@@ -49,7 +49,7 @@ import { parseTime, parseDateTime } from './drishti_time-picker.js';
  * @property {Object<string, FieldSchema>} [properties] object: its fields
  * @property {string[]} [required] object: the keys that must have a value
  * @property {string[]} [order] object: the order of its fields (default: as written)
- * @property {string} [widget] how it is drawn: text, textarea, select, radio, checkbox, switch, multiselect, combobox, tree, date, daterange, code
+ * @property {string} [widget] how it is drawn: text, textarea, select, radio, checkbox, switch, multiselect, combobox, tree, date, daterange, code, formula (one line, options.mode and options.complete)
  * @property {Object} [options] the widget's options (a combobox's source, a tree's nodes, a code editor's mode)
  * @property {boolean} [readOnly]
  * @property {string} [placeholder]

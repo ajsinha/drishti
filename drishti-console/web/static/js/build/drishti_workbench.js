@@ -87,7 +87,7 @@ store.state.baseMoved = init.baseMoved || null;
   });
   inspector = WB.Inspector($('[data-inspector]'), store, function () { return schemaP; }, { remove: function (id) { return canvas.remove(id); }, paths: function () { return data ? data.fields() : []; }, actions: actions });
   data = WB.Data($('[data-left]'), store, actions, { maxFile: parseFloat(d.maxFileMb) * 1048576, selection: function () { return canvas.selected(); } });
-  WB.palette.render($('[data-palette]'), function (kind) { actions.add(kind, actions.afterSelected()); }, $('[data-kind-filter]'));
+  WB.palette.render($('[data-palette]'), function (kind) { actions.add(kind, actions.afterSelected()); });
   $('[data-add-panel]').addEventListener('click', function () { actions.menuAdd(this); });
   var notes = WB.Notes($('[data-notes]'), store, init.notes || '');
   var yaml = WB.YamlTab($('[data-yaml-src]'), $('[data-field-help]'), store);

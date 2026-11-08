@@ -148,14 +148,13 @@
 
   function columnsBox(part, sec) {
     var t = part.table, box = el('div', { 'class': 'dz-cols', role: 'group', 'aria-label': 'Columns' });
-    var chosen = t.chosen.slice();
-    t.fields.forEach(function (f) {
-      var cb = el('input', { type: 'checkbox', value: f });
-      cb.checked = chosen.indexOf(f) >= 0;
-      box.appendChild(el('label', {}, [cb, ' ' + f.replace(/_/g, ' ').toLowerCase()]));
-    });
+    var chosen = t.chosen.slice(), host = el('div', { 'class': 'dz-cols-form' });
+    box.appendChild(host);                                       // drishti-inputs' Form: the columns a row of checkboxes
+    var form = new window.Drishti.elements.inputs.Form(host, { embedded: true, label: 'Columns', schema: { type: 'object', properties: { columns: { type: 'array', title: 'Columns', widget: 'checkboxes',
+      items: { type: 'string', 'enum': t.fields.slice(), enumLabels: t.fields.map(function (f) { return f.replace(/_/g, ' ').toLowerCase(); }) } } } },
+      value: { columns: t.fields.filter(function (f) { return chosen.indexOf(f) >= 0; }) } });
     box.appendChild(el('button', { type: 'button', 'class': 'dz-btn dz-primary', 'data-dz-cols-apply': '', text: 'Show these columns', on: { click: function () {
-      var picked = [].slice.call(box.querySelectorAll('input:checked')).map(function (i) { return i.value; });
+      var picked = (form.getField('columns') || []).slice();
       var order = chosen.filter(function (f) { return picked.indexOf(f) >= 0; }).concat(picked.filter(function (f) { return chosen.indexOf(f) < 0; }));
       step({ op: 'columns', panel: t.id, fields: order }).catch(function () {});
     } } }));

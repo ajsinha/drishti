@@ -8592,7 +8592,7 @@ A field of a form schema.
 | `[properties]` | `Object&lt;string, FieldSchema&gt;` | object: its fields |
 | `[required]` | `string[]` | object: the keys that must have a value |
 | `[order]` | `string[]` | object: the order of its fields (default: as written) |
-| `[widget]` | `string` | how it is drawn: text, textarea, select, radio, checkbox, switch, multiselect, combobox, tree, date, daterange, code |
+| `[widget]` | `string` | how it is drawn: text, textarea, select, radio, checkbox, switch, multiselect, combobox, tree, date, daterange, code, formula (one line, options.mode and options.complete) |
 | `[options]` | `Object` | the widget's options (a combobox's source, a tree's nodes, a code editor's mode) |
 | `[readOnly]` | `boolean` |  |
 | `[placeholder]` | `string` |  |
@@ -10621,6 +10621,8 @@ A step of a designer.
 | `[empty='Select an item to see its properties.']` | `string` | what an empty selection says |
 | `[readOnly=false]` | `boolean` |  |
 | `[locale]` | `string` |  |
+| `[form]` | `Object` | more options for the Form (widgets, layout, pathAttr: drishti-inputs' FormOptions) |
+| `[head]` | `function(string[], Object): (?Node\|Node[])` | the host's header for the selection (what it is, its actions), drawn in place of the schema's title |
 
 #### `DesignerAction` : `Object`
 
