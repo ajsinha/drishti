@@ -37,6 +37,7 @@ from playwright.sync_api import expect, sync_playwright  # noqa: E402
 import bi_report_stack  # noqa: E402
 from bi_report_helpers import clean, sign_in  # noqa: E402
 from bi_report_stack import CONSOLE_URL, api  # noqa: E402
+import select_helpers  # noqa: E402
 
 WES = ("wes", ["bi-writer"])
 state = {}
@@ -143,7 +144,7 @@ def test_a_report_is_started_on_the_model_and_gets_a_relative_date_slicer_a_top_
     page.select_option("[data-format-default]", "last-30-days")
     page.uncheck('[data-format-options] [data-option="last-90-days"]')
     page.uncheck('[data-format-options] [data-option="last-12-months"]')
-    expect(page.locator("[data-format-default] option")).not_to_have_count(0)
+    assert select_helpers.values(page, "[data-format-default]")
     # a top filter in the Filters pane
     page.click('[data-add-filter="report"]')
     page.select_option('[data-filter-editor] [name="field"]', "trade.desk")
@@ -348,10 +349,10 @@ def test_a_board_page_lists_a_draft_report_draws_its_tile_and_refuses_to_publish
     tile = page.evaluate("window.drishtiBi.design.sel().id")
     expect(page.locator(f'[data-design-root] [data-visual="{tile}"] [data-tile-placeholder]')).to_have_count(1)      # nothing chosen yet: it says what to do
     page.click("[data-ptab='format']")
-    option = page.locator(f'[data-tile-report] option[value="{rep}"]')
-    expect(option).to_have_text("Draft KPIs (draft)")                                                    # the author's own draft is offered, labelled
+    page.wait_for_function(select_helpers.has_option("[data-tile-report]", rep))
+    assert [o["label"] for o in select_helpers.options(page, "[data-tile-report]") if o["value"] == rep] == ["Draft KPIs (draft)"]                                                    # the author's own draft is offered, labelled
     page.select_option("[data-tile-report]", rep)
-    page.wait_for_function("() => document.querySelectorAll('[data-tile-visual] option').length > 1")
+    page.wait_for_function(select_helpers.has_option("[data-tile-visual]", ">1"))
     page.select_option("[data-tile-visual]", "main/card-1")
     expect(page.locator(f'[data-design-root] [data-visual="{tile}"] .bi-card-value')).to_have_count(1, timeout=20000)    # drawn with the report's numbers
     page.click("[data-save]")
@@ -380,10 +381,10 @@ def test_view_as_readers_see_it_shows_the_published_version_not_the_draft(stack,
     assert s == 200, r
     page.goto(f"{CONSOLE_URL}/bi/design/{never}")
     page.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
-    assert page.locator('[data-view-as] option[value="published"]').get_attribute("disabled") is not None       # never published: nothing to look at
+    assert [o["disabled"] for o in select_helpers.options(page, "[data-view-as]") if o["value"] == "published"] == [True]       # never published: nothing to look at
     page.goto(f"{CONSOLE_URL}/bi/design/{rep}")
     page.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
-    assert page.locator('[data-view-as] option[value="published"]').get_attribute("disabled") is None
+    assert [o["disabled"] for o in select_helpers.options(page, "[data-view-as]") if o["value"] == "published"] == [False]
     page.select_option("[data-view-as]", "published")
     assert "as=published" in page.get_attribute("[data-view-link]", "href")
     page.click("[data-view-link]")

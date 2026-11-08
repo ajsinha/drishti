@@ -21,6 +21,7 @@
 import { bus as sharedBus, FILTER_CHANNEL, filterWords, formatDateRange, announce, parseNumberText } from '../../drishti-core/src/drishti_index.js';
 import { DATE_PRESETS, resolvePreset, parseDateInput, calendar } from './drishti_calendar.js';
 import { InputBase, Popover, Listbox, normalizeOptions, searchOptions, uid } from './drishti_inputs-dom.js';
+import { Select } from './drishti_select.js';
 
 const OPS = { number: [['gt', '>'], ['gte', '≥'], ['lt', '<'], ['lte', '≤'], ['equals', '='], ['notEquals', '≠'], ['between', 'between']],
   text: [['contains', 'contains'], ['notContains', 'does not contain'], ['equals', 'is'], ['notEquals', 'is not'], ['startsWith', 'starts with'], ['endsWith', 'ends with']] };
@@ -225,6 +226,7 @@ export class FilterBar extends InputBase {
     const f = this.state.field(id);
     if (!f) { return Promise.resolve(); }
     const at = anchor || this.addBtn, cur = this.state.model[id], box = this.el('div', { cls: 'di-fb-editor', data: { field: id } });
+    let first = null;
     const msg = this.el('div', { cls: 'di-msg', attrs: { 'aria-live': 'polite' } });
     const head = this.el('div', { cls: 'di-fb-editor-head', text: f.label });
     const done = this.el('button', { cls: 'di-btn di-primary', text: 'Apply', attrs: { type: 'button' }, data: { act: 'apply' } });
@@ -245,36 +247,43 @@ export class FilterBar extends InputBase {
       done.addEventListener('click', () => { this.state.setMembers(id, members.filter((m) => picked.has(String(m.value))).map((m) => m.value).concat(Array.from(picked).filter((k) => !members.some((m) => String(m.value) === k)))); this.pop.close(true); this.changed(); });
       if (f.members) { Promise.resolve(f.members('')).then((m) => { members = normalizeOptions(m); draw(); }); } else { draw(); }
     } else if (f.type === 'date') {
-      const cal = calendar(this.o.calendar), preset = this.el('select', { cls: 'di-field', attrs: { 'aria-label': 'Preset' } });
-      preset.appendChild(this.el('option', { text: 'Custom range', attrs: { value: '' } }));
-      DATE_PRESETS.forEach((p) => { const o = this.el('option', { text: p.label, attrs: { value: p.id } }); if (cur && cur.preset === p.id) { o.selected = true; } preset.appendChild(o); });
+      const cal = calendar(this.o.calendar), preset = this.pick('Preset', [{ value: '', label: 'Custom range' }].concat(DATE_PRESETS.map((p) => ({ value: p.id, label: p.label }))), cur && cur.preset ? cur.preset : '');
       const from = this.el('input', { cls: 'di-field', attrs: { type: 'text', 'aria-label': 'From', placeholder: 'From: T-5, 1 Nov 2026' } });
       const to = this.el('input', { cls: 'di-field', attrs: { type: 'text', 'aria-label': 'To', placeholder: 'To: T, ME' } });
       if (cur && !cur.preset) { from.value = cur.value; to.value = cur.valueTo; }
       box.append(preset, this.el('div', { cls: 'di-range-ends' }, [from, this.el('span', { text: '→' }), to]));
+      first = from;
       done.addEventListener('click', () => {
-        const why = this.state.setDates(id, { preset: preset.value || null, from: from.value, to: to.value, asOf: this.o.asOf, calendar: cal });
+        const why = this.state.setDates(id, { preset: preset.component.getValue() || null, from: from.value, to: to.value, asOf: this.o.asOf, calendar: cal });
         if (why) { msg.textContent = why; return; }
         this.pop.close(true);
         this.changed();
       });
     } else {
-      const ops = OPS[f.type === 'number' ? 'number' : 'text'], op = this.el('select', { cls: 'di-field', attrs: { 'aria-label': 'Condition' } });
-      ops.forEach(([k, w]) => { const o = this.el('option', { text: w, attrs: { value: k } }); if (cur && cur.op === k) { o.selected = true; } op.appendChild(o); });
+      const ops = OPS[f.type === 'number' ? 'number' : 'text'], op = this.pick('Condition', ops.map(([k, w]) => ({ value: k, label: w })), cur && cur.op ? cur.op : ops[0][0]);
       const val = this.el('input', { cls: 'di-field', attrs: { type: 'text', 'aria-label': 'Value', placeholder: f.type === 'number' ? '1m, 250k, −5,000' : 'Text' } });
       const val2 = this.el('input', { cls: 'di-field', attrs: { type: 'text', 'aria-label': 'Up to', placeholder: 'and' } });
       if (cur) { val.value = cur.value === undefined ? '' : String(cur.value); val2.value = cur.valueTo === undefined ? '' : String(cur.valueTo); }
-      const showTo = () => { val2.hidden = op.value !== 'between'; };
-      op.addEventListener('change', showTo);
+      const showTo = () => { val2.hidden = op.component.getValue() !== 'between'; };
+      op.component.on('change', showTo);
+      first = val;
       showTo();
-      const apply = () => { const why = this.state.setCondition(id, op.value, val.value, val2.value); if (why) { msg.textContent = why; val.setAttribute('aria-invalid', 'true'); return; } this.pop.close(true); this.changed(); };
+      const apply = () => { const why = this.state.setCondition(id, op.component.getValue(), val.value, val2.value); if (why) { msg.textContent = why; val.setAttribute('aria-invalid', 'true'); return; } this.pop.close(true); this.changed(); };
       [val, val2].forEach((x) => x.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); apply(); } }));
       done.addEventListener('click', apply);
       box.append(this.el('div', { cls: 'di-fb-cond' }, [op, val, val2]));
     }
     box.appendChild(foot);
     this.pop.open(at, box);
+    if (first) { first.focus(); }                                          // the value, not the condition's Select: typing starts the value
     return Promise.resolve();
+  }
+
+  /** @private a choice in the filter's panel: drishti-inputs' Select in a <drishti-select> (its list a panel nested in this one) */
+  pick(label, options, value) {
+    const box = this.el('drishti-select', { cls: 'di-fb-pick' });
+    box.component = new Select(box, { label, options, value, search: false });
+    return box;
   }
 
   /**

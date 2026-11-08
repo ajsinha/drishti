@@ -112,7 +112,7 @@ export class Popover {
     this.doc = doc;
     this.o = o || {};
     this.el = null;
-    this.onDown = (e) => { if (this.el && !this.el.contains(e.target) && !(this.anchor && this.anchor.contains(e.target))) { this.close(); } };
+    this.onDown = (e) => { if (this.el && !this.el.contains(e.target) && !(this.anchor && this.anchor.contains(e.target)) && !this.nested(e.target)) { this.close(); } };
     this.onKey = (e) => { if (e.key === 'Escape' && this.el) { e.stopPropagation(); this.close(true); } };
   }
 
@@ -121,6 +121,14 @@ export class Popover {
    * @returns {boolean}
    */
   isOpen() { return !!this.el; }
+
+  /** @private a click in a panel opened from inside this one (a Select in a filter's panel) leaves this one open */
+  nested(t) {
+    for (let p = t && t.closest ? t.closest('.di-pop') : null; p && p.diAnchor; p = p.diAnchor.closest ? p.diAnchor.closest('.di-pop') : null) {
+      if (this.el.contains(p.diAnchor)) { return true; }
+    }
+    return false;
+  }
 
   /**
    * Opens the panel under an anchor with its content.
@@ -135,6 +143,7 @@ export class Popover {
     this.before = this.doc.activeElement;
     const el = this.el = h(this.doc, 'div', { cls: 'di-pop ' + (this.o.cls || ''), attrs: { role: this.o.role || 'dialog', 'aria-label': this.o.label || null } });
     if (this.o.theme && this.o.theme.closest) { const t = this.o.theme.closest('[data-density]'); if (t) { el.setAttribute('data-density', t.getAttribute('data-density')); } }
+    el.diAnchor = anchor;                                                  // a panel opened from inside another keeps the other open
     el.appendChild(content);
     el.addEventListener('keydown', this.onKey);
     (anchor.closest && anchor.closest('dialog[open]') || this.doc.body).appendChild(el);   /* inside an open modal dialog: in its top layer, not inert */

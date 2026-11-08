@@ -1395,17 +1395,20 @@
   /* ---- src/drishti_shell-parts.js ---- */
   __m["src/drishti_shell-parts.js"] = (function () {
     var h = __lib("drishti-core").h;
+    var Select = __lib("drishti-inputs").Select;
     var entryAttrs = __m["src/drishti_palette.js"].entryAttrs;
     function actionElement(doc, a, emit) {
       const attrs = Object.assign({ 'data-act': a.id, title: a.title || null, 'data-dd-title': a.title || '', hidden: !!a.hidden }, entryAttrs(a.attrs));
       const cls = 'dd-btn' + (a.primary ? ' dd-primary' : '');
       if (a.href !== undefined) { return h(doc, 'a', { cls: cls + ' dd-link', text: a.label, attrs: Object.assign(attrs, { href: a.href || '#' }) }); }
-      if (a.choices) {
+      if (a.choices) {                                                         // drishti-inputs' Select in a <drishti-select> (its value and change as a select's)
         attrs['aria-label'] = a.label;
-        const sel = h(doc, 'select', { cls: 'dd-layout-pick dd-choice', attrs: Object.assign(attrs, { disabled: !a.enabled }) }, a.choices.map((c) =>
-          h(doc, 'option', { text: c.label, attrs: { value: c.value, disabled: !!c.disabled } })));
-        sel.addEventListener('change', () => emit({ id: a.id, value: sel.value }));
-        return sel;
+        const box = h(doc, 'drishti-select', { cls: 'dd-layout-pick dd-choice', attrs });
+        const sel = box.component = new Select(box, { options: a.choices.map((c) => ({ value: c.value, label: c.label, disabled: !!c.disabled })), value: a.value,
+          label: a.label, disabled: !a.enabled, search: false });
+        box.disabled = !a.enabled;
+        sel.on('change', (d) => { emit({ id: a.id, value: d.value }); box.dispatchEvent(new doc.defaultView.Event('change', { bubbles: true })); });
+        return box;
       }
       if (a.toggle) { attrs['aria-pressed'] = String(!!a.pressed); }
       const b = h(doc, 'button', { cls, text: a.label, attrs: Object.assign(attrs, { type: 'button', disabled: !a.enabled }) });
@@ -1414,6 +1417,13 @@
         emit({ id: a.id });
       });
       return b;
+    }
+    function layoutPick(doc, layouts, onPick) {
+      const box = h(doc, 'drishti-select', { cls: 'dd-layout-pick', attrs: { 'data-dd-layout-pick': '' } });
+      const words = { studio: 'Studio', 'side-by-side': 'Side by side', terminal: 'Terminal' };
+      box.component = new Select(box, { label: 'Layout', search: false, value: layouts[0], options: layouts.map((l) => ({ value: l, label: words[l] || l })) });
+      box.component.on('change', (d) => onPick(d.value));
+      return box;
     }
     function drawObjectGroups(shell) {
       if (!shell.objects) { return; }
@@ -1479,12 +1489,12 @@
         t.count.classList.toggle('dd-bad', !!bad);
       }
     }
-    return { "actionElement": actionElement, "drawObjectGroups": drawObjectGroups, "DocTabs": DocTabs, "Dock": Dock };
+    return { "actionElement": actionElement, "layoutPick": layoutPick, "drawObjectGroups": drawObjectGroups, "DocTabs": DocTabs, "Dock": Dock };
   })();
   /* ---- src/drishti_shell.js ---- */
   __m["src/drishti_shell.js"] = (function () {
     var EventBus = __lib("drishti-core").EventBus, announce = __lib("drishti-core").announce, h = __lib("drishti-core").h, openDialog = __lib("drishti-core").openDialog, closeDialog = __lib("drishti-core").closeDialog;
-    var actionElement = __m["src/drishti_shell-parts.js"].actionElement, drawObjectGroups = __m["src/drishti_shell-parts.js"].drawObjectGroups, DocTabs = __m["src/drishti_shell-parts.js"].DocTabs, Dock = __m["src/drishti_shell-parts.js"].Dock;
+    var actionElement = __m["src/drishti_shell-parts.js"].actionElement, drawObjectGroups = __m["src/drishti_shell-parts.js"].drawObjectGroups, layoutPick = __m["src/drishti_shell-parts.js"].layoutPick, DocTabs = __m["src/drishti_shell-parts.js"].DocTabs, Dock = __m["src/drishti_shell-parts.js"].Dock;
     const SHELL_ACTIONS = Object.freeze([
       { id: 'validate', label: 'Validate', title: 'Check the definition now (Ctrl+Enter)' },
       { id: 'preview', label: 'Preview', title: 'Read the preview again' },
@@ -1614,8 +1624,7 @@
         this.cmdBar = x('div', { cls: 'dd-cmdbar', attrs: { hidden: true } }, [x('span', { cls: 'dd-cmd-p', text: 'DESIGN>' }), this.cmd]);
         this.fkeys = x('div', { cls: 'dd-fkeys', attrs: { hidden: true, 'aria-hidden': 'true' } }, Object.keys(SHELL_FKEYS).map((k) => x('span', {}, [x('b', { text: k }), ' ' + SHELL_FKEYS[k]])));
         this.statusBar = x('div', { cls: 'dd-statusbar', attrs: { 'data-dd-statusbar': '', role: 'status' } });
-        this.layoutSel = x('select', { cls: 'dd-layout-pick', attrs: { 'data-dd-layout-pick': '', 'aria-label': 'Layout' } }, SHELL_LAYOUTS.map((l) => x('option', { text: { studio: 'Studio', 'side-by-side': 'Side by side', terminal: 'Terminal' }[l], attrs: { value: l } })));
-        this.layoutSel.addEventListener('change', () => this.setLayout(this.layoutSel.value, true));
+        this.layoutSel = layoutPick(doc, SHELL_LAYOUTS, (l) => this.setLayout(l, true));
         head.appendChild(this.layoutSel);
         this.el.append(head, this.cmdBar, this.msg, grid, this.fkeys, this.statusBar, this.dlg);
         this.doc.addEventListener('keydown', (e) => { if (this.el.contains(e.target) || e.target === this.doc.body) { this.onKey(e); } });      // the focus may have left with a hidden pane
@@ -1701,10 +1710,11 @@
           const b = this.buttons[id], v = states[id];
           if (!b || b.tagName === 'A') { return; }                                 // a link is never off
           b.disabled = v !== true;
+          if (b.component && b.component.setDisabled) { b.component.setDisabled(v !== true); }   // a choice (a Select)
           b.title = v === true ? b.getAttribute('data-dd-title') : String(v || '');
         });
       }
-      setLabel(id, label) { const b = this.buttons[id]; if (b && b.tagName !== 'SELECT') { b.textContent = label; } }
+      setLabel(id, label) { const b = this.buttons[id]; if (b && !b.component) { b.textContent = label; } }
       showAction(id, on) { if (this.buttons[id]) { this.buttons[id].hidden = !on; } }
       setDocs(list) { if (this.docs) { this.docs.set(list); } }
       dockPane(id) { return this.dock && this.dock.tabs[id] ? this.dock.tabs[id].pane : null; }

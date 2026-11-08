@@ -18,6 +18,7 @@
    a close button) and the dock under the editor (tabs of panes the host fills: problems, a query, a log; a count on a tab; the tab that
    is open pressed again folds the dock away). Every text goes in as text; a host's own attributes are data-* only. */
 import { h } from '../../drishti-core/src/drishti_index.js';
+import { Select } from '../../drishti-inputs/src/drishti_index.js';
 import { entryAttrs } from './drishti_palette.js';
 
 /**
@@ -47,12 +48,14 @@ export function actionElement(doc, a, emit) {
   const attrs = Object.assign({ 'data-act': a.id, title: a.title || null, 'data-dd-title': a.title || '', hidden: !!a.hidden }, entryAttrs(a.attrs));
   const cls = 'dd-btn' + (a.primary ? ' dd-primary' : '');
   if (a.href !== undefined) { return h(doc, 'a', { cls: cls + ' dd-link', text: a.label, attrs: Object.assign(attrs, { href: a.href || '#' }) }); }
-  if (a.choices) {
+  if (a.choices) {                                                         // drishti-inputs' Select in a <drishti-select> (its value and change as a select's)
     attrs['aria-label'] = a.label;
-    const sel = h(doc, 'select', { cls: 'dd-layout-pick dd-choice', attrs: Object.assign(attrs, { disabled: !a.enabled }) }, a.choices.map((c) =>
-      h(doc, 'option', { text: c.label, attrs: { value: c.value, disabled: !!c.disabled } })));
-    sel.addEventListener('change', () => emit({ id: a.id, value: sel.value }));
-    return sel;
+    const box = h(doc, 'drishti-select', { cls: 'dd-layout-pick dd-choice', attrs });
+    const sel = box.component = new Select(box, { options: a.choices.map((c) => ({ value: c.value, label: c.label, disabled: !!c.disabled })), value: a.value,
+      label: a.label, disabled: !a.enabled, search: false });
+    box.disabled = !a.enabled;
+    sel.on('change', (d) => { emit({ id: a.id, value: d.value }); box.dispatchEvent(new doc.defaultView.Event('change', { bubbles: true })); });
+    return box;
   }
   if (a.toggle) { attrs['aria-pressed'] = String(!!a.pressed); }
   const b = h(doc, 'button', { cls, text: a.label, attrs: Object.assign(attrs, { type: 'button', disabled: !a.enabled }) });
@@ -61,6 +64,21 @@ export function actionElement(doc, a, emit) {
     emit({ id: a.id });
   });
   return b;
+}
+
+/**
+ * The layout picker in the header: drishti-inputs' Select in a <drishti-select> (data-dd-layout-pick; its value as a select's).
+ * @param {Document} doc
+ * @param {string[]} layouts
+ * @param {function(string): void} onPick a person picked a layout
+ * @returns {HTMLElement}
+ */
+export function layoutPick(doc, layouts, onPick) {
+  const box = h(doc, 'drishti-select', { cls: 'dd-layout-pick', attrs: { 'data-dd-layout-pick': '' } });
+  const words = { studio: 'Studio', 'side-by-side': 'Side by side', terminal: 'Terminal' };
+  box.component = new Select(box, { label: 'Layout', search: false, value: layouts[0], options: layouts.map((l) => ({ value: l, label: words[l] || l })) });
+  box.component.on('change', (d) => onPick(d.value));
+  return box;
 }
 
 /**

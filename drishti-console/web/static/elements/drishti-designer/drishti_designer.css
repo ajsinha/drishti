@@ -83,7 +83,7 @@
 .dd-insp-side { position: relative; background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius, 6px); padding: 8px; min-width: 0; max-height: calc(100vh - 150px); overflow: auto; }
 .dd-sec { margin: 0 0 6px; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--d-muted); }
 .dd-statusbar { font-size: 11px; color: var(--d-muted); border-top: 1px solid var(--d-border); padding: 4px 2px 0; min-height: 1.4em; }
-.dd-layout-pick { background: var(--d-surface-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 4px; font-size: 12px; padding: 3px 6px; }
+.dd-layout-pick { display: inline-block; min-width: 9em; font-size: 12px; }                                   /* a Select (drishti-inputs) draws its own control */
 .dd-cmdbar { display: flex; align-items: center; gap: 8px; background: var(--d-bg-2, var(--d-bg)); border: 1px solid var(--d-border); border-radius: 4px; padding: 4px 8px; font-family: var(--d-font-mono); }
 .dd-cmdbar[hidden], .dd-fkeys[hidden] { display: none; }
 .dd-cmd-p { color: var(--d-accent); font-weight: 700; }

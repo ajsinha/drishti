@@ -38,6 +38,13 @@ def value(pg, sel):
     return None if v is None else str(v)
 
 
+def has_option(sel, val=None):
+    """A predicate for wait_for_function: the select under sel offers the value val (any option at all without val; more than one when
+    val is the string ">1")."""
+    want = "o.length > 1" if val == ">1" else "o.length > 0" if val is None else "o.some((x) => String(x.value) === %r)" % str(val)
+    return ("() => { const e = document.querySelector(%r); const o = e && e.component ? e.component.options : []; return %s; }" % (sel, want))
+
+
 def choose(pg, sel, val):
     """Opens the select and clicks the option whose value is val (compared as text); the list closes and drishti:change fires."""
     pg.locator(sel + " .di-select-control").click()
@@ -57,20 +64,21 @@ def choose(pg, sel, val):
 TARGET = ("(e) => { if (e && e.tagName === 'INPUT' && e.type === 'hidden' && e.closest('.di-names')) {"
           " const f = e.closest('.di-form-field'), s = f && f.querySelector('drishti-select'); if (s) { return s; } } return e; }")
 IS_SELECT = "(e) => { const t = (%s)(e); return !!t && t.tagName === 'DRISHTI-SELECT'; }" % TARGET
-OPTION_AT = ("(e, want) => { const w = [].concat(want.value, want.label).map(String);"
-             " return e.component.matches.findIndex((o) => w.indexOf(String(o.value)) >= 0 || w.indexOf(String(o.label)) >= 0); }")
+OPTION_AT = ("(e, want) => { const w = [].concat(want.value, want.label).map(String), m = e.component.matches;"
+             " if (want.index !== null) { const o = e.component.options[want.index]; return o ? m.indexOf(o) : -1; }"
+             " return m.findIndex((o) => w.indexOf(String(o.value)) >= 0 || w.indexOf(String(o.label)) >= 0); }")
 NO_OPTION = "e => e.component.options.map((o) => [o.value, o.label])"
 
 
-def _want(value, label):
+def _want(value, label, index=None):
     as_list = lambda x: [] if x is None else list(x) if isinstance(x, (list, tuple)) else [x]   # noqa: E731
-    return {"value": as_list(value), "label": as_list(label)}
+    return {"value": as_list(value), "label": as_list(label), "index": index}
 
 
-def _pick(locator, value=None, label=None):
+def _pick(locator, value=None, label=None, index=None):
     """Opens the Select under locator (or beside the hidden input it names) and clicks the option whose value or label is asked (a
     list: any of them)."""
-    want = _want(value, label)
+    want = _want(value, label, index)
     el = locator.element_handle().evaluate_handle(TARGET).as_element()
     el.query_selector(".di-select-control").click()
     page = locator.page
@@ -81,9 +89,9 @@ def _pick(locator, value=None, label=None):
     return [str(el.evaluate("e => e.value"))]
 
 
-async def _pick_async(locator, value=None, label=None):
+async def _pick_async(locator, value=None, label=None, index=None):
     """_pick for Playwright's async API."""
-    want = _want(value, label)
+    want = _want(value, label, index)
     el = (await (await locator.element_handle()).evaluate_handle(TARGET)).as_element()
     await (await el.query_selector(".di-select-control")).click()
     page = locator.page
@@ -107,8 +115,8 @@ def install_playwright_shim():
     aloc_select, aloc_value = ALocator.select_option, ALocator.input_value
 
     def select_option(self, value=None, *, index=None, label=None, element=None, **kw):
-        if index is None and element is None and self.first.evaluate(IS_SELECT):
-            return _pick(self.first, value, label)
+        if element is None and self.first.evaluate(IS_SELECT):
+            return _pick(self.first, value, label, index)
         return loc_select(self, value, index=index, label=label, element=element, **kw)
 
     def input_value(self, **kw):
@@ -121,8 +129,8 @@ def install_playwright_shim():
         return select_option(self.locator(selector), value, index=index, label=label, element=element, **kw)
 
     async def aselect_option(self, value=None, *, index=None, label=None, element=None, **kw):
-        if index is None and element is None and await self.first.evaluate(IS_SELECT):
-            return await _pick_async(self.first, value, label)
+        if element is None and await self.first.evaluate(IS_SELECT):
+            return await _pick_async(self.first, value, label, index)
         return await aloc_select(self, value, index=index, label=label, element=element, **kw)
 
     async def ainput_value(self, **kw):
