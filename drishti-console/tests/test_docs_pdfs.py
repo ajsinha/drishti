@@ -45,7 +45,11 @@ def test_every_pdf_has_its_pages_and_pictures(source):
     assert pages >= 5, f"{source.name}: {pages} pages"
     shown = md_to_pdf.pictures(source)
     assert all(p.is_file() for p in shown), [p.name for p in shown if not p.is_file()]
-    assert len(re.findall(rb"/Subtype\s*/Image", data)) >= len(shown) or not shown, f"{source.name}: a picture is not in the PDF"
+    images = len(re.findall(rb"/Subtype\s*/Image", data))
+    rasters = [p for p in shown if p.suffix.lower() != ".svg"]
+    assert images >= len(rasters) or not rasters, f"{source.name}: a picture is not in the PDF"
+    if len(rasters) < len(shown):     # SVG diagrams are drawn as vectors: no raster image beyond the screenshots
+        assert images == len(rasters), f"{source.name}: {images} raster images for {len(rasters)} screenshots: an SVG diagram was rasterised"
 
 
 def test_the_guides_link_their_pdfs():

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
+  PROPRIETARY AND CONFIDENTIAL. See the LICENSE file in the root of this repository.
+  A diagram of docs/guides/CLUSTER_GUIDE.md.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 610" width="960" height="610" role="img" aria-labelledby="t d">
+<title id="t">Three machines in production</title>
+<desc id="d">Users reach a load balancer that spreads requests over three identical machines in three zones; the machines are one Drishti*net and share the lake and PostgreSQL.</desc>
+<defs>
+<marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#5b7590"/></marker>
+<marker id="ahs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#5b7590"/></marker>
+</defs>
+<rect x="0.75" y="0.75" width="958.5" height="608.5" rx="14" fill="#ffffff" stroke="#d5dde7" stroke-width="1.5"/>
+<text x="24" y="34" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="16" font-weight="700" fill="#12324f">Three machines in production</text>
+<rect x="230" y="56" width="500" height="40" rx="8" fill="#eef1f5" stroke="#aab6c4" stroke-width="1.2"/>
+<text x="480.0" y="80.55" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1d2430" text-anchor="middle">users (browsers, embedding hosts, API clients)</text>
+<path d="M 480 96 L 480 136" fill="none" stroke="#5b7590" stroke-width="1.6" marker-end="url(#ah)"/>
+<text x="490" y="121" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#5b6878" text-anchor="start">HTTPS 443</text>
+<rect x="180" y="138" width="600" height="48" rx="8" fill="#fdf2e1" stroke="#e0b36e" stroke-width="1.2"/>
+<text x="480.0" y="166.55" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1d2430" text-anchor="middle">load balancer (a pair + VIP, or an ALB): health /readyz</text>
+<text x="796" y="158" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="600" fill="#5b6878" text-anchor="start">no stickiness</text>
+<text x="796" y="176" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="400" fill="#5b6878" text-anchor="start">(section 7.4)</text>
+<path d="M 330 186 L 330 205 L 170 205 L 170 236" fill="none" stroke="#5b7590" stroke-width="1.6" marker-end="url(#ah)"/>
+<rect x="30" y="238" width="280" height="168" rx="8" fill="#e8f0fa" stroke="#8fb0d6" stroke-width="1.2"/>
+<text x="42" y="260" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="14" font-weight="700" fill="#1b4a73" text-anchor="start">machine 1  (zone a)</text>
+<text x="42" y="283" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1d2430" text-anchor="start">console, 4 workers</text>
+<text x="42" y="304" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1d2430" text-anchor="start">server: owner and coordinator;</text>
+<text x="42" y="325" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1d2430" text-anchor="start">~2/3 of the shards;</text>
+<text x="42" y="346" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1d2430" text-anchor="start">every node's aggregate</text>
+<text x="42" y="367" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1d2430" text-anchor="start">hot files: NVMe/EBS</text>
+<path d="M 480 186 L 480 205 L 480 205 L 480 236" fill="none" stroke="#5b7590" stroke-width="1.6" marker-end="url(#ah)"/>
+<rect x="340" y="238" width="280" height="168" rx="8" fill="#e8f0fa" stroke="#8fb0d6" stroke-width="1.2"/>
+<text x="352" y="260" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="14" font-weight="700" fill="#1b4a73" text-anchor="start">machine 2  (zone b)</text>
+<text x="352" y="283" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1d2430" text-anchor="start">console, 4 workers</text>
+<text x="352" y="304" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1d2430" text-anchor="start">server: owner and coordinator;</text>
+<text x="352" y="325" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1d2430" text-anchor="start">~2/3 of the shards;</text>
+<text x="352" y="346" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1d2430" text-anchor="start">every node's aggregate</text>
+<text x="352" y="367" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1d2430" text-anchor="start">hot files: NVMe/EBS</text>
+<path d="M 630 186 L 630 205 L 790 205 L 790 236" fill="none" stroke="#5b7590" stroke-width="1.6" marker-end="url(#ah)"/>
+<rect x="650" y="238" width="280" height="168" rx="8" fill="#e8f0fa" stroke="#8fb0d6" stroke-width="1.2"/>
+<text x="662" y="260" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="14" font-weight="700" fill="#1b4a73" text-anchor="start">machine 3  (zone c)</text>
+<text x="662" y="283" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1d2430" text-anchor="start">console, 4 workers</text>
+<text x="662" y="304" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1d2430" text-anchor="start">server: owner and coordinator;</text>
+<text x="662" y="325" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1d2430" text-anchor="start">~2/3 of the shards;</text>
+<text x="662" y="346" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1d2430" text-anchor="start">every node's aggregate</text>
+<text x="662" y="367" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1d2430" text-anchor="start">hot files: NVMe/EBS</text>
+<path d="M 108 440 L 852 440" fill="none" stroke="#5b7590" stroke-width="1.6" marker-end="url(#ah)" marker-start="url(#ahs)"/>
+<path d="M 100 406 L 100 440" stroke="#5b7590" stroke-width="1.6" stroke-dasharray="3 3"/>
+<path d="M 410 406 L 410 440" stroke="#5b7590" stroke-width="1.6" stroke-dasharray="3 3"/>
+<path d="M 720 406 L 720 440" stroke="#5b7590" stroke-width="1.6" stroke-dasharray="3 3"/>
+<path d="M 250 412 L 250 480" stroke="#ffffff" stroke-width="7"/>
+<path d="M 250 406 L 250 486" fill="none" stroke="#5b7590" stroke-width="1.6" marker-end="url(#ah)"/>
+<path d="M 560 412 L 560 480" stroke="#ffffff" stroke-width="7"/>
+<path d="M 560 406 L 560 486" fill="none" stroke="#5b7590" stroke-width="1.6" marker-end="url(#ah)"/>
+<path d="M 870 412 L 870 480" stroke="#ffffff" stroke-width="7"/>
+<path d="M 870 406 L 870 486" fill="none" stroke="#5b7590" stroke-width="1.6" marker-end="url(#ah)"/>
+<rect x="262" y="425" width="300" height="24" rx="4" fill="#ffffff" stroke="#ffffff" stroke-width="0"/>
+<text x="412" y="442" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13" font-weight="600" fill="#12324f" text-anchor="middle">Drishti*net: gossip + signed member calls</text>
+<rect x="30" y="488" width="900" height="96" rx="10" fill="#e3f3f0" stroke="#7fbcb1" stroke-width="1.2"/>
+<text x="50" y="524" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="14" text-anchor="start"><tspan font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-weight="700" fill="#0f5e57">LAKE </tspan><tspan font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-weight="400" fill="#1d2430">on shared storage: S3, or S3-compatible (MinIO …), or NAS/SAN</tspan></text>
+<text x="50" y="558" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="14" text-anchor="start"><tspan font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-weight="700" fill="#0f5e57">POSTGRESQL </tspan><tspan font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-weight="400" fill="#1d2430">primary + standby (Patroni), or RDS Multi-AZ</tspan></text>
+</svg>

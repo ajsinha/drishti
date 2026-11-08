@@ -79,9 +79,30 @@ def test_every_picture_any_guide_shows_exists_and_is_a_real_image():
             f = doc.parent / rel
             count += 1
             assert f.is_file(), f"{doc.relative_to(ROOT)} shows {rel}, which is missing: drishti-console/.venv/bin/python tools/docs/screenshots.py --guide <guide>"
+            if f.suffix == ".svg":
+                assert_a_self_contained_diagram(f)
+                continue
             head = f.read_bytes()[:4]
             assert (head[:3] == b"\xff\xd8\xff" or head == b"\x89PNG") and f.stat().st_size > 2000, rel
     assert count >= 25
+
+
+def assert_a_self_contained_diagram(f: Path) -> None:
+    """A drawn diagram (docs/guides/img/cluster/*.svg): an SVG that scales (viewBox), names itself (title), and loads nothing from elsewhere
+    (no link, script, external font or image), so the help centre, GitHub and the PDF show it the same."""
+    text = f.read_text(encoding="utf-8")
+    assert text.startswith("<?xml") and "Copyright (c)" in text and '<svg xmlns="http://www.w3.org/2000/svg"' in text, f"{f.name}: header and svg"
+    assert re.search(r'<svg[^>]*\bviewBox="0 0 \d+ \d+"', text) and "<title" in text, f"{f.name}: viewBox and title"
+    for bad in ("<script", "<image", "<foreignObject", "@import", "@font-face", "href=\"http", "xlink:href", "url(http"):
+        assert bad not in text, f"{f.name} loads or runs something: {bad}"
+
+
+def test_the_cluster_guide_draws_its_diagrams_as_pictures():
+    """The cluster guide's architecture pictures are SVG diagrams in docs/guides/img/cluster/, one home each: no box-drawing diagram left."""
+    guide = DOCS / "guides" / "CLUSTER_GUIDE.md"
+    shown = [r for r in pictures_of(guide) if r.startswith("img/cluster/")]
+    assert len(shown) >= 11 and all(r.endswith(".svg") for r in shown), shown
+    assert not re.search(r"[┌┐┘┬┴▼▲]", guide.read_text()), "a box-drawing diagram is back in CLUSTER_GUIDE.md: draw it in docs/guides/img/cluster/"
 
 
 def test_no_generated_picture_is_left_over_that_no_guide_shows():
