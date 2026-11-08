@@ -4277,7 +4277,7 @@ A field of a form schema.
 | `[name]` | `string` | a hidden input of this name carries the value in a plain form |
 | `[disabled=false]` | `boolean` |  |
 | `[renderOption]` | `function(Object, HTMLElement): void` | draws an option's content |
-| `[native=false]` | `boolean` | a change also fires input and change on the host, as a native select's did (a page's own listeners and delegated handlers keep working); &lt;drishti-select&gt; in a page's markup and selectElement turn it on |
+| `[native=false]` | `boolean` | a change also fires input and change on the host, as a native select's did (a page's own listeners and delegated handlers keep working); selectElement turns it on, and so does the attribute native on a page's &lt;drishti-select&gt; |
 
 #### `TimePickerOptions` : `Object`
 

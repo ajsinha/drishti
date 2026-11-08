@@ -37,7 +37,7 @@ import { InputBase, Listbox, Popover, normalizeOptions, searchOptions, uid } fro
  * @property {boolean} [disabled=false]
  * @property {function(Object, HTMLElement): void} [renderOption] draws an option's content
  * @property {boolean} [native=false] a change also fires input and change on the host, as a native select's did (a page's own listeners
- *   and delegated handlers keep working); <drishti-select> in a page's markup and selectElement turn it on
+ *   and delegated handlers keep working); selectElement turns it on, and so does the attribute native on a page's <drishti-select>
  */
 
 const TYPE_AHEAD_MS = 500;

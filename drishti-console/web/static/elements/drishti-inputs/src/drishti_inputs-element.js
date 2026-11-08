@@ -61,7 +61,7 @@ export function defineInputElements(registry, win) {
     const Cls = INPUT_ELEMENTS[name];
     registry.define(name, class extends win.HTMLElement {
       connectedCallback() { if (!this.component && (this.attributes.length > 1 || this.hasAttribute('options-json') || Cls === DatePicker || Cls === CodeEditor || Cls === Select)) { this.make(fromAttributes(this)); } }
-      make(o) { if (this.component) { this.component.destroy(); } this.component = new Cls(this, Cls === Select ? Object.assign({ native: true }, o) : o); }   // a page's select fires change as a native one did
+      make(o) { if (this.component) { this.component.destroy(); } this.component = new Cls(this, Cls === Select && this.hasAttribute('native') ? Object.assign({ native: true }, o) : o); }   // <drishti-select native>: a pick fires change as a native select's did
       set options(o) { this.make(Object.assign(fromAttributes(this), o)); }
       get options() { return this.component ? this.component.o : null; }
       get value() { return this.component && this.component.getValue ? this.component.getValue() : null; }

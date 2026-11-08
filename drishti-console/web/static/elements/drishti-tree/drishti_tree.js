@@ -850,8 +850,7 @@
         const modes = (o.modes || TREE_MODES).filter((m) => TREE_MODES.indexOf(m) >= 0);
         this.modeSeg = modes.length > 1 ? h(doc, 'span', { cls: 'dt-seg', attrs: { role: 'group', 'aria-label': 'Mode' } }, modes.map((m) => h(doc, 'button', { text: MODE_NAMES[m], attrs: { type: 'button', 'aria-pressed': 'false' }, data: { mode: m } }))) : null;
         const add = this.model.measures.filter((m) => m.additive !== false);
-        this.sizeSel = selectElement(doc, { label: 'Size by (an additive measure)', search: false, options: add.map((m) => ({ value: m.field, label: m.label })),   // drishti-inputs' Select
-          value: this.sizeBy && add.some((m) => m.field === this.sizeBy) ? this.sizeBy : undefined }, { class: 'dt-pick', 'data-ctl': 'size' });
+        this.sizeSel = selectElement(doc, { label: 'Size by (an additive measure)', search: false, options: add.map((m) => ({ value: m.field, label: m.label })), value: add.some((m) => m.field === this.sizeBy) ? this.sizeBy : undefined }, { class: 'dt-pick', 'data-ctl': 'size' });
         this.sizeBox = h(doc, 'span', { cls: 'dt-sizebox' }, [h(doc, 'span', { cls: 'dt-lbl', text: 'size' }), this.sizeSel]);
         this.editBtn = o.editable ? b('edit', '✎ Edit (propose)', 'Re-parent nodes: the moves become one proposal for review') : null;
         this.altBtn = b('alt', '▦', 'The figures as a table');

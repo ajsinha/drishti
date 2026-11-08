@@ -39,7 +39,7 @@
   <p><button type="button" class="btn-pill btn-ghost" data-refresh-now hidden><i class="bi bi-arrow-repeat" aria-hidden="true"></i> Refresh now</button>
     <span class="text-muted-d" data-refresh-msg role="status" aria-live="polite"></span></p>
   <form class="bi-form bi-inline" data-set-schedule hidden aria-label="Set a refresh schedule">
-    <label>Refresh<drishti-select name="kind" class="studio-select" label="Refresh"><option value="daily">Every day at</option><option value="weekdays">Weekdays at</option><option value="business-days">Business days at</option><option value="hourly">Every hour</option><option value="after-load">After a data load finishes</option></drishti-select></label>
+    <label>Refresh<drishti-select native name="kind" class="studio-select" label="Refresh"><option value="daily">Every day at</option><option value="weekdays">Weekdays at</option><option value="business-days">Business days at</option><option value="hourly">Every hour</option><option value="after-load">After a data load finishes</option></drishti-select></label>
     <label>Time<input name="time" type="time" value="06:00" class="studio-in"></label>
     <button type="submit" class="btn-pill btn-accent">Set a schedule</button>
     <p class="text-muted-d">Writes <code>refresh:</code> into a new saved state of the draft (comments and order kept); publish it to start the schedule.</p></form>
@@ -50,7 +50,7 @@
     <thead><tr><th scope="col">When</th><th scope="col">Started by</th><th scope="col">Result</th><th scope="col">Date</th><th scope="col">Rows</th><th scope="col">Took</th><th scope="col">Error</th></tr></thead><tbody></tbody></table></div></section>
 <section class="bi-sec" aria-labelledby="dTests" data-tests-sec hidden><h2 id="dTests">Expected values</h2>
   <p class="text-muted-d">Tests the dataset declares (<code>tests:</code>), run as you or a role you hold.</p>
-  <p><label>Run as <drishti-select class="studio-select" data-tests-role label="Run the tests as a role"></drishti-select></label>
+  <p><label>Run as <drishti-select native class="studio-select" data-tests-role label="Run the tests as a role"></drishti-select></label>
     <button type="button" class="btn-pill btn-ghost" data-tests-run><i class="bi bi-clipboard-check" aria-hidden="true"></i> Run the tests</button>
     <span class="text-muted-d" data-tests-sum role="status" aria-live="polite"></span></p>
   <div class="tbl-wrap"><table class="tbl bi-tbl" data-tests-table data-plain hidden><caption class="visually-hidden">Expected values</caption>

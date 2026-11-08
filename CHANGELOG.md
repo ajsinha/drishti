@@ -318,7 +318,7 @@
   export scope, the notebook, the transform, environments, history's Compare, the runs drawer's forms, the parameter slicers, the
   statement settings, the drill and perspective pickers and the relative-date slicer (`B.select` in code, `<drishti-select>` in the
   templates; *Also add* a `<drishti-multiselect>`); the renderer's harness and the gallery's option panel too. New in drishti-inputs:
-  `selectElement(doc, options, attrs)`; a page's `<drishti-select>` fires `change` and `input` for a pick as a native select did, its
+  `selectElement(doc, options, attrs)`; such a Select, and a page's `<drishti-select native>`, fires `change` and `input` for a pick as a native select did; the element's
   `value`, `disabled` and `focus()` reach the control, and a named one's field reads and sets it (`form.elements.<name>.value`). The guard's
   allow-list: 69 files and 149 selects → 39 and 78 (and to none with the screens below). Names, `data-*` hooks and the saved YAML are unchanged.
 - **The screens outside BI on `Select`** ([ELEMENTS.md section 15](docs/architecture/ELEMENTS.md#15-build-checklist)): every native

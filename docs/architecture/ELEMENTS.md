@@ -547,9 +547,9 @@ library with its module: an unlicensed module's library is not served, its kinds
     `search: true`) has a search field on top that holds the focus. In markup its options may be `<option>` and `<optgroup>` children
     (`selected` marks the value), so a template swaps `<select>` for `<drishti-select>`; `name` makes a hidden input for a plain form;
     `setOptions(list, value)` refills it, `setDisabled`, `drishti:change` with `{value, option}` (a value set by code emits nothing).
-    Behaving as the native select it replaces: a `<drishti-select>` of a page's markup, and one made in code with
-    **`selectElement(doc, options, attrs)`** (the element with its component, the attributes on it: an id, the `data-*` hooks, a name),
-    fire `change` and `input` on the element for a pick (`native: true`), so a page's own and delegated listeners keep working; the
+    Behaving as the native select it replaces: one made in code with **`selectElement(doc, options, attrs)`** (the element with its
+    component, the attributes on it: an id, the `data-*` hooks, a name), and a `<drishti-select native>` of a page's markup (BI's
+    templates), fire `change` and `input` on the element for a pick (`native: true`; without it a page hears `drishti:change`), so a page's own and delegated listeners keep working; the
     element's `value`, `disabled` and `focus()` reach the component; and a named one's field is the form's (`form.elements.kind.value`
     reads the value and, set, picks that option; the hidden input's value attribute is what the form submits). Why one function rather
     than an adapter in drishti-core that upgrades when drishti-inputs is present: a fallback would be a native select again, which the
