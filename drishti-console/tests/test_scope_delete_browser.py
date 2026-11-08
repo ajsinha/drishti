@@ -27,6 +27,7 @@ from conftest import CONSOLE, FakeBackend
 sync_api = pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install playwright)")
 
 from test_live_tabs_browser import _free_port  # noqa: E402
+import engine_fakes  # noqa: E402
 
 
 def _baskets():
@@ -44,6 +45,8 @@ class BasketBackend(FakeBackend):
         super().__init__()
         self.kept = _baskets()
         self.deleted = []
+
+    engine = engine_fakes.method
 
     async def var(self, method, path, ident, /, body=None, raw=False, accept="", **params):
         if path == "/baskets":

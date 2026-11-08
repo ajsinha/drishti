@@ -13,17 +13,19 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Forms from a schema, the model (tested in Node): a JSON-schema-like description of the fields (string, number, integer, boolean, date,
-   date range, enum, array, object), their defaults, the conditions that show a field (when: another field equals, is in, is more than,
+/* Forms from a schema, the model (tested in Node): a JSON-schema-like description of the fields (string, number, integer, money, boolean,
+   date, time, date and time, date range, enum, array, object), their defaults, the conditions that show a field (when: another field equals, is in, is more than,
    is true; all, any, not), and validation with messages in words ("Notional must be at least 1,000", "Pick at most 3 desks", "Maturity
    must be after the trade date"). A field that is hidden is neither validated nor part of the value. Changes between two values (the
    four-eyes proposal's diff) are listed by path. Paths read "legs[1].notional". */
 import { formatNumber, formatDate, isoDate, parseNumberText } from '../../drishti-core/src/drishti_index.js';
+import { parseTime, parseDateTime } from './drishti_time-picker.js';
 
 /**
  * A field of a form schema.
  * @typedef {Object} FieldSchema
- * @property {('string'|'number'|'integer'|'boolean'|'date'|'daterange'|'array'|'object')} type
+ * @property {('string'|'number'|'integer'|'money'|'boolean'|'date'|'time'|'datetime'|'daterange'|'array'|'object')} type money: a number
+ *   shown grouped with its currency; time: "HH:MM"; datetime: "YYYY-MM-DDTHH:MM" in its timeZone
  * @property {string} [title] the label (default: the key in words)
  * @property {string} [description] help under the field
  * @property {*} [default]
@@ -47,10 +49,27 @@ import { formatNumber, formatDate, isoDate, parseNumberText } from '../../drisht
  * @property {Object<string, FieldSchema>} [properties] object: its fields
  * @property {string[]} [required] object: the keys that must have a value
  * @property {string[]} [order] object: the order of its fields (default: as written)
- * @property {string} [widget] how it is drawn: text, textarea, select, radio, checkbox, switch, multiselect, combobox, tree, date, daterange, code
+ * @property {string} [widget] how it is drawn: text, textarea, select, radio, checkbox, switch, multiselect, combobox, tree, date, daterange, code, formula (one line, options.mode and options.complete)
  * @property {Object} [options] the widget's options (a combobox's source, a tree's nodes, a code editor's mode)
  * @property {boolean} [readOnly]
  * @property {string} [placeholder]
+ * @property {string} [currency] money: its currency code (USD), or the key of the field that holds it (a sibling, or "/path")
+ * @property {string} [timeZone] datetime: the zone named beside it
+ * @property {number} [stepMinutes] time, datetime: the minutes between the times offered (default 15)
+ * @property {string} [name] the name a surrounding server form submits the value under (hidden inputs; a native control carries it)
+ * @property {*} [nameValue] boolean with a name: what is submitted when it is on (default "true")
+ * @property {(string|Object<string, string>)} [hook] data attributes on the field's control: "format-title" is data-format-title="";
+ *   an object sets each attribute as given (the hooks tutorials and tests find a field by)
+ * @property {string} [step] the step (of the form's steps) the field belongs to
+ * @property {string} [dependsOn] enum lists: the field whose chosen values narrow the values offered (see parents)
+ * @property {Object<string, string[]>} [parents] enum lists: for each value, the values of dependsOn it goes with
+ * @property {string} [optionHook] checkboxes and radios: each option's control gets data-<optionHook>="<value>"
+ * @property {boolean} [allowEmpty] select: false leaves out the empty choice
+ * @property {string} [emptyLabel] select: the words of the empty choice
+ * @property {boolean} [lazy] text and numbers: the value changes when the field is left or Enter is pressed, not at each key
+ * @property {boolean} [noLabel] a custom widget that draws its own label
+ * @property {string} [addLabel] an array of objects: the words of its Add button
+ * @property {string} [parseMessage] the words when typed text does not read as the field's type (default: the form's own)
  */
 
 /**
@@ -183,6 +202,7 @@ export function fieldProblem(field, v, c) {
   if (field.enum && field.type !== 'array' && field.enum.indexOf(v) < 0) { return L + ' must be one of ' + listWords(field.enum.map((x) => enumLabel(field, x))); }
   switch (field.type) {
     case 'integer':
+    case 'money':
     case 'number': {
       if (typeof v !== 'number' || isNaN(v)) { return L + ' must be a number'; }
       if (field.type === 'integer' && !Number.isInteger(v)) { return L + ' must be a whole number'; }
@@ -213,6 +233,25 @@ export function fieldProblem(field, v, c) {
       if (field.maximum && d > field.maximum) { return L + ' must be on or before ' + formatDate(field.maximum, 'd MMM yyyy'); }
       return (field.after && cmp(field.after, true)) || (field.before && cmp(field.before, false)) || null;
     }
+    case 'time': {
+      const t = parseTime(v);
+      if (!t) { return L + ' must be a time such as 14:05'; }
+      if (field.minimum && t < field.minimum) { return L + ' must be at or after ' + field.minimum; }
+      if (field.maximum && t > field.maximum) { return L + ' must be at or before ' + field.maximum; }
+      return null;
+    }
+    case 'datetime': {
+      const t = parseDateTime(v);
+      if (!t) { return L + ' must be a date and a time such as 2026-12-31 17:00'; }
+      if (field.minimum && t < field.minimum) { return L + ' must be on or after ' + field.minimum.replace('T', ' '); }
+      if (field.maximum && t > field.maximum) { return L + ' must be on or before ' + field.maximum.replace('T', ' '); }
+      for (const [other, after] of [[field.after, true], [field.before, false]]) {
+        if (!other) { continue; }
+        const p = sibling(c.path, other), o = parseDateTime(getPath(c.values, p)) || (isoDate(getPath(c.values, p)) ? isoDate(getPath(c.values, p)) + 'T00:00' : null);
+        if (o && (after ? t <= o : t >= o)) { return L + ' must be ' + (after ? 'after ' : 'before ') + (c.labelOf ? c.labelOf(p) : words(other)).toLowerCase() + ' (' + o.replace('T', ' ') + ')'; }
+      }
+      return null;
+    }
     case 'daterange': return v.from && v.to && v.from > v.to ? L + ': the start must not be after the end' : null;
     case 'array': {
       const n = v.length, what = L.toLowerCase();
@@ -224,6 +263,36 @@ export function fieldProblem(field, v, c) {
     }
     default: return null;
   }
+}
+
+/**
+ * A money field's currency: its fixed code, or what the field it names holds.
+ * @param {FieldSchema} field
+ * @param {Object} values the whole form's value
+ * @param {string} path the money field's path
+ * @returns {string}
+ */
+export function currencyOf(field, values, path) {
+  const c = field.currency || '';
+  if (/^[A-Z]{3}$/.test(c)) { return c; }
+  const v = c ? getPath(values, sibling(path, c)) : null;
+  return v ? String(v) : '';
+}
+
+/**
+ * The values an enum list offers now: those whose parents include a value chosen in the field it depends on (all when none is chosen).
+ * @param {FieldSchema} field
+ * @param {Object} values
+ * @param {string} path
+ * @returns {Array}
+ */
+export function offeredValues(field, values, path) {
+  const list = field.enum || (field.items && field.items.enum) || [];
+  if (!field.dependsOn || !field.parents) { return list; }
+  const chosen = getPath(values, sibling(path, field.dependsOn));
+  const picked = Array.isArray(chosen) ? chosen.map(String) : chosen === undefined || chosen === null || chosen === '' ? [] : [String(chosen)];
+  if (!picked.length) { return list; }
+  return list.filter((v) => (field.parents[v] || []).some((p) => picked.indexOf(String(p)) >= 0));
 }
 
 /**
@@ -305,12 +374,14 @@ export function changes(before, after, base) {
 export function parseField(field, text, label) {
   const t = String(text === undefined || text === null ? '' : text).trim(), L = label || field.title || 'The value';
   if (!t) { return { value: undefined, error: null }; }
-  if (field.type === 'number' || field.type === 'integer') {
+  if (field.type === 'number' || field.type === 'integer' || field.type === 'money') {
     const v = parseNumberText(t);
     if (v === null) { return { value: undefined, error: L + ' must be a number, such as 1,250,000 or 1.25m' }; }
     return { value: v, error: null };
   }
   if (field.type === 'boolean') { return { value: /^(true|yes|y|1|on)$/i.test(t), error: null }; }
   if (field.type === 'date') { const d = isoDate(t); return d ? { value: d, error: null } : { value: undefined, error: L + ' must be a date such as 2026-11-06' }; }
+  if (field.type === 'time') { const x = parseTime(t); return x ? { value: x, error: null } : { value: undefined, error: L + ' must be a time such as 14:05' }; }
+  if (field.type === 'datetime') { const x = parseDateTime(t); return x ? { value: x, error: null } : { value: undefined, error: L + ' must be a date and a time such as 2026-12-31 17:00' }; }
   return { value: t, error: null };
 }

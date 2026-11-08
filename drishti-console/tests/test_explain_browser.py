@@ -122,14 +122,14 @@ def test_old_against_new_on_the_demo_data(stack):
         # Why it moved: the engine's answer; against the removed endpoints when this server still has them (a parity build)
         new = explain(stack, kind="var", scope=scope, part="why")["why"]
         assert new["available"] and new["addsUp"]
-        status, old = get(stack.server + "/api/v1/var/explain?" + urllib.parse.urlencode({"scope": scope}))
+        status, old = get(stack.server + "/api/v1/risk/var/explain?" + urllib.parse.urlencode({"scope": scope}))
         if status == 200:
             assert without(new["answer"], "computeMs") == without(old, "computeMs"), scope
-            status, mr = get(stack.server + "/api/v1/pivot/mr/explain?" + urllib.parse.urlencode({"scope": scope}))
+            status, mr = get(stack.server + "/api/v1/risk/mr/explain?" + urllib.parse.urlencode({"scope": scope}))
             if status == 200:
                 assert without(new["answer"], "computeMs") == without(mr, "computeMs", "factorOverlay"), scope
             m_new = explain(stack, kind="var", scope=scope, part="why", view="matrix")["why"]["answer"]["matrix"]
-            status, m_old = get(stack.server + "/api/v1/var/explain/matrix?" + urllib.parse.urlencode({"scope": scope}))
+            status, m_old = get(stack.server + "/api/v1/risk/var/explain/matrix?" + urllib.parse.urlencode({"scope": scope}))
             assert status == 200 and m_new == m_old, scope
         else:                                                                  # removed: the answer still ends at each date's VaR
             a = new["answer"]

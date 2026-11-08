@@ -330,7 +330,7 @@ def render_estimate(e: dict, say) -> None:
 
 
 def matrix_csv(m: dict) -> str:
-    """The matrix as CSV, as the console's export writes it (routes/smat_routes.py to_csv): a row per scenario, a column per date, then
+    """The matrix as CSV, as the console's export writes it (plugins/banking/routes/smat_routes.py to_csv): a row per scenario, a column per date, then
     VaR, ES, base PV, the source and the gap of each date."""
     import csv
     import io

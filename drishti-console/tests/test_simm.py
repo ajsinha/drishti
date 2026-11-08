@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""ISDA SIMM in the console (routes/simm_routes.py; docs/guides/SIMM_GUIDE.md sections 7 and 8): SIMM [<netting set> | CPTY <id>], PLAY SIMM
+"""ISDA SIMM in the console (plugins/banking/routes/simm_routes.py; docs/guides/SIMM_GUIDE.md sections 7 and 8): SIMM [<netting set> | CPTY <id>], PLAY SIMM
 <netting set> and PLAY SIMM RUN <id>, the pages as shells, every figure read from the server as the person with the switches, side and
 overrides passed through, the recipe saved and replayed, the workbook streamed. The figures themselves are the engine's tests
 (SimmHandBuiltCasesTest, SimmPlaygroundWorkbookTest, SimmApiTest)."""
@@ -20,9 +20,10 @@ from __future__ import annotations
 
 import pytest
 
-from routes.play_routes import play_command
-from routes.simm_routes import play_simm_command, simm_command
+from plugins.banking.routes.play_routes import play_command
+from plugins.banking.routes.simm_routes import play_simm_command, simm_command
 from test_play import RISK_ABOUT, _app, _Upstream
+import engine_fakes  # noqa: E402
 
 ANSWER = {"SCOPE": "EXAMPLE", "KIND": "EXAMPLE", "NETTING_SET": None, "SIMM_VERSION": "TOY-1", "IM_COLLECT": 1, "IM_POST": 1, "BY_PRODUCT_CLASS": [],
           "BY_RISK_CLASS": [], "REGULATORY": False}
@@ -61,7 +62,7 @@ def test_the_pages_and_the_api_are_read_as_the_person(backend, monkeypatch):
         sent.append(("STREAM", path, getattr(ident, "user", None), {}))
         return _Upstream(b"PK\x03\x04workbook")
 
-    monkeypatch.setattr(backend, "simm", simm, raising=False)
+    engine_fakes.patch(monkeypatch, backend, simm=simm)
     monkeypatch.setattr(backend, "open_download", open_download, raising=False)
     app, c = _app(backend, monkeypatch, RISK_ABOUT)
     r = c.get("/go", params={"q": "SIMM NS-ALDERSHOT-LDN <GO>"}, follow_redirects=False)
@@ -84,4 +85,4 @@ def test_the_pages_and_the_api_are_read_as_the_person(backend, monkeypatch):
     assert c.get("/api/simm/recipes/FR-AB12CD34-1").status_code == 400
     x = c.get("/api/simm/export.xlsx", params={"nettingSet": "EXAMPLE", "side": "post", "override": ["InterestRate.across-currencies=0.4"]})
     assert x.status_code == 200 and x.content.startswith(b"PK")
-    assert sent[-1][0] == "STREAM" and sent[-1][1].startswith("/simm/playground.xlsx?") and "side=post" in sent[-1][1] and sent[-1][1].count("override=") == 1
+    assert sent[-1][0] == "STREAM" and sent[-1][1].startswith("/risk/simm/playground.xlsx?") and "side=post" in sent[-1][1] and sent[-1][1].count("override=") == 1

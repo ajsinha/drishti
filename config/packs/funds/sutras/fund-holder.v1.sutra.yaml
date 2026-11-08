@@ -48,6 +48,6 @@ panels:
     with:
       title: About this page
       area: right
-      text: "Public data (U.S. public domain): every holding of the company in the pack's 200 funds, as each filed it on Form N-PORT for its own report date, shares and value as filed. The share of the company's shares compares the shares held with those outstanding on its latest 10-K cover (us-equities); it is left empty where the filed count cannot be compared. Source: tools/publicdata/funds.py."
+      text: "Public data (U.S. public domain): every holding of the company in the pack's 200 funds, as each filed it on Form N-PORT for its own report date, shares and value as filed. The share of the company's shares compares the shares held with those outstanding on its latest 10-K cover (us-equities); it is left empty where the filed count cannot be compared. Source: drishti.py feed run funds."
   - { use: data-provenance@1 }
 keys: { F5: "link($.COMPANY, 'us-company', $.NAME)", F9: raw }

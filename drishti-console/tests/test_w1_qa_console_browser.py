@@ -88,6 +88,7 @@ def test_subscribe_builds_its_schedule_from_choices(browser):
     page.select_option("[data-when-kind]", "weekly")
     page.select_option("[data-when-day]", "fri")
     page.fill("[data-when-time]", "18:00")
+    page.press("[data-when-time]", "Enter")                                             # drishti-inputs' time picker keeps a time on Enter or on leaving it
     assert page.input_value('input[name="schedule"]') == "weekly fri 18:00 business"
     page.select_option("[data-when-kind]", "month-end")
     assert page.input_value('input[name="schedule"]') == "monthly last 18:00 business"

@@ -117,7 +117,7 @@ def test_mobile_ready(client):
     assert m.status_code == 200 and '"start_url": "/t"' in m.text
     css = client.get("/static/css/drishti_terminal.css").text
     assert "@media (max-width: 640px)" in css and "safe-area-inset-bottom" in css and "font-size: var(--d-fs-16)" in css   # 16px: iOS does not zoom
-    assert "--d-fs-16: 1rem;" in client.get("/static/css/drishti_tokens.css").text
+    assert "--d-fs-16: 16px;" in client.get("/static/css/drishti_tokens.css").text
 
 
 SUTRA_GUIDE = Path(__file__).resolve().parents[2] / "docs" / "guides" / "SUTRA_DEVELOPER_GUIDE.md"
@@ -230,7 +230,8 @@ def test_the_help_centre_has_eight_sections_and_internal_and_about_sixty_pages()
     # 2.9.11.b's data inbox, custom functions and MR cube tutorials raised the ceiling to 70; 2.9.11.c's lake and Flight pages to 72.
     # 73: plus Schema to pack (docs/guides/SCHEMA_TO_PACK_GUIDE.md, 2.9.11.c), split from the data guide when it passed 1,500 lines.
     # 75: plus virtual tables' two (the tables guide and tutorial 44, 2.9.11.d), the same rule (a feature's guide and tutorial).
-    assert 30 <= total <= 75, total
+    # 77: plus the public sector's two (the Public sector guide and tutorial 46, 2.9.11.g), the same rule (a domain's guide and tutorial).
+    assert 30 <= total <= 77, total
 
 
 def test_every_old_help_address_still_opens_something(client):

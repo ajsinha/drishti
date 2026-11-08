@@ -17,8 +17,9 @@
 # Domain modules: the boundary between the core and banking
 
 **Status: phase 1 (the backend) built in 2.9.11.f: the Java modules split, the cycles J1 to J6 broken, the API under `/api/v1/risk`, the
-packs naming their domain, the rules as tests (section 8 says what is built and what phase 2 must do). The console (C1 to C7), Help and the
-JavaScript by module are phase 2.** The survey of sections 1 and 2 was taken on develop `b3f2af7c2` on 2026-11-07. The principle is the product owner's
+packs naming their domain, the rules as tests. Phase 2's first half built: the console asks the server for modules and functions on every
+door, static assets by module and lens, the console cycles C1 to C7 broken in place, the console on `/api/v1/risk` (section 8). The moves
+(screens into the plugin folder, packs into domain folders, editions folded) are phase 2's second half.** The survey of sections 1 and 2 was taken on develop `b3f2af7c2` on 2026-11-07. The principle is the product owner's
 ([IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md), the 2.9.11.e row and *Domains are modules*): the core knows no industry; each domain
 is a set of modules owning its compute, services and API, console screens and assets, Help, tutorials and packs; what a person sees
 follows role and lens; licences name modules. This document is the boundary list, the target layout, the dependency rules, the cycles
@@ -30,7 +31,7 @@ that exist today and the order of the move. The native libraries' module, which 
 |---|---|---|
 | **Core** | everything generic: entities, packs and the pack loader, Sutras and Rachana, Pivot, BI, tables and models, lakes, loaders and the data inbox, connectors, search, Explain, approvals and changes, collaboration, security, the cluster, Flight, AI, the console shell, the generic compute (Python workers, the vector store, parallel and many-set sums, sharding, fan-out), `drishti-native` | it would serve a hospital, a utility or a ministry unchanged |
 | **Banking** (the risk and banking domain) | VaR and ES (historical, parametric), the VaR playground content, backtesting, regulatory VaR reporting, the scenario matrix, stress windows, baskets; exposure and CCR (PFE, EEPE, what-if); FRTB-SA and sensitivities; ISDA SIMM; SA-CCR and CVA (planned); the MR and CCR cubes; the risk, trading, market and CRO lenses; the official risk results; equity analytics (beta, correlation); the trading, market-data, market-risk and counterparty-risk packs | it names a trade, a position, a risk factor, a desk or a regulation |
-| **Economy** (no code of its own: a content module shipped with the core) | the world-economy and news-and-markets packs (and the public-sector data to come), the world lens and its landing, the IMF-based BI reports | public economic and public-sector data |
+| **Economy** (no code of its own: a content module shipped with the core) | the world-economy and news-and-markets packs and the public sector's six (world-development, central-banks, national-statistics, oecd, official-news, gdelt-events), the World and Public sector lenses, the world landing, the IMF-based BI reports | public economic and public-sector data |
 | **Capital markets** (no code of its own yet: a content module shipped with the core; the owner's choice, 2026-11-07) | the us-equities and funds packs; the market data's functions (curves, FX, vols, equities, bonds: `CRV` ... `EQV`); the market lens with banking | listed companies, funds, prices and market data |
 
 ## 2. The boundary list
@@ -97,7 +98,7 @@ Everything else (the shell, BI, Pivot, Build, designer, admin, Help, embed, phon
 
 | Kind | Banking | Economy |
 |---|---|---|
-| Packs (`config/packs`) | `trading`, `market-data` (its commands are capital markets' functions; the pack stays banking's while the engines read it), `market-risk`, `counterparty-risk` | economy: `world-economy`, `news-and-markets`; capital markets: `us-equities`, `funds`; core reference data: `gleif` (section 7, D6) |
+| Packs (`config/packs`) | `trading`, `market-data` (its commands are capital markets' functions; the pack stays banking's while the engines read it), `market-risk`, `counterparty-risk` | economy: `world-economy`, `news-and-markets`; capital markets: `us-equities`, `funds`; public sector: `world-development`, `central-banks`, `national-statistics`, `oecd`, `official-news`, `gdelt-events` (each filled daily by its feed); core reference data: `gleif` (section 7, D6) |
 | Engines (`config/engines`) | `var`, `exposure`, `frtb-sa`, `simm`, `mr-cube`, `sensitivities` (core: `dataload`, `flight`, `memory-lake`, `openblas`, `pivot`) | |
 | Editions | `risk`, `trading`, `market` | `world` |
 | Lakes | `lakes/var-official.yaml`, `lakes/ccr-official.yaml` | |
@@ -137,7 +138,7 @@ Rules 1 to 3 are enforced on the Java side by `ArchitectureRulesTest` (drishti-i
 guard and rule 4's string check come with phase 2:
 
 1. **The core never imports a domain**: no class outside `com.ash.drishti.banking..` depends on one inside it; no console module outside
-   the plugins/banking folder (planned) imports one inside it; no core template includes a banking template.
+   `drishti-console/plugins/banking` imports one inside it; no core template includes a banking template.
 2. **Domains never import each other**: `com.ash.drishti.banking..` and `com.ash.drishti.economy..` (and later `aml`) are disjoint.
 3. **Domains reach the core only through its SPIs** (section 5) and public services; a domain may use anything public of the core.
 4. **Strings count too**: the core names no banking word, engine id, source name or path in code (a static check over the core's
@@ -156,16 +157,18 @@ are broken (phase 1)**; C1 to C7 wait for the console plugin (phase 2):
 | J4 | `server.api.HealthController` | `var.Hierarchies.skipped()` | **built**: `server.api.HealthFigures`; the banking module contributes `hierarchiesSkipped` |
 | J5 | `packs.edition.Edition.WORDS` | the words `VAR`, `EXP` | **built**: `Edition.WORDS` holds the core's words; a module declares its functions in its manifest; an edition reads every word it names |
 | J6 | `packs.OfficialReaders` | the lake forms `var-official`, `ccr-official` | **built**: `OfficialReaders.OfficialResults`, found with the `ServiceLoader` (it runs before any bean); `BankingOfficialResults` (the `config/lakes/*-official.yaml` files themselves move in phase 2, step 8) |
-| C1 | `core/app.py` | includes nine banking routers by name | a plugin loader: `plugins/*/plugin.py` declares its routers, templates folder, static folder, words and Help; `app.py` includes what is enabled |
-| C2 | `routes/terminal_routes.py` | `redirect_for` and `retired_link` of eight banking route modules | a redirect registry the plugins fill |
-| C3 | `routes/api_routes.py` | `smat_command`, `play_command`, `var_suggestions` | a command-word registry (word → handler, suggestions) the plugins fill |
-| C4 | `routes/admin_routes.py` | `play_routes._stream` (the workbook streamer) | move `_stream` into a core module (`core/workbook_stream.py`); FRTB, SIMM and VaR playgrounds use it from there |
-| C5 | `routes/pivot_routes.py` | `mcube_routes.parse` (a preset's word) | the preset's parser registered with the pivot presets by the plugin |
-| C6 | `routes/edition_routes.py` | `core/trading_landing`, `core/market_landing` | landings registered by the plugin (lens → landing) |
-| C7 | `core/backend.py` | the VaR, FRTB, SIMM and exposure client methods | a generic `engine(path)` call in the core client; the typed helpers move into the plugin |
+| C1 | `core/app.py` | includes nine banking routers by name | **built**: `drishti-console/plugins/<module>/plugin.yaml` lists the module's routers (in order), the files that register its hooks and its other code; `core/plugins.py` `include(app)` includes them where the banking routers were; a module's routes answer 404 while it is off |
+| C2 | `routes/terminal_routes.py` | `redirect_for` and `retired_link` of eight banking route modules | **built**: `plugins.command(fn, needs=words)` and `plugins.retired(fn)`, filled by each banking route module; the terminal asks `plugins.redirect` and `plugins.retired_link` |
+| C3 | `core/search.py` (was `routes/api_routes.py`) | `smat_command`, `play_command`, `var_suggestions` | **built**: `plugins.type_ahead(pattern, fn, needs)` and `plugins.hints(...)`, filled by the SMAT, PLAY and VAR routes |
+| C4 | `routes/admin_routes.py` | `play_routes._stream` (the workbook streamer) | **built**: `core/workbook_stream.py` `stream(...)`, used by the VaR, FRTB-SA and SIMM playgrounds, why VaR moved and the capacity planner; `_stream` deleted |
+| C5 | `routes/pivot_routes.py` | `mcube_routes.parse` (a preset's word) | **built**: `plugins.preset("mr", parse)` by the MR cube's routes; the Pivot page draws the MR lens's style, script and panes from the plugin's `screens.pivot` (`screen_parts()`), naming none |
+| C6 | `routes/edition_routes.py` | `core/trading_landing`, `core/market_landing` | **built**: `plugins.landing_rule(fn)` (the trading role's landing, by `plugins/banking/routes/trading_routes.py`); the market landing's figures (`/api/home/market/{part}`) moved to the banking routes |
+| C7 | `core/backend.py` | the VaR, FRTB, SIMM and exposure client methods | **built**: the core client's one `engine(method, path, ...)` call; the typed calls are the module's (`drishti-console/plugins/banking/risk_api.py`: `var`, `exposure`, `risk`, `mr`, `path`) on `/api/v1/risk`; `core/facts.py` reads an engine step's API root from the engine catalogue |
 
-No banking code imports another domain (there is no other domain's code yet), and no core module beyond those above imports banking
-code. The generic packages that only *mention* VaR in their documentation (`compute.vector`, `compute.shard`, `server.shard`,
+No banking code imports another domain (there is no other domain's code yet), and no core module imports banking code: in Java
+`ArchitectureRulesTest`, in the console `tests/test_module_boundaries.py` (no core module imports a module's code, no core template
+includes a module's template or names its static files, no core script or style names a module's file). Admin → Saved VaR baskets
+(`/admin/scopes`) moved from the core's Admin routes to the VaR routes for the same rule. The generic packages that only *mention* VaR in their documentation (`compute.vector`, `compute.shard`, `server.shard`,
 `server.playground`) import nothing of banking; their comments are reworded when the documentation is rewritten (2.9.11.g).
 
 ## 6. The move, step by step (after 2.9.11.d merges)
@@ -220,27 +223,71 @@ the VaR and exposure lakes; package `com.ash.drishti.server.connectors` kept, in
 `TokenScopeGuardTest` beside the server's, over the banking API. Banking tests start the whole server through `BankingTestServer`
 (`@SpringBootConfiguration` importing `DrishtiApplication`), with the server's test helpers from its test jar.
 
-**Phase 2 must do:**
+**Phase 2, first half, as built (2.9.11.f, the console; additive, no screen moved):**
 
-1. **The console plugin** (the console's plugins/banking folder (planned)): C1 to C7 of section 5; the routes, templates, JavaScript, CSS and
-   landings moved; static assets served by module and lens; Help's `risk` section and the console's engine entries in the plugin.
-2. **The console asks the server** (`GET /api/v1/modules`): menus, the sitemap, the Build home, search, the command line and type-ahead
-   follow the modules on, the lenses offered and the functions on (and, from 2.9.11.i, allowed for the person).
-3. **The console to the new paths**: its client (`core/backend.py`) and routes still call the old prefixes (answered as the new ones);
-   the CLIs, the tools, the guides, tutorials and lenses already use `/api/v1/risk`. Then the aliases are deleted (next release).
-4. **The engine catalogue by module**: the banking engines' entries (`engines/catalogue.yaml` and the console's byte-equal copy) move into
-   the module; the banking token-scope entries of `application.yaml` with them (Spring lists cannot be split across files today: a
-   module-contributed scope list is needed).
-5. **Rule 4 (strings)**: the static check over the core's sources for the banking words, with an allow list that only shrinks (today: the
-   catalogue, `application.yaml`'s risk scopes, `CapacityController`'s planner rows by key, the console).
-6. **Packs by folder** (step 7): one folder per domain under config/packs (planned), the pack loader reading one level of domain folders; deferred
+- **The console asks the server** and nothing else. The public about answer lists the `modules` loaded at the server's start (polled with
+  the edition and the engines, kept per console app: `core/modules.py` `State`); `GET /api/v1/modules`, as the person, answers the modules
+  loaded and not (with why), the lenses open to them (with the modules and functions each needs) and `functions.off`: every function they
+  may not use (its module off, an administrator's switch, from 2.9.11.i not granted), each with its module and the words to say (*VRES is
+  not available to you: ask your administrator*). The console caches it per person (`ui.user_cache_seconds`, dropped on a change seen by
+  any worker) and sets it per request; an older server that says nothing hides nothing.
+- **Every door asks** `core/modules.py`: the routes (`core/edition_gate.py`: a module's pages and APIs 404), the words
+  (`Edition.word_on`, `command_shown`, `typed_shown`: menus' `word:` and `cmd:` requirements, the Build home's, the landings' chips),
+  menus, the Engines menu and the Admin strip (sitemap `domain:` tags on a menu, column or item, the innermost wins; `requires:
+  module:<id>`), search and the type-ahead (`modules.allowed`), the command line (`/go`: typed anyway, the refusal in words), Help (a
+  guide's module is its engine's, else its section's `domain:`; the section too), the Build home (a type's `domain`), keys (a module's
+  keys are registered only by its own pages, which are refused) and the static files.
+- **Each module's console part** is `drishti-console/plugins/<module>/plugin.yaml`: `routers` (included in order, C1), `registers` (files
+  that fill the hooks on import), `code` (its other Python modules), `engines` (their words, pages, menus, Help and tiles from the engine
+  catalogue), `words`, `paths`, `templates`, `assets` (globs under `web/static`) and `screens` (what it adds to a core screen while it is
+  on: the Pivot's MR lens). banking and economy have one; capitalmarkets has none (its functions are its packs' commands, which the
+  server stops offering).
+- **Static assets by module and lens**: a module's file is served only while the module is on for the person and, when they work in a
+  lens or an edition, only when that lens uses the module (the World lens gets no banking file; `core/app.py`
+  `_module_asset_refused`: only a module's file costs the session check). The Elements manifest carries each library's `module`
+  (drishti-risk: banking) and the loader refuses a library of a module the page does not list (`<meta name="drishti-modules">`, from the
+  person's modules and lens; `configure({modules})`; `refused(name)`), and every library that requires it.
+- **C1 to C7 broken in place** (section 5), and the console on `/api/v1/risk` (its client, the workbook streams, the MR cube's extras);
+  the old aliases stay one release for other clients.
+- **Tests**: `test_modules_off.py` (banking off: pages, APIs, menus, the Engines menu, the Admin strip, the command line, the type-ahead,
+  search, Help, the Build home, the files and the page's module list; banking on draws them again; an older server hides nothing;
+  capital markets off: its functions refused and not offered; single functions off (VRES, SMAT): their menu items, command, type-ahead and
+  pages gone, VAR kept; a lens without the module gets none of its files), `test_module_boundaries.py` (static: the plugins name files
+  that exist; the core imports no module's code; modules do not import each other; no core template includes a module template or names
+  its files; no core script or style names a module file), the Elements loader's refusal (`tests/elements/core.test.mjs`), and on the
+  server `BankingModuleOffTest` / `BankingModuleOnTest` (the console's answers: `/api/v1/modules` and `/public/about`).
+
+**Phase 2, second half, as built so far (2.9.11.f):**
+
+- **The console plugin's moves** (with `git mv`, so later merges follow): the banking routes (`drishti-console/plugins/banking/routes`: VaR, regulatory
+  VaR, SMAT, FRTB-SA, SIMM, the playgrounds, exposure and the pre-deal check, the MR cube, the trading and market landings' figures), its
+  landings' code and Build types (`trading_landing.py`, `market_landing.py`, `build_types.py`, `risk_api.py` in `drishti-console/plugins/banking`), its templates
+  (`drishti-console/plugins/banking/templates`, the same names: the console searches each module's folder after `web/templates`) and its scripts and
+  styles (`drishti-console/plugins/banking/static`, served at the same `/static/...` addresses after `web/static`, gated by module and lens); the World
+  landing into `drishti-console/plugins/economy`. drishti-risk stays an Elements library under `web/static/elements` (its manifest names its module).
+- **The engine catalogue by module**: the banking engines' entries are drishti-banking's `META-INF/drishti/engines.yaml` (read before the
+  core's `engines/catalogue.yaml`; absent when the module is not installed), their jar files `engines/<id>.yaml` are its own (imported
+  `optional:` by `application.yaml`), and the console's copies are `plugins/banking/engines.yaml` and `config/engines.yaml` (the core's),
+  byte for byte (`EngineCatalogueTest`, `BankingEngineCatalogueTest`). A core engine's soft use of a module's engine (the pivot uses VaR)
+  counts only where the module is installed.
+- **Rule 4 (strings)**: `tools/domain_strings.py` counts the banking names (command words, engine ids, connectors, API and console paths,
+  packages) in the core's code (Java outside the banking modules; the console's core, routes, scripts, styles and templates) against
+  `tools/domain_strings_allowed.yaml`, which only shrinks (a quick file check, `tools/test_domain_strings.py`).
+
+**Phase 2, second half, still to do:**
+
+1. **The banking token-scope entries** of `application.yaml` into the module (a module-contributed scope list: Spring lists cannot be
+   split across files today), and Help's `risk` section into the plugin.
+2. **Packs by folder** (step 7): one folder per domain under `config/packs` (core, banking, economy, capitalmarkets), the pack loader reading one level of domain folders; deferred
    because about 90 Python files (console and tools) join `config/packs/<id>` directly: a shared resolver first.
-7. **Banking configuration** (step 8): `config/lakes/{var,ccr}-official.yaml`, the banking BI reports, models, tables, fragments and
+3. **Banking configuration** (step 8): `config/lakes/{var,ccr}-official.yaml`, the banking BI reports, models, tables, fragments and
    notebooks into the banking folders.
-8. **The thin jar and the plugins folder** (step 9): `drishti-app` builds the core jar alone, and a site's `plugins/` (already on the
+4. **The thin jar and the plugins folder** (step 9): `drishti-app` builds the core jar alone, and a site's `plugins/` (already on the
    launcher's `loader.path` pattern) holds the module jars; the registry's *installed* follows the jar.
-9. **Editions folded** (and their pack lists by module: World without us-equities and funds, Market with them, once the World landing's cards and the console's tests move): the editions risk, trading, market and world are lenses now (the registry's lenses, the edition files still read
+5. **Editions folded** (and their pack lists by module: World without us-equities and funds, Market with them, once the World landing's cards and the console's tests move): the editions risk, trading, market and world are lenses now (the registry's lenses, the edition files still read
    for their home, cards and BI lists); folding the instance editions (`drishti.edition`, `var-engine`, `default-packs`, `features`) into
    modules and lenses, and removing `config/editions/`, needs the console's lens and home code (phase 2).
-10. **The drills**: one with the banking module absent (the core starts, serves BI, Pivot and the economy packs, and says *not
+6. **Python worker code**: none of banking's is left in `drishti-compute/src/main/python/drishti_compute` (the exposure what-if moved
+   to Java in 2.9.11.g); the tools' banking scripts move with the module.
+7. **The drills**: one with the banking module absent (the core starts, serves BI, Pivot and the economy packs, and says *not
     installed* for a banking word).

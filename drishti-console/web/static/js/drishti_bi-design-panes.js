@@ -328,25 +328,6 @@
     // ---- Format --------------------------------------------------------------------------------------------------------
     const fmt = q('[data-format]');
     function frow(label, input, hint) { return h('label', { class: 'bi-frow' }, h('span', { text: label }), input, hint ? h('small', { class: 'text-muted-d', text: hint }) : null); }
-    function textInput(value, onChange, attrs) {
-      const i = h('input', Object.assign({ type: 'text', class: 'studio-in', autocomplete: 'off', value: value || '' }, attrs || {}));
-      i.addEventListener('change', () => onChange(i.value));
-      return i;
-    }
-    /** A date: drishti-inputs' date picker over a date field (typed T-1 or 6 Nov 2026, or the calendar); onChange hears the ISO date. */
-    function dateInput(value, onChange, label) {
-      const i = textInput(value, onChange, { type: 'date', 'aria-label': label });
-      const box = h('span', { class: 'bi-date' }, i);
-      const I = window.Drishti.elements && window.Drishti.elements.inputs;
-      if (I) { I.upgradeDateInput(i); }
-      return box;
-    }
-    function checkbox(label, value, onChange, attrs) {
-      const c = h('input', Object.assign({ type: 'checkbox' }, attrs || {}));
-      c.checked = !!value;
-      c.addEventListener('change', () => onChange(c.checked));
-      return h('label', { class: 'bi-checkrow' }, c, ' ' + label);
-    }
     function selectInput(options, value, onChange, attrs) {
       const s = h('select', Object.assign({ class: 'studio-select' }, attrs || {}), options.map((o) => h('option', { value: o[0], text: o[1] })));
       s.value = value == null ? '' : value;
@@ -357,6 +338,19 @@
     const setFmt = (v, key, val) => D.change('Format ' + key, () => { v.format = v.format || {}; if (val === '' || val == null) { delete v.format[key]; } else { v.format[key] = val; } if (!Object.keys(v.format).length) { delete v.format; } });
     const openSections = {};                                   // section name -> open, kept while the designer is open (the pane is drawn again after every change)
     const setTop = (v, key, val) => D.change('Set ' + key, () => { if (val === '' || val == null) { delete v[key]; } else { v[key] = val; } });
+    const trimmed = (x) => String(x == null ? '' : x).trim();
+    /** A live Form of settings (drishti-inputs, B.formatPane.form): rows of [key, field, value, on change]. */
+    function settings(label, rows, cls) {
+      const fields = {}, value = {}, on = {};
+      rows = rows.filter(Boolean);
+      if (!rows.length) { return null; }
+      rows.forEach(([k, f, x, fn]) => { fields[k] = f; if (x !== undefined && x !== null && x !== '') { value[k] = x; } on[k] = fn; });
+      const host = h('div', { class: 'bi-fform' + (cls ? ' ' + cls : '') });
+      fmt.appendChild(host);
+      B.formatPane.form(host, { fields, value, on, label });
+      return host;
+    }
+    const text = (title, hook, more) => Object.assign({ type: 'string', title, lazy: true, hook }, more || {});
 
     function drawFormat() {
       B.clear(fmt);
@@ -364,28 +358,24 @@
       if (!v) { drawPageFormat(); return; }
       const group = (D.catalogue.visuals[v.type] || {}).group;
       const f = v.format || {};
-      fmt.appendChild(frow('Title', textInput(v.title, (x) => setTop(v, 'title', x.trim()), { 'data-format-title': '' })));
-      fmt.appendChild(frow('Alt text', textInput(v.alt, (x) => setTop(v, 'alt', x.trim()), { 'data-format-alt': '' }), 'What a screen reader says about it.'));
-      if (group !== 'static' && group !== 'board') {                                              // a visual may read a dataset of its own (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.10)
-        fmt.appendChild(frow('Dataset', textInput(v.dataset, (x) => setTop(v, 'dataset', x.trim()), { 'data-format-dataset': '', list: 'biDatasetNames', placeholder: D.model.dataset }),
-          'Blank: the report\'s dataset (' + (D.dataset && D.dataset.title ? D.dataset.title + ', ' : '') + D.model.dataset + '). Another dataset: its fields are written in the wells in the YAML tab, and a link (Report, below the page) connects its slicers to the others.'));
-      }
+      const pages = D.model.pages, bms = D.model.bookmarks || [], act = v.action || {};
+      settings('The visual', [
+        ['title', text('Title', 'data-format-title'), v.title, (x) => setTop(v, 'title', trimmed(x))],
+        ['alt', text('Alt text', 'data-format-alt', { description: 'What a screen reader says about it.' }), v.alt, (x) => setTop(v, 'alt', trimmed(x))],
+        group !== 'static' && group !== 'board' ? ['dataset', text('Dataset', { 'data-format-dataset': '', list: 'biDatasetNames' }, { placeholder: D.model.dataset,          // a visual may read a dataset of its own (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.10)
+          description: 'Blank: the report\'s dataset (' + (D.dataset && D.dataset.title ? D.dataset.title + ', ' : '') + D.model.dataset + '). Another dataset: its fields are written in the wells in the YAML tab, and a link (Report, below the page) connects its slicers to the others.' }),
+        v.dataset, (x) => setTop(v, 'dataset', trimmed(x))] : null
+      ]);
       if (v.type === 'tile') { D.tileEditor(fmt, v); }
-      if (v.type === 'text') {
-        const ta = h('textarea', { class: 'studio-in', rows: '3', 'data-format-text': '' });
-        ta.value = v.text || '';
-        ta.addEventListener('change', () => setTop(v, 'text', ta.value));
-        fmt.appendChild(frow('Text', ta));
-      }
-      if (v.type === 'image') { fmt.appendChild(frow('Image', textInput(v.src, (x) => setTop(v, 'src', x.trim()), { placeholder: '/static/... or a data:image/ URI' }))); }
-      if (v.type === 'button') {
-        fmt.appendChild(frow('Label', textInput(v.text, (x) => setTop(v, 'text', x))));
-        const act = v.action || {};
-        const pages = [['', 'none']].concat(D.model.pages.map((p) => [p.id, p.title]));
-        fmt.appendChild(frow('Go to page', selectInput(pages, act.navigate || '', (x) => D.change('Set the button', () => { v.action = x ? { navigate: x } : {}; }), { 'data-button-page': '' })));
-        const bms = [['', 'none']].concat((D.model.bookmarks || []).map((b) => [b.name, b.name]));
-        fmt.appendChild(frow('or apply bookmark', selectInput(bms, act.bookmark || '', (x) => D.change('Set the button', () => { v.action = x ? { bookmark: x } : {}; }))));
-      }
+      settings('The ' + v.type, [
+        v.type === 'text' ? ['text', { type: 'string', title: 'Text', widget: 'textarea', lazy: true, hook: 'data-format-text', options: { rows: 3 } }, v.text, (x) => setTop(v, 'text', x || '')] : null,
+        v.type === 'image' ? ['src', text('Image', 'data-format-src', { placeholder: '/static/... or a data:image/ URI' }), v.src, (x) => setTop(v, 'src', trimmed(x))] : null,
+        v.type === 'button' ? ['label', text('Label', 'data-button-label'), v.text, (x) => setTop(v, 'text', x || '')] : null,
+        v.type === 'button' ? ['navigate', { type: 'string', title: 'Go to page', enum: pages.map((x) => x.id), enumLabels: pages.map((x) => x.title), widget: 'select', emptyLabel: 'none', hook: 'data-button-page' }, act.navigate,
+          (x) => D.change('Set the button', () => { v.action = x ? { navigate: x } : {}; })] : null,
+        v.type === 'button' ? ['bookmark', { type: 'string', title: 'or apply bookmark', enum: bms.map((b) => b.name), widget: 'select', emptyLabel: 'none', hook: 'data-button-bookmark' }, act.bookmark,
+          (x) => D.change('Set the button', () => { v.action = x ? { bookmark: x } : {}; })] : null
+      ]);
       // the typed format of the visual's family (report schema v2): generated from GET /reports/format-schemas
       const gen = h('div', { class: 'bi-fgen', 'data-format-generated': v.type });
       fmt.appendChild(gen);
@@ -400,22 +390,22 @@
       if (group !== 'static' && group !== 'board') {
         if (group !== 'slicer') { D.tooltipPicker(fmt, v); }
         D.interactionsEditor(fmt, v);
-        fmt.appendChild(checkbox('Other visuals filter this one', v.interacts !== false, (x) => setTop(v, 'interacts', x ? '' : false), { 'data-format-interacts': '' }));
-        if (group !== 'slicer') {
-          fmt.appendChild(frow('Most rows', textInput(v.limit, (x) => setTop(v, 'limit', x === '' ? '' : Math.max(1, parseInt(x, 10) || 1)), { type: 'number', min: '1' })));
-          const fields = Object.keys(v.wells).reduce((a, k) => a.concat(v.wells[k]), []);
-          if (fields.length) {
-            fmt.appendChild(frow('Sort by', selectInput([['', 'default']].concat(fields.map((x) => [x, x])), v.sort ? v.sort.by : '', (x) => D.change('Sort', () => { if (x) { v.sort = { by: x, desc: v.sort ? v.sort.desc : D.kindOf(x) === 'measure' }; } else { delete v.sort; } }), { 'data-sort-by': '' })));
-            if (v.sort) { fmt.appendChild(checkbox('Descending', v.sort.desc, (x) => D.change('Sort', () => { v.sort.desc = x; }))); }
-          }
-        }
+        const fields = Object.keys(v.wells).reduce((a, k) => a.concat(v.wells[k]), []), slicer = group === 'slicer';
+        settings('How it behaves', [
+          ['interacts', { type: 'boolean', title: 'Other visuals filter this one', hook: 'data-format-interacts' }, v.interacts !== false, (x) => setTop(v, 'interacts', x ? '' : false)],
+          slicer ? null : ['limit', { type: 'integer', title: 'Most rows', minimum: 1, lazy: true, hook: 'data-format-limit' }, v.limit,
+            (x) => { if (x === undefined || !isNaN(x)) { setTop(v, 'limit', x === undefined ? '' : Math.max(1, Math.round(x) || 1)); } }],
+          slicer || !fields.length ? null : ['sortBy', { type: 'string', title: 'Sort by', enum: fields, widget: 'select', emptyLabel: 'default', hook: 'data-sort-by' }, v.sort ? v.sort.by : undefined,
+            (x) => D.change('Sort', () => { if (x) { v.sort = { by: x, desc: v.sort ? v.sort.desc : D.kindOf(x) === 'measure' }; } else { delete v.sort; } })],
+          slicer || !fields.length || !v.sort ? null : ['desc', { type: 'boolean', title: 'Descending', hook: 'data-sort-desc' }, !!v.sort.desc, (x) => D.change('Sort', () => { v.sort.desc = x; })]
+        ]);
       }
     }
 
     function drawPageFormat() {
       const p = D.page(), m = D.model;
       fmt.appendChild(h('h4', { class: 'bi-fhead', text: 'Page' }));
-      fmt.appendChild(frow('Page title', textInput(p.title, (x) => D.change('Rename the page', () => { p.title = x.trim() || p.title; }), { 'data-page-title': '' })));
+      settings('The page', [['title', text('Page title', 'data-page-title'), p.title, (x) => D.change('Rename the page', () => { p.title = trimmed(x) || p.title; })]]);
       const ix = m.pages.indexOf(p);
       const acts = h('div', { class: 'bi-actions' });
       const mk = (label, fn, dis, attr) => { const b = h('button', Object.assign({ type: 'button', class: 'btn-pill btn-ghost bi-small', disabled: !!dis }, attr || {}), label);
@@ -436,13 +426,18 @@
       fmt.appendChild(h('fieldset', { class: 'bi-fieldset' }, h('legend', { text: 'This page is a drill-through target for' }), ul, fieldSel));
       D.pageV2(fmt, p);
       fmt.appendChild(h('h4', { class: 'bi-fhead', text: 'Report' }));
-      fmt.appendChild(frow('Report title', textInput(m.title, (x) => D.change('Rename the report', () => { m.title = x.trim() || m.title; }), { 'data-report-title': '' })));
-      fmt.appendChild(frow('Description', textInput(m.description, (x) => D.change('Describe the report', () => { if (x.trim()) { m.description = x.trim(); } else { delete m.description; } }))));
+      settings('The report', [
+        ['title', text('Report title', 'data-report-title'), m.title, (x) => D.change('Rename the report', () => { m.title = trimmed(x) || m.title; })],
+        ['description', text('Description', 'data-report-description'), m.description, (x) => D.change('Describe the report', () => { if (trimmed(x)) { m.description = trimmed(x); } else { delete m.description; } })]
+      ]);
       D.reportV2(fmt, m);
-      fmt.appendChild(frow('Colours', selectInput(B.PALETTES.map((n) => [n, n]), (m.theme || {}).palette || 'default', (x) => D.change('Theme', () => { m.theme = Object.assign({}, m.theme, { palette: x }); }), { 'data-theme-palette': '' }), 'default follows the console theme; colour-blind is Okabe-Ito.'));
       const dates = m.dates || {};
-      fmt.appendChild(frow('Business date from', dateInput(dates.from, (x) => setDates({ from: x }), 'Business date from')));
-      fmt.appendChild(frow('Business date to', dateInput(dates.to, (x) => setDates({ to: x }), 'Business date to')));
+      settings('Colours and dates', [
+        ['palette', { type: 'string', title: 'Colours', enum: B.PALETTES, widget: 'select', allowEmpty: false, hook: 'data-theme-palette', description: 'default follows the console theme; colour-blind is Okabe-Ito.' },
+          (m.theme || {}).palette || 'default', (x) => D.change('Theme', () => { m.theme = Object.assign({}, m.theme, { palette: x }); })],
+        ['from', { type: 'date', title: 'Business date from', hook: 'data-dates-from' }, dates.from, (x) => setDates({ from: x })],
+        ['to', { type: 'date', title: 'Business date to', hook: 'data-dates-to' }, dates.to, (x) => setDates({ to: x })]
+      ]);
       fmt.appendChild(frow('Dataset', h('code', { text: m.dataset })));
       const lk = h('fieldset', { class: 'bi-fieldset', 'data-links': '' }, h('legend', { text: 'Links between datasets' }));
       (m.links || []).forEach((l, i) => {

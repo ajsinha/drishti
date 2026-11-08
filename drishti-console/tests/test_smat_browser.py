@@ -34,6 +34,7 @@ from conftest import CONSOLE, FakeBackend  # noqa: E402
 from risk_elements import chart, chart_ready  # noqa: E402
 from test_live_tabs_browser import browser  # noqa: E402,F401 - the shared browser fixture
 from test_page_widths_browser import AUDIT  # noqa: E402
+import engine_fakes  # noqa: E402
 
 THEMES = ["terminal", "light", "wallstreet", "blue", "green", "crimson", "crimson-dark", "terminal-green", "terminal-crimson", "terminal-blue"]
 N, DAYS = 509, 20
@@ -91,6 +92,8 @@ MATRIX = _matrix()
 
 class SmatBackend(FakeBackend):
     """The stand-in server with a VaR engine that answers the scenario matrix: JSON, or the Arrow stream when asked (as the server)."""
+
+    engine = engine_fakes.method
 
     async def var(self, method, path, ident, body=None, raw=False, accept="", **params):
         import json

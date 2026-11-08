@@ -17,6 +17,31 @@
 
 ## 2.9.11.g (unreleased)
 
+### The public sector: the first new domain, government data and free news
+
+- **Part of the economy module, with a lens of its own** (PUBLIC_SECTOR_GUIDE.md; one module, the owner's decision of 2026-11-07): ten
+  functions (`WDI`, `WDIS`, `CBANK`, `CBSER`, `NSTAT`, `OECD`, `OECDS`, `PRESS`, `PREL`, `GDELT`) in the economy's manifest, the
+  **Public sector** lens, and the free news (`PRESS`, `PREL`, `GDELT`) in the World lens. The economy module off: all its packs,
+  connectors, functions and both lenses are gone, banking, capital markets and GLEIF untouched (`EconomyModuleOffTest`,
+  `PublicSectorLensTest`).
+- **Six packs** with `domain: economy`, each with its kinds, data contracts (worked examples under docs/contracts/samples), README,
+  pack guide and Sutras built from the UI kit only: **world-development** (World Bank WDI: a country's profile with the world map by GDP
+  per head, every indicator's history), **central-banks** (FRED and the Bank of Canada: a bank's policy rate, its last move and its
+  series), **national-statistics** (Statistics Canada by vector), **oecd** (the members' leading indicator, unemployment, inflation and
+  growth, a map by inflation), **official-news** (the press releases of the Fed, ECB, Bank of Canada, Bank of England, SEC, OSFI, the US
+  Federal Register and the Canada Gazette, each a link) and **gdelt-events** (a country's day in the world's news: events, tone,
+  conflict, CAMEO categories, a map by tone, the top stories).
+- **Six daily feeds on drishti-feeds** (`config/feeds/<pack>.yaml`, `tools/feeds/sources/`): incremental (the source's last update, each
+  series from its last observation, releases already seen, the GDELT days after the last), JSON Lines into `worldlake` and `newslake`,
+  whose lake files now ship with exactly these tables (`tools/test_empty_lakes.py` says only these packs read them). Every source's
+  licence and terms are in the feed file (`options.sources`); the Bank of England, OSFI and the Canada Gazette are internal only and their
+  releases say so. FRED's key is `DRISHTI_FRED_API_KEY`; without it the Bank of Canada still loads. One publisher down or a day GDELT
+  skipped never fails a run.
+- **Tests on recorded fixtures** (`tools/feeds/tests/test_publicsector.py`, never the network) and a browser test of the six screens on a
+  scratch lake loaded from them (`test_public_sector_browser.py`); `tools/packgen/publicsector/make.py` writes the samples and READMEs.
+- **Docs**: the Public sector guide and Tutorial 46 (two Help entries), the External data page's public-sector rows and section, the
+  contract pages, OPERATIONS' modules.
+
 ### The pre-deal service and the exposure what-if in Java
 
 - **The pre-deal check is a service of the exposure engine** (EXPOSURE_GUIDE.md section 18.9): `POST /api/v1/exposure/predeal` and the
@@ -56,6 +81,45 @@
   approve; decline on the limit and on a bucket; refer on a proxy, no limit, a measure not computed and no exposure; two people at once
   with their own entitlements; the grammar; the audit); the console's trading check, menus and under-construction tests; `test_expcli`.
 
+### drishti-feeds: external data into the lakes, every day
+
+- **drishti-feeds: one module to pull external data into the lakes every day** ([EXTERNAL_DATA.md](docs/guides/EXTERNAL_DATA.md), Help → Data
+  → External data feeds: one guide for the feeds and their sources). A feed is a feed file (`config/feeds/<feed>.yaml`: the source, its datasets and the pack, kind and table
+  each loads, the target lake, the daily schedule, the licence with its redistribution and internal-only flag, API keys as `${ENV}`
+  names only) and a `Feed` class in `tools/feeds/sources/` that pulls. The base class (`tools/feeds/feedbase.py`) does the rest:
+  incremental pulls from a state file (`data/datafeeds/<feed>/state.json`, saved only when the whole run succeeds), the polite client
+  (one User-Agent `DRISHTI_FEEDS_USER_AGENT` naming Drishti, no personal address; a pause between requests; retries with back-off
+  and `Retry-After`; a download cache, so a broken run resumes), JSONL.gz per dataset and business date under
+  `data/datafeeds/<feed>/<date>/` with a manifest of rows and SHA-256, a lock per feed, and a re-run of a date that replaces it whole.
+- **Three load routes, no new writer**: `java` (the default: `lake build --engine java`, the parallel loader `LakeLoad` from the
+  server's jar), `python` (`lake build`) and `inbox` (the files and their `.ready` with `lake:`, `sha256` and `rows` dropped into the
+  data inbox; several tables or dates as one tar of `<table>/<date>/` folders). Every route replaces the dates it loads; a table new to
+  the lake file gets its pack's recommended entry first (and the dataset's key as its id).
+- **`drishti.py feed list|run|status|schedule`** (`tools/feeds/cli.py`; the wrappers `tools/feeds/feed.sh` and
+  `tools/windows/feed.ps1`): `feed run <feed>|--all [--date D | --since D] [--load java|python|inbox|none] [--dry-run] [--snapshot]`,
+  scheduler exit codes (0 ok, 1 failed, 2 refused, 3 locked, 4 partial) and one log line per run; `feed schedule --cron | --systemd |
+  --windows` prints ready-to-use daily entries. Every run appends a line to the run ledger `data/datafeeds/ledger.jsonl`.
+- **Admin → Data loads → Feeds**: every feed's last run, last success, rows, duration, failures and last error, and Run now
+  (`GET /api/v1/admin/feeds`, `POST /api/v1/admin/feeds/{feed}/run`, audited; console tables on drishti-grid). A failed run raises
+  the platform alert `data-feed-failed` through the one alert engine (the gauge `drishti.datafeed.failed`; a later success closes it;
+  the same rule for Prometheus). Server settings `drishti.feeds.config`, `root`, `python`, `sample-seconds`.
+- **The public-data refresh scripts are folded into the feeds** (no second way): `tools/publicdata/` is gone; its pack sources live
+  in `tools/feeds/sources/` and run as the feeds `gleif` (into the new **`referencelake`**, core reference data: `config/lakes/referencelake.yaml`,
+  `data/delta/referencelake/`, shipped empty like the other lakes), `us-equities` and `funds` (into `capitalmarket`; the index
+  members now include the **Russell 2000 from IWM's** N-PORT holdings beside the Dow 30 from DIA and the S&P 500 from SPY),
+  `yahoo-prices` (internal only, off as shipped), `world-economy` (internal only for the IMF forecasts, into `worldlake`),
+  `news-and-markets` (internal only, into `newslake`) and `market-data` (incremental by day from its state, each document under its own
+  date, `--since` for a backfill, into `capitalmarket`). The World Bank's WDI belongs to the public sector's world-development feed:
+  world-economy runs with `--no-wdi` (its kinds keyed on WDI series wait until the pack reads them from there).
+  Refreshing a pack's committed demo snapshot in `data/testdata` is `feed run <feed> --snapshot` (with `--internal-ok` for
+  internal-only data), writing exactly where the scripts wrote. Their per-pack `.sh` and `.ps1` wrappers are replaced by the one
+  wrapper per system; `DRISHTI_SEC_USER_AGENT` and `DRISHTI_GLEIF_USER_AGENT` are replaced by `DRISHTI_FEEDS_USER_AGENT`; the
+  sources' downloads and builds move from `<data>/publicdata/` to `<data>/datafeeds/sources/`; `DRISHTI_LIVE_FETCH` is replaced by
+  pytest's `--live` for the hand-run smokes.
+- **Tests on recorded responses only**: every feed's pull, incremental state, an idempotent re-run, retries, the lock, the ledger and
+  status, the inbox route's `.ready` and tar, the java and python routes into a temporary lake, the command line and the schedule
+  output; Admin → Feeds in the console and the server; one `--live` smoke per feed for a person to run.
+
 ## 2.9.11.h (unreleased)
 
 - **The documentation plan, for approval** ([DOCS_PLAN.md](docs/architecture/DOCS_PLAN.md)): 22 major features, each with one guide and one tutorial; every existing document kept, merged, generated or deleted (337 → about 138 under `docs/`); the data contracts from 118 pages to 28 with generated JSON examples; the generated references and the docs gates; the order of work around 2.9.11.e and f; open questions.
@@ -94,6 +158,33 @@
   core reference data; economy keeps world-economy and news-and-markets. The Market lens needs capital markets and banking.
 - **Editions as lenses**: the risk, trading, market and world editions are lenses of the registry; an edition opened as a lens is offered
   only while its modules are on.
+- **Domain modules, phase 2 (first half): the console follows the modules** ([DOMAIN_MODULES.md](docs/architecture/DOMAIN_MODULES.md)
+  section 8, [ACCESS_MODEL.md](docs/architecture/ACCESS_MODEL.md) section 8; OPERATIONS.md section 22). The console asks the server and
+  nothing else: the public about answer now lists the `modules` loaded, and `GET /api/v1/modules` answers, as the person, the modules not
+  loaded (with why), the lenses open to them (with the modules and functions each needs) and the **functions they may not use** (each with
+  its module and the words to say). A module that is off, or a function off for the person, is gone from every door the console draws:
+  its pages and routes answer 404, menus (sitemap `domain:` tags, now drawn by the module's state; a new `requires: module:<id>`), the
+  Engines menu, the Admin strip, search, the command line and its type-ahead, Help (its guides, tutorials and section) and the Build home
+  leave it out, and typed anyway it says *VRES is not available to you: ask your administrator*.
+- **Domain modules, phase 2 (second half, first steps): the moves.** The banking console code, pages, scripts and styles live in
+  `drishti-console/plugins/banking/` (`routes/`, `templates/`, `static/`, the landings' code, the Build types, the engine calls), the
+  World landing in `plugins/economy/`; the console finds a module's templates after its own and serves a module's files at the same
+  `/static/...` addresses, gated by module and lens. The banking engines are the module's: their catalogue entries in drishti-banking's
+  `META-INF/drishti/engines.yaml` (and the console's `plugins/banking/engines.yaml`), their jar files in its `engines/`; a server without
+  the module lists none of them. Rule 4 of the boundaries as a check: `tools/domain_strings.py` counts the banking names in the core's
+  code against an allow list that only shrinks. `EngineRegistryTest` and `EngineFilesTest` run in drishti-banking (they use its engines).
+- **Static assets by module**: each module's console part is `drishti-console/plugins/<module>/plugin.yaml` (its routers, engines, words,
+  pages, templates, static files, and the parts it adds to a core screen). An off module's scripts, styles and Elements library are not
+  served (404), and neither to a person whose lens does not use the module (the World lens gets no banking file). The Elements manifest
+  carries each library's `module` (drishti-risk: banking) and the loader refuses a library of a module the page does not list
+  (`<meta name="drishti-modules">`, `configure({modules})`, `refused(name)`).
+- **The console's cycles C1 to C7 are broken in place** (no screen moved yet): the banking routers are included from the plugin's list;
+  commands, retired links, the type-ahead, the Pivot presets' word grammar and the landing rules are hooks the module fills
+  (`core/plugins.py`); one workbook streamer (`core/workbook_stream.py`); the core client has one engine call (`BackendClient.engine`) and
+  the banking calls are the module's own (`plugins/banking/risk_api.py`), **on `/api/v1/risk/…`**; the market landing's figures moved to the
+  banking routes, Admin → Saved VaR baskets to the VaR routes, the Pivot draws the MR lens through the plugin's `screens:`. A static test
+  (`test_module_boundaries.py`) fails when the core imports a module's code, includes its templates or names its files.
+
 ## 2.9.11.e (unreleased)
 
 - **drishti-graph and drishti-tree, two new Drishti Elements libraries** (ELEMENTS.md section 8.8; the owner's picks: g5 option A and
@@ -158,11 +249,49 @@
   connected graph on a canvas (counterparty, ownership and AML networks; layouts, paths, grouping, Explain, a linked table), a tree
   (org chart, tree grid with ◆ non-additive measures, sunburst; re-parenting as a four-eyes proposal), and the one shell every
   designer is built on, shown as the BI report designer and as the form designer. Design only.
+- **No bespoke UI, the panes** ([ELEMENTS.md section 12.3, fourth pass](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
+  the Build workbench's inspector is drishti-designer's `Inspector` (one live `Form` from the Rachana schema; `build/drishti_inspector.js`
+  286 → 242 lines) and its palette the kit's `Palette` (`build/drishti_palette.js` 80 → 63); its expression fields are `Form`'s new
+  **formula** widget, a one-line `CodeEditor` completing shape paths and functions (`build/drishti_expr.js` 107 → 65: the hand-made
+  completion list deleted); `build/drishti_forms.js` is the converter of the structured options into fields (134 → 116). The table editor's
+  own formula widget folded into the `Form`'s; the model editor's Overview (name, title, in words) and Masks are live `Form`s; the Sutra
+  designer's columns checklist is `Form`'s checkboxes. drishti-designer's `Inspector` takes `form` and `head`. The kit guard gains a rule:
+  no console script draws a label and an input in a loop over a schema's properties or fields (an allow-list of 2 that only shrinks).
+- **The forms on drishti-inputs' `Form`** ([ELEMENTS.md 8.2, "The forms on Form"](docs/architecture/ELEMENTS.md#82-as-built-drishti-inputs-drishti-data-and-the-grids-cell-editing)):
+  the query form (`FORM <pack>`: the server sends its schema, the fields are a `Form` embedded in the page's GET form and the address is
+  unchanged), the subscription's When, the table editor's name, rows and look-up dialog, BI's Format pane, the Build inspector's
+  structured options and the record forms' fields (beside the table and in the drawer's steps). **drishti-inputs 0.3.0**: `Form` gains
+  live and embedded modes, steps, named fields for server forms, hooks (`hook`, `optionHook`, `submitHook`, a field's `data-path`),
+  custom widgets (`defineWidget`), the types `time`, `datetime` and `money`, a row of checkboxes, dependent lists, `setField`,
+  `setNotes`, `showErrors`; the new `TimePicker` and `DateTimePicker`, and the native time and date-time fields upgraded in place (the
+  top bar's Known at, compare, the record forms). The column filter's dates and BI's date parameters are the date picker. Deleted: the
+  query form's server-drawn fields, its dependents and long-list search, the record forms' field boxes, messages and currency painter,
+  the inspector's hand-made lists, objects and number checks, the Format pane's hand-made controls, and their CSS.
 - **No bespoke UI, the second pass** ([ELEMENTS.md section 12.3](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
   `trackPointer` moved into drishti-core (with pointer capture); the Sutra designer's Customize, Grid and Outline drags, the BI designer's
   field, visual-type and well drags, layout mode, screen arranging, workspaces and sliders on it or on drishti-designer's `DragHub` (their
   HTML5 drags deleted); drishti-inputs makes a page's `<textarea data-di-code>` a code editor (`upgradeCodeArea`) and the connector,
   net, theme, BI item, workspace, transform and Pivot code areas use it. The guard's allow-list went from 19 files to 3.
+- **No bespoke UI, the third pass**: the Sutra designer's Grid formula bar is drishti-inputs' `CodeEditor` (Rachana, growing with its
+  text; Enter keeps, Shift+Enter a new line, Esc goes back; the panels' events after `@`, fragments and kinds first in a line and
+  parameters after a bracket are its completion), its hand-made suggestion list deleted; the Outline mode's tree is drishti-designer's
+  `Outline` (keys, Alt+arrows, drags before, after or into an item; dropping a panel on a table nests it), the hand-made tree deleted;
+  the table and model editors' formula fields (computed columns, the filter, the look-up key, row rules, measures, hierarchies, the
+  statement) are the code editor, their hand-made completion list deleted. drishti-inputs: `<input data-di-code>` becomes a one-line
+  code editor (`singleLine`), `height: 'auto'` with `minHeight` and `maxHeight`, `insert()`, `setInvalid()`; a code area's "change" on
+  leaving comes only after a person's edit, never for the page's own text. drishti-designer's `Outline`: a node's `cls` and its own
+  `data-*` attributes. The guard's allow-list went from 3 files to 1 (the workbench's data-shape tree, moved onto drishti-tree on its
+  own branch).
+- **No bespoke UI: the BI designer's own panes** ([ELEMENTS.md section 12.3](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
+  conditional formatting (each rule a live `Form` whose fields follow its kind; the 2.1 short form a Form's repeatable rows), the theme
+  designer's name, series colours (repeatable rows: add, remove, move; 3 to 12), colours and type, Edit interactions, the tooltip page,
+  the page's layout, the report's theme and kiosk rotation, a board tile's report, visual and alert, and the visual's, page's and
+  report's own settings (title, alt text, dataset, text, image, button, sort, most rows, business dates) are drishti-inputs' `Form`
+  through one helper (`drishtiBi.formatPane.form`), every control keeping its `data-*` hook; a colour per value (series colours and a
+  rule's colours) is one custom widget. The ExpressionEditor (a report's own measure) is a one-line Rachana `CodeEditor` whose
+  completion hook offers the fields, measures, functions and keywords (also after `(`, `,` and `=` in a call); its own suggestion list
+  and CSS deleted. Deleted: the Format pane's small controls (`row`, `select`, `text`, `checkbox`, `colour`) and the designer's own
+  text, date and checkbox helpers. drishti-inputs: `upgradeCodeArea` passes `completeAfter`. Saved reports are unchanged.
 - **Vega retired (the owner's decision O1): one drawing engine.** A report's `vega-lite` visual and a Python visual's `output: vega-lite`
   are translated by drishti-chart (`fromVegaLite`) and drawn by drishti-chart; a feature it does not translate is refused in words with
   what to use instead (`vegaLiteAlternative`, `vegaLiteRefusal`, `vegaLiteIn`; `chartIn(host, spec)` puts any spec in a host), never
@@ -231,6 +360,7 @@
   the submit); `Combobox` on a page's own field and in a `suggest` mode; `DateRangePicker` with presets given whole and `openEnded`;
   44 px targets on touch screens. The renderer 2.0.0 and the embeds load drishti-inputs for the controls (its style sheet in the view
   sheet, raised to 29 KB gzip on purpose). A guard fails a console script that draws its own multi-select or picker list.
+
 - **drishti-designer 0.1.0, the designer kit** (the product owner, 2026-11-07: "duplicated code will make the system unmaintainable";
   [ELEMENTS.md section 8.9](docs/architecture/ELEMENTS.md#89-as-built-drishti-designer-the-designer-kit)): one layout canvas over a
   layout model (grid or flow; snap, settle, multi-select, align, distribute, z-order, groups, copy and paste, a phone's order, the keys,
@@ -524,7 +654,7 @@
   a rail grouped Data · Screens · Analysis · Work with a count per kind, lists with lineage both ways (what an item uses, what uses it,
   inverted across every kind gathered for the person), first-visit task tiles (Bring data in, Shape it, Show it, Package it; hidden per
   browser), one search across every kind, + New per kind. Built from one registry of object types (`core/build_registry.py`): the core's
-  types in `core/build_types.py`, banking's (VaR baskets) in `core/build_types_banking.py`, so the domain split moves banking's entries as
+  types in `core/build_types.py`, banking's (VaR baskets) in `plugins/banking/build_types.py`, so the domain split moves banking's entries as
   one file; every source runs at once with a time limit and a failing one leaves its kind without a count. Folded and deleted: *My
   designs* (`build/designs.html`, now the home's *My drafts* partial with its actions; `drishti_build-designs.js` is
   `drishti_build-home.js`), Studio's bare start page (`/studio` redirects to `/build`); **BI Studio's own home is folded in**: `/bi` redirects to `/build`,
@@ -619,11 +749,16 @@
   `pinnedCellClicked`, a tree node's own row in its cell context), drishti-chart 0.2.0 (the histogram of a server's bins). A
   before-and-after comparison of sixteen screens and tabs (`tests/screen_figures.py`, `tests/test_var_family_figures_browser.py`, run on
   demand) and every family browser file on the new selectors with its assertions kept.
+- **The first global search no longer waits on Help** (Alt+K): it read every Help page's text, rendering them all on the event loop
+  (about 12 s on a cold console, longer on a busy machine); the console now renders them once in a worker thread as it starts, Help's
+  search renders what is missing off the event loop, and the rendered pages are shared by every pack set's library. **The Approvals
+  queue drops a stale list**: an answer to an older filter that arrives after a newer one no longer replaces it.
 - **The console's CSS on design tokens, the look unchanged** ([ELEMENTS.md 4.1, Design tokens](docs/architecture/ELEMENTS.md#design-tokens)):
   `drishti_tokens.css` is the one home of every colour and scale. Each hard-coded colour became a token whose value in every theme is
   what its rule drew: fixed colours (white labels on coloured fills, the navigation band, scrims, the theme menu's swatches, FRTB-SA's
   Terminal colours), the landings' and Capacity's hues per theme, elevations, and the print palette (last in the file, with no
-  `!important`). The type scale (53 steps in rem named by their px, 7 relative, 10 fluid display sizes), spacing (51 steps up to 2rem),
+  `!important`). The type scale (53 steps in px: a library or an embedded view draws the same size on a host page whose root text is not 16px,
+  as the Elements' harnesses' 13px; 7 relative steps, 10 fluid display sizes), spacing (52 px steps up to 32px),
   radii, layers (14 `--d-z-*`), breakpoints (24 `--d-bp-*`) and the Elements' densities are tokens of exactly the values in use;
   grid and chart take their density sizes from them. Gone: rules of removed screens (the old Studio, the BI model designer and layer
   wizard, the browser Python console, the top bar's clock and desk name, the exposure sparkline, unused tone and text utilities), the
@@ -3010,7 +3145,7 @@
   masked for a role without raw, said); P&L against VaR from the official history (left out, with a note, without one); overnight
   movers. **Explorer**: the command line, chips, grouped commands, recent Trading commands. Read-only routes
   `/api/home/trading/{me,valuations,blotter,risk,limits,pnl-var,traders}` and `POST /api/home/trading/check` (`DRS-4023` unless the
-  edition or lens shows the commands), `core/trading_landing.py` (EDITIONS.md section 14).
+  edition or lens shows the commands), `plugins/banking/trading_landing.py` (EDITIONS.md section 14).
 - **Four lenses by default**: `drishti.lenses` is `risk,world,market,trading` (server `application.yaml`, the stack, Docker, the AWS
   example); Open, Leave and Switch to across all four; no design link inside the Trading lens.
 - **Tests**: `EditionTradingServerTest` (the lens through the real settings API, its commands, `ECON`, `SCN`, `COLL`, `FRTB` refused with
@@ -3063,7 +3198,7 @@
   and `EXP` off), no trades and no VaR, the Market data Knowledge page, branding "Drishti Market". The pack ships no BI dataset yet: BI is
   kept to `market-data-*` names, so it offers no VaR, exposure or world item.
 - **Its Home**: the three approved mock-ups, Market desk (default), Explorer and Quality, in the terminal look with a violet accent. The
-  figures are worked out by `core/market_landing.py` from the pack's own answers (search, raw documents, the business date, one field's
+  figures are worked out by `plugins/banking/market_landing.py` from the pack's own answers (search, raw documents, the business date, one field's
   history) and served read-only by `/api/home/market/desk`, `/moves` and `/quality` (`DRS-4023` unless the edition or lens shows `CRV`).
   Desk: USD OIS 10Y, USD 2s10s, EUR/USD 1M ATM vol, the CDS 5Y median and the data exceptions, with a day-over-day change only when both
   days hold real data; the USD curves against a week ago (else OIS against projection); the biggest moves in σ of each item's own history

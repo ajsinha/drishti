@@ -1,0 +1,68 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Built from the Drishti UI kit only (config/ui-kit/fragments): no screen code of its own.
+rachana: 1
+sutra: release-source
+version: 1
+description: "One publisher of official news (a central bank, a regulator, a government): its latest releases newest first, each a link, and its terms."
+doc:
+  summary: "A publisher's latest press releases, newest first, each a link to the original; the count by category; its terms of reuse."
+  description: >-
+    One page per publisher the official-news feed follows: the strip gives its type, its country, the number of releases kept, the
+    latest one's time, whether the last pull worked and whether its terms make it internal only; the list gives the latest releases
+    newest first, each title opening the release in Drishti and each address the original on the publisher's site; the bars count the
+    releases by category; the terms, the licence and the feed's address close the page.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/release-source/PRESS-FED"
+    - "PRESS PRESS-FED"
+  since: "2.9.11"
+match: { kind: release-source, priority: 10 }
+title: { pill: Public sector · Official press releases, id: $.SOURCE_ID, with: $.NAME }
+strip:
+  - { label: Publisher, bind: $.NAME, emphasis: true }
+  - { label: Type, bind: $.PUBLISHER_TYPE }
+  - { label: Country, bind: $.COUNTRY }
+  - { label: Releases, bind: $.RELEASES, fmt: amount0 }
+  - { label: Latest, bind: $.LAST_PUBLISHED }
+  - { label: Last pull, bind: $.LAST_PULL }
+  - { label: Internal only, bind: "$.INTERNAL_ONLY ? 'yes: ' + $.WHY_INTERNAL : 'no'" }
+panels:
+  - id: latest
+    kind: table
+    title: "Latest releases, newest first (a title opens the release, an address the original)"
+    key: F2
+    code: LIST
+    rows: $.LATEST
+    search: true
+    columns:
+      - { label: Published, bind: "@.PUBLISHED" }
+      - { label: Release, bind: "link(@.PRESS_RELEASE, 'press-release', @.TITLE)" }
+      - { label: Category, bind: "nonblank(@.CATEGORY, '')" }
+      - { label: Original, bind: "@.URL" }
+  - { use: ranked-bars@1, with: { id: categories, title: Releases by category, key: F3, area: right, rows: $.BY_CATEGORY, label: CATEGORY, value: COUNT, fmt: amount0 } }
+  - id: terms
+    kind: kv
+    title: Terms of reuse
+    area: right
+    columns:
+      - { label: Licence, bind: $.LICENCE }
+      - { label: Terms, bind: $.TERMS_URL }
+      - { label: Website, bind: $.WEBSITE }
+      - { label: Feed, bind: $.FEED_URL }
+  - { use: source-footer@1 }
+keys: { F9: raw }

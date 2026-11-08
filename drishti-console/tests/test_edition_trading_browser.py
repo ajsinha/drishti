@@ -38,7 +38,7 @@ GREENS = ("rgb(79, 209, 139)", "rgb(26, 127, 75)")      # the accent on dark and
 def trading_console():
     import uvicorn
 
-    from core import trading_landing
+    from plugins.banking import trading_landing
     from core.app import create_app
     from core.config import load_settings
 

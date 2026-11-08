@@ -1,0 +1,29 @@
+{
+ "date": "2026-11-05",
+ "data": [
+  {
+   "id": "WABTUS3WXXX",
+   "type": "BIC",
+   "lei": "06BTX5UWZD0GQ5N5Y745",
+   "name": "WESTINGHOUSE AIR BRAKE TECHNOLOGIES CORPORATION"
+  },
+  {
+   "id": "US0378331005",
+   "type": "ISIN",
+   "lei": "HWUPKR0MPOU8FGXBT394",
+   "name": "APPLE INC."
+  },
+  {
+   "id": "US6153691059",
+   "type": "ISIN",
+   "lei": "549300GCEDD8YCF5WU84",
+   "name": "MOODY'S CORPORATION"
+  },
+  {
+   "id": "MOODUS33XXX",
+   "type": "BIC",
+   "lei": "549300GCEDD8YCF5WU84",
+   "name": "MOODY'S CORPORATION"
+  }
+ ]
+}

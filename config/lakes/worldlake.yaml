@@ -16,9 +16,38 @@
 # <data>/delta/worldlake/<domain>/<table>; the folder is kept in git with only its README.md, and nothing loaded into it is ever committed.
 # Add a table's entry here before its first load to choose its layout (partition-by after business_date, promote, sort-by, file sizes,
 # retention, maintenance); a load into a table with no entry copies its pack's recommended entry here first. Connectors read this lake
-# with lake: worldlake.
+# with lake: worldlake. The economy module's public-sector packs read it (docs/guides/PUBLIC_SECTOR_GUIDE.md): their feeds fill the tables below daily
+# (world-development, central-banks, national-statistics, oecd); every other shipped connector reads the demo lake.
 lake: worldlake
 format: delta
 root: ${drishti.data.dir:./data}/delta/worldlake
 defaults: {load-mode: replace}
-tables: {}
+tables:
+  development.development-profile:
+    id: PROFILE_ID
+    promote: [ISO3, COUNTRY_NAME, REGION, INCOME_GROUP, POPULATION, GDP_PER_CAPITA, GDP_GROWTH, INFLATION, UNEMPLOYMENT, LIFE_EXPECTANCY]
+    retention: 260
+  development.development-series:
+    id: SERIES_ID
+    promote: [ISO3, COUNTRY_NAME, INDICATOR_CODE, INDICATOR, UNIT, LATEST, LATEST_YEAR]
+    retention: 260
+  centralbank.central-bank:
+    id: BANK_ID
+    promote: [NAME, COUNTRY, POLICY_RATE, POLICY_RATE_DATE, LAST_MOVE_DATE, LAST_MOVE_BP]
+    retention: 260
+  centralbank.rate-series:
+    id: SERIES_ID
+    promote: [SOURCE, CODE, CENTRAL_BANK, TITLE, UNIT, LATEST, LATEST_DATE, CHANGE]
+    retention: 260
+  statistics.statistics-series:
+    id: SERIES_ID
+    promote: [VECTOR, TITLE, TABLE_ID, TOPIC, UNIT, LATEST, LATEST_PERIOD, CHANGE_PCT, YEAR_ON_YEAR_PCT, RELEASED]
+    retention: 260
+  oecd.oecd-country:
+    id: COUNTRY_ID
+    promote: [ISO3, COUNTRY_NAME, LEADING_INDICATOR, UNEMPLOYMENT, INFLATION, GDP_GROWTH]
+    retention: 260
+  oecd.oecd-series:
+    id: SERIES_ID
+    promote: [ISO3, COUNTRY_NAME, MEASURE, TITLE, UNIT, LATEST, LATEST_PERIOD]
+    retention: 260

@@ -298,12 +298,13 @@ def gen_manifest(m: dict) -> str:
         libs[name] = {"version": spec["version"], "title": spec.get("title", ""), "bundle": name + "/" + bundle_name(name),
                       "entry": name + "/" + spec["entry"], "global": short(name).replace("-", "_"),
                       "requires": list(spec.get("requires") or []), "css": list(spec.get("css") or []),
-                      "scripts": list(spec.get("scripts") or [])}
+                      "scripts": list(spec.get("scripts") or []), "module": str(spec.get("module") or "core")}
     body = json.dumps({"elements": m["elements"], "libraries": libs}, indent=2, ensure_ascii=False)
     return (gen_header("The Elements manifest: every library, its version, its files and what it requires", "static/elements/drishti_elements.json")
             + "\n/** The libraries of Drishti Elements by name: version, bundle and entry (relative to the elements folder), global name, the\n"
-            " *  libraries each requires, the style sheets and the vendored engine's scripts (both relative to the static root) it needs.\n"
-            " *  @type {{elements: string, libraries: Object<string, {version: string, title: string, bundle: string, entry: string, global: string, requires: string[], css: string[], scripts: string[]}>}} */\n"
+            " *  libraries each requires, the style sheets and the vendored engine's scripts (both relative to the static root) it needs, and the\n"
+            " *  module it ships with (core: every installation; a domain module's library is loaded only where that module is on for the person).\n"
+            " *  @type {{elements: string, libraries: Object<string, {version: string, title: string, bundle: string, entry: string, global: string, requires: string[], css: string[], scripts: string[], module: string}>}} */\n"
             f"export const MANIFEST = Object.freeze({body});\n")
 
 

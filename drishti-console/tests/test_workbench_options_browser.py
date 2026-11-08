@@ -16,12 +16,12 @@
 fixed sets are selects, and markers, the table's pivot object and the pivot's `by` list are structured. Fixtures: test_workbench_browser.py's."""
 import yaml
 
-from test_workbench_browser import browser, open_design, page, settle, state, wait  # noqa: F401 - fixtures and helpers
+from test_workbench_browser import browser, open_design, page, settle, state, type_formula, wait  # noqa: F401 - fixtures and helpers
 from wb_live import live_console, showcase_json, showcase_sutra  # noqa: F401 - the fixture
 
 NAMES = r"""() => {
   const box = document.querySelector('[data-inspector]'), out = new Set(), unnamed = [];
-  box.querySelectorAll('label, legend, .wb-cap').forEach(l => out.add(l.textContent.replace(/\s*\*$/, '').trim()));
+  box.querySelectorAll('label, legend, .di-label').forEach(l => out.add(l.textContent.replace(/\s*\*$/, '').trim()));
   box.querySelectorAll('[role=group][aria-label]').forEach(g => out.add(g.getAttribute('aria-label')));
   box.querySelectorAll('input, select, textarea').forEach(c => {
     const named = c.getAttribute('aria-label') || c.title || (c.id && box.querySelector('label[for="' + c.id + '"]'));
@@ -66,7 +66,7 @@ def test_numeric_options_take_numbers_and_enumerated_options_are_selects(live_co
     pick(page, "versions")
     rev = state(page, "rev")
     limit = page.get_by_label("limit", exact=True)
-    assert limit.get_attribute("type") == "number"
+    assert limit.get_attribute("inputmode") == "decimal"                  # drishti-inputs reads a number loosely (and checks it in words)
     limit.fill("5")
     limit.blur()
     settle(page, rev)
@@ -97,9 +97,8 @@ def test_markers_the_pivot_object_and_the_pivot_by_list_have_structured_editors(
     pick(page, "scenarios")
     rev = state(page, "rev")
     page.get_by_role("button", name="Add marker").click()
-    page.get_by_label("Label 2", exact=True).fill("ES 97.5")
-    page.get_by_label("Value 2", exact=True).fill("-$.VAR975")
-    page.get_by_label("Value 2", exact=True).blur()
+    page.get_by_role("group", name="markers 2").get_by_label("Label", exact=True).fill("ES 97.5")
+    type_formula(page, "opt.markers[1].value", "-$.VAR975")                    # a formula: drishti-inputs' one-line code editor
     settle(page, rev)
     assert [m.get("label") for m in option_value(page, "scenarios", "markers")] == ["VaR 99%", "ES 97.5"]
     pick(page, "grid")

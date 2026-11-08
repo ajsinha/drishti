@@ -406,6 +406,39 @@ async def loads_inbox(request: Request, partial: int = 0):
                   inbox_failed=(st.get("board") or {}).get("failedTotal") or 0)
 
 
+@router.get("/loads/feeds")
+async def loads_feeds(request: Request):
+    """Admin → Data loads → Feeds (docs/guides/EXTERNAL_DATA.md section 6): every data feed with its last run, last success, rows, duration,
+    failures since the last success and the last error, Run now, and the latest runs of the ledger. Every figure is the server's
+    (GET /api/v1/admin/feeds, from config/feeds and <data>/datafeeds/ledger.jsonl)."""
+    me = ident(request)
+    if not me.is_admin:
+        return _forbidden(request)
+    error = None
+    try:
+        st = await request.app.state.backend.admin("GET", "/feeds?runs=30", me)
+    except BackendError as e:
+        if e.status in (401, 403):
+            return render(request, "admin/forbidden.html", status_code=e.page_status, error=e)
+        st, error = {}, e
+    return render(request, "admin/feeds.html", st=st or {}, error=error, status=await _status(request), feeds_failing=(st or {}).get("failing") or 0,
+                  **await _inbox_tab(request, me))
+
+
+@router.post("/api/feeds/{feed}/run")
+async def feeds_run(request: Request, feed: str):
+    """Run now: the server starts the feed in the background, or says a run of it is in progress."""
+    me = ident(request)
+    if not me.is_admin:
+        return _admins_only()
+    if not feed.replace("-", "").isalnum() or feed != feed.lower():
+        return JSONResponse({"detail": "not a feed's name"}, status_code=400)
+    try:
+        return await request.app.state.backend.admin("POST", f"/feeds/{feed}/run", me, {})
+    except BackendError as e:
+        return _problem(e)
+
+
 @router.post("/api/dataload/run")
 async def dataload_run(request: Request):
     """Load now: the server starts a cycle, or answers skipped while a run still loads (runs never overlap); the page says which."""
@@ -626,23 +659,6 @@ async def audit(request: Request, subject: str = "", limit: int = 200):
     return render(request, "admin/audit.html", events=events, subject=subject)
 
 
-@router.get("/scopes")
-async def scopes(request: Request, owner: str = ""):
-    """Every person's saved VaR baskets (their ad-hoc scopes kept by name), filtered by owner, each with Delete and an optional reason
-    (docs/guides/VAR_GUIDE.md section 3.5). Deleting goes through /api/var/baskets/<owner>/<name>, which the server allows an administrator."""
-    me = ident(request)
-    if not me.is_admin:
-        return _forbidden(request)
-    rows, error = [], None
-    try:
-        rows = await request.app.state.backend.var("GET", "/admin/baskets", me, owner=owner.strip())
-    except BackendError as e:
-        if e.status in (401, 403):
-            return render(request, "admin/forbidden.html", status_code=e.status, error=e)
-        error = e                               # the VaR engine is off or unreachable: said on the page
-    return render(request, "admin/scopes.html", rows=rows, owner=owner, error=error, viewer=me.user)
-
-
 HEALTH_WAIT_SECONDS = 30.0
 
 
@@ -754,10 +770,10 @@ async def capacity_live(request: Request):
 @router.get("/api/capacity/workbook.xlsx")
 async def capacity_workbook(request: Request):
     """The planner workbook with the inputs given (``inputs=plan|live|both`` and any input by name), streamed from the server; audited there."""
-    from routes.play_routes import _stream
+    from core.workbook_stream import stream
 
     params = {k: v for k, v in request.query_params.items()}
-    return await _stream(request, "/admin/capacity.xlsx", params, "capacity.xlsx")
+    return await stream(request, "/admin/capacity.xlsx", params, "capacity.xlsx")
 
 
 @router.get("/caches/{name}/dates")

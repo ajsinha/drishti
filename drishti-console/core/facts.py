@@ -263,22 +263,30 @@ def check(packs_dir: Path) -> dict[str, list[str]]:
 
 # ---------------------------------------------------------------------------------------------------------------------- computing
 
+def engine_api(engine_id: str) -> str:
+    """A compute engine's API root after /api/v1 (``var`` -> ``/risk/var``), from the engine catalogue (config/engines.yaml ``api:``)."""
+    from core import engines
+
+    api = [str(a) for a in ((engines.entry(engine_id) or {}).get("api") or [])]
+    return api[0][len("/api/v1"):] if api and api[0].startswith("/api/v1/") else ""
+
+
 class Fetcher:
-    """What the steps fetch, as the user: the VaR and exposure APIs, structured search and raw records (core/backend.py)."""
+    """What the steps fetch, as the user: a compute engine's API (the step's key is the engine: ``var``, ``exposure``), structured search and
+    raw records (core/backend.py)."""
 
     def __init__(self, backend, ident, as_of: str | None = None, timeout: float = 60.0):
         self.backend, self.ident, self.as_of, self.timeout = backend, ident, as_of, timeout
 
     async def fetch(self, kind: str, target: Any, params: dict) -> Any:
         dated = {**params, **({"asOf": self.as_of} if self.as_of and "asOf" not in params else {})}
-        if kind == "var":
-            return await self.backend.var("GET", target, self.ident, **dated)
-        if kind == "exposure":
-            return await self.backend.exposure("GET", target, self.ident, **dated)
         if kind == "search":
             return await self.backend.search(target, self.ident)
         if kind == "raw":
             return await self.backend.raw(target[0], target[1], self.ident)
+        root = engine_api(kind)
+        if root:                                       # a compute engine's step (var: /tree): its API as the engine catalogue names it
+            return await self.backend.engine("GET", root + target, self.ident, timeout=self.timeout, **dated)
         raise ValueError(kind)
 
     async def figure(self, fn: str, args: list) -> Any:

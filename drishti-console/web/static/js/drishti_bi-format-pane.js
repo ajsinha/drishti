@@ -13,12 +13,13 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* The Format pane generated from the format schemas (report schema v2, R6, 2.4.0): GET /bi/api/reports/format-schemas gives each visual family's sections and
-   properties (types, enums, ranges, labels, hints), and this draws the controls for the selected visual: a checkbox for a boolean, a choice for an enum, a
-   number with its range, a colour, a group for an object (the value axis, small multiples), and the custom controls a property names (x-control: the rules of
-   conditional formatting, the palette's swatches, colours per series, data bars, a slicer's windows, a JSON object). A property the visual's type does not use
-   is left out. Each control carries the data attribute its x-hook names (else data-format-<key>), so tutorials and tests find it. The theme designer draws
-   a family's defaults with the same function. */
+   properties (types, enums, ranges, labels, hints), and this draws them as drishti-inputs' Form, one live form per section (a checkbox for a boolean, a choice
+   for an enum, a number with its range read loosely, a group for an object such as the value axis or the axis titles, rows of checkboxes for data bars and a
+   slicer's windows), and the custom widgets a property names (x-control: the palette's swatches and a colour, colours per series, a JSON object, a Vega-Lite
+   specification). A property the visual's type does not use is left out. Each control carries the data attribute its x-hook names (else data-format-<key>),
+   so tutorials and tests find it. A key whose default is on stores only false, one whose default is off only true; '' removes a key. */
 (function () {
   'use strict';
   const B = window.drishtiBi;
@@ -26,103 +27,162 @@
   const P = (B.formatPane = B.formatPane || {});
   const HEX = /^#[0-9a-fA-F]{6}$/;
   let loaded = null;
-  const controls = {};
+  const widgets = {};
 
   /** The schemas, asked once per page. */
   P.schemas = () => (loaded = loaded || B.api('GET', '/reports/format-schemas'));
-  /** Registers a custom control: fn(prop, key, value, env) returns the element. */
-  P.control = (name, fn) => { controls[name] = fn; };
+  /** Registers a custom widget for an x-control: fn(prop, key, value, env, set) returns the element (set('') removes the key). */
+  P.control = (name, fn) => { widgets[name] = fn; };
 
   const kebab = (k) => String(k).replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
-  const hook = (prop, key) => (prop['x-hook'] ? 'data-' + prop['x-hook'] : 'data-format-' + kebab(key));
+  const hookOf = (prop, key) => (prop['x-hook'] ? prop['x-hook'] : 'format-' + kebab(key));
   const appliesTo = (prop, type) => !Array.isArray(prop['x-types']) || !prop['x-types'].length || prop['x-types'].indexOf(type) >= 0;
   P.kebab = kebab;
+  const isColour = (prop) => prop['x-control'] === 'colour' || (prop.type === 'string' && /#\[0-9a-fA-F\]\{6\}|0-9a-fA-F/.test(prop.pattern || ''));
 
-  function row(label, input, hint) {
-    return h('label', { class: 'bi-frow' }, h('span', { text: label }), input, hint ? h('small', { class: 'text-muted-d', text: hint }) : null);
-  }
-  P.row = row;
-  function checkbox(label, value, onChange, attrs) {
-    const c = h('input', Object.assign({ type: 'checkbox' }, attrs || {}));
-    c.checked = !!value;
-    c.addEventListener('change', () => onChange(c.checked));
-    return h('label', { class: 'bi-checkrow' }, c, ' ' + label);
-  }
-  P.checkbox = checkbox;
-  function select(options, value, onChange, attrs) {
-    const s = h('select', Object.assign({ class: 'studio-select' }, attrs || {}), options.map((o) => h('option', { value: o[0], text: o[1] })));
-    s.value = value == null ? '' : String(value);
-    s.addEventListener('change', () => onChange(s.value));
-    return s;
-  }
-  P.select = select;
-  function text(value, onChange, attrs) {
-    const i = h('input', Object.assign({ type: 'text', class: 'studio-in', autocomplete: 'off', value: value == null ? '' : String(value) }, attrs || {}));
-    i.addEventListener('change', () => onChange(i.value));
-    return i;
-  }
-  P.text = text;
-  /** A colour that may be unset: the colour, and a button that clears it. */
+  /** A colour that may be unset: the colour, and a button that clears it (a custom widget of the forms here). */
   function colour(value, onChange, attrs) {
     const set = HEX.test(value || '');
     const i = h('input', Object.assign({ type: 'color', class: 'bi-colour', value: set ? value : '#000000', 'data-unset': set ? null : '' }, attrs || {}));
     i.addEventListener('change', () => onChange(i.value));
     const x = h('button', { type: 'button', class: 'bi-chipbtn', 'aria-label': 'Clear this colour', title: 'Clear', disabled: !set }, B.icon('x-lg'));
     x.addEventListener('click', () => onChange(''));
-    return h('span', { class: 'bi-colourpick' }, i, x);
+    return { el: h('span', { class: 'bi-colourpick' }, i, x), input: i };
   }
-  P.colour = colour;
-  const num = (s, integer) => { if (s === '' || s == null) { return ''; } const n = Number(s); return isFinite(n) ? (integer ? Math.round(n) : n) : ''; };
 
-  /** One property's control; `set(value)` stores it ('' or null removes it). */
-  function control(prop, key, value, env, set) {
-    const label = prop['x-label'] || key;
-    const attrs = { [hook(prop, key)]: '', 'aria-label': label };
-    if (prop['x-control'] && controls[prop['x-control']]) { return controls[prop['x-control']](prop, key, value, env, set); }
-    if (prop['x-control'] === 'colour' || prop.type === 'string' && /#\[0-9a-fA-F\]\{6\}|0-9a-fA-F/.test(prop.pattern || '')) {
-      return row(label, colour(value, set, attrs), prop['x-hint']);
+  /** One property as a field of the section's form schema. */
+  function fieldOf(prop, key, env) {
+    const title = prop['x-label'] || key, hook = hookOf(prop, key), hint = prop['x-hint'];
+    const xc = prop['x-control'];
+    if (xc === 'slicer-mode') {
+      return { type: 'string', title: title === key ? 'Mode' : title, widget: 'select', allowEmpty: false, hook: hook === 'format-mode' ? 'format-mode' : hook, enum: ['list', 'dropdown', 'range', 'relative-date'],
+        enumLabels: ['list', 'dropdown', 'range (numbers and dates)', 'relative date (a date field)'], 'x-kind': 'slicer-mode' };
     }
-    if (prop.type === 'boolean') {                                         // a key whose default is on stores only `false`; one whose default is off stores only `true`
-      const dflt = prop.default === true;
-      return checkbox(label, value == null ? dflt : value, (on) => set(on === dflt ? '' : on), attrs);
+    if (xc === 'relative-default' || xc === 'relative-options') {
+      if ((env.format || {}).mode !== 'relative-date') { return null; }
+      const all = B.visuals.RELATIVE, offered = (env.format.options || []).length ? env.format.options : all;
+      if (xc === 'relative-default') { return { type: 'string', title: 'Starts as', widget: 'select', emptyLabel: 'no default (all dates)', enum: offered, enumLabels: offered.map(B.visuals.relativeLabel), hook: 'format-default', 'x-kind': xc }; }
+      return { type: 'array', title: 'Windows it offers', items: { type: 'string', enum: all, enumLabels: all.map(B.visuals.relativeLabel) }, widget: 'checkboxes', optionHook: 'option', hook: 'format-options', 'x-kind': xc };
     }
+    if (xc === 'measures') {
+      const ms = env.measures || [];
+      return ms.length ? { type: 'array', title: title, items: { type: 'string', enum: ms }, widget: 'checkboxes', optionHook: 'databar', hook: 'format-data-bars', 'x-kind': 'list' } : null;
+    }
+    if (xc === 'axis-titles') {
+      return { type: 'object', title: title, 'x-kind': 'object', properties: { x: { type: 'string', title: 'Category axis title', hook: 'format-axis-x', lazy: true }, y: { type: 'string', title: 'Value axis title', hook: 'format-axis-y', lazy: true } } };
+    }
+    if (xc === 'json') { return { type: 'string', title: title, description: hint, widget: 'json', hook: hook, placeholder: '{"bins": 24}', 'x-kind': 'json' }; }
+    if (xc && widgets[xc]) { return { type: 'string', title: title, widget: 'x-' + xc, noLabel: true, 'x-prop': prop, 'x-key': key, 'x-kind': 'custom' }; }
+    if (isColour(prop)) { return { type: 'string', title: title, description: hint, widget: 'colour', hook: hook, 'x-kind': 'colour' }; }
+    if (prop.type === 'boolean') { return { type: 'boolean', title: title, hook: hook, 'x-kind': 'boolean', 'x-default': prop.default === true }; }
     if (Array.isArray(prop.enum)) {
-      return row(label, select([['', 'default']].concat(prop.enum.map((e) => [String(e), String(e)])), value, (x) => set(x), attrs), prop['x-hint']);
+      return { type: typeof prop.enum[0] === 'number' ? 'number' : 'string', title: title, description: hint, enum: prop.enum, widget: 'select', emptyLabel: 'default', hook: hook, 'x-kind': 'plain' };
     }
     if (prop.type === 'integer' || prop.type === 'number') {
-      const a = Object.assign({ type: 'number', step: prop.type === 'integer' ? '1' : 'any' }, attrs);
-      if (prop.minimum != null) { a.min = String(prop.minimum); }
-      if (prop.maximum != null) { a.max = String(prop.maximum); }
-      return row(label, text(value, (x) => set(num(x, prop.type === 'integer')), a), prop['x-hint']);
+      return { type: prop.type, title: title, description: hint, minimum: prop.minimum == null ? undefined : prop.minimum, maximum: prop.maximum == null ? undefined : prop.maximum, lazy: true, hook: hook, 'x-kind': 'plain' };
     }
     if (prop.type === 'object' && prop.properties) {
-      const box = h('fieldset', { class: 'bi-fieldset', [hook(prop, key)]: '' }, h('legend', { text: label }));
-      const cur = value && typeof value === 'object' ? value : {};
+      const props = {};
       Object.keys(prop.properties).forEach((k) => {
-        const sub = prop.properties[k];
-        box.appendChild(control(Object.assign({ 'x-hook': (prop['x-hook'] || 'format-' + kebab(key)) + '-' + kebab(k) }, sub), k, cur[k], env, (x) => {
-          const next = Object.assign({}, cur);
-          if (x === '' || x == null) { delete next[k]; } else { next[k] = x; }
-          set(Object.keys(next).length ? next : '');
-        }));
+        const sub = fieldOf(Object.assign({ 'x-hook': hook + '-' + kebab(k) }, prop.properties[k]), k, env);
+        if (sub) { props[k] = sub; }
       });
-      if (prop['x-hint']) { box.appendChild(h('small', { class: 'text-muted-d', text: prop['x-hint'] })); }
-      return box;
+      return { type: 'object', title: title, description: hint, hook: hook, properties: props, 'x-kind': 'object' };
     }
-    if (prop.type === 'string') { return row(label, text(value, (x) => set(x.trim()), Object.assign({ maxlength: prop.maxLength ? String(prop.maxLength) : null }, attrs)), prop['x-hint']); }
-    return row(label, text(value == null ? '' : JSON.stringify(value), (x) => { try { set(x.trim() ? JSON.parse(x) : ''); } catch (e) { /* kept until it parses */ } }, attrs), prop['x-hint']);
+    if (prop.type === 'string') { return { type: 'string', title: title, description: hint, maxLength: prop.maxLength || undefined, lazy: true, hook: hook, 'x-kind': 'text' }; }
+    return { type: 'string', title: title, description: hint, widget: 'json', hook: hook, placeholder: '{"bins": 24}', 'x-kind': 'json' };
   }
-  P.controlFor = control;
+
+  /** A field's value in the form, from the stored format. */
+  function valueOf(fs, v) {
+    if (fs['x-kind'] === 'boolean') { return v == null ? fs['x-default'] : v; }
+    if (fs['x-kind'] === 'object') { const o = {}; const cur = v && typeof v === 'object' ? v : {}; Object.keys(fs.properties).forEach((k) => { const x = valueOf(fs.properties[k], cur[k]); if (x !== undefined) { o[k] = x; } }); return o; }
+    if (fs['x-kind'] === 'slicer-mode') { return v || 'list'; }
+    if (fs['x-kind'] === 'relative-options') { return v && v.length ? v : B.visuals.RELATIVE; }
+    return v == null || v === '' ? undefined : v;
+  }
+
+  /** The value stored for a field ('' removes the key). */
+  function stored(fs, v) {
+    if (fs['x-kind'] === 'boolean') { return v === fs['x-default'] ? '' : v; }
+    if (fs['x-kind'] === 'object') {
+      const o = {};
+      Object.keys(fs.properties || {}).forEach((k) => { const x = stored(fs.properties[k], (v || {})[k]); if (x !== '' && x !== undefined && x !== null) { o[k] = x; } });
+      return Object.keys(o).length ? o : '';
+    }
+    if (fs['x-kind'] === 'relative-options') { const all = B.visuals.RELATIVE, ordered = all.filter((x) => (v || []).indexOf(x) >= 0); return ordered.length === all.length ? '' : ordered; }
+    if (fs['x-kind'] === 'list') { return v && v.length ? v : ''; }
+    if (v === undefined || v === null) { return ''; }
+    return typeof v === 'string' ? v.trim() : v;
+  }
 
   /**
-   * Draws the format of visual `v` into `host`, a section per group of its family in the family's order.
+   * Colours by value (a legend value's colours, a conditional rule's colour per value of a field): a colour per name (clearing it takes the
+   * name out) and a name to add. A custom widget of the format forms ('colour-map', its options in the field's x-map).
+   *
+   * @param o { legend, names (shown even without a colour), hint, placeholder, label, addText, next(count) (the new name's colour), hooks {box, row, colour, name, add} }
+   */
+  function colourMap(value, set, o) {
+    const cur = value && typeof value === 'object' ? value : {}, hk = o.hooks || {};
+    const box = h('fieldset', { class: 'bi-fieldset', [hk.box]: '' }, h('legend', { text: o.legend }));
+    const names = (o.names || []).concat(Object.keys(cur)).filter((x, i, a) => a.indexOf(x) === i);
+    names.forEach((n) => box.appendChild(h('label', { class: 'bi-frow', [hk.row]: n }, h('span', { text: n }), colour(cur[n] || '', (c) => {
+      const next = Object.assign({}, cur);
+      if (c) { next[n] = c; } else { delete next[n]; }
+      set(Object.keys(next).length ? next : '');
+    }, { [hk.colour]: n, 'aria-label': 'Colour of ' + n }).el)));
+    const name = h('input', { type: 'text', class: 'studio-in', placeholder: o.placeholder, 'aria-label': o.label, [hk.name]: '' });
+    const add = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', text: o.addText, [hk.add]: '' });
+    add.addEventListener('click', () => { const n = name.value.trim(); if (n && !cur[n]) { set(Object.assign({}, cur, { [n]: o.next(names.length) })); } });
+    box.appendChild(h('div', { class: 'bi-cond' }, name, add));
+    if (o.hint) { box.appendChild(h('small', { class: 'text-muted-d', text: o.hint })); }
+    return box;
+  }
+
+  /** The custom widgets of the format forms (drishti-inputs widgets): a colour, a JSON object, and the registered x-controls. */
+  function formWidgets(env) {
+    const out = {
+      colour: (w) => { const c = colour(w.value, (x) => w.set(x || undefined), { id: w.id, 'aria-label': w.label }); return { el: c.el, input: c.input }; },
+      'colour-map': (w) => ({ el: colourMap(w.value, (x) => w.set(x || undefined), w.field['x-map']) }),
+      json: (w) => {
+        const i = h('input', { type: 'text', class: 'studio-in', id: w.id, autocomplete: 'off', placeholder: w.field.placeholder, value: w.value ? JSON.stringify(w.value) : '' });
+        i.addEventListener('change', () => {
+          if (i.value.trim() === '') { w.set(undefined); return; }
+          try { const o = JSON.parse(i.value); if (o && typeof o === 'object' && !Array.isArray(o)) { w.set(o); } } catch (e) { /* the last good value is kept until it parses */ }
+        });
+        return { el: i, input: i };
+      }
+    };
+    Object.keys(widgets).forEach((name) => {
+      out['x-' + name] = (w) => ({ el: widgets[name](w.field['x-prop'], w.field['x-key'], w.value, env, (x) => env.setFmt(w.field['x-key'], x)) || h('span', { hidden: true }) });
+    });
+    return out;
+  }
+
+  /**
+   * A live Form (drishti-inputs, embedded: no <form> of its own) for the designer's other panes: the page, the report, a tile, a theme, a
+   * conditional formatting rule. Its widgets are the format forms' (a colour that may be unset, a list of colours by value).
+   *
+   * @param o { fields (the properties of an object schema), value, label, on (key -> fn(value, form): the change of a top-level field), widgets }
+   * @returns the Form
+   */
+  P.form = function (host, o) {
+    const I = window.Drishti.elements.inputs;
+    const form = new I.Form(host, { schema: { type: 'object', properties: o.fields }, value: o.value || {}, embedded: true, label: o.label || 'Settings', widgets: Object.assign(formWidgets(o.env || {}), o.widgets || {}) });
+    form.on('change', (e) => { const key = e.path.split(/[.[]/)[0], fn = (o.on || {})[key]; if (fn) { fn(form.getField(key), form); } });
+    return form;
+  };
+
+  /**
+   * Draws the format of visual `v` into `host`, a section per group of its family in the family's order, each section a live Form.
    *
    * @param env { setFmt(key, value), format (the visual's format), type, palette, measures, fields, theme, open (section name -> open) }
    */
   P.draw = function (host, env) {
+    const I = window.Drishti.elements && window.Drishti.elements.inputs;
     return P.schemas().then((s) => {
       const fam = s.families[s.types[env.type]];
-      if (!fam) { return; }
+      if (!fam || !I) { return; }
       const f = env.format || {};
       const groups = {};
       Object.keys(fam.properties).forEach((k) => {
@@ -131,27 +191,39 @@
         (groups[prop['x-group'] || 'More'] = groups[prop['x-group'] || 'More'] || []).push(k);
       });
       const order = (fam.order || []).concat(Object.keys(groups).filter((g) => (fam.order || []).indexOf(g) < 0));
+      const ws = formWidgets(env);
       order.forEach((g) => {
         if (!groups[g]) { return; }
         const slug = B.slug(g);
         const det = h('details', { class: 'bi-fsection', 'data-format-section': slug, open: env.open ? env.open(g) : true }, h('summary', { text: g }));
-        groups[g].forEach((k) => {
-          const el = control(fam.properties[k], k, f[k], env, (x) => env.setFmt(k, x));
-          if (el) { det.appendChild(el); }
-        });
+        const props = {}, value = {};
+        groups[g].forEach((k) => { const fs = fieldOf(fam.properties[k], k, env); if (fs) { props[k] = fs; value[k] = valueOf(fs, f[k]); } });
+        if (Object.keys(props).length) {
+          const box = h('div', { class: 'bi-fform' });
+          det.appendChild(box);
+          const form = new I.Form(box, { schema: { type: 'object', properties: props }, value: value, live: true, label: g, widgets: ws });
+          form.on('change', (e) => {
+            const key = e.path.split(/[.[]/)[0], fs = props[key];
+            if (!fs || fs['x-kind'] === 'custom') { return; }
+            const x = stored(fs, form.getField(key));
+            if (fs['x-kind'] === 'slicer-mode' && env.slicerMode) { env.slicerMode(x || 'list'); return; }
+            env.setFmt(key, x);
+            if (fs['x-kind'] === 'relative-options' && env.format.default && x && x.indexOf(env.format.default) < 0) { env.setFmt('default', ''); }
+          });
+        }
         det.addEventListener('toggle', () => { if (env.toggled) { env.toggled(g, det.open); } });
         host.appendChild(det);
       });
     }).catch((e) => { host.appendChild(h('p', { class: 'bi-vis-note', text: 'The format settings did not load: ' + e.message })); });
   };
 
-  // ---- the custom controls the schemas name ------------------------------------------------------------------------------
+  // ---- the custom widgets the schemas name ------------------------------------------------------------------------------
 
   P.control('swatches', (prop, key, value, env, set) => {
     const r = h('div', { class: 'bi-frow' }, h('span', { text: prop['x-label'] || 'Colour' }));
     const sw = h('div', { class: 'bi-swatches', role: 'group', 'aria-label': 'Theme colours' });
     (env.palette || []).forEach((c, i) => {
-      const hex = B.formatPane.hex(c);
+      const hex = P.hex(c);
       const b = h('button', { type: 'button', class: 'bi-swatch', 'aria-label': 'Theme colour ' + (i + 1), title: c, 'aria-pressed': value === hex ? 'true' : 'false', 'data-colour': c });
       b.style.background = c;
       b.addEventListener('click', () => set(hex));
@@ -160,49 +232,15 @@
     const none = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', text: 'Theme default' });
     none.addEventListener('click', () => set(''));
     r.appendChild(sw);
-    r.appendChild(colour(value, set, { 'aria-label': 'Another colour', 'data-format-colour-custom': '' }));
+    r.appendChild(colour(value, set, { 'aria-label': 'Another colour', 'data-format-colour-custom': '' }).el);
     r.appendChild(none);
     return r;
   });
 
-  P.control('series-colours', (prop, key, value, env, set) => {
-    const cur = value && typeof value === 'object' ? value : {};
-    const box = h('fieldset', { class: 'bi-fieldset', 'data-format-series-colours': '' }, h('legend', { text: prop['x-label'] || 'Colours' }));
-    const names = (env.series || []).concat(Object.keys(cur)).filter((x, i, a) => a.indexOf(x) === i);
-    names.forEach((n, i) => box.appendChild(row(n, colour(cur[n] || '', (c) => {
-      const next = Object.assign({}, cur);
-      if (c) { next[n] = c; } else { delete next[n]; }
-      set(Object.keys(next).length ? next : '');
-    }, { 'data-series-colour': n, 'aria-label': 'Colour of ' + n }))));
-    const name = h('input', { type: 'text', class: 'studio-in', placeholder: 'A legend value', 'aria-label': 'A value of the legend field to colour', 'data-series-name': '' });
-    const add = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', text: 'Colour this value', 'data-series-add': '' });
-    add.addEventListener('click', () => { const n = name.value.trim(); if (n) { set(Object.assign({}, cur, { [n]: (env.palette && B.formatPane.hex(env.palette[names.length % env.palette.length])) || '#1f4e79' })); } });
-    box.appendChild(h('div', { class: 'bi-cond' }, name, add));
-    if (prop['x-hint']) { box.appendChild(h('small', { class: 'text-muted-d', text: prop['x-hint'] })); }
-    return box;
-  });
-
-  P.control('axis-titles', (prop, key, value, env, set) => {
-    const at = value && typeof value === 'object' ? value : {};
-    const put = (k, x) => { const next = Object.assign({}, at); if (x) { next[k] = x; } else { delete next[k]; } set(Object.keys(next).length ? next : ''); };
-    return h('div', {}, row('Category axis title', text(at.x, (x) => put('x', x.trim()), { 'data-format-axis-x': '' })), row('Value axis title', text(at.y, (x) => put('y', x.trim()), { 'data-format-axis-y': '' })));
-  });
-
-  P.control('measures', (prop, key, value, env, set) => {
-    const ms = env.measures || [];
-    if (!ms.length) { return null; }
-    const box = h('fieldset', { class: 'bi-fieldset', 'data-format-data-bars': '' }, h('legend', { text: prop['x-label'] || key }));
-    ms.forEach((m) => box.appendChild(checkbox(m, (value || []).indexOf(m) >= 0, (on) => {
-      const cur = (value || []).filter((x) => x !== m).concat(on ? [m] : []);
-      set(cur.length ? cur : '');
-    }, { 'data-databar': m })));
-    return box;
-  });
-
-  P.control('json', (prop, key, value, env, set) => row(prop['x-label'] || key, text(value ? JSON.stringify(value) : '', (x) => {
-    if (x.trim() === '') { set(''); return; }
-    try { const o = JSON.parse(x); if (o && typeof o === 'object' && !Array.isArray(o)) { set(o); } } catch (e) { /* the last good value is kept until it parses */ }
-  }, { [hook(prop, key)]: '', placeholder: '{"bins": 24}' }), prop['x-hint']));
+  P.control('series-colours', (prop, key, value, env, set) => colourMap(value, set, {
+    legend: prop['x-label'] || 'Colours', names: env.series || [], hint: prop['x-hint'], placeholder: 'A legend value', label: 'A value of the legend field to colour', addText: 'Colour this value',
+    next: (n) => (env.palette && P.hex(env.palette[n % env.palette.length])) || '#1f4e79', hooks: { box: 'data-format-series-colours', row: 'data-series-row', colour: 'data-series-colour', name: 'data-series-name', add: 'data-series-add' }
+  }));
 
   P.control('vega-spec', (prop, key, value, env, set) => {
     const box = h('textarea', { class: 'studio-in bi-vegalite-spec', rows: '10', spellcheck: 'false', 'data-format-vega-spec': '', 'aria-label': 'Vega-Lite specification (JSON)' });
@@ -218,28 +256,6 @@
       } catch (e) { note.textContent = 'Not valid JSON yet (' + e.message + '); the last good specification is kept.'; }
     });
     return h('label', { class: 'bi-frow' }, h('span', { text: 'Vega-Lite specification (JSON)' }), box, note);
-  });
-
-  P.control('slicer-mode', (prop, key, value, env, set) => row(prop['x-label'] || 'Mode', select([['list', 'list'], ['dropdown', 'dropdown'], ['range', 'range (numbers and dates)'], ['relative-date', 'relative date (a date field)']],
-    value || 'list', (x) => { if (env.slicerMode) { env.slicerMode(x); } else { set(x); } }, { 'data-format-mode': '' })));
-
-  P.control('relative-default', (prop, key, value, env, set) => {
-    if ((env.format || {}).mode !== 'relative-date') { return null; }
-    const all = B.visuals.RELATIVE, now = (env.format.options || []).length ? env.format.options : all;
-    return row('Starts as', select([['', 'no default (all dates)']].concat(now.map((o) => [o, B.visuals.relativeLabel(o)])), value || '', (x) => set(x), { 'data-format-default': '' }));
-  });
-
-  P.control('relative-options', (prop, key, value, env, set) => {
-    if ((env.format || {}).mode !== 'relative-date') { return null; }
-    const all = B.visuals.RELATIVE, now = value && value.length ? value : all;
-    const box = h('fieldset', { class: 'bi-fieldset', 'data-format-options': '' }, h('legend', { text: 'Windows it offers' }));
-    all.forEach((o) => box.appendChild(checkbox(B.visuals.relativeLabel(o), now.indexOf(o) >= 0, (on) => {
-      const cur = now.filter((x) => x !== o).concat(on ? [o] : []);
-      const ordered = all.filter((x) => cur.indexOf(x) >= 0);
-      set(ordered.length === all.length ? '' : ordered);
-      if (env.format.default && ordered.length && ordered.indexOf(env.format.default) < 0) { env.setFmt('default', ''); }
-    }, { 'data-option': o })));
-    return box;
   });
 
   /** A colour as #rrggbb (a palette colour may be rgb(...)). */

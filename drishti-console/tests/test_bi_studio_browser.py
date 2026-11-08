@@ -271,8 +271,8 @@ def test_a_theme_is_made_published_and_offered_to_reports(stack, browser):
     page.wait_for_selector("[data-theme-root][data-ready=yes]", timeout=30000)
     fill(page, "[data-theme-key]", "desk-blue")
     fill(page, "[data-theme-title]", "Desk blue")
-    page.locator('[data-theme-colour="0"]').evaluate("(el) => { el.value = '#0b3d91'; el.dispatchEvent(new Event('change')); }")
-    page.click("[data-theme-add-colour]")
+    page.locator('[data-theme-palette-list] .di-repeat-item[data-index="0"] input[data-theme-colour]').evaluate("(el) => { el.value = '#0b3d91'; el.dispatchEvent(new Event('change')); }")
+    page.click("[data-theme-palette-list] > button[data-act=add]")                 # the series colours are the theme Form's repeatable rows
     page.click('[data-theme-family="matrix"] > summary')
     page.check('[data-theme-family="matrix"] [data-format-row-banding]')
     expect(page.locator("[data-theme-valid]")).to_have_text("The theme is valid.", timeout=15000)

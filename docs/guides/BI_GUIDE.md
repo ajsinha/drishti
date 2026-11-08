@@ -1006,8 +1006,9 @@ Contract tab says what that change means:
 
 **4. Reports on a model.** The Fields pane shows the model's **display names**, its **folders**, leaves **hidden** fields out, and offers the model's
 **perspectives** (the report keeps its choice as `perspective:`); every visual's labels use the display names. **New measure for this report** writes a
-measure of this report only in the expression editor (`measures:` in the report, sent with each query as `define`; *Move to the model* offers it to the
-model). **Query of the selected visual** shows the question as a **model query (MQ)** or as **SQL**, one switch; **Run as SQL** asks the server and says
+measure of this report only in the expression editor (a one-line code editor: as you type a name, or after `(`, `,` or `=` in a call, or on Ctrl+Space,
+it offers the fields, the measures, written `measure('…')`, the functions and the keywords; `measures:` in the report, sent with each query as `define`;
+*Move to the model* offers it to the model). **Query of the selected visual** shows the question as a **model query (MQ)** or as **SQL**, one switch; **Run as SQL** asks the server and says
 whether the plan is the visual's ([section 31 §19](#19-languages-in-the-report-designer)).
 
 **5. The Notebook on the server.** A SQL cell is Drishti SQL over the model the extract reads, run by the server as you
@@ -1149,7 +1150,8 @@ The designers share one shell, **BI Studio** (BI_DESIGN.md section 8.1): the rep
 
 **The Format pane is generated** from the format schemas (`GET /api/v1/bi/reports/format-schemas`, [section 31, its section 5](#5-format)): a section per group in the family's order (Title, Frame, Data labels,
 Axes, Legend, Colours, Small multiples, Values, Conditional formatting; for a matrix Layout and Subtotals; for a slicer Slicer), a checkbox for a yes or no, a choice for a closed list, a number with its range, a colour
-picker that can be cleared, a group for an object (the value axis, small multiples) and the custom controls (the palette's swatches, a colour per series, data bars, a slicer's windows, the rules). A setting a visual's
+picker that can be cleared, a group for an object (the value axis, small multiples) and the custom controls (the palette's swatches, a colour per series, data bars, a slicer's windows, the rules: each rule a
+small form of its own, *Rule 1*, *Rule 2*, with its kind, what it colours and the fields of that kind, and a button that removes it). A setting a visual's
 type does not use is not shown; whatever the pane offers the server accepts.
 
 | In Power BI | In BI Studio | YAML |
@@ -1166,7 +1168,7 @@ type does not use is not shown; whatever the pane offers the server accepts.
 | Sync slicers | Format, *Slicer*, *Sync group* | `format: { syncGroup: ccy }` |
 | View, Themes, Customize current theme | Format, *Report*, *Theme*; **Make a theme** (the theme designer) | `theme: corporate`; a `theme` item ([section 31, its section 5.2](#52-themes)) |
 
-**The theme designer** (`/bi/design/theme/<id>`; *New: theme* in the Explorer, or **Make a theme** in Format) edits a theme item: its series colours (add, remove, move), page, text, good and bad colours, type, and the
+**The theme designer** (`/bi/design/theme/<id>`; *New: theme* in the Explorer, or **Make a theme** in Format) edits a theme item: its title and name, its series colours (rows you add, remove and move up or down; 3 to 12), page, text, good and bad colours, type, and the
 format defaults of each kind of visual, drawn by the same generated pane, with a preview of a chart, a table and a card in the theme. Save keeps the draft; Publish makes it what reports read.
 
 ![The theme designer: series colours, the format defaults of matrices, and the preview](img/bistudio/theme-designer.jpg)

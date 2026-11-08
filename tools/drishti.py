@@ -19,7 +19,7 @@
 
 Groups: sutra (the Java `sutra` tool, plus `sutra gen`), pack (make, new, regenerate, diff, catalogue, i18n, check, about-check, bundle, verify, deploy, rollback,
 publish, keygen, install), data (profile and ingest your own JSON Lines or watch a drop folder, load the demo data), server (health, packs, smoke),
-lake (build a Delta lake from a large JSON export, scan, status, maintain), testdata (capture-market: a real offline snapshot), view (get, explain), history (an entity over business days), doctor, completion, design (the Screen Designer's designs over
+lake (build a Delta lake from a large JSON export, scan, status, maintain), feed (pull external data into the lakes: list, run, status, schedule), testdata (capture-market: a real offline snapshot), view (get, explain), history (an entity over business days), doctor, completion, design (the Screen Designer's designs over
 REST: create, save, check, propose, approve, export, import, bind) and docs (screenshots).
 Needs Python 3.10+ and PyYAML; deltalake and pyarrow only for `--store delta` ingests. The guide with every command,
 recipes and real output is docs/guides/CLI_GUIDE.md.
@@ -1105,7 +1105,7 @@ def main(argv: list[str] | None = None) -> int:
         ap = build_parser()
         a, extra = ap.parse_known_args(argv)
         a._argv = list(sys.argv[1:] if argv is None else argv)
-        passthrough = (a.group == "sutra" and a.cmd != "gen") or (a.group == "data" and a.cmd == "load") or (a.group == "lake" and a.cmd == "maintain")
+        passthrough = (a.group == "sutra" and a.cmd != "gen") or (a.group == "data" and a.cmd == "load") or (a.group == "lake" and a.cmd == "maintain") or (a.group == "feed" and a.cmd == "run")
         if extra and not passthrough:
             ap.error("unrecognized arguments: " + " ".join(extra))
         if extra and extra[0] == "--":

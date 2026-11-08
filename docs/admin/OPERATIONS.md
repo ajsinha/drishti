@@ -590,7 +590,7 @@ the shipped lake files: `config/lakes/demo.yaml` holds an entry for every table 
 after the move `git status` shows nothing in `config/lakes`. Only when a site's own connector reads a table the file has no entry for
 (an older or edited connector file naming a kind the packs no longer have) is that entry added, at the end of the file's `tables:`, in
 its compact style, every other line kept byte for byte; the log names the file. The same holds for the data inbox's first load into a
-table a lake file lacks (the empty lakes `risklake`, `newslake`, `worldlake`, `regulators`, `capitalmarket`): only that entry is
+table a lake file lacks (the empty lakes `risklake`, `newslake`, `worldlake`, `regulators`, `capitalmarket`, `referencelake`): only that entry is
 added. A start that finds nothing to add writes nothing. To see what a site's start added: `git diff config/lakes`.
 
 By hand (stop the server first: its connectors hold the tables open), or to see what it would do:
@@ -4112,7 +4112,8 @@ Drishti runs as a core plus **modules** ([ACCESS_MODEL.md](../architecture/ACCES
 [DOMAIN_MODULES.md](../architecture/DOMAIN_MODULES.md)): **banking** (VaR and ES, exposure and CCR, FRTB-SA, SIMM, sensitivities, the MR
 cube, the official results, and the trading, market-data, market-risk and counterparty-risk packs), **capitalmarkets** (content only: the
 us-equities and funds packs and the market data's functions such as CRV, FX, EQV) and **economy** (content only: the world-economy and
-news-and-markets packs and the World lens). GLEIF's legal entities are core reference data. A module is **on** when it is installed (its jar
+news-and-markets packs, the public sector's world-development, central-banks, national-statistics, oecd, official-news and gdelt-events
+packs filled daily by their feeds, and the World and Public sector lenses: [PUBLIC_SECTOR_GUIDE.md](../guides/PUBLIC_SECTOR_GUIDE.md)). GLEIF's legal entities are core reference data. A module is **on** when it is installed (its jar
 is in the server), licensed and enabled, and every module it needs is on. The core is always on.
 
 | Where | What |
@@ -4131,6 +4132,23 @@ Engines, its packs and connectors do not load, and its functions (VAR, EXP, TRD 
 **Functions** (command words) belong to one module each; a word no module declares is the core's. Admin → Commands' switches still turn a
 single function off for everyone; the access registry decides, so a function is on only when its module is on and no administrator turned
 it off. Its API then answers `404 DRS-1026`.
+
+**In the console, the same module or function is gone too**, for every person, within a few seconds of the server saying so (the console
+asks the server: the modules loaded from its public about answer, each person's view from `GET /api/v1/modules`; it reads no access file
+itself):
+
+| Door | A module off | A function off (VRES, SMAT …) |
+|---|---|---|
+| Pages and routes | its pages and their `/api/...` answer 404 (`/var`, `/exposure`, `/frtb`, `/simm`, `/smat`, `/play`, `/mcube`, Admin → Saved VaR baskets, the trading and market landings' figures) | the pages of its word answer 404 (`/smat` with SMAT off) |
+| Menus, the sitemap, the Admin strip | its menus, columns and items (sitemap `domain:` tags, the Engines menu's columns) are not drawn | the items that run it are not drawn |
+| Command line | typed anyway: *VAR is not available to you: ask your administrator* | *VRES is not available to you: ask your administrator* |
+| Type-ahead, search | its words, screens and Help pages are not offered or found | the word is not offered |
+| Help | its guides, tutorials and Help section are not listed and answer 404 | (Help stays: a guide is about a module) |
+| Build home | its object types (VaR baskets) are not offered | |
+| Static files | its scripts, styles and Elements library (`drishti-risk`) are not served (404), and the Elements loader refuses them; a person whose lens does not use the module (the World lens and banking) does not get them either | |
+
+What each module brings to the console is its `drishti-console/plugins/<module>/plugin.yaml` (its routers, engines, words, pages,
+static files and the parts it adds to a core screen); the capital-markets module has none (its functions are its packs' commands).
 
 ```bash
 curl -s -H "Authorization: Bearer $TOKEN" http://localhost:18080/api/v1/admin/modules | jq '.modules[] | {id, on, reason, loaded}'

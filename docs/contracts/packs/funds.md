@@ -34,12 +34,12 @@ A US mutual fund or ETF from SEC public data: the fact sheet, the look-through h
 | Contract | [fund.contract.yaml](../../../config/packs/funds/contracts/fund.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
-| Source | public data: SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (tools/publicdata/funds.py) |
+| Source | public data: SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (drishti.py feed run funds) |
 | Grain | One row per fund or etf, keyed by TICKER. |
 | Key | `TICKER` |
 | Id pattern | — |
 | Dated by | `snapshot` |
-| Cadence | static (due: quarterly, when the SEC publishes the data sets (tools/publicdata/funds.py)) |
+| Cadence | static (due: quarterly, when the SEC publishes the data sets (drishti.py feed run funds)) |
 | Storage | connector `funds-store` (plugin `delta`), table `<root>/funds/fund/` |
 | Columns | `TICKER`, `NAME`, `TYPE`, `TICKERS`, `ADVISER`, `INDEX_ID`, `NET_ASSETS`, `EXPENSE_RATIO`, `HOLDING_COUNT`, `REPORT_DATE`, `RANK` |
 | Test data | data/testdata/funds/fund |
@@ -389,7 +389,7 @@ A US mutual fund or ETF from SEC public data: the fact sheet, the look-through h
 
 - Reviewed by the pack owner: every figure is as the SEC data sets publish it; amounts are US dollars as N-PORT reports them (CURRENCY_VALUE), weights and ratios are in percent as filed (a weight of 7.1 is 7.1% of net assets).
 - A holding's BALANCE is in its UNIT (NS shares, PA principal amount, NC contracts) and a derivative's NOTIONAL in the currency it was filed in; neither is converted.
-- A snapshot: refreshed when tools/publicdata/funds.py runs (the SEC publishes each data set quarterly); the same documents on every business day of the demo lake.
+- A snapshot: refreshed when the funds data feed runs (the SEC publishes each data set quarterly); the same documents on every business day of the demo lake.
 - Optional fields are empty where the fund did not file them: N-CEN facts for a fund whose census is not in the four quarters read, fees and returns for a fund without a risk/return summary (a unit investment trust).
 
 ## HELD: Funds holding a company (`fund-holder`)
@@ -401,12 +401,12 @@ The reverse look-through: every fund of the pack that holds one us-equities comp
 | Contract | [fund-holder.contract.yaml](../../../config/packs/funds/contracts/fund-holder.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
-| Source | public data: SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (tools/publicdata/funds.py) |
+| Source | public data: SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (drishti.py feed run funds) |
 | Grain | One row per funds holding a company, keyed by TICKER. |
 | Key | `TICKER` |
 | Id pattern | — |
 | Dated by | `snapshot` |
-| Cadence | static (due: quarterly, when the SEC publishes the data sets (tools/publicdata/funds.py)) |
+| Cadence | static (due: quarterly, when the SEC publishes the data sets (drishti.py feed run funds)) |
 | Storage | connector `funds-store` (plugin `delta`), table `<root>/funds/fund-holder/` |
 | Columns | `TICKER`, `NAME`, `FUNDS`, `TOTAL_VALUE`, `PCT_OF_SHARES` |
 | Test data | data/testdata/funds/fund-holder |
@@ -477,7 +477,7 @@ The reverse look-through: every fund of the pack that holds one us-equities comp
 
 - Reviewed by the pack owner: every figure is as the SEC data sets publish it; amounts are US dollars as N-PORT reports them (CURRENCY_VALUE), weights and ratios are in percent as filed (a weight of 7.1 is 7.1% of net assets).
 - A holding's BALANCE is in its UNIT (NS shares, PA principal amount, NC contracts) and a derivative's NOTIONAL in the currency it was filed in; neither is converted.
-- A snapshot: refreshed when tools/publicdata/funds.py runs (the SEC publishes each data set quarterly); the same documents on every business day of the demo lake.
+- A snapshot: refreshed when the funds data feed runs (the SEC publishes each data set quarterly); the same documents on every business day of the demo lake.
 - Optional fields are empty where the fund did not file them: N-CEN facts for a fund whose census is not in the four quarters read, fees and returns for a fund without a risk/return summary (a unit investment trust).
 
 ## TRACK: Funds tracking an index (`index-funds`)
@@ -489,12 +489,12 @@ The funds and ETFs of the pack that track one us-equities index, by net assets, 
 | Contract | [index-funds.contract.yaml](../../../config/packs/funds/contracts/index-funds.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
-| Source | public data: SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (tools/publicdata/funds.py) |
+| Source | public data: SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (drishti.py feed run funds) |
 | Grain | One row per funds tracking an index, keyed by INDEX. |
 | Key | `INDEX` |
 | Id pattern | — |
 | Dated by | `snapshot` |
-| Cadence | static (due: quarterly, when the SEC publishes the data sets (tools/publicdata/funds.py)) |
+| Cadence | static (due: quarterly, when the SEC publishes the data sets (drishti.py feed run funds)) |
 | Storage | connector `funds-store` (plugin `delta`), table `<root>/funds/index-funds/` |
 | Columns | `INDEX`, `NAME`, `FUNDS`, `TOTAL_NET_ASSETS` |
 | Test data | data/testdata/funds/index-funds |
@@ -549,5 +549,5 @@ The funds and ETFs of the pack that track one us-equities index, by net assets, 
 
 - Reviewed by the pack owner: every figure is as the SEC data sets publish it; amounts are US dollars as N-PORT reports them (CURRENCY_VALUE), weights and ratios are in percent as filed (a weight of 7.1 is 7.1% of net assets).
 - A holding's BALANCE is in its UNIT (NS shares, PA principal amount, NC contracts) and a derivative's NOTIONAL in the currency it was filed in; neither is converted.
-- A snapshot: refreshed when tools/publicdata/funds.py runs (the SEC publishes each data set quarterly); the same documents on every business day of the demo lake.
+- A snapshot: refreshed when the funds data feed runs (the SEC publishes each data set quarterly); the same documents on every business day of the demo lake.
 - Optional fields are empty where the fund did not file them: N-CEN facts for a fund whose census is not in the four quarters read, fees and returns for a fund without a risk/return summary (a unit investment trust).

@@ -156,7 +156,7 @@ report and renderer sheets (`tools/elements_sheet.py`, `tools/render_sheet.py`) 
 | Semantic hues | `--d-market-violet`, `--d-trading-green`, `--d-world-teal`, `--d-cap-*` | a screen's own hue, with a dark and a light value per theme |
 | Fixed colours | `--d-on-color`, `--d-paper`, `--d-on-band`, `--d-band-*`, `--d-scrim*`, `--d-swatch-*`, … | the same in every theme: white labels on coloured fills, the navigation band, scrims under dialogs, the theme menu's swatches |
 | Elevation | `--d-shadow` (per theme), `--d-elev-*` | shadows by role: paper, raised, bar, pop, toast, panel, list, menu, sheet, dialog, drawer, mega menu |
-| Type | `--d-fs-<px>`, `--d-fs-em-<percent>`, `--d-fs-display-<n>` | absolute steps named by their size in px at the default 16px and written in rem (so the console follows the reader's font size); relative steps; fluid display sizes |
+| Type | `--d-fs-<px>`, `--d-fs-em-<percent>`, `--d-fs-display-<n>` | absolute steps named and written in px (px, not rem: a library or an embedded view draws the same size whatever the host page's root text size); relative steps; fluid display sizes |
 | Spacing | `--d-sp-<px>` | padding, margin and gap steps up to 2rem; larger offsets are layout |
 | Radius | `--d-radius` (cards and panels), `--d-radius-<px>`, `--d-radius-pill` | corner radii |
 | Layers | `--d-z-bar` … `--d-z-confirm` | the stacking order of what floats over the page (a z-index under 100 orders things inside one component) |
@@ -629,6 +629,46 @@ library with its module: an unlicensed module's library is not served, its kinds
   | `drishti_people.js` (four screens), `drishti_discussion-compose.js` (`@`, `{`) | `Combobox` (suggest mode, on the page's field); the comment box with the combobox's `TypeAhead`, `Listbox` and `Popover` | the hand-made listboxes, their `<ul>`s in five templates and scripts, `.shr-list` CSS |
   | `drishti_record-forms.js` entity field | `Combobox` over the page's field with the server's lookup | the hand-made list, its search ordering, `.fm-entity-list` CSS |
 
+- **The forms on `Form`** (2.9.11.e, wip/e-forms; drishti-inputs 0.3.0). `Form` gained, for the console's forms and the designer
+  kit's Inspector (12.3; its API is kept stable for both):
+  - **`live`** (no Save or Reset; a change event per field; still its own `<form>`, as the designer kit wrote it) and **`embedded`**
+    (live with no `<form>` element: the fields sit inside a page's server form);
+  - **named fields** (`name`): a native control carries the name, a picker writes hidden inputs (one per item of a list, a boolean only
+    when on, `nameValue`), and a hidden field submits nothing, so a server form submits exactly the address it always did;
+  - **hooks** (`hook`: data attributes, or classes, on a field's control or fieldset; `optionHook` on each checkbox or radio;
+    `submitHook` on the submit button), and every field's block carries its path in **`data-path`** (`pathAttr` names another, for a
+    page whose own controls use data-path);
+  - **custom widgets** (`defineWidget(name, factory)` or the form's `widgets`; a factory gets the field, its value, an id and
+    `set`/`touch`, and returns its element; `noLabel` when it draws its own);
+  - the types **`time`** (`TimePicker`: 14:05, 1405, 2pm; the day's times by a step), **`datetime`** (`DateTimePicker`: the date picker
+    and the time picker with the zone named beside them) and **`money`** (read loosely, shown grouped, its `currency` fixed or another
+    field's); the widget **`checkboxes`** (a row of checkboxes for a short list); `parseMessage` (a page's own words for text that does
+    not read), `lazy` (a change when the field is left, not at each key), `allowEmpty` and `emptyLabel` for selects, `addLabel`;
+  - **steps** (`steps`, a field's `step`; Back and Next, Next checks the step's fields; a submit with a problem brings its step forward);
+  - **dependent lists** (`dependsOn`, `parents`: the values offered follow what the other field holds; only the dependent field is drawn
+    again, so the field in use keeps its open list and its focus);
+  - `setField(path, value)` (one field drawn again; a field being typed in keeps its text), `getField`, `setNotes` (warnings shown where
+    a problem would be), `showErrors` (problems shown at once without marking every field tried); the widget **`formula`** (a one-line `CodeEditor` through
+    `<input data-di-code>`: `options.mode`, default Rachana, and `options.complete`, the page's completion; the input holds the value); the errors map (`form.errors`) is
+    current when `change` fires; `readOnly` as before.
+  - The native **`<input type="time">`** and **`<input type="datetime-local">`** are upgraded in place like the dates
+    (`upgradeTimeInput`, `upgradeDateTimeInput`; `upgradeFields` does all three).
+
+  | Was | Now |
+  |---|---|
+  | `drishti_form.js` + `terminal/form.html` (the query form drawn by the server, its dependents, its long-list search) | the server sends the form's schema (`core/forms.py` `form_schema`); `Form`, embedded in the page's GET form, every control named `op.`/`v.`/`v2.`/`cs.<path>`; the long list a custom widget (chips and a server combobox); relative dates a combobox of the presets |
+  | `drishti_subscribe-when.js` (how often, the day, a native time) | `Form`, embedded, the time picker |
+  | `drishti_editor-table.js` (name and title, the rows' filter, grain and materialisation, the look-up dialog) | live `Form`s and a submitted one, a Rachana formula widget, the look-up's columns a dependent list of checkboxes |
+  | `drishti_bi-format-pane.js` (controls from the format schemas) | one live `Form` per section; the swatches, series colours, a colour, JSON and the Vega-Lite text as custom widgets |
+  | the BI designer's other panes: `drishti_bi-format-rules.js` (conditional formatting, the 2.1 short form), `drishti_bi-theme-designer.js` (name, series colours, colours, type), `drishti_bi-design-v2.js` (interactions, tooltip page, page layout, report theme, kiosk rotation, a tile's source and alert), `drishti_bi-design-panes.js` (the visual's, page's and report's settings) | live embedded `Form`s through `drishtiBi.formatPane.form` (fields, values, a handler per field; the hooks kept); a rule's fields follow its kind; the series colours and the short form are repeatable rows; a colour per value one custom widget (`colour-map`); the Format pane's `row`, `select`, `text`, `checkbox` and `colour` deleted |
+  | `build/drishti_forms.js` (the inspector's structured options) | a live `Form` per option (numbers checked in words, a count or "all", lists of names and of objects, objects, a switch with its settings) |
+  | `drishti_record-forms.js` (the form beside the table, the drawer's steps) | `Form` for the fields (money, date and time, the entity combobox, locked and masked values as widgets); the form expressions' errors and warnings through `showErrors` and `setNotes` |
+  | the column filter's dates (`drishti_colfilter.js`), BI's date parameters (`drishti_bi-consume.js`), every `datetime-local` | the date pickers (`upgradeDateInput`), the date-and-time picker |
+
+  Left on their own, with the reason: the record forms' **cells** (a cell editor in a table: drishti-grid's editing, 8.2, when the panel
+  moves onto the grid), the drawer's **step chrome** (its "So far" line, the summary on the last step and the hints are the screen's,
+  around a `Form` per step), and `drishti_form-expr.js` (the server's form expressions in the browser: a language, not a form).
+
 - **Still to move** (each a later branch; none is drawn twice):
 
   | Today (file, lines) | Moves onto | Note |
@@ -638,10 +678,6 @@ library with its module: an unlicensed module's library is not served, its kinds
   | `drishti_bi-expr-editor.js` (33–375), `drishti_editor-formula.js` (27–100), `build/drishti_expr.js` (28–106) | `CodeEditor` completion, a `Combobox` | three completions of formulas and paths |
   | `drishti_bi-design.js` (602), `drishti_calc.js` (71), `build/drishti_yamltab.js` (29), `build/drishti_about.js` (39) | `CodeEditor` | four `CodeMirror.fromTextArea` |
   | `drishti_controls.js` (the filter model) | `FilterBar` | the controls' values are the server's (`ctl.*`, panels asked again); a filter bar emits a browser-side filter model, so it waits for a Sutra whose panels filter in the browser |
-  | `drishti_form.js` (the query form, server-drawn GET), `build/drishti_forms.js` (29–184), `drishti_bi-format-pane.js` (41–171), `drishti_editor-table.js` (54–263), `drishti_subscribe-when.js` (28–76) | `Form` | `Form` draws its own `<form>` with Save and Reset and validates at submit; these are live property panes or parts of a server form. They need a **live mode** (no form element, a change per field), **custom widgets** (colour, rules, swatches, the format pane's `x-control`s), **per-field hooks** (`data-*` names the tutorials and tests use) and a **time** type (the subscription's "At") first |
-  | `drishti_form-expr.js` (27–212) | stays | the browser's copy of the server's form expressions (`FormExpr.java`): a language, not a form; `Form`'s `when` conditions are a different, smaller one |
-  | `drishti_record-forms.js` (the rest: beside, cells, the drawer's steps, drafts, review) | `Form` with four eyes, grid editing | the entity field and every date moved (above); the beside form, the cells and the stepped drawer need `Form` steps, money and datetime types with their adornments, and the server's drafts as the four-eyes hook |
-  | `<input type="datetime-local">` (the top bar's *Known at*, compare, the record forms' datetime) | a date-and-time picker | drishti-inputs has no time yet |
   | `drishti_var-basket-sheet.js` (40–290) | grid editing | its cell editor (200) and paste (210–248) |
   | `drishti_live-hub.js` (40–316), `drishti_channel.js` (60–163), `drishti_live.js` (34–155), `drishti_monitor.js` (32–49), `drishti_bi-consume.js` (158–216), the renderer's `m/net.js` (55–105) and `m/elements.js` (85–256) | `LiveClient` | one connection, reconnect and resync; the channel's leader election stays a page concern |
   | `drishti_table.js` (39–242) | `ArrowClient`, `DataFrame` | the VaR explorer and the scenario matrix |
@@ -862,10 +898,8 @@ drishti-risk) behind a generic hook. The chart studio's options for the risk kin
 (`limit`) is a generic hook.
 
 The multi-select, the as-of date, the raw date fields, the controls' pickers, the history range and the people pickers moved in
-2.9.11.e (8.2, "Moved onto them"); the YAML editors moved onto the designer kit (8.9). **Still to move**: the forms (`drishti_form.js`,
-`build/drishti_forms.js`, `drishti_bi-format-pane.js`, `drishti_editor-table.js`, `drishti_subscribe-when.js`, the rest of
-`drishti_record-forms.js` → `Form`, which first needs custom widgets, per-field hooks and a time type; 8.2), the formula inputs
-(`drishti_editor-formula.js`, `build/drishti_expr.js` → `CodeEditor` hooks), polling and staleness
+2.9.11.e (8.2, "Moved onto them"), the forms after them (8.2, "The forms on Form"); the YAML editors moved onto the designer kit (8.9).
+**Still to move**: the formula inputs (`drishti_editor-formula.js`, `build/drishti_expr.js` → `CodeEditor` hooks), polling and staleness
 (`drishti_refresh.js` → a data source), and inside drishti-grid the renderer's simpler document tables (`enhanceDocTables`' sort and
 pager) fold into `consoleTables`.
 
@@ -1132,8 +1166,12 @@ under 530 lines each, typed JSDoc, the bundle by `tools/elements/build.py`, `Dri
   F8 Impact, F9 Propose).
 - **drishti-inputs extended for it** (no code in the screens): `CodeEditor.updateValue` (the cursor and the scroll kept), `highlight`
   (the selected item's lines), `cursor` and its event, `completeAfter` (a YAML key's "kind: ", a path's "$."), entries that say where
-  their word starts, `lineWrapping`, `tabLeaves` (a small box Tab leaves), YAML's Enter keeping its indentation (`yamlIndentAfter`);
-  `Form`'s `live` (no Save or Reset: an inspector).
+  their word starts, `lineWrapping`, `tabLeaves` (a small box Tab leaves), YAML's Enter keeping its indentation (`yamlIndentAfter`),
+  `height: 'auto'` (it grows with its text between `minHeight` and `maxHeight`: a formula bar), `singleLine` (a formula field: Enter
+  adds no line, a pasted line break is a space), `insert` (text at the cursor, as typed), `setInvalid` (a host's own check), and
+  `upgradeCodeArea` for `<input data-di-code>` too (one line; the element holds the value; focus and blur forwarded);
+  `Form`'s `live` (no Save or Reset: an inspector). `Inspector` takes `form` (more of `Form`'s options: widgets, layout, pathAttr)
+  and `head` (the host's header for the selection, in place of the schema's title).
 - **Moved onto it, the old code deleted**: the Build workbench's canvas (`build/drishti_canvas.js`: a flow `LayoutCanvas`; the trash,
   grip and size badge are its decoration), its drags (`build/drishti_drag.js`: the kit's `DragHub` and `trackPointer`), its YAML tab
   (`build/drishti_yamltab.js`: `YamlPane` with the schema assistant) and its about box (`CodeEditor`); the BI report designer's canvas
@@ -1305,6 +1343,11 @@ measure (a plain form: the hidden input), and the exposure explorer's pre-deal f
 figures). `terminal/_risk_elements.html` loads drishti-inputs. FRTB-SA's and SIMM's own choice selects (side, by, compare) and the
 library's own two (a form's enum of more than three, the grid's select editor) are still native.
 
+```bash
+DRISHTI_FIGURES_OUT=data/figures/before drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_var_family_figures_browser.py
+DRISHTI_FIGURES_BASELINE=data/figures/before drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_var_family_figures_browser.py
+```
+
 **Open.** The exposure scope tree is still hand-built (not tree data yet); the scenario matrix's date headings lose their hover note (in the column
 description instead); the screens' scripts move into the banking plugin with the module platform (section 8).
 
@@ -1316,21 +1359,21 @@ table editor, `/build/tables?new=table`; "the model designer" in two notes means
 
 | Screen (files) | On the kit | Still its own (moving next) |
 |---|---|---|
-| Build workbench (`build/drishti_*.js`) | canvas (flow `LayoutCanvas`), drags (`DragHub`), YAML tab (`YamlPane`, schema assistant), about box (`CodeEditor`), the form and controls tabs' re-ordering (`sortableList`); undo stays the server's operation log | the inspector (`build/drishti_inspector.js` → `Inspector` from the Rachana schema), the palette (`build/drishti_palette.js` → `Palette`), the data-shape tree (`drishti_build-shape-tree.js` → `Outline`), the expression input (`build/drishti_expr.js` → `CodeEditor`) |
-| BI report designer (`drishti_bi-design*.js`) | canvas (grid `LayoutCanvas`), undo (`SnapshotHistory`), settle, YAML tab (`CodeEditor` with completion), the Phone and Tablet order's drag (`sortableList`) | the Fields and Visualizations panes (→ `Palette`), the Format pane (→ `Inspector`), the device orders' model (→ `LayoutModel` breakpoints), the expression editor (`drishti_bi-expr-editor.js` → `CodeEditor`) |
-| Dataset designer: the table editor, virtual tables (`drishti_editor-table.js`) | the shell (`DesignerShell`), the YAML (`YamlPane`) | the source and look-up rows, the columns checklist and computed columns (→ `Form`, drishti-grid editing), the formula input (`drishti_editor-formula.js` → `CodeEditor`) |
-| Model designer: the semantic model editor (`drishti_editor-model.js`) | the shell, the YAML | the tabs, measure cards and the access matrix (→ `Form`, drishti-grid), relationships |
+| Build workbench (`build/drishti_*.js`) | canvas (flow `LayoutCanvas`), drags (`DragHub`), YAML tab (`YamlPane`, schema assistant), about box (`CodeEditor`), the form and controls tabs' re-ordering (`sortableList`), the inspector (`Inspector`: one live `Form` from the Rachana schema), its expressions (the `Form`'s formula widget, completing from `WB.expr.candidates`), the palette (`Palette`); undo stays the server's operation log | the data-shape tree (`drishti_build-shape-tree.js` → `Outline`) |
+| BI report designer (`drishti_bi-design*.js`) | canvas (grid `LayoutCanvas`), undo (`SnapshotHistory`), settle, YAML tab (`CodeEditor` with completion), the Phone and Tablet order's drag (`sortableList`); the Format pane and every settings pane beside it (conditional formatting, interactions, tooltip page, page, report, theme, tile: live `Form`s, 8.2); the expression editor (`drishti_bi-expr-editor.js`: a one-line Rachana `CodeEditor`, its completion hook from the fields, measures, functions and keywords) | the Fields and Visualizations panes (→ `Palette`), the wells' add lists, the drill-through and bookmark rows, the Filters pane's editor (→ `Form` with `when`), the links between datasets, the device orders' model (→ `LayoutModel` breakpoints) and their hide, width and rows controls (→ `Form`) |
+| Dataset designer: the table editor, virtual tables (`drishti_editor-table.js`) | the shell (`DesignerShell`), the YAML (`YamlPane`), the name, rows and look-up dialog (`Form`), every formula field (the `Form`'s formula widget) and the statement (`CodeEditor`, through `drishti_editor-formula.js`) | the source and look-up rows, the columns checklist (→ `Form`, drishti-grid editing) |
+| Model designer: the semantic model editor (`drishti_editor-model.js`) | the shell, the YAML, the measures', hierarchies' and row rules' formulas (`CodeEditor`), the Overview's name, title and words and the masks (live `Form`s) | the rows of the tables, relationships, measures, hierarchies and row rules, and the access matrix (→ drishti-grid editing) |
 | Python table and model editor (`drishti_editor-python.js`) | the shell, the YAML | the code beside its contract (→ `CodeEditor` Python), the templates |
 | + New steps (`drishti_editor-new.js`) | the shell | the guided steps (→ `Form`) |
-| Sutra screen designer: Customize, Grid, Outline, Describe (`drishti_designer*.js`, `templates/designer/`) | | the panel handles and drags (→ `LayoutCanvas` flow), the Grid's cells and formula bar (→ `LayoutCanvas` grid, `CodeEditor`), the outline (→ `Outline`), the settings and forms panels (→ `Inspector`) |
+| Sutra screen designer: Customize, Grid, Outline, Describe (`drishti_designer*.js`, `templates/designer/`) | the drags (`trackPointer`, `DragHub`), the Grid's formula bar (`CodeEditor` with completion), the Outline mode's tree (`Outline`), the columns checklist (`Form`'s checkboxes) | the panel handles (→ `LayoutCanvas` flow), the Grid's cells (→ `LayoutCanvas` grid), the settings and forms panels (→ `Inspector`) |
 | Form designer (the workbench's Form and Controls tabs) | the cards' order by drag (`sortableList`) | their fields (→ `Inspector`) |
-| BI Studio shell and theme designer (`drishti_bi-studio.js`, `drishti_bi-theme-designer.js`) | | the explorer, tabs and dock (→ `DesignerShell`), the theme YAML (→ `YamlPane`) |
+| BI Studio shell and theme designer (`drishti_bi-studio.js`, `drishti_bi-theme-designer.js`) | the theme's settings and series colours (`Form`) | the explorer, tabs and dock (→ `DesignerShell`), the theme YAML (→ `YamlPane`) |
 | BI items, workspaces, transforms (`templates/bi/item.html`, `workspace.html`, `transform.html`) | | the YAML and Python text areas (→ `CodeEditor`) |
 | The Notebook's cells (`drishti_bi-notebook*.js`) | | its cells' code (→ `CodeEditor` Python) |
 | Calculator, Pivot computed fields (`terminal/_calc.html`, `terminal/pivot.html`) | | their code areas (→ `CodeEditor`) |
 | Admin › Connectors, Drishti*net (`templates/admin/_connector_dialogs.html`, `net.html`) | | the YAML areas (→ `YamlPane`) |
 | Reader layout mode, arranging a screen, workspaces (`drishti_layout.js`, `drishti_screen-grid.js`, `drishti_workspace.js`) | | the pointer moves (→ `LayoutCanvas`, `trackPointer`) |
-| Forms, record forms, alerts, subscriptions (`drishti_form*.js`, `drishti_record-forms.js`, `drishti_alert-form.js`, `drishti_subscribe-when.js`) | | `Form` (wip/e-inputs-convert moves the forms) |
+| Forms, record forms, subscriptions (`drishti_form.js`, `drishti_record-forms.js`, `drishti_subscribe-when.js`), the table editor's fields, BI's Format pane, the Build inspector's structured options (`build/drishti_forms.js`) | `Form` (live, embedded, steps, named fields, hooks, custom widgets, time, date-and-time, money: 8.2, "The forms on Form") | the record forms' cells (→ drishti-grid editing); `drishti_alert-form.js` (→ `Form`) |
 | Packs, lake files, lenses, editions, engines, settings (`drishti_pack-new.js`, `drishti_admin-*.js`) | | their forms (→ `Form` with four eyes) |
 | Approvals' change views (`drishti_approvals.js`, `build/_diff.html`) | | the diffs (→ drishti-inputs' `CodeDiff`) |
 
@@ -1341,8 +1384,32 @@ its frames) and a slider's thumbs; every HTML5 drag of these is deleted. On dris
 `upgradeCodeArea`: the text area keeps the value for its form and its page's script): the connector and Drishti*net YAML, the theme
 designer's YAML, a BI item's and a workspace's YAML, the transform's Python and YAML, the Pivot's function code; the calculator draws its
 `CodeEditor` in place. **Still on the allow-list**: the Sutra designer's Grid formula bar (its own suggestion list → `CodeEditor`
-completion) and the Outline mode's tree (→ the kit's `Outline`); the workbench's data-shape tree is off the list, on drishti-tree's `TreeOutline` (8.8). The editors' own panes in the table
+completion) and the Outline mode's tree (→ the kit's `Outline`), the workbench's data-shape tree (→ drishti-tree's `TreeOutline`). The editors' own panes in the table
 above (inspectors and forms) are not drags or code areas, so the guard does not see them; they move with the forms builder's `Form`.
+
+**Third pass (the allow-list from 3 to 1).** The Grid's formula bar is a `CodeEditor` (Rachana, `height: 'auto'`; Enter keeps, Shift+Enter
+a new line, Esc goes back; its suggestions are the editor's completion hook); the Outline mode draws its tree with the kit's `Outline`
+(sections and the "Drop a panel here" rows as fixed nodes, the host's `data-ol-*` attributes on the rows; a move becomes the server's
+step: move, un-nest, or nest after asking where it opens). The editors' formula fields are `CodeEditor`s through `<input data-di-code>`.
+The workbench's data-shape tree is on drishti-tree's `TreeOutline` (8.8): **the allow-list is empty**. Next: the kit's `Outline`
+and drishti-tree's `TreeOutline` fold into one component (never two implementations side by side).
+
+**Fourth pass (the panes, wip/e-panes).** The Build workbench's inspector is the kit's `Inspector`: one live `Form` whose schema is made
+from the Rachana schema (sections Required, the kind's options, Placement and heading; lists as repeatable groups; a tabs panel's body
+by its kind; the structured options through `build/drishti_forms.js`'s converter); its header (the kind, About, Remove panel, Bind
+field) is the host's `head`. Its expression fields are the `Form`'s new **formula** widget (`<input data-di-code="rachana">`, a
+one-line `CodeEditor` with the host's completion), the hand-made completion list deleted; the palette is the kit's `Palette` over the
+page's `DragHub`. The table editor's own formula widget folded into the `Form`'s. A new rule in `test_designer_kit_guard.py`: no
+console script draws a label and an input in a loop over a schema's properties or fields (an inspector or form pane made by hand); its
+allow-list (2: a lake's classifier and promote checkboxes, a BI transform's parameters) only shrinks and ends at 0.
+
+**The BI designer's own panes (2.9.11.e).** The panes the guard does not see moved too: every settings pane of the report designer and
+the theme designer is a live `Form` through one helper (`drishtiBi.formatPane.form`: fields, values, a handler per top-level field; each
+control keeps its `data-*` hook, so tests and tutorials find it), and the ExpressionEditor is a one-line `CodeEditor` (the editor's
+completion in place of its own list). Saved reports are unchanged: a field writes only when a person changes it, and what it writes is
+what the old control wrote. **Still their own** (the next pass): the wells' add lists and the Fields and Visualizations panes (→
+`Palette`), the drill-through and bookmark rows, the links between datasets, the Filters pane's editor (→ a `Form` with `when`), the
+Phone and Tablet controls, the BI Studio shell (→ `DesignerShell`) and a report's measure name beside its formula.
 
 ## 13. Risks
 
@@ -1399,7 +1466,8 @@ g1 was decided separately: the grid's three layouts (section 5.1).
 - [x] The guards of section 11, the allow list (8.6: `test_elements_guards.py`; the allow-list holds only the BI, Pivot, VaR and exposure screens still moving)
 - [x] The general screens' tables, panel charts, history charts, Calc, the live connection and their numbers on the libraries (8.6)
 - [x] The general screens' multi-select, the as-of date and every date field, the controls' pickers, the history range, the people pickers and the comment box's lists on drishti-inputs 0.2.0 (8.2)
-- [ ] The forms on `Form` (needs its live mode, custom widgets, per-field hooks and a time type) and the Build and Studio editors (8.2, 8.6)
+- [x] The forms on `Form`: its live and embedded modes, steps, named fields, hooks, custom widgets, time, date-and-time and money; the query form, the subscription's When, the table editor, BI's Format pane, the inspector's structured options, the record forms' fields (8.2)
+- [ ] The record forms' cells on drishti-grid editing; the alert form and the admin forms on `Form` (12.3)
 - [ ] Every screen moved (section 12) and the old code deleted; the allow list empty (the BI and Pivot family: 12.1)
 - [ ] `tools/elements/inventory.py` (planned) regenerates section 2's figures; README and CHANGELOG updated; two drills
 

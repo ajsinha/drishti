@@ -28,6 +28,7 @@ import re
 import pytest
 
 from conftest import CONSOLE
+from core import modules
 
 pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it (TEST_HARNESS.md, "Quick file checks")
 
@@ -66,23 +67,23 @@ ALLOWED = {
     "static/js/drishti_bi-transform.js": {"numbers": BI},
     "static/js/drishti_bi-visuals.js": {"echarts": BI},
     "static/js/drishti_geomap.js": {"echarts": BI},
-    "static/js/drishti_mr-lens.js": {"numbers": BI},
+    "plugins/banking/static/js/drishti_mr-lens.js": {"numbers": BI},
     "static/js/drishti_pivot-engine.js": {"numbers": BI},
     "static/js/drishti_pivot-functions.js": {"numbers": BI},
     "static/js/drishti_table-chart.js": {"echarts": BI},
     # VaR, exposure and the risk screens (wip/e-migrate-var)
-    "static/js/drishti_exposure-explorer.js": {"numbers": VAR},
-    "static/js/drishti_frtb-sa.js": {"numbers": VAR},
-    "static/js/drishti_risk-landing.js": {"numbers": VAR},
-    "static/js/drishti_scenario-matrix.js": {"numbers": VAR},
-    "static/js/drishti_simm.js": {"numbers": VAR},
-    "static/js/drishti_stress-window.js": {"numbers": VAR},
-    "static/js/drishti_var-backtesting.js": {"numbers": VAR},
-    "static/js/drishti_var-basket.js": {"numbers": VAR},
-    "static/js/drishti_var-explorer.js": {"numbers": VAR},
-    "static/js/drishti_var-parametric.js": {"numbers": VAR},
-    "static/js/drishti_var-playground.js": {"numbers": VAR},
-    "static/js/drishti_var-reports.js": {"numbers": VAR},
+    "plugins/banking/static/js/drishti_exposure-explorer.js": {"numbers": VAR},
+    "plugins/banking/static/js/drishti_frtb-sa.js": {"numbers": VAR},
+    "plugins/banking/static/js/drishti_risk-landing.js": {"numbers": VAR},
+    "plugins/banking/static/js/drishti_scenario-matrix.js": {"numbers": VAR},
+    "plugins/banking/static/js/drishti_simm.js": {"numbers": VAR},
+    "plugins/banking/static/js/drishti_stress-window.js": {"numbers": VAR},
+    "plugins/banking/static/js/drishti_var-backtesting.js": {"numbers": VAR},
+    "plugins/banking/static/js/drishti_var-basket.js": {"numbers": VAR},
+    "plugins/banking/static/js/drishti_var-explorer.js": {"numbers": VAR},
+    "plugins/banking/static/js/drishti_var-parametric.js": {"numbers": VAR},
+    "plugins/banking/static/js/drishti_var-playground.js": {"numbers": VAR},
+    "plugins/banking/static/js/drishti_var-reports.js": {"numbers": VAR},
 }
 
 COMMENT = re.compile(r"/\*.*?\*/|(?<![:\\'\"])//[^\n]*|\{#.*?#\}|<!--.*?-->", re.S)
@@ -90,7 +91,11 @@ COMMENT = re.compile(r"/\*.*?\*/|(?<![:\\'\"])//[^\n]*|\{#.*?#\}|<!--.*?-->", re
 
 def _sources():
     files = sorted((WEB / "static" / "js").rglob("*.js")) + sorted((WEB / "templates").rglob("*.html"))
-    return {str(p.relative_to(WEB)): p for p in files}
+    out = {str(p.relative_to(WEB)): p for p in files}
+    for d in modules.static_dirs() + modules.template_dirs():       # each domain module's scripts and pages (plugins/<module>/...)
+        for p in sorted(d.rglob("*.js")) + sorted(d.rglob("*.html")):
+            out[str(p.relative_to(CONSOLE))] = p
+    return out
 
 
 def _broken(text, script=True):

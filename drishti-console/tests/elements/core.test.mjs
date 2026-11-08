@@ -173,6 +173,22 @@ test('the loader: versions and requirements from the manifest; under Node it say
   await assert.rejects(C.load('drishti-grid'), /no page to load it into|is not loaded/);
 });
 
+test('the loader: a library ships with its module and is refused where that module is not on for the person', async () => {
+  assert.equal(C.manifest().libraries['drishti-risk'].module, 'banking');
+  assert.equal(C.manifest().libraries['drishti-grid'].module, 'core');
+  assert.equal(C.refused('drishti-risk'), null);                               // nothing said (no Drishti page): every library loads
+  try {
+    C.configure({ modules: ['economy'] });
+    assert.match(C.refused('drishti-risk'), /drishti-risk belongs to the module 'banking', which is not available here/);
+    assert.equal(C.refused('drishti-chart'), null);                            // the core's libraries load everywhere
+    await assert.rejects(C.load('drishti-risk'), /module 'banking'/);          // refused before any file is asked for
+    C.configure({ modules: ['banking'] });
+    assert.equal(C.refused('drishti-risk'), null);
+  } finally {
+    C.configure({ modules: null });
+  }
+});
+
 test('the bundle is the modules: the same names, the version from the manifest, registered on Drishti.elements', () => {
   const b = require('../../web/static/elements/drishti-core/drishti_core.js');
   const names = Object.keys(C).sort();

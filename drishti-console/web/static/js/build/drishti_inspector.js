@@ -14,14 +14,16 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* The inspector: a form for whatever is selected, made from the Rachana schema (GET /studio/schema, the same document the YAML
- * editor completes from). A panel: its required options first, then the rest of what its kind accepts; enums are selects,
- * booleans toggles, numbers number fields, expressions text fields with autocomplete of shape paths and functions, and the lists
- * (columns, fields, series, the strip) add, remove and reorder. Nothing selected: the screen's own match and function keys. The title
- * and the strip, when selected on the canvas, have their own editors. Each change is one operation (SetOption, SetTitle, SetStrip,
- * SetKeys, SetMatch); the form is not redrawn under your hands while you type.
+/* The inspector: drishti-designer's Inspector (one live drishti-inputs Form) for whatever is selected, its schema made from the Rachana
+ * schema (GET /studio/schema, the same document the YAML editor completes from). A panel: its required options first, then the rest of
+ * what its kind accepts, then its placement; enums are selects, booleans switches, numbers number fields, expressions the Form's formula
+ * widget (a one-line code editor completing shape paths and functions: WB.expr), the structured options WB.Forms' fields, and the lists
+ * (columns, fields, series, the strip) repeatable groups that add, remove and move. Nothing selected: the screen's own match and function
+ * keys. The title and the strip, when selected on the canvas, have their own forms. Each change is one operation (SetOption, SetTitle,
+ * SetStrip, SetKeys, SetMatch), typed text after a pause; the form is not drawn again under your hands while you type.
  *
- *   new WB.Inspector(box, store, getSchema, ctx) -> {show(sel, opts)}      ctx: {paths(): shape rows, actions}                   */
+ *   new WB.Inspector(box, store, getSchema, ctx) -> {show(sel, opts), flush(), pending(), required(kind), current(), focusFirst()}
+ *   ctx: {paths(): shape rows, actions, remove(id)}                                                                                      */
 (function () {
   'use strict';
   var WB = window.Drishti.WB = window.Drishti.WB || {};
@@ -33,21 +35,18 @@
     strip: [['label', 'Label'], ['bind', 'Value', 'x'], ['fmt', 'Format', 'fmt'], ['tone', 'Tone', 'tone'], ['emphasis', 'Emphasis', 'b']]
   };
   var BASE = ['title', 'description', 'area', 'span', 'height', 'key', 'code'];
-  var uid = 0;
+  var EXPR = /^(rows|source|children|each|x|y|label|value|mark|max|text)$/;
 
   WB.Inspector = function (box, store, getSchema, ctx) {
-    var cur = null, schema = null, mine = false, timers = {}, waiting = {}, enums = {};
+    var D = window.Drishti.elements.designer, cur = null, schema = null, mine = false, timers = {}, waiting = {}, enums = {};
+    var built = null;                            // the selection as a form: {schema, values, change(path, values)}, a panel's {kind, model, required}
     function el(t, c, x, a) { return WB.el(t, c, x, a); }
-    function label(text, input, extra) {
-      var id = 'wbi' + (++uid), w = el('div', 'wb-field' + (extra ? ' ' + extra : ''));
-      var l = el('label', null, text, { 'for': id });
-      input.id = id; w.appendChild(l); w.appendChild(input);
-      return w;
-    }
+    function keyOf(op) { return op.op + ':' + (op.panel || '') + ':' + (op.option || ''); }
+    function cancel(op) { var key = keyOf(op); clearTimeout(timers[key]); delete waiting[key]; }
     function commit(op, now) {
       var fire = function () { mine = true; return store.send([op], 'Changed').then(function (r) { mine = false; return r; }); };
-      var key = op.op + ':' + (op.panel || '') + ':' + (op.option || '');
-      clearTimeout(timers[key]); delete waiting[key];
+      var key = keyOf(op);
+      cancel(op);
       if (now) { fire(); } else { waiting[key] = fire; timers[key] = setTimeout(function () { delete waiting[key]; fire(); }, 450); }
     }
     var prop = function (n) { return ((schema.raw.$defs.panel.properties || {})[n]) || {}; };
@@ -57,221 +56,176 @@
       own = own ? (schema.resolve(own) || own) : null;
       return own && (own.type || own['enum'] || own.oneOf) ? own : Object.assign({}, prop(n), own || {});
     }
-    function enumOf(p) { return p.enum || (p.oneOf && []) || null; }
-
-    // ---- one value --------------------------------------------------------------------------------------------------------
-    function textInput(value, onChange, expr, src) {
-      var i = el('input', 'studio-in mono', null, { type: 'text', autocomplete: 'off', spellcheck: 'false' });
-      i.value = value == null ? '' : String(value);
-      i.addEventListener('input', function () { onChange(i.value, false); });
-      i.addEventListener('change', function () { onChange(i.value, true); });
-      return { input: i, mount: function (w) { if (expr) { WB.expr.attach(i, src); } return w; } };
-    }
-    function select(options, value, onChange) {
-      var s = el('select', 'studio-in');
-      if (value && options.indexOf(String(value)) < 0) { options = options.concat([String(value)]); }          // a value the list does not know (a kind from outside the packs) is still shown
-      [''].concat(options).forEach(function (o) { var op = el('option', null, o || '(none)', { value: o }); if (String(value == null ? '' : value) === o) { op.selected = true; } s.appendChild(op); });
-      s.addEventListener('change', function () { onChange(s.value, true); });
-      return s;
-    }
     function exprSource(panel) {
       return { paths: function () { return ctx.paths(); }, rows: function () { var m = WB.model(store.state.yaml).panels.filter(function (p) { return p.id === panel; })[0]; return m && typeof m.values.rows === 'string' ? m.values.rows : ''; },
                functions: schema.fns };
     }
-    /** The control for one option of a panel. */
-    function control(panelId, name, value, p, req, kind) {
-      var set = function (v, now) { commit({ op: 'setOption', panel: panelId, option: name, value: v }, now); };
-      var desc = p.description || '';
-      var isExpr = /Rachana-EL/.test(desc), node;
-      if (p.enum) { node = select(p.enum, value, function (v, n) { set(v === '' ? null : v, n); }); return label(name, node); }
-      if (p.type === 'boolean') {
-        var cb = el('input', null, null, { type: 'checkbox', role: 'switch' });
-        cb.checked = value === true;
-        cb.addEventListener('change', function () { set(cb.checked ? true : null, true); });
-        var w = label(name, cb, 'wb-toggle'); return w;
-      }
-      if (LISTS[name] && (p.type === 'array' || name === 'series' || name === 'fields')) { return listEditor(name, value, function (v) { set(v.length ? v : null); }, panelId); }
-      if (name === 'body' && kind === 'tabs') { return bodyEditor(panelId, value, set); }
-      var structured = p.type === 'integer' || p.type === 'number' || p.oneOf || p.type === 'array' || (Array.isArray(p.type) && p.type.indexOf('object') >= 0) || (value && typeof value === 'object');
-      if (structured) {
-        var made = WB.Forms.edit(p.type || p.oneOf ? p : {}, value, function (v) { set(v === undefined ? null : v, true); }, name, enums);
-        return made.tagName === 'FIELDSET' ? made : (made.tagName === 'INPUT' || made.tagName === 'SELECT' ? label(name, made) : WB.Forms.captioned(name, made));
-      }
-      var t = textInput(value, set, isExpr || /^(rows|source|children|each|x|y|label|value|mark|max|text)$/.test(name), exprSource(panelId));
-      var wrap = label(name + (req ? ' *' : ''), t.input);
-      t.mount(wrap);
-      if (desc) { t.input.setAttribute('aria-description', desc); t.input.title = desc; }
-      if (req) { wrap.classList.add('wb-req'); wrap.setAttribute('data-required', name); }
-      return wrap;
-    }
+    function formula(title, panel, extra) { return Object.assign({ type: 'string', title: title, widget: 'formula', options: { complete: WB.expr.complete(exprSource(panel)) } }, extra || {}); }
+    function plain(f) { return { field: f, into: function (x) { return x == null || x === '' ? undefined : String(x); }, out: function (x) { return x === undefined || x === '' ? null : x; } }; }
 
-    /** A tabs panel's `body`: the panel each tab shows, by its kind and its columns (the rest is kept as it is). */
-    function bodyEditor(panelId, value, set) {
-      var body = Object.assign({}, value && typeof value === 'object' ? value : {}), wrap = el('fieldset', 'wb-list');
-      wrap.appendChild(el('legend', null, 'body'));
-      var inner = el('div');
-      function send() { set(body.kind ? Object.assign({}, body) : null, true); }
-      function paint() {
-        inner.textContent = '';
-        var k = schema.byKind[body.kind], listName = k && k.options.indexOf('columns') >= 0 ? 'columns' : (k && k.options.indexOf('fields') >= 0 ? 'fields' : '');
-        if (listName) {
-          inner.appendChild(listEditor(listName, body[listName], function (v) { if (v.length) { body[listName] = v; } else { delete body[listName]; } send(); }, panelId));
-        }
-        var rest = Object.keys(body).filter(function (x) { return x !== 'kind' && x !== listName; });
-        if (rest.length) { inner.appendChild(el('p', 'text-muted-d', 'Also set in the YAML tab: ' + rest.join(', ') + '.')); }
-      }
-      wrap.appendChild(label('kind of the tab body', select(Object.keys(schema.byKind), body.kind, function (v) { if (v) { body.kind = v; } else { delete body.kind; } send(); paint(); })));
-      wrap.appendChild(inner); paint();
-      return wrap;
-    }
-
-    // ---- lists: columns, fields, series, the strip ------------------------------------------------------------------------
-    function listEditor(name, value, onChange, panelId) {
-      var items = Array.isArray(value) ? value.map(function (x) { return Object.assign({}, x); }) : [], keys = LISTS[name];
-      var wrap = el('fieldset', 'wb-list'), body = el('div'), src = exprSource(panelId);
-      wrap.appendChild(el('legend', null, name));
-      wrap.appendChild(body);
-      function clean() {
-        return items.map(function (it) { var o = {}; keys.forEach(function (k) { var v = it[k[0]]; if (v !== '' && v != null && v !== false) { o[k[0]] = v; } }); return o; }).filter(function (o) { return Object.keys(o).length; });
-      }
-      function paint(focusAt) {
-        body.textContent = '';
-        items.forEach(function (it, idx) {
-          var row = el('div', 'wb-item', null, { role: 'group', 'aria-label': name + ' ' + (idx + 1) });
-          keys.forEach(function (k) {
-            var cell;
-            if (k[2] === 'b') {
-              cell = el('input', null, null, { type: 'checkbox' }); cell.checked = it[k[0]] === true;
-              cell.addEventListener('change', function () { it[k[0]] = cell.checked; onChange(clean()); });
-            } else if (k[2] === 'fmt' || k[2] === 'tone') {
-              cell = select(enums[k[2]] || [], it[k[0]], function (v) { it[k[0]] = v; onChange(clean()); });
-            } else {
-              cell = el('input', 'studio-in mono', null, { type: 'text', autocomplete: 'off', spellcheck: 'false' });
-              cell.value = it[k[0]] == null ? '' : it[k[0]];
-              cell.addEventListener('change', function () { it[k[0]] = cell.value; onChange(clean()); });
-            }
-            var w = label(k[1] + ' ' + (idx + 1), cell, 'wb-cell');
-            row.appendChild(w);
-            if (k[2] === 'x') { WB.expr.attach(cell, src); }
-          });
-          var tools = el('div', 'wb-item-tools');
-          [['↑', 'Move up', -1], ['↓', 'Move down', 1]].forEach(function (b) {
-            var btn = el('button', 'btn-pill btn-ghost', b[0], { type: 'button', 'aria-label': b[1] + ': ' + name + ' ' + (idx + 1) });
-            btn.disabled = idx + b[2] < 0 || idx + b[2] >= items.length;
-            btn.addEventListener('click', function () { items.splice(idx + b[2], 0, items.splice(idx, 1)[0]); onChange(clean()); paint(idx + b[2]); });
-            tools.appendChild(btn);
-          });
-          var rm = el('button', 'btn-pill btn-ghost', 'Remove', { type: 'button', 'aria-label': 'Remove ' + name + ' ' + (idx + 1) });
-          rm.addEventListener('click', function () { items.splice(idx, 1); onChange(clean()); paint(Math.max(0, idx - 1)); });
-          tools.appendChild(rm);
-          row.appendChild(tools);
-          body.appendChild(row);
-        });
-        if (focusAt != null) { var f = body.children[focusAt] && body.children[focusAt].querySelector('input, select'); if (f) { f.focus(); } }
-      }
-      var add = el('button', 'btn-pill btn-ghost', 'Add ' + name.replace(/s$/, ''), { type: 'button' });
-      add.addEventListener('click', function () { items.push({}); paint(items.length - 1); });
-      wrap.appendChild(add);
-      paint();
-      return wrap;
-    }
-
-    // ---- what is selected -----------------------------------------------------------------------------------------------------
-    function panelForm(sel, opts) {
-      var m = WB.model(store.state.yaml).panels.filter(function (p) { return p.id === sel.id; })[0];
-      if (!m) { box.appendChild(el('p', 'text-muted-d', 'This panel is gone.')); return; }
-      var kind = m.kind, k = schema.byKind[kind] || { required: [], options: [] };
-      var head = el('div', 'wb-ins-h');
-      head.appendChild(el('span', 'bs-role', kind));
-      head.appendChild(el('b', 'mono', m.id));
-      var help = el('a', 'lnk', 'About ' + kind, { href: '/help/rachana-reference#' + kind, target: '_blank', rel: 'noopener' });
-      head.appendChild(help);
-      box.appendChild(head);
-      var bar = el('div', 'bs-actions');
-      var bind = el('button', 'btn-pill btn-ghost', 'Bind field…', { type: 'button' });
-      bind.addEventListener('click', function () { ctx.actions.menuBind(bind); });
-      var rm = el('button', 'btn-pill btn-ghost wb-remove', 'Remove panel', { type: 'button', 'aria-label': 'Remove panel ' + (m.values.title || m.id) });
-      rm.addEventListener('click', function () { if (ctx.remove) { ctx.remove(m.id); } else { ctx.actions.remove(m.id, null); } });
-      head.appendChild(rm);
-      bar.appendChild(bind); box.appendChild(bar);
-      var missing = [];
-      var sect = function (title, names, req) {
-        var list = names.filter(function (n) { return n !== 'id' && n !== 'kind'; });
-        if (!list.length) { return; }
-        var s = el('fieldset', 'wb-sect'); s.appendChild(el('legend', null, title));
-        list.forEach(function (n) {
-          var has = m.values[n] !== undefined && m.values[n] !== null && m.values[n] !== '' && !(Array.isArray(m.values[n]) && !m.values[n].length);
-          var c = control(m.id, n, m.values[n], kindProp(kind, n), req, kind);
-          if (req && (!has || (opts && opts.required))) { c.classList.add('wb-missing'); missing.push(c); }
-          s.appendChild(c);
-        });
-        box.appendChild(s);
+    // ---- one option as a field: {field, into(value), out(formValue)} ---------------------------------------------------------------
+    function listField(name, panelId) {
+      var keys = LISTS[name], props = {};
+      keys.forEach(function (k) {
+        props[k[0]] = k[2] === 'x' ? formula(k[1], panelId) : k[2] === 'b' ? { type: 'boolean', title: k[1] }
+          : k[2] ? { type: 'string', title: k[1], 'enum': enums[k[2]] || [], widget: 'select', emptyLabel: '(none)' } : { type: 'string', title: k[1], lazy: true };
+      });
+      var clean = function (items) {
+        return (items || []).map(function (it) { var o = {}; keys.forEach(function (k) { var v = (it || {})[k[0]]; if (v !== '' && v != null && v !== false) { o[k[0]] = v; } }); return o; })
+          .filter(function (o) { return Object.keys(o).length; });
       };
-      sect('Required', k.required.filter(function (n) { return n !== 'id' && n !== 'kind'; }), true);
+      return { field: { type: 'array', title: name, addLabel: 'Add ' + name.replace(/s$/, ''), items: { type: 'object', title: name, properties: props } },
+        into: function (v) { return (Array.isArray(v) ? v : []).map(function (x) { return Object.assign({}, x); }); },
+        out: function (v) { var c = clean(v); return c.length ? c : null; } };
+    }
+    /** A tabs panel's `body`: the panel each tab shows, by its kind and its columns or fields (the rest is kept as it is). */
+    function bodyField(value, panelId) {
+      var kinds = Object.keys(schema.byKind), body = value && typeof value === 'object' ? value : {};
+      var having = function (o) { return kinds.filter(function (k) { return schema.byKind[k].options.indexOf(o) >= 0; }); };
+      var withCols = having('columns'), withFields = having('fields').filter(function (k) { return withCols.indexOf(k) < 0; });
+      var cols = listField('columns', panelId), flds = listField('fields', panelId);
+      var rest = Object.keys(body).filter(function (x) { return x !== 'kind' && x !== 'columns' && x !== 'fields'; });
+      return { field: { type: 'object', title: 'body', description: rest.length ? 'Also set in the YAML tab: ' + rest.join(', ') + '.' : undefined, properties: {
+          kind: { type: 'string', title: 'kind of the tab body', 'enum': kinds, widget: 'select', emptyLabel: '(none)' },
+          columns: Object.assign({}, cols.field, { when: { field: 'kind', 'in': withCols } }),
+          fields: Object.assign({}, flds.field, { when: { field: 'kind', 'in': withFields } }) } },
+        into: function (v) { v = v && typeof v === 'object' ? v : {}; return { kind: v.kind, columns: cols.into(v.columns), fields: flds.into(v.fields) }; },
+        out: function (v) {
+          v = v || {};
+          if (!v.kind) { return null; }
+          var o = {}, list = withCols.indexOf(v.kind) >= 0 ? 'columns' : withFields.indexOf(v.kind) >= 0 ? 'fields' : '';
+          rest.forEach(function (k) { o[k] = body[k]; });
+          o.kind = v.kind;
+          var c = list === 'columns' ? cols.out(v.columns) : list === 'fields' ? flds.out(v.fields) : null;
+          if (c) { o[list] = c; }
+          return o;
+        } };
+    }
+    function optionField(panelId, name, value, p, kind) {
+      var desc = p.description || '', tip = desc ? { 'aria-description': desc, title: desc } : null;
+      if (p['enum'] || p.type === 'boolean') { return WB.Forms.toField(p, value, name, enums); }
+      if (LISTS[name] && (p.type === 'array' || name === 'series' || name === 'fields')) { return listField(name, panelId); }
+      if (name === 'body' && kind === 'tabs') { return bodyField(value, panelId); }
+      var structured = p.type === 'integer' || p.type === 'number' || p.oneOf || p.type === 'array' || (Array.isArray(p.type) && p.type.indexOf('object') >= 0) || (value && typeof value === 'object');
+      if (structured) { return WB.Forms.toField(p.type || p.oneOf ? p : {}, value, name, enums); }
+      if (/Rachana-EL/.test(desc) || EXPR.test(name)) { return plain(formula(name, panelId, { hook: tip })); }
+      return plain({ type: 'string', title: name, hook: tip });
+    }
+
+    // ---- what is selected, as a form ---------------------------------------------------------------------------------------------
+    function panelForm(sel) {
+      var m = WB.model(store.state.yaml).panels.filter(function (p) { return p.id === sel.id; })[0];
+      if (!m) { return null; }
+      var kind = m.kind, k = schema.byKind[kind] || { required: [], options: [] }, conv = {}, at = {}, props = {}, values = {};
       var optional = k.options.filter(function (n) { return k.required.indexOf(n) < 0; });
       if (kind === 'tabs' && optional.indexOf('body') < 0) { optional.push('body'); }          // what each tab shows: a panel of its own, not listed among the options
-      sect('Options of a ' + kind + ' panel', optional.filter(function (n) { return n !== 'columns' || true; }), false);
-      sect('Placement and heading', BASE, false);
-      if (opts && opts.required && missing.length) {
-        var f = missing[0].querySelector('input, select, button');
-        box.insertBefore(el('p', 'wb-hint', 'Required options are marked (filled from your data when it could; check them): ' + missing.map(function (x) { return x.getAttribute('data-required') || x.querySelector('legend, label').textContent; }).join(', ') + '.', { role: 'status' }), box.children[2]);
+      [['req', 'Required', k.required], ['opt', 'Options of a ' + kind + ' panel', optional], ['base', 'Placement and heading', BASE]].forEach(function (s) {
+        var names = s[2].filter(function (n) { return n !== 'id' && n !== 'kind' && !at[n]; });
+        if (!names.length) { return; }
+        var sp = {}, sv = {};
+        names.forEach(function (n) {
+          var c = conv[n] = optionField(m.id, n, m.values[n], kindProp(kind, n), kind);
+          at[n] = s[0];
+          sp[n] = Object.assign({ title: n }, c.field);
+          var x = c.into(m.values[n]);
+          if (x !== undefined) { sv[n] = x; }
+        });
+        props[s[0]] = { type: 'object', title: s[1], properties: sp, required: s[0] === 'req' ? names : undefined };
+        values[s[0]] = sv;
+      });
+      return { kind: kind, model: m, required: k.required.filter(function (n) { return n !== 'id' && n !== 'kind'; }), schema: { type: 'object', title: kind, properties: props }, values: values,
+        change: function (path, all) {
+          var n = path.split('.')[1].split('[')[0], c = conv[n];
+          if (!c) { return; }
+          var out = c.out(((all || {})[at[n]] || {})[n]);
+          if (out === WB.Forms.SKIP) { return; }
+          var op = { op: 'setOption', panel: m.id, option: n, value: out === undefined ? null : out };
+          var now = WB.model(store.state.yaml).panels.filter(function (p) { return p.id === m.id; })[0], was = now ? now.values[n] : undefined;
+          if (JSON.stringify(was === undefined ? null : was) === JSON.stringify(op.value)) { cancel(op); return; }   // an empty item added, a text typed back: nothing to send
+          commit(op, typeof out !== 'string');
+        } };
+    }
+    function titleForm() {
+      var t = WB.model(store.state.yaml).title || {};
+      return { schema: { type: 'object', properties: { title: { type: 'object', title: 'Title', properties: {
+          id: formula('Id (expression)', ''), pill: { type: 'string', title: 'Pill (text, may hold ${…})' }, 'with': formula('With (expression)', '') } } } },
+        values: { title: { id: t.id, pill: t.pill, 'with': t['with'] } },
+        change: function (path, all) {
+          var v = Object.assign({}, t), f = (all || {}).title || {};
+          ['id', 'pill', 'with'].forEach(function (k) { if (f[k]) { v[k] = f[k]; } else { delete v[k]; } });
+          if (v.id) { commit({ op: 'setTitle', title: v }, false); }
+        } };
+    }
+    function stripForm() {
+      var c = listField('strip', '');
+      return { schema: { type: 'object', description: 'Up to eight figures. Drag a field from the shape onto the strip to add one.', properties: { strip: c.field } },
+        values: { strip: c.into(WB.model(store.state.yaml).strip || []) },
+        change: function (path, all) { commit({ op: 'setStrip', items: c.out((all || {}).strip) || [] }, !/\.(label|bind)$/.test(path)); } };
+    }
+    function screenForm() {
+      var md = WB.model(store.state.yaml), match = md.match || {}, keys = md.keys || {}, cm = (schema.raw.properties.match || {}).properties || {}, fk = {}, kv = {};
+      for (var n = 1; n <= 12; n++) { fk['F' + n] = formula('F' + n, ''); if (keys['F' + n]) { kv['F' + n] = keys['F' + n]; } }
+      return { schema: { type: 'object', description: 'Select a panel, the title or the strip on the canvas to edit it here.', properties: {
+          match: { type: 'object', title: 'Applies to (match)', properties: { kind: { type: 'string', title: 'kind', 'enum': (cm.kind && cm.kind['enum']) || [], widget: 'select', emptyLabel: '(none)' },
+            where: formula('where (expression)', ''), priority: { type: 'integer', title: 'priority', minimum: 0, lazy: true } } },
+          keys: { type: 'object', title: 'Function keys', properties: fk } } },
+        values: { match: { kind: match.kind, where: match.where, priority: match.priority }, keys: kv },
+        change: function (path, all) {
+          all = all || {};
+          if (path.indexOf('keys.') === 0) {
+            var k = Object.assign({}, keys), f = all.keys || {};
+            Object.keys(fk).forEach(function (x) { if (f[x]) { k[x] = f[x]; } else { delete k[x]; } });
+            commit({ op: 'setKeys', keys: k }, false);
+            return;
+          }
+          var mt = Object.assign({}, match), g = all.match || {};
+          ['kind', 'where', 'priority'].forEach(function (x) { var v = g[x]; if (v !== undefined && v !== '' && !(typeof v === 'number' && isNaN(v))) { mt[x] = v; } else { delete mt[x]; } });
+          if (mt.kind) { commit({ op: 'setMatch', match: mt }, path !== 'match.where'); }
+        } };
+    }
+
+    // ---- the kit's inspector ------------------------------------------------------------------------------------------------------
+    function header() {
+      if (!built || !built.model) { return null; }
+      var m = built.model, kind = built.kind;
+      var rm = el('button', 'btn-pill btn-ghost wb-remove', 'Remove panel', { type: 'button', 'aria-label': 'Remove panel ' + (m.values.title || m.id) });
+      rm.addEventListener('click', function () { if (ctx.remove) { ctx.remove(m.id); } else { ctx.actions.remove(m.id, null); } });
+      var bind = el('button', 'btn-pill btn-ghost', 'Bind field…', { type: 'button' });
+      bind.addEventListener('click', function () { ctx.actions.menuBind(bind); });
+      return [el('span', 'bs-role', kind), el('b', 'mono', m.id), el('a', 'lnk', 'About ' + kind, { href: '/help/rachana-reference#' + kind, target: '_blank', rel: 'noopener' }), rm, bind];
+    }
+    var kit = new D.Inspector(box, { empty: 'Loading the Rachana schema...', head: header,
+      schemaFor: function () { return built ? built.schema : null; }, valuesFor: function () { return built ? JSON.parse(JSON.stringify(built.values)) : {}; } });
+    kit.on('change', function (c) { if (built) { built.change(c.path, c.values); } });
+
+    /** Marks the required options (the empty ones; all of them when a panel was just added: filled from the data, to be checked); the first takes the focus. */
+    function markRequired(opts) {
+      if (!built || !built.required) { return; }
+      var marked = [], fresh = !!(opts && opts.required);
+      built.required.forEach(function (n) {
+        var w = box.querySelector('[data-path="req.' + n + '"]'), v = built.model.values[n];
+        if (!w) { return; }
+        w.setAttribute('data-required', n);
+        if (fresh || v === undefined || v === null || v === '' || (Array.isArray(v) && !v.length)) { w.classList.add('wb-missing'); marked.push(n); }
+      });
+      if (fresh && marked.length) {
+        kit.body.insertBefore(el('p', 'wb-hint', 'Required options are marked (filled from your data when it could; check them): ' + marked.join(', ') + '.', { role: 'status' }), kit.body.firstChild);
+        var at = '[data-path="req.' + marked[0] + '"] ', f = box.querySelector(at + 'input, ' + at + 'select, ' + at + 'button');
         if (f) { f.focus(); }
       }
     }
-    function section(name, val, build) {
-      var s = el('fieldset', 'wb-sect'); s.appendChild(el('legend', null, name)); build(s, val); box.appendChild(s);
-    }
-    function titleForm() {
-      var t = WB.model(store.state.yaml).title || {}, cur2 = Object.assign({}, t);
-      section('Title', t, function (s) {
-        [['id', 'Id (expression)', true], ['pill', 'Pill (text, may hold ${…})', false], ['with', 'With (expression)', true]].forEach(function (f) {
-          var tin = textInput(cur2[f[0]], function (v, now) { if (v) { cur2[f[0]] = v; } else { delete cur2[f[0]]; } if (cur2.id) { commit({ op: 'setTitle', title: Object.assign({}, cur2) }, now); } }, f[2], exprSource(''));
-          var w = label(f[1], tin.input); tin.mount(w); s.appendChild(w);
-        });
-      });
-    }
-    function stripForm() {
-      var items = WB.model(store.state.yaml).strip || [];
-      var le = listEditor('strip', items, function (v) { commit({ op: 'setStrip', items: v }, true); }, '');
-      box.appendChild(le);
-      box.appendChild(el('p', 'text-muted-d', 'Up to eight figures. Drag a field from the shape onto the strip to add one.'));
-    }
-    function screenForm() {
-      var md = WB.model(store.state.yaml), match = Object.assign({}, md.match), keys = Object.assign({}, md.keys);
-      var cm = (schema.raw.properties.match || {}).properties || {};
-      section('Applies to (match)', match, function (s) {
-        var kinds = (cm.kind && cm.kind.enum) || [];
-        var send = function () { commit({ op: 'setMatch', match: Object.assign({}, match) }, true); };
-        s.appendChild(label('kind', select(kinds, match.kind, function (v) { if (v) { match.kind = v; send(); } })));
-        var w = textInput(match.where, function (v, now) { if (v) { match.where = v; } else { delete match.where; } if (match.kind && now) { send(); } }, true, exprSource(''));
-        var lw = label('where (expression)', w.input); w.mount(lw); s.appendChild(lw);
-        var pr = el('input', 'studio-in', null, { type: 'number', min: 0 }); pr.value = match.priority == null ? '' : match.priority;
-        pr.addEventListener('change', function () { if (pr.value === '') { delete match.priority; } else { match.priority = parseInt(pr.value, 10); } if (match.kind) { send(); } });
-        s.appendChild(label('priority', pr));
-      });
-      section('Function keys', keys, function (s) {
-        for (var n = 1; n <= 12; n++) {
-          (function (key) {
-            var t = textInput(keys[key], function (v, now) { if (v) { keys[key] = v; } else { delete keys[key]; } commit({ op: 'setKeys', keys: Object.assign({}, keys) }, now); }, true, exprSource(''));
-            var w = label(key, t.input, 'wb-cell'); t.mount(w); s.appendChild(w);
-          })('F' + n);
-        }
-      });
-      box.appendChild(el('p', 'text-muted-d', 'Select a panel, the title or the strip on the canvas to edit it here.'));
-    }
-
     function show(sel, opts) {
       cur = sel;
-      box.textContent = '';
-      if (!schema) { box.appendChild(el('p', 'text-muted-d', 'Loading the Rachana schema...')); return; }
-      var labelText = !sel ? 'the screen' : sel.type === 'panel' ? 'panel ' + sel.id : sel.type;
-      box.setAttribute('aria-label', 'Inspector: ' + labelText);
-      if (!sel) { screenForm(); } else if (sel.type === 'panel') { panelForm(sel, opts); } else if (sel.type === 'title') { titleForm(); } else if (sel.type === 'strip') { stripForm(); }
+      if (!schema) { built = null; kit.show([]); return; }
+      box.setAttribute('aria-label', 'Inspector: ' + (!sel ? 'the screen' : sel.type === 'panel' ? 'panel ' + sel.id : sel.type));
+      built = !sel ? screenForm() : sel.type === 'panel' ? panelForm(sel) : sel.type === 'title' ? titleForm() : sel.type === 'strip' ? stripForm() : null;
+      kit.show([!sel ? 'screen' : sel.type === 'panel' ? 'panel:' + sel.id : sel.type]);
+      markRequired(opts);
     }
     getSchema().then(function (raw) {
-      schema = new window.Drishti.elements.designer.YamlSchema(raw);      // the Rachana schema as drishti-designer reads it
+      schema = new D.YamlSchema(raw);                                  // the Rachana schema as drishti-designer reads it
       var col = raw.$defs.column.properties;
-      enums.fmt = (col.fmt || {}).enum || []; enums.tone = (col.tone || {}).enum || [];
+      enums.fmt = (col.fmt || {})['enum'] || []; enums.tone = (col.tone || {})['enum'] || [];
       show(cur);
     });
     // the Sutra changed somewhere else (the YAML tab, undo, another panel): redraw unless the form is what changed it
@@ -281,6 +235,8 @@
       var all = Object.keys(waiting).map(function (k) { clearTimeout(timers[k]); var f = waiting[k]; delete waiting[k]; return f(); });
       return Promise.all(all);
     }
-    return { flush: flush, pending: function () { return Object.keys(waiting).length > 0; }, required: function (kind) { return schema && schema.byKind[kind] ? schema.byKind[kind].required : []; }, show: show, current: function () { return cur; }, focusFirst: function () { var f = box.querySelector('input, select, button'); if (f) { f.focus(); } } };
+    var FOCUS = '.dd-inspector-body input:not([type=hidden]), .dd-inspector-body select, .dd-inspector-body textarea, .dd-inspector-body button';
+    return { flush: flush, pending: function () { return Object.keys(waiting).length > 0; }, required: function (kind) { return schema && schema.byKind[kind] ? schema.byKind[kind].required : []; },
+      show: show, current: function () { return cur; }, focusFirst: function () { var f = box.querySelector(FOCUS) || box.querySelector('button'); if (f) { f.focus(); } } };
   };
 })();

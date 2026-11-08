@@ -56,13 +56,6 @@
 .wb-sample-pick { flex: 1 1 auto; text-align: left; background: none; border: 1px solid transparent; border-radius: var(--d-radius-4); padding: var(--d-sp-2_4) var(--d-sp-6_4); color: var(--d-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
 .wb-sample.on .wb-sample-pick { border-color: var(--d-accent); background: var(--d-accent-tint); font-weight: 700; }
 .wb-sample-pick:focus-visible { outline: 2px solid var(--d-accent); }
-.wb-palette { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--d-sp-4); }
-.wb-kind { display: flex; align-items: center; gap: var(--d-sp-8); padding: var(--d-sp-4_8) var(--d-sp-6_4); border: 1px solid var(--d-border); border-radius: var(--d-radius-6); cursor: grab; background: var(--d-surface); }
-.wb-kind:hover { border-color: var(--d-accent); }
-.wb-kind > .bi { font-size: var(--d-fs-18_4); color: var(--d-accent); flex: 0 0 auto; }
-.wb-kind-t { display: flex; flex-direction: column; min-width: 0; flex: 1 1 auto; }
-.wb-kind-t small { color: var(--d-muted); font-size: var(--d-fs-11_84); line-height: 1.2; }
-.wb-kind-add { padding: var(--d-sp-1_6) var(--d-sp-8); font-size: var(--d-fs-12); }
 .wb-field-row { cursor: grab; }
 body.wb-dragging, body.wb-dragging * { cursor: grabbing !important; user-select: none; }
 
@@ -100,23 +93,11 @@ body.wb-dragging, body.wb-dragging * { cursor: grabbing !important; user-select:
 .wb-menu-n { font-weight: 600; }
 .wb-menu-d { color: var(--d-muted); font-size: var(--d-fs-12_48); flex-basis: 100%; }
 .wb-menu-e { padding: var(--d-sp-6_4) var(--d-sp-8); color: var(--d-muted); }
-.wb-expr { position: absolute; z-index: 20; left: 0; right: 0; top: 100%; max-height: 12rem; border: 1px solid var(--d-border); border-radius: var(--d-radius-6); background: var(--d-surface); box-shadow: var(--d-shadow); }
 
 /* the inspector */
-.wb-ins-h { display: flex; align-items: baseline; gap: var(--d-sp-9_6); margin-bottom: var(--d-sp-6_4); }
-.wb-sect, .wb-list { border: 1px solid var(--d-border); border-radius: var(--d-radius-6); margin: 0 0 var(--d-sp-9_6); padding: var(--d-sp-6_4) var(--d-sp-9_6) var(--d-sp-8); min-width: 0; }
 .wb-sect legend, .wb-list legend { float: none; width: auto; font-size: var(--d-fs-12_48); font-weight: 700; color: var(--d-muted); padding: 0 var(--d-sp-4_8); margin: 0; }
-.wb-field { position: relative; display: flex; flex-direction: column; gap: var(--d-sp-1_6); margin: var(--d-sp-4_8) 0; }
-.wb-field label { font-size: var(--d-fs-12_48); color: var(--d-muted); }
-.wb-field input.studio-in, .wb-field select.studio-in { width: 100%; }
-.wb-toggle { flex-direction: row; align-items: center; gap: var(--d-sp-8); }
-.wb-toggle label { order: 2; color: var(--d-ink); }
-.wb-req label { color: var(--d-ink); font-weight: 600; }
-.wb-missing input, .wb-missing select { border-color: var(--d-warn); box-shadow: 0 0 0 2px var(--d-accent-tint); }
+.wb-missing input, .wb-missing select, .wb-missing .CodeMirror { border-color: var(--d-warn); box-shadow: 0 0 0 2px var(--d-accent-tint); }
 .wb-hint { color: var(--d-warn); font-size: var(--d-fs-13_6); margin: 0 0 var(--d-sp-8); }
-.wb-item { border: 1px solid var(--d-border); border-radius: var(--d-radius-6); padding: var(--d-sp-3_2) var(--d-sp-8); margin: var(--d-sp-4_8) 0; }
-.wb-item-tools { display: flex; gap: var(--d-sp-4_8); justify-content: flex-end; margin-bottom: var(--d-sp-3_2); }
-.wb-cell { margin: var(--d-sp-2_4) 0; }
 
 /* problems, tests, status bar */
 .wb-problems { list-style: none; padding: 0; margin: 0; }
@@ -161,7 +142,7 @@ body.wb-dragging, body.wb-dragging * { cursor: grabbing !important; user-select:
 .wb-sec { margin-bottom: var(--d-sp-9_6); }
 .wb-sec > summary { cursor: pointer; }
 .wb-palette { max-height: 15rem; overflow: auto; padding-right: var(--d-sp-3_2); }
-.wb-kind, .wb-field-row, .wb-frame .pnl-h, .wb-frame .dd-edge { user-select: none; -webkit-user-select: none; }
+.wb-field-row, .wb-frame .pnl-h, .wb-frame .dd-edge { user-select: none; -webkit-user-select: none; }
 
 /* the YAML editor wears the console's colours, as Studio's does (drishti_terminal.css scopes those rules to Studio's own pane) */
 #wbPaneYaml .CodeMirror { background: var(--d-bg-2); color: var(--d-ink); font: var(--d-fs-13_12)/1.5 var(--d-font-mono); }
@@ -176,8 +157,6 @@ body.wb-dragging, body.wb-dragging * { cursor: grabbing !important; user-select:
 #wbPaneYaml .cm-s-default .cm-bracket, #wbPaneYaml .cm-s-default .cm-operator { color: var(--d-muted); }
 #wbPaneYaml .studio-gutter { width: 14px; }
 #wbPaneYaml .studio-chk { text-decoration: underline wavy var(--d-warn); text-underline-offset: 3px; }
-.wb-item { display: grid; grid-template-columns: 1fr 1fr; column-gap: var(--d-sp-8); }
-.wb-item .wb-item-tools { grid-column: 1 / -1; }
 .wb-drop:not(.wb-drop-box) { box-shadow: 0 0 0 3px var(--d-accent-tint), 0 0 10px var(--d-accent); }
 
 /* ---- step 8: shipping ------------------------------------------------------------------------------------------------------ */
@@ -195,17 +174,10 @@ body.wb-dragging, body.wb-dragging * { cursor: grabbing !important; user-select:
 .wb-notes-view { overflow-wrap: anywhere; }
 @media (max-width: 900px) { .wb-notes { grid-template-columns: minmax(0, 1fr); } }
 .wb-dropped { margin: 0 0 var(--d-sp-6_4); }
-.wb-cap-set { border: 0; padding: 0; margin: 0 0 var(--d-sp-4_8); }
-.wb-cap { font-size: var(--d-fs-12_8); float: none; width: auto; margin: 0; }
-.wb-inline { display: flex; align-items: center; gap: var(--d-sp-6_4); }
-.wb-obj { display: grid; gap: var(--d-sp-4); margin-left: var(--d-sp-8); }
 
 /* Adding a panel (product owner): the header button, the kind grid, the grip and the arrival highlight */
 .wb-add-panel { font-weight: 700; }
-.wb-palette { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--d-sp-4); padding: 0; list-style: none; }
-.wb-palette .wb-kind { padding: var(--d-sp-3_2) var(--d-sp-5_6); gap: var(--d-sp-4_8); min-width: 0; }
-.wb-palette .wb-kind-t { min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: var(--d-fs-12_8); }
-.wb-palette .wb-kind-add { padding: var(--d-sp-0_8) var(--d-sp-6_4); }
+.wb-palette .dd-palette-entry { cursor: grab; user-select: none; -webkit-user-select: none; }
 .wb-menu-ic { margin-right: var(--d-sp-6_4); }
 .wb-grip { margin-right: var(--d-sp-4_8); opacity: .7; cursor: grab; }
 .wb-frame .wb-new { animation: wb-arrive 1.6s ease-out; }

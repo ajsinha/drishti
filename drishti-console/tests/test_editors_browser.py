@@ -62,6 +62,13 @@ hierarchies:
 VIOLATIONS = "window.__csp = []; document.addEventListener('securitypolicyviolation', e => window.__csp.push(e.violatedDirective + ' ' + e.blockedURI));"
 
 
+def fx(pg, sel, text):
+    """A formula field (drishti-inputs' one-line Rachana code editor; the element holds the value) given new text, as a paste."""
+    wait(pg, f"!!(document.querySelector({sel!r}) || {{}}).drishtiCode && !!document.querySelector({sel!r}).drishtiCode.cm")
+    pg.evaluate("""([s, t]) => { const cm = document.querySelector(s).drishtiCode.cm; cm.focus();
+      cm.replaceRange(t, { line: 0, ch: 0 }, { line: cm.lastLine(), ch: cm.getLine(cm.lastLine()).length }, 'paste'); }""", [sel, text])
+
+
 def fill_yaml(pg, text):
     """Types the whole YAML anew, as a person does (the editor is drishti-inputs' CodeEditor: CodeMirror's +input origin)."""
     pg.wait_for_selector("[data-yaml] .CodeMirror")
@@ -233,7 +240,7 @@ def test_new_table_steps_land_in_the_editor_and_both_sides_follow_each_other(pg)
     assert "table: mine.trade_view" in yaml(pg)
     # a visual edit shows in the YAML with its line highlighted
     pg.click("[data-add-computed]")
-    pg.fill("[data-col-from='NEW_COLUMN']", "$.QUANTITY / 1000")
+    fx(pg, "[data-col-from='NEW_COLUMN']", "$.QUANTITY / 1000")
     wait(pg, "window.Drishti.editors.yamlText().includes('$.QUANTITY / 1000')")
     settle(pg)
     assert pg.locator("[data-yaml] .di-code[data-hl]").count() == 1            # the line being edited is marked in the YAML
@@ -254,11 +261,11 @@ def test_new_table_steps_land_in_the_editor_and_both_sides_follow_each_other(pg)
     pg.click(f"[data-col-show='{avail}']")
     wait(pg, f"!document.querySelector(\"[data-col-row='{avail}']\")")
     # the filter, with type-ahead from the function catalogue
-    pg.click("[data-path=filter]")
+    fx(pg, "[data-path=filter]", "")
     pg.keyboard.type("abs")
-    wait(pg, "!!document.querySelector('.ed-fx:not([hidden]) li')")
+    wait(pg, "[...document.querySelectorAll('.di-complete-pop .di-option-label')].some(e => e.getClientRects().length && e.textContent === 'abs')")
     pg.keyboard.press("Escape")
-    pg.fill("[data-path=filter]", "$.QUANTITY != null")
+    fx(pg, "[data-path=filter]", "$.QUANTITY != null")
     wait(pg, "window.Drishti.editors.yamlText().includes('filter:')")
     pg.select_option("[data-materialize]", "on-load")
     wait(pg, "window.Drishti.editors.yamlText().includes('materialize: on-load')")
@@ -291,7 +298,7 @@ def test_text_toggle_and_a_join_with_its_cost(pg):
     wait(pg, "!!document.querySelector('[data-statement]')")
     assert pg.input_value("[data-statement]").startswith("table mine.trade_join from trade")
     st = pg.input_value("[data-statement]").rstrip() + "\nwhere $.QUANTITY > 0\n"
-    pg.fill("[data-statement]", st)
+    fx(pg, "[data-statement]", st)
     wait(pg, "/reads/.test(document.querySelector('[data-statement-state]').textContent)")
     wait(pg, "window.Drishti.editors.yamlText().includes('filter:')")
     pg.click("[data-table-view=grid]")
@@ -301,7 +308,7 @@ def test_text_toggle_and_a_join_with_its_cost(pg):
     pg.click("[data-add-lookup]")
     wait(pg, "!!document.querySelector('[data-dialog][open] [data-lookup-go]')")
     pg.select_option("[data-lookup-table]", "trading.trade_products")
-    pg.fill("[data-lookup-on]", "$.productType")
+    fx(pg, "[data-lookup-on]", "$.productType")
     pg.check("[data-lookup-col='NAME']")
     pg.click("[data-lookup-go]")
     wait(pg, "!!document.querySelector(\"[data-lookup='trading.trade_products']\")")
@@ -358,7 +365,7 @@ def test_model_tabs_measure_card_and_access(pg):
     pg.fill("[data-new-measure-name]", "Rows")
     pg.click("[data-add-measure]")
     wait(pg, "window.Drishti.editors.yamlText().includes('Rows:')")
-    pg.fill("[data-path='measures.Rows.expr']", "count(t)")
+    fx(pg, "[data-path='measures.Rows.expr']", "count(t)")
     pg.fill("[data-path='measures.Rows.format']", "#,##0")
     wait(pg, "window.Drishti.editors.yamlText().includes('#,##0')")
     pg.click("[data-remove-measure] >> nth=2")

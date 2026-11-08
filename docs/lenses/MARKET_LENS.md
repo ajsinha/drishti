@@ -171,7 +171,7 @@ licensing shapes what they may show (section 6).
 ## 4. The landings
 
 One template, `home/market_landing.html`, with `drishti_market-landing.js` and `drishti_market-landing.css`, a **violet accent**. The figures are worked out
-by `drishti-console/core/market_landing.py` from the pack's own answers (search, raw documents, the business date, one field's history
+by `drishti-console/plugins/banking/market_landing.py` from the pack's own answers (search, raw documents, the business date, one field's history
 through `/api/v1/history/{kind}/{id}/series`), read as the person, cached two minutes per person, and served by `/api/home/market/desk`,
 `/api/home/market/moves` and `/api/home/market/quality` (`404 DRS-4023` unless the edition or lens shows `CRV`)
 ([EDITIONS.md section 13](../admin/EDITIONS.md#13-drishti-market)).
@@ -287,7 +287,7 @@ counted as unknown.
 ### 5.2 ML2: the σ-jump check
 
 The desk already measures the latest move in σ of the item's own daily moves over 21 business days when ten or more are held
-(`drishti-console/core/market_landing.py`, `moves`). The check: for every item and **every pillar** (a curve's `POINTS[].ZERO_RATE`, a
+(`drishti-console/plugins/banking/market_landing.py`, `moves`). The check: for every item and **every pillar** (a curve's `POINTS[].ZERO_RATE`, a
 surface's grid, not only the headline field), flag |move| ≥ `quality.jump-sigma` σ (proposed setting, default 4 for a warning; 6 for
 critical, configurable), measured in the item's natural unit (basis points for rates and spreads, log return for prices, vol points for
 vols); fewer than ten moves held: not checked, counted as such. Two jumps of opposite sign on consecutive days (a spike that reverts) are
@@ -634,9 +634,9 @@ row.
 
 [Open the mock-up](mockups/market/market-landing.html). **Chosen:** the footer's proposal, adopted: A the default, B and C behind links;
 C built with the quality checks the data supports (its *PROPOSED* badge on the mock-up) ([EDITIONS.md section 13](../admin/EDITIONS.md#13-drishti-market)).
-A violet accent on the terminal look. **Code:** [`market_landing.html`](../../drishti-console/web/templates/home/market_landing.html),
-[`drishti_market-landing.js`](../../drishti-console/web/static/js/drishti_market-landing.js), [`drishti_market-landing.css`](../../drishti-console/web/static/css/drishti_market-landing.css),
-[`market_landing.py`](../../drishti-console/core/market_landing.py) (`/api/home/market/desk`, `/api/home/market/moves`,
+A violet accent on the terminal look. **Code:** [`market_landing.html`](../../drishti-console/plugins/banking/templates/home/market_landing.html),
+[`drishti_market-landing.js`](../../drishti-console/plugins/banking/static/js/drishti_market-landing.js), [`drishti_market-landing.css`](../../drishti-console/plugins/banking/static/css/drishti_market-landing.css),
+[`market_landing.py`](../../drishti-console/plugins/banking/market_landing.py) (`/api/home/market/desk`, `/api/home/market/moves`,
 `/api/home/market/quality`), [`market.yaml`](../../config/editions/market.yaml). Curve names and shapes are the demo's; other figures
 illustrative.
 
@@ -645,7 +645,7 @@ chips and quick cards run their commands; hovering a move shows its dates and th
 and the lens links sit above every landing. **States.** *Loading:* `…`. *Error:* `Not available: <reason>` in the panel. *Not given by
 the data*, said in place: a change only when both days hold real data; fewer than ten moves ranks by the day's move (the σ column then
 reads *since*); no history: says so and ranks nothing; on the demo every quality check is clean ("no exceptions"). **Phone** (600 px and
-below): one column ([`drishti_market-landing.css`](../../drishti-console/web/static/css/drishti_market-landing.css)); the mock-up drew no phone form; on a phone the landing takes the phone tiers ([MOBILE_DISPLAY.md section 8](../architecture/MOBILE_DISPLAY.md#8-beyond-sutra-pages)): the command line, the tiles and the first card in full, the other tables at a glance (five rows, *Show all*), charts, maps and the quick links under *More on this page*.
+below): one column ([`drishti_market-landing.css`](../../drishti-console/plugins/banking/static/css/drishti_market-landing.css)); the mock-up drew no phone form; on a phone the landing takes the phone tiers ([MOBILE_DISPLAY.md section 8](../architecture/MOBILE_DISPLAY.md#8-beyond-sutra-pages)): the command line, the tiles and the first card in full, the other tables at a glance (five rows, *Show all*), charts, maps and the quick links under *More on this page*.
 
 | # | Panel (option) | Contents on the mock-up | Data, API or contract | Interaction | Gap row | Status |
 |---|---|---|---|---|---|---|

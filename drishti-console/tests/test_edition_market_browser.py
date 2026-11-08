@@ -38,7 +38,7 @@ VIOLETS = ("rgb(167, 139, 250)", "rgb(109, 40, 217)")      # the accent on dark 
 def market_console():
     import uvicorn
 
-    from core import market_landing
+    from plugins.banking import market_landing
     from core.app import create_app
     from core.config import load_settings
 

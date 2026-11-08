@@ -753,10 +753,13 @@
         this.mixed = values.__mixed || [];
         delete values.__mixed;
         this.head.textContent = this.ids.length > 1 ? this.ids.length + ' items selected' + (this.mixed.length ? ' · mixed: ' + this.mixed.join(', ') : '') : (schema.title || '');
+        const own = this.o.head ? this.o.head(this.ids.slice(), schema) : null;
+        if (own) { this.head.textContent = ''; this.head.append(...[].concat(own).filter(Boolean)); }
         const host = h(this.doc, 'div', { cls: 'dd-inspector-form' });
         this.body.appendChild(host);
-        this.form = new Form(host, { schema: Object.assign({}, schema, { title: '' }), value: values, live: true, readOnly: !!this.o.readOnly, locale: this.o.locale });
-        this.mixed.forEach((k) => { const w = host.querySelector('[data-path="' + k + '"]'); if (w) { w.setAttribute('data-dd-mixed', ''); } });
+        this.form = new Form(host, Object.assign({}, this.o.form, { schema: Object.assign({}, schema, { title: '' }), value: values, live: true, readOnly: !!this.o.readOnly, locale: this.o.locale }));
+        const at = (this.o.form && this.o.form.pathAttr) || 'data-path';
+        this.mixed.forEach((k) => { const w = host.querySelector('[' + at + '="' + k + '"]'); if (w) { w.setAttribute('data-dd-mixed', ''); } });
         this.form.on('change', (c) => { if (this.problem(c.path) === null) { this.events.emit('change', { ids: this.ids.slice(), path: c.path, value: c.value, values: c.values }); } });
       }
       problem(path) { return this.form && this.form.errors && this.form.errors[path] ? this.form.errors[path] : null; }
@@ -850,6 +853,8 @@
             h(doc, 'span', { cls: 'dd-node-label', text: n.label }),
             n.detail ? h(doc, 'span', { cls: 'dd-node-detail', text: n.detail }) : null]);
           li.style.setProperty('--dd-level', String(r.level - 1));
+          if (n.cls) { n.cls.split(/\s+/).filter(Boolean).forEach((c) => li.classList.add(c)); }
+          Object.keys(n.attrs || {}).forEach((k) => { if (/^data-(?!dd-)[\w-]+$/.test(k) && n.attrs[k] !== null && n.attrs[k] !== undefined) { li.setAttribute(k, String(n.attrs[k])); } });
           this.tree.appendChild(li);
         });
         this.mark();

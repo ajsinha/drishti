@@ -1,0 +1,38 @@
+{
+ "api-v1-documents-json-b38ddf17a512": {
+  "file": "api-v1-documents-json-b38ddf17a512.gz",
+  "url": "https://www.federalregister.gov/api/v1/documents.json?per_page=50&order=newest&fields[]=title&fields[]=html_url&fields[]=publication_date&fields[]=abstract&fields[]=type&fields[]=agencies&fields[]=document_number"
+ },
+ "content-type-press-releases-feed-547b6e573fb8": {
+  "file": "content-type-press-releases-feed-547b6e573fb8.gz",
+  "url": "https://www.bankofcanada.ca/content_type/press-releases/feed/"
+ },
+ "en-rss-xml-157f3fb3a5ab": {
+  "file": "en-rss-xml-157f3fb3a5ab.gz",
+  "url": "https://www.osfi-bsif.gc.ca/en/rss.xml"
+ },
+ "feeds-press-all-xml-ced8192ed60d": {
+  "file": "feeds-press-all-xml-ced8192ed60d.gz",
+  "url": "https://www.federalreserve.gov/feeds/press_all.xml"
+ },
+ "news-pressreleases-rss-85c6dfd8785d": {
+  "file": "news-pressreleases-rss-85c6dfd8785d.gz",
+  "url": "https://www.sec.gov/news/pressreleases.rss"
+ },
+ "rss-news-93816bcb14df": {
+  "file": "rss-news-93816bcb14df.gz",
+  "url": "https://www.bankofengland.co.uk/rss/news"
+ },
+ "rss-p1-eng-xml-d46e5d13f367": {
+  "file": "rss-p1-eng-xml-d46e5d13f367.gz",
+  "url": "https://gazette.gc.ca/rss/p1-eng.xml"
+ },
+ "rss-p2-eng-xml-686a4b853443": {
+  "file": "rss-p2-eng-xml-686a4b853443.gz",
+  "url": "https://gazette.gc.ca/rss/p2-eng.xml"
+ },
+ "rss-press-html-b1492ff5d050": {
+  "file": "rss-press-html-b1492ff5d050.gz",
+  "url": "https://www.ecb.europa.eu/rss/press.html"
+ }
+}

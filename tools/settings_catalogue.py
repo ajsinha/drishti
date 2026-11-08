@@ -139,6 +139,10 @@ AREAS = [
     Area("alerts", "Platform alert rules: `config/alerts/platform-alerts.yaml`",
          "The rules each server evaluates against its own metrics ([OPERATIONS.md](OPERATIONS.md#136-platform-metrics-and-alerts)); "
          "`drishti.metrics.alerts.file` names the file, read again when it changes. A rule's name is the site's own."),
+    Area("feeds", "Data feeds: `config/feeds/<feed>.yaml`",
+         "One file per data feed: the source, its datasets and the lake they load, the schedule, the licence and the keys "
+         "(environment variables only) ([EXTERNAL_DATA.md section 7](../guides/EXTERNAL_DATA.md#7-the-feed-file-every-key)); read by "
+         "`drishti.py feed` at every run. The keys below are those of the annotated `gleif.yaml`; `keys:` names API keys as `${ENV}`."),
     Area("reports", "Report definitions: `config/reports/`",
          "One YAML per regulatory report (`drishti.regulatory.reports-dir`), read when a run is made: its rows, columns, checks, outputs "
          "and sign-off chain ([VAR_GUIDE.md section 18.14](../guides/VAR_GUIDE.md#1814-regulatory-reports-definitions-runs-checks-and-sign-off))."),
@@ -377,7 +381,11 @@ def engine_rows() -> tuple[list[Row], list[str]]:
     import yaml
     rows: list[Row] = []
     problems: list[str] = []
-    catalogue = yaml.safe_load((ENGINES_JAR / "catalogue.yaml").read_text(encoding="utf-8")).get("engines") or []
+    catalogue = []                                         # each module's engines (its jar's META-INF/drishti/engines.yaml) first, then the core's
+    for module_jar in sorted(ROOT.glob("drishti-*/src/main/resources/META-INF/drishti/engines.yaml")):
+        for e in yaml.safe_load(module_jar.read_text(encoding="utf-8")).get("engines") or []:
+            catalogue.append({**e, "_jar": module_jar.parents[2] / "engines"})
+    catalogue += yaml.safe_load((ENGINES_JAR / "catalogue.yaml").read_text(encoding="utf-8")).get("engines") or []
     files = {e["file"] for e in catalogue}
     on_disk = {p.name for p in ENGINES_DIR.glob("*.yaml")}
     for name in sorted(on_disk - files):
@@ -389,7 +397,7 @@ def engine_rows() -> tuple[list[Row], list[str]]:
     app_keys = _flat_keys(yaml.safe_load((ROOT / "drishti-server/src/main/resources/application.yaml").read_text(encoding="utf-8")))
     for e in catalogue:
         f = ENGINES_DIR / e["file"]
-        jar = ENGINES_JAR / e["file"]
+        jar = e.get("_jar", ENGINES_JAR) / e["file"]
         if not f.is_file() or not jar.is_file():
             problems.append(f"the engine {e['id']} has no file config/engines/{e['file']} (and its jar copy)")
             continue
@@ -435,6 +443,8 @@ def all_rows() -> tuple[list[Row], list[str]]:
     rows += yaml_rows("net", sorted((ROOT / "config/net.examples/peers").glob("*.yaml")), "each member", "live", "`peers/<name>.yaml`")
     rows += yaml_rows("alerts", [ROOT / "config/alerts/platform-alerts.yaml"], "server", "live", None, named={"rules": "<rule>"})
     rows += yaml_rows("dataload", [ROOT / "config/dataload.yaml"], "server (the inbox's owner)", "live", None)
+    rows += yaml_rows("feeds", [ROOT / "config/feeds/gleif.yaml"], "drishti.py feed (each run)", "live", "A feed file: `config/feeds/<feed>.yaml`",
+                      named={"datasets": "<dataset>"})
     rows += yaml_rows("ui-kit", [ROOT / "config/ui-kit/brand.yaml"], "server", "restart", None, named={"themes": "<theme>"})
     rows += yaml_rows("ai", sorted((ROOT / "config/ai").glob("*.yaml.example")), "server and console", "live", "A provider file: `config/ai/<name>.yaml`",
                       named={"deployments": "<model>"})

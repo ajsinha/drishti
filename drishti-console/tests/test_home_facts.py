@@ -23,6 +23,7 @@ import yaml
 
 from core.facts import FactsService, Fetcher, check, compute, links, load_pack, parse, rotate
 from core.facts_expr import Expr, ExprError, Template, fmt
+import engine_fakes  # noqa: E402
 
 PACKS = Path(__file__).resolve().parents[2] / "config" / "packs"
 
@@ -181,6 +182,8 @@ def test_links_rotation_and_the_fetcher_date():
     assert {rotate(items, d)[0]["id"] for d in ("2026-10-27", "2026-10-28", "2026-10-29")} == {"a", "b", "c"}
 
     class Be:
+        engine = engine_fakes.method
+
         async def var(self, method, path, ident, **params):
             return params
     assert asyncio.run(Fetcher(Be(), None, "2026-10-27").fetch("var", "/tree", {"hierarchy": "LEGAL"})) == {"hierarchy": "LEGAL",
@@ -245,7 +248,7 @@ def test_home_facts_answer_with_links_for_the_packs_on_only(client, backend, wit
         if path == "/tree":
             return tree
         raise LookupError(path)
-    monkeypatch.setattr(backend, "var", var, raising=False)
+    engine_fakes.patch(monkeypatch, backend, var=var)
     d = client.get("/api/home/facts").json()
     assert d["date"] == "2026-09-30"
     assert [f["id"] for f in d["facts"]] == ["book-over-limit-desk-within"]

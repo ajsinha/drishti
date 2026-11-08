@@ -22,7 +22,7 @@ class: fundamental
 status: active
 title: US company
 description: 'A US listed company: key facts, ten years of annual financials, recent SEC filings and index memberships, from public data.'
-source: 'public data: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py)'
+source: 'public data: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities)'
 grain: One row per us company, keyed by TICKER.
 key:
 - TICKER
@@ -573,7 +573,7 @@ notes:
 review:
 - 'required inferred from 100% coverage in 506 documents (3 samples and 503 test-data documents (data/testdata/us-equities/us-company/us-company.2026-10-24.jsonl.gz)):
   confirm each required field is mandatory upstream, and each optional one may be empty.'
-- 'a snapshot refreshed when tools/publicdata/us_equities.py runs: confirm the refresh cadence.'
+- 'a snapshot refreshed when the us-equities data feed runs: confirm the refresh cadence.'
 - 'enum values inferred from the data, not from a glossary: LEI_STATUS, LEI_SOURCE, CURRENCY, INDEXES[].INDEX, INDEXES[].NAME, FACTS[].LABEL:
   confirm they are closed lists.'
 - 'no unit stated for the amounts REVENUE, NET_INCOME, EPS_DILUTED, FINANCIALS[].REVENUE, FINANCIALS[].NET_INCOME, FINANCIALS[].EPS_DILUTED (docs/contracts/README.md

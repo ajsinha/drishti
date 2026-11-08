@@ -15,7 +15,7 @@
 """Download the us-equities pack's public data into a cache folder (the network; make.py then builds the pack offline).
 
 Sources, all openly licensed (docs/guides/packs/US_EQUITIES.md, Data sources and licences):
-  SEC Form N-PORT        the index members: the stocks the tracking ETFs SPY (S&P 500), QQQ (Nasdaq-100) and DIA (Dow) report
+  SEC Form N-PORT        the index members: the stocks the tracking ETFs SPY (S&P 500), QQQ (Nasdaq-100), DIA (Dow) and IWM (Russell 2000) report
   (US public domain)      holding (trackers.py, from the funds pack's cache; no download here)
   Wikidata (CC0)          CIK, ticker, LEI, headquarters, founded, website; its index members too (often out of date), whose
                           companies stay in the pack when an index has dropped them
@@ -37,7 +37,6 @@ from __future__ import annotations
 import argparse
 import gzip
 import json
-import os
 import re
 import sys
 import time
@@ -48,7 +47,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_CACHE = ROOT / "data" / "cache" / "us-equities"
-USER_AGENT = os.environ.get("DRISHTI_SEC_USER_AGENT", "Drishti research ajsinha@gmail.com")
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "feeds"))
+from pullkit import user_agent  # noqa: E402  (the one User-Agent of every feed: tools/feeds/pullkit.py)
+USER_AGENT = user_agent()   # DRISHTI_FEEDS_USER_AGENT, else the feeds' default
 INDEXES = {"DJIA": "Q180816", "NDX": "Q507306", "SP500": "Q242345"}
 # curated lists, kept here (not in Wikidata): code -> (name, tickers as the SEC ticker file lists them). Only SEC filers can be in this
 # pack; banks with no SEC filings (National Bank of Canada, Standard Chartered, Nationwide...) are in the gleif pack's bank groups.
@@ -378,7 +379,7 @@ def main(argv: list[str]) -> int:
     p = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     p.add_argument("--cache", type=Path, default=DEFAULT_CACHE)
     p.add_argument("--only", default="wikidata,trackers,nasdaq,sec,gleif")
-    p.add_argument("--funds-cache", type=Path, default=ROOT / "data" / "publicdata" / "cache" / "funds",
+    p.add_argument("--funds-cache", type=Path, default=ROOT / "data" / "datafeeds" / "sources" / "cache" / "funds",
                    help="the funds pack's download cache, whose N-PORT data sets give the index members (trackers)")
     p.add_argument("--limit", type=int, help="the first N companies only (a quick try)")
     a = p.parse_args(argv)

@@ -23,21 +23,23 @@ export { CALENDAR_RULES, easterSunday, ruleDate, HolidayCalendar, defineCalendar
 export { uid, debounce, InputBase, Popover, Listbox, normalizeOptions, searchOptions } from './drishti_inputs-dom.js';
 export { CalendarView, DatePicker } from './drishti_date-picker.js';
 export { DateRangePicker } from './drishti_date-range.js';
+export { parseTime, parseDateTime, timeSlots, TimePicker, DateTimePicker } from './drishti_time-picker.js';
 export { TreeModel } from './drishti_tree.js';
 export { TreePicker } from './drishti_tree-picker.js';
 export { MultiSelect } from './drishti_multiselect.js';
 export { TypeAhead, Combobox } from './drishti_combobox.js';
 export { Select } from './drishti_select.js';
 export { words, pathParts, getPath, setPath, conditionHolds, fieldsOf, defaults, fieldProblem, validate, visibleValue, changes,
-  parseField } from './drishti_schema.js';
+  parseField, currencyOf, offeredValues } from './drishti_schema.js';
 export { Form } from './drishti_form.js';
+export { defineWidget, defaultWidget, applyHook } from './drishti_form-fields.js';
 export { FilterModelBar, FilterBar } from './drishti_filter-bar.js';
-export { upgradeDateInput, upgradeCheckboxes, upgradeFields } from './drishti_native.js';
+export { upgradeDateInput, upgradeTimeInput, upgradeDateTimeInput, upgradeCheckboxes, upgradeFields } from './drishti_native.js';
 export { rachanaMode, yamlMode, MODES, defineModes, MiniStream, tokens } from './drishti_code-modes.js';
 export { wordAt, completions, insertText, lineDiff, sideBySide, diffStats } from './drishti_code-text.js';
 export { ensureCodeMirror, yamlIndentAfter, CodeEditor, CodeDiff } from './drishti_code-editor.js';
-export { upgradeCodeArea, upgradeCodeAreas } from './drishti_code-upgrade.js';
-import { upgradeCodeAreas } from './drishti_code-upgrade.js';
+export { upgradeCodeArea, upgradeCodeAreas, CODE_AREA_SELECTOR } from './drishti_code-upgrade.js';
+import { upgradeCodeAreas, CODE_AREA_SELECTOR } from './drishti_code-upgrade.js';
 export { INPUT_ELEMENTS, defineInputElements } from './drishti_inputs-element.js';
 import { defineInputElements } from './drishti_inputs-element.js';
 
@@ -50,7 +52,7 @@ import { defineInputElements } from './drishti_inputs-element.js';
 export function install(root) {
   if (!root || !root.document) { return; }
   if (root.customElements) { defineInputElements(root.customElements, root); }
-  const doc = root.document, go = () => upgradeCodeAreas(doc);          // the page's code areas (<textarea data-di-code>), now and as they appear
+  const doc = root.document, go = () => upgradeCodeAreas(doc);          // the page's code areas (<textarea data-di-code>, <input data-di-code>), now and as they appear
   if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', go); } else { go(); }
-  if (root.MutationObserver) { new root.MutationObserver(() => { if (doc.querySelector('textarea[data-di-code]:not([data-di-code-upgraded])')) { go(); } }).observe(doc.documentElement, { childList: true, subtree: true }); }
+  if (root.MutationObserver) { new root.MutationObserver(() => { if (doc.querySelector(CODE_AREA_SELECTOR)) { go(); } }).observe(doc.documentElement, { childList: true, subtree: true }); }
 }

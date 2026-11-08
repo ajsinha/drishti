@@ -17,7 +17,7 @@
    the Power BI way on the canvas, a Filter / Highlight / None choice over each other visual), the tooltip page a visual opens over its marks, the page's
    layout (grid or board) and whether it is a tooltip page, the report's theme (a theme item or a palette) and its board settings, and the tile editor of a
    board page (the report and visual a tile shows, and its alert thresholds), with a live preview of the tile on the canvas. Everything is a choice from a
-   list: nothing here needs the YAML tab. */
+   list, each part a live drishti-inputs Form (B.formatPane.form) whose controls keep their data-* hooks: nothing here needs the YAML tab. */
 (function () {
   'use strict';
   const B = window.drishtiBi;
@@ -25,8 +25,10 @@
   if (!D) { return; }
   const h = B.h;
   const P = B.formatPane;
-  const MODES = [['', 'the viewer\'s choice (filter)'], ['filter', 'filter'], ['highlight', 'highlight'], ['none', 'none']];
-  const OPS = [['lt', '<'], ['le', '≤'], ['gt', '>'], ['ge', '≥'], ['eq', '='], ['ne', '≠']];
+  const MODES = ['filter', 'highlight', 'none'];
+  const OPS = ['lt', 'le', 'gt', 'ge', 'eq', 'ne'], OP_WORDS = ['<', '≤', '>', '≥', '=', '≠'];
+  /** A live Form (drishti-inputs, B.formatPane.form) in its own block of the pane; answers the block. */
+  const formIn = (parent, o, cls) => { const host = h('div', { class: 'bi-fform' + (cls ? ' ' + cls : '') }); parent.appendChild(host); P.form(host, o); return host; };
   let editInteractions = false;
   let themesP = null, choicesP = null;
   const sources = new Map();          // a tile's report id -> its answer (model, dataset), for the canvas preview
@@ -50,7 +52,13 @@
     if (!list.length) { return; }
     const box = h('details', { class: 'bi-fsection', 'data-format-section': 'interactions', open: true }, h('summary', { text: 'Interactions' }));
     box.appendChild(h('p', { class: 'text-muted-d', text: (v.type === 'slicer' ? 'A choice in this slicer' : 'A selection on this visual') + ' acts on:' }));
-    list.forEach((t) => box.appendChild(P.row(t.title || t.id, P.select(MODES, interaction(v.id, t.id), (x) => setInteraction(v.id, t.id, x), { 'data-interaction': t.id, 'aria-label': 'How it acts on ' + (t.title || t.id) }))));
+    const fields = {}, value = {}, on = {};
+    list.forEach((t, i) => {
+      fields['t' + i] = { type: 'string', title: t.title || t.id, enum: MODES, widget: 'select', emptyLabel: 'the viewer\'s choice (filter)', hook: { 'data-interaction': t.id } };
+      value['t' + i] = interaction(v.id, t.id) || undefined;
+      on['t' + i] = (x) => setInteraction(v.id, t.id, x || '');
+    });
+    formIn(box, { fields, value, on, label: 'Interactions' });
     const toggle = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', 'data-edit-interactions-toggle': '', 'aria-pressed': editInteractions ? 'true' : 'false' }, B.icon('bounding-box-circles'),
       editInteractions ? ' Stop editing on the canvas' : ' Edit on the canvas');
     toggle.addEventListener('click', () => { editInteractions = !editInteractions; overlays(); D.emit('select', D.selected); });
@@ -82,8 +90,8 @@
   /** Format, Tooltip: the tooltip page drawn over this visual's marks, or a new one. */
   D.tooltipPicker = function (fmt, v) {
     const tips = D.model.pages.filter((p) => p.tooltip);
-    const sel = P.select([['', 'none']].concat(tips.map((p) => [p.id, p.title])), v.tooltip || '', (x) => D.change('Tooltip page', () => { if (x) { v.tooltip = x; } else { delete v.tooltip; } }),
-      { 'data-tooltip-page': '', 'aria-label': 'Tooltip page' });
+    const tip = { type: 'string', title: 'Tooltip page', enum: tips.map((p) => p.id), enumLabels: tips.map((p) => p.title), widget: 'select', emptyLabel: 'none', hook: 'data-tooltip-page',
+      description: 'Shown over a mark when the pointer rests on it, filtered to the mark.' };
     const make = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', 'data-new-tooltip-page': '' }, B.icon('chat-square-quote'), ' New tooltip page');
     make.addEventListener('click', () => {
       let n = 1;
@@ -94,46 +102,63 @@
       });
       D.say('Tooltip page "Tooltip ' + n + '" added: open its tab to put a few cards or a small chart on it. It shows over a mark of this visual, filtered to that mark.');
     });
-    const box = h('details', { class: 'bi-fsection', 'data-format-section': 'tooltip', open: true }, h('summary', { text: 'Tooltip' }),
-      P.row('Tooltip page', sel, 'Shown over a mark when the pointer rests on it, filtered to the mark.'), make);
+    const box = h('details', { class: 'bi-fsection', 'data-format-section': 'tooltip', open: true }, h('summary', { text: 'Tooltip' }));
+    formIn(box, { fields: { tooltip: tip }, value: { tooltip: v.tooltip }, label: 'Tooltip', on: { tooltip: (x) => D.change('Tooltip page', () => { if (x) { v.tooltip = x; } else { delete v.tooltip; } }) } });
+    box.appendChild(make);
     fmt.appendChild(box);
   };
 
   /** Format with no visual selected, the page: its layout (grid, board or statement) and whether it is a tooltip page. */
   D.pageV2 = function (fmt, p) {
-    fmt.appendChild(P.row('Layout', P.select([['grid', 'grid (a report page)'], ['board', 'board (a wall of tiles, kiosk and rotation)'], ['statement', 'statement (paper: page-exact PDF and Excel)']], p.layout || 'grid',
-      (x) => D.change('Page layout', () => { if (x === 'board' || x === 'statement') { p.layout = x; delete p.tooltip; } else { delete p.layout; } }), { 'data-page-layout': '' }),
-      'A board page holds tiles (visuals of other reports, with alert colours) beside the report\'s own visuals, and turns in kiosk mode. A statement page is paper: its visuals are bands laid out page by page (the Paper tab sets the paper and previews it); a subscription sends each person their own.'));
-    fmt.appendChild(P.checkbox('Use as a tooltip page (shown over a mark, not as a tab)', !!p.tooltip, (on) => D.change('Tooltip page', () => { if (on) { p.tooltip = true; delete p.layout; } else { delete p.tooltip; } }),
-      { 'data-page-tooltip': '' }));
+    formIn(fmt, {
+      label: 'The page',
+      fields: {
+        layout: { type: 'string', title: 'Layout', enum: ['grid', 'board', 'statement'], enumLabels: ['grid (a report page)', 'board (a wall of tiles, kiosk and rotation)', 'statement (paper: page-exact PDF and Excel)'],
+          widget: 'select', allowEmpty: false, hook: 'data-page-layout',
+          description: 'A board page holds tiles (visuals of other reports, with alert colours) beside the report\'s own visuals, and turns in kiosk mode. A statement page is paper: its visuals are bands laid out page by page (the Paper tab sets the paper and previews it); a subscription sends each person their own.' },
+        tooltip: { type: 'boolean', title: 'Use as a tooltip page (shown over a mark, not as a tab)', hook: 'data-page-tooltip' }
+      },
+      value: { layout: p.layout || 'grid', tooltip: !!p.tooltip },
+      on: {
+        layout: (x) => D.change('Page layout', () => { if (x === 'board' || x === 'statement') { p.layout = x; delete p.tooltip; } else { delete p.layout; } }),
+        tooltip: (on) => D.change('Tooltip page', () => { if (on) { p.tooltip = true; delete p.layout; } else { delete p.tooltip; } })
+      }
+    });
   };
 
   /** Format with no visual selected, the report: its theme (a theme item, or a palette) and, with board pages, the kiosk rotation. */
   D.reportV2 = function (fmt, m) {
-    const sel = h('select', { class: 'studio-select', 'data-report-theme': '', 'aria-label': 'Theme' }, h('option', { value: '', text: 'none (the palette below)' }));
     const cur = (m.theme || {}).use || '';
-    sel.value = cur;
+    const host = h('div', { class: 'bi-report-theme' });
+    fmt.appendChild(host);
     themesP = themesP || B.api('GET', '/themes').catch(() => []);
     themesP.then((list) => {
-      list.forEach((t) => sel.appendChild(h('option', { value: t.name, text: t.title + (t.shipped ? '' : ' (' + t.status + ')') })));
-      if (cur && !list.some((t) => t.name === cur)) { sel.appendChild(h('option', { value: cur, text: cur + ' (not found)' })); }
-      sel.value = cur;
+      const ids = list.map((t) => t.name), words = list.map((t) => t.title + (t.shipped ? '' : ' (' + t.status + ')'));
+      if (cur && ids.indexOf(cur) < 0) { ids.push(cur); words.push(cur + ' (not found)'); }
+      formIn(host, {
+        label: 'The report\'s theme',
+        fields: { theme: { type: 'string', title: 'Theme', enum: ids, enumLabels: words, widget: 'select', emptyLabel: 'none (the palette below)', hook: 'data-report-theme',
+          description: 'Colours, type and the format defaults of each kind of visual; a visual\'s own format wins.' } },
+        value: { theme: cur || undefined },
+        on: { theme: (x) => D.change('Theme', () => {
+          const t = Object.assign({}, m.theme);
+          if (x) { t.use = x; } else { delete t.use; }
+          if (Object.keys(t).length) { m.theme = t; } else { delete m.theme; }
+        }) }
+      });
+      host.appendChild(h('a', { class: 'bi-small', href: '/bi/design/theme/new', 'data-new-theme': '', text: 'Make a theme' }));
     });
-    sel.addEventListener('change', () => D.change('Theme', () => {
-      const t = Object.assign({}, m.theme);
-      if (sel.value) { t.use = sel.value; } else { delete t.use; }
-      if (Object.keys(t).length) { m.theme = t; } else { delete m.theme; }
-    }));
-    const link = h('a', { class: 'bi-small', href: '/bi/design/theme/new', 'data-new-theme': '', text: 'Make a theme' });
-    fmt.appendChild(P.row('Theme', h('span', { class: 'bi-cond' }, sel, link), 'Colours, type and the format defaults of each kind of visual; a visual\'s own format wins.'));
     if (m.pages.some((p) => p.layout === 'board')) {
-      const rot = parseInt((m.board || {}).rotate, 10) || '';
-      fmt.appendChild(P.row('Kiosk: next page every (seconds)', P.text(rot, (x) => D.change('Board rotation', () => {
-        const n = parseInt(x, 10);
-        const b = Object.assign({}, m.board);
-        if (n >= 3 && n <= 3600) { b.rotate = n + 's'; } else { delete b.rotate; }
-        if (Object.keys(b).length) { m.board = b; } else { delete m.board; }
-      }), { type: 'number', min: '3', max: '3600', 'data-board-rotate': '' }), 'Empty: the console\'s default.'));
+      formIn(fmt, {
+        label: 'Kiosk',
+        fields: { rotate: { type: 'integer', title: 'Kiosk: next page every (seconds)', minimum: 3, maximum: 3600, lazy: true, hook: 'data-board-rotate', description: 'Empty: the console\'s default.' } },
+        value: { rotate: parseInt((m.board || {}).rotate, 10) || undefined },
+        on: { rotate: (n) => D.change('Board rotation', () => {
+          const b = Object.assign({}, m.board);
+          if (n >= 3 && n <= 3600) { b.rotate = Math.round(n) + 's'; } else { delete b.rotate; }
+          if (Object.keys(b).length) { m.board = b; } else { delete m.board; }
+        }) }
+      });
     }
   };
 
@@ -147,23 +172,30 @@
   D.tileEditor = function (fmt, v) {
     const from = v.from || {};
     const box = h('details', { class: 'bi-fsection', 'data-format-section': 'tile', open: true }, h('summary', { text: 'Tile' }));
-    const rep = h('select', { class: 'studio-select', 'data-tile-report': '', 'aria-label': 'Report the tile shows' }, h('option', { value: '', text: 'Choose a report' }));
-    const vis = h('select', { class: 'studio-select', 'data-tile-visual': '', 'aria-label': 'Visual the tile shows' }, h('option', { value: '', text: 'Choose a visual' }));
+    const source = h('div', { class: 'bi-tile-source' });
+    box.appendChild(source);
     choices().then((list) => {
-      list.filter((c) => c.id !== D.itemId).forEach((c) => rep.appendChild(h('option', { value: c.id, text: c.title + (c.draft ? ' (draft)' : '') })));
-      const c = findChoice(list, from.report || '');
-      rep.value = c ? c.id : '';
-      ((c && c.visuals) || []).forEach((x) => vis.appendChild(h('option', { value: x.page + '/' + x.id, text: x.title + ' · ' + x.type + ' (' + x.page + ')' })));
-      vis.value = from.visual && c ? ((c.visuals || []).find((x) => x.id === from.visual && (!from.page || x.page === from.page)) || {}).page + '/' + from.visual : '';
+      const reps = list.filter((c) => c.id !== D.itemId), c = findChoice(list, from.report || ''), vs = (c && c.visuals) || [];
+      const at = from.visual && c ? ((vs.find((x) => x.id === from.visual && (!from.page || x.page === from.page)) || {}).page + '/' + from.visual) : undefined;
+      formIn(source, {
+        label: 'What the tile shows',
+        fields: {
+          report: { type: 'string', title: 'Report', enum: reps.map((x) => x.id), enumLabels: reps.map((x) => x.title + (x.draft ? ' (draft)' : '')), widget: 'select', emptyLabel: 'Choose a report', hook: { 'data-tile-report': '', 'aria-label': 'Report the tile shows' } },
+          visual: { type: 'string', title: 'Visual', enum: vs.map((x) => x.page + '/' + x.id), enumLabels: vs.map((x) => x.title + ' · ' + x.type + ' (' + x.page + ')'), widget: 'select', emptyLabel: 'Choose a visual',
+            hook: { 'data-tile-visual': '', 'aria-label': 'Visual the tile shows' } }
+        },
+        value: { report: c ? c.id : undefined, visual: at },
+        on: {
+          report: (x) => D.change('Tile report', () => { v.from = { report: shortRef(x || ''), visual: '' }; }),
+          visual: (x) => D.change('Tile visual', () => {
+            const [page, id] = String(x || '').split('/');
+            v.from = { report: (v.from || {}).report || shortRef(c ? c.id : ''), page, visual: id };
+            const t = vs.find((y) => y.page === page && y.id === id);
+            if (!v.title && t && t.title) { v.title = t.title; }
+          })
+        }
+      });
     });
-    rep.addEventListener('change', () => D.change('Tile report', () => { v.from = { report: shortRef(rep.value), visual: '' }; }));
-    vis.addEventListener('change', () => D.change('Tile visual', () => {
-      const [page, id] = vis.value.split('/');
-      v.from = { report: (v.from || {}).report || shortRef(rep.value), page, visual: id };
-      if (!v.title) { const t = vis.options[vis.selectedIndex].text.split(' · ')[0]; if (t) { v.title = t; } }
-    }));
-    box.appendChild(P.row('Report', rep));
-    box.appendChild(P.row('Visual', vis));
     // an alert is written once it has a threshold; what is set before that (Alert on, the hysteresis, notify) waits here, per tile, so it is not lost
     const drafts = (D.tileAlertDrafts = D.tileAlertDrafts || {});
     const al = v.alert || drafts[v.id] || {};
@@ -174,16 +206,23 @@
     });
     const level = (name, label) => {
       const r = al[name] || {};
-      const op = P.select(OPS, r.op || 'lt', (x) => put({ [name]: Object.assign({ value: 0 }, r, { op: x }) }), { ['data-tile-' + name + '-op']: '', 'aria-label': label + ' when' });
-      const val = P.text(r.value == null ? '' : r.value, (x) => put({ [name]: x === '' ? undefined : { op: r.op || 'lt', value: Number(x) || 0 } }), { type: 'number', step: 'any', ['data-tile-' + name + '-value']: '', 'aria-label': label + ' threshold' });
-      return P.row(label, h('span', { class: 'bi-cond' }, op, val), name === 'warn' ? 'Amber.' : 'Red.');
+      return [
+        [name + 'Op', { type: 'string', title: label + ' when', enum: OPS, enumLabels: OP_WORDS, widget: 'select', allowEmpty: false, hook: 'data-tile-' + name + '-op' }, r.op || 'lt',
+          (x) => put({ [name]: Object.assign({ value: 0 }, r, { op: x }) })],
+        [name + 'Value', { type: 'number', title: label + ' threshold', lazy: true, hook: 'data-tile-' + name + '-value', description: name === 'warn' ? 'Amber.' : 'Red.' }, r.value,
+          (x) => { if (x === undefined || !isNaN(x)) { put({ [name]: x === undefined ? undefined : { op: r.op || 'lt', value: Number(x) || 0 } }); } }]
+      ];
     };
-    box.appendChild(P.row('Alert on', P.text(al.on, (x) => put({ on: x.trim() || undefined }), { 'data-tile-alert-on': '', placeholder: 'the first number it shows' }), 'The measure (or column) the thresholds compare.'));
-    box.appendChild(level('warn', 'Warning'));
-    box.appendChild(level('crit', 'Critical'));
-    box.appendChild(P.row('Hysteresis', P.text(al.hysteresis, (x) => put({ hysteresis: x === '' ? undefined : Math.max(0, Number(x) || 0) }), { type: 'number', min: '0', step: 'any', 'data-tile-hysteresis': '' }),
-      'How far back inside a threshold the value must come before the colour drops a level.'));
-    box.appendChild(P.checkbox('Notify (the inbox) when it turns red', !!al.notify, (on) => put({ notify: on ? true : undefined }), { 'data-tile-notify': '' }));
+    const rows = [['on', { type: 'string', title: 'Alert on', lazy: true, hook: 'data-tile-alert-on', placeholder: 'the first number it shows', description: 'The measure (or column) the thresholds compare.' }, al.on,
+      (x) => put({ on: String(x || '').trim() || undefined })]]
+      .concat(level('warn', 'Warning'), level('crit', 'Critical'), [
+        ['hysteresis', { type: 'number', title: 'Hysteresis', minimum: 0, lazy: true, hook: 'data-tile-hysteresis', description: 'How far back inside a threshold the value must come before the colour drops a level.' }, al.hysteresis,
+          (x) => { if (x === undefined || !isNaN(x)) { put({ hysteresis: x === undefined ? undefined : Math.max(0, Number(x) || 0) }); } }],
+        ['notify', { type: 'boolean', title: 'Notify (the inbox) when it turns red', hook: 'data-tile-notify' }, !!al.notify, (on) => put({ notify: on ? true : undefined })]
+      ]);
+    const fields = {}, value = {}, on = {};
+    rows.forEach(([k, f, x, fn]) => { fields[k] = f; if (x !== undefined && x !== null && x !== '') { value[k] = x; } on[k] = fn; });
+    formIn(box, { fields, value, on, label: 'The tile\'s alert' });
     fmt.appendChild(box);
   };
 

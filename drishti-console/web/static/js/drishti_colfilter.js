@@ -415,7 +415,7 @@
       function showArgs() {
         var p = opInfo(type, sel.value), n = p ? p[2] : 0, top = sel.value === 'top' || sel.value === 'bot';
         ia.hidden = n < 1; ib.hidden = n < 2;
-        ia.type = top ? 'number' : type === 'date' ? 'date' : 'text'; ib.type = type === 'date' ? 'date' : 'text';
+        if (!ia.diPicker) { ia.type = top ? 'number' : type === 'date' ? 'date' : 'text'; ib.type = type === 'date' ? 'date' : 'text'; }
         ia.setAttribute('aria-label', top ? 'How many items' : n === 2 ? 'From' : 'Value'); ib.setAttribute('aria-label', 'To');
         ia.placeholder = type === 'number' && !top ? 'e.g. 1m' : ''; ib.placeholder = ia.placeholder;
         if (top && !ia.value) { ia.value = '10'; }
@@ -423,6 +423,8 @@
       if (current && current.c) { sel.value = current.c.op; ia.value = current.c.a || ''; ib.value = current.c.b || ''; }
       cw.appendChild(sel); cw.appendChild(ia); cw.appendChild(ib); menu.appendChild(cw); menu.appendChild(err);
       showArgs();
+      var DI = window.Drishti && window.Drishti.elements && window.Drishti.elements.inputs;
+      if (type === 'date' && DI) { DI.upgradeDateInput(ia, { label: 'From', placeholder: 'T-1, ME or 6 Nov 2026' }); DI.upgradeDateInput(ib, { label: 'To', placeholder: 'T-1, ME or 6 Nov 2026' }); }   // drishti-inputs' date pickers
       sel.addEventListener('change', function () { showArgs(); err.textContent = ''; if (sel.value && !ia.hidden) { ia.focus(); } });
 
       // the checklist
@@ -531,7 +533,7 @@
       var doc = menu.ownerDocument;
       function away(e) {
         var t = e.composedPath ? e.composedPath()[0] : e.target;
-        if (!t || menu.contains(t) || (t.closest && t.closest('.cf-btn'))) { return; }
+        if (!t || menu.contains(t) || (t.closest && (t.closest('.cf-btn') || t.closest('.di-pop')))) { return; }   // a date picker's calendar floats in the body
         closeMenu(false);
       }
       function onResize() { closeMenu(false); }
