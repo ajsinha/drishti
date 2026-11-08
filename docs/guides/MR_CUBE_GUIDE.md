@@ -87,6 +87,15 @@ where it does not. `dv01()`, `cs01()` and `sbm()` are offered only when the FRTB
 A figure the cube cannot give in a cell (stressed VaR past `stressed-max-cells`, SBM of a cell no scope text names, a limit of a cell that is
 not a whole node) is empty, with its reason in the cell's notes; never a zero.
 
+**Which cells get stressed VaR and SBM.** Each is a run of an engine on the cell's scope, so a view gets them for a fixed set of its cells:
+the first `stressed-max-cells` (100) and `sbm-max-cells` (60) cells **in the grid's order**: row by row as the grid shows them (with
+subtotals below, the grand total row comes last), each row's columns left to right, column total last; a cell without trades is not a
+cell. Every other cell is empty, with the note *stressed VaR is computed for the first 100 cells of a view, row by row as the grid shows
+them*, even when its figure is in the cache from another view. So the same view always shows the same figures, whatever was asked
+before it or at the same time. A view is not sorted or ranked for a top N by either measure (the order decides which cells are
+computed), and a row's diversification of either is shown only when the row's total and every one of its parts have the figure: never a
+sum of some of the parts.
+
 ## 3. The inputs and their data contract
 
 The cube adds no input of its own: it reads the VaR engine's book of the business date and, for the sensitivity measures, the FRTB-SA
@@ -228,8 +237,8 @@ The cell budget, busy protection and the cache are the pivot engine's (`drishti.
 | `drishti.cube.mr.risk-classes` | IR, CR, FX, EQ, CM by product group | the derived `RISK_CLASS` dimension |
 | `drishti.cube.mr.grids` | `BANK-IR-TENOR`, `FRTB-GIRR` | the ladders' bucket grids, in years |
 | `drishti.cube.mr.ladder-limits` | none | two-sided DV01 limits per currency and bucket (`"USD 2-5Y": 1500000`) |
-| `drishti.cube.mr.sbm-max-cells` | 60 | the cells whose SBM one evaluation computes |
-| `drishti.cube.mr.stressed-max-cells` | 100 | the cells whose stressed VaR one evaluation computes |
+| `drishti.cube.mr.sbm-max-cells` | 60 | the cells of a view that get SBM: its first, in the grid's order (section 2) |
+| `drishti.cube.mr.stressed-max-cells` | 100 | the cells of a view that get stressed VaR: its first, in the grid's order (section 2) |
 | `drishti.cube.mr.sparkline-dates` | 20 | the open business dates a sparkline reads |
 | `drishti.cube.mr.sparkline-max-cells` | 600 | the most cells of a view that get a sparkline |
 | `drishti.cube.mr.what-if-rows` | 40 | the most rows the what-if side by side computes (the total always added) |

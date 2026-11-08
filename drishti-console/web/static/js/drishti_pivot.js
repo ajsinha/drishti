@@ -236,7 +236,9 @@
     if (ctx.rowHeader) {
       var bits = [];
       if ((e.kind === "header" || (e.kind === "node" && e.expanded)) && e.by && e.kind !== "others") { bits.push("by " + e.by); }
-      if (e.diversification) { bits.push("Σ−total " + Object.keys(e.diversification).map(function (k) { return k + " " + fmt(e.diversification[k], {}); }).join(", ")); }
+      // a gap is null when a part or the total has no figure (a capped measure): left out, never a partial sum
+      var gaps = Object.keys(e.diversification || {}).filter(function (k) { return e.diversification[k] != null; });
+      if (gaps.length) { bits.push("Σ−total " + gaps.map(function (k) { return k + " " + fmt(e.diversification[k], {}); }).join(", ")); }
       return bits.length ? {after: " · " + bits.join(" · "), title: e.by ? "its children are broken down by " + e.by : null} : null;
     }
     var key = e.key + "|" + ctx.colKey, out = {cls: "", title: "", after: ""};

@@ -60,8 +60,6 @@ final class VarPivotLens {
     private final MrCubeProperties props;
     private final Supplier<FrtbService> frtb;
     private final Map<String, Map<String, Double>> sens = new HashMap<>();
-    private int stressedAsked;
-    private int sbmAsked;
 
     private VarPivotLens(VarService svc, Principal p, String scope, String ccy, VarService.Scoped base, VarLens lens, MrCubeProperties props,
             Supplier<FrtbService> frtb) {
@@ -187,13 +185,13 @@ final class VarPivotLens {
         return svc.loader().limitBasis(date(), n.id()).matches(lens) && n.limit() != 0;
     }
 
-    /** A cell's stressed VaR from its scope, the first {@code stressed-max-cells} of an evaluation; else the reason. */
+    /**
+     * A cell's stressed VaR from its scope; else the reason. The pivot engine asks it for the first {@code stressed-max-cells} cells of a
+     * view in the grid's order only ({@link VarPivotProvider#cap}).
+     */
     Object stressed(String cellScope) {
         if (cellScope == null) {
             return "no scope text names this cell, and stressed VaR is computed scope by scope";
-        }
-        if (++stressedAsked > props.stressedMaxCells()) {
-            return "stressed VaR is computed for the first " + props.stressedMaxCells() + " cells of a view (drishti.cube.mr.stressed-max-cells)";
         }
         try {
             return svc.scoped(p, cellScope, date(), null, lens.withStressed(true)).measures().var();
@@ -202,7 +200,10 @@ final class VarPivotLens {
         }
     }
 
-    /** A cell's FRTB-SA SBM capital from its scope, the first {@code sbm-max-cells} of an evaluation; else the reason. */
+    /**
+     * A cell's FRTB-SA SBM capital from its scope; else the reason. The pivot engine asks it for the first {@code sbm-max-cells} cells of a
+     * view in the grid's order only ({@link VarPivotProvider#cap}).
+     */
     Object sbm(String cellScope) {
         FrtbService f = frtb.get();
         if (f == null) {
@@ -210,9 +211,6 @@ final class VarPivotLens {
         }
         if (cellScope == null) {
             return "no scope text names this cell, and SBM is computed scope by scope";
-        }
-        if (++sbmAsked > props.sbmMaxCells()) {
-            return "SBM is computed for the first " + props.sbmMaxCells() + " cells of a view (drishti.cube.mr.sbm-max-cells)";
         }
         try {
             return f.run(p, cellScope, date(), null, base.date().currency(), FrtbChoices.defaults()).result().sbm().sbm();

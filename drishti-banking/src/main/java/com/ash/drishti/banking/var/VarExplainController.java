@@ -17,9 +17,16 @@ package com.ash.drishti.banking.var;
 
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.server.explain.ExplainRequest;
+import com.ash.drishti.server.explain.NumberExplainService;
 import com.ash.drishti.server.security.Principal;
+import jakarta.servlet.http.HttpServletResponse;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.LinkedHashMap;
+import java.util.Locale;
+import java.util.Map;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -36,18 +43,91 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
  * <pre>
  *   GET /api/v1/risk/var/explain.xlsx?scope=&amp;from=&amp;to=              the explanation as a workbook of formulas, checked against the engine
  *        (from, to: business dates, yyyy-MM-dd; none: the business date before the newest, and the newest)
+ *   GET /api/v1/risk/var/explain?scope=&amp;from=&amp;to=&amp;confidence=          DEPRECATED, answered for this release: the one Explain's
+ *   GET /api/v1/risk/var/explain/matrix?scope=&amp;from=&amp;to=&amp;confidence=   why.answer (and its matrix), as 2.9.11.d answered them
  * </pre>
  * The explanation itself is the one Explain's ({@code GET /api/v1/explain?kind=var}, {@link VarNumberExplainer}): its Why it moved tab,
- * the steps, drivers and the Matrix and Sentences views. This is its Workbook.
+ * the steps, drivers and the Matrix and Sentences views. This is its Workbook. The old paths ({@code /api/v1/var/explain} and
+ * {@code /explain/matrix}, reached through the {@code /api/v1/var} alias, and {@code /api/v1/pivot/mr/explain} in {@link MrCubeController})
+ * answer for one release with {@code Deprecation: true} and a {@code Link} to the one Explain.
  */
 @RestController
 @RequestMapping("/api/v1/risk/var")
 public class VarExplainController {
 
-    private final VarExplain explain;
+    /** The one Explain's address, the successor of the old explain endpoints. */
+    static final String SUCCESSOR = "/api/v1/explain?kind=var&part=why";
 
-    VarExplainController(VarExplain explain) {
+    private final VarExplain explain;
+    private final ObjectProvider<NumberExplainService> explainer;
+
+    VarExplainController(VarExplain explain, ObjectProvider<NumberExplainService> explainer) {
         this.explain = explain;
+        this.explainer = explainer;
+    }
+
+    /** DEPRECATED, answered for this release: the one Explain's {@code why.answer}, the engine's own answer as 2.9.11.d gave it. */
+    @GetMapping("/explain")
+    public Map<String, Object> explainAlias(@RequestParam(required = false) String scope, @RequestParam(required = false) String from,
+            @RequestParam(required = false) String to, @RequestParam(required = false) Double confidence,
+            @RequestParam(required = false) String method, @RequestAttribute(Principal.ATTRIBUTE) Principal p, HttpServletResponse res) {
+        method(method);
+        return why(explainer.getObject(), p, scope(scope), from, to, confidence, false, res);
+    }
+
+    /** DEPRECATED, answered for this release: the one Explain's Matrix view ({@code why.answer.matrix}), as 2.9.11.d gave it. */
+    @GetMapping("/explain/matrix")
+    public Map<String, Object> matrixAlias(@RequestParam(required = false) String scope, @RequestParam(required = false) String from,
+            @RequestParam(required = false) String to, @RequestParam(required = false) Double confidence,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p, HttpServletResponse res) {
+        return why(explainer.getObject(), p, scope(scope), from, to, confidence, true, res);
+    }
+
+    /**
+     * The engine's answer of why VaR moved, read from the one Explain ({@code kind=var, part=why}): {@code why.answer}, or its
+     * {@code matrix} for the Matrix view; the answer carries {@code Deprecation: true} and a {@code Link} to the one Explain.
+     */
+    @SuppressWarnings("unchecked")
+    static Map<String, Object> why(NumberExplainService service, Principal p, String scope, String from, String to, Double confidence,
+            boolean matrix, HttpServletResponse res) {
+        date(from, "from");
+        date(to, "to");
+        Map<String, Object> args = new LinkedHashMap<>();
+        args.put("scope", scope);
+        if (from != null && !from.isBlank()) {
+            args.put("from", from.strip());
+        }
+        if (to != null && !to.isBlank()) {
+            args.put("to", to.strip());
+        }
+        if (confidence != null) {
+            args.put("confidence", String.valueOf(confidence));
+        }
+        if (matrix) {
+            args.put("view", "matrix");
+        }
+        Map<String, Object> x = service.explain(p, new ExplainRequest("var", "var", "why", args));
+        Map<String, Object> why = (Map<String, Object>) x.get("why");
+        Map<String, Object> answer = why == null ? null : (Map<String, Object>) why.get("answer");
+        if (answer == null) {
+            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "why VaR moved is not available for " + scope + ": "
+                    + (why == null ? "the explainer gave none" : String.valueOf(why.getOrDefault("note", "no answer"))));
+        }
+        res.setHeader("Deprecation", "true");
+        res.setHeader("Link", "<" + SUCCESSOR + (matrix ? "&view=matrix" : "") + ">; rel=\"successor-version\"");
+        return matrix ? (Map<String, Object>) answer.get("matrix") : answer;
+    }
+
+    /** The old {@code method}: sequence, the only one built (shapley is planned), refused in words otherwise. */
+    static void method(String method) {
+        if (method == null || method.isBlank() || method.strip().equalsIgnoreCase("sequence")) {
+            return;
+        }
+        if (method.strip().toLowerCase(Locale.ROOT).equals("shapley")) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "method=shapley is planned, not built: the explanation is the configured sequence "
+                    + "(drishti.var.explain.order), whose steps add up exactly");
+        }
+        throw new DrishtiException(ErrorCode.BAD_REQUEST, "method is sequence (shapley is planned)");
     }
 
     static LocalDate date(String text, String name) {

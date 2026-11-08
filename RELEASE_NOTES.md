@@ -36,6 +36,10 @@ also use in your own applications.** This release carries the work planned as 2.
   lineage*, *Why it moved* and *Workbook*, and *Open as a page* to print. It replaces the VaR page's *How calculated* drawer and *Why it
   moved* tab, the parametric figures' pop-ups, the MR cube's *Explain the move* tables and the exposure page's *How this number was built*
   box (the table under "Removed" below).
+- **The MR cube's stressed VaR and SBM land on the same cells every time**: a view gets them for its first 100 and 60 cells in the
+  grid's order (row by row as shown, each row's columns left to right), whatever was asked before or at the same time; before, a view
+  asked after others could show them on more cells. A row's diversification of either is shown only when all its cells have the figure
+  ([MR_CUBE_GUIDE.md section 2](docs/guides/MR_CUBE_GUIDE.md#2-the-measures)).
 - **The FRTB-SA screen shows each class's Total again**, the server's figure.
 
 ## New
@@ -171,7 +175,7 @@ Follow these steps when upgrading an installation of 2.9.11.d.
 | `POST /api/v1/var/reports/{report}/runs/{period}/signoff` | kind `var-report`, id `report:period:vN`; the maker's text is `POST …/runs/{period}/narrative` |
 | `drishti.py design approve\|reject`, `change approve\|reject\|withdraw`, `pivot functions approve`, `var stress-window --decide`, `var report sign` | `drishti.py approvals list\|show\|approve\|reject\|withdraw\|ask` |
 | `/api/v1/me/alerts`, `/api/v1/me/alerts/rules/**`, `/api/v1/me/measure-alerts/**`, `/api/v1/admin/measure-alerts/**` | `/api/v1/alerts`, `/api/v1/alerts/rules/**`, `/api/v1/admin/alerts`; the stream `/api/v1/alerts/stream` (an alert is a `notice` event of type `alert`) |
-| `GET /api/v1/var/explain`, `GET /api/v1/var/explain/matrix`, `GET /api/v1/pivot/mr/explain` | `GET /api/v1/explain?kind=var&part=why&scope=…&from=…&to=…` (`view=matrix`; the engine's answer is `why.answer`) |
+| `GET /api/v1/var/explain`, `GET /api/v1/var/explain/matrix`, `GET /api/v1/pivot/mr/explain` (deprecated, answer this release with the 2.9.11.d body, `Deprecation: true` and a `Link` to the successor) | `GET /api/v1/explain?kind=var&part=why&scope=…&from=…&to=…` (`view=matrix`; the engine's answer is `why.answer`) |
 | `POST /api/v1/pivot/explain` (deprecated, answers this release) | `POST /api/v1/explain` with `kind: pivot, measure: cell` |
 | the console's `GET /api/suggest` | `GET /api/search?in=command&q=…` (the same suggestions in `items`) |
 | the console's `POST /api/exposure/what-if` and the exposure explorer's Pre-deal tab | the pre-deal check (`/predeal`); the tab's address opens it |

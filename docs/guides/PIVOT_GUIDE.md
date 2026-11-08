@@ -401,7 +401,10 @@ Select cells (click, Shift+click or Shift+arrows) and press `G`. With nothing se
 (sum, count) is drawn as bars that sum to the total. **A measure that does not add up is never stacked**: VaR by desk is drawn as the desks'
 bars beside the bank's, with the diversification as its own bar, and the chart says so in words. The diversification is the engine's
 own gap of the charted column (each open row's `diversificationByColumn` in the answer, Σ parts − total; drawn as total − Σ parts): the
-browser adds up nothing. A bar's click opens that member in the
+browser adds up nothing. The gap is given only when the row's total and every one of its parts have the figure; when one has none (a
+measure computed for a view's first cells only, such as the MR cube's stressed VaR and SBM, or a hidden cell) it is `null` and no bar is
+drawn: never a sum of some of the parts. Which cells get such a capped measure is fixed by the view: its first N cells in the grid's
+order, row by row as shown, each row's columns left to right ([MR_CUBE_GUIDE.md](MR_CUBE_GUIDE.md) section 2). A bar's click opens that member in the
 grid. ECharts is vendored; nothing comes from a CDN.
 
 ## 10. Export
