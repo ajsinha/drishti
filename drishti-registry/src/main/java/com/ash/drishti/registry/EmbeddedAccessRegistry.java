@@ -195,7 +195,7 @@ public final class EmbeddedAccessRegistry implements AccessRegistry, AutoCloseab
             return Optional.of("its module '" + module.get() + "' is off: " + module(module.get()).map(ModuleState::reason).orElse(""));
         }
         Boolean on = functionSwitches.on(w);
-        return Boolean.FALSE.equals(on) ? Optional.of("an administrator switched it off (Admin -> Commands)") : Optional.empty();
+        return Boolean.FALSE.equals(on) ? Optional.of("an administrator switched it off (Admin -> Functions)") : Optional.empty();
     }
 
     @Override

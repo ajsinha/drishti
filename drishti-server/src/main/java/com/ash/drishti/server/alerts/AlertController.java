@@ -215,7 +215,7 @@ public class AlertController {
 
     private volatile com.ash.drishti.server.switches.SwitchEvents switches;
 
-    /** Admin → Commands: a change of the switches is told on every stream ({@code switches}), so open pages follow it at once. */
+    /** Admin → Functions: a change of the switches is told on every stream ({@code switches}), so open pages follow it at once. */
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     void switches(com.ash.drishti.server.switches.SwitchEvents s) {
         this.switches = s;

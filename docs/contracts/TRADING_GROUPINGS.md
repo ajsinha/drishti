@@ -172,7 +172,7 @@ All of these are additive or distinct-counts over trades: computed per answer fr
 | Exposure, limits | `EXPOSURE_GUIDE.md`, `LIM.md` | the counterparty's netting sets |
 
 The page asks each engine with the same canonical scope text and date; each figure carries its own provenance. A figure an engine is
-switched off for (Admin → Commands) is shown *not active*, never 0.
+switched off for (Admin → Functions) is shown *not active*, never 0.
 
 ## 7. What Drishti builds
 

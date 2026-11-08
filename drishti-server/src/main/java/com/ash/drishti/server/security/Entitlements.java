@@ -42,7 +42,7 @@ import java.util.function.UnaryOperator;
 public final class Entitlements {
 
     public static final String DENIED = "no access";
-    /** A link's badge, and a panel's note, when an administrator turned the command off (Admin → Commands). */
+    /** A link's badge, and a panel's note, when an administrator turned the command off (Admin → Functions). */
     public static final String INACTIVE = "not active";
     public static final String INACTIVE_PANEL = "not active (turned off by an administrator)";
     private final SecurityProperties props;

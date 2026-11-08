@@ -42,7 +42,7 @@ optional shared input, `credit-path`.
 ## 1. Summary
 
 **Commands.** `WWR CPTY CP-ALDERSHOT <GO>`, `WWR NSET NS-ALDERSHOT-NY <GO>`, `WWR LE LE-NY <GO>` (every flagged counterparty of the legal
-entity, worst first); the API `/api/v1/wwr`. The mnemonic `WWR` is new (Admin → Commands switches it like any other).
+entity, worst first); the API `/api/v1/wwr`. The mnemonic `WWR` is new (Admin → Functions switches it like any other).
 
 **Nothing is retired**: there is no stored wrong-way kind. The Calc snippet `wrong_way_flags.py` (heuristic flags from reference data) is
 superseded by the computed kind.

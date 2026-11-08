@@ -128,7 +128,7 @@ public class ApiExceptionHandler {
                 .header(org.springframework.http.HttpHeaders.CACHE_CONTROL, "no-store").body(p);
     }
 
-    /** A command an administrator turned off (Admin → Commands): {@code 403 DRS-1016} with the command and since when, nothing else. */
+    /** A command an administrator turned off (Admin → Functions): {@code 403 DRS-1016} with the command and since when, nothing else. */
     @ExceptionHandler(com.ash.drishti.server.security.CommandOffException.class)
     ProblemDetail commandOff(com.ash.drishti.server.security.CommandOffException e) {
         ProblemDetail p = drishti(e);

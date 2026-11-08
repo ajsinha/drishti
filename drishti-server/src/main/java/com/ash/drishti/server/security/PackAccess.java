@@ -97,7 +97,7 @@ public final class PackAccess {
         return o.byKind();
     }
 
-    /** The commands administrators turned off (Admin → Commands): their kinds are not active for anyone. None until wired. */
+    /** The commands administrators turned off (Admin → Functions): their kinds are not active for anyone. None until wired. */
     private volatile CommandSwitches commands;
 
     /** Wires the commands' switches: a kind whose command is off is allowed to no one ({@link #kindAllowed}, {@link #kindAssigned}). */

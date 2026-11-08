@@ -30,7 +30,7 @@ public final class IdentityRepositories {
 
     public interface PackStates extends JpaRepository<PackStateEntity, String> {}
 
-    /** The administrators' switches of commands and packs (Admin → Commands): the newest state of each. */
+    /** The administrators' switches of commands and packs (Admin → Functions): the newest state of each. */
     public interface Switches extends JpaRepository<SwitchEntity, String> {}
 
     /** Every change of a switch, newest first for the history. */

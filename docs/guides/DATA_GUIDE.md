@@ -1007,7 +1007,7 @@ The size is estimated by compressing the selected rows as the download will (the
 ### 4. Entitlements, masks, internal-only data and the audit
 
 - **Entitlements.** Only datasets the person may open are listed or read: their role opens the kind, the pack is on for them, and the
-  command is on (Admin → Commands); an edition or lens that hides the kind's command hides the dataset. The same rules as every other screen.
+  command is on (Admin → Functions); an edition or lens that hides the kind's command hides the dataset. The same rules as every other screen.
 - **Masks.** A column masked for the person (`drishti.security.redact`, a role without `raw`) is left out of the column list and out of
   every download, even when a shared link names it; a filter line on it is refused (`403 DRS-5002`: filtering would tell its values). Masks
   deeper in a record apply too, so a masked person's rows are always read as documents with the masks applied.
