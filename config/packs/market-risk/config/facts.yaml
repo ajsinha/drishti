@@ -27,10 +27,10 @@ items:
       - { as: nodes, let: "flat(pluck(trees, 'ans.nodes'))" }
       - as: book
         pick: nodes
-        where: "book.limitUse > 1 and find(nodes, 'id', book.parent).limitUse <= 1"
+        where: "book.limitStatus == 'breach' and find(nodes, 'id', book.parent).limitStatus != 'breach'"       # the server's status
         order: book.limitUse
       - { as: parent, let: "find(nodes, 'id', book.parent)" }
-    when: "book.limitUse > 1 and parent.limitUse <= 1"
+    when: "book.limitStatus == 'breach' and parent.limitStatus != 'breach'"
     text: "{book.name} is at **{book.limitUse|pct}** of its VaR limit, while its {parent.level}, {parent.name}, is within its own."
     why: >-
       A limit is set on each node of the risk hierarchy. The {book.level}'s VaR is {book.var|money} against a limit of

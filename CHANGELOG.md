@@ -82,6 +82,15 @@
   it. **The Trading landing shows the server's status and computes none**: the book rows, the desk headline, the Breaches and Near limit
   tiles, the desk head's limit use by book and day, and both halves of the new-trade check (the VaR half reads the what-if's own `limit`;
   the console no longer divides by the book's limit). `limit_state` and the setting `trading.near-limit` are removed.
+- **Every limit bar draws the server's status** (within neutral, near amber, breach red; a row without a status has no tone): the VaR
+  explorer's limit tile and its scope tree's bars (the explorer's own amber at 75% and red at 90% are deleted), drishti-risk's VaR
+  hierarchy tree (`LIMIT_USE_BANDS` 0.75/0.9/1 is replaced by `LIMIT_STATUS_TONES` on the node's `LIMIT_STATUS`; `limitBreaches` reads
+  the status), the Risk home (its bars, pills and heat-map cells, and the VaR and credit breach counts, which counted a use of 100% as a
+  breach), the MR cube's limit tile (its near tick at the server's `limitNear`), the exposure explorer's limit tile, bar and chip (its
+  own amber was over 90%) and the market-risk pack's Home fact *a book over its limit inside a desk within its own*. drishti-tree's
+  `bar` takes a status instead of bands (`{status, tones, words, max}`; `bandTone` becomes `statusTone`). The server adds the status
+  where it was missing: the MR cube's headline (`limitStatus`, `limitNear`) and an exposure counterparty's credit limit (`status`,
+  `near`).
 - **One way to check a trade**: the exposure explorer's Pre-deal tab, its form and the console's what-if proxy (`POST /api/exposure/what-if`)
   are removed; the tab's address (`/exposure?scope=…&tab=predeal`) opens the check at that counterparty or netting set. The API and
   `drishti.py exposure whatif` keep the what-if alone.

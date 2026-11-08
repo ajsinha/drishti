@@ -43,9 +43,9 @@ final class ExposureViews {
     private final ExposureService svc;
     private final ExposureExplorer explorer;
 
-    ExposureViews(ExposureService svc) {
+    ExposureViews(ExposureService svc, com.ash.drishti.banking.RiskLimits limits) {
         this.svc = svc;
-        this.explorer = new ExposureExplorer(svc);
+        this.explorer = new ExposureExplorer(svc, limits);
     }
 
     ExposureService service() {
