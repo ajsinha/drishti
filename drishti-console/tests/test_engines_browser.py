@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Admin -> Engines in a real browser (docs/architecture/COMPUTE_ENGINES.md section 8, mock-up A; section 13's browser test), over a real
+"""Admin -> Engines in a real browser (docs/guides/ADMIN_GUIDE.md section 8, mock-up A; section 13's browser test), over a real
 server and console, the engines' folder a temporary one:
 
 - the page lists every engine with its switch, state, memory, needs, used by and where its switch is set; the not-yet-built engines say

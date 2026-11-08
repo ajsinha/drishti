@@ -37,6 +37,7 @@ optional shared input, `credit-path`.
 14. [Retiring the stored version](#14-retiring-the-stored-version)
 15. [A worked example](#15-a-worked-example)
 16. [Open questions and the change table](#16-open-questions-and-the-change-table)
+17. [JSON examples](#17-json-examples)
 
 ## 1. Summary
 
@@ -228,7 +229,7 @@ exposure.
 | `PROFILE` | record list | | per primary date: `TENOR`, `T`, `EE`, `EE_DEF`, `EE_STRESS`, `RHO`, `MEAN_HAZARD` |
 | `SPECIFIC` | record list | | per flagged trade or holding: `TRADE_ID` or `HOLDING_ID`, `REFERENCE`, `MATCHED_BY` (`lei`, `group`, `issuer`, `isin`, `bank-flag`), `RELATION` (the counterparty itself, parent, subsidiary), `JTD`, `MTM` |
 | `BY_COUNTERPARTY` | record list | | above a counterparty: `COUNTERPARTY`, `FLAGS`, `WWR_RATIO`, `CVA_WWR`, `SPECIFIC_JTD` |
-| `PROVENANCE` | record | | NSET's, plus EXP's run, `credit-path` presence, the model and its parameters |
+| `PROVENANCE` | record | | NSET's (`INPUTS`: each `KIND` with its `VERSION` and `BATCH_IDS`; `UNVALUED`, `PARTIAL`, `HIDDEN`), plus EXP's run (`RUN_ID`), `credit-path` presence (`CREDIT_PATHS`), the model and its parameters (`SETTINGS`, by the names of §6.1) |
 
 ### 9.2 The API (`/api/v1/wwr`, planned)
 
@@ -241,10 +242,17 @@ exposure.
 
 ### 9.3 Published official results (`wwr-official`, `wwr-official-cpty`)
 
-The two tables of [NSET.md section 9.5](NSET.md#95-published-official-results-nset-official-nset-official-cpty). Node rows:
-`SPECIFIC_TRADES` (BIGINT), `SPECIFIC_JTD`, `WRONG_WAY_COLLATERAL`, `CVA_WWR`, `CVA_IND` (DOUBLE, USD), `FLAGGED_COUNTERPARTIES`
-(BIGINT). Counterparty rows (restricted) add `FLAGS` (STRING, comma-separated), `RHO_1Y`, `WWR_RATIO`, `EEPE`, `EEPE_DEF`,
-`EEPE_STRESS` (DOUBLE), `MODEL` (STRING).
+The two tables of [NSET.md section 9.5](NSET.md#95-published-official-results-nset-official-nset-official-cpty), with the shared
+columns ([README.md section 11](README.md#11-what-drishti-answers-computed-kinds-the-api-captures)) and these:
+
+| Field | Type | Delta | Tables | Meaning | Example |
+|---|---|---|---|---|---|
+| `SPECIFIC_TRADES`, `FLAGGED_COUNTERPARTIES` | integer | BIGINT | both | | `0`, `1` |
+| `SPECIFIC_JTD`, `WRONG_WAY_COLLATERAL`, `CVA_WWR`, `CVA_IND` | amount | DOUBLE | both | USD, as §9.1 | `-10351000` |
+| `COUNTERPARTY`, `LEI`, `LEGAL_ENTITY`, `RATING` | id, id, id, text | STRING | `-cpty` | as NSET.md section 9.5 | `CP-CASCADIA` |
+| `FLAGS` | text | STRING | `-cpty` | comma-separated | `GENERAL` |
+| `RHO_1Y`, `WWR_RATIO`, `EEPE`, `EEPE_DEF`, `EEPE_STRESS` | rate, rate, amount, amount, amount | DOUBLE | `-cpty` | as §9.1 | `1.32` |
+| `MODEL` | text | STRING | `-cpty` | `credit-paths` or `hull-white` | `credit-paths` |
 
 ### 9.4 The reactive connector and the engine (proposed)
 
@@ -387,6 +395,38 @@ CDS leaves the netting set and is its own set with exposure 6.0m in default (SA-
 | Version | Date | Change |
 |---|---|---|
 | 1.0 | 2026-10-25 | First version, PLANNED; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, inputs kept 7 years with EXP's retention question, published official results) |
+
+## 17. JSON examples
+
+The demo's netting set `NS-CASCADIA-TKY` (`CP-CASCADIA`, an airline rated BB) on 2026-09-30, the same set as
+[CVA.md section 17](CVA.md#17-json-examples): its EE and its independence CVA (`CVA_IND`) are that page's. The demo run has no credit
+paths yet (`CREDIT_PATHS` false); the records below assume the planned ones of §13, with Cascadia the counterparty whose hazard rises with
+its exposure (β > 0). Each line is one record.
+
+**credit-path: draft** (the input is optional and not yet delivered by any simulator, open question 1). One grid date of the
+counterparty, the 1Y point; `HAZARD` and `SPREAD` are shortened here to their first four values (a real record carries all P = 200,
+in the path order of `exposure-path`):
+
+```json
+{"CREDIT_PATH_ID":"XR-2026-09-30-01~CP-CASCADIA~13","BUSINESS_DATE":"2026-09-30","RUN_ID":"XR-2026-09-30-01","NAME_TYPE":"COUNTERPARTY","NAME":"CP-CASCADIA","GRID_INDEX":13,"GRID_DATE":"2027-09-30","HAZARD":[0.0312,0.0219,0.0287,0.0241],"SPREAD":[187.2,131.4,172.2,144.6],"STATUS":"ok","BATCH_ID":"B-2026-09-30-01"}
+```
+
+**wwr-result: `WWR NSET NS-CASCADIA-TKY`** (abbreviated: `PROFILE` carries three of the 13 primary dates). The ratio 1.32 is above the
+1.2 threshold, so the set is flagged `GENERAL`; no trade or holding references Cascadia or its group, so `SPECIFIC` is empty.
+
+```json
+{"SCOPE":"NSET:NS-CASCADIA-TKY","CANONICAL":"NSET:NS-CASCADIA-TKY","SCOPE_KIND":"NSET","LABEL":"NS-CASCADIA-TKY · 13 trades","BUSINESS_DATE":"2026-09-30","MODEL":"credit-paths","FLAGS":["GENERAL"],"SPECIFIC_TRADES":0,"SPECIFIC_JTD":0,"WRONG_WAY_COLLATERAL":0,"RHO_1Y":0.41,"CVA_WWR":-10351000,"CVA_IND":-7842105,"WWR_RATIO":1.32,"EEPE":58380867,"EEPE_DEF":76400000,"EEPE_STRESS":108000000,"PROFILE":[{"TENOR":"1Y","T":1.0,"EE":66876770,"EE_DEF":88100000,"EE_STRESS":124300000,"RHO":0.43,"MEAN_HAZARD":0.0275},{"TENOR":"5Y","T":5.0027,"EE":52246947,"EE_DEF":66900000,"EE_STRESS":97200000,"RHO":0.38,"MEAN_HAZARD":0.0538},{"TENOR":"10Y","T":10.0082,"EE":1511177,"EE_DEF":1820000,"EE_STRESS":2640000,"RHO":0.21,"MEAN_HAZARD":0.0565}],"SPECIFIC":[],"BY_COUNTERPARTY":[],"PROVENANCE":{"INPUTS":[{"KIND":"exposure-path","VERSION":31,"BATCH_IDS":["XB-2026-09-30-01"]},{"KIND":"credit-path","VERSION":4,"BATCH_IDS":["B-2026-09-30-01"]}],"UNVALUED":0,"PARTIAL":false,"HIDDEN":0,"RUN_ID":"XR-2026-09-30-01","CREDIT_PATHS":true,"SETTINGS":{"model":"credit-paths","ratio-threshold":1.2,"rho-threshold":0.3,"stress-quantile":0.95}}}
+```
+
+A flagged specific trade adds a `SPECIFIC` row such as
+`{"TRADE_ID":"CLY-3000417","REFERENCE":"LEI-OBLIGOR-PARENT","MATCHED_BY":"group","RELATION":"parent","JTD":6000000,"MTM":200000}` (the
+CDS of §15) and counts in `SPECIFIC_TRADES` and `SPECIFIC_JTD`.
+
+**wwr-official-cpty: the netting set's published row** (restricted table):
+
+```json
+{"BUSINESS_DATE":"2026-09-30","HIERARCHY":"NSET","NODE_ID":"NSET:NS-CASCADIA-TKY","NODE_NAME":"NS-CASCADIA-TKY","PARENT_ID":"CPTY:CP-CASCADIA","LEVEL":"netting-set","CAPTURE_ID":"CAP-WWR-2026-09-30-OFFICIAL","RESULT_VERSION":1,"INPUT_VERSIONS":"{\"exposure-path\":{\"version\":31,\"batches\":[\"XB-2026-09-30-01\"]},\"credit-path\":{\"version\":4,\"batches\":[\"B-2026-09-30-01\"]}}","COMPUTED_AT":"2026-10-01T07:05:00Z","CONTRACT_VERSION":"1.0","COUNTERPARTY":"CP-CASCADIA","LEI":"5493005CUB4V16ZSQX54","LEGAL_ENTITY":"LE-TKY","RATING":"BB","SPECIFIC_TRADES":0,"FLAGGED_COUNTERPARTIES":1,"SPECIFIC_JTD":0,"WRONG_WAY_COLLATERAL":0,"CVA_WWR":-10351000,"CVA_IND":-7842105,"FLAGS":"GENERAL","RHO_1Y":0.41,"WWR_RATIO":1.32,"EEPE":58380867,"EEPE_DEF":76400000,"EEPE_STRESS":108000000,"MODEL":"credit-paths"}
+```
 
 ---
 

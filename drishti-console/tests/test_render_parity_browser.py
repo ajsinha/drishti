@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Parity: the client-side renderer draws what the console's macros draw (docs/architecture/CLIENT_RENDERER.md section 14).
+"""Parity: the client-side renderer draws what the console's macros draw (docs/guides/EMBED_GUIDE.md section 14).
 
 Each ViewModel is drawn two ways, the console's server HTML and the library in a blank page, and compared: the accessible tree, the
 visible text line by line, every cell, every link and its target, every tone, every chart's series and points (from its ECharts option,
@@ -38,7 +38,7 @@ pytest.importorskip("playwright.async_api", reason="needs Playwright (pip instal
 pytestmark = [pytest.mark.browser, pytest.mark.spread]
 WIDTHS = (390, 1280)
 
-# What differs on purpose, each with its reason (CLIENT_RENDERER.md section 14.3). Applied to both sides before comparing.
+# What differs on purpose, each with its reason (EMBED_GUIDE.md section 14.3). Applied to both sides before comparing.
 INTENTIONAL = {
     "unknown-kind": "a kind the client does not know says so (VIEWMODEL.md section 8); the macros draw an empty body",
     "header-role": "a panel header in a tabbed grid area: Chromium exposes it as a banner when the console's script turns the section into a "

@@ -79,7 +79,7 @@
 .mr-skel { min-height: 60px; border-radius: var(--d-radius-4); background: linear-gradient(90deg, var(--d-surface-2), transparent, var(--d-surface-2)); background-size: 200% 100%; animation: mr-sk 1.2s linear infinite; }
 @keyframes mr-sk { from { background-position: 200% 0; } to { background-position: 0 0; } }
 @media (prefers-reduced-motion: reduce) { .mr-skel, .mr-tile.skel { animation: none; } }
-/* the phone (docs/guides/PACK_DEVELOPER_GUIDE.md tiers): the headline and the pivot's first rows; the lens controls and the editor are the desk's */
+/* the phone (docs/guides/BUILD_GUIDE.md tiers): the headline and the pivot's first rows; the lens controls and the editor are the desk's */
 @media (max-width: 640px) {
   .mr-keys, .mr-spark { display: none; }
   .mr-seg button { padding: var(--d-sp-4) var(--d-sp-6); }

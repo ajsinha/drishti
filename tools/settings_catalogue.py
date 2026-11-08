@@ -97,12 +97,12 @@ AREAS = [
          "its switch (`drishti.engines.<engine>.enabled`) and every setting of that engine, under the keys they always had. "
          "`application.local.yaml`, the environment and the command line still win over a file. Admin → Engines and "
          "`drishti.py server engines` write only the switch and `changed`; every other key is edited in the file "
-         "([COMPUTE_ENGINES.md](../architecture/COMPUTE_ENGINES.md), [OPERATIONS.md](OPERATIONS.md#21-compute-engines-on-or-off)). "
+         "([ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#21-compute-engines-on-or-off), [ARCHITECTURE.md](../architecture/ARCHITECTURE.md#27-compute-engines)). "
          "The old switch names are listed last: they still work, with a warning at start (`DRS-1024`)."),
     Area("modules", "Modules: `config/modules/*.yaml`",
          "One file per module (banking, capitalmarkets, economy), `config/modules/<module>.yaml` (`DRISHTI_MODULES_DIR`): the administrator's switch, and for a module in a jar of "
          "its own (banking) its name, so a server without the jar knows it and leaves it off as not installed; the module's manifest ships in its jar and the access registry reads both ([ACCESS_MODEL.md](../architecture/ACCESS_MODEL.md), "
-         "[OPERATIONS.md](OPERATIONS.md)). `drishti.modules.<module>.enabled` (`DRISHTI_MODULES_<MODULE>_ENABLED`) wins over the file. A module "
+         "[OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#65-engines-modules-and-editions)). `drishti.modules.<module>.enabled` (`DRISHTI_MODULES_<MODULE>_ENABLED`) wins over the file. A module "
          "is on when installed, licensed and enabled; a change takes effect at the next start."),
     Area("console", "The console: `application.yaml`",
          "`drishti-console/config/application.yaml`. Override a key in `config/application.local.yaml`, with the variable named, with "
@@ -113,35 +113,35 @@ AREAS = [
          "(`tools/settings_schemas.yaml`), checked against what the shipped files use."),
     Area("connectors", "Connectors: every plugin's settings",
          "A connector's settings go under `settings:` in its file, `config/connectors/<name>.yaml` "
-         "([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)); the same catalogue builds the form in Admin → Connectors. A changed "
+         "([DATA_GUIDE.md section 9](../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors)); the same catalogue builds the form in Admin → Connectors. A changed "
          "file restarts that connector only. Every plugin takes the common settings; a plugin marked TLS or proxy also takes the shared "
          "`tls.*` or `proxy.*` settings."),
     Area("packs", "Packs: `pack.yaml`",
          "`config/packs/<domain>/<pack>/pack.yaml`, read by the server's pack loader (`PackLoader`) and the console. A changed pack is reloaded "
-         "while the server runs ([Live reload](../guides/PACK_DEVELOPER_GUIDE.md#live-reload-the-packs-folder-is-watched)). Guide: "
-         "[PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#packyaml-key-by-key)."),
+         "while the server runs ([Live reload](../guides/BUILD_GUIDE.md#296-live-reload-the-packs-folder-is-watched)). Guide: "
+         "[BUILD_GUIDE.md](../guides/BUILD_GUIDE.md#4-packyaml-key-by-key)."),
     Area("editions", "Lenses: `config/lenses/`",
          "A lens file (`config/lenses/<module>/<lens>.yaml`, an edition when it is the instance's), the feature presets (`features.yaml`) and "
          "the default packs (`config/packs/default-packs.yaml`, by module), read by the server (`Editions.java`) and the console "
          "(`core/edition.py`). The site's own configuration "
          "wins over any key: `drishti.edition-spec.<key>` on the server, `edition.<key>` in the console "
-         "([LENSES.md](LENSES.md))."),
+         "([ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#12-what-a-lens-is))."),
     Area("store", "The content store: `config/store/store.yaml`",
          "Where user content is kept so every node of a cluster reaches it ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)); "
          "`drishti.store.file` names the file."),
     Area("runs", "BI runs: `config/runs/runs.yaml`",
-         "Every BI question as a bounded, visible job ([BI_DESIGN.md](../architecture/BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job)); `drishti.bi.runs.file` names the file. "
+         "Every BI question as a bounded, visible job ([ARCHITECTURE.md §28](../architecture/ARCHITECTURE.md#287-bi-runs-every-bi-query-as-a-bounded-visible-job)); `drishti.bi.runs.file` names the file. "
          "Ready-made variants: `config/runs.examples/`."),
     Area("edit", "Write-back: `config/edit/`",
-         "Write-back's four files ([WRITE_BACK.md](../guides/WRITE_BACK.md): the administrator's guide and, in its section 16, "
+         "Write-back's four files ([APPROVALS_GUIDE.md](../guides/APPROVALS_GUIDE.md): the administrator's guide and, in its section 16, "
          "the design); `drishti.edit.file` names `edit.yaml`, the others sit beside it."),
     Area("compute", "Compute workers: `config/compute/compute.yaml`",
-         "The supervisor, the Python pools and their environments ([OPERATIONS.md](OPERATIONS.md#19-compute-workers))."),
+         "The supervisor, the Python pools and their environments ([OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#15-compute-workers))."),
     Area("net", "Drishti*net: `config/net/`",
-         "The cluster folder (`drishti.net.dir`), watched while the server runs ([OPERATIONS.md](OPERATIONS.md#18-drishtinet-running-several-servers-as-one)); the shipped examples are in "
+         "The cluster folder (`drishti.net.dir`), watched while the server runs ([CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)); the shipped examples are in "
          "`config/net.examples/`."),
     Area("alerts", "Platform alert rules: `config/alerts/platform-alerts.yaml`",
-         "The rules each server evaluates against its own metrics ([OPERATIONS.md](OPERATIONS.md#136-platform-metrics-and-alerts)); "
+         "The rules each server evaluates against its own metrics ([OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#135-platform-metrics-and-alert-rules)); "
          "`drishti.metrics.alerts.file` names the file, read again when it changes. A rule's name is the site's own."),
     Area("feeds", "Data feeds: `config/feeds/<feed>.yaml`",
          "One file per data feed: the source, its datasets and the lake they load, the schedule, the licence and the keys "
@@ -163,8 +163,8 @@ AREAS = [
     Area("ai", "AI providers and MCP servers: `config/ai/`, `config/mcp/`",
          "One YAML per provider in `config/ai/` and per MCP server in `config/mcp/`, for the server (`drishti.ai.dir`, `drishti.mcp.dir`) "
          "and the console (`ai.dir`, `mcp.dir`); the folders are looked at every few seconds, so a changed file needs no restart. Every key "
-         "a shipped example (`*.yaml.example`) uses ([AI.md › Model providers](AI.md#1-model-providers), "
-         "[AI.md › The MCP client](AI.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy))."),
+         "a shipped example (`*.yaml.example`) uses ([AI_GUIDE.md › Model providers](../guides/AI_GUIDE.md#1-model-providers), "
+         "[AI_GUIDE.md › The MCP client](../guides/AI_GUIDE.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy))."),
 ]
 AREA_IDS = {a.id for a in AREAS}
 

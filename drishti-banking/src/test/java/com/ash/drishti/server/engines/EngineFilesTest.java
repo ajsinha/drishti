@@ -31,7 +31,7 @@ import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.StandardEnvironment;
 
 /**
- * The engine files and the switches (COMPUTE_ENGINES.md sections 3, 4 and 8; tests EngineFilesTest and EngineFileWriteTest): what wins
+ * The engine files and the switches (ADMIN_GUIDE.md sections 3, 4 and 8; tests EngineFilesTest and EngineFileWriteTest): what wins
  * (the local file over the engine file over the shipped copy), each old switch name as an alias with its DRS-1024 warning, the in-memory
  * lake on when its stores are in the old place; the page's write keeps every comment and key and the switch's variable, writes
  * {@code changed}, is atomic, creates the file from the jar's copy, and refuses a file changed on disk (DRS-1023).

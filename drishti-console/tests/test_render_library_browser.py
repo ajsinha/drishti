@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The client-side renderer's behaviour (docs/architecture/CLIENT_RENDERER.md): formats, tones and the DOM rules as units; a hostile
+"""The client-side renderer's behaviour (docs/guides/EMBED_GUIDE.md): formats, tones and the DOM rules as units; a hostile
 ViewModel; a streamed (GenUI) screen that ends equal to a one-shot render; live patches and the stream; in-place navigation with its
 back stack and the navigate event; sorting the way the console sorts; drill-downs, tree rows and tabs by keyboard; 44 px targets on a
 phone; the playground. Every page runs under the console's CSP on one made-up origin; no request may leave it and window.open is never

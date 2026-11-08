@@ -20,7 +20,7 @@ import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * The engines' date loads run on pools of their own (2.9.7, RESOURCES_AND_SCALE.md section 6.5), never on the common pool: a 10-second
+ * The engines' date loads run on pools of their own (2.9.7, CLUSTER_GUIDE.md section 6.5), never on the common pool: a 10-second
  * load there occupied one of the {@code cores - 1} threads that parallel streams and every other {@code CompletableFuture} share. Each
  * pool is a {@link ForkJoinPool} of {@code threads} workers: bounded, and a load that waits for another (a currency's book waiting for its
  * USD book) is compensated by the pool instead of deadlocking it. Daemon threads named {@code <name>-<n>}.

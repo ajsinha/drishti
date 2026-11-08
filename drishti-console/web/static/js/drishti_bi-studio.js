@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* BI Studio, the one shell of the BI designers (docs/architecture/BI_DESIGN.md section 8.1), on drishti-designer's DesignerShell (ELEMENTS.md
+/* BI Studio, the one shell of the BI designers (docs/architecture/ARCHITECTURE.md §28 section 8.1), on drishti-designer's DesignerShell (ELEMENTS.md
    8.8, 12.3): the header (where you are, the name, the status, the designer's actions), the left rail's Explorer (the items of the workspaces you
    may edit: reports, boards, models, datasets, themes, Python items, with a search and + New; it folds away), the open items above the designer
    (kept for the session: a per-person convenience, never the work itself, which the server saves), the designer in the middle, and the dock

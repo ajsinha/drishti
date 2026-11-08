@@ -37,7 +37,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * Changes to settings proposed in Admin → Configuration and decided by a second administrator (four eyes; docs/admin/OPERATIONS.md, "The
+ * Changes to settings proposed in Admin → Configuration and decided by a second administrator (four eyes; docs/guides/OPERATIONS_GUIDE.md, "The
  * configuration editor"). A proposal names a key, the area whose file holds it ({@code server}, {@code engines} or {@code console}), the
  * new value and why. Nothing changes until another administrator approves it: the person who proposed may withdraw it, never approve or
  * reject it. An approved change of the server's (or an engine's) key is written to the server's {@code application.local.yaml} as one

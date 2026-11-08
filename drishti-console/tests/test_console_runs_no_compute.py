@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""One Python runtime (docs/architecture/PYTHON_COMPUTE.md section 19): every Python run is the server's, on its compute pool ``python``; the
+"""One Python runtime (docs/guides/NOTEBOOK_GUIDE.md section 19): every Python run is the server's, on its compute pool ``python``; the
 console only shows. So the console's own code (``core/``, ``routes/`` and its entry) imports no compute library, the console holds no Python
 runner, and the server never calls the console to run Python. The browser's Labs Calc (``web/static/calc``, Pyodide in the reader's browser) is
 not the console's code and is left out. A quick file check: the drill's gate runs it."""
@@ -52,7 +52,7 @@ def imports(path: Path) -> list[tuple[int, str]]:
 
 def test_the_console_imports_no_compute_library():
     found = [f"{p.relative_to(CONSOLE)}:{line} imports {name}" for p in console_sources() for line, name in imports(p) if name in BANNED]
-    assert not found, "the console computes nothing; Python runs on the server's compute pool (PYTHON_COMPUTE.md section 19):\n" + "\n".join(found)
+    assert not found, "the console computes nothing; Python runs on the server's compute pool (NOTEBOOK_GUIDE.md section 19):\n" + "\n".join(found)
 
 
 def test_the_console_has_no_python_runner_and_the_server_never_calls_it():

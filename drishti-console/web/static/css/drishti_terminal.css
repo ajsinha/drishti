@@ -116,7 +116,7 @@ body.terminal { font-size: var(--d-fs-14); }
 .sw-accent { background: var(--d-accent); } .sw-limit { background: none; border-top: 2px dashed var(--d-neg); }
 
 .bars { list-style: none; margin: 0; padding: 0; }
-.bars li { display: grid; grid-template-columns: fit-content(40%) minmax(2rem, 1fr) minmax(5.5rem, max-content); align-items: center; gap: var(--d-sp-9_6); padding: var(--d-sp-3_52) 0; }   /* a long label is cut with an ellipsis and a long value widens its own column: a bar list never widens the page (CLIENT_RENDERER.md 14.3) */
+.bars li { display: grid; grid-template-columns: fit-content(40%) minmax(2rem, 1fr) minmax(5.5rem, max-content); align-items: center; gap: var(--d-sp-9_6); padding: var(--d-sp-3_52) 0; }   /* a long label is cut with an ellipsis and a long value widens its own column: a bar list never widens the page (EMBED_GUIDE.md 14.3) */
 .bl { color: var(--d-muted); font-size: var(--d-fs-13_12); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 3.4rem; }
 .bt { height: 10px; }
 .bf { display: block; height: 10px; width: 0; background: var(--d-link); border-radius: var(--d-radius-1); transition: width .4s; }

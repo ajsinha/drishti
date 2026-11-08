@@ -34,7 +34,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 /**
- * "Explain the difference" between two cells, or one cell on two dates (PIVOT_ENGINE.md section 10, item 1), in exact steps that add up.
+ * "Explain the difference" between two cells, or one cell on two dates (ARCHITECTURE.md section 26.7, item 1), in exact steps that add up.
  *
  * <p>The difference {@code to − from} is split by the members of a dimension the person picks ({@code by}): each step moves one member's rows
  * from the first cell to the second (the member's state replaced, the total's states merged and finished again), in a fixed order (by

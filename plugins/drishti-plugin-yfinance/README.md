@@ -84,7 +84,7 @@ for since the start. Two connectors use it: `yfinance` (news-and-markets pack, k
 | `retry-factor` | string | `2` | Growth of the wait (2) |
 | `retry-jitter` | string | `0.2` | Random spread of the wait (0.2) |
 
-Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md). It takes the shared `tls.*` settings (docs/connectors/TLS.md). It takes the shared `proxy.*` settings for an outbound HTTP proxy (CONNECTOR_DEVELOPER_GUIDE.md).
+Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/guides/DATA_GUIDE.md section 9). It takes the shared `tls.*` settings (docs/guides/DATA_GUIDE.md section 10). It takes the shared `proxy.*` settings for an outbound HTTP proxy (DEVELOPER_GUIDE.md).
 <!-- settings:end -->
 
 ## Data structure
@@ -139,14 +139,14 @@ annotated copy is `config/connectors.examples/other/yfinance.yaml`. There is no 
 
 - Below: [turning it on](#turning-it-on), [how the figures are worked out](#how-the-figures-are-worked-out), [health, errors and retries](#health-errors-and-retries), [using it from a pack](#using-it-from-a-pack), [how it is built](#how-it-is-built), [tests](#tests).
 - [The us-equities pack's guide](../../config/packs/capitalmarkets/us-equities/guides/us-equities.md#prices-internal-use-only) (prices: internal use only).
-- [The news connector](../drishti-plugin-news/README.md), [connector files](../../docs/connectors/CONNECTOR_FILES.md), [TLS (and the outbound proxy)](../../docs/connectors/TLS.md).
+- [The news connector](../drishti-plugin-news/README.md), [connector files](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors), [TLS (and the outbound proxy)](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy).
 
 ## Turning it on
 
 A pack that uses it (`news-and-markets`) carries a template; at first start the server writes `config/connectors/yfinance.yaml` from it
 with `enabled: ${DRISHTI_YFINANCE_ENABLED:false}`. Set `DRISHTI_YFINANCE_ENABLED=true`, or `enabled: true` in the file, or Enable in
 Admin → Connectors. Enabling and disabling the file is live; a new plugin jar needs a restart (the plugin ships inside `drishti-server`).
-To use a mirror, set `base-url`; HTTPS on a private CA takes the shared [`tls.*`](../../docs/connectors/TLS.md) settings.
+To use a mirror, set `base-url`; HTTPS on a private CA takes the shared [`tls.*`](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy) settings.
 
 The `us-equities` pack carries a second connector on the same plugin, `us-equities-prices` (`id-prefix: PX-`, `kind: price-history`, a
 year of daily bars), off unless `DRISHTI_US_EQUITIES_PRICES_ENABLED=true`, for internal use only: the pack commits no prices
@@ -168,7 +168,7 @@ is not JSON is an error, never a half-empty quote.
 
 ## Outbound proxy
 
-The settings and rules are shared by every HTTP-based connector: [TLS.md (proxy)](../../docs/connectors/TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers).
+The settings and rules are shared by every HTTP-based connector: [DATA_GUIDE.md, the outbound proxy](../../docs/guides/DATA_GUIDE.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers).
 A `proxy:` block in `settings:` (or `proxy: none`) overrides the site default `drishti.http.proxy.*`; the password is an `${ENV}`
 placeholder, never a literal. Yahoo's chart endpoint is reached through the proxy when one applies. Health ends
 `via proxy host:port (source)`. Tested in `YFinanceProxyTest` against a fake proxy and the fake Yahoo server.
@@ -204,11 +204,11 @@ routes: { quote: yfinance }
   - { id: history, kind: line, source: "link($.QUOTE_ID, 'quote')", rows: $.HISTORY, x: DATE, y: CLOSE, fmt: price2 }
 ```
 
-See the [`news-and-markets` sample pack](../../docs/guides/PACK_DEVELOPER_GUIDE.md#sample-packs). **Offline** (`DRISHTI_OFFLINE=true`,
+See the [`news-and-markets` sample pack](../../docs/guides/BUILD_GUIDE.md#315-sample-packs). **Offline** (`DRISHTI_OFFLINE=true`,
 [CONFIGURATION](../../docs/admin/CONFIGURATION.md#drishtioffline--offline-mode-no-internet)) this connector never starts and shows
 *off (offline mode)* in Admin → Connectors; the pack's `news-store` then serves `quote` from a snapshot captured through this connector
 with `range: 1y` (`drishti.py testdata capture-market`;
-[PACK_DEVELOPER_GUIDE.md](../../docs/guides/PACK_DEVELOPER_GUIDE.md#news-and-markets-and-world-economy-offline)).
+[BUILD_GUIDE.md](../../docs/guides/BUILD_GUIDE.md#317-the-demo-lakes-where-the-seven-packs-read-their-data)).
 
 ## How it is built
 

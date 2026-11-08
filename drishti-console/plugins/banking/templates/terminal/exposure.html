@@ -24,7 +24,7 @@
 {% block head %}{% include "terminal/_risk_elements_css.html" %}<link rel="stylesheet" href="/static/elements/drishti-tree/drishti_tree.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_exposure.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% with command_text='EXP ' ~ scope ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
-{% from "_macros/phone.html" import part, foot, back %}{% set PP = phone_parts(request, 'exposure') %}{# the phone display (docs/guides/PACK_DEVELOPER_GUIDE.md 8) #}
+{% from "_macros/phone.html" import part, foot, back %}{% set PP = phone_parts(request, 'exposure') %}{# the phone display (docs/guides/BUILD_GUIDE.md 8) #}
 {{ back(request) }}
 <div class="xx" data-exposure data-scope="{{ scope }}" data-capture="{{ capture }}" data-user="{{ user }}">
   <div class="xx-cmdline" aria-live="polite">

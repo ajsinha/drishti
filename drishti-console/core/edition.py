@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Editions and lenses, the console side (docs/admin/LENSES.md).
+"""Editions and lenses, the console side (docs/guides/ADMIN_GUIDE.md).
 
 An *edition* is one setting on the servers (``drishti.edition``) naming ``config/lenses/<module>/<lens>.yaml``; the console learns the name from
 the server's about answer (:meth:`Editions.learn`), reads the same file and puts its presets as a layer under the site's own configuration
@@ -89,7 +89,7 @@ def _kinds_word(kind: str) -> str:
 
 def hidden_hint(edition, kind: str = "") -> str:
     """What to do about ``DRS-4023`` (a view refused because the edition or the person's lens hides its kind), naming the lens plainly
-    (CLIENT_RENDERER.md 10; plan 2.9.7 row 2a): never "check the kind and id", which sends a person hunting for a typo that is not there."""
+    (EMBED_GUIDE.md 10; plan 2.9.7 row 2a): never "check the kind and id", which sends a person hunting for a typo that is not there."""
     what = _kinds_word(kind)
     if edition is not None and getattr(edition, "active", False) and getattr(edition, "lens", False):
         return f"You are inside the {edition.title} lens, which does not include {what}: leave the lens (Views → Leave) or choose an entity it shows."
@@ -162,7 +162,7 @@ class Edition:
         return {str(c).strip().upper() for c in allow if str(c).strip()}
 
     def command_shown(self, code: str | None) -> bool:
-        if code and _engines.word_hidden(code):                  # a word of a compute engine that runs nowhere (COMPUTE_ENGINES.md 5.2)
+        if code and _engines.word_hidden(code):                  # a word of a compute engine that runs nowhere (ADMIN_GUIDE.md 5.2)
             return False
         if code and _modules.word_refusal(code) is not None:     # its module is off, or the function is off or not the person's (ACCESS_MODEL.md)
             return False
@@ -381,7 +381,7 @@ class Editions:
         name = str((about.get("edition") or {}).get("name") or "")
         lenses = [str(n) for n in about.get("lenses") or []] if not name else []
         brand = {k: about.get(k) for k in ("product", "tagline") if about.get(k)}
-        engines_changed = _engines.learn(about.get("engines"), self.engines)   # the engines running in the cluster (COMPUTE_ENGINES.md 5.2)
+        engines_changed = _engines.learn(about.get("engines"), self.engines)   # the engines running in the cluster (ADMIN_GUIDE.md 5.2)
         engines_changed = _modules.learn(about.get("modules"), self.modules) or engines_changed   # the modules loaded (ACCESS_MODEL.md)
         changed = name != self.instance.name or sorted(lenses) != sorted(self.lenses) or brand != self._server_brand
         if not changed:

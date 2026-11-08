@@ -204,7 +204,7 @@ ECL) is offered for critique; the playground shows the difference (case 6).
 ## 8. Management overlays
 
 An overlay (post-model adjustment) is a Drishti-owned record, `ecl-overlay`, entered through a write-back form and **approved with four
-eyes** ([WRITE_BACK.md section 10](../guides/WRITE_BACK.md#10-approval); `owned` target, `approvals: two`), never typed into a figure:
+eyes** ([APPROVALS_GUIDE.md section 10](../guides/APPROVALS_GUIDE.md#6-the-approvals-queue); `owned` target, `approvals: two`), never typed into a figure:
 
 | Field | Meaning |
 |---|---|
@@ -245,7 +245,7 @@ the coverage ratio (allowance ÷ gross carrying amount) for each; the stage-2 sh
 credit risk grade and stage.
 
 **Cluster.** Facilities are sharded by facility id; each owner computes its shard's facility ECLs and partial sums per requested cut; the
-coordinator adds the partials in shard order (the same equality rule as the VaR sums, [VAR_SHARDING.md](VAR_SHARDING.md)).
+coordinator adds the partials in shard order (the same equality rule as the VaR sums, [DATA_ARCHITECTURE.md section 13](DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built)).
 
 ## 11. Why the provision moved
 

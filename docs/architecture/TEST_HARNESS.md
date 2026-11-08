@@ -9,7 +9,7 @@
 How the console's browser tests are run so that their time grows with the machine, not with the number of pages: where the time
 went, the design that replaced it, the numbers it must hold, how it was validated, and the rules every new browser test follows. The
 testing architecture as a whole (the test pyramid, the drill's stages) is in [ARCHITECTURE.md, "Testing architecture"](ARCHITECTURE.md#22-testing-architecture);
-the drill's every option is in [PACK_DEVELOPER_GUIDE.md section 2.6](../guides/PACK_DEVELOPER_GUIDE.md#26-the-drill-toolsdrillsh).
+the drill's every option is in [BUILD_GUIDE.md section 2.6](../guides/DEVELOPER_GUIDE.md#26-the-drill-toolsdrillsh).
 
 ## Contents
 
@@ -345,8 +345,8 @@ Beside the automated harness, one manual script is kept: a demo rehearsal on a *
 Maven through the company's internal mirror, no `.exe` placed on the machine), showing ENDUR trades from the bank's own JSON Lines
 files beside the synthetic CALYPSO and MUREX trades, the supporting data (curves, counterparties, netting sets, CSAs, collateral, FX,
 fixings, risk), the committed quotes-and-news snapshot (no website is contacted) and the world economy data. Do it in order, the day
-before the demo. Installing and running Drishti in general is [GETTING_STARTED.md](../guides/GETTING_STARTED.md) and its
-[Drishti on Windows](../guides/GETTING_STARTED.md#drishti-on-windows).
+before the demo. Installing and running Drishti in general is [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine) and its
+[Drishti on Windows](../guides/OPERATIONS_GUIDE.md#4-drishti-on-windows).
 
 **Your real trade files are confidential.** Keep them **outside** the project folder (below `<private>`, for example
 `C:\Users\<you>\drishti-private\endur\`); never copy them into the repository. Drishti reads them where they are. `<repo>` below is the
@@ -359,7 +359,7 @@ $py = "<repo>\drishti-console\.venv\Scripts\python.exe"; $tools = "<repo>\tools"
 ### 9.1 Set up once
 
 1. **The machine:** JDK 21 or newer, Python 3.13, IntelliJ IDEA and PyCharm, 8 GB free memory, 5 GB free disk
-   ([GETTING_STARTED.md step 1](../guides/GETTING_STARTED.md#step-1--install-the-prerequisites)). pip reads `%APPDATA%\pip\pip.ini`,
+   ([OPERATIONS_GUIDE.md step 1](../guides/OPERATIONS_GUIDE.md#21-prerequisites)). pip reads `%APPDATA%\pip\pip.ini`,
    Maven `%USERPROFILE%\.m2\settings.xml` for the mirror.
 2. **The code:** clone (or extract the ZIP of) branch **main** into `<repo>`. Nothing needs unzipping: `data\testdata` is `.jsonl.gz`,
    read directly. Your files go in `<private>`, **one per business date**, named by the load rules
@@ -369,7 +369,7 @@ $py = "<repo>\drishti-console\.venv\Scripts\python.exe"; $tools = "<repo>\tools"
 4. **Two IDE projects, never one folder:** IntelliJ opens `<repo>` (run configurations in `run-configs\`: **Drishti build server jar**,
    **Drishti server (demo lakes)**); PyCharm opens `<repo>\drishti-console` (`drishti-console\run-configs\`: **Drishti console**,
    **Build demo lakes**, **Load ENDUR file into the lake**, the `drishti …` tools), with the `.venv` interpreter, `tools` a Sources root and
-   pytest the runner ([GETTING_STARTED.md › PyCharm](../guides/GETTING_STARTED.md#4-pycharm-run-and-debug-the-console)). Opened on the same
+   pytest the runner ([OPERATIONS_GUIDE.md › PyCharm](../guides/OPERATIONS_GUIDE.md#33-pycharm-run-and-debug-the-console)). Opened on the same
    folder they overwrite each other's `.idea` (IntelliJ then says **module not specified**: close both, delete `<repo>\.idea`, reopen;
    or **Maven → Reload All Maven Projects**). Every PyCharm configuration runs `tools\drishti.py` (or `run_drishti_web.py`) from `<repo>`
    (`$PROJECT_DIR$/..`); a line such as `lake build …` below goes in its *Parameters* box, or after `& $py "$tools\drishti.py"` in a terminal.
@@ -401,7 +401,7 @@ means it is waiting (a slow disk, or antivirus scanning `data`).
 | another system's files | `--source-dir <folder> --system calypso --files-only` |
 | some datasets only | `--only trades/calypso,trades/murex --as-of <the lakes' last date>` (a folder of `data\testdata`, or a pack name) |
 | one system in Iceberg, the others in Delta | `--store endur=delta --store calypso=iceberg` (`--store all=iceberg` for every system; `--only trades/calypso --store calypso=delta --as-of <date>` moves it back). Needs the jar; the closing lines list each system's store and what changed in its connector file |
-| your bank's names instead of *Drishti Bank* | edit `config\demo\names.yaml`, then `--only core/legal-entity,market-risk/risk-hierarchy --as-of <date>` ([DEMO_DATA.md](../connectors/DEMO_DATA.md#your-banks-names)) |
+| your bank's names instead of *Drishti Bank* | edit `config\demo\names.yaml`, then `--only core/legal-entity,market-risk/risk-hierarchy --as-of <date>` ([../guides/DATA_GUIDE.md section 11](../guides/DATA_GUIDE.md#1114-your-banks-names)) |
 | a running server told at once | `--server http://<its address>:18480` with a `loads:write` token in `DRISHTI_TOKEN` (or `--token-file`); otherwise restart it, or wait about 10 s for a table's new version |
 
 **By hand, one file** (after deleting `data\delta\trading\trade_endur` so the synthetic table and its columns go):
@@ -416,7 +416,7 @@ as columns; `--mode overwrite-dates` makes a repeat safe. The last line reads
 non-zero `rejected` is explained, with the line, above it. Trade ids are text (`1000008` is read as `"1000008"`). Full paths matter:
 PyCharm's terminal opens in `drishti-console`, where a relative path makes a stray `drishti-console\data`.
 
-**With the Java loader** (every core, bounded memory; [TOOLS.md section 4.13](../guides/TOOLS.md#413-the-parallel-lake-loader)): add
+**With the Java loader** (every core, bounded memory; [CLI_REFERENCE.md section 4.13](../guides/CLI_REFERENCE.md#713-the-parallel-lake-loader)): add
 `--engine java` to the line above (the last line then says `engine=java-loader`; **without it `lake build` always uses Python**), or run
 the loader alone from a YAML file (`source: {files, pack, connector, partition-by}`, `target: {format: delta, lake, kind: trade, mode: replace}`,
 `memory: {budget-mb, spill-dir}`; single quotes keep Windows backslashes):
@@ -489,7 +489,7 @@ Delete the scratch lakes afterwards.
 
 The pictures are of synthetic data loaded exactly as in 9.2.
 
-**Optional: two servers as one** ([tutorial 19](../tutorials/19-a-cluster-of-three.md)). Use the machine's real IPv4 address
+**Optional: two servers as one** ([tutorial 22](../tutorials/22-a-cluster-of-three.md)). Use the machine's real IPv4 address
 (`ipconfig`), never `127.0.0.1` or `localhost`. Set one key for both (`$env:DRISHTI_NET_SECRET`), `drishti.py net set node.secret` and
 `node.enabled true` on each, `net add-peer` the first from the second (its own `config` and `data` folders, `--server.port=18490`); **Admin →
 Net → Members** shows both `alive`. With the console's `DRISHTI_BACKEND_URLS` naming the first, stopping it moves the next page to the

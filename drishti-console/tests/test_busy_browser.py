@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Busy protection in a real browser (docs/admin/OPERATIONS.md, "Busy protection"; mock-up A): a download the server asks to wait comes
+"""Busy protection in a real browser (docs/guides/OPERATIONS_GUIDE.md, "Busy protection"; mock-up A): a download the server asks to wait comes
 back to the Download card as the calm message with a ring counting down the server's Retry-After and Try now, Cancel and Copy CLI line;
 when the time is up it starts the download again by itself, and the server lets it in. Admin -> Health draws the Busy protection card with
 its bars (widths set without inline style) and the operator override. Runs Chromium through Playwright; skipped when it is missing."""

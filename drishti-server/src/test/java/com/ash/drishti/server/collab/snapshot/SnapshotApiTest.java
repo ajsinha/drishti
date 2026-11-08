@@ -49,7 +49,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 /**
- * Watermarked snapshots (COLLABORATION.md, step 10), over the whole stack with snapshots on: the picture is computed for the most
+ * Watermarked snapshots (ARCHITECTURE.md §31, step 10), over the whole stack with snapshots on: the picture is computed for the most
  * restrictive recipient (asserted on what the layout draws, before any pixel), a recipient who may not open the kind is left out, a pack
  * can forbid pictures, the watermark names the sender, the recipients, the time, the data's date and generation and the link, every
  * picture is in the access log, and the email carries it as an attachment.

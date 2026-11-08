@@ -22,7 +22,7 @@ publish, keygen, install), data (profile and ingest your own JSON Lines or watch
 lake (build a Delta lake from a large JSON export, scan, status, maintain), feed (pull external data into the lakes: list, run, status, schedule), testdata (capture-market: a real offline snapshot), view (get, explain), history (an entity over business days), doctor, completion, design (the Screen Designer's designs over
 REST: create, save, check, propose, approve, export, import, bind) and docs (screenshots).
 Needs Python 3.10+ and PyYAML; deltalake and pyarrow only for `--store delta` ingests. The guide with every command,
-recipes and real output is docs/guides/CLI_GUIDE.md.
+recipes and real output is docs/guides/CLI_REFERENCE.md.
 
 Exit codes: 0 ok, 1 problems found (a failing check, a server that said no, an unreachable server), 2 usage (a bad option,
 a missing file or jar). Commands that talk to a server read it from --server or DRISHTI_SERVER (default
@@ -158,7 +158,7 @@ class ApiError(CliError):
     problem document when it was JSON."""
 
     HINTS = {401: " (no or bad token: set DRISHTI_TOKEN or --token-file)",
-             403: " (your role or a server setting does not allow it: designing is open to everyone, approving needs an approver, Admin pages an administrator; a personal drk_ token also needs the scope for the call: design:write, design:approve, packs:admin, loads:write, bi:write, bi:approve or bi:admin, see CLI_GUIDE)"}
+             403: " (your role or a server setting does not allow it: designing is open to everyone, approving needs an approver, Admin pages an administrator; a personal drk_ token also needs the scope for the call: design:write, design:approve, packs:admin, loads:write, bi:write, bi:approve or bi:admin, see docs/guides/CLI_REFERENCE.md)"}
 
     def __init__(self, status: int, code: str | None, detail: str):
         if code and detail and detail.startswith(code + " "):
@@ -189,7 +189,7 @@ def problem_error(status: int, raw: bytes, headers, reason: str = "") -> ApiErro
         err.retry_after = max(1, int((headers or {}).get("Retry-After") or j.get("retryAfterSeconds") or 0))
     except (TypeError, ValueError):
         err.retry_after = 30
-    if code == "DRS-1020":                                       # a compute engine running nowhere (COMPUTE_ENGINES.md): exit 3, the server's words
+    if code == "DRS-1020":                                       # a compute engine running nowhere (ADMIN_GUIDE.md): exit 3, the server's words
         err.args = ((detail or "").split(code + " ", 1)[-1] + f" ({code})",)
         err.code = 3
     if status == 503 and (j.get("busy") or BUSY_CODE.match(str(code or ""))):
@@ -368,7 +368,7 @@ RESERVED_WORDS = ("ADMIN", "BI", "DATA", "DATAMAP", "EXPORT", "FORM", "FUNC", "R
 
 
 def check_reserved_mnemonics(pack: pathlib.Path) -> list[str]:
-    """A pack may not define a mnemonic that is a reserved command word, in any case (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 4): the server refuses to load it."""
+    """A pack may not define a mnemonic that is a reserved command word, in any case (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 4): the server refuses to load it."""
     try:
         m = need_yaml().safe_load((pack / "pack.yaml").read_text(encoding="utf-8")) or {}
     except OSError:
@@ -874,7 +874,7 @@ def cmd_server_packs(a, extra) -> int:
 
 
 def cmd_server_commands(a, extra) -> int:
-    """Admin -> Commands (docs/admin/USER_MANAGEMENT.md): list the commands with their state, turn some off or on with a reason, or the history."""
+    """Admin -> Commands (docs/guides/ADMIN_GUIDE.md): list the commands with their state, turn some off or on with a reason, or the history."""
     api = Api.from_args(a)
     if a.commands_cmd in ("on", "off"):
         changes = [{"scope": "pack" if a.pack else "command", "name": n if a.pack else n.upper(), "on": a.commands_cmd == "on"} for n in a.names]

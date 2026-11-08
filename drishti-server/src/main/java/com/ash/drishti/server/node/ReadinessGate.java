@@ -18,7 +18,7 @@ package com.ash.drishti.server.node;
 import java.util.List;
 
 /**
- * Something readiness waits for (CD1, CLUSTER_DEPLOYMENT.md section 9.1): this node joining Drishti*net, an engine's newest date opening,
+ * Something readiness waits for (CD1, CLUSTER_GUIDE.md section 9.1): this node joining Drishti*net, an engine's newest date opening,
  * the shards this member owns becoming ready. Asked on every readiness probe, so it answers from memory and never waits; it may start work
  * in the background (opening a date) that makes it ready later.
  */

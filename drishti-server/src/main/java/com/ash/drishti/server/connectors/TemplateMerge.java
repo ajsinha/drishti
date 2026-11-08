@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * The deep additive merge of a connector's definition with its pack's template (CONNECTOR_FILES.md, "Upgrades"), for the parts that are
+ * The deep additive merge of a connector's definition with its pack's template (docs/guides/DATA_GUIDE.md section 9, "Upgrades"), for the parts that are
  * not flat settings: a reactive connector's computation ({@code kinds.<kind>.params}, {@code kinds.<kind>.result}, {@code reads},
  * {@code engine}, {@code triggers}, {@code coalesce}, {@code cache}, {@code limits}, {@code history}, at any depth). Rules:
  * <ul>

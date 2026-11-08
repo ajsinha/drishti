@@ -54,7 +54,7 @@
   function applyPanel(p) {
     var old = document.getElementById('p-' + p.panel.id);
     if (!old) { return; }
-    // a phone's compact (glance) panel keeps its compact form: drishti_phone.js fetches it again (docs/guides/PACK_DEVELOPER_GUIDE.md 6)
+    // a phone's compact (glance) panel keeps its compact form: drishti_phone.js fetches it again (docs/guides/BUILD_GUIDE.md 6)
     if (old.hasAttribute('data-phone-compact') && window.Drishti.phone) { window.Drishti.phone.refresh(p.panel.id); return; }
     if (!p.html) { window.Drishti.view && window.Drishti.view.updateChart(p.panel.id, p.panel.data); return; }
     var chosen = old.querySelector('[role="tab"][aria-selected="true"]');

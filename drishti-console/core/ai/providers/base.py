@@ -24,7 +24,7 @@ from core.ai.types import CHAT, EMBEDDINGS, JSON_MODE, TOOL_CALLS, ChatRequest, 
 
 
 def tls_result(cfg: ProviderConfig, url: str):
-    """The shared ``tls.*`` settings (``core/ai/tls.py``, docs/connectors/TLS.md) as a context plus the certificates' expiry."""
+    """The shared ``tls.*`` settings (``core/ai/tls.py``, docs/guides/DATA_GUIDE.md section 10) as a context plus the certificates' expiry."""
     return tls_mod.build(cfg.settings, url, os.environ.get)
 
 

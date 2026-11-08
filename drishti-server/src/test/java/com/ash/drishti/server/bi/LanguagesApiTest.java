@@ -47,7 +47,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 /**
- * The languages of wave A over the whole stack, security on (docs/architecture/BI_DESIGN.md sections 3.3 and 3.4): the DEL function catalogue, checking an
+ * The languages of wave A over the whole stack, security on (docs/architecture/ARCHITECTURE.md §28 sections 3.3 and 3.4): the DEL function catalogue, checking an
  * expression against a model as the caller sees it (a masked field is refused in a filter, a hidden one does not exist), the converter for one expression
  * and for an item's YAML; Drishti SQL over the same model. A small lake read through a real file connector; readers rita (every desk, raw), hana (a
  * desk-head: DESK-A only) and ann (no raw: {@code mtm} masked).

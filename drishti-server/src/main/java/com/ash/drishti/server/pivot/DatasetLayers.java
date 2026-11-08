@@ -28,7 +28,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.ObjectProvider;
 
 /**
- * The dataset route of a document list's fields (PIVOT_ENGINE.md section 6.7): a published BI dataset table over the kind's list
+ * The dataset route of a document list's fields (ARCHITECTURE.md section 26.4): a published BI dataset table over the kind's list
  * ({@code source: {kind: trade, each: LEGS}}) whose columns name the list's fields ({@code NOTIONAL}, or {@code INDEX_NAME} with
  * {@code path: INDEX.NAME}), its date built into the BI {@code cached} layer (Parquet, one row per element with the entity's id and the
  * element's index). The pivot reads those files instead of every document when the view's list fields are all there. BI off, no such

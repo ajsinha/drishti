@@ -219,7 +219,7 @@ Mock-up: [g4-python.html](mockups/editors/g4-python.html), option **A** as the e
 - **Where it runs.** The sample run, the Notebook's cells and the table's rows when read all run on the server's compute pool `python`, in
   its strict sandbox: the inputs read as the person running it (row rules and masks), pinned libraries, the code's time and memory limits, no
   network (an approved source is read by the server and handed in as an input), files only in its own folder, every run audited; the rows are
-  checked against the contract and a mismatch is refused in words ([PYTHON_COMPUTE.md section 19](PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write)).
+  checked against the contract and a mismatch is refused in words ([NOTEBOOK_GUIDE.md section 19](ARCHITECTURE.md#291-one-python-runtime)).
   Where the server cannot run Python safely (compute off, Windows) the buttons are off and say why.
 
 ### 7.5 People and access

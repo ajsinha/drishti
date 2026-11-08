@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Python items in the console (docs/guides/BI_GUIDE.md › Python in BI): every run is the server's (its compute pool python, PYTHON_COMPUTE.md section 19).
+"""Python items in the console (docs/guides/REPORTS_GUIDE.md › Python in BI): every run is the server's (its compute pool python, NOTEBOOK_GUIDE.md section 19).
 The console's routes pass the page's calls to the server as the signed-in person and pass the answer back: a python visual's run, the check, the status;
 the server's traceback reaches the page only when the server gave one (for authors). The report page carries no browser runtime; CSRF holds. What the
 code computes and what the sandbox refuses is tested where it runs: drishti-compute/src/test/python/test_items.py."""

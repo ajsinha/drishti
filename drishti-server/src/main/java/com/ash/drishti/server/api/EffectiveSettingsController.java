@@ -181,7 +181,7 @@ public class EffectiveSettingsController {
         if (m.find()) {
             String f = m.group(1).replace('\\', '/');
             String base = f.substring(f.lastIndexOf('/') + 1);
-            return f.endsWith("engines/" + base) ? "engines/" + base : base;   // a compute engine's file (COMPUTE_ENGINES.md) keeps its folder
+            return f.endsWith("engines/" + base) ? "engines/" + base : base;   // a compute engine's file (ADMIN_GUIDE.md) keeps its folder
         }
         return null;
     }

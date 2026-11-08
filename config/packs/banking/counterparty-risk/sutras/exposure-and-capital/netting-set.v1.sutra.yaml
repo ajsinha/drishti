@@ -53,7 +53,7 @@ controls:
   - { id: product, kind: multi-select, label: Product, options: "$.TRADES[*].PRODUCT", placement: header, panel: trades }
   - { id: minNotional, kind: slider, label: Notional at least, min: 0, max: "max($.TRADES[*].NOTIONAL)", step: 1000000, placement: header, panel: trades }
   - { id: status, kind: multi-select, label: Status, options: "$.TRADES[*].STATUS", default: all, placement: header, panel: trades }
-phone:                                     # on a phone (docs/guides/PACK_DEVELOPER_GUIDE.md): what the set owes first, the trades at a glance
+phone:                                     # on a phone (docs/guides/BUILD_GUIDE.md): what the set owes first, the trades at a glance
   order: [exposureEngine, exposure, trades, byAsset]
   summary: "Net MTM ${fmt($.NET_MTM, 'signed0')} · ${$.TRADE_COUNT} trades · PFE 95 peak ${fmt($.EXPOSURE_ENGINE.PEAK_PFE, 'compact')}"
 panels:

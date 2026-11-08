@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Tutorial 11, step 7: a report on the model trades-daily that says the figures it must show (tests:). Check runs them; a publish is refused while one
+# Tutorial 8, step 36: a report on the model trades-daily that says the figures it must show (tests:). Check runs them; a publish is refused while one
 # fails. The third test is wrong on purpose.
 rachana: 2
 report: desk-check

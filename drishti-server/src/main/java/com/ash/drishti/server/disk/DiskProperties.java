@@ -19,7 +19,7 @@ import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * The server's local disk (RESOURCES_AND_SCALE.md section 7, 2.9.7), {@code drishti.disk.*}: the free-space guard every large writer asks
+ * The server's local disk (CLUSTER_GUIDE.md section 7, 2.9.7), {@code drishti.disk.*}: the free-space guard every large writer asks
  * before it writes, how often the folders are measured, and how many heap dumps are kept.
  *
  * @param minFreePercent the free space a write must leave, as a share of the disk (10); both this and {@code minFreeGb} must hold

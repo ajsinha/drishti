@@ -112,10 +112,10 @@ FOLD_WHAT = {
 }
 
 #: guide sections and tutorials of a kind: (document under docs/, the heading's start); anchors are computed from the heading
-_VAR = [("guides/VAR_GUIDE.md", "15.13 "), ("tutorials/25-var-from-the-bank-to-a-trade.md", "# ")]
-_EXP = [("guides/EXPOSURE_GUIDE.md", "16. "), ("tutorials/26-exposure-from-the-bank-to-a-trade.md", "# ")]
-_TRD = [("guides/PACK_DEVELOPER_GUIDE.md", "Trading"), ("knowledge/trades-and-products.md", "# "),
-        ("tutorials/24-correct-a-trade-and-approve-it.md", "# ")]
+_VAR = [("guides/VAR_GUIDE.md", "15.13 "), ("tutorials/02-var-from-the-bank-to-a-trade.md", "# ")]
+_EXP = [("guides/EXPOSURE_GUIDE.md", "16. "), ("tutorials/03-exposure-from-the-bank-to-a-trade.md", "# ")]
+_TRD = [("guides/BUILD_GUIDE.md", "Trading"), ("knowledge/risk.md", "3. Trades"),
+        ("tutorials/11-correct-and-approve.md", "# ")]
 LINKS = {
     "trade": _TRD,
     "pnl-vector": [("guides/VAR_GUIDE.md", "15.2 "), ("guides/VAR_GUIDE.md", "8.4 ")] + _VAR,
@@ -133,21 +133,21 @@ LINKS = {
     "cva": _EXP, "sa-ccr": _EXP, "simm": _EXP,
     "trade-valuation": [("contracts/TVAL.md", "# ")] + _EXP,
     "frtb-sensitivity": [("contracts/FRTB.md", "# ")], "pnl-explain": [("contracts/PNL.md", "# ")], "stress-result": [("contracts/STR.md", "# ")],
-    "fund": [("guides/FUNDS_GUIDE.md", "# "), ("tutorials/28-funds-and-etfs.md", "# ")],
-    "fund-holder": [("guides/FUNDS_GUIDE.md", "# "), ("tutorials/28-funds-and-etfs.md", "# ")],
+    "fund": [("guides/FUNDS_GUIDE.md", "# "), ("tutorials/13-world-data.md", "# ")],
+    "fund-holder": [("guides/FUNDS_GUIDE.md", "# "), ("tutorials/13-world-data.md", "# ")],
     "position-sensitivity": [("contracts/FRTB.md", "20. "), ("guides/FRTB_SA_GUIDE.md", "# ")],
     "risk-factor": [("contracts/FRTB.md", "21. "), ("guides/FRTB_SA_GUIDE.md", "# ")],
-    "index-funds": [("guides/FUNDS_GUIDE.md", "# "), ("tutorials/28-funds-and-etfs.md", "# ")],
+    "index-funds": [("guides/FUNDS_GUIDE.md", "# "), ("tutorials/13-world-data.md", "# ")],
 }
 PACK_LINKS = {
-    "core": [("knowledge/entities-and-ownership.md", "# "), ("knowledge/counterparty-credit-risk.md", "# ")],
-    "market-data": [("knowledge/market-data.md", "# ")],
-    "gleif": [("guides/EXTERNAL_DATA.md", "# "), ("knowledge/entities-and-ownership.md", "# "), ("tutorials/27-groupings-and-analytics.md", "# ")],
-    "us-equities": [("guides/EXTERNAL_DATA.md", "# "), ("knowledge/companies-funds-and-etfs.md", "# "), ("tutorials/27-groupings-and-analytics.md", "# ")],
+    "core": [("knowledge/data.md", "2. Entities"), ("knowledge/risk.md", "2. Counterparty")],
+    "market-data": [("knowledge/data.md", "1. Market data")],
+    "gleif": [("guides/EXTERNAL_DATA.md", "# "), ("knowledge/data.md", "2. Entities"), ("tutorials/06-groupings-and-analytics.md", "# ")],
+    "us-equities": [("guides/EXTERNAL_DATA.md", "# "), ("knowledge/world.md", "1. Companies"), ("tutorials/06-groupings-and-analytics.md", "# ")],
     "news-and-markets": [("guides/EXTERNAL_DATA.md", "# ")],
-    "world-economy": [("guides/EXTERNAL_DATA.md", "# "), ("knowledge/economies.md", "# ")],
-    "market-risk": [("knowledge/market-risk.md", "# ")],
-    "counterparty-risk": [("knowledge/counterparty-credit-risk.md", "# ")],
+    "world-economy": [("guides/EXTERNAL_DATA.md", "# "), ("knowledge/world.md", "2. Economies")],
+    "market-risk": [("knowledge/risk.md", "1. Market risk")],
+    "counterparty-risk": [("knowledge/risk.md", "2. Counterparty")],
     **{p: [("guides/PUBLIC_SECTOR_GUIDE.md", "# "), ("guides/EXTERNAL_DATA.md", "# ")]
        for p in ("world-development", "central-banks", "national-statistics", "oecd", "official-news", "gdelt-events")},
 }
@@ -807,7 +807,7 @@ def _links(page: dict, c: dict) -> list[str]:
         title, a = _heading(doc, start)
         title = re.sub(r"\s*\([^)]*\d\.\d+\.\d+[^)]*\)", "", title)
         out.append(f"- [{title}](../../../{doc}{'#' + a if a else ''})")
-    out.append("- [The test data and the demo lakes](../../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and "
+    out.append("- [The test data and the demo lakes](../../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and "
                "the [index of every data sample](../README.md).")
     return list(OrderedDict.fromkeys(out))
 

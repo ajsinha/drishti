@@ -40,7 +40,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The document disk cache never serves stale data (2.9.7, OPERATIONS.md section 12, "Sizing caches and disk per connector"): a record
+ * The document disk cache never serves stale data (2.9.7, OPERATIONS_GUIDE.md section 12, "Sizing caches and disk per connector"): a record
  * of the same date committed again is read new right after a data-load signal; without a signal it may be the old one within
  * {@code refresh-seconds} and is always the new one after that; an as-of read at the old version still reads the old one. The documents
  * are keyed by the table version they were read from, so the cache only ever answers for the version asked. Also: the id-map TTL's

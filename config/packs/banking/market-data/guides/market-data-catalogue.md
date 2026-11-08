@@ -182,26 +182,26 @@ A set of factors whose pairwise correlations basket, quanto and spread products 
 
 | Trade field | Kind | Selected by |
 |---|---|---|
-| `basisCurve` | `ir-curve` | `basis:{ccy}` |
+| `basisCurve` | [`ir-curve`](../../../../../docs/contracts/samples/market-data.md#ir-curve) ([contract](../../../../../docs/contracts/packs/market-data.md#crv-interest-rate-curve-ir-curve)) | `basis:{ccy}` |
 | `benchmarkCurve` | `ir-curve` | `govt:{ccy}` |
-| `capVolSurface` | `cap-vol-surface` | `cap:{ccy}` |
-| `commodityCurve` | `commodity-curve` | `{commodity}` |
-| `commodityVolSurface` | `commodity-vol-surface` | `{commodity}` |
-| `correlation` | `correlation-matrix` | `{corr}` |
-| `creditCurve` | `credit-curve` | `{issuer}` |
+| `capVolSurface` | [`cap-vol-surface`](../../../../../docs/contracts/samples/market-data.md#cap-vol-surface) ([contract](../../../../../docs/contracts/packs/market-data.md#cpv-capfloor-volatility-surface-cap-vol-surface)) | `cap:{ccy}` |
+| `commodityCurve` | [`commodity-curve`](../../../../../docs/contracts/samples/market-data.md#commodity-curve) ([contract](../../../../../docs/contracts/packs/market-data.md#cmdc-commodity-forward-curve-commodity-curve)) | `{commodity}` |
+| `commodityVolSurface` | [`commodity-vol-surface`](../../../../../docs/contracts/samples/market-data.md#commodity-vol-surface) ([contract](../../../../../docs/contracts/packs/market-data.md#cmdv-commodity-volatility-surface-commodity-vol-surface)) | `{commodity}` |
+| `correlation` | [`correlation-matrix`](../../../../../docs/contracts/samples/market-data.md#correlation-matrix) ([contract](../../../../../docs/contracts/packs/market-data.md#corr-correlation-matrix-correlation-matrix)) | `{corr}` |
+| `creditCurve` | [`credit-curve`](../../../../../docs/contracts/samples/market-data.md#credit-curve) ([contract](../../../../../docs/contracts/packs/market-data.md#cds-credit-curve-credit-curve)) | `{issuer}` |
 | `discountCurve` | `ir-curve` | `ois:{ccy}` |
-| `dividendCurve` | `dividend-curve` | `{equity}` |
-| `equityVolSurface` | `equity-vol-surface` | `{equity}` |
+| `dividendCurve` | [`dividend-curve`](../../../../../docs/contracts/samples/market-data.md#dividend-curve) ([contract](../../../../../docs/contracts/packs/market-data.md#div-dividend-curve-dividend-curve)) | `{equity}` |
+| `equityVolSurface` | [`equity-vol-surface`](../../../../../docs/contracts/samples/market-data.md#equity-vol-surface) ([contract](../../../../../docs/contracts/packs/market-data.md#eqv-equity-volatility-surface-equity-vol-surface)) | `{equity}` |
 | `equityVolSurface` | `equity-vol-surface` | `{index}` |
-| `fixingIndex` | `rate-fixing` | `rfr:{ccy}` |
+| `fixingIndex` | [`rate-fixing`](../../../../../docs/contracts/samples/market-data.md#rate-fixing) ([contract](../../../../../docs/contracts/packs/market-data.md#fix-rate-index-fixings-rate-fixing)) | `rfr:{ccy}` |
 | `forwardCurve` | `ir-curve` | `proj:{ccy}` |
-| `fxForwardCurve` | `fx-forward-curve` | `{pair}` |
-| `fxSpot` | `fx-spot` | `{pair}` |
-| `fxVolSurface` | `fx-vol-surface` | `{pair}` |
-| `inflationCurve` | `inflation-curve` | `{infl}` |
-| `inflationIndex` | `inflation-index` | `{infl}` |
-| `repoCurve` | `repo-curve` | `{ccy}` |
-| `swaptionVolCube` | `ir-vol-cube` | `swaption:{ccy}` |
+| `fxForwardCurve` | [`fx-forward-curve`](../../../../../docs/contracts/samples/market-data.md#fx-forward-curve) ([contract](../../../../../docs/contracts/packs/market-data.md#fxf-fx-forward-curve-fx-forward-curve)) | `{pair}` |
+| `fxSpot` | [`fx-spot`](../../../../../docs/contracts/samples/market-data.md#fx-spot) ([contract](../../../../../docs/contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot)) | `{pair}` |
+| `fxVolSurface` | [`fx-vol-surface`](../../../../../docs/contracts/samples/market-data.md#fx-vol-surface) ([contract](../../../../../docs/contracts/packs/market-data.md#fxv-fx-volatility-surface-fx-vol-surface)) | `{pair}` |
+| `inflationCurve` | [`inflation-curve`](../../../../../docs/contracts/samples/market-data.md#inflation-curve) ([contract](../../../../../docs/contracts/packs/market-data.md#infc-inflation-curve-inflation-curve)) | `{infl}` |
+| `inflationIndex` | [`inflation-index`](../../../../../docs/contracts/samples/market-data.md#inflation-index) ([contract](../../../../../docs/contracts/packs/market-data.md#inf-inflation-index-inflation-index)) | `{infl}` |
+| `repoCurve` | [`repo-curve`](../../../../../docs/contracts/samples/market-data.md#repo-curve) ([contract](../../../../../docs/contracts/packs/market-data.md#repo-repo-curve-repo-curve)) | `{ccy}` |
+| `swaptionVolCube` | [`ir-vol-cube`](../../../../../docs/contracts/samples/market-data.md#ir-vol-cube) ([contract](../../../../../docs/contracts/packs/market-data.md#irv-swaption-volatility-cube-ir-vol-cube)) | `swaption:{ccy}` |
 | `underlyingBond` | `bond` | `{bond}` |
 | `underlyingEquity` | `equity` | `{equity}` |
-| `underlyingIndex` | `equity-index` | `{index}` |
+| `underlyingIndex` | [`equity-index`](../../../../../docs/contracts/samples/market-data.md#equity-index) ([contract](../../../../../docs/contracts/packs/market-data.md#eqx-equity-index-equity-index)) | `{index}` |

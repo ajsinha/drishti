@@ -163,7 +163,7 @@ Screens (Sutras):
 |---|---|---|---|
 | World Bank World Development Indicators API (v2) | CC BY 4.0 | no | development-profile, development-series |
 
-Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/world-development.md](guides/world-development.md): *Data contracts* and *Data retrieval*.
+Every kind's links to its data contract and its example and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/world-development.md](guides/world-development.md): *Data contracts* and *Data retrieval*.
 
 External data: World Bank World Development Indicators API (v2). Each source's URL, licence and data feed are on the External data help page, [docs/guides/EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md).
 
@@ -190,4 +190,4 @@ The pack's files are written by `tools/packgen/publicsector/make.py`; its `--che
 ## See also
 
 - [The world-development pack](guides/world-development.md): World Bank World Development Indicators by country and year (CC BY 4.0), filled daily by the world-development feed into worldlake: a profile per economy with the latest of each indicator and the world map by GDP per head, and the history of every indicator. Type WDI WDI-CAN.
-- [Packs](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md) (the README standard).
+- [Packs](../../../../docs/guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/BUILD_GUIDE.md) (the README standard).

@@ -483,7 +483,7 @@ final class VarViews {
         m.put("cache", s.cached() ? "hit" : "miss");
         m.put("loadedMs", s.date().loadMs());
         if (s.shards() != null) {
-            m.put("shards", s.shards());                              // a sharded date (VAR_SHARDING.md): the shards asked, who answered
+            m.put("shards", s.shards());                              // a sharded date (DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built): the shards asked, who answered
         }
         return m;
     }
@@ -675,7 +675,7 @@ final class VarViews {
                 total[0] = runs.size();
                 Sizer z = new Sizer(b);
                 int[] keep = largest(runs, max, r -> z.position(s.set(), r[0])).stream().mapToInt(r -> r[0]).toArray();
-                out.addAll(b.readAhead(s.set(), keep, new int[0], () -> {  // one call per remote shard, not one per position (VAR_SHARDING 15)
+                out.addAll(b.readAhead(s.set(), keep, new int[0], () -> {  // one call per remote shard, not one per position (DATA_ARCHITECTURE.md section 13 15)
                     List<Part> ps = new ArrayList<>(keep.length);
                     for (int pi : keep) {
                         ps.add(position(b, s.set(), pi));

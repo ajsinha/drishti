@@ -25,7 +25,7 @@ import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.actuate.health.Status;
 
 /**
- * Readiness that means ready (CD1, CLUSTER_DEPLOYMENT.md section 9.1): a member of the {@code readiness} health group only (never of
+ * Readiness that means ready (CD1, CLUSTER_GUIDE.md section 9.1): a member of the {@code readiness} health group only (never of
  * {@code /actuator/health} itself, nor of liveness: {@link NodeConfiguration#readinessOnly}). {@code OUT_OF_SERVICE} while this node is
  * drained (its drain, Drishti*net's drain or the VaR shards' drain); {@code DOWN} while any {@link ReadinessGate} waits (joining, an engine's
  * newest date opening, an owned shard not ready); {@code UP} otherwise. Each gate can be switched off in {@code drishti.node.readiness}.

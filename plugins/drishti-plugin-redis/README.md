@@ -113,7 +113,7 @@ key (`--ttl-days`). It never writes; `tools/load-redis.sh` (`RedisLoader`) does.
 | `columns-cache-mb` | int | `1024` | Memory for days' column sets |
 | `reverse-index` | boolean | `true` | Build the reverse index |
 
-Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md). It takes the shared `tls.*` settings (docs/connectors/TLS.md).
+Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/guides/DATA_GUIDE.md section 9). It takes the shared `tls.*` settings (docs/guides/DATA_GUIDE.md section 10).
 <!-- settings:end -->
 
 ## Data structure
@@ -408,7 +408,7 @@ The scaling curve from 10,000 to 50,000 trades a day, side by side with the othe
 
 The address decides TLS: **`rediss://`** (two s) is TLS, `redis://` plain text; for a cluster every seed URI is `rediss://`. With
 no `tls.*` the server certificate is checked against the JVM's authorities and the host name; the shared `tls.*` settings
-([TLS.md](../../docs/connectors/TLS.md), [the keys](../../docs/admin/CONFIGURATION.md#shared-tls)) add a private CA, a client
+([DATA_GUIDE.md section 10](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy), [the keys](../../docs/admin/CONFIGURATION.md#shared-tls)) add a private CA, a client
 certificate for a server running `tls-auth-clients yes`, protocols and cipher suites. `user` and `password` are the Redis ACL user
 and its password (`${ENV}` or `file:`). `tls.*` against a `redis://` URI, or a missing or unreadable file, is a start-up error, not a
 silent downgrade. A Lettuce option in the URI (`rediss://host:6380?verifyPeer=CA`) still works but logs a deprecation warning
@@ -461,7 +461,7 @@ Lettuce multiplexes: one connection carries any number of commands from any numb
 idle for `pool-idle-timeout` are closed. A command in flight longer than `pool-leak-threshold` is logged as slow. `timeout-ms` is the
 command timeout; `pool-max-lifetime`, `pool-connection-timeout` and `statement-timeout` do not apply. The pub/sub connection of
 `live: true` is one long-lived subscription, not pooled. Admin shows open, in use, idle and the longest command in flight
-([connection pools](../../docs/connectors/CONNECTOR_FILES.md#14-connection-pools)).
+([connection pools](../../docs/guides/DATA_GUIDE.md#914-connection-pools)).
 
 ## Production checklist
 
@@ -507,7 +507,7 @@ cp config/connectors.examples/redis/*.yaml config/connectors/      # the banking
 - TLS: `SSLHandshakeException … certificate_required`: the server wants a client certificate (`tls.cert-file`, `tls.key-file`);
   `PKIX path building failed`: the issuing CA is not in `tls.ca-file`; `No subject alternative names matching …`: connect by a name
   the certificate carries; health `DOWN` with `Connection refused`: the port speaks plain text or nothing (with `--port 0` only the
-  `tls-port` listens). File errors read as in [TLS.md, section 8](../../docs/connectors/TLS.md#8-start-up-checks-and-their-messages).
+  `tls-port` listens). File errors read as in [DATA_GUIDE.md section 10.8](../../docs/guides/DATA_GUIDE.md#108-start-up-checks-and-their-messages).
 
 `GET /api/v1/admin/health` shows the catalogue (`kinds`, `datesIndexed`, `ids`, `columnSets`, `columnSetsMb`, `dictionaries`,
 `liveViews`). Useful Redis commands: `INFO memory`, `MEMORY USAGE <key>`, `HGETALL {trading:trade:days}:gens`,
@@ -515,5 +515,5 @@ cp config/connectors.examples/redis/*.yaml config/connectors/      # the banking
 
 ## See also
 
-- [Connector files](../../docs/connectors/CONNECTOR_FILES.md) and [TLS](../../docs/connectors/TLS.md).
-- [The connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the README standard).
+- [Connector files](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) and [TLS](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy).
+- [The connector developer's guide](../../docs/guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one) (the README standard).

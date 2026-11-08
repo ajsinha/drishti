@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 
 /**
- * The coordinator's scatter-gather (VAR_SHARDING.md section 6), measure-agnostic: every shard asked answers once (here or remote), the
+ * The coordinator's scatter-gather (DATA_ARCHITECTURE.md section 13), measure-agnostic: every shard asked answers once (here or remote), the
  * partials combine in shard order whatever order the answers arrive in, one shard failing fails the whole answer; VaR's partials add, and a
  * measure with another unit (a map of netting set to exposure, as exposure might bring) combines its own way.
  */

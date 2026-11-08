@@ -34,6 +34,7 @@ settlement flows), the utilisation, the status, the headroom, and the **pre-deal
 14. [Retiring the stored version](#14-retiring-the-stored-version)
 15. [A worked example](#15-a-worked-example)
 16. [Open questions and the change table](#16-open-questions-and-the-change-table)
+17. [JSON examples](#17-json-examples)
 
 ## 1. Summary
 
@@ -90,9 +91,9 @@ counterparty measure. If the product owner prefers two tables (open question 6),
 | `PARENT_LIMIT` | id | STRING | optional | R | | the limit this one sub-allocates (a counterparty limit under a group limit) | `LIM-GRP-ALDERSHOT` |
 | `MEASURE` | text | STRING | required | R | | `PFE`, `EE_PEAK`, `EEPE`, `SACCR_EAD`, `NET_MTM`, `CE`, `NOTIONAL`, `SETTLEMENT` (today the text `PFE 95 peak`) | `PFE` |
 | `CONFIDENCE` | rate | DOUBLE | optional | R | | the PFE's q; default `drishti.ccr.exposure.limit-confidence` | `0.95` |
-| `LIMIT` | amount | DOUBLE | required | R | `CURRENCY` | the overall limit | `337000000` |
+| `LIMIT` | amount | DOUBLE | required | R | `CURRENCY` | the overall limit | `7980000000` |
 | `CURRENCY` | ccy | STRING | required | R | | | `USD` |
-| `BUCKETS[]` | record list | doc | optional | R | | tenor buckets: `BUCKET` (label), `FROM_YEARS`, `TO_YEARS` (a grid date t belongs when FROM < t ≤ TO; the first bucket also holds t₀), `LIMIT`; for `SETTLEMENT`, `FROM_DAYS`, `TO_DAYS` | `{"BUCKET": "1-3Y", "FROM_YEARS": 1, "TO_YEARS": 3, "LIMIT": 337000000}` |
+| `BUCKETS[]` | record list | doc | optional | R | | tenor buckets: `BUCKET` (label), `FROM_YEARS`, `TO_YEARS` (a grid date t belongs when FROM < t ≤ TO; the first bucket also holds t₀), `LIMIT`; for `SETTLEMENT`, `FROM_DAYS`, `TO_DAYS` | `{"BUCKET": "1-5Y", "FROM_YEARS": 1, "TO_YEARS": 5, "LIMIT": 7980000000}` |
 | `WARNING_AT` | rate | DOUBLE | optional | R | | utilisation at which the status is `WARNING` (default 0.8) | `0.8` |
 | `LIMIT_TYPE` | text | STRING | optional | R | | `HARD` (a breach declines the trade) or `SOFT` (a breach refers it) | `HARD` |
 | `TEMPORARY_EXCESS` | amount | DOUBLE | optional | R | | an approved excess above `LIMIT` | `0` |
@@ -215,7 +216,7 @@ scope **contains or equals** the counterparty's (the counterparty's own limits, 
 | `BUCKETS` | record list | | `BUCKET`, `FROM`, `TO`, `LIMIT`, `USAGE`, `UTILISATION`, `HEADROOM`, `STATUS`, `PEAK_DATE` |
 | `FLAGS` | text list | | `REVIEW_OVERDUE`, `EXCESS_EXPIRED`, `proxy`, `incomplete` |
 | `LIMITS` | record list | | for a scope id: one row per limit as above |
-| `PROVENANCE` | record | | NSET's, plus the measure answers used (their ids and versions) |
+| `PROVENANCE` | record | | NSET's (`INPUTS`: each `KIND` with its `VERSION` and `BATCH_IDS`; `UNVALUED`, `PARTIAL`, `HIDDEN`), plus the measure answers used (`ANSWERS`: `KIND`, `ID`, `VERSION`) |
 
 ### 9.2 The API (`/api/v1/limits`, planned)
 
@@ -231,11 +232,19 @@ CSV: `GET /breaches?format=csv`: `limit_id,scope,measure,bucket,limit,usage,util
 
 ### 9.3 Published official results (`limit-official`, `limit-official-cpty`)
 
-The node table of [NSET.md section 9.5](NSET.md#95-published-official-results-nset-official-nset-official-cpty) carries, per hierarchy
-node, the counts of limits in each status among the counterparties the node faces (`LIMITS`, `OK`, `WARNINGS`, `BREACHES`,
-`EXCESSES`, BIGINT) and the total headroom of SA-CCR EAD limits (`EAD_HEADROOM`, DOUBLE). The restricted `-cpty` table's natural row is
-**the limit** (row level `limit`, `NODE_ID` the limit id): `SCOPE`, `MEASURE`, `CONFIDENCE`, `LIMIT`, `USAGE`, `UTILISATION`,
-`HEADROOM`, `STATUS`, `BINDING_BUCKET`, and the buckets as JSON text (`BUCKETS`).
+The two tables of [NSET.md section 9.5](NSET.md#95-published-official-results-nset-official-nset-official-cpty), with the shared
+columns ([README.md section 11](README.md#11-what-drishti-answers-computed-kinds-the-api-captures)). The node table carries, per hierarchy
+node, the counts of limits in each status among the counterparties the node faces and the total headroom of SA-CCR EAD limits. The
+restricted `-cpty` table's natural row is **the limit** (row level `limit`, `NODE_ID` the limit id).
+
+| Field | Type | Delta | Table | Meaning | Example |
+|---|---|---|---|---|---|
+| `LIMITS`, `OK`, `WARNINGS`, `BREACHES`, `EXCESSES` | integer | BIGINT | node | limits in each status | `96`, `91`, `3`, `1`, `1` |
+| `EAD_HEADROOM` | amount | DOUBLE | node | Σ headroom of the `SACCR_EAD` limits, USD | `1250000000` |
+| `COUNTERPARTY`, `LEI`, `RATING` | id, id, text | STRING | `-cpty` | as NSET.md section 9.5 | `CP-ALDERSHOT` |
+| `SCOPE`, `MEASURE`, `STATUS`, `BINDING_BUCKET` | text | STRING | `-cpty` | as §9.1 | `CPTY:CP-ALDERSHOT`, `PFE`, `OK`, `1-5Y` |
+| `CONFIDENCE`, `LIMIT`, `USAGE`, `UTILISATION`, `HEADROOM` | rate, amount, amount, rate, amount | DOUBLE | `-cpty` | as §9.1 | `0.95` |
+| `BUCKETS` | text | STRING | `-cpty` | §9.1's buckets as JSON text | |
 
 ### 9.4 The reactive connector and the engine (proposed)
 
@@ -335,9 +344,8 @@ SA-CCR EAD limit for each bank counterparty, two group limits (GRP.md), one sett
 stored PFE peaks** (quantiles taken at possibly different dates and then summed: neither is the counterparty's PFE, which is the
 quantile of its netting sets' exposures summed per path), its `LIMIT` to that usage × U(1.2, 2.0) rounded to a million, the status from
 the overall utilisation, and each bucket's usage to the overall usage × a fixed fraction (0.85, 1.0, 0.7, 0.35, 0.1) — so the 1–3Y bucket
-always equals the overall usage and the others are not computed from any profile. Test data example `LIM-ALDERSHOT`: limit 8,843,000,000,
-used 6,650,622,170 (the universe's scaled book), while its 1–3Y bucket shows 7,124,260,290, above the overall usage (the changes files
-walk the buckets separately). The computed usage reads EXP at `CPTY:CP-ALDERSHOT`; the release notes list both.
+always equals the overall usage and the others are not computed from any profile. Test data example `LIM-ALDERSHOT` on 2026-09-30: limit 7,980,000,000,
+used 5,324,955,300 (the universe's scaled book), its 1–3Y bucket the same 5,324,955,300 and its 0–1Y bucket 4,526,212,005 (0.85 of it). The computed usage reads EXP at `CPTY:CP-ALDERSHOT`; the release notes list both.
 
 ## 15. A worked example
 
@@ -374,6 +382,32 @@ bucket breaches: headroom 0.5 / (0.674 × 0.04 × √0.5) = **26.2**.
 | Version | Date | Change |
 |---|---|---|
 | 1.0 | 2026-10-25 | First version, PLANNED; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, inputs kept 7 years, published official results) |
+
+## 17. JSON examples
+
+The demo counterparty `CP-ALDERSHOT` on 2026-09-30, its limit in the planned shape (three buckets, §13) with the demo's limit amount;
+the usage figures follow the demo's stored PFE peaks. Each line is one record.
+
+**credit-limit: a counterparty limit and a group limit** (the group limit of GRP.md's example; its member limits are sub-allocations
+only when `PARENT_LIMIT` says so):
+
+```json
+{"LIMIT_ID":"LIM-ALDERSHOT","BUSINESS_DATE":"2026-09-30","SCOPE":"CPTY:CP-ALDERSHOT","COUNTERPARTY":"CP-ALDERSHOT","MEASURE":"PFE","CONFIDENCE":0.95,"LIMIT":7980000000,"CURRENCY":"USD","BUCKETS":[{"BUCKET":"0-1Y","FROM_YEARS":0,"TO_YEARS":1,"LIMIT":7980000000},{"BUCKET":"1-5Y","FROM_YEARS":1,"TO_YEARS":5,"LIMIT":7980000000},{"BUCKET":"5Y+","FROM_YEARS":5,"TO_YEARS":50,"LIMIT":4788000000}],"WARNING_AT":0.8,"LIMIT_TYPE":"HARD","TEMPORARY_EXCESS":0,"APPROVED_BY":"Credit Risk Committee","APPROVED_ON":"2026-03-19","REVIEW_DUE":"2027-03-19","VALID_FROM":"2026-03-19","LIMIT_STATUS":"ACTIVE","COUNTERPARTY_NAME":"Aldershot Pension Trust","BATCH_ID":"B-2026-09-30-01"}
+{"LIMIT_ID":"LIM-GRP-MERIDIAN","BUSINESS_DATE":"2026-09-30","SCOPE":"GROUP:GRP-MERIDIAN","GROUP":"GRP-MERIDIAN","MEASURE":"PFE","CONFIDENCE":0.95,"LIMIT":8670000000,"CURRENCY":"USD","WARNING_AT":0.8,"LIMIT_TYPE":"SOFT","APPROVED_BY":"Credit Risk Committee","APPROVED_ON":"2026-03-19","REVIEW_DUE":"2027-03-19","LIMIT_STATUS":"ACTIVE","BATCH_ID":"B-2026-09-30-01"}
+```
+
+**limit-usage: `LIM LIM-ALDERSHOT`.** Every bucket is `OK`; the binding bucket is the one with the least headroom.
+
+```json
+{"LIMIT_ID":"LIM-ALDERSHOT","SCOPE":"CPTY:CP-ALDERSHOT","MEASURE":"PFE","CONFIDENCE":0.95,"LIMIT":7980000000,"CURRENCY":"USD","BUSINESS_DATE":"2026-09-30","USAGE":5324955300,"UTILISATION":0.6673,"HEADROOM":2655044700,"STATUS":"OK","BINDING_BUCKET":"1-5Y","BUCKETS":[{"BUCKET":"0-1Y","FROM":0,"TO":1,"LIMIT":7980000000,"USAGE":4526212005,"UTILISATION":0.5672,"HEADROOM":3453787995,"STATUS":"OK","PEAK_DATE":"2027-09-30"},{"BUCKET":"1-5Y","FROM":1,"TO":5,"LIMIT":7980000000,"USAGE":5324955300,"UTILISATION":0.6673,"HEADROOM":2655044700,"STATUS":"OK","PEAK_DATE":"2028-09-29"},{"BUCKET":"5Y+","FROM":5,"TO":50,"LIMIT":4788000000,"USAGE":1863734355,"UTILISATION":0.3892,"HEADROOM":2924265645,"STATUS":"OK","PEAK_DATE":"2033-09-30"}],"FLAGS":[],"PROVENANCE":{"INPUTS":[{"KIND":"credit-limit","VERSION":9,"BATCH_IDS":["B-2026-09-30-01"]}],"UNVALUED":0,"PARTIAL":false,"HIDDEN":0,"ANSWERS":[{"KIND":"exposure-result","ID":"CPTY:CP-ALDERSHOT","VERSION":31}]}}
+```
+
+**limit-official and limit-official-cpty: a node row and the limit's restricted row:**
+
+```json
+{"BUSINESS_DATE":"2026-09-30","HIERARCHY":"LEGAL","NODE_ID":"LE:LE-NY","NODE_NAME":"LE-NY","PARENT_ID":"BANK","LEVEL":"legal-entity","CAPTURE_ID":"CAP-LIM-2026-09-30-OFFICIAL","RESULT_VERSION":1,"INPUT_VERSIONS":"{\"credit-limit\":{\"version\":9,\"batches\":[\"B-2026-09-30-01\"]}}","COMPUTED_AT":"2026-10-01T06:50:00Z","CONTRACT_VERSION":"1.0","LIMITS":24,"OK":21,"WARNINGS":2,"BREACHES":1,"EXCESSES":0,"EAD_HEADROOM":0}
+{"BUSINESS_DATE":"2026-09-30","HIERARCHY":"CPTY","NODE_ID":"LIM-ALDERSHOT","NODE_NAME":"Aldershot Pension Trust","PARENT_ID":"CPTY:CP-ALDERSHOT","LEVEL":"limit","CAPTURE_ID":"CAP-LIM-2026-09-30-OFFICIAL","RESULT_VERSION":1,"INPUT_VERSIONS":"{\"credit-limit\":{\"version\":9,\"batches\":[\"B-2026-09-30-01\"]}}","COMPUTED_AT":"2026-10-01T06:50:00Z","CONTRACT_VERSION":"1.0","COUNTERPARTY":"CP-ALDERSHOT","LEI":"549300H5KZ2QJHEAMB55","RATING":"AA-","SCOPE":"CPTY:CP-ALDERSHOT","MEASURE":"PFE","CONFIDENCE":0.95,"LIMIT":7980000000,"USAGE":5324955300,"UTILISATION":0.6673,"HEADROOM":2655044700,"STATUS":"OK","BINDING_BUCKET":"1-5Y","BUCKETS":"[{\"BUCKET\":\"0-1Y\",\"USAGE\":4526212005,\"STATUS\":\"OK\"},{\"BUCKET\":\"1-5Y\",\"USAGE\":5324955300,\"STATUS\":\"OK\"},{\"BUCKET\":\"5Y+\",\"USAGE\":1863734355,\"STATUS\":\"OK\"}]"}
+```
 
 ---
 

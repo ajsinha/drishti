@@ -115,7 +115,7 @@ td .fm-adorn .fm-in { width: auto; flex: 1; }
   .fm-note { margin-left: 0; flex-basis: 100%; }
 }
 
-/* Write-back (WRITE_BACK.md 18.2): Submit, the review and confirm sheet, and what happened to a submitted draft. */
+/* Write-back (APPROVALS_GUIDE.md 18.2): Submit, the review and confirm sheet, and what happened to a submitted draft. */
 .fm-submit { margin-left: var(--d-sp-4); }
 .wb-sheet { width: min(46rem, calc(100vw - 2rem)); max-height: 86vh; overflow: auto; padding: var(--d-sp-16) var(--d-sp-20); border-radius: var(--d-radius);
   border: 1px solid var(--d-border); background: var(--d-surface); color: var(--d-ink); }

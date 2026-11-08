@@ -685,7 +685,7 @@ class DemoLake:
               "     drishti-console/.venv/bin/python drishti-console/run_drishti_web.py --server.port=17480 --backend.url=http://127.0.0.1:18480\n"
               "     (these two commands run with sign-in off on both; the run configurations turn it on, with the same secrets on both:\n"
               "     the server's DRISHTI_SECURITY_ENABLED and DRISHTI_TOKEN_SECRET, the console's DRISHTI_AUTH_ENABLED, DRISHTI_TOKEN_SECRET,\n"
-              "     DRISHTI_SESSION_SECRET; docs/guides/GETTING_STARTED.md)\n"
+              "     DRISHTI_SESSION_SECRET; docs/guides/OPERATIONS_GUIDE.md)\n"
               "  3. Open (console port 17480 by default):\n"
               "     /v/trade/1000001             an ENDUR ComSwap (legs side by side, cash flows and resets)\n"
               "     /v/trade/CLY-3000157         a CALYPSO government bond;   /v/trade/MX-20000001   a MUREX swap\n"
@@ -723,7 +723,7 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
     p.add_argument("--keep-other-dates", action="store_true", help="add the dated tables' dates to the lake, keeping the dates already "
                    "there (each date written is replaced): the VaR data's three dates are 2026-09-28 to 2026-09-30, `--as-of 2026-09-25 "
                    "--keep-other-dates` adds them again as 2026-09-23 to 2026-09-25, the scenario window moved with them (the scenario matrix, "
-                   "tutorial 25 step 16); an undated table is rebuilt as always")
+                   "tutorial 2, step 16); an undated table is rebuilt as always")
     p.add_argument("--dry-run", action="store_true", help="print the names mapping it would apply and build nothing")
     p.add_argument("-q", "--quiet", action="store_true", help="only the summary")
     return p

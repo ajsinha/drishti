@@ -49,7 +49,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This server as a member of a Drishti*net cluster (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, sections 5 and 14). It watches {@code config/net/}; while
+ * This server as a member of a Drishti*net cluster (CLUSTER_GUIDE.md › Drishti*net: many servers, one Drishti, sections 5 and 14). It watches {@code config/net/}; while
  * {@code node.yaml} says {@code enabled: false} (or there is no folder) it does nothing at all and the server is a single
  * server exactly as before. Switched on, it keeps the member table, runs a gossip round every {@code interval} on a virtual
  * thread, saves {@code <data dir>/net/peers.json} every {@code persist-every}, on every join or leave and at shutdown, and
@@ -592,7 +592,7 @@ public final class NetService implements AutoCloseable {
         Node n = node;
         if (n == null) {
             throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.NET_OFF,
-                    Branding.netName() + " is off on this node: config/net/node.yaml does not say enabled: true (see docs/admin/OPERATIONS.md)");
+                    Branding.netName() + " is off on this node: config/net/node.yaml does not say enabled: true (see docs/guides/OPERATIONS_GUIDE.md)");
         }
         return n;
     }

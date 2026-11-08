@@ -38,6 +38,7 @@ valuations (TVAL.md §13.4) and the Calc snippets `pnl_explain_quality.py`, `pnl
 14. [Retiring the stored version](#14-retiring-the-stored-version)
 15. [A worked example](#15-a-worked-example)
 16. [Open questions and the change table](#16-open-questions-and-the-change-table)
+17. [JSON examples](#17-json-examples)
 
 ## 1. Summary
 
@@ -278,7 +279,7 @@ Kind `pnl-attribution`, id `<canonical scope>~from=<T−1>` (default omitted). P
 | `COUNTS` | record | `CONTINUING`, `AMENDED`, `NEW`, `ENDED`, `MISSING_VALUATION`, `MISSING_SENSITIVITY`, `UNMOVED_FACTORS` |
 | `CHILDREN` | record list | per child: `KEY`, `SCOPE`, `ACTUAL`, `EXPLAINED`, `UNEXPLAINED`, `WITHIN_TOLERANCE` |
 | `TOP_UNEXPLAINED` | record list | `TRADE_ID`, `CASE`, `ACTUAL`, `EXPLAINED`, `UNEXPLAINED` |
-| `PROVENANCE` | record | VaR's plus the batches of `valuation` (T−1, T), `sensitivity` (T−1), `market-move` (T), `pnl-event` (T) |
+| `PROVENANCE` | record | VaR's plus `INPUTS`: per input (`valuation` at T−1 and T, `sensitivity` at T−1, `market-move` and `pnl-event` at T) its `TABLE`, `DATE`, `VERSION`, `BATCH_IDS` |
 
 ### 9.3 Reactive connectors and the Python engine (proposed)
 
@@ -461,6 +462,46 @@ max(10,000, 10% × 29,700) = 10,000 ≥ 1,178: **within**. **Hypothetical P&L** 
 | Version | Date | Change |
 |---|---|---|
 | 1.0 | 2026-10-25 | First version (PLANNED): `market-move` and `pnl-event`, per-trade attribution with additive node sums, tolerance, hypothetical P&L, the published `pnl-official` table, the retirement of `pnl-explain` |
+
+## 17. JSON examples
+
+The records of [section 15](#15-a-worked-example), book `BOOK-X`, T−1 = 2026-09-29, T = 2026-09-30, with its trades A to E as
+`MX-20000501` to `MX-20000505`. Each line is one record (wrapped here only by the code block's width). `market-move` and `pnl-event`
+are **draft** inputs (no source delivers them yet, open questions 1 and 2); `valuation` and `sensitivity` rows are TVAL.md's and
+FRTB.md's.
+
+**market-move (draft): the four moves of the example.**
+
+```json
+{"MOVE_KEY":"GIRR~CURVE~USD~SOFR~5Y~~delta","BUSINESS_DATE":"2026-09-30","FROM_DATE":"2026-09-29","RISK_CLASS":"GIRR","FACTOR_TYPE":"CURVE","QUALIFIER":"USD","CURVE":"SOFR","TENOR":"5Y","UNDERLYING_TENOR":"","MEASURE":"delta","MOVE":12.0,"LEVEL_FROM":4.12,"LEVEL_TO":4.24,"SOURCE":"MD-2026-09-30-EOD","BATCH_ID":"B-MOVE-2026-09-30-01"}
+{"MOVE_KEY":"EQ~SPOT~ACME~~~~delta","BUSINESS_DATE":"2026-09-30","FROM_DATE":"2026-09-29","RISK_CLASS":"EQ","FACTOR_TYPE":"SPOT","QUALIFIER":"ACME","CURVE":"","TENOR":"","UNDERLYING_TENOR":"","MEASURE":"delta","MOVE":-3.0,"LEVEL_FROM":150.0,"LEVEL_TO":145.5,"SOURCE":"MD-2026-09-30-EOD","BATCH_ID":"B-MOVE-2026-09-30-01"}
+{"MOVE_KEY":"EQ~VOL~ACME~~3M~~vega","BUSINESS_DATE":"2026-09-30","FROM_DATE":"2026-09-29","RISK_CLASS":"EQ","FACTOR_TYPE":"VOL","QUALIFIER":"ACME","CURVE":"","TENOR":"3M","UNDERLYING_TENOR":"","MEASURE":"vega","MOVE":0.04,"LEVEL_FROM":0.25,"LEVEL_TO":0.26,"SOURCE":"MD-2026-09-30-EOD","BATCH_ID":"B-MOVE-2026-09-30-01"}
+{"MOVE_KEY":"FX~SPOT~EUR~~~~delta","BUSINESS_DATE":"2026-09-30","FROM_DATE":"2026-09-29","RISK_CLASS":"FX","FACTOR_TYPE":"SPOT","QUALIFIER":"EUR","CURVE":"","TENOR":"","UNDERLYING_TENOR":"","MEASURE":"delta","MOVE":0.5,"LEVEL_FROM":1.0816,"LEVEL_TO":1.0870,"SOURCE":"MD-2026-09-30-EOD","BATCH_ID":"B-MOVE-2026-09-30-01"}
+```
+
+**pnl-event (draft): trade C's upfront and fee, trade D's final settlement, trade E's amendment.**
+
+```json
+{"EVENT_KEY":"MX-20000503~NEW~E-7001","BUSINESS_DATE":"2026-09-30","TRADE_ID":"MX-20000503","EVENT_TYPE":"NEW","EVENT_ID":"E-7001","AMOUNT_USD":-10000.0,"DESCRIPTION":"Upfront premium paid","BATCH_ID":"B-EVT-2026-09-30-01"}
+{"EVENT_KEY":"MX-20000503~FEE~F-889","BUSINESS_DATE":"2026-09-30","TRADE_ID":"MX-20000503","EVENT_TYPE":"FEE","EVENT_ID":"F-889","AMOUNT_USD":-500.0,"DESCRIPTION":"Brokerage","BATCH_ID":"B-EVT-2026-09-30-01"}
+{"EVENT_KEY":"MX-20000504~MATURE~E-7002","BUSINESS_DATE":"2026-09-30","TRADE_ID":"MX-20000504","EVENT_TYPE":"MATURE","EVENT_ID":"E-7002","AMOUNT_USD":50200.0,"DESCRIPTION":"Final settlement received","BATCH_ID":"B-EVT-2026-09-30-01"}
+{"EVENT_KEY":"MX-20000505~AMEND~E-7003","BUSINESS_DATE":"2026-09-30","TRADE_ID":"MX-20000505","EVENT_TYPE":"AMEND","EVENT_ID":"E-7003","PV_BEFORE_USD":300000.0,"PV_AFTER_USD":310000.0,"TRADE_VERSION_BEFORE":"4","TRADE_VERSION_AFTER":"5","DESCRIPTION":"Notional increased","BATCH_ID":"B-EVT-2026-09-30-01"}
+```
+
+**pnl-attribution: the book's answer** (also the body of `GET /api/v1/pnl/scope?scope=BOOK:BOOK-X&asOf=2026-09-30`):
+
+```json
+{"SCOPE":"BOOK:BOOK-X","CANONICAL":"BOOK:BOOK-X","BUSINESS_DATE":"2026-09-30","FROM_DATE":"2026-09-29","MTM_FROM":1550000.0,"MTM_TO":1540000.0,"ACTUAL":29700.0,"HYPOTHETICAL":18200.0,"EXPLAINED":30878.0,"UNEXPLAINED":-1178.0,"UNEXPLAINED_RATIO":-0.0397,"WITHIN_TOLERANCE":true,"DELTA_GIRR":30000.0,"DELTA_CSR":0.0,"DELTA_EQ":-12000.0,"DELTA_COMM":0.0,"DELTA_FX":500.0,"GAMMA":1278.0,"VEGA":800.0,"THETA":-1400.0,"NEW_TRADES":1500.0,"AMENDMENTS":10000.0,"ENDED_TRADES":200.0,"FEES":0.0,"COUNTS":{"CONTINUING":2,"AMENDED":1,"NEW":1,"ENDED":1,"MISSING_VALUATION":0,"MISSING_SENSITIVITY":0,"UNMOVED_FACTORS":0},"CHILDREN":[{"KEY":"MX-20000501","SCOPE":"TRD:MX-20000501","ACTUAL":31000.0,"EXPLAINED":30428.0,"UNEXPLAINED":572.0,"WITHIN_TOLERANCE":true},{"KEY":"MX-20000502","SCOPE":"TRD:MX-20000502","ACTUAL":-15000.0,"EXPLAINED":-11850.0,"UNEXPLAINED":-3150.0,"WITHIN_TOLERANCE":true}],"TOP_UNEXPLAINED":[{"TRADE_ID":"MX-20000502","CASE":"continuing","ACTUAL":-15000.0,"EXPLAINED":-11850.0,"UNEXPLAINED":-3150.0},{"TRADE_ID":"MX-20000505","CASE":"amended","ACTUAL":12000.0,"EXPLAINED":10600.0,"UNEXPLAINED":1400.0},{"TRADE_ID":"MX-20000501","CASE":"continuing","ACTUAL":31000.0,"EXPLAINED":30428.0,"UNEXPLAINED":572.0}],"PROVENANCE":{"INPUTS":[{"TABLE":"valuation","DATE":"2026-09-29","VERSION":56,"BATCH_IDS":["B-VAL-2026-09-29-02"]},{"TABLE":"valuation","DATE":"2026-09-30","VERSION":57,"BATCH_IDS":["B-VAL-2026-09-30-02"]},{"TABLE":"sensitivity","DATE":"2026-09-29","VERSION":411,"BATCH_IDS":["B-SENS-2026-09-29-01"]},{"TABLE":"market-move","DATE":"2026-09-30","VERSION":12,"BATCH_IDS":["B-MOVE-2026-09-30-01"]},{"TABLE":"pnl-event","DATE":"2026-09-30","VERSION":9,"BATCH_IDS":["B-EVT-2026-09-30-01"]}]}}
+```
+
+The children here are listed by trade (`by=trade`, two of the five shown). **pnl-official: the book's row** of the sign-off (the
+shared columns are [README.md section 11](README.md#11-what-drishti-answers-computed-kinds-the-api-captures)'s):
+
+```json
+{"BUSINESS_DATE":"2026-09-30","HIERARCHY":"MGMT","NODE_ID":"BOOK:BOOK-X","NODE_NAME":"BOOK-X","PARENT_ID":"DESK:DESK-RATES","LEVEL":"book","CAPTURE_ID":"CAP-PNL-2026-09-30-OFFICIAL","RESULT_VERSION":1,"INPUT_VERSIONS":"{\"valuation\":{\"version\":57,\"batches\":[\"B-VAL-2026-09-30-02\"]},\"market-move\":{\"version\":12,\"batches\":[\"B-MOVE-2026-09-30-01\"]}}","COMPUTED_AT":"2026-10-01T06:42:00Z","CONTRACT_VERSION":"1.0","FROM_DATE":"2026-09-29","MTM_FROM":1550000.0,"MTM_TO":1540000.0,"ACTUAL":29700.0,"HYPOTHETICAL":18200.0,"EXPLAINED":30878.0,"UNEXPLAINED":-1178.0,"UNEXPLAINED_RATIO":-0.0397,"WITHIN_TOLERANCE":true,"DELTA_GIRR":30000.0,"DELTA_CSR":0.0,"DELTA_EQ":-12000.0,"DELTA_COMM":0.0,"DELTA_FX":500.0,"GAMMA":1278.0,"VEGA":800.0,"THETA":-1400.0,"NEW_TRADES":1500.0,"AMENDMENTS":10000.0,"ENDED_TRADES":200.0,"FEES":0.0,"CASH":39700.0,"TRADE_COUNT":5,"NEW_COUNT":1,"AMENDED_COUNT":1,"ENDED_COUNT":1,"MISSING_COUNT":0}
+```
+
+`CASH` is the cash of the day, received less paid: 50,200 − 10,000 − 500 = 39,700.
 
 ---
 

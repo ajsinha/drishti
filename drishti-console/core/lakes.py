@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Admin → Data loads → Lakes: load a large JSON or JSON Lines file into a Delta lake from the browser, with the same engine as
-``drishti.py lake build`` (docs/guides/TOOLS.md).
+``drishti.py lake build`` (docs/guides/CLI_REFERENCE.md).
 
 The file is streamed to the console's temporary folder as it arrives (never held in memory) and scanned as a stream for its fields
 and their values (the suggested id, business date and classifiers). The build is the CLI itself, ``tools/lake/build.py``, run as a

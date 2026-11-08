@@ -64,7 +64,7 @@ KINDS = {
     "var-result": ("VRES", "VaR of a scope (computed)", None, None),
     # the published official results: one row per node, business date and result version (id <NODE_ID>@<date>#v<n>); no pattern
     "var-official": ("VOFF", "VaR official results (published)", None, None),
-    # 2.9.7: the bank's stress P&L per scenario, the desks' results added (COMPUTED_ATTRIBUTES.md section 8.2, Q4); its id is the
+    # 2.9.7: the bank's stress P&L per scenario, the desks' results added (DATA_ARCHITECTURE.md section 12, Q4); its id is the
     # scenario's own (SCN-...), so no pattern claims it
     "stress-scenario-pnl": ("SSPNL", "Stress P&L of a scenario across desks (derived from the stress results)", None, "SCENARIO_ID"),
 }
@@ -84,7 +84,7 @@ _LENS = {"horizon": {"type": "enum", "options": ["1d", "10d"], "default": "1d"},
          "es-confidence": {"type": "decimal", "min": 0.5, "max": 0.9999}}
 #: the connectors besides risk-store: the positions the server derives, from the VaR engine's memory; the computed kinds
 CONNECTORS = {
-    # the bank's stress P&L per scenario (COMPUTED_ATTRIBUTES.md section 8.2, Q4): the desks' stored results added (additive), each desk's
+    # the bank's stress P&L per scenario (DATA_ARCHITECTURE.md section 12, Q4): the desks' stored results added (additive), each desk's
     # limit use and breach against its positive limit (F5); built once per business date and data version, shared by every reader
     "mr-derived": {
         "plugin": "derived", "enabled": "${DRISHTI_MR_DERIVED_ENABLED:true}",

@@ -68,7 +68,7 @@ doc:
   emits:
     - { name: "%{event}", on: row-click, payload: { id: id, ref: id } }
   expects: []
-  # on a phone (docs/guides/PACK_DEVELOPER_GUIDE.md): a use or a Sutra's phone: overrides it
+  # on a phone (docs/guides/BUILD_GUIDE.md): a use or a Sutra's phone: overrides it
   phone: glance
   examples:
     - { use: row-picker@1, with: { id: trades, title: Trades, rows: $.TRADES, event: open, key: TRADE_ID, key-label: Trade, ref: COUNTERPARTY, a: PRODUCT_TYPE, a-label: Product, b: CURRENCY, b-label: Currency, amount: NOTIONAL, amount-label: Notional, date: MATURITY_DATE, date-label: Maturity } }

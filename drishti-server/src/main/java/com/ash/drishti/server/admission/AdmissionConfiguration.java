@@ -26,7 +26,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 
-/** Busy protection (docs/admin/OPERATIONS.md, "Busy protection"): the gate, the counter of requests being answered. */
+/** Busy protection (docs/guides/OPERATIONS_GUIDE.md, "Busy protection"): the gate, the counter of requests being answered. */
 @Configuration
 @EnableConfigurationProperties(AdmissionProperties.class)
 public class AdmissionConfiguration {

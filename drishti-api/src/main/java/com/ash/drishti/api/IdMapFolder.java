@@ -47,7 +47,7 @@ import java.util.function.Supplier;
 
 /**
  * One connector's id-map folder on disk ({@code cache/<connector>/idmaps}, the Delta and Iceberg connectors) and what keeps it bounded
- * (2.9.7, RESOURCES_AND_SCALE.md section 14.25): the cap {@code id-map-disk.max-gb} and the optional age limit {@code id-map-disk.ttl}.
+ * (2.9.7, CLUSTER_GUIDE.md section 14.25): the cap {@code id-map-disk.max-gb} and the optional age limit {@code id-map-disk.ttl}.
  *
  * <p><b>Idle mappings are released</b> ({@code id-map-disk.idle-release}, 30m, at least 5m): a map not read for that long is unmapped
  * (the file stays; the next read maps it again), never while a read is inside it nor for a date an engine has open. So the connectors'

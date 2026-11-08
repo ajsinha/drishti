@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /**
- * The measure-agnostic sharding machinery (docs/architecture/CLUSTER_DEPLOYMENT.md, VaR and exposure sharding): the shard map and its
+ * The measure-agnostic sharding machinery (docs/guides/CLUSTER_GUIDE.md, VaR and exposure sharding): the shard map and its
  * cut by key ranges ({@link com.ash.drishti.compute.shard.ShardMap}), rendezvous ownership with replicas
  * ({@link com.ash.drishti.compute.shard.ShardOwners}), the handover rule ({@link com.ash.drishti.compute.shard.ShardHandover}) and the
  * coordinator's scatter-gather with its exactly-once check and the measure's own combine ({@link com.ash.drishti.compute.shard.ShardGather}).

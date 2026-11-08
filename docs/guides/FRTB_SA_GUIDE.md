@@ -19,7 +19,7 @@ Drishti computes the FRTB standardised approach (the Basel Framework's MAR21 to 
 when asked, for any scope, never stored as a figure.** The input is one table of position sensitivities; a factor dictionary says what
 each factor is and where it falls in the regulator's grid; the parameters are configuration files that name their paragraphs. Every figure
 opens in a playground that shows the same calculation as spreadsheet formulas, with every method choice a switch you can flip, compare
-and reproduce. The tutorial is [tutorial 30](../tutorials/30-frtb-sa-from-the-cases-to-a-desk.md); the data contract, every field of
+and reproduce. The tutorial is [tutorial 4](../tutorials/04-frtb-sa.md); the data contract, every field of
 every record and the worked records are [FRTB.md](../contracts/FRTB.md).
 
 ## Contents
@@ -76,8 +76,8 @@ YAML contracts are in `config/packs/banking/market-risk/contracts/`. In short:
 
 | Kind (command) | What | Grain | Required |
 |---|---|---|---|
-| `position-sensitivity` (SENS) | each position's sensitivities: DV01, CS01, IE01 per bp; DELTA per 1% (equity repo per bp); VEGA per vol point with `IMPLIED_VOL`; CURVATURE_UP and CURVATURE_DOWN with `SHOCK_SIZE`; or GAMMA for a source that cannot revalue | one record per position (or trade), date and batch, a sparse `SENSITIVITIES[]` list | yes |
-| `risk-factor` (RFAC) | the factor dictionary: the standard name, class, type, qualifier, curve, tenor, FRTB and SIMM buckets, seniority, liquidity horizon, the source systems' names | one row per factor and date | yes |
+| [`position-sensitivity`](../contracts/samples/market-risk.md#position-sensitivity) ([contract](../contracts/packs/market-risk.md#sens-position-sensitivities-position-sensitivity)) (SENS) | each position's sensitivities: DV01, CS01, IE01 per bp; DELTA per 1% (equity repo per bp); VEGA per vol point with `IMPLIED_VOL`; CURVATURE_UP and CURVATURE_DOWN with `SHOCK_SIZE`; or GAMMA for a source that cannot revalue | one record per position (or trade), date and batch, a sparse `SENSITIVITIES[]` list | yes |
+| [`risk-factor`](../contracts/samples/market-risk.md#risk-factor) ([contract](../contracts/packs/market-risk.md#rfac-risk-factor-dictionary-risk-factor)) (RFAC) | the factor dictionary: the standard name, class, type, qualifier, curve, tenor, FRTB and SIMM buckets, seniority, liquidity horizon, the source systems' names | one row per factor and date | yes |
 | `default-risk` (DRCI, planned) | obligor, DRC bucket, seniority, credit quality, bond-equivalent notional and market value, maturity, cash-equity maturity, recovery independence | one row per position (or trade), obligor and date | for the DRC |
 | `residual-risk` (RRAI, planned) | RRAO class (exotic, other, none), gross notional, back-to-back and listed-or-clearable flags | one row per trade and date | optional |
 
@@ -297,7 +297,7 @@ Every FRTB endpoint takes the switches (`curvatureSource`, `girrCurvatureShock`,
 `override=path=value` (repeatable), `ccy` and `asOf`. Every answer carries its provenance: the date, the knowledge time, the batches, the
 dictionary's version, the parameter files' regimes, versions and SHA-256, the choices, the overrides, what was refused and why.
 
-**Settings** (`drishti.frtb.*` in the engine's own file `config/engines/frtb-sa.yaml`, all in [CONFIGURATION.md](../admin/CONFIGURATION.md)): the switch `drishti.engines.frtb-sa.enabled` (the old name `drishti.frtb.enabled` still works; off: `404 DRS-1020`; it needs VaR and the sensitivities on the same server, [OPERATIONS.md section 21](../admin/OPERATIONS.md#21-compute-engines-on-or-off)), `parameters-dir` (else the
+**Settings** (`drishti.frtb.*` in the engine's own file `config/engines/frtb-sa.yaml`, all in [CONFIGURATION.md](../admin/CONFIGURATION.md)): the switch `drishti.engines.frtb-sa.enabled` (the old name `drishti.frtb.enabled` still works; off: `404 DRS-1020`; it needs VaR and the sensitivities on the same server, [OPERATIONS_GUIDE.md section 21](ADMIN_GUIDE.md#21-compute-engines-on-or-off)), `parameters-dir` (else the
 market-risk pack's `capital/`), `sensitivity-kind`, `factor-kind` (now `drishti.sensitivities.*` in `config/engines/sensitivities.yaml`, read under the old names too), `default-risk-kind`, `residual-risk-kind`, `rrao-from-positions`,
 `max-factors` (2,000), `recipes-dir` (under the data folder), `cache-minutes`, `playground-template`.
 
@@ -348,9 +348,7 @@ so it reproduces after the parameters change.
 
 ## 13. FRTB-SA data: every dataset the engine reads
 
-Every dataset the FRTB-SA engine reads, what it is for, whether it is required, where its sample lives, and one real record from the shipped sample
-data (`data/testdata/`), formatted, with long arrays shortened as `/* … N more … */`. The field-by-field rules of each kind are its
-**data contract** ([docs/contracts/packs/](../contracts/packs/README.md)); how files are named, dated and loaded is
+Every dataset the FRTB-SA engine reads, what it is for, whether it is required, where its sample lives, and the links to its two homes: its **data contract** (the fields, the key, the rules: the pack's contract page and its `<kind>.contract.yaml`) and its **example** (a real record of the shipped synthetic test data, every field explained, on [docs/contracts/samples](../contracts/samples/README.md)). This guide copies neither. How files are named, dated and loaded is
 [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo).
 
 <!-- The block below is generated by tools/docs/guide_data.py from tools/docs/guide_data.yaml: edit the spec, not the block. -->
@@ -370,116 +368,32 @@ One record per position (or trade), date and batch with a sparse `SENSITIVITIES[
 `IMPLIED_VOL`; curvature up and down with `SHOCK_SIZE`. Each element names its factor by the standard name the factor dictionary
 defines.
 
-- **Data contract:** [`position-sensitivity`](../contracts/packs/market-risk.md#sens-position-sensitivities-position-sensitivity) (SENS), key `SENSITIVITY_ID`; 28 fields, 19 required.
-- **Sample:** `data/testdata/market-risk/position-sensitivity/position-sensitivity.2026-09-30.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "SENSITIVITY_ID": "SENS-1000003-B-SENS-2026-09-30-01",
-  "GRAIN": "TRADE",
-  "POSITION_ID": "POS-BOOK-COMM-1~1000003",
-  "TRADE_ID": "1000003",
-  "TRADE_IDS": [
-    "1000003"
-  ],
-  "SOURCE_SYSTEM": "ENDUR",
-  "BUSINESS_DATE": "2026-09-30",
-  "BATCH_ID": "B-SENS-2026-09-30-01",
-  "RUN_KIND": "FULL",
-  "COMPUTED_AT": "2026-09-30T06:10:00Z",
-  "RESTATEMENT": 0,
-  "STATUS": "ok",
-  "PRICER": "demo-factor-model",
-  "MODEL_VERSION": "demo-sens-1",
-  "LEGAL_ENTITY": "LE-NY",
-  "DIVISION": "DIV-MARKETS",
-  "DESK": "DESK-COMM",
-  "TT_BOOK": "BOOK-COMM-1",
-  "LIMIT_LETTER": "LL-0001",
-  "FRTB_DESK": "FD-COMM",
-  "PRODUCT_GROUP": "Commodity",
-  "PRODUCT_TYPE": "ComSwap",
-  "TRADE_STATUS": "AMENDED",
-  "MATURITY_DATE": "2027-02-28",
-  "CURRENCY": "USD",
-  "SENSITIVITIES": [
-    {
-      "RISK_FACTOR": "CM/PRICE/NG/HENRY_HUB/3M",
-      "MEASURE": "DELTA",
-      "VALUE": -73736.91,
-      "CURRENCY": "USD",
-      "RISK_CLASS": "COMM",
-      "FRTB_BUCKET": "6",
-      "TENOR": "3M",
-      "SIMM_BUCKET": "6"
-    },
-    {
-      "RISK_FACTOR": "CM/PRICE/NG/HENRY_HUB/6M",
-      "MEASURE": "DELTA",
-      "VALUE": -139167.48,
-      "CURRENCY": "USD",
-      "RISK_CLASS": "COMM",
-      "FRTB_BUCKET": "6",
-      "TENOR": "6M",
-      "SIMM_BUCKET": "6"
-    },
-    /* … 1 more … */
-  ]
-}
-```
+- **Data contract:** [`position-sensitivity`](../contracts/packs/market-risk.md#sens-position-sensitivities-position-sensitivity) (SENS), key `SENSITIVITY_ID`; 28 fields, 19 required; the file [`position-sensitivity.contract.yaml`](../../config/packs/banking/market-risk/contracts/position-sensitivity.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#position-sensitivity) (files `data/testdata/market-risk/position-sensitivity/position-sensitivity.*.jsonl.gz`).
 
 ### 13.3 `risk-factor`: the factor dictionary
 
 One row per factor and date: the standard name, risk class, factor type, qualifier, curve and tenor, the FRTB and SIMM buckets,
 seniority and liquidity horizon, and `SOURCE_NAMES` mapping each system's own name to it.
 
-- **Data contract:** [`risk-factor`](../contracts/packs/market-risk.md#rfac-risk-factor-dictionary-risk-factor) (RFAC), key `RISK_FACTOR`; 27 fields, 12 required.
-- **Sample:** `data/testdata/market-risk/risk-factor/risk-factor.2026-09-30.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "RISK_FACTOR": "CM/PRICE/BRENT",
-  "FACTOR_TYPE": "PRICE",
-  "RISK_CLASS": "COMM",
-  "QUALIFIER": "BRENT",
-  "CURVE": null,
-  "UNDERLYING": "BRENT",
-  "TENOR": null,
-  "UNDERLYING_TENOR": null,
-  "FRTB_BUCKET": "2",
-  "SIMM_RISK_CLASS": "Commodity",
-  "SIMM_BUCKET": "2",
-  "SIMM_LABEL1": null,
-  "SIMM_LABEL2": null,
-  "LIQUIDITY_HORIZON": 20,
-  "MODELLABLE": true,
-  "MARKET_DATA_REF": "CMD-BRENT",
-  "SOURCE_NAMES": [
-    "MX:CM:PRICE-BRENT",
-    "CM.PRICE.BRENT",
-    "BRENT_PRICE_CM"
-  ],
-  "VALID_FROM": "2026-01-02",
-  "BUSINESS_DATE": "2026-09-30",
-  "SOURCE": "demo-factor-master"
-}
-```
+- **Data contract:** [`risk-factor`](../contracts/packs/market-risk.md#rfac-risk-factor-dictionary-risk-factor) (RFAC), key `RISK_FACTOR`; 27 fields, 12 required; the file [`risk-factor.contract.yaml`](../../config/packs/banking/market-risk/contracts/risk-factor.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#risk-factor) (files `data/testdata/market-risk/risk-factor/risk-factor.*.jsonl.gz`).
 
 ### 13.4 `default-risk`: the DRC inputs
 
 The default risk charge's inputs per position and obligor. Without them the answer says *DRC not computed: no default-risk inputs*,
 never 0.
 
-- **Data contract:** [`default-risk`](../contracts/packs/market-risk.md#drci-default-risk-inputs-the-drc-per-position-and-obligor-default-risk) (DRCI), key `DEFAULT_RISK_ID`; 15 fields, 10 required.
-- **Sample:** no sample in the demo data.
+- **Data contract:** [`default-risk`](../contracts/packs/market-risk.md#drci-default-risk-inputs-the-drc-per-position-and-obligor-default-risk) (DRCI), key `DEFAULT_RISK_ID`; 15 fields, 10 required; the file [`default-risk.contract.yaml`](../../config/packs/banking/market-risk/contracts/default-risk.contract.yaml).
+- **Example:** no sample in the demo data.
 
 ### 13.5 `residual-risk`: the RRAO inputs
 
 The residual risk add-on's class (exotic, other, none) and gross notional per trade. Without them the engine derives the class from
 each position's `PRODUCT_TYPE` and its notional from the VaR book.
 
-- **Data contract:** [`residual-risk`](../contracts/packs/market-risk.md#rrai-residual-risk-inputs-the-rrao-per-trade-residual-risk) (RRAI), key `RESIDUAL_RISK_ID`; 12 fields, 7 required.
-- **Sample:** no sample in the demo data.
+- **Data contract:** [`residual-risk`](../contracts/packs/market-risk.md#rrai-residual-risk-inputs-the-rrao-per-trade-residual-risk) (RRAI), key `RESIDUAL_RISK_ID`; 12 fields, 7 required; the file [`residual-risk.contract.yaml`](../../config/packs/banking/market-risk/contracts/residual-risk.contract.yaml).
+- **Example:** no sample in the demo data.
 <!-- guide-data:end -->
 
 ## 14. Where each number comes from

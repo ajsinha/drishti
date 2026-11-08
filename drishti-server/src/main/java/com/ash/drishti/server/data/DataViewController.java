@@ -43,7 +43,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * The Data view, {@code DATA <GO>} (docs/guides/DATA_GUIDE.md "The Data view", docs/guides/API_GUIDE.md): the datasets the caller may
+ * The Data view, {@code DATA <GO>} (docs/guides/DATA_GUIDE.md "The Data view", docs/guides/API_REFERENCE.md): the datasets the caller may
  * open, one dataset's facts, a selection's row count, and the selected rows of a day as JSON Lines, gzip-compressed, streamed and never
  * held whole. Download only, never a viewer. The caller's entitlements decide the datasets ({@link Entitlements#mayOpen}: role, pack on,
  * command on) and the edition or lens the commands shown; a masked column is left out (and may not be filtered on); a dataset marked

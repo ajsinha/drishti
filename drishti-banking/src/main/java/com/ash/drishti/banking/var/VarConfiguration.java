@@ -53,7 +53,7 @@ public class VarConfiguration {
             ObjectProvider<com.ash.drishti.server.disk.DiskBudget> disk, VarReadProperties reads,
             ObjectProvider<com.ash.drishti.engine.time.BusinessDates> businessDates,
             ObjectProvider<com.ash.drishti.server.nativelib.NativeLibraries> nativeLibraries) {
-        nativeLibraries.getIfAvailable();                                 // BLAS bound from drishti.native.* before any sum (OPERATIONS.md 2.1)
+        nativeLibraries.getIfAvailable();                                 // BLAS bound from drishti.native.* before any sum (OPERATIONS_GUIDE.md 2.1)
         ParallelSums sums = new ParallelSums(props.threads(), props.parallelRows());
         com.ash.drishti.banking.compute.var.VarBook.positionCacheBytes(props.memoryBudgetMb() * 1024 * 1024 / 4);   // heap tier: a quarter of a date's budget
         VarAccess access = new VarAccess(props, entitlements);
@@ -66,7 +66,7 @@ public class VarConfiguration {
         svc.saved().words(() -> svc.words().keySet());
         com.ash.drishti.engine.time.BusinessDates bd = businessDates.getIfAvailable();
         svc.calendar(bd == null ? null : bd.calendar());                 // the pinned dates' calendars (VAR_GUIDE.md section 26.8)
-        // VaR sharding across Drishti*net (VAR_SHARDING.md): off unless the pack's sharding block or drishti.var.sharding switches it on
+        // VaR sharding across Drishti*net (DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built): off unless the pack's sharding block or drishti.var.sharding switches it on
         java.util.function.Supplier<VarSharding> shardSettings = VarSharding.of(sharding, props, packs::getIfAvailable);
         svc.shards(new VarShards(props, sharding, shardSettings, loader, new com.ash.drishti.server.shard.ShardPeers(VarSharding.MEASURE.service(), net::getIfAvailable, digests::getIfAvailable), access,
                 sums).start());
@@ -118,7 +118,7 @@ public class VarConfiguration {
     }
 
     /**
-     * The VaR engine as a compute engine (docs/architecture/COMPUTE_ENGINES.md): the registry turns it on and off; off, its dates, answers,
+     * The VaR engine as a compute engine (docs/guides/ADMIN_GUIDE.md): the registry turns it on and off; off, its dates, answers,
      * views and refusals are released (as Admin, Caches' purge of var) and every request answers 404 DRS-1020. Regulatory VaR is part of it.
      */
     @Bean

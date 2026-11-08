@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Reads a {@code model} item (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 2) and checks what the text alone shows, with the codes of section 2.11:
+ * Reads a {@code model} item (docs/architecture/ARCHITECTURE.md §28 › The model layer: the specification of wave W1, section 2) and checks what the text alone shows, with the codes of section 2.11:
  * {@code DRS-9120} structure, {@code 9122} a relationship that does not name two fields, {@code 9125} model security that names another alias or tries to
  * unmask, {@code 9128} a contract naming what the model lacks, {@code 9129} a later wave's key used now. What needs the datasets (are they there, do the
  * fields exist, is the one side unique, is a path ambiguous, do the measures compile, the security safeguard) is {@link ModelChecker}'s.
@@ -156,7 +156,7 @@ public final class ModelDefParser {
                 root.has("ai") ? root.get("ai") : null, root.has("implicit-from") ? LayerYaml.text(root, "implicit-from", "") : null, placeholders, semantics, calculation, histories);
     }
 
-    // ---- field properties, perspectives, object-level security (docs/architecture/BI_DESIGN.md sections 2.2 and 5.1) ----------
+    // ---- field properties, perspectives, object-level security (docs/architecture/ARCHITECTURE.md §28 sections 2.2 and 5.1) ----------
 
     private static ModelDef.Semantics semantics(JsonNode root, Map<String, ModelDef.Use> datasets, Map<String, ModelDef.Meas> measures, LayerYaml y) {
         Map<String, ModelDef.FieldProps> fields = new LinkedHashMap<>();

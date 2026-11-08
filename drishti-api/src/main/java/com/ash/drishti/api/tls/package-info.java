@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /**
- * The TLS every connector shares (docs/connectors/TLS.md): the {@code tls.*} settings ({@link com.ash.drishti.api.tls.TlsSettings}),
+ * The TLS every connector shares (docs/guides/DATA_GUIDE.md section 10): the {@code tls.*} settings ({@link com.ash.drishti.api.tls.TlsSettings}),
  * the SSL context built from PEM, PKCS12 or JKS ({@link com.ash.drishti.api.tls.TlsContexts}, {@link com.ash.drishti.api.tls.TlsMaterial}),
  * HTTP clients ({@link com.ash.drishti.api.tls.TlsHttp}), secrets from files and placeholders ({@link com.ash.drishti.api.tls.Secrets}) and
  * certificate expiry ({@link com.ash.drishti.api.tls.CertInfo}).

@@ -101,7 +101,7 @@ also summarised in [CONFIGURATION.md › Connector settings](../../docs/admin/CO
 | `columns-seconds` | int | `300` | How long a day's column set is kept before it is read again |
 | `reverse-index` | boolean | `true` | Build the reverse index |
 
-Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md). It takes the shared `tls.*` settings (docs/connectors/TLS.md).
+Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/guides/DATA_GUIDE.md section 9). It takes the shared `tls.*` settings (docs/guides/DATA_GUIDE.md section 10).
 <!-- settings:end -->
 
 ## Data structure
@@ -193,7 +193,7 @@ later ones read memory. A loader line looks like:
 | `tls.* (or tls-name) is set but tls.enabled is not true: …` | the TLS keys are there but TLS is not switched on | `tls.enabled: true` |
 | `auth-mode: pki logs in with a client certificate: …` | `pki` without TLS or a client certificate | set `tls.enabled: true` and `tls.cert-file` with `tls.key-file`, or `tls.keystore` |
 | `auth-mode 'ldap' is not internal, external or pki` | a mistyped mode | fix it |
-| `tls.ca-file '…': file not found` | a wrong path | fix it ([TLS.md, section 8](../../docs/connectors/TLS.md#8-start-up-checks-and-their-messages)) |
+| `tls.ca-file '…': file not found` | a wrong path | fix it ([DATA_GUIDE.md section 10.8](../../docs/guides/DATA_GUIDE.md#108-start-up-checks-and-their-messages)) |
 | the container exits at start | too few file descriptors | `deploy/docker/compose.data.yaml` sets `nofile` to 15000; do the same |
 | a snapshot kind shows *gone* for one entity | it has no record `kind/id/yyyyMMdd` for the kind's newest date | write every entity each date, or use `mode.<kind>: effective` |
 | a trade is in type-ahead but does not open on a date | its record for that day expired (TTL) or was never loaded | check the index record's `dates`; with a lake connector behind, older days come from there |
@@ -278,7 +278,7 @@ next connector for the kind is asked.
 ## Security
 
 TLS in the server is an **Aerospike Enterprise Edition** feature; it uses the shared `tls.*` settings
-([TLS.md](../../docs/connectors/TLS.md)) and can log in with the client certificate.
+([DATA_GUIDE.md section 10](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy)) and can log in with the client certificate.
 
 | Setting | Meaning for Aerospike |
 |---|---|
@@ -327,7 +327,7 @@ The client keeps a pool of connections **per node**: `pool-size` (`maxConnsPerNo
 `totalTimeout`, 5m). Admin adds the nodes up: open, in use and idle connections against `pool-size` times the number of nodes. The
 client does not time borrows and does not queue callers (a call finding the node's pool full fails at once), so
 `pool-connection-timeout`, `pool-max-lifetime` and `pool-leak-threshold` do not apply. See
-[CONNECTOR_FILES.md, section 14](../../docs/connectors/CONNECTOR_FILES.md#14-connection-pools).
+[../../docs/guides/DATA_GUIDE.md section 9.14](../../docs/guides/DATA_GUIDE.md#914-connection-pools).
 
 ## Sizing and limits
 
@@ -392,6 +392,6 @@ Limits:
 
 ## See also
 
-- [Connector files](../../docs/connectors/CONNECTOR_FILES.md) and [TLS](../../docs/connectors/TLS.md).
+- [Connector files](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) and [TLS](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy).
 - [The cassandra connector](../drishti-plugin-cassandra/README.md) (a similar design on disk) and [the delta connector](../drishti-plugin-delta/README.md) (the same engine side).
-- [The connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the README standard).
+- [The connector developer's guide](../../docs/guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one) (the README standard).

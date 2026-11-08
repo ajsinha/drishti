@@ -17,7 +17,7 @@ package com.ash.drishti.server.admission;
 
 import com.ash.drishti.common.ErrorCode;
 
-/** The kinds of new work busy protection may ask to wait (docs/admin/OPERATIONS.md, "Busy protection"), each with its code. */
+/** The kinds of new work busy protection may ask to wait (docs/guides/OPERATIONS_GUIDE.md, "Busy protection"), each with its code. */
 public enum Work {
     /** A new sign-in: waits only at the highest memory level; people already signed in keep working. */
     SIGN_IN(ErrorCode.BUSY_SIGN_IN, "Sign in", false),

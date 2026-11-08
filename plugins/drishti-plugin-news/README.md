@@ -91,7 +91,7 @@ starts.
 | `retry-factor` | string | `2` | Growth of the wait (2) |
 | `retry-jitter` | string | `0.2` | Random spread of each wait, so many failing reads do not repeat together |
 
-Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md). It takes the shared `tls.*` settings (docs/connectors/TLS.md). It takes the shared `proxy.*` settings for an outbound HTTP proxy (CONNECTOR_DEVELOPER_GUIDE.md).
+Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/guides/DATA_GUIDE.md section 9). It takes the shared `tls.*` settings (docs/guides/DATA_GUIDE.md section 10). It takes the shared `proxy.*` settings for an outbound HTTP proxy (DEVELOPER_GUIDE.md).
 <!-- settings:end -->
 
 ## Data structure
@@ -147,8 +147,8 @@ $.ITEMS`. An annotated copy is `config/connectors.examples/other/news.yaml`. The
 
 - Below: [turning it on](#turning-it-on), [the pipeline step by step](#the-pipeline-step-by-step), [health, errors and retries](#health-errors-and-retries), [using it from a pack](#using-it-from-a-pack), [how it is built](#how-it-is-built), [tests](#tests).
 - [The yfinance connector](../drishti-plugin-yfinance/README.md) (the same pattern for quotes) and
-  [connectors that compute data on demand](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md#connectors-that-compute-data-on-demand).
-- [Connector files](../../docs/connectors/CONNECTOR_FILES.md), [TLS (and the outbound proxy)](../../docs/connectors/TLS.md), [packs](../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which).
+  [connectors that compute data on demand](../../docs/guides/DEVELOPER_GUIDE.md#1011-connectors-that-compute-data-on-demand).
+- [Connector files](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors), [TLS (and the outbound proxy)](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy), [packs](../../docs/guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which).
 
 ## Turning it on
 
@@ -160,7 +160,7 @@ every plugin (the plugin ships inside `drishti-server`).
 **Privacy.** Every time a headline list is not in the cache, the entity's name (and the edition's language and country) is sent to
 `news.google.com`. For a company or a country that is harmless; for a client, a counterparty under review or an internal project name it
 may not be: switching it on is a decision for the site. Behind a mirror, set `base-url` to it; HTTPS on a private CA takes the shared
-[`tls.*`](../../docs/connectors/TLS.md) settings.
+[`tls.*`](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy) settings.
 
 **Ids.** `NEWS-Federal_Reserve` gives the newest headlines that name the Federal Reserve (or an alias), `NEWS-Toyota@ja-JP` the same from
 the Japanese edition, `NEWS-Federal_Reserve~all` everything the feed returned, without the relevance filter (the publisher lists and
@@ -188,7 +188,7 @@ is served and health says why.
 
 ## Outbound proxy
 
-The settings and rules are shared by every HTTP-based connector: [TLS.md (proxy)](../../docs/connectors/TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers).
+The settings and rules are shared by every HTTP-based connector: [DATA_GUIDE.md, the outbound proxy](../../docs/guides/DATA_GUIDE.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers).
 A `proxy:` block in `settings:` (or `proxy: none`) overrides the site default `drishti.http.proxy.*`; the password is an `${ENV}`
 placeholder, never a literal. Google News is reached through the proxy when one applies; the first request of a name and every retry use
 it. Health ends `via proxy host:port (source)`. Tested in `NewsProxyTest` (through the proxy with a login, no-proxy bypass, the site
@@ -213,7 +213,7 @@ A failed read never returns "not held": it throws, so a view says the source fai
 **Linked panels and the link budget.** A page that reads headlines through `source: link(...)` waits for them at most
 `drishti.graph.link-budget` (40 ms by default). A web call takes longer, so the first view of a name shows its news panels as *pending*
 and the next view (within `cache-ttl-seconds`) shows the headlines. A site using this pack sets the budget to a second or two
-(`drishti.graph.link-budget: 2s`, [PERFORMANCE.md](../../docs/admin/PERFORMANCE.md)). While the connector is off the panels stay empty
+(`drishti.graph.link-budget: 2s`, [CLUSTER_GUIDE.md](../../docs/guides/CLUSTER_GUIDE.md#16-tuning)). While the connector is off the panels stay empty
 with the reason (`waiting for NEWS-...`).
 
 ## Using it from a pack
@@ -242,12 +242,12 @@ routes: { news: news }
 
 The shipped example is the `news-and-markets` sample pack: fifteen topics (central banks, countries, companies, themes) and twenty
 listed companies with a quote, a price chart and these headlines
-([PACK_DEVELOPER_GUIDE.md](../../docs/guides/PACK_DEVELOPER_GUIDE.md#sample-packs)).
+([BUILD_GUIDE.md](../../docs/guides/BUILD_GUIDE.md#315-sample-packs)).
 
 **Offline.** In offline mode (`DRISHTI_OFFLINE=true`, [CONFIGURATION](../../docs/admin/CONFIGURATION.md#drishtioffline--offline-mode-no-internet))
 this connector never starts, whatever its file says, and shows *off (offline mode)* in Admin → Connectors. The `news-and-markets` pack's
 `news-store` then serves `news` from a snapshot captured through this connector (`drishti.py testdata capture-market`;
-[PACK_DEVELOPER_GUIDE.md](../../docs/guides/PACK_DEVELOPER_GUIDE.md#news-and-markets-and-world-economy-offline)); it can also be held in
+[BUILD_GUIDE.md](../../docs/guides/BUILD_GUIDE.md#317-the-demo-lakes-where-the-seven-packs-read-their-data)); it can also be held in
 the in-memory lake ([DATA_LAKE_GUIDE.md section 13](../../docs/guides/DATA_LAKE_GUIDE.md#13-the-in-memory-lake)).
 
 ## How it is built
@@ -266,7 +266,7 @@ and `drishti-common` (the shared retry policy), and is Spring-free.
 
 Nothing is stored, so `fetch` does the work; it is safe to call from many virtual threads at once (the cache has one lock held only for
 map operations, and a call in flight is shared); it never holds a thread longer than its timeout; and it reports through `health()` and
-`cacheStats()`. The pattern: [connectors that compute data on demand](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md#connectors-that-compute-data-on-demand).
+`cacheStats()`. The pattern: [connectors that compute data on demand](../../docs/guides/DEVELOPER_GUIDE.md#1011-connectors-that-compute-data-on-demand).
 
 ## Tests
 

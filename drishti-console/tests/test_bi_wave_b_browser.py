@@ -14,7 +14,7 @@
 
 """Wave B, console lane, in Chromium over the real server and console (the W1 model stack of tests/test_w1_model_designer_browser.py on this file's own ports
 18926 and 17926 plus the pytest-xdist offset: security on, the trading and core packs, a small file lake of trades and desks). The acceptance of
-docs/architecture/BI_DESIGN.md section 12.2 for the console lane:
+docs/architecture/ARCHITECTURE.md §28 section 12.2 for the console lane:
 
 * no BI page computes: no WebAssembly, Pyodide, DuckDB-Wasm or Perspective file is requested, and no page's policy allows 'wasm-unsafe-eval';
 * a %-of-total measure (share_of), equal to an independent computation of the same rows;
@@ -231,7 +231,7 @@ def test_the_explain_panel_shows_tiers_layers_and_times(browser, made):
     expect(panel.locator("[data-explain-times]")).to_contain_text("ms")
     assert panel.locator("[data-explain-op]").count() >= 2
     assert "SecureScan" in panel.locator("[data-explain-text]").text_content() or panel.locator('[data-explain-op="SecureScan"]').count() >= 1
-    if os.environ.get("DRISHTI_CAPTURES"):                       # the answer the guide quotes (BI_GUIDE.md section 25.1)
+    if os.environ.get("DRISHTI_CAPTURES"):                       # the answer the guide quotes (REPORTS_GUIDE.md section 25.1)
         a = fetch(page, "POST", "/bi/api/mq", {"mq": 2, "model": made["model"] + "@1", "select": {"fields": ["trade.DESK"], "measures": ["MTM shocked"]},
                                                 "params": {"shock": 0.5}, "options": {"explain": True}})
         with open(os.path.join(os.environ["DRISHTI_CAPTURES"], "wave-b-explain.json"), "w") as f:

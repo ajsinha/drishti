@@ -90,7 +90,7 @@ It never writes; `tools/load-files.sh` (`JsonlLoader`) does.
 | `index.block-cache` | int | `16` | Decoded 128-id blocks each on-disk day keeps in memory (a lookup reads one or two blocks from the file); 0 = none |
 | `index.kinds.*` | string |  | Per-kind override of any index setting (index.kinds.<kind>.days) |
 
-Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md).
+Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/guides/DATA_GUIDE.md section 9).
 <!-- settings:end -->
 
 ## Data structure
@@ -127,7 +127,7 @@ A line is one JSON object, in either form (a file may mix them):
   served and searches over it say `partial` with the reason. (A row with `columns` is indexed without parsing its `doc`; a `doc` that
   itself breaks a limit serves searches from its columns and fails to open with the limit named.)
 - **Promoted fields** are declared by the pack on the connector that stores the kind (`layout.<kind>.columns`, chosen as for every store:
-  [PACK_DEVELOPER_GUIDE.md, Large kinds](../../docs/guides/PACK_DEVELOPER_GUIDE.md#large-kinds-the-lake-layout)); the `files` profile (`SPRING_PROFILES_ACTIVE=files`) switches the
+  [BUILD_GUIDE.md, Large kinds](../../docs/guides/BUILD_GUIDE.md#51-large-kinds-the-lake-layout)); the `files` profile (`SPRING_PROFILES_ACTIVE=files`) switches the
   banking packs' store connectors to this plugin and keeps their settings. The trades are read per source system (`trade-endur`,
   `trade-calypso`, `trade-murex`), which the profile does not rename: point files at the trades with connector files of those names.
 
@@ -192,7 +192,7 @@ VALUE_STRING); 3 duplicate ids in trading/2026-09-29/trade.jsonl, the last line 
   ([ARCHITECTURE.md, Several business days](../../docs/architecture/ARCHITECTURE.md#91-several-business-days)); a folder or file whose
   modification time changes is a restated day, rebuilt at the next rescan, and a silent restatement is caught every
   `index.reload-every`; **Admin → Connectors → this connector → Index** reloads a day by hand
-  ([OPERATIONS.md, sizing the index](../../docs/admin/OPERATIONS.md#122-sizing-the-multi-day-type-ahead-index)).
+  ([OPERATIONS_GUIDE.md, sizing the index](../../docs/guides/OPERATIONS_GUIDE.md#144-the-multi-day-type-ahead-index)).
 - **Searches, pick lists, derived kinds and impact** read the day's promoted columns, exactly as on Delta Lake: exact over every entity
   of the day (`partial: false`), no document read. Other fields read documents (20,000 at most, then `partial`). A day whose file
   cannot be read at all is a failure, not *not held*: reads fail with `DRS-1003`, searches are `partial` naming the connector, and
@@ -202,7 +202,7 @@ VALUE_STRING); 3 duplicate ids in trading/2026-09-29/trade.jsonl, the last line 
   entity only in its newest line). Impact (F8) therefore works from files as from any store.
 - **In a cluster** (Drishti*net) each kind names its table `file:<folder>#<fingerprint>`, a SHA-256 of the kind's files (path, size,
   modification time) taken at each rescan. Two servers reading the same folder say the same and are replicas; files that differ make them
-  shards ([OPERATIONS.md, the capability digest](../../docs/admin/OPERATIONS.md#5-what-each-node-offers-the-capability-digest)). A kind
+  shards ([OPERATIONS_GUIDE.md, the capability digest](../../docs/guides/CLUSTER_GUIDE.md#15-what-each-node-offers-the-capability-digest)). A kind
   with no file is not listed in the server's capability digest.
 
 ## Dates: snapshot and effective kinds
@@ -239,7 +239,7 @@ SPRING_PROFILES_ACTIVE=files DRISHTI_PACKS=market-risk,counterparty-risk java -j
   or kind like `../x`) is refused.
 
 The connector never writes and has no `writes:`; write-back keeps corrections as overlays in the Drishti database and the loader folds
-approved ones into the next build ([WRITE_BACK.md](../../docs/guides/WRITE_BACK.md#52-who-performs-the-write)).
+approved ones into the next build ([APPROVALS_GUIDE.md](../../docs/architecture/ARCHITECTURE.md#316-where-a-write-lands-overlays-owned-rows-and-the-outbox)).
 
 ## Memory, size and measured results
 
@@ -319,12 +319,12 @@ catches up at the next rescan. An id with `/` or `..` that would leave the root 
 **CSV** (`<id>.csv`, a header row, read as `{"rows": [...]}` with numbers and booleans typed) is deprecated: each CSV file logs a warning
 and health says `UP (CSV input is deprecated: fixing/X.csv (convert to JSON Lines: drishti.py convert))`. `drishti.py convert
 fixing/X.csv --rows-document --out fixing.jsonl` writes the JSON Lines line that serves the same document
-([CLI_GUIDE.md](../../docs/guides/CLI_GUIDE.md#convert-csv-a-json-array-or-a-folder-of-json-files-into-json-lines)).
+([CLI_REFERENCE.md](../../docs/guides/CLI_REFERENCE.md#convert-csv-a-json-array-or-a-folder-of-json-files-into-json-lines)).
 
 ## See also
 
 - [CONFIGURATION.md, the `file` connector](../../docs/admin/CONFIGURATION.md#file--json-or-csv-files-on-disk) and
-  [Connector files](../../docs/connectors/CONNECTOR_FILES.md); ready-made files in `config/connectors.examples/files/`.
-- [Demo data](../../docs/connectors/DEMO_DATA.md) (the rows the loaders write) and
+  [Connector files](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors); ready-made files in `config/connectors.examples/files/`.
+- [Demo data](../../docs/guides/DATA_GUIDE.md#11-the-demo-data) (the rows the loaders write) and
   [the data lake guide](../../docs/guides/DATA_LAKE_GUIDE.md) (the load rules).
-- [The connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the README standard).
+- [The connector developer's guide](../../docs/guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one) (the README standard).

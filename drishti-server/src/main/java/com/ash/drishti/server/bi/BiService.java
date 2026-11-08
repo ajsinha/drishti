@@ -50,7 +50,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
- * Business intelligence, Rupaka phase 1 (docs/architecture/BI_DESIGN.md › Rūpaka: the original design and every phase as built, sections 3, 10, 11): workspaces (a personal one per user and shared
+ * Business intelligence, Rupaka phase 1 (docs/architecture/ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, sections 3, 10, 11): workspaces (a personal one per user and shared
  * ones with the roles viewer, contributor, member and admin), items (typed placeholders: dataset, report, board or notebook, with a YAML
  * body that is stored and versioned but not run yet), the lifecycle draft, proposed, published (review before publish reuses the
  * Sutra approver power and four-eyes), endorsement, and the catalogue that shows each person only what its audience lets them see.
@@ -1054,7 +1054,7 @@ public final class BiService {
         }
         impact.requirePublishedReports(i, "published");                              // a board, or a report's board pages, shows other reports to its readers: those must be published
         List<String> undrawn = undrawable(p, i, force, "published");
-        // the expected values the item declares (docs/guides/BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 14): a failing one stops a publish unless a bi-admin forces it
+        // the expected values the item declares (docs/guides/REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 14): a failing one stops a publish unless a bi-admin forces it
         List<String> failing = List.of();
         var gate = "python".equals(i.kind()) ? pythonTestGate : gov.refuseFailingTests() && Set.of("report", "table", "dataset", "model").contains(i.kind()) ? testGate : null;
         if (gate != null && i.body().contains("tests:")) {
@@ -1068,7 +1068,7 @@ public final class BiService {
                 access.require(p, BiAccess.ADMIN);
             }
         }
-        // what this publish does to the reports that read a dataset (docs/guides/BI_GUIDE.md, Impact)
+        // what this publish does to the reports that read a dataset (docs/guides/REPORTS_GUIDE.md, Impact)
         ImpactAnalyzer.Result damage = null;
         ImpactAnalyzer.Result renaming = null;
         if (BiGovernance.isTable(i.kind()) && i.isPublished()) {

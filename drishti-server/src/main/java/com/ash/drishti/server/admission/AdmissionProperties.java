@@ -18,7 +18,7 @@ package com.ash.drishti.server.admission;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Busy protection, {@code drishti.admission.*} (docs/admin/OPERATIONS.md, "Busy protection"): the levels at which new heavy work and new
+ * Busy protection, {@code drishti.admission.*} (docs/guides/OPERATIONS_GUIDE.md, "Busy protection"): the levels at which new heavy work and new
  * sign-ins wait, so the server refuses politely instead of running out of memory. Shares are of {@code -Xmx}; every level has a warn
  * level below it that only colours Admin, Health.
  *

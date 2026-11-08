@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * A model of the layer (docs/architecture/BI_DESIGN.md section 3.3): virtual tables under aliases (Q10), related many-to-one, with measures in
+ * A model of the layer (docs/architecture/ARCHITECTURE.md §28 section 3.3): virtual tables under aliases (Q10), related many-to-one, with measures in
  * Rachana's aggregate scope, hierarchies, model security that only tightens, and the keys BI's models have kept as written. MQ asks it
  * as it asks a BI model today.
  *
@@ -119,7 +119,7 @@ public record ModelDef(String name, String version, Map<String, Object> about, M
     }
 
     /**
-     * The model's own security: it only tightens what the tables' rules allow (BI_DESIGN.md section 15; the safeguards {@code DRS-9130}
+     * The model's own security: it only tightens what the tables' rules allow (ARCHITECTURE.md §28 section 15; the safeguards {@code DRS-9130}
      * and {@code DRS-9131} unchanged).
      *
      * @param rows alias to its rules (rule scope over the alias's columns and {@code user.x})

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The rolling upgrade runner's inventory (CD3, docs/architecture/CLUSTER_DEPLOYMENT.md section 10.1): copy, fill in, then
+# The rolling upgrade runner's inventory (CD3, docs/guides/CLUSTER_GUIDE.md section 10.1): copy, fill in, then
 #   tools/rolling-upgrade.sh --inventory my-cluster.yaml --version 2.9.7 --dry-run      (every step printed, nothing called)
 #   tools/rolling-upgrade.sh --inventory my-cluster.yaml --version 2.9.7
 # Order: consoles, BI and data-serving, coordinators, then owners one zone at a time. Each node: drain, wait until safe to stop, stop,

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 18, Several datasets in one report (docs/tutorials/18-several-datasets-in-one-report.md), written to docs/tutorials/img/t18/.
+"""Pictures of tutorial 8, Part B, Several datasets in one report (docs/tutorials/08-reports-and-dashboards.md), written to docs/tutorials/img/t18/.
 
 One model with two facts: the trade and netting-set pack datasets and their grains, the model built in the model designer (suggested relationships, measures
 from columns, a measure over two facts in the expression editor, a row rule and the safeguard), a report with MTM and exposure in one visual, the refusal
@@ -54,7 +54,7 @@ def ensure(c: Ctx):
 
 def make(c: Ctx, kind: str, title: str, file: str) -> str:
     made = bi(c, "POST", f"/workspaces/{STATE['ws']}/items", {"kind": kind, "title": title, "body": (DATA / file).read_text(), "audienceRoles": AUDIENCE})
-    bi(c, "POST", f"/items/{made['id']}/publish", {"note": "tutorial 18"})
+    bi(c, "POST", f"/items/{made['id']}/publish", {"note": "tutorial 8, Part B"})
     return made["id"]
 
 

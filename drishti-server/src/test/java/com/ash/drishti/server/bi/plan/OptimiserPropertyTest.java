@@ -27,7 +27,7 @@ import java.util.TreeMap;
 import org.junit.jupiter.api.Test;
 
 /**
- * The optimiser's security property (docs/architecture/BI_DESIGN.md section 4.2): over a thousand random plans (scans with random rules, masks and denials,
+ * The optimiser's security property (docs/architecture/ARCHITECTURE.md §28 section 4.2): over a thousand random plans (scans with random rules, masks and denials,
  * filters on random fields, top-N, one or several facts), no rule removes, changes or adds a scan's security, and every condition of the query survives
  * (pushed into a scan, or left above). Also: the plan hash ignores security, and a plan's canonical text is the same whatever the order of a meet's parts.
  */

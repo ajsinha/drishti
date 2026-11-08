@@ -38,12 +38,14 @@ def _edition(request):
 def shown(edition, guide, aliases: dict | None = None) -> bool:
     """Whether the edition (or the person's lens) keeps a guide (LENSES.md › The design): its section listed (help.categories,
     a section's id or an old name in help.yaml's aliases:), a Knowledge page or pack guide about one of its packs (help.knowledge for Knowledge
-    pages, packs.enabled for pack guides), and an unlisted document only when the edition does not refuse them (help.unlisted-slugs: refuse).
-    Without an edition: every guide."""
+    pages, packs.enabled for pack guides), a page with ``lenses:`` (help.yaml) only in one of those lenses, and an unlisted document only
+    when the edition does not refuse them (help.unlisted-slugs: refuse). Without an edition: every guide."""
     if not edition.active:
         return True
     cats = edition.help_categories()
     if cats is not None and guide.category not in {(aliases or {}).get(c, c) for c in cats}:
+        return False
+    if guide.lenses and edition.name not in guide.lenses:
         return False
     if not guide.listed and edition.refuse_unlisted:
         return False
@@ -74,10 +76,11 @@ def visible(request, guide) -> bool:
 
 def _module_on(guide) -> bool:
     """A guide of a domain module that is off for the person is not shown (ACCESS_MODEL.md: Help too): its module is its engine's
-    (help.yaml ``engine:``, the module's plugin.yaml ``engines:``), else its Help section's (sitemap.yaml ``help-sections[].domain``)."""
+    (help.yaml ``engine:``, the module's plugin.yaml ``engines:``), else its own (help.yaml ``domain:``), else its Help section's
+    (sitemap.yaml ``help-sections[].domain``, a module's section: the module)."""
     from core import modules
     module = modules.module_of_engine(guide.engine) if guide.engine else None
-    return not modules.tag_hidden(module or _section_domains().get(str(guide.category or ""), ""))
+    return not modules.tag_hidden(module or guide.domain or _section_domains().get(str(guide.category or ""), ""))
 
 
 def _section_domains() -> dict[str, str]:

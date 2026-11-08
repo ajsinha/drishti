@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The sample engine: echo and sum vectors (docs/architecture/PYTHON_COMPUTE.md section 8). It needs nothing beyond the standard library
+"""The sample engine: echo and sum vectors (docs/guides/NOTEBOOK_GUIDE.md section 8). It needs nothing beyond the standard library
 (numpy is used when the environment has it), so it runs on the Windows QA machine and in a bare interpreter. It is what the load test and
 Admin → Compute's "Test the pool" run.
 

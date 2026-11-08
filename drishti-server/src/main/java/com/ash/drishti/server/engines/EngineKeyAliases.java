@@ -24,7 +24,7 @@ import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 
 /**
- * Settings that moved to another engine's file under a new name (docs/architecture/COMPUTE_ENGINES.md section 4): the code still reads the
+ * Settings that moved to another engine's file under a new name (docs/guides/ADMIN_GUIDE.md section 4): the code still reads the
  * old name, and this lowest layer gives the old name the new one's value. A site that sets the old name anywhere (application.local.yaml,
  * the environment) still wins, so nothing an install set before changes: {@code drishti.frtb.sensitivity-kind}, {@code factor-kind} and
  * {@code cache-minutes} read {@code drishti.sensitivities.*} (config/engines/sensitivities.yaml).

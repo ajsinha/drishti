@@ -34,7 +34,7 @@ keeps its licence file beside it. Sizes are bytes as served (raw) and gzip -9.
 ## Removed in wave B (2.3.0)
 
 FINOS Perspective 3.8.0, DuckDB-Wasm 1.33.1 and the Apache Arrow JS module that DuckDB-Wasm imported are no longer vendored: wave B made the servers compute
-every number and the browser draw (docs/architecture/BI_DESIGN.md principle P3), so no BI page loads WebAssembly. A 2.1 report's `perspective-grid`,
+every number and the browser draw (docs/architecture/ARCHITECTURE.md §28 principle P3), so no BI page loads WebAssembly. A 2.1 report's `perspective-grid`,
 `perspective-pivot` and `perspective-chart` visuals are drawn as Drishti's own grid of the server's answer; Analyse's Slice and SQL run on the console and the
 server. Pyodide stays for Calc only.
 

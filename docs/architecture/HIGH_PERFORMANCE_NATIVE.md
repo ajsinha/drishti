@@ -72,7 +72,7 @@ allocation-bound**, so its fix is pure Java.
   default and as the fallback.
 - The Windows QA machine takes **no native binaries dropped beside Drishti** (no `.exe`, no `.dll` copied in). Native code that already
   ships **inside a dependency's jar** (zstd-jni, snappy-java, lz4-java, RocksDB, DuckDB JDBC) unpacks into the server's temp folder as it
-  does today ([OPERATIONS.md](../admin/OPERATIONS.md)). Anything else native is found on the host (a system BLAS, a system library) or
+  does today ([OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md)). Anything else native is found on the host (a system BLAS, a system library) or
   not used.
 - A native test **skips itself** where its library is absent, with a clear reason, and its pure-Java twin always runs.
 - The answer is the same either way: the parity rules are in [section 9.1](#91-parity-native-on-against-native-off).
@@ -100,7 +100,7 @@ Java code fails with an exception; native code can fail by killing the process. 
 
 **Checksums and licences.** Every native artefact Drishti loads itself (not one unpacked by a dependency's jar) is listed in a manifest
 with its platform, version, SHA-256 and licence, checked before it is loaded; the same rules the compute environments use for jars with
-native code ([OPERATIONS.md](../admin/OPERATIONS.md)) apply. `THIRD-PARTY-NOTICES.md` lists each one. Nothing is fetched at run time;
+native code ([OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md)) apply. `THIRD-PARTY-NOTICES.md` lists each one. Nothing is fetched at run time;
 nothing comes from a CDN.
 
 ---
@@ -261,7 +261,7 @@ for nothing.
 | 0.1 | **Two budgets, by where the bytes live.** The heap budget (`memory-budget-mb`) bounds only on-heap structures: the heap tier's vectors (`tier.mode: heap`), the skeleton, aggregates and caches. The mapped tier's spill and hot file are checked against **disk** (free space in `drishti.var.tier.dir`: spill P × S × 8 bytes + hot file P × S × 4 bytes + margin) and against **physical RAM** for the pages that should stay resident (the open dates' hot files against total RAM minus the heap, the direct-memory limit and a reserve; from `OperatingSystemMXBean.getTotalMemorySize()`) | `RowSpill`, `VarLoader`, `VarTier`, `VarProperties`; the same pattern for `ExposureLoader` (`drishti.ccr.exposure.memory-budget-gb`) |
 | 0.2 | **RAM is advisory, disk is a hard limit.** Mapped pages the operating system evicts are read again from the file, so a mapped date larger than the page cache still answers, more slowly; Health warns. A date whose spill or hot file does not fit on disk is refused (`DRS-5204`, with the bytes needed and free) | `VarTier`, Health |
 | 0.3 | **Remember refusals.** A refused date is kept in a small table keyed by date, currency, inputs digest and the budget settings, with the reason and the time; a request for it answers `DRS-5204` at once with a `Retry-After`, without touching the lake. The entry is dropped when a date is evicted or unloaded (room was freed), when the inputs change (a new digest), when settings change, or after `drishti.var.refusal-ttl-seconds` (proposed, default 300) | `VarLoader`, `VarCaches` (listed in Admin → Caches) |
-| 0.4 | **The heap formula covers the heap only.** The sizing in [RESOURCES_AND_SCALE.md section 9.5](RESOURCES_AND_SCALE.md#95-capacity-tables) and [BENCHMARK.md section 11](../admin/BENCHMARK.md#11-memory-and-heap) counts, per open date, the skeleton (about 1 KB a position at the server), the aggregates (8 × S bytes a node and currency), the standalone cache (8 bytes a position and lens) and the caches pool; the hot file is counted under page cache and local disk, never under `-Xmx` | the two documents and the status page's budget figures |
+| 0.4 | **The heap formula covers the heap only.** The sizing in [CLUSTER_GUIDE.md section 9.5](../guides/CLUSTER_GUIDE.md#154-capacity-per-server) and [BENCHMARK.md section 11](../admin/BENCHMARK.md#11-memory-and-heap) counts, per open date, the skeleton (about 1 KB a position at the server), the aggregates (8 × S bytes a node and currency), the standalone cache (8 bytes a position and lens) and the caches pool; the hot file is counted under page cache and local disk, never under `-Xmx` | the two documents and the status page's budget figures |
 
 Measured by: the 1M-position date opening at `-Xmx6g` (it was refused); the count of lake reads for a refused date under 50 users (one,
 not one per request); the heap after collection with the date open within the formula's figure.
@@ -376,7 +376,7 @@ is expected, to be measured.
 | **xxHash** (zero-allocation-hashing, pure Java, or native) | non-cryptographic hash | shard keys and row fingerprints where SHA-256 is not required | compute | many times faster than SHA-256 where volume is large | S | low | Apache-2.0 (Java), BSD-2 (C) | all | SHA-256 | a micro-benchmark; only where a profile shows hashing |
 | **CRC32C** (JDK intrinsic) | checksum | `VarHotFile` sections | compute | already an intrinsic | none | none | JDK | all | none | none |
 | **netty-tcnative / BoringSSL**, or Tomcat's OpenSSL through FFM | TLS | the server's HTTPS, peer calls | compute | small: JDK TLS uses AES-GCM intrinsics | M | medium | Apache-2.0 + OpenSSL/ISC | Linux, macOS | JDK TLS | only if a profile shows TLS above a few percent |
-| **jemalloc / mimalloc** (`LD_PRELOAD`) | native allocator | the server process (RocksDB, DuckDB, glibc arenas) | resident memory | lower and flatter RSS outside the heap (PERFORMANCE.md measures 660 to 735 MB that NMT does not see) | S (operations) | low | jemalloc BSD-2; mimalloc MIT | Linux | glibc malloc, `-XX:TrimNativeHeapInterval` (already used) | RSS over the soak (BENCHMARK 13) |
+| **jemalloc / mimalloc** (`LD_PRELOAD`) | native allocator | the server process (RocksDB, DuckDB, glibc arenas) | resident memory | lower and flatter RSS outside the heap (CLUSTER_GUIDE.md measures 660 to 735 MB that NMT does not see) | S (operations) | low | jemalloc BSD-2; mimalloc MIT | Linux | glibc malloc, `-XX:TrimNativeHeapInterval` (already used) | RSS over the soak (BENCHMARK 13) |
 | **Transparent huge pages** for the heap and mapped files | memory | `-XX:+UseTransparentHugePages`; `madvise` on hot files | bandwidth (TLB misses) | a few percent on whole-bank sums | S | low | n/a | Linux | off | BENCHMARK 5.2 |
 
 ### 5.2 What is not worth it
@@ -460,7 +460,7 @@ and the identical-scenario check prevent that.
   system other than Linux and Windows on x86-64 go to Java at once, the reason naming the platform (`no bundled OpenBLAS for macosx-aarch64`).
 - **Threads**: `openblas_set_num_threads(1)` once loaded; Drishti's sum pool parallelises over chunks of rows, so BLAS never
   oversubscribes the cores beside the request threads.
-- **Modes** (`drishti.native.blas.mode`): `auto` (default: OpenBLAS where it fits, else Java with the warning of OPERATIONS.md section
+- **Modes** (`drishti.native.blas.mode`): `auto` (default: OpenBLAS where it fits, else Java with the warning of OPERATIONS_GUIDE.md section
   2.1: a WARN banner, Health DEGRADED, a notice for administrators, the alert `native-blas-fallback`, the metric
   `drishti_native_blas{path,reason}`); `java` (chosen: nothing native is loaded, nothing warns). There is no mode that refuses to start:
   nothing about BLAS can stop the server (the product owner, 2026-11-03).
@@ -517,7 +517,7 @@ Members never refuse each other over BLAS. Each publishes its path in its capabi
 `java-fallback <reason>`, `java <reason>`). When **any** member runs on Java (or is an older server without the service, which sums in
 Java), every member sums many scopes (`MultiSums`, through `Blas.forClusterSums()`) on Java, so the figures members combine or compare
 are the same bits; the log says it in a WARN banner naming the members, Admin → Health shows each member's path and the cluster's
-(`clusterPath`), and the agreement lifts by itself when every member is native again. Shard sums (`VAR_SHARDING.md`) never use BLAS:
+(`clusterPath`), and the agreement lifts by itself when every member is native again. Shard sums (`DATA_ARCHITECTURE.md section 13`) never use BLAS:
 they are `ParallelSums`' fixed-order Java sums on every member.
 
 ---

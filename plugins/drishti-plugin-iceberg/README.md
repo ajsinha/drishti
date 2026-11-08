@@ -119,9 +119,9 @@ reads position and equality deletes and answers *known at* from older snapshots.
 | `doc-disk-cache.zone` | string | `America/New_York` | Zone of the daily clearing |
 | `id-map-disk.enabled` | bool | `true` | Each business date's id map written once per date's files and memory-mapped: no heap per id, kept across restarts and commits of other dates |
 | `id-map-disk.dir` | path | `<data dir>/cache/<connector>/idmaps` | each date's id map written once and memory-mapped, kept across restarts |
-| `id-map-disk.max-gb` | number | `5` | The most disk the id map files take; the least recently used beyond it are unmapped, then deleted, never a map in use (mapped, read or written in the last five minutes, a date open in VaR or exposure); a map alone over it is kept and warned about (OPERATIONS.md section 12.3) |
-| `id-map-disk.ttl` | duration |  | Off when empty or 0; at least 24h. Drops a map not used (mapped or read) for that long, give or take 10%; never the latest and previous dates, today, a date open in VaR or exposure (OPERATIONS.md section 12.3) |
-| `id-map-disk.idle-release` | duration | `30m` | A map not read for that long is unmapped (the file stays; the next read maps it again), never while a read is inside it nor for a date open in VaR or exposure: the cap then trims its file when the folder is over max-gb. At least 5m (OPERATIONS.md section 12.3) |
+| `id-map-disk.max-gb` | number | `5` | The most disk the id map files take; the least recently used beyond it are unmapped, then deleted, never a map in use (mapped, read or written in the last five minutes, a date open in VaR or exposure); a map alone over it is kept and warned about (OPERATIONS_GUIDE.md section 12.3) |
+| `id-map-disk.ttl` | duration |  | Off when empty or 0; at least 24h. Drops a map not used (mapped or read) for that long, give or take 10%; never the latest and previous dates, today, a date open in VaR or exposure (OPERATIONS_GUIDE.md section 12.3) |
+| `id-map-disk.idle-release` | duration | `30m` | A map not read for that long is unmapped (the file stays; the next read maps it again), never while a read is inside it nor for a date open in VaR or exposure: the cap then trims its file when the folder is over max-gb. At least 5m (OPERATIONS_GUIDE.md section 12.3) |
 | `id-map-mb` | int | `1024` | Id maps kept in the heap (MB) |
 | `doc-cache-mb` | int | `256` | Documents kept in the heap (MB) |
 | `columns-cache-mb` | int | `1024` | Promoted columns kept in the heap (MB) |
@@ -167,7 +167,7 @@ reads position and equality deletes and answers *known at* from older snapshots.
 | `index.block-cache` | int | `16` | Decoded 128-id blocks each on-disk day keeps in memory (a lookup reads one or two blocks from the file); 0 = none |
 | `index.kinds.*` | string |  | Per-kind override of any index setting (index.kinds.<kind>.days) |
 
-Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md). It takes the shared `tls.*` settings (docs/connectors/TLS.md). It takes the shared `proxy.*` settings for an outbound HTTP proxy (CONNECTOR_DEVELOPER_GUIDE.md).
+Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/guides/DATA_GUIDE.md section 9). It takes the shared `tls.*` settings (docs/guides/DATA_GUIDE.md section 10). It takes the shared `proxy.*` settings for an outbound HTTP proxy (DEVELOPER_GUIDE.md).
 <!-- settings:end -->
 
 ## Data structure
@@ -270,7 +270,7 @@ Create the Glue database with a `LocationUri` (`s3://<lake bucket>/iceberg/<doma
 **IAM**: a reader needs `glue:GetCatalog`, `glue:GetDatabase(s)`, `glue:GetTable(s)`, `s3:GetObject` and `s3:ListBucket` on the tables'
 prefix, `kms:Decrypt`; a writer also `glue:CreateDatabase`, `glue:CreateTable`, `glue:UpdateTable` and `s3:PutObject`; maintenance also
 `s3:DeleteObject`; and `lakeformation:GetDataAccess` where Lake Formation vends credentials. The policies are in
-`deploy/aws/iceberg/iam/*.json` ([CLUSTER_DEPLOYMENT.md section 22](../../docs/architecture/CLUSTER_DEPLOYMENT.md#22-iceberg-on-aws)).
+`deploy/aws/iceberg/iam/*.json` ([CLUSTER_GUIDE.md section 22](../../docs/guides/CLUSTER_GUIDE.md#1212-iceberg-on-aws-and-official-results-in-s3)).
 `deploy/aws/iceberg/check-glue.sh` runs `GlueLiveTest` (skipped without `DRISHTI_GLUE_LIVE=1`) against a real account: it writes a table
 of P&L vectors, reads it back through the connector bit for bit, and drops it.
 
@@ -303,7 +303,7 @@ engine (`engine: library` is refused); with `table-bucket-arn` blank the connect
 parallel loader); `iceberg-external` reads S3 Tables written by Athena, EMR or Firehose with the same two settings. Files:
 `config/connectors.examples/s3tables/` ([README](../../config/connectors.examples/s3tables/README.md)); the AWS side:
 `deploy/aws/s3-tables/s3-tables.sh create|check` ([README](../../deploy/aws/s3-tables/README.md),
-[TOOLS.md section 4.14](../../docs/guides/TOOLS.md#414-the-aws-connectors-tool-scripts-s3-tables-and-delta-lake-on-s3)). Tests check the
+[CLI_REFERENCE.md section 4.14](../../docs/guides/CLI_REFERENCE.md#714-the-aws-connectors-tool-scripts-s3-tables-and-delta-lake-on-s3)). Tests check the
 ARN's settings, names and request signatures against recorded botocore ones, and a stand-in REST server that refuses unsigned
 requests; the live run is `deploy/aws/iceberg/check-glue.sh --s3-tables <ARN>`.
 
@@ -335,7 +335,7 @@ tools/load-iceberg.sh s3a://risk-lake/iceberg --set s3.region=us-east-1 --spill-
 
 Other options: `--engine`, `--future-days N` (1), `--zone Z`, `--catalog`, `--uri`, `--warehouse`, `--credential`, `--token`,
 `--set key=value`. For millions of rows, `drishti.py lake build --format iceberg --engine java` (the parallel lake loader,
-[TOOLS.md section 4.13](../../docs/guides/TOOLS.md#413-the-parallel-lake-loader)) writes the same layout, every stage multi-threaded.
+[CLI_REFERENCE.md section 4.13](../../docs/guides/CLI_REFERENCE.md#713-the-parallel-lake-loader)) writes the same layout, every stage multi-threaded.
 
 **Your own writer** (Spark, Flink, Snowflake, Trino) writes the same table, partitioned by `business_date`, `WRITE ORDERED BY id`, with
 the properties under [Data structure](#data-structure). In Spark, one business day:
@@ -370,7 +370,7 @@ filter `id = '…'`, so Parquet decodes only the row group whose id range holds 
 **Type-ahead** is the newest day's ids (every day's for an `effective` kind), rebuilt when a snapshot changes. With `index.days` above 1
 the past days' ids are kept too, rebuilt from the id column in the background on a new snapshot and re-checked every
 `index.reload-every` ([ARCHITECTURE.md section 9.1](../../docs/architecture/ARCHITECTURE.md#91-several-business-days),
-[OPERATIONS.md section 12.2](../../docs/admin/OPERATIONS.md#122-sizing-the-multi-day-type-ahead-index)).
+[OPERATIONS_GUIDE.md section 12.2](../../docs/guides/OPERATIONS_GUIDE.md#144-the-multi-day-type-ahead-index)).
 
 **Searches, pick lists, derived kinds, impact** use `columnar(kind)` and `columns(kind, paths, asOf)` as for Delta Lake; the newest day's
 column set is loaded in the background after each snapshot change. `columns` answers "not held" for a day the table lacks, so the next
@@ -392,7 +392,7 @@ reaches.
 ## Retention and maintenance
 
 `IcebergMaintenance` keeps tables bounded and in the layout, each step one commit (Admin → Lakes and `lake maintain` run it,
-[OPERATIONS.md section 8](../../docs/admin/OPERATIONS.md#8-iceberg-lakes)):
+[OPERATIONS_GUIDE.md section 8](../../docs/guides/OPERATIONS_GUIDE.md#163-iceberg-lakes)):
 
 ```bash
 java -cp <plugin classpath> com.ash.drishti.plugin.iceberg.IcebergMaintenance ./data/iceberg --domain trading,market \
@@ -437,7 +437,7 @@ engine reads the footer on every single read. On the 10,000-trade test lake the 
 a past date's trade in 94 ms against 353 ms. A purge of the connector empties every cache.
 
 **Windows**: `tools\windows\start-server.ps1 -Iceberg` starts the server with the Iceberg connector files and the native engine
-([GETTING_STARTED.md](../../docs/guides/GETTING_STARTED.md#drishti-on-windows)).
+([OPERATIONS_GUIDE.md](../../docs/guides/OPERATIONS_GUIDE.md#4-drishti-on-windows)).
 
 ## Parity with Delta: vectors and disk caches
 
@@ -452,7 +452,7 @@ The connector answers what the Delta connector answers on the same rows (`Iceber
   (`id-map-disk.*`) and documents in RocksDB under `<data>/cache/<connector>/docs` (`doc-disk-cache.*`). The id-map folder's
   safeguards (idle release, the `max-gb` cap, `ttl`, never a map in use or a date open in VaR or exposure) are the Delta connector's;
   Admin → Caches shows `idMapsMappedFromDisk`, `idMapsReadFromLake`, `docsOnDiskMB` and the drops by reason. Sizing:
-  [OPERATIONS.md section 12.3](../../docs/admin/OPERATIONS.md#123-sizing-caches-and-disk-per-connector).
+  [OPERATIONS_GUIDE.md section 12.3](../../docs/guides/OPERATIONS_GUIDE.md#145-disk-caches-per-connector).
 - **VaR and exposure on an Iceberg risk lake** (`build_demo_lakes.py --store risk=iceberg`) give VaR, ES, contributions, limit letters,
   EE, PFE and EPE equal to the cent to Delta; intraday batches and the Kafka PV stream are Iceberg appends.
 - **Official results in Iceberg**: `drishti.var.official.format: iceberg` (and `drishti.ccr.exposure.official.format`) write append-only
@@ -481,7 +481,7 @@ curve from 10,000 to 50,000 trades a day and the other stores side by side are i
 
 ## Security: TLS and credentials
 
-The shared `tls.*` settings ([TLS.md](../../docs/connectors/TLS.md), [CONFIGURATION.md](../../docs/admin/CONFIGURATION.md#shared-tls))
+The shared `tls.*` settings ([DATA_GUIDE.md section 10](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy), [CONFIGURATION.md](../../docs/admin/CONFIGURATION.md#shared-tls))
 secure the **object store** that holds the data and metadata (MinIO, Ceph, a gateway on a private CA):
 
 | Setting | Meaning |
@@ -518,7 +518,7 @@ Check with `curl --cacert /etc/drishti/tls/ca.pem https://minio.example.com:9000
 
 ## Outbound proxy
 
-The shared `proxy.*` settings ([TLS.md, proxy](../../docs/connectors/TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers),
+The shared `proxy.*` settings ([DATA_GUIDE.md section 10, proxy](../../docs/guides/DATA_GUIDE.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers),
 [CONFIGURATION.md](../../docs/admin/CONFIGURATION.md#shared-proxy)): a `proxy:` block in `settings:` (or `proxy: none`) overrides the
 site default. A REST catalog's own client takes it as `rest.client.proxy.*` (when the catalog is not on `no-proxy`), the object store's
 S3 file IO gets the SDK's proxy configuration (`https://` tunnelled, `tls.*` kept), and Hadoop's S3A gets `fs.s3a.proxy.*`. Health adds
@@ -569,7 +569,7 @@ never a stack trace at each refresh.
 ## See also
 
 - [The iceberg-external connector](../drishti-plugin-iceberg-external/README.md) for tables other engines lay out.
-- [The delta connector](../drishti-plugin-delta/README.md) (the shared design), [Connectors](../../docs/connectors/CONNECTORS.md#apache-iceberg),
-  [Connector files](../../docs/connectors/CONNECTOR_FILES.md), [TLS](../../docs/connectors/TLS.md) and
+- [The delta connector](../drishti-plugin-delta/README.md) (the shared design), [Connectors](../../docs/guides/DATA_GUIDE.md#82-which-connector),
+  [Connector files](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors), [TLS](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy) and
   [DATA_LAKE_GUIDE.md](../../docs/guides/DATA_LAKE_GUIDE.md).
-- [The connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the README standard).
+- [The connector developer's guide](../../docs/guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one) (the README standard).

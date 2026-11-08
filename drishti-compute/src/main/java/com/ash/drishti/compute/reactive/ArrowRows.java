@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Documents to Arrow tables and back, for the bridge to Python engines (PYTHON_COMPUTE.md section 7.3). Each top-level field of the
+ * Documents to Arrow tables and back, for the bridge to Python engines (NOTEBOOK_GUIDE.md section 7.3). Each top-level field of the
  * documents becomes a column: whole numbers {@code int64}, other numbers {@code float64}, booleans {@code bool}, text {@code utf8}, and a
  * list of numbers of one length in every row a fixed-size vector of {@code float64} (a 509-day P&amp;L path). A masked or absent value is a
  * null; a field of mixed types is text; nested objects and ragged lists are left out (they are not columns).

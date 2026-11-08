@@ -29,7 +29,7 @@
 #   DRILL_GATE_THREADS          Maven threads of the gate's build (default 1C: one per CPU)
 #   DRILL_BROWSER_RERUNS        browser-lane files re-run at a time (default 1); DRILL_LANE_LIMIT a console lane's time limit in seconds
 #
-# Full drill, in two stages (docs/guides/TOOLS.md, "The release drill"):
+# Full drill, in two stages (docs/guides/CLI_REFERENCE.md, "The release drill"):
 # 1. The gate, a few minutes, every job at once; the first failure stops the drill with the list:
 #    licence headers; the generated documents and data that must be current (settings catalogue, data contracts and their pages,
 #    data samples, the packs' generated content, the Python API reference); the docs and help console tests; the repository rules

@@ -38,7 +38,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.LongAdder;
 
 /**
- * Aggregate awareness (PIVOT_ENGINE.md section 9.6): a plan is answered from the smallest current rollup whose grain gives every dimension
+ * Aggregate awareness (ARCHITECTURE.md section 26.6): a plan is answered from the smallest current rollup whose grain gives every dimension
  * the plan names (its groupings, restrictions, exclusions and filters; a date coarsened where the grain holds it finer) and that keeps every
  * function of the plan; the rollup's rows are merged into the plan's cells in key order, so the answer equals the scan's (sums to the last
  * compensated digit, counts, Welford parts, sketch registers exactly). Only for a person who reads every row and field of the source (a

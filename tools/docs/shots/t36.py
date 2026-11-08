@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 36, the data inbox (docs/tutorials/36-load-files-with-the-data-inbox.md), written to docs/tutorials/img/t36/, in
+"""Pictures of tutorial 16, Part C, the data inbox (docs/tutorials/16-load-your-own-data-into-a-new-lake.md), written to docs/tutorials/img/t36/, in
 the light theme. The pictures follow the tutorial's steps, which this module runs itself, in order, against a scratch stack on the demo
 lake with sign-in off and its own copy of config/ (the rules are written to that copy): start the stack, then
 
@@ -99,7 +99,7 @@ def _inbox(c: Ctx, heading: str = "", wait_ms: int = 1500, name: str = "", above
 
 @shot("01-engine-on.jpg")
 def engine_on(c: Ctx):
-    cli("server", "engines", "on", "dataload", "--reason", "tutorial 36")       # already on after the restart that stable-seconds needs
+    cli("server", "engines", "on", "dataload", "--reason", "tutorial 16, Part C")       # already on after the restart that stable-seconds needs
     cli("dataload", "run")                                         # an empty cycle makes inbox/ and ledger/
     time.sleep(3)
     cli("dataload", "status")

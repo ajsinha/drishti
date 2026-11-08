@@ -61,7 +61,7 @@ def _alive(pid: int) -> bool:
 
 
 def remove_stale(base: Path, min_age_seconds: float = 600.0) -> int:
-    """Removes the ``drishti-console-<pid>`` folders a crashed worker left (2.9.7, RESOURCES_AND_SCALE.md section 7.4: the soak audit
+    """Removes the ``drishti-console-<pid>`` folders a crashed worker left (2.9.7, CLUSTER_GUIDE.md section 7.4: the soak audit
     found 871). Disabled on 2026-10-17 because a delete could reach files that are not ours; since 2.9.7 it is safe by construction:
     only a real folder (never a link) directly under the base, named ``drishti-console-<digits>``, holding our marker file, untouched for
     ``min_age_seconds``, whose process is gone (a reused id that is alive keeps it); its contents removed without following any link

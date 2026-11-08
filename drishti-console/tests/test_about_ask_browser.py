@@ -87,7 +87,7 @@ def model():
 
 @pytest.fixture(scope="module")
 def live_console(tmp_path_factory, model):
-    ai = tmp_path_factory.mktemp("ai")                                 # Ask's model: a provider file of the AI layer (docs/admin/AI.md)
+    ai = tmp_path_factory.mktemp("ai")                                 # Ask's model: a provider file of the AI layer (docs/guides/AI_GUIDE.md)
     (ai / "fake.yaml").write_text(f"type: openai\nbase-url: {model.base}\ncompletions-path: /v1/chat/completions\nmodels:\n  - name: fake\n    id: fake\n")
     yield from _stack(tmp_path_factory, {"DRISHTI_PACKS": "market-risk,genomics", "DRISHTI_PACKS_EXTRA_DIRS": str(ROOT / "examples" / "packs"), "DRISHTI_ASK_ENABLED": "true",
                                          "DRISHTI_AI_ENABLED": "true", "DRISHTI_AI_DIR": str(ai),

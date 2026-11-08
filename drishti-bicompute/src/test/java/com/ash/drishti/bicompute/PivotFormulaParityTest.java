@@ -38,7 +38,7 @@ import java.util.TreeMap;
 import org.junit.jupiter.api.Test;
 
 /**
- * The pivot formula parity proof (PIVOT_ENGINE.md section 8.2): every formula of {@code formula-parity/corpus.yaml} (each shipped and test
+ * The pivot formula parity proof (ARCHITECTURE.md section 26.5): every formula of {@code formula-parity/corpus.yaml} (each shipped and test
  * formula, every construct of the grammar) gives the answer recorded before formulas were read by Rachana (answers.json), on the SQL path
  * (the tabular provider's {@code GROUPING SETS}: every cell of regions by desks and their totals) and on the Java path (the formula over the
  * fixture's rows), value for value. A formula the saved-formula migration rewrites is asked in its new text ({@code rachana}). Recording:

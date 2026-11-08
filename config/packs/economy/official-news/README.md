@@ -192,7 +192,7 @@ Screens (Sutras):
 | Canada Gazette, Part II (RSS) | Government of Canada terms: non-commercial reproduction permitted; commercial reproduction needs permission | yes | release-source, press-release |
 | Canada Gazette, Part I (RSS) | Government of Canada terms: non-commercial reproduction permitted; commercial reproduction needs permission | yes | release-source, press-release |
 
-Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/official-news.md](guides/official-news.md): *Data contracts* and *Data retrieval*.
+Every kind's links to its data contract and its example and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/official-news.md](guides/official-news.md): *Data contracts* and *Data retrieval*.
 
 External data: Federal Reserve Board press releases (RSS); European Central Bank press releases (RSS); Bank of Canada press releases (RSS); Bank of England news (RSS) (**internal only**); US Securities and Exchange Commission press releases (RSS); Office of the Superintendent of Financial Institutions news (RSS) (**internal only**); US Federal Register documents (API); Canada Gazette, Part II (RSS) (**internal only**); Canada Gazette, Part I (RSS) (**internal only**). Each source's URL, licence and data feed are on the External data help page, [docs/guides/EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md).
 
@@ -219,4 +219,4 @@ The pack's files are written by `tools/packgen/publicsector/make.py`; its `--che
 ## See also
 
 - [The official-news pack](guides/official-news.md): Press releases and notices of central banks, regulators and governments from their own feeds (Fed, ECB, BoC, BoE, SEC, OSFI, Federal Register, Canada Gazette), filled daily by the official-news feed into newslake, each publisher's terms recorded. Type PRESS PRESS-FED.
-- [Packs](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md) (the README standard).
+- [Packs](../../../../docs/guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/BUILD_GUIDE.md) (the README standard).

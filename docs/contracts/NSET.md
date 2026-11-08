@@ -54,6 +54,7 @@ provenance, entitlements, the reactive connector), this page refers to [VAR_GUID
 14. [Retiring the stored version](#14-retiring-the-stored-version)
 15. [A worked example](#15-a-worked-example)
 16. [Open questions and the change table](#16-open-questions-and-the-change-table)
+17. [JSON examples](#17-json-examples)
 
 ## 1. Summary
 
@@ -141,7 +142,7 @@ a large bank about 100,000). **Source:** the legal or collateral system that map
 | `COUNTERPARTY` | id | STRING | required | R | | the counterparty (link `counterparty`) | `CP-ALDERSHOT` |
 | `LEGAL_ENTITY` | id | STRING | required | R | | the bank's legal entity that faces the counterparty (link `legal-entity`) | `LE-FRA` |
 | `AGREEMENT` | id | STRING | required | R | | the master agreement (link `agreement`) | `AGR-ALDERSHOT-ISDA` |
-| `CSA` | id | STRING | optional | R | | the CSA securing it; empty: unmargined | `CSA-ALDERSHOT-NY` |
+| `CSA` | id | STRING | optional | R | | the CSA securing it; empty: unmargined | `CSA-ALDERSHOT-FRA` |
 | `NETTING_ENFORCEABLE` | boolean | STRING | required | R | | close-out netting enforceable (legal opinion) in the counterparty's jurisdiction; false: every member is treated as standalone | `true` |
 | `NETTING_TYPE` | text | STRING | optional | R | | `DERIVATIVES` (OTC derivatives under ISDA), `SFT` (repo, securities lending under GMRA/GMSLA), `CROSS_PRODUCT` (a cross-product netting agreement), `CLEARED` (a clearing account) | `DERIVATIVES` |
 | `PRODUCT_SCOPE` | text list | doc | optional | R | | product groups the agreement covers; a member outside it is flagged (§10) | `["Rates", "FX", "Credit", "Equity", "Commodity", "Inflation"]` |
@@ -184,7 +185,7 @@ products no master agreement nets (cash, bonds held, loans, deposits): they are 
 
 ### 3.4 `agreement`: master agreements (kept, moved)
 
-Unchanged from today's kind (`config/packs/banking/counterparty-risk/contracts/agreement.contract.yaml`) except: moved to `risk/agreement/`,
+Unchanged from today's kind ([`agreement.contract.yaml`](../../config/packs/banking/counterparty-risk/contracts/agreement.contract.yaml)) except: moved to `risk/agreement/`,
 `CLOSE_OUT_NETTING` becomes an enum (`ENFORCEABLE`, `NOT_ENFORCEABLE`, `UNDER_REVIEW`), and `NETTING_SETS` (id list, derived) is added
 for navigation. The engines read `AGREEMENT_ID`, `COUNTERPARTY`, `CLOSE_OUT_NETTING`, `ELECTIONS.TERMINATION_CURRENCY` (the currency of
 close-out, used by COLL for the FX haircut) and `ELECTIONS.SET_OFF`.
@@ -410,7 +411,7 @@ The command `NSET <id> <GO>` with a netting-set id opens the kept `netting-set` 
 | `BY_ASSET` | record list | | `ASSET` (product group), `TRADES`, `NET_MTM`, `GROSS_POSITIVE` |
 | `BY_NETTING_SET` | record list | | per touched set: `NETTING_SET`, `COUNTERPARTY`, `LEGAL_ENTITY`, `CSA`, `MARGINED`, `TRADES`, `NET_MTM`, `COLLATERAL`, `CE`, `PARTIAL` |
 | `MEASURES` | record | | links to the other measures at the same scope: `SACCR`, `EXP`, `LIM`, `CVA`, `COLL`, `MC`, `WWR` (scope texts) |
-| `PROVENANCE` | record | | below |
+| `PROVENANCE` | record | | below: `INPUTS` (each `KIND` with its `VERSION` and `BATCH_IDS`), `UNVALUED`, `UNMAPPED`, `STANDALONE`, `PARTIAL`, `HIDDEN` |
 
 **Provenance** (every counterparty answer; VaR's fields in UPPER_SNAKE plus): `INPUTS` (each read kind with its data version and
 `BATCH_ID`), `UNVALUED` (members without a valuation), `UNMAPPED` (valuations naming a netting set the membership does not have),
@@ -478,11 +479,19 @@ proposes **two tables per measure**, the same for all nine counterparty contract
 The `-cpty` table has the shared columns with these meanings: `HIERARCHY` is `NSET`, `CPTY` or `GROUP`; `NODE_ID` the scope text
 (`NSET:NS-ALDERSHOT-FRA`); `NODE_NAME` the netting set's or counterparty's name (subject to the `counterparty` kind's masks: a masked name
 is published as the id); `PARENT_ID` the counterparty of a netting set, the group of a counterparty; `LEVEL` `netting-set`, `counterparty`
-or `group`. It adds `COUNTERPARTY`, `LEI`, `LEGAL_ENTITY` (for a netting set) and `RATING` columns.
+or `group`. It adds these columns:
+
+| Field | Type | Delta | Meaning | Example |
+|---|---|---|---|---|
+| `COUNTERPARTY` | id | STRING | the counterparty of the row | `CP-ALDERSHOT` |
+| `LEI` | id | STRING | the counterparty's LEI | `549300H5KZ2QJHEAMB55` |
+| `LEGAL_ENTITY` | id | STRING | the bank's legal entity (netting-set rows only) | `LE-NY` |
+| `RATING` | text | STRING | the counterparty's rating on the date | `AA-` |
+| `UNVALUED` | integer | BIGINT | member trades without a valuation (both tables; the figures beside it are incomplete) | `0` |
 
 **NSET's figure columns** (both tables): `NET_MTM`, `GROSS_POSITIVE`, `GROSS_NEGATIVE`, `NETTING_BENEFIT`, `VM_HELD`, `VM_POSTED`,
 `IM_HELD`, `IM_POSTED`, `COLLATERAL`, `CE`, `CE_UNCOLL`, `NEG_EXPOSURE` (DOUBLE, USD), `NGR` (DOUBLE), `NETTING_SETS`, `TRADES`,
-`UNVALUED` (BIGINT). Node rows sum per-set figures over the node's netting sets (a node that cuts a netting set, a desk, publishes the
+`UNVALUED` (BIGINT; the count of `PROVENANCE.UNVALUED`). Node rows sum per-set figures over the node's netting sets (a node that cuts a netting set, a desk, publishes the
 partial figures of §6.1 with `PARTIAL_SETS`).
 
 ## 10. Validation, errors and data quality
@@ -637,6 +646,44 @@ gives 0; `PARTIAL_SETS` = 2 and, with `partial-collateral: none`, `CE` = 9.0m.
 | Version | Date | Change |
 |---|---|---|
 | 1.0 | 2026-10-25 | First version, PLANNED: terms and membership kept, figures computed; product owner's decisions of 2026-10-25 applied (load signal reloads the engines, inputs kept 7 years, `LE:` from the trade's booking legal entity, published official results with a restricted counterparty-level table) |
+
+## 17. JSON examples
+
+The demo's netting set `NS-ALDERSHOT-NY` on 2026-09-30 (272 member trades in the test data), as the upstream systems would send its
+terms and membership, then Drishti's answers. Each line is one record. The CSA's record is in [section 3.5](#35-csa-credit-support-annex-terms-kept-moved-made-numeric).
+
+**netting-set: the terms.**
+
+```json
+{"NETTING_SET_ID":"NS-ALDERSHOT-NY","BUSINESS_DATE":"2026-09-30","COUNTERPARTY":"CP-ALDERSHOT","LEGAL_ENTITY":"LE-NY","AGREEMENT":"AGR-ALDERSHOT-ISDA","CSA":"CSA-ALDERSHOT-NY","NETTING_ENFORCEABLE":true,"NETTING_TYPE":"DERIVATIVES","PRODUCT_SCOPE":["Rates","FX","Credit","Equity","Commodity","Inflation"],"MARGINED":true,"CLEARED":false,"OPENED_ON":"2015-12-10","STATUS":"ACTIVE","SOURCE_SYSTEM":"legal-docs","BATCH_ID":"B-2026-09-30-01"}
+```
+
+**netting-set-member: two of its trades**, a Murex swap and an Endur commodity swap (an all-digit `TRADE_ID` stays text):
+
+```json
+{"MEMBER_ID":"NS-ALDERSHOT-NY~MX-30004038","BUSINESS_DATE":"2026-09-30","NETTING_SET":"NS-ALDERSHOT-NY","TRADE_ID":"MX-30004038","SOURCE_SYSTEM":"MUREX","COUNTERPARTY":"CP-ALDERSHOT","LEGAL_ENTITY":"LE-NY","SPECIFIC_WWR":false}
+{"MEMBER_ID":"NS-ALDERSHOT-NY~1000098","BUSINESS_DATE":"2026-09-30","NETTING_SET":"NS-ALDERSHOT-NY","TRADE_ID":"1000098","SOURCE_SYSTEM":"ENDUR","COUNTERPARTY":"CP-ALDERSHOT","LEGAL_ENTITY":"LE-NY","FROM_DATE":"2026-03-02","SPECIFIC_WWR":false}
+```
+
+**agreement: the master agreement**, as moved (`CLOSE_OUT_NETTING` as the enum, `NETTING_SETS` added):
+
+```json
+{"AGREEMENT_ID":"AGR-ALDERSHOT-ISDA","BUSINESS_DATE":"2026-09-30","TYPE":"ISDA 2002 Master","COUNTERPARTY_NAME":"Aldershot Pension Trust","GOVERNING_LAW":"English","SIGNED":"2015-12-10","CLOSE_OUT_NETTING":"ENFORCEABLE","ELECTIONS":{"AUTOMATIC_EARLY_TERMINATION":false,"CROSS_DEFAULT":"3% of shareholders' equity","SET_OFF":true,"TERMINATION_CURRENCY":"USD","ADDITIONAL_TERMINATION_EVENTS":"Rating downgrade below BBB-","PROTOCOLS":"ISDA 2020 IBOR Fallbacks; 2018 US Resolution Stay"},"COUNTERPARTY":"CP-ALDERSHOT","CSAS":["CSA-ALDERSHOT-FRA","CSA-ALDERSHOT-LDN","CSA-ALDERSHOT-NY","CSA-ALDERSHOT-TKY"],"NETTING_SETS":["NS-ALDERSHOT-FRA","NS-ALDERSHOT-LDN","NS-ALDERSHOT-NY","NS-ALDERSHOT-TKY"]}
+```
+
+**nset-figures: the answer for `NSET:NS-ALDERSHOT-NY`.** The figures follow section 6.1 from the members' MtM and the CSA's VM held:
+`CE` = max(639,865,877.81 − 423,067,563, 0) = 216,798,314.81 and `NGR` = 639,865,877.81 / 1,355,732,163.20 = 0.472. `GET /scope` returns
+the same record in camelCase.
+
+```json
+{"SCOPE":"NSET:NS-ALDERSHOT-NY","CANONICAL":"NSET:NS-ALDERSHOT-NY","SCOPE_KIND":"netting-set","LABEL":"NS-ALDERSHOT-NY","BUSINESS_DATE":"2026-09-30","NETTING_SETS":1,"TRADES":272,"PARTIAL_SETS":0,"NET_MTM":639865877.81,"GROSS_POSITIVE":1355732163.2,"GROSS_NEGATIVE":-715866285.39,"NETTING_BENEFIT":715866285.39,"VM_HELD":423067563.0,"VM_POSTED":0.0,"IM_HELD":0.0,"IM_POSTED":0.0,"COLLATERAL":423067563.0,"CE":216798314.81,"CE_UNCOLL":639865877.81,"NEG_EXPOSURE":0.0,"NGR":0.472,"BY_ASSET":[{"ASSET":"Rates","TRADES":86,"NET_MTM":761902960.65,"GROSS_POSITIVE":1117121125.53},{"ASSET":"Commodity","TRADES":87,"NET_MTM":-79784473.94,"GROSS_POSITIVE":95412657.1},{"ASSET":"Credit","TRADES":62,"NET_MTM":-56913090.3,"GROSS_POSITIVE":77962636.25},{"ASSET":"Fixed income","TRADES":12,"NET_MTM":-11734575.16,"GROSS_POSITIVE":21944680.47},{"ASSET":"Money market","TRADES":25,"NET_MTM":26395056.56,"GROSS_POSITIVE":43291063.85}],"BY_NETTING_SET":[{"NETTING_SET":"NS-ALDERSHOT-NY","COUNTERPARTY":"CP-ALDERSHOT","LEGAL_ENTITY":"LE-NY","CSA":"CSA-ALDERSHOT-NY","MARGINED":true,"TRADES":272,"NET_MTM":639865877.81,"COLLATERAL":423067563.0,"CE":216798314.81,"PARTIAL":false}],"MEASURES":{"SACCR":"NSET:NS-ALDERSHOT-NY","EXP":"NSET:NS-ALDERSHOT-NY","LIM":"NSET:NS-ALDERSHOT-NY","CVA":"NSET:NS-ALDERSHOT-NY","COLL":"NSET:NS-ALDERSHOT-NY","MC":"NSET:NS-ALDERSHOT-NY","WWR":"NSET:NS-ALDERSHOT-NY"},"PROVENANCE":{"INPUTS":[{"KIND":"netting-set","VERSION":60,"BATCH_IDS":["B-2026-09-30-01"]},{"KIND":"netting-set-member","VERSION":60,"BATCH_IDS":["B-2026-09-30-01"]},{"KIND":"valuation","VERSION":412,"BATCH_IDS":["B-2026-09-30-01"]},{"KIND":"collateral-holding","VERSION":60,"BATCH_IDS":["B-2026-09-30-01"]}],"UNVALUED":[],"UNMAPPED":[],"STANDALONE":[],"PARTIAL":[],"HIDDEN":0}}
+```
+
+**nset-official-cpty: the published netting-set row** of the same date (restricted table, section 9.5):
+
+```json
+{"BUSINESS_DATE":"2026-09-30","HIERARCHY":"NSET","NODE_ID":"NSET:NS-ALDERSHOT-NY","NODE_NAME":"NS-ALDERSHOT-NY","PARENT_ID":"CPTY:CP-ALDERSHOT","LEVEL":"netting-set","COUNTERPARTY":"CP-ALDERSHOT","LEI":"549300H5KZ2QJHEAMB55","LEGAL_ENTITY":"LE-NY","RATING":"AA-","NET_MTM":639865877.81,"GROSS_POSITIVE":1355732163.2,"GROSS_NEGATIVE":-715866285.39,"NETTING_BENEFIT":715866285.39,"VM_HELD":423067563.0,"VM_POSTED":0.0,"IM_HELD":0.0,"IM_POSTED":0.0,"COLLATERAL":423067563.0,"CE":216798314.81,"CE_UNCOLL":639865877.81,"NEG_EXPOSURE":0.0,"NGR":0.472,"NETTING_SETS":1,"TRADES":272,"UNVALUED":0,"CAPTURE_ID":"CAP-NSET-2026-09-30-OFFICIAL","RESULT_VERSION":1,"INPUT_VERSIONS":"{\"netting-set\":{\"version\":60,\"batches\":[\"B-2026-09-30-01\"]},\"valuation\":{\"version\":412,\"batches\":[\"B-2026-09-30-01\"]}}","COMPUTED_AT":"2026-10-01T06:45:00Z","CONTRACT_VERSION":"1.0"}
+```
 
 ---
 

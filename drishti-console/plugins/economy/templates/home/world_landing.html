@@ -26,7 +26,7 @@
 {% block head %}<link rel="stylesheet" href="/static/css/drishti_world-landing.css?v={{ ASSET_V }}">{% endblock %}
 {% macro go(cmd) %}/go?q={{ (cmd ~ ' <GO>') | urlencode }}{% endmacro %}
 {% block content %}
-{% from "_macros/phone.html" import part, foot, back %}{% set PP = phone_parts(request, 'landing') %}{# the phone display (docs/guides/PACK_DEVELOPER_GUIDE.md 8) #}
+{% from "_macros/phone.html" import part, foot, back %}{% set PP = phone_parts(request, 'landing') %}{# the phone display (docs/guides/BUILD_GUIDE.md 8) #}
 {% set cm = module_on('capitalmarkets') %}{# the World lens is economy with capital markets: their parts (every landing's) only while that module is on #}
 {{ back(request) }}
 <div class="wl" data-world-landing="{{ landing }}" data-topics="{{ topics | join(',') }}">
@@ -61,12 +61,12 @@
   <div class="wl-qc">
     <div class="wl-q"><h2>Recently opened</h2><ul data-wl-recents>{% for r in recents %}<li><a class="mono" href="{{ go(r) }}">{{ r }}</a></li>{% else %}<li class="wl-muted">Nothing yet: type a command above</li>{% endfor %}</ul></div>
     <div class="wl-q"><h2>Knowledge</h2><ul>
-      <li><a href="/help/knowledge-economies">Economies</a></li><li><a href="/help/knowledge-companies-funds-and-etfs">Companies, funds and ETFs</a></li>
-      <li><a href="/help/knowledge-entities-and-ownership">Entities and ownership</a></li><li><a href="/what">What is…?</a></li></ul></div>
+      <li><a href="/help/knowledge-world#2-economies">Economies</a></li><li><a href="/help/knowledge-world#1-companies-funds-and-etfs">Companies, funds and ETFs</a></li>
+      <li><a href="/help/knowledge-data#2-entities-and-ownership">Entities and ownership</a></li><li><a href="/what">What is…?</a></li></ul></div>
     <div class="wl-q"><h2>Data map</h2><ul>
       <li><a href="/datamap">How economies, companies, entities and funds link up</a></li><li><a href="{{ go('FUNC') }}">Every command of {{ PRODUCT }}</a></li></ul></div>
     <div class="wl-q"><h2>Learn</h2><ul>
-      <li><a href="/help/docs-tutorials-27-groupings-and-analytics">Groupings and analytics</a></li><li><a href="/help/docs-tutorials-28-funds-and-etfs">Funds and ETFs</a></li>
+      <li><a href="/help/docs-tutorials-06-groupings-and-analytics">Groupings and analytics</a></li><li><a href="/help/docs-tutorials-13-world-data#part-c--funds-and-etfs">Funds and ETFs</a></li>
       <li><a href="/help/external-data">External data: where it comes from</a></li></ul></div>
   </div>
   {% elif landing == 'map' %}

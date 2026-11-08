@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Java plug-in functions (PIVOT_ENGINE.md section 8.2): a jar in the plug-in folder ({@code functions.java.dir}), pinned by its SHA-256 when
+ * Java plug-in functions (ARCHITECTURE.md section 26.5): a jar in the plug-in folder ({@code functions.java.dir}), pinned by its SHA-256 when
  * an administrator approves it (as compute's Java libraries are), holding a public class with a no-argument constructor that implements
  * {@link AggFunction}. The jar is read only when its bytes still have the pinned digest; each jar gets its own class loader, kept while the
  * server runs. A plug-in runs in the server: it is reviewed code, approved by an administrator.

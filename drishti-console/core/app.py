@@ -94,7 +94,7 @@ WORKER_CSP = "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-
 _HOST = re.compile(r"^[A-Za-z0-9.\-]+(:\d{1,5})?$|^\[[0-9A-Fa-f:.]+\](:\d{1,5})?$")
 WORKER = "/static/js/drishti_calc-worker.js"
 PYODIDE = "/pyodide/"
-# Wave B (BI_DESIGN.md P3): no BI page loads WebAssembly any more (Perspective and DuckDB-Wasm are gone); only Calc's worker above may compile it.
+# Wave B (ARCHITECTURE.md §28 P3): no BI page loads WebAssembly any more (Perspective and DuckDB-Wasm are gone); only Calc's worker above may compile it.
 EMBED = "/embed/"                           # embedded views for other web applications: off unless embed.enabled (routes/embed_routes.py)
 
 
@@ -551,7 +551,7 @@ def create_app(settings: Settings) -> FastAPI:
     from core import engines as _engines_state
     templates.env.globals["engine_available"] = _engines_state.engine_available   # an engine running here or on a peer (Admin -> Data out: flight)
     from core import phone as _phone
-    templates.env.globals["phone_parts"] = _phone.page_parts         # the phone display on the VaR, exposure and landing pages (docs/guides/PACK_DEVELOPER_GUIDE.md 8)
+    templates.env.globals["phone_parts"] = _phone.page_parts         # the phone display on the VaR, exposure and landing pages (docs/guides/BUILD_GUIDE.md 8)
     templates.env.globals["phone_everything"] = _phone.everything
     app.state.servers = catalogue
     from core.backend_watch import BackendWatch
@@ -563,7 +563,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.state.cluster = pool if pool.enabled else None
     app.state.backend_watch = BackendWatch(catalogue, _seconds(settings.get("backend.check_seconds", 5)),
                                            url_of=(lambda s: pool.current() if s.id == catalogue.default else s.url) if pool.enabled else None)
-    # the console learns the server's edition, lenses and branding from its about answer (docs/admin/LENSES.md › The design)
+    # the console learns the server's edition, lenses and branding from its about answer (docs/guides/ADMIN_GUIDE.md › The design)
     app.state.backend_watch.on_about = lambda s, about: app.state.editions.learn(about) if s.id == catalogue.default and _real_backend(app) else None
     from core.user_stamps import UserStamps
 
@@ -667,7 +667,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(drafts_routes.lookup_router)     # an entity field's live search (/api/forms/lookup)
     app.include_router(changes_routes.router)           # write-back: /api/changes, Review -> Changes, Admin -> Edits (before the admin and API routes)
     app.include_router(api_routes.router)
-    app.include_router(render_routes.router)            # the client-side renderer's playground (CLIENT_RENDERER.md section 13)
+    app.include_router(render_routes.router)            # the client-side renderer's playground (EMBED_GUIDE.md section 13)
     app.include_router(elements_routes.router)          # the Drishti Elements gallery (ELEMENTS.md section 10)
     app.include_router(auth_routes.router)
     app.include_router(studio_routes.router)
@@ -695,13 +695,13 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(collab_admin_routes.router)
     app.include_router(embed_admin_routes.router)
     app.include_router(admin_commands_routes.router)    # the command switches' JSON; /admin/commands redirects to /func
-    app.include_router(functions_routes.router)         # Functions: FUNC, the command directory for everyone (docs/admin/USER_MANAGEMENT.md)
+    app.include_router(functions_routes.router)         # Functions: FUNC, the command directory for everyone (docs/guides/ADMIN_GUIDE.md)
     app.include_router(datamap_routes.router)           # Data map: DATAMAP, the packs' kinds and joins, checked against the data (USER_GUIDE.md)
     app.include_router(data_routes.router)              # Export data: DATA, every dataset and a day as .jsonl.gz (DATA_GUIDE.md)
-    app.include_router(compute_admin_routes.router)     # Admin -> Compute (docs/admin/OPERATIONS.md)
-    app.include_router(admin_engines_routes.router)     # Admin -> Engines: compute engines on or off per server (COMPUTE_ENGINES.md)
+    app.include_router(compute_admin_routes.router)     # Admin -> Compute (docs/guides/OPERATIONS_GUIDE.md)
+    app.include_router(admin_engines_routes.router)     # Admin -> Engines: compute engines on or off per server (ADMIN_GUIDE.md)
     from routes import config_editor_routes
-    app.include_router(config_editor_routes.router)     # Admin -> Configuration: every setting in three tiers, changes proposed (OPERATIONS.md)
+    app.include_router(config_editor_routes.router)     # Admin -> Configuration: every setting in three tiers, changes proposed (OPERATIONS_GUIDE.md)
     app.include_router(data_out_routes.router)          # Admin -> Data out: Arrow Flight, the page and the map (FLIGHT_GUIDE.md)
     app.include_router(connector_routes.router)
     app.include_router(artifact_routes.router)
@@ -732,7 +732,7 @@ def create_app(settings: Settings) -> FastAPI:
         from routes import embed_routes, embed_signin_routes, embed_v2_routes
 
         app.include_router(embed_routes.router)
-        app.include_router(embed_signin_routes.router)       # the renderer's optional sign-in window (auth: 'popup', CLIENT_RENDERER.md 10.1)
+        app.include_router(embed_signin_routes.router)       # the renderer's optional sign-in window (auth: 'popup', EMBED_GUIDE.md 10.1)
         app.include_router(embed_v2_routes.router)           # the embed API v2: the ViewModel as JSON, the renderer, Elements 2.0 (beside v1)
         from routes import embed_report_routes
 

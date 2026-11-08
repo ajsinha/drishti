@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 
-"""The client-side renderer on the console's side (docs/architecture/CLIENT_RENDERER.md), without a browser: one page renderer, Jinja (the
+"""The client-side renderer on the console's side (docs/guides/EMBED_GUIDE.md), without a browser: one page renderer, Jinja (the
 console's pages are the server's; the library draws embeds and <drishti-report> only), About as JSON, panels answered with their JSON (for an
 embed's renderer), the channel's ``vm:`` subscriptions, the embed API v2 (the ViewModel with its contract, its parts as JSON, the renderer's
 versioned files, Elements 2.x's address), and the three console fixes phase 1 found (a panel with no data, the candles' texts, a bar

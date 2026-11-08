@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Binds an MQ-shaped {@code SELECT} to a model (docs/architecture/BI_DESIGN.md section 3.4, "How it compiles"): names are resolved against the model as the
+ * Binds an MQ-shaped {@code SELECT} to a model (docs/architecture/ARCHITECTURE.md §28 section 3.4, "How it compiles"): names are resolved against the model as the
  * caller sees it (a hidden column does not exist, {@code DRS-9171}), and the statement becomes exactly one model query: the selected columns (= the
  * {@code GROUP BY}) are its fields, {@code MEASURE('name')} its measures, an inline aggregate a local measure in DEL, {@code WHERE} its row filters,
  * {@code HAVING} its measure filters, {@code ORDER BY}, {@code LIMIT}, the table clause its time; a select without {@code GROUP BY} or aggregates is a row

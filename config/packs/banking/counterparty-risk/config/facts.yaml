@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Did you know: this pack's facts for Home (drishti-console/core/facts.py; docs/guides/PACK_DEVELOPER_GUIDE.md, "Facts for Home").
+# Did you know: this pack's facts for Home (drishti-console/core/facts.py; docs/guides/BUILD_GUIDE.md, "Facts for Home").
 # Every number is computed from the exposure engine's answers (and the VaR engine's, for the fact that needs market-risk) on the
 # business date, as the user who opens Home; a fact whose condition does not hold today is not shown.
 facts: 1
@@ -44,7 +44,7 @@ items:
         - { label: with it, value: at.ee, format: money, tone: alert }
     open: "EXP {hit.it.id}"
     what: Collateral effect
-    knowledge: counterparty-credit-risk.md#4-a-worked-example-on-the-demo-data
+    knowledge: risk.md#counterparty-credit-risk-a-worked-example-on-the-demo-data
 
   - id: var-versus-peak-pfe
     domain: Counterparty credit
@@ -71,4 +71,4 @@ items:
         - { label: "Peak PFE ({cp.peakPfeTenor})", value: cp.peakPfe, format: money, tone: alert }
     open: "EXP {cp.id}"
     what: Peak PFE
-    knowledge: market-risk.md#4-a-worked-example-on-the-demo-data
+    knowledge: risk.md#market-risk-a-worked-example-on-the-demo-data

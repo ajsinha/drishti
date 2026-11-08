@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Every endpoint of the server's controllers is in docs/guides/API_GUIDE.md, and the guide's tables list none that do not exist.
+"""Every endpoint of the server's controllers is in docs/guides/API_REFERENCE.md, and the guide's tables list none that do not exist.
 
 The controllers' `@GetMapping`, `@PostMapping`, `@PutMapping`, `@DeleteMapping` and `@PatchMapping` annotations (with the class's
 `@RequestMapping` prefix) are read from the source. An endpoint counts as documented when a line of the guide names its path (path
@@ -26,7 +26,7 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-GUIDE = (ROOT / "docs" / "guides" / "API_GUIDE.md").read_text(encoding="utf-8")
+GUIDE = (ROOT / "docs" / "guides" / "API_REFERENCE.md").read_text(encoding="utf-8")
 ANNOTATION = re.compile(r"@(?:[\w.]*\.)?(Get|Post|Put|Delete|Patch)Mapping(?:\(([^)]*)\))?")
 # Not under /api/v1 and not a controller of the product's API: nothing to list.
 NOT_DOCUMENTED = set()
@@ -80,7 +80,7 @@ def _documented(method: str, path: str) -> bool:
 
 def test_every_controller_endpoint_is_in_the_api_guide():
     missing = sorted(f"{m} {p}" for m, p in ((m, _norm(p)) for m, p in _endpoints()) if not _documented(m, p) and f"{m} {p}" not in NOT_DOCUMENTED)
-    assert not missing, "endpoints the controllers map that API_GUIDE.md does not list:\n  " + "\n  ".join(missing)
+    assert not missing, "endpoints the controllers map that API_REFERENCE.md does not list:\n  " + "\n  ".join(missing)
 
 
 def test_every_endpoint_row_of_the_api_guide_exists():
@@ -96,4 +96,4 @@ def test_every_endpoint_row_of_the_api_guide_exists():
             continue
         if not any(p.match(path) for p in patterns):
             unknown.append(f"{m.group(1)} {m.group(2)}")
-    assert not unknown, "API_GUIDE.md rows with no controller behind them:\n  " + "\n  ".join(unknown)
+    assert not unknown, "API_REFERENCE.md rows with no controller behind them:\n  " + "\n  ".join(unknown)

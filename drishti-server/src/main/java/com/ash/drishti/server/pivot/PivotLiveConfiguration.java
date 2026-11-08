@@ -37,7 +37,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Live pivots wired to the server's existing change signals (PIVOT_ENGINE.md section 10, item 5; PIVOT_GUIDE.md, live pivots); nothing
+ * Live pivots wired to the server's existing change signals (ARCHITECTURE.md section 26.7, item 5; PIVOT_GUIDE.md, live pivots); nothing
  * here computes a figure:
  *
  * <ul>

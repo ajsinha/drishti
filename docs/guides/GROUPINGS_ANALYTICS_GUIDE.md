@@ -16,7 +16,7 @@
 # Groupings and analytics guide
 
 *Revision 1.0 · the one reference for the groupings and analytics computed instead of stored. The
-hands-on companion is [tutorial 27](../tutorials/27-groupings-and-analytics.md).*
+hands-on companion is [tutorial 6](../tutorials/06-groupings-and-analytics.md).*
 
 Seven pages that used to be **stored copies** of figures are **computed from the fundamental data when they are opened**:
 
@@ -255,10 +255,10 @@ where the inferred layout had rounded them to whole numbers ("0").
 | `SIC <code>`, `/v/sic-sector/<code>`, `SIC ALL` | the same ids, computed from the companies |
 | `ECG ECG-<code>`, `/v/country-group/ECG-<code>` | the same ids, computed from the economies |
 | `CORR CORR-<set>`, `/v/correlation-matrix/CORR-<set>` | the same ids: the set's definition, its correlations computed (`CORRC CORR-<set>`) |
-| `us-company` fields `NET_MARGIN`, `REVENUE_GROWTH`, `FINANCIALS[].NET_MARGIN`; `index-membership` `ROWS[].NET_MARGIN` | removed from the records; the pages compute them (a saved search on `NET_MARGIN` finds nothing) |
-| `correlation-matrix` fields `AVERAGE`, `PAIRS`, `WINDOW`, `ESTIMATOR` | removed; `correlation-result` answers them |
-| `financial-fact` `CHANGE_PCT`, `HISTORY[].CHANGE_PCT` | removed; the page computes the change |
-| `index-membership` `SECTORS`, `REVENUE`, `NET_INCOME`, `BY_SECTOR` | removed; the page sums the members' rows (the membership and `MEMBERS` stay) |
+| [`us-company`](../contracts/samples/us-equities.md#us-company) ([contract](../contracts/packs/us-equities.md#useq-us-company-us-company)) fields `NET_MARGIN`, `REVENUE_GROWTH`, `FINANCIALS[].NET_MARGIN`; `index-membership` `ROWS[].NET_MARGIN` | removed from the records; the pages compute them (a saved search on `NET_MARGIN` finds nothing) |
+| [`correlation-matrix`](../contracts/samples/market-data.md#correlation-matrix) ([contract](../contracts/packs/market-data.md#corr-correlation-matrix-correlation-matrix)) fields `AVERAGE`, `PAIRS`, `WINDOW`, `ESTIMATOR` | removed; `correlation-result` answers them |
+| [`financial-fact`](../contracts/samples/us-equities.md#financial-fact) ([contract](../contracts/packs/us-equities.md#fact-financial-fact-financial-fact)) `CHANGE_PCT`, `HISTORY[].CHANGE_PCT` | removed; the page computes the change |
+| [`index-membership`](../contracts/samples/us-equities.md#index-membership) ([contract](../contracts/packs/us-equities.md#idx-index-members-index-membership)) `SECTORS`, `REVENUE`, `NET_INCOME`, `BY_SECTOR` | removed; the page sums the members' rows (the membership and `MEMBERS` stay) |
 | `equity` `BETA` | removed; `EQB <ticker>` and the equity page's Beta panel compute it |
 | the search form of `lei-group` (`FORM gleif`) | gone: the type-ahead finds a group by its name, and the `LEIG ALL` search finds entities |
 
@@ -277,7 +277,7 @@ its inputs. The machine-readable contracts are `config/packs/<domain>/<pack>/con
 | `lei-group` | LEIG | `gleif-groupings` (derived) | `GROUP_ID`: an ultimate parent's LEI, or `ALL` | `lei-entity` | the business date asked (the entities' date) |
 | `lei-country` | LEIC | `gleif-groupings` (derived) | `COUNTRY`: an ISO 3166 code, or `ALL` | `lei-entity` | as above |
 | `sic-sector` | SIC | `us-equities-groupings` (derived) | `SIC`: a four-digit code, or `ALL` | `us-company` | as above |
-| `country-group` | ECG | `macro-groupings` (derived) | `GROUP_ID`: `ECG-<World Bank code>` | `economy` | as above |
+| `country-group` | ECG | `macro-groupings` (derived) | `GROUP_ID`: `ECG-<World Bank code>` | [`economy`](../contracts/samples/world-economy.md#economy) | as above |
 | `correlation-result` | CORRC | `correlation-engine` (reactive, Java) | the set's id, `~window=`, `~estimator=` | `correlation-matrix`, `equity`, `fx-spot` | the request |
 | USEQ ratios | USEQ | none: the `us-company` page | `TICKER` | `us-company` | the company record's |
 | PXH analytics | PXH | `us-equities-prices` (yfinance) | `PX-<ticker>` | the price history read live | the request (live only) |
@@ -493,7 +493,7 @@ On the committed data (gleif 2026-10-25, us-equities 2026-10-24, world-economy's
 | `lei-country` | 133 countries + ALL | every count on every country | the stored page listed the first 400 entities of the six largest countries; the computed one lists all |
 | `sic-sector` | 194 codes + ALL | companies, revenue and net income on every code (USD reporters); ALL 586 companies, 18,430,213,107,000 revenue, 2,340,128,705,000 net income | none |
 | `country-group` | 12 groups | members on every group | the stored figures were the **World Bank's own aggregates** for 2025, which estimate members that have not reported; the computed ones add up the members, each at its latest year. GDP within 3% (ECG-EAS 32,711 against 33,657: three members' latest GDP is from 2022), population within 2.1%, growth within 0.32 points (ECG-MEA 3.06 against 2.75), inflation as the median within 0.5 points (ECG-LCN 2.58 against 2.08). The four income groups had no stored figures; they have computed ones now |
-| `correlation-matrix` | 3 sets | the factors | the stored pairs were **synthetic**: drawn at random between 0.15 and 0.78 and labelled *2 years, Ledoit-Wolf*, with no price history behind them. Computed from the lake's 29 daily returns to 2026-09-30, Pearson: CORR-EU-EQ average 0.096 (stored 0.385), CORR-G10FX −0.012 (0.512), CORR-US-EQ 0.092 (0.406) |
+| [`correlation-matrix`](../contracts/samples/market-data.md#correlation-matrix) ([contract](../contracts/packs/market-data.md#corr-correlation-matrix-correlation-matrix)) | 3 sets | the factors | the stored pairs were **synthetic**: drawn at random between 0.15 and 0.78 and labelled *2 years, Ledoit-Wolf*, with no price history behind them. Computed from the lake's 29 daily returns to 2026-09-30, Pearson: CORR-EU-EQ average 0.096 (stored 0.385), CORR-G10FX −0.012 (0.512), CORR-US-EQ 0.092 (0.406) |
 | USEQ ratios | 586 companies | net margin on the 563 that report revenue and net income, and every year of the financials; revenue growth on 560 | **3 companies** whose previous fiscal year is missing from the financials (SNA, SWK and TXT: 2023, 2024, 2026): the stored growth compared with the last year reported (two years earlier); the computed growth is against the previous fiscal year only, and empty when it is missing |
 | PXH analytics | live only | nothing was stored | new |
 | FACT changes | 4,026 facts, 38,632 yearly rows | every change, on every row and every strip | none |
@@ -551,7 +551,7 @@ macro-groupings:
 
 The order on a page: the aggregates, the rows, the tree, the `then` fields, the sorts, then `unlisted`. Pages live in the heap by default
 (`store: disk` keeps them on disk for very large kinds, as the trading pages do). Across Drishti*net nodes a group is gathered from every
-node's share ([CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti)); a median cannot be combined from parts, so a group whose members are split
+node's share ([CLUSTER_GUIDE.md](CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)); a median cannot be combined from parts, so a group whose members are split
 over nodes without every member listed shows no median.
 
 The code: `drishti-engine/.../source/derived/DerivedKind.java` (grouping, aggregates), `DerivedPage.java` (`then`, `sort`, `tree`),
@@ -636,9 +636,7 @@ few megabytes, built in about a second from the 9,937 entities.
 
 ## 25. Groupings and analytics data: every input dataset
 
-Every dataset a grouping or an analytic reads, what it is for, whether it is required, where its sample lives, and one real record from the shipped sample
-data (`data/testdata/`), formatted, with long arrays shortened as `/* … N more … */`. The field-by-field rules of each kind are its
-**data contract** ([docs/contracts/packs/](../contracts/packs/README.md)); how files are named, dated and loaded is
+Every dataset a grouping or an analytic reads, what it is for, whether it is required, where its sample lives, and the links to its two homes: its **data contract** (the fields, the key, the rules: the pack's contract page and its `<kind>.contract.yaml`) and its **example** (a real record of the shipped synthetic test data, every field explained, on [docs/contracts/samples](../contracts/samples/README.md)). This guide copies neither. How files are named, dated and loaded is
 [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo).
 
 <!-- The block below is generated by tools/docs/guide_data.py from tools/docs/guide_data.yaml: edit the spec, not the block. -->
@@ -665,370 +663,70 @@ These are the inputs; every grouping and analytic is computed from them when ask
 GLEIF's legal entities: `LEI_GROUP`, `DIRECT_PARENT`, `LEI_COUNTRY`, `RENEWAL_LATE`, `REGISTRATION_STATUS` and `GLEIF_GROUP_SIZE` make
 the ownership groups (LEIG) and the country pages (LEIC).
 
-- **Data contract:** [`lei-entity`](../contracts/packs/gleif.md#lei-lei-legal-entity-lei-entity) (LEI), key `LEI`; 43 fields, 16 required.
-- **Sample:** `data/testdata/gleif/lei-entity/lei-entity.2026-10-25.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "LEI": "010PWNH4K3BLIC3I7R03",
-  "NAME": "GESTION PLACEMENTS DESJARDINS INC.",
-  "LEGAL_FORM": "Société par actions par Loi sur les sociétés par actions",
-  "JURISDICTION": "CA-QC",
-  "LEI_COUNTRY": "CA",
-  "COUNTRY_NAME": "Canada",
-  "LEGAL_ADDRESS": "27e-2 Complexe Desjardins, Tour Est, H5B 1E4 Montreal, CA-QC, CA",
-  "LEGAL_CITY": "Montreal",
-  "HQ_ADDRESS": "200 rue des Commandeurs, G6V 6R2 Lévis, CA-QC, CA",
-  "REGISTERED_AS": "1140542631",
-  "ENTITY_STATUS": "ACTIVE",
-  "CREATED": "1994-06-06",
-  "REGISTRATION_STATUS": "LAPSED",
-  "INITIAL_REGISTRATION": "2012-11-26",
-  "LAST_UPDATE": "2024-10-07",
-  "NEXT_RENEWAL": "2024-10-07",
-  "RENEWAL": "Late: renewal was due 2024-10-07 (lapsed)",
-  "RENEWAL_LATE": true,
-  "MANAGING_LOU": "EQS Group GmbH",
-  "DIRECT_PARENT": "549300COKYB5EGSU1838",
-  "ULTIMATE_PARENT": "549300B2Q47IR0CR5B54",
-  "LEI_GROUP": "549300B2Q47IR0CR5B54",
-  "PARENTS": [
-    {
-      "LEVEL": 1,
-      "LEI": "549300COKYB5EGSU1838",
-      "NAME": "Desjardins Holding financier inc.",
-      "RELATIONSHIP": "Direct parent"
-    },
-    {
-      "LEVEL": 2,
-      "LEI": "549300B2Q47IR0CR5B54",
-      "NAME": "FÉDÉRATION DES CAISSES DESJARDINS DU QUÉBEC",
-      "RELATIONSHIP": "Ultimate parent"
-    }
-  ],
-  "PROVENANCE": {
-    "SOURCE": "GLEIF, the Global Legal Entity Identifier Foundation (LEI records, golden copy level 2, mapping files)",
-    "RETRIEVED_AT": "2026-10-25",
-    "LICENCE": "CC0 1.0 (GLEIF's terms: free of charge, no restriction; attribution appreciated)",
-    "URL": "https://search.gleif.org/#/record/010PWNH4K3BLIC3I7R03"
-  }
-}
-```
+- **Data contract:** [`lei-entity`](../contracts/packs/gleif.md#lei-lei-legal-entity-lei-entity) (LEI), key `LEI`; 43 fields, 16 required; the file [`lei-entity.contract.yaml`](../../config/packs/core/gleif/contracts/lei-entity.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/gleif.md#lei-entity) (files `data/testdata/gleif/lei-entity/lei-entity.*.jsonl.gz`).
 
 ### 25.3 `us-company`: the US companies
 
 SEC EDGAR's companies: `SIC` makes the sectors (SIC); the financials (`REVENUE`, `NET_INCOME`, `FINANCIALS[]`) make the USEQ ratios.
 
-- **Data contract:** [`us-company`](../contracts/packs/us-equities.md#useq-us-company-us-company) (USEQ), key `TICKER`; 46 fields, 23 required.
-- **Sample:** `data/testdata/us-equities/us-company/us-company.2026-10-24.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "TICKER": "ABT",
-  "NAME": "Abbott Laboratories",
-  "SIC": "2834",
-  "SIC_DESCRIPTION": "Pharmaceutical Preparations",
-  "CURRENCY": "USD",
-  "FISCAL_YEAR": 2025,
-  "REVENUE": 44328000000,
-  "NET_INCOME": 6524000000,
-  "FINANCIALS": [
-    {
-      "YEAR": 2016,
-      "PERIOD_END": "2016-12-31",
-      "REVENUE": 20853000000,
-      "NET_INCOME": 1400000000,
-      "ASSETS": 52666000000,
-      "LIABILITIES": 31949000000,
-      "EQUITY": 20538000000,
-      "EPS_DILUTED": 0.94
-    },
-    {
-      "YEAR": 2017,
-      "PERIOD_END": "2017-12-31",
-      "REVENUE": 27390000000,
-      "NET_INCOME": 477000000,
-      "ASSETS": 76250000000,
-      "LIABILITIES": 45152000000,
-      "EQUITY": 30897000000,
-      "EPS_DILUTED": 0.27
-    },
-    /* … 8 more … */
-  ]
-}
-```
-
-The record shows 9 of its 46 fields; omitted here: `SEC_NAME`, `CIK`, `OTHER_TICKERS`, `EXCHANGE`, `LISTING`, `DIVISION`, `SECTOR`, `STATE_OF_INCORPORATION` and 29 more.
+- **Data contract:** [`us-company`](../contracts/packs/us-equities.md#useq-us-company-us-company) (USEQ), key `TICKER`; 46 fields, 23 required; the file [`us-company.contract.yaml`](../../config/packs/capitalmarkets/us-equities/contracts/us-company.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/us-equities.md#us-company) (files `data/testdata/us-equities/us-company/us-company.*.jsonl.gz`).
 
 ### 25.4 `economy`: the economies
 
 `REGION_GROUP`, `INCOME_GROUP`, `GDP_USD_BN`, `POPULATION_M`, `GROWTH`, `INFLATION`, `YEAR` and `GDP_PATH`: the country groups (ECG).
 
-- **Data contract:** [`economy`](../contracts/packs/world-economy.md#econ-economy-economy) (ECON), key `ECONOMY_ID`; 28 fields, 16 required.
-- **Sample:** no sample in the demo data (`data/testdata`); the world-economy pack ships its public data with the pack
+- **Data contract:** [`economy`](../contracts/packs/world-economy.md#econ-economy-economy) (ECON), key `ECONOMY_ID`; 28 fields, 16 required; the file [`economy.contract.yaml`](../../config/packs/economy/world-economy/contracts/economy.contract.yaml).
+- **Example:** no sample in the demo data (`data/testdata`); the world-economy pack ships its public data with the pack
 (`config/packs/economy/world-economy/samples/`).
 
 ### 25.5 `correlation-matrix`: the correlation sets
 
 A correlation set's factors; the correlations themselves are computed from the factors' price histories.
 
-- **Data contract:** [`correlation-matrix`](../contracts/packs/market-data.md#corr-correlation-matrix-correlation-matrix) (CORR), key `MATRIX_ID`; 5 fields, 5 required.
-- **Sample:** `data/testdata/market-data/correlation-matrix/correlation-matrix.2026-07-08.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "MATRIX_ID": "CORR-EU-EQ",
-  "NAME": "European equities",
-  "FACTORS": [
-    "ORBT",
-    "RHNB",
-    "GRNT",
-    "LUMN"
-  ],
-  "EQUITY_IDS": [
-    "EQ-ORBT",
-    "EQ-RHNB",
-    "EQ-GRNT",
-    "EQ-LUMN"
-  ],
-  "FX_IDS": []
-}
-```
+- **Data contract:** [`correlation-matrix`](../contracts/packs/market-data.md#corr-correlation-matrix-correlation-matrix) (CORR), key `MATRIX_ID`; 5 fields, 5 required; the file [`correlation-matrix.contract.yaml`](../../config/packs/banking/market-data/contracts/correlation-matrix.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-data.md#correlation-matrix) (files `data/testdata/market-data/correlation-matrix/correlation-matrix.*.jsonl.gz`).
 
 ### 25.6 `equity`: the equities' price history
 
 An equity's quote and its history (`HISTORY[]`): the returns of CORR and the beta of EQB.
 
-- **Data contract:** [`equity`](../contracts/packs/market-data.md#eq-equity-equity) (EQ), key `TICKER`; 15 fields, 14 required.
-- **Sample:** `data/testdata/market-data/equity/equity.2026-09-30.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "TICKER": "EQ-CSCA",
-  "NAME": "Cascadia Airlines Inc.",
-  "PRICE": 21.84,
-  "CHANGE_1D": 0.03852,
-  "MARKET_CAP": 34324492441,
-  "SECTOR": "Airlines",
-  "EXCHANGE": "TSX",
-  "CURRENCY": "CAD",
-  "HISTORY": [
-    {
-      "DATE": "2026-08-19",
-      "CLOSE": 18.95
-    },
-    {
-      "DATE": "2026-08-20",
-      "CLOSE": 19.17
-    },
-    /* … 28 more … */
-  ],
-  "OHLC": [
-    {
-      "DATE": "2026-07-08",
-      "OPEN": 18.94,
-      "HIGH": 19.5,
-      "LOW": 18.85,
-      "CLOSE": 19.38,
-      "VOLUME": 7737428
-    },
-    {
-      "DATE": "2026-07-09",
-      "OPEN": 19.31,
-      "HIGH": 19.45,
-      "LOW": 18.99,
-      "CLOSE": 19.36,
-      "VOLUME": 12924628
-    },
-    /* … 58 more … */
-  ],
-  "IDENTIFIERS": {
-    "ISIN": "CA0CSCA00012",
-    "BLOOMBERG": "CSCA TS Equity",
-    "RIC": "CSCA.T",
-    "FIGI": "BBG2033A30F5"
-  },
-  "ISSUER": "ISS-CASCADIA",
-  "EQUITY_VOL_SURFACE": "EQV-CSCA",
-  "DIVIDEND_CURVE": "DIV-CSCA"
-}
-```
+- **Data contract:** [`equity`](../contracts/packs/market-data.md#eq-equity-equity) (EQ), key `TICKER`; 15 fields, 14 required; the file [`equity.contract.yaml`](../../config/packs/banking/market-data/contracts/equity.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-data.md#equity) (files `data/testdata/market-data/equity/equity.*.jsonl.gz`).
 
 ### 25.7 `equity-index`: the indices' price history
 
 An index's level and history: the market leg of an equity's beta (EQB).
 
-- **Data contract:** [`equity-index`](../contracts/packs/market-data.md#eqx-equity-index-equity-index) (EQX), key `INDEX_ID`; 10 fields, 10 required.
-- **Sample:** `data/testdata/market-data/equity-index/equity-index.2026-09-30.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "INDEX_ID": "EQX-NDX",
-  "NAME": "Nasdaq-100",
-  "LEVEL": 24530.0,
-  "CHANGE_1D": 0.00986,
-  "CONSTITUENT_COUNT": 101,
-  "CURRENCY": "USD",
-  "CONSTITUENTS": [
-    {
-      "EQUITY": "EQ-NVTK",
-      "WEIGHT": 0.02
-    }
-  ],
-  "HISTORY": [
-    {
-      "DATE": "2026-08-19",
-      "CLOSE": 25294.78
-    },
-    {
-      "DATE": "2026-08-20",
-      "CLOSE": 25348.48
-    },
-    /* … 28 more … */
-  ],
-  "EQUITY_VOL_SURFACE": "EQV-NDX",
-  "DIVIDEND_CURVE": "DIV-NDX"
-}
-```
+- **Data contract:** [`equity-index`](../contracts/packs/market-data.md#eqx-equity-index-equity-index) (EQX), key `INDEX_ID`; 10 fields, 10 required; the file [`equity-index.contract.yaml`](../../config/packs/banking/market-data/contracts/equity-index.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-data.md#equity-index) (files `data/testdata/market-data/equity-index/equity-index.*.jsonl.gz`).
 
 ### 25.8 `fx-spot`: FX history
 
 A currency pair's quote and history: FX factors in a correlation set.
 
-- **Data contract:** [`fx-spot`](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot) (FX), key `PAIR`; 11 fields, 11 required.
-- **Sample:** `data/testdata/market-data/fx-spot/fx-spot.2026-09-30.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "PAIR": "FX-AUDUSD",
-  "PAIR_NAME": "AUD/USD",
-  "MID": 0.661,
-  "BID": 0.66097,
-  "ASK": 0.66103,
-  "CHANGE_1D": -0.01092,
-  "SPOT_DATE": "2026-10-02",
-  "HISTORY": [
-    {
-      "DATE": "2026-08-19",
-      "MID": 0.69653
-    },
-    {
-      "DATE": "2026-08-20",
-      "MID": 0.70057
-    },
-    /* … 28 more … */
-  ],
-  "CONVENTIONS": {
-    "BASE": "AUD",
-    "QUOTE": "USD",
-    "PIP_FACTOR": 10000,
-    "SPOT_LAG": "T+2",
-    "CALENDAR": "GBLO+USNY",
-    "NDF": false
-  },
-  "FX_FORWARD_CURVE": "FXF-AUDUSD",
-  "FX_VOL_SURFACE": "FXV-AUDUSD"
-}
-```
+- **Data contract:** [`fx-spot`](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot) (FX), key `PAIR`; 11 fields, 11 required; the file [`fx-spot.contract.yaml`](../../config/packs/banking/market-data/contracts/fx-spot.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-data.md#fx-spot) (files `data/testdata/market-data/fx-spot/fx-spot.*.jsonl.gz`).
 
 ### 25.9 `financial-fact`: the reported facts
 
 One reported figure of one company with its `HISTORY[]`: the FACT page's changes.
 
-- **Data contract:** [`financial-fact`](../contracts/packs/us-equities.md#fact-financial-fact-financial-fact) (FACT), key `FACT_ID`; 12 fields, 12 required.
-- **Sample:** `data/testdata/us-equities/financial-fact/financial-fact.2026-10-24.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "FACT_ID": "ABT-REVENUE",
-  "COMPANY": "ABT",
-  "COMPANY_NAME": "Abbott Laboratories",
-  "CIK": "0000001800",
-  "CONCEPT": "REVENUE",
-  "LABEL": "Revenue",
-  "UNIT": "USD",
-  "XBRL_TAG": "RevenueFromContractWithCustomerExcludingAssessedTax",
-  "LATEST": 44328000000,
-  "LATEST_YEAR": 2025,
-  "YEARS": 10,
-  "HISTORY": [
-    {
-      "YEAR": 2016,
-      "PERIOD_END": "2016-12-31",
-      "VALUE": 20853000000,
-      "FILED": "2019-02-22",
-      "ACCESSION": "0001047469-19-000624"
-    },
-    {
-      "YEAR": 2017,
-      "PERIOD_END": "2017-12-31",
-      "VALUE": 27390000000,
-      "FILED": "2020-02-21",
-      "ACCESSION": "0001104659-20-023904"
-    },
-    /* … 8 more … */
-  ]
-}
-```
-
-The record shows 12 of its 13 fields; omitted here: `_meta`.
+- **Data contract:** [`financial-fact`](../contracts/packs/us-equities.md#fact-financial-fact-financial-fact) (FACT), key `FACT_ID`; 12 fields, 12 required; the file [`financial-fact.contract.yaml`](../../config/packs/capitalmarkets/us-equities/contracts/financial-fact.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/us-equities.md#financial-fact) (files `data/testdata/us-equities/financial-fact/financial-fact.*.jsonl.gz`).
 
 ### 25.10 `index-membership`: the index members
 
 An index's members (`ROWS[]`): the IDX page's totals.
 
-- **Data contract:** [`index-membership`](../contracts/packs/us-equities.md#idx-index-members-index-membership) (IDX), key `INDEX`; 5 fields, 5 required.
-- **Sample:** `data/testdata/us-equities/index-membership/index-membership.2026-10-24.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "INDEX": "DJIA",
-  "NAME": "Dow Jones Industrial Average",
-  "MEMBERS": 30,
-  "ROWS": [
-    {
-      "TICKER": "AAPL",
-      "NAME": "Apple Inc.",
-      "SECTOR": "Manufacturing",
-      "SIC": "3571",
-      "SIC_DESCRIPTION": "Electronic Computers",
-      "EXCHANGE": "Nasdaq",
-      "REVENUE": 416161000000,
-      "NET_INCOME": 112010000000,
-      "CURRENCY": "USD",
-      "FISCAL_YEAR": 2025,
-      "SINCE": ""
-    },
-    {
-      "TICKER": "AMGN",
-      "NAME": "Amgen",
-      "SECTOR": "Manufacturing",
-      "SIC": "2836",
-      "SIC_DESCRIPTION": "Biological Products, (No Diagnostic Substances)",
-      "EXCHANGE": "Nasdaq",
-      "REVENUE": 36751000000,
-      "NET_INCOME": 7711000000,
-      "CURRENCY": "USD",
-      "FISCAL_YEAR": 2025,
-      "SINCE": ""
-    },
-    /* … 28 more … */
-  ],
-  "PROVENANCE": {
-    "SOURCE": "SEC Form N-PORT of DIA (SPDR DOW JONES INDUSTRIAL AVERAGE ETF TRUST), the stocks it reported holding on 2026-07-31 (filed 2026-09-18, accession 0001410368-26-0…",
-    "LICENCE": "Public domain (SEC EDGAR); CC0 1.0 (Wikidata)",
-    "NOTE": "Membership as the tracking fund holds it on its report date. Index weights and levels are proprietary to their index providers and are not included.",
-    "RETRIEVED_AT": "2026-10-24"
-  }
-}
-```
-
-The record shows 5 of its 6 fields; omitted here: `_meta`.
+- **Data contract:** [`index-membership`](../contracts/packs/us-equities.md#idx-index-members-index-membership) (IDX), key `INDEX`; 5 fields, 5 required; the file [`index-membership.contract.yaml`](../../config/packs/capitalmarkets/us-equities/contracts/index-membership.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/us-equities.md#index-membership) (files `data/testdata/us-equities/index-membership/index-membership.*.jsonl.gz`).
 
 ### 25.11 `price-history`: live price history
 
 A ticker's daily prices, read live when PXH opens: the returns, volatility and beta of the PXH analytics.
 
-- **Data contract:** [`price-history`](../contracts/packs/us-equities.md#pxh-price-history-live-internal-use-only-price-history) (PXH), key none; 13 fields, 0 required.
-- **Sample:** none in the demo data; read live from Yahoo Finance's public chart endpoint (internal use only), off as shipped.
+- **Data contract:** [`price-history`](../contracts/packs/us-equities.md#pxh-price-history-live-internal-use-only-price-history) (PXH), key none; 13 fields, 0 required; the file [`price-history.contract.yaml`](../../config/packs/capitalmarkets/us-equities/contracts/price-history.contract.yaml).
+- **Example:** none in the demo data; read live from Yahoo Finance's public chart endpoint (internal use only), off as shipped.
 <!-- guide-data:end -->

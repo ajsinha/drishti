@@ -40,6 +40,7 @@ the Sutras `config/packs/banking/trading/sutras/pages/*-trades.v1.sutra.yaml`, t
 14. [Retiring the stored version](#14-retiring-the-stored-version)
 15. [A worked example](#15-a-worked-example)
 16. [Open questions and the change table](#16-open-questions-and-the-change-table)
+17. [JSON examples](#17-json-examples)
 
 ## 1. Summary
 
@@ -241,8 +242,15 @@ Kind `trade-scope` (id: the canonical scope, filters after `~`: `CPTY:CP-SUMMIT~
 | `LAST_MATURITY` | date | |
 | `PAY_7D`, `PAY_7D_EVENTS`, `PAY_30D`, `PAY_30D_EVENTS`, `PAY_90D`, `PAY_90D_EVENTS` | amount (USD), integer | §6.2 |
 | `PAYMENTS_BY_MONTH` | record list | `MONTH`, `AMOUNT_USD`, `EVENTS` |
-| `ROWS` | record list | the **first page** only (100 rows, sorted by `MATURITY_DATE`); the rest through the API, never inside the record |
-| `PROVENANCE` | record | the trade connectors' data versions per source system, the FX date, unknown ids, hidden trades, the time |
+| `ROWS` | record list | the **first page** only (100 rows, sorted by `MATURITY_DATE`); the rest through the API, never inside the record. Each row: the columns of §3 asked (default `TRADE_ID`, `SOURCE_SYSTEM`, `TRADE_STATUS`, `COUNTERPARTY`, `TT_BOOK`, `LEGAL_ENTITY`, `PRODUCT_TYPE`, `CURRENCY`, `MATURITY_DATE`) and `NOTIONAL_USD` |
+| `PROVENANCE` | record | `DATA_VERSIONS` (the trade connectors' data version per source system), `FX_DATE`, `UNKNOWN` (unknown ids), `HIDDEN` (trades the caller may not see), `COMPUTED_AT` |
+
+`GET /scope/rows` answers one page:
+
+| Field | Type | Meaning |
+|---|---|---|
+| `total`, `page`, `size` | integer | the filtered trades (exact, no member cap), the page and its size |
+| `rows` | record list | the page's rows, as `ROWS` above, in the asked `sort` |
 
 Note: the retired records' `TRADE_IDS` (every member id) and `TRADES` (every member row) are **not** fields of the new record: a
 counterparty with 10,000 trades would carry them all in every read. The rows are paged.
@@ -439,6 +447,43 @@ With the filter `status=VALIDATED,AMENDED,NEW` the list shows T1, T2, T5 (`total
 | Version | Date | Change |
 |---|---|---|
 | 1.0 | 2026-10-25 | First version (PLANNED): the trade-scope page over the scope engine, the words `INDEX:`, `TRDR:`, `STATUS:`, the retirement of CTRD, PTRD, LTRD, ITRD and `trade-pages` |
+
+## 17. JSON examples
+
+Each line is one record (wrapped here only by the code block's width). The groupings have no input of their own; the trade below is
+the demo data's (`data/testdata/trades/murex/`, 2026-09-30), cut to the fields of §3 (the full record is the trading pack's `trade`
+contract). The answers are the worked example of [section 15](#15-a-worked-example) (counterparty `CP-A`, trades T1 to T5 as
+`MX-20000701` to `MX-20000705`).
+
+**trade: what the groupings read of one trade** (two legs on two indexes; three of its 78 events: one in the past, one payment date in
+the 90-day window, the maturity):
+
+```json
+{"TRADE_ID":"MX-20000022","SOURCE_SYSTEM":"MUREX","TRADE_VERSION":"4","TRADE_STATUS":"AMENDED","COUNTERPARTY":"CP-VERDANT","PORTFOLIO":"BOOK-RATES-1","TT_BOOK":"BOOK-RATES-1","LEGAL_ENTITY":"LE-NY","TRADER_ID":"TRDR-ASHAH","PRODUCT_TYPE":"XCCY_SWAP","PRODUCT_GROUP":"Rates","BUY_SELL_CODE":"S","CURRENCY":"USD","TRADE_DATE":"2026-08-27","MATURITY_DATE":"2035-02-01","LEGS":[{"NOTIONAL":141900000.0,"CURRENCY":"USD","INDEX":{"NAME":"TERM-SOFR-3M","GROUP":"Rates"}},{"NOTIONAL":19118000000.0,"CURRENCY":"JPY","INDEX":{"NAME":"TERM-TONA-3M","GROUP":"Rates"}}],"EVENTS":[{"EVENT_DATE":"2026-08-31","EVENT_TYPE":"CASH_SETTLED","PAYMENT_TYPE":"","AMOUNT":19118000000.0,"CURRENCY":"JPY"},{"EVENT_DATE":"2026-11-04","EVENT_TYPE":"NEXT_PAYMENT","PAYMENT_TYPE":"","AMOUNT":"","CURRENCY":"USD"},{"EVENT_DATE":"2035-02-01","EVENT_TYPE":"MATURITY","PAYMENT_TYPE":"","AMOUNT":"","CURRENCY":"USD"}]}
+```
+
+The trade is in `CPTY:CP-VERDANT`, `BOOK:BOOK-RATES-1`, `LE:LE-NY`, `TRDR:TRDR-ASHAH`, `INDEX:TERM-SOFR-3M` and `INDEX:TERM-TONA-3M`;
+its notional is the first leg's, 141,900,000 USD. An event with an empty `AMOUNT` is a date without a cash amount and adds nothing to
+`PAY_nD`.
+
+**trade-scope: `CTRD CP-A`** (every status; `ROWS` cut to two of the five):
+
+```json
+{"SCOPE":"CPTY:CP-A","CANONICAL":"CPTY:CP-A","SCOPE_KIND":"counterparty","LABEL":"CP-A","BUSINESS_DATE":"2026-09-30","TRADE_COUNT":5,"LIVE_COUNT":3,"BY_STATUS":[{"STATUS":"VALIDATED","COUNT":1},{"STATUS":"AMENDED","COUNT":1},{"STATUS":"CANCELLED","COUNT":1},{"STATUS":"MATURED","COUNT":1},{"STATUS":"NEW","COUNT":1}],"NOTIONAL_USD":21500000.0,"SOURCE_SYSTEMS":["MUREX"],"PRODUCT_TYPES":["IRS_FIXFLOAT","FX_FORWARD"],"CURRENCIES":["USD","EUR"],"BY_PRODUCT_TYPE":[{"KEY":"IRS_FIXFLOAT","COUNT":4,"NOTIONAL_USD":19500000.0},{"KEY":"FX_FORWARD","COUNT":1,"NOTIONAL_USD":2000000.0}],"BY_INDEX":[{"KEY":"SOFR","COUNT":2,"NOTIONAL_USD":13000000.0},{"KEY":"EURIBOR3M","COUNT":1,"NOTIONAL_USD":5500000.0}],"BY_CURRENCY":[{"KEY":"USD","COUNT":4,"NOTIONAL_USD":16000000.0},{"KEY":"EUR","COUNT":1,"NOTIONAL_USD":5500000.0}],"BY_SOURCE_SYSTEM":[{"KEY":"MUREX","COUNT":5,"NOTIONAL_USD":21500000.0}],"MATURITY_PROFILE":[{"KEY":"0-1Y","COUNT":2,"NOTIONAL_USD":3000000.0},{"KEY":"2-5Y","COUNT":2,"NOTIONAL_USD":8500000.0},{"KEY":"5-10Y","COUNT":1,"NOTIONAL_USD":10000000.0}],"LAST_MATURITY":"2033-12-15","PAY_7D":-50000.0,"PAY_7D_EVENTS":1,"PAY_30D":-28000.0,"PAY_30D_EVENTS":2,"PAY_90D":-72500.0,"PAY_90D_EVENTS":4,"PAYMENTS_BY_MONTH":[{"MONTH":"2026-10","AMOUNT_USD":-28000.0,"EVENTS":2},{"MONTH":"2026-11","AMOUNT_USD":7500.0,"EVENTS":1},{"MONTH":"2026-12","AMOUNT_USD":-52000.0,"EVENTS":1}],"ROWS":[{"TRADE_ID":"MX-20000704","SOURCE_SYSTEM":"MUREX","TRADE_STATUS":"MATURED","COUNTERPARTY":"CP-A","TT_BOOK":"BOOK-2","LEGAL_ENTITY":"LE-NY","PRODUCT_TYPE":"IRS_FIXFLOAT","CURRENCY":"USD","MATURITY_DATE":"2026-09-29","NOTIONAL_USD":1000000.0},{"TRADE_ID":"MX-20000703","SOURCE_SYSTEM":"MUREX","TRADE_STATUS":"CANCELLED","COUNTERPARTY":"CP-A","TT_BOOK":"BOOK-2","LEGAL_ENTITY":"LE-LDN","PRODUCT_TYPE":"FX_FORWARD","CURRENCY":"USD","MATURITY_DATE":"2027-03-31","NOTIONAL_USD":2000000.0}],"PROVENANCE":{"DATA_VERSIONS":{"MUREX":118},"FX_DATE":"2026-09-30","UNKNOWN":[],"HIDDEN":0,"COMPUTED_AT":"2026-10-01T08:15:02Z"}}
+```
+
+**`GET /api/v1/trades/scope/rows?scope=CPTY:CP-A&asOf=2026-09-30&status=VALIDATED,AMENDED,NEW&sort=-NOTIONAL_USD`:**
+
+```json
+{"total":3,"page":0,"size":100,"rows":[{"TRADE_ID":"MX-20000701","SOURCE_SYSTEM":"MUREX","TRADE_STATUS":"VALIDATED","COUNTERPARTY":"CP-A","TT_BOOK":"BOOK-1","LEGAL_ENTITY":"LE-NY","PRODUCT_TYPE":"IRS_FIXFLOAT","CURRENCY":"USD","MATURITY_DATE":"2033-12-15","NOTIONAL_USD":10000000.0},{"TRADE_ID":"MX-20000702","SOURCE_SYSTEM":"MUREX","TRADE_STATUS":"AMENDED","COUNTERPARTY":"CP-A","TT_BOOK":"BOOK-1","LEGAL_ENTITY":"LE-NY","PRODUCT_TYPE":"IRS_FIXFLOAT","CURRENCY":"EUR","MATURITY_DATE":"2029-10-20","NOTIONAL_USD":5500000.0},{"TRADE_ID":"MX-20000705","SOURCE_SYSTEM":"MUREX","TRADE_STATUS":"NEW","COUNTERPARTY":"CP-A","TT_BOOK":"BOOK-2","LEGAL_ENTITY":"LE-LDN","PRODUCT_TYPE":"IRS_FIXFLOAT","CURRENCY":"USD","MATURITY_DATE":"2029-11-30","NOTIONAL_USD":3000000.0}]}
+```
+
+**trades-official: the row of book `BOOK-2`** (T3, T4 and T5; the shared columns are
+[README.md section 11](README.md#11-what-drishti-answers-computed-kinds-the-api-captures)'s):
+
+```json
+{"BUSINESS_DATE":"2026-09-30","HIERARCHY":"MGMT","NODE_ID":"BOOK:BOOK-2","NODE_NAME":"BOOK-2","PARENT_ID":"DESK:DESK-RATES","LEVEL":"book","CAPTURE_ID":"CAP-TRADES-2026-09-30-OFFICIAL","RESULT_VERSION":1,"INPUT_VERSIONS":"{\"trade\":{\"version\":118,\"batches\":[]}}","COMPUTED_AT":"2026-10-01T06:42:00Z","CONTRACT_VERSION":"1.0","TRADE_COUNT":3,"LIVE_COUNT":1,"NEW_COUNT":1,"VALIDATED_COUNT":0,"AMENDED_COUNT":0,"CANCELLED_COUNT":1,"MATURED_COUNT":1,"NOTIONAL_USD":3000000.0,"PAY_7D":0.0,"PAY_30D":0.0,"PAY_90D":7500.0,"PAY_7D_EVENTS":0,"PAY_30D_EVENTS":0,"PAY_90D_EVENTS":1,"COUNTERPARTY_COUNT":1}
+```
 
 ---
 

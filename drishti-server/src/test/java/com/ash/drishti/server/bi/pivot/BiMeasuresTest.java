@@ -28,7 +28,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /**
- * A model's measures as pivot functions (PIVOT_ENGINE.md section 12.2): DEL's aggregates, {@code ratio}, {@code where=}, {@code count(table)} and
+ * A model's measures as pivot functions (ARCHITECTURE.md section 26.9): DEL's aggregates, {@code ratio}, {@code where=}, {@code count(table)} and
  * {@code measure('Name')} translate to the engine's formulas with the right kind and additivity, and evaluate to the same figure as by hand.
  */
 class BiMeasuresTest {

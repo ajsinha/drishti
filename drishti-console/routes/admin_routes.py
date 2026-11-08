@@ -664,7 +664,7 @@ HEALTH_WAIT_SECONDS = 30.0
 
 @router.post("/api/busy/override")
 async def busy_override(request: Request):
-    """Busy protection's operator override (OPERATIONS.md, "Busy protection"): ``automatic``, ``open`` (let everything through) or ``hold``
+    """Busy protection's operator override (OPERATIONS_GUIDE.md, "Busy protection"): ``automatic``, ``open`` (let everything through) or ``hold``
     (hold all new heavy work), with a reason and the minutes it lasts; the server checks, applies and audits it, and ends it by itself."""
     body = await json_body(request)
     try:
@@ -735,9 +735,9 @@ def _cache_view(view: dict) -> dict:
             if disk else {}}
 
 
-# Admin -> Capacity (RESOURCES_AND_SCALE.md 9.7): the page, the planner and the live figures as JSON, and the workbook streamed. The server
+# Admin -> Capacity (CLUSTER_GUIDE.md 9.7): the page, the planner and the live figures as JSON, and the workbook streamed. The server
 # enforces the admin role on each; F1 opens the guide's section on the page.
-CAPACITY_HELP = "/help/operations#124-admin--capacity-today-against-the-plan"
+CAPACITY_HELP = "/help/operations#146-admin--capacity-today-against-the-plan"
 
 
 @router.get("/capacity")

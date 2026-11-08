@@ -2,7 +2,7 @@
 # Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved. Proprietary and confidential.
 #
 # Caffeine caches bounded by a count alone (maximumSize, no weigher), allowed by CachesWeighedInBytesTest (2.9.7, D3,
-# RESOURCES_AND_SCALE.md section 5.2): one per line, "file#cache", then why a count is enough. The list only shrinks: a new cache is
+# CLUSTER_GUIDE.md section 5.2): one per line, "file#cache", then why a count is enough. The list only shrinks: a new cache is
 # weighed in bytes (weigher + maximumWeight), or listed here with its reason in review.
 
 drishti-engine/src/main/java/com/ash/drishti/engine/bind/MapSupport.java#documents  8 map panels' documents, TTL: small and short-lived

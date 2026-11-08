@@ -18,7 +18,7 @@ package com.ash.drishti.rachana.el.check;
 import java.util.Locale;
 
 /**
- * The types of checked mode (docs/architecture/BI_DESIGN.md 2.1; moved from DEL's {@code DelType}, BI_DESIGN.md section 3.3.3): no implicit
+ * The types of checked mode (docs/architecture/ARCHITECTURE.md §28 2.1; moved from DEL's {@code DelType}, ARCHITECTURE.md §28 section 3.3.3): no implicit
  * casts, integer with decimal gives decimal, {@code date - date} gives integer days, booleans only where a condition is expected.
  * {@link #NUMBER} is a number whose kind is not known (a measure), {@link #ANY} a value whose type is not known (a field when the
  * expression is checked without a table or model).

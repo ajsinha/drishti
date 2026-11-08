@@ -34,7 +34,7 @@ final class Aggregates {
             "variance", "stddev", "variance_pop", "stddev_pop", "sum_once", "count_once", "avg_once", "measure", "cell");
 
     /**
-     * The functions of a model's measures the engine computes over an answer, never over a list (docs/architecture/BI_DESIGN.md 2.5, runs E):
+     * The functions of a model's measures the engine computes over an answer, never over a list (docs/architecture/ARCHITECTURE.md §28 2.5, runs E):
      * the filter context ({@code calc}, {@code share_of}, {@code parent_of}, {@code as_of}, {@code avg_by}, {@code avg_over}), time
      * intelligence, windows, balances, conversion and lookup. Rachana parses and checks them; the engine's compiler lowers them.
      */

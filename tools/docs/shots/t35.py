@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 35, data out with Arrow Flight (docs/tutorials/35-data-out-with-arrow-flight.md), written to
+"""Pictures of tutorial 17, data out with Arrow Flight (docs/tutorials/17-data-out-with-arrow-flight.md), written to
 docs/tutorials/img/t35/, in the light theme. Start a scratch stack on the VaR pictures' lake (tools/docs/shots/_var.py) with sign-in on
 (_tut.SERVER_ENV), the Flight port's certificate and key as PEM files (DRISHTI_FLIGHT_TLS_CERT, DRISHTI_FLIGHT_TLS_KEY: a test PKI) and
 Flight switched on (Admin -> Engines, then a restart), then point this at its console:

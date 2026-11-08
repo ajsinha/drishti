@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The renderer's optional sign-in window, ``auth: 'popup'`` (docs/architecture/CLIENT_RENDERER.md section 10.1), for a host page WITHOUT a
+"""The renderer's optional sign-in window, ``auth: 'popup'`` (docs/guides/EMBED_GUIDE.md section 10.1), for a host page WITHOUT a
 backend of its own. Nothing here opens by itself: the renderer draws a "Sign in to see this" button, and its click opens one window here.
 
 * ``GET  /embed/v2/sign-in/check``: may this page (its ``Origin``) sign in here? ``{allowed, origin, product, code, detail}``; readable by any

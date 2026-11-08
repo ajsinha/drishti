@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 """Drishti Elements distributed: the files of each library, the themes, the integrity record and the three forms other applications
-take them in (docs/architecture/ELEMENTS.md section 8.7; the guide docs/guides/ELEMENTS_IN_YOUR_APP.md). Offline, Python only: no npm,
+take them in (docs/architecture/ELEMENTS.md section 8.7; the guide docs/guides/EMBED_GUIDE.md). Offline, Python only: no npm,
 no network, nothing published anywhere.
 
 * **the tree**: the console's static layout (``elements/<library>/…``, ``css/``, ``vendor/``) plus ``themes/``, each library's
@@ -284,7 +284,7 @@ def readme(train: Train, lib: str, npm: bool) -> str:
             " (load the libraries it requires first).\n"
             + (f"- Its style sheet{'s' if len(spec.get('css') or []) > 1 else ''}: " + ", ".join(f"`{Path(c).name if npm else c}`" for c in spec.get("css") or []) + ".\n" if spec.get("css") else "")
             + f"- Types: `drishti-{s}.d.ts`, generated from the typed JSDoc.\n\n"
-            "The guide: *Using Drishti Elements in your app* (docs/guides/ELEMENTS_IN_YOUR_APP.md); the API reference: ELEMENTS_API.md.\n"
+            "The guide: *Using Drishti Elements in your app* (docs/guides/EMBED_GUIDE.md); the API reference: ELEMENTS_API.md.\n"
             "The licence: LICENSE-NOTICE.txt.\n")
 
 
@@ -346,7 +346,7 @@ def full_tree(train: Train, include_domains: set[str] = frozenset()) -> dict[str
                           "Serve this folder as it is: `elements/` holds the libraries (each with its ES modules under `src/`, one bundled "
                           "script, its `.d.ts` and README), `css/` the token sheet and the components' style sheets, `themes/` one sheet per "
                           "theme, `vendor/` the engines (ECharts, CodeMirror) and the map shapes. `drishti-elements.json` lists every file "
-                          "with its SHA-384 integrity hash for `<script integrity>`.\n\nThe guide: docs/guides/ELEMENTS_IN_YOUR_APP.md.\n").encode("utf-8")
+                          "with its SHA-384 integrity hash for `<script integrity>`.\n\nThe guide: docs/guides/EMBED_GUIDE.md.\n").encode("utf-8")
     files["drishti-elements.json"] = dist_manifest(train, libs, files, include_domains)
     return files
 

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 #
-# Prometheus alerting rules for Drishti (docs/admin/OPERATIONS.md section 13.6), for a site that alerts from its own Prometheus and
+# Prometheus alerting rules for Drishti (docs/guides/OPERATIONS_GUIDE.md section 13.6), for a site that alerts from its own Prometheus and
 # Alertmanager. They are the server's own rules (config/alerts/platform-alerts.yaml) written in PromQL over the names of
 # /actuator/prometheus, plus the server being down. Load with rule_files: [drishti-alerts.yaml]; route severity "critical" and "warning"
 # in Alertmanager as the site does. Each server also evaluates its rules itself (Admin -> Health), so this file is optional.

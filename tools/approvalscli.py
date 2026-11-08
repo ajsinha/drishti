@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""`drishti.py approvals ...`: the one Approvals queue from the command line (USER_GUIDE.md "Approvals"; API_GUIDE.md "Approvals"): the
+"""`drishti.py approvals ...`: the one Approvals queue from the command line (USER_GUIDE.md "Approvals"; API_REFERENCE.md "Approvals"): the
 items waiting for you (and those you sent, or decided), one item with what changes, its effect and the rules, and the decision (approve,
 reject with a reason, withdraw your own) or a question on it. Every four-eyes kind is decided here: Sutra proposals, corrections, BI
 items, compute packages, pivot functions, stress windows and report sign-offs. Exit codes: 0, 1 (the server said no), 2 (usage)."""

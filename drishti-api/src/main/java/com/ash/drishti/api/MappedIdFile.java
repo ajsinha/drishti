@@ -41,7 +41,7 @@ import java.util.function.ToIntFunction;
  * ids sorted by their UTF-8 bytes, an offset per id and the index of the data file holding each. A lookup is a binary search over the
  * map; the heap holds nothing per id.
  *
- * <p><b>Released, not left to the collector (2.9.7, RESOURCES_AND_SCALE.md section 7.3).</b> Before 2.9.7 a mapping was never unmapped:
+ * <p><b>Released, not left to the collector (2.9.7, CLUSTER_GUIDE.md section 7.3).</b> Before 2.9.7 a mapping was never unmapped:
  * a deleted file kept holding its disk on Linux, the delete failed on Windows, and the address space grew with every table version. Now
  * every read enters a guard; {@link #close} unmaps once no reader is inside (a later read gets {@link Closed}: "ask again"), and
  * {@link #release(Path, boolean)} unmaps a file's mapping before deleting it. One mapping per file at a time ({@link #open} shares it).

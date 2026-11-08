@@ -124,7 +124,7 @@ name; tables in Azure, Google Cloud Storage or HDFS are not read; branches and t
 | `s3.secret-key` | string |  | S3 secret key: ${ENV_VAR} or file:/path (secret: give `${ENV_VAR}` or `file:/path`, never the value) |
 | `s3.read-block-kb` | int | `1024` | The smallest ranged GET |
 
-Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md). It takes the shared `tls.*` settings (docs/connectors/TLS.md). It takes the shared `proxy.*` settings for an outbound HTTP proxy (CONNECTOR_DEVELOPER_GUIDE.md).
+Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/guides/DATA_GUIDE.md section 9). It takes the shared `tls.*` settings (docs/guides/DATA_GUIDE.md section 10). It takes the shared `proxy.*` settings for an outbound HTTP proxy (DEVELOPER_GUIDE.md).
 <!-- settings:end -->
 
 ## Data structure
@@ -274,7 +274,7 @@ one and is not served until `tables.<kind>.id` names it. Kinds configured under 
 A kind's fields come from the table's schema, so a starter pack can be drafted from it. `StarterSchemas` writes each served kind's
 document as a JSON Schema, with the id (`x-drishti-role: key`), the business date (`x-drishti-role: date`) and the `links`
 (`x-drishti-link`), and the pack maker turns the schemas into a pack (the kind, its fields, a Sutra listing them, links), to edit like
-any pack ([SCHEMA_TO_PACK_GUIDE.md](../../docs/guides/SCHEMA_TO_PACK_GUIDE.md)):
+any pack ([BUILD_GUIDE.md](../../docs/guides/BUILD_GUIDE.md#8-a-pack-from-a-json-schema-build--new-pack)):
 
 ```bash
 java -cp "$(./mvnw -q -o dependency:build-classpath -pl plugins/drishti-plugin-iceberg-external -Dmdep.outputFile=/dev/stdout):plugins/drishti-plugin-iceberg-external/target/classes" \
@@ -315,6 +315,6 @@ pyiceberg's rows converted by the rules of [Data structure](#data-structure).
 
 ## See also
 
-- [The iceberg connector](../drishti-plugin-iceberg/README.md) (catalogs, `s3.*`, `relocate`, engines) and [Connector files](../../docs/connectors/CONNECTOR_FILES.md).
-- [Connectors](../../docs/connectors/CONNECTORS.md#apache-iceberg) (which connector when).
-- [The connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the README standard).
+- [The iceberg connector](../drishti-plugin-iceberg/README.md) (catalogs, `s3.*`, `relocate`, engines) and [Connector files](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors).
+- [Connectors](../../docs/guides/DATA_GUIDE.md#82-which-connector) (which connector when).
+- [The connector developer's guide](../../docs/guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one) (the README standard).

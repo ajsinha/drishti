@@ -23,7 +23,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * One version of a custom aggregation function (PIVOT_ENGINE.md sections 8.2 and 8.7): its language, code, declared kind, inputs, state
+ * One version of a custom aggregation function (ARCHITECTURE.md section 26.5): its language, code, declared kind, inputs, state
  * bound and tolerance; who wrote it and when; its harness report; its sharing (private, submitted, approved for groups or everyone,
  * withdrawn) with every approval and withdrawal. A version never changes once saved except for its sharing: a view names the version it
  * uses, so a new version never changes a saved view's figures.

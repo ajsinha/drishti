@@ -131,9 +131,9 @@ if ($Iceberg) {
 # unpack their native libraries there, and the server removes stale copies at start; java.io.tmpdir only moves on the command line
 $tmpDir = if ($env:DRISHTI_TMP_DIR) { $env:DRISHTI_TMP_DIR } elseif ($env:DRISHTI_DATA_DIR) { Join-Path $env:DRISHTI_DATA_DIR 'tmp\server' } else { Join-Path $root 'data\tmp\server' }
 New-Item -ItemType Directory -Force -Path $tmpDir | Out-Null
-# native memory (PERFORMANCE.md, Resident memory): direct buffers capped, the JDK's per-thread temporary direct buffers cached up to
+# native memory (CLUSTER_GUIDE.md, Resident memory): direct buffers capped, the JDK's per-thread temporary direct buffers cached up to
 # 256 KB only, freed native memory given back, native memory tracked (MALLOC_ARENA_MAX is glibc's: not here). Diagnostics of a long run
-# (OPERATIONS.md): a heap dump on OutOfMemoryError in data\dumps and a rotated GC log (5 x 20 MB) in data\logs. The GC log's path is
+# (OPERATIONS_GUIDE.md): a heap dump on OutOfMemoryError in data\dumps and a rotated GC log (5 x 20 MB) in data\logs. The GC log's path is
 # relative to the working folder (the repository): -Xlog reads a colon as a separator, so a drive letter cannot appear in it; the
 # JVM does not start when the folder is missing, so both are made first.
 $logs = Join-Path $root 'data\logs'

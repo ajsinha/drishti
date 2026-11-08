@@ -96,7 +96,7 @@ day's ids from a covered query, both re-read every `refresh-seconds`. Retention 
 | `columns-cache-mb` | int | `1024` | Memory for days' column sets |
 | `reverse-index` | boolean | `true` | Build the reverse index |
 
-Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md). It takes the shared `tls.*` settings (docs/connectors/TLS.md).
+Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/guides/DATA_GUIDE.md section 9). It takes the shared `tls.*` settings (docs/guides/DATA_GUIDE.md section 10).
 <!-- settings:end -->
 
 ## Data structure
@@ -317,7 +317,7 @@ searches at 70–180 ms and impact at about 130 ms. Treat them as an order of ma
 ## Security: TLS, certificate log-in and credentials
 
 TLS is on when `tls.enabled: true`, or the URI says so (`tls=true`, `ssl=true`, a `mongodb+srv://` address); the shared `tls.*`
-settings ([TLS.md](../../docs/connectors/TLS.md), [the keys](../../docs/admin/CONFIGURATION.md#shared-tls)) add a private CA and a
+settings ([DATA_GUIDE.md section 10](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy), [the keys](../../docs/admin/CONFIGURATION.md#shared-tls)) add a private CA and a
 client certificate. `tls.*` keys without TLS switched on, or `tls.enabled: true` beside `tls=false` in the URI, are start-up errors.
 `tls.verify-hostname: false` is the driver's `tlsAllowInvalidHostnames`; the driver takes protocol versions from the JVM
 (`jdk.tls.client.protocols`), so `tls.protocols` cannot narrow them. A literal password in the `uri` is refused: give it as an
@@ -380,7 +380,7 @@ The MongoDB driver keeps the pool; Drishti sets it from `pool-size` (`maxPoolSiz
 (the socket read timeout). Operations check a connection out for one call (cursors are closed with their block); Admin shows open,
 in use, idle, waiting and the longest current checkout, and one held longer than `pool-leak-threshold` is logged with the taker's
 stack. The loader's `--pool-size N` bounds its writes in flight. See
-[connection pools](../../docs/connectors/CONNECTOR_FILES.md#14-connection-pools).
+[connection pools](../../docs/guides/DATA_GUIDE.md#914-connection-pools).
 
 ## Production checklist
 
@@ -403,5 +403,5 @@ cp config/connectors.examples/mongodb/*.yaml config/connectors/               # 
 
 ## See also
 
-- [Connector files](../../docs/connectors/CONNECTOR_FILES.md) and [TLS](../../docs/connectors/TLS.md).
-- [The connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the README standard).
+- [Connector files](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) and [TLS](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy).
+- [The connector developer's guide](../../docs/guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one) (the README standard).

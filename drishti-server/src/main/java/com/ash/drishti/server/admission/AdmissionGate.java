@@ -41,7 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Busy protection: the one gate in front of new heavy work (docs/admin/OPERATIONS.md, "Busy protection"; IMPLEMENTATION_PLAN.md 2.9.11
+ * Busy protection: the one gate in front of new heavy work (docs/guides/OPERATIONS_GUIDE.md, "Busy protection"; IMPLEMENTATION_PLAN.md 2.9.11
  * row 8). New sign-ins, date loads (VaR, exposure), Data view downloads, BI runs and bulk loads ask it first; when the server is short of
  * memory (the heap after the last collection), its load slots are full, the open dates' heap is well over its safety net, it answers too
  * many requests at once, or its disk is nearly full, the work is refused politely: {@code 503}, {@code Retry-After}, a {@code DRS-95xx}

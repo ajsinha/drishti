@@ -17,7 +17,7 @@
 
 # Data contracts of the market-risk pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/banking/market-risk/guides/market-risk.md](../../../config/packs/banking/market-risk/guides/market-risk.md), shows the same contracts (generated from the same files, tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/banking/market-risk/guides/market-risk.md](../../../config/packs/banking/market-risk/guides/market-risk.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -1418,7 +1418,7 @@ The official end-of-day VaR and ES of every node of the MGMT and LEGAL hierarchi
 
 ## SSPNL: Stress P&L of a scenario across desks (derived from the stress results) (`stress-scenario-pnl`)
 
-The bank's stress P&L under one scenario: the desks' stored stress results added (additive), with each desk's limit use and breach, once per business date (quick win Q4 of docs/architecture/COMPUTED_ATTRIBUTES.md, until the stress engine STR).
+The bank's stress P&L under one scenario: the desks' stored stress results added (additive), with each desk's limit use and breach, once per business date (docs/architecture/DATA_ARCHITECTURE.md section 12, until the stress engine STR).
 
 |  |  |
 |---|---|

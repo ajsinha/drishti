@@ -37,7 +37,7 @@ import java.util.stream.Stream;
  *   template's fingerprint ({@link TemplateStamp}).</li>
  *   <li><b>Upgrade</b>: a file whose stamp says it was never edited follows its pack: when the template changed it is replaced in full
  *   by the new one (the file before kept beside it and in the history). An edited file is kept; the server's template updates add what
- *   the template gained, keeping every edit (CONNECTOR_FILES.md, "Upgrades").</li>
+ *   the template gained, keeping every edit (docs/guides/DATA_GUIDE.md section 9, "Upgrades").</li>
  * </ol>
  * It reports what it did as messages, for the log and the audit trail.
  */

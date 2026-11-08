@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /**
- * The table layer (docs/architecture/ARCHITECTURE.md; docs/architecture/BI_DESIGN.md sections 3 to 5): virtual tables and
+ * The table layer (docs/architecture/ARCHITECTURE.md; docs/architecture/ARCHITECTURE.md §28 sections 3 to 5): virtual tables and
  * models defined once, read by every consumer (BI, the pivot, Arrow Flight, alerts).
  *
  * <ul>

@@ -32,7 +32,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * Admission by work class and share, and the cost budget (wave B task 5, docs/architecture/BI_DESIGN.md sections 6.3 and 6.7): a waiting interactive query is
+ * Admission by work class and share, and the cost budget (wave B task 5, docs/architecture/ARCHITECTURE.md §28 sections 6.3 and 6.7): a waiting interactive query is
  * served before background work that waited longer; one model holds at most its share of the slots; standing work does not use a person's share; a query
  * whose estimated rows are over its budget is refused before it runs, with the estimate.
  */

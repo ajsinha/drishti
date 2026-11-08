@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The migration with DEL's real translator (docs/architecture/BI_DESIGN.md sections 2.4 and 4): DEL read by its parser, mapped by part A's
+ * The migration with DEL's real translator (docs/architecture/ARCHITECTURE.md §28 sections 2.4 and 4): DEL read by its parser, mapped by part A's
  * {@link DelToRachana}, printed by Rachana; then the layer's rewrites. Every dataset and model shipped before the switch (a copy of {@code bi/before-tables})
  * converts, the reports bound to a version-1 dataset bind its model, the outputs pass the layer's checks, and a second run changes nothing.
  */
@@ -59,7 +59,7 @@ class DelTablesTranslatorTest {
     }
 
     /**
-     * The shipped datasets, models, reports and notebooks as they were before the switch (docs/architecture/BI_DESIGN.md step 5): the migration's
+     * The shipped datasets, models, reports and notebooks as they were before the switch (docs/architecture/ARCHITECTURE.md §28 step 5): the migration's
      * regression input while the tool lives (Q24).
      */
     static final Path BEFORE = Path.of("src", "test", "resources", "bi", "before-tables");

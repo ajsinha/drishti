@@ -12,8 +12,8 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The README standard for packs and connectors (docs/guides/PACK_DEVELOPER_GUIDE.md and
-docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md, "The README standard").
+"""The README standard for packs and connectors (docs/guides/BUILD_GUIDE.md and
+docs/guides/DEVELOPER_GUIDE.md, "The README standard").
 
 Every pack (``config/packs/<domain>/<pack>/README.md``), every connector type (``plugins/drishti-plugin-<x>/README.md``, the built-ins in
 ``docs/connectors/types/<type>/README.md``) and every folder of connector templates (``config/connectors.examples/<x>/README.md``)
@@ -552,7 +552,7 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
     guide_files = [g.get("file") for g in (yaml.safe_load(F.text("config/help.yaml") or "{}") or {}).get("guides") or [] if g.get("file")]
     if F.glob("contracts/*.contract.yaml"):
         where = f"[{guide_files[0]}]({guide_files[0]})" if guide_files else "the pack's guide"
-        out += [f"Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and "
+        out += [f"Every kind's links to its data contract and its example and where its data comes from (an external source and "
                 f"the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, {where}: *Data contracts* and "
                 "*Data retrieval*.", ""]
     ext = [s for s in sources if (s.get("name") or "").strip() and not str(s.get("licence", "")).startswith("Proprietary")]
@@ -599,6 +599,6 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
         out.append(f"- [{g.get('title')}]({g.get('file')}): {g.get('summary', '')}".rstrip(": "))
     if isec.get("See also"):
         out.append(isec["See also"])
-    out += ["- [Packs](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md) "
+    out += ["- [Packs](../../../../docs/guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/BUILD_GUIDE.md) "
             "(the README standard).", ""]
     return "\n".join(out).rstrip() + "\n"

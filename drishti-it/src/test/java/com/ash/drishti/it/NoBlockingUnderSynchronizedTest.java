@@ -33,7 +33,7 @@ import org.junit.jupiter.api.Test;
  * {@code ReentrantLock}. A justified case carries the marker {@code pinning-ok} in a comment on the line of the
  * {@code synchronized} keyword or the line above it.
  *
- * <p>2.9.7 (RESOURCES_AND_SCALE.md section 6.5): the scan also catches what the body <i>calls</i> that is known to read the lake (an engine
+ * <p>2.9.7 (CLUSTER_GUIDE.md section 6.5): the scan also catches what the body <i>calls</i> that is known to read the lake (an engine
  * loading a date: {@code svc.date(}, {@code loader.load(}, {@code tradePaths(}, {@code loadShard(}), and the loader lambdas of synchronous
  * Caffeine caches ({@code Cache<} fields: {@code cache.get(key, k -> ...)} runs the loader inside the map's {@code synchronized} bin), which
  * must not block either: use {@code SingleFlight} or an {@code AsyncCache}.

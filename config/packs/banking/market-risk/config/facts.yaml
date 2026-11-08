@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Did you know: this pack's facts for Home (drishti-console/core/facts.py; docs/guides/PACK_DEVELOPER_GUIDE.md, "Facts for Home").
+# Did you know: this pack's facts for Home (drishti-console/core/facts.py; docs/guides/BUILD_GUIDE.md, "Facts for Home").
 # Every number is computed from the VaR engine's answers on the business date, as the user who opens Home; a fact whose condition
 # does not hold today is not shown. Steps: var / exposure (an API path and params), search (a structured search), raw (one record),
 # let (a value), pick (the best row: where, order). when: what makes it surprising. Templates fill {expression|format}.
@@ -44,7 +44,7 @@ items:
         - { label: "{parent.name}", value: parent.limitUse, format: pct }
     open: "VAR NODE {book.id}"
     what: VaR limit
-    knowledge: market-risk.md#4-a-worked-example-on-the-demo-data
+    knowledge: risk.md#market-risk-a-worked-example-on-the-demo-data
 
   - id: desk-that-lowers-var
     domain: Market risk
@@ -71,4 +71,4 @@ items:
         - { label: Incremental (without it), value: desk.incrementalVar, format: money, tone: alert }
     open: "VAR DESK {desk.key}"
     what: Incremental VaR
-    knowledge: market-risk.md#4-a-worked-example-on-the-demo-data
+    knowledge: risk.md#market-risk-a-worked-example-on-the-demo-data

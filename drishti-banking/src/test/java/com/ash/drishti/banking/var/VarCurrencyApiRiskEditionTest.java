@@ -18,7 +18,7 @@ package com.ash.drishti.banking.var;
 import org.springframework.test.context.TestPropertySource;
 
 /**
- * Every test of {@link VarCurrencyApiTest} again with the server running the {@code risk} edition (docs/admin/LENSES.md): every reporting currency (scenario FX, crosses through USD) work
+ * Every test of {@link VarCurrencyApiTest} again with the server running the {@code risk} edition (docs/guides/ADMIN_GUIDE.md): every reporting currency (scenario FX, crosses through USD) work
  * under Drishti Risk exactly as on the full product. Its fixtures use the retired finance example pack, which the edition does not list, so this run lets the site switch
  * allow-only off (drishti.edition-spec.packs.allow-only=false, a site override as LENSES.md shows); the commands and BI
  * datasets stay the edition's.

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Migrated from config/bi/datasets/trading-cashflows-payments.dataset.yaml by drishti.py tables migrate (docs/architecture/BI_DESIGN.md section 4).
+# Migrated from config/bi/datasets/trading-cashflows-payments.dataset.yaml by drishti.py tables migrate (docs/architecture/ARCHITECTURE.md §28 section 4).
 rachana: 3
 table: banking.trading_cashflows_payments
 was: trading-cashflows-payments

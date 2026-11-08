@@ -22,7 +22,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * The market-risk cube (MR_CUBE_GUIDE.md) as a compute engine, {@code mr-cube} (COMPUTE_ENGINES.md, {@code config/engines/mr-cube.yaml}):
+ * The market-risk cube (PIVOT_GUIDE.md#29-the-mr-cube-preset) as a compute engine, {@code mr-cube} (ADMIN_GUIDE.md, {@code config/engines/mr-cube.yaml}):
  * not a second aggregation engine but the pivot engine's VaR source with the MR lens. It needs the VaR engine and the pivot engine and uses
  * the sensitivities and FRTB-SA engines softly (with them off, DV01, CS01, SBM, the ladder and the heat map are not offered). Off, its API
  * ({@code /api/v1/pivot/mr}) answers {@code 404 DRS-1020}, the VaR source offers VaR, ES, PV and trades by the positions' columns only, the

@@ -252,7 +252,7 @@ STATIC_ON_PURPOSE = {
     "shipment": "the ETA delay is a single reading; the route and milestones are a record of what has happened",
 }
 
-# Fields a kind leaves alone while it ticks (documented in docs/connectors/DEMO_DATA.md).
+# Fields a kind leaves alone while it ticks (documented in docs/guides/DATA_GUIDE.md section 11).
 STATIC_FIELDS = {
     "bond": "the coupon schedule is fixed by the terms",
     "equity": "the 60-day bars before today are history",

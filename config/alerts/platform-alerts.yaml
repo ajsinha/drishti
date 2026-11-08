@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 #
-# The platform alert rules (docs/admin/OPERATIONS.md section 13.6): each server evaluates them against its own metrics every
+# The platform alert rules (docs/guides/OPERATIONS_GUIDE.md section 13.6): each server evaluates them against its own metrics every
 # drishti.metrics.sample-interval, without Prometheus, and tells drishti.metrics.alerts.notify-roles in their inbox when one opens. Admin ->
 # Health lists the open ones; GET /api/v1/admin/alerts has the rules, the open and the recent alerts. The server reads this file
 # (drishti.metrics.alerts.file) again when it changes. deploy/prometheus/drishti-alerts.yaml has the same rules for a site's Prometheus.
@@ -22,7 +22,7 @@
 # or increase over window for a counter), exactly one of above and below, for (how long it must hold), severity (info, warn, critical),
 # summary ({value}, {threshold} and each tag's name in braces are filled in), format (number, percent, bytes, seconds), enabled.
 rules:
-  heap-after-gc-high:              # RESOURCES_AND_SCALE 8.5: the heap after a collection over 85% for 10 minutes
+  heap-after-gc-high:              # CLUSTER_GUIDE.md 15.9: the heap after a collection over 85% for 10 minutes
     metric: jvm.gc.live.data.size  # the meter read, by its Micrometer name: here the old generation after the last collection
     divide-by: jvm.gc.max.data.size  # a second meter the value is divided by (its series with the same tags): here its maximum
     above: 0.85                    # fire above this value: here 85% of the maximum
@@ -31,7 +31,7 @@ rules:
     format: percent                # how {value} and {threshold} are written: number, percent, bytes or seconds
     summary: "the heap after a collection is {value} of its maximum"  # the alert's line: {value}, {threshold} and each tag's name in braces are filled in
     enabled: true                  # false switches the rule off
-  cache-near-limit:                # RESOURCES_AND_SCALE 8.5: a cache held at its limit for an hour
+  cache-near-limit:                # CLUSTER_GUIDE.md 15.9: a cache held at its limit for an hour
     metric: drishti.cache.bytes    # each cache's size (sampled from Admin -> Caches)
     divide-by: drishti.cache.limit.bytes  # its limit
     above: 0.95                    # 95% of the limit
@@ -39,14 +39,14 @@ rules:
     severity: warn                 # warn
     format: percent                # percent
     summary: "cache {cache} at {value} of its limit for an hour"  # the line
-  memory-budget-squeezed:          # RESOURCES_AND_SCALE 8.5: the heap after a collection passed squeeze-at more than 3 times an hour
+  memory-budget-squeezed:          # CLUSTER_GUIDE.md 15.9: the heap after a collection passed squeeze-at more than 3 times an hour
     metric: drishti.memory.budget.squeezes  # times the low-priority pools were halved
     function: increase             # value (the meter's value, or a counter's count; the default) or increase (a counter's rise over window)
     window: 1h                     # the span of increase
     above: 3                       # squeezes in the window
     severity: warn                 # warn
     summary: "the memory budget was squeezed {value} times in an hour: the heap is small for the caches"  # the line
-  direct-memory-high:              # RESOURCES_AND_SCALE 8.5: direct memory over 80% of -XX:MaxDirectMemorySize (every lake read fails at 100%)
+  direct-memory-high:              # CLUSTER_GUIDE.md 15.9: direct memory over 80% of -XX:MaxDirectMemorySize (every lake read fails at 100%)
     metric: jvm.buffer.memory.used  # buffer memory in use
     tags: {id: direct}             # only the series with these tags: here the direct buffers
     divide-by: drishti.direct.max.bytes  # the direct-memory limit
@@ -54,7 +54,7 @@ rules:
     severity: critical             # critical: at the limit every lake read fails
     format: percent                # percent
     summary: "direct memory at {value} of its limit (OPERATIONS section 12.1a)"  # the line
-  disk-folder-near-cap:            # RESOURCES_AND_SCALE 8.2 and 8.5: a folder under the data folder at 80% of its cap (amber)
+  disk-folder-near-cap:            # CLUSTER_GUIDE.md 15.9: a folder under the data folder at 80% of its cap (amber)
     metric: drishti.disk.folder.bytes  # the folder's size
     divide-by: drishti.disk.folder.limit.bytes  # its cap (a folder without a cap is never alerted)
     above: 0.8                     # share of the cap
@@ -80,7 +80,7 @@ rules:
     below: 1                       # under the guard
     severity: critical             # critical
     summary: "free disk is under the guard: new dates are refused (DRS-5218)"  # the line
-  mapped-deleted-files:            # RESOURCES_AND_SCALE 8.5: deleted files still mapped (their disk space is not given back)
+  mapped-deleted-files:            # CLUSTER_GUIDE.md 15.9: deleted files still mapped (their disk space is not given back)
     metric: drishti.mapped.deleted.files  # mappings of deleted files (Linux)
     above: 100                     # mappings
     severity: warn                 # warn

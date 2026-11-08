@@ -178,7 +178,7 @@ def run(opts) -> int:
                     "settings": {"root": _lakeconfig().DEMO_ROOT_REF, "domain": opts.name,
                                  "layout": {k: {"columns": lake_cols[k], "sort-by": "id", "file-rows": 250000, "row-group-rows": 1000}
                                             for k in stored}}}
-        manifest["connectors"] = [f"{opts.name}-store"]                  # named by its logical name (docs/connectors/CONNECTOR_FILES.md) ...
+        manifest["connectors"] = [f"{opts.name}-store"]                  # named by its logical name (docs/guides/DATA_GUIDE.md section 9) ...
         manifest["connector-templates"] = {f"{opts.name}-store": conn}   # ... with the connection settings as the pack's template
         manifest["routes"] = {k: f"{opts.name}-store" for k in stored}
         manifest["ingest"] = {k: {"key": keys[k], **({"date": dates[k]} if k in dates else {})} for k in stored}

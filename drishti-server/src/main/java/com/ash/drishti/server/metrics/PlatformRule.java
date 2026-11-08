@@ -29,7 +29,7 @@ import org.springframework.boot.convert.DurationStyle;
 import org.yaml.snakeyaml.Yaml;
 
 /**
- * One platform alert rule (OPERATIONS.md section 13.6): a metric of this server's registry, optionally divided by another, compared with a
+ * One platform alert rule (OPERATIONS_GUIDE.md section 13.6): a metric of this server's registry, optionally divided by another, compared with a
  * threshold for a time. Each series (each set of tags) of the metric is a separate alert unless {@code aggregate} sums or takes the most.
  *
  * @param name the rule's name, unique in the file

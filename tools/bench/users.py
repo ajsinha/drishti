@@ -18,7 +18,7 @@ the given seconds over a mix of 80 % single trades (a random system and date), 1
 5 % searches of one counterparty's trades, and the result is one JSON line: requests a second and, per kind of request, p50/p95/p99
 and failures (an HTTP error, a timeout, a page saying DRS-1004, a page that sent the user to sign in again).
 
-With --var-share (0 by default) that share of the requests are VaR questions (RESOURCES_AND_SCALE.md section 10.1, the 2.9.7 benchmark)
+With --var-share (0 by default) that share of the requests are VaR questions (CLUSTER_GUIDE.md section 10.1, the 2.9.7 benchmark)
 on a lake made by tools/bench/vargen.py: 60 % a node (the bank, a legal entity, a division, a desk or a book), 20 % the bank minus a
 desk, 10 % a stored basket of 50,000 positions (``PORT:PF-BASKET-BIG-nn``), 10 % a desk's contributions by position or a node's P&L
 path; each kind its own line (var-node, var-bank-minus-desk, var-basket, var-contrib, var-path). ``--server`` may name several servers
@@ -134,7 +134,7 @@ async def user(n: int, client, stats: dict, stop: float, a) -> None:
             resp = await client.get(url, headers=headers)
             bad = HISTORY_BAD if label == "history" else BAD
             ok = resp.status_code == 200 and not any(b in resp.text for b in bad) and "/login" not in resp.url.path   # signed out is a failure
-            # busy protection (OPERATIONS.md 12.5): a polite 503 DRS-9501..9505 with Retry-After is counted apart, not as a failure
+            # busy protection (OPERATIONS_GUIDE.md 12.5): a polite 503 DRS-9501..9505 with Retry-After is counted apart, not as a failure
             busy = resp.status_code == 503 and "DRS-950" in resp.text[:400]
         except Exception:
             ok = False

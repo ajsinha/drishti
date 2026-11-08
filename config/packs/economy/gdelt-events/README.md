@@ -119,7 +119,7 @@ Screens (Sutras):
 |---|---|---|---|
 | GDELT 1.0 daily event files | GDELT terms of use: free and open for any use, commercial included, with a citation of the GDELT Project and a link to it | no | event-country |
 
-Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/gdelt-events.md](guides/gdelt-events.md): *Data contracts* and *Data retrieval*.
+Every kind's links to its data contract and its example and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/gdelt-events.md](guides/gdelt-events.md): *Data contracts* and *Data retrieval*.
 
 External data: GDELT 1.0 daily event files. Each source's URL, licence and data feed are on the External data help page, [docs/guides/EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md).
 
@@ -146,4 +146,4 @@ The pack's files are written by `tools/packgen/publicsector/make.py`; its `--che
 ## See also
 
 - [The gdelt-events pack](guides/gdelt-events.md): What the world's news reported about each country yesterday from the GDELT Project's daily event files (free with a citation), filled daily by the gdelt-events feed into newslake: events, tone, conflict share, CAMEO categories, the world map by tone, the top stories. Type GDELT GDELT-USA.
-- [Packs](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md) (the README standard).
+- [Packs](../../../../docs/guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/BUILD_GUIDE.md) (the README standard).

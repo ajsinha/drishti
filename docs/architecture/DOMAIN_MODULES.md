@@ -89,11 +89,11 @@ Everything else (the shell, BI, Pivot, Build, designer, admin, Help, embed, phon
 | Guides | `VAR_GUIDE`, `REGULATORY_VAR_REPORTING`, `EXPOSURE_GUIDE`, `FRTB_SA_GUIDE`, `SIMM_GUIDE`, `MR_CUBE_GUIDE`, `FUNDS_GUIDE` |
 | Tutorials | 24 (correct a trade: a core feature on banking data; moves with banking until it has a neutral twin), 25, 26, 28, 29, 30, 32, 38, 43 |
 | Lenses | `RISK_LENS`, `CRO_LENS`, `TRADING_LENS`, `MARKET_LENS`, `MR_CUBE_LENS`, `CCR_CUBE_LENS` |
-| Architecture | `PARAMETRIC_VAR`, `SENSITIVITIES_AND_FRTB_SA`, `VAR_PLAYGROUND`, `VAR_SHARDING` (its machinery is core: the document is split when it moves) |
+| Architecture | `PARAMETRIC_VAR`, `SENSITIVITIES_AND_FRTB_SA`, `VAR_PLAYGROUND`, `DATA_ARCHITECTURE.md section 13` (its machinery is core: the document is split when it moves) |
 | Help pages | the 19 listed under section `risk` and the banking pages of `analytics` (MR cube, funds) and `knowledge` (market risk, counterparty credit risk, trades and products, market data, companies, funds and ETFs) |
 | Contracts | `CVA`, `FRTB`, `FRTB_DATA_STRUCTURES`, `PNL`, `SACCR`, `SIMM`, `TRADING_GROUPINGS`, `COLL`, `GRP`, `LIM`, `MC`, `NSET`, `STR`, `TVAL`, `WWR`, the banking packs' pages and samples |
 
-`GROUPINGS_ANALYTICS_GUIDE` and tutorial 27 are mixed (generic groupings, equity beta and correlation): split when the analytics move.
+`GROUPINGS_ANALYTICS_GUIDE` and tutorial 6 are mixed (generic groupings, equity beta and correlation): split when the analytics move.
 
 ### 2.4 Packs, configuration, engines and API
 
@@ -305,7 +305,7 @@ the VaR and exposure lakes; package `com.ash.drishti.server.connectors` kept, in
   carries its Home cards and chips (`cards:`, `chips:` in its module's `META-INF/drishti/lenses.yaml`, answered per person by
   `/api/v1/modules`; each shown only while its function is on), and the lens file its landing, menus, Help, Admin pages, BI lists and
   branding; `drishti.edition` (a lens for the
-  whole instance) and `drishti.lenses` are unchanged ([LENSES.md](../admin/LENSES.md), *Editions are lenses of modules*).
+  whole instance) and `drishti.lenses` are unchanged ([LENSES.md](../guides/ADMIN_GUIDE.md#12-what-a-lens-is), *Editions are lenses of modules*).
 
 **Phase 2, still to do:**
 

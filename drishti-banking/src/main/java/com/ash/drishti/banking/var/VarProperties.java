@@ -72,9 +72,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *     {@code word}, {@code limits}); when set, wins over a loaded pack's {@code hierarchies:} block; neither: MGMT and LEGAL from the
  *     {@code risk-hierarchy} rows, as before 2.9.5
  * @param viewCacheMb the most memory the viewers' views (bitsets per date, version, currency and role set) may take (64); idle ones go
- *     after an hour and a date's go with it (2.9.7, RESOURCES_AND_SCALE.md section 5.3)
+ *     after an hour and a date's go with it (2.9.7, CLUSTER_GUIDE.md section 5.3)
  * @param versionCheck how often an open date compares its data version with the lake's (30 s; 0 switches the watch off): a changed date
- *     reloads in the background without a data-load signal (2.9.7, RESOURCES_AND_SCALE.md section 4.4)
+ *     reloads in the background without a data-load signal (2.9.7, CLUSTER_GUIDE.md section 4.4)
  * @param loadThreads the threads that load business dates from the lake (2), off the common pool (2.9.7)
  * @param tenDayMethod how a 10-day VaR is made when the method is not named (2.9.7, VAR_GUIDE.md section 18.6): {@code sqrt10} (the
  *     default: the 1-day figures × √10) or {@code sum} (each 10-day scenario the sum of 10 consecutive 1-day scenario P&amp;Ls)
@@ -353,7 +353,7 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
      * @param keepOnShutdown keep the hot files when the server stops (false: they are deleted at shutdown, and at start any left over)
      * @param closeGraceSeconds how long an evicted date stays mapped for the requests still reading it before it is unmapped
      * @param maxDiskGb the most disk the hot files (dates, listed currencies, shard books) may take (0: half the disk's size); the least
-     *     recently used beyond are deleted, never an open one (2.9.7, RESOURCES_AND_SCALE.md section 7.2)
+     *     recently used beyond are deleted, never an open one (2.9.7, CLUSTER_GUIDE.md section 7.2)
      */
     public record Tier(String mode, String dir, Integer diskDates, Boolean keepOnShutdown, Integer closeGraceSeconds, Double maxDiskGb) {
 

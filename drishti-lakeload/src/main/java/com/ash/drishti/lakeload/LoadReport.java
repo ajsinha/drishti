@@ -43,7 +43,7 @@ import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * What a load did, in the words of {@code drishti.py lake build}'s summary (docs/guides/TOOLS.md section 4.6), so the console, the run log
+ * What a load did, in the words of {@code drishti.py lake build}'s summary (docs/guides/CLI_REFERENCE.md section 4.6), so the console, the run log
  * and scripts read either the same way: documents, accepted, rejected (by reason, the first ones with where they were: {@code file:line}),
  * rows per date and partition, ids seen twice, the commit per date, the columns; and beside them the loader's own: the throughput of each
  * stage. The <b>load manifest</b> ({@link #manifest}) lists each written file with its rows and its first and last sort key, for a reader
@@ -192,7 +192,7 @@ final class LoadReport {
     }
 
     /**
-     * The duplicate-record rule ({@link Latest}; TOOLS.md section 4.13): per date, the ids seen more than once (by both hashes), the copy
+     * The duplicate-record rule ({@link Latest}; CLI_REFERENCE.md section 4.13): per date, the ids seen more than once (by both hashes), the copy
      * kept (latest {@code latest-by}, else the last read) and the copies dropped. The dropped ones leave the row and partition counts, are
      * counted in {@link #duplicates} and named in {@link #duplicateExamples}; {@link #dropped} tells the write stage which to skip.
      */

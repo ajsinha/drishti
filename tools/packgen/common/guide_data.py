@@ -15,8 +15,9 @@
 """The two sections every pack guide ends with (the product owner's request of 2026-10-26: data contract, data retrieval and details
 for all packs), generated so they cannot drift:
 
-  ## Data contracts    every kind of the pack from config/packs/<domain>/<pack>/contracts/*.contract.yaml: class, key, grain, storage, and every
-                       column (type, key, presence, unit, example or values, link, meaning), nested lists too
+  ## Data contracts    every kind of the pack from config/packs/<domain>/<pack>/contracts/*.contract.yaml: class, key, grain and links
+                       to its two homes, never a copy: its contract (docs/contracts/packs/<pack>.md, every field) and its example
+                       (docs/contracts/samples/<domain>.md#<table>, a real record of the test data, every field explained)
   ## Data retrieval    per kind, where its data comes from: an external source (licence, internal-only flag, the refresh script with an
                        example), a generator of synthetic data, or a Drishti engine; how it reaches the lake, how to check it, offline
 
@@ -34,6 +35,7 @@ documents every external source at length.
 """
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -100,63 +102,91 @@ def _testdata() -> dict[str, list[dict]]:
 
 
 def _anchor(c: dict) -> str:
-    import re
     return re.sub(r"[^\w\- ]", "", f"{c['mnemonic']}: {c['title']} ({c['kind']})".lower()).replace(" ", "-")
 
 
-def _example(x: dict) -> str:
-    if x.get("enum"):
-        return ", ".join(f"`{e}`" for e in x["enum"])
-    ex = x.get("example")
-    if ex in (None, ""):
-        return f"pattern `{x['pattern']}`" if x.get("pattern") else ""
-    return f"`{ex}`" + (f" (pattern `{x['pattern']}`)" if x.get("pattern") else "")
+SAMPLES = ROOT / "docs" / "contracts" / "samples"
+SAMPLES_PAGE = "../../../../../docs/contracts/samples/{page}.md#{anchor}"
 
 
-def _fields(fs: list[dict], key: set[str]) -> list[str]:
-    return table(["Column", "Type", "Key", "Presence", "Unit", "Example or values", "Link", "Meaning"], [[
-        f"`{x['name']}`", x.get("type", ""), "key" if x["name"] in key else "", x.get("presence", "") + (f" (retiring in {x['retiring-in']})" if x.get("retiring-in") else ""),
-        x.get("unit", ""), _example(x), f"`{x['link']}`" if x.get("link") else "",
-        (x.get("description") or "—") + (f" *{x['note']}*" if x.get("note") else "")] for x in fs])
+def sample_anchors() -> dict[str, tuple[str, str]]:
+    """kind -> (its data-sample page, its anchor): the test data's folders <domain>/<table> (testdata.yaml), else a page's own
+    <a id="<kind>"></a>; a kind with no sample section is missing (a computed kind, a kind with no test data)."""
+    out: dict[str, tuple[str, str]] = {}
+    pages = {p.stem: p.read_text(encoding="utf-8") for p in sorted(SAMPLES.glob("*.md"))}
+    for kind, ds in _testdata().items():
+        for d in ds:
+            parts = (d.get("folder") or "").split("/")
+            if len(parts) == 2 and f'<a id="{parts[1]}"></a>' in pages.get(parts[0], ""):
+                out.setdefault(kind, (parts[0], parts[1]))
+    for page, text in pages.items():
+        for a in re.findall(r'<a id="([^"]+)"></a>', text):
+            out.setdefault(a, (page, a))
+    return out
+
+
+def all_contracts() -> dict[str, dict]:
+    """kind -> its contract, of every pack (with ``_pack``, the pack's folder name: its contract page)."""
+    out: dict[str, dict] = {}
+    for d in PP.pack_dirs().values():
+        for f in sorted((d / "contracts").glob("*.contract.yaml")) if (d / "contracts").is_dir() else ():
+            c = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
+            if c.get("kind"):
+                c["_pack"], c["_file"] = d.name, f.name
+                out[c["kind"]] = c
+    return out
+
+
+_FENCE = re.compile(r"^```.*?^```[ \t]*$", re.S | re.M)
+
+
+def link_kinds(text: str) -> str:
+    """A pack guide with its input kinds linked (tools/test_guide_contract_links.py): the first plain mention of each kind with a
+    sample (`scenario-pv` in backticks; hyphenated kinds only), outside code blocks, headings and links, becomes
+    [`kind`](its example) ([contract](its contract section)), unless the guide already links both."""
+    cons, examples = all_contracts(), sample_anchors()
+    for kind in sorted({k for k in re.findall(r"`([a-z][a-z0-9]*(?:-[a-z0-9]+)+)`", _FENCE.sub("", text)) if k in cons and k in examples}):
+        page, anchor = examples[kind]
+        sample = SAMPLES_PAGE.format(page=page, anchor=anchor)
+        contract = f"{CONTRACTS_PAGE.format(pack=cons[kind]['_pack'])}#{_anchor(cons[kind])}"
+        if f"]({sample})" in text and f"]({contract})" in text:
+            continue
+        fences = [(m.start(), m.end()) for m in _FENCE.finditer(text)]
+        for m in re.finditer(f"`{re.escape(kind)}`", text):
+            line = text[text.rfind("\n", 0, m.start()) + 1:m.start()]
+            if any(a <= m.start() < b for a, b in fences) or line.startswith("#") or text[m.start() - 1:m.start()] == "[":
+                continue
+            text = text[:m.start()] + f"[`{kind}`]({sample}) ([contract]({contract}))" + text[m.end():]
+            break
+    return text
 
 
 def contracts_section(pack: str, items: list[dict], where: str | None = None) -> list[str]:
+    """One row per kind: what one record is, and links to its two homes, never a copy: its data contract (the fields) and its
+    example (a real record of the test data, every field explained)."""
     if not items:
         return []
     page = CONTRACTS_PAGE.format(pack=pack)
     where = where or f"config/packs/<domain>/{pack}"
+    examples = sample_anchors()
     out = ["## Data contracts", "",
            f"Every kind of the pack has a data contract: a YAML file beside the pack (`{where}/contracts/<kind>.contract.yaml`, "
            "checked against `tools/contracts.schema.json`) that says what one record is, its key, how it is stored and dated, and every "
-           "column. This section is generated from those files; the same files give the contract pages "
-           f"([docs/contracts/packs/{pack}.md]({page}), with each kind's validation rules and the points still to review). Check them "
-           "against the pack and its data with `python3 tools/contracts.py check` (or `drishti.py contract check`); show one with "
+           f"field with its type, presence, unit and meaning. The contracts are published on [docs/contracts/packs/{pack}.md]({page}) "
+           "and each kind's example (a real record of the test data, every field explained) on "
+           "[docs/contracts/samples](../../../../../docs/contracts/samples/README.md); this guide links them and copies neither. Check "
+           "them against the pack and its data with `python3 tools/contracts.py check` (or `drishti.py contract check`); show one with "
            "`python3 tools/contracts.py show <MNEMONIC>`.", ""]
-    out += table(["Command", "Kind", "Class", "Key", "Grain", "Columns"], [[
-        f"`{c['mnemonic']}`", f"`{c['kind']}`", c.get("class", ""), ", ".join(f"`{k}`" for k in c.get("key") or []) or "—", c.get("grain", ""),
-        str(len(c.get("fields") or []) + sum(len(v) for v in (c.get("nested") or {}).values()))] for c in items])
+    rows = []
+    for c in items:
+        ex = examples.get(c["kind"])
+        rows.append([f"`{c['mnemonic']}`", f"`{c['kind']}`", c.get("class", ""), ", ".join(f"`{k}`" for k in c.get("key") or []) or "—",
+                     c.get("grain", ""), f"[{c['mnemonic']}: {c['title']}]({page}#{_anchor(c)}) (`contracts/{c['_file']}`)",
+                     f"[example]({SAMPLES_PAGE.format(page=ex[0], anchor=ex[1])})" if ex else "— (computed when asked)"
+                     if c.get("class") in ("computed", "drishti-owned") else "— (no test data)"])
+    out += table(["Command", "Kind", "Class", "Key", "Grain", "Contract", "Example"], rows)
     out += ["*Class*: **fundamental** data is delivered by a source system and stored; **input** is stored data an engine reads; "
             "**computed** is worked out by Drishti when asked and never stored by a source; **drishti-owned** is kept by Drishti itself.", ""]
-    for c in items:
-        st = c.get("storage") or {}
-        key = set(c.get("key") or [])
-        out += [f"### {c['mnemonic']}: {c['title']} (`{c['kind']}`)", "", " ".join(str(c.get("description", "")).split()), ""]
-        facts = [f"**Class** {c.get('class')}" + (f", retiring in {c['retiring-in']}" if c.get("status") == "retiring" else ""),
-                 f"**Key** {', '.join(f'`{k}`' for k in c.get('key') or []) or '—'}",
-                 f"**Dated by** `{c.get('dated-by')}`",
-                 f"**Cadence** {(c.get('cadence') or {}).get('frequency', '')}",
-                 f"**Stored by** connector `{st.get('connector')}` (plugin `{st.get('plugin')}`)" + (f", table `{st['table']}`" if st.get("table") else "")]
-        if c.get("id-pattern"):
-            facts.append("**Ids** " + ", ".join(f"`{p}`" for p in c["id-pattern"]))
-        out += [" · ".join(facts) + ".", "", f"**Grain:** {c.get('grain', '')} **Contract:** `contracts/{c['_file']}` "
-                f"([full contract page]({page}#{_anchor(c)})).", ""]
-        out += _fields(c.get("fields") or [], key)
-        for path, fs in (c.get("nested") or {}).items():
-            out += [f"Nested `{path}`:", ""] + _fields(fs, set())
-        if c.get("links"):
-            out += ["**Links:** " + ", ".join(f"`{x['field']}` → `{x['kind']}`" for x in c["links"]) + ".", ""]
-        if c.get("notes"):
-            out += [f"- {' '.join(str(n).split())}" for n in c["notes"]] + [""]
     return out
 
 
@@ -265,7 +295,7 @@ def retrieval_section(pack: str, items: list[dict]) -> list[str]:
             "- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, "
             "the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta "
             "connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way "
-            "([Tools](../../../../../docs/guides/TOOLS.md)).",
+            "([Command line](../../../../../docs/guides/CLI_REFERENCE.md)).",
             "- **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's "
             "`--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists "
             "a kind and the pack's code opens its overview with the count of each kind.",

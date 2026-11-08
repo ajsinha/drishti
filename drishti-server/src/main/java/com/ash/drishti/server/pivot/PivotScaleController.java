@@ -49,7 +49,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 /**
- * The pivot engine's scale API (PIVOT_GUIDE.md, scale; API_GUIDE.md, the pivot engine):
+ * The pivot engine's scale API (PIVOT_GUIDE.md, scale; API_REFERENCE.md, the pivot engine):
  *
  * <ul>
  *   <li>{@code POST /api/v1/pivot/query?progressive=true}: server-sent events, {@code approximate} (≈ from a sample, each figure with its

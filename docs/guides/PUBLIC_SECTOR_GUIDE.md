@@ -20,7 +20,7 @@ of its own (Public sector). Six packs, each filled every day by its own feed, sh
 member's cycle, the press releases of central banks, regulators and governments, and what the world's news said about a country yesterday.
 Every source's licence is recorded; what may not be redistributed is marked internal only.
 
-The hands-on companion is [Tutorial 46](../tutorials/46-public-sector-data.md). The feeds machinery (run, load, schedule, monitor, write a
+The hands-on companion is [Tutorial 14](../tutorials/14-public-sector-data.md). The feeds machinery (run, load, schedule, monitor, write a
 feed) is the [External data guide](EXTERNAL_DATA.md); every column of every kind is in the data contracts (section 4).
 
 ## Contents
@@ -51,16 +51,16 @@ The functions (command words), each owned by the economy module and gated by the
 
 | Word | Kind | Opens |
 |---|---|---|
-| `WDI` | `development-profile` | a country's development profile (World Bank) |
-| `WDIS` | `development-series` | one World Bank indicator of one country by year |
-| `CBANK` | `central-bank` | a central bank: policy rate, last move, series |
-| `CBSER` | `rate-series` | one central-bank or market series (FRED, Bank of Canada) |
-| `NSTAT` | `statistics-series` | one Statistics Canada series by vector |
-| `OECD` | `oecd-country` | an OECD member's latest measures, the members on a map |
-| `OECDS` | `oecd-series` | one OECD measure of one member by period |
-| `PRESS` | `release-source` | a publisher's latest press releases, each a link |
-| `PREL` | `press-release` | one press release |
-| `GDELT` | `event-country` | a country's day in the world's news |
+| `WDI` | [`development-profile`](../contracts/samples/world-development.md#development-profile) ([contract](../contracts/packs/world-development.md#wdi-development-profile-development-profile)) | a country's development profile (World Bank) |
+| `WDIS` | [`development-series`](../contracts/samples/world-development.md#development-series) ([contract](../contracts/packs/world-development.md#wdis-development-indicator-series-development-series)) | one World Bank indicator of one country by year |
+| `CBANK` | [`central-bank`](../contracts/samples/central-banks.md#central-bank) ([contract](../contracts/packs/central-banks.md#cbank-central-bank-central-bank)) | a central bank: policy rate, last move, series |
+| `CBSER` | [`rate-series`](../contracts/samples/central-banks.md#rate-series) ([contract](../contracts/packs/central-banks.md#cbser-central-bank-series-rate-series)) | one central-bank or market series (FRED, Bank of Canada) |
+| `NSTAT` | [`statistics-series`](../contracts/samples/national-statistics.md#statistics-series) ([contract](../contracts/packs/national-statistics.md#nstat-national-statistic-statistics-series)) | one Statistics Canada series by vector |
+| `OECD` | [`oecd-country`](../contracts/samples/oecd.md#oecd-country) ([contract](../contracts/packs/oecd.md#oecd-oecd-country-oecd-country)) | an OECD member's latest measures, the members on a map |
+| `OECDS` | [`oecd-series`](../contracts/samples/oecd.md#oecd-series) ([contract](../contracts/packs/oecd.md#oecds-oecd-series-oecd-series)) | one OECD measure of one member by period |
+| `PRESS` | [`release-source`](../contracts/samples/official-news.md#release-source) ([contract](../contracts/packs/official-news.md#press-official-press-releases-release-source)) | a publisher's latest press releases, each a link |
+| `PREL` | [`press-release`](../contracts/samples/official-news.md#press-release) ([contract](../contracts/packs/official-news.md#prel-press-release-press-release)) | one press release |
+| `GDELT` | [`event-country`](../contracts/samples/gdelt-events.md#event-country) ([contract](../contracts/packs/gdelt-events.md#gdelt-world-events-by-country-event-country)) | a country's day in the world's news |
 
 The packs' own codes open their overviews: `WDEV`, `CBNK`, `STCAN`, `OECDP`, `ONEWS`, `GDLT`.
 
@@ -108,35 +108,20 @@ lake table), its cadence (daily, the feed's schedule) and every field with its t
 contracts are the one place for the data; the pages below are generated from them (`tools/contracts.py docs`), and each kind's worked
 example (a real record as JSON, every field explained) is under [docs/contracts/samples](../contracts/samples/README.md).
 
-| Pack | Kinds | Contracts | Lake table |
+| Pack | Kinds (each: its example and its contract) | Contracts | Lake table |
 |---|---|---|---|
-| `world-development` | `development-profile` (key `PROFILE_ID`, `WDI-<ISO3>`), `development-series` (`SERIES_ID`, `WDIS-<ISO3>-<code>`) | [world-development.md](../contracts/packs/world-development.md) | `worldlake/development/<kind>` |
-| `central-banks` | `central-bank` (`BANK_ID`, `CBANK-<id>`), `rate-series` (`SERIES_ID`, `CBSER-<FRED or BOC>-<code>`) | [central-banks.md](../contracts/packs/central-banks.md) | `worldlake/centralbank/<kind>` |
-| `national-statistics` | `statistics-series` (`SERIES_ID`, `NSTAT-V<vector>`) | [national-statistics.md](../contracts/packs/national-statistics.md) | `worldlake/statistics/<kind>` |
-| `oecd` | `oecd-country` (`COUNTRY_ID`, `OECD-<ISO3>`), `oecd-series` (`SERIES_ID`, `OECDS-<ISO3>-<measure>`) | [oecd.md](../contracts/packs/oecd.md) | `worldlake/oecd/<kind>` |
-| `official-news` | `release-source` (`SOURCE_ID`, `PRESS-<publisher>`), `press-release` (`RELEASE_ID`, `PREL-<publisher>-<hash>`) | [official-news.md](../contracts/packs/official-news.md) | `newslake/officialnews/<kind>` |
-| `gdelt-events` | `event-country` (`EVENT_COUNTRY_ID`, `GDELT-<ISO3>`) | [gdelt-events.md](../contracts/packs/gdelt-events.md) | `newslake/gdelt/<kind>` |
+| `world-development` | [`development-profile`](../contracts/samples/world-development.md#development-profile) ([contract](../contracts/packs/world-development.md#wdi-development-profile-development-profile)) (key `PROFILE_ID`, `WDI-<ISO3>`), [`development-series`](../contracts/samples/world-development.md#development-series) ([contract](../contracts/packs/world-development.md#wdis-development-indicator-series-development-series)) (`SERIES_ID`, `WDIS-<ISO3>-<code>`) | [world-development.md](../contracts/packs/world-development.md) | `worldlake/development/<kind>` |
+| `central-banks` | [`central-bank`](../contracts/samples/central-banks.md#central-bank) ([contract](../contracts/packs/central-banks.md#cbank-central-bank-central-bank)) (`BANK_ID`, `CBANK-<id>`), [`rate-series`](../contracts/samples/central-banks.md#rate-series) ([contract](../contracts/packs/central-banks.md#cbser-central-bank-series-rate-series)) (`SERIES_ID`, `CBSER-<FRED or BOC>-<code>`) | [central-banks.md](../contracts/packs/central-banks.md) | `worldlake/centralbank/<kind>` |
+| `national-statistics` | [`statistics-series`](../contracts/samples/national-statistics.md#statistics-series) ([contract](../contracts/packs/national-statistics.md#nstat-national-statistic-statistics-series)) (`SERIES_ID`, `NSTAT-V<vector>`) | [national-statistics.md](../contracts/packs/national-statistics.md) | `worldlake/statistics/<kind>` |
+| `oecd` | [`oecd-country`](../contracts/samples/oecd.md#oecd-country) ([contract](../contracts/packs/oecd.md#oecd-oecd-country-oecd-country)) (`COUNTRY_ID`, `OECD-<ISO3>`), [`oecd-series`](../contracts/samples/oecd.md#oecd-series) ([contract](../contracts/packs/oecd.md#oecds-oecd-series-oecd-series)) (`SERIES_ID`, `OECDS-<ISO3>-<measure>`) | [oecd.md](../contracts/packs/oecd.md) | `worldlake/oecd/<kind>` |
+| `official-news` | [`release-source`](../contracts/samples/official-news.md#release-source) ([contract](../contracts/packs/official-news.md#press-official-press-releases-release-source)) (`SOURCE_ID`, `PRESS-<publisher>`), [`press-release`](../contracts/samples/official-news.md#press-release) ([contract](../contracts/packs/official-news.md#prel-press-release-press-release)) (`RELEASE_ID`, `PREL-<publisher>-<hash>`) | [official-news.md](../contracts/packs/official-news.md) | `newslake/officialnews/<kind>` |
+| `gdelt-events` | [`event-country`](../contracts/samples/gdelt-events.md#event-country) ([contract](../contracts/packs/gdelt-events.md#gdelt-world-events-by-country-event-country)) (`EVENT_COUNTRY_ID`, `GDELT-<ISO3>`) | [gdelt-events.md](../contracts/packs/gdelt-events.md) | `newslake/gdelt/<kind>` |
 
 Every document carries `PROVENANCE`: the source, the dataset and its vintage, the retrieval date, the licence, the attribution, the
 address and `INTERNAL_ONLY`. Each pack's README (`config/packs/<pack>/README.md`) lists its kinds' data structures; its guide
 (`config/packs/<pack>/guides/<pack>.md`, a Help page) ends with the generated *Data contracts* and *Data retrieval* sections.
 
-**One record, shortened** (`WDI-CAN` as recorded for 2026-11-06; the full record and every field: the worked example page):
-
-```json
-{
-  "PROFILE_ID": "WDI-CAN", "NAME": "Canada", "ISO3": "CAN", "ISO2": "CA", "COUNTRY_NAME": "Canada",
-  "REGION": "North America", "INCOME_GROUP": "High income", "CAPITAL": "Ottawa",
-  "POPULATION": 41651653.0, "GDP_PER_CAPITA": 55697.6639660837, "GDP_GROWTH": 1.74268536175708, "INFLATION": 2.07232411149103,
-  "UNEMPLOYMENT": 6.907, /* … 5 more indicators' fields … */
-  "INDICATORS": [
-    {"INDICATOR": "Population, total", "UNIT": "persons", "LATEST": 41651653.0, "YEAR": "2025", "CODE": "SP.POP.TOTL", "WDI_SERIES": "WDIS-CAN-SP_POP_TOTL"}
-    /* … 9 more … */
-  ],
-  "DATA_YEAR": "2025", "INDICATOR_COUNT": 10,
-  "PROVENANCE": {"SOURCE": "World Bank, World Development Indicators", "LICENCE": "CC BY 4.0", "INTERNAL_ONLY": false /* … */}
-}
-```
+**One record.** Each kind's example (a real record, every field explained) is its section on the data-sample pages, linked from the table above; the fields are its contract.
 
 The packs' `samples/` keep a few documents (from the feeds' recorded fixtures, `python3 tools/packgen/publicsector/make.py`) for the
 renderer's tests; they are never served beside the lake: demo and real data never mix

@@ -50,7 +50,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 /**
- * The VaR provider of the pivot engine (PIVOT_ENGINE.md section 6.3, MR_CUBE_GUIDE.md), source {@code var}: the VaR engine's book of a
+ * The VaR provider of the pivot engine (ARCHITECTURE.md section 26.4, PIVOT_GUIDE.md#29-the-mr-cube-preset), source {@code var}: the VaR engine's book of a
  * business date as the person sees it. Members are the date's trades; a cell is the view's scope ({@code options.scope}) under its filters
  * with each coordinate, its members found from per-trade dimension codes ({@link VarPivotCodes}); every cell's and total's vector is summed
  * in <b>one</b> batch for the whole plan ({@code VarBook.vectors}: on a sharded date one call per remote shard for all the sets) and its
@@ -109,7 +109,7 @@ public final class VarPivotProvider implements PivotProvider {
         this(svc, () -> true);
     }
 
-    /** {@code on}: whether the VaR engine runs here (COMPUTE_ENGINES.md: the pivot engine uses var); off, the source is not offered. */
+    /** {@code on}: whether the VaR engine runs here (ADMIN_GUIDE.md: the pivot engine uses var); off, the source is not offered. */
     public VarPivotProvider(VarService svc, BooleanSupplier on) {
         this(svc, on, () -> false, MrCubeProperties.defaults(), () -> null);
     }
@@ -282,7 +282,7 @@ public final class VarPivotProvider implements PivotProvider {
                     : "your role sees the bank in aggregate only: no dimension is offered (hierarchy levels come with the MR cube)");
         }
         if (mr()) {
-            notes.put("lens", "the MR cube: options scope, horizon, method, confidence, esConfidence, set and ccy (MR_CUBE_GUIDE.md section 4)");
+            notes.put("lens", "the MR cube: options scope, horizon, method, confidence, esConfidence, set and ccy (PIVOT_GUIDE.md section 29.4)");
             notes.put("defaultView", defaultView(o));
         }
         return new Catalogue(SOURCE, mr() ? "VaR · MR cube" : "VaR", fields, natives(), o.date().toString(), dates, version(v, source, date), 0, notes);
@@ -308,7 +308,7 @@ public final class VarPivotProvider implements PivotProvider {
     }
 
     /**
-     * The MR cube's landing view (layout A, docs/lenses/README.md section 6.7): rows the management hierarchy's desks (then books, positions and
+     * The MR cube's landing view (layout A, docs/architecture/LENSES.md section 6.7): rows the management hierarchy's desks (then books, positions and
      * trades as each node is opened), columns the risk class, the VaR; the bank as the scope.
      */
     Map<String, Object> defaultView(VarPivotLens o) {

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 7, Load data daily (docs/tutorials/07-load-data-daily.md), written to docs/tutorials/img/t07/.
+"""Pictures of tutorial 12, Load data daily (docs/tutorials/12-a-day-of-bank-data.md), written to docs/tutorials/img/t07/.
 
 The pack is `trading`, the kind `trade`. The expectation is set on the page; the loads are announced the way a nightly job does (a token that holds only
 `loads:write`, the real API); the measure alert is made on the alert form. Dates are business days before the date the server calls current."""

@@ -17,9 +17,9 @@
 
 The pivot engine turns any table of any pack, or the VaR engine's trades, into a pivot: these measures, broken down by these fields on
 rows and columns, under these filters, on this business date. Every figure is computed by the server; every total is made from its own
-members, never from the figures on the screen. The design behind it is [PIVOT_ENGINE.md](../architecture/PIVOT_ENGINE.md); the hands-on
-walk-through is [tutorial 33](../tutorials/33-the-pivot-engine.md); custom functions, explain and what-if are walked through in
-[tutorial 37](../tutorials/37-custom-functions-and-explain.md).
+members, never from the figures on the screen. The hands-on walk-through is [tutorial 7, Part A](../tutorials/07-pivot-cubes-and-explain.md#part-a--the-pivot-engine-trades-by-product-legs-by-desk-then-var-by-desk);
+custom functions, explain and what-if are walked through in [tutorial 7, Part B](../tutorials/07-pivot-cubes-and-explain.md#part-b--custom-functions-why-did-it-move-and-what-if); the MR cube,
+market risk as a pivot, is [section 29](#29-the-mr-cube-preset) and [tutorial 7, Part C](../tutorials/07-pivot-cubes-and-explain.md#part-c--the-mr-cube-desks-by-risk-class-with-the-right-totals).
 
 ## Contents
 
@@ -51,6 +51,7 @@ walk-through is [tutorial 33](../tutorials/33-the-pivot-engine.md); custom funct
 - [26. Cell comments](#26-cell-comments)
 - [27. Pivot data: the sources of the examples](#27-pivot-data-the-sources-of-the-examples)
 - [28. Presets: the risk cubes](#28-presets-the-risk-cubes)
+- [29. The MR cube preset](#29-the-mr-cube-preset)
 
 ## 1. Open it
 
@@ -62,14 +63,14 @@ walk-through is [tutorial 33](../tutorials/33-the-pivot-engine.md); custom funct
 | A page's table | **Pivot** under a table or ladder whose Sutra says `pivot:` (the source `panel/<kind>/<panel>/<id>`: the panel's own rows, the Sutra's arrangement as the opening view) |
 | Search results | **Pivot** above the results of a kind whose pack says `pivot:` (the kind, the pack's arrangement as the opening view) |
 
-The engine is a compute engine with its own file, `config/engines/pivot.yaml` ([COMPUTE_ENGINES.md](../architecture/COMPUTE_ENGINES.md)):
+The engine is a compute engine with its own file, `config/engines/pivot.yaml` ([ADMIN_GUIDE.md](ADMIN_GUIDE.md#21-compute-engines-on-or-off)):
 switch it with `drishti.engines.pivot.enabled` (on as shipped; `DRISHTI_PIVOT_ENGINE_ENABLED`), from Admin → Engines or
 `drishti.py admin engines`, live. Off, `/api/v1/pivot` answers `404 DRS-1020` in words, and `PIVOT`, Views → Pivot, its Help pages and
 `drishti.py pivot` disappear. The old name `drishti.pivot.enabled` still works (it is also the Pivot tab's switch). The MR cube needs it.
 
 ## 2. The screen
 
-The screen is mock-up A of the design ([section 25](../architecture/PIVOT_ENGINE.md#25-mock-ups-the-screens-to-build)): Excel's PivotTable
+The screen is Excel's PivotTable
 as people know it, with what Excel lacks in the places Excel's equivalents would be.
 
 | Part | What it does |
@@ -440,7 +441,7 @@ Comments on its cells are kept beside its versions ([section 26](#26-cell-commen
 - A table is read through Export data's own read for you: a table you may not open is not offered; a **masked column is not read at
   all**, so it cannot be a dimension, a measure's input or a filter (`403 DRS-5705`).
 - The VaR source applies the VaR engine's own entitlements: trades you may not see are left out of every cell; a role that sees the bank only
-  in aggregate is offered no dimension unless the MR cube runs, which offers it the hierarchy levels ([MR_CUBE_GUIDE.md](MR_CUBE_GUIDE.md)).
+  in aggregate is offered no dimension unless the MR cube runs, which offers it the hierarchy levels ([section 29.4](#294-the-view-dimensions-options-cells-and-totals)).
 - `drishti.pivot.aggregate-only.min-members-per-cell` (1 as shipped) hides the figures of a cell with fewer members.
 - Every view run, rows read and export is audited without values.
 
@@ -492,7 +493,7 @@ The answer has `rows` and `columns` in display order (each with `key`, `kind` no
 | `POST /api/v1/pivot/live`, `GET /live`, `GET /live/{id}/events`, `DELETE /live/{id}` | a live pivot: started (its first answer, id and node), listed, streamed (`answer`, `patch`, `reshape`, `status`), ended ([section 25](#25-live-pivots)) |
 | `GET, POST /api/v1/pivot/views/{owner}/{name}/comments`, `POST /comments/{id}/resolve`, `/reopen`, `DELETE /comments/{id}` | a saved view's cell comments ([section 26](#26-cell-comments)) |
 
-Details and the error codes: [API_GUIDE.md, Pivot engine](API_GUIDE.md#pivot-engine-apiv1pivot).
+Details and the error codes: [API_REFERENCE.md, Pivot engine](API_REFERENCE.md#23-pivot-engine-apiv1pivot).
 
 ## 15. The command line
 
@@ -513,7 +514,7 @@ drishti.py pivot explain --view asha/desk-risk --cell DESK=EMEA --from 2026-09-3
 drishti.py pivot whatif --view asha/desk-risk --scale PRICE=1.1@DESK=RATES --exclude BOOK=B-17
 ```
 
-More in [TOOLS.md](TOOLS.md#516-pivot).
+More in [CLI_REFERENCE.md](CLI_REFERENCE.md#pivot-the-pivot-engine).
 
 ## 16. Settings
 
@@ -677,7 +678,7 @@ source (`mode: direct`) gets no engine totals either (they would read every row 
 ## 23. Scale: sketches, rollups, progressive answers and the cluster
 
 Large tables (a billion rows and more) are answered by four things that work together, each of them inside the engine and each saying in
-the answer what it did. The design and its reasons are [PIVOT_ENGINE.md section 9](../architecture/PIVOT_ENGINE.md#9-scale-extremely-large-data).
+the answer what it did.
 
 ### 23.1 Sketches, with a stated error and exact on request
 
@@ -715,9 +716,8 @@ drishti.py pivot run --source trade --rows DESK --values "distinct(COUNTERPARTY)
 
 How a sketch is made on the tabular provider: HyperLogLog's (register, rank) pairs come from DuckDB's 64-bit `hash()` in the same
 `GROUP BY GROUPING SETS` statement as every other state; KLL is built in Java from the cell's quantile points (`quantile_disc` at 2k + 1
-fractions) and its count; Space-Saving from the cell's value counts, kept to its counters. KLL is written in the module (Apache
-DataSketches, allowed by decision 2, is not resolvable in the offline build); its error is measured by `SketchErrorTest`. Up to about 10,000 distinct values (2.5 × the 4,096 registers) a distinct count is linear counting over the registers, which is closer there than the harmonic mean. A document
-source ([PIVOT_ENGINE.md section 6.7](../architecture/PIVOT_ENGINE.md#67-documents-paths-arrays-and-grains)) is sketched the same way at
+fractions) and its count; Space-Saving from the cell's value counts, kept to its counters. KLL is written in the module; its error is measured by `SketchErrorTest`. Up to about 10,000 distinct values (2.5 × the 4,096 registers) a distinct count is linear counting over the registers, which is closer there than the harmonic mean. A document
+source ([section 3](#documents-paths-lists-and-grains)) is sketched the same way at
 its view's grain: `distinct($.LEGS[*].CURRENCY)` counts the legs' currencies.
 
 ### 23.2 Rollups of partial states, chosen automatically
@@ -911,9 +911,7 @@ DELETE /api/v1/pivot/views/asha/desk-risk/comments/c-91d0…
 
 ## 27. Pivot data: the sources of the examples
 
-Every dataset the pivot guide's examples reads, what it is for, whether it is required, where its sample lives, and one real record from the shipped sample
-data (`data/testdata/`), formatted, with long arrays shortened as `/* … N more … */`. The field-by-field rules of each kind are its
-**data contract** ([docs/contracts/packs/](../contracts/packs/README.md)); how files are named, dated and loaded is
+Every dataset the pivot guide's examples and the MR cube preset read, what it is for, whether it is required, where its sample lives, and the links to its two homes: its **data contract** (the fields, the key, the rules: the pack's contract page and its `<kind>.contract.yaml`) and its **example** (a real record of the shipped synthetic test data, every field explained, on [docs/contracts/samples](../contracts/samples/README.md)). This guide copies neither. How files are named, dated and loaded is
 [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo).
 
 <!-- The block below is generated by tools/docs/guide_data.py from tools/docs/guide_data.yaml: edit the spec, not the block. -->
@@ -925,6 +923,12 @@ data (`data/testdata/`), formatted, with long arrays shortened as `/* … N more
 | [The trades](#272-the-trades-the-examples-table) | the rows of the guide's examples (`"source": "trade"`) | for the table source `trade` | `trades/murex/trade_murex.*.jsonl.gz` | [3](#3-sources-and-fields) |
 | [`scenario-pv`](#273-scenario-pv-the-var-books-vectors) | the positions' columns and vectors behind `var()`, `es()`, `pv()` | for the source `var` | `market-risk/scenario-pv/scenario-pv-*.tar` | [3](#3-sources-and-fields) |
 | [`position`](#274-position-positions) | a stored position table, when the bank delivers one | optional (a table source) | no sample in the demo data | [3](#3-sources-and-fields) |
+| [`pnl-vector`](#275-pnl-vector-pl-vectors-per-trade) | the MR cube preset: every trade's vector; its columns as dimensions | **one of the two**, per trade | `market-risk/pnl-vector/pnl-vector-*.tar` | [29.3](#293-the-inputs) |
+| [`scenario-set`](#276-scenario-set-the-scenario-days) | the scenario days of the histogram and the explain | for the MR cube | `market-risk/scenario-set/scenario-set.tar` | — |
+| [`risk-hierarchy`](#277-risk-hierarchy-the-trees) | the hierarchy levels as dimensions | for the MR cube | `market-risk/risk-hierarchy/risk-hierarchy.*.jsonl.gz` | — |
+| [`var-limit`](#278-var-limit-var-limits) | `limit()` and `limit_use()` | optional | `market-risk/var-limit/var-limit.*.jsonl.gz` | — |
+| [`position-sensitivity`](#279-position-sensitivity-the-sensitivities) | `dv01()`, `cs01()`, the ladder and the heat map | for the sensitivity measures | `market-risk/position-sensitivity/position-sensitivity.*.jsonl.gz` | [FRTB_SA_GUIDE.md 3](FRTB_SA_GUIDE.md#3-the-inputs-and-their-data-contract) |
+| [`risk-factor`](#2710-risk-factor-the-factor-dictionary) | each factor's class, tenor and curve for the ladder | for the sensitivity measures | `market-risk/risk-factor/risk-factor.*.jsonl.gz` | — |
 
 The pivot reads any stored kind through its connector ([section 3](#3-sources-and-fields)); these are the sources the guide's examples
 use. A field's type and unit (money, rate) come from the kind's data contract.
@@ -934,96 +938,66 @@ use. A field's type and unit (money, rate) come from the kind's data contract.
 The trades (`trade_murex`, `trade_endur`, `trade_calypso` under `data/testdata/trades/<system>/`): a stored kind read as a table; its
 text fields are the rows and columns, its numbers the measures. The record shows the fields a pivot of trades usually groups by.
 
-- **Data contract:** [`trade`](../contracts/packs/trading.md#trd-trade-trade) (TRD), key `TRADE_ID`; 47 fields, 25 required.
-- **Sample:** `data/testdata/trades/murex/trade_murex.2026-07-08.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "SOURCE_SYSTEM": "MUREX",
-  "TRADE_ID": "MX-20000001",
-  "TRADE_STATUS": "AMENDED",
-  "TRADE_DATE": "2025-07-25",
-  "PRODUCT_GROUP": "Rates",
-  "PRODUCT_TYPE": "IRS_FIXFLOAT",
-  "BUY_SELL_CODE": "S",
-  "QUANTITY": 242000000.0,
-  "CURRENCY": "AUD",
-  "COUNTERPARTY": "CP-MERIDIAN-RE",
-  "LEGAL_ENTITY": "LE-NY",
-  "PORTFOLIO": "BOOK-RATES-3",
-  "TRADER_ID": "TRDR-ASHAH",
-  "MATURITY_DATE": "2032-06-25"
-}
-```
-
-The record shows 14 of its 47 fields; omitted here: `SOURCE_UPDATE_TIME`, `INPUT_DATE`, `TRADE_ACTION`, `TRADE_VERSION`, `TRANSACTION_ID`, `PACKAGE_ID`, `PRICE`, `PRODUCT_SUB_TYPE` and 25 more.
+- **Data contract:** [`trade`](../contracts/packs/trading.md#trd-trade-trade) (TRD), key `TRADE_ID`; 47 fields, 25 required; the file [`trade.contract.yaml`](../../config/packs/banking/trading/contracts/trade.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/trades.md#murex) (files `data/testdata/trades/murex/trade_murex.*.jsonl.gz`).
 
 ### 27.3 `scenario-pv`: the VaR book's vectors
 
 The source `var` is the VaR engine's book of the date, built from these rows (or `pnl-vector` rows, [VAR_GUIDE.md section
 36](VAR_GUIDE.md#36-var-data-every-dataset-the-engine-reads)): its text columns (DESK, CURRENCY, PRODUCT_GROUP …) are the fields.
 
-- **Data contract:** [`scenario-pv`](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv) (SPV), key `SCENARIO_PV_ID`; 39 fields, 28 required.
-- **Sample:** `data/testdata/market-risk/scenario-pv/scenario-pv-2026-09-30.tar` → `scenario-pv/2026-09-30/cob.part-001.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "VALUE_TYPE": "PV",
-  "GRAIN": "TRADE",
-  "TRADE_ID": "1000003",
-  "CURRENCY": "USD",
-  "SOURCE_SYSTEM": "ENDUR",
-  "SCENARIO_PV_ID": "SPV-1000003-HS-509",
-  "SECURITY_ID": null,
-  "INSTRUMENT": "ENGY-B-SWAP USD 2027-02",
-  "BUSINESS_DATE": "2026-09-30",
-  "SCENARIO_SET_ID": "HS-509",
-  "TRADE_VERSIONS": "v7",
-  "TRADE_STATUS": "AMENDED",
-  "MATURITY_DATE": "2027-02-28",
-  "LEGAL_ENTITY": "LE-NY",
-  "DIVISION": "DIV-MARKETS",
-  "DESK": "DESK-COMM",
-  "TT_BOOK": "BOOK-COMM-1",
-  "LIMIT_LETTER": "LL-0001",
-  "PORTFOLIO": "BOOK-COMM-1",
-  "STRATEGY": "",
-  "PRODUCT_GROUP": "Commodity",
-  "PRODUCT_TYPE": "ComSwap",
-  "COUNTERPARTY": "CP-CASCADIA",
-  "DIRECTION": "SHORT",
-  "QUANTITY": -4687500.0,
-  "TAGS": "",
-  "BASE_PV": -5176568.0,
-  "VALUATION_DATE": "2026-09-30",
-  "BASE_VALUATION_DATE": "2026-09-30",
-  "SCENARIO_PV": [
-    -4754754.0,
-    -5608689.0,
-    -5444664.0,
-    -5103789.0,
-    /* … 501 more … */,
-    -5371205.0,
-    -5327780.0,
-    -4800104.0,
-    -5239083.0
-  ],
-  "STATUS": "ok",
-  "PRICER": "demo-factor-model",
-  "MODEL_VERSION": "demo-2",
-  "COMPUTED_AT": "2026-09-30T06:00:00Z",
-  "BATCH_ID": "B-2026-09-30-01",
-  "RESTATEMENT": 0,
-  "RUN_KIND": "FULL"
-}
-```
+- **Data contract:** [`scenario-pv`](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv) (SPV), key `SCENARIO_PV_ID`; 39 fields, 28 required; the file [`scenario-pv.contract.yaml`](../../config/packs/banking/market-risk/contracts/scenario-pv.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#scenario-pv) (files `data/testdata/market-risk/scenario-pv/scenario-pv-*.tar`).
 
 ### 27.4 `position`: positions
 
 A stored position table, pivoted like any other kind. The demo derives its positions in the VaR engine instead.
 
-- **Data contract:** [`position`](../contracts/packs/market-risk.md#pos-position-position) (POS), key `POSITION_ID`; 32 fields, 30 required.
-- **Sample:** no sample in the demo data.
+- **Data contract:** [`position`](../contracts/packs/market-risk.md#pos-position-position) (POS), key `POSITION_ID`; 32 fields, 30 required; the file [`position.contract.yaml`](../../config/packs/banking/market-risk/contracts/position.contract.yaml).
+- **Example:** no sample in the demo data.
+
+### 27.5 `pnl-vector`: P&L vectors per trade
+
+Each trade's scenario P&L; its columns (`LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `CURRENCY`,
+`COUNTERPARTY`, …) are the cube's dimensions.
+
+- **Data contract:** [`pnl-vector`](../contracts/packs/market-risk.md#pnlv-pl-vector-509-scenarios-pnl-vector) (PNLV), key `VECTOR_ID`; 39 fields, 27 required; the file [`pnl-vector.contract.yaml`](../../config/packs/banking/market-risk/contracts/pnl-vector.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#pnl-vector) (files `data/testdata/market-risk/pnl-vector/pnl-vector-*.tar`).
+
+### 27.6 `scenario-set`: the scenario days
+
+The ordered scenario days: the histogram's and the explain's dates.
+
+- **Data contract:** [`scenario-set`](../contracts/packs/market-risk.md#sset-scenario-set-scenario-set) (SSET), key `SCENARIO_SET_ID`; 13 fields, 10 required; the file [`scenario-set.contract.yaml`](../../config/packs/banking/market-risk/contracts/scenario-set.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#scenario-set) (files `data/testdata/market-risk/scenario-set/scenario-set.tar`).
+
+### 27.7 `risk-hierarchy`: the trees
+
+The trees' levels are dimensions (`MGMT.DESK`, `LEGAL.LEGAL-ENTITY`, `LL.LIMIT_LETTER`).
+
+- **Data contract:** [`risk-hierarchy`](../contracts/packs/market-risk.md#hier-risk-hierarchy-node-risk-hierarchy) (HIER), key `NODE_ID`; 11 fields, 8 required; the file [`risk-hierarchy.contract.yaml`](../../config/packs/banking/market-risk/contracts/risk-hierarchy.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#risk-hierarchy) (files `data/testdata/market-risk/risk-hierarchy/risk-hierarchy.*.jsonl.gz`).
+
+### 27.8 `var-limit`: VaR limits
+
+A node's VaR limit: the `limit()` and `limit_use()` measures.
+
+- **Data contract:** [`var-limit`](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit) (VLIM), key `LIMIT_ID`; 10 fields, 7 required; the file [`var-limit.contract.yaml`](../../config/packs/banking/market-risk/contracts/var-limit.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#var-limit) (files `data/testdata/market-risk/var-limit/var-limit.*.jsonl.gz`).
+
+### 27.9 `position-sensitivity`: the sensitivities
+
+The FRTB-SA engine's position sensitivities: `dv01()`, `cs01()`, the ladder and the heat map of tab C.
+
+- **Data contract:** [`position-sensitivity`](../contracts/packs/market-risk.md#sens-position-sensitivities-position-sensitivity) (SENS), key `SENSITIVITY_ID`; 28 fields, 19 required; the file [`position-sensitivity.contract.yaml`](../../config/packs/banking/market-risk/contracts/position-sensitivity.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#position-sensitivity) (files `data/testdata/market-risk/position-sensitivity/position-sensitivity.*.jsonl.gz`).
+
+### 27.10 `risk-factor`: the factor dictionary
+
+The factor dictionary the sensitivities name their factors by.
+
+- **Data contract:** [`risk-factor`](../contracts/packs/market-risk.md#rfac-risk-factor-dictionary-risk-factor) (RFAC), key `RISK_FACTOR`; 27 fields, 12 required; the file [`risk-factor.contract.yaml`](../../config/packs/banking/market-risk/contracts/risk-factor.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#risk-factor) (files `data/testdata/market-risk/risk-factor/risk-factor.*.jsonl.gz`).
 <!-- guide-data:end -->
 
 ## 28. Presets: the risk cubes
@@ -1040,12 +1014,262 @@ asking, exactly as on `PIVOT <GO>`. The presets are defined in `drishti-console/
 
 **The MR cube.** `MCUBE <scope> [BY rows[,columns]] [MEASURE m,...] [DATE d] [SORT desc] <GO>` lays what you type over the landing
 (`MCUBE DESK:RATES BY MGMT.BOOK,CURRENCY MEASURE VAR,COMP_VAR`); `MCUBE @owner/name <GO>` opens a saved view; in the VaR explorer, **MR cube ›**
-opens the scope and date you are looking at. Its measures, lens and figures are the [MR cube guide](MR_CUBE_GUIDE.md). A test records the view the
+opens the scope and date you are looking at. Its measures, lens and figures are [section 29](#29-the-mr-cube-preset). A test records the view the
 cube asked the server for, for each form of `MCUBE`, and checks the preset asks for exactly the same (`tests/test_cube_presets.py`).
 
 **The CCR cube** is *Under construction*: the preset, its word and its door exist, and its page says so; its source, the CCR provider, comes with
-the counterparty engines ([PIVOT_ENGINE.md section 6.5](../architecture/PIVOT_ENGINE.md#65-the-ccr-provider-later),
-[UNDER_CONSTRUCTION.md](../admin/UNDER_CONSTRUCTION.md), `ccr-cube-preset`). Meanwhile every counterparty's computed exposure is the
+the counterparty engines ([UNDER_CONSTRUCTION.md](../admin/UNDER_CONSTRUCTION.md), `ccr-cube-preset`). Meanwhile every counterparty's computed exposure is the
 [Exposure explorer](EXPOSURE_GUIDE.md) (`EXP`).
 
 A preset whose engine runs on no server of the cluster (the MR cube needs `mr-cube`) is refused in words (`DRS-1020`), like its word.
+
+## 29. The MR cube preset
+
+The **MR cube** puts the VaR engine's figures on any rows and columns: desks by risk class, books by currency, legal entities by product,
+a desk's positions by counterparty. It is the Pivot's preset `mr` ([section 28](#28-presets-the-risk-cubes)): the pivot engine on its
+VaR source (`var`), with the MR lens around it. Every cell, every subtotal and the grand total is the **figure of its own set of trades**,
+computed by the server from those trades' scenario P&L vectors. A total is never the sum of the cells above it: VaR does not add up, and
+the pivot shows the gap as **diversification**. Around the pivot sit the headline of the view's scope, the time-travel slider,
+sparklines, a cell's tail histogram and why it moved, the components and their waterfall, the factor heat map, the DV01 ladder and a
+what-if side by side. The hands-on walk-through is [tutorial 7, Part C](../tutorials/07-pivot-cubes-and-explain.md#part-c--the-mr-cube-desks-by-risk-class-with-the-right-totals). The preset needs
+the `mr-cube` engine ([29.9](#299-settings-and-switching-the-cube-off)); where it does not run, `MCUBE` and this preset are refused in
+words and the rest of this guide still applies.
+
+### 29.1 What the cube answers
+
+| Question | Where |
+|---|---|
+| Where is the bank's VaR, by desk × risk class, against limits? | the pivot (the landing): each cell its VaR; add `limit_use()` for each whole desk's use of its limit |
+| Why is the bank's VaR smaller than the desks' sum? | the **Σ desks − total** tile and the grand total's diversification (Σ children − total, in money) |
+| Which scenario days drive this cell's tail? | the rail under the pivot: the cell's histogram, the VaR scenario marked **V**, the expected-shortfall tail marked **E** |
+| Why did a cell's VaR move since yesterday? | **Explain the move**: the VaR engine's exact steps on the cell's scope, adding up to the change |
+| Where did this number come from? | a cell's **provenance** (click it): its scope, its members, the date's data, the scenario set, the method |
+| What does each desk contribute? | tab B: component VaR (adding up to the total exactly), the waterfall, the hedges as negative bars |
+| Am I within my DV01 buckets? | tab C: the DV01 ladder by currency and tenor bucket, against two-sided bucket limits when they are configured |
+| What does this unwind do to every desk? | tab C: the what-if side by side, before, after and the change for every row and the total |
+
+Every figure is computed by the server in Java; the console only draws. The VaR of a cell **equals** the VaR engine's answer for the cell's
+scope (`GET /api/v1/risk/var/scope?scope=<the cell's scope>`) to the cent; every cell carries its scope so you can check it.
+
+### 29.2 The measures
+
+The VaR source's measures are its own functions (a view writes them `var()`, `comp_var()`): each cell and each total is computed from its
+own trades, never by adding one cell's figure to another's.
+
+| Measure | Plain sum? | What it is |
+|---|---|---|
+| `var()` | no | the cell's own VaR: its trades' scenario P&L vectors summed (float64, the engine's fixed order), then the k-th worst loss through the view's lens |
+| `es()` | no | the cell's expected shortfall from the same summed vector |
+| `pv()` | yes | the sum of the trades' present values |
+| `trades()` | yes | the trades in the cell |
+| `comp_var()` | yes | the cell's share of the view's **total** VaR (Euler): the cells of any level add up to their parent's share, and all of them to the total VaR |
+| `comp_es()` | yes | the same for ES |
+| `incr_var()` | no | the view's total VaR less the total's VaR without the cell |
+| `limit()` | no | the VaR limit of the node the cell is, when the cell is that node's whole membership as you see it (`var-limit`) |
+| `limit_use()` | no | the cell's VaR over its node's limit, shown only when the limit is set for the view's horizon and confidence |
+| `svar()` | no | stressed VaR: the cell's scope on the date's stress set (USD), computed scope by scope, for the first `stressed-max-cells` cells of a view |
+| `dv01()` | yes | the cell's GIRR delta sensitivities per basis point, from the position sensitivities |
+| `cs01()` | yes | the cell's credit-spread delta sensitivities |
+| `sbm()` | no | FRTB-SA sensitivities-based capital of the cell's own scope ([FRTB_SA_GUIDE.md](FRTB_SA_GUIDE.md)), for the first `sbm-max-cells` cells |
+
+**Always exact.** The cube's measures have one name each and no ≈ form: the pivot engine's sketches and its progressive first answer from
+a sample never apply to them; a large view waits for its exact figures, or is refused by the budget with its count.
+
+*Plain sum* says only how an Excel export writes a total: as a `SUM` formula of its cells where the figure adds up, as the server's value
+where it does not. `dv01()`, `cs01()` and `sbm()` are offered only when the FRTB-SA engine runs here. With the MR cube off, the source offers
+`var()`, `es()`, `pv()` and `trades()` only. A figure the cube cannot give in a cell (stressed VaR past `stressed-max-cells`, SBM of a cell
+no scope text names, a limit of a cell that is not a whole node) is empty, with its reason in the cell's notes; never a zero.
+
+### 29.3 The inputs
+
+The cube adds no input of its own: it reads the VaR engine's book of the business date and, for the sensitivity measures, the FRTB-SA
+engine's position sensitivities. Each input's fields are its data contract; the links to each one's contract and example are in
+[section 27](#27-pivot-data-the-sources-of-the-examples).
+
+| Input | Kind | What the cube reads from it |
+|---|---|---|
+| Scenario P&L vectors or scenario PVs | `pnl-vector`, `scenario-pv` (+ [`fx-scenario`](../contracts/samples/market-risk.md#fx-scenario) ([contract](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-509-scenarios-fx-scenario))) | every trade's vector; its columns (`LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `CURRENCY`, `COUNTERPARTY`, …) as dimensions |
+| Scenario set | `scenario-set` | the scenario days of the histogram and the explain |
+| Hierarchies and VaR limits | `risk-hierarchy`, `var-limit` | the hierarchy levels as dimensions (`MGMT.DESK`, `LEGAL.LEGAL-ENTITY`, `LL.LIMIT_LETTER`), `limit()` and `limit_use()` |
+| Position sensitivities and the factor dictionary | `position-sensitivity`, `risk-factor` | `dv01()`, `cs01()`, the ladder and the heat map ([FRTB_SA_GUIDE.md section 3](FRTB_SA_GUIDE.md#3-the-inputs-and-their-data-contract)) |
+| Official captures and the open dates | the VaR engine | the time-travel slider's stops and the sparklines |
+
+**Positions** are the VaR engine's own ([VAR_GUIDE.md](VAR_GUIDE.md)). A dimension that is a column of the positions puts a **whole
+position** in one value, exactly as a `WHERE:` rule selects it, so the cell's scope text selects the same trades.
+
+**The risk class** (`RISK_CLASS`) is derived from each position's product group by configuration (`drishti.cube.mr.risk-classes`): a
+position's primary class, the classes in their configured order, then `OTHER`. A desk of one product group has VaR in one class only.
+
+### 29.4 The view: dimensions, options, cells and totals
+
+A view of the cube is a pivot view of source `var`: rows, columns, values, filters, the date, nodes opened lazily, sort and top N, and the
+source's **options**:
+
+| Option | Values | What |
+|---|---|---|
+| `scope` | the VaR engine's grammar: `BANK` (default), `DESK:RATES`, `NODE:MGMT~DESK-RATES`, `LE:LE-NY - BOOK:X`, `PORT:…`, `BASKET:…` | the trades the view starts from, as you see them |
+| `horizon` | `1d` (default), `10d` | the VaR horizon |
+| `method` | `sqrt10` (default for 10 days), `sum` | the 10-day method: the 1-day figure × √10, or the overlapping 10-day sums |
+| `confidence`, `esConfidence` | `0.99`, `0.975` (or `99%`) | the VaR and ES confidences |
+| `set` | `normal` (default), `stressed` | the scenario set (stressed: in USD) |
+| `ccy` | `USD` (default), any reporting currency the engine offers | the reporting currency |
+
+The lens is the VaR engine's ([VAR_GUIDE.md section 18.6](VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)).
+A name that is not an option is refused in words.
+
+```json
+{ "source": "var", "rows": ["MGMT.DESK", "MGMT.BOOK", "POSITION", "TRADE"], "columns": ["RISK_CLASS"],
+  "values": [{"measure": "var()", "as": "VaR"}, {"measure": "comp_var()", "as": "Comp VaR"}],
+  "filters": {"LEGAL_ENTITY": {"in": ["LE-NY"]}}, "options": {"scope": "BANK", "horizon": "10d"} }
+```
+
+**Dimensions** (`GET /api/v1/pivot/catalogue?source=var`):
+
+| Type | Examples | Values and the cell's scope |
+|---|---|---|
+| hierarchy | `MGMT.DIVISION`, `MGMT.DESK`, `MGMT.BOOK`, `LEGAL.LEGAL-ENTITY`, `LL.LIMIT_LETTER` | the level's nodes by their code (`DESK-RATES`); the scope names the node, `NODE:MGMT~DESK-RATES` |
+| string (a position column) | `DESK`, `TT_BOOK`, `LEGAL_ENTITY`, `CURRENCY`, `PRODUCT_GROUP`, `PRODUCT_TYPE` | the column's values; the scope is a `WHERE:` rule |
+| string (a trade column) | `COUNTERPARTY`, `TRADE_STATUS`, any other column of the trades | the column's values; `COUNTERPARTY` is `CPTY:`, the others have no scope text |
+| string (derived) | `RISK_CLASS` | the configured classes, then `OTHER`; the scope is `WHERE:PRODUCT_GROUP in (…)` |
+| string (members) | `POSITION`, `TRADE` | each position (`POS:`), each trade (`TRD:`): the last levels of a drill |
+
+The landing view (the catalogue's `defaultView`) puts the management hierarchy's desks on the rows, its lower levels then `POSITION` and
+`TRADE` beneath them (each opened when you open a node), and `RISK_CLASS` on the columns.
+
+**A cell, a subtotal and the grand total are the same thing**: a set of trades. The pivot engine plans the view level by level and asks the
+VaR provider for every set of a level at once; the provider finds each cell's trades from per-trade dimension codes and sums **all** their
+vectors **in one batch** (on a sharded date one call per remote shard owner for all the cells), then takes each measure's statistic once
+per cell. So the grand total's VaR equals `VAR BANK` (or the view's scope) exactly; each subtotal is its node's own VaR, never a sum of the
+rows under it; the diversification of a node is **Σ children − node**, in money, beside it; an empty cell (a desk with no trade of the
+class) has no figure, not a zero. The partial-state cache keeps every cell's figures by the date's data version and intraday stamp, the
+viewer's rights, the scope and the lens: a re-pivot computes only the cells it has not seen (the answer says how many came from the cache).
+
+**Rights.** The cube reads as the person, as the VaR explorer does. A role that sees part of a scope only in aggregate may pivot it by
+**hierarchy levels** only: a column, the risk class, a position or a trade would name what it may not see one by one, and is refused
+in words (`403`). A masked column is not offered and is refused if asked.
+
+### 29.5 The landing
+
+`MCUBE <GO>` (or **VaR → MR cube**, or **MR cube ›** in the VaR explorer, which opens the scope and date you are looking at) opens the
+pivot screen on the VaR source with the MR lens, the pivot first, with tabs B and C beside it; the command forms are in
+[section 28](#28-presets-the-risk-cubes).
+
+| Panel | What it shows |
+|---|---|
+| Headline strip | VaR of the scope (its rank of N), ES (mean of the worst), limit use with its bar (green under 80%, amber from it, red over 100%), **Σ rows − total** (the diversification), stressed VaR, the data (batches, intraday, data version, trades and positions) |
+| Lens controls | the scope; the measure (VaR, ES, Comp VaR, DV01, SBM: one not running here is greyed); horizon 1D, 10D √10, 10D sum; confidence; scenario set; currency. Each changes the view's options and the engine answers again |
+| Time-travel slider | the business dates with an official record, open on this server or held by the lake (official ones dotted); a click: *as of*; shift-click: *compare* (explain's earlier date); `[` and `]` step |
+| Pivot | the pivot engine's grid: nested rows opened with + and −, *expand by…* per node, the field list and its zones, each cell a sparkline of the first measure over the open dates |
+| Rail | the clicked cell's tail histogram (V and E), explain the move, the sparklines' note |
+
+Click a cell to fill the rail and see its provenance; `→` opens a row (desk → book → position → trade), `E` expands a node by another field,
+`Enter` lists a cell's trades. Keys of the lens: **H** 1D/10D, **[ ]** dates, **W** the what-if tray.
+
+### 29.6 Tail, attribution, sensitivities and what-if
+
+**Tab B** (the first row dimension): **components** (`comp_var()` of each member and its share of the total, a negative component a
+hedge; they add up to the total exactly), the **waterfall** of the components sorted by size with the total as its last bar, the
+**histogram** of the view's total, and the **factor heat map** of GIRR delta (DV01) by curve currency × tenor (▲ long in green, ▼ short in
+red, intensity by size, every cell printed).
+
+**Tab C**: the **sensitivity ladder**: GIRR delta by currency and the buckets of a grid (`BANK-IR-TENOR`: 0-2Y, 2-5Y, 5-10Y, 10Y+;
+`FRTB-GIRR`: the regulator's vertices), net per bucket, a centre-zero bar (long right, short left), against the bucket's two-sided limit
+when one is configured (`use = max(net / limit, −net / limit)`, **near** from 80%, **breach** over 100%). The **what-if side by side**: add
+a booked trade copied and scaled (`× -1` unwinds it); every row of the view's first row dimension and the total, before, after and the change
+(the Java what-if on each row's scope, [VAR_GUIDE.md section 8.2](VAR_GUIDE.md#82-the-what-if-the-java-engine)), a materially changed row
+outlined. **Explain the move** of the last cell clicked, or of the view's scope.
+
+A grid is configuration: each bucket `label: from-to` in years, starting where the last ended (a gap or an overlap is refused in words);
+a tenor in no bucket is counted aside (`withoutTenor`).
+
+### 29.7 Explain the move, time travel and provenance
+
+**Explain the move** is the one Explain of the cell's VaR (kind `var` on the cell's scope, `GET /api/v1/explain?kind=var&scope=…&from=…&to=…`;
+[USER_GUIDE.md, "Explain: one for every number"](USER_GUIDE.md#explain-one-for-every-number)): the card names the cell and its dates, a
+hover previews it, a click opens the drawer at **Why it moved**, the VaR engine's exact steps between the compare date (or the date
+before) and the view's date, each with its top contributors; the steps add up to the change.
+
+**Time travel.** The slider's stops are business dates and, within an open date, its batches in order (dates and batches, not raw lake
+versions). Choosing a date that is not open opens it. The pivot screen's **Compare** shows the view on two dates cell by cell.
+
+**Provenance** per cell (click it, `GET /api/v1/pivot/provenance/{id}?cell=<row>|<column>`): the cell's scope, its members, how its figure
+is made; the view's shared part (the source's notes: route, scenarios, trades hidden by your role) and the work done (sets, cells from the
+cache, the batch of vector sums). The headline's provenance (`POST /api/v1/risk/mr/headline`) adds the date's data version and input
+versions, batches and intraday updates, the scenario set and window, the method and lens, and the shards.
+
+### 29.8 Saved views, sharing and export
+
+The cube's views are pivot views ([section 11](#11-saved-and-shared-views-compare)): saved, shared read-only with people or roles and
+opened **with the reader's entitlements**; the options (scope and lens) are kept with the view. Export from the pivot screen's **Export**:
+Excel (outline levels; `SUM` formulas only for `pv()`, `trades()`, `comp_var()`, `comp_es()`, `dv01()` and `cs01()`, the server's values
+for every other measure; a Provenance sheet), CSV, Arrow, the definition as YAML, and a cell's trades.
+
+### 29.9 Settings and switching the cube off
+
+The cell budget, busy protection and the cache are the pivot engine's ([section 16](#16-settings)). The cube's own settings are in
+`config/engines/mr-cube.yaml`; each key, its default and its environment variable are in [CONFIGURATION.md](../admin/CONFIGURATION.md):
+
+| Setting | What |
+|---|---|
+| `drishti.engines.mr-cube.enabled` | the MR cube (engine `mr-cube`: needs `var` and `pivot`, uses `sensitivities` and `frtb-sa`) |
+| `drishti.cube.mr.risk-classes` | the derived `RISK_CLASS` dimension (IR, CR, FX, EQ, CM by product group as shipped) |
+| `drishti.cube.mr.grids` | the ladders' bucket grids, in years (`BANK-IR-TENOR`, `FRTB-GIRR`) |
+| `drishti.cube.mr.ladder-limits` | two-sided DV01 limits per currency and bucket (`"USD 2-5Y": 1500000`) |
+| `drishti.cube.mr.sbm-max-cells`, `stressed-max-cells` | the cells whose SBM, and whose stressed VaR, one evaluation computes |
+| `drishti.cube.mr.sparkline-dates`, `sparkline-max-cells` | the open business dates a sparkline reads, and the most cells of a view that get one |
+| `drishti.cube.mr.what-if-rows` | the most rows the what-if side by side computes (the total always added) |
+
+**Switched off** (Admin → Engines, or the file), `/api/v1/risk/mr/...` answers `404 DRS-1020`, the `MCUBE` word and the menu entry are
+gone, the VaR source of the pivot engine offers `var()`, `es()`, `pv()` and `trades()` by the positions' columns only (an MR measure, a
+hierarchy level or an option is refused in words), and the cube's kept dimension codes are released.
+
+### 29.10 API and command line
+
+The grid is the pivot engine's API ([section 14](#14-the-api)) with `"source": "var"`; the MR lens adds:
+
+| Request | What |
+|---|---|
+| `POST /api/v1/risk/mr/headline` | `{view}`: the headline of the view's scope: `var`, `es`, `k`, `esCount`, `scenarios`, `lens`, `limit`, `limitUse`, `limitStatus` (within, near, breach), `limitNear`, `stressedVar` or `stressedNote`, `dataVersion`, `batches`, `intraday`, `trades`, `positions`, `provenance` |
+| `POST /api/v1/risk/mr/detail` | `{view, coords}`: one cell's tail: histogram `edges` and `counts`, `var`, `es`, `k`, `esCount`, the VaR scenario and its date, the ES tail, `trades`, `positions`, `scope` |
+| `POST /api/v1/risk/mr/history` | `{view}`: the sparklines: `dates`, `series` by cell key (`<row>|<column>`) of the first measure |
+| `GET /api/v1/risk/mr/versions` | the slider's stops |
+| `GET /api/v1/risk/mr/sensitivities?scope=&grid=&asOf=` · `?by=QUALIFIER,TENOR&class=GIRR&measure=DELTA` | the ladder by a grid, or the heat map by two factor parts |
+| `POST /api/v1/risk/mr/what-if` | `{view, items: [{copyOf, factor}]}`: each row and the total, before, after and incremental |
+
+A `view` is the view itself or a saved view's id (`owner/name`). On the command line: `drishti.py pivot run --source var --rows MGMT.DESK
+--cols RISK_CLASS --values "var()" --option horizon=10d`, and `drishti.py pivot mr headline|cell|versions|explain|ladder|heat|whatif`
+([CLI_REFERENCE.md](CLI_REFERENCE.md)). In the console: `MCUBE <GO>`.
+
+### 29.11 Refusals and error codes
+
+| Code | When |
+|---|---|
+| `DRS-5701` (400) | a view the cube cannot answer: an unknown field, measure or option, an MR measure or option while the MR cube is off, a bad lens or grid |
+| `DRS-5702` (422) | the view has more cells (with its totals) than the pivot engine's budget for holistic measures: the count is given; nothing is cut short |
+| `DRS-5704` (404) | a saved view or a cell that is not there, or not shared with you |
+| `DRS-5705` (403) | a masked column asked as a dimension |
+| `DRS-1020` (404) | the MR cube (or the pivot or VaR engine) is not running on this server |
+| `DRS-9507` (503) | busy protection: a large view did not start; `Retry-After` |
+| `403` | a dimension that would name positions of a scope you see only in aggregate |
+| `DRS-5215` (503) | a shard of the date has no live owner: the view is refused, never answered from the other shards |
+
+### 29.12 How it is computed
+
+The pivot engine owns the view: the levels, the cell sets, the budget, busy protection, the cache, provenance, saved views and exports. The
+VaR provider (`VarPivotProvider`) answers each set of cells: it opens the view's scope through its lens as the person (`VarService`), finds
+each cell's trades from per-trade codes of each dimension (`VarPivotCodes`), sums every cell's vector in one batch (`VarBook.vectors`,
+`ShardedVectors.sumSets`: the planner's node aggregates plus and minus the rows that differ, each remote shard asked once for all the sets,
+partials added in shard order so each vector is the single set's to the bit), and finishes each figure with the engine's own arithmetic
+(`VarCalc`, `VarMath`, `VarLens`). Components use the view's total vector (the filtered trades of the view). The MR lens's endpoints
+(`MrCubeExtras`, `MrSensitivities`) read the same provider and engines. Nothing in the console computes a figure.
+
+### 29.13 Not built yet
+
+- **Per-class vectors** (the risk-class columns as each position's own split): the class is a position's primary class until the bank
+  delivers per-class vectors.
+- **The factor overlay** of explain the move (Σ sensitivity × the factor's move): it needs each factor's move by date in the lake.
+- **Within-date batches on the slider** as stops of their own (the slider moves between dates; a date's batches are listed on its stop).
+- **Streaming patches** of visible cells on an intraday batch, **corrections** in the cube, the **phone tiers** beyond the pivot
+  screen's narrow layout.
+- **The cube's playground and its workbook of the VaR formulas** (the export has the totals that add up as formulas; the VaR statistic of a
+  cell is the VaR Playground's, `PLAY VAR <scope>`).

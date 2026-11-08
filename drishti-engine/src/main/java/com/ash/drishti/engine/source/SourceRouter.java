@@ -303,7 +303,7 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
 
     /**
      * Sources outside this server that a read falls back to when no local source holds the entity: Drishti*net's peers
-     * (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 7, data forwarding). Not set while the cluster is off, so a single server reads exactly as before.
+     * (CLUSTER_GUIDE.md › Drishti*net: many servers, one Drishti, section 7, data forwarding). Not set while the cluster is off, so a single server reads exactly as before.
      */
     public interface Fallback {
         /**
@@ -331,7 +331,7 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
         /**
          * A grouped page (a derived kind) gathered from every node that holds members of the kind it groups, replacing {@code local} (this
          * node's page, or null when no member is here); empty when there is nothing to gather (not a derived kind, no other node holds
-         * members, a forwarded request). CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 8.
+         * members, a forwarded request). CLUSTER_GUIDE.md › Drishti*net: many servers, one Drishti, section 8.
          */
         default Optional<EntityDocument> gather(EntityRef ref, AsOf asOf, EntityDocument local) {
             return Optional.empty();
@@ -766,7 +766,7 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
     /**
      * As {@link #list}, and in a cluster the entities the peers hold too (listed there for the caller), merged as one list of at most
      * {@code limit}, this node's first: what a listing that reads documents through {@link #fetchAll} needs (a map panel's countries).
-     * A structured search does not use it: its controller scatters the whole search (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 8).
+     * A structured search does not use it: its controller scatters the whole search (CLUSTER_GUIDE.md › Drishti*net: many servers, one Drishti, section 8).
      */
     public Listing listAcross(String kind, int limit, Duration budget, AsOf asOf, SourceFailures failures) {
         Listing local = list(kind, "", limit, budget, asOf, failures);
@@ -840,7 +840,7 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
             return subscribeSource(ref, listener);
         }
         // every tick carries what is laid over it; an applied change to the record reads it again and ticks it, also for a record
-        // that no source streams (write-back's viewers, WRITE_BACK.md › The design and its reasons, section 18.5)
+        // that no source streams (write-back's viewers, APPROVALS_GUIDE.md › The design and its reasons, section 18.5)
         Subscription source = subscribeSource(ref, d -> listener.accept(l.apply(d, AsOf.LATEST)));
         Subscription edits = l.watch(ref, () -> fetch(ref).thenAccept(listener));
         if (source == Subscription.NONE && edits == Subscription.NONE) {
@@ -955,7 +955,7 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
      */
     /**
      * The kind's data files on a date when one source holds the whole kind and can hand them over (the pivot engine's direct lake route,
-     * docs/architecture/PIVOT_ENGINE.md section 6.2); empty otherwise. Reads no data file.
+     * docs/architecture/ARCHITECTURE.md section 26.4); empty otherwise. Reads no data file.
      */
     public Optional<com.ash.drishti.api.LakeFiles> lakeFiles(String kind, AsOf asOf) {
         List<SourcePlugin> sources = wholeKindSources(kind, asOf);
@@ -1174,7 +1174,7 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
     }
 
     /**
-     * The same, for the rows whose key is in {@code range} (a VaR shard, VAR_SHARDING.md; null: the whole date): the source may skip the
+     * The same, for the rows whose key is in {@code range} (a VaR shard, DATA_ARCHITECTURE.md section 13; null: the whole date): the source may skip the
      * files its statistics show hold none; the caller checks every row it is given.
      */
     public boolean vectors(String kind, String column, List<String> texts, AsOf asOf, com.ash.drishti.api.KeyRange range,
@@ -1188,7 +1188,7 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
         return false;
     }
 
-    /** Column batches of the kind over a date range from the first source in routing order that answers as columns (BI_DESIGN.md 6.1). */
+    /** Column batches of the kind over a date range from the first source in routing order that answers as columns (ARCHITECTURE.md §28 6.1). */
     public Optional<com.ash.drishti.api.ArrowScan> scan(com.ash.drishti.api.ScanRequest request) throws Exception {
         for (SourcePlugin p : candidates(request.kind())) {
             Optional<com.ash.drishti.api.ArrowScan> s = p.scan(request);

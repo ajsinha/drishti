@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * The one Approvals API (API_GUIDE.md "Approvals"): the caller's queue, one item, the decision and the questions. Every four-eyes kind is
+ * The one Approvals API (API_REFERENCE.md "Approvals"): the caller's queue, one item, the decision and the questions. Every four-eyes kind is
  * decided here; the kinds' own approve and reject endpoints are gone.
  *
  * <pre>

@@ -51,7 +51,7 @@ final class VarPartTotals {
     /** Missing positions computed on one thread up to this many; more are split across the sum threads. */
     private static final int PARALLEL_FROM = 256;
     /**
-     * The positions or trades whose remote reads are fetched ahead together (VAR_SHARDING.md section 15): one step's answers held at
+     * The positions or trades whose remote reads are fetched ahead together (DATA_ARCHITECTURE.md section 13): one step's answers held at
      * once, about 4 MB at 509 scenarios.
      */
     static final int AHEAD = com.ash.drishti.compute.vector.ShardedVectors.BATCH;

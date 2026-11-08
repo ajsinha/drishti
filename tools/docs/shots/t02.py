@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 2, Look up anything (docs/tutorials/02-look-up-anything.md), written to docs/tutorials/img/t02/."""
+"""Pictures of tutorial 1, Part B, Look up anything (docs/tutorials/01-first-15-minutes.md), written to docs/tutorials/img/t02/."""
 from __future__ import annotations
 
 from _tut import OUT, SERVER_ENV, command, go, lake_days, login, page_shot  # noqa: F401

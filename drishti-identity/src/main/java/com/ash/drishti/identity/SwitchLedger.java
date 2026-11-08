@@ -40,7 +40,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.support.TransactionTemplate;
 
 /**
- * The administrators' switches (docs/admin/USER_MANAGEMENT.md): which commands and packs are on or off, kept in the Drishti database, which is
+ * The administrators' switches (docs/guides/ADMIN_GUIDE.md): which commands and packs are on or off, kept in the Drishti database, which is
  * the system of record ({@code drishti_switch}, every change in {@code drishti_switch_log}). Drishti*net only spreads it: each node
  * gossips {@link #hash()}, and a node whose hash differs from a peer's pulls the peer's {@link #entries()} and {@link #merge}s them.
  *
@@ -55,7 +55,7 @@ public final class SwitchLedger {
 
     public static final String COMMAND = "command";
     public static final String PACK = "pack";
-    /** A connector's {@code writes:} switched on by an administrator (WRITE_BACK.md › The design and its reasons, section 12): off unless an entry says on. */
+    /** A connector's {@code writes:} switched on by an administrator (APPROVALS_GUIDE.md › The design and its reasons, section 12): off unless an entry says on. */
     public static final String WRITES = "connector-writes";
     public static final String EVERYONE = "*";
 

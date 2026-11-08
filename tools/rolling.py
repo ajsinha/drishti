@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The rolling upgrade runner (CD3, docs/architecture/CLUSTER_DEPLOYMENT.md section 10.1): a cluster upgraded one node at a time with no
+"""The rolling upgrade runner (CD3, docs/guides/CLUSTER_GUIDE.md section 10.1): a cluster upgraded one node at a time with no
 downtime, on VMs (systemd, any shell commands) or on ECS (one service per node).
 
 The order is fixed: **consoles**, then **BI and data-serving** members, then **coordinators**, then **shard owners one zone at a time**
@@ -339,7 +339,7 @@ def describe(work: list[tuple[str, Node, list[Step]]], inv: Inventory, version: 
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="rolling.py", description=__doc__.split("\n\n")[0], formatter_class=argparse.RawDescriptionHelpFormatter,
-                                epilog="docs/architecture/CLUSTER_DEPLOYMENT.md section 10.1; docs/admin/OPERATIONS.md, Rolling upgrades")
+                                epilog="docs/guides/CLUSTER_GUIDE.md section 10.1; docs/guides/OPERATIONS_GUIDE.md, Rolling upgrades")
     p.add_argument("--inventory", required=True, help="the cluster's nodes and commands (YAML or JSON; deploy/rolling.example.yaml)")
     p.add_argument("--version", default="", help="the version to install, filled in as {version}")
     p.add_argument("--dry-run", action="store_true", help="print every step and call nothing")

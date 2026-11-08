@@ -27,7 +27,7 @@ import java.util.function.UnaryOperator;
 
 /**
  * The principal of any user, not only the caller: the current roles of an enabled user, none otherwise, looked up at most once a
- * minute per user. What a person receives is computed for that person from what they may see now (COLLABORATION.md, Security),
+ * minute per user. What a person receives is computed for that person from what they may see now (ARCHITECTURE.md §31, Security),
  * so delivery, the inbox and the alert engine decide rights through this one place.
  */
 public final class Principals {

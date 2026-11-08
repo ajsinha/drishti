@@ -23,7 +23,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /**
- * Shard ownership by rendezvous hashing (VAR_SHARDING.md section 4): the same members in any order give the same owners on every member;
+ * Shard ownership by rendezvous hashing (DATA_ARCHITECTURE.md section 13): the same members in any order give the same owners on every member;
  * a fourth member takes about a quarter of the shards (and of the replica slots); a member leaving moves only its own shards, each keeping
  * its other replica; owners spread over zones when there are zones; a pinned shard goes to its member first.
  */

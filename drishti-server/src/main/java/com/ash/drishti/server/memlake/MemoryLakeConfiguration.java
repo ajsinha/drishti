@@ -58,7 +58,7 @@ public class MemoryLakeConfiguration {
             ObjectProvider<com.ash.drishti.server.net.NetService> net,
             ObjectProvider<com.ash.drishti.server.admission.RequestsInFlight> inFlight,
             ObjectProvider<com.ash.drishti.server.engines.EngineSwitches> switches) {
-        // off (config/engines/memory-lake.yaml, COMPUTE_ENGINES.md): no store, no table, no job; on needs a restart (the direct-memory limit)
+        // off (config/engines/memory-lake.yaml, ADMIN_GUIDE.md): no store, no table, no job; on needs a restart (the direct-memory limit)
         com.ash.drishti.server.engines.EngineSwitches sw = switches.getIfAvailable();
         MemoryLakeSettings props = sw == null || sw.of("memory-lake").on() ? configured : MemoryLakeSettings.none();
         Set<String> owned = ownedHere(net.getIfAvailable());
@@ -72,7 +72,7 @@ public class MemoryLakeConfiguration {
     }
 
     /**
-     * The in-memory lake as a compute engine (docs/architecture/COMPUTE_ENGINES.md): off live releases its stores; on needs a restart (the
+     * The in-memory lake as a compute engine (docs/guides/ADMIN_GUIDE.md): off live releases its stores; on needs a restart (the
      * launchers add the stores' caps to the direct-memory limit at start), so Admin, Engines writes the file and says "restart needed".
      */
     @Bean

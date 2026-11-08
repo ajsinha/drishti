@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""A mail catcher for trying subscriptions and alerts on your own machine (tutorial 11).
+"""A mail catcher for trying subscriptions and alerts on your own machine (tutorial 8, Part D).
 
 It accepts any mail on 127.0.0.1 and writes each message to a file in a folder; it sends nothing anywhere. No sign-in, no TLS: for a laptop only.
 

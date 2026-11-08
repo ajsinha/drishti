@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The BI store's retention (2.9.7, RESOURCES_AND_SCALE.md section 7.2): at most {@code store-max-dates} dates a table, then the least
+ * The BI store's retention (2.9.7, CLUSTER_GUIDE.md section 7.2): at most {@code store-max-dates} dates a table, then the least
  * recently built dates beyond {@code store-max-gb}, never a table's newest; a removed date's generation moves on.
  */
 class LayersRetentionTest {

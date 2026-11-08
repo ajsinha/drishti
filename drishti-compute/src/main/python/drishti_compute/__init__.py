@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Drishti's compute worker SDK (docs/architecture/PYTHON_COMPUTE.md section 8): the engine contract, the pure-Python Arrow codec and the
+"""Drishti's compute worker SDK (docs/guides/NOTEBOOK_GUIDE.md section 8): the engine contract, the pure-Python Arrow codec and the
 worker loop the server's supervisor starts. Pure Python, standard library only: it runs in any interpreter of 3.10 or later, on Linux and
 on Windows, with no compiled package."""
 

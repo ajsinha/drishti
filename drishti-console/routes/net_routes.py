@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Admin → Net (/admin/net): the Drishti*net cluster this console's server belongs to (docs/admin/OPERATIONS.md). Tabs: Members (every node,
+"""Admin → Net (/admin/net): the Drishti*net cluster this console's server belongs to (docs/guides/OPERATIONS_GUIDE.md). Tabs: Members (every node,
 its state, version, tags, latency, packs; add a seed, remove a gone node, drain, leave, rejoin), Capability map, Routing (explain a
 request, forwarded traffic), Access (nodes per role, this node's tags and peer-only packs), Files (config/net/ with check, version,
 history and diff) and Security (the key's state, refused calls). Administrators only. The server keeps the files, checks them and
@@ -32,7 +32,7 @@ from routes.common import ident, render
 router = APIRouter(prefix="/admin/net", include_in_schema=False)
 
 _ACTIONS = ("drain", "undrain", "leave", "rejoin")
-# the drain before a stop (CD2, CLUSTER_DEPLOYMENT.md section 4.6): forwarded work and VaR shards handed over, readiness out of service
+# the drain before a stop (CD2, CLUSTER_GUIDE.md section 4.6): forwarded work and VaR shards handed over, readiness out of service
 _STOP_ACTIONS = {"stop-drain": True, "stop-undrain": False}
 
 

@@ -386,7 +386,7 @@ on sec.gov.
 | Nasdaq Trader symbol directory | Public directory, attribution | no | the listing market |
 | Yahoo Finance (us-equities-prices connector, yfinance plugin) | Terms forbid redistribution; nothing committed | yes | price-history, read live only when the connector is on |
 
-Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/us-equities.md](guides/us-equities.md): *Data contracts* and *Data retrieval*.
+Every kind's links to its data contract and its example and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/us-equities.md](guides/us-equities.md): *Data contracts* and *Data retrieval*.
 
 External data: SEC EDGAR (submissions, company facts XBRL); Wikidata; GLEIF LEI records; Nasdaq Trader symbol directory; Yahoo Finance (us-equities-prices connector, yfinance plugin) (**internal only**). Each source's URL, licence and data feed are on the External data help page, [docs/guides/EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md).
 
@@ -415,4 +415,4 @@ The pack's files are written by `tools/packgen/us_equities/make.py`; its `--chec
 ## See also
 
 - [The us-equities pack](guides/us-equities.md): Public data on the Dow 30, Nasdaq-100 and S&P 500 companies: SEC filings and financials, SIC sectors, LEIs and index membership. Prices are live only, off by default, internal use. Type USEQ AAPL, IDX SP500, SIC 3674, EDGAR 8-K, FACT AAPL-REVENUE or PXH PX-AAPL.
-- [Packs](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md) (the README standard).
+- [Packs](../../../../docs/guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/BUILD_GUIDE.md) (the README standard).

@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* BI runs (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), sections 6 and 7): the workspace tabs, the Runs list, the drawer of one run, the run card of a visual and the confirm
+/* BI runs (docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), sections 6 and 7): the workspace tabs, the Runs list, the drawer of one run, the run card of a visual and the confirm
    card. Colours come from the theme tokens only, so every theme (the three Terminal ones too) draws them; every state also has its word and its glyph. */
 .bi-ws-tabs { display: flex; gap: var(--d-sp-4); border-bottom: 1px solid var(--d-border); margin: var(--d-sp-8) 0 var(--d-sp-16); overflow-x: auto; }
 .bi-ws-tabs [role="tab"] { display: inline-flex; align-items: center; gap: var(--d-sp-6_4); padding: var(--d-sp-8_8) var(--d-sp-14_4); min-height: 2.75rem; box-sizing: border-box; color: var(--d-muted); text-decoration: none;

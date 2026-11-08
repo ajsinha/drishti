@@ -111,9 +111,11 @@ class Guide:
     listed: bool = True
     packs: tuple = ()                 # the packs the guide is about (a pack's own guide; help.yaml packs:), for an edition's help filter
     roles: tuple = ()                 # help.yaml roles: only people with one of these roles (or an administrator) see the guide; empty = everyone
-    engine: str = ""                  # help.yaml engine: the compute engine the guide is about; hidden while it runs nowhere (COMPUTE_ENGINES.md)
+    engine: str = ""                  # help.yaml engine: the compute engine the guide is about; hidden while it runs nowhere (ADMIN_GUIDE.md)
     pair: str = ""                    # help.yaml pair: the tutorial drawn beside this guide on its section's page
     group: str = ""                   # the group of its section it sits in (help.yaml groups[].title)
+    domain: str = ""                  # help.yaml domain: the domain module the page belongs to (banking, capitalmarkets, economy); core when not said
+    lenses: tuple = ()                # help.yaml lenses: the lenses that show the page (none said: every lens; the full product shows it)
 
     def permits(self, ident) -> bool:
         """Whether this person may see the guide: an unrestricted guide anyone; a guide with ``roles:`` (an internal page such as the
@@ -156,7 +158,8 @@ class Library:
                     guide = Guide(g["slug"], g["title"], g.get("summary", "").replace("{tutorials}", tutorial_count_word(docs_dir)), g.get("icon", "journal-text"),
                                   g.get("kind", "reference" if src else "guide"), sec["id"], path, packs=tuple(g.get("packs") or ()),
                                   roles=tuple(str(r) for r in (g.get("roles") or ())), engine=str(g.get("engine") or ""),
-                                  pair=str(g.get("pair") or ""), group=str(grp.get("title") or ""))
+                                  pair=str(g.get("pair") or ""), group=str(grp.get("title") or ""), domain=str(g.get("domain") or ""),
+                                  lenses=tuple(str(x) for x in (g.get("lenses") or ())))
                     if path.exists():
                         self.guides[guide.slug] = guide
                         items.append(guide)

@@ -89,7 +89,7 @@ connector `kinds:`: an empty listing otherwise makes it a candidate for every ki
 | `index.block-cache` | int | `16` | Decoded 128-id blocks each on-disk day keeps in memory (a lookup reads one or two blocks from the file); 0 = none |
 | `index.kinds.*` | string |  | Per-kind override of any index setting (index.kinds.<kind>.days) |
 
-Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md). It takes the shared `tls.*` settings (docs/connectors/TLS.md). It takes the shared `proxy.*` settings for an outbound HTTP proxy (CONNECTOR_DEVELOPER_GUIDE.md).
+Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/guides/DATA_GUIDE.md section 9). It takes the shared `tls.*` settings (docs/guides/DATA_GUIDE.md section 10). It takes the shared `proxy.*` settings for an outbound HTTP proxy (DEVELOPER_GUIDE.md).
 <!-- settings:end -->
 
 Defaults as `S3SourcePlugin.start` reads them: `region` `us-east-1`, `path-style` `true` (read only with `endpoint`), `rescan-seconds`
@@ -147,7 +147,7 @@ routes:
 The shipped `application.yaml` also lists the plugin as itself, off (`drishti.sources.plugins.s3`, switched on by
 `DRISHTI_S3_ENABLED`); use named connector files for anything more than one bucket. Every setting with its environment variable is
 in [CONFIGURATION.md](../../docs/admin/CONFIGURATION.md#s3-tls-proxy); the file format, live reload and Admin → Connectors are in
-[Connector files](../../docs/connectors/CONNECTOR_FILES.md).
+[Connector files](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors).
 
 ### Try it on a laptop
 
@@ -203,7 +203,7 @@ within `drishti.sources.fetch-timeout` (10 s), so keep the bucket close to the s
 look at the business date unless `index.days` keeps several days, in which case a past date answers from that date's own ids
 ([ARCHITECTURE.md section 9.1](../../docs/architecture/ARCHITECTURE.md#91-several-business-days)); the regular listing fills the kept
 days (on the heap), and each past day is re-listed every `index.reload-every` (S3 gives a day no version). **Admin → Connectors →
-this connector → Index** reloads a day by hand ([OPERATIONS.md section 12.2](../../docs/admin/OPERATIONS.md#122-sizing-the-multi-day-type-ahead-index)).
+this connector → Index** reloads a day by hand ([OPERATIONS_GUIDE.md section 12.2](../../docs/guides/OPERATIONS_GUIDE.md#144-the-multi-day-type-ahead-index)).
 
 **Searches, derived kinds.** With no promoted columns, a structured search (`STR where pnl < -50m`) is answered by the engine reading
 each id of the kind (at most `drishti.search.max-scan`) one read each, within `drishti.search.budget`; documents not read in time are
@@ -265,7 +265,7 @@ settings: { bucket: risk-docs, prefix: eod/, lookback-days: 10 }
 
 An undated object answers every date, so the lake is never asked for that entity: keep undated objects only for kinds that do not
 change by date. Set `lookback-days` to the history S3 keeps (and the lifecycle rule to match). General rules:
-[Combining connectors](../../docs/connectors/CONNECTORS.md#combining-connectors).
+[Combining connectors](../../docs/guides/DATA_GUIDE.md#84-combining-connectors).
 
 ## Failure and recovery
 
@@ -299,7 +299,7 @@ SSE-S3 and SSE-KMS objects are read transparently (SSE-KMS also needs `kms:Decry
 **Credentials.** Blank `access-key` uses the AWS default chain (system properties, `AWS_*` environment variables, web identity,
 `~/.aws` profile, container credentials, the EC2 instance role); prefer a role or web identity. A set `access-key` and `secret-key`
 are static credentials with no session token. Never write a key in YAML: `${S3_ACCESS_KEY}` or `file:` only
-([Secrets](../../docs/connectors/CONNECTORS.md#secrets)).
+([Secrets](../../docs/guides/DATA_GUIDE.md#secrets)).
 
 **Addressing.** With `endpoint`, path-style (`https://minio.bank.example/risk-docs/eod/…`) unless `path-style: false`; without it,
 AWS's virtual-hosted style. Entitlements and redaction apply to S3 documents like any other.
@@ -308,7 +308,7 @@ AWS's virtual-hosted style. Entitlements and redaction apply to S3 documents lik
 
 AWS endpoints are HTTPS against the JVM's authorities. With `endpoint` write `https://` in production (`http://localhost:9000` is for a
 local MinIO). A private CA (MinIO, Ceph, an internal gateway) goes on the connector with the shared `tls.*` settings
-([TLS.md](../../docs/connectors/TLS.md), [CONFIGURATION.md](../../docs/admin/CONFIGURATION.md#shared-tls)):
+([DATA_GUIDE.md section 10](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy), [CONFIGURATION.md](../../docs/admin/CONFIGURATION.md#shared-tls)):
 
 | Setting | Meaning |
 |---|---|
@@ -340,7 +340,7 @@ Check from the command line: `curl --cacert /etc/drishti/tls/ca.pem https://mini
 
 ## Outbound proxy
 
-The shared `proxy.*` settings ([TLS.md, proxy](../../docs/connectors/TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers),
+The shared `proxy.*` settings ([DATA_GUIDE.md section 10, proxy](../../docs/guides/DATA_GUIDE.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers),
 [CONFIGURATION.md](../../docs/admin/CONFIGURATION.md#shared-proxy)): a `proxy:` block in `settings:` (or `proxy: none`) overrides the
 site default `drishti.http.proxy.*`. The AWS SDK's proxy configuration is used for AWS and for an S3-compatible `endpoint`; with a
 proxy the connector uses the Apache HTTP client (it answers a proxy's login when tunnelling `https://` with `CONNECT`), and
@@ -386,7 +386,7 @@ JVM's `https.proxyHost` properties and of the environment is switched off so the
 
 ## See also
 
-- [Connectors](../../docs/connectors/CONNECTORS.md#s3) (which connector when), [Connector files](../../docs/connectors/CONNECTOR_FILES.md),
-  [TLS and proxy](../../docs/connectors/TLS.md).
+- [Connectors](../../docs/guides/DATA_GUIDE.md#82-which-connector) (which connector when), [Connector files](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors),
+  [TLS and proxy](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy).
 - [The S3 settings in CONFIGURATION.md](../../docs/admin/CONFIGURATION.md#s3-tls-proxy).
-- [The connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the README standard).
+- [The connector developer's guide](../../docs/guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one) (the README standard).

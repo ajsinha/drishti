@@ -14,7 +14,7 @@
 
 # The payments table of the model trading-cashflows: one row per element of a trade's EVENTS, the amounts the deal page nets by date. AMOUNT is signed
 # as the booking says (paid −, received +) and in the event's own CURRENCY; the model converts it to a USD equivalent.
-# Reference: docs/guides/BI_GUIDE.md.
+# Reference: docs/guides/REPORTS_GUIDE.md.
 
 rachana: 2
 expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/BI_LANGUAGE_REFERENCE.md)

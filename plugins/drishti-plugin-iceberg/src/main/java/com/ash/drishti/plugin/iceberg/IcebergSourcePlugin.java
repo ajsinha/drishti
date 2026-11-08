@@ -801,7 +801,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
     }
 
     /**
-     * The date's vectors for the keys of {@code range} (a VaR shard, VAR_SHARDING.md): a data file whose manifest bounds of the first key
+     * The date's vectors for the keys of {@code range} (a VaR shard, DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built): a data file whose manifest bounds of the first key
      * column (and its null count) show none of them is not read; the reader checks every row.
      */
     @Override
@@ -966,7 +966,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
     }
 
     /**
-     * The date's rows from the current snapshot's manifests: the sum of the {@code record_count} of its data files (docs/architecture/BI_DESIGN.md
+     * The date's rows from the current snapshot's manifests: the sum of the {@code record_count} of its data files (docs/architecture/ARCHITECTURE.md §28
      * section 4.1). The plan is the cached one the reads use; no data file is read. A date without files holds 0 rows. With delete files the
      * count is an upper bound (the deleted rows are still counted), which an estimate may be.
      */
@@ -982,7 +982,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
     }
 
     /**
-     * The date's Parquet data files and the promoted columns, for the pivot engine's direct lake route (docs/architecture/PIVOT_ENGINE.md
+     * The date's Parquet data files and the promoted columns, for the pivot engine's direct lake route (docs/architecture/ARCHITECTURE.md section 26
      * section 6.2): only a snapshot table on a local disk whose date has no delete files (a reader of the bare files would see deleted
      * rows). No data file is read: the plan is the cached one.
      */

@@ -38,7 +38,7 @@ spring:
     # files read after this one: the engines' files (config/engines/<id>.yaml), application.local.yaml in the working directory, then the packs overlay Admin -> Packs writes
     # (DRISHTI_PACKS_OVERLAY, default <data dir>/packs/added.yaml)
     import:
-      # the engines' own files (docs/architecture/COMPUTE_ENGINES.md section 3): the jar's copy, then the site's, which wins key by key
+      # the engines' own files (docs/guides/ADMIN_GUIDE.md section 3): the jar's copy, then the site's, which wins key by key
       - optional:classpath:engines/var.yaml   # the banking module's (its jar): absent when the module is not installed
       - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/var.yaml
       - optional:classpath:engines/exposure.yaml   # the banking module's (its jar): absent when the module is not installed
@@ -79,7 +79,7 @@ spring:
     open-in-view: false      # no lazy loading while a view renders: the identity services load what they return
 
 logging:
-  # RESOURCES_AND_SCALE.md 6.4: with drishti.logging.file set the server writes its own log, rotated by size and day and kept
+  # CLUSTER_GUIDE.md 6.4: with drishti.logging.file set the server writes its own log, rotated by size and day and kept
   # within a total (compressed); unset (containers), standard output only, as before. The stack sets it per node (run/logs/<node>.log).
   file:
     name: ${drishti.logging.file:}  # the log file, from drishti.logging.file (empty: standard output only)
@@ -130,13 +130,13 @@ management:
         enabled: true  # /actuator/health/liveness and /actuator/health/readiness for Kubernetes probes
       group:
         readiness:
-          # readiness that means ready (CD1, CLUSTER_DEPLOYMENT.md section 9.1): Spring's own state and this node's (drishti.node.readiness):
+          # readiness that means ready (CD1, CLUSTER_GUIDE.md section 9.1): Spring's own state and this node's (drishti.node.readiness):
           # DOWN while joining, while an engine's newest date opens or an owned shard is not ready; OUT_OF_SERVICE while drained. Only
           # here: /actuator/health itself and liveness never wait for it
           include: readinessState,nodeReadiness
 
 drishti:
-  # The edition (docs/admin/LENSES.md): blank is the full Drishti; risk is Drishti Risk. It names
+  # The edition (docs/guides/ADMIN_GUIDE.md): blank is the full Drishti; risk is Drishti Risk. It names
   # config/lenses/<module>/<lens>.yaml, read as a layer under the site's configuration before the packs load; every member of a cluster sets the
   # same value, and the console learns it from /api/v1/about. A change needs a restart.
   edition: ${DRISHTI_EDITION:}
@@ -148,16 +148,16 @@ drishti:
     # The umbrella folder every runtime path below defaults under (identity database, caches, loads, collab, designs, reports, the
     # pack overlay and settings, governance, the sample feeds). Each path's own setting still overrides its default.
     dir: ${DRISHTI_DATA_DIR:./data}
-  logging:                           # RESOURCES_AND_SCALE.md 6.4: the server's own log file, read by logging: above
+  logging:                           # CLUSTER_GUIDE.md 6.4: the server's own log file, read by logging: above
     file: ${DRISHTI_LOG_FILE:}       # empty: standard output only (containers); drishti-stack sets run/logs/<node>.log
     max-file-mb: 100                 # one file's size before it rolls (also daily); rolled files compressed
     max-total-mb: 1024               # every rolled file together; the oldest go beyond
     max-files: 30                    # rolled days kept at most
-  memory:                            # RESOURCES_AND_SCALE.md 5.2, D3, PO-2: one cache budget for the heap
+  memory:                            # CLUSTER_GUIDE.md 5.2, D3, PO-2: one cache budget for the heap
     cache-share: 0.5                 # the share of -Xmx every cache in the budget may take together, in weighted pools
     # weights: {connector.idmaps: 20, connector.columns: 20, connector.documents: 6, connector.parts: 4, engine.answers: 20, engine.layouts: 10, small: 20}
     squeeze-at: 0.85                 # the heap after a collection past this share of -Xmx halves the connectors' and small pools for a minute
-  admission:                         # busy protection (docs/admin/OPERATIONS.md "Busy protection"): new heavy work waits politely instead of an out-of-memory
+  admission:                         # busy protection (docs/guides/OPERATIONS_GUIDE.md "Busy protection"): new heavy work waits politely instead of an out-of-memory
     enabled: ${DRISHTI_ADMISSION_ENABLED:true}  # false: nothing waits (Admin -> Health still shows the readings)
     memory-warn: 0.80                # the heap after the last collection past this share of -Xmx: Health says "getting full"
     memory-refuse-heavy: 0.85        # past this, new date loads, downloads, BI runs and bulk loads wait (503 DRS-9502 to DRS-9505, Retry-After)
@@ -180,13 +180,13 @@ drishti:
       pivot-view: 20                 # a large pivot view (DRS-9507)
     keep: 50                         # refusals kept for Admin -> Health (in memory)
     override-max-minutes: 240        # the longest an operator's override may last (it ends by itself)
-  disk:                              # RESOURCES_AND_SCALE.md 7: the local disk
+  disk:                              # CLUSTER_GUIDE.md 7: the local disk
     min-free-percent: 10             # the free-space guard: a build that would leave less than this share of the disk free is refused (DRS-5218)...
     min-free-gb: 20                  # ...or less than this many GB (both must hold)
     check-interval: 60s              # every folder measured and brought under its cap this often
     max-dumps: 2                     # heap dumps kept in the -XX:HeapDumpPath folder; the oldest beyond go at start
     dumps-dir: ${drishti.data.dir:./data}/dumps   # the dump folder when -XX:HeapDumpPath does not name one
-  native:                            # native libraries (docs/admin/OPERATIONS.md section 2.1; HIGH_PERFORMANCE_NATIVE.md section 6): nothing here can stop the server
+  native:                            # native libraries (docs/guides/OPERATIONS_GUIDE.md section 2.1; HIGH_PERFORMANCE_NATIVE.md section 6): nothing here can stop the server
     cache-dir: ${DRISHTI_NATIVE_CACHE_DIR:${drishti.data.dir:./data}/native-cache}  # where the bundled native libraries are unpacked (JavaCPP's cache), under the data folder
     max-bytes-mb: 1024               # the most off-heap memory JavaCPP may allocate itself (org.bytedeco.javacpp.maxBytes); BLAS calls take Java arrays
     blas:
@@ -195,7 +195,7 @@ drishti:
       canary-interval: 6h            # the self-test against Java is run again this often (0: only at start); a failure switches OpenBLAS off for the run
       gemm-min-sets: 32              # a 1,024-row tile of many-scope sums is one dgemm when at least this many sets share it (tuned on one machine: BENCHMARK.md section 17)
       gemm-min-density: 0.25         # ...and at least this share of its (set, row) pairs are members; sparser tiles are added in Java
-  engines:                           # compute engines on or off per node, each with its own file (docs/architecture/COMPUTE_ENGINES.md; Admin -> Engines)
+  engines:                           # compute engines on or off per node, each with its own file (docs/guides/ADMIN_GUIDE.md; Admin -> Engines)
     dir: ${DRISHTI_ENGINES_DIR:./config/engines}   # the folder of the engines' files Admin -> Engines writes (the imports above name the same folder)
     drain: 30s                       # an engine turned off live: requests in flight finish within this, then are cancelled
     watch-seconds: 5                 # how often the engine files are compared with what was read (an edit by hand takes effect as from the page)
@@ -204,7 +204,7 @@ drishti:
     watch-seconds: 5                 # how often the module and access files are compared with what was read (a change to a module takes effect at the next start; lenses and the licence at once)
   access:                            # the access model's files (docs/architecture/ACCESS_MODEL.md): the access registry reads them, nothing else does
     dir: ${DRISHTI_ACCESS_DIR:./config/access}     # licence.yaml (none: the development licence, every module), lenses.yaml, roles.yaml, assignments.yaml; none is needed
-  metrics:                           # the platform metrics and alerts (docs/admin/OPERATIONS.md section 13.6; RESOURCES_AND_SCALE.md 8.3, 8.5)
+  metrics:                           # the platform metrics and alerts (docs/guides/OPERATIONS_GUIDE.md section 13.6; CLUSTER_GUIDE.md 8.3, 8.5)
     enabled: ${DRISHTI_METRICS_ENABLED:true}  # export the platform gauges (caches, memory budget, disk, sources, feeds, loads) on /actuator/prometheus and evaluate the alert rules
     sample-interval: 15s             # how often the gauges are sampled and the alert rules evaluated
     disk-interval: 60s               # how often the disk folders are measured for the gauges (a folder's size walks its files)
@@ -223,7 +223,7 @@ drishti:
     file: ${DRISHTI_STORE_FILE:./config/store/store.yaml}
     root: ${DRISHTI_STORE_ROOT:}   # the filesystem backend's root, over the file's filesystem.root (empty: the file's, else <data folder>/fstore)
   edit:
-    # Write-back (docs/guides/WRITE_BACK.md): its settings are in their own folder (edit.yaml, lanes.yaml, policy.yaml, retention.yaml).
+    # Write-back (docs/guides/APPROVALS_GUIDE.md): its settings are in their own folder (edit.yaml, lanes.yaml, policy.yaml, retention.yaml).
     # Off as shipped (edit.enabled: false there): a fresh install or an upgrade is read-only.
     file: ${DRISHTI_EDIT_FILE:./config/edit/edit.yaml}
   index:
@@ -247,14 +247,14 @@ drishti:
     enabled: ${DRISHTI_OFFLINE:false}
     plugins: news,yfinance,feed      # the public-data feed plugin too (US Treasury, ECB, NY Fed, FRED: market-data pack)
   net:
-    # Drishti*net (docs/admin/OPERATIONS.md): several servers as one. OFF unless <dir>/node.yaml says enabled: true; without the folder
+    # Drishti*net (docs/guides/OPERATIONS_GUIDE.md): several servers as one. OFF unless <dir>/node.yaml says enabled: true; without the folder
     # this server is a single server exactly as before. Everything else (this node, its seed peers, gossip timings, routing,
     # nodes per role) is in the files of that folder, managed like connector files (Admin -> Net, drishti.py net), never here.
     dir: ${DRISHTI_NET_DIR:./config/net}     # created on first write; ready-made files in config/net.examples/
     watch: ${DRISHTI_NET_WATCH:auto}         # auto (file events, polling as a fallback) | poll | off
     poll: 5s  # how often the folder is looked at when polling (and, with file events, at least this often anyway)
   node:
-    # This server as one node of a cluster (CLUSTER_DEPLOYMENT.md sections 4.6, 9.1 and 10.1; CD1 and CD2)
+    # This server as one node of a cluster (CLUSTER_GUIDE.md sections 4.6, 9.1 and 10.1; CD1 and CD2)
     readiness:                       # what /actuator/health/readiness waits for (liveness and /actuator/health never wait)
       enabled: true                  # false: readiness is Spring's alone (up once started)
       joining: true                  # DOWN while this node joins Drishti*net (its peers' digests not had yet; at most join-grace)
@@ -314,7 +314,7 @@ drishti:
     # Named connectors: several instances of a plugin, each with its own settings. They live in FILES, one per connector:
     #   <connectors-dir>/<name>.yaml     the file name is the connector's logical name; packs refer to it by that name.
     # The folder is watched: a changed file restarts only that connector, a new file starts one, a deleted file stops it.
-    # See docs/connectors/CONNECTOR_FILES.md and Admin -> Connectors. Ready-made files: config/connectors.examples/.
+    # See docs/guides/DATA_GUIDE.md section 9 and Admin -> Connectors. Ready-made files: config/connectors.examples/.
     connectors-dir: ${DRISHTI_CONNECTORS_DIR:./config/connectors}   # created on first write
     connectors-watch: auto                  # auto (file events, polling as a fallback) | poll | off
     connectors-poll: 5s                     # how often the files are looked at (also the safety net beside file events)
@@ -377,7 +377,7 @@ drishti:
       - /api/v1/changes/preview          # write-back's review sheet: what a change would do, written nowhere
       - /api/v1/bi/datasets/*/query     # Rupaka phase 2: a dataset query (fields, measures, filters in the body), masked and row-ruled, changes nothing
       - /api/v1/bi/datasets/validate    # checks a dataset's YAML without storing it
-      - /api/v1/bi/mq                   # the model query language (docs/architecture/BI_DESIGN.md › The model layer: the specification, section 15): one query of a model as the caller, changes nothing
+      - /api/v1/bi/mq                   # the model query language (docs/architecture/ARCHITECTURE.md §28 › The model layer: the specification, section 15): one query of a model as the caller, changes nothing
       - /api/v1/bi/models/*/query       # the same with the model in the path
       - /api/v1/bi/mq/validate          # checks a model query without reading data
       - /api/v1/bi/models/validate      # checks a model's or a rachana 2 dataset's YAML without storing it
@@ -405,12 +405,12 @@ drishti:
       - /api/v1/bi/themes/validate      # checks a theme's YAML without storing it
       - /api/v1/bi/python/input         # one input of a Python Transform as the caller (the Transform editor's preview and profile), masked and row-ruled, stores nothing
       - /api/v1/bi/items/*/tests        # runs the expected values (tests:) of a report or dataset as the caller or a role they hold: queries only, stores nothing
-      - /api/v1/bi/runs                 # BI runs (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built), section 14): one question as the caller, answered inline or as a run of theirs; changes no data
+      - /api/v1/bi/runs                 # BI runs (docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built), section 14): one question as the caller, answered inline or as a run of theirs; changes no data
       - /api/v1/bi/runs/estimate        # a run's tier and estimate from metadata only, runs nothing
       - /api/v1/export/*                # Rupaka phase 7: a report, visual or view rendered as PDF, PNG, Excel or CSV for the caller (masked), stores nothing
       - /api/v1/subscriptions/preview   # renders what a subscription would send, for the caller, stores nothing
       - /api/v1/compute/*/*             # a reactive connector's answer for the caller (DATA_ARCHITECTURE.md): computed and cached, changes no data
-    # WRITE SCOPES (TOKEN_SCOPES in docs/guides/API_GUIDE.md): a token is made with `read` (the default: all of the above) or with
+    # WRITE SCOPES (TOKEN_SCOPES in docs/guides/API_REFERENCE.md): a token is made with `read` (the default: all of the above) or with
     # scopes from this list (keys in [brackets] keep the colon); each opens the METHOD path patterns under `allow` (* = any method). A scope is only a door: the
     # controller behind it still checks the roles of the token's user at the time of the call, so a token never does more than
     # its user. A write that no scope opens, and nothing in token-never, is refused. Every non-GET endpoint must be declared in
@@ -429,7 +429,7 @@ drishti:
         description: "Read data through Arrow Flight (FLIGHT_GUIDE.md): kinds, BI models, pivot views, VaR vectors and the in-memory lake, as your roles, masks and row rules allow, every read audited. It opens no HTTP call. data:read:<domain> (a pack such as trading, bi, var, a lake) opens one domain only."
         allow: []
       "[edit]":
-        description: "Submit changes through write-back (WRITE_BACK.md: forms, the CLI's change propose), and approve, reject or withdraw them in the one Approvals queue (kind change). No token has it unless chosen; it never exceeds your roles: the edit power, the field's roles, masks and four eyes all apply, and editing must be on."
+        description: "Submit changes through write-back (APPROVALS_GUIDE.md: forms, the CLI's change propose), and approve, reject or withdraw them in the one Approvals queue (kind change). No token has it unless chosen; it never exceeds your roles: the edit power, the field's roles, masks and four eyes all apply, and editing must be on."
         allow:
           - POST /api/v1/changes
           - POST /api/v1/approvals/change/*/approve
@@ -558,7 +558,7 @@ drishti:
           - POST /api/v1/admin/dataload/retry   # a failed inbox file back into the inbox (drishti.py dataload retry; an administrator)
           - POST /api/v1/admin/feeds/*/run      # a data feed's Run now (drishti.py feed run starts it locally; the server still requires an administrator)
       "[node:drain]":
-        description: "Drain this server before it stops and take it back (the stop hooks and the rolling upgrade runner, CLUSTER_DEPLOYMENT.md section 10.1): forwarded work and VaR shards handed to other members, readiness out of service. Needs the admin role at call time."
+        description: "Drain this server before it stops and take it back (the stop hooks and the rolling upgrade runner, CLUSTER_GUIDE.md section 10.1): forwarded work and VaR shards handed to other members, readiness out of service. Needs the admin role at call time."
         allow:
           - POST /api/v1/admin/node/drain
       "[ai:use]":
@@ -586,7 +586,7 @@ drishti:
       - POST /api/v1/bi/models/*/preview-as     # previews another role's answers: audited, in the console only
       - PUT /api/v1/tables/editor/prefs         # a person's editor view: personal, in the console
       - "* /api/v1/me/**"
-      - "* /api/v1/drafts/**"                  # form drafts: personal, kept per person, saved from the console (WRITE_BACK.md)
+      - "* /api/v1/drafts/**"                  # form drafts: personal, kept per person, saved from the console (APPROVALS_GUIDE.md)
       - POST /api/v1/admin/edits/**            # write-back's switches (a connector's writes, withdrawing an overlay): an administrator in the console
       - "* /api/v1/auth/**"
       - "* /api/v1/admin/tokens/**"
@@ -606,7 +606,7 @@ drishti:
       - "POST /api/v1/approvals/*/*/questions"          # a question on an item: a person asks it
       - "* /api/v1/alerts/**"                           # the alerts raised for a person and their rules: personal state, set in the console
       - "POST /api/v1/risk/var/intraday/streams/*/apply"   # applying a PV topic's waiting window now: an administrator in the console
-      # VaR shards (docs/architecture/VAR_SHARDING.md section 10). /partial is one member's call to another, signed with the cluster key
+      # VaR shards (docs/architecture/DATA_ARCHITECTURE.md section 14). /partial is one member's call to another, signed with the cluster key
       # and made as the caller (their on-behalf-of token; the owner applies their rights again): like /compute/peer/**, never a token's.
       # It reads data but is no read POST for a token, which would only add a door to the members' channel. /shards/drain takes a member's
       # shards away before it stops: an administrator (console, drishti.py var shards --drain, a task's stop hook signed in as one), never
@@ -651,7 +651,7 @@ drishti:
       author:  { kinds: ["*"], raw: true, author: true, calc: true, bi: [bi, bi-author] }   # calc: may use Calc, Python in the browser (USER_GUIDE.md)
       approver: { kinds: ["*"], raw: true, author: true, approve: true, calc: true, bi: [bi, bi-author] }   # reviews proposed Sutras (admins may too)
       pivot-approver: { kinds: ["*"], bi: [bi] }   # approves custom pivot functions someone else wrote (four eyes; drishti.pivot.functions.approver-role)
-      admin:   { kinds: ["*"], raw: true, author: true, admin: true, calc: true, edit: true }   # edit: may submit write-back changes (WRITE_BACK.md; editing itself is off until config/edit/edit.yaml turns it on)
+      admin:   { kinds: ["*"], raw: true, author: true, admin: true, calc: true, edit: true }   # edit: may submit write-back changes (APPROVALS_GUIDE.md; editing itself is off until config/edit/edit.yaml turns it on)
     oidc:                              # single sign-on: the console runs the flow, the server verifies the ID token
       enabled: ${DRISHTI_OIDC_ENABLED:false}  # verify single-sign-on ID tokens
       issuer: ${DRISHTI_OIDC_ISSUER:}  # the OIDC issuer URL
@@ -675,7 +675,7 @@ drishti:
     mask-copies-min-length: 3  # shortest text value scrubbed as a copy (numbers from four digits)
     mask-copies-max-nodes: 50000  # a document with more nodes is not scanned for copies (its masked fields are still masked)
     mask-copies-max-values: 64  # most distinct masked values scrubbed per document
-  embed:                             # embedded views in other web applications (docs/architecture/CLIENT_RENDERER.md; API_GUIDE, Embedding)
+  embed:                             # embedded views in other web applications (docs/guides/EMBED_GUIDE.md; API_REFERENCE, Embedding)
     enabled: ${DRISHTI_EMBED_ENABLED:false}   # off: no token endpoint, embed tokens refused. Needs drishti.security.enabled
     issuer: ${DRISHTI_PUBLIC_URL:}            # the iss of embed tokens: this server's public URL
     audiences: ["${DRISHTI_CONSOLE_URL:}"]      # the consoles that may accept embed tokens (their public URLs); the first is the default
@@ -684,7 +684,7 @@ drishti:
     mask: always                              # embed calls always mask drishti.security.redact fields, whatever the user's roles
     allow-wildcard-origins: false             # let an application register https://*.suffix origins (review apps)
     assertion-max-age: 60s                    # longest life of a client or user assertion a host signs
-    sign-in-window: ${DRISHTI_EMBED_SIGN_IN_WINDOW:true}   # the renderer's auth: 'popup' (CLIENT_RENDERER.md 10.1): a registered host's page signs its user in
+    sign-in-window: ${DRISHTI_EMBED_SIGN_IN_WINDOW:true}   # the renderer's auth: 'popup' (EMBED_GUIDE.md 10.1): a registered host's page signs its user in
                                               # through single sign-on in a window it opens on a click; needs drishti.security.oidc. false: token exchange only
     scopes:                                  # what each embed scope opens; a token calls nothing else, and never writes
       "[embed:view]":
@@ -709,7 +709,7 @@ drishti:
       views-per-user-per-minute: 60           # calls per user (the default for a new registration)
       searches-per-user-per-minute: 30        # searches per user and application through <drishti-search>, on top of the call rates
     apps: []                                  # host applications declared here (GitOps): read-only in Admin → Embedding ("from config"), see docs/admin/CONFIGURATION.md
-  retry:                             # what failed is tried again by itself (docs/admin/OPERATIONS.md, "Retries"): packs refused, connectors, AI providers, MCP servers
+  retry:                             # what failed is tried again by itself (docs/guides/OPERATIONS_GUIDE.md, "Retries"): packs refused, connectors, AI providers, MCP servers
     enabled: true  # retry at all; false leaves a failure to the next file change or an administrator's Retry now
     initial: 5s                      # wait before the first retry
     factor: 2.0                      # each further wait is this many times the one before
@@ -717,7 +717,7 @@ drishti:
     jitter: 0.2                      # each wait varies by up to this fraction either way
     permanent-after: 3               # a failure waiting cannot fix (refused credentials, bad settings) seen this often in a row is retried only every max
     # packs: {initial: 2s}           # drishti.retry.<area>.<key> overrides any of these for one area: packs, connectors, ai, mcp
-  ai:                                # LLM provider layer (docs/admin/AI.md): OFF by default; no file is read and no model is called while off
+  ai:                                # LLM provider layer (docs/guides/AI_GUIDE.md): OFF by default; no file is read and no model is called while off
     enabled: ${DRISHTI_AI_ENABLED:false}  # turn on the LLM provider layer: provider files in drishti.ai.dir are read and models become callable
     dir: ${DRISHTI_AI_DIR:./config/ai}        # one YAML per provider: type, base-url, api-key as ${ENV}, models with logical names
     watch: auto                      # auto | poll | off: how edits to the folder are noticed (live reload, like connectors)
@@ -731,8 +731,8 @@ drishti:
       per-user-per-day: 0  # calls a user may make per day (0 = no limit)
       cost-per-user-per-day: 0       # in the unit of the models' cost-per-1k-* prices
       features: {}                   # per feature: "[ask]": {roles: [..], per-user-per-minute: 6}
-      # BI hooks use the features bi-draft, bi-ask and bi-explain (docs/guides/BI_GUIDE.md), e.g. "[bi-ask]": {roles: [analyst], per-user-per-minute: 10}
-  mcp:                               # MCP client (docs/admin/AI.md): OFF by default
+      # BI hooks use the features bi-draft, bi-ask and bi-explain (docs/guides/REPORTS_GUIDE.md), e.g. "[bi-ask]": {roles: [analyst], per-user-per-minute: 10}
+  mcp:                               # MCP client (docs/guides/AI_GUIDE.md): OFF by default
     enabled: ${DRISHTI_MCP_ENABLED:false}  # turn on the MCP client: server files in drishti.mcp.dir are read and their tools become callable
     dir: ${DRISHTI_MCP_DIR:./config/mcp}      # one YAML per MCP server: transport, url, headers as ${ENV}, allowed-tools
     watch: auto  # auto | poll | off: how edits to the folder are noticed (live reload)
@@ -754,8 +754,8 @@ drishti:
     enabled: ${DRISHTI_ACCESS_LOG:true}  # record who looked at what (Admin -> Access)
     keep-days: 90                    # older events are pruned once a day
     queue: 100000                    # events waiting to be written at most; beyond it they are dropped and counted
-  collab:                            # share with a note, comment threads, the inbox (docs/architecture/COLLABORATION.md)
-    enabled: ${DRISHTI_COLLAB_ENABLED:true}  # share with a note, the directory and the inbox (docs/architecture/COLLABORATION.md)
+  collab:                            # share with a note, comment threads, the inbox (docs/architecture/ARCHITECTURE.md §31)
+    enabled: ${DRISHTI_COLLAB_ENABLED:true}  # share with a note, the directory and the inbox (docs/architecture/ARCHITECTURE.md §31)
     store: content                   # content: the content store, every cluster node (default) | jpa: the identity database, one node | file: one server only
     dir: ${DRISHTI_COLLAB_DIR:${drishti.data.dir}/collab}   # the file store, and exports
     console-url: ${DRISHTI_CONSOLE_URL:}       # links in emails and shares; empty turns email off
@@ -835,7 +835,7 @@ drishti:
       cache-size: 50                            # pictures kept by view, generation and rights profile
       cache-ttl: 10m  # how long snapshot views and pictures are kept, by view, generation and rights profile
       recipients: count                         # the watermark names: count | names
-  admin:                             # Admin, Artifacts: uninstalling packs, connector files and shipped BI files safely (docs/guides/OPERATIONALISING.md)
+  admin:                             # Admin, Artifacts: uninstalling packs, connector files and shipped BI files safely (docs/guides/OPERATIONS_GUIDE.md)
     uninstalled-dir: ${DRISHTI_UNINSTALLED_DIR:${drishti.data.dir:./data}/uninstalled}   # an uninstall MOVES the artifact here; nothing is deleted
     uninstalled-keep: ${DRISHTI_UNINSTALLED_KEEP:30d}      # archives older than this are removed, once a day; 0 keeps them for ever
     uninstalled-prune-interval: 1d                        # how often the archive is pruned
@@ -861,7 +861,7 @@ drishti:
     workspace-creation: authors      # who creates shared workspaces: authors (bi-author), stewards (bi-steward), admins (bi-admin); Admin, BI settings changes it at run time
     max-body-bytes: 262144           # largest YAML body of one item
     versions-keep: 50                # published versions kept per item
-    ai:                              # the three BI hooks on the AI layer (docs/guides/BI_GUIDE.md); they also need drishti.ai.enabled
+    ai:                              # the three BI hooks on the AI layer (docs/guides/REPORTS_GUIDE.md); they also need drishti.ai.enabled
       model: ""                      # provider/model; blank = drishti.ai.default-model
       values: labels-only            # labels-only: the model sees names, types, descriptions, never a value | aggregates: it may also word the reader's own masked aggregates
       max-question-chars: 600  # longest question or description sent to the model
@@ -920,17 +920,17 @@ drishti:
       breaker-failures: 5            # consecutive failures that open a connector's circuit breaker (DRS-9026 at once while open)
       breaker-open: 30s              # how long an open breaker refuses before one fragment may try again
       node: ${DRISHTI_BI_NODE:}      # this Java node's name when several serve the site (blank: one node)
-      background-share: 0.25         # BI runs: the most of the slots background work (runs, dataset refresh) holds at once (docs/architecture/BI_DESIGN.md 10.1)
+      background-share: 0.25         # BI runs: the most of the slots background work (runs, dataset refresh) holds at once (docs/architecture/ARCHITECTURE.md §28 10.1)
       standing-share: 0.25           # the most of the slots standing-query maintenance holds at once; interactive work keeps the rest
       fragments-share: 0.5           # the most of a connector's max-fragments the layer builds of background runs hold at once
     runs:
-      file: ${DRISHTI_BI_RUNS_FILE:./config/runs/runs.yaml}   # BI runs (docs/architecture/BI_DESIGN.md); ready-made in config/runs.examples/
+      file: ${DRISHTI_BI_RUNS_FILE:./config/runs/runs.yaml}   # BI runs (docs/architecture/ARCHITECTURE.md §28); ready-made in config/runs.examples/
     plan:                            # the logical plan: result cache and guards (docs/admin/CONFIGURATION.md, drishti.bi.plan)
       cache-entries: 2000            # answers cached by plan hash, security signature and data generation (0: off)
       cache-ttl: 15m                 # an answer for the current state is asked again after this; as-of answers have no ttl
       cache-idle: 1h                 # an answer nobody asked for this long is dropped
       guards: refuse                 # refuse (the default) or warn: sums across currencies (DRS-9158), balances added across dates (DRS-9159)
-    sql:                             # Drishti SQL over models (docs/guides/API_GUIDE.md, Drishti SQL; docs/admin/CONFIGURATION.md, drishti.bi.sql)
+    sql:                             # Drishti SQL over models (docs/guides/API_REFERENCE.md, Drishti SQL; docs/admin/CONFIGURATION.md, drishti.bi.sql)
       enabled: true                  # false: /bi/sql answers DRS-9006 and SQL view datasets cannot be read
       max-leaves: 8                  # model queries one composite statement may ask
       composite-memory: 256MB        # memory of the in-memory engine a composite statement's outer query runs in
@@ -939,7 +939,7 @@ drishti:
     expr:                            # the Drishti expression language, DEL v2 (docs/guides/RACHANA_REFERENCE.md; docs/admin/CONFIGURATION.md, drishti.bi.expr)
       legacy: refuse                 # the old expression syntax: refuse (DRS-9100 with the DEL v2 text as the fix; the default) or warn (read with DRS-9100)
       parse-cache: 10000             # parsed expressions kept (0: off)
-    migrate:                         # migrations of STORED BI items (docs/architecture/BI_DESIGN.md 8.3; docs/guides/TROUBLESHOOTING.md "Migration problems")
+    migrate:                         # migrations of STORED BI items (docs/architecture/ARCHITECTURE.md §28 8.3; docs/guides/OPERATIONS_GUIDE.md "Migration problems")
       on-start: ${DRISHTI_BI_MIGRATE_ON_START:true}   # at start: stored datasets and models into the table layer, 2.3 boards into reports; audited, the text before kept; idempotent
       actor: system                  # the name the history, the item's events and the audit log give the start-up run
   layouts:                           # layout mode: each user's arrangement of a Sutra's panels (USER_GUIDE.md, Layout mode)
@@ -949,7 +949,7 @@ drishti:
     cache-ttl: 60s                   # how long an answer is served before it is derived again
     ask:                             # Ask about this page (RACHANA_REFERENCE.md): OFF by default; while off no call to any model is ever made
       enabled: ${DRISHTI_ASK_ENABLED:false}  # turn on Ask about this page (also list packs in drishti.explain.ask.packs)
-      model: ${DRISHTI_ASK_MODEL:}  # the model Ask uses: a logical model of the AI layer (provider/model; a provider file in drishti.ai.dir, docs/admin/AI.md)
+      model: ${DRISHTI_ASK_MODEL:}  # the model Ask uses: a logical model of the AI layer (provider/model; a provider file in drishti.ai.dir, docs/guides/AI_GUIDE.md)
       packs: []                      # packs where the Ask box is on; empty = none (per-pack opt-in)
       values: labels-only            # labels-only | shown: whether the page's rendered text (values) goes into the prompt; masked values never do
       max-question-chars: 500  # longer questions are refused (400)
@@ -1030,7 +1030,7 @@ drishti:
     fingerprint-cache-size: 100000  # one per (entity, generation; in a cluster, caller signature): about 30 MB full
     bind-parallelism: 0             # 0 = one binding thread per core
   db:
-    pool:                            # connection pools of every database connector and the identity database (docs/connectors/CONNECTOR_FILES.md)
+    pool:                            # connection pools of every database connector and the identity database (docs/guides/DATA_GUIDE.md section 9)
       size: 20                       # most connections open at once; a connector's own pool-size wins (SQLite and DuckDB are embedded and not pooled)
       min-idle: 2                    # idle connections kept when quiet
       idle-timeout: 10m              # an idle connection beyond min-idle is closed after this long
@@ -1039,7 +1039,7 @@ drishti:
       leak-threshold: 60s            # a connection borrowed longer than this is logged with the borrower's stack (0 = off)
       statement-timeout: 5m          # longest one statement may run (PostgreSQL, MongoDB and Aerospike operations; 0 = none)
   http:
-    proxy:                           # the site's outbound HTTP proxy (docs/connectors/TLS.md): OFF unless url is set (or from-environment is true)
+    proxy:                           # the site's outbound HTTP proxy (docs/guides/DATA_GUIDE.md section 10): OFF unless url is set (or from-environment is true)
       url: ${DRISHTI_HTTP_PROXY_URL:}                 # http://host:port; http and https targets both go through it (https via CONNECT)
       username: ${DRISHTI_HTTP_PROXY_USERNAME:}       # Basic proxy authentication
       password: ${DRISHTI_HTTP_PROXY_PASSWORD:}       # only a ${ENV} placeholder (a literal in this file is refused at start)

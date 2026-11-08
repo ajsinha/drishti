@@ -58,12 +58,12 @@ def tmp_flag(tmp=None, cwd=None, env=None) -> str:
 
 
 # The JDK caches a temporary direct buffer per thread for every channel read into a heap buffer, as large as the read, unless capped:
-# a server or loader with many threads then exhausts -XX:MaxDirectMemorySize (OPERATIONS.md, Direct memory). 256 KB.
+# a server or loader with many threads then exhausts -XX:MaxDirectMemorySize (OPERATIONS_GUIDE.md, Direct memory). 256 KB.
 CACHE_FLAG = "-Djdk.nio.maxCachedBufferSize="
 CACHE_LIMIT = CACHE_FLAG + "262144"
 
 
-# 2.9.7 (RESOURCES_AND_SCALE.md 5.4, D5): compact object headers (about 10% less heap) whenever the JVM is 25 or later. A product flag
+# 2.9.7 (CLUSTER_GUIDE.md 5.4, D5): compact object headers (about 10% less heap) whenever the JVM is 25 or later. A product flag
 # there (JEP 519); Java 21 refuses to start with it, and 24 is not supported, so it is added only when the version says 25+.
 COMPACT = "-XX:+UseCompactObjectHeaders"
 _VERSIONS: dict = {}

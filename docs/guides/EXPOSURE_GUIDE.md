@@ -20,16 +20,16 @@ EEE, PFE, EPE, EEPE, EAD), the explorer screen by screen, scopes from the bank t
 the pre-deal what-if, exposure as a kind, who sees what, the command line, the API and the settings (Part I); the data contract: every
 input column, formula, answer, error code, the official results, retention, the stored profiles against computed exposure and the decisions
 (Part II); how the engine holds a date's netting-set path matrices in memory and on local disk, its sizes and what is still open (Part
-III). The hands-on walk-through is [tutorial 26](../tutorials/26-exposure-from-the-bank-to-a-trade.md) (the test data, from the bank to a
+III). The hands-on walk-through is [tutorial 3](../tutorials/03-exposure-from-the-bank-to-a-trade.md) (the test data, from the bank to a
 trade). In the console, **F1** on the explorer (or its **?**) opens this guide.
 
 Each measure has exactly two documents, the guide and one tutorial, and two help entries: the exposure data contract is Part II of this
 guide. Where the original proposal said otherwise, the code wins and the difference is stated (**Implementation:**).
-VaR follows the same rule: [VAR_GUIDE.md](VAR_GUIDE.md) and tutorial 25.
+VaR follows the same rule: [VAR_GUIDE.md](VAR_GUIDE.md) and tutorial 2, Part A.
 
 For the proposed counterparty credit risk cube on this engine (allocated exposure, the GLEIF group roll-up, limits by tenor with
 headroom, CVA, SA-CCR, SIMM, wrong-way risk, pre-deal pricing on paths, every data contract), see the design:
-[CCR_CUBE_LENS.md](../lenses/README.md#7-ccr-cube-lens).
+[CCR_CUBE_LENS.md](../architecture/LENSES.md#7-ccr-cube-lens).
 
 Every number below that is not a hand-made example is the engine's on the demo lake that `drishti.py lake demo` builds by default
 (`--exposure demo`): the run `XR-2026-09-30-01` (business date 2026-09-30, 200 paths, 24 grid dates of which 13 primary) generated for
@@ -203,7 +203,7 @@ How to read it:
   below the sum of the quantiles. That is why Drishti sums path matrices, never stored PFEs.
 
 **The bank and its legal entities** (the demo lake on the data's own date, `--as-of data`: 74 netting sets with paths of 76, 8,022
-live trades; `drishti.py exposure show BANK`, `tree`; tutorial 26 steps 1 and 2):
+live trades; `drishti.py exposure show BANK`, `tree`; tutorial 3, steps 1 and 2):
 
 | Scope | Peak PFE 95% | EPE | Note |
 |---|---|---|---|
@@ -293,7 +293,7 @@ On a phone the panels stack: the command line, the tree, then the tiles and the 
 - **Counterparties** (the board): one row per counterparty: a small EE profile, peak PFE, EPE, the stored **limit** and **used**
   (the computed peak PFE at the limit's confidence over the limit, its bar and chip in the tone of the server's status), the number of
   netting sets; 25 rows at a time, largest first; a row
-  opens the counterparty. The limit is the `credit-limit` record read as stored (`drishti.ccr.exposure.kinds.limit`); LIM stays parked,
+  opens the counterparty. The limit is the [`credit-limit`](../contracts/samples/counterparty-risk.md#credit-limit) ([contract](../contracts/packs/counterparty-risk.md#lim-credit-limit-credit-limit)) record read as stored (`drishti.ccr.exposure.kinds.limit`); LIM stays parked,
   see [section 28](#28-open-items) on its low utilisation.
 - **Legal entities** (bank): per legal entity its EE profile, peak PFE, EPE, netting sets and share of the bank's peak.
 - **Netting sets** (counterparty or ad-hoc): per set its CSA, EE profile, EPE, **peak PFE alone** and **PFE contribution** (the shares
@@ -482,8 +482,8 @@ answers **approve**, **refer** or **decline**, with the method and the template 
 | Kind | Command | Class | What |
 |---|---|---|---|
 | `exposure-result` | `EXP <scope>` | computed (reactive connector `exposure-engine`, Java `ExposureResultEngine`) | a scope's figures, profile, netting sets, flags, provenance |
-| `simulation-run` | `XRUN` | input | the run's identity and grid |
-| `exposure-path` | `XPATH` | input (Delta connector `exposure-store`) | every trade's MtM on every path at every grid date |
+| [`simulation-run`](../contracts/samples/counterparty-risk.md#simulation-run) ([contract](../contracts/packs/counterparty-risk.md#xrun-exposure-simulation-run-simulation-run)) | `XRUN` | input | the run's identity and grid |
+| [`exposure-path`](../contracts/samples/counterparty-risk.md#exposure-path) ([contract](../contracts/packs/counterparty-risk.md#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path)) | `XPATH` | input (Delta connector `exposure-store`) | every trade's MtM on every path at every grid date |
 
 The id of a computed answer is the scope text with parameters after `~`: `CPTY:CP-ALDERSHOT~q=0.99`. `exposure-result` takes `q`,
 `collateral` (`lagged`, `current`, `none`) and `run` (empty: the newest complete run). Its contract is a generated page in
@@ -537,7 +537,7 @@ YYYY-MM-DD` (default the newest with paths), `--q Q` (default 0.95), `--collater
 | `reload` | drop the loaded dates (administrators): the next request maps the hot file again or reads the lake; `?date=` one date only | `drishti.py exposure reload [--date D]` |
 | `whatif <scope>` | a pre-deal what-if: `--like TRADE` (`--factor`, default 1; −1 its unwind), `--set NETTING_SET` (default a set of its own), or `--candidates FILE.json`; `--method paths|addon` (default `paths`) | `drishti.py exposure whatif CPTY:CP-ALDERSHOT --like CLY-4003028 --factor -1 --set NS-ALDERSHOT-FRA` |
 
-Real output of each on the test data: [tutorial 26](../tutorials/26-exposure-from-the-bank-to-a-trade.md). Tests: `tools/test_expcli.py`.
+Real output of each on the test data: [tutorial 3](../tutorials/03-exposure-from-the-bank-to-a-trade.md). Tests: `tools/test_expcli.py`.
 
 ## 11. The API
 
@@ -551,7 +551,7 @@ All under `/api/v1/risk/exposure`. Every `GET` takes `asOf` (the business date; 
 | `GET /scopes/{scope}` | as above | the path form for a simple scope (`/scopes/NSET:NS-ALDERSHOT-FRA`) |
 | `GET /scope/profile` | `scope`, `dates` (`primary` or `all`), `format=csv` or `format=jsonl` | the profile only, for charts; CSV `tenor,date,t,ee,ene,eee,pfe,pfe_99,ee_uncoll` |
 | `GET /scope/distribution` | `scope`, `date` (a primary date or tenor; default the peak), `bins` (`histogram-bins`, 42), **`bands`** (`true`: also the path fan, the 5, 25, 50, 75 and 95% quantiles of the paths' exposure at every primary date) | `histogram {edges, counts}`, `quantiles`, `mean`, `zeroShare`, `bands` |
-| `GET /scope/contributions` | `scope`, `by` (`child`, `netting-set`, `counterparty`, `legal-entity`, `trade`, `asset`), `figure` (`EE`, `EPE`, `PFE`), `date` (EE), **`alone`** (`true`, by trade: each trade's peak PFE alone, uncollateralised, too), **`profile`** (`true`, by trade: each trade's EE contribution at every primary date) | rows `{key, scope, label, kind, value, pct, incremental}` (with `alone`: `peakPfeAlone`; with `profile`: `profile[]`), `total`, `date`, `parts`, `truncated` |
+| `GET /scope/contributions` | `scope`, `by` (`child`, `netting-set`, `counterparty`, [`legal-entity`](../contracts/samples/core.md#legal-entity) ([contract](../contracts/packs/core.md#le-bank-legal-entity-legal-entity)), `trade`, `asset`), `figure` (`EE`, `EPE`, `PFE`), `date` (EE), **`alone`** (`true`, by trade: each trade's peak PFE alone, uncollateralised, too), **`profile`** (`true`, by trade: each trade's EE contribution at every primary date) | rows `{key, scope, label, kind, value, pct, incremental}` (with `alone`: `peakPfeAlone`; with `profile`: `profile[]`), `total`, `date`, `parts`, `truncated` |
 | `GET /tree` | `q` | the bank, legal entities, groups, counterparties (with their stored limit and use) and netting sets with EPE and peak PFE; sets without paths `noPaths` |
 | `POST /what-if` | body `{scope, method: paths|addon, q, collateral, candidates: [{tradeId, label, nettingSet, paths: {copyOf, factor} | {runId, mtm} | {runId, arrow}, assetClass, notional, maturityDate, mtm, delta}]}` | `{base, with, incremental: {epe, peakPfe, profile[]}, method, flags, items, note}` ([section 7](#7-pre-deal-what-if)); a `copyOf` of a trade you do not see trade by trade `403` |
 | `POST /predeal` | body `{command: "PREDEAL <counterparty> LIKE <trade> <notional> …"}` or the same as fields; `asOf` | `{checkId, command, decision: approve|refer|decline, reason, reasons, method, template, nettingSet, limit {…, buckets}, exposure {base, with, incremental}, saCcr, flags}` ([section 18.9](#189-the-pre-deal-check)) |
@@ -565,11 +565,11 @@ All under `/api/v1/risk/exposure`. Every `GET` takes `asOf` (the business date; 
 | `POST /official` | `asOf` | take the official capture now (administrators) |
 | `POST /reload` | | drop the loaded dates (administrators) |
 
-Codes: [section 21](#21-validation-errors-and-data-quality). The full endpoint list of Drishti is [API_GUIDE.md](API_GUIDE.md).
+Codes: [section 21](#21-validation-errors-and-data-quality). The full endpoint list of Drishti is [API_REFERENCE.md](API_REFERENCE.md).
 
 ## 12. Settings
 
-Every setting is under `drishti.ccr.exposure` in the engine's own file, `config/engines/exposure.yaml` (its switch `drishti.engines.exposure.enabled`; [OPERATIONS.md section 21](../admin/OPERATIONS.md#21-compute-engines-on-or-off)) (and [CONFIGURATION.md](../admin/CONFIGURATION.md#drishticcrexposure--the-exposure-engine)).
+Every setting is under `drishti.ccr.exposure` in the engine's own file, `config/engines/exposure.yaml` (its switch `drishti.engines.exposure.enabled`; [OPERATIONS_GUIDE.md section 21](ADMIN_GUIDE.md#21-compute-engines-on-or-off)) (and [CONFIGURATION.md](../admin/CONFIGURATION.md#drishticcrexposure--the-exposure-engine)).
 
 Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `drishti.ccr.exposure`](../admin/CONFIGURATION.md#drishticcrexposure) (also at Help → Configuration in the console).
 
@@ -633,8 +633,8 @@ the profile figures on `netting-set` ([NSET.md](../contracts/NSET.md) section 14
 
 | Part | Status |
 |---|---|
-| `simulation-run` (one row per simulation run and date: the grid, the paths, the seed, the model) | BUILT |
-| `exposure-path` (one row per trade × grid date: a vector of MtM over the paths) | BUILT |
+| [`simulation-run`](../contracts/samples/counterparty-risk.md#simulation-run) ([contract](../contracts/packs/counterparty-risk.md#xrun-exposure-simulation-run-simulation-run)) (one row per simulation run and date: the grid, the paths, the seed, the model) | BUILT |
+| [`exposure-path`](../contracts/samples/counterparty-risk.md#exposure-path) ([contract](../contracts/packs/counterparty-risk.md#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path)) (one row per trade × grid date: a vector of MtM over the paths) | BUILT |
 | Netting per path, collateral per path with the margin period of risk, EE, ENE, EPE, EEE, EEPE, PFE, peaks, contributions | BUILT |
 | Tiered memory: netting-set path matrices in memory-mapped per-date files, trade paths read only for drills and what-ifs | BUILT (one node; sharding PLANNED) |
 | Incremental exposure before dealing: the conservative proxy (`addon`) | BUILT |
@@ -665,7 +665,7 @@ internal model), and traders (what a new trade does to a counterparty's PFE befo
 
 **Methodology.** Monte Carlo exposure simulation post-processing as in Basel CRE53 (internal models method: EE, effective EE, EEPE,
 alpha 1.4) and the industry's PFE practice for limits. Drishti does **not** simulate markets or price trades: the paths are inputs
-(the contracts' README.md section 3). QLRisk may later produce them ([PYTHON_COMPUTE.md](../architecture/PYTHON_COMPUTE.md)).
+(the contracts' README.md section 3). QLRisk may later produce them ([NOTEBOOK_GUIDE.md](NOTEBOOK_GUIDE.md)).
 
 ## 15. Inputs from upstream engines
 
@@ -681,11 +681,11 @@ ${DRISHTI_DELTA_ROOT}/risk/
 
 | Kind | Key | Grain | Read by | Cadence | Due |
 |---|---|---|---|---|---|
-| `simulation-run` | `RUN_ID` | run × date | EXP, CVA, LIM, GRP, WWR | daily | before the paths (to be agreed) |
-| `exposure-path` | `PATH_ROW_ID` | trade × grid date × run | EXP, CVA, LIM, GRP, WWR | daily | **to be agreed** (open question 1); a large bank's run often lands overnight, 04:00–07:00 local |
+| [`simulation-run`](../contracts/samples/counterparty-risk.md#simulation-run) ([contract](../contracts/packs/counterparty-risk.md#xrun-exposure-simulation-run-simulation-run)) | `RUN_ID` | run × date | EXP, CVA, LIM, GRP, WWR | daily | before the paths (to be agreed) |
+| [`exposure-path`](../contracts/samples/counterparty-risk.md#exposure-path) ([contract](../contracts/packs/counterparty-risk.md#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path)) | `PATH_ROW_ID` | trade × grid date × run | EXP, CVA, LIM, GRP, WWR | daily | **to be agreed** (open question 1); a large bank's run often lands overnight, 04:00–07:00 local |
 
-Beside them the engine reads, for the date (E0 of [COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md)):
-`trade-valuation` (each netting set's members, a live status naming the set, and their MtM today: the market-risk pack's kind, which
+Beside them the engine reads, for the date (E0 of [DATA_ARCHITECTURE.md section 12](../architecture/DATA_ARCHITECTURE.md#12-computed-and-derived-attributes)):
+[`trade-valuation`](../contracts/samples/market-risk.md#trade-valuation) ([contract](../contracts/packs/market-risk.md#tval-trade-valuation-trade-valuation)) (each netting set's members, a live status naming the set, and their MtM today: the market-risk pack's kind, which
 VaR reads too), `netting-set` (the set's terms and links: counterparty, legal entity, CSA, collateral balance; no figure), `csa` (the
 terms), `collateral-balance` (the holdings, after haircut), `credit-limit` (the counterparty's approved limit) and the counterparty and
 group masters. Each of their data-load signals reloads the date (the connector's triggers; `drishti.ccr.exposure.kinds.*` names them).
@@ -695,27 +695,7 @@ group masters. Each of their data-load signals reloads the date (the connector's
 **Grain:** one row per run and business date. **Row count:** 1 per date (a second, *stressed* calibration run is open question 4).
 The paths of `exposure-path` are ordered by this row exactly as the P&L vectors are ordered by the scenario set (VAR_GUIDE.md section 15.3).
 
-| Column | JSON | Delta | Req. | Engine | Unit | Meaning | Example |
-|---|---|---|---|---|---|---|---|
-| `RUN_ID` | id | `id` STRING | required | R | | the run; stamped on every answer | `XR-2026-09-30-01` |
-| `BUSINESS_DATE` | date | `business_date` DATE | required | R | | the close the run starts from (t₀) | `2026-09-30` |
-| `MARKET_DATA_DATE` | date | doc | required | R | | the market data the run calibrated to (normally the business date) | `2026-09-30` |
-| `MODEL` | text | doc | required | – | | the scenario model | `Hull-White 1F rates, GBM FX and equity, Schwartz 1F commodity` |
-| `MODEL_VERSION` | text | doc | required | – | | | `xsim-7.3.1` |
-| `CALIBRATION` | text | STRING | required | R | | `RISK_NEUTRAL` (CVA, pricing) or `REAL_WORLD` (PFE, limits); `STRESSED` for a stressed calibration | `RISK_NEUTRAL` |
-| `PATHS` | integer | DOUBLE | required | R | | P, the length of every `MTM` vector | `5000` |
-| `SEED` | text | doc | required | – | | the generator's seed; with `MODEL_VERSION`, market data and trade versions the run is reproducible upstream | `0x5eed-20260930` |
-| `ANTITHETIC` | boolean | doc | optional | – | | paths 2k and 2k+1 are antithetic pairs | `false` |
-| `GRID_DATES` | date list | doc | required | R | | the G grid dates, strictly increasing, all after `BUSINESS_DATE`; index *k* of every row's `GRID_INDEX` | `["2026-10-01", "2026-10-07", …]` |
-| `GRID_ROLE` | text list | doc | required | R | | per grid date: `PRIMARY` (exposure is reported) or `LOOKBACK` (only for collateral) | `["LOOKBACK", "PRIMARY", …]` |
-| `LOOKBACK_OF` | integer list | doc | required | R | | per grid date: for a `LOOKBACK` point, the index of the `PRIMARY` point it serves; −1 for a primary point | `[1, -1, …]` |
-| `LOOKBACK_DAYS` | integer | doc | required | R | business days | the distance of every look-back point before its primary point (the run's MPOR) | `10` |
-| `VALUE_BASIS` | text | doc | required | R | | `FUTURE` (each value in USD of its grid date; Drishti discounts for CVA) or `DISCOUNTED` (in today's USD by the run's numeraire) | `FUTURE` |
-| `CURRENCY` | ccy | doc | required | R | | must be `USD` | `USD` |
-| `PRECISION` | text | doc | required | R | | `float32` or `float64`: the `MTM` vectors' type (§17) | `float32` |
-| `CREDIT_PATHS` | boolean | doc | optional | R | | the run also wrote `credit-path` rows (WWR.md) | `true` |
-| `TRADES`, `ROWS` | integer | doc | required | R | | rows written, for completeness | `998412`, `41302877` |
-| `BATCH_ID`, `COMPUTED_AT` | id, timestamp | STRING, doc | required | – | | | `B-2026-09-30-01` |
+**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`simulation-run.contract.yaml`](../../config/packs/banking/counterparty-risk/contracts/simulation-run.contract.yaml), published as [XRUN: `simulation-run`](../contracts/packs/counterparty-risk.md#xrun-exposure-simulation-run-simulation-run); a real record of the test data with every field explained is its [example](../contracts/samples/counterparty-risk.md#simulation-run).
 
 **The grid.** Recommended (not required): daily to 2 weeks, weekly to 3 months, monthly to 1 year, quarterly to 5 years, semi-annual to
 10 years, annual to 30 years (about 50 primary dates), each with one look-back date `LOOKBACK_DAYS` before it, shared where two coincide.
@@ -743,24 +723,7 @@ The lake is partitioned by `business_date` only (`RUN_ID` is a column); the demo
 reads `list<float>` too (each value widened exactly to float64) and the lake writer writes float32 vector columns (`vector32`). In the lake the paths are served by the counterparty-risk pack's Delta connector `exposure-store` from the risk lake's domain
 (`<root>/risk/simulation-run/`, `<root>/risk/exposure-path/`, layout `vectors: [MTM]`).
 
-| Column | JSON | Delta | Req. | Engine | Unit | Meaning | Example |
-|---|---|---|---|---|---|---|---|
-| `PATH_ROW_ID` | id | `id` STRING | required | – | | `<RUN_ID>~<TRADE_ID>~<GRID_INDEX>` | `XR-2026-09-30-01~CLY-4003028~7` |
-| `BUSINESS_DATE` | date | `business_date` DATE | required | R | | partition | `2026-09-30` |
-| `RUN_ID` | id | STRING (partition `run_id`) | required | R | | the `simulation-run` | `XR-2026-09-30-01` |
-| `TRADE_ID` | id | STRING | required | R | | the booking system's id, text | `CLY-4003028` |
-| `SOURCE_SYSTEM` | text | STRING | required | R | | | `CALYPSO` |
-| `TRADE_VERSION` | text | doc | optional | – | | the trade version the simulator priced | `5` |
-| `NETTING_SET` | id | STRING | required | R | | denormalised from `netting-set-member` (checked, NSET.md section 10); empty: standalone | `NS-ALDERSHOT-FRA` |
-| `COUNTERPARTY` | id | STRING | required | R | | denormalised | `CP-ALDERSHOT` |
-| `LEGAL_ENTITY` | id | STRING | required | R | | the trade's booking legal entity | `LE-FRA` |
-| `GRID_INDEX` | integer | DOUBLE | required | R | | *k*, index into `GRID_DATES` | `7` |
-| `GRID_DATE` | date | STRING | required | – | | `GRID_DATES[k]`, for people and checks | `2026-12-31` |
-| `MTM` | vector | `list<float>` (or `list<double>`) | required | R | USD | the trade's MtM on each path at the grid date, bank's side, an asset positive, length P, path order of the run | `[1203455.5, -88213.0, …]` (5,000) |
-| `CASHFLOW` | vector | `list<float>` | optional | R | USD | net cash flow the trade pays the bank between the previous grid date and this one, per path (positive received); for settlement risk and collateral spikes (open question 6) | `[0, 0, 25000.0, …]` |
-| `STATUS` | text | STRING | required | R | | `ok`, `proxied` (an approximate model), `failed` (`MTM` null) | `ok` |
-| `PRICER` | text | doc | optional | – | | | `xsim-hw1f-swap` |
-| `BATCH_ID` | id | STRING | required | R | | the run's batch; equal to the `simulation-run`'s | `B-2026-09-30-01` |
+**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`exposure-path.contract.yaml`](../../config/packs/banking/counterparty-risk/contracts/exposure-path.contract.yaml), published as [XPATH: `exposure-path`](../contracts/packs/counterparty-risk.md#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path); a real record of the test data with every field explained is its [example](../contracts/samples/counterparty-risk.md#exposure-path).
 
 **The vector** (the contracts' README.md section 8, with one stated difference):
 
@@ -792,12 +755,12 @@ allow pruning. The demo lake (`lake build`) writes the same columns with the wri
 
 | Kind | Key | Read for |
 |---|---|---|
-| `netting-set`, `netting-set-member`, `csa` (NSET.md) | `NETTING_SET`, `CSA` | membership (checks), margined or not, thresholds, MTA, IA, rounding, MPOR, IM |
+| [`netting-set`](../contracts/samples/counterparty-risk.md#netting-set) ([contract](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set)), `netting-set-member`, `csa` (NSET.md) | `NETTING_SET`, `CSA` | membership (checks), margined or not, thresholds, MTA, IA, rounding, MPOR, IM |
 | `collateral-holding` (COLL.md) | `NETTING_SET` | today's collateral (the `current` collateral model, independent amounts, IM held) |
 | `valuation` ([TVAL.md](../contracts/TVAL.md)) | `TRADE_ID` | t₀ exposure (today's MtM) and the check that path means start near it |
 | `trade` | `TRADE_ID` | maturity (sparse rows), status |
 | `counterparty`, `counterparty-group` | | `CPTY:` and `GROUP:` scopes (GRP.md) |
-| `ir-curve` (market-data) | `CRV-USD-…` | discount factors when `VALUE_BASIS` is `FUTURE` and a discounted figure is asked (CVA.md) |
+| [`ir-curve`](../contracts/samples/market-data.md#ir-curve) ([contract](../contracts/packs/market-data.md#crv-interest-rate-curve-ir-curve)) (market-data) | `CRV-USD-…` | discount factors when `VALUE_BASIS` is `FUTURE` and a discounted figure is asked (CVA.md) |
 
 ## 17. Conventions specific to exposure
 
@@ -874,7 +837,7 @@ Unmargined sets: C = IA held (or 0).
 
 - A primary date whose look-back date would fall on or before the business date (1W and 2W on a 10-day margin period) has no look-back
   point: its collateral is today's collateral held, as nothing called later settles within the margin period. (E0 of
-  [COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md)) that is the balance's holdings **after haircut** (`POSITIONS[].VALUE`,
+  [DATA_ARCHITECTURE.md section 12](../architecture/DATA_ARCHITECTURE.md#12-computed-and-derived-attributes)) that is the balance's holdings **after haircut** (`POSITIONS[].VALUE`,
   held positive, posted negative; a balance without positions gives its `NET`, also after haircut in the test data).
 - Rounding is applied to the change from today's collateral (`CsaTerms.called`); only the held side is shortened by the counterparty's
   MTA, as above (the posted side is not: conservative).
@@ -911,7 +874,7 @@ remaining maturity in the scope, capped at 1 year. Sums and means in float64.
 longest remaining maturity of the scope's trades (their `MATURITY_DATE`, else their last grid date), capped at 1 year; T = 0 gives EPE =
 EEPE = 0. The peaks are over the primary dates only (t₀ is CE), the earliest date on a tie. CE uses each set's value today, the sum of its
 live member trades' MtM, less today's collateral (after haircut) and IM. (E0 of
-[COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md)) the members and their MtM are read from `trade-valuation` (a live
+[DATA_ARCHITECTURE.md section 12](../architecture/DATA_ARCHITECTURE.md#12-computed-and-derived-attributes)) the members and their MtM are read from `trade-valuation` (a live
 status, the set in `NETTING_SET`; a member past its maturity date is in no figure and flags the set `PAST_MATURITY`), not the set's
 stored `TRADES[].MTM`; a date without trade valuations reads the stored members. Implemented in
 `ExposureMath` (Java) and `ccrmath.py` (Python), compared on the test data by `ExposureParityTest`.
@@ -1306,7 +1269,7 @@ input or fundamental kind carries `EPE`, `EEPE`, `PFE_PEAK`, `EE_PEAK`.
   (LIM and CVA are parked); the stored CVA, the SA-CCR figures, a credit limit's stored used amount and utilisation and the
   counterparty's stored net MtM show *Under construction* in their place until their engines are built
   ([UNDER_CONSTRUCTION.md](../admin/UNDER_CONSTRUCTION.md)); the walks of the live demo do not move exposure figures.
-- **Computed attributes** ([COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md) section 13): beside the stored figures the netting-set page
+- **Computed attributes** ([DATA_ARCHITECTURE.md section 12](../architecture/DATA_ARCHITECTURE.md#12-computed-and-derived-attributes) section 13): beside the stored figures the netting-set page
   shows the totals derived from the trade valuations (derived kind `nset-mtm`: net MtM, live trades, gross positive and negative,
   netting benefit, net-to-gross, uncollateralised CE, MtM by product group, the live-status trades past their maturity date) with the
   difference to the stored net MtM; the counterparty page the same from `cpty-mtm` (its CE uncollateralised per set first). The engine's CE
@@ -1632,7 +1595,7 @@ The product owner decided 7 years for VaR's input vectors. 7 years is about 1,76
 | statistics per set and counterparty (EE, ENE, EEE, PFE 95/99 per primary date), float64 | 0.22 GB | 0.4 TB | **every date, 7 years** |
 | trade EE contributions per primary date, float32 | 1,000,000 × 50 × 4 = 0.2 GB | 0.35 TB | **every date, 7 years** (audit of who drove the exposure) |
 | official end-of-day captures (counterparty profiles) | about 0.05 GB | 0.1 TB | 7 years |
-| `simulation-run` rows | KB | MB | 7 years (reproducibility) |
+| [`simulation-run`](../contracts/samples/counterparty-risk.md#simulation-run) ([contract](../contracts/packs/counterparty-risk.md#xrun-exposure-simulation-run-simulation-run)) rows | KB | MB | 7 years (reproducibility) |
 
 At P = 2,000 and G = 50 every number above is a fifth. Under the proposal the standing storage is about 130 TB at full size (64 + 50 + 17 TB of paths and matrices, under 1 TB of statistics,
 contributions and captures) (instead of
@@ -1660,7 +1623,7 @@ command, every figure and what limits a large bank: [BENCHMARK.md section 6](../
 | **Loading a large bank on one node** | open (§27.4): the load keeps every set's value matrix in float64 on the heap until the date is built (80 GB at P = 2,000, G = 50; 400 GB at P = 5,000, G = 100), so a large bank needs the sharding below or a set-at-a-time load (§26.3's design); the memory budget refuses a date over it (`DRS-5445`) |
 | **Contributions by trade at a large bank's size** | open (§27.4): the trade-path read streams the date's whole `exposure-path` table, minutes at 0.4 to 2 TB; pruning by `NETTING_SET` (planned, §26.2) makes it a set's 0.4 to 2 GB. Its trades' paths are held in float64 (4 GB for 1,000 trades at P = 5,000, G = 100) |
 | **Scopes of many sets at P = 5,000** | open (§27.4): a scope's matrices are summed on one thread; a group of 200 sets is about 0.3 s at P = 5,000, G = 100 (target 150 ms). Summing in parallel, or a `STAT` section of per-set statistics, would meet it |
-| **Sharding across Drishti\*net** | planned: counterparties in contiguous ranges aligned to groups, two replicas, a group across nodes summed by the coordinator (§26.2); today it is one node. The full design (key `COUNTERPARTY`, `NETTING_SET`; partial path matrices; quantiles after the combine; the migration) is [CLUSTER_DEPLOYMENT.md section 6](../architecture/CLUSTER_DEPLOYMENT.md#6-exposure-sharding-in-depth-planned), plan row CD10 |
+| **Sharding across Drishti\*net** | planned: counterparties in contiguous ranges aligned to groups, two replicas, a group across nodes summed by the coordinator (§26.2); today it is one node. The full design (key `COUNTERPARTY`, `NETTING_SET`; partial path matrices; quantiles after the combine; the migration) is [CLUSTER_GUIDE.md section 6](../architecture/ARCHITECTURE.md#3211-exposure-sharding-design-not-built), plan row CD10 |
 | **The restricted (wall-crossed) list** | not built (§9): access is by counterparty, group or legal entity at `trades`, `aggregate` or `none` |
 | **Stored credit limits read very low utilisation** | the `credit-limit` records (read as stored, `kinds.limit`) were sized on stored profiles, 3 to 30 times the computed peaks on the large sets (§22.2: median computed / stored 0.08), so the board's *used* reads 0.1% to a few percent. Limits (LIM) are parked; resizing them on the computed PFE comes with the LIM engine |
 | Several runs on one date (`STRESSED`, `EAD_IMM_STRESSED`) | not built (§24.1, question 4) |
@@ -1672,9 +1635,7 @@ command, every figure and what limits a large bank: [BENCHMARK.md section 6](../
 
 ## 29. Exposure data: every dataset the engine reads
 
-Every dataset the exposure engine reads, what it is for, whether it is required, where its sample lives, and one real record from the shipped sample
-data (`data/testdata/`), formatted, with long arrays shortened as `/* … N more … */`. The field-by-field rules of each kind are its
-**data contract** ([docs/contracts/packs/](../contracts/packs/README.md)); how files are named, dated and loaded is
+Every dataset the exposure engine reads, what it is for, whether it is required, where its sample lives, and the links to its two homes: its **data contract** (the fields, the key, the rules: the pack's contract page and its `<kind>.contract.yaml`) and its **example** (a real record of the shipped synthetic test data, every field explained, on [docs/contracts/samples](../contracts/samples/README.md)). This guide copies neither. How files are named, dated and loaded is
 [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo).
 
 <!-- The block below is generated by tools/docs/guide_data.py from tools/docs/guide_data.yaml: edit the spec, not the block. -->
@@ -1700,415 +1661,62 @@ The kinds are the engine's `drishti.ccr.exposure.kinds.*` settings (`config/engi
 One row per simulation run and business date: the grid dates (with their look-back dates), the number of paths, the model and the
 seed. The paths of `exposure-path` are ordered by this row exactly as the P&L vectors are ordered by VaR's scenario set.
 
-- **Data contract:** [`simulation-run`](../contracts/packs/counterparty-risk.md#xrun-exposure-simulation-run-simulation-run) (XRUN), key `RUN_ID`; 24 fields, 24 required.
-- **Sample:** `data/testdata/counterparty-risk/simulation-run/simulation-run.2026-09-30.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "RUN_ID": "XR-2026-09-30-01",
-  "BUSINESS_DATE": "2026-09-30",
-  "MARKET_DATA_DATE": "2026-09-30",
-  "MODEL": "One correlated Brownian factor per asset class (rates, FX, credit, equity, commodity) and a walk of each trade's own; values amortise to zero at maturity (tool…",
-  "MODEL_VERSION": "drishti-testgen-ccr-1.0",
-  "CALIBRATION": "REAL_WORLD",
-  "PATHS": 200,
-  "SEED": "ccr|XR-2026-09-30-01",
-  "ANTITHETIC": false,
-  "GRID_DATES": [
-    "2026-10-07",
-    "2026-10-14",
-    "2026-10-16",
-    "2026-10-30",
-    /* … 16 more … */,
-    "2033-09-16",
-    "2033-09-30",
-    "2036-09-16",
-    "2036-09-30"
-  ],
-  "GRID_ROLE": [
-    "PRIMARY",
-    "PRIMARY",
-    "LOOKBACK",
-    "PRIMARY",
-    /* … 16 more … */,
-    "LOOKBACK",
-    "PRIMARY",
-    "LOOKBACK",
-    "PRIMARY"
-  ],
-  "LOOKBACK_OF": [
-    -1,
-    -1,
-    3,
-    -1,
-    /* … 16 more … */,
-    21,
-    -1,
-    23,
-    -1
-  ],
-  "GRID_TENORS": [
-    "1W",
-    "2W",
-    null,
-    "1M",
-    /* … 16 more … */,
-    null,
-    "7Y",
-    null,
-    "10Y"
-  ],
-  "LOOKBACK_DAYS": 10,
-  "VALUE_BASIS": "FUTURE",
-  "CURRENCY": "USD",
-  "PRECISION": "float64",
-  "CREDIT_PATHS": false,
-  "NETTING_SETS": 8,
-  "TRADES": 523,
-  "ROWS": 7540,
-  "BATCH_ID": "XB-2026-09-30-01",
-  "COMPUTED_AT": "2026-09-30T23:40:00Z",
-  "STATUS": "complete"
-}
-```
+- **Data contract:** [`simulation-run`](../contracts/packs/counterparty-risk.md#xrun-exposure-simulation-run-simulation-run) (XRUN), key `RUN_ID`; 24 fields, 24 required; the file [`simulation-run.contract.yaml`](../../config/packs/banking/counterparty-risk/contracts/simulation-run.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/counterparty-risk.md#simulation-run) (files `data/testdata/counterparty-risk/simulation-run/simulation-run.*.jsonl.gz`).
 
 ### 29.3 `exposure-path`: every trade's MtM on every path
 
 The large input: one row per trade, grid date and run, `MTM` holding the trade's value on each path. Drishti sums a netting set's
 trades per path and date; an absent row after maturity means the trade is worth 0 there.
 
-- **Data contract:** [`exposure-path`](../contracts/packs/counterparty-risk.md#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path) (XPATH), key `PATH_ROW_ID`; 21 fields, 20 required.
-- **Sample:** `data/testdata/counterparty-risk/exposure-path/exposure-path.tar` → `exposure-path/2026-09-30/cob.part-001.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "PATH_ROW_ID": "XR-2026-09-30-01~CLY-3000280~0",
-  "BUSINESS_DATE": "2026-09-30",
-  "RUN_ID": "XR-2026-09-30-01",
-  "TRADE_ID": "CLY-3000280",
-  "SOURCE_SYSTEM": "CALYPSO",
-  "NETTING_SET": "NS-ALDERSHOT-FRA",
-  "COUNTERPARTY": "CP-ALDERSHOT",
-  "LEGAL_ENTITY": "LE-FRA",
-  "DESK": "DESK-SFT",
-  "TT_BOOK": "BOOK-SFT-1",
-  "LIMIT_LETTER": "LL-0001",
-  "ASSET_CLASS": "Securities financing",
-  "PRODUCT": "Tri-party repo",
-  "NOTIONAL": 260700000.0,
-  "MATURITY_DATE": "2027-02-15",
-  "GRID_INDEX": 0,
-  "GRID_DATE": "2026-10-07",
-  "MTM": [
-    -523841,
-    -1015981,
-    -712385,
-    -991918,
-    /* … 192 more … */,
-    -789507,
-    -534603,
-    -638599,
-    -552661
-  ],
-  "STATUS": "ok",
-  "PRICER": "testgen-factor-walk",
-  "BATCH_ID": "XB-2026-09-30-01"
-}
-```
+- **Data contract:** [`exposure-path`](../contracts/packs/counterparty-risk.md#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path) (XPATH), key `PATH_ROW_ID`; 21 fields, 20 required; the file [`exposure-path.contract.yaml`](../../config/packs/banking/counterparty-risk/contracts/exposure-path.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/counterparty-risk.md#exposure-path) (files `data/testdata/counterparty-risk/exposure-path/exposure-path.tar`).
 
 ### 29.4 `netting-set`: the netting sets and their trades
 
 Each netting set with its counterparty, legal entity, agreement and CSA, and its trades: the engine sums the trades' paths of one set
 before flooring at zero.
 
-- **Data contract:** [`netting-set`](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set) (NSET), key `NETTING_SET_ID`; 19 fields, 18 required.
-- **Sample:** `data/testdata/counterparty-risk/netting-set/netting-set.2026-09-30.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "NETTING_SET_ID": "NS-ALDERSHOT-FRA",
-  "TRADE_COUNT": 35,
-  "NET_MTM": -22673015.35,
-  "COLLATERAL": -15251373,
-  "LIMIT": 7000000.0,
-  "CVA": -46,
-  "TRADES": [
-    {
-      "TRADE_ID": "CLY-4000583",
-      "STATUS": "LIVE",
-      "PRODUCT": "Tri-party repo",
-      "ASSET_CLASS": "Securities financing",
-      "CURRENCY": "EUR",
-      "BOOK": "BOOK-SFT-3",
-      "NOTIONAL": 645808000.0,
-      "MATURITY": "2026-10-15",
-      "MATURITY_BUCKET": "0-1Y",
-      "MTM": -14229099.25
-    },
-    {
-      "TRADE_ID": "CLY-4004249",
-      "STATUS": "LIVE",
-      "PRODUCT": "Reverse repo",
-      "ASSET_CLASS": "Securities financing",
-      "CURRENCY": "EUR",
-      "BOOK": "BOOK-SFT-1",
-      "NOTIONAL": 671692000.0,
-      "MATURITY": "2026-10-07",
-      "MATURITY_BUCKET": "0-1Y",
-      "MTM": 13871720.6
-    },
-    /* … 33 more … */
-  ],
-  "BY_ASSET": [
-    {
-      "ASSET": "Securities financing",
-      "MTM": -22673015
-    }
-  ],
-  "COUNTERPARTY": "CP-ALDERSHOT",
-  "AGREEMENT": "AGR-ALDERSHOT-ISDA",
-  "CSA": "CSA-ALDERSHOT-FRA",
-  "CREDIT_LIMIT": "LIM-ALDERSHOT",
-  "CVA_RESULT": "CVA-ALDERSHOT-FRA",
-  "SACCR": "SACCR-ALDERSHOT-FRA",
-  "SIMM": "SIMM-ALDERSHOT",
-  "COLLATERAL_BALANCE": "COLL-ALDERSHOT-FRA",
-  "LEGAL_ENTITY": "LE-FRA",
-  "NETTING_ENFORCEABLE": true,
-  "TRADE_IDS": [
-    "CLY-3000280",
-    "CLY-3000286",
-    "CLY-3000289",
-    "CLY-4000284",
-    /* … 27 more … */,
-    "CLY-4004280",
-    "CLY-4004557",
-    "CLY-4004583",
-    "CLY-4004588"
-  ]
-}
-```
+- **Data contract:** [`netting-set`](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set) (NSET), key `NETTING_SET_ID`; 19 fields, 18 required; the file [`netting-set.contract.yaml`](../../config/packs/banking/counterparty-risk/contracts/netting-set.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/counterparty-risk.md#netting-set) (files `data/testdata/counterparty-risk/netting-set/netting-set.*.jsonl.gz`).
 
 ### 29.5 `csa`: the collateral terms
 
 A credit support annex's terms: thresholds, minimum transfer amount, independent amount, rounding and the margin period of risk the
 collateral on each path is computed with. A netting set without a CSA is unmargined.
 
-- **Data contract:** [`csa`](../contracts/packs/counterparty-risk.md#csa-credit-support-annex-csa) (CSA), key `CSA_ID`; 18 fields, 18 required.
-- **Sample:** `data/testdata/counterparty-risk/csa/csa.2026-07-08.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "CSA_ID": "CSA-ALDERSHOT-FRA",
-  "MARGIN_TYPE": "VM",
-  "CSA_CURRENCY": "USD",
-  "THRESHOLD_US": 10000000.0,
-  "THRESHOLD_THEM": 10000000.0,
-  "MTA": 500000,
-  "MTA_US": 500000,
-  "MTA_THEM": 500000,
-  "INDEPENDENT_AMOUNT": 0,
-  "FREQUENCY": "Daily",
-  "MARGIN_FREQUENCY_DAYS": 1,
-  "MPOR_DAYS": 10,
-  "ELIGIBLE": [
-    {
-      "ASSET": "USD, EUR, GBP cash",
-      "HAIRCUT": 0.0
-    },
-    {
-      "ASSET": "G7 government bonds < 1Y",
-      "HAIRCUT": 0.005
-    },
-    /* … 2 more … */
-  ],
-  "AGREEMENT": "AGR-ALDERSHOT-ISDA",
-  "COUNTERPARTY": "CP-ALDERSHOT",
-  "LEGAL_ENTITY": "LE-FRA",
-  "NETTING_SETS": [
-    "NS-ALDERSHOT-FRA"
-  ],
-  "COLLATERAL_BALANCES": [
-    "COLL-ALDERSHOT-FRA"
-  ]
-}
-```
+- **Data contract:** [`csa`](../contracts/packs/counterparty-risk.md#csa-credit-support-annex-csa) (CSA), key `CSA_ID`; 18 fields, 18 required; the file [`csa.contract.yaml`](../../config/packs/banking/counterparty-risk/contracts/csa.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/counterparty-risk.md#csa) (files `data/testdata/counterparty-risk/csa/csa.*.jsonl.gz`).
 
 ### 29.6 `collateral-balance`: today's collateral
 
 The collateral account of a netting set today: what is held and posted. Read by the `current` collateral model and for independent
 amounts and initial margin held.
 
-- **Data contract:** [`collateral-balance`](../contracts/packs/counterparty-risk.md#coll-collateral-balance-collateral-balance) (COLL), key `BALANCE_ID`; 8 fields, 8 required.
-- **Sample:** `data/testdata/counterparty-risk/collateral-balance/collateral-balance.2026-09-30.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "BALANCE_ID": "COLL-ALDERSHOT-FRA",
-  "HELD": 0,
-  "POSTED": 15251373,
-  "NET": -15251373,
-  "AS_OF": "2026-09-30",
-  "POSITIONS": [
-    {
-      "ASSET": "Solaris Energy Corp. 2031",
-      "DIRECTION": "Posted",
-      "MARKET_VALUE": 5109338,
-      "HAIRCUT": 0.005,
-      "VALUE": 5083791
-    },
-    {
-      "ASSET": "United States Treasury 2036",
-      "DIRECTION": "Posted",
-      "MARKET_VALUE": 5109338,
-      "HAIRCUT": 0.005,
-      "VALUE": 5083791
-    },
-    /* … 1 more … */
-  ],
-  "CSA": "CSA-ALDERSHOT-FRA",
-  "NETTING_SET": "NS-ALDERSHOT-FRA"
-}
-```
+- **Data contract:** [`collateral-balance`](../contracts/packs/counterparty-risk.md#coll-collateral-balance-collateral-balance) (COLL), key `BALANCE_ID`; 8 fields, 8 required; the file [`collateral-balance.contract.yaml`](../../config/packs/banking/counterparty-risk/contracts/collateral-balance.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/counterparty-risk.md#collateral-balance) (files `data/testdata/counterparty-risk/collateral-balance/collateral-balance.*.jsonl.gz`).
 
 ### 29.7 `counterparty`: the counterparties
 
 The core pack's counterparties: the `CPTY:` scope adds the exposures of a counterparty's netting sets per path; the name and rating
 label the explorer.
 
-- **Data contract:** [`counterparty`](../contracts/packs/core.md#cpty-counterparty-counterparty) (CPTY), key `COUNTERPARTY_ID`; 19 fields, 17 required.
-- **Sample:** `data/testdata/core/counterparty/counterparty.2026-09-30.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "COUNTERPARTY_ID": "CP-ALDERSHOT",
-  "NAME": "Aldershot Pension Trust",
-  "LEI": "549300H5KZ2QJHEAMB55",
-  "RATING": "AA-",
-  "SECTOR": "Pensions",
-  "COUNTRY": "GB",
-  "TYPE": "Pension fund",
-  "COUNTRY_OF_RISK": "GB",
-  "UEN": "UEN0100037",
-  "ECONOMY": "ECON-GBR",
-  "NEWS_ID": "NEWS-Aldershot_Pension_Trust",
-  "NET_MTM": 520405666.42,
-  "NETTING_SETS": [
-    {
-      "ID": "NS-ALDERSHOT-FRA",
-      "AGREEMENT": "AGR-ALDERSHOT-ISDA",
-      "TRADES": 35,
-      "NET_MTM": -22673015.35
-    },
-    {
-      "ID": "NS-ALDERSHOT-LDN",
-      "AGREEMENT": "AGR-ALDERSHOT-ISDA",
-      "TRADES": 159,
-      "NET_MTM": -139050654.04
-    },
-    /* … 2 more … */
-  ],
-  "KYC": {
-    "STATUS": "Approved",
-    "RISK_RATING": "Standard",
-    "LAST_REVIEW": "2026-02-11",
-    "EMIR_CLASSIFICATION": "FC",
-    "PD_1Y": 0.0004
-  },
-  "GROUP": "GRP-ALDERSHOT",
-  "CREDIT_LIMIT": "LIM-ALDERSHOT",
-  "HIERARCHY": {
-    "NODES": [
-      {
-        "ID": "GRP-ALDERSHOT",
-        "LABEL": "Aldershot Pension Trust",
-        "TYPE": "Group (ultimate parent)"
-      },
-      {
-        "ID": "CP-ALDERSHOT",
-        "LABEL": "Aldershot Pension Trust",
-        "TYPE": "Counterparty"
-      },
-      /* … 9 more … */
-    ],
-    "EDGES": [
-      {
-        "FROM": "GRP-ALDERSHOT",
-        "TO": "CP-ALDERSHOT",
-        "LABEL": "parent of"
-      },
-      {
-        "FROM": "CP-ALDERSHOT",
-        "TO": "AGR-ALDERSHOT-ISDA",
-        "LABEL": "signed"
-      },
-      /* … 12 more … */
-    ]
-  },
-  "LEGAL_ENTITY": "LE-NY"
-}
-```
+- **Data contract:** [`counterparty`](../contracts/packs/core.md#cpty-counterparty-counterparty) (CPTY), key `COUNTERPARTY_ID`; 19 fields, 17 required; the file [`counterparty.contract.yaml`](../../config/packs/core/core/contracts/counterparty.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/core.md#counterparty) (files `data/testdata/core/counterparty/counterparty.*.jsonl.gz`).
 
 ### 29.8 `counterparty-group`: connected groups
 
 A group of connected counterparties (a parent and its subsidiaries): the `GROUP:` scope.
 
-- **Data contract:** [`counterparty-group`](../contracts/packs/core.md#grp-counterparty-group-counterparty-group) (GRP), key `GROUP_ID`; 5 fields, 5 required.
-- **Sample:** `data/testdata/core/counterparty-group/counterparty-group.2026-09-30.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "GROUP_ID": "GRP-ALDERSHOT",
-  "NAME": "Aldershot Pension Trust",
-  "LIMIT": 7980000000.0,
-  "UTILISATION": 0.6673,
-  "MEMBERS": [
-    {
-      "ID": "CP-ALDERSHOT",
-      "NAME": "Aldershot Pension Trust",
-      "RATING": "AA-"
-    }
-  ]
-}
-```
+- **Data contract:** [`counterparty-group`](../contracts/packs/core.md#grp-counterparty-group-counterparty-group) (GRP), key `GROUP_ID`; 5 fields, 5 required; the file [`counterparty-group.contract.yaml`](../../config/packs/core/core/contracts/counterparty-group.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/core.md#counterparty-group) (files `data/testdata/core/counterparty-group/counterparty-group.*.jsonl.gz`).
 
 ### 29.9 `risk-hierarchy`: the trees
 
 The market-risk pack's trees, shared with VaR: a legal-entity or desk scope of exposure is a node of one of them.
 
-- **Data contract:** [`risk-hierarchy`](../contracts/packs/market-risk.md#hier-risk-hierarchy-node-risk-hierarchy) (HIER), key `NODE_ID`; 11 fields, 8 required.
-- **Sample:** `data/testdata/market-risk/risk-hierarchy/risk-hierarchy.2026-09-30.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "NODE_ID": "LEGAL~BANK",
-  "HIERARCHY": "LEGAL",
-  "LEVEL": "bank",
-  "PARENT_ID": null,
-  "NAME": "Drishti Bank",
-  "REF": null,
-  "CHILDREN": [
-    "LEGAL~LE-NY",
-    "LEGAL~LE-LDN",
-    "LEGAL~LE-FRA",
-    "LEGAL~LE-TKY"
-  ],
-  "BOOKS": [
-    "BOOK-COMM-1",
-    "BOOK-COMM-2",
-    "BOOK-COMM-3",
-    "BOOK-CREDIT-1",
-    /* … 22 more … */,
-    "BOOK-SFT-3",
-    "BOOK-STRUCT-1",
-    "BOOK-STRUCT-2",
-    "BOOK-STRUCT-3"
-  ],
-  "BUSINESS_DATE": "2026-09-30",
-  "VALID_FROM": "2026-01-02",
-  "VALID_TO": null
-}
-```
+- **Data contract:** [`risk-hierarchy`](../contracts/packs/market-risk.md#hier-risk-hierarchy-node-risk-hierarchy) (HIER), key `NODE_ID`; 11 fields, 8 required; the file [`risk-hierarchy.contract.yaml`](../../config/packs/banking/market-risk/contracts/risk-hierarchy.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#risk-hierarchy) (files `data/testdata/market-risk/risk-hierarchy/risk-hierarchy.*.jsonl.gz`).
 <!-- guide-data:end -->
 
 ---

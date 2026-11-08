@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-{# Admin -> Health, "Busy protection" (docs/admin/OPERATIONS.md "Busy protection"; mock-up A, panel 4): every reading against its warn and
+{# Admin -> Health, "Busy protection" (docs/guides/OPERATIONS_GUIDE.md "Busy protection"; mock-up A, panel 4): every reading against its warn and
    wait levels, the last refusals and the operator's override. The server decides; this only draws GET /api/v1/admin/busy's answer. #}
 {% set bz = h.get('busy') %}
 {% if bz %}

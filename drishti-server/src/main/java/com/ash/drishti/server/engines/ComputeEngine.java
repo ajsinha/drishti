@@ -18,7 +18,7 @@ package com.ash.drishti.server.engines;
 import java.util.List;
 
 /**
- * One compute engine's lifecycle (docs/architecture/COMPUTE_ENGINES.md section 5.1), registered with the {@link EngineRegistry} as a Spring
+ * One compute engine's lifecycle (docs/guides/ADMIN_GUIDE.md section 5.1), registered with the {@link EngineRegistry} as a Spring
  * bean: an engine's build adds one bean of this type and one catalogue entry, nothing else. The engine's beans exist either way and are
  * thin; what holds memory or threads (open dates, caches, pools, schedulers, its connectors) is created on first use while it runs and
  * released by {@link #stop()}. While it does not run, its service refuses with {@link EngineOffException} (404 DRS-1020) and the API filter

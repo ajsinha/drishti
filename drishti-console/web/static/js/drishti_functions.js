@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Functions, FUNC <GO> (docs/admin/USER_MANAGEMENT.md): the command directory, server-rendered. For everyone: Find (every word must appear in a
+/* Functions, FUNC <GO> (docs/guides/ADMIN_GUIDE.md): the command directory, server-rendered. For everyone: Find (every word must appear in a
    command's code, title, description, kind or its pack's name and title; FUNC <words> arrives with them typed) and the Pack picker, kept in
    the address as ?q= so a reload or a shared link shows the same list. For an administrator (the page carries the switches): a row per
    command with the Everyone column and a pack switch; ticking a box only records a change: changes are batched (Undo takes back the last

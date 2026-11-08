@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 /**
- * The engine's tree of a pivot formula (PIVOT_ENGINE.md section 8.2, "Formula of built-ins"), lowered from Rachana's by {@link FormulaLowering}:
+ * The engine's tree of a pivot formula (ARCHITECTURE.md section 26.5, "Formula of built-ins"), lowered from Rachana's by {@link FormulaLowering}:
  * what a measure needs: numbers, strings, fields, arithmetic, comparisons, {@code &&}/{@code ||}/{@code !} (here {@code and}, {@code or},
  * {@code not}), {@code c ? a : b}, scalar calls ({@code abs}, {@code sqrt}, ...) and aggregate calls of the built-ins with an optional
  * {@code where =} condition. Immutable.

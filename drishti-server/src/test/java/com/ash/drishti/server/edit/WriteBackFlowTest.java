@@ -41,7 +41,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * Write-back end to end on the book desk (WRITE_BACK.md W1, W2, W6, W7): a form's draft is submitted (the review sheet first), waits for
+ * Write-back end to end on the book desk (APPROVALS_GUIDE.md W1, W2, W6, W7): a form's draft is submitted (the review sheet first), waits for
  * one approver who is never the submitter, is applied in its lane as an overlay, closes the draft with the change id, shows on the page
  * for every reader (and is named in "How this view was built"), reaches a live viewer of the page, and is told to the triggers and the
  * consoles; a second change based on the old value is conflicted, never applied; a person without the edit power is refused.

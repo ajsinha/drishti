@@ -63,7 +63,7 @@ def test_every_help_entry_has_a_title_that_parsed_whole():
     for s in _sections():
         for g in _pages(s):
             assert isinstance(g.get("title"), str) and g["title"], g
-            assert set(g) <= {"slug", "doc", "title", "icon", "kind", "summary", "packs", "roles", "engine", "pair"}, f"{g.get('slug')}: unexpected keys {sorted(set(g))} (an unquoted comma in a title?)"
+            assert set(g) <= {"slug", "doc", "title", "icon", "kind", "summary", "packs", "roles", "engine", "pair", "domain", "lenses"}, f"{g.get('slug')}: unexpected keys {sorted(set(g))} (an unquoted comma in a title?)"
 
 
 def test_the_docs_readme_names_the_help_sections_in_order():

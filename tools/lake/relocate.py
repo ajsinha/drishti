@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """lake relocate: move a lake built in the older layout (its tables directly in <data>/delta/<domain>/<table>) into its own folder,
-<data>/delta/<lake>/, once (docs/admin/OPERATIONS.md, "The lakes' folders").
+<data>/delta/<lake>/, once (docs/guides/OPERATIONS_GUIDE.md, "The lakes' folders").
 
 The server does this for the demo lake at start (drishti.lakes.relocate-on-start); this runs the same Java (``LakeRelocate``, in the server's
 exec jar) by hand. Only the lake's known folders move, by a rename on the same file system; every table is opened and measured before and

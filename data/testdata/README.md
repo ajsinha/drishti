@@ -87,8 +87,8 @@ On Windows, offline, with your own ENDUR files: [How to QA in Windows Environmen
    from the committed snapshot ([below](#the-market-snapshot-news-and-markets-offline)). On a machine with internet, set it to `false`
    (and enable the live connectors) to see live quotes and headlines instead.
 
-   **The demo ticker (tutorial 12, live BI and boards).** The lakes are daily snapshots: they do not tick, so on these servers a live
-   visual's chip says **Listening** (following, nothing has changed) rather than **Live**. Tutorial 12's live trades and exposure come
+   **The demo ticker (tutorial 8, Part F, live BI and boards).** The lakes are daily snapshots: they do not tick, so on these servers a live
+   visual's chip says **Listening** (following, nothing has changed) rather than **Live**. Tutorial 8, Part F's live trades and exposure come
    from the **demo source**, which ticks by itself about twice a second: start the server with `DRISHTI_DEMO_ENABLED=true` (the run
    configuration **Drishti server**, or edit **Drishti server (demo lakes)** and set that variable to `true`). With it on, a sample
    answers before the lake for an id both hold; the lakes still answer every other id.
@@ -364,7 +364,7 @@ A change file holds only that day's new and changed documents, so it is not a da
 the changes applied by key. `lake demo --only trades/endur` does that for one dataset, `--only core` for one pack.
 
 **Pointing packs at the lakes.** Each pack's Delta connectors read `${DRISHTI_DELTA_ROOT:<data>/delta}`; at its first start the server
-writes them to `config/connectors/<name>.yaml` ([CONNECTOR_FILES.md](../../docs/connectors/CONNECTOR_FILES.md)). `lake demo --lake
+writes them to `config/connectors/<name>.yaml` ([../../docs/guides/DATA_GUIDE.md section 9](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors)). `lake demo --lake
 /elsewhere` writes the files to point there (or start the server with `DRISHTI_DELTA_ROOT=/elsewhere`); a file that points at another
 folder is updated, its earlier text kept in `data/connectors/history/`. Without a lake the packs' samples answer, as before.
 

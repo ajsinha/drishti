@@ -44,7 +44,7 @@ lenses:
       - { title: "Official press releases", cmd: PRESS PRESS-FED, icon: newspaper }
       - { title: "The world's news by tone (GDELT)", cmd: GDELT GDELT-CAN, icon: broadcast }
     chips: [WDI WDI-USA, CBANK CBANK-FED, OECD OECD-USA, PRESS PRESS-ECB]   # Home's chips (the same rule as the cards)
-    help: [docs-guides-public-sector-guide, docs-tutorials-46-public-sector-data, world-development-pack, central-banks-pack,
+    help: [docs-guides-public-sector-guide, docs-tutorials-14-public-sector-data, world-development-pack, central-banks-pack,
       national-statistics-pack, oecd-pack, official-news-pack, gdelt-events-pack, external-data]
   - id: cio
     title: Chief information officer

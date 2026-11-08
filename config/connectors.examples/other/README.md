@@ -60,7 +60,7 @@ files:
 - s3-via-proxy.yaml
 - trading-stream.yaml
 - yfinance.yaml
-doc: docs/connectors/CONNECTOR_FILES.md
+doc: docs/guides/DATA_GUIDE.md
 ---
 # The other connector templates
 
@@ -173,8 +173,8 @@ apply` refuse a credential written in clear. There is no loader for these files:
 
 ## See also
 
-- [Connector files](../../../docs/connectors/CONNECTOR_FILES.md): the folder, the format, live reload, copying these examples.
-- [TLS and the outbound proxy](../../../docs/connectors/TLS.md): every `tls.*` and `proxy.*` setting and the start-up checks.
+- [Connector files](../../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors): the folder, the format, live reload, copying these examples.
+- [TLS and the outbound proxy](../../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy): every `tls.*` and `proxy.*` setting and the start-up checks.
 - The plugins' documents: [Kafka](../../../plugins/drishti-plugin-kafka/README.md), [ActiveMQ](../../../plugins/drishti-plugin-activemq/README.md),
   [RabbitMQ](../../../plugins/drishti-plugin-rabbitmq/README.md), [REST](../../../plugins/drishti-plugin-rest/README.md),
   [PostgreSQL](../../../plugins/drishti-plugin-jdbc/README.md), [MongoDB](../../../plugins/drishti-plugin-mongodb/README.md),

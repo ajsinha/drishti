@@ -637,7 +637,7 @@ retrieval date and licence.
 | CIA World Factbook | Public domain | no | governments, office holders, elections, parties |
 | UNDP Human Development Index | CC BY 3.0 IGO | no | social indicators |
 
-Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/world-economy.md](guides/world-economy.md): *Data contracts* and *Data retrieval*.
+Every kind's links to its data contract and its example and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/world-economy.md](guides/world-economy.md): *Data contracts* and *Data retrieval*.
 
 External data: World Bank World Development Indicators and Worldwide Governance Indicators; IMF World Economic Outlook (**internal only**); CIA World Factbook; UNDP Human Development Index. Each source's URL, licence and data feed are on the External data help page, [docs/guides/EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md).
 
@@ -664,4 +664,4 @@ The pack's files are written by `tools/packgen/world/make.py`; its `--check` fai
 ## See also
 
 - [World economy pack](guides/world-economy.md): Real public economic data for about 200 economies: output, growth, prices, jobs, debt and external balance (World Bank, IMF, CIA World Factbook), IMF forecasts, and World Bank regions and income groups; and governments and societies: government type, office holders, elections, parties with seats, and social and governance indicators (CIA World Factbook, World Bank, UNDP).
-- [Packs](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md) (the README standard).
+- [Packs](../../../../docs/guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/BUILD_GUIDE.md) (the README standard).

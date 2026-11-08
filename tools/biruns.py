@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""BI runs on the command line (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 14.4, docs/guides/BI_GUIDE.md): what the Runs tab does, over REST as the
+"""BI runs on the command line (docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 14.4, docs/guides/REPORTS_GUIDE.md): what the Runs tab does, over REST as the
 token's user. Loaded by drishti.py; the server decides who may see and do what (a run's `can`).
 
   bi runs list [--state S] [--source report|mq|sql] [--since 7d] [--all-nodes]     your runs and the ones shared with you, newest first
@@ -114,7 +114,7 @@ def as_of(r: dict) -> str:
 def register(bi, srv, ctx) -> None:
     """Adds `bi runs` to the `bi` subcommands; ctx holds Api, CliError and say_json of drishti.py."""
     rs = bi.add_parser("runs", help="bi runs list|get|submit|estimate|wait|result|cancel|rerun|export|share|unshare|promote|keep|schedule|schedules|storage|suggestions: BI runs",
-                       description="BI runs (BI_DESIGN.md): questions that run in the background, as you.")
+                       description="BI runs (ARCHITECTURE.md §28): questions that run in the background, as you.")
     ra = rs.add_subparsers(dest="action", metavar="ACTION", required=True)
     ex = argparse.RawDescriptionHelpFormatter
 
@@ -481,7 +481,7 @@ def cmd_unshare(a, ctx) -> int:
 
 
 def cmd_promote(a, ctx) -> int:
-    """POST /runs/{id}/promote {name?, title?, to} (BI_DESIGN › BI runs, 9.4 as built): 201 {snapshot, version, dataset: {name, item}, report: {item}|null, yaml}."""
+    """POST /runs/{id}/promote {name?, title?, to} (ARCHITECTURE §28 › BI runs, 9.4 as built): 201 {snapshot, version, dataset: {name, item}, report: {item}|null, yaml}."""
     to = {"snapshot": "dataset", "report": "report"}.get(a.as_ or "", a.to)
     body = {"to": to}
     for k in ("name", "title"):
@@ -610,7 +610,7 @@ def cmd_storage(a, ctx) -> int:
 def asked(a, ctx, path: str, body: dict) -> int:
     """`bi mq --async` and `bi sql --async`: the question with `Prefer: respond-async, wait=<--wait>`; the answer when it is done in time, else the run."""
     wait = seconds(a.wait)
-    if getattr(a, "yes", False):                                          # --yes: confirmed in advance, as POST /runs options.confirm (BI_DESIGN › BI runs, 14.5, BIR-05)
+    if getattr(a, "yes", False):                                          # --yes: confirmed in advance, as POST /runs options.confirm (ARCHITECTURE §28 › BI runs, 14.5, BIR-05)
         body = dict(body, confirm=True)
     status, r = ask_async(_api(a, ctx), ctx, "POST", path, body, wait)
     return show_outcome(a, ctx, status, r)

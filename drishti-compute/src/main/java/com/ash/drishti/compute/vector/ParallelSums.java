@@ -60,7 +60,7 @@ public final class ParallelSums implements AutoCloseable {
     }
 
     /**
-     * The sum of the vectors of {@code set}: {@code width} doubles, in a <b>fixed reduction order</b> (2.9.7, RESOURCES_AND_SCALE.md section
+     * The sum of the vectors of {@code set}: {@code width} doubles, in a <b>fixed reduction order</b> (2.9.7, CLUSTER_GUIDE.md section
      * 6.7, decision PO-7): the ordinals are cut into blocks aligned to the absolute ordinal (block k holds {@code [k * B, (k + 1) * B)}),
      * B chosen from the set's size alone ({@link #blockRows}: about 64 blocks, a power of two, at least 1,024 rows; a set under 1,024 rows
      * is summed in plain row order); each block's rows are

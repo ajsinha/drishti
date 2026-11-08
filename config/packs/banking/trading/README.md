@@ -405,7 +405,7 @@ Screens (Sutras):
 |---|---|---|---|
 | Synthetic sample data (tools/packgen/banking) | Proprietary (part of Drishti); fictitious names and figures | no | every document in samples/ and the demo lake |
 
-Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/trading.md](guides/trading.md): *Data contracts* and *Data retrieval*.
+Every kind's links to its data contract and its example and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/trading.md](guides/trading.md): *Data contracts* and *Data retrieval*.
 
 ## Enabling and dependencies
 
@@ -431,4 +431,4 @@ The pack's files are written by `tools/packgen/banking/make_docs.py`; its `--che
 
 - [Trading pack](guides/trading.md): Trades in 125 products: what a trade holds, its connectors and examples.
 - [Trading products](guides/trading-products.md): All 125 products by asset class: terms, schedules, market data and risk.
-- [Packs](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md) (the README standard).
+- [Packs](../../../../docs/guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/BUILD_GUIDE.md) (the README standard).

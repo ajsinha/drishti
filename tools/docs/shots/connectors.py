@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The pictures of the connector developer guide (docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md), written to docs/connectors/img/connectors/.
+"""The pictures of the connector developer guide (docs/guides/DEVELOPER_GUIDE.md), written to docs/connectors/img/connectors/.
 
 This guide needs its own scratch server: the teaching plugin (docs/guides/examples/connector, built with ./mvnw package) in a plugin folder,
 a connector over its sample folder, and two connectors pointed at ports nothing listens on, so Admin -> Health shows UP and DOWN

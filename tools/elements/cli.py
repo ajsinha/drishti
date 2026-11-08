@@ -12,7 +12,7 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""``drishti.py elements``: Drishti Elements for other applications (docs/guides/ELEMENTS_IN_YOUR_APP.md).
+"""``drishti.py elements``: Drishti Elements for other applications (docs/guides/EMBED_GUIDE.md).
 
     drishti.py elements pack --libs core,grid,chart [--theme dark] [--out DIR] [--include-domain banking] [--no-engines] [--maps]
     drishti.py elements dist [--out DIR] [--include-domain banking] [--only zip|npm]

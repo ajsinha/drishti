@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Drishti Elements distributed (tools/elements/dist.py, pack.py, cli.py; docs/guides/ELEMENTS_IN_YOUR_APP.md):
+"""Drishti Elements distributed (tools/elements/dist.py, pack.py, cli.py; docs/guides/EMBED_GUIDE.md):
 
 * the zip, the npm tarballs and the WebJar hold what their manifest says, every file with a matching SHA-384 integrity hash, the same
   bytes in all three, reproducibly;

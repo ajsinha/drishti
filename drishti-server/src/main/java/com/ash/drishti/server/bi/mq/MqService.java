@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Asks a model a model query (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 5): validates it (steps 3 to 10, {@link MqValidator}), compiles it
+ * Asks a model a model query (docs/architecture/ARCHITECTURE.md §28 › The model layer: the specification of wave W1, section 5): validates it (steps 3 to 10, {@link MqValidator}), compiles it
  * ({@link MqCompiler}), runs the engine requests as the reader through the model's runner, and writes the one answer shape of section 5.2: the model, typed
  * columns with stable ids, additivity and masks, the rows, the totals per level, and the meta (as-of, dates, layer, tables, masks, warnings, cache, time,
  * the data generation that is the standing query's cursor, the canonical query that ran). Has no state; the catalogue binds a model to a reader.
@@ -57,7 +57,7 @@ public final class MqService {
     }
 
     /**
-     * What a query would read, from metadata only (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 4): validated and compiled as the bound reader, its main request's
+     * What a query would read, from metadata only (docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 4): validated and compiled as the bound reader, its main request's
      * footprint. Empty when compiling it needs data (a {@code top} filter), when the runner cannot say, or when it does not validate (the run reports why).
      */
     public java.util.Optional<com.ash.drishti.server.bi.engine.Footprints.Footprint> footprint(Bound b, ModelQuery q) {
@@ -311,7 +311,7 @@ public final class MqService {
         }
         QueryService.Result shown = withoutGuards(r);
         List<Map<String, Object>> totals = new ArrayList<>();
-        if (!compiled.totals().isEmpty()) {                                       // every level in one statement of the pivot engine (BI_DESIGN.md, totals)
+        if (!compiled.totals().isEmpty()) {                                       // every level in one statement of the pivot engine (ARCHITECTURE.md §28, totals)
             QueryRequest lq = compiled.totals().get(0).query();
             List<String> measures = lq.measures().stream().filter(m -> !py.contains(m)).toList();   // a Python measure has no total
             com.ash.drishti.server.bi.pivot.BiAggregate.Totals t = com.ash.drishti.server.bi.pivot.BiAggregate.totals(compiled.dataset(),
