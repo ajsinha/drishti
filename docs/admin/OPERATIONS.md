@@ -3719,7 +3719,7 @@ new requests meanwhile, so the console moves to another server at once, and the 
 #### VaR shards
 
 With VaR sharding on (the market-risk pack's `sharding:` block, or `drishti.var.sharding.enabled`; off by default), each date's trades are
-cut into shards by legal entity and desk and each shard is held by `replicas` members ([VAR_SHARDING.md](../architecture/VAR_SHARDING.md)).
+cut into shards by legal entity and desk and each shard is held by `replicas` members ([DATA_ARCHITECTURE.md section 13](../architecture/DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built)).
 For the operator:
 
 - **Every member answers every VaR scope**; only the rows are spread. `drishti.py var shards --date D` lists the date's shards, their

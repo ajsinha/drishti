@@ -606,7 +606,7 @@ drishti:
       - "POST /api/v1/approvals/*/*/questions"          # a question on an item: a person asks it
       - "* /api/v1/alerts/**"                           # the alerts raised for a person and their rules: personal state, set in the console
       - "POST /api/v1/risk/var/intraday/streams/*/apply"   # applying a PV topic's waiting window now: an administrator in the console
-      # VaR shards (docs/architecture/VAR_SHARDING.md section 10). /partial is one member's call to another, signed with the cluster key
+      # VaR shards (docs/architecture/DATA_ARCHITECTURE.md section 14). /partial is one member's call to another, signed with the cluster key
       # and made as the caller (their on-behalf-of token; the owner applies their rights again): like /compute/peer/**, never a token's.
       # It reads data but is no read POST for a token, which would only add a door to the members' channel. /shards/drain takes a member's
       # shards away before it stops: an administrator (console, drishti.py var shards --drain, a task's stop hook signed in as one), never

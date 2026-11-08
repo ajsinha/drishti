@@ -115,7 +115,7 @@ final class VarLoader {
     }
 
     /**
-     * The rows of a date per shard key value (VAR_SHARDING.md section 3), read as columns (no vector is read): every kind of {@code kinds}
+     * The rows of a date per shard key value (DATA_ARCHITECTURE.md section 13), read as columns (no vector is read): every kind of {@code kinds}
      * that a connector holds counted together. Empty when a kind's source cannot answer the key as columns (the date is then not cut).
      */
     java.util.Optional<java.util.SortedMap<List<String>, Long>> keyCounts(LocalDate date, List<String> key, List<String> kinds) {
@@ -233,7 +233,7 @@ final class VarLoader {
     }
 
     /**
-     * The digest a shard's book built now would have (VAR_SHARDING.md section 6): what a member that puts the date together expects of the
+     * The digest a shard's book built now would have (DATA_ARCHITECTURE.md section 13): what a member that puts the date together expects of the
      * shard's skeleton, computed from its own reads of the inputs' versions (empty when the trades' source cannot say its version).
      */
     String shardDigest(LocalDate date, VarShardScope shard) {
@@ -241,7 +241,7 @@ final class VarLoader {
     }
 
     /**
-     * One shard of a sharded date (VAR_SHARDING.md section 5): the date's inputs read for the rows of the shard's key range only (the
+     * One shard of a sharded date (DATA_ARCHITECTURE.md section 13): the date's inputs read for the rows of the shard's key range only (the
      * plugin skips the files whose statistics hold none of its keys; every row is checked here), built and written as the shard's own hot
      * file (its {@code RANG} section), the morning run only (the day's updates are applied by each member on the date it puts together).
      */
@@ -383,7 +383,7 @@ final class VarLoader {
     /**
      * The hierarchy rows of a date (the {@code risk-hierarchy} kind, for the hierarchies built from rows) with their books and limits (a
      * var-limit row wins over the row's own {@code LIMIT_VAR}), the root names as configured, and the hierarchies built from columns: what
-     * a date's nodes are built from (a load, or a sharded date put together, VAR_SHARDING.md).
+     * a date's nodes are built from (a load, or a sharded date put together, DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built).
      */
     com.ash.drishti.banking.compute.var.ShardAssembly.Nodes nodeRows(AsOf asOf, Hierarchies hs, Map<String, Double> limits) {
         List<String[]> rows = new ArrayList<>();
@@ -657,7 +657,7 @@ final class VarLoader {
     }
 
     /**
-     * The portfolios' VaR limits (2.9.7, decision 8 of COMPUTED_ATTRIBUTES.md: every VaR limit lives in {@code var-limit}, with its currency):
+     * The portfolios' VaR limits (2.9.7, DATA_ARCHITECTURE.md section 12: every VaR limit lives in {@code var-limit}, with its currency):
      * the date's var-limit rows of hierarchy {@code PORTFOLIO}, portfolio id to limit in USD; empty when no connector serves the kind.
      */
     Map<String, Double> portfolioLimits(AsOf asOf) {

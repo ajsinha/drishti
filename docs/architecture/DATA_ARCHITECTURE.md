@@ -147,6 +147,9 @@ and the per-store documents; VaR's intake is the parallel lake loader ([section 
 9. [The in-memory lake: Delta tables that never touch a disk](#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk)
 10. [The parallel lake loader (drishti-lakeload)](#10-the-parallel-lake-loader-drishti-lakeload)
 11. [Arrow Flight: Drishti's data to any client](#11-arrow-flight-drishtis-data-to-any-client)
+12. [Computed and derived attributes](#12-computed-and-derived-attributes)
+13. [VaR sharding: how it is built](#13-var-sharding-how-it-is-built)
+14. [VaR sharding for operators](#14-var-sharding-for-operators)
 
 ## 1. Live updates
 
@@ -3999,3 +4002,298 @@ every request form and the clients: [FLIGHT_REFERENCE.md](../guides/FLIGHT_REFER
 | Limits | `FlightLimits` per role; Arrow memory per read and per node (`ArrowMemory`, Health's `arrow-flight`) |
 | Audit and Admin → Data out | `data.flight` per read; `FlightActivity`; one screen over `GET /api/v1/admin/data-out` with two views: the page (default; [mock-up A](mockups/data-out/A.html): the service, the nodes, live streams with Stop, the last day's readers, tokens and limits, in order of urgency) and the map ([mock-up B](mockups/data-out/B.html): clients and nodes with a line per stream) |
 | Flight SQL | `DrishtiSqlProducer` on the same port: each statement a `form: model` request with its SQL, answered by `SqlService` (DSQL) and read through the same producer; one catalog, the models as schemas, their aliases as tables (`ServerFlightSqlCatalog`); the model by a first-line comment or the header `model` |
+
+## 12. Computed and derived attributes
+
+Every number on a market-risk or counterparty-risk page is one of three classes, and the class decides where it is made. This is the rule
+the packs follow and the mechanisms that apply it; the open steps (the engines still to build, the stored figures still to retire) are in
+[IMPLEMENTATION_PLAN.md, "Computed and derived attributes: open steps"](IMPLEMENTATION_PLAN.md#computed-and-derived-attributes-open-steps).
+
+### 12.1 Three classes, and the rule for deciding which
+
+| Class | What it is | Who makes it | Stored? | Examples |
+|---|---|---|---|---|
+| **Fundamental** | a fact delivered by a source system or an upstream engine at the grain that engine owns; not reproducible from anything Drishti holds | source systems, upstream pricing and simulation engines | **yes**, with a contract | a trade's `MTM`, a CSA's thresholds, a collateral holding, a limit amount, an exposure path, a P&L vector |
+| **Derived** | a deterministic function of fields Drishti holds: a sum, count, max, difference, ratio or pick; no model, no parameters beyond a filter | Drishti, from configuration: a Sutra expression (one document) or a derived kind (across documents) | **no** | a netting set's net MtM = Σ trade MtM; utilisation = used ÷ limit; held collateral = Σ holdings' values |
+| **Computed** | needs an engine: scenarios, paths, quantiles, correlations, regulatory parameter tables, any scope, any date, what-if, per-reader entitlements | the engines (reactive connectors, Java or Python) | **no** (only as an immutable capture or a published official result) | VaR, ES, EE, PFE, EPE, SA-CCR EAD, SIMM IM, the FRTB charge, CVA |
+
+The contracts' four data kinds ([contracts README section 3](../contracts/README.md#3-four-kinds-of-data)) map onto these: fundamental
+and input are fundamental; Drishti-owned covers Drishti's derived records (positions) and users' definitions (portfolios, baskets);
+computed is computed. Ask in order; the first "yes" decides:
+
+1. Delivered by a system of record and not reproducible from anything Drishti holds? **Fundamental**: stored, with a contract.
+2. A pure function of fields of **one** document? **Derived, in the Sutra** (Rachana-EL), never stored on the document.
+3. A pure, additive function of fields of **several** documents of one kind grouped by a key, shared alike by every reader? **Derived
+   kind** (`plugin: derived`).
+4. Needs a non-additive statistic, a parameter table, per-path or per-scenario arithmetic, FX by scenario, a join across kinds with rules,
+   an arbitrary scope, a what-if or per-reader entitlements? **Computed** by an engine.
+
+Two corollaries: **a derived attribute over a computed input is computed** (the utilisation of a PFE limit divides by a quantile of
+summed paths, so it belongs to the limits engine; a Sutra may still show the division of two numbers already on the page as a *check*);
+**membership is fundamental, totals are not** (which trade is in which netting set is a legal fact; the set's net MtM is a derived
+total). Stored copies of derived or computed numbers are avoided because they give two numbers for one thing, go stale when the members
+move, cannot be rebuilt or explained, leak sums over trades a reader may not see, and freeze a method the measure's definition forbids.
+
+### 12.2 The mechanisms
+
+| Mechanism | Example | Runs | Refreshes | Scope | Entitlements | Limits |
+|---|---|---|---|---|---|---|
+| **Sutra expression** (Rachana-EL in `bind:`, `title:`, `when:`) | `size($.DEFINITION.MEMBERS)` on the portfolio page | in the server, as the page is built from one document | every render | one document | the reader's | Rachana's function set |
+| **Derived kind** (`plugin: derived`, `DerivedSourcePlugin`) | `counterparty-trades` grouped by `$.COUNTERPARTY` from `trade`; `nset-mtm`, `cpty-mtm`, `stress-scenario-pnl` | in the server, reading every member through the router | once per business date and data version, else every `refresh`; a reader never waits (served stale, refreshed behind) | one page per group key | **built once per date and shared by every reader** | `max-scan` documents per kind; aggregates `count`, `sum`, `avg`, `median`, `min`, `max`, `distinct`, `first`; no join to another kind |
+| **Reactive engine** (`plugin: reactive`) | `var-engine`, `exposure-engine` and their what-ifs | Java in the server or Python on the compute pools | on request; cached; recomputed on `data-version` triggers of its input kinds, coalesced | any scope, any date, parameters | **as the requesting user** | timeouts, in-flight limits per user, scope sizes |
+| **Engine figures on a stored page** | `VarFigures` (`$.VAR_ENGINE` on position and portfolio pages), `ExposureFigures` (`$.EXPOSURE_ENGINE` on netting-set and counterparty pages) | as the page opens | the engine's cache | the page's own entity as a scope | as the reader | the engine's |
+| **BI measure** | `MTM: sum(trades.MTM)` in a model | the BI engine over datasets | on load | any slice | dataset row rules and masks | additive measures only; a non-additive figure comes from an engine's published result |
+
+Where each class belongs: fundamental, a stored kind with a contract; derived within one document, a Sutra expression; derived across
+documents, a derived kind bound by a panel's `source:` (or the measure's engine when per-reader totals or arbitrary scopes are needed);
+computed, a reactive engine and its figures on the stored page (BI only over an engine's published official results). Never: a page
+working out a fundamental, a derived figure stored beside its inputs, a computed figure stored on a fundamental record or summed in BI
+when it does not add up.
+
+### 12.3 Shared definitions
+
+| Symbol | Definition |
+|---|---|
+| *d* | the business date asked for (`asOf`), else the newest date present |
+| **Live**(*t*, *d*) | `TRADE_STATUS` ∈ {`NEW`, `VALIDATED`, `AMENDED`} **and** `MATURITY_DATE` ≥ *d* (or empty): one rule for every figure. A live-status trade past its maturity date is in no total and is counted and listed as a data-quality warning (the exposure engine flags its set `PAST_MATURITY`) |
+| MTM(*t*, *d*) | `trade-valuation.MTM` of trade *t* on *d*, USD, dirty, the bank's side, positive = asset |
+| NS(*t*, *d*) | the netting set of *t* on *d*: `trade-valuation.NETTING_SET` |
+| Σ over a set | float64 accumulation; a member with no value is **counted as missing**, never as 0 |
+| Fraction | a ratio is stored and passed as a fraction (0.667), formatted as a percentage only on screen |
+
+**Sum currency.** Every sum (net and gross MtM, collateral, exposure, limits used, stress P&L, notionals, counterparty and group totals)
+is made in **USD by default**, the currency said beside it (`SUM_CURRENCY`); each member is converted at the market-data pack's close mid
+for *d* **before** it is added, never added unconverted, and a member that cannot be converted is counted as missing. Ratios take both
+amounts in one currency first. A derived kind reads one source kind and cannot join FX, so a derived total over members in more than one
+currency says *not converted* (`CURRENCY_NOTE`); the converted figure is an engine's. The per-entity override (a netting set or
+counterparty asking for CAD or EUR) is designed in the open steps.
+
+### 12.4 What the packs build this way
+
+- **`nset-mtm` (`NSMTM`)**, connector `ccr-derived` of the counterparty-risk pack (generated by `tools/packgen/banking/ccr_kinds.py`):
+  one page per netting set from the trade valuations of a live status: net MtM, trade count, gross positive and negative MtM,
+  uncollateralised current exposure, netting benefit, net-to-gross, by product group, the member rows, the past-maturity count and MtM,
+  the sum currency. Fields: [its contract](../contracts/packs/counterparty-risk.md).
+- **`cpty-mtm` (`CPMTM`)**, the same connector: one page per counterparty from the trade valuations directly (a derived kind cannot read
+  another kind of its own connector): net MtM, trade count, gross parts, the netting sets as `group()` rows, uncollateralised CE = Σ over
+  the sets of max(set net, 0).
+- **`stress-scenario-pnl` (`SSPNL`)**, connector `mr-derived` of the market-risk pack (`tools/packgen/banking/var_kinds.py`): one page per
+  scenario: the bank's P&L (Σ desks), the desks' P&L, limit use and status, the worst desk, the breaches.
+- **Pages** (`tools/packgen/banking/risk_data.py`): the netting set shows *Computed from the trade valuations, beside the stored figures*
+  (computed, stored and difference), net MtM by product group and the live-status trades past maturity; the counterparty shows its
+  computed figures and netting sets; **checks** panels on the collateral balance (held, posted and net after haircut from the positions),
+  the credit limit (headroom, utilisation and its difference from the stored one), SA-CCR (the EAD identity α(RC + multiplier × add-on)
+  and add-on = Σ by asset class) and the stress result (limit use, status, headroom, Σ P&L by book). The derived pages are built once per
+  business date and data version and shared: every user who may open the kind sees them.
+- **The data rules** the generators and contracts apply: stress limits are positive magnitudes; collateral balances (`HELD`, `POSTED`,
+  `NET`) and `netting-set.COLLATERAL` are the positions' values after haircut; one CSA per agreement and legal entity
+  (`CSA-<counterparty>-<legal entity>`, named by the netting set, the collateral balance and the margin call; an agreement lists its
+  `CSAS`); CSA terms are numeric with a currency (`CSA_CURRENCY`, `MTA_US`, `MTA_THEM`, `MARGIN_FREQUENCY_DAYS`, `MPOR_DAYS`); maturity
+  buckets are named sets per purpose (`display`, `limit`) in `config/packs/banking/counterparty-risk/config/maturity-buckets.yaml`; every
+  VaR limit lives in `var-limit` (MGMT, LEGAL and limit-letter nodes, and each portfolio as hierarchy `PORTFOLIO`), so `risk-hierarchy`
+  and `portfolio` carry none; a counterparty group's `LIMIT` is its own approved limit; `netting-set.UTILISATION` is not delivered. The
+  retirement guard (`tools/contracts.policy.yaml`, `removed:`) fails the build if a retired field returns.
+- **The exposure engine's inputs** (`ExposureLoader`): a netting set's members and their current MtM come from `trade-valuation` (a live
+  status, the set in `NETTING_SET`), not the set's stored `TRADES[]` (a date without valuations reads the stored members and logs it); the
+  collateral held today is the balance's holdings after haircut (held positive, posted negative; a balance without positions gives its
+  `NET`); the limit is the counterparty's `credit-limit.LIMIT`; `trade-valuation` and `credit-limit` are among its data-version triggers.
+  On the test data's 2026-09-30, 55 of 76 sets' derived net MtM equal the stored `NET_MTM`; the other 21 hold 827 live-status trades past
+  maturity, and with those added back all 76 agree to the dollar.
+
+## 13. VaR sharding: how it is built
+
+One date of a large bank is 509 scenario P&L values for every trade: 2 GB of float32 rows a million positions. Sharding spreads a date's
+rows over the Drishti\*net members so each holds and reads from the lake only its part, while every member still answers every scope:
+adding a fourth member moves only about a quarter of the rows. It is **off by default** (no `sharding:` block in the market-risk pack and
+no `drishti.var.sharding.enabled`: every server holds whole dates). What a VaR user sees of it is
+[VAR_GUIDE.md section 28](../guides/VAR_GUIDE.md#28-sharding-across-drishtinet); running it is
+[section 14](#14-var-sharding-for-operators).
+
+```
+              lake (Delta or Iceberg): pnl-vector, scenario-pv, ... (every member reads the same tables)
+                │ each owner reads only its shards' key ranges (files skipped by their statistics, every row checked)
+   ┌────────────┼──────────────────────────────┬───────────────────────────────┐
+   ▼            ▼                              ▼                               ▼
+ member A: S0, S2 (hot files)        member B: S0, S1                 member C: S1, S2         coordinator-only D: none
+   │  every member puts the date together: its own shards + the others' skeletons (ids, columns, book aggregates)
+   │  -> the same trades, positions, nodes and node aggregates (to the bit) as one server
+   ▼
+ a request for scope X on any member:
+   node of a hierarchy  -> its aggregate, here (VAR BANK and the desks stay instant)
+   anything else        -> the planner's rows split by shard; each shard's part to one ready owner
+                           (POST /api/v1/risk/var/partial, signed, one hop, as the caller), partial float64 vectors back,
+                           exactly one per shard, added in shard order; VaR and ES taken once
+```
+
+**The shard map** (`ShardMap`, `com.ash.drishti.compute.shard`): per business date, the rows counted per value of the shard key (VaR:
+`LEGAL_ENTITY`, then `DESK`), read as columns with no vector, both trade kinds (`pnl-vector`, `scenario-pv`) together; walked in key order,
+a shard closed when the next key would take it over `target-shard-mb` (a row's size is the measure's: 4 × scenarios bytes). A desk is never
+split: a desk larger than the target is a shard of its own. The ranges cover the whole key space (shard 0 also everything before, the last
+everything after), so every row has exactly one shard. The map is a pure function of the counts: every member reading the same data
+version computes the same map. Its `digest` names the cut, not the data, so an intraday batch that adds rows without moving a cut keeps
+it. A source that cannot answer the key as columns gives one shard (the whole date, with a note), owned by `replicas` members.
+
+**Owners by rendezvous hashing, no consensus protocol** (`ShardOwners`): a shard's owners are the top `replicas` members by rendezvous
+weight (the first 60 bits of SHA-256 of `node|key`, the key the shard's range, so the same desks keep the same owners from day to day
+while the cut does not move); a second replica goes to another zone when members carry zones; a pinned shard is owned by its pin first. The
+members that may own shards (`ShardMembership`) are this server and the live, routable Drishti\*net members whose capability digest says
+VaR sharding is on and that are not `coordinator-only`; the view moves only once the eligible members have been the same for
+`stable-seconds`; a draining member leaves it at once. Ownership is a pure function of shared inputs (the map from the same data, the
+membership gossip converges on), and a shard is served only by a member that **holds** it at the data version the asker put the date
+together from, so two members briefly disagreeing cost at most a refused call and a try on the next member, never a wrong number; a quorum
+and a leader would add nothing to correctness.
+
+**Shard books** (`VarShardBooks`, `VarLoader.loadShard`): an owner reads the date's inputs for its shard's key range only.
+`SourcePlugin.vectors(kind, column, texts, asOf, KeyRange, sink)` lets a connector skip files whose statistics hold none of the range's
+keys (Delta: the add action's `minValues`, `maxValues` and `nullCount` of the first key column; Iceberg: the data file's bounds and null
+count; a statistic not stated, or a Delta string of 32 characters or more, is not used), and the loader checks every row again. The rows go
+through the same intake as a whole date's and are written as an ordinary hot file (`<hot>/<date>-shard-<i>/inputs-<digest>.vhot`, header
+flag `RANGE`, a `RANG` section with the map, the shard, its range and the digest of its inputs). A reporting currency's shard book is
+built from the USD one (`<date>-<CCY>-shard-<i>/`).
+
+**The skeleton** (`ShardSkeleton`): the hot file without its matrices (`META`, `SCEN`, `TIDS`, `TCOL`, `BOOK`, `AKEY`, `AGGS`, `CTOT`,
+`CELL`, `RANG`, each with its CRC32C; flag `SKELETON`), sent by an owner (`GET /api/v1/risk/var/shards/skeleton`) to members that put the
+date together without holding the shard; written with positional reads into a buffer and the servlet stream's own `write`, so a slow
+reader never pins a virtual thread's carrier. Every member holds the whole skeleton (ids, columns, positions, books, nodes and their
+aggregates), because a question names positions by their attributes and node figures come from aggregates; skeletons are fetched from
+owners, never rebuilt from the lake by non-owners. Measured at 1,000,000 positions: 0.72 KB a position a date on the heap
+([BENCHMARK.md section 4.8](../admin/BENCHMARK.md#48-1000000-positions-the-heap-and-what-the-formula-missed)); at 2.3 million positions
+about 1.7 GB a date, the same on every member (adding members does not reduce it). Memory-mapping it, dictionary-encoding it, or sharding
+it too are the ways to shrink it ([RESOURCES_AND_SCALE.md section 5.1](RESOURCES_AND_SCALE.md#51-the-heap-skeleton-d1)).
+
+**Putting a date together** (`ShardAssembly`): the shards' trades side by side in shard order are the whole date's trades in one server's
+order (a shard is a range of that order), so positions, books, cells and nodes are derived by the same code (`Cells.layout`,
+`Cells.derive`, `VarBook.nodes`); every book's and cell's aggregate is the one its shard summed (float64, from the lake's rows) and every
+node's is summed from them bottom-up as `VarBook.Builder` does: **a node's vector is the unsharded date's to the bit**, on every member.
+The rows stay where they are (`ShardedVectors`: shards held here from their mapped files, the others through their owners). The intake's
+checks are made again across shards (`VarShardIntake`: one batch id, the date's scenario set, one form and one grain per source system);
+then the day's intraday updates are read from the lake and applied as one server applies them (a trade's morning row read back by its
+id, never from a shard). A date with a book (or, with a hierarchy built from columns, a position) under two shards is refused
+(`DRS-5217`) rather than answered differently from one server.
+
+**Queries: scatter-gather with a completeness check** (`ShardGather`). A scope resolves on the coordinator (any member a request reaches)
+as the caller. A node is its aggregate, here. For any other set the planner adds the aggregates it can and gathers the rows it needs into
+one set to add and one to take away; each is summed shard by shard: a shard held here from its mapped rows; else its part (a bitmap of the
+shard's ordinals) goes to one member, in order: the shard's owners ready at the date's data version, any other member ready at it (an old
+owner during a handover), then owners not ready yet (they build from the lake). The call (`POST /api/v1/risk/var/partial`) is signed with
+the cluster key, one hop, with the caller's on-behalf-of token; the owner applies the caller's rights again and answers the float64 sum,
+labelled with the shard, the map's digest, the shard's data digest and the number of rows; an answer labelled otherwise is refused, a
+member on another data version answers `409 DRS-5216`. **Exactly one answer per shard**, added in shard order; a shard nobody answers fails
+the whole sum (`503 DRS-5215`, naming the shard, its range and what each member said): never a partial VaR. What-if, contributions,
+backtests, history, the official records and the reporting currencies all go through this path. The answer's `provenance.shards` gives
+`shards`, `heldHere`, `shardsAsked`, `answeredHere`, `answeredByOwners`, `answeredByReplicas` and `nodes`.
+
+**Contributions under load.** A contribution table needs one vector per part; read part by part, a desk of 2,000 positions held elsewhere
+would be 2,000 calls. The reads are **fetched ahead** (`VarBook.readAhead`, `ShardedVectors.batched`, `VarShardRows.sumAll`): cut at shard
+boundaries, the local ones left alone, the others grouped by shard and asked once each through `POST /api/v1/risk/var/partials` (up to
+1,024 row sets a call as run pairs, every shard's calls side by side on virtual threads), each set's sum the one `/partial` gives, added in
+the same order, so the numbers are the same to the bit (`ShardReadAheadTest`). The calls of one answer share one deadline,
+`call-timeout-seconds` from when the answer's context is taken; each member tried for a shard gets its share of the time left, so a stalled
+owner leaves time for its replica. Measured on three members at 200,000 positions: contributions' p95 0.88 s at 50 users and 2.53 s at 200,
+no errors, about 230 requests a second ([BENCHMARK.md section 4.3](../admin/BENCHMARK.md#43-users-50-100-and-200)).
+
+**Handover.** Readiness travels in the capability digest (service `var-shards`): whether sharding is on, whether the member owns shards or
+drains, per date the maps held and per shard the data digest it is ready to serve; a change raises the digest's hash in gossip and peers
+pull it within a round. Every `rebalance-seconds`, once the membership has settled, each member (1) builds from the lake (never from a
+peer) the shards of dates in use that it owns and does not hold, and announces them (a date is in use while open on any member and for
+`release-after-seconds` after); (2) releases what `ShardHandover` allows: a shard it no longer owns once **every** owner has announced it
+ready for `grace-seconds`, an older data version once the newer has been ready here for the grace period, a shard of a replaced cut after
+the grace period; (3) puts together again a date whose remote shards' owners announce newer data, or nobody announces any more, or whose
+cut changed; (4) releases for age shard books of dates not in use, outside the newest `hot-dates` and unread for `release-after-seconds`.
+A replacement date is put together beside the loaded one and swapped in in one step only when complete (`VarService.swap`); until then
+the loaded date answers, so even with both owners of a shard down `BANK` answers from its aggregate. The old owner's release always
+waits for the new owner's readiness. An intraday batch moves no shard: each member reads the day's updates from the lake on its own
+data-load signal; a full run puts the date together again at the new data version. A reporting currency keeps its morning run per date
+and data version and puts the USD date's intraday layer on it per answer. A date whose updates cannot be read answers from its morning
+run with a warning until the next signal. `provenance.intraday.batches` lists the batches in one order on every member (by each batch's
+newest `COMPUTED_AT`, then `BATCH_ID`).
+
+**Measure-agnostic machinery.** Free of Spring and of the VaR engine, in `com.ash.drishti.compute.shard`: `ShardMap` (the cut; the key a
+prefix of the measure's row order, the row size the measure's), `ShardOwners`, `ShardHandover`, `ShardGather` (scatter-gather with its
+exactly-once check and the measure's `Combine`); in the server, `com.ash.drishti.server.shard`: `ShardMembership`, `ShardPeers`
+(readiness in the digest under the measure's service, signed one-hop calls as the caller) and `ShardedMeasure<P>` (its name, digest
+service, key order, bytes per row, partial type and how two combine). VaR's is `VarMeasure` (`double[]` partials added element by
+element); the VaR-specific parts are `VarShards`, `VarShardBooks`, `VarShardRows`, `ShardAssembly`, `ShardSkeleton` and `ShardedVectors`.
+The pivot engine's ordered merge is the same combine, lifted into its core ([ARCHITECTURE.md section 26.6](ARCHITECTURE.md#266-scale)).
+Owners only sum rows; the coordinator plans and adds, so node aggregates are used once and a node's figures are the same bits (other
+scopes' summation order differs from one server's within a cent). Both trade kinds are always sharded together; every other kind is read
+whole by each member.
+
+**Tests.** `ShardMapTest`, `ShardOwnersTest` (a fourth member takes 20 to 30% of first owners and replica slots over 2,000 shards; a
+member leaving moves only its shards), `ShardGatherTest`, `ShardAssemblyTest` (1,800 trades in six shards: every node's aggregate to the
+bit, every scope's vector exactly equal), `ShardReadAheadTest`, `VarShardHandoverTest` (a handover played second by second never leaves a
+shard without a ready holder), `VarShardingSettingsTest`, `VarShardSingleNodeTest` and `VarShardClusterTest`: three real members and a
+reference server, 13 scopes in USD and EUR (headline, contributions, the P&L path, every member's tree) equal the reference **to the cent**
+on Delta and Iceberg, with two and three members; an intraday batch applied live equals the reference; the official record has the same
+figures; while a third member joins and takes shards no request fails or differs; with one owner stopped its replica answers, with both a
+scope needing the shard answers `503 DRS-5215` and `BANK` still answers, and 15 s later the shard has a new owner.
+
+**Not built.** An Admin → Health "Shards" panel (mock-ups first; until then `GET /api/v1/risk/var/shards` and `drishti.py var shards`);
+read-ahead for an intraday batch's morning rows and an intraday date's overlay store (read one call each); exact file skipping from a
+sorted lake loader's per-file key ranges (today the first key column's statistics); exposure and BI sharding on the same machinery.
+
+## 14. VaR sharding for operators
+
+Everything an operator does with VaR sharding; how it works is [section 13](#13-var-sharding-how-it-is-built). Every key below, with its
+default and environment variable, is in [CONFIGURATION.md](../admin/CONFIGURATION.md).
+
+**Switch it on.** In the market-risk pack (no block: off):
+
+```yaml
+# config/packs/banking/market-risk/pack.yaml (or the pack's settings): off without it
+sharding:
+  enabled: true
+  key: [LEGAL_ENTITY, DESK]          # ranges cut along this order; a desk is never split ([LEGAL_ENTITY] also allowed)
+  kinds: [scenario-pv, pnl-vector]    # the trades' scenario P&L; every other kind is read whole by each member
+  target-shard-mb: 2048
+  replicas: 2
+```
+
+The same five keys under `drishti.var.sharding.*` (application.yaml) win over the block when set (a value that is not valid refuses the
+start). Sharding needs the tiered memory (`drishti.var.tier.mode: mapped`, the default).
+
+**How many shards, and where.** The number of shards follows from the date's size and `target-shard-mb` (a date of 2.3 million positions
+at 2,048 MB makes a few shards; a desk is never split, so the largest desk sets the smallest useful target). `replicas: 2` keeps every
+shard on two members (an owner can stop without a refusal). Placement:
+
+| Setting | Use |
+|---|---|
+| `coordinator-only` | this member owns no shard: it puts dates together and coordinates queries only (a member for users' requests) |
+| `zone-tag` | the member tag prefix naming its zone (`az`: a tag `az:us-east-1a`): a shard's second owner goes to another zone |
+| `pins` | a shard (`S3`, or its range) pinned to a member as its first owner, the same on every member (tests) |
+| `stable-seconds` | members unchanged this long before shards move to new owners |
+| `grace-seconds` | a new owner ready this long before the old one releases a shard |
+| `rebalance-seconds` | how often a member looks at the members and its shards |
+| `release-after-seconds` | a shard book of a date nobody has open, outside the newest `hot-dates`, unread this long, is released |
+| `call-timeout-seconds`, `skeleton-timeout-seconds` | an answer's deadline for its partials; an owner's time to build and send a skeleton |
+| `drain` | start drained (takes no shard) |
+
+Every member also needs heap for the date's whole skeleton (about 0.72 KB a position a date, the same on every member) besides its own
+shards' rows on local disk; the shard books are hot files under the same disk budget.
+
+**Rebalancing.** Nothing to run: when a member joins or leaves and the membership has been stable for `stable-seconds`, the new owners
+build their shards from the lake and announce them; the old owners release theirs once every new owner has been ready for
+`grace-seconds`. A fourth member takes about a quarter of the shards.
+
+**Stop a member safely** (a scale-in, a deploy): `drishti.py var shards --drain` (or `POST /api/v1/risk/var/shards/drain {on: true}`, from
+a task's stop hook), then wait until `GET /api/v1/risk/var/shards` says `"safeToStop": true`. The draining member leaves the owners' view
+at once, keeps answering and serving its shards until each is handed over. Give a Fargate task's `stopTimeout` at least the time to build
+its largest shard plus `grace-seconds`. `--undrain` takes it back.
+
+**See it.** `GET /api/v1/risk/var/shards?asOf=` (anyone who may open `pnl-vector`) and `drishti.py var shards [--date D] [--json]`: the
+settings, the members (owner, in the view, draining, zone, what each announces ready), the shard books held here, and the date's map with
+each shard's range, rows, owners and ready members. Every answer's `provenance.shards` says how many shards were asked and who answered;
+`provenance.intraday.batches` which intraday batches it includes. `POST /api/v1/risk/var/partial`, `/partials` and
+`/shards/skeleton` are the members' own signed channel and `/shards/drain` an administrator's action: all are in `token-never` (no
+personal API token opens them).
+
+**When something goes wrong.**
+
+| Case | What happens | What to do |
+|---|---|---|
+| an owner of a shard stops | its replica answers; after `stable-seconds` a new owner builds the shard from the lake | nothing |
+| every owner of a shard down | a scope needing its rows answers `503 DRS-5215` (naming the shard and what each member said); node figures (`BANK`, desks) keep answering; once the membership is stable the new owners build it and it answers again | bring a member back, or wait `stable-seconds` plus the shard's build |
+| a load lands between members | `409 DRS-5216`, the next member asked; the date is put together again at the new version and swapped in whole | nothing |
+| a book (or, with a hierarchy from columns, a position) under two shards | the date is refused, `422 DRS-5217`, naming it | shard by `LEGAL_ENTITY` only, correct the data, or switch sharding off |
+| an unsigned call to `/partial` or `/shards/skeleton` | `401 DRS-5051` | check the cluster key on every member |
+| Drishti\*net off | the server owns every shard; the date is still cut and put together | — |

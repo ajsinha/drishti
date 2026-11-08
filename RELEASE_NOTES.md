@@ -783,7 +783,7 @@ days.**
   default), **Command first** and **Risk map**, each person's choice remembered. On a full instance, the **lens** (`drishti.lenses:
   risk`, off by default) gives each person *Open Drishti Risk* and *Leave Drishti Risk*, with no restart; a lens hides, it does not
   secure. Without an edition Drishti is exactly as before. Works across a cluster; Admin → Net warns when members differ.
-- **VaR sharded across Drishti\*net** ([VAR_SHARDING](docs/architecture/VAR_SHARDING.md)): off by default; with the market-risk pack's
+- **VaR sharded across Drishti\*net** ([VAR_SHARDING](docs/architecture/DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built)): off by default; with the market-risk pack's
   `sharding:` block each date is cut into legal-entity and desk ranges, owned by two members each (rendezvous hashing, no consensus
   protocol); every member keeps every node's aggregate, so bank and desk totals answer even with a shard's owners down; other scopes sum
   one partial per shard, never a partial VaR (`DRS-5215`); handover and drain for scale-in. Equal to one server to the cent.
@@ -802,7 +802,7 @@ days.**
   `GET /api/v1/viewmodel/schema`); how a screen is made, generic not bespoke (ARCHITECTURE section 7a); a worked example of every data
   type, field by field ([data samples](docs/contracts/samples/README.md)), with every input contract audited against all its rows and a
   drift test; the computed-attributes analysis of the market-risk and counterparty-risk packs, with its decisions
-  ([COMPUTED_ATTRIBUTES](docs/architecture/COMPUTED_ATTRIBUTES.md)); the documentation consolidated (178 to 152 active documents,
+  ([COMPUTED_ATTRIBUTES](docs/architecture/DATA_ARCHITECTURE.md#12-computed-and-derived-attributes)); the documentation consolidated (178 to 152 active documents,
   obsolete designs deleted); the README rewritten as a product page.
 - **Upgrade:** rebuild the server image or jar so the new launch flags apply; nothing else to do. The lens and sharding are off until
   you turn them on.

@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A range of a composite key over promoted text columns (a VaR shard: legal entity, then desk; VAR_SHARDING.md), for a vector read
+ * A range of a composite key over promoted text columns (a VaR shard: legal entity, then desk; DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built), for a vector read
  * that needs only the rows inside it. {@code from} is included, {@code to} excluded; either empty means the start or the end of the key
  * space. Keys compare column by column as text, a missing value as empty text (the order the VaR engine sorts trades in).
  *

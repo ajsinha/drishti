@@ -433,7 +433,7 @@ reporting sum of theirs. So the reports **Counterparty risk** and **Desk P&L vs 
 `desk-pnl-vs-exposure-py` and the notebook `pnl-vs-exposure-pandas` show computed figures. The live model `live-exposure` keeps only what the
 netting set still carries as it ticks (net MTM, collateral, limit, trades): its cards (and the *Desk wall* tiles) are
 **Collateral** and **Trades** (no stored utilisation: its formula is unknown to the
-source, docs/architecture/COMPUTED_ATTRIBUTES.md decision 13), since the published results change once a day and a live dataset is not joined
+source, docs/architecture/DATA_ARCHITECTURE.md section 12 decision 13), since the published results change once a day and a live dataset is not joined
 to that cached table.
 
 **Admin, BI settings** (`/admin/bi`, needs `bi-admin`):

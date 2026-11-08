@@ -2415,7 +2415,7 @@ also served as the computed kind `var-result` through a reactive connector; the 
 | An optional "risk position" grouping for viewing (book × product × currency × underlying × maturity quarter) | PLANNED | §15.6 |
 | Tiered memory: each loaded date a memory-mapped local hot file (float32 position rows in hierarchy order, the trades of fungible positions, float64 aggregates; Delta stays float64), the heap holding aggregates, columns and links; history dates opened lazily from their file; rebuilt when the inputs change; cleaned on eviction and shutdown | Built | §26 |
 | The benchmark 1 M trades × 50 dates (`VarTierBenchmark`, opt-in): measured at 100,000 trades × 5 dates, extrapolated | Built (measured locally; the full run is for a server) | [BENCHMARK.md section 5.2](../admin/BENCHMARK.md#52-the-tiered-store-vartierbenchmark) |
-| Sharding the hot store across Drishti*net nodes | Built (off by default: the pack's `sharding:` block) | §28, [VAR_SHARDING.md](../architecture/VAR_SHARDING.md) |
+| Sharding the hot store across Drishti*net nodes | Built (off by default: the pack's `sharding:` block) | §28, [DATA_ARCHITECTURE.md section 13](../architecture/DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built) |
 | The common risk lake (domain `risk`, one connector `risk-store` for every risk pack) | PLANNED (VaR's tables already there) | §15.1 |
 | The computed kind `var-result` (`VRES`, the Java engine through the reactive connector `var-engine`) and the pre-deal what-if (`POST /api/v1/risk/var/what-if`, the same engine: copies of booked trades or scopes, trades priced elsewhere, the stressed window) | Built | §8 |
 | VaR by a trade column (`by=attribute:TRADER_ID`), summed over every trade of the scope, the column's mask honoured | Built | §11.3 |
@@ -2627,7 +2627,7 @@ desks) with a `DIV-MARKETS` division added; nothing contradicts them.
 | `REF` | record | doc | optional | – | | the master the node is: `{KIND, ID}` | `{"KIND": "legal-entity", "ID": "LE-NY"}` |
 | `CHILDREN` | id list | doc | optional | – | | child node ids (informational; the engine uses `PARENT_ID`) | `["LEGAL~DESK-COMM", …]` |
 | `BOOKS` | id list | doc | required | R | | **every** book beneath the node (a book node lists itself); the node's members are these books' trades | `["BOOK-COMM-1", …]` (15) |
-| `LIMIT_VAR` | amount | DOUBLE | optional | R | USD | **not in the demo**: a node's limit is its `var-limit` row (decision 8 of [COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md)); a bank's row that still carries one is read when `var-limit` has no row for the node | `8500000` |
+| `LIMIT_VAR` | amount | DOUBLE | optional | R | USD | **not in the demo**: a node's limit is its `var-limit` row (decision 8 of [DATA_ARCHITECTURE.md section 12](../architecture/DATA_ARCHITECTURE.md#12-computed-and-derived-attributes)); a bank's row that still carries one is read when `var-limit` has no row for the node | `8500000` |
 | `BUSINESS_DATE` | date | `business_date` DATE | required | R | | | `2026-09-30` |
 | `VALID_FROM`, `VALID_TO` | date | doc | optional | – | | validity of the node (informational) | `2026-01-02`, `null` |
 
@@ -3142,7 +3142,7 @@ the test data has none.)
 **Grain:** one row per node with a limit and business date. **Key:** `LIMIT_ID` = `VL-<NODE_ID>`. **Row count:** 157 in the test data
 (41: the 43 nodes of LL but two letter-desk nodes left without one; the 88 MGMT and LEGAL nodes; the 28 portfolios, hierarchy
 `PORTFOLIO`, `NODE_ID` the portfolio's id: every VaR limit lives here, with its currency, decision 8 of
-[COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md)). Read for the hierarchies whose `limits` names the kind
+[DATA_ARCHITECTURE.md section 12](../architecture/DATA_ARCHITECTURE.md#12-computed-and-derived-attributes)). Read for the hierarchies whose `limits` names the kind
 (`drishti.var.kinds.limit`, `var-limit`) and for the portfolios; JSON Lines, one row a line.
 
 | Column | JSON | Delta | Req. | Meaning | Example |
@@ -3341,7 +3341,7 @@ the sources already send (P&L vectors or scenario PVs, [section 15](#15-inputs-f
 position rows (the hot file's float32 rows in float64, or a node's float64 aggregate) in the fixed reduction order
 ([RESOURCES_AND_SCALE.md section 6.7](../architecture/RESOURCES_AND_SCALE.md)). The windowing is a fixed left-to-right sum of ten values, so
 a node's 10-day vector is **equal to the bit** whatever the shards and threads that summed its 1-day vector
-([VAR_SHARDING.md](../architecture/VAR_SHARDING.md): the partials stay the 1-day vectors, never windows). **Tested:**
+([DATA_ARCHITECTURE.md section 13](../architecture/DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built): the partials stay the 1-day vectors, never windows). **Tested:**
 `VarLensTest` (√10 equals the 1-day VaR and ES × √10 exactly at every confidence; the windows by hand on `1, 2, … 14` give `55, 65, 75,
 85, 95`; 509 → 500, 250 → 241; the ranks; ES; components adding up; the 10-day vector of four scopes the same bits on 1, 2, 3, 8 and 24
 threads), `ShardAssemblyTest` (23 scopes over six shards, three held and three through an owner: the 10-day vectors, VaR and ES
@@ -4229,7 +4229,7 @@ The stress results stay stored (one per desk and scenario, `STR`, with a positiv
 derived, not stored: `stress-scenario-pnl` (`SSPNL`, connector `mr-derived` of the market-risk pack) adds the desks' results of one
 scenario once per business date: the bank's P&L, the number of desks, the worst desk, each desk's limit use and the breaches. The
 stress-scenario page shows it in two panels, **Bank P&L under this scenario** and **Desks under this scenario**
-([COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md) section 13). It does not touch VaR: `VAR BANK` on 2026-09-30 stays
+([DATA_ARCHITECTURE.md section 12](../architecture/DATA_ARCHITECTURE.md#12-computed-and-derived-attributes) section 13). It does not touch VaR: `VAR BANK` on 2026-09-30 stays
 112,041,646.
 
 ![SCN SCN-COVID2020: the bank's P&L under the scenario, the desks' results added, and each desk with its limit use](img/computed/04-stress-scenario.jpg)
@@ -4988,8 +4988,8 @@ Scope membership itself adds nothing that grows with the date: a position costs 
 Deploying a sharded cluster (owners and coordinators per role, shard sizes, zones, drains, failure timings): [CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md).
 
 **Off by default.** With no `sharding:` block in the market-risk pack and no `drishti.var.sharding.enabled`, every server holds whole dates
-as in sections 25 to 27. Switched on, a date's rows are spread over the Drishti\*net members; the design, the handover, the failure cases,
-the settings and the tests are in [VAR_SHARDING.md](../architecture/VAR_SHARDING.md). In short:
+as in sections 25 to 27. Switched on, a date's rows are spread over the Drishti\*net members (how it is built:
+[DATA_ARCHITECTURE.md section 13](../architecture/DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built)). In short:
 
 - **A shard map per date**: the date's rows counted per legal entity and desk (columns only, no vector), cut into contiguous ranges near
   `target-shard-mb` (a desk never split), the same on every member that reads the same data (`ShardMap`).
@@ -5006,12 +5006,12 @@ the settings and the tests are in [VAR_SHARDING.md](../architecture/VAR_SHARDING
   serving until the new one has been ready for `grace-seconds`. A member drains before it stops (`drishti.py var shards --drain`).
 - **Intraday**: each member reads the day's updates from the lake on its own data-load signal and applies them on the date it put
   together; `provenance.intraday.batches` says which batches an answer includes, in the same order on every member (section 8.4). A client
-  that must see a batch everywhere polls it there (VAR_SHARDING.md section 7, *Convergence after a batch*).
+  that must see a batch everywhere polls `provenance.intraday.batches` on each member until it lists the batch.
 - **API tokens**: `POST /api/v1/risk/var/partial` (the members' signed channel) and `POST /api/v1/risk/var/shards/drain` (administrators) are in
   `token-never`.
 
 Measured equal to one server **to the cent** (VaR, ES, contributions, the P&L path, the tree, intraday, the official record) on three
-members in USD and EUR, on Delta and Iceberg inputs (`VarShardClusterTest`, VAR_SHARDING.md section 12). `GET /api/v1/risk/var/shards?asOf=`
+members in USD and EUR, on Delta and Iceberg inputs (`VarShardClusterTest`). `GET /api/v1/risk/var/shards?asOf=`
 and `drishti.py var shards` show the map, the owners and who is ready.
 
 **Bit-equality, and why.** Every member sums the same rows in the same fixed order: a shard's partial is summed in row order, the partials
@@ -5020,18 +5020,10 @@ and sent in the skeleton, and every node's is summed from them bottom-up exactly
 bits on every member. A book (or, with a hierarchy built from columns, a position) under
 two shards would break this, so such a date is refused (`422 DRS-5217`) rather than answered differently from one server.
 
-**Operating it** (the full reference is [VAR_SHARDING.md](../architecture/VAR_SHARDING.md) sections 7 to 11):
-
-| Task | How |
-|---|---|
-| switch it on | the market-risk pack's `sharding:` block (`enabled`, `key: [LEGAL_ENTITY, DESK]`, `kinds: [scenario-pv, pnl-vector]`, `target-shard-mb`, `replicas`), or the same keys under `drishti.var.sharding.*`, which win; needs `drishti.var.tier.mode: mapped` (the default) |
-| tune the hand-over | `drishti.var.sharding.stable-seconds` (members unchanged this long before shards move, 30), `grace-seconds` (a new owner ready this long before the old one releases, 30), `rebalance-seconds` (2), `release-after-seconds` (a shard book of a date nobody has open released, 900) |
-| place members | `coordinator-only` (puts dates together and coordinates, owns no shard), `zone-tag` (a second owner in another zone), `pins` (tests) |
-| stop a member safely | `drishti.py var shards --drain` (or `POST /api/v1/risk/var/shards/drain`), then wait for `"safeToStop": true` on `GET /api/v1/risk/var/shards`; give a Fargate task's `stopTimeout` the time to build its largest shard plus `grace-seconds` |
-| an owner dies | its replica answers; after `stable-seconds` a new owner builds the shard from the lake (never from a peer) |
-| every owner of a shard down | a scope that needs it answers `503 DRS-5215`, never a partial VaR; node figures keep answering from the skeletons |
-| a load lands between members | `409 DRS-5216`, the next member asked; the date is put together again at the new version and swapped in whole, never dropped |
-| intraday | each member reads the day's batches from the lake on its own load signal; `provenance.intraday.batches` lists them in one order on every member |
+**Operating it**: switching it on, how many shards and where (`target-shard-mb`, `replicas`, `coordinator-only`, `zone-tag`), the
+hand-over timings, stopping a member safely with a drain, and what each failure looks like and what to do are in
+[DATA_ARCHITECTURE.md, VaR sharding for operators](../architecture/DATA_ARCHITECTURE.md#14-var-sharding-for-operators); every setting
+with its default is in [CONFIGURATION.md](../admin/CONFIGURATION.md).
 
 The shard books are hot files too: caches, rebuilt from the lake, under the same disk budget ([section 26](#26-the-tiered-memory-and-the-hot-file)).
 What sharding costs and gives on one machine is measured in [BENCHMARK.md section 4](../admin/BENCHMARK.md#4-the-200000-position-var-and-cluster-run).

@@ -341,7 +341,7 @@ Requests a second (both mixes together), errors, and p50 / p95 / p99 in seconds 
 | 200 users | 231, 0 | 0.57 / 2.44 / 3.70 | 0.93 / 2.93 / 4.14 | 0.58 / 2.49 / 3.75 | 0.62 / 2.57 / 3.89 | 0.79 / 2.70 / 3.87 | 0.81 / **2.53** / 3.52 | 0.58 / 2.29 / 3.16 |
 
 The second cluster table is the same run (Java 21, G1, `-Xmx4g` each, the same lake and mix) with the contribution tables' and the
-standalone sums' remote reads fetched ahead, one `/partials` call per remote shard ([VAR_SHARDING.md section 15](../architecture/VAR_SHARDING.md#15-contributions-under-load));
+standalone sums' remote reads fetched ahead, one `/partials` call per remote shard ([DATA_ARCHITECTURE.md section 13](../architecture/DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built));
 the 50-user window ran its 60 s, the warm-up had no error either, and the run recorded no pinned virtual thread on any member. First
 opens 10.9 / 17.9 s; the bank's VaR the same to the dollar; heap after GC at the end 1,546 / 1,686 / 1,632 MB, RSS 5.2 / 5.8 / 5.5 GB.
 

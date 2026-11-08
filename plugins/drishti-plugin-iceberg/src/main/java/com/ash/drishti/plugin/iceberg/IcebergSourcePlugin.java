@@ -801,7 +801,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
     }
 
     /**
-     * The date's vectors for the keys of {@code range} (a VaR shard, VAR_SHARDING.md): a data file whose manifest bounds of the first key
+     * The date's vectors for the keys of {@code range} (a VaR shard, DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built): a data file whose manifest bounds of the first key
      * column (and its null count) show none of them is not read; the reader checks every row.
      */
     @Override

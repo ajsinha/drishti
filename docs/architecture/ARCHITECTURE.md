@@ -1131,10 +1131,10 @@ hot file with sharding, is kept for the few measures that cannot do without it.
 | Shape of the need | Mechanism | Examples |
 |---|---|---|
 | Entity documents read one at a time or searched | **The lake** (Delta or Iceberg) through connectors, drawn by Sutras | trades, reference data, market data, the public-data packs |
-| A figure per entity derived from its inputs | **Computed (derived) kinds**, computed on demand, never stored ([COMPUTED_ATTRIBUTES.md](COMPUTED_ATTRIBUTES.md)) | NSMTM, CPMTM, SSPNL, the Checks panels |
+| A figure per entity derived from its inputs | **Computed (derived) kinds**, computed on demand, never stored ([DATA_ARCHITECTURE.md section 12](DATA_ARCHITECTURE.md#12-computed-and-derived-attributes)) | NSMTM, CPMTM, SSPNL, the Checks panels |
 | Heavy or non-linear models per request | **Python compute workers**, Arrow in and out ([PYTHON_COMPUTE.md](PYTHON_COMPUTE.md)) | pricing, Monte Carlo, what-ifs |
 | Aggregates for dashboards and reports | **The BI engine**: rollups and caches ([BI_DESIGN.md](BI_DESIGN.md)) | desk reports, live exposure reports |
-| Large vectors per position, re-aggregated over any scope, interactively, beyond one server | **The hot file and sharding** ([VAR_SHARDING.md](VAR_SHARDING.md)) | VaR |
+| Large vectors per position, re-aggregated over any scope, interactively, beyond one server | **The hot file and sharding** ([DATA_ARCHITECTURE.md section 13](DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built)) | VaR |
 
 **The mechanism check.** A measure uses the hot file and sharding only if **all four** hold, answered with sizes at bank scale in its
 design document before anything is built:
@@ -1147,7 +1147,7 @@ design document before anything is built:
 
 If all four hold, the measure plugs into the measure-agnostic machinery: it brings a `ShardedMeasure<P>` (its name, key order, bytes per
 row, partial type and how two partials combine) and reuses the shard map, ownership, replicas, handover and scatter-gather
-([VAR_SHARDING.md section 13](VAR_SHARDING.md#13-decisions)). If not, it uses one of the lighter mechanisms. Likely future users of the
+([DATA_ARCHITECTURE.md section 13](DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built)). If not, it uses one of the lighter mechanisms. Likely future users of the
 heavy one: exposure paths (sharded by netting set), stress P&L across hundreds of scenarios, FRTB internal-model ES and DRC simulations,
 climate scenario losses per position.
 

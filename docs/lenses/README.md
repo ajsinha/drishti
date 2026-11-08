@@ -123,7 +123,7 @@ Sutras (a Sutra lays out one entity's view; these span the engines). **A: Risk d
 
 ### 1.3 Gaps and proposals
 
-The rules every proposal follows ([COMPUTED_ATTRIBUTES.md section 1.2](../architecture/COMPUTED_ATTRIBUTES.md#12-the-rule-for-deciding-which)):
+The rules every proposal follows ([DATA_ARCHITECTURE.md section 12](../architecture/DATA_ARCHITECTURE.md#121-three-classes-and-the-rule-for-deciding-which)):
 fundamental inputs under a **data contract** as JSON Lines; measures **computed on demand** from trade or position-grain inputs and
 **never stored**, except as an immutable capture or an official end-of-day record; governance records Drishti-owned and versioned; **BI
 is the report layer**; the engines are unchanged by a lens. Sizes: **S** days, **M** one to three weeks, **L** more than three weeks.
@@ -428,14 +428,14 @@ STR, SSPNL) and collateral operations (COLL, MC), left out by the lens file. **D
 | The scenario matrix (`SMAT`, "is this tail scenario new?") | **Built**, on in the lens (`SMAT BOOK BOOK-RATES-1 20`) | [VAR_GUIDE section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat) |
 | VaR limit use per book and desk; limit use by book over 5 official dates; breaches and near limit | **Built** (`var-limit`; the server's `limitStatus` with `drishti.risk.limit-near` 0.8) | [VAR_GUIDE section 15.15](../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits) |
 | P&L against VaR: hypothetical P&L against the VaR before it, 60 days, exceptions circled | **Partly built**: Drishti's derived hypothetical P&L only (TL3); left out without official history | [VAR_GUIDE section 7](../guides/VAR_GUIDE.md#7-history-and-backtesting) |
-| DV01 of my books | **Partly built**: Σ live trades' `DV01`; no bucketed sensitivities (TL7) | [COMPUTED_ATTRIBUTES.md section 4.9](../architecture/COMPUTED_ATTRIBUTES.md#49-frtb-sensitivity-frtb) |
+| DV01 of my books | **Partly built**: Σ live trades' `DV01`; no bucketed sensitivities (TL7) | [IMPLEMENTATION_PLAN.md "Computed and derived attributes: open steps"](../architecture/IMPLEMENTATION_PLAN.md#computed-and-derived-attributes-open-steps) |
 | Trades today (new, amended, cancelled), today's blotter, trade pages and history | **Built** ("new" reads 0 on the demo: TL1) | [trading pack README](../../config/packs/banking/trading/README.md), [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time) |
 | Counterparties: `CTRD`, `NSET`, `NSMTM`, `CPMTM`; pre-deal PFE against the credit limit | **Built** | [EXPOSURE_GUIDE section 7](../guides/EXPOSURE_GUIDE.md#7-pre-deal-what-if) |
 | The desk's largest counterparty | **Partly built**: by share of positive MtM, not exposure (TL2) | [EXPOSURE_GUIDE section 4](../guides/EXPOSURE_GUIDE.md#4-scopes) |
 | Alerts on numbers and monitors | **Built**, each person sets their own (one-click watch: TL10) | [USER_GUIDE.md, Alerts on numbers](../guides/USER_GUIDE.md#alerts-on-numbers) |
 | The bank's market data a trader reads (`CRV`, `FX`, `FXV`, `EQ`, `EQX`, `CMD`, `CMDC`, `BND`, `CDS`, `FXF`, `IRV`, `CPV`, `FIX`, `REPO`) | **Built**, in one Markets menu | [section 2.2.3](#223-the-lens-is-configuration) |
 | "My": user → trader or desk (lens file, console, a matching trader record, then View as); landing by trading role; never widening access (tested) | **Built**; from the directory: TL13; `lens.roles` not wired | [LENSES.md, "My": who a person is, configured](../admin/LENSES.md#my-who-a-person-is-configured) |
-| P&L explain (`PNL`) | **Partly built**: the stored explain is shown, its waterfall *under construction* (a generator's steps disagree with the bars); the engine is TL4 | [COMPUTED_ATTRIBUTES.md section 4.10](../architecture/COMPUTED_ATTRIBUTES.md#410-pnl-explain-pnl), [PNL.md](../contracts/PNL.md) |
+| P&L explain (`PNL`) | **Partly built**: the stored explain is shown, its waterfall *under construction* (a generator's steps disagree with the bars); the engine is TL4 | [IMPLEMENTATION_PLAN.md "Computed and derived attributes: open steps"](../architecture/IMPLEMENTATION_PLAN.md#computed-and-derived-attributes-open-steps), [PNL.md](../contracts/PNL.md) |
 | Actual P&L, month-to-date and year-to-date, intraday P&L, stop-loss, sensitivity and notional limits, breach records | **Not built**: TL3, TL9, TL11, TL7, TL6 | section 2.3 |
 
 What the data does not give is left out or labelled, never invented: [LENSES.md, What the data does not give](../admin/LENSES.md#what-the-data-does-not-give-left-out-or-labelled-never-invented).
@@ -476,7 +476,7 @@ What a trader sees is the lens file [`trading.yaml`](../../config/lenses/banking
 
 ### 2.3 Gaps and proposals
 
-Every design follows the rule of [COMPUTED_ATTRIBUTES.md section 1.2](../architecture/COMPUTED_ATTRIBUTES.md#12-the-rule-for-deciding-which):
+Every design follows the rule of [DATA_ARCHITECTURE.md section 12](../architecture/DATA_ARCHITECTURE.md#121-three-classes-and-the-rule-for-deciding-which):
 fundamental inputs arrive under a data contract as JSON Lines; measures are computed on demand from trade-grain inputs, never stored
 (except an immutable capture or an official end-of-day record); Drishti-owned records (a comment, an acknowledgement) are versioned;
 BI is the report layer; a landing reads the engines' answers as the person, never widening access. Sizes: **S** days, **M** one to
@@ -619,7 +619,7 @@ The My VaR tile shows "−0.3m since morning": the intraday VaR against the day'
 
 | Data | Grain | Needed by | Source |
 |---|---|---|---|
-| Trade valuations (MtM, DV01, notional) on consecutive dates | trade × date | built tiles | the valuation system (`NOTIONAL`'s unit is disputed: [COMPUTED_ATTRIBUTES.md section 6](../architecture/COMPUTED_ATTRIBUTES.md#6-findings-duplicates-and-inconsistencies)) |
+| Trade valuations (MtM, DV01, notional) on consecutive dates | trade × date | built tiles | the valuation system (`NOTIONAL`'s unit is disputed: [IMPLEMENTATION_PLAN.md "Computed and derived attributes: open steps"](../architecture/IMPLEMENTATION_PLAN.md#computed-and-derived-attributes-open-steps)) |
 | Trades booked on their date with `SOURCE_UPDATE_TIME`, `TRADE_ACTION`, `TRADE_STATUS` | trade | Trades today, TL1, TL4a | booking systems |
 | Actual and hypothetical P&L | desk (better book or trade) × date | TL3, TL11 | product control and finance |
 | Position sensitivities (DV01 by currency and tenor, CS01, vega, FX delta, gamma) | trade × date | TL4b, TL7 | the bank's risk engine; aggregation per RO4 |
@@ -802,7 +802,7 @@ On the committed demo every check is clean; the checks are proved on crafted bad
 
 Market data is **fundamental** (delivered under the pack's contracts as JSON Lines); every check, move, impact and link is **computed on
 demand**, never stored; an acknowledgement or correction note is a versioned **Drishti-owned** record; BI is the report layer
-([COMPUTED_ATTRIBUTES.md section 1.2](../architecture/COMPUTED_ATTRIBUTES.md#12-the-rule-for-deciding-which)). Sizes: **S** days, **M**
+([DATA_ARCHITECTURE.md section 12](../architecture/DATA_ARCHITECTURE.md#121-three-classes-and-the-rule-for-deciding-which)). Sizes: **S** days, **M**
 one to three weeks, **L** more than three weeks.
 
 | Id | Gap | Size | Depends on | Status |
@@ -1225,7 +1225,7 @@ permission. Nothing World shows from Yahoo may be redistributed, screenshots in 
 
 Each source arrives through **one standalone refresh script per pack** (with `.sh` and `.ps1`) as JSON Lines, built into the lake; every
 document carries `PROVENANCE` (source, licence, retrieval date); group figures, changes and deltas are **computed on demand**, never
-stored as copies; BI is the report layer ([COMPUTED_ATTRIBUTES.md section 1.2](../architecture/COMPUTED_ATTRIBUTES.md#12-the-rule-for-deciding-which)).
+stored as copies; BI is the report layer ([DATA_ARCHITECTURE.md section 12](../architecture/DATA_ARCHITECTURE.md#121-three-classes-and-the-rule-for-deciding-which)).
 Sizes: **S** days, **M** one to three weeks.
 
 | Id | Gap | Size | Depends on | Status |
@@ -1466,7 +1466,7 @@ Everything below is built in the engines and lenses the Oversight lens would reu
 
 ### 5.3 Gaps and proposals
 
-**Design rules for every proposal** ([COMPUTED_ATTRIBUTES.md section 1.2](../architecture/COMPUTED_ATTRIBUTES.md#12-the-rule-for-deciding-which)):
+**Design rules for every proposal** ([DATA_ARCHITECTURE.md section 12](../architecture/DATA_ARCHITECTURE.md#121-three-classes-and-the-rule-for-deciding-which)):
 fundamental inputs (limits, sensitivities, P&L, volumes, RNIV amounts a quant supplies) arrive under a data contract as JSON Lines; measures
 are computed on demand and never stored, except as an immutable capture or official record; **governance records** (a breach's
 commentary and approval, an RNIV entry, a sign-off) are Drishti-owned, versioned, never edited in place, every step an audit entry, and
@@ -1664,7 +1664,7 @@ limit breached by a crafted trade; long and short netting within a bucket; two-s
   per trade when delivered, so any scope). A sum over dates at desk grain; computed at trade grain for arbitrary scopes.
 - **Position and notional limits (RO6), proposed, S:** a position's quantity or market value, a scope's gross or net notional, from the
   derived positions ([VAR_GUIDE section 4](../guides/VAR_GUIDE.md#4-positions-derived-never-delivered)) and `trade-valuation.NOTIONAL`,
-  whose unit must be settled first (F10, [COMPUTED_ATTRIBUTES.md section 6](../architecture/COMPUTED_ATTRIBUTES.md#6-findings-duplicates-and-inconsistencies)).
+  whose unit must be settled first (F10, [IMPLEMENTATION_PLAN.md "Computed and derived attributes: open steps"](../architecture/IMPLEMENTATION_PLAN.md#computed-and-derived-attributes-open-steps)).
 
 #### 5.3.6 RO7: the RNIV register
 

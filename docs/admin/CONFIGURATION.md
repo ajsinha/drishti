@@ -1585,7 +1585,7 @@ else by `drishti.var.positions`.
 
 Off by default: what is sharded is the market-risk pack's `sharding:` block (`enabled`, `key`, `kinds`, `target-shard-mb`, `replicas`); with
 no block and no `enabled` here every date loads whole. The same five keys here win over the block when set; a value that is not
-valid refuses the start. Design and operation: [VAR_SHARDING.md](../architecture/VAR_SHARDING.md), [OPERATIONS.md](OPERATIONS.md#var-shards).
+valid refuses the start. Design and operation: [DATA_ARCHITECTURE.md section 13](../architecture/DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built), [OPERATIONS.md](OPERATIONS.md#var-shards).
 
 | Key | Default | Meaning |
 |---|---|---|

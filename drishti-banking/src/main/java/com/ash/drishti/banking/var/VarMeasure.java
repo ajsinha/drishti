@@ -20,7 +20,7 @@ import com.ash.drishti.server.shard.ShardedMeasure;
 import java.util.List;
 
 /**
- * VaR as a sharded measure (VAR_SHARDING.md): shards along legal entity, then desk (the hot file's order, a desk never split); a row is a
+ * VaR as a sharded measure (DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built): shards along legal entity, then desk (the hot file's order, a desk never split); a row is a
  * position's float32 scenario P&amp;L ({@code 4 × scenarios} bytes); a shard's partial answer is the float64 sum of the rows asked, one value
  * per scenario, and partials add element by element.
  */

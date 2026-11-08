@@ -3461,7 +3461,7 @@ The release train ships 2.9.11.e, 2.9.11.f and 2.9.11.g as one tag, v2.9.11.g: e
 
 ### Computed attributes: the quick wins, the data fixes and the exposure engine's inputs (2026-10-29)
 
-The product owner's decisions on [COMPUTED_ATTRIBUTES.md](docs/architecture/COMPUTED_ATTRIBUTES.md) (section 11), built; its section 13
+The product owner's decisions on [COMPUTED_ATTRIBUTES.md](docs/architecture/DATA_ARCHITECTURE.md#12-computed-and-derived-attributes) (section 11), built; its section 13
 "As built" says what, with the reconciliation.
 
 - **Derived netting-set and counterparty totals (Q1, Q2).** New derived kinds `nset-mtm` (`NSMTM`) and `cpty-mtm` (`CPMTM`), connector
@@ -3641,7 +3641,7 @@ The product owner's decisions on [COMPUTED_ATTRIBUTES.md](docs/architecture/COMP
   official record) on three members in USD and EUR on Delta and Iceberg (`VarShardClusterTest`); `ShardMapTest`, `ShardOwnersTest`,
   `ShardGatherTest`, `ShardAssemblyTest`, `VarShardHandoverTest`, `VarShardingSettingsTest`, `VarShardSingleNodeTest`. The machinery
   (shard map, ownership, handover, gather with its completeness check, readiness) is measure-agnostic (`compute.shard`, `server.shard`,
-  `ShardedMeasure`), VaR its first measure. Docs: [VAR_SHARDING.md](docs/architecture/VAR_SHARDING.md), VAR_GUIDE.md section 28,
+  `ShardedMeasure`), VaR its first measure. Docs: [VAR_SHARDING.md](docs/architecture/DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built), VAR_GUIDE.md section 28,
   DRISHTI_NET.md, NET.md, CONFIGURATION.md, TROUBLESHOOTING.md, TOOLS.md, CLI_GUIDE.md. Open: an Admin → Health "Shards" panel (mock-ups
   first).
 - **Fixed (drill): a reporting currency could keep answering without the day's intraday updates.** The official capture reads every

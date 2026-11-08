@@ -27,7 +27,7 @@ import java.util.NavigableMap;
  * A date's morning rows with its intraday layer on top (VAR_GUIDE.md section 8.4): the morning store unchanged (the hot file is written
  * once), each updated trade's row corrected by its difference ({@code current − morning as stored}), the trades added during the day
  * appended after the morning's ({@code row >= base.rows()}). Immutable: each intraday batch makes a new one, sharing the rows. Over a
- * sharded morning ({@link SetSums}, VAR_SHARDING.md) a set's morning rows go to their shards' owners whole and the differences and added
+ * sharded morning ({@link SetSums}, DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built) a set's morning rows go to their shards' owners whole and the differences and added
  * rows, held here, are added to it.
  */
 final class OverlayVectors implements Vectors, SetSums {

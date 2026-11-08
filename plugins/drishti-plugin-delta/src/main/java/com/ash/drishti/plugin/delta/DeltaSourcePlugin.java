@@ -1189,7 +1189,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     }
 
     /**
-     * The date's vectors for the keys of {@code range} (a VaR shard, VAR_SHARDING.md): a file whose statistics (the first key column's
+     * The date's vectors for the keys of {@code range} (a VaR shard, DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built): a file whose statistics (the first key column's
      * {@code minValues} and {@code maxValues}, its {@code nullCount}) show none of them is not read; the reader checks every row.
      */
     @Override

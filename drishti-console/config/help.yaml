@@ -470,6 +470,8 @@ moved:
   knowledge-economies: knowledge-world#2-economies   # docs/knowledge/economies.md folded into docs/knowledge/world.md
   docs-guides-mr-cube-guide: docs-guides-pivot-guide#29-the-mr-cube-preset   # docs/guides/MR_CUBE_GUIDE.md folded into docs/guides/PIVOT_GUIDE.md (the MR cube preset)
   docs-architecture-pivot-engine: docs-architecture-architecture#26-the-pivot-engine   # docs/architecture/PIVOT_ENGINE.md: use folded into PIVOT_GUIDE.md, design into ARCHITECTURE.md section 26
+  docs-architecture-computed-attributes: docs-architecture-data-architecture#12-computed-and-derived-attributes   # docs/architecture/COMPUTED_ATTRIBUTES.md: what is built into DATA_ARCHITECTURE.md section 12, open steps into IMPLEMENTATION_PLAN.md
+  docs-architecture-var-sharding: docs-architecture-data-architecture#13-var-sharding-how-it-is-built   # docs/architecture/VAR_SHARDING.md folded into DATA_ARCHITECTURE.md sections 13 and 14 (operators) and VAR_GUIDE.md section 28
 
 # "What does this mean?" beside a data page's help (the explorers' ?, a view's About): the Knowledge page, or glossary entry, that
 # explains the screen (var, exposure) or the kind of the record (core/app.py reads it at start; tests/test_help.py checks each target).

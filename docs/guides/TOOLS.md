@@ -1382,7 +1382,7 @@ picks the business date (default the newest with vectors); `--json` prints the s
   currency; the headline says the currency and where its FX came from ([VAR_GUIDE.md section 15.10](VAR_GUIDE.md#1510-reporting-currency)).
 - `var status` prints the engine's settings, its tiered memory (hot files on disk, dates open, how this JVM maps) and the dates loaded.
 - `var shards [--date D] [--json]`: VaR sharding across Drishti*net: the settings, the members, the shards held here, and the
-  date's shard map with each shard's range, owners and the members ready for it ([VAR_SHARDING.md](../architecture/VAR_SHARDING.md));
+  date's shard map with each shard's range, owners and the members ready for it ([DATA_ARCHITECTURE.md section 13](../architecture/DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built));
   `--drain` / `--undrain` (administrators) hand this member's shards over before it stops, or take shards again.
 - `var capture SCOPE [--note TEXT]`, `var captures [--scope SCOPE]`, `var compare A [B|now]`: captures (writing needs `risk:write`).
 - `var basket NAME SCOPE [--title] [--description] [--share USER|role:NAME ...]`, `var baskets`: saved baskets; `var baskets --all [--owner TEXT]`: every person's (administrators). `var basket-delete NAME [--owner USER] [--reason TEXT] [--version N]`: deletes your basket, or with `--owner` anyone's (administrators; the reason goes to the audit log and the owner's inbox); captures of it are kept ([VAR_GUIDE.md section 3.5](VAR_GUIDE.md#35-construct-your-basket)).

@@ -44,7 +44,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
 /**
- * VaR sharded across three real Drishti*net members in one JVM equals VaR on one server, to the cent (VAR_SHARDING.md section 12). One
+ * VaR sharded across three real Drishti*net members in one JVM equals VaR on one server, to the cent (DATA_ARCHITECTURE.md section 13). One
  * risk lake (the limit-letter fixture of {@link VarFormatEqualityTest}, its scenario PVs and FX, in Delta and the same lines in Iceberg) is
  * read by a reference server (sharding off, Drishti*net off) and by members A, B and C (sharding on: two shards, one per legal entity and
  * desk, two owners each). For every scope of the fixture in USD and EUR, the headline (VaR, ES, the tail, limits, diversification), the
