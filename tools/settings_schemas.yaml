@@ -565,12 +565,12 @@ env:
   - { name: DRISHTI_SHOTS_LAKE_END, by: tools, default: ~, sets: "screenshot tools", meaning: "The last business date of the lake they build" }
   - { name: DRISHTI_SHOTS_INDEX, by: tools, default: ~, sets: "screenshot tools", meaning: "Which shots of a tutorial to take" }
   - { name: DRISHTI_SHOTS_DELTA_ROOT, by: tools, default: ~, sets: "screenshot tools", meaning: "The lake they read" }
-  - { name: DRISHTI_T35_USER, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 35's shots: the reader who signs in (default the administrator)" }
-  - { name: DRISHTI_T35_PASSWORD, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 35's shots: that reader's password" }
-  - { name: DRISHTI_T35_TOKEN_FILE, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 35's shots: a scratch file the new token is kept in for the later steps" }
-  - { name: DRISHTI_T36_WORK, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 36's shots: the working folder of the data inbox run" }
-  - { name: DRISHTI_T37_USER, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 37's shots: the function's author who signs in" }
-  - { name: DRISHTI_T37_PASSWORD, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 37's shots: that author's password" }
-  - { name: DRISHTI_T37_FN, by: tools, default: "fn:you/wret@1", sets: "screenshot tools", meaning: "Tutorial 37's shots: the saved function shown" }
+  - { name: DRISHTI_T35_USER, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 17's shots: the reader who signs in (default the administrator)" }
+  - { name: DRISHTI_T35_PASSWORD, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 17's shots: that reader's password" }
+  - { name: DRISHTI_T35_TOKEN_FILE, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 17's shots: a scratch file the new token is kept in for the later steps" }
+  - { name: DRISHTI_T36_WORK, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 16, Part C's shots: the working folder of the data inbox run" }
+  - { name: DRISHTI_T37_USER, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 7, Part B's shots: the function's author who signs in" }
+  - { name: DRISHTI_T37_PASSWORD, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 7, Part B's shots: that author's password" }
+  - { name: DRISHTI_T37_FN, by: tools, default: "fn:you/wret@1", sets: "screenshot tools", meaning: "Tutorial 7, Part B's shots: the saved function shown" }
   - { name: DRISHTI_ARTIFACTS_SERVER_PORT, by: tools, default: ~, sets: "screenshot tools", meaning: "The server port of the artifacts screenshots" }
   - { name: DRISHTI_ARTIFACTS_CONSOLE_PORT, by: tools, default: ~, sets: "screenshot tools", meaning: "The console port of the artifacts screenshots" }

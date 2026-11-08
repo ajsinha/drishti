@@ -144,7 +144,7 @@ values, chunk-rows: 20, reduce: { sum: [ROWS, SUM], tables: { total: [PNL] }, th
 
 - Below: [when to use one](#when-to-use-one), [writing the computation](#writing-the-computation), [reading a computed kind](#reading-a-computed-kind), [what happens on a read](#what-happens-on-a-read), [engines](#engines), [triggers](#triggers), [private sandboxes](#private-sandboxes), [the HTTP API](#the-http-api), [isolation](#isolation), [performance](#performance).
 - [Reactive connectors, the design](../../../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors) and [compute workers](../../../architecture/PYTHON_COMPUTE.md).
-- [Operating compute](../../../admin/OPERATIONS.md#19-compute-workers) and [tutorial 23: computed panels](../../../tutorials/23-computed-panels.md).
+- [Operating compute](../../../admin/OPERATIONS.md#19-compute-workers) and [tutorial 19, Part C: computed panels](../../../tutorials/19-build-a-pack-and-a-screen.md#part-c--computed-panels-a-reactive-connector).
 
 ## When to use one
 

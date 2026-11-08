@@ -491,7 +491,7 @@ None: all 806,304 rows were read, and every field any of them has is in the reco
 - Data contract: [TVAL in the market-risk pack's contracts](../packs/market-risk.md#tval-trade-valuation-trade-valuation) (`config/packs/banking/market-risk/contracts/trade-valuation.contract.yaml`, the source of every meaning on this page).
 - [TVAL, trade valuation totals: the data contract](../../contracts/TVAL.md)
 - [16. Reference and master data read](../../guides/EXPOSURE_GUIDE.md#16-reference-and-master-data-read)
-- [Tutorial 26 · Exposure from the bank to a trade](../../tutorials/26-exposure-from-the-bank-to-a-trade.md)
+- [Tutorial 3 · Exposure from the bank to a trade](../../tutorials/03-exposure-from-the-bank-to-a-trade.md)
 - [Market risk](../../knowledge/market-risk.md)
 - [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
@@ -754,7 +754,7 @@ Fields no record above has, found by reading all 88 rows, with how many rows fil
 - Data contract: [HIER in the market-risk pack's contracts](../packs/market-risk.md#hier-risk-hierarchy-node-risk-hierarchy) (`config/packs/banking/market-risk/contracts/risk-hierarchy.contract.yaml`, the source of every meaning on this page).
 - [15.4 `risk-hierarchy`: the trees and their limits](../../guides/VAR_GUIDE.md#154-risk-hierarchy-the-trees-and-their-limits)
 - [15.14 Hierarchies: from the rows or from the trades' columns](../../guides/VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns)
-- [Tutorial 25 · VaR from the bank to a trade](../../tutorials/25-var-from-the-bank-to-a-trade.md)
+- [Tutorial 2 · VaR from the bank to a trade](../../tutorials/02-var-from-the-bank-to-a-trade.md)
 - [Market risk](../../knowledge/market-risk.md)
 - [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
@@ -847,7 +847,7 @@ Fields no record above has, found by reading all 2 rows, with how many rows fill
 
 - Data contract: [SSET in the market-risk pack's contracts](../packs/market-risk.md#sset-scenario-set-scenario-set) (`config/packs/banking/market-risk/contracts/scenario-set.contract.yaml`, the source of every meaning on this page).
 - [15.3 `scenario-set`: the scenario days](../../guides/VAR_GUIDE.md#153-scenario-set-the-scenario-days)
-- [Tutorial 25 · VaR from the bank to a trade](../../tutorials/25-var-from-the-bank-to-a-trade.md)
+- [Tutorial 2 · VaR from the bank to a trade](../../tutorials/02-var-from-the-bank-to-a-trade.md)
 - [Market risk](../../knowledge/market-risk.md)
 - [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
@@ -1074,7 +1074,7 @@ Fields no record above has, found by reading all 16,468 rows, with how many rows
 - [15.2 `pnl-vector`: one P&L vector per trade](../../guides/VAR_GUIDE.md#152-pnl-vector-one-pl-vector-per-trade)
 - [8.4 What-if pricing and intraday recomputes](../../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)
 - [15.13 Inputs: any form, any grain](../../guides/VAR_GUIDE.md#1513-inputs-any-form-any-grain)
-- [Tutorial 25 · VaR from the bank to a trade](../../tutorials/25-var-from-the-bank-to-a-trade.md)
+- [Tutorial 2 · VaR from the bank to a trade](../../tutorials/02-var-from-the-bank-to-a-trade.md)
 - [Market risk](../../knowledge/market-risk.md)
 - [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
@@ -1421,7 +1421,7 @@ Fields no record above has, found by reading all 2,685 rows, with how many rows 
 - [15.9 `scenario-pv`: scenario PVs per trade, in the trade's currency](../../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)
 - [8.4 What-if pricing and intraday recomputes](../../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)
 - [15.13 Inputs: any form, any grain](../../guides/VAR_GUIDE.md#1513-inputs-any-form-any-grain)
-- [Tutorial 25 · VaR from the bank to a trade](../../tutorials/25-var-from-the-bank-to-a-trade.md)
+- [Tutorial 2 · VaR from the bank to a trade](../../tutorials/02-var-from-the-bank-to-a-trade.md)
 - [Market risk](../../knowledge/market-risk.md)
 - [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
@@ -1503,7 +1503,7 @@ None: all 12 rows were read, and every field any of them has is in the record ab
 
 - Data contract: [FXS in the market-risk pack's contracts](../packs/market-risk.md#fxs-scenario-fx-of-a-currency-509-scenarios-fx-scenario) (`config/packs/banking/market-risk/contracts/fx-scenario.contract.yaml`, the source of every meaning on this page).
 - [15.9 `scenario-pv`: scenario PVs per trade, in the trade's currency](../../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)
-- [Tutorial 25 · VaR from the bank to a trade](../../tutorials/25-var-from-the-bank-to-a-trade.md)
+- [Tutorial 2 · VaR from the bank to a trade](../../tutorials/02-var-from-the-bank-to-a-trade.md)
 - [Market risk](../../knowledge/market-risk.md)
 - [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
@@ -1673,7 +1673,7 @@ Fields no record above has, found by reading all 28 rows, with how many rows fil
 
 - Data contract: [PORT in the market-risk pack's contracts](../packs/market-risk.md#port-portfolio-portfolio) (`config/packs/banking/market-risk/contracts/portfolio.contract.yaml`, the source of every meaning on this page).
 - [15.5 `portfolio`: stored portfolio definitions](../../guides/VAR_GUIDE.md#155-portfolio-stored-portfolio-definitions)
-- [Tutorial 25 · VaR from the bank to a trade](../../tutorials/25-var-from-the-bank-to-a-trade.md)
+- [Tutorial 2 · VaR from the bank to a trade](../../tutorials/02-var-from-the-bank-to-a-trade.md)
 - [Market risk](../../knowledge/market-risk.md)
 - [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
@@ -1753,7 +1753,7 @@ Fields no record above has, found by reading all 157 rows, with how many rows fi
 
 - Data contract: [VLIM in the market-risk pack's contracts](../packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit) (`config/packs/banking/market-risk/contracts/var-limit.contract.yaml`, the source of every meaning on this page).
 - [15.15 `var-limit`: the nodes' VaR limits](../../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits)
-- [Tutorial 25 · VaR from the bank to a trade](../../tutorials/25-var-from-the-bank-to-a-trade.md)
+- [Tutorial 2 · VaR from the bank to a trade](../../tutorials/02-var-from-the-bank-to-a-trade.md)
 - [Market risk](../../knowledge/market-risk.md)
 - [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
@@ -1831,7 +1831,7 @@ None: all 10 rows were read, and every field any of them has is in the record ab
 - Data contract: [DPNL in the market-risk pack's contracts](../packs/market-risk.md#dpnl-desk-pl-actual-and-hypothetical-daily-desk-pnl) (`config/packs/banking/market-risk/contracts/desk-pnl.contract.yaml`, the source of every meaning on this page).
 - [15.16 `desk-pnl`: the bank's actual and hypothetical P&L](../../guides/VAR_GUIDE.md#1516-desk-pnl-the-banks-actual-and-hypothetical-pl)
 - [4.6 Backtesting](../../guides/REGULATORY_VAR_REPORTING.md#46-backtesting)
-- [Tutorial 25 · VaR from the bank to a trade](../../tutorials/25-var-from-the-bank-to-a-trade.md)
+- [Tutorial 2 · VaR from the bank to a trade](../../tutorials/02-var-from-the-bank-to-a-trade.md)
 - [Market risk](../../knowledge/market-risk.md)
 - [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 

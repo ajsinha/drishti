@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Tutorial 18: one model with two facts. Trades (one row per trade) and netting sets (one row per netting set) are facts; the counterparty and the desk
+# Tutorial 8, Part B: one model with two facts. Trades (one row per trade) and netting sets (one row per netting set) are facts; the counterparty and the desk
 # are the dimensions they share or reach. A measure from each fact is aggregated alone at the question's grain, then the answers are joined: the totals
 # stay the true ones. The model designer writes this file when you follow the tutorial in the UI; the CLI path creates it from here.
 rachana: 2

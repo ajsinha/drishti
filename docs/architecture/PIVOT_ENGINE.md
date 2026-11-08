@@ -1292,7 +1292,7 @@ come from the seeded generators (JSON Lines to Delta, as every pack's data), clu
 - [ ] `config/engines/pivot.yaml`, the catalogue entry (`mr-cube` and `ccr-cube` need `pivot`), CONFIGURATION.md (built: `config/engines/pivot.yaml`, the catalogue entry, `mr-cube` needs `pivot`; `ccr-cube` when it is built)
 - [x] API, `drishti.py pivot`, error codes in API_GUIDE
 - [ ] tests of section 20; the benchmark of section 21 into BENCHMARK.md (P3: `SketchErrorTest`, `RollupTest`, `ClusterMergeTest`, `ProgressiveTest` written; the harness `tools/bench/pivot_bench.py` and BENCHMARK.md section 16 written; the runs to be made)
-- [ ] docs: a pivot guide and a tutorial (UI, CLI and YAML at every step), Help entries, a custom-function guide, the MR cube guide on the engine (built: the guide, tutorial 33, Help entries)
+- [ ] docs: a pivot guide and a tutorial (UI, CLI and YAML at every step), Help entries, a custom-function guide, the MR cube guide on the engine (built: the guide, tutorial 7, Part A, Help entries)
 - [ ] Rachana paths as the field notation (one parser, compiled to columns or DuckDB JSON; the grain from `[*]`); BI's examples in the `$.` form (built: the pivot side; the BI datasets' `$.` form to come)
 - [x] documents ([section 6.7](#67-documents-paths-arrays-and-grains)): the field list from the contract and the document's shape; promoted, dataset and ad-hoc routes with the scan estimate; one grain per view; coarser figures once per parent; separate lists never crossed; filters per grain; Promote and Add to dataset for administrators
 - [x] the pivot guide's worked examples of section 6.7, each with its real figures from the demo lake, a screenshot, the command line and the saved view's YAML

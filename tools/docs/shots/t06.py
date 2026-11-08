@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 6, Design a screen (docs/tutorials/06-design-a-screen.md), written to docs/tutorials/img/t06/.
+"""Pictures of tutorial 19, Part B, Design a screen (docs/tutorials/19-build-a-pack-and-a-screen.md), written to docs/tutorials/img/t06/.
 
 The workbench takes the three desk documents of docs/tutorials/data/desks, drafts a screen, and the tutorial's Sutra (desk-book.sutra.yaml: tabs that hold
 panels, a slider, a table with column filters) replaces the draft. Nothing is saved or proposed: the pictures are of the design in progress."""

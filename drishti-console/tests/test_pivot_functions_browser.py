@@ -136,7 +136,7 @@ def test_why_splits_by_any_field_of_the_source(stack, page):
 
 
 def test_the_playground_shows_the_states_and_small_figures_unrounded(page):
-    """Tutorial 37 step 2: each state as the engine words it ([Σ=… n=…, Σ=… n=…]), and a figure such as 0.007 or 0.006429 as it is,
+    """Tutorial 7, step 12: each state as the engine words it ([Σ=… n=…, Σ=… n=…]), and a figure such as 0.007 or 0.006429 as it is,
     never rounded to 0.01."""
     page.click("[data-pf-open='functions']")
     _card(page, "functions").wait_for(state="visible")

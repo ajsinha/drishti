@@ -19,7 +19,7 @@
 The reference for getting Drishti onto a machine: install the tools, build the server, build the **demo lakes** from the
 committed test data, start the server and the console, sign in, make a personal API token for the command line, and the other
 ways to build and run (an IDE with no terminal, a system Maven, Docker, a different configuration file, Windows). It does not
-teach the product: the first quarter of an hour in it is [tutorial 1](../tutorials/01-first-15-minutes.md), and the
+teach the product: the first quarter of an hour in it is [tutorial 1, Part A](../tutorials/01-first-15-minutes.md#part-a--install-start-and-look-around), and the
 [tutorials](../tutorials/README.md) take you through the rest. From a clean clone the whole install takes about 15 minutes on a
 laptop, most of it the first build.
 
@@ -303,7 +303,7 @@ What the settings do:
 | `DRISHTI_TOKEN_SECRET` | The secret the server and the console share to sign tokens (at least 32 characters). The value above is the run configurations' development secret: never use it on a shared machine. |
 | `DRISHTI_SEED_ADMIN`, `DRISHTI_SEED_USERNAME`, `DRISHTI_SEED_PASSWORD` | On the first start with no users, create this administrator (the values above are the defaults too). |
 | `DRISHTI_EXTERNAL_LIB` | The folder of extra jars and Python modules (`external_lib/java`, `external_lib/python`); default `external_lib` in the repository. |
-| `DRISHTI_DEMO_ENABLED=false` | The demo source (the packs' samples, ticking) off, so every page reads the lakes. With it on (the default) a sample answers before the lake for an id both hold; tutorial 12's live tiles need it on. |
+| `DRISHTI_DEMO_ENABLED=false` | The demo source (the packs' samples, ticking) off, so every page reads the lakes. With it on (the default) a sample answers before the lake for an id both hold; tutorial 8, Part F's live tiles need it on. |
 
 Leave this terminal open: the server runs in it and writes its log there. After a few seconds you should see:
 
@@ -416,9 +416,9 @@ From there:
 
 | You want to | Go to |
 |---|---|
-| Open a trade, search, try the form, look at BI and make a token, in a guided quarter of an hour | [Tutorial 1 · Your first 15 minutes](../tutorials/01-first-15-minutes.md) |
-| Use mnemonics, type-ahead, links, a past business date and Compare | [Tutorial 2 · Look up anything](../tutorials/02-look-up-anything.md) |
-| Search by value (`TRD where QUANTITY > 100m order by QUANTITY desc`: 6,062 of the 15,000 trades on the demo lakes), by form, save a search and a monitor | [Tutorial 3 · Query by form](../tutorials/03-query-by-form.md) and [USER_GUIDE.md](USER_GUIDE.md#search-by-value) |
+| Open a trade, search, try the form, look at BI and make a token, in a guided quarter of an hour | [Tutorial 1, Part A · Your first 15 minutes](../tutorials/01-first-15-minutes.md#part-a--install-start-and-look-around) |
+| Use mnemonics, type-ahead, links, a past business date and Compare | [Tutorial 1, Part B · Look up anything](../tutorials/01-first-15-minutes.md#part-b--look-up-anything) |
+| Search by value (`TRD where QUANTITY > 100m order by QUANTITY desc`: 6,062 of the 15,000 trades on the demo lakes), by form, save a search and a monitor | [Tutorial 1, Part C · Query by form](../tutorials/01-first-15-minutes.md#part-c--query-by-form) and [USER_GUIDE.md](USER_GUIDE.md#search-by-value) |
 | Set an alert and watch a list | [USER_GUIDE.md](USER_GUIDE.md#monitors) |
 
 If a command gives `DRS-4001` the mnemonic is unknown (is its pack loaded?); if a view says `DRS-1001 no source holds …` the id does
@@ -1175,8 +1175,8 @@ More in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 |---|---|
 | Learn by doing | [the tutorials](../tutorials/README.md) |
 | Learn every feature of the console | [USER_GUIDE.md](USER_GUIDE.md) |
-| Build reports, models and boards in BI Studio | [BI_GUIDE.md](BI_GUIDE.md), [tutorial 10](../tutorials/10-first-bi-report.md) |
-| Run several servers as one cluster (Drishti\*net) | [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one), [tutorial 19](../tutorials/19-a-cluster-of-three.md) |
+| Build reports, models and boards in BI Studio | [BI_GUIDE.md](BI_GUIDE.md), [tutorial 8, Part A](../tutorials/08-reports-and-dashboards.md#part-a--your-first-bi-report) |
+| Run several servers as one cluster (Drishti\*net) | [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one), [tutorial 22](../tutorials/22-a-cluster-of-three.md) |
 | Know which packs exist and what commands they offer | [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) |
 | Change how a screen looks | [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench), [SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md) and [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md) |
 | Add users and roles | [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) |

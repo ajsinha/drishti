@@ -271,7 +271,7 @@ from the filings when the pack's snapshot is built (`tools/packgen/funds`), not 
 
 - [Funds and ETFs guide](../guides/FUNDS_GUIDE.md): FUND, HELD and TRACK with worked numbers, the data contract of every kind, the
   sources and the refresh script.
-- [Tutorial 28: funds and ETFs](../tutorials/28-funds-and-etfs.md).
+- [Tutorial 13, Part C: funds and ETFs](../tutorials/13-world-data.md#part-c--funds-and-etfs).
 - [The us-equities pack's guide](../../config/packs/capitalmarkets/us-equities/guides/us-equities.md) and [the gleif pack's guide](../../config/packs/core/gleif/guides/gleif.md).
 - [Groupings and analytics guide](../guides/GROUPINGS_ANALYTICS_GUIDE.md) section 4 (SIC) and section 7 (USEQ, FACT and IDX).
 - [External data](../guides/EXTERNAL_DATA.md): SEC EDGAR, N-PORT, N-CEN, Wikidata and GLEIF, their licences and refresh scripts.

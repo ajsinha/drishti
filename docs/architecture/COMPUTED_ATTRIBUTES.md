@@ -1137,7 +1137,7 @@ bank is collateralised for, a smaller balance posted lowers the exposure of a se
 | BANK (the demo run, 74 sets) | peak PFE 95% / EPE / CE | 2,858,060,180 / 945,577,981 / 1,532,007,701 | 2,897,620,439 / 947,202,991 / 1,586,811,699 |
 
 The parity reference (`drishti-compute-banking/src/test/resources/ccr/reference.json`) was written again by `make_ccr_data.py`; the exposure guide,
-tutorial 26 and the knowledge pages quote the new figures.
+tutorial 3 and the knowledge pages quote the new figures.
 
 ### 13.4 Reconciliation (section 9.3, stage 2)
 

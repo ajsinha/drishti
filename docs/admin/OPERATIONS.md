@@ -4040,7 +4040,7 @@ a failure `compute.failed`; events `compute.event`; sandboxes `compute.sandbox.*
 in memory (`cache.results`, `cache.ttl` per connector).
 
 **The sample.** The `compute-demo` pack (`DRISHTI_PACKS=…,compute-demo`) brings two reactive connectors, `path-sum-python` (pool
-`sample`) and `path-sum-java`; [tutorial 23](../tutorials/23-computed-panels.md) walks through it.
+`sample`) and `path-sum-java`; [tutorial 19, Part C](../tutorials/19-build-a-pack-and-a-screen.md#part-c--computed-panels-a-reactive-connector) walks through it.
 
 ## 20. Lake maintenance: Admin → Lakes → Maintain and `lake maintain`
 

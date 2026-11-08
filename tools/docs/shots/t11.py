@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 11, BI that runs itself (docs/tutorials/11-bi-that-runs-itself.md), written to docs/tutorials/img/t11/.
+"""Pictures of tutorial 8, Part D, BI that runs itself (docs/tutorials/08-reports-and-dashboards.md), written to docs/tutorials/img/t11/.
 
 A dataset of the model layer that rebuilds itself every business morning (its page's Refresh), a subscription to a report (what Run now says without a mail
 server, and with one: the pictures marked "mail" need the server started with spring.mail.host pointing at a catcher), an alert on a number of a report and on a

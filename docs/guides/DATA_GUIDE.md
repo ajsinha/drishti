@@ -147,7 +147,7 @@ look-back window). It is flagged once: a notice to the people the pack names, an
 
 ### 3. Your first load in five minutes
 
-The walk-through, with real output and pictures, is [tutorial 7 · Load data daily](../tutorials/07-load-data-daily.md): say when you expect data (step 1), announce a load from the command line (step 2), a failed
+The walk-through, with real output and pictures, is [tutorial 12 · Load data daily](../tutorials/12-a-day-of-bank-data.md): say when you expect data (step 1), announce a load from the command line (step 2), a failed
 batch (step 3), the same through the API (step 4), the history and what is due (step 5) and an alert for a missing day (step 6). In short: **announce** a batch when your ETL has written it,
 
 ```
@@ -1013,4 +1013,4 @@ Every setting is also in [CONFIGURATION.md](../admin/CONFIGURATION.md).
 
 ## 7. The data inbox: drop files and they load
 
-Drop files with a `.ready` marker in a folder and the server loads them into a lake by itself: [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md), [section 3.1](DATA_LAKE_GUIDE.md#31-the-data-inbox) (the folders, the cycle, the settings, the Inbox screen), section 4 (the `.ready` file) and section 5 (routing rules, dates, modes, undo); the walk-through is [tutorial 36](../tutorials/36-load-files-with-the-data-inbox.md).
+Drop files with a `.ready` marker in a folder and the server loads them into a lake by itself: [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md), [section 3.1](DATA_LAKE_GUIDE.md#31-the-data-inbox) (the folders, the cycle, the settings, the Inbox screen), section 4 (the `.ready` file) and section 5 (routing rules, dates, modes, undo); the walk-through is [tutorial 16, Part C](../tutorials/16-load-your-own-data-into-a-new-lake.md#part-c--load-files-automatically-with-the-data-inbox).

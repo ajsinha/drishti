@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Makes the pictures of the pivot screen (PIVOT_GUIDE.md, tutorial 33) from the stand-in server's synthetic trades (not a test: run it
+"""Makes the pictures of the pivot screen (PIVOT_GUIDE.md, tutorial 7, Part A) from the stand-in server's synthetic trades (not a test: run it
 by hand).
 
     drishti-console/.venv/bin/python drishti-console/tests/pivot_shots.py [pictures dir]

@@ -19,7 +19,7 @@ Drishti computes the FRTB standardised approach (the Basel Framework's MAR21 to 
 when asked, for any scope, never stored as a figure.** The input is one table of position sensitivities; a factor dictionary says what
 each factor is and where it falls in the regulator's grid; the parameters are configuration files that name their paragraphs. Every figure
 opens in a playground that shows the same calculation as spreadsheet formulas, with every method choice a switch you can flip, compare
-and reproduce. The tutorial is [tutorial 30](../tutorials/30-frtb-sa-from-the-cases-to-a-desk.md); the data contract, every field of
+and reproduce. The tutorial is [tutorial 4](../tutorials/04-frtb-sa.md); the data contract, every field of
 every record and the worked records are [FRTB.md](../contracts/FRTB.md).
 
 ## Contents

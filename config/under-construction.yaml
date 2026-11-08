@@ -113,7 +113,7 @@ items:
 
   - id: flight-cluster-end-to-end
     what: test
-    about: "Arrow Flight on a three-node cluster, end to end (endpoints on every node, a node stopped mid-read, a VaR stream through an intraday batch): not measured yet; the single-node reads, the stream, Stop and resume are run (tutorial 35)"
+    about: "Arrow Flight on a three-node cluster, end to end (endpoints on every node, a node stopped mid-read, a VaR stream through an intraday batch): not measured yet; the single-node reads, the stream, Stop and resume are run (tutorial 17)"
     release: "a later heavy run (needs a three-node scratch cluster)"
     treatment: under-construction
     contracts: ["docs/guides/FLIGHT_GUIDE.md#13-testing"]

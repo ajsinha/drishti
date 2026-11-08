@@ -192,13 +192,13 @@ word `BI` goes there from the command line, in any case: `BI <GO>` the Build hom
 catalogue, `BI SETTINGS <GO>` the BI settings (administrators with `bi-admin`), `BI <report-or-board> <GO>` a published item by id or title (a **report opens drawn**, with its slicers, drill-down and drill-through; type-ahead completes after `BI `; `RUPAKA` still works as an alias). Without the power the menu is not there and `BI <GO>`
 says what is missing. No pack can define a mnemonic named `BI`, `RUPAKA`, `FORM`, `FUNC`, `WHAT`, `DATAMAP` or `DATA`. The BI page, its keys (`/`, `g h`, `g c`, `g w`, `?`) and what it can and cannot do yet:
 [BI_GUIDE.md](BI_GUIDE.md). **Using a report:** click a bar and the page filters to it, the buttons in a visual's header drill down, drill through to another page, show the rows behind it or open a trade in the terminal, and a slicer filters
-what it can reach ([BI_GUIDE.md](BI_GUIDE.md) section 14); **building one:** *Designer* in the BI rail, drag fields onto the canvas in BI Studio, with its Explorer, tabs and Problems and Query dock ([BI_GUIDE.md](BI_GUIDE.md) sections 15 and 26, [tutorial 10](../tutorials/10-first-bi-report.md)); the YAML reference is [BI_GUIDE.md](BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave). The BI rail also opens *Analyse*, *Transforms* (Python data prep step by step) and the *Python console*.
+what it can reach ([BI_GUIDE.md](BI_GUIDE.md) section 14); **building one:** *Designer* in the BI rail, drag fields onto the canvas in BI Studio, with its Explorer, tabs and Problems and Query dock ([BI_GUIDE.md](BI_GUIDE.md) sections 15 and 26, [tutorial 8, Part A](../tutorials/08-reports-and-dashboards.md#part-a--your-first-bi-report)); the YAML reference is [BI_GUIDE.md](BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave). The BI rail also opens *Analyse*, *Transforms* (Python data prep step by step) and the *Python console*.
 
 **In a report:** a **parameter slicer** may switch *which* field or measure a visual draws (a field parameter: the chart breaks down
 by desk, then by portfolio; it shows MTM, then notional), and the choice is yours alone, as any slicer's ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21](BI_GUIDE.md#21-field-parameters-in-a-well)).
 A report may also have **statement pages**: paper, page by page, with a header and footer, page numbers and a period, downloaded as PDF or
 Excel made as you (your masks and row rules), and sent by a subscription as one statement per recipient; the reference is
-[BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](BI_GUIDE.md#24-statements-paginated-reports-page-exact-one-per-reader), the walk-through [tutorial 20](../tutorials/20-statements-and-field-parameters.md).
+[BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](BI_GUIDE.md#24-statements-paginated-reports-page-exact-one-per-reader), the walk-through [tutorial 8, Part C](../tutorials/08-reports-and-dashboards.md#part-c--statements-and-field-parameters).
 
 **On the right:** round tools, from left to right.
 
@@ -355,7 +355,7 @@ numbers came from (open in memory, read from the lake by id, the official captur
 values says why in its column header (`DRS-5203`, refused) and never shows zeros. **Export CSV · Arrow** downloads the whole matrix. A
 **Scenario matrix** link opens it from a trade, a position, a P&L vector (`PNLV`), a scenario PV (`SPV`) and the VaR page; on a phone it
 is the selected scenario's line and its tail count. It is part of Drishti Risk and Drishti Trading
-([VAR_GUIDE.md section 3.9](VAR_GUIDE.md#39-the-scenario-matrix-smat); [tutorial 25, step 16](../tutorials/25-var-from-the-bank-to-a-trade.md#step-16--the-scenario-matrix-scenarios-across-the-days)).
+([VAR_GUIDE.md section 3.9](VAR_GUIDE.md#39-the-scenario-matrix-smat); [tutorial 2, step 16](../tutorials/02-var-from-the-bank-to-a-trade.md#step-16--the-scenario-matrix-scenarios-across-the-days)).
 
 **The VaR Playground.** `PLAY VAR <scope> <GO>` (`PLAY VAR DESK RATES`, `PLAY VAR BANK 10D SUM`, `PLAY VAR POS-10442 T-1001` for a few
 positions or trades), or **Playground** on the VaR page, works the scope's VaR out cell by cell: a spreadsheet-like grid of each
@@ -366,7 +366,7 @@ At most 500 positions are shown; a larger scope keeps the 500 largest by |compon
 column, so its VaR is still the VaR page's. **Export to Excel** downloads the same calculation as a workbook of real formulas (100, 500,
 1,000, 10,000 or All positions, each choice's size, recalculation time and applications stated first) whose **ALL CHECKS PASS** band
 says it equals the engine to the cent. On a phone: the headline and the explanation. Part of Drishti Risk and Drishti Trading
-([VAR_GUIDE.md section 3.10](VAR_GUIDE.md#310-the-var-playground-play-var); [tutorial 25, step 18](../tutorials/25-var-from-the-bank-to-a-trade.md#step-18--work-the-var-out-by-hand-the-var-playground)).
+([VAR_GUIDE.md section 3.10](VAR_GUIDE.md#310-the-var-playground-play-var); [tutorial 2, step 18](../tutorials/02-var-from-the-bank-to-a-trade.md#step-18--work-the-var-out-by-hand-the-var-playground)).
 
 **The VaR page's layout.** The hierarchy tree is on the left (click **▸** to open a node, its name to see its VaR); the toolbar above
 the figures has two searchable drop-downs, **System baskets** (key **B**: the bank's portfolios) and **My baskets** (key **M**: the
@@ -1406,14 +1406,14 @@ Newer screens (every pack screen is built from the same parts) can do more than 
   says *Edited here*), or conflicted if the trade moved since you opened it (your draft is kept). Approvers decide in the **Approvals** queue
   (Build → Govern → Changes). Someone else's change to the record you are viewing shows *Changed by … just now*.
   The reference is [WRITE_BACK.md section 4a](WRITE_BACK.md#4a-submitting-a-change-write-back); a walk-through is
-  [tutorial 24](../tutorials/24-correct-a-trade-and-approve-it.md).
+  [tutorial 11](../tutorials/11-correct-and-approve.md).
 - **Screens laid out on a grid.** A screen with named areas may have a split you drag (its position kept for you), areas shown as
   tabs and panels that fold. Where the screen allows it, you may drag panels to another place and resize them, for yourself;
   **Reset layout** goes back. Such a screen does not offer layout mode (`Alt+L`): the grid replaces it.
 - **Your page.** With the Sutra designer on, **Customize** in a page's header changes the page for you alone (move, hide, columns,
   what a click opens, refresh, letting people edit); the header then says *Your page*, whose link opens the pack's page.
   [RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31](RACHANA_REFERENCE.md#31-the-sutra-designer-customize-describe-outline-and-grid) and
-  [tutorial 6, part B](../tutorials/06-design-a-screen.md#part-b--on-a-live-page-the-sutra-designer).
+  [tutorial 19, Part B (the Sutra designer)](../tutorials/19-build-a-pack-and-a-screen.md#on-a-live-page-the-sutra-designer).
 
 ## Zoom a panel
 
@@ -1468,7 +1468,7 @@ work only while the focus is inside the element ([Drishti Elements, keyboard](..
 ## Pivot: slice a table your way
 
 A table or ladder whose Sutra says `pivot:`, and the results of a search whose kind's pack says `pivot:`, carry a **Pivot** button. It opens
-the **pivot screen** (`PIVOT <GO>`; [PIVOT_GUIDE.md](PIVOT_GUIDE.md), [tutorial 33](../tutorials/33-the-pivot-engine.md)) on the table's own
+the **pivot screen** (`PIVOT <GO>`; [PIVOT_GUIDE.md](PIVOT_GUIDE.md), [tutorial 7, Part A](../tutorials/07-pivot-cubes-and-explain.md#part-a--the-pivot-engine-trades-by-product-legs-by-desk-then-var-by-desk)) on the table's own
 rows (the same document, Sutra and business date as the page) or on every row of the kind, with the Sutra's or the pack's arrangement as the
 view it opens with. Everything is computed by the server's pivot engine: rows, columns, values and filters by drag or by key (`R`, `C`, `V`,
 `F`), nested rows opened lazily with + and −, totals made from their own rows (an average of a total is never an average of averages),
@@ -1710,7 +1710,7 @@ The round **Live** button beside the box is a toggle, the same on a laptop and a
 You can still pick another date while paused. The choice is kept as you move between pages. A screen reader hears
 *Live updates on — click to pause* or *Live updates paused — click to resume*, which is also its tooltip.
 
-Step by step, with pictures (a past date, the same layout with that day's figures, a Saturday, back to Live): [tutorial 2](../tutorials/02-look-up-anything.md), step 5. It needs the sample history ([GETTING_STARTED.md](GETTING_STARTED.md), Step 5).
+Step by step, with pictures (a past date, the same layout with that day's figures, a Saturday, back to Live): [tutorial 1, Part B](../tutorials/01-first-15-minutes.md#part-b--look-up-anything), step 14. It needs the sample history ([GETTING_STARTED.md](GETTING_STARTED.md), Step 5).
 
 What the banners mean:
 
@@ -1738,7 +1738,7 @@ Compare lists every field that differs in one entity between two business dates.
 
 Click **Compare** (it appears in the title line when you have picked a date): *What changed in MX-20000001* compares the picked date with the business day before. Each row shows the field's label and path, the value on each date and the
 change for numbers; choose any two dates at the top to compare further apart, or give the earlier side a *known at* time to see what was restated on the same date; filter to *changed*, *added* or *removed*; **CSV** downloads
-the comparison. Walk-through: [tutorial 2](../tutorials/02-look-up-anything.md), step 6.
+the comparison. Walk-through: [tutorial 1, Part B](../tutorials/01-first-15-minutes.md#part-b--look-up-anything), step 15.
 
 Example rows for the valuation `TVAL-MX-20000001`, 2026-10-15 against 2026-10-16:
 
@@ -2011,7 +2011,7 @@ without `where` opens a single match directly.
 
 ## Search with a form (`FORM <pack>`)
 
-Type `FORM <pack>` (or open **Forms** in the Views menu) to fill in boxes instead of writing a search: the form writes the search, shows it and runs it. A field with more than 300 values (the counterparties of a large book) shows a box to find them as you type instead of one tick box each. The reference is [Query by form](#query-by-form) below; the walk-through is [tutorial 3](../tutorials/03-query-by-form.md).
+Type `FORM <pack>` (or open **Forms** in the Views menu) to fill in boxes instead of writing a search: the form writes the search, shows it and runs it. A field with more than 300 values (the counterparties of a large book) shows a box to find them as you type instead of one tick box each. The reference is [Query by form](#query-by-form) below; the walk-through is [tutorial 1, Part C](../tutorials/01-first-15-minutes.md#part-c--query-by-form).
 
 ## Export, print and share
 
@@ -2128,14 +2128,14 @@ strip) as they tick. Rows can be of different kinds.
 saves a copy to your account. (None of the shipped packs offers a starter, so start from a search; the retired example packs
 `finance` and `logistics` under `examples/packs/` offer *Credit watch* and *Fleet watch*.)
 
-Step by step (a search, **Watch as a monitor**, adding an entity, removing a row), with pictures: [tutorial 3](../tutorials/03-query-by-form.md) (save a search and a monitor).
+Step by step (a search, **Watch as a monitor**, adding an entity, removing a row), with pictures: [tutorial 1, Part C](../tutorials/01-first-15-minutes.md#part-c--query-by-form) (save a search and a monitor).
 
 The monitor is saved on the server under your account, so it follows you to any browser. All rows share
 one live connection.
 
 ## Scheduled reports
 
-A report is a search that runs on its own, on a schedule, and delivers its result as a CSV or JSON Lines file (**Format**); **Reports** in the Views menu lists them with your subscriptions. Export and subscriptions are in the same place. The reference is [BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 0](BI_GUIDE.md#0-scheduled-searches-and-the-reports-page); the walk-through is [tutorial 9](../tutorials/09-reports.md).
+A report is a search that runs on its own, on a schedule, and delivers its result as a CSV or JSON Lines file (**Format**); **Reports** in the Views menu lists them with your subscriptions. Export and subscriptions are in the same place. The reference is [BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 0](BI_GUIDE.md#0-scheduled-searches-and-the-reports-page); the walk-through is [tutorial 8, Part E](../tutorials/08-reports-and-dashboards.md#part-e--scheduled-searches-and-subscriptions).
 
 ## Alerts
 
@@ -2214,7 +2214,7 @@ after a data load, or when it changes), and how to tell you: your **inbox** and 
 inside the limit (by the *hysteresis* you set, if any) and does not fire again within the *cooldown* (30 minutes by default). Your rules are on the **Alerts** page (also **Reports**, *My alerts*): *Look now*, *Pause*, *Resume*,
 *Edit and history* (what every look did, and what was sent where) and *Delete*; what they raised is under *Raised for you* and in the
 **Alerts** tab of your inbox. If a board's author has made a tile notify, you are told when it turns red, on your own number.
-Reference: [BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 4](BI_GUIDE.md#4-alerts-on-numbers); walk-through: [tutorial 11](../tutorials/11-bi-that-runs-itself.md).
+Reference: [BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 4](BI_GUIDE.md#4-alerts-on-numbers); walk-through: [tutorial 8, Part D](../tutorials/08-reports-and-dashboards.md#part-d--bi-that-runs-itself).
 
 ## Workspaces
 
@@ -2794,7 +2794,7 @@ full-screen at the terminal.
 
 ## Query by form
 
-Learn it by doing in [tutorial 3](../tutorials/03-query-by-form.md); this page is the reference.
+Learn it by doing in [tutorial 1, Part C](../tutorials/01-first-15-minutes.md#part-c--query-by-form); this page is the reference.
 
 If you would rather fill in boxes than write a search, type `FORM` and a pack on the command line. The page is a form for the pack's
 kinds: one input for each field people search by, each suited to what the field holds. When you press **Search** the form writes the search
@@ -3709,7 +3709,7 @@ rail); to publish, share or schedule, make a BI report. The Notebook is for what
 browser**: SQL is the server's, Python the server's compute pool's. The page asks and draws. For Python in your own browser on a view's rows there is
 [Calc](#calc-python-on-any-view), a scratch pad behind a Labs switch that never publishes.
 
-The walk-through is [tutorial 14](../tutorials/14-python-and-analyse.md); the design is [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase).
+The walk-through is [tutorial 9](../tutorials/09-notebook-and-python.md); the design is [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase).
 
 ### 1. At a glance
 

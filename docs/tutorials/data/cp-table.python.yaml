@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Tutorial 18: a Python Transform, a table in and a table out. It receives the answers of two model queries (asked as the reader: their rules and masks)
+# Tutorial 8, Part B: a Python Transform, a table in and a table out. It receives the answers of two model queries (asked as the reader: their rules and masks)
 # as pandas frames, named as the dataset's inputs, and returns one row per counterparty.
 rachana: 1
 python: cp-table

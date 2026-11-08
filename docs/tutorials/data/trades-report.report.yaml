@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Tutorial 13: a report on the model trades-model. It reads trade.PORTFOLIO, which is what the tutorial's "what breaks" check finds.
+# Tutorial 8, Part G: a report on the model trades-model. It reads trade.PORTFOLIO, which is what the tutorial's "what breaks" check finds.
 rachana: 2
 report: trades-report
 version: 1

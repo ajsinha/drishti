@@ -263,7 +263,7 @@ company that booked the trades. A netting set joins one of each. See [Entities a
 ## 7. Where to go deeper
 
 - [Exposure guide](../guides/EXPOSURE_GUIDE.md): every measure with worked numbers, the explorer, collateral, the pre-deal what-if, the data contract.
-- [Tutorial 26: exposure from the bank to a trade](../tutorials/26-exposure-from-the-bank-to-a-trade.md): eight hands-on steps.
+- [Tutorial 3: exposure from the bank to a trade](../tutorials/03-exposure-from-the-bank-to-a-trade.md): eight hands-on steps.
 - The stored results' contracts: [NSET](../contracts/NSET.md), [CVA](../contracts/CVA.md), [SA-CCR](../contracts/SACCR.md),
   [SIMM](../contracts/SIMM.md), [collateral](../contracts/COLL.md), [margin calls](../contracts/MC.md), [limits](../contracts/LIM.md),
   [groups](../contracts/GRP.md), [wrong-way risk](../contracts/WWR.md).

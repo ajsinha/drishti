@@ -1746,7 +1746,7 @@ as a fixture file; neither touches the other's files. Each step is one push with
 | **H10** | B | DIFF mode, export routes (csv, json, xlsx), share links and pick lists carrying the range | export tests (names, BOM, formula guard, masked values as served) | USER_GUIDE, API_GUIDE "console's own JSON routes" |
 | **H11** | B | `drishti.py history`, the Python client's `history()`, `PhraseParser` time phrases | `test_drishti_cli.py` cases, `PhraseParserTest` cases | CLI_GUIDE, USER_GUIDE plain words |
 | **H12** | A | BI source `history` (not built, section 15.4) | dataset parser and `DatasetSources` tests | BI_GUIDE.md |
-| **H13** | A + B | The shipped packs' `history:` blocks (section 6.3); help card; tutorial 21; CHANGELOG | `sutra lint` of every shipped pack clean | PACKS, tutorial 21, help |
+| **H13** | A + B | The shipped packs' `history:` blocks (section 6.3); help card; tutorial 1, Part E; CHANGELOG | `sutra lint` of every shipped pack clean | PACKS, tutorial 1, Part E, help |
 | **H14** | B, then both | Browser test and the benchmark (section 19.3, 19.4); then the release drill, once | both green under the 10K-trade cap | SCALE_STRATEGY history row, RELEASE_NOTES |
 
 Order: H1 first (a day; it fixes the contract). Then A runs H2 → H3 → H4 → H5 (→ H6 when the branches land) and B runs H7 → H8 → H9 →
@@ -1821,7 +1821,7 @@ than 10,000 trades, deletes its folder at the end and exits 1 on a missed target
 | `CHANGELOG.md`, `RELEASE_NOTES.md` | each step's line |
 | `docs/architecture/CLUSTER_DEPLOYMENT.md` | the history row with the new measurements |
 | this document | implementation notes, as WRITE_BACK.md and CLUSTER_DEPLOYMENT.md keep them |
-| **tutorial 21** `docs/tutorials/21-an-entity-over-time.md` | hands-on and complete: (1) `TRD 1000015 30` in the UI, the same with `drishti.py history trade 1000015 --days 30`, and the `history:` YAML that shapes it; (2) changes only and DIFF (UI, `--changes-only`, `--diff`); (3) open a day (UI; `drishti.py view get trade/1000015 --date …`); (4) `EQ EQ-CSCA 3M`, the chart and the numbers (UI, CLI, YAML `chart:`, `headline:`); (5) add `history:` to your own pack and `sutra lint` it (YAML, CLI, Admin → Packs); (6) export (UI, `--csv`); (7) plain words; (8) limits and errors (`max-days`, `DRS-4021`). Every step shows the UI, the CLI where there is one, and the YAML, with screenshots in `img/` |
+| **tutorial 1, Part E** `docs/tutorials/01-first-15-minutes.md` | hands-on and complete: (1) `TRD 1000015 30` in the UI, the same with `drishti.py history trade 1000015 --days 30`, and the `history:` YAML that shapes it; (2) changes only and DIFF (UI, `--changes-only`, `--diff`); (3) open a day (UI; `drishti.py view get trade/1000015 --date …`); (4) `EQ EQ-CSCA 3M`, the chart and the numbers (UI, CLI, YAML `chart:`, `headline:`); (5) add `history:` to your own pack and `sutra lint` it (YAML, CLI, Admin → Packs); (6) export (UI, `--csv`); (7) plain words; (8) limits and errors (`max-days`, `DRS-4021`). Every step shows the UI, the CLI where there is one, and the YAML, with screenshots in `img/` |
 
 ### 21. Where the code forced a change from the agreed design
 
@@ -1857,8 +1857,8 @@ All five were decided by the product owner on 2026-10-20, before the build start
    **Decided: with write-back's forms.** The block is edited as YAML and checked by `sutra lint` and the deploy check.
 4. **Ranges over a pick list** (`TRD desk=rates 30`: many trades over time) are BI's job; keep them out of the command for good?
    **Decided: left to BI** (the `history` data source, section 15.4). The command takes a range for one entity only.
-5. **Tutorial numbering:** the ask names tutorial 21; 20 is not used on develop today. Keep 21?
-   **Decided: 21** (`docs/tutorials/21-an-entity-over-time.md`).
+5. **Tutorial numbering:** the ask names tutorial 1, Part E; 20 is not used on develop today. Keep 21?
+   **Decided: 21** (`docs/tutorials/01-first-15-minutes.md`).
 
 ## 3. drishti-iceberg: Drishti's own Apache Iceberg engine
 
@@ -2158,7 +2158,7 @@ drishti-iceberg whichever engine wrote it, on local disk and in S3 alike (`Icebe
 
 Status: **R1 to R4 built and built (2026-10-26); R5 and R6 planned, in no release yet.** Designed with the product owner (2026-10-24). What is built, and
 where it differs from the design below, is in [section 21](#21-built-r1-to-r4); the reference for people who write and run reactive
-connectors is [the reactive connector's README](../connectors/types/reactive/README.md) and [tutorial 23](../tutorials/23-computed-panels.md).
+connectors is [the reactive connector's README](../connectors/types/reactive/README.md) and [tutorial 19, Part C](../tutorials/19-build-a-pack-and-a-screen.md#part-c--computed-panels-a-reactive-connector).
 Everything named below that section 21 does not list as built is **planned**. Related designs:
 [PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) (the workers that run the computations, `requires:` and approval),
 [VAR_GUIDE.md Part III](../guides/VAR_GUIDE.md#24-where-the-engine-lives) (the first reactive connector: a generic VaR engine), [WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons) (a saved change
@@ -3576,7 +3576,7 @@ changed by the lake file.
 
 Some feeds may not, by contract, be saved on a disk. How it is used, every setting and troubleshooting:
 [DATA_LAKE_GUIDE.md section 13](../guides/DATA_LAKE_GUIDE.md#13-the-in-memory-lake); a worked example is
-[tutorial 31](../tutorials/31-news-in-memory-only.md).
+[tutorial 16, Part D](../tutorials/16-load-your-own-data-into-a-new-lake.md#part-d--news-held-in-memory-only).
 
 ### 9.1 The idea
 

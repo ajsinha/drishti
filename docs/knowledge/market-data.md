@@ -171,6 +171,6 @@ reprice from these curves. See [Market risk](market-risk.md).
 ## 7. Where to go deeper
 
 - [Groupings and analytics guide](../guides/GROUPINGS_ANALYTICS_GUIDE.md) sections 6 and 8: CORR, PXH and beta with worked numbers.
-- [Tutorial 27: groupings and analytics](../tutorials/27-groupings-and-analytics.md).
+- [Tutorial 6: groupings and analytics](../tutorials/06-groupings-and-analytics.md).
 - [External data](../guides/EXTERNAL_DATA.md): ECB, US Treasury, NY Fed and Yahoo Finance sources and their licences.
 - [Market risk](market-risk.md), [Trades and products](trades-and-products.md).

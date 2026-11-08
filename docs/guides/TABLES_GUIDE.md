@@ -19,7 +19,7 @@ A **virtual table** is a named, typed table defined once by configuration over a
 table, an in-memory table), a SQL query, a Python transform, a model's answer or another virtual table. A **model** relates virtual tables
 and defines measures over them. Every consumer reads them the same way: BI, the pivot, Arrow Flight and alerts. This guide is the
 reference: every key, every check, the command line and the migration of BI's datasets and models; the hands-on walk-through is the
-[virtual tables tutorial](../tutorials/44-virtual-tables-and-models.md). The design, with its decisions, is
+[virtual tables tutorial](../tutorials/18-tables-and-models.md). The design, with its decisions, is
 [ARCHITECTURE.md section 24](../architecture/ARCHITECTURE.md#24-virtual-tables-the-central-table-layer); how BI reads the layer is
 [BI_DESIGN.md section 18](../architecture/BI_DESIGN.md#18-the-bi-foundation-bi-on-the-table-layer-and-rachana).
 

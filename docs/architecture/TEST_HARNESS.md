@@ -489,7 +489,7 @@ Delete the scratch lakes afterwards.
 
 The pictures are of synthetic data loaded exactly as in 9.2.
 
-**Optional: two servers as one** ([tutorial 19](../tutorials/19-a-cluster-of-three.md)). Use the machine's real IPv4 address
+**Optional: two servers as one** ([tutorial 22](../tutorials/22-a-cluster-of-three.md)). Use the machine's real IPv4 address
 (`ipconfig`), never `127.0.0.1` or `localhost`. Set one key for both (`$env:DRISHTI_NET_SECRET`), `drishti.py net set node.secret` and
 `node.enabled true` on each, `net add-peer` the first from the second (its own `config` and `data` folders, `--server.port=18490`); **Admin →
 Net → Members** shows both `alive`. With the console's `DRISHTI_BACKEND_URLS` naming the first, stopping it moves the next page to the

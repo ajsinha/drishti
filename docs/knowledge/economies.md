@@ -156,6 +156,6 @@ opened; the stored group pages were retired.
 ## 7. Where to go deeper
 
 - [Groupings and analytics guide](../guides/GROUPINGS_ANALYTICS_GUIDE.md) section 5: ECG with worked numbers.
-- [Tutorial 27: groupings and analytics](../tutorials/27-groupings-and-analytics.md) (a World Bank region).
+- [Tutorial 6: groupings and analytics](../tutorials/06-groupings-and-analytics.md) (a World Bank region).
 - [External data](../guides/EXTERNAL_DATA.md) (World Bank, IMF, UNDP, CIA Factbook): sources, licences and refresh scripts.
 - [Counterparty credit risk](counterparty-credit-risk.md) and [Entities and ownership](entities-and-ownership.md).

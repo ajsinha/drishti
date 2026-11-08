@@ -18,8 +18,8 @@
 The pivot engine turns any table of any pack, or the VaR engine's trades, into a pivot: these measures, broken down by these fields on
 rows and columns, under these filters, on this business date. Every figure is computed by the server; every total is made from its own
 members, never from the figures on the screen. The design behind it is [PIVOT_ENGINE.md](../architecture/PIVOT_ENGINE.md); the hands-on
-walk-through is [tutorial 33](../tutorials/33-the-pivot-engine.md); custom functions, explain and what-if are walked through in
-[tutorial 37](../tutorials/37-custom-functions-and-explain.md).
+walk-through is [tutorial 7, Part A](../tutorials/07-pivot-cubes-and-explain.md#part-a--the-pivot-engine-trades-by-product-legs-by-desk-then-var-by-desk); custom functions, explain and what-if are walked through in
+[tutorial 7, Part B](../tutorials/07-pivot-cubes-and-explain.md#part-b--custom-functions-why-did-it-move-and-what-if).
 
 ## Contents
 

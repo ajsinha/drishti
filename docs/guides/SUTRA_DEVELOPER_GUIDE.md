@@ -1222,7 +1222,7 @@ panels:
 
 Every key is in [RACHANA_REFERENCE: Events, sources and children](RACHANA_REFERENCE.md#events-sources-and-children-sutra-next).
 You rarely need to write these by hand: the **Sutra designer** (section 16) writes them from plain choices, and
-[tutorial 6, part B](../tutorials/06-design-a-screen.md#part-b--on-a-live-page-the-sutra-designer) builds such a screen step by step.
+[tutorial 19, Part B (the Sutra designer)](../tutorials/19-build-a-pack-and-a-screen.md#on-a-live-page-the-sutra-designer) builds such a screen step by step.
 
 ## 12. Expandable row groups: pivot `by` lists and tree tables
 
@@ -1388,12 +1388,12 @@ How to test a Sutra (`expect.yaml`, the `tests/<sutra>/` samples, `sutra lint`, 
 
 You can write every Sutra in this guide in a text editor. The **Build workbench** (**Build → New screen**) is the same language with the engine in the loop: the screen you see is the real one, every
 edit is an operation the server applies to the Sutra text (your comments and key order are kept), and the checks run as you type. Its full manual is [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench); for a
-guided build of complete screens, follow the [Build workbench tutorial](../tutorials/06-design-a-screen.md). What matters for a Sutra author:
+guided build of complete screens, follow the [Build workbench tutorial](../tutorials/19-build-a-pack-and-a-screen.md#part-b--design-a-screen-in-the-workbench-and-on-a-live-page). What matters for a Sutra author:
 
 | You are doing | In the workbench | Section |
 |---|---|---|
 | starting from data, a schema, an example or an existing Sutra | **Build → New screen** | [§1](RACHANA_REFERENCE.md#1-start-bring-data) |
-| changing a live page in plain words (move, hide, columns, what a click opens, refresh, let people edit), or a screen from one line | the **Sutra designer** (`ui.designer: true`): **Customize** on the page, **Describe**, **Outline**, **Grid** | [§31](RACHANA_REFERENCE.md#31-the-sutra-designer-customize-describe-outline-and-grid), [tutorial 6, part B](../tutorials/06-design-a-screen.md#part-b--on-a-live-page-the-sutra-designer) |
+| changing a live page in plain words (move, hide, columns, what a click opens, refresh, let people edit), or a screen from one line | the **Sutra designer** (`ui.designer: true`): **Customize** on the page, **Describe**, **Outline**, **Grid** | [§31](RACHANA_REFERENCE.md#31-the-sutra-designer-customize-describe-outline-and-grid), [tutorial 19, Part B (the Sutra designer)](../tutorials/19-build-a-pack-and-a-screen.md#on-a-live-page-the-sutra-designer) |
 | writing the YAML by hand, with completion and a check as you type | the **YAML** tab (or **Split**, with the screen beside it) | [§9](RACHANA_REFERENCE.md#9-the-yaml-tab-the-split-view-and-the-summary) |
 | seeing what is wrong, with the code and the line | the **Problems** tab | [§10](RACHANA_REFERENCE.md#10-problems) |
 | checking every panel against every sample | the **Tests** tab: ok / empty / error / no access | [§11](RACHANA_REFERENCE.md#11-tests-as-you-type) |
@@ -1442,7 +1442,7 @@ is malformed, duplicated, reads a missing parent or control, or has a default it
 
 - [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md): every key, panel kind, format, function and problem code.
 - [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#panels-the-twenty-two-kinds-and-developing-a-new-one): the 22 panel kinds, one entry each, and [developing a panel kind](RACHANA_REFERENCE.md#developing-a-panel-kind) of your own.
-- [WRITE_BACK.md](WRITE_BACK.md) (forms: edit records beside a table, in its cells, in a drawer); [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench), [Build tutorial](../tutorials/06-design-a-screen.md).
+- [WRITE_BACK.md](WRITE_BACK.md) (forms: edit records beside a table, in its cells, in a drawer); [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench), [Build tutorial](../tutorials/19-build-a-pack-and-a-screen.md#part-b--design-a-screen-in-the-workbench-and-on-a-live-page).
 - [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#inference-the-screens-drishti-draws-with-no-sutra): what Drishti does without a Sutra, and how to start a Sutra from inference.
 - [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#1-live-updates): how a view you laid out keeps itself up to date.
 - [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md): packaging Sutras with mnemonics, links, formats and samples.

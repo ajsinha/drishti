@@ -29,7 +29,7 @@ Who reads what:
 | writing a pack | this guide |
 | writing the Sutras of a pack | [Sutra guide](SUTRA_DEVELOPER_GUIDE.md), every key in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md), the workbench in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) |
 | connecting a pack to a database, a lake or a queue | [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md), [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md) and the per-connector pages they list |
-| turning JSON files or a schema into a pack without writing files by hand | [tutorial 5](../tutorials/05-build-a-pack.md), [DATA_GUIDE.md](SCHEMA_TO_PACK_GUIDE.md), [Generating a pack from JSON Lines](#generating-a-pack-from-json-lines) |
+| turning JSON files or a schema into a pack without writing files by hand | [tutorial 19, Part A](../tutorials/19-build-a-pack-and-a-screen.md#part-a--build-a-pack-from-your-data), [DATA_GUIDE.md](SCHEMA_TO_PACK_GUIDE.md), [Generating a pack from JSON Lines](#generating-a-pack-from-json-lines) |
 
 Contents:
 
@@ -162,9 +162,9 @@ copied into `config/packs/` of a running server is loaded too, without naming it
 ## Build it, step by step
 
 This is the pack **by hand**, to show every file. If your data is JSON Lines or has a JSON Schema, you do not need to write these files:
-`drishti.py pack new` ([below](#generating-a-pack-from-json-lines)) and [tutorial 5](../tutorials/05-build-a-pack.md) turn a schema or a folder
+`drishti.py pack new` ([below](#generating-a-pack-from-json-lines)) and [tutorial 19, Part A](../tutorials/19-build-a-pack-and-a-screen.md#part-a--build-a-pack-from-your-data) turn a schema or a folder
 into a pack, deploy it and roll it back (the rules are in [DATA_GUIDE.md](SCHEMA_TO_PACK_GUIDE.md)), and
-[tutorial 6](../tutorials/06-design-a-screen.md) designs its screen.
+[tutorial 19, Part B](../tutorials/19-build-a-pack-and-a-screen.md#part-b--design-a-screen-in-the-workbench-and-on-a-live-page) designs its screen.
 
 Each step says what to type and what you should see. The outputs are real: they were produced by running the steps on the
 finished pack on a server. (Your ticking numbers may differ a little: the ticket's age walks up and down.)
@@ -3470,7 +3470,7 @@ example ids are real: they are in the pack's `samples/` and in the [demo lakes](
 | `us-equities` | `USEQS` | — | `USEQ` US listed company · `IDX` index members · `SIC` SIC sector · `EDGAR` filings browser · `FILING` SEC filing · `FACT` financial fact · `PXH` price history (real public data on the Dow 30, Nasdaq-100 and S&P 500 companies: SEC EDGAR, GLEIF, Wikidata; **off by default**, add it to `DRISHTI_PACKS`; prices are live only, off and for internal use: [its guide](../../config/packs/capitalmarkets/us-equities/guides/us-equities.md)) | `USEQ AAPL`, `IDX SP500` |
 | `gleif` | `GLEIF` | — | `LEI` legal entity · `LEIG` ownership group · `LEIR` parent relationship · `LEIC` country · `LEIM` ISIN, BIC or MIC to LEI (real public data from GLEIF, CC0: the ownership groups of the us-equities companies and of the large banks, insurers, asset managers and market infrastructures, at most 50 entities a group; **off by default**, add it to `DRISHTI_PACKS`; with `us-equities` on, a company and its LEI record link both ways: [its guide](../../config/packs/core/gleif/guides/gleif.md)) | `LEI 8I5DZWZKVSZI1NUHU748`, `LEIG ALL` |
 | `funds` | `FUNDS` | — | `FUND` fund or ETF · `HELD` funds holding a company · `TRACK` funds tracking an index (real public data from the SEC, public domain: the 200 largest US mutual funds and ETFs by net assets with their holdings from Form N-PORT, census facts from Form N-CEN, fees and returns from the prospectus summaries; **off by default**, after `us-equities`, whose companies its holdings open; [its guide](FUNDS_GUIDE.md)) | `FUND QQQ`, `HELD AAPL`, `TRACK SP500` |
-| `compute-demo` | `CMPD` | — | `PBOOK` path book · `PSTRIP` P&L strip · `PSUM` book path computed by the sample Python engine · `PSUMJ` the same by the Java engine (synthetic numbers; a sample pack, off unless named in `DRISHTI_PACKS`) | [tutorial 23](../tutorials/23-computed-panels.md) |
+| `compute-demo` | `CMPD` | — | `PBOOK` path book · `PSTRIP` P&L strip · `PSUM` book path computed by the sample Python engine · `PSUMJ` the same by the Java engine (synthetic numbers; a sample pack, off unless named in `DRISHTI_PACKS`) | [tutorial 19, Part C](../tutorials/19-build-a-pack-and-a-screen.md#part-c--computed-panels-a-reactive-connector) |
 
 What each pack holds, as shipped (counted in `config/packs/`):
 
@@ -3949,7 +3949,7 @@ a loaded pack names them again; after a restart they follow the usual rule (a co
 ### Sample packs
 
 A pack that exists to demonstrate Drishti is marked `sample: true` in its `pack.yaml`. The packs that ship marked so are **compute-demo** (synthetic P&L strips and their sum computed by reactive connectors; not loaded by
-default: [tutorial 23](../tutorials/23-computed-panels.md)) and **news-and-markets** (a small list of well-known topics and listed companies, with
+default: [tutorial 19, Part C](../tutorials/19-build-a-pack-and-a-screen.md#part-c--computed-panels-a-reactive-connector)) and **news-and-markets** (a small list of well-known topics and listed companies, with
 news and quotes that [connectors compute on demand](../connectors/CONNECTOR_DEVELOPER_GUIDE.md#connectors-that-compute-data-on-demand) from Google News and Yahoo Finance; their
 connectors are off as shipped, the Yahoo endpoint is unofficial and restricted, and names and tickers leave the network when they are on: internal demonstrations only); the retired example packs **genomics** and **logistics** (invented data in domains far from capital
 markets) are samples too; **world-economy** is not a sample: it carries real public data ([REAL_DATA](EXTERNAL_DATA.md#the-world-economy-data-in-detail)); the banking, markets and risk packs
@@ -4193,7 +4193,7 @@ The `funds` pack puts the **200 largest US mutual funds and ETFs** by net assets
 public data (Form N-PORT, Form N-CEN, the prospectus risk/return summaries). It has its own complete guide,
 **[FUNDS_GUIDE.md](FUNDS_GUIDE.md)**: using it (the FUND page and its tabs, HELD, TRACK, the commands, the command line and the API), the
 data contract of every kind (`fund`, `fund-holder`, `index-funds`), and where the data comes from (the sources and their licences, how the
-200 are chosen, the refresh script, the gzipped snapshot). The hands-on companion is [tutorial 28](../tutorials/28-funds-and-etfs.md).
+200 are chosen, the refresh script, the gzipped snapshot). The hands-on companion is [tutorial 13, Part C](../tutorials/13-world-data.md#part-c--funds-and-etfs).
 
 ## Part VII. Groupings and analytics, computed
 
@@ -4201,7 +4201,7 @@ LEIG, LEIC, SIC, ECG, CORR, an equity's beta (EQB), the USEQ ratios, FACT change
 the fundamental data when asked, never stored. They have their own complete guide,
 **[GROUPINGS_ANALYTICS_GUIDE.md](GROUPINGS_ANALYTICS_GUIDE.md)**: using them, the data contract of every computed kind, and how each is
 computed (the packs' `computed:` kinds and the correlation engine). The hands-on companion is
-[tutorial 27](../tutorials/27-groupings-and-analytics.md).
+[tutorial 6](../tutorials/06-groupings-and-analytics.md).
 
 ## Part VIII. Changing Drishti's code: the developer guide
 

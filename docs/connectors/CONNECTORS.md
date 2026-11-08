@@ -18,7 +18,7 @@
 
 Connecting Drishti to your data means choosing a **connector** (one configured instance of a source plugin) and writing it down as a **connector file**. This page is the reference for
 every shipped plugin: what it is for, a connector file for it, and a link to its full document (how it reads, every setting, scale and limits, troubleshooting). To do it once with a worked example, follow
-[tutorial 4](../tutorials/04-connect-your-data.md). To write a plugin of your own: [CONNECTOR_DEVELOPER_GUIDE.md](CONNECTOR_DEVELOPER_GUIDE.md). The files, live reload, Admin and the API:
+[tutorial 15](../tutorials/15-connect-your-data.md). To write a plugin of your own: [CONNECTOR_DEVELOPER_GUIDE.md](CONNECTOR_DEVELOPER_GUIDE.md). The files, live reload, Admin and the API:
 [CONNECTOR_FILES.md](CONNECTOR_FILES.md). TLS and the proxy: [TLS.md](TLS.md).
 
 ## One file per connector

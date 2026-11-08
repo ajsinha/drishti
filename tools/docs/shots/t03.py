@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 3, Query by form (docs/tutorials/03-query-by-form.md), written to docs/tutorials/img/t03/."""
+"""Pictures of tutorial 1, Part C, Query by form (docs/tutorials/01-first-15-minutes.md), written to docs/tutorials/img/t03/."""
 from __future__ import annotations
 
 import urllib.parse

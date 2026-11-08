@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 43, parametric VaR beside historical (docs/tutorials/43-parametric-var-beside-historical.md), written to
+"""Pictures of tutorial 2, Part B, parametric VaR beside historical (docs/tutorials/02-var-from-the-bank-to-a-trade.md), written to
 docs/tutorials/img/t43/. Run it on its own: it builds the VaR pictures' scratch lake from the committed test data (2026-09-30, the
 tutorial's date) and starts its own scratch server and console (tools/docs/shots/_var.py):
 
