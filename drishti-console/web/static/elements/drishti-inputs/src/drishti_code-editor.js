@@ -26,6 +26,9 @@ import { InputBase, Listbox, Popover, debounce } from './drishti_inputs-dom.js';
 
 let cmReady = null;
 
+/** A text on one line: its line breaks as spaces. @param {*} t @returns {string} */
+function oneLine(t) { return String(t || '').replace(/\r?\n/g, ' '); }
+
 /**
  * The indentation of a new YAML line after the text before the cursor: the line's own, a list item's content column, two more after a
  * key that opens a block ("key:", "key: |").
@@ -73,7 +76,9 @@ export function ensureCodeMirror(given) {
  * @property {('rachana'|'yaml'|'python'|'text')} [mode='rachana']
  * @property {boolean} [readOnly=false]
  * @property {boolean} [lineNumbers=true]
- * @property {number} [height=200] px
+ * @property {(number|'auto')} [height=200] px, or 'auto': the editor grows with its text (a formula bar), between minHeight and maxHeight
+ * @property {number} [minHeight] px, with height 'auto'
+ * @property {number} [maxHeight] px, with height 'auto' (past it the editor scrolls)
  * @property {import('./drishti_code-text.js').CatalogueEntry[]} [catalogue] the functions completion offers
  * @property {function({word: string, line: string, ch: number, mode: string}): (Promise<Array>|Array)} [complete] the completion hook
  *   (the server's catalogue); answers CatalogueEntry objects
@@ -88,6 +93,8 @@ export function ensureCodeMirror(given) {
  *   (a YAML key's "kind: ", a path's "$.")
  * @property {boolean} [lineWrapping=false]
  * @property {boolean} [tabLeaves=false] Tab and Shift+Tab move the focus out of the editor (a small box in a form) instead of indenting
+ * @property {boolean} [singleLine=false] one line, as a form's text field (a formula, a filter): Enter adds no line (the page's Enter key
+ *   still runs), a line break pasted or set becomes a space; with height 'auto' it grows as the line wraps
  */
 
 /**
@@ -102,13 +109,14 @@ export class CodeEditor extends InputBase {
   constructor(host, options) {
     super(host, options, 'di-code');
     const o = this.o = Object.assign({ mode: 'rachana', lineNumbers: true, height: 200, lintDelay: 400, value: '', indentUnit: 2 }, this.o);
+    if (o.singleLine) { o.value = oneLine(o.value); }
     if (!MODES[o.mode]) { throw new Error('no code mode ' + o.mode + ' (' + Object.keys(MODES).join(', ') + ')'); }
     this.value = String(o.value || '');
     this.problems = [];
     this.marks = [];
     this.area = this.el('textarea', { cls: 'di-field di-code-fallback', attrs: { 'aria-label': o.label || 'Code', spellcheck: 'false', readonly: o.readOnly || null } });
     this.area.value = this.value;
-    this.area.style.height = o.height + 'px';
+    if (o.height === 'auto') { this.area.rows = 1; this.area.style.minHeight = (o.minHeight || 0) + 'px'; } else { this.area.style.height = o.height + 'px'; }
     this.area.addEventListener('input', () => { this.value = this.area.value; this.changed(); });
     this.area.addEventListener('keydown', (e) => {                                     // the page's keys before CodeMirror is in
       const name = (e.ctrlKey ? 'Ctrl-' : '') + (e.metaKey ? 'Cmd-' : '') + (e.shiftKey ? 'Shift-' : '') + (e.key === 'Escape' ? 'Esc' : e.key);
@@ -133,10 +141,18 @@ export class CodeEditor extends InputBase {
     const go = () => {
       this.area.remove();
       const cm = this.cm = CM(this.box, { value: this.value, mode: mode.cm, readOnly: o.readOnly ? true : false, lineNumbers: o.lineNumbers, gutters: ['di-lint-gutter', 'CodeMirror-linenumbers'],
-        indentUnit: o.indentUnit, tabSize: o.indentUnit, indentWithTabs: false, lineWrapping: !!o.lineWrapping, screenReaderLabel: o.label || 'Code', extraKeys: this.extraKeys() });
+        indentUnit: o.indentUnit, tabSize: o.indentUnit, indentWithTabs: false, lineWrapping: !!o.lineWrapping, screenReaderLabel: o.label || 'Code', extraKeys: this.extraKeys(),
+        viewportMargin: o.height === 'auto' ? Infinity : 10 });
       cm.setSize(null, o.height);
+      if (o.height === 'auto') {                                                       // grows with the text, scrolls past maxHeight
+        const sc = cm.getScrollerElement();
+        if (o.minHeight) { sc.style.minHeight = o.minHeight + 'px'; }
+        if (o.maxHeight) { sc.style.maxHeight = o.maxHeight + 'px'; }
+      }
+      if (this.invalid) { this.setInvalid(true); }
       const ta = cm.getInputField();
       if (ta) { ta.setAttribute('aria-label', (o.label || 'Code') + (o.readOnly ? ' (read-only)' : '')); }
+      if (o.singleLine) { cm.on('beforeChange', (x, ch) => { if (ch.update && ch.text.length > 1) { ch.update(ch.from, ch.to, [ch.text.join(' ')]); } }); }
       cm.on('change', (x, ch) => {
         this.value = cm.getValue();
         this.changed(ch.origin);
@@ -160,6 +176,7 @@ export class CodeEditor extends InputBase {
       Tab: (cm) => { if (cm.somethingSelected()) { cm.indentSelection('add'); } else { cm.replaceSelection(unit, 'end'); } },
       'Shift-Tab': (cm) => { cm.indentSelection('subtract'); } };
     if (this.o.tabLeaves) { keys.Tab = false; keys['Shift-Tab'] = false; }
+    if (this.o.singleLine) { keys.Enter = () => {}; keys['Shift-Enter'] = () => {}; }
     if (this.o.mode === 'yaml') { keys.Enter = (cm) => { const c = cm.getCursor(); cm.replaceSelection('\n' + ' '.repeat(yamlIndentAfter(cm.getLine(c.line).slice(0, c.ch))), 'end', '+input'); }; }
     Object.keys(this.o.keys || {}).forEach((k) => { keys[k] = () => this.o.keys[k](); });
     return keys;
@@ -297,7 +314,7 @@ export class CodeEditor extends InputBase {
    * @param {string} text
    * @returns {void}
    */
-  setValue(text) { this.value = String(text || ''); if (this.cm) { this.cm.setValue(this.value); } else { this.area.value = this.value; } }
+  setValue(text) { this.value = this.o.singleLine ? oneLine(text) : String(text || ''); if (this.cm) { this.cm.setValue(this.value); } else { this.area.value = this.value; } }
 
   /**
    * Replaces the text where it differs, keeping the cursor, the selection and the scroll (the document changed elsewhere: an undo,
@@ -306,7 +323,7 @@ export class CodeEditor extends InputBase {
    * @returns {boolean}
    */
   updateValue(text) {
-    text = String(text || '');
+    text = this.o.singleLine ? oneLine(text) : String(text || '');
     if (text === this.getValue()) { return false; }
     if (!this.cm) { this.setValue(text); return true; }
     const cm = this.cm, cur = cm.getCursor(), scroll = cm.getScrollInfo();
@@ -340,6 +357,32 @@ export class CodeEditor extends InputBase {
    * @returns {{line: number, ch: number}}
    */
   cursor() { if (this.cm) { const c = this.cm.getCursor(); return { line: c.line, ch: c.ch }; } const before = this.area.value.slice(0, this.area.selectionStart).split('\n'); return { line: before.length - 1, ch: before[before.length - 1].length }; }
+
+  /**
+   * Puts text in place of the selection (at the cursor), as if typed: a key of the page's own (Shift+Enter: a new line).
+   * @param {string} text
+   * @returns {void}
+   */
+  insert(text) {
+    if (this.cm) { this.cm.replaceSelection(String(text), 'end', '+input'); return; }
+    const a = this.area, at = a.selectionStart;
+    a.setRangeText(String(text), at, a.selectionEnd, 'end');
+    this.value = a.value;
+    this.changed();
+  }
+
+  /**
+   * Marks the text as not valid (aria-invalid on the input, the editor drawn as an error) or valid again: a host's own check (a
+   * formula the server could not read).
+   * @param {boolean} on
+   * @returns {void}
+   */
+  setInvalid(on) {
+    this.invalid = !!on;
+    this.host.classList.toggle('di-invalid', this.invalid);
+    const ta = this.cm ? this.cm.getInputField() : this.area;
+    if (ta) { if (this.invalid) { ta.setAttribute('aria-invalid', 'true'); } else { ta.removeAttribute('aria-invalid'); } }
+  }
 
   /**
    * Makes it read-only, or editable.

@@ -8196,6 +8196,26 @@ The cursor (0-based line and column).
 
 Returns `{line: number, ch: number}`.
 
+##### `CodeEditor.insert(text)`
+
+Puts text in place of the selection (at the cursor), as if typed: a key of the page's own (Shift+Enter: a new line).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` |  |
+
+Returns `void`.
+
+##### `CodeEditor.setInvalid(on)`
+
+Marks the text as not valid (aria-invalid on the input, the editor drawn as an error) or valid again: a host's own check (a formula the server could not read).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `on` | `boolean` |  |
+
+Returns `void`.
+
 ##### `CodeEditor.setReadOnly(on)`
 
 Makes it read-only, or editable.
@@ -8256,24 +8276,28 @@ Returns `{added: number, removed: number, same: number}`.
 
 #### `upgradeCodeArea(ta, o)`
 
-Makes one text area a code editor (once); answers the editor.
+Makes one text area (or one-line input) a code editor (once); answers the editor.
 
 | Parameter | Type | Meaning |
 |---|---|---|
-| `ta` | `HTMLTextAreaElement` |  |
-| `[o]` | `{mode: string, height: number, complete: Function, lint: Function}` | beside the element's own attributes |
+| `ta` | `(HTMLTextAreaElement\|HTMLInputElement)` |  |
+| `[o]` | `{mode: string, height: number, complete: Function, lint: Function, keys: Object}` | beside the element's own attributes and drishtiCodeOptions |
 
 Returns `CodeEditor`.
 
 #### `upgradeCodeAreas(root)`
 
-Upgrades every &lt;textarea data-di-code&gt; inside a root (a page, a dialog drawn later).
+Upgrades every &lt;textarea data-di-code&gt; and &lt;input data-di-code&gt; inside a root (a page, a dialog drawn later).
 
 | Parameter | Type | Meaning |
 |---|---|---|
 | `root` | `ParentNode` |  |
 
 Returns `CodeEditor[]`.
+
+#### `CODE_AREA_SELECTOR`
+
+The elements upgradeCodeAreas makes code editors (install's observer looks for them).
 
 ### drishti_inputs-element.js
 
@@ -8343,7 +8367,9 @@ A lint problem.
 | `[mode='rachana']` | `('rachana'\|'yaml'\|'python'\|'text')` |  |
 | `[readOnly=false]` | `boolean` |  |
 | `[lineNumbers=true]` | `boolean` |  |
-| `[height=200]` | `number` | px |
+| `[height=200]` | `(number\|'auto')` | px, or 'auto': the editor grows with its text (a formula bar), between minHeight and maxHeight |
+| `[minHeight]` | `number` | px, with height 'auto' |
+| `[maxHeight]` | `number` | px, with height 'auto' (past it the editor scrolls) |
 | `[catalogue]` | `import('./drishti_code-text.js').CatalogueEntry[]` | the functions completion offers |
 | `[complete]` | `function({word: string, line: string, ch: number, mode: string}): (Promise&lt;Array&gt;\|Array)` | the completion hook (the server's catalogue); answers CatalogueEntry objects |
 | `[lint]` | `function(string): (Promise&lt;LintProblem[]&gt;\|LintProblem[])` | the lint hook |
@@ -8355,6 +8381,7 @@ A lint problem.
 | `[completeAfter]` | `function(string): boolean` | also opens the completions when the text before the cursor passes this test (a YAML key's "kind: ", a path's "$.") |
 | `[lineWrapping=false]` | `boolean` |  |
 | `[tabLeaves=false]` | `boolean` | Tab and Shift+Tab move the focus out of the editor (a small box in a form) instead of indenting |
+| `[singleLine=false]` | `boolean` | one line, as a form's text field (a formula, a filter): Enter adds no line (the page's Enter key still runs), a line break pasted or set becomes a space; with height 'auto' it grows as the line wraps |
 
 #### `CatalogueEntry` : `Object`
 
@@ -10699,7 +10726,9 @@ A node of the outline.
 | `[detail]` | `string` | a short note after the label (its kind, "opens on a click") |
 | `[icon]` | `string` |  |
 | `[children]` | `OutlineNode[]` |  |
-| `[fixed]` | `boolean` | cannot be dragged |
+| `[fixed]` | `boolean` | cannot be dragged (a heading, a "drop here" row: still a place to drop on) |
+| `[cls]` | `string` | more classes on its row (the host's look: a drop row, a heading) |
+| `[attrs]` | `Object&lt;string, string&gt;` | the host's own data-* attributes on its row (its selectors: data-panel="trades"); other names are left out, the row's role and state stay the outline's |
 
 #### `PaletteEntry` : `Object`
 

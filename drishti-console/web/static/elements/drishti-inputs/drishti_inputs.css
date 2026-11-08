@@ -170,6 +170,7 @@
 .di-code { display: flex; flex-direction: column; gap: 4px; }
 .di-code-box { border: 1px solid var(--d-border); border-radius: 8px; overflow: hidden; }
 .di-code-box:focus-within { border-color: var(--d-accent); }
+.di-code.di-invalid .di-code-box { border-color: var(--d-bad); }
 .di-code-fallback { width: 100%; border: 0; border-radius: 0; font-family: var(--d-font-mono); resize: vertical; }
 .di-code .CodeMirror { font-family: var(--d-font-mono); font-size: 12.5px; background: var(--d-surface); color: var(--d-ink); height: auto; }
 .di-code .CodeMirror-gutters { background: var(--d-surface-2); border-right: 1px solid var(--d-border); }
@@ -253,3 +254,7 @@
 
 /* a finger's size on a touch screen: every field, button and option at least 44 px high */
 @media (pointer: coarse) { .di-control, .di-field, .di-inline-field, .di-btn, .di-chip-btn, .di-option, .di-preset, .di-icon-btn, .di-chip-x { min-height: 44px; } }
+/* a page's code area or one-line formula field made a code editor: the element holds the value, out of sight */
+input[data-di-code-upgraded][hidden], textarea[data-di-code-upgraded][hidden] { display: none; }
+.di-code-line .di-code-box { border-radius: 6px; }
+.di-code-line .CodeMirror-lines { padding: 5px 0; }

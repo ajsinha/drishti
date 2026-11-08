@@ -75,17 +75,37 @@ def stepped(pg, before):
     wait(pg, f"document.querySelector('[data-grid]').getAttribute('data-gd-rev') !== '{before}'")
 
 
+CM = "document.querySelector('[data-gd-formula] .CodeMirror').CodeMirror"     # the formula bar: drishti-inputs' CodeEditor
+BAR = "[data-gd-formula] .CodeMirror textarea"                                    # where its keys go
+POP = ".di-complete-pop .di-option-label"                                        # its completions
+
+
+def formula(pg):
+    wait(pg, "!!document.querySelector('[data-gd-formula] .CodeMirror')")
+    return pg.evaluate(CM + ".getValue()")
+
+
+def put(pg, text):
+    """The formula bar holds text, the cursor at its end and the focus in it (as a person who typed it; no completion opened)."""
+    wait(pg, "!!document.querySelector('[data-gd-formula] .CodeMirror')")
+    pg.evaluate("t => { const cm = " + CM + "; cm.setValue(t); cm.focus(); cm.setCursor(cm.lineCount(), 0); }", text)
+
+
+def completions(pg):
+    wait(pg, f"[...document.querySelectorAll('{POP}')].some(e => e.getClientRects().length)")
+    return [t for t in pg.evaluate(f"[...document.querySelectorAll('{POP}')].filter(e => e.getClientRects().length).map(e => e.textContent)")]
+
+
 def formula_of(pg, cell):
     pg.click(f'[data-gd-cell="{cell}"]')
-    return pg.input_value("[data-gd-formula]")
+    return formula(pg)
 
 
 def typed(pg, cell, text):
     pg.click(f'[data-gd-cell="{cell}"]')
-    pg.fill("[data-gd-formula]", text)
+    put(pg, text)
     r = rev(pg)
-    pg.evaluate("document.querySelector('[data-gd-suggest]').hidden = true")
-    pg.press("[data-gd-formula]", "Enter")
+    pg.press(BAR, "Enter")
     return r
 
 
@@ -108,11 +128,11 @@ def test_a_formula_changes_the_preview_in_place_and_a_cell_reads_another_cells_s
     assert pg.evaluate("document.querySelector('[data-gd-preview]').contentWindow.__kept") == 1, "the preview reloaded"
     # suggestions: the panels' events by cell
     pg.click('[data-gd-cell="B2"]')
-    pg.fill("[data-gd-formula]", "field-list@1(id: who; source: {pack: core, kind: counterparty, id: @A2")
-    pg.press("[data-gd-formula]", "End")
+    put(pg, "field-list@1(id: who; source: {pack: core, kind: counterparty, id: @A2")
     pg.keyboard.type(".")
-    wait(pg, "!document.querySelector('[data-gd-suggest]').hidden")
-    assert "@A2.open.ref" in pg.locator("[data-gd-suggest]").inner_text()
+    assert "@A2.open.ref" in completions(pg)
+    pg.keyboard.press("Escape")                                                # closes the completions, keeps the text
+    assert formula(pg).endswith("@A2.")
     # B2 reads A2's selection: a click on a trade in the preview fills it
     stepped(pg, typed(pg, "B2", WHO))
     assert "@A2.open.ref" in pg.inner_text('[data-gd-cell="B2"] .gd-f')
@@ -130,7 +150,7 @@ def test_merge_split_insert_drag_and_a_bad_formula(browser, stack):
     wait(pg, "!document.querySelector('[data-gd-error]').hidden")
     assert pg.inner_text("[data-gd-red]").startswith("(id: pay7")
     assert "not closed" in pg.inner_text("[data-gd-why]")
-    pg.press("[data-gd-formula]", "Escape")
+    pg.press(BAR, "Escape")
     assert formula_of(pg, "A1").startswith('metric(id: pay7, title: "Payments')       # the cell kept its last good state
     # split the head, merge it back
     r = rev(pg)
@@ -161,7 +181,9 @@ def test_merge_split_insert_drag_and_a_bad_formula(browser, stack):
     assert pg.inner_text("[data-gd-name]") == "B2"
     pg.keyboard.press("ArrowDown")
     pg.keyboard.press("Enter")
-    assert pg.evaluate("document.activeElement.matches('[data-gd-formula]')") and pg.input_value("[data-gd-formula]").startswith("kv(id: book")
+    assert pg.evaluate("!!document.activeElement.closest('[data-gd-formula]')") and formula(pg).startswith("kv(id: book")
+    pg.keyboard.press("Shift+Enter")                                           # a new line: another panel in the cell, nothing kept yet
+    assert formula(pg).endswith("\n") and pg.evaluate("!!document.activeElement.closest('[data-gd-formula]')")
     pg.keyboard.press("Escape")
     assert pg.evaluate("document.activeElement.getAttribute('data-gd-cell')") == "B3"
     pg.close()
@@ -202,7 +224,7 @@ def test_column_widths_and_a_panel_a_click_opens_as_its_own_cell(browser, stack)
     pg.click('[data-gd-cell="A2"] > .gd-ref')
     pg.keyboard.press("ArrowDown")
     assert pg.inner_text("[data-gd-name]") == "A2a"
-    assert pg.input_value("[data-gd-formula]").startswith("cashflow-ladder@1(id: flows, title: Cash flows,")
+    assert formula(pg).startswith("cashflow-ladder@1(id: flows, title: Cash flows,")
     pg.keyboard.press("ArrowUp")
     assert pg.inner_text("[data-gd-name]") == "A2"
     text = formula_of(pg, "A2a").replace("title: Cash flows", "title: Flows of the trade")
@@ -295,7 +317,7 @@ def test_a_panel_a_click_in_an_opened_panel_opens_is_a_cell_one_step_further_in(
     for name in ("A1a", "A1a1"):
         pg.keyboard.press("ArrowDown")
         assert pg.inner_text("[data-gd-name]") == name
-    f = pg.input_value("[data-gd-formula]")
+    f = formula(pg)
     assert f.startswith("kv(id: event,") and f.endswith("opens from A1a"), f
     pg.keyboard.press("ArrowUp")
     pg.keyboard.press("ArrowUp")
@@ -303,12 +325,11 @@ def test_a_panel_a_click_in_an_opened_panel_opens_is_a_cell_one_step_further_in(
     # suggestions inside a child cell: @parent. with what the parent emits, and the opened cells by their own names
     formula_of(pg, "A1a1")
     for word, want in (("@p", "@parent.open.when"), ("@A1", "@A1a.open.when")):
-        pg.fill("[data-gd-formula]", "kv(id: event, title: " + word[:-1])
-        pg.press("[data-gd-formula]", "End")
+        put(pg, "kv(id: event, title: " + word[:-1])
         pg.keyboard.type(word[-1])
-        wait(pg, "!document.querySelector('[data-gd-suggest]').hidden")
-        assert want in pg.locator("[data-gd-suggest]").inner_text(), want
-    pg.press("[data-gd-formula]", "Escape")
+        assert want in completions(pg), want
+    pg.keyboard.press("Escape")                                                # the completions close
+    pg.press(BAR, "Escape")                                                    # back to the cell
     text = formula_of(pg, "A1a1").replace("The flow of", "Picked flow")
     stepped(pg, typed(pg, "A1a1", text))
     grand = sutra_of(pg)["panels"][0]["children"][0]["panels"][0]["children"][0]["panels"][0]
@@ -316,7 +337,7 @@ def test_a_panel_a_click_in_an_opened_panel_opens_is_a_cell_one_step_further_in(
     typed(pg, "A1a1", text.replace("opens from A1a", "opens from A1"))         # it stays under its table: said, nothing changes
     wait(pg, "!document.querySelector('[data-gd-error]').hidden")
     assert pg.inner_text("[data-gd-red]") == "A1"
-    pg.press("[data-gd-formula]", "Escape")
+    pg.press(BAR, "Escape")
     # in the preview: a trade opens its cash flows, a click on a flow opens the grandchild, which fills
     wait(pg, "!!(document.querySelector('[data-gd-preview]').contentWindow.Drishti && document.querySelector('[data-gd-preview]').contentWindow.Drishti.wire && document.querySelector('[data-gd-preview]').contentDocument.querySelector('#p-trades tbody tr[data-ev]'))")
     assert preview(pg).locator("#p-event").count() == 0
