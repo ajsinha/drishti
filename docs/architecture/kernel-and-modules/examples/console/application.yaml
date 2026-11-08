@@ -1,0 +1,116 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+
+# EXAMPLE (design, not built): config/console/application.yaml of a Drishti Console on Spring Boot (release 2.9.11.i4;
+# docs/architecture/KERNEL_AND_MODULES.md section 10). The console is a separate application in front of one or many kernels. Database
+# settings are NOT here (config/db/database.yaml, the database rules); secrets are ${secret:...} references or DRISHTI_* environment
+# variables, never values in this file.
+format: 1
+
+server:
+  address: 0.0.0.0
+  port: 18480                                 # the public console port, as today
+spring:
+  threads:
+    virtual:
+      enabled: true                           # every request on a virtual thread (section 10.3)
+
+console:
+  id: console-research                        # its node name in each cluster (role: console, section 10.5)
+  distribution: config/distributions/drishti.research.yaml   # presentation: brand, theme, lenses, Home, modules shown (section 10.6)
+  elements:
+    train: 1.6.0                              # the Elements release train this console serves (section 11.1)
+  page:
+    deadline-ms: 4000                         # a page's kernel questions run in parallel and give up together after this
+
+kernels:                                      # one or many; the order is the order of the switcher and of Home
+  - id: finance
+    label: Finance
+    colour-token: accent-1                    # a theme token, never a colour value
+    identity: true                            # the identity kernel: verifies sign-in, maps identity to access (section 10.11)
+    urls: [https://drishti-main.bank.example:17480, https://drishti-b.bank.example:17480]   # entry nodes; discovery as today
+    audience: drishti-finance                 # the aud of every token this console mints for this kernel
+    limits: { connections: 200, concurrent-calls: 400, timeout-ms: 30000 }
+    breaker: { failure-rate: 50, open-seconds: 20 }
+  - id: genomics
+    label: Genomics
+    colour-token: accent-3
+    urls: [https://drishti-gpu.lab.example:17480]
+    audience: drishti-genomics
+    limits: { connections: 50, concurrent-calls: 100, timeout-ms: 60000 }
+    breaker: { failure-rate: 50, open-seconds: 20 }
+  # - id: finance-uat                         # the same modules as finance: refused unless prefixed (/k/uat/m/banking/...)
+  #   prefix: uat
+
+security:
+  tokens:                                     # console -> kernel tokens (section 10.11, recommended O8)
+    mode: console-jwt                         # or token-exchange (RFC 8693) where the site requires IdP-issued tokens
+    lifetime-seconds: 120
+    signing-key: ${secret:console-research-jwt-es256}   # rotated; both keys published in /.well-known/jwks.json during the overlap
+  session:
+    idle-minutes: 30
+    absolute-hours: 12
+    recheck-seconds: 10                       # the identity kernel's session check (revocation within this time)
+  local-sign-in:
+    enabled: true                             # break-glass administrator; shows "not for production" when it is the only method
+  sso:
+    metadata-refresh-minutes: 60
+    require-mfa-for: [admin, approvals]       # step-up: acr_values / amr checked
+    providers:                                # one or more; the sign-in page offers each
+      entra:
+        protocol: oidc
+        issuer: https://login.microsoftonline.com/0f1e2d3c-aaaa-bbbb-cccc-111122223333/v2.0
+        client-id: 6b1c...-drishti
+        client-auth: private_key_jwt
+        client-key: ${secret:entra-drishti-key}
+        scopes: [openid, profile, email, offline_access]
+        claims: { username: preferred_username, groups: roles }         # app roles recommended (no groups overage)
+        logout: { back-channel: true }
+      okta:
+        protocol: oidc
+        issuer: https://bank.okta.com/oauth2/default
+        client-id: 0oa1drishti
+        client-secret: ${secret:okta-drishti}
+        claims: { username: preferred_username, groups: groups }
+      keycloak:
+        protocol: oidc
+        issuer: https://login.bank.example/realms/staff
+        client-id: drishti
+        client-secret: ${secret:keycloak-drishti}
+        claims: { username: preferred_username, groups: realm_access.roles }
+      ping:
+        protocol: oidc
+        issuer: https://sso.bank.example/as
+        client-id: drishti
+        client-secret: ${secret:ping-drishti}
+        claims: { username: sub, groups: memberOf }
+      adfs:
+        protocol: saml2                       # or oidc on ADFS 2016+
+        metadata-url: https://adfs.bank.example/FederationMetadata/2007-06/FederationMetadata.xml
+        entity-id: https://drishti.bank.example/saml2
+        signing-key: ${secret:drishti-saml-sp-key}
+        attributes: { username: http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn, groups: http://schemas.microsoft.com/ws/2008/06/identity/claims/role }
+        logout: { slo: true }
+      google:
+        protocol: oidc
+        issuer: https://accounts.google.com
+        client-id: 1234-drishti.apps.googleusercontent.com
+        client-secret: ${secret:google-drishti}
+        claims: { username: email, groups: none }                       # groups from the Directory API or the identity map's e-mail lists
+        hosted-domain: lab.example
+
+migration:                                    # during i4 only (section 10.8); deleted with the Python console
+  legacy-url: http://127.0.0.1:18481          # the Python console in front mode, loopback only
+  legacy-routes: config/console/legacy-routes.yaml   # the route groups not yet migrated; one owner per path

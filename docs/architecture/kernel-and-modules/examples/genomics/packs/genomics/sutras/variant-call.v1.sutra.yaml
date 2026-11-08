@@ -16,7 +16,7 @@
 # packs/genomics/sutras/variant-call.v1.sutra.yaml inside genomics-0.1.0.dmod (docs/architecture/KERNEL_AND_MODULES.md
 # section 9.1). Rachana grammar 1, the same format banking's Sutras use. The data is read through the kernel's bindings (data/needs.yaml);
 # the carrier counts come from the module's computed kind variant-summary (a KindProvider). Removing the module removes the Sutra, its
-# match, its search entries and its links (section 10.3).
+# match, its search entries and its links (section 12.3).
 rachana: 1
 sutra: variant-call
 version: 1

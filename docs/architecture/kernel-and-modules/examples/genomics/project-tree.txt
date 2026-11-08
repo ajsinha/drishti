@@ -38,7 +38,6 @@ genomics/                                       a Git repository of its own (or 
 │   ├── plugin.yaml                             routes, menus, functions' pages, Home cards, slots, API proxy (format 2)
 │   ├── templates/variant_explorer.html         a composed page: extends kernel/page.html, Elements macros only
 │   ├── templates/_cohort_strip.html            a partial of its own (genomics:_cohort_strip.html)
-│   ├── pages.py                                optional console handlers named by plugin.yaml (no routes registered by code)
 │   ├── static/js/drishti_genomics-explorer.js  ES module on the Elements public API; drishti_ prefix
 │   ├── static/css/drishti_genomics.css         theme tokens only
 │   ├── i18n/{en,fr}.yaml
@@ -55,7 +54,7 @@ genomics/                                       a Git repository of its own (or 
 │   ├── pom.xml                                 depends on drishti-kernel-testkit (test)
 │   └── src/test/java/com/example/genomics/
 │       ├── GenomicsConformanceTest.java        extends ModuleConformanceSuite (every check of section 8.6)
-│       ├── GenomicsAbsenceTest.java            extends AbsenceSuite (install, record, remove, assert gone: section 10.11)
+│       ├── GenomicsAbsenceTest.java            extends AbsenceSuite (install, record, remove, assert gone: section 12.11)
 │       └── VariantApiTest.java                 the module's own API through the harness, as two people at once
 ├── settings/{schema.json,defaults.yaml}                                                                       → settings/
 ├── NOTICES/{LICENSE,THIRD-PARTY-NOTICES.md}                                                                   → NOTICES/

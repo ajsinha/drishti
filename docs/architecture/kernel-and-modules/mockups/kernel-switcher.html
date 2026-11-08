@@ -1,0 +1,124 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  Mock-up (static, design only): the kernel switcher, one Drishti Console in front of two kernels (finance production and genomics),
+  two alternatives (docs/architecture/KERNEL_AND_MODULES.md sections 10.6 and 17). The genomics kernel is down in this picture.
+  ?v=A|B and ?theme=dark|light pick the view (for screenshots).
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kernel switcher mock-ups</title>
+<style>
+:root{--bg:#0e1628;--bg2:#121c33;--sf:#16213a;--sf2:#1b2744;--bd:#26345a;--ink:#e7ecf5;--mu:#93a0b8;--ac:#e8a33a;--acink:#14100a;--ln:#7fb2ff;--ok:#5fd39a;--wa:#f2c14e;--bad:#ff7a7a;--k1:#5fd39a;--k2:#b79cff;--top:#0a1120}
+:root[data-theme=light]{--bg:#f4f6fa;--bg2:#e9eef5;--sf:#ffffff;--sf2:#eef2f8;--bd:#cdd6e3;--ink:#1a2333;--mu:#5c6a80;--ac:#c47d12;--acink:#ffffff;--ln:#1f5fbf;--ok:#1e8a55;--wa:#a86f00;--bad:#c62828;--k1:#1e8a55;--k2:#6a4fb3;--top:#ffffff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.45 system-ui,"Segoe UI",Roboto,sans-serif}
+.pick{display:flex;gap:6px;padding:10px 16px;border-bottom:1px solid var(--bd);background:var(--bg2);align-items:center;flex-wrap:wrap}
+.pick button{background:var(--sf);color:var(--ink);border:1px solid var(--bd);border-radius:4px;padding:6px 12px;cursor:pointer;font-weight:600}
+.pick button.on{background:var(--ac);color:var(--acink);border-color:var(--ac)}.sp{flex:1}
+.v{display:none;padding:14px 16px}.v.on{display:block}
+.top{display:flex;gap:12px;align-items:center;padding:9px 14px;background:var(--top);border:1px solid var(--bd);border-radius:8px 8px 0 0;flex-wrap:wrap;position:relative}
+.top b.brand{color:var(--ac);letter-spacing:.08em}
+.kchip{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--k1);color:var(--ink);border-radius:14px;padding:3px 10px;font-weight:600;background:var(--sf)}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--k1)}.dot.k2{background:var(--k2)}.dot.bad{background:var(--bad)}
+.cmd{flex:1;min-width:160px;background:var(--sf);border:1px solid var(--bd);border-radius:4px;padding:5px 9px;color:var(--mu);font-family:ui-monospace,monospace}
+.menu{display:flex;gap:14px;color:var(--mu);font-size:12px}.menu span.on{color:var(--ink);font-weight:600}
+.dd{position:absolute;left:150px;top:40px;width:300px;background:var(--sf);border:1px solid var(--bd);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.35);z-index:3}
+.dd .h{padding:8px 12px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);border-bottom:1px solid var(--bd)}
+.dd .it{display:flex;gap:8px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--bd)}.dd .it:last-child{border-bottom:0}
+.dd .it .n{flex:1}.dd .it .m{color:var(--mu);font-size:11px}.dd .it.cur{background:var(--sf2)}.dd .it.down .n{color:var(--mu)}
+.frame{border:1px solid var(--bd);border-top:0;border-radius:0 0 8px 8px;background:var(--bg);padding:12px;min-height:360px}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+.lbl{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin:0 0 6px}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:6px;padding:10px}.card .t{font-weight:600}.card .k{font-size:11px;color:var(--mu)}
+.card .n{font:600 18px ui-monospace,monospace;margin-top:4px}
+.card.down{border-style:dashed;opacity:.75}.card.down .n{font:12px system-ui;color:var(--wa)}
+.tag{font-size:10px;padding:0 6px;border-radius:8px;border:1px solid var(--k1);color:var(--k1);margin-left:4px;font-weight:700}.tag.k2{border-color:var(--k2);color:var(--k2)}
+.mlist{background:var(--sf);border:1px solid var(--bd);border-radius:6px}
+.mlist .row{display:flex;gap:8px;padding:7px 10px;border-bottom:1px solid var(--bd);align-items:center}.mlist .row:last-child{border-bottom:0}
+.mlist .row.down{color:var(--mu)}
+.banner{display:flex;gap:10px;align-items:center;margin:0 0 10px;padding:8px 10px;border-left:4px solid var(--wa);background:var(--sf);border-radius:4px;font-size:12px}
+.rail{display:flex;gap:0;border:1px solid var(--bd);border-bottom:0;border-radius:8px 8px 0 0;overflow:hidden}
+.rail .tab{padding:8px 16px;font-weight:600;border-right:1px solid var(--bd);background:var(--bg2);color:var(--mu);display:flex;gap:6px;align-items:center}
+.rail .tab.on{background:var(--top);color:var(--ink);border-bottom:3px solid var(--k1)}.rail .tab.down{color:var(--bad)}
+.note{margin-top:14px;padding:10px 12px;border-left:3px solid var(--ln);background:var(--bg2);color:var(--mu);font-size:12px}.note b{color:var(--ink)}
+@media (max-width:860px){.cols{grid-template-columns:1fr}.cards{grid-template-columns:1fr 1fr}.dd{left:16px}}
+</style></head><body>
+<div class="pick"><button data-v="A" class="on">A · Kernel chip + menu (recommended)</button><button data-v="B">B · Kernel rail (a tab per kernel)</button>
+<span class="sp"></span><button id="theme">Light / dark</button></div>
+
+<!-- ================= A ================= -->
+<div class="v on" id="A">
+<div class="top"><b class="brand">DRISHTI RESEARCH</b>
+  <span class="kchip"><span class="dot"></span>Finance ▾</span>
+  <div class="cmd">VAR DESK RATES &lt;GO&gt;</div>
+  <div class="menu"><span>Home</span><span class="on">Analyse</span><span>Build</span><span>Data</span><span>Admin</span><span>Help</span></div>
+  <div class="dd"><div class="h">Kernels on this console</div>
+    <div class="it cur"><span class="dot"></span><span class="n"><b>Finance</b> · production</span><span class="m">current · 3 nodes</span></div>
+    <div class="it down"><span class="dot bad"></span><span class="n">Genomics</span><span class="m">not answering · 2 min</span></div>
+    <div class="it"><span class="n" style="color:var(--mu);font-size:12px">Kernel pages (Pivot, BI, Build, Data, Admin) open on the chosen kernel; module pages always open on their own.</span></div>
+  </div>
+</div>
+<div class="frame">
+ <div style="height:176px"></div>
+ <div class="cols">
+  <div><div class="lbl">Home (the union, labelled per kernel)</div>
+   <div class="cards">
+    <div class="card"><div class="t">VaR of the bank <span class="tag">Finance</span></div><div class="k">99% · 1 day · 2026-11-06</div><div class="n">41.8 m</div></div>
+    <div class="card"><div class="t">Rates desk <span class="tag">Finance</span></div><div class="k">limit use</div><div class="n">72%</div></div>
+    <div class="card down"><div class="t">Cohorts <span class="tag k2">Genomics</span></div><div class="k">BRCA-2026</div><div class="n">Genomics is not answering; other areas work.</div></div>
+   </div></div>
+  <div><div class="lbl">Analyse menu</div>
+   <div class="mlist">
+    <div class="row"><span class="dot"></span>VaR explorer <span class="tag">Finance</span></div>
+    <div class="row"><span class="dot"></span>Exposure <span class="tag">Finance</span></div>
+    <div class="row"><span class="dot"></span>Equities <span class="tag">Finance</span></div>
+    <div class="row down"><span class="dot bad"></span>Variant explorer <span class="tag k2">Genomics</span><span class="sp"></span><span style="font-size:11px">unavailable</span></div>
+    <div class="row down"><span class="dot bad"></span>Sample QC <span class="tag k2">Genomics</span><span class="sp"></span><span style="font-size:11px">unavailable</span></div>
+   </div></div>
+ </div>
+</div>
+<div class="note"><b>A, kernel chip and menu (recommended).</b> One header for any number of kernels: the current kernel sits beside the brand with its colour token, the menu lists every kernel with its health, and a down kernel is greyed in the menu, on its Home cards and in the Analyse menu while everything else works. Menus, Home and search stay one list, each entry labelled with its kernel. With a single kernel the chip is not shown at all. Weak spot: the current kernel matters only on kernel pages (Pivot, BI, Data), so the chip shows a small "applies to Pivot, BI, Data" hint on first use.</div>
+</div>
+
+<!-- ================= B ================= -->
+<div class="v" id="B">
+<div class="rail"><div class="tab on"><span class="dot"></span>Finance</div><div class="tab down"><span class="dot bad"></span>Genomics · down</div></div>
+<div class="top" style="border-radius:0"><b class="brand">DRISHTI RESEARCH</b><div class="cmd">VAR DESK RATES &lt;GO&gt;</div>
+  <div class="menu"><span>Home</span><span class="on">Analyse</span><span>Build</span><span>Data</span><span>Admin</span><span>Help</span></div></div>
+<div class="frame">
+ <div class="banner"><span class="dot"></span>You are in <b>Finance</b>. Menus, Home and search below show Finance only; switch tabs for Genomics.</div>
+ <div class="cols">
+  <div><div class="lbl">Home (Finance tab)</div>
+   <div class="cards">
+    <div class="card"><div class="t">VaR of the bank</div><div class="k">99% · 1 day</div><div class="n">41.8 m</div></div>
+    <div class="card"><div class="t">Rates desk</div><div class="k">limit use</div><div class="n">72%</div></div>
+    <div class="card"><div class="t">Exposure</div><div class="k">top counterparty</div><div class="n">118 m</div></div>
+   </div></div>
+  <div><div class="lbl">Analyse menu (Finance tab)</div>
+   <div class="mlist"><div class="row">VaR explorer</div><div class="row">Exposure</div><div class="row">Equities</div></div></div>
+ </div>
+</div>
+<div class="note"><b>B, kernel rail.</b> Very clear with two kernels: each tab is a world of its own with its own menus, Home and search, and a down kernel shows on its tab. Weak spots: it crowds at three or more kernels, it splits search and Home (a person must switch to see the other kernel's cards), and it uses a full row of the screen. Recommended only for a console with exactly two kernels that are never used together.</div>
+</div>
+
+<script>
+(function(){var q=new URLSearchParams(location.search);function show(v){document.querySelectorAll('.v').forEach(function(e){e.classList.toggle('on',e.id===v)});document.querySelectorAll('.pick button[data-v]').forEach(function(b){b.classList.toggle('on',b.dataset.v===v)})}
+document.querySelectorAll('.pick button[data-v]').forEach(function(b){b.onclick=function(){show(b.dataset.v)}});
+var t=q.get('theme')||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');document.documentElement.dataset.theme=t;
+document.getElementById('theme').onclick=function(){var r=document.documentElement;r.dataset.theme=r.dataset.theme==='light'?'dark':'light'};
+if(q.get('v'))show(q.get('v'));})();
+</script>
+</body></html>

@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 584" width="760" height="584" role="img" aria-label="The strangler migration" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'DejaVu Sans', Arial, sans-serif">
+<!-- Copyright (c) 2026 Ashutosh Sinha. All rights reserved. PROPRIETARY AND CONFIDENTIAL. -->
+<title>The strangler migration</title>
+<defs><marker id="a1a2333" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1a2333"/></marker><marker id="a1f5fbf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1f5fbf"/></marker><marker id="a1e8a55" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1e8a55"/></marker><marker id="ac62828" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#c62828"/></marker><marker id="ae8a33a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#e8a33a"/></marker><marker id="a2bb3a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#2bb3a3"/></marker><marker id="a5c6a80" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#5c6a80"/></marker><marker id="a12324f" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#12324f"/></marker><marker id="a6a4fb3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#6a4fb3"/></marker></defs>
+<rect x="0.5" y="0.5" width="759" height="583" rx="14" fill="#f7f9fc" stroke="#cdd6e3"/>
+<text x="24" y="38" font-size="20" font-weight="700" fill="#12324f">The strangler migration</text>
+<text x="24" y="60" font-size="13" fill="#5c6a80">The Java console fronts everything from day one; the Python console behind it shrinks group by group to zero.</text>
+<text x="139" y="96" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">Start of i4</text>
+<rect x="24" y="108" width="230" height="150" rx="8" fill="#ebe5f7" stroke="#6a4fb3" stroke-width="1.5"/>
+<text x="36" y="130" font-size="13" font-weight="700" fill="#6a4fb3" text-anchor="start">Java console (front)</text>
+<text x="36" y="148" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">G0 shell, sign-in, static</text>
+<text x="36" y="165" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">G1 banking + economy</text>
+<path d="M139,258 L139,290" fill="none" stroke="#5c6a80" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#a5c6a80)"/>
+<text x="194" y="280" font-size="12" font-weight="400" fill="#5c6a80" text-anchor="middle" font-style="italic">proxy rest</text>
+<rect x="24.0" y="294" width="230" height="96" rx="8" fill="#ffffff" stroke="#5c6a80" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="36.0" y="316" font-size="13" font-weight="700" fill="#5c6a80" text-anchor="start">Python console</text>
+<text x="36.0" y="334" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">G2 Admin … G10 notebooks</text>
+<text x="36.0" y="351" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">loopback, front mode</text>
+<text x="381" y="96" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">Middle of i4</text>
+<rect x="266" y="108" width="230" height="150" rx="8" fill="#ebe5f7" stroke="#6a4fb3" stroke-width="1.5"/>
+<text x="278" y="130" font-size="13" font-weight="700" fill="#6a4fb3" text-anchor="start">Java console (front)</text>
+<text x="278" y="148" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">G0–G1</text>
+<text x="278" y="165" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">G2 Admin · G3 Terminal</text>
+<text x="278" y="182" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">G4 Pivot, BI · G5 Explain</text>
+<path d="M381,258 L381,290" fill="none" stroke="#5c6a80" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#a5c6a80)"/>
+<text x="436" y="280" font-size="12" font-weight="400" fill="#5c6a80" text-anchor="middle" font-style="italic">proxy rest</text>
+<rect x="301.0" y="294" width="160" height="70" rx="8" fill="#ffffff" stroke="#5c6a80" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="313.0" y="316" font-size="13" font-weight="700" fill="#5c6a80" text-anchor="start">Python console</text>
+<text x="313.0" y="334" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">G6 … G10</text>
+<text x="313.0" y="351" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">loopback, front mode</text>
+<text x="623" y="96" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">End of i4</text>
+<rect x="508" y="108" width="230" height="150" rx="8" fill="#ebe5f7" stroke="#6a4fb3" stroke-width="1.5"/>
+<text x="520" y="130" font-size="13" font-weight="700" fill="#6a4fb3" text-anchor="start">Java console (front)</text>
+<text x="520" y="148" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">G0–G10: every group</text>
+<text x="520" y="165" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start"></text>
+<text x="520" y="182" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start"></text>
+<path d="M623,258 L623,290" fill="none" stroke="#5c6a80" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#a5c6a80)"/>
+<text x="678" y="280" font-size="12" font-weight="400" fill="#5c6a80" text-anchor="middle" font-style="italic">nothing left</text>
+<rect x="548" y="294" width="150" height="70" rx="8" fill="#ffffff" stroke="#c62828" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="560" y="316" font-size="13" font-weight="700" fill="#c62828" text-anchor="start">Python console</text>
+<text x="560" y="334" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">deleted</text>
+<rect x="24" y="410" width="712" height="60" rx="8" fill="#dff1e7" stroke="#1e8a55" stroke-width="1.5"/>
+<text x="36" y="432" font-size="13" font-weight="700" fill="#1e8a55" text-anchor="start">Playwright browser suite, unchanged</text>
+<text x="36" y="450" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">runs over HTTP against the Java front at every merge: it cannot tell which process answered</text>
+<rect x="24" y="486" width="712" height="76" rx="8" fill="#fbefd9" stroke="#e8a33a" stroke-width="1.5"/>
+<text x="36" y="508" font-size="13" font-weight="700" fill="#e8a33a" text-anchor="start">Rules</text>
+<text x="36" y="526" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">a group moves when its browser tests pass on Java · one owner per path (legacy-routes.yaml)</text>
+<text x="36" y="543" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">pytest route tests → JUnit + MockMvc per group · latency per page measured · no dual machinery at the end</text>
+</svg>
