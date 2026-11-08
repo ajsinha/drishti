@@ -8527,6 +8527,7 @@ A custom widget: draws a field's control. Returns its element and, as it can, se
 | `[check]` | `function(Object): Promise&lt;Object&lt;string, string&gt;&gt;` | the server's checks: problems by path |
 | `[fourEyes]` | `FourEyes` |  |
 | `[submitLabel='Save']` | `string` |  |
+| `[doneText='Saved']` | `string` | what the form says once onSubmit answered ('': nothing, for a page that shows the answer itself, such as a check) |
 | `[readOnly=false]` | `boolean` |  |
 | `[layout='stacked']` | `('stacked'\|'columns')` |  |
 | `[locale]` | `string` | how numbers are read and shown |
@@ -12958,7 +12959,7 @@ The exposure profile: EE and PFE over the tenors (a log axis by default), EEPE o
 
 | Parameter | Type | Meaning |
 |---|---|---|
-| `spec` | `Object` | x (tenor in years), ee, pfe, eepe (the server's), limit, log (default true), more (further series drawn as given: the uncollateralised EE, the paths' fan) |
+| `spec` | `Object` | x (tenor in years), ee, pfe, eepe (the server's; false: none drawn, for an answer that has none, e.g. a proxy), limit, log (default true), more (further series drawn as given: the uncollateralised EE, the paths' fan, a profile before a change) |
 | `rows` | `Object[]` |  |
 | `env` | `Object` |  |
 

@@ -113,7 +113,7 @@ def test_a_lens_draws_its_own_subject_menus_for_that_person_only(backend, monkey
     page = alice.get("/t").text
     assert _commands(_panel(page, "Blotter")) == ["TRD", "CTRD", "PTRD", "LTRD"]
     assert _commands(_panel(page, "Risk")) == ["VAR", "VLIM", "TVAL", "PNLV", "DPNL", "PNL", "SENS"]
-    assert _commands(_panel(page, "Counterparties")) == ["CPTY", "NSET", "LIM", "PREDEAL", "EXP", "CCUBE"]   # PREDEAL: its screen under construction   # CCUBE: the Pivot's preset ccr, under construction
+    assert _commands(_panel(page, "Counterparties")) == ["CPTY", "NSET", "LIM", "PREDEAL", "EXP", "CCUBE"]   # PREDEAL: Counterparties → Pre-deal check   # CCUBE: the Pivot's preset ccr, under construction
 
 
 def test_the_trading_lens_has_one_markets_menu_and_no_bi_or_admin_menu(backend, monkeypatch):

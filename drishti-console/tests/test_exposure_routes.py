@@ -48,13 +48,26 @@ def test_other_words_are_not_exposure_commands():
     assert exp_command([]) is None
 
 
-def test_predeal_typed_says_its_screen_is_under_construction_and_names_the_service(client):
-    """PREDEAL (the server's pre-deal service, EXPOSURE_GUIDE.md section 18.9): until Counterparties → Pre-deal check is built on the
-    Elements libraries, typing it says so in words, with the API and the command line that answer it now; not a search, not an error."""
+def test_predeal_typed_opens_the_pre_deal_check(client):
+    """PREDEAL (the server's pre-deal service, EXPOSURE_GUIDE.md section 18.9) opens Counterparties → Pre-deal check: with words, the
+    check is made at once (?command=); the word alone opens the empty form. Not an explorer command."""
     from urllib.parse import unquote
 
     r = client.get("/go?q=PREDEAL CP-ALDERSHOT LIKE 1000001 250M <GO>", follow_redirects=False)
-    where = unquote(r.headers["location"])
-    assert r.status_code == 303 and where.startswith("/t?error=PREDEAL")
-    assert "under construction" in where and "/api/v1/risk/exposure/predeal" in where and "drishti.py exposure predeal" in where
+    assert r.status_code == 303 and unquote(r.headers["location"]) == "/predeal?command=PREDEAL CP-ALDERSHOT LIKE 1000001 250M"
+    r = client.get("/go?q=PREDEAL <GO>", follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"] == "/predeal"
     assert exp_command("PREDEAL CP-ALDERSHOT".split()) is None                       # not an explorer command
+
+
+def test_the_explorers_old_pre_deal_tab_opens_the_check(client):
+    """One way: the explorer's Pre-deal tab is gone; its address opens Counterparties → Pre-deal check at the same counterparty or netting
+    set, and the explorer's what-if proxy is gone with it (the check asks POST /api/exposure/predeal)."""
+    r = client.get("/exposure?scope=CPTY:CP-ALDERSHOT&tab=predeal", follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"] == "/predeal?counterparty=CP-ALDERSHOT"
+    r = client.get("/exposure?scope=NSET:NS-ALDERSHOT-LDN&tab=predeal", follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"] == "/predeal?nettingSet=NS-ALDERSHOT-LDN"
+    assert client.post("/api/exposure/what-if", json={}).status_code == 404
+    page = client.get("/predeal?counterparty=cp-aldershot")
+    assert page.status_code == 200 and 'data-counterparty="CP-ALDERSHOT"' in page.text and "drishti_exposure-predeal.js" in page.text
+    assert 'data-tab="predeal"' not in client.get("/exposure?scope=CPTY:CP-ALDERSHOT").text

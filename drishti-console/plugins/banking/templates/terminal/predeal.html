@@ -1,0 +1,77 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# Counterparties → Pre-deal check, PREDEAL <counterparty> LIKE <trade> <notional> (EXPOSURE_GUIDE.md section 18.9; the approved CCR
+   cube mock-up C, its pre-deal tiles and overlay): the trade (a drishti-inputs Form: counterparty, netting set, a booked trade to copy or
+   the trade described, notional and side), the server's verdict (approve, refer or decline, and within, near or over per limit and tenor
+   bucket with the numbers and the headroom), the one Explain, and the what-if (current against with the trade: the profile overlay and
+   the incremental PFE per tenor on drishti-chart through drishti-risk, the tables on drishti-grid). A shell: drishti_exposure-predeal.js
+   fills it from POST /api/exposure/predeal; every number is the server's. On a phone everything stacks, a wide table scrolls in its card. #}
+{% extends "base.html" %}
+{% block title %}Pre-deal check · {{ PRODUCT }}{% endblock %}
+{% block screen %}predeal{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_var-regulatory.css?v={{ ASSET_V }}">{% include "terminal/_risk_elements_css.html" %}{% endblock %}
+{% block nav %}{% with command_text=(command or 'PREDEAL') ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
+{% block content %}
+<div class="rg" data-predeal data-command="{{ command }}" data-counterparty="{{ counterparty }}" data-netting-set="{{ netting_set }}" data-asof="{{ as_of }}">
+  <div class="rg-head">
+    <h1>Pre-deal check</h1>
+    <span class="rg-word" data-pd-word>{{ command or 'PREDEAL' }}</span>
+    <span class="rg-meta" data-pd-source aria-live="polite">loading the counterparties…</span>
+    <a class="rg-meta" href="/help/context/exposure" title="Help: the pre-deal check (EXPOSURE_GUIDE.md section 18.9)"><i class="bi bi-question-circle" aria-hidden="true"></i></a>
+  </div>
+  <p class="rg-notice" data-pd-notice role="status" hidden></p>
+  <div class="rg-grid">
+    <section class="rg-card" aria-labelledby="pdVerdictTitle" data-pd-verdict-card hidden>
+      <h2 id="pdVerdictTitle"><span data-pd-verdict-title>Verdict</span><span class="rg-sub" data-pd-verdict-sub></span></h2>
+      <div class="rg-lamps"><span class="rg-lamp green" data-lamp="approve" aria-hidden="true"></span><span class="rg-lamp amber" data-lamp="refer" aria-hidden="true"></span><span class="rg-lamp red" data-lamp="decline" aria-hidden="true"></span><span class="rg-zone" data-pd-decision>—</span><span class="rg-pill" data-pd-status></span></div>
+      <p data-pd-reason></p>
+      <div class="rg-tiles" data-pd-tiles aria-live="polite"></div>
+      <div class="rg-gridhost rg-gap" data-pd-limits></div>
+      <ul class="rg-note" data-pd-reasons></ul>
+      <div class="rg-bar rg-gap">
+        <button type="button" class="rg-btn" data-pd-explain data-explain-primary aria-keyshortcuts="E" title="Explain the check: the formula with its values, the inputs and lineage (E); every tile has its own">Explain ›</button>
+        <a class="rg-btn" data-pd-exposure href="/exposure">The counterparty's exposure</a>
+        <span class="rg-meta mono" data-pd-cli></span>
+      </div>
+    </section>
+    <section class="rg-card" aria-labelledby="pdTradeTitle">
+      <h2 id="pdTradeTitle">The trade<span class="rg-sub">the server checks it against the credit limit</span></h2>
+      <div data-pd-form></div>
+      <p class="rg-note">Like a booked trade: its paths on the day's run, scaled to the notional (the exact method; approve, refer or decline).
+        Described: an asset class, notional and maturity (a conservative proxy, which only refers).</p>
+    </section>
+  </div>
+  <div class="rg-grid" data-pd-whatif hidden>
+    <section class="rg-card" aria-labelledby="pdOverlayTitle">
+      <h2 id="pdOverlayTitle">Current and with the trade<span class="rg-sub" data-pd-overlay-sub></span></h2>
+      <div data-pd-overlay aria-label="The exposure profile before and with the trade, against the limit"></div>
+      <div data-pd-bars aria-label="The incremental PFE per tenor"></div>
+    </section>
+    <section class="rg-card" aria-labelledby="pdCompareTitle">
+      <h2 id="pdCompareTitle">The figures<span class="rg-sub">current, with the trade, incremental</span></h2>
+      <div class="rg-gridhost" data-pd-compare></div>
+      <p class="rg-note" data-pd-method></p>
+      <p class="rg-note" data-pd-saccr></p>
+    </section>
+  </div>
+  <section class="rg-card" aria-labelledby="pdTenorTitle" data-pd-tenor-card hidden>
+    <h2 id="pdTenorTitle">By tenor<span class="rg-sub">EE and PFE before and with the trade</span></h2>
+    <div class="rg-gridhost" data-pd-tenor></div>
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script>{% include "terminal/_risk_elements.html" %}<script src="/static/js/drishti_exposure-predeal.js?v={{ ASSET_V }}"></script>{% endblock %}

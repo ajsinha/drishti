@@ -2677,7 +2677,8 @@
           return Promise.resolve(this.o.onSubmit ? this.o.onSubmit(values) : null).then((result) => {
             this.busy(false);
             this.initial = JSON.parse(JSON.stringify(this.values));
-            this.say('Saved', 'ok');
+            const done = this.o.doneText === undefined ? 'Saved' : this.o.doneText;
+            if (done) { this.say(done, 'ok'); }
             this.emit('submitted', { values: values, result: result });
             return true;
           });

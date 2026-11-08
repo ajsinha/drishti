@@ -18,8 +18,8 @@
    tree, the breadcrumb, a row of the counterparty board, a netting set in the contributions or a trade in the Trades tab moves every
    panel to the new scope in place (no page load); Back returns to the scope before. The headline tiles and the profile are always
    shown; the tabs below change with the scope's level: the counterparty board and the legal entities at the bank, the board at a legal
-   entity or a group, the netting sets' contributions and the pre-deal what-if (into a netting set it picks) at a counterparty, the netting-set workbench (collateral, trades, pre-deal) at a
-   netting set, the trade in its netting set at a trade; By tenor and Captures everywhere. Every view is a command (EXP <scope>) and a
+   entity or a group, the netting sets' contributions at a counterparty, the netting-set workbench (collateral, trades) at a netting set
+   (both with a link to Counterparties → Pre-deal check, the one place a new trade is checked), the trade in its netting set at a trade; By tenor and Captures everywhere. Every view is a command (EXP <scope>) and a
    URL (/exposure?scope=...), so links, the command line and F1 work. The time from a click to the painted headline is kept on the root
    element (data-paint-ms) for the tests. How a figure was built is the one Explain's (drishti-insight): hover a tile, click it, or Explain ›. */
 (function () {
@@ -38,8 +38,8 @@
     bank: [["board", "Counterparties"], ["les", "Legal entities"], ["tenor", "By tenor"]],
     "legal-entity": [["board", "Counterparties"], ["tenor", "By tenor"]],
     group: [["board", "Counterparties"], ["tenor", "By tenor"]],
-    counterparty: [["sets", "Netting sets"], ["predeal", "Pre-deal"], ["tenor", "By tenor"]],
-    "netting-set": [["coll", "Collateral"], ["trades", "Trades"], ["predeal", "Pre-deal"], ["tenor", "By tenor"]],
+    counterparty: [["sets", "Netting sets"], ["tenor", "By tenor"]],
+    "netting-set": [["coll", "Collateral"], ["trades", "Trades"], ["tenor", "By tenor"]],
     trade: [["inset", "In its netting set"], ["tenor", "By tenor (alone)"]],
     adhoc: [["sets", "Netting sets"], ["tenor", "By tenor"]]
   };
@@ -378,6 +378,7 @@
 
   // ---------------------------------------------------------------------------------------------------------------- tabs
   function renderTabs() {
+    predealLink();
     var tabs = TABS[level(S.head)].concat([["captures", "Captures"]]), bar = $("[data-xx-tabs]");
     if (!S.tab || !tabs.some(function (x) { return x[0] === S.tab; })) S.tab = tabs[0][0];
     bar.textContent = "";
@@ -396,6 +397,14 @@
     var done = function () { if (seq === S.seq) root.dataset.tabPainted = S.tab; };
     var fn = PANES[S.tab];
     Promise.resolve(fn(pane, S.head)).then(done).catch(function (e) { if (seq === S.seq) { errorBox(pane, e); done(); } });
+  }
+
+  /** Counterparties → Pre-deal check, from a counterparty or a netting set (the explorer's old Pre-deal tab moved there). */
+  function predealLink() {
+    var a = $("[data-xx-predeal]"), lev = level(S.head), id = S.head ? S.head.canonical.slice(S.head.canonical.indexOf(":") + 1) : "";
+    if (!a) return;
+    a.hidden = lev !== "counterparty" && lev !== "netting-set";
+    a.href = "/predeal?" + (lev === "counterparty" ? "counterparty=" : "nettingSet=") + encodeURIComponent(id);
   }
 
   function counterparties() {
@@ -593,118 +602,6 @@
     });
   }
 
-  /**
-   * The pre-deal what-if, on a netting set and on a counterparty: the candidate is a copy of a booked trade (its paths, scaled by a
-   * factor; −1 its unwind). On a counterparty the person picks the netting set the new trade goes into (the largest by peak PFE first) and
-   * sees the counterparty's figures (its credit limit's) or the set's.
-   */
-  function predeal(pane, d) {
-    var onCp = d.kind === "counterparty";
-    var sets0 = onCp ? (d.byNettingSet || []).slice().sort(function (a, b) { return (b.peakPfe || 0) - (a.peakPfe || 0); }) : [];
-    var set = onCp ? (sets0.length ? "NSET:" + sets0[0].nettingSet : null) : d.canonical;
-    if (!set) {
-      pane.textContent = "";
-      pane.appendChild(h("p", "xx-note", "No netting set of this counterparty you may see: nothing to deal into."));
-      return Promise.resolve();
-    }
-    return Promise.all([setTrades(set), treeReady()]).then(function (x) {
-      var rows = x[0].rows || [];
-      pane.textContent = "";
-      var two = h("div", "xx-two"), form = h("div", "xx-form");
-      // the form's pickers are <drishti-select>s (drishti-inputs' Select: search, keyboard, ARIA); el.component is the Select
-      var pick = function (data, label, options) {
-        var el = h("drishti-select", "xx-pick");
-        el.dataset[data] = "1";
-        el.options = { label: label, options: options };
-        return { el: el, s: el.component };
-      };
-      var cand = pick("xxCandidate", "Candidate: like trade", []), sel = cand.s;
-      var fill = function () {
-        sel.setOptions(rows.map(function (r) { return { value: r.key, label: r.key + " · " + (r.product || "") + " · " + m(r.notional) }; }));
-      };
-      fill();
-      var factor = h("input", "xx-input");
-      factor.value = "1";
-      factor.dataset.xxFactor = "1";
-      factor.setAttribute("aria-label", "Factor");
-      var meth = pick("xxMethod", "Method", [{ value: "paths", label: "paths (exact, the same run)" }, { value: "addon", label: "addon (conservative proxy)" }]), method = meth.s;
-      var cp = onCp ? { scope: d.canonical } : (d.ancestors || []).filter(function (a) { return a.kind === "counterparty"; })[0];
-      var figs = pick("xxWhatifScope", "Figures of", []), sc = figs.s;
-      var scopes = function () {
-        sc.setOptions([{ value: cp ? cp.scope : set, label: onCp ? "this counterparty (the credit limit's)" : "its counterparty (the credit limit's)" },
-          { value: set, label: onCp ? "the netting set " + set.slice(5) : "this netting set" }], cp ? cp.scope : set);
-      };
-      scopes();
-      var fields = [["Candidate: like trade", cand.el], ["Factor (−1: its unwind)", factor], ["Method", meth.el], ["Figures of", figs.el]];
-      if (onCp) {
-        var into = pick("xxPredealSet", "Into the netting set", sets0.map(function (s) { return { value: "NSET:" + s.nettingSet, label: s.nettingSet + " · peak PFE " + m(s.peakPfe) }; }));
-        into.s.on("change", function (e) {
-          set = e.value;
-          sel.setDisabled(true);
-          setTrades(set).then(function (c) { rows = c.rows || []; fill(); scopes(); sel.setDisabled(false); });
-        });
-        fields.unshift(["Into the netting set", into.el]);
-      }
-      fields.forEach(function (r) { form.appendChild(h("label", null, r[0])); form.appendChild(r[1]); });
-      var left = h("div");
-      left.appendChild(form);
-      var run = h("button", "btn btn-sm xx-btn primary", "Run what-if");
-      run.type = "button";
-      run.dataset.xxWhatif = "1";
-      var chip = h("span", "xx-chip", "ready");
-      var acts = h("div", "xx-actions");
-      acts.appendChild(run);
-      acts.appendChild(chip);
-      left.appendChild(acts);
-      left.appendChild(h("p", "xx-note after", "Pre-deal what-if: the candidate is a copy of a booked trade's paths on the day's run, scaled by the "
-        + "factor, added to " + (onCp ? "the netting set picked above (the counterparty's largest first)" : "this netting set") + ". paths: its values "
-        + "netted and collateralised with the set, path by path, by the exposure engine; addon: a netting set of its own, uncollateralised, "
-        + "SA-CCR's supervisory factor (flagged proxy)."));
-      var out = h("div");
-      out.dataset.xxWhatifOut = "1";
-      two.appendChild(left);
-      two.appendChild(out);
-      pane.appendChild(two);
-      run.addEventListener("click", function () {
-        var r = rows.filter(function (x) { return x.key === sel.getValue(); })[0] || {}, f = Number(factor.value) || 1;
-        chip.className = "xx-chip";
-        chip.textContent = "computing…";
-        var t0 = performance.now();
-        var setId = set.slice(5);
-        send("what-if", { scope: sc.getValue(), method: method.getValue(), q: S.q, collateral: S.collateral,
-          candidates: [{ tradeId: "CANDIDATE-1", label: f + " × " + r.key, nettingSet: setId, paths: { copyOf: r.key, factor: f },
-            assetClass: r.assetClass, notional: Math.abs((r.notional || 0) * f), maturityDate: r.maturity, mtm: (r.mtm || 0) * f, delta: f < 0 ? -1 : 1 }] })
-          .then(function (w) {
-            chip.className = "xx-chip " + (w.method === "addon" ? "proxy" : "ok");
-            chip.textContent = (w.method === "addon" ? "proxy" : "exact") + " · done in " + ((performance.now() - t0) / 1000).toFixed(1) + " s";
-            root.dataset.whatif = w.method;
-            root.dataset.whatifScope = w.canonical;
-            whatIfResult(out, w, d);
-          }).catch(function (e) { chip.className = "xx-chip crit"; chip.textContent = "failed"; errorBox(out, e); });
-      });
-    });
-  }
-
-  function whatIfResult(out, w, d) {
-    out.textContent = "";
-    var b = w.base || {}, a = w["with"] || {}, inc = w.incremental || {};
-    var cpNode = null;
-    counterparties().forEach(function (cp) { if (cp.scope === w.canonical) cpNode = cp; });
-    var rows = [["Candidate", (w.items && w.items[0] ? w.items[0].label : "") || String(w.candidates) + " candidate(s)"],
-      ["Method", w.method + (w.flags && w.flags.length ? " · " + w.flags.join(", ") : "")], ["Figures of", w.canonical],
-      ["Peak PFE before", m(b.peakPfe)], ["Peak PFE after", m(a.peakPfe)], ["Incremental", (inc.peakPfe >= 0 ? "+" : "") + m(inc.peakPfe), inc.peakPfe > 0 ? "warn" : null],
-      ["EPE before / after", m(b.epe) + " / " + m(a.epe)]];
-    if (cpNode && cpNode.limit && Math.abs(S.q - cpNode.limit.confidence) < 1e-9) {
-      rows.push(["Limit headroom after", m(cpNode.limit.limit - a.peakPfe), a.peakPfe > cpNode.limit.limit ? "warn" : null]);
-    }
-    out.appendChild(kv(rows));
-    var prof = inc.profile || [];
-    gridIn(out, { title: "What-if by tenor", fitRows: 40, rows: prof.map(function (r) { return Object.assign({ id: r.tenor }, r); }),
-      columns: [text("tenor", "Tenor", { width: 80, pinned: "left" }), money("eeBase", "EE before"), money("ee", "EE after"), money("pfeBase", "PFE before"),
-        money("pfe", "PFE after"), money("incrementalPfe", "Incremental PFE", { width: 130, tone: function (v) { return v > 0 ? "warn" : null; } })] });
-    out.appendChild(h("p", "xx-note after", w.note || ""));
-  }
-
   function inset(pane, d) {
     var set = "NSET:" + d.trade.nettingSet;
     return Promise.all([setTrades(set), api("scope", { scope: set })]).then(function (x) {
@@ -809,7 +706,7 @@
     }).catch(function (e) { errorBox(box, e); });
   }
 
-  var PANES = { board: board, les: les, sets: sets, tenor: tenor, coll: coll, trades: trades, predeal: predeal, inset: inset, captures: captures };
+  var PANES = { board: board, les: les, sets: sets, tenor: tenor, coll: coll, trades: trades, inset: inset, captures: captures };
 
   // ---------------------------------------------------------------------------------------------------------------- the tree
   var treeWaiters = [];
