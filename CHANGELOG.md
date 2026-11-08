@@ -262,6 +262,14 @@
   condition and date preset (drishti-inputs' panels: one opened from inside another keeps it open). **A guard**
   (`tests/test_native_select_guard.py`) fails on a raw `<select>` in a console page, script, library source or plugin page; its allow-list (69 files:
   the libraries without drishti-inputs, the renderer's harness, the gallery, the screens of the native-select sweep) only shrinks.
+- **The screens outside BI on `Select`** ([ELEMENTS.md section 15](docs/architecture/ELEMENTS.md#15-build-checklist)): every native
+  select of Account settings, alerts, Approvals, Build (the design's control kind and theme, the controls, form and versions tabs, the
+  new-design registry), the designer (grid, modes, sentences, settings, outline, describe), Help › Configuration, reports and
+  subscriptions, the calculator, the data view, discussions, the query form, Functions, the pivot and its Why, What-if and playground
+  cards, workspaces, the column filter, the controls' dropdown, the table and model editors, the field history, the pack screens, the
+  record forms' enum and lookup cells (it opens on the value; a pick saves), the refresh interval, the table chart, and the banking
+  plugin's trading landing, market-risk ladder and scenario matrix is drishti-inputs' `<drishti-select>`: search on a long list,
+  type-ahead, the kit's keys; a form submits the same names; 39 files and 78 selects off the guard's allow-list.
 - **The theme designer's YAML on the kit's `YamlPane`** ([ELEMENTS.md section 12.3](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
   the theme as YAML is BI Studio's YAML panel (Visual, YAML, Both), both ways: an edit is read by the server after a pause, a line that does
   not read is marked and the theme keeps its last good version; the hand-made YAML writer and the text area are deleted (`dumpYaml` writes it).

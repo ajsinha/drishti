@@ -141,8 +141,7 @@ def test_ctrl_s_says_why_it_cannot_save_and_ctrl_enter_previews(live_console, pa
 
 def test_versions_tab_diffs_against_the_base_and_an_earlier_version_and_restores(live_console, page):
     page.goto(f"{live_console}/build/new")
-    option = page.locator("select option", has_text="@").first
-    sutra = option.get_attribute("value")
+    sutra = next((v for v in select_helpers.values(page, "[data-registry]") if "@" in v), None)   # the registry: drishti-inputs' Select
     assert sutra and "@" in sutra
     made = post(page, f"{live_console}/build/designs", {"name": "diffed", "base": sutra})
     assert made["http"] == 201

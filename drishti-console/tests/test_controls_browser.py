@@ -227,9 +227,9 @@ def test_every_kind_is_drawn_in_its_place_with_a_label(page):
     assert page.locator("#p-schedule .pnl-h [data-ctl='legs']").count() == 1                  # header
     assert page.locator(".vhead [data-ctl='when']").count() == 1 and page.locator(".vhead [data-ctl='q']").count() == 1   # strip
     assert page.locator(".vgrid > .ctl-side [data-ctl='region']").count() == 1                 # side
-    assert page.locator("select[id^=ctl-]").first.get_attribute("id")
+    assert page.locator("[data-ctl] .di-select-control[id^=ctl-]").first.get_attribute("id")
     # every control can be named by a screen reader
-    unnamed = page.evaluate("""() => [...document.querySelectorAll('[data-ctl] select, [data-ctl] input:not([type=checkbox]), [data-ctl] button, [data-ctl] summary')]
+    unnamed = page.evaluate("""() => [...document.querySelectorAll('[data-ctl] [role=combobox], [data-ctl] input:not([type=checkbox]), [data-ctl] button, [data-ctl] summary')]
         .filter(e => !(e.labels && e.labels.length) && !e.getAttribute('aria-label') && !e.closest('[role=radiogroup]') && e.tagName !== 'BUTTON' && e.tagName !== 'SUMMARY').length""")
     assert unnamed == 0
     assert page.locator("[data-ctl-status][role=status]").count() == 1
