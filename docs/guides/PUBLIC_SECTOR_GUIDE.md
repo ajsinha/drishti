@@ -150,7 +150,7 @@ manifest (rows, SHA-256), and is loaded into its lake, replacing that date (a re
 
 | Feed | Source | Default selection (`options:`) | Incremental by | Daily at (local) |
 |---|---|---|---|---|
-| `world-development` | World Bank WDI API v2 | every economy, 15 years, 10 indicators (population, GDP per head, growth, inflation, unemployment, life expectancy, poverty, electricity access, internet use, central government debt) | the WDI source's last-updated date: unchanged, nothing written | 06:30 |
+| `world-development` | World Bank WDI API v2 (the one fetcher of WDI: world-economy reads its output) | every economy, 15 years, 10 headline indicators in the profile (population, GDP per head, growth, inflation, unemployment, life expectancy, poverty, electricity access, internet use, central government debt); as series also every `kind: wdi` code of `tools/realdata/sources.yaml` back to its `years.first` (`series-from`) and the world, its 7 regions and 4 income groups (`aggregates`, series only) | the WDI source's last-updated date: unchanged, nothing written | 06:30 |
 | `central-banks` | FRED API, Bank of Canada Valet | the Fed: target range upper limit, effective rate, 2- and 10-year Treasuries, 10y–2y, CPI, unemployment, total assets; the Bank of Canada: target rate, CORRA, 2- and 10-year yields, USD/CAD; two years of history | each series from 10 days before its last observation | weekdays 18:15 |
 | `national-statistics` | Statistics Canada WDS | seven vectors: CPI (raw and seasonally adjusted), unemployment, monthly GDP, population, housing starts, the overnight rate; 60 periods | each vector from a quarter before its last period; a newer release time | weekdays 09:00 |
 | `oecd` | OECD Data Explorer SDMX | the 38 members; the composite leading indicator, unemployment, CPI inflation, quarterly GDP growth; from 2020 | from three periods before each measure's last | 07:00 |
@@ -216,7 +216,7 @@ options:
 
 | To | Edit |
 |---|---|
-| more World Bank indicators or fewer countries | `world-development`: `indicators`, `countries` (`all`, or ISO3 codes), `years` |
+| more World Bank indicators or fewer countries | `world-development`: `indicators` (profile fields), `countries` (`all`, or ISO3 codes), `years`, `aggregates`; a series-only indicator the world-economy pack uses too: a `kind: wdi` line in `tools/realdata/sources.yaml` (`series-from`) |
 | another FRED or Valet series | `central-banks`: a `series` entry `{source, code, bank, title, unit}`; another bank: a `banks` entry |
 | another Statistics Canada vector | `national-statistics`: a `vectors` entry `{vector, title, unit, topic, table-title, frequency}` |
 | another OECD measure | `oecd`: a `measures` entry `{id, field, title, unit, frequency, dataflow, key}` (the Data Explorer's Developer API gives the dataflow and the key) |

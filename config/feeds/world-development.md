@@ -9,7 +9,7 @@
 
 World Bank, World Development Indicators.
 
-The economy module's public-sector world-development pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): World Bank World Development Indicators by country and year: population, GDP per head and growth, inflation, unemployment, life expectancy, poverty, access to electricity, internet use and central government debt for every economy, from the World Bank's API (CC BY 4.0). A country's profile shows the latest of each indicator and the world map shaded by GDP per head; each series shows its history by year. Filled daily by the world-development feed into the worldlake lake.
+The economy module's public-sector world-development pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): World Bank World Development Indicators by country and year: population, GDP per head and growth, inflation, unemployment, life expectancy, poverty, access to electricity, internet use and central government debt for every economy, from the World Bank's API (CC BY 4.0). A country's profile shows the latest of each indicator and the world map shaded by GDP per head; each series shows its history by year. Filled daily by the world-development feed into the worldlake lake. The one fetcher of WDI: as series it also pulls every WDI code of the world-economy pack (tools/realdata/sources.yaml) and the World Bank's aggregates, which the world-economy feed reads from its output.
 
 | | |
 |---|---|
@@ -77,8 +77,8 @@ Pack `world-development`, kind `development-series` (Development indicator serie
 |---|---|---|---|
 | `SERIES_ID` | id | required | WDIS-, the country's ISO alpha-3 code and the indicator's code with its dots as underscores. |
 | `NAME` | text | required | The country and the indicator, as one name. |
-| `WDI_PROFILE` | id | required | The country's development-profile page (WDI-<ISO3>). |
-| `ISO3` | text | required | The country's ISO 3166-1 alpha-3 code. |
+| `WDI_PROFILE` | id | optional | The country's development-profile page (WDI-<ISO3>); empty for a World Bank aggregate (the world, a region, an income group), which has series but no profile. |
+| `ISO3` | text | required | The country's ISO 3166-1 alpha-3 code, or the World Bank aggregate's code (WLD the world, EAS ... SSF the regions, HIC ... LIC the income groups). |
 | `COUNTRY_NAME` | text | optional | The economy's name as the World Bank writes it. |
 | `INDICATOR_CODE` | text | required | The indicator's code in the World Bank API. |
 | `INDICATOR` | text | required | The indicator's name as the World Bank publishes it. |

@@ -12,14 +12,21 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Refresh the world-economy pack from its public sources (World Bank WDI and WGI, IMF WEO, UNDP HDI, CIA World Factbook).
+"""Refresh the world-economy pack from its public sources (World Bank WGI and country list, WDI read from the world-development
+feed, IMF WEO, UNDP HDI, CIA World Factbook).
 
     python3 tools/drishti.py feed status world-economy
     python3 tools/drishti.py feed run world-economy --dry-run
     python3 tools/drishti.py feed run world-economy --snapshot                a full build in <data>/datafeeds/sources/world-economy
     python3 tools/drishti.py feed run world-economy --snapshot --internal-ok  refresh the committed dataset and pack (carries IMF data)
     python3 tools/drishti.py feed run world-economy --snapshot -- --no-imf    a build without any IMF data, in the data folder
-    python3 tools/drishti.py feed run world-economy --snapshot -- worldbank --since 2000 --scope SP.DYN.LE00.IN,EN.ATM.CO2E.PC:social
+    python3 tools/drishti.py feed run world-economy --snapshot -- worldbank --since 2000 --scope GOV_WGI_RL.STD:governance
+
+The World Bank's development indicators (WDI) are never downloaded here: the world-development feed is their one fetcher, and the
+fetcher reads every `kind: wdi` code of tools/realdata/sources.yaml from that feed's latest output (tools/feeds/sources/publicsector.py
+wdi_rows), written into the cache as the API's answer so the normaliser runs unchanged. With no such output the run fails in words:
+run `feed run world-development` first (it runs at 06:30, this feed at 06:45). --scope widens the WGI and IMF series only; a new WDI
+code goes into sources.yaml, which world-development then pulls.
 
 It wraps tools/realdata (the fetcher's per-source downloads, the normaliser, the pack generator and its check), so a refresh
 of the committed pack writes exactly what `tools/realdata/realdata.py all` writes. The IMF's terms allow reuse with
@@ -87,7 +94,8 @@ class WorldBank(B.Source):
     name, title, pack = "worldbank", "World Bank: World Development Indicators and Worldwide Governance Indicators", PACK
     url, licence = "https://data.worldbank.org", "CC BY 4.0"
     licence_url = "https://datacatalog.worldbank.org/public-licenses#cc-by"
-    scope_help = "more WDI/WGI indicator codes, CODE or CODE:group (group economy|labour|fiscal|social|governance; default economy)"
+    scope_help = ("more WGI indicator codes, CODE or CODE:group (group economy|labour|fiscal|social|governance; default economy); a WDI "
+                  "code goes into tools/realdata/sources.yaml, which the world-development feed pulls")
     cache_prefixes = ("wb_country", "wb/", "wb_indicator/")
 
     def widen(self, run: B.Run, cfg: dict) -> None:
@@ -100,15 +108,21 @@ class WorldBank(B.Source):
             meta = (json.loads(raw)[1] or [{}])[0] if raw else {}
             if raw and len(json.loads(raw)) < 2:
                 raise B.Refusal(f"the World Bank has no indicator {code}")
+            if (meta.get("source") or {}).get("id") != "3":
+                raise B.Refusal(f"{code} is a development indicator (WDI): the world-development feed is its one fetcher. Add it to "
+                                f"tools/realdata/sources.yaml (kind: wdi), run feed run world-development, then this feed")
             cfg["indicators"].append(indicator(code, meta.get("name") or code, meta.get("unit") or "",
                                                meta.get("sourceNote") or meta.get("name") or code,
                                                "wgi" if (meta.get("source") or {}).get("id") == "3" else "wdi", group or "economy"))
 
     def plan(self, run: B.Run) -> list[str]:
         api, y = run.cfg["sources"]["wdi"]["api"], run.cfg["years"]
+        wdi = [i["code"] for i in run.cfg["indicators"] if i["kind"] == "wdi"]
         return [f"{api}/country?format=json&per_page=400"] + [
-            f"{api}/country/all/indicator/{i['code']}?format=json&date={y['first']}:{y['last']}&per_page=20000"
-            for i in run.cfg["indicators"] if i["kind"] in ("wdi", "wgi")]
+            f"{api}/country/all/indicator/{i['code']}?format=json&date={y['first']}:{y['last']}&per_page=20000&source=3"
+            for i in run.cfg["indicators"] if i["kind"] == "wgi"] + \
+            ([f"WDI ({len(wdi)} indicators, {y['first']}-{y['last']}): read from the world-development feed's latest output, not the API"]
+             if wdi else [])
 
     def fetch(self, run: B.Run) -> None:
         run.fetcher.worldbank()
@@ -221,8 +235,6 @@ def plan_cfg(run: B.Run, selected: list[B.Source], dry: bool) -> tuple[dict, boo
     y = cfg["years"]
     y["first"] = run.first_year(y["first"], y["last"])
     cfg["imf_years"]["first"] = min(cfg["imf_years"]["first"], y["first"])
-    if getattr(run.a, "no_wdi", False):            # the world-development feed owns WDI: the country list and WGI stay here
-        cfg["indicators"] = [i for i in cfg["indicators"] if i["kind"] != "wdi"]
     if run.scope and not dry:
         for s in selected:
             if hasattr(s, "widen"):
@@ -342,8 +354,6 @@ def write_build(run: B.Run, a, cfg: dict, no_imf: bool) -> int:
 
 def extra_args(r) -> None:
     r.add_argument("--no-imf", action="store_true", help="no IMF data at all (fetch, dataset, pack); always the data folder")
-    r.add_argument("--no-wdi", action="store_true", help="leave out the World Bank's WDI indicators (the world-development feed owns "
-                                                          "them; the country list and the governance indicators WGI stay); the data folder")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -366,9 +376,9 @@ import packscript as PS  # noqa: E402
 
 
 class WorldEconomyFeed(PS.PackFeed):
-    """`drishti.py feed run world-economy`: the World Bank (WDI, WGI), the IMF's WEO (INTERNAL USE ONLY), UNDP and the CIA World
-    Factbook, built into the run's folder; each kind of the built pack loaded into worldlake. `--snapshot --internal-ok` refreshes the
-    committed dataset and pack."""
+    """`drishti.py feed run world-economy`: the World Bank (WGI; WDI read from the world-development feed's output), the IMF's WEO
+    (INTERNAL USE ONLY), UNDP and the CIA World Factbook, built into the run's folder; each kind of the built pack loaded into
+    worldlake. `--snapshot --internal-ok` refreshes the committed dataset and pack."""
     module, pack, prog = sys.modules[__name__], PACK, "world_economy.py"
 
     def pull(self, run):

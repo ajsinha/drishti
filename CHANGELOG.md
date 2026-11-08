@@ -37,6 +37,15 @@
   licence and terms are in the feed file (`options.sources`); the Bank of England, OSFI and the Canada Gazette are internal only and their
   releases say so. FRED's key is `DRISHTI_FRED_API_KEY`; without it the Bank of Canada still loads. One publisher down or a day GDELT
   skipped never fails a run.
+- **One fetcher of the World Bank's WDI**: the world-development feed. Besides its ten headline indicators (the profile) it pulls, as
+  series only, every `kind: wdi` code of `tools/realdata/sources.yaml` back to that file's `years.first` (`options.series-from`) and the
+  world, its seven regions and four income groups (`options.aggregates`; an aggregate's series has no `WDI_PROFILE`, now optional in the
+  contract). world-economy reads WDI from that feed's latest output (`publicsector.wdi_rows`, written into its cache in the API's shape,
+  so the normaliser is unchanged) and never calls the WDI API; with no output it fails saying `run feed run world-development first`.
+  `--no-wdi` is gone and world-economy loads all twelve of its kinds again (economy, macro-indicator, economic-forecast, labour-market
+  and fiscal-position are back); it runs after world-development by schedule (06:30, then 06:45). `--scope` widens WGI and IMF series
+  only: a new WDI code goes into `sources.yaml`. Tested on world-development output written from its recorded fixtures
+  (`tools/feeds/tests/test_wdi_one_fetcher.py`).
 - **Tests on recorded fixtures** (`tools/feeds/tests/test_publicsector.py`, never the network) and a browser test of the six screens on a
   scratch lake loaded from them (`test_public_sector_browser.py`); `tools/packgen/publicsector/make.py` writes the samples and READMEs.
 - **Docs**: the Public sector guide and Tutorial 46 (two Help entries), the External data page's public-sector rows and section, the
@@ -125,7 +134,7 @@
   `yahoo-prices` (internal only, off as shipped), `world-economy` (internal only for the IMF forecasts, into `worldlake`),
   `news-and-markets` (internal only, into `newslake`) and `market-data` (incremental by day from its state, each document under its own
   date, `--since` for a backfill, into `capitalmarket`). The World Bank's WDI belongs to the public sector's world-development feed:
-  world-economy runs with `--no-wdi` (its kinds keyed on WDI series wait until the pack reads them from there).
+  world-economy reads it from that feed's output (see "One fetcher of the World Bank's WDI" above).
   Refreshing a pack's committed demo snapshot in `data/testdata` is `feed run <feed> --snapshot` (with `--internal-ok` for
   internal-only data), writing exactly where the scripts wrote. Their per-pack `.sh` and `.ps1` wrappers are replaced by the one
   wrapper per system; `DRISHTI_SEC_USER_AGENT` and `DRISHTI_GLEIF_USER_AGENT` are replaced by `DRISHTI_FEEDS_USER_AGENT`; the
