@@ -34,6 +34,18 @@ def _free_port() -> int:
         return s.getsockname()[1]
 
 
+class FormsBackend(FakeBackend):
+    """The stand-in server, with the access log the Access page reads."""
+
+    async def admin(self, method, path, ident, body=None, **params):
+        if path == "/access":
+            self.calls.append(("admin", method, path, params))
+            return [{"at": "2026-10-30T09:00:00Z", "user": "ada", "action": "raw", "kind": "trade", "entityId": "T1", "businessDate": None}]
+        if path == "/access/stats":
+            return {"keepDays": 90, "dropped": 0}
+        return await super().admin(method, path, ident, body, **params)
+
+
 @pytest.fixture(scope="module")
 def console():
     import uvicorn
@@ -42,7 +54,7 @@ def console():
     from core.config import load_settings
 
     app = create_app(load_settings(CONSOLE / "config"))
-    app.state.backend = FakeBackend()
+    app.state.backend = FormsBackend()
     port = _free_port()
     server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning", timeout_graceful_shutdown=2))
     thread = threading.Thread(target=server.run, daemon=True)
@@ -151,4 +163,64 @@ def test_the_searches_submit_their_old_names(browser, console):
     page.locator("input[name=subject]").fill("system")
     page.locator("input[name=subject]").press("Enter")
     page.wait_for_url("**/admin/audit?subject=system")
+    page.close()
+
+
+def test_the_access_filter_submits_its_names_and_a_picked_date(browser, console):
+    url, _ = console
+    page = browser.new_page()
+    page.goto(url + "/admin/access?user=ada&action=raw&from=2026-10-01")
+    _no_raw_controls(page, ".adm")
+    fields = page.locator("[data-access-fields]")
+    assert fields.locator("input[name=user]").input_value() == "ada"
+    assert fields.locator("select[name=action]").input_value() == "raw"
+    assert fields.locator("input[type=hidden][name=from]").input_value() == "2026-10-01"       # the date picker writes the name
+    fields.locator("input[name=kind]").fill("trade")
+    page.locator("form.alert-form button[type=submit]").click()
+    page.wait_for_url("**kind=trade**")
+    assert "from=2026-10-01" in page.url and "user=ada" in page.url and "action=raw" in page.url
+    page.close()
+
+
+def test_caches_purge_a_picked_date_on_the_whole_cluster(browser, console):
+    url, _ = console
+    page = browser.new_page()
+    page.on("dialog", lambda d: d.accept())
+    page.goto(url + "/admin/caches")
+    _no_raw_controls(page, ".adm")
+    page.click("[data-purge-date='var.hot-files']")
+    assert "Choose the business date" in page.locator("[data-purge-status]").inner_text()       # nothing picked: said, not sent
+    page.evaluate("""() => window.Drishti.elements.inputs.formOf(document.querySelector("[data-purge-date-for='var.hot-files']")).setField('date', '2026-10-29')""")
+    page.locator("[data-purge-cluster]").check()
+    with page.expect_request(lambda r: "/admin/api/caches/var.hot-files/purge" in r.url) as req:
+        page.click("[data-purge-date='var.hot-files']")
+    assert "date=2026-10-29" in req.value.url and "scope=cluster" in req.value.url
+    page.close()
+
+
+def test_a_packs_data_file_names_its_kind_and_snapshot_date(browser, console):
+    url, _ = console
+    page = browser.new_page()
+    kinds = {"kinds": [{"kind": "trade", "connector": "trading-store", "folder": "trades", "key": "id", "snapshot": False},
+                       {"kind": "curve", "connector": "curve-store", "folder": "curves", "key": "id", "snapshot": True}], "businessDate": "2026-10-30", "maxMb": 5}
+    sent = []
+
+    def answer(route):
+        if "?" in route.request.url:
+            sent.append(route.request.url)
+            route.fulfill(json={"rows": 1, "kind": "curve", "checks": [], "steps": []})
+        else:
+            route.fulfill(json=kinds)
+    page.route("**/admin/api/packs/trading/data**", answer)
+    page.goto(url + "/admin/packs/trading")
+    page.locator("[data-data-form]:not([hidden])").wait_for()
+    _no_raw_controls(page, "[data-data-form]")
+    assert page.locator("[data-data-date]").is_hidden()                                        # trade is not a snapshot
+    page.locator("[data-data-kind]").select_option("curve")
+    assert page.locator("[data-data-date]").is_visible()
+    page.set_input_files("[data-data-file]", {"name": "curves.jsonl", "mimeType": "application/json", "buffer": b'{"id": "c1"}\n'})
+    assert page.locator("[data-data-load]").is_enabled()
+    page.click("[data-data-load]")
+    page.wait_for_function("() => !document.querySelector('[data-data-result]').hidden || /./.test(document.querySelector('[data-data-msg]').textContent)")
+    assert sent and "kind=curve" in sent[0] and "date=2026-10-30" in sent[0]
     page.close()
