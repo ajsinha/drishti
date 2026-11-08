@@ -409,6 +409,24 @@ export class Form extends InputBase {
   }
 
   /**
+   * A list field's values replaced (a server's answer that arrives later: the measures of the model just chosen); the form drawn again,
+   * the focus kept. A value no longer offered stays until a person changes it (its check says so).
+   * @param {string} path the field in the schema, an array's item fields by name (filters.field)
+   * @param {Array} list the values offered
+   * @param {string[]} [labels] their words
+   * @returns {void}
+   */
+  setOptions(path, list, labels) {
+    let node = this.schema;
+    String(path).split('.').forEach((k) => { while (node && node.type === 'array' && node.items) { node = node.items; } node = node && node.properties ? node.properties[k] : null; });
+    if (!node) { throw new Error('no field ' + path); }
+    const target = node.type === 'array' && node.items && !node.items.properties ? node.items : node;
+    target.enum = list.slice();
+    if (labels) { target.enumLabels = labels.slice(); } else { delete target.enumLabels; }
+    this.render();
+  }
+
+  /**
    * A field's value.
    * @param {string} path
    * @returns {*}

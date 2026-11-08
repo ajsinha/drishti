@@ -69,6 +69,8 @@ import { parseTime, parseDateTime } from './drishti_time-picker.js';
  * @property {boolean} [lazy] text and numbers: the value changes when the field is left or Enter is pressed, not at each key
  * @property {boolean} [noLabel] a custom widget that draws its own label
  * @property {string} [addLabel] an array of objects: the words of its Add button
+ * @property {(string|Object<string, string>)} [itemHook] an array of objects: data attributes on each item's group (as hook)
+ * @property {(string|Object<string, string>)} [addHook] an array of objects: data attributes on its Add button (as hook)
  * @property {string} [parseMessage] the words when typed text does not read as the field's type (default: the form's own)
  */
 

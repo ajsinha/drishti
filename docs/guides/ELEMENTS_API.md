@@ -7628,6 +7628,18 @@ One field's value set from outside (a page's own control, a server's answer); th
 
 Returns `void`.
 
+##### `Form.setOptions(path, list, labels)`
+
+A list field's values replaced (a server's answer that arrives later: the measures of the model just chosen); the form drawn again, the focus kept. A value no longer offered stays until a person changes it (its check says so).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `path` | `string` | the field in the schema, an array's item fields by name (filters.field) |
+| `list` | `Array` | the values offered |
+| `[labels]` | `string[]` | their words |
+
+Returns `void`.
+
 ##### `Form.getField(path)`
 
 A field's value.
@@ -8624,6 +8636,8 @@ A field of a form schema.
 | `[lazy]` | `boolean` | text and numbers: the value changes when the field is left or Enter is pressed, not at each key |
 | `[noLabel]` | `boolean` | a custom widget that draws its own label |
 | `[addLabel]` | `string` | an array of objects: the words of its Add button |
+| `[itemHook]` | `(string\|Object&lt;string, string&gt;)` | an array of objects: data attributes on each item's group (as hook) |
+| `[addHook]` | `(string\|Object&lt;string, string&gt;)` | an array of objects: data attributes on its Add button (as hook) |
 | `[parseMessage]` | `string` | the words when typed text does not read as the field's type (default: the form's own) |
 
 #### `SelectOptions` : `Object`

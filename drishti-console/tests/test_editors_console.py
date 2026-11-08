@@ -50,11 +50,13 @@ def test_the_page_is_a_shell_with_its_scripts_and_needs_bi():
     assert r.status_code == 200
     for s in SCRIPTS:
         assert s in r.text
-    for act in ("validate", "preview", "history", "impact", "save", "propose", "new"):
-        assert f'data-act="{act}"' in r.text
-    for mode in ("visual", "yaml", "both"):
-        assert f'data-mode="{mode}"' in r.text
-    assert 'data-resize="panel"' in r.text and 'data-name="trading.trade_summary"' in r.text
+    # the header, the modes and the resizable panes are drawn by drishti-designer's DesignerShell in the page's [data-editors] (the kit)
+    assert "data-editors" in r.text and '{% include "_designer_kit.html" %}' not in r.text and "drishti-designer" in r.text
+    shell = (CONSOLE / "web" / "static" / "elements" / "drishti-designer" / "src" / "drishti_shell.js").read_text(encoding="utf-8")
+    for act in ("validate", "preview", "history", "impact", "save", "propose"):
+        assert f"id: '{act}'" in shell
+    assert "'data-act': 'new'" in shell and "'data-mode': m" in shell and "'data-resize': 'panel'" in shell
+    assert 'data-name="trading.trade_summary"' in r.text
     assert make(powers=())[0].get("/build/tables").status_code == 403
 
 

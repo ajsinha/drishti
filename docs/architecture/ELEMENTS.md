@@ -646,7 +646,9 @@ library with its module: an unlicensed module's library is not served, its kinds
   - `setField(path, value)` (one field drawn again; a field being typed in keeps its text), `getField`, `setNotes` (warnings shown where
     a problem would be), `showErrors` (problems shown at once without marking every field tried); the widget **`formula`** (a one-line `CodeEditor` through
     `<input data-di-code>`: `options.mode`, default Rachana, and `options.complete`, the page's completion; the input holds the value); the errors map (`form.errors`) is
-    current when `change` fires; `readOnly` as before.
+    current when `change` fires; `readOnly` as before; `setOptions(path, list, labels)` (a list field's values replaced when the server
+    answers later: the measures of the model just chosen; the form drawn again, the focus kept); an array of objects' `itemHook` and
+    `addHook` (data attributes on each item's group and on its Add button).
   - The native **`<input type="time">`** and **`<input type="datetime-local">`** are upgraded in place like the dates
     (`upgradeTimeInput`, `upgradeDateTimeInput`; `upgradeFields` does all three).
 
@@ -1199,8 +1201,8 @@ table editor, `/build/tables?new=table`; "the model designer" in two notes means
 | Calculator, Pivot computed fields (`terminal/_calc.html`, `terminal/pivot.html`) | | their code areas (→ `CodeEditor`) |
 | Admin › Connectors, Drishti*net (`templates/admin/_connector_dialogs.html`, `net.html`) | | the YAML areas (→ `YamlPane`) |
 | Reader layout mode, arranging a screen, workspaces (`drishti_layout.js`, `drishti_screen-grid.js`, `drishti_workspace.js`) | | the pointer moves (→ `LayoutCanvas`, `trackPointer`) |
-| Forms, record forms, subscriptions (`drishti_form.js`, `drishti_record-forms.js`, `drishti_subscribe-when.js`), the table editor's fields, BI's Format pane, the Build inspector's structured options (`build/drishti_forms.js`) | `Form` (live, embedded, steps, named fields, hooks, custom widgets, time, date-and-time, money: 8.2, "The forms on Form") | the record forms' cells (→ drishti-grid editing); `drishti_alert-form.js` (→ `Form`) |
-| Packs, lake files, lenses, editions, engines, settings (`drishti_pack-new.js`, `drishti_admin-*.js`) | | their forms (→ `Form` with four eyes) |
+| Forms, record forms, subscriptions (`drishti_form.js`, `drishti_record-forms.js`, `drishti_subscribe-when.js`), the table editor's fields, BI's Format pane, the Build inspector's structured options (`build/drishti_forms.js`) | `Form` (live, embedded, steps, named fields, hooks, custom widgets, time, date-and-time, money: 8.2, "The forms on Form"); the alert form (`drishti_alert-form.js`: the server's schema from `core/alert_form.py`, embedded in its POST form) | the record forms' cells (→ drishti-grid editing) |
+| Packs, lake files, lenses, editions, engines, settings (`drishti_pack-new.js`, `drishti_admin-*.js`) | a lake file's fields (drishti-grid editing) | their forms (→ `Form` with four eyes); the survey of 2026-11-07 counts native controls in `templates/admin/`: collab 23, loads 19, embedding 16, `_lake_maintain` 14, roles 11, net 11, lakes 11, users 10, capacity, artifacts, access, `_connector_dialogs` 6 each, health and configuration 5, packs, pack_detail, connectors, `_uninstall_dialog` 3, edits and caches 2, inbox, engines, compute, audit 1; and in scripts `drishti_admin-connectors.js` 8, `-lake-maintain.js` and `-embedding.js` 3 |
 | Approvals' change views (`drishti_approvals.js`, `build/_diff.html`) | | the diffs (→ drishti-inputs' `CodeDiff`) |
 
 **Second pass (the allow-list from 19 to 3).** On drishti-core's `trackPointer` (now with pointer capture) or the kit's `DragHub`: the
@@ -1248,6 +1250,12 @@ source and look-ups and its columns checklist, and Admin › Lakes' fields with 
 the **`code` cell editor** (drishti-inputs' one-line `CodeEditor` in the column's `codeMode`, completing through its `complete` hook; the
 completion keeps its own Enter, Tab and Escape) so a formula in a row is the same editor as everywhere else. With the BI pass's transform parameters on `Form`, the hand-made
 form allow-list is empty (0) and capped at 0.
+
+The alert form is a `Form` from the server's schema (`core/alert_form.py`), embedded in the page's POST form with every control named as
+before (`routes/alert_routes.body_from` unchanged): the source, condition and trigger groups show through `when` (their `data-group` and
+`data-when` hooks kept), the model's measures and the filters' fields arrive through `setOptions`, and the filters are an array of objects
+the page writes into the hidden `model_query` (`drishti_alert-form.js` 218 → 191 lines, `alert_form.html` 163 → 69, `core/alert_form.py` new, 168: the hand-made groups,
+the filter rows and the swapped column select deleted).
 
 ## 13. Risks
 

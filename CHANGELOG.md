@@ -187,6 +187,13 @@
 
 ## 2.9.11.e (unreleased)
 
+- **The alert form on drishti-inputs' `Form`** ([ELEMENTS.md section 12.3, fifth pass](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
+  the server sends the form's schema (`core/alert_form.py`, new, 168 lines) and the page's `Form`, embedded in its POST form, draws every
+  field with the name it always submitted (saving and *Check now* unchanged); the source, condition and trigger groups follow the choice
+  through `when`, the model's measures and the filters' fields arrive as the server answers (`Form.setOptions`), and the filters are an array
+  of objects written into the hidden `model_query`. `drishti_alert-form.js` 218 → 191 lines, `alert_form.html` 163 → 69; the hand-made groups,
+  filter rows, swapped select and their CSS deleted. **drishti-inputs**: `Form.setOptions(path, list, labels)`, an array's `itemHook` and
+  `addHook`.
 - **No bespoke UI, the editors' rows on drishti-grid editing** ([ELEMENTS.md section 12.3, fifth pass](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
   the model editor's tables, relationships, measures (the ? card and the engine's "adds up?" as drawn cells), hierarchies, row rules,
   fields and access matrix, and the table editor's source and look-ups and its columns checklist are drishti-grid with cell editing through
