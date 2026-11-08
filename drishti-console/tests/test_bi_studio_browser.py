@@ -277,6 +277,18 @@ def test_a_theme_is_made_published_and_offered_to_reports(stack, browser):
     page.check('[data-theme-family="matrix"] [data-format-row-banding]')
     expect(page.locator("[data-theme-valid]")).to_have_text("The theme is valid.", timeout=15000)
     expect(page.locator('[data-theme-preview] [data-theme-sample="column"] .bi-chart')).to_have_count(1)
+    # the theme's YAML is the Studio shell's YAML panel (the kit's YamlPane), both ways: the visual side's edits are in it; an edit of the
+    # YAML, read after a pause, shows in the form; a line that does not read keeps the theme as it was
+    yaml_text = "() => document.querySelector('[data-theme-yaml] .CodeMirror').CodeMirror.getValue()"
+    page.wait_for_function(f"() => ({yaml_text})().includes('theme: desk-blue') && ({yaml_text})().includes('title: Desk blue')")
+    edit = """([a, b]) => { const cm = document.querySelector('[data-theme-yaml] .CodeMirror').CodeMirror, t = cm.getValue();
+      cm.replaceRange(t.replace(a, b), { line: 0, ch: 0 }, { line: cm.lastLine(), ch: cm.getLine(cm.lastLine()).length }, 'paste'); }"""
+    page.evaluate(edit, ["title: Desk blue", "title: Desk navy"])
+    page.wait_for_function("() => document.querySelector('[data-theme-title] input, input[data-theme-title]').value === 'Desk navy'", timeout=15000)
+    page.evaluate(edit, ["title: Desk navy", "title: [Desk navy"])
+    expect(page.locator("[data-theme-yaml][data-dd-problem]")).to_have_count(1, timeout=15000)
+    page.evaluate(edit, ["title: [Desk navy", "title: Desk blue"])
+    page.wait_for_function("() => document.querySelector('[data-theme-title] input, input[data-theme-title]').value === 'Desk blue'", timeout=15000)
     page.click("[data-save]")
     expect(page.locator("[data-status]")).to_have_text("Saved", timeout=20000)
     page.click("[data-publish]")

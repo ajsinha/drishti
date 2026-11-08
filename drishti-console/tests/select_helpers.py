@@ -52,33 +52,59 @@ def choose(pg, sel, val):
 # with select_option picks from the Select the way a person does (open it, click the option); input_value reads the element's value. A
 # native <select> is untouched. Installed once for the test session by conftest.py.
 
-IS_SELECT = "(e) => !!e && e.tagName === 'DRISHTI-SELECT'"
+# A field's name is on its hidden input (span.di-names, so the page's own form submits it); a test that found the field by its name
+# (`[name="op.mtm"]`) means the <drishti-select> a person sees beside it.
+TARGET = ("(e) => { if (e && e.tagName === 'INPUT' && e.type === 'hidden' && e.closest('.di-names')) {"
+          " const f = e.closest('.di-form-field'), s = f && f.querySelector('drishti-select'); if (s) { return s; } } return e; }")
+IS_SELECT = "(e) => { const t = (%s)(e); return !!t && t.tagName === 'DRISHTI-SELECT'; }" % TARGET
 OPTION_AT = ("(e, want) => { const w = [].concat(want.value, want.label).map(String);"
              " return e.component.matches.findIndex((o) => w.indexOf(String(o.value)) >= 0 || w.indexOf(String(o.label)) >= 0); }")
+NO_OPTION = "e => e.component.options.map((o) => [o.value, o.label])"
+
+
+def _want(value, label):
+    as_list = lambda x: [] if x is None else list(x) if isinstance(x, (list, tuple)) else [x]   # noqa: E731
+    return {"value": as_list(value), "label": as_list(label)}
 
 
 def _pick(locator, value=None, label=None):
-    """Opens the Select under locator and clicks the option whose value or label is asked (a list: any of them)."""
-    as_list = lambda x: [] if x is None else list(x) if isinstance(x, (list, tuple)) else [x]   # noqa: E731
-    want = {"value": as_list(value), "label": as_list(label)}
-    locator.locator(".di-select-control").click()
+    """Opens the Select under locator (or beside the hidden input it names) and clicks the option whose value or label is asked (a
+    list: any of them)."""
+    want = _want(value, label)
+    el = locator.element_handle().evaluate_handle(TARGET).as_element()
+    el.query_selector(".di-select-control").click()
     page = locator.page
     page.wait_for_selector(".di-select-pop [role=listbox]")
-    i = locator.evaluate(OPTION_AT, want)
-    assert i >= 0, ("no such option", want, locator.evaluate("e => e.component.options.map((o) => [o.value, o.label])"))
+    i = el.evaluate(OPTION_AT, want)
+    assert i >= 0, ("no such option", want, el.evaluate(NO_OPTION))
     page.locator(".di-select-pop [role=option][data-i='%d']" % i).click()
-    return [str(locator.evaluate("e => e.value"))]
+    return [str(el.evaluate("e => e.value"))]
+
+
+async def _pick_async(locator, value=None, label=None):
+    """_pick for Playwright's async API."""
+    want = _want(value, label)
+    el = (await (await locator.element_handle()).evaluate_handle(TARGET)).as_element()
+    await (await el.query_selector(".di-select-control")).click()
+    page = locator.page
+    await page.wait_for_selector(".di-select-pop [role=listbox]")
+    i = await el.evaluate(OPTION_AT, want)
+    assert i >= 0, ("no such option", want, await el.evaluate(NO_OPTION))
+    await page.locator(".di-select-pop [role=option][data-i='%d']" % i).click()
+    return [str(await el.evaluate("e => e.value"))]
 
 
 def install_playwright_shim():
-    """Makes Page.select_option, Locator.select_option and Locator.input_value work on a <drishti-select> (sync API)."""
+    """Makes Page.select_option, Locator.select_option and Locator.input_value work on a <drishti-select> (sync and async API)."""
     try:
         from playwright.sync_api import Locator, Page
+        from playwright.async_api import Locator as ALocator, Page as APage
     except ImportError:                                            # no Playwright: nothing to do
         return
     if getattr(Locator, "_drishti_select", False):
         return
     loc_select, loc_value = Locator.select_option, Locator.input_value
+    aloc_select, aloc_value = ALocator.select_option, ALocator.input_value
 
     def select_option(self, value=None, *, index=None, label=None, element=None, **kw):
         if index is None and element is None and self.first.evaluate(IS_SELECT):
@@ -87,12 +113,27 @@ def install_playwright_shim():
 
     def input_value(self, **kw):
         if self.evaluate(IS_SELECT):
-            v = self.evaluate("e => e.value")
+            v = self.evaluate("(e) => (%s)(e).value" % TARGET)
             return "" if v is None else str(v)
         return loc_value(self, **kw)
 
     def page_select_option(self, selector, value=None, *, index=None, label=None, element=None, **kw):
         return select_option(self.locator(selector), value, index=index, label=label, element=element, **kw)
 
+    async def aselect_option(self, value=None, *, index=None, label=None, element=None, **kw):
+        if index is None and element is None and await self.first.evaluate(IS_SELECT):
+            return await _pick_async(self.first, value, label)
+        return await aloc_select(self, value, index=index, label=label, element=element, **kw)
+
+    async def ainput_value(self, **kw):
+        if await self.evaluate(IS_SELECT):
+            v = await self.evaluate("(e) => (%s)(e).value" % TARGET)
+            return "" if v is None else str(v)
+        return await aloc_value(self, **kw)
+
+    async def apage_select_option(self, selector, value=None, *, index=None, label=None, element=None, **kw):
+        return await aselect_option(self.locator(selector), value, index=index, label=label, element=element, **kw)
+
     Locator.select_option, Locator.input_value, Page.select_option = select_option, input_value, page_select_option
+    ALocator.select_option, ALocator.input_value, APage.select_option = aselect_option, ainput_value, apage_select_option
     Locator._drishti_select = True

@@ -1890,7 +1890,9 @@
         const all = this.expand(ids);
         return this.commit(label || (all.length === 1 ? 'Delete ' + ((this.get(all[0]) || {}).label || 'an item') : 'Delete ' + all.length + ' items'), (items) => {
           for (let i = items.length - 1; i >= 0; i--) { if (all.indexOf(items[i].id) >= 0) { items.splice(i, 1); } }
-          Object.keys(this.state.breakpoints).forEach((b) => { const bp = this.state.breakpoints[b]; bp.order = (bp.order || []).filter((x) => all.indexOf(x) < 0); bp.hidden = (bp.hidden || []).filter((x) => all.indexOf(x) < 0); });
+          Object.keys(this.state.breakpoints).forEach((b) => { const bp = this.state.breakpoints[b]; bp.order = (bp.order || []).filter((x) => all.indexOf(x) < 0); bp.hidden = (bp.hidden || []).filter((x) => all.indexOf(x) < 0);
+            all.forEach((x) => { if (bp.heights) { delete bp.heights[x]; } });
+            if (bp.wide) { bp.wide = bp.wide.filter((x) => all.indexOf(x) < 0); if (!bp.wide.length) { delete bp.wide; } } });
           return all;
         });
       }
@@ -2038,8 +2040,8 @@
         return o && o.withHidden ? out : out.filter((id) => hidden.indexOf(id) < 0);
       }
       breakpoint(bp) { return this.state.breakpoints[bp] ? copy(this.state.breakpoints[bp]) : null; }
-      arrange(bp, change) {
-        return this.commit('Arrange ' + bp, () => {
+      arrange(bp, change, label) {
+        return this.commit(label || 'Arrange ' + bp, () => {
           const cur = this.state.breakpoints[bp] || { order: [], hidden: [], heights: {} };
           const order = this.order(bp, { withHidden: true });
           if (change.order) { order.splice(0, order.length, ...change.order.filter((id) => this.get(id))); }
@@ -2048,8 +2050,10 @@
           if (change.hide) { const [id, on] = change.hide, k = hidden.indexOf(id); if (on && k < 0) { hidden.push(id); } else if (!on && k >= 0) { hidden.splice(k, 1); } }
           const heights = Object.assign({}, cur.heights);
           if (change.height) { const [id, n] = change.height; if (n) { heights[id] = clampHeight(n, this.o.maxH); } else { delete heights[id]; } }
-          const natural = this.ids().join('|') === order.join('|') && !hidden.length && !Object.keys(heights).length;
-          if (natural) { delete this.state.breakpoints[bp]; } else { this.state.breakpoints[bp] = { order, hidden, heights }; }
+          const wide = (cur.wide || []).slice();
+          if (change.wide) { const [id, on] = change.wide, k = wide.indexOf(id); if (on && k < 0) { wide.push(id); } else if (!on && k >= 0) { wide.splice(k, 1); } }
+          const natural = this.ids().join('|') === order.join('|') && !hidden.length && !Object.keys(heights).length && !wide.length;
+          if (natural) { delete this.state.breakpoints[bp]; } else { this.state.breakpoints[bp] = wide.length ? { order, hidden, heights, wide } : { order, hidden, heights }; }
           return [];
         });
       }

@@ -279,6 +279,18 @@ class EditorApiTest {
     }
 
     @Test
+    void theDesignerLayoutIsRememberedPerPersonWithTheRestOfTheView() throws Exception {
+        assertThat(ann(get("/api/v1/tables/editor/prefs"), null).path("layout").asText()).isEqualTo("studio");
+        ann(put("/api/v1/tables/editor/prefs"), Map.of("layout", "terminal"));
+        ann(put("/api/v1/tables/editor/prefs"), Map.of("mode", "visual"));                     // another setting keeps the layout
+        JsonNode mine = ann(get("/api/v1/tables/editor/prefs"), null);
+        assertThat(mine.path("layout").asText()).isEqualTo("terminal");
+        assertThat(mine.path("mode").asText()).isEqualTo("visual");
+        assertThat(ok("cat", "reader", get("/api/v1/tables/editor/prefs"), null).path("layout").asText()).isEqualTo("studio");
+        assertThat(call("ann", "writer", put("/api/v1/tables/editor/prefs"), Map.of("layout", "dashboard")).getResponse().getStatus()).isEqualTo(422);
+    }
+
+    @Test
     void newTableStepsSuggestColumnsFromASampleOfTheKind() throws Exception {
         JsonNode s = ann(post("/api/v1/tables/editor/suggest"), Map.of("kind", "trade", "name", "mine.trades"));
         assertThat(s.path("doc").path("table").asText()).isEqualTo("mine.trades");
