@@ -53,9 +53,12 @@ def pictures_of(doc: Path) -> list:
     return PICTURE.findall(doc.read_text())
 
 
+TOP_LEVEL = {"deployqa": DOCS / "img" / "deploy"}     # the pictures of a guide at the top of docs/ (DEPLOYMENT_AND_QA_GUIDE.md): docs/img/<dir>/
+
+
 def image_dirs() -> list:
-    """Every directory of generated pictures: docs/<guides|connectors>/img/<guide>/."""
-    return sorted(p for p in DOCS.glob("*/img/*") if p.is_dir())
+    """Every directory of generated pictures: docs/<guides|connectors|tutorials>/img/<guide>/, and the top-level guides' docs/img/<dir>/."""
+    return sorted({p for p in DOCS.glob("*/img/*") if p.is_dir()} | {p for p in TOP_LEVEL.values() if p.is_dir()})
 
 
 def shown_in(directory: Path) -> set:
@@ -94,7 +97,7 @@ def test_the_screenshot_script_makes_every_picture_of_its_guide(guide):
     out = subprocess.run([sys.executable, str(SHOTS), "--list", "--guide", guide], capture_output=True, text=True, timeout=60)
     assert out.returncode == 0, out.stderr
     made = set(out.stdout.split())
-    dirs = [d for d in image_dirs() if d.name == guide]
+    dirs = [TOP_LEVEL[guide]] if guide in TOP_LEVEL else [d for d in image_dirs() if d.name == guide and d not in TOP_LEVEL.values()]
     assert dirs, f"no picture directory for the guide {guide}"
     for d in dirs:
         assert {p.name for p in d.iterdir() if p.is_file()} <= made, "a picture the script no longer makes: " + guide

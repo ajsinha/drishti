@@ -894,6 +894,10 @@ which sets none of the demo settings). Then:
 - **Admin → Packs → trading → Sutra coverage**: every SOURCE_SYSTEM × PRODUCT_TYPE of your data has a Sutra (a row without one is a
   product type the pack does not know yet, laid out by inference).
 
+![Admin → Connectors: the trade connectors of the three systems running](img/deploy/30-admin-connectors.jpg)
+
+![Admin → Packs → trading: the Sutra coverage](img/deploy/31-pack-coverage.jpg)
+
 ### 11.4 The demo, page by page
 
 | # | Show | How |
@@ -908,6 +912,13 @@ which sets none of the demo settings). Then:
 | 8 | BI by source system | **BI → Catalogue → Trades overview**; change a slicer |
 | 9 | VaR and exposure on your data | `VAR BANK`, `EXP BANK` (section 8) |
 | 10 | A history | `TRD <your id> 60` (two or more of your files), `TRD 1000279 60` (amended ten times); **C** changes only, **D** the fields that changed |
+
+| | |
+|---|---|
+| ![An ENDUR deal: ticket, legs, cash flows](img/deploy/32-endur-deal.jpg) **1. An ENDUR deal** | ![Forms → Trading](img/deploy/33-trading-form.jpg) **2. Forms → Trading** |
+| ![A counterparty's trades](img/deploy/34-counterparty.jpg) **4. A counterparty** | |
+
+The pictures are of the synthetic data, loaded exactly as in 11.2.
 
 **Optional: the S3 tests**, against simulators that need no `.exe` and no Docker: `pip install "moto[server]==5.2.3"`, then
 `.\mvnw.cmd -q -pl drishti-identity,plugins/drishti-plugin-iceberg -am test "-Dtest=S3ContentStoreTest,S3MockContentStoreTest,MinioContentStoreTest,NativeOnS3SimulatorTest" "-Dsurefire.failIfNoSpecifiedTests=false"`

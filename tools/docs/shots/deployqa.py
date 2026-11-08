@@ -148,6 +148,26 @@ def engines(c: Ctx):
     page(c, "18-engines.jpg", "/admin/engines", height=1100)
 
 
+# ---- section 11, the offline rehearsal: the checks and the demo pages (the synthetic data loaded as in 11.2) ------------------------------------
+
+@shot("30-admin-connectors.jpg", also=("31-pack-coverage.jpg",))
+def rehearsal_admin(c: Ctx):
+    login(c, width=WIDE, height=HIGH)
+    page(c, "30-admin-connectors.jpg", "/admin/connectors", wait="table", height=1100)
+    go(c, "/admin/packs/trading", width=WIDE, height=HIGH, wait="[data-coverage]", settle=2000)
+    c.page.locator("#pdCover").scroll_into_view_if_needed()
+    c.page.wait_for_timeout(600)
+    c.save("31-pack-coverage.jpg")
+
+
+@shot("32-endur-deal.jpg", also=("33-trading-form.jpg", "34-counterparty.jpg"))
+def rehearsal_pages(c: Ctx):
+    login(c, width=WIDE, height=HIGH)
+    page(c, "32-endur-deal.jpg", "/v/trade/1000001", wait="[data-panel]", height=1000, settle=3000)
+    page(c, "33-trading-form.jpg", "/form/trading", height=1000, settle=2500)
+    page(c, "34-counterparty.jpg", "/v/counterparty-trades/CP-NORTHPLAINS", wait="[data-panel]", height=1000, settle=3000)
+
+
 # ---- the banking module off (the server restarted with DRISHTI_MODULES_BANKING_ENABLED=false) ---------------------------------------------------
 
 @shot("15-banking-off.jpg")
