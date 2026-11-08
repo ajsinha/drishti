@@ -17,8 +17,8 @@
    kinds of layout share it. A **grid** layout places each item at {x, y, w, h} (a report page: snap, settle, align, distribute,
    z-order, groups). A **flow** layout keeps items in order inside named areas (a screen's main and side columns), each with a span in
    columns and a height in rows (0: the content's). Both have copy and paste, and **breakpoints**: a phone's (or a tablet's) own order,
-   hidden items and heights, kept apart from the full layout. A host that keeps its own document (and its own undo) passes stack: null
-   and hears each step as a "commit" event with the rectangles before and after. */
+   hidden items, heights and wide items (the whole width), kept apart from the full layout. A host that keeps its own document (and
+   its own undo) passes stack: null and hears each step as a "commit" event with the rectangles before and after. */
 import { EventBus } from '../../drishti-core/src/drishti_index.js';
 import { CommandStack } from './drishti_commands.js';
 import { clampRect, settle as settleRects, alignRects, distributeRects, clampSpan, clampHeight, bounds } from './drishti_layout-rules.js';
@@ -83,7 +83,7 @@ export class LayoutModel {
   /**
    * Loads items (and breakpoints) without an undo step: a document opened, a host's model redrawn.
    * @param {LayoutItem[]} items
-   * @param {Object<string, {order: string[], hidden: string[], heights: Object<string, number>}>} [breakpoints]
+   * @param {Object<string, {order: string[], hidden: string[], heights: Object<string, number>, wide: string[]}>} [breakpoints]
    * @returns {void}
    */
   load(items, breakpoints) {
@@ -187,7 +187,9 @@ export class LayoutModel {
     const all = this.expand(ids);
     return this.commit(label || (all.length === 1 ? 'Delete ' + ((this.get(all[0]) || {}).label || 'an item') : 'Delete ' + all.length + ' items'), (items) => {
       for (let i = items.length - 1; i >= 0; i--) { if (all.indexOf(items[i].id) >= 0) { items.splice(i, 1); } }
-      Object.keys(this.state.breakpoints).forEach((b) => { const bp = this.state.breakpoints[b]; bp.order = (bp.order || []).filter((x) => all.indexOf(x) < 0); bp.hidden = (bp.hidden || []).filter((x) => all.indexOf(x) < 0); });
+      Object.keys(this.state.breakpoints).forEach((b) => { const bp = this.state.breakpoints[b]; bp.order = (bp.order || []).filter((x) => all.indexOf(x) < 0); bp.hidden = (bp.hidden || []).filter((x) => all.indexOf(x) < 0);
+        all.forEach((x) => { if (bp.heights) { delete bp.heights[x]; } });
+        if (bp.wide) { bp.wide = bp.wide.filter((x) => all.indexOf(x) < 0); if (!bp.wide.length) { delete bp.wide; } } });
       return all;
     });
   }
@@ -459,21 +461,23 @@ export class LayoutModel {
   }
 
   /**
-   * A breakpoint's own arrangement, as kept (order, hidden, heights), or null when it follows the full layout.
+   * A breakpoint's own arrangement, as kept (order, hidden, heights and, when any, wide), or null when it follows the full layout.
    * @param {string} bp
-   * @returns {?{order: string[], hidden: string[], heights: Object<string, number>}}
+   * @returns {?{order: string[], hidden: string[], heights: Object<string, number>, wide: (string[]|undefined)}}
    */
   breakpoint(bp) { return this.state.breakpoints[bp] ? copy(this.state.breakpoints[bp]) : null; }
 
   /**
-   * Changes a breakpoint: an item moved by `step` places, hidden or shown, or its height; arranging it back to the full layout's
-   * order with nothing hidden and no heights removes the breakpoint's entry.
+   * Changes a breakpoint: an item moved by `step` places, hidden or shown, its height, or made wide (the whole width: a tablet's two
+   * columns); arranging it back to the full layout's order with nothing hidden, no heights and nothing wide removes the breakpoint's
+   * entry.
    * @param {string} bp
-   * @param {{move: [string, number], hide: [string, boolean], height: [string, number], order: string[]}} change
+   * @param {{move: [string, number], hide: [string, boolean], height: [string, number], wide: [string, boolean], order: string[]}} change
+   * @param {string} [label] the step's name (default "Arrange <bp>")
    * @returns {boolean}
    */
-  arrange(bp, change) {
-    return this.commit('Arrange ' + bp, () => {
+  arrange(bp, change, label) {
+    return this.commit(label || 'Arrange ' + bp, () => {
       const cur = this.state.breakpoints[bp] || { order: [], hidden: [], heights: {} };
       const order = this.order(bp, { withHidden: true });
       if (change.order) { order.splice(0, order.length, ...change.order.filter((id) => this.get(id))); }
@@ -482,8 +486,10 @@ export class LayoutModel {
       if (change.hide) { const [id, on] = change.hide, k = hidden.indexOf(id); if (on && k < 0) { hidden.push(id); } else if (!on && k >= 0) { hidden.splice(k, 1); } }
       const heights = Object.assign({}, cur.heights);
       if (change.height) { const [id, n] = change.height; if (n) { heights[id] = clampHeight(n, this.o.maxH); } else { delete heights[id]; } }
-      const natural = this.ids().join('|') === order.join('|') && !hidden.length && !Object.keys(heights).length;
-      if (natural) { delete this.state.breakpoints[bp]; } else { this.state.breakpoints[bp] = { order, hidden, heights }; }
+      const wide = (cur.wide || []).slice();
+      if (change.wide) { const [id, on] = change.wide, k = wide.indexOf(id); if (on && k < 0) { wide.push(id); } else if (!on && k >= 0) { wide.splice(k, 1); } }
+      const natural = this.ids().join('|') === order.join('|') && !hidden.length && !Object.keys(heights).length && !wide.length;
+      if (natural) { delete this.state.breakpoints[bp]; } else { this.state.breakpoints[bp] = wide.length ? { order, hidden, heights, wide } : { order, hidden, heights }; }
       return [];
     });
   }

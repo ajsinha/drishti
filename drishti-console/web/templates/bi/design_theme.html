@@ -14,7 +14,7 @@
   See the LICENSE file in the root of this repository for the full terms.
 #}
 {# The theme designer (report schema v2, 2.4.0; docs/guides/BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 5.2), inside BI Studio: a theme item's colours, type and format defaults per kind of
-   visual, with a preview, drawn by static/js/drishti_bi-theme-designer.js from /bi/api/items/<id>; /bi/design/theme/new makes one. #}
+   visual, with a preview, drawn by static/js/drishti_bi-theme-designer.js from /bi/api/items/<id>, its YAML in the Studio shell's YAML panel (the kit's YamlPane); /bi/design/theme/new makes one. #}
 {% extends "bi/shell.html" %}
 {% block bi_title %}Theme{% endblock %}
 {% block head %}<link rel="stylesheet" href="/static/elements/drishti-grid/drishti_grid.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/elements/drishti-chart/drishti_chart.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-report.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-design.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-studio.css?v={{ ASSET_V }}">{% endblock %}
@@ -27,9 +27,6 @@
       <p class="text-muted-d">Sample figures, drawn as a report in this theme draws them.</p>
       <div class="bi-theme-preview bi-rgrid" data-theme-preview></div>
       <p data-theme-valid role="status" aria-live="polite"></p><ul class="bi-warn" data-theme-problems></ul>
-      <details class="bi-fsection"><summary>YAML</summary>
-        <p class="text-muted-d">The same theme as text: edit it here and leave the box to apply it.</p>
-        <textarea class="studio-in mono" rows="14" spellcheck="false" data-theme-yaml data-di-code="yaml" aria-label="Theme YAML"></textarea></details>
     </section>
   </div>
 </div>

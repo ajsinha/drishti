@@ -151,6 +151,21 @@ test('breakpoints: a phone\'s own order, hidden items and heights; arranging bac
   assert.equal(m.breakpoint('phone'), null, 'the automatic arrangement again');
 });
 
+test('breakpoints: wide items (a tablet\'s whole width), a named step, a host\'s own undo; removing an item tidies every breakpoint', () => {
+  const m = new K.LayoutModel({ stack: null }), heard = [];
+  m.on('commit', (c) => heard.push(c));
+  m.load([{ id: 'a', x: 0, y: 0, w: 6, h: 2 }, { id: 'b', x: 6, y: 0, w: 6, h: 2 }], { tablet: { order: ['b', 'a'], hidden: [], heights: { a: 3 } } });
+  assert.ok(m.arrange('tablet', { wide: ['a', true] }, 'Whole width on a tablet'));
+  assert.equal(heard[0].label, 'Whole width on a tablet');
+  assert.deepEqual(m.breakpoint('tablet'), { order: ['b', 'a'], hidden: [], heights: { a: 3 }, wide: ['a'] });
+  assert.deepEqual(heard[0].breakpoints.tablet.wide, ['a']);
+  assert.equal(m.arrange('tablet', { wide: ['a', true] }), false, 'nothing changed: no step');
+  m.remove(['a']);
+  assert.deepEqual(m.breakpoint('tablet'), { order: ['b'], hidden: [], heights: {} });
+  m.arrange('tablet', { order: ['b'] });
+  assert.equal(m.breakpoint('tablet'), null, 'nothing wide, hidden or tall: the full layout again');
+});
+
 test('the keymap: two schemes of the arrows and the common keys; a host overrides', () => {
   const mv = K.designerKeys('move'), se = K.designerKeys('select');
   assert.deepEqual(mv({ key: 'ArrowLeft' }), { type: 'move', dx: -1, dy: 0 });

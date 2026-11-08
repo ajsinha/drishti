@@ -253,9 +253,23 @@
   page form's submit while a field has a problem), the field types `file` and `range`, a text field's `password` and `search`
   formats, `maxLength`, `mono`, `suggest`, the `inline` layout.
 - **Selects on drishti-inputs' `Select`** ([ELEMENTS.md section 8.2](docs/architecture/ELEMENTS.md#82-as-built-drishti-inputs-drishti-data-and-the-grids-cell-editing)):
-  drishti-grid's select cell editor opens a `Select` on the value (a pick saves; `Select` gains a `pick` event); FRTB-SA's and SIMM's
-  playground choices (method switches, *Compare with*, *By*, *Side*) are `<drishti-select>`s. Tests pick through `tests/select_helpers.py`;
-  Playwright's `select_option` and `input_value` work on a `<drishti-select>` (installed by `conftest.py`).
+  a `Form`'s select field (every form on `Form`: the Admin screens, the alert form, the query form, BI's panes, the editors) is a
+  `<drishti-select>` with search, type-ahead and the keys of the rest of the kit; drishti-grid's select cell editor is a `Select` that opens on
+  the value (a pick saves; `Select` gains a `pick` event); FRTB-SA's and SIMM's playground choices (method switches, *Compare with*, *By*, *Side*) are `<drishti-select>`s. Tests pick
+  through `tests/select_helpers.py`; Playwright's `select_option` and `input_value` work on a `<drishti-select>` (installed by `conftest.py`;
+  a field found by its name, `[name="op.mtm"]`, is its `<drishti-select>`; `index=` picks too; `has_option` waits for an option). Also on
+  `Select`: the designer kit's layout picker and the shell's header choices (the report designer's *View which version*), the filter bar's
+  condition and date preset (drishti-inputs' panels: one opened from inside another keeps it open). **A guard**
+  (`tests/test_native_select_guard.py`) fails on a raw `<select>` in a console page, script, library source or plugin page; its allow-list (69 files:
+  the libraries without drishti-inputs, the renderer's harness, the gallery, the screens of the native-select sweep) only shrinks.
+- **The theme designer's YAML on the kit's `YamlPane`** ([ELEMENTS.md section 12.3](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
+  the theme as YAML is BI Studio's YAML panel (Visual, YAML, Both), both ways: an edit is read by the server after a pause, a line that does
+  not read is marked and the theme keeps its last good version; the hand-made YAML writer and the text area are deleted (`dumpYaml` writes it).
+- **The Phone and Tablet orders on the kit's `LayoutModel`** ([ELEMENTS.md section 8.9](docs/architecture/ELEMENTS.md#89-as-built-drishti-designer-the-designer-kit)):
+  a page's arrangement on a device is a breakpoint of drishti-designer's `LayoutModel` (its order, hidden visuals, heights and, new in the kit,
+  wide items and a named step); the report's `layouts` are written as before (an unchanged report's YAML is the same byte for byte).
+- **The editors remember the designer layout on the server**: `EditorService`'s prefs keep `layout` (studio, side by side, terminal) with
+  the mode and the YAML pane, per person (`PUT /api/v1/tables/editor/prefs` `{layout}`; another value is `422`).
 - **One outline** ([ELEMENTS.md section 8.8](docs/architecture/ELEMENTS.md#88-as-built-drishti-graph-and-drishti-tree)): drishti-designer's own
   outline (`drishti_outline.js`, 286 lines) is folded into drishti-tree's `TreeOutline` and deleted; the kit re-exports it as `Outline`
   (drishti-designer 0.2.0 requires drishti-tree 0.2.0; `_designer_kit.html` loads drishti-tree). `TreeOutline` (292 → 526 lines) takes

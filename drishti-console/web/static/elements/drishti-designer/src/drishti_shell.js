@@ -27,7 +27,7 @@
    A studio that edits several objects in turn adds the open documents above the editor (docs), a dock of panes under it (dock: problems,
    a query) and a left rail that folds away (collapsible); its header's actions may be links, toggles and choices too (drishti_shell-parts.js). */
 import { EventBus, announce, h, openDialog, closeDialog } from '../../drishti-core/src/drishti_index.js';
-import { actionElement, drawObjectGroups, DocTabs, Dock } from './drishti_shell-parts.js';
+import { actionElement, drawObjectGroups, layoutPick, DocTabs, Dock } from './drishti_shell-parts.js';
 
 /** The header's actions, in order, with their words. */
 export const SHELL_ACTIONS = Object.freeze([
@@ -212,8 +212,7 @@ export class DesignerShell {
     this.cmdBar = x('div', { cls: 'dd-cmdbar', attrs: { hidden: true } }, [x('span', { cls: 'dd-cmd-p', text: 'DESIGN>' }), this.cmd]);
     this.fkeys = x('div', { cls: 'dd-fkeys', attrs: { hidden: true, 'aria-hidden': 'true' } }, Object.keys(SHELL_FKEYS).map((k) => x('span', {}, [x('b', { text: k }), ' ' + SHELL_FKEYS[k]])));
     this.statusBar = x('div', { cls: 'dd-statusbar', attrs: { 'data-dd-statusbar': '', role: 'status' } });
-    this.layoutSel = x('select', { cls: 'dd-layout-pick', attrs: { 'data-dd-layout-pick': '', 'aria-label': 'Layout' } }, SHELL_LAYOUTS.map((l) => x('option', { text: { studio: 'Studio', 'side-by-side': 'Side by side', terminal: 'Terminal' }[l], attrs: { value: l } })));
-    this.layoutSel.addEventListener('change', () => this.setLayout(this.layoutSel.value, true));
+    this.layoutSel = layoutPick(doc, SHELL_LAYOUTS, (l) => this.setLayout(l, true));
     head.appendChild(this.layoutSel);
     this.el.append(head, this.cmdBar, this.msg, grid, this.fkeys, this.statusBar, this.dlg);
     this.doc.addEventListener('keydown', (e) => { if (this.el.contains(e.target) || e.target === this.doc.body) { this.onKey(e); } });      // the focus may have left with a hidden pane
@@ -371,12 +370,13 @@ export class DesignerShell {
       const b = this.buttons[id], v = states[id];
       if (!b || b.tagName === 'A') { return; }                                 // a link is never off
       b.disabled = v !== true;
+      if (b.component && b.component.setDisabled) { b.component.setDisabled(v !== true); }   // a choice (a Select)
       b.title = v === true ? b.getAttribute('data-dd-title') : String(v || '');
     });
   }
 
   /** An action's words (Publish or Propose, as the place requires). @param {string} id @param {string} label @returns {void} */
-  setLabel(id, label) { const b = this.buttons[id]; if (b && b.tagName !== 'SELECT') { b.textContent = label; } }
+  setLabel(id, label) { const b = this.buttons[id]; if (b && !b.component) { b.textContent = label; } }
 
   /** Shows or hides an action (one that does not apply here). @param {string} id @param {boolean} on @returns {void} */
   showAction(id, on) { if (this.buttons[id]) { this.buttons[id].hidden = !on; } }

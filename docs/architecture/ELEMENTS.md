@@ -666,12 +666,23 @@ library with its module: an unlicensed module's library is not served, its kinds
     beside it: `minimum`, `maximum`, `increment`), a text field's `format` **`password`** or **`search`**, `maxLength`, `mono`,
     `autocomplete` and **`suggest`** (values offered as one types, any text taken), and the layout **`inline`** (the fields in a row, for
     a filter bar). The server's side is `core/form_kit.py` (12.3, sixth pass).
-  - **Selects on `Select`.** drishti-grid's select cell editor is a `Select` that opens on the cell's value (a pick saves, through the
-    `Select`'s new **`pick`** event, which fires for every pick, the same value too; without drishti-inputs on the page the cell takes
-    an option's words or value typed). FRTB-SA's and SIMM's playground choices (the method switches, *Compare with*, *By*, *Side*) are
-    `<drishti-select>`s heard through `drishti:change`. Tests pick as a person does: `tests/select_helpers.py` (`choose`), and
-    Playwright's `select_option` and `input_value` on a `<drishti-select>` open it and click the option or read its value (installed by
-    `conftest.py`). Still native: a `Form`'s own select field (next).
+  - **Selects on `Select`.** A `Form`'s select field is the library's `Select` in a `<drishti-select>` element (its
+    `hook` on the element, `el.value` and `el.component` as anywhere; the empty choice first when the field allows one; a pick also
+    fires `change` and `input` on the element, as a native select did, so a page's own listeners keep working; a name writes its hidden
+    input). drishti-grid's select cell editor is a `Select` that opens on the cell's value (a pick saves, through the
+    `Select`'s **`pick`** event, which fires for every pick, the same value too; without drishti-inputs on the
+    page the cell takes an option's words or value typed). FRTB-SA's and SIMM's playground choices (the method switches, *Compare
+    with*, *By*, *Side*) are `<drishti-select>`s heard through `drishti:change`. Tests pick as a person does: `tests/select_helpers.py`
+    (`choose`), and Playwright's `select_option` and `input_value` on a `<drishti-select>` open it and click the option or read its value
+    (installed by `conftest.py`), so a screen's test reads the same either way; a field found by its name (`[name="op.mtm"]`, the
+    hidden input that carries it) is its `<drishti-select>`, `index=` picks by position and `has_option` waits for an option. The designer
+    kit's layout picker and its header choices (`choices`, a `<drishti-select>` with the action's `data-*` hooks) and the filter bar's
+    condition and date preset are `Select`s too; a drishti-inputs panel opened from inside another (a `Select` in a filter's panel) keeps
+    the other open. **The guard** `tests/test_native_select_guard.py` fails on a raw `<select>` in a console page, script or library
+    source (the tag, `createElement('select')`, an element helper asked for one); its allow-list says how many each file still draws
+    and why, and only shrinks: the libraries that do not require drishti-inputs (drishti-chart's studio options and map metric,
+    drishti-graph's chrome, drishti-grid's document console and pivot measure, drishti-tree's move-to and size-by), the renderer's
+    harness page and the gallery's option panel, and the screens of the native-select sweep (60 files with the plugins' pages, 2026-11-07).
 
   | Was | Now |
   |---|---|
@@ -1167,7 +1178,8 @@ under 530 lines each, typed JSDoc, the bundle by `tools/elements/build.py`, `Dri
   distribute, bounds) and the 12-column panel rules (span, height or the content's, the sentence a screen reader hears; the old
   `drishti_layout-rules.js` of the console keeps its name for layout mode until it moves). `LayoutModel`: a **grid** layout ({x, y, w,
   h}, z-order, groups that move, copy and delete together, copy and paste with new ids, duplicate) or a **flow** layout (items in order
-  inside named areas, a span and a height), and **breakpoints** (a phone's own order, hidden items and heights; arranging back removes
+  inside named areas, a span and a height), and **breakpoints** (a phone's own order, hidden items, heights and wide items, the whole
+  width of a tablet's two columns; `arrange` takes the step's name; arranging back removes
   the entry). Every change is one step on its stack, or, with `stack: null`, a "commit" event for a host that keeps its own undo (the
   Build workbench sends operations to the server; the BI designer keeps snapshots). `designerKeys`: the keymap (the "move" scheme of a
   report page and the "select" scheme of the workbench: arrows select, Alt+arrows move; the common keys: undo, redo, copy, cut, paste,
@@ -1194,7 +1206,8 @@ under 530 lines each, typed JSDoc, the bundle by `tools/elements/build.py`, `Dri
   version; lint and completion hooks). `DesignerShell` (EDITORS.md section 1): the header (where you are, the name, the status with
   versions, Validate, Preview, History, Impact, Save draft, Propose for review, + New), Visual / YAML / Both, the left rail's tabs
   (objects with search, palette, outline), the inspector pane, the preview with checks, a status bar, a dialog, and Propose for review
-  (a note, the host's submit to the Approvals queue: four eyes). Its **layouts** (`layout`, remembered per person by the host): **studio**
+  (a note, the host's submit to the Approvals queue: four eyes). Its **layouts** (`layout`, a `Select` in the header, remembered per person
+  by the host: the table, model and Python editors keep it in the person's editor preferences on the server): **studio**
   (g7 A, the default: rail | canvas with the YAML docked under it | inspector | preview), **side-by-side** (B: the outline over the
   palette, the canvas and the YAML side by side, the preview always on, the inspector a card by the selection) and **terminal** (C:
   dense and monospace, a `DESIGN>` command line on Ctrl+K, the outline as a property grid, F3 Validate, F4 YAML, F5 Preview, F7 History,
@@ -1202,7 +1215,7 @@ under 530 lines each, typed JSDoc, the bundle by `tools/elements/build.py`, `Dri
   editor, each a link to its address with a close button: `setDocs`, the "close" event), `dock` (tabs of panes under the editor that
   the host fills, a count on a tab, the open tab pressed again folds it: `dockPane`, `showDock`, `setDockCount`, the "dock" event),
   `collapsible` (a header button folds the left rail: `setRail`, the "rail" event), objects that are links (`href`) with a `badge`;
-  the header's actions may be links (`href`), toggles (`toggle`, aria-pressed) and choices (`choices`, a select), each with the
+  the header's actions may be links (`href`), toggles (`toggle`, aria-pressed) and choices (`choices`, drishti-inputs' `Select`), each with the
   host's `data-*` attributes (`attrs`), on from the start (`enabled`) or `hidden`; `setLabel`, `showAction`; `statusWords` takes the
   host's own words (`text`).
 - **drishti-inputs extended for it** (no code in the screens): `CodeEditor.updateValue` (the cursor and the scroll kept), `highlight`
@@ -1218,7 +1231,9 @@ under 530 lines each, typed JSDoc, the bundle by `tools/elements/build.py`, `Dri
   (`build/drishti_yamltab.js`: `YamlPane` with the schema assistant) and its about box (`CodeEditor`); the BI report designer's canvas
   (`drishti_bi-design-canvas.js`: a grid `LayoutCanvas`, moves and resizes one step of the designer's undo), its undo
   (`SnapshotHistory`), its settle (the kit's) and its YAML tab (`CodeEditor` completing from the report's catalogue, in place of the
-  suggestion strip); the table, model and Python editors' shell (`drishti_editors.js` on `DesignerShell`, its YAML on `YamlPane`: the
+  suggestion strip), its Phone and Tablet orders (a breakpoint of a `LayoutModel` over the page's visuals: order, hidden, heights,
+  wide; the report's `layouts` written as before) and the theme designer's YAML (`YamlPane` in the Studio shell's YAML panel, read by
+  the server; its hand-made writer and text area deleted); the table, model and Python editors' shell (`drishti_editors.js` on `DesignerShell`, its YAML on `YamlPane`: the
   hand-made gutter and highlight gone). Deleted whole: `drishti_studio-yaml.js`, `drishti_studio-assist.js`, `drishti_cm-yaml.js`
   (`window.Drishti.yaml` points to the kit's reader).
 - **Harness and tests.** `drishti_harness.html` (a report designer built only from the kit, in any layout with `?layout=`; a flow
@@ -1401,14 +1416,14 @@ table editor, `/build/tables?new=table`; "the model designer" in two notes means
 | Screen (files) | On the kit | Still its own (moving next) |
 |---|---|---|
 | Build workbench (`build/drishti_*.js`) | canvas (flow `LayoutCanvas`), drags (`DragHub`), YAML tab (`YamlPane`, schema assistant), about box (`CodeEditor`), the form and controls tabs' re-ordering (`sortableList`), the inspector (`Inspector`: one live `Form` from the Rachana schema), its expressions (the `Form`'s formula widget, completing from `WB.expr.candidates`), the palette (`Palette`); undo stays the server's operation log | the data-shape tree (`drishti_build-shape-tree.js` → `Outline`) |
-| BI report designer (`drishti_bi-design*.js`) | canvas (grid `LayoutCanvas`), undo (`SnapshotHistory`), settle, YAML tab (`CodeEditor` with completion), the Phone and Tablet order's drag (`sortableList`); the Format pane and every settings pane beside it (conditional formatting, interactions, tooltip page, page, report, theme, tile: live `Form`s, 8.2); the expression editor (`drishti_bi-expr-editor.js`: a one-line Rachana `CodeEditor`, its completion hook from the fields, measures, functions and keywords); the Visualizations (`Palette`), the wells' Add a field (`Form`); the Fields pane (drishti-tree's `TreeOutline`: folders, a date's parts, the badges, Move to the model, one branch per added dataset with its remove) | the device orders' model (→ `LayoutModel` breakpoints) |
+| BI report designer (`drishti_bi-design*.js`) | canvas (grid `LayoutCanvas`), undo (`SnapshotHistory`), settle, YAML tab (`CodeEditor` with completion), the Phone and Tablet orders (their drag `sortableList`, their model a `LayoutModel` breakpoint); the Format pane and every settings pane beside it (conditional formatting, interactions, tooltip page, page, report, theme, tile: live `Form`s, 8.2); the expression editor (`drishti_bi-expr-editor.js`: a one-line Rachana `CodeEditor`, its completion hook from the fields, measures, functions and keywords); the Visualizations (`Palette`), the wells' Add a field (`Form`); the Fields pane (drishti-tree's `TreeOutline`: folders, a date's parts, the badges, Move to the model, one branch per added dataset with its remove) | |
 | Dataset designer: the table editor, virtual tables (`drishti_editor-table.js`) | the shell (`DesignerShell`), the YAML (`YamlPane`), the name, rows and look-up dialog (`Form`), every formula field (the `Form`'s formula widget) and the statement (`CodeEditor`, through `drishti_editor-formula.js`), the source and look-up rows and the columns checklist (drishti-grid editing) | |
 | Model designer: the semantic model editor (`drishti_editor-model.js`) | the shell, the YAML, the Overview's name, title and words and the masks (live `Form`s), the rows of the tables, relationships, measures (the ? card, "adds up?"), hierarchies, row rules, fields and the access matrix (drishti-grid editing; formulas in the grid's `code` cell editor) | |
 | Python table and model editor (`drishti_editor-python.js`) | the shell, the YAML | the code beside its contract (→ `CodeEditor` Python), the templates |
 | + New steps (`drishti_editor-new.js`) | the shell | the guided steps (→ `Form`) |
 | Sutra screen designer: Customize, Grid, Outline, Describe (`drishti_designer*.js`, `templates/designer/`) | the drags (`trackPointer`, `DragHub`), the Grid's formula bar (`CodeEditor` with completion), the Outline mode's tree (`Outline`), the columns checklist (`Form`'s checkboxes) | the panel handles (→ `LayoutCanvas` flow), the Grid's cells (→ `LayoutCanvas` grid), the settings and forms panels (→ `Inspector`) |
 | Form designer (the workbench's Form and Controls tabs) | the cards' order by drag (`sortableList`) | their fields (→ `Inspector`) |
-| BI Studio shell and theme designer (`drishti_bi-studio.js`, `drishti_bi-theme-designer.js`) | the shell (`DesignerShell`: the header and the designer's actions, the Explorer as its objects, the open items as `docs`, Problems and Query as its `dock`, the three layouts, four eyes through `propose`), the theme's settings and series colours (`Form`) | the theme YAML (→ `YamlPane`) |
+| BI Studio shell and theme designer (`drishti_bi-studio.js`, `drishti_bi-theme-designer.js`) | the shell (`DesignerShell`: the header and the designer's actions, the Explorer as its objects, the open items as `docs`, Problems and Query as its `dock`, the three layouts, four eyes through `propose`), the theme's settings and series colours (`Form`), the theme YAML (`YamlPane` in the shell's YAML panel, Visual / YAML / Both) | |
 | BI items, workspaces, transforms (`templates/bi/item.html`, `workspace.html`, `transform.html`) | | the YAML and Python text areas (→ `CodeEditor`) |
 | The Notebook's cells (`drishti_bi-notebook*.js`) | | its cells' code (→ `CodeEditor` Python) |
 | Calculator, Pivot computed fields (`terminal/_calc.html`, `terminal/pivot.html`) | | their code areas (→ `CodeEditor`) |
@@ -1563,8 +1578,8 @@ g1 was decided separately: the grid's three layouts (section 5.1).
 - [x] The phone behaviour of the grid and the pivot (O2); the standalone Excel writer (O4)
 - [x] drishti-inputs: pickers, forms with four eyes, the filter bar, the code editor (8.2); the formula input and people picker as their screens move
 - [x] drishti-inputs' single-choice `Select` (`<drishti-select>`, 8.2); the VaR family's and the exposure screens' native selects replaced (12.2: hierarchy, horizon, confidences, currency, the pre-deal form)
-- [x] drishti-grid's select editor and FRTB-SA's and SIMM's choice selects on `Select` (8.2)
-- [ ] A `Form`'s select field on `Select` (built on wip/e-admin-2-select; the screens' tests still to adapt)
+- [x] The library's own native selects (a form's enum select, the grid's select editor, the designer kit's layout picker and choices, the filter bar's condition and preset) and FRTB-SA's and SIMM's choice selects on `Select`; the screens' tests through `select_helpers.py` (8.2)
+- [ ] The native-select sweep: the allow-list of `test_native_select_guard.py` empty (60 screens; the libraries without drishti-inputs, the renderer's harness and the gallery; 8.2)
 - [x] drishti-renderer 2.0.0 on the libraries (8.5; the console's controls, funnels and Zoom still its scripts until their screens move)
 - [x] drishti-insight 0.1.0 (8.10): the one Explain, the one search box, the Approvals queue and the workbook export, in the manifest, so
   packing and the gallery include it

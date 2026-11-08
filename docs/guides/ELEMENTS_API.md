@@ -10738,7 +10738,7 @@ Loads items (and breakpoints) without an undo step: a document opened, a host's 
 | Parameter | Type | Meaning |
 |---|---|---|
 | `items` | `LayoutItem[]` |  |
-| `[breakpoints]` | `Object&lt;string, {order: string[], hidden: string[], heights: Object&lt;string, number&gt;}&gt;` |  |
+| `[breakpoints]` | `Object&lt;string, {order: string[], hidden: string[], heights: Object&lt;string, number&gt;, wide: string[]}&gt;` |  |
 
 Returns `void`.
 
@@ -10992,22 +10992,23 @@ Returns `string[]`.
 
 ##### `LayoutModel.breakpoint(bp)`
 
-A breakpoint's own arrangement, as kept (order, hidden, heights), or null when it follows the full layout.
+A breakpoint's own arrangement, as kept (order, hidden, heights and, when any, wide), or null when it follows the full layout.
 
 | Parameter | Type | Meaning |
 |---|---|---|
 | `bp` | `string` |  |
 
-Returns `?{order: string[], hidden: string[], heights: Object&lt;string, number&gt;}`.
+Returns `?{order: string[], hidden: string[], heights: Object&lt;string, number&gt;, wide: (string[]\|undefined)}`.
 
-##### `LayoutModel.arrange(bp, change)`
+##### `LayoutModel.arrange(bp, change, label)`
 
-Changes a breakpoint: an item moved by `step` places, hidden or shown, or its height; arranging it back to the full layout's order with nothing hidden and no heights removes the breakpoint's entry.
+Changes a breakpoint: an item moved by `step` places, hidden or shown, its height, or made wide (the whole width: a tablet's two columns); arranging it back to the full layout's order with nothing hidden, no heights and nothing wide removes the breakpoint's entry.
 
 | Parameter | Type | Meaning |
 |---|---|---|
 | `bp` | `string` |  |
-| `change` | `{move: [string, number], hide: [string, boolean], height: [string, number], order: string[]}` |  |
+| `change` | `{move: [string, number], hide: [string, boolean], height: [string, number], wide: [string, boolean], order: string[]}` |  |
+| `[label]` | `string` | the step's name (default "Arrange &lt;bp&gt;") |
 
 Returns `boolean`.
 

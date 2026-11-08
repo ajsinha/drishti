@@ -63,7 +63,8 @@
   const narrow = window.matchMedia && window.matchMedia('(max-width: 900px)').matches;
   const shell = (S.shell = new K.DesignerShell(root, {
     crumbs: [{ label: 'BI', href: '/bi' }, { label: 'Studio', href: '/bi/designer' }, (KINDS.find((k) => k[0] === kind) || [])[1] || 'Reports'],
-    title: kind === 'theme' ? 'Theme' : 'Report', label: 'BI Studio', search: 'Find an item', modes: false, preview: false, docs: true, collapsible: true,
+    title: kind === 'theme' ? 'Theme' : 'Report', label: 'BI Studio', search: 'Find an item', modes: kind === 'theme',      // a theme's YAML is the shell's panel (Visual, YAML, Both); a report's is its designer's tab
+    preview: false, docs: true, collapsible: true,
     dock: [{ id: 'problems', label: 'Problems' }, { id: 'query', label: 'Query' }], actions: ACTIONS[kind] || ACTIONS.report,
     newItems: [{ id: 'report', label: 'Report' }, { id: 'board', label: 'Board' }, { id: 'theme', label: 'Theme' }, { id: 'dataset', label: 'Dataset' }, { id: 'model', label: 'Model' }],
     layout: read('localStorage', LAYOUT, 'studio')
