@@ -254,75 +254,15 @@
   })();
   /* ---- src/drishti_chart-theme.js ---- */
   __m["src/drishti_chart-theme.js"] = (function () {
-    var token = __lib("drishti-core").token, formatCompact = __lib("drishti-core").formatCompact, formatNumber = __lib("drishti-core").formatNumber, formatPercent = __lib("drishti-core").formatPercent, formatBasisPoints = __lib("drishti-core").formatBasisPoints, formatCurrency = __lib("drishti-core").formatCurrency, formatNamed = __lib("drishti-core").formatNamed, hasFormat = __lib("drishti-core").hasFormat, formatDate = __lib("drishti-core").formatDate, parseColor = __lib("drishti-core").parseColor;
+    var visualTheme = __lib("drishti-core").visualTheme;
     const CHART_DENSITIES = Object.freeze({
       comfortable: Object.freeze({ font: 12, pad: 14, symbol: 7, line: 2, title: 14 }),
       compact: Object.freeze({ font: 11, pad: 10, symbol: 6, line: 1.6, title: 13 }),
       terminal: Object.freeze({ font: 10.5, pad: 6, symbol: 5, line: 1.4, title: 12 })
     });
-    const NAMES = ['bg', 'bg-2', 'surface', 'surface-2', 'border', 'ink', 'muted', 'faint', 'accent', 'accent-strong', 'link', 'pos', 'neg', 'ok', 'warn', 'bad', 'font-sans', 'font-mono'];
-    function blend(a, b, f) {
-      const x = parseColor(a), y = parseColor(b);
-      if (!x || !y) { return f > 0.5 ? b : a; }
-      const k = Math.max(0, Math.min(1, f)), m = (p, q) => Math.round(p + (q - p) * k);
-      return 'rgb(' + m(x.r, y.r) + ',' + m(x.g, y.g) + ',' + m(x.b, y.b) + ')';
-    }
-    function alpha(c, a) {
-      const x = parseColor(c);
-      return x ? 'rgba(' + x.r + ',' + x.g + ',' + x.b + ',' + a + ')' : c;
-    }
     function chartTheme(o) {
-      o = o || {};
-      const t = {};
-      NAMES.forEach((n) => { t[n] = (o.tokens && o.tokens['--d-' + n]) || token('--d-' + n, { element: o.element, theme: o.theme }) || ''; });
-      const dark = t.bg ? (parseColor(t.bg) ? (parseColor(t.bg).r + parseColor(t.bg).g + parseColor(t.bg).b) < 384 : true) : true;
-      const palette = [t.link, t.accent, t.ok, t.neg, blend(t.link, t.bad, 0.55), blend(t.ok, t.link, 0.5), t.warn, blend(t.accent, t.bad, 0.5), t.muted, blend(t.link, t.ink, 0.45)];
-      const density = CHART_DENSITIES[o.density] ? o.density : 'compact';
-      return {
-        dark: dark, tokens: t, palette: palette, density: density, size: CHART_DENSITIES[density],
-        ink: t.ink, muted: t.muted, faint: t.faint, border: t.border, surface: t.surface, surface2: t['surface-2'], ground: t['bg-2'],
-        grid: blend(t.surface, t.border, 0.7), axis: t.border,
-        font: density === 'terminal' ? t['font-mono'] : t['font-sans'], mono: t['font-mono'],
-        tones: { good: t.ok, ok: t.ok, bad: t.bad, warn: t.warn, accent: t.accent, link: t.link, pos: t.pos, neg: t.neg, muted: t.muted, faint: t.faint, ink: t.ink },
-        sequential: [blend(t['surface-2'], t.link, 0.12), blend(t['surface-2'], t.link, 0.35), blend(t['surface-2'], t.link, 0.58), blend(t['surface-2'], t.link, 0.8), t.link],
-        diverging: [t.neg, blend(t.neg, t['surface-2'], 0.55), t['surface-2'], blend(t.pos, t['surface-2'], 0.55), t.pos],
-        nodata: blend(t.surface, t.border, 0.55)
-      };
-    }
-    function toneColour(th, tone, i) {
-      if (typeof tone === 'number') { return th.palette[tone % th.palette.length]; }
-      if (tone && th.tones[tone]) { return th.tones[tone]; }
-      if (tone && /^(#|rgb|hsl)/.test(tone)) { return tone; }
-      return th.palette[(i || 0) % th.palette.length];
-    }
-    function rampColour(ramp, v, lo, hi) {
-      const f = hi === lo ? 1 : Math.max(0, Math.min(1, (v - lo) / (hi - lo))) * (ramp.length - 1), i = Math.min(ramp.length - 2, Math.floor(f));
-      return blend(ramp[i], ramp[i + 1], f - i);
-    }
-    function formatterFor(f) {
-      if (typeof f === 'function') { return f; }
-      if (f && typeof f === 'object') {
-        if (f.currency) { return (v) => formatCurrency(v, f.currency, f); }
-        if (f.style === 'percent') { return (v) => formatPercent(v, f); }
-        if (f.style === 'compact') { return (v) => formatCompact(v, f); }
-        return (v) => formatNumber(v, f);
-      }
-      switch (f) {
-        case 'money': return (v) => formatCompact(v, { decimals: 2 });
-        case 'compact': return (v) => formatCompact(v, { decimals: 1 });
-        case 'number': return (v) => formatNumber(v, { decimals: 0, maxDecimals: 2 });
-        case 'integer': case 'count': return (v) => formatNumber(v, { decimals: 0 });
-        case 'percent': return (v) => formatPercent(v, { decimals: 1 });
-        case 'bp': return (v) => formatBasisPoints(v);
-        case 'date': return (v) => (v === null || v === undefined ? '' : formatDate(v));
-        case 'text': return (v) => (v === null || v === undefined ? '' : String(v));
-        default:
-          if (f && hasFormat(f)) { return (v) => formatNamed(f, v); }
-          return (v) => {
-            if (typeof v !== 'number') { return v === null || v === undefined ? '' : String(v); }
-            return Math.abs(v) >= 1e5 ? formatCompact(v, { decimals: 2 }) : formatNumber(v, { decimals: 0, maxDecimals: 2 });
-          };
-      }
+      const th = visualTheme(Object.assign({}, o, { density: o && CHART_DENSITIES[o.density] ? o.density : 'compact' }));
+      return Object.assign(th, { size: CHART_DENSITIES[th.density] });
     }
     function textStyle(th, colour) { return { color: colour || th.faint, fontFamily: th.font, fontSize: th.size.font }; }
     function axisOf(th, base, fmt) {
@@ -334,7 +274,7 @@
         nameTextStyle: textStyle(th, th.muted), nameGap: 26
       }, base);
     }
-    return { "CHART_DENSITIES": CHART_DENSITIES, "blend": blend, "alpha": alpha, "chartTheme": chartTheme, "toneColour": toneColour, "rampColour": rampColour, "formatterFor": formatterFor, "textStyle": textStyle, "axisOf": axisOf };
+    return { "CHART_DENSITIES": CHART_DENSITIES, "chartTheme": chartTheme, "textStyle": textStyle, "axisOf": axisOf, "blend": __lib("drishti-core").blend, "alpha": __lib("drishti-core").alpha, "toneColour": __lib("drishti-core").toneColour, "rampColour": __lib("drishti-core").rampColour, "formatterFor": __lib("drishti-core").formatterFor };
   })();
   /* ---- src/drishti_chart-parts.js ---- */
   __m["src/drishti_chart-parts.js"] = (function () {
@@ -1478,7 +1418,7 @@
   })();
   /* ---- src/drishti_chart-view.js ---- */
   __m["src/drishti_chart-view.js"] = (function () {
-    var h = __lib("drishti-core").h, renderExplain = __lib("drishti-core").renderExplain, EventBus = __lib("drishti-core").EventBus, sharedBus = __lib("drishti-core").bus, announce = __lib("drishti-core").announce;
+    var h = __lib("drishti-core").h, renderExplain = __lib("drishti-core").renderExplain, EventBus = __lib("drishti-core").EventBus, sharedBus = __lib("drishti-core").bus, announce = __lib("drishti-core").announce, SELECTION_EVENT = __lib("drishti-core").SELECTION_EVENT;
     var normalizeSpec = __m["src/drishti_chart-spec.js"].normalizeSpec, kindOf = __m["src/drishti_chart-spec.js"].kindOf;
     var rowsOf = __m["src/drishti_chart-data.js"].rowsOf;
     var chartTheme = __m["src/drishti_chart-theme.js"].chartTheme, formatterFor = __m["src/drishti_chart-theme.js"].formatterFor;
@@ -1490,7 +1430,6 @@
       'tableToggled', 'dataUpdated', 'modeChanged', 'densityChanged', 'kindChanged', 'levelChanged', 'metricChanged', 'placeSelected', 'pointerMoved',
       'error']);
     const CHART_MODES = Object.freeze(['card', 'studio']);
-    const SELECTION_EVENT = 'drishti:selection';
     class Chart extends ChartIO {
       constructor(el, spec, o) {
         super();
@@ -1760,7 +1699,7 @@
         this.el.textContent = '';
       }
     }
-    return { "CHART_EVENTS": CHART_EVENTS, "CHART_MODES": CHART_MODES, "SELECTION_EVENT": SELECTION_EVENT, "Chart": Chart };
+    return { "CHART_EVENTS": CHART_EVENTS, "CHART_MODES": CHART_MODES, "Chart": Chart };
   })();
   /* ---- src/drishti_chart-element.js ---- */
   __m["src/drishti_chart-element.js"] = (function () {
@@ -1925,25 +1864,6 @@
     }
     return { "buildPie": buildPie, "buildGauge": buildGauge, "buildTreemap": buildTreemap, "buildSankey": buildSankey, "registerOtherKinds": registerOtherKinds };
   })();
-  /* ---- src/drishti_chart-link.js ---- */
-  __m["src/drishti_chart-link.js"] = (function () {
-    var sharedBus = __lib("drishti-core").bus;
-    var SELECTION_EVENT = __m["src/drishti_chart-view.js"].SELECTION_EVENT;
-    function linkGrid(grid, o) {
-      const model = grid && grid.model ? grid.model : grid, b = (o && o.bus) || sharedBus, channel = o && o.channel;
-      if (!model || !model.events || !model.selection) { throw new Error('linkGrid: give a drishti-grid (Grid, the element\'s grid, or its model)'); }
-      let applying = false;
-      const off1 = model.events.on('selectionChanged', (p) => { if (!applying) { b.emit(SELECTION_EVENT, { channel: channel, ids: (p && p.ids) || [], source: model }); } });
-      const off2 = b.on(SELECTION_EVENT, (p) => {
-        if (!p || p.channel !== channel || p.source === model) { return; }
-        applying = true;
-        try { model.selection.selectAll(p.ids || []); } finally { applying = false; }
-      });
-      return () => { off1(); off2(); };
-    }
-    function publishSelection(channel, ids, o) { ((o && o.bus) || sharedBus).emit(SELECTION_EVENT, { channel: channel, ids: ids || [], source: (o && o.source) || null }); }
-    return { "linkGrid": linkGrid, "publishSelection": publishSelection };
-  })();
   /* ---- src/drishti_chart-panels.js ---- */
   __m["src/drishti_chart-panels.js"] = (function () {
     var formatCompact = __lib("drishti-core").formatCompact;
@@ -2095,46 +2015,6 @@
           return c ? esc(c.x) + '<br>O ' + esc(c.open) + '  H ' + esc(c.high) + '<br>L ' + esc(c.low) + '  C <b>' + esc(c.close) + '</b>' + (num(c.volume) ? '<br>Vol ' + panelCompact(c.volume) : '') : '';
         } }) };
     }
-    function layers(nodes, edges, w, h) {
-      const depth = {}, incoming = {}, children = {};
-      nodes.forEach((n) => { incoming[n.id] = 0; children[n.id] = []; });
-      edges.forEach((e) => { if (children[e.from] && e.from !== e.to) { children[e.from].push(e.to); incoming[e.to]++; } });
-      let queue = nodes.filter((n) => !incoming[n.id]).map((n) => n.id);
-      if (!queue.length && nodes.length) { queue = [nodes[0].id]; }
-      queue.forEach((id) => { depth[id] = 0; });
-      for (let i = 0; i < queue.length; i++) { children[queue[i]].forEach((c) => { if (depth[c] == null) { depth[c] = depth[queue[i]] + 1; queue.push(c); } }); }
-      nodes.forEach((n) => { if (depth[n.id] == null) { depth[n.id] = 0; } });
-      const rows = {};
-      nodes.forEach((n) => { (rows[depth[n.id]] = rows[depth[n.id]] || []).push(n.id); });
-      const pos = {}, deepest = Math.max(1, Object.keys(rows).length - 1);
-      Object.keys(rows).forEach((r) => { rows[r].forEach((id, i) => { pos[id] = [(i + 1) / (rows[r].length + 1) * w, Number(r) / deepest * h]; }); });
-      return pos;
-    }
-    function graph(d, t, size) {
-      const nodes = d.nodes || [], edges = d.edges || [], groups = [], colours = palette(t);
-      nodes.forEach((n) => { const g = n.group || ''; if (!groups.includes(g)) { groups.push(g); } });
-      const tree = d.layout !== 'force', top = groups.length > 1 ? 40 : 24;
-      const pos = tree ? layers(nodes, edges, Math.max(200, size.width - 180), Math.max(120, size.height - top - 28)) : {};
-      return { animationDuration: 400,
-        legend: groups.length > 1 ? { top: 0, data: groups.filter(Boolean), textStyle: { color: t.muted, fontSize: 10 }, itemHeight: 8 } : undefined,
-        tooltip: tip(t, { formatter: (p) => {
-          if (p.dataType === 'edge') { return esc(p.data.source) + ' → ' + esc(p.data.target) + (p.data.label && p.data.label.formatter ? ' · ' + esc(p.data.label.formatter) : ''); }
-          const n = p.data.node;
-          return '<b>' + esc(n.label) + '</b>' + (n.group ? ' · ' + esc(n.group) : '') + (n.link ? '<br>' + esc(n.id) + ' (click to open)' : '');
-        } }),
-        series: [{ type: 'graph', layout: tree ? 'none' : 'force', roam: true, draggable: !tree, top, bottom: 28, left: 90, right: 90,
-          force: { repulsion: 220, edgeLength: 90 }, categories: groups.map((g, i) => ({ name: g, itemStyle: { color: colours[i % colours.length] } })),
-          edgeSymbol: ['none', 'arrow'], edgeSymbolSize: 7, lineStyle: { color: t.faint || t.border, width: 1.2, curveness: tree ? 0 : 0.1 },
-          label: { show: true, position: 'bottom', color: t.ink, fontSize: 10, formatter: (p) => p.data.node.label },
-          edgeLabel: { show: edges.length <= 30, color: t.muted, fontSize: 9, formatter: (p) => p.data.text || '' }, emphasis: { focus: 'adjacency' },
-          data: nodes.map((n) => {
-            const o = { id: n.id, name: n.id, category: groups.indexOf(n.group || ''), node: n, symbolSize: n.focus ? 26 : 16, symbol: n.link ? 'circle' : 'roundRect',
-              cursor: n.link ? 'pointer' : 'default', itemStyle: { borderColor: n.focus ? t.accent : t.surface, borderWidth: n.focus ? 3 : 1 } };
-            if (tree) { o.x = pos[n.id][0]; o.y = pos[n.id][1]; }
-            return o;
-          }),
-          links: edges.map((e) => ({ source: e.from, target: e.to, text: e.label || '' })) }] };
-    }
     function donut(d, t) {
       const bars = (d.bars || []).filter((b) => num(b.value)), colours = palette(t);
       return { animationDuration: 400,
@@ -2165,7 +2045,7 @@
         visualMap: visual,
         series: [{ type: 'heatmap', data: cells, label: { show: x.length * y.length <= 72, color: t.ink, fontFamily: t.mono, fontSize: 10, formatter: (p) => Math.round(p.value[2] * 100) / 100 } }] };
     }
-    const BUILD = { line: (d, t) => line(d, t, 'line'), area: (d, t) => line(d, t, 'area'), waterfall, histogram, scatter, candlestick, graph, donut,
+    const BUILD = { line: (d, t) => line(d, t, 'line'), area: (d, t) => line(d, t, 'area'), waterfall, histogram, scatter, candlestick, donut,
       surface: (d, t, s, view) => surfaceOption(d, t, view || 'heatmap') };
     function panelOption(kind, data, tokens, size, view) {
       const b = BUILD[kind];
@@ -2228,6 +2108,7 @@
     }
     class PanelCharts {
       static state(el) {
+        if (el.__drishtiGraph) { return el.__drishtiGraph.layoutMs === null ? 'animating' : 'drawn'; }
         const E = el.ownerDocument.defaultView.echarts, c = E && E.getInstanceByDom(el);
         if (!c || c.isDisposed()) { return 'none'; }
         return c.getZr().animation.isFinished() ? 'drawn' : 'animating';
@@ -2267,6 +2148,7 @@
           return;
         }
         if (kind === 'surface') { await this.surface(E, el, t, el.getAttribute('data-view') || 'heatmap'); return; }
+        if (kind === 'graph') { await this.graph(el, data || {}); return; }
         try {
           const c = E.getInstanceByDom(el) || E.init(el, null, { renderer: 'svg' });
           c.setOption(panelOption(kind, data || {}, t, { width: el.clientWidth || 800, height: el.clientHeight || 360 }), true);
@@ -2279,6 +2161,15 @@
             });
           }
         } catch (e) { this.broken(E, el); }
+      }
+      async graph(el, data) {
+        if (el.__drishtiGraph && el.__drishtiGraphData === data) { return; }
+        try {
+          if (!this.o.graph) { throw new Error('no graph library'); }
+          const G = await this.o.graph();
+          G.drawGraphPanel(el, data, { onLink: (l) => this.link(l, el), density: el.getAttribute('data-density') || undefined });
+          el.__drishtiGraphData = data;
+        } catch (e) { this.broken(null, el, 'The graph did not load'); }
       }
       link(l, el) { if (this.o.onLink) { this.o.onLink(l, el); } }
       async surface(E, el, t, view) {
@@ -2316,7 +2207,7 @@
       redraw() { return this.draw(this.root); }
       async update(el) {
         const spec = this.o.specOf(el);
-        if (!spec || spec.kind === 'map' || spec.kind === 'surface') { return this.draw(el.parentNode || this.root); }
+        if (!spec || spec.kind === 'map' || spec.kind === 'surface' || spec.kind === 'graph') { return this.draw(el.parentNode || this.root); }
         const E = await this.o.engine(), c = E.getInstanceByDom(el);
         if (!c) { return this.draw(el.parentNode || this.root); }
         c.setOption(panelOption(spec.kind, spec.data || {}, this.tokens(), { width: el.clientWidth || 800, height: el.clientHeight || 360 }), false);
@@ -2336,6 +2227,7 @@
         if (this.ro) { this.ro.disconnect(); this.ro = null; }
         this.live().forEach((c) => c.dispose());
         this.all = [];
+        this.root.querySelectorAll(this.o.selector).forEach((el) => { if (el.__drishtiGraph) { el.__drishtiGraph.destroy(); el.__drishtiGraph = null; } });
       }
     }
     return { "drawMap": drawMap, "PanelCharts": PanelCharts };
@@ -2610,7 +2502,7 @@
     registerMapKind();
     registerKind('layer', { label: 'layers', cartesian: true, build: (spec, rows, env) => buildLayers(spec, rows, env, kindOf, (l) => rowsOf(l.data)) });
     function install(root) { if (root && root.document && root.customElements) { defineChartElement(root.customElements, root); } }
-    return { "install": install, "registerKind": __m["src/drishti_chart-spec.js"].registerKind, "kindOf": __m["src/drishti_chart-spec.js"].kindOf, "kindList": __m["src/drishti_chart-spec.js"].kindList, "KIND_ALIASES": __m["src/drishti_chart-spec.js"].KIND_ALIASES, "checkSpec": __m["src/drishti_chart-spec.js"].checkSpec, "normalizeSpec": __m["src/drishti_chart-spec.js"].normalizeSpec, "specText": __m["src/drishti_chart-spec.js"].specText, "rowsOf": __m["src/drishti_chart-data.js"].rowsOf, "fieldOf": __m["src/drishti_chart-data.js"].fieldOf, "num": __m["src/drishti_chart-data.js"].num, "members": __m["src/drishti_chart-data.js"].members, "sumBy": __m["src/drishti_chart-data.js"].sumBy, "bin": __m["src/drishti_chart-data.js"].bin, "quantile": __m["src/drishti_chart-data.js"].quantile, "boxStats": __m["src/drishti_chart-data.js"].boxStats, "quantileBreaks": __m["src/drishti_chart-data.js"].quantileBreaks, "classOf": __m["src/drishti_chart-data.js"].classOf, "compileCondition": __m["src/drishti_chart-data.js"].compileCondition, "conditionFields": __m["src/drishti_chart-data.js"].conditionFields, "CHART_DENSITIES": __m["src/drishti_chart-theme.js"].CHART_DENSITIES, "blend": __m["src/drishti_chart-theme.js"].blend, "alpha": __m["src/drishti_chart-theme.js"].alpha, "chartTheme": __m["src/drishti_chart-theme.js"].chartTheme, "toneColour": __m["src/drishti_chart-theme.js"].toneColour, "rampColour": __m["src/drishti_chart-theme.js"].rampColour, "formatterFor": __m["src/drishti_chart-theme.js"].formatterFor, "textStyle": __m["src/drishti_chart-theme.js"].textStyle, "axisOf": __m["src/drishti_chart-theme.js"].axisOf, "rowId": __m["src/drishti_chart-kinds.js"].rowId, "seriesDefs": __m["src/drishti_chart-kinds.js"].seriesDefs, "annotationMarks": __m["src/drishti_chart-kinds.js"].annotationMarks, "buildSeriesChart": __m["src/drishti_chart-kinds.js"].buildSeriesChart, "buildScatter": __m["src/drishti_chart-kinds.js"].buildScatter, "buildHistogram": __m["src/drishti_chart-kinds.js"].buildHistogram, "buildWaterfall": __m["src/drishti_chart-kinds.js"].buildWaterfall, "buildBoxplot": __m["src/drishti_chart-kinds.js"].buildBoxplot, "buildHeatmap": __m["src/drishti_chart-kinds.js"].buildHeatmap, "buildCandlestick": __m["src/drishti_chart-kinds.js"].buildCandlestick, "buildLayers": __m["src/drishti_chart-kinds.js"].buildLayers, "registerAxisKinds": __m["src/drishti_chart-kinds.js"].registerAxisKinds, "buildPie": __m["src/drishti_chart-kinds2.js"].buildPie, "buildGauge": __m["src/drishti_chart-kinds2.js"].buildGauge, "buildTreemap": __m["src/drishti_chart-kinds2.js"].buildTreemap, "buildSankey": __m["src/drishti_chart-kinds2.js"].buildSankey, "registerOtherKinds": __m["src/drishti_chart-kinds2.js"].registerOtherKinds, "equalEarth": __m["src/drishti_chart-geo.js"].equalEarth, "albers": __m["src/drishti_chart-geo.js"].albers, "plateCarree": __m["src/drishti_chart-geo.js"].plateCarree, "projectGeometry": __m["src/drishti_chart-geo.js"].projectGeometry, "bounds": __m["src/drishti_chart-geo.js"].bounds, "coreExtent": __m["src/drishti_chart-geo.js"].coreExtent, "countryProjection": __m["src/drishti_chart-geo.js"].countryProjection, "US_INSETS": __m["src/drishti_chart-geo.js"].US_INSETS, "prepareRegions": __m["src/drishti_chart-geo.js"].prepareRegions, "prepareWorld": __m["src/drishti_chart-geo.js"].prepareWorld, "findPlace": __m["src/drishti_chart-geo.js"].findPlace, "createGeoLoader": __m["src/drishti_chart-geo.js"].createGeoLoader, "holdAntimeridian": __m["src/drishti_chart-geo.js"].holdAntimeridian, "fitView": __m["src/drishti_chart-geo.js"].fitView, "mapMetrics": __m["src/drishti_chart-map.js"].mapMetrics, "placeValues": __m["src/drishti_chart-map.js"].placeValues, "mapScale": __m["src/drishti_chart-map.js"].mapScale, "ranking": __m["src/drishti_chart-map.js"].ranking, "buildMap": __m["src/drishti_chart-map.js"].buildMap, "registerMapKind": __m["src/drishti_chart-map.js"].registerMapKind, "colourTone": __m["src/drishti_chart-vega.js"].colourTone, "d3Format": __m["src/drishti_chart-vega.js"].d3Format, "fromVegaLite": __m["src/drishti_chart-vega.js"].fromVegaLite, "vegaLiteAlternative": __m["src/drishti_chart-vega.js"].vegaLiteAlternative, "vegaLiteRefusal": __m["src/drishti_chart-vega.js"].vegaLiteRefusal, "vegaLiteIn": __m["src/drishti_chart-vega.js"].vegaLiteIn, "valueText": __m["src/drishti_chart-parts.js"].valueText, "tooltipElement": __m["src/drishti_chart-parts.js"].tooltipElement, "dataTable": __m["src/drishti_chart-parts.js"].dataTable, "legendElement": __m["src/drishti_chart-parts.js"].legendElement, "markSelection": __m["src/drishti_chart-parts.js"].markSelection, "addZoom": __m["src/drishti_chart-parts.js"].addZoom, "dragBrush": __m["src/drishti_chart-parts.js"].dragBrush, "svgOf": __m["src/drishti_chart-parts.js"].svgOf, "MAP_MODES": __m["src/drishti_map-view.js"].MAP_MODES, "geoLoader": __m["src/drishti_map-view.js"].geoLoader, "MapView": __m["src/drishti_map-view.js"].MapView, "Studio": __m["src/drishti_chart-studio.js"].Studio, "CHART_EVENTS": __m["src/drishti_chart-view.js"].CHART_EVENTS, "CHART_MODES": __m["src/drishti_chart-view.js"].CHART_MODES, "SELECTION_EVENT": __m["src/drishti_chart-view.js"].SELECTION_EVENT, "Chart": __m["src/drishti_chart-view.js"].Chart, "ChartIO": __m["src/drishti_chart-io.js"].ChartIO, "linkGrid": __m["src/drishti_chart-link.js"].linkGrid, "publishSelection": __m["src/drishti_chart-link.js"].publishSelection, "PANEL_KINDS": __m["src/drishti_chart-panels.js"].PANEL_KINDS, "escapeTip": __m["src/drishti_chart-panels.js"].escapeTip, "panelCompact": __m["src/drishti_chart-panels.js"].panelCompact, "panelLineCompact": __m["src/drishti_chart-panels.js"].panelLineCompact, "panelTokens": __m["src/drishti_chart-panels.js"].panelTokens, "labelFit": __m["src/drishti_chart-panels.js"].labelFit, "panelOption": __m["src/drishti_chart-panels.js"].panelOption, "drawMap": __m["src/drishti_chart-panel-draw.js"].drawMap, "PanelCharts": __m["src/drishti_chart-panel-draw.js"].PanelCharts, "CHART_ELEMENT": __m["src/drishti_chart-element.js"].CHART_ELEMENT, "defineChartElement": __m["src/drishti_chart-element.js"].defineChartElement, "chartIn": __m["src/drishti_chart-element.js"].chartIn };
+    return { "install": install, "registerKind": __m["src/drishti_chart-spec.js"].registerKind, "kindOf": __m["src/drishti_chart-spec.js"].kindOf, "kindList": __m["src/drishti_chart-spec.js"].kindList, "KIND_ALIASES": __m["src/drishti_chart-spec.js"].KIND_ALIASES, "checkSpec": __m["src/drishti_chart-spec.js"].checkSpec, "normalizeSpec": __m["src/drishti_chart-spec.js"].normalizeSpec, "specText": __m["src/drishti_chart-spec.js"].specText, "rowsOf": __m["src/drishti_chart-data.js"].rowsOf, "fieldOf": __m["src/drishti_chart-data.js"].fieldOf, "num": __m["src/drishti_chart-data.js"].num, "members": __m["src/drishti_chart-data.js"].members, "sumBy": __m["src/drishti_chart-data.js"].sumBy, "bin": __m["src/drishti_chart-data.js"].bin, "quantile": __m["src/drishti_chart-data.js"].quantile, "boxStats": __m["src/drishti_chart-data.js"].boxStats, "quantileBreaks": __m["src/drishti_chart-data.js"].quantileBreaks, "classOf": __m["src/drishti_chart-data.js"].classOf, "compileCondition": __m["src/drishti_chart-data.js"].compileCondition, "conditionFields": __m["src/drishti_chart-data.js"].conditionFields, "CHART_DENSITIES": __m["src/drishti_chart-theme.js"].CHART_DENSITIES, "blend": __m["src/drishti_chart-theme.js"].blend, "alpha": __m["src/drishti_chart-theme.js"].alpha, "chartTheme": __m["src/drishti_chart-theme.js"].chartTheme, "toneColour": __m["src/drishti_chart-theme.js"].toneColour, "rampColour": __m["src/drishti_chart-theme.js"].rampColour, "formatterFor": __m["src/drishti_chart-theme.js"].formatterFor, "textStyle": __m["src/drishti_chart-theme.js"].textStyle, "axisOf": __m["src/drishti_chart-theme.js"].axisOf, "rowId": __m["src/drishti_chart-kinds.js"].rowId, "seriesDefs": __m["src/drishti_chart-kinds.js"].seriesDefs, "annotationMarks": __m["src/drishti_chart-kinds.js"].annotationMarks, "buildSeriesChart": __m["src/drishti_chart-kinds.js"].buildSeriesChart, "buildScatter": __m["src/drishti_chart-kinds.js"].buildScatter, "buildHistogram": __m["src/drishti_chart-kinds.js"].buildHistogram, "buildWaterfall": __m["src/drishti_chart-kinds.js"].buildWaterfall, "buildBoxplot": __m["src/drishti_chart-kinds.js"].buildBoxplot, "buildHeatmap": __m["src/drishti_chart-kinds.js"].buildHeatmap, "buildCandlestick": __m["src/drishti_chart-kinds.js"].buildCandlestick, "buildLayers": __m["src/drishti_chart-kinds.js"].buildLayers, "registerAxisKinds": __m["src/drishti_chart-kinds.js"].registerAxisKinds, "buildPie": __m["src/drishti_chart-kinds2.js"].buildPie, "buildGauge": __m["src/drishti_chart-kinds2.js"].buildGauge, "buildTreemap": __m["src/drishti_chart-kinds2.js"].buildTreemap, "buildSankey": __m["src/drishti_chart-kinds2.js"].buildSankey, "registerOtherKinds": __m["src/drishti_chart-kinds2.js"].registerOtherKinds, "equalEarth": __m["src/drishti_chart-geo.js"].equalEarth, "albers": __m["src/drishti_chart-geo.js"].albers, "plateCarree": __m["src/drishti_chart-geo.js"].plateCarree, "projectGeometry": __m["src/drishti_chart-geo.js"].projectGeometry, "bounds": __m["src/drishti_chart-geo.js"].bounds, "coreExtent": __m["src/drishti_chart-geo.js"].coreExtent, "countryProjection": __m["src/drishti_chart-geo.js"].countryProjection, "US_INSETS": __m["src/drishti_chart-geo.js"].US_INSETS, "prepareRegions": __m["src/drishti_chart-geo.js"].prepareRegions, "prepareWorld": __m["src/drishti_chart-geo.js"].prepareWorld, "findPlace": __m["src/drishti_chart-geo.js"].findPlace, "createGeoLoader": __m["src/drishti_chart-geo.js"].createGeoLoader, "holdAntimeridian": __m["src/drishti_chart-geo.js"].holdAntimeridian, "fitView": __m["src/drishti_chart-geo.js"].fitView, "mapMetrics": __m["src/drishti_chart-map.js"].mapMetrics, "placeValues": __m["src/drishti_chart-map.js"].placeValues, "mapScale": __m["src/drishti_chart-map.js"].mapScale, "ranking": __m["src/drishti_chart-map.js"].ranking, "buildMap": __m["src/drishti_chart-map.js"].buildMap, "registerMapKind": __m["src/drishti_chart-map.js"].registerMapKind, "colourTone": __m["src/drishti_chart-vega.js"].colourTone, "d3Format": __m["src/drishti_chart-vega.js"].d3Format, "fromVegaLite": __m["src/drishti_chart-vega.js"].fromVegaLite, "vegaLiteAlternative": __m["src/drishti_chart-vega.js"].vegaLiteAlternative, "vegaLiteRefusal": __m["src/drishti_chart-vega.js"].vegaLiteRefusal, "vegaLiteIn": __m["src/drishti_chart-vega.js"].vegaLiteIn, "valueText": __m["src/drishti_chart-parts.js"].valueText, "tooltipElement": __m["src/drishti_chart-parts.js"].tooltipElement, "dataTable": __m["src/drishti_chart-parts.js"].dataTable, "legendElement": __m["src/drishti_chart-parts.js"].legendElement, "markSelection": __m["src/drishti_chart-parts.js"].markSelection, "addZoom": __m["src/drishti_chart-parts.js"].addZoom, "dragBrush": __m["src/drishti_chart-parts.js"].dragBrush, "svgOf": __m["src/drishti_chart-parts.js"].svgOf, "MAP_MODES": __m["src/drishti_map-view.js"].MAP_MODES, "geoLoader": __m["src/drishti_map-view.js"].geoLoader, "MapView": __m["src/drishti_map-view.js"].MapView, "Studio": __m["src/drishti_chart-studio.js"].Studio, "CHART_EVENTS": __m["src/drishti_chart-view.js"].CHART_EVENTS, "CHART_MODES": __m["src/drishti_chart-view.js"].CHART_MODES, "Chart": __m["src/drishti_chart-view.js"].Chart, "ChartIO": __m["src/drishti_chart-io.js"].ChartIO, "SELECTION_EVENT": __lib("drishti-core").SELECTION_EVENT, "linkGrid": __lib("drishti-core").linkGrid, "publishSelection": __lib("drishti-core").publishSelection, "PANEL_KINDS": __m["src/drishti_chart-panels.js"].PANEL_KINDS, "escapeTip": __m["src/drishti_chart-panels.js"].escapeTip, "panelCompact": __m["src/drishti_chart-panels.js"].panelCompact, "panelLineCompact": __m["src/drishti_chart-panels.js"].panelLineCompact, "panelTokens": __m["src/drishti_chart-panels.js"].panelTokens, "labelFit": __m["src/drishti_chart-panels.js"].labelFit, "panelOption": __m["src/drishti_chart-panels.js"].panelOption, "drawMap": __m["src/drishti_chart-panel-draw.js"].drawMap, "PanelCharts": __m["src/drishti_chart-panel-draw.js"].PanelCharts, "CHART_ELEMENT": __m["src/drishti_chart-element.js"].CHART_ELEMENT, "defineChartElement": __m["src/drishti_chart-element.js"].defineChartElement, "chartIn": __m["src/drishti_chart-element.js"].chartIn };
   })();
   return Object.freeze(Object.assign({ library: "drishti-chart", version: "0.2.0" }, __m["src/drishti_index.js"]));
 });

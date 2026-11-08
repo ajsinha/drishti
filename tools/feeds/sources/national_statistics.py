@@ -14,7 +14,7 @@
 
 """The national-statistics feed (config/feeds/national-statistics.yaml): Statistics Canada's Web Data Service by vector, for the
 national-statistics pack. One GET for every vector (getDataFromVectorByReferencePeriodRange). Incremental: the first run asks
-`history-years`, later runs from a quarter before each vector's last period, merged into its kept history (history/v<vector>.json); no
+`history-years`, later runs from a quarter before each vector's last period, merged into its kept history (history/v<vector>.jsonl); no
 vector with a newer release, nothing emitted. Emits the statistics-series kind (one a vector: the latest value, the change on the period
 and on the year, the history)."""
 from __future__ import annotations

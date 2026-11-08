@@ -37,6 +37,15 @@
   licence and terms are in the feed file (`options.sources`); the Bank of England, OSFI and the Canada Gazette are internal only and their
   releases say so. FRED's key is `DRISHTI_FRED_API_KEY`; without it the Bank of Canada still loads. One publisher down or a day GDELT
   skipped never fails a run.
+- **One fetcher of the World Bank's WDI**: the world-development feed. Besides its ten headline indicators (the profile) it pulls, as
+  series only, every `kind: wdi` code of `tools/realdata/sources.yaml` back to that file's `years.first` (`options.series-from`) and the
+  world, its seven regions and four income groups (`options.aggregates`; an aggregate's series has no `WDI_PROFILE`, now optional in the
+  contract). world-economy reads WDI from that feed's latest output (`publicsector.wdi_rows`, written into its cache in the API's shape,
+  so the normaliser is unchanged) and never calls the WDI API; with no output it fails saying `run feed run world-development first`.
+  `--no-wdi` is gone and world-economy loads all twelve of its kinds again (economy, macro-indicator, economic-forecast, labour-market
+  and fiscal-position are back); it runs after world-development by schedule (06:30, then 06:45). `--scope` widens WGI and IMF series
+  only: a new WDI code goes into `sources.yaml`. Tested on world-development output written from its recorded fixtures
+  (`tools/feeds/tests/test_wdi_one_fetcher.py`).
 - **Tests on recorded fixtures** (`tools/feeds/tests/test_publicsector.py`, never the network) and a browser test of the six screens on a
   scratch lake loaded from them (`test_public_sector_browser.py`); `tools/packgen/publicsector/make.py` writes the samples and READMEs.
 - **Docs**: the Public sector guide and Tutorial 46 (two Help entries), the External data page's public-sector rows and section, the
@@ -128,7 +137,7 @@
   `yahoo-prices` (internal only, off as shipped), `world-economy` (internal only for the IMF forecasts, into `worldlake`),
   `news-and-markets` (internal only, into `newslake`) and `market-data` (incremental by day from its state, each document under its own
   date, `--since` for a backfill, into `capitalmarket`). The World Bank's WDI belongs to the public sector's world-development feed:
-  world-economy runs with `--no-wdi` (its kinds keyed on WDI series wait until the pack reads them from there).
+  world-economy reads it from that feed's output (see "One fetcher of the World Bank's WDI" above).
   Refreshing a pack's committed demo snapshot in `data/testdata` is `feed run <feed> --snapshot` (with `--internal-ok` for
   internal-only data), writing exactly where the scripts wrote. Their per-pack `.sh` and `.ps1` wrappers are replaced by the one
   wrapper per system; `DRISHTI_SEC_USER_AGENT` and `DRISHTI_GLEIF_USER_AGENT` are replaced by `DRISHTI_FEEDS_USER_AGENT`; the
@@ -137,6 +146,21 @@
 - **Tests on recorded responses only**: every feed's pull, incremental state, an idempotent re-run, retries, the lock, the ledger and
   status, the inbox route's `.ready` and tar, the java and python routes into a temporary lake, the command line and the schedule
   output; Admin → Feeds in the console and the server; one `--live` smoke per feed for a person to run.
+
+### Fixes (the train's bulk drill)
+
+- **Drishti's lake writer and a partition value with a space**: Kernel hands a partition's folder percent-encoded
+  (`PRODUCT_GROUP=Fixed%20income`); the writer wrote the file there while every read looked in `Fixed income`, so a Calypso or Murex
+  trade load by `PRODUCT_GROUP` failed with "the write failed, nothing was committed". The writer now decodes a `file:` URI exactly as the
+  reads do (`LakeWriterTest`).
+- **The public-sector feeds keep their working history as JSON Lines** (the data standard): a series' points, the kept releases and
+  GDELT's per-day country aggregates under `<data>/datafeeds/<feed>/history/` are `.jsonl`, a row a line.
+- **A pack filled by a feed counts as served without the demo connector**: `PacksServedWithoutDemoTest` accepts a Delta connector
+  reading the lake an enabled feed loads the kind into (the six public-sector packs, `worldlake` and `newslake`); PACK_DEVELOPER_GUIDE
+  step 16 says so.
+- Tests brought up to date: the demo lake's trades by `PRODUCT_TYPE` (Endur) and `PRODUCT_GROUP` (Calypso, Murex); the engines' and
+  publishers' sources found in their domain modules; `css_visual_check.py` names the demo lake's variable through `lakeconfig`; importing
+  `drishti-stack/stack.py` in a test leaves no `__pycache__` in the checkout.
 
 ## 2.9.11.h (unreleased)
 
@@ -205,6 +229,103 @@
 
 ## 2.9.11.e (unreleased)
 
+- **The Admin forms, part 2, on drishti-inputs' `Form`** ([ELEMENTS.md section 12.3, sixth pass](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
+  Users, Roles, Access, Audit, Configuration (search and *Propose a change*), Connectors (the list's filters and the connector editor),
+  Artifacts (filters, a BI file), Packs (the archive, the signature, the breaking-change box), a pack's *Load a data file*, Lakes,
+  Drishti*net (seed, map filter, *Explain a request*, nodes per role, this node's tags, the file's YAML), Capacity (the plan's inputs, the
+  growth sliders, the workbook's inputs), Health's busy override, Engines, Edits, Compute, Inbox, Caches, the uninstall dialogs and the
+  banking module's Scopes draw no control of their own: the server builds each form's schema (`core/admin_forms.py`, `core/form_kit.py`,
+  new; a template calls `admin_form(...)`), every field keeps its old name and data attributes, so routes, scripts and tests read the
+  same names. **Fixed with it**: an unticked box in a JSON body is `false`, never missing (a role's powers, a user's *Enabled*, Lakes'
+  *Bind* and *Tell*); a new user without a first password, a role or user name that does not fit, an Edits switch without a reason are
+  said in words and not sent. Capacity's and the connector editor's hand-made fields, the connector's extra rows and datalist and their
+  CSS deleted. **drishti-inputs**: a form the server drew (`data-di-form`, `formOf`, `upgradeForms`; an embedded `Form` stops its
+  page form's submit while a field has a problem), the field types `file` and `range`, a text field's `password` and `search`
+  formats, `maxLength`, `mono`, `suggest`, the `inline` layout.
+- **Selects on drishti-inputs' `Select`** ([ELEMENTS.md section 8.2](docs/architecture/ELEMENTS.md#82-as-built-drishti-inputs-drishti-data-and-the-grids-cell-editing)):
+  drishti-grid's select cell editor opens a `Select` on the value (a pick saves; `Select` gains a `pick` event); FRTB-SA's and SIMM's
+  playground choices (method switches, *Compare with*, *By*, *Side*) are `<drishti-select>`s. Tests pick through `tests/select_helpers.py`;
+  Playwright's `select_option` and `input_value` work on a `<drishti-select>` (installed by `conftest.py`).
+- **The alert form on drishti-inputs' `Form`** ([ELEMENTS.md section 12.3, fifth pass](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
+  the server sends the form's schema (`core/alert_form.py`, new, 168 lines) and the page's `Form`, embedded in its POST form, draws every
+  field with the name it always submitted (saving and *Check now* unchanged); the source, condition and trigger groups follow the choice
+  through `when`, the model's measures and the filters' fields arrive as the server answers (`Form.setOptions`), and the filters are an array
+  of objects written into the hidden `model_query`. `drishti_alert-form.js` 218 → 191 lines, `alert_form.html` 163 → 69; the hand-made groups,
+  filter rows, swapped select and their CSS deleted. **drishti-inputs**: `Form.setOptions(path, list, labels)`, an array's `itemHook` and
+  `addHook`.
+- **No bespoke UI, the editors' rows on drishti-grid editing** ([ELEMENTS.md section 12.3, fifth pass](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
+  the model editor's tables, relationships, measures (the ? card and the engine's "adds up?" as drawn cells), hierarchies, row rules,
+  fields and access matrix, and the table editor's source and look-ups and its columns checklist are drishti-grid with cell editing through
+  one helper (`E.rowGrid`, `drishti_editor-formula.js` 59 → 92 lines; `drishti_editor-model.js` 332 → 340 and `drishti_editor-table.js`
+  276 → 266, their hand-made tables, inputs and selects deleted). **drishti-grid** gains the `code` cell editor: a formula cell is
+  drishti-inputs' one-line `CodeEditor` (the column's `codeMode` and `complete` hook) when that library is on the page; a cell editor started
+  out of view takes the focus when its cell is drawn. Admin › Lakes: a file's fields with their Classifier and Promote checkboxes are a
+  drishti-grid with editing (`drishti_admin-lakes.js` 231 → 236), so the kit guard's hand-made-form allow-list is 1 → 0 with the BI pass's transform
+  parameters on Form (capped at 0). A problem without a level in the editors' YAML is an error. Tests: the editors', the lakes' and the workbench's browser
+  files follow the grids and the kit's palette.
+
+- **drishti-graph and drishti-tree, two new Drishti Elements libraries** (ELEMENTS.md section 8.8; the owner's picks: g5 option A and
+  g6 option B the defaults, the other options modes of the same components). **drishti-graph**: networks cyclic or acyclic on a canvas
+  for thousands of nodes (5,000 nodes and 20,000 edges: the force layout 2.2 to 2.7 s in Node, settling on screen in 4.7 s with the
+  page responsive, a full frame 11 to 17 ms); force (seeded Barnes-Hut), layered, radial, circular, grouped and preset layouts,
+  animated unless motion is reduced; zoom, pan, minimap, fit; neighbours expanded on demand through a host's hook; the shortest path;
+  groups folded by an attribute (a non-additive measure never summed); filters by type; size and colour by a measure with the legend;
+  edge width by weight; pin, multi-select and the lasso; Explain; linked selection with drishti-grid through drishti-core's bus;
+  export PNG, SVG, CSV and JSON; the arrow keys between neighbours and the adjacency table (▦) as the text alternative; live changes
+  throttled; three modes: `inspector` (default), `table` (the Nodes, Edges and Path tables linked both ways) and `terminal` (the
+  `GRAPH>` command line with Tab completion, history and function keys); the lineage preset (sources → tables → models → reports, status
+  badges). **drishti-tree**: hierarchies as the indented tree grid on drishti-grid's tree data (default), an org chart, a sunburst and an
+  icicle (additive sizes only); search with breadcrumbs; non-additive measures (◆) asked of the server and never summed, the
+  children's sum beside; Explain; re-parenting in an edit mode that proposes the moves as one four-eyes proposal. drishti-risk's presets:
+  the counterparty structure graph and the VaR hierarchy tree. Gallery demos for both (every mode), fixture harnesses, Node and browser
+  tests.
+- **The one-off graphs moved onto drishti-graph, the old code deleted**: the view's graph panel (the counterparty hierarchy, F3 HIER;
+  the console, the client renderer and the embed draw it; drishti-chart's ECharts graph option is gone), the **data map** (DATAMAP: the
+  domains as frames of the grouped layout, **Layered** the lineage DAG of the joins, the layout in the address; the drawn SVG, its CSS
+  and the server's layout code are gone) and Build › New pack's graph of kinds and links. The same nodes and edges as before (the data
+  map's are checked against the server's model in the browser test). linkGrid, the selection event and the shared colour theme
+  (`visualTheme`) moved from drishti-chart into drishti-core, where every component uses them.
+- **The VaR explorer's scope tree is drishti-tree** (drishti-risk's `varHierarchyTree` preset, the tree grid in the terminal density;
+  ELEMENTS.md section 8.8): the same rows and figures (VaR, ES, the limit use bar or *no limit* / *n/c*, Parametric and Gap when on),
+  every figure the server's (nothing summed in the browser), a book's positions and a position's trades asked when the row opens
+  (*computing…* until then), *+ basket* and the direction chip, the current scope marked, what is open and the column widths kept;
+  the explorer's own riskGrid tree code is deleted. drishti-tree gains generic hooks for it: `chrome: false` (the view alone),
+  `grid` (the node's cell, a measure's `column`, more columns, a row's class and data, widths given and kept, `fitRows`), lazy
+  children (`loadChildren`, `lazyText`, `HierarchyModel.addChildren`) and a quiet `select`.
+- **The other hand-built trees are drishti-tree too** (ELEMENTS.md section 8.8, no bespoke UI on any screen): the **Drishti Risk
+  home's VaR hierarchy** (`varHierarchyTree` in the panel: VaR and the limit use bar of every node as the server sent them, open to the
+  desks, a node's name the link to the VaR explorer at that scope); the **exposure explorer's scope tree** (the bank, legal entities,
+  counterparties, netting sets and a set's trades asked when it opens; peak PFE not additive, every figure the server's; a click opens
+  the scope, the way to the current scope opens and its row is marked); the **raw document viewer** and F9's drawer (the tree grid
+  with Key and Value columns: the path opened and selected, the cut at 50 with *Show all* as a row, search keeping the matches and
+  their ancestors, masked values as sent). Deleted: `rl-tree`'s rows, `xx-tree`'s rows, twisties and open-state bookkeeping, the raw
+  viewer's own tree and their CSS. **A tree's filter is in the address again** (`?tf.<panel id>=<words>`; treeTables' `address` hook):
+  a reload or a shared link shows the same rows, as before the move. **drishti-grid**: rows that open and close (a tree, groups, a
+  pivot) are 44 px high on a touch screen (a phone, a tablet; inside the row line), with a 44 px twisty.
+
+- **The Build workbench's shape tree is drishti-tree** (no bespoke UI in an authoring tool): a Design's Shape section draws its fields
+  with drishti-tree's new **outline** (`TreeOutline`, `drishti_tree-outline.js`: a `Tree` in grid mode without chrome for a narrow
+  panel; marks after a node's label (type, role badge with its reason, conflict, presence, examples), a row class, a filter that keeps
+  the matches and the nodes above them, a tree's keys on the rows (Home/End, Right/Left to open, close and go up, Enter or Space to
+  open a branch or show a leaf's detail), the detail under the tree with the host's buttons, the host's keys first; `outlineFilter`
+  and `outlineKey` pure and tested in Node). Same nodes, counts, conflicts and rare fields, filter, Expand and Collapse, Enter for a
+  field's reason, `S` and `B`, a field dragged onto the canvas. The hand-built `role=tree` list and its CSS (`.bs-tree`, `.bs-row`,
+  `.bs-detail` and the rest) are deleted; `window.Drishti.ShapeTree` keeps its `show(report)` and gains `fieldAt(element)`.
+- **Tables with children are drishti-tree** (RACHANA_REFERENCE.md › Tree rows in the browser): a Sutra table or ladder with
+  `children:` is drawn by drishti-tree's new **table tree** (`treeTables`, `TreePanel`, `drishti_tree-panel.js`) in the console, the
+  client renderer and the embed (`elements-tree`), from the server's rows (texts, tones, links; nothing summed): the **tree grid** on
+  drishti-grid's tree data (+/−, a filter keeping the ancestors of a match, the grid's column menus) or the **org chart** of the same
+  rows, a tree that is one chain opening as it; mode, open rows and filter survive a live patch; the server's table stays hidden for
+  print and pages without scripts. Deleted: the console's hand-built toggles, filter and funnels on trees (`drishti_tree-rows.js`
+  part 1), drishti-grid's `tree` and `treeVisibility`, `.tr-q`, `.tr-bar`, `.tr-count`. The renderer requires drishti-tree; the embed v2
+  serves drishti-graph's and drishti-tree's modules. **GLEIF**: an entity's parents chain (`PAR`) is now a tree from the ultimate parent
+  down to the entity (highlighted), opening as an org chart; a group's tree (`TREE`) opens as the tree grid with the org chart a click away.
+
+- **Proposed for the owner's choice: drishti-graph, drishti-tree and the designer kit** (ELEMENTS.md section 16; mock-ups
+  docs/architecture/mockups/elements/g5-graph.html, g6-tree.html and g7-designer-kit.html, three options each, synthetic data): a
+  connected graph on a canvas (counterparty, ownership and AML networks; layouts, paths, grouping, Explain, a linked table), a tree
+  (org chart, tree grid with ◆ non-additive measures, sunburst; re-parenting as a four-eyes proposal), and the one shell every
+  designer is built on, shown as the BI report designer and as the form designer. Design only.
 - **No bespoke UI, the panes** ([ELEMENTS.md section 12.3, fourth pass](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
   the Build workbench's inspector is drishti-designer's `Inspector` (one live `Form` from the Rachana schema; `build/drishti_inspector.js`
   286 → 242 lines) and its palette the kit's `Palette` (`build/drishti_palette.js` 80 → 63); its expression fields are `Form`'s new
@@ -252,6 +373,25 @@
   the drill-through target, the links between datasets, the bookmarks, the Phone and Tablet rows, a report measure's name, the
   Copilot's question and a transform step's parameters are `Form`s too; the designer's `frow` and `selectInput` deleted; the form
   guard's allow-list from 2 files to 1.
+  BI's Visualizations are drishti-designer's `Palette`; the wells' Add a field a `Form` select. drishti-designer: a palette entry's own
+  data attributes (`attrs`, data-* only) and the search field's (`searchAttrs`).
+  **The last two hand-made parts of the BI designer are on Drishti Elements** (ELEMENTS.md 12.3: *still their own* is empty). **BI
+  Studio is drishti-designer's `DesignerShell`** for the report (and board) and theme designers: the header (BI › Studio › Reports, the
+  name, the status pill, the designer's actions with their `data-*` hooks, + New), the Explorer as the shell's objects (links, a status
+  badge), the open items above the designer, Problems and Query in a dock under it, the left rail folding away; the three layouts
+  (studio, side by side, terminal with `DESIGN>` and the function keys) remembered per person in this browser; a workspace that
+  requires review proposes through the shell's Propose for review with a note for the reviewer. drishti-designer: the shell's `docs`,
+  `dock` and `collapsible` parts, link, toggle and choice actions with the host's `attrs`, `setLabel`, `showAction`, objects with an
+  `href` and a `badge`, the status in the host's words; its title stash renamed `data-dd-title` (no clash with a host's `data-title`).
+  Deleted: `templates/bi/_studio.html` (42 lines), the designers' hand-made headers, the Studio's Explorer, tabs and dock CSS
+  (`drishti_bi-studio.css` 75 → 54 lines; the header rules of `drishti_bi-design.css`); `drishti_bi-studio.js` 162 → 161 lines, now a
+  host of the kit with no DOM of its own. **The Fields pane is drishti-tree's `TreeOutline`** (the one tree component): a field a
+  button (a click or Enter adds it; dragged through the page's `DragHub`), the badges (masked, this report only, default or model, the
+  time function) as marks with their `data-*` attributes, Move to the model a link, a date's parts and Hierarchies closed at the start,
+  one branch per added dataset with its remove action; the hand-made `details`/`ul` tree, its search code and its CSS (13 rules)
+  deleted. drishti-tree's outline: `button`, `activate`, `wire`, `attrs`, `actions`, `startOpen`, `fill`, a mark's `href` and `attrs`.
+  drishti-grid: a bare grid (`chrome: false`) draws no wells. Tests follow person-visible behaviour (a field one level under its
+  folder by `aria-level`); `tests/dnd.py` (an HTML5 drag helper, dead since the kit's pointer drags) deleted.
 - **Vega retired (the owner's decision O1): one drawing engine.** A report's `vega-lite` visual and a Python visual's `output: vega-lite`
   are translated by drishti-chart (`fromVegaLite`) and drawn by drishti-chart; a feature it does not translate is refused in words with
   what to use instead (`vegaLiteAlternative`, `vegaLiteRefusal`, `vegaLiteIn`; `chartIn(host, spec)` puts any spec in a host), never
@@ -322,7 +462,7 @@
   sheet, raised to 29 KB gzip on purpose). A guard fails a console script that draws its own multi-select or picker list.
 
 - **drishti-designer 0.1.0, the designer kit** (the product owner, 2026-11-07: "duplicated code will make the system unmaintainable";
-  [ELEMENTS.md section 8.8](docs/architecture/ELEMENTS.md#88-as-built-drishti-designer-the-designer-kit)): one layout canvas over a
+  [ELEMENTS.md section 8.9](docs/architecture/ELEMENTS.md#89-as-built-drishti-designer-the-designer-kit)): one layout canvas over a
   layout model (grid or flow; snap, settle, multi-select, align, distribute, z-order, groups, copy and paste, a phone's order, the keys,
   undo and redo on one command stack or by snapshots), the palette, the inspector (a drishti-inputs Form), the outline, the YAML pane kept
   in step with the model both ways (Studio's reader and schema assistant moved into it) and the designer shell of EDITORS.md in the three

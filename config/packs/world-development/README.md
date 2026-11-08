@@ -51,6 +51,8 @@ generated-by: tools/packgen/publicsector/make.py
 
 World Bank World Development Indicators by country and year: population, GDP per head and growth, inflation, unemployment, life expectancy, poverty, access to electricity, internet use and central government debt for every economy, from the World Bank's API (CC BY 4.0). A country's profile shows the latest of each indicator and the world map shaded by GDP per head; each series shows its history by year. Filled daily by the world-development feed into the worldlake lake.
 
+The feed is the one fetcher of the World Bank's WDI: besides the ten headline indicators it pulls, as series only, every `kind: wdi` code of `tools/realdata/sources.yaml` back to that file's first year, and the world, its seven regions and four income groups (`options.series-from`, `options.aggregates`). The world-economy feed reads them from this feed's latest output and never calls the WDI API; with no such output it fails, saying to run this feed first. An aggregate's series has no `WDI_PROFILE` (aggregates have no profile page).
+
 ## Data structures
 
 Every kind the pack owns, read from its manifest, its samples and its Sutras: how its ids look, its fields (type, an example, what it means), its nested lists and the fields that link to other kinds. A path `A[].B` is field `B` of every element of list `A`.

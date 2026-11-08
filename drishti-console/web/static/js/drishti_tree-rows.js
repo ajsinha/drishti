@@ -14,117 +14,46 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Expandable rows (PANEL_KINDS.md, Tree rows).
-   1. A table or ladder whose Sutra says children: (table.tbl-tree): the ▸/▾ button of a row opens and closes the rows under
-      it, any number of levels deep; the filter box and the column filters (drishti_colfilter.js) keep the rows that match and the
-      ancestors of those rows: a parent shows, open, when any row below it matches.
+/* Expandable rows (RACHANA_REFERENCE.md, children: on a table).
+   1. A table or ladder whose Sutra says children: (table.tbl-tree) is drawn by drishti-tree (Drishti Elements' table tree,
+      drishti_tree-panel.js): the tree grid on drishti-grid's tree data (+ and - open and close the rows under a row, any number of
+      levels deep; the filter box and the grid's column filters keep the rows that match and their ancestors), or the org chart of the
+      same rows (a tree that is one chain opens as it); every cell the server's text, tone and links. The server's table stays hidden
+      for print and for pages without the library.
    2. A pivot by a list of fields (div.pv-tree-host): the nested rows are drawn by drishti-grid (Drishti Elements, the Pivot screen's
       grid: + and − on the groups, subtotals, the grand total) from the panel's own data, every figure the pivot engine's (ChartBinder
       computes them with drishti-bicompute) and shown as the server's text; one grid for pivot rows.
-   Both are plain buttons, so Tab, Enter and Space work; the state is aria-expanded. Live updates replace panels: new ones
-   are enhanced when they appear (data-tree-ready marks the ones already done). */
+   Live updates replace panels: new ones are enhanced when they appear (data-tree-ready marks the ones already done); a tree keeps
+   its mode, open rows and filter across them. */
 (function () {
   'use strict';
-  var me = document.currentScript, reg0 = window.drishtiModules || {};
+  var me = document.currentScript;
   var ROOT = me && /\/js\/(?:drishti_)?tree-rows\.js/.test(me.src || '') ? me.src.replace(/js\/(?:drishti_)?tree-rows\.js.*$/, '') : '/static/';
   var VER = me && /[?&]v=([^&]+)/.exec(me.src || '') ? /[?&]v=([^&]+)/.exec(me.src)[1] : '';
 
-  var treeState = {};                                      // a tree's filters by panel, so a live patch that replaces the table keeps them
-  var openMem = {};                                        // the rows a reader opened, by table: a live patch repaints the panel, and what was opened stays open
-  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) { e.className = cls; } if (text != null) { e.textContent = text; } return e; }
-
-  // ---- table rows with children -----------------------------------------------------------------------------------
-  function treeTable(t, root, scope) {
-    var body = t.tBodies[0];
-    if (!body) { return; }
-    var rows = Array.prototype.slice.call(body.rows), q = '', CF = reg0.colFilter, ctl = null;
-    var heads = t.tHead && t.tHead.rows.length ? Array.prototype.slice.call(t.tHead.rows[0].cells) : [];
-    var count = null, clearBtn = null, lastLive = '';
-    function cellText(r, i) { var c = r.cells[i]; return c ? c.textContent.replace(/[▸▾]/g, '').replace(/\s+/g, ' ').trim() : ''; }
-    var panelOf = t.closest('[data-panel], section[id], .pnl'), pidOf = panelOf && (panelOf.getAttribute('data-panel') || panelOf.id) || 'tree';
-    var memKey = scope + '|' + pidOf + '|' + (panelOf ? Array.prototype.indexOf.call(panelOf.querySelectorAll('table.tbl'), t) : 0);
-    var mem = openMem[memKey];
-    rows.forEach(function (r, i) {
-      r.__depth = +r.getAttribute('data-depth');
-      var b = r.querySelector('.tr-tog');
-      r.__open = !!b && (mem && mem.length === rows.length ? mem[i] === true : b.getAttribute('aria-expanded') === 'true');
-      r.__text = r.textContent.replace(/[▸▾]/g, '').replace(/\s+/g, ' ').toLowerCase();
-    });
-    function textHit(r) { return !q || r.__text.indexOf(q) >= 0; }
-    function paint(say) {
-      var hit = [], real = [], on = !!q || !!(ctl && ctl.active());
-      if (ctl) { ctl.prepare(); }
-      if (on) {                                            // a match, and every ancestor of a match (shown open)
-        real = rows.map(function (r) { return textHit(r) && (!ctl || ctl.pass(r)); });
-        hit = real.slice();
-        rows.forEach(function (r, i) {
-          if (!real[i]) { return; }
-          for (var j = i - 1, need = r.__depth - 1; j >= 0 && need >= 0; j--) {
-            if (rows[j].__depth === need) { hit[j] = true; need--; }
-          }
-        });
-      }
-      var parentOpen = [true];                             // per depth: is the nearest row above at this depth open and shown?
-      rows.forEach(function (r, i) {
-        var d = r.__depth, visible = on ? hit[i] : (d === 0 || parentOpen[d - 1] === true);
-        r.hidden = !visible;
-        var open = on ? hasKept(i, hit) : r.__open;
-        parentOpen[d] = visible && open;
-        var b = r.querySelector('.tr-tog');
-        if (b) {
-          b.setAttribute('aria-expanded', open ? 'true' : 'false');
-          b.setAttribute('aria-label', (open ? 'Collapse ' : 'Expand ') + b.getAttribute('aria-label').replace(/^(Collapse|Expand) /, ''));
-          b.textContent = open ? '▾' : '▸';
-        }
-      });
-      t.setAttribute('data-shown', String(rows.filter(function (r) { return !r.hidden; }).length));
-      var matched = real.filter(Boolean).length, text = on ? matched + ' of ' + rows.length + ' rows (filtered)' : rows.length + ' rows';
-      if (count) { count.textContent = on ? text : ''; }
-      if (clearBtn) { clearBtn.hidden = !on; }
-      if (say === true && CF && text !== lastLive) { CF.say(root, text); }
-      lastLive = text;
+  // ---- table rows with children: drishti-tree's table tree ---------------------------------------------------------
+  var memory = {};                                         // each tree's mode, open rows and filter by table, so a live patch that replaces it keeps them
+  var live = [];                                           // the trees drawn (those whose table left the page are taken down on the next scan)
+  // a tree's filter is in the console's address (?tf.<panel id>=<words>), so a reload or a shared link shows the same rows (not inside
+  // <drishti-view>: the host's address is not touched)
+  var ADDRESS = {
+    read: function (pid) { return new URLSearchParams(location.search).get('tf.' + pid); },
+    write: function (pid, q) {
+      var u = new URL(location.href), k = 'tf.' + pid;
+      if ((u.searchParams.get(k) || '') === q) { return; }
+      if (q) { u.searchParams.set(k, q); } else { u.searchParams.delete(k); }
+      history.replaceState(history.state, '', u.pathname + u.search + u.hash);
     }
-    function hasKept(i, hit) {                             // a row is shown open while a row below it (deeper) is kept
-      var d = rows[i].__depth;
-      for (var j = i + 1; j < rows.length && rows[j].__depth > d; j++) { if (hit[j] === true) { return true; } }
-      return false;
-    }
-    body.addEventListener('click', function (e) {
-      var b = e.target.closest && e.target.closest('.tr-tog');
-      if (!b || q || (ctl && ctl.active())) { return; }
-      var r = b.closest('tr');
-      r.__open = !r.__open;
-      openMem[memKey] = rows.map(function (x) { return x.__open === true; });
-      paint();
-      var again = r.querySelector('.tr-tog');
-      if (again) { again.focus(); }
-    });
-    if (!t.hasAttribute('data-no-search')) {
-      var wrap = t.closest('.tbl-wrap') || t.parentNode;
-      var box = el('input', 'tbl-q tr-q');
-      box.type = 'search'; box.placeholder = 'Filter rows'; box.setAttribute('aria-label', 'Filter rows');
-      box.addEventListener('input', function () { q = box.value.trim().toLowerCase(); paint(true); });
-      var bar = el('div', 'tr-bar');
-      count = el('span', 'tr-count mono'); count.setAttribute('aria-hidden', 'true');
-      clearBtn = el('button', 'fk tbl-pg-b tbl-clear', '✕ Clear filters'); clearBtn.type = 'button'; clearBtn.hidden = true;
-      clearBtn.title = 'Clear all filters on this table (Alt+Shift+X)';
-      t.__tblClear = function () { q = ''; box.value = ''; if (ctl) { ctl.clear(true); } paint(true); };
-      clearBtn.addEventListener('click', t.__tblClear);
-      bar.appendChild(box); bar.appendChild(clearBtn); bar.appendChild(count);
-      wrap.parentNode.insertBefore(bar, wrap);
-      if (CF && heads.length) {
-        var panel = t.closest('[data-panel], section[id], .pnl'), pid = panel && (panel.getAttribute('data-panel') || panel.id) || 'tree';
-        var n = panel ? Array.prototype.indexOf.call(panel.querySelectorAll('table.tbl'), t) : 0;
-        var kk = scope + '|' + pid + '|tree' + n;
-        var st = treeState[kk] || (treeState[kk] = { f: {} });
-        ctl = CF.attach({
-          id: kk, key: pid + (n > 0 ? '~' + (n + 1) : ''), table: t, root: root, heads: heads, state: st, useUrl: root === document,
-          rows: function () { return rows; }, text: cellText, base: textHit, sort: null,
-          onChange: function () { paint(true); }
-        });
-      }
-    }
-    paint();
+  };
+  /** Draws the tree tables under node with drishti-tree (Drishti Elements: loaded on demand); without the library the server's table stays. */
+  function treeTables(node, scope, root) {
+    var E = window.Drishti && window.Drishti.elements;
+    if (!E) { return; }
+    var loader = E.load || (E.core && E.core.load);
+    if (!E.tree && !loader) { return; }
+    (E.tree ? Promise.resolve(E.tree) : loader('drishti-tree')).then(function (T) {
+      live = T.treeTables(node, { memory: memory, scope: scope, live: live, address: root === document ? ADDRESS : null });
+    }, function () { /* the server's table stays */ });
   }
 
   // ---- a pivot by several fields, drawn by drishti-grid ---------------------------------------------------------------
@@ -225,9 +154,9 @@
   function init(root, options) {
     function scan(node) {
       if (!node.querySelectorAll) { return; }
-      var tables = Array.prototype.slice.call(node.querySelectorAll('table.tbl-tree:not([data-tree-ready])'));
-      if (node.matches && node.matches('table.tbl-tree:not([data-tree-ready])')) { tables.push(node); }
-      tables.forEach(function (t) { t.setAttribute('data-tree-ready', ''); treeTable(t, root, (options && options.scope) || location.pathname); });
+      if (node.querySelector('table.tbl-tree:not([data-tree-ready])') || (node.matches && node.matches('table.tbl-tree:not([data-tree-ready])'))) {
+        treeTables(node, (options && options.scope) || location.pathname, root);
+      }
       var hosts = Array.prototype.slice.call(node.querySelectorAll('.pv-tree-host:not([data-tree-ready])'));
       if (node.matches && node.matches('.pv-tree-host:not([data-tree-ready])')) { hosts.push(node); }
       hosts.forEach(pivotTree);

@@ -19,7 +19,10 @@ folder, the values as published, and the recorded fixtures the tests answer from
 
     sources(run)              options.sources: [{id, name, title, url, terms, licence, redistributable, internal-only, attribution, ...}]
     provenance(run, ...)      {SOURCE, DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION, URL, INTERNAL_ONLY} for a document
-    History                   <data>/datafeeds/<feed>/history/<name>.json: a series' kept points, merged with what a pull brought
+    History                   <data>/datafeeds/<feed>/history/<name>.jsonl: a series' kept points, merged with what a pull brought
+    read_kept, write_kept     a feed's kept rows in its folder as JSON Lines (one object a line: the data standard, DATA_GUIDE.md)
+    wdi_rows(codes, first, last)  WDI observations from the world-development feed's latest output, in the World Bank API's row shape
+                              (the world-economy feed reads WDI this way: one fetcher)
     Fixtures, Recorder        an opener answering from recorded responses (tests), and one recording them (new fixtures)
 """
 from __future__ import annotations
@@ -75,24 +78,37 @@ def tolerate(run, url: str) -> None:
     run.http.failed[:] = [u for u in run.http.failed if u != url]
 
 
+def read_kept(path: Path) -> list[dict]:
+    """A feed's kept rows (JSON Lines, one object a line); none when the file is missing or cannot be read (the next pull refills it)."""
+    try:
+        return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    except (OSError, ValueError):
+        return []
+
+
+def write_kept(path: Path, rows) -> None:
+    """Writes a feed's kept rows as JSON Lines, replacing the file whole (written beside it, then moved: never half a file)."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(path.name + ".part")
+    tmp.write_text("".join(json.dumps(r, ensure_ascii=False, separators=(",", ":")) + "\n" for r in rows), encoding="utf-8")
+    tmp.replace(path)
+
+
 class History:
-    """A time series' kept points under the feed's folder (history/<name>.json), merged with what a pull brought: a revised point
-    replaces the old one, the oldest beyond `keep` (points, or a floor key) are dropped. Written at once: a failed run merges again."""
+    """A time series' kept points under the feed's folder (history/<name>.jsonl, a point a line), merged with what a pull brought: a
+    revised point replaces the old one, the oldest beyond `keep` (points, or a floor key) are dropped. Written at once: a failed run
+    merges again."""
 
     def __init__(self, run, name: str):
-        self.file = Path(run.folder) / "history" / f"{name}.json"
+        self.file = Path(run.folder) / "history" / f"{name}.jsonl"
 
     def merge(self, points: dict, keep: int | None = None, floor: str | None = None, key: str = "DATE") -> list[dict]:
-        try:
-            kept = {h[key]: h["VALUE"] for h in json.loads(self.file.read_text(encoding="utf-8"))}
-        except (OSError, ValueError):
-            kept = {}
+        kept = {h[key]: h["VALUE"] for h in read_kept(self.file)}
         kept.update({k: v for k, v in points.items() if v is not None})
         hist = [{key: k, "VALUE": v} for k, v in sorted(kept.items()) if floor is None or k >= floor]
         if keep:
             hist = hist[-keep:]
-        self.file.parent.mkdir(parents=True, exist_ok=True)
-        self.file.write_text(json.dumps(hist, separators=(",", ":")) + "\n", encoding="utf-8")
+        write_kept(self.file, hist)
         return hist
 
 
@@ -118,6 +134,66 @@ def change(latest, previous):
 def ident(s: str) -> str:
     """An id part: upper case, letters, digits and underscores only (NY.GDP.PCAP.CD -> NY_GDP_PCAP_CD)."""
     return re.sub(r"[^A-Z0-9]+", "_", str(s).upper()).strip("_")
+
+
+# ---------------------------------------------------------------- WDI from the world-development feed (its one fetcher)
+
+WDI_FEED = "world-development"
+WDI_FIRST = "run feed run world-development first (python3 tools/drishti.py feed run world-development): it is the one fetcher of the World Bank's WDI"
+_DAY = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+
+def wdi_output(root: Path | None = None) -> dict:
+    """The world-development feed's latest written output: {folder, date, series (the development-series file), profiles (or None),
+    codes (the WDI codes that run pulled), lastupdated}. With none, a FeedError in words."""
+    from feedbase import feeds_dir
+    base = Path(root or feeds_dir()) / WDI_FEED
+    days = sorted((p for p in base.iterdir() if p.is_dir() and _DAY.match(p.name)), reverse=True) if base.is_dir() else []
+    for d in days:
+        series = sorted(d.glob("development-series.*.jsonl.gz"))
+        if series:
+            try:
+                state = json.loads((base / "state.json").read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                state = {}
+            prof = sorted(d.glob("development-profile.*.jsonl.gz"))
+            return {"folder": d, "date": d.name, "series": series[-1], "profiles": prof[-1] if prof else None,
+                    "codes": set(state.get("series-codes") or []), "first": state.get("first-year"), "lastupdated": state.get("lastupdated") or ""}
+    raise FeedError(f"no world-development output under {base}: {WDI_FIRST}")
+
+
+def _jsonl_gz(path: Path):
+    with gzip.open(path, "rt", encoding="utf-8") as fh:
+        for line in fh:
+            if line.strip():
+                yield json.loads(line)
+
+
+def wdi_rows(codes, first: int, last: int, root: Path | None = None, out: dict | None = None) -> dict[str, list[dict]]:
+    """The World Bank WDI observations of `codes` between the years first and last, read from the world-development feed's latest
+    output (never the API), in the API's row shape: {indicator: {id, value}, country: {id, value}, countryiso3code, date, value}.
+    The answer has a key for each code that output covers (its rows may be empty: the World Bank publishes nothing for it); a code it
+    does not cover is left out (the caller says so). `out` receives what wdi_output found."""
+    found = wdi_output(root)
+    if out is not None:
+        out.update(found)
+    iso2 = {p["ISO3"]: p.get("ISO2") for p in _jsonl_gz(found["profiles"])} if found["profiles"] else {}
+    want = set(codes)
+    rows: dict[str, list[dict]] = {c: [] for c in want if c in found["codes"]}
+    for s in _jsonl_gz(found["series"]):
+        code = s.get("INDICATOR_CODE")
+        if code not in want:
+            continue
+        rows.setdefault(code, [])
+        iso3 = s["ISO3"]
+        for h in s.get("HISTORY") or []:
+            if first <= int(h["YEAR"]) <= last and h.get("VALUE") is not None:
+                rows[code].append({"indicator": {"id": code, "value": s.get("INDICATOR")},
+                                   "country": {"id": iso2.get(iso3) or iso3, "value": s.get("COUNTRY_NAME")},
+                                   "countryiso3code": iso3, "date": str(h["YEAR"]), "value": h["VALUE"]})
+    for v in rows.values():
+        v.sort(key=lambda r: (r["countryiso3code"], r["date"]))
+    return rows
 
 
 # ---------------------------------------------------------------- recorded fixtures (tests) and recording them

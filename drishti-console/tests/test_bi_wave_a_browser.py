@@ -218,7 +218,7 @@ def test_the_designer_has_a_tablet_tab_that_writes_layouts_tablet(stack, browser
     page.click("[data-new] button[type=submit]")
     page.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
     expect(page.locator('[data-tab="tablet"]')).to_have_count(1)
-    page.click('.bi-vtype[data-type="card"]')                                                         # one visual, so the tab has a row
+    page.click('[data-types] [data-type="card"]')                                                         # one visual, so the tab has a row
     page.wait_for_selector(".bi-dvis")
     page.click('[data-tab="tablet"]')
     page.wait_for_selector("[data-tablet-list] li")

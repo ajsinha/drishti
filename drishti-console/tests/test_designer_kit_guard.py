@@ -45,7 +45,7 @@ RULES = {
     "code-editor": (re.compile(r"""\bfromTextArea\b|\bCodeMirror\s*\(\s*[\w.]+\s*,|CodeMirror\.defineMode\b|<textarea(?![^>]*data-di-code=)[^>]*(?:data-[\w-]*(?:yaml|sutra|code|python|formula)\b|name="(?:body|yamlbody)")"""),
                     "makes its own code or YAML editor: use drishti-inputs' CodeEditor or drishti-designer's YamlPane"),
     "tree": (re.compile(r"""role['"]?\s*[:=,]\s*['"]tree['"]|setAttribute\(\s*['"]role['"]\s*,\s*['"]tree['"]"""),
-             "draws its own tree view: use drishti-designer's Outline or drishti-inputs' TreePicker"),
+             "draws its own tree view: use drishti-designer's Outline, drishti-tree's TreeOutline or drishti-inputs' TreePicker"),
     "undo": (re.compile(r"\b(?:undo|redo)(?:Stack)?\s*=\s*\[\s*\]|\bconst\s+undo\s*=\s*\[|\bvar\s+undo\s*=\s*\["),
              "keeps its own undo history: use drishti-designer's CommandStack or SnapshotHistory"),
 }
@@ -53,9 +53,7 @@ RULES = {
 AUTHORING = re.compile(r"design|editor|build|studio|outline|form|notebook|pack-new|transform|calc|alert|connector|lens|edition|workflow|approval")
 AUTHORING_ONLY = {"tree", "undo"}
 # file (relative to drishti-console/web) -> the rules it still breaks (each the designer or editor still being moved onto the kit)
-ALLOWED = {
-    "templates/build/design.html": {"tree"},                      # the workbench's data-shape tree (drishti_build-shape-tree.js)
-}
+ALLOWED: dict = {}                     # empty (2.9.11.e): the Sutra designer on the kit, the workbench's shape tree on drishti-tree
 
 COMMENT = re.compile(r"/\*.*?\*/|(?<![:\\'\"])//[^\n]*|\{#.*?#\}|<!--.*?-->", re.S)
 
@@ -104,7 +102,7 @@ def test_the_allow_list_only_shrinks():
 
 def test_the_allow_list_is_capped():
     """The list never grows past what it was when the rule was made (2026-11-07): new files cannot be added to it."""
-    assert len(ALLOWED) <= 1 and sum(len(r) for r in ALLOWED.values()) <= 1
+    assert len(ALLOWED) == 0                                      # every designer and editor on the kit: the list stays empty
 
 
 def test_the_guard_finds_what_it_looks_for():
@@ -128,10 +126,8 @@ FORM_LOOP = re.compile(r"(?:\bproperties|\bfields|\bprops|\bschema\w*|\bparams|\
 FORM_LABEL = re.compile(r"""\(\s*['"]label['"]|<label\b""")
 FORM_INPUT = re.compile(r"""\(\s*['"](?:input|select)['"]|<(?:input|select)\b""")
 FORM_WINDOW = 25      # lines after the loop's head that the label and the input are looked for in
-# file (relative to drishti-console/web) -> still draws a form pane by hand (each moving onto Form or drishti-grid editing); only shrinks
-FORMS_ALLOWED = {
-    "static/js/drishti_admin-lakes.js",          # a lake's fields: the classifier and promote checkboxes per field (-> drishti-grid editing)
-}
+# file (relative to drishti-console/web) -> still draws a form pane by hand; empty since every pane is on Form or drishti-grid editing
+FORMS_ALLOWED: set = set()
 
 
 def _hand_form(text):
@@ -168,7 +164,7 @@ def test_no_console_script_draws_an_inspector_or_form_pane_by_hand(hand_forms):
 def test_the_form_allow_list_only_shrinks_and_is_capped(hand_forms):
     stale = [f"{name}: gone or on Form now (take it off the list)" for name in sorted(FORMS_ALLOWED) if not hand_forms.get(name)]
     assert not stale, "\n".join(stale)
-    assert len(FORMS_ALLOWED) <= 1                # 3 when the rule was made (2026-11-07, wip/e-panes), 1 now; it ends at 0
+    assert len(FORMS_ALLOWED) == 0                # 3 when the rule was made (2026-11-07); 0 now (a lake's fields on grid editing, a transform's parameters on Form)
 
 
 def test_the_form_guard_finds_what_it_looks_for():

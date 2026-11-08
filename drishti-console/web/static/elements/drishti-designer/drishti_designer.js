@@ -598,6 +598,11 @@
   /* ---- src/drishti_palette.js ---- */
   __m["src/drishti_palette.js"] = (function () {
     var EventBus = __lib("drishti-core").EventBus, announce = __lib("drishti-core").announce, h = __lib("drishti-core").h;
+    function entryAttrs(attrs) {
+      const out = {};
+      Object.keys(attrs || {}).forEach((k) => { if (/^data-[a-z0-9-]+$/.test(k) && k !== 'data-dd-entry' && attrs[k] !== null && attrs[k] !== undefined) { out[k] = String(attrs[k]); } });
+      return out;
+    }
     function searchPalette(entries, query) {
       const words = String(query || '').toLowerCase().split(/\s+/).filter(Boolean);
       if (!words.length) { return entries.slice(); }
@@ -626,6 +631,7 @@
         el.classList.add('dd-palette');
         const doc = this.doc;
         this.input = this.o.search ? h(doc, 'input', { cls: 'dd-palette-search', attrs: { type: 'search', placeholder: this.o.placeholder, 'aria-label': 'Search ' + this.o.label.toLowerCase(), 'data-dd-palette-search': '' } }) : null;
+        if (this.input) { Object.entries(entryAttrs(this.o.searchAttrs)).forEach(([k, v]) => this.input.setAttribute(k, v)); }
         this.list = h(doc, 'div', { cls: 'dd-palette-list', attrs: { role: 'listbox', 'aria-label': this.o.label, tabindex: '0' } });
         this.empty = h(doc, 'p', { cls: 'dd-palette-empty', text: 'Nothing matches.', attrs: { hidden: true } });
         el.append(...[this.input, this.list, this.empty].filter(Boolean));
@@ -654,8 +660,8 @@
           const box = h(doc, 'div', { cls: 'dd-palette-group', attrs: { role: 'group', 'aria-label': g.category || this.o.label } });
           if (g.category) { box.appendChild(h(doc, 'div', { cls: 'dd-palette-cat', text: g.category, attrs: { 'aria-hidden': 'true' } })); }
           g.entries.forEach((e) => {
-            const opt = h(doc, 'div', { cls: 'dd-palette-entry', attrs: { role: 'option', id: 'dd-pal-' + e.id.replace(/[^\w-]/g, '_'), 'data-dd-entry': e.id, 'aria-disabled': e.disabled ? 'true' : null,
-              title: e.disabled ? e.why || '' : e.detail || '', draggable: this.o.dragType && !e.disabled ? 'true' : null } }, [
+            const opt = h(doc, 'div', { cls: 'dd-palette-entry', attrs: Object.assign({ role: 'option', id: 'dd-pal-' + e.id.replace(/[^\w-]/g, '_'), 'data-dd-entry': e.id, 'aria-disabled': e.disabled ? 'true' : null,
+              title: e.disabled ? e.why || '' : e.detail || '', draggable: this.o.dragType && !e.disabled ? 'true' : null }, entryAttrs(e.attrs)) }, [
               e.icon ? h(doc, 'i', { cls: e.icon, attrs: { 'aria-hidden': 'true' } }) : null,
               h(doc, 'span', { cls: 'dd-palette-label', text: e.label }),
               e.detail ? h(doc, 'span', { cls: 'dd-palette-detail', text: e.detail }) : null]);
@@ -691,7 +697,7 @@
         this.events.emit('add', { entry: en, payload: this.payload(en) });
       }
     }
-    return { "searchPalette": searchPalette, "paletteGroups": paletteGroups, "Palette": Palette };
+    return { "entryAttrs": entryAttrs, "searchPalette": searchPalette, "paletteGroups": paletteGroups, "Palette": Palette };
   })();
   /* ---- src/drishti_inspector.js ---- */
   __m["src/drishti_inspector.js"] = (function () {
@@ -1386,9 +1392,99 @@
     }
     return { "readYaml": readYaml, "YamlPane": YamlPane };
   })();
+  /* ---- src/drishti_shell-parts.js ---- */
+  __m["src/drishti_shell-parts.js"] = (function () {
+    var h = __lib("drishti-core").h;
+    var entryAttrs = __m["src/drishti_palette.js"].entryAttrs;
+    function actionElement(doc, a, emit) {
+      const attrs = Object.assign({ 'data-act': a.id, title: a.title || null, 'data-dd-title': a.title || '', hidden: !!a.hidden }, entryAttrs(a.attrs));
+      const cls = 'dd-btn' + (a.primary ? ' dd-primary' : '');
+      if (a.href !== undefined) { return h(doc, 'a', { cls: cls + ' dd-link', text: a.label, attrs: Object.assign(attrs, { href: a.href || '#' }) }); }
+      if (a.choices) {
+        attrs['aria-label'] = a.label;
+        const sel = h(doc, 'select', { cls: 'dd-layout-pick dd-choice', attrs: Object.assign(attrs, { disabled: !a.enabled }) }, a.choices.map((c) =>
+          h(doc, 'option', { text: c.label, attrs: { value: c.value, disabled: !!c.disabled } })));
+        sel.addEventListener('change', () => emit({ id: a.id, value: sel.value }));
+        return sel;
+      }
+      if (a.toggle) { attrs['aria-pressed'] = String(!!a.pressed); }
+      const b = h(doc, 'button', { cls, text: a.label, attrs: Object.assign(attrs, { type: 'button', disabled: !a.enabled }) });
+      b.addEventListener('click', () => {
+        if (a.toggle) { const on = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', String(on)); emit({ id: a.id, pressed: on }); return; }
+        emit({ id: a.id });
+      });
+      return b;
+    }
+    function drawObjectGroups(shell) {
+      if (!shell.objects) { return; }
+      const term = (shell.searchEl.value || '').toLowerCase(), doc = shell.doc;
+      shell.objects.textContent = '';
+      shell.groups.forEach((g) => {
+        const list = g.items.filter((x) => !term || (x.label + ' ' + (x.search || x.detail || '')).toLowerCase().indexOf(term) >= 0);
+        const ul = h(doc, 'ul', { cls: 'dd-list', attrs: { role: 'list' } }, list.map((x) => h(doc, 'li', {}, [h(doc, x.href ? 'a' : 'button', { cls: 'dd-obj' + (x.current ? ' dd-on' : ''),
+          attrs: { type: x.href ? null : 'button', href: x.href || null, title: x.title || null, 'aria-current': x.current ? (x.href ? 'page' : 'true') : null, 'data-object': x.id, 'data-object-item': (x.data && x.data.item) || '' },
+          on: x.href ? {} : { click: () => shell.events.emit('open', { group: g.id, item: x }) } }, [h(doc, 'span', { cls: 'dd-obj-n', text: x.label },
+          x.badge ? [h(doc, 'span', { cls: 'dd-obj-badge', text: x.badge })] : []), h(doc, 'small', { text: x.detail || '' })])])));
+        shell.objects.appendChild(h(doc, 'section', { cls: 'dd-group', attrs: { 'data-group': g.id } }, [h(doc, 'h2', {}, [g.label + ' ', h(doc, 'small', { text: String(list.length) })]),
+          list.length ? ul : h(doc, 'p', { cls: 'dd-muted dd-small', text: term ? 'none match' : 'none yet' })]));
+      });
+    }
+    class DocTabs {
+      constructor(doc, emit) {
+        this.doc = doc;
+        this.emit = emit;
+        this.el = h(doc, 'nav', { cls: 'dd-docs', attrs: { role: 'tablist', 'aria-label': 'Open items', 'data-dd-docs': '' } });
+      }
+      set(list) {
+        const doc = this.doc;
+        this.el.textContent = '';
+        (list || []).forEach((d) => {
+          const tab = h(doc, 'a', { cls: 'dd-doc-tab', text: d.label, attrs: { href: d.href, role: 'tab', 'data-dd-doc': d.id, 'aria-selected': String(!!d.current), title: d.title || d.label } });
+          const x = h(doc, 'button', { cls: 'dd-doc-x', text: '×', attrs: { type: 'button', 'data-dd-doc-close': d.id, 'aria-label': 'Close ' + d.label } });
+          x.addEventListener('click', (e) => { e.preventDefault(); this.emit('close', { id: d.id }); });
+          this.el.appendChild(h(doc, 'span', { cls: 'dd-doc' + (d.current ? ' dd-on' : '') }, [tab, x]));
+        });
+        this.el.hidden = !(list && list.length);
+      }
+    }
+    class Dock {
+      constructor(doc, tabs, emit) {
+        this.doc = doc;
+        this.emit = emit;
+        this.tabs = {};
+        this.open = null;
+        const list = h(doc, 'div', { cls: 'dd-dock-tabs', attrs: { role: 'tablist', 'aria-label': 'Dock' } });
+        this.body = h(doc, 'div', { cls: 'dd-dock-body', attrs: { hidden: true } });
+        tabs.forEach((t) => {
+          const count = h(doc, 'span', { cls: 'dd-dock-count', attrs: { 'data-dd-dock-count': t.id } });
+          const tab = h(doc, 'button', { cls: 'dd-ptab dd-dock-tab', attrs: { type: 'button', role: 'tab', 'aria-selected': 'false', 'data-dd-dock-tab': t.id } }, [t.label + ' ', count]);
+          const pane = h(doc, 'div', { cls: 'dd-dock-pane', attrs: { role: 'tabpanel', 'aria-label': t.label, 'data-dd-dock-pane': t.id, hidden: true } });
+          tab.addEventListener('click', () => { this.show(this.open === t.id ? null : t.id); this.emit('dock', { id: this.open }); });
+          list.appendChild(tab);
+          this.body.appendChild(pane);
+          this.tabs[t.id] = { tab, pane, count };
+        });
+        this.el = h(doc, 'section', { cls: 'dd-dock', attrs: { 'aria-label': 'Dock', 'data-dd-dock': '' } }, [list, this.body]);
+      }
+      show(id) {
+        this.open = id && this.tabs[id] ? id : null;
+        Object.keys(this.tabs).forEach((k) => { const on = k === this.open; this.tabs[k].tab.setAttribute('aria-selected', String(on)); this.tabs[k].pane.hidden = !on; });
+        this.body.hidden = !this.open;
+        this.el.classList.toggle('dd-dock-folded', !this.open);
+      }
+      count(id, n, bad) {
+        const t = this.tabs[id];
+        if (!t) { return; }
+        t.count.textContent = n ? String(n) : '';
+        t.count.classList.toggle('dd-bad', !!bad);
+      }
+    }
+    return { "actionElement": actionElement, "drawObjectGroups": drawObjectGroups, "DocTabs": DocTabs, "Dock": Dock };
+  })();
   /* ---- src/drishti_shell.js ---- */
   __m["src/drishti_shell.js"] = (function () {
     var EventBus = __lib("drishti-core").EventBus, announce = __lib("drishti-core").announce, h = __lib("drishti-core").h, openDialog = __lib("drishti-core").openDialog, closeDialog = __lib("drishti-core").closeDialog;
+    var actionElement = __m["src/drishti_shell-parts.js"].actionElement, drawObjectGroups = __m["src/drishti_shell-parts.js"].drawObjectGroups, DocTabs = __m["src/drishti_shell-parts.js"].DocTabs, Dock = __m["src/drishti_shell-parts.js"].Dock;
     const SHELL_ACTIONS = Object.freeze([
       { id: 'validate', label: 'Validate', title: 'Check the definition now (Ctrl+Enter)' },
       { id: 'preview', label: 'Preview', title: 'Read the preview again' },
@@ -1400,6 +1496,7 @@
     const SHELL_MODES = Object.freeze(['visual', 'yaml', 'both']);
     function statusWords(s) {
       if (!s) { return { word: '', versions: '', tone: '' }; }
+      if (s.text) { return { word: s.text, versions: s.versions || '', tone: s.status || 'draft' }; }      // the host's own words (Saved, Read-only)
       const word = s.origin === 'file' ? 'Shipped' : s.status === 'published' || s.status === 'approved' ? 'Approved' : s.status === 'proposed' ? 'Proposed' : 'Draft';
       const versions = s.origin === 'file' ? 'from configuration' : s.origin === 'item' || s.version ? (s.version ? 'approved v' + s.version : 'never approved') + (s.status === 'draft' && s.version ? ' · a draft after it' : '') : '';
       return { word: word + (s.dirty ? ' · unsaved' : ''), versions, tone: s.status || 'draft' };
@@ -1435,8 +1532,7 @@
         this.buttons = {};
         const acts = x('div', { cls: 'dd-actions' });
         o.actions.forEach((a) => {
-          const b = x('button', { cls: 'dd-btn' + (a.primary ? ' dd-primary' : ''), text: a.label, attrs: { type: 'button', 'data-act': a.id, title: a.title || '', 'data-title': a.title || '', disabled: true },
-            on: { click: () => this.events.emit('action', { id: a.id }) } });
+          const b = actionElement(doc, a, (ev) => this.events.emit('action', ev));
           if (a.id === 'impact') { b.appendChild(doc.createTextNode(' ')); this.impactCount = x('span', { attrs: { 'data-impact-count': '' } }); b.appendChild(this.impactCount); }
           this.buttons[a.id] = b;
           acts.appendChild(b);
@@ -1450,6 +1546,11 @@
           acts.append(nb, menu);
         }
         head.appendChild(acts);
+        if (o.collapsible) {
+          this.railToggle = x('button', { cls: 'dd-btn dd-rail-toggle', text: '◧', attrs: { type: 'button', 'data-dd-rail-toggle': '', 'aria-expanded': 'true', 'aria-label': 'Hide the left rail' },
+            on: { click: () => { this.setRail(this.el.classList.contains('dd-rail-off')); this.events.emit('rail', { open: !this.el.classList.contains('dd-rail-off') }); } } });
+          head.insertBefore(this.railToggle, head.firstChild);
+        }
         this.msg = x('p', { cls: 'dd-msg', attrs: { 'data-msg': '', role: 'status', 'aria-live': 'polite' } });
         const grid = x('div', { cls: 'dd-shell-grid', attrs: { 'data-grid': '' } });
         const railTabs = (o.search ? [{ id: 'objects', label: 'Objects' }] : []).concat(o.rail || []);
@@ -1489,7 +1590,9 @@
         this.yamlBody = x('div', { cls: 'dd-ybody', attrs: { 'data-yaml-body': '' } });
         this.yaml = x('section', { cls: 'dd-yaml-panel', attrs: { 'data-yaml-panel': '', 'aria-label': 'The definition as YAML', hidden: true } }, [
           x('div', { cls: 'dd-yh' }, [this.yamlToggle, this.yamlState, x('span', { cls: 'dd-ynote', text: 'edits on either side show on the other' })]), this.yamlBody]);
-        grid.appendChild(x('section', { cls: 'dd-main', attrs: { 'aria-label': 'Editor' } }, [this.readOnlyBar, this.visual, this.yaml]));
+        if (o.docs) { this.docs = new DocTabs(doc, (n, ev) => this.events.emit(n, ev)); this.docs.set([]); }
+        if (o.dock && o.dock.length) { this.dock = new Dock(doc, o.dock, (n, ev) => this.events.emit(n, ev)); this.dock.show(null); }
+        grid.appendChild(x('section', { cls: 'dd-main', attrs: { 'aria-label': 'Editor' } }, [this.docs ? this.docs.el : null, this.readOnlyBar, this.visual, this.yaml, this.dock ? this.dock.el : null]));
         if (o.inspector) {
           this.inspector = x('div', { cls: 'dd-inspector-pane', attrs: { 'data-dd-inspector': '' } });
           this.inspectorBox = x('aside', { cls: 'dd-insp-side', attrs: { 'aria-label': 'Inspector' } }, [x('h3', { cls: 'dd-sec', text: 'Inspector' }), this.inspector]);
@@ -1596,10 +1699,20 @@
       setActions(states) {
         Object.keys(states).forEach((id) => {
           const b = this.buttons[id], v = states[id];
-          if (!b) { return; }
+          if (!b || b.tagName === 'A') { return; }                                 // a link is never off
           b.disabled = v !== true;
-          b.title = v === true ? b.getAttribute('data-title') : String(v || '');
+          b.title = v === true ? b.getAttribute('data-dd-title') : String(v || '');
         });
+      }
+      setLabel(id, label) { const b = this.buttons[id]; if (b && b.tagName !== 'SELECT') { b.textContent = label; } }
+      showAction(id, on) { if (this.buttons[id]) { this.buttons[id].hidden = !on; } }
+      setDocs(list) { if (this.docs) { this.docs.set(list); } }
+      dockPane(id) { return this.dock && this.dock.tabs[id] ? this.dock.tabs[id].pane : null; }
+      showDock(id) { if (this.dock) { this.dock.show(id); } }
+      setDockCount(id, n, bad) { if (this.dock) { this.dock.count(id, n, bad); } }
+      setRail(open) {
+        this.el.classList.toggle('dd-rail-off', !open);
+        if (this.railToggle) { this.railToggle.setAttribute('aria-expanded', String(!!open)); this.railToggle.setAttribute('aria-label', open ? 'Hide the left rail' : 'Show the left rail'); }
       }
       setMode(mode, user) {
         if (SHELL_MODES.indexOf(mode) < 0) { return; }
@@ -1624,19 +1737,7 @@
       }
       setYamlState(text, tone) { this.yamlState.textContent = text || ''; this.yamlState.className = 'dd-ystate' + (tone ? ' dd-' + tone : ''); }
       setObjects(groups) { this.groups = groups || []; this.drawObjects(); }
-      drawObjects() {
-        if (!this.objects) { return; }
-        const term = (this.searchEl.value || '').toLowerCase(), doc = this.doc;
-        this.objects.textContent = '';
-        this.groups.forEach((g) => {
-          const list = g.items.filter((x) => !term || (x.label + ' ' + (x.search || x.detail || '')).toLowerCase().indexOf(term) >= 0);
-          const ul = h(doc, 'ul', { cls: 'dd-list', attrs: { role: 'list' } }, list.map((x) => h(doc, 'li', {}, [h(doc, 'button', { cls: 'dd-obj' + (x.current ? ' dd-on' : ''),
-            attrs: { type: 'button', 'aria-current': x.current ? 'true' : null, 'data-object': x.id, 'data-object-item': (x.data && x.data.item) || '' },
-            on: { click: () => this.events.emit('open', { group: g.id, item: x }) } }, [h(doc, 'span', { cls: 'dd-obj-n', text: x.label }), h(doc, 'small', { text: x.detail || '' })])])));
-          this.objects.appendChild(h(doc, 'section', { cls: 'dd-group', attrs: { 'data-group': g.id } }, [h(doc, 'h2', {}, [g.label + ' ', h(doc, 'small', { text: String(list.length) })]),
-            list.length ? ul : h(doc, 'p', { cls: 'dd-muted dd-small', text: term ? 'none match' : 'none yet' })]));
-        });
-      }
+      drawObjects() { drawObjectGroups(this); }
       say(text, bad) { this.msg.textContent = text || ''; this.msg.classList.toggle('dd-bad', !!bad); if (text) { announce(text); } }
       setReadOnly(ro) {
         this.readOnlyBar.textContent = '';
@@ -2279,7 +2380,7 @@
       D.yaml = { parse: parseYamlTree, context: yamlContext, chain: yamlChain, get: yamlGet, plain: yamlPlain, unquote: yamlUnquote };
       if (root.document && root.customElements) { defineDesignerElements(root.customElements, root); }
     }
-    return { "install": install, "CommandStack": __m["src/drishti_commands.js"].CommandStack, "SnapshotHistory": __m["src/drishti_commands.js"].SnapshotHistory, "Selection": __m["src/drishti_selection.js"].Selection, "GRID": __m["src/drishti_layout-rules.js"].GRID, "MAX_H": __m["src/drishti_layout-rules.js"].MAX_H, "DEFAULT_MIN_SPAN": __m["src/drishti_layout-rules.js"].DEFAULT_MIN_SPAN, "clamp": __m["src/drishti_layout-rules.js"].clamp, "clampSpan": __m["src/drishti_layout-rules.js"].clampSpan, "clampHeight": __m["src/drishti_layout-rules.js"].clampHeight, "hideRefused": __m["src/drishti_layout-rules.js"].hideRefused, "sizeText": __m["src/drishti_layout-rules.js"].sizeText, "rowsFromPixels": __m["src/drishti_layout-rules.js"].rowsFromPixels, "snap": __m["src/drishti_layout-rules.js"].snap, "clampRect": __m["src/drishti_layout-rules.js"].clampRect, "overlaps": __m["src/drishti_layout-rules.js"].overlaps, "settle": __m["src/drishti_layout-rules.js"].settle, "bounds": __m["src/drishti_layout-rules.js"].bounds, "ALIGN_EDGES": __m["src/drishti_layout-rules.js"].ALIGN_EDGES, "alignRects": __m["src/drishti_layout-rules.js"].alignRects, "distributeRects": __m["src/drishti_layout-rules.js"].distributeRects, "LayoutModel": __m["src/drishti_layout-model.js"].LayoutModel, "KEY_SCHEMES": __m["src/drishti_keymap.js"].KEY_SCHEMES, "designerBindings": __m["src/drishti_keymap.js"].designerBindings, "designerKeys": __m["src/drishti_keymap.js"].designerKeys, "keyHelp": __m["src/drishti_keymap.js"].keyHelp, "DragHub": __m["src/drishti_pointer.js"].DragHub, "sortableList": __m["src/drishti_pointer.js"].sortableList, "flowHit": __m["src/drishti_layout-flow.js"].flowHit, "showFlowDrop": __m["src/drishti_layout-flow.js"].showFlowDrop, "clearFlowDrop": __m["src/drishti_layout-flow.js"].clearFlowDrop, "LayoutCanvas": __m["src/drishti_layout-canvas.js"].LayoutCanvas, "searchPalette": __m["src/drishti_palette.js"].searchPalette, "paletteGroups": __m["src/drishti_palette.js"].paletteGroups, "Palette": __m["src/drishti_palette.js"].Palette, "commonValues": __m["src/drishti_inspector.js"].commonValues, "sharedSchema": __m["src/drishti_inspector.js"].sharedSchema, "Inspector": __m["src/drishti_inspector.js"].Inspector, "flattenTree": __m["src/drishti_outline.js"].flattenTree, "findNode": __m["src/drishti_outline.js"].findNode, "isWithin": __m["src/drishti_outline.js"].isWithin, "moveNode": __m["src/drishti_outline.js"].moveNode, "Outline": __m["src/drishti_outline.js"].Outline, "yamlUnquote": __m["src/drishti_yaml-read.js"].yamlUnquote, "parseYamlTree": __m["src/drishti_yaml-read.js"].parseYamlTree, "yamlGet": __m["src/drishti_yaml-read.js"].yamlGet, "yamlPlain": __m["src/drishti_yaml-read.js"].yamlPlain, "yamlChain": __m["src/drishti_yaml-read.js"].yamlChain, "yamlContext": __m["src/drishti_yaml-read.js"].yamlContext, "yamlScalar": __m["src/drishti_yaml-write.js"].yamlScalar, "dumpYaml": __m["src/drishti_yaml-write.js"].dumpYaml, "yamlRanges": __m["src/drishti_yaml-write.js"].yamlRanges, "pathAtLine": __m["src/drishti_yaml-write.js"].pathAtLine, "RACHANA_FUNCTION_ARGS": __m["src/drishti_yaml-assist.js"].RACHANA_FUNCTION_ARGS, "RACHANA_FUNCTION_HELP": __m["src/drishti_yaml-assist.js"].RACHANA_FUNCTION_HELP, "YamlSchema": __m["src/drishti_yaml-assist.js"].YamlSchema, "yamlPlace": __m["src/drishti_yaml-assist.js"].yamlPlace, "yamlCompletions": __m["src/drishti_yaml-assist.js"].yamlCompletions, "yamlCheck": __m["src/drishti_yaml-assist.js"].yamlCheck, "yamlHelp": __m["src/drishti_yaml-assist.js"].yamlHelp, "readYaml": __m["src/drishti_yaml-pane.js"].readYaml, "YamlPane": __m["src/drishti_yaml-pane.js"].YamlPane, "SHELL_ACTIONS": __m["src/drishti_shell.js"].SHELL_ACTIONS, "SHELL_MODES": __m["src/drishti_shell.js"].SHELL_MODES, "SHELL_LAYOUTS": __m["src/drishti_shell.js"].SHELL_LAYOUTS, "SHELL_FKEYS": __m["src/drishti_shell.js"].SHELL_FKEYS, "statusWords": __m["src/drishti_shell.js"].statusWords, "DesignerShell": __m["src/drishti_shell.js"].DesignerShell, "DESIGNER_ELEMENTS": __m["src/drishti_designer-element.js"].DESIGNER_ELEMENTS, "defineDesignerElements": __m["src/drishti_designer-element.js"].defineDesignerElements };
+    return { "install": install, "CommandStack": __m["src/drishti_commands.js"].CommandStack, "SnapshotHistory": __m["src/drishti_commands.js"].SnapshotHistory, "Selection": __m["src/drishti_selection.js"].Selection, "GRID": __m["src/drishti_layout-rules.js"].GRID, "MAX_H": __m["src/drishti_layout-rules.js"].MAX_H, "DEFAULT_MIN_SPAN": __m["src/drishti_layout-rules.js"].DEFAULT_MIN_SPAN, "clamp": __m["src/drishti_layout-rules.js"].clamp, "clampSpan": __m["src/drishti_layout-rules.js"].clampSpan, "clampHeight": __m["src/drishti_layout-rules.js"].clampHeight, "hideRefused": __m["src/drishti_layout-rules.js"].hideRefused, "sizeText": __m["src/drishti_layout-rules.js"].sizeText, "rowsFromPixels": __m["src/drishti_layout-rules.js"].rowsFromPixels, "snap": __m["src/drishti_layout-rules.js"].snap, "clampRect": __m["src/drishti_layout-rules.js"].clampRect, "overlaps": __m["src/drishti_layout-rules.js"].overlaps, "settle": __m["src/drishti_layout-rules.js"].settle, "bounds": __m["src/drishti_layout-rules.js"].bounds, "ALIGN_EDGES": __m["src/drishti_layout-rules.js"].ALIGN_EDGES, "alignRects": __m["src/drishti_layout-rules.js"].alignRects, "distributeRects": __m["src/drishti_layout-rules.js"].distributeRects, "LayoutModel": __m["src/drishti_layout-model.js"].LayoutModel, "KEY_SCHEMES": __m["src/drishti_keymap.js"].KEY_SCHEMES, "designerBindings": __m["src/drishti_keymap.js"].designerBindings, "designerKeys": __m["src/drishti_keymap.js"].designerKeys, "keyHelp": __m["src/drishti_keymap.js"].keyHelp, "DragHub": __m["src/drishti_pointer.js"].DragHub, "sortableList": __m["src/drishti_pointer.js"].sortableList, "flowHit": __m["src/drishti_layout-flow.js"].flowHit, "showFlowDrop": __m["src/drishti_layout-flow.js"].showFlowDrop, "clearFlowDrop": __m["src/drishti_layout-flow.js"].clearFlowDrop, "LayoutCanvas": __m["src/drishti_layout-canvas.js"].LayoutCanvas, "searchPalette": __m["src/drishti_palette.js"].searchPalette, "paletteGroups": __m["src/drishti_palette.js"].paletteGroups, "entryAttrs": __m["src/drishti_palette.js"].entryAttrs, "Palette": __m["src/drishti_palette.js"].Palette, "commonValues": __m["src/drishti_inspector.js"].commonValues, "sharedSchema": __m["src/drishti_inspector.js"].sharedSchema, "Inspector": __m["src/drishti_inspector.js"].Inspector, "flattenTree": __m["src/drishti_outline.js"].flattenTree, "findNode": __m["src/drishti_outline.js"].findNode, "isWithin": __m["src/drishti_outline.js"].isWithin, "moveNode": __m["src/drishti_outline.js"].moveNode, "Outline": __m["src/drishti_outline.js"].Outline, "yamlUnquote": __m["src/drishti_yaml-read.js"].yamlUnquote, "parseYamlTree": __m["src/drishti_yaml-read.js"].parseYamlTree, "yamlGet": __m["src/drishti_yaml-read.js"].yamlGet, "yamlPlain": __m["src/drishti_yaml-read.js"].yamlPlain, "yamlChain": __m["src/drishti_yaml-read.js"].yamlChain, "yamlContext": __m["src/drishti_yaml-read.js"].yamlContext, "yamlScalar": __m["src/drishti_yaml-write.js"].yamlScalar, "dumpYaml": __m["src/drishti_yaml-write.js"].dumpYaml, "yamlRanges": __m["src/drishti_yaml-write.js"].yamlRanges, "pathAtLine": __m["src/drishti_yaml-write.js"].pathAtLine, "RACHANA_FUNCTION_ARGS": __m["src/drishti_yaml-assist.js"].RACHANA_FUNCTION_ARGS, "RACHANA_FUNCTION_HELP": __m["src/drishti_yaml-assist.js"].RACHANA_FUNCTION_HELP, "YamlSchema": __m["src/drishti_yaml-assist.js"].YamlSchema, "yamlPlace": __m["src/drishti_yaml-assist.js"].yamlPlace, "yamlCompletions": __m["src/drishti_yaml-assist.js"].yamlCompletions, "yamlCheck": __m["src/drishti_yaml-assist.js"].yamlCheck, "yamlHelp": __m["src/drishti_yaml-assist.js"].yamlHelp, "readYaml": __m["src/drishti_yaml-pane.js"].readYaml, "YamlPane": __m["src/drishti_yaml-pane.js"].YamlPane, "SHELL_ACTIONS": __m["src/drishti_shell.js"].SHELL_ACTIONS, "SHELL_MODES": __m["src/drishti_shell.js"].SHELL_MODES, "SHELL_LAYOUTS": __m["src/drishti_shell.js"].SHELL_LAYOUTS, "SHELL_FKEYS": __m["src/drishti_shell.js"].SHELL_FKEYS, "statusWords": __m["src/drishti_shell.js"].statusWords, "DesignerShell": __m["src/drishti_shell.js"].DesignerShell, "DESIGNER_ELEMENTS": __m["src/drishti_designer-element.js"].DESIGNER_ELEMENTS, "defineDesignerElements": __m["src/drishti_designer-element.js"].defineDesignerElements };
   })();
   return Object.freeze(Object.assign({ library: "drishti-designer", version: "0.1.0" }, __m["src/drishti_index.js"]));
 });

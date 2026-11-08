@@ -302,15 +302,14 @@ const EXTRA = [
   { kind: 'scatter', data: { points: [{ x: 1, y: 2, size: 4, xText: '1', yText: '2', group: 'g1', link: { kind: 'book', id: 'B1' } }, { x: 2, y: 1, size: 9, xText: '2', yText: '1', label: 'two', group: 'g2' }],
     groups: ['g1', 'g2'], xLabel: 'X', yLabel: 'Y', sized: true, more: 7 } },
   { kind: 'candlestick', data: { candles: [{ x: '2026-09-01', open: 1, high: 2.5, low: 0.5, close: 2 }, { x: '2026-09-02', open: 2, high: 2, low: 1e-5, close: 1e17 }], volume: false } },
-  { kind: 'graph', data: { nodes: [{ id: 'A', label: 'Alpha', focus: true, link: { kind: 'counterparty', id: 'A' } }, { id: 'B', label: 'Beta', group: 'g' }],
-    edges: [{ from: 'A', to: 'B' }, { from: 'A', to: 'Z' }], layout: 'force', more: 2 } },
   { kind: 'donut', data: { shape: 'donut', total: '9.0m', bars: [{ label: 'Rates', value: 4.5e6, text: '4.5m' }, { label: 'FX', value: -3e6, text: '−3.0m' }, { label: 'Credit', value: 1.5e6, text: '1.5m' }] } },
   { kind: 'waterfall', data: { unit: 'USD', steps: [1, 2, 3, 4, 5, 6, 7, 8].map((i) => ({ label: 'S' + i, value: i, from: i * (i - 1) / 2, to: i * (i + 1) / 2, text: '+' + i, total: false })) } },
   { kind: 'histogram', data: { bins: [{ from: 0, to: 1, count: 3, label: '0 to 1' }, { from: 1, to: 2, count: 1, label: '1 to 2' }],
     markers: [{ label: 'VaR', value: 0.5, text: '0.5', tone: 'neg' }, { value: 1.5, text: '1.5' }], count: 4, dropped: 2, unit: 'm' } },
   { kind: 'area', data: {} }, { kind: 'waterfall', data: {} }, { kind: 'histogram', data: {} }, { kind: 'scatter', data: {} }, { kind: 'candlestick', data: {} },
-  { kind: 'graph', data: {} }, { kind: 'donut', data: {} }, { kind: 'surface', data: {} }];
-const CHART_KINDS = new Set(['line', 'area', 'waterfall', 'histogram', 'scatter', 'candlestick', 'graph', 'surface']);
+  { kind: 'donut', data: {} }, { kind: 'surface', data: {} }];
+// a graph panel is drishti-graph's (its own tests: graph.test.mjs, test_elements_graph_browser.py); PanelCharts hands it over
+const CHART_KINDS = new Set(['line', 'area', 'waterfall', 'histogram', 'scatter', 'candlestick', 'surface']);
 const CASES = showcase.panels.filter((p) => CHART_KINDS.has(p.kind)).map((p) => ({ kind: p.kind, data: p.data })).concat(EXTRA);
 const seriesOf = (o) => JSON.parse(JSON.stringify((o.series || []).map((s) => ({ type: s.type, name: s.name == null ? '' : String(s.name), data: s.data || null })),
   (k, v) => (typeof v === 'function' ? undefined : v)));
@@ -327,6 +326,7 @@ test('panel charts: every kind gives the frozen 1.2.0 series, point for point (t
     }
   }
   assert.throws(() => C.panelOption('sankey', {}, TOK), /no panel chart sankey/);
+  assert.throws(() => C.panelOption('graph', {}, TOK), /no panel chart graph/);              // drawn by drishti-graph now
   assert.deepEqual(C.labelFit([{ text: 'x' }], SIZE), Frozen.labelFit([{ text: 'x' }], SIZE));
   assert.equal(C.escapeTip('<b a="1">&'), '&lt;b a=&quot;1&quot;&gt;&amp;');
 });

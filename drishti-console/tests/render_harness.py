@@ -58,7 +58,8 @@ def env(design_on: bool) -> Environment:
 
 def console_html(vm: dict, theme: str = "", design_on: bool = True) -> str:
     """The view as the console's macros draw it (banners, the head of an embedded view, the panels in their grid), on a page with the
-    console's sheets and the scripts that enhance first paint (charts, tabs, widths, the grid and its resize handle)."""
+    console's sheets and the scripts that enhance first paint (charts, tabs, widths, the grid and its resize handle, and the tables with
+    children: drishti-tree, loaded on demand as the console's tree rows load it; trees.js, so the nested pivots stay plain on both sides)."""
     e = env(design_on)
     parts = e.get_template("_macros/view.html").module
     panels = vm.get("panels") or []
@@ -76,7 +77,8 @@ def console_html(vm: dict, theme: str = "", design_on: bool = True) -> str:
             + str(parts.provenance_banners(vm, "live", {}, False, "")) + str(parts.vhead(vm)) + body + "</div>")
     links = "".join(f'<link rel="stylesheet" href="/static/{s.removeprefix("static/")}">' for s in CONSOLE_SHEETS)
     scripts = "".join(f'<script src="{s}"></script>' for s in ("/render-test/csp.js", "/static/vendor/echarts/echarts.min.js", "/static/js/drishti_geomap.js", "/static/elements/drishti-chart/drishti_chart.js",
-                                                                     "/static/js/drishti_charts.js", "/static/js/drishti_view.js"))
+                                                                     "/static/js/drishti_charts.js", "/static/js/drishti_view.js",
+                                                                     "/static/elements/drishti-grid/drishti_grid.js", "/render-test/trees.js"))
     # the resize component (drishti-core) in the head: the grid's split is its handle (drishti_screen-grid.js)
     resize = '<link rel="stylesheet" href="/static/css/drishti_resize.css"><script src="/static/elements/drishti-core/drishti_core.js"></script>'
     t = f' data-theme="{theme}"' if theme else ""
@@ -89,6 +91,9 @@ def library_html() -> str:
 
 
 CSP_JS = "window.__csp = []; document.addEventListener('securitypolicyviolation', function (e) { window.__csp.push(e.violatedDirective + ' ' + e.blockedURI); });"
+# the console's tables with children, drawn as drishti_tree-rows.js draws them (drishti-tree's treeTables), without its nested pivots
+TREES_JS = ("(function () { var E = window.Drishti && window.Drishti.elements; if (E && document.querySelector('table.tbl-tree')) {"
+            " E.core.load('drishti-tree').then(function (T) { T.treeTables(document, { scope: location.pathname }); }); } })();")
 
 HARNESS_JS = """
 import { render } from '%s';
@@ -124,7 +129,7 @@ class Site:
     """The made-up origin: static files from web/static, test pages and ViewModels from memory; every request is recorded."""
 
     def __init__(self):
-        self.pages: dict[str, str] = {"/render-test/library.html": library_html(), "/render-test/csp.js": CSP_JS, "/render-test/harness.js": HARNESS_JS,
+        self.pages: dict[str, str] = {"/render-test/library.html": library_html(), "/render-test/csp.js": CSP_JS, "/render-test/trees.js": TREES_JS, "/render-test/harness.js": HARNESS_JS,
                                      "/render-test/page.css": "body { margin: 0; }", "/render-test/lab.html": LAB_HTML, "/render-test/lab.js": LAB_JS}
         self.requests: list[str] = []
 

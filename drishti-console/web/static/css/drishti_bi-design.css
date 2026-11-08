@@ -18,14 +18,6 @@
 .bi-shell-design { grid-template-columns: minmax(0, 1fr); max-width: none; }
 .bi-shell-design .bi-rail { display: none; }
 .bi-design { display: flex; flex-direction: column; gap: var(--d-sp-8); min-width: 0; }
-.bi-dbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--d-sp-8) var(--d-sp-16); }
-.bi-dtitle { display: flex; align-items: center; gap: var(--d-sp-9_6); min-width: 0; }
-.bi-dtitle h1 { font-size: var(--d-fs-20); margin: 0; padding: 0; overflow-wrap: anywhere; }
-.bi-dtitle h1::before, .bi-dtitle h1::after { content: none; }
-.bi-dback { color: var(--d-muted); padding: var(--d-sp-4_8); border-radius: var(--d-radius-6); }
-.bi-dactions { display: flex; flex-wrap: wrap; gap: var(--d-sp-5_6); align-items: center; }
-.bi-dactions .bi-viewas { width: auto; flex: 0 0 auto; max-width: 13rem; }
-.bi-preview-toggle { margin: 0 var(--d-sp-6_4); }
 .bi-checkpanel { border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: var(--d-sp-9_6) var(--d-sp-14_4); background: var(--d-surface); }
 .bi-checkpanel h2 { font-size: var(--d-fs-16); margin: 0 0 var(--d-sp-4_8); }
 .bi-readonly { border: 1px solid var(--d-warn); border-radius: var(--d-radius); padding: var(--d-sp-6_4) var(--d-sp-12_8); list-style: none; color: var(--d-ink); }
@@ -59,14 +51,6 @@ button.bi-tab { background: none; font: inherit; cursor: pointer; }
 .bi-pane h2 { font-size: var(--d-fs-15_2); margin: 0 0 var(--d-sp-8); }
 .bi-fhead { font-size: var(--d-fs-12_8); text-transform: uppercase; letter-spacing: .04em; color: var(--d-muted); margin: var(--d-sp-11_2) 0 var(--d-sp-4_8); }
 .bi-ptabs { display: flex; gap: var(--d-sp-2_4); margin: var(--d-sp-9_6) 0 var(--d-sp-6_4); border-bottom: 1px solid var(--d-border); }
-.bi-types .bi-type-group { margin: var(--d-sp-4_8) 0 var(--d-sp-2_4); font-size: var(--d-fs-11_52); color: var(--d-muted); text-transform: uppercase; letter-spacing: .04em; }
-.bi-typegrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--d-sp-4); }
-.bi-vtype { display: flex; flex-direction: column; align-items: center; gap: var(--d-sp-1_6); background: var(--d-surface-2); border: 1px solid var(--d-border); border-radius: var(--d-radius-6); color: var(--d-ink); padding: var(--d-sp-4_8) var(--d-sp-1_6); cursor: pointer; font-size: var(--d-fs-9_6); line-height: 1.1; min-height: 3rem; overflow: hidden; }
-.bi-vtype i { font-size: var(--d-fs-17_6); }
-.bi-vtype span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.bi-vtype:hover { border-color: var(--d-accent); }
-.bi-vtype[aria-pressed="true"] { background: var(--d-accent-tint); border-color: var(--d-accent); color: var(--d-accent-strong); }
-.bi-vtype:focus-visible, .bi-field:focus-visible, .bi-chipbtn:focus-visible, .bi-swatch:focus-visible { outline: 2px solid var(--d-link); outline-offset: 1px; }
 .bi-build-head { margin: var(--d-sp-3_2) 0 var(--d-sp-6_4); font-size: var(--d-fs-13_6); }
 .bi-well { border: 1px dashed var(--d-border); border-radius: var(--d-radius-6); padding: var(--d-sp-4_8) var(--d-sp-6_4) var(--d-sp-6_4); margin: 0 0 var(--d-sp-7_2); min-width: 0; }
 .bi-well.bi-drop { border-color: var(--d-link); background: var(--d-highlight); }
@@ -87,14 +71,7 @@ button.bi-tab { background: none; font: inherit; cursor: pointer; }
 .bi-swatch[aria-pressed="true"] { border-color: var(--d-ink); box-shadow: 0 0 0 2px var(--d-accent); }
 .bi-cond { display: grid; grid-template-columns: 1fr 3.2rem 4.5rem 2.4rem 1.7rem; gap: var(--d-sp-3_2); align-items: center; margin-bottom: var(--d-sp-4); }
 .bi-cond input[type="color"] { padding: 0; min-height: 1.9rem; }
-.bi-fieldtable { margin: 0 0 var(--d-sp-5_6); }
-.bi-fieldtable > summary { cursor: pointer; font-weight: 600; font-size: var(--d-fs-13_6); padding: var(--d-sp-2_4) 0; overflow-wrap: anywhere; }
-.bi-fieldlist { list-style: none; margin: 0; padding: 0 0 0 var(--d-sp-8); }
-.bi-field { display: flex; align-items: center; gap: var(--d-sp-5_6); width: 100%; text-align: left; background: none; border: 0; color: var(--d-ink); font: inherit; font-size: var(--d-fs-13_12); padding: var(--d-sp-2_4) var(--d-sp-4); border-radius: var(--d-radius-4); cursor: grab; min-height: 1.7rem; }
-.bi-field:hover { background: var(--d-highlight); }
-.bi-field-name { flex: 1 1 auto; overflow-wrap: anywhere; }
-.bi-fieldparts > summary { cursor: pointer; font-size: var(--d-fs-12); color: var(--d-muted); padding-left: var(--d-sp-19_2); }
-.bi-parts { padding-left: var(--d-sp-19_2); }
+[data-fields-tree] .dt-obtn { cursor: grab; }                                         /* a field is dragged onto the canvas or a well */
 .bi-fsec { margin-bottom: var(--d-sp-6_4); }
 .bi-filterlist { list-style: none; margin: 0 0 var(--d-sp-4); padding: 0; display: flex; flex-direction: column; gap: var(--d-sp-3_2); }
 .bi-fitem { display: flex; align-items: center; gap: var(--d-sp-1_6); background: var(--d-surface-2); border: 1px solid var(--d-border); border-radius: var(--d-radius-6); padding: var(--d-sp-1_6) var(--d-sp-2_4) var(--d-sp-1_6) var(--d-sp-7_2); font-size: var(--d-fs-12_48); }
@@ -127,10 +104,9 @@ button.bi-tab { background: none; font: inherit; cursor: pointer; }
 }
 @media (max-width: 760px) {
   .bi-dmain { grid-template-columns: minmax(0, 1fr); }
-  .bi-dactions .btn-pill { flex: 1 1 8rem; }
 }
 @media (pointer: coarse) {
-  .bi-vtype, .bi-field, .bi-chipbtn, .bi-viewas { min-height: 44px; min-width: 44px; }
+  .bi-chipbtn { min-height: 44px; min-width: 44px; }
 }
 
 /* the Model view (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 6.2): tables as boxes with their columns, relationships as lines */
@@ -164,9 +140,6 @@ button.bi-tab { background: none; font: inherit; cursor: pointer; }
 .bi-tablet-screen { width: 768px; max-width: 100%; max-height: 640px; overflow-y: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--d-sp-10); background: var(--d-bg); }
 .bi-tablet-screen .bi-phone-card { min-width: 0; overflow: hidden; }
 /* several datasets: a tree for each, the dataset tag on a visual, the links panel */
-.bi-dstree { margin: 0 0 var(--d-sp-8); border-bottom: 1px solid var(--d-border); }
-.bi-dstree > summary { cursor: pointer; font-weight: 700; font-size: var(--d-fs-14_4); padding: var(--d-sp-3_2) 0; display: flex; align-items: center; gap: var(--d-sp-4_8); }
-.bi-dstree > summary .bi-chipbtn { margin-left: auto; }
 .bi-dstag { position: absolute; top: .15rem; right: .4rem; z-index: 2; font-size: var(--d-fs-11_2); padding: 0 var(--d-sp-6_4); border-radius: var(--d-radius-pill); background: var(--d-surface); border: 1px solid var(--d-border); color: var(--d-muted); max-width: 55%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; pointer-events: none; }
 .bi-adddataset { margin: var(--d-sp-4_8) 0; }
 .bi-linkspanel { margin-top: var(--d-sp-9_6); border-top: 1px solid var(--d-border); padding-top: var(--d-sp-6_4); }
@@ -174,7 +147,7 @@ button.bi-tab { background: none; font: inherit; cursor: pointer; }
 .bi-linklist li { padding: var(--d-sp-2_4) 0; overflow-wrap: anywhere; }
 .bi-composed-yaml { max-height: 14rem; overflow: auto; font-size: var(--d-fs-12); background: var(--d-surface); border: 1px solid var(--d-border); padding: var(--d-sp-6_4); white-space: pre; }
 @media (pointer: coarse) {
-  .bi-adddataset .btn-pill, .bi-adddataset .studio-select, .bi-linkspanel .btn-pill, .bi-dstree .bi-chipbtn, .bi-linklist input[type="checkbox"] { min-height: 44px; min-width: 44px; }
+  .bi-adddataset .btn-pill, .bi-adddataset .studio-select, .bi-linkspanel .btn-pill, .bi-linklist input[type="checkbox"] { min-height: 44px; min-width: 44px; }
 }
 .bi-dvis { position: relative; }
 .bi-fieldset[data-format-options] { display: flex; flex-direction: column; gap: var(--d-sp-2_4); }
@@ -184,20 +157,19 @@ button.bi-tab { background: none; font: inherit; cursor: pointer; }
   [data-bookmarks] .bi-chipbtn { min-height: 44px; min-width: 44px; }
 }
 
-/* a phone: the toolbar shows icons, and the panes are reached through tabs under the canvas */
+/* a phone: the panes are reached through tabs under the canvas */
 @media (max-width: 760px) {
-  .bi-dactions .bi-lbl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-  .bi-dactions .btn-pill, .bi-dactions .bi-checkrow { flex: 0 0 auto; min-width: 44px; min-height: 44px; justify-content: center; }
-  .bi-dactions .bi-preview-toggle { display: none; }
   .bi-mpanes { display: flex; gap: var(--d-sp-4); overflow-x: auto; margin: var(--d-sp-6_4) 0; }
   .bi-mpanes .bi-tab { min-height: 44px; flex: 0 0 auto; }
   .bi-dmain[data-mpane="canvas"] .bi-pane, .bi-dmain[data-mpane="vis"] .bi-pane:not(.bi-pane-vis), .bi-dmain[data-mpane="fields"] .bi-pane:not(.bi-pane-fields), .bi-dmain[data-mpane="filters"] .bi-pane:not(.bi-pane-filters) { display: none; }
   .bi-dmain[data-mpane]:not([data-mpane="canvas"]) .bi-dleft { display: none; }
   .bi-pane-vis { resize: none; min-height: 0; }
 }
-@media (pointer: coarse) { .bi-pane-head button, .bi-addvisual .btn-pill, .bi-addvisual select, .bi-chipbtn, .bi-vtype { min-height: 44px; min-width: 44px; } }
+@media (pointer: coarse) { .bi-pane-head button, .bi-addvisual .btn-pill, .bi-addvisual select, .bi-chipbtn { min-height: 44px; min-width: 44px; } }
 
 /* a draft that cannot be changed (proposed, shipped, no edit power): what would change it looks switched off */
-.bi-ro .bi-vtype, .bi-ro .bi-field, .bi-ro .bi-vis-btn[data-act="delete"], .bi-ro .bi-vis-btn[data-act="duplicate"], .bi-ro .bi-resize { opacity: .45; cursor: not-allowed; }
-.bi-ro .bi-vtype:hover { border-color: var(--d-border); }
+.bi-ro [data-fields-tree] .dt-obtn, .bi-ro .bi-vis-btn[data-act="delete"], .bi-ro .bi-vis-btn[data-act="duplicate"], .bi-ro .bi-resize { opacity: .45; cursor: not-allowed; }
 .bi-ro [data-save]:disabled { opacity: .45; cursor: not-allowed; }
+/* the Visualizations: drishti-designer's Palette, the selected visual's type marked; the add bar a Form and its button */
+.bi-addvisual { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--d-sp-4); }
+.bi-typepalette [data-dd-entry][aria-selected="true"] { background: var(--d-accent-tint); border-color: var(--d-accent); }

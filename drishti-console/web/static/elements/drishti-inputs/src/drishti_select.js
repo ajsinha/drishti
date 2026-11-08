@@ -60,7 +60,7 @@ function fromMarkup(host) {
 }
 
 /**
- * A single-choice select with keyboard, type-ahead and search. Events: change {value, option}, open, close.
+ * A single-choice select with keyboard, type-ahead and search. Events: change {value, option} (the value changed), pick {value, option} (a person picked, the same value too), open, close.
  */
 export class Select extends InputBase {
   /**
@@ -210,6 +210,7 @@ export class Select extends InputBase {
     if (!it || it.disabled) { return; }
     this.close(true);
     this.setValue(it.value, true);
+    this.emit('pick', { value: this.value, option: this.getOption() });      // every pick, the same value too (a cell editor saves on it)
   }
 
   /**

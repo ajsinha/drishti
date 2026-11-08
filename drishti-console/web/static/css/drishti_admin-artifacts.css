@@ -20,14 +20,12 @@
 .art-install { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: var(--d-sp-16); margin: var(--d-sp-9_6) 0 var(--d-sp-19_2); }
 .art-card { border: 1px solid var(--d-border); border-radius: var(--d-radius-8); padding: var(--d-sp-9_6) var(--d-sp-16) var(--d-sp-16); background: var(--d-surface); min-width: 0; }
 .art-card h3 { margin: var(--d-sp-4_8) 0; font-size: var(--d-fs-16); }
-.art-file { display: flex; flex-direction: column; gap: var(--d-sp-4_8); margin: var(--d-sp-8) 0; color: var(--d-ink); }
 .art-dialog { width: min(640px, 94vw); max-height: 92vh; overflow: auto; }
 .art-group { margin: var(--d-sp-8) 0; }
 .art-group h3 { margin: 0 0 var(--d-sp-3_2); font-size: var(--d-fs-15_2); }
 .art-names { margin: 0; padding-left: var(--d-sp-19_2); overflow-wrap: anywhere; }   /* every dependant is listed in full: the dialog scrolls, the list does not clip */
 .art-notes { margin: var(--d-sp-6_4) 0; padding-left: var(--d-sp-19_2); }
 .art-typed { display: flex; flex-direction: column; gap: var(--d-sp-4_8); margin: var(--d-sp-9_6) 0; }
-.art-cascade { display: flex; align-items: center; gap: var(--d-sp-8); min-height: 44px; margin: var(--d-sp-8) 0; }
 .art-cascade[hidden], .art-typed[hidden], .art-dialog [hidden], .art-card .chk[hidden] { display: none !important; }   /* .chk is inline-flex !important */
 @media (max-width: 640px) {
   .art-dialog { padding: var(--d-sp-12_8); }

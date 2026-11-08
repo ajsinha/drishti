@@ -13,12 +13,16 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Linked selection between a grid and charts, through drishti-core's event bus: rows selected in a drishti-grid outline their marks in
-   every chart on the same channel, and marks (or map places) clicked in a chart select their rows in the grid. A grid is linked by its
-   model's typed events (selectionChanged) and its selection model, so drishti-chart needs no import of drishti-grid; a chart is linked by
-   its link option ({channel}). The ids are the rows' ids (the grid's getRowId, the chart spec's id field). */
-import { bus as sharedBus } from '../../drishti-core/src/drishti_index.js';
-import { SELECTION_EVENT } from './drishti_chart-view.js';
+
+/* Linked selection between components, through the shared event bus: rows selected in a drishti-grid outline their marks in every
+   chart and their nodes in every graph or tree on the same channel, and marks, places or nodes clicked select their rows in the grid. A
+   grid is linked by its model's typed events (selectionChanged) and its selection model, so no library imports drishti-grid for it; a
+   chart, a graph or a tree is linked by its link option ({channel}) and publishes and hears SELECTION_EVENT itself. The ids are the
+   rows' ids (the grid's getRowId, the chart spec's id field, the graph's node ids). */
+import { bus as sharedBus } from './drishti_events.js';
+
+/** The selection's event on the shared bus: {channel, ids, source}. */
+export const SELECTION_EVENT = 'drishti:selection';
 
 /**
  * Links a drishti-grid (the Grid, the element's grid, or its GridModel) to a selection channel: its row selection is published, and a

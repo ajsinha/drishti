@@ -137,7 +137,7 @@ def test_a_report_is_started_on_the_model_and_gets_a_relative_date_slicer_a_top_
     state["report"] = re.sub(r".*/bi/design/", "", page.url).replace("%3A", ":")
     # a slicer on the date field: click the field, make it a slicer, then make it a relative-date one
     page.click('[data-field="trade.tradeDate"]')
-    page.click('.bi-vtype[data-type="slicer"]')
+    page.click('[data-types] [data-type="slicer"]')
     page.click('[data-ptab="format"]')
     page.select_option("[data-format-mode]", "relative-date")
     page.select_option("[data-format-default]", "last-30-days")
@@ -341,9 +341,9 @@ def test_a_board_page_lists_a_draft_report_draws_its_tile_and_refuses_to_publish
     page.goto(f"{CONSOLE_URL}/bi/design/board/{brd}")                                                    # the 2.3 address opens the report designer
     page.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
     assert "/bi/design/board/" not in page.url
-    page.click("[data-design-root] [data-title]")
+    page.click("[data-studio] [data-title]")
     page.keyboard.press("Escape")
-    page.click('.bi-vtype[data-type="tile"]')
+    page.click('[data-types] [data-type="tile"]')
     page.wait_for_function("() => { const v = window.drishtiBi.design.sel(); return v && v.type === 'tile'; }")
     tile = page.evaluate("window.drishtiBi.design.sel().id")
     expect(page.locator(f'[data-design-root] [data-visual="{tile}"] [data-tile-placeholder]')).to_have_count(1)      # nothing chosen yet: it says what to do
@@ -410,14 +410,14 @@ def test_a_visual_id_follows_its_type_and_what_named_it_follows_the_id(stack, pa
     page.goto(f"{CONSOLE_URL}/bi/design/{rep}")
     page.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
     page.evaluate("window.drishtiBi.design.select('card-1')")
-    page.click('.bi-vtype[data-type="bar"]')
+    page.click('[data-types] [data-type="bar"]')
     m = page.evaluate("window.drishtiBi.design.model")
     ids = [v["id"] for v in m["pages"][0]["visuals"]]
     assert "bar-1" in ids and "card-1" not in ids, ids
     phone = m["layouts"]["phone"]["main"]
     assert "bar-1" in phone["order"] and "card-1" not in phone["order"] and "bar-1" in phone["span"] and "card-1" not in phone["span"], phone
     page.evaluate("window.drishtiBi.design.select('slicer-1')")
-    page.click('.bi-vtype[data-type="table"]')
+    page.click('[data-types] [data-type="table"]')
     m = page.evaluate("window.drishtiBi.design.model")
     assert "table-1" in [v["id"] for v in m["pages"][0]["visuals"]]
     assert list(m["bookmarks"][0]["slicers"]) == ["table-1"] and "table-1" in m["layouts"]["phone"]["main"]["hide"], m["bookmarks"]

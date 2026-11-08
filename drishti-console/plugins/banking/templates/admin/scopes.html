@@ -29,8 +29,8 @@
     the people it was shared with lose it too, the owner gets a notice in their inbox (with your reason, when you give one), and captures
     taken of it are kept and still open. Every delete is in the <a href="/admin/audit">audit log</a> as
     <span class="mono">var-basket-delete</span>.</p>
-  <form class="adm-bar" method="get" action="/admin/scopes" role="search"><label for="sOwner" class="visually-hidden">Owner</label>
-    <input id="sOwner" name="owner" value="{{ owner }}" class="studio-in" placeholder="Filter by owner" data-scope-owner>
+  <form class="adm-bar" method="get" action="/admin/scopes" role="search">
+    {{ admin_form('search', name='owner', value=owner, title='Owner', placeholder='Filter by owner', hook={'data-scope-owner': ''}) }}
     <button type="submit" class="btn-pill btn-ghost">Filter</button>{% if owner %} <a href="/admin/scopes">Show everyone's</a>{% endif %}</form>
   <p class="adm-msg" data-msg role="status" aria-live="polite">{% if error %}The VaR engine did not answer: {{ error.detail }}{% endif %}</p>
   <div class="tbl-wrap"><table class="tbl adm-tbl" data-scope-table>

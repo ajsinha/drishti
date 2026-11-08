@@ -113,7 +113,8 @@ def test_the_playground_draws_every_component_with_clean_aria_and_its_code(brows
             await pg.click(".gx-codebox [data-tab=js]")
             js = await pg.text_content("#gx-code-panel")
             assert "import {" in js or "Drishti.elements" in js, (d["id"], js[:200])
-            tag = {"drishti-grid": "drishti-grid", "drishti-chart": "drishti-chart", "drishti-risk": "drishti-chart"}.get(d["library"])
+            tag = {"drishti-grid": "drishti-grid", "drishti-chart": "drishti-chart", "drishti-graph": "drishti-graph", "drishti-tree": "drishti-tree",
+                   "drishti-risk": "drishti-chart, .gx-stage drishti-graph, .gx-stage drishti-tree"}.get(d["library"])
             tag = ".gx-ag-grid.dg" if d["id"] == "ag-adapter" else tag                       # the adapter draws into a plain element
             if tag and d["kind"] == "element":
                 assert await pg.locator(".gx-stage " + tag).count() >= 1, d["id"]

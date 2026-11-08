@@ -1,0 +1,271 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+"""The Admin screens' forms as drishti-inputs draws them (docs/architecture/ELEMENTS.md section 12.3): each builder answers the host of a
+server-built schema (``core/form_kit.py``); a template calls ``admin_form("<name>", ...)``. Every field keeps the old control's name and
+data attributes (``hook``), so the routes and the pages' scripts read the same names; what a page posts as JSON its script reads from the
+Form. Nothing here decides who may do what: the routes keep every check."""
+from __future__ import annotations
+
+from typing import Callable
+
+from markupsafe import Markup
+
+from core import form_kit as K
+
+POWERS = [("raw", "See every field unmasked (raw JSON, views, search)"), ("author", "Author Sutras (save and propose from the workbench)"),
+          ("approve", "Approve proposed Sutras"), ("admin", "Administer users, roles and caches"), ("calc", "Use Calc: Python in the browser on what the role opens"),
+          ("edit", "Submit edits: change records through forms that save (write-back, when editing is on)"),
+          ("layout", "Customise layouts: arrange a view's panels for themselves (Alt+L)")]
+
+
+def role(**_) -> Markup:
+    """Admin › Roles' dialog: a role's name, words, the kinds it opens and its powers (the page posts JSON from the Form)."""
+    props = {
+        "name": K.text("Name", "name", pattern="[a-z][a-z0-9-]{1,63}", patternMessage="a lower-case name: letters, digits and dashes, starting with a letter",
+                       placeholder="credit-analyst", maxLength=64),
+        "description": K.text("Description", "description", placeholder="Reads counterparties and credit curves"),
+        "all": K.check("Opens every kind", "all"),
+        "kinds": K.area("Kinds it opens (one per line, or pick by pack below)", "kinds", rows=4, placeholder="counterparty\ncredit-curve",
+                        when={"field": "all", "notEquals": True}),
+        "powers": K.group("Powers", {k: K.check(words, k) for k, words in POWERS}),
+    }
+    value = {"name": "", "description": "", "all": False, "kinds": "", "powers": {k: k == "layout" for k, _ in POWERS}}
+    return K.host(K.schema(props, required=["name"]), value, attrs={"data-role-fields": ""}, label="The role")
+
+
+def user(*, roles=(), packs=None, force_change: bool = False, **_) -> Markup:
+    """Admin › Users' dialog: who the person is, their roles and packs, and a first password for a new user."""
+    props = {
+        "username": K.text("User name", "username", pattern="[a-z0-9][a-z0-9._-]{2,63}", maxLength=64,
+                           patternMessage="3 to 64 lower-case letters, digits, dots, dashes or underscores, starting with a letter or digit"),
+        "displayName": K.text("Display name", "displayName"),
+        "desk": K.text("Desk", "desk"),
+        "email": K.text("Email", "email", format="email"),
+        "roles": K.checks("Roles", "roles", list(roles)),
+    }
+    if packs:
+        props["packs"] = K.checks("Packs", "packs", list(packs), description=(
+            "Tick the packs this person may use. Untick every pack and they see none (every kind answers no access). Packs are saved as a "
+            "list; the server default applies only to people never given a list."), hook={"class": "adm-packs-box"})
+    props["enabled"] = K.check("Enabled", "enabled")
+    props["password"] = K.text("Initial password", "password", format="password", hook={"data-pw": ""}, when={"field": "editing", "notEquals": True})
+    props["mustChangePassword"] = K.check("Must change at first sign-in", "mustChangePassword", hook={"data-pw": ""}, when={"field": "editing", "notEquals": True})
+    value = {"username": "", "displayName": "", "desk": "", "email": "", "roles": [], "packs": list(packs or []), "enabled": True,
+             "password": "", "mustChangePassword": bool(force_change), "editing": False}    # editing: the page's state (no field), hides the password
+    return K.host(K.schema(props, required=["username"]), value, attrs={"data-user-fields": ""}, label="The user")
+
+
+def search(*, name: str, value: str = "", title: str, placeholder: str = "", hook=None, **_) -> Markup:
+    """A one-field search in a page's GET form (Enter submits it, as before): Users, Audit, the banking module's Scopes."""
+    return K.host(K.schema({name: K.text(title, name, format="search", placeholder=placeholder, hook=hook)}), {name: value or ""},
+                  attrs={"data-search-fields": ""}, layout="inline", label=title)
+
+
+_KINDS = {"text": K.text, "area": K.area, "check": K.check, "date": K.date, "file": K.file}
+
+
+def field(*, key: str, kind: str = "text", title: str, name: str | None = None, value=None, required: bool = False, attrs: dict | None = None,
+          layout: str = "stacked", **more) -> Markup:
+    """One field on its own (a reason, a load id, a typed name to confirm, a date, a file, a box to tick): ``kind`` text, area, check, date
+    or file; the rest of the field's schema in ``more`` (``hook``, ``placeholder``, ``maxLength``, ``mono``, ``accept``)."""
+    fs = _KINDS[kind](title, name, **more)
+    empty = False if kind == "check" else ""
+    return K.host(K.schema({key: fs}, required=[key] if required else ()), {key: empty if value is None else value},
+                  attrs={"data-field-of": key, **(attrs or {})}, layout=layout, label=title)
+
+
+def access_filter(*, f: dict, **_) -> Markup:
+    """Admin › Access log's filter (a GET form): person, what, kind, id, from and until."""
+    props = {"user": K.text("Person", "user", mono=True), "action": K.select("What", "action", ["view", "raw", "history", "search", "export"], empty="anything"),
+             "kind": K.text("Kind", "kind", mono=True, placeholder="trade, or TRD for searches"), "id": K.text("Id", "id", mono=True),
+             "from": K.date("From", "from"), "to": K.date("Until", "to")}
+    value = {k: (f.get(k) or "") for k in props}
+    for k in ("from", "to"):
+        if not value[k]:
+            value.pop(k)
+    return K.host(K.schema(props), value, attrs={"data-access-fields": ""}, layout="inline", label="Filter the access log")
+
+
+def config_search(*, q: str = "", area: str = "", areas=(), **_) -> Markup:
+    """Admin › Configuration's search (a GET form): words and an area."""
+    props = {"q": K.text("Search settings", "q", format="search", hook={"data-cfe-q": ""}, placeholder="A key, an environment variable or words: confidence, DRISHTI_PORT, lens"),
+             "area": K.select("Area", "area", list(areas), empty="Every area", hook={"data-cfe-area": ""})}
+    return K.host(K.schema(props), {"q": q or "", "area": area or ""}, attrs={"data-cfe-fields": ""}, layout="inline", label="Search settings")
+
+
+def config_propose(**_) -> Markup:
+    """Admin › Configuration's Propose a change: the new value and why (a second administrator approves it; the page posts JSON)."""
+    props = {"value": K.text("New value", "value", maxLength=2000, hook={"data-dlg-value": ""}),
+             "reason": K.area("Why (the approver reads it)", "reason", rows=3, maxLength=500, hook={"data-dlg-reason": ""})}
+    return K.host(K.schema(props, required=["value"]), {"value": "", "reason": ""}, attrs={"data-propose-fields": ""}, label="Propose a change")
+
+
+CONNECTOR_STATES = [("RUNNING", "Running"), ("DISABLED", "Disabled"), ("OFFLINE", "Off (offline mode)"), ("FAILED", "Failed"), ("problem", "With a problem")]
+CONNECTOR_ORIGINS = [("file", "File"), ("pack", "Pack"), ("application", "application.yaml")]
+ARTIFACT_KINDS = [("pack", "Packs"), ("connector", "Connectors"), ("table", "BI tables"), ("model", "BI models"), ("report", "BI reports"), ("board", "BI boards"),
+                  ("notebook", "BI notebooks"), ("python", "BI Python items")]
+ARTIFACT_STATES = [("on", "On"), ("off", "Disabled"), ("problem", "With a problem"), ("not loaded", "Not loaded")]
+ARTIFACT_ORIGINS = [("shipped", "Shipped"), ("archive", "Archive"), ("file", "File"), ("ui", "Console"), ("template", "Pack template"), ("application", "application.yaml")]
+
+
+def connector_filters(**_) -> Markup:
+    """Admin › Connectors' list filters (the page's script filters the rows as they change)."""
+    props = {"q": K.text("Filter the connectors", None, format="search", hook={"data-filter": ""}, placeholder="Filter by name, plugin, kind or pack"),
+             "state": K.select("Show connectors in state", None, CONNECTOR_STATES, empty="Any status", hook={"data-state-filter": ""}),
+             "origin": K.select("Show connectors from", None, CONNECTOR_ORIGINS, empty="Any origin", hook={"data-origin-filter": ""})}
+    return K.host(K.schema(props), {"q": "", "state": "", "origin": ""}, attrs={"data-filter-fields": ""}, layout="inline", label="Filter the connectors")
+
+
+def artifact_filters(**_) -> Markup:
+    """Admin › Artifacts' list filters."""
+    props = {"q": K.text("Filter the artifacts", None, format="search", hook={"data-filter": ""}, placeholder="Filter by name, title or problem"),
+             "kind": K.select("Show", None, ARTIFACT_KINDS, empty="All kinds", hook={"data-kind-filter": ""}),
+             "state": K.select("Status", None, ARTIFACT_STATES, empty="Any status", hook={"data-state-filter": ""}),
+             "origin": K.select("Origin", None, ARTIFACT_ORIGINS, empty="Any origin", hook={"data-origin-filter": ""})}
+    return K.host(K.schema(props), {"q": "", "kind": "", "state": "", "origin": ""}, attrs={"data-filter-fields": ""}, layout="inline", label="Filter the artifacts")
+
+
+def artifact_bi_file(**_) -> Markup:
+    """Admin › Artifacts' Install a BI file: the file, and Replace (shown when a file of that name is there)."""
+    props = {"file": K.file("Choose a file", None, accept=".yaml,.yml", hook={"data-bi-file": ""}),
+             "replace": K.check("Replace the file that is there (it is archived first)", None, hook={"data-bi-replace": ""}, when={"field": "exists", "equals": True})}
+    return K.host(K.schema(props), {"replace": False, "exists": False}, attrs={"data-bi-fields": ""}, label="A BI file")
+
+
+def busy_override(*, max_minutes: int = 240, **_) -> Markup:
+    """Admin › Health's busy protection override: the mode, a reason and how long (the page's script posts them)."""
+    minutes = [m for m in (15, 30, 60, 120, 240) if m <= max_minutes] or [15]
+    props = {"mode": K.radios("Override", "busy-mode", [("automatic", "Automatic"), ("open", "Let everything through"), ("hold", "Hold all new heavy work")],
+                              hook={"class": "busy-modes"}),
+             "reason": K.text("Reason", None, maxLength=300, hook={"data-busy-reason": ""}, placeholder='required, e.g. "month-end sign-off, CRO approved"'),
+             "minutes": K.select("Ends after", None, [(str(m), f"{m} minutes") for m in minutes], hook={"data-busy-minutes": ""})}
+    return K.host(K.schema(props), {"mode": "automatic", "reason": "", "minutes": "30" if 30 in minutes else str(minutes[0])},
+                  attrs={"data-busy-fields": ""}, layout="inline", label="Operator override")
+
+
+def pack_signature(**_) -> Markup:
+    """Admin › Packs' Signed archive?: the publisher and the signature sent with the archive."""
+    props = {"publisher": K.text("Publisher", None, hook={"data-publisher": ""}, placeholder="acme",
+                                 description="The publisher's key must be listed in drishti.packs.registry.trusted-keys. Unsigned archives are accepted unless the server requires signatures."),
+             "signature": K.text("Signature (base64 Ed25519 of the archive)", None, mono=True, hook={"data-signature": ""})}
+    return K.host(K.schema(props), {"publisher": "", "signature": ""}, attrs={"data-signature-fields": ""}, label="Signed archive")
+
+
+def pack_data(**_) -> Markup:
+    """A pack's page, Load a data file: the file, the kind (when the pack loads several; the page's script fills the list) and the business
+    date of a snapshot kind."""
+    props = {"file": K.file("Data file", None, accept=".json,.jsonl,.ndjson", hook={"data-data-file": ""}),
+             "kind": K.select("Kind", None, [], hook={"data-data-kind": ""}, when={"field": "many", "equals": True}),
+             "date": K.date("Business date (snapshot)", None, hook={"data-data-date": ""}, when={"field": "snapshot", "equals": True})}
+    return K.host(K.schema(props), {"many": False, "snapshot": False}, attrs={"data-data-fields": ""}, label="Load a data file")
+
+
+def capacity_growth(**_) -> Markup:
+    """Admin › Capacity's Plan for growth: three sliders (the page's script seeds them from the plan and recomputes as they move)."""
+    props = {"intraday": K.slider("Intraday updated a day", 0, 100, unit="%", hook={"data-cap-grow": "intraday"}),
+             "HotDates": K.slider("Dates in memory", 1, 60, hook={"data-cap-grow": "HotDates"}),
+             "Users": K.slider("Concurrent users", 1, 1000, hook={"data-cap-grow": "Users"})}
+    return K.host(K.schema(props), {"intraday": 0, "HotDates": 10, "Users": 1}, attrs={"data-cap-growth-fields": ""}, layout="inline", label="Plan for growth")
+
+
+def capacity_download(**_) -> Markup:
+    """Admin › Capacity's Download the working: which inputs the workbook carries (submitted with the dialog as ``inputs``)."""
+    props = {"inputs": K.radios("Which inputs?", "inputs", [("plan", "What is on the screen"), ("live", "This server's live figures"), ("both", "Both, side by side")],
+                                description="What is on the screen: the inputs as set here. This server's live figures: the measured positions, trades, dates in "
+                                            "memory, users, requests a second and Java in the Inputs (the plan beside them), with the measured heap, RSS, disk and "
+                                            "load under them. Both: the plan's inputs drive Results; a Live column beside them holds the measured figures, "
+                                            "stamped with their time.")}
+    return K.host(K.schema(props), {"inputs": "plan"}, attrs={"data-cap-download-fields": ""}, label="Which inputs?")
+
+
+LAKE_MODES = [("overwrite-dates", "Replace those dates (re-runs are safe)"), ("overwrite-partitions", "Replace only those dates and classifier values"),
+              ("append", "Add the rows")]
+
+
+def lake_file(*, max_mb: int = 0, **_) -> Markup:
+    """Admin › Lakes, step 1: the file (the page's script uploads it at once)."""
+    return field(key="file", kind="file", title=f"A .json (array), .jsonl, .ndjson or .gz file, up to {max_mb:,} MB",
+                 accept=".json,.jsonl,.ndjson,.gz,application/json", hook={"data-file": ""})
+
+
+def lake_fields(**_) -> Markup:
+    """Admin › Lakes, step 2: the id field (the file's fields, filled by the page's script) and another business date."""
+    props = {"key": K.select("Id field (one row per id and date)", None, [], hook={"data-key": ""}),
+             "asOf": K.date("Another business date for the whole file (optional)", None, hook={"data-lake-asof": ""})}
+    return K.host(K.schema(props), {"key": ""}, attrs={"data-lake-fields": ""}, layout="columns", label="Id and business date")
+
+
+def lake_target(**_) -> Markup:
+    """Admin › Lakes, step 3: where it goes (the lakes, roots and packs filled by the page's script), how a date already there is
+    treated, and whether to bind and announce."""
+    props = {"table": K.select("Lake", None, [("", "A new lake (table)")], hook={"data-table": ""}),
+             "root": K.select("Lake root", None, [], hook={"data-root": ""}),
+             "domain": K.text("Domain", None, mono=True, hook={"data-domain": ""}, placeholder="trading"),
+             "kind": K.text("Kind (the table)", None, mono=True, hook={"data-kind": ""}, placeholder="deal"),
+             "mode": K.select("When a date is already there", None, LAKE_MODES, hook={"data-mode": ""}),
+             "pack": K.select("Pack (its Delta connector reads the lake)", None, [], hook={"data-pack": ""}),
+             "bind": K.check("Bind the lake to the pack's Delta connector (a new connector file, or the kind added to it; kept in its history)", None, hook={"data-bind": ""}),
+             "signal": K.check("Tell the server the data landed (Data loads, alerts, notices)", None, hook={"data-signal": ""})}
+    return K.host(K.schema(props), {"table": "", "root": "", "domain": "", "kind": "", "mode": "overwrite-dates", "pack": "", "bind": True, "signal": True},
+                  attrs={"data-lake-target": ""}, layout="columns", label="Where it goes")
+
+
+def net_explain(*, roles=(), **_) -> Markup:
+    """Admin › Drishti*net, Explain a request: a kind and id, or a search, as a role, on a past date (the page's script asks the server)."""
+    props = {"kind": K.text("Kind", None, mono=True, hook={"data-ex-kind": ""}, placeholder="trade"),
+             "id": K.text("Id (optional)", None, mono=True, hook={"data-ex-id": ""}, placeholder="IRS-48213"),
+             "q": K.text("or a search", None, mono=True, hook={"data-ex-q": ""}, placeholder="TRD where mtm > 1m"),
+             "role": K.select("As the role", None, list(roles), empty="mine", hook={"data-ex-role": ""}),
+             "dated": K.check("A past business date (a peer with another calendar is left out)", None, hook={"data-ex-dated": ""})}
+    return K.host(K.schema(props), {"kind": "", "id": "", "q": "", "role": "", "dated": False}, attrs={"data-explain-fields": ""}, layout="columns",
+                  label="Explain a request")
+
+
+def net_node(*, tags=(), peer_only=(), **_) -> Markup:
+    """Admin › Drishti*net, Access: this node's tags and the packs it serves to peers only."""
+    props = {"tags": K.text("This node's tags (comma-separated)", None, mono=True, hook={"data-node-tags": ""}, placeholder="region:emea, tier:risk"),
+             "peerOnly": K.text("Packs served to peers only (comma-separated)", None, mono=True, hook={"data-node-peer-only": ""}, placeholder="market-risk")}
+    return K.host(K.schema(props), {"tags": ", ".join(tags or []), "peerOnly": ", ".join(peer_only or [])}, attrs={"data-node-fields": ""}, layout="columns",
+                  label="This node")
+
+
+def connector_head(**_) -> Markup:
+    """Admin › Connectors' editor, the Form tab's head: the name, the plugin (the page's script lists the plugins), on or off, and the
+    words. The plugin's own settings are a Form the script builds from the plugin's
+    description (``/admin/connectors/api/plugins``)."""
+    props = {"name": K.text("Name", None, mono=True, maxLength=64, pattern="[a-z0-9][a-z0-9\\-]*", hook={"data-f-name": ""}, placeholder="trading-lake",
+                            patternMessage="lower case letters, digits and hyphens", description="The file is name.yaml; packs refer to the connector by this name."),
+             "plugin": K.select("Plugin", None, [], hook={"data-f-plugin": ""}),
+             "enabled": K.check("Connector is on", None, hook={"data-f-enabled": ""}),
+             "description": K.text("Description", None, maxLength=200, hook={"data-f-description": ""},
+                                   description="One line saying what this connector reads; shown in the list.")}
+    return K.host(K.schema(props), {"name": "", "plugin": "", "enabled": True, "description": ""}, attrs={"data-conn-head": ""},
+                  layout="columns", label="The connector")
+
+
+BUILDERS: dict[str, Callable[..., Markup]] = {
+    "connector_head": connector_head,
+    "net_explain": net_explain, "net_node": net_node,
+    "lake_file": lake_file, "lake_fields": lake_fields, "lake_target": lake_target,
+    "capacity_growth": capacity_growth, "capacity_download": capacity_download,
+    "pack_signature": pack_signature, "pack_data": pack_data,
+    "role": role, "user": user, "search": search, "field": field, "access_filter": access_filter, "config_search": config_search,
+    "config_propose": config_propose, "connector_filters": connector_filters, "artifact_filters": artifact_filters, "artifact_bi_file": artifact_bi_file,
+    "busy_override": busy_override}
+
+
+def admin_form(form: str, /, **kw) -> Markup:
+    """The host of an Admin form by name (a Jinja global)."""
+    return BUILDERS[form](**kw)

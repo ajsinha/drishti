@@ -42,13 +42,12 @@
 .bi-packgroup > summary { cursor: pointer; padding: var(--d-sp-4_8) 0; }
 .bi-card-desc { font-size: var(--d-fs-13_6); margin: var(--d-sp-1_6) 0; overflow-wrap: anywhere; }
 .bi-roles { display: flex; flex-wrap: wrap; gap: var(--d-sp-3_2) var(--d-sp-14_4); margin-bottom: var(--d-sp-6_4); }
-.bi-dactions { position: relative; }
-.bi-dactions .bi-near { position: absolute; top: 100%; right: 0; z-index: 10; max-width: 26rem; background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: var(--d-sp-4_8) var(--d-sp-9_6); }
+.bi-studio .dd-actions .bi-near { position: absolute; top: 100%; right: 0; z-index: 10; max-width: 26rem; background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: var(--d-sp-4_8) var(--d-sp-9_6); }
 .bi-ask { display: inline-flex; flex-wrap: wrap; gap: var(--d-sp-6_4); align-items: center; }
 @media (max-width: 640px) {  .bi-layer-search { max-width: 100%; }
-  .bi-md-tab, .bi-dactions .btn-pill, .bi-packgroup > summary, .bi-checkrow input, .bi-chipbtn, .bi-roles .bi-checkrow { min-height: 44px; }
+  .bi-md-tab, .bi-studio .dd-actions .dd-btn, .bi-packgroup > summary, .bi-checkrow input, .bi-chipbtn, .bi-roles .bi-checkrow { min-height: 44px; }
   .bi-checkrow input[type=checkbox], .bi-checkrow input[type=radio] { min-width: 44px; }
-  .bi-dactions .bi-near { position: static; max-width: 100%; }
+  .bi-studio .dd-actions .bi-near { position: static; max-width: 100%; }
 }
 .bi-md-fieldshead { display: flex; flex-direction: column; gap: var(--d-sp-5_6); padding: var(--d-sp-8_8) var(--d-sp-10_4); margin: 0 0 var(--d-sp-9_6); border: 1px solid var(--d-border); border-radius: var(--d-radius); background: var(--d-surface); min-width: 0; }
 .bi-md-fieldshead p { margin: 0; overflow-wrap: anywhere; }

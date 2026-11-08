@@ -89,7 +89,7 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | `HISTORY[].YEAR` | string | required | The calendar year of the value. | seen: `2019`, `2020`, `2021`, `2022`, `2023`, `2024`, `2025` | `"2019"` |
 | `INDICATOR` | string | required | The indicator's name as the World Bank publishes it. | — | `"Access to electricity (% of population)"` |
 | `INDICATOR_CODE` | string | required | The indicator's code in the World Bank API. | — | `"EG.ELC.ACCS.ZS"` |
-| `ISO3` | string | required | The country's ISO 3166-1 alpha-3 code. | seen: `CAN`, `AUS`, `BRA`, `IND`, `NGA`, `USA` | `"CAN"` |
+| `ISO3` | string | required | The country's ISO 3166-1 alpha-3 code, or the World Bank aggregate's code (WLD the world, EAS... SSF the regions, HIC... LIC the income groups). | seen: `CAN`, `AUS`, `BRA`, `IND`, `NGA`, `USA` | `"CAN"` |
 | `LATEST` | number | required | The latest published value, in the unit shown. | unit: the record's UNIT | `100.0` |
 | `LATEST_YEAR` | string | required | The calendar year of the latest value. | seen: `2025`, `2024`, `2022` | `"2024"` |
 | `NAME` | string | required | The country and the indicator, as one name. | — | `"Canada · Access to electricity (% of population)"` |
@@ -105,7 +105,7 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | `PROVENANCE.URL` | string | required | The source's page for this record. | — | `"https://data.worldbank.org/indicator/EG.ELC.ACCS.ZS?locati…` |
 | `SERIES_ID` | string | required | WDIS-, the country's ISO alpha-3 code and the indicator's code with its dots as underscores. | pattern `^WDIS-` | `"WDIS-CAN-EG_ELC_ACCS_ZS"` |
 | `UNIT` | string | required | What the value measures (the feed's YAML names it). | seen: `% of population`, `% a year`, `current USD`, `persons`, `% of GDP`, `% of labour force`, `years` | `"% of population"` |
-| `WDI_PROFILE` | string | required | The country's development-profile page (WDI-<ISO3>). | pattern `^WDI-`; links to `development-profile` | `"WDI-CAN"` |
+| `WDI_PROFILE` | string | optional (filled in every row) | The country's development-profile page (WDI-<ISO3>); empty for a World Bank aggregate (the world, a region, an income group), which has series but no profile. | pattern `^WDI-`; links to `development-profile` | `"WDI-CAN"` |
 
 ## Fields in other rows
 
@@ -114,7 +114,7 @@ None: all 16 rows were read, and every field any of them has is in the record ab
 ## For the production query
 
 - **Identity:** one record per `SERIES_ID` per `snapshot`; the key is text, unique within the date.
-- **Never null:** `SERIES_ID`, `NAME`, `WDI_PROFILE`, `ISO3`, `INDICATOR_CODE`, `INDICATOR`, `UNIT`, `LATEST`, `LATEST_YEAR`, `HISTORY`, `PROVENANCE` (the contract's required fields); every row of the test data also fills `CHANGE`, `COUNTRY_NAME`, `DEFINITION`, `PREVIOUS`, `PREVIOUS_YEAR`.
+- **Never null:** `SERIES_ID`, `NAME`, `ISO3`, `INDICATOR_CODE`, `INDICATOR`, `UNIT`, `LATEST`, `LATEST_YEAR`, `HISTORY`, `PROVENANCE` (the contract's required fields); every row of the test data also fills `CHANGE`, `COUNTRY_NAME`, `DEFINITION`, `PREVIOUS`, `PREVIOUS_YEAR`, `WDI_PROFILE`.
 - **Format:** JSON Lines, UTF-8, one object a line, gzip; field names exactly as shown (UPPER_SNAKE); dates `YYYY-MM-DD`; numbers as JSON numbers, never strings; a missing value is `null` or absent (an empty string is read as empty).
 - **Arrays:** keep the order shown (vectors in the scenario set's or the run's order); nested objects as JSON, never flattened.
 - Unique: `SERIES_ID` per snapshot.

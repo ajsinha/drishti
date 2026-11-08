@@ -15,6 +15,8 @@
 """Admin → Net in the console: the page shows the cluster as the server sees it (this node, every member with state, tags, latency and
 packs, the files of config/net/), the menus link to it, it is closed to non-administrators, and its same-origin calls reach the server's
 /api/v1/net endpoints with JSON bodies only and a file's version as If-Match. No key is ever on the page."""
+import html
+
 from core.backend import BackendError
 
 KEY = "a-cluster-key-that-must-never-reach-a-page"
@@ -131,9 +133,10 @@ def test_access_shows_nodes_per_role_and_saves_only_its_three_parts(client, back
     calls = []
     with_net(backend, monkeypatch, calls)
     page = client.get("/admin/net?tab=access").text
-    for text in ('id="netTabAccess"', 'data-role-nodes="trader"', 'value="region:emea"', 'data-role-nodes="risk"', "every node", "market-risk",
-                 'list="netChoices"', '<option value="region:apac">', "Save access", "n-c"):
-        assert text in page, text
+    shown = html.unescape(page)                                                # the fields are drishti-inputs' Forms from the server's schemas
+    for text in ('id="netTabAccess"', '"data-role-nodes":"trader"', '"region:emea"', '"data-role-nodes":"risk"', "every node", "market-risk",
+                 '"suggest":[', '"region:apac"', "Save access", "n-c"):
+        assert text in shown, text
     body = {"roles": {"trader": ["region:emea", ""], "risk": []}, "tags": ["region:emea", "tier:risk"], "peerOnlyPacks": [], "secret": "x", "junk": 1}
     assert client.put("/admin/net/api/access", json=body).status_code == 200
     put = next(c for c in calls if c[0] == "PUT" and c[1] == "/access")

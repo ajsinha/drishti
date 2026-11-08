@@ -21,7 +21,7 @@
    and the card's chrome and status line. Two modes of one component (g2): 'card' (A, the default) and 'studio' (B: the kinds in a rail,
    the chart with its table, the spec beside it with options that change both). A map (kind: 'map') is drawn by its view
    (drishti_map-view.js) inside the same card. */
-import { h, renderExplain, EventBus, bus as sharedBus, announce } from '../../drishti-core/src/drishti_index.js';
+import { h, renderExplain, EventBus, bus as sharedBus, announce, SELECTION_EVENT } from '../../drishti-core/src/drishti_index.js';
 import { normalizeSpec, kindOf } from './drishti_chart-spec.js';
 import { rowsOf } from './drishti_chart-data.js';
 import { chartTheme, formatterFor } from './drishti_chart-theme.js';
@@ -37,9 +37,6 @@ export const CHART_EVENTS = Object.freeze(['rendered', 'markClicked', 'selection
 
 /** The modes of a chart: card (g2 A, the default) and studio (g2 B). */
 export const CHART_MODES = Object.freeze(['card', 'studio']);
-
-/** The selection's event on drishti-core's bus: {channel, ids, source}. */
-export const SELECTION_EVENT = 'drishti:selection';
 
 /**
  * The options of a chart (the spec says what to draw; these say how it lives in its page).

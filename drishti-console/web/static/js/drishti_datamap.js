@@ -13,12 +13,15 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* The data map, DATAMAP (docs/guides/USER_GUIDE.md "The data map"; routes/datamap_routes.py). One page, two views sharing one state:
-   the view (Map or Cards), the selected kind or domain, the domain chip and Find, all kept in the address (view, kind, domain, chip,
-   find) so a link or a reload opens the same picture. A click on a node selects its kind (its joins lit, the others dimmed) and fills the
-   side panel: its join fields with how well the data honours them, the kinds that join to it, the commands that open it and its contract,
-   guide and WHAT links; a click on a card opens its domain's table. Ctrl/Cmd-click a node to open its kind instead. While the server is
-   still counting and checking, /datamap/data is asked again and the counts, cards, panel and findings follow. */
+   the view (Map or Cards), the selected kind or domain, the domain chip, Find and the map's layout, all kept in the address (view, kind,
+   domain, chip, find, layout) so a link or a reload opens the same picture. The Map is drishti-graph (Drishti Elements): each kind a
+   node, each domain a frame (the grouped layout; Layered draws the joins as the lineage DAG), each pair of joined kinds an edge. A click
+   on a node selects its kind (its joins lit, the others dimmed) and fills the side panel: its join fields with how well the data
+   honours them, the kinds that join to it, the commands that open it and its contract, guide and WHAT links; a double click opens the
+   kind; a click on a card opens its domain's table. While the server is still counting and checking, /datamap/data is asked again and
+   the counts, cards, panel and findings follow. */
 (function () {
   'use strict';
   var root = document.querySelector('[data-datamap]');
@@ -26,7 +29,7 @@
   var model;
   try { model = JSON.parse(root.getAttribute('data-model') || '{}'); } catch (e) { return; }
   var st = { view: root.getAttribute('data-view') || 'map', kind: root.getAttribute('data-kind') || '', domain: root.getAttribute('data-domain') || '',
-             chip: root.getAttribute('data-chip') || '', find: '' };
+             chip: root.getAttribute('data-chip') || '', find: '', layout: root.getAttribute('data-layout') || 'grouped' };
   var findInput = root.querySelector('[data-find]');
   st.find = findInput ? findInput.value.trim() : '';
   var side = root.querySelector('[data-side-body]');
@@ -46,6 +49,7 @@
     if (st.kind) { p.set('kind', st.kind); } else if (st.domain) { p.set('domain', st.domain); }
     if (st.chip) { p.set('chip', st.chip); }
     if (st.find) { p.set('find', st.find); }
+    if (st.layout !== 'grouped') { p.set('layout', st.layout); }
     var q = p.toString();
     try { history.replaceState(null, '', '/datamap' + (q ? '?' + q : '')); } catch (e) { /* a sandboxed frame */ }
     var cmd = document.querySelector('[data-command] .cmd-input');
@@ -61,6 +65,36 @@
     return (model.joins || []).some(function (j) { return (j.from === k.kind || j.to === k.kind) && j.field.toLowerCase().indexOf(f) >= 0; });
   }
 
+  /* ---- the map: drishti-graph ---- */
+  var graph = null, host = root.querySelector('[data-graph]');
+  function graphData() {
+    var joins = {};
+    (model.lines || []).forEach(function (l) { joins[l.from + '|' + l.to] = l; });
+    return {
+      directed: true,
+      nodes: (model.kinds || []).map(function (k) {
+        return { id: k.kind, label: k.label, type: k.computed ? 'computed' : 'stored', domain: (domains[k.domain] || { title: k.domain }).title, count: typeof k.count === 'number' ? k.count : undefined,
+          countText: k.countText, code: k.code || '', pack: k.pack, status: (model.joins || []).some(function (j) { return j.from === k.kind && j.low; }) ? 'warn' : undefined };
+      }),
+      edges: Object.keys(joins).map(function (key) { var l = joins[key]; return { source: l.from, target: l.to, label: l.fields.join(', '), type: l.low ? 'finding' : l.cross ? 'cross' : 'join', weight: l.low ? 0.4 : 1 }; })
+    };
+  }
+  function mountGraph() {
+    var E = window.Drishti && window.Drishti.elements;
+    if (!host || !E || !E.graph) { return; }
+    graph = new E.graph.Graph(host, {
+      data: graphData(), mode: 'table', tables: false, card: false, layout: st.layout, layoutOptions: { groupBy: 'domain' }, density: 'compact',
+      height: Math.max(380, Math.min(640, window.innerHeight - 300)),
+      title: 'Data map', measures: [{ field: 'count', label: 'Count', format: 'integer' }],
+      types: { stored: { label: 'Stored in the lake', shape: 'square', colour: 'link' }, computed: { label: 'Computed on demand', shape: 'diamond', colour: 'accent' } },
+      explain: function (ctx) { var k = index[ctx.id]; return Promise.resolve(k ? { title: k.label, value: k.countText, scope: (domains[k.domain] || {}).title, note: k.description || '' } : null); }
+    });
+    host.__drishtiGraph = graph;                       // the page's graph, for its tests and the console's settled signal
+    graph.on('selectionChanged', function (p) { if (p.source === 'graph') { var id = (p.ids || [])[0] || ''; if (id !== st.kind) { select(id); } } });
+    graph.on('nodeDoubleClicked', function (p) { var k = index[p.id]; if (k) { window.location.assign(k.open || '/datamap?kind=' + encodeURIComponent(k.kind)); } });
+    graph.on('layoutChanged', function (p) { st.layout = p.layout; address(); });
+  }
+
   function paint() {
     root.querySelectorAll('[data-set-view]').forEach(function (a) {
       var on = a.getAttribute('data-set-view') === st.view;
@@ -69,30 +103,13 @@
     });
     root.querySelectorAll('[data-pane]').forEach(function (p) { p.hidden = p.getAttribute('data-pane') !== st.view; });
     root.querySelectorAll('[data-chip-set]').forEach(function (c) { c.classList.toggle('on', c.getAttribute('data-chip-set') === st.chip); });
-    var near = {};
-    (model.joins || []).forEach(function (j) {
-      if (j.from === st.kind) { near[j.to] = true; }
-      if (j.to === st.kind) { near[j.from] = true; }
-    });
-    root.querySelectorAll('.dm-n').forEach(function (n) {
-      var k = index[n.getAttribute('data-kind')];
-      var hidden = !!st.chip && n.getAttribute('data-domain') !== st.chip;
-      n.classList.toggle('dm-hidden', hidden);
-      n.classList.toggle('dm-sel', !!k && k.kind === st.kind);
-      n.classList.toggle('dm-near', !!k && !!near[k.kind]);
-      n.classList.toggle('dm-dim', !!k && (!matches(k) || (!!st.kind && k.kind !== st.kind && !near[k.kind])));
-    });
-    root.querySelectorAll('.dm-region').forEach(function (r) {
-      r.classList.toggle('dm-hidden', !!st.chip && r.getAttribute('data-domain') !== st.chip);
-    });
-    root.querySelectorAll('.dm-j').forEach(function (l) {
-      var a = l.getAttribute('data-from'), b = l.getAttribute('data-to');
-      var on = !!st.kind && (a === st.kind || b === st.kind);
-      var hidden = !!st.chip && (!index[a] || index[a].domain !== st.chip) && (!index[b] || index[b].domain !== st.chip);
-      l.classList.toggle('dm-on', on);
-      l.classList.toggle('dm-dim', !!st.kind && !on);
-      l.classList.toggle('dm-hidden', hidden);
-    });
+    if (graph) {
+      var outside = (model.kinds || []).filter(function (k) { return !!st.chip && k.domain !== st.chip; }).map(function (k) { return k.kind; });
+      var shown = graph.st.hidden;
+      if (outside.length !== shown.size || outside.some(function (id) { return !shown.has(id); })) { graph.st.hidden = new Set(outside); graph.recompute(true); }
+      graph.select(st.kind ? [st.kind] : [], { silent: true });
+      graph.highlight(st.find ? (model.kinds || []).filter(matches).map(function (k) { return k.kind; }) : null);
+    }
     var open = st.domain || (index[st.kind] ? index[st.kind].domain : '');
     root.querySelectorAll('[data-card]').forEach(function (c) {
       var d = domains[c.getAttribute('data-card')];
@@ -192,37 +209,33 @@
 
   root.addEventListener('click', function (e) {
     if (e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) { return; }
-    var t = e.target.closest('[data-set-view],[data-chip-set],.dm-n,[data-card],[data-select],[data-select-domain]');
+    var t = e.target.closest('[data-set-view],[data-chip-set],[data-card],[data-select],[data-select-domain]');
     if (!t || !root.contains(t)) { return; }
     e.preventDefault();
     if (t.hasAttribute('data-set-view')) { st.view = t.getAttribute('data-set-view'); paint(); }
     else if (t.hasAttribute('data-chip-set')) { st.chip = t.getAttribute('data-chip-set'); paint(); }
-    else if (t.classList.contains('dm-n')) { var kk = t.getAttribute('data-kind'); select(st.kind === kk ? '' : kk); }
     else if (t.hasAttribute('data-card')) { select('', t.getAttribute('data-card')); }
     else if (t.hasAttribute('data-select')) { select(t.getAttribute('data-select')); }
     else { select('', t.getAttribute('data-select-domain')); }
   });
   root.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && (st.kind || st.domain)) { select('', ''); }
+    if (e.key === 'Escape' && (st.kind || st.domain) && !(host && host.contains(e.target))) { select('', ''); }
   });
   if (findInput) {
     findInput.addEventListener('input', function () { st.find = findInput.value.trim(); paint(); });
   }
 
   function refresh() {
-    root.querySelectorAll('.dm-n').forEach(function (n) {
-      var k = index[n.getAttribute('data-kind')];
-      var c = n.querySelector('[data-count]');
-      if (k && c) { c.textContent = k.countText; }
-    });
+    if (graph) {
+      var d = graphData(), have = {};
+      graph.model.nodeList().forEach(function (n) { have[n.id] = true; });
+      graph.applyTransaction({ updateNodes: d.nodes.filter(function (n) { return have[n.id]; }), addNodes: d.nodes.filter(function (n) { return !have[n.id]; }) });
+    }
     root.querySelectorAll('[data-card]').forEach(function (c) {
       var d = domains[c.getAttribute('data-card')];
       var s = c.querySelector('[data-summary]');
       if (d && s) { s.textContent = d.summary; }
     });
-    var low = {};
-    (model.lines || []).forEach(function (l) { low[l.from + '|' + l.to] = l.low; });
-    root.querySelectorAll('.dm-j').forEach(function (l) { l.classList.toggle('dm-j-low', !!low[l.getAttribute('data-from') + '|' + l.getAttribute('data-to')]); });
     var state = root.querySelector('[data-state]');
     if (state) {
       state.textContent = model.state === 'ready' ? '' : 'Counting and checking the data: ' + model.counted + ' of ' + (model.kinds || []).length +
@@ -250,6 +263,7 @@
     }, 3000);
   }
 
+  mountGraph();
   paint();
   follow();
 })();

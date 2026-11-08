@@ -201,8 +201,26 @@ export function drawField(form, f) {
       control = inp;
       break;
     }
+    case 'file': {                                            // a file to send: the value is its name; the page reads the input's files
+      const inp = part.input = named(form.el('input', { cls: 'di-field di-file', attrs: { id: id, type: 'file', accept: fs.accept || null, multiple: fs.multiple || null, disabled: ro || null,
+        'aria-describedby': described, 'aria-required': f.required ? 'true' : null } }));
+      inp.addEventListener('change', () => { set(inp.files && inp.files.length ? Array.from(inp.files).map((x) => x.name).join(', ') : undefined); touch(); });
+      control = inp;
+      break;
+    }
+    case 'range': {                                           // a slider with its value beside it (the schema's minimum, maximum and increment)
+      const lo = fs.minimum !== undefined ? fs.minimum : 0, hi = fs.maximum !== undefined ? fs.maximum : 100;
+      const inp = part.input = named(form.el('input', { cls: 'di-range', attrs: { id: id, type: 'range', min: String(lo), max: String(hi), step: String(fs.increment || 1), disabled: ro || null, 'aria-describedby': described } }));
+      const out = form.el('output', { cls: 'di-range-out', attrs: { for: id } });
+      inp.value = String(v === undefined || v === null ? lo : v);
+      out.textContent = formatNumber(+inp.value, { maxDecimals: 6, minus: '-' }) + (fs.unit || '');
+      inp.addEventListener('input', () => { out.textContent = formatNumber(+inp.value, { maxDecimals: 6, minus: '-' }) + (fs.unit || ''); set(+inp.value); });
+      control = form.el('div', { cls: 'di-control di-adorned' }, [inp, out]);
+      break;
+    }
     case 'textarea': {
-      const ta = part.input = named(form.el('textarea', { cls: 'di-field', attrs: { id: id, rows: String((fs.options && fs.options.rows) || 3), 'aria-describedby': described, readonly: ro || null, placeholder: fs.placeholder || null } }));
+      const ta = part.input = named(form.el('textarea', { cls: 'di-field' + (fs.mono ? ' di-mono' : ''), attrs: { id: id, rows: String((fs.options && fs.options.rows) || 3), 'aria-describedby': described, readonly: ro || null,
+        placeholder: fs.placeholder || null, maxlength: fs.maxLength ? String(fs.maxLength) : null, spellcheck: fs.mono ? 'false' : null } }));
       ta.value = v === undefined || v === null ? '' : String(v);
       ta.addEventListener(fs.lazy ? 'change' : 'input', () => set(ta.value === '' ? undefined : ta.value));
       ta.addEventListener('blur', touch);
@@ -211,8 +229,15 @@ export function drawField(form, f) {
     }
     default: {
       const numeric = fs.type === 'number' || fs.type === 'integer' || fs.type === 'money', money = fs.type === 'money';
-      const inp = part.input = named(form.el('input', { cls: 'di-field' + (numeric ? ' di-num' : ''), attrs: { id: id, type: fs.format === 'email' ? 'email' : 'text', inputmode: numeric ? 'decimal' : null,
-        'aria-describedby': described, readonly: ro || null, placeholder: fs.placeholder || (money ? '1.5m, 250k or 1,000,000' : null), 'aria-required': f.required ? 'true' : null, autocomplete: 'off' } }));
+      const type = ['email', 'password', 'search'].indexOf(fs.format) >= 0 ? fs.format : 'text';
+      const inp = part.input = named(form.el('input', { cls: 'di-field' + (numeric ? ' di-num' : '') + (fs.mono ? ' di-mono' : ''), attrs: { id: id, type: type, inputmode: numeric ? 'decimal' : null,
+        'aria-describedby': described, readonly: ro || null, placeholder: fs.placeholder || (money ? '1.5m, 250k or 1,000,000' : null), 'aria-required': f.required ? 'true' : null,
+        autocomplete: fs.autocomplete || (type === 'password' ? 'new-password' : 'off'), maxlength: fs.maxLength ? String(fs.maxLength) : null, spellcheck: fs.mono ? 'false' : null } }));
+      if (fs.suggest && fs.suggest.length) {                  // values offered as one types (the browser's own list); any text is still taken
+        const dl = form.el('datalist', { attrs: { id: id + '-list' } }, fs.suggest.map((x) => form.el('option', { attrs: { value: String(x) } })));
+        inp.setAttribute('list', id + '-list');
+        wrap.appendChild(dl);
+      }
       const show = (x) => (x === undefined || x === null ? '' : numeric && typeof x === 'number' && !isNaN(x) ? formatNumber(x, { maxDecimals: money ? 2 : 10, minus: '-' }) : String(x));
       inp.value = show(v);
       inp.addEventListener(fs.lazy ? 'change' : 'input', () => {
@@ -254,11 +279,16 @@ function drawRepeat(form, f, wrap, msg, help, ro) {
       ro ? null : form.el('button', { cls: 'di-btn', text: '↑', attrs: { type: 'button', 'aria-label': 'Move ' + name + ' up', disabled: i === 0 || null }, on: { click: () => form.moveItem(f.path, i, -1) } }),
       ro ? null : form.el('button', { cls: 'di-btn', text: '↓', attrs: { type: 'button', 'aria-label': 'Move ' + name + ' down', disabled: i === list.length - 1 || null }, on: { click: () => form.moveItem(f.path, i, 1) } }),
       ro ? null : form.el('button', { cls: 'di-btn', text: 'Remove', attrs: { type: 'button', 'aria-label': 'Remove ' + name, disabled: (fs.minItems && list.length <= fs.minItems) || null }, data: { act: 'remove' }, on: { click: () => form.removeItem(f.path, i) } })])]);
+    applyHook(group, fs.itemHook);
     const subs = fieldsOf(fs.items, p);
     subs.forEach((sub) => group.appendChild(drawField(form, subs.length === 1 ? Object.assign({}, sub, { label: name }) : sub)));   // one field an item: it is named as the item
     box.appendChild(group);
   });
-  if (!ro) { box.appendChild(form.el('button', { cls: 'di-btn', text: fs.addLabel || 'Add ' + (fs.items.title || words(f.key).replace(/s$/, '')).toLowerCase(), attrs: { type: 'button', disabled: (fs.maxItems && list.length >= fs.maxItems) || null }, data: { act: 'add' }, on: { click: () => form.addItem(f.path) } })); }
+  if (!ro) {
+    const add = form.el('button', { cls: 'di-btn', text: fs.addLabel || 'Add ' + (fs.items.title || words(f.key).replace(/s$/, '')).toLowerCase(), attrs: { type: 'button', disabled: (fs.maxItems && list.length >= fs.maxItems) || null }, data: { act: 'add' }, on: { click: () => form.addItem(f.path) } });
+    applyHook(add, fs.addHook);
+    box.appendChild(add);
+  }
   box.appendChild(msg);
   applyHook(box, fs.hook);
   wrap.appendChild(box);

@@ -48,7 +48,7 @@ import { drawField, defaultWidget, writeNames } from './drishti_form-fields.js';
  * @property {string} [doneText='Saved'] what the form says once onSubmit answered ('': nothing, for a page that shows the answer itself,
  *   such as a check)
  * @property {boolean} [readOnly=false]
- * @property {('stacked'|'columns')} [layout='stacked']
+ * @property {('stacked'|'columns'|'inline')} [layout='stacked'] inline: the fields side by side in a row (a filter bar's search and lists)
  * @property {string} [locale] how numbers are read and shown
  * @property {boolean} [live=false] no Save or Reset: each change is the host's at once (a designer's inspector, a property pane)
  * @property {boolean} [embedded=false] no <form> element of its own (the fields sit inside a page's server form, which submits the fields
@@ -89,7 +89,7 @@ export class Form extends InputBase {
     this.at = 0;
     if (this.o.embedded) { this.o.live = true; }
     this.pathAttr = this.o.pathAttr || 'data-path';
-    this.form = this.el(this.o.embedded ? 'div' : 'form', { cls: 'di-form-el' + (this.o.layout === 'columns' ? ' di-columns' : '') + (this.o.live ? ' di-live' : ''),
+    this.form = this.el(this.o.embedded ? 'div' : 'form', { cls: 'di-form-el' + (this.o.layout === 'columns' ? ' di-columns' : this.o.layout === 'inline' ? ' di-inline' : '') + (this.o.live ? ' di-live' : ''),
       attrs: { novalidate: this.o.embedded ? null : true, role: this.o.embedded ? 'group' : null, 'aria-label': this.o.label || this.schema.title || 'Form' } });
     if (!this.o.embedded) { this.form.addEventListener('submit', (e) => { e.preventDefault(); this.submit(); }); }
     host.appendChild(this.form);
@@ -409,6 +409,24 @@ export class Form extends InputBase {
     this.redrawField(path);
     this.narrow(path).forEach((q) => this.redrawField(q));
     this.refresh();
+  }
+
+  /**
+   * A list field's values replaced (a server's answer that arrives later: the measures of the model just chosen); the form drawn again,
+   * the focus kept. A value no longer offered stays until a person changes it (its check says so).
+   * @param {string} path the field in the schema, an array's item fields by name (filters.field)
+   * @param {Array} list the values offered
+   * @param {string[]} [labels] their words
+   * @returns {void}
+   */
+  setOptions(path, list, labels) {
+    let node = this.schema;
+    String(path).split('.').forEach((k) => { while (node && node.type === 'array' && node.items) { node = node.items; } node = node && node.properties ? node.properties[k] : null; });
+    if (!node) { throw new Error('no field ' + path); }
+    const target = node.type === 'array' && node.items && !node.items.properties ? node.items : node;
+    target.enum = list.slice();
+    if (labels) { target.enumLabels = labels.slice(); } else { delete target.enumLabels; }
+    this.render();
   }
 
   /**

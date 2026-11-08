@@ -23,9 +23,7 @@
 .lk-grid .loads-field { max-width: none; }
 .lk-progress { display: flex; flex-wrap: wrap; align-items: center; gap: var(--d-sp-9_6); margin: var(--d-sp-8) 0; }
 .lk-progress progress { width: min(24rem, 100%); }
-.lk-fields { max-height: 26rem; overflow: auto; }
-.lk-fields td, .lk-fields th { white-space: normal; }
-.lk-top { color: var(--d-muted); font-size: var(--d-fs-13_6); max-width: 22rem; overflow-wrap: anywhere; }
+.lk-fields { width: 100%; max-width: 100%; min-width: 0; }               /* drishti-grid (its own scroll); its height set by the script from the rows */
 .lk-warn { color: var(--d-warn); margin: var(--d-sp-6_4) 0; }
 .lk-runs td { white-space: normal; overflow-wrap: anywhere; font-size: var(--d-fs-12_8); }
 /* Maintain: the toolbar over the tables, the run, settings, schedules and history (drishti_admin-lake-maintain.js) */
@@ -59,7 +57,6 @@
   .lk-step { padding: var(--d-sp-3_2) var(--d-sp-8) var(--d-sp-9_6); }
   .lk-step input[type=checkbox] { width: 24px; height: 24px; }
   .lk-step .btn-pill, .lk-step select, .lk-step input:not([type=checkbox]) { min-height: 44px; font-size: var(--d-fs-16); }
-  .lk-fields td, .lk-fields th { padding: var(--d-sp-8) var(--d-sp-4_8); }
 }
 
 /* Admin -> Lakes -> one table (/admin/lakes/table) */

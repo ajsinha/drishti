@@ -459,6 +459,8 @@ def create_app(settings: Settings) -> FastAPI:
     from core.asof import to_local
 
     templates.env.globals["known_local"] = to_local
+    from core.admin_forms import admin_form
+    templates.env.globals["admin_form"] = admin_form          # the Admin screens' forms: drishti-inputs' Form from a server-built schema
     from jinja2 import pass_context
 
     from core.asof import local_when, zone_label

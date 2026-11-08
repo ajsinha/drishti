@@ -98,7 +98,7 @@ def designed(page):
 
 def deselect(page):
     """Nothing selected (Escape, with the focus off any field): the next type chosen in Visualizations adds a visual, and Format shows the page and the report."""
-    page.click("[data-design-root] [data-title]")
+    page.click("[data-studio] [data-title]")
     page.keyboard.press("Escape")
     page.wait_for_function("() => window.drishtiBi.design.selected === null")
 
@@ -107,7 +107,7 @@ def add(page, vtype):
     """A new visual of a type from the Visualizations pane, then its Build tab."""
     deselect(page)
     before = len(model(page)["pages"])
-    page.click(f'.bi-vtype[data-type="{vtype}"]')
+    page.click(f'[data-types] [data-type="{vtype}"]')
     page.wait_for_function("(t) => { const v = window.drishtiBi.design.sel(); return v && v.type === t; }", arg=vtype)
     assert len(model(page)["pages"]) == before
     page.click("[data-ptab='build']")
@@ -128,8 +128,8 @@ def test_a_power_bi_author_builds_the_desk_pack_without_yaml(stack, browser):
     page.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
     STATE["report"] = page.url.rsplit("/", 1)[1]
     # BI Studio: the item is open in the tabs and listed in the Explorer
-    expect(page.locator(f'[data-studio-tab="{STATE["report"]}"]')).to_have_count(1)
-    expect(page.locator(f'[data-studio-item="{STATE["report"]}"]')).to_have_count(1)
+    expect(page.locator(f'[data-dd-doc="{STATE["report"]}"]')).to_have_count(1)
+    expect(page.locator(f'[data-object="{STATE["report"]}"]')).to_have_count(1)
 
     # 1. the P&L matrix: desk and portfolio down, currency across, MTM and Notional; subtotals at every level, opening at the first level
     add(page, "matrix")
@@ -203,10 +203,10 @@ def test_a_power_bi_author_builds_the_desk_pack_without_yaml(stack, browser):
     STATE["second"] = second
 
     # the server's Check in the Studio's Problems: no error; then Save. The YAML tab was never opened.
-    page.click('[data-dock-tab="problems"]')
-    page.wait_for_function("() => { const p = document.querySelector('[data-dock-pane=\"problems\"]'); return p && /no problems|0 errors/i.test(p.textContent); }", timeout=20000)
+    page.click('[data-dd-dock-tab="problems"]')
+    page.wait_for_function("() => { const p = document.querySelector('[data-dd-dock-pane=\"problems\"]'); return p && /no problems|0 errors/i.test(p.textContent); }", timeout=20000)
     page.click("[data-save]")
-    expect(page.locator("[data-state]")).to_have_text("Saved", timeout=20000)
+    expect(page.locator("[data-status]")).to_have_text("Saved", timeout=20000)
     assert page.evaluate("document.querySelector('[data-tab=\"yaml\"]').getAttribute('aria-selected')") == "false"
     clean(page)
 
@@ -278,9 +278,9 @@ def test_a_theme_is_made_published_and_offered_to_reports(stack, browser):
     expect(page.locator("[data-theme-valid]")).to_have_text("The theme is valid.", timeout=15000)
     expect(page.locator('[data-theme-preview] [data-theme-sample="column"] .bi-chart')).to_have_count(1)
     page.click("[data-save]")
-    expect(page.locator("[data-state]")).to_have_text("Saved", timeout=20000)
+    expect(page.locator("[data-status]")).to_have_text("Saved", timeout=20000)
     page.click("[data-publish]")
-    expect(page.locator("[data-theme-root] .bi-near").filter(has_text="Published: reports that name desk-blue")).to_have_count(1, timeout=20000)
+    expect(page.locator(".bi-studio .bi-near").filter(has_text="Published: reports that name desk-blue")).to_have_count(1, timeout=20000)
     # the report designer's theme picker offers it
     page.goto(f"{CONSOLE_URL}/bi/design/{STATE['report']}")
     page.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)

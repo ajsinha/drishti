@@ -16,8 +16,9 @@
 /* Draws a rendered view's panel charts (moved here from the client renderer's m/draw.js and m/charts.js drawMap): it finds the chart
    containers a host made (data-r-chart, the panel's kind and data on el.__drishti), draws each with the engine the host loads, keeps
    them sized and themed, hands a click on a point, a node or a place that names an entity to the host, switches a surface between its
-   heatmap and 3D, and draws a map from the console's shapes (drishti_geomap.js, injected). One chart that cannot be drawn says so in
-   words and leaves the others. Every engine call of a panel chart is in this module. */
+   heatmap and 3D, draws a map from the console's shapes (drishti_geomap.js, injected) and hands a graph panel to drishti-graph (loaded
+   by the host's graph hook: drishti-chart does not import it). One chart that cannot be drawn says so in words and leaves the others.
+   Every engine call of a panel chart is in this module. */
 import { panelOption, panelTokens, panelCompact } from './drishti_chart-panels.js';
 
 const TOKEN = /\{(iso3|iso2|code)\}/;
@@ -87,6 +88,8 @@ export function drawMap(E, G, el, d, t, onLink, chartsOut) {
  * @property {function(): Promise<Object>} engine loads the engine (ECharts) and resolves with it (the host's loader: its own policy for scripts)
  * @property {function(): Promise<void>} [gl] loads ECharts GL (the surface in 3D); without it a 3D surface is drawn as its heatmap
  * @property {function(): Promise<Object>} [geo] the console's map helper (drishti_geomap.js); without it a map says it did not load
+ * @property {function(): Promise<Object>} [graph] loads drishti-graph and resolves with its API (drawGraphPanel draws a graph panel); without
+ *   it a graph panel says it did not load
  * @property {function(Object, HTMLElement): void} [onLink] a point, a node or a place that names an entity was clicked ({kind, id}, the container)
  * @property {function(HTMLElement, Array<{name: string, link: Object, text: string}>, string): void} [onPlaces] a map's clickable places and its note, for the host to list
  * @property {string} [selector='[data-r-chart]'] the chart containers
@@ -106,6 +109,7 @@ export class PanelCharts {
    * @returns {('drawn'|'animating'|'none')}
    */
   static state(el) {
+    if (el.__drishtiGraph) { return el.__drishtiGraph.layoutMs === null ? 'animating' : 'drawn'; }
     const E = el.ownerDocument.defaultView.echarts, c = E && E.getInstanceByDom(el);
     if (!c || c.isDisposed()) { return 'none'; }
     return c.getZr().animation.isFinished() ? 'drawn' : 'animating';
@@ -160,6 +164,7 @@ export class PanelCharts {
       return;
     }
     if (kind === 'surface') { await this.surface(E, el, t, el.getAttribute('data-view') || 'heatmap'); return; }
+    if (kind === 'graph') { await this.graph(el, data || {}); return; }
     try {
       const c = E.getInstanceByDom(el) || E.init(el, null, { renderer: 'svg' });
       c.setOption(panelOption(kind, data || {}, t, { width: el.clientWidth || 800, height: el.clientHeight || 360 }), true);
@@ -172,6 +177,17 @@ export class PanelCharts {
         });
       }
     } catch (e) { this.broken(E, el); }
+  }
+
+  /** @private a graph panel: drawn by drishti-graph, which follows its size and the page's theme itself (drawn again only for new data) */
+  async graph(el, data) {
+    if (el.__drishtiGraph && el.__drishtiGraphData === data) { return; }
+    try {
+      if (!this.o.graph) { throw new Error('no graph library'); }
+      const G = await this.o.graph();
+      G.drawGraphPanel(el, data, { onLink: (l) => this.link(l, el), density: el.getAttribute('data-density') || undefined });
+      el.__drishtiGraphData = data;
+    } catch (e) { this.broken(null, el, 'The graph did not load'); }
   }
 
   /** @private an entity named by a mark */
@@ -230,7 +246,7 @@ export class PanelCharts {
    */
   async update(el) {
     const spec = this.o.specOf(el);
-    if (!spec || spec.kind === 'map' || spec.kind === 'surface') { return this.draw(el.parentNode || this.root); }
+    if (!spec || spec.kind === 'map' || spec.kind === 'surface' || spec.kind === 'graph') { return this.draw(el.parentNode || this.root); }
     const E = await this.o.engine(), c = E.getInstanceByDom(el);
     if (!c) { return this.draw(el.parentNode || this.root); }
     c.setOption(panelOption(spec.kind, spec.data || {}, this.tokens(), { width: el.clientWidth || 800, height: el.clientHeight || 360 }), false);
@@ -262,5 +278,6 @@ export class PanelCharts {
     if (this.ro) { this.ro.disconnect(); this.ro = null; }
     this.live().forEach((c) => c.dispose());
     this.all = [];
+    this.root.querySelectorAll(this.o.selector).forEach((el) => { if (el.__drishtiGraph) { el.__drishtiGraph.destroy(); el.__drishtiGraph = null; } });
   }
 }

@@ -15,7 +15,7 @@
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Rupaka phase 3 (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 9): the designer's three panes. Fields: the dataset's tables, columns (dates open into their parts), measures and
-   hierarchies, with search; drag one onto the canvas or press its button. Visualizations: the catalogue of visual types, then Build (the field wells of the
+   hierarchies, with search, on drishti-tree's outline; drag one onto the canvas or press its button. Visualizations: the catalogue of visual types, then Build (the field wells of the
    selected visual) and Format (titles, labels, colours from the theme, axes, number formats, conditional formats, slicer and drill settings; with no visual
    selected, the page and the report). Filters: report, page and visual level; basic, advanced and top-N. Every action also has a button and a select, so
    the panes work without dragging. */
@@ -32,7 +32,6 @@
     tile: 'window-stack' };
   const GROUPS = [['Charts', ['bar', 'column', 'line', 'area', 'combo', 'scatter', 'bubble', 'pie', 'donut', 'funnel', 'waterfall', 'treemap', 'heatmap', 'histogram', 'box', 'map', 'vega-lite']], ['Cards', ['card', 'multirow-card', 'kpi', 'gauge']],
     ['Tables', ['table', 'matrix']], ['Python', ['python']], ['Filter and other', ['slicer', 'text', 'image', 'button']], ['Board', ['tile']]];
-  const TYPE_ICON = { string: 'fonts', integer: '123', decimal: '123', boolean: 'check2-square', date: 'calendar3', timestamp: 'clock' };
   const PARTS = ['year', 'quarter', 'month', 'week', 'day'];
   const OPS = { eq: 'is', ne: 'is not', lt: 'is less than', le: 'is at most', gt: 'is greater than', ge: 'is at least', between: 'is between', contains: 'contains', 'starts-with': 'starts with', 'is-null': 'is empty', 'not-null': 'is not empty' };
 
@@ -43,17 +42,15 @@
     }).catch(() => {});
     const q = D.q;
 
-    // ---- Fields --------------------------------------------------------------------------------------------------------
+    // ---- Fields: drishti-tree's outline (one component for every tree; ELEMENTS.md 12.3) --------------------------------------
+    // the dataset's tables and their columns (a date opens into its parts), its measures and hierarchies, in folders as the model files
+    // them; each field a button (a click, or Enter, adds it; a drag puts it on the canvas or a well); badges say masked, this report only,
+    // default or model, the time function; a measure of this report only on a model links to the model; one branch per added dataset
     const tree = q('[data-fields-tree]');
     const search = q('[data-fields-search]');
-
-    function fieldButton(name, kind, label, icon, title, masked, ref) {
-      const b = h('button', { type: 'button', class: 'bi-field', 'data-field': name, 'data-kind': kind, title: title || name, 'aria-label': 'Add ' + name + ' to the report' }, B.icon(icon), ' ', h('span', { class: 'bi-field-name', text: label }),
-        masked ? h('small', { class: 'bi-badge', text: 'masked' }) : null);
-      D.hub.draggable(b, { payload: () => ({ name, kind, dataset: ref || '' }), label: () => label });      // dragged onto the canvas or a well (drishti-designer's DragHub)
-      b.addEventListener('click', () => D.addField(name, kind, { useSelected: true, dataset: ref || '' }));
-      return b;
-    }
+    const SEP = '\u0001';
+    let outline = null, drawn = '';
+    const modelPages = {};                                          // a bound model's name -> its item page ('' while asked, false: none)
 
     /** The time-intelligence function a measure uses (year to date, month to date, ... running total), or null: shown as a badge in the Fields pane. */
     function timeKind(expr) {
@@ -66,117 +63,150 @@
     const persp = (ds) => { const p = D.perspective && ds.perspectives && ds.perspectives[D.perspective]; return p && p.fields && p.measures ? p : null; };
     const shownMeasure = (ds, m) => !m.hidden && (!persp(ds) || m.local || persp(ds).measures.indexOf(m.name) >= 0);
     const shownField = (ds, t, c) => !c.hidden && (!persp(ds) || persp(ds).fields.indexOf(t.name + '.' + c.name) >= 0);
-    /** Items with a folder go in a nested list per folder (sorted), the rest stay at the top. */
-    function foldered(ul, items, draw) {
-      const folders = {};
-      items.forEach((it) => { if (it.folder) { (folders[it.folder] = folders[it.folder] || []).push(it); } else { ul.appendChild(draw(it)); } });
-      Object.keys(folders).sort().forEach((f) => ul.appendChild(h('li', { 'data-search': folders[f].map((it) => (it.name + ' ' + (it.display || '') + ' ' + (it.description || '')).toLowerCase()).join(' ') + ' ' + f.toLowerCase() },
-        h('details', { class: 'bi-fieldfolder', open: true, 'data-folder': f }, h('summary', {}, B.icon('folder2'), ' ' + f), h('ul', { class: 'bi-fieldlist' }, folders[f].map(draw))))));
-    }
-    function drawTree(tree, ds, idx, ref) {
-      const mixed = (ds.measures || []).some((m) => m.implicit) && (ds.measures || []).some((m) => !m.implicit);   // both kinds in one list: say which is which
-      const ms = h('ul', { class: 'bi-fieldlist' });
-      const drawMeasure = (m) => {
-        const li = h('li');
-        oneMeasure(m, li);
-        return li;
-      };
-      foldered(ms, (ds.measures || []).filter((m) => shownMeasure(ds, m)), drawMeasure);
-      function oneMeasure(m, host) {
-        const time = timeKind(m.expr);
-        const btn = fieldButton(m.name, 'measure', m.name, time ? 'calendar-range' : 'calculator', (time ? '[' + time + '] ' : '') + m.name + ': ' + m.expr + (m.description ? ' — ' + m.description : '') + (mixed ? (m.implicit ? ' (a default measure, made from a column)' : ' (defined in the model)') : ''), m.masked, ref);
-        if (m.local) {
-          btn.appendChild(h('small', { class: 'bi-badge', 'data-origin': 'report', text: 'this report only' }));
-        }
-        if (mixed) { btn.appendChild(h('small', { class: 'bi-badge', 'data-origin': m.implicit ? 'default' : 'model', text: m.implicit ? 'default' : 'model' })); }
-        if (time) { btn.appendChild(h('small', { class: 'bi-badge', 'data-time': time, text: time })); }
-        const bound = (B.modelBinding && B.modelBinding.ref) || '';
-        const move = m.local && bound && bound.indexOf('dataset:') !== 0 ? h('a', { class: 'bi-small', 'data-move-measure': m.name, href: '/bi/models', text: 'Move to the model' }) : null;
-        if (move) {
-          B.layer.get('datasets').then((d) => { const it = (d.models || []).find((x) => x.kind === 'model' && x.name === bound.split('@')[0]); if (it) { move.href = '/build/tables?kind=model&item=' + B.id2path(it.id); } else { move.hidden = true; } }).catch(() => { move.hidden = true; });
-        }
-        host.setAttribute('data-search', (m.name + ' ' + (m.description || '') + ' ' + (time ? 'time ' + time : '')).toLowerCase());
-        host.append(btn, move || '');
+
+    /** The item page of the model a report measure would move to (asked once; the pane is drawn again when it is known). */
+    function modelPage(bound) {
+      const name = bound.split('@')[0];
+      if (modelPages[name] === undefined) {
+        modelPages[name] = '';
+        B.layer.get('datasets').then((d) => { const it = (d.models || []).find((x) => x.kind === 'model' && x.name === name); modelPages[name] = it ? '/build/tables?kind=model&item=' + B.id2path(it.id) : false; })
+          .catch(() => { modelPages[name] = false; }).then(() => drawFields());
       }
-      tree.appendChild(h('details', { class: 'bi-fieldtable', open: true, 'data-table': 'measures' }, h('summary', {}, B.icon('calculator'), ' Measures'), ms));
-      (ds.tables || []).forEach((t) => {
-        const ul = h('ul', { class: 'bi-fieldlist' });
-        const cols = t.columns.filter((c) => shownField(ds, t, c));
-        if (!cols.length) { return; }
-        foldered(ul, cols, (c) => {
-          const name = t.name + '.' + c.name;
-          const label = (c.display || c.name) + (c.key ? ' · key' : '');
-          const li = h('li', { 'data-search': (name + ' ' + (c.display || '') + ' ' + (c.description || '')).toLowerCase() }, fieldButton(name, 'field', label, TYPE_ICON[c.type] || 'fonts', (c.display ? c.display + ' (' + name + ')' : name) + ' (' + c.type + ')' + (c.description ? ': ' + c.description : ''), c.masked, ref));
-          if (c.type === 'date' || c.type === 'timestamp') {
-            const sub = h('ul', { class: 'bi-fieldlist bi-parts' });
-            PARTS.forEach((p) => sub.appendChild(h('li', { 'data-search': (name + ' ' + p).toLowerCase() }, fieldButton(name + '.' + p, 'field', p, 'calendar3-week', name + '.' + p, false, ref))));
-            li.appendChild(h('details', { class: 'bi-fieldparts' }, h('summary', { text: 'date parts' }), sub));
-          }
-          return li;
-        });
-        tree.appendChild(h('details', { class: 'bi-fieldtable', open: true, 'data-table': t.name }, h('summary', {}, B.icon('table'), ' ' + t.name, h('small', { class: 'text-muted-d', text: ' ' + (t.kind || '') })), ul));
-      });
-      const hs = h('ul', { class: 'bi-fieldlist' });
-      Object.keys(idx.hierarchies).forEach((n) => hs.appendChild(h('li', { 'data-search': n.toLowerCase() }, fieldButton(n, 'hierarchy', n, 'diagram-2', n + ': ' + idx.hierarchies[n].join(' > '), false, ref))));
-      if (hs.children.length) { tree.appendChild(h('details', { class: 'bi-fieldtable', 'data-table': 'hierarchies' }, h('summary', {}, B.icon('diagram-2'), ' Hierarchies'), hs)); }
+      return modelPages[name] || null;
     }
 
-    /** The Fields pane: one tree for the report's dataset and, when datasets were added, one collapsible tree for each (labelled, removable when no visual uses it). */
-    function drawFields() {
-      // built aside and put in only when it differs: a redraw that changes nothing (the perspective lists, a model change elsewhere) keeps the
-      // buttons in place, so a field being dragged, or focused, is not taken from under the reader (a drag just after the page was ready was lost)
-      const out = h('div');
-      const extra = D.extraEntries ? D.extraEntries() : [];
-      if (!extra.length) { drawTree(out, D.dataset, D.idx, ''); } else {
-        const wrap = (ref, ds, idx, title, main) => {
-          const box = h('div', { class: 'bi-dstree-body' });
-          drawTree(box, ds, idx, ref);
-          const sum = h('summary', {}, B.icon('hdd-stack'), ' ' + title + (main ? ' (main)' : ''));
-          const det = h('details', { class: 'bi-dstree', open: true, 'data-dataset-tree': ds.id || ref }, sum, box);
-          if (!main) {
-            const used = D.datasetUsed(ref);
-            const rm = h('button', { type: 'button', class: 'bi-chipbtn', 'data-remove-dataset': ds.id || ref, 'aria-label': used ? 'Remove ' + title + ' (a visual reads it)' : 'Remove ' + title, disabled: used, title: used ? 'A visual reads this dataset' : 'Remove from the Fields pane' }, B.icon('x-lg'));
-            rm.addEventListener('click', (e) => { e.preventDefault(); D.removeDataset(ref); });
-            sum.appendChild(rm);
+    /** The rows of one dataset's tree, under `top` (null: at the top). */
+    function rowsOf(rows, ds, idx, ref, top) {
+      const base = (ref || 'main') + SEP;
+      const mixed = (ds.measures || []).some((m) => m.implicit) && (ds.measures || []).some((m) => !m.implicit);   // both kinds in one list: say which is which
+      const folders = {};
+      const folder = (parent, f) => {
+        const id = parent + SEP + 'folder' + SEP + f;
+        if (!folders[id]) { folders[id] = true; rows.push({ id, parent, label: f, folder: f }); }
+        return id;
+      };
+      const bound = (B.modelBinding && B.modelBinding.ref) || '';
+      const mid = base + 'measures';
+      rows.push({ id: mid, parent: top, label: 'Measures', table: 'measures' });
+      (ds.measures || []).filter((m) => shownMeasure(ds, m)).forEach((m) => {
+        const time = timeKind(m.expr);
+        rows.push({ id: base + 'm' + SEP + m.name, parent: m.folder ? folder(mid, m.folder) : mid, label: m.name, words: m.name + ' ' + (m.description || '') + (time ? ' time ' + time : ''),
+          field: { name: m.name, kind: 'measure', ref, masked: !!m.masked, time, local: !!m.local, origin: mixed ? (m.implicit ? 'default' : 'model') : '',
+            move: m.local && bound && bound.indexOf('dataset:') !== 0 ? modelPage(bound) : null,
+            title: (time ? '[' + time + '] ' : '') + m.name + ': ' + m.expr + (m.description ? ' — ' + m.description : '') + (mixed ? (m.implicit ? ' (a default measure, made from a column)' : ' (defined in the model)') : '') } });
+      });
+      (ds.tables || []).forEach((t) => {
+        const cols = t.columns.filter((c) => shownField(ds, t, c));
+        if (!cols.length) { return; }
+        const tid = base + 't' + SEP + t.name;
+        rows.push({ id: tid, parent: top, label: t.name, table: t.name, kind: t.kind || '' });
+        cols.forEach((c) => {
+          const name = t.name + '.' + c.name, id = base + 'f' + SEP + name;
+          rows.push({ id, parent: c.folder ? folder(tid, c.folder) : tid, label: (c.display || c.name) + (c.key ? ' · key' : ''), words: name + ' ' + (c.display || '') + ' ' + (c.description || ''),
+            field: { name, kind: 'field', ref, masked: !!c.masked, title: (c.display ? c.display + ' (' + name + ')' : name) + ' (' + c.type + ')' + (c.description ? ': ' + c.description : '') } });
+          if (c.type === 'date' || c.type === 'timestamp') {
+            PARTS.forEach((p) => rows.push({ id: id + SEP + p, parent: id, label: p, words: name + ' ' + p, field: { name: name + '.' + p, kind: 'field', ref, title: name + '.' + p } }));
           }
-          out.appendChild(det);
-        };
-        wrap('', D.dataset, D.idx, D.dataset.title || D.dataset.id || D.model.dataset, true);
-        extra.forEach((x) => wrap(x.ref, x.dataset, x.idx, x.title, false));
+        });
+      });
+      const hs = Object.keys(idx.hierarchies);
+      if (hs.length) {
+        const hid = base + 'hierarchies';
+        rows.push({ id: hid, parent: top, label: 'Hierarchies', table: 'hierarchies', closed: true });
+        hs.forEach((n) => rows.push({ id: base + 'h' + SEP + n, parent: hid, label: n, field: { name: n, kind: 'hierarchy', ref, title: n + ': ' + idx.hierarchies[n].join(' > ') } }));
       }
-      const same = out.childNodes.length === tree.childNodes.length && [...out.childNodes].every((n, i) => n.isEqualNode(tree.childNodes[i]));
-      if (!same) { B.clear(tree); while (out.firstChild) { tree.appendChild(out.firstChild); } }
+    }
+
+    const fieldOf = (n) => (n && n.data ? n.data.field : null);
+    const addIt = (f) => D.addField(f.name, f.kind, { useSelected: true, dataset: f.ref || '' });
+    function marks(n) {
+      const f = fieldOf(n), out = [];
+      if (!f) { return n.data.kind ? [{ text: n.data.kind }] : []; }
+      if (f.masked) { out.push({ text: 'masked', badge: true, tone: 'warn' }); }
+      if (f.local) { out.push({ text: 'this report only', badge: true, tone: 'accent', attrs: { 'data-origin': 'report' } }); }
+      if (f.origin) { out.push({ text: f.origin, badge: true, attrs: { 'data-origin': f.origin } }); }
+      if (f.time) { out.push({ text: f.time, badge: true, tone: 'link', attrs: { 'data-time': f.time } }); }
+      if (f.move) { out.push({ text: 'Move to the model', href: f.move, attrs: { 'data-move-measure': f.name } }); }
+      return out;
+    }
+
+    /** The Fields pane: one tree for the report's dataset and, when datasets were added, one branch for each (labelled, removable when no visual uses it). */
+    function drawFields() {
+      const rows = [];
+      const extra = D.extraEntries ? D.extraEntries() : [];
+      if (!extra.length) { rowsOf(rows, D.dataset, D.idx, '', null); } else {
+        const branch = (ref, ds, idx, title, main) => {
+          const id = 'dataset' + SEP + (ref || 'main');
+          rows.push({ id, parent: null, label: title + (main ? ' (main)' : ''), dataset: ds.id || ref, ref, main, used: main ? false : D.datasetUsed(ref) });
+          rowsOf(rows, ds, idx, ref, id);
+        };
+        branch('', D.dataset, D.idx, D.dataset.title || D.dataset.id || D.model.dataset, true);
+        extra.forEach((x) => branch(x.ref, x.dataset, x.idx, x.title, false));
+      }
+      const data = { rows };
+      const sig = JSON.stringify(rows);
+      // drawn again only when it differs: a redraw that changes nothing keeps the buttons in place, so a field being dragged, or focused, is not taken from under the reader
+      if (sig !== drawn) {
+        drawn = sig;
+        if (outline) { outline.setData(data); } else {
+          outline = new window.Drishti.elements.tree.TreeOutline(tree, { data, title: 'Field', label: 'Fields', density: 'compact', fitRows: 5000, fill: true,
+            text: (n) => n.data.words || n.label,
+            marks,
+            startOpen: (n) => !n.data.closed && !fieldOf(n),
+            button: (n) => { const f = fieldOf(n); return f ? { label: 'Add ' + f.name + ' to the report', title: f.title, attrs: { 'data-field': f.name, 'data-kind': f.kind } } : null; },
+            activate: (n) => addIt(fieldOf(n)),
+            wire: (n, el) => {                                           // dragged onto the canvas or a well (drishti-designer's DragHub)
+              const f = fieldOf(n);
+              if (!f) { return; }
+              const { name, kind, ref } = f;
+              D.hub.draggable(el, { payload: () => ({ name, kind, dataset: ref || '' }), label: () => n.label });
+            },
+            attrs: (n) => (n.data.table ? { 'data-table': n.data.table } : n.data.folder ? { 'data-folder': n.data.folder } : n.data.dataset ? { 'data-dataset-tree': n.data.dataset } : null),
+            actions: (n) => (n.data.dataset && !n.data.main ? [{ label: n.data.used ? 'Remove ' + n.label + ' (a visual reads it)' : 'Remove ' + n.label, text: '×', disabled: n.data.used,
+              title: n.data.used ? 'A visual reads this dataset' : 'Remove from the Fields pane', attrs: { 'data-remove-dataset': n.data.dataset }, run: () => D.removeDataset(n.data.ref) }] : []),
+            onKey: (n, e) => { const f = fieldOf(n); if (f && e.key === 'Enter') { addIt(f); return true; } return false; }
+          });
+          if (search.value) { outline.filter(search.value); }
+        }
+      }
       q('[data-model-link]').href = '/bi/m/' + B.id2path(D.dataset.id || '');
     }
     D.drawFields = drawFields;
 
-    search.addEventListener('input', () => {
-      const t = search.value.trim().toLowerCase();
-      B.qa('li[data-search]', tree).forEach((li) => { li.hidden = !!t && li.getAttribute('data-search').indexOf(t) < 0; });
-      B.qa('details.bi-fieldtable', tree).forEach((d) => { const any = B.qa('li[data-search]', d).some((li) => !li.hidden); d.hidden = !!t && !any; if (t && any) { d.open = true; } });
-    });
+    search.addEventListener('input', () => { if (outline) { outline.filter(search.value); } });
 
     // ---- Visualizations: the catalogue ---------------------------------------------------------------------------------
     const types = q('[data-types]');
+    let typePalette = null;
     function drawTypes() {
       B.clear(types);
-      const add = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', 'data-add-visual': '', title: 'Add an empty visual of the type chosen below' }, B.icon('plus-lg'), ' Add visual');
-      const pick = h('select', { class: 'studio-select', 'data-add-visual-type': '', 'aria-label': 'Type of the visual to add' });
-      Object.keys(D.catalogue.visuals).forEach((t) => pick.appendChild(h('option', { value: t, text: t })));
-      pick.value = 'table';
-      add.addEventListener('click', () => D.addVisual(pick.value));
-      types.appendChild(h('p', { class: 'bi-addvisual' }, add, ' ', pick));
-      GROUPS.forEach(([title, list]) => {
-        types.appendChild(h('p', { class: 'bi-type-group', text: title }));
-        const row = h('div', { class: 'bi-typegrid', role: 'group', 'aria-label': title });
-        list.forEach((t) => {
-          const b = h('button', { type: 'button', class: 'bi-vtype', 'data-type': t, 'aria-label': t, title: t + ' (click to use it; drag onto the canvas to add one there)', 'aria-pressed': 'false' }, B.icon(ICONS[t]), h('span', { text: t }));
-          b.addEventListener('click', () => chooseType(t));
-          D.hub.draggable(b, { payload: () => ({ vtype: t }), label: () => t });
-          row.appendChild(b);
-        });
-        types.appendChild(row);
-      });
+      let pickType = 'table';
+      const add = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', 'data-add-visual': '', title: 'Add an empty visual of the type chosen beside it' }, B.icon('plus-lg'), ' Add visual');
+      add.addEventListener('click', () => D.addVisual(pickType));
+      const bar = h('div', { class: 'bi-addvisual' });
+      types.appendChild(bar);
+      const all = Object.keys(D.catalogue.visuals);
+      B.formatPane.form(bar, { label: 'Add a visual', value: { type: pickType }, on: { type: (x) => { pickType = x || 'table'; } },
+        fields: { type: { type: 'string', title: 'Type of the visual to add', enum: all, widget: 'select', allowEmpty: false, hook: 'data-add-visual-type' } } });
+      bar.appendChild(add);
+      const host = h('div', { class: 'bi-typepalette' });
+      types.appendChild(host);
+      const entries = [];
+      GROUPS.forEach(([title, list]) => list.forEach((t) => entries.push({ id: t, label: t, category: title, icon: 'bi bi-' + ICONS[t], payload: { vtype: t }, attrs: { 'data-type': t } })));
+      typePalette = new window.Drishti.elements.designer.Palette(host, { entries, hub: D.hub, label: 'Visualizations', placeholder: 'Search the visuals' });
+      typePalette.on('add', (e) => chooseType(e.entry.id));
+      markTypes();
+    }
+
+    /** What a well may take ({value, label}): fields as table.column, measures, and the model's field parameters (2.6.0: the reader's
+     *  parameter slicer chooses which field or measure the visual draws). */
+    function choicesFor(kind, ds0) {
+      const ds = ds0 || D.dataset, out = [];
+      if (kind !== 'measure') { (ds.tables || []).forEach((t) => t.columns.forEach((c) => out.push({ value: t.name + '.' + c.name, label: t.name + ' › ' + c.name }))); }
+      if (kind !== 'field') { (ds.measures || []).forEach((m) => out.push({ value: m.name, label: m.name + ' (measure)' })); }
+      (ds.parameters || []).filter((p) => p.kind === 'field' && (kind === 'any' || D.paramKind('param.' + p.name) === kind))
+        .forEach((p) => out.push({ value: 'param.' + p.name, label: (p.title || p.name) + ' (' + (p.fields || []).map(B.label).join(' / ') + ')' }));
+      return out;
     }
 
     /** What would be lost turning `v` into `type`: the wells' items no well of the new type takes (or takes beyond its room). */
@@ -228,35 +258,11 @@
 
     function markTypes() {
       const v = D.sel();
-      B.qa('.bi-vtype', types).forEach((b) => b.setAttribute('aria-pressed', v && v.type === b.getAttribute('data-type') ? 'true' : 'false'));
+      B.qa('[data-dd-entry]', types).forEach((b) => b.setAttribute('aria-selected', v && v.type === b.getAttribute('data-type') ? 'true' : 'false'));
     }
 
     // ---- Build: wells --------------------------------------------------------------------------------------------------
     const build = q('[data-build]');
-    function optionsFor(kind, ds0) {
-      const ds = ds0 || D.dataset;
-      const frag = document.createDocumentFragment();
-      if (kind !== 'measure') {
-        (ds.tables || []).forEach((t) => {
-          const g = h('optgroup', { label: t.name });
-          t.columns.forEach((c) => g.appendChild(h('option', { value: t.name + '.' + c.name, text: c.name })));
-          frag.appendChild(g);
-        });
-      }
-      if (kind !== 'field') {
-        const g = h('optgroup', { label: 'Measures' });
-        (ds.measures || []).forEach((m) => g.appendChild(h('option', { value: m.name, text: m.name })));
-        frag.appendChild(g);
-      }
-      // the model's field parameters (2.6.0): the reader's parameter slicer chooses which field or measure the visual draws
-      const fp = (ds.parameters || []).filter((p) => p.kind === 'field' && (kind === 'any' || D.paramKind('param.' + p.name) === kind));
-      if (fp.length) {
-        const g = h('optgroup', { label: 'Field parameters', 'data-field-params': '' });
-        fp.forEach((p) => g.appendChild(h('option', { value: 'param.' + p.name, text: (p.title || p.name) + ' (' + (p.fields || []).map(B.label).join(' / ') + ')', 'data-field-param': p.name })));
-        frag.appendChild(g);
-      }
-      return frag;
-    }
 
     function drawBuild() {
       B.clear(build);
@@ -282,13 +288,12 @@
           li.appendChild(x);
           ul.appendChild(li);
         });
-        const add = h('select', { class: 'studio-select bi-wadd', 'aria-label': 'Add to ' + w, 'data-add': w }, h('option', { value: '', text: spec.kind === 'measure' ? 'Add a measure…' : spec.kind === 'field' ? 'Add a field…' : 'Add a field or measure…' }), optionsFor(spec.kind, D.dsOf(v).dataset));
-        add.addEventListener('change', () => {
-          if (!add.value) { return; }
-          const name = add.value;
-          D.withIdx(D.idxOf(v), () => D.change('Add ' + B.label(name), () => { D.putInWell(v, w, name); D.auto.delete(v.id); }));
-        });
-        const fs = h('fieldset', { class: 'bi-well', 'data-well': w }, h('legend', {}, w, h('small', { class: 'text-muted-d', text: ' ' + (spec.kind === 'any' ? 'fields and measures' : spec.kind + 's') + (spec.required ? ', needed' : '') + (spec.max ? ', up to ' + spec.max : '') })), ul, add);
+        // the well's "Add a field…": a drishti-inputs Form select (data-add="<well>")
+        const offer = choicesFor(spec.kind, D.dsOf(v).dataset), addBox = h('div', { class: 'bi-fform bi-wadd' });
+        B.formatPane.form(addBox, { label: 'Add to ' + w, fields: { add: { type: 'string', title: 'Add to ' + w, enum: offer.map((o) => o.value), enumLabels: offer.map((o) => o.label), widget: 'select',
+          emptyLabel: spec.kind === 'measure' ? 'Add a measure…' : spec.kind === 'field' ? 'Add a field…' : 'Add a field or measure…', hook: { 'data-add': w } } },
+        on: { add: (name) => { if (name) { D.withIdx(D.idxOf(v), () => D.change('Add ' + B.label(name), () => { D.putInWell(v, w, name); D.auto.delete(v.id); })); } } } });
+        const fs = h('fieldset', { class: 'bi-well', 'data-well': w }, h('legend', {}, w, h('small', { class: 'text-muted-d', text: ' ' + (spec.kind === 'any' ? 'fields and measures' : spec.kind + 's') + (spec.required ? ', needed' : '') + (spec.max ? ', up to ' + spec.max : '') })), ul, addBox);
         D.hub.target({ el: fs, accepts: (p) => !!p && !p.vtype, over: () => fs.classList.add('bi-drop'), leave: () => fs.classList.remove('bi-drop'), drop: (x, y, p) => {      // a field dropped on the well
           fs.classList.remove('bi-drop');
           const clash = D.dsConflict(v, p.dataset || '');

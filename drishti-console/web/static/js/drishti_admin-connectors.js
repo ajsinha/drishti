@@ -148,25 +148,30 @@
   });
 
   // ---- the editor ---------------------------------------------------------------------------------------------------------
+  // Every field is drishti-inputs' Form: the head (name, plugin, on, words) and a kind to add from the server's schemas
+  // (core/admin_forms.py); the plugin's settings a Form built here from the plugin's own description (a fieldset per group, a secret a
+  // masked field, a boolean or a list of values a select with the default first, the settings the plugin has no field for as rows).
+  var I = window.Drishti.elements.inputs;
   var dlg = $('[data-edit-dialog]'), tabs = $$('[data-tab]', dlg), panes = $$('[data-pane]', dlg);
-  var f = { name: $('[data-f-name]'), plugin: $('[data-f-plugin]'), enabled: $('[data-f-enabled]'), description: $('[data-f-description]'), yaml: $('[data-yaml]') };
+  var HF = I.formOf($('[data-conn-head]', dlg)), KF = I.formOf($('[data-field-of=kind]', dlg));
+  var f = { yaml: $('[data-yaml]') };
   var editMsg = $('[data-edit-msg]'), problemsList = $('[data-problems]'), groupsHost = $('[data-groups]'), chipsHost = $('[data-chips]');
   var plugins = null;                       // name -> {tls, settings:[...]}
   var draft = null;                         // {isNew, name, plugin, enabled, kinds, description, settings{}, etag, template, text}
   var tab = 'form', yamlDirty = false, opener = null;
+  var SF = null, keys = {};                 // the settings' Form; a setting's name -> its path in the Form (names have dots)
 
   function loadPlugins() {
     if (plugins) { return Promise.resolve(plugins); }
     return call('GET', '/plugins').then(function (r) {
       plugins = {};
       ((r.body && r.body.plugins) || []).forEach(function (p) { plugins[p.name] = p; });
-      f.plugin.textContent = '';
-      Object.keys(plugins).sort().forEach(function (n) { f.plugin.appendChild(el('option', { value: n, text: n })); });
+      HF.setOptions('plugin', Object.keys(plugins).sort());
       return plugins;
     });
   }
-  $('#connKinds').appendChild(document.createDocumentFragment());
-  known.forEach(function (k) { $('#connKinds').appendChild(el('option', { value: k })); });
+  KF.schema.properties.kind.suggest = known.slice();
+  KF.setValue({ kind: '' });
 
   function setTab(name, focus) {
     tab = name;
@@ -183,71 +188,61 @@
   }
   function fieldOf(field) {
     var m = /^settings\.(.+)$/.exec(field || '');
-    return m ? $$('[data-setting]', groupsHost).filter(function (n) { return n.getAttribute('data-setting') === m[1]; })[0] : null;
+    return m ? keys[m[1]] || null : null;
   }
   // the first failing field is shown, focused and scrolled into view: the form is long and the Save bar is sticky
-  function focusField(n) {
-    if (!n || tab !== 'form') { return; }
-    n.scrollIntoView({ block: 'center' });
-    n.focus({ preventScroll: true });
+  function focusField(path) {
+    if (!path || tab !== 'form' || !SF) { return; }
+    var n = groupsHost.querySelector('[data-setting="' + path.name + '"]');
+    if (n) { n.scrollIntoView({ block: 'center' }); }
+    SF.focusField(path.path);
   }
+  var secretErrors = {};
   function showProblems(list, focusFirst) {
     problemsList.textContent = '';
-    $$('[data-field-err]', groupsHost).forEach(function (e) { if (!e.getAttribute('data-secret-err')) { e.textContent = ''; } });
-    $$('[aria-invalid="true"]', groupsHost).forEach(function (n) { if (!n.hasAttribute('data-secret')) { n.removeAttribute('aria-invalid'); } });
-    var first = null;
+    var errors = Object.assign({}, secretErrors), first = null;
     (list || []).forEach(function (p) {
       problemsList.appendChild(el('li', { class: p.level === 'error' ? 't-bad' : 't-warn' }, [el('b', { text: (p.level === 'error' ? 'Error' : 'Note') + ' ' }), el('span', { class: 'mono', text: p.field + ': ' }), p.message]));
-      var n = fieldOf(p.field);
-      if (n) {
-        var err = $('[data-field-err]', n.closest('.conn-field'));
-        if (err && !err.textContent) { err.textContent = p.message; }
-        if (p.level === 'error') { n.setAttribute('aria-invalid', 'true'); if (!first) { first = n; } }
-      }
+      var k = fieldOf(p.field);
+      if (k && p.level === 'error' && !errors[k.path]) { errors[k.path] = p.message; if (!first) { first = k; } }
     });
+    if (SF) { SF.showErrors(errors); }
     if (focusFirst && first) { focusField(first); }
   }
 
   // draft <-> form
   function readForm() {
-    var settings = {};
-    $$('[data-setting]', groupsHost).forEach(function (n) {
-      var v = n.value.trim();
-      if (v !== '') { settings[n.getAttribute('data-setting')] = v; }
+    var settings = {}, h = HF.getValue();
+    Object.keys(keys).forEach(function (name) {
+      var v = String(SF.getField(keys[name].path) || '').trim();
+      if (v !== '') { settings[name] = v; }
     });
-    $$('[data-extra-row]', groupsHost).forEach(function (r) {
-      var k = $('[data-extra-key]', r).value.trim(), v = $('[data-extra-val]', r).value.trim();
+    (SF ? SF.getField('extra') || [] : []).forEach(function (r) {
+      var k = String(r.key || '').trim(), v = String(r.value || '').trim();
       if (k && v !== '') { settings[k] = v; }
     });
-    draft.name = f.name.value.trim();
-    draft.plugin = f.plugin.value;
-    draft.enabled = f.enabled.checked;
-    draft.description = f.description.value.trim();
+    draft.name = String(h.name || '').trim();
+    draft.plugin = h.plugin || draft.plugin;
+    draft.enabled = h.enabled === true;                                       // unticked: off, never left out
+    draft.description = String(h.description || '').trim();
     draft.settings = settings;
     return draft;
   }
-  function fieldFor(spec, value) {
-    var id = 'connF-' + spec.name.replace(/[^a-z0-9]/gi, '-');
-    var t = spec.type || 'string', input;
-    if (t === 'boolean') {
-      input = el('select', { class: 'studio-in', id: id, 'data-setting': spec.name }, [el('option', { value: '', text: spec.default != null ? 'default (' + spec.default + ')' : 'default' }), el('option', { value: 'true', text: 'true' }), el('option', { value: 'false', text: 'false' })]);
-    } else if (t.indexOf('enum:') === 0) {
-      input = el('select', { class: 'studio-in', id: id, 'data-setting': spec.name }, [el('option', { value: '', text: spec.default != null ? 'default (' + spec.default + ')' : 'default' })].concat(t.slice(5).split('|').map(function (o) { return el('option', { value: o, text: o }); })));
+  /** One setting's field in the settings' Form. */
+  function settingField(spec) {
+    var t = spec.type || 'string', dflt = spec.default != null ? 'default (' + spec.default + ')' : 'default';
+    var fs = { type: 'string', title: spec.name + (spec.required ? ' (required)' : ''), mono: t === 'path' || !!spec.secret,
+      description: spec.description + (spec.secret ? ' A credential is never written into a connector file: use ${ENV_VAR} or file:/path.' : ''),
+      hook: { 'data-setting': spec.name } };
+    if (spec.required) { fs.hook['aria-required'] = 'true'; }
+    if (t === 'boolean' || t.indexOf('enum:') === 0) {
+      fs.widget = 'select'; fs.allowEmpty = true; fs.emptyLabel = dflt;
+      fs['enum'] = t === 'boolean' ? ['true', 'false'] : t.slice(5).split('|');
     } else {
-      input = el('input', { class: 'studio-in' + (t === 'path' || spec.secret ? ' mono' : ''), id: id, 'data-setting': spec.name, autocomplete: 'off', spellcheck: 'false',
-        placeholder: spec.secret ? '${ENV_VAR} or file:/run/secrets/name' : (spec.default != null ? spec.default : '') });
+      fs.placeholder = spec.secret ? '${ENV_VAR} or file:/run/secrets/name' : (spec.default != null ? String(spec.default) : '');
+      if (spec.secret) { fs.format = 'password'; fs.hook['data-secret'] = ''; }
     }
-    if (spec.secret) { input.setAttribute('data-secret', ''); input.setAttribute('type', 'password'); input.setAttribute('autocomplete', 'new-password'); }
-    if (spec.required) { input.setAttribute('aria-required', 'true'); }
-    if (value != null) {
-      if (input.tagName === 'SELECT' && !Array.prototype.some.call(input.options, function (o) { return o.value === value; })) { input.appendChild(el('option', { value: value, text: value })); }
-      input.value = value;
-    }
-    var hint = el('span', { class: 'text-muted-d conn-hint', id: id + '-hint', text: spec.description + (spec.secret ? ' A credential is never written into the file: use ${ENV_VAR} or file:/path.' : '') });
-    input.setAttribute('aria-describedby', id + '-hint');
-    var err = el('span', { class: 't-bad conn-field-err', 'data-field-err': true, role: 'alert' });
-    return el('div', { class: 'conn-field' + (spec.required ? ' conn-required' : '') }, [
-      el('label', { for: id }, [el('span', { class: 'mono', text: spec.name }), spec.required ? el('span', { class: 'conn-req', text: ' (required)' }) : null]), input, hint, err]);
+    return fs;
   }
   // the proxy the connector uses now (masked by the server) and where it came from, for the Proxy section and the test
   function proxyLine(px) {
@@ -259,37 +254,32 @@
     return px.note ? t + ' ' + px.note + '.' : t;
   }
   function buildForm() {
+    if (SF) { SF.destroy && SF.destroy(); }
     groupsHost.textContent = '';
-    var spec = plugins[draft.plugin];
-    var settings = Object.assign({}, draft.settings), used = {};
-    var by = {};
+    var spec = plugins[draft.plugin], settings = Object.assign({}, draft.settings), by = {}, props = {}, value = {};
+    keys = {};
     ((spec && spec.settings) || []).forEach(function (s) { if (s.name.slice(-2) !== '.*') { (by[s.group] = by[s.group] || []).push(s); } });
-    GROUPS.concat(Object.keys(by).filter(function (g) { return !GROUPS.some(function (x) { return x[0] === g; }); }).map(function (g) { return [g, g]; })).forEach(function (g) {
+    GROUPS.concat(Object.keys(by).filter(function (g) { return !GROUPS.some(function (x) { return x[0] === g; }); }).map(function (g) { return [g, g]; })).forEach(function (g, gi) {
       if (!by[g[0]]) { return; }
-      var fs = el('fieldset', { class: 'conn-set', 'data-group': g[0] }, [el('legend', { text: g[1] })]);
-      var grid = el('div', { class: 'conn-fields' });
-      if (g[0] === 'proxy') { fs.appendChild(el('p', { class: 'text-muted-d', 'data-proxy-now': true, text: proxyLine(draft.proxy) })); }
-      by[g[0]].forEach(function (s) { used[s.name] = true; grid.appendChild(fieldFor(s, settings[s.name])); });
-      fs.appendChild(grid);
-      groupsHost.appendChild(fs);
+      var gk = 'g' + gi, group = { type: 'object', title: g[1], properties: {}, hook: { 'data-group': g[0], 'class': 'conn-set' } };
+      if (g[0] === 'proxy') { group.description = proxyLine(draft.proxy); }
+      value[gk] = {};
+      by[g[0]].forEach(function (s, si) {
+        var k = 's' + si;
+        keys[s.name] = { path: gk + '.' + k, name: s.name };
+        group.properties[k] = settingField(s);
+        if (settings[s.name] != null) { value[gk][k] = String(settings[s.name]); }
+      });
+      props[gk] = group;
     });
-    var extra = el('fieldset', { class: 'conn-set', 'data-group': 'other' }, [el('legend', { text: 'Other settings' })]);
-    var rows = el('div', { 'data-extras': true });
-    Object.keys(settings).filter(function (k) { return !used[k]; }).forEach(function (k) { rows.appendChild(extraRow(k, settings[k])); });
-    var add = el('button', { type: 'button', class: 'fk', text: 'Add setting' });
-    add.addEventListener('click', function () { var r = extraRow('', ''); rows.appendChild(r); $('[data-extra-key]', r).focus(); });
-    extra.appendChild(el('p', { class: 'text-muted-d', text: 'Settings the plugin reads that have no field above, such as layout.trade.columns or mode.trade.' }));
-    extra.appendChild(rows);
-    extra.appendChild(add);
-    groupsHost.appendChild(extra);
-  }
-  function extraRow(k, v) {
-    var key = el('input', { class: 'studio-in mono', 'data-extra-key': true, value: k, 'aria-label': 'Setting name', placeholder: 'setting.name', autocomplete: 'off', spellcheck: 'false' });
-    var val = el('input', { class: 'studio-in mono', 'data-extra-val': true, value: v, 'aria-label': 'Setting value', autocomplete: 'off', spellcheck: 'false' });
-    var rm = el('button', { type: 'button', class: 'fk', text: 'Remove', 'aria-label': 'Remove this setting' });
-    var row = el('div', { class: 'conn-extra', 'data-extra-row': true }, [key, val, rm]);
-    rm.addEventListener('click', function () { row.remove(); });
-    return row;
+    props.extra = { type: 'array', title: 'Other settings', addLabel: 'Add setting', itemHook: 'extra-row', hook: { 'data-group': 'other', 'class': 'conn-set' },
+      description: 'Settings the plugin reads that have no field above, such as layout.trade.columns or mode.trade.',
+      items: { type: 'object', title: 'Setting', properties: {
+        key: { type: 'string', title: 'Setting name', mono: true, placeholder: 'setting.name', hook: { 'data-extra-key': '' } },
+        value: { type: 'string', title: 'Setting value', mono: true, hook: { 'data-extra-val': '' } } } } };
+    value.extra = Object.keys(settings).filter(function (k) { return !keys[k]; }).map(function (k) { return { key: k, value: String(settings[k]) }; });
+    SF = new I.Form(groupsHost, { schema: { type: 'object', properties: props }, value: value, live: true, label: 'The plugin\'s settings', pathAttr: 'data-conn-path' });
+    secretErrors = {};
   }
   function chips() {
     chipsHost.textContent = '';
@@ -301,42 +291,48 @@
     });
   }
   function addKind() {
-    var inp = $('[data-kind-in]'), k = inp.value.trim();
+    var k = String(KF.getField('kind') || '').trim();
     if (k && draft.kinds.indexOf(k) < 0) {
       draft.kinds.push(k); chips();
       if (known.length && known.indexOf(k) < 0) { say(editMsg, 'Note: no loaded pack owns the kind ' + k + '. It is kept, and reads nothing until a pack does.', false); }
     }
-    inp.value = ''; inp.focus();
+    KF.setValue({ kind: '' }); KF.focusField('kind');
   }
   $('[data-kind-add]').addEventListener('click', addKind);
-  $('[data-kind-in]').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); addKind(); } });
+  $('[data-field-of=kind]', dlg).addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target.matches('[data-kind-in]')) { e.preventDefault(); addKind(); } });
 
   function fillForm() {
-    f.name.value = draft.name; f.name.readOnly = !draft.isNew;
-    f.plugin.value = draft.plugin; f.plugin.disabled = !draft.isNew;
-    f.enabled.checked = draft.enabled; f.description.value = draft.description || '';
+    HF.schema.properties.name.readOnly = !draft.isNew;
+    HF.schema.properties.plugin.readOnly = !draft.isNew;
+    HF.setValue({ name: draft.name, plugin: draft.plugin, enabled: draft.enabled !== false, description: draft.description || '' });
     $('[data-file-name]').textContent = (draft.name || 'name') + '.yaml';
     chips();
     buildForm();
   }
-  f.name.addEventListener('input', function () { $('[data-file-name]').textContent = (f.name.value.trim() || 'name') + '.yaml'; });
-  f.plugin.addEventListener('change', function () { readForm(); buildForm(); });
+  HF.on('change', function (e) {
+    if (e.path === 'name') { $('[data-file-name]').textContent = (String(e.value || '').trim() || 'name') + '.yaml'; }
+    if (e.path === 'plugin') { readForm(); buildForm(); }
+  });
 
   // client-side guard: a credential is only a reference (the server checks too)
   function checkSecrets() {
-    var bad = 0;
-    $$('[data-secret]', groupsHost).forEach(function (n) {
-      var holder = n.closest('.conn-field'), err = $('[data-field-err]', holder), v = n.value.trim();
-      var wrong = v !== '' && !SECRET_OK.test(v);
-      if (wrong) { err.setAttribute('data-secret-err', '1'); } else { err.removeAttribute('data-secret-err'); }
-      err.textContent = wrong ? 'A credential is never written into a connector file. Use an environment reference such as ${' + n.getAttribute('data-setting').replace(/[^A-Za-z0-9]+/g, '_').toUpperCase() + '} or file:/run/secrets/name.' : '';
-      n.setAttribute('aria-invalid', wrong ? 'true' : 'false');
-      if (wrong) { bad++; if (bad === 1) { focusField(n); } }
+    var bad = 0, first = null;
+    secretErrors = {};
+    Object.keys(keys).forEach(function (name) {
+      var k = keys[name], n = groupsHost.querySelector('[data-setting="' + name + '"]');
+      if (!n || !n.hasAttribute('data-secret')) { return; }
+      var v = String(SF.getField(k.path) || '').trim();
+      if (v !== '' && !SECRET_OK.test(v)) {
+        secretErrors[k.path] = 'A credential is never written into a connector file. Use an environment reference such as ${' + name.replace(/[^A-Za-z0-9]+/g, '_').toUpperCase() + '} or file:/run/secrets/name.';
+        bad++; if (!first) { first = k; }
+      }
     });
-    $$('[data-extra-row]', groupsHost).forEach(function (r) {
-      var k = $('[data-extra-key]', r), v = $('[data-extra-val]', r);
-      if (SECRET_KEY.test(k.value) && v.value.trim() !== '' && !SECRET_OK.test(v.value.trim())) { bad++; v.setAttribute('aria-invalid', 'true'); say(editMsg, k.value + ' is a credential: use ${ENV_VAR} or file:/path, never the value itself.', true); }
+    (SF.getField('extra') || []).forEach(function (r, i) {
+      var k = String(r.key || ''), v = String(r.value || '').trim();
+      if (SECRET_KEY.test(k) && v !== '' && !SECRET_OK.test(v)) { bad++; secretErrors['extra[' + i + '].value'] = 'A credential: use ${ENV_VAR} or file:/path.'; say(editMsg, k + ' is a credential: use ${ENV_VAR} or file:/path, never the value itself.', true); }
     });
+    SF.showErrors(secretErrors);
+    if (first) { focusField(first); }
     return bad === 0;
   }
 
@@ -386,7 +382,8 @@
     readForm();
     return { plugin: draft.plugin, enabled: draft.enabled, kinds: draft.kinds, description: draft.description, settings: draft.settings };
   }
-  function nameNow() { return tab === 'yaml' ? (draft.name || f.name.value.trim()) : (f.name.value.trim() || draft.name); }
+  function headName() { return String(HF.getField('name') || '').trim(); }
+  function nameNow() { return tab === 'yaml' ? (draft.name || headName()) : (headName() || draft.name); }
 
   function open(opts) {
     opener = opts.from || null;
@@ -405,7 +402,7 @@
       if (opts.yaml != null) { f.yaml.value = opts.yaml; }
       setTab('form');
       if (!dlg.open) { show(dlg); }
-      (draft.isNew ? f.name : f.description).focus();
+      HF.focusField(draft.isNew ? 'name' : 'description');
     });
   }
   function newDraft(name) { return { isNew: true, hasFile: false, name: name || '', plugin: 'file', enabled: true, kinds: [], description: '', settings: {} }; }
@@ -488,8 +485,8 @@
   function save(confirmed) {
     if (tab === 'form' && !checkSecrets()) { say(editMsg, 'Not saved: a credential holds the value itself. Use a ${ENV_VAR} or file: reference.', true); return; }
     var name = nameNow();
-    if (!name) { say(editMsg, 'Give the connector a name.', true); f.name.setAttribute('aria-invalid', 'true'); setTab('form'); f.name.focus(); return; }
-    f.name.removeAttribute('aria-invalid');
+    if (!name) { say(editMsg, 'Give the connector a name.', true); setTab('form'); HF.showErrors({ name: 'Give the connector a name' }); HF.focusField('name'); return; }
+    HF.showErrors({});
     var idle = busy($('[data-save]'), 'Saving…');
     say(editMsg, 'Saving…');
     var headers = draft.etag ? { 'If-Match': draft.etag } : {};

@@ -243,7 +243,8 @@
     q('[data-undo]').disabled = !hist.canUndo();
     q('[data-redo]').disabled = !hist.canRedo();
     q('[data-save]').disabled = D.readOnly;
-    q('[data-state]').textContent = D.readOnly ? (D.item && D.item.status === 'proposed' ? 'Read-only (proposed)' : 'Read-only') : D.dirty ? 'Unsaved changes' : 'Saved';
+    const words = D.readOnly ? (D.item && D.item.status === 'proposed' ? 'Read-only (proposed)' : 'Read-only') : D.dirty ? 'Unsaved changes' : 'Saved';
+    if (B.studio && B.studio.state) { B.studio.state(words, D.item && D.item.status); }        // the status beside the name in the Studio's header
   }
 
   // ---- page tabs -----------------------------------------------------------------------------------------------------
@@ -510,14 +511,18 @@
   function publishNow() {
     const btn = q('[data-publish]');
     if (D.item && D.item.personal && !D.item.shipped) { B.near(btn, 'This report is in your private workspace, which cannot publish. Move it to a shared workspace (Move on its item page), then publish it there.', true); return Promise.resolve(); }
+    const done = (review) => (it) => {
+      D.item = it;
+      say(review ? 'Proposed for review. Open the item page to follow it; this draft is now frozen until it is approved or withdrawn.' : 'Published.');
+      window.setTimeout(() => { window.location.href = '/bi/i/' + B.id2path(itemId); }, 900);
+    };
     const go = () => {
       const review = D.item && D.item.workspaceReviewRequired;
-      const verb = review ? 'propose' : 'publish';
-      return B.api('POST', '/items/' + B.id2path(itemId) + '/' + verb, {}).then((it) => {
-        D.item = it;
-        say(review ? 'Proposed for review. Open the item page to follow it; this draft is now frozen until it is approved or withdrawn.' : 'Published.');
-        window.setTimeout(() => { window.location.href = '/bi/i/' + B.id2path(itemId); }, 900);
-      }).catch((e) => { B.near(btn, e.message, true); });
+      if (review && B.studio && B.studio.shell) {                    // four eyes: the kit's Propose for review asks a note for the reviewer, then files it
+        B.studio.shell.propose(D.item.title || 'the report', (note) => B.api('POST', '/items/' + B.id2path(itemId) + '/propose', { note: note }).then(done(true)));
+        return Promise.resolve();
+      }
+      return B.api('POST', '/items/' + B.id2path(itemId) + '/' + (review ? 'propose' : 'publish'), {}).then(done(review)).catch((e) => { B.near(btn, e.message, true); });
     };
     if (D.dirty) {
       return B.confirm(btn, 'There are unsaved changes. Save them first, then ' + ((D.item && D.item.workspaceReviewRequired) ? 'propose' : 'publish') + '?', 'Save and continue')
@@ -558,7 +563,7 @@
     q('[data-tab="tablet"]').addEventListener('click', () => showTab('tablet'));
     q('[data-tab="yaml"]').addEventListener('click', () => showTab('yaml'));
     if (q('[data-tab="paper"]')) { q('[data-tab="paper"]').addEventListener('click', () => showTab('paper')); }       // a statement page's paper and preview (2.6.0)
-    q('[data-preview]').addEventListener('change', (e) => { D.preview = e.target.checked; D.emit('preview', D.preview); });
+    q('[data-preview]').addEventListener('click', (e) => { D.preview = e.currentTarget.getAttribute('aria-pressed') === 'true'; D.emit('preview', D.preview); });     // the Studio's toggle
     D.preview = true;
     // the designer's keys (the one keymap, drishti_keys.js); the visuals' own keys are their widgets', described so ? lists them
     const K = window.Drishti.keys;
@@ -625,7 +630,7 @@
     viewAs.addEventListener('change', () => { q('[data-view-link]').href = viewHref(); });
     q('[data-save-copy]').hidden = !D.readOnly;
     q('[data-dmain]').classList.toggle('bi-ro', D.readOnly);                       // the palette, the fields and the visuals' delete look switched off, as they are
-    q('[data-publish-label]').textContent = item.workspaceReviewRequired ? 'Propose' : 'Publish';
+    if (B.studio && B.studio.shell) { B.studio.shell.setLabel('propose', item.workspaceReviewRequired ? 'Propose' : 'Publish'); }
     q('[data-publish]').hidden = D.readOnly || !(item.can && (item.can.publish || item.can.propose || (item.personal && item.can.edit)));       // a private workspace shows Publish too: pressing it explains what to do
     const ro = q('[data-readonly]');
     if (D.readOnly) {
@@ -668,7 +673,7 @@
       const bad = (r.problems || []).filter((p) => p.level === 'error');
       if (bad.length) { say(bad.length + ' problem' + (bad.length === 1 ? '' : 's') + ' in the draft; see Check.', true); }
       if (D.pickedDataset) { D.dirty = true; updateButtons(); }
-      if (B.studio && B.studio.attach) {                              // BI Studio (2.4.0): this item joins the open tabs; the dock shows its problems and the selected visual's query
+      if (B.studio && B.studio.attach) {                              // BI Studio: this item joins the open items; the dock shows its problems and the selected visual's query
         B.studio.attach(D.item);
         dockProblems(D.item.body);
         const qh = B.studio.queryHost();

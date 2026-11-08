@@ -129,7 +129,7 @@ def designed(page):
 
 
 def deselect(page):
-    page.click("[data-design-root] [data-title]")
+    page.click("[data-studio] [data-title]")
     page.keyboard.press("Escape")
     page.wait_for_function("() => window.drishtiBi.design.selected === null")
 
@@ -151,12 +151,12 @@ def test_the_studio_wells_offer_field_parameters_and_the_slicer_switches_the_cha
                      "By the reader's choice")
     open_designer(page, rid)
     deselect(page)
-    page.click('.bi-vtype[data-type="column"]')
+    page.click('[data-types] [data-type="column"]')
     page.wait_for_function("() => { const v = window.drishtiBi.design.sel(); return v && v.type === 'column'; }")
     page.click("[data-ptab='build']")
     # the axis well offers the field parameter of fields only; the values well the one of measures only
-    axis_params = page.eval_on_selector_all('[data-add="axis"] optgroup[data-field-params] option', "os => os.map(o => o.value)")
-    value_params = page.eval_on_selector_all('[data-add="values"] optgroup[data-field-params] option', "os => os.map(o => o.value)")
+    axis_params = page.eval_on_selector_all('[data-add="axis"] option[value^="param."]', "os => os.map(o => o.value)")
+    value_params = page.eval_on_selector_all('[data-add="values"] option[value^="param."]', "os => os.map(o => o.value)")
     assert axis_params == ["param.breakdown"] and value_params == ["param.metric"], (axis_params, value_params)
     page.select_option('[data-add="axis"]', "param.breakdown")
     page.select_option('[data-add="values"]', "param.metric")
@@ -169,7 +169,7 @@ def test_the_studio_wells_offer_field_parameters_and_the_slicer_switches_the_cha
     vid = v["id"]
     assert drawn(page, vid) == sums("desk", "mtm"), "the canvas draws the default choice: MTM by desk"
     page.click("[data-save]")
-    expect(page.locator("[data-state]")).to_have_text("Saved", timeout=20000)
+    expect(page.locator("[data-status]")).to_have_text("Saved", timeout=20000)
     # the viewer (the author's own draft): the parameter slicer switches the field and the measure the chart draws
     page.goto(CONSOLE_URL + "/bi/r/" + rid)
     page.wait_for_selector("[data-ready=yes]", state="attached", timeout=30000)
@@ -255,7 +255,7 @@ def test_the_statement_designer_sets_the_paper_and_previews_page_by_page(stack, 
     assert box["width"] > box["height"], "a landscape sheet"
     shoot(page, '[data-view="paper"]', "statement-designer", 900)
     page.click("[data-save]")
-    expect(page.locator("[data-state]")).to_have_text("Saved", timeout=20000)
+    expect(page.locator("[data-status]")).to_have_text("Saved", timeout=20000)
     saved = fetch(page, "GET", "/bi/api/items/" + rid)
     assert "layout: statement" in saved["body"]["body"] and "orientation: landscape" in saved["body"]["body"], saved["body"]["body"]
     clean(page)

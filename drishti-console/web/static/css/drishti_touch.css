@@ -17,9 +17,6 @@
    both directions (test_page_widths_browser.py checks it at 390 px). A mouse keeps the compact desktop sizes. Links inside
    running text keep their size (WCAG 2.5.8, inline exception). This sheet loads last. */
 @media (pointer: coarse) {
-  /* BI designer and Model view: the back link is finger-sized too */
-  .bi-dtitle > a.bi-dback { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; }
-
   /* admin lists and detail pages: a name link in a cell, a section heading's link (a pack on /forms), a pack in a detail list and the heading ? are tap targets too */
   .conn-used a.mono, .cmp-path a, h1 > a.mono, th > a.mono, .rep-links a, .conn-name a.mono, .ws-h > a.emb-help, h1 > a.qf-help, .ws-h > a.lnk, dd > a.mono { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; }
 

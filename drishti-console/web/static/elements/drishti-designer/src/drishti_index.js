@@ -29,7 +29,7 @@ export { KEY_SCHEMES, designerBindings, designerKeys, keyHelp } from './drishti_
 export { DragHub, sortableList } from './drishti_pointer.js';
 export { flowHit, showFlowDrop, clearFlowDrop } from './drishti_layout-flow.js';
 export { LayoutCanvas } from './drishti_layout-canvas.js';
-export { searchPalette, paletteGroups, Palette } from './drishti_palette.js';
+export { searchPalette, paletteGroups, entryAttrs, Palette } from './drishti_palette.js';
 export { commonValues, sharedSchema, Inspector } from './drishti_inspector.js';
 export { flattenTree, findNode, isWithin, moveNode, Outline } from './drishti_outline.js';
 export { yamlUnquote, parseYamlTree, yamlGet, yamlPlain, yamlChain, yamlContext } from './drishti_yaml-read.js';

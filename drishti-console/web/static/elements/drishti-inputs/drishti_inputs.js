@@ -2405,8 +2405,26 @@
           control = inp;
           break;
         }
+        case 'file': {                                            // a file to send: the value is its name; the page reads the input's files
+          const inp = part.input = named(form.el('input', { cls: 'di-field di-file', attrs: { id: id, type: 'file', accept: fs.accept || null, multiple: fs.multiple || null, disabled: ro || null,
+            'aria-describedby': described, 'aria-required': f.required ? 'true' : null } }));
+          inp.addEventListener('change', () => { set(inp.files && inp.files.length ? Array.from(inp.files).map((x) => x.name).join(', ') : undefined); touch(); });
+          control = inp;
+          break;
+        }
+        case 'range': {                                           // a slider with its value beside it (the schema's minimum, maximum and increment)
+          const lo = fs.minimum !== undefined ? fs.minimum : 0, hi = fs.maximum !== undefined ? fs.maximum : 100;
+          const inp = part.input = named(form.el('input', { cls: 'di-range', attrs: { id: id, type: 'range', min: String(lo), max: String(hi), step: String(fs.increment || 1), disabled: ro || null, 'aria-describedby': described } }));
+          const out = form.el('output', { cls: 'di-range-out', attrs: { for: id } });
+          inp.value = String(v === undefined || v === null ? lo : v);
+          out.textContent = formatNumber(+inp.value, { maxDecimals: 6, minus: '-' }) + (fs.unit || '');
+          inp.addEventListener('input', () => { out.textContent = formatNumber(+inp.value, { maxDecimals: 6, minus: '-' }) + (fs.unit || ''); set(+inp.value); });
+          control = form.el('div', { cls: 'di-control di-adorned' }, [inp, out]);
+          break;
+        }
         case 'textarea': {
-          const ta = part.input = named(form.el('textarea', { cls: 'di-field', attrs: { id: id, rows: String((fs.options && fs.options.rows) || 3), 'aria-describedby': described, readonly: ro || null, placeholder: fs.placeholder || null } }));
+          const ta = part.input = named(form.el('textarea', { cls: 'di-field' + (fs.mono ? ' di-mono' : ''), attrs: { id: id, rows: String((fs.options && fs.options.rows) || 3), 'aria-describedby': described, readonly: ro || null,
+            placeholder: fs.placeholder || null, maxlength: fs.maxLength ? String(fs.maxLength) : null, spellcheck: fs.mono ? 'false' : null } }));
           ta.value = v === undefined || v === null ? '' : String(v);
           ta.addEventListener(fs.lazy ? 'change' : 'input', () => set(ta.value === '' ? undefined : ta.value));
           ta.addEventListener('blur', touch);
@@ -2415,8 +2433,15 @@
         }
         default: {
           const numeric = fs.type === 'number' || fs.type === 'integer' || fs.type === 'money', money = fs.type === 'money';
-          const inp = part.input = named(form.el('input', { cls: 'di-field' + (numeric ? ' di-num' : ''), attrs: { id: id, type: fs.format === 'email' ? 'email' : 'text', inputmode: numeric ? 'decimal' : null,
-            'aria-describedby': described, readonly: ro || null, placeholder: fs.placeholder || (money ? '1.5m, 250k or 1,000,000' : null), 'aria-required': f.required ? 'true' : null, autocomplete: 'off' } }));
+          const type = ['email', 'password', 'search'].indexOf(fs.format) >= 0 ? fs.format : 'text';
+          const inp = part.input = named(form.el('input', { cls: 'di-field' + (numeric ? ' di-num' : '') + (fs.mono ? ' di-mono' : ''), attrs: { id: id, type: type, inputmode: numeric ? 'decimal' : null,
+            'aria-describedby': described, readonly: ro || null, placeholder: fs.placeholder || (money ? '1.5m, 250k or 1,000,000' : null), 'aria-required': f.required ? 'true' : null,
+            autocomplete: fs.autocomplete || (type === 'password' ? 'new-password' : 'off'), maxlength: fs.maxLength ? String(fs.maxLength) : null, spellcheck: fs.mono ? 'false' : null } }));
+          if (fs.suggest && fs.suggest.length) {                  // values offered as one types (the browser's own list); any text is still taken
+            const dl = form.el('datalist', { attrs: { id: id + '-list' } }, fs.suggest.map((x) => form.el('option', { attrs: { value: String(x) } })));
+            inp.setAttribute('list', id + '-list');
+            wrap.appendChild(dl);
+          }
           const show = (x) => (x === undefined || x === null ? '' : numeric && typeof x === 'number' && !isNaN(x) ? formatNumber(x, { maxDecimals: money ? 2 : 10, minus: '-' }) : String(x));
           inp.value = show(v);
           inp.addEventListener(fs.lazy ? 'change' : 'input', () => {
@@ -2456,11 +2481,16 @@
           ro ? null : form.el('button', { cls: 'di-btn', text: '↑', attrs: { type: 'button', 'aria-label': 'Move ' + name + ' up', disabled: i === 0 || null }, on: { click: () => form.moveItem(f.path, i, -1) } }),
           ro ? null : form.el('button', { cls: 'di-btn', text: '↓', attrs: { type: 'button', 'aria-label': 'Move ' + name + ' down', disabled: i === list.length - 1 || null }, on: { click: () => form.moveItem(f.path, i, 1) } }),
           ro ? null : form.el('button', { cls: 'di-btn', text: 'Remove', attrs: { type: 'button', 'aria-label': 'Remove ' + name, disabled: (fs.minItems && list.length <= fs.minItems) || null }, data: { act: 'remove' }, on: { click: () => form.removeItem(f.path, i) } })])]);
+        applyHook(group, fs.itemHook);
         const subs = fieldsOf(fs.items, p);
         subs.forEach((sub) => group.appendChild(drawField(form, subs.length === 1 ? Object.assign({}, sub, { label: name }) : sub)));   // one field an item: it is named as the item
         box.appendChild(group);
       });
-      if (!ro) { box.appendChild(form.el('button', { cls: 'di-btn', text: fs.addLabel || 'Add ' + (fs.items.title || words(f.key).replace(/s$/, '')).toLowerCase(), attrs: { type: 'button', disabled: (fs.maxItems && list.length >= fs.maxItems) || null }, data: { act: 'add' }, on: { click: () => form.addItem(f.path) } })); }
+      if (!ro) {
+        const add = form.el('button', { cls: 'di-btn', text: fs.addLabel || 'Add ' + (fs.items.title || words(f.key).replace(/s$/, '')).toLowerCase(), attrs: { type: 'button', disabled: (fs.maxItems && list.length >= fs.maxItems) || null }, data: { act: 'add' }, on: { click: () => form.addItem(f.path) } });
+        applyHook(add, fs.addHook);
+        box.appendChild(add);
+      }
       box.appendChild(msg);
       applyHook(box, fs.hook);
       wrap.appendChild(box);
@@ -2503,7 +2533,7 @@
         this.at = 0;
         if (this.o.embedded) { this.o.live = true; }
         this.pathAttr = this.o.pathAttr || 'data-path';
-        this.form = this.el(this.o.embedded ? 'div' : 'form', { cls: 'di-form-el' + (this.o.layout === 'columns' ? ' di-columns' : '') + (this.o.live ? ' di-live' : ''),
+        this.form = this.el(this.o.embedded ? 'div' : 'form', { cls: 'di-form-el' + (this.o.layout === 'columns' ? ' di-columns' : this.o.layout === 'inline' ? ' di-inline' : '') + (this.o.live ? ' di-live' : ''),
           attrs: { novalidate: this.o.embedded ? null : true, role: this.o.embedded ? 'group' : null, 'aria-label': this.o.label || this.schema.title || 'Form' } });
         if (!this.o.embedded) { this.form.addEventListener('submit', (e) => { e.preventDefault(); this.submit(); }); }
         host.appendChild(this.form);
@@ -2735,6 +2765,15 @@
         this.narrow(path).forEach((q) => this.redrawField(q));
         this.refresh();
       }
+      setOptions(path, list, labels) {
+        let node = this.schema;
+        String(path).split('.').forEach((k) => { while (node && node.type === 'array' && node.items) { node = node.items; } node = node && node.properties ? node.properties[k] : null; });
+        if (!node) { throw new Error('no field ' + path); }
+        const target = node.type === 'array' && node.items && !node.items.properties ? node.items : node;
+        target.enum = list.slice();
+        if (labels) { target.enumLabels = labels.slice(); } else { delete target.enumLabels; }
+        this.render();
+      }
       getField(path) { return getPath(this.values, path); }
       say(text, tone) { this.banner.hidden = !text; this.banner.textContent = text || ''; this.banner.className = 'di-form-banner di-tone-' + (tone || 'info'); announce(text); }
       getValue() { return visibleValue(this.schema, this.values); }
@@ -2746,6 +2785,30 @@
     }
     function CSS_ESCAPE(s) { return String(s).replace(/([^\w-])/g, '\\$1'); }
     return { "Form": Form };
+  })();
+  /* ---- src/drishti_form-host.js ---- */
+  __m["src/drishti_form-host.js"] = (function () {
+    var Form = __m["src/drishti_form.js"].Form;
+    const FORM_HOST_SELECTOR = '[data-di-form][data-schema]';
+    function formOf(host, extra) {
+      if (!host) { return null; }
+      if (host.diForm) { return host.diForm; }
+      let spec;
+      try { spec = JSON.parse(host.getAttribute('data-schema') || 'null'); } catch (e) { spec = null; }
+      if (!spec || !spec.schema) { return null; }
+      const opts = Object.assign({ embedded: true }, spec.options || {}, extra || {}, { schema: spec.schema, value: spec.value });
+      const form = host.diForm = new Form(host, opts);
+      const outer = opts.embedded && host.closest ? host.closest('form') : null;
+      if (outer && opts.checkOnSubmit !== false) {               // the page's form is not sent while a field has a problem (a native control's required did that)
+        outer.addEventListener('submit', (e) => { if (!form.validate().ok) { e.preventDefault(); e.stopImmediatePropagation(); form.focusField(Object.keys(form.errors)[0]); } }, true);
+      }
+      return form;
+    }
+    function upgradeForms(root) {
+      if (!root || !root.querySelectorAll) { return []; }
+      return Array.from(root.querySelectorAll(FORM_HOST_SELECTOR)).map((h) => formOf(h)).filter(Boolean);
+    }
+    return { "FORM_HOST_SELECTOR": FORM_HOST_SELECTOR, "formOf": formOf, "upgradeForms": upgradeForms };
   })();
   /* ---- src/drishti_select.js ---- */
   __m["src/drishti_select.js"] = (function () {
@@ -2877,6 +2940,7 @@
         if (!it || it.disabled) { return; }
         this.close(true);
         this.setValue(it.value, true);
+        this.emit('pick', { value: this.value, option: this.getOption() });      // every pick, the same value too (a cell editor saves on it)
       }
       getValue() { return this.value; }
       getOption() { const v = this.value; return v === null ? null : this.options.find((x) => same(x.value, v)) || null; }
@@ -2958,6 +3022,7 @@
     var DatePicker = __m["src/drishti_date-picker.js"].DatePicker;
     var TimePicker = __m["src/drishti_time-picker.js"].TimePicker, DateTimePicker = __m["src/drishti_time-picker.js"].DateTimePicker;
     var MultiSelect = __m["src/drishti_multiselect.js"].MultiSelect;
+    var upgradeForms = __m["src/drishti_form-host.js"].upgradeForms;
     function labelOf(input, fallback) {
       const own = input.getAttribute('aria-label');
       if (own) { return own; }
@@ -3071,8 +3136,9 @@
     }
     function upgradeFields(root, options) {
       const o = Object.assign({ small: 6 }, options);
-      const out = { dates: [], checks: [] };
+      const out = { dates: [], checks: [], forms: [] };
       if (!root || !root.querySelectorAll) { return out; }
+      out.forms = upgradeForms(root);                            // the server's forms first (their fields are the library's own)
       root.querySelectorAll('input[type=date]:not([data-native])').forEach((i) => { const p = upgradeDateInput(i, o.dates); if (p) { out.dates.push(p); } });
       root.querySelectorAll('input[type=time]:not([data-native])').forEach((i) => { const p = upgradeTimeInput(i); if (p) { out.dates.push(p); } });
       root.querySelectorAll('input[type=datetime-local]:not([data-native])').forEach((i) => { const p = upgradeDateTimeInput(i); if (p) { out.dates.push(p); } });
@@ -3096,7 +3162,7 @@
       if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', go); } else { go(); }
       if (root.MutationObserver) { new root.MutationObserver(() => { if (doc.querySelector(CODE_AREA_SELECTOR)) { go(); } }).observe(doc.documentElement, { childList: true, subtree: true }); }
     }
-    return { "install": install, "CALENDAR_RULES": __m["src/drishti_calendar.js"].CALENDAR_RULES, "easterSunday": __m["src/drishti_calendar.js"].easterSunday, "ruleDate": __m["src/drishti_calendar.js"].ruleDate, "HolidayCalendar": __m["src/drishti_calendar.js"].HolidayCalendar, "defineCalendar": __m["src/drishti_calendar.js"].defineCalendar, "calendar": __m["src/drishti_calendar.js"].calendar, "DATE_PRESETS": __m["src/drishti_calendar.js"].DATE_PRESETS, "resolvePreset": __m["src/drishti_calendar.js"].resolvePreset, "parseDateInput": __m["src/drishti_calendar.js"].parseDateInput, "monthGrid": __m["src/drishti_calendar.js"].monthGrid, "shiftDate": __m["src/drishti_calendar.js"].shiftDate, "uid": __m["src/drishti_inputs-dom.js"].uid, "debounce": __m["src/drishti_inputs-dom.js"].debounce, "InputBase": __m["src/drishti_inputs-dom.js"].InputBase, "Popover": __m["src/drishti_inputs-dom.js"].Popover, "Listbox": __m["src/drishti_inputs-dom.js"].Listbox, "normalizeOptions": __m["src/drishti_inputs-dom.js"].normalizeOptions, "searchOptions": __m["src/drishti_inputs-dom.js"].searchOptions, "CalendarView": __m["src/drishti_date-picker.js"].CalendarView, "DatePicker": __m["src/drishti_date-picker.js"].DatePicker, "DateRangePicker": __m["src/drishti_date-range.js"].DateRangePicker, "parseTime": __m["src/drishti_time-picker.js"].parseTime, "parseDateTime": __m["src/drishti_time-picker.js"].parseDateTime, "timeSlots": __m["src/drishti_time-picker.js"].timeSlots, "TimePicker": __m["src/drishti_time-picker.js"].TimePicker, "DateTimePicker": __m["src/drishti_time-picker.js"].DateTimePicker, "TreeModel": __m["src/drishti_tree.js"].TreeModel, "TreePicker": __m["src/drishti_tree-picker.js"].TreePicker, "MultiSelect": __m["src/drishti_multiselect.js"].MultiSelect, "TypeAhead": __m["src/drishti_combobox.js"].TypeAhead, "Combobox": __m["src/drishti_combobox.js"].Combobox, "Select": __m["src/drishti_select.js"].Select, "words": __m["src/drishti_schema.js"].words, "pathParts": __m["src/drishti_schema.js"].pathParts, "getPath": __m["src/drishti_schema.js"].getPath, "setPath": __m["src/drishti_schema.js"].setPath, "conditionHolds": __m["src/drishti_schema.js"].conditionHolds, "fieldsOf": __m["src/drishti_schema.js"].fieldsOf, "defaults": __m["src/drishti_schema.js"].defaults, "fieldProblem": __m["src/drishti_schema.js"].fieldProblem, "validate": __m["src/drishti_schema.js"].validate, "visibleValue": __m["src/drishti_schema.js"].visibleValue, "changes": __m["src/drishti_schema.js"].changes, "parseField": __m["src/drishti_schema.js"].parseField, "currencyOf": __m["src/drishti_schema.js"].currencyOf, "offeredValues": __m["src/drishti_schema.js"].offeredValues, "Form": __m["src/drishti_form.js"].Form, "defineWidget": __m["src/drishti_form-fields.js"].defineWidget, "defaultWidget": __m["src/drishti_form-fields.js"].defaultWidget, "applyHook": __m["src/drishti_form-fields.js"].applyHook, "FilterModelBar": __m["src/drishti_filter-bar.js"].FilterModelBar, "FilterBar": __m["src/drishti_filter-bar.js"].FilterBar, "upgradeDateInput": __m["src/drishti_native.js"].upgradeDateInput, "upgradeTimeInput": __m["src/drishti_native.js"].upgradeTimeInput, "upgradeDateTimeInput": __m["src/drishti_native.js"].upgradeDateTimeInput, "upgradeCheckboxes": __m["src/drishti_native.js"].upgradeCheckboxes, "upgradeFields": __m["src/drishti_native.js"].upgradeFields, "rachanaMode": __m["src/drishti_code-modes.js"].rachanaMode, "yamlMode": __m["src/drishti_code-modes.js"].yamlMode, "MODES": __m["src/drishti_code-modes.js"].MODES, "defineModes": __m["src/drishti_code-modes.js"].defineModes, "MiniStream": __m["src/drishti_code-modes.js"].MiniStream, "tokens": __m["src/drishti_code-modes.js"].tokens, "wordAt": __m["src/drishti_code-text.js"].wordAt, "completions": __m["src/drishti_code-text.js"].completions, "insertText": __m["src/drishti_code-text.js"].insertText, "lineDiff": __m["src/drishti_code-text.js"].lineDiff, "sideBySide": __m["src/drishti_code-text.js"].sideBySide, "diffStats": __m["src/drishti_code-text.js"].diffStats, "ensureCodeMirror": __m["src/drishti_code-editor.js"].ensureCodeMirror, "yamlIndentAfter": __m["src/drishti_code-editor.js"].yamlIndentAfter, "CodeEditor": __m["src/drishti_code-editor.js"].CodeEditor, "CodeDiff": __m["src/drishti_code-editor.js"].CodeDiff, "upgradeCodeArea": __m["src/drishti_code-upgrade.js"].upgradeCodeArea, "upgradeCodeAreas": __m["src/drishti_code-upgrade.js"].upgradeCodeAreas, "CODE_AREA_SELECTOR": __m["src/drishti_code-upgrade.js"].CODE_AREA_SELECTOR, "INPUT_ELEMENTS": __m["src/drishti_inputs-element.js"].INPUT_ELEMENTS, "defineInputElements": __m["src/drishti_inputs-element.js"].defineInputElements };
+    return { "install": install, "CALENDAR_RULES": __m["src/drishti_calendar.js"].CALENDAR_RULES, "easterSunday": __m["src/drishti_calendar.js"].easterSunday, "ruleDate": __m["src/drishti_calendar.js"].ruleDate, "HolidayCalendar": __m["src/drishti_calendar.js"].HolidayCalendar, "defineCalendar": __m["src/drishti_calendar.js"].defineCalendar, "calendar": __m["src/drishti_calendar.js"].calendar, "DATE_PRESETS": __m["src/drishti_calendar.js"].DATE_PRESETS, "resolvePreset": __m["src/drishti_calendar.js"].resolvePreset, "parseDateInput": __m["src/drishti_calendar.js"].parseDateInput, "monthGrid": __m["src/drishti_calendar.js"].monthGrid, "shiftDate": __m["src/drishti_calendar.js"].shiftDate, "uid": __m["src/drishti_inputs-dom.js"].uid, "debounce": __m["src/drishti_inputs-dom.js"].debounce, "InputBase": __m["src/drishti_inputs-dom.js"].InputBase, "Popover": __m["src/drishti_inputs-dom.js"].Popover, "Listbox": __m["src/drishti_inputs-dom.js"].Listbox, "normalizeOptions": __m["src/drishti_inputs-dom.js"].normalizeOptions, "searchOptions": __m["src/drishti_inputs-dom.js"].searchOptions, "CalendarView": __m["src/drishti_date-picker.js"].CalendarView, "DatePicker": __m["src/drishti_date-picker.js"].DatePicker, "DateRangePicker": __m["src/drishti_date-range.js"].DateRangePicker, "parseTime": __m["src/drishti_time-picker.js"].parseTime, "parseDateTime": __m["src/drishti_time-picker.js"].parseDateTime, "timeSlots": __m["src/drishti_time-picker.js"].timeSlots, "TimePicker": __m["src/drishti_time-picker.js"].TimePicker, "DateTimePicker": __m["src/drishti_time-picker.js"].DateTimePicker, "TreeModel": __m["src/drishti_tree.js"].TreeModel, "TreePicker": __m["src/drishti_tree-picker.js"].TreePicker, "MultiSelect": __m["src/drishti_multiselect.js"].MultiSelect, "TypeAhead": __m["src/drishti_combobox.js"].TypeAhead, "Combobox": __m["src/drishti_combobox.js"].Combobox, "Select": __m["src/drishti_select.js"].Select, "words": __m["src/drishti_schema.js"].words, "pathParts": __m["src/drishti_schema.js"].pathParts, "getPath": __m["src/drishti_schema.js"].getPath, "setPath": __m["src/drishti_schema.js"].setPath, "conditionHolds": __m["src/drishti_schema.js"].conditionHolds, "fieldsOf": __m["src/drishti_schema.js"].fieldsOf, "defaults": __m["src/drishti_schema.js"].defaults, "fieldProblem": __m["src/drishti_schema.js"].fieldProblem, "validate": __m["src/drishti_schema.js"].validate, "visibleValue": __m["src/drishti_schema.js"].visibleValue, "changes": __m["src/drishti_schema.js"].changes, "parseField": __m["src/drishti_schema.js"].parseField, "currencyOf": __m["src/drishti_schema.js"].currencyOf, "offeredValues": __m["src/drishti_schema.js"].offeredValues, "Form": __m["src/drishti_form.js"].Form, "FORM_HOST_SELECTOR": __m["src/drishti_form-host.js"].FORM_HOST_SELECTOR, "formOf": __m["src/drishti_form-host.js"].formOf, "upgradeForms": __m["src/drishti_form-host.js"].upgradeForms, "defineWidget": __m["src/drishti_form-fields.js"].defineWidget, "defaultWidget": __m["src/drishti_form-fields.js"].defaultWidget, "applyHook": __m["src/drishti_form-fields.js"].applyHook, "FilterModelBar": __m["src/drishti_filter-bar.js"].FilterModelBar, "FilterBar": __m["src/drishti_filter-bar.js"].FilterBar, "upgradeDateInput": __m["src/drishti_native.js"].upgradeDateInput, "upgradeTimeInput": __m["src/drishti_native.js"].upgradeTimeInput, "upgradeDateTimeInput": __m["src/drishti_native.js"].upgradeDateTimeInput, "upgradeCheckboxes": __m["src/drishti_native.js"].upgradeCheckboxes, "upgradeFields": __m["src/drishti_native.js"].upgradeFields, "rachanaMode": __m["src/drishti_code-modes.js"].rachanaMode, "yamlMode": __m["src/drishti_code-modes.js"].yamlMode, "MODES": __m["src/drishti_code-modes.js"].MODES, "defineModes": __m["src/drishti_code-modes.js"].defineModes, "MiniStream": __m["src/drishti_code-modes.js"].MiniStream, "tokens": __m["src/drishti_code-modes.js"].tokens, "wordAt": __m["src/drishti_code-text.js"].wordAt, "completions": __m["src/drishti_code-text.js"].completions, "insertText": __m["src/drishti_code-text.js"].insertText, "lineDiff": __m["src/drishti_code-text.js"].lineDiff, "sideBySide": __m["src/drishti_code-text.js"].sideBySide, "diffStats": __m["src/drishti_code-text.js"].diffStats, "ensureCodeMirror": __m["src/drishti_code-editor.js"].ensureCodeMirror, "yamlIndentAfter": __m["src/drishti_code-editor.js"].yamlIndentAfter, "CodeEditor": __m["src/drishti_code-editor.js"].CodeEditor, "CodeDiff": __m["src/drishti_code-editor.js"].CodeDiff, "upgradeCodeArea": __m["src/drishti_code-upgrade.js"].upgradeCodeArea, "upgradeCodeAreas": __m["src/drishti_code-upgrade.js"].upgradeCodeAreas, "CODE_AREA_SELECTOR": __m["src/drishti_code-upgrade.js"].CODE_AREA_SELECTOR, "INPUT_ELEMENTS": __m["src/drishti_inputs-element.js"].INPUT_ELEMENTS, "defineInputElements": __m["src/drishti_inputs-element.js"].defineInputElements };
   })();
   return Object.freeze(Object.assign({ library: "drishti-inputs", version: "0.3.0" }, __m["src/drishti_index.js"]));
 });

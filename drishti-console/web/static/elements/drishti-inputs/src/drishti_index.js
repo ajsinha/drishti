@@ -32,6 +32,7 @@ export { Select } from './drishti_select.js';
 export { words, pathParts, getPath, setPath, conditionHolds, fieldsOf, defaults, fieldProblem, validate, visibleValue, changes,
   parseField, currencyOf, offeredValues } from './drishti_schema.js';
 export { Form } from './drishti_form.js';
+export { FORM_HOST_SELECTOR, formOf, upgradeForms } from './drishti_form-host.js';
 export { defineWidget, defaultWidget, applyHook } from './drishti_form-fields.js';
 export { FilterModelBar, FilterBar } from './drishti_filter-bar.js';
 export { upgradeDateInput, upgradeTimeInput, upgradeDateTimeInput, upgradeCheckboxes, upgradeFields } from './drishti_native.js';

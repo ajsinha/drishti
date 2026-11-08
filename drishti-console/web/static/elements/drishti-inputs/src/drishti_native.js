@@ -25,6 +25,7 @@ import { HolidayCalendar } from './drishti_calendar.js';
 import { DatePicker } from './drishti_date-picker.js';
 import { TimePicker, DateTimePicker } from './drishti_time-picker.js';
 import { MultiSelect } from './drishti_multiselect.js';
+import { upgradeForms } from './drishti_form-host.js';
 
 /** @private the text of the label(s) that name a field, or its aria-label */
 function labelOf(input, fallback) {
@@ -195,12 +196,13 @@ export function upgradeCheckboxes(group, options) {
  * `small` checkboxes (fewer stay a compact row of checkboxes).
  * @param {(Document|Element)} root
  * @param {{small: number, offClass: string, dates: UpgradeDateOptions}} [options]
- * @returns {{dates: DatePicker[], checks: Array<Object>}}
+ * @returns {{dates: DatePicker[], checks: Array<Object>, forms: Array<Object>}} (forms: the server's form hosts made Forms, drishti_form-host.js)
  */
 export function upgradeFields(root, options) {
   const o = Object.assign({ small: 6 }, options);
-  const out = { dates: [], checks: [] };
+  const out = { dates: [], checks: [], forms: [] };
   if (!root || !root.querySelectorAll) { return out; }
+  out.forms = upgradeForms(root);                            // the server's forms first (their fields are the library's own)
   root.querySelectorAll('input[type=date]:not([data-native])').forEach((i) => { const p = upgradeDateInput(i, o.dates); if (p) { out.dates.push(p); } });
   root.querySelectorAll('input[type=time]:not([data-native])').forEach((i) => { const p = upgradeTimeInput(i); if (p) { out.dates.push(p); } });
   root.querySelectorAll('input[type=datetime-local]:not([data-native])').forEach((i) => { const p = upgradeDateTimeInput(i); if (p) { out.dates.push(p); } });

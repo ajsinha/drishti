@@ -38,9 +38,11 @@ _READ = r"""() => {
     out.push({ host: 'data-vx-tree', kind: 'tree', headings: [...hdr.children].map((x) => clean(x.textContent)),
       rows: [...t.querySelectorAll('.vx-row[data-scope]')].map((r) => [...r.children].map((x) => clean(x.textContent))) });
   });
-  document.querySelectorAll('drishti-grid').forEach((el) => {
-    if (!el.grid || el.closest('[hidden]')) return;
-    const m = el.grid.model, cols = m.shownColumns(), rows = [];
+  const grids = [...document.querySelectorAll('drishti-grid')].map((el) => [el, el.grid]).concat(   // a drishti-tree's tree grid too (the VaR tree)
+    [...document.querySelectorAll('drishti-tree')].map((el) => [el, el.tree && el.tree.grid && el.tree.grid.grid]));
+  grids.forEach(([el, grid]) => {
+    if (!grid || el.closest('[hidden]')) return;
+    const m = grid.model, cols = m.shownColumns(), rows = [];
     for (let r = 0; r < m.rowCount(); r++) { rows.push(cols.map((c, j) => clean(m.cellText(r, j)))); }
     out.push({ host: hostOf(el), kind: 'grid', headings: cols.map((c) => clean(c.header)), rows: rows });
   });
@@ -71,7 +73,7 @@ def figures(page) -> dict:
 
 
 def _key(row: dict, common: list[str]) -> tuple:
-    return tuple(row.get(h, "") for h in common)
+    return tuple(row.get(h, "") or "—" for h in common)          # no figure: a blank cell or a dash (drishti-risk's riskMoney draws "—")
 
 
 def compare(old: dict, new: dict) -> list[str]:
