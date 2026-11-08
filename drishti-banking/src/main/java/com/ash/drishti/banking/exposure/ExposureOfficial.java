@@ -15,8 +15,6 @@
  */
 package com.ash.drishti.banking.exposure;
 
-import com.ash.drishti.api.AsOf;
-import com.ash.drishti.api.DataNode;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.banking.compute.ccr.ExposureBook;
 import com.ash.drishti.banking.compute.ccr.ExposureCalc;

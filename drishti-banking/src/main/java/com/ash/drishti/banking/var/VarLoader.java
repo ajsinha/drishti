@@ -387,28 +387,62 @@ final class VarLoader {
     /**
      * The display names of a date's nodes (VAR_GUIDE.md section 15.14): a level's name is the reference kind ({@code desk}, {@code book},
      * {@code legal-entity}) and the value its id; the entity's {@code NAME} when a connector serves it, else none (the node is named by
-     * its value). Each entity read once per load.
+     * its value). Each kind's names are read once per load, as one column when its source keeps {@code NAME} as a column, else entity by
+     * entity (at most {@link #NAME_READS} a kind, then by value).
      */
     com.ash.drishti.banking.compute.var.Cells.Names names(AsOf asOf, Hierarchies hs) {
         java.util.Set<String> levels = new java.util.HashSet<>();
         hs.specs().forEach(s -> levels.addAll(s.levelNames()));
-        Map<String, String> cache = new java.util.concurrent.ConcurrentHashMap<>();
+        Map<String, Map<String, String>> byKind = new java.util.concurrent.ConcurrentHashMap<>();
+        Map<String, java.util.concurrent.atomic.AtomicInteger> reads = new java.util.concurrent.ConcurrentHashMap<>();
         return (level, value) -> {
             if (!levels.contains(level) || value == null) {
                 return null;
             }
-            String got = cache.computeIfAbsent(level + "\u0000" + value, x -> {
-                try {
-                    com.ash.drishti.api.EntityRef ref = new com.ash.drishti.api.EntityRef(level, value);
-                    EntityDocument d = router.fetchAll(List.of(ref), java.time.Duration.ofSeconds(10), asOf).get(ref);
-                    String n = d == null || d.data() == null ? null : text(d.data(), "NAME");
-                    return n == null || n.isBlank() ? "" : n.strip();
-                } catch (RuntimeException e) {
-                    return "";                                         // no connector serves the kind: the node is named by its value
-                }
-            });
-            return got.isEmpty() ? null : got;
+            Map<String, String> names = byKind.computeIfAbsent(level, k -> nameColumn(k, asOf));
+            String got = names.get(value);
+            if (got == null && !names.containsKey(ALL_READ) && reads.computeIfAbsent(level, k -> new java.util.concurrent.atomic.AtomicInteger())
+                    .incrementAndGet() <= NAME_READS) {
+                got = nameOf(level, value, asOf);
+                names.put(value, got);
+            }
+            return got == null || got.isEmpty() ? null : got;
         };
+    }
+
+    /** The most entities of one kind whose names a load reads one by one (a kind whose source keeps no NAME column). */
+    static final int NAME_READS = 200;
+    private static final String ALL_READ = "\u0000all";
+
+    /** A kind's names as one column ({@code NAME} kept as a column by its source), marked complete; else an empty map to fill. */
+    private Map<String, String> nameColumn(String kind, AsOf asOf) {
+        Map<String, String> out = new java.util.concurrent.ConcurrentHashMap<>();
+        try {
+            router.columns(kind, List.of("NAME"), asOf, java.time.Duration.ofSeconds(30)).filter(c -> c.has("NAME")).ifPresent(c -> {
+                for (int i = 0; i < c.size(); i++) {
+                    Object n = c.value("NAME", i);
+                    if (c.ids()[i] != null && n != null && !String.valueOf(n).isBlank()) {
+                        out.put(c.ids()[i], String.valueOf(n).strip());
+                    }
+                }
+                out.put(ALL_READ, "");
+            });
+        } catch (RuntimeException e) {
+            out.put(ALL_READ, "");                                     // no connector serves the kind: every node named by its value
+        }
+        return out;
+    }
+
+    /** One entity's {@code NAME} ("" when there is none). */
+    private String nameOf(String kind, String id, AsOf asOf) {
+        try {
+            com.ash.drishti.api.EntityRef ref = new com.ash.drishti.api.EntityRef(kind, id);
+            EntityDocument d = router.fetchAll(List.of(ref), java.time.Duration.ofSeconds(10), asOf).get(ref);
+            String n = d == null || d.data() == null ? null : text(d.data(), "NAME");
+            return n == null || n.isBlank() ? "" : n.strip();
+        } catch (RuntimeException e) {
+            return "";
+        }
     }
 
     /** What the reference entities that name the nodes add to a hot file's digest: each level kind's data version. */
