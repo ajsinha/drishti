@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
+  PROPRIETARY AND CONFIDENTIAL. See the LICENSE file in the root of this repository.
+-->
+<!-- PMD's copy-paste detector, for tools/duplicates.py only. Deliberately not a module of the root pom: it is never built, packaged or
+     resolved by a normal build, and nothing here reaches the product's class path. -->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.ash.drishti.tools</groupId>
+  <artifactId>drishti-cpd</artifactId>
+  <version>1</version>
+  <packaging>pom</packaging>
+  <properties><pmd.version>7.29.0</pmd.version></properties>
+  <dependencies>
+    <dependency><groupId>net.sourceforge.pmd</groupId><artifactId>pmd-cli</artifactId><version>${pmd.version}</version></dependency>
+    <dependency><groupId>net.sourceforge.pmd</groupId><artifactId>pmd-java</artifactId><version>${pmd.version}</version></dependency>
+    <dependency><groupId>net.sourceforge.pmd</groupId><artifactId>pmd-javascript</artifactId><version>${pmd.version}</version></dependency>
+    <dependency><groupId>net.sourceforge.pmd</groupId><artifactId>pmd-python</artifactId><version>${pmd.version}</version></dependency>
+  </dependencies>
+</project>

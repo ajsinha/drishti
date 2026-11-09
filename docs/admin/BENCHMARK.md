@@ -50,6 +50,7 @@ work is in the [VaR guide](../guides/VAR_GUIDE.md) and the [exposure guide](../g
 19. [The BI scale gate](#19-the-bi-scale-gate)
 20. [Drishti Elements: the grid engine at 1,000,000 rows](#20-drishti-elements-the-grid-engine-at-1000000-rows)
 21. [Measuring one installation](#21-measuring-one-installation)
+22. [Code volume by release](#22-code-volume-by-release)
 
 ## 1. What is measured, and why
 
@@ -2043,3 +2044,16 @@ In-memory files are 4 to 42 times smaller than the decoded documents and 1.6 to 
 JSON-lines index loaded inside a cache's compute in the file connector (and the same pattern in the S3 connector); after the change no pin.
 Pins that need no change: Hadoop's `Shell.runCommand` and RocksDB's libc check (once, at start), Hadoop security's `LoginContext` (once),
 DuckDB, lz4 and zstd JNI calls (they do not park).
+
+## 22. Code volume by release
+
+Lines of code at each release and now, **measured** from git by `python3 tools/code_volume.py --write`, run in each release's preparation: Java under `src/main` and
+`src/test`; the console's Python, without its tests; the console's JavaScript, without `static/vendor`, the frozen `render/1.2.0` and `web/embed`.
+
+<!-- code-volume:begin (tools/code_volume.py --write) -->
+| Release | Date | Java main | Java test | Console python | Console js |
+|---|---|---:|---:|---:|---:|
+| v2.9.11.d | 2026-11-07 | 421,661 | 160,177 | 43,438 | 56,384 |
+| v2.9.11.g | 2026-11-08 | 431,422 | 164,993 | 46,531 | 119,031 |
+| current | 2026-11-09 | 436,337 | 167,731 | 46,788 | 122,291 |
+<!-- code-volume:end -->

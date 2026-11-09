@@ -17,6 +17,9 @@
 
 ## Unreleased
 
+- **Copy-paste ratchet and code volume:** `tools/duplicates.py` runs PMD's copy-paste detector over Java, JavaScript and Python at 100 tokens (`tools/cpd/pom.xml`, outside the
+  root build, nothing that ships); the gate fails if any language has more duplicated lines than `tools/cpd/baseline.txt`, which is only lowered. `tools/code_volume.py` writes lines of code per
+  release from git into `docs/admin/BENCHMARK.md` section 22.
 - **Kernel boundary (P1):** the core names no banking string (`tools/domain_strings_allowed.yaml` is empty); banking's words go through `DomainVocabulary` and the
   console's new plugin hooks (reserved words, console commands, phone pages, connector actions, the view toolbar slot). New `drishti-kernel-api` jar (kernel API 0.1) holds
   the SPIs of KERNEL_AND_MODULES section 2.3, with `ApiSurfaceTest` pinning the surface; `KernelWithoutModulesTest` boots the kernel with no banking on the class path.

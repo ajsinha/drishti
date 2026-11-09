@@ -198,6 +198,7 @@ server, console or browser, and takes seconds. It is marked **`static`** (`pytes
 `@pytest.mark.static` for one test; the marker is registered in the root `pytest.ini`) and runs in the drill's **gate**, beside the
 static scripts and the Java build, so a mistake it finds stops the drill in the first minutes instead of failing a lane an hour later.
 A guard that sat in the browser lane because its text names Chromium (the Java launch guard) failed one drill that late.
+The copy-paste ratchet (`tools/test_duplicates.py`, seconds) is one of these: duplicated lines per language may only fall below `tools/cpd/baseline.txt`.
 
 - `tools/drillkit/drill_plan.py static` lists the console test files with a static test; `--kind tools` the tools test files marked
   static as a whole. Finding none fails the gate (a mark misspelt or a folder moved is never a silent pass).
