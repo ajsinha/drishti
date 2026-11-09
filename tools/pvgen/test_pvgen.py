@@ -63,7 +63,7 @@ class MorningTest(unittest.TestCase):
     def setUpClass(cls):
         cls.tmp = tempfile.TemporaryDirectory()
         cls.out = Path(cls.tmp.name)
-        cls.rc, cls.said = run(morning.main, "--out", str(cls.out), "--date", "2026-10-27")
+        cls.rc, cls.said = run(morning.main, *OLD, "--out", str(cls.out), "--date", "2026-10-27")
 
     @classmethod
     def tearDownClass(cls):
@@ -73,7 +73,7 @@ class MorningTest(unittest.TestCase):
         with self.assertRaises(SystemExit), contextlib.redirect_stdout(io.StringIO()):
             morning.main(["--help"])
         with tempfile.TemporaryDirectory() as t:
-            rc, said = run(morning.main, "--out", t, "--dry-run")
+            rc, said = run(morning.main, *OLD, "--out", t, "--dry-run")
             self.assertEqual(rc, 0)
             self.assertIn("dry run: nothing written", said)
             self.assertEqual(list(Path(t).iterdir()), [])
@@ -100,7 +100,7 @@ class MorningTest(unittest.TestCase):
 
     def test_every_system_as_p_and_l_vectors_is_2_9_3(self):
         with tempfile.TemporaryDirectory() as t:
-            rc, said = run(morning.main, "--out", t, "--all-vectors", "--gzip")
+            rc, said = run(morning.main, *OLD, "--out", t, "--all-vectors", "--gzip")
             self.assertEqual(rc, 0)
             folder = Path(t) / "morning-2026-09-30"
             self.assertEqual(sorted(f.name for f in folder.iterdir()), ["fx-scenario.2026-09-30.jsonl.gz", "pnl-vector.2026-09-30.jsonl.gz"])
@@ -110,6 +110,10 @@ class MorningTest(unittest.TestCase):
             self.assertEqual((round(var), round(es)), (112_035_906, 160_132_107))
 
 
+#: these tests exercise the generator's forms and grains: trade grain, Endur as PVs (the demo's default is position grain, every system PVs)
+OLD = ("--grain", "trade", "--pv-systems", "ENDUR")
+
+
 class GrainTest(unittest.TestCase):
     """Per position (--grain position, --position-systems): each record a position summed from its trades, naming them; every record
     says what it is first (VALUE_TYPE, GRAIN, its id, CURRENCY, SOURCE_SYSTEM); the bank and every desk the same as per trade, to the
@@ -117,8 +121,8 @@ class GrainTest(unittest.TestCase):
 
     def test_the_same_trades_as_their_positions_give_the_same_bank_and_desks(self):
         with tempfile.TemporaryDirectory() as t:
-            rc, _ = run(morning.main, "--out", t + "/trade")
-            rc2, said = run(morning.main, "--out", t + "/position", "--grain", "position")
+            rc, _ = run(morning.main, *OLD, "--out", t + "/trade")
+            rc2, said = run(morning.main, *OLD, "--out", t + "/position", "--grain", "position")
             self.assertEqual((rc, rc2), (0, 0))
             self.assertIn("per position: ENDUR, MUREX, CALYPSO", said)
             by_trade = check.load_morning(Path(t) / "trade" / "morning-2026-09-30")
@@ -136,7 +140,7 @@ class GrainTest(unittest.TestCase):
                 for x, y in zip(a[scope], b[scope]):
                     self.assertAlmostEqual(x, y, delta=0.01)
             # the intraday updates follow each record's grain
-            rc, said = run(intraday.main, "--out", t + "/i", "--grain", "position", "--batches", "1", "--trades-per-batch", "6")
+            rc, said = run(intraday.main, *OLD, "--out", t + "/i", "--grain", "position", "--batches", "1", "--trades-per-batch", "6")
             rows = every_line(Path(t) / "i")
             self.assertTrue(rows)
             for kind, r in rows:
@@ -158,9 +162,9 @@ class IntradayTest(unittest.TestCase):
         cls.tmp = tempfile.TemporaryDirectory()
         base = Path(cls.tmp.name)
         cls.a, cls.b, cls.c = base / "a", base / "b", base / "c"
-        run(intraday.main, "--out", str(cls.a), "--batches", "4", "--trades-per-batch", "12", "--seed", "3")
-        run(intraday.main, "--out", str(cls.b), "--batches", "4", "--trades-per-batch", "12", "--seed", "3")
-        run(intraday.main, "--out", str(cls.c), "--batches", "4", "--trades-per-batch", "12", "--seed", "4")
+        run(intraday.main, *OLD, "--out", str(cls.a), "--batches", "4", "--trades-per-batch", "12", "--seed", "3")
+        run(intraday.main, *OLD, "--out", str(cls.b), "--batches", "4", "--trades-per-batch", "12", "--seed", "3")
+        run(intraday.main, *OLD, "--out", str(cls.c), "--batches", "4", "--trades-per-batch", "12", "--seed", "4")
 
     @classmethod
     def tearDownClass(cls):
@@ -198,16 +202,16 @@ class IntradayTest(unittest.TestCase):
 
     def test_a_plan_amended_new_and_cancelled_in_either_form_and_a_dry_run(self):
         with tempfile.TemporaryDirectory() as t:
-            rc, said = run(intraday.main, "--out", t, "--batches", "1", "--plan", "amend,new,cancel", "--all-vectors", "--systems", "ENDUR")
+            rc, said = run(intraday.main, *OLD, "--out", t, "--batches", "1", "--plan", "amend,new,cancel", "--all-vectors", "--systems", "ENDUR")
             self.assertEqual(rc, 0)
             rows = every_line(Path(t))
             self.assertEqual([r["TRADE_STATUS"] for _, r in rows][1:], ["NEW", "CANCELLED"])
             self.assertEqual({k for k, r in rows if r["TRADE_STATUS"] != "CANCELLED"}, {"pnl-vector"})   # Endur's updates as vectors
             self.assertEqual(rows[2][0], "scenario-pv")                    # a cancel in the form the trade has (Endur's: scenario PVs)
             self.assertTrue(rows[1][1]["TRADE_ID"].startswith("9"))         # a new trade in Endur's range
-            rc, said = run(intraday.main, "--out", t + "/none", "--batches", "2", "--dry-run")
+            rc, said = run(intraday.main, *OLD, "--out", t + "/none", "--batches", "2", "--dry-run")
             self.assertIn("dry run: nothing written", said)
-            rc, said = run(intraday.main, "--out", t + "/none", "--batches", "2", "--first", "21", "--dry-run")   # a second run goes on
+            rc, said = run(intraday.main, *OLD, "--out", t + "/none", "--batches", "2", "--first", "21", "--dry-run")   # a second run goes on
             self.assertIn("I-2026-09-30-021:", said)
             self.assertIn("I-2026-09-30-022:", said)
             self.assertFalse(Path(t, "none").exists())
@@ -220,7 +224,7 @@ class IntradayTest(unittest.TestCase):
         for r in rows:
             self.assertEqual(C.validate("scenario-pv", r), [])
         with tempfile.TemporaryDirectory() as t:                          # and it is what the script writes, byte for byte
-            rc, _ = run(intraday.main, "--batches", "1", "--trades-per-batch", "5", "--systems", "ENDUR",
+            rc, _ = run(intraday.main, *OLD, "--batches", "1", "--trades-per-batch", "5", "--systems", "ENDUR",
                         "--plan", "amend,amend,amend,new,cancel", "--out", t)
             self.assertEqual(rc, 0)
             self.assertEqual(Path(t, "intraday-2026-09-30", "I-2026-09-30-001", f.name).read_bytes(), f.read_bytes())
@@ -231,7 +235,7 @@ class PublisherAndCheckerTest(unittest.TestCase):
     def test_each_message_is_jsonl_of_several_records_a_cancel_a_cancel_line(self):
         with tempfile.TemporaryDirectory() as t:
             save = Path(t) / "sent.jsonl"
-            rc, said = run(publish_kafka.main, "--dry-run", "--rate", "10", "--seconds", "4", "--per-message", "3",
+            rc, said = run(publish_kafka.main, *OLD, "--dry-run", "--rate", "10", "--seconds", "4", "--per-message", "3",
                            "--mix", "amend=1,cancel=1", "--save", str(save))
             self.assertEqual(rc, 0)
             lines = [x for x in said.splitlines() if x.startswith("drishti.risk.pv-updates key=P-2026-09-30-")]

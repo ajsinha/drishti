@@ -53,16 +53,18 @@ NEW_IDS = {"ENDUR": (9_000_000, ""), "CALYPSO": (9_000_000, "CLY-"), "MUREX": (9
 
 def grain_args(p) -> None:
     """--grain and --position-systems: which systems send per position (GRAIN POSITION) rather than per trade."""
-    p.add_argument("--grain", choices=("trade", "position"), default="trade",
-                   help="position: every system sends per position (each record a position, summed from its trades, naming them)")
-    p.add_argument("--position-systems", default="", metavar="SYS,SYS", help="these systems send per position, the rest per trade")
+    p.add_argument("--grain", choices=("trade", "position"), default="position",
+                   help="position (the demo, the default): every system sends per position (each record a position, summed from its trades, "
+                        "naming them); trade: per trade")
+    p.add_argument("--position-systems", default="", metavar="SYS,SYS", help="these systems send per position, the rest per trade (instead of --grain)")
 
 
 def grain_systems(a) -> tuple[str, ...]:
-    """The systems sending per position: all with --grain position, else --position-systems (the morning run and its updates alike)."""
-    if getattr(a, "grain", "trade") == "position":
-        return ("ENDUR", "MUREX", "CALYPSO")
-    return systems(getattr(a, "position_systems", ""))
+    """The systems sending per position: --position-systems when given, else all with --grain position, none with --grain trade (the
+    morning run and its updates alike)."""
+    if getattr(a, "position_systems", ""):
+        return systems(a.position_systems)
+    return ("ENDUR", "MUREX", "CALYPSO") if getattr(a, "grain", "position") == "position" else ()
 
 
 def systems(text: str) -> tuple[str, ...]:

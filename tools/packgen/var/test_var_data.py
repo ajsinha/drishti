@@ -65,6 +65,24 @@ def seed() -> list[dict]:
     return out
 
 
+_TRADE_GRAIN: Path | None = None
+
+
+def trade_grain() -> Path:
+    """The generator's trade-grain output (Endur as scenario PVs, the rest as P&L vectors, one record a trade) in a temporary folder, once a
+    process: the committed data is position grain; these tests check what the generator makes of trades, so the demo's own data need not hold it."""
+    global _TRADE_GRAIN
+    if _TRADE_GRAIN is None:
+        import atexit, shutil, tempfile, yaml
+        out = Path(tempfile.mkdtemp(prefix="drishti-var-trade-grain-"))
+        atexit.register(shutil.rmtree, out, True)
+        td = ROOT / "data" / "testdata"
+        dates = yaml.safe_load((td / "testdata.yaml").read_text(encoding="utf-8"))["business-dates"]
+        MV.write(out, MV.demos(td, dates, pv_systems=("ENDUR",), position_systems=(), usd_pv_systems=()), with_samples=False)
+        _TRADE_GRAIN = out / "market-risk"
+    return _TRADE_GRAIN
+
+
 def docs(kind: str, stress: bool = False, day: str | None = NEWEST) -> list[dict]:
     """A kind's documents of the normal scenario set, or (``stress``) of the stress set (its files start with ``stress-``), of the date
     ``day`` (the newest; None: every date; a kind written for the newest date only, as the desks' 260-day P&L, whole). The files are
@@ -72,7 +90,7 @@ def docs(kind: str, stress: bool = False, day: str | None = NEWEST) -> list[dict
     import feedfiles
     out = []
     whole = kind in MV.NEWEST_ONLY
-    for d, parts in feedfiles.read_table(TD / kind).items():
+    for d, parts in feedfiles.read_table((trade_grain() if kind in ("pnl-vector", "scenario-pv") else TD) / kind).items():
         if day is not None and not whole and d != day:
             continue
         for p in parts:
@@ -110,7 +128,8 @@ def column_nodes(rows: list[dict]) -> dict[str, dict]:
             parent = f"{h}~BANK"
             out[parent]["BOOKS"].add(r["TT_BOOK"])
             for col, level in levels:
-                nid = f"{h}~{r[col]}"
+                # MGMT's ids are the values (ids: leaf); LEGAL's the path below the root, as the server builds them (ids: path)
+                nid = f"{h}~{r[col]}" if h == "MGMT" or parent == f"{h}~BANK" else f"{parent}/{r[col]}"
                 out.setdefault(nid, {"HIERARCHY": h, "LEVEL": level, "PARENT_ID": parent, "BOOKS": set()})["BOOKS"].add(r["TT_BOOK"])
                 parent = nid
     return out
@@ -182,8 +201,8 @@ class VarDataTest(unittest.TestCase):
 
     def test_scenario_pvs_in_the_trades_currency_with_the_supplied_fx(self):
         self.assertGreater(len(self.pv_rows), 1000)
-        self.assertEqual({r["SOURCE_SYSTEM"] for r in self.pv_rows}, set(SFX.PV_SYSTEMS))
-        self.assertFalse({r["SOURCE_SYSTEM"] for r in self.vector_rows} & set(SFX.PV_SYSTEMS))
+        self.assertEqual({r["SOURCE_SYSTEM"] for r in self.pv_rows}, {"ENDUR"})
+        self.assertFalse({r["SOURCE_SYSTEM"] for r in self.vector_rows} & {"ENDUR"})
         self.assertGreater(sum(1 for r in self.pv_rows if r["CURRENCY"] != "USD"), 100, "scenario PVs in other currencies")
         cob = self.rows[0]["BUSINESS_DATE"]
         for c, f in self.fx.items():
@@ -208,7 +227,7 @@ class VarDataTest(unittest.TestCase):
         sys.path.insert(0, str(HERE))
         import make_var_data as M
         td = ROOT / "data" / "testdata"
-        demo = M.Demo(td, yaml.safe_load((td / "testdata.yaml").read_text(encoding="utf-8"))["business-dates"], budget=3)
+        demo = M.Demo(td, yaml.safe_load((td / "testdata.yaml").read_text(encoding="utf-8"))["business-dates"], budget=3, pv_systems=("ENDUR",), position_systems=(), usd_pv_systems=())
         b = demo.batch
         usd = [r for r in b.pv_rows if r["CURRENCY"] == "USD"]
         other = [r for r in b.pv_rows if r["CURRENCY"] != "USD"]
@@ -378,8 +397,8 @@ class FormsPerSystemTest(unittest.TestCase):
         import make_var_data as M
         cls.M = M
         dates = yaml.safe_load((ROOT / "data" / "testdata" / "testdata.yaml").read_text(encoding="utf-8"))["business-dates"]
-        cls.vectors = M.Demo(ROOT / "data" / "testdata", dates, pv_systems=M.pv_systems("ENDUR", all_vectors=True))
-        cls.both = M.Demo(ROOT / "data" / "testdata", dates, pv_systems=M.pv_systems("ENDUR,CALYPSO"))
+        cls.vectors = M.Demo(ROOT / "data" / "testdata", dates, pv_systems=M.pv_systems("ENDUR", all_vectors=True), position_systems=())
+        cls.both = M.Demo(ROOT / "data" / "testdata", dates, pv_systems=M.pv_systems("ENDUR,CALYPSO"), position_systems=(), usd_pv_systems=())
 
     def test_every_system_as_p_and_l_vectors_is_2_9_3(self):
         b = self.vectors.batch

@@ -20107,96 +20107,6 @@ datasets:
     files:
     - trader.2026-09-30.jsonl.gz
     bytes: 20
-- folder: market-risk/scenario-set
-  pack: market-risk
-  kind: scenario-set
-  connector: risk-store
-  key: SCENARIO_SET_ID
-  dated-by: BUSINESS_DATE
-  first-date: '2026-09-28'
-  last-date: '2026-09-30'
-  documents: 4
-  files:
-  - scenario-set.tar
-  bytes: 10240
-- folder: market-risk/pnl-vector
-  pack: market-risk
-  kind: pnl-vector
-  connector: risk-store
-  key: VECTOR_ID
-  dated-by: BUSINESS_DATE
-  first-date: '2026-09-28'
-  last-date: '2026-09-30'
-  documents: 33024
-  files:
-  - pnl-vector-2026-09-28.tar
-  - pnl-vector-2026-09-29.tar
-  - pnl-vector-2026-09-30.tar
-  bytes: 48005120
-- folder: market-risk/scenario-pv
-  pack: market-risk
-  kind: scenario-pv
-  connector: risk-store
-  key: SCENARIO_PV_ID
-  dated-by: BUSINESS_DATE
-  first-date: '2026-09-28'
-  last-date: '2026-09-30'
-  documents: 5369
-  files:
-  - scenario-pv-2026-09-28.tar
-  - scenario-pv-2026-09-29.tar
-  - scenario-pv-2026-09-30.tar
-  bytes: 9922560
-- folder: market-risk/fx-scenario
-  pack: market-risk
-  kind: fx-scenario
-  connector: risk-store
-  key: FX_SCENARIO_ID
-  dated-by: BUSINESS_DATE
-  first-date: '2026-09-28'
-  last-date: '2026-09-30'
-  documents: 24
-  files:
-  - fx-scenario.tar
-  bytes: 61440
-- folder: market-risk/var-limit
-  pack: market-risk
-  kind: var-limit
-  connector: risk-store
-  key: LIMIT_ID
-  dated-by: BUSINESS_DATE
-  first-date: '2026-09-28'
-  last-date: '2026-09-30'
-  documents: 471
-  files:
-  - var-limit.2026-09-28.jsonl.gz
-  - var-limit.2026-09-29.jsonl.gz
-  - var-limit.2026-09-30.jsonl.gz
-  bytes: 5773
-- folder: market-risk/desk-pnl
-  pack: market-risk
-  kind: desk-pnl
-  connector: risk-store
-  key: DESK_PNL_ID
-  dated-by: BUSINESS_DATE
-  first-date: '2025-09-17'
-  last-date: '2026-09-30'
-  documents: 2600
-  files:
-  - desk-pnl.tar
-  bytes: 276480
-- folder: market-risk/pnl-history
-  pack: market-risk
-  kind: pnl-history
-  connector: risk-store
-  key: HISTORY_ID
-  dated-by: BUSINESS_DATE
-  first-date: '2026-09-30'
-  last-date: '2026-09-30'
-  documents: 28
-  files:
-  - pnl-history.2026-09-30.jsonl.gz
-  bytes: 1155460
 - folder: counterparty-risk/simulation-run
   pack: counterparty-risk
   kind: simulation-run
@@ -20245,6 +20155,82 @@ datasets:
   files:
   - risk-factor.2026-09-30.jsonl.gz
   bytes: 21745
+- folder: market-risk/scenario-set
+  pack: market-risk
+  kind: scenario-set
+  connector: risk-store
+  key: SCENARIO_SET_ID
+  dated-by: BUSINESS_DATE
+  first-date: '2026-09-28'
+  last-date: '2026-09-30'
+  documents: 4
+  files:
+  - scenario-set.tar
+  bytes: 10240
+- folder: market-risk/scenario-pv
+  pack: market-risk
+  kind: scenario-pv
+  connector: risk-store
+  key: SCENARIO_PV_ID
+  dated-by: BUSINESS_DATE
+  first-date: '2026-09-28'
+  last-date: '2026-09-30'
+  documents: 32060
+  files:
+  - scenario-pv-2026-09-28.tar
+  - scenario-pv-2026-09-29.tar
+  - scenario-pv-2026-09-30.tar
+  bytes: 58040320
+- folder: market-risk/fx-scenario
+  pack: market-risk
+  kind: fx-scenario
+  connector: risk-store
+  key: FX_SCENARIO_ID
+  dated-by: BUSINESS_DATE
+  first-date: '2026-09-28'
+  last-date: '2026-09-30'
+  documents: 24
+  files:
+  - fx-scenario.tar
+  bytes: 61440
+- folder: market-risk/var-limit
+  pack: market-risk
+  kind: var-limit
+  connector: risk-store
+  key: LIMIT_ID
+  dated-by: BUSINESS_DATE
+  first-date: '2026-09-28'
+  last-date: '2026-09-30'
+  documents: 471
+  files:
+  - var-limit.2026-09-28.jsonl.gz
+  - var-limit.2026-09-29.jsonl.gz
+  - var-limit.2026-09-30.jsonl.gz
+  bytes: 5768
+- folder: market-risk/desk-pnl
+  pack: market-risk
+  kind: desk-pnl
+  connector: risk-store
+  key: DESK_PNL_ID
+  dated-by: BUSINESS_DATE
+  first-date: '2025-09-17'
+  last-date: '2026-09-30'
+  documents: 2600
+  files:
+  - desk-pnl.tar
+  bytes: 276480
+- folder: market-risk/pnl-history
+  pack: market-risk
+  kind: pnl-history
+  connector: risk-store
+  key: HISTORY_ID
+  dated-by: BUSINESS_DATE
+  first-date: '2026-09-30'
+  last-date: '2026-09-30'
+  documents: 28
+  files:
+  - pnl-history.2026-09-30.jsonl.gz
+  bytes: 1155460
 - samples: config/packs/economy/world-economy/samples
   pack: world-economy
   kind: economic-forecast

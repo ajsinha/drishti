@@ -75,7 +75,7 @@ On Windows, offline, with your own ENDUR files: [How to QA in Windows Environmen
    `FIXINGS`, `PNL_SERIES`: its `DATE`, by the same number of business days), and so do the dates a market document holds a fixed
    number of business days from its date (an FX spot's value date `SPOT_DATE`, T+2; an IR curve's pillar `POINTS[].MATURITY`), so a price history has no missing days between the series
    and the stored days. A market document's `CHANGE_1D` is the day's move of its own price (`PRICE`, `LEVEL`, `MID`), and the fields quoted next to the price move with it ([below](#the-datasets)). Measured for sixty days on a fast machine: **943 s (about 15 minutes; up to half an hour on a laptop)**,
-   87 tables, about 3.4 GB on disk (14 tables are static reference data built from the world-economy and
+   86 tables, about 3.4 GB on disk (14 tables are static reference data built from the world-economy and
    news-and-markets packs' samples, 2 the captured quotes and headlines, 8 the us-equities and gleif public data; since 2.9.2 the
    country groups, SIC sectors, ownership groups and LEI countries are computed from them, not stored).
 4. **Start** the server and the console: the run configurations **Drishti server (demo lakes)** (the samples off,
@@ -233,14 +233,14 @@ Nine more market-risk folders feed the VaR engine ([VAR.md](../../docs/contracts
 every date under its file's (or tar folder's) date, moved with the other business dates.
 
 **Three business dates**: the last three days, 2026-09-28, 2026-09-29 and 2026-09-30, each in files of its own
-(`<kind>.<date>.jsonl.gz`; the P&L vectors and scenario PVs `<kind>-<date>.tar`, a date's parts `<kind>/<date>/cob.part-NNN.jsonl.gz`), so the VaR page's *Why it moved* compares real dates: each date's positions come from that date's trades (31 trades
+(`<kind>.<date>.jsonl.gz`; the scenario PVs `<kind>-<date>.tar`, a date's parts `<kind>/<date>/cob.part-NNN.jsonl.gz`), so the VaR page's *Why it moved* compares real dates: each date's positions come from that date's trades (31 trades
 leave between the first two dates, 37 between the last two), its 509-day scenario window is a day further on (a day keeps its move on
 every date that holds it), and book `BOOK-FI-3` sits under the credit desk on 2026-09-28 and under the fixed income desk from
 2026-09-29. The VaR limits are the newest date's on every date. The stress set (its own files `stress-cob…` in the 2026-09-30 folders, 250 synthetic 2008-like
-days), the desks' P&L history (`desk-pnl`) and the long P&L history (`pnl-history`) are the newest date's only. About 16.3 MB a date,
-58 MB in all with the stress set.
+days), the desks' P&L history (`desk-pnl`) and the long P&L history (`pnl-history`) are the newest date's only. About 19 MB a date,
+60 MB in all with the stress set.
 
-| Date | Live trades | Positions | Bank VaR 99% 1-day |
+| Date | Live trades | Positions (records) | Bank VaR 99% 1-day |
 |---|---|---|---|
 | 2026-09-28 | 9,640 | 8,041 | 112,405,919 |
 | 2026-09-29 | 9,609 | 8,015 | 112,575,052 |
@@ -250,8 +250,7 @@ The counts below are the newest date's.
 
 | Folder | Kind · key | Dates | Documents |
 |---|---|---|---|
-| `market-risk/pnl-vector` | `pnl-vector` · `VECTOR_ID` | the last three days | one 509-scenario P&L vector in USD per live trade (8,233: every live trade but Endur's), with the trade's terms as the batch priced them and a synthetic `SECURITY_ID` on securities and listed trades (`PNL`, a `list<double>` column in the lake), in 10 files |
-| `market-risk/scenario-pv` | `scenario-pv` · `SCENARIO_PV_ID` | the last three days | 2.9.4: the Endur trades (1,339; 1,089 USD, 246 EUR, 4 CAD) sent as scenario PVs instead: each trade's PV under the 509 scenarios and its base PV, in its own currency (`SCENARIO_PV`, a `list<double>` column), in 3 files; the server converts them to USD P&L when it loads the date |
+| `market-risk/scenario-pv` | `scenario-pv` · `SCENARIO_PV_ID` | the last three days | **position grain** (`GRAIN: POSITION`, `POSITION_ID`, the trades in `TRADE_IDS`), every system: 7,993 records (7,984 positions; nine positions under two limit letters are one record per letter, `<position>@<division>/<letter>`): its PV under the 509 scenarios and its base PV (`SCENARIO_PV`, a `list<double>` column), Endur's in the trades' own currency, Calypso's and Murex's in USD (`TRADE_CURRENCY` their trades' own); the server converts them to USD P&L when it loads the date. Trade grain: `make_var_data.py --position-systems ""` |
 | `market-risk/fx-scenario` | `fx-scenario` · `FX_SCENARIO_ID` | the last three days | 2.9.4: the scenario FX the batch supplies for AUD, CAD, CHF, EUR, GBP and JPY: USD per unit today (the `fx-spot` mid) and under each of the 509 scenarios (moved by the factor model's FX factors) |
 | `market-risk/scenario-set` | `scenario-set` · `SCENARIO_SET_ID` | the last three days | HS-509: the 509 scenario days |
 | `market-risk/var-limit` | `var-limit` · `LIMIT_ID` | the last three days | 157 VaR limits: every node of the MGMT, LEGAL and limit-letter hierarchies (the server builds the three from the vectors' DIVISION, LEGAL_ENTITY, DESK, TT_BOOK and LIMIT_LETTER) and every portfolio with one |
@@ -259,7 +258,7 @@ The counts below are the newest date's.
 | `market-risk/pnl-history` | `pnl-history` · `HISTORY_ID` | the last day | each node's long P&L history (since 2007) for the stress window selection |
 | `market-risk/portfolio` | `portfolio` · `PORTFOLIO_ID` | the last three days | 28 portfolio definitions: HIERARCHY (one per desk and legal entity, and a book), RULE and BASKET, overlapping; no figures |
 
-There is no `position` folder: the server derives positions from the vectors by the market-risk pack's `positions:` rules when it loads
+There is no `position` folder: at trade grain the server derives positions from the vectors by the market-risk pack's `positions:` rules when it loads
 a date (7,984 on the last day, 8,015 and 8,041 on the two before). The stored `var` and `var-node` folders were retired in 2.8.0, and no document carries a VaR figure:
 the engine computes them. `python3 tools/packgen/var/make_var_data.py --check` says whether the folders match the trades;
 `--budget <n> --out <a folder outside the repository>` values a sample of `n` trades a book (a smaller set for a quick local run).
@@ -393,27 +392,3 @@ The generator builds on the banking generators (`tools/packgen/banking`, `tools/
 samples, then the test data. It never touches `news-and-markets/` (the captured market snapshot; `capture-market` refreshes it),
 `us-equities/` or `gleif/` (their generators write them). The world-economy and news-and-markets datasets are those packs' samples; the world-economy figures
 include IMF series, so they are for internal demonstrations only.
-
-## Scenario PVs at position grain (`position-grain/`) (`GRAIN: POSITION`)
-
-Synthetic scenario PVs for **all three trading systems** (Endur, Calypso, Murex) on 2026-09-30, one record per position: 7,984 positions
-(Endur 1,271, Calypso 3,209, Murex 3,504), summed from the 9,572 live trades of the test data and naming them in `TRADE_IDS`, 509 scenarios
-each (set `HS-509`), with the date's scenario FX.
-
-| File | Kind | Rows |
-|---|---|---|
-| `scenario-pv-2026-09-30.tar` (`scenario-pv/2026-09-30/`) | `scenario-pv` | 7,984 |
-| `fx-scenario.2026-09-30.jsonl.gz` | `fx-scenario` | 6 |
-
-**Not part of the demo lake:** `drishti.py lake demo` reads only the datasets listed in `testdata.yaml`, and this folder is not listed. One
-source system sends one form and one grain on one date (`DRS-5210`), and the demo's 2026-09-30 already has these systems' trades, as scenario
-PVs (Endur) and P&L vectors (Calypso, Murex). Load these files into a lake or onto a date that has no other VaR inputs from these systems.
-
-Regenerate them, or make another date:
-
-```bash
-python tools/pvgen/morning.py --grain position --pv-systems ENDUR,CALYPSO,MUREX --gzip --out <folder> [--date YYYY-MM-DD]
-```
-
-The bank's and each desk's VaR and ES from these files equal those from the same run at trade grain (`tools/pvgen/check.py --morning <folder>`
-prints them). Grains and what each gives: [VAR_GUIDE.md section 15.13](../../docs/guides/VAR_GUIDE.md#1513-inputs-any-form-any-grain).
