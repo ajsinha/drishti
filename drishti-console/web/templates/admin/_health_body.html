@@ -144,6 +144,11 @@
   {% for k, why in h.hierarchyWarnings.items() %}<p class="t-warn"><b>Hierarchy warning</b> ({{ k }}): {{ why }}</p>{% endfor %}
 </div></section>
 {% endif %}
+{% if h.varMaturedWarnings %}
+<section class="ws-card" data-var-matured-warnings><div class="ws-cb">
+  {% for d, why in h.varMaturedWarnings.items() %}<p class="t-warn"><b>VaR matured items</b> ({{ d }}): {{ why }}</p>{% endfor %}
+</div></section>
+{% endif %}
 <h2 class="ws-h">Connectors</h2>
 <section class="pnl"><div class="pnl-b"><div class="tbl-wrap"><table class="tbl hl-tbl">
   <thead><tr><th>Connector</th><th>Status</th><th>Last update</th><th>Kinds</th><th class="num">Reads</th><th class="num">Errors</th><th class="num">p50 ms</th><th class="num">p99 ms</th><th>Last error</th><th>Cache</th><th>Connection pool</th></tr></thead>

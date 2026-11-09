@@ -70,7 +70,14 @@ final class VarIntake {
      */
     record Summary(int rejected, List<String> rejections, int excluded, List<String> batchIds, List<String> scenarioSets, String rules,
             String rulesDigest, Map<String, String> notLive, int scenarioPv, java.util.Set<String> pvTrades,
-            Map<String, Map<String, Object>> inputs, Map<String, List<String>> positionTrades, int setLength, Boolean oldPnlIds) {
+            Map<String, Map<String, Object>> inputs, Map<String, List<String>> positionTrades, int setLength, Boolean oldPnlIds,
+            VarMatured matured) {
+
+        /** The same record with the date's matured items checked. */
+        Summary withMatured(VarMatured m) {
+            return new Summary(rejected, rejections, excluded, batchIds, scenarioSets, rules, rulesDigest, notLive, scenarioPv, pvTrades, inputs,
+                    positionTrades, setLength, oldPnlIds, m);
+        }
 
         /**
          * The prefix of the date's P&amp;L-vector ids: {@code PNL-} (2.9.5), or {@code PV-} when its rows carry the earlier ids (a lake
@@ -139,6 +146,11 @@ final class VarIntake {
     private final TreeSet<String> batches = new TreeSet<>();
     private final TreeSet<String> sets = new TreeSet<>();
     private final Map<String, String> notLive = new HashMap<>();
+    /** The records excluded as matured, per source system and grain (the provenance's commentary). */
+    private final Map<String, Map<String, Integer>> maturedRecords = new java.util.TreeMap<>();
+    /** The supplied positions that went into the book and name their trades; the others are counted. */
+    private final java.util.Set<String> liveNamed = new java.util.HashSet<>();
+    private int liveUnnamed;
     private final TreeSet<String> pvTrades = new TreeSet<>();
     /** Per currency met in scenario PVs: how its rates were found, and today's rate (VarDate.fx). */
     private final Map<String, Object> fxUsed = new TreeMap<>();
@@ -331,6 +343,9 @@ final class VarIntake {
         boolean live = rules.live(status) && !matured(maturity);
         if (!live && !intra) {
             excluded++;
+            if (rules.live(status) && matured(maturity) || "MATURED".equalsIgnoreCase(status)) {
+                maturedRecords.computeIfAbsent(system.strip(), x -> new java.util.TreeMap<>()).merge(supplied ? VarInputs.POSITION : VarInputs.TRADE, 1, Integer::sum);
+            }
             if (notLive.size() < NOT_LIVE_KEPT && trade != null) {
                 notLive.put(trade, !rules.live(status) ? "its status is " + status : "it matured on " + maturity.substring(0, 10));
             }
@@ -407,6 +422,13 @@ final class VarIntake {
             }
         }
         if (supplied) {                                                 // a supplied position: as it is, never derived from trades
+            if (!intra) {
+                if (positionTrades.containsKey(trade)) {
+                    liveNamed.add(trade);
+                } else {
+                    liveUnnamed++;
+                }
+            }
             texts[VarBook.TRADE_TEXTS.indexOf("POSITION_ID")] = trade;
             texts[VarBook.TRADE_TEXTS.indexOf("POSITION_RULE")] = SUPPLIED;
             String sec = text(row, "SECURITY_ID");
@@ -670,6 +692,13 @@ final class VarIntake {
 
     Summary summary() {
         return new Summary(rejected, List.copyOf(rejections), excluded, List.copyOf(batches), List.copyOf(sets), rules.toString(), rules.digest(),
-                Map.copyOf(notLive), scenarioPv, java.util.Set.copyOf(pvTrades), inputs.describe(), Map.copyOf(positionTrades), full, oldPnlIds);
+                Map.copyOf(notLive), scenarioPv, java.util.Set.copyOf(pvTrades), inputs.describe(), Map.copyOf(positionTrades), full, oldPnlIds, VarMatured.ofIntake(maturedRecords, liveUnnamed));
+    }
+
+    /** The live supplied positions that name their trades, to those trades (the maturity check of the load). */
+    Map<String, List<String>> liveNamedPositions() {
+        Map<String, List<String>> out = new HashMap<>();
+        liveNamed.forEach(p -> out.put(p, positionTrades.get(p)));
+        return out;
     }
 }

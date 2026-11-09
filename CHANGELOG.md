@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### VaR
+
+- **What happened to matured items:** Explain's Inputs & lineage says how many records were excluded as matured (per source system and grain) and flags live positions holding trades past their maturity, with the list of positions; "could not be checked" when `TRADE_IDS` or the trade feed is missing. A flag only: no figure changes. Also on Admin → Health and in `provenance.matured`; `/api/v1/risk/var/scope/matured` pages the list.
+
 ### Docs
 
 - **Roadmap:** every visual lives in Drishti Elements; a Drishti Elements Playground (live pages with editable data) closes the BI depth release.

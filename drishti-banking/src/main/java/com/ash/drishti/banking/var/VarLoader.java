@@ -329,6 +329,9 @@ final class VarLoader {
                     : keepNormal(sets.stressIds()), fxSet);
             List<LocalDate> days = scenarioDates;
             VarIntake.Summary sum = intake.summary();
+            if (!stress) {                                             // the maturity of the trades inside positions: once, at the load (a flag only)
+                sum = sum.withMatured(sum.matured().checked(intake.liveNamedPositions(), date, VarMatured.feed(router, asOf)));
+            }
             long tVectors = System.nanoTime();
             Map<String, Double> portfolios = portfolioLimits(asOf);       // the system baskets' limits (their definitions: the basket store)
             versions.put("scenarioSet", setId);

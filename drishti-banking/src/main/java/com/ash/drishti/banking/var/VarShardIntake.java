@@ -69,6 +69,7 @@ final class VarShardIntake {
         Set<String> pvTrades = new TreeSet<>();
         Map<String, Map<String, Object>> inputs = new TreeMap<>();
         Map<String, List<String>> positionTrades = new TreeMap<>();
+        List<VarMatured> matured = new ArrayList<>();
         String rules = "";
         String rulesDigest = "";
         for (VarIntake.Summary s : parts) {
@@ -96,6 +97,7 @@ final class VarShardIntake {
             if (s.positionTrades() != null) {
                 positionTrades.putAll(s.positionTrades());
             }
+            matured.add(s.matured());
             rules = s.rules();
             rulesDigest = s.rulesDigest();
             if (s.inputs() != null) {
@@ -126,7 +128,7 @@ final class VarShardIntake {
                     + String.join(", ", other) + " beside the date's set " + setId);
         }
         return new VarIntake.Summary(rejected, List.copyOf(rejections), excluded, List.copyOf(batches), List.copyOf(sets), rules, rulesDigest,
-                Map.copyOf(notLive), scenarioPv, Set.copyOf(pvTrades), inputs, Map.copyOf(positionTrades), setLength, oldIds);
+                Map.copyOf(notLive), scenarioPv, Set.copyOf(pvTrades), inputs, Map.copyOf(positionTrades), setLength, oldIds, VarMatured.merge(matured));
     }
 
     private static int number(Object o) {

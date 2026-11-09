@@ -39,6 +39,7 @@ public final class Explanation {
     private final List<String> formula = new ArrayList<>();
     private String rachana;
     private final List<Map<String, Object>> inputs = new ArrayList<>();
+    private final List<Map<String, Object>> notes = new ArrayList<>();
     private final List<Map<String, Object>> lineage = new ArrayList<>();
     private Map<String, Object> why;
     private final List<Map<String, Object>> workbook = new ArrayList<>();
@@ -111,6 +112,20 @@ public final class Explanation {
         m.put("label", label);
         m.put("value", value instanceof Number n ? number(n.doubleValue()) : value == null ? "" : String.valueOf(value));
         inputs.add(m);
+        return this;
+    }
+
+    /**
+     * A sentence of commentary under the inputs, optionally with a list that opens.
+     *
+     * @param list null, or {@code summary}, {@code columns}, {@code rows} (each {@code cells}, optional {@code href} for the first cell),
+     *     optional {@code moreHref} answering further pages ({@code page}, {@code rows}, {@code more})
+     */
+    public Explanation note(String text, Map<String, Object> list) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("text", text);
+        m.put("list", list);
+        notes.add(m);
         return this;
     }
 
@@ -205,7 +220,7 @@ public final class Explanation {
             out.put("formula", f);
         }
         if (r.wants("inputs")) {
-            out.put("inputs", Map.of("rows", inputs, "lineage", lineage));
+            out.put("inputs", Map.of("rows", inputs, "lineage", lineage, "notes", notes));
         }
         if (r.wants("why")) {
             out.put("why", why == null ? new LinkedHashMap<>(Map.of("available", false)) : why);

@@ -339,4 +339,79 @@ class VarInputsApiTest {
         assertThat(ask("/api/v1/risk/var/scope", "BANK", CAD_PNL).at("/provenance/rejections").toString())
                 .contains("DRS-5208 T1: REPORTING_CCY USD is not the CURRENCY CAD");
     }
+
+    /** A date as a test wants it: the same book with another record of its matured items, for one reader's view. */
+    private VarService.Scoped withMatured(VarService.Scoped s, VarMatured m, VarAccess.View view) {
+        VarDate d = s.date();
+        VarDate copy = new VarDate(d.date(), d.book(), d.portfolioLimits(), d.version(), d.loadedAt(), d.loadMs(), d.vectorMs(),
+                d.intake().withMatured(m), d.versions(), d.warnings(), d.currency(), d.fx(), null);
+        return new VarService.Scoped(copy, view, s.res(), s.set(), s.hidden(), s.vector(), s.measures(), s.kind(), s.label(), s.computeMs(), s.cached(),
+                null);
+    }
+
+    @Test
+    @Order(90)
+    void maturedTradesInsidePositionsAreFlaggedAndNamedOnlyToWhoMaySeeThem() {
+        VarService.Scoped s = svc.scoped(null, "BANK", POSITIONS, VarDate.USD, null);
+        VarBook b = s.date().book();
+        String seen = b.tradeId(0);
+        String other = b.tradeId(1);
+        Map<String, Map<String, String>> listed = new java.util.TreeMap<>(Map.of(seen, Map.of("T1", "2026-01-15"), other, Map.of("T2", "2026-02-15", "T3", "2026-03-15")));
+        VarMatured m = new VarMatured(Map.of("ENDUR", Map.of("TRADE", 2)), VarMatured.CHECKED, null, 2, 3, 0, 0, listed, false);
+        Map<String, Object> all = VarMaturedView.of(withMatured(s, m, s.view()), false);
+        assertThat(all.get("date")).isEqualTo(POSITIONS.toString());
+        assertThat(((Map<?, ?>) all.get("records")).get("sentence")).isEqualTo("2 records were excluded because they had matured by " + POSITIONS + ".");
+        Map<?, ?> in = (Map<?, ?>) all.get("inside");
+        assertThat(in.get("positions")).isEqualTo(2);
+        assertThat(in.get("trades")).isEqualTo(3);
+        assertThat((List<?>) in.get("rows")).hasSize(2);
+        assertThat(in.get("sentences").toString()).contains("2 positions contain 3 trades past their maturity; their PVs are included, because the source sends each position whole.");
+        // a reader who sees only the first position one by one: both counted, the other not named
+        var first = com.ash.drishti.compute.vector.OrdinalSet.of(0);
+        Map<?, ?> partial = (Map<?, ?>) VarMaturedView.of(withMatured(s, m, new VarAccess.View(s.view().visible(), first, false, "t")), false).get("inside");
+        assertThat(partial.get("positions")).isEqualTo(2);
+        assertThat(partial.get("notNamed")).isEqualTo(1);
+        assertThat((List<?>) partial.get("rows")).hasSize(1);
+        assertThat(partial.toString()).contains(seen).doesNotContain(other).doesNotContain("T2");
+        // masked trade ids: nothing named
+        assertThat((List<?>) ((Map<?, ?>) VarMaturedView.of(withMatured(s, m, s.view()), true).get("inside")).get("rows")).isEmpty();
+        // the list comes page by page
+        Map<String, Object> page = VarMaturedView.page(withMatured(s, m, s.view()), false, 1, 1);
+        assertThat(page.get("total")).isEqualTo(2);
+        assertThat((List<?>) page.get("rows")).hasSize(1);
+        assertThat(page.get("more")).isEqualTo(false);
+    }
+
+    @Test
+    @Order(91)
+    void theCommentaryIsOmittedWhenThereIsNothingToSay() throws Exception {
+        JsonNode trades = ask("/api/v1/risk/var/scope", "BANK", TRADES);
+        assertThat(trades.at("/provenance").has("matured")).isFalse();
+    }
+
+    @Test
+    @Order(92)
+    void maturedRecordsAreCountedByGrainAndTradesInPositionsCouldNotBeCheckedWithoutAFeed() throws Exception {
+        double before = ask("/api/v1/risk/var/scope", "BANK", MIXED_SYSTEMS).get("var").asDouble();
+        List<Map<String, Object>> positions = asPositions(VarIntradayLake.morningVectors(MIXED_SYSTEMS), "PNL", MIXED_SYSTEMS);
+        List<Map<String, Object>> trades = VarIntradayLake.morningPvs(MIXED_SYSTEMS);
+        Map<String, Object> newPosition = new java.util.LinkedHashMap<>(positions.get(0));
+        newPosition.put("POSITION_ID", "POS-MATURED");
+        newPosition.put("MATURITY_DATE", "2026-01-15");
+        positions.add(newPosition);
+        Map<String, Object> newTrade = new java.util.LinkedHashMap<>(trades.get(0));
+        newTrade.put("TRADE_ID", "T-MATURED");
+        newTrade.put("MATURITY_DATE", "2026-01-15");
+        trades.add(newTrade);
+        rewrite(MIXED_SYSTEMS, positions, trades);
+        JsonNode h = ask("/api/v1/risk/var/scope", "BANK", MIXED_SYSTEMS);
+        assertThat(h.get("var").asDouble()).isCloseTo(before, within(0.01));   // matured records never enter the figure
+        JsonNode m = h.at("/provenance/matured");
+        assertThat(m.at("/records/count").asInt()).isEqualTo(2);
+        assertThat(m.at("/records/bySystem").toString()).contains("POSITION").contains("TRADE");
+        assertThat(m.at("/records/sentence").asText()).isEqualTo("2 records were excluded because they had matured by " + MIXED_SYSTEMS + ".");
+        // the positions name their trades and this server has no trade feed: never a zero
+        assertThat(m.at("/inside/status").asText()).isEqualTo("could not be checked");
+        assertThat(m.at("/inside/positions").isNull()).isTrue();
+    }
 }

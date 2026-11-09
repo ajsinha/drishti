@@ -137,6 +137,22 @@ public class VarConfiguration {
         };
     }
 
+    /** {@code /api/v1/health}'s {@code varMaturedWarnings}: per open date, the matured records excluded and the matured trades inside live positions. */
+    @Bean
+    com.ash.drishti.server.api.HealthFigures varMaturedHealth(VarService svc) {
+        return new com.ash.drishti.server.api.HealthFigures() {
+            @Override
+            public String key() {
+                return "varMaturedWarnings";
+            }
+
+            @Override
+            public Object value() {
+                return svc.maturedWarnings();
+            }
+        };
+    }
+
     /** Readiness waits for the VaR engine's newest date (CD1, drishti.node.readiness.engines). */
     @Bean
     com.ash.drishti.server.node.ReadinessGate varNewestDateReady(VarService svc) {

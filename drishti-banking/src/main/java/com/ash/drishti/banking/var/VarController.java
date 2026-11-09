@@ -223,6 +223,13 @@ public class VarController {
         return parametric(views.path(p, scope(scope), date(asOf), page, size, ccy, lens(horizon, method, confidence, esq, set)), parametric);
     }
 
+    /** The positions of the scope holding trades past their maturity, page by page (VAR_GUIDE.md, "Matured items"). */
+    @GetMapping("/scope/matured")
+    public Map<String, Object> matured(@RequestParam String scope, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "0") int size,
+            AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return views.matured(p, scope(scope), date(asOf), page, size);
+    }
+
     @GetMapping("/scope/history")
     public Map<String, Object> history(@RequestParam String scope, @RequestParam(required = false) String ccy,
             @RequestParam(required = false) Double confidence, @RequestParam(required = false) String horizon, @RequestParam(required = false) String method,
