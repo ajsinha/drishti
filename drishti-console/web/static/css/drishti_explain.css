@@ -54,6 +54,12 @@ p.dx-pop-h { margin-right: var(--d-sp-18); font-size: var(--d-fs-13); }
 .dx-err { color: var(--d-bad); }
 .dx-ok { color: var(--d-ok); margin: var(--d-sp-2) 0; }
 .dx-bad { color: var(--d-bad); margin: var(--d-sp-2) 0; }
+/* the commentary under the inputs, and the list that opens under a sentence */
+.dx-note { margin: var(--d-sp-6) 0; font-size: var(--d-fs-12); }
+.dx-details { margin: var(--d-sp-6) 0 var(--d-sp-12); font-size: var(--d-fs-12); }
+.dx-details summary { cursor: pointer; color: var(--d-link); }
+.dx-details a { color: var(--d-link); }
+.dx-more { margin-top: var(--d-sp-6); font-size: var(--d-fs-12); }
 .dx-links { padding-left: var(--d-sp-18); font-size: var(--d-fs-12); }
 .dx-links a { color: var(--d-link); }
 .dx-why-bar { display: flex; flex-wrap: wrap; gap: var(--d-sp-8); align-items: center; margin-bottom: var(--d-sp-8); font-size: var(--d-fs-12); }

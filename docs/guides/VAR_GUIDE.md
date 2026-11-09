@@ -3107,6 +3107,17 @@ combinations, a system switching grain between dates, two grains on one date ref
 update in another grain refused), `VarInputsTest` (fields, pins, the per-system rule), `VarPvStreamTest` (a Kafka message mixing all four
 of four systems, a pin disagreeing, a field missing), `test_pvgen.py` (per position equal to per trade to the cent).
 
+#### Matured items
+
+An item past its maturity on the business date (`MATURITY_DATE` before the date) is handled at the grain the source sends:
+
+- **A record that has matured** (a trade's or a position's own row) is excluded when the date loads. Explain's **Inputs & lineage** says how many, per source system and grain: *"14 records were excluded because they had matured by 2026-11-09."*
+- **A matured trade inside a live position** (`GRAIN: POSITION`) cannot be taken out: the source sends the position's PVs whole. When the position names its trades in `TRADE_IDS`, each one's `MATURITY_DATE` is read from the trade feed once, at the date's load, and the position is flagged: *"39 positions contain 72 trades past their maturity; their PVs are included, because the source sends each position whole."* The list opens under the sentence, each position linking to its page. This is a flag only: it never changes a figure.
+
+Without `TRADE_IDS` or a trade feed holding the maturities, the commentary says the trades **could not be checked**, never zero. Nothing is said when there is nothing to report. The counts are for the scope when each flagged position can be placed in it, otherwise for the whole date (the sentence says so). A position outside what the reader may see one by one is counted, not named. The same counts are on Admin → Health and in `provenance.matured` of `/api/v1/risk/var/scope`; `/api/v1/risk/var/scope/matured` pages the list.
+
+**Production loading checklist:** ask each source whether it removes matured trades from a position's PVs before sending. When it does not, the flag above shows how many are still inside, and send `TRADE_IDS` so that it can.
+
 ### 15.14 Hierarchies: from promoted columns
 
 Every hierarchy of the VaR and exposure engines (the trees the scopes, limits, official records and the explorer's tree walk) is built by

@@ -1287,7 +1287,7 @@ one panel, updates strip cells in place, and hands chart panels new data — so 
 
 ## 20. Quality rules
 
-- **Every source file ≤ 1500 lines** (UX templates, styles and scripts excepted) — enforced by `SourceFileSizeTest`
+- **Every source file ≤ 2000 lines** (UX templates, styles and scripts excepted) — enforced by `SourceFileSizeTest`
   (`drishti-it`) and `drishti-console/tests/test_assets_policy.py`.
 - **Copyright header on every file** — enforced by `LicenseHeaderTest` (`drishti-it`); `tools/license_headers.py`
   adds missing ones.

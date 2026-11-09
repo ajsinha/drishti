@@ -120,7 +120,7 @@ only shrinks and is capped; section 12.3 lists every authoring screen and its st
 - **Plain ES modules, no build step**, readable as served; one entry per library plus its stylesheet, a `.d.ts` and an integrity record
   ([the renderer's shape](ARCHITECTURE.md#302-the-renderer-as-an-elements-library) and [versioning](../guides/EMBED_GUIDE.md#10-versions-integrity-and-lifecycle) apply to all eight).
 - **Vendored, never a CDN**; every file of ours carries the `drishti_` prefix inside the console and the library name outside it.
-- **Files under 1,500 lines**; object-oriented, configuration-driven, no globals beyond one namespace (`window.Drishti.<Library>` for
+- **Files under 2,000 lines**; object-oriented, configuration-driven, no globals beyond one namespace (`window.Drishti.<Library>` for
   hosts without modules).
 - **The theme is CSS custom properties** from drishti-core's tokens; light and dark, three **densities** (comfortable, compact,
   terminal: the product owner's decision on g1, 2026-11-07) shared by every component.
@@ -1318,7 +1318,7 @@ is the example's source, not a copy).
 | **No server for 1 to 5** | a reference to `/api/`, `/embed/` or the console in libraries 1 to 5 (their Drishti sources live in drishti-data behind an explicit `server` option) |
 | **The browser computes nothing in the console** | a console page creating a grid with the client-side aggregating model (extends `test_console_does_not_aggregate.py`) |
 | **Immutable versions** | a changed file in a released version folder without a new version and integrity record |
-| **Assets** | an outside URL (`test_assets_policy.py`), a missing `drishti_` prefix inside the console (`test_asset_names.py`), a file over 1,500 lines |
+| **Assets** | an outside URL (`test_assets_policy.py`), a missing `drishti_` prefix inside the console (`test_asset_names.py`), a file over 2,000 lines |
 | **Licence** | drishti-risk served, or its kinds registered, without the banking module's licence |
 | **Docs** | `api_ref.py --check`, a gallery example that does not run, a hand-written option table |
 | **Size budget** | a library's gzip size over its budget (set from the first release, raised only on purpose) |

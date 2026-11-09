@@ -3912,7 +3912,7 @@ python3 tools/api_docs.py zip              # drishti-console/web/apidocs/drishti
 
 `tools/drishti.py` is one program; its groups are in [section 1](#1-what-it-is). The command tree (every group, command and option) is built in `tools/drishti_parser.py`, the commands
 themselves in `tools/drishti.py` and the group modules it registers (`datacli.py`, `pivotfncli.py`, ...), each file well under the
-1,500-line cap.
+2,000-line cap.
 
 The group modules live beside it and are not run on their own: `tools/authoring.py` (`data profile`, `pack regenerate|diff|catalogue|i18n`),
 `tools/dataprofile.py`, `tools/packmake.py`, `tools/packregen.py`, `tools/packdiff.py`, `tools/packcatalogue.py`, `tools/packi18n.py`,

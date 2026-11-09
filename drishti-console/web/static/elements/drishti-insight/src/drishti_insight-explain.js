@@ -260,6 +260,48 @@ export function installExplain(win) {
   }
 
   /** One part of an answer into host; a promise (why it moved is painted by the renderer). */
+  /** A sentence of the commentary and, when it has one, the list that opens under it (further pages from the server, as they are asked for). */
+  function note(host, n) {
+    host.appendChild(h("p", "dx-note", n.text));
+    var list = n.list;
+    if (!list) return;
+    var det = h("details", "dx-details"), t = h("table", "dx-table"), head = h("tr"), tb = h("tbody"), th = h("thead"), page = 0;
+    det.appendChild(h("summary", null, list.summary));
+    list.columns.forEach(function (c) { head.appendChild(h("th", null, c)); });
+    th.appendChild(head);
+    t.appendChild(th);
+    t.appendChild(tb);
+    det.appendChild(t);
+    function add(rows) {
+      rows.forEach(function (r) {
+        var tr = h("tr");
+        r.cells.forEach(function (c, i) {
+          var td = h("td", "mono");
+          if (i === 0 && r.href) { var a = h("a", null, c); a.href = r.href; td.appendChild(a); } else td.textContent = c;
+          tr.appendChild(td);
+        });
+        tb.appendChild(tr);
+      });
+    }
+    add(list.rows || []);
+    if (list.moreHref) {
+      var more = h("button", "dx-more", "Show more");
+      more.type = "button";
+      more.addEventListener("click", function () {
+        page += 1;
+        fetch(list.moreHref + "&page=" + page).then(function (r) { return r.json(); }).then(function (b) {
+          add((b.rows || []).map(function (r) {
+            return { cells: [r.position, (r.trades || []).map(function (x) { return x.trade + " (" + x.maturity + ")"; }).join(", ")],
+              href: "/v/position/" + encodeURIComponent(r.position) + "?asOf=" + encodeURIComponent(b.businessDate) };
+          }));
+          more.hidden = !b.more;
+        });
+      });
+      det.appendChild(more);
+    }
+    host.appendChild(det);
+  }
+
   function part(host, a, tab, inDrawer) {
     var x = a[tab] || {};
     if (tab === "formula") {
@@ -277,6 +319,7 @@ export function installExplain(win) {
       var dl = h("dl", "dx-dl");
       (x.rows || []).forEach(function (row) { dl.appendChild(h("dt", null, row.label)); dl.appendChild(h("dd", "mono", row.value)); });
       host.appendChild(dl);
+      (x.notes || []).forEach(function (n) { note(host, n); });
       if ((x.lineage || []).length) {
         host.appendChild(h("h3", "dx-h3", "Lineage"));
         var t = h("table", "dx-table");

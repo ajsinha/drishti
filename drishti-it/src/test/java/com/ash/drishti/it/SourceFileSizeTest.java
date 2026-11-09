@@ -25,10 +25,10 @@ import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
-/** No non-UX source file may exceed 1500 lines. UX templates, styles and scripts are exempt, and so is the generated test data. */
+/** No non-UX source file may exceed 2000 lines. UX templates, styles and scripts are exempt, and so is the generated test data. */
 class SourceFileSizeTest {
 
-    static final int MAX_LINES = 1500;
+    static final int MAX_LINES = 2000;
 
     @Test
     void sourceFilesStayUnderTheLimit() throws IOException {

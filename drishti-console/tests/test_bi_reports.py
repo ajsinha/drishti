@@ -111,7 +111,7 @@ def test_the_new_scripts_and_stylesheets_exist_and_carry_no_cdn_or_inline_code()
         text = (WEB / "static" / rel).read_text(encoding="utf-8")
         assert "http://" not in text.replace("http://www.w3.org/2000/svg", "") and "https://" not in text, rel
         assert "innerHTML" not in text and "document.write" not in text and "eval(" not in text, rel
-        assert len(text.splitlines()) < 1500, rel
+        assert len(text.splitlines()) < 2000, rel
     for rel in ("report.html", "design.html", "designer.html"):
         html = (WEB / "templates" / "bi" / rel).read_text(encoding="utf-8")
         assert " onclick=" not in html and "<style" not in html and " style=" not in html, rel

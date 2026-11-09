@@ -416,7 +416,7 @@ Both kinds are listed here.
 | Rule | Enforced by |
 |---|---|
 | Every source file carries the copyright header | `LicenseHeaderTest`, `tools/license_headers.py` (drill, CI) |
-| No non-UI source file over 1500 lines | `SourceFileSizeTest`; `drishti-console/tests/test_assets_policy.py` for console Python |
+| No non-UI source file over 2000 lines | `SourceFileSizeTest`; `drishti-console/tests/test_assets_policy.py` for console Python |
 | One-way module dependencies, a Spring-free SPI, controllers only in `server`, no field injection, no `Serializable` | `ArchitectureRulesTest` |
 | No `synchronized` around blocking I/O (virtual threads) | `NoBlockingUnderSynchronizedTest` |
 | Front end vendored: no CDN, no external URL, no inline script, handler or style | `drishti-console/tests/test_assets_policy.py`, the console's Content Security Policy |

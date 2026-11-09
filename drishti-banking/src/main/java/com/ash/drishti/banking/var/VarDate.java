@@ -107,4 +107,18 @@ record VarDate(LocalDate date, VarBook book, Map<String, Double> portfolioLimits
      * @param limit its VaR limit in the date's currency (var-limit, HIERARCHY PORTFOLIO), NaN when it has none
      */
     record Portfolio(String id, String name, String type, String owner, String scope, double limit) {}
+
+    /** What the date holds, for the loaded dates' listing. */
+    java.util.Map<String, Object> loadFacts() {
+        java.util.Map<String, Object> m = new java.util.LinkedHashMap<>();
+        m.put("trades", book().tradeCount());
+        m.put("positions", book().positionCount());
+        m.put("nodes", book().nodes().size());
+        m.put("vectorBytes", book().vectorBytes());
+        m.put("inputsBySystem", intake().inputs() == null ? Map.of() : intake().inputs());   // per source system: form, grain (15.13)
+        m.put("tier", book().tier());
+        m.put("aggregateBytes", book().aggregateBytes());
+        m.put("heapBytes", book().morning().heapBytes());        // what the date's base book holds on the heap (27.1)
+        return m;
+    }
 }
