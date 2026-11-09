@@ -55,6 +55,37 @@ class ConnectorBootstrapTest {
     }
 
     @Test
+    void anOldGenerationThatNamesATableItsLakeLostFollowsTheTemplate(@TempDir Path dir) throws Exception {
+        // the lake-form rewrite of a generated file broke its marker: the file looked edited, kept kinds the template dropped, and its connector failed
+        Path lakes = Files.createDirectories(dir.resolve("lakes"));
+        Files.writeString(lakes.resolve("demo.yaml"), "lake: demo\nformat: delta\nroot: " + dir.resolve("d") + "\ntables:\n  macro.economy: {}\n");
+        com.ash.drishti.lakeconfig.Lakes.useProperties(k -> k.equals("drishti.lakes.dir") ? lakes.toString() : null);
+        try {
+            String tpl = "pack: risk\nkinds: [economy, gdp]\nroutes:\n  economy: m\n  gdp: m\nconnectors:\n  m:\n    plugin: delta\n    kinds: [economy, gdp]\n    settings:\n      lake: demo\n"
+                    + "      lake-tables: macro.economy,macro.gdp\n";
+            ConnectorFiles files = new ConnectorFiles(dir.resolve("config/connectors"), dir.resolve("state"));
+            String old = "plugin: delta\nkinds:\n- economy\n- country-group\nsettings:\n  lake: demo\n  lake-tables: \"macro.economy,macro.country-group\"\n  mode.country-group: effective\n";
+            files.write("m", old);
+            files.writeMarker("m", "something else", "old-template", List.of("economy", "country-group"));
+            ConnectorBootstrap.Result r = ConnectorBootstrap.run(packs(dir, tpl), files, null, true);
+            assertThat(r.regenerated()).containsExactly("m");
+            assertThat(files.read("m").settings()).containsEntry("lake-tables", "macro.economy,macro.gdp");
+            assertThat(files.read("m").kinds()).containsExactly("economy", "gdp");
+            try (var s = Files.list(files.dir())) {
+                assertThat(s.map(f -> f.getFileName().toString())).anyMatch(n -> n.contains("before-upgrade"));
+            }
+
+            String edited = old + "  lookback-days: 3\n";                                  // a setting of its own: a real edit, kept
+            files.write("m", edited);
+            files.writeMarker("m", "something else", "old-template", List.of("economy", "country-group"));
+            assertThat(ConnectorBootstrap.run(packs(dir, tpl), files, null, true).regenerated()).isEmpty();
+            assertThat(files.read("m").settings()).containsEntry("lookback-days", "3");
+        } finally {
+            com.ash.drishti.lakeconfig.Lakes.useProperties(null);
+        }
+    }
+
+    @Test
     void aConnectorThePackRetiredGoesWhenNobodyEditedItAndStaysWhenEdited(@TempDir Path dir) throws Exception {
         String two = RISK + "  what-if:\n    plugin: delta\n    kinds: [var]\n    settings:\n      domain: what-if\n";
         ConnectorFiles files = new ConnectorFiles(dir.resolve("config/connectors"));

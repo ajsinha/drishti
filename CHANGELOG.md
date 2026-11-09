@@ -43,6 +43,7 @@
 
 ### Fixes
 
+- **Connectors no longer stuck on a frozen copy of their settings:** a pack reload could write a connector's generated file into the shared Admin overlay, where it then outranked the file for good, so a later move of the demo lake left those connectors on the old folder (`FUND` listed nothing). The server's own writes now go to the file, and an older generated file that names tables its lake lost follows its pack's template (`.bak` kept). Admin → Connectors marks a connector whose override is in force, shows what it changes against the file and offers Remove override; Health warns while a node has any. A search names a connector it cannot reach instead of showing an empty list, and a Delta connector with neither `lake:` nor `root:` is refused rather than reading the demo folder.
 - **The demo's trade feed keeps step with its VaR records:** `lake demo` moves a trade's `MATURITY_DATE` with the other dates, so the matured-items check does not flag live trades on a moved demo. The committed test data is unchanged.
 - **The demo's VaR no longer drifts with the day it is built:** `lake demo` moves `MATURITY_DATE` on dated records with the other dates, so moving the demo no longer matures records that are live on the test data's own date.
 - **Demo-lake setups had no system baskets:** the seed follows `DRISHTI_DEMO_ENABLED`, which these setups turn off. `bin/start-server --demo`, the IntelliJ demo-lakes configuration, the deployment guide's settings and `drishti-stack` now set `DRISHTI_VAR_SYSTEM_BASKETS_SEED=true`.

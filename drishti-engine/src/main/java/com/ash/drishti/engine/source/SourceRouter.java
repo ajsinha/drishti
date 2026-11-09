@@ -735,6 +735,11 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
     public Listing list(String kind, String text, int limit, Duration budget, AsOf asOf, SourceFailures failures) {
         List<CompletableFuture<List<EntityHit>>> parts = new ArrayList<>();
         java.util.Set<String> asked = kind == null ? null : listed(kind, asOf, failures);
+        String routed = kind == null ? null : routes.get(kind);
+        if (routed != null && registry.plugin(routed).isEmpty() && registry.connectorStatuses().get(routed) != null
+                && "FAILED".equals(registry.connectorStatuses().get(routed).state())) {
+            failures.add(routed, noSource(kind).getMessage());  // a connector that could not start: the search says why, not "nothing"
+        }
         for (SourcePlugin p : registry.plugins()) {
             if (p.manifest().capabilities().search() && (kind == null || p.manifest().serves(kind))) {
                 boolean dated = p.manifest().capabilities().dated();
