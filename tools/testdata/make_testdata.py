@@ -53,7 +53,7 @@ import universe as UV  # noqa: E402
 PACKS = ("core", "market-data", "trading", "counterparty-risk", "market-risk", "world-economy", "news-and-markets", "compute-demo")
 FROM_SAMPLES = ("world-economy", "news-and-markets", "compute-demo")
 SYSTEMS = ("ENDUR", "CALYPSO", "MUREX")
-KEEP = (CM.PACK, *PS.PACKS)   # real, dated snapshots (capture_market.py, the us-equities and gleif generators): never regenerated here
+KEEP = (CM.PACK, *PS.PACKS, "position-grain")   # real, dated snapshots (capture_market.py, the us-equities and gleif generators): never regenerated here
 
 
 def has_samples(pack: str, kind: str) -> bool:

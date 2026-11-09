@@ -97,8 +97,8 @@ class TestData(unittest.TestCase):
                if f.stat().st_size > (25 if f.name.endswith(".tar") else 10) * 1024 * 1024]
         self.assertEqual(big, [], "a file above 10 MB (a tar of one date above 25 MB)")
         total = sum(f.stat().st_size for f in files)
-        # sixty days and the VaR data's three business dates, about 182 MB; GitHub refuses files over 100 MB, none is over 25
-        self.assertLess(total, 190e6, f"{total / 1e6:.1f} MB committed")
+        # sixty days, the VaR data's three business dates and the position-grain set, about 201 MB; GitHub refuses files over 100 MB, none is over 25
+        self.assertLess(total, 205e6, f"{total / 1e6:.1f} MB committed")
         self.assertEqual(sorted(p.name for p in TD.iterdir() if p.is_file()), ["README.md", "testdata.yaml"])
 
     def test_the_docs_quote_as_many_demo_tables_as_lake_demo_builds(self):
