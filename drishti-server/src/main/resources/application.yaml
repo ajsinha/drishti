@@ -366,6 +366,7 @@ drishti:
       - /api/v1/tables/editor/preview
       - /api/v1/tables/editor/access
       - /api/v1/tables/editor/suggest
+      - /api/v1/tables/editor/dax
       - /api/v1/tables/editor/python/notebook
       - /api/v1/tables/editor/python/contract
       - /api/v1/pivot/live               # a live pivot: the same answer kept current for the caller (ended by DELETE, or when no stream reads it)
