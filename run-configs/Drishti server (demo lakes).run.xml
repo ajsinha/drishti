@@ -25,7 +25,8 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Drishti server (demo lakes)" type="Application" factoryName="Application" folderName="Drishti">
     <option name="MAIN_CLASS_NAME" value="com.ash.drishti.server.DrishtiApplication" />
-    <module name="drishti-server" />
+    <module name="drishti-app" />
+    <shortenClasspath name="ARGS_FILE" />
     <option name="VM_PARAMETERS" value="-Djava.io.tmpdir=$PROJECT_DIR$/data/tmp/server -Xmx4g -XX:MaxDirectMemorySize=256m -XX:MaxDirectMemorySize=768m -Ddrishti.arrow.max-bytes=536870912 --add-opens=java.base/java.nio=ALL-UNNAMED -XX:TrimNativeHeapInterval=60000 -Djdk.nio.maxCachedBufferSize=262144 -XX:NativeMemoryTracking=summary -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=$PROJECT_DIR$/data/tmp/server" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
     <envs>
@@ -40,6 +41,7 @@
       <env name="DRISHTI_EXTERNAL_LIB" value="$PROJECT_DIR$/external_lib" />
       <env name="DRISHTI_PORT" value="18480" />
       <env name="DRISHTI_DEMO_ENABLED" value="false" />
+      <env name="DRISHTI_VAR_SYSTEM_BASKETS_SEED" value="true" />
       <env name="DRISHTI_OFFLINE" value="true" />
     </envs>
     <method v="2">

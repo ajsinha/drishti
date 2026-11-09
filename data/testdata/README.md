@@ -393,3 +393,27 @@ The generator builds on the banking generators (`tools/packgen/banking`, `tools/
 samples, then the test data. It never touches `news-and-markets/` (the captured market snapshot; `capture-market` refreshes it),
 `us-equities/` or `gleif/` (their generators write them). The world-economy and news-and-markets datasets are those packs' samples; the world-economy figures
 include IMF series, so they are for internal demonstrations only.
+
+## Scenario PVs at position grain (`position-grain/`) (`GRAIN: POSITION`)
+
+Synthetic scenario PVs for **all three trading systems** (Endur, Calypso, Murex) on 2026-09-30, one record per position: 7,984 positions
+(Endur 1,271, Calypso 3,209, Murex 3,504), summed from the 9,572 live trades of the test data and naming them in `TRADE_IDS`, 509 scenarios
+each (set `HS-509`), with the date's scenario FX.
+
+| File | Kind | Rows |
+|---|---|---|
+| `scenario-pv-2026-09-30.tar` (`scenario-pv/2026-09-30/`) | `scenario-pv` | 7,984 |
+| `fx-scenario.2026-09-30.jsonl.gz` | `fx-scenario` | 6 |
+
+**Not part of the demo lake:** `drishti.py lake demo` reads only the datasets listed in `testdata.yaml`, and this folder is not listed. One
+source system sends one form and one grain on one date (`DRS-5210`), and the demo's 2026-09-30 already has these systems' trades, as scenario
+PVs (Endur) and P&L vectors (Calypso, Murex). Load these files into a lake or onto a date that has no other VaR inputs from these systems.
+
+Regenerate them, or make another date:
+
+```bash
+python tools/pvgen/morning.py --grain position --pv-systems ENDUR,CALYPSO,MUREX --gzip --out <folder> [--date YYYY-MM-DD]
+```
+
+The bank's and each desk's VaR and ES from these files equal those from the same run at trade grain (`tools/pvgen/check.py --morning <folder>`
+prints them). Grains and what each gives: [VAR_GUIDE.md section 15.13](../../docs/guides/VAR_GUIDE.md#1513-inputs-any-form-any-grain).

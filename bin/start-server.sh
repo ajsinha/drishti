@@ -167,7 +167,7 @@ dev_secret() { if [ -z "$(eval "printf '%s' \"\${$1:-}\"")" ]; then export "$1=$
 if $DEMO; then
   PACKS="${PACKS:-${DRISHTI_PACKS:-core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif,funds}}"
   HEAP="${HEAP:-4g}"
-  export DRISHTI_DEMO_ENABLED=false DRISHTI_OFFLINE=true DRISHTI_SECURITY_ENABLED=true DRISHTI_SEED_ADMIN=true DRISHTI_STUDIO_SAVE=true
+  export DRISHTI_DEMO_ENABLED=false DRISHTI_VAR_SYSTEM_BASKETS_SEED=true DRISHTI_OFFLINE=true DRISHTI_SECURITY_ENABLED=true DRISHTI_SEED_ADMIN=true DRISHTI_STUDIO_SAVE=true
   export DRISHTI_LENSES="${DRISHTI_LENSES:-risk,world,market,trading}" DRISHTI_EXTERNAL_LIB="${DRISHTI_EXTERNAL_LIB:-$DRISHTI_ROOT/external_lib}"
   export DRISHTI_SEED_USERNAME="${DRISHTI_SEED_USERNAME:-drishti-dev-admin}"
   dev_secret DRISHTI_SEED_PASSWORD drishti-dev-admin123
