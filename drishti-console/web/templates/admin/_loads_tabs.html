@@ -13,10 +13,11 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-{# Admin → Data loads: its tabs (Loads, Inbox while the data inbox runs somewhere, Feeds, Load a file into a lake). sub = 'loads', 'inbox' or 'feeds'. #}
+{# Admin → Data loads: its tabs (Loads, Inbox and Upload while the data inbox runs somewhere, Feeds, Load a file into a lake). sub = 'loads', 'inbox', 'upload' or 'feeds'. #}
 <nav class="ib-subtabs" aria-label="Data loads">
   <a href="/admin/loads"{% if sub == 'loads' %} aria-current="page"{% endif %}>Loads</a>
   {% if inbox_shown %}<a href="/admin/loads/inbox" data-inbox-tab{% if sub == 'inbox' %} aria-current="page"{% endif %}>Inbox{% if inbox_failed %} <span class="st st-bad" data-inbox-failed-badge>{{ inbox_failed }} failed</span>{% endif %}</a>{% endif %}
+  {% if inbox_shown %}<a href="/admin/loads/upload" data-upload-tab{% if sub == 'upload' %} aria-current="page"{% endif %}>Upload</a>{% endif %}
   <a href="/admin/loads/feeds" data-feeds-tab{% if sub == 'feeds' %} aria-current="page"{% endif %}>Feeds{% if feeds_failing %} <span class="st st-bad" data-feeds-failing-badge>{{ feeds_failing }} failing</span>{% endif %}</a>
   <a href="/admin/lakes">Load a file into a lake</a>
 </nav>

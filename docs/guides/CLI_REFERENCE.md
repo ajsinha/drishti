@@ -70,7 +70,7 @@ codes and, where it helps scripts, `--json`.
 | `sutra` | `shape`, `design`, `lint`, `test`, `preview`, `gen` | the Java tool in the exec jar; `tools/sutragen.py` (JDK 21+) | [4](#4-sutra-shape-design-gen-lint-test-preview) |
 | `pack` | `make`, `new`, `regenerate`, `diff`, `catalogue`, `i18n`, `check`, `about-check`, `bundle`, `verify`, `deploy`, `rollback`, `publish`, `keygen`, `install` | `tools/packgen/pack_from_jsonl.py`, the Java tool, `tools/packreg/packreg.py`; REST for `install` | [5](#5-pack-make-new-regenerate-diff-catalogue-i18n-check-about-check-bundle-verify-deploy-rollback-publish-keygen-install) |
 | `data` | `profile`, `ingest`, `load`, `landed`, `loads`, `get` | `tools/ingest_jsonl.py`, `tools/load-<store>.sh`; REST for `landed`, `loads`, `get` | [6](#6-data-profile-ingest-and-load) |
-| `dataload` | `status`, `run`, `retry`, `undo` (the data inbox) | REST | [6](#dataload-the-data-inbox) |
+| `dataload` | `status`, `run`, `retry`, `ready`, `undo` (the data inbox) | REST | [6](#dataload-the-data-inbox) |
 | `testdata` | `capture-market` | a scratch server and the market connectors | [6](#testdata-capture-market-the-market-snapshot-for-offline-demos) |
 | `lake` | `build`, `scan`, `status`, `publish`, `demo`, `show`, `check`, `migrate-config`, `maintain`, `relocate`, `undo`, `memory` | `tools/lake/`; the server jar's writer and parallel loader | [7](#7-lake-a-large-json-export-into-a-delta-lake) |
 | `server`, `admin` | `server health`, `caches`, `packs`, `commands`, `smoke`, `engines`, `blas`; `admin capacity` (also `admin engines`, `admin blas`) | REST `/api/v1/admin/...` (an administrator) | [8](#8-server-health-and-packs) |
@@ -1530,7 +1530,7 @@ store itself.
 ### `dataload`: the data inbox
 
 The data inbox from the command line ([DATA_GUIDE.md section 7](DATA_GUIDE.md#7-the-data-inbox-drop-files-and-they-load): files
-dropped in a folder, loaded by the server; module `tools/dataloadcli.py`). Administrators; a token needs `loads:write` for `run`,
+dropped in a folder, loaded by the server; module `tools/dataloadcli.py`). Administrators; a token needs `loads:write` for `run`, `ready`,
 `retry` and `undo`.
 
 | Command | What it does |
@@ -1538,6 +1538,7 @@ dropped in a folder, loaded by the server; module `tools/dataloadcli.py`). Admin
 | `dataload status [--json]` | the inbox on or off, the node, the next cycle, the folder lock's holder; every file waiting and why (ready, not stable yet, no `.ready` yet, refused at the next cycle), markers without a file; the failed files with their reasons; the last cycles (done, skipped and why, failed) with their files' outcomes and notices |
 | `dataload run` | Load now: a cycle starts at once; while a run still loads none starts and it says *skipped: run 20261103T150000Z-drishti-main still loading (12 min)* (runs never overlap) |
 | `dataload retry FILE` | a failed file and its `.ready` back into the inbox (an empty `.ready` when it had none); the next cycle, or `run`, loads it |
+| `dataload ready --file F \| --inbox NAME [--table T --lake L --date D --mode append\|replace --key K --hold] [--new-table --pack P --kind K] [--check] [--push] [--yes-replace]` | Uploads a file (or takes one in `inbox/`), prints its exact `.ready`; `--check` prints the checks, `--push` pushes it (a refusal stops it, exit 1). `--yes-replace` says yes to a replace of rows already in the table. The token comes from the environment. Same endpoints as Admin → Data loads → Upload ([DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md) section 3.5) |
 | `dataload undo LOAD [--lake NAME] [--yes]` | removes one load's rows from the lake it went to, found in the ledger |
 
 ```bash

@@ -123,7 +123,7 @@ public class ConnectorController {
             @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);
         ConnectorManager.Change c = connectors.reset(name, unquote(ifMatch));
-        audit.record(p.user(), "connector-reset", name, "back to the pack's default; settings " + c.changed());
+        audit.record(p.user(), "connector-reset", name, (c.changed().contains("shared edit removed") ? "override removed; the file counts again" : "back to the pack's default; settings " + c.changed()));
         return withEtag(withWarnings(c));
     }
 

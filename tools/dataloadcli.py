@@ -18,6 +18,9 @@
     status [--json]          the files waiting and why, the last cycles, the failures with their reasons, the lock, the next cycle
     run                      Load now: a cycle at once; while a run still loads, none starts and it says so
     retry <file>             a failed file and its .ready back into the inbox; the next cycle (or run) loads it
+    ready --file F [--table T --lake L --date D --mode append|replace --key K --hold] [--check] [--push] [--yes-replace]
+                             the file uploaded to the server, its exact .ready printed, its checks with --check, pushed with --push (or a file
+                             already in the inbox folder: --inbox NAME); the same endpoints as Admin, Data loads, Upload
     undo <load-id> [--yes]   what undoing a load would remove (a dry run), or with --yes the undo, in the lake the load wrote into
                              (the server finds it in the ledger; --lake NAME to say it)
 
@@ -26,7 +29,9 @@ from __future__ import annotations
 
 EPILOG = ("examples:\n  drishti.py dataload status\n  drishti.py dataload run\n  drishti.py dataload retry trades-endur-2026-11-03.jsonl.gz\n"
           "  drishti.py dataload undo 20261104T093000.123-4242.1\n  drishti.py dataload undo 20261104T093000.123-4242.1 --yes\n"
-          "  drishti.py dataload status --json | jq '.failed'")
+          "  drishti.py dataload status --json | jq '.failed'\n"
+          "  drishti.py dataload ready --file trade_endur.2026-11-06.jsonl.gz --table trade_endur --check\n"
+          "  drishti.py dataload ready --file eod-2026-11-06.tar.gz --mode append --push")
 
 
 def _size(n) -> str:
@@ -89,11 +94,85 @@ def render(st: dict) -> list[str]:
     return out
 
 
+def ready_form(a, item: str | None, choices: dict) -> dict:
+    """The form's fields from the command line: the table named resolves to its pack, kind and connector by the same list the page offers."""
+    f = {"item": item, "lake": a.lake, "mode": a.mode or "append", "hold": a.hold, "ackReplace": a.yes_replace, "key": a.key, "businessDate": a.date}
+    if a.new_table:
+        f.update({"newTable": True, "table": a.table, "pack": a.pack, "kind": a.kind or a.table})
+    elif a.table:
+        hits = [t for t in choices.get("tables") or [] if t.get("table") == a.table]
+        if len(hits) > 1 and a.pack:
+            hits = [t for t in hits if t.get("pack") == a.pack]
+        if len(hits) == 1:
+            f.update({"table": a.table, "pack": hits[0]["pack"], "kind": hits[0]["kind"], "connector": hits[0].get("connector")})
+        else:
+            f["table"] = a.table
+    return f
+
+
+def say_checks(res: dict) -> None:
+    """The checks as a person reads them."""
+    for c in res.get("checks") or []:
+        print(f"{c.get('status', ''):<9}{c.get('text', '')}")
+        if c.get("fix"):
+            print(f"{'':<9}{c['fix']}")
+
+
 def register(groups, srv, ctx: dict) -> None:
-    """Adds ``dataload status|run|retry|undo``."""
+    """Adds ``dataload status|run|retry|ready|undo``."""
     import argparse
 
     Api, CliError, ApiError, say_json = ctx["Api"], ctx["CliError"], ctx["ApiError"], ctx["say_json"]
+
+    def wait(api, item: dict, json_out: bool) -> dict:
+        import time
+        while item.get("state") == "inspecting":
+            time.sleep(0.5)
+            item = api.json("GET", "/api/v1/admin/dataload/item/" + item["id"])
+        if item.get("state") == "failed":
+            raise CliError(f"{item.get('file')}: {item.get('error')}", 1)
+        return item
+
+    def ready(api, a) -> int:
+        import os
+        import urllib.parse
+        choices = api.json("GET", "/api/v1/admin/dataload/choices")
+        if a.inbox:
+            item = api.json("POST", "/api/v1/admin/dataload/pick", {"file": a.inbox})
+        elif a.file:
+            name = os.path.basename(a.file)
+            with open(a.file, "rb") as fh:
+                item = api.json("POST", "/api/v1/admin/dataload/upload?file=" + urllib.parse.quote(name, safe=""), data=fh, ctype="application/octet-stream",
+                                extra={"Content-Length": str(os.path.getsize(a.file))})
+        else:
+            raise CliError("give --file or --inbox", 2)
+        item = wait(api, item, a.json)
+        form = ready_form(a, item["id"], choices)
+        if item.get("tar"):
+            form = {k: v for k, v in form.items() if k in ("item", "lake", "mode", "hold", "ackReplace")}
+        prev = api.json("POST", "/api/v1/admin/dataload/ready/preview", form)
+        out = {"item": item, "ready": prev}
+        code = 1 if prev.get("errors") else 0
+        if not a.json:
+            print(prev.get("text") or "", end="")
+            for field, why in (prev.get("errors") or {}).items():
+                print(f"error    {field}: {why}")
+        if a.check or a.push:
+            res = api.json("POST", "/api/v1/admin/dataload/ready/check", form)
+            out["checks"] = res
+            if not a.json:
+                say_checks(res)
+            if res.get("blocked") or (res.get("tick") and a.push and not a.yes_replace):
+                code = 1
+        if a.push and code == 0:
+            out["pushed"] = api.json("POST", "/api/v1/admin/dataload/ready/push", form)
+            if not a.json:
+                print(f"pushed {out['pushed'].get('file')} and its .ready to the inbox on {out['pushed'].get('node')}")
+        elif item.get("source") == "upload":                      # not pushed: nothing stays in the staging folder
+            api.json("DELETE", "/api/v1/admin/dataload/upload/" + item["id"])
+        if a.json:
+            say_json(out)
+        return code
 
     def cmd(a, extra) -> int:
         api = Api.from_args(a)
@@ -115,6 +194,8 @@ def register(groups, srv, ctx: dict) -> None:
                 else:
                     print(f"{res.get('file')}: back in the inbox (from {res.get('from')}); {res.get('next')}.")
                 return 0
+            if act == "ready":
+                return ready(api, a)
             if act == "undo":
                 body = {"loadId": a.load_id}
                 if a.yes:
@@ -141,16 +222,32 @@ def register(groups, srv, ctx: dict) -> None:
                 raise CliError(f"no failed file is named {a.file} (drishti.py dataload status lists them)", 1) from None
             raise
 
-    p = groups.add_parser("dataload", help="dataload status|run|retry|undo: the data inbox (files dropped in <data>/dataload/inbox, loaded into the lake)",
+    p = groups.add_parser("dataload", help="dataload status|run|retry|ready|undo: the data inbox (files dropped in <data>/dataload/inbox, loaded into the lake)",
                           description=__doc__.split("\n\n")[0], epilog=EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="dataload_cmd", metavar="ACTION", required=True)
     for act, what in (("status", "the files waiting, the last cycles, the failures with their reasons"), ("run", "Load now: a cycle at once"),
                       ("retry", "a failed file and its .ready back into the inbox"),
+                      ("ready", "upload a file, print its exact .ready, check and push it (same endpoints as the Upload page)"),
                       ("undo", "undo a load by its id in the lake it wrote into: a dry run, or --yes")):
         c = sub.add_parser(act, parents=[srv], help=what, description=what, epilog=EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter)
         c.set_defaults(func=cmd)
         if act == "retry":
             c.add_argument("file", help="the failed file's name as it was dropped (trades-2026-11-03.jsonl.gz)")
+        if act == "ready":
+            c.add_argument("--file", metavar="F", help="the data file to upload (.jsonl, .gz, .zip, .tar, .tar.gz, .tgz)")
+            c.add_argument("--inbox", metavar="NAME", help="a file already in the inbox folder, with no .ready (nothing is uploaded)")
+            c.add_argument("--table", metavar="T", help="the table (default: from the file name); a tar names its own")
+            c.add_argument("--lake", metavar="L", help="the lake (default: the inbox's)")
+            c.add_argument("--date", metavar="D", help="the business date, YYYY-MM-DD (default: from the file name)")
+            c.add_argument("--mode", choices=("append", "replace"), help="append (the default) or replace")
+            c.add_argument("--key", metavar="K", help="the field that identifies a row (default: the contract's)")
+            c.add_argument("--pack", metavar="P", help="only for a new table, or a table name in two packs")
+            c.add_argument("--kind", metavar="K", help="only for a new table")
+            c.add_argument("--new-table", action="store_true", help="the file may create a table no pack has")
+            c.add_argument("--hold", action="store_true", help="wait in the inbox until released")
+            c.add_argument("--check", action="store_true", help="run the checks and print them")
+            c.add_argument("--push", action="store_true", help="push it after its checks; a refusal stops it, exit 1")
+            c.add_argument("--yes-replace", action="store_true", help="say yes to a replace that removes rows the table already holds for the date")
         if act == "undo":
             c.add_argument("load_id", metavar="LOAD_ID", help="the load's id (a load report's loads, or a row's _load_id)")
             c.add_argument("--yes", action="store_true", help="undo it (without: what would be undone, nothing changes)")

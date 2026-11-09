@@ -3197,6 +3197,101 @@ The values an enum list offers now: those whose parents include a value chosen i
 
 Returns `Array`.
 
+### drishti_file-drop.js
+
+#### class `FileDrop`
+
+A file drop zone. Events: pick {file}, refused {name, reason}, progress {loaded, total, percent}, done {status, body}, cancel.
+
+##### `new FileDrop(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `options` | `FileDropOptions` |  |
+
+##### `FileDrop.take(file)`
+
+Takes a file, as a drop does (a page that was handed one).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `file` | `File` |  |
+
+Returns `boolean`: false when its type is not accepted.
+
+##### `FileDrop.send(url, headers)`
+
+Sends the file as the body of a POST, streamed by the browser, the bar following.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `url` | `string` |  |
+| `[headers]` | `Object&lt;string, string&gt;` |  |
+
+Returns `Promise&lt;{status: number, body: *}&gt;`.
+
+##### `FileDrop.showing(name, text)`
+
+The file's line shown in place of the zone.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+| `[text]` | `string` |  |
+
+Returns `void`.
+
+##### `FileDrop.setProgress(loaded, total)`
+
+Moves the bar.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `loaded` | `number` |  |
+| `total` | `number` |  |
+
+Returns `void`.
+
+##### `FileDrop.cancel()`
+
+Stops a send under way and shows the zone again.
+
+Returns `void`.
+
+##### `FileDrop.clear()`
+
+Back to the empty zone.
+
+Returns `void`.
+
+##### `FileDrop.setDisabled(on)`
+
+Turns the zone off or on.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `on` | `boolean` |  |
+
+Returns `void`.
+
+##### `FileDrop.destroy()`
+
+Empties the host, stopping a send under way.
+
+Returns `void`.
+
+#### `acceptedName(name, accept)`
+
+True when a name ends with one of the endings (any case; no endings: every name).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+| `[accept]` | `string[]` |  |
+
+Returns `boolean`.
+
 ### drishti_form.js
 
 #### class `Form`
@@ -4188,6 +4283,15 @@ An entry of the function catalogue (the server's: GET /api/v1/functions, or a pa
 | `items` | `PickerItem[]` |  |
 | `[collapsed]` | `boolean` | closed at first (More fields) |
 | `[columns]` | `boolean` | two columns of items (short labels) |
+
+#### `FileDropOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[label='Drop a file here']` | `string` | the words on the zone |
+| `[hint]` | `string` | the second line (default: the accepted types) |
+| `[accept]` | `string[]` | name endings taken ('.jsonl', '.tar.gz'); none: any file |
+| `[disabled=false]` | `boolean` |  |
 
 #### `FilterField` : `Object`
 

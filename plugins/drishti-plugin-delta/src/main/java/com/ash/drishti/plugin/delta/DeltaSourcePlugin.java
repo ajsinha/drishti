@@ -56,7 +56,7 @@ import java.util.concurrent.TimeUnit;
  * limit for {@code effective} tables (a row only when the entity changes, e.g. reference data). {@code knownAt}
  * reads the table as it was at that instant (Delta time travel), before later corrections.
  *
- * <p>Settings: {@code root} (default the demo lake's folder, {@code <data>/delta/demo}; or {@code lake: <name>}, resolved through its lake file), {@code domain} (a sub-folder, e.g. {@code finance}),
+ * <p>Settings: {@code root} (from the lake file, {@code lake: <name>}; a connector naming neither is refused; or {@code lake: <name>}, resolved through its lake file), {@code domain} (a sub-folder, e.g. {@code finance}),
  * {@code kinds} (comma list; default: every table found), {@code mode.<kind>} ({@code snapshot}|{@code effective}),
  * {@code lookback-days} (10), {@code id-column} ({@code id}), {@code doc-column} ({@code doc}), {@code date-column}
  * ({@code business_date}), {@code refresh-seconds} (10: how often a table's latest version is checked), {@code warm-dates}
@@ -209,6 +209,8 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     private String sourceName;
     private int lookbackDays;
     private LakeStore lake;
+    private String lakeName = "";
+    private String domain = "";
     /** What cannot be read right now (a date's files, a table's log, a kind's ids): health and searches say so. */
     private volatile TableProblems problems = new TableProblems("delta");
 
@@ -278,7 +280,12 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         this.lookbackDays = Integer.parseInt(ctx.setting("lookback-days", "10"));
         // local disk or object storage (s3a://, abfs://, gs://), read by the native engine or Hadoop's (`engine`): the
         // rest of the connector does not know which
-        String root = ctx.setting("root", com.ash.drishti.api.DataDir.under("delta/demo"));   // no root and no lake: the demo lake's own folder
+        String root = ctx.setting("root", "");                 // from the lake file (ConnectorLake): nothing here guesses a folder
+        if (root.isBlank()) {
+            throw new IllegalArgumentException("connector " + sourceName + " names no lake: give it lake: <name> (config/lakes/<name>.yaml says where its tables are)");
+        }
+        this.lakeName = ctx.setting("lake-name", "");
+        this.domain = ctx.setting("domain", "");
         // a lake in memory (mem://, docs/architecture/DATA_ARCHITECTURE.md section 8): memory-only by contract, so nothing of it may reach a disk here either:
         // no id-map files, no document cache on disk, no index segments on disk (the memory caches still apply)
         this.memoryOnly = com.ash.drishti.lakeio.StorageProviders.memoryOnly(root);
@@ -1112,6 +1119,9 @@ public final class DeltaSourcePlugin implements SourcePlugin {
 
     @Override
     public Optional<String> listingProblem(String kind) {
+        if (!memoryOnly && !lake.reachable()) {
+            return Optional.of(unreachable());                 // a search says why, instead of an empty list
+        }
         return problems.listing(kind);
     }
 
@@ -1448,6 +1458,13 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         }
     }
 
+    /** In plain words: which lake and tables were looked for, where, and what to do. */
+    private String unreachable() {
+        String which = lakeName.isEmpty() ? "this connector's tables" : "lake " + lakeName + (domain.isEmpty() ? "" : ", tables " + domain + ".*");
+        return "cannot reach " + lake.describe() + ": " + which + ": no such folder. Check config/lakes/" + (lakeName.isEmpty() ? "<lake>" : lakeName)
+                + ".yaml, load the pack's data, or see Admin > Connectors (a shared edit may be in force over the file)";
+    }
+
     @Override
     public boolean memoryOnly() {
         return memoryOnly;
@@ -1460,7 +1477,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
             return "UP: " + lake.describe() + " is held in memory only and is empty now: its replenish job refills it (Admin > Lakes)";
         }
         if (!lake.reachable()) {
-            return "DOWN: cannot reach " + lake.describe() + " (" + engineName + ")";
+            return "DOWN: " + unreachable() + " (" + engineName + ")";
         }
         String tlsNote = (lake.tls() == null ? "" : lake.tls().expiryNote(java.time.Instant.now()))
                 + (lake.proxy().active() ? (lake.tls() == null ? "" : "; ") + lake.proxy().note() : "");

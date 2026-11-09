@@ -32,6 +32,7 @@ export { TypeAhead, Combobox } from './drishti_combobox.js';
 export { Select, selectElement, selectProperties } from './drishti_select.js';
 export { words, pathParts, getPath, setPath, conditionHolds, fieldsOf, defaults, fieldProblem, validate, visibleValue, changes,
   parseField, currencyOf, offeredValues } from './drishti_schema.js';
+export { FileDrop, acceptedName } from './drishti_file-drop.js';
 export { Form } from './drishti_form.js';
 export { FORM_HOST_SELECTOR, formOf, upgradeForms } from './drishti_form-host.js';
 export { defineWidget, defaultWidget, applyHook } from './drishti_form-fields.js';

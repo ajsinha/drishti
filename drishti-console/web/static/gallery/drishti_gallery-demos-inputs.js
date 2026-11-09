@@ -123,6 +123,14 @@
   }));
 
   demos.push(inputDemo({
+    id: 'file-drop', title: 'File drop', about: 'drishti_file-drop.js', keys: ['drishti_file-drop.js'], types: ['FileDropOptions'],
+    summary: 'A file to send: dropped or chosen, its type said and checked, then its name, a progress bar and Cancel; send() streams it, nothing held in memory.',
+    values: { label: 'Drop a data file here' },
+    examples: [{ title: 'JSON Lines and archives', values: {} }],
+    build: function (values) { return build('drishti-file-drop', 'FileDrop', Object.assign({ accept: ['.jsonl', '.gz', '.zip', '.tar', '.tar.gz'] }, typed(values, ['label']))); }
+  }));
+
+  demos.push(inputDemo({
     id: 'form', title: 'Form', about: 'drishti_form.js', types: ['FormOptions'],
     summary: 'A form from a schema: validation in words, conditional fields, arrays, dates by a calendar, the server\'s checks, a four-eyes submit to a second person.',
     values: { submitLabel: 'Propose', layout: 'columns' },

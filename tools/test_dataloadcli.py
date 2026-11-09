@@ -104,6 +104,34 @@ class Dataload(unittest.TestCase):
         self.assertEqual(1, code)
         self.assertIn("no failed file is named x.jsonl", err)
 
+    def _ready_routes(self, checks):
+        item = {"id": "i1", "file": "trade.2026-11-02.jsonl", "source": "upload", "state": "ready", "tar": False, "sha256": "ab" * 32, "rows": 2}
+        table = {"table": "trade", "kind": "trade", "pack": "trading", "connector": None, "key": "TRADE_ID", "label": "trade · trade · trading"}
+        FakeServer.routes[("GET", "/api/v1/admin/dataload/choices")] = (200, {"tables": [table]})
+        FakeServer.routes[("POST", "/api/v1/admin/dataload/upload")] = (200, item)
+        FakeServer.routes[("POST", "/api/v1/admin/dataload/ready/preview")] = (200, {"text": "table: trade\nmode: append\n", "errors": {}})
+        FakeServer.routes[("POST", "/api/v1/admin/dataload/ready/check")] = (200, checks)
+        FakeServer.routes[("POST", "/api/v1/admin/dataload/ready/push")] = (200, {"file": item["file"], "node": "drishti-main"})
+
+    def test_ready_prints_the_text_uses_the_tables_list_and_stops_on_a_refusal(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            f = pathlib.Path(d) / "trade.2026-11-02.jsonl"
+            f.write_text("{}\n")
+            self._ready_routes({"checks": [{"status": "pass", "text": "every required field is there"}], "blocked": False, "tick": False})
+            code, out, _ = self.go("dataload", "ready", "--file", str(f), "--table", "trade", "--push")
+            self.assertEqual(0, code, out)
+            self.assertIn("table: trade", out)
+            self.assertIn("pushed trade.2026-11-02.jsonl", out)
+            sent = json.loads([r for r in FakeServer.requests if "ready/push" in r[1]][-1][5])
+            self.assertEqual(("trade", "trading", "append"), (sent["table"], sent["pack"], sent["mode"]))
+            self._ready_routes({"checks": [{"status": "refused", "text": "DRS-5210 clash", "fix": "use replace"}], "blocked": True, "tick": False})
+            pushes = len([r for r in FakeServer.requests if "ready/push" in r[1]])
+            code, out, _ = self.go("dataload", "ready", "--file", str(f), "--push")
+            self.assertEqual(1, code, out)
+            self.assertIn("DRS-5210 clash", out)
+            self.assertEqual(pushes, len([r for r in FakeServer.requests if "ready/push" in r[1]]))
+
     def test_undo_is_a_dry_run_unless_yes_and_names_the_loads_lake(self):
         answer = {"loadId": "20261107T101740.754-1.1", "lake": "risklake", "lakeFrom": "ledger", "undone": False,
                   "lines": [{"table": "risk/var-limit", "date": "2026-11-06", "removed": 26, "restored": 0, "replaced": False}],

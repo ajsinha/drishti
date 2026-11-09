@@ -551,6 +551,20 @@ public final class ConnectorFiles {
             o.put(name, text, expectedEtag, fileText(f));
             return;
         }
+        writeFile(name, text);
+    }
+
+    /**
+     * Writes what the server itself made (a pack's template generated or followed at an upgrade or a pack reload): the file, never the
+     * shared overlay, which holds only what an administrator saved. An override already there stays until an administrator removes it
+     * (Admin -> Connectors shows it and what it changes).
+     */
+    public void writeGenerated(String name, String text) {
+        writeFile(name, text);
+    }
+
+    private void writeFile(String name, String text) {
+        Path f = file(name);
         try {
             Files.createDirectories(dir);
             backup(name);

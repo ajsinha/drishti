@@ -61,8 +61,12 @@ public record ReadyNote(String pack, String kind, String connector, String table
         if (marker == null || !Files.isRegularFile(marker) || Files.size(marker) == 0) {
             return EMPTY;
         }
-        String text = Files.readString(marker);
-        if (text.isBlank()) {
+        return parse(Files.readString(marker));
+    }
+
+    /** A marker's text (YAML or JSON), by the one set of rules: blank is {@link #EMPTY}; a key it does not know is refused. */
+    public static ReadyNote parse(String text) {
+        if (text == null || text.isBlank()) {
             return EMPTY;
         }
         JsonNode n;

@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A screen mock-up (ready-upload/A-step-wizard.html), self-contained: system fonts, everything inline, nothing from a CDN.
+  Admin: upload a data file and build its .ready; see README.md beside it.
+  The address picks the state, e.g. #refused-tar-light. Dark theme by default.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>.ready upload: A, step wizard</title>
+<script>if(location.hash.indexOf('light')>=0)document.documentElement.classList.add('light');</script>
+<style>
+:root{
+  --bg:#0e1628; --bg2:#121c33; --panel:#16213a; --panel2:#1b2744; --line:#26345a; --line2:#1f2b49;
+  --ink:#e7ecf5; --muted:#93a0b8; --faint:#8490a9; --amber:#e8a33a; --amber2:#f2b453; --amber-t:rgba(232,163,58,.14);
+  --link:#7fb2ff; --ok:#5fd39a; --warn:#f2c14e; --bad:#ff7a7a; --onacc:#14100a; --shadow:0 10px 30px rgba(0,0,0,.45);
+  --ok-t:rgba(95,211,154,.14); --warn-t:rgba(242,193,78,.16); --bad-t:rgba(255,122,122,.15);
+  --sy-k:#7fb2ff; --sy-s:#e7ecf5; --sy-n:#f2b453; --sy-b:#c79bff; --sy-h:#5fd39a;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:dark;
+}
+html.light{
+  --bg:#f7f5f0; --bg2:#efebe3; --panel:#ffffff; --panel2:#faf8f4; --line:#e2dcd0; --line2:#ece7dd;
+  --ink:#172440; --muted:#55607a; --faint:#60697e; --amber:#985b0a; --amber2:#7c4805; --amber-t:rgba(184,110,12,.10);
+  --link:#1f5fc4; --ok:#1b784c; --warn:#8a6100; --bad:#b42323; --onacc:#ffffff; --shadow:0 10px 30px rgba(40,40,60,.18);
+  --ok-t:rgba(27,120,76,.10); --warn-t:rgba(138,97,0,.10); --bad-t:rgba(180,35,35,.09);
+  --sy-k:#1f5fc4; --sy-s:#172440; --sy-n:#985b0a; --sy-b:#6b3fb5; --sy-h:#1b784c;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:13px;line-height:1.4}
+a{color:var(--link);text-decoration:none} a:hover{text-decoration:underline}
+button,input,select{font:inherit;color:inherit}
+.mono{font-family:var(--mono)}
+.muted{color:var(--muted)}
+.cap{position:sticky;top:0;z-index:60;display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center;font-size:11.5px;color:var(--muted);padding:5px 12px;background:var(--bg);border-bottom:1px dashed var(--line);min-height:31px}
+.cap b{color:var(--amber)} .cap .g{display:flex;gap:2px;align-items:center}
+.cap .g>span{margin-right:3px}
+.cap a{padding:1px 7px;border-radius:4px;color:var(--link)} .cap a.on{background:var(--panel2);color:var(--ink);outline:1px solid var(--line)}
+.app{display:flex;flex-direction:column;padding:6px 12px 14px;gap:7px;min-width:0;max-width:1680px;margin:0 auto}
+.bar{display:flex;gap:14px;align-items:center;padding:5px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg2);flex-wrap:wrap}
+.brand{font-weight:700;letter-spacing:.12em;color:var(--amber)}
+.cmd{flex:0 1 460px;height:26px;display:flex;align-items:center;padding:0 12px;border:1px solid var(--amber);border-radius:14px;font-family:var(--mono);color:var(--amber);font-size:12px;white-space:nowrap;overflow:hidden}
+.menus{display:flex;gap:2px;margin-left:auto;font-size:12.5px}
+.menus span{padding:4px 9px;border-radius:6px;color:var(--muted)} .menus span.on{background:var(--panel2);color:var(--ink)}
+h1{margin:0;font-size:16px}
+.sub{display:flex;gap:2px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.sub a{padding:5px 11px;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
+.sub a.on{color:var(--ink);border-bottom-color:var(--amber);font-weight:600}
+.facts{display:flex;gap:6px 20px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.facts b{color:var(--ink);font-family:var(--mono);font-weight:500}
+.st{display:inline-block;padding:0 7px;border-radius:9px;font-size:11px;font-weight:600;background:var(--panel2);color:var(--muted);white-space:nowrap}
+.st.ok{background:var(--ok-t);color:var(--ok)} .st.warn{background:var(--warn-t);color:var(--warn)} .st.bad{background:var(--bad-t);color:var(--bad)}
+.btn{font-size:12.5px;padding:4px 11px;border:1px solid var(--line);border-radius:6px;background:var(--panel2);white-space:nowrap;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.btn:hover{border-color:var(--amber)}
+.btn.p{background:var(--amber);border-color:var(--amber);color:var(--onacc);font-weight:600}
+.btn.big{font-size:14px;padding:7px 18px}
+.btn[disabled]{opacity:.45;cursor:not-allowed;border-color:var(--line)}
+.btn:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,.info:focus-visible{outline:2px solid var(--link);outline-offset:1px}
+.card{border:1px solid var(--line);border-radius:8px;background:var(--panel);min-width:0}
+.card>h3{margin:0;padding:6px 11px;font-size:12px;font-weight:600;letter-spacing:.03em;border-bottom:1px solid var(--line2);display:flex;gap:8px;align-items:center;background:var(--panel2);border-radius:8px 8px 0 0}
+.card>h3 .r{margin-left:auto;display:flex;gap:6px;align-items:center;font-weight:400}
+.pad{padding:10px 11px}
+/* choosing the file */
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{border:0;background:transparent;padding:3px 11px;cursor:pointer;color:var(--muted);font-size:12.5px}
+.seg button.on{background:var(--amber-t);color:var(--amber2);font-weight:600}
+.drop{border:1.5px dashed var(--line);border-radius:8px;padding:20px;text-align:center;color:var(--muted);cursor:pointer;margin-top:8px}
+.drop:hover,.drop.over{border-color:var(--amber);background:var(--amber-t)}
+.drop b{color:var(--ink);font-size:14px}
+.note{font-size:12px;color:var(--muted);margin-top:7px}
+.tip-line{display:flex;gap:7px;align-items:flex-start;font-size:12px;padding:6px 9px;background:var(--amber-t);border-radius:6px;margin-top:8px;color:var(--ink)}
+.fileline{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px;padding:7px 10px;border:1px solid var(--line2);border-radius:6px;background:var(--panel2)}
+.fileline .n{font-family:var(--mono);font-weight:600;word-break:break-all}
+.prog{height:7px;border-radius:4px;background:var(--line);overflow:hidden;margin-top:6px} .prog i{display:block;height:100%;background:var(--amber)}
+.ptab{width:100%;border-collapse:collapse;margin-top:8px;font-size:12.5px}
+.ptab th{text-align:left;color:var(--muted);font-weight:500;font-size:11.5px;padding:3px 8px;border-bottom:1px solid var(--line)}
+.ptab td{padding:4px 8px;border-bottom:1px solid var(--line2)} .ptab td.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.ptab tr.pick{cursor:pointer} .ptab tr.pick:hover td{background:var(--amber-t)}
+/* the form */
+.fr{display:grid;grid-template-columns:128px minmax(0,1fr) 128px;gap:8px;align-items:center;padding:3px 0;min-height:30px}
+.fr label{display:flex;gap:6px;align-items:center;color:var(--muted);font-size:12.5px}
+.fr .src{font-size:10.5px;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fr .src.calc{color:var(--ok)}
+.fsec{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--faint);margin:9px 0 2px;padding-bottom:2px;border-bottom:1px solid var(--line2)}
+.fsec:first-child{margin-top:0}
+.in{width:100%;height:27px;padding:2px 7px;border:1px solid var(--line);border-radius:5px;background:var(--bg2);font-family:var(--mono);font-size:12.5px;min-width:0}
+.in[readonly],.in[disabled]{color:var(--muted);background:transparent;border-style:dashed}
+.explain{grid-column:2/4;font-size:11.5px;color:var(--muted);margin-top:-2px}
+.info{display:inline-flex;flex:none;width:16px;height:16px;border-radius:50%;border:1px solid var(--line);color:var(--muted);font-size:10.5px;font-weight:700;align-items:center;justify-content:center;cursor:help;font-family:Georgia,serif;font-style:italic;background:transparent;padding:0}
+.info:hover{border-color:var(--amber);color:var(--amber)}
+#tip{position:fixed;z-index:90;width:320px;font:12px/1.45 var(--sans);background:var(--panel);border:1px solid var(--amber);border-radius:8px;padding:8px 10px;box-shadow:var(--shadow);display:none}
+.tog{display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-size:12.5px} .tog input{accent-color:var(--amber)}
+/* checks */
+.chk{display:grid;grid-template-columns:62px minmax(0,1fr) auto;gap:3px 9px;padding:6px 11px;border-bottom:1px solid var(--line2);align-items:start}
+.chk:last-child{border-bottom:0}
+.chk.bad{background:var(--bad-t)}
+.chk .fix{grid-column:2/3;font-size:12px;color:var(--muted)}
+.chk .act{grid-row:1/3;grid-column:3}
+.chk .st{justify-self:start;margin-top:1px}
+.tally{font-size:11.5px}
+/* the .ready text */
+pre.ready{margin:0;padding:10px 12px;font-family:var(--mono);font-size:12.5px;line-height:1.6;overflow:auto;min-height:60px;tab-size:2;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--sy-s)}
+pre.ready .k{color:var(--sy-k)} pre.ready .n{color:var(--sy-n)} pre.ready .b{color:var(--sy-b)} pre.ready .h{color:var(--sy-h)} pre.ready .d{color:var(--sy-n)} pre.ready .pu{color:var(--faint)}
+.rname{font-family:var(--mono);font-weight:500;word-break:break-all}
+/* push */
+.pushbar{display:flex;align-items:center;gap:14px;padding:9px 12px;flex-wrap:wrap}
+.pushbar .sp{flex:1}
+.order{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--muted);flex-wrap:wrap} .order .ar{color:var(--faint)}
+.done{border:1px solid var(--ok);border-radius:8px;background:var(--ok-t);padding:12px 14px}
+.done h3{margin:0 0 6px;font-size:14px;color:var(--ok)}
+.done ol{margin:6px 0;padding-left:19px} .done li{margin:2px 0}
+.done .acts{display:flex;gap:8px;margin-top:9px;flex-wrap:wrap}
+.toast{font-size:12px;padding:5px 10px;border-left:3px solid var(--link);background:var(--panel2);border-radius:0 6px 6px 0;margin-top:8px}
+@media(max-width:900px){.fr{grid-template-columns:minmax(0,1fr)} .explain{grid-column:1} .fr .src{display:none}}
+</style>
+</head>
+<body>
+<div class="cap" id="cap"></div>
+<main class="app" id="app"></main>
+<div id="tip" role="tooltip"></div>
+<script>
+const OPTION='A';
+let step=1;
+const STEPS=['File','Details','Check','Review .ready','Push'];
+function afterLoad(){const st={empty:1,uploading:1,filled:4,refused:3,pushed:5}[M.state];step=M.step?+M.step:st;}
+function afterChoose(){step=2;}
+function afterPush(){step=5;}
+function maxStep(){if(!M.file||M.uploading)return 2;if(refused())return 3;return 5;}
+function action(a,b){
+  if(a==='go'){const n=+b.dataset.v;if(n<=maxStep()){step=n;render();}}
+  else if(a==='next'){if(step<maxStep()){step++;render();}}
+  else if(a==='back'){if(step>1){step--;render();}}
+}
+const CSS_STEP='';
+function stepper(){
+  const mx=maxStep();
+  return '<ol class="steps">'+STEPS.map((s,i)=>{const n=i+1,cl=n===step?'cur':n<step?'past':'';return '<li class="'+cl+'"><button data-act="go" data-v="'+n+'"'+(n>mx?' disabled':'')+'><i>'+(n<step?'✓':n)+'</i> '+s+'</button></li>';}).join('')+'</ol>';
+}
+function nav(){
+  const nextLab={1:'Next: Details',2:'Next: Check',3:'Next: Review .ready',4:'Next: Push'}[step];
+  return step===5?'':'<div class="stepnav"><button class="btn" data-act="back"'+(step===1?' disabled':'')+'>Back</button><span style="flex:1"></span>'+(step===3&&refused()?'<span style="color:var(--bad)">Fix the refusal to go on.</span>':'')+'<button class="btn p" data-act="next"'+(step>=maxStep()?' disabled':'')+'>'+nextLab+'</button></div>';
+}
+function summary(){
+  if(!M.v)return '';
+  const v=M.v,t=M.file.tar;
+  const r=(a,b)=>'<tr><td class="muted">'+a+'</td><td class="mono">'+esc(b)+'</td></tr>';
+  return '<section class="card"><h3>What will load</h3><table class="ptab" style="margin:0">'+r('File',M.file.name+' · '+M.file.size)+r('Lake',v.lake)+(t?r('Folders',v.folders.length+' folders, each with its pack')+r('Dates','2026-11-05, 2026-11-06 (from the folders)'):r('Table','risk/scenario-pv (pack '+v.pack+', kind '+v.kind+')')+r('Business date',v.date)+r('Key',v.key))+r('Mode',v.mode)+r('Rows',num(v.rows))+r('Hold',v.hold?'yes':'no')+'</table></section>';
+}
+function body(){
+  if(step===1)return '<section class="card"><h3>1 · Choose the file</h3><div class="pad">'+fileHtml()+'</div></section>';
+  if(step===2)return '<section class="card"><h3>2 · Details <span class="r muted">one field per key · hover ? for help</span></h3><div class="pad form-w">'+formHtml()+'</div></section>';
+  if(step===3)return checksCard();
+  if(step===4)return '<div class="two">'+summary()+readyCard()+'</div>'+'<div class="card pad" style="display:flex;gap:10px;align-items:center">'+tallyHtml()+'<a href="#" data-act="go" data-v="3">See the checks</a></div>';
+  if(M.pushed)return doneHtml();
+  return readyCard()+'<section class="card" data-push>'+pushHtml()+'</section>';
+}
+function view(){
+  return chrome('<a href="#">Inbox</a><a href="#" class="on">Upload</a>')+factsHtml()+'<style>.steps{list-style:none;display:flex;gap:0;margin:0;padding:0;flex-wrap:wrap}.steps li{flex:1;min-width:120px}.steps button{width:100%;display:flex;align-items:center;gap:7px;padding:7px 10px;background:var(--panel);border:1px solid var(--line);border-right-width:0;color:var(--muted);cursor:pointer}.steps li:last-child button{border-right-width:1px;border-radius:0 7px 7px 0}.steps li:first-child button{border-radius:7px 0 0 7px}.steps i{font-style:normal;font-family:var(--mono);width:18px;height:18px;border-radius:50%;background:var(--panel2);display:inline-flex;align-items:center;justify-content:center;font-size:11px}.steps .cur button{color:var(--ink);font-weight:600;background:var(--amber-t)}.steps .cur i{background:var(--amber);color:var(--onacc)}.steps .past i{background:var(--ok-t);color:var(--ok)}.steps button[disabled]{opacity:.5;cursor:not-allowed}.stepnav{display:flex;gap:10px;align-items:center}.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:8px}.form-w{max-width:820px}.wiz{display:flex;flex-direction:column;gap:8px;max-width:1120px;width:100%}@media(max-width:900px){.two{grid-template-columns:minmax(0,1fr)}}</style><div class="wiz">'+stepper()+body()+nav()+'</div>';
+}
+
+/* The mock-up's one model: a file, the form's values, the checks, the .ready text. Figures are made up for the illustration. */
+const FILES={
+  gz:{name:'scenario-pv.2026-11-06.jsonl.gz',size:'3.86 GB',rows:612480,sha:'7d1f0c9e4ab2386ef15d70c2b94e6a1038dfc7725ea41b96c0d83f2a617be4d9',tar:false},
+  tar:{name:'eod-2026-11-06.tar.gz',size:'5.12 GB',rows:2050326,sha:'c48ab0177e92d3f65b01ca8e3d7f264490ae6d1fb8357c02e9146db7a0f3c185',tar:true}
+};
+const PACKS={'market-risk':['scenario-pv','fx-scenario','scenario-set','var-limit'],trading:['trade']};
+const KEYS={'scenario-pv':'SCENARIO_PV_ID',trade:'TRADE_ID'};
+const LAKES=['risklake','demo','capitalmarket','referencelake','worldlake','regulators','newslake'];
+const HELP={
+  lake:'The lake the rows go to: a file in config/lakes/. Default: the routing rule\'s lake, else the inbox\'s own lake. A lake with no file yet is created when the first file loads.',
+  pack:'The pack whose kind and recommended layout (promoted columns, id, partitions) the table takes.',
+  kind:'The pack\'s kind of data. It decides the contract the file is checked against and the key.',
+  connector:'Only when several connectors serve this kind: it decides the exact table. Left on automatic, the key is not written.',
+  table:'Names the table directly, instead of the one the file name gives. Refused for a tar, which names its own.',
+  date:'Every row goes under this date; it is the partition. It comes from outside the data, never from a row. Default: the date in the file name, else the business today.',
+  mode:'replace: this date in the table is replaced in one commit, so sending a file again is safe. append: rows are added, and readers take each id\'s newest row.',
+  newtable:'Allows this file to create a table no pack has. It also needs drishti.dataload.new-tables: true. Off for almost everything.',
+  key:'The field that identifies a row. Filled in from the kind\'s data contract; a table created by its first load takes it as its id.',
+  folders:'A tar holds <folder>/<YYYY-MM-DD>/ files. Each top folder is a table or a kind; this says which pack it belongs to. One unresolved folder refuses the whole archive.',
+  sha256:'Computed by the server from the file itself. The inbox checks it again before writing anything: a file cut short or changed goes to failed/.',
+  rows:'Counted by the server: one document per line (a tar: all its files together). A different count at load time sends the file to failed/.',
+  hold:'The file waits in the inbox, shown as held, until this is removed or set to false (Admin → Data loads → Inbox).',
+  ready:'Upload a .ready file you already have and the form fills from it. An unknown key is shown as a refusal here, as it would be in the inbox.'
+};
+const PRIOR={POSITION:{grain:'POSITION',rows:604220},TRADE:{grain:'TRADE',rows:498136}};
+let M;
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const num=n=>Number(n).toLocaleString('en-US');
+function values(f,prior){
+  if(f.tar) return {lake:'risklake',mode:'replace',hold:false,sha256:f.sha,rows:f.rows,
+    folders:[{f:'trade_endur',dates:2,rows:1240112,pack:'trading'},{f:'trade_calypso',dates:1,rows:197734,pack:'trading'},{f:'scenario-pv',dates:1,rows:612454,pack:'market-risk'},{f:'var_limit',dates:1,rows:26,pack:'market-risk'}]};
+  return {lake:'risklake',pack:'market-risk',kind:'scenario-pv',connector:'',table:'',date:'2026-11-06',mode:prior==='TRADE'?'append':'replace',newtable:false,key:'SCENARIO_PV_ID',hold:false,sha256:f.sha,rows:f.rows};
+}
+function parseHash(){
+  const t=location.hash.slice(1).split('-').filter(Boolean);
+  return {state:t.find(x=>['empty','uploading','filled','refused','pushed'].includes(x))||'filled',ft:t.includes('tar')?'tar':'gz',light:t.includes('light'),step:(t.find(x=>/^s[1-5]$/.test(x))||'').slice(1)};
+}
+function hashOf(o){const h=[o.state];if(o.ft==='tar')h.push('tar');if(o.light)h.push('light');return '#'+h.join('-');}
+function load(){
+  const p=parseHash();M={...p,src:'upload',file:null,v:null,ed:{},pushed:false,prefilled:false,drawer:true,prior:'POSITION'};
+  document.documentElement.classList.toggle('light',p.light);
+  if(p.state==='empty'){M.drawer=false;return;}
+  M.file=FILES[p.ft];
+  if(p.state==='uploading'){M.uploading=true;M.v=values(M.file,'POSITION');delete M.v.sha256;delete M.v.rows;return;}
+  if(p.state==='refused'){M.prior='TRADE';}
+  M.v=values(M.file,M.prior);
+  if(p.state==='refused'&&M.file.tar){M.v.folders.push({f:'pnl_strips',dates:1,rows:0,pack:''});}
+  if(p.state==='pushed'){M.pushed=true;M.src='upload';}
+}
+function chooseFile(ft,src){
+  M.file=FILES[ft];M.src=src||M.src;M.uploading=false;M.ft=ft;M.pushed=false;M.v=values(M.file,'POSITION');M.prior='POSITION';M.ed={};M.drawer=true;
+  if(typeof afterChoose==='function')afterChoose();
+  render();
+}
+function checks(){
+  const c=[];if(!M.file||M.uploading)return c;
+  const add=(st,t,fix,act)=>c.push({st,t,fix,act});
+  if(M.file.tar){
+    add('ok','The archive holds &lt;folder&gt;/&lt;YYYY-MM-DD&gt;/ files and nothing else: '+M.v.folders.length+' folders, 2 dates.');
+    const open=M.v.folders.filter(f=>!f.pack);
+    open.forEach(f=>add('bad','Folder <b class="mono">'+esc(f.f)+'</b> is no kind or table of any pack: the whole archive would be refused.','Choose its pack under Folders, or rename the folder to a table or kind and upload again.'));
+    if(!open.length)add('ok','Every top folder has its pack.');
+    add('ok','The dates come from the folders, so no <span class="mono">business-date:</span> or <span class="mono">table:</span> is written.');
+    add('ok','Sample of 10,000 rows from each folder matches its contract.');
+    add('warn','<b class="mono">var_limit</b>: LIMIT_LETTER is empty on 2 rows: they would go under (Blank).','Correct them at the source, or push and fix them later with a corrected file.');
+    add('ok','An archive loads completely or not at all: if one table fails, the tables already written are undone.');
+    return c;
+  }
+  add('ok','The file reads to the end: gzip intact, one JSON document per line, '+num(M.file.rows)+' rows.');
+  add('ok','Sample of 10,000 rows matches the <span class="mono">'+esc(M.v.kind)+'</span> contract, version 1.1: every required field is there.');
+  add('ok','GRAIN POSITION, POSITION_ID present on every sampled row.');
+  add('ok','ENDUR is set to send form PV, grain POSITION (drishti.var.inputs), and the file says the same.');
+  add('ok','SCENARIO_PV has 509 values on every sampled row, as scenario set HS-509 needs.');
+  if(M.v.key)add('ok','The key <span class="mono">'+esc(M.v.key)+'</span> is unique in the sample.');
+  else add('bad','No key: this kind\'s table needs one.','Choose a key field.');
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(M.v.date||''))add('bad','The business date is not a date (YYYY-MM-DD).','Enter it as 2026-11-06.');
+  add('warn','LIMIT_LETTER is empty on 12 rows: they would go under (Blank).','Correct them at the source, or push and send a corrected file later; replace mode makes that safe.');
+  if(M.prior==='TRADE'&&M.v.mode==='append'){
+    add('bad','ENDUR already sent TRADE grain on 2026-11-06 (DRS-5210): this date would be refused.',
+      'One system sends one form and one grain per date. Use replace, so this file takes the place of those 498,136 rows, or undo load 20261106T093000.123-4242.1 first.',
+      '<button class="btn" data-act="fix-replace">Use replace</button>');
+  } else if(M.v.mode==='replace'){
+    const p=PRIOR[M.prior];
+    add('ok','Replace: the '+num(p.rows)+' '+p.grain+'-grain rows ENDUR sent for 2026-11-06 are replaced in one commit. Undo a load brings them back.');
+  } else {
+    add('warn','Append: rows are added to 2026-11-06; if this same file is corrected later, send it in append too.','Most end-of-day files use replace.');
+  }
+  return c;
+}
+const refused=()=>checks().some(c=>c.st==='bad');
+const canPush=()=>!!M.file&&!M.uploading&&!refused()&&!M.pushed;
+function readyName(){return M.file?M.file.name+'.ready':'<data file>.ready';}
+function readyText(){
+  if(!M.file||!M.v)return '';
+  const v=M.v,l=[];
+  if(M.file.tar){
+    l.push('lake: '+v.lake,'mode: '+v.mode);
+    l.push('folders: {'+v.folders.filter(f=>f.pack).map(f=>f.f+': '+f.pack).join(', ')+'}');
+  } else {
+    l.push('lake: '+v.lake);
+    if(v.pack)l.push('pack: '+v.pack);
+    if(v.kind)l.push('kind: '+v.kind);
+    if(v.connector)l.push('connector: '+v.connector);
+    if(v.table)l.push('table: '+v.table);
+    if(v.date)l.push('business-date: '+v.date);
+    l.push('mode: '+v.mode);
+    if(v.key)l.push('key: '+v.key);
+    if(v.newtable)l.push('new-table: true');
+  }
+  if(v.sha256)l.push('sha256: '+v.sha256);
+  if(v.rows)l.push('rows: '+v.rows);
+  if(v.hold)l.push('hold: true');
+  return l.join('\n')+'\n';
+}
+function colour(t){
+  return t.split('\n').map(line=>{
+    const m=line.match(/^([a-z0-9-]+)(:)( )(.*)$/);if(!m)return esc(line);
+    const x=m[4];let c='';
+    if(/^\d{4}-\d{2}-\d{2}$/.test(x))c='d';else if(/^[0-9a-f]{64}$/.test(x))c='h';else if(/^\d+$/.test(x))c='n';else if(/^(true|false)$/.test(x))c='b';
+    return '<span class="k">'+m[1]+'</span><span class="pu">:</span> '+(c?'<span class="'+c+'">'+esc(x)+'</span>':x.startsWith('{')?'<span class="pu">{</span>'+esc(x.slice(1,-1))+'<span class="pu">}</span>':esc(x));
+  }).join('\n');
+}
+/* drawn parts */
+const q=k=>'<button type="button" class="info" data-h="'+k+'" aria-label="What is this?">?</button>';
+function sel(k,opts,label){const cur=M.v?M.v[k]:'';return '<select class="in" data-f="'+k+'"'+(M.v?'':' disabled')+'>'+(label!=null?'<option value="">'+esc(label)+'</option>':'')+opts.map(o=>'<option'+(o===cur?' selected':'')+'>'+esc(o)+'</option>').join('')+'</select>';}
+function txt(k,ph,ro){const cur=M.v?(M.v[k]==null?'':M.v[k]):'';return '<input class="in" data-f="'+k+'" value="'+esc(cur)+'"'+(ph?' placeholder="'+esc(ph)+'"':'')+(ro||!M.v?' readonly':'')+'>';}
+function fr(k,label,ctrl,src,cls){return '<div class="fr"><label>'+label+' '+q(k)+'</label><div>'+ctrl+'</div><span class="src '+(cls||'')+'">'+(M.ed[k]?'you set this':src||'')+'</span></div>';}
+function fileHtml(){
+  if(M.uploading)return uploadingHtml();
+  let h='<div class="seg" role="tablist"><button data-act="src" data-v="upload" class="'+(M.src==='upload'?'on':'')+'">Upload a file</button><button data-act="src" data-v="inbox" class="'+(M.src==='inbox'?'on':'')+'">Already in the inbox folder</button></div>';
+  if(M.file)h+='<div class="fileline"><span class="st ok">'+(M.src==='inbox'?'in inbox/':'uploaded')+'</span><span class="n">'+esc(M.file.name)+'</span><span class="muted">'+M.file.size+' · '+(M.file.tar?'tar archive':'one table, one date')+'</span><span style="flex:1"></span><button class="btn" data-act="clear">Choose another</button></div>';
+  else if(M.src==='upload')h+='<div class="drop" data-act="pick" data-v="gz" tabindex="0"><b>Drop a data file here</b><br>or click to choose. <span class="mono">.jsonl .gz .zip .tar .tar.gz</span></div>';
+  if(!M.file&&M.src==='inbox')h+=inboxPickHtml();
+  if(!M.file)h+='<div class="tip-line"><span class="st warn">large</span><span>Over about 2 GB, copy the file straight into the inbox folder (<span class="mono">data/dataload/inbox/</span>, no <span class="mono">.ready</span> yet) and pick it from <b>Already in the inbox folder</b>: nothing then goes through the browser.</span></div>';
+  h+='<div class="note">Have a <span class="mono">.ready</span> already? <a href="#" data-act="prefill">Upload it to fill the form</a> '+q('ready')+(M.prefilled?'':'')+'</div>';
+  if(M.prefilled)h+='<div class="toast">Filled from <span class="mono">scenario-pv.2026-11-05.jsonl.gz.ready</span>: lake, pack, kind, mode and key. The date, SHA-256 and rows are this file\'s own.</div>';
+  return h;
+}
+function uploadingHtml(){return '<div class="fileline" style="display:block"><div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><span class="st warn">uploading</span><span class="n">'+esc(M.file.name)+'</span><span class="muted mono">2.39 of '+M.file.size+' · 62% · 48 MB/s · 31 s left</span><span style="flex:1"></span><button class="btn" data-act="clear">Cancel</button></div><div class="prog"><i style="width:62%"></i></div><div class="note">Streamed to the owner node\'s staging folder, not held in memory. SHA-256 and rows are computed when it finishes; the checks run then. You can fill in the form meanwhile.</div></div>';}
+function inboxPickHtml(){return '<table class="ptab"><thead><tr><th>In inbox/, no .ready yet</th><th style="text-align:right">Size</th><th>Unchanged for</th></tr></thead><tbody><tr class="pick" data-act="pick" data-v="gz" data-s="inbox"><td class="mono">scenario-pv.2026-11-06.jsonl.gz</td><td class="n">3.86 GB</td><td>12 min</td></tr><tr class="pick" data-act="pick" data-v="tar" data-s="inbox"><td class="mono">eod-2026-11-06.tar.gz</td><td class="n">5.12 GB</td><td>41 min</td></tr><tr><td class="mono muted">fx-scenario.2026-11-06.jsonl.gz</td><td class="n">18.4 MB</td><td class="muted">still being written</td></tr></tbody></table><div class="note">Nothing is copied through the browser: the server reads the file where it lies.</div>';}
+function formHtml(){
+  const v=M.v;
+  const tar=M.file&&M.file.tar;
+  const sf=s=>M.file?s:'';
+  let h='<div class="fsec">Where the rows go</div>'+fr('lake','Lake',sel('lake',LAKES,v?null:'choose'),sf('configured'));
+  if(tar){
+    h+='<div class="fr"><label>Pack, kind, table</label><div><input class="in" value="one per folder, below" readonly></div><span class="src">the tar names them</span></div>';
+    h+='<div class="fsec">Folders '+q('folders')+'</div><table class="ptab" style="margin-top:2px"><thead><tr><th>Folder</th><th style="text-align:right">Dates</th><th style="text-align:right">Rows</th><th>Pack</th></tr></thead><tbody>'+v.folders.map((f,i)=>'<tr><td class="mono">'+esc(f.f)+'/</td><td class="n">'+f.dates+'</td><td class="n">'+(f.rows?num(f.rows):'-')+'</td><td><select class="in" data-folder="'+i+'"><option value="">choose a pack</option>'+Object.keys(PACKS).map(p=>'<option'+(p===f.pack?' selected':'')+'>'+p+'</option>').join('')+'</select></td></tr>').join('')+'</tbody></table>';
+    h+='<div class="fsec">Which business date</div><div class="fr"><label>Business date '+q('date')+'</label><div><input class="in" value="2026-11-05, 2026-11-06" readonly></div><span class="src">from its folders</span><div class="explain">A tar names its own dates in its folders; nothing overrides them, so no <span class="mono">business-date:</span> is written.</div></div>';
+    h+='<div class="fsec">How it loads</div>'+fr('mode','Mode',modeCtrl(),'lake default');
+    h+='<div class="fr"><label>Key '+q('key')+'</label><div><input class="in" value="each table\'s own id" readonly></div><span class="src">from its lake entry</span></div>';
+  } else {
+    const kinds=v&&v.pack?PACKS[v.pack]:[];
+    h+=fr('pack','Pack',sel('pack',Object.keys(PACKS),v?null:'choose'),sf('from the file name'));
+    h+=fr('kind','Kind',sel('kind',kinds,v?null:'choose'),sf('from the file name'));
+    h+=fr('connector','Connector',sel('connector',[],'automatic: risk-store'),sf('the only one'));
+    h+=fr('table','Or table',txt('table',M.file?'from the kind: risk/scenario-pv':''),sf(''));
+    h+='<div class="fsec">Which business date</div>'+fr('date','Business date',txt('date','YYYY-MM-DD'),sf('from the file name'));
+    h+='<div class="fsec">How it loads</div>'+fr('mode','Mode',modeCtrl(),sf('lake default'));
+    h+=fr('key','Key',txt('key'),sf('from the contract'));
+    h+=fr('newtable','New table','<label class="tog"><input type="checkbox" data-f="newtable"'+(v&&v.newtable?' checked':'')+(v?'':' disabled')+'> may create a table no pack has</label>','');
+  }
+  h+='<div class="fsec">Checks the inbox repeats</div>';
+  const pend=M.uploading?'computed when the upload ends':'';
+  h+=fr('sha256','SHA-256','<input class="in" value="'+esc(v&&v.sha256||'')+'" readonly placeholder="'+pend+'">',M.file?'computed':'','calc');
+  h+=fr('rows','Rows','<input class="in" value="'+(v&&v.rows?num(v.rows):'')+'" readonly placeholder="'+pend+'">',M.file?'computed':'','calc');
+  h+='<div class="fsec">Hold it</div>'+fr('hold','Hold','<label class="tog"><input type="checkbox" data-f="hold"'+(v&&v.hold?' checked':'')+(v?'':' disabled')+'> wait in the inbox until released</label>','');
+  return h;
+}
+function modeCtrl(){const m=M.v?M.v.mode:'replace',d=M.v?'':' disabled';return '<div class="seg"><button data-act="mode" data-v="replace" class="'+(m==='replace'?'on':'')+'"'+d+'>replace</button><button data-act="mode" data-v="append" class="'+(m==='append'?'on':'')+'"'+d+'>append</button></div>';}
+function checksHtml(){
+  const c=checks();
+  if(!M.file)return '<div class="pad muted">Choose a file: a sample is checked against its contract here, before anything reaches the inbox.</div>';
+  if(M.uploading)return '<div class="pad muted">The checks run when the upload ends.</div>';
+  return c.map(x=>'<div class="chk '+(x.st==='bad'?'bad':'')+'"><span class="st '+x.st+'">'+({ok:'pass',warn:'warning',bad:'refused'}[x.st])+'</span><div>'+x.t+'</div>'+(x.act?'<div class="act">'+x.act+'</div>':'')+(x.fix?'<div class="fix">'+x.fix+'</div>':'')+'</div>').join('');
+}
+function tallyHtml(){
+  const c=checks();if(!c.length)return '';
+  const n=s=>c.filter(x=>x.st===s).length;
+  return '<span class="tally muted"><span class="st ok">'+n('ok')+' passed</span> <span class="st warn">'+n('warn')+' warning'+(n('warn')===1?'':'s')+'</span> '+(n('bad')?'<span class="st bad">'+n('bad')+' refused</span>':'')+'</span>';
+}
+function checksCard(){return '<section class="card"><h3>Checks before pushing <span class="r" data-tally>'+tallyHtml()+(M.file&&!M.uploading?' <button class="btn" data-act="recheck">Check again</button>':'')+'</span></h3><div data-checks>'+checksHtml()+'</div></section>';}
+function readyCard(extra){
+  const t=readyText();
+  return '<section class="card"><h3><span class="rname" data-rname>'+esc(readyName())+'</span><span class="st">read-only</span><span class="r"><button class="btn" data-act="copy"'+(t?'':' disabled')+'>Copy</button><button class="btn" data-act="dl"'+(t?'':' disabled')+'>Download</button></span></h3><pre class="ready" data-ready>'+(t?colour(t):'<span class="pu">Choose a file: the exact .ready text is written here as you fill in the form.</span>')+'</pre>'+(extra||'')+'</section>';
+}
+function pushHtml(){
+  const b=refused();
+  return '<div class="pushbar"><div class="order"><span>1 data file into <span class="mono">inbox/</span></span><span class="ar">→</span><span>2 <span class="mono">.ready</span> last</span></div><span class="sp"></span>'+(b?'<span style="color:var(--bad)">Push is blocked: fix the refusal above.</span>':'')+'<button class="btn p big" data-act="push"'+(canPush()?'':' disabled')+'>Push to inbox</button></div>';
+}
+function doneHtml(){
+  const h=M.v.hold;
+  return '<div class="done"><h3>Pushed to the inbox</h3><div><span class="mono">'+esc(M.file.name)+'</span> and its <span class="mono">.ready</span> are in the inbox on owner node <span class="mono">drishti-main</span>.</div><ol><li>Data file written to staging and renamed into <span class="mono">inbox/</span></li><li><span class="mono">.ready</span> written last, the same way</li><li>'+(h?'Held: it waits until released on the Inbox board':'Next cycle in 07:12, after 30 s unchanged')+'</li></ol><div class="muted">Recorded in the audit log: ajsinha, 2026-11-09 12:41:08.</div><div class="acts"><a class="btn p" href="#" data-act="board">Follow it on the Inbox board →</a><button class="btn" data-act="reset">Push another file</button></div></div>';
+}
+function factsHtml(){return '<div class="facts"><span>Data inbox <span class="st ok">on</span></span><span>Owner node <b>drishti-main</b></span><span>Next cycle <b>07:12</b></span><span>Free in inbox folder <b>412 GB</b></span></div>';}
+function chrome(sub){
+  return '<div class="bar"><span class="brand">DRISHTI</span><span class="cmd">&gt; admin loads</span><div class="menus"><span>Views</span><span>Build</span><span>Risk</span><span class="on">Admin</span><span>Help</span></div></div><h1>Data loads</h1><nav class="sub"><a href="#">Loads</a>'+sub+'<a href="#">Feeds</a><a href="#">Load a file into a lake</a></nav>';
+}
+function captionHtml(){
+  const o=OPTION,p={state:M.state,ft:M.ft,light:M.light};
+  const lk=(lab,href,on)=>'<a href="'+href+'" class="'+(on?'on':'')+'">'+lab+'</a>';
+  const opts=[['A','A-step-wizard.html'],['B','B-split-view.html'],['C','C-inbox-first.html']];
+  return '<b>Mock-up · .ready upload</b><span class="g"><span>Option</span>'+opts.map(([a,f])=>lk(a,f+hashOf(p),a===o)).join('')+'</span>'+
+   '<span class="g"><span>State</span>'+['empty','uploading','filled','refused','pushed'].map(s=>lk(s,hashOf({...p,state:s}),M.state===s)).join('')+'</span>'+
+   '<span class="g"><span>File</span>'+lk('.jsonl.gz',hashOf({...p,ft:'gz'}),M.ft==='gz')+lk('tar',hashOf({...p,ft:'tar'}),M.ft==='tar')+'</span>'+
+   '<span class="g"><span>Theme</span>'+lk('dark',hashOf({...p,light:false}),!M.light)+lk('light',hashOf({...p,light:true}),M.light)+'</span><span class="muted">Figures are made up.</span>';
+}
+function render(){
+  document.getElementById('cap').innerHTML=captionHtml();
+  document.getElementById('app').innerHTML=view();
+  if(typeof afterRender==='function')afterRender();
+}
+function refresh(){
+  document.querySelectorAll('[data-ready]').forEach(e=>e.innerHTML=readyText()?colour(readyText()):'');
+  document.querySelectorAll('[data-checks]').forEach(e=>e.innerHTML=checksHtml());
+  document.querySelectorAll('[data-tally]').forEach(e=>e.innerHTML=tallyHtml()+' <button class="btn" data-act="recheck">Check again</button>');
+  document.querySelectorAll('[data-push]').forEach(e=>e.innerHTML=pushHtml());
+}
+function flash(b,t){const o=b.textContent;b.textContent=t;setTimeout(()=>b.textContent=o,1200);}
+document.addEventListener('click',ev=>{
+  const b=ev.target.closest('[data-act]');if(!b)return;
+  const a=b.dataset.act,v=b.dataset.v;
+  if(b.tagName==='A')ev.preventDefault();
+  if(a==='src'){M.src=v;render();}
+  else if(a==='pick')chooseFile(v,b.dataset.s||M.src);
+  else if(a==='clear'){M.file=null;M.v=null;M.uploading=false;M.prefilled=false;M.pushed=false;render();}
+  else if(a==='prefill'){if(!M.file)chooseFile('gz','upload');M.prefilled=true;render();}
+  else if(a==='mode'){M.v.mode=v;M.ed.mode=true;render();}
+  else if(a==='fix-replace'){M.v.mode='replace';M.ed.mode=true;render();}
+  else if(a==='push'){if(canPush()){M.pushed=true;if(typeof afterPush==='function')afterPush();render();}}
+  else if(a==='reset'){location.hash=hashOf({state:'empty',ft:M.ft,light:M.light});}
+  else if(a==='recheck'){flash(b,'Checked');}
+  else if(a==='copy'){const t=readyText();try{navigator.clipboard.writeText(t);}catch(e){}flash(b,'Copied');}
+  else if(a==='dl'){const u=URL.createObjectURL(new Blob([readyText()],{type:'text/plain'}));const x=document.createElement('a');x.href=u;x.download=M.file.name+'.ready';x.click();URL.revokeObjectURL(u);}
+  else if(a==='board'&&OPTION!=='C'){location.href='C-inbox-first.html'+hashOf({state:'pushed',ft:M.ft,light:M.light});}
+  else if(typeof action==='function')action(a,b);
+});
+document.addEventListener('input',ev=>{
+  const e=ev.target,k=e.dataset.f;
+  if(k&&e.tagName==='INPUT'&&e.type==='text'){M.v[k]=e.value;M.ed[k]=true;const s=e.closest('.fr').querySelector('.src');if(s)s.textContent='you set this';refresh();}
+});
+document.addEventListener('change',ev=>{
+  const e=ev.target,k=e.dataset.f;
+  if(e.dataset.folder!=null){M.v.folders[+e.dataset.folder].pack=e.value;render();return;}
+  if(!k)return;
+  if(e.type==='checkbox'){M.v[k]=e.checked;M.ed[k]=true;refresh();return;}
+  if(e.tagName==='SELECT'){M.v[k]=e.value;M.ed[k]=true;
+    if(k==='pack'){M.v.kind=PACKS[e.value][0];M.v.key=KEYS[M.v.kind]||'';}
+    if(k==='kind'){M.v.key=KEYS[e.value]||'';}
+    render();}
+});
+const tip=()=>document.getElementById('tip');
+function showTip(b){const t=tip();t.textContent=HELP[b.dataset.h];t.style.display='block';const r=b.getBoundingClientRect();t.style.left=Math.max(8,Math.min(innerWidth-336,r.left-6))+'px';const below=r.bottom+6+t.offsetHeight<innerHeight;t.style.top=(below?r.bottom+6:r.top-6-t.offsetHeight)+'px';}
+document.addEventListener('mouseover',e=>{const b=e.target.closest('.info');if(b)showTip(b);});
+document.addEventListener('mouseout',e=>{if(e.target.closest('.info'))tip().style.display='none';});
+document.addEventListener('focusin',e=>{const b=e.target.closest('.info');if(b)showTip(b);});
+document.addEventListener('focusout',e=>{if(e.target.closest('.info'))tip().style.display='none';});
+['dragover','drop'].forEach(n=>document.addEventListener(n,e=>{e.preventDefault();if(n==='drop'&&!M.pushed)chooseFile(M.ft==='tar'?'tar':'gz','upload');}));
+window.addEventListener('hashchange',()=>{load();if(typeof afterLoad==='function')afterLoad();render();});
+load();if(typeof afterLoad==='function')afterLoad();render();
+</script>
+</body>
+</html>

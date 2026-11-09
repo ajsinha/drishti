@@ -17,6 +17,11 @@
 
 ## Unreleased
 
+### Data loads
+
+- **Admin → Data loads → Upload** (split view): upload a data file or pick one in the inbox folder, a searchable **Table** picker filled from the file name (kind, pack and connector shown read-only), the exact `.ready` live beside the form, checks against a sample (contract, key, grain and id, `DRS-5210`, hierarchy columns) as pass, warning or refused, and Push: data first, `.ready` last. A replace of a date that already holds rows names the systems and counts, offers a tar or append, and needs a tick. `drishti.py dataload ready`; `.ready` parsing from text and one writer; settings `drishti.dataload.upload.*`; **File drop** in drishti-inputs.
+- A dropped file on the Inbox board, and **Build its .ready** on a Waiting card, open Upload filled in.
+
 ### VaR
 
 - **What happened to matured items:** Explain's Inputs & lineage says how many records were excluded as matured (per source system and grain) and flags live positions holding trades past their maturity, with the list of positions; "could not be checked" when `TRADE_IDS` or the trade feed is missing. A flag only: no figure changes. Also on Admin → Health and in `provenance.matured`; `/api/v1/risk/var/scope/matured` pages the list.
@@ -38,6 +43,7 @@
 
 ### Fixes
 
+- **Connectors no longer stuck on a frozen copy of their settings:** a pack reload could write a connector's generated file into the shared Admin overlay, where it then outranked the file for good, so a later move of the demo lake left those connectors on the old folder (`FUND` listed nothing). The server's own writes now go to the file, and an older generated file that names tables its lake lost follows its pack's template (`.bak` kept). Admin → Connectors marks a connector whose override is in force, shows what it changes against the file and offers Remove override; Health warns while a node has any. A search names a connector it cannot reach instead of showing an empty list, and a Delta connector with neither `lake:` nor `root:` is refused rather than reading the demo folder.
 - **The demo's trade feed keeps step with its VaR records:** `lake demo` moves a trade's `MATURITY_DATE` with the other dates, so the matured-items check does not flag live trades on a moved demo. The committed test data is unchanged.
 - **The demo's VaR no longer drifts with the day it is built:** `lake demo` moves `MATURITY_DATE` on dated records with the other dates, so moving the demo no longer matures records that are live on the test data's own date.
 - **Demo-lake setups had no system baskets:** the seed follows `DRISHTI_DEMO_ENABLED`, which these setups turn off. `bin/start-server --demo`, the IntelliJ demo-lakes configuration, the deployment guide's settings and `drishti-stack` now set `DRISHTI_VAR_SYSTEM_BASKETS_SEED=true`.

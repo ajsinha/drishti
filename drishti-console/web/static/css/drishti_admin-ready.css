@@ -1,0 +1,41 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* Admin → Data loads → Upload: the split view. Theme tokens only. */
+.ready-split { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: var(--d-sp-8); align-items: start; }
+.ready-left { display: flex; flex-direction: column; gap: var(--d-sp-8); min-width: 0; }
+.ready-right { position: sticky; top: var(--d-sp-8); }
+.ready-card { border: 1px solid var(--d-border); border-radius: var(--d-radius); background: var(--d-surface); padding: var(--d-sp-9_6) var(--d-sp-14_4); margin-bottom: var(--d-sp-8); min-width: 0; }
+.ready-title { display: flex; flex-wrap: wrap; align-items: center; gap: var(--d-sp-5_6); }
+.ready-seg { display: flex; gap: var(--d-sp-4); margin-bottom: var(--d-sp-8); }
+.ready-seg [aria-pressed="true"] { border-color: var(--d-accent); color: var(--d-accent); font-weight: 600; }
+.ready-fileline { display: flex; flex-wrap: wrap; align-items: center; gap: var(--d-sp-8); padding: var(--d-sp-5_6) 0; }
+.ready-derived { display: flex; flex-wrap: wrap; gap: var(--d-sp-5_6) var(--d-sp-16); margin-top: var(--d-sp-8); }
+.ready-fact { display: flex; gap: var(--d-sp-5_6); align-items: baseline; }
+.ready-errors { margin: var(--d-sp-5_6) 0 0; padding-left: var(--d-sp-16); }
+.ready-folders { width: 100%; border-collapse: collapse; }
+.ready-folders th { text-align: left; color: var(--d-muted); font-weight: 500; padding: var(--d-sp-3_2) var(--d-sp-8); border-bottom: 1px solid var(--d-border); }
+.ready-folders td { padding: var(--d-sp-3_2) var(--d-sp-8); border-bottom: 1px solid var(--d-border); }
+.ready-chk { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr); gap: var(--d-sp-8); padding: var(--d-sp-5_6) 0; border-bottom: 1px solid var(--d-border); }
+.ready-chk:last-child { border-bottom: 0; }
+.ready-tally { display: inline-flex; gap: var(--d-sp-4); font-weight: 400; }
+.ready-push { display: flex; flex-wrap: wrap; align-items: center; gap: var(--d-sp-14_4); position: sticky; bottom: 0; }
+.ready-why { flex: 1; color: var(--d-warn); }
+.ready-done h3 { margin: 0 0 var(--d-sp-5_6); color: var(--d-ok); }
+.ready-done { display: flex; flex-direction: column; gap: var(--d-sp-5_6); align-items: flex-start; }
+.ready-loader { margin-top: var(--d-sp-8); }
+.ib-card-act { margin-top: var(--d-sp-4); }
+@media (max-width: 1000px) { .ready-split { grid-template-columns: minmax(0, 1fr); } .ready-right { position: static; } }
+.ready-fileline[hidden] { display: none; }

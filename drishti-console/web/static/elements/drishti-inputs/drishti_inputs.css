@@ -291,3 +291,15 @@
 input[data-di-code-upgraded][hidden], textarea[data-di-code-upgraded][hidden] { display: none; }
 .di-code-line .di-code-box { border-radius: 6px; }
 .di-code-line .CodeMirror-lines { padding: 5px 0; }
+
+/* the file drop (drishti_file-drop.js) */
+.di-file-drop .di-drop-zone { border: 1.5px dashed var(--d-border); border-radius: var(--d-radius); padding: var(--d-sp-16); text-align: center; color: var(--d-muted); cursor: pointer; }
+.di-file-drop .di-drop-zone b { color: var(--d-ink); }
+.di-file-drop .di-drop-zone:hover, .di-file-drop .di-drop-zone.di-over, .di-file-drop .di-drop-zone:focus-visible { border-color: var(--d-accent); }
+.di-file-drop .di-drop-zone.di-disabled { opacity: .55; cursor: not-allowed; }
+.di-file-drop .di-drop-file { display: flex; flex-wrap: wrap; align-items: center; gap: var(--d-sp-8); }
+.di-file-drop .di-drop-name { font-weight: 600; word-break: break-all; }
+.di-file-drop .di-drop-said { color: var(--d-muted); }
+.di-file-drop .di-drop-bar { flex-basis: 100%; height: 6px; border-radius: 3px; background: var(--d-border); overflow: hidden; }
+.di-file-drop .di-drop-bar i { display: block; height: 100%; width: var(--di-progress, 0%); background: var(--d-accent); }
+.di-file-drop .di-drop-file[hidden], .di-file-drop .di-drop-zone[hidden] { display: none; }

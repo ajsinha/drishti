@@ -113,6 +113,12 @@ public class VarConfiguration {
     }
 
     /** The VaR engine's figures on Admin -> Capacity (DOMAIN_MODULES.md J3). */
+    /** The VaR intake's rules, for the checks of a file before it is pushed (DATA_LAKE_GUIDE.md section 3.5). */
+    @Bean
+    com.ash.drishti.dataload.ReadyRule varReadyRule(VarProperties props, ObjectProvider<PackRegistry> packs) {
+        return new VarReadyRule(props::input, Hierarchies.of(props, packs::getIfAvailable));
+    }
+
     @Bean
     VarCapacityFigures varCapacityFigures(VarController controller) {
         return new VarCapacityFigures(controller);

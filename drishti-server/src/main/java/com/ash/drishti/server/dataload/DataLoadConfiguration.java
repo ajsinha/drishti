@@ -19,6 +19,8 @@ import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.dataload.DataInbox;
 import com.ash.drishti.dataload.DataLoadSettings;
 import com.ash.drishti.dataload.LoaderProcess;
+import com.ash.drishti.dataload.ReadyDesk;
+import com.ash.drishti.dataload.ReadyRule;
 import com.ash.drishti.dataload.Routes;
 import com.ash.drishti.dataload.Signal;
 import com.ash.drishti.engine.time.BusinessDates;
@@ -83,6 +85,20 @@ public class DataLoadConfiguration {
     @Bean
     public DataLoadController dataLoadController(DataInbox inbox, Entitlements entitlements, ObjectProvider<AuditLog> audit) {
         return new DataLoadController(inbox, entitlements, audit.getIfAvailable());
+    }
+
+    /** The Upload page and {@code drishti.py dataload ready}: {@code drishti.dataload.upload.*}, and every module's checks of a file. */
+    @Bean
+    public ReadyDesk readyDesk(DataLoadSettings settings, DataInbox inbox, Environment env, ObjectProvider<LoadService> loads,
+            ObjectProvider<com.ash.drishti.engine.source.SourceRegistry> sources, ObjectProvider<NetService> net, ObjectProvider<ReadyRule> rules) {
+        ReadyDesk.Settings upload = Binder.get(env).bind("drishti.dataload.upload", ReadyDesk.Settings.class).orElseGet(ReadyDesk.Settings::defaults);
+        return new ReadyDesk(settings, upload, inbox, packs(loads, sources), Clock.systemUTC(), node(net.getIfAvailable()), rules.orderedStream().toList());
+    }
+
+    @Bean
+    public ReadyController readyController(ReadyDesk desk, DataInbox inbox, Entitlements entitlements, ObjectProvider<AuditLog> audit,
+            ObjectProvider<com.ash.drishti.server.engines.EngineGateFilter.Peers> peers) {
+        return new ReadyController(desk, inbox, entitlements, audit.getIfAvailable(), peers.getIfAvailable());
     }
 
     /** This node's name in the folder lock: its cluster id, else the host's name. */

@@ -119,7 +119,7 @@ public final class ConnectorBootstrap {
                 }
                 try {
                     String text = TemplateStamp.stamp(fromTemplate(files, name, e.getValue(), header), packName, fingerprint(files, name, e.getValue()));
-                    files.write(name, text);
+                    files.writeGenerated(name, text);
                     files.writeMarker(name, text, fingerprint(files, name, e.getValue()), kindsOf(e.getValue()));
                     generated.add(name);
                     messages.add("connector file " + name + ".yaml generated from the template of pack '" + templateOwner.get(name).name() + "'");
@@ -187,11 +187,13 @@ public final class ConnectorBootstrap {
             if (TemplateStamp.pristine(text)) {
                 String fresh = TemplateStamp.stamp(fromTemplate(files, name, t, header), pack, fp);
                 Path kept = files.keepBeside(name, "before-upgrade");
-                files.write(name, fresh);
+                files.writeGenerated(name, fresh);
                 files.writeMarker(name, fresh, fp, newKinds);
                 regenerated.add(name);
                 messages.add("connector file " + name + ".yaml replaced by the new template of pack '" + pack + "': it had never been edited"
                         + (kept == null ? "" : " (the file before is kept as " + kept.getFileName() + " and in the history)"));
+            } else if (behindAndBroken(files, name, text, t, header)) {
+                upgradeStale(files, name, t, fp, pack, newKinds, regenerated, messages);
             } else {
                 TemplateChange c = new TemplateChange(name, pack, mk == null ? files.parse(name, text).kinds() : mk.kinds(), newKinds);
                 changed.add(c);
@@ -213,6 +215,9 @@ public final class ConnectorBootstrap {
             ConnectorFiles.Definition f = files.parse(name, fresh);
             if (d.plugin().equals(f.plugin()) && d.settings().equals(f.settings()) && d.enabled().equals(f.enabled())) {
                 mk = new ConnectorFiles.Marker(ConnectorFiles.etag(text), "", d.kinds());          // ours, never edited: same as a marked file
+            } else if (behindAndBroken(files, name, text, t, header)) {
+                upgradeStale(files, name, t, fp, pack, newKinds, regenerated, messages);
+                return;
             } else {
                 TemplateChange c = new TemplateChange(name, pack, d.kinds(), newKinds);
                 changed.add(c);
@@ -226,16 +231,66 @@ public final class ConnectorBootstrap {
         if (ConnectorFiles.etag(text).equals(mk.fileEtag())) {
             String fresh = TemplateStamp.stamp(fromTemplate(files, name, t, header), pack, fp);
             files.keepBeside(name, "before-upgrade");
-            files.write(name, fresh);
+            files.writeGenerated(name, fresh);
             files.writeMarker(name, fresh, fp, newKinds);
             regenerated.add(name);
             messages.add("connector file " + name + ".yaml regenerated: the template of pack '" + pack + "' changed (kinds: "
                     + String.join(", ", mk.kinds()) + " -> " + String.join(", ", newKinds) + ") and the file had not been edited");
+        } else if (behindAndBroken(files, name, text, t, header)) {
+            upgradeStale(files, name, t, fp, pack, newKinds, regenerated, messages);
         } else {
             TemplateChange c = new TemplateChange(name, pack, mk.kinds(), newKinds);
             changed.add(c);
             messages.add("connector file " + name + ".yaml was edited and the template of pack '" + pack + "' changed; the file is kept. " + c.message());
         }
+    }
+
+    /**
+     * Whether a file that counts as edited is in truth an old generation of the template that can no longer start: it names a table of its
+     * lake that the lake file does not have, every such table belongs to a kind the template has dropped, and nothing else in it differs
+     * from the template (the template may have gained kinds and settings). A site's real edit (a setting of its own, or a kind
+     * added with a table of its own) never matches, and a file that starts is left alone. The lake form's rewrite of a generated file
+     * (its marker then no longer matched) is what makes such a file look edited.
+     */
+    private static boolean behindAndBroken(ConnectorFiles files, String name, String text, Map<String, Object> t, String header) {
+        try {
+            ConnectorFiles.Definition d = files.parse(name, text);
+            ConnectorFiles.Definition f = files.parse(name, fromTemplate(files, name, t, header));
+            String lakeName = d.settings().get(com.ash.drishti.lakeconfig.ConnectorLake.LAKE);
+            if (lakeName == null || !lakeName.equals(f.settings().get(com.ash.drishti.lakeconfig.ConnectorLake.LAKE))
+                    || !d.plugin().equals(f.plugin()) || !d.enabled().equals(f.enabled())) {
+                return false;
+            }
+            java.util.Set<String> gone = new java.util.HashSet<>(d.kinds());
+            f.kinds().forEach(gone::remove);
+            com.ash.drishti.lakeconfig.Lake lake = com.ash.drishti.lakeconfig.Lakes.current().get(lakeName.strip());
+            List<String> missing = new ArrayList<>();
+            for (String n : d.settings().getOrDefault(com.ash.drishti.lakeconfig.ConnectorLake.TABLES, "").split(",")) {
+                if (!n.isBlank() && lake.entry(n.strip()).isEmpty()) {
+                    missing.add(n.strip());
+                }
+            }
+            if (missing.isEmpty() || !missing.stream().allMatch(n -> gone.contains(n.substring(n.indexOf('.') + 1)))) {
+                return false;
+            }
+            Map<String, String> mine = new LinkedHashMap<>(d.settings());
+            mine.remove(com.ash.drishti.lakeconfig.ConnectorLake.TABLES);
+            mine.keySet().removeIf(k -> java.util.Arrays.stream(k.split("\\.")).anyMatch(gone::contains));   // mode.agreement, layout.csa.columns
+            return f.settings().entrySet().containsAll(mine.entrySet());
+        } catch (RuntimeException e) {
+            return false;                                                // unreadable, or a lake it cannot find: not this repair's case
+        }
+    }
+
+    private static void upgradeStale(ConnectorFiles files, String name, Map<String, Object> t, String fp, String pack, List<String> newKinds,
+            List<String> regenerated, List<String> messages) {
+        String fresh = generate(files, name, pack, t);
+        Path kept = files.keepBeside(name, "before-upgrade");
+        files.writeGenerated(name, fresh);
+        files.writeMarker(name, fresh, fp, newKinds);
+        regenerated.add(name);
+        messages.add("connector file " + name + ".yaml replaced by the new template of pack '" + pack + "': it was an older generation that named tables "
+                + "its lake no longer has" + (kept == null ? "" : " (the file before is kept as " + kept.getFileName() + " and in the history)"));
     }
 
     /** The header of a file generated from a pack's template. */

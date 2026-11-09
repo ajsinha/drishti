@@ -50,6 +50,7 @@
         <div><span class="st {{ PILL.get(w.code, '') }}">{{ w.label }}</span> <span class="text-muted-d">{{ w.detail }}</span></div>
         {% if w.rule %}<div class="{{ 'ib-warn' if w.rule.error else 'text-muted-d' }}" data-rule>{{ w.rule.text }}</div>{% endif %}
         <div class="text-muted-d">{{ w.next }}</div>
+        {% if w.code == 'no-marker' %}<div class="ib-card-act"><a class="btn-pill ib-btn" data-build-ready href="/admin/loads/upload?inbox={{ w.file | urlencode }}">Build its .ready</a></div>{% endif %}
       </div>
       {% else %}<p class="text-muted-d">{{ b.waitingText or 'Nothing waiting: inbox/ is empty.' }}</p>{% endfor %}
       {% for m in st.markersWithoutFile or [] %}<div class="ib-card"><span class="mono ib-name">{{ m }}</span> <span class="text-muted-d">a marker without its file</span></div>{% endfor %}

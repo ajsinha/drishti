@@ -37,3 +37,8 @@ drishti:
     nice: true                       # run the loader at a lower priority (nice 10) where the system has nice; never on Windows
     default-mode: append             # a file's load mode when its .ready file says none: append (the rows are added) or replace (each business date of the file replaced)
     new-tables: false                # whether a file may create a table no pack has (its .ready file's new-table: true and pack:); false: such a file goes to failed/ with the known tables
+    upload:                          # Admin -> Data loads -> Upload and drishti.py dataload ready
+      max-gb: 10                     # the largest file taken by upload; a larger one is copied into inbox/ and picked from there
+      floor-gb: 5                    # the free space an upload must leave on the disk of the staging folder
+      sample-rows: 10000             # the rows of a file (of each table of a tar) the checks read
+      keep-hours: 24                 # an upload not pushed is deleted from staging/ after this long

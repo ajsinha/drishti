@@ -73,6 +73,9 @@ public final class EngineGateFilter extends OncePerRequestFilter {
         };
     }
 
+    /** The one request let through whole when its engine runs elsewhere: its controller (ReadyController) passes it on in parts. */
+    private static final String RELAYED = "/api/v1/admin/dataload/upload";
+
     private final EngineRegistry registry;
     private final Peers peers;
 
@@ -111,6 +114,10 @@ public final class EngineGateFilter extends OncePerRequestFilter {
                     // a counter's decrement does not fail
                 }
             }
+            return;
+        }
+        if (RELAYED.equals(RequestPaths.routed(req))) {
+            chain.doFilter(req, res);                                   // a file larger than one forwarded call: its controller sends it on in signed parts
             return;
         }
         Principal p = req.getAttribute(Principal.ATTRIBUTE) instanceof Principal x ? x : null;
