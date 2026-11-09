@@ -2574,6 +2574,7 @@ made from its own members; masks apply before aggregation. Every view run and ex
 | `GET /api/v1/pivot/sources` | `{sources: [{source, title, provider}]}`: what the caller may pivot |
 | `GET /api/v1/pivot/catalogue?source=&date=` | the source's `fields` (name, type), `measures` (a provider's own: `var`, `es`), `functions` (the built-ins), `date`, `dates`, `version`, `masked`, `notes`, `limits` |
 | `POST /api/v1/pivot/query` | body: a view (or `{"view": {...}}`, or `{"view": "owner/name"}`); answer: `rows` and `columns` in display order, `cells` keyed `rowKey|colKey`, `measures`, `computed`, `cellCount`, `provenance` |
+| `POST /api/v1/pivot/decompose` | `{source, measure, split, path: [{field, value}], date, filters, options, top}`: one split of a decomposition tree: `node`, `children` (each `value` and `component`), `additive`, `sumStandalone`, `diversification`; figures from the pivot engine for that slice |
 | `POST /api/v1/pivot/estimate` | `{rows, bytes, columns, ofColumns, seconds, how, confirm, words}`; nothing read |
 | `POST /api/v1/pivot/expand` | `{view, axis: rows, path: [[dim, value], ...], by}`: the view with that node open (only its children computed; the rest from the cache) |
 | `POST /api/v1/pivot/compare` | `{view, otherDate}`: `{answer, other, diff}` (per cell: `delta` per measure, or `status` new or gone) |
