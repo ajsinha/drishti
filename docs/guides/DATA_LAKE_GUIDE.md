@@ -880,7 +880,7 @@ lake, and pushes them to the inbox: the same rules as a `.ready` written by hand
 endpoints. Administrators; a token needs the `loads:write` scope.
 
 **1. The file.** Drop a file, or pick one already in `inbox/` with no marker (very large files: copy them to `inbox/` first, then pick). `.jsonl`, `.gz`, `.zip`,
-`.tar` and `.tar.gz` are taken, up to `drishti.dataload.upload.max-gb` (10). An upload goes to `<dataload>/staging/` on the owner node, streamed, never held in
+`.tar`, `.tar.gz` and `.tgz` are taken, up to `drishti.dataload.upload.max-gb` (10). An upload goes to `<dataload>/staging/` on the owner node, streamed, never held in
 memory. The SHA-256 and the row count are computed on the server over the whole file and written into the `.ready`. Dropping a file on the Inbox board opens it here, and **Build its .ready**
 on a Waiting card with no marker opens that file here.
 

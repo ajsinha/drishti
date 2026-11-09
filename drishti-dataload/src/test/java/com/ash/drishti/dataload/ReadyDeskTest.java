@@ -165,6 +165,7 @@ class ReadyDeskTest {
             assertThatThrownBy(() -> desk.receive(new ByteArrayInputStream(new byte[1]), bad, 1, ME)).as(bad).isInstanceOf(DrishtiException.class);
         }
         assertThat(ReadyDesk.checkName("a.tar.gz")).isEqualTo("a.tar.gz");
+        assertThat(ReadyDesk.checkName("a.tgz")).isEqualTo("a.tgz");
     }
 
     @Test

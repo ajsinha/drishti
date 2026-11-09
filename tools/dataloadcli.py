@@ -234,7 +234,7 @@ def register(groups, srv, ctx: dict) -> None:
         if act == "retry":
             c.add_argument("file", help="the failed file's name as it was dropped (trades-2026-11-03.jsonl.gz)")
         if act == "ready":
-            c.add_argument("--file", metavar="F", help="the data file to upload (.jsonl, .gz, .zip, .tar, .tar.gz)")
+            c.add_argument("--file", metavar="F", help="the data file to upload (.jsonl, .gz, .zip, .tar, .tar.gz, .tgz)")
             c.add_argument("--inbox", metavar="NAME", help="a file already in the inbox folder, with no .ready (nothing is uploaded)")
             c.add_argument("--table", metavar="T", help="the table (default: from the file name); a tar names its own")
             c.add_argument("--lake", metavar="L", help="the lake (default: the inbox's)")

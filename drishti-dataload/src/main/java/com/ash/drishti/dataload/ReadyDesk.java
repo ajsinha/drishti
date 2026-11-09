@@ -60,7 +60,7 @@ public final class ReadyDesk {
     private static final Logger LOG = LoggerFactory.getLogger(ReadyDesk.class);
     static final String STAGING = "staging";
     /** The file names taken, and what a name may look like (no folder, no leading dot). */
-    static final List<String> ACCEPTED = List.of(".jsonl", ".gz", ".zip", ".tar", ".tar.gz");
+    static final List<String> ACCEPTED = List.of(".jsonl", ".gz", ".zip", ".tar", ".tar.gz", ".tgz");
     private static final java.util.regex.Pattern NAME = java.util.regex.Pattern.compile("[A-Za-z0-9][A-Za-z0-9._ -]*");
 
     /** Faults between the steps of a push (tests). */
