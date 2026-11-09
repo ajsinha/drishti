@@ -28,7 +28,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-RISK = ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set")   # the system baskets are no data: seeded (DRISHTI_VAR_SYSTEM_BASKETS_SEED)
+RISK = ("scenario-pv", "fx-scenario", "scenario-set")   # the system baskets are no data: seeded (DRISHTI_VAR_SYSTEM_BASKETS_SEED)
 
 
 #: the trades every VaR browser file's lake holds, so one lake is built per run and shared by all of them
@@ -70,7 +70,7 @@ def var_lake(tmp_path_factory, only: str, as_of: str | None = None) -> Path:
         r = subprocess.run([sys.executable, str(ROOT / "tools" / "drishti.py"), "lake", "demo", "--lake", str(lake), "--data-dir", str(work / "data"),
                             "--connectors-dir", str(work / "connectors"), "--as-of", as_of, "--only", only, "--no-signal", "-q",
                             "--engine", "deltalake"], capture_output=True, text=True, cwd=ROOT, timeout=1500)   # the Python writer, in this process: auto starts a JVM for every table and business day
-        ok = r.returncode == 0 and (lake / "risk" / "pnl-vector").is_dir() and (lake / "risk" / "scenario-pv").is_dir()
+        ok = r.returncode == 0 and (lake / "risk" / "scenario-pv").is_dir()
         return {"lake": str(lake), "error": None if ok else "could not build the VaR demo lake: " + (r.stderr or r.stdout)[-400:]}
 
     got = browser_harness.shared_once(run, key, make)

@@ -225,12 +225,6 @@ fields:
   presence: required
   description: 'The product type as booked in the source system (ComSwap, ComFut ...): picks the position rule when no group does.'
   example: ComSwap
-  enum:
-  - CallNot
-  - Cash
-  - ComFut
-  - ComSwap
-  - Commodity
 - name: COUNTERPARTY
   type: id
   presence: optional
@@ -319,6 +313,12 @@ fields:
     INTRADAY row whose TRADE_STATUS is not live (CANCELLED), its PVs empty.'
   example: FULL
   enum: [FULL, INTRADAY]
+- name: TRADE_CURRENCY
+  type: text
+  presence: optional
+  description: 'The position''s or trade''s own currency when its PVs are in another one (a position of EUR trades valued in USD): what scopes,
+    rules and Trade currency read. Without it the record''s CURRENCY is its own.'
+  example: EUR
 - name: TRADE_IDS
   type: id list
   presence: optional

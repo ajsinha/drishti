@@ -48,7 +48,7 @@ The VaR data is **synthetic** (a correlated, fat-tailed factor market over the c
 
 **Part A · Historical VaR from the bank to a trade**
 
-- where the VaR inputs live (one P&L vector of 509 scenario days per live trade) and how a date is loaded;
+- where the VaR inputs live (one record of 509 scenario PVs per position, as a production batch sends them) and how a date is loaded;
 - what VaR, ES, component, incremental VaR and diversification mean on real numbers, and that components add up;
 - how to drill from the bank to a trade, and how longs and shorts net in a position;
 - the scope grammar: nodes, positions, trades, system baskets, rules, with `+`, `-` and `&`;
@@ -93,7 +93,7 @@ ones below (`--as-of today`, the default, moves the date to your today and trade
 
 ```bash
 python3 tools/drishti.py lake demo --as-of data \
-  --only market-risk/pnl-vector,market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/var-limit
+  --only market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/var-limit
 ```
 
 Start the server and console (tutorial 1, Part A), then ask for the bank:
@@ -107,7 +107,7 @@ VAR BANK  ·  Drishti Bank  ·  node  ·  2026-09-30
   parts      2 division   standalone sum 130,101,896   diversification 18,060,250
   backtest   amber  5 exceptions in 249 days   Kupiec p 0.160   Christoffersen p 0.076
   9572 trades in 7993 positions
-  pnl-vector and scenario-pv (1339 trades from scenario PVs) · batch B-2026-09-30-01 of 2026-09-30 · data version …
+  scenario-pv (7993 positions from scenario PVs, grain position) · batch B-2026-09-30-01 of 2026-09-30 · data version …
   in USD, crosses through USD; FX CAD supplied (0.719942 USD); EUR supplied (1.174 USD); USD base (1 USD)
   node aggregate (float64) · historical, equal weights, 1-day, k = 6th worst of 509 · 2 ms (miss)
   warning: 9 positions had trades under two nodes of a hierarchy built from columns and are split, one part per node (<position>@<value>)
@@ -308,8 +308,8 @@ VAR BANK - DESK:CREDIT  ·  BANK - DESK:CREDIT  ·  adhoc  ·  2026-09-30
   ES 97.5%   76,775,085 USD   (mean of the 13 worst)
   ...
   8629 trades in 7050 positions
-$ drishti.py var show 'DESK:RATES - TRD:MX-30000121' --json        (abridged)
-{"canonical": "DESK:RATES - TRD:MX-30000121", "kind": "adhoc", "var": 74720890, "es": 75093413, ...}
+$ drishti.py var show 'DESK:RATES - POS:POS-BOOK-RATES-1~MX-30000121' --json        (abridged)
+{"canonical": "DESK:RATES - POS:POS-BOOK-RATES-1~MX-30000121", "kind": "adhoc", "var": 74720890, "es": 75093413, ...}
 ```
 
 and a rule over the positions' columns:
@@ -991,7 +991,7 @@ signal tells the running server.
 
 ```text
 $ python3 tools/drishti.py lake demo --as-of 2026-09-25 --keep-other-dates -q \
-    --only market-risk/pnl-vector,market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/var-limit
+    --only market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/var-limit
 ```
 
 **In the UI**, type `SMAT BOOK BOOK-RATES-1 5 <GO>` (or open a book, a position or a trade in the explorer and click **Scenario
@@ -1409,7 +1409,7 @@ build and its output are [tutorial 16, step 30](16-load-your-own-data-into-a-new
 
 ```bash
 drishti-console/.venv/bin/python tools/build_demo_lakes.py --as-of data --store risk=iceberg \
-  --only market-risk/pnl-vector,market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/var-limit
+  --only market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/var-limit
 ```
 
 **In the UI.** `VAR BANK`, then **Limit letters** in the select above the tree and **LL-0011**:
@@ -1428,7 +1428,7 @@ VAR BANK  ·  Drishti Bank  ·  node  ·  2026-09-30
   limit      150,000,000 USD   use 74.7%
   …
   9572 trades in 7993 positions
-  pnl-vector and scenario-pv (1339 trades from scenario PVs) · batch B-2026-09-30-01 of 2026-09-30 · data version risk-store=7affffbb8b218c|scenario-pv:risk-store=7affffddd82bf9
+  scenario-pv (7993 positions from scenario PVs, grain position) · batch B-2026-09-30-01 of 2026-09-30 · data version risk-store=7affffbb8b218c|scenario-pv:risk-store=7affffddd82bf9
   …
 $ drishti.py var show LL:LL-0011
   VaR 99%   29,280,653 USD   …   limit 41,000,000 USD   use 71.4%

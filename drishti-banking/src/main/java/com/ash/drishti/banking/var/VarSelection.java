@@ -252,6 +252,13 @@ final class VarSelection {
     }
 
     private static String trade(VarService.Scoped s, String id, String date) {
+        if (s.date().book().tradeOrdinalAnyCase(id) >= 0 && s.date().book().supplied(s.date().book().tradeOrdinalAnyCase(id))) {
+            return "TRD:" + id + " is a position its source system sends whole (position grain): ask POS:" + id;
+        }
+        String position = s.date().intake().positionOf(id);
+        if (position != null) {
+            return "TRD:" + id + " is in the position " + position + ", which its source system sends whole (position grain): ask POS:" + position;
+        }
         String why = s.date().intake().notLiveWhy(id);
         return why != null ? "TRD:" + id + " is not live on " + date + ": " + why + " (no P&L vector)"
                 : "TRD:" + id + " is not a live trade on " + date + " (no P&L vector): unknown to the day's vectors, matured or cancelled";

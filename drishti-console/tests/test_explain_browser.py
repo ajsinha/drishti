@@ -40,7 +40,7 @@ from var_stack import VAR_TRADES, var_data, var_lake, var_server
 def stack(tmp_path_factory):
     import os
     keep = os.environ.get("DRISHTI_TEST_EXPLAIN_WORK")           # a lake built before, reused (debugging: the build takes minutes)
-    if keep and (Path(keep) / "delta" / "risk" / "pnl-vector").is_dir():
+    if keep and (Path(keep) / "delta" / "risk" / "scenario-pv").is_dir():
         lake = Path(keep) / "delta"
     else:
         lake = var_lake(tmp_path_factory, var_data(*VAR_TRADES))   # the committed three dates, ending today (the last weekday)

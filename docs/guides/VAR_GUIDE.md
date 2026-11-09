@@ -38,7 +38,7 @@ engine design and the data model); they were deleted (in git at tag v2.9.5). Whe
 the code wins and the difference is marked **Design differs**.
 
 Every number below that is not a hand-made example was read from a server over the committed test data: the market-risk pack's VaR
-inputs of **2026-09-30** (`data/testdata/market-risk/`: 9,572 live trades, 7,984 derived positions (7,993 once the limit letters split nine of them), 131 hierarchy nodes (88 MGMT and
+inputs of **2026-09-30** (`data/testdata/market-risk/`: the demo runs at **position grain**, every system's scenario PVs per position, as a bank's production batch sends them ([section 15.13](#1513-inputs-any-form-any-grain)): 7,993 position records, 7,984 positions summing 9,572 live trades (nine positions sit under two limit letters, one record per letter), 131 hierarchy nodes (88 MGMT and
 LEGAL, 43 limit letters), 28 system basket
 definitions, 509 scenario days), built into a lake with `drishti.py lake demo --as-of data`. The vectors are synthetic (a correlated,
 fat-tailed factor market), not prices.
@@ -2802,8 +2802,8 @@ day*) reads the table at that instant, within the 7 years kept.
 A bank's batch may send a trade's scenario P&L in a second form (product owner, 2026-10-27): the trade **revalued under each scenario**
 and its **base PV** of the same run, both in the trade's own currency, instead of the P&L vector. Drishti computes the P&L itself when it
 loads the date, in USD, and from there in any reporting currency ([section 15.10](#1510-reporting-currency)). The two forms
-live side by side: a date may hold P&L vectors for some trades and scenario PVs for others (the demo does: its Endur trades come as
-scenario PVs); a trade is in one form only (a trade id in both refuses the date, `DRS-5202`). The P&L-vector form of section 15.2 is
+live side by side: a date may hold P&L vectors for some trades and scenario PVs for others (the demo sends every system's positions as
+scenario PVs, section 15.13); a trade is in one form only (a trade id in both refuses the date, `DRS-5202`). The P&L-vector form of section 15.2 is
 unchanged.
 
 **The decisions (product owner, 2026-10-27):** (1) PVs are in **each trade's own currency**, its `CURRENCY`; one stated currency for a
@@ -3078,6 +3078,20 @@ scenario FX on the date rejects the row (`DRS-5207`). The trade's own currency, 
 present it must say the same (`DRS-5208`). **The currency caveat:** scenario PVs in their own currency convert exactly into any reporting
 currency with each scenario's FX (section 15.11); a P&L vector's conversion is approximate, since the currency move inside the trade is
 already folded into the vector, so `inputsBySystem.<system>.tradesWithoutPv` counts the records that limit multi-currency exactness.
+
+**Loading production position-level scenario PVs.** What the owner's batch must carry, per record of `scenario-pv` (JSONL, one object per line):
+
+| Field | Required | What |
+|---|---|---|
+| `VALUE_TYPE` `PV`, `GRAIN` `POSITION`, `POSITION_ID` | yes | what the record is; `POSITION_ID` unique on the date |
+| `CURRENCY`, `SCENARIO_PV`, `BASE_PV`, `VALUATION_DATE`, `BASE_VALUATION_DATE` | yes | the PVs, in one currency (`TRADE_CURRENCY` when the position's own differs: USD PVs of an EUR position), with `fx-scenario` for every non-USD `CURRENCY` |
+| `SOURCE_SYSTEM` | yes | selects its pin below |
+| `BUSINESS_DATE`, `SCENARIO_SET_ID`, `BATCH_ID`, `COMPUTED_AT`, `RUN_KIND` `FULL` | yes | the run; one `BATCH_ID` a date, `SCENARIO_SET_ID` `HS-509` (509 values) or the configured window (250) |
+| `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `LIMIT_LETTER` | yes | every hierarchy level column promoted: the book placement and tree are read from the record, never derived |
+| `TRADE_STATUS`, `MATURITY_DATE`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `SECURITY_ID`, `COUNTERPARTY`, `DIRECTION`, `QUANTITY`, `TAGS` | as available | scopes, baskets, rules |
+| `TRADE_IDS` | optional | the trades the position sums: their pages then link it, and `TRD:<trade>` answers in words |
+
+Rules: **one form and one grain per system per date** (`DRS-5210`: a date holding a system's positions and trades, or PVs and P&L vectors, is refused). A position under two nodes of a hierarchy is **one record per node**, its id `<position>@<level value>` (the demo: `POS-BOOK-RATES-1~XCH-BOND_FUTURE-AUD-01@DIV-MARKETS/LL-0010`), so every record has one value per level column. Pin it (`drishti.var.inputs`): `ENDUR: {form: pv, grain: position}` and the same for each system; `make_var_data.py --inputs-config` prints the demo's. Then load it (a `.ready` beside the file; [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md), section 3.1), with `fx-scenario` and `scenario-set` for the date.
 
 **Visibility.** Every answer's provenance carries `inputsBySystem`: per source system on the date, `form`, `grain`, `rows`,
 `decidedBy` (*record fields*, or *record fields, agreeing with the pin pv, position*) and `tradesWithoutPv`; `GET /api/v1/risk/var/status`

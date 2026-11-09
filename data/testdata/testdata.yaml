@@ -20107,54 +20107,6 @@ datasets:
     files:
     - trader.2026-09-30.jsonl.gz
     bytes: 20
-- folder: counterparty-risk/simulation-run
-  pack: counterparty-risk
-  kind: simulation-run
-  connector: exposure-store
-  key: RUN_ID
-  dated-by: BUSINESS_DATE
-  first-date: '2026-09-30'
-  last-date: '2026-09-30'
-  documents: 1
-  files:
-  - simulation-run.2026-09-30.jsonl.gz
-  bytes: 659
-- folder: counterparty-risk/exposure-path
-  pack: counterparty-risk
-  kind: exposure-path
-  connector: exposure-store
-  key: PATH_ROW_ID
-  dated-by: BUSINESS_DATE
-  first-date: '2026-09-30'
-  last-date: '2026-09-30'
-  documents: 7540
-  files:
-  - exposure-path.tar
-  bytes: 6041600
-- folder: market-risk/position-sensitivity
-  pack: market-risk
-  kind: position-sensitivity
-  connector: risk-store
-  key: SENSITIVITY_ID
-  dated-by: BUSINESS_DATE
-  first-date: '2026-09-30'
-  last-date: '2026-09-30'
-  documents: 8052
-  files:
-  - position-sensitivity.2026-09-30.jsonl.gz
-  bytes: 426106
-- folder: market-risk/risk-factor
-  pack: market-risk
-  kind: risk-factor
-  connector: risk-store
-  key: RISK_FACTOR
-  dated-by: BUSINESS_DATE
-  first-date: '2026-09-30'
-  last-date: '2026-09-30'
-  documents: 867
-  files:
-  - risk-factor.2026-09-30.jsonl.gz
-  bytes: 21745
 - folder: market-risk/scenario-set
   pack: market-risk
   kind: scenario-set
@@ -20231,6 +20183,54 @@ datasets:
   files:
   - pnl-history.2026-09-30.jsonl.gz
   bytes: 1155460
+- folder: counterparty-risk/simulation-run
+  pack: counterparty-risk
+  kind: simulation-run
+  connector: exposure-store
+  key: RUN_ID
+  dated-by: BUSINESS_DATE
+  first-date: '2026-09-30'
+  last-date: '2026-09-30'
+  documents: 1
+  files:
+  - simulation-run.2026-09-30.jsonl.gz
+  bytes: 659
+- folder: counterparty-risk/exposure-path
+  pack: counterparty-risk
+  kind: exposure-path
+  connector: exposure-store
+  key: PATH_ROW_ID
+  dated-by: BUSINESS_DATE
+  first-date: '2026-09-30'
+  last-date: '2026-09-30'
+  documents: 7540
+  files:
+  - exposure-path.tar
+  bytes: 6041600
+- folder: market-risk/position-sensitivity
+  pack: market-risk
+  kind: position-sensitivity
+  connector: risk-store
+  key: SENSITIVITY_ID
+  dated-by: BUSINESS_DATE
+  first-date: '2026-09-30'
+  last-date: '2026-09-30'
+  documents: 8052
+  files:
+  - position-sensitivity.2026-09-30.jsonl.gz
+  bytes: 426106
+- folder: market-risk/risk-factor
+  pack: market-risk
+  kind: risk-factor
+  connector: risk-store
+  key: RISK_FACTOR
+  dated-by: BUSINESS_DATE
+  first-date: '2026-09-30'
+  last-date: '2026-09-30'
+  documents: 867
+  files:
+  - risk-factor.2026-09-30.jsonl.gz
+  bytes: 21745
 - samples: config/packs/economy/world-economy/samples
   pack: world-economy
   kind: economic-forecast
