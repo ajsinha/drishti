@@ -295,6 +295,14 @@ class SeriesMoved(unittest.TestCase):
         self.assertEqual(out["AS_OF"], "2026-10-26")
         self.assertGreater(out["POINTS"][0]["MATURITY"], "2026-11-20")
 
+    def test_a_dated_records_maturity_moves_with_its_dates(self):
+        # a date move must not mature a record that is live on the test data's own date
+        d = self.lake(["2026-09-28", "2026-09-29", "2026-09-30"], ["2026-11-05", "2026-11-06", "2026-11-09"])
+        out = d.redate_dated({"BUSINESS_DATE": "2026-09-30", "MATURITY_DATE": "2026-09-30"})
+        self.assertEqual(out["BUSINESS_DATE"], "2026-11-09")
+        self.assertEqual(out["MATURITY_DATE"], "2026-11-09")
+        self.assertGreater(d.redate_dated({"MATURITY_DATE": "2026-10-30"})["MATURITY_DATE"], "2026-11-30")
+
     def test_nothing_moves_when_the_dates_are_the_data_own(self):
         d = self.lake(["2026-09-30"], ["2026-09-30"])
         line = '{"HISTORY":[{"DATE":"2026-09-29","CLOSE":1}]}'
