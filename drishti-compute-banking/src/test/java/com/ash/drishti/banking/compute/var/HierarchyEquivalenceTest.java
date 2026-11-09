@@ -47,7 +47,9 @@ import org.junit.jupiter.api.Test;
  * level, children, members, aggregate (to the bit), VaR, ES, worst scenarios, its children's component VaR (exact doubles) and its limit
  * from {@code var-limit}. The trees built now, all three from the trades' promoted columns as the market-risk pack configures them, are
  * equal to it field by field. LEGAL's node ids are paths since the pack's LEGAL is {@code ids: path} (a desk booking into two legal
- * entities is two nodes): the golden file's LEGAL ids were re-keyed from the leaf ids it was recorded with to their paths, every figure
+ * entities is two nodes). The test data are now positions, so the golden file's {@code members}, {@code membersDigest} and {@code aggregateDigest}
+ * (trade-derived or depending on the summation order) were re-keyed to the positions' from the trades', every VaR, ES, component VaR, worst
+ * scenario, tree and limit figure kept as recorded at trade grain and compared to a micro-dollar. The golden file's LEGAL ids were re-keyed from the leaf ids it was recorded with to their paths, every figure
  * kept as recorded ({@link #legalIdsAreThePathsOfTheLeafIdsTheTreesWereRecordedWith}).
  */
 class HierarchyEquivalenceTest {
@@ -163,13 +165,7 @@ class HierarchyEquivalenceTest {
         for (int c = 0; c < texts.length; c++) {
             texts[c] = VarTestDataPrecisionTest.text(n, cols.get(c));
         }
-        String trade = VarTestDataPrecisionTest.text(n, "TRADE_ID");
-        PositionRules.Derived d = rules.derive(trade, VarTestDataPrecisionTest.text(n, "TT_BOOK"), VarTestDataPrecisionTest.text(n, "PRODUCT_GROUP"),
-                VarTestDataPrecisionTest.text(n, "PRODUCT_TYPE"), k -> VarTestDataPrecisionTest.text(n, k));
-        texts[cols.indexOf("POSITION_ID")] = d.positionId();
-        texts[cols.indexOf("POSITION_RULE")] = d.rule();
-        texts[cols.indexOf("INSTRUMENT_ID")] = d.instrumentId();
-        texts[cols.indexOf("SECURITY_ID")] = d.securityId();
+        String trade = VarTestDataPrecisionTest.identify(texts, cols, n, rules);
         texts[cols.indexOf(CurrencyTotals.COLUMN)] = pvCurrency;
         b.trade(trade, v, v.length, texts, new double[] {n.path("QUANTITY").asDouble(Double.NaN), pvUsd});
     }
@@ -184,7 +180,7 @@ class HierarchyEquivalenceTest {
         for (String id : ids) {
             JsonNode got = JSON.valueToTree(have.get(id));
             JsonNode exp = want.get(id);
-            exp.fieldNames().forEachRemaining(f -> assertThat(got.get(f)).as(currency + " " + id + " " + f).isEqualTo(exp.get(f)));
+            exp.fieldNames().forEachRemaining(f -> assertClose(currency + " " + id + " " + f, exp.get(f), got.get(f)));
             assertThat(got.size()).as(currency + " " + id + " fields").isEqualTo(exp.size());
         }
     }
@@ -279,5 +275,26 @@ class HierarchyEquivalenceTest {
         }
         // the letters split the bank: their roots' members are every trade
         assertThat(letters.node("LL~BANK").members()).isEqualTo(letters.all());
+    }
+
+    /**
+     * The golden figures compared to a micro-dollar: the sum over a position's trades and the position's own record differ in the last bit of a
+     * double (the order of the additions, about 10^-8 of a dollar at most). Text and digests exactly.
+     */
+    static void assertClose(String what, JsonNode want, JsonNode got) {
+        if (want.isNumber() && got.isNumber()) {
+            assertThat(got.asDouble()).as(what).isCloseTo(want.asDouble(), org.assertj.core.api.Assertions.within(1e-6));
+        } else if (want.isContainerNode() && got != null && got.getNodeType() == want.getNodeType()) {
+            assertThat(got.size()).as(what + " size").isEqualTo(want.size());
+            if (want.isArray()) {
+                for (int i = 0; i < want.size(); i++) {
+                    assertClose(what + "[" + i + "]", want.get(i), got.get(i));
+                }
+            } else {
+                want.fieldNames().forEachRemaining(k -> assertClose(what + "." + k, want.get(k), got.get(k)));
+            }
+        } else {
+            assertThat(got).as(what).isEqualTo(want);
+        }
     }
 }

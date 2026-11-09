@@ -49,7 +49,9 @@ import org.junit.jupiter.api.io.TempDir;
  * <p>{@code var/system-baskets-golden-2026-09-30.json} was recorded from the 28 rows of the {@code portfolio} feed before the feed was
  * removed: per portfolio its definition (type, scope text), the trades it resolves to (count and a digest of their ids), its P&amp;L
  * vector (a digest of the float64 bits), its VaR and ES (exact doubles), its limit from {@code var-limit} (hierarchy PORTFOLIO) and the
- * limit use; and the figures of the page {@code PORT PF-RATES-DESK} shows: its positions with their trades in scope, standalone VaR,
+ * limit use (the test data now positions: members, digests, the page's trade counts and, for baskets that named trades or POSITION_RULE,
+ * the definition re-keyed to the positions; PF-PARTIAL-FILLS holds whole positions now, so it was recorded anew; every other figure kept as
+ * recorded and compared to a micro-dollar); and the figures of the page {@code PORT PF-RATES-DESK} shows: its positions with their trades in scope, standalone VaR,
  * component VaR, direction and market value, the counts of longs and shorts, the gross and net market value. The same figures computed
  * now, from the definitions as they are kept now (the market-risk pack's seed imported into the basket store's system scope, read back as
  * the date's portfolios with their var-limit limits), are equal field by field.
@@ -200,7 +202,7 @@ class SystemBasketGoldenTest {
         for (String id : ids) {
             JsonNode exp = want.get(id);
             JsonNode g = got.get(id);
-            exp.fieldNames().forEachRemaining(f -> assertThat(g.get(f)).as(id + " " + f).isEqualTo(exp.get(f)));
+            exp.fieldNames().forEachRemaining(f -> assertClose(id + " " + f, exp.get(f), g.get(f)));
             assertThat(g.size()).as(id + " fields").isEqualTo(exp.size());
         }
         assertThat(want.get(PAGE).get("page").get("positionCount").asInt()).as("the page's positions").isPositive();
@@ -219,6 +221,27 @@ class SystemBasketGoldenTest {
             return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));
         } catch (java.security.NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
+        }
+    }
+
+    /**
+     * The golden figures compared to a micro-dollar: the sum over a position's trades and the position's own record differ in the last bit of a
+     * double (the order of the additions, about 10^-8 of a dollar at most). Text and digests exactly.
+     */
+    static void assertClose(String what, JsonNode want, JsonNode got) {
+        if (want.isNumber() && got.isNumber()) {
+            assertThat(got.asDouble()).as(what).isCloseTo(want.asDouble(), org.assertj.core.api.Assertions.within(1e-6));
+        } else if (want.isContainerNode() && got != null && got.getNodeType() == want.getNodeType()) {
+            assertThat(got.size()).as(what + " size").isEqualTo(want.size());
+            if (want.isArray()) {
+                for (int i = 0; i < want.size(); i++) {
+                    assertClose(what + "[" + i + "]", want.get(i), got.get(i));
+                }
+            } else {
+                want.fieldNames().forEachRemaining(k -> assertClose(what + "." + k, want.get(k), got.get(k)));
+            }
+        } else {
+            assertThat(got).as(what).isEqualTo(want);
         }
     }
 }

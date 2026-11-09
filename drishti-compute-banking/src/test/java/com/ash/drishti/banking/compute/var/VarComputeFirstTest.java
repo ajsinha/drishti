@@ -83,25 +83,18 @@ class VarComputeFirstTest {
         b.currencyRates(c -> fx.rates(c).orElse(null));
         b.columnHierarchies(HierarchyEquivalenceTest.MGMT_LEGAL, Map.of());      // MGMT and LEGAL from the promoted columns
         double[] worst = {0, 0};                                             // the largest absolute and relative differences
-        VarTestDataPrecisionTest.lines(data.resolve("scenario-pv"), n -> {   // the Endur trades: scenario PVs in their own currency
+        VarTestDataPrecisionTest.lines(data.resolve("scenario-pv"), n -> {   // the demo's records: positions as scenario PVs
             if (!rules.live(VarTestDataPrecisionTest.text(n, "TRADE_STATUS"))) {
                 return;
             }
             double[] p = values(n.get("SCENARIO_PV"));
-            ScenarioFx.Rates r = fx.rates(VarTestDataPrecisionTest.text(n, "CURRENCY")).orElseThrow();
-            double[] v = new double[p.length];
-            ScenarioFx.pnlFromPv(n.path("BASE_PV").asDouble(), p, p.length, r, v);
-            add(b, n, v, n.path("BASE_PV").asDouble() * r.base(), VarTestDataPrecisionTest.text(n, "CURRENCY"));
-        });
-        VarTestDataPrecisionTest.lines(data.resolve("pnl-vector"), n -> {
-            if (!rules.live(VarTestDataPrecisionTest.text(n, "TRADE_STATUS"))) {
-                return;
-            }
-            double[] stored = values(n.get("PNL"));
-            double pv = n.path("PV").asDouble(0);
+            ScenarioFx.Rates sent = fx.rates(VarTestDataPrecisionTest.text(n, "CURRENCY")).orElseThrow();
+            double[] stored = new double[p.length];
+            ScenarioFx.pnlFromPv(n.path("BASE_PV").asDouble(), p, p.length, sent, stored);   // the record's USD P&L, the stored vector of these tests
+            double pv = n.path("BASE_PV").asDouble() * sent.base();
             double[] v = stored;
             if (form != Form.VECTORS) {
-                // the scenario PVs a pricing system sends for this trade: its value today and under each scenario, in a currency c
+                // the scenario PVs a pricing system sends for this record: its value today and under each scenario, in a currency c
                 String c = form == Form.PV_USD ? "USD" : own(n, fx);
                 ScenarioFx.Rates r = fx.rates(c).orElseThrow();
                 double base = pv / r.base();
@@ -117,7 +110,7 @@ class VarComputeFirstTest {
                     worst[1] = Math.max(worst[1], d / Math.max(1, Math.abs(pv) + Math.abs(stored[j])));
                 }
             }
-            add(b, n, v, pv, null);
+            add(b, n, v, pv, form == Form.VECTORS ? null : VarTestDataPrecisionTest.text(n, "CURRENCY"));
         });
         return worst;
     }
@@ -142,13 +135,7 @@ class VarComputeFirstTest {
         for (int c = 0; c < texts.length; c++) {
             texts[c] = VarTestDataPrecisionTest.text(n, cols.get(c));
         }
-        String trade = VarTestDataPrecisionTest.text(n, "TRADE_ID");
-        PositionRules.Derived d = rules.derive(trade, VarTestDataPrecisionTest.text(n, "TT_BOOK"), VarTestDataPrecisionTest.text(n, "PRODUCT_GROUP"),
-                VarTestDataPrecisionTest.text(n, "PRODUCT_TYPE"), k -> VarTestDataPrecisionTest.text(n, k));
-        texts[VarBook.TRADE_TEXTS.indexOf("POSITION_ID")] = d.positionId();
-        texts[VarBook.TRADE_TEXTS.indexOf("POSITION_RULE")] = d.rule();
-        texts[VarBook.TRADE_TEXTS.indexOf("INSTRUMENT_ID")] = d.instrumentId();
-        texts[VarBook.TRADE_TEXTS.indexOf("SECURITY_ID")] = d.securityId();
+        String trade = VarTestDataPrecisionTest.identify(texts, cols, n, rules);
         texts[VarBook.TRADE_TEXTS.indexOf(CurrencyTotals.COLUMN)] = pvCurrency;
         b.trade(trade, v, v.length, texts, new double[] {n.path("QUANTITY").asDouble(Double.NaN), pvUsd});
     }
@@ -167,11 +154,11 @@ class VarComputeFirstTest {
         double[] usd = new double[2];
         VarBook vectors = book(Form.VECTORS, none);
         VarBook pvs = book(Form.PV_USD, usd);
-        assertThat(usd[0]).as("the largest difference of a derived P&L to its stored vector").isZero();
-        assertThat(pvs.tradeCount()).isEqualTo(9572);
+        assertThat(usd[0]).as("the largest difference of a derived P&L to its stored vector").isLessThan(1e-6);
+        assertThat(pvs.tradeCount()).isEqualTo(7993);
         assertThat(pvs.nodes()).hasSize(88);
         for (VarBook.Node n : vectors.nodes().values()) {
-            assertThat(pvs.aggregate(n.id())).as(n.id()).containsExactly(vectors.aggregate(n.id()));
+            assertThat(pvs.aggregate(n.id())).as(n.id()).containsExactly(vectors.aggregate(n.id()), org.assertj.core.api.Assertions.within(1e-6));
         }
         VarCalc calc = VarCalc.defaults();
         assertThat(Math.round(calc.measures(pvs.aggregate("MGMT~BANK")).var())).isEqualTo(112_041_646L);
@@ -208,7 +195,7 @@ class VarComputeFirstTest {
         VarBook.Builder b = new VarBook.Builder(LocalDate.of(2026, 9, 30), "HS-STRESS-2008", days, 65_536, Long.MAX_VALUE);
         VarTestDataPrecisionTest.fill(b, data, rules, 1, true);
         VarBook stressed = b.build(sums);
-        assertThat(stressed.tradeCount()).isEqualTo(9572);
+        assertThat(stressed.tradeCount()).isEqualTo(7993);
         VarCalc calc = VarCalc.defaults();
         double[] bank = stressed.aggregate("MGMT~BANK");
         VarCalc.Measures one = calc.measures(bank);
