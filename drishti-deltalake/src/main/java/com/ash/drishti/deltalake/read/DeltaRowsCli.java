@@ -77,6 +77,7 @@ public final class DeltaRowsCli {
 
     /** Reads the table the arguments name and writes its rows to standard output; exit 1 with the reason on standard error. */
     public static void main(String[] args) throws Exception {
+        System.setOut(System.err);                             // the engine's log lines must never land among the rows on standard output
         String table = null;
         Long version = null;
         String date = null;

@@ -84,7 +84,7 @@ def read(table, version: int | None = None, date: str | None = None, columns: li
                     schema = json.loads(ln)["schema"]
                     cols = [[] for _ in schema]
                 continue
-            if not (ln.startswith("[") and ln.rstrip().endswith("]")):
+            if not ln.startswith("["):
                 continue                                            # a log line, never a row (a row is one JSON array)
             for c, v in zip(cols, json.loads(ln)):
                 c.append(v)
