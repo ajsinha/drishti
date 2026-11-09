@@ -119,7 +119,9 @@ public final class DeltaRowsCli {
         }
         ScanBuilder b = s.getScanBuilder().withReadSchema(schema);
         if (date != null && s.getPartitionColumnNames().contains("business_date")) {
-            b = b.withFilter(new Predicate("=", new Column("business_date"), Literal.ofDate((int) LocalDate.parse(date).toEpochDay())));
+            boolean text = s.getSchema().get("business_date").getDataType() instanceof io.delta.kernel.types.StringType;   // delta-rs may write a string column
+            b = b.withFilter(new Predicate("=", new Column("business_date"),
+                    text ? Literal.ofString(date) : Literal.ofDate((int) LocalDate.parse(date).toEpochDay())));
         }
         Scan scan = b.build();
         Row state = scan.getScanState(engine);
