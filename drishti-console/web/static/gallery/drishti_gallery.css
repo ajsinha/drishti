@@ -151,3 +151,12 @@ kbd { border: 1px solid var(--d-border); border-radius: 4px; padding: 0 4px; fon
 .gx-flow-panel.gx-span-5 { grid-column: span 5; } .gx-flow-panel.gx-span-7 { grid-column: span 7; } .gx-flow-panel.gx-span-8 { grid-column: span 8; }
 .gx-flow-panel.gx-span-9 { grid-column: span 9; } .gx-flow-panel.gx-span-10 { grid-column: span 10; } .gx-flow-panel.gx-span-11 { grid-column: span 11; }
 .gx-flow-h { cursor: grab; font-weight: 600; }
+
+/* The Playground page of an element (one column, the sandboxed drawing on top) */
+.gx-page-visual { position: relative; min-height: 380px; border: 1px solid var(--d-border); border-radius: 6px; background: var(--d-surface); }
+.gx-page-frame { width: 100%; height: 380px; border: 0; display: block; }
+.gx-page-stale { opacity: 0.35; filter: grayscale(1); }
+.gx-page-status { color: var(--d-muted); font-size: 12px; margin: 4px 0; }
+.gx-page-error { display: flex; align-items: center; gap: 12px; background: var(--d-highlight); color: var(--d-ink); border-left: 3px solid var(--d-bad, red); padding: 6px 8px; font-size: 12.5px; }
+.gx-page-data { height: 240px; }
+.gx-page-badline { background: color-mix(in srgb, var(--d-bad, red) 22%, transparent); }

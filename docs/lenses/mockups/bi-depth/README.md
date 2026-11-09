@@ -107,11 +107,11 @@ Light: ![](modelling-A-bridge-light.png)
 
 | Item | Library | Data | Interaction | Status |
 |---|---|---|---|---|
-| Decomposition tree: columns, split list, links, diversification line | `drishti-chart`, `drishti-inputs` | pivot engine; VaR from the engine per node | open a node, change a split | to build |
-| Playground page per element; sandbox with error reporting; last good drawing; reset | `drishti-inputs` (code editor), `drishti-grid` (data) | element's example | edit redraws | to build |
-| Brush on line, histogram, scatter; click on bars; chips; Esc | `drishti-chart`, `drishti-core` (events) | cross-filter of the report, VaR recomputed | drag, clear | to build |
-| Sunburst, icicle | `drishti-chart` | hierarchy from promoted columns | zoom, path | to build |
-| Calendar heatmap | `drishti-chart` | breaches or exceptions per business date | pick a day | to build |
+| Decomposition tree: columns, split list, links, diversification line | `drishti-tree` | pivot engine; VaR from the engine per node | open a node, change a split | built |
+| Playground page per element; sandbox with error reporting; last good drawing; reset | `drishti-inputs` (code editor), `drishti-grid` (data) | element's example | edit redraws | built |
+| Brush on line, histogram, scatter; click on bars; chips; Esc | `drishti-chart`, `drishti-core` (events) | cross-filter of the report, VaR recomputed | drag, clear | built |
+| Sunburst, icicle | `drishti-tree` (its modes) | hierarchy from promoted columns | zoom, path | built (reports; Sutra panels later, with the Rachana track) |
+| Calendar heatmap | `drishti-chart` | breaches or exceptions per business date | pick a day | built (reports; Sutra panels later) |
 | Relationship grid and forms; bridge form; path diagram | `drishti-grid`, `drishti-inputs`, `drishti-chart` | the model file | edit, save | to build |
 | Refusal with paths and one-click fixes | server model check; `drishti-core` | a new error code, one per refusal | apply a fix, undo | to build |
 

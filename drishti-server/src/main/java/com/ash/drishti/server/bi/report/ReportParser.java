@@ -72,8 +72,20 @@ public final class ReportParser {
     private static final Pattern NAME = Pattern.compile("[A-Za-z0-9][A-Za-z0-9_.-]{0,63}");
     private static final Pattern ID = Pattern.compile("[A-Za-z0-9][A-Za-z0-9_-]{0,39}");
     private static final Pattern DAY = Pattern.compile("\\d{4}-\\d{2}-\\d{2}");
+    /** How marks combine: {@code single} (the default: a new selection replaces the last) or {@code crossfilter} (one per visual). */
+    private static String selection(JsonNode n, List<Problem> out) {
+        if (n.isMissingNode() || n.isNull()) {
+            return null;
+        }
+        if (!Set.of("single", "crossfilter").contains(n.asText())) {
+            out.add(new Problem("error", INVALID, "selection", "selection is single or crossfilter"));
+            return null;
+        }
+        return n.asText();
+    }
+
     private static final Set<String> TOP = Set.of("rachana", "report", "version", "title", "description", "sample", "dataset", "model", "perspective", "measures", "theme", "dates", "filters", "bookmarks", "layouts", "links", "tests", "pages",
-            "owner", "tags", "endorsement", "endorsedBy", "audience", "board", "statement", "as-of");
+            "owner", "tags", "endorsement", "endorsedBy", "audience", "board", "statement", "as-of", "selection");
     private static final Set<String> PAGE = Set.of("id", "title", "filters", "drillthrough", "visuals", "layout", "tooltip", "interactions");
     private static final Set<String> VISUAL_KEYS = Set.of("id", "type", "title", "at", "wells", "filters", "sort", "limit", "hierarchy", "drillthrough", "format", "text", "src", "alt",
             "interacts", "action", "dataset", "tooltip", "from", "alert");
@@ -148,7 +160,7 @@ public final class ReportParser {
         }
         Report r = new Report(name, root.path("version").asInt(1), text(root, "title", name), text(root, "description", ""), root.path("sample").asBoolean(false), dataset,
                 theme, dates, filters, pages, bookmarks, layouts(root.path("layouts"), out), links(root.path("links"), out), tests, local, perspective, board, statement,
-                AsOfRule.parse(root.path("as-of"), out));
+                AsOfRule.parse(root.path("as-of"), out), selection(root.path("selection"), out));
         out.addAll(com.ash.drishti.server.bi.board.ReportBoards.check(r));
         out.addAll(StatementSpec.check(r));                                     // statement pages and their paper (2.6.0, DRS-9038)
         pageReferences(r, out);

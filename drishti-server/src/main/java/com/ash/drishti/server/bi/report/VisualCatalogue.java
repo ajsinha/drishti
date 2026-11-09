@@ -67,6 +67,11 @@ public final class VisualCatalogue {
         put("box", "chart", "axis", legend, "details", axis, "values", new Well(Kind.MEASURE, true, 1));
         put("map", "chart", "location", legend, "latitude", legend, "longitude", legend, "details", legend, "values", new Well(Kind.MEASURE, true, 1));
         put("waterfall", "chart", "axis", axis, "values", new Well(Kind.MEASURE, true, 1));
+        for (String t : List.of("sunburst", "icicle")) {
+            put(t, "chart", "axis", new Well(Kind.FIELD, true, 5), "values", new Well(Kind.MEASURE, true, 1), "colour", new Well(Kind.MEASURE, false, 1));
+        }
+        put("calendar", "chart", "axis", axis, "values", new Well(Kind.MEASURE, true, 1));
+        put("decomposition", "static");
         put("treemap", "chart", "axis", new Well(Kind.FIELD, true, 2), "values", new Well(Kind.MEASURE, true, 1));
         put("heatmap", "chart", "axis", axis, "legend", new Well(Kind.FIELD, true, 1), "values", new Well(Kind.MEASURE, true, 1));
         put("card", "card", "values", new Well(Kind.MEASURE, true, 1));

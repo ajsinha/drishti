@@ -90,6 +90,10 @@ CSP = ("default-src 'self'; img-src 'self' data:; style-src 'self'; script-src '
 # It may also fetch only the console's static files and the runtime (connect-src names those two paths on this host),
 # never an /api route: Calc code in the worker carries the user's session cookie, so any other route it could reach it
 # would reach as the user (QA 2026-10-01 SEC-17). Its reads go by message to the page, which fetches an allow-listed few.
+# The gallery's Playground frame (sandboxed, opaque origin): its scripts are inline (they are written into it); no network of any kind.
+PLAYGROUND_FRAME = "/static/gallery/drishti_playground-frame.html"
+PLAYGROUND_CSP = ("default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval'; style-src 'unsafe-inline'; img-src data:; font-src data:; "
+                  "frame-ancestors 'self'")
 WORKER_CSP = "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src {connect}"
 _HOST = re.compile(r"^[A-Za-z0-9.\-]+(:\d{1,5})?$|^\[[0-9A-Fa-f:.]+\](:\d{1,5})?$")
 WORKER = "/static/js/drishti_calc-worker.js"
@@ -305,7 +309,7 @@ class SecurityHeaders(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         response = await call_next(request)
         path = request.url.path
-        policy = worker_csp(request.headers.get("host", "")) if path == WORKER else CSP
+        policy = worker_csp(request.headers.get("host", "")) if path == WORKER else PLAYGROUND_CSP if path == PLAYGROUND_FRAME else CSP
         response.headers.setdefault("Content-Security-Policy", policy)
         if path.startswith(PYODIDE) and response.status_code == 200:
             response.headers["Cache-Control"] = "public, max-age=31536000, immutable"   # the URL names the version

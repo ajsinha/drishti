@@ -1,0 +1,30 @@
+<!doctype html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  The Playground's sandbox (the frame the gallery runs edited code in): loaded with sandbox="allow-scripts" and no same-origin, so it has no
+  cookies, no storage and no access to the page; served with a content security policy that allows no network at all. It waits for one message
+  from its parent: the page to draw, written in place.
+-->
+<html><head><meta charset="utf-8"><title>Playground frame</title></head>
+<body><script>
+window.addEventListener('message', function (e) {
+  if (e.source !== window.parent || !e.data || e.data.type !== 'drishti-playground-page') { return; }
+  document.open();
+  document.write(e.data.html);
+  document.close();
+});
+window.parent.postMessage({ type: 'drishti-playground-ready' }, '*');
+</script></body></html>

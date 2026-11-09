@@ -53,6 +53,14 @@
 
 ## Unreleased
 
+### BI depth: visuals
+
+- **Decomposition tree** (`decomposition` report visual, `Decomposition` in drishti-tree): one measure split level by level, the next split the reader's choice, every figure the pivot engine's for that slice (`POST /api/v1/pivot/decompose`); a split of a non-additive measure says *Σ standalone − diversification = parent*, with component VaR beside standalone when the source has it.
+- **Linked brushing:** drag across a line, area, histogram or scatter in a report to select a range; the other visuals filter to it, VaR recomputed; `selection: crossfilter` keeps one selection per visual. A selection has a clear button, and Esc clears it (`rangeBrush` in drishti-chart).
+- **New visuals:** `sunburst`, `icicle` (drishti-tree's modes, in reports; an additive size, a colour read per node) and `calendar` (drishti-chart).
+- **Playground page** of an element in the gallery (`/elements`, tab Playground page): the visual live, its data and options below, its HTML and JavaScript editable and drawn in a sandboxed frame with no network; an error names its line and keeps the last good drawing; Reset.
+- **Every visual in a library:** a guard fails a screen, plugin or report script that draws by hand (existing cases are listed and only shrink).
+
 ### Testing and the drill
 
 - **The VaR proof runs in seconds:** an in-process golden test covers all three demo dates, the 509 and 250 windows, USD and EUR, every hierarchy and all 28 system baskets. The server-against-server API comparison now runs for releases only.

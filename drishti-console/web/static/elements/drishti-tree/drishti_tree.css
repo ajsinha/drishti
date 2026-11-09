@@ -189,3 +189,28 @@ a.dt-mark { text-decoration: underline; }
 
 @media (max-width: 760px) { .dt-body { grid-template-columns: minmax(0, 1fr); } .dt-side { border-left: 0; border-top: 1px solid var(--d-border); } }
 @media (pointer: coarse) { .dt-obtn, .dt-oact { min-height: 44px; min-width: 44px; } }
+
+/* The decomposition tree */
+.dt-decomp { overflow: auto; height: 100%; font-size: var(--fs-sm, 12px); color: var(--ink); }
+.dt-strip { position: relative; display: flex; gap: 40px; padding: 8px; width: max-content; }
+.dt-col { position: relative; z-index: 1; width: 220px; display: flex; flex-direction: column; gap: 8px; }
+.dt-col-head { display: flex; align-items: center; gap: 6px; min-height: 26px; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.04em; font-size: var(--fs-xs, 11px); }
+.dt-col-title { color: var(--ink); text-transform: none; font-weight: 600; }
+.dt-split { background: var(--surface); color: var(--ink); border: 1px solid var(--border); border-radius: 4px; padding: 2px 4px; font-size: var(--fs-xs, 11px); }
+.dt-box { display: block; width: 100%; text-align: left; background: var(--surface); color: var(--ink); border: 1px solid var(--border); border-radius: 4px; padding: 6px 8px; cursor: pointer; font: inherit; }
+.dt-box:hover { border-color: var(--accent); }
+.dt-box-on, .dt-box-root { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.dt-box-others { font-style: italic; cursor: default; }
+.dt-box-top, .dt-box-comp { display: flex; justify-content: space-between; gap: 8px; }
+.dt-box-comp { color: var(--ink-dim); font-size: var(--fs-xs, 11px); margin-top: 2px; }
+.dt-box-value { font-variant-numeric: tabular-nums; font-family: var(--font-mono, monospace); }
+.dt-box-bar { height: 4px; margin-top: 6px; background: var(--surface-2, var(--border)); border-radius: 2px; overflow: hidden; }
+.dt-box-fill { height: 100%; background: var(--accent); }
+.dt-line { border: 1px dashed var(--border); border-radius: 4px; padding: 6px 8px; font-size: var(--fs-xs, 11px); color: var(--ink-dim); line-height: 1.5; }
+.dt-line-div { color: var(--good, var(--accent)); }
+.dt-line-eq { color: var(--ink); font-family: var(--font-mono, monospace); }
+.dt-col-note { color: var(--ink-dim); font-style: italic; margin: 8px 0; }
+.dt-col-error { color: var(--bad, var(--ink)); font-style: normal; }
+.dt-links { position: absolute; top: 0; left: 0; pointer-events: none; }
+.dt-link { fill: none; stroke: var(--border); stroke-width: 1; }
+.dt-link-on { stroke: var(--accent); stroke-width: 1.5; }

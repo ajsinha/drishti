@@ -10516,6 +10516,47 @@ Defines &lt;drishti-tree&gt; in a registry (once; the bundle does it when it loa
 
 Returns `boolean`: whether it was defined now.
 
+### drishti_decomposition.js
+
+#### class `Decomposition`
+
+The tree: the root's column, then one column per open split.
+
+##### `new Decomposition(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `options` | `DecompositionOptions` |  |
+
+##### `Decomposition.load(depth, split, path)`
+
+Asks column depth anew (its split changed, or its parent was opened), drops those to its right.
+
+##### `Decomposition.open(depth, index)`
+
+Opens a member (its children below, by the next unused split or the one already chosen).
+
+##### `Decomposition.splitBy(depth, field)`
+
+Splits column depth by a dimension.
+
+##### `Decomposition.line(a, label)`
+
+The words of a split's line, every figure the server's.
+
+##### `Decomposition.draw()`
+
+Draws the whole strip (columns, then the links over them).
+
+##### `Decomposition.resize()`
+
+Draws again at the size the host now has.
+
+##### `Decomposition.dispose()`
+
+Empties the host.
+
 ### drishti_index.js
 
 #### `install(root)`
@@ -10529,6 +10570,32 @@ Starts drishti-tree in a page (the bundle calls it when it loads): defines &lt;d
 Returns `void`.
 
 ### Types of drishti-tree
+
+#### `DecompositionAnswer` : `Object`
+
+One column of the answer the host gives.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `node` | `{value: ?number, component: ?number, note: (string\|undefined)}` | the node's own figures |
+| `children` | `Array&lt;{member: ?string, label: string, value: ?number, component: ?number, others: boolean, note: (string\|undefined)}&gt;` | each member's own figures |
+| `additive` | `boolean` | whether the measure adds up (a plain sum) |
+| `[sumStandalone]` | `number` | Σ of the members' standalone figures (a measure that does not add), from the server |
+| `[diversification]` | `number` | Σ members − node, from the server |
+| `[componentLabel]` | `?string` | the name of the component measure, when the source has one |
+| `[unit]` | `string` | money, count… |
+
+#### `DecompositionOptions` : `Object`
+
+The options of a decomposition tree.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `title` | `string` | the measure's name (the root box and the first heading) |
+| `splits` | `Array&lt;{field: string, label: string}&gt;` | the dimensions the reader may split by |
+| `load` | `function({split: ?string, path: Array&lt;{field: string, value: string}&gt;}): Promise&lt;DecompositionAnswer&gt;` | one node's answer, asked of the host |
+| `[first]` | `string[]` | the dimensions the columns start with (default: none open, the reader picks) |
+| `[format]` | `function(?number, string): string` | a figure in words, given the value and the unit (default: compact) |
 
 #### `DrawContext` : `Object`
 
@@ -14407,6 +14474,20 @@ Drag-to-zoom on a chart's plot: a drag across draws a band and zooms the x axis 
 
 Returns `void`.
 
+#### `rangeBrush(engine, active, colour, onBrush, axis)`
+
+A drag on the grid that picks a range of the axis (linked brushing): a band while it moves, onBrush(from, to) with the axis's own values at the end; the band stays until the returned function clears it.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `engine` | `Object` | the chart's engine instance |
+| `active` | `function(): boolean` | whether the chart brushes now |
+| `colour` | `string` | the band's fill |
+| `onBrush` | `function(*, *): void` | given the axis values at the two ends, lower first |
+| `[axis='x']` | `('x'\|'y')` |  |
+
+Returns `function(): void`: clears the band.
+
 #### `svgOf(E, option, width, height)`
 
 The chart as SVG text, drawn off screen by the engine's server-side renderer at the card's size (the export's SVG).
@@ -14756,6 +14837,20 @@ Shows the crosshair and the tooltip at a row (a page's selected row followed by 
 | `index` | `number` | the row's index in the chart's rows (the category's, for one series by category) |
 
 Returns `void`.
+
+### drishti_chart-calendar.js
+
+#### `buildCalendar(spec, rows, env)`
+
+Calendar: a value per date.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` | x (the date field), value (the measure field), scale ({type: 'diverging', mid}), title |
+| `rows` | `Object[]` |  |
+| `env` | `Object` |  |
+
+Returns `import('./drishti_chart-spec.js').BuiltChart`.
 
 ### drishti_link.js
 

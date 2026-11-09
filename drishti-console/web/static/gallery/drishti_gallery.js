@@ -29,7 +29,7 @@
   const NS = (root.Drishti = root.Drishti || {});
   const GAL = (NS.gallery = NS.gallery || {});
   const MODES = ['playground', 'docs'];
-  const DOC_TABS = [['examples', 'Examples'], ['api', 'API'], ['a11y', 'Accessibility'], ['changelog', 'Changelog']];
+  const DOC_TABS = [['examples', 'Examples'], ['api', 'API'], ['a11y', 'Accessibility'], ['changelog', 'Changelog'], ['page', 'Playground page']];
   const BADGES = { none: ['ok', 'no server needed'], server: ['srv', 'needs a Drishti server'], licence: ['lic', 'banking module licence'] };
   const kebab = (n) => 'drishti:' + n.replace(/[A-Z]/g, (c) => '-' + c.toLowerCase());
 
@@ -383,7 +383,7 @@
         on: { click: () => { if (this.docTab !== t[0]) { this.docTab = t[0]; this.render(); } } } })));
       this.main.appendChild(list);
       this.main.appendChild(panel);
-      if (this.docTab === 'examples') { this.renderExamples(d, panel); } else if (this.docTab === 'api') { this.renderApi(d, panel); } else if (this.docTab === 'a11y') { this.renderA11y(d, panel); } else { this.renderChangelog(d, panel); }
+      if (this.docTab === 'examples') { this.renderExamples(d, panel); } else if (this.docTab === 'page') { GAL.renderPage(this, d, panel); } else if (this.docTab === 'api') { this.renderApi(d, panel); } else if (this.docTab === 'a11y') { this.renderA11y(d, panel); } else { this.renderChangelog(d, panel); }
     }
 
     renderExamples(d, panel) {

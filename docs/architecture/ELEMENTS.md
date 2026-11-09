@@ -395,6 +395,11 @@ screen readers read and a button shows, and the same card chrome and status line
 A kind is a module that turns the spec into ECharts options; a domain library registers its kinds (`chart.kinds.register`) and they
 appear in the gallery and in Sutras like the general ones.
 
+**Added in 2.9.11.i1b** (ideas from D3's catalogue, written on the vendored engine; no D3 code): `calendar` (drishti-chart, a square per day, a
+gap left hollow); `sunburst` and `icicle` are modes of drishti-tree, usable as report visuals; **`Decomposition`** (drishti-tree, one measure split
+level by level, every figure given by the host's `load`, never added); `rangeBrush` (drishti-chart, the drag that picks a range of an axis, for
+linked brushing). Every one has a **Playground page** in the gallery.
+
 **Vega-Lite.** A BI visual of `type: vega-lite` and a Python visual's Vega-Lite output are translated into the spec (`fromVegaLite`)
 and drawn by drishti-chart; Vega itself is not in the product (decision O1, section 14: two engines is dual machinery). A Python visual
 may return a drishti-chart spec directly (`output: drishti-chart`), the preferred form.
@@ -1304,7 +1309,9 @@ gallery example runs, every guide links its API reference and tutorial, no optio
 [g4](mockups/elements/g4-gallery.html): option A, the three-pane playground (the list of libraries and components with their version and
 a badge: no server needed, needs a Drishti server, banking module licence; the live component; code tabs for the web component, plain
 JavaScript, a Sutra and, for the grid, the AG Grid adapter; options generated from the typed JSDoc; an event log), with option B's tabs
-(Examples, API, Accessibility, Changelog) as the published page. Served by the console at `/elements` (as built: 8.4); libraries 1 to 5 run with
+(Examples, API, Accessibility, Changelog, and **Playground page**: one column, the visual live on top, its data and options below, its
+HTML and JavaScript editable and drawn in a frame with `sandbox="allow-scripts"` and no network; an error names its line and keeps the last
+good drawing greyed; Reset restores the example) as the published page. Served by the console at `/elements` (as built: 8.4); libraries 1 to 5 run with
 no server (static files and sample data); 6 to 8 against the console's own server. **Each gallery example is a test**: the browser suite
 opens every example in both themes and three densities, runs axe, and checks the code snippet produces the same component (the snippet
 is the example's source, not a copy).
@@ -1314,6 +1321,7 @@ is the example's source, not a copy).
 | Guard | What it fails |
 |---|---|
 | **No second implementation** (`test_elements_no_duplicates.py`) | outside `static/elements/`: a call to `echarts.init`, `setOption`; a `<table>` built with sorting, filtering or paging code; a number formatter (`toFixed` with a unit suffix, `Intl.NumberFormat` outside drishti-core); a drag handle; a hand-made dialog. An allow list holds exactly the files not yet moved and **only shrinks** |
+| **No hand-drawn visuals** (`test_elements_guards.py`, rule `visual`) | outside `static/elements/`: `createElementNS`, a 2D canvas, `<svg`, or `echarts.init`; existing cases are listed and may only shrink |
 | **Dependencies** | a library importing anything but drishti-core, its vendored engine and (for 6 to 8) libraries 1 to 5; a domain library importing another domain's |
 | **No server for 1 to 5** | a reference to `/api/`, `/embed/` or the console in libraries 1 to 5 (their Drishti sources live in drishti-data behind an explicit `server` option) |
 | **The browser computes nothing in the console** | a console page creating a grid with the client-side aggregating model (extends `test_console_does_not_aggregate.py`) |

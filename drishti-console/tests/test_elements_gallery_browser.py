@@ -37,6 +37,7 @@ ORIGIN = "http://render.test"
 PAGE = "/static/gallery/drishti_gallery.html"
 HEADERS = {"content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:"}
 TYPES = {".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "application/javascript", ".json": "application/json"}
+FRAME_HEADERS = {"content-security-policy": "default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval'; style-src 'unsafe-inline'; img-src data:; font-src data:; frame-ancestors 'self'"}
 SHOTS = os.environ.get("DRISHTI_GALLERY_SHOTS")
 READY = "() => window.__gallery && document.querySelector('.gx-stage') && !document.querySelector('.dc-loading:not([hidden])')"
 
@@ -49,7 +50,7 @@ def router(fetched):
             fetched.append(path)
             headers = {"content-type": TYPES.get(f.suffix, "application/octet-stream")}
             if f.suffix == ".html":
-                headers.update(HEADERS)
+                headers.update(FRAME_HEADERS if path.endswith("drishti_playground-frame.html") else HEADERS)
             return await r.fulfill(status=200, body=f.read_bytes(), headers=headers)
         fetched.append(path + " 404")
         return await r.fulfill(status=404, body="")

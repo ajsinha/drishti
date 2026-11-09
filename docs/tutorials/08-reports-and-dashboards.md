@@ -3181,6 +3181,24 @@ either. The API answers the same, masked as you (`GET /api/v1/bi/items/<id>/line
 The YAML behind it is the connector's own file (`config/connectors/orders-lake.yaml`: `plugin: file`, `kinds: [trade]`, `settings: { root:
 /srv/lake/orders }`), which only an administrator edits (**Admin → Connectors**).
 
+## Step 66 · Break a measure down, and see it live
+
+**UI.** On a report page: *Add a visual → Decomposition*, in Format give the pivot source (`var`), the measure (`var()`) and the splits
+(`DESK`, `LEGAL_ENTITY`). Save, then in the viewer pick *Split by* on the root box and open a desk: each split says *Σ standalone −
+diversification = parent*, and each box shows component VaR beside standalone.
+
+**CLI.** The same numbers the box shows:
+
+```bash
+curl -s -X POST -H "$AUTH" -H 'Content-Type: application/json' \
+  -d '{"source":"var","measure":"var()","split":"DESK","options":{"scope":"BANK"}}' \
+  http://localhost:17480/api/v1/pivot/decompose | python3 -m json.tool | head -20
+```
+
+**YAML.** See [9.7a](../guides/REPORTS_GUIDE.md#97a-the-decomposition-tree): a `decomposition` visual holds the source, the measure and the
+splits. To try an element's code, open **Elements → Playground page** (`/elements#mode=docs&c=decomposition&tab=page`): edit the JavaScript,
+the visual redraws in a sandboxed frame; a mistake names its line and the last good drawing stays, greyed.
+
 ## Next steps
 
 - [REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md) for every page of the BI area, [REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#9-the-report-file-pages-visuals-filters-and-slicers) for every visual and its wells (sections 3 and 6 are the map and the slicers), [REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#5-models-and-datasets-what-a-report-reads) for writing a dataset, and [REPORTS_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 17](../guides/REPORTS_GUIDE.md#59-worked-examples-the-shipped-models-row-rules-and-masks) for

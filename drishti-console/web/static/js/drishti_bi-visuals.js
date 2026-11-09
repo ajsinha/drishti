@@ -138,6 +138,11 @@
         openMark(items[cursor], r.left + r.width / 2, r.top + r.height / 2);
       } else if (e.key === 'Escape') { cursor = -1; }
     });
+    const brushed = ctx.interactive && ctx.onBrush && window.Drishti.elements.chart && V.brushOf ? V.brushOf(spec, option, marks) : null;
+    if (brushed) {                                                                     // linked brushing: the drag is drishti-chart's, what it selects is the report's
+      const clear = window.Drishti.elements.chart.rangeBrush(chart, () => true, ctx.t['accent-soft'] || 'rgba(127,127,127,0.18)', (a, b) => { const sel = brushed(a, b); if (sel) { ctx.onBrush(sel); } });
+      box.__clearBrush = clear;
+    }
     const handle = { dispose() { chart.dispose(); }, resize() { chart.resize(); } };
     box.__handle = handle;
     return handle;
@@ -773,10 +778,10 @@
 
   /** Draws the visual if it is a chart or a card; returns the handle, or null when the type is not one of these (drishti_bi-grids.js draws the rest). */
   V.drawChartOrCard = function (host, spec, ctx, res) {
-    const fn = CHARTS[spec.type] || CARDS[spec.type];
+    const fn = CHARTS[spec.type] || CARDS[spec.type] || (V.elementVisuals && V.elementVisuals[spec.type]);
     return fn ? fn(host, spec, ctx, res) : null;
   };
-  V.isChart = (type) => !!CHARTS[type];
+  V.isChart = (type) => !!(CHARTS[type] || (V.elementVisuals && V.elementVisuals[type]));
 
   /**
    * The data-as-of line of an answer (2.6.7 patch): each table reads its latest date on or before the asked one, so a fact and a dimension
