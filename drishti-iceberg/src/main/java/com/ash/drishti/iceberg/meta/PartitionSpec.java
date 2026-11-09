@@ -18,9 +18,6 @@ package com.ash.drishti.iceberg.meta;
 import com.ash.drishti.iceberg.types.NestedField;
 import com.ash.drishti.iceberg.types.Schema;
 import com.ash.drishti.iceberg.types.Type;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -62,33 +59,6 @@ public record PartitionSpec(int specId, List<Field> fields) {
     public Type.Primitive sourceType(Schema schema, int i) {
         NestedField src = schema.field(fields.get(i).sourceId());
         return src != null && src.type() instanceof Type.Primitive p ? p : null;
-    }
-
-    public static PartitionSpec read(JsonNode n) {
-        List<Field> fields = new ArrayList<>();
-        JsonNode arr = n.isArray() ? n : n.path("fields");
-        int next = 1000;
-        for (JsonNode f : arr) {
-            int id = f.has("field-id") ? f.get("field-id").asInt() : next;   // v1 specs may lack field ids: 1000, 1001, …
-            next = id + 1;
-            if (f.has("source-ids") && f.get("source-ids").size() > 1) {
-                throw new com.ash.drishti.iceberg.types.UnsupportedFeature("a partition field over several columns (format version 3)");
-            }
-            int source = f.has("source-id") ? f.get("source-id").asInt() : f.path("source-ids").path(0).asInt();
-            fields.add(new Field(source, id, f.path("name").asText(), Transform.parse(f.path("transform").asText())));
-        }
-        return new PartitionSpec(n.isArray() ? 0 : n.path("spec-id").asInt(0), fields);
-    }
-
-    public ObjectNode write() {
-        ObjectNode o = JsonNodeFactory.instance.objectNode();
-        o.put("spec-id", specId);
-        var arr = o.putArray("fields");
-        for (Field f : fields) {
-            arr.addObject().put("name", f.name()).put("transform", f.transform().toString()).put("source-id", f.sourceId())
-                    .put("field-id", f.fieldId());
-        }
-        return o;
     }
 
     /** Whether two specs partition the same way (the same fields, whatever their spec ids). */

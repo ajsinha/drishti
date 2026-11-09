@@ -15,9 +15,6 @@
  */
 package com.ash.drishti.iceberg.meta;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,27 +29,6 @@ public record SortOrder(int orderId, List<Field> fields) {
     }
 
     public static final SortOrder UNSORTED = new SortOrder(0, List.of());
-
-    public static SortOrder read(JsonNode n) {
-        List<Field> fields = new ArrayList<>();
-        for (JsonNode f : n.path("fields")) {
-            int source = f.has("source-id") ? f.get("source-id").asInt() : f.path("source-ids").path(0).asInt();
-            fields.add(new Field(source, Transform.parse(f.path("transform").asText("identity")), !"desc".equalsIgnoreCase(f.path("direction").asText()),
-                    "nulls-first".equalsIgnoreCase(f.path("null-order").asText())));
-        }
-        return new SortOrder(n.path("order-id").asInt(0), fields);
-    }
-
-    public ObjectNode write() {
-        ObjectNode o = JsonNodeFactory.instance.objectNode();
-        o.put("order-id", orderId);
-        var arr = o.putArray("fields");
-        for (Field f : fields) {
-            arr.addObject().put("transform", f.transform().toString()).put("source-id", f.sourceId()).put("direction", f.ascending() ? "asc" : "desc")
-                    .put("null-order", f.nullsFirst() ? "nulls-first" : "nulls-last");
-        }
-        return o;
-    }
 
     /** Whether the files are sorted by this column alone, ascending (so per-file id bounds do not overlap). */
     public boolean sortedBy(int fieldId) {

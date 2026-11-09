@@ -16,23 +16,25 @@
 package com.ash.drishti.iceberg.catalog;
 
 import com.ash.drishti.iceberg.Table;
+import com.ash.drishti.iceberg.io.DrishtiFileIO;
 import com.ash.drishti.iceberg.io.FileAccess;
 import com.ash.drishti.iceberg.meta.PartitionSpec;
 import com.ash.drishti.iceberg.meta.SortOrder;
 import com.ash.drishti.iceberg.types.Schema;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.apache.iceberg.BaseTable;
+import org.apache.iceberg.StaticTableOperations;
+import org.apache.iceberg.exceptions.NotFoundException;
 
-/** Tables named by their metadata files ({@code metadata-location}, or one per kind): read-only. */
+/** Tables named by their metadata files ({@code metadata-location.<table>}): someone else's tables, read-only; a refresh finds nothing new. */
 public final class StaticCatalog implements Catalog {
 
     private final Map<String, String> files;
     private final FileAccess io;
 
-    /** @param files table name to its metadata file */
     public StaticCatalog(Map<String, String> files, FileAccess io) {
         this.files = Map.copyOf(files);
         this.io = io;
@@ -45,9 +47,11 @@ public final class StaticCatalog implements Catalog {
             return Optional.empty();
         }
         try {
-            return Optional.of(Table.load(name, new StaticTableOps(f, io)));
-        } catch (NoSuchTable e) {
-            return Optional.empty();
+            StaticTableOperations ops = new StaticTableOperations(f, new DrishtiFileIO(io));
+            ops.current();
+            return Optional.of(new Table(name, new BaseTable(ops, name, r -> { }), null));
+        } catch (NotFoundException e) {
+            throw new java.io.FileNotFoundException("no metadata file " + f);
         }
     }
 
@@ -63,22 +67,20 @@ public final class StaticCatalog implements Catalog {
 
     @Override
     public boolean reachable() {
-        for (String f : files.values()) {
+        return files.values().stream().allMatch(f -> {
             try {
                 String p = io.resolve(f);
                 io.storage(p).status(p);
-            } catch (FileNotFoundException e) {
-                return false;
+                return true;
             } catch (IOException | RuntimeException e) {
                 return false;
             }
-        }
-        return true;
+        });
     }
 
     @Override
     public String describe() {
-        return files.size() == 1 ? files.values().iterator().next() : files.size() + " metadata files";
+        return "metadata files " + files.values();
     }
 
     @Override

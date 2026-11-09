@@ -30,9 +30,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * The tables of a data domain as {@link IcebergLoader} and {@link IcebergMaintenance} write them, through the engine
- * the settings (or {@code --engine}) choose: {@code native} (drishti-iceberg) or {@code library} (Apache Iceberg
- * Java). Both write {@link IcebergLayout}; a table written by one is read and maintained by the other.
+ * The tables of a data domain as {@link IcebergLoader} and {@link IcebergMaintenance} write them ({@link IcebergLayout}).
  */
 interface LayoutLake extends Closeable {
 
@@ -93,126 +91,11 @@ interface LayoutLake extends Closeable {
 
     List<String> kinds() throws IOException;
 
-    IcebergEngine engine();
-
     @Override
     void close() throws IOException;
 
     static LayoutLake of(Map<String, String> settings) {
-        return IcebergEngine.of(settings) == IcebergEngine.NATIVE ? new Native(Catalogs.open(settings)) : new Library(IcebergLake.of(settings));
-    }
-
-    /** Apache Iceberg Java (the loader's and maintenance's code before drishti-iceberg). */
-    record Library(IcebergLake lake) implements LayoutLake {
-
-        record Kind(IcebergLake lake, String kind, org.apache.iceberg.Table t) implements LayoutTable {
-            @Override
-            public String name() {
-                return t.name();
-            }
-
-            @Override
-            public List<?> writeDay(LocalDate date, Iterator<Row> sorted, int fileRows) {
-                return IcebergLayout.writeDay(t, date, sorted, fileRows);
-            }
-
-            @Override
-            public long rows(List<?> files) {
-                return files.stream().mapToLong(f -> ((org.apache.iceberg.DataFile) f).recordCount()).sum();
-            }
-
-            @Override
-            public long bytes(List<?> files) {
-                return files.stream().mapToLong(f -> ((org.apache.iceberg.DataFile) f).fileSizeInBytes()).sum();
-            }
-
-            @Override
-            @SuppressWarnings("unchecked")
-            public void commitDays(Map<LocalDate, List<?>> days) {
-                IcebergLayout.commitDays(t, (Map<LocalDate, List<org.apache.iceberg.DataFile>>) (Map<?, ?>) days);
-            }
-
-            @Override
-            public int keepDays(int keep, LoadGuard guard, LocalDate floor) {
-                return IcebergMaintenance.keepDays(t, keep, guard, floor);
-            }
-
-            @Override
-            public void append(List<?> files, Map<String, String> summary) {
-                org.apache.iceberg.AppendFiles a = t.newAppend();
-                files.forEach(f -> a.appendFile((org.apache.iceberg.DataFile) f));
-                summary.forEach(a::set);
-                a.commit();
-            }
-
-            @Override
-            public void properties(Map<String, String> props) {
-                org.apache.iceberg.UpdateProperties u = t.updateProperties();
-                props.forEach(u::set);
-                u.commit();
-            }
-
-            @Override
-            public long sequenceNumber() {
-                t.refresh();
-                return t.currentSnapshot() == null ? 0 : t.currentSnapshot().sequenceNumber();
-            }
-
-            @Override
-            public void expireSnapshots(long hours) {
-                IcebergMaintenance.expireSnapshots(t, hours);
-            }
-
-            @Override
-            public void rewriteManifests() {
-                IcebergMaintenance.rewriteManifests(t);
-            }
-
-            @Override
-            public int relayout(boolean force, Path spillDir, long budget) {
-                return IcebergMaintenance.relayout(t, force, spillDir, budget);
-            }
-
-            @Override
-            public void addColumns(List<String> paths) {
-                IcebergMaintenance.addColumns(lake, kind, t, paths);
-            }
-
-            @Override
-            public int fileRows() {
-                return IcebergLayout.fileRows(t);
-            }
-
-            @Override
-            public void refresh() {
-                t.refresh();
-            }
-        }
-
-        @Override
-        public LayoutTable open(String kind, Map<String, Boolean> promoted, java.util.Set<String> vectors, long rowGroupBytes, int fileRows) {
-            return new Kind(lake, kind, IcebergLayout.open(lake, kind, promoted, vectors, rowGroupBytes, fileRows));
-        }
-
-        @Override
-        public Optional<LayoutTable> load(String kind) {
-            return lake.load(kind).map(t -> new Kind(lake, kind, t));
-        }
-
-        @Override
-        public List<String> kinds() throws IOException {
-            return lake.kinds();
-        }
-
-        @Override
-        public IcebergEngine engine() {
-            return IcebergEngine.LIBRARY;
-        }
-
-        @Override
-        public void close() throws IOException {
-            lake.close();
-        }
+        return new Native(Catalogs.open(settings));
     }
 
     /** drishti-iceberg. */
@@ -319,11 +202,6 @@ interface LayoutLake extends Closeable {
         @Override
         public List<String> kinds() throws IOException {
             return catalog.tables();
-        }
-
-        @Override
-        public IcebergEngine engine() {
-            return IcebergEngine.NATIVE;
         }
 
         @Override

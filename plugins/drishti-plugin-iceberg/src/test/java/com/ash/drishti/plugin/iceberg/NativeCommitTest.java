@@ -24,7 +24,6 @@ import com.ash.drishti.iceberg.catalog.Catalogs;
 import com.ash.drishti.iceberg.expr.Expr;
 import com.ash.drishti.iceberg.manifest.DataFile;
 import com.ash.drishti.iceberg.scan.FileTask;
-import com.ash.drishti.iceberg.write.Commit;
 import com.ash.drishti.iceberg.write.Operations;
 import com.ash.drishti.plugin.iceberg.IcebergLayout.Row;
 import java.nio.file.Files;
@@ -121,7 +120,7 @@ class NativeCommitTest {
             Operations.append(t, NativeLayout.writeDay(t, day, rows("B", 3).iterator(), 1000), Map.of());
             List<DataFile> rewritten = NativeLayout.writeDay(t, day, rows("A", 10).iterator(), 1000);
             assertThatThrownBy(() -> Operations.rewriteFiles(t, readPaths, rewritten, f -> day.equals(NativeLayout.dateOf(t, f)), readPaths))
-                    .isInstanceOf(Commit.ValidationFailed.class).hasMessageContaining("1 added");
+                    .isInstanceOf(com.ash.drishti.iceberg.write.Operations.ValidationFailed.class).hasMessageContaining("1 added");
             assertThat(liveRows(t, pool)).isEqualTo(13);                     // nothing lost
             // a rewrite of what is there now goes through
             Set<String> now = new HashSet<>();

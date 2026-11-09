@@ -137,7 +137,7 @@ final class TableProblems {
                 List<String> kinds = byPair.get(pair);
                 parts.add(String.join(", ", kinds) + ": their metadata names files under the folder they were written in, which is not there now: "
                         + "the tables were moved or copied after they were written. Write them again where they are now, or read them with "
-                        + "engine: native and relocate: '" + pair + "'" + (relocate.isEmpty() ? ""
+                        + "relocate: '" + pair + "'" + (relocate.isEmpty() ? ""
                                 : " (relocate " + relocate + " is set, but no old folder in it holds " + pair.substring(0, pair.indexOf(" -> ")) + ")"));
             }
         });
@@ -172,7 +172,7 @@ final class TableProblems {
                 String given = relocate.isEmpty() ? "" : " (relocate " + relocate + " is set, but no old folder in it holds " + shownOld + ")";
                 return shorten("its metadata names files under " + shownOld + " that are not there (" + tail(m.group(2))
                         + "): the table was moved or copied after it was written. Write it again where it is now, or read it with "
-                        + "engine: native and relocate: '" + (pair == null ? shownOld + " -> <where it is now>" : pair) + "'" + given);
+                        + "relocate: '" + (pair == null ? shownOld + " -> <where it is now>" : pair) + "'" + given);
             }
             return shorten("a file its metadata names is not there (" + missing.get() + "): the table was moved or its files removed");
         }

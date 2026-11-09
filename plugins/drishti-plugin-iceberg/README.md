@@ -44,7 +44,6 @@ settings:
 - cache-mb
 - source-name
 - table.*
-- engine
 - metadata-location.*
 - relocate
 - vended-credentials
@@ -86,7 +85,7 @@ settings:
 - proxy.*
 auth: Local files need none; S3 takes s3.access-key and s3.secret-key (${ENV} or file:), the AWS chain or credentials a REST catalog vends; a REST catalog takes credential (OAuth2 id:secret) or a token, or SigV4 through catalog.rest.*; a private CA through tls.*; an outbound proxy through proxy.*.
 licence: Drishti's own native Iceberg engine (drishti-iceberg) with Apache Iceberg Java, Apache Parquet, Apache Hadoop client and AWS SDK for Java v2 (all Apache-2.0), bundled.
-windows: Works on Windows with engine native (the default; local folders with drive letters, and S3); engine library needs winutils.exe, so it is not for the Windows QA machine. Loader tools\windows\load-iceberg.ps1; bin\start-server.cmd --iceberg copies the example files in.
+windows: Works on Windows (local folders with drive letters, and S3), so it is not for the Windows QA machine. Loader tools\windows\load-iceberg.ps1; bin\start-server.cmd --iceberg copies the example files in.
 doc: plugins/drishti-plugin-iceberg/README.md
 ---
 # The iceberg connector
@@ -128,10 +127,9 @@ reads position and equality deletes and answers *known at* from older snapshots.
 | `cache-mb` | int | `512` | Whole small days kept for reverse lookups (MB) |
 | `source-name` | string |  | The name the connector's documents carry as their source |
 | `table.*` | string |  | Per-kind table name under the namespace when it is not the kind's name (table.trade: trade_calypso) |
-| `engine` | one of native, library, auto | `native` | native: drishti-iceberg, no Hadoop (local disk and S3; Windows without winutils.exe; left to the default, a root it cannot reach is read by the library); library: Apache Iceberg Java over Hadoop (also Azure, Google Cloud Storage, HDFS); auto: native on Windows, library elsewhere. DRISHTI_ICEBERG_ENGINE sets it for every connector |
-| `metadata-location.*` | string |  | A table named by its metadata file, read-only (metadata-location.<kind>: s3://…/v12.metadata.json); native engine |
-| `relocate` | string |  | `native`: `<old folder> -> <new folder>; …` reads a table copied elsewhere (an S3 table synced to a laptop, a folder moved after loading: Health gives the pair to copy, plugins/drishti-plugin-iceberg/README.md › Catalogs and storage). Each side is a plain folder (`/data/ice1`, `C:\lake` or `C:/lake`, `\\fs\share\lake`) or a URI (`file:/data/ice1`, `file:///C:/lake`, `s3://bucket/wh`; `s3a://` and `s3n://` are the same bucket): both are read into the `file:` form the metadata names its files in, so the plain form and the `file:` form are the same pair. A folder matches whole folders (`/data/ice1` is not `/data/ice10`). Quote the value in YAML when it holds a backslash: `relocate: 'C:\old -> D:\new'`. A pair that cannot be read fails the start, naming it. The library engine does not read it, and Health says so |
-| `vended-credentials` | boolean | `true` | `native`, `rest`: ask the catalog for each table's own S3 credentials (`X-Iceberg-Access-Delegation`), renewed before they expire |
+| `metadata-location.*` | string |  | A table named by its metadata file, read-only (metadata-location.<kind>: s3://…/v12.metadata.json) |
+| `relocate` | string |  | `<old folder> -> <new folder>; …` reads a table copied elsewhere (an S3 table synced to a laptop, a folder moved after loading: Health gives the pair to copy, plugins/drishti-plugin-iceberg/README.md › Catalogs and storage). Each side is a plain folder (`/data/ice1`, `C:\lake` or `C:/lake`, `\\fs\share\lake`) or a URI (`file:/data/ice1`, `file:///C:/lake`, `s3://bucket/wh`; `s3a://` and `s3n://` are the same bucket): both are read into the `file:` form the metadata names its files in, so the plain form and the `file:` form are the same pair. A folder matches whole folders (`/data/ice1` is not `/data/ice10`). Quote the value in YAML when it holds a backslash: `relocate: 'C:\old -> D:\new'`. A pair that cannot be read fails the start, naming it. The library engine does not read it, and Health says so |
+| `vended-credentials` | boolean | `true` | `rest`: ask the catalog for each table's own S3 credentials (`X-Iceberg-Access-Delegation`), renewed before they expire |
 | `lz4-decoder` | one of safe, fast | `safe` | The LZ4 page decoder of the native engine: safe (pure Java) or fast (JNI when present) |
 | `hadoop.*` | string |  | Any Hadoop configuration property (hadoop.fs.s3a.connection.maximum) |
 | `catalog.*` | string |  | Any Iceberg catalog property (catalog.<property>) |
@@ -418,18 +416,9 @@ automatic maintenance, Spark's `rewrite_data_files` with `sort_order => 'id'`, T
 
 ## Engines and caches
 
-| `engine` | What reads and writes | Reaches |
-|---|---|---|
-| `native` (default) | **drishti-iceberg**, Drishti's own engine, no Hadoop ([DATA_ARCHITECTURE.md](../../docs/architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine)) | local disk (drive letters, UNC shares), `s3://`, `s3a://`; path-based, metadata file, REST |
-| `library` | Apache Iceberg Java over Hadoop | the above plus `abfs://`, `gs://`, `hdfs://` |
-| `auto` | `native` on Windows, `library` elsewhere | |
-
-`DRISHTI_ICEBERG_ENGINE` sets it for every connector; the loader and maintenance take `--engine`. Left to the default, a root the native
-engine cannot reach is read by the library; asked for by name, `native` refuses such a root. A table written by one engine is read and
-maintained by the other. The native engine reads metadata, manifests (v1, v2) and Parquet by **field id** (renames, added columns,
-widened types, `schema.name-mapping.default`), prunes over every partition transform, applies deletes by sequence number, and commits
+Iceberg's protocol comes from `iceberg-core` (metadata, manifests, planning, commits, the REST client) with Drishti's file access and Parquet reader, and there is one engine: `engine`, `DRISHTI_ICEBERG_ENGINE` and `--engine` are accepted and ignored. Roots: local disk, `s3://`, `s3a://`, `mem://`; `abfs://`, `gs://` and `hdfs://` are refused by name ([DATA_ARCHITECTURE.md](../../docs/architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop)). Parquet is read by **field id** (renames, added columns, widened types, `schema.name-mapping.default`), deletes are applied by sequence number, and commits are
 safely (a hard link on local disk, a conditional PUT on S3, the catalog's requirements through REST). It refuses by name, never reading
-wrongly: format version 3, encrypted tables, ORC and Avro data files, unknown types, S3 remote signing. File paths are opened as
+wrongly: format version 3 deletion vectors and variant columns, encrypted tables, ORC and Avro data files, unknown types, S3 remote signing. File paths are opened as
 written, never percent-decoded (a partition folder `g=a%2Fb` another writer made is that folder). The loader writes only tables
 partitioned by `business_date` alone and refuses one another engine re-partitioned. The full feature table, both directions:
 [DATA_LAKE_GUIDE.md section 15](../../docs/guides/DATA_LAKE_GUIDE.md#15-iceberg-spec-compliance).

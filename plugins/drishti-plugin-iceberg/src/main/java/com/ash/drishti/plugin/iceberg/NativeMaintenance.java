@@ -74,7 +74,7 @@ final class NativeMaintenance {
             return 0;
         }
         NavigableMap<LocalDate, Day> days;
-        try (ExecutorService pool = IcebergTable.virtualPool()) {
+        try (ExecutorService pool = java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor()) {
             days = layout(t, pool).days();
         }
         var from = IcebergMaintenance.keepFrom(days.navigableKeySet(), keep, guard, floor);
@@ -115,7 +115,7 @@ final class NativeMaintenance {
 
     /** Makes text-only paths numbers when the newest day's documents hold numbers there (as the library's maintenance). */
     static void inferTypes(Table t, Map<String, Boolean> cols) {
-        try (ExecutorService pool = IcebergTable.virtualPool()) {
+        try (ExecutorService pool = java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor()) {
             NativeKindTable k = new NativeKindTable(t, pool);
             Layout l = layout(t, pool);
             if (l.days().isEmpty()) {
@@ -158,7 +158,7 @@ final class NativeMaintenance {
         }
         int fileRows = NativeLayout.fileRows(t);
         int rewritten = 0;
-        try (ExecutorService pool = IcebergTable.virtualPool()) {
+        try (ExecutorService pool = java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor()) {
             NativeKindTable k = new NativeKindTable(t, pool);
             Layout l = layout(t, pool);
             List<NestedField> promoted = t.metadata().schema().columns().stream().filter(f -> f.id() > 3).toList();
@@ -209,7 +209,7 @@ final class NativeMaintenance {
             return out;
         }
         int fileRows = NativeLayout.fileRows(t);
-        try (ExecutorService pool = IcebergTable.virtualPool()) {
+        try (ExecutorService pool = java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor()) {
             NativeKindTable k = new NativeKindTable(t, pool);
             Layout l = layout(t, pool);
             List<NestedField> promoted = t.metadata().schema().columns().stream().filter(f -> f.id() > 3).toList();

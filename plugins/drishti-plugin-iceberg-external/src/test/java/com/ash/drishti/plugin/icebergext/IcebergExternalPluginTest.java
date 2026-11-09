@@ -317,9 +317,4 @@ class IcebergExternalPluginTest {
             java.nio.file.Files.deleteIfExists(meta.getParent().getParent());
         }
     }
-
-    @Test
-    void theLibraryEngineIsRefused() {
-        assertThatThrownBy(() -> plugin(Map.of("engine", "library"))).hasMessageContaining("drishti-iceberg");
-    }
 }

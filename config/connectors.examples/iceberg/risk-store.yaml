@@ -35,4 +35,3 @@ description: risk-store read from Iceberg (the market-risk pack's risk domain; D
 settings:
   lake: iceberg
   lake-tables: risk.stress-scenario,risk.stress-result,risk.frtb-sensitivity,risk.pnl-explain,risk.trade-valuation,risk.pnl-vector,risk.scenario-pv,risk.fx-scenario,risk.scenario-set,risk.var-limit,risk.pnl-history
-  engine: native

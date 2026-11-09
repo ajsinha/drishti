@@ -94,27 +94,4 @@ class S3TablesTest {
         assertThat(S3Tables.named(Map.of("catalog", "S3Tables"))).isTrue();
         assertThat(S3Tables.named(Map.of("catalog", "rest"))).isFalse();
     }
-
-    @Test
-    void signaturesEqualTheOnesBotocoreRecorded() throws Exception {
-        JsonNode rec;
-        try (InputStream in = S3TablesTest.class.getResourceAsStream("/s3tables/sigv4-recorded.json")) {
-            rec = RestClient.JSON.readTree(in);
-        }
-        Map<String, String> props = Map.of("rest.access-key-id", rec.get("access-key-id").asText(), "rest.secret-access-key",
-                rec.get("secret-access-key").asText(), "rest.signing-region", rec.get("region").asText(), "rest.signing-name",
-                rec.get("service").asText());
-        SigV4 signer = SigV4.from(props).at(Clock.fixed(Instant.parse(rec.get("time").asText()), ZoneOffset.UTC));
-        assertThat(rec.get("requests")).hasSize(3);
-        for (JsonNode r : rec.get("requests")) {
-            URI u = URI.create(r.get("url").asText());
-            byte[] body = r.get("body").isNull() ? null : r.get("body").asText().getBytes(StandardCharsets.UTF_8);
-            HttpRequest.Builder b = HttpRequest.newBuilder(u);
-            signer.sign(b, r.get("method").asText(), u, body, Map.of());
-            HttpRequest signed = b.GET().build();
-            assertThat(signed.headers().firstValue("X-Amz-Date")).as(u.toString()).contains(r.get("x-amz-date").asText());
-            assertThat(signed.headers().firstValue("x-amz-content-sha256")).as(u.toString()).contains(r.get("x-amz-content-sha256").asText());
-            assertThat(signed.headers().firstValue("Authorization")).as(r.get("method").asText() + " " + u).contains(r.get("authorization").asText());
-        }
-    }
 }

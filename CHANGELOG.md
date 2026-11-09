@@ -17,6 +17,11 @@
 
 ## Unreleased
 
+- **Iceberg on `iceberg-core`, one engine.** Metadata, manifests, planning, commits and the REST client now come from Apache Iceberg's library with Drishti's `FileIO` and Parquet reader; no Hadoop at run time. `engine: library`, `DRISHTI_ICEBERG_ENGINE` and Azure/GCS/HDFS roots are gone (the setting is ignored, those roots are refused by name). Interop is proved both ways with every special partition character.
+- **Python reads Delta only through Delta Kernel** (`tools/lake/deltaread.py`); delta-rs stays for writes.
+- **Connector fixes from the data-standards review:** ActiveMQ no longer treats a Map/Object/Stream message as a delete; JDBC keeps integers beyond a long exact and reads binary as base64; Mongo reads Decimal128 NaN and Infinity; Kafka maps Avro decimal, date and timestamp logical types; an uncompressed Parquet page of the wrong size is an error; AWS keeps the SDK's checksums.
+
+
 ### Data loads
 
 - **Admin → Data loads → Upload** (split view): upload a data file or pick one in the inbox folder, a searchable **Table** picker filled from the file name (kind, pack and connector shown read-only), the exact `.ready` live beside the form, checks against a sample (contract, key, grain and id, `DRS-5210`, hierarchy columns) as pass, warning or refused, and Push: data first, `.ready` last. A replace of a date that already holds rows names the systems and counts, offers a tar or append, and needs a tick. `drishti.py dataload ready`; `.ready` parsing from text and one writer; settings `drishti.dataload.upload.*`; **File drop** in drishti-inputs.

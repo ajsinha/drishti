@@ -26,7 +26,6 @@ capabilities:
 settings:
 - tables.*
 - tables
-- engine
 - root
 - uri
 - catalog
@@ -89,7 +88,6 @@ name; tables in Azure, Google Cloud Storage or HDFS are not read; branches and t
 |---|---|---|---|
 | `tables.*` | string |  | Per kind: tables.<kind>.table (namespace.table), id (columns, joined by id-separator), id-separator (:), date, date-from (day), date-zone (UTC), mode (snapshot\|effective), document (row\|column:<name>), columns.exclude, columns.rename.<column>, links.<column> (a kind), depth (2); or tables: auto with namespace |
 | `tables` | string |  | auto: every table of the namespace is a kind (its name in lower case with -), its id from the identifier fields, its date from the partition spec |
-| `engine` | one of native, auto | `auto` | `native` or `auto`: both read through drishti-iceberg; `library` is refused (it is the `iceberg` connector's only) |
 | `root` | path |  | Path-based tables' root (a folder or s3://…); tables.<kind>.table names the folder under it |
 | `uri` | string |  | A REST catalog's URI (Polaris, Snowflake Open Catalog, Glue, Unity, Nessie, Lakekeeper) |
 | `catalog` | string |  | hadoop (path-based, the default), rest, or s3tables (AWS S3 Tables, the settings from table-bucket-arn) |
@@ -212,7 +210,7 @@ with its environment variable is in [CONFIGURATION.md](../../docs/admin/CONFIGUR
 | Writes | the loader and maintenance | **never** |
 
 Both read through drishti-iceberg, Drishti's own Iceberg engine with no Hadoop
-([DATA_ARCHITECTURE.md](../../docs/architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine)); why
+([DATA_ARCHITECTURE.md](../../docs/architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop)); why
 there are two is in [DATA_ARCHITECTURE.md, Two connectors](../../docs/architecture/DATA_ARCHITECTURE.md#15-two-connectors-drishti-tables-and-external-tables).
 
 ## Ids, dates and modes

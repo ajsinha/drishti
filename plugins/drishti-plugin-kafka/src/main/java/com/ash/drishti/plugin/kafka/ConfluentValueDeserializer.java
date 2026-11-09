@@ -111,6 +111,23 @@ final class ConfluentValueDeserializer implements Deserializer<String> {
         if (schema.getType() == Schema.Type.UNION) {
             return toJson(v, unionBranch(schema, v));
         }
+        org.apache.avro.LogicalType logical = schema.getLogicalType();
+        if (logical != null) {
+            switch (logical.getName()) {
+                case "decimal":
+                    return NODES.numberNode(v instanceof GenericFixed f
+                            ? new org.apache.avro.Conversions.DecimalConversion().fromFixed(f, schema, logical)
+                            : new org.apache.avro.Conversions.DecimalConversion().fromBytes(((ByteBuffer) v).duplicate(), schema, logical));
+                case "date":
+                    return NODES.textNode(java.time.LocalDate.ofEpochDay((Integer) v).toString());
+                case "timestamp-millis":
+                    return NODES.textNode(java.time.Instant.ofEpochMilli((Long) v).toString());
+                case "timestamp-micros":
+                    return NODES.textNode(java.time.Instant.EPOCH.plus((Long) v, java.time.temporal.ChronoUnit.MICROS).toString());
+                default:
+                    break;                                     // the underlying Avro type carries it
+            }
+        }
         switch (schema.getType()) {
             case RECORD: {
                 GenericRecord r = (GenericRecord) v;

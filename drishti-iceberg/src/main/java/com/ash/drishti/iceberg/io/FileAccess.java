@@ -30,7 +30,7 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * The engine's files: local paths and {@code file:} URIs through {@code java.nio} (Windows drive letters, backslashes
  * and UNC shares included, no {@code winutils.exe}), {@code s3://}, {@code s3a://} and {@code s3n://} through the AWS
- * SDK; nothing else ({@code abfs://}, {@code gs://}, {@code hdfs://} are refused, naming the library engine).
+ * SDK; nothing else ({@code abfs://}, {@code gs://}, {@code hdfs://} are refused).
  *
  * <p>Paths in a table's metadata and manifests are absolute. A table copied elsewhere (an S3 table synced to a laptop,
  * a test fixture) is read through {@code relocate}: each {@code from} prefix of a path is replaced by its {@code to}
@@ -137,7 +137,7 @@ public final class FileAccess implements AutoCloseable {
             return com.ash.drishti.lakeio.StorageProviders.storage(path);    // mem://, a warehouse in memory (docs/architecture/DATA_ARCHITECTURE.md section 7)
         }
         throw new UnsupportedOperationException("drishti-iceberg reads local disk, S3 (s3://, s3a://) and memory (mem://), not " + scheme
-                + "://; set the connector's engine: library for this table");
+                + "://");
     }
 
     /** The whole file at {@code path} (relocated). */

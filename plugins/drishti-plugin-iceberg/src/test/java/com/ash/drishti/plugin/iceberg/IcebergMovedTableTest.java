@@ -66,7 +66,7 @@ class IcebergMovedTableTest {
         Path written = Files.createTempDirectory("drishti-iceberg-written");
         Map<String, Boolean> trade = new LinkedHashMap<>();
         trade.put("mtm", true);
-        try (IcebergLake lake = IcebergLake.of(Map.of("root", written.toString(), "domain", "desk"))) {
+        try (OracleLake lake = OracleLake.of(Map.of("root", written.toString(), "domain", "desk"))) {
             IcebergSourcePluginTest.write(lake, ROWS, Map.of("trade", trade));
         }
         moved = written.resolveSibling(written.getFileName() + "-moved");
@@ -123,16 +123,6 @@ class IcebergMovedTableTest {
             assertThat(p.fetch(EntityRef.of("trade", "T-1"))).isPresent();
             assertThat(p.health()).startsWith("UP");
             assertThat(p.problem("trade")).isEmpty();
-        } finally {
-            p.close();
-        }
-    }
-
-    @Test
-    void relocateGivenToTheLibraryEngineIsSaid() throws Exception {
-        IcebergSourcePlugin p = start("library", "/nowhere -> /elsewhere");
-        try {
-            assertThat(p.health()).contains("relocate is read by engine: native only; engine: library ignores it");
         } finally {
             p.close();
         }

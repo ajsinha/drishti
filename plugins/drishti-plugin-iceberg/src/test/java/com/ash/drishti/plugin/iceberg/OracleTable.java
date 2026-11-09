@@ -55,20 +55,20 @@ import org.apache.iceberg.util.SnapshotUtil;
  * delete files applied by {@link GenericDeleteFilter}. A day's {@link Day#files()} are Iceberg {@link FileScanTask}s.
  * Immutable per snapshot; thread-safe.
  */
-final class IcebergTable extends KindTable {
+final class OracleTable extends KindTable {
 
     private final String kind;
-    private final IcebergLake lake;
+    private final OracleLake lake;
     private volatile Table table;
 
-    IcebergTable(String kind, IcebergLake lake, ExecutorService pool) {
+    OracleTable(String kind, OracleLake lake, ExecutorService pool) {
         super(pool);
         this.kind = kind;
         this.lake = lake;
     }
 
     /** A table already loaded (maintenance). */
-    IcebergTable(Table table, ExecutorService pool) {
+    OracleTable(Table table, ExecutorService pool) {
         this(table.name(), null, pool);
         this.table = table;
     }
@@ -167,7 +167,7 @@ final class IcebergTable extends KindTable {
         List<PartitionField> fields = task.spec().fields();
         for (int i = 0; i < fields.size(); i++) {
             PartitionField f = fields.get(i);
-            if (f.transform().isIdentity() && IcebergLayout.DATE.equals(task.spec().schema().findColumnName(f.sourceId()))) {
+            if (f.transform().isIdentity() && OracleLayout.DATE.equals(task.spec().schema().findColumnName(f.sourceId()))) {
                 Integer days = task.file().partition().get(i, Integer.class);
                 return days == null ? LocalDate.MIN : LocalDate.ofEpochDay(days);
             }
@@ -227,7 +227,7 @@ final class IcebergTable extends KindTable {
     void scan(Layout l, Day day, int file, List<String> columns, String idEquals, Consumer<Object[]> sink) {
         Table t = table().orElseThrow();
         Schema schema = SnapshotUtil.schemaFor(t, l.snapshotId());
-        Expression filter = idEquals == null ? Expressions.alwaysTrue() : Expressions.equal(IcebergLayout.ID, idEquals);
+        Expression filter = idEquals == null ? Expressions.alwaysTrue() : Expressions.equal(OracleLayout.ID, idEquals);
         try (CloseableIterable<Record> rows = open(t.io(), schema, tasks(day).get(file), select(schema, columns), filter)) {
             Object[] values = new Object[columns.size()];
             for (Record r : rows) {

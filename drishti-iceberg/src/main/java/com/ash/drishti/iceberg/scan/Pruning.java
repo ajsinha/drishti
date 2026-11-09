@@ -17,7 +17,6 @@ package com.ash.drishti.iceberg.scan;
 
 import com.ash.drishti.iceberg.expr.Expr;
 import com.ash.drishti.iceberg.manifest.DataFile;
-import com.ash.drishti.iceberg.manifest.ManifestFile;
 import com.ash.drishti.iceberg.meta.PartitionSpec;
 import com.ash.drishti.iceberg.types.NestedField;
 import com.ash.drishti.iceberg.types.Schema;
@@ -59,23 +58,6 @@ public final class Pruning {
             }
         }
         return out;
-    }
-
-    /** Whether the manifest may hold matching files, by its partition summaries. */
-    public static boolean manifest(ManifestFile m, List<Expr.Pred> projected, Type.Struct partitionType) {
-        for (Expr.Pred p : projected) {
-            if (p.fieldId() >= m.partitions().size() || !(partitionType.fields().get(p.fieldId()).type() instanceof Type.Primitive t)) {
-                continue;
-            }
-            ManifestFile.FieldSummary s = m.partitions().get(p.fieldId());
-            Object lo = decode(t, s.lowerBound());
-            Object hi = decode(t, s.upperBound());
-            boolean allNull = lo == null && hi == null && s.containsNull();
-            if (!range(t, p, lo, hi, s.containsNull(), allNull)) {
-                return false;
-            }
-        }
-        return true;
     }
 
     /** Whether a file of this partition may hold matching rows. */

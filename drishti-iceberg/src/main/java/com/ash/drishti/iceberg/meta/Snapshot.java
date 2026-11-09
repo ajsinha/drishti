@@ -15,9 +15,6 @@
  */
 package com.ash.drishti.iceberg.meta;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -37,41 +34,5 @@ public record Snapshot(long snapshotId, Long parentId, long sequenceNumber, long
     public Snapshot {
         manifests = List.copyOf(manifests);
         summary = Map.copyOf(summary);
-    }
-
-    public static Snapshot read(JsonNode n) {
-        Map<String, String> summary = new LinkedHashMap<>();
-        n.path("summary").fields().forEachRemaining(e -> summary.put(e.getKey(), e.getValue().asText()));
-        List<String> manifests = new ArrayList<>();
-        n.path("manifests").forEach(m -> manifests.add(m.asText()));
-        return new Snapshot(n.path("snapshot-id").asLong(), n.hasNonNull("parent-snapshot-id") ? n.get("parent-snapshot-id").asLong() : null,
-                n.path("sequence-number").asLong(0), n.path("timestamp-ms").asLong(),
-                n.hasNonNull("manifest-list") ? n.get("manifest-list").asText() : null, manifests, summary.getOrDefault("operation", ""), summary,
-                n.hasNonNull("schema-id") ? n.get("schema-id").asInt() : null);
-    }
-
-    /** The JSON for table metadata ({@code sequence-number} written for v2 only). */
-    public ObjectNode write(int formatVersion) {
-        ObjectNode o = JsonNodeFactory.instance.objectNode();
-        o.put("snapshot-id", snapshotId);
-        if (parentId != null) {
-            o.put("parent-snapshot-id", parentId);
-        }
-        if (formatVersion >= 2) {
-            o.put("sequence-number", sequenceNumber);
-        }
-        o.put("timestamp-ms", timestampMs);
-        ObjectNode s = o.putObject("summary");
-        s.put("operation", operation);
-        summary.forEach((k, v) -> {
-            if (!k.equals("operation")) {
-                s.put(k, v);
-            }
-        });
-        o.put("manifest-list", manifestList);
-        if (schemaId != null) {
-            o.put("schema-id", schemaId);
-        }
-        return o;
     }
 }

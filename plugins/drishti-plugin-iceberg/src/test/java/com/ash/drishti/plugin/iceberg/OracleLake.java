@@ -55,7 +55,7 @@ import org.apache.iceberg.rest.RESTCatalog;
  * {@code s3.path-style} configure both Hadoop's S3A (path-based tables) and Iceberg's S3FileIO (REST catalogs);
  * {@code hadoop.<key>} is passed to Hadoop and {@code catalog.<key>} to the catalog as {@code <key>}.
  */
-public interface IcebergLake extends Closeable {
+interface OracleLake extends Closeable {
 
     /** The kind's table, or empty when it does not exist. */
     Optional<Table> load(String kind);
@@ -86,7 +86,7 @@ public interface IcebergLake extends Closeable {
         return com.ash.drishti.api.proxy.ProxySettings.none();
     }
 
-    static IcebergLake of(Map<String, String> settings) {
+    static OracleLake of(Map<String, String> settings) {
         String domain = settings.getOrDefault("domain", "").trim();
         if (domain.contains("..") || domain.startsWith("/")) {
             throw new IllegalArgumentException("domain escapes the Iceberg root: " + domain);
@@ -155,7 +155,7 @@ public interface IcebergLake extends Closeable {
     }
 
     /** Path-based tables: {@code <base>/<kind>} with {@code metadata/version-hint.text}. */
-    final class PathLake implements IcebergLake {
+    final class PathLake implements OracleLake {
         private final String base;
         private final Configuration conf;
         private final HadoopTables tables;
@@ -217,7 +217,7 @@ public interface IcebergLake extends Closeable {
     }
 
     /** Tables in a namespace of an Iceberg REST catalog. */
-    final class RestLake implements IcebergLake {
+    final class RestLake implements OracleLake {
         private final RESTCatalog catalog;
         private final Namespace namespace;
         private final String uri;
@@ -277,52 +277,13 @@ public interface IcebergLake extends Closeable {
             });
             String tlsId = null;
             com.ash.drishti.api.tls.TlsMaterial tls = null;
-            if (com.ash.drishti.api.tls.TlsSettings.anyGiven(s, "tls.")) {
-                // the object store's private CA / client certificate: S3FileIO is our subclass, with the module's trust
-                com.ash.drishti.api.tls.TlsSettings ts = com.ash.drishti.api.tls.TlsSettings.from(s);
-                String endpoint = s.getOrDefault("s3.endpoint", "");
-                if (!endpoint.regionMatches(true, 0, "https://", 0, 8)) {
-                    throw new com.ash.drishti.api.tls.TlsException("tls.* is set but s3.endpoint is not https:// (" + (endpoint.isBlank() ? "not set" : endpoint)
-                            + "): tls.* secures the object store's endpoint");
-                }
-                tls = com.ash.drishti.api.tls.TlsContexts.build(ts);
-                tlsId = TlsS3FileIO.register(tls);
-                props.putIfAbsent("io-impl", TlsS3FileIO.class.getName());
-                props.put(TlsS3FileIO.ID, tlsId);
-                if (uri.regionMatches(true, 0, "https://", 0, 8)) {
-                    java.lang.System.getLogger("com.ash.drishti.plugin.iceberg").log(java.lang.System.Logger.Level.WARNING,
-                            "iceberg: tls.* secures the object store; the REST catalog's own https connection ({0}) uses the JVM's truststore "
-                                    + "(Iceberg's REST client has no TLS setting)", uri);
-                }
-            }
-            // the outbound proxy: Iceberg's REST client takes it from rest.client.proxy.*, the object store's client from the file IO
-            var catalogProxy = com.ash.drishti.api.proxy.ProxySettings.resolve(s, uri);
-            if (catalogProxy.appliesTo(java.net.URI.create(uri).getHost())) {
-                props.put("rest.client.proxy.hostname", catalogProxy.host());
-                props.put("rest.client.proxy.port", String.valueOf(catalogProxy.port()));
-                if (catalogProxy.hasCredentials()) {
-                    props.put("rest.client.proxy.username", catalogProxy.username());
-                    props.put("rest.client.proxy.password", catalogProxy.password());
-                }
-            }
-            String store = s.getOrDefault("s3.endpoint", "");
-            var storeProxy = com.ash.drishti.api.proxy.ProxySettings.resolve(s, store.isBlank() ? "https://s3.amazonaws.com" : store);
-            boolean storeViaProxy = storeProxy.appliesTo(store.isBlank() ? "s3.amazonaws.com" : java.net.URI.create(store).getHost());
-            if (storeViaProxy && tlsId == null) {
-                tlsId = TlsS3FileIO.register(null, storeProxy);
-                props.putIfAbsent("io-impl", TlsS3FileIO.class.getName());
-                props.put(TlsS3FileIO.ID, tlsId);
-            } else if (storeViaProxy) {
-                TlsS3FileIO.unregister(tlsId);
-                tlsId = TlsS3FileIO.register(tls, storeProxy);
-                props.put(TlsS3FileIO.ID, tlsId);
-            }
+            var catalogProxy = com.ash.drishti.api.proxy.ProxySettings.none();
             RESTCatalog catalog = new RESTCatalog();
             catalog.setConf(conf);
             catalog.initialize(s.getOrDefault("source-name", "drishti"), props);
             String ns = s.getOrDefault("namespace", "").isBlank() ? domain : s.get("namespace");
             return new RestLake(catalog, ns.isBlank() ? Namespace.empty() : Namespace.of(ns.split("\\.")), uri, tls, tlsId,
-                    catalogProxy.active() ? catalogProxy : storeViaProxy ? storeProxy : com.ash.drishti.api.proxy.ProxySettings.none());
+                    catalogProxy);
         }
 
         @Override
@@ -372,7 +333,6 @@ public interface IcebergLake extends Closeable {
 
         @Override
         public void close() throws IOException {
-            TlsS3FileIO.unregister(tlsId);
             catalog.close();
         }
     }

@@ -15,50 +15,20 @@
  */
 package com.ash.drishti.iceberg.meta;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import org.apache.iceberg.mapping.MappedField;
 
-/**
- * A table's name mapping ({@code schema.name-mapping.default}, the spec's "Column Projection"): for data files written
- * without field ids (files added from Hive or plain Parquet), which column name, at which nesting, is which field id.
- * A column it does not name is not read (it is null), never guessed.
- */
+/** {@code schema.name-mapping.default}: names to field ids for data files written without ids, as Apache Iceberg parses it. */
 public final class NameMapping {
 
-    private final Map<String, Integer> byPath = new HashMap<>();
+    private final org.apache.iceberg.mapping.NameMapping mapping;
 
-    private NameMapping() {}
-
-    public static NameMapping parse(String json) {
-        try {
-            NameMapping m = new NameMapping();
-            m.add(TableMetadata.JSON.readTree(json), "");
-            return m;
-        } catch (IOException e) {
-            throw new UncheckedIOException("unreadable schema.name-mapping.default", e);
-        }
+    NameMapping(org.apache.iceberg.mapping.NameMapping mapping) {
+        this.mapping = mapping;
     }
 
-    private void add(JsonNode fields, String prefix) {
-        for (JsonNode f : fields) {
-            List<String> names = new java.util.ArrayList<>();
-            f.path("names").forEach(n -> names.add(n.asText()));
-            for (String name : names) {
-                String path = prefix + name;
-                if (f.hasNonNull("field-id")) {
-                    byPath.put(path, f.get("field-id").asInt());
-                }
-                add(f.path("fields"), path + ".");
-            }
-        }
-    }
-
-    /** The field id of the column at this path of names ({@code a.b}; a list's element and a map's parts by their names in the file), or null. */
+    /** The field id of a dotted path, or null. */
     public Integer id(String path) {
-        return byPath.get(path);
+        MappedField f = mapping.find(path.split("\\."));
+        return f == null ? null : f.id();
     }
 }

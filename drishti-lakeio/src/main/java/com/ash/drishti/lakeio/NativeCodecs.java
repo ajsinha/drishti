@@ -147,9 +147,12 @@ public final class NativeCodecs implements CompressionCodecFactory {
     private enum Codec implements PageCodec {
         NONE {
             @Override
-            public byte[] decompress(byte[] in, int off, int len, int size) {
+            public byte[] decompress(byte[] in, int off, int len, int size) throws IOException {
+                if (len != size) {
+                    throw new IOException("uncompressed page of " + len + " bytes where its header says " + size);
+                }
                 byte[] out = new byte[size];
-                System.arraycopy(in, off, out, 0, Math.min(len, size));
+                System.arraycopy(in, off, out, 0, size);
                 return out;
             }
         },

@@ -17,14 +17,10 @@ package com.ash.drishti.plugin.iceberg;
 
 import com.ash.drishti.iceberg.Table;
 import com.ash.drishti.iceberg.io.FileAccess;
-import com.ash.drishti.iceberg.manifest.ManifestEntry;
-import com.ash.drishti.iceberg.manifest.ManifestFile;
-import com.ash.drishti.iceberg.meta.Snapshot;
 import com.ash.drishti.iceberg.meta.TableMetadata;
 import com.ash.drishti.iceberg.scan.Planner;
 import com.ash.drishti.lakeio.FileEntry;
 import com.ash.drishti.lakeio.Storage;
-import com.fasterxml.jackson.databind.JsonNode;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -148,20 +144,13 @@ final class OrphanFiles {
         };
         add.accept(t.metadataLocation());
         m.metadataLog().forEach(e -> add.accept(e.metadataFile()));
-        for (String key : List.of("statistics", "partition-statistics")) {
-            for (JsonNode s : m.json().path(key)) {
-                add.accept(s.path("statistics-path").asText(null));
-            }
-        }
-        for (Snapshot s : m.snapshots()) {
-            add.accept(s.manifestList());
-            for (ManifestFile mf : Planner.manifests(m, s, io)) {
-                add.accept(mf.path());
-                for (ManifestEntry e : Planner.entries(mf, m, io)) {
-                    add.accept(e.file().path());
-                }
-            }
-        }
+        m.statisticsFiles().forEach(add);
+        org.apache.iceberg.Table table = t.iceberg();
+        table.snapshots().forEach(s -> {
+            add.accept(s.manifestListLocation());
+            s.allManifests(table.io()).forEach(mf -> add.accept(mf.path()));
+            Planner.live(table, s, f -> add.accept(f.location()));
+        });
         return out;
     }
 }

@@ -57,7 +57,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * rows each, are committed together in one overwrite of those days).
  * Up to {@code --threads} days are written at once; commits to one table are serialised.
  *
- * <p>Options: {@code --engine native|library|auto} (the engine that writes: as the connector's {@code engine}, else
+ * <p>Options: 
  * {@code DRISHTI_ICEBERG_ENGINE}, else {@code native}; {@code native} needs no Hadoop, so it runs on Windows), {@code --catalog rest --uri U
  * --warehouse W --credential C --token T} for a REST catalog (the domain is
  * the namespace), {@code --set key=value} for any connector setting ({@code s3.endpoint}, {@code hadoop.…}),
