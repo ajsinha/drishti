@@ -484,6 +484,7 @@ functions:
   description: 'A two-level aggregate: agg per value of by, then the sum of those values. The row-to-filter context transition, with its grain written: per value of by the inner aggregate is evaluated with that value as a filter. A measure that does not add (additive: false, such as VaR) is refused: use max_by, min_by or avg_by.'
   examples:
   - {expr: 'sum_by(max(trades.MTM), by = [desks.NAME])', says: the sum of each desk's largest MTM}
+  - {expr: 'sum_by(count(trades), by = [trades.PORTFOLIO])', says: 'trades, counted book by book'}
   edge-cases: {nulls: Groups of by whose aggregate is null are left out., empty: null when no group of by has rows.}
 - name: min_by
   family: aggregate
@@ -497,6 +498,7 @@ functions:
   description: 'A two-level aggregate: agg per value of by, then the smallest of those values.'
   examples:
   - {expr: 'min_by(measure(''MTM''), by = [desks.NAME])', says: the smallest desk MTM}
+  - {expr: 'min_by(sum(trades.MTM), by = [trades.TRADE_DATE])', says: the worst day's MTM}
   edge-cases: {nulls: Groups of by whose aggregate is null are left out., empty: null when no group of by has rows.}
 - name: max_by
   family: aggregate
@@ -510,6 +512,7 @@ functions:
   description: 'A two-level aggregate: agg per value of by, then the largest of those values. Good for a measure that does not add, such as the largest desk VaR.'
   examples:
   - {expr: 'max_by(measure(''VaR''), by = [desks.NAME])', says: the largest desk VaR}
+  - {expr: 'max_by(sum(trades.MTM), by = [trades.TRADE_DATE])', says: the best day's MTM}
   edge-cases: {nulls: Groups of by whose aggregate is null are left out., empty: null when no group of by has rows.}
 - name: ytd
   family: time intelligence

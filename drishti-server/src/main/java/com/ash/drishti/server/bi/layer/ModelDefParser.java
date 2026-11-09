@@ -139,6 +139,10 @@ public final class ModelDefParser {
             if (r.name() != null) {
                 relIds.add(r.name());
             }
+            if (r.bridge() != null) {
+                relIds.add(r.bridge().leftName());
+                relIds.add(r.bridge().rightName());
+            }
             relIds.add(r.label());
         });
         measures.values().stream().filter(m -> m.via() != null && !relIds.contains(m.via())).forEach(m -> y.error("DRS-9122", "measures." + m.name() + ".via",
