@@ -214,6 +214,20 @@ final class VarMaturedView {
         return parts.isEmpty() ? null : date + ": " + String.join("; ", parts);
     }
 
+    /** Per open date, what happened to its matured items, in words; a date still loading is not opened for it. */
+    static Map<String, String> warnings(Map<java.time.LocalDate, java.util.concurrent.CompletableFuture<VarDate>> dates) {
+        Map<String, String> out = new java.util.TreeMap<>();
+        dates.forEach((d, f) -> {
+            if (f.isDone() && !f.isCompletedExceptionally()) {
+                String w = health(f.join().intake().matured(), d);
+                if (w != null) {
+                    out.put(d.toString(), w);
+                }
+            }
+        });
+        return out;
+    }
+
     private static String count(int n, String noun) {
         return String.format(Locale.ROOT, "%,d %s%s", n, noun, n == 1 ? "" : "s");
     }

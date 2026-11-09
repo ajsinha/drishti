@@ -1100,23 +1100,13 @@ public final class VarService implements AutoCloseable {
         return java.util.Set.copyOf(dates.keySet());
     }
 
-    /** Whether the trade id is masked for this reader: it is then never named. */
     boolean tradeIdsMasked(Principal p) {
         return access.masked(p, "TRADE_ID");
     }
 
-    /** Admin, Health: per open date, what happened to its matured items, in words; a date still loading is not opened for it. */
+    /** Admin, Health: per open date, what happened to its matured items, in words. */
     Map<String, String> maturedWarnings() {
-        Map<String, String> out = new java.util.TreeMap<>();
-        dates.forEach((d, f) -> {
-            if (f.isDone() && !f.isCompletedExceptionally()) {
-                String w = VarMaturedView.health(f.join().intake().matured(), d);
-                if (w != null) {
-                    out.put(d.toString(), w);
-                }
-            }
-        });
-        return out;
+        return VarMaturedView.warnings(dates);
     }
 
     List<Map<String, Object>> loaded() {
@@ -1126,14 +1116,7 @@ public final class VarService implements AutoCloseable {
                 VarDate vd = f.join();
                 Map<String, Object> m = new LinkedHashMap<>();
                 m.put("businessDate", d.toString());
-                m.put("trades", vd.book().tradeCount());
-                m.put("positions", vd.book().positionCount());
-                m.put("nodes", vd.book().nodes().size());
-                m.put("vectorBytes", vd.book().vectorBytes());
-                m.put("inputsBySystem", vd.intake().inputs() == null ? Map.of() : vd.intake().inputs());   // per source system: form, grain (15.13)
-                m.put("tier", vd.book().tier());
-                m.put("aggregateBytes", vd.book().aggregateBytes());
-                m.put("heapBytes", vd.book().morning().heapBytes());        // what the date's base book holds on the heap (27.1)
+                m.putAll(vd.loadFacts());
                 m.put("lastUsed", openDates.lastUsed(d));
                 if (vd.book().hot() != null) {
                     m.put("hotFile", loader.tier().root().relativize(vd.book().hot().file()).toString().replace('\\', '/'));
