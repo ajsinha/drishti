@@ -329,7 +329,6 @@ def build_parser(h) -> argparse.ArgumentParser:
                           description="bi dax: convert a DAX measure to Rachana (the cookbook is in RACHANA_REFERENCE); prints what could not be converted",
                           epilog='examples:\n  drishti.py bi dax "CALCULATE(SUM(trades[MTM]), ALL(desks))"', formatter_class=argparse.RawDescriptionHelpFormatter)
     p_dax.add_argument("text", help="the DAX expression, or Name = expression")
-    p_dax.add_argument("--json", action="store_true", help="the answer as JSON")
     p_dax.set_defaults(func=h.cmd_bi_dax)
     for noun, func, what in (("workspace", h.cmd_bi_workspace, "list the workspaces you belong to, or show one with its members and items"),
                              ("catalogue", h.cmd_bi_catalogue, "search the catalogue, show an item, or publish one")):

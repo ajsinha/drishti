@@ -237,7 +237,7 @@ measures:
 
 **At the prompt:** `tools/drishti.py bi dax "CALCULATE(SUM(trades[NOTIONAL]), USERELATIONSHIP(trades[SETTLE_DATE], dates[DAY]))"`
 
-Group rows by limit group do not add to the total when a book sits in two groups: the total counts each trade once.
+You should see group rows by limit group that do not add to the total when a book sits in two groups: the total counts each trade once.
 
 ## Step 6 · BI's samples migrated, with a dry run first
 

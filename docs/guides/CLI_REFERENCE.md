@@ -3140,6 +3140,7 @@ drishti.py bi workspace list|get [ID]                      the workspaces you ma
 drishti.py bi catalogue list [--q T] [--kind K] [--workspace W] [--owner O] [--endorsement E] [--tag T] [--sort use|date|title] [--fresh DAYS] [--limit N]
 drishti.py bi catalogue get ID [--body]                    one item (--body also prints its YAML)
 drishti.py bi catalogue publish ID [--note TEXT]           publish the draft as the next version
+drishti.py bi dax "DAX"                                   DAX to Rachana; names what it cannot convert (exit 2 then)
 ```
 
 All take `--json`, `--server`, `--token-file` and `--user` like the other REST commands. With a review-required workspace, `publish` answers `403 DRS-9002`; propose
