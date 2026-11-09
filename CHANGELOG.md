@@ -46,6 +46,7 @@
 
 ### Docs
 
+- **Plan:** i2 and i3 become one release with one drill after i1 + i1b, in four waves, with deploy built once, cluster-first.
 - **Source file limit:** 2,000 lines (was 1,500); `SourceFileSizeTest`, the console's checks and the guides.
 - **Roadmap:** every visual lives in Drishti Elements; a Drishti Elements Playground (live pages with editable data) closes the BI depth release.
 - **Roadmap:** a BI depth release (2.9.11.i1b) after i1: many-to-many and both-ways relationships, Rachana filter-context control, a decomposition tree; the comparison with Power BI lists it as planned.
