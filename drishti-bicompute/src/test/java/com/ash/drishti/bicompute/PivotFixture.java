@@ -162,8 +162,8 @@ final class PivotFixture implements AutoCloseable {
         };
         TabularProvider base = new TabularProvider(exec, resolver);
         this.provider = base;
-        PivotProvider counting = (counting = new Counting(base, statements));
-        this.core = new PivotCore(List.of(counting), cache, settings);
+        this.counting = new Counting(base, statements);
+        this.core = new PivotCore(List.of(this.counting), cache, settings);
         this.plain = new PivotCore(List.of(base), cache, settings);
     }
 
