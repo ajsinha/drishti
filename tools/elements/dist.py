@@ -25,7 +25,7 @@ no network, nothing published anywhere.
   (profile ``elements``) jars.
 
 The licence: a library with a ``module`` in the manifest (drishti-risk: ``banking``) is left out unless its domain is included
-(``include_domains``); until the licence check (2.9.11.i) that is the only gate. Every output is reproducible: the same sources make
+(``include_domains``); until the licence check (2.9.11.j) that is the only gate. Every output is reproducible: the same sources make
 the same bytes (fixed timestamps, sorted entries)."""
 from __future__ import annotations
 
@@ -117,7 +117,7 @@ class Train:
             d = self.domain(n)
             if d and d not in include_domains:
                 raise DistError(f"{n} is licensed with the {d} module: it is packed only with --include-domain {d} "
-                                "(until the licence check of 2.9.11.i, the only gate)")
+                                "(until the licence check of 2.9.11.j, the only gate)")
             for r in self.libs[n].get("requires") or []:
                 visit(r, trail + [n])
             if n not in out:

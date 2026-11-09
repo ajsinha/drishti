@@ -304,14 +304,7 @@ public final class ArtifactService {
             case "connector" -> {
                 ConnectorFiles files = connectors.files();
                 Path file = files.file(name);
-                if (!"shared".equals(files.source(name))) {
-                    yield archive.archive("connector", "", name, "connectors", file.getFileName().toString(), file, actor, summary);
-                }
-                // created or edited through Admin: the text in force is the shared overlay in the content store, not (only) a file
-                String rel = file.getFileName().toString();
-                ArtifactArchive.Entry e = archive.archiveText("connector", "", name, "connectors", rel, rel, files.text(name), actor, summary);
-                files.removeEverywhere(name);
-                yield e;
+                yield archive.archive("connector", "", name, "connectors", file.getFileName().toString(), file, actor, summary);
             }
             default -> {
                 Path file = paths.biFile(subtype, name);

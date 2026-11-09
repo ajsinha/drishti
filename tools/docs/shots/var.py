@@ -33,7 +33,7 @@ SERVER_ENV = {"DRISHTI_SECURITY_ENABLED": "false"}   # marks the guide as one th
 def explorer_desk(c: Ctx):
     open_var(c, "/go?q=" + "VAR DESK DESK-RATES <GO>".replace(" ", "+"))
     painted(c, "DESK:DESK-RATES")
-    c.until("document.querySelectorAll('.vx-tree .vx-row[data-scope]').length > 5")
+    c.until("document.querySelectorAll('.vx-tree .dg-row[data-scope]').length > 5")
     c.save("01-explorer-desk.jpg")
 
 
@@ -41,9 +41,9 @@ def explorer_desk(c: Ctx):
 def scenario(c: Ctx):
     open_var(c, "/var?scope=DESK:DESK-RATES")
     painted(c, "DESK:DESK-RATES")
-    c.page.locator("[data-vx-pathtable] tbody tr").first.locator("td").first.click()   # the rank: the row drills (its loss-from cell opens that part)
+    c.page.locator("[data-vx-pathtable] .dg-row").first.locator(".dg-cell").first.click()   # the rank: the row drills (its loss-from cell opens that part)
     c.until("document.querySelector('[data-vx-drill]') && !document.querySelector('[data-vx-drill]').hidden"
-            " && document.querySelectorAll('[data-vx-drill] tbody tr').length > 0")
+            " && document.querySelectorAll('[data-vx-drill] .dg-row').length > 0")
     c.page.wait_for_timeout(500)
     c.save("02-scenario-contributors.jpg", locator=".vx-main")
 
@@ -69,7 +69,7 @@ def book_positions(c: Ctx):
     open_var(c, "/var?scope=BOOK:BOOK-EQD-2")
     painted(c, "BOOK:BOOK-EQD-2")
     tab(c, "contrib")
-    c.until("document.querySelectorAll('[data-vx-ctable] tbody tr[data-scope^=\"POS:\"]').length > 1")
+    c.until("document.querySelectorAll('[data-vx-ctable] .dg-row[data-scope^=\"POS:\"]').length > 1")
     c.save("05-book-positions.jpg", locator=".vx-main")
 
 
@@ -77,7 +77,7 @@ def basket_pick(c: Ctx, text: str) -> None:
     """Types into the basket sheet's Find and add and picks the engine's first hint (it lands in its kind's column)."""
     c.page.locator("[data-vb-find]").fill("")
     c.page.locator("[data-vb-find]").type(text, delay=20)
-    c.until("document.querySelector('[data-vb-hints]').dataset.q === %r && document.querySelectorAll('[data-vb-hint]').length > 0" % text, 30)
+    c.until("document.querySelector('.vb-hints').dataset.q === %r && document.querySelectorAll('.vb-hint').length > 0" % text, 30)
     n = c.page.evaluate("window.Drishti.VarBasket.parts()")
     c.page.locator("[data-vb-find]").press("Enter")
     c.until("window.Drishti.VarBasket.parts() > %d" % n)
@@ -103,10 +103,10 @@ def basket(c: Ctx):
     c.page.reload()
     painted(c, "BOOK:BOOK-RATES-1")
     tab(c, "contrib")
-    c.until("document.querySelectorAll('[data-vx-ctable] tbody tr[data-scope^=\"POS:\"]').length > 1")
-    c.page.locator('[data-vx-ctable] tbody tr[data-scope^="POS:"]').first.locator("[data-vx-add]").click()
+    c.until("document.querySelectorAll('[data-vx-ctable] .dg-row[data-scope^=\"POS:\"]').length > 1")
+    c.page.locator('[data-vx-ctable] .dg-row[data-scope^="POS:"]').first.locator("[data-vx-add]").click()
     basket_pick(c, "pf-usd")
-    c.page.locator('.vx-tree .vx-row[data-scope="NODE:MGMT~DESK-FX"] [data-vx-add]').click(force=True)
+    c.page.locator('.vx-tree .dg-row[data-scope="NODE:MGMT~DESK-FX"] [data-vx-add]').click(force=True)
     trades = c.page.evaluate("fetch('/api/var/scope/contributions?scope=PORT:PF-USD-RATES&by=trade').then(r => r.json()).then(d => d.rows.slice(0, 3).map(r => r.key))")
     basket_paste(c, "TRD", 0, f"{trades[0]}\n{trades[1]}\n-MX-30000121\n10000000\n")
     basket_live(c)
@@ -147,9 +147,9 @@ def capture(c: Ctx):
     c.page.locator("[data-vx-cap-note]").fill("before the hedge")
     c.page.locator("[data-vx-capture]").click()
     c.until("document.querySelector('[data-var]').dataset.lastCapture && "
-            "document.querySelectorAll('[data-vx-captable] tbody tr[data-capture]').length > 0")
+            "document.querySelectorAll('[data-vx-captable] .dg-row[data-capture]').length > 0")
     cap = c.page.get_attribute("[data-var]", "data-last-capture")
-    c.page.locator(f'[data-vx-captable] tr[data-capture="{cap}"] button', has_text="Compare with now").click()
+    c.page.locator(f'[data-vx-captable] .dg-row[data-capture="{cap}"] button', has_text="Compare with now").click()
     c.until("(document.querySelector('[data-vx-compare]').dataset.compared || '').indexOf('now') > 0")
     c.page.wait_for_timeout(600)
     c.save("07-capture-compare.jpg", locator=".vx-main")
@@ -210,7 +210,7 @@ def in_currency(c: Ctx, scope: str, ccy: str) -> None:
     choose(c, "[data-vx-ccy]", ccy)
     c.until("document.querySelector('.vx-tile[data-tile=\"0\"] .l').innerText.indexOf(%r) >= 0" % ccy, 90)
     painted(c, scope)
-    c.until("document.querySelector('.vx-tree .vx-row.hdr') && document.querySelector('.vx-tree .vx-row.hdr').innerText.indexOf(%r) >= 0" % ccy, 90)
+    c.until("document.querySelector('.vx-tree .dg-row.hdr') && document.querySelector('.vx-tree .dg-row.hdr').innerText.indexOf(%r) >= 0" % ccy, 90)
 
 
 def back_to_usd(c: Ctx) -> None:
@@ -231,7 +231,7 @@ def other_currencies(c: Ctx):
     open_var(c, "/var?scope=DESK:DESK-RATES&ccy=USD")
     painted(c, "DESK:DESK-RATES")
     tab(c, "ccy")
-    c.until("document.querySelectorAll('[data-vx-ccytable] tbody tr[data-ccy]').length >= 5", 60)
+    c.until("document.querySelectorAll('[data-vx-ccytable] .dg-row[data-ccy]').length >= 5", 60)
     c.save("16-other-currencies.jpg", locator=".vx-main")
     back_to_usd(c)
 

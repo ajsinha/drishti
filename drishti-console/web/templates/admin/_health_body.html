@@ -106,7 +106,7 @@
 {% endif %}
 {% if (h.tmp or {}).get('jvmTmpdirWarning') %}<p class="hl-err" role="alert" data-tmpdir-warning><b class="t-warn">Java temp folder</b> {{ h.tmp.jvmTmpdirWarning }}</p>{% endif %}
 
-{% if (h.connectors or {}).get('overlays') %}<p class="hl-err" role="alert" data-connector-overlays><b class="t-warn">Connector overrides</b> this node's connectors follow an override, not their file: {{ h.connectors.overlays | join(', ') }}. <a href="/admin/connectors">Connectors</a> shows what each changes and can remove it.</p>{% endif %}
+{% if (h.connectors or {}).get('fileDrift') %}<p class="hl-err" role="alert" data-connector-drift><b class="t-warn">Connector files differ between nodes</b> {% for d in h.connectors.fileDrift %}{{ d.name }} ({{ d.nodes | join(', ') }}){{ ', ' if not loop.last }}{% endfor %}. A save changes the node it is made on; copy the file, or save it on each node.</p>{% endif %}
 
 {% if h.dataLate %}
 <section class="pnl" aria-label="Data that is late"><div class="pnl-b"><ul class="hl-late">{% for d in h.dataLate %}

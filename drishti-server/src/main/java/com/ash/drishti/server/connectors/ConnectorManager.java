@@ -93,6 +93,7 @@ public final class ConnectorManager {
     private final Map<String, String> editors = new java.util.concurrent.ConcurrentHashMap<>();
     private volatile RequirementsGate gate = RequirementsGate.NONE;
     private final List<String> bootstrapMessages;
+    private volatile ConnectorFileDrift fileDrift;
     private final ReentrantLock scanLock = new ReentrantLock();   // file reads and writes: a ReentrantLock, not synchronized (Java 21 pins virtual threads)
     /** Connectors that must not run: the ones only unloaded packs, or hidden sample packs, used. Their files stay on disk. */
     private volatile Set<String> suppressed;
@@ -124,8 +125,6 @@ public final class ConnectorManager {
             seen.put(n, t == null ? "" : ConnectorFiles.etag(t));
             LOG.warn("connector file {}.yaml is not usable: {}", n, m);
         });
-        // the start-up properties came from the files alone: a shared edit (or a shared delete) is applied by the first scan
-        files.overlaid().forEach(n -> seen.put(n, "shared"));
         files.misnamed().forEach(f -> LOG.warn("{} in {} is not a connector file (names are lower case letters, digits and hyphens, ending .yaml); it is ignored", f, files.dir()));
         bootstrapMessages.forEach(m -> LOG.info("connectors: {}", m));
         warnDeprecated();
@@ -638,10 +637,7 @@ public final class ConnectorManager {
         TemplateChange tc = templateChange(name);
         m.put("templateChanged", tc == null ? null : tc.message());
         String source = files.source(name);
-        m.put("source", source == null ? origin(name) : source);       // file, shared (an Admin edit every node applies), shared-hidden
-        if ("shared".equals(source)) {
-            m.put("overlay", overlayDiff(files, name));                // what the override changes against the file (the Connectors pages show it)
-        }
+        m.put("source", source == null ? origin(name) : source);
         return m;
     }
 
@@ -1092,7 +1088,7 @@ public final class ConnectorManager {
                 requireUnused(name, "disabling", confirm);
             }
             List<String> changed = diff(before, next);
-            files.write(name, text, current);
+            files.write(name, text);
             scan();
             return new Change(detail(name), changed, warnings);
         } finally {
@@ -1190,62 +1186,24 @@ public final class ConnectorManager {
         }
     }
 
-    /**
-     * What a connector's override in the shared overlay changes against its file, one row per setting: {@code what}, {@code file},
-     * {@code override} (secrets masked). A connector with no file says so; the Admin pages show this beside "Remove override".
-     */
-    static List<Map<String, String>> overlayDiff(ConnectorFiles files, String name) {
-        List<Map<String, String>> out = new ArrayList<>();
-        String file = files.fileText(name);
-        String shared = files.text(name);
-        if (file == null) {
-            out.add(Map.of("what", "(file)", "file", "no file on this node", "override", "defined only by the override"));
-            return out;
-        }
-        ConnectorFiles.Definition a;
-        ConnectorFiles.Definition b;
-        try {
-            a = files.parse(name, file);
-            b = files.parse(name, shared);
-        } catch (ConnectorFiles.InvalidFile e) {
-            out.add(Map.of("what", "(text)", "file", file.equals(shared) ? "same" : "differs", "override", String.valueOf(e.getMessage())));
-            return out;
-        }
-        differ(out, "plugin", a.plugin(), b.plugin());
-        differ(out, "enabled", a.enabled(), b.enabled());
-        differ(out, "kinds", String.join(", ", a.kinds()), String.join(", ", b.kinds()));
-        Set<String> keys = new TreeSet<>(a.settings().keySet());
-        keys.addAll(b.settings().keySet());
-        for (String k : keys) {
-            boolean secret = ConnectorSecrets.secretKey(k);
-            differ(out, "settings." + k, secret && a.settings().get(k) != null ? "***" : a.settings().get(k), secret && b.settings().get(k) != null ? "***" : b.settings().get(k));
-        }
-        return out;
+    /** Admin, Health's comparison of this node's connector files with the other nodes'. */
+    public void fileDrift(ConnectorFileDrift d) {
+        this.fileDrift = d;
     }
 
-    private static void differ(List<Map<String, String>> out, String what, Object file, Object override) {
-        if (!java.util.Objects.equals(file, override)) {
-            out.add(Map.of("what", what, "file", file == null ? "(not set)" : String.valueOf(file), "override", override == null ? "(not set)" : String.valueOf(override)));
+    /** Connectors changed by the upgrade at start: the next scan applies them (the start-up properties came from the earlier files). */
+    public void applyFolded(List<String> names) {
+        scanLock.lock();
+        try {
+            names.forEach(n -> seen.put(n, "folded"));
+            scan();
+        } finally {
+            scanLock.unlock();
         }
     }
 
     /** Puts a pack's template back as the connector's file. */
     public Change reset(String name, String ifMatch) {
-        String source = files.source(name);
-        if (source != null && source.startsWith("shared")) {      // a shared edit: Reset removes it, the file (or the pack's template) counts again
-            scanLock.lock();
-            try {
-                String now = files.text(name);
-                if (ifMatch != null && now != null && !ifMatch.equals(ConnectorFiles.etag(now))) {
-                    throw new DrishtiException(ErrorCode.CONNECTOR_CONFLICT, "connector '" + name + "' changed since you read it; reload it");
-                }
-                files.overlay().remove(name, now);
-                scan();
-                return new Change(defined(name) ? detail(name) : Map.of("name", name, "deleted", true), List.of("shared edit removed"), List.of());
-            } finally {
-                scanLock.unlock();
-            }
-        }
         Template t = template(name).orElseThrow(() -> new DrishtiException(ErrorCode.CONNECTOR_CONFLICT,
                 "connector '" + name + "' has no pack default to go back to; delete it, or edit it"));
         String text = com.ash.drishti.packs.ConnectorBootstrap.generate(files, name, t.pack(), t.definition());   // stamped: it follows the pack again
@@ -1288,10 +1246,8 @@ public final class ConnectorManager {
             }
             String text = com.ash.drishti.packs.ConnectorBootstrap.generate(files, name, t.pack(), t.definition());
             files.write(name, text);
-            if (files.source(name) == null || !files.source(name).startsWith("shared")) {
-                files.writeMarker(name, text, com.ash.drishti.packs.ConnectorBootstrap.fingerprint(files, name, t.definition()),
-                        com.ash.drishti.packs.ConnectorBootstrap.kindsOf(t.definition()));
-            }
+            files.writeMarker(name, text, com.ash.drishti.packs.ConnectorBootstrap.fingerprint(files, name, t.definition()),
+                    com.ash.drishti.packs.ConnectorBootstrap.kindsOf(t.definition()));
             scan();
             return true;
         } finally {
@@ -1471,7 +1427,7 @@ public final class ConnectorManager {
         m.put("count", rows.size());
         m.put("failed", failed);
         m.put("badFiles", badFiles);
-        m.put("overlays", new ArrayList<>(new TreeSet<>(files.overlaid())));   // connectors whose override, not their file, is in force (Admin -> Connectors)
+        m.put("fileDrift", fileDrift == null ? List.of() : fileDrift.differing());   // connectors whose file differs on another node (Admin -> Health)
         Map<String, String> changed = new java.util.TreeMap<>();
         for (Map<String, Object> r : rows) {
             if (r.get("templateChanged") != null) {

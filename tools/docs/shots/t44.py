@@ -78,7 +78,7 @@ def security(c: Ctx):
 def by_book(c: Ctx):
     """Step 5: the legs by book and currency, every book open: their subtotals and the grand total, as a model of legs and books answers by book."""
     _pivot(c, "t44-legs-by-book", BY_BOOK)                     # every book open (expandTo): its currencies, then its subtotal
-    c.until("document.querySelectorAll('[data-pv-grid] [data-pv-toggle][aria-expanded=\"true\"]').length > 0", 120)
+    c.until("document.querySelectorAll('[data-pv-grid] .dg-ctoggle[aria-expanded=\"true\"]').length > 0", 120)
     c.page.wait_for_timeout(800)
     c.save("03-legs-by-book.jpg", clip={"x": 0, "y": 56, "width": WIDE, "height": HIGH - 56})
 

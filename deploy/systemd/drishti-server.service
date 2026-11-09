@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # The Drishti server as a systemd service (docs/admin/OPERATIONS.md section 7.2). Copy to /etc/systemd/system/drishti-server.service,
-# and deploy/bin/drishti-node.sh to /opt/drishti/bin/. The stop drains the node first (CD2, CLUSTER_DEPLOYMENT.md section 4.6):
+# and bin/drishti-node.sh to /opt/drishti/bin/. The stop drains the node first (CD2, CLUSTER_DEPLOYMENT.md section 4.6):
 # forwarded work and VaR shards go to other members, then SIGTERM runs Spring's graceful shutdown. The drain needs DRISHTI_DRAIN_TOKEN in
 # the environment file (an administrator's personal API token with the node:drain scope); without it the stop goes on undrained.
 [Unit]

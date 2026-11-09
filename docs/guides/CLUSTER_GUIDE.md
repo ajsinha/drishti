@@ -393,9 +393,9 @@ For a cluster on one machine without the steps below, the repository's `drishti-
 `stack.yaml` ([drishti-stack/README.md](../../drishti-stack/README.md)):
 
 ```bash
-drishti-stack/start.sh       # start what is not running: the three servers, then the console
-drishti-stack/status.sh      # the processes and ports, the members, the console's servers
-drishti-stack/stop.sh        # stop everything start.sh started (by process id, never by name)
+bin/start-cluster.sh       # start what is not running: the three servers, then the console
+bin/status.sh --cluster drishti-stack/stack.yaml      # the processes and ports, the members, the console's servers
+bin/stop-cluster.sh        # stop everything the cluster file started (by process id, never by name)
 ```
 
 It starts each node and the console through the scripts of `bin/` (2.0), so their pid files and logs are in `data/run/` and `data/logs/`.
@@ -944,7 +944,7 @@ Settings: `live.relay.*` ([CONFIGURATION.md](../admin/CONFIGURATION.md)).
 ### 8.1 Drain before a stop
 
 One action drains a node for a stop: `POST /api/v1/admin/node/drain {"on": true}` (Admin → Cluster → **Drain for a stop**;
-`deploy/bin/drishti-node.sh drain`; administrators, or a personal API token with the `node:drain` scope). It stops Drishti\*net forwarding to
+`bin/drishti-node.sh drain`; administrators, or a personal API token with the `node:drain` scope). It stops Drishti\*net forwarding to
 the node (a forwarded request that reaches it is answered `503` so the caller tries the next peer), hands its VaR shards to their next owners
 and turns readiness `OUT_OF_SERVICE`; `GET /api/v1/admin/node` reports `safeToStop` once every part has handed its work over (the forwarding
 after `drishti.node.drain.settle-seconds`, 5 s; the shards once it holds none). `{"on": false}` takes it back; a restart does too.
@@ -965,7 +965,7 @@ the drain:**
 | systemd (`deploy/systemd/drishti-server.service`) | `ExecStop=-/opt/drishti/bin/drishti-node.sh drain` | `DRISHTI_DRAIN_WAIT` (240 s), within `TimeoutStopSec` (300 s) |
 | Docker (`deploy/docker/server.Dockerfile`) | the entry point `drishti-node.sh run java …`, on `docker stop` | 90 s; `stop_grace_period: 120s` in `compose.yaml` (or `docker stop -t 120`) |
 | ECS (`deploy/docker/ecs/`) | the same entry point, on the task's SIGTERM | 90 s within `stopTimeout` of **120 s, Fargate's most**: a shard rebuild can take longer, so drain before the stop (the rolling runner does) |
-| Windows | `deploy\bin\drishti-node.ps1 drain -Wait 240`, before stopping the process | `-Wait` |
+| Windows | `bin\drishti-node.ps1 drain -Wait 240`, before stopping the process | `-Wait` |
 
 The token: `DRISHTI_DRAIN_TOKEN` (or `DRISHTI_DRAIN_TOKEN_FILE`); with sign-in off none is needed. A drain that is refused, or not safe in
 time, never holds the stop: the replicas answer and the next owners build the shards, as after a crash. On ECS with EC2 capacity raise the
@@ -1334,10 +1334,10 @@ folders), wait for readiness. `tools/rolling-upgrade.sh --inventory <file> --ver
 tools/rolling-upgrade.sh --inventory prod-ecs.yaml --version <version> --dry-run
 tools/rolling-upgrade.sh --inventory prod-ecs.yaml --version <version>
 # one owner by hand, the same steps
-DRISHTI_NODE_URL=http://var-3.drishti.local:18480 DRISHTI_DRAIN_WAIT=1800 deploy/bin/drishti-node.sh drain
+DRISHTI_NODE_URL=http://var-3.drishti.local:18480 DRISHTI_DRAIN_WAIT=1800 bin/drishti-node.sh drain
 aws ecs update-service --cluster "$ECS_CLUSTER" --service var-3 --task-definition "drishti-$ENV-var-3:$REV" --force-new-deployment
 aws ecs wait services-stable --cluster "$ECS_CLUSTER" --services var-3
-DRISHTI_NODE_URL=http://var-3.drishti.local:18480 deploy/bin/drishti-node.sh wait-ready --wait 1800
+DRISHTI_NODE_URL=http://var-3.drishti.local:18480 bin/drishti-node.sh wait-ready --wait 1800
 ```
 
 | Event | What happens, what to do |

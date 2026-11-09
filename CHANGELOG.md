@@ -17,6 +17,11 @@
 
 ## Unreleased
 
+### Operations
+
+- **One home for start and stop scripts.** `bin/start-cluster`, `bin/stop-cluster` (`.sh`, `.ps1`, `.cmd`) and `bin/status --cluster FILE` start, stop and show a cluster on one machine from a cluster file (default `drishti-stack/stack.yaml`, the same format). `drishti-stack/` is configuration only. **`drishti-stack/start.sh`, `stop.sh` and `status.sh` are gone: run `bin/start-cluster.sh`, `bin/stop-cluster.sh` and `bin/status.sh --cluster drishti-stack/stack.yaml`.** The server jar copy moves to `data/stack/server.jar`. `deploy/bin/drishti-node` is now `bin/drishti-node`.
+- **The file is the connector.** The file in `config/connectors/` is the only truth; every Admin save writes it, with its history and audit entry. At the first start of this release each node folds connector edits an earlier release kept in the content store into its own files; a file changed since then is kept and the edit is saved beside it as `<name>.yaml.content-store-<date>.bak`, logged and audited. The override marks, *Remove override* and its Health warning are gone. On a cluster a save applies to its node: Admin → Health warns when nodes' connector files differ.
+
 ### Data loads
 
 - **Admin → Data loads → Upload** (split view): upload a data file or pick one in the inbox folder, a searchable **Table** picker filled from the file name (kind, pack and connector shown read-only), the exact `.ready` live beside the form, checks against a sample (contract, key, grain and id, `DRS-5210`, hierarchy columns) as pass, warning or refused, and Push: data first, `.ready` last. A replace of a date that already holds rows names the systems and counts, offers a tar or append, and needs a tick. `drishti.py dataload ready`; `.ready` parsing from text and one writer; settings `drishti.dataload.upload.*`; **File drop** in drishti-inputs.
@@ -5774,7 +5779,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   Admin create, edit, enable or disable, restore or delete is a shared edit in the content store (`config/connectors/<name>.yaml`, with
   history) that every node applies over its file within `drishti.store.watch-ms` (2 s), hot-reloading as for a file edit. Admin →
   Connectors marks it *shared edit*; Reset removes it. Placeholders stay unresolved in the store. Two nodes editing one connector get one
-  `409 DRS-5032`. `drishti.connectors.store: file` for one node. [CONNECTOR_FILES.md](docs/guides/DATA_GUIDE.md#shared-edits-on-a-cluster), CONTENT_STORE.md section 11.
+  `409 DRS-5032`. `drishti.connectors.store: file` for one node. [CONNECTOR_FILES.md](docs/guides/DATA_GUIDE.md#connector-files-on-a-cluster), CONTENT_STORE.md section 11.
 
 - **New: collaboration, notes, embed apps, pack switches, the audit trail, Sutra proposals and load history on every node of a cluster.** They moved
   into the content store (docs/architecture/CONTENT_STORE.md section 9): one document per comment thread (its comments, sealed revision

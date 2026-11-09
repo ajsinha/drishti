@@ -328,7 +328,7 @@ read`); a token with a write scope must expire (at most `writeMaxDays`, 90). Rev
 `Ctrl+C` in each terminal (or the red square in the IDE) stops it; repeat 2.5 and 2.6 with the same `export` lines to start again (no
 rebuild unless the code changed; monitors, alerts, workspaces and settings are kept under `./data`). New demo data: run 2.4 again, with
 the server running or not. The start order does not matter ([5.2](#52-first-start-by-hand-and-check-it-works)). Three servers as one
-cluster with a console, on this machine: `drishti-stack/start.sh` ([drishti-stack/README.md](../../drishti-stack/README.md),
+cluster with a console, on this machine: `bin/start-cluster.sh` ([drishti-stack/README.md](../../drishti-stack/README.md),
 [CLUSTER_GUIDE.md](CLUSTER_GUIDE.md)).
 
 ### 2.10 Where Drishti keeps things
@@ -641,7 +641,7 @@ EOF
 sudo chmod 600 /etc/drishti/drishti.env
 ```
 
-`/etc/systemd/system/drishti-server.service` (also `deploy/systemd/drishti-server.service`; copy `deploy/bin/drishti-node.sh` to
+`/etc/systemd/system/drishti-server.service` (also `deploy/systemd/drishti-server.service`; copy `bin/drishti-node.sh` to
 `/opt/drishti/bin/` beside it):
 
 ```ini
@@ -711,7 +711,7 @@ journalctl -u drishti-server -f                            # the log
 
 **Readiness means ready**: it is `DOWN` (`503`) while the VaR or exposure engine opens its newest business date (the check opens it),
 while the node joins a cluster or builds a VaR shard it owns, and `OUT_OF_SERVICE` while it is drained; `/actuator/health/liveness` says
-whether the process is up. `deploy/bin/drishti-node.sh wait-ready` waits for it. Lake maintenance and the lake build run as further units
+whether the process is up. `bin/drishti-node.sh wait-ready` waits for it. Lake maintenance and the lake build run as further units
 ([section 16](#16-lake-maintenance-and-scheduling)).
 
 ### 5.4 Docker Compose
@@ -2938,7 +2938,7 @@ serves; a request one node cannot answer is answered by another, and a person co
 with no `config/net/node.yaml` saying `enabled: true` is a single server). Nodes advertise a real address (never `localhost` or `0.0.0.0`), share one
 key (`DRISHTI_NET_SECRET`), keep their clocks in step, and are watched on **Admin → Cluster**. Setting one up, its files, security, routing, draining, rolling
 upgrades, VaR sharding, the console with several servers, sizing and performance tuning, and Drishti on AWS are all in
-[CLUSTER_GUIDE.md](CLUSTER_GUIDE.md); a cluster of three on one machine is `drishti-stack/start.sh` and [tutorial 22](../tutorials/22-a-cluster-of-three.md).
+[CLUSTER_GUIDE.md](CLUSTER_GUIDE.md); a cluster of three on one machine is `bin/start-cluster.sh` and [tutorial 22](../tutorials/22-a-cluster-of-three.md).
 
 ## 20. Runbooks
 

@@ -51,7 +51,7 @@ features:
   # Operate (core, administrators)
   - { id: O1, name: Install and operate, domain: core, lenses: all, guide: guides/OPERATIONS_GUIDE.md, budget: 2500, tutorial: tutorials/21-run-it-in-production.md, tutorial-budget: 400 }
   - { id: O2, name: Clusters and scale, domain: core, lenses: all, guide: guides/CLUSTER_GUIDE.md, budget: 1500, tutorial: tutorials/22-a-cluster-of-three.md, tutorial-budget: 400 }
-  - { id: O3, name: "People, access and editions", domain: core, lenses: all, guide: guides/ADMIN_GUIDE.md, budget: 1200, tutorial: after 2.9.11.i }
+  - { id: O3, name: "People, access and editions", domain: core, lenses: all, guide: guides/ADMIN_GUIDE.md, budget: 1200, tutorial: after 2.9.11.j }
 
 # The references (one home each, mostly generated) and the guide sub-pages that are not features of their own.
 references:

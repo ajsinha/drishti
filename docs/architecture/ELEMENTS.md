@@ -1611,7 +1611,7 @@ g1 was decided separately: the grid's three layouts (section 5.1).
 - [ ] drishti-risk in the banking plugin, licensed
 - [x] The distribution (8.7): per-library packages with `.d.ts`, themes, `drishti.py elements pack` with the banking exclusion, the
   zip with SRI hashes, npm tarballs for an internal registry, the WebJar (`-P elements`); the guide EMBED_GUIDE.md
-- [ ] The licence check (2.9.11.i) replaces `--include-domain` as the gate on drishti-risk
+- [ ] The licence check (2.9.11.j) replaces `--include-domain` as the gate on drishti-risk
 - [x] The gallery in both modes, `playground` (default) and `docs` (g4 A and B), every component and example run in its browser file, the grid in both themes and three densities, a keyboard/ARIA smoke check on every demo (8.4)
 - [ ] axe vendored for the gallery's check; every example in both themes and three densities
 - [ ] Documentation per library (section 9): guide, generated API reference with `--check`, tutorial, gallery, the AG Grid migration guide, theming and accessibility guides, changelogs, versioning policy; Help entries

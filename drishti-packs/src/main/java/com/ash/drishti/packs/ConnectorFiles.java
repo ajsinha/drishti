@@ -159,7 +159,6 @@ public final class ConnectorFiles {
 
     private final Path dir;
     private final Path state;
-    private volatile ConnectorOverlay overlay;
     private final ObjectMapper yaml = new ObjectMapper(new YAMLFactory().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
             .enable(YAMLGenerator.Feature.MINIMIZE_QUOTES));
     private static final ObjectMapper REQUIRES_YAML = new ObjectMapper(new YAMLFactory().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
@@ -182,35 +181,14 @@ public final class ConnectorFiles {
         }
     }
 
-    /** Reads through (and writes to) the shared overlay from now on: edits made through Admin reach every node (DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 11). */
-    public ConnectorFiles overlay(ConnectorOverlay o) {
-        this.overlay = o;
-        return this;
-    }
-
-    public ConnectorOverlay overlay() {
-        return overlay;
-    }
-
-    /** Where a connector's text comes from: {@code file}, {@code shared} (an edit made through Admin), {@code shared-hidden} (deleted through Admin), or null. */
+    /** Where a connector's text comes from: {@code file}, or null. */
     public String source(String name) {
-        ConnectorOverlay o = overlay;
-        ConnectorOverlay.Entry e = o == null || !validName(name) ? null : o.get(name);
-        if (e != null) {
-            return e.hidden() ? "shared-hidden" : "shared";
-        }
         return fileExists(name) ? "file" : null;
     }
 
-    /** Whether the file of that name is on disk (the base), whatever the overlay says. */
+    /** Whether the file of that name is on disk. */
     public boolean fileExists(String name) {
         return validName(name) && Files.isRegularFile(dir.resolve(name + ".yaml"));
-    }
-
-    /** The names that have a shared overlay (edited or hidden through Admin). */
-    public Set<String> overlaid() {
-        ConnectorOverlay o = overlay;
-        return o == null ? Set.of() : Set.copyOf(o.all().keySet());
     }
 
     /** Where the edit history and generated-file markers are kept ({@code <data dir>/connectors}). */
@@ -242,16 +220,14 @@ public final class ConnectorFiles {
     }
 
     public boolean exists(String name) {
-        ConnectorOverlay o = overlay;
-        ConnectorOverlay.Entry e = o == null || !validName(name) ? null : o.get(name);
-        return e != null ? !e.hidden() : fileExists(name);
+        return fileExists(name);
     }
 
     /** The names that have a file, sorted; files whose names break the rule are listed by {@link #misnamed()}. */
     public List<String> names() {
         List<String> out = new ArrayList<>();
         if (!Files.isDirectory(dir)) {
-            return overlay == null ? out : withOverlay(out);
+            return out;
         }
         try (Stream<Path> s = Files.list(dir)) {
             s.filter(Files::isRegularFile).map(p -> p.getFileName().toString())
@@ -260,19 +236,7 @@ public final class ConnectorFiles {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-        return overlay == null ? out : withOverlay(out);
-    }
-
-    private List<String> withOverlay(List<String> onDisk) {
-        java.util.TreeSet<String> all = new java.util.TreeSet<>(onDisk);
-        overlay.all().forEach((n, e) -> {
-            if (e.hidden()) {
-                all.remove(n);
-            } else {
-                all.add(n);
-            }
-        });
-        return new ArrayList<>(all);
+        return out;
     }
 
     /** Files in the folder that are not connector files by name (a {@code .yml}, upper case, spaces): reported, never loaded. */
@@ -292,16 +256,10 @@ public final class ConnectorFiles {
 
     /** The raw text, or null when there is no such file. */
     public String text(String name) {
-        Path f = file(name);
-        ConnectorOverlay o = overlay;
-        ConnectorOverlay.Entry e = o == null ? null : o.get(name);
-        if (e != null) {
-            return e.hidden() ? null : e.text();
-        }
-        return fileText(f);
+        return fileText(file(name));
     }
 
-    /** The file's own text (the base), or null. */
+    /** The file's text, or null. */
     public String fileText(String name) {
         return fileText(file(name));
     }
@@ -327,12 +285,6 @@ public final class ConnectorFiles {
             return null;
         }
         Definition d = parse(name, text);
-        ConnectorOverlay o = overlay;
-        ConnectorOverlay.Entry shared = o == null ? null : o.get(name);
-        if (shared != null) {
-            return new Definition(d.name(), d.plugin(), d.enabled(), d.kinds(), d.description(), d.settings(), text, etag(text), shared.at(),
-                    d.requires(), d.compute(), d.writes());
-        }
         try {
             return new Definition(d.name(), d.plugin(), d.enabled(), d.kinds(), d.description(), d.settings(), text, etag(text),
                     Files.getLastModifiedTime(file(name)).toInstant(), d.requires(), d.compute(), d.writes());
@@ -537,33 +489,6 @@ public final class ConnectorFiles {
 
     /** Writes the text atomically, keeping the previous text in the history; creates the folder on first write. */
     public void write(String name, String text) {
-        write(name, text, null);
-    }
-
-    /**
-     * Writes the text. With an overlay attached it is a shared edit (compare-and-set against {@code expectedEtag}, the etag of the
-     * text the edit was based on, null for no check); otherwise the file, atomically, keeping the previous text in the history.
-     */
-    public void write(String name, String text, String expectedEtag) {
-        Path f = file(name);
-        ConnectorOverlay o = overlay;
-        if (o != null) {
-            o.put(name, text, expectedEtag, fileText(f));
-            return;
-        }
-        writeFile(name, text);
-    }
-
-    /**
-     * Writes what the server itself made (a pack's template generated or followed at an upgrade or a pack reload): the file, never the
-     * shared overlay, which holds only what an administrator saved. An override already there stays until an administrator removes it
-     * (Admin -> Connectors shows it and what it changes).
-     */
-    public void writeGenerated(String name, String text) {
-        writeFile(name, text);
-    }
-
-    private void writeFile(String name, String text) {
         Path f = file(name);
         try {
             Files.createDirectories(dir);
@@ -578,8 +503,7 @@ public final class ConnectorFiles {
 
     /**
      * Keeps a copy of the connector's file on disk beside it, {@code <name>.yaml.<label>-<yyyyMMdd-HHmmss>.bak} (not a {@code .yaml}, so
-     * never read as a connector), before an automatic change; returns it, or null when there is no file on disk (a shared edit's earlier
-     * text stays in the shared history) or it cannot be written.
+     * never read as a connector), before an automatic change; returns it, or null when there is no file or it cannot be written.
      */
     public Path keepBeside(String name, String label) {
         try {
@@ -593,6 +517,34 @@ public final class ConnectorFiles {
             return b;
         } catch (IOException | RuntimeException e) {
             return null;
+        }
+    }
+
+    /** Keeps this text beside the connector's file as {@code <name>.yaml.<label>-<yyyyMMdd-HHmmss>.bak}; returns the copy. */
+    public Path keepTextBeside(String name, String label, String text) {
+        try {
+            Files.createDirectories(dir);
+            Path f = file(name);
+            String at = java.time.LocalDateTime.now(java.time.ZoneOffset.UTC).format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
+            Path b = f.resolveSibling(f.getFileName() + "." + label + "-" + at + ".bak");
+            Files.writeString(b, text, StandardCharsets.UTF_8);
+            return b;
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    /** Adds an earlier text to the history under its id, unless it is already there (an upgrade bringing old history in). */
+    public void importRevision(String name, String id, String text) {
+        requireName(name);
+        Path to = state.resolve(HISTORY).resolve(name + "." + id + ".yaml");
+        try {
+            if (!Files.exists(to)) {
+                Files.createDirectories(to.getParent());
+                Files.writeString(to, text, StandardCharsets.UTF_8);
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 
@@ -646,19 +598,6 @@ public final class ConnectorFiles {
     /** Removes the file after keeping its text in the history. */
     public boolean delete(String name) {
         Path f = file(name);
-        ConnectorOverlay o = overlay;
-        if (o != null) {
-            String now = text(name);
-            if (now == null) {
-                return false;
-            }
-            if (fileExists(name)) {
-                o.hide(name, now);
-            } else {
-                o.remove(name, now);
-            }
-            return true;
-        }
         try {
             if (!Files.isRegularFile(f)) {
                 return false;
@@ -669,32 +608,6 @@ public final class ConnectorFiles {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-    }
-
-    /**
-     * Takes a connector out for an uninstall: removes its shared overlay, if any (the text stays in the shared history), and the
-     * file of that name, if any (its text kept in the file history). True when there was something to remove.
-     */
-    public boolean removeEverywhere(String name) {
-        requireName(name);
-        String now = text(name);
-        Path f = file(name);
-        boolean gone = false;
-        try {
-            if (Files.isRegularFile(f)) {
-                backup(name);
-                Files.delete(f);
-                gone = true;
-            }
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-        ConnectorOverlay o = overlay;
-        if (o != null && o.get(name) != null) {
-            o.remove(name, now == null ? "" : now);
-            gone = true;
-        }
-        return gone;
     }
 
     private void backup(String name) throws IOException {
@@ -717,10 +630,6 @@ public final class ConnectorFiles {
         requireName(name);
         Path h = state.resolve(HISTORY);
         List<Revision> out = new ArrayList<>();
-        ConnectorOverlay o = overlay;
-        if (o != null) {
-            out.addAll(o.history(name));
-        }
         if (!Files.isDirectory(h)) {
             return out;
         }
@@ -744,11 +653,6 @@ public final class ConnectorFiles {
         requireName(name);
         if (!id.matches("\\d{8}T\\d{9}(-\\d+)?")) {
             return null;
-        }
-        ConnectorOverlay o = overlay;
-        String shared = o == null ? null : o.revisionText(name, id);
-        if (shared != null) {
-            return shared;
         }
         Path f = state.resolve(HISTORY).resolve(name + "." + id + ".yaml");
         try {

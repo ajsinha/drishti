@@ -130,7 +130,7 @@ items:
   - id: approvals-access-kinds
     what: decision
     about: "The Approvals queue's access kinds: users and roles, API keys, captures, pack changes and admin configuration as four-eyes items (today each takes effect at once, by an administrator, audited); the queue and its API take a new kind as one more ApprovalSource"
-    release: 2.9.11.i
+    release: 2.9.11.j
     treatment: under-construction
     contracts: ["docs/guides/USER_GUIDE.md#approvals", "docs/architecture/SHARED_SCREENS.md#2-one-approvals-queue"]
 

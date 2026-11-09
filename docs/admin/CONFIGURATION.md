@@ -370,10 +370,9 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | (no variable) | `drishti.packs.state-store` | `content` | Packs switched off in Admin: `content` (`admin/pack-state.json`, `drishti_pack_state` imported once) or `jpa`. |
 | (no variable) | `drishti.loads.store` | `content` | Load history: `content` (`loads/<pack>.json`, each pack's `drishti.loads.dir` file imported on first read) or `file` (one node). |
 | (no variable) | `drishti.loads.config-store` | `content` | Per-pack data loads overrides saved through Admin: `content` (`loads/config/<pack>.yaml` in the content store, every node; the `drishti.loads.dir/config` files imported once and kept) or `file` (one node). |
-| (no variable) | `drishti.connectors.store` | `content` | Connector edits made through Admin: `content` (a shared overlay `config/connectors/<name>.yaml` in the content store that every node applies over its file) or `file` (written into the node's own `config/connectors`, one node). |
 | (no variable) | `drishti.connectors.template-updates` | (from `config/connectors-settings.yaml`, else `additive`) | Connectors behind their pack's template: `additive` adds missing kinds and settings automatically (keeping edits), `notify` only lists them in Admin → Connectors → Template updates, `off`. Set it in `config/connectors-settings.yaml` (`template-updates:`; the file is named by `drishti.connectors.settings-file`); this property overrides the file. |
 | (no variable) | `drishti.connectors.template-check-ms` | `60000` | How often connectors are compared with their pack's template. |
-| (no variable) | `drishti.store.watch-ms` | `2000` | How often each node asks the content store what changed, to apply another node's shared edits (connectors, load overrides, pack state). |
+| (no variable) | `drishti.store.watch-ms` | `2000` | How often each node asks the content store what changed, to apply another node's shared edits (load overrides, pack state). |
 | (no variable) | `drishti.governance.store` | `content` | Sutra proposals: `content` (`governance/proposals/`, the `drishti.governance.dir` folder imported once) or `file` (one node). |
 | `DRISHTI_CONSOLE_URL` | `drishti.collab.console-url` | empty | The console's address, put in front of `/share/sh_…` in the links shares carry; email stays off while it is empty. |
 | `DRISHTI_MAIL_FROM` | `drishti.collab.email.from` | `drishti@localhost` | The From address of collaboration email. |
@@ -6238,8 +6237,8 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_DELTA_ROOT` | `drishti.var.official.root` (engine), `drishti.ccr.exposure.official.root` (engine), the demo lake's root (config/lakes/demo.yaml) | `./data/delta` | engine, packs | a folder or s3://bucket/prefix |
 | `DRISHTI_DEMO_ENABLED` | `drishti.sources.plugins.demo.enabled`, `drishti.var.system-baskets.seed` (engine) | `true` | engine, server | run the demo source (the packs' sample data) |
 | `DRISHTI_DOCTOR_PORTS` | drishti.py doctor | none | tools | The ports doctor checks |
-| `DRISHTI_DRAIN_TOKEN` | rolling.py, deploy/bin/drishti-node.sh | none | tools | An administrator's personal API token with the node:drain scope: the stop hooks and the rolling upgrade runner drain a server with it (secret; else DRISHTI\_DRAIN\_TOKEN\_FILE, else DRISHTI\_TOKEN) |
-| `DRISHTI_DRAIN_WAIT` | deploy/bin/drishti-node.sh | `90` | tools | Seconds the stop hook waits for safeToStop after the drain (ECS on Fargate: at most 120 s for the whole stop) |
+| `DRISHTI_DRAIN_TOKEN` | rolling.py, bin/drishti-node.sh | none | tools | An administrator's personal API token with the node:drain scope: the stop hooks and the rolling upgrade runner drain a server with it (secret; else DRISHTI\_DRAIN\_TOKEN\_FILE, else DRISHTI\_TOKEN) |
+| `DRISHTI_DRAIN_WAIT` | bin/drishti-node.sh | `90` | tools | Seconds the stop hook waits for safeToStop after the drain (ECS on Fargate: at most 120 s for the whole stop) |
 | `DRISHTI_DUCKDB_MEMORY` | duckdb profile | `1GB` | profile | The shared DuckDB instance's memory limit |
 | `DRISHTI_DUCKDB_PATH` | duckdb profile | `./data/duckdb/drishti.duckdb` | profile | The duckdb profile's file (one file, a schema per domain) |
 | `DRISHTI_EDITION` | `drishti.edition` | empty | server | The edition (docs/guides/ADMIN\_GUIDE.md): blank is the full Drishti; risk is Drishti Risk. It names config/lenses/&lt;module&gt;/&lt;lens&gt;.yaml, read as a layer under the site's configuration before the packs load; every member of a cluster sets the same value, and the console learns it from /api/v1/about. A change needs a restart. |
@@ -6355,7 +6354,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_NET_WATCH` | `drishti.net.watch` | `auto` | server | auto (file events, polling as a fallback) \| poll \| off |
 | `DRISHTI_NEWS_ENABLED` | news connector enabled | `false` | packs | The news-and-markets pack's news connector on (names leave the network) |
 | `DRISHTI_NEWS_URL` | news base URL | `https://news.google.com/rss/search` | packs | Where the news connector asks |
-| `DRISHTI_NODE_URL` | deploy/bin/drishti-node.sh | `http://localhost:18480` | tools | The server the stop hook drains and checks |
+| `DRISHTI_NODE_URL` | bin/drishti-node.sh | `http://localhost:18480` | tools | The server the stop hook drains and checks |
 | `DRISHTI_OFFLINE` | `drishti.offline.enabled` | `false` | server | Offline mode, for a machine with no internet (a demonstration laptop): connectors of the plugins below, whose data comes from public web services, never start, whatever their files say; Admin -&gt; Connectors shows them "off (offline mode)", and their kinds are served by the other connectors that hold them (news-and-markets: news-store, built from the captured snapshot by `drishti.py lake demo`). |
 | `DRISHTI_OIDC_CLIENT_ID` | `drishti.security.oidc.client-id`, `auth.oidc.client_id` | empty | console, server | the OIDC client id (the token's audience) |
 | `DRISHTI_OIDC_CLIENT_SECRET` | `auth.oidc.client_secret` | empty | console | from the environment only; empty for a public client (PKCE alone) |

@@ -218,9 +218,9 @@ class Running(unittest.TestCase):
 
 
 class StopHook(unittest.TestCase):
-    """deploy/bin/drishti-node.sh: POSIX sh, its help needs nothing, a drain against a server that does not answer gives up at once."""
+    """bin/drishti-node.sh: POSIX sh, its help needs nothing, a drain against a server that does not answer gives up at once."""
 
-    SCRIPT = ROOT / "deploy" / "bin" / "drishti-node.sh"
+    SCRIPT = ROOT / "bin" / "drishti-node.sh"
 
     def test_it_parses_and_helps(self):
         for sh in ("sh", "bash"):
