@@ -16,7 +16,6 @@
 package com.ash.drishti.plugin.icebergext;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.ColumnSet;

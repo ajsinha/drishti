@@ -15,7 +15,6 @@
  */
 package com.ash.drishti.iceberg.meta;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /** A sort order: what a table's files are sorted by (Drishti's layout: {@code id} ascending). Order 0 is unsorted. */

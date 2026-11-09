@@ -16,7 +16,6 @@
 package com.ash.drishti.plugin.iceberg;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.EntityRef;
