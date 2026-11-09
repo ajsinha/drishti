@@ -345,7 +345,7 @@ Nested structures:
 | Path | Fields |
 |---|---|
 | `DEFINITION` | `MEMBERS` (list of objects): For a BASKET system basket: the positions and trades someone picked (a trade brings that part of its position)., `NODE` (string): For a HIERARCHY system basket: the node of the bank's hierarchy whose positions it holds (every book under it)., `RULE` (string): For a RULE system basket: the condition a position's columns must meet to be in it, checked on each business date. |
-| `DEFINITION.MEMBERS[]` | `POSITION_ID` (string), `TRADE_ID` (string) |
+| `DEFINITION.MEMBERS[]` | `POSITION_ID` (string) |
 | `ROLLS_UP_TO` | `KIND` (string), `ID` (string): The node the system basket reports under (the bank, a division, a legal entity, a desk or a book). |
 
 Links: `PORTFOLIO_ID` → `system-basket`.
@@ -399,7 +399,7 @@ Fields, from 2 sample documents:
 | `BATCH_ID` | string | `B-2026-09-30-01` | — |
 | `RESTATEMENT` | integer | `0` | — |
 | `RUN_KIND` | string | `FULL` | — |
-| `POSITION_ID` | string | `POS-BOOK-COMM-1~XCH-CMD_FUTURE-USD-03` | link to `position` (in 50%) |
+| `POSITION_ID` | string | `POS-BOOK-EQD-2~SEC-WARRANT-USD-01` | link to `position` (in 50%) |
 | `TRADE_IDS` | list of strings |  | link to `trade` (in 50%) |
 
 Links: `COUNTERPARTY` → `counterparty`, `DESK` → `desk`, `LEGAL_ENTITY` → `legal-entity`, `PORTFOLIO` → `book`, `POSITION_ID` → `position`, `TRADE_ID` → `trade`, `TRADE_IDS` → `trade`, `TT_BOOK` → `book`.
@@ -417,18 +417,13 @@ Fields, from 2 sample documents:
 | Field | Type | Example | Description |
 |---|---|---|---|
 | `VALUE_TYPE` | string | `PV` | — |
-| `GRAIN` | string | `TRADE` | — |
-| `TRADE_ID` | string | `1000054` | link to `trade` (in 50%) |
+| `GRAIN` | string | `POSITION` | — |
+| `POSITION_ID` | string | `POS-BOOK-COMM-1~1000054` | link to `position` (in 50%) |
 | `CURRENCY` | string | `EUR` | The currency both PVs are in: the trade's own currency (one stated currency for a whole file is the same thing). |
 | `SOURCE_SYSTEM` | string | `ENDUR` | — |
-| `SCENARIO_PV_ID` | string | `SPV-1000054-HS-509` | link to `scenario-pv` |
-| `SECURITY_ID` | string | `XCH-ComFut-EUR-03` | — |
-| `INSTRUMENT` | string | `ENGY-SWAP EUR 2026-09` | — |
+| `SCENARIO_PV_ID` | string | `SPV-POS-BOOK-COMM-1~1000054-HS-509` | link to `scenario-pv` |
 | `BUSINESS_DATE` | date | `2026-09-30` | — |
-| `SCENARIO_SET_ID` | string | `HS-509` | — |
-| `TRADE_VERSIONS` | string | `v2` | — (in 50%) |
 | `TRADE_STATUS` | string | `VALIDATED` | — |
-| `MATURITY_DATE` | date | `2026-09-30` | — |
 | `LEGAL_ENTITY` | string | `LE-NY` | link to `legal-entity` |
 | `DIVISION` | string | `DIV-MARKETS` | — |
 | `DESK` | string | `DESK-COMM` | link to `desk` |
@@ -438,6 +433,10 @@ Fields, from 2 sample documents:
 | `STRATEGY` | null |  | — |
 | `PRODUCT_GROUP` | string | `Commodity` | — |
 | `PRODUCT_TYPE` | string | `ComSwap` | — |
+| `SCENARIO_SET_ID` | string | `HS-509` | — |
+| `SECURITY_ID` | string | `SEC-WARRANT-USD-01` | — |
+| `INSTRUMENT` | string | `ENGY-SWAP EUR 2026-09` | — |
+| `MATURITY_DATE` | date | `2026-09-30` | — |
 | `COUNTERPARTY` | string | `CP-NORTHPLAINS` | link to `counterparty` |
 | `DIRECTION` | string | `SHORT` | — |
 | `QUANTITY` | number | `-18000.0` | — |
@@ -453,8 +452,9 @@ Fields, from 2 sample documents:
 | `BATCH_ID` | string | `B-2026-09-30-01` | — |
 | `RESTATEMENT` | integer | `0` | — |
 | `RUN_KIND` | string | `FULL` | — |
-| `POSITION_ID` | string | `POS-BOOK-COMM-1~XCH-ComFut-EUR-03` | link to `position` (in 50%) |
 | `TRADE_IDS` | list of strings |  | link to `trade` (in 50%) |
+| `TRADE_ID` | string | `MX-20000274` | link to `trade` (in 50%) |
+| `TRADE_VERSIONS` | string | `v4` | — (in 50%) |
 
 Links: `COUNTERPARTY` → `counterparty`, `DESK` → `desk`, `LEGAL_ENTITY` → `legal-entity`, `PORTFOLIO` → `book`, `POSITION_ID` → `position`, `SCENARIO_PV_ID` → `scenario-pv`, `TRADE_ID` → `trade`, `TRADE_IDS` → `trade`, `TT_BOOK` → `book`.
 

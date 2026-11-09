@@ -38,7 +38,7 @@ engine design and the data model); they were deleted (in git at tag v2.9.5). Whe
 the code wins and the difference is marked **Design differs**.
 
 Every number below that is not a hand-made example was read from a server over the committed test data: the market-risk pack's VaR
-inputs of **2026-09-30** (`data/testdata/market-risk/`: 9,572 live trades, 7,984 derived positions (7,993 once the limit letters split nine of them), 131 hierarchy nodes (88 MGMT and
+inputs of **2026-09-30** (`data/testdata/market-risk/`: the demo runs at **position grain**, every system's scenario PVs per position, as a bank's production batch sends them ([section 15.13](#1513-inputs-any-form-any-grain)): 7,993 position records, 7,984 positions summing 9,572 live trades (nine positions sit under two limit letters, one record per letter), 131 hierarchy nodes (88 MGMT and
 LEGAL, 43 limit letters), 28 system basket
 definitions, 509 scenario days), built into a lake with `drishti.py lake demo --as-of data`. The vectors are synthetic (a correlated,
 fat-tailed factor market), not prices.
@@ -2802,8 +2802,8 @@ day*) reads the table at that instant, within the 7 years kept.
 A bank's batch may send a trade's scenario P&L in a second form (product owner, 2026-10-27): the trade **revalued under each scenario**
 and its **base PV** of the same run, both in the trade's own currency, instead of the P&L vector. Drishti computes the P&L itself when it
 loads the date, in USD, and from there in any reporting currency ([section 15.10](#1510-reporting-currency)). The two forms
-live side by side: a date may hold P&L vectors for some trades and scenario PVs for others (the demo does: its Endur trades come as
-scenario PVs); a trade is in one form only (a trade id in both refuses the date, `DRS-5202`). The P&L-vector form of section 15.2 is
+live side by side: a date may hold P&L vectors for some trades and scenario PVs for others (the demo sends every system's positions as
+scenario PVs, section 15.13); a trade is in one form only (a trade id in both refuses the date, `DRS-5202`). The P&L-vector form of section 15.2 is
 unchanged.
 
 **The decisions (product owner, 2026-10-27):** (1) PVs are in **each trade's own currency**, its `CURRENCY`; one stated currency for a
@@ -2978,7 +2978,7 @@ portfolio figures stay in USD.
 
 A pricing system sends a business day's trades in either form, side by side: **P&L vectors** in USD (`pnl-vector`, section 15.2) or
 **scenario PVs** in each trade's own currency with its base PV (`scenario-pv`, section 15.9), with the **scenario FX** (`fx-scenario`)
-when it has it; during the day, only the changed trades (section 8.4); per trade or per position (section 15.13). **This is the
+when it has it; during the day, only the changed trades (section 8.4); per trade or per position (section 15.13; the demo, and most banks' batches, per position). **This is the
 contract a pricing system sends:** every record leads with what it is (`VALUE_TYPE`, `GRAIN`, its id, `CURRENCY`, `SOURCE_SYSTEM`); JSONL, one
 JSON object per line, UTF-8, a file `.jsonl` (or `.jsonl.gz`), each line exactly the fields of its kind's contract
 (`config/packs/banking/market-risk/contracts/{scenario-pv,pnl-vector,fx-scenario}.contract.yaml`, which say the same), no other. Sample lines
@@ -3065,8 +3065,7 @@ position as PVs beside Murex per trade as P&L vectors).
 **What still adds up.** A supplied position is one row of the date, its id its `POSITION_ID`, placed in its book's nodes in both
 hierarchies: the tree, portfolios, `LE:`, `DESK:`, `BOOK:`, `CPTY:` (when the record has one), baskets and what-if at position level,
 captures, official records, the reporting currencies and the per-currency node totals, intraday files and Kafka (keyed by
-`POSITION_ID`, the latest `COMPUTED_AT` winning). **What degrades, in words:** `TRD:<id>` of a supplied position answers *a position its
-source system sends whole (position grain): ask POS:<id>*; contributions by trade list it as the position it is; a trade page of such a
+`POSITION_ID`, the latest `COMPUTED_AT` winning). **What degrades, in words:** `TRD:<id>` of a supplied position counts as the position and says so (*counted as POS:<id>*), and the trade inside it answers *in the position …, which its source system sends whole (position grain): ask POS:<id>*; contributions by trade list it as the position it is; a trade page of such a
 system says *its source system sends PVs per position: the trade is in the supplied position …* and links the position (when
 `TRADE_IDS` names it); the position page lists the named trades without trade-level figures; Trade currency on a trade page is not
 shown for them.
@@ -3078,6 +3077,20 @@ scenario FX on the date rejects the row (`DRS-5207`). The trade's own currency, 
 present it must say the same (`DRS-5208`). **The currency caveat:** scenario PVs in their own currency convert exactly into any reporting
 currency with each scenario's FX (section 15.11); a P&L vector's conversion is approximate, since the currency move inside the trade is
 already folded into the vector, so `inputsBySystem.<system>.tradesWithoutPv` counts the records that limit multi-currency exactness.
+
+**Loading production position-level scenario PVs.** What the owner's batch must carry, per record of `scenario-pv` (JSONL, one object per line):
+
+| Field | Required | What |
+|---|---|---|
+| `VALUE_TYPE` `PV`, `GRAIN` `POSITION`, `POSITION_ID` | yes | what the record is; `POSITION_ID` unique on the date |
+| `CURRENCY`, `SCENARIO_PV`, `BASE_PV`, `VALUATION_DATE`, `BASE_VALUATION_DATE` | yes | the PVs, in one currency (`TRADE_CURRENCY` when the position's own differs: USD PVs of an EUR position), with `fx-scenario` for every non-USD `CURRENCY` |
+| `SOURCE_SYSTEM` | yes | selects its pin below |
+| `BUSINESS_DATE`, `SCENARIO_SET_ID`, `BATCH_ID`, `COMPUTED_AT`, `RUN_KIND` `FULL` | yes | the run; one `BATCH_ID` a date, `SCENARIO_SET_ID` `HS-509` (509 values) or the configured window (250) |
+| `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `LIMIT_LETTER` | yes | every hierarchy level column promoted: the book placement and tree are read from the record, never derived |
+| `TRADE_STATUS`, `MATURITY_DATE`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `SECURITY_ID`, `COUNTERPARTY`, `DIRECTION`, `QUANTITY`, `TAGS` | as available | scopes, baskets, rules |
+| `TRADE_IDS` | optional | the trades the position sums: their pages then link it, and `TRD:<trade>` answers in words |
+
+Rules: **one form and one grain per system per date** (`DRS-5210`: a date holding a system's positions and trades, or PVs and P&L vectors, is refused). A position under two nodes of a hierarchy is **one record per node**, its id `<position>@<level value>` (the demo: `POS-BOOK-RATES-1~XCH-BOND_FUTURE-AUD-01@DIV-MARKETS/LL-0010`), so every record has one value per level column. Pin it (`drishti.var.inputs`): `ENDUR: {form: pv, grain: position}` and the same for each system; `make_var_data.py --inputs-config` prints the demo's. Then load it (a `.ready` beside the file; [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md), section 3.1), with `fx-scenario` and `scenario-set` for the date.
 
 **Visibility.** Every answer's provenance carries `inputsBySystem`: per source system on the date, `form`, `grain`, `rows`,
 `decidedBy` (*record fields*, or *record fields, agreeing with the pin pv, position*) and `tradesWithoutPv`; `GET /api/v1/risk/var/status`
@@ -5379,7 +5392,7 @@ dates to the latest business days when it is built, so a file dated 2026-09-30 a
 |---|---|---|---|---|
 | [`scenario-set`](#362-scenario-set-the-scenario-days) | the ordered scenario days every vector lines up with | **yes** | `market-risk/scenario-set/scenario-set.tar` | [15.3](#153-scenario-set-the-scenario-days) |
 | [`scenario-pv`](#363-scenario-pv-scenario-pvs-per-trade-preferred) | each trade's base PV and its PV under each scenario; Drishti computes the P&L | **one of the two**, per trade | `market-risk/scenario-pv/scenario-pv-*.tar` | [15.9](#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency) |
-| [`pnl-vector`](#364-pnl-vector-pl-vectors-per-trade-accepted) | each trade's scenario P&L, computed by the source | **one of the two**, per trade | `market-risk/pnl-vector/pnl-vector-*.tar` | [15.2](#152-pnl-vector-one-pl-vector-per-trade) |
+| [`pnl-vector`](#364-pnl-vector-pl-vectors-per-trade-accepted) | each trade's scenario P&L, computed by the source | **one of the two**, per trade | no sample in the demo data | [15.2](#152-pnl-vector-one-pl-vector-per-trade) |
 | [`fx-scenario`](#365-fx-scenario-scenario-fx-rates) | each currency's rate on each scenario day, to convert scenario PVs to USD | when scenario PVs are in other currencies (else derived from `fx-spot`) | `market-risk/fx-scenario/fx-scenario.tar` | [15.9](#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency) |
 | [`fx-spot`](#366-fx-spot-fx-history) | FX history: today's rates, reporting currencies, scenario FX when not supplied | for other currencies | `market-data/fx-spot/fx-spot.*.jsonl.gz` | [15.10](#1510-reporting-currency) |
 | [`var-limit`](#367-var-limit-var-limits) | a node's or a system basket's VaR limit (the Limit column, limit use) | optional | `market-risk/var-limit/var-limit.*.jsonl.gz` | [15.15](#1515-var-limit-the-nodes-var-limits) |
@@ -5413,7 +5426,7 @@ so a trade's position is known without reading the trade itself.
 - **`STATUS`:** `ok`, or a pricing failure the completeness checks show.
 - **`BATCH_ID`, `RESTATEMENT`, `RUN_KIND`:** which run produced it; a restatement replaces the earlier row.
 
-- **Data contract:** [`scenario-pv`](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv) (SPV), key `SCENARIO_PV_ID`; 39 fields, 28 required; the file [`scenario-pv.contract.yaml`](../../config/packs/banking/market-risk/contracts/scenario-pv.contract.yaml).
+- **Data contract:** [`scenario-pv`](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv) (SPV), key `SCENARIO_PV_ID`; 40 fields, 28 required; the file [`scenario-pv.contract.yaml`](../../config/packs/banking/market-risk/contracts/scenario-pv.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#scenario-pv) (files `data/testdata/market-risk/scenario-pv/scenario-pv-*.tar`).
 
 ### 36.4 `pnl-vector`: P&L vectors per trade (accepted)
@@ -5427,7 +5440,7 @@ downstream knows which form a trade came in.
 - **`PV`:** today's value, shown beside the P&L.
 
 - **Data contract:** [`pnl-vector`](../contracts/packs/market-risk.md#pnlv-pl-vector-509-scenarios-pnl-vector) (PNLV), key `VECTOR_ID`; 39 fields, 27 required; the file [`pnl-vector.contract.yaml`](../../config/packs/banking/market-risk/contracts/pnl-vector.contract.yaml).
-- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#pnl-vector) (files `data/testdata/market-risk/pnl-vector/pnl-vector-*.tar`).
+- **Example:** no sample in the demo data.
 
 ### 36.5 `fx-scenario`: scenario FX rates
 

@@ -146,23 +146,29 @@ class Stress:
                 self.trade_vectors[tid] = [round(q * per_unit * unit[j] + own * _shock(tr)) for j in range(m.n)]
 
     def rows(self) -> dict[str, list[dict]]:
-        """The stress set's documents of the date, by kind: its scenario set, P&amp;L vectors, scenario PVs and scenario FX."""
+        """The stress set's documents of the date, by kind: its scenario set, P&amp;L vectors, scenario PVs and scenario FX. Each record is
+        the stress set's version of the normal set's, at the same grain: a trade's own, or a position's, summed from its trades' stress rows."""
         demo, b = self.demo, self.demo.batch
         pnl, spv = [], []
-        for row in b.vector_rows:
-            if row.get("GRAIN") != "TRADE":
-                continue                                               # the demo sends every record at trade grain
+
+        def trade(row: dict) -> dict:
+            """A trade's stress row from its normal-set row."""
             tid = row["TRADE_ID"]
-            pnl.append({**row, "VECTOR_ID": f"PNL-{tid}-{SET}", "SCENARIO_SET_ID": SET, "PNL": self.trade_vectors[tid]})
-        for row in b.pv_rows:
-            if row.get("GRAIN") != "TRADE":
-                continue
-            tid, ccy = row["TRADE_ID"], row["CURRENCY"]
+            if "SCENARIO_PV" not in row:
+                return {**row, "VECTOR_ID": f"PNL-{tid}-{SET}", "SCENARIO_SET_ID": SET, "PNL": self.trade_vectors[tid]}
+            ccy = row["CURRENCY"]
             base, r0 = row["BASE_PV"], self.fx.today(ccy)                 # the trade's base PV is the normal set's: one valuation today
             pvs = [round(base + x / r0, 2) for x in self.trade_vectors[tid]]
             self.engine_vectors[tid] = SFX.engine_pnl(self.fx, ccy, base, pvs)
-            spv.append({**row, "SCENARIO_PV_ID": f"SPV-{tid}-{SET}", "SCENARIO_SET_ID": SET, "BASE_PV": base, "SCENARIO_PV": pvs})
-        key = lambda r: (r["LEGAL_ENTITY"], r["DESK"], r["TT_BOOK"], r["TRADE_ID"])   # noqa: E731
+            return {**row, "SCENARIO_PV_ID": f"SPV-{tid}-{SET}", "SCENARIO_SET_ID": SET, "SCENARIO_PV": pvs}
+
+        for row in b.vector_rows + b.pv_rows:
+            if row.get("GRAIN") == "TRADE":
+                (spv if "SCENARIO_PV" in row else pnl).append(trade(row))
+        for pid, sys, members in b.supplied_parts:
+            kind, row = b.supply(pid, sys, [trade(m) for m in members], SET)
+            (spv if kind == "scenario-pv" else pnl).append(row)
+        key = lambda r: (r["LEGAL_ENTITY"], r["DESK"], r["TT_BOOK"], str(r.get("TRADE_ID") or r.get("POSITION_ID")))   # noqa: E731
         return {"scenario-set": [self.scenario_set()], "pnl-vector": sorted(pnl, key=key), "scenario-pv": sorted(spv, key=key),
                 "fx-scenario": [{**x, "SOURCE": "demo-stress-model"} for x in self.fx.rows(demo.cob, SET, f"B-{demo.cob}-01")]}
 

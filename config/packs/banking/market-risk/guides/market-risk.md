@@ -148,7 +148,7 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 | `TVAL` | `trade-valuation` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-risk/trade-valuation/` → `lake demo` → connector `risk-store` |
 | `POS` | `position` | computed by Drishti: (the VaR engine derives positions from the trades of pnl-vector when a date loads, docs/guides/VAR_GUIDE.md section 15.6); see the [VaR guide](../../../../../docs/guides/VAR_GUIDE.md) (positions) | nothing to load: computed from its inputs when asked |
 | `PORT` | `system-basket` | computed by Drishti: (the basket store's system scope, var/system-baskets/, docs/guides/VAR_GUIDE.md section 5.7; the demo's from the market-risk pack's seed) | published by the server to `` |
-| `PNLV` | `pnl-vector` | synthetic: `python3 tools/packgen/var/make_var_data.py` | `data/testdata/market-risk/pnl-vector/` → `lake demo` → connector `risk-store` |
+| `PNLV` | `pnl-vector` | synthetic: `python3 tools/packgen/var/make_var_data.py` | `data/testdata/market-risk/pnl-vector/` → connector `risk-store` |
 | `SPV` | `scenario-pv` | synthetic: `python3 tools/packgen/var/make_var_data.py` | `data/testdata/market-risk/scenario-pv/` → `lake demo` → connector `risk-store` |
 | `FXS` | `fx-scenario` | synthetic: `python3 tools/packgen/var/make_var_data.py` | `data/testdata/market-risk/fx-scenario/` → `lake demo` → connector `risk-store` |
 | `SSET` | `scenario-set` | synthetic: `python3 tools/packgen/var/make_var_data.py` | `data/testdata/market-risk/scenario-set/` → `lake demo` → connector `risk-store` |

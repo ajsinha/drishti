@@ -13,15 +13,15 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The morning run of a stand-in pricing system: a full business day's scenario PVs and P&L vectors, and the scenario FX, as JSONL.
+"""The morning run of a stand-in pricing system: a full business day's scenario PVs (or P&L vectors), and the scenario FX, as JSONL.
 
-    python tools/pvgen/morning.py [--date 2026-10-27] [--pv-systems ENDUR] [--pnl-systems CALYPSO,MUREX] [--all-vectors]
+    python tools/pvgen/morning.py [--date 2026-10-27] [--grain position|trade] [--pv-systems ENDUR,CALYPSO,MUREX] [--pnl-systems SYS,...] [--all-vectors]
                                   [--out DIR] [--gzip] [--lake DIR [--server URL] [--token-file F]] [--dry-run]
 
 Every live trade of the test data (data/testdata: Endur, Calypso and Murex) is valued by the demo's factor model
-(tools/packgen/var/make_var_data.py) over the 509 scenario days: the trades of ``--pv-systems`` (default ENDUR) as scenario PVs in their
-own currency with their base PV (``scenario-pv``), the others as P&L vectors in USD (``pnl-vector``), and every currency's scenario FX
-(``fx-scenario``). ``--all-vectors`` sends every trade as a P&L vector, exactly as before 2.9.4. The rows are the contract a pricing
+(tools/packgen/var/make_var_data.py) over the 509 scenario days, the demo's morning by default: every system per position (``--grain position``)
+as scenario PVs (``scenario-pv``: ``--pv-systems``, default all three), each record a position naming its trades; systems left out of it as P&L
+vectors in USD (``pnl-vector``), and every currency's scenario FX (``fx-scenario``); ``--grain trade`` sends each trade its own record. The rows are the contract a pricing
 system sends: one JSON object per line, exactly the contract's fields, ``RUN_KIND: FULL``; ``--date`` moves them to another business date
 (the demo lake's, today's). Files, named by the load rules (docs/guides/DATA_LAKE_GUIDE.md): ``<out>/morning-<date>/
 scenario-pv.<date>.jsonl``, ``pnl-vector.<date>.jsonl``, ``fx-scenario.<date>.jsonl`` (``.jsonl.gz`` with ``--gzip``). ``--lake`` writes them into the lake (``drishti.py lake build``, replacing the date), ``--server`` then raises the data-load
@@ -42,9 +42,10 @@ def main(argv=None) -> int:
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--testdata", default=str(C.ROOT / "data" / "testdata"), help="the test data the trades are read from")
     p.add_argument("--date", help="the business date the rows carry (default: the test data's, 2026-09-30)")
-    p.add_argument("--pv-systems", default="ENDUR", metavar="SYS,SYS", help="systems sent as scenario PVs (default ENDUR)")
+    p.add_argument("--pv-systems", default="ENDUR,CALYPSO,MUREX", metavar="SYS,SYS", help="systems sent as scenario PVs (default all three)")
     p.add_argument("--pnl-systems", default="", metavar="SYS,SYS", help="systems sent as P&L vectors even when listed above")
     p.add_argument("--all-vectors", action="store_true", help="every trade a P&L vector (as before 2.9.4)")
+    p.add_argument("--budget", type=int, default=0, help="at most this many trades a book, whole positions (default 0: every live trade): a small test set")
     p.add_argument("--out", default=str(Path(os.environ.get("DRISHTI_DATA_DIR", C.ROOT / "data")) / "pvgen"),
                    help="the folder the files go to (default <data folder>/pvgen); a subfolder morning-<date>")
     p.add_argument("--gzip", action="store_true", help="write .jsonl.gz")
@@ -55,7 +56,7 @@ def main(argv=None) -> int:
     p.add_argument("--dry-run", action="store_true", help="say what would be written; write nothing")
     a = p.parse_args(argv)
     pv = C.M.pv_systems(a.pv_systems, a.pnl_systems, a.all_vectors)
-    m = C.Morning(Path(a.testdata), pv, a.date, C.grain_systems(a))
+    m = C.Morning(Path(a.testdata), pv, a.date, C.grain_systems(a), a.budget)
     folder = Path(a.out) / f"morning-{m.day}"
     grain = ", per position: " + ", ".join(m.position_systems) if m.position_systems else ""
     print(f"morning run of {m.day}: {len(m.rows['scenario-pv']):,} records as scenario PVs ({', '.join(pv) or 'none'}), "

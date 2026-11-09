@@ -38,7 +38,10 @@ RULES = {
     "PF-SHORT-RISK": ("Short positions, credit and rates", "group-risk", "DIRECTION == 'SHORT' and PRODUCT_GROUP in ('Credit', 'Rates')",
                       ("division", "DIV-MARKETS")),
     "PF-GOVT-BONDS": ("Government bonds", "rates-risk", "PRODUCT_TYPE in ('GOVT_BOND', 'T_BILL', 'MUNI_BOND')", ("division", "DIV-MARKETS")),
-    "PF-LISTED": ("Listed futures and options", "markets-coo", "POSITION_RULE == 'listed'", ("bank", "BANK")),
+    # the pack's listed rule's product types (a position its source system sends whole has POSITION_RULE supplied: the rule reads the product)
+    "PF-LISTED": ("Listed futures and options", "markets-coo", "PRODUCT_TYPE in ('BOND_FUTURE', 'STIR_FUTURE', 'STIR_FUT_OPT', 'EQ_FUTURE_SINGLE', "
+                  "'EQ_INDEX_FUTURE', 'EQ_OPTION_LISTED', 'EQ_INDEX_OPTION', 'CMD_FUTURE', 'CMD_FUT_OPTION', 'ComFut', 'EMISSIONS_FUTURE') "
+                  "and PRODUCT_GROUP != 'Fixed income'", ("bank", "BANK")),
     "PF-OPTIONS": ("Every option position", "group-risk", "'option' in TAGS", ("bank", "BANK")),
     "PF-FX-CROSSES": ("FX away from the dollar", "fx-risk", "PRODUCT_GROUP == 'FX' and CURRENCY in ('JPY', 'GBP', 'CAD', 'CHF', 'EUR')",
                       ("desk", "DESK-FX")),
@@ -113,16 +116,42 @@ def members(demo, spec: dict) -> dict[str, list[str]]:
 
 
 def rows(demo) -> list[dict]:
-    """The portfolio documents of the date: definitions and a VaR limit (an input), never a figure."""
+    """The portfolio documents of the date: definitions and a VaR limit (an input), never a figure. A definition names what the date's
+    records are: a basket's members are positions when the demo sends every system per position (:func:`position_members`)."""
     tv = demo.batch.trade_vectors
     out = []
     for spec in specs(demo):
         mem = members(demo, spec)
-        trades = sorted({t for ts in mem.values() for t in ts})
+        trades = {t for ts in mem.values() for t in ts}
+        if spec["TYPE"] == "BASKET" and demo.batch.supplied_parts:         # held whole at position grain (position_members): the limit too
+            trades |= {t for p in demo.batch.positions if trades & set(p["TRADE_IDS"]) for t in p["TRADE_IDS"]}
+        trades = sorted(trades)
         total = VM.add(tv[t][:demo.n] for t in trades) if trades else [0.0] * demo.n
         limit = demo_limit(spec["PORTFOLIO_ID"], VM.var(total))
-        out.append({**spec, "LIMIT_VAR": limit, "BUSINESS_DATE": demo.cob, "VALID_FROM": "2026-01-02", "VALID_TO": None})
+        out.append({**position_members(demo, spec), "LIMIT_VAR": limit, "BUSINESS_DATE": demo.cob, "VALID_FROM": "2026-01-02", "VALID_TO": None})
     return out
+
+
+def position_members(demo, spec: dict) -> dict:
+    """A basket whose date comes per position (every member a position the batch sends whole): named trades become their positions, and a
+    position split between limit letters becomes its parts (``<position>@<division>/<letter>``). A trade of a fungible position cannot be held on its
+    own at position grain: its whole position is held instead (PF-PARTIAL-FILLS, renamed for it)."""
+    b = demo.batch
+    if spec["TYPE"] != "BASKET" or not b.supplied_parts:
+        return spec
+    parts: dict[str, list[str]] = {}
+    for pid, _, _rows in b.supplied_parts:
+        parts.setdefault(pid.split("@", 1)[0], []).append(pid)
+    of = {t: p["POSITION_ID"] for p in b.positions for t in p["TRADE_IDS"]}
+    seen, out = set(), []
+    for m in spec["DEFINITION"]["MEMBERS"]:
+        whole = m.get("POSITION_ID") or of.get(m.get("TRADE_ID"))
+        for pid in parts.get(whole, []):
+            if pid not in seen:
+                seen.add(pid)
+                out.append({"POSITION_ID": pid})
+    named = {"PF-PARTIAL-FILLS": "Fungible positions under review"}.get(spec["PORTFOLIO_ID"], spec["NAME"])
+    return {**spec, "NAME": named, "DEFINITION": {**spec["DEFINITION"], "MEMBERS": out}}
 
 
 def nice(x: float) -> int:

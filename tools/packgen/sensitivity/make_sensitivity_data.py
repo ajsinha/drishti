@@ -23,7 +23,7 @@ would deliver them:
                             three source systems give it (factor_dictionary.py)
 
 **From the VaR demo's factor model, so the two agree.** The positions are those the server derives from the committed VaR inputs of the
-business date (the pnl-vector and scenario-pv files; the pack's position rules, positions.Rules); each position's factor loadings
+business date (from the VaR batch at trade grain, make_var_data.py; the pack's position rules, positions.Rules); each position's factor loadings
 are the VaR model's (factors.loadings) and its one-sigma daily P&L the same seeded draw the VaR batch uses (positions.Batch). A loading
 becomes a sensitivity by the factor's daily volatility (DAILY_SIGMA): a USD rates position whose one-sigma P&L is 600,000 has a DV01
 of about −100,000 per bp. Rate and credit sensitivities are split onto the two vertices around the position's maturity (MAR21.8); an
@@ -83,18 +83,15 @@ def _h(*parts) -> int:
 
 
 def read_terms(testdata: Path, cob: str) -> list[dict]:
-    """The live trades of the business date with their terms, from the committed VaR inputs (vectors left out)."""
-    rows = []
-    for kind in ("pnl-vector", "scenario-pv"):
-        for part in FF.read_table(testdata / PACK / kind).get(cob, []):
-            if part.label.rsplit("/", 1)[-1].startswith("stress-"):     # the stress set's files: not the date's positions
-                continue
-            for line in part.lines():
-                d = json.loads(line)
-                d.pop("PNL", None)
-                d.pop("SCENARIO_PV", None)
-                rows.append(d)
-    return sorted(rows, key=lambda d: str(d["TRADE_ID"]))
+    """The live trades of the business date with their terms (vectors left out). The committed VaR inputs are per position, so the terms come
+    from the same batch the generator makes them from, at trade grain (tools/packgen/var/make_var_data.py)."""
+    import yaml
+    import make_var_data as M
+    manifest = testdata / "testdata.yaml" if (testdata / "testdata.yaml").is_file() else ROOT / "data" / "testdata" / "testdata.yaml"   # --check works in a copy
+    dates = [d for d in yaml.safe_load(manifest.read_text(encoding="utf-8"))["business-dates"] if d <= cob]
+    b = M.Demo(testdata, dates, pv_systems=("ENDUR",), position_systems=(), usd_pv_systems=()).batch
+    keep = lambda r: {k: v for k, v in r.items() if k not in ("PNL", "SCENARIO_PV")}   # noqa: E731
+    return sorted((keep(r) for r in b.vector_rows + b.pv_rows), key=lambda d: str(d["TRADE_ID"]))
 
 
 def cob_of(testdata: Path) -> str:

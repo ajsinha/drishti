@@ -48,7 +48,7 @@ The VaR data is **synthetic** (a correlated, fat-tailed factor market over the c
 
 **Part A · Historical VaR from the bank to a trade**
 
-- where the VaR inputs live (one P&L vector of 509 scenario days per live trade) and how a date is loaded;
+- where the VaR inputs live (one record of 509 scenario PVs per position, as a production batch sends them) and how a date is loaded;
 - what VaR, ES, component, incremental VaR and diversification mean on real numbers, and that components add up;
 - how to drill from the bank to a trade, and how longs and shorts net in a position;
 - the scope grammar: nodes, positions, trades, system baskets, rules, with `+`, `-` and `&`;
@@ -93,7 +93,7 @@ ones below (`--as-of today`, the default, moves the date to your today and trade
 
 ```bash
 python3 tools/drishti.py lake demo --as-of data \
-  --only market-risk/pnl-vector,market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/var-limit
+  --only market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/var-limit
 ```
 
 Start the server and console (tutorial 1, Part A), then ask for the bank:
@@ -107,7 +107,7 @@ VAR BANK  ·  Drishti Bank  ·  node  ·  2026-09-30
   parts      2 division   standalone sum 130,101,896   diversification 18,060,250
   backtest   amber  5 exceptions in 249 days   Kupiec p 0.160   Christoffersen p 0.076
   9572 trades in 7993 positions
-  pnl-vector and scenario-pv (1339 trades from scenario PVs) · batch B-2026-09-30-01 of 2026-09-30 · data version …
+  scenario-pv (7993 positions from scenario PVs, grain position) · batch B-2026-09-30-01 of 2026-09-30 · data version …
   in USD, crosses through USD; FX CAD supplied (0.719942 USD); EUR supplied (1.174 USD); USD base (1 USD)
   node aggregate (float64) · historical, equal weights, 1-day, k = 6th worst of 509 · 2 ms (miss)
   warning: 9 positions had trades under two nodes of a hierarchy built from columns and are split, one part per node (<position>@<value>)
@@ -139,11 +139,11 @@ connectors:
           columns: [CURRENCY, RATE, SCENARIO_SET_ID]
 ```
 
-The demo's Endur trades (1,339) come that way: when the date loads, the engine turns each into its USD P&L,
-`PV(s) × FX(s) − PV(base) × FX(base)`, and from then on they are trades like any other.
+Every demo position comes that way (7,993 position records, the three systems): when the date loads, the engine turns each into its USD P&L,
+`PV(s) × FX(s) − PV(base) × FX(base)`, and from then on it is a position like any other.
 
-**You should see** VaR 112,041,646 and ES 160,143,809 on 2026-09-30, over 9,572 trades in 7,993 positions, 1,339 of them from scenario
-PVs (the limit letters of step 14 split nine positions in two, as the warning says). On the 6th worst of the 509 days the bank loses 112 million; the two divisions alone would add up to 130 million: holding them
+**You should see** VaR 112,041,646 and ES 160,143,809 on 2026-09-30, over 7,993 position records, all from scenario
+PVs (nine positions sit under two limit letters, one record per letter). On the 6th worst of the 509 days the bank loses 112 million; the two divisions alone would add up to 130 million: holding them
 together saves 18 million. (With every trade a P&L vector the bank's VaR would be 112,035,906: the 250 Endur trades in EUR and
 CAD now also carry the move of their currency on their value.)
 
@@ -308,8 +308,8 @@ VAR BANK - DESK:CREDIT  ·  BANK - DESK:CREDIT  ·  adhoc  ·  2026-09-30
   ES 97.5%   76,775,085 USD   (mean of the 13 worst)
   ...
   8629 trades in 7050 positions
-$ drishti.py var show 'DESK:RATES - TRD:MX-30000121' --json        (abridged)
-{"canonical": "DESK:RATES - TRD:MX-30000121", "kind": "adhoc", "var": 74720890, "es": 75093413, ...}
+$ drishti.py var show 'DESK:RATES - POS:POS-BOOK-RATES-1~MX-30000121' --json        (abridged)
+{"canonical": "DESK:RATES - POS:POS-BOOK-RATES-1~MX-30000121", "kind": "adhoc", "var": 74720890, "es": 75093413, ...}
 ```
 
 and a rule over the positions' columns:
@@ -714,7 +714,7 @@ drishti:
 computed kinds of steps 10 and 11 answer the same way: they are computed as you.
 
 **You should see** in the Explain drawer's *Inputs & lineage*, as a restricted user, *View: restricted by node (… trades outside your
-entitlement)* for the bank: the bank's 9,572 trades less the rates desk's 1,487, so 8,085 outside, and the bank's VaR equal to the desk's.
+entitlement)* for the bank: the bank's 7,993 records less the rates desk's 1,358, so 6,635 outside, and the bank's VaR equal to the desk's.
 
 **Further in the guide:** [section 9](../guides/VAR_GUIDE.md#9-who-sees-what-entitlements-and-audit) (entitlements and audit).
 
@@ -756,7 +756,7 @@ $ drishti.py var intraday
 
 ```text
 $ tools/pvgen/check.sh --morning data/pvgen/morning-2026-09-30 --intraday data/pvgen/intraday-2026-09-30 --server http://<host>:<port>
-2026-09-30: the morning run (9,572 trades) and 30 intraday rows
+2026-09-30: the morning run (7,993 positions) and 30 intraday rows
   BANK                     VaR      111,939,005  ES      159,035,721   server VaR      111,939,005  ES      159,035,721  ok  (intraday updates 30)
   DESK:DESK-COMM           VaR       16,590,438  ES       17,486,765   server VaR       16,590,438  ES       17,486,765  ok  (intraday updates 30)
   ...
@@ -991,7 +991,7 @@ signal tells the running server.
 
 ```text
 $ python3 tools/drishti.py lake demo --as-of 2026-09-25 --keep-other-dates -q \
-    --only market-risk/pnl-vector,market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/var-limit
+    --only market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/var-limit
 ```
 
 **In the UI**, type `SMAT BOOK BOOK-RATES-1 5 <GO>` (or open a book, a position or a trade in the explorer and click **Scenario
@@ -1409,7 +1409,7 @@ build and its output are [tutorial 16, step 30](16-load-your-own-data-into-a-new
 
 ```bash
 drishti-console/.venv/bin/python tools/build_demo_lakes.py --as-of data --store risk=iceberg \
-  --only market-risk/pnl-vector,market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/var-limit
+  --only market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/var-limit
 ```
 
 **In the UI.** `VAR BANK`, then **Limit letters** in the select above the tree and **LL-0011**:
@@ -1428,7 +1428,7 @@ VAR BANK  ·  Drishti Bank  ·  node  ·  2026-09-30
   limit      150,000,000 USD   use 74.7%
   …
   9572 trades in 7993 positions
-  pnl-vector and scenario-pv (1339 trades from scenario PVs) · batch B-2026-09-30-01 of 2026-09-30 · data version risk-store=7affffbb8b218c|scenario-pv:risk-store=7affffddd82bf9
+  scenario-pv (7993 positions from scenario PVs, grain position) · batch B-2026-09-30-01 of 2026-09-30 · data version risk-store=7affffbb8b218c|scenario-pv:risk-store=7affffddd82bf9
   …
 $ drishti.py var show LL:LL-0011
   VaR 99%   29,280,653 USD   …   limit 41,000,000 USD   use 71.4%
@@ -1467,7 +1467,7 @@ connector's `lake` must then name `data/iceberg`); `drishti.py var intraday --lo
 |---|---|
 | *no P&L vectors in any connector* | build the lake (step 1); is the market-risk pack loaded? |
 | other numbers than these | you built the lake with `--as-of today`: trades matured since 2026-09-30 drop out; rebuild with `--as-of data` |
-| the bank's VaR is 112,035,906 and the provenance says only `pnl-vector` | the lake has no `scenario-pv` table (built without it, or `--only` without it): the Endur trades are missing too (8,233 trades); rebuild with the `--only` list of step 1 |
+| *no P&L vectors in any connector*, and the lake has no `scenario-pv` table | built without it, or `--only` without it: rebuild with the `--only` list of step 1 |
 | `--ccy` answers `422 DRS-5207` | the date has no rates for that currency: supply them in `fx-scenario`, or load enough FX history in [`fx-spot`](../contracts/samples/market-data.md#fx-spot) ([contract](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot)) ([VAR_GUIDE.md section 15.9](../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)) |
 | `PORT <id>` says *no system basket …* | the page opens on the newest date the engine holds; a basket valid only before or after it (its *Valid from*, *Valid to*) is not there: `PORT <GO>` lists the ones that are |
 | *System basket* is not under the sheet | your roles do not hold `var:system-baskets`: an administrator gives it (Admin → Roles → Permissions) |

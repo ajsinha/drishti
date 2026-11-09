@@ -153,10 +153,9 @@ public final class ScopeResolver {
                 OrdinalSet.Builder b = new OrdinalSet.Builder();
                 for (String id : r.ids()) {
                     int o = book.tradeOrdinalAnyCase(id);
-                    if (o >= 0 && book.supplied(o)) {                    // a supplied position: no trade-level VaR, said in words
-                        unknown.add(id);
-                        notes.add("TRD:" + id + " is a position its source system sends whole (position grain): ask POS:" + id
-                                + "; there is no trade-level VaR for it on this date");
+                    if (o >= 0 && book.supplied(o)) {                    // a supplied position: counted as the position, said in words
+                        notes.add("TRD:" + id + " is a position its source system sends whole (position grain): counted as POS:" + id);
+                        b.add(o);
                     } else if (o < 0) {
                         unknown.add(id);
                     } else {

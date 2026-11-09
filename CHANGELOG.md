@@ -25,6 +25,8 @@
 
 ### Test data
 
+- The demo's VaR inputs are at **position grain** for all three systems (Endur, Calypso, Murex) on every date: `market-risk/scenario-pv` per position (a position under two limit letters is one record per letter, `<position>@<division>/<letter>`); the `pnl-vector` demo table is gone (86 tables). Calypso and Murex positions are valued in USD with `TRADE_CURRENCY` their trades' own, so VaR, ES and component VaR are unchanged. The engine keeps both grains; the generator keeps them by flag. A position named in the Trade column or as `TRD:` counts as the position; a trade inside one answers in words. `PF-LISTED` now reads the product types and `PF-PARTIAL-FILLS` holds whole positions (`Fungible positions under review`), the demo having no trade-level records.
+
 - **Scenario PVs at position grain:** `data/testdata/position-grain/` holds 2026-09-30 for Endur, Calypso and Murex (`GRAIN: POSITION`, 7,984 positions, 509 scenarios), kept out of the demo lake.
 
 ## Unreleased

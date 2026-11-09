@@ -57,8 +57,8 @@ panels:
     columns:
       - { label: Trade, bind: "@.TRADE_ID", link: true }
       - { label: Direction, bind: "@.DIRECTION" }
-      - { label: Quantity, bind: "@.QUANTITY", fmt: amount0, total: true }
-      - { label: PV, bind: "@.PV", fmt: amount0, total: true }
+      - { label: Quantity, bind: "@.QUANTITY", fmt: amount0 }
+      - { label: PV, bind: "@.PV", fmt: amount0 }
       - { label: Trade currency, bind: "nonblank(@.TRADE_CURRENCY, '–')" }
       - { label: Counterparty, bind: "@.COUNTERPARTY", link: true }
   - id: trade-var

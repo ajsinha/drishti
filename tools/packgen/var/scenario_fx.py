@@ -14,9 +14,8 @@
 
 """The demo batch's scenario PVs and scenario FX (docs/guides/VAR_GUIDE.md sections 15.9 and 15.10; release 2.9.4).
 
-A bank may send a trade's scenario P&L as **scenario PVs** in the trade's own currency (the ``scenario-pv`` kind) instead of a P&L vector,
-with each currency's **scenario FX** when it has it (``fx-scenario``). The demo's Endur trades come that way (``PV_SYSTEMS``); every other
-trade keeps its P&L vector, so the demo holds both forms on one date, as a bank may send them.
+A bank may send a position's or trade's scenario P&L as **scenario PVs** in the trade's own currency (the ``scenario-pv`` kind) instead of a
+P&L vector, with each currency's **scenario FX** when it has it (``fx-scenario``). Every demo record comes that way (``PV_SYSTEMS``), per position.
 
 - **Scenario FX.** For each currency of ``CURRENCIES``: today's rate is the market-data pack's ``fx-spot`` mid on the business date, as USD
   per one unit (``FX-EURUSD`` 1.174; ``FX-USDJPY`` 148.2 is 1 / 148.2), and the rate under scenario j moves with the factor model's FX
@@ -33,8 +32,13 @@ from __future__ import annotations
 
 import factors as F
 
-#: the booking systems whose batch sends scenario PVs in the demo (every other one sends P&L vectors)
-PV_SYSTEMS = ("ENDUR",)
+#: the booking systems whose batch sends scenario PVs in the demo: all three (the generator's and tools/pvgen's default)
+PV_SYSTEMS = ("ENDUR", "CALYPSO", "MUREX")
+#: the systems sending per position (GRAIN POSITION), as the demo's scenario PVs are produced; the demo's default for all three
+POSITION_SYSTEMS = PV_SYSTEMS
+#: the position systems whose records are valued in USD (CURRENCY USD, TRADE_CURRENCY the trades' own), so their P&L is the factor model's
+#: USD P&L exactly (scenario-PV FX translation stays with Endur's positions, valued in their own currency)
+USD_PV_SYSTEMS = ("CALYPSO", "MUREX")
 #: the currencies whose scenario FX the demo batch supplies, with a daily volatility of the rate (relative)
 VOLS = {"EUR": 0.0055, "GBP": 0.0060, "JPY": 0.0065, "AUD": 0.0075, "CAD": 0.0045, "CHF": 0.0060}
 CURRENCIES = tuple(sorted(VOLS))

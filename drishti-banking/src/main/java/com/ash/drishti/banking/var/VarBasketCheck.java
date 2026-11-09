@@ -215,10 +215,11 @@ final class VarBasketCheck {
         switch (c.word()) {
             case "TRD" -> {
                 int o = book.tradeOrdinalAnyCase(c.id());
-                if (o >= 0 && book.supplied(o)) {
-                    return new Found(null, "is a position its source system sends whole: put it in the Position column (POS:" + c.id() + ")");
-                }
                 if (o < 0) {
+                    String pos = d.intake().positionOf(c.id());
+                    if (pos != null) {
+                        return new Found(null, "is in the position " + pos + ", which its source system sends whole: put the position in the Position column");
+                    }
                     String why = d.intake().notLiveWhy(c.id());
                     return new Found(null, why != null ? "is not live on " + date + ": " + why + " (no P&L vector)"
                             : "is not a live trade on " + date + " (no P&L vector): unknown to the day's vectors, matured or cancelled");

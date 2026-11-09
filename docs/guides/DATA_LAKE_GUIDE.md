@@ -350,6 +350,32 @@ cp /landing/trade_endur.2026-11-06.jsonl.gz data/dataload/inbox/
 touch data/dataload/inbox/trade_endur.2026-11-06.ready          # or trade_endur.2026-11-06.jsonl.gz.ready
 ```
 
+**Loading production position-level scenario PVs.** Each morning's batch is one file of `scenario-pv` records (every field in the checklist of
+[VAR_GUIDE.md section 15.13](VAR_GUIDE.md#1513-inputs-any-form-any-grain)), its currency FX in `fx-scenario` and the date's scenario set in
+`scenario-set`; the `.ready` file goes in last:
+
+```bash
+# drop/scenario-pv.2026-11-06.jsonl.gz holds one object per position, for example (the vector cut here to 3 of 509 values):
+# {"VALUE_TYPE":"PV","GRAIN":"POSITION","POSITION_ID":"POS-BOOK-RATES-1~XCH-BOND_FUTURE-AUD-01@DIV-MARKETS/LL-0010","CURRENCY":"USD",
+#  "TRADE_CURRENCY":"AUD","SOURCE_SYSTEM":"MUREX","SCENARIO_PV_ID":"SPV-...-HS-509","BUSINESS_DATE":"2026-11-06","SCENARIO_SET_ID":"HS-509",
+#  "TRADE_STATUS":"VALIDATED","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-RATES","TT_BOOK":"BOOK-RATES-1","LIMIT_LETTER":"LL-0010",
+#  "PRODUCT_GROUP":"Rates","PRODUCT_TYPE":"BOND_FUTURE","DIRECTION":"LONG","QUANTITY":25,"TAGS":"","BASE_PV":1250000.00,
+#  "VALUATION_DATE":"2026-11-06","BASE_VALUATION_DATE":"2026-11-06","SCENARIO_PV":[1249500.00,1251120.00,1247800.00],"STATUS":"ok",
+#  "BATCH_ID":"B-2026-11-06-01","COMPUTED_AT":"2026-11-06T06:00:00Z","RUN_KIND":"FULL","TRADE_IDS":["MX-20000002"]}
+cp drop/scenario-pv.2026-11-06.jsonl.gz drop/fx-scenario.2026-11-06.jsonl.gz drop/scenario-set.2026-11-06.jsonl.gz data/dataload/inbox/
+cat > data/dataload/inbox/scenario-pv.2026-11-06.jsonl.gz.ready <<'YAML'
+lake: risklake
+pack: market-risk
+kind: scenario-pv
+mode: replace
+rows: 7993                          # refuses a file cut short
+YAML
+touch data/dataload/inbox/fx-scenario.2026-11-06.jsonl.gz.ready data/dataload/inbox/scenario-set.2026-11-06.jsonl.gz.ready
+```
+
+Pin each system's form and grain in `drishti.var.inputs` (`ENDUR: {form: pv, grain: position}`, the same for the others): a record that
+disagrees is refused and listed. One system sends one form and one grain per date; a position under two nodes of a hierarchy is one record per node.
+
 **One cycle**, every `interval` (10 minutes), on the owner node:
 
 1. **Skipped** while an earlier run still loads (runs never overlap: *skipped: run 20261107T150000Z-drishti-main still loading (12

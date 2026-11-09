@@ -845,10 +845,10 @@ final class VarViews {
      */
     static String[] tradeCurrency(Columns tc, int o) {
         String pv = tc.has(CurrencyTotals.COLUMN) ? tc.text(CurrencyTotals.COLUMN, o) : null;
-        if (pv != null) {
+        String own = tc.text("CURRENCY", o);
+        if (pv != null && (own == null || own.equals(pv))) {             // PVs in another currency than its own (TRADE_CURRENCY): its own is shown
             return new String[] {pv, "scenario PVs"};
         }
-        String own = tc.text("CURRENCY", o);
         return new String[] {own, own == null ? null : "trade"};
     }
 

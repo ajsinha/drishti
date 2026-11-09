@@ -20119,20 +20119,6 @@ datasets:
   files:
   - scenario-set.tar
   bytes: 10240
-- folder: market-risk/pnl-vector
-  pack: market-risk
-  kind: pnl-vector
-  connector: risk-store
-  key: VECTOR_ID
-  dated-by: BUSINESS_DATE
-  first-date: '2026-09-28'
-  last-date: '2026-09-30'
-  documents: 33024
-  files:
-  - pnl-vector-2026-09-28.tar
-  - pnl-vector-2026-09-29.tar
-  - pnl-vector-2026-09-30.tar
-  bytes: 48005120
 - folder: market-risk/scenario-pv
   pack: market-risk
   kind: scenario-pv
@@ -20141,12 +20127,12 @@ datasets:
   dated-by: BUSINESS_DATE
   first-date: '2026-09-28'
   last-date: '2026-09-30'
-  documents: 5369
+  documents: 32060
   files:
   - scenario-pv-2026-09-28.tar
   - scenario-pv-2026-09-29.tar
   - scenario-pv-2026-09-30.tar
-  bytes: 9922560
+  bytes: 58040320
 - folder: market-risk/fx-scenario
   pack: market-risk
   kind: fx-scenario
@@ -20172,7 +20158,7 @@ datasets:
   - var-limit.2026-09-28.jsonl.gz
   - var-limit.2026-09-29.jsonl.gz
   - var-limit.2026-09-30.jsonl.gz
-  bytes: 5773
+  bytes: 5768
 - folder: market-risk/desk-pnl
   pack: market-risk
   kind: desk-pnl

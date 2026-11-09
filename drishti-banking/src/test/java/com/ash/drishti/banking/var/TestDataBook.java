@@ -50,7 +50,7 @@ final class TestDataBook {
     /** The repository's root (the folder holding data/testdata/market-risk). */
     static Path root() {
         Path p = Path.of("").toAbsolutePath();
-        while (p != null && !Files.isDirectory(p.resolve("data/testdata/market-risk/pnl-vector"))) {
+        while (p != null && !Files.isDirectory(p.resolve("data/testdata/market-risk/scenario-pv"))) {
             p = p.getParent();
         }
         if (p == null) {
@@ -61,6 +61,9 @@ final class TestDataBook {
 
     /** The documents of a folder of the demo date's normal scenario set. */
     static void lines(Path folder, Consumer<JsonNode> each) throws IOException {
+        if (!Files.isDirectory(folder)) {
+            return;                                                     // a kind the demo does not send (P&L vectors)
+        }
         for (String line : FeedFiles.lines(folder, p -> p.date().equals(DATE) && !p.name().startsWith("stress-"))) {
             each.accept(JSON.readTree(line));
         }
@@ -146,12 +149,24 @@ final class TestDataBook {
         for (int c = 0; c < texts.length; c++) {
             texts[c] = text(n, cols.get(c));
         }
+        String own = text(n, "TRADE_CURRENCY");
+        if (own != null) {
+            texts[cols.indexOf("CURRENCY")] = own;                      // the record's own currency, as the intake (scopes, rules)
+        }
         String trade = text(n, "TRADE_ID");
-        PositionRules.Derived d = rules.derive(trade, text(n, "TT_BOOK"), text(n, "PRODUCT_GROUP"), text(n, "PRODUCT_TYPE"), k -> text(n, k));
-        texts[cols.indexOf("POSITION_ID")] = d.positionId();
-        texts[cols.indexOf("POSITION_RULE")] = d.rule();
-        texts[cols.indexOf("INSTRUMENT_ID")] = d.instrumentId();
-        texts[cols.indexOf("SECURITY_ID")] = d.securityId();
+        if (trade == null) {
+            trade = text(n, "POSITION_ID");                             // a position sent whole: never derived
+            texts[cols.indexOf("POSITION_ID")] = trade;
+            texts[cols.indexOf("POSITION_RULE")] = VarBook.SUPPLIED;
+            texts[cols.indexOf("INSTRUMENT_ID")] = text(n, "SECURITY_ID") != null ? text(n, "SECURITY_ID") : trade;
+            texts[cols.indexOf("SECURITY_ID")] = text(n, "SECURITY_ID");
+        } else {
+            PositionRules.Derived d = rules.derive(trade, text(n, "TT_BOOK"), text(n, "PRODUCT_GROUP"), text(n, "PRODUCT_TYPE"), k -> text(n, k));
+            texts[cols.indexOf("POSITION_ID")] = d.positionId();
+            texts[cols.indexOf("POSITION_RULE")] = d.rule();
+            texts[cols.indexOf("INSTRUMENT_ID")] = d.instrumentId();
+            texts[cols.indexOf("SECURITY_ID")] = d.securityId();
+        }
         texts[cols.indexOf(CurrencyTotals.COLUMN)] = pvCurrency;
         b.trade(trade, v, v.length, texts, new double[] {n.path("QUANTITY").asDouble(Double.NaN), pvUsd});
     }

@@ -157,7 +157,7 @@ LAYOUT = {
     "scenario-pv": {"columns": ["VALUE_TYPE", "GRAIN", "TRADE_ID", "POSITION_ID", "CURRENCY", "SOURCE_SYSTEM", "SECURITY_ID", "INSTRUMENT",
                                 *_HIER, "STRATEGY", "PRODUCT_GROUP", "PRODUCT_TYPE", "COUNTERPARTY", "DIRECTION", "QUANTITY", "BASE_PV",
                                 "VALUATION_DATE", "BASE_VALUATION_DATE", "TAGS", "TRADE_STATUS", "MATURITY_DATE", "STATUS", "SCENARIO_SET_ID",
-                                "BATCH_ID", "RUN_KIND", "COMPUTED_AT", "TRADE_IDS"],
+                                "BATCH_ID", "RUN_KIND", "COMPUTED_AT", "TRADE_IDS", "TRADE_CURRENCY"],
                     "vectors": ["SCENARIO_PV"]},
     "fx-scenario": {"columns": ["CURRENCY", "RATE", "SCENARIO_SET_ID"]},
     "var-limit": {"columns": ["LIMIT_ID", "HIERARCHY", "NODE_ID", "LIMIT_VAR", "CURRENCY"]},
