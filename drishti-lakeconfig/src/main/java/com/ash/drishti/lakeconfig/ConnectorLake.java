@@ -44,6 +44,8 @@ public final class ConnectorLake {
     public static final String LAKE = "lake";
     /** The connector setting that names its tables when a kind has several in the lake ({@code trading.trade_endur}). */
     public static final String TABLES = "lake-tables";
+    /** The setting the plugin is handed with the lake's name, so what it says when it cannot reach its tables names the lake. */
+    public static final String LAKE_NAME = "lake-name";
     /** The plugins whose settings a lake supplies. */
     public static final Set<String> PLUGINS = Set.of("delta", "iceberg");
 
@@ -125,6 +127,7 @@ public final class ConnectorLake {
         Map<String, String> out = new LinkedHashMap<>(settings);
         out.remove(LAKE);
         out.remove(TABLES);
+        out.put(LAKE_NAME, lake.name());
         // the plugins read <root>/<domain>/<folder>: the table's parent folder's last segment is the domain, the rest goes to the root
         String parent = parents.isEmpty() ? "" : parents.iterator().next();
         int cut = parent.lastIndexOf('/');

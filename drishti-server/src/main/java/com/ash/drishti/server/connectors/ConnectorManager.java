@@ -639,6 +639,9 @@ public final class ConnectorManager {
         m.put("templateChanged", tc == null ? null : tc.message());
         String source = files.source(name);
         m.put("source", source == null ? origin(name) : source);       // file, shared (an Admin edit every node applies), shared-hidden
+        if ("shared".equals(source)) {
+            m.put("overlay", overlayDiff(files, name));                // what the override changes against the file (the Connectors pages show it)
+        }
         return m;
     }
 
@@ -1187,6 +1190,45 @@ public final class ConnectorManager {
         }
     }
 
+    /**
+     * What a connector's override in the shared overlay changes against its file, one row per setting: {@code what}, {@code file},
+     * {@code override} (secrets masked). A connector with no file says so; the Admin pages show this beside "Remove override".
+     */
+    static List<Map<String, String>> overlayDiff(ConnectorFiles files, String name) {
+        List<Map<String, String>> out = new ArrayList<>();
+        String file = files.fileText(name);
+        String shared = files.text(name);
+        if (file == null) {
+            out.add(Map.of("what", "(file)", "file", "no file on this node", "override", "defined only by the override"));
+            return out;
+        }
+        ConnectorFiles.Definition a;
+        ConnectorFiles.Definition b;
+        try {
+            a = files.parse(name, file);
+            b = files.parse(name, shared);
+        } catch (ConnectorFiles.InvalidFile e) {
+            out.add(Map.of("what", "(text)", "file", file.equals(shared) ? "same" : "differs", "override", String.valueOf(e.getMessage())));
+            return out;
+        }
+        differ(out, "plugin", a.plugin(), b.plugin());
+        differ(out, "enabled", a.enabled(), b.enabled());
+        differ(out, "kinds", String.join(", ", a.kinds()), String.join(", ", b.kinds()));
+        Set<String> keys = new TreeSet<>(a.settings().keySet());
+        keys.addAll(b.settings().keySet());
+        for (String k : keys) {
+            boolean secret = ConnectorSecrets.secretKey(k);
+            differ(out, "settings." + k, secret && a.settings().get(k) != null ? "***" : a.settings().get(k), secret && b.settings().get(k) != null ? "***" : b.settings().get(k));
+        }
+        return out;
+    }
+
+    private static void differ(List<Map<String, String>> out, String what, Object file, Object override) {
+        if (!java.util.Objects.equals(file, override)) {
+            out.add(Map.of("what", what, "file", file == null ? "(not set)" : String.valueOf(file), "override", override == null ? "(not set)" : String.valueOf(override)));
+        }
+    }
+
     /** Puts a pack's template back as the connector's file. */
     public Change reset(String name, String ifMatch) {
         String source = files.source(name);
@@ -1429,6 +1471,7 @@ public final class ConnectorManager {
         m.put("count", rows.size());
         m.put("failed", failed);
         m.put("badFiles", badFiles);
+        m.put("overlays", new ArrayList<>(new TreeSet<>(files.overlaid())));   // connectors whose override, not their file, is in force (Admin -> Connectors)
         Map<String, String> changed = new java.util.TreeMap<>();
         for (Map<String, Object> r : rows) {
             if (r.get("templateChanged") != null) {
