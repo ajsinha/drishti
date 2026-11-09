@@ -1391,6 +1391,8 @@ You should see `Python visual draft saved in your workspace` **beside the button
 
 ## Step 23 · How this compares with Power BI
 
+The full, checked comparison is [Drishti BI and Power BI compared](../strategy/BI_AND_POWER_BI.md); this step shows the modelling differences you have just used.
+
 You should see a short, honest table, not a scorecard (the claims about Power BI are the ones of [ARCHITECTURE.md §28 section 11](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer), whose own knowledge of Power BI may be stale; check before you quote it):
 
 | | Power BI | Drishti |
