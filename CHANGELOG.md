@@ -19,6 +19,7 @@
 
 ### Docs
 
+- **Roadmap:** a BI depth release (2.9.11.i1b) after i1: many-to-many and both-ways relationships, Rachana filter-context control, a decomposition tree; the comparison with Power BI lists it as planned.
 - **Drishti BI and Power BI compared** (`docs/strategy/BI_AND_POWER_BI.md`, opened from Help through the Reports guide): an area-by-area comparison with each Drishti item labelled built or planned, clustered compute behind BI, and Power BI facts checked against Microsoft's documentation.
 
 ### Test data

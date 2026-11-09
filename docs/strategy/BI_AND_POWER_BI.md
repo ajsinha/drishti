@@ -170,6 +170,7 @@ These are choices, neither better nor worse in general.
 | Release | What it brings to BI | Against Power BI |
 |---|---|---|
 | **i1** Foundations | Data standards, the kernel boundary, faster testing | Internal; no BI feature of its own |
+| **i1b** BI depth | **Many-to-many** through a bridge table, **both-ways filtering**, inactive relationships per measure; Rachana **filter-context control**, calculated tables, calculation groups; a DAX-to-Rachana cookbook and converter; a **decomposition tree** that can break down VaR with diversification. Later: a custom-visual SDK, forecast and anomaly overlays, key influencers, smart narrative | Power BI has the relationships, DAX and these visuals today; Drishti plans them. A decomposition of VaR with diversification would be a planned advantage |
 | **i2** Modules on one node | Signed `.dmod` modules loaded on one node; a Module SDK | Power BI has AppSource and `.pbiviz` today; a planned advantage only in how domain code is packaged |
 | **i3** Modules in a cluster, white label | Placement of modules per node or role; distributions under another brand | Power BI embedding can be branded today; planned advantage for full white-label on your own machines |
 | **i4** Console on Spring Boot | Java console; **SAML 2.0, LDAP, Kerberos** alongside OIDC, identity map; **one console over many kernels** | Power BI has Entra single sign-on today; Drishti plans wider options in i4 |
