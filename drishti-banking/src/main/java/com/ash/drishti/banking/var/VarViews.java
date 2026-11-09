@@ -342,7 +342,12 @@ final class VarViews {
         Map<String, Object> hist = history(s);
         out.put("backtest", hist.get("backtest"));
         out.put("ancestors", ancestors(b, s.res().node(), s));
-        out.put("provenance", provenance(s));
+        Map<String, Object> pv = provenance(s);
+        Map<String, Object> matured = VarMaturedView.of(s, svc.tradeIdsMasked(p));
+        if (matured != null) {
+            pv.put("matured", matured);
+        }
+        out.put("provenance", pv);
         svc.audit(p, "var-view", s, null);
         return out;
     }
@@ -1090,6 +1095,11 @@ final class VarViews {
     }
 
     // ------------------------------------------------------------------------------------------------------------------- path
+
+    /** One page of the positions holding matured trades in the scope, as far as the reader may see them named. */
+    Map<String, Object> matured(Principal p, String scope, LocalDate date, int page, int size) {
+        return VarMaturedView.page(svc.scoped(p, scope, date, VarDate.USD, null), svc.tradeIdsMasked(p), page, size);
+    }
 
     Map<String, Object> path(Principal p, String scope, LocalDate date, int page, int size) {
         return path(p, scope, date, page, size, VarDate.USD);

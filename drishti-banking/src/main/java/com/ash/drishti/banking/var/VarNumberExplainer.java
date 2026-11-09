@@ -255,6 +255,7 @@ final class VarNumberExplainer implements Explainer {
         List<String> rej = strings(p.get("rejections"));
         x.input("Rows left out", Explanation.number(int0(p.get("rejected"))) + " rejected" + (rej.isEmpty() ? "" : " (" + String.join("; ",
                 rej.subList(0, Math.min(3, rej.size()))) + ")") + " · " + Explanation.number(int0(p.get("excluded"))) + " not live");
+        matured(x, h, p);
         x.input("Vectors", str(p.get("vectors")) + (p.get("tier") != null ? " · " + p.get("tier") : ""));
         x.input("Scenario set", p.get("scenarioSet"));
         x.input("Method", p.get("method"));
@@ -279,6 +280,49 @@ final class VarNumberExplainer implements Explainer {
             x.lineage("batches", batches.size() + " batch" + (batches.size() == 1 ? "" : "es") + " loaded", String.join(", ", batches));
         }
         x.lineage("scenario set", str(p.get("scenarioSet")), "");
+    }
+
+    /** What happened to matured items, in sentences; the positions with matured trades as a list that opens (VAR_GUIDE.md, "Matured items"). */
+    private static void matured(Explanation x, Map<String, Object> h, Map<String, Object> p) {
+        Map<String, Object> m = map(p.get("matured"));
+        Map<String, Object> rec = map(m.get("records"));
+        if (!rec.isEmpty()) {
+            List<String> by = new ArrayList<>();
+            if (rec.get("bySystem") instanceof List<?> l) {
+                l.forEach(o -> by.add(map(o).get("system") + " " + map(o).get("grain") + ": " + Explanation.number(int0(map(o).get("count")))));
+            }
+            x.input("Matured records", String.join("; ", by));
+            x.note(str(rec.get("sentence")), null);
+        }
+        Map<String, Object> in = map(m.get("inside"));
+        if (in.isEmpty()) {
+            return;
+        }
+        List<String> sentences = strings(in.get("sentences"));
+        Map<String, Object> list = null;
+        if (in.get("rows") instanceof List<?> rows && !rows.isEmpty()) {
+            List<Map<String, Object>> shown = new ArrayList<>();
+            rows.forEach(o -> shown.add(maturedRow(map(o), str(h.get("businessDate")))));
+            list = new java.util.LinkedHashMap<>();
+            list.put("summary", "The positions and their matured trades");
+            list.put("columns", List.of("Position", "Matured trades (maturity)"));
+            list.put("rows", shown);
+            if (Boolean.TRUE.equals(in.get("more"))) {
+                list.put("moreHref", "/api/var/scope/matured?scope=" + enc(str(h.get("canonical"))) + "&asOf=" + enc(str(h.get("businessDate"))));
+            }
+        }
+        for (int i = 0; i < sentences.size(); i++) {
+            x.note(sentences.get(i), i == 0 ? list : null);
+        }
+    }
+
+    private static Map<String, Object> maturedRow(Map<String, Object> r, String date) {
+        String position = str(r.get("position"));
+        List<String> trades = new ArrayList<>();
+        if (r.get("trades") instanceof List<?> l) {
+            l.forEach(o -> trades.add(map(o).get("trade") + " (" + map(o).get("maturity") + ")"));
+        }
+        return Map.of("cells", List.of(position, String.join(", ", trades)), "href", "/v/position/" + enc(position) + "?asOf=" + enc(date));
     }
 
     /** Per source system on the date: its form and grain, its records (VAR_GUIDE.md section 15.13). */

@@ -1100,6 +1100,25 @@ public final class VarService implements AutoCloseable {
         return java.util.Set.copyOf(dates.keySet());
     }
 
+    /** Whether the trade id is masked for this reader: it is then never named. */
+    boolean tradeIdsMasked(Principal p) {
+        return access.masked(p, "TRADE_ID");
+    }
+
+    /** Admin, Health: per open date, what happened to its matured items, in words; a date still loading is not opened for it. */
+    Map<String, String> maturedWarnings() {
+        Map<String, String> out = new java.util.TreeMap<>();
+        dates.forEach((d, f) -> {
+            if (f.isDone() && !f.isCompletedExceptionally()) {
+                String w = VarMaturedView.health(f.join().intake().matured(), d);
+                if (w != null) {
+                    out.put(d.toString(), w);
+                }
+            }
+        });
+        return out;
+    }
+
     List<Map<String, Object>> loaded() {
         List<Map<String, Object>> out = new ArrayList<>();
         dates.forEach((d, f) -> {
