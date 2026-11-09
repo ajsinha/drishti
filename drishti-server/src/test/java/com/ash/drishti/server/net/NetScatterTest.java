@@ -110,7 +110,7 @@ class NetScatterTest {
         assertThat(ids(all)).containsExactlyElementsOf(ALL.keySet());           // every trade once, ordered by id as one node orders
         assertThat(ids(search("a", "TRD limit 100"))).as("the same from any node").isEqualTo(ids(all));
         assertThat(ids(search("c", "TRD limit 100"))).isEqualTo(ids(all));
-        assertThat(all.path("partial").asBoolean()).isFalse();
+        assertThat(all.path("partial").asBoolean()).as(all.toString()).isFalse();
         assertThat(all.path("failed")).isEmpty();
         assertThat(all.path("scanned").asLong()).isGreaterThanOrEqualTo(ALL.size());
         assertThat(all.has("nodes")).as("who answered what is for administrators (security is off: everyone is)").isTrue();

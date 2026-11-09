@@ -73,7 +73,13 @@ public final class LlmRegistry implements AutoCloseable {
 
     public LlmRegistry(List<ProviderFactory> factories, Supplier<ProviderConfigLoader.Loaded> source, String defaultModel,
             com.ash.drishti.common.RetryPolicy policy) {
-        this.retry = new com.ash.drishti.common.RetryBoard("ai provider", policy);
+        this(factories, source, defaultModel, policy, java.time.Clock.systemUTC());
+    }
+
+    /** With the clock the retry schedule reads (a test moves it instead of sleeping). */
+    public LlmRegistry(List<ProviderFactory> factories, Supplier<ProviderConfigLoader.Loaded> source, String defaultModel,
+            com.ash.drishti.common.RetryPolicy policy, java.time.Clock clock) {
+        this.retry = new com.ash.drishti.common.RetryBoard("ai provider", policy, clock);
         for (ProviderFactory f : factories) {
             this.factories.putIfAbsent(f.type().toLowerCase(java.util.Locale.ROOT), f);
         }

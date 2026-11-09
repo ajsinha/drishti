@@ -37,7 +37,7 @@ import org.junit.jupiter.api.Test;
  * kind and connector) whose files are committed; or by a Delta connector of the pack, enabled by default, reading the lake an enabled
  * feed loads the kind into ({@code config/feeds/<feed>.yaml}: its {@code lake:} and a {@code datasets:} entry of the pack and kind; the
  * economy module's public-sector packs, whose lakes worldlake and newslake are filled daily and never committed: PUBLIC_SECTOR_GUIDE.md
- * section 5); or by the pack's derived connector (the trading pack's pages). The demo connector never counts. Exempt: {@code us-equities/price-history}, live prices that are internal only and ship no data.
+ * section 5); or by the pack's derived connector (the trading pack's pages). The demo connector never counts. Exempt: {@code us-equities/price-history}, live prices that are internal only and ship no data, and the inputs no demo data carries (EXEMPT).
  */
 class PacksServedWithoutDemoTest {
 
@@ -45,8 +45,11 @@ class PacksServedWithoutDemoTest {
     static final Path TESTDATA = Path.of("..", "data", "testdata");
     static final Path FEEDS = Path.of("..", "config", "feeds");
     /** price-history: internal-only prices, off as shipped. The published official results (var-official, exposure-official-cpty) are
-     *  written by the server's own official captures into risk-results, never delivered as test data (VAR_GUIDE.md section 19). */
-    static final Set<String> EXEMPT = Set.of("us-equities/price-history", "market-risk/var-official", "counterparty-risk/exposure-official-cpty");
+     *  written by the server's own official captures into risk-results, never delivered as test data (VAR_GUIDE.md section 19).
+     *  pnl-vector: the bank's alternative to scenario-pv, served by risk-store; the demo ships scenario PVs at position grain instead
+     *  (its sample is the pack's samples/pnl-vector.jsonl; the generator's trade-grain flag still writes it). */
+    static final Set<String> EXEMPT = Set.of("us-equities/price-history", "market-risk/var-official", "counterparty-risk/exposure-official-cpty",
+            "market-risk/pnl-vector");
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
 
     @Test

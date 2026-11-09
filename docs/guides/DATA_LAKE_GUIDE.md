@@ -351,8 +351,8 @@ touch data/dataload/inbox/trade_endur.2026-11-06.ready          # or trade_endur
 ```
 
 **Loading production position-level scenario PVs.** Each morning's batch is one file of `scenario-pv` records (every field in the checklist of
-[VAR_GUIDE.md section 15.13](VAR_GUIDE.md#1513-inputs-any-form-any-grain)), its currency FX in `fx-scenario` and the date's scenario set in
-`scenario-set`; the `.ready` file goes in last:
+[VAR_GUIDE.md section 15.13](VAR_GUIDE.md#1513-inputs-any-form-any-grain)), its currency FX in `fx-scenario` ([contract](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-509-scenarios-fx-scenario), [example](../contracts/samples/market-risk.md#fx-scenario)) and the date's scenario set in
+`scenario-set` ([contract](../contracts/packs/market-risk.md#sset-scenario-set-scenario-set), [example](../contracts/samples/market-risk.md#scenario-set)); the `.ready` file goes in last:
 
 ```bash
 # drop/scenario-pv.2026-11-06.jsonl.gz holds one object per position, for example (the vector cut here to 3 of 509 values):

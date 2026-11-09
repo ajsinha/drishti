@@ -653,7 +653,7 @@ def _go(a, p, as_of, lake, table, summary, prog, started, say, remote_root: str 
         if iceberg:
             import icebergwrite
             res = icebergwrite.write(remote_root or lake, p["domain"], table.rstrip("/").rsplit("/", 1)[-1], by_day, names, staging, a.jar, a.java,
-                                     progress=tick, settings=getattr(a, "iceberg_set", None))
+                                     progress=tick, settings=getattr(a, "iceberg_set", None), types=promoted)
         elif engine == "drishti":
             res = writers.write_drishti(t, by_day, staging, a.jar, a.java, progress=tick)
         else:
