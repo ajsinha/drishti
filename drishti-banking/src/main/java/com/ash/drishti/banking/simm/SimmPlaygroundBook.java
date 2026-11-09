@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.simm;
 
+import com.ash.drishti.banking.PlaygroundSheets;
 import com.ash.drishti.banking.compute.simm.Simm;
 import com.ash.drishti.banking.compute.simm.SimmChoices;
 import com.ash.drishti.banking.compute.simm.SimmInput;
@@ -373,13 +374,10 @@ final class SimmPlaygroundBook {
         s.width(0, 52).width(1, 18).width(2, 22).width(3, 22).width(4, 34).width(5, 90);
         s.row(1).text(0, "Config: the switches, the constants and the parameters of SIMM " + p.version + (empty ? " (empty: ISDA's numbers are licensed; the bank's "
                 + "own export fills them)" : " (licensed: confidential to the bank)"), "title");
-        s.row(3).text(0, "Switch", "head").text(1, "Value (choose)", "head").text(2, "Default", "head").text(3, "Options", "head").text(4, "Rule", "head")
-                .text(5, "Why the default", "head");
+        PlaygroundSheets.switchHead(s);
         int row = SW_FIRST;
         for (SimmChoices.Switch x : SimmChoices.SWITCHES) {
-            s.row(row).text(0, x.name(), "label").text(1, ch.get(x.name()), "input.text").text(2, x.dflt(), "text").text(3, String.join(", ", x.options()), "text")
-                    .text(4, x.rule(), "text").text(5, x.why(), "wrap");
-            s.list("B" + row, x.options());
+            PlaygroundSheets.switchRow(s, row, x, ch.get(x.name()));
             row++;
         }
         s.row(row).text(0, "side", "label").text(1, side, "input.text").text(2, "collect", "text").text(3, "collect, post", "text").text(4, "SIMM.md section 6.8", "text")
@@ -876,19 +874,10 @@ final class SimmPlaygroundBook {
     // ---- Explain, Provenance -----------------------------------------------------------------------------------------------------
 
     private void explain(SheetStream s) {
-        s.width(0, 44).width(1, 150);
-        s.row(1).text(0, com.ash.drishti.common.Branding.current().productOr("") + " · SIMM Playground · how each figure is worked out", "title");
-        s.blank(1, "title");
-        int row = 3;
-        for (String[] step : t.explain()) {
-            s.row(row++).text(0, step[0], "label.wrap").text(1, step[1], "wrap");
-        }
+        PlaygroundSheets.explain(s, "SIMM Playground", t.explain());
     }
 
     private void provenance(SheetStream s) {
-        s.width(0, 38).width(1, 120);
-        s.row(1).text(0, "Provenance", "title");
-        s.blank(1, "title");
         Map<String, Object> prov = new LinkedHashMap<>(run.provenance());
         prov.put("Scope", run.scope() + " (" + run.kind() + ")");
         prov.put("Calculation currency", run.calculationCurrency());
@@ -897,18 +886,6 @@ final class SimmPlaygroundBook {
                 : "contains the bank's licensed SIMM parameters: confidential, never a shared template");
         prov.put("Recipe", recipe == null ? "not saved" : recipe);
         prov.put("Exported by", user + " at " + now);
-        int row = 3;
-        for (Map.Entry<String, Object> en : prov.entrySet()) {
-            Object v = en.getValue();
-            s.row(row++).text(0, en.getKey(), "label");
-            if (v instanceof List<?> list) {
-                s.text(1, list.isEmpty() ? "none" : String.valueOf(list.size()), "text");
-                for (Object o : list) {
-                    s.row(row++).text(1, String.valueOf(o), "text");
-                }
-            } else {
-                s.text(1, v == null ? "" : String.valueOf(v), "text");
-            }
-        }
+        PlaygroundSheets.provenance(s, prov);
     }
 }

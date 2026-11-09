@@ -16,7 +16,7 @@
 discovered servers (core/cluster.py). Refused: localhost in any spelling (localhost., a name under it, ip6-localhost), a loopback, wildcard
 or link-local address in any notation (127.0.1.1, 0, 2130706433, 0x7f000001, [::1], fe80::1), an address of this machine's container or
 VM bridges (docker0's 172.17.0.1), and a name that resolves here to one of those (a machine's own host name is 127.0.1.1 on Debian and
-Ubuntu). A name that cannot be resolved here is not refused. Stdlib only."""
+Ubuntu). A name that cannot be resolved here is not refused. Stdlib only; tools/hostaddr.py loads this file, so there is one rule."""
 from __future__ import annotations
 
 import functools

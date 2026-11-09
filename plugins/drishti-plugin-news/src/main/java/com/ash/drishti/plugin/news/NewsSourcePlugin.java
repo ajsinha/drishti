@@ -25,6 +25,8 @@ import com.ash.drishti.api.Provenance;
 import com.ash.drishti.api.SourceCapabilities;
 import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.api.SourcePlugin;
+import com.ash.drishti.common.BoundedCache;
+import com.ash.drishti.common.HttpFetcher;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -104,7 +106,7 @@ public final class NewsSourcePlugin implements SourcePlugin {
                 b = com.ash.drishti.api.tls.TlsHttp.apply(b, tls);
             }
         }
-        this.fetcher = new HttpFetcher(b.build(), settings, proxy);
+        this.fetcher = new HttpFetcher(b.build(), settings, proxy, "application/rss+xml, application/xml, text/xml, */*");
         // nothing is fetched at start: there is no entity yet, and the web may be unreachable. Health is UP until a call fails.
     }
 

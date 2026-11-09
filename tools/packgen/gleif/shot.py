@@ -23,14 +23,12 @@ from __future__ import annotations
 
 import argparse
 import os
-import subprocess
 import sys
 import tempfile
-import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "docs"))
-from shotlib import Ctx, java_cmd, listening  # noqa: E402
+from shotlib import Ctx, start_pack_servers  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[3]
 PACKS = "core,us-equities,gleif"
@@ -41,27 +39,7 @@ JPM = "8I5DZWZKVSZI1NUHU748"
 
 
 def start_servers(work: Path) -> list:
-    jars = sorted((ROOT / "drishti-server" / "target").glob("drishti-server-*-exec.jar"))
-    if not jars:
-        sys.exit("build the server first: ./mvnw -o package -DskipTests -pl drishti-app -am")
-    if not (work / "config").exists():
-        (work / "config").symlink_to(ROOT / "config")
-    java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
-    env = dict(os.environ, DRISHTI_PORT=str(SERVER_PORT), DRISHTI_PACKS=PACKS, DRISHTI_LAKE_ENABLED="false", DRISHTI_DATA_DIR=str(work / "data"))
-    server = subprocess.Popen(java_cmd(java, ["-Xmx2g", "-jar", str(jars[-1])], cwd=work, env=env), cwd=work, env=env,
-                              stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
-    py = ROOT / "drishti-console" / ".venv" / "bin" / "python"
-    py = py if py.exists() else Path(sys.executable)
-    cenv = dict(os.environ, DRISHTI_BACKEND_URL=f"http://127.0.0.1:{SERVER_PORT}", DRISHTI_CONSOLE_PORT=str(CONSOLE_PORT))
-    console = subprocess.Popen([str(py), str(ROOT / "drishti-console" / "run_drishti_web.py")], cwd=ROOT, env=cenv,
-                               stdout=(work / "console.log").open("w"), stderr=subprocess.STDOUT)
-    for _ in range(360):
-        if listening(SERVER_PORT) and listening(CONSOLE_PORT):
-            return [server, console]
-        time.sleep(0.5)
-    for p in (server, console):
-        p.terminate()
-    sys.exit("the scratch server or console did not start; see " + str(work))
+    return start_pack_servers(work, PACKS, SERVER_PORT, CONSOLE_PORT, data_dir=work / "data")
 
 
 def entity(c: Ctx):

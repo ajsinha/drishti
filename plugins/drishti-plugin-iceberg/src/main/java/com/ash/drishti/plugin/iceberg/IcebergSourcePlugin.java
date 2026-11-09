@@ -28,6 +28,7 @@ import com.ash.drishti.api.Provenance;
 import com.ash.drishti.api.SourceCapabilities;
 import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.api.SourcePlugin;
+import com.ash.drishti.common.ReferenceScanner;
 import com.ash.drishti.iceberg.catalog.S3Tables;
 import com.ash.drishti.plugin.iceberg.KindTable.Day;
 import com.ash.drishti.plugin.iceberg.KindTable.IdMap;

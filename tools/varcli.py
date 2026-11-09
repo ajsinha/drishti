@@ -31,6 +31,8 @@ import os
 import sys
 import urllib.parse
 
+from clitable import money, table
+
 
 def _demo_root() -> str:
     """The demo lake's root (config/lakes/demo.yaml): where intraday PVs are appended unless --lake says otherwise."""
@@ -55,20 +57,6 @@ EPILOG = ("examples:\n  drishti.py var show 'DESK:RATES'\n  drishti.py var show 
           "  drishti.py var capture 'BASKET:asha/rates-hedges' --note 'before the unwind'\n  drishti.py var compare CAP-20260930-7 now\n"
           "  drishti.py var whatif 'DESK:RATES' --copy BOOK:BOOK-RATES-3=-0.5\n  drishti.py var whatif 'DESK:RATES' --trades new-swap.json\n"
           "  drishti.py var explain BANK\n  drishti.py var explain 'DESK:RATES' --from 2026-09-29 --to 2026-09-30 --xlsx why.xlsx")
-
-
-def money(v) -> str:
-    return "—" if not isinstance(v, (int, float)) or isinstance(v, bool) else f"{v:,.0f}"
-
-
-def table(rows: list[list[str]], say) -> None:
-    if not rows:
-        return
-    widths = [max(len(r[i]) for r in rows) for i in range(len(rows[0]))]
-    for n, r in enumerate(rows):
-        say("  ".join(c.rjust(widths[i]) if i and n else c.ljust(widths[i]) for i, c in enumerate(r)).rstrip())
-        if n == 0:
-            say("  ".join("-" * w for w in widths))
 
 
 def render_headline(h: dict, say) -> None:

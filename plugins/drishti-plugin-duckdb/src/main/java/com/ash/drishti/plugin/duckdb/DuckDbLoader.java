@@ -15,11 +15,10 @@
  */
 package com.ash.drishti.plugin.duckdb;
 
+import com.ash.drishti.common.LoadLine;
 import com.ash.drishti.common.RowFeed;
 import com.ash.drishti.api.LoadGuard;
 import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
@@ -421,45 +420,10 @@ public final class DuckDbLoader {
     }
 
     private static Row parse(JsonFactory json, String line) throws IOException {
-        String domain = null;
-        String kind = null;
-        String id = null;
-        String date = null;
-        String doc = null;
-        Map<String, Object> columns = new LinkedHashMap<>();
-        try (JsonParser p = json.createParser(line)) {
-            p.nextToken();
-            while (p.nextToken() == JsonToken.FIELD_NAME) {
-                String name = p.currentName();
-                JsonToken t = p.nextToken();
-                switch (name) {
-                    case "domain" -> domain = p.getText();
-                    case "kind" -> kind = p.getText();
-                    case "id" -> id = p.getText();
-                    case "date" -> date = p.getText();
-                    case "doc" -> doc = p.getText();
-                    case "columns" -> {
-                        if (t == JsonToken.START_OBJECT) {
-                            while (p.nextToken() == JsonToken.FIELD_NAME) {
-                                String path = p.currentName();
-                                JsonToken v = p.nextToken();
-                                columns.put(path, v == JsonToken.VALUE_NUMBER_INT || v == JsonToken.VALUE_NUMBER_FLOAT ? (Object) p.getDoubleValue()
-                                        : v == JsonToken.VALUE_NULL ? null : v == JsonToken.START_OBJECT || v == JsonToken.START_ARRAY ? skip(p) : p.getText());
-                            }
-                        }
-                    }
-                    default -> p.skipChildren();
-                }
-            }
-        }
-        if (domain == null || kind == null || id == null || doc == null) {
+        LoadLine l = LoadLine.parseValuesOnly(json, line);
+        if (l.domain() == null || l.kind() == null || l.id() == null || l.doc() == null) {
             throw new IOException("a row needs domain, kind, id and doc: " + (line.length() > 200 ? line.substring(0, 200) + "…" : line));
         }
-        return new Row(DuckDbLayout.schema(domain), kind, id, date == null ? null : LocalDate.parse(date), doc, columns);
-    }
-
-    private static Object skip(JsonParser p) throws IOException {
-        p.skipChildren();
-        return null;                                                       // a promoted path is a value, not an object
+        return new Row(DuckDbLayout.schema(l.domain()), l.kind(), l.id(), l.day(), l.doc(), l.columns());
     }
 }

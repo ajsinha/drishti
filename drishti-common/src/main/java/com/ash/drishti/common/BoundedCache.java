@@ -13,23 +13,23 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.plugin.news;
+package com.ash.drishti.common;
 
 import java.util.LinkedHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
 /** A small least-recently-used map with a fixed capacity; safe for many threads (one lock, held only for the map operation). */
-final class BoundedCache<V> {
+public final class BoundedCache<V> {
 
     private final ReentrantLock lock = new ReentrantLock();
     private final LinkedHashMap<String, V> map = new LinkedHashMap<>(16, 0.75f, true);
     private final int capacity;
 
-    BoundedCache(int capacity) {
+    public BoundedCache(int capacity) {
         this.capacity = capacity;
     }
 
-    V get(String key) {
+    public V get(String key) {
         lock.lock();
         try {
             return map.get(key);
@@ -38,7 +38,7 @@ final class BoundedCache<V> {
         }
     }
 
-    void put(String key, V value) {
+    public void put(String key, V value) {
         lock.lock();
         try {
             map.put(key, value);
@@ -50,7 +50,7 @@ final class BoundedCache<V> {
         }
     }
 
-    int size() {
+    public int size() {
         lock.lock();
         try {
             return map.size();
@@ -59,7 +59,7 @@ final class BoundedCache<V> {
         }
     }
 
-    void clear() {
+    public void clear() {
         lock.lock();
         try {
             map.clear();

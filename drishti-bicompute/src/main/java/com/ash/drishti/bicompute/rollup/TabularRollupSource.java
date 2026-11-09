@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.bicompute.rollup;
 
+import com.ash.drishti.bicompute.sql.ForwardingTabularSource;
 import com.ash.drishti.kernel.api.pivot.AggregationPlan;
 import com.ash.drishti.kernel.api.pivot.Partials;
 import com.ash.drishti.kernel.api.pivot.PivotView;
@@ -142,37 +143,7 @@ public final class TabularRollupSource implements RollupSource {
                 if (!(s instanceof Parted p)) {
                     throw new IllegalStateException(source + " lists no parts");
                 }
-                return new TabularSource() {
-                    @Override
-                    public String id() {
-                        return s.id();
-                    }
-
-                    @Override
-                    public String title() {
-                        return s.title();
-                    }
-
-                    @Override
-                    public List<PivotProvider.Field> fields() {
-                        return s.fields();
-                    }
-
-                    @Override
-                    public int masked() {
-                        return s.masked();
-                    }
-
-                    @Override
-                    public String date() {
-                        return s.date();
-                    }
-
-                    @Override
-                    public List<String> dates() {
-                        return s.dates();
-                    }
-
+                return new ForwardingTabularSource(s) {
                     @Override
                     public String version() {
                         return s.version() + "|parts " + parts.size();

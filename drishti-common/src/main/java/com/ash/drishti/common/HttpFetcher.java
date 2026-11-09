@@ -13,9 +13,8 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.plugin.news;
+package com.ash.drishti.common;
 
-import com.ash.drishti.common.RetryPolicy;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,37 +30,60 @@ import java.util.random.RandomGenerator;
  * {@code retries} times with {@link RetryPolicy} backoff and jitter; any other 4xx, an oversized body or a body that is not
  * wanted fails at once, because waiting will not change it. The body is read only up to {@code max-bytes}.
  */
-final class HttpFetcher {
+public final class HttpFetcher {
+
+    /** What a fetch needs of a connector's settings. */
+    public interface Limits {
+        int retries();
+
+        RetryPolicy retryPolicy();
+
+        Duration timeout();
+
+        int maxBytes();
+
+        String userAgent();
+    }
 
     /** A failed fetch; {@link #permanent()} says repeating cannot help. */
-    static final class FetchException extends IOException {
+    public static final class FetchException extends IOException {
         private final boolean permanent;
+        private final int status;
 
         FetchException(String message, boolean permanent, Throwable cause) {
-            super(message, cause);
-            this.permanent = permanent;
+            this(message, permanent, 0, cause);
         }
 
-        boolean permanent() {
+        FetchException(String message, boolean permanent, int status, Throwable cause) {
+            super(message, cause);
+            this.permanent = permanent;
+            this.status = status;
+        }
+
+        /** The HTTP status, or 0 when there was none. */
+        public int status() {
+            return status;
+        }
+
+        public boolean permanent() {
             return permanent;
         }
     }
 
     private final HttpClient http;
     private final com.ash.drishti.api.proxy.ProxySettings proxy;
-    private final NewsSettings settings;
+    private final Limits settings;
+    private final String accept;
 
-    HttpFetcher(HttpClient http, NewsSettings settings) {
-        this(http, settings, com.ash.drishti.api.proxy.ProxySettings.none());
-    }
-
-    HttpFetcher(HttpClient http, NewsSettings settings, com.ash.drishti.api.proxy.ProxySettings proxy) {
+    /** @param accept the Accept header of every request */
+    public HttpFetcher(HttpClient http, Limits settings, com.ash.drishti.api.proxy.ProxySettings proxy, String accept) {
         this.http = http;
         this.settings = settings;
         this.proxy = proxy;
+        this.accept = accept;
     }
 
-    byte[] get(URI uri) throws IOException, InterruptedException {
+    public byte[] get(URI uri) throws IOException, InterruptedException {
         FetchException last = null;
         for (int attempt = 0; attempt <= settings.retries(); attempt++) {
             if (attempt > 0) {
@@ -81,7 +103,7 @@ final class HttpFetcher {
 
     private byte[] once(URI uri) throws FetchException, InterruptedException {
         HttpRequest req = HttpRequest.newBuilder(uri).timeout(settings.timeout()).header("User-Agent", settings.userAgent())
-                .header("Accept", "application/rss+xml, application/xml, text/xml, */*").GET().build();
+                .header("Accept", accept).GET().build();
         long deadline = System.nanoTime() + settings.timeout().toNanos();
         try {
             HttpResponse<InputStream> r = proxy.send(http, req, HttpResponse.BodyHandlers.ofInputStream());
@@ -89,7 +111,7 @@ final class HttpFetcher {
                 int code = r.statusCode();
                 if (code / 100 != 2) {
                     boolean again = code == 429 || code / 100 == 5;
-                    throw new FetchException("HTTP " + code + " from " + uri.getHost(), !again, null);
+                    throw new FetchException("HTTP " + code + " from " + uri.getHost(), !again, code, null);
                 }
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
                 byte[] buf = new byte[8192];

@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import org.slf4j.Logger;
@@ -43,22 +42,13 @@ public final class LlmRegistry implements AutoCloseable {
     public record Health(Status status, String detail, Instant lastOk, Instant lastFailure, long calls, long failures) {}
 
     /** A provider in the registry. */
-    public record Entry(ProviderConfig config, LlmProvider provider, String error, State state) {
+    public record Entry(ProviderConfig config, LlmProvider provider, String error, CallTally state) {
         public boolean usable() {
             return provider != null && config.enabled();
         }
     }
 
     /** Counters the registry keeps per provider. */
-    public static final class State {
-        final AtomicLong calls = new AtomicLong();
-        final AtomicLong failures = new AtomicLong();
-        volatile Instant lastOk;
-        volatile Instant lastFailure;
-        volatile String lastError = "";
-        volatile boolean lastWasFailure;
-    }
-
     /** A chat model picked by name. */
     public record Resolved(Entry entry, LlmModel model) {
         public ModelInfo info() {
@@ -121,7 +111,7 @@ public final class LlmRegistry implements AutoCloseable {
         for (ProviderConfig c : loaded.providers()) {
             names.add(c.name());
             Entry prev = old.entries().get(c.name());
-            State state = prev != null ? prev.state() : new State();
+            CallTally state = prev != null ? prev.state() : new CallTally();
             if (!c.enabled()) {
                 retry.forget(c.name());
                 entries.put(c.name(), new Entry(c, null, null, state));
@@ -251,21 +241,11 @@ public final class LlmRegistry implements AutoCloseable {
 
     /** Called by the gateway after each call so health reflects use. */
     public void record(Entry entry, boolean ok, String error) {
-        State s = entry.state();
-        s.calls.incrementAndGet();
-        if (ok) {
-            s.lastOk = Instant.now();
-            s.lastWasFailure = false;
-        } else {
-            s.failures.incrementAndGet();
-            s.lastFailure = Instant.now();
-            s.lastError = error == null ? "" : error;
-            s.lastWasFailure = true;
-        }
+        entry.state().record(ok, error);
     }
 
     public Health health(Entry e) {
-        State s = e.state();
+        CallTally s = e.state();
         if (!e.config().enabled()) {
             return new Health(Status.OFF, "enabled: false in the provider file", null, null, 0, 0);
         }

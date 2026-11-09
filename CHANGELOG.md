@@ -17,6 +17,8 @@
 
 ## Unreleased
 
+- **Duplicates folded, behaviour unchanged:** the loaders' line parsing (`LoadLine`), `ReferenceScanner`, `HttpFetcher` and `BoundedCache` in `drishti-common`; `MethodChoices` and `PlaygroundSheets` for FRTB and SIMM;
+  `ForwardingTabularSource`, `ReadingFileIO`, `CallTally`; one real-IP rule (`drishti-console/core/hostrule.py`, loaded by `tools/hostaddr.py`), `tools/clitable.py`, the IAM policy steps in `deploy/aws/lib`, `shotlib.start_pack_servers`. Duplicated lines: Java 4523 to 3613, Python 612 to 318.
 - **Copy-paste ratchet and code volume:** `tools/duplicates.py` runs PMD's copy-paste detector over Java, JavaScript and Python at 100 tokens (`tools/cpd/pom.xml`, outside the
   root build, nothing that ships); the gate fails if any language has more duplicated lines than `tools/cpd/baseline.txt`, which is only lowered. `tools/code_volume.py` writes lines of code per
   release from git into `docs/admin/BENCHMARK.md` section 22.

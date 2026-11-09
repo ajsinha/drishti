@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.plugin.mongodb;
+package com.ash.drishti.common;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
  * identifier (letters, digits and dashes, with at least one dash or digit), anywhere in the document. Streaming,
  * so a large document is not materialised twice.
  */
-final class ReferenceScanner {
+public final class ReferenceScanner {
 
     private static final JsonFactory JSON = new JsonFactory();
     private static final Pattern ID = Pattern.compile("[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+");
@@ -36,7 +36,7 @@ final class ReferenceScanner {
     private ReferenceScanner() {
     }
 
-    static Set<String> referencedIds(String json) {
+    public static Set<String> referencedIds(String json) {
         Set<String> out = new HashSet<>();
         try (JsonParser p = JSON.createParser(json)) {
             JsonToken t;
