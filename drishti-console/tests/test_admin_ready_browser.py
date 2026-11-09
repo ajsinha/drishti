@@ -53,6 +53,17 @@ class ReadyBackend(FakeBackend):
         super().__init__()
         self.pushed = []
         self.items = {}
+        self.uploaded = []
+
+    async def admin_stream_upload(self, path, ident, chunks, params=None, timeout=3600.0):
+        got = b""
+        async for c in chunks:
+            got += c
+        self.uploaded.append((path, params, got))
+        name = params["file"]
+        self.items["up-1"] = {"id": "up-1", "file": name, "source": "upload", "state": "ready", "size": len(got), "sha256": "cd" * 32, "rows": 1, "tar": False,
+                              "suggest": {"table": "trade_endur", "date": "2026-11-06"}}
+        return self.items["up-1"]
 
     async def admin(self, method, path, ident, body=None, timeout=None, **params):
         if path == "/dataload" and method == "GET":
@@ -161,6 +172,30 @@ def test_a_replace_of_existing_rows_needs_its_tick_then_pushes(browser, ready_co
     page.wait_for_selector("[data-ready-done]")
     assert page.locator("[data-ready-board]").get_attribute("href") == "/admin/loads/inbox"
     assert fake.pushed[-1]["ackReplace"] is True and fake.pushed[-1]["mode"] == "replace"
+    assert errors == [], errors
+    ctx.close()
+
+
+def test_a_chosen_file_is_streamed_through_the_console(browser, ready_console, tmp_path):  # noqa: F811
+    base, fake = ready_console
+    page, errors, ctx = _open(browser, base)
+    f = tmp_path / FILE
+    f.write_bytes(b'{"TRADE_ID":"A1"}\n')
+    page.locator("[data-ready-drop] input[type=file]").set_input_files(str(f))
+    expect(page.locator("[data-ready-text]")).to_have_value(re.compile("table: trade_endur"))
+    assert fake.uploaded[-1][0] == "/dataload/upload" and fake.uploaded[-1][1] == {"file": FILE}
+    assert fake.uploaded[-1][2] == b'{"TRADE_ID":"A1"}\n'
+    assert errors == [], errors
+    ctx.close()
+
+
+def test_a_tar_folder_can_be_given_its_pack(browser, ready_console):  # noqa: F811
+    base, fake = ready_console
+    page, errors, ctx = _open(browser, base)
+    page.click('[data-src="inbox"]')
+    page.click('[data-ready-pick="eod.tar.gz"]')
+    page.wait_for_selector('[data-ready-folder="trade"]')
+    assert page.locator('select[data-ready-folder]').count() == 0, "no native select"
     assert errors == [], errors
     ctx.close()
 

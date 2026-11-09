@@ -34,7 +34,7 @@
   function problem(b) { return (b.code ? b.code + ' ' : '') + (b.detail || 'the server said no'); }
   function say(text, bad) { var s = $('[data-ready-said]'); s.textContent = text || ''; s.classList.toggle('t-bad', !!bad); }
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) { e.className = cls; } if (text !== undefined) { e.textContent = text; } return e; }
-  function num(n) { return Number(n).toLocaleString('en-US'); }
+  function num(n) { return window.Drishti.elements.core.formatNumber(Number(n || 0)); }
   function size(n) {
     if (n === null || n === undefined || n < 0) { return '-'; }
     var u = ['B', 'KB', 'MB', 'GB', 'TB'], i = 0;
@@ -193,14 +193,20 @@
     if (st.layoutError) { host.appendChild(el('p', 't-bad', st.layoutError)); }
     var tbl = el('table', 'ready-folders');
     var head = el('tr');
-    ['Table', 'Dates', 'Rows'].forEach(function (x) { head.appendChild(el('th', '', x)); });
+    ['Table', 'Dates', 'Rows', 'Pack'].forEach(function (x) { head.appendChild(el('th', '', x)); });
     tbl.appendChild(head);
     (st.folders || []).forEach(function (f) {
       var tr = el('tr');
       tr.appendChild(el('td', 'mono', f.folder));
       tr.appendChild(el('td', 'mono', f.dates.join(', ')));
       tr.appendChild(el('td', 'mono', f.rows === null || f.rows === undefined ? '-' : num(f.rows)));
+      var td = el('td'), host2 = el('div');
+      host2.setAttribute('data-ready-folder', f.folder);
+      td.appendChild(host2);
+      tr.appendChild(td);
       tbl.appendChild(tr);
+      var pick = new I.Select(host2, { options: [{ value: '', label: 'from its name' }].concat(S.choices.packs.map(function (p) { return { value: p.pack, label: p.pack }; })), value: (S.values.folders || {})[f.folder] || '', label: 'The pack of ' + f.folder });
+      pick.on('change', function (d) { S.values.folders = Object.assign({}, S.values.folders); if (d.value) { S.values.folders[f.folder] = d.value; } else { delete S.values.folders[f.folder]; } schedule(); });
     });
     host.appendChild(tbl);
     var form = el('div');
@@ -216,7 +222,7 @@
   /** The form as the server's fields. */
   function fields() {
     var v = S.values, t = byId(v.pick), f = { item: S.item, lake: v.lake || null, mode: v.mode || 'append', hold: !!v.hold, ackReplace: S.tick };
-    if (S.state && S.state.tar) { return f; }
+    if (S.state && S.state.tar) { f.folders = v.folders || {}; return f; }
     f.businessDate = v.businessDate || null;
     f.key = v.key || null;
     if (v.newTable) {
@@ -358,7 +364,10 @@
 
   function loadChoices() {
     return call('GET', '/choices').then(function (r) {
-      if (!r.ok) { say(problem(r.body), true); return null; }
+      if (!r.ok) {
+        say(r.status === 404 ? 'The data inbox is off on every server: turn it on in Admin, Engines, Data inbox.' : problem(r.body), true);
+        return null;
+      }
       S.choices = r.body;
       S.tables = (r.body.tables || []).map(function (t) { return Object.assign({ id: t.pack + '/' + t.kind + '/' + t.table }, t); });
       facts();

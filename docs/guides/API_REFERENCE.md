@@ -3134,6 +3134,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-5004 | 404 | cache not found | no cache by that name (cache purge) |
 | DRS-5006 | 404 | design not found | no such Build design, or it is not yours (a design is only ever reachable by its owner) |
 | DRS-5007 | 409 | stale revision | an edit built on an older revision of a design (reload it, then edit again), or an undo/redo with nothing to move to (HTTP 409) |
+| DRS-5008 | 409 | push refused | Admin → Data loads → Upload or `drishti.py dataload ready`: a check refused the file, a replace of rows already in the table was not ticked, or a file of that name is already waiting in the inbox |
 | DRS-5010 | 401 | unauthenticated | missing, bad or expired bearer token |
 | DRS-5011 | 404 | load pack not found | a data-load call named a pack that is not loaded (or one the caller may open nothing of): see [DATA_GUIDE.md](DATA_GUIDE.md#12-troubleshooting) |
 | DRS-5012 | 422 | load kind unknown | a data-load call named a kind the pack does not own (the message lists its kinds) |

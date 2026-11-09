@@ -26,7 +26,12 @@ import { InputBase } from './drishti_inputs-dom.js';
  * @property {boolean} [disabled=false]
  */
 
-/** True when a name ends with one of the endings (any case; no endings: every name). */
+/**
+ * True when a name ends with one of the endings (any case; no endings: every name).
+ * @param {string} name
+ * @param {string[]} [accept]
+ * @returns {boolean}
+ */
 export function acceptedName(name, accept) {
   if (!accept || !accept.length) { return true; }
   const low = String(name).toLowerCase();

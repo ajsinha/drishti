@@ -79,7 +79,7 @@ public class ReadyController {
     }
 
     /** The file as the raw body, {@code ?file=<name>}; streamed to the staging folder, its SHA-256 computed on the way, its rows counted after. */
-    @PostMapping(UPLOAD)
+    @PostMapping("/api/v1/admin/dataload/upload")
     public ResponseEntity<?> upload(@RequestParam("file") String file, HttpServletRequest req, @RequestAttribute(Principal.ATTRIBUTE) Principal p) throws IOException {
         entitlements.requireAdmin(p);
         if (inbox.started() || peers.fromPeer(req)) {
@@ -93,7 +93,7 @@ public class ReadyController {
     }
 
     /** One part of an upload another node relays: {@code ?file=}, {@code ?id=} after the first, {@code ?last=true} on the end. */
-    @PostMapping(UPLOAD + "/part")
+    @PostMapping("/api/v1/admin/dataload/upload/part")
     public Map<String, Object> part(@RequestParam("file") String file, @RequestParam(name = "id", required = false) String id,
             @RequestParam(name = "last", defaultValue = "false") boolean last, HttpServletRequest req, @RequestAttribute(Principal.ATTRIBUTE) Principal p) throws IOException {
         entitlements.requireAdmin(p);
@@ -101,7 +101,7 @@ public class ReadyController {
     }
 
     /** The stream cut into parts that each fit one signed peer call; at most one part in memory. */
-    private ResponseEntity<?> relay(String node, String file, InputStream in, Principal p) throws IOException {
+    ResponseEntity<?> relay(String node, String file, InputStream in, Principal p) throws IOException {
         String id = null;
         byte[] next = in.readNBytes(PART);
         while (true) {
@@ -125,7 +125,7 @@ public class ReadyController {
     }
 
     /** An upload dropped. */
-    @DeleteMapping(UPLOAD + "/{id}")
+    @DeleteMapping("/api/v1/admin/dataload/upload/{id}")
     public Map<String, Object> discard(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);
         desk.discard(id, p.user());

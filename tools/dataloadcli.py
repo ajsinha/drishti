@@ -168,7 +168,7 @@ def register(groups, srv, ctx: dict) -> None:
             out["pushed"] = api.json("POST", "/api/v1/admin/dataload/ready/push", form)
             if not a.json:
                 print(f"pushed {out['pushed'].get('file')} and its .ready to the inbox on {out['pushed'].get('node')}")
-        elif not a.check and not a.push and item.get("source") == "upload":
+        elif item.get("source") == "upload":                      # not pushed: nothing stays in the staging folder
             api.json("DELETE", "/api/v1/admin/dataload/upload/" + item["id"])
         if a.json:
             say_json(out)

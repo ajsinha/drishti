@@ -28,7 +28,7 @@
 .ready-folders { width: 100%; border-collapse: collapse; }
 .ready-folders th { text-align: left; color: var(--d-muted); font-weight: 500; padding: var(--d-sp-3_2) var(--d-sp-8); border-bottom: 1px solid var(--d-border); }
 .ready-folders td { padding: var(--d-sp-3_2) var(--d-sp-8); border-bottom: 1px solid var(--d-border); }
-.ready-chk { display: grid; grid-template-columns: var(--d-sp-64, 4rem) minmax(0, 1fr); gap: var(--d-sp-8); padding: var(--d-sp-5_6) 0; border-bottom: 1px solid var(--d-border); }
+.ready-chk { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr); gap: var(--d-sp-8); padding: var(--d-sp-5_6) 0; border-bottom: 1px solid var(--d-border); }
 .ready-chk:last-child { border-bottom: 0; }
 .ready-tally { display: inline-flex; gap: var(--d-sp-4); font-weight: 400; }
 .ready-push { display: flex; flex-wrap: wrap; align-items: center; gap: var(--d-sp-14_4); position: sticky; bottom: 0; }
