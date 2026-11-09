@@ -24,7 +24,6 @@ import com.ash.drishti.engine.source.SourceRegistry;
 import com.ash.drishti.engine.source.SourcesProperties;
 import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.identity.content.ContentStore;
-import com.ash.drishti.identity.content.FileContentStore;
 import com.ash.drishti.packs.ConnectorFiles;
 import com.ash.drishti.packs.PackRegistry;
 import java.nio.file.Files;

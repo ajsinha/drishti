@@ -38,9 +38,9 @@ About 45 minutes.
 The outputs of the command line below were captured on this version; paths are shortened to `~/drishti`.
 
 **The ready-made local cluster: `drishti-stack/`.** This tutorial builds a cluster by hand so that you see each file. To have one running
-without the steps, use `drishti-stack/` at the repository's root: `drishti-stack/start.sh` starts three servers (your own stack on 18480 with
+without the steps, use `drishti-stack/` at the repository's root: `bin/start-cluster.sh` starts three servers (your own stack on 18480 with
 the demo lakes, and two more on 18791 and 18792 with synthetic ENDUR, CALYPSO and MUREX trades) and a console on 17480 given the first
-alone; `status.sh` shows the members and `stop.sh` stops them by process id. The secrets are made on the first start and stay out of git.
+alone; `bin/status --cluster` shows the members and `bin/stop-cluster` stops them by process id. The secrets are made on the first start and stay out of git.
 See [drishti-stack/README.md](../../drishti-stack/README.md).
 
 ## What you will learn

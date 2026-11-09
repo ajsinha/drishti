@@ -791,7 +791,7 @@ nodes:
 ```
 
 ```bash
-drishti-stack/stop.sh && drishti-stack/start.sh
+bin/stop-cluster.sh && bin/start-cluster.sh
 ```
 
 drishti-main's `packs:` names more packs than Drishti Risk opens: the lens's load and the log names the others it skipped. The console

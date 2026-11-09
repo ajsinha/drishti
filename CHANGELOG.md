@@ -5772,7 +5772,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   Admin create, edit, enable or disable, restore or delete is a shared edit in the content store (`config/connectors/<name>.yaml`, with
   history) that every node applies over its file within `drishti.store.watch-ms` (2 s), hot-reloading as for a file edit. Admin →
   Connectors marks it *shared edit*; Reset removes it. Placeholders stay unresolved in the store. Two nodes editing one connector get one
-  `409 DRS-5032`. `drishti.connectors.store: file` for one node. [CONNECTOR_FILES.md](docs/guides/DATA_GUIDE.md#shared-edits-on-a-cluster), CONTENT_STORE.md section 11.
+  `409 DRS-5032`. `drishti.connectors.store: file` for one node. [CONNECTOR_FILES.md](docs/guides/DATA_GUIDE.md#connector-files-on-a-cluster), CONTENT_STORE.md section 11.
 
 - **New: collaboration, notes, embed apps, pack switches, the audit trail, Sutra proposals and load history on every node of a cluster.** They moved
   into the content store (docs/architecture/CONTENT_STORE.md section 9): one document per comment thread (its comments, sealed revision
