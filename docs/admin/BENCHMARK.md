@@ -1638,6 +1638,22 @@ The console's browser tests as the release drill runs them (the design, its rule
 | the browser lane by test (`--dist loadgroup`), the redesigned harness, three runs (no Java verify beside it) | 9 | 25 min 15 s, 28 min 55 s, 25 min 54 s | 13,444 s, 15,420 s, 13,848 s | about 36 GB (18 to 19 server JVMs, 81 Chromium processes); at least 10.8 GB left available |
 | both render suites alone, by test, measured on a shared machine | 4 | 353 s | | |
 
+### 18.1 The full drill: before and after
+
+The lanes as last measured on the release machine, and what the changes to the drill are expected to give. **"After" is an estimate until the release's single full drill measures it.**
+
+| Lane | Before (measured) | After (estimate) | What changes |
+|---|---:|---:|---|
+| Gate | 197 s (measured on this change) | same | |
+| Browser lane | 3,222 s (4 workers by the sizing formula at 49 GB free) | about 2,000 s (7-8 workers on a quiet machine) | sized at 3 GB a worker with a memory floor, cached demo lakes |
+| Java 21 | 2,443 s | same | every test, unchanged |
+| Java 21 Docker | 519 s, after the browser lane | same | |
+| Java 25 | 4,775 s, after the browser lane and Java 21 | about 500 s, from 20 GB free | whole tree compiled, tests of the code a JDK version can change |
+| Tools | about 1,180 s each | same | |
+| **Full drill** | **about 80 minutes** (older releases 82 to 115) | **about 50 to 55 minutes** | the Java 21 lane becomes the longest job |
+
+"Before" is the last full run on record, on a machine shared with other work. Measured for the new pieces: `VarGoldenMatrixTest`, 12 cases with all hierarchies and baskets, about 3 s in the test JVM; a VaR browser file's set-up with the demo lake built, 589 s, and reusing the cached lake, 93 s; `tools/drill.sh --affected` on a two-file diff (one module's tests, one console file), 25 s.
+
 ## 19. The BI scale gate
 
 A small, always-on guard for the BI engine: one model query timed and its Java allocation counted, failing the build when the

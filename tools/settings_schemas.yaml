@@ -473,6 +473,7 @@ schemas:
 # Environment variables no settings file above names: read by the packs' manifests, the server's profile files, the code or the tools.
 # by: server, console, packs, profile, tools.
 env:
+  - { name: DRISHTI_LAKE_CACHE, by: tools, default: "<data>/tmp/lake-cache", sets: "the cached demo lakes' folder", meaning: "Where tools/drillkit/lake_cache.py keeps the demo lakes the test stacks and checks reuse, one per hash of the test data, generators and lake code" }
   # the packs' connectors (config/packs/<domain>/<pack>/pack.yaml)
   - { name: DRISHTI_DELTA_ROOT, by: packs, default: "./data/delta/demo", sets: "the demo lake's root (config/lakes/demo.yaml)", meaning: "Root of the demo lake, which every pack's Delta connector reads (lake: demo); every lake's own default is <data>/delta/<lake>" }
   - { name: DRISHTI_LAKES_RELOCATE_ON_START, by: server, default: "true", sets: "drishti.lakes.relocate-on-start", meaning: "At start, move a demo lake built in the older layout (<data>/delta/<domain>) into <data>/delta/demo once, safely (verified, moved back on any error, never a delete); false: only by drishti.py lake relocate demo (docs/guides/OPERATIONS_GUIDE.md)" }

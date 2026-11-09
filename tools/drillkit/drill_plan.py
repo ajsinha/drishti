@@ -22,6 +22,8 @@
       The browser lane's worker count: the memory available (MemAvailable unless given) less what the drill's other jobs need,
       divided by one browser worker's measured budget, capped at the CPU threads less two and at the scratch ports' limit
       (docs/architecture/TEST_HARNESS.md, "Worker sizing").
+  drill_plan.py wait-memory [--gb GB] [--limit SECONDS]
+      Blocks until that much memory is free (the memory budget of the drill's heavy Java jobs).
   drill_plan.py budget --timings FILE [--budget SECONDS] [--exceptions FILE] [--out FILE]
       The files of one run over the per-file time budget (a file's tests' seconds together), each flagged; exit 0 (a report).
       A file whose tests are spread one by one (marked ``spread``) has no file budget: the workers share its tests.
@@ -71,7 +73,7 @@ SPREAD_WORDS = re.compile(r"^(?:@pytest\.mark\.spread\b|pytestmark\s*=.*\bpytest
 # one browser worker's memory at its peak (its Chromium, its stand-in console, its real server's JVM and that of the file it runs),
 # measured on the release machine (TEST_HARNESS.md, "Measurements": about 4 GB a worker at 9 workers, 2026-11-05); the drill's Java
 # verify and other lane are reserved beside it
-PER_WORKER_GB = 4.0
+PER_WORKER_GB = 3.0
 RESERVE_GB = 24.0
 MAX_WORKERS = 12             # drishti-console/tests/scratch_ports.py MAX_WORKERS: each worker's ports in a block of their own
 BUDGET_SECONDS = 300         # a browser file's tests together; a longer file is split into spread tests or listed with its reason
@@ -249,6 +251,18 @@ def browser_workers(mem_gb: float, threads: int, per_worker_gb: float = PER_WORK
     """How many browser workers fit: (memory less the reserve) / one worker's budget, at most threads - 2 and the ports' cap, at least 1."""
     by_mem = int(max(0.0, mem_gb - reserve_gb) // per_worker_gb)
     return max(1, min(by_mem, max(1, threads - 2), cap))
+
+
+def cmd_wait_memory(a) -> int:
+    """Blocks until ``--gb`` are free: the memory budget (two heavy jobs when 20 GB are free). Exit 0 either way after ``--limit`` seconds, saying so."""
+    began = time.monotonic()
+    while mem_available_gb() < a.gb:
+        if time.monotonic() - began > a.limit:
+            print(f"drill: only {mem_available_gb():.0f} GB free after {a.limit}s; starting anyway")
+            return 0
+        time.sleep(10)
+    print(f"drill: {mem_available_gb():.0f} GB free after {time.monotonic() - began:.0f}s")
+    return 0
 
 
 def cmd_workers(a) -> int:
@@ -445,6 +459,10 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--reserve-gb", type=float, default=RESERVE_GB)
     s.add_argument("--max", type=int, default=MAX_WORKERS)
     s.set_defaults(run=cmd_workers)
+    s = sub.add_parser("wait-memory", help="block until this much memory is free")
+    s.add_argument("--gb", type=float, default=20.0)
+    s.add_argument("--limit", type=int, default=3600)
+    s.set_defaults(func=cmd_wait_memory)
     s = sub.add_parser("budget", help="flag the files of one run over the per-file time budget")
     s.add_argument("--timings", required=True)
     s.add_argument("--tests", default=str(ROOT / "drishti-console" / "tests"))
