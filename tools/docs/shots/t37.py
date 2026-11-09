@@ -51,7 +51,7 @@ def _open(c: Ctx, name: str, view: dict) -> None:
         raise RuntimeError(f"{name}: {r}")
     c.page.set_viewport_size({"width": WIDE, "height": HIGH})
     c.page.goto(c.base + "/pivot?view=" + r["id"])
-    c.until("document.querySelectorAll('[data-pv-grid] td.pv-c').length > 0", 300)
+    c.until("document.querySelectorAll('[data-pv-grid] .dg-cell[data-cell]').length > 0", 300)
     c.page.wait_for_timeout(1200)
 
 
@@ -101,9 +101,10 @@ def explain(c: Ctx):
     c.page.fill("[data-pf-to]", "PRODUCT_TYPE=FX_FORWARD")
     c.page.select_option("[data-pf-by]", "COUNTERPARTY")
     c.page.locator("[data-pf-explain]").click()
-    c.until("document.querySelector('[data-pf-waterfall]') && document.querySelector('[data-pf-waterfall]').innerHTML.length > 50", 60)
+    c.until("document.querySelector('.dx-drawer [data-dx-body]') && document.querySelector('.dx-drawer [data-dx-body]').innerText.trim().length > 50", 60)
     c.page.wait_for_timeout(1000)
-    _card_shot(c, "04-explain.jpg", "explain")
+    c.save("04-explain.jpg", locator=".dx-drawer")               # the steps now open in the Explain drawer
+    c.page.locator("[data-dx-close]").click()
 
 
 @shot("05-whatif.jpg")

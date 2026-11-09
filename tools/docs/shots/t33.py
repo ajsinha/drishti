@@ -79,7 +79,7 @@ def _save(c: Ctx, name: str, view: dict) -> str:
 def _open(c: Ctx, path: str) -> None:
     c.page.set_viewport_size({"width": 1440, "height": 900})
     c.page.goto(c.base + path)
-    c.until("document.querySelectorAll('[data-pv-grid] td.pv-c').length > 0 || !document.querySelector('[data-pv-notice]').hidden", 300)
+    c.until("document.querySelectorAll('[data-pv-grid] .dg-cell[data-cell]').length > 0 || !document.querySelector('[data-pv-notice]').hidden", 300)
     c.page.wait_for_timeout(900)
 
 
@@ -111,11 +111,11 @@ def open_row(c: Ctx):
 @shot("03-documents-field-list.jpg")
 def field_list(c: Ctx):
     _open(c, "/pivot?source=trade")
-    c.page.fill("[data-pv-field-search]", "legs")                       # the legs' fields, under their grain's heading
-    c.page.dispatch_event("[data-pv-field-search]", "input")
-    c.until("Array.from(document.querySelectorAll('[data-pv-fields] h3')).some(h => h.textContent.indexOf('Each leg') === 0)", 60)
+    c.page.wait_for_selector("[data-pv-grid] .dg-field-search")
+    c.page.fill("[data-pv-grid] .dg-field-search", "legs")              # the legs' fields, under their grain's heading
+    c.until("Array.from(document.querySelectorAll('[data-pv-grid] .dg-fgroup')).some(g => g.textContent.indexOf('Each leg') >= 0)", 60)
     c.page.wait_for_timeout(400)
-    c.save("03-documents-field-list.jpg", locator=".pv-card:has([data-pv-fields])")
+    c.save("03-documents-field-list.jpg", locator="[data-pv-grid] .dg-fieldpane")
 
 
 @shot("04-legs-per-desk.jpg", also=("notional-by-desk-and-year.jpg", "trades-with-a-jpy-leg.jpg", "fixed-and-floating-legs.jpg",

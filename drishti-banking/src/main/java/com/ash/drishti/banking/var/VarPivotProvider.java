@@ -136,6 +136,46 @@ public final class VarPivotProvider implements PivotProvider {
         return frtb;
     }
 
+    /** The names of the last date asked: reference data, the same for every viewer (the loader reads each kind's names once per load). */
+    private volatile Map.Entry<String, java.util.function.BinaryOperator<String>> names;
+
+    /**
+     * Desk, book, legal entity and the other hierarchy levels by their entity's name (the VaR tree's, {@code VarLoader.names}). A dimension
+     * is a position column ({@code DESK}) or a level of a hierarchy ({@code MGMT.DESK}); a level with no name, or a name not readable, shows its id.
+     */
+    @Override
+    public java.util.function.BinaryOperator<String> memberNames(Viewer v, String source, String date) {
+        if (!on.getAsBoolean()) {
+            return (dim, value) -> null;
+        }
+        String key;
+        LocalDate day;
+        try {
+            day = svc.scoped(principal(v), "BANK", day(date)).date().date();
+            key = version(v, source, date).split("\\|", 4)[2] + "|" + day;
+        } catch (RuntimeException e) {
+            return (dim, value) -> null;                         // no date to name: the ids stand
+        }
+        Map.Entry<String, java.util.function.BinaryOperator<String>> held = names;
+        if (held != null && held.getKey().equals(key)) {
+            return held.getValue();
+        }
+        Hierarchies hs = svc.hierarchies();
+        Map<String, String> levels = new HashMap<>();
+        hs.specs().forEach(s -> s.levelNames().forEach(l -> levels.put(l.toUpperCase(Locale.ROOT).replace('-', '_'), l)));
+        com.ash.drishti.banking.compute.var.Cells.Names read = svc.loader().names(com.ash.drishti.api.AsOf.of(day), hs);
+        java.util.function.BinaryOperator<String> out = (dim, value) -> {
+            String level = levels.get(dim.substring(dim.lastIndexOf('.') + 1).toUpperCase(Locale.ROOT).replace('-', '_'));
+            try {
+                return level == null ? null : read.of(level, value);
+            } catch (RuntimeException e) {
+                return null;
+            }
+        };
+        names = Map.entry(key, out);
+        return out;
+    }
+
     /** True when the MR cube runs here. */
     boolean mr() {
         return mr.getAsBoolean();

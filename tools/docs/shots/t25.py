@@ -97,7 +97,7 @@ def basket(c: Ctx):
         c.until("document.querySelector('[data-vb-hints]').dataset.q === %r && document.querySelectorAll('[data-vb-hint]').length > 0" % text, 30)
         c.page.locator("[data-vb-find]").press("Enter")
         c.until("window.Drishti.VarBasket.parts() > %d" % n)
-    c.until("(() => { const l = document.querySelector('[data-vb-live]'); return l && l.dataset.sig === window.Drishti.VarBasket.signature()"
+    c.until("(() => { const l = document.querySelector('[data-var-basket] .vb-kpis'); return l && l.dataset.sig === window.Drishti.VarBasket.signature()"
             " && !l.classList.contains('computing'); })()", 60)
     c.page.wait_for_timeout(600)
     c.save("06-basket.jpg", locator="[data-var-basket]")

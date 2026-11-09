@@ -28,6 +28,9 @@
 - **Kernel boundary (P1):** the core names no banking string (`tools/domain_strings_allowed.yaml` is empty); banking's words go through `DomainVocabulary` and the
   console's new plugin hooks (reserved words, console commands, phone pages, connector actions, the view toolbar slot). New `drishti-kernel-api` jar (kernel API 0.1) holds
   the SPIs of KERNEL_AND_MODULES section 2.3, with `ApiSurfaceTest` pinning the surface; `KernelWithoutModulesTest` boots the kernel with no banking on the class path.
+- **Pivot rows show entity names** (desk, book, legal entity), as the VaR tree does, with the id in the tooltip. Figures are unchanged.
+- **Screenshot scripts** t33, t37 and var follow the current pivot field pane, the Explain drawer and the basket sheet.
+- **Mock-ups** for including matured items on the VaR explorer: `docs/lenses/mockups/var-matured/`.
 
 ### Operations
 

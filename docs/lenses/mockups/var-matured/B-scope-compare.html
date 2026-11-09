@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A screen mock-up (var-matured/B-scope-compare.html), self-contained: system fonts, everything inline, nothing from a CDN.
+  VaR explorer: include or exclude matured items, at the grain of the input; see README.md beside it.
+  The address picks the state, e.g. #on-trade-light. Off, position grain and dark theme by default.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Matured items: B, scope compare</title>
+<script>if(location.hash.indexOf('light')>=0)document.documentElement.classList.add('light');</script>
+<style>
+:root{
+  --bg:#0e1628;--panel:#16213a;--panel2:#1b2744;--line:#26345a;--ink:#e7ecf5;--muted:#93a0b8;--amber:#e8a33a;--amber-t:rgba(232,163,58,.14);
+  --link:#7fb2ff;--ok:#5fd39a;--warn:#f2c14e;--warn-t:rgba(242,193,78,.16);--onacc:#14100a;--shadow:0 10px 30px rgba(0,0,0,.45);
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;color-scheme:dark}
+html.light{--bg:#f7f5f0;--panel:#fff;--panel2:#faf8f4;--line:#e2dcd0;--ink:#172440;--muted:#55607a;--amber:#985b0a;--amber-t:rgba(184,110,12,.10);
+  --link:#1f5fc4;--ok:#1b784c;--warn:#8a6100;--warn-t:rgba(138,97,0,.10);--onacc:#fff;--shadow:0 10px 30px rgba(40,40,60,.18);color-scheme:light}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 var(--sans)}
+.cap{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:8px 16px;background:var(--panel2);border-bottom:1px solid var(--line);font-size:12px;color:var(--muted)}
+.cap b{color:var(--ink)}.cap a{color:var(--link);text-decoration:none;padding:2px 7px;border-radius:5px}.cap a.on{background:var(--amber-t);color:var(--amber);font-weight:600}.cap .sp{flex:1}
+main{max-width:1180px;margin:0 auto;padding:16px}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}.bar h1{font-size:19px;margin:0 8px 0 0}
+.pick{border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:4px 9px;font-size:13px;color:var(--ink)}.sp{flex:1}
+.btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:6px;padding:5px 11px;font:inherit;font-size:13px;cursor:pointer}
+.sw{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--panel);padding:4px 10px;border-radius:6px;font-size:13px;cursor:pointer}
+.sw i{width:30px;height:16px;border-radius:9px;background:var(--line);position:relative;display:inline-block}.sw i:after{content:"";position:absolute;width:12px;height:12px;border-radius:50%;background:var(--ink);top:2px;left:2px}
+.sw.on{border-color:var(--amber);background:var(--amber-t)}.sw.on i{background:var(--amber)}.sw.on i:after{left:16px;background:var(--onacc)}
+.q{display:inline-flex;width:15px;height:15px;border-radius:50%;border:1px solid var(--muted);color:var(--muted);font-size:10px;align-items:center;justify-content:center}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:13px 15px;margin-bottom:12px}.card h2{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.head{display:flex;flex-wrap:wrap;gap:26px;align-items:flex-end}.fig{font:600 30px/1.1 var(--mono)}.lbl{font-size:12px;color:var(--muted)}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:.03em;background:var(--amber);color:var(--onacc)}.tag.plain{background:var(--panel2);color:var(--muted);border:1px solid var(--line)}
+.band{display:flex;gap:10px;align-items:center;background:var(--warn-t);border:1px solid var(--amber);border-radius:6px;padding:7px 12px;margin-bottom:12px;font-size:13px}
+.grid{display:grid;grid-template-columns:2fr 1fr;gap:12px}@media(max-width:820px){.grid{grid-template-columns:1fr}}
+table{width:100%;border-collapse:collapse;font-size:13px}th{font-size:11px;color:var(--muted);text-align:right;font-weight:600;padding:4px 7px;border-bottom:1px solid var(--line)}th:first-child,td:first-child{text-align:left}
+td{padding:5px 7px;border-bottom:1px solid var(--line);text-align:right;font-family:var(--mono)}td:first-child{font-family:var(--sans)}tr.t td{font-weight:700}.i1 td:first-child{padding-left:22px}.i2 td:first-child{padding-left:38px}.dlt{color:var(--amber)}.flag{color:var(--warn);font-size:11px;font-family:var(--sans);margin-left:6px}
+ul.no{margin:0;padding:0;list-style:none}ul.no li{padding:4px 0;font-size:13px}.ok{color:var(--ok)}.muted{color:var(--muted);font-size:12px}
+.note{font-size:13px;line-height:1.55}.mono{font-family:var(--mono);font-size:12px}
+.cmp{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}.cmp>div{border:1px solid var(--line);border-radius:6px;padding:9px 12px}.cmp .act{border-color:var(--amber);background:var(--amber-t)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}.seg button{border:0;background:var(--panel);color:var(--ink);padding:5px 11px;font:inherit;font-size:13px;cursor:pointer}.seg button.on{background:var(--amber);color:var(--onacc);font-weight:600}
+.file{display:flex;justify-content:space-between;gap:8px;padding:5px 0;font-size:13px;border-bottom:1px solid var(--line)}
+</style>
+</head>
+<body>
+<div class="cap"><b>Matured items: B, scope compare</b><span id="c1"></span><span id="c2"></span><span id="c3"></span><span class="sp"></span><span>Mock-up. The figures are made up.</span></div>
+<main id="m"></main>
+<script>
+"use strict";
+const H=location.hash.slice(1).split('-');let S={on:H.includes('on'),trade:H.includes('trade'),light:H.includes('light')};
+const link=(l,k,v)=>'<a href="#" class="'+(S[k]===v?'on':'')+'" data-k="'+k+'" data-v="'+v+'">'+l+'</a>';
+const D={on:{p:{n:'14 matured positions',one:'matured position',plural:'positions',add:2.68,var:43.87},t:{n:'31 matured trades',one:'matured trade',plural:'trades',add:1.94,var:43.13}}};
+const ROWS=[['Firm','t',41.19,48.0],['Global Markets','i1',33.40,38.0],['Rates desk','i2',18.72,21.0],['FX desk','i2',12.05,14.0],['Credit desk','i2',9.61,12.0],['Treasury','i1',11.26,14.0]];
+const SH={p:[.0,.0,1.31,.42,.68,.27],t:[.0,.0,.94,.30,.52,.18]};const c=(x)=>x.toFixed(2);
+function g(){return S.trade?D.on.t:D.on.p}
+function vals(){const o=g(),sh=S.trade?SH.t:SH.p;let r=ROWS.map((w,i)=>[...w,sh[i]]);r[1][4]=r[2][4]+r[3][4]+r[4][4]-.34*(S.trade?.8:1);r[0][4]=o.add;return r}
+function tree(off){const showD=!off;return '<table><tr><th>Node</th><th>VaR 99% 1d (m USD)</th>'+(showD?'<th>of which matured</th>':'')+'<th>Limit</th><th>Use</th></tr>'+vals().map(r=>{const v=off?r[2]:r[2]+r[4];const flag=(!S.trade&&r[0]==='Rates desk')?'<span class="flag" title="Trade 44102 inside this position has matured: flagged only, a position is the smallest piece of this input">matured trade inside</span>':'';return '<tr class="'+r[1]+'"><td>'+r[0]+flag+'</td><td>'+c(v)+'</td>'+(showD?'<td class="dlt">+'+c(r[4])+'</td>':'')+'<td>'+c(r[3])+'</td><td>'+Math.round(r[2]/r[3]*100)+'%</td></tr>'}).join('')+'</table>'}
+function ctl(){const o=g();return '<span class="seg" title="This view only"><button class="'+(S.on?'':'on')+'"'+(S.on?' data-tg="1"':'')+'>Official scope</button><button class="'+(S.on?'on':'')+'"'+(S.on?'':' data-tg="1"')+'>With matured '+o.plural+'</button></span>'}
+function notAff(){return '<div class="card"><h2>What ignores this control</h2><ul class="no"><li><span class="ok">&#10003;</span> Official record: always without matured '+g().plural+'</li><li><span class="ok">&#10003;</span> Captures and sign-off: always without them</li><li><span class="ok">&#10003;</span> Limit use and breaches: always without them</li></ul><p class="muted">The control changes this view only. It is off whenever the page opens.</p></div>'}
+function comm(){const o=g();return S.on?'<b>Includes '+o.n+'.</b> Firm VaR is '+c(o.var)+'m, '+c(o.add)+'m above the official 41.19m. Rates desk adds the most. Use the official figure for reporting.':'Firm VaR is 41.19m, 86% of limit. Rates desk is the largest contributor at 18.72m. Matured '+o.plural+' are left out, as in the official record.'}
+function exp(){const o=g();const a=[['VaR tree (Excel)',S.on?'sheet title and a Scope column: "Includes matured '+o.plural+'"':'as today'],['PDF report',S.on?'a banner on each page':'as today'],['CSV',S.on?'a SCOPE column on each row':'as today']];return '<div class="card"><h2>Exports</h2>'+a.map(x=>'<div class="file"><span>'+x[0]+'</span><span class="muted">'+x[1]+'</span></div>').join('')+'</div>'}
+function flagsCard(){if(S.trade)return '<p class="muted">At trade grain each matured trade is its own input, so each can be left in or out.</p>';return '<div class="card"><h2>Matured trades inside positions</h2><p class="note"><b>3 positions</b> hold a matured trade. It cannot be separated from a position-grain input, so it is flagged and stays in the figure either way.</p></div>'}
+function page(){const o=g();document.getElementById('m').innerHTML='<div class="bar"><h1>VaR explorer</h1><span class="pick">Desk hierarchy</span><span class="pick">2026-11-06</span><span class="pick">99% · 1d · 509 days</span><span class="pick">USD</span><span class="sp"></span>'+ctl()+'<button class="btn">Export</button></div>'+'<div class="card"><h2>Firm VaR, by scope</h2><div class="cmp"><div class="'+(S.on?'':'act')+'"><div class="lbl">Official scope'+(S.on?'':' · shown')+'</div><div class="fig">41.19m</div></div><div class="'+(S.on?'act':'')+'"><div class="lbl">With '+o.n+(S.on?' · shown':'')+'</div><div class="fig">'+c(o.var)+'m</div></div><div><div class="lbl">Difference</div><div class="fig dlt">+'+c(o.add)+'m</div></div></div></div>'+(S.on?'<div class="band"><span class="tag">INCLUDES MATURED</span><span>The tree, commentary and exports below include '+o.n+'.</span></div>':'')+'<div class="grid"><div><div class="card"><h2>By desk</h2>'+tree(!S.on)+'</div><div class="card"><h2>Commentary</h2><p class="note">'+comm()+'</p></div></div><div><div class="card"><h2>The matured '+o.plural+'</h2>'+(S.trade?[['T-881204','Rates','2026-10-30'],['T-880977','FX','2026-11-03'],['T-880412','Credit','2026-11-05']]:[['P-20411','Rates','2026-10-30'],['P-20287','FX','2026-11-03'],['P-19954','Credit','2026-11-05']]).map(x=>'<div class="file"><span class="mono">'+x[0]+'</span><span>'+x[1]+'</span><span class="muted">matured '+x[2]+'</span></div>').join('')+'<p class="muted">and more. Open the full list.</p></div>'+notAff()+exp()+flagsCard()+'</div></div>'}
+function draw(){document.documentElement.classList.toggle('light',S.light);page();
+ document.getElementById('c1').innerHTML='Control: '+link('Off','on',false)+link('On','on',true);
+ document.getElementById('c2').innerHTML='Input: '+link('GRAIN=POSITION','trade',false)+link('GRAIN=TRADE','trade',true);
+ document.getElementById('c3').innerHTML='Theme: '+link('Dark','light',false)+link('Light','light',true);
+ location.replace('#'+[S.on?'on':'off',S.trade?'trade':'position',S.light?'light':'dark'].join('-'))}
+document.addEventListener('click',e=>{const a=e.target.closest('[data-k]');if(a){e.preventDefault();S[a.dataset.k]=a.dataset.v==='true';draw();return}if(e.target.closest('[data-tg]')){S.on=!S.on;draw()}});
+draw();
+</script>
+</body>
+</html>
