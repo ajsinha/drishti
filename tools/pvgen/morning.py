@@ -45,6 +45,7 @@ def main(argv=None) -> int:
     p.add_argument("--pv-systems", default="ENDUR,CALYPSO,MUREX", metavar="SYS,SYS", help="systems sent as scenario PVs (default all three)")
     p.add_argument("--pnl-systems", default="", metavar="SYS,SYS", help="systems sent as P&L vectors even when listed above")
     p.add_argument("--all-vectors", action="store_true", help="every trade a P&L vector (as before 2.9.4)")
+    p.add_argument("--budget", type=int, default=0, help="at most this many trades a book, whole positions (default 0: every live trade): a small test set")
     p.add_argument("--out", default=str(Path(os.environ.get("DRISHTI_DATA_DIR", C.ROOT / "data")) / "pvgen"),
                    help="the folder the files go to (default <data folder>/pvgen); a subfolder morning-<date>")
     p.add_argument("--gzip", action="store_true", help="write .jsonl.gz")
@@ -55,7 +56,7 @@ def main(argv=None) -> int:
     p.add_argument("--dry-run", action="store_true", help="say what would be written; write nothing")
     a = p.parse_args(argv)
     pv = C.M.pv_systems(a.pv_systems, a.pnl_systems, a.all_vectors)
-    m = C.Morning(Path(a.testdata), pv, a.date, C.grain_systems(a))
+    m = C.Morning(Path(a.testdata), pv, a.date, C.grain_systems(a), a.budget)
     folder = Path(a.out) / f"morning-{m.day}"
     grain = ", per position: " + ", ".join(m.position_systems) if m.position_systems else ""
     print(f"morning run of {m.day}: {len(m.rows['scenario-pv']):,} records as scenario PVs ({', '.join(pv) or 'none'}), "

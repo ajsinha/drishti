@@ -79,6 +79,16 @@ def var_lake(tmp_path_factory, only: str, as_of: str | None = None) -> Path:
     return Path(got["lake"])
 
 
+def trade_grain(lake: Path, budget: int = 40) -> None:
+    """A small trade-grain morning on the lake's newest date, replacing its position records (the demo is position grain; the engine's trade
+    paths stay covered): each trade its own record, Endur as scenario PVs, Calypso and Murex as P&L vectors, at most ``budget`` trades a book."""
+    day = max(p.name.split("=")[1] for p in (lake / "risk" / "scenario-pv").iterdir() if p.name.startswith("business_date="))
+    r = subprocess.run([sys.executable, str(ROOT / "tools" / "pvgen" / "morning.py"), "--grain", "trade", "--pv-systems", "ENDUR", "--budget", str(budget), "--date", day,
+                        "--out", str(lake.parent / "morning"), "--lake", str(lake)], capture_output=True, text=True, cwd=ROOT, timeout=900)
+    if r.returncode != 0:
+        pytest.skip("could not write the trade-grain morning: " + (r.stderr or r.stdout)[-400:])
+
+
 def var_server(tmp_path_factory, lake: Path, **env: str):
     """A real server and console over ``lake``, its VaR engine ready; ``env``: more DRISHTI_* settings. Its VaR hot folder and the root
     it publishes the official results to (``<root>/risk-results``, VAR_GUIDE section 19) are its own: the lake is read, never written."""

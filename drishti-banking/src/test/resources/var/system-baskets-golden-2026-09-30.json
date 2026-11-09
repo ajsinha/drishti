@@ -74,14 +74,14 @@
     "type": "RULE",
     "owner": "group-risk",
     "scope": "WHERE:CURRENCY == 'EUR'",
-    "members": 235,
-    "membersDigest": "1b06b16108e0b547cfb08e97180a2129688b9b259692bbd7ec2e3941ff72ccf0",
-    "aggregateDigest": "ec64d33e3cee67a2c41532f279800cf856d210de6e121bbe5d7879710b9fb0b9",
+    "members": 1040,
+    "membersDigest": "3d0b34475ffb6ab39a3bc6559a61b3310a3ae9837c040760f6f00ec292186fab",
+    "aggregateDigest": "a4f580e3082d0a3a550289ff27d57321bd754a259cb987b3c8d12874dc8e28ee",
     "unknown": [],
-    "var": 3021487.8067357475,
-    "es": 2804194.845695984,
+    "var": 24780509.896403074,
+    "es": 37760146.18492138,
     "limit": 36000000.0,
-    "limitUse": 0.08393021685377076
+    "limitUse": 0.6883474971223076
   },
   "PF-FI-DESK": {
     "name": "Bonds and securitised desk",
@@ -102,14 +102,14 @@
     "type": "RULE",
     "owner": "fx-risk",
     "scope": "WHERE:PRODUCT_GROUP == 'FX' and CURRENCY in ('JPY', 'GBP', 'CAD', 'CHF', 'EUR')",
-    "members": 0,
-    "membersDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "aggregateDigest": "77efb11a7ce36716aaabac10bdb7cb4881d53ad3b973bc57457b4977133ded30",
+    "members": 440,
+    "membersDigest": "23268e91cf55411de2de0d532816cc96de5d2bb44705138d483931a90b604322",
+    "aggregateDigest": "414cd655d15d1da7efe893bb74f8099d70e6f845328f73adfdf2b798f893b315",
     "unknown": [],
-    "var": -0.0,
-    "es": -0.0,
+    "var": 16232009.0,
+    "es": 16002058.23076923,
     "limit": 27000000.0,
-    "limitUse": -0.0
+    "limitUse": 0.6011855185185185
   },
   "PF-FX-DESK": {
     "name": "G10 and EM FX desk",
@@ -11255,13 +11255,13 @@
     "type": "RULE",
     "owner": "group-risk",
     "scope": "WHERE:PRODUCT_GROUP in ('Rates', 'Fixed income', 'Money market') and CURRENCY == 'USD'",
-    "members": 1849,
-    "membersDigest": "d97a2b2b03ecdb663fd80584c1df444e19e6d33c98616def2b99b979229d77d5",
-    "aggregateDigest": "43d19681b17586cfe2ae22207138a0863c5d814ce7bf9dd3a26e252d82ea0eb3",
+    "members": 565,
+    "membersDigest": "da9b1265e8b1b6a6824d2c3e549abe748d2320cb11732bbdebf3861c56a87038",
+    "aggregateDigest": "877c422e8053dd26cccd6e487dd5cb0561028051946835f7eeaed754f08f04cb",
     "unknown": [],
-    "var": 52781698.0,
-    "es": 56180214.23076923,
+    "var": 28968862.0,
+    "es": 29801297.46153846,
     "limit": 42000000.0,
-    "limitUse": 1.2567070952380952
+    "limitUse": 0.6897348095238095
   }
 }

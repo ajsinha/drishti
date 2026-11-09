@@ -61,7 +61,6 @@ guides:
           - **`BATCH_ID`, `RESTATEMENT`, `RUN_KIND`:** which run produced it; a restatement replaces the earlier row.
       - kind: pnl-vector
         title: P&L vectors per trade (accepted)
-        sample: market-risk/pnl-vector/pnl-vector-*.tar
         required: "**one of the two**, per trade"
         for: each trade's scenario P&L, computed by the source
         guide: "[15.2](#152-pnl-vector-one-pl-vector-per-trade)"
@@ -490,7 +489,6 @@ guides:
           A stored position table, pivoted like any other kind. The demo derives its positions in the VaR engine instead.
       - kind: pnl-vector
         title: P&L vectors per trade
-        sample: market-risk/pnl-vector/pnl-vector-*.tar
         required: "**one of the two**, per trade"
         for: "the MR cube preset: every trade's vector; its columns as dimensions"
         guide: "[29.3](#293-the-inputs)"

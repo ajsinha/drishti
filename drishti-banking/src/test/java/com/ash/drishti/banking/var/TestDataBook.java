@@ -149,6 +149,10 @@ final class TestDataBook {
         for (int c = 0; c < texts.length; c++) {
             texts[c] = text(n, cols.get(c));
         }
+        String own = text(n, "TRADE_CURRENCY");
+        if (own != null) {
+            texts[cols.indexOf("CURRENCY")] = own;                      // the record's own currency, as the intake (scopes, rules)
+        }
         String trade = text(n, "TRADE_ID");
         if (trade == null) {
             trade = text(n, "POSITION_ID");                             // a position sent whole: never derived

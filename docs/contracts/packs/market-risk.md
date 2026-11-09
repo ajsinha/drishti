@@ -730,7 +730,6 @@ A trade's present value under each historical scenario and its base PV of the sa
 - link: field DESK; kind desk
 - link: field TT_BOOK; kind book
 - link: field PORTFOLIO; kind book
-- enum: field PRODUCT_TYPE; values `CallNot`, `Cash`, `ComFut`, `ComSwap`, `Commodity`
 - link: field COUNTERPARTY; kind counterparty
 - enum: field DIRECTION; values `LONG`, `SHORT`
 - vector-length: field SCENARIO_PV; same every row of one business date

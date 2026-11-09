@@ -242,6 +242,8 @@ final class VarSelection {
         for (String n : s.res().notes()) {
             if (n.equals("rule matched 0 positions")) {
                 out.add("a rule matches no position on " + date);
+            } else if (n.startsWith("TRD:") && n.contains("sends whole")) {
+                out.add(n);                                               // a position named as a trade: counted as the position, said so
             }
         }
         if (s.set().isEmpty()) {
@@ -252,9 +254,6 @@ final class VarSelection {
     }
 
     private static String trade(VarService.Scoped s, String id, String date) {
-        if (s.date().book().tradeOrdinalAnyCase(id) >= 0 && s.date().book().supplied(s.date().book().tradeOrdinalAnyCase(id))) {
-            return "TRD:" + id + " is a position its source system sends whole (position grain): ask POS:" + id;
-        }
         String position = s.date().intake().positionOf(id);
         if (position != null) {
             return "TRD:" + id + " is in the position " + position + ", which its source system sends whole (position grain): ask POS:" + position;

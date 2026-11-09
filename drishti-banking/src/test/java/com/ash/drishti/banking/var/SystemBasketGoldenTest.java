@@ -49,7 +49,8 @@ import org.junit.jupiter.api.io.TempDir;
  * <p>{@code var/system-baskets-golden-2026-09-30.json} was recorded from the 28 rows of the {@code portfolio} feed before the feed was
  * removed: per portfolio its definition (type, scope text), the trades it resolves to (count and a digest of their ids), its P&amp;L
  * vector (a digest of the float64 bits), its VaR and ES (exact doubles), its limit from {@code var-limit} (hierarchy PORTFOLIO) and the
- * limit use (the test data now positions: members, digests, the page's trade counts and, for baskets that named trades or POSITION_RULE,
+ * limit use (read with each record's own currency, TRADE_CURRENCY when sent, as the server does: PF-EUR-ALL, PF-FX-CROSSES and PF-USD-RATES, rules
+ * on CURRENCY, were recorded anew when the harness read the P&amp;L vectors' CURRENCY, USD, for Calypso and Murex; the test data now positions: members, digests, the page's trade counts and, for baskets that named trades or POSITION_RULE,
  * the definition re-keyed to the positions; PF-PARTIAL-FILLS holds whole positions now, so it was recorded anew; every other figure kept as
  * recorded and compared to a micro-dollar); and the figures of the page {@code PORT PF-RATES-DESK} shows: its positions with their trades in scope, standalone VaR,
  * component VaR, direction and market value, the counts of longs and shorts, the gross and net market value. The same figures computed
@@ -202,7 +203,13 @@ class SystemBasketGoldenTest {
         for (String id : ids) {
             JsonNode exp = want.get(id);
             JsonNode g = got.get(id);
-            exp.fieldNames().forEachRemaining(f -> assertClose(id + " " + f, exp.get(f), g.get(f)));
+            exp.fieldNames().forEachRemaining(f -> {
+                if (List.of("var", "es", "limitUse", "page").contains(f)) {
+                    assertClose(id + " " + f, exp.get(f), g.get(f));
+                } else {
+                    assertThat(g.get(f)).as(id + " " + f).isEqualTo(exp.get(f));             // definition, members, limit: exactly
+                }
+            });
             assertThat(g.size()).as(id + " fields").isEqualTo(exp.size());
         }
         assertThat(want.get(PAGE).get("page").get("positionCount").asInt()).as("the page's positions").isPositive();
@@ -225,8 +232,8 @@ class SystemBasketGoldenTest {
     }
 
     /**
-     * The golden figures compared to a micro-dollar: the sum over a position's trades and the position's own record differ in the last bit of a
-     * double (the order of the additions, about 10^-8 of a dollar at most). Text and digests exactly.
+     * VaR, ES, limit use and the page's figures compared to a micro-dollar (1e-6 USD; the largest difference seen is 6e-8): a position's record
+     * and the sum of its trades add the same numbers in another order, which moves the last bit of a double. Everything else is compared exactly.
      */
     static void assertClose(String what, JsonNode want, JsonNode got) {
         if (want.isNumber() && got.isNumber()) {

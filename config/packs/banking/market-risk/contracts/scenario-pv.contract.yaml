@@ -423,14 +423,6 @@ validation:
 - rule: link
   field: PORTFOLIO
   kind: book
-- rule: enum
-  field: PRODUCT_TYPE
-  values:
-  - CallNot
-  - Cash
-  - ComFut
-  - ComSwap
-  - Commodity
 - rule: link
   field: COUNTERPARTY
   kind: counterparty

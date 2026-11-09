@@ -112,14 +112,14 @@ def validate(kind: str, row: dict) -> list[str]:
 _DEMOS: dict = {}
 
 
-def demo(testdata: Path, pv_systems: tuple[str, ...], position_systems: tuple[str, ...] = ()):
+def demo(testdata: Path, pv_systems: tuple[str, ...], position_systems: tuple[str, ...] = (), budget: int = 0):
     """The demo's risk batch of the test data's business date (the factor model), the given systems as scenario PVs and the given ones
     per position (GRAIN POSITION; kept per process: the same inputs give the same batch)."""
     import yaml
-    key = (str(Path(testdata).resolve()), tuple(pv_systems), tuple(position_systems))
+    key = (str(Path(testdata).resolve()), tuple(pv_systems), tuple(position_systems), budget)
     if key not in _DEMOS:
         dates = yaml.safe_load((testdata / "testdata.yaml").read_text(encoding="utf-8"))["business-dates"]
-        _DEMOS[key] = M.Demo(testdata, dates, pv_systems=pv_systems, position_systems=position_systems)
+        _DEMOS[key] = M.Demo(testdata, dates, budget, pv_systems=pv_systems, position_systems=position_systems)
     return _DEMOS[key]
 
 
@@ -173,6 +173,8 @@ def lake_build(path: Path, kind: str, lake: str, mode: str, signal: str | None, 
     (docs/guides/DATA_LAKE_GUIDE.md): its business date is its name's; ``mode`` is said (replace: overwrite-dates, or append)."""
     cmd = [sys.executable, str(ROOT / "tools" / "drishti.py"), "lake", "build", "--from", str(path), "--pack", str(PACK), "--connector",
            "risk-store", "--kind", kind, "--key", KEYS[kind], "--mode", mode, "--lake", lake, "-q"]
+    if kind in VECTORS:                                                  # the risk lake's layout (config/lakes): set and grain after the date
+        cmd += ["--partition-by", "SCENARIO_SET_ID,GRAIN"]
     if signal:
         cmd += ["--signal", signal]
     env = dict(os.environ, **({"DRISHTI_TOKEN": token} if token else {}))
@@ -201,8 +203,8 @@ class Morning:
     """The demo's morning run as a pricing system sends it: the trades' rows (scenario PVs or P&L vectors), the scenario FX, moved to
     ``day``; each row exactly its contract's fields; ``RUN_KIND: FULL``."""
 
-    def __init__(self, testdata: Path, pv_systems: tuple[str, ...], day: str | None = None, position_systems: tuple[str, ...] = ()):
-        self.demo = demo(testdata, pv_systems, position_systems)
+    def __init__(self, testdata: Path, pv_systems: tuple[str, ...], day: str | None = None, position_systems: tuple[str, ...] = (), budget: int = 0):
+        self.demo = demo(testdata, pv_systems, position_systems, budget)
         self.position_systems = position_systems
         self.pv_systems = pv_systems
         self.cob = self.demo.cob

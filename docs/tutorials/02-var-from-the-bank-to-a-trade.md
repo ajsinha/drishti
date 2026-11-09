@@ -139,11 +139,11 @@ connectors:
           columns: [CURRENCY, RATE, SCENARIO_SET_ID]
 ```
 
-The demo's Endur trades (1,339) come that way: when the date loads, the engine turns each into its USD P&L,
-`PV(s) × FX(s) − PV(base) × FX(base)`, and from then on they are trades like any other.
+Every demo position comes that way (7,993 position records, the three systems): when the date loads, the engine turns each into its USD P&L,
+`PV(s) × FX(s) − PV(base) × FX(base)`, and from then on it is a position like any other.
 
-**You should see** VaR 112,041,646 and ES 160,143,809 on 2026-09-30, over 9,572 trades in 7,993 positions, 1,339 of them from scenario
-PVs (the limit letters of step 14 split nine positions in two, as the warning says). On the 6th worst of the 509 days the bank loses 112 million; the two divisions alone would add up to 130 million: holding them
+**You should see** VaR 112,041,646 and ES 160,143,809 on 2026-09-30, over 7,993 position records, all from scenario
+PVs (nine positions sit under two limit letters, one record per letter). On the 6th worst of the 509 days the bank loses 112 million; the two divisions alone would add up to 130 million: holding them
 together saves 18 million. (With every trade a P&L vector the bank's VaR would be 112,035,906: the 250 Endur trades in EUR and
 CAD now also carry the move of their currency on their value.)
 
@@ -714,7 +714,7 @@ drishti:
 computed kinds of steps 10 and 11 answer the same way: they are computed as you.
 
 **You should see** in the Explain drawer's *Inputs & lineage*, as a restricted user, *View: restricted by node (… trades outside your
-entitlement)* for the bank: the bank's 9,572 trades less the rates desk's 1,487, so 8,085 outside, and the bank's VaR equal to the desk's.
+entitlement)* for the bank: the bank's 7,993 records less the rates desk's 1,358, so 6,635 outside, and the bank's VaR equal to the desk's.
 
 **Further in the guide:** [section 9](../guides/VAR_GUIDE.md#9-who-sees-what-entitlements-and-audit) (entitlements and audit).
 
@@ -756,7 +756,7 @@ $ drishti.py var intraday
 
 ```text
 $ tools/pvgen/check.sh --morning data/pvgen/morning-2026-09-30 --intraday data/pvgen/intraday-2026-09-30 --server http://<host>:<port>
-2026-09-30: the morning run (9,572 trades) and 30 intraday rows
+2026-09-30: the morning run (7,993 positions) and 30 intraday rows
   BANK                     VaR      111,939,005  ES      159,035,721   server VaR      111,939,005  ES      159,035,721  ok  (intraday updates 30)
   DESK:DESK-COMM           VaR       16,590,438  ES       17,486,765   server VaR       16,590,438  ES       17,486,765  ok  (intraday updates 30)
   ...
@@ -1467,7 +1467,7 @@ connector's `lake` must then name `data/iceberg`); `drishti.py var intraday --lo
 |---|---|
 | *no P&L vectors in any connector* | build the lake (step 1); is the market-risk pack loaded? |
 | other numbers than these | you built the lake with `--as-of today`: trades matured since 2026-09-30 drop out; rebuild with `--as-of data` |
-| the bank's VaR is 112,035,906 and the provenance says only `pnl-vector` | the lake has no `scenario-pv` table (built without it, or `--only` without it): the Endur trades are missing too (8,233 trades); rebuild with the `--only` list of step 1 |
+| *no P&L vectors in any connector*, and the lake has no `scenario-pv` table | built without it, or `--only` without it: rebuild with the `--only` list of step 1 |
 | `--ccy` answers `422 DRS-5207` | the date has no rates for that currency: supply them in `fx-scenario`, or load enough FX history in [`fx-spot`](../contracts/samples/market-data.md#fx-spot) ([contract](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot)) ([VAR_GUIDE.md section 15.9](../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)) |
 | `PORT <id>` says *no system basket …* | the page opens on the newest date the engine holds; a basket valid only before or after it (its *Valid from*, *Valid to*) is not there: `PORT <GO>` lists the ones that are |
 | *System basket* is not under the sheet | your roles do not hold `var:system-baskets`: an administrator gives it (Admin → Roles → Permissions) |

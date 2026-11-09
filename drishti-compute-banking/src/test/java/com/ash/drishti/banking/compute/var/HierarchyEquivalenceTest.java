@@ -180,7 +180,13 @@ class HierarchyEquivalenceTest {
         for (String id : ids) {
             JsonNode got = JSON.valueToTree(have.get(id));
             JsonNode exp = want.get(id);
-            exp.fieldNames().forEachRemaining(f -> assertClose(currency + " " + id + " " + f, exp.get(f), got.get(f)));
+            exp.fieldNames().forEachRemaining(f -> {
+                if (List.of("var", "es", "components").contains(f)) {
+                    assertClose(currency + " " + id + " " + f, exp.get(f), got.get(f));
+                } else {
+                    assertThat(got.get(f)).as(currency + " " + id + " " + f).isEqualTo(exp.get(f));   // tree, members, worst scenarios, limit: exactly
+                }
+            });
             assertThat(got.size()).as(currency + " " + id + " fields").isEqualTo(exp.size());
         }
     }
@@ -278,8 +284,8 @@ class HierarchyEquivalenceTest {
     }
 
     /**
-     * The golden figures compared to a micro-dollar: the sum over a position's trades and the position's own record differ in the last bit of a
-     * double (the order of the additions, about 10^-8 of a dollar at most). Text and digests exactly.
+     * VaR, ES and component VaR compared to a micro-dollar (1e-6 USD; the largest difference seen is 6e-8): a position's record and the sum of
+     * its trades add the same numbers in another order, which moves the last bit of a double. Everything else is compared exactly.
      */
     static void assertClose(String what, JsonNode want, JsonNode got) {
         if (want.isNumber() && got.isNumber()) {
