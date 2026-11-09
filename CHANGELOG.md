@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### Fixes
+
+- **IntelliJ run configurations:** the server configurations ran the `drishti-server` module, which has no domain modules on its class path since the split, so VAR and every banking function said *not installed*. They now run `drishti-app`, and *Drishti build server jar* builds it; a test keeps them so.
+
 ### Breaking
 
 - **The `risk-hierarchy` kind is removed (HIER):** every VaR and exposure hierarchy is built by the server from the trades' **promoted

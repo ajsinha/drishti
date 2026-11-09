@@ -28,7 +28,7 @@
               <option value="package" />
               <option value="-DskipTests" />
               <option value="-pl" />
-              <option value="drishti-server" />
+              <option value="drishti-app" />
               <option value="-am" />
             </list>
           </option>
