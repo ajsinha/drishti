@@ -119,7 +119,12 @@ export class FileDrop extends InputBase {
     });
   }
 
-  /** The file's line shown in place of the zone. @param {string} name @param {string} [text] @returns {void} */
+  /**
+   * The file's line shown in place of the zone.
+   * @param {string} name
+   * @param {string} [text]
+   * @returns {void}
+   */
   showing(name, text) {
     this.name.textContent = name;
     this.said.textContent = text || '';
@@ -128,7 +133,12 @@ export class FileDrop extends InputBase {
     this.fill.style.setProperty('--di-progress', '0%');
   }
 
-  /** @param {number} loaded @param {number} total @returns {void} */
+  /**
+   * Moves the bar.
+   * @param {number} loaded
+   * @param {number} total
+   * @returns {void}
+   */
   setProgress(loaded, total) {
     const p = total > 0 ? Math.min(100, Math.round(loaded * 100 / total)) : 0;
     this.fill.style.setProperty('--di-progress', p + '%');
@@ -137,28 +147,41 @@ export class FileDrop extends InputBase {
     this.emit('progress', { loaded: loaded, total: total, percent: p });
   }
 
-  /** Stops a send under way and shows the zone again. @returns {void} */
+  /**
+   * Stops a send under way and shows the zone again.
+   * @returns {void}
+   */
   cancel() {
     if (this.xhr) { this.xhr.abort(); }
     this.clear();
     this.emit('cancel', {});
   }
 
-  /** Back to the empty zone. @returns {void} */
+  /**
+   * Back to the empty zone.
+   * @returns {void}
+   */
   clear() {
     this.file = null;
     this.zone.hidden = false;
     this.line.hidden = true;
   }
 
-  /** @param {boolean} on @returns {void} */
+  /**
+   * Turns the zone off or on.
+   * @param {boolean} on
+   * @returns {void}
+   */
   setDisabled(on) {
     this.o.disabled = on;
     this.zone.setAttribute('aria-disabled', on ? 'true' : 'false');
     this.zone.classList.toggle('di-disabled', on);
   }
 
-  /** @returns {void} */
+  /**
+   * Empties the host, stopping a send under way.
+   * @returns {void}
+   */
   destroy() {
     if (this.xhr) { this.xhr.abort(); }
     this.host.textContent = '';

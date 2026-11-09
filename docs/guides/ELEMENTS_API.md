@@ -3244,6 +3244,8 @@ Returns `void`.
 
 ##### `FileDrop.setProgress(loaded, total)`
 
+Moves the bar.
+
 | Parameter | Type | Meaning |
 |---|---|---|
 | `loaded` | `number` |  |
@@ -3265,6 +3267,8 @@ Returns `void`.
 
 ##### `FileDrop.setDisabled(on)`
 
+Turns the zone off or on.
+
 | Parameter | Type | Meaning |
 |---|---|---|
 | `on` | `boolean` |  |
@@ -3272,6 +3276,8 @@ Returns `void`.
 Returns `void`.
 
 ##### `FileDrop.destroy()`
+
+Empties the host, stopping a send under way.
 
 Returns `void`.
 

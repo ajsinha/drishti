@@ -13,6 +13,8 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+/* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis);
 /* Admin → Data loads → Upload (DATA_LAKE_GUIDE.md section 3.5): the form on the left, the exact .ready on the right, the checks below, Push at the
    bottom. Every rule is the server's (the text, the field errors, the checks, the push); this file holds one person's form in this tab and
    draws what the server answers. Built from drishti-inputs only (FileDrop, Form, Select, CodeEditor). */
@@ -35,12 +37,7 @@
   function say(text, bad) { var s = $('[data-ready-said]'); s.textContent = text || ''; s.classList.toggle('t-bad', !!bad); }
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) { e.className = cls; } if (text !== undefined) { e.textContent = text; } return e; }
   function num(n) { return window.Drishti.elements.core.formatNumber(Number(n || 0)); }
-  function size(n) {
-    if (n === null || n === undefined || n < 0) { return '-'; }
-    var u = ['B', 'KB', 'MB', 'GB', 'TB'], i = 0;
-    while (n >= 1024 && i < 4) { n /= 1024; i++; }
-    return (i ? n.toFixed(1) : n) + ' ' + u[i];
-  }
+  function size(n) { return n === null || n === undefined || n < 0 ? '-' : window.Drishti.elements.core.formatBytes(n); }
 
   // ---- the file -----------------------------------------------------------------------------------------------------------------------
   function setSource(which) {
