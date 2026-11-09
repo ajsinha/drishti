@@ -27,5 +27,4 @@ description: trades (Endur) read from AWS S3 Tables
 settings:
   lake: s3tables
   lake-tables: trading.trade
-  engine: native
   source-name: trade-endur

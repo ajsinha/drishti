@@ -17,9 +17,9 @@ package com.ash.drishti.iceberg.catalog;
 
 import com.ash.drishti.iceberg.Table;
 import com.ash.drishti.iceberg.io.FileAccess;
+import com.ash.drishti.iceberg.meta.Bridge;
 import com.ash.drishti.iceberg.meta.PartitionSpec;
 import com.ash.drishti.iceberg.meta.SortOrder;
-import com.ash.drishti.iceberg.meta.TableMetadata;
 import com.ash.drishti.iceberg.types.Schema;
 import com.ash.drishti.lakeio.Storage;
 import java.io.IOException;
@@ -27,11 +27,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.apache.iceberg.BaseTable;
+import org.apache.iceberg.TableMetadata;
+import org.apache.iceberg.exceptions.CommitFailedException;
 
 /**
- * Path-based tables under one folder ({@code catalog: hadoop}, the name kept from Iceberg's {@code HadoopTables}; no
- * Hadoop is involved): table {@code t} is the folder {@code <base>/t} with its {@code metadata/} folder. Local disk
- * (Windows paths included) or S3.
+ * Path-based tables under one folder ({@code catalog: hadoop}, the name kept from Iceberg's {@code HadoopTables}; no Hadoop is involved):
+ * table {@code t} is the folder {@code <base>/t} with its {@code metadata/} folder. Local disk (Windows paths included) or S3.
  */
 public final class PathCatalog implements Catalog {
 
@@ -62,7 +64,7 @@ public final class PathCatalog implements Catalog {
         if (!ops.exists()) {
             return Optional.empty();
         }
-        return Optional.of(Table.load(name, ops));
+        return Optional.of(new Table(name, new BaseTable(ops, name, r -> { }), null));
     }
 
     @Override
@@ -100,15 +102,14 @@ public final class PathCatalog implements Catalog {
     @Override
     public Table create(String name, Schema schema, PartitionSpec spec, SortOrder order, Map<String, String> properties) throws IOException {
         PathTableOps ops = ops(name);
-        int version = Integer.parseInt(properties.getOrDefault("format-version", "2"));
-        Map<String, String> props = new java.util.LinkedHashMap<>(properties);
-        props.remove("format-version");
-        TableMetadata md = TableMetadata.create(ops.location(), version, schema, spec, order, props, System.currentTimeMillis());
+        org.apache.iceberg.Schema s = Bridge.iceberg(schema);
+        TableMetadata md = TableMetadata.newTableMetadata(s, Bridge.iceberg(spec, schema, s), Bridge.iceberg(order, schema, s), ops.location(), properties);
         try {
-            return new Table(name, ops, ops.write(md, 1));
-        } catch (CommitConflict e) {
+            ops.commit(null, md);
+        } catch (CommitFailedException e) {
             throw new TableExists("table " + name + " was created at " + ops.location() + " by another writer");
         }
+        return new Table(name, new BaseTable(ops, name, r -> { }), null);
     }
 
     @Override

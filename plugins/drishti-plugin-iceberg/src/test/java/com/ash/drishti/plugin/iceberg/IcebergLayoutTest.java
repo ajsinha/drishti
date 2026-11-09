@@ -145,7 +145,7 @@ class IcebergLayoutTest {
     }
 
     Table table() {
-        return IcebergLake.of(Map.of("root", root.toString(), "domain", "desk")).load("trade").orElseThrow();
+        return OracleLake.of(Map.of("root", root.toString(), "domain", "desk")).load("trade").orElseThrow();
     }
 
     @Test
@@ -280,7 +280,7 @@ class IcebergLayoutTest {
         IcebergLayout.Row r1 = new IcebergLayout.Row("T-0105", doc(105, D2), Map.of("mtm", 1.0, "book", "BOOK-A", "nettingSet", "NS-0"));
         IcebergLayout.Row r2 = new IcebergLayout.Row("T-0205", doc(205, D2), Map.of("mtm", 2.0, "book", "BOOK-B", "nettingSet", "NS-1"));
         var append = t.newAppend();
-        IcebergLayout.writeDay(t, D2, List.of(r1, r2).iterator(), 15).forEach(append::appendFile);
+        OracleLayout.writeDay(t, D2, List.of(r1, r2).iterator(), 15).forEach(append::appendFile);
         append.commit();
         IcebergSourcePlugin p = plugin(true);
         assertThat(p.fetch(EntityRef.of("trade", "T-0105"))).isPresent();
@@ -339,8 +339,8 @@ class IcebergLayoutTest {
         }
         assertThatThrownBy(() -> load(lines)).hasMessageContaining("in the future");      // a tar with trade/2099-03-01/: refused whole
         Table t = table();
-        try (var pool = IcebergTable.virtualPool()) {
-            assertThat(new IcebergTable(t, pool).layout(t.currentSnapshot().snapshotId(), false).days().keySet()).as("the days loaded, not the future one")
+        try (var pool = OracleTable.virtualPool()) {
+            assertThat(new OracleTable(t, pool).layout(t.currentSnapshot().snapshotId(), false).days().keySet()).as("the days loaded, not the future one")
                     .containsExactly(D1, D2);
         }
         assertThat(rows(t)).isEqualTo(80);
@@ -390,7 +390,7 @@ class IcebergLayoutTest {
         try (CloseableIterable<FileScanTask> tasks = t.newScan().filter(Expressions.equal("business_date", day.toString())).planFiles()) {
             for (FileScanTask task : tasks) {
                 long pos = 0;
-                try (CloseableIterable<Record> rows = IcebergTable.open(t.io(), t.schema(), task, new Schema(t.schema().findField("id")),
+                try (CloseableIterable<Record> rows = OracleTable.open(t.io(), t.schema(), task, new Schema(t.schema().findField("id")),
                         Expressions.alwaysTrue())) {
                     for (Record r : rows) {
                         if (id.equals(r.get(0))) {
@@ -415,8 +415,8 @@ class IcebergLayoutTest {
     static void deleteEquality(Table t, LocalDate day, String id) throws IOException {
         Schema eq = new Schema(t.schema().findField("id"));
         EqualityDeleteWriter<Record> w = Parquet.writeDeletes(t.io().newOutputFile(
-                        t.locationProvider().newDataLocation(t.spec(), IcebergLayout.partition(t.spec(), day), "eq-" + id + ".parquet")))
-                .forTable(t).withPartition(IcebergLayout.partition(t.spec(), day)).rowSchema(eq).equalityFieldIds(1)
+                        t.locationProvider().newDataLocation(t.spec(), OracleLayout.partition(t.spec(), day), "eq-" + id + ".parquet")))
+                .forTable(t).withPartition(OracleLayout.partition(t.spec(), day)).rowSchema(eq).equalityFieldIds(1)
                 .createWriterFunc(GenericParquetWriter::create).buildEqualityWriter();
         GenericRecord r = GenericRecord.create(eq);
         r.setField("id", id);

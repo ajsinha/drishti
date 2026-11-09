@@ -45,7 +45,7 @@ class IcebergSourcePluginTest extends DatedSourceContract {
     static Path root;
 
     /** Writes rows (any order) as the layout does: a table per kind, each business day sorted by id, one commit a day. */
-    static void write(IcebergLake lake, List<Row> rows, Map<String, Map<String, Boolean>> promotedByKind) {
+    static void write(OracleLake lake, List<Row> rows, Map<String, Map<String, Boolean>> promotedByKind) {
         JsonCodec codec = new JsonCodec();
         Map<String, Map<LocalDate, TreeMap<String, IcebergLayout.Row>>> byKind = new LinkedHashMap<>();
         for (Row r : rows) {
@@ -59,8 +59,8 @@ class IcebergSourcePluginTest extends DatedSourceContract {
                     .put(r.id(), new IcebergLayout.Row(r.id(), r.json(), cols));
         }
         byKind.forEach((kind, days) -> {
-            Table t = IcebergLayout.open(lake, kind, promotedByKind.getOrDefault(kind, Map.of()), IcebergLayout.DEFAULT_ROW_GROUP_BYTES, 1000);
-            days.forEach((date, sorted) -> IcebergLayout.commitDay(t, date, IcebergLayout.writeDay(t, date, sorted.values().iterator(), 1000)));
+            Table t = OracleLayout.open(lake, kind, promotedByKind.getOrDefault(kind, Map.of()), IcebergLayout.DEFAULT_ROW_GROUP_BYTES, 1000);
+            days.forEach((date, sorted) -> OracleLayout.commitDay(t, date, OracleLayout.writeDay(t, date, sorted.values().iterator(), 1000)));
         });
     }
 
@@ -79,7 +79,7 @@ class IcebergSourcePluginTest extends DatedSourceContract {
         Map<String, Boolean> trade = new LinkedHashMap<>();
         trade.put("mtm", true);
         trade.put("nettingSet", false);
-        try (IcebergLake lake = IcebergLake.of(Map.of("root", root.toString(), "domain", "desk"))) {
+        try (OracleLake lake = OracleLake.of(Map.of("root", root.toString(), "domain", "desk"))) {
             write(lake, ROWS, Map.of("trade", trade));
         }
         IcebergSourcePlugin p = new IcebergSourcePlugin();

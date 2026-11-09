@@ -43,7 +43,7 @@ class WindowsPathsTest {
         }
         assertThat(FileAccess.supports("s3a://bucket/lake")).isTrue();
         assertThat(FileAccess.supports("abfs://c@a.dfs.core.windows.net/lake")).isFalse();
-        assertThatThrownBy(() -> io.storage("gs://bucket/lake")).hasMessageContaining("engine: library");
+        assertThatThrownBy(() -> io.storage("gs://bucket/lake")).hasMessageContaining("reads local disk");
     }
 
     @Test

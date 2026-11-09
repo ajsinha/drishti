@@ -57,9 +57,9 @@ class CatalogNamedMetadataTest {
                     newest = s.map(f -> f.getFileName().toString()).filter(n -> n.startsWith("00002-")).findFirst().orElseThrow();
                 }
                 Files.copy(meta.resolve(newest), meta.resolve("00003-0b1d7e52-6a8c-4c5e-9e0f-1c2b3a4d5e6f.metadata.json"));
-                TableOps.Loaded next = t.ops().refresh(t.state()).orElseThrow(() -> new AssertionError("the refresh did not see 00003"));
-                assertThat(next.location()).endsWith("00003-0b1d7e52-6a8c-4c5e-9e0f-1c2b3a4d5e6f.metadata.json");
-                assertThat(t.ops().refresh(next)).isEmpty();
+                assertThat(t.refresh()).as("the refresh sees 00003").isTrue();
+                assertThat(t.metadataLocation()).endsWith("00003-0b1d7e52-6a8c-4c5e-9e0f-1c2b3a4d5e6f.metadata.json");
+                assertThat(t.refresh()).isFalse();
             }
         } finally {
             try (Stream<Path> all = Files.walk(root)) {

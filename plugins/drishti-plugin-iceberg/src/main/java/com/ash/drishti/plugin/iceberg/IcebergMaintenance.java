@@ -16,35 +16,18 @@
 package com.ash.drishti.plugin.iceberg;
 
 import com.ash.drishti.api.LoadGuard;
-import com.ash.drishti.plugin.iceberg.IcebergLayout.Row;
 import com.ash.drishti.plugin.iceberg.KindTable.Day;
 import com.ash.drishti.plugin.iceberg.KindTable.Layout;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.time.LocalDate;
-import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import org.apache.iceberg.DataFile;
-import org.apache.iceberg.DeleteFile;
-import org.apache.iceberg.FileScanTask;
-import org.apache.iceberg.RewriteFiles;
-import org.apache.iceberg.Schema;
-import org.apache.iceberg.Table;
-import org.apache.iceberg.data.Record;
-import org.apache.iceberg.expressions.Expressions;
-import org.apache.iceberg.io.CloseableIterable;
-import org.apache.iceberg.types.Conversions;
-import org.apache.iceberg.types.Types;
 
 /**
  * Keeps Iceberg tables bounded and in {@link IcebergLayout}: {@code java -cp <plugin classpath>
@@ -100,7 +83,7 @@ public final class IcebergMaintenance {
             domains = s.filter(java.nio.file.Files::isDirectory).filter(d -> !d.getFileName().toString().startsWith("_")).sorted().toList();
         }
         for (Path d : domains) {
-            Map<String, String> ns = new HashMap<>(Map.of("root", root, "domain", d.getFileName().toString(), "engine", "native"));
+            Map<String, String> ns = new HashMap<>(Map.of("root", root, "domain", d.getFileName().toString()));
             try (LayoutLake view = LayoutLake.of(ns)) {
                 for (String kind : view.kinds()) {
                     com.ash.drishti.iceberg.Table t = ((LayoutLake.Native.Kind) view.load(kind).orElseThrow()).t();
@@ -303,7 +286,7 @@ public final class IcebergMaintenance {
         if (t.currentSnapshot().isEmpty()) {
             return List.of();
         }
-        try (ExecutorService pool = IcebergTable.virtualPool()) {
+        try (ExecutorService pool = java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor()) {
             var days = new NativeKindTable(t, pool).layout(t.currentSnapshot().get().snapshotId(), false).days();
             var from = keepFrom(days.navigableKeySet(), keep, guard, floor);
             return from.isEmpty() ? List.of() : days.headMap(from.get(), false).keySet().stream().map(LocalDate::toString).toList();
@@ -318,7 +301,7 @@ public final class IcebergMaintenance {
             m.putAll(Map.of("files", 0, "mb", 0.0, "dates", 0));
             return m;
         }
-        try (ExecutorService pool = IcebergTable.virtualPool()) {
+        try (ExecutorService pool = java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor()) {
             Layout l = new NativeKindTable(t, pool).layout(t.currentSnapshot().get().snapshotId(), false);
             long files = 0;
             long bytes = 0;
@@ -339,100 +322,6 @@ public final class IcebergMaintenance {
         return m;
     }
 
-    /** Adds promoted columns ({@code paths}, typed by the newest day's documents) to the library-engine table {@code t}. */
-    static void addColumns(IcebergLake lake, String kind, Table t, List<String> paths) {
-        Map<String, Boolean> cols = new LinkedHashMap<>();
-        paths.forEach(p -> cols.put(p.trim(), false));
-        inferTypes(t, cols);
-        IcebergLayout.open(lake, kind, cols, IcebergLayout.DEFAULT_ROW_GROUP_BYTES, IcebergLayout.fileRows(t));
-        t.refresh();
-    }
-
-    /** {@link #keepDays(Table, int, LoadGuard)} counting back from today. */
-    static int keepDays(Table t, int keep) {
-        return keepDays(t, keep, LoadGuard.fromArgs(new String[0]));
-    }
-
-    static int keepDays(Table t, int keep, LoadGuard guard) {
-        return keepDays(t, keep, guard, null);
-    }
-
-    /**
-     * Deletes the business days older than the table's newest {@code keep} on or before the guard's as-of date (a day
-     * after it is neither counted nor deleted), never one on or after {@code floor} (the retention floor; null: none); refused
-     * when that is more than the guard's share of the table's rows. Returns how many days went.
-     */
-    static int keepDays(Table t, int keep, LoadGuard guard, LocalDate floor) {
-        t.refresh();
-        if (t.currentSnapshot() == null) {
-            return 0;
-        }
-        java.util.NavigableMap<LocalDate, Day> days;
-        try (ExecutorService pool = IcebergTable.virtualPool()) {
-            days = layout(t, pool, false).days();
-        }
-        var from = keepFrom(days.navigableKeySet(), keep, guard, floor);
-        if (from.isEmpty()) {
-            return 0;
-        }
-        var old = days.headMap(from.get(), false);
-        guard.checkDrop(t.name(), old.values().stream().mapToLong(Day::rows).sum(), days.values().stream().mapToLong(Day::rows).sum(), "rows");
-        t.newDelete().deleteFromRowFilter(Expressions.lessThan(IcebergLayout.DATE, from.get().toString())).commit();
-        return old.size();
-    }
-
-    private static Layout layout(Table t, ExecutorService pool, boolean stats) {
-        return new IcebergTable(t, pool).layout(t.currentSnapshot().snapshotId(), stats);
-    }
-
-    /** Expires snapshots older than {@code hours} (always keeping the current one) and deletes files only they used. */
-    static void expireSnapshots(Table t, long hours) {
-        t.refresh();
-        if (t.currentSnapshot() != null) {
-            t.expireSnapshots().expireOlderThan(System.currentTimeMillis() - hours * 3_600_000L).retainLast(1).commit();
-        }
-    }
-
-    /** One manifest per month of business dates: planning opens a month's manifest, not one per daily commit. */
-    static void rewriteManifests(Table t) {
-        t.refresh();
-        if (t.currentSnapshot() != null) {
-            t.rewriteManifests().clusterBy(f -> {
-                Integer days = f.partition().size() > 0 ? f.partition().get(0, Integer.class) : null;
-                return days == null ? "none" : YearMonth.from(LocalDate.ofEpochDay(days)).toString();
-            }).commit();
-        }
-    }
-
-    /** Makes text-only paths numbers when the newest day's documents hold numbers there. */
-    private static void inferTypes(Table t, Map<String, Boolean> cols) {
-        try (ExecutorService pool = IcebergTable.virtualPool()) {
-            Layout l = layout(t, pool, false);
-            if (l.days().isEmpty()) {
-                return;
-            }
-            Day newest = l.days().lastEntry().getValue();
-            try (CloseableIterable<Record> rows = IcebergTable.open(t.io(), t.schema(), IcebergTable.tasks(newest).get(0),
-                    new Schema(t.schema().findField(IcebergLayout.DOC)), Expressions.alwaysTrue())) {
-                int n = 0;
-                Map<String, Integer> seen = new HashMap<>();
-                for (Record r : rows) {
-                    if (r.get(0) == null || n++ > 1000) {
-                        break;
-                    }
-                    JsonNode doc = JSON.readTree(r.get(0).toString());
-                    for (String p : cols.keySet()) {
-                        JsonNode v = at(doc, p);
-                        seen.merge(p, v == null || v.isNull() ? 0 : v.isNumber() ? 1 : 2, (x, y) -> x | y);
-                    }
-                }
-                seen.forEach((p, f) -> cols.put(p, f == 1));
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-        }
-    }
-
     private static JsonNode at(JsonNode doc, String path) {
         JsonNode n = doc;
         for (String part : path.split("\\.")) {
@@ -449,127 +338,5 @@ public final class IcebergMaintenance {
     static boolean shardSorted(java.util.Map<String, String> properties) {
         String by = properties.getOrDefault("drishti.layout.sort-by", "").trim();
         return !by.isEmpty() && !by.equals("id");
-    }
-
-    /**
-     * Rewrites the days that drifted from the layout (every day when {@code force}), each in one commit that replaces
-     * the day's files and delete files; returns how many days were rewritten.
-     */
-    static int relayout(Table t, boolean force, Path spillDir, long budget) {
-        t.refresh();
-        if (t.currentSnapshot() == null || shardSorted(t.properties())) {
-            return 0;                                           // laid out by the parallel loader's sort-by: left in its order
-        }
-        int fileRows = IcebergLayout.fileRows(t);
-        int rewritten = 0;
-        try (ExecutorService pool = IcebergTable.virtualPool()) {
-            Layout l = layout(t, pool, true);
-            Schema schema = t.schema();
-            List<Types.NestedField> promoted = schema.columns().stream().filter(f -> f.fieldId() > 3).toList();
-            for (Day day : l.days().values()) {
-                if (LocalDate.MIN.equals(day.date()) || !(force || drifted(day, fileRows, promoted))) {
-                    continue;
-                }
-                try (SortedRuns rows = new SortedRuns(spillDir, "relayout-" + day.date())) {
-                    for (FileScanTask task : IcebergTable.tasks(day)) {
-                        copy(t, schema, task, promoted, rows, budget);
-                    }
-                    List<DataFile> files = IcebergLayout.writeDay(t, day.date(), rows.merged(), fileRows);
-                    RewriteFiles rw = t.newRewrite().validateFromSnapshot(l.snapshotId());
-                    java.util.Set<String> gone = new java.util.HashSet<>();
-                    for (FileScanTask task : IcebergTable.tasks(day)) {
-                        rw.deleteFile(task.file());
-                        for (DeleteFile d : task.deletes()) {
-                            Integer p = d.partition().size() > 0 ? d.partition().get(0, Integer.class) : null;
-                            if (p != null && p == day.date().toEpochDay() && gone.add(d.location())) {
-                                rw.deleteFile(d);         // the day's own delete files: their rows are gone from the new files
-                            }
-                        }
-                    }
-                    files.forEach(rw::addFile);
-                    rw.commit();
-                    rewritten++;
-                }
-            }
-        }
-        return rewritten;
-    }
-
-    /** True when the day is not as the layout writes it. */
-    private static boolean drifted(Day day, int fileRows, List<Types.NestedField> promoted) {
-        if (day.deletes() || day.files().size() > Math.max(1, (day.rows() + fileRows - 1) / fileRows)) {
-            return true;
-        }
-        List<String[]> ranges = new ArrayList<>();
-        for (FileScanTask task : IcebergTable.tasks(day)) {
-            DataFile f = task.file();
-            if (f.recordCount() > fileRows) {
-                return true;
-            }
-            // a vector column (a list) has its metrics under its element's id: only scalar columns say a file predates them
-            if (hasCounts(f) && promoted.stream().anyMatch(c -> c.type().isPrimitiveType() && !f.valueCounts().containsKey(c.fieldId()))) {
-                return true;                                   // written before a promoted column was added
-            }
-            String lo = bound(f.lowerBounds());
-            String hi = bound(f.upperBounds());
-            if (lo == null || hi == null) {
-                return true;
-            }
-            ranges.add(new String[] {lo, hi});
-        }
-        ranges.sort(java.util.Comparator.comparing(r -> r[0]));
-        for (int i = 1; i < ranges.size(); i++) {
-            if (ranges.get(i)[0].compareTo(ranges.get(i - 1)[1]) <= 0) {
-                return true;                                   // two files share an id range: an append out of order
-            }
-        }
-        return false;
-    }
-
-    /** Whether the file's metrics list its columns (they do unless the table's metrics mode is none). */
-    private static boolean hasCounts(DataFile f) {
-        return f.valueCounts() != null && !f.valueCounts().isEmpty();
-    }
-
-    private static String bound(Map<Integer, ByteBuffer> bounds) {
-        ByteBuffer b = bounds == null ? null : bounds.get(1);
-        return b == null ? null : Conversions.<CharSequence>fromByteBuffer(Types.StringType.get(), b).toString();
-    }
-
-    /** Copies one file's live rows (deletes applied) into the sorter, filling promoted columns the file lacks from the document. */
-    private static void copy(Table t, Schema schema, FileScanTask task, List<Types.NestedField> promoted, SortedRuns rows, long budget) {
-        List<Types.NestedField> cols = new ArrayList<>();
-        cols.add(schema.findField(IcebergLayout.ID));
-        cols.add(schema.findField(IcebergLayout.DOC));
-        cols.addAll(promoted);
-        DataFile f = task.file();
-        try (CloseableIterable<Record> it = IcebergTable.open(t.io(), schema, task, new Schema(cols), Expressions.alwaysTrue())) {
-            for (Record r : it) {
-                Map<String, Object> values = new LinkedHashMap<>();
-                JsonNode doc = null;
-                for (int c = 0; c < promoted.size(); c++) {
-                    Types.NestedField field = promoted.get(c);
-                    String path = field.name().replace("__", ".");
-                    // a vector column is copied as it is (its document holds only a marker, never the values)
-                    boolean inFile = !field.type().isPrimitiveType() || !hasCounts(f) || f.valueCounts().containsKey(field.fieldId());
-                    Object v = r.get(c + 2);
-                    if (v instanceof List<?> list) {
-                        v = new ArrayList<>(list);                // the reader reuses its containers: the row keeps its own copy
-                    }
-                    if (!inFile && r.get(1) != null) {
-                        doc = doc == null ? JSON.readTree(r.get(1).toString()) : doc;
-                        JsonNode n = at(doc, path);
-                        v = n == null || n.isNull() || n.isContainerNode() ? null : n.isNumber() ? (Object) n.asDouble() : n.asText();
-                    }
-                    values.put(path, v);
-                }
-                rows.add(new Row(r.get(0).toString(), r.get(1) == null ? null : r.get(1).toString(), values));
-                if (rows.bufferedBytes() > budget) {
-                    rows.spill();
-                }
-            }
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
     }
 }

@@ -41,7 +41,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 /**
  * The same contract with the tables in an Iceberg REST catalog (the Iceberg project's REST fixture, as Polaris,
  * Snowflake Open Catalog or Glue's REST endpoint would serve them) and their files in S3 (Adobe S3Mock), read through
- * S3FileIO. The writer is the loader's code path ({@link IcebergLayout} through {@link IcebergLake}). Skipped where
+ * S3FileIO. The writer is the loader's code path ({@link IcebergLayout} through {@link OracleLake}). Skipped where
  * Docker is not reachable.
  */
 @Testcontainers(disabledWithoutDocker = true)
@@ -109,7 +109,7 @@ class IcebergRestCatalogTest extends DatedSourceContract {
         Map<String, Boolean> trade = new LinkedHashMap<>();
         trade.put("mtm", true);
         trade.put("nettingSet", false);
-        try (IcebergLake lake = IcebergLake.of(settings())) {
+        try (OracleLake lake = OracleLake.of(settings())) {
             IcebergSourcePluginTest.write(lake, ROWS, Map.of("trade", trade));
         }
         Map<String, String> s = settings();

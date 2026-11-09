@@ -26,46 +26,22 @@
   </parent>
   <artifactId>drishti-plugin-iceberg</artifactId>
   <name>drishti-plugin-iceberg</name>
-  <description>Apache Iceberg source: dated entity tables (path-based or through a REST catalog) read with Iceberg's own Parquet reader, with time travel</description>
+  <description>Apache Iceberg source: dated entity tables (path-based or through a REST catalog) with time travel</description>
   <dependencies>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
-    <!-- engine: native (no Hadoop); engine: library is Apache Iceberg Java below -->
+    <!-- Apache Iceberg on iceberg-core with Drishti's file access and Parquet reader; no Hadoop -->
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-iceberg</artifactId></dependency>
     <!-- documents already read, on disk across restarts (as the Delta connector) -->
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-diskcache</artifactId></dependency>
-    <dependency><groupId>org.apache.iceberg</groupId><artifactId>iceberg-core</artifactId><version>${iceberg.version}</version></dependency>
-    <dependency><groupId>org.apache.iceberg</groupId><artifactId>iceberg-parquet</artifactId><version>${iceberg.version}</version></dependency>
-    <dependency>
-      <groupId>org.apache.iceberg</groupId><artifactId>iceberg-data</artifactId><version>${iceberg.version}</version>
-      <exclusions>
-        <!-- the generic readers and writers are used for Parquet only; ORC brings protobuf and Hive's storage API -->
-        <exclusion><groupId>org.apache.orc</groupId><artifactId>orc-core</artifactId></exclusion>
-      </exclusions>
-    </dependency>
-    <!-- the Parquet writer's schema type appears in Iceberg's writer API -->
-    <dependency><groupId>org.apache.parquet</groupId><artifactId>parquet-column</artifactId><version>${parquet.version}</version></dependency>
-    <!-- S3FileIO, the file IO that REST catalogs (Polaris, Snowflake Open Catalog, Glue's REST endpoint) hand out -->
-    <dependency><groupId>org.apache.iceberg</groupId><artifactId>iceberg-aws</artifactId><version>${iceberg.version}</version></dependency>
-    <dependency><groupId>org.apache.hadoop</groupId><artifactId>hadoop-client-api</artifactId><version>${hadoop.version}</version></dependency>
-    <dependency><groupId>org.apache.hadoop</groupId><artifactId>hadoop-client-runtime</artifactId><version>${hadoop.version}</version></dependency>
-    <!-- path-based tables in S3 (s3a://): Hadoop's S3 file system with the AWS SDK modules it uses, as the Delta connector -->
-    <dependency>
-      <groupId>org.apache.hadoop</groupId><artifactId>hadoop-aws</artifactId><version>${hadoop.version}</version>
-      <exclusions>
-        <exclusion><groupId>software.amazon.awssdk</groupId><artifactId>bundle</artifactId></exclusion>
-        <exclusion><groupId>org.apache.hadoop</groupId><artifactId>hadoop-common</artifactId></exclusion>
-        <exclusion><groupId>org.wildfly.openssl</groupId><artifactId>wildfly-openssl</artifactId></exclusion>
-      </exclusions>
-    </dependency>
-    <dependency><groupId>software.amazon.awssdk</groupId><artifactId>s3</artifactId><version>${awssdk.version}</version></dependency>
-    <dependency><groupId>software.amazon.awssdk</groupId><artifactId>s3-transfer-manager</artifactId><version>${awssdk.version}</version></dependency>
-    <dependency><groupId>software.amazon.awssdk</groupId><artifactId>sts</artifactId><version>${awssdk.version}</version></dependency>
-    <dependency><groupId>software.amazon.awssdk</groupId><artifactId>apache-client</artifactId><version>${awssdk.version}</version></dependency>
-    <!-- S3FileIO's properties name KMS encryption types: its class must be present even without SSE-KMS -->
-    <dependency><groupId>software.amazon.awssdk</groupId><artifactId>kms</artifactId><version>${awssdk.version}</version></dependency>
     <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-core</artifactId></dependency>
     <dependency><groupId>com.github.ben-manes.caffeine</groupId><artifactId>caffeine</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-common</artifactId></dependency>   <!-- RowFeed: the load rules of the loader -->
+    <!-- the interop oracle, test scope only: Apache Iceberg's Parquet readers and writers, over Hadoop -->
+    <dependency><groupId>org.apache.iceberg</groupId><artifactId>iceberg-parquet</artifactId><version>${iceberg.version}</version><scope>test</scope></dependency>
+    <dependency><groupId>org.apache.iceberg</groupId><artifactId>iceberg-data</artifactId><version>${iceberg.version}</version><scope>test</scope><exclusions><exclusion><groupId>org.apache.orc</groupId><artifactId>orc-core</artifactId></exclusion></exclusions></dependency>
+    <dependency><groupId>org.apache.parquet</groupId><artifactId>parquet-column</artifactId><version>${parquet.version}</version><scope>test</scope></dependency>
+    <dependency><groupId>org.apache.hadoop</groupId><artifactId>hadoop-client-api</artifactId><version>${hadoop.version}</version><scope>test</scope></dependency>
+    <dependency><groupId>org.apache.hadoop</groupId><artifactId>hadoop-client-runtime</artifactId><version>${hadoop.version}</version><scope>test</scope></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId><scope>test</scope></dependency>
     <!-- the parity tests: the same rows through the Delta connector (and Drishti's Delta writer) -->
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-delta</artifactId><scope>test</scope></dependency>

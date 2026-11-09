@@ -55,7 +55,6 @@ public final class IcebergAppender {
             Map<String, Boolean> promoted, Set<String> vectors, Map<String, String> properties) throws IOException {
         Map<String, String> s = new HashMap<>(settings);
         s.put("domain", domain);
-        s.putIfAbsent("engine", "native");
         try (LayoutLake lake = LayoutLake.of(s)) {
             LayoutLake.LayoutTable t = lake.open(table, new LinkedHashMap<>(promoted), vectors, IcebergLayout.DEFAULT_ROW_GROUP_BYTES,
                     IcebergLayout.DEFAULT_FILE_ROWS);

@@ -28,6 +28,10 @@
 
 - **One home for start and stop scripts.** `bin/start-cluster`, `bin/stop-cluster` (`.sh`, `.ps1`, `.cmd`) and `bin/status --cluster FILE` start, stop and show a cluster on one machine from a cluster file (default `drishti-stack/stack.yaml`, the same format). `drishti-stack/` is configuration only. **`drishti-stack/start.sh`, `stop.sh` and `status.sh` are gone: run `bin/start-cluster.sh`, `bin/stop-cluster.sh` and `bin/status.sh --cluster drishti-stack/stack.yaml`.** The server jar copy moves to `data/stack/server.jar`. `deploy/bin/drishti-node` is now `bin/drishti-node`.
 - **The file is the connector.** The file in `config/connectors/` is the only truth; every Admin save writes it, with its history and audit entry. At the first start of this release each node folds connector edits an earlier release kept in the content store into its own files; a file changed since then is kept and the edit is saved beside it as `<name>.yaml.content-store-<date>.bak`, logged and audited. The override marks, *Remove override* and its Health warning are gone. On a cluster a save applies to its node: Admin → Health warns when nodes' connector files differ.
+- **Iceberg on `iceberg-core`, one engine.** Metadata, manifests, planning, commits and the REST client now come from Apache Iceberg's library with Drishti's `FileIO` and Parquet reader; no Hadoop at run time. `engine: library`, `DRISHTI_ICEBERG_ENGINE` and Azure/GCS/HDFS roots are gone (the setting is ignored, those roots are refused by name). Interop is proved both ways with every special partition character.
+- **Python reads Delta only through Delta Kernel** (`tools/lake/deltaread.py`); delta-rs stays for writes.
+- **Connector fixes from the data-standards review:** ActiveMQ no longer treats a Map/Object/Stream message as a delete; JDBC keeps integers beyond a long exact and reads binary as base64; Mongo reads Decimal128 NaN and Infinity; Kafka maps Avro decimal, date and timestamp logical types; an uncompressed Parquet page of the wrong size is an error; AWS keeps the SDK's checksums.
+
 
 ### Data loads
 
@@ -6583,7 +6587,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   GETTING_STARTED's Windows table loses its Iceberg row. Proven by a pyiceberg interop suite (fixtures written by pyiceberg, read
   back equal; tables written by drishti-iceberg read back by pyiceberg), every plugin test on both engines, a class-loader test that
   refuses Hadoop's file systems, `Shell` and `Configuration` for the connector, the loader and maintenance, writers committing at once
-  (local disk, a REST catalog), and refusal and Windows path tests ([DRISHTI_ICEBERG.md](docs/architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine)).
+  (local disk, a REST catalog), and refusal and Windows path tests ([DRISHTI_ICEBERG.md](docs/architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop)).
 - **New: the `iceberg-external` connector, for Iceberg tables Drishti does not write** (Spark, Flink, Trino, Snowflake, Glue, dbt):
   read-only through drishti-iceberg, the row is the document (structs, lists, maps; `decimals: string`, `binary: omit`), the id comes
   from the identifier fields or named columns, the business date from a column, a timestamp's day in a zone or the partition spec
@@ -6591,7 +6595,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   `tables: auto` serves a namespace and names tables without an id, and `StarterSchemas` drafts a pack's schemas from the tables
   ([ICEBERG_EXTERNAL_CONNECTOR.md](plugins/drishti-plugin-iceberg-external/README.md)).
 - **Changed: the native Delta engine's file access is a module of its own, `drishti-lakeio`**, shared with the coming Iceberg engine
-  ([DRISHTI_ICEBERG.md](docs/architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine) step I1): local disk and S3 storage, byte ranges, the Parquet page codecs
+  ([DRISHTI_ICEBERG.md](docs/architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop) step I1): local disk and S3 storage, byte ranges, the Parquet page codecs
   (which now also compress, for writers) and the per-file Parquet footer cache moved out of `drishti-deltalake` unchanged; local disk gains
   an exclusive create (a hard link of a finished file) and S3 a conditional PUT (`If-None-Match: *`) with a start-up probe, for safe commits.
   Every Delta test passes as before; the tests of the moved classes moved with them.

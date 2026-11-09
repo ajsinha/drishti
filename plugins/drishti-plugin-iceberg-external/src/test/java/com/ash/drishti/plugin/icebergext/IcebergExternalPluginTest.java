@@ -16,7 +16,6 @@
 package com.ash.drishti.plugin.icebergext;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.ColumnSet;
@@ -316,10 +315,5 @@ class IcebergExternalPluginTest {
             java.nio.file.Files.deleteIfExists(meta.getParent());
             java.nio.file.Files.deleteIfExists(meta.getParent().getParent());
         }
-    }
-
-    @Test
-    void theLibraryEngineIsRefused() {
-        assertThatThrownBy(() -> plugin(Map.of("engine", "library"))).hasMessageContaining("drishti-iceberg");
     }
 }

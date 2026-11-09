@@ -78,7 +78,7 @@ class IcebergRestCatalogNativeTest extends IcebergRestCatalogTest {
                 f.get();
             }
         }
-        try (IcebergLake lake = IcebergLake.of(s)) {
+        try (OracleLake lake = OracleLake.of(s)) {
             org.apache.iceberg.Table t = lake.load("trade").orElseThrow();
             assertThat(IcebergLayoutTest.rows(t)).isEqualTo(writers * 3 * 4L);
             assertThat(t.snapshots()).hasSize(writers * 3);
