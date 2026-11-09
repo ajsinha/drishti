@@ -15,7 +15,6 @@
  */
 package com.ash.drishti.kernel.api.shard;
 
-import com.ash.drishti.kernel.api.shard.ShardGather;
 import java.util.List;
 
 /**

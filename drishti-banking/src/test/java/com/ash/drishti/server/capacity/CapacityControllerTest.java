@@ -169,7 +169,7 @@ class CapacityControllerTest {
     @SuppressWarnings("unchecked")
     void theLiveFiguresSayWhenAndWhatTheyStandFor() {
         Map<String, Object> m = controller.live(ROOT);
-        assertThat(m).containsKeys("measuredAt", "server", "var", "disk", "load", "inputs");
+        assertThat(m).containsKeys("measuredAt", "server", "engine", "disk", "load", "inputs");
         Map<String, Object> server = (Map<String, Object>) m.get("server");
         assertThat(server).containsKeys("heapMaxMb", "heapAfterGcMb", "rssMb", "cpus", "javaVersion");
         assertThat((Map<String, Object>) m.get("inputs")).containsEntry("JavaVersion", Runtime.version().feature()).containsKey("Users");

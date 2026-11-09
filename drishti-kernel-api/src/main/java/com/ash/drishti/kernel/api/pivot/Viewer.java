@@ -15,7 +15,6 @@
  */
 package com.ash.drishti.kernel.api.pivot;
 
-import com.ash.drishti.kernel.api.security.Principal;
 
 /**
  * Who asks (ARCHITECTURE.md section 26.12): the module knows only the user's name; {@code principal} is the host's own identity (the server's

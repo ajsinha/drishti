@@ -15,7 +15,6 @@
  */
 package com.ash.drishti.kernel.api.pivot;
 
-import com.ash.drishti.kernel.api.pivot.PivotProvider;
 
 /**
  * A pivot source a module contributes (docs/architecture/DOMAIN_MODULES.md, the cycles: J1): a bean of this type gives the pivot engine one

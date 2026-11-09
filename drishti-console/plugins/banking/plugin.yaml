@@ -52,6 +52,7 @@ assets:
   - css/drishti_scenario-matrix.css
   - js/drishti_smat-link.js
   - js/drishti_scope-delete.js
+  - js/drishti_admin-scopes.js
   - js/drishti_play-link.js
   - js/drishti_stress-window.js
   - css/drishti_stress-window.css

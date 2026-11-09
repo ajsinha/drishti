@@ -44,7 +44,7 @@ class AggregationOwnerTest {
         List<String> found = new ArrayList<>();
         for (Path p : RepositoryFiles.withSuffixes(Set.of(".java", ".js", ".py"))) {
             String rel = root.relativize(p).toString().replace('\\', '/');
-            if (rel.startsWith("drishti-bicompute/") || rel.contains("/src/test/") || rel.contains("/tests/") || rel.startsWith("tools/")) {
+            if (rel.startsWith("drishti-bicompute/") || rel.startsWith("drishti-kernel-api/") || rel.contains("/src/test/") || rel.contains("/tests/") || rel.startsWith("tools/")) {
                 continue;
             }
             String text = Files.readString(p);

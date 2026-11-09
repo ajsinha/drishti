@@ -15,7 +15,6 @@
  */
 package com.ash.drishti.kernel.api.pivot;
 
-import com.ash.drishti.kernel.api.pivot.PivotView;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
