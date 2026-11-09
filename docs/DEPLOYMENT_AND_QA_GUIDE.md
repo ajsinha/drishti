@@ -401,6 +401,7 @@ DRISHTI_AUTH_ENABLED=true
 DRISHTI_SECURE_COOKIE=false                                            # false only for plain http; behind TLS leave it on
 DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif,funds
 DRISHTI_DEMO_ENABLED=false
+DRISHTI_VAR_SYSTEM_BASKETS_SEED=true
 DRISHTI_OFFLINE=true
 DRISHTI_LENSES=risk,world,market,trading
 DRISHTI_DATALOAD_ENABLED=true
@@ -466,7 +467,7 @@ the task's state is the process's:
 Set-Location C:\drishti
 $env:DRISHTI_JAVA_HOME = 'C:\jdk-21'
 $env:DRISHTI_TOKEN_SECRET = (Get-Content C:\drishti-secrets\token-secret.txt -Raw).Trim()   # a folder only the service account can read
-$env:DRISHTI_SECURITY_ENABLED = 'true'; $env:DRISHTI_DEMO_ENABLED = 'false'
+$env:DRISHTI_SECURITY_ENABLED = 'true'; $env:DRISHTI_DEMO_ENABLED = 'false'; $env:DRISHTI_VAR_SYSTEM_BASKETS_SEED = 'true'
 & .\bin\start-server.ps1 --heap 4g
 ```
 

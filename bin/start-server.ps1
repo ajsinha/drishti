@@ -145,6 +145,7 @@ if ($demo) {
     if (-not $packs) { $packs = 'core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif,funds' }
     if (-not $heap) { $heap = '4g' }
     $env:DRISHTI_DEMO_ENABLED = 'false'               # the lakes are the only data: no built-in samples
+    $env:DRISHTI_VAR_SYSTEM_BASKETS_SEED = 'true'    # the demo's system baskets, imported once into an empty store
     $env:DRISHTI_OFFLINE = 'true'                     # quotes and news from the committed snapshot; no website is contacted
     $env:DRISHTI_SECURITY_ENABLED = 'true'
     $env:DRISHTI_SEED_ADMIN = 'true'

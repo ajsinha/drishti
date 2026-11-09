@@ -25,6 +25,7 @@
 
 ### Fixes
 
+- **Demo-lake setups had no system baskets:** the seed follows `DRISHTI_DEMO_ENABLED`, which these setups turn off. `bin/start-server --demo`, the IntelliJ demo-lakes configuration, the deployment guide's settings and `drishti-stack` now set `DRISHTI_VAR_SYSTEM_BASKETS_SEED=true`.
 - **IntelliJ run configurations:** the server configurations ran the `drishti-server` module, which has no domain modules on its class path since the split, so VAR and every banking function said *not installed*. They now run `drishti-app`, and *Drishti build server jar* builds it; a test keeps them so.
 
 ### Breaking
