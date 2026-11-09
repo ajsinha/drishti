@@ -16,7 +16,7 @@
 package com.ash.drishti.server.nativelib;
 
 import com.ash.drishti.compute.linalg.Blas;
-import com.ash.drishti.server.engines.ComputeEngine;
+import com.ash.drishti.kernel.api.engines.ComputeEngine;
 import java.time.Instant;
 import org.springframework.stereotype.Component;
 

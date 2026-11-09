@@ -25,7 +25,7 @@ import com.ash.drishti.server.bi.layer.DatasetDef;
 import com.ash.drishti.server.bi.layer.ImplicitModels;
 import com.ash.drishti.server.bi.layer.ResolvedDataset;
 import com.ash.drishti.server.bi.layer.Semver;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;

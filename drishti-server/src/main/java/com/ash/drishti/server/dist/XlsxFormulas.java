@@ -41,7 +41,7 @@ public final class XlsxFormulas {
 
     /** The functions a formula may call. */
     public static final Set<String> ALLOWED = Set.of("SUM", "SUMPRODUCT", "SMALL", "LARGE", "AVERAGE", "COUNT", "INDEX", "MATCH", "ROUNDDOWN",
-            "ROUNDUP", "SQRT", "IF", "ABS", "MAX", "MIN", "AND", "OR", "ISNUMBER", "EXP", "SUMIFS", "SUMIF",
+            "ROUNDUP", "SQRT", "IF", "ABS", "MAX", "MIN", "AND", "OR", "ISNUMBER", "EXP", "SUMIFS", "SUMIF", // domain-strings: generic (the Excel function)
             "NORM.S.INV", "PI");                                         // 2.9.11.c: parametric VaR (Excel 2010+, LibreOffice 4.2+, Google Sheets)
 
     /** A function call: a name then an opening parenthesis (a sheet name or a defined name is never followed by one). */

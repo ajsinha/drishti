@@ -20,7 +20,7 @@ import com.ash.drishti.engine.command.Mnemonics;
 import com.ash.drishti.engine.search.SearchQuery;
 import com.ash.drishti.engine.search.StructuredSearch;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.util.Map;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestAttribute;

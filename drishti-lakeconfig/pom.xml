@@ -28,6 +28,7 @@
   <name>drishti-lakeconfig</name>
   <description>The lake configuration (config/lakes/*.yaml): one description of each lake and every table in it, read by the writers (the loader, the data inbox, lake build, the demo lakes) and the readers (the Delta and Iceberg connectors) alike. Plain Java and Jackson only, so every module, a plugin included, can depend on it</description>
   <dependencies>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-kernel-api</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>   <!-- PackFolders: where a pack is -->
     <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-databind</artifactId></dependency>
     <dependency><groupId>com.fasterxml.jackson.dataformat</groupId><artifactId>jackson-dataformat-yaml</artifactId></dependency>

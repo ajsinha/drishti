@@ -15,16 +15,16 @@
  */
 package com.ash.drishti.bicompute.scale;
 
-import com.ash.drishti.bicompute.core.AggregationPlan.FunctionCall;
+import com.ash.drishti.kernel.api.pivot.AggregationPlan.FunctionCall;
 import com.ash.drishti.bicompute.core.PivotCore;
-import com.ash.drishti.bicompute.core.PivotView;
+import com.ash.drishti.kernel.api.pivot.PivotView;
 import com.ash.drishti.bicompute.core.ScaleOptions;
 import com.ash.drishti.bicompute.functions.Functions;
 import com.ash.drishti.bicompute.functions.Kll;
 import com.ash.drishti.bicompute.functions.Sketches;
-import com.ash.drishti.bicompute.spi.Kind;
-import com.ash.drishti.bicompute.spi.PivotProvider;
-import com.ash.drishti.bicompute.spi.Viewer;
+import com.ash.drishti.kernel.api.pivot.Kind;
+import com.ash.drishti.kernel.api.pivot.PivotProvider;
+import com.ash.drishti.kernel.api.pivot.Viewer;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -97,8 +97,8 @@ public final class Progressive {
             return "not asked";
         }
         PivotProvider p = core.provider(view.source());
-        if ("var".equals(p.id())) {
-            return "VaR is never sampled: it shows when exact";
+        if (p.exactOnly() != null) {
+            return p.exactOnly();
         }
         boolean exact = o != null && o.exactness() == ScaleOptions.Exactness.EXACT;
         PivotView prepared = p.prepare(v, view);

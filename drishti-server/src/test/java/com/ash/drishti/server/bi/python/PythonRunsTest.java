@@ -30,7 +30,7 @@ import com.ash.drishti.server.bi.report.BiReportProperties;
 import com.ash.drishti.server.bi.transform.TransformProperties;
 import com.ash.drishti.server.bi.transform.TransformRunner;
 import com.ash.drishti.server.bi.transform.TransformService;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.nio.file.Files;
 import java.nio.file.Path;

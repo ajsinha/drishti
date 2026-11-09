@@ -17,8 +17,8 @@ package com.ash.drishti.bicompute;
 
 import com.ash.drishti.bicompute.cache.StateCache;
 import com.ash.drishti.bicompute.core.PivotCore;
-import com.ash.drishti.bicompute.spi.PivotProvider;
-import com.ash.drishti.bicompute.spi.Viewer;
+import com.ash.drishti.kernel.api.pivot.PivotProvider;
+import com.ash.drishti.kernel.api.pivot.Viewer;
 import com.ash.drishti.bicompute.sql.DuckDbExecutor;
 import com.ash.drishti.bicompute.sql.TabularProvider;
 import com.ash.drishti.bicompute.sql.TabularSource;
@@ -223,19 +223,19 @@ final class PivotFixture implements AutoCloseable {
         }
 
         @Override
-        public Estimate estimate(Viewer v, com.ash.drishti.bicompute.core.AggregationPlan plan) {
+        public Estimate estimate(Viewer v, com.ash.drishti.kernel.api.pivot.AggregationPlan plan) {
             return d.estimate(v, plan);
         }
 
         @Override
-        public com.ash.drishti.bicompute.core.Partials evaluate(Viewer v, com.ash.drishti.bicompute.core.AggregationPlan plan) {
-            com.ash.drishti.bicompute.core.Partials p = d.evaluate(v, plan);
+        public com.ash.drishti.kernel.api.pivot.Partials evaluate(Viewer v, com.ash.drishti.kernel.api.pivot.AggregationPlan plan) {
+            com.ash.drishti.kernel.api.pivot.Partials p = d.evaluate(v, plan);
             statements.addAll(p.stats().statements());
             return p;
         }
 
         @Override
-        public Rows drill(Viewer v, com.ash.drishti.bicompute.core.AggregationPlan plan, com.ash.drishti.bicompute.core.CellKey key, int offset,
+        public Rows drill(Viewer v, com.ash.drishti.kernel.api.pivot.AggregationPlan plan, com.ash.drishti.kernel.api.pivot.CellKey key, int offset,
                 int limit) {
             return d.drill(v, plan, key, offset, limit);
         }

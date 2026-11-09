@@ -20,7 +20,7 @@ import com.ash.drishti.identity.collab.Pin;
 import com.ash.drishti.identity.collab.Share;
 import com.ash.drishti.server.collab.NoteText;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.ArrayList;
 import java.util.List;

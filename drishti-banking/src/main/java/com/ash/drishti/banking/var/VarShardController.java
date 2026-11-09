@@ -23,7 +23,7 @@ import com.ash.drishti.banking.compute.var.VarBook;
 import com.ash.drishti.compute.vector.OrdinalSet;
 import com.ash.drishti.server.net.NetCallFilter;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.LocalDate;

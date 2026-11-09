@@ -21,7 +21,7 @@ import com.ash.drishti.identity.bi.BiStore;
 import com.ash.drishti.server.bi.BiAccess;
 import com.ash.drishti.server.bi.BiService;
 import com.ash.drishti.server.bi.report.BiReportProperties;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;

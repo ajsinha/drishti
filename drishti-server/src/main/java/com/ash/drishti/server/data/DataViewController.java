@@ -22,7 +22,7 @@ import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.packs.edition.Edition;
 import com.ash.drishti.server.edition.EditionCommands;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;

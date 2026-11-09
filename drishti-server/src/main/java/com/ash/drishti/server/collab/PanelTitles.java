@@ -22,7 +22,7 @@ import com.ash.drishti.engine.control.ViewState;
 import com.ash.drishti.engine.view.ViewModel.PanelView;
 import com.ash.drishti.engine.view.ViewModel;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import java.time.Duration;

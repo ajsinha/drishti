@@ -15,9 +15,10 @@
  */
 package com.ash.drishti.server.pivot;
 
+import com.ash.drishti.kernel.api.pivot.PivotSourceProvider;
 import com.ash.drishti.bicompute.cache.StateCache;
 import com.ash.drishti.bicompute.core.PivotCore;
-import com.ash.drishti.bicompute.spi.PivotProvider;
+import com.ash.drishti.kernel.api.pivot.PivotProvider;
 import com.ash.drishti.bicompute.sql.DuckDbExecutor;
 import com.ash.drishti.bicompute.sql.TabularProvider;
 import com.ash.drishti.engine.source.SourceRouter;
@@ -118,7 +119,7 @@ public class PivotConfiguration {
     static com.ash.drishti.bicompute.sql.TabularSource.Resolver both(KindSources kinds, PanelSources panels, TableSources tables) {
         return new com.ash.drishti.bicompute.sql.TabularSource.Resolver() {
             @Override
-            public java.util.Map<String, String> sources(com.ash.drishti.bicompute.spi.Viewer v) {
+            public java.util.Map<String, String> sources(com.ash.drishti.kernel.api.pivot.Viewer v) {
                 java.util.Map<String, String> out = new java.util.LinkedHashMap<>(kinds.sources(v));
                 if (tables != null) {
                     out.putAll(tables.sources(v));
@@ -132,7 +133,7 @@ public class PivotConfiguration {
             }
 
             @Override
-            public com.ash.drishti.bicompute.sql.TabularSource open(com.ash.drishti.bicompute.spi.Viewer v, String source, String date) {
+            public com.ash.drishti.bicompute.sql.TabularSource open(com.ash.drishti.kernel.api.pivot.Viewer v, String source, String date) {
                 if (panels.serves(source)) {
                     return panels.open(v, source, date);
                 }

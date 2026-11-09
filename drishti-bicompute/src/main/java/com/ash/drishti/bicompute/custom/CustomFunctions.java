@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.bicompute.custom;
 
+import com.ash.drishti.kernel.api.vocabulary.DomainVocabulary;
 import com.ash.drishti.bicompute.custom.FunctionDef.Input;
 import com.ash.drishti.bicompute.custom.FunctionDef.Language;
 import com.ash.drishti.bicompute.formula.FormulaFunction;
@@ -23,10 +24,10 @@ import com.ash.drishti.bicompute.functions.Functions;
 import com.ash.drishti.bicompute.harness.FunctionCheck;
 import com.ash.drishti.bicompute.python.PythonFunction;
 import com.ash.drishti.bicompute.python.PythonFunctionClient;
-import com.ash.drishti.bicompute.spi.AggFunction;
-import com.ash.drishti.bicompute.spi.Batch;
-import com.ash.drishti.bicompute.spi.Kind;
-import com.ash.drishti.bicompute.spi.Viewer;
+import com.ash.drishti.kernel.api.pivot.AggFunction;
+import com.ash.drishti.kernel.api.pivot.Batch;
+import com.ash.drishti.kernel.api.pivot.Kind;
+import com.ash.drishti.kernel.api.pivot.Viewer;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import java.nio.charset.StandardCharsets;
@@ -57,8 +58,7 @@ public final class CustomFunctions {
     private static final Pattern NAME = Pattern.compile("[a-z][a-z0-9_]{0,63}");
 
     /** Names a custom function never takes: the official measures (decision 14) and the built-ins. */
-    public static final Set<String> RESERVED = Set.of("var", "es", "svar", "stressed_var", "expected_shortfall", "frtb", "frtb_sa", "simm", "saccr",
-            "sa_ccr", "ead", "pfe", "ee", "epe", "eepe", "exposure", "cva", "irc", "drc", "rrao", "ima", "official");
+    public static final Set<String> RESERVED = DomainVocabulary.union(DomainVocabulary::reservedFunctionNames);
 
     /**
      * The settings ({@code drishti.pivot.functions}).

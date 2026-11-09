@@ -16,8 +16,8 @@
 package com.ash.drishti.bicompute.sql;
 
 import com.ash.drishti.bicompute.core.PivotCore;
-import com.ash.drishti.bicompute.spi.PivotProvider;
-import com.ash.drishti.bicompute.spi.Viewer;
+import com.ash.drishti.kernel.api.pivot.PivotProvider;
+import com.ash.drishti.kernel.api.pivot.Viewer;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -129,12 +129,12 @@ public final class SampledResolver implements TabularSource.Resolver {
 
             /** A document plan's relation (its lists unnested) sampled the same way: its rows, not its documents. */
             @Override
-            public Relation relation(DuckDbExecutor exec, com.ash.drishti.bicompute.core.AggregationPlan plan) {
+            public Relation relation(DuckDbExecutor exec, com.ash.drishti.kernel.api.pivot.AggregationPlan plan) {
                 return sampled(s.relation(exec, plan));
             }
 
             @Override
-            public com.ash.drishti.bicompute.core.PivotView prepare(com.ash.drishti.bicompute.core.PivotView view) {
+            public com.ash.drishti.kernel.api.pivot.PivotView prepare(com.ash.drishti.kernel.api.pivot.PivotView view) {
                 return s.prepare(view);
             }
 

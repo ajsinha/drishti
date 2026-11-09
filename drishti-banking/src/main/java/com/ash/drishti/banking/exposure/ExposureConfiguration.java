@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.banking.exposure;
 
-import com.ash.drishti.engine.ViewAugmenter;
+import com.ash.drishti.kernel.api.view.ViewAugmenter;
 import com.ash.drishti.engine.ViewPipeline;
 import com.ash.drishti.engine.source.SourceRouter;
 import com.ash.drishti.identity.AuditLog;
@@ -84,13 +84,13 @@ public class ExposureConfiguration {
 
     /** Explain an exposure figure (kind exposure, the one Explain of SHARED_SCREENS.md section 3). */
     @Bean
-    com.ash.drishti.server.explain.Explainer exposureNumberExplainer(ExposureViews views) {
+    com.ash.drishti.kernel.api.explain.Explainer exposureNumberExplainer(ExposureViews views) {
         return new ExposureNumberExplainer(views);
     }
 
     /** Explain a pre-deal check (kind predeal: the decision, the limit's use, headroom and buckets; EXPOSURE_GUIDE.md section 18.9). */
     @Bean
-    com.ash.drishti.server.explain.Explainer exposurePreDealExplainer(ExposureService svc, com.ash.drishti.banking.RiskLimits limits) {
+    com.ash.drishti.kernel.api.explain.Explainer exposurePreDealExplainer(ExposureService svc, com.ash.drishti.banking.RiskLimits limits) {
         return new ExposurePreDealExplainer(new ExposurePreDeal(svc, new ExposureWhatIf(svc), limits));
     }
 

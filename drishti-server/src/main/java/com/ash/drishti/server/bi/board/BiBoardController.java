@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.bi.board;
 
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.util.Map;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;

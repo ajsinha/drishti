@@ -26,7 +26,7 @@ import com.ash.drishti.registry.ModuleManifest;
 import com.ash.drishti.registry.ModuleState;
 import com.ash.drishti.registry.Subject;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;

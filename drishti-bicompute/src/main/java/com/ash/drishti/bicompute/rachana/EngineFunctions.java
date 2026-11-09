@@ -16,7 +16,7 @@
 package com.ash.drishti.bicompute.rachana;
 
 import com.ash.drishti.api.DataNode;
-import com.ash.drishti.bicompute.spi.FigureSource;
+import com.ash.drishti.kernel.api.pivot.FigureSource;
 import com.ash.drishti.rachana.el.FunctionProvider;
 import com.ash.drishti.rachana.el.Values;
 import com.ash.drishti.rachana.el.check.Signatures;
@@ -148,7 +148,7 @@ public final class EngineFunctions implements FunctionProvider {
         measureLevel(out);
         out.add(new Provided("measure", 1, 3, "name, [scope], [options]", "measure",
                 "a compute engine's measure for one scope (VaR, ES …), exactly from its engine, never summed",
-                "measure('VAR', 'DESK:DESK-COMM')", (a, c) -> measure(a)));
+                "measure('MEASURE', 'GROUP:G-1')", (a, c) -> measure(a)));
         out.add(new Provided("cell", 1, 33, "view, [field, member] ...", "measure", "a cell of a saved pivot view, as the view computes it",
                 "cell('desk-pnl', 'DESK', 'DESK-COMM', 'month', '2026-09')", (a, c) -> cell(a)));
         return out;

@@ -15,12 +15,13 @@
  */
 package com.ash.drishti.server.engines;
 
+import com.ash.drishti.kernel.api.engines.ComputeEngine;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.net.transport.PeerHttp;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;

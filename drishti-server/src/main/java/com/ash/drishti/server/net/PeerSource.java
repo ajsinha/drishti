@@ -29,7 +29,7 @@ import com.ash.drishti.net.security.NetHeaders;
 import com.ash.drishti.net.security.OnBehalfOf;
 import com.ash.drishti.net.transport.PeerHttp;
 import com.ash.drishti.server.api.AsOfResolver;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 import java.io.InputStream;

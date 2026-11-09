@@ -26,7 +26,7 @@ import com.ash.drishti.server.bi.engine.QueryProperties;
 import com.ash.drishti.server.bi.engine.QueryService;
 import com.ash.drishti.server.bi.engine.TestLake;
 import com.ash.drishti.server.bi.plan.PlanProperties;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.nio.file.Path;
 import java.time.Clock;
 import java.time.Duration;

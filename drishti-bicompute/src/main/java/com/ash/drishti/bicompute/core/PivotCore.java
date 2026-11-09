@@ -15,13 +15,19 @@
  */
 package com.ash.drishti.bicompute.core;
 
+import com.ash.drishti.kernel.api.pivot.AggregationPlan;
+import com.ash.drishti.kernel.api.pivot.CellKey;
+import com.ash.drishti.kernel.api.pivot.CellSet;
+import com.ash.drishti.kernel.api.pivot.Dim;
+import com.ash.drishti.kernel.api.pivot.Partials;
+import com.ash.drishti.kernel.api.pivot.PivotView;
 import com.ash.drishti.bicompute.cache.StateCache;
 import com.ash.drishti.bicompute.cluster.OrderedMerge;
-import com.ash.drishti.bicompute.core.AggregationPlan.FunctionCall;
+import com.ash.drishti.kernel.api.pivot.AggregationPlan.FunctionCall;
 import com.ash.drishti.bicompute.functions.Functions;
-import com.ash.drishti.bicompute.spi.Kind;
-import com.ash.drishti.bicompute.spi.PivotProvider;
-import com.ash.drishti.bicompute.spi.Viewer;
+import com.ash.drishti.kernel.api.pivot.Kind;
+import com.ash.drishti.kernel.api.pivot.PivotProvider;
+import com.ash.drishti.kernel.api.pivot.Viewer;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import java.util.ArrayList;

@@ -27,7 +27,7 @@ import com.ash.drishti.rachana.model.Sutra;
 import com.ash.drishti.server.governance.Proposal;
 import com.ash.drishti.server.governance.SutraGovernance;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;

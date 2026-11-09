@@ -25,7 +25,7 @@ import com.ash.drishti.banking.compute.frtb.FrtbExamples;
 import com.ash.drishti.banking.compute.frtb.FrtbInput;
 import com.ash.drishti.banking.compute.frtb.FrtbParams;
 import com.ash.drishti.banking.compute.frtb.FrtbSa;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.ash.drishti.banking.var.VarService;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

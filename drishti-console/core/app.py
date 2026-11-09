@@ -318,6 +318,12 @@ class SecurityHeaders(BaseHTTPMiddleware):
         return response
 
 
+
+def _plugins_connector_actions(plugin: str) -> list:
+    from core import plugins
+    return plugins.connector_actions(plugin)
+
+
 def create_app(settings: Settings) -> FastAPI:
     from core import tmpdir
 
@@ -505,15 +511,6 @@ def create_app(settings: Settings) -> FastAPI:
 
     templates.env.globals["design_on"] = _design_on
 
-    def _smat_on() -> bool:
-        """The scenario matrix (SMAT) as this request's person sees it: a lens or an edition without the word offers no "Scenario matrix"
-        link (Drishti Market and Drishti World), so no link answers DRS-4023."""
-        from core import edition as _ed
-        e = app.state.editions.for_request(_ed.current_lens())
-        return e.word_on("SMAT") and e.word_on("VAR")
-
-    templates.env.globals["smat_on"] = _smat_on
-
     def _pivot_on() -> bool:
         """The pivot screen (PIVOT) as this request's person sees it: offered where the edition or lens has the word."""
         from core import edition as _ed
@@ -521,13 +518,13 @@ def create_app(settings: Settings) -> FastAPI:
 
     templates.env.globals["pivot_on"] = _pivot_on
 
-    def _play_on() -> bool:
-        """The VaR Playground (PLAY) as this request's person sees it: offered where the edition or lens has the word and VaR."""
+    def _word_on(word: str) -> bool:
+        """A reserved word as this request's person sees it: offered where the edition or lens has the word."""
         from core import edition as _ed
-        e = app.state.editions.for_request(_ed.current_lens())
-        return e.word_on("PLAY") and e.word_on("VAR")
+        return app.state.editions.for_request(_ed.current_lens()).word_on(word)
 
-    templates.env.globals["play_on"] = _play_on
+    templates.env.globals["word_on"] = _word_on
+    templates.env.globals["connector_actions"] = _plugins_connector_actions
     from core import modules as _modules_state
 
     def _page_modules(request) -> list[str]:

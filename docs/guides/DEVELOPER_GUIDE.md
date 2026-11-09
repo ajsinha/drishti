@@ -691,7 +691,7 @@ import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.engine.command.CommandsProperties;
 import com.ash.drishti.engine.command.Mnemonics;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.util.List;
 import java.util.Locale;
 import org.springframework.web.bind.annotation.GetMapping;

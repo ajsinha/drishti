@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.bicompute.sql;
 
-import com.ash.drishti.bicompute.spi.PivotProvider;
-import com.ash.drishti.bicompute.spi.Viewer;
+import com.ash.drishti.kernel.api.pivot.PivotProvider;
+import com.ash.drishti.kernel.api.pivot.Viewer;
 import java.util.List;
 import java.util.Map;
 
@@ -68,12 +68,12 @@ public interface TabularSource {
      * The relation one plan reads: a document source unnests the lists the plan's grain steps into (one row per leg) and extracts its
      * path fields; every other source reads the same relation for every plan.
      */
-    default Relation relation(DuckDbExecutor exec, com.ash.drishti.bicompute.core.AggregationPlan plan) {
+    default Relation relation(DuckDbExecutor exec, com.ash.drishti.kernel.api.pivot.AggregationPlan plan) {
         return relation(exec);
     }
 
     /** The view as this source answers it ({@link PivotProvider#prepare}); the default: as it is. */
-    default com.ash.drishti.bicompute.core.PivotView prepare(com.ash.drishti.bicompute.core.PivotView view) {
+    default com.ash.drishti.kernel.api.pivot.PivotView prepare(com.ash.drishti.kernel.api.pivot.PivotView view) {
         return view;
     }
 

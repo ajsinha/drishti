@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.bicompute.rollup;
 
-import com.ash.drishti.bicompute.core.Dim;
-import com.ash.drishti.bicompute.core.PivotView;
+import com.ash.drishti.kernel.api.pivot.Dim;
+import com.ash.drishti.kernel.api.pivot.PivotView;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;

@@ -35,11 +35,11 @@ import java.util.Map;
  * @param code       true when it brings code (a jar); false for content only
  * @param shipped    whether it is enabled as shipped (an administrator's switch overrides it)
  * @param installed  true when it is present here: its jar's manifest was found, or it is a content module a site file declares
- * @param packages   the Java package roots of its code ({@code com.ash.drishti.banking}): a class there belongs to it
+ * @param packages   the Java package roots of its code (as the module's manifest writes them): a class there belongs to it
  * @param engines    the compute engines it brings (ids of the engine catalogue)
  * @param packs      the packs it owns (ids)
  * @param connectors the connectors and connector plugins it owns (names)
- * @param api        the server API prefixes it answers ({@code /api/v1/risk})
+ * @param api        the server API prefixes it answers (as the module's manifest writes them)
  * @param functions  the functions it brings (command words: {@code VAR}, {@code EXP}, {@code TRD}), each with the APIs behind it
  * @param source     where the manifest was read, in words
  */

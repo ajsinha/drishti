@@ -28,7 +28,7 @@ import com.ash.drishti.compute.env.Environments;
 import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.server.net.NetCaller;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.List;

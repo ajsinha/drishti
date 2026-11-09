@@ -18,7 +18,7 @@ package com.ash.drishti.server.bi;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.server.bi.engine.QueryRequest;
 import com.ash.drishti.server.bi.model.PackModels;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

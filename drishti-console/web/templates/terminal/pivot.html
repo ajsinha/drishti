@@ -44,7 +44,7 @@
   </div>
   {% if cube_building %}<p class="pv-building" role="status" data-cube-building><span class="drishti_uc-chip" data-uc="{{ cube.under_construction }}" title="Depends on work not built yet (Help → Under construction)">Under construction</span>
     The {{ cube.title }} is a preset of this Pivot: its source, the CCR provider (each netting set's exposure paths, netted and collateralised first), is not built yet.
-    Meanwhile the <a href="/exposure">Exposure explorer</a> (<span class="mono">EXP</span>) has every counterparty's computed exposure.</p>{% endif %}
+    {% if cube.meanwhile %}Meanwhile the <a href="{{ cube.meanwhile.href }}">{{ cube.meanwhile.label }}</a> (<span class="mono">{{ cube.meanwhile.word }}</span>) {{ cube.meanwhile.what }}{% endif %}</p>{% endif %}
   <div class="pv-bar" role="toolbar" aria-label="Pivot controls">
     <label class="pv-chip">Source <drishti-select data-pv-source label="Source"></drishti-select></label>
     <label class="pv-chip">Date <drishti-select data-pv-date label="Business date"></drishti-select></label>

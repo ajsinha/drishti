@@ -28,7 +28,7 @@ import com.ash.drishti.identity.collab.ShareStore;
 import com.ash.drishti.identity.collab.ThreadStore;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.server.security.PackAccess;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;

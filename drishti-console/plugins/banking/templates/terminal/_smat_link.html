@@ -1,0 +1,2 @@
+{# The scenario matrix link on a position's page (the core's view.html, screens: view toolbar of plugin.yaml). #}
+{% if vm.ref.kind in ['trade', 'position', 'pnl-vector', 'scenario-pv'] and word_on('SMAT') and word_on('VAR') %}<a class="tbar-link vhead-alert" data-smat-link href="/smat?id={{ vm.ref.id | urlencode }}" title="Scenario matrix (SMAT {{ vm.ref.id }}): its scenario P&amp;L by scenario day across the last 20 business dates, with each date's VaR and ES tail"><i class="bi bi-grid-3x3" aria-hidden="true"></i> Scenario matrix</a>{% endif %}

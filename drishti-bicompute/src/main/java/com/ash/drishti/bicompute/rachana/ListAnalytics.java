@@ -17,8 +17,8 @@ package com.ash.drishti.bicompute.rachana;
 
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.bicompute.functions.Functions;
-import com.ash.drishti.bicompute.spi.AggFunction;
-import com.ash.drishti.bicompute.spi.Batch;
+import com.ash.drishti.kernel.api.pivot.AggFunction;
+import com.ash.drishti.kernel.api.pivot.Batch;
 import com.ash.drishti.rachana.el.FunctionProvider.Provided;
 import com.ash.drishti.rachana.el.Values;
 import java.util.ArrayList;

@@ -185,7 +185,7 @@ public class RunsConfiguration {
         Principals who = principals.getIfAvailable();
         com.ash.drishti.server.collab.DirectoryService dir = directory.getIfAvailable();
         return new RunSharing(runs, shares, catalog::bind, mq,
-                u -> who == null ? new com.ash.drishti.server.security.Principal(u, List.of()) : who.of(u),
+                u -> who == null ? new com.ash.drishti.kernel.api.security.Principal(u, List.of()) : who.of(u),
                 role -> dir == null ? List.of() : dir.members(role).stream().map(com.ash.drishti.identity.User::username).toList(),
                 sources::replay, Clock.systemUTC());
     }

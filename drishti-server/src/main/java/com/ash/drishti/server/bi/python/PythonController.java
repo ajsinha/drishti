@@ -21,7 +21,7 @@ import com.ash.drishti.server.bi.BiAccess;
 import com.ash.drishti.server.bi.BiService;
 import com.ash.drishti.server.bi.report.BiReportService;
 import com.ash.drishti.server.bi.transform.TransformProperties;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;

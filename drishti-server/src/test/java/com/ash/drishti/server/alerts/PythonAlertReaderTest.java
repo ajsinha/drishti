@@ -34,7 +34,7 @@ import com.ash.drishti.server.bi.engine.QueryService;
 import com.ash.drishti.server.bi.python.PythonItems;
 import com.ash.drishti.server.bi.report.BiReportService;
 import com.ash.drishti.server.bi.transform.TransformRunner;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;

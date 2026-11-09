@@ -23,7 +23,7 @@ import com.ash.drishti.server.collab.InboxHub;
 import com.ash.drishti.server.collab.InboxService;
 import com.ash.drishti.server.metrics.PlatformAlerts;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 import java.util.ArrayList;

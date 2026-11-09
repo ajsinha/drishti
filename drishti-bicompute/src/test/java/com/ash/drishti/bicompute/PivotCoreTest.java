@@ -20,10 +20,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.data.Offset.offset;
 
 import com.ash.drishti.bicompute.cache.StateCache;
-import com.ash.drishti.bicompute.core.CellKey;
+import com.ash.drishti.kernel.api.pivot.CellKey;
 import com.ash.drishti.bicompute.core.PivotCore;
-import com.ash.drishti.bicompute.core.PivotView;
-import com.ash.drishti.bicompute.spi.Viewer;
+import com.ash.drishti.kernel.api.pivot.PivotView;
+import com.ash.drishti.kernel.api.pivot.Viewer;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import java.util.ArrayList;

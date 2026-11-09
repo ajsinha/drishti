@@ -25,7 +25,7 @@ import static org.mockito.Mockito.when;
 
 import com.ash.drishti.server.bi.engine.Footprints;
 import com.ash.drishti.server.bi.report.BiReportService;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.nio.file.Path;
 import java.time.Clock;
 import java.time.Duration;

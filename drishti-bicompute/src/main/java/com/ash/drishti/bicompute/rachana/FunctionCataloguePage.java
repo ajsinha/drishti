@@ -92,7 +92,7 @@ public final class FunctionCataloguePage {
                 .append("of the answer's cells (a total is never broken; no rows are read again). Pivot values only: a list in Rachana has ")
                 .append("no rows and columns.\n\n");
         b.append("| Function | Arguments | Means | Example | Excel | SAS | Runs | Source |\n|---|---|---|---|---|---|---|---|\n");
-        for (com.ash.drishti.bicompute.functions.Windows.Info w : com.ash.drishti.bicompute.functions.Windows.FUNCTIONS) {
+        for (com.ash.drishti.kernel.api.pivot.Windows.Info w : com.ash.drishti.kernel.api.pivot.Windows.FUNCTIONS) {
             b.append("| `").append(w.name()).append("` | ").append(cell(w.args())).append(" | ").append(cell(w.description())).append(" | `")
                     .append(cell(w.example())).append("` | ").append(cell(w.excel())).append(" | ").append(cell(w.sas())).append(" | E | ")
                     .append(EngineFunctions.SOURCE).append(" |\n");

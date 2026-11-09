@@ -165,3 +165,58 @@ def landing_by_rules(request, ed, offered: list[str], me, mine: dict) -> str | N
         if (to := fn(request, ed, offered, me, mine)) in offered:
             return to
     return None
+
+
+# ---- C8: reserved words, console commands, phone pages, connector actions ---------------------------------------------------------------
+@dataclass(frozen=True)
+class _Word:
+    word: str
+    paths: tuple[str, ...]
+    mnemonic: bool
+
+
+_words: list[_Word] = []
+_console_commands: list[tuple] = []
+_phone_pages: dict[str, dict] = {}
+_connector_actions: dict[str, list[dict]] = {}
+
+
+def word(name: str, paths: tuple[str, ...] = (), mnemonic: bool = False) -> None:
+    """A module's reserved command word and the console pages it opens (the edition switch and the 404 follow it). ``mnemonic``: it is
+    also a pack's mnemonic, so an edition without it still runs it as the pack's (and a landing does not refuse it)."""
+    _once(_words, _Word(name, tuple(paths), mnemonic))
+
+
+def words() -> list[_Word]:
+    load()
+    return list(_words)
+
+
+def console_command(word_: str, pack: str, label: str, what: str, example: str, kind: str, needs: tuple[str, ...] = ()) -> None:
+    """A console command FUNC lists with a pack's, shown when the person's edition or lens has its first word and ``needs``."""
+    _once(_console_commands, (word_, pack, label, what, example, kind, tuple(needs)))
+
+
+def console_commands() -> list[tuple]:
+    load()
+    return list(_console_commands)
+
+
+def phone_page(name: str, parts: dict) -> None:
+    """A page's parts for the phone display (core/phone.py): part to (default tier, name in *More on this page*)."""
+    _phone_pages[name] = parts
+
+
+def phone_pages() -> dict[str, dict]:
+    load()
+    return dict(_phone_pages)
+
+
+def connector_action(plugin: str, label: str, aria: str, title: str, url: str) -> None:
+    """A button on Admin -> Connectors for a running connector of ``plugin``: POSTs ``url`` (``{name}``: the connector's) as the user."""
+    _once(_connector_actions.setdefault(plugin, []), {"label": label, "aria": aria, "title": title, "url": url})
+
+
+def connector_actions(plugin: str) -> list[dict]:
+    load()
+    return list(_connector_actions.get(str(plugin or ""), []))

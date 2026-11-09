@@ -17,7 +17,7 @@ package com.ash.drishti.server.bi.runs;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.nio.file.Path;
 import java.time.Clock;
 import java.time.Instant;

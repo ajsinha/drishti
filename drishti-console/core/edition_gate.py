@@ -20,7 +20,7 @@ with every switch on (the defaults) nothing is refused: the full Drishti, as bef
 from __future__ import annotations
 
 from core import engines, modules
-from core.edition import ADMIN_PAGES, FEATURE_PATHS, WORD_PATHS, Edition
+from core.edition import ADMIN_PAGES, FEATURE_PATHS, Edition, word_paths
 
 
 #: the console's own switches (features.*): a page of one switched off answers 404 with or
@@ -55,7 +55,7 @@ def hidden(request, edition: Edition, path: str) -> str | None:
     off = engines.path_engine(path)                                 # a compute engine that runs nowhere (ADMIN_GUIDE.md 5.2)
     if off is not None:
         return f"{off.get('title') or off.get('id')} is not running on this server, and no other server of this cluster runs it"
-    for word, prefixes in WORD_PATHS.items():
+    for word, prefixes in word_paths().items():
         if _under(path, prefixes) and not edition.word_on(word):
             return f"{word} is not part of {edition.title}"
     for feature, prefixes in FEATURE_PATHS.items():

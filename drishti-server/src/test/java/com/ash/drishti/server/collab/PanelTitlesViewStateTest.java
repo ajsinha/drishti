@@ -20,7 +20,7 @@ import static org.mockito.Mockito.mock;
 
 import com.ash.drishti.engine.control.ViewState;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;

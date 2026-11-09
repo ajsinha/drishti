@@ -32,6 +32,7 @@
     provider, and the exports (xlsx with outline levels and formulas only where a measure adds up, CSV). Every component that aggregates
     calls this module; none re-implements aggregation.</description>
   <dependencies>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-kernel-api</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-common</artifactId></dependency>
     <!-- Rachana's grammar (docs/architecture/ARCHITECTURE.md): the engine registers every aggregate into its function table (one direction only:

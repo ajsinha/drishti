@@ -31,7 +31,7 @@ import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.server.api.ProcessResources;
 import com.ash.drishti.server.api.RequestActivity;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.ByteArrayInputStream;

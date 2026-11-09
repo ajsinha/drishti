@@ -21,7 +21,7 @@ import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.Resolver;
 import com.ash.drishti.server.bi.engine.QueryRequest;
 import com.ash.drishti.server.bi.engine.QueryService;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

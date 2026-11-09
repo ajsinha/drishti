@@ -15,11 +15,11 @@
  */
 package com.ash.drishti.bicompute.scale;
 
-import com.ash.drishti.bicompute.core.AggregationPlan;
-import com.ash.drishti.bicompute.core.Partials;
+import com.ash.drishti.kernel.api.pivot.AggregationPlan;
+import com.ash.drishti.kernel.api.pivot.Partials;
 import com.ash.drishti.bicompute.core.PivotCore;
-import com.ash.drishti.bicompute.spi.PivotProvider;
-import com.ash.drishti.bicompute.spi.Viewer;
+import com.ash.drishti.kernel.api.pivot.PivotProvider;
+import com.ash.drishti.kernel.api.pivot.Viewer;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;

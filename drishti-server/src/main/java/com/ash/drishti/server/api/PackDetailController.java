@@ -24,7 +24,7 @@ import com.ash.drishti.rachana.SutraRegistry;
 import com.ash.drishti.rachana.about.AboutCatalog;
 import com.ash.drishti.server.design.FormDefinitions;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

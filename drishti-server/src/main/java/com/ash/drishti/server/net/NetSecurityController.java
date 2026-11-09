@@ -24,7 +24,7 @@ import com.ash.drishti.net.config.NetSchema;
 import com.ash.drishti.net.member.Member;
 import com.ash.drishti.server.connectors.ConnectorManager;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.ash.drishti.server.security.RoleCatalog;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.util.ArrayList;

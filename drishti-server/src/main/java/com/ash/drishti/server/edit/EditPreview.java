@@ -23,7 +23,7 @@ import com.ash.drishti.compute.reactive.ReactiveHub;
 import com.ash.drishti.identity.User;
 import com.ash.drishti.identity.UserService;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

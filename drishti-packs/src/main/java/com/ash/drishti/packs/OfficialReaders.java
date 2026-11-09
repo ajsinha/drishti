@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.packs;
 
+import com.ash.drishti.kernel.api.official.OfficialResults;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,19 +42,6 @@ public final class OfficialReaders {
 
     /** The settings prefix of each official kind's publisher. */
     static final Map<String, String> PREFIX = collect(OfficialResults::kinds);
-
-    /**
-     * The publishers of official results a module brings (docs/architecture/DOMAIN_MODULES.md, the cycles: J6), found with the
-     * {@link java.util.ServiceLoader} before any bean exists: the core names none of them.
-     */
-    public interface OfficialResults {
-
-        /** Each lake of the module's official results (its {@code config/lakes/<lake>.yaml}) to its publisher's settings prefix. */
-        Map<String, String> lakes();
-
-        /** Each official kind to its publisher's settings prefix. */
-        Map<String, String> kinds();
-    }
 
     private static Map<String, String> collect(java.util.function.Function<OfficialResults, Map<String, String>> part) {
         Map<String, String> out = new LinkedHashMap<>();

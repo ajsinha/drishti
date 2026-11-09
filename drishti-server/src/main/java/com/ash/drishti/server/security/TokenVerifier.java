@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.security;
 
+import com.ash.drishti.kernel.api.security.Principal;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.fasterxml.jackson.databind.JsonNode;

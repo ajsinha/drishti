@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.banking.var;
 
-import com.ash.drishti.bicompute.core.CellKey;
+import com.ash.drishti.kernel.api.pivot.CellKey;
 import com.ash.drishti.banking.compute.var.Columns;
 import com.ash.drishti.banking.compute.var.VarBook;
 import com.ash.drishti.compute.vector.OrdinalSet;

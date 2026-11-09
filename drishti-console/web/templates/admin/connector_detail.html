@@ -66,7 +66,7 @@
     <p class="adm-actions det-actions">
       <button type="button" class="fk" data-act="edit" aria-label="Edit {{ c.name }}">Edit</button>
       <button type="button" class="fk" data-act="test" aria-label="Test the connection of {{ c.name }}">Test connection</button>
-      {% if c.plugin == 'var-pv-stream' and c.enabled %}<button type="button" class="fk" data-act="var-apply-now" aria-label="Apply the waiting window of {{ c.name }} now, as one intraday batch" title="The PV topic's waiting window applied now, as one intraday batch (VAR_GUIDE.md section 8.4)">Apply now</button>{% endif %}
+      {% if c.enabled %}{% for a in connector_actions(c.plugin) %}<button type="button" class="fk" data-act="post-action" data-url="{{ a.url }}" aria-label="{{ a.aria | replace('{name}', c.name) }}" title="{{ a.title }}">{{ a.label }}</button>{% endfor %}{% endif %}
       <button type="button" class="fk" data-act="{{ 'disable' if c.enabled else 'enable' }}" aria-label="{{ 'Disable' if c.enabled else 'Enable' }} {{ c.name }}">{{ 'Disable' if c.enabled else 'Enable' }}</button>
 {% elif c.template %}<button type="button" class="fk" data-act="reset" aria-label="Reset {{ c.name }} to the default of pack {{ c.template }}">Reset to pack default</button>
       {% elif c.origin == 'file' %}<button type="button" class="fk emb-danger" data-uninstall data-kind="connector" data-name="{{ c.name }}" aria-label="Uninstall {{ c.name }}">Uninstall…</button>{% endif %}

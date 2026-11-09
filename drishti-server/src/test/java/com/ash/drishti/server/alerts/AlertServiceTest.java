@@ -26,7 +26,7 @@ import com.ash.drishti.identity.FilePreferenceStore;
 import com.ash.drishti.server.alerts.AlertLogic.Reading;
 import com.ash.drishti.server.bi.board.Board;
 import com.ash.drishti.server.dist.SubscriptionService.Person;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;

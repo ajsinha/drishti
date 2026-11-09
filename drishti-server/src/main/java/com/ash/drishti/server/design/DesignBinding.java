@@ -22,7 +22,7 @@ import com.ash.drishti.identity.design.StoredDesign;
 import com.ash.drishti.rachana.RachanaProperties;
 import com.ash.drishti.rachana.SutraRegistry;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;

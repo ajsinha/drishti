@@ -20,7 +20,7 @@ import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.engine.explain.ExplainService;
 import com.ash.drishti.server.explain.AskService;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.util.List;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;

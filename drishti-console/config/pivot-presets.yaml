@@ -87,3 +87,4 @@ presets:
     landing: limit-board       # the CCR cube's landing: the limit board and the netting-set drill (docs/architecture/LENSES.md)
     help: ccr-cube
     under_construction: ccr-cube-preset
+    meanwhile: {href: /exposure, label: Exposure explorer, word: EXP, what: "has every counterparty's computed exposure."}

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.engines;
 
+import com.ash.drishti.kernel.api.engines.ComputeEngine;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 

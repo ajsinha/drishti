@@ -23,7 +23,7 @@ import com.ash.drishti.flight.FlightRequest;
 import com.ash.drishti.server.flight.FlightBackends;
 import com.ash.drishti.server.flight.FlightForm;
 import com.ash.drishti.server.flight.FlightNodes;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;

@@ -15,10 +15,10 @@
  */
 package com.ash.drishti.banking.exposure;
 
-import com.ash.drishti.server.explain.ExplainRequest;
-import com.ash.drishti.server.explain.Explainer;
-import com.ash.drishti.server.explain.Explanation;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.explain.ExplainRequest;
+import com.ash.drishti.kernel.api.explain.Explainer;
+import com.ash.drishti.kernel.api.explain.Explanation;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;

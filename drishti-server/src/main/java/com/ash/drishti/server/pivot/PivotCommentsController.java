@@ -16,7 +16,7 @@
 package com.ash.drishti.server.pivot;
 
 import com.ash.drishti.identity.AuditLog;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.util.Map;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;

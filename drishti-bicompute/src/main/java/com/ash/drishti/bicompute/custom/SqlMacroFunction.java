@@ -17,9 +17,9 @@ package com.ash.drishti.bicompute.custom;
 
 import com.ash.drishti.bicompute.formula.FormulaFunction;
 import com.ash.drishti.bicompute.formula.FormulaLowering;
-import com.ash.drishti.bicompute.spi.AggFunction;
-import com.ash.drishti.bicompute.spi.Batch;
-import com.ash.drishti.bicompute.spi.Kind;
+import com.ash.drishti.kernel.api.pivot.AggFunction;
+import com.ash.drishti.kernel.api.pivot.Batch;
+import com.ash.drishti.kernel.api.pivot.Kind;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;

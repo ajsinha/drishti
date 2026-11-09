@@ -20,7 +20,7 @@ import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.banking.compute.var.VarBook;
 import com.ash.drishti.compute.vector.OrdinalSet;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;

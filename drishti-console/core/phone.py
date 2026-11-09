@@ -178,35 +178,34 @@ def plan(request, vm: dict, panels: list[dict], dev: str, pack_list: list | None
             "why": [{"id": p.get("id"), "title": p.get("title") or p.get("id"), **tiers.get(str(p.get("id") or ""), {})} for p in panels]}
 
 
-# ---- pages beyond Sutra pages (docs/guides/BUILD_GUIDE.md section 8): the VaR and exposure pages and the edition landings ------------------
+# ---- pages beyond Sutra pages (docs/guides/BUILD_GUIDE.md section 8): a module's pages (core/plugins.py) and the edition landings ------------------
 
 # Each page's parts with their default tier and their name in *More on this page*. The site sets its own in ui.phone.pages.<page>, an
 # edition in its phone.pages.<page> (a landing also in home.phone); either may cap with max (a part never above it).
 PAGES: dict[str, dict[str, tuple[str, str]]] = {
-    "var": {"tiles": ("must", "Headline VaR, ES and limit use"), "method": ("must", "How VaR is computed"),
-            "path-dist": ("glance", "Distribution of scenario P&L"), "path-tail": ("more", "Worst 25 scenarios"),
-            "path-series": ("more", "P&L by scenario date"), "path-table": ("more", "The P&L path, scenario by scenario"),
-            "hist": ("more", "VaR / ES history"), "contrib": ("more", "Contributions"), "captures": ("more", "Captured results"),
-            "ccy": ("more", "In other currencies"), "tree": ("more", "Scopes"),
-            "whatif": ("desk", "What-if"), "basket": ("desk", "Construct your basket")},
-    "exposure": {"tiles": ("must", "CE, EPE and peak PFE"), "chart": ("glance", "Profile"), "tabs": ("more", "Netting sets, trades and limits"),
-                 "tree": ("more", "Scopes"), "fan": ("desk", "Paths")},
     "landing": {"hero": ("must", "Command line"), "tiles": ("must", "Headline figures"), "quick": ("more", "Saved baskets, watch list, learn"),
                 "card-1": ("must", "First card"), "table": ("glance", "Tables"), "chart": ("more", "Charts"), "map": ("more", "Maps"),
                 "feed": ("glance", "Today")},
 }
 
 
+def page_parts_catalogue() -> dict[str, dict[str, tuple[str, str]]]:
+    """Every page's parts: the kernel's and those the modules register (core/plugins.py)."""
+    from core import plugins as _plugins
+    return {**PAGES, **_plugins.phone_pages()}
+
+
 def page_parts(request, page: str) -> dict | None:
     """The tiers of a page's parts for this request, or None on a desktop (and with the phone display off or *Show everything*):
     ``{"device", "tiers": {part: tier}, "labels": {part: name}, "more": [parts], "desk": [parts]}``."""
-    if page not in PAGES or not enabled(request) or show_all(request):
+    pages = page_parts_catalogue()
+    if page not in pages or not enabled(request) or show_all(request):
         return None
     dev = device(request)
     if dev == "desk":
         return None
-    tiers = {k: v[0] for k, v in PAGES[page].items()}
-    labels = {k: v[1] for k, v in PAGES[page].items()}
+    tiers = {k: v[0] for k, v in pages[page].items()}
+    labels = {k: v[1] for k, v in pages[page].items()}
     caps: dict[str, str] = {}
     edition = getattr(request.state, "edition", None) or getattr(getattr(request.app.state, "editions", None), "instance", None)
     spec = getattr(edition, "spec", None) or {}

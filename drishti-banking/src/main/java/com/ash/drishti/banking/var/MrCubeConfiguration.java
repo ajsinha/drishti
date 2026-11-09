@@ -40,10 +40,10 @@ public class MrCubeConfiguration {
 
     /**
      * The VaR source of the pivot engine, with the MR cube's lens (DOMAIN_MODULES.md J1: the pivot engine asks every
-     * {@link com.ash.drishti.server.pivot.PivotSourceProvider}; it names no module's source).
+     * {@link com.ash.drishti.kernel.api.pivot.PivotSourceProvider}; it names no module's source).
      */
     @Bean
-    public com.ash.drishti.server.pivot.PivotSourceProvider varPivotSource(org.springframework.beans.factory.ObjectProvider<VarService> var,
+    public com.ash.drishti.kernel.api.pivot.PivotSourceProvider varPivotSource(org.springframework.beans.factory.ObjectProvider<VarService> var,
             org.springframework.beans.factory.ObjectProvider<MrCubeProperties> mr,
             org.springframework.beans.factory.ObjectProvider<com.ash.drishti.banking.frtb.FrtbService> frtb, org.springframework.core.env.Environment env,
             org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.engines.EngineRegistry> engines,

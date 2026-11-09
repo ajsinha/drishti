@@ -16,7 +16,7 @@
 package com.ash.drishti.server.pivot.functions;
 
 import com.ash.drishti.bicompute.python.PythonFunctionClient;
-import com.ash.drishti.bicompute.spi.Batch;
+import com.ash.drishti.kernel.api.pivot.Batch;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.compute.arrow.ArrowIpc;

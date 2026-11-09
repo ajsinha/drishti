@@ -446,7 +446,7 @@ class VarApiTest {
                 new com.ash.drishti.api.Provenance("var-positions", 1, java.time.Instant.now(), false, VarLakeFixture.DAY));
         com.ash.drishti.api.EntityDocument[] seen = new com.ash.drishti.api.EntityDocument[1];
         com.ash.drishti.server.net.NetCaller.with(new com.ash.drishti.server.net.NetCaller.Caller(
-                new com.ash.drishti.server.security.Principal("rita", List.of("risk")), null, "t"),
+                new com.ash.drishti.kernel.api.security.Principal("rita", List.of("risk")), null, "t"),
                 () -> seen[0] = figures.augment(stored, com.ash.drishti.api.AsOf.of(VarLakeFixture.DAY)));
         JsonNode f = json.readTree(json.writeValueAsString(seen[0].data().unwrap())).get(VarFigures.FIELD);
         assertThat(f.get("VAR").asDouble()).isEqualTo(1200);
@@ -456,7 +456,7 @@ class VarApiTest {
         assertThat(figures.augment(stored, com.ash.drishti.api.AsOf.of(VarLakeFixture.DAY)).data().get(VarFigures.FIELD).get("STATUS").asText())
                 .isEqualTo("unavailable");                                                  // outside a request: no viewer, no figures
         com.ash.drishti.server.net.NetCaller.with(new com.ash.drishti.server.net.NetCaller.Caller(
-                new com.ash.drishti.server.security.Principal("rita", List.of("risk")), null, "t"),
+                new com.ash.drishti.kernel.api.security.Principal("rita", List.of("risk")), null, "t"),
                 () -> seen[0] = figures.augment(new com.ash.drishti.api.EntityDocument(com.ash.drishti.api.EntityRef.of("system-basket", "PF-MIX"),
                         com.ash.drishti.api.DataNode.of(java.util.Map.of("PORTFOLIO_ID", "PF-MIX")), stored.provenance()), null));
         JsonNode pf = json.readTree(json.writeValueAsString(seen[0].data().unwrap())).get(VarFigures.FIELD);
@@ -469,7 +469,7 @@ class VarApiTest {
                         java.util.Map.of("BOOK", "BOOK-1", "PNL", 7, "TRADES", 3), java.util.Map.of("BOOK", "BOOK-2", "PNL", -2, "TRADES", 4)))),
                 stored.provenance());
         com.ash.drishti.server.net.NetCaller.with(new com.ash.drishti.server.net.NetCaller.Caller(
-                new com.ash.drishti.server.security.Principal("rita", List.of("risk")), null, "t"),
+                new com.ash.drishti.kernel.api.security.Principal("rita", List.of("risk")), null, "t"),
                 () -> seen[0] = figures.augment(le, com.ash.drishti.api.AsOf.of(VarLakeFixture.DAY)));
         JsonNode lf = json.readTree(json.writeValueAsString(seen[0].data().unwrap())).get(VarFigures.FIELD);
         assertThat(figures.augments("legal-entity")).isTrue();

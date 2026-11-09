@@ -24,7 +24,7 @@ import com.ash.drishti.net.security.OnBehalfOf;
 import com.ash.drishti.net.transport.PeerHttp;
 import com.ash.drishti.server.net.DigestService;
 import com.ash.drishti.server.net.NetService;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.http.HttpResponse;

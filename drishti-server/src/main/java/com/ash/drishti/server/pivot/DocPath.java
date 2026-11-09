@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.pivot;
 
-import com.ash.drishti.bicompute.core.PivotView;
+import com.ash.drishti.kernel.api.pivot.PivotView;
 import com.ash.drishti.rachana.el.ElCompiler;
 import com.ash.drishti.rachana.el.ElException;
 import com.ash.drishti.rachana.el.Expr;

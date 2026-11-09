@@ -39,6 +39,7 @@ class Preset:
     mode: str = "views"
     view: str = ""
     views: tuple = ()
+    meanwhile: dict | None = None
 
 
 @lru_cache(maxsize=1)
@@ -49,7 +50,8 @@ def presets() -> dict[str, Preset]:
         out[str(name)] = Preset(name=str(name), title=str(p.get("title") or name), word=str(p.get("word") or "").upper(), source=str(p.get("source") or ""),
                                 lens=str(p.get("lens") or ""), landing=str(p.get("landing") or "source"), help=str(p.get("help") or "pivot"),
                                 engine=str(p.get("engine") or ""), under_construction=str(p.get("under_construction") or ""),
-                                mode=mode_of(p.get("mode")), view=str(p.get("view") or ""), views=tuple(_view(v) for v in (p.get("views") or [])))
+                                mode=mode_of(p.get("mode")), view=str(p.get("view") or ""), views=tuple(_view(v) for v in (p.get("views") or [])),
+                                meanwhile=p.get("meanwhile"))
     return out
 
 

@@ -179,9 +179,9 @@ class WriteBackFlowTest {
         heard.close();
         Map<String, Object> appliedEvent = events.stream().map(e -> ((EditFeed.Event) e).body())
                 .filter(b -> "applied".equals(b.get("type")) && id.equals(b.get("id"))).findFirst().orElseThrow();
-        assertThat(feed.forReader(new EditFeed.Event(appliedEvent), new com.ash.drishti.server.security.Principal("rae", List.of("reader"))))
+        assertThat(feed.forReader(new EditFeed.Event(appliedEvent), new com.ash.drishti.kernel.api.security.Principal("rae", List.of("reader"))))
                 .as("a reader of the kind hears it changed, without the submitter's name or reason").containsEntry("by", "").doesNotContainKey("reason");
-        assertThat(feed.forReader(new EditFeed.Event(appliedEvent), new com.ash.drishti.server.security.Principal("tia", List.of("trader"))))
+        assertThat(feed.forReader(new EditFeed.Event(appliedEvent), new com.ash.drishti.kernel.api.security.Principal("tia", List.of("trader"))))
                 .containsEntry("mine", true);
         JsonNode history = call("GET", "/api/v1/entities/trade/" + trade + "/history", rae(), null, 200);
         assertThat(history.path("changes").findValuesAsText("id")).contains(id);

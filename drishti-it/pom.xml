@@ -28,6 +28,7 @@
   <name>drishti-it</name>
   <description>Integration, architecture and repository rules</description>
   <dependencies>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-kernel-api</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-server</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-banking</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId></dependency>

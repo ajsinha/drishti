@@ -23,7 +23,7 @@ import com.ash.drishti.rachana.SutraRegistry;
 import com.ash.drishti.rachana.model.Form;
 import com.ash.drishti.rachana.model.Panel;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;

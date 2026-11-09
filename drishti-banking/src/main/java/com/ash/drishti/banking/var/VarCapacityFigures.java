@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.banking.var;
 
-import com.ash.drishti.server.capacity.CapacityFigures;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.capacity.CapacityFigures;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.util.List;
 import java.util.Map;
 import java.util.LinkedHashMap;
@@ -34,7 +34,7 @@ public final class VarCapacityFigures implements CapacityFigures {
 
     @Override
     public String key() {
-        return "var";
+        return "engine";
     }
 
     @Override

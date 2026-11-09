@@ -20,7 +20,7 @@ import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.identity.content.ContentDocs;
 import com.ash.drishti.identity.content.ContentStore;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;

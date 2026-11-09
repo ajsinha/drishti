@@ -15,9 +15,9 @@
  */
 package com.ash.drishti.server.pivot;
 
-import com.ash.drishti.bicompute.core.AggregationPlan;
-import com.ash.drishti.bicompute.core.Dim;
-import com.ash.drishti.bicompute.core.PivotView;
+import com.ash.drishti.kernel.api.pivot.AggregationPlan;
+import com.ash.drishti.kernel.api.pivot.Dim;
+import com.ash.drishti.kernel.api.pivot.PivotView;
 import com.ash.drishti.bicompute.sql.DuckDbExecutor;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -66,17 +66,17 @@ final class DocView {
      * which a once-per-parent figure reads, and the {@code ~all} twin of every list field, which an all-elements filter names. The field
      * list does not show them (a name starting {@code _} or holding {@code ~}).
      */
-    static List<com.ash.drishti.bicompute.spi.PivotProvider.Field> engineFields(Map<String, DocPath> paths, Map<String, String> types) {
-        List<com.ash.drishti.bicompute.spi.PivotProvider.Field> out = new ArrayList<>();
+    static List<com.ash.drishti.kernel.api.pivot.PivotProvider.Field> engineFields(Map<String, DocPath> paths, Map<String, String> types) {
+        List<com.ash.drishti.kernel.api.pivot.PivotProvider.Field> out = new ArrayList<>();
         int deepest = paths.values().stream().mapToInt(p -> p.grainLevels().size()).max().orElse(0);
-        out.add(new com.ash.drishti.bicompute.spi.PivotProvider.Field(GRAIN, "string", "grain", "the view's grain (every plan of the view reads at it)"));
+        out.add(new com.ash.drishti.kernel.api.pivot.PivotProvider.Field(GRAIN, "string", "grain", "the view's grain (every plan of the view reads at it)"));
         for (int i = 0; i <= deepest; i++) {
-            out.add(new com.ash.drishti.bicompute.spi.PivotProvider.Field("_p" + i, "string", "parent key " + i, "the key of each parent at depth "
+            out.add(new com.ash.drishti.kernel.api.pivot.PivotProvider.Field("_p" + i, "string", "parent key " + i, "the key of each parent at depth "
                     + i + " (once-per-parent figures)"));
         }
         for (DocPath p : paths.values()) {
             if (!p.grainLevels().isEmpty()) {
-                out.add(new com.ash.drishti.bicompute.spi.PivotProvider.Field(p.id() + ALL, types.getOrDefault(p.id(), "string"), p.label() + " (all)",
+                out.add(new com.ash.drishti.kernel.api.pivot.PivotProvider.Field(p.id() + ALL, types.getOrDefault(p.id(), "string"), p.label() + " (all)",
                         "keeps an entity when all of its elements match"));
             }
         }

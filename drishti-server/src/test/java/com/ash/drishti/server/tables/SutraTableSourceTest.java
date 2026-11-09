@@ -28,7 +28,7 @@ import com.ash.drishti.engine.view.ViewModel;
 import com.ash.drishti.rachana.model.Sutra;
 import com.ash.drishti.rachana.parse.SutraParser;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Files;

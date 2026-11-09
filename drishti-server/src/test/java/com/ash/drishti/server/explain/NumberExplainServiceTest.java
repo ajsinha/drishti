@@ -15,13 +15,16 @@
  */
 package com.ash.drishti.server.explain;
 
+import com.ash.drishti.kernel.api.explain.ExplainRequest;
+import com.ash.drishti.kernel.api.explain.Explainer;
+import com.ash.drishti.kernel.api.explain.Explanation;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.rachana.UnderConstruction;
 import com.ash.drishti.server.engines.EngineRegistry;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;

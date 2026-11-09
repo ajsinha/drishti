@@ -20,7 +20,7 @@ import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.identity.EmbedAppStore;
 import com.ash.drishti.identity.User;
 import com.ash.drishti.identity.UserService;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.ash.drishti.server.security.oidc.IdTokenVerifier;
 import com.ash.drishti.server.security.oidc.OidcProperties;
 import com.fasterxml.jackson.databind.JsonNode;

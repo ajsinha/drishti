@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.lakeconfig;
 
+import com.ash.drishti.kernel.api.vocabulary.DomainVocabulary;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -236,6 +237,8 @@ public final class LakeFiles {
         }
         return scalar(n.asText());
     }
+
+    private static final java.util.Set<String> LAKE_WRITERS = DomainVocabulary.union(DomainVocabulary::namedLakeWriters);
 
     private static final java.util.Set<String> RESERVED = java.util.Set.of("true", "false", "null", "yes", "no", "on", "off", "y", "n");
 
@@ -533,7 +536,7 @@ public final class LakeFiles {
      * Moves the connectors that read the demo lake by its old default root ({@link #demoRoot}: generated from a pack's template before the
      * lake form) to {@code lake: demo}, so they follow the demo lake into its own folder ({@code <data>/delta/demo}): each one's tables named
      * by {@code lake-tables:} (its {@code domain} and {@code table.<kind>}, else its kinds), a table the demo lake file lacks added to it from
-     * the connector's layout, every reading setting kept. A {@code var-pv-stream} connector's {@code lake:} folder in that form becomes the
+     * the connector's layout, every reading setting kept. A named lake writer's ({@link DomainVocabulary#namedLakeWriters()}) {@code lake:} folder in that form becomes the
      * name {@code demo}. A connector that names its root otherwise (a path or URI of its own) is left as it is: that form is permanent.
      * With {@code write}, each file is kept beside it first ({@code <name>.yaml.before-lake-<time>.bak}).
      */
@@ -580,7 +583,7 @@ public final class LakeFiles {
             String plugin = c.path("plugin").asText();
             Map<String, String> flat = flat(settings);
             ObjectNode rewritten = ((ObjectNode) c).deepCopy();
-            if (plugin.equals("var-pv-stream") && demoRoot(flat.get(ConnectorLake.LAKE))) {
+            if (LAKE_WRITERS.contains(plugin) && demoRoot(flat.get(ConnectorLake.LAKE))) {
                 ((ObjectNode) rewritten.get("settings")).put(ConnectorLake.LAKE, "demo");
                 connectors.put(f, restamp.apply(Files.readString(f), comments(f) + YAML.writeValueAsString(rewritten)));
                 notes.add(f.getFileName() + ": writes into the demo lake by name now (lake: demo)");

@@ -30,7 +30,7 @@ import com.ash.drishti.server.bi.mq.ModelQuery;
 import com.ash.drishti.server.bi.mq.MqParser;
 import com.ash.drishti.server.bi.mq.MqService;
 import com.ash.drishti.server.pivot.PivotController;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;

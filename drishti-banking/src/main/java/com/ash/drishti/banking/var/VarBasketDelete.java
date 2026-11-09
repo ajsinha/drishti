@@ -22,7 +22,7 @@ import com.ash.drishti.identity.content.ContentDocs;
 import com.ash.drishti.server.collab.InboxHub;
 import com.ash.drishti.server.collab.InboxService;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.time.Instant;
 import java.util.Map;
 import java.util.function.Supplier;

@@ -16,14 +16,14 @@
 package com.ash.drishti.server.pivot;
 
 import com.ash.drishti.bicompute.core.PivotCore;
-import com.ash.drishti.bicompute.core.PivotView;
+import com.ash.drishti.kernel.api.pivot.PivotView;
 import com.ash.drishti.bicompute.explain.Explain;
 import com.ash.drishti.server.explain.ExplainPanels;
-import com.ash.drishti.server.explain.ExplainRequest;
-import com.ash.drishti.server.explain.Explainer;
-import com.ash.drishti.server.explain.Explanation;
+import com.ash.drishti.kernel.api.explain.ExplainRequest;
+import com.ash.drishti.kernel.api.explain.Explainer;
+import com.ash.drishti.kernel.api.explain.Explanation;
 import com.ash.drishti.identity.AuditLog;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;

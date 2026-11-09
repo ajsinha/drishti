@@ -15,9 +15,9 @@
  */
 package com.ash.drishti.bicompute.whatif;
 
-import com.ash.drishti.bicompute.core.Dim;
-import com.ash.drishti.bicompute.spi.PivotProvider;
-import com.ash.drishti.bicompute.spi.Viewer;
+import com.ash.drishti.kernel.api.pivot.Dim;
+import com.ash.drishti.kernel.api.pivot.PivotProvider;
+import com.ash.drishti.kernel.api.pivot.Viewer;
 import com.ash.drishti.bicompute.sql.DuckDbExecutor;
 import com.ash.drishti.bicompute.sql.GroupingSetsCompiler;
 import com.ash.drishti.bicompute.sql.TabularSource;

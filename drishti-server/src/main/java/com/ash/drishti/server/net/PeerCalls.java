@@ -19,7 +19,7 @@ import com.ash.drishti.net.member.MemberState;
 import com.ash.drishti.net.security.NetHeaders;
 import com.ash.drishti.net.security.OnBehalfOf;
 import com.ash.drishti.net.transport.PeerHttp;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

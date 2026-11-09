@@ -15,12 +15,12 @@
  */
 package com.ash.drishti.bicompute.sql;
 
-import com.ash.drishti.bicompute.core.AggregationPlan;
-import com.ash.drishti.bicompute.core.AggregationPlan.FunctionCall;
-import com.ash.drishti.bicompute.core.CellKey;
-import com.ash.drishti.bicompute.core.CellSet;
-import com.ash.drishti.bicompute.core.Dim;
-import com.ash.drishti.bicompute.spi.PivotProvider;
+import com.ash.drishti.kernel.api.pivot.AggregationPlan;
+import com.ash.drishti.kernel.api.pivot.AggregationPlan.FunctionCall;
+import com.ash.drishti.kernel.api.pivot.CellKey;
+import com.ash.drishti.kernel.api.pivot.CellSet;
+import com.ash.drishti.kernel.api.pivot.Dim;
+import com.ash.drishti.kernel.api.pivot.PivotProvider;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;

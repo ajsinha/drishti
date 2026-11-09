@@ -180,7 +180,7 @@ public final class EngineCatalogue {
         return all().stream().filter(e -> e.uses().contains(id)).map(Entry::id).toList();
     }
 
-    /** The engine whose API a request path is under (the longest prefix wins: /api/v1/frtb vs /api/v1/sensitivities), or empty. */
+    /** The engine whose API a request path is under (the longest prefix wins), or empty. */
     public Optional<Entry> forPath(String path) {
         Entry best = null;
         int len = -1;

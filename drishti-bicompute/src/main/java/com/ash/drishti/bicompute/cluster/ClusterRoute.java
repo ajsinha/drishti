@@ -15,14 +15,14 @@
  */
 package com.ash.drishti.bicompute.cluster;
 
-import com.ash.drishti.bicompute.core.AggregationPlan;
-import com.ash.drishti.bicompute.core.Partials;
+import com.ash.drishti.kernel.api.pivot.AggregationPlan;
+import com.ash.drishti.kernel.api.pivot.Partials;
 import com.ash.drishti.bicompute.core.PivotCore;
 import com.ash.drishti.bicompute.core.ScaleOptions;
 import com.ash.drishti.bicompute.functions.Hll;
 import com.ash.drishti.bicompute.rollup.RollupSource;
-import com.ash.drishti.bicompute.spi.PivotProvider;
-import com.ash.drishti.bicompute.spi.Viewer;
+import com.ash.drishti.kernel.api.pivot.PivotProvider;
+import com.ash.drishti.kernel.api.pivot.Viewer;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -181,7 +181,7 @@ public final class ClusterRoute implements PivotCore.Hooks {
     public static Map<String, Object> answer(PivotCore core, Map<String, RollupSource> parted, Viewer v, Map<String, Object> req) {
         Map<String, Object> pm = (Map<String, Object>) req.get("plan");
         if (pm == null) {
-            throw com.ash.drishti.bicompute.core.PivotView.bad("no plan was sent");
+            throw com.ash.drishti.kernel.api.pivot.PivotView.bad("no plan was sent");
         }
         PivotProvider p = core.provider(String.valueOf(pm.get("source")));
         AggregationPlan plan = PartialCodec.plan(pm, p);

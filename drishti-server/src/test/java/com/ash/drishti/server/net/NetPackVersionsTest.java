@@ -82,7 +82,7 @@ class NetPackVersionsTest {
     @Test
     void theNewestVersionIsServedAndAPeerOnlyPackIsServedToPeersOnly() throws Exception {
         // B has finance too, older: its users get A's pages
-        assertThat(cluster.node("b").bean(NetRouting.class).view("trade", com.ash.drishti.server.security.Principal.anonymous("x"), false, "IRS-48213").reason())
+        assertThat(cluster.node("b").bean(NetRouting.class).view("trade", com.ash.drishti.kernel.api.security.Principal.anonymous("x"), false, "IRS-48213").reason())
                 .contains("9.9.9");
         var onB = cluster.call("GET", cluster.node("b").url() + "/api/v1/views/trade/IRS-48213", null);
         assertThat(onB.statusCode()).as(onB.body()).isEqualTo(200);

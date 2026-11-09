@@ -16,12 +16,12 @@
 package com.ash.drishti.server.pivot;
 
 import com.ash.drishti.bicompute.core.PivotCore;
-import com.ash.drishti.bicompute.core.PivotView;
-import com.ash.drishti.bicompute.spi.FigureSource;
-import com.ash.drishti.bicompute.spi.PivotProvider;
-import com.ash.drishti.bicompute.spi.Viewer;
+import com.ash.drishti.kernel.api.pivot.PivotView;
+import com.ash.drishti.kernel.api.pivot.FigureSource;
+import com.ash.drishti.kernel.api.pivot.PivotProvider;
+import com.ash.drishti.kernel.api.pivot.Viewer;
 import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -36,7 +36,7 @@ import org.springframework.web.context.request.RequestContextHolder;
  * entitlements, masks and the aggregate-only minimum apply as on the Pivot screen); nothing is computed here:
  *
  * <ul>
- *   <li>{@code measure('VAR', 'DESK:DESK-COMM')}: the compute engine whose pivot provider offers the measure as its own ({@code var},
+ *   <li>{@code measure('MEASURE', 'GROUP:G-1')}: the compute engine whose pivot provider offers the measure as its own (
  *       {@code es}, {@code pv} of the VaR engine …) answers one cell, {@code DESK = DESK-COMM}, exactly as its engine computes it: a
  *       holistic figure from the scope's own trades, never a sum of other figures. Options: {@code date} (the business date),
  *       {@code source} (when two engines offer the same name).</li>
