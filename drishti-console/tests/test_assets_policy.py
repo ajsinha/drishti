@@ -45,7 +45,8 @@ def test_vendor_has_no_external_references():
 def test_no_inline_script_or_handlers():
     for p in _files(".html"):
         text = p.read_text(encoding="utf-8")
-        assert not INLINE_SCRIPT.search(text), p
+        if p.name != "drishti_playground-frame.html":   # the Playground's sandbox: an opaque origin with its own policy (core/app.py) runs nothing but inline
+            assert not INLINE_SCRIPT.search(text), p
         assert not INLINE_HANDLER.search(text), p
         assert not INLINE_STYLE.search(text), p  # style-src 'self' blocks style attributes
 

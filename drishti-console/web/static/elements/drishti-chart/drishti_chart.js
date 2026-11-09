@@ -538,20 +538,24 @@
       const th = env.theme, xf = fieldOf(spec.x), yf = fieldOf(spec.y), vf = fieldOf(spec.value) || fieldOf(spec.colour);
       const xs = members(rows, xf, spec.x && spec.x.order), ys = members(rows, yf, spec.y && spec.y.order);
       const data = rows.map((r, i) => ({ value: [xs.indexOf(String(r[xf])), ys.indexOf(String(r[yf])), num(r[vf])], r: [i], ids: [rowId(spec, r, i)] })).filter((d) => d.value[2] !== null);
-      const vals = data.map((d) => d.value[2]), div = spec.scale && spec.scale.type === 'diverging', mid = div ? (spec.scale.mid || 0) : 0;
-      let lo = vals.length ? Math.min.apply(null, vals) : 0, hi = vals.length ? Math.max.apply(null, vals) : 1;
-      if (div) { const m = Math.max(Math.abs(lo - mid), Math.abs(hi - mid)); lo = mid - m; hi = mid + m; }
+      const { lo, hi, visualMap } = heatScale(spec, data.map((d) => d.value[2]), env);
       const series = [{ type: 'heatmap', name: (spec.value && spec.value.title) || vf, field: vf, data: data, selectedMode: 'multiple', select: { itemStyle: { borderColor: th.tokens.accent, borderWidth: 2 } },
         itemStyle: { borderColor: th.surface, borderWidth: 1 }, emphasis: { itemStyle: { borderColor: th.ink, borderWidth: 1 } },
         label: { show: !!spec.labels, color: th.ink, fontFamily: th.font, fontSize: th.size.font - 1, formatter: (p) => env.fmt(p.value[2]) } }];
       const option = frame(spec, env, Object.assign(xAxisOf(spec, env, 'category', xs), { splitArea: { show: false } }), Object.assign(axisOf(th, { type: 'category', data: ys, inverse: true }), { splitArea: { show: false } }), series, {
-        visualMap: { min: lo, max: hi, calculable: false, orient: 'horizontal', left: 'center', bottom: 0, itemWidth: 10, itemHeight: 140, inRange: { color: div ? th.diverging : th.sequential },
-          textStyle: textStyle(th), formatter: (v) => env.fmt(v), text: [env.fmt(hi), env.fmt(lo)] } });
+        visualMap: visualMap });
       option.grid.bottom = th.size.pad + 34;
       option.tooltip = { trigger: 'item', confine: true };
       return { option: option, legend: [], table: { columns: [{ header: yf }].concat(xs.map((x) => ({ header: x, format: spec.value && spec.value.format }))),
         rows: ys.map((y) => [y].concat(xs.map((x) => { const r = rows.find((q) => String(q[xf]) === x && String(q[yf]) === y); return r ? num(r[vf]) : null; }))) },
       summary: 'Heatmap' + (spec.title ? ' of ' + spec.title : '') + ', ' + ys.length + ' rows by ' + xs.length + ' columns, from ' + env.fmt(lo) + ' to ' + env.fmt(hi) };
+    }
+    function heatScale(spec, vals, env) {
+      const th = env.theme, div = spec.scale && spec.scale.type === 'diverging', mid = div ? (spec.scale.mid || 0) : 0;
+      let lo = vals.length ? Math.min.apply(null, vals) : 0, hi = vals.length ? Math.max.apply(null, vals) : 1;
+      if (div) { const m = Math.max(Math.abs(lo - mid), Math.abs(hi - mid)); lo = mid - m; hi = mid + m; }
+      return { lo, hi, visualMap: { min: lo, max: hi, calculable: false, orient: 'horizontal', left: 'center', bottom: 0, itemWidth: 10, itemHeight: 140, inRange: { color: div ? th.diverging : th.sequential },
+        textStyle: textStyle(th), formatter: (v) => env.fmt(v), text: [env.fmt(hi), env.fmt(lo)] } };
     }
     function buildCandlestick(spec, rows, env) {
       const th = env.theme, xf = fieldOf(spec.x), f = (k) => fieldOf(spec[k]) || k;
@@ -604,12 +608,12 @@
       registerKind('heatmap', { build: buildHeatmap, label: 'heatmap', cartesian: false });
       registerKind('candlestick', { build: buildCandlestick, label: 'candlestick', cartesian: true });
     }
-    return { "rowId": rowId, "seriesDefs": seriesDefs, "annotationMarks": annotationMarks, "buildSeriesChart": buildSeriesChart, "buildScatter": buildScatter, "buildHistogram": buildHistogram, "buildWaterfall": buildWaterfall, "buildBoxplot": buildBoxplot, "buildHeatmap": buildHeatmap, "buildCandlestick": buildCandlestick, "buildLayers": buildLayers, "registerAxisKinds": registerAxisKinds };
+    return { "rowId": rowId, "seriesDefs": seriesDefs, "annotationMarks": annotationMarks, "buildSeriesChart": buildSeriesChart, "buildScatter": buildScatter, "buildHistogram": buildHistogram, "buildWaterfall": buildWaterfall, "buildBoxplot": buildBoxplot, "buildHeatmap": buildHeatmap, "heatScale": heatScale, "buildCandlestick": buildCandlestick, "buildLayers": buildLayers, "registerAxisKinds": registerAxisKinds };
   })();
   /* ---- src/drishti_chart-calendar.js ---- */
   __m["src/drishti_chart-calendar.js"] = (function () {
     var fieldOf = __m["src/drishti_chart-data.js"].fieldOf, num = __m["src/drishti_chart-data.js"].num;
-    var rowId = __m["src/drishti_chart-kinds.js"].rowId;
+    var rowId = __m["src/drishti_chart-kinds.js"].rowId, heatScale = __m["src/drishti_chart-kinds.js"].heatScale;
     var textStyle = __m["src/drishti_chart-theme.js"].textStyle;
     const year = (d) => String(d).slice(0, 4);
     function buildCalendar(spec, rows, env) {
@@ -621,17 +625,15 @@
       });
       data.sort((a, b) => (a.name < b.name ? -1 : 1));
       const years = Array.from(new Set(data.map((d) => year(d.name))));
-      const vals = data.map((d) => d.value[1]), div = spec.scale && spec.scale.type === 'diverging', mid = div ? (spec.scale.mid || 0) : 0;
-      let lo = vals.length ? Math.min.apply(null, vals) : 0, hi = vals.length ? Math.max.apply(null, vals) : 1;
-      if (div) { const m = Math.max(Math.abs(lo - mid), Math.abs(hi - mid)); lo = mid - m; hi = mid + m; }
+      const vals = data.map((d) => d.value[1]), { lo, hi, visualMap } = heatScale(spec, vals, env);
       const cell = Math.max(10, th.size.font + 2), top = 28, gap = 26, heightOne = cell * 7 + gap;
-      const calendars = years.map((y, i) => ({ range: y, top: top + i * heightOne, left: 40, right: 16, cellSize: ['auto', cell], itemStyle: { color: 'transparent', borderColor: th.grid || th.inkDim, borderWidth: 1 },
-        splitLine: { show: true, lineStyle: { color: th.inkDim || th.ink, width: 1 } }, dayLabel: Object.assign({ firstDay: 1, nameMap: 'en' }, textStyle(th)), monthLabel: Object.assign({ nameMap: 'en' }, textStyle(th)),
+      const calendars = years.map((y, i) => ({ range: y, top: top + i * heightOne, left: 40, right: 16, cellSize: ['auto', cell], itemStyle: { color: 'transparent', borderColor: th.tokens.border || th.ink, borderWidth: 1 },
+        splitLine: { show: true, lineStyle: { color: th.tokens.border || th.ink, width: 1 } }, dayLabel: Object.assign({ firstDay: 1, nameMap: 'en' }, textStyle(th)), monthLabel: Object.assign({ nameMap: 'en' }, textStyle(th)),
         yearLabel: Object.assign({ show: years.length > 1 }, textStyle(th)) }));
       const series = years.map((y, i) => ({ type: 'heatmap', coordinateSystem: 'calendar', calendarIndex: i, name: (spec.value && spec.value.title) || vf, field: vf, data: data.filter((d) => year(d.name) === y),
         selectedMode: 'multiple', select: { itemStyle: { borderColor: th.tokens.accent, borderWidth: 2 } }, emphasis: { itemStyle: { borderColor: th.ink, borderWidth: 1 } } }));
       const option = { calendar: calendars, series: series, tooltip: { trigger: 'item', confine: true },
-        visualMap: { min: lo, max: hi, calculable: false, orient: 'horizontal', left: 'center', bottom: 0, itemWidth: 10, itemHeight: 140, inRange: { color: div ? th.diverging : th.sequential }, textStyle: textStyle(th), formatter: (v) => env.fmt(v), text: [env.fmt(hi), env.fmt(lo)] },
+        visualMap: visualMap,
         textStyle: textStyle(th), animation: false };
       return { option: option, legend: [], minHeight: top + years.length * heightOne + 30,
         table: { columns: [{ header: xf }, { header: vf, format: spec.value && spec.value.format }], rows: data.map((d) => [d.name, d.value[1]]) },

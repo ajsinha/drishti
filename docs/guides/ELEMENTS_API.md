@@ -10533,29 +10533,53 @@ The tree: the root's column, then one column per open split.
 
 Asks column depth anew (its split changed, or its parent was opened), drops those to its right.
 
+| Parameter | Type | Meaning |
+|---|---|---|
+| `depth` | `number` |  |
+| `split` | `?string` |  |
+| `path` | `Array&lt;{field: string, value: string}&gt;` |  |
+
+Returns `void`.
+
 ##### `Decomposition.open(depth, index)`
 
 Opens a member (its children below, by the next unused split or the one already chosen).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `depth` | `number` |  |
+| `index` | `number` |  |
+
+Returns `void`.
 
 ##### `Decomposition.splitBy(depth, field)`
 
 Splits column depth by a dimension.
 
-##### `Decomposition.line(a, label)`
+| Parameter | Type | Meaning |
+|---|---|---|
+| `depth` | `number` |  |
+| `field` | `?string` |  |
 
-The words of a split's line, every figure the server's.
+Returns `void`.
 
 ##### `Decomposition.draw()`
 
 Draws the whole strip (columns, then the links over them).
 
+Returns `void`.
+
 ##### `Decomposition.resize()`
 
 Draws again at the size the host now has.
 
+Returns `void`.
+
 ##### `Decomposition.dispose()`
 
 Empties the host.
+
+Returns `void`.
 
 ### drishti_index.js
 

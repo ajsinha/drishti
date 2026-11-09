@@ -51,7 +51,7 @@ def test_every_new_visual_has_a_playground_page(browsers):
 def test_the_decomposition_tree_says_the_diversification_and_opens_a_split(browsers):
     async def body(pg):
         await pg.wait_for_selector(".dt-box-root", timeout=30000)
-        await pg.select_option(".dt-col[data-depth='0'] .dt-split", "desk")
+        await pg.click(".dt-col[data-depth='0'] .dt-split-opt[data-field=desk]")
         await pg.wait_for_selector(".dt-box[data-index='4']")
         line = await pg.inner_text(".dt-line")
         assert "diversification" in line and "=" in line and "$29.6m" in line, line

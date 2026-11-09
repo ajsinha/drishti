@@ -368,20 +368,32 @@ export function buildHeatmap(spec, rows, env) {
   const th = env.theme, xf = fieldOf(spec.x), yf = fieldOf(spec.y), vf = fieldOf(spec.value) || fieldOf(spec.colour);
   const xs = members(rows, xf, spec.x && spec.x.order), ys = members(rows, yf, spec.y && spec.y.order);
   const data = rows.map((r, i) => ({ value: [xs.indexOf(String(r[xf])), ys.indexOf(String(r[yf])), num(r[vf])], r: [i], ids: [rowId(spec, r, i)] })).filter((d) => d.value[2] !== null);
-  const vals = data.map((d) => d.value[2]), div = spec.scale && spec.scale.type === 'diverging', mid = div ? (spec.scale.mid || 0) : 0;
-  let lo = vals.length ? Math.min.apply(null, vals) : 0, hi = vals.length ? Math.max.apply(null, vals) : 1;
-  if (div) { const m = Math.max(Math.abs(lo - mid), Math.abs(hi - mid)); lo = mid - m; hi = mid + m; }
+  const { lo, hi, visualMap } = heatScale(spec, data.map((d) => d.value[2]), env);
   const series = [{ type: 'heatmap', name: (spec.value && spec.value.title) || vf, field: vf, data: data, selectedMode: 'multiple', select: { itemStyle: { borderColor: th.tokens.accent, borderWidth: 2 } },
     itemStyle: { borderColor: th.surface, borderWidth: 1 }, emphasis: { itemStyle: { borderColor: th.ink, borderWidth: 1 } },
     label: { show: !!spec.labels, color: th.ink, fontFamily: th.font, fontSize: th.size.font - 1, formatter: (p) => env.fmt(p.value[2]) } }];
   const option = frame(spec, env, Object.assign(xAxisOf(spec, env, 'category', xs), { splitArea: { show: false } }), Object.assign(axisOf(th, { type: 'category', data: ys, inverse: true }), { splitArea: { show: false } }), series, {
-    visualMap: { min: lo, max: hi, calculable: false, orient: 'horizontal', left: 'center', bottom: 0, itemWidth: 10, itemHeight: 140, inRange: { color: div ? th.diverging : th.sequential },
-      textStyle: textStyle(th), formatter: (v) => env.fmt(v), text: [env.fmt(hi), env.fmt(lo)] } });
+    visualMap: visualMap });
   option.grid.bottom = th.size.pad + 34;
   option.tooltip = { trigger: 'item', confine: true };
   return { option: option, legend: [], table: { columns: [{ header: yf }].concat(xs.map((x) => ({ header: x, format: spec.value && spec.value.format }))),
     rows: ys.map((y) => [y].concat(xs.map((x) => { const r = rows.find((q) => String(q[xf]) === x && String(q[yf]) === y); return r ? num(r[vf]) : null; }))) },
   summary: 'Heatmap' + (spec.title ? ' of ' + spec.title : '') + ', ' + ys.length + ' rows by ' + xs.length + ' columns, from ' + env.fmt(lo) + ' to ' + env.fmt(hi) };
+}
+
+/**
+ * The colour scale of a heatmap or a calendar: the range of the values (centred on spec.scale.mid when diverging) and the legend.
+ * @param {Object} spec
+ * @param {number[]} vals
+ * @param {Object} env
+ * @returns {{lo: number, hi: number, visualMap: Object}}
+ */
+export function heatScale(spec, vals, env) {
+  const th = env.theme, div = spec.scale && spec.scale.type === 'diverging', mid = div ? (spec.scale.mid || 0) : 0;
+  let lo = vals.length ? Math.min.apply(null, vals) : 0, hi = vals.length ? Math.max.apply(null, vals) : 1;
+  if (div) { const m = Math.max(Math.abs(lo - mid), Math.abs(hi - mid)); lo = mid - m; hi = mid + m; }
+  return { lo, hi, visualMap: { min: lo, max: hi, calculable: false, orient: 'horizontal', left: 'center', bottom: 0, itemWidth: 10, itemHeight: 140, inRange: { color: div ? th.diverging : th.sequential },
+    textStyle: textStyle(th), formatter: (v) => env.fmt(v), text: [env.fmt(hi), env.fmt(lo)] } };
 }
 
 /**

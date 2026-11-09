@@ -136,15 +136,15 @@
         } else {
           head.appendChild(this.el('span', 'dt-col-by', 'Split by'));
         }
-        const sel = this.el('select', 'dt-split');
-        sel.setAttribute('aria-label', 'Split by');
-        const none = this.el('option', '', 'choose…'); none.value = '';
-        sel.appendChild(none);
         const used = this.levels.slice(0, depth).map((x) => x.split);
-        this.o.splits.filter((s) => used.indexOf(s.field) < 0).forEach((s) => { const op = this.el('option', '', s.label); op.value = s.field; sel.appendChild(op); });
-        sel.value = l.split || '';
-        sel.addEventListener('change', () => this.splitBy(depth, sel.value));
-        head.appendChild(sel);
+        this.o.splits.filter((s) => used.indexOf(s.field) < 0).forEach((s) => {
+          const b = this.el('button', 'dt-split-opt', s.label);
+          b.type = 'button';
+          b.dataset.field = s.field;
+          b.setAttribute('aria-pressed', l.split === s.field ? 'true' : 'false');
+          b.addEventListener('click', () => this.splitBy(depth, s.field));
+          head.appendChild(b);
+        });
         col.appendChild(head);
         if (l.busy) { col.appendChild(this.el('p', 'dt-col-note', 'Working…')); return col; }
         if (l.error) { const p = this.el('p', 'dt-col-note dt-col-error', l.error); p.setAttribute('role', 'alert'); col.appendChild(p); return col; }

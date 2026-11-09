@@ -63,12 +63,14 @@ export class Decomposition {
     this.load(0, null, []);
   }
 
+  /** @private */
   fmt(v, unit) {
     if (v === null || v === undefined) { return '–'; }
     if (this.o.format) { return this.o.format(v, unit); }
     return unit === 'money' ? '$' + formatCompact(v) : formatCompact(v);
   }
 
+  /** @private */
   path(depth) {
     const out = [];
     for (let d = 0; d < depth; d++) {
@@ -78,7 +80,13 @@ export class Decomposition {
     return out;
   }
 
-  /** Asks column depth anew (its split changed, or its parent was opened), drops those to its right. */
+  /**
+   * Asks column depth anew (its split changed, or its parent was opened), drops those to its right.
+   * @param {number} depth
+   * @param {?string} split
+   * @param {Array<{field: string, value: string}>} path
+   * @returns {void}
+   */
   load(depth, split, path) {
     this.levels.length = depth + 1;
     this.levels[depth] = { answer: null, split: split, selected: null, busy: true };
@@ -95,7 +103,12 @@ export class Decomposition {
     });
   }
 
-  /** Opens a member (its children below, by the next unused split or the one already chosen). */
+  /**
+   * Opens a member (its children below, by the next unused split or the one already chosen).
+   * @param {number} depth
+   * @param {number} index
+   * @returns {void}
+   */
   open(depth, index) {
     const l = this.levels[depth];
     if (!l || !l.answer || !l.answer.children[index] || l.answer.children[index].others) { return; }
@@ -107,12 +120,18 @@ export class Decomposition {
     if (next) { this.load(depth + 1, next, this.path(depth + 1)); } else { this.draw(); }
   }
 
-  /** Splits column depth by a dimension. */
+  /**
+   * Splits column depth by a dimension.
+   * @param {number} depth
+   * @param {?string} field
+   * @returns {void}
+   */
   splitBy(depth, field) {
     this.load(depth, field || null, this.path(depth));
   }
 
   /** The words of a split's line, every figure the server's. */
+  /** @private */
   line(a, label) {
     if (!a.children.length) { return null; }
     if (a.additive || a.diversification === undefined) { return 'The parts add up to ' + this.fmt(a.node.value, a.unit) + (a.additive ? '' : ' (no diversification figure)'); }
@@ -120,6 +139,7 @@ export class Decomposition {
       pct: a.sumStandalone ? formatNumber(100 * a.diversification / a.sumStandalone, { decimals: 0 }) + '% offset' : '', label: label };
   }
 
+  /** @private */
   el(tag, cls, text) {
     const e = this.doc.createElement(tag);
     if (cls) { e.className = cls; }
@@ -163,15 +183,15 @@ export class Decomposition {
     } else {
       head.appendChild(this.el('span', 'dt-col-by', 'Split by'));
     }
-    const sel = this.el('select', 'dt-split');
-    sel.setAttribute('aria-label', 'Split by');
-    const none = this.el('option', '', 'choose…'); none.value = '';
-    sel.appendChild(none);
     const used = this.levels.slice(0, depth).map((x) => x.split);
-    this.o.splits.filter((s) => used.indexOf(s.field) < 0).forEach((s) => { const op = this.el('option', '', s.label); op.value = s.field; sel.appendChild(op); });
-    sel.value = l.split || '';
-    sel.addEventListener('change', () => this.splitBy(depth, sel.value));
-    head.appendChild(sel);
+    this.o.splits.filter((s) => used.indexOf(s.field) < 0).forEach((s) => {
+      const b = this.el('button', 'dt-split-opt', s.label);
+      b.type = 'button';
+      b.dataset.field = s.field;
+      b.setAttribute('aria-pressed', l.split === s.field ? 'true' : 'false');
+      b.addEventListener('click', () => this.splitBy(depth, s.field));
+      head.appendChild(b);
+    });
     col.appendChild(head);
     if (l.busy) { col.appendChild(this.el('p', 'dt-col-note', 'Working…')); return col; }
     if (l.error) { const p = this.el('p', 'dt-col-note dt-col-error', l.error); p.setAttribute('role', 'alert'); col.appendChild(p); return col; }
@@ -227,7 +247,10 @@ export class Decomposition {
     }
   }
 
-  /** Draws the whole strip (columns, then the links over them). */
+  /**
+   * Draws the whole strip (columns, then the links over them).
+   * @returns {void}
+   */
   draw() {
     while (this.host.firstChild) { this.host.removeChild(this.host.firstChild); }
     const strip = this.el('div', 'dt-strip');
@@ -236,9 +259,15 @@ export class Decomposition {
     this.links(strip);
   }
 
-  /** Draws again at the size the host now has. */
+  /**
+   * Draws again at the size the host now has.
+   * @returns {void}
+   */
   resize() { this.draw(); }
 
-  /** Empties the host. */
+  /**
+   * Empties the host.
+   * @returns {void}
+   */
   dispose() { this.seq++; while (this.host.firstChild) { this.host.removeChild(this.host.firstChild); } }
 }

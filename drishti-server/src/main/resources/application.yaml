@@ -355,6 +355,7 @@ drishti:
     token-read-posts:
       - /api/v1/pivot/query              # the pivot engine (PIVOT_GUIDE.md): a view's answer, its estimate, a node opened, two dates compared,
       - /api/v1/pivot/estimate           # a cell's rows and an export: each reads as the caller and writes nothing
+      - /api/v1/pivot/decompose          # one split of a decomposition tree: reads as the caller, writes nothing
       - /api/v1/pivot/expand
       - /api/v1/pivot/compare
       - /api/v1/pivot/rows
