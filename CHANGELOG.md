@@ -17,6 +17,8 @@
 
 ## Unreleased
 
+- **BI modelling depth (2.9.11.i1b):** many-to-many through a declared `bridges:` table (semi-join, never double-counted, totals from each level's own rows, row rules and masks inside the join); both-ways filtering per relationship with a per-measure override, and an ambiguous filter path refused at save with its reason and the fix; relationships named, `via:` per measure; Rachana `calc` grows `ignore = [table] | GROUP`, `keep` narrowing `ignore`, `by`/`having`, `filter =`; `sum_by`, `min_by`, `max_by` (the context transition, grain written; a measure that does not add is refused in `sum_by`); a calculated table may be related in the model that produces it (a self-read refused); a calculation group's template that cannot apply reads *not applicable, and why*; model-level measure functions; `tools/drishti.py bi dax` and the model editor's Tables tab convert common DAX to Rachana and name what they cannot; the Tables tab is table first (name and filter columns, bridges grid, paths drawn on a refusal or on request).
+
 - **Copy-paste ratchet and code volume:** `tools/duplicates.py` runs PMD's copy-paste detector over Java, JavaScript and Python at 100 tokens (`tools/cpd/pom.xml`, outside the
   root build, nothing that ships); the gate fails if any language has more duplicated lines than `tools/cpd/baseline.txt`, which is only lowered. `tools/code_volume.py` writes lines of code per
   release from git into `docs/admin/BENCHMARK.md` section 22.

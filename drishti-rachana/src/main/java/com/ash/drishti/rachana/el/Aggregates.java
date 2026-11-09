@@ -38,7 +38,7 @@ final class Aggregates {
      * the filter context ({@code calc}, {@code share_of}, {@code parent_of}, {@code as_of}, {@code avg_by}, {@code avg_over}), time
      * intelligence, windows, balances, conversion and lookup. Rachana parses and checks them; the engine's compiler lowers them.
      */
-    static final List<String> MEASURE_LEVEL = List.of("ratio", "convert", "related", "related_rows", "fx", "avg_by", "avg_over", "calc", "share_of",
+    static final List<String> MEASURE_LEVEL = List.of("ratio", "convert", "related", "related_rows", "fx", "avg_by", "sum_by", "min_by", "max_by", "avg_over", "calc", "share_of",
             "parent_of", "as_of", "ytd", "mtd", "qtd", "prior_period", "same_period_last_year", "running", "fiscal_ytd", "lag", "lead",
             "rank", "dense_rank", "percent_rank", "moving_avg", "moving_sum", "moving_min", "moving_max", "latest", "earliest", "opening",
             "closing");

@@ -47,13 +47,13 @@ public sealed interface Node {
      * Wave B (docs/architecture/ARCHITECTURE.md §28 sections 3.3.4 and 3.3.5): functions over an aggregate in an edited filter context or at other dates. Their
      * keyword arguments are kept as pseudo-calls {@code Call("=where", [cond])}, {@code Call("=ignore", [refs or ALL])} (see {@link #keyword}).
      */
-    Set<String> CONTEXT = Set.of("calc", "share_of", "parent_of", "avg_by", "as_of", "last", "first", "opening", "closing", "avg_over", "convert");
+    Set<String> CONTEXT = Set.of("calc", "share_of", "parent_of", "avg_by", "sum_by", "min_by", "max_by", "as_of", "last", "first", "opening", "closing", "avg_over", "convert");
     /** Scalars of wave B: dates that move ({@code shift_date}), the query's as-of date ({@code asof}), FX rates ({@code fx}). */
     Set<String> SCALARS_B = Set.of("shift_date", "asof", "fx");
     /** The prefix of a keyword argument kept in the tree. */
     String KEYWORD = "=";
     /** Keyword arguments that name fields a context drops or keeps (or {@code ALL}): the expression does not read them, so walks of the tree skip them. */
-    Set<String> UNREAD = Set.of("=ignore", "=keep", "=over", "=hierarchy", "=via", "=period", "=unit", "=to", "=at");
+    Set<String> UNREAD = Set.of("=ignore", "=keep", "=over", "=hierarchy", "=via", "=filter", "=having", "=period", "=unit", "=to", "=at");
 
     /** The value of a keyword argument of a call ({@code null} when absent): its one item, or for a list keyword the pseudo-call itself. */
     static Call keyword(Call c, String name) {

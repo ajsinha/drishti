@@ -219,6 +219,26 @@ the grand total, as the Pivot shows over the same trades today (rows `$.PORTFOLI
 
 ![The Pivot: the legs by book and currency, with each book's subtotal and the grand total](img/t44/03-legs-by-book.jpg)
 
+## Step 5a · A bridge, both ways, and a measure along another path
+
+**In the Console.** Open the model, **Tables** tab. Under **Many-to-many bridges** add a row: left key `books.BOOK_ID`, right key `limit_groups.GROUP_ID`, bridge table `book_limit_group`. In **Relationships** set a relationship's **Filter** to **Both ways** only if a one-side measure must be filtered by the many side. If the save is refused, the two paths and the fix buttons appear with the paths drawn; **Show the paths** draws them at any time. **Convert DAX to Rachana** at the bottom of the tab turns a pasted DAX measure into Rachana and names what it cannot convert.
+
+**In YAML:**
+
+```yaml
+relationships:
+  - { name: trade_date, from: trades.TRADE_DATE, to: dates.DAY }
+  - { name: settle_date, from: trades.SETTLE_DATE, to: dates.DAY, active: false }
+bridges:
+  - { name: book_limit_group, left: books.BOOK_ID, right: limit_groups.GROUP_ID, through: book_limit_group }
+measures:
+  Notional by settle date: { expr: "sum(trades.NOTIONAL)", via: settle_date }
+```
+
+**At the prompt:** `tools/drishti.py bi dax "CALCULATE(SUM(trades[NOTIONAL]), USERELATIONSHIP(trades[SETTLE_DATE], dates[DAY]))"`
+
+Group rows by limit group do not add to the total when a book sits in two groups: the total counts each trade once.
+
 ## Step 6 · BI's samples migrated, with a dry run first
 
 The dry run prints the diff of every file it would write and a report; nothing is written:

@@ -131,6 +131,19 @@ public final class ModelChecks {
 
     private static void relationships(ModelDef m, Map<String, TableDef> byAlias, Set<String> columns, Map<String, String> types, List<Problem> out) {
         Set<String> activePairs = new HashSet<>();
+        List<FilterPaths.Link> links = new java.util.ArrayList<>();
+        Object bridges = m.extras().get("bridges");
+        if (bridges instanceof List<?> list) {
+            for (Object b : list) {
+                if (b instanceof Map<?, ?> map) {
+                    String left = String.valueOf(map.get("left")).split("\\.")[0];
+                    String right = String.valueOf(map.get("right")).split("\\.")[0];
+                    String through = String.valueOf(map.get("through"));
+                    links.add(new FilterPaths.Link(name(map, "left-name", "bridge_" + left), through, left, !"one_way".equals(String.valueOf(map.get("left-filter"))), true));
+                    links.add(new FilterPaths.Link(name(map, "right-name", "bridge_" + right), through, right, "both".equals(String.valueOf(map.get("right-filter"))), true));
+                }
+            }
+        }
         for (int i = 0; i < m.relationships().size(); i++) {
             ModelDef.Relationship r = m.relationships().get(i);
             String p = "relationships[" + i + "]";
@@ -152,12 +165,25 @@ public final class ModelChecks {
             if (a != null && b != null && !a.equals(b)) {
                 out.add(Problem.error(TableCodes.RELATIONSHIP, p, r.from() + " is " + a + " and " + r.to() + " is " + b + ": a key joins values of one type"));
             }
+            if (r.active()) {
+                String relName = r.label() != null ? r.label() : r.id() != null ? r.id() : r.from() + " -> " + r.to();
+                links.add(new FilterPaths.Link(relName, r.from().split("\\.")[0], r.to().split("\\.")[0], "both".equals(r.direction()), false));
+            }
             String pair = r.from().split("\\.")[0] + ">" + r.to().split("\\.")[0];
             if (r.active() && !activePairs.add(pair)) {
                 out.add(Problem.error(TableCodes.RELATIONSHIP, p, "a second active relationship between " + pair.replace(">", " and ")
                         + ": make one active: false and name it with calc(..., via = 'id')"));
             }
         }
+        String ambiguous = FilterPaths.ambiguous(links);
+        if (ambiguous != null) {
+            out.add(Problem.error(TableCodes.RELATIONSHIP, "relationships", ambiguous));
+        }
+    }
+
+    private static String name(Map<?, ?> map, String key, String otherwise) {
+        Object v = map.get(key);
+        return v == null ? otherwise : String.valueOf(v);
     }
 
     private void security(ModelDef m, Set<String> columns, ExpressionChecker.Env env, List<Problem> out) {

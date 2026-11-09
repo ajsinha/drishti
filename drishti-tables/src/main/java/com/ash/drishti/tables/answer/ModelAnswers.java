@@ -139,6 +139,9 @@ public final class ModelAnswers {
             if (measure == null || measure.expr() == null) {
                 throw new Refused("DRS-9152", "no measure '" + name + "' (a Python measure is answered by its runner)");
             }
+            if (measure.keys().containsKey("via") || m.extras().containsKey("bridges")) {
+                throw new Refused("DRS-9129", "this model uses a bridge or via: the preview here cannot read those: open it in a report, which the query engine answers");
+            }
             LateBound.Bound b = LateBound.bind(Trees.parse(measure.expr()), true);
             bound.put(name, b);
             lowered.put(name, compiler.measure(b.expr()));

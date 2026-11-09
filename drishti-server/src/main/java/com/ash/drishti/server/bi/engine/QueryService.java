@@ -892,6 +892,9 @@ public final class QueryService implements AutoCloseable {
         Set<String> joined = new LinkedHashSet<>();
         for (SqlCompiler.Join j : plan.joins()) {
             Dataset.TableSecurity s = d.security().tables().get(j.toTable());
+            if (j.semi() != null) {
+                return null;                                                       // a many-to-many is read through its bridge, never by one key
+            }
             if (!fact.equals(j.fromTable()) || s == null || !s.dimension() || !plan.tables().contains(j.toTable())) {
                 return null;                                                       // a chain, a fact on the one side, or a table read for more than its rules
             }

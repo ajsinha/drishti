@@ -73,7 +73,30 @@ public final class SqlCompiler {
     public record FilterUse(QueryRequest.Filter filter, Resolver.ColRef ref, Dataset.Measure measure) {}
 
     /** A relationship followed from one table to another: {@code from} the table already in the query. */
-    public record Join(String fromTable, String fromColumn, String toTable, String toColumn) {}
+    public record Join(String fromTable, String fromColumn, String toTable, String toColumn, Semi semi) {
+        public Join(String fromTable, String fromColumn, String toTable, String toColumn) {
+            this(fromTable, fromColumn, toTable, toColumn, null);
+        }
+    }
+
+    /**
+     * A join that must not repeat the base table: {@code through} (a bridge table, null for a both-ways relationship read directly), joined on {@code throughTo},
+     * gives the distinct keys {@code throughFrom}, each paired with the far table's asked-for values. Each base row meets one row per distinct value, so a group's
+     * sum holds a row once and a total asked without the far table holds it once.
+     */
+    public record Semi(String through, String throughFrom, String throughTo) {}
+
+    /** Limits a compile to the groups a sub-query keeps: {@code calc(..., by =, having =)}. */
+    record Restriction(List<String> fields, String sql, List<Object> params) {
+        String predicate(List<Object> out, java.util.function.Function<String, String> column) {
+            List<String> on = new ArrayList<>();
+            for (String f : fields) {
+                on.add(column.apply(f) + " IS NOT DISTINCT FROM " + Dialect.quote("hv") + "." + Dialect.quote(f));
+            }
+            out.addAll(params);
+            return "EXISTS (SELECT 1 FROM (" + sql + ") AS " + Dialect.quote("hv") + " WHERE " + String.join(" AND ", on) + ")";
+        }
+    }
 
     /** The query resolved against the model. */
     public record Plan(Dataset dataset, QueryRequest query, List<Field> fields, List<Use> measures, List<FilterUse> filters, List<Node> rules, boolean denied,
@@ -130,11 +153,15 @@ public final class SqlCompiler {
     /** The SQL, its parameters in order, and the output columns. */
     public record Compiled(String sql, List<Object> params, List<Out> columns, Set<String> tables, String base, List<String> notes) {}
 
+    private static final String SEMI_KEY = "__semi_key";
+    private static final String SEMI_DATE = "__semi_date";
+
     private final Dataset ds;
     private final Resolver resolver;
     private final Dialect dialect;
 
     private int depth;
+    private Restriction restriction;
 
     public SqlCompiler(Dataset ds, Dialect dialect) {
         this.ds = ds;
@@ -145,6 +172,12 @@ public final class SqlCompiler {
     /** This compiler writes a filter context's sub-query {@code d} levels down. */
     SqlCompiler depth(int d) {
         this.depth = d;
+        return this;
+    }
+
+    /** Restricts this compile's rows to the groups of {@code calc(..., by =, having =)}; the {@code by} fields' tables are planned in. */
+    SqlCompiler restrict(Restriction r) {
+        this.restriction = r;
         return this;
     }
 
@@ -198,6 +231,9 @@ public final class SqlCompiler {
             measures.add(new Use(name, new Node.MeasureRef(name), masked));
         }
         tables.addAll(aggTables);
+        if (restriction != null) {
+            restriction.fields().forEach(f -> tables.add(resolve(f).table()));
+        }
         Map<String, Node> derived = new LinkedHashMap<>();
         expandMixed(measureTables, derived, reader);
         List<FilterUse> filters = new ArrayList<>();
@@ -254,7 +290,7 @@ public final class SqlCompiler {
         Plan whole = new Plan(ds, q, fields, measures, filters, rules, denied, tables, null, List.of(), null, derived);
         Plan joined;
         try {
-            joined = join(whole, aggTables);
+            joined = join(whole, aggTables, reader);
         } catch (DrishtiException e) {
             if (e.errorCode() == ErrorCode.QUERY_INVALID && measureTables.size() > 1) {
                 Plan several = factParts(whole, measureTables, dimTables, reader);
@@ -413,7 +449,10 @@ public final class SqlCompiler {
                     return null;
                 }
                 joins = more;
-                TableRules.Bound bound = TableRules.bind(ds, allOf(base, joins), reader);
+                checkSemi(joins, groupTables.get(i));
+                Set<String> outer = new LinkedHashSet<>(allOf(base, joins));
+                outer.removeAll(semiTables(joins));
+                TableRules.Bound bound = TableRules.bind(ds, outer, reader);
                 rules = bound.rules();
                 denied = bound.denied();
             }
@@ -464,13 +503,32 @@ public final class SqlCompiler {
     // ---- join planning -----------------------------------------------------------------------------------------------
 
     /** A relationship as an edge the query may follow: from the many side to the one side. */
-    private record Edge(String from, String fromColumn, String to, String toColumn, boolean oneToOne) {}
+    private record Edge(String from, String fromColumn, String to, String toColumn, boolean oneToOne, Semi semi) {
+        Edge(String from, String fromColumn, String to, String toColumn, boolean oneToOne) {
+            this(from, fromColumn, to, toColumn, oneToOne, null);
+        }
+    }
 
     private List<Edge> edges() {
         List<Edge> out = new ArrayList<>();
         for (Dataset.Relationship r : ds.relationships()) {
+            if (r.bridge() != null) {
+                Dataset.Bridge b = r.bridge();
+                if (b.leftBoth()) {                                                 // a filter on the right reaches the left: a query at the left's grain may cross
+                    out.add(new Edge(r.fromTable(), r.fromColumn(), r.toTable(), r.toColumn(), false, new Semi(b.through(), b.leftKey(), b.rightKey())));
+                }
+                if (b.rightBoth()) {
+                    out.add(new Edge(r.toTable(), r.toColumn(), r.fromTable(), r.fromColumn(), false, new Semi(b.through(), b.rightKey(), b.leftKey())));
+                }
+                continue;
+            }
             if (!r.active()) {
                 continue;
+            }
+            if ("both".equals(r.direction()) && !"one-to-one".equals(r.cardinality())) {     // a filter on the many side reaches the one side: a semi-join, never a repeat
+                boolean oneToMany = "one-to-many".equals(r.cardinality());
+                out.add(new Edge(oneToMany ? r.fromTable() : r.toTable(), oneToMany ? r.fromColumn() : r.toColumn(), oneToMany ? r.toTable() : r.fromTable(),
+                        oneToMany ? r.toColumn() : r.fromColumn(), false, new Semi(null, null, null)));
             }
             if ("one-to-many".equals(r.cardinality())) {
                 out.add(new Edge(r.toTable(), r.toColumn(), r.fromTable(), r.fromColumn(), false));
@@ -484,7 +542,7 @@ public final class SqlCompiler {
         return out;
     }
 
-    private Plan join(Plan p, Set<String> aggTables) {
+    private Plan join(Plan p, Set<String> aggTables, Reader reader) {
         Set<String> tables = p.tables();
         List<Edge> edges = edges();
         boolean measures = !p.measures().isEmpty() || p.filters().stream().anyMatch(f -> f.measure() != null);
@@ -495,6 +553,17 @@ public final class SqlCompiler {
         for (String base : candidates) {
             List<Join> joins = tree(base, tables, edges, true);
             if (joins != null) {
+                checkSemi(joins, aggTables);
+                Set<String> semi = semiTables(joins);
+                if (!semi.isEmpty() && ds.security().perTable()) {
+                    Set<String> outer = new LinkedHashSet<>(allOf(base, joins));
+                    outer.removeAll(semi);                                     // a semi-joined table's rules bind inside the semi-join, before any join
+                    TableRules.Bound bound = TableRules.bind(ds, outer, reader);
+                    return new Plan(p.dataset(), p.query(), p.fields(), p.measures(), p.filters(), bound.rules(), bound.denied(), allOf(base, joins), base, joins, null, p.derived());
+                }
+                if (!semi.isEmpty() && !p.rules().isEmpty()) {
+                    throw invalid("this dataset's row rules are written over its joined columns and cannot be applied across a many-to-many: write them per table");
+                }
                 return new Plan(p.dataset(), p.query(), p.fields(), p.measures(), p.filters(), p.rules(), p.denied(), allOf(base, joins), base, joins, null, p.derived());
             }
         }
@@ -522,8 +591,41 @@ public final class SqlCompiler {
     private static Set<String> allOf(String base, List<Join> joins) {
         Set<String> all = new LinkedHashSet<>();
         all.add(base);
-        joins.forEach(j -> all.add(j.toTable()));
+        joins.forEach(j -> {
+            all.add(j.toTable());
+            if (j.semi() != null && j.semi().through() != null) {
+                all.add(j.semi().through());
+            }
+        });
         return all;
+    }
+
+    /** The tables a plan reads only inside a semi-join (the far table and the bridge): their filters and rules apply there, before any join. */
+    static Set<String> semiTables(List<Join> joins) {
+        Set<String> out = new LinkedHashSet<>();
+        for (Join j : joins) {
+            if (j.semi() != null) {
+                out.add(j.toTable());
+                if (j.semi().through() != null) {
+                    out.add(j.semi().through());
+                }
+            }
+        }
+        return out;
+    }
+
+    /** Refuses a plan where a measure reads a semi-joined table (it would be repeated) or a further join leaves one (its rows would not stay unique). */
+    private void checkSemi(List<Join> joins, Set<String> aggTables) {
+        Set<String> semi = semiTables(joins);
+        for (Join j : joins) {
+            if (semi.contains(j.fromTable())) {
+                throw invalid("'" + j.toTable() + "' lies beyond the many-to-many at '" + j.fromTable() + "': a query crosses one many-to-many and reads its far table's own columns; "
+                        + "bring the column onto '" + j.fromTable() + "' with a look-up, or relate the two directly");
+            }
+            if (j.semi() != null && aggTables.contains(j.toTable())) {
+                throw invalid("a measure reads '" + j.toTable() + "' across a many-to-many, where one row of the base table meets several: aggregate '" + j.toTable() + "' on its own, or filter by it");
+            }
+        }
     }
 
     /** A tree of joins from {@code base} reaching every needed table; null when some table is unreachable. Intermediate tables are added as needed. */
@@ -548,6 +650,12 @@ public final class SqlCompiler {
     }
 
     private static List<Join> path(String base, String target, List<Edge> edges, boolean forwardOnly, Set<String> inTree) {
+        // a plain path when there is one: a many-to-many or a both-ways relationship is crossed only where nothing else reaches the table
+        List<Join> plain = search(target, edges.stream().filter(e -> e.semi() == null).toList(), forwardOnly, inTree);
+        return plain != null ? plain : search(target, edges, forwardOnly, inTree);
+    }
+
+    private static List<Join> search(String target, List<Edge> edges, boolean forwardOnly, Set<String> inTree) {
         // breadth first from every table already in the tree
         Map<String, Join> via = new LinkedHashMap<>();
         java.util.ArrayDeque<String> queue = new java.util.ArrayDeque<>(inTree);
@@ -559,10 +667,10 @@ public final class SqlCompiler {
                 Join j = null;
                 if (e.from().equals(at)) {
                     next = e.to();
-                    j = new Join(e.from(), e.fromColumn(), e.to(), e.toColumn());
-                } else if (!forwardOnly && e.to().equals(at)) {
+                    j = new Join(e.from(), e.fromColumn(), e.to(), e.toColumn(), e.semi());
+                } else if (!forwardOnly && e.to().equals(at) && e.semi() == null) {
                     next = e.from();
-                    j = new Join(e.to(), e.toColumn(), e.from(), e.fromColumn());
+                    j = new Join(e.to(), e.toColumn(), e.from(), e.fromColumn(), null);
                 }
                 if (next != null && seen.add(next)) {
                     via.put(next, j);
@@ -596,6 +704,68 @@ public final class SqlCompiler {
      * True when a join of a query over more than one business date also matches the business date: both tables are snapshots read per date (not live, not a
      * history), so without it each fact row would meet its dimension row once per date of the window and be counted that many times.
      */
+    private String semiFrom(Join j, Plan p, QueryRequest q, Map<String, Source> sources, Reader reader, MoreSources more, List<Object> fromParams) {
+        Semi s = j.semi();
+        Set<String> inside = new LinkedHashSet<>(Set.of(j.toTable()));
+        if (s.through() != null) {
+            inside.add(s.through());
+        }
+        String near = s.through() == null ? j.toTable() : s.through();
+        String key = Dialect.quote(near) + "." + Dialect.quote(s.through() == null ? j.toColumn() : s.throughFrom());
+        List<String> cols = new ArrayList<>(List.of(key + " AS " + Dialect.quote(SEMI_KEY)));
+        Set<String> projected = new LinkedHashSet<>();
+        for (Field f : p.fields()) {
+            if (!f.masked() && j.toTable().equals(f.ref().table()) && projected.add(f.ref().column())) {
+                cols.add(Dialect.quote(j.toTable()) + "." + Dialect.quote(f.ref().column()));
+            }
+        }
+        boolean dated = overDates(q, new Join(j.fromTable(), j.fromColumn(), near, j.fromColumn()));
+        if (dated) {
+            cols.add(Dialect.quote(near) + "." + Dialect.quote(Dataset.DATE) + " AS " + Dialect.quote(SEMI_DATE));
+        }
+        Source to = sources.get(j.toTable());
+        StringBuilder inner = new StringBuilder("SELECT DISTINCT ").append(String.join(", ", cols)).append(" FROM ");
+        if (s.through() != null) {
+            Source bridge = sources.get(s.through());
+            inner.append(bridge.sql()).append(" JOIN ").append(to.sql()).append(" ON ").append(Dialect.quote(s.through())).append('.').append(Dialect.quote(s.throughTo()))
+                    .append(" = ").append(Dialect.quote(j.toTable())).append('.').append(Dialect.quote(j.toColumn()));
+            if (overDates(q, new Join(s.through(), s.throughTo(), j.toTable(), j.toColumn()))) {
+                inner.append(" AND ").append(Dialect.quote(s.through())).append('.').append(Dialect.quote(Dataset.DATE)).append(" = ").append(Dialect.quote(j.toTable())).append('.').append(Dialect.quote(Dataset.DATE));
+            }
+            fromParams.addAll(bridge.params());
+        } else {
+            inner.append(to.sql());
+        }
+        fromParams.addAll(to.params());
+        SqlEmitter where = new SqlEmitter(ds, dialect, j.toTable(), null, reader.user());
+        where.relatedRows(RelatedRows.writer(ds, reader, more, q.from(), q.to()));
+        List<String> preds = new ArrayList<>();
+        for (FilterUse f : p.filters()) {
+            if (f.measure() == null && f.ref() != null && inside.contains(f.ref().table())) {
+                preds.add(filter(where, f.filter(), f.ref()));
+            }
+        }
+        TableRules.Bound bound = ds.security().perTable() ? TableRules.bind(ds, inside, reader) : new TableRules.Bound(List.of(), false);
+        if (bound.denied()) {
+            preds.add("1 = 0");
+        }
+        boolean restricted = bound.denied() || !bound.rules().isEmpty();
+        for (Node rule : bound.rules()) {
+            preds.add(where.emit(rule, false));
+        }
+        if (!preds.isEmpty()) {
+            inner.append(" WHERE ").append(String.join(" AND ", preds));
+        }
+        fromParams.addAll(where.params());
+        boolean filtered = !preds.isEmpty() || restricted;                     // inner: a filtered or row-ruled far table drops the base rows it does not match
+        StringBuilder out = new StringBuilder(filtered ? " JOIN (" : " LEFT JOIN (").append(inner).append(") AS ").append(Dialect.quote(j.toTable())).append(" ON ")
+                .append(Dialect.quote(j.fromTable())).append('.').append(Dialect.quote(j.fromColumn())).append(" = ").append(Dialect.quote(j.toTable())).append('.').append(Dialect.quote(SEMI_KEY));
+        if (dated) {
+            out.append(" AND ").append(Dialect.quote(j.fromTable())).append('.').append(Dialect.quote(Dataset.DATE)).append(" = ").append(Dialect.quote(j.toTable())).append('.').append(Dialect.quote(SEMI_DATE));
+        }
+        return out.toString();
+    }
+
     private boolean overDates(QueryRequest q, Join j) {
         if (q.from() == null || q.to() == null || q.from().equals(q.to())) {
             return false;
@@ -626,6 +796,7 @@ public final class SqlCompiler {
         SqlEmitter select = new SqlEmitter(ds, dialect, p.base(), components, reader.user()).time(time);
         SqlEmitter where = new SqlEmitter(ds, dialect, p.base(), null, reader.user());
         SqlEmitter having = new SqlEmitter(ds, dialect, p.base(), components, reader.user()).time(time);
+        Restriction restriction = this.restriction;
         List<String> items = new ArrayList<>();
         List<String> group = new ArrayList<>();
         List<Out> outs = new ArrayList<>();
@@ -673,6 +844,10 @@ public final class SqlCompiler {
         from.append(base.sql());
         fromParams.addAll(base.params());
         for (Join j : p.joins()) {
+            if (j.semi() != null) {
+                from.append(semiFrom(j, p, q, sources, reader, more, fromParams));
+                continue;
+            }
             Source s = sources.get(j.toTable());
             from.append(" LEFT JOIN ").append(s.sql()).append(" ON ").append(Dialect.quote(j.fromTable())).append('.').append(Dialect.quote(j.fromColumn()))
                     .append(" = ").append(Dialect.quote(j.toTable())).append('.').append(Dialect.quote(j.toColumn()));
@@ -688,11 +863,15 @@ public final class SqlCompiler {
         }
         // WHERE: filters, then the row rules
         List<String> preds = new ArrayList<>();
+        Set<String> semi = semiTables(p.joins());
         for (FilterUse f : p.filters()) {
-            if (f.measure() != null) {
-                continue;
+            if (f.measure() != null || f.ref() != null && semi.contains(f.ref().table())) {
+                continue;                                                      // a filter on a semi-joined table is applied inside the semi-join
             }
             preds.add(filter(where, f.filter(), f.ref()));
+        }
+        if (restriction != null) {
+            preds.add(restriction.predicate(where.params(), r -> where.column(resolve(r))));
         }
         if (p.denied()) {
             preds.add("1 = 0");

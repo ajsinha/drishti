@@ -555,6 +555,11 @@ The same definitions are checked on the command line by `drishti.py tables check
 
 ## 12. Measures in a model: filter context, and what is refused
 
+**Filter direction, bridges and named paths.** A relationship has a `direction: single` (one way, the default) or `both`. A many-to-many is declared with `bridges:` naming its bridge table; each measure can follow a named or inactive relationship once for all of its expression with `via: name` (`calc(..., via = 'name', filter = 'one_way')` overrides one relationship's direction for one measure). A model where a table reaches another by two paths and one is both-ways or across a bridge is refused at save with both paths and the fix; see [Reports guide section 5.3](REPORTS_GUIDE.md#53-relationships-and-how-a-question-joins).
+
+**Measure functions.** `functions: { share: { params: [a, b], expr: "a / b" } }` lets a measure write `share(sum(x.V), sum(x.W))`; a call is expanded before the checks, so it is exactly the expression it stands for.
+
+
 Every expression is written in one of four scopes, decided by where it stands: **row** (a column's `expr`, a `filter`), **rule** (a
 table's `rules`, a model's `security.rows`), **aggregate** (a model's measures, MQ `define` and `having`) and **context** (the first
 argument of `calc`, `share_of`, `parent_of`, `as_of`). What each scope may name: [ARCHITECTURE.md §28 section

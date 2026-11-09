@@ -111,7 +111,7 @@ public final class Flattener {
         });
         List<Dataset.Relationship> rels = new ArrayList<>();
         for (ModelDef.Rel r : m.relationships()) {
-            rels.add(new Dataset.Relationship(r.fromAlias(), r.fromColumn(), r.toAlias(), r.toColumn(), r.cardinality(), r.direction(), r.active(), r.id()));
+            rels.add(new Dataset.Relationship(r.fromAlias(), r.fromColumn(), r.toAlias(), r.toColumn(), r.cardinality(), r.direction(), r.active(), r.id(), r.name() == null || r.name().isBlank() ? null : r.name(), r.bridge()));
         }
         rels.addAll(hiddenRels);
         Map<String, Dataset.Measure> measures = new LinkedHashMap<>();
@@ -148,7 +148,9 @@ public final class Flattener {
         ModelDef.Calculation calc = m.calculation();
         ModelDef.FxDef f = calc.fx();
         Dataset.Fx fx = f == null ? null : new Dataset.Fx(f.rates(), f.from(), f.to(), f.rate(), f.date(), f.base());
-        return new Dataset.Model(calc.calendar() == null ? null : calc.calendar().holidays(), calc.calendar() == null ? 1 : calc.calendar().fiscalYearStart(), fx, currencyOf);
+        Set<String> notAdditive = new java.util.LinkedHashSet<>();
+        m.measures().values().stream().filter(x -> "false".equals(x.additive())).forEach(x -> notAdditive.add(x.name()));
+        return new Dataset.Model(calc.calendar() == null ? null : calc.calendar().holidays(), calc.calendar() == null ? 1 : calc.calendar().fiscalYearStart(), fx, currencyOf, notAdditive);
     }
 
     private static List<Dataset.RowRule> rowRules(List<DatasetDef.Rule> rules, String name, Set<String> cols, String alias) {

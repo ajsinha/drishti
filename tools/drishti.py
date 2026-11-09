@@ -750,6 +750,20 @@ def cmd_bi_workspace(a, extra) -> int:
     return 0
 
 
+def cmd_bi_dax(a, extra) -> int:
+    r = Api.from_args(a).json("POST", "/api/v1/tables/editor/dax", {"dax": a.text})
+    if a.json:
+        say_json(r)
+        return 0 if r.get("rachana") else 2
+    if r.get("rachana"):
+        print(r["rachana"])
+    for x in r.get("notes") or []:
+        print("note: " + x)
+    for x in r.get("notConverted") or []:
+        print("not converted: " + x)
+    return 0 if r.get("rachana") else 2
+
+
 def cmd_bi_catalogue(a, extra) -> int:
     api = Api.from_args(a)
     if a.action == "list":

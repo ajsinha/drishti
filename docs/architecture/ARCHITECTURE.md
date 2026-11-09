@@ -2238,7 +2238,7 @@ meaning: it asks the server's validate endpoints as you type.
 
 #### Filter-context control: the design beside DAX
 
-*Design: rows marked "to build" are not in the product yet.* The principle stays: **every edit of the context is written, and one function
+The principle stays: **every edit of the context is written, and one function
 does each job.** Rachana gets no second `CALCULATE`: `calc` grows just enough, and the things DAX does implicitly become named arguments.
 
 **Filter edits.**
@@ -2249,9 +2249,9 @@ does each job.** Rachana gets no second `CALCULATE`: `calc` grows just enough, a
 | `CALCULATE([MTM], trades[STATUS] = "LIVE")` | `calc(measure('MTM'), ignore = [trades.STATUS], where = trades.STATUS == 'LIVE')` | built |
 | `CALCULATE([MTM], REMOVEFILTERS(desks[NAME]))`, or `ALL(desks[NAME])` as a modifier | `calc(measure('MTM'), ignore = [desks.NAME])` | built |
 | `CALCULATE([MTM], REMOVEFILTERS())`, or `ALL()` | `calc(measure('MTM'), ignore = ALL)`: everything *you* may see | built |
-| `CALCULATE([MTM], ALL(desks))` | `calc(measure('MTM'), ignore = [desks])`: a table name means all its fields | to build |
-| `CALCULATE([MTM], ALLEXCEPT(desks, desks[REGION]))` | `calc(measure('MTM'), ignore = [desks], keep = [desks.REGION])` | to build |
-| `CALCULATE([MTM], ALLSELECTED())` | `calc(measure('MTM'), ignore = GROUP)`: the group layer only, slicers and page filters stay | to build |
+| `CALCULATE([MTM], ALL(desks))` | `calc(measure('MTM'), ignore = [desks])`: a table name means all its fields | built |
+| `CALCULATE([MTM], ALLEXCEPT(desks, desks[REGION]))` | `calc(measure('MTM'), ignore = [desks], keep = [desks.REGION])` | built |
+| `CALCULATE([MTM], ALLSELECTED())` | `calc(measure('MTM'), ignore = GROUP)`: the group layer only, slicers and page filters stay | built |
 
 The second row is the one difference a DAX author must learn. A DAX filter argument **replaces** the filters on its column; Rachana's `where`
 **adds** to them, which is DAX's `KEEPFILTERS`. To replace, say so with `ignore`; the converter writes both arguments. We keep `where` as it is:
@@ -2268,8 +2268,8 @@ combines the results. That *is* the transition, with its grain visible.
 | DAX | Rachana | Status |
 |---|---|---|
 | `AVERAGEX(VALUES(dates[DAY]), [MTM])` | `avg_by(measure('MTM'), by = [dates.DAY])` | built |
-| `SUMX(VALUES(desks[NAME]), CALCULATE(MAX(trades[MTM])))` | `sum_by(max(trades.MTM), by = [desks.NAME])` | to build, with `min_by`, `max_by` |
-| `CALCULATE([MTM], FILTER(ALL(desks[NAME]), [VaR] > 1000000))` | `calc(measure('MTM'), ignore = [desks.NAME], by = [desks.NAME], having = measure('VAR') > 1000000)` | to build: a semi-join on the groups that pass |
+| `SUMX(VALUES(desks[NAME]), CALCULATE(MAX(trades[MTM])))` | `sum_by(max(trades.MTM), by = [desks.NAME])` | built, with `min_by`, `max_by` |
+| `CALCULATE([MTM], FILTER(ALL(desks[NAME]), [VaR] > 1000000))` | `calc(measure('MTM'), ignore = [desks.NAME], by = [desks.NAME], having = measure('VAR') > 1000000)` | built: a semi-join on the groups that pass |
 
 An engine measure can be iterated but not added: `max_by(measure('VAR'), by = [desks.NAME])` is the largest desk VaR; `sum_by(measure('VAR'), ...)` is
 refused with `DRS-9127`, as any stacking of VaR is. An aggregate in a table column stays refused too: where DAX writes a calculated column
@@ -2277,7 +2277,7 @@ with `CALCULATE`, Rachana writes a calculated table and relates it.
 
 **Calculated tables** are not a new thing: a virtual table can already take a model's answer as its source (`from: { model: ..., query }`, see
 [TABLES_GUIDE.md](../guides/TABLES_GUIDE.md)), so `SUMMARIZECOLUMNS` and `ADDCOLUMNS` become that query, and `FILTER` its `where`.
-`UNION` and `CROSSJOIN` are a SQL table. To build: relating such a table in the same model that produces it, with the cycle refused. The table
+`UNION` and `CROSSJOIN` are a SQL table. Such a table may be related in the same model that produces it, as long as its query does not read itself (that cycle is refused). The table
 is computed per business date, like any answer, never held as a stale copy.
 
 ```yaml
@@ -2288,11 +2288,11 @@ from: { model: risk-model@1, query: "an ordinary MQ: sum(trades.NOTIONAL) by des
 
 **Calculation groups** are built: a group's items are templates over `SELECTED` with a precedence (higher applies first) and a format per item
 (`ModelDef.CalcGroup`). DAX's `CALCULATE(SELECTEDMEASURE(), DATESYTD(dates[DAY]))` is the item `ytd(SELECTED, dates.DAY)`, and
-`SELECTEDMEASURE() / CALCULATE(SELECTEDMEASURE(), ALL(desks))` is `share_of(SELECTED, over = [desks])`. To build: when a template cannot apply to a
+`SELECTEDMEASURE() / CALCULATE(SELECTEDMEASURE(), ALL(desks))` is `share_of(SELECTED, over = [desks])`. When a template cannot apply to a
 measure (a year-to-date of VaR), the cell reads *not applicable, and why* rather than failing the whole visual.
 
-**`via:` per measure.** Inactive relationships are followed today with `calc(agg, via = 'r_5')`, by the relationship's generated id. To build:
-relationships get names, and a measure may say so once for all of its expression. It is the same mechanism: `via:` compiles to the `calc`.
+**`via:` per measure.** Inactive relationships are followed with `calc(agg, via = 'name')`, by name or generated id.
+Relationships have names, and a measure may say so once for all of its expression. It is the same mechanism: `via:` compiles to the `calc`.
 
 ```yaml
 measures:

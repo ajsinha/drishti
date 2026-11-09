@@ -249,7 +249,22 @@ final class DatasetSources implements StagedTables {
 
     // ---- another model's answer --------------------------------------------------------------------------------------
 
+    /** Tables being computed on this thread, so a calculated table whose query reads itself through a measure is refused rather than run forever. */
+    private static final ThreadLocal<java.util.Set<String>> READING = ThreadLocal.withInitial(java.util.LinkedHashSet::new);
+
     private Answer fromModel(String table, DatasetDef d) {
+        if (!READING.get().add(d.name())) {
+            READING.get().clear();
+            throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.MQ_CONTEXT, "a model cannot read its own answer: calculated table '" + d.name() + "' reads itself through a measure");
+        }
+        try {
+            return readFromModel(table, d);
+        } finally {
+            READING.get().remove(d.name());
+        }
+    }
+
+    private Answer readFromModel(String table, DatasetDef d) {
         MqService.Bound inner = inner(table, d.source().model());
         MqService.Ran[] ran = new MqService.Ran[1];
         QueryService.Result shown = guarded(d, inner, () -> {
@@ -441,6 +456,10 @@ final class DatasetSources implements StagedTables {
         return walk(catalog, datasets, path);
     }
 
+    private static String alias(Map<String, ResolvedDataset> datasets, ResolvedDataset r) {
+        return datasets.entrySet().stream().filter(e -> e.getValue() == r).map(Map.Entry::getKey).findFirst().orElse(r.def().name());
+    }
+
     private static Optional<String> walk(ModelCatalog catalog, Map<String, ResolvedDataset> datasets, List<String> path) {
         if (path.size() > DEPTH) {
             return Optional.empty();
@@ -471,6 +490,10 @@ final class DatasetSources implements StagedTables {
                 targets.addAll(catalog.publishedModels(name));
             }
             if (next.contains(target)) {
+                String asks = String.valueOf(r.def().source().modelQuery());
+                if (r.def().source().modelQuery() != null && target.startsWith("model:") && !asks.contains(r.def().name()) && !asks.contains(alias(datasets, r) + ".")) {
+                    continue;                                                      // a calculated table may be related in the model that produces it when its query does not read it
+                }
                 return Optional.of(words(next, target));
             }
             next.add(target);
