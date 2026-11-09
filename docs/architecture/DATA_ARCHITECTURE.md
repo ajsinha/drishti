@@ -128,7 +128,7 @@ and the per-store documents; VaR's intake is the parallel lake loader ([section 
     - [8. Next steps: what is still kept on one node](#8-next-steps-what-is-still-kept-on-one-node)
     - [9. BI content and BI runs](#9-bi-content-and-bi-runs)
     - [10. Collaboration, notes and the admin data](#10-collaboration-notes-and-the-admin-data)
-    - [11. UI-written configuration: shared overlays (built for connectors and load overrides)](#11-ui-written-configuration-shared-overlays-built-for-connectors-and-load-overrides)
+    - [11. UI-written configuration: shared overlays (built for load overrides)](#11-ui-written-configuration-shared-overlays-built-for-load-overrides)
 6. [The one Drishti database (design, not built)](#6-the-one-drishti-database-design-not-built)
     - [1. The decision](#1-the-decision)
     - [2. What lives in it, and what does not](#2-what-lives-in-it-and-what-does-not)
@@ -3192,7 +3192,7 @@ with the identity database for what is still there (users, roles, tokens, prefer
 or take a filesystem snapshot: every item is one file written by rename, so a copy taken while it runs holds whole items, but a
 multi-document change may be half in (its intent record under `system/tx/` is copied too, and the next start finishes it).
 
-### 11. UI-written configuration: shared overlays (built for connectors and load overrides)
+### 11. UI-written configuration: shared overlays (built for load overrides)
 
 The decision (2026-10-21): **Admin updates are shared across the cluster; the files stay the base (GitOps), and every edit made
 through Admin or the UI is an overlay in the content store that every node reads.** (Option 2 of the four that were listed: one
@@ -3202,19 +3202,7 @@ writer node, overlay, store as the truth, a shared config folder.)
 changed keys to the listeners whose prefix they start with; the window overlaps the last one by 2 s of clock skew, and a key is handed
 over only when its version moved. One walk of the store per interval, however many areas listen.
 
-**Connectors** (`drishti.connectors.store`: `content`, default; `file`). `ConnectorFiles` reads through a `ConnectorOverlay`:
-
-| Key | Holds |
-|---|---|
-| `config/connectors/<name>.yaml` | the text saved through Admin, exactly as saved (`${VAR}` unresolved, masked credentials never written) |
-| `config/connectors/<name>.hidden` | an Admin delete of a connector the files define (the file stays on disk, hidden on every node) |
-| `config/connectors-history/<name>/<yyyyMMddTHHmmssSSS>.yaml` | every earlier effective text (Restore lists them with the file history) |
-
-The effective text is the overlay if present, else the file. Every node's `ConnectorManager` gets the change from the watch and
-hot-reloads as for a file edit; at start the overlaid names are applied by the first scan (the start-up properties come from the
-files alone). A save compares the etag the edit was based on with the store's current effective text and writes by compare-and-set,
-so two administrators on two nodes get one `409 DRS-5032`. Reset removes the overlay. There is nothing to import (the files were and
-stay the base). The overlay holds only what an administrator saved: what the server itself generates from a pack's template goes to the file (a template update's additive merge is a shared edit, so every node gets it). An override stays until an administrator removes it: Admin → Connectors marks it, shows what it changes against the file, and offers Remove override; Health warns while a node has any.
+**Connectors** are not in this overlay: the file in `config/connectors` is the only truth, and an Admin save writes it (with the history and the audit entry). A node's files are its own; each node's digest carries its connector files' hashes and Admin → Health warns when a connector on two nodes differs.
 
 **Data loads overrides** (`drishti.loads.config-store`: `content`, default; `file`): `loads/config/<pack>.yaml`, read on every use,
 saved by compare-and-set; the folder `<data>/loads/config` imported once (`system/imports/loads-config.json`) and kept.

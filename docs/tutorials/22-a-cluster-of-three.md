@@ -295,8 +295,8 @@ also shows the node's **Readiness** and, while it is not ready, what it waits fo
 
 ```bash
 # the same from a terminal (an administrator's API token with the node:drain scope; with sign-in off none is needed)
-DRISHTI_NODE_URL=http://$IP:18783 DRISHTI_DRAIN_TOKEN=drk_... deploy/bin/drishti-node.sh drain    # waits for safe to stop
-DRISHTI_NODE_URL=http://$IP:18783 deploy/bin/drishti-node.sh undrain                              # or restart it: it takes work again
+DRISHTI_NODE_URL=http://$IP:18783 DRISHTI_DRAIN_TOKEN=drk_... bin/drishti-node.sh drain    # waits for safe to stop
+DRISHTI_NODE_URL=http://$IP:18783 bin/drishti-node.sh undrain                              # or restart it: it takes work again
 curl -s http://$IP:18783/actuator/health/readiness                                                # {"status":"OUT_OF_SERVICE"} while drained
 ```
 

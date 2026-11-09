@@ -119,7 +119,7 @@ public final class ConnectorBootstrap {
                 }
                 try {
                     String text = TemplateStamp.stamp(fromTemplate(files, name, e.getValue(), header), packName, fingerprint(files, name, e.getValue()));
-                    files.writeGenerated(name, text);
+                    files.write(name, text);
                     files.writeMarker(name, text, fingerprint(files, name, e.getValue()), kindsOf(e.getValue()));
                     generated.add(name);
                     messages.add("connector file " + name + ".yaml generated from the template of pack '" + templateOwner.get(name).name() + "'");
@@ -187,7 +187,7 @@ public final class ConnectorBootstrap {
             if (TemplateStamp.pristine(text)) {
                 String fresh = TemplateStamp.stamp(fromTemplate(files, name, t, header), pack, fp);
                 Path kept = files.keepBeside(name, "before-upgrade");
-                files.writeGenerated(name, fresh);
+                files.write(name, fresh);
                 files.writeMarker(name, fresh, fp, newKinds);
                 regenerated.add(name);
                 messages.add("connector file " + name + ".yaml replaced by the new template of pack '" + pack + "': it had never been edited"
@@ -231,7 +231,7 @@ public final class ConnectorBootstrap {
         if (ConnectorFiles.etag(text).equals(mk.fileEtag())) {
             String fresh = TemplateStamp.stamp(fromTemplate(files, name, t, header), pack, fp);
             files.keepBeside(name, "before-upgrade");
-            files.writeGenerated(name, fresh);
+            files.write(name, fresh);
             files.writeMarker(name, fresh, fp, newKinds);
             regenerated.add(name);
             messages.add("connector file " + name + ".yaml regenerated: the template of pack '" + pack + "' changed (kinds: "
@@ -286,7 +286,7 @@ public final class ConnectorBootstrap {
             List<String> regenerated, List<String> messages) {
         String fresh = generate(files, name, pack, t);
         Path kept = files.keepBeside(name, "before-upgrade");
-        files.writeGenerated(name, fresh);
+        files.write(name, fresh);
         files.writeMarker(name, fresh, fp, newKinds);
         regenerated.add(name);
         messages.add("connector file " + name + ".yaml replaced by the new template of pack '" + pack + "': it was an older generation that named tables "

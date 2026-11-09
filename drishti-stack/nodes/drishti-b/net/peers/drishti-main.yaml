@@ -12,4 +12,4 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 # The seed: where drishti-b knocks when it joins.
-url: http://${DRISHTI_STACK_HOST}:18480     # the seed's real address (start.sh sets it)
+url: http://${DRISHTI_STACK_HOST}:18480     # the seed's real address (bin/start-cluster sets it)

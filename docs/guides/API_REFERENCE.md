@@ -1243,7 +1243,7 @@ Administrators; a personal token needs the `node:drain` scope for the `POST`.
 | Method | Path | Notes |
 |---|---|---|
 | `GET` | `/admin/node` | `{node, drained, since, safeToStop, parts: [{name (net, var-shards), draining, detail, safeToStop}], readiness: {status (UP, DOWN, OUT_OF_SERVICE), enabled, waitingFor: {gate: [line]}}}`: what `/actuator/health/readiness` waits for (joining, an engine's newest date opening, an owned VaR shard not ready) and the drain's state |
-| `POST` | `/admin/node/drain` | body `{"on": true}` (no body: on) drains Drishti\*net's forwarding and the VaR shards at once and turns readiness `OUT_OF_SERVICE`; `safeToStop` once every part has handed its work over (the forwarding after `drishti.node.drain.settle-seconds`, the shards once none is held here). `{"on": false}` takes the node back (a restart does too). The same answer as the `GET`. Audited as `node-drain`, `node-undrain`. The stop hooks (`deploy/bin/drishti-node.sh`) and the rolling upgrade runner (`tools/rolling.py`) call it |
+| `POST` | `/admin/node/drain` | body `{"on": true}` (no body: on) drains Drishti\*net's forwarding and the VaR shards at once and turns readiness `OUT_OF_SERVICE`; `safeToStop` once every part has handed its work over (the forwarding after `drishti.node.drain.settle-seconds`, the shards once none is held here). `{"on": false}` takes the node back (a restart does too). The same answer as the `GET`. Audited as `node-drain`, `node-undrain`. The stop hooks (`bin/drishti-node.sh`) and the rolling upgrade runner (`tools/rolling.py`) call it |
 
 ```bash
 curl -s -X POST -H "Authorization: Bearer $DRISHTI_DRAIN_TOKEN" -H 'Content-Type: application/json' -d '{"on":true}' $B/admin/node/drain | jq '{drained, safeToStop}'

@@ -17,18 +17,25 @@
 . (Join-Path $PSScriptRoot 'lib\common.ps1')
 
 $usage = @'
-usage: bin\status.ps1 [--data-dir DIR ...] [--env-file FILE]
+usage: bin\status.ps1 [--data-dir DIR ...] [--env-file FILE] [--cluster FILE]
 
 For each pid file in <data>\run (server.pid, server-<node>.pid, console.pid): the process id, whether it runs, its port, whether
 its health URL answers, and the address other machines open.
 
   --data-dir DIR      the data folder (repeatable; default DRISHTI_DATA_DIR, else <drishti>\data)
   --env-file FILE     read DRISHTI_DATA_DIR from this file
+  --cluster FILE      a cluster file: also the members each node sees and the console's servers
   -h, --help          this text
 
 Exit codes: 0 every process found runs and answers (or none was started); 1 one is not running or not answering; 2 a wrong option.
 '@
 
+if ($args -contains '--cluster') {
+    $py = Get-ToolsPython
+    if (-not $py) { Fail 'no Python found for --cluster' 1 }
+    & $py (Join-Path $PSScriptRoot 'lib\cluster.py') status @args
+    exit $LASTEXITCODE
+}
 $o = Read-Options $args @{ datadir = 'list'; envfile = 'value' }
 if ($o['help']) { Write-Host $usage; exit 0 }
 if ($o['envfile']) { Import-EnvFile $o['envfile'] -Quiet }

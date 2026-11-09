@@ -230,6 +230,8 @@ This section is the one place for the full list of options; [bin/README.md](../b
 | `status` | every process this machine started with `bin/`: pid, running or a stale pid, port, whether its health URL answers, its LAN address |
 | `start-all` | one server and one console on this machine, in the background (calls `start-server`, then `start-console`) |
 | `stop-all` | the console, then the server (`--all-nodes`: every node too) |
+| `start-cluster`, `stop-cluster` | a cluster on one machine from a cluster file (`--cluster FILE`, default `drishti-stack/stack.yaml`): every node, then the console, or only those named |
+| `drishti-node` | one node's drain before a stop and its readiness: the stop hook of the service unit and the images |
 
 **`start-server` options**
 
@@ -280,6 +282,8 @@ This section is the one place for the full list of options; [bin/README.md](../b
 | `status` | `--data-dir DIR` (repeatable), `--env-file FILE` |
 | `start-all` | `--demo`, `--env-file FILE`, `--data-dir DIR`, `--server-port N`, `--console-port N`, `--heap SIZE` |
 | `stop-all` | `--data-dir DIR`, `--env-file FILE`, `--all-nodes` |
+| `start-cluster`, `stop-cluster` | `--cluster FILE`, `--data-dir DIR`, then node names (`console` for the console) |
+| `status --cluster FILE` | also shows the members each node sees and the console's servers |
 
 Every script takes `--help` (`-h`; on Windows also `-Help`).
 
@@ -480,7 +484,7 @@ Start-ScheduledTask -TaskName 'Drishti server'
 ```
 
 Do the same for the console with `run-console.ps1` (`bin\start-console.ps1`). Before stopping the task, drain the server:
-`deploy\bin\drishti-node.ps1 drain -Wait 240` ([CLUSTER_GUIDE.md › Drain before a stop](guides/CLUSTER_GUIDE.md#81-drain-before-a-stop)).
+`bin\drishti-node.ps1 drain -Wait 240` ([CLUSTER_GUIDE.md › Drain before a stop](guides/CLUSTER_GUIDE.md#81-drain-before-a-stop)).
 `powershell.exe` is part of Windows: nothing is installed.
 
 **macOS (launchd).** One agent (or daemon, under `/Library/LaunchDaemons`) per process:
@@ -1000,9 +1004,9 @@ t-a: stopped (pid 1977639)
 t-b: stopped (pid 1978776)
 ```
 
-**The repository's own three on one machine.** `drishti-stack/start.sh` starts three servers and a console from `drishti-stack/stack.yaml`
+**The repository's own three on one machine.** `bin/start-cluster.sh` starts three servers and a console from `drishti-stack/stack.yaml`
 through these same scripts, with the real address and the secrets made for you; `status.sh` shows them, `stop.sh` stops them
-([drishti-stack/README.md](../drishti-stack/README.md)). It runs on Linux and macOS; on Windows start the three as above.
+([drishti-stack/README.md](../drishti-stack/README.md)). The same scripts run on Windows (`bin\start-cluster.cmd`).
 
 ### 10.7 Verify the cluster, step by step
 
@@ -1035,7 +1039,7 @@ curl -s -X POST -H "Authorization: Bearer $ADMIN_TOKEN" -H 'Content-Type: applic
 curl -s -H "Authorization: Bearer $ADMIN_TOKEN" http://<host-c>:18480/api/v1/admin/node        # "safeToStop": true once handed over
 ```
 
-(Windows: `deploy\bin\drishti-node.ps1 drain`; Linux: `deploy/bin/drishti-node.sh drain`; a personal token needs the `node:drain` scope.)
+(Windows: `bin\drishti-node.ps1 drain`; Linux: `bin/drishti-node.sh drain`; a personal token needs the `node:drain` scope.)
 The drain answers at once with what it is handing over; `safeToStop` turns true within a few seconds:
 
 ```text
@@ -1081,9 +1085,9 @@ nodes, then the owner. `tools/rolling-upgrade.sh` (Windows: `tools\windows\rolli
 | | Windows | Linux | macOS |
 |---|---|---|---|
 | start a node | `bin\start-server.cmd --node …` (a scheduled task per node, section 7) | `bin/start-server.sh --node …`; systemd, one unit per node | `bin/start-server.sh --node …`; launchd, one plist per node |
-| drain before a stop | `deploy\bin\drishti-node.ps1 drain -Wait 240` | `ExecStop=` in the unit does it | `deploy/bin/drishti-node.sh drain` before `launchctl unload` |
+| drain before a stop | `bin\drishti-node.ps1 drain -Wait 240` | `ExecStop=` in the unit does it | `bin/drishti-node.sh drain` before `launchctl unload` |
 | the shared lake | SMB, a UNC path | NFS or S3 | NFS or S3 |
-| three on one machine | three `bin\start-server.cmd --node … --port … --node-data …` | the same with `bin/start-server.sh`, or `drishti-stack/start.sh` | the same as Linux |
+| three on one machine | three `bin\start-server.cmd --node … --port … --node-data …` | the same with `bin/start-server.sh`, or `bin/start-cluster.sh` | the same as Linux |
 
 ### 10.10 The cluster QA checklist
 

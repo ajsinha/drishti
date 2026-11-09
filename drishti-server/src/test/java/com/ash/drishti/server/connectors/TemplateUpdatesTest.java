@@ -24,7 +24,6 @@ import com.ash.drishti.engine.source.SourceRegistry;
 import com.ash.drishti.engine.source.SourcesProperties;
 import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.identity.content.ContentStore;
-import com.ash.drishti.identity.content.ContentWatch;
 import com.ash.drishti.identity.content.FileContentStore;
 import com.ash.drishti.packs.ConnectorFiles;
 import com.ash.drishti.packs.PackRegistry;
@@ -41,7 +40,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.mock.env.MockEnvironment;
 
-/** Connectors drifted from their pack's current template: found, merged when additive, fixed by the buttons, shared by the overlay. */
+/** Connectors drifted from their pack's current template: found, merged when additive, fixed by the buttons. */
 class TemplateUpdatesTest {
 
     /** The pack serves kinds trade, valuation and region-economy; its template names all three and a layout for each. */
@@ -75,10 +74,6 @@ class TemplateUpdatesTest {
         Files.writeString(pack.resolve("pack.yaml"), packText);
         Files.writeString(conf.resolve("risk-store.yaml"), staleText);
         ConnectorFiles files = new ConnectorFiles(conf, dir.resolve("state"));
-        ContentConnectorOverlay overlay = store == null ? null : new ContentConnectorOverlay(store);
-        if (overlay != null) {
-            files.overlay(overlay);
-        }
         MockEnvironment env = new MockEnvironment().withProperty("drishti.packs.dir", dir.resolve("packs").toString())
                 .withProperty("drishti.packs.loaded", "risk");
         Map<String, SourcesProperties.ConnectorSettings> startup = new HashMap<>();
@@ -102,16 +97,6 @@ class TemplateUpdatesTest {
             }
         };
         TemplateUpdates u = new TemplateUpdates(m, audit, mode);
-        if (store != null) {
-            ContentWatch watch = new ContentWatch(store, 100);
-            watch.subscribe(ContentConnectorOverlay.PREFIX, keys -> {
-                if (!overlay.refresh(keys).isEmpty()) {
-                    m.scan();
-                }
-            });
-            watch.start();
-            open.add(watch);
-        }
         open.add(u);
         return new Node(files, registry, m, u);
     }
@@ -248,19 +233,14 @@ class TemplateUpdatesTest {
     }
 
     @Test
-    void theMergeIsSharedAcrossTwoNodesThroughTheOverlay(@TempDir Path dir) throws Exception {
-        ContentStore store = new FileContentStore(dir.resolve("fstore"));
-        Node a = node(dir.resolve("a"), store, TemplateUpdates.Mode.ADDITIVE);
-        Node b = node(dir.resolve("b"), store, TemplateUpdates.Mode.NOTIFY);
+    void theMergeIsWrittenToTheFileOfThisNodeOnly(@TempDir Path dir) throws Exception {
+        Node a = node(dir.resolve("a"), null, TemplateUpdates.Mode.ADDITIVE);
+        Node b = node(dir.resolve("b"), null, TemplateUpdates.Mode.NOTIFY);
         a.updates().check();
-        assertThat(Files.readString(dir.resolve("a/connectors/risk-store.yaml"))).isEqualTo(STALE);          // the file, the base, is untouched
-        long end = System.currentTimeMillis() + 10_000;
-        while (System.currentTimeMillis() < end && !b.registry().applied("risk-store").map(c -> c.kinds().contains("valuation")).orElse(false)) {
-            Thread.sleep(50);
-        }
-        assertThat(b.registry().applied("risk-store").orElseThrow().kinds()).contains("valuation", "region-economy");
-        assertThat(b.files().source("risk-store")).isEqualTo("shared");
-        assertThat(b.updates().drift("risk-store").orElseThrow().additive()).isFalse();
+        assertThat(Files.readString(dir.resolve("a/connectors/risk-store.yaml"))).contains("valuation");
+        assertThat(Files.readString(dir.resolve("b/connectors/risk-store.yaml"))).isEqualTo(STALE);
+        assertThat(a.files().source("risk-store")).isEqualTo("file");
+        assertThat(b.updates().drift("risk-store").orElseThrow().additive()).isTrue();
     }
 
     /** 2.9.5: a stamped file nobody edited follows its pack's new template in full, changed values included, the file before kept. */

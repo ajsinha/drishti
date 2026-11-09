@@ -79,8 +79,8 @@ class LauncherMemory(unittest.TestCase):
                     self.assertEqual(text.count("bin/java\" -D"), text.count("-Djdk.nio.maxCachedBufferSize=262144"), "every java line")
 
     def test_the_stack_starts_each_server_with_them(self):
-        """drishti-stack starts every node through bin/start-server.sh, which sets them (one launcher, not two)."""
-        text = (ROOT / "drishti-stack/stack.py").read_text(encoding="utf-8")
+        """bin/start-cluster starts every node through bin/start-server.sh, which sets them (one launcher, not two)."""
+        text = (ROOT / "bin/lib/cluster.py").read_text(encoding="utf-8")
         self.assertIn('bin_run("start-server"', text)
         self.assertNotIn("-XX:MaxDirectMemorySize", text)
         self.assertIn('MALLOC_ARENA_MAX="${MALLOC_ARENA_MAX:-2}"', (ROOT / "bin/start-server.sh").read_text(encoding="utf-8"))
