@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Rupaka phase 3 (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 8): the charts and cards of a report, drawn from one visual's query result. Charts are ECharts (vendored), cards are
    plain elements. Every renderer takes the host element, the visual (as the report model has it), the result ({columns, rows, meta, highlight}) and a context
    (the dataset index, the palette, and the callbacks that make a mark interactive), and returns {dispose, resize}. A chart can be driven from the keyboard:

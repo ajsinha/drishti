@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Report visuals that are Drishti Elements (the sunburst and icicle of drishti-tree, the calendar of drishti-chart, the decomposition tree of
    drishti-tree): this file only hands a visual's answer to its element and turns the element's events into the report's selection. It draws
    nothing itself. Linked brushing: what a drag on a line, area, histogram or scatter selects. */
