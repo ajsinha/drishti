@@ -640,7 +640,7 @@ One trade's (or one position's) P&L under every scenario of the date's scenario 
 
 **To review (5)**
 
-- required inferred from 100% coverage in 2001 documents (1 samples and 2000 test-data documents (data/testdata/market-risk/pnl-vector/pnl-vector-2026-09-30.tar, data/testdata/market-risk/pnl-vector/pnl-vector-2026-09-30.tar, data/testdata/market-risk/pnl-vector/pnl-vector-2026-09-30.tar)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 2001 documents (1 sample and 2000 test-data documents): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source is the pack's first listed source (its README): confirm.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: SOURCE_SYSTEM, TRADE_STATUS, PRODUCT_GROUP, CURRENCY, DIRECTION: confirm they are closed lists.

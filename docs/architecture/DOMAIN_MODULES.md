@@ -233,7 +233,7 @@ the VaR and exposure lakes; package `com.ash.drishti.server.connectors` kept, in
 - **The console asks the server** and nothing else. The public about answer lists the `modules` loaded at the server's start (polled with
   the edition and the engines, kept per console app: `core/modules.py` `State`); `GET /api/v1/modules`, as the person, answers the modules
   loaded and not (with why), the lenses open to them (with the modules and functions each needs) and `functions.off`: every function they
-  may not use (its module off, an administrator's switch, from 2.9.11.i not granted), each with its module and the words to say (*VRES is
+  may not use (its module off, an administrator's switch, from 2.9.11.j not granted), each with its module and the words to say (*VRES is
   not available to you: ask your administrator*). The console caches it per person (`ui.user_cache_seconds`, dropped on a change seen by
   any worker) and sets it per request; an older server that says nothing hides nothing.
 - **Every door asks** `core/modules.py`: the routes (`core/edition_gate.py`: a module's pages and APIs 404), the words
