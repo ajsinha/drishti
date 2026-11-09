@@ -92,9 +92,9 @@ SERIES = ("HISTORY", "OHLC", "FIXINGS", "PNL_SERIES")
 SERIES_MARK = tuple(f'"{k}":[{{"DATE":"' for k in SERIES)
 # Dates a market document holds a fixed number of business days from its business date (an FX spot's value date, an IR curve's pillar
 # maturities; tools/testdata/history.py TENOR_DATES and TENOR_POINTS): moved by the same number of business days as the dates.
-TENOR_DATES = ("SPOT_DATE",)
+TENOR_DATES = ("SPOT_DATE", "MATURITY_DATE")   # MATURITY_DATE: a trade's, so the trade feed stays in step with the VaR records and a date move matures nothing
 TENOR_POINTS = {"POINTS": "MATURITY"}
-TENOR_MARK = ('"SPOT_DATE":"', '"POINTS":[{')
+TENOR_MARK = ('"SPOT_DATE":"', '"MATURITY_DATE":"', '"POINTS":[{')
 
 
 def data_dir() -> pathlib.Path:
