@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A screen mock-up (bi-depth/new-visuals.html), self-contained: system fonts, everything inline, nothing from a CDN.
+  Sunburst and icicle on the hierarchies, calendar heatmap of limit breaches or backtesting exceptions.
+  See README.md beside it. The address keeps option, state and theme.
+-->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<script>if(location.hash.indexOf('light')>=0)document.documentElement.classList.add('light');</script>
+<style>:root{--bg:#0e1628;--bg2:#121c33;--panel:#16213a;--panel2:#1b2744;--line:#26345a;--line2:#1f2b49;--ink:#e7ecf5;--muted:#93a0b8;--faint:#8490a9;--amber:#e8a33a;--amber2:#f2b453;--amber-t:rgba(232,163,58,.14);--link:#7fb2ff;--ok:#5fd39a;--warn:#f2c14e;--bad:#ff7a7a;--onacc:#14100a;--ok-t:rgba(95,211,154,.14);--warn-t:rgba(242,193,78,.16);--bad-t:rgba(255,122,122,.15);--sy-k:#7fb2ff;--sy-s:#5fd39a;--sy-n:#f2b453;--sy-c:#8490a9;--sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;color-scheme:dark}
+html.light{--bg:#f7f5f0;--bg2:#efebe3;--panel:#fff;--panel2:#faf8f4;--line:#e2dcd0;--line2:#ece7dd;--ink:#172440;--muted:#55607a;--faint:#60697e;--amber:#985b0a;--amber2:#7c4805;--amber-t:rgba(184,110,12,.10);--link:#1f5fc4;--ok:#1b784c;--warn:#8a6100;--bad:#b42323;--onacc:#fff;--ok-t:rgba(27,120,76,.10);--warn-t:rgba(138,97,0,.10);--bad-t:rgba(180,35,35,.09);--sy-k:#1f5fc4;--sy-s:#1b784c;--sy-n:#985b0a;--sy-c:#60697e;color-scheme:light}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:13px/1.45 var(--sans)}
+button,select,input,textarea{font:inherit;color:inherit}
+.cap{display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:7px 14px;background:var(--bg2);border-bottom:1px solid var(--line);font-size:12px}
+.cap b{color:var(--amber2);letter-spacing:.04em;text-transform:uppercase;font-size:11px}
+.cap .grp{display:flex;align-items:center;gap:3px}.cap .grp>span{color:var(--faint);margin-right:4px}
+.cap button,.btn{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:3px 9px;cursor:pointer}
+.cap button.on,.btn.on{background:var(--amber);border-color:var(--amber);color:var(--onacc);font-weight:600}
+.btn.pri{background:var(--amber);border-color:var(--amber);color:var(--onacc);font-weight:600}
+.btn:hover,.cap button:hover{border-color:var(--amber)}
+.top{display:flex;align-items:baseline;gap:12px;padding:10px 16px 8px;border-bottom:1px solid var(--line2)}
+.top h1{font-size:15px;margin:0;font-weight:600}.top .sub{color:var(--muted);font-size:12px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:4px}
+.ph{display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid var(--line2);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.ph .r{margin-left:auto;text-transform:none;letter-spacing:0}
+.muted{color:var(--muted)}.num{font-family:var(--mono);font-variant-numeric:tabular-nums}.mono{font-family:var(--mono)}
+.ok{color:var(--ok)}.bad{color:var(--bad)}.warn{color:var(--warn)}.amb{color:var(--amber2)}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border-radius:10px;background:var(--amber-t);border:1px solid var(--amber);font-size:12px}
+.chip button{background:none;border:0;cursor:pointer;color:var(--amber2);padding:0 2px;font-size:13px}
+.note{padding:8px 10px;border-left:3px solid var(--amber);background:var(--amber-t);font-size:12px;border-radius:0 3px 3px 0}
+.refuse{padding:10px 12px;border-left:3px solid var(--bad);background:var(--bad-t);border-radius:0 3px 3px 0}
+select,input[type=text],input[type=number]{background:var(--panel2);border:1px solid var(--line);border-radius:3px;padding:2px 6px}
+table.g{border-collapse:collapse;width:100%;font-size:12px}table.g th{color:var(--muted);text-align:left;font-weight:500;padding:4px 8px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--panel)}table.g td{padding:3px 8px;border-bottom:1px solid var(--line2)}
+pre.y{margin:0;padding:10px 12px;font:12px/1.5 var(--mono);white-space:pre;overflow:auto}
+.y .k{color:var(--sy-k)}.y .s{color:var(--sy-s)}.y .c{color:var(--sy-c)}.y .h{background:var(--amber-t);display:inline-block;min-width:100%}
+svg text{fill:var(--muted);font:11px var(--sans)}
+</style>
+<style>#stage{padding:12px 16px}.lay{display:grid;grid-template-columns:1fr 280px;gap:12px}.bc{margin-bottom:8px}.bc a{color:var(--link);cursor:pointer}
+.hv rect,.hv path{cursor:pointer;stroke:var(--panel);stroke-width:1}.hv g:hover rect,.hv path:hover{filter:brightness(1.15)}.leg{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}.leg i{display:block;width:110px;height:8px;background:linear-gradient(90deg,var(--ok),var(--warn) 55%,var(--bad));border-radius:2px}
+.board{display:grid;grid-template-columns:320px 1fr;gap:12px}.cal rect.day{cursor:pointer}.cal rect.day:hover{stroke:var(--ink)}</style>
+<title>New BI visuals</title>
+</head><body>
+<div id=cap class=cap></div><div class=top><h1 id=ttl></h1><span class=sub id=sub></span></div><div id=stage></div>
+<script>
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+function el(t,a,...c){const e=document.createElement(t);for(const k in a||{}){if(k.startsWith('on'))e[k]=a[k];else if(k==='html')e.innerHTML=a[k];else e.setAttribute(k,a[k]);}c.flat(9).forEach(x=>e.append(x));return e;}
+function rng(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function gauss(r){return Math.sqrt(-2*Math.log(1-r()))*Math.cos(2*Math.PI*r());}
+function money(v){const a=Math.abs(v),s=v<0?'-':'';return s+'$'+(a>=1e9?(a/1e9).toFixed(2)+'B':a>=1e6?(a/1e6).toFixed(1)+'M':a>=1e3?(a/1e3).toFixed(0)+'K':a.toFixed(0));}
+function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+function yaml(t){return t.split('\n').map(l=>{let h=l.endsWith('  #!');if(h)l=l.slice(0,-4);let o=esc(l).replace(/(#.*)$/,'<span class=c>$1</span>').replace(/^(\s*-?\s*)([\w.]+):/,'$1<span class=k>$2</span>:').replace(/('[^']*')/g,'<span class=s>$1</span>');return h?'<span class=h>'+o+'</span>':o;}).join('\n');}
+function pct1(arr){const a=[...arr].sort((x,y)=>x-y);return -a[Math.floor(a.length*.01)];}
+// The caption bar: option, state, theme; the address keeps the choice (#B-error-light)
+function Caption(title,opts,states,go,extra){
+ const parts=location.hash.slice(1).split('-');let o=opts.find(x=>x[0]===parts[0])?parts[0]:opts[0][0];let s=states.find(x=>x[0]===parts[1])?parts[1]:states[0][0];
+ const c=$('#cap');
+ function grp(l,list,cur,set){return el('span',{class:'grp'},el('span',{},l),list.map(x=>el('button',{class:x[0]===cur?'on':'',title:x[1],onclick:()=>set(x[0])},x[1])));}
+ function draw(){c.innerHTML='';c.append(el('b',{},title),grp('Option',opts,o,v=>{o=v;up();}),grp('State',states,s,v=>{s=v;up();}),el('span',{class:'grp'},el('button',{onclick:()=>{document.documentElement.classList.toggle('light');up(true);}},document.documentElement.classList.contains('light')?'Dark':'Light')),el('span',{class:'muted',style:'margin-left:auto'},'Mock-up · synthetic data'));if(extra)c.append(extra());}
+ function up(themeOnly){location.hash=o+'-'+s+(document.documentElement.classList.contains('light')?'-light':'');draw();if(!themeOnly)go(o,s);else if(window.onTheme)onTheme();}
+ window.addEventListener('hashchange',()=>{const p=location.hash.slice(1).split('-');let ch=false;if(p[0]&&p[0]!==o&&opts.find(x=>x[0]===p[0])){o=p[0];ch=true;}if(p[1]&&p[1]!==s&&states.find(x=>x[0]===p[1])){s=p[1];ch=true;}if(ch){draw();go(o,s);}});
+ draw();go(o,s);
+}
+
+const r0=rng(21);function nodeOf(n,c){return{n,c:c||null};}
+const T=nodeOf('Firm',[['Markets',['Rates','Credit','FX']],['Treasury',['ALM','Liquidity']],['Equities',['Cash','Derivs']],['Commodities',['Energy','Metals']]].map(([a,bs])=>nodeOf(a,bs.map(b=>nodeOf(b,['01','02','03','04'].slice(0,2+Math.floor(r0()*3)).map(x=>({n:b.slice(0,3).toUpperCase()+'-'+x,v:(.4+r0()*2.6)*1e8,u:.35+r0()*.85})))))));
+function sumv(n){return n.c?n.c.reduce((a,c)=>a+sumv(c),0):n.v;}function uu(n){return n.c?n.c.reduce((a,c)=>a+sumv(c)*uu(c),0)/sumv(n):n.u;}
+function layout(n,d,x,w,p){n.p=p;n.d=d;n.x=x;n.w=w;if(n.c){const tot=sumv(n);let at=x;n.c.forEach(c=>{const f=sumv(c)/tot;layout(c,d+1,at,w*f,n);at+=w*f;});}}
+layout(T,0,0,1,null);
+const color=u=>{const t=Math.min(1,Math.max(0,(u-.3)/.9));return t<.55?`color-mix(in srgb,var(--warn) ${t/.55*100}%,var(--ok))`:`color-mix(in srgb,var(--bad) ${(t-.55)/.45*100}%,var(--warn))`;};
+let focus=T,cur={sel:null};
+function walk(n,f){f(n);(n.c||[]).forEach(c=>walk(c,f));}
+function bc(cb){const a=[];for(let n=focus;n;n=n.p)a.unshift(n);return el('div',{class:'bc'},a.map((n,i)=>[i?' › ':'',el('a',{onclick:()=>{focus=n;cur.sel=n;cb();}},n.n)]));}
+function detail(n){return el('div',{},el('div',{class:'ph'},n.n),el('table',{class:'g'},[['Notional (size)',money(sumv(n))],['VaR use of limit (colour)',(uu(n)*100).toFixed(0)+'%'],['Level',['Firm','Division','Desk','Book'][n.d]]].map(([a,b])=>el('tr',{},el('td',{class:'muted'},a),el('td',{class:'num',style:'text-align:right'},b)))),el('div',{class:'note',style:'margin:10px',html:'Size is notional because it adds up. VaR does not, so it is colour, read per node from the engine, never summed from the rings.'}));}
+const IDX=[];function ids(n){if(n.id==null){n.id=IDX.length;IDX.push(n);}return n.id;}
+function wrap(h,cb){const d=el('div',{html:h});d.onclick=e=>{const t=e.target.closest('[data-i]');if(!t)return;const n=IDX[+t.dataset.i];cur.sel=n;if(n.c&&n!==focus)focus=n;else if(n===focus&&n.p)focus=n.p;cb();};return d;}
+function sun(size,cb){const c=size/2,maxD=3,band=(c-8)/(maxD+.45),S=[],wf=focus.w,xf=focus.x;walk(focus,n=>{const rd=n.d-focus.d;if(rd<0||rd>maxD||n.w/wf<.0035)return;if(rd===0){S.push(`<circle data-i="${ids(n)}" cx=${c} cy=${c} r=${band*.45-2} fill="${color(uu(n))}" style="cursor:pointer"/><text x=${c} y=${c+4} text-anchor=middle pointer-events=none style="fill:#101622;font-weight:600">${n.n}</text>`);return;}const a0=(n.x-xf)/wf*2*Math.PI-Math.PI/2,a1=(n.x+n.w-xf)/wf*2*Math.PI-Math.PI/2-1e-4,ri=band*(rd-.55),ro=band*(rd+.45)-1,p=(a,r)=>`${c+Math.cos(a)*r} ${c+Math.sin(a)*r}`,lg=a1-a0>Math.PI?1:0;S.push(`<path data-i="${ids(n)}" d="M${p(a0,ri)}A${ri} ${ri} 0 ${lg} 1 ${p(a1,ri)}L${p(a1,ro)}A${ro} ${ro} 0 ${lg} 0 ${p(a0,ro)}Z" fill="${color(uu(n))}"/>`);if(rd<=2&&(a1-a0)*(ri+ro)/2>n.n.length*7){const am=(a0+a1)/2,rt=(ri+ro)/2;S.push(`<text x=${c+Math.cos(am)*rt} y=${c+Math.sin(am)*rt+4} text-anchor=middle pointer-events=none style="fill:#101622;font-weight:600">${n.n}</text>`);}});return wrap(`<svg width=${size} height=${size} class=hv>${S.join('')}</svg>`,cb);}
+function ice(W,H,cb){const maxD=3,S=[],bh=H/(maxD+1),wf=focus.w,xf=focus.x;walk(focus,n=>{const rd=n.d-focus.d;if(rd<0||rd>maxD||n.w/wf<.0035)return;const x=(n.x-xf)/wf*W,w=n.w/wf*W,y=rd*bh;S.push(`<g data-i="${ids(n)}" style="cursor:pointer"><rect x=${x} y=${y} width=${Math.max(0,w-1)} height=${bh-1} fill="${color(uu(n))}"/>${w>46?`<text x=${x+5} y=${y+15} style="fill:#101622;font-weight:600;pointer-events:none">${n.n}</text>${w>70&&bh>38?`<text x=${x+5} y=${y+30} style="fill:#101622;pointer-events:none">${money(sumv(n))}</text>`:''}`:''}</g>`);});return wrap(`<svg width=${W} height=${H} class=hv>${S.join('')}</svg>`,cb);}
+const r1=rng(31),CAL=[];let dd=new Date(Date.UTC(2026,0,1));while(dd.getUTCFullYear()===2026){const wk=dd.getUTCDay(),biz=wk%6!==0,crisis=dd>=new Date(Date.UTC(2026,5,29))&&dd<=new Date(Date.UTC(2026,6,24));let br=0,ex=0;if(biz){br=Math.floor(Math.max(0,gauss(r1)*(crisis?5:1.6)+(crisis?4:.2)));ex=r1()<(crisis?.14:.018)?1:0;}CAL.push({iso:dd.toISOString().slice(0,10),biz,br,ex,w:wk});dd=new Date(+dd+864e5);}
+function calColor(d,m){const v=m==='br'?d.br:d.ex;if(!v)return'var(--panel2)';if(m==='ex')return'var(--bad)';return`color-mix(in srgb,var(--bad) ${Math.min(100,18+v*12)}%,var(--panel2))`;}
+function calendar(W,m,onDay,sel){const cell=Math.min(19,(W-40)/54),S=[];let w=0;CAL.forEach((d,i)=>{if(i&&d.w===1)w++;const y=(d.w+6)%7,x=34+w*cell;if(d.biz)S.push(`<rect class=day data-d="${d.iso}" x=${x} y=${20+y*cell} width=${cell-2} height=${cell-2} rx=2 fill="${calColor(d,m)}" ${sel===d.iso?'stroke="var(--ink)" stroke-width=1.5':''} />`);else S.push(`<rect x=${x+.5} y=${20+y*cell+.5} width=${cell-3} height=${cell-3} rx=1 fill=none stroke="var(--line2)"/>`);if(d.iso.slice(8)==='01')S.push(`<text x=${x} y=14>${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+d.iso.slice(5,7)-1]}</text>`);});['M','W','F'].forEach((l,i)=>S.push(`<text x=20 y=${32+i*2*cell} text-anchor=middle>${l}</text>`));const d=el('div',{class:'cal',html:`<svg width=${W} height=${40+cell*7}>${S.join('')}</svg>`});d.onclick=e=>{const t=e.target.closest('[data-d]');if(t)onDay(t.dataset.d);};return d;}
+function dayNote(iso,m){const d=CAL.find(x=>x.iso===iso);return el('div',{},el('div',{class:'ph'},iso),el('div',{style:'padding:10px',html:m==='br'?`<b class=num>${d.br}</b> limit breaches. ${d.br?'Largest: book RAT-02 at 118% of its VaR limit.':''}`:d.ex?`<b class=bad>Exception</b>: the loss beat the 99% VaR forecast.`:'No exception: the loss stayed inside VaR.'}));}
+const legend=()=>el('div',{class:'leg',style:'margin-top:8px'},'30%',el('i'),'120% of the VaR limit');
+let M='br',sel=CAL.reduce((a,d)=>d.br>a.br?d:a).iso,state='sunburst',opt='A';
+function ttl(){const counts=CAL.reduce((a,d)=>a+(M==='br'?d.br:d.ex),0);$('#ttl').textContent={sunburst:'Sunburst · Division → Desk → Book',icicle:'Icicle · Division → Desk → Book',calendar:M==='br'?`Calendar · ${counts} limit breaches in 2026`:`Calendar · ${counts} backtesting exceptions in 2026`}[state];$('#sub').textContent=state==='calendar'?'Hollow squares are non-business days from the desk calendar':'Click a segment to zoom in; click the centre or the path to go back';}
+function metric(cb){return el('div',{style:'margin-bottom:8px;display:flex;gap:6px;align-items:center'},el('span',{class:'muted'},'Show'),[['br','Limit breaches'],['ex','Backtesting exceptions']].map(([v,l])=>el('button',{class:'btn'+(M===v?' on':''),onclick:()=>{M=v;cb();}},l)));}
+function draw(){const s=$('#stage');s.innerHTML='';ttl();if(opt==='A'){const main=el('div',{class:'panel',style:'padding:12px'}),side=el('div',{class:'panel'});if(state==='calendar'){main.append(metric(draw),calendar(1080,M,d=>{sel=d;draw();},sel));side.append(dayNote(sel,M));s.append(el('div',{class:'lay',style:'grid-template-columns:1fr'},main,side));return;}main.append(bc(draw),state==='sunburst'?sun(460,draw):ice(960,360,draw),legend());side.append(detail(cur.sel||focus));s.append(el('div',{class:'lay'},main,side));}
+ else{s.append(el('div',{class:'board'},el('div',{class:'panel',style:'padding:10px'},bc(draw),sun(290,draw),legend()),el('div',{class:'panel',style:'padding:10px'},el('div',{class:'muted',style:'margin-bottom:6px'},'Scope: '+focus.n),ice(1100,290,draw))),el('div',{class:'panel',style:'padding:10px;margin-top:12px'},metric(draw),calendar(1100,M,d=>{sel=d;draw();},sel),el('div',{class:'muted',style:'margin-top:4px'},`${focus.n}: the calendar is read for the scope picked in the sunburst.`)));}}
+Caption('4 · First new visuals',[['A','One visual at a time'],['B','Board (all linked)']],[['sunburst','Sunburst'],['icicle','Icicle'],['calendar','Calendar']],(o,st)=>{opt=o;state=st;focus=T;cur.sel=null;draw();});
+</script>
+</body></html>
