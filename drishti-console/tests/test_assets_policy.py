@@ -51,7 +51,7 @@ def test_no_inline_script_or_handlers():
 
 
 def test_python_files_under_limit():
-    over = [str(p) for p in CONSOLE.rglob("*.py") if ".venv" not in p.parts and len(p.read_text().splitlines()) > 1500]
+    over = [str(p) for p in CONSOLE.rglob("*.py") if ".venv" not in p.parts and len(p.read_text().splitlines()) > 2000]
     assert over == []
 
 

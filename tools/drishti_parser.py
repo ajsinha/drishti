@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """drishti.py's command tree (``tools/drishti.py``): every group, command and option, and the shared option groups (the server
-connection, ``--json``, the Java tool). Kept apart from drishti.py so the commands and the tree each stay well under the 1,500-line cap;
+connection, ``--json``, the Java tool). Kept apart from drishti.py so the commands and the tree each stay well under the 2,000-line cap;
 ``build_parser(h)`` is given drishti.py's module and binds each command to its ``cmd_*`` function there. The groups that live in their
 own modules (``datacli.py``, ``pivotfncli.py``, ...) register themselves through ``register(...)`` as before."""
 from __future__ import annotations

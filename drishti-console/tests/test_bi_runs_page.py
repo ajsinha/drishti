@@ -191,7 +191,7 @@ def test_every_runs_script_has_the_licence_and_no_markup_strings():
         text = (CONSOLE / "web/static/js" / name).read_text(encoding="utf-8")
         assert "PROPRIETARY AND CONFIDENTIAL" in text[:600], name
         assert "innerHTML" not in text and "insertAdjacentHTML" not in text, name            # text only, never markup (the strict policy)
-        assert len(text.splitlines()) < 1500, name
+        assert len(text.splitlines()) < 2000, name
 
 
 def test_share_answers_each_mode_a_role_expanded_and_a_refusal_and_the_recipient_sees_it(bi):

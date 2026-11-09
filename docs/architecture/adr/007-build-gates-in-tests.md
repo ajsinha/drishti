@@ -23,7 +23,7 @@
 Header and file-size rules must not depend on developer discipline.
 
 ## Decision
-`drishti-it` holds `LicenseHeaderTest`, `SourceFileSizeTest` (1500 lines, UX exempt) and `ArchitectureRulesTest`. `tools/license_headers.py --fix` inserts headers. The parent POM is `spring-boot-starter-parent`, which aligns versions, so there is no separate BOM module. Formatting follows `.editorconfig`; Spotless and Error Prone are deferred.
+`drishti-it` holds `LicenseHeaderTest`, `SourceFileSizeTest` (2000 lines, UX exempt) and `ArchitectureRulesTest`. `tools/license_headers.py --fix` inserts headers. The parent POM is `spring-boot-starter-parent`, which aligns versions, so there is no separate BOM module. Formatting follows `.editorconfig`; Spotless and Error Prone are deferred.
 
 ## Consequences
 A plain `./mvnw verify` enforces the rules. The formatter gate may be added later if drift appears.

@@ -69,7 +69,7 @@ kept as they were planned, with notes where the delivery differed.
   and a merge to **`main`** ("drill it": push `develop`, merge into `main`, push `main`).
 - Sole author: Ashutosh Sinha. Commit messages explain *why*; no trailers.
 - Every file carries the copyright/proprietary header; build fails otherwise.
-- No source file over 1500 lines (UX templates excepted); build fails otherwise.
+- No source file over 2000 lines (UX templates excepted); build fails otherwise.
 - Each wave updates `docs/` (guides, ADRs, CHANGELOG) as it goes, not afterwards.
 
 ## Release rules (product owner, 2026-10-31)

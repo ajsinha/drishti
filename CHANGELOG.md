@@ -23,6 +23,7 @@
 
 ### Docs
 
+- **Source file limit:** 2,000 lines (was 1,500); `SourceFileSizeTest`, the console's checks and the guides.
 - **Roadmap:** every visual lives in Drishti Elements; a Drishti Elements Playground (live pages with editable data) closes the BI depth release.
 - **Roadmap:** a BI depth release (2.9.11.i1b) after i1: many-to-many and both-ways relationships, Rachana filter-context control, a decomposition tree; the comparison with Power BI lists it as planned.
 - **Drishti BI and Power BI compared** (`docs/strategy/BI_AND_POWER_BI.md`, opened from Help through the Reports guide): an area-by-area comparison with each Drishti item labelled built or planned, clustered compute behind BI, and Power BI facts checked against Microsoft's documentation.

@@ -4158,7 +4158,7 @@ What to notice, because each is a rule for your own binder:
   limit from `PanelLimits`.
 - **Computing over a list** (bins, running totals, aggregates, graphs) belongs in `ChartBinder.java`, beside
   `waterfall`..`pivot`, which reads at most the `PanelLimits` it is given and records what it dropped (`more`,
-  `dropped`) so the console can say so. Keep both files under 1,500 lines (`Binder.java` is near the cap; a new
+  `dropped`) so the console can say so. Keep both files under 2,000 lines (`Binder.java` is near the cap; a new
   computing kind belongs in `ChartBinder` for that reason too).
 
 #### 8. Masks, `source` and no access
@@ -4577,7 +4577,7 @@ Always write the Sutra with `rachana: 1` first (`DRS-2009` otherwise) and a lowe
 | the catalogue has all 21 anchors | `drishti-console/tests/test_panel_kinds.py` | a heading is missing, renamed, or not the first of its slug |
 | contrast | `drishti-console/tests/test_contrast.py` | a theme's tokens fall below the ratios |
 | pack Sutras against mangled documents | `ImperfectDataTest` | a pack's panels error on a mangled document |
-| file size, headers, no CDN | `tools/license_headers.py --fix`; the 1,500-line cap | a new file lacks the header; a Java file is too long |
+| file size, headers, no CDN | `tools/license_headers.py --fix`; the 2,000-line cap | a new file lacks the header; a Java file is too long |
 
 ##### 15.3 What the guards do **not** catch
 

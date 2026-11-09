@@ -175,7 +175,7 @@ Most rules are tests, so the fast checks above catch them; the rest is review. T
 | **The servers compute, the browser draws**: every risk and BI number is computed in Java on the server | review; [ARCHITECTURE.md](architecture/ARCHITECTURE.md) |
 | **Branding from configuration**: no product name or owner in code or templates (`ui.product`, `drishti.branding.*`) | `test_branding_guard.py` |
 | **Our files are named `drishti_<name>`** (JS, CSS, images we write); vendored libraries untouched under `static/vendor` with `VENDOR.md`; nothing from a CDN | `test_assets_policy.py` and the asset-name tests |
-| **The copyright header** on every source file; no source file over 1,500 lines | `LicenseHeaderTest`, `tools/license_headers.py`, `SourceFileSizeTest` |
+| **The copyright header** on every source file; no source file over 2,000 lines | `LicenseHeaderTest`, `tools/license_headers.py`, `SourceFileSizeTest` |
 | **Docs with every change**: the guide, tutorial, Help entry and CHANGELOG that a change affects are updated in the same commit; one home per fact (link, do not copy); no bugs or version history in customer documents | `test_docs_rot.py`, `test_docs_gates.py`, `test_help*.py`, `test_guide_images.py` |
 | **Settings**: a new setting is declared where the generator finds it and appears in CONFIGURATION.md | the generated-document checks of the gate |
 | **Commits**: authored as the repository owner, plain sentences that say what changed for a user or an operator, no tool or co-author trailers | review ([DEVELOPER_GUIDE.md › Git](guides/DEVELOPER_GUIDE.md#38-git)) |

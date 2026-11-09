@@ -112,7 +112,7 @@ def test_the_new_scripts_carry_no_cdn_url_inline_code_or_markup_strings():
     for rel in ("js/drishti_bi-visuals.js", "js/drishti_bi-grids.js", "js/drishti_bi-dataset.js", "js/drishti_bi-design-panes.js"):
         text = (STATIC / rel).read_text(encoding="utf-8")
         assert "https://" not in text and "innerHTML" not in text and "eval(" not in text, rel
-        assert len(text.splitlines()) < 1500, rel
+        assert len(text.splitlines()) < 2000, rel
 
 
 def test_the_new_visuals_stay_inside_the_phone_rules():

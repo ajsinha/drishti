@@ -270,7 +270,7 @@ the modules they may use. The map of every document is [docs/README.md](docs/REA
 - **Console**: Python, FastAPI and Jinja2, each domain module's part in `drishti-console/plugins/<module>/`; every front-end asset
   vendored or one of the Elements libraries, under a strict content security policy; it works on phones.
 - **Contributing**: work on `develop`; `./mvnw -q verify` and the console tests
-  (`drishti-console/.venv/bin/python -m pytest -q drishti-console/tests`) must pass; no source file over 1,500 lines; every file carries
+  (`drishti-console/.venv/bin/python -m pytest -q drishti-console/tests`) must pass; no source file over 2,000 lines; every file carries
   the copyright header (`python3 tools/license_headers.py --fix`); every change updates the documents it affects and the changelog in
   the same push; the documentation gates (`drishti-console/tests/test_docs_gates.py`, `config/docs-features.yaml`) keep one guide and one
   tutorial per feature.
