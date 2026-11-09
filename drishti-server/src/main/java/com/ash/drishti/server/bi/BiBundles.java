@@ -26,7 +26,7 @@ import com.ash.drishti.server.bi.report.Report;
 import com.ash.drishti.server.bi.report.ReportParser;
 import com.ash.drishti.server.deploy.PackArchive;
 import com.ash.drishti.server.security.PackAccess;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.ash.drishti.server.security.RoleCatalog;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -22,7 +22,7 @@ import com.ash.drishti.server.bi.engine.QueryService;
 import com.ash.drishti.server.bi.layer.DatasetDef;
 import com.ash.drishti.server.bi.mq.ModelCatalog;
 import com.ash.drishti.server.bi.mq.MqException;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HexFormat;

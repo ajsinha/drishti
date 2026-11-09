@@ -28,7 +28,7 @@ import com.ash.drishti.rachana.SutraProblem;
 import com.ash.drishti.rachana.SutraRegistry;
 import com.ash.drishti.rachana.model.Sutra;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+- **Kernel boundary (P1):** the core names no banking string (`tools/domain_strings_allowed.yaml` is empty); banking's words go through `DomainVocabulary` and the
+  console's new plugin hooks (reserved words, console commands, phone pages, connector actions, the view toolbar slot). New `drishti-kernel-api` jar (kernel API 0.1) holds
+  the SPIs of KERNEL_AND_MODULES section 2.3, with `ApiSurfaceTest` pinning the surface; `KernelWithoutModulesTest` boots the kernel with no banking on the class path.
+
 ### Operations
 
 - **One home for start and stop scripts.** `bin/start-cluster`, `bin/stop-cluster` (`.sh`, `.ps1`, `.cmd`) and `bin/status --cluster FILE` start, stop and show a cluster on one machine from a cluster file (default `drishti-stack/stack.yaml`, the same format). `drishti-stack/` is configuration only. **`drishti-stack/start.sh`, `stop.sh` and `status.sh` are gone: run `bin/start-cluster.sh`, `bin/stop-cluster.sh` and `bin/status.sh --cluster drishti-stack/stack.yaml`.** The server jar copy moves to `data/stack/server.jar`. `deploy/bin/drishti-node` is now `bin/drishti-node`.

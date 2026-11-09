@@ -20,8 +20,8 @@ import static org.assertj.core.data.Offset.offset;
 
 import com.ash.drishti.bicompute.cache.StateCache;
 import com.ash.drishti.bicompute.core.PivotCore;
-import com.ash.drishti.bicompute.core.PivotView;
-import com.ash.drishti.bicompute.spi.Viewer;
+import com.ash.drishti.kernel.api.pivot.PivotView;
+import com.ash.drishti.kernel.api.pivot.Viewer;
 import com.ash.drishti.bicompute.whatif.Overlay;
 import com.ash.drishti.bicompute.whatif.WhatIf;
 import java.util.List;

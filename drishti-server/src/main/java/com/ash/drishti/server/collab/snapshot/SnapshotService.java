@@ -32,7 +32,7 @@ import com.ash.drishti.identity.collab.ShareStore;
 import com.ash.drishti.server.collab.Principals;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.server.security.PackAccess;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import java.io.IOException;

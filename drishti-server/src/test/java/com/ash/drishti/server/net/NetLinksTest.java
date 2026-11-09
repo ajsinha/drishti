@@ -100,7 +100,7 @@ class NetLinksTest {
 
     @Test
     void aReadThatGoesToThePeersWaitsThePeerBudgetAndAForwardedOneTheLocalOne() {
-        var rita = new com.ash.drishti.server.security.Principal("rita", List.of("risk"));
+        var rita = new com.ash.drishti.kernel.api.security.Principal("rita", List.of("risk"));
         var local = java.time.Duration.ofMillis(40);
         var trade = com.ash.drishti.api.EntityRef.of("trade", "IRS-48213");
         var latest = com.ash.drishti.api.AsOf.LATEST;

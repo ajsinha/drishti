@@ -274,7 +274,7 @@ drishti-select.studio-select, drishti-multiselect.studio-select { background: tr
 .adm-dialog form { display: flex; flex-direction: column; gap: var(--d-sp-8); }
 .adm-dialog label { display: flex; flex-direction: column; gap: var(--d-sp-3_2); color: var(--d-muted); font-size: var(--d-fs-13_6); }
 .adm-dialog .studio-in { width: 100%; }
-/* deleting a saved VaR basket (drishti_scope-delete.js, on the VaR explorer and Admin -> Ad-hoc scopes) */
+/* deleting a saved VaR basket (a module's confirm dialog) */
 .sd-dialog p { margin: 0 0 var(--d-sp-8); }
 .sd-dialog .sd-reason { margin: var(--d-sp-4_8) 0 var(--d-sp-6_4); }
 .sd-danger { background: var(--d-bad); border-color: var(--d-bad); color: var(--d-on-color); }

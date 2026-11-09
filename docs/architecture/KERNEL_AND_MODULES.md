@@ -203,6 +203,13 @@ the whole surface, `kernelApi: MAJOR.MINOR`, separate from the product version (
 **Existing SPIs** (built for the domain split; the banking module fills them today). Each moves into `drishti-kernel-api` under
 `com.ash.drishti.kernel.api.*`, keeping its shape; banking's use is in brackets.
 
+Built in `drishti-kernel-api` (kernel API **0.1**; the jar is on the class path of the kernel modules, `ApiSurfaceTest` pins its surface):
+`ComputeEngine` (`kernel.api.engines`), `PivotProvider` and `PivotSourceProvider` with their value types (`kernel.api.pivot`), `ViewAugmenter`
+(`kernel.api.view`), `Explainer`, `ExplainRequest`, `Explanation` (`kernel.api.explain`), `Principal` (`kernel.api.security`), `ShardedMeasure` and
+`ShardGather` (`kernel.api.shard`), `CapacityFigures`, `HealthFigures`, `ApiAlias`, `OfficialResults`, and the new `DomainVocabulary` (`kernel.api.vocabulary`).
+Still at their old homes and to move with i2: `FunctionProvider` (its `EvalContext` carries the formats), `CacheGroup`/`CacheReport` (Caffeine and
+`MemoryBudget` in their shape), `ApprovalSource`, `FlightForm` (Arrow types); `SourcePlugin`, `StorageProvider` and `ProviderFactory` stay kernel-only, off this jar.
+
 | SPI (today's home) | What a module contributes | Banking |
 |---|---|---|
 | `ComputeEngine` (`drishti-api` compute) | a compute engine with its switch, words and health | VaR, exposure, FRTB-SA, SIMM, sensitivities, MR cube |

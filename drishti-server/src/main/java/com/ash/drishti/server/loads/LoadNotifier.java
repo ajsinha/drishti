@@ -23,7 +23,7 @@ import com.ash.drishti.server.collab.InboxService;
 import com.ash.drishti.server.collab.Principals;
 import com.ash.drishti.server.collab.mail.EmailNotifier;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.LinkedHashSet;

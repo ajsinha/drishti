@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.bicompute.custom;
 
-import com.ash.drishti.bicompute.spi.AggFunction;
+import com.ash.drishti.kernel.api.pivot.AggFunction;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import java.io.IOException;

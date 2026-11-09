@@ -15,9 +15,9 @@
  */
 package com.ash.drishti.bicompute.python;
 
-import com.ash.drishti.bicompute.spi.AggFunction;
-import com.ash.drishti.bicompute.spi.Batch;
-import com.ash.drishti.bicompute.spi.Kind;
+import com.ash.drishti.kernel.api.pivot.AggFunction;
+import com.ash.drishti.kernel.api.pivot.Batch;
+import com.ash.drishti.kernel.api.pivot.Kind;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import java.util.List;

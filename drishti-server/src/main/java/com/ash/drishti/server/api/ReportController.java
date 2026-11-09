@@ -20,7 +20,7 @@ import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.identity.PreferenceStore;
 import com.ash.drishti.server.reports.ReportService;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.util.ArrayList;
 import java.util.List;

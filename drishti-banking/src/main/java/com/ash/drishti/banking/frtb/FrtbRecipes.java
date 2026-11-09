@@ -20,7 +20,7 @@ import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.banking.compute.frtb.FrtbChoices;
 import com.ash.drishti.banking.compute.frtb.FrtbSa;
 import com.ash.drishti.banking.compute.frtb.Sbm;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import java.io.IOException;

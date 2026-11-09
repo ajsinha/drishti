@@ -16,9 +16,9 @@
 package com.ash.drishti.bicompute.whatif;
 
 import com.ash.drishti.bicompute.core.PivotCore;
-import com.ash.drishti.bicompute.core.PivotView;
-import com.ash.drishti.bicompute.spi.PivotProvider;
-import com.ash.drishti.bicompute.spi.Viewer;
+import com.ash.drishti.kernel.api.pivot.PivotView;
+import com.ash.drishti.kernel.api.pivot.PivotProvider;
+import com.ash.drishti.kernel.api.pivot.Viewer;
 import com.ash.drishti.bicompute.sql.TabularProvider;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
@@ -29,7 +29,7 @@ import java.util.Map;
  * What-if inside the pivot (ARCHITECTURE.md section 26.7, item 3): the view as it is and the view with an {@link Overlay}, cell by cell, with
  * the differences. The what-if runs on a core of its own over the same executor, the same partial-state cache (keys carry the overlay's
  * digest, so the original's states are reused and only the overlay's are new) and the same custom functions; nothing is written anywhere.
- * Sources of the tabular provider only: VaR's what-if is the VaR engine's own arithmetic ({@code /api/v1/var/whatif}).
+ * Sources of the tabular provider only: a compute engine's what-if is its own arithmetic, under its own API.
  */
 public final class WhatIf {
 

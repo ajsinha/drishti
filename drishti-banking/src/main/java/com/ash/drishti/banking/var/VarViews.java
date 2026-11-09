@@ -26,7 +26,7 @@ import com.ash.drishti.banking.compute.var.VarCalc;
 import com.ash.drishti.banking.compute.var.VarLens;
 import com.ash.drishti.banking.compute.var.VarMath;
 import com.ash.drishti.compute.vector.OrdinalSet;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;

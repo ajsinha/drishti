@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.bicompute.cluster;
 
-import com.ash.drishti.bicompute.core.AggregationPlan;
-import com.ash.drishti.bicompute.core.Partials;
+import com.ash.drishti.kernel.api.pivot.AggregationPlan;
+import com.ash.drishti.kernel.api.pivot.Partials;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import java.util.ArrayList;

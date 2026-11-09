@@ -21,7 +21,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 
 import com.ash.drishti.banking.compute.var.VarLens;
 import com.ash.drishti.server.PinnedBusinessDate;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.ash.drishti.server.security.TokenVerifier;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

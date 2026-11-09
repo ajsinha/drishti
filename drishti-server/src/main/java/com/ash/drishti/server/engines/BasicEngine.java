@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.engines;
 
+import com.ash.drishti.kernel.api.engines.ComputeEngine;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.IntSupplier;

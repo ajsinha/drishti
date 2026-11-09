@@ -16,7 +16,7 @@
 package com.ash.drishti.server.alerts;
 
 import com.ash.drishti.server.dist.SubscriptionService.Person;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.util.List;
 import java.util.Optional;
 

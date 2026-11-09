@@ -612,9 +612,9 @@
       else if (act === 'test') { openExisting(me, b).then(function () { $('[data-test]').click(); }); }
       else if (act === 'enable' || act === 'disable') { toggle(me, act === 'enable', b); }
       else if (act === 'reset') { reset(me); }
-      else if (act === 'var-apply-now') {               // a var-pv-stream connector: its waiting window applied now (VAR_GUIDE.md 8.4)
+      else if (act === 'post-action') {               // a module's connector action (core/plugins.py connector_action)
         b.disabled = true;
-        fetch('/api/var/intraday/streams/' + q(me) + '/apply', { method: 'POST' }).then(function (r) {
+        fetch(b.dataset.url.replace('{name}', q(me)), { method: 'POST' }).then(function (r) {
           return r.json().catch(function () { return {}; }).then(function (x) { return { ok: r.ok, status: r.status, body: x }; });
         }).then(function (r) {
           b.disabled = false;

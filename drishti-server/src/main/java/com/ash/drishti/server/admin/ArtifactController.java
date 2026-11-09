@@ -18,7 +18,7 @@ package com.ash.drishti.server.admin;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;

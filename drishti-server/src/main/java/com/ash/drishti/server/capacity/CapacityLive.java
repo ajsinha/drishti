@@ -15,10 +15,11 @@
  */
 package com.ash.drishti.server.capacity;
 
+import com.ash.drishti.kernel.api.capacity.CapacityFigures;
 import com.ash.drishti.server.api.ProcessResources;
 import com.ash.drishti.server.api.RequestActivity;
 import com.ash.drishti.server.disk.DiskBudget;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.lang.management.ManagementFactory;

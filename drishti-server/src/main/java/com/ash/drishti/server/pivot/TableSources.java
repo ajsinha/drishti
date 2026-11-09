@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.server.pivot;
 
-import com.ash.drishti.bicompute.spi.PivotProvider;
-import com.ash.drishti.bicompute.spi.Viewer;
+import com.ash.drishti.kernel.api.pivot.PivotProvider;
+import com.ash.drishti.kernel.api.pivot.Viewer;
 import com.ash.drishti.bicompute.sql.DuckDbExecutor;
 import com.ash.drishti.bicompute.sql.TabularSource;
 import com.ash.drishti.engine.ViewerContext;

@@ -15,9 +15,9 @@
  */
 package com.ash.drishti.bicompute.cluster;
 
-import com.ash.drishti.bicompute.core.AggregationPlan;
-import com.ash.drishti.bicompute.core.CellKey;
-import com.ash.drishti.bicompute.core.Partials;
+import com.ash.drishti.kernel.api.pivot.AggregationPlan;
+import com.ash.drishti.kernel.api.pivot.CellKey;
+import com.ash.drishti.kernel.api.pivot.Partials;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

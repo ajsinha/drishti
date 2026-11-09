@@ -27,7 +27,7 @@ import com.ash.drishti.server.bi.gov.ImpactAnalyzer;
 import com.ash.drishti.server.governance.GovernanceProperties;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.server.security.PackAccess;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.ash.drishti.server.security.RoleCatalog;
 import com.ash.drishti.server.security.SecurityProperties;
 import com.fasterxml.jackson.databind.JsonNode;

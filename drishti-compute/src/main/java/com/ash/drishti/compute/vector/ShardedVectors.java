@@ -151,11 +151,11 @@ public final class ShardedVectors implements Vectors, SetSums {
         }
         Object ctx = remote.context();
         int[] asked = touched.stream().mapToInt(Integer::intValue).toArray();
-        return com.ash.drishti.compute.shard.ShardGather.gather(asked, i -> parts.get(i).held(), i -> {
+        return com.ash.drishti.kernel.api.shard.ShardGather.gather(asked, i -> parts.get(i).held(), i -> {
             double[] v = sums.sum(parts.get(i).rows(), slices[i]);
             remote.held(parts.get(i).shard(), ctx);
             return v;
-        }, i -> remote.sum(parts.get(i).shard(), slices[i], ctx), com.ash.drishti.compute.shard.ShardGather.sum(width), ASK);
+        }, i -> remote.sum(parts.get(i).shard(), slices[i], ctx), com.ash.drishti.kernel.api.shard.ShardGather.sum(width), ASK);
     }
 
     /** The index in {@link #parts} of the shard holding {@code row}. */
@@ -410,7 +410,7 @@ public final class ShardedVectors implements Vectors, SetSums {
         if (failed != null) {
             throw failed;
         }
-        com.ash.drishti.compute.shard.ShardGather.Combine<double[]> combine = com.ash.drishti.compute.shard.ShardGather.sum(width);
+        com.ash.drishti.kernel.api.shard.ShardGather.Combine<double[]> combine = com.ash.drishti.kernel.api.shard.ShardGather.sum(width);
         List<double[]> out = new ArrayList<>(sets.size());
         for (int s = 0; s < sets.size(); s++) {
             double[] acc = combine.zero();

@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.ash.drishti.api.DataNode;
-import com.ash.drishti.bicompute.spi.FigureSource;
+import com.ash.drishti.kernel.api.pivot.FigureSource;
 import com.ash.drishti.common.JsonCodec;
 import com.ash.drishti.rachana.el.ElCompiler;
 import com.ash.drishti.rachana.el.ElException;

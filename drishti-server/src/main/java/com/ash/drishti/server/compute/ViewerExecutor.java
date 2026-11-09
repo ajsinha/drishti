@@ -16,7 +16,7 @@
 package com.ash.drishti.server.compute;
 
 import com.ash.drishti.api.compute.Viewer;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.util.List;
 import java.util.concurrent.AbstractExecutorService;
 import java.util.concurrent.ExecutorService;

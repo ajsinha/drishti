@@ -21,7 +21,7 @@ import com.ash.drishti.identity.UserService;
 import com.ash.drishti.rachana.SutraRegistry;
 import com.ash.drishti.rachana.model.Sutra;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.ash.drishti.server.security.SecurityProperties;
 import java.io.IOException;
 import java.io.UncheckedIOException;

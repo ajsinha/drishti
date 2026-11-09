@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.pivot;
 
-import com.ash.drishti.bicompute.spi.PivotProvider;
+import com.ash.drishti.kernel.api.pivot.PivotProvider;
 import com.ash.drishti.bicompute.sql.DuckDbExecutor;
 import com.ash.drishti.bicompute.sql.TabularSource;
 import java.util.LinkedHashMap;

@@ -23,7 +23,7 @@ import com.ash.drishti.api.Provenance;
 import com.ash.drishti.common.JsonCodec;
 import com.ash.drishti.engine.source.SourceRouter;
 import com.ash.drishti.engine.source.derived.GroupShares;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;

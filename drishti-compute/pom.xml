@@ -30,6 +30,7 @@
     and their approval; the in-memory vector store (row-major double[] chunks, ordinal sets, parallel sums under a memory budget), sharding
     and the reactive connectors. Generic: a domain's maths lives in its own compute module (drishti-compute-banking)</description>
   <dependencies>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-kernel-api</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
     <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-databind</artifactId></dependency>
     <dependency><groupId>com.fasterxml.jackson.dataformat</groupId><artifactId>jackson-dataformat-yaml</artifactId></dependency>

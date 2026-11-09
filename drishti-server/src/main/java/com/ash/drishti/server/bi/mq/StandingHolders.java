@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.bi.mq;
 
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.http.HttpResponse;

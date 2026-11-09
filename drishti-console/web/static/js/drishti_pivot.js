@@ -383,7 +383,7 @@
         + (cell.notes && cell.notes[m.label] ? '<dt>Note</dt><dd>' + esc(cell.notes[m.label]) + '</dd>' : "")
         + (ref ? '<dt>Reference</dt><dd class="mono">' + esc(ref) + '</dd>' : '<dt>Reference</dt><dd>save the view to name its cells</dd>')
         + '</dl><div class="pv-pop-b"><button type="button" class="pv-btn" data-pop-rows>Rows (' + esc(cell.members) + ')</button>'
-        + (cell.scope && p.provider === "var" ? ' <a class="pv-btn" href="/var?scope=' + encodeURIComponent(cell.scope) + '">Ask the VaR engine</a>' : "")
+        + (cell.scope && ((state.catalogue || {}).notes || {}).cellLink ? ' <a class="pv-btn" href="' + state.catalogue.notes.cellLink.href + encodeURIComponent(cell.scope) + '">' + esc(state.catalogue.notes.cellLink.label) + '</a>' : "")
         + (ref ? ' <button type="button" class="pv-btn" data-pop-copy>Copy reference</button>' : "") + '</div><div data-pop-rowsbox></div>';
       if (sw()) { sw().popover(pop, key, m, cell); }   // the cell's comments, and how the answer was computed
       pop.querySelector("[data-pop-rows]").onclick = function () { rows(key, pop.querySelector("[data-pop-rowsbox]")); };
@@ -581,7 +581,7 @@
       if (!view) {
         var firstText = (c.fields || []).filter(function (f) { return f.type === "string"; })[0];
         var firstNum = (c.fields || []).filter(function (f) { return f.type === "number"; })[0];
-        var values = c.provider === "var" ? [{measure: "var()", as: "VaR"}, {measure: "es()", as: "ES"}]
+        var values = (c.notes || {}).defaultValues ? c.notes.defaultValues
           : [{measure: "count()", as: "Rows"}].concat(firstNum ? [{measure: "sum(" + firstNum.name + ")", as: cap(firstNum.label || firstNum.name)}] : []);
         view = {source: source, date: c.date, rows: firstText ? [firstText.name] : [], columns: [], values: values, filters: {}, expanded: []};
       }
@@ -778,7 +778,7 @@
   /** A per-cell measure's options in its value menu: the MR lens's horizon, confidence and scenario set (the view's options). */
   function lensOptions(col) {
     var c = state.catalogue || {};
-    if (c.provider !== "var" || !(c.notes || {}).lens) { return {items: []}; }
+    if (!(c.notes || {}).lens) { return {items: []}; }
     var o = (viewBody() || {}).options || {};
     var items = [{heading: "VaR options (every value of the view)"},
       {id: "horizon:1d", label: "Horizon 1 day", checked: !o.horizon || o.horizon === "1d"}, {id: "horizon:10d", label: "Horizon 10 days (√10)", checked: o.horizon === "10d"},

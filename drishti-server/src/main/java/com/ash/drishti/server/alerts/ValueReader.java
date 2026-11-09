@@ -16,7 +16,7 @@
 package com.ash.drishti.server.alerts;
 
 import com.ash.drishti.server.alerts.AlertLogic.Reading;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.time.LocalDate;
 
 /**

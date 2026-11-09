@@ -15,9 +15,9 @@
  */
 package com.ash.drishti.server.pivot;
 
-import com.ash.drishti.bicompute.core.CellKey;
-import com.ash.drishti.bicompute.spi.PivotProvider;
-import com.ash.drishti.bicompute.spi.Viewer;
+import com.ash.drishti.kernel.api.pivot.CellKey;
+import com.ash.drishti.kernel.api.pivot.PivotProvider;
+import com.ash.drishti.kernel.api.pivot.Viewer;
 import com.ash.drishti.bicompute.sql.DuckDbExecutor;
 import com.ash.drishti.bicompute.sql.TabularSource;
 import com.ash.drishti.common.DrishtiException;
@@ -27,7 +27,7 @@ import com.ash.drishti.server.data.DataSelection;
 import com.ash.drishti.server.data.DataViewService;
 import com.ash.drishti.server.edition.EditionCommands;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -380,18 +380,18 @@ public final class KindSources implements TabularSource.Resolver {
         }
 
         @Override
-        public com.ash.drishti.bicompute.core.PivotView prepare(com.ash.drishti.bicompute.core.PivotView view) {
+        public com.ash.drishti.kernel.api.pivot.PivotView prepare(com.ash.drishti.kernel.api.pivot.PivotView view) {
             return docView().prepare(view);
         }
 
         /** True when the plan reads a document path (or a parent key): the documents are staged and unnested for it. */
         /** A plan is read file by file only on the direct lake route and only when it reads no document path (those are staged whole). */
         @Override
-        public boolean parted(com.ash.drishti.bicompute.core.AggregationPlan plan) {
+        public boolean parted(com.ash.drishti.kernel.api.pivot.AggregationPlan plan) {
             return lake != null && !readsDocuments(plan);
         }
 
-        private boolean readsDocuments(com.ash.drishti.bicompute.core.AggregationPlan plan) {
+        private boolean readsDocuments(com.ash.drishti.kernel.api.pivot.AggregationPlan plan) {
             java.util.function.Predicate<String> doc = id -> docs.containsKey(id) || id.endsWith(DocView.ALL) || id.startsWith("_p")
                     || DocView.GRAIN.equals(id);
             return plan.dims().values().stream().anyMatch(x -> doc.test(x.field()))
@@ -399,7 +399,7 @@ public final class KindSources implements TabularSource.Resolver {
         }
 
         @Override
-        public Relation relation(DuckDbExecutor e, com.ash.drishti.bicompute.core.AggregationPlan plan) {
+        public Relation relation(DuckDbExecutor e, com.ash.drishti.kernel.api.pivot.AggregationPlan plan) {
             if (!readsDocuments(plan)) {
                 return relation(e);
             }
@@ -415,7 +415,7 @@ public final class KindSources implements TabularSource.Resolver {
             Map<String, String> types = new LinkedHashMap<>();
             fields.forEach(f -> types.put(f.name(), f.type()));
             List<String> names = new ArrayList<>(fields.stream().map(PivotProvider.Field::name).toList());
-            plan.dims().values().stream().map(com.ash.drishti.bicompute.core.Dim::field).filter(f -> f.endsWith(DocView.ALL) && !names.contains(f))
+            plan.dims().values().stream().map(com.ash.drishti.kernel.api.pivot.Dim::field).filter(f -> f.endsWith(DocView.ALL) && !names.contains(f))
                     .forEach(names::add);
             DatasetLayers dl = layers;
             // the dataset route only for a reader without masks: the cached layer holds the values as stored

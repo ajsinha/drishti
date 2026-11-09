@@ -163,7 +163,7 @@ public final class EmbeddedAccessRegistry implements AccessRegistry, AutoCloseab
 
     @Override
     public Optional<String> functionOfApi(String path) {
-        // the most specific function wins: /api/v1/risk/exposure/predeal is PREDEAL's, the rest of /api/v1/risk/exposure EXP's
+        // the most specific function wins: a longer prefix (/x/y/z) takes its calls from a function on /x/y
         String best = null;
         int longest = -1;
         for (ModuleManifest m : snapshot.model.modules()) {

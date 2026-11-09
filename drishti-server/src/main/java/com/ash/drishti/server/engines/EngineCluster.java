@@ -21,7 +21,7 @@ import com.ash.drishti.server.net.DigestService;
 import com.ash.drishti.server.net.NetCallFilter;
 import com.ash.drishti.server.net.NetCaller;
 import com.ash.drishti.server.net.RunCluster;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.Comparator;

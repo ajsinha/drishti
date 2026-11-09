@@ -466,12 +466,12 @@ final class ChartBinder {
         boolean totals = !Boolean.FALSE.equals(p.options().get("totals"));
         boolean nested = bys.size() > 1;
         int k = bys.size();
-        List<com.ash.drishti.bicompute.spi.PivotProvider.Field> fields = new ArrayList<>();
+        List<com.ash.drishti.kernel.api.pivot.PivotProvider.Field> fields = new ArrayList<>();
         for (int j = 0; j < k; j++) {
-            fields.add(new com.ash.drishti.bicompute.spi.PivotProvider.Field("b" + j, "string", bys.get(j), ""));
+            fields.add(new com.ash.drishti.kernel.api.pivot.PivotProvider.Field("b" + j, "string", bys.get(j), ""));
         }
-        fields.add(new com.ash.drishti.bicompute.spi.PivotProvider.Field("x", "string", across, ""));
-        fields.add(new com.ash.drishti.bicompute.spi.PivotProvider.Field("v", "number", value == null ? "rows" : value, ""));
+        fields.add(new com.ash.drishti.kernel.api.pivot.PivotProvider.Field("x", "string", across, ""));
+        fields.add(new com.ash.drishti.kernel.api.pivot.PivotProvider.Field("v", "number", value == null ? "rows" : value, ""));
         Group root = new Group("", List.of());
         LinkedHashSet<String> columns = new LinkedHashSet<>();
         List<Object[]> data = new ArrayList<>();
@@ -541,7 +541,7 @@ final class ChartBinder {
 
     /** Every cell, subtotal and total of the rows, by the pivot engine: {@code rowKey|colKey} to the cell's entry. */
     @SuppressWarnings("unchecked")
-    private static Map<String, Map<String, Object>> engineCells(List<com.ash.drishti.bicompute.spi.PivotProvider.Field> fields, List<Object[]> data,
+    private static Map<String, Map<String, Object>> engineCells(List<com.ash.drishti.kernel.api.pivot.PivotProvider.Field> fields, List<Object[]> data,
             int k, String function) {
         List<Object> rowDims = new ArrayList<>();
         for (int j = 0; j < k; j++) {
@@ -557,8 +557,8 @@ final class ChartBinder {
                 List.of(new com.ash.drishti.bicompute.rows.RowsProvider("panel", "panel", fields, data)),
                 com.ash.drishti.bicompute.cache.StateCache.none(),
                 new com.ash.drishti.bicompute.core.PivotCore.Settings(5_000_000, 5_000_000, Integer.MAX_VALUE, 1, 10, 1, 60, Long.MAX_VALUE));
-        Map<String, Object> answer = core.query(com.ash.drishti.bicompute.spi.Viewer.of(""),
-                com.ash.drishti.bicompute.core.PivotView.parse(view));
+        Map<String, Object> answer = core.query(com.ash.drishti.kernel.api.pivot.Viewer.of(""),
+                com.ash.drishti.kernel.api.pivot.PivotView.parse(view));
         return (Map<String, Map<String, Object>>) answer.get("cells");
     }
 
@@ -576,7 +576,7 @@ final class ChartBinder {
         for (int j = 0; j < path.size(); j++) {
             m.put("b" + j, path.get(j));
         }
-        return com.ash.drishti.bicompute.core.CellKey.of(m).canonical();
+        return com.ash.drishti.kernel.api.pivot.CellKey.of(m).canonical();
     }
 
     /**

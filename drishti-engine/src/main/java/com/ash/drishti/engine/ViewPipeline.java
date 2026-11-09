@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.engine;
 
+import com.ash.drishti.kernel.api.view.ViewAugmenter;
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.EntityDocument;

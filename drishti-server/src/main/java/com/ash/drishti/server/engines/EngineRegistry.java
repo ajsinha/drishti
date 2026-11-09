@@ -15,6 +15,8 @@
  */
 package com.ash.drishti.server.engines;
 
+import com.ash.drishti.kernel.api.vocabulary.DomainVocabulary;
+import com.ash.drishti.kernel.api.engines.ComputeEngine;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.identity.AuditLog;
@@ -413,11 +415,7 @@ public final class EngineRegistry implements AutoCloseable {
     }
 
     private static String because(String id) {
-        return switch (id) {
-            case "frtb-sa" -> ": its scopes (desks, books, limit letters) are VaR's and its inputs are the position sensitivities";
-            case "simm" -> ": it reads the position sensitivities and the factor dictionary";
-            default -> "";
-        };
+        return DomainVocabulary.notes(DomainVocabulary::engineDependencyNotes).getOrDefault(id, "");
     }
 
     private static String words(int n) {

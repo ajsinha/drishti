@@ -17,7 +17,7 @@ package com.ash.drishti.server.collab;
 
 import com.ash.drishti.identity.User;
 import com.ash.drishti.identity.UserService;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import java.time.Duration;

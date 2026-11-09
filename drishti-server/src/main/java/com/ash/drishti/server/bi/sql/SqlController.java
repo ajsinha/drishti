@@ -26,7 +26,7 @@ import com.ash.drishti.server.bi.engine.ArrowIpcWriter;
 import com.ash.drishti.server.bi.mq.ModelCatalog;
 import com.ash.drishti.server.bi.mq.MqException;
 import com.ash.drishti.server.bi.mq.MqService;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;

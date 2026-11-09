@@ -25,7 +25,7 @@ import com.ash.drishti.compute.vector.OrdinalSet;
 import com.ash.drishti.compute.vector.ShardedVectors;
 import com.ash.drishti.net.transport.PeerHttp;
 import com.ash.drishti.server.net.NetCaller;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;

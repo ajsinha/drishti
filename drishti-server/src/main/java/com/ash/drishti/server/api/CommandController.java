@@ -28,7 +28,7 @@ import com.ash.drishti.engine.search.StructuredSearch;
 import com.ash.drishti.engine.source.SourceRouter;
 import com.ash.drishti.engine.view.ViewModel;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.util.List;
 import java.util.Map;
 import java.util.Locale;

@@ -36,7 +36,7 @@ import com.ash.drishti.server.bi.runs.RunService;
 import com.ash.drishti.server.bi.runs.RunState;
 import com.ash.drishti.server.bi.runs.RunStore;
 import com.ash.drishti.server.bi.runs.RunsProperties;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Clock;

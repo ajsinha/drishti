@@ -217,7 +217,7 @@ public record ShardMap(LocalDate date, String version, List<String> key, List<Sh
         return shards.size();
     }
 
-    /** The map in words and numbers (the API's {@code GET /api/v1/var/shards}). */
+    /** The map in words and numbers (the engine API's shards endpoint). */
     public Map<String, Object> describe() {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("businessDate", date.toString());

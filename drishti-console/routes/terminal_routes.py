@@ -27,7 +27,7 @@ from core.settings import changed_at
 from core.backend import BackendError
 from core.csrf import BodyError, json_body
 from routes import api_routes, designer_routes, history_routes, phone_routes
-from core.edition import ADMIN_PAGES, WORDS
+from core.edition import ADMIN_PAGES, mnemonics, words as reserved_words
 from routes.common import ident, packs, render
 from core import modules as _modules
 from core import plugins as _plugins
@@ -117,7 +117,7 @@ async def go(request: Request, q: str = ""):
     from core import menus as _menus
     if (closed := _menus.engine_refused(request, typed)) is not None:   # VAR for a role that does not open VaR: said in words, not run
         return RedirectResponse(f"/t?error={quote(_menus.refusal_for_role(closed))}", status_code=303)
-    if head in WORDS and head != "EXP" and not ed.word_on(head):    # a word the edition (or lens) switches off: said, not run (EXP is also a mnemonic)
+    if head in reserved_words() and head not in mnemonics() and not ed.word_on(head):    # a word the edition (or lens) switches off: said, not run (EXP is also a mnemonic)
         return RedirectResponse(f"/t?error={quote(f'DRS-4023 {head} is not part of {ed.title}: FUNC lists what you can use')}", status_code=303)
     if typed.split(None, 1)[:1] and typed.split(None, 1)[0].upper() in BI_WORDS:        # reserved (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 4), whatever packs define
         return await rupaka(request, typed.split(None, 1)[1].strip() if " " in typed else "")

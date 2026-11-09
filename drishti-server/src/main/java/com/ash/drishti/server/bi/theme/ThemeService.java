@@ -23,7 +23,7 @@ import com.ash.drishti.server.bi.BiFolder;
 import com.ash.drishti.server.bi.BiService;
 import com.ash.drishti.server.bi.report.Report;
 import com.ash.drishti.server.bi.report.ReportParser;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;

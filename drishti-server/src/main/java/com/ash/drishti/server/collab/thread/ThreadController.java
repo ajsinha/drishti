@@ -16,7 +16,7 @@
 package com.ash.drishti.server.collab.thread;
 
 import com.ash.drishti.api.AsOf;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.util.List;
 import java.util.Map;
 import org.springframework.http.HttpStatus;

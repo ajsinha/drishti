@@ -15,13 +15,13 @@
  */
 package com.ash.drishti.bicompute.scale;
 
-import com.ash.drishti.bicompute.core.AggregationPlan.FunctionCall;
+import com.ash.drishti.kernel.api.pivot.AggregationPlan.FunctionCall;
 import com.ash.drishti.bicompute.core.PivotCore;
-import com.ash.drishti.bicompute.core.PivotView;
+import com.ash.drishti.kernel.api.pivot.PivotView;
 import com.ash.drishti.bicompute.core.ScaleOptions;
 import com.ash.drishti.bicompute.functions.Sketches;
-import com.ash.drishti.bicompute.spi.PivotProvider;
-import com.ash.drishti.bicompute.spi.Viewer;
+import com.ash.drishti.kernel.api.pivot.PivotProvider;
+import com.ash.drishti.kernel.api.pivot.Viewer;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -57,7 +57,7 @@ public final class ScalePolicy implements PivotCore.Hooks {
     @Override
     public void functions(Viewer v, PivotView view, PivotProvider p, ScaleOptions o, List<FunctionCall> fns,
             Supplier<PivotProvider.Estimate> estimate, List<String> notes) {
-        if (o.exactness() == ScaleOptions.Exactness.EXACT || !p.capabilities().builtIns() || "var".equals(p.id())) {
+        if (o.exactness() == ScaleOptions.Exactness.EXACT || !p.capabilities().builtIns() || p.exactOnly() != null) {
             return;
         }
         long rows = -1;

@@ -195,7 +195,7 @@
   function haveState(live, plan) { return live == null ? 'none' : live >= plan ? 'ok' : 'act'; }
 
   function renderLiveTable() {
-    var L = st.live || {}, s = L.server || {}, v = L['var'] || {}, d = L.disk || {}, l = L.load || {};
+    var L = st.live || {}, s = L.server || {}, v = L.engine || {}, d = L.disk || {}, l = L.load || {};
     var h = '<thead><tr><th class="l">Figure</th><th>Live</th><th>Plan</th><th></th><th class="l">From</th></tr></thead><tbody>';
     h += liveRow('Positions (newest date)', v.positions == null ? '—' : fmt(v.positions), fmt(value('Positions')), loadState(v.positions, value('Positions')), 'the VaR engine: the newest date loaded');
     h += liveRow('Dates open / hot-dates', v.openDates == null ? '—' : v.openDates + ' / ' + v.hotDates, fmt(value('DatesInMemory')), loadState(v.openDates, value('DatesInMemory')), 'the VaR engine\'s open dates');

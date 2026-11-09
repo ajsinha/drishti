@@ -21,7 +21,7 @@ import com.ash.drishti.server.bi.gov.ImpactAnalyzer;
 import com.ash.drishti.server.bi.gov.ReportRenamer;
 import com.ash.drishti.server.bi.gov.Surface;
 import com.ash.drishti.server.bi.report.ReportParser;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;

@@ -25,7 +25,7 @@ import com.ash.drishti.server.bi.BiAccess;
 import com.ash.drishti.server.bi.BiService;
 import com.ash.drishti.server.data.DataViewService;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.ash.drishti.server.security.RoleCatalog;
 import com.ash.drishti.tables.Problem;
 import com.ash.drishti.tables.TableCodes;
@@ -717,14 +717,14 @@ public final class EditorService {
 
     /** The sums of a read's number columns, by the pivot engine over every row read (never the browser's arithmetic). */
     Map<String, Object> totals(Principal p, TableReads.Read read) {
-        List<com.ash.drishti.bicompute.spi.PivotProvider.Field> fields = new ArrayList<>();
+        List<com.ash.drishti.kernel.api.pivot.PivotProvider.Field> fields = new ArrayList<>();
         List<Integer> at = new ArrayList<>();
         for (int i = 0; i < read.columns().size(); i++) {
             String type = read.types().get(i);
             String c = read.columns().get(i);
             if (("integer".equals(type) || "decimal".equals(type)) && !read.masked().contains(c) && c.matches("[A-Za-z_][A-Za-z0-9_]*")
                     && !c.equals("index") && !c.equals("update_seq")) {
-                fields.add(new com.ash.drishti.bicompute.spi.PivotProvider.Field(c, "number", c, ""));
+                fields.add(new com.ash.drishti.kernel.api.pivot.PivotProvider.Field(c, "number", c, ""));
                 at.add(i);
             }
         }
@@ -751,8 +751,8 @@ public final class EditorService {
         com.ash.drishti.bicompute.core.PivotCore core = new com.ash.drishti.bicompute.core.PivotCore(
                 List.of(new com.ash.drishti.bicompute.rows.RowsProvider("inline", "Preview", fields, rows)),
                 com.ash.drishti.bicompute.cache.StateCache.none(), com.ash.drishti.bicompute.core.PivotCore.Settings.defaults());
-        Map<String, Object> answer = core.query(new com.ash.drishti.bicompute.spi.Viewer(p.user(), p),
-                com.ash.drishti.bicompute.core.PivotView.parse(spec));
+        Map<String, Object> answer = core.query(new com.ash.drishti.kernel.api.pivot.Viewer(p.user(), p),
+                com.ash.drishti.kernel.api.pivot.PivotView.parse(spec));
         if (answer.get("cells") instanceof Map<?, ?> cells && cells.get("*|*") instanceof Map<?, ?> grand && grand.get("values") instanceof Map<?, ?> v) {
             v.forEach((k, x) -> out.put(String.valueOf(k), x));
         }

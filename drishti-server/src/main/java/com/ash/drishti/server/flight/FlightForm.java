@@ -17,7 +17,7 @@ package com.ash.drishti.server.flight;
 
 import com.ash.drishti.flight.FlightBackend;
 import com.ash.drishti.flight.FlightRequest;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.util.List;
 
 /**

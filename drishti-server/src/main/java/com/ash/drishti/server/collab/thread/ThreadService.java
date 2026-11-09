@@ -42,7 +42,7 @@ import com.ash.drishti.server.collab.Principals;
 import com.ash.drishti.server.collab.RateLimits;
 import com.ash.drishti.server.collab.ShareService;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.time.Clock;
 import java.time.Duration;

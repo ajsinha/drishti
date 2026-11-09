@@ -31,6 +31,7 @@
     /api/v1/risk (the old paths answered for one release). A module: its manifest (META-INF/drishti/module.yaml) declares what it brings, and
     its auto-configuration loads only while the access registry says it is on (installed, licensed, enabled)</description>
   <dependencies>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-kernel-api</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-server</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-compute-banking</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-server</artifactId><type>test-jar</type><scope>test</scope></dependency>

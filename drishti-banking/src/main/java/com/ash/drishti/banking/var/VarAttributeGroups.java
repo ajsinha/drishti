@@ -23,7 +23,7 @@ import com.ash.drishti.banking.compute.var.Columns;
 import com.ash.drishti.banking.compute.var.VarBook;
 import com.ash.drishti.compute.vector.OrdinalSet;
 import com.ash.drishti.engine.source.SourceRouter;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;

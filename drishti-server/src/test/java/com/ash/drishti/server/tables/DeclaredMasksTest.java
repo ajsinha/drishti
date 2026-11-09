@@ -23,7 +23,7 @@ import com.ash.drishti.engine.ViewerContext;
 import com.ash.drishti.server.bi.DatasetService;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.ash.drishti.server.security.SecurityProperties;
 import com.ash.drishti.tables.read.TableReads;
 import java.nio.file.Files;

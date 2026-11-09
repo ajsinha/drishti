@@ -21,7 +21,7 @@ picks one from the links on Home and the choice is kept in their settings (``hom
 ``home.landing-by-role`` ({role: landing}) is read and, when configured, wins over the person's choice: the hook for role-based access
 later; Drishti Trading's ``trading.landing-by-role`` (the same shape, for the person's trading role) picks the first landing below their
 choice. ``/api/home/search`` is the landings' one read: the server's search grammar, for a command the edition shows; Drishti Market's
-figures (``/api/home/market/{desk,moves,quality}``) and Drishti Trading's are the banking module's (plugins/banking/market_landing.py and
+figures and Drishti Trading's are the banking module's (plugins/banking/market_landing.py and
 plugins/banking/trading_landing.py, served by plugins/banking/routes/trading_routes.py, with its landing rule registered in core/plugins.py).
 
 The lens: ``/lens/<name>`` opens an edition the server offers as a lens (``drishti.lenses``, one or more) for this person; opening another
@@ -35,6 +35,7 @@ from urllib.parse import quote
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
+from core.edition import landing_refused
 from core import plugins
 from core.backend import BackendError
 from core.edition import Edition
@@ -112,7 +113,7 @@ async def landing_search(request: Request, q: str = ""):
     head = q.split()[0].upper() if q.split() else ""
     if getattr(request.state, "identity", None) is None:
         return JSONResponse({"detail": "sign in first"}, status_code=401)
-    if not ed.active or not head or not ed.command_shown(head) or head in ("BI", "RUPAKA", "FORM", "FUNC", "WHAT", "DATAMAP", "DATA", "EXPORT", "VAR", "SMAT", "PLAY"):
+    if not ed.active or not head or not ed.command_shown(head) or head in landing_refused():
         return JSONResponse({"code": "DRS-4023", "detail": f"{head or 'the command'} is not part of {ed.title if ed.active else 'a landing'}"},
                             status_code=404)
     try:

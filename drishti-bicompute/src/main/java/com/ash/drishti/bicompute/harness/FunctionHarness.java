@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.bicompute.harness;
 
-import com.ash.drishti.bicompute.spi.AggFunction;
-import com.ash.drishti.bicompute.spi.Batch;
+import com.ash.drishti.kernel.api.pivot.AggFunction;
+import com.ash.drishti.kernel.api.pivot.Batch;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;

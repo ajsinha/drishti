@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.capacity;
 
+import com.ash.drishti.kernel.api.capacity.CapacityFigures;
 import com.ash.drishti.common.Branding;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
@@ -22,7 +23,7 @@ import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.server.api.RequestActivity;
 import com.ash.drishti.server.disk.DiskBudget;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;

@@ -29,7 +29,7 @@ import com.ash.drishti.engine.live.ViewStream;
 import com.ash.drishti.engine.view.PanelData;
 import com.ash.drishti.engine.view.ViewModel;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

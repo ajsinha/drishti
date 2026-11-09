@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.engine.search;
 
+import com.ash.drishti.kernel.api.vocabulary.DomainVocabulary;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -101,7 +102,16 @@ public final class PhraseParser {
     private static final Set<String> LESS = Set.of("under", "below", "less", "lower", "<", "smaller");
     private static final Set<String> BIG = Set.of("biggest", "largest", "highest", "top", "most", "greatest", "newest", "latest");
     private static final Set<String> SMALL = Set.of("smallest", "lowest", "least", "bottom", "oldest", "earliest");
-    private static final Set<String> MEASURES = Set.of("mtm", "notional", "amount", "value", "balance", "exposure", "marketvalue", "pnl");
+    private static final List<String> MEASURE_ORDER = measureOrder();
+    private static final Set<String> MEASURES = Set.copyOf(MEASURE_ORDER);
+
+    /** The measure words in preference order: the core's, with each domain module's after {@code balance}. */
+    private static List<String> measureOrder() {
+        List<String> out = new java.util.ArrayList<>(List.of("mtm", "notional", "amount", "value", "balance"));
+        out.addAll(DomainVocabulary.union(DomainVocabulary::phraseMeasures));
+        out.addAll(List.of("marketvalue", "pnl"));
+        return List.copyOf(out);
+    }
     private static final Pattern NUMBER = Pattern.compile("^([-+−]?\\d[\\d,]*(?:\\.\\d+)?)(k|m|mm|mn|bn|b|million|billion|thousand)?$", Pattern.CASE_INSENSITIVE);
     private static final Pattern YEAR = Pattern.compile("^(19|20)\\d\\d$");
     private static final Pattern DATE = Pattern.compile("^\\d{4}-\\d{2}-\\d{2}$");
@@ -481,7 +491,7 @@ public final class PhraseParser {
 
     /** The kind's main number: mtm, notional, amount … in that order, else its first number. */
     private static Field measure(List<Field> fields) {
-        for (String m : List.of("mtm", "notional", "amount", "value", "balance", "exposure", "marketvalue", "pnl")) {
+        for (String m : MEASURE_ORDER) {
             for (Field f : fields) {
                 if (f.type() == Type.NUMBER && f.path().toLowerCase(Locale.ROOT).replace(".", "").equals(m)) {
                     return f;

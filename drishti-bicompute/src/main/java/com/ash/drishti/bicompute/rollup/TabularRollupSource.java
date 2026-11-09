@@ -15,12 +15,12 @@
  */
 package com.ash.drishti.bicompute.rollup;
 
-import com.ash.drishti.bicompute.core.AggregationPlan;
-import com.ash.drishti.bicompute.core.Partials;
-import com.ash.drishti.bicompute.core.PivotView;
+import com.ash.drishti.kernel.api.pivot.AggregationPlan;
+import com.ash.drishti.kernel.api.pivot.Partials;
+import com.ash.drishti.kernel.api.pivot.PivotView;
 import com.ash.drishti.bicompute.functions.Sketches;
-import com.ash.drishti.bicompute.spi.PivotProvider;
-import com.ash.drishti.bicompute.spi.Viewer;
+import com.ash.drishti.kernel.api.pivot.PivotProvider;
+import com.ash.drishti.kernel.api.pivot.Viewer;
 import com.ash.drishti.bicompute.sql.DuckDbExecutor;
 import com.ash.drishti.bicompute.sql.TabularProvider;
 import com.ash.drishti.bicompute.sql.TabularSource;
@@ -111,7 +111,7 @@ public final class TabularRollupSource implements RollupSource {
         for (int i = 0; i < d.functions().size(); i++) {
             fns.add(v.values().get(i).measure() + (d.functions().get(i).strip().endsWith(Sketches.MARK.strip()) ? Sketches.MARK : ""));
         }
-        return new RollupDef(d.id(), d.source(), v.rows().stream().map(com.ash.drishti.bicompute.core.Dim::id).toList(), fns, d.dates(), d.title());
+        return new RollupDef(d.id(), d.source(), v.rows().stream().map(com.ash.drishti.kernel.api.pivot.Dim::id).toList(), fns, d.dates(), d.title());
     }
 
     @Override

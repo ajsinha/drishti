@@ -24,7 +24,7 @@ import com.ash.drishti.identity.collab.OutboxStore;
 import com.ash.drishti.server.collab.Notifier;
 import com.ash.drishti.server.collab.Principals;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;

@@ -40,7 +40,7 @@ import com.ash.drishti.server.collab.thread.CommentRenderer;
 import com.ash.drishti.server.collab.thread.PinnedDocs;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.server.security.PackAccess;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.time.Clock;
 import java.time.Instant;

@@ -38,7 +38,7 @@ import com.ash.drishti.server.bi.layer.ModelDefParser;
 import com.ash.drishti.server.bi.layer.PackDatasets;
 import com.ash.drishti.server.bi.layer.ResolvedDataset;
 import com.ash.drishti.server.bi.layer.Semver;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.ArrayList;

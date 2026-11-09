@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.banking;
 
-import com.ash.drishti.packs.OfficialReaders;
+import com.ash.drishti.kernel.api.official.OfficialResults;
 import java.util.Map;
 
 /**
@@ -23,7 +23,7 @@ import java.util.Map;
  * ({@code config/lakes/banking/var-official.yaml}, {@code ccr-official.yaml}) and the official kinds, each to its publisher's settings prefix, so a
  * pack's reader of them follows the publisher's format. Found with the {@link java.util.ServiceLoader} before any bean exists.
  */
-public final class BankingOfficialResults implements OfficialReaders.OfficialResults {
+public final class BankingOfficialResults implements OfficialResults {
 
     @Override
     public Map<String, String> lakes() {

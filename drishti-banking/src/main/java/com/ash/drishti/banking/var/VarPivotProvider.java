@@ -15,16 +15,16 @@
  */
 package com.ash.drishti.banking.var;
 
-import com.ash.drishti.bicompute.core.AggregationPlan;
-import com.ash.drishti.bicompute.core.CellKey;
-import com.ash.drishti.bicompute.core.CellSet;
-import com.ash.drishti.bicompute.core.Partials;
-import com.ash.drishti.bicompute.core.PivotView;
+import com.ash.drishti.kernel.api.pivot.AggregationPlan;
+import com.ash.drishti.kernel.api.pivot.CellKey;
+import com.ash.drishti.kernel.api.pivot.CellSet;
+import com.ash.drishti.kernel.api.pivot.Partials;
+import com.ash.drishti.kernel.api.pivot.PivotView;
 import com.ash.drishti.bicompute.functions.Final;
-import com.ash.drishti.bicompute.spi.AggFunction;
-import com.ash.drishti.bicompute.spi.Kind;
-import com.ash.drishti.bicompute.spi.PivotProvider;
-import com.ash.drishti.bicompute.spi.Viewer;
+import com.ash.drishti.kernel.api.pivot.AggFunction;
+import com.ash.drishti.kernel.api.pivot.Kind;
+import com.ash.drishti.kernel.api.pivot.PivotProvider;
+import com.ash.drishti.kernel.api.pivot.Viewer;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.banking.compute.var.Columns;
@@ -33,7 +33,7 @@ import com.ash.drishti.banking.compute.var.VarCalc;
 import com.ash.drishti.banking.compute.var.VarMath;
 import com.ash.drishti.compute.vector.OrdinalSet;
 import com.ash.drishti.banking.frtb.FrtbService;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -166,6 +166,11 @@ public final class VarPivotProvider implements PivotProvider {
             return Map.of();
         }
         return Map.of(SOURCE, mr() ? "VaR · MR cube (the VaR engine's trades and scenario vectors)" : "VaR (the VaR engine's trades and scenario vectors)");
+    }
+
+    @Override
+    public String exactOnly() {
+        return "VaR is never sampled: it shows when exact";
     }
 
     @Override
@@ -302,6 +307,8 @@ public final class VarPivotProvider implements PivotProvider {
             notes.put("defaultView", defaultView(o));
         }
         notes.put("folders", FOLDERS);
+        notes.put("cellLink", java.util.Map.of("label", "Ask the VaR engine", "href", "/var?scope="));   // the cell popover's link (drishti_pivot.js)
+        notes.put("defaultValues", java.util.List.of(java.util.Map.of("measure", "var()", "as", "VaR"), java.util.Map.of("measure", "es()", "as", "ES")));
         notes.put("measureGroup", "VaR engine");                         // the field pickers' group of the measures, and each one's note
         notes.put("perCellNote", "Computed per cell by the VaR engine from the cell's own trades: a total is the VaR of its trades, never a sum"
                 + " of the cells (\u03a3 \u2212 total = the diversification)");
@@ -757,9 +764,9 @@ public final class VarPivotProvider implements PivotProvider {
         return new Rows(cols, rows, members.size(), "the cell's trades as the VaR engine holds them; open the cell's scope with VAR <scope>");
     }
 
-    private static Map<String, com.ash.drishti.bicompute.core.Dim> dimsOf(CellKey key) {
-        Map<String, com.ash.drishti.bicompute.core.Dim> m = new LinkedHashMap<>();
-        key.coords().keySet().forEach(d -> m.put(d, new com.ash.drishti.bicompute.core.Dim(d, null)));
+    private static Map<String, com.ash.drishti.kernel.api.pivot.Dim> dimsOf(CellKey key) {
+        Map<String, com.ash.drishti.kernel.api.pivot.Dim> m = new LinkedHashMap<>();
+        key.coords().keySet().forEach(d -> m.put(d, new com.ash.drishti.kernel.api.pivot.Dim(d, null)));
         return m;
     }
 

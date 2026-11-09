@@ -277,7 +277,7 @@ the VaR and exposure lakes; package `com.ash.drishti.server.connectors` kept, in
   counts only where the module is installed.
 - **Rule 4 (strings)**: `tools/domain_strings.py` counts the banking names (command words, engine ids, connectors, API and console paths,
   packages) in the core's code (Java outside the banking modules; the console's core, routes, scripts, styles and templates) against
-  `tools/domain_strings_allowed.yaml`, which only shrinks (a quick file check, `tools/test_domain_strings.py`).
+  `tools/domain_strings_allowed.yaml` (empty since 2.9.11.i1: a line that only looks like banking carries `domain-strings: generic`), which only shrinks (a quick file check, `tools/test_domain_strings.py`).
 
 **Phase 2, second half, as built (2.9.11.f, the configuration):**
 

@@ -40,7 +40,7 @@ public interface TransformRunner {
      *        timestamp is read as one on the pool (the frames carry dates as ISO text), then the result is checked against it
      */
     record Request(Map<String, Object> manifest, List<byte[]> frames, Map<String, Object> params, Path output, int maxRows, long maxBytes,
-            com.ash.drishti.server.security.Principal who, Map<String, String> contract) {
+            com.ash.drishti.kernel.api.security.Principal who, Map<String, String> contract) {
 
         public Request {
             contract = contract == null ? Map.of() : Map.copyOf(contract);
@@ -59,7 +59,7 @@ public interface TransformRunner {
      *
      * @param groupBy the group columns; empty: the whole input is one group
      */
-    default com.fasterxml.jackson.databind.JsonNode measure(com.ash.drishti.server.security.Principal who, Map<String, Object> manifest, Map<String, Object> params,
+    default com.fasterxml.jackson.databind.JsonNode measure(com.ash.drishti.kernel.api.security.Principal who, Map<String, Object> manifest, Map<String, Object> params,
             List<String> groupBy, List<String> columns, List<List<Object>> rows) {
         throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.PYTHON_BUSY, "this runner runs Transforms only");
     }

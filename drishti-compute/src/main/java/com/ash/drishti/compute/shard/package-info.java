@@ -17,7 +17,7 @@
  * The measure-agnostic sharding machinery (docs/guides/CLUSTER_GUIDE.md, VaR and exposure sharding): the shard map and its
  * cut by key ranges ({@link com.ash.drishti.compute.shard.ShardMap}), rendezvous ownership with replicas
  * ({@link com.ash.drishti.compute.shard.ShardOwners}), the handover rule ({@link com.ash.drishti.compute.shard.ShardHandover}) and the
- * coordinator's scatter-gather with its exactly-once check and the measure's own combine ({@link com.ash.drishti.compute.shard.ShardGather}).
- * A measure plugs in through {@code com.ash.drishti.server.shard.ShardedMeasure}.
+ * coordinator's scatter-gather with its exactly-once check and the measure's own combine ({@link com.ash.drishti.kernel.api.shard.ShardGather}).
+ * A measure plugs in through {@code com.ash.drishti.kernel.api.shard.ShardedMeasure}.
  */
 package com.ash.drishti.compute.shard;

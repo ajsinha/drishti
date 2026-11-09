@@ -17,7 +17,7 @@ package com.ash.drishti.server.modules;
 
 import com.ash.drishti.registry.AccessRegistry;
 import com.ash.drishti.registry.Subject;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.ash.drishti.server.security.RequestPaths;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;

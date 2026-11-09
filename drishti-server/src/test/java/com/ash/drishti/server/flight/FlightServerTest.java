@@ -144,7 +144,7 @@ class FlightServerTest {
 
     @Test
     void adminDataOutListsTheServiceAndItsNodes() {
-        var d = dataOut.describe(new com.ash.drishti.server.security.Principal("root", List.of("admin")));
+        var d = dataOut.describe(new com.ash.drishti.kernel.api.security.Principal("root", List.of("admin")));
         assertThat(d).containsKeys("service", "nodes", "live", "recent", "limits", "tokens");
         assertThat(((java.util.Map<?, ?>) d.get("service")).get("running")).isEqualTo(true);
     }

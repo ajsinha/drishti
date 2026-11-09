@@ -26,7 +26,7 @@ import com.ash.drishti.banking.compute.simm.SimmInput;
 import com.ash.drishti.banking.compute.simm.SimmParams;
 import com.ash.drishti.banking.frtb.FrtbData;
 import com.ash.drishti.banking.frtb.FrtbService;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.ash.drishti.banking.var.VarService;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

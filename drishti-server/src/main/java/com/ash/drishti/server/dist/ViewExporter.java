@@ -25,7 +25,7 @@ import com.ash.drishti.engine.view.PanelData;
 import com.ash.drishti.engine.view.ViewModel;
 import com.ash.drishti.server.collab.snapshot.ColumnFilters;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.ArrayList;

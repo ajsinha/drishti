@@ -26,9 +26,9 @@ routers: [plugins.banking.routes.trading_routes, plugins.banking.routes.var_regu
           plugins.banking.routes.smat_routes, plugins.banking.routes.frtb_routes, plugins.banking.routes.simm_routes,
           plugins.banking.routes.play_routes, plugins.banking.routes.exposure_routes, plugins.banking.routes.mcube_routes]
 # files that fill the core's hooks on import (core/plugins.py): the Build home's types, the landings' figures
-registers: [plugins.banking.build_types, plugins.banking.routes.trading_routes]
+registers: [plugins.banking.build_types, plugins.banking.routes.trading_routes, plugins.banking.console_hooks]
 # its other Python modules (the core imports none of them: tests/test_module_boundaries.py)
-code: [plugins.banking.trading_landing, plugins.banking.market_landing, plugins.banking.risk_api]
+code: [plugins.banking.console_hooks, plugins.banking.trading_landing, plugins.banking.market_landing, plugins.banking.risk_api]
 
 # its compute engines: their words, console pages, menus, Help pages, tiles and lenses are the engine catalogue's (config/engines.yaml)
 help: help.yaml
@@ -51,6 +51,8 @@ assets:
   - js/drishti_scenario-matrix.js
   - css/drishti_scenario-matrix.css
   - js/drishti_smat-link.js
+  - js/drishti_scope-delete.js
+  - js/drishti_admin-scopes.js
   - js/drishti_play-link.js
   - js/drishti_stress-window.js
   - css/drishti_stress-window.css
@@ -67,9 +69,11 @@ assets:
 # its templates (the core's never include them; a core screen takes a module's parts through screens: below)
 templates: [terminal/var.html, terminal/var_backtesting.html, terminal/var_reports.html, terminal/var_statistics.html, terminal/exposure.html, terminal/predeal.html,
             terminal/frtb.html, terminal/simm.html, terminal/smat.html, terminal/play.html, terminal/stress_window.html, terminal/_mr_lens.html,
-            terminal/_mr_panes.html, terminal/_risk_elements.html, home/risk_landing.html, home/trading_landing.html, home/market_landing.html, admin/scopes.html]
+            terminal/_mr_panes.html, terminal/_risk_elements.html, terminal/_smat_link.html, home/risk_landing.html, home/trading_landing.html, home/market_landing.html, admin/scopes.html]
 # what it adds to a core screen, while it is on: the Pivot's market-risk preset (lens mr) draws the MR lens's strip and panes
 screens:
+  view:
+    toolbar: [terminal/_smat_link.html]
   pivot:
     when: {lens: mr}
     css: [css/drishti_mr-lens.css]

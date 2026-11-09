@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.bicompute.export;
 
-import com.ash.drishti.bicompute.core.CellKey;
-import com.ash.drishti.bicompute.spi.PivotProvider;
+import com.ash.drishti.kernel.api.pivot.CellKey;
+import com.ash.drishti.kernel.api.pivot.PivotProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import java.io.IOException;

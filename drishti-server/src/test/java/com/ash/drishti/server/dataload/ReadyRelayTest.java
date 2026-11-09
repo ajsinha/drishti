@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.net.transport.PeerHttp;
 import com.ash.drishti.server.engines.EngineGateFilter;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;

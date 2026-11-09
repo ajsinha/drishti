@@ -21,7 +21,7 @@ import com.ash.drishti.engine.view.ViewModel;
 import com.ash.drishti.server.collab.snapshot.SnapshotLayout;
 import com.ash.drishti.server.collab.snapshot.SnapshotModel;
 import com.ash.drishti.server.collab.snapshot.SnapshotPainter;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 import java.time.Clock;

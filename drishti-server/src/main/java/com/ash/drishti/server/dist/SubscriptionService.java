@@ -25,7 +25,7 @@ import com.ash.drishti.server.collab.mail.MailFailures;
 import com.ash.drishti.server.collab.mail.MailRenderer;
 import com.ash.drishti.server.collab.mail.MailTransport;
 import com.ash.drishti.server.collab.mail.RenderedMail;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;

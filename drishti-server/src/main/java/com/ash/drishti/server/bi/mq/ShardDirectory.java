@@ -16,7 +16,7 @@
 package com.ash.drishti.server.bi.mq;
 
 import com.ash.drishti.server.bi.plan.SecuritySignature;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;

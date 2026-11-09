@@ -21,7 +21,7 @@ import json
 from pathlib import Path
 
 from conftest import CONSOLE
-from routes.functions_routes import CONSOLE_COMMANDS
+from core import plugins
 from plugins.banking.routes.var_routes import explain_command, var_command, var_suggestions
 
 WEB = Path(__file__).resolve().parents[1] / "web"
@@ -113,13 +113,14 @@ def test_the_page_carries_a_pivot_cells_view_sent_in_the_body(client):
 
 
 def test_func_lists_var_explain_and_f1_has_the_explain_section(client):
-    assert any(c[0] == "VAR EXPLAIN" and c[4] == "VAR EXPLAIN BANK" for c in CONSOLE_COMMANDS)
+    assert any(c[0] == "VAR EXPLAIN" and c[4] == "VAR EXPLAIN BANK" for c in plugins.console_commands())
     r = client.get("/help/context/explain", follow_redirects=False)
     assert r.status_code == 303 and r.headers["location"].endswith("user-guide#explain-one-for-every-number")
 
 
 def test_a_phone_has_no_old_explain_parts(client):
-    from core.phone import PAGES
+    from core.phone import page_parts_catalogue
+    PAGES = page_parts_catalogue()
 
     for page in ("var", "exposure"):
         assert not [p for p in PAGES[page] if p.startswith("why") or p == "prov"], page

@@ -22,7 +22,7 @@ import com.ash.drishti.identity.UserService;
 import com.ash.drishti.identity.collab.CollabProperties;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.server.security.PackAccess;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.time.Duration;
 import java.util.ArrayList;

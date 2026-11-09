@@ -15,10 +15,11 @@
  */
 package com.ash.drishti.packs;
 
+import com.ash.drishti.kernel.api.official.OfficialResults;
 import java.util.Map;
 
 /** The banking module's official results, as its provider declares them, for this module's own tests (the module itself is not here). */
-public final class TestOfficialResults implements OfficialReaders.OfficialResults {
+public final class TestOfficialResults implements OfficialResults {
 
     @Override
     public Map<String, String> lakes() {

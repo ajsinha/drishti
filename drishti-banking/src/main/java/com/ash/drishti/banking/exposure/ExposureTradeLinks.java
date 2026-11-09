@@ -19,7 +19,7 @@ import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.EntityDocument;
 import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.engine.ViewAugmenter;
+import com.ash.drishti.kernel.api.view.ViewAugmenter;
 import java.util.LinkedHashMap;
 import java.util.Map;
 

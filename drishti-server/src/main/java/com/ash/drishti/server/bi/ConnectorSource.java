@@ -17,7 +17,7 @@ package com.ash.drishti.server.bi;
 
 import com.ash.drishti.server.connectors.ConnectorManager;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;

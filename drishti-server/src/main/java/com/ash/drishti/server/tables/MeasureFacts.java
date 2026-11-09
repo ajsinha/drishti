@@ -16,8 +16,8 @@
 package com.ash.drishti.server.tables;
 
 import com.ash.drishti.bicompute.functions.Functions;
-import com.ash.drishti.bicompute.spi.AggFunction;
-import com.ash.drishti.bicompute.spi.Kind;
+import com.ash.drishti.kernel.api.pivot.AggFunction;
+import com.ash.drishti.kernel.api.pivot.Kind;
 import com.ash.drishti.rachana.el.Expr;
 import com.ash.drishti.rachana.el.Printer;
 import com.ash.drishti.rachana.el.check.Signatures;

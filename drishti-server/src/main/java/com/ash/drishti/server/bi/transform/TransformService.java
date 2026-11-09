@@ -46,7 +46,7 @@ import java.util.function.Supplier;
 public final class TransformService implements AutoCloseable {
 
     /** What to run, built only when the result is not already kept: the manifest, the input frames, the parameters. */
-    public record Prepared(Map<String, Object> manifest, List<byte[]> frames, Map<String, Object> params, com.ash.drishti.server.security.Principal who) {}
+    public record Prepared(Map<String, Object> manifest, List<byte[]> frames, Map<String, Object> params, com.ash.drishti.kernel.api.security.Principal who) {}
 
     /** The result for a reader: the Parquet file, the columns typed from the frame, its rows, whether it was kept, and the time the run took (0 when kept). */
     public record Output(Path file, List<TransformRunner.Column> columns, long rows, boolean cached, long millis) {}

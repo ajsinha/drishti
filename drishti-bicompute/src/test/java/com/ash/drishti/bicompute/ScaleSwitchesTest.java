@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.bicompute.cache.StateCache;
 import com.ash.drishti.bicompute.core.PivotCore;
-import com.ash.drishti.bicompute.core.PivotView;
+import com.ash.drishti.kernel.api.pivot.PivotView;
 import com.ash.drishti.bicompute.core.ScaleOptions;
 import com.ash.drishti.bicompute.functions.SpaceSaving;
 import com.ash.drishti.bicompute.rollup.AggregateAwareness;
@@ -27,7 +27,7 @@ import com.ash.drishti.bicompute.rollup.RollupDef;
 import com.ash.drishti.bicompute.rollup.Rollups;
 import com.ash.drishti.bicompute.rollup.TabularRollupSource;
 import com.ash.drishti.bicompute.scale.ScalePolicy;
-import com.ash.drishti.bicompute.spi.Viewer;
+import com.ash.drishti.kernel.api.pivot.Viewer;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -177,7 +177,7 @@ class ScaleSwitchesTest {
             }
             Map<String, Object> others = rows.stream().filter(r -> Boolean.TRUE.equals(r.get("approximateTop"))).findFirst().orElseThrow();
             assertThat(String.valueOf(others.get("label"))).startsWith("Others (≈");
-            Map<String, Object> oc = cells.values().stream().filter(c -> com.ash.drishti.bicompute.core.CellKey.OTHERS.equals(
+            Map<String, Object> oc = cells.values().stream().filter(c -> com.ash.drishti.kernel.api.pivot.CellKey.OTHERS.equals(
                     ((Map<String, Object>) c.get("coords")).get("CPTY"))).findFirst().orElseThrow();
             assertThat(PivotCoreTest.val(oc, "C")).as("Others: its own members, exactly").isEqualTo(20_000 - shown);
             // ranked by a sum: never by the summary, said in words

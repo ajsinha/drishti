@@ -25,6 +25,7 @@ from urllib.parse import quote
 
 from fastapi import APIRouter, Request
 
+from core import plugins
 from core.backend import BackendError
 from routes.common import ident, render
 
@@ -60,32 +61,15 @@ def _decorate(data: dict, q: str) -> dict:
     return data
 
 
-#: the console's own commands FUNC lists with a pack's (each shown when the person's edition or lens has the word): word, the pack it
-#: belongs with, its label, what it does, its example
-CONSOLE_COMMANDS = (
-    ("SMAT", "market-risk", "Scenario matrix", "One trade, position or VaR node: its scenario P&L by scenario day across the last N business "
-     "dates (20; at most 60), each date's VaR rank and ES tail outlined, a row charted against -VaR; P&L, PV or the change; CSV and Arrow",
-     "SMAT DESK:RATES 20"),
-    ("PLAY", "market-risk", "VaR Playground", "A VaR scope or a few positions: every scenario P&L, the rank, VaR, ES, components, incremental "
-     "VaR and both 10-day methods worked in a spreadsheet-like grid with the explanation beside it (500 positions at most, the rest in Rest "
-     "of scope), exported as an .xlsx of real formulas equal to the engine to the cent",
-     "PLAY VAR DESK RATES"),
-    ("VAR EXPLAIN", "market-risk", "Why VaR moved", "A VaR scope between two business dates: the change in causes that add up exactly "
-     "(restatement, hierarchy and rules, trades out, the window, the market, trades in), who drove each step, the order-free view by part, "
-     "and the working as an .xlsx of formulas",
-     "VAR EXPLAIN BANK"),
-)
-
-
 def console_words(data: dict, edition) -> dict:
-    """The console's own commands (SMAT) added to their pack's list, when the pack is listed and the edition (or lens) has the word. They
+    """The modules' console commands (core/plugins.py) added to their pack's list, when the pack is listed and the edition (or lens) has the word. They
     have no Everyone switch (the edition decides them): ``console`` marks them for the page."""
-    for word, pack, label, what, example in CONSOLE_COMMANDS:
-        if not edition.word_on(word.split()[0]) or not edition.word_on("VAR"):
+    for word, pack, label, what, example, kind, needs in plugins.console_commands():
+        if not edition.word_on(word.split()[0]) or not all(edition.word_on(w) for w in needs):
             continue
         for p in data.get("packs") or []:
             if p.get("name") == pack and not any((m.get("code") or "").upper() == word for m in p.get("commands") or []):
-                p.setdefault("commands", []).append({"code": word, "label": label, "description": what, "example": example, "kind": "var-result",
+                p.setdefault("commands", []).append({"code": word, "label": label, "description": what, "example": example, "kind": kind,
                                                      "on": True, "console": True})
     return data
 

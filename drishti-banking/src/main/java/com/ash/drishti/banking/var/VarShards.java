@@ -25,7 +25,7 @@ import com.ash.drishti.compute.shard.ShardMap;
 import com.ash.drishti.compute.shard.ShardOwners;
 import com.ash.drishti.banking.compute.var.VarBook;
 import com.ash.drishti.compute.vector.ParallelSums;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.ash.drishti.server.shard.ShardMembership;
 import com.ash.drishti.server.shard.ShardPeers;
 import java.time.Instant;

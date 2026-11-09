@@ -16,7 +16,7 @@
 package com.ash.drishti.server.engines;
 
 import com.ash.drishti.net.transport.PeerHttp;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.ash.drishti.server.security.RequestPaths;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
@@ -33,7 +33,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
  * An engine's API on this node (docs/guides/ADMIN_GUIDE.md sections 5.1 and 9): a request under an engine's path prefixes
- * ({@code /api/v1/frtb/**}) is answered here when the engine runs here (and counted, so turning it off drains it); else, in a cluster, it is
+ * (its {@code api:} prefixes) is answered here when the engine runs here (and counted, so turning it off drains it); else, in a cluster, it is
  * forwarded whole to a node that runs it (the least loaded, signed, for the caller), and its answer passed back; else {@code 404 DRS-1020} in
  * words. A request another node forwarded is answered here only (one hop).
  */

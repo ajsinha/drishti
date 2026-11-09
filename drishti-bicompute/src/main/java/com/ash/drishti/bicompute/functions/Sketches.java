@@ -15,9 +15,9 @@
  */
 package com.ash.drishti.bicompute.functions;
 
-import com.ash.drishti.bicompute.spi.AggFunction;
-import com.ash.drishti.bicompute.spi.Batch;
-import com.ash.drishti.bicompute.spi.Kind;
+import com.ash.drishti.kernel.api.pivot.AggFunction;
+import com.ash.drishti.kernel.api.pivot.Batch;
+import com.ash.drishti.kernel.api.pivot.Kind;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -94,8 +94,8 @@ public final class Sketches {
     }
 
     /** The ≈ form of a call (same inputs and label, its id marked), or empty when it has none. */
-    public static java.util.Optional<com.ash.drishti.bicompute.core.AggregationPlan.FunctionCall> approximate(
-            com.ash.drishti.bicompute.core.AggregationPlan.FunctionCall f) {
+    public static java.util.Optional<com.ash.drishti.kernel.api.pivot.AggregationPlan.FunctionCall> approximate(
+            com.ash.drishti.kernel.api.pivot.AggregationPlan.FunctionCall f) {
         AggFunction<Object> s;
         if (f.fn() instanceof Builtins.Distinct) {
             s = new ApproxDistinct();
@@ -104,17 +104,17 @@ public final class Sketches {
         } else {
             return java.util.Optional.empty();
         }
-        return java.util.Optional.of(new com.ash.drishti.bicompute.core.AggregationPlan.FunctionCall(f.id() + MARK, f.label(), s, f.inputs()));
+        return java.util.Optional.of(new com.ash.drishti.kernel.api.pivot.AggregationPlan.FunctionCall(f.id() + MARK, f.label(), s, f.inputs()));
     }
 
     /**
      * A call's text as written in a rollup or sent between nodes: the function's own text, or that text with {@link #MARK} for its ≈ form.
      */
-    public static com.ash.drishti.bicompute.core.AggregationPlan.FunctionCall parse(String text, com.ash.drishti.bicompute.spi.PivotProvider p) {
+    public static com.ash.drishti.kernel.api.pivot.AggregationPlan.FunctionCall parse(String text, com.ash.drishti.kernel.api.pivot.PivotProvider p) {
         String t = text.strip();
         if (t.endsWith(MARK.strip())) {
-            com.ash.drishti.bicompute.core.AggregationPlan.FunctionCall exact = Functions.parse(t.substring(0, t.length() - 1).strip(), null, p);
-            return approximate(exact).orElseThrow(() -> com.ash.drishti.bicompute.core.PivotView.bad(exact.id() + " has no ≈ form; "
+            com.ash.drishti.kernel.api.pivot.AggregationPlan.FunctionCall exact = Functions.parse(t.substring(0, t.length() - 1).strip(), null, p);
+            return approximate(exact).orElseThrow(() -> com.ash.drishti.kernel.api.pivot.PivotView.bad(exact.id() + " has no ≈ form; "
                     + "distinct, median and percentile have"));
         }
         return Functions.parse(t, null, p);

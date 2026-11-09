@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.compute.shard;
 
+import com.ash.drishti.kernel.api.shard.ShardGather;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 

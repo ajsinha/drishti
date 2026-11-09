@@ -15,15 +15,16 @@
  */
 package com.ash.drishti.bicompute.explain;
 
-import com.ash.drishti.bicompute.core.AggregationPlan.FunctionCall;
-import com.ash.drishti.bicompute.core.CellKey;
-import com.ash.drishti.bicompute.core.CellSet;
-import com.ash.drishti.bicompute.core.Dim;
+import com.ash.drishti.kernel.api.vocabulary.DomainVocabulary;
+import com.ash.drishti.kernel.api.pivot.AggregationPlan.FunctionCall;
+import com.ash.drishti.kernel.api.pivot.CellKey;
+import com.ash.drishti.kernel.api.pivot.CellSet;
+import com.ash.drishti.kernel.api.pivot.Dim;
 import com.ash.drishti.bicompute.core.PivotCore;
-import com.ash.drishti.bicompute.core.PivotView;
-import com.ash.drishti.bicompute.spi.AggFunction;
-import com.ash.drishti.bicompute.spi.Kind;
-import com.ash.drishti.bicompute.spi.Viewer;
+import com.ash.drishti.kernel.api.pivot.PivotView;
+import com.ash.drishti.kernel.api.pivot.AggFunction;
+import com.ash.drishti.kernel.api.pivot.Kind;
+import com.ash.drishti.kernel.api.pivot.Viewer;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import java.util.ArrayList;
@@ -157,7 +158,7 @@ public final class Explain {
             }
             double rest = diff - sum;
             sum += rest;
-            steps.add(step(isVar(fc) ? "diversification" : "not additive", "residual", null, null, rest, sum));
+            steps.add(step(isDiversifying(fc) ? "diversification" : "not additive", "residual", null, null, rest, sum));
         }
         out.put("order", r.order() == null || r.order().isBlank() ? "member" : r.order());
         out.put("steps", steps);
@@ -276,9 +277,9 @@ public final class Explain {
         return m;
     }
 
-    private static boolean isVar(FunctionCall fc) {
+    private static boolean isDiversifying(FunctionCall fc) {
         String n = fc.fn().name().toLowerCase(java.util.Locale.ROOT);
-        return n.equals("var") || n.equals("es") || n.startsWith("var") && fc.fn().inputs() == 0;
+        return DomainVocabulary.anyMatch(d -> d.diversifies(n, fc.fn().inputs()));
     }
 
     static double num(Double d) {

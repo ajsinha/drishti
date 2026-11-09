@@ -22,7 +22,7 @@ import com.ash.drishti.flight.FlightRefusal;
 import com.ash.drishti.flight.FlightRequest;
 import com.ash.drishti.server.data.DataViewController;
 import com.ash.drishti.server.data.DataViewService;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;

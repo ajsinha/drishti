@@ -23,7 +23,7 @@ import com.ash.drishti.identity.collab.CollabProperties;
 import com.ash.drishti.identity.collab.FileOutboxStore;
 import com.ash.drishti.identity.collab.OutboxItem;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;

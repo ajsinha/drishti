@@ -20,7 +20,7 @@ import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.banking.compute.var.ScenarioFx;
 import com.ash.drishti.banking.compute.var.VarBook;
 import com.ash.drishti.banking.compute.var.VarCalc;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;

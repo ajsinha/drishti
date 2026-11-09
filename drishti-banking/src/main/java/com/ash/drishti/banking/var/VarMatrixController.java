@@ -18,7 +18,7 @@ package com.ash.drishti.banking.var;
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.server.bi.engine.ArrowAnswers;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;

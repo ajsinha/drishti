@@ -58,7 +58,7 @@ public final class RequestActivity extends OncePerRequestFilter {
             chain.doFilter(req, res);
         } finally {
             record(System.currentTimeMillis() / 60_000, (System.nanoTime() - started) / 1_000, res.getStatus() >= 500);
-            if (req.getAttribute(com.ash.drishti.server.security.Principal.ATTRIBUTE) instanceof com.ash.drishti.server.security.Principal p
+            if (req.getAttribute(com.ash.drishti.kernel.api.security.Principal.ATTRIBUTE) instanceof com.ash.drishti.kernel.api.security.Principal p
                     && p.user() != null && !p.roles().contains("service")) {
                 seen(p.user(), System.currentTimeMillis());
             }

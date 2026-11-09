@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.approvals;
 
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;

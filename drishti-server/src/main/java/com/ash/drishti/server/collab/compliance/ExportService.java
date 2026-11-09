@@ -37,7 +37,7 @@ import com.ash.drishti.identity.collab.Share;
 import com.ash.drishti.identity.collab.ShareStore;
 import com.ash.drishti.identity.collab.ThreadStore;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ArrayNode;

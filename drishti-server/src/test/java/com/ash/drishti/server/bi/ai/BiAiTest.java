@@ -37,7 +37,7 @@ import com.ash.drishti.server.ai.AiProperties;
 import com.ash.drishti.server.bi.BiService;
 import com.ash.drishti.server.bi.DatasetService;
 import com.ash.drishti.server.bi.report.BiReportService;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.ash.drishti.server.security.TokenVerifier;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -38,7 +38,7 @@ import com.ash.drishti.server.collab.snapshot.SnapshotService;
 import com.ash.drishti.server.collab.thread.ThreadService;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.server.security.PackAccess;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.time.Duration;
 import java.time.Instant;

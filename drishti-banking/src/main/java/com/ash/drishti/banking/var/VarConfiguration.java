@@ -129,8 +129,8 @@ public class VarConfiguration {
      * promote (its rows sit under (Blank) at that level), "var LL LIMIT_LETTER scenario-pv" to the words and the fix (DRS-5211, a warning).
      */
     @Bean
-    com.ash.drishti.server.api.HealthFigures hierarchyWarningsHealth() {
-        return new com.ash.drishti.server.api.HealthFigures() {
+    com.ash.drishti.kernel.api.health.HealthFigures hierarchyWarningsHealth() {
+        return new com.ash.drishti.kernel.api.health.HealthFigures() {
             @Override
             public String key() {
                 return "hierarchyWarnings";
@@ -145,8 +145,8 @@ public class VarConfiguration {
 
     /** {@code /api/v1/health}'s {@code varMaturedWarnings}: per open date, the matured records excluded and the matured trades inside live positions. */
     @Bean
-    com.ash.drishti.server.api.HealthFigures varMaturedHealth(VarService svc) {
-        return new com.ash.drishti.server.api.HealthFigures() {
+    com.ash.drishti.kernel.api.health.HealthFigures varMaturedHealth(VarService svc) {
+        return new com.ash.drishti.kernel.api.health.HealthFigures() {
             @Override
             public String key() {
                 return "varMaturedWarnings";
@@ -221,7 +221,7 @@ public class VarConfiguration {
 
     /** Explain a VaR figure (kind var, the one Explain of SHARED_SCREENS.md section 3): formula, inputs and lineage, why it moved, workbook. */
     @Bean
-    com.ash.drishti.server.explain.Explainer varNumberExplainer(VarService svc, VarViews views, VarExplain explain) {
+    com.ash.drishti.kernel.api.explain.Explainer varNumberExplainer(VarService svc, VarViews views, VarExplain explain) {
         return new VarNumberExplainer(svc, views, explain);
     }
 
@@ -328,7 +328,7 @@ public class VarConfiguration {
         VarFigures f = new VarFigures(svc, views);
         ViewPipeline p = pipeline.getIfAvailable();
         if (p != null) {
-            java.util.List<com.ash.drishti.engine.ViewAugmenter> all = new java.util.ArrayList<>(p.augmenters());
+            java.util.List<com.ash.drishti.kernel.api.view.ViewAugmenter> all = new java.util.ArrayList<>(p.augmenters());
             all.add(f);                                                // beside the others (the exposure engine's on netting sets)
             all.add(new VarTradeLinks(f.service()));                   // a trade page's Risk links: its P&L vector and its VaR
             p.augmenters(all);

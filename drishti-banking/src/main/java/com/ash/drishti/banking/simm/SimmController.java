@@ -21,7 +21,7 @@ import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.banking.compute.simm.SimmChoices;
 import com.ash.drishti.banking.compute.simm.SimmCompare;
 import com.ash.drishti.server.playground.PlaygroundTemplate;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.time.LocalDate;

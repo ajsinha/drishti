@@ -24,7 +24,7 @@ import com.ash.drishti.server.design.DesignBinding;
 import com.ash.drishti.server.design.DesignRebase;
 import com.ash.drishti.server.design.DesignShip;
 import com.ash.drishti.server.design.PackFragment;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;

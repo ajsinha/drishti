@@ -24,7 +24,7 @@ import com.ash.drishti.server.admin.ArtifactImpact;
 import com.ash.drishti.server.net.NetService;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.server.security.PackAccess;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.ash.drishti.server.security.RoleCatalog;
 import java.time.Instant;
 import java.util.ArrayList;

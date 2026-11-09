@@ -26,7 +26,7 @@ import com.ash.drishti.banking.compute.var.VarMath;
 import com.ash.drishti.compute.vector.OrdinalSet;
 import com.ash.drishti.server.playground.ExportSizing;
 import com.ash.drishti.server.playground.PlaygroundTemplate;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.io.OutputStream;
 import java.nio.file.Path;
 import java.time.LocalDate;
