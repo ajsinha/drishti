@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### Docs
+
+- **Drishti BI and Power BI compared** (`docs/strategy/BI_AND_POWER_BI.md`, opened from Help through the Reports guide): an area-by-area comparison with each Drishti item labelled built or planned, clustered compute behind BI, and Power BI facts checked against Microsoft's documentation.
+
 ### Test data
 
 - **Scenario PVs at position grain:** `data/testdata/position-grain/` holds 2026-09-30 for Endur, Calypso and Murex (`GRAIN: POSITION`, 7,984 positions, 509 scenarios), kept out of the demo lake.

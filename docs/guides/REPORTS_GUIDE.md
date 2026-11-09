@@ -45,6 +45,7 @@ Transforms) is the [Notebook](NOTEBOOK_GUIDE.md).
 | Show a report in another web application | [section 20](#20-embedding-a-report-in-another-web-application), [EMBED_GUIDE.md](EMBED_GUIDE.md) |
 | Grant the powers, set the limits | [ADMIN_GUIDE.md](ADMIN_GUIDE.md#34-bi-powers-rupaka), [CONFIGURATION.md](../admin/CONFIGURATION.md) |
 | Call it from a program or the command line | [API_REFERENCE.md](API_REFERENCE.md), [CLI_REFERENCE.md](CLI_REFERENCE.md#bi-workspaces-and-the-catalogue-rupaka) |
+| Compare this with Power BI, honestly: leads, gaps, what is planned | [Drishti BI and Power BI compared](../strategy/BI_AND_POWER_BI.md) |
 | Fix a problem | [section 22](#22-settings-limits-and-problem-codes), [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#21-troubleshooting) |
 
 A good first hour: read sections 2 to 4, set up the stack of [section 5.9](#59-worked-examples-the-shipped-models-row-rules-and-masks), then do tutorial 8, Part A.
