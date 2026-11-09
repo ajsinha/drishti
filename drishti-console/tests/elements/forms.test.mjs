@@ -23,6 +23,13 @@ import * as I from '../../web/static/elements/drishti-inputs/src/drishti_index.j
 
 const require = createRequire(import.meta.url);
 
+test('a file drop takes only the endings it is given', () => {
+  assert.equal(I.acceptedName('a.tar.gz', ['.jsonl', '.tar.gz']), true);
+  assert.equal(I.acceptedName('A.JSONL', ['.jsonl']), true);
+  assert.equal(I.acceptedName('a.exe', ['.jsonl']), false);
+  assert.equal(I.acceptedName('anything', []), true);
+});
+
 test('times and dates with times: typed times, slots', () => {
   assert.equal(I.parseTime('14:05'), '14:05');
   assert.equal(I.parseTime('1405'), '14:05');

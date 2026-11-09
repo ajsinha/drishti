@@ -865,11 +865,77 @@ java -Xmx4g -Dloader.main=com.ash.drishti.lakeload.LakeLoad -jar drishti-server-
 - **Idempotent:** `mode: replace` (and the ledger, which skips a file whose SHA-256 was already loaded) make a re-run safe.
 - **Throughput:** the loader runs as its own process (`loader-heap`, 4g) on every core; a cycle can be bounded with `max-files` and
   `max-gb`; keep the inbox and the lake on local or fast shared storage; exclude them from real-time antivirus scanning.
+- **Several files for one date:** `mode: replace` removes every row of the date in the table, so a date made of several files must be loaded either **together in one tar** (one replace, all or nothing) or with
+  **`mode: append`**, never one replace after another. The Upload page (section 3.5) warns, naming the systems and rows, and needs a tick.
 - **Hold and release:** `hold: true` keeps a pair waiting (shown as *held*) until you remove the key, for example until a risk run is
   signed off.
 - **Checks:** a wrong `sha256:` or `rows:`, an unknown key, a bad date or mode, a table that cannot be routed, or rejected rows over
   `reject-max-percent` (0) send the pair to `failed/` with the reason, and nothing is committed; **Retry** (or `drishti.py dataload
   retry`) puts it back after you fix it. Every row a load rejects is listed in the load's `*.rejects.jsonl` with its line and reason.
+
+### 3.5 Upload a file and build its `.ready` (Admin → Data loads → Upload)
+
+**Admin → Data loads → Upload** takes a data file, builds its `.ready` from a form, shows the exact text, checks both against the kind's contract and the
+lake, and pushes them to the inbox: the same rules as a `.ready` written by hand (section 4), without writing one. The command line does the same through the same
+endpoints. Administrators; a token needs the `loads:write` scope.
+
+**1. The file.** Drop a file, or pick one already in `inbox/` with no marker (very large files: copy them to `inbox/` first, then pick). `.jsonl`, `.gz`, `.zip`,
+`.tar` and `.tar.gz` are taken, up to `drishti.dataload.upload.max-gb` (10). An upload goes to `<dataload>/staging/` on the owner node, streamed, never held in
+memory. The SHA-256 and the row count are computed on the server over the whole file and written into the `.ready`. Dropping a file on the Inbox board opens it here, and **Build its .ready**
+on a Waiting card with no marker opens that file here.
+
+**2. The table.** The main field is **Table**: one searchable list of the real tables, each labelled `trade_endur · trade · trading` (table, kind, pack), filled from the file name when it can be
+(`trade_endur.2026-11-06.jsonl.gz` picks `trade_endur`, and the page says so). The pack, kind and connector are shown beside it, read-only: they are what the table resolves to and what the
+checks use. Only **Create a new table** (which needs `drishti.dataload.new-tables: true`) asks for a pack; a new table's kind is its own name. The `.ready` names `table:` and adds `pack:`, `kind:` and
+`connector:` only when a routing rule or a table name in two packs would otherwise send the file elsewhere. **Lake** is its own field. The mode starts on **append**.
+
+**3. A tar.** The table and business date are read from the archive's `<table>/<YYYY-MM-DD>/` folders by the loader's own reading of them, and shown read-only with each date and row count. Nothing overrides them, no `table:` or
+`business-date:` is written, and a bad layout is refused before anything is written. `folders:` is written only where a folder needs its pack named.
+
+**4. The checks.** A sample of the file's first rows (`upload.sample-rows`, 10,000; of each table of a tar) is checked, per table and date. Each result is a **pass**, a **warning** or a **refusal**, in words and with the fix:
+
+| Check | Result |
+|---|---|
+| required fields of the kind's contract | refused, with the fields and how many rows |
+| the key is present on every sampled row | refused when not; a repeat within the sample is a warning |
+| a VaR input's records say what they are and their grain and id agree | refused (`DRS-5208`, `DRS-5209`), by the VaR intake's own rule |
+| one source system, one form and one grain on the date (`DRS-5210`) | refused, by the same rule the VaR intake applies; **Use replace** is offered only when replace would really remove the clash |
+| hierarchy level columns filled | warning with counts: such rows go under (Blank) |
+| rows the table already holds for the date | see below |
+| a file of that name already waiting | refused |
+
+A refusal blocks Push; the checks run again on the server when you push.
+
+**Replacing a date that already has rows.** `mode: replace` removes **every** row of that date in that table, whichever file or source system sent it. A date can be several files, or several systems, so when the table already holds rows for the date the page says how many, per system,
+and offers the two right ways: load the date's files **together in one tar** (one replace, all or nothing), or use **append**. **Push stays off until you tick** that this file really takes the place of those rows. On the command line this is `--yes-replace`.
+
+**5. Push.** The data file is moved into `inbox/` first and its `.ready` last, each appearing whole or not at all, so the loader never sees a half-written pair; a file of the same name already waiting is refused and never overwritten. The push is audited: who, the file, its SHA-256, the `.ready` text. In a cluster
+the request is answered by the node that runs the inbox; an upload reaching another node is passed on to it in signed parts.
+
+```bash
+export DRISHTI_TOKEN=...                                                # a token with loads:write; never on the command line
+drishti.py dataload ready --file trade_endur.2026-11-06.jsonl.gz --table trade_endur --check   # prints the .ready and the checks
+drishti.py dataload ready --file trade_endur.2026-11-06.jsonl.gz --table trade_endur --mode append --push
+drishti.py dataload ready --inbox eod-2026-11-06.tar.gz --mode append --push                   # a file already in inbox/
+```
+
+```yaml
+# trade_endur.2026-11-06.jsonl.gz.ready, as the page and the command line write it
+lake: risklake
+table: trade_endur
+business-date: 2026-11-06
+mode: append
+key: TRADE_ID
+sha256: 7d1f0c9e4ab2386ef15d70c2b94e6a1038dfc7725ea41b96c0d83f2a617be4d9
+rows: 612480
+```
+
+```yaml
+# config/engines/dataload.yaml
+drishti:
+  dataload:
+    upload: { max-gb: 10, floor-gb: 5, sample-rows: 10000, keep-hours: 24 }
+```
 
 ## 4. The `.ready` file, every key
 

@@ -17,6 +17,11 @@
 
 ## Unreleased
 
+### Data loads
+
+- **Admin → Data loads → Upload** (split view): upload a data file or pick one in the inbox folder, a searchable **Table** picker filled from the file name (kind, pack and connector shown read-only), the exact `.ready` live beside the form, checks against a sample (contract, key, grain and id, `DRS-5210`, hierarchy columns) as pass, warning or refused, and Push: data first, `.ready` last. A replace of a date that already holds rows names the systems and counts, offers a tar or append, and needs a tick. `drishti.py dataload ready`; `.ready` parsing from text and one writer; settings `drishti.dataload.upload.*`; **File drop** in drishti-inputs.
+- A dropped file on the Inbox board, and **Build its .ready** on a Waiting card, open Upload filled in.
+
 ### VaR
 
 - **What happened to matured items:** Explain's Inputs & lineage says how many records were excluded as matured (per source system and grain) and flags live positions holding trades past their maturity, with the list of positions; "could not be checked" when `TRADE_IDS` or the trade feed is missing. A flag only: no figure changes. Also on Admin → Health and in `provenance.matured`; `/api/v1/risk/var/scope/matured` pages the list.

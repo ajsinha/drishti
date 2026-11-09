@@ -556,6 +556,14 @@ drishti:
           - POST /api/v1/admin/lakes/memory/refill/*   # run an in-memory table's refill job now (drishti.py lake memory refill; the server still requires an administrator)
           - POST /api/v1/admin/dataload/run     # the data inbox's Load now (drishti.py dataload run; the server still requires an administrator)
           - POST /api/v1/admin/dataload/retry   # a failed inbox file back into the inbox (drishti.py dataload retry; an administrator)
+          - POST /api/v1/admin/dataload/upload        # Admin -> Data loads -> Upload, drishti.py dataload ready: an administrator (as the entries below)
+          - POST /api/v1/admin/dataload/upload/part
+          - DELETE /api/v1/admin/dataload/upload/*
+          - POST /api/v1/admin/dataload/pick
+          - POST /api/v1/admin/dataload/ready/preview
+          - POST /api/v1/admin/dataload/ready/check
+          - POST /api/v1/admin/dataload/ready/read
+          - POST /api/v1/admin/dataload/ready/push
           - POST /api/v1/admin/feeds/*/run      # a data feed's Run now (drishti.py feed run starts it locally; the server still requires an administrator)
       "[node:drain]":
         description: "Drain this server before it stops and take it back (the stop hooks and the rolling upgrade runner, CLUSTER_GUIDE.md section 10.1): forwarded work and VaR shards handed to other members, readiness out of service. Needs the admin role at call time."

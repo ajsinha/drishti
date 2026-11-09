@@ -439,6 +439,96 @@ async def feeds_run(request: Request, feed: str):
         return _problem(e)
 
 
+@router.get("/loads/upload")
+async def loads_upload(request: Request):
+    """Admin → Data loads → Upload (DATA_LAKE_GUIDE.md section 3.5, mock-up B): a file, its .ready built from the form, checked and pushed. The page
+    is drawn empty; drishti_admin-ready.js asks the server through the routes below, and every rule is the server's."""
+    me = ident(request)
+    if not me.is_admin:
+        return _forbidden(request)
+    return render(request, "admin/upload.html", status=await _status(request), **await _inbox_tab(request, me))
+
+
+@router.get("/api/dataload/choices")
+async def dataload_choices(request: Request):
+    """The pickers: lakes, tables with their kind and pack, files in the inbox folder with no marker, the facts above the form."""
+    me = ident(request)
+    if not me.is_admin:
+        return _admins_only()
+    try:
+        return await request.app.state.backend.admin("GET", "/dataload/choices", me)
+    except BackendError as e:
+        return _problem(e)
+
+
+@router.post("/api/dataload/upload")
+async def dataload_upload(request: Request, file: str = ""):
+    """The file, streamed on to the server as it arrives: the console holds none of it. The server writes it to its staging folder."""
+    me = ident(request)
+    if not me.is_admin:
+        return _admins_only()
+    if (request.headers.get("content-type") or "").split(";")[0].strip().lower() != "application/octet-stream":
+        raise BodyError(415, "send the file as application/octet-stream")
+
+    async def chunks():
+        async for c in request.stream():
+            yield c
+    try:
+        return await request.app.state.backend.admin_stream_upload("/dataload/upload", me, chunks(), {"file": file})
+    except BackendError as e:
+        return _problem(e)
+
+
+@router.delete("/api/dataload/upload/{uid}")
+async def dataload_discard(request: Request, uid: str):
+    """An upload dropped from the staging folder (its owner's only)."""
+    me = ident(request)
+    if not me.is_admin:
+        return _admins_only()
+    try:
+        return await request.app.state.backend.admin("DELETE", "/dataload/upload/" + quote(uid, safe=""), me)
+    except BackendError as e:
+        return _problem(e)
+
+
+@router.get("/api/dataload/item/{uid}")
+async def dataload_item(request: Request, uid: str):
+    """A file's state: its SHA-256 and rows when computed, with progress until then."""
+    me = ident(request)
+    if not me.is_admin:
+        return _admins_only()
+    try:
+        return await request.app.state.backend.admin("GET", "/dataload/item/" + quote(uid, safe=""), me)
+    except BackendError as e:
+        return _problem(e)
+
+
+@router.post("/api/dataload/pick")
+async def dataload_pick(request: Request):
+    """Pick a file already in the inbox folder."""
+    me = ident(request)
+    if not me.is_admin:
+        return _admins_only()
+    try:
+        return await request.app.state.backend.admin("POST", "/dataload/pick", me, await json_body(request))
+    except BackendError as e:
+        return _problem(e)
+
+
+@router.post("/api/dataload/ready/{action}")
+async def dataload_ready(request: Request, action: str):
+    """The .ready: preview, check, read (a .ready someone already has) and push; the same server endpoints as drishti.py dataload ready."""
+    me = ident(request)
+    if not me.is_admin:
+        return _admins_only()
+    if action not in ("preview", "check", "read", "push"):
+        return JSONResponse({"detail": "not found"}, status_code=404)
+    try:
+        return await request.app.state.backend.admin("POST", "/dataload/ready/" + action, me, await json_body(request))
+    except BackendError as e:
+        return _problem(e)
+
+
 @router.post("/api/dataload/run")
 async def dataload_run(request: Request):
     """Load now: the server starts a cycle, or answers skipped while a run still loads (runs never overlap); the page says which."""

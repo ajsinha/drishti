@@ -133,6 +133,8 @@ public enum ErrorCode {
     DESIGN_NOT_FOUND("DRS-5006", 404),
     /** An edit made on an older revision of a Design than the server holds (reload, then edit again). */
     STALE_REVISION("DRS-5007", 409),
+    /** A data file and its .ready refused by the checks of Admin, Data loads, Upload, or a file of the same name already waiting in the inbox. */
+    READY_PUSH_REFUSED("DRS-5008", 409),
     UNAUTHENTICATED("DRS-5010", 401),
     /** A data-load announcement or a Data loads query names a pack that is not loaded (or one the caller may not reach: the two look the same). */
     LOAD_PACK_NOT_FOUND("DRS-5011", 404),

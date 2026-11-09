@@ -1534,6 +1534,110 @@
     }
     return { "FieldPicker": FieldPicker };
   })();
+  /* ---- src/drishti_file-drop.js ---- */
+  __m["src/drishti_file-drop.js"] = (function () {
+    var InputBase = __m["src/drishti_inputs-dom.js"].InputBase;
+    function acceptedName(name, accept) {
+      if (!accept || !accept.length) { return true; }
+      const low = String(name).toLowerCase();
+      return accept.some((e) => low.endsWith(String(e).toLowerCase()));
+    }
+    class FileDrop extends InputBase {
+      constructor(host, options) {
+        super(host, options, 'di-file-drop');
+        this.file = null;
+        this.xhr = null;
+        const o = this.o;
+        this.input = this.el('input', { attrs: { type: 'file', tabindex: '-1', 'aria-hidden': 'true', accept: (o.accept || []).join(',') || null } });
+        this.input.hidden = true;
+        this.zone = this.el('div', { cls: 'di-drop-zone', attrs: { role: 'button', tabindex: '0', 'aria-label': o.label || 'Drop a file here' } });
+        this.title = this.el('b', { text: o.label || 'Drop a file here' });
+        this.note = this.el('div', { cls: 'di-drop-note', text: o.hint || (o.accept && o.accept.length ? 'or click to choose: ' + o.accept.join(' ') : 'or click to choose') });
+        this.zone.appendChild(this.title);
+        this.zone.appendChild(this.note);
+        this.line = this.el('div', { cls: 'di-drop-file' });
+        this.line.hidden = true;
+        this.name = this.el('span', { cls: 'di-drop-name' });
+        this.said = this.el('span', { cls: 'di-drop-said' });
+        this.cancelBtn = this.el('button', { cls: 'di-btn', text: 'Cancel', attrs: { type: 'button' } });
+        this.bar = this.el('div', { cls: 'di-drop-bar', attrs: { role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-valuenow': '0', 'aria-label': 'Upload' } });
+        this.fill = this.el('i', {});
+        this.bar.appendChild(this.fill);
+        [this.name, this.said, this.cancelBtn, this.bar].forEach((e) => this.line.appendChild(e));
+        [this.input, this.zone, this.line].forEach((e) => host.appendChild(e));
+        this.zone.addEventListener('click', () => { if (!this.o.disabled) { this.input.click(); } });
+        this.zone.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && !this.o.disabled) { e.preventDefault(); this.input.click(); } });
+        this.input.addEventListener('change', () => { if (this.input.files && this.input.files[0]) { this.take(this.input.files[0]); } this.input.value = ''; });
+        this.zone.addEventListener('dragover', (e) => { e.preventDefault(); this.zone.classList.add('di-over'); });
+        this.zone.addEventListener('dragleave', () => this.zone.classList.remove('di-over'));
+        this.zone.addEventListener('drop', (e) => {
+          e.preventDefault();
+          this.zone.classList.remove('di-over');
+          if (!this.o.disabled && e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) { this.take(e.dataTransfer.files[0]); }
+        });
+        this.cancelBtn.addEventListener('click', () => this.cancel());
+        this.setDisabled(!!o.disabled);
+      }
+      take(file) {
+        if (!acceptedName(file.name, this.o.accept)) {
+          this.emit('refused', { name: file.name, reason: file.name + ' is not one of ' + this.o.accept.join(', ') });
+          return false;
+        }
+        this.file = file;
+        this.emit('pick', { file: file });
+        return true;
+      }
+      send(url, headers) {
+        const file = this.file;
+        if (!file) { return Promise.reject(new Error('no file')); }
+        this.showing(file.name);
+        return new Promise((resolve, reject) => {
+          const x = this.xhr = new this.win.XMLHttpRequest();
+          x.open('POST', url);
+          Object.entries(Object.assign({ 'Content-Type': 'application/octet-stream', Accept: 'application/json' }, headers || {})).forEach(([k, v]) => x.setRequestHeader(k, v));
+          x.upload.onprogress = (e) => { if (e.lengthComputable) { this.setProgress(e.loaded, e.total); } };
+          x.onload = () => { this.xhr = null; let body = null; try { body = JSON.parse(x.responseText); } catch (e) { body = null; } this.emit('done', { status: x.status, body: body }); resolve({ status: x.status, body: body }); };
+          x.onerror = () => { this.xhr = null; reject(new Error('the connection was lost')); };
+          x.onabort = () => { this.xhr = null; reject(new Error('cancelled')); };
+          x.send(file);
+        });
+      }
+      showing(name, text) {
+        this.name.textContent = name;
+        this.said.textContent = text || '';
+        this.zone.hidden = true;
+        this.line.hidden = false;
+        this.fill.style.setProperty('--di-progress', '0%');
+      }
+      setProgress(loaded, total) {
+        const p = total > 0 ? Math.min(100, Math.round(loaded * 100 / total)) : 0;
+        this.fill.style.setProperty('--di-progress', p + '%');
+        this.bar.setAttribute('aria-valuenow', String(p));
+        this.said.textContent = p + '%';
+        this.emit('progress', { loaded: loaded, total: total, percent: p });
+      }
+      cancel() {
+        if (this.xhr) { this.xhr.abort(); }
+        this.clear();
+        this.emit('cancel', {});
+      }
+      clear() {
+        this.file = null;
+        this.zone.hidden = false;
+        this.line.hidden = true;
+      }
+      setDisabled(on) {
+        this.o.disabled = on;
+        this.zone.setAttribute('aria-disabled', on ? 'true' : 'false');
+        this.zone.classList.toggle('di-disabled', on);
+      }
+      destroy() {
+        if (this.xhr) { this.xhr.abort(); }
+        this.host.textContent = '';
+      }
+    }
+    return { "acceptedName": acceptedName, "FileDrop": FileDrop };
+  })();
   /* ---- src/drishti_select.js ---- */
   __m["src/drishti_select.js"] = (function () {
     var announce = __lib("drishti-core").announce;
@@ -3208,11 +3312,12 @@
     var Combobox = __m["src/drishti_combobox.js"].Combobox;
     var Select = __m["src/drishti_select.js"].Select;
     var Form = __m["src/drishti_form.js"].Form;
+    var FileDrop = __m["src/drishti_file-drop.js"].FileDrop;
     var FilterBar = __m["src/drishti_filter-bar.js"].FilterBar;
     var CodeEditor = __m["src/drishti_code-editor.js"].CodeEditor, CodeDiff = __m["src/drishti_code-editor.js"].CodeDiff;
     const INPUT_ELEMENTS = Object.freeze({
       'drishti-date': DatePicker, 'drishti-date-range': DateRangePicker, 'drishti-time': TimePicker, 'drishti-datetime': DateTimePicker, 'drishti-tree-picker': TreePicker, 'drishti-multiselect': MultiSelect,
-      'drishti-combobox': Combobox, 'drishti-select': Select, 'drishti-form': Form, 'drishti-filter-bar': FilterBar, 'drishti-code': CodeEditor, 'drishti-code-diff': CodeDiff
+      'drishti-combobox': Combobox, 'drishti-select': Select, 'drishti-form': Form, 'drishti-file-drop': FileDrop, 'drishti-filter-bar': FilterBar, 'drishti-code': CodeEditor, 'drishti-code-diff': CodeDiff
     });
     const ATTRS = ['label', 'calendar', 'mode', 'value', 'readonly', 'as-of', 'placeholder', 'name', 'disabled'];
     function fromAttributes(el) {
@@ -3391,7 +3496,7 @@
       if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', go); } else { go(); }
       if (root.MutationObserver) { new root.MutationObserver(() => { if (doc.querySelector(CODE_AREA_SELECTOR)) { go(); } }).observe(doc.documentElement, { childList: true, subtree: true }); }
     }
-    return { "install": install, "CALENDAR_RULES": __m["src/drishti_calendar.js"].CALENDAR_RULES, "easterSunday": __m["src/drishti_calendar.js"].easterSunday, "ruleDate": __m["src/drishti_calendar.js"].ruleDate, "HolidayCalendar": __m["src/drishti_calendar.js"].HolidayCalendar, "defineCalendar": __m["src/drishti_calendar.js"].defineCalendar, "calendar": __m["src/drishti_calendar.js"].calendar, "DATE_PRESETS": __m["src/drishti_calendar.js"].DATE_PRESETS, "resolvePreset": __m["src/drishti_calendar.js"].resolvePreset, "parseDateInput": __m["src/drishti_calendar.js"].parseDateInput, "monthGrid": __m["src/drishti_calendar.js"].monthGrid, "shiftDate": __m["src/drishti_calendar.js"].shiftDate, "uid": __m["src/drishti_inputs-dom.js"].uid, "debounce": __m["src/drishti_inputs-dom.js"].debounce, "InputBase": __m["src/drishti_inputs-dom.js"].InputBase, "Popover": __m["src/drishti_inputs-dom.js"].Popover, "Listbox": __m["src/drishti_inputs-dom.js"].Listbox, "normalizeOptions": __m["src/drishti_inputs-dom.js"].normalizeOptions, "searchOptions": __m["src/drishti_inputs-dom.js"].searchOptions, "CalendarView": __m["src/drishti_date-picker.js"].CalendarView, "DatePicker": __m["src/drishti_date-picker.js"].DatePicker, "DateRangePicker": __m["src/drishti_date-range.js"].DateRangePicker, "parseTime": __m["src/drishti_time-picker.js"].parseTime, "parseDateTime": __m["src/drishti_time-picker.js"].parseDateTime, "timeSlots": __m["src/drishti_time-picker.js"].timeSlots, "TimePicker": __m["src/drishti_time-picker.js"].TimePicker, "DateTimePicker": __m["src/drishti_time-picker.js"].DateTimePicker, "TreeModel": __m["src/drishti_tree.js"].TreeModel, "TreePicker": __m["src/drishti_tree-picker.js"].TreePicker, "FieldPicker": __m["src/drishti_field-picker.js"].FieldPicker, "MultiSelect": __m["src/drishti_multiselect.js"].MultiSelect, "TypeAhead": __m["src/drishti_combobox.js"].TypeAhead, "Combobox": __m["src/drishti_combobox.js"].Combobox, "Select": __m["src/drishti_select.js"].Select, "selectElement": __m["src/drishti_select.js"].selectElement, "selectProperties": __m["src/drishti_select.js"].selectProperties, "words": __m["src/drishti_schema.js"].words, "pathParts": __m["src/drishti_schema.js"].pathParts, "getPath": __m["src/drishti_schema.js"].getPath, "setPath": __m["src/drishti_schema.js"].setPath, "conditionHolds": __m["src/drishti_schema.js"].conditionHolds, "fieldsOf": __m["src/drishti_schema.js"].fieldsOf, "defaults": __m["src/drishti_schema.js"].defaults, "fieldProblem": __m["src/drishti_schema.js"].fieldProblem, "validate": __m["src/drishti_schema.js"].validate, "visibleValue": __m["src/drishti_schema.js"].visibleValue, "changes": __m["src/drishti_schema.js"].changes, "parseField": __m["src/drishti_schema.js"].parseField, "currencyOf": __m["src/drishti_schema.js"].currencyOf, "offeredValues": __m["src/drishti_schema.js"].offeredValues, "Form": __m["src/drishti_form.js"].Form, "FORM_HOST_SELECTOR": __m["src/drishti_form-host.js"].FORM_HOST_SELECTOR, "formOf": __m["src/drishti_form-host.js"].formOf, "upgradeForms": __m["src/drishti_form-host.js"].upgradeForms, "defineWidget": __m["src/drishti_form-fields.js"].defineWidget, "defaultWidget": __m["src/drishti_form-fields.js"].defaultWidget, "applyHook": __m["src/drishti_form-fields.js"].applyHook, "FilterModelBar": __m["src/drishti_filter-bar.js"].FilterModelBar, "FilterBar": __m["src/drishti_filter-bar.js"].FilterBar, "upgradeDateInput": __m["src/drishti_native.js"].upgradeDateInput, "upgradeTimeInput": __m["src/drishti_native.js"].upgradeTimeInput, "upgradeDateTimeInput": __m["src/drishti_native.js"].upgradeDateTimeInput, "upgradeCheckboxes": __m["src/drishti_native.js"].upgradeCheckboxes, "upgradeFields": __m["src/drishti_native.js"].upgradeFields, "rachanaMode": __m["src/drishti_code-modes.js"].rachanaMode, "yamlMode": __m["src/drishti_code-modes.js"].yamlMode, "MODES": __m["src/drishti_code-modes.js"].MODES, "defineModes": __m["src/drishti_code-modes.js"].defineModes, "MiniStream": __m["src/drishti_code-modes.js"].MiniStream, "tokens": __m["src/drishti_code-modes.js"].tokens, "wordAt": __m["src/drishti_code-text.js"].wordAt, "completions": __m["src/drishti_code-text.js"].completions, "insertText": __m["src/drishti_code-text.js"].insertText, "lineDiff": __m["src/drishti_code-text.js"].lineDiff, "sideBySide": __m["src/drishti_code-text.js"].sideBySide, "diffStats": __m["src/drishti_code-text.js"].diffStats, "ensureCodeMirror": __m["src/drishti_code-editor.js"].ensureCodeMirror, "yamlIndentAfter": __m["src/drishti_code-editor.js"].yamlIndentAfter, "CodeEditor": __m["src/drishti_code-editor.js"].CodeEditor, "CodeDiff": __m["src/drishti_code-editor.js"].CodeDiff, "upgradeCodeArea": __m["src/drishti_code-upgrade.js"].upgradeCodeArea, "upgradeCodeAreas": __m["src/drishti_code-upgrade.js"].upgradeCodeAreas, "CODE_AREA_SELECTOR": __m["src/drishti_code-upgrade.js"].CODE_AREA_SELECTOR, "INPUT_ELEMENTS": __m["src/drishti_inputs-element.js"].INPUT_ELEMENTS, "defineInputElements": __m["src/drishti_inputs-element.js"].defineInputElements };
+    return { "install": install, "CALENDAR_RULES": __m["src/drishti_calendar.js"].CALENDAR_RULES, "easterSunday": __m["src/drishti_calendar.js"].easterSunday, "ruleDate": __m["src/drishti_calendar.js"].ruleDate, "HolidayCalendar": __m["src/drishti_calendar.js"].HolidayCalendar, "defineCalendar": __m["src/drishti_calendar.js"].defineCalendar, "calendar": __m["src/drishti_calendar.js"].calendar, "DATE_PRESETS": __m["src/drishti_calendar.js"].DATE_PRESETS, "resolvePreset": __m["src/drishti_calendar.js"].resolvePreset, "parseDateInput": __m["src/drishti_calendar.js"].parseDateInput, "monthGrid": __m["src/drishti_calendar.js"].monthGrid, "shiftDate": __m["src/drishti_calendar.js"].shiftDate, "uid": __m["src/drishti_inputs-dom.js"].uid, "debounce": __m["src/drishti_inputs-dom.js"].debounce, "InputBase": __m["src/drishti_inputs-dom.js"].InputBase, "Popover": __m["src/drishti_inputs-dom.js"].Popover, "Listbox": __m["src/drishti_inputs-dom.js"].Listbox, "normalizeOptions": __m["src/drishti_inputs-dom.js"].normalizeOptions, "searchOptions": __m["src/drishti_inputs-dom.js"].searchOptions, "CalendarView": __m["src/drishti_date-picker.js"].CalendarView, "DatePicker": __m["src/drishti_date-picker.js"].DatePicker, "DateRangePicker": __m["src/drishti_date-range.js"].DateRangePicker, "parseTime": __m["src/drishti_time-picker.js"].parseTime, "parseDateTime": __m["src/drishti_time-picker.js"].parseDateTime, "timeSlots": __m["src/drishti_time-picker.js"].timeSlots, "TimePicker": __m["src/drishti_time-picker.js"].TimePicker, "DateTimePicker": __m["src/drishti_time-picker.js"].DateTimePicker, "TreeModel": __m["src/drishti_tree.js"].TreeModel, "TreePicker": __m["src/drishti_tree-picker.js"].TreePicker, "FieldPicker": __m["src/drishti_field-picker.js"].FieldPicker, "MultiSelect": __m["src/drishti_multiselect.js"].MultiSelect, "TypeAhead": __m["src/drishti_combobox.js"].TypeAhead, "Combobox": __m["src/drishti_combobox.js"].Combobox, "Select": __m["src/drishti_select.js"].Select, "selectElement": __m["src/drishti_select.js"].selectElement, "selectProperties": __m["src/drishti_select.js"].selectProperties, "words": __m["src/drishti_schema.js"].words, "pathParts": __m["src/drishti_schema.js"].pathParts, "getPath": __m["src/drishti_schema.js"].getPath, "setPath": __m["src/drishti_schema.js"].setPath, "conditionHolds": __m["src/drishti_schema.js"].conditionHolds, "fieldsOf": __m["src/drishti_schema.js"].fieldsOf, "defaults": __m["src/drishti_schema.js"].defaults, "fieldProblem": __m["src/drishti_schema.js"].fieldProblem, "validate": __m["src/drishti_schema.js"].validate, "visibleValue": __m["src/drishti_schema.js"].visibleValue, "changes": __m["src/drishti_schema.js"].changes, "parseField": __m["src/drishti_schema.js"].parseField, "currencyOf": __m["src/drishti_schema.js"].currencyOf, "offeredValues": __m["src/drishti_schema.js"].offeredValues, "FileDrop": __m["src/drishti_file-drop.js"].FileDrop, "acceptedName": __m["src/drishti_file-drop.js"].acceptedName, "Form": __m["src/drishti_form.js"].Form, "FORM_HOST_SELECTOR": __m["src/drishti_form-host.js"].FORM_HOST_SELECTOR, "formOf": __m["src/drishti_form-host.js"].formOf, "upgradeForms": __m["src/drishti_form-host.js"].upgradeForms, "defineWidget": __m["src/drishti_form-fields.js"].defineWidget, "defaultWidget": __m["src/drishti_form-fields.js"].defaultWidget, "applyHook": __m["src/drishti_form-fields.js"].applyHook, "FilterModelBar": __m["src/drishti_filter-bar.js"].FilterModelBar, "FilterBar": __m["src/drishti_filter-bar.js"].FilterBar, "upgradeDateInput": __m["src/drishti_native.js"].upgradeDateInput, "upgradeTimeInput": __m["src/drishti_native.js"].upgradeTimeInput, "upgradeDateTimeInput": __m["src/drishti_native.js"].upgradeDateTimeInput, "upgradeCheckboxes": __m["src/drishti_native.js"].upgradeCheckboxes, "upgradeFields": __m["src/drishti_native.js"].upgradeFields, "rachanaMode": __m["src/drishti_code-modes.js"].rachanaMode, "yamlMode": __m["src/drishti_code-modes.js"].yamlMode, "MODES": __m["src/drishti_code-modes.js"].MODES, "defineModes": __m["src/drishti_code-modes.js"].defineModes, "MiniStream": __m["src/drishti_code-modes.js"].MiniStream, "tokens": __m["src/drishti_code-modes.js"].tokens, "wordAt": __m["src/drishti_code-text.js"].wordAt, "completions": __m["src/drishti_code-text.js"].completions, "insertText": __m["src/drishti_code-text.js"].insertText, "lineDiff": __m["src/drishti_code-text.js"].lineDiff, "sideBySide": __m["src/drishti_code-text.js"].sideBySide, "diffStats": __m["src/drishti_code-text.js"].diffStats, "ensureCodeMirror": __m["src/drishti_code-editor.js"].ensureCodeMirror, "yamlIndentAfter": __m["src/drishti_code-editor.js"].yamlIndentAfter, "CodeEditor": __m["src/drishti_code-editor.js"].CodeEditor, "CodeDiff": __m["src/drishti_code-editor.js"].CodeDiff, "upgradeCodeArea": __m["src/drishti_code-upgrade.js"].upgradeCodeArea, "upgradeCodeAreas": __m["src/drishti_code-upgrade.js"].upgradeCodeAreas, "CODE_AREA_SELECTOR": __m["src/drishti_code-upgrade.js"].CODE_AREA_SELECTOR, "INPUT_ELEMENTS": __m["src/drishti_inputs-element.js"].INPUT_ELEMENTS, "defineInputElements": __m["src/drishti_inputs-element.js"].defineInputElements };
   })();
   return Object.freeze(Object.assign({ library: "drishti-inputs", version: "0.3.0" }, __m["src/drishti_index.js"]));
 });

@@ -901,6 +901,31 @@ business-date: 2026-09-30
 
 ![The Inbox screen: one file waiting, ready, with its rule](img/t36/03-waiting-ready.jpg)
 
+### The same step from a screen: Admin → Data loads → Upload
+
+Instead of writing the `.ready` by hand, use **Upload** (DATA_LAKE_GUIDE section 3.5).
+
+**In the console:** Admin → Data loads → **Upload**. Drop the file, or under **Already in the inbox folder** pick one. **Table** fills from the file name; the pack, kind and connector show beside it. The `.ready` updates on the right as you change the form. Read the checks below; a refusal blocks **Push to inbox**. A replace of a date that already has rows needs its tick.
+
+**On the command line:**
+
+```bash
+export DRISHTI_TOKEN=...      # a token with loads:write
+drishti-console/.venv/bin/python tools/drishti.py dataload ready --inbox trades-2026-11-03.jsonl --table trade --check
+drishti-console/.venv/bin/python tools/drishti.py dataload ready --inbox trades-2026-11-03.jsonl --table trade --mode append --push
+```
+
+**The `.ready` it writes:**
+
+```yaml
+table: trade
+business-date: 2026-11-03
+mode: append
+key: TRADE_ID
+sha256: ...
+rows: 2
+```
+
 ## Step 17 · Load now and watch it load
 
 A cycle runs every ten minutes; you need not wait.

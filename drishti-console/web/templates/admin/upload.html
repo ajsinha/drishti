@@ -1,0 +1,72 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# Admin → Data loads → Upload (docs/guides/DATA_LAKE_GUIDE.md section 3.5, mock-up B, the split view): the form left, the exact .ready right, the checks
+   below, Push at the bottom. Every rule is the server's; drishti_admin-ready.js places its answers with drishti-inputs. #}
+{% extends "base.html" %}
+{% block title %}Upload · Data loads · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-loads.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-inbox.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-ready.css?v={{ ASSET_V }}">{% endblock %}
+{% block screen %}admin{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm ib ready" data-ready-page data-source="upload">
+  {% with tab='loads' %}{% include "admin/_nav.html" %}{% endwith %}
+  <h1 class="ws-h">Data loads</h1>
+  {% with sub='upload' %}{% include "admin/_loads_tabs.html" %}{% endwith %}
+  <div class="ib-top ready-facts" data-ready-facts aria-label="The data inbox"></div>
+  <p class="ib-said" data-ready-said role="status" aria-live="polite"></p>
+  <div class="ready-split">
+    <div class="ready-left">
+      <section class="ready-card" aria-labelledby="ready-file-h">
+        <h2 class="ib-h2" id="ready-file-h">File</h2>
+        <div class="ready-seg" role="group" aria-label="Where the file is">
+          <button type="button" class="btn-pill ib-btn" data-src="upload">Upload a file</button>
+          <button type="button" class="btn-pill ib-btn" data-src="inbox">Already in the inbox folder</button>
+        </div>
+        <div data-pane="upload"><div data-ready-drop></div>
+          <p class="text-muted-d">Very large? Copy it straight into <span class="mono">inbox/</span> (no <span class="mono">.ready</span> yet) and pick it from <b>Already in the inbox folder</b>: nothing goes through the browser.</p></div>
+        <div data-pane="inbox" hidden></div>
+        <div class="ready-fileline" data-file-line hidden></div>
+        <div class="ready-loader" data-ready-load-file></div>
+      </section>
+      <section class="ready-card" aria-labelledby="ready-det-h">
+        <h2 class="ib-h2" id="ready-det-h">Details</h2>
+        <div data-ready-form></div>
+        <ul class="ready-errors" data-ready-errors></ul>
+      </section>
+    </div>
+    <section class="ready-card ready-right" aria-labelledby="ready-name-h">
+      <h2 class="ib-h2 ready-title"><span class="mono" id="ready-name-h" data-ready-name>&lt;data file&gt;.ready</span> <span class="st">read-only</span>
+        <button type="button" class="btn-pill ib-btn" data-ready-copy disabled>Copy</button><button type="button" class="btn-pill ib-btn" data-ready-dl disabled>Download</button></h2>
+      <div data-ready-code></div>
+      <input type="hidden" data-ready-text value="">
+      <p class="text-muted-d">Updates as you fill in the form. This exact text is written beside the data file.</p>
+    </section>
+  </div>
+  <section class="ready-card" aria-labelledby="ready-chk-h">
+    <h2 class="ib-h2 ready-title" id="ready-chk-h">Checks before pushing <span class="ready-tally" data-ready-tally></span></h2>
+    <p class="text-muted-d">A sample of the file's first rows is checked here; the SHA-256 and the row count are the whole file's.</p>
+    <div data-ready-checks></div>
+  </section>
+  <section class="ready-card ready-push" data-ready-pushbar>
+    <span class="text-muted-d">1 data file into <span class="mono">inbox/</span> → 2 <span class="mono">.ready</span> last</span>
+    <span class="ready-why" data-ready-why></span>
+    <button type="button" class="btn-pill btn-accent ib-btn" data-ready-push disabled><i class="bi bi-box-arrow-in-down" aria-hidden="true"></i> Push to inbox</button>
+  </section>
+</div>
+{% endblock %}
+{% block footer %}{% include "_footer.html" %}{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-ready.js?v={{ ASSET_V }}"></script>{% endblock %}

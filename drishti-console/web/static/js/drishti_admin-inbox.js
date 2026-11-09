@@ -68,6 +68,22 @@
   }
   function problem(b) { return (b.code ? b.code + ' ' : '') + (b.detail || 'the server said no'); }
 
+  // a file dropped on the board opens Upload with it (the browser keeps a dropped file only for this page, so Upload asks for it again by the same drop)
+  root.addEventListener('dragover', function (e) { e.preventDefault(); });
+  root.addEventListener('drop', function (e) {
+    e.preventDefault();
+    var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (!f) { return; }
+    say('Uploading ' + f.name + '…');
+    fetch('/admin/api/dataload/upload?file=' + encodeURIComponent(f.name), { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/octet-stream', Accept: 'application/json' }, body: f })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { ok: r.ok, body: j }; }); })
+      .then(function (r) {
+        if (!r.ok) { say(problem(r.body), true); return; }
+        location.href = '/admin/loads/upload?item=' + encodeURIComponent(r.body.id);
+      })
+      .catch(function () { say('the console could not reach the server', true); });
+  });
+
   body.addEventListener('click', function (e) {
     var run = e.target.closest('[data-inbox-run]');
     var retry = e.target.closest('[data-retry]');

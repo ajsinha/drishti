@@ -1210,7 +1210,7 @@ Audited as `data-load-ready`, `data-load-failed`, `data-load-config-changed` and
 `dataLate` and is `DEGRADED` while it is not empty.
 
 **The data inbox** (files dropped in `<data>/dataload/inbox` with a `.ready` marker, loaded by the server: [DATA_GUIDE.md section 7](DATA_GUIDE.md#7-the-data-inbox-drop-files-and-they-load);
-the CLI is `drishti.py dataload`). Administrators; a token needs `loads:write` for the two `POST`s. While the inbox's engine is off on every
+the CLI is `drishti.py dataload`). Administrators; a token needs `loads:write` for the `POST`s and the `DELETE`. While the inbox's engine is off on every
 server the paths answer `DRS-1020`. In a cluster the inbox's signals reach the other members through the same
 `POST /packs/{pack}/loads`, signed with the cluster key and made as the owner node (`node:<id>`, the service role), which each member takes
 as an administrator's announcement.
@@ -1222,6 +1222,16 @@ as an administrator's announcement.
 | `POST` | `/admin/dataload/run` | Load now: `{started: true, by}`; while a run still loads none starts: `{started: false, skipped: "skipped: run 20261103T150000Z-drishti-main still loading (12 min)"}` (recorded as a skipped cycle). `400 DRS-5001` the inbox is off here. Audited `dataload.run` |
 | `POST` | `/admin/dataload/retry` | body `{file}` (or `?file=`): a failed file and its `.ready` back into the inbox: `{file, from, to, next}`. `404 DRS-1001` no failed file of that name, `400 DRS-5001` a bad name or one in the inbox already. Audited `dataload.retry` |
 | `POST` | `/admin/dataload/undo` | body `{loadId}`: what undoing that load would do, nothing changed; `{loadId, confirm}` with `confirm` the same id: the load undone, its rows removed from every Delta and Iceberg table of the inbox's lake, one commit per table and date, a replace restored ([DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#55-undo-a-load) section 5.5): `{loadId, undone, lines: [{table, format, date, removed, restored, replaced}], text}`. `400 DRS-5001` no id, or the undo failed. Audited (`dataload.undo`). |
+| `GET` | `/admin/dataload/choices` | The Upload page's pickers ([DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#35-upload-a-file-and-build-its-ready-admin--data-loads--upload) section 3.5): `{on, node, maxGb, accepted, newTables, defaultLake, lakes, tables: [{table, kind, pack, connector, key, label}], packs, waiting}` |
+| `POST` | `/admin/dataload/upload?file=` | The data file as the raw body (`application/octet-stream`), streamed to `<dataload>/staging/`; `.jsonl`, `.gz`, `.zip`, `.tar`, `.tar.gz`. Refused: a name with a folder, `..` or a leading dot, another type (`400 DRS-5001`), over `upload.max-gb` or the disk floor (`413 DRS-5005`). `{id, file, source, state, size, sha256, rows, suggest, tar, folders}` |
+| `POST` | `/admin/dataload/upload/part?file=&id=&last=` | One part of an upload relayed by another node of the cluster |
+| `DELETE` | `/admin/dataload/upload/{id}` | Drops an upload not pushed |
+| `POST` | `/admin/dataload/pick` | body `{file}`: a file already in the inbox folder with no marker; `{id, ...}` as an upload. Nothing is copied |
+| `GET` | `/admin/dataload/item/{id}` | A file's state: `state` `inspecting`, `ready` or `failed`, progress, its SHA-256 and rows, a tar's `folders` (each table, dates, rows). Its owner's only: `404` for anyone else |
+| `POST` | `/admin/dataload/ready/preview` | body the form `{item, table, pack, kind, connector, lake, businessDate, mode, newTable, key, folders, hold}`: `{text, errors: {field: words}, derived}` |
+| `POST` | `/admin/dataload/ready/check` | The form with `item`: `{checks: [{status: pass\|warning\|refused, text, fix, field, value, tick}], blocked, tick, text, errors}`. `field` and `value`: a one-click fix |
+| `POST` | `/admin/dataload/ready/read` | body `{text}`: a `.ready` as the form's fields, or `{refused}` |
+| `POST` | `/admin/dataload/ready/push` | The form with `item` and `ackReplace`: the data file then the `.ready` into `inbox/`: `{file, marker, sha256, rows, text, hold, node, nextCycleText}`. `409 DRS-5008` a refusal, a missing tick, or that name already waiting. Audited as `dataload.push` |
 | `GET` | `/admin/feeds?runs=30` | The data feeds ([EXTERNAL_DATA.md](EXTERNAL_DATA.md) section 6; Admin → Data loads → Feeds): `{feeds: [{feed, title, lake, load, enabled, schedule, licence, licenceUrl, internalOnly, datasets, lastRun, lastStatus, lastExit, lastTrigger, seconds, lastSuccess, rows, businessDate, failuresSinceSuccess, failed, lastError, running}], runs: [the newest ledger lines], ledger, config, failing}`, from `config/feeds/*.yaml` and `<data>/datafeeds/ledger.jsonl` |
 | `POST` | `/admin/feeds/{feed}/run` | Run now: `tools/drishti.py feed run <feed> --trigger admin` started in the background with the server's data folder: `{started: true, pid, log, by}`; while the feed's lock is held `{started: false, skipped}`. `404 DRS-1001` no such feed, `400 DRS-5001` the installation's tools are not there (`drishti.feeds.root`). Audited `feed.run` |
 
@@ -2840,7 +2850,7 @@ patterns, and the server decides in one filter (`TokenScopes`):
 | `read` | `GET`, `HEAD` and the read-only `POST`s (the default; what tokens always had) | - |
 | `design:write` | `POST/PUT/PATCH/DELETE /builder/**` (Designs, shape, suggest, edit, check, propose, share, bind, import), `POST /studio/**`, `POST /sutras`, `POST /approvals/sutra/{id}/withdraw` | `author` |
 | `design:approve` | `POST /approvals/sutra/{id}/approve` and `/reject` | `approve` or admin (not your own proposal, four-eyes) |
-| `loads:write` | `POST /packs/{pack}/loads` (announce that a batch landed or failed; [DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)) | the roles that open the kind (an administrator needs no more) |
+| `loads:write` | `POST /packs/{pack}/loads` (announce that a batch landed or failed; the data inbox's Upload endpoints, an administrator; [DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)) | the roles that open the kind (an administrator needs no more) |
 | `bi:write` | Business intelligence: `POST /bi/datasets/{id}/refresh`, `POST /bi/workspaces`, `POST /bi/workspaces/{id}/items`, `POST /bi/items/{id}/open`, `/move`, `/propose`, `/withdraw`, `/publish`, `/versions/{n}/restore`, `/history/{seq}/restore`, `/impact`, `PUT /bi/items/{id}` and `/favourite`, `DELETE /bi/items/{id}` | the BI power and workspace role each call needs (`bi-author`, contributor or member) |
 | `bi:approve` | `POST /approvals/bi/{id}/approve` and `/reject`, `POST /bi/items/{id}/endorse`, `POST /bi/bundle/import` and `POST /bi/imports/{id}/rollback` | `approve` and workspace member for approving (never your own proposal, four-eyes); promote: owner or member; certify: `bi-steward` |
 | `bi:admin` | `PUT` and `DELETE /bi/workspaces/{id}`, `PUT` and `DELETE /bi/workspaces/{id}/members/{user}`, `PUT /bi/settings` | workspace admin, or `bi-admin` |

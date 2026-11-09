@@ -76,21 +76,23 @@ These came out of reading the code and the guide; the mock-ups simplify them.
 
 ## Build checklist
 
+Built: **B**, with C's two ways in; A and C were not built.
+
 | Area | Item | Status |
 |---|---|---|
-| Server | `POST /api/v1/admin/dataload/upload`: streams the raw body into `<dataload>/staging/`, never into memory; free-space floor; size limit in `config/engines/dataload.yaml` | to do |
-| Server | `POST /api/v1/admin/dataload/inspect`: name, tar layout, SHA-256 and rows as a job with progress; for an upload or a file in `inbox/` (names only, no paths, no links) | to do |
-| Server | `POST /api/v1/admin/dataload/check`: the form's values against a sample; returns the pass, warning and refused list in words with the fix | to do |
-| Server | `POST /api/v1/admin/dataload/push`: rename the data file into `inbox/`, then write the `.ready` the same way, last; refuses when a check refuses, re-checked on the server | to do |
-| Server | `GET /api/v1/admin/dataload/choices`: lakes, packs, kinds, connectors, each kind's key from its contract, files in `inbox/` with no marker | to do |
-| Reuse | `ReadyNote` for the keys and rules (today it reads a `Path`: add parsing from text); one writer beside it, tested by reading its output back; `READY_KEYS` in `tools/lake/feedroute.py` stays compared | to do |
-| Reuse | `Routes` for what a name routes to, the contract validator for the sample, `VarIntake`'s rule for DRS-5210 | to do |
-| Reuse | The streaming of `/api/lakes/upload` in `drishti-console/routes/lake_routes.py`, passed on to the server rather than kept in the console's temporary folder | to do |
-| Security | Administrator only; add the new endpoints to the `loads:write` list in `application.yaml` for API tokens; file names validated (no `..`, no leading dot, accepted extensions only) | to do |
-| Audit | One audit line per push: who, file, SHA-256, rows, the `.ready` text; a refusal overridden is impossible, so none to record | to do |
-| Cluster | Every call goes to the owner node (`owner: true`), which holds the inbox folder; another node forwards; the page names the owner node | to do |
-| CLI | `drishti.py dataload ready <file>` in `tools/dataloadcli.py`: same inspect and check, prints the `.ready`, `--push` to push; shares the endpoints | to do |
-| Console | Tab *Upload* in `_loads_tabs.html`; *Build its .ready* on a no-marker card in `_inbox_body.html`; dropping on the board opens Upload | to do |
-| Elements | No bespoke UI: `Form`, pickers and read-only `CodeEditor` from drishti-inputs. **A file-drop input with progress does not exist yet:** add it to drishti-inputs, with its gallery page | to do |
-| Docs | DATA_LAKE_GUIDE section 3 and 4 (the page), one tutorial with UI, CLI and YAML at every step and screenshots, `CONFIGURATION.md` for the new settings, CHANGELOG | to do |
-| Tests | Writer and `ReadyNote` round trip for every key; each check's words; refusal blocks push on the server; data before `.ready` (crash between them leaves no marker); name collision; path traversal; tar with an unresolved folder; `loads:write` and non-admin refused; owner-node forwarding; one browser test per state, dark and light | to do |
+| Server | `POST /api/v1/admin/dataload/upload`: streams the raw body into `<dataload>/staging/`, never into memory; free-space floor; size limit in `config/engines/dataload.yaml` | built |
+| Server | `POST /api/v1/admin/dataload/inspect`: name, tar layout, SHA-256 and rows as a job with progress; for an upload or a file in `inbox/` (names only, no paths, no links) | built |
+| Server | `POST /api/v1/admin/dataload/check`: the form's values against a sample; returns the pass, warning and refused list in words with the fix | built |
+| Server | `POST /api/v1/admin/dataload/push`: rename the data file into `inbox/`, then write the `.ready` the same way, last; refuses when a check refuses, re-checked on the server | built |
+| Server | `GET /api/v1/admin/dataload/choices`: lakes, packs, kinds, connectors, each kind's key from its contract, files in `inbox/` with no marker | built |
+| Reuse | `ReadyNote` for the keys and rules (today it reads a `Path`: add parsing from text); one writer beside it, tested by reading its output back; `READY_KEYS` in `tools/lake/feedroute.py` stays compared | built |
+| Reuse | `Routes` for what a name routes to, the contract validator for the sample, `VarIntake`'s rule for DRS-5210 | built |
+| Reuse | The streaming of `/api/lakes/upload` in `drishti-console/routes/lake_routes.py`, passed on to the server rather than kept in the console's temporary folder | built |
+| Security | Administrator only; add the new endpoints to the `loads:write` list in `application.yaml` for API tokens; file names validated (no `..`, no leading dot, accepted extensions only) | built |
+| Audit | One audit line per push: who, file, SHA-256, rows, the `.ready` text; a refusal overridden is impossible, so none to record | built |
+| Cluster | Every call goes to the owner node (`owner: true`), which holds the inbox folder; another node forwards; the page names the owner node | built |
+| CLI | `drishti.py dataload ready <file>` in `tools/dataloadcli.py`: same inspect and check, prints the `.ready`, `--push` to push; shares the endpoints | built |
+| Console | Tab *Upload* in `_loads_tabs.html`; *Build its .ready* on a no-marker card in `_inbox_body.html`; dropping on the board opens Upload | built |
+| Elements | No bespoke UI: `Form`, pickers and read-only `CodeEditor` from drishti-inputs. **A file-drop input with progress does not exist yet:** add it to drishti-inputs, with its gallery page | built |
+| Docs | DATA_LAKE_GUIDE section 3.5 (the page), one tutorial with UI, CLI and YAML (screenshots deferred, owner), `CONFIGURATION.md` for the new settings, CHANGELOG | built |
+| Tests | Writer and `ReadyNote` round trip for every key; each check's words; refusal blocks push on the server; data before `.ready` (crash between them leaves no marker); name collision; path traversal; tar with an unresolved folder; `loads:write` and non-admin refused; owner-node forwarding; one browser test per state, dark and light | built |
