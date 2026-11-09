@@ -303,6 +303,14 @@ class SeriesMoved(unittest.TestCase):
         self.assertEqual(out["MATURITY_DATE"], "2026-11-09")
         self.assertGreater(d.redate_dated({"MATURITY_DATE": "2026-10-30"})["MATURITY_DATE"], "2026-11-30")
 
+    def test_a_trades_maturity_moves_with_the_days(self):
+        # the trade feed keeps step with the VaR records: a date move matures no live trade
+        d = self.lake(["2026-09-28", "2026-09-29", "2026-09-30"], ["2026-11-05", "2026-11-06", "2026-11-09"])
+        out = json.loads(d.redate(json.dumps({"TRADE_ID": "T1", "MATURITY_DATE": "2026-09-30"}, separators=(",", ":"))))
+        self.assertEqual(out["MATURITY_DATE"], "2026-11-09")
+        out = json.loads(d.redate(json.dumps({"TRADE_ID": "T2", "MATURITY_DATE": "2026-10-30"}, separators=(",", ":"))))
+        self.assertGreater(out["MATURITY_DATE"], "2026-11-30")
+
     def test_nothing_moves_when_the_dates_are_the_data_own(self):
         d = self.lake(["2026-09-30"], ["2026-09-30"])
         line = '{"HISTORY":[{"DATE":"2026-09-29","CLOSE":1}]}'
