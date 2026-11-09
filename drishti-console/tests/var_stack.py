@@ -65,13 +65,14 @@ def var_lake(tmp_path_factory, only: str, as_of: str | None = None) -> Path:
     key = "var-lake-" + hashlib.sha1(f"{only}|{as_of}".encode()).hexdigest()[:12]
 
     def make():
-        work = run / key
-        lake = work / "delta"
-        r = subprocess.run([sys.executable, str(ROOT / "tools" / "drishti.py"), "lake", "demo", "--lake", str(lake), "--data-dir", str(work / "data"),
-                            "--connectors-dir", str(work / "connectors"), "--as-of", as_of, "--only", only, "--no-signal", "-q",
-                            "--engine", "deltalake"], capture_output=True, text=True, cwd=ROOT, timeout=1500)   # the Python writer, in this process: auto starts a JVM for every table and business day
-        ok = r.returncode == 0 and (lake / "risk" / "scenario-pv").is_dir()
-        return {"lake": str(lake), "error": None if ok else "could not build the VaR demo lake: " + (r.stderr or r.stdout)[-400:]}
+        sys.path.insert(0, str(ROOT / "tools" / "drillkit"))
+        import lake_cache   # built once per hash of the test data, generators and lake code, across runs (TEST_HARNESS.md, "The cached demo lake")
+
+        try:
+            lake = lake_cache.demo_lake(only, as_of) / "delta"   # the Python writer: auto starts a JVM for every table and business day
+        except RuntimeError as e:
+            return {"lake": "", "error": "could not build the VaR demo lake: " + str(e)}
+        return {"lake": str(lake), "error": None if (lake / "risk" / "scenario-pv").is_dir() else f"no scenario-pv in the cached lake {lake}"}
 
     got = browser_harness.shared_once(run, key, make)
     if got["error"]:

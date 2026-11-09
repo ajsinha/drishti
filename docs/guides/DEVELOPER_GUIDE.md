@@ -341,7 +341,9 @@ tools/drill.sh
 Options: `--docs` (the light drill, below), `--full` (the full drill even when only docs changed), `--no-push` (verify only: no push,
 no merge, and it may run on any branch), `--keep-going` (run every job to its end after one has failed, to see every failure at
 once; by default the first failure stops the rest), `--gate` (the gate only, stage 1 below, then stop: no lanes and no push, on any
-branch; a check of a few minutes before a drill). `DRILL_MVN_ARGS="..."` adds Maven arguments to every Maven run (for example
+branch; a check of a few minutes before a drill), `--affected [--base REF] [--dry-run]` (only the Maven modules and test files the diff can reach, for a builder's
+iterations: [TEST_HARNESS.md](../architecture/TEST_HARNESS.md) section 3.16; `tools/docs/shots_affected.py` does the same for screenshots). The VaR proof of a patch is the
+in-process `VarGoldenMatrixTest`; the server-against-server API comparison runs for releases only. `DRILL_MVN_ARGS="..."` adds Maven arguments to every Maven run (for example
 `-Ddrishti.test.forks=1` to run the test classes serially). `DRILL_BROWSER_WORKERS` and `DRILL_OTHER_WORKERS` set the console
 lanes' workers (the browser lane's default comes from the memory available), `DRILL_BROWSER_RERUNS` the browser-lane files re-run at a time (default 1), `DRILL_LANE_LIMIT` a console lane's
 time limit in seconds (default three hours), `DRILL_GATE_THREADS` the gate build's Maven threads (default `1C`, one per CPU). The

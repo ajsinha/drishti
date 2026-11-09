@@ -41,6 +41,13 @@
 
 ## Unreleased
 
+### Testing and the drill
+
+- **The VaR proof runs in seconds:** an in-process golden test covers all three demo dates, the 509 and 250 windows, USD and EUR, every hierarchy and all 28 system baskets. The server-against-server API comparison now runs for releases only.
+- **`tools/drill.sh --affected [--base REF]`** runs only the Maven modules and test files a diff can reach, for builders; shared infrastructure, and anything it cannot place, selects more. `tools/docs/shots_affected.py` does the same for screenshots.
+- **Cached demo lakes:** built once per hash of the test data, generators and lake code, and reused by every test stack and check.
+- **A faster full drill:** the Java 25 lane compiles everything and runs only the tests of what a JDK version can change, the browser lane has more workers under a memory floor, and heavy jobs follow a memory budget instead of strict order. Before and after are in docs/admin/BENCHMARK.md.
+
 ### Fixes
 
 - **Connectors no longer stuck on a frozen copy of their settings:** a pack reload could write a connector's generated file into the shared Admin overlay, where it then outranked the file for good, so a later move of the demo lake left those connectors on the old folder (`FUND` listed nothing). The server's own writes now go to the file, and an older generated file that names tables its lake lost follows its pack's template (`.bak` kept). Admin → Connectors marks a connector whose override is in force, shows what it changes against the file and offers Remove override; Health warns while a node has any. A search names a connector it cannot reach instead of showing an empty list, and a Delta connector with neither `lake:` nor `root:` is refused rather than reading the demo folder.

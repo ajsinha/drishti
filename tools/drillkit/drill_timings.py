@@ -24,10 +24,31 @@ from __future__ import annotations
 
 import json
 import os
+import time
 from collections import defaultdict
 from pathlib import Path
 
 _seconds: dict[str, float] = defaultdict(float)
+_PAUSE = 300.0        # seconds a test waits at most for memory: never fails it, and a drill that is really out of memory still shows
+
+
+def _available_gb() -> float:
+    try:
+        for line in Path("/proc/meminfo").read_text().splitlines():
+            if line.startswith("MemAvailable:"):
+                return int(line.split()[1]) / 1048576
+    except OSError:
+        pass
+    return 1e9
+
+
+def pytest_runtest_setup(item) -> None:
+    """The memory floor (DRILL_MIN_FREE_GB): a test does not start while less is free, up to five minutes, so the workers ease off when the
+    Java lane peaks instead of Chromium being killed."""
+    floor = float(os.environ.get("DRILL_MIN_FREE_GB") or 0)
+    began = time.monotonic()
+    while floor and _available_gb() < floor and time.monotonic() - began < _PAUSE:
+        time.sleep(2)
 
 
 def pytest_runtest_logreport(report) -> None:
