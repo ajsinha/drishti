@@ -29,7 +29,7 @@ One section per command of the pack: the shape of its data, how it is stored and
 | [POS](#pos-position-position) | `position` | drishti-owned | active | 32 | 5 |
 | [PORT](#port-system-basket-the-banks-baskets-kept-in-drishti-system-basket) | `system-basket` | drishti-owned | active | 11 | 0 |
 | [PNLV](#pnlv-pl-vector-509-scenarios-pnl-vector) | `pnl-vector` | input | active | 39 | 5 |
-| [SPV](#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv) | `scenario-pv` | input | active | 39 | 5 |
+| [SPV](#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv) | `scenario-pv` | input | active | 40 | 5 |
 | [FXS](#fxs-scenario-fx-of-a-currency-509-scenarios-fx-scenario) | `fx-scenario` | input | active | 9 | 3 |
 | [SSET](#sset-scenario-set-scenario-set) | `scenario-set` | input | active | 13 | 3 |
 | [VLIM](#vlim-var-limit-of-a-hierarchy-node-var-limit) | `var-limit` | input | active | 10 | 0 |
@@ -693,7 +693,7 @@ A trade's present value under each historical scenario and its base PV of the sa
 | `PORTFOLIO` | id | required |  | The booking portfolio on the trade as the source system names it: a BOOK_ID of the core pack's book kind (BOOK-…), the same as TT_BOOK in the demo. | `BOOK-COMM-1` (pattern `^BOOK-`) | `book` |
 | `STRATEGY` | unknown | optional |  | The trading strategy on the trade, when the booking system has one (empty in the demo). |  |  |
 | `PRODUCT_GROUP` | text | required |  | The product group: picks the position rule that groups the trade into a position. | `Commodity` |  |
-| `PRODUCT_TYPE` | text | required |  | The product type as booked in the source system (ComSwap, ComFut ...): picks the position rule when no group does. | `CallNot`, `Cash`, `ComFut`, `ComSwap`, `Commodity` |  |
+| `PRODUCT_TYPE` | text | required |  | The product type as booked in the source system (ComSwap, ComFut ...): picks the position rule when no group does. | `ComSwap` |  |
 | `COUNTERPARTY` | id | optional |  | The trade's counterparty: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…); the CPTY: scope. | `CP-NORTHPLAINS` (pattern `^CP-`) | `counterparty` |
 | `DIRECTION` | text | required |  | LONG when QUANTITY is zero or more, SHORT when it is negative. | `LONG`, `SHORT` |  |
 | `QUANTITY` | amount | required |  | The signed quantity or notional: positive bought, negative sold (the batch applies the sign of BUY_SELL_CODE). | `-18000.0` |  |
@@ -709,6 +709,7 @@ A trade's present value under each historical scenario and its base PV of the sa
 | `BATCH_ID` | id | required |  | The risk run that produced the row: one batch per date for the full run across both forms (DRS-5203); each intraday batch has its own. | `B-2026-09-30-01` |  |
 | `RESTATEMENT` | integer | required |  | 0 for the first run of the date, then 1, 2, ... each time the date is restated. | `0` |  |
 | `RUN_KIND` | text | optional |  | Which run the row belongs to (VAR_GUIDE.md section 8.4): FULL (or none) for the day's full run; INTRADAY for an update a pricing system sends during the day: only the changed trades, amended, new or cancelled, priced over the same scenario set; each intraday batch has its own BATCH_ID and a later COMPUTED_AT, and the latest COMPUTED_AT per trade wins. A cancel is an INTRADAY row whose TRADE_STATUS is not live (CANCELLED), its PVs empty. | `FULL`, `INTRADAY` |  |
+| `TRADE_CURRENCY` | text | optional |  | The position's or trade's own currency when its PVs are in another one (a position of EUR trades valued in USD): what scopes, rules and Trade currency read. Without it the record's CURRENCY is its own. | `EUR` |  |
 | `TRADE_IDS` | id list | optional |  | At GRAIN POSITION, the trades the position aggregates when its source system knows them: kept for navigation (the position page lists them; a trade page links its position); none of them may be sent on its own as well (DRS-5210). | `["1000279", "1000280"]` | `trade` |
 
 **Links:** `SCENARIO_PV_ID` → `scenario-pv`, `TRADE_ID` → `trade`, `LEGAL_ENTITY` → `legal-entity`, `DESK` → `desk`, `TT_BOOK` → `book`, `PORTFOLIO` → `book`, `COUNTERPARTY` → `counterparty`.
@@ -729,7 +730,6 @@ A trade's present value under each historical scenario and its base PV of the sa
 - link: field DESK; kind desk
 - link: field TT_BOOK; kind book
 - link: field PORTFOLIO; kind book
-- enum: field PRODUCT_TYPE; values `CallNot`, `Cash`, `ComFut`, `ComSwap`, `Commodity`
 - link: field COUNTERPARTY; kind counterparty
 - enum: field DIRECTION; values `LONG`, `SHORT`
 - vector-length: field SCENARIO_PV; same every row of one business date

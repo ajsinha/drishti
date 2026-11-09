@@ -452,7 +452,10 @@ class DemoLake:
                     # an exposure run's and its paths' (docs/guides/EXPOSURE_GUIDE.md section 15): the run id, a row's id and grid date carry dates
                     "RUN_ID", "PATH_ROW_ID", "GRID_DATE", "MARKET_DATA_DATE",
                     # scenario PVs (VAR_GUIDE.md section 15.9) are valued on their business date: moved with it, or the engine rejects them
-                    "VALUATION_DATE", "BASE_VALUATION_DATE")
+                    "VALUATION_DATE", "BASE_VALUATION_DATE",
+                    # a record's maturity moves with its valuation date, or a date move would mature records (and leave matured trades inside live
+                    # positions) that are live on the test data's own date: the demo gives the same figures whatever day it is built
+                    "MATURITY_DATE")
     #: the date lists moved the same way: a scenario set's days, an exposure run's grid
     DATED_LISTS = ("SCENARIO_DATES", "GRID_DATES")
     #: a stress scenario set's fields that name its historical period: kept as they are

@@ -759,6 +759,7 @@ lake:
       - RUN_KIND
       - COMPUTED_AT
       - TRADE_IDS
+      - TRADE_CURRENCY
       vectors:
       - SCENARIO_PV
     risk.fx-scenario:

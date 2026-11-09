@@ -18,13 +18,12 @@ business dates, each date in files of its own (docs/guides/DATA_LAKE_GUIDE.md se
 keeps its move on every date: factors.Market ``back``), one book moved between desks (MOVED_BOOK), so the VaR change explanation
 (VAR_GUIDE.md section 3.11) compares real dates. The stress set, the desk P&L and the long P&L history are the newest date's only:
 
-    pnl-vector/       one P&L vector per live trade: 509 scenario P&Ls in USD, the vector column PNL (list<double> in the lake), with the
-                      trade's terms the server derives positions from (SECURITY_ID, TRADE_STATUS, MATURITY_DATE, product, book)
-    scenario-pv/      2.9.4: the Endur trades' scenario PVs instead (scenario_fx.py): each trade's PV under the 509 scenarios and its base
-                      PV, in its own currency, the vector column SCENARIO_PV; the server turns them into USD P&L when it loads the date
+    scenario-pv/      every date's scenario PVs, one record per position (GRAIN POSITION; scenario_fx.py), for the three systems: its PV
+                      under the 509 scenarios and its base PV, the vector column SCENARIO_PV, the server turning them into USD P&L when it
+                      loads the date. A position under two hierarchy nodes (a limit letter) is one record per node, <position>@<division>/<letter>
     fx-scenario/      2.9.4: the scenario FX the batch supplies: per currency, USD per unit today and under each scenario
     scenario-set/     HS-509: the scenario days of the business date
-    stress-*          the stress scenario set HS-STRESS-2008 (stress.py): its scenario set, P&L vectors, scenario PVs and scenario FX in
+    stress-*          the stress scenario set HS-STRESS-2008 (stress.py): its scenario set, scenario PVs and scenario FX in
                       files of their own (stress-cob...) beside the normal set's, under the same table and date, for stressed VaR
     var-limit/        the VaR limits by hierarchy and node id (USD): every node of the limit-letter hierarchy LL (a few left without one,
                       shown blank), every node of MGMT (bank, division, desk, book) and LEGAL (bank, legal entity, desk, book; LEGAL's ids are paths), and every
@@ -34,13 +33,15 @@ keeps its move on every date: factors.Market ``back``), one book moved between d
                       business date, generated from each desk's scenario P&L (its risk-theoretical P&L) with front-office and finance
                       differences
 
-Every P&L and scenario-PV row carries its LIMIT_LETTER (2.9.5, positions.limit_letters): twelve letters, two books split between two.
+Every scenario-PV row carries its LIMIT_LETTER (positions.limit_letters): twelve letters, two books split between two. Positions are the
+demo's grain (VAR_GUIDE.md section 15.13); --position-systems "" sends every system per trade, the same data as trade-level records, for
+trade-grain tests, and --all-vectors sends P&L vectors (a kind with no records has no folder).
 
 No position, no VaR and no node history is written: positions are derived by the server from the trades and the pack's rules (VAR_GUIDE.md
 section 3.7), every figure is computed when asked, and a node's history is its official end-of-day captures. Every live trade is valued
-(statuses NEW, VALIDATED, AMENDED; maturity on or after the date; VAR_GUIDE.md section 23.1 question 1), about 9,600 trades. Each kind's
-folder holds one file per business date, <kind>.<YYYY-MM-DD>.jsonl.gz, or tar archives of <kind>/<YYYY-MM-DD>/ folders where a date is
-several files or one run writes many dates (TARS: the P&L vectors and scenario PVs one archive a date, their vectors split into files of
+(statuses NEW, VALIDATED, AMENDED; maturity on or after the date; VAR_GUIDE.md section 23.1 question 1), about 9,600 trades in 7,993
+position records. Each kind's folder holds one file per business date, <kind>.<YYYY-MM-DD>.jsonl.gz, or tar archives of <kind>/<YYYY-MM-DD>/ folders where a date is
+several files or one run writes many dates (TARS: the scenario PVs one archive a date, their vectors split into files of
 about 1.2 MB; the desks' 260-day P&L one archive; scenario-set and fx-scenario, whose newest date holds the stress set's file too, one
 archive), written by tools/lake/feedfiles.py; every row's BUSINESS_DATE is its file's (folder's) date. Deterministic: the same trades give
 the same files, byte for byte.
@@ -118,7 +119,7 @@ class Demo:
     """Everything the VaR demo data holds for one business date (``back`` business days before the newest)."""
 
     def __init__(self, testdata: Path, dates: list[str], budget: int = 0, rules: P.Rules | None = None, pv_systems=None,
-                 position_systems=(), back: int = 0):
+                 position_systems=None, back: int = 0, usd_pv_systems=None):
         """``back``: the date that many business days before ``dates[-1]`` (its trades, desks and market as of that day: the demo's
         earlier VaR dates, VAR_DATES)."""
         dates = dates[:len(dates) - back]
@@ -137,7 +138,7 @@ class Demo:
         market = F.Market(back=back)
         self.fx = SFX.Fx(market, SFX.today_rates(P.replay(testdata / "market-data" / "fx-spot", "PAIR", dates)))
         self.batch = P.Batch(trades, desks, vals, self.cob, self.rules, budget, market=market, fx=self.fx, pv_systems=pv_systems,
-                             position_systems=position_systems)
+                             position_systems=position_systems, usd_pv_systems=usd_pv_systems)
         self.scenario_dates = business_days(previous_day(self.cob), F.N_SCENARIOS)
         self.n = F.N_SCENARIOS
         self.nodes = self._hierarchy()
@@ -277,6 +278,13 @@ def dumps(d: dict) -> str:
     return json.dumps(d, separators=(",", ":"), ensure_ascii=False)
 
 
+def remove_folder(folder: Path) -> None:
+    if folder.is_dir():
+        for f in folder.iterdir():
+            f.unlink()
+        folder.rmdir()
+
+
 def demos(testdata: Path, dates: list[str], budget: int = 0, **kw) -> list[Demo]:
     """The Demo of every VaR date, the oldest first and the newest last."""
     return [Demo(testdata, dates, budget, back=k, **kw) for k in range(VAR_DATES - 1, -1, -1)]
@@ -307,6 +315,11 @@ def newest(docs: dict[str, list[dict]], cob: str) -> dict[str, list[dict]]:
     return {k: v if k in NEWEST_ONLY else [r for r in v if r["BUSINESS_DATE"] == cob] for k, v in docs.items()}
 
 
+def record_key(r: dict) -> tuple:
+    """A record's place in its file: by legal entity, desk and book (a book's records contiguous), then its id (a trade's or a position's)."""
+    return (r["LEGAL_ENTITY"], r["DESK"], r["TT_BOOK"], str(r.get("TRADE_ID") or r.get("POSITION_ID")))
+
+
 def documents(demo: Demo, newest_only: bool = True) -> dict[str, list[dict]]:
     """The documents of the demo's date (``newest_only`` False: without the NEWEST_ONLY kinds)."""
     demo.limits()
@@ -314,8 +327,8 @@ def documents(demo: Demo, newest_only: bool = True) -> dict[str, list[dict]]:
     limits = demo.var_limit_rows() + demo.portfolio_limit_rows(portfolios)
     return {"scenario-set": [demo.scenario_set()],
             # sorted as a book's trades are contiguous (the engine sorts a date in memory anyway: the lake's order does not matter)
-            "pnl-vector": sorted(demo.batch.vector_rows, key=lambda r: (r["LEGAL_ENTITY"], r["DESK"], r["TT_BOOK"], r["TRADE_ID"])),
-            "scenario-pv": sorted(demo.batch.pv_rows, key=lambda r: (r["LEGAL_ENTITY"], r["DESK"], r["TT_BOOK"], r["TRADE_ID"])),
+            "pnl-vector": sorted(demo.batch.vector_rows, key=record_key),
+            "scenario-pv": sorted(demo.batch.pv_rows, key=record_key),
             "fx-scenario": demo.fx.rows(demo.cob, SET, f"B-{demo.cob}-01"),
             "var-limit": limits,
             **({"desk-pnl": DP.rows(demo),
@@ -338,14 +351,13 @@ def write(out: Path, ds: list[Demo], with_samples: bool = True) -> list[dict]:
         for path in retired_samples(want):
             path.unlink()
     for kind in RETIRED:
-        folder = out / PACK / kind
-        if folder.is_dir():
-            for f in folder.iterdir():
-                f.unlink()
-            folder.rmdir()
+        remove_folder(out / PACK / kind)
     stressed = demo.stress().rows()
     for kind, rows in docs.items():
         extra = stressed.get(kind) or []
+        if not rows and not extra:                                    # a kind no system sends (the demo sends no P&L vectors): no folder, no entry
+            remove_folder(out / PACK / kind)
+            continue
         by_day: dict[str, list[tuple[str, bytes]]] = {}
         for day in sorted({r["BUSINESS_DATE"] for r in rows}):
             by_day[day] = gz_parts("cob", [dumps(r) for r in rows if r["BUSINESS_DATE"] == day])
@@ -382,8 +394,7 @@ def samples(demo: Demo, docs: dict[str, list[dict]]) -> dict[Path, str]:
                     next(p for p in pos if p["TRADE_COUNT"] > 1))
     otc = next(p for p in pos if p["DESK"] == "DESK-RATES" and p["POSITION_RULE"] == "otc")
     picks = {"position": [fungible, otc],
-             "pnl-vector": [r for r in docs["pnl-vector"] if r["TRADE_ID"] == fungible["TRADE_IDS"][0]],
-             "scenario-pv": [r for r in docs["scenario-pv"] if r["CURRENCY"] != "USD"][:1],
+             "scenario-pv": [r for r in docs["scenario-pv"] if r["CURRENCY"] != "USD"][:1],   # the demo's own: a position, sent whole
              "fx-scenario": [r for r in docs["fx-scenario"] if r["CURRENCY"] == "EUR"],
              "scenario-set": docs["scenario-set"],
              "var-limit": [r for r in docs["var-limit"] if r["HIERARCHY"] == "LL"][:3] + [r for r in docs["var-limit"]
@@ -393,17 +404,14 @@ def samples(demo: Demo, docs: dict[str, list[dict]]) -> dict[Path, str]:
              # a node's history cut to its first 20 days, so the sample stays readable (the lake's rows hold every day since 2007)
              "pnl-history": [{**r, "HISTORY_DATES": r["HISTORY_DATES"][:20], "PNL": r["PNL"][:20], "DAY_COUNT": 20,
                               "LAST_DAY": r["HISTORY_DATES"][19]} for r in docs["pnl-history"] if r["NODE_ID"] == "MGMT~DESK-RATES"]}
-    # and the same data at position grain (VAR_GUIDE.md section 15.13): a position its source system sends whole, naming its trades
+    # and the other forms the kinds accept (VAR_GUIDE.md section 15.13), the same fungible position's first trade: per trade, and a P&L
+    # vector per position (kept as reference samples: the demo's own data is the first scenario-PV record above)
     b = demo.batch
-    for kind, key, form in (("pnl-vector", "VECTOR_ID", "PNL"), ("scenario-pv", "SCENARIO_PV_ID", "PV")):
-        rows = {r["TRADE_ID"]: r for r in docs[kind] if r.get("GRAIN") == "TRADE"}
-        for p in pos:
-            members = [rows.get(t) for t in p["TRADE_IDS"]]
-            if len(members) > 1 and all(members) and len({m["SOURCE_SYSTEM"] for m in members}) == 1:
-                k, row = b.supply(p["POSITION_ID"], members[0]["SOURCE_SYSTEM"], members)
-                if k == kind:
-                    picks[kind] = picks[kind] + [row]
-                    break
+    first = fungible["TRADE_IDS"][0]
+    picks["pnl-vector"] = [b.trade_row(first, "pnl-vector")]
+    picks["scenario-pv"] = picks["scenario-pv"] + [b.trade_row(first, "scenario-pv")]
+    kind, row = b.supply(fungible["POSITION_ID"], b.terms_of[first][4], [b.trade_row(t, "pnl-vector") for t in fungible["TRADE_IDS"]])
+    picks["pnl-vector"].append(row)
     out = {SAMPLES / f"{k}.jsonl": "".join(json.dumps(d, ensure_ascii=False, separators=(",", ":")) + "\n" for d in v) for k, v in picks.items()}
     # the pack's Sutra tests (tests/<kind>/cases.jsonl and expect.yaml: java -jar <server> sutra test config/packs/banking/market-risk). The VaR
     # figures of these pages are the engine's, added when the page is opened: a test of the stored document checks the rest.
@@ -443,12 +451,12 @@ def main(argv=None) -> int:
     p.add_argument("--budget", type=int, default=0, help="most trades valued per book, whole positions only (default 0: every live trade)")
     p.add_argument("--check", action="store_true", help="fail if the committed files differ from what would be written")
     p.add_argument("--pv-systems", default=",".join(SFX.PV_SYSTEMS), metavar="SYS,SYS",
-                   help=f"the source systems whose trades come as scenario PVs in their own currency (default {','.join(SFX.PV_SYSTEMS)})")
+                   help=f"the source systems whose records come as scenario PVs (default {','.join(SFX.PV_SYSTEMS)})")
     p.add_argument("--pnl-systems", default="", metavar="SYS,SYS", help="systems whose trades come as P&L vectors (USD) even if listed above")
     p.add_argument("--all-vectors", action="store_true", help="every system as P&L vectors, exactly as in 2.9.3 (no scenario PVs)")
-    p.add_argument("--position-systems", default="", metavar="SYS,SYS",
-                   help="systems whose records come per position (GRAIN POSITION, summed from their trades, naming them in TRADE_IDS) "
-                        "rather than per trade (default: none)")
+    p.add_argument("--position-systems", default=",".join(SFX.POSITION_SYSTEMS), metavar="SYS,SYS",
+                   help="systems whose records come per position (GRAIN POSITION, summed from their trades, naming them in TRADE_IDS); "
+                        f"the others per trade (default {','.join(SFX.POSITION_SYSTEMS)}: the demo; \"\" for trade grain)")
     p.add_argument("--inputs-config", action="store_true",
                    help="print the drishti.var.inputs snippet matching the data the flags produce, and stop")
     a = p.parse_args(argv)

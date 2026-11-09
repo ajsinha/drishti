@@ -28,10 +28,15 @@ The **vector grain is the trade**: each live trade gets its own 509 scenario P&L
 of its trades' (P&L adds). A trade's P&L is its signed quantity times its position's P&L per unit (factors.unit_path) plus a little of
 its own (different dates, strikes, counterparties), rounded to whole USD.
 
-Since 2.9.4 the trades of the systems in scenario_fx.PV_SYSTEMS (Endur) come as **scenario PVs** in their own currency
-(``scenario-pv``) instead of a P&L vector, with the supplied scenario FX (``fx-scenario``): the same factor-model move, valued in the
-trade's currency (scenario_fx.py). ``trade_vectors`` keeps every trade's factor-model USD P&L (the limits and portfolios are set from it,
-as before); ``engine_vectors`` holds, for the scenario-PV trades, the USD P&L the server computes from their files.
+**What the batch sends** (the demo's scenario_fx.PV_SYSTEMS and POSITION_SYSTEMS, all three systems): one record per position
+(``GRAIN: POSITION``, ``POSITION_ID``, the trades it sums in ``TRADE_IDS``), as scenario PVs (``scenario-pv``) with the supplied scenario FX
+(``fx-scenario``). Endur's positions are valued in their trades' own currency (scenario_fx.py), so a currency translates exactly; Calypso's
+and Murex's are valued in USD (scenario_fx.USD_PV_SYSTEMS: ``CURRENCY`` USD, ``TRADE_CURRENCY`` their trades' own). ``trade_vectors`` keeps every
+trade's factor-model USD P&L (the limits and portfolios are set from it); ``engine_vectors`` holds the USD P&L the server computes
+from the files. A record's hierarchy placement is its promoted columns (LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, LIMIT_LETTER), so a position
+under two limit letters is sent as one record per letter, ``POSITION_ID`` ``<position>@<division>/<letter>`` (:meth:`Batch.supply_parts`): the id the
+engine gives the same split from trade-grain inputs. The flags keep the trade grain (each trade's own record; a position derived by the
+server) and P&L vectors.
 
 Since 2.9.5 every record carries its **limit letter** (``LIMIT_LETTER``, :func:`limit_letters`): the letter of authority its VaR limit is
 granted under. The demo's twelve letters each hold a few books across desks, and two books are split between two letters trade by trade
@@ -192,16 +197,24 @@ def lead(value_type: str, grain: str, ident: str, currency: str, system) -> dict
             "SOURCE_SYSTEM": system}
 
 
+def own(rows: list[dict], ccy: str) -> dict:
+    """A position's TRADE_CURRENCY when its trades share one that is not the currency of its PVs (else nothing: the record's CURRENCY)."""
+    ccys = {r.get("TRADE_CURRENCY") or ccy for r in rows}
+    return {"TRADE_CURRENCY": ccys.pop()} if len(ccys) == 1 and ccys != {ccy} else {}
+
+
 class Batch:
     """The demo risk batch of one business date: every live trade valued, each with its vector; the positions the rules derive."""
 
     def __init__(self, trades: dict[str, dict], desks: dict[str, dict], valuations: dict[str, dict], cob: str, rules: Rules, budget: int = 0,
-                 market: F.Market | None = None, fx: SFX.Fx | None = None, pv_systems=None, position_systems=()):
+                 market: F.Market | None = None, fx: SFX.Fx | None = None, pv_systems=None, position_systems=None, usd_pv_systems=None):
         self.cob, self.market, self.rules, self.fx = cob, market or F.Market(), rules, fx
-        # the systems whose trades come as scenario PVs (the rest as P&L vectors); () makes every trade a P&L vector, as before 2.9.4
+        # the systems whose trades come as scenario PVs (the rest as P&L vectors); () makes every trade a P&L vector
         self.pv_systems = tuple(SFX.PV_SYSTEMS if pv_systems is None else pv_systems)
-        # the systems whose records come per position, not per trade (GRAIN POSITION, VAR_GUIDE.md section 15.13); none by default
-        self.position_systems = tuple(position_systems or ())
+        # the systems whose records come per position, not per trade (GRAIN POSITION, VAR_GUIDE.md section 15.13); () for trade grain
+        self.position_systems = tuple(SFX.POSITION_SYSTEMS if position_systems is None else position_systems)
+        # the position systems whose PVs are in USD, not in their trades' own currency (scenario_fx.USD_PV_SYSTEMS)
+        self.usd_pv_systems = tuple(SFX.USD_PV_SYSTEMS if usd_pv_systems is None else usd_pv_systems)
         self.desk_of_book: dict[str, str] = {}
         self.le_of_desk: dict[str, str] = {}
         for d in desks.values():
@@ -222,12 +235,15 @@ class Batch:
         self.groups = self._sample(groups, budget)
         self.letters = limit_letters(sorted(self.desk_of_book))       # every book of the desks: the exposure paths' letters are the same
         self.letter: dict[str, str] = {}                    # trade id -> its limit letter (2.9.5)
+        self.terms_of: dict[str, tuple] = {}                # trade id -> its row's terms (trade_row)
         self.valuations = valuations
         self.trade_vectors: dict[str, list[int]] = {}       # trade id -> scenario P&Ls, then the business date's own move last
         self.positions: list[dict] = []
         self.vector_rows: list[dict] = []
         self.pv_rows: list[dict] = []                       # the trades sent as scenario PVs (scenario-pv)
         self.engine_vectors: dict[str, list[float]] = {}    # their USD P&L as the server computes it from the files
+        self.supplied_parts: list[tuple[str, str, list[dict]]] = []   # (position id of the record, system, its trades' rows): one per record sent
+        self.trade_rows: dict[str, dict] = {}               # each trade's own row (its kind's form), for the samples and the stress set
         self._value()
 
     @staticmethod
@@ -287,49 +303,75 @@ class Batch:
                 run = {"STATUS": "ok", "PRICER": "demo-factor-model", "MODEL_VERSION": "demo-2", "COMPUTED_AT": f"{self.cob}T06:00:00Z",   # the morning run; intraday updates come after it
                        "BATCH_ID": f"B-{self.cob}-01", "RESTATEMENT": 0, "RUN_KIND": "FULL"}   # a full run (VAR_GUIDE.md section 8.4)
                 sys = t.get("SOURCE_SYSTEM")
-                if self.fx is not None and sys in self.pv_systems and self.fx.has(ccy):
-                    base, pvs = SFX.scenario_pvs(self.fx, ccy, float(round(pv)), vec)
-                    self.engine_vectors[tid] = SFX.engine_pnl(self.fx, ccy, base, pvs)
-                    row = {**lead("PV", "TRADE", tid, ccy, sys), "SCENARIO_PV_ID": f"SPV-{tid}-HS-509", **terms, "BASE_PV": base,
-                           "VALUATION_DATE": self.cob, "BASE_VALUATION_DATE": self.cob, "SCENARIO_PV": pvs[:m.n], **run}
-                    rows = self.pv_rows
-                else:
-                    # a P&L vector's CURRENCY is its values' (USD here); the trade's own is TRADE_CURRENCY (2.9.4)
-                    row = {**lead("PNL", "TRADE", tid, "USD", sys), "VECTOR_ID": f"{PNL_ID}{tid}-HS-509", **terms, "CURRENCY": "USD",
-                           "TRADE_CURRENCY": ccy, "REPORTING_CCY": "USD", "PV": round(pv), "PNL": vec[:m.n], **run}
-                    rows = self.vector_rows
+                self.terms_of[tid] = (terms, run, ccy, float(round(pv)), sys)
+                pv_form = self.fx is not None and sys in self.pv_systems and self.fx.has(ccy)
+                row = self.trade_row(tid, "scenario-pv" if pv_form else "pnl-vector", usd=sys in self.position_systems and sys in self.usd_pv_systems, store=True)
+                self.trade_rows[tid] = row
                 if sys in self.position_systems:
                     supplied[(pid, sys)].append((t, row))             # sent whole per position (below), not per trade
                 else:
-                    rows.append(row)
+                    (self.pv_rows if pv_form else self.vector_rows).append(row)
             self.positions.append(self.position(pid, ts))
         for (pid, sys), members in supplied.items():
-            kind, row = self.supply(pid, sys, [r for _, r in members])
+            self.supply_parts(pid, sys, [r for _, r in members])
+
+    def trade_row(self, tid: str, kind: str, usd: bool = False, store: bool = False) -> dict:
+        """A trade's own record of ``kind`` (GRAIN TRADE): scenario PVs in its currency (``usd``: in USD, carrying TRADE_CURRENCY), or a USD
+        P&L vector (its factor-model vector); ``store``: ``engine_vectors`` gets the USD P&L the server computes from the record."""
+        terms, run, ccy, pv, sys = self.terms_of[tid]
+        vec = self.trade_vectors[tid]
+        n = self.market.n
+        if kind == "scenario-pv":
+            if usd:
+                base, pvs = pv, [round(pv + x, 2) for x in vec]
+                cur = {"CURRENCY": "USD", "TRADE_CURRENCY": ccy}
+            else:
+                base, pvs = SFX.scenario_pvs(self.fx, ccy, pv, vec)
+                cur = {"CURRENCY": ccy}
+            if store:
+                self.engine_vectors[tid] = SFX.engine_pnl(self.fx, cur["CURRENCY"], base, pvs)
+            return {**lead("PV", "TRADE", tid, cur["CURRENCY"], sys), "SCENARIO_PV_ID": f"SPV-{tid}-HS-509", **terms, **cur, "BASE_PV": base,
+                    "VALUATION_DATE": self.cob, "BASE_VALUATION_DATE": self.cob, "SCENARIO_PV": pvs[:n], **run}
+        # a P&L vector's CURRENCY is its values' (USD here); the trade's own is TRADE_CURRENCY
+        return {**lead("PNL", "TRADE", tid, "USD", sys), "VECTOR_ID": f"{PNL_ID}{tid}-HS-509", **terms, "CURRENCY": "USD",
+                "TRADE_CURRENCY": ccy, "REPORTING_CCY": "USD", "PV": round(pv), "PNL": vec[:n], **run}
+
+    def supply_parts(self, pid: str, sys: str, rows: list[dict]) -> None:
+        """A position of a system sent at position grain: one record per limit letter its trades sit under (one record for almost all;
+        ``<position>@<division>/<letter>`` for a position split across two, the hierarchy levels being the record's promoted columns)."""
+        letters: dict[str, list[dict]] = defaultdict(list)
+        for r in rows:
+            letters[r["LIMIT_LETTER"]].append(r)
+        for letter in sorted(letters):
+            part = pid if len(letters) == 1 else f"{pid}@{letters[letter][0]['DIVISION']}/{letter}"     # the id the engine gives a split position
+            self.supplied_parts.append((part, sys, letters[letter]))
+            kind, row = self.supply(part, sys, letters[letter])
             (self.pv_rows if kind == "scenario-pv" else self.vector_rows).append(row)
 
-    def supply(self, pid: str, sys: str, rows: list[dict]) -> tuple[str, dict]:
+    def supply(self, pid: str, sys: str, rows: list[dict], scenario_set: str = "HS-509") -> tuple[str, dict]:
         """One position of a system sent at position grain: its trades' records summed (PVs or P&L, linear) into one record keyed by
         POSITION_ID, placed by its book (LEGAL_ENTITY, DESK, TT_BOOK), naming its trades (TRADE_IDS). Scenario PVs only when its trades
-        share a currency (else as a P&L vector, in USD)."""
+        share a currency (else as a P&L vector, in USD). ``scenario_set``: the normal set's rows, or the stress set's."""
         pv_form = all("SCENARIO_PV" in r for r in rows) and len({r["CURRENCY"] for r in rows}) == 1
         first = rows[0]
         ids = [r["TRADE_ID"] for r in rows]
         qty = sum(float(r["QUANTITY"]) for r in rows)
         cps = sorted({r.get("COUNTERPARTY") or "" for r in rows} - {""})
-        place = {k: first.get(k) for k in ("BUSINESS_DATE", "SCENARIO_SET_ID", "TRADE_STATUS", "LEGAL_ENTITY", "DIVISION", "DESK", "TT_BOOK",
+        place = {k: first.get(k) for k in ("BUSINESS_DATE", "TRADE_STATUS", "LEGAL_ENTITY", "DIVISION", "DESK", "TT_BOOK",
                                             "LIMIT_LETTER", "PORTFOLIO", "STRATEGY", "PRODUCT_GROUP", "PRODUCT_TYPE")}
-        place.update({"SECURITY_ID": first.get("SECURITY_ID"), "INSTRUMENT": first.get("INSTRUMENT"),
+        place.update({"SCENARIO_SET_ID": scenario_set, "SECURITY_ID": first.get("SECURITY_ID"), "INSTRUMENT": first.get("INSTRUMENT"),
                       "MATURITY_DATE": max(str(r.get("MATURITY_DATE") or "") for r in rows) or None,
                       "COUNTERPARTY": cps[0] if len(cps) == 1 else "", "DIRECTION": "LONG" if qty >= 0 else "SHORT", "QUANTITY": qty,
                       "TAGS": "|".join(sorted({x for r in rows for x in str(r.get("TAGS") or "").split("|") if x}))})
         run = {k: first[k] for k in ("STATUS", "PRICER", "MODEL_VERSION", "COMPUTED_AT", "BATCH_ID", "RESTATEMENT", "RUN_KIND")}
-        n = self.market.n
+        n = len(first["SCENARIO_PV"] if "SCENARIO_PV" in first else first["PNL"])   # the normal set's 509 or the stress set's 250
         if pv_form:
             ccy = first["CURRENCY"]
             base = round(sum(float(r["BASE_PV"]) for r in rows), 2)
             pvs = [round(sum(float(r["SCENARIO_PV"][j]) for r in rows), 2) for j in range(n)]
-            self.engine_vectors[pid] = SFX.engine_pnl(self.fx, ccy, base, pvs)
-            return "scenario-pv", {**lead("PV", "POSITION", pid, ccy, sys), "SCENARIO_PV_ID": f"SPV-{pid}-HS-509", **place, "BASE_PV": base,
+            if scenario_set == "HS-509":                              # the stress set's are the stress market's, not this batch's FX
+                self.engine_vectors[pid] = SFX.engine_pnl(self.fx, ccy, base, pvs)
+            return "scenario-pv", {**lead("PV", "POSITION", pid, ccy, sys), "SCENARIO_PV_ID": f"SPV-{pid}-{scenario_set}", **place, **own(rows, ccy), "BASE_PV": base,
                                    "VALUATION_DATE": self.cob, "BASE_VALUATION_DATE": self.cob, "SCENARIO_PV": pvs, **run, "TRADE_IDS": ids}
         pnl = [0.0] * n
         for r in rows:
@@ -337,9 +379,9 @@ class Batch:
             for j in range(n):
                 pnl[j] += float(v[j])
         ccys = {r.get("TRADE_CURRENCY") or r["CURRENCY"] for r in rows}
-        own = {"TRADE_CURRENCY": ccys.pop()} if len(ccys) == 1 else {}
+        own_ccy = {"TRADE_CURRENCY": ccys.pop()} if len(ccys) == 1 else {}
         return "pnl-vector", {**lead("PNL", "POSITION", pid, "USD", sys),
-                              "VECTOR_ID": f"{PNL_ID}{pid}-HS-509", **place, "CURRENCY": "USD", **own, "REPORTING_CCY": "USD",
+                              "VECTOR_ID": f"{PNL_ID}{pid}-{scenario_set}", **place, "CURRENCY": "USD", **own_ccy, "REPORTING_CCY": "USD",
                               "PV": round(sum(float(r.get("PV") or 0) for r in rows if "PV" in r)), "PNL": [round(x, 2) for x in pnl],
                               **run, "TRADE_IDS": ids}
 

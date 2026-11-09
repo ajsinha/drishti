@@ -57,7 +57,7 @@ class VarTestDataPrecisionTest {
 
     static Path root() {
         Path p = Path.of("").toAbsolutePath();
-        while (p != null && !Files.isDirectory(p.resolve("data/testdata/market-risk/pnl-vector"))) {
+        while (p != null && !Files.isDirectory(p.resolve("data/testdata/market-risk/scenario-pv"))) {
             p = p.getParent();
         }
         if (p == null) {
@@ -83,6 +83,9 @@ class VarTestDataPrecisionTest {
     static final String DATE = "2026-09-30";
 
     static void lines(Path folder, boolean stress, Consumer<JsonNode> each) throws IOException {
+        if (!Files.isDirectory(folder)) {
+            return;                                                     // a kind the demo does not send (P&L vectors)
+        }
         for (String line : FeedFiles.lines(folder, p -> p.date().equals(DATE) && p.name().startsWith("stress-") == stress)) {
             each.accept(JSON.readTree(line));
         }
@@ -153,18 +156,39 @@ class VarTestDataPrecisionTest {
         });
     }
 
+    /**
+     * Fills a record's position texts as the intake does and returns its book key: a trade's, derived from the rules; a position sent whole
+     * ({@code GRAIN: POSITION}), its own id, never derived. {@code CURRENCY} is the trade's own when the record says it apart from the values'.
+     */
+    static String identify(String[] texts, List<String> cols, JsonNode n, PositionRules rules) {
+        String own = text(n, "TRADE_CURRENCY");
+        if (own != null) {
+            texts[cols.indexOf("CURRENCY")] = own;
+        }
+        String trade = text(n, "TRADE_ID");
+        if (trade == null) {
+            String pos = text(n, "POSITION_ID");
+            texts[cols.indexOf("POSITION_ID")] = pos;
+            texts[cols.indexOf("POSITION_RULE")] = VarBook.SUPPLIED;
+            texts[cols.indexOf("INSTRUMENT_ID")] = text(n, "SECURITY_ID") != null ? text(n, "SECURITY_ID") : pos;
+            texts[cols.indexOf("SECURITY_ID")] = text(n, "SECURITY_ID");
+            return pos;
+        }
+        PositionRules.Derived d = rules.derive(trade, text(n, "TT_BOOK"), text(n, "PRODUCT_GROUP"), text(n, "PRODUCT_TYPE"), k -> text(n, k));
+        texts[cols.indexOf("POSITION_ID")] = d.positionId();
+        texts[cols.indexOf("POSITION_RULE")] = d.rule();
+        texts[cols.indexOf("INSTRUMENT_ID")] = d.instrumentId();
+        texts[cols.indexOf("SECURITY_ID")] = d.securityId();
+        return trade;
+    }
+
     private static void add(VarBook.Builder b, JsonNode n, PositionRules rules, double[] v, double pvUsd, String pvCurrency) {
         List<String> cols = b.textColumns();
         String[] texts = new String[cols.size()];
         for (int c = 0; c < texts.length; c++) {
             texts[c] = text(n, cols.get(c));
         }
-        String trade = text(n, "TRADE_ID");
-        PositionRules.Derived d = rules.derive(trade, text(n, "TT_BOOK"), text(n, "PRODUCT_GROUP"), text(n, "PRODUCT_TYPE"), k -> text(n, k));
-        texts[VarBook.TRADE_TEXTS.indexOf("POSITION_ID")] = d.positionId();
-        texts[VarBook.TRADE_TEXTS.indexOf("POSITION_RULE")] = d.rule();
-        texts[VarBook.TRADE_TEXTS.indexOf("INSTRUMENT_ID")] = d.instrumentId();
-        texts[VarBook.TRADE_TEXTS.indexOf("SECURITY_ID")] = d.securityId();
+        String trade = identify(texts, cols, n, rules);
         texts[VarBook.TRADE_TEXTS.indexOf(CurrencyTotals.COLUMN)] = pvCurrency;
         double[] nums = {n.path("QUANTITY").asDouble(Double.NaN), pvUsd};
         b.trade(trade, v, v.length, texts, nums);
@@ -204,8 +228,8 @@ class VarTestDataPrecisionTest {
 
     @Test
     void theHotCopyOfTheTestDataIsWithinTheStatedTolerance() {
-        assertThat(heap.tradeCount()).isEqualTo(9572);
-        assertThat(heap.positionCount()).isEqualTo(7984);
+        assertThat(heap.tradeCount()).isEqualTo(7993);
+        assertThat(heap.positionCount()).isEqualTo(7993);
         assertThat(heap.nodes()).hasSize(88);
         VarCalc calc = VarCalc.defaults();
         double bound = VarHotFileTest.bound(heap);

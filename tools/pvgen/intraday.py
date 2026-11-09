@@ -49,7 +49,7 @@ def main(argv=None) -> int:
     p.add_argument("--trades-per-batch", type=int, default=15, help="trades a batch (default 15)")
     p.add_argument("--seed", type=int, default=7, help="the same batches for the same seed (default 7)")
     p.add_argument("--mix", default="amend=70,new=15,cancel=15", help="the shares of amended, new and cancelled trades")
-    p.add_argument("--pv-systems", default="ENDUR", metavar="SYS,SYS", help="systems whose updates come as scenario PVs (default ENDUR)")
+    p.add_argument("--pv-systems", default="ENDUR,CALYPSO,MUREX", metavar="SYS,SYS", help="systems whose updates come as scenario PVs (default all three)")
     p.add_argument("--pnl-systems", default="", metavar="SYS,SYS", help="systems whose updates come as P&L vectors even when listed above")
     p.add_argument("--all-vectors", action="store_true", help="every update a P&L vector")
     p.add_argument("--morning-pv-systems", default="ENDUR", metavar="SYS,SYS", help="the morning run's scenario-PV systems (default ENDUR)")

@@ -30,7 +30,7 @@ from wb_live import _stack
 
 pytestmark = pytest.mark.browser
 ROOT = Path(__file__).resolve().parents[2]
-DATA = ",".join([f"market-risk/{k}" for k in ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set",
+DATA = ",".join([f"market-risk/{k}" for k in ("scenario-pv", "fx-scenario", "scenario-set",
                                              "var-limit", "pnl-history")] + ["core/desk", "core/book", "core/legal-entity"] + ["trades/murex"])
 
 
@@ -44,7 +44,7 @@ def stack(tmp_path_factory):
     r = subprocess.run([sys.executable, str(ROOT / "tools" / "drishti.py"), "lake", "demo", "--lake", str(lake), "--data-dir", str(work / "data"),
                         "--connectors-dir", str(work / "connectors"), "--as-of", today.isoformat(), "--only", DATA, "--no-signal", "-q",
                         "--engine", "deltalake"], capture_output=True, text=True, cwd=ROOT, timeout=1500)   # the Python writer, in this process: auto starts a JVM for every table and business day
-    if r.returncode != 0 or not (lake / "risk" / "pnl-vector").is_dir():
+    if r.returncode != 0 or not (lake / "risk" / "scenario-pv").is_dir():
         pytest.skip("could not build the VaR demo lake: " + (r.stderr or r.stdout)[-400:])
     for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true", "DRISHTI_VAR_SYSTEM_BASKETS_SEED": "true",
                                         "DRISHTI_VAR_HOT_DIR": str(work / "hot")}):

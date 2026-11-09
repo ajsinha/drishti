@@ -242,6 +242,8 @@ final class VarSelection {
         for (String n : s.res().notes()) {
             if (n.equals("rule matched 0 positions")) {
                 out.add("a rule matches no position on " + date);
+            } else if (n.startsWith("TRD:") && n.contains("sends whole")) {
+                out.add(n);                                               // a position named as a trade: counted as the position, said so
             }
         }
         if (s.set().isEmpty()) {
@@ -252,6 +254,10 @@ final class VarSelection {
     }
 
     private static String trade(VarService.Scoped s, String id, String date) {
+        String position = s.date().intake().positionOf(id);
+        if (position != null) {
+            return "TRD:" + id + " is in the position " + position + ", which its source system sends whole (position grain): ask POS:" + position;
+        }
         String why = s.date().intake().notLiveWhy(id);
         return why != null ? "TRD:" + id + " is not live on " + date + ": " + why + " (no P&L vector)"
                 : "TRD:" + id + " is not a live trade on " + date + " (no P&L vector): unknown to the day's vectors, matured or cancelled";

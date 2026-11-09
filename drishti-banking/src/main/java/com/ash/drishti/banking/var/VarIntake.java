@@ -387,12 +387,12 @@ final class VarIntake {
         for (int c = 0; c < numbers.length; c++) {
             numbers[c] = VarLoader.number(text(row, VarBook.TRADE_NUMBERS.get(c)));
         }
+        // a record's CURRENCY is its values' currency: the trade's or position's own is TRADE_CURRENCY when sent (scopes, rules, Trade currency)
+        String ownCurrency = text(row, "TRADE_CURRENCY");
+        if (ownCurrency != null) {
+            texts[VarBook.TRADE_TEXTS.indexOf("CURRENCY")] = ownCurrency;
+        }
         if (fx == null) {
-            // a P&L row's CURRENCY is its values' currency: the trade's own is TRADE_CURRENCY when sent (scopes, rules, Trade currency)
-            String own = text(row, "TRADE_CURRENCY");
-            if (own != null) {
-                texts[VarBook.TRADE_TEXTS.indexOf("CURRENCY")] = own;
-            }
             if (vectorCcy != null) {
                 numbers[VarBook.TRADE_NUMBERS.indexOf("PV")] = pvUsd;       // its PV, also in CURRENCY, in USD at today's rate
             }

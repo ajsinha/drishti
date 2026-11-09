@@ -31,8 +31,8 @@ system-baskets:
       - position: POS-BOOK-FX-1~CLY-3000004
       - position: POS-BOOK-FX-1~CLY-3000006
       - position: POS-BOOK-FX-1~CLY-3000014
-      - trade: CLY-3000087
-      - trade: CLY-3000091
+      - position: POS-BOOK-CREDIT-1~CLY-3000087
+      - position: POS-BOOK-CREDIT-1~CLY-3000091
     rolls-up-to: {kind: division, id: DIV-MARKETS}
     valid-from: '2026-01-02'
   - id: PF-COMM-BOOK-1
@@ -157,7 +157,7 @@ system-baskets:
     name: Listed futures and options
     owner: markets-coo
     type: rule
-    rule: 'POSITION_RULE == ''listed'''
+    rule: 'PRODUCT_TYPE in (''BOND_FUTURE'', ''STIR_FUTURE'', ''STIR_FUT_OPT'', ''EQ_FUTURE_SINGLE'', ''EQ_INDEX_FUTURE'', ''EQ_OPTION_LISTED'', ''EQ_INDEX_OPTION'', ''CMD_FUTURE'', ''CMD_FUT_OPTION'', ''ComFut'', ''EMISSIONS_FUTURE'') and PRODUCT_GROUP != ''Fixed income'''
     rolls-up-to: {kind: bank, id: BANK}
     valid-from: '2026-01-02'
   - id: PF-MM-DESK
@@ -178,8 +178,8 @@ system-baskets:
       - position: POS-BOOK-COMM-1~XCH-ComFut-USD-09
       - position: POS-BOOK-COMM-1~XCH-ComFut-USD-10
       - position: POS-BOOK-COMM-2~XCH-CMD_FUTURE-USD-01
-      - trade: MX-20000016
-      - trade: MX-20000018
+      - position: POS-BOOK-RATES-1~MX-20000016
+      - position: POS-BOOK-RATES-1~MX-20000018
     rolls-up-to: {kind: bank, id: BANK}
     valid-from: '2026-01-02'
   - id: PF-OPTIONS
@@ -190,18 +190,18 @@ system-baskets:
     rolls-up-to: {kind: bank, id: BANK}
     valid-from: '2026-01-02'
   - id: PF-PARTIAL-FILLS
-    name: Single fills of fungible positions
+    name: Fungible positions under review
     owner: asha
     type: basket
     members:
-      - trade: MX-20000317
-      - trade: MX-30000316
-      - trade: MX-30000758
-      - trade: '1001385'
-      - trade: '1000171'
-      - trade: '1000105'
-      - trade: '1001213'
-      - trade: '1003924'
+      - position: POS-BOOK-COMM-1~XCH-CMD_FUT_OPTION-USD-05
+      - position: POS-BOOK-COMM-1~XCH-CMD_FUT_OPTION-USD-06
+      - position: POS-BOOK-COMM-1~XCH-CMD_FUT_OPTION-USD-09
+      - position: POS-BOOK-COMM-1~XCH-ComFut-EUR-03
+      - position: POS-BOOK-COMM-1~XCH-ComFut-USD-06
+      - position: POS-BOOK-COMM-1~XCH-ComFut-USD-08
+      - position: POS-BOOK-COMM-1~XCH-ComFut-USD-09
+      - position: POS-BOOK-COMM-1~XCH-ComFut-USD-10
     rolls-up-to: {kind: bank, id: BANK}
     valid-from: '2026-01-02'
   - id: PF-RATES-DESK

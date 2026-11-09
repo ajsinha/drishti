@@ -525,7 +525,7 @@ python3 tools/drishti.py lake show
 lakes in .../config/lakes: 3
   ccr-official: delta at .../data/delta, 1 tables
     risk-results.exposure-official-cpty      risk-results/exposure-official-cpty      partitioned by business_date; 26 promoted
-  demo: delta at .../data/delta/demo, 87 tables
+  demo: delta at .../data/delta/demo, 86 tables
     compute-demo.path-book                   compute-demo/path-book                   partitioned by business_date; 4 promoted
     ...
     risk.pnl-vector                          risk/pnl-vector                          partitioned by business_date; 32 promoted, vectors PNL

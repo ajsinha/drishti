@@ -39,7 +39,7 @@ REGISTER = yaml.safe_load((ROOT / "config" / "docs-features.yaml").read_text(enc
 FEATURES = REGISTER["features"]
 REFERENCES = set(REGISTER.get("references") or [])
 
-CAPS = {"guides": 24, "tutorials": 23, "references": 12, "knowledge": 5, "help": 65}
+CAPS = {"guides": 24, "tutorials": 23, "references": 12, "knowledge": 5, "help": 66}
 CONTRACTS_PLANNED = 30
 
 HISTORY = re.compile(r"\b(?:since|new in|as of|added in|until|before|changed in) (?:v|version )?2\.\d+(?:\.\d+)*(?:\.[a-z])?\b"

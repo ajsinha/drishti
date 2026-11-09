@@ -40,6 +40,8 @@ import subprocess
 import sys
 import time
 import urllib.error
+import urllib.parse
+import json
 import urllib.request
 from pathlib import Path
 
@@ -51,7 +53,7 @@ from wb_live import _stack
 from select_helpers import choose, labels  # <drishti-select>: drishti-inputs' Select
 
 ROOT = Path(__file__).resolve().parents[2]
-VAR_DATA = ",".join([f"market-risk/{k}" for k in ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "var-limit")] + ["core/desk", "core/book", "core/legal-entity"] + ["trades/murex"])
+VAR_DATA = ",".join([f"market-risk/{k}" for k in ("scenario-pv", "fx-scenario", "scenario-set", "var-limit")] + ["core/desk", "core/book", "core/legal-entity"] + ["trades/murex"])
 SHOTS = os.environ.get("DRISHTI_VAR_SHOTS")
 #: the time from a click on a desk to its painted panels (the product owner's target is 300 ms on the demo data); generous here, as the
 #: suite runs beside builds: the measured time is printed and kept in the docs
@@ -65,11 +67,29 @@ def stack(tmp_path_factory):
     r = subprocess.run([sys.executable, str(ROOT / "tools" / "drishti.py"), "lake", "demo", "--lake", str(lake), "--data-dir", str(work / "data"),
                         "--connectors-dir", str(work / "connectors"), "--as-of", "today", "--only", VAR_DATA, "--no-signal", "-q",
                         "--engine", "deltalake"], capture_output=True, text=True, cwd=ROOT, timeout=1500)   # the Python writer, in this process: auto starts a JVM for every table and business day
-    if r.returncode != 0 or not (lake / "risk" / "pnl-vector").is_dir():
+    if r.returncode != 0 or not (lake / "risk" / "scenario-pv").is_dir():
         pytest.skip("could not build the VaR demo lake: " + (r.stderr or r.stdout)[-400:])
     for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true", "DRISHTI_VAR_SYSTEM_BASKETS_SEED": "true",
                                         "DRISHTI_COMPUTE_ENABLED": "false",    # the what-if needs no compute workers
                                         "DRISHTI_VAR_SCENARIO_WINDOW": "all"}, heap=VAR_HEAP):   # the full 509-scenario set the figures below are written for
+        _engine_ready(str(st))
+        yield st
+
+
+@pytest.fixture(scope="module")
+def trade_stack(tmp_path_factory):
+    """The explorer over a small trade-grain date (var_stack.trade_grain): the engine's trade paths, the demo itself being position grain."""
+    import var_stack
+    work = tmp_path_factory.mktemp("var-trade-lake")
+    lake = work / "delta"
+    r = subprocess.run([sys.executable, str(ROOT / "tools" / "drishti.py"), "lake", "demo", "--lake", str(lake), "--data-dir", str(work / "data"),
+                        "--connectors-dir", str(work / "connectors"), "--as-of", "today", "--only", VAR_DATA, "--no-signal", "-q",
+                        "--engine", "deltalake"], capture_output=True, text=True, cwd=ROOT, timeout=1500)
+    if r.returncode != 0:
+        pytest.skip("could not build the VaR demo lake: " + (r.stderr or r.stdout)[-400:])
+    var_stack.trade_grain(lake)
+    for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true", "DRISHTI_VAR_SYSTEM_BASKETS_SEED": "true",
+                                        "DRISHTI_COMPUTE_ENABLED": "false", "DRISHTI_VAR_SCENARIO_WINDOW": "all"}, heap=VAR_HEAP):
         _engine_ready(str(st))
         yield st
 
@@ -122,8 +142,8 @@ def open_var(browser, base, path, size=None):
     return pg
 
 
-def test_the_command_opens_the_desk_and_a_drill_from_bank_to_trade_stays_in_place(stack, browser):
-    pg = open_var(browser, str(stack), "/go?q=" + "VAR DESK DESK-RATES <GO>".replace(" ", "+"))
+def test_the_command_opens_the_desk_and_a_drill_from_bank_to_trade_stays_in_place(trade_stack, browser):
+    pg = open_var(browser, str(trade_stack), "/go?q=" + "VAR DESK DESK-RATES <GO>".replace(" ", "+"))
     assert "/var?scope=DESK%3ADESK-RATES" in pg.url or "/var?scope=DESK:DESK-RATES" in pg.url
     painted(pg, "DESK:DESK-RATES")
     assert pg.locator(".vx-tile").count() == 6
@@ -183,11 +203,11 @@ def test_the_command_opens_the_desk_and_a_drill_from_bank_to_trade_stays_in_plac
     pg.close()
 
 
-def test_the_limit_letters_tree_a_letter_its_desk_and_a_trade(stack, browser):
+def test_the_limit_letters_tree_a_letter_its_desk_and_a_trade(trade_stack, browser):
     """2.9.5 (docs/guides/VAR_GUIDE.md section 15.14): the selector lists the date's hierarchies by title (the pack's MGMT, LEGAL and LL);
     LL is kept in the link; a letter carries its limit bar; a drill from the letter to its desk node to a position and a trade stays in
     place; LL:<letter> in the scope box is the letter's node."""
-    pg = open_var(browser, str(stack), "/var?scope=BANK")
+    pg = open_var(browser, str(trade_stack), "/var?scope=BANK")
     painted(pg, "BANK")
     wait(pg, "(document.querySelector('[data-vx-hierarchy]').component || {options: []}).options.length >= 3")
     titles = labels(pg, "[data-vx-hierarchy]")
@@ -219,14 +239,14 @@ def test_the_limit_letters_tree_a_letter_its_desk_and_a_trade(stack, browser):
     pg.close()
     # the scope word: LL:<letter> is the letter's node (its VaR the tree's)
     word = "LL:" + letter.split("~", 1)[1]
-    pg = open_var(browser, str(stack), "/var?scope=" + word)
+    pg = open_var(browser, str(trade_stack), "/var?scope=" + word)
     painted(pg, word)
     assert pg.locator('.vx-tile[data-tile="0"] .v').inner_text()
     pg.close()
 
 
-def test_the_tabs_path_history_and_contributions(stack, browser):
-    pg = open_var(browser, str(stack), "/var?scope=DESK:DESK-FX")
+def test_the_tabs_path_history_and_contributions(trade_stack, browser):
+    pg = open_var(browser, str(trade_stack), "/var?scope=DESK:DESK-FX")
     painted(pg, "DESK:DESK-FX")
     assert len([c for c in bars(pg, "[data-vx-histo]") if c]) > 10                        # the server's bins with a count
     assert len(bars(pg, "[data-vx-tail]")) == 25
@@ -287,8 +307,8 @@ def paste(pg, text):
         document.querySelector('[data-vb-sheet]').dispatchEvent(new ClipboardEvent('paste', {clipboardData: dt, bubbles: true, cancelable: true})); }""", text)
 
 
-def test_construct_your_basket_sheet_paste_checks_save_reopen_edit_and_delete(stack, browser):
-    pg = open_var(browser, str(stack), "/var?scope=BOOK:BOOK-RATES-1")
+def test_construct_your_basket_sheet_paste_checks_save_reopen_edit_and_delete(trade_stack, browser):
+    pg = open_var(browser, str(trade_stack), "/var?scope=BOOK:BOOK-RATES-1")
     pg.evaluate("localStorage.removeItem(window.Drishti.key('drishti.varBasket2'))")
     pg.reload()
     painted(pg, "BOOK:BOOK-RATES-1")
@@ -388,7 +408,7 @@ def test_construct_your_basket_sheet_paste_checks_save_reopen_edit_and_delete(st
     # a fresh browser (nothing kept): opening the basket loads it back into the sheet, column by column
     ctx = browser.new_context(viewport={"width": 1600, "height": 1000})
     pg = ctx.new_page()
-    pg.goto(str(stack) + "/go?q=" + f"VAR SCOPE {basket} <GO>".replace(" ", "+"))
+    pg.goto(str(trade_stack) + "/go?q=" + f"VAR SCOPE {basket} <GO>".replace(" ", "+"))
     wait(pg, "window.Drishti.VarExplorer && window.Drishti.VarExplorer.state.head && window.Drishti.VarExplorer.state.head.kind === 'basket'", 60)
     wait(pg, "window.Drishti.VarBasket.state.saved && window.Drishti.VarBasket.state.saved.id === %r && window.Drishti.VarBasket.parts() === 6" % basket)
     assert pg.locator("[data-vx-basket]").is_hidden()                       # loaded; the sheet waits for the link
@@ -433,13 +453,13 @@ def test_construct_your_basket_sheet_paste_checks_save_reopen_edit_and_delete(st
     pg.locator(f'[data-vx-delete="{basket}"]').wait_for(state="detached")
     assert pg.evaluate("(id) => fetch('/api/var/baskets/' + id).then(r => r.status)", basket) == 404
     # anywhere else: no Basket in the top bar and Alt+B does nothing; the explorer opens the sheet with the basket kept (this browser)
-    pg.goto(str(stack) + "/t")
+    pg.goto(str(trade_stack) + "/t")
     wait(pg, "!!document.querySelector('header, nav')")
     assert pg.locator("[data-basket-btn]").count() == 0
     pg.keyboard.press("Alt+b")
     pg.wait_for_timeout(300)
     assert pg.locator("[data-vb-popup]").count() == 0 and pg.locator("[data-vb-sheet]").count() == 0
-    pg.goto(str(stack) + "/var?scope=BANK")
+    pg.goto(str(trade_stack) + "/var?scope=BANK")
     wait(pg, "window.Drishti.VarExplorer && window.Drishti.VarExplorer.state.head", 60)
     n = pg.evaluate("window.Drishti.VarBasket.parts()")
     assert n > 0 and int(pg.locator("[data-vx-basket-open] [data-basket-count]").inner_text().replace(",", "")) == n
@@ -448,9 +468,9 @@ def test_construct_your_basket_sheet_paste_checks_save_reopen_edit_and_delete(st
     ctx.close()
 
 
-def test_the_pre_deal_what_if_under_the_sheet(stack, browser):
+def test_the_pre_deal_what_if_under_the_sheet(trade_stack, browser):
     """A copy of a booked trade, unwound (factor -1), added to the basket: VaR and ES before and after by the server's VaR engine."""
-    pg = open_var(browser, str(stack), "/var?scope=DESK:DESK-FX")
+    pg = open_var(browser, str(trade_stack), "/var?scope=DESK:DESK-FX")
     pg.evaluate("localStorage.removeItem(window.Drishti.key('drishti.varBasket2'))")
     pg.reload()
     painted(pg, "DESK:DESK-FX")
@@ -480,12 +500,12 @@ def test_an_id_that_is_not_a_live_trade_says_so(stack, browser):
     pg.close()
 
 
-def test_a_trade_page_has_its_risk_links(stack, browser):
+def test_a_trade_page_has_its_risk_links(trade_stack, browser):
     """risk-links@1 on every deal Sutra: the P&L vector and the VaR of a live trade one click away; no exposure run here, said so."""
-    trd = urllib.request.urlopen(str(stack) + "/api/var/scope/contributions?scope=DESK:DESK-RATES&by=trade", timeout=60)
+    trd = urllib.request.urlopen(str(trade_stack) + "/api/var/scope/contributions?scope=DESK:DESK-RATES&by=trade", timeout=60)
     import json
     tid = [r["key"] for r in json.loads(trd.read())["rows"] if r["key"].startswith("MX-")][0]
-    pg = open_var(browser, str(stack), "/go?q=" + f"TRD {tid} <GO>".replace(" ", "+"))
+    pg = open_var(browser, str(trade_stack), "/go?q=" + f"TRD {tid} <GO>".replace(" ", "+"))
     wait(pg, "!!document.querySelector('#p-risk')", 60)
     risk = pg.locator("#p-risk")
     wait(pg, "document.querySelector('#p-risk').innerText.indexOf('HS-509') >= 0 || document.querySelector('#p-risk').innerText.indexOf('not loaded') >= 0", 30)
@@ -583,3 +603,49 @@ def test_on_a_phone_the_explorer_stacks_without_scrolling_sideways(stack, browse
     assert pg.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
     shot(pg, "explorer-phone")
     pg.close()
+
+def test_a_position_grain_date_drills_to_the_position_and_says_the_rest_in_words(stack, browser):
+    """The demo as stakeholders see it: contributions by position, a position's page, and a trade or a position named as a trade in words."""
+    pg = open_var(browser, str(stack), "/var?scope=DESK:DESK-FX&tab=contrib")
+    pg.locator('[data-by="trade"]').click()
+    wait(pg, "document.querySelectorAll('[data-vx-ctable] .dg-row[data-scope^=\"POS:\"]').length > 0")
+    assert pg.locator('[data-vx-ctable] .dg-row[data-scope^="TRD:"]').count() == 0
+    pos = pg.locator('[data-vx-ctable] .dg-row[data-scope^="POS:"]').first.get_attribute("data-scope")[4:]
+    # a position named as a trade counts as the position, and says so
+    pg2 = open_var(browser, str(stack), "/var?scope=" + urllib.parse.quote("TRD:" + pos))
+    wait(pg2, "(document.querySelector('[data-vx-notices]') || {innerText: ''}).innerText.indexOf('counted as POS:') >= 0", 60)
+    notes = pg2.locator("[data-vx-notices]").inner_text()
+    assert "counted as POS:" + pos in notes, notes
+    pg2.close()
+    doc = json.loads(urllib.request.urlopen(str(stack) + "/api/var/scope?scope=" + urllib.parse.quote("POS:" + pos), timeout=60).read())
+    assert doc["var"] >= 0 and doc["kind"] == "position"
+    pg.close()
+
+
+def test_a_trade_of_a_position_sent_whole_is_said_in_words(stack, browser):
+    import yaml
+    rows = yaml.safe_load((ROOT / "config/packs/banking/market-risk/seeds/system-baskets.yaml").read_text(encoding="utf-8"))["system-baskets"]
+    assert rows                                                       # the seed loads
+    doc = json.loads(urllib.request.urlopen(str(stack) + "/api/var/scope/contributions?scope=DESK:DESK-RATES&by=position", timeout=60).read())
+    assert doc["by"] == "position"
+    pg = open_var(browser, str(stack), "/go?q=" + "VAR TRD CLY-3000087 <GO>".replace(" ", "+"))
+    wait(pg, "document.querySelector('[data-var]') && document.querySelector('[data-var]').dataset.empty === 'true'", 60)
+    notes = pg.locator("[data-vx-notices]").inner_text()
+    assert "sends whole" in notes and "POS:POS-BOOK-CREDIT-1~CLY-3000087" in notes, notes
+    assert "DRS-" not in notes
+    pg.close()
+
+
+def test_a_system_basket_of_positions_and_a_paste_into_the_trade_column(stack, browser):
+    """A position id pasted into the Trade column of the sheet counts as the position; a trade inside a position says which position."""
+    pg = open_var(browser, str(stack), "/var?scope=DESK:DESK-FX&tab=contrib")
+    pg.locator('[data-by="trade"]').click()
+    wait(pg, "document.querySelectorAll('[data-vx-ctable] .dg-row[data-scope^=\"POS:\"]').length > 0")
+    pos = pg.locator('[data-vx-ctable] .dg-row[data-scope^="POS:"]').first.get_attribute("data-scope")[4:]
+    r = urllib.request.Request(str(stack) + "/api/var/basket/sheet", json.dumps({"TRD": [pos, "CLY-3000087"]}).encode(),
+                               {"content-type": "application/json"})
+    pg.close()
+    d = json.loads(urllib.request.urlopen(r, timeout=120).read())
+    assert d["found"] == 1 and d["notFound"] == 1, d
+    assert "sends whole" in d["cells"][0]["reason"] and "DRS-" not in d["cells"][0]["reason"], d
+

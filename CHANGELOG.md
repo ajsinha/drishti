@@ -17,7 +17,15 @@
 
 ## Unreleased
 
+### Docs
+
+- **Roadmap:** every visual lives in Drishti Elements; a Drishti Elements Playground (live pages with editable data) closes the BI depth release.
+- **Roadmap:** a BI depth release (2.9.11.i1b) after i1: many-to-many and both-ways relationships, Rachana filter-context control, a decomposition tree; the comparison with Power BI lists it as planned.
+- **Drishti BI and Power BI compared** (`docs/strategy/BI_AND_POWER_BI.md`, opened from Help through the Reports guide): an area-by-area comparison with each Drishti item labelled built or planned, clustered compute behind BI, and Power BI facts checked against Microsoft's documentation.
+
 ### Test data
+
+- The demo's VaR inputs are at **position grain** for all three systems (Endur, Calypso, Murex) on every date: `market-risk/scenario-pv` per position (a position under two limit letters is one record per letter, `<position>@<division>/<letter>`); the `pnl-vector` demo table is gone (86 tables). Calypso and Murex positions are valued in USD with `TRADE_CURRENCY` their trades' own, so VaR, ES and component VaR are unchanged. The engine keeps both grains; the generator keeps them by flag. A position named in the Trade column or as `TRD:` counts as the position; a trade inside one answers in words. `PF-LISTED` now reads the product types and `PF-PARTIAL-FILLS` holds whole positions (`Fungible positions under review`), the demo having no trade-level records.
 
 - **Scenario PVs at position grain:** `data/testdata/position-grain/` holds 2026-09-30 for Endur, Calypso and Murex (`GRAIN: POSITION`, 7,984 positions, 509 scenarios), kept out of the demo lake.
 
@@ -25,6 +33,7 @@
 
 ### Fixes
 
+- **The demo's VaR no longer drifts with the day it is built:** `lake demo` moves `MATURITY_DATE` on dated records with the other dates, so moving the demo no longer matures records that are live on the test data's own date.
 - **Demo-lake setups had no system baskets:** the seed follows `DRISHTI_DEMO_ENABLED`, which these setups turn off. `bin/start-server --demo`, the IntelliJ demo-lakes configuration, the deployment guide's settings and `drishti-stack` now set `DRISHTI_VAR_SYSTEM_BASKETS_SEED=true`.
 - **IntelliJ run configurations:** the server configurations ran the `drishti-server` module, which has no domain modules on its class path since the split, so VAR and every banking function said *not installed*. They now run `drishti-app`, and *Drishti build server jar* builds it; a test keeps them so.
 

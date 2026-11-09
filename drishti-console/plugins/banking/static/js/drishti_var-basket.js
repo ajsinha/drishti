@@ -213,7 +213,7 @@
     el.wif.appendChild(el.wifList);
     var wrow = h("div", "vb-row");
     el.wifTrade = h("input", "vb-input mono vb-narrow");
-    el.wifTrade.placeholder = "a booked trade (MX-30000121) or a scope (BOOK:BOOK-RATES-3)";
+    el.wifTrade.placeholder = "a booked trade (MX-30000121), a position, or a scope (BOOK:BOOK-RATES-3)";
     el.wifTrade.setAttribute("aria-label", "The booked trade, or the scope, to copy");
     el.wifTrade.dataset.vbWhatifTrade = "";
     el.wifFactor = h("input", "vb-input mono vb-tiny");
@@ -700,7 +700,7 @@
     }).catch(function (e) {
       el.wifOut.textContent = "";
       el.wifOut.dataset.done = "failed";
-      var p = h("p", "vb-err", "What-if failed: " + e.message + (e.code ? " (" + e.code + ")." : ""));
+      var p = h("p", "vb-err", "What-if failed: " + e.message);
       p.setAttribute("role", "alert");
       el.wifOut.appendChild(p);
     });
