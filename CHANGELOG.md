@@ -6569,7 +6569,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   GETTING_STARTED's Windows table loses its Iceberg row. Proven by a pyiceberg interop suite (fixtures written by pyiceberg, read
   back equal; tables written by drishti-iceberg read back by pyiceberg), every plugin test on both engines, a class-loader test that
   refuses Hadoop's file systems, `Shell` and `Configuration` for the connector, the loader and maintenance, writers committing at once
-  (local disk, a REST catalog), and refusal and Windows path tests ([DRISHTI_ICEBERG.md](docs/architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine)).
+  (local disk, a REST catalog), and refusal and Windows path tests ([DRISHTI_ICEBERG.md](docs/architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop)).
 - **New: the `iceberg-external` connector, for Iceberg tables Drishti does not write** (Spark, Flink, Trino, Snowflake, Glue, dbt):
   read-only through drishti-iceberg, the row is the document (structs, lists, maps; `decimals: string`, `binary: omit`), the id comes
   from the identifier fields or named columns, the business date from a column, a timestamp's day in a zone or the partition spec
@@ -6577,7 +6577,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   `tables: auto` serves a namespace and names tables without an id, and `StarterSchemas` drafts a pack's schemas from the tables
   ([ICEBERG_EXTERNAL_CONNECTOR.md](plugins/drishti-plugin-iceberg-external/README.md)).
 - **Changed: the native Delta engine's file access is a module of its own, `drishti-lakeio`**, shared with the coming Iceberg engine
-  ([DRISHTI_ICEBERG.md](docs/architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine) step I1): local disk and S3 storage, byte ranges, the Parquet page codecs
+  ([DRISHTI_ICEBERG.md](docs/architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop) step I1): local disk and S3 storage, byte ranges, the Parquet page codecs
   (which now also compress, for writers) and the per-file Parquet footer cache moved out of `drishti-deltalake` unchanged; local disk gains
   an exclusive create (a hard link of a finished file) and S3 a conditional PUT (`If-None-Match: *`) with a start-up probe, for safe commits.
   Every Delta test passes as before; the tests of the moved classes moved with them.

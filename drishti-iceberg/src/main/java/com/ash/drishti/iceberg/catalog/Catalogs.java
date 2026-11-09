@@ -80,7 +80,7 @@ public final class Catalogs {
         String root = settings.getOrDefault("root", "").isBlank() ? com.ash.drishti.api.DataDir.under("iceberg") : settings.get("root").trim();
         if (!FileAccess.supports(root)) {
             io.close();
-            throw new UnsupportedOperationException("not an Iceberg location Drishti reads: " + root
+            throw new UnsupportedOperationException("Iceberg tables are not read from " + root
                     + ": Iceberg tables are read from local disk, S3 and memory");
         }
         String base = LocalPaths.isLocal(root) ? new LocalStorage().qualify(root) : root.replaceAll("/+$", "");

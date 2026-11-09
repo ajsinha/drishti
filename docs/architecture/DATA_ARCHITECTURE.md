@@ -78,20 +78,6 @@ and the per-store documents; VaR's intake is the parallel lake loader ([section 
     - [21. Where the code forced a change from the agreed design](#21-where-the-code-forced-a-change-from-the-agreed-design)
     - [22. Open questions](#22-open-questions)
 3. [drishti-iceberg: Drishti's own Apache Iceberg engine](#3-drishti-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop)
-    - [1. The ask](#1-the-ask-1)
-    - [2. Principles](#2-principles)
-    - [3. Why not keep the library and only drop Hadoop](#3-why-not-keep-the-library-and-only-drop-hadoop)
-    - [4. The picture](#4-the-picture)
-    - [5. What of the protocol is covered](#5-what-of-the-protocol-is-covered)
-    - [6. Catalogs](#6-catalogs)
-    - [7. Reading](#7-reading)
-    - [8. Writing and commits](#8-writing-and-commits)
-    - [9. Files: local disk and S3](#9-files-local-disk-and-s3)
-    - [10. Engines and configuration](#10-engines-and-configuration)
-    - [11. Windows](#11-windows)
-    - [12. Proving it keeps to the protocol](#12-proving-it-keeps-to-the-protocol)
-    - [13. Build plan](#13-build-plan)
-    - [14. Risks and open questions](#14-risks-and-open-questions)
     - [15. Two connectors: Drishti tables and external tables](#15-two-connectors-drishti-tables-and-external-tables)
     - [16. Vector columns and orphan files](#16-vector-columns-and-orphan-files)
 4. [Reactive connectors](#4-reactive-connectors)
@@ -1888,6 +1874,52 @@ Status: **built.** Modules `drishti-lakeio`, `drishti-iceberg`, `plugins/drishti
 **The `engine` setting and `DRISHTI_ICEBERG_ENGINE` are ignored.** A connector file that sets them keeps working, and the loader and maintenance still accept `--engine`.
 
 **Proof.** `IcebergSpecInteropTest` runs both ways against the Apache Iceberg library (kept in test scope only, with Hadoop): the library writes every transform with every special partition character, position and equality deletes, and Drishti reads every row; Drishti writes every special partition character and the library reads every row. `PyicebergReadsNativeTest` and `NativeReadInteropTest` do the same against pyiceberg.
+
+### 15. Two connectors: Drishti tables and external tables
+
+The product owner (2026-10-20): Drishti needs **a connector for Iceberg tables Drishti writes and one for Iceberg tables
+it does not write**. Both run on `drishti-iceberg` (the `iceberg` connector also on the `library` engine; `iceberg-external` refuses it); they differ in what they expect of a table.
+
+| | `iceberg` (Drishti tables) | `iceberg-external` (anyone's tables) |
+|---|---|---|
+| Tables | written in Drishti's layout by `IcebergLoader` (ICEBERG_CONNECTOR.md section 3): `id`, `doc`, `business_date`, promoted columns, sorted by id | written by Spark, Flink, Trino, Snowflake, Glue, dbt, pyiceberg, in any layout |
+| The document | the `doc` column, exactly as loaded | **the row**, as JSON (every column; structs as objects, lists as arrays, maps as objects), or a JSON column named by `document: column:<name>` |
+| The id | the `id` column | one column or several (`id: [SOURCE_SYSTEM, TRADE_ID]`, joined by `id-separator`, `:`); by default the table's **identifier fields** (Iceberg v2's `identifier-field-ids`) |
+| The business date | `business_date` | a date column, or a timestamp column with `date-from: day` (in `date-zone`); by default the partition spec's date (`identity` of a date, or `day(ts)`); none: the table is **current only** (every read is the current snapshot) |
+| Searchable fields | the promoted columns the pack declares | **every primitive column** (nested ones flattened to `depth`, 2): the table is already columnar, nothing to promote |
+| One entity | id map or range map: one row group | pushed-down filter on the id columns with partition, metric and row-group pruning; for a table **not sorted by id**, an **id index** built by Drishti on first use per snapshot and day (id → file and row group, bounded by `id-index-mb`), so later reads are one row group |
+| Writes | the loader and maintenance | **never**: the connector only reads; the owners' engines maintain the tables |
+| Deletes, time travel | as section 7 | the same: merge-on-read position and equality deletes from Spark and Flink are applied; *known at* uses the snapshot log |
+
+The external connector's reference, which this section once held in full (configuration, rows as documents, reading at
+scale, settings, tests), is one document: [ICEBERG_EXTERNAL_CONNECTOR.md](../../plugins/drishti-plugin-iceberg-external/README.md). What
+was 15.1 *Configuration* is its [section 2](../../plugins/drishti-plugin-iceberg-external/README.md#examples) and
+[section 8](../../plugins/drishti-plugin-iceberg-external/README.md#discovery-tables-auto) (`tables: auto`); 15.2 *Rows as documents* is its
+[section 3](../../plugins/drishti-plugin-iceberg-external/README.md#data-structure) and *Make a pack* its
+[section 9](../../plugins/drishti-plugin-iceberg-external/README.md#make-a-pack); 15.3 *Reading at scale* is its
+[sections 5 and 6](../../plugins/drishti-plugin-iceberg-external/README.md#one-entity-at-scale); 15.4 *Settings* is its
+[section 10](../../plugins/drishti-plugin-iceberg-external/README.md#settings) (generated settings: the plugin's
+[README](../../plugins/drishti-plugin-iceberg-external/README.md)); 15.5 *Tests* is its
+[section 12](../../plugins/drishti-plugin-iceberg-external/README.md#how-it-is-tested).
+
+### 16. Vector columns and orphan files
+
+**`list<double>` columns.** The layout's vector column (`layout.<kind>.vectors`, a P&L vector of 509 values) is an optional
+`list<double>` whose elements are optional: field ids are assigned after the promoted columns, the column's then its element's. The
+writer (`ParquetDataWriter`) writes a three-level list; a null element is written as an empty element group, so it reads back as null
+(never 0). The reader's list converter (`Converters.ListConverter`) gives a `List` with the nulls in place; the connector turns it into a
+`double[]` with NaN for null ([ICEBERG_CONNECTOR.md section 18](../../plugins/drishti-plugin-iceberg/README.md#parity-with-delta-vectors-and-disk-caches)).
+Adding a vector column to an existing table (`Operations.addColumns`) gives the column the next id and its element the one after, and
+records the higher as `last-column-id`. Delta stays the default lake format; this is the Iceberg side of the same column.
+
+**Orphan files.** A load that dies after writing data files but before its commit leaves files no snapshot references, and Iceberg's
+expiry only removes the files of the snapshots it expires. `OrphanFiles` (in the plugin, run by `IcebergMaintenance --remove-orphans`)
+lists every file under the table's location first, then reads the references: the current metadata file and every one its
+`metadata-log` lists, `version-hint.text`, each snapshot's manifest list, every manifest and every data and delete file they name (any
+entry status, so a file a kept snapshot may read is never taken) and the statistics files. A file not referenced and older than
+`--older-than-hours` (72 at least: longer than the longest load) is deleted; `--dry-run` lists them. Reading the references after the
+listing means a commit landing in between only adds references; the age keeps a load in flight safe. The sweep reads the table with
+drishti-iceberg whichever engine wrote it, on local disk and in S3 alike (`IcebergOrphanFilesTest`).
 
 ### Connector and data-source review (standards)
 

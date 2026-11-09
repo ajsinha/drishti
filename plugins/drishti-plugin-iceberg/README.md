@@ -424,7 +424,7 @@ partitioned by `business_date` alone and refuses one another engine re-partition
 [DATA_LAKE_GUIDE.md section 15](../../docs/guides/DATA_LAKE_GUIDE.md#15-iceberg-spec-compliance).
 
 **Caches.** The native engine reads each Parquet footer once and keeps it (`-Ddrishti.parquet.footer-cache-mb`, 64, shared with Delta),
-plus parsed manifests (`drishti.iceberg.manifest-cache-entries`) and delete files (`drishti.iceberg.delete-cache-rows`); the library
+plus parsed manifests and delete files (`drishti.iceberg.delete-cache-rows`); the library
 engine reads the footer on every single read. On the 10,000-trade test lake the native engine started in 637 ms against 1,848 ms and read
 a past date's trade in 94 ms against 353 ms. A purge of the connector empties every cache.
 
