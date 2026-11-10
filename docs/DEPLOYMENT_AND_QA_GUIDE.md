@@ -618,8 +618,11 @@ the other lakes listed empty.
 
 ### 8.6 A VaR answer: the bank, then a desk
 
-**In the UI.** Type `VAR BANK` in the command line and press Enter: the bank's historical VaR and expected shortfall, the hierarchy with
-every node's figure and limit bar, the P&L path. Then `VAR DESK RATES`: one desk.
+**In the UI.** Type `VAR BANK` in the command line (or **Risk → VaR explorer**) and press Enter: the bank's historical VaR and expected
+shortfall, the scope tree with every node's figure and limit bar, the P&L path. Then `VAR DESK RATES`: one desk, the tree below it with a
+breadcrumb up. **Explain ›** on a row or on the VaR tile opens how the figure was built; **Why it moved** compares it with the previous
+day (or a week, a month end, a date you pick) in steps that add up ([VAR_GUIDE.md section 3.2](guides/VAR_GUIDE.md#32-the-screen),
+[section 3.11](guides/VAR_GUIDE.md#311-why-it-moved-the-var-change-explained)).
 
 ![VAR BANK: the bank's VaR, its hierarchy and the P&L path](img/deploy/06-var-bank.jpg)
 
@@ -667,8 +670,10 @@ Details: [REPORTS_GUIDE.md](guides/REPORTS_GUIDE.md), [PIVOT_GUIDE.md](guides/PI
 
 ### 8.9 The Elements gallery
 
-**In the UI.** `http://<host>:17480/elements/gallery`: every component of the Drishti Elements libraries, live (grid, charts, inputs,
-maps, the risk widgets). A component that does not draw here will not draw on a screen either.
+**In the UI.** **Build → Elements gallery** (`http://<host>:17480/elements`): every component of the Drishti Elements libraries, live
+(grid, charts, inputs, maps, the risk widgets); each component's **Playground page** draws it over data you edit in a grid
+([ELEMENTS.md section 8.4](architecture/ELEMENTS.md#84-as-built-the-gallery)). A component that does not draw here will not draw on a screen
+either.
 
 ![The Elements gallery](img/deploy/12-elements-gallery.jpg)
 
@@ -790,10 +795,10 @@ Tick one column per operating system tested. *Expected* is what section 8 shows.
 | 8 | Sign in, change the password, make a token | Home opens; `doctor --token-file` green | ☐ | ☐ | ☐ |
 | 9 | Home through Risk and through World | each lens's Home with its cards | ☐ | ☐ | ☐ |
 | 10 | Admin → Lakes | the demo lake's tables with rows and dates | ☐ | ☐ | ☐ |
-| 11 | `VAR BANK`, `VAR DESK RATES` | the bank's VaR and ES, the hierarchy; one desk | ☐ | ☐ | ☐ |
+| 11 | `VAR BANK`, `VAR DESK RATES`; Explain ›, Why it moved | the bank's VaR and ES, the scope tree; one desk; the change in steps that add up | ☐ | ☐ | ☐ |
 | 12 | `EXP BANK`, Pre-deal check | the exposure explorer; the check's form | ☐ | ☐ | ☐ |
 | 13 | BI Trades overview; `MCUBE` | the report with live slicers; VaR by desk | ☐ | ☐ | ☐ |
-| 14 | Elements gallery | every component drawn | ☐ | ☐ | ☐ |
+| 14 | Build → Elements gallery, a Playground page | every component drawn; an edited cell redraws the visual | ☐ | ☐ | ☐ |
 | 15 | Admin → Data loads → Inbox and Feeds; `feed list`, `feed run gleif --dry-run` | the owner node; the feeds; `exit=0` | ☐ | ☐ | ☐ |
 | 16 | Banking off, restart | `off` lists banking; no risk pages; `DRS-1025` | ☐ | ☐ | ☐ |
 | 17 | Banking on, restart | VaR answers again | ☐ | ☐ | ☐ |
