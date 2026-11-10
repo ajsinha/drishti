@@ -465,6 +465,7 @@ schemas:
 # Environment variables no settings file above names: read by the packs' manifests, the server's profile files, the code or the tools.
 # by: server, console, packs, profile, tools.
 env:
+  - { name: DRISHTI_KERNEL_JAR, by: tools, default: "drishti-kernel-app/target/drishti-kernel-*-exec.jar", sets: "the kernel's thin jar", meaning: "The jar `drishti.py module run` starts with one module only (CLI_REFERENCE.md, module run)" }
   - { name: DRISHTI_MODULE_TOOL, by: tools, default: "drishti-module-runtime/target/drishti-module-tool.jar", sets: "the module tool's jar", meaning: "The jar `drishti.py module pack|check|inspect` runs (java -jar drishti-module-tool.jar; DEVELOPER_GUIDE.md section 1.6)" }
   - { name: DRISHTI_LAKE_CACHE, by: tools, default: "<data>/tmp/lake-cache", sets: "the cached demo lakes' folder", meaning: "Where tools/drillkit/lake_cache.py keeps the demo lakes the test stacks and checks reuse, one per hash of the test data, generators and lake code" }
   # the packs' connectors (config/packs/<domain>/<pack>/pack.yaml)

@@ -409,6 +409,31 @@ modules:
 - **Today's built-in modules** (banking and the others still inside the server) count as placed on every node, unguarded, until each
   becomes a module: their behaviour is unchanged, and a placement that names one is refused.
 
+### 1.10 Deploying a module
+
+A module (`.dmod`) is deployed once for the whole cluster, from Admin → Modules → Deploy or `drishti.py module deploy`, both over one API
+(`/api/v1/admin/modules/…`, [API_REFERENCE.md](API_REFERENCE.md#2-entities-views-search-and-administration)):
+
+- **Built once, stored once.** The upload goes to the module store of the node you talk to (`modules/store/<id>/<version>/` under
+  `drishti.module-deploy.dir`, by default `<data>/modules`; on AWS with EFS every node reads the same folder). It is checked there with the
+  fifteen conformance checks (C15 with `drishti.module-deploy.conformance-cycles` cycles); a version is never rebuilt: the same version with
+  other bytes is refused. Plans and applies are made on that node (the coordinator).
+- **The plan follows the placement.** Place the module's parts first (section 1.9). The plan lists every node: a placed node stages and
+  activates it; a node where no part is placed receives nothing (it forwards the module's requests) and only records the module in its
+  registry. A module placed on no node is refused (`DRS-1033`).
+- **Four eyes, then two phases.** Another administrator applies (`DRS-2007` for the proposer; `DRS-1031` when the cluster changed since the
+  plan). Phase 1 sends the package to each placed node in chunks over Drishti\*net; each node checks the SHA-256 and runs V1–V9 itself.
+  Phase 2 activates on every placed node; any refusal or failure rolls every node back to what it ran before and the deployment ends
+  `failed` with the node and the reason.
+- **Rolling upgrade.** A newer version of an active module is staged everywhere first, then switched node by node; the other nodes serve
+  the old version until their turn, and requests that reach a node while it switches wait for it (`drishti.module-deploy.swap-wait-seconds`).
+  A failure puts the switched nodes back to the old version.
+- **Switch off and remove.** Switching off unloads it on every placed node (its API answers `404 DRS-1025`); removing unloads it hot
+  (with the class loader leak check), writes the tombstone, and every node answers its API `410 DRS-1028` and its console paths with the
+  *no longer installed* page. Saved work that uses it (alert rules, saved views and reports whose text names its API, pages, functions or
+  kinds) is kept and marked *needs module X*; a reinstall (a plan of the same or a newer version) restores everything.
+- **Audit.** `module-stored`, `module-deploy-planned`, `module-deploy-applying`, `module-deploy-applied|failed|rejected|withdrawn`.
+
 ---
 
 ## 2. A cluster of three

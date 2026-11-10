@@ -181,7 +181,8 @@ public final class ModuleTool {
 
     private static Path temp() {
         try {
-            return Files.createTempDirectory("drishti-module-tool-");
+            // under java.io.tmpdir (the launcher's -Djava.io.tmpdir), a folder of its own, removed when the command ends
+            return Files.createDirectories(Path.of(System.getProperty("java.io.tmpdir"), "drishti-module-tool-" + java.util.UUID.randomUUID()));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

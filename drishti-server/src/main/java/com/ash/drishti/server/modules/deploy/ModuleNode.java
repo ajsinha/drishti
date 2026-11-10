@@ -1,0 +1,750 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+package com.ash.drishti.server.modules.deploy;
+
+import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.module.runtime.Contributions;
+import com.ash.drishti.module.runtime.Dmod;
+import com.ash.drishti.module.runtime.DmodManifest;
+import com.ash.drishti.module.runtime.KernelFacts;
+import com.ash.drishti.module.runtime.LoadedModule;
+import com.ash.drishti.module.runtime.ModuleCandidate;
+import com.ash.drishti.module.runtime.ModuleDiscovery;
+import com.ash.drishti.module.runtime.ModuleHealth;
+import com.ash.drishti.module.runtime.ModuleHost;
+import com.ash.drishti.module.runtime.ModuleRefusedException;
+import com.ash.drishti.module.runtime.ModuleRuntime;
+import com.ash.drishti.module.runtime.ModuleVerifier;
+import com.ash.drishti.module.runtime.placement.ModuleParts;
+import com.ash.drishti.server.placement.PlacementHost;
+import com.ash.drishti.server.placement.PlacementService;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
+
+/**
+ * This node's side of module deployment (KERNEL_AND_MODULES.md sections 4.11.4, 7.6 and 12): the one {@link ModuleRuntime} of the server,
+ * the installed modules ({@code modules/installed/<id>/<version>/} and {@code active.yaml}), the staging area of a deployment's phase 1,
+ * activation (phase 2), rollback and unload, and the node's copy of the cluster's module registry ({@code registry.json}: every module the
+ * cluster deployed, active, off or removed, with the names it owned). A node that holds no part of a module keeps only its registry entry:
+ * it forwards the module's requests (placement) and, once the module is removed, answers its paths 410 and marks saved work that used it.
+ * Every step is audited by the coordinator; the node logs.
+ */
+public final class ModuleNode implements AutoCloseable {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ModuleNode.class);
+    private static final ObjectMapper JSON = new ObjectMapper();
+
+    /** A module's state in the cluster. */
+    public enum State { ACTIVE, OFF, REMOVED }
+
+    /**
+     * One module of the cluster's registry.
+     *
+     * @param claims  the names it owns (API prefix, functions, kinds, lenses), kept after removal so saved work that uses one is marked
+     * @param routes  its console route paths ({@code /m/<id>/…})
+     * @param manifest its {@code module.yaml}, so a node that holds nothing of it still knows its parts
+     */
+    public record Entry(String id, String version, State state, String title, String prefix, List<String> claims, List<String> routes,
+            String manifest, String by, String at, String deployment) {
+    }
+
+    private final Path root;
+    private final Path installed;
+    private final Path staging;
+    private final Path tombstones;
+    private final Path activeFile;
+    private final Path registryFile;
+    private final KernelFacts facts;
+    private final PlacementService placement;
+    private final ApiMounts mounts;
+    private final Map<String, Entry> registry = new ConcurrentHashMap<>();
+    private final Map<String, AtomicInteger> inFlight = new ConcurrentHashMap<>();
+    private final Set<String> swapping = ConcurrentHashMap.newKeySet();
+    private final java.util.concurrent.locks.ReentrantLock lock = new java.util.concurrent.locks.ReentrantLock();
+    private final java.util.concurrent.locks.ReentrantLock swapLock = new java.util.concurrent.locks.ReentrantLock();
+    private final java.util.concurrent.locks.Condition swapSignal = swapLock.newCondition();
+    private final long drainMillis;
+    private ModuleRuntime runtime;
+
+    public ModuleNode(Path root, KernelFacts facts, PlacementService placement, ApiMounts mounts, long drainMillis) {
+        this.root = root;
+        this.installed = root.resolve("installed");
+        this.staging = root.resolve("staging");
+        this.tombstones = root.resolve("tombstones");
+        this.activeFile = installed.resolve("active.yaml");
+        this.registryFile = root.resolve("registry.json");
+        this.facts = facts;
+        this.placement = placement;
+        this.mounts = mounts;
+        this.drainMillis = drainMillis;
+    }
+
+    /** Reads the registry, tells placement of every active module, and loads the active modules placed here. */
+    public ModuleNode start(ApplicationContext parent) {
+        lock.lock();
+        try {
+            readRegistry();
+            PlacementHost ph = new PlacementHost(placement);
+            ModuleHost host = new ModuleHost() {
+                @Override
+                public boolean placedHere(DmodManifest manifest) {
+                    return ph.placedHere(manifest);
+                }
+
+                @Override
+                public void started(LoadedModule module, Contributions contributions) {
+                    ph.started(module, contributions);
+                    if (mounts != null) {
+                        mounts.mount(module, contributions);
+                    }
+                }
+
+                @Override
+                public void drain(String module) {
+                    ModuleNode.this.drain(module);
+                }
+
+                @Override
+                public void event(String name, String module) {
+                    LOG.info("{}: {}", name, module);
+                }
+            };
+            runtime = new ModuleRuntime(facts, parent, ModuleNode.class.getClassLoader(), host, tombstones);
+            registry.values().stream().filter(e -> e.state() == State.ACTIVE).forEach(this::declare);
+            if (Files.isDirectory(installed)) {
+                runtime.start(List.of(installed), ModuleDiscovery.readActive(activeFile),
+                        id -> registry.containsKey(id) ? registry.get(id).state() == State.ACTIVE : true);
+            }
+            return this;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public ModuleRuntime runtime() {
+        return runtime;
+    }
+
+    public Path root() {
+        return root;
+    }
+
+    // ---- phase 1: stage ------------------------------------------------------------------------------------------------------------
+
+    /** One chunk of a deployment's package (chunk 0 starts the file). */
+    public void chunk(String deployment, int index, byte[] bytes) {
+        Path f = staged(deployment).resolveSibling(safe(deployment) + ".dmod");
+        try {
+            Files.createDirectories(f.getParent());
+            if (index == 0) {
+                Files.write(f, bytes);
+            } else {
+                Files.write(f, bytes, StandardOpenOption.APPEND);
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    /** A local package for a deployment (the coordinator's own node): copied into staging as if it had arrived. */
+    public void chunkFrom(String deployment, Path dmod) {
+        try {
+            Path f = staged(deployment).resolveSibling(safe(deployment) + ".dmod");
+            Files.createDirectories(f.getParent());
+            Files.copy(dmod, f, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    /**
+     * Phase 1 on this node: the package's SHA-256 checked here (never trusting another node's word), unpacked into staging, its hash list
+     * checked and the verification V1–V9 run against this kernel. Returns the notes; refused with the reason.
+     */
+    public List<String> stage(String deployment, String id, String version, String sha) {
+        lock.lock();
+        try {
+            Path f = staged(deployment).resolveSibling(safe(deployment) + ".dmod");
+            try {
+                if (!Files.isRegularFile(f)) {
+                    throw refused("no package arrived for " + deployment);
+                }
+                String got;
+                try (InputStream in = Files.newInputStream(f)) {
+                    got = Dmod.sha256(in);
+                }
+                if (!got.equalsIgnoreCase(sha)) {
+                    throw refused("the package's SHA-256 is " + got.substring(0, 12) + "…, not the stored " + sha.substring(0, Math.min(12, sha.length())) + "…");
+                }
+                Path dir = staged(deployment).resolve(id).resolve(version);
+                Dmod.unpack(f, dir);
+                Files.copy(f, dir.getParent().resolve(Dmod.fileName(id, version)), StandardCopyOption.REPLACE_EXISTING);
+                Dmod.verify(dir, f, id + " " + version);   // V2 here, on this node's own copy (refused when a file is missing or changed)
+                ModuleCandidate c = candidate(staged(deployment), id, version);
+                if (!c.manifest().id().equals(id) || !c.manifest().version().equals(version)) {
+                    throw refused("the package is " + c.manifest().label() + ", not " + id + " " + version);
+                }
+                return new ModuleVerifier(facts).verify(c);
+            } catch (ModuleRefusedException e) {
+                abort(deployment);
+                throw refused(e.check() + " " + e.getMessage());
+            } catch (IOException | UncheckedIOException e) {
+                abort(deployment);
+                throw refused("staging failed: " + e.getMessage());
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /** Removes a deployment's staged files (an abort, or after activation). */
+    public void abort(String deployment) {
+        delete(staged(deployment));
+        try {
+            Files.deleteIfExists(staged(deployment).resolveSibling(safe(deployment) + ".dmod"));
+        } catch (IOException e) {
+            LOG.debug("staging cleanup", e);
+        }
+    }
+
+    // ---- phase 2: activate, roll back, unload ----------------------------------------------------------------------------------------
+
+    /**
+     * Phase 2 on this node: the staged version becomes the installed and active one, the version running here (if any) is unloaded and
+     * the new one loaded; requests to the module wait while the two swap (old version stops, new starts). Returns the version it replaced
+     * (null for none); refused, the node is left as it was (the old version loaded again).
+     */
+    public Map<String, Object> activate(String deployment, String id, String version) {
+        lock.lock();
+        try {
+            Path from = staged(deployment).resolve(id).resolve(version);
+            if (!Files.isDirectory(from)) {
+                throw refused(id + " " + version + " is not staged here (" + deployment + ")");
+            }
+            Map<String, String> active = new LinkedHashMap<>(ModuleDiscovery.readActive(activeFile));
+            String previous = runtime.loaded(id).map(m -> m.manifest().version()).orElse(null);
+            boolean existed = Files.isDirectory(installed.resolve(id).resolve(version));
+            Path to = installed.resolve(id).resolve(version);
+            try {
+                delete(to);
+                Files.createDirectories(to.getParent());
+                Files.move(from, to, StandardCopyOption.REPLACE_EXISTING);
+                Path dmod = staged(deployment).resolve(id).resolve(Dmod.fileName(id, version));
+                if (Files.isRegularFile(dmod)) {
+                    Files.copy(dmod, installed.resolve(id).resolve(Dmod.fileName(id, version)), StandardCopyOption.REPLACE_EXISTING);
+                }
+            } catch (IOException e) {
+                throw refused("installing failed: " + e.getMessage());
+            } finally {
+                abort(deployment);
+            }
+            String failure = swap(id, version, active);
+            if (failure != null) {
+                if (!existed) {
+                    delete(to);
+                }
+                if (previous != null) {
+                    swap(id, previous, active);
+                } else {
+                    active.remove(id);
+                    writeActive(active);
+                }
+                throw new DrishtiException(ErrorCode.MODULE_DEPLOY_FAILED, id + " " + version + " did not start on this node: " + failure);
+            }
+            deleteTombstone(id);
+            Map<String, Object> out = new LinkedHashMap<>();
+            out.put("loaded", version);
+            out.put("previous", previous);
+            out.put("routes", runtime.routes().snapshot().of(id).size());
+            return out;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /** Unloads what runs here and loads {@code version} instead; requests wait for the swap. Null when it loaded, else why not. */
+    private String swap(String id, String version, Map<String, String> active) {
+        beginSwap(id);
+        try {
+            if (runtime.loaded(id).isPresent()) {
+                ModuleRuntime.UnloadReport r = runtime.unload(id, ModuleRuntime.Leave.DISABLE, true);
+                if (!r.failures().isEmpty()) {
+                    LOG.warn("module {}: unload before the swap: {}", id, r.failures());
+                }
+            }
+            active.put(id, version);
+            writeActive(active);
+            ModuleCandidate c;
+            List<String> notes;
+            try {
+                c = candidate(installed, id, version);
+                notes = new ModuleVerifier(facts).verify(c);
+            } catch (ModuleRefusedException e) {
+                return e.check() + " " + e.getMessage();
+            }
+            if (runtime.load(c, notes) == null) {
+                return runtime.health(id).map(h -> h.reason() == null ? h.state().name() : h.reason()).orElse("refused");
+            }
+            return null;
+        } finally {
+            endSwap(id);
+        }
+    }
+
+    /**
+     * Undoes an activation of {@code deployment} here: the new version unloaded and, when there was one before, {@code previous} loaded
+     * again; else the module leaves this node (switched off: its saved work is untouched). Idempotent.
+     */
+    public Map<String, Object> rollback(String id, String version, String previous) {
+        lock.lock();
+        try {
+            Map<String, String> active = new LinkedHashMap<>(ModuleDiscovery.readActive(activeFile));
+            String now = runtime.loaded(id).map(m -> m.manifest().version()).orElse(null);
+            Map<String, Object> out = new LinkedHashMap<>();
+            if (previous != null) {
+                if (!previous.equals(now)) {
+                    String f = swap(id, previous, active);
+                    out.put("restored", f == null ? previous : "failed: " + f);
+                } else {
+                    out.put("restored", previous);
+                }
+            } else {
+                if (now != null) {
+                    out.put("unload", runtime.unload(id, ModuleRuntime.Leave.DISABLE, true).steps().size() + " steps");
+                }
+                active.remove(id);
+                writeActive(active);
+                if (!registry.containsKey(id) || registry.get(id).state() != State.ACTIVE) {
+                    delete(installed.resolve(id).resolve(version));
+                }
+                out.put("restored", "nothing (it was not here before)");
+            }
+            return out;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /** Takes a module off this node: removed (410, tombstone, files kept for a reinstall) or switched off (404). */
+    public Map<String, Object> unload(String id, ModuleRuntime.Leave leave) {
+        lock.lock();
+        try {
+            Map<String, Object> out = new LinkedHashMap<>();
+            if (runtime.loaded(id).isPresent()) {
+                ModuleRuntime.UnloadReport r = runtime.unload(id, leave, true);
+                out.put("steps", r.steps());
+                out.put("failures", r.failures());
+                out.put("leakFree", r.leakFree());
+            } else {
+                out.put("steps", List.of("nothing of it was loaded here"));
+                out.put("failures", List.of());
+            }
+            Map<String, String> active = new LinkedHashMap<>(ModuleDiscovery.readActive(activeFile));
+            if (leave == ModuleRuntime.Leave.REMOVE && active.remove(id) != null) {
+                writeActive(active);
+            }
+            return out;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    // ---- one node, no plan: the entry points of a single server (auto-deploy, module run) ------------------------------------------
+
+    /**
+     * Installs a {@code .dmod} on this node alone, the same path a deployment takes here (stage: SHA-256, V2, V1–V9; activate: the version
+     * running here unloaded, the new one loaded; record): for a single server's auto-deploy folder and {@code module run}. A cluster
+     * deploys by plan and apply instead. Returns the activation's answer; refused or failed, nothing is left changed.
+     */
+    public Map<String, Object> install(Path dmod, String by) {
+        lock.lock();
+        try {
+            String deployment = "local-" + java.util.UUID.randomUUID().toString().substring(0, 8);
+            try {
+                String sha;
+                try (InputStream in = Files.newInputStream(dmod)) {
+                    sha = Dmod.sha256(in);
+                }
+                DmodManifest m;
+                try (java.util.zip.ZipFile z = new java.util.zip.ZipFile(dmod.toFile());
+                        InputStream in = z.getInputStream(java.util.Objects.requireNonNull(z.getEntry(DmodManifest.FILE), "no module.yaml"))) {
+                    m = DmodManifest.read(in, dmod.getFileName().toString());
+                }
+                chunkFrom(deployment, dmod);
+                stage(deployment, m.id(), m.version(), sha);
+                Map<String, Object> out = activate(deployment, m.id(), m.version());
+                record(entryOf(installed.resolve(m.id()).resolve(m.version()), State.ACTIVE, by, deployment));
+                return out;
+            } catch (IOException | RuntimeException e) {
+                abort(deployment);
+                throw e instanceof DrishtiException d ? d : refused(dmod.getFileName() + ": " + e.getMessage());
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /** Removes a module from this node alone (410, tombstone, saved work marked; files kept for a reinstall): the single-server path. */
+    public Map<String, Object> remove(String id, String by) {
+        lock.lock();
+        try {
+            Entry e = registry.get(id);
+            Map<String, Object> out = unload(id, ModuleRuntime.Leave.REMOVE);
+            if (e != null) {
+                record(new Entry(e.id(), e.version(), State.REMOVED, e.title(), e.prefix(), e.claims(), e.routes(), e.manifest(), by, now(), e.deployment()));
+            }
+            return out;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /** The registry entry of an unpacked module folder: its names (claims), console routes and manifest. */
+    public static Entry entryOf(Path dir, State state, String by, String deployment) {
+        try {
+            String manifest = Files.readString(dir.resolve(DmodManifest.FILE));
+            DmodManifest m = DmodManifest.read(new ByteArrayInputStream(manifest.getBytes(StandardCharsets.UTF_8)), dir.toString());
+            ModuleCandidate c = new ModuleCandidate(m, dir, null);
+            List<String> routes = new ArrayList<>();
+            List<String> claims;
+            try {
+                Object plugin = m.console() == null ? null : m.console().get("plugin");
+                if (plugin != null && c.yaml(String.valueOf(plugin), "V1").get("routes") instanceof List<?> list) {
+                    for (Object o : list) {
+                        if (o instanceof Map<?, ?> r && r.get("path") != null) {
+                            routes.add("/m/" + m.id() + r.get("path"));
+                        }
+                    }
+                }
+                claims = com.ash.drishti.module.runtime.Claims.of(c, List.of());
+            } catch (RuntimeException ex) {
+                claims = List.of();
+            }
+            return new Entry(m.id(), m.version(), state, m.title(), m.api() == null ? null : m.api().prefix(), claims, routes, manifest, by, now(),
+                    deployment);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    // ---- the registry --------------------------------------------------------------------------------------------------------------
+
+    /** Records the cluster's word on a module (every node, placed or not): placement learns its parts, or forgets it when it leaves. */
+    public void record(Entry e) {
+        lock.lock();
+        try {
+            registry.put(e.id(), e);
+            writeRegistry();
+            if (e.state() == State.ACTIVE) {
+                declare(e);
+                deleteTombstone(e.id());
+            } else {
+                placement.forget(e.id());
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public Optional<Entry> entry(String id) {
+        return Optional.ofNullable(registry.get(id));
+    }
+
+    public List<Entry> entries() {
+        return new TreeMap<>(registry).values().stream().toList();
+    }
+
+    /** The registry entry whose API prefix is {@code prefix}. */
+    public Optional<Entry> byPrefix(String prefix) {
+        return registry.values().stream().filter(e -> prefix.equals(e.prefix())).findFirst();
+    }
+
+    /** The registry entry that owns a console path ({@code /m/<id>/…}). */
+    public Optional<Entry> byPath(String path) {
+        if (path == null || !path.startsWith("/m/")) {
+            return Optional.empty();
+        }
+        String rest = path.substring(3);
+        String id = rest.contains("/") ? rest.substring(0, rest.indexOf('/')) : rest;
+        return Optional.ofNullable(registry.get(id));
+    }
+
+    private void declare(Entry e) {
+        try {
+            placement.declare(ModuleParts.of(DmodManifest.read(new ByteArrayInputStream(e.manifest().getBytes(StandardCharsets.UTF_8)), e.id())));
+        } catch (RuntimeException ex) {
+            LOG.warn("module {}: its manifest in the registry does not read: {}", e.id(), ex.getMessage());
+        }
+    }
+
+    // ---- saved work: needs module X ------------------------------------------------------------------------------------------------
+
+    /**
+     * The modules (off or removed) a saved artefact needs, from its stored text: an API path ({@code /api/v1/<prefix>/}), a console path
+     * ({@code /m/<id>/}), a function word or a kind the module owned. Nothing is rewritten; a reinstall makes the answer empty again.
+     */
+    public List<Map<String, Object>> needs(String text) {
+        List<Map<String, Object>> out = new ArrayList<>();
+        if (text == null || text.isEmpty()) {
+            return out;
+        }
+        for (Entry e : entries()) {
+            if (e.state() == State.ACTIVE) {
+                continue;
+            }
+            if (uses(e, text)) {
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("module", e.id());
+                m.put("title", e.title());
+                m.put("state", e.state().name().toLowerCase(Locale.ROOT));
+                m.put("words", "needs module " + e.id() + (e.state() == State.OFF ? " (off)" : " (not installed)"));
+                out.add(m);
+            }
+        }
+        return out;
+    }
+
+    static boolean uses(Entry e, String text) {
+        if (e.prefix() != null && text.contains("/api/v1/" + e.prefix() + "/")) {
+            return true;
+        }
+        if (text.contains("/m/" + e.id() + "/")) {
+            return true;
+        }
+        for (String claim : e.claims()) {
+            int sp = claim.indexOf(' ');
+            String kind = sp < 0 ? "" : claim.substring(0, sp);
+            String name = sp < 0 ? claim : claim.substring(sp + 1);
+            if ((kind.equals("function") || kind.equals("kind")) && !name.isBlank()
+                    && Pattern.compile("(?<![A-Za-z0-9_-])" + Pattern.quote(name) + "(?![A-Za-z0-9_-])").matcher(text).find()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // ---- requests during a swap and the drain -------------------------------------------------------------------------------------
+
+    /** A request of the module starts here (the route filter counts them, so an unload drains them). */
+    public void enter(String id) {
+        inFlight.computeIfAbsent(id, k -> new AtomicInteger()).incrementAndGet();
+    }
+
+    public void leave(String id) {
+        AtomicInteger n = inFlight.get(id);
+        if (n != null) {
+            n.decrementAndGet();
+        }
+    }
+
+    /** Waits while the module swaps versions here, at most {@code millis}; true when it is no longer swapping. */
+    public boolean awaitSwap(String id, long millis) {
+        long until = System.currentTimeMillis() + millis;
+        swapLock.lock();
+        try {
+            while (swapping.contains(id)) {
+                long left = until - System.currentTimeMillis();
+                if (left <= 0) {
+                    return false;
+                }
+                try {
+                    swapSignal.await(left, java.util.concurrent.TimeUnit.MILLISECONDS);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return false;
+                }
+            }
+        } finally {
+            swapLock.unlock();
+        }
+        return true;
+    }
+
+    public boolean swapping(String id) {
+        return swapping.contains(id);
+    }
+
+    private void beginSwap(String id) {
+        swapping.add(id);
+    }
+
+    private void endSwap(String id) {
+        swapLock.lock();
+        try {
+            swapping.remove(id);
+            swapSignal.signalAll();
+        } finally {
+            swapLock.unlock();
+        }
+    }
+
+    /** Unload step 3: requests already inside the module finish (at most the drain time). */
+    private void drain(String id) {
+        long until = System.currentTimeMillis() + drainMillis;
+        AtomicInteger n = inFlight.get(id);
+        while (n != null && n.get() > 0 && System.currentTimeMillis() < until) {
+            try {
+                Thread.sleep(20);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+        }
+    }
+
+    // ---- this node's view ----------------------------------------------------------------------------------------------------------
+
+    /** What this node holds: each registry module with the version loaded here and its Health row. */
+    public Map<String, Object> status() {
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("node", placement.self());
+        List<Map<String, Object>> mods = new ArrayList<>();
+        Map<String, ModuleHealth> health = new LinkedHashMap<>();
+        runtime.health().forEach(h -> health.put(h.id(), h));
+        for (Entry e : entries()) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("id", e.id());
+            m.put("version", e.version());
+            m.put("state", e.state().name().toLowerCase(Locale.ROOT));
+            m.put("loaded", runtime.loaded(e.id()).map(x -> x.manifest().version()).orElse(null));
+            ModuleHealth h = health.get(e.id());
+            m.put("health", h == null ? null : h.state().name());
+            m.put("reason", h == null ? null : h.reason());
+            m.put("routes", runtime.routes().snapshot().of(e.id()).size());
+            mods.add(m);
+        }
+        out.put("modules", mods);
+        out.put("routeTable", runtime.routes().snapshot().version());
+        return out;
+    }
+
+    // ---- files ---------------------------------------------------------------------------------------------------------------------
+
+    private static ModuleCandidate candidate(Path folder, String id, String version) {
+        ModuleDiscovery.Found f = ModuleDiscovery.discover(List.of(folder), Map.of(id, version));
+        if (f.refused().containsKey(id)) {
+            throw f.refused().get(id);
+        }
+        return f.candidates().stream().filter(c -> c.id().equals(id)).findFirst()
+                .orElseThrow(() -> new ModuleRefusedException("V1", id + " " + version + " is not in " + folder.getFileName()));
+    }
+
+    private Path staged(String deployment) {
+        return staging.resolve(safe(deployment));
+    }
+
+    static String safe(String s) {
+        if (s == null || !s.matches("[A-Za-z0-9._-]{1,80}") || s.contains("..")) {
+            throw refused("not a deployment id: " + s);
+        }
+        return s;
+    }
+
+    private void writeActive(Map<String, String> active) {
+        StringBuilder y = new StringBuilder("# the version of each installed module that runs on this node (written by deployments)\nmodules:\n");
+        new TreeMap<>(active).forEach((k, v) -> y.append("  ").append(k).append(": \"").append(v).append("\"\n"));
+        Dmod.write(activeFile, y.toString());
+    }
+
+    private void deleteTombstone(String id) {
+        try {
+            Files.deleteIfExists(tombstones.resolve(id + ".yaml"));
+        } catch (IOException e) {
+            LOG.debug("tombstone", e);
+        }
+    }
+
+    private void readRegistry() {
+        if (!Files.isRegularFile(registryFile)) {
+            return;
+        }
+        try {
+            List<Entry> all = JSON.readValue(registryFile.toFile(), new TypeReference<List<Entry>>() { });
+            all.forEach(e -> registry.put(e.id(), e));
+        } catch (IOException e) {
+            LOG.warn("modules: {} does not read: {}", registryFile, e.getMessage());
+        }
+    }
+
+    private void writeRegistry() {
+        try {
+            Files.createDirectories(root);
+            Path tmp = registryFile.resolveSibling("registry.json.tmp");
+            JSON.writerWithDefaultPrettyPrinter().writeValue(tmp.toFile(), entries());
+            Files.move(tmp, registryFile, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    static void delete(Path dir) {
+        if (dir == null || !Files.exists(dir)) {
+            return;
+        }
+        try (var s = Files.walk(dir)) {
+            s.sorted(java.util.Comparator.reverseOrder()).forEach(p -> {
+                try {
+                    Files.deleteIfExists(p);
+                } catch (IOException e) {
+                    LOG.debug("delete {}", p, e);
+                }
+            });
+        } catch (IOException e) {
+            LOG.debug("delete {}", dir, e);
+        }
+    }
+
+    static DrishtiException refused(String words) {
+        return new DrishtiException(ErrorCode.MODULE_DEPLOY_REFUSED, words);
+    }
+
+    /** Now, for the registry's {@code at}. */
+    static String now() {
+        return Instant.now().toString();
+    }
+
+    @Override
+    public void close() {
+        if (runtime != null) {
+            runtime.close();
+        }
+    }
+}
