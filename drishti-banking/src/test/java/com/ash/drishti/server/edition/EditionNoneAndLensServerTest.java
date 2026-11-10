@@ -71,8 +71,7 @@ class EditionNoneAndLensServerTest {
     @Test
     void withoutAnEditionTheServerIsTheFullDrishti() throws Exception {
         assertThat(env.getProperty("drishti.edition")).isBlank();
-        assertThat(((org.springframework.core.env.ConfigurableEnvironment) env).getPropertySources()
-                .contains(com.ash.drishti.packs.edition.EditionEnvironmentPostProcessor.SOURCE)).isFalse();
+        assertThat(env.getProperty("drishti.edition-spec.title")).isNull();     // Drishti All: the distribution facts only, no filter
         JsonNode about = getJson(get("/api/v1/about"));
         assertThat(about.path("edition").isNull()).isTrue();
         assertThat(about.path("product").asText()).isEqualTo("Drishti");

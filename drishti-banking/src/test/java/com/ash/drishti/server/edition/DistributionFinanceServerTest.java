@@ -81,7 +81,7 @@ class DistributionFinanceServerTest {
     void theEnginesOfTheModulesItLeavesOutAreOffAndHealthSaysSo() throws Exception {
         assertThat(engines.state("var")).isEqualTo(com.ash.drishti.server.engines.EngineRegistry.State.OFF);
         assertThat(engines.state("exposure")).isEqualTo(com.ash.drishti.server.engines.EngineRegistry.State.OFF);
-        JsonNode d = getJson("/api/v1/health").path("distribution");
+        JsonNode d = getJson("/api/v1/admin/health").path("distribution");
         assertThat(d.path("id").asText()).isEqualTo("drishti.finance");
         assertThat(d.path("modules").path("economy").asText()).isEqualTo("loaded");
         assertThat(d.path("asked").toString()).contains("capital-markets", "economy", "market-data");
