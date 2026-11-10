@@ -1272,7 +1272,8 @@ python3 tools/drishti.py module status dpl-3f9a12c0             # one deployment
 python3 tools/drishti.py module run dist/greeter-1.0.0.dmod     # the kernel's thin jar with this module only, on a free port
 ```
 
-`deploy` and `upgrade` upload the `.dmod` to the module store (checked once there with the fifteen conformance checks; the same version
+`module remove`, `module disable` and `module enable` plan that action for a module; `module reject` (another administrator) and `module
+withdraw` (its proposer) close a waiting plan. The commands live in `tools/modulecli.py`. `deploy` and `upgrade` upload the `.dmod` to the module store (checked once there with the fifteen conformance checks; the same version
 with other bytes is refused) and print the plan per node: the placed nodes stage and activate, the others receive nothing. `apply` exits
 **0** applied, **1** failed (rolled back on every node), **2** a stale plan (`DRS-1031`: plan again), **3** waiting for a second
 administrator (`DRS-2007`). `run` lays out a run folder (the module installed and active, every part placed on this node; `--dir` keeps
