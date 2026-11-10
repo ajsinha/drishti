@@ -211,7 +211,7 @@ def _shape(answer: dict) -> dict:
     for f in ((answer.get("functions") or {}).get("off") or []):
         if isinstance(f, dict) and f.get("word"):
             w = str(f["word"]).upper()
-            funcs[w] = {"module": str(f.get("module") or CORE), "reason": str(f.get("reason") or ""),
+            funcs[w] = {"module": str(f.get("module") or CORE), "reason": str(f.get("reason") or ""), "gate": str(f.get("gate") or ""),
                         "text": str(f.get("text") or f"{w} is not available to you: ask your administrator")}
     cards = {str(l.get("id")): [dict(c) for c in l.get("cards") or [] if isinstance(c, dict) and c.get("cmd")]
              for l in answer.get("lenses") or [] if isinstance(l, dict) and l.get("id") and l.get("cards")}
@@ -335,6 +335,21 @@ def word_refusal(word: str) -> str | None:
     if p is not None and w in p["functions"]:
         return p["functions"][w]["text"]
     return None
+
+
+def data_need(word: str) -> dict | None:
+    """A function that is here but waits for data (the server's data gate: a required need no source serves): ``{word, title, text}``,
+    the text as the server says it (``EXP needs data: exposure-path is not bound; ask your data administrator``). Its pages explain
+    themselves (core/edition_gate.py ``needs_data``, the needs-data page, 200) instead of answering 404; None otherwise."""
+    w = " ".join(str(word or "").upper().split())
+    p = person()
+    f = (p or {}).get("functions", {}).get(w) if p else None
+    if not f or f.get("gate") != "data":
+        return None
+    from core import engines as _engines
+
+    title = next((str(e.get("title")) for e in _engines.entries() if e.get("title") and w in _engines._words(e)), "") or w
+    return {"word": w, "title": title, "text": f.get("text") or f.get("reason") or ""}
 
 
 def typed_refusal(text: str) -> str | None:

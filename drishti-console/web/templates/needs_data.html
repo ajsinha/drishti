@@ -1,0 +1,35 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# A function that is here but waits for data (the server's data gate, KERNEL_AND_MODULES.md section 5.6): its page explains itself, HTTP
+   200, in the kernel shell; the command line says the same and its API answers 409 DRS-1035. Binding the data turns it on. #}
+{% extends "base.html" %}
+{% block title %}{{ need.title }} needs data · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_admin-modules.css?v={{ ASSET_V }}">{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="ib" data-needs-data="{{ need.word }}">
+  <section class="mod-notice" role="status">
+    <h1 class="ib-h2">{{ need.title }} needs data</h1>
+    <p data-needs-data-text>{{ need.text }}</p>
+    <p>{{ need.title }} is installed and on; it starts as soon as its data is bound.</p>
+    <p class="mod-actions"><a class="btn-pill ib-btn" href="/admin/bindings">Admin › Data bindings</a>
+      <a class="btn-pill ib-btn" href="/help?q={{ 'data bindings'|urlencode }}">Help: data bindings</a>
+      <a class="btn-pill ib-btn" href="/">Go to Home</a></p>
+  </section>
+</div>
+{% endblock %}
+{% block footer %}{% include "_footer.html" %}{% endblock %}
