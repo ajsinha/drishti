@@ -391,6 +391,15 @@ the registry (other kernel parts ask the registry). Every field:
 | `health` | no | its health checks' ids |
 | `taint` | no | set by the kernel, never by the publisher |
 
+**First-party modules, like in-tree Linux drivers** (product owner, 2026-11-10). The manifest's `origin:` says `first-party` (built and
+shipped by the Drishti product, like a driver built in the kernel tree) or `third-party` (the default, like an out-of-tree driver). The
+claim is **verified, never trusted**: until signing (2.9.11.j) the kernel ships `first-party.yaml`, the ids and content hashes of its own
+modules, and a `.dmod` is first-party only when its id and its `DMOD.MF` hash match; from j, when it carries the product's signature. Only
+a verified first-party module may use a **declared allowance** of kernel internals (`kernel-internals:` in its manifest, the list that may
+only shrink; banking's 44 packages in i2 + i3); conformance check C1 honours the allowance for it and refuses internals for every other
+module. Health and `drishti.py module list` show the origin; a third-party module, or a first-party claim that does not verify, loads as
+third-party and, where it needs more than the public API, is refused with the reason. `drishti.py module inspect` prints the origin and why.
+
 **The full banking example:** [examples/banking/module.yaml](kernel-and-modules/examples/banking/module.yaml). It lists the two jars
 (`drishti-banking`, `drishti-compute-banking`), the six engines, the Python package `drishti_banking` with its items, the five packs (with
 `banking-reference`, decision Q1), the 30-odd data needs, the console plugin and `drishti-risk`, the six lenses, 60 functions, the
