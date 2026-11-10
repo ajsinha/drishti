@@ -170,10 +170,14 @@ class DistributionsTest {
     @Test
     void genomicsBootsOnTheKernelAlone() {
         Distribution g = read("genomics");
-        assertThat(g.packs()).containsExactly("core");
+        assertThat(g.packs()).as("none of the kernel's packs: no counterparty, book or desk").isEmpty();
         assertThat(g.wordsOff()).contains("VAR", "EXP");
-        assertThat(g.modules()).containsExactly("genomics");                            // listed, not installed (required: false)
-        assertThat(g.domains()).doesNotContainKey("genomics");
-        assertThat(Editions.of(boot("drishti.distribution", "genomics")).commandShown("CRV")).isFalse();
+        assertThat(g.modules()).containsExactly("genomics");                            // its manifest: modules/genomics/src/dmod (the SDK's layout)
+        assertThat(g.domains()).containsEntry("genomics", "genomics");
+        assertThat(g.lenses()).containsExactly("research");
+        StandardEnvironment env = boot("drishti.distribution", "genomics");
+        assertThat(Editions.of(env).commandShown("CRV")).isFalse();
+        assertThat(Editions.of(env).commandShown("CPTY")).isFalse();
+        assertThat(env.getProperty("drishti.packs.enabled")).as("a distribution of no packs loads none").isEmpty();
     }
 }

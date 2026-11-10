@@ -81,7 +81,7 @@ public final class EditionEnvironmentPostProcessor implements EnvironmentPostPro
         com.fasterxml.jackson.databind.JsonNode enabled = spec.path("packs").path("enabled");      // by module (in order), or a plain list
         (enabled.isObject() ? enabled.elements() : java.util.List.of(enabled).iterator())
                 .forEachRemaining(m -> m.forEach(p -> { if (!packs.contains(p.asText().strip())) packs.add(p.asText().strip()); }));
-        if (!packs.isEmpty()) {
+        if (!packs.isEmpty() || spec.path("packs").path("none").asBoolean(false)) {   // a distribution of no packs (Genomics) has none
             props.put("drishti.packs.enabled", preset(env, "drishti.packs.enabled", String.join(",", packs)));
         }
         spec.path("branding").fields().forEachRemaining(e -> props.put("drishti.branding." + e.getKey(), preset(env, "drishti.branding." + e.getKey(), e.getValue().asText())));

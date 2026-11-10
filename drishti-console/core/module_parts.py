@@ -242,7 +242,8 @@ class ModuleParts:
     def _shipped(self) -> dict[str, Path]:
         """The product's own modules with a console part (``modules/<folder>/module.yaml``), by id."""
         out = {}
-        for f in sorted(self.shipped.glob("*/module.yaml")) if self.shipped and self.shipped.is_dir() else []:
+        found = sorted(self.shipped.glob("*/module.yaml")) + sorted(self.shipped.glob("*/src/dmod/module.yaml")) if self.shipped and self.shipped.is_dir() else []
+        for f in found:                             # a content module's folder, or a module project's src/dmod (the SDK's layout)
             mid = str(_yaml(f).get("id") or "")
             if mid and (f.parent / "console" / "plugin.yaml").is_file():
                 out[mid] = f.parent

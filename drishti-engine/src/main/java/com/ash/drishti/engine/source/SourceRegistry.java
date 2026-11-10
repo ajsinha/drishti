@@ -593,13 +593,18 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
      * routed is refused.
      */
     public Runnable attach(SourcePlugin plugin) {
+        return attach(plugin, Map.of());
+    }
+
+    /** As {@link #attach(SourcePlugin)}, the source started with {@code settings} (a module's connector extension: its folders). */
+    public Runnable attach(SourcePlugin plugin, Map<String, String> settings) {
         String name = plugin.manifest().name();
         synchronized (this) {
             if (plugins.containsKey(name)) {
                 throw new IllegalStateException("a source named " + name + " is already routed");
             }
             try {
-                plugin.start(new EngineSourceContext(Map.of(), codec, scheduler, reader));
+                plugin.start(new EngineSourceContext(settings == null ? Map.of() : Map.copyOf(settings), codec, scheduler, reader));
             } catch (RuntimeException e) {
                 throw e;
             } catch (Exception e) {

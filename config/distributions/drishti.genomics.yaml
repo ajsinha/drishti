@@ -12,9 +12,9 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Drishti Genomics (docs/architecture/DISTRIBUTIONS.md section 4): the sample that proves the kernel carries no finance. The genomics
-# module (a VCF reader; kinds variant, gene, sample, cohort) is not installed yet: the distribution boots on the kernel alone, and Health
-# says which module it asked for and that it did not load.
+# Drishti Genomics (docs/architecture/DISTRIBUTIONS.md section 4): the sample that proves the kernel carries no finance. The kernel and
+# the genomics module (modules/genomics: a VCF reader; kinds variant, sample, gene, cohort; VARIANT, GENE, COHORT), nothing else: none of
+# the kernel's packs (no counterparty, book or desk), the Research lens.
 format: 1
 distribution: drishti.genomics
 version: 1.0.0
@@ -35,15 +35,17 @@ brand:
 theme: { tokens: green, mode: light, density: comfortable }
 
 modules:
-  - { id: genomics, required: false }
+  - { id: genomics }
+
+kernel-packs: []                           # none of the kernel's packs: the module serves its own kinds
 
 lenses:
-  offered: []
-  default: ""
+  offered: [research]
+  default: research
 
 menus:
-  top: [views, bi, admin, help]
-  placeholder: "FUNC, PIVOT, BI …  then <GO>"
+  top: [genomics, views, bi, admin, help]
+  placeholder: "GENE TP53, COHORT COH-A, VARIANT HX-A001 …  then <GO>"
 
 docs: { title: Drishti Genomics Help }
 demo: { ships: false, enabled: false }

@@ -46,6 +46,8 @@ public final class ModuleManifests {
 
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
     private static final String IN_JAR = "src/main/resources/META-INF/drishti/module.yaml";
+    /** A module project made from the SDK's archetype keeps its {@code .dmod} manifest in {@code src/dmod/} (genomics). */
+    private static final String SDK_PROJECT = "src/dmod/module.yaml";
 
     private ModuleManifests() {
     }
@@ -58,7 +60,7 @@ public final class ModuleManifests {
         }
         try (DirectoryStream<Path> modules = Files.newDirectoryStream(dir, Files::isDirectory)) {
             for (Path m : modules) {
-                Path dmod = m.resolve("module.yaml");
+                Path dmod = Files.isRegularFile(m.resolve("module.yaml")) ? m.resolve("module.yaml") : m.resolve(SDK_PROJECT);
                 if (Files.isRegularFile(dmod)) {
                     Entry e = ofDmod(tree(dmod), dmod);
                     byId.put(e.id(), e);
