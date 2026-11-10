@@ -147,7 +147,7 @@ class ModuleSdkTest {
         props.put("groupId", "com.example." + artifactId);
         props.put("artifactId", artifactId);
         props.put("package", "com.example." + artifactId);
-        props.put("archetypeVersion", System.getProperty("drishti.sdk.version"));
+        props.put("drishtiVersion", System.getProperty("drishti.sdk.version"));
         var doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(archetype.resolve("META-INF/maven/archetype-metadata.xml").toFile());
         NodeList required = doc.getElementsByTagName("requiredProperty");
         for (int i = 0; i < required.getLength(); i++) {

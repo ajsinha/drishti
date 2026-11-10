@@ -21,6 +21,8 @@
   <requiredProperties>
     <requiredProperty key="version"><defaultValue>0.1.0</defaultValue></requiredProperty>
     <requiredProperty key="domain"><defaultValue>general</defaultValue></requiredProperty>
+    <!-- the SDK version the module builds against: the archetype's own (filled when the archetype is built) -->
+    <requiredProperty key="drishtiVersion"><defaultValue>@project.version@</defaultValue></requiredProperty>
   </requiredProperties>
   <fileSets>
     <fileSet filtered="true" packaged="true" encoding="UTF-8">

@@ -6,7 +6,7 @@
   <parent>
     <groupId>com.ash.drishti</groupId>
     <artifactId>drishti-module-parent</artifactId>
-    <version>${archetypeVersion}</version>
+    <version>${drishtiVersion}</version>
     <relativePath/>
   </parent>
   <groupId>${groupId}</groupId>

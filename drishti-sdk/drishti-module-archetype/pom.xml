@@ -32,4 +32,18 @@
     <spotless.check.skip>true</spotless.check.skip>
     <spotless.apply.skip>true</spotless.apply.skip>
   </properties>
+  <build>
+    <resources>
+      <!-- only the descriptor is filtered (the SDK version a generated module builds against); the templates are Velocity's -->
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+        <includes><include>META-INF/maven/archetype-metadata.xml</include></includes>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+        <excludes><exclude>META-INF/maven/archetype-metadata.xml</exclude></excludes>
+      </resource>
+    </resources>
+  </build>
 </project>
