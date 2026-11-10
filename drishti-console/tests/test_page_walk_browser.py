@@ -25,7 +25,6 @@
 DRISHTI_PAGEWALK_BASE=<console URL> walks a console that is already running instead of starting one (an owner's stack, a QA machine).
 Skipped when Playwright, Chromium, the built server jar or a JDK is missing."""
 import os
-from urllib.parse import quote_plus
 
 import pytest
 
@@ -37,9 +36,8 @@ from var_stack import VAR_TRADES, var_data, var_lake, var_server
 KEY_PAGES = ["/", "/var?scope=BANK", go("VAR BANK EXPLAIN"), "/pivot?preset=mr", "/pivot", "/bi/designer", "/forms", "/admin/engines",
              "/admin/connectors", "/admin/loads", "/admin/loads/upload", "/help"]
 THEMES = {"dark": "terminal", "light": "light"}
-
-
-EXTRA: list[str] = []   # pages only this stack can name (a table of its lake)
+#: in-context pages opened from a link on the page that lists them (they need its parameters)
+FROM = {"/admin/lakes/table": "/admin/lakes"}
 
 
 @pytest.fixture(scope="module")
@@ -48,15 +46,28 @@ def stack(tmp_path_factory):
         yield os.environ["DRISHTI_PAGEWALK_BASE"].rstrip("/")
         return
     lake = var_lake(tmp_path_factory, var_data(*VAR_TRADES))
-    EXTRA[:] = [f"/admin/lakes/table?root={quote_plus(str(lake))}&table=risk/scenario-pv"]
     # the data inbox on (Admin -> Data loads -> Inbox and Upload are its pages), over an empty folder of its own
     yield from var_server(tmp_path_factory, lake, DRISHTI_DATALOAD_ENABLED="true", DRISHTI_DATALOAD_DIR=str(tmp_path_factory.mktemp("walk-dataload")))
 
 
 def _walk(browser, base: str, hrefs: list[str]) -> list[dict]:
+    """Opens each page; an in-context page that needs what its page gives it (FROM) is opened by the first such link on that page."""
     pg = new_page(browser)
     try:
-        return [open_page(pg, base, h) for h in hrefs]
+        out = []
+        for h in hrefs:
+            if h in FROM:
+                pg.goto(base + FROM[h])
+                link = pg.evaluate("(p) => { const a = document.querySelector('#main a[href^=\"' + p + '?\"]'); return a ? a.getAttribute('href') : null; }", h)
+                if not link:
+                    continue        # nothing to open on this stack (no lake the console reads)
+                h = link
+            out.append(open_page(pg, base, h))
+        for r in out:   # a page over the budget is opened once more: a cold cache or a busy moment is not a slow page, slow twice is
+            if r["secs"] > BUDGET_S and not r["faults"]:
+                again = open_page(pg, base, r["href"])
+                r["secs"], r["faults"] = min(r["secs"], again["secs"]), again["faults"]
+        return out
     finally:
         pg.context.close()
 
@@ -71,7 +82,7 @@ def _assert_clean(results: list[dict]) -> None:
 
 
 def test_every_sitemap_page_opens_clean(stack, browser):
-    _assert_clean(_walk(browser, str(stack), [h for h in sitemap_addresses() if h != "/admin/lakes/table"] + EXTRA))
+    _assert_clean(_walk(browser, str(stack), sitemap_addresses()))
 
 
 def test_every_top_bar_link_in_the_product_and_each_lens_opens_clean(stack, browser):
@@ -87,12 +98,9 @@ def test_every_top_bar_link_in_the_product_and_each_lens_opens_clean(stack, brow
             links += menu_links(pg, base)
         pg.goto(base + "/lens/leave")
         todo = [h for h in dedupe(links) if h not in done and not h.startswith("/lens/")]
-        results = [open_page(pg, base, h) for h in todo]
-        for lens in lenses:   # each lens's own home
-            results.append(open_page(pg, base, lens))
-        pg.goto(base + "/lens/leave")
     finally:
         pg.context.close()
+    results = _walk(browser, base, todo + lenses)   # each lens's own home last
     _assert_clean(results)
 
 

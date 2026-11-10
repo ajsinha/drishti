@@ -39,7 +39,11 @@ IN_CONTEXT = {"/w/new": "/w/new?name=page-walk", "/home/trading/view-as": None}
 #: pages allowed over the budget, each with its reason (a page leaves the list when it is made fast)
 SLOW_ALLOWED: dict[str, str] = {}
 #: known faults not yet fixed, each with its reason: reported on every walk, not failed (a page leaves the list when it is fixed)
-KNOWN_FAULTS: dict[str, str] = {}
+KNOWN_FAULTS: dict[str, str] = {
+    "/go?q=PLAY+SIMM+EXAMPLE+%3CGO%3E": "no licensed SIMM parameter files on a test stack: the server answers 5xx (DRS-5333), the console 502; "
+                                        "it should be a 4xx the page explains",
+    "/go?q=PLAY%20SIMM%20EXAMPLE%20%3CGO%3E": "as above, the top bar's link",
+}
 
 
 def sitemap() -> dict:
@@ -155,6 +159,8 @@ def open_page(pg, base: str, href: str, timeout_s: float = 60) -> dict:
 def report(results: list[dict], budget: float = BUDGET_S) -> tuple[list[str], list[str]]:
     """(faults, slow): one line per faulty page, one per page over the budget (slowest first)."""
     for r in results:
+        if r["secs"] > budget and r["href"] in SLOW_ALLOWED:
+            print(f"  slow, allowed {r['href']} {r['secs']:.1f}s ({SLOW_ALLOWED[r['href']]})")
         if r["faults"] and r["href"] in KNOWN_FAULTS:
             print(f"  known {r['href']} ({KNOWN_FAULTS[r['href']]}): " + "; ".join(r["faults"]))
     bad = [f"{r['href']}: " + "; ".join(r["faults"]) for r in results if r["faults"] and r["href"] not in KNOWN_FAULTS]

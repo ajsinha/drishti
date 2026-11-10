@@ -57,12 +57,17 @@
   }
   /** The limit's bar: its tone the server's status (within, near, breach), its near tick the server's rule (drishti.risk.limit-near). */
   var LIMIT_TONE = { within: "ok", near: "warn", breach: "bad" };
+  function placeStyles(box) {
+    box.querySelectorAll("[data-mr-w]").forEach(function (e) { e.style.width = e.getAttribute("data-mr-w"); });
+    box.querySelectorAll("[data-mr-left]").forEach(function (e) { e.style.left = e.getAttribute("data-mr-left"); });
+  }
   function limitBar(use, status, near) {
     if (!isNum(use)) { return ""; }
     var cls = (status && LIMIT_TONE[status]) || "";
-    return '<span class="mr-lbar ' + cls + '" title="' + pct(use) + ' of the limit"><span class="f" style="width:' + Math.min(100, use * 100 / 1.2).toFixed(1)
-      + '%"></span>' + (isNum(near) ? '<b class="tick" style="left:' + (near * 100 / 1.2).toFixed(1) + '%"></b>' : "")
-      + '<b class="tick full" style="left:' + (100 / 1.2).toFixed(1) + '%"></b></span>';
+    // the widths and positions are set through the CSSOM once drawn (placeStyles): the Content Security Policy refuses style="" in markup
+    return '<span class="mr-lbar ' + cls + '" title="' + pct(use) + ' of the limit"><span class="f" data-mr-w="' + Math.min(100, use * 100 / 1.2).toFixed(1)
+      + '%"></span>' + (isNum(near) ? '<b class="tick" data-mr-left="' + (near * 100 / 1.2).toFixed(1) + '%"></b>' : "")
+      + '<b class="tick full" data-mr-left="' + (100 / 1.2).toFixed(1) + '%"></b></span>';
   }
   /** The server's scenario P&L of a scope as drishti-risk's P&L distribution: its bins, its VaR and ES (V and E on the lines). */
   function histogram(box, d, height) {
@@ -135,6 +140,7 @@
         tile("Data", esc((h.batches || []).join(", ") || "—") + esc(intraday), "data version " + esc(h.dataVersion || "?") + " · " + (h.trades || 0).toLocaleString("en-US")
           + " trades in " + (h.positions || 0).toLocaleString("en-US") + " positions")
       ].join("");
+      placeStyles(box);
     }).catch(function (e) { box.innerHTML = '<p class="pv-notice">' + esc(e.message) + "</p>"; });
   }
 
