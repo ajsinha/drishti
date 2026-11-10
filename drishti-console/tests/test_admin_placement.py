@@ -49,7 +49,7 @@ def test_the_modules_tab_shows_the_matrix_in_words(client, backend, monkeypatch)
     pane = page.split('id="netPaneModules"')[1].split("</section>")[0]
     for s in ["data-placement-matrix", "sample.compute", "heavy · max 1 · 6,144 MB", "not placed", "active", "down", "in process", "★",
               "genomics is not placed", "built in: every node", "data-placement-fields", "Plan (a second administrator applies)", "pl-1",
-              'data-plan-act="apply"', "/help/cluster#module-placement"]:
+              'data-plan-act="apply"', "/help/cluster#19-module-placement"]:
         assert s in pane, s
     assert 'aria-selected="true"' in page.split('id="netTabModules"')[1][:200]
     assert "drishti_admin-placement.js" in page

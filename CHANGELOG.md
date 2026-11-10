@@ -19,6 +19,17 @@
 
 - VaR explorer: turning on **Include matured positions** no longer makes the scope tree disappear (the tree library refused the switch's own "of which matured" column); a screen's own tree measure with a label is accepted.
 
+- **Module placement** (2.9.11.i2 + i3, wave 2; [CLUSTER_GUIDE.md section 1.9](docs/guides/CLUSTER_GUIDE.md#19-module-placement),
+  [KERNEL_AND_MODULES.md section 4.11](docs/architecture/KERNEL_AND_MODULES.md#411-modules-in-a-cluster)): `config/placement.yaml` says which
+  module parts (API, compute, pages, feeds) run on which nodes, by node name or role (a node label such as `heavy` or `web`), with no
+  all-nodes default: a part not placed runs nowhere and Health says so. Feed and singleton parts have one owner, the first live placed node
+  by name (one `SingletonElection` interface, `FirstLiveElection` today), failing over only inside the placement. A node runs a part only
+  where it is placed: others forward the request to a placed node (`X-Drishti-Placement` names it) or refuse it with `503 DRS-1032` when
+  none is up. Changes are plans applied by a second administrator (`DRS-1030` heavy work everywhere or over max-nodes, `DRS-1031` the
+  cluster changed since the plan, `DRS-2007` four eyes), without a restart, adopted by every member by version. The node × part matrix:
+  `GET /api/v1/admin/cluster/modules` and **Admin → Cluster → Modules**. The module runtime's host asks `placedHere` before loading
+  (`NOT_PLACED`). Banking and the other built-in modules count as placed on every node, so nothing changes for them.
+
 - **The module runtime** (2.9.11.i2 + i3, wave 1; new Maven module `drishti-module-runtime`,
   [KERNEL_AND_MODULES.md section 10.4](docs/architecture/KERNEL_AND_MODULES.md#104-one-module-runtime-library-two-hosts),
   [DEVELOPER_GUIDE.md section 1.5](docs/guides/DEVELOPER_GUIDE.md#15-the-module-runtime)): the `.dmod` package (pack, unpack, the

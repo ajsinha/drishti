@@ -25,7 +25,7 @@
     nodes (every other node forwards its requests); a feed or singleton runs on one owner (<span aria-hidden="true">★</span>), the first live
     placed node by name, and fails over only inside its placement. Modules built into the server run on every node. The file is
     <span class="mono">{{ modules.file or 'config/placement.yaml' }}</span>, version {{ modules.version or 0 }}; see the
-    <a href="/help/cluster#module-placement">Cluster guide</a>.</p>
+    <a href="/help/cluster#19-module-placement">Cluster guide</a>.</p>
   <p class="ib-said" data-placement-said role="status" aria-live="polite"></p>
 {% if not modules %}
   <p class="adm-warn" role="alert" data-placement-error>The server did not give the placement (a server before 2.9.11.i3, or the call failed).</p>
