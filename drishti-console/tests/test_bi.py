@@ -221,8 +221,7 @@ def test_the_help_screen_exists(bi):
 
 
 def test_bi_can_be_switched_off_in_the_console():
-    settings = load_settings(CONSOLE / "config")
-    settings.as_dict().setdefault("bi", {})["enabled"] = False
+    settings = load_settings(CONSOLE / "config", ["--bi.enabled=false"])     # the site's own (command line), above the distribution layer
     app = create_app(settings)
     app.state.backend = BiBackend()
     client = TestClient(app)

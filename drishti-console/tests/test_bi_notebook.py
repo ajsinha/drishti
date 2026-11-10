@@ -73,8 +73,7 @@ class NotebookBackend(BiBackend):
 
 
 def make(powers=("bi", "bi-author"), **notebook):
-    s = load_settings(CONSOLE / "config")
-    s.as_dict().setdefault("bi", {}).setdefault("notebook", {}).update(notebook)
+    s = load_settings(CONSOLE / "config", [f"--bi.notebook.{k}={v}" for k, v in notebook.items()])     # the site's own (command line)
     app = create_app(s)
     app.state.backend = NotebookBackend(powers)
     return TestClient(app), app.state.backend
