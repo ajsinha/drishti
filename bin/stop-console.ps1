@@ -29,9 +29,10 @@ then removes the pid file. A pid file whose process is gone is removed and said 
 Exit codes: 0 stopped or not running; 2 a wrong option.
 '@
 
-$o = Read-Options $args @{ datadir = 'value'; envfile = 'value'; timeout = 'value' }
+$o = Read-Options $args @{ datadir = 'value'; envfile = 'value'; timeout = 'value'; name = 'value' }
 if ($o['help']) { Write-Host $usage; exit 0 }
 if ($o['envfile']) { Import-EnvFile $o['envfile'] -Quiet }
 $data = Get-DataDir (Opt $o 'datadir')
-Stop-ByPidFile (Join-Path $data 'run\console.pid') 'console' $script:ConsoleMark ([int](Opt $o 'timeout' 30))
+$cname = $(if ($o['name']) { "console-$($o['name'])" } else { 'console' })   # --name: a console started with --name
+Stop-ByPidFile (Join-Path $data "run\$cname.pid") $cname $script:ConsoleMark ([int](Opt $o 'timeout' 30))
 exit 0

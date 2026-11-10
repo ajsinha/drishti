@@ -161,6 +161,20 @@ def test_admin_white_label_shows_the_distributions_side_by_side(backend, monkeyp
     assert "data-white-label-running" in t and "Drishti Finance Help" in t and "bin/start-all.sh --distribution finance" in t
 
 
+def test_a_stack_file_runs_a_risk_and_a_finance_console_over_one_cluster():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("drishti_cluster", CONSOLE.parent / "bin" / "lib" / "cluster.py")
+    cluster = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(cluster)
+    stack = {"nodes": [{"name": "n1", "port": 18480}], "console": {"port": 17480, "servers": ["n1"], "settings": {"A": "1"}},
+             "consoles": [{"name": "risk", "port": 17480, "distribution": "risk"}, {"name": "finance", "port": 17481, "distribution": "finance"}]}
+    cs = cluster.consoles(stack)
+    assert [(c["process"], c["port"], c["distribution"], c["servers"]) for c in cs] == [
+        ("console-risk", 17480, "risk", ["n1"]), ("console-finance", 17481, "finance", ["n1"])]
+    assert cs[1]["settings"] == {"A": "1"}
+    assert [c["process"] for c in cluster.consoles({"nodes": [], "console": {"port": 17480}})] == ["console"]   # the one console, as before
+
+
 def test_a_path_names_a_sites_own_file(tmp_path: Path):
     own = tmp_path / "acme.yaml"
     own.write_text((DIR / "drishti.finance.yaml").read_text(encoding="utf-8").replace("Drishti Finance", "Acme Markets")
