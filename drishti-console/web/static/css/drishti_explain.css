@@ -97,7 +97,7 @@ p.dx-pop-h { margin-right: var(--d-sp-18); font-size: var(--d-fs-13); }
 .dx-kpi b { font-size: var(--d-fs-18); overflow-wrap: anywhere; }
 .dx-kpi .dx-up { color: var(--d-bad); }
 .dx-kpi .dx-down { color: var(--d-ok); }
-.dx-why-row { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: var(--d-sp-10); align-items: start; }
+.dx-why-row { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: var(--d-sp-10); align-items: start; }
 .dx-wf { min-height: 260px; }
 .dx-words { font-size: var(--d-fs-13); line-height: 1.45; }
 .dx-folds { display: flex; flex-direction: column; gap: var(--d-sp-6); }

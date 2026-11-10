@@ -135,32 +135,37 @@ def test_why_it_moved_layout_a_with_the_compare_date(stack, browser):
     shot(pg, "why-it-moved-a")
     assert pg.evaluate("document.querySelector('[data-explain-page]').dataset.layout") == "why-a"
     assert pg.locator(".dx-kpi").count() == 4
+    wait(pg, "!!(document.querySelector('[data-dx-waterfall] drishti-chart') || {}).chart")      # the waterfall drawn by drishti-chart
     order = pg.evaluate("['[data-dx-compare]', '.dx-kpis', '.dx-why-row', '.dx-folds'].map((s) => document.querySelector(s).getBoundingClientRect().top)")
     assert order == sorted(order)
     wf = pg.locator("[data-dx-waterfall]").bounding_box()
     side = pg.locator("[data-dx-side]").bounding_box()
-    assert wf["width"] > 1.5 * side["width"] and abs(wf["y"] - side["y"]) < 40          # the waterfall first and wide, the contributors on its right
+    assert wf["width"] > 1.2 * side["width"] and abs(wf["y"] - side["y"]) < 40          # the waterfall first and wide, the contributors on its right
     assert pg.locator("[data-dx-side] h2").inner_text().startswith("Biggest contributors · ")
     assert pg.locator("[data-dx-words]").inner_text().strip()
     assert pg.evaluate("[...document.querySelectorAll('.dx-folds > details')].map((d) => [d.dataset.dxPart, d.open])")[:2] == [["formula", False], ["inputs", False]]
     # no empty boxes
     assert pg.evaluate("[...document.querySelectorAll('.dx-kpi, .dx-card, .dx-fold')].filter((e) => e.offsetParent !== null && !e.textContent.trim()).length") == 0
     assert layout_faults(pg) == []
-    to = pg.evaluate("document.querySelector('[data-dx-compare] b:first-of-type').textContent")
-    # 1 week: the link carries it and the page compares with the newest business date on or before it
+    to, before = pg.evaluate("[...document.querySelectorAll('[data-dx-compare] b')].map((b) => b.textContent)")
+    # 1 week: the link carries it; the engine answers on the newest business date it has on or before it, or says in words why not,
+    # the way back to the previous day kept on the page
     pg.locator('[data-dx-compare="week"]').click()
-    wait(pg, "new URL(location.href).searchParams.get('from') && document.querySelector('[data-explain-page]').dataset.state === 'ready'", seconds=120)
+    wait(pg, "new URL(location.href).searchParams.get('from') && ['ready', 'failed'].includes(document.querySelector('[data-explain-page]').dataset.state)", seconds=120)
     asked = pg.evaluate("new URL(location.href).searchParams.get('from')")
     import datetime
     assert asked == (datetime.date.fromisoformat(to) - datetime.timedelta(days=7)).isoformat()
-    wait(pg, "document.querySelector('[data-dx-compare=\"week\"]').classList.contains('on')")
-    shown = pg.evaluate("document.querySelectorAll('[data-dx-compare] b')[1].textContent")
-    assert shown <= asked
+    if pg.evaluate("document.querySelector('[data-explain-page]').dataset.state") == "ready":
+        assert pg.evaluate("document.querySelectorAll('[data-dx-compare] b')[1].textContent") <= asked
+    else:
+        assert pg.locator("[data-dx-grid]").inner_text().strip()
     # Previous day takes it back out
     pg.locator('[data-dx-compare="prev"]').click()
     wait(pg, "!new URL(location.href).searchParams.get('from') && document.querySelector('[data-explain-page]').dataset.state === 'ready'", seconds=120)
-    # the command's own compare date
-    pg.goto(base + "/go?q=" + urllib.parse.quote("VAR BANK EXPLAIN vs " + asked + " <GO>"))
+    # a picked date, through the command: VAR <scope> EXPLAIN vs <date>
+    pg.goto(base + "/go?q=" + urllib.parse.quote("VAR BANK EXPLAIN vs " + before + " <GO>"))
     wait(pg, "document.querySelector('[data-explain-page]') && document.querySelector('[data-explain-page]').dataset.state === 'ready'", seconds=120)
-    assert pg.evaluate("new URL(location.href).searchParams.get('from')") == asked
+    assert pg.evaluate("new URL(location.href).searchParams.get('from')") == before
+    assert pg.evaluate("document.querySelectorAll('[data-dx-compare] b')[1].textContent") == before
+    assert pg.evaluate("document.querySelector('[data-dx-compare=\"pick\"]').classList.contains('on')")
     pg.close()

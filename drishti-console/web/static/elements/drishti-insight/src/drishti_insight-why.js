@@ -156,8 +156,11 @@ export function renderWhyPage(root, a, k, asked) {
     return k.paint(paint, { title: line.label, from: x.from, to: x.to }, mine);
   }
   const biggest = lines.slice().sort((p, q) => Math.abs(q.effect) - Math.abs(p.effect))[0];
-  const C = win.Drishti && win.Drishti.elements && win.Drishti.elements.chart;
-  const drawn = new Promise((resolve) => {
+  const chartLib = () => win.Drishti && win.Drishti.elements && win.Drishti.elements.chart;
+  // drishti-chart is the page's last script: an answer already cached can come before it has run, so the page's load is awaited first
+  const loaded = chartLib() || doc.readyState === 'complete' ? Promise.resolve() : new Promise((r) => win.addEventListener('load', r, { once: true }));
+  const drawn = loaded.then(() => new Promise((resolve) => {
+    const C = chartLib();
     if (!(C && C.defineChartElement)) { chart.appendChild(h('p', 'dx-muted', 'The chart library is not on this page.')); resolve(); return; }
     C.defineChartElement(win.customElements, win);
     const el = doc.createElement('drishti-chart');
@@ -175,7 +178,7 @@ export function renderWhyPage(root, a, k, asked) {
                 data: { rows: stepRows } };
     if (el.mount) { el.mount(); }
     setTimeout(resolve, 3000);                      // drawn or not, the page goes on
-  });
+  }));
   const sideDone = biggest ? side(biggest) : Promise.resolve();
 
   // ---- Formula, Inputs & lineage and Checks, folded
@@ -211,7 +214,6 @@ export function renderWhyPage(root, a, k, asked) {
  * @returns {Promise<void>}
  */
 export function mountWhyPage(root, req, a, k) {
-  const win = root.ownerDocument.defaultView;
   const wb = ((a.workbook || {}).links || [])[0], head = root.querySelector('.dx-page-head');
   if (wb && head && !root.querySelector('[data-dx-wb]')) {
     const w = k.h('a', 'dx-btn', 'Workbook');
@@ -219,18 +221,27 @@ export function mountWhyPage(root, req, a, k) {
     w.setAttribute('data-dx-wb', '');
     head.insertBefore(w, head.querySelector('[data-dx-print]'));
   }
-  const deps = Object.assign({}, k, {
-    recompare(from) {
-      const next = Object.assign({}, req);
-      if (from) { next.from = from; } else { delete next.from; }
-      const u = new URL(win.location.href);
-      if (from) { u.searchParams.set('from', from); } else { u.searchParams.delete('from'); }
-      win.history.replaceState(win.history.state, '', u.toString());
-      root.setAttribute('data-explain-request', JSON.stringify(next));
-      k.rerender(root);
-    } });
+  const deps = Object.assign({}, k, { recompare(from) { compareAgain(root, req, from, k.rerender); } });
   return renderWhyPage(root, a, deps, req.from || '').then(() => {
     k.checks(root.querySelector('[data-dx-checks]'), { checks: [] });
     root.dataset.state = 'ready';
   });
+}
+
+/**
+ * Asks the page again with another compare date (none: the previous business date), kept in the link (from).
+ * @param {Element} root the [data-explain-page] element
+ * @param {Object} req the request the page asked
+ * @param {string} from the compare date, '' for the previous business date
+ * @param {function(Element): *} rerender the page's renderer
+ * @returns {void}
+ */
+export function compareAgain(root, req, from, rerender) {
+  const win = root.ownerDocument.defaultView, next = Object.assign({}, req);
+  if (from) { next.from = from; } else { delete next.from; }
+  const u = new URL(win.location.href);
+  if (from) { u.searchParams.set('from', from); } else { u.searchParams.delete('from'); }
+  win.history.replaceState(win.history.state, '', u.toString());
+  root.setAttribute('data-explain-request', JSON.stringify(next));
+  rerender(root);
 }

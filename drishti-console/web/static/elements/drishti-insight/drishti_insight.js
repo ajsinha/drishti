@@ -151,8 +151,10 @@
         return k.paint(paint, { title: line.label, from: x.from, to: x.to }, mine);
       }
       const biggest = lines.slice().sort((p, q) => Math.abs(q.effect) - Math.abs(p.effect))[0];
-      const C = win.Drishti && win.Drishti.elements && win.Drishti.elements.chart;
-      const drawn = new Promise((resolve) => {
+      const chartLib = () => win.Drishti && win.Drishti.elements && win.Drishti.elements.chart;
+      const loaded = chartLib() || doc.readyState === 'complete' ? Promise.resolve() : new Promise((r) => win.addEventListener('load', r, { once: true }));
+      const drawn = loaded.then(() => new Promise((resolve) => {
+        const C = chartLib();
         if (!(C && C.defineChartElement)) { chart.appendChild(h('p', 'dx-muted', 'The chart library is not on this page.')); resolve(); return; }
         C.defineChartElement(win.customElements, win);
         const el = doc.createElement('drishti-chart');
@@ -170,7 +172,7 @@
                     data: { rows: stepRows } };
         if (el.mount) { el.mount(); }
         setTimeout(resolve, 3000);                      // drawn or not, the page goes on
-      });
+      }));
       const sideDone = biggest ? side(biggest) : Promise.resolve();
       const folds = h('div', 'dx-folds');
       const jobs = [['formula', 'Formula'], ['inputs', 'Inputs & lineage (sources, versions, batches)']].map((t) => {
@@ -194,7 +196,6 @@
       return Promise.all(jobs.concat([drawn, sideDone])).then(() => undefined);
     }
     function mountWhyPage(root, req, a, k) {
-      const win = root.ownerDocument.defaultView;
       const wb = ((a.workbook || {}).links || [])[0], head = root.querySelector('.dx-page-head');
       if (wb && head && !root.querySelector('[data-dx-wb]')) {
         const w = k.h('a', 'dx-btn', 'Workbook');
@@ -202,22 +203,22 @@
         w.setAttribute('data-dx-wb', '');
         head.insertBefore(w, head.querySelector('[data-dx-print]'));
       }
-      const deps = Object.assign({}, k, {
-        recompare(from) {
-          const next = Object.assign({}, req);
-          if (from) { next.from = from; } else { delete next.from; }
-          const u = new URL(win.location.href);
-          if (from) { u.searchParams.set('from', from); } else { u.searchParams.delete('from'); }
-          win.history.replaceState(win.history.state, '', u.toString());
-          root.setAttribute('data-explain-request', JSON.stringify(next));
-          k.rerender(root);
-        } });
+      const deps = Object.assign({}, k, { recompare(from) { compareAgain(root, req, from, k.rerender); } });
       return renderWhyPage(root, a, deps, req.from || '').then(() => {
         k.checks(root.querySelector('[data-dx-checks]'), { checks: [] });
         root.dataset.state = 'ready';
       });
     }
-    return { "whyPageFits": whyPageFits, "compareDate": compareDate, "renderWhyPage": renderWhyPage, "mountWhyPage": mountWhyPage };
+    function compareAgain(root, req, from, rerender) {
+      const win = root.ownerDocument.defaultView, next = Object.assign({}, req);
+      if (from) { next.from = from; } else { delete next.from; }
+      const u = new URL(win.location.href);
+      if (from) { u.searchParams.set('from', from); } else { u.searchParams.delete('from'); }
+      win.history.replaceState(win.history.state, '', u.toString());
+      root.setAttribute('data-explain-request', JSON.stringify(next));
+      rerender(root);
+    }
+    return { "whyPageFits": whyPageFits, "compareDate": compareDate, "renderWhyPage": renderWhyPage, "mountWhyPage": mountWhyPage, "compareAgain": compareAgain };
   })();
   /* ---- src/drishti_insight-link.js ---- */
   __m["src/drishti_insight-link.js"] = (function () {
@@ -294,7 +295,7 @@
   })();
   /* ---- src/drishti_insight-explain.js ---- */
   __m["src/drishti_insight-explain.js"] = (function () {
-    var mountWhyPage = __m["src/drishti_insight-why.js"].mountWhyPage, whyPageFits = __m["src/drishti_insight-why.js"].whyPageFits;
+    var compareAgain = __m["src/drishti_insight-why.js"].compareAgain, mountWhyPage = __m["src/drishti_insight-why.js"].mountWhyPage, whyPageFits = __m["src/drishti_insight-why.js"].whyPageFits;
     var explainLink = __m["src/drishti_insight-link.js"].explainLink, upgradeLinks = __m["src/drishti_insight-link.js"].upgradeLinks, drawNote = __m["src/drishti_insight-link.js"].drawNote;
     function installExplain(win) {
       const window = win, document = win.document;
@@ -656,7 +657,16 @@
             if (first) { var c = root.querySelector("#dx-" + first); if (c) c.scrollIntoView(); }
           });
         }).catch(function (e) {
-          root.querySelector("[data-dx-grid]").textContent = e.message || String(e);
+          var g = root.querySelector("[data-dx-grid]");
+          g.textContent = e.message || String(e);
+          if (first === "why" && req.from) {                    // a compare date the engine cannot answer: said, and the way back
+            var back = h("button", "dx-chip", "Compare with the previous day");
+            back.type = "button";
+            back.setAttribute("data-dx-compare", "prev");
+            back.addEventListener("click", function () { compareAgain(root, req, '', renderPage); });
+            g.appendChild(document.createTextNode(" "));
+            g.appendChild(back);
+          }
           root.dataset.state = "failed";
         });
       }

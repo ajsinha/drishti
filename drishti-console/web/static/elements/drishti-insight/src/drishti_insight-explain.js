@@ -30,7 +30,7 @@
    figure of a measure that has an explanation carries it, ui-guarded), .upgrade(root) (each [data-explain-link] under root made one).
    The full page at tab=why for an explanation with steps (VaR) is layout A (drishti_insight-why.js).
    Everything is the server's (GET /api/explain, the person's own entitlements): the browser computes nothing, it places text. */
-import { mountWhyPage, whyPageFits } from './drishti_insight-why.js';
+import { compareAgain, mountWhyPage, whyPageFits } from './drishti_insight-why.js';
 import { explainLink, upgradeLinks, drawNote } from './drishti_insight-link.js';
 /**
  * Installs the one Explain in a page (once): the preview, the drawer, the full page when the page is /explain, the keys, and Drishti.Explain.
@@ -420,7 +420,16 @@ export function installExplain(win) {
         if (first) { var c = root.querySelector("#dx-" + first); if (c) c.scrollIntoView(); }
       });
     }).catch(function (e) {
-      root.querySelector("[data-dx-grid]").textContent = e.message || String(e);
+      var g = root.querySelector("[data-dx-grid]");
+      g.textContent = e.message || String(e);
+      if (first === "why" && req.from) {                    // a compare date the engine cannot answer: said, and the way back
+        var back = h("button", "dx-chip", "Compare with the previous day");
+        back.type = "button";
+        back.setAttribute("data-dx-compare", "prev");
+        back.addEventListener("click", function () { compareAgain(root, req, '', renderPage); });
+        g.appendChild(document.createTextNode(" "));
+        g.appendChild(back);
+      }
       root.dataset.state = "failed";
     });
   }
