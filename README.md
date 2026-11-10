@@ -45,8 +45,10 @@ TRD MX-20000001 <GO>                           →  a trade: terms, legs, cashfl
 ## Modules, lenses and functions
 
 What a person can do is decided in one place, the access registry: licence → module → lens → function → permission
-([ACCESS_MODEL.md](docs/architecture/ACCESS_MODEL.md), [DOMAIN_MODULES.md](docs/architecture/DOMAIN_MODULES.md)). The next step, a domain-free kernel with modules
-shipped as packages (their signatures and the licence check in 2.9.11.j), is a design for 2.9.11.i: [KERNEL_AND_MODULES.md](docs/architecture/KERNEL_AND_MODULES.md) ([PDF](docs/architecture/KERNEL_AND_MODULES.pdf)).
+([ACCESS_MODEL.md](docs/architecture/ACCESS_MODEL.md), [DOMAIN_MODULES.md](docs/architecture/DOMAIN_MODULES.md)). The core is a kernel
+that names no domain: a module's words reach it through `DomainVocabulary` and the console's plugin hooks, its interfaces are the
+`drishti-kernel-api` jar, and the kernel starts with no module at all (tests hold each). Modules shipped as signed packages and
+white-label distributions are designed, not built: [KERNEL_AND_MODULES.md](docs/architecture/KERNEL_AND_MODULES.md) ([PDF](docs/architecture/KERNEL_AND_MODULES.pdf)).
 
 | Module | Brings |
 |---|---|
@@ -70,8 +72,9 @@ shipped as packages (their signatures and the licence check in 2.9.11.j), is a d
 The banking module's engines run on the server, in Java, for any scope; the console only draws their answers.
 
 - **VaR and ES** for the bank, a desk, a book, a counterparty, a portfolio, a basket or an expression (`BANK - DESK:CREDIT`): drill from
-  the bank to a trade with contributions that add up, hierarchies from rows or from the trades' own columns, limits with one rule
-  (within, near, breach), any reporting currency, the 509- or 250-scenario window, stressed and 10-day VaR, intraday updates, the official
+  the bank to a trade with contributions that add up, any number of hierarchies built from the trades' promoted columns (an empty level
+  shows as *(Blank)*), a scope tree that shows only the chosen scope (the bank, a node and below, or a basket's own positions), limits with
+  one rule (within, near, breach), a switch that adds back matured positions for a look without touching the official figure, any reporting currency, the 509- or 250-scenario window, stressed and 10-day VaR, intraday updates, the official
   end-of-day record and backtests ([VAR_GUIDE.md](docs/guides/VAR_GUIDE.md), [tutorial 2](docs/tutorials/02-var-from-the-bank-to-a-trade.md));
   regulatory reporting to the cell in [REGULATORY_VAR_REPORTING.md](docs/guides/REGULATORY_VAR_REPORTING.md).
 - **Parametric VaR** (`PVAR`) beside historical, as a cross-check and never the official figure
@@ -104,8 +107,12 @@ report sign-offs go through one Approvals queue with four eyes. Anything that de
 - **The Pivot** (`PIVOT`): any kind, table or measure, every total computed from its own members, custom functions, why a figure moved,
   what-if, Excel with formulas; **Pivot → Report** turns a view into a report ([PIVOT_GUIDE.md](docs/guides/PIVOT_GUIDE.md),
   [tutorial 7](docs/tutorials/07-pivot-cubes-and-explain.md)).
-- **Reports and dashboards** on the table layer: reports and boards, statements, schedules, subscriptions, publishing and governance
-  ([REPORTS_GUIDE.md](docs/guides/REPORTS_GUIDE.md), [tutorial 8](docs/tutorials/08-reports-and-dashboards.md)).
+- **Reports and dashboards** on the table layer: reports and boards, statements, schedules, subscriptions, publishing and governance;
+  models with many-to-many relationships through a bridge table and filtering both ways, calculation groups, filter context in Rachana
+  (`calc` with via, filter, ignore and keep), a DAX converter; the decomposition tree, linked brushing across visuals, sunburst, icicle and
+  calendar heatmap ([REPORTS_GUIDE.md](docs/guides/REPORTS_GUIDE.md), [TABLES_GUIDE.md](docs/guides/TABLES_GUIDE.md),
+  [tutorial 8](docs/tutorials/08-reports-and-dashboards.md)); the area-by-area comparison with Power BI is
+  [BI_AND_POWER_BI.md](docs/strategy/BI_AND_POWER_BI.md).
 - **The Notebook**: SQL on the server and Python on its one sandboxed Python runtime ([NOTEBOOK_GUIDE.md](docs/guides/NOTEBOOK_GUIDE.md),
   [tutorial 9](docs/tutorials/09-notebook-and-python.md)).
 - **AI**, off as shipped: Ask about a page and BI from words on any of seventeen provider types, MCP servers' tools behind Drishti's
@@ -125,7 +132,8 @@ report sign-offs go through one Approvals queue with four eyes. Anything that de
   lists everything people build, what it uses and what uses it.
 - **Drishti Elements**: the console's JavaScript and CSS as eleven versioned libraries (core, inputs, grid, chart with maps, data, tree,
   graph, insight, designer, renderer, and the banking module's risk). Every screen and every designer is drawn with them, guard tests
-  fail the build when a page draws its own controls, and the gallery (`/elements`) shows each component live
+  fail the build when a page draws its own controls, and the gallery (**Build → Elements gallery**, `/elements`) shows each component
+  live, with a Playground page that draws it over data you edit and HTML and JavaScript you can change
   ([ELEMENTS.md](docs/architecture/ELEMENTS.md), [ELEMENTS_API.md](docs/guides/ELEMENTS_API.md)).
 - **Embed** live views, panels and reports in your own web pages, or the libraries in your own application; they ship as files, a
   release archive with SRI hashes, npm tarballs or a WebJar, never from a CDN ([EMBED_GUIDE.md](docs/guides/EMBED_GUIDE.md),
@@ -135,9 +143,11 @@ report sign-offs go through one Approvals queue with four eyes. Anything that de
 
 ## Data in
 
-- **Connectors**: Delta Lake and Apache Iceberg (Drishti's own engines, local disk or S3, no Hadoop), JDBC databases, DuckDB, MongoDB,
+- **Connectors**: Delta Lake (Drishti's Java engine, Databricks-compatible; Python reads through Delta Kernel) and Apache Iceberg (on
+  Apache's `iceberg-core`), each on local disk or S3 with no Hadoop and checked both ways against the reference libraries; JDBC databases, DuckDB, MongoDB,
   Redis, Aerospike, Cassandra, Kafka, ActiveMQ, RabbitMQ, files, S3, REST and public feeds, each a plugin in `plugins/drishti-plugin-*/`: `demo`, `file`, `rest`, `jdbc`, `delta`, `iceberg`, `iceberg-external`, `duckdb`, `mongodb`, `redis`, `aerospike`, `cassandra`, `kafka`, `activemq`, `rabbitmq`, `s3`, `feeds`, `news`, `yfinance`;
-  each with its README ([DATA_GUIDE.md](docs/guides/DATA_GUIDE.md#8-connectors), [tutorial 15](docs/tutorials/15-connect-your-data.md)).
+  each with its README. A connector is one file in `config/connectors/`, and every Admin change writes that file with its history
+  ([DATA_GUIDE.md](docs/guides/DATA_GUIDE.md#8-connectors), [tutorial 15](docs/tutorials/15-connect-your-data.md)).
 - **Lakes, each in its own folder** and described by one lake file (`config/lakes/<lake>.yaml`):
 
   | Lake | Holds |
@@ -153,7 +163,8 @@ report sign-offs go through one Approvals queue with four eyes. Anything that de
   The banking module adds the official VaR and exposure records. In-memory lakes (`mem://`) hold data that never touches disk.
 - **Loading**: JSON Lines is the standard. A plain file is one table and one business date; a `.ready` file says it is complete and names
   its lake; a tar archive loads all or nothing; every row carries its load id, so `drishti.py lake undo <load-id>` removes exactly one
-  load. The data inbox loads what your ETL drops, and the parallel Java loader handles large loads
+  load. The data inbox loads what your ETL drops; **Admin → Data loads → Upload** takes a file (JSON Lines, or a `.tgz`/`.tar.gz`),
+  writes its `.ready` beside the form and checks a sample first; the parallel Java loader handles large loads
   ([DATA_LAKE_GUIDE.md](docs/guides/DATA_LAKE_GUIDE.md), [tutorial 16](docs/tutorials/16-load-your-own-data-into-a-new-lake.md)).
 - **A day of bank data**: what a bank sends each day and the daily cycle ([tutorial 12](docs/tutorials/12-a-day-of-bank-data.md),
   [the data contracts](docs/contracts/README.md), one per command word).
@@ -183,7 +194,8 @@ report sign-offs go through one Approvals queue with four eyes. Anything that de
   administrator approves ([CONFIGURATION.md](docs/admin/CONFIGURATION.md)).
 - **Clusters** (Drishti\*net, off as shipped): servers join by gossip on a port of their own, any member answers any request, and VaR
   shards across members; sizing and tuning ([CLUSTER_GUIDE.md](docs/guides/CLUSTER_GUIDE.md), [tutorial 22](docs/tutorials/22-a-cluster-of-three.md)).
-- **Engines and native maths**: each compute engine on or off per node; OpenBLAS bundled for Linux and Windows x86-64, off as shipped
+- **Engines and native maths**: each compute engine on or off per node in **Admin → Engines** (its pages, under **Risk**, follow
+  the switch and the person's role); OpenBLAS bundled for Linux and Windows x86-64, off as shipped
   ([ADMIN_GUIDE.md section 21](docs/guides/ADMIN_GUIDE.md#21-compute-engines-on-or-off),
   [OPERATIONS_GUIDE.md section 14.9](docs/guides/OPERATIONS_GUIDE.md#149-native-libraries-blas)).
 
@@ -212,17 +224,19 @@ bin/stop-all.sh                  # when you are done
 Open the console's address that `start-all` prints, sign in as `drishti-dev-admin` (password `drishti-dev-admin123`: the demo's
 development account, never for a shared machine) and try `TRD MX-20000001`, `VAR BANK`, `EXP BANK`, `PREDEAL` and `PIVOT`.
 
-- **Starting and stopping**: the seven scripts of [bin/](bin/README.md) (`start-server`, `start-console`, `stop-server`, `stop-console`,
-  `status`, `start-all`, `stop-all`), each as `.sh` (Linux, macOS), `.ps1` and `.cmd` (Windows); every option, a cluster node by node with
-  `--node`, and the console pointed at a cluster's entry node with `--server`:
+- **Starting and stopping**: the scripts of [bin/](bin/README.md) (`start-server`, `start-console`, `stop-server`, `stop-console`,
+  `status`, `start-all`, `stop-all`, `start-cluster`, `stop-cluster`, `drishti-node`), each as `.sh` (Linux, macOS), `.ps1` and `.cmd`
+  (Windows); every option, a cluster node by node with `--node`, and the console pointed at a cluster's entry node with `--server`:
   [DEPLOYMENT_AND_QA_GUIDE.md section 6](docs/DEPLOYMENT_AND_QA_GUIDE.md#6-start-the-server-and-the-console).
 
 - **The command line** is `tools/drishti.py`, run with the console's Python: lakes and loads, feeds, Elements, approvals, VaR, exposure
   and more ([CLI_REFERENCE.md](docs/guides/CLI_REFERENCE.md), [COMMAND_CATALOG.md](docs/guides/COMMAND_CATALOG.md)).
-- **A local cluster of three** with its console, from one file: `bin/start-cluster.sh` with [drishti-stack/stack.yaml](drishti-stack/README.md).
+- **A local cluster of three** with its console, from one file: `bin/start-cluster.sh` (Windows `bin\start-cluster.cmd`), `bin/status.sh --cluster drishti-stack/stack.yaml`
+  and `bin/stop-cluster.sh`, with [drishti-stack/stack.yaml](drishti-stack/README.md).
 - **Other ways**: [Windows](docs/guides/OPERATIONS_GUIDE.md#4-drishti-on-windows) (Java and Python only),
   [Docker Compose](docs/guides/OPERATIONS_GUIDE.md#54-docker-compose) and the
-  [IDEs](docs/guides/OPERATIONS_GUIDE.md#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm).
+  [IDEs](docs/guides/OPERATIONS_GUIDE.md#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm) (IntelliJ's server configurations in
+  `run-configs/` run module `drishti-app`; PyCharm's console ones in `drishti-console/run-configs/`).
 
 ## Measured performance
 
@@ -269,8 +283,9 @@ the modules they may use. The map of every document is [docs/README.md](docs/REA
   schema file per database and no migrations.
 - **Console**: Python, FastAPI and Jinja2, each domain module's part in `drishti-console/plugins/<module>/`; every front-end asset
   vendored or one of the Elements libraries, under a strict content security policy; it works on phones.
-- **Contributing**: work on `develop`; `./mvnw -q verify` and the console tests
-  (`drishti-console/.venv/bin/python -m pytest -q drishti-console/tests`) must pass; no source file over 2,000 lines; every file carries
+- **Contributing**: work on `develop`; `tools/drill.sh --affected` runs what a branch can reach and `tools/drill.sh --gate` the release
+  drill's first checks ([QUICKSTART_DEVELOPERS.md](docs/QUICKSTART_DEVELOPERS.md)); no source file over 2,000 lines; duplicated lines
+  never rise above the baseline (`tools/duplicates.py`); every page opens within the 10 s page budget (the page walk); every file carries
   the copyright header (`python3 tools/license_headers.py --fix`); every change updates the documents it affects and the changelog in
   the same push; the documentation gates (`drishti-console/tests/test_docs_gates.py`, `config/docs-features.yaml`) keep one guide and one
   tutorial per feature.
@@ -279,39 +294,39 @@ the modules they may use. The map of every document is [docs/README.md](docs/REA
 
 <!-- code-volume:begin -->
 
-*Measured 2026-11-08 from the files the repository tracks (`python3 tools/docs/code_volume.py`; sample data and vendored libraries not counted).*
+*Measured 2026-11-10 from the files the repository tracks (`python3 tools/docs/code_volume.py`; sample data and vendored libraries not counted).*
 
 | Language | Lines | Files |
 |---|---|---|
-| Java, product | 434k | 2,167 |
-| Java, tests | 166k | 1,044 |
-| Python, product (console, tools, loaders, feeds) | 143k | 732 |
-| Python, tests | 107k | 603 |
-| JavaScript, product (console and Elements) | 127k | 490 |
-| JavaScript, tests | 5k | 23 |
-| CSS | 19k | 114 |
-| HTML (templates and pages) | 37k | 338 |
+| Java, product | 435k | 2,172 |
+| Java, tests | 169k | 1,057 |
+| Python, product (console, tools, loaders, feeds) | 144k | 740 |
+| Python, tests | 108k | 619 |
+| JavaScript, product (console and Elements) | 130k | 499 |
+| JavaScript, tests | 5k | 24 |
+| CSS | 19k | 115 |
+| HTML (templates and pages) | 39k | 355 |
 | YAML: configuration, Sutras, data contracts | 112k | 1,425 |
-| Markdown: guides, tutorials, design | 222k | 307 |
+| Markdown: guides, tutorials, design | 224k | 313 |
 
-About **759k lines of product code** and **278k lines of tests** (37% of the product code), with **222k lines of documentation**.
+About **767k lines of product code** and **282k lines of tests** (37% of the product code), with **224k lines of documentation**.
 
 | What | Count |
 |---|---|
-| Maven modules | 52 (19 of them connector plugins) |
+| Maven modules | 53 (19 of them connector plugins) |
 | Domain modules | 4: core, banking, economy, capitalmarkets |
 | Lenses | 10: risk, trading, market, cro, mr-cube, ccr-cube, world, publicsector, cio, oversight |
 | Functions a module declares | 105 (46 banking, 32 capitalmarkets, 27 economy); every other command word is the core's |
-| Console routes | 644 |
-| Server REST handlers | 761 |
-| Drishti Elements | 11 libraries, 190 ES modules |
+| Console routes | 652 |
+| Server REST handlers | 774 |
+| Drishti Elements | 11 libraries, 196 ES modules |
 | Domain packs | 17: banking 4, capitalmarkets 2, core 3, economy 8 |
 | Sutras in the shipped packs | 248 |
 | Connector plugins | 19 |
 | Feeds | 13 |
 | Lake files | 9 |
-| Test files | 1,529: Java 959, console 250, browser 177, tools 120, JavaScript 23 |
-| Documents under docs/ | 178 (32 guides, 22 tutorials) |
+| Test files | 1,550: Java 966, console 253, browser 181, tools 126, JavaScript 24 |
+| Documents under docs/ | 183 (32 guides, 22 tutorials) |
 
 <!-- code-volume:end -->
 
