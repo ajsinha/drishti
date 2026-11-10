@@ -101,11 +101,7 @@ async def placement_action(request: Request, action: str):
     me = _admin(request)
     if me is None:
         return _forbidden()
-    try:
-        body = await request.json()
-    except ValueError:
-        return JSONResponse({"code": "DRS-5001", "detail": "a JSON body"}, status_code=400)
-    body = body if isinstance(body, dict) else {}
+    body = await json_body(request)                                  # 400/415 problems for a body that is not a JSON object
     pid = quote(str(body.get("id") or ""), safe="")
     b = request.app.state.backend
     try:
