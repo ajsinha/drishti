@@ -41,13 +41,30 @@ public final class EngineSwitches {
      */
     public record Switch(boolean on, String source, String alias, boolean overridden) {}
 
-    private final Map<String, Switch> switches = new LinkedHashMap<>();
-    private final List<String> warnings = new ArrayList<>();
+    private final Map<String, Switch> switches = new java.util.concurrent.ConcurrentHashMap<>();
+    private final List<String> warnings = new java.util.concurrent.CopyOnWriteArrayList<>();
+    private final ConfigurableEnvironment env;
 
     public EngineSwitches(EngineCatalogue catalogue, ConfigurableEnvironment env) {
+        this.env = env;
         for (EngineCatalogue.Entry e : catalogue.all()) {
             switches.put(e.id(), read(e, env));
         }
+    }
+
+    /**
+     * Reads the switch of an engine a loaded module brought (its catalogue entry, its defaults now in the settings), as the server's own
+     * were read at the start; forgotten again when it leaves.
+     */
+    public void learn(EngineCatalogue.Entry e) {
+        if (env != null) {
+            switches.put(e.id(), read(e, env));
+        }
+    }
+
+    /** An engine that left with its module. */
+    public void forget(String id) {
+        switches.remove(id);
     }
 
     public Switch of(String id) {

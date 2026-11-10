@@ -190,6 +190,9 @@ public final class EngineRegistry implements AutoCloseable {
             entries.computeIfAbsent(id, x -> new EngineCatalogue.Entry(x, x, "", x + ".yaml", "drishti.engines." + x + ".enabled", "", List.of(),
                     true, true, true, Map.of()));
             inFlight.putIfAbsent(id, new AtomicInteger());
+            if (added) {
+                switches.learn(entries.get(id));                   // a module's engine: its switch from its defaults and the site's file
+            }
             boolean on = switches.of(id).on();
             desired.put(id, on);
             List<String> missing = entry(id).needs().stream().filter(n -> states.get(n) != State.RUNNING).toList();
@@ -200,6 +203,18 @@ public final class EngineRegistry implements AutoCloseable {
                 block(id, missing);
             } else {
                 start(id, eng);
+                // a module's engines attach one by one: one that waited for this one starts now
+                for (boolean more = true; more; ) {
+                    more = false;
+                    for (String other : List.copyOf(states.keySet())) {
+                        if (states.get(other) == State.BLOCKED && Boolean.TRUE.equals(desired.get(other)) && engines.containsKey(other)
+                                && entry(other).needs().stream().allMatch(n -> states.get(n) == State.RUNNING)) {
+                            reasons.remove(other);
+                            start(other, engines.get(other));
+                            more |= states.get(other) == State.RUNNING;
+                        }
+                    }
+                }
             }
         }
         listeners.forEach(Runnable::run);
@@ -217,6 +232,7 @@ public final class EngineRegistry implements AutoCloseable {
                 desired.put(id, false);
                 reasons.remove(id);
                 if (added) {
+                    switches.forget(id);
                     entries.remove(id);
                     states.remove(id);
                     desired.remove(id);

@@ -69,9 +69,9 @@ public final class ApiMounts {
         if (prefix != null) {        // a REST controller whose every path is already in the module's namespace (/api/v1/<prefix>/...) is mounted as it is
             for (String name : module.context().getBeanNamesForAnnotation(org.springframework.web.bind.annotation.RestController.class)) {
                 if (!names.contains(name) && module.context().getBeanFactory().containsBeanDefinition(name)) {
-                    RequestMapping tm = AnnotatedElementUtils.findMergedAnnotation(module.context().getType(name), RequestMapping.class);
                     String ns = "/api/v1/" + prefix;
-                    if (tm != null && tm.path().length > 0 && java.util.Arrays.stream(tm.path()).allMatch(p -> p.equals(ns) || p.startsWith(ns + "/"))) {
+                    java.util.List<String> full = paths(ClassUtils.getUserClass(module.context().getType(name)));
+                    if (!full.isEmpty() && full.stream().allMatch(p -> p.equals(ns) || p.startsWith(ns + "/") || p.startsWith(ns + "."))) {
                         absolute.add(name);
                     } else {
                         LOG.warn("module {}: the controller {} is outside its namespace {} (and has no @ModuleApi): not mounted", module.id(), name, ns);
@@ -116,6 +116,24 @@ public final class ApiMounts {
                 }
             }
         }
+    }
+
+    /** Every path a controller class maps (its type's paths joined with each method's). */
+    private static java.util.List<String> paths(Class<?> type) {
+        java.util.List<String> out = new java.util.ArrayList<>();
+        RequestMapping typeMapping = AnnotatedElementUtils.findMergedAnnotation(type, RequestMapping.class);
+        String[] bases = typeMapping == null || typeMapping.path().length == 0 ? new String[] {""} : typeMapping.path();
+        for (Method method : type.getMethods()) {
+            RequestMapping rm = AnnotatedElementUtils.findMergedAnnotation(method, RequestMapping.class);
+            if (rm != null) {
+                for (String base : bases) {
+                    for (String path : rm.path().length == 0 ? new String[] {""} : rm.path()) {
+                        out.add(join(base, path));
+                    }
+                }
+            }
+        }
+        return out;
     }
 
     private static String join(String base, String path) {
