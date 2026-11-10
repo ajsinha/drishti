@@ -52,7 +52,7 @@
       const box = ctx.h(host.ownerDocument, 'div', { cls: 'bi-decomp' }); box.style.height = '360px';
       host.appendChild(box);
       const d = new ctx.E.tree.Decomposition(box, { title: '99% VaR', splits: SPLITS, load: standIn() });
-      return { element: box, destroy: () => { d.dispose(); box.remove(); } };
+      return { element: box, target: box, destroy: () => { d.dispose(); box.remove(); } };
     },
     code: () => ({ element: '<!-- a plain JavaScript element -->', js: JS }),
     sutra: () => null
