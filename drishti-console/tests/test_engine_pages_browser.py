@@ -54,11 +54,11 @@ def test_why_it_moved_lays_its_parts_across_the_page(stack, browser):
     pg = open_var(browser, str(stack), "/go?q=" + "VAR BANK EXPLAIN <GO>".replace(" ", "+"), {"width": 1400, "height": 950})
     assert "/explain?" in pg.url and "tab=why" in pg.url
     wait(pg, "document.querySelector('[data-explain-page]').dataset.state === 'ready'", 180)
-    wait(pg, "document.querySelector('[data-dx-part=\"why\"] [data-dx-why]').dataset.painted === 'waterfall'", 180)
+    wait(pg, "!!(document.querySelector('[data-dx-waterfall] drishti-chart') || {}).chart", 180)      # layout A: the waterfall first
     m = pg.evaluate("""() => { const g = document.querySelector('[data-dx-grid]'), r = g.getBoundingClientRect();
-      const why = document.querySelector('[data-dx-part="why"]').getBoundingClientRect();
-      return { grid: r.width, why: why.width, page: document.documentElement.clientWidth }; }""")
-    assert m["grid"] >= 0.6 * m["page"] and m["why"] >= 0.45 * m["grid"], m          # the parts use the page, not a narrow strip
+      const wf = document.querySelector('[data-dx-why-waterfall]').getBoundingClientRect(), side = document.querySelector('[data-dx-side]').getBoundingClientRect();
+      return { grid: r.width, wf: wf.width, side: side.width, page: document.documentElement.clientWidth }; }""")
+    assert m["grid"] >= 0.6 * m["page"] and m["wf"] >= 0.5 * m["grid"] and m["wf"] > m["side"], m   # the parts use the page, the waterfall widest
     assert pg.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
     assert pg.evaluate(_ERRORS) == []
     pg.close()

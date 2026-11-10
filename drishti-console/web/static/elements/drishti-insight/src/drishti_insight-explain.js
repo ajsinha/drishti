@@ -26,8 +26,12 @@
    A number opts in with data-explain='{"kind":"var","measure":"es","scope":"DESK:RATES"}' (and data-explain-tab to open another tab
    first); a page may name its main number with data-explain-primary, which E opens when no number is focused. Script API:
    Drishti.Explain.open(request, tab), .preview(anchor, request), .close(), .pageUrl(request, tab), .bind(el, request, tab),
-   .ask(request, part) (the server's answer for a part, cached per page).
+   .ask(request, part) (the server's answer for a part, cached per page), .link(request, opts) (the one "Explain ›" control: every
+   figure of a measure that has an explanation carries it, ui-guarded), .upgrade(root) (each [data-explain-link] under root made one).
+   The full page at tab=why for an explanation with steps (VaR) is layout A (drishti_insight-why.js).
    Everything is the server's (GET /api/explain, the person's own entitlements): the browser computes nothing, it places text. */
+import { compareAgain, mountWhyPage, whyPageFits } from './drishti_insight-why.js';
+import { explainLink, upgradeLinks, drawNote } from './drishti_insight-link.js';
 /**
  * Installs the one Explain in a page (once): the preview, the drawer, the full page when the page is /explain, the keys, and Drishti.Explain.
  * @param {Window} win the page's window
@@ -260,48 +264,6 @@ export function installExplain(win) {
   }
 
   /** One part of an answer into host; a promise (why it moved is painted by the renderer). */
-  /** A sentence of the commentary and, when it has one, the list that opens under it (further pages from the server, as they are asked for). */
-  function note(host, n) {
-    host.appendChild(h("p", "dx-note", n.text));
-    var list = n.list;
-    if (!list) return;
-    var det = h("details", "dx-details"), t = h("table", "dx-table"), head = h("tr"), tb = h("tbody"), th = h("thead"), page = 0;
-    det.appendChild(h("summary", null, list.summary));
-    list.columns.forEach(function (c) { head.appendChild(h("th", null, c)); });
-    th.appendChild(head);
-    t.appendChild(th);
-    t.appendChild(tb);
-    det.appendChild(t);
-    function add(rows) {
-      rows.forEach(function (r) {
-        var tr = h("tr");
-        r.cells.forEach(function (c, i) {
-          var td = h("td", "mono");
-          if (i === 0 && r.href) { var a = h("a", null, c); a.href = r.href; td.appendChild(a); } else td.textContent = c;
-          tr.appendChild(td);
-        });
-        tb.appendChild(tr);
-      });
-    }
-    add(list.rows || []);
-    if (list.moreHref) {
-      var more = h("button", "dx-more", "Show more");
-      more.type = "button";
-      more.addEventListener("click", function () {
-        page += 1;
-        fetch(list.moreHref + "&page=" + page).then(function (r) { return r.json(); }).then(function (b) {
-          add((b.rows || []).map(function (r) {
-            return { cells: [r.position, (r.trades || []).map(function (x) { return x.trade + " (" + x.maturity + ")"; }).join(", ")],
-              href: "/v/position/" + encodeURIComponent(r.position) + "?asOf=" + encodeURIComponent(b.businessDate) };
-          }));
-          more.hidden = !b.more;
-        });
-      });
-      det.appendChild(more);
-    }
-    host.appendChild(det);
-  }
-
   function part(host, a, tab, inDrawer) {
     var x = a[tab] || {};
     if (tab === "formula") {
@@ -319,7 +281,7 @@ export function installExplain(win) {
       var dl = h("dl", "dx-dl");
       (x.rows || []).forEach(function (row) { dl.appendChild(h("dt", null, row.label)); dl.appendChild(h("dd", "mono", row.value)); });
       host.appendChild(dl);
-      (x.notes || []).forEach(function (n) { note(host, n); });
+      (x.notes || []).forEach(function (n) { drawNote(document, host, n); });
       if ((x.lineage || []).length) {
         host.appendChild(h("h3", "dx-h3", "Lineage"));
         var t = h("table", "dx-table");
@@ -403,14 +365,19 @@ export function installExplain(win) {
     var paint = h("div", "dx-why");
     paint.dataset.dxWhy = x.view || "";
     host.appendChild(paint);
-    var model = { contract: "1.0", ref: { kind: "explain", id: a.kind + ":" + a.subject }, title: { pill: "Why it moved", id: a.title + " · " + x.from + " to " + x.to },
-                  strip: [], panels: x.panels || [], keys: [], provenance: { source: "the server's Explain, GET /api/v1/explain?kind=" + a.kind } };
+    return paintPanels(paint, a, { title: a.title, from: x.from, to: x.to }, x.panels || []).then(function () { paint.dataset.painted = x.view || "waterfall"; });
+  }
+
+  /** The server's panels drawn by the one renderer (drishti-render) into host. */
+  function paintPanels(host, a, t, panels) {
+    var model = { contract: "1.0", ref: { kind: "explain", id: a.kind + ":" + a.subject }, title: { pill: "Why it moved", id: t.title + " · " + t.from + " to " + t.to },
+                  strip: [], panels: panels, keys: [], provenance: { source: "the server's Explain, GET /api/v1/explain?kind=" + a.kind } };
     lib = lib || import("/static/render/2.0.0/drishti-render.js");
     return lib.then(function (R) {
-      var v = R.render(paint, model, { theme: document.documentElement.getAttribute("data-theme") || "terminal", header: "none", help: false,
-                                       tables: true, live: false, navigation: "host", device: window.innerWidth <= 640 ? "phone" : "desk" });
+      var v = R.render(host, model, { theme: document.documentElement.getAttribute("data-theme") || "terminal", header: "none", help: false,
+                                      tables: true, live: false, navigation: "host", device: window.innerWidth <= 640 ? "phone" : "desk" });
       return v.ready;
-    }).then(function () { paint.dataset.painted = x.view || "waterfall"; });
+    });
   }
 
   function checks(host, a) {
@@ -436,6 +403,7 @@ export function installExplain(win) {
       root.querySelector("[data-dx-crumb]").textContent = "Explain · " + a.subject + (a.asOf ? " · " + a.asOf : "");
       root.querySelector("[data-dx-origin]").textContent = a.origin || "";
       document.title = "Explain · " + a.title + (document.body.dataset.product ? " · " + document.body.dataset.product : "");
+      if (first === "why" && whyPageFits(a)) return whyPage(root, req, a);
       var grid = root.querySelector("[data-dx-grid]");
       grid.textContent = "";
       var jobs = TABS.map(function (t) {
@@ -452,9 +420,24 @@ export function installExplain(win) {
         if (first) { var c = root.querySelector("#dx-" + first); if (c) c.scrollIntoView(); }
       });
     }).catch(function (e) {
-      root.querySelector("[data-dx-grid]").textContent = e.message || String(e);
+      var g = root.querySelector("[data-dx-grid]");
+      g.textContent = e.message || String(e);
+      if (first === "why" && req.from) {                    // a compare date the engine cannot answer: said, and the way back
+        var back = h("button", "dx-chip", "Compare with the previous day");
+        back.type = "button";
+        back.setAttribute("data-dx-compare", "prev");
+        back.addEventListener("click", function () { compareAgain(root, req, '', renderPage); });
+        g.appendChild(document.createTextNode(" "));
+        g.appendChild(back);
+      }
       root.dataset.state = "failed";
     });
+  }
+
+  /** Layout A of the full page at tab=why (drishti_insight-why.js), another compare date asked again through renderPage. */
+  function whyPage(root, req, a) {
+    return mountWhyPage(root, req, a, { h: h, part: part, checks: checks, rerender: renderPage,
+      paint: function (host, t, panels) { return paintPanels(host, a, t, panels); } });
   }
 
   // ---------------------------------------------------------------------------------------------------------------- the page's numbers
@@ -497,6 +480,9 @@ export function installExplain(win) {
       lastAnchor = f; preview(f, r2);
     } });
 
+  var link = function (req, o) { return explainLink(document, req, o, pageUrl); };
+  var upgrade = function (root) { upgradeLinks(root || document, pageUrl); };
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { upgrade(document); }); else upgrade(document);
   var pageRoot = document.querySelector("[data-explain-page]");
   if (pageRoot) {
     renderPage(pageRoot);
@@ -505,7 +491,7 @@ export function installExplain(win) {
   }
 
   window.Drishti.Explain = {
-    open: open, close: close, preview: preview, pageUrl: pageUrl, ask: ask,
+    open: open, close: close, preview: preview, pageUrl: pageUrl, ask: ask, link: link, upgrade: upgrade,
     /** Marks el as an explainable number: hover previews, click opens the drawer (on tab), E opens it when focused. */
     bind: function (el, req, tab) {
       el.setAttribute("data-explain", JSON.stringify(req));

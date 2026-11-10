@@ -84,6 +84,10 @@
   get("/api/var/scope?scope=BANK").then(function (h) {
     text("[data-rl-var]", money(h.var));
     text("[data-rl-var-s]", "ES " + money(h.es) + " · " + Math.round((h.confidence || 0) * 100) + "% · 1 day");
+    var E = window.Drishti && window.Drishti.Explain;               // the one Explain › on the bank's VaR (VAR_GUIDE.md 3.11)
+    document.querySelectorAll("[data-rl-var]").forEach(function (v) {
+      if (E && !v.parentNode.querySelector("[data-explain-link]")) v.parentNode.appendChild(E.link({ kind: "var", measure: "var", scope: "BANK" }, { cls: "rl-explain" }));
+    });
     text("[data-rl-date]", h.businessDate || "—");
     text("[data-rl-ccy]", h.currency || "USD");
     if (h.intraday) text("[data-rl-intraday]", " · intraday: " + (typeof h.intraday === "string" ? h.intraday : (h.intraday.note || "applied")));

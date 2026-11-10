@@ -197,6 +197,32 @@ def console_command(word_: str, pack: str, label: str, what: str, example: str, 
     _once(_console_commands, (word_, pack, label, what, example, kind, tuple(needs)))
 
 
+_figure_explainers: list = []
+
+
+def figure_explainer(rule: dict) -> None:
+    """A module's figures that carry the one Explain › (drishti-insight's Explain.link): ``rule`` = {kind, pages: {page kind: scope word},
+    paths: {strip path suffix: measure}, columns: {column: measure}, scope: [scope columns], date: date column}. The core draws the
+    control from the rules alone (a Sutra page's strip, a BI visual of one row), never naming a module's measure."""
+    _once(_figure_explainers, rule)
+
+
+def figure_explainers() -> list[dict]:
+    load()
+    return list(_figure_explainers)
+
+
+def figure_explain(vm, c) -> dict | None:
+    """The Explain request of a Sutra page's strip cell ``c`` by the modules' rules, or None."""
+    ref, path = (vm or {}).get("ref") or {}, (c or {}).get("path") or ""
+    for r in figure_explainers():
+        word = (r.get("pages") or {}).get(ref.get("kind"))
+        for suffix, measure in (r.get("paths") or {}).items():
+            if word and path.endswith(suffix):
+                return {"kind": r["kind"], "measure": measure, "scope": f"{word}:{ref.get('id')}"}
+    return None
+
+
 def console_commands() -> list[tuple]:
     load()
     return list(_console_commands)

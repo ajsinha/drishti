@@ -237,7 +237,10 @@ def test_var_explain_opens_the_page_at_why_it_moved_and_a_phone_gets_a_sheet(sta
     pg = open_var(browser, str(stack), "/go?q=" + "VAR EXPLAIN BANK <GO>".replace(" ", "+"), {"width": 1280, "height": 900})
     assert "/explain?" in pg.url and "tab=why" in pg.url
     wait(pg, "document.querySelector('[data-explain-page]').dataset.state === 'ready'", 180)
-    wait(pg, "document.querySelector('[data-dx-part=\"why\"] [data-dx-why]').dataset.painted === 'waterfall'", 180)
+    # Why it moved as a page is layout A (VAR_GUIDE.md 3.11): the waterfall drawn, a step's contributors beside it
+    assert pg.evaluate("document.querySelector('[data-explain-page]').dataset.layout") == "why-a"
+    wait(pg, "!!(document.querySelector('[data-dx-waterfall] drishti-chart') || {}).chart", 180)
+    assert pg.locator("[data-dx-side] h2").inner_text().startswith("Biggest contributors")
     assert pg.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
     pg.close()
     ph = open_var(browser, str(stack), "/var?scope=BANK", {"width": 390, "height": 844})

@@ -49,11 +49,28 @@ function plain(nodes) {
 }
 
 export function strip(R, vm) {
-  return h('dl', { class: 'strip' }, (vm.strip || []).map((c, i) => stripItem(R, c, i)));
+  return h('dl', { class: 'strip' }, (vm.strip || []).map((c, i) => stripItem(R, c, i, vm.ref)));
 }
-export function stripItem(R, c, i) {
+/** A strip figure a module's rule names (the host page's figure-explainers, core/plugins.figure_explainer) carries the one Explain ›, as the
+    console's strip does; a page without the rules draws none. */
+function figureExplain(c, ref) {
+  const doc = typeof document !== 'undefined' ? document : null, el = doc && doc.getElementById('drishti-figure-explainers');
+  if (!el || !ref) { return null; }
+  let rules = [];
+  try { rules = JSON.parse(el.getAttribute('data-rules') || '[]'); } catch (e) { rules = []; }
+  const p = c.path || '';
+  for (const r of rules) {
+    const word = (r.pages || {})[ref.kind], suffix = Object.keys(r.paths || {}).find((x) => p.endsWith(x));
+    if (word && suffix) {
+      return h('a', { 'data-explain-link': '', 'data-explain': JSON.stringify({ kind: r.kind, measure: r.paths[suffix], scope: word + ':' + ref.id }), 'data-explain-tab': 'why' }, 'Explain ›');
+    }
+  }
+  return null;
+}
+export function stripItem(R, c, i, ref) {
   return h('div', { class: 'strip-i', 'data-r-strip': String(i) }, h('dt', null, str(c.label)),
-    h('dd', { class: 'mono' + toneClass(c) + (c.emphasis ? ' emph' : ''), 'data-path': c.path || null, title: plain(cellText(R, c)) }, cellText(R, c)));
+    h('dd', { class: 'mono' + toneClass(c) + (c.emphasis ? ' emph' : ''), 'data-path': c.path || null, title: plain(cellText(R, c)) }, cellText(R, c)),
+    figureExplain(c, ref));
 }
 
 export function head(R, vm) {

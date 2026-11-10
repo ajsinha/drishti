@@ -32,6 +32,11 @@ plugins.console_command("VAR EXPLAIN", "market-risk", "Why VaR moved", "A VaR sc
                         "(restatement, hierarchy and rules, trades out, the window, the market, trades in), who drove each step, the order-free view by part, and "
                         "the working as an .xlsx of formulas", "VAR EXPLAIN BANK", "var-result", ("VAR",))
 
+# the VaR and ES figures that carry the one Explain › (VAR_GUIDE.md 3.11): a Sutra page's engine figures, a BI visual of one var-result row
+plugins.figure_explainer({"kind": "var", "pages": {"system-basket": "PORT", "position": "POS", "desk": "DESK", "book": "BOOK", "legal-entity": "LE", "trade": "TRD"},
+                          "paths": {"VAR_ENGINE.VAR": "var", "VAR_ENGINE.ES": "es"}, "columns": {"VAR": "var", "ES": "es"},
+                          "scope": ["CANONICAL", "SCOPE"], "date": "BUSINESS_DATE"})
+
 plugins.phone_page("var", {"tiles": ("must", "Headline VaR, ES and limit use"), "method": ("must", "How VaR is computed"),
                            "path-dist": ("glance", "Distribution of scenario P&L"), "path-tail": ("more", "Worst 25 scenarios"),
                            "path-series": ("more", "P&L by scenario date"), "path-table": ("more", "The P&L path, scenario by scenario"),
