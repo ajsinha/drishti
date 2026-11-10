@@ -17,6 +17,11 @@
 
 ## Unreleased
 
+- **VaR explorer: include matured items.** A switch beside Explain (`<drishti-switch>`, new in drishti-inputs) adds back the positions or trades,
+  at the input's grain, that the load left out because they had matured. Off whenever the page opens; on, the tiles, a band with **Back to official**,
+  the method strip, the tree's **of which matured** column and the path's CSV and JSON Lines say *includes N matured …*. The server computes it
+  (`matured=true` on `/var/scope`, `/var/scope/path`, `/var/tree`), per request; the official record, captures and limit use never include them.
+  A load keeps about 2.3 KB of heap a matured record (2.7 KB more in a mapped date's hot-file header), none beyond 1% of the date's records.
 - **Fixes before the drill:** `lake build --format iceberg` sends a promoted id list (`TRADE_IDS`) as its JSON text, as the Delta writers store it, instead of
   refusing the rows as a bad vector; a Delta connector of the older form (a `root`, no lake file) that finds no tables no longer marks every search partial;
   `lake-name` is in the Delta connector's settings catalogue; the console's engine catalogue copy and sitemap list Data loads › Upload.

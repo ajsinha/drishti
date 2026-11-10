@@ -23,7 +23,7 @@ one bundled file next to them; a page loads drishti-core and then `Drishti.eleme
 | Library | Version | What it is |
 |---|---|---|
 | [drishti-core](#drishti-core) | 1.1.0 | Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts, the filter model every library shares, the element maker and placements, Explain's drawing, the CSV writer, reading typed numbers, loading vendored engines |
-| [drishti-inputs](#drishti-inputs) | 0.3.0 | Inputs: business-date and range pickers with holiday calendars, the tree picker, the multi-select, the combobox with server type-ahead (on its own field or a page's), forms from a schema (live or embedded, steps, named fields, hooks, custom widgets, time, date-and-time and money) with four eyes, the time and date-and-time pickers, the filter bar, the code editor over CodeMirror, and a page's own date fields and checkbox lists upgraded in place |
+| [drishti-inputs](#drishti-inputs) | 0.3.1 | Inputs: business-date and range pickers with holiday calendars, the on/off switch, the tree picker, the multi-select, the combobox with server type-ahead (on its own field or a page's), forms from a schema (live or embedded, steps, named fields, hooks, custom widgets, time, date-and-time and money) with four eyes, the time and date-and-time pickers, the filter bar, the code editor over CodeMirror, and a page's own date fields and checkbox lists upgraded in place |
 | [drishti-grid](#drishti-grid) | 0.4.0 | The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and &lt;drishti-grid&gt; in three layouts and three densities), cell editing with undo, paste, write-back and four eyes, and the AG Grid-style adapter (createGridFromAgOptions) |
 | [drishti-tree](#drishti-tree) | 0.2.0 | The tree: hierarchies as an org chart, an indented tree with measures (on drishti-grid's tree data), a sunburst and an icicle; expand and collapse, search with breadcrumbs, measures on nodes with non-additive ones (◆) asked of the server and never summed, Explain, re-parenting in an edit mode that proposes the move for four eyes, the outline of an authoring screen (marks, a hiding filter, a designer's selection followed both ways, moves by drag or Alt+arrows), export, keyboard and ARIA |
 | [drishti-designer](#drishti-designer) | 0.2.0 | The designer kit: the layout canvas over a layout model (grid or flow: place, move, resize with snap, multi-select, align, distribute, z-order, groups, copy and paste, a phone's order, the keys, undo and redo on one command stack), the palette, the inspector (a form from a schema), the outline (drishti-tree's, drag to re-order or re-parent), the YAML pane kept in step with the model both ways (completion and lint from a JSON Schema) and the designer shell (three panes, Visual / YAML / Both, versions, Validate, Preview, History, Impact, Propose for review) |
@@ -1672,7 +1672,7 @@ A table to export.
 
 ## drishti-inputs
 
-Version 0.3.0. Bundle `static/elements/drishti-inputs/drishti_inputs.js`, global `Drishti.elements.inputs`; requires drishti-core.
+Version 0.3.1. Bundle `static/elements/drishti-inputs/drishti_inputs.js`, global `Drishti.elements.inputs`; requires drishti-core.
 
 ### drishti_calendar.js
 
@@ -3292,6 +3292,61 @@ True when a name ends with one of the endings (any case; no endings: every name)
 
 Returns `boolean`.
 
+### drishti_switch.js
+
+#### class `Switch`
+
+A switch. Events: change {value}.
+
+##### `new Switch(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `options` | `SwitchOptions` |  |
+
+##### `Switch.getValue()`
+
+The value: on or off.
+
+Returns `boolean`.
+
+##### `Switch.setValue(v)`
+
+Turns it on or off, without an event.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `boolean` | on |
+
+Returns `void`.
+
+##### `Switch.setLabel(text)`
+
+Changes the words beside the track.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` | the words |
+
+Returns `void`.
+
+##### `Switch.setDisabled(off)`
+
+Turns the switch off for use, or back on.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `off` | `boolean` | disabled |
+
+Returns `void`.
+
+##### `Switch.focus()`
+
+Moves the focus to the switch.
+
+Returns `void`.
+
 ### drishti_form.js
 
 #### class `Form`
@@ -4471,6 +4526,15 @@ A field of a form schema.
 | `[disabled=false]` | `boolean` |  |
 | `[renderOption]` | `function(Object, HTMLElement): void` | draws an option's content |
 | `[native=false]` | `boolean` | a change also fires input and change on the host, as a native select's did (a page's own listeners and delegated handlers keep working); selectElement turns it on, and so does the attribute native on a page's &lt;drishti-select&gt; |
+
+#### `SwitchOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[label]` | `string` | the words beside the track |
+| `[help]` | `string` | what the switch does, on its ? (title and aria-description) |
+| `[value=false]` | `boolean` | on or off |
+| `[disabled=false]` | `boolean` |  |
 
 #### `TimePickerOptions` : `Object`
 

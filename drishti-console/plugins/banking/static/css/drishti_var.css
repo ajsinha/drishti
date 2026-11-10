@@ -149,4 +149,11 @@
 @media (max-width: 800px) { .vx-layout { grid-template-columns: minmax(0, 1fr); } .vx-charts, .vx-hist2 { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 560px) { .vx-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } .vx-tile .v { font-size: var(--d-fs-17); } .vx { padding: var(--d-sp-10); }
   .vx-ccy { flex: 1 1 100%; justify-content: space-between; } .vx-ccy-select { flex: 1 1 auto; max-width: 60%; font-size: var(--d-fs-14); } .vx-ccy-select .di-select-control { min-height: 40px; } }
+/* the matured-items switch (VAR_GUIDE.md, "Matured items"; mock-up var-matured A): the band, the tag on the VaR and ES tiles, the tree's column */
+.vx-matured-band { display: flex; flex-wrap: wrap; gap: var(--d-sp-8); align-items: center; margin: var(--d-sp-4) 0 var(--d-sp-6); padding: var(--d-sp-4) var(--d-sp-8);
+  border: 1px solid var(--d-warn); border-radius: var(--d-radius); font-size: var(--d-fs-12); }
+.vx-matured-band[hidden] { display: none; }
+.vx-matured-chip { padding: 1px 7px; border-radius: 4px; background: var(--d-warn); color: var(--d-bg); font: 700 var(--d-fs-10_5) var(--d-font-sans); letter-spacing: .03em; }
+.vx-tile.vx-matured-on { border-color: var(--d-warn); }
+.vx-tile .s.vx-matured-tag, .vx-matured-add, .vx-matured-lead { color: var(--d-warn); }
 

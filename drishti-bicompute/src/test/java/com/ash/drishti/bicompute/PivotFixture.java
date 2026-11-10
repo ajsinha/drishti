@@ -190,7 +190,7 @@ final class PivotFixture implements AutoCloseable {
         java.util.function.BinaryOperator<String> names = (dim, value) -> null;
 
         @Override
-        public java.util.function.BinaryOperator<String> memberNames(com.ash.drishti.bicompute.spi.Viewer v, String source, String date) {
+        public java.util.function.BinaryOperator<String> memberNames(com.ash.drishti.kernel.api.pivot.Viewer v, String source, String date) {
             return names;
         }
 
