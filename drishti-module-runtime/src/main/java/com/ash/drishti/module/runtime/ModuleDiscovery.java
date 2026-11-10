@@ -47,6 +47,9 @@ public final class ModuleDiscovery {
     }
 
     /** Discovers the modules of the folders; {@code active} maps an id to its active version (may be empty). */
+    /** The host's own folders a modules folder may hold beside the modules (the deploy store and its work areas): never a module id. */
+    public static final java.util.Set<String> HOST_FOLDERS = java.util.Set.of("installed", "staging", "tombstones", "store", "lib");
+
     public static Found discover(List<Path> folders, Map<String, String> active) {
         List<ModuleCandidate> out = new ArrayList<>();
         Map<String, ModuleRefusedException> refused = new LinkedHashMap<>();
@@ -55,9 +58,23 @@ public final class ModuleDiscovery {
             if (!Files.isDirectory(folder)) {
                 continue;
             }
+            if (Files.isRegularFile(folder.resolve(DmodManifest.FILE))) {    // an exploded module itself (development mode only)
+                try (InputStream in = Files.newInputStream(folder.resolve(DmodManifest.FILE))) {
+                    DmodManifest m = DmodManifest.read(in, folder.getFileName().toString());
+                    if (seen.putIfAbsent(m.id(), true) == null) {
+                        out.add(new ModuleCandidate(m, folder, null));
+                    }
+                } catch (ModuleRefusedException e) {
+                    refused.put(folder.getFileName().toString(), e);
+                } catch (IOException e) {
+                    refused.put(folder.getFileName().toString(), new ModuleRefusedException("V1", folder + ": module.yaml does not read: "
+                            + e.getMessage(), e));
+                }
+                continue;
+            }
             for (Path idDir : list(folder)) {
                 String id = idDir.getFileName().toString();
-                if (!Files.isDirectory(idDir) || seen.containsKey(id) || id.startsWith(".")) {
+                if (!Files.isDirectory(idDir) || seen.containsKey(id) || id.startsWith(".") || HOST_FOLDERS.contains(id)) {
                     continue;
                 }
                 Optional<Path> version = pick(idDir, active.get(id));

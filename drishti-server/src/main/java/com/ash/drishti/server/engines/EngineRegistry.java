@@ -165,6 +165,60 @@ public final class EngineRegistry implements AutoCloseable {
         LOG.warn("engines: {} is not started: {} (DRS-1022); turn {} on, or {} off, in config/engines/", id, why, String.join(" and ", missing), id);
     }
 
+    /**
+     * A loaded module's engine (docs/architecture/KERNEL_AND_MODULES.md section 12.3): listed and started as its switch and needs say, as if
+     * it had been a bean at the start; the returned action stops it (draining what is in flight) and takes it out. An id already
+     * installed is refused.
+     */
+    public Runnable attach(ComputeEngine eng) {
+        String id = eng.id();
+        boolean added;
+        synchronized (changing) {
+            if (engines.containsKey(id)) {
+                throw new IllegalStateException("an engine " + id + " is already installed");
+            }
+            added = !entries.containsKey(id);
+            engines.put(id, eng);
+            entries.computeIfAbsent(id, x -> new EngineCatalogue.Entry(x, x, "", x + ".yaml", "drishti.engines." + x + ".enabled", "", List.of(),
+                    true, true, true, Map.of()));
+            inFlight.putIfAbsent(id, new AtomicInteger());
+            boolean on = switches.of(id).on();
+            desired.put(id, on);
+            List<String> missing = entry(id).needs().stream().filter(n -> states.get(n) != State.RUNNING).toList();
+            if (!on) {
+                states.put(id, State.OFF);
+                eng.running(false);
+            } else if (!missing.isEmpty()) {
+                block(id, missing);
+            } else {
+                start(id, eng);
+            }
+        }
+        listeners.forEach(Runnable::run);
+        return () -> {
+            synchronized (changing) {
+                if (engines.get(id) != eng) {
+                    return;
+                }
+                if (states.get(id) == State.RUNNING) {
+                    stop(id, eng);
+                }
+                eng.running(false);
+                engines.remove(id);
+                states.put(id, State.NOT_INSTALLED);
+                desired.put(id, false);
+                reasons.remove(id);
+                if (added) {
+                    entries.remove(id);
+                    states.remove(id);
+                    desired.remove(id);
+                    inFlight.remove(id);
+                }
+            }
+            listeners.forEach(Runnable::run);
+        };
+    }
+
     private void start(String id, ComputeEngine eng) {
         states.put(id, State.STARTING);
         try {

@@ -13,7 +13,8 @@ contracts: ">=1.0"
 plugin-api: ">=2.0"
 elements: ">=1.4 <2"
 provides: {kinds: {${artifactId}-pack: [${artifactId}-greeting]}}
-java: {jars: [${artifactId}.jar], entry: ${package}.HelloModule, spring: [${package}.ModuleConfig]}
+api: {prefix: ${artifactId}}
+java: {jars: [${artifactId}.jar], lib: [], entry: ${package}.HelloModule, spring: [${package}.ModuleConfig]}
 console: {plugin: console/plugin.yaml}
 data: {needs: data/needs.yaml}
 functions: [{word: ${artifactId.toUpperCase()}}]

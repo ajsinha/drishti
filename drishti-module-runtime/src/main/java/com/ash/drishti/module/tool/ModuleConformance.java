@@ -65,6 +65,8 @@ public final class ModuleConformance {
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
     private static final String KERNEL = "com/ash/drishti/";
     private static final String KERNEL_API = "com/ash/drishti/kernel/api/";
+    /** The entity types the kernel API's signatures use (EntityRef, EntityDocument, AsOf): part of the kernel API. */
+    private static final String ENTITY_API = "com/ash/drishti/api/";
     private static final Set<String> TEXT = Set.of("yaml", "yml", "md", "html", "js", "css", "json", "txt", "py", "jsonl", "csv", "properties");
     private static final Pattern BESPOKE = Pattern.compile("<(table|canvas|svg)\\b", Pattern.CASE_INSENSITIVE);
     private static final Pattern JS_IMPORT = Pattern.compile("(?:import\\s[^'\"]*?from\\s*|import\\s*\\(?\\s*)['\"]([^'\"]+)['\"]");
@@ -134,8 +136,8 @@ public final class ModuleConformance {
         if (m.java() == null) {
             return out;
         }
-        for (String jar : m.java().jars()) {
-            try (ZipFile z = new ZipFile(dir.resolve("java").resolve(jar).toFile())) {
+        for (String jar : m.java().classPath()) {
+            try (ZipFile z = new ZipFile(dir.resolve(jar).toFile())) {
                 for (Enumeration<? extends ZipEntry> en = z.entries(); en.hasMoreElements(); ) {
                     ZipEntry e = en.nextElement();
                     if (e.getName().endsWith(".class") && !e.getName().endsWith("module-info.class")) {
@@ -145,7 +147,7 @@ public final class ModuleConformance {
                     }
                 }
             } catch (IOException e) {
-                throw new UncheckedIOException("java/" + jar + " does not read", e);
+                throw new UncheckedIOException(jar + " does not read", e);
             }
         }
         return out;
@@ -158,7 +160,7 @@ public final class ModuleConformance {
         List<String> out = new ArrayList<>();
         for (ClassFiles.Info c : classes) {
             for (String t : c.types()) {
-                if (t.startsWith(KERNEL) && !t.startsWith(KERNEL_API) && !own.contains(pkg(t))) {
+                if (t.startsWith(KERNEL) && !t.startsWith(KERNEL_API) && !t.startsWith(ENTITY_API) && !own.contains(pkg(t))) {
                     out.add(c.name().replace('/', '.') + " uses " + t.replace('/', '.') + ", a kernel internal: a module may use only "
                             + "drishti-kernel-api (com.ash.drishti.kernel.api) and its own classes");
                 }

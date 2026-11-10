@@ -249,13 +249,66 @@ For Maven the SDK is three more artifacts of this repository, `com.ash.drishti:*
 mvn -B archetype:generate -DarchetypeGroupId=com.ash.drishti -DarchetypeArtifactId=drishti-module-archetype \
     -DarchetypeVersion=2.9.11.g -DgroupId=com.example.greet -DartifactId=greet -Dpackage=com.example.greet
 cd greet && mvn verify          # the test, target/dmod/greet-0.1.0.dmod, then "C1 No kernel internals: passed" ... C15
-mkdir -p <modules folder>/greet/0.1.0 && unzip -q target/dmod/greet-0.1.0.dmod -d <modules folder>/greet/0.1.0 \
-    && cp target/dmod/greet-0.1.0.dmod <modules folder>/greet/       # what the kernel's ModuleRuntime loads (§1.5)
+cp target/dmod/greet-0.1.0.dmod <data folder>/modules/    # auto-deploy (a single node): stored, checked, installed and loaded
+curl -s localhost:18480/api/v1/greet/greeting/Asha         # the module's REST API, mounted by the kernel
+rm <data folder>/modules/greet-0.1.0.dmod                  # removed the same way: its paths answer 410, its tombstone is kept
 ```
 
 (To keep your `~/.m2` untouched while trying it, add `-Dmaven.repo.local=<folder> -Dmaven.repo.local.tail=$HOME/.m2/repository` to each
-Maven command: installs go to the folder, reads fall back to `~/.m2`.) The kernel loading `.dmod` files from its modules folder at start
-comes in wave 2; until then `ModuleRuntime` loads them in tests and tools.
+Maven command: installs go to the folder, reads fall back to `~/.m2`.) The `.dmod` dropped into the module folder (`drishti.modules.path`,
+default `<data folder>/modules`) goes through the module deployment as an administrator's would: its hash list, the fifteen checks, then
+installed under `modules/installed/<id>/<version>/` and loaded. Auto-deploy is on for a single node and off in a cluster, where a module is
+deployed by plan → apply ([CLUSTER_GUIDE.md](CLUSTER_GUIDE.md)). **Production loads only verified `.dmod` packages.**
+
+**Edit → reload, in development mode.** While you work on a module, the kernel can load its build output without packing a `.dmod` and
+reload it whenever it changes, as Tomcat runs an unpacked web application:
+
+```bash
+# once: a development server (single node, never the prod or production profile) pointed at the module's exploded build output
+DRISHTI_MODULES_DEV=true DRISHTI_MODULES_PATH=$PWD/target/dmod-stage/greet bin/start-server.sh
+# the loop: edit, rebuild, and the kernel reloads it within drishti.modules.autodeploy-seconds (unload, leak check, load)
+mvn -q package -DskipTests      # the server log says "development mode: greet changed: unloaded (leak-free)", then "loaded"
+```
+
+`target/dmod-stage/<id>/` is the folder `drishti:assemble` packs (module.yaml at its root, the jars under `java/`). A folder of
+`<id>/<version>/` folders works too. Development mode loads it **unverified** (no hash list, no checks), and Health and Admin → Modules mark
+the module *development (unverified)*. `drishti.modules.dev` is refused in a cluster and under the `prod` or `production` profile: the
+server logs the refusal and loads only verified packages. Run `mvn verify` (the fifteen checks) before you ship.
+
+**Several jars.** `java.jars` names the module's own jars (the project's first: a service jar, a compute jar ...); `java.lib` names
+third-party jars, packed under the package's `lib/`. Every jar of the package is named in one of the two (V1 refuses one that is not); all of them are
+the module's class path, its own first. `drishti:assemble` takes the others from the project's compile and runtime dependencies by file
+name (`commons-math3-3.6.1.jar`); the tool takes them with `pack <folder> --jar <own jar> --more <jar>,<jar>`.
+
+```yaml
+java: {jars: [genomics-service.jar, genomics-compute.jar], lib: [commons-math3-3.6.1.jar], entry: com.example.genomics.GenomicsModule,
+       spring: [com.example.genomics.ModuleConfig]}
+```
+
+A library every module and connector of the site shares (a JDBC driver, a company's own jar) goes into the shared lib folder instead
+(`drishti.lib.path`, default `<data folder>/lib`; [ADMIN_GUIDE.md](ADMIN_GUIDE.md)): a module sees it after its own jars.
+
+### 1.7 What a module can contribute
+
+A loaded module's beans (of its Spring configuration) and the `META-INF/services` entries of its jars that are of one of the kernel's
+extension types are seen by the kernel while the module is loaded and gone when it unloads: each one is recorded in the registry of
+contributions and withdrawn in the unload's own step ([KERNEL_AND_MODULES.md section 12](../architecture/KERNEL_AND_MODULES.md)). Only
+the kernel API (`com.ash.drishti.kernel.api`) and the entity types its signatures use (`com.ash.drishti.api`: `EntityRef`,
+`EntityDocument`, `AsOf`, `DataNode`) are visible to a module.
+
+| Type (kernel API) | What the kernel does with it |
+|---|---|
+| `data.KindProvider` | routes the kinds it computes like any source: views, Rachana, the pivot, BI |
+| `function.FunctionProvider` | adds its functions to Rachana (the archetype's `<id>_greet(name)` in any expression, Sutra or measure); a name already taken refuses the start |
+| `engines.ComputeEngine` | lists and starts it as the engine registry would at start (its switch and needs apply) |
+| `@ModuleApi` + `@RestController` | mounts its endpoints under `/api/v1/<prefix>/` (its manifest's `api.prefix`); off: 404, removed: 410 |
+| `module.DrishtiModule` (the manifest's `java.entry`) | started with the kernel's `ModuleContext` (kinds as rows, settings `drishti.module.<id>.*`, its data folder, audit, the business date); stopped before its context closes |
+| `approvals.ApprovalSource`, `explain.Explainer`, `view.ViewAugmenter`, `pivot.PivotSourceProvider` | the Approvals queue, Explain this number, the views, the pivot's sources |
+| `health.HealthFigures`, `capacity.CapacityFigures` | Health and the capacity page |
+| `vocabulary.DomainVocabulary`, `official.OfficialResults`, `modules.ApiAlias` | the domain words, the readers of official results, old API paths |
+| `ai.AiToolProvider` | held for the AI layer |
+
+Pages and their routes come from the console part (`console/plugin.yaml` format 2, served under `/m/<id>/`), through the live route table.
 
 **The conformance checks** ([KERNEL_AND_MODULES.md section 8.6](../architecture/KERNEL_AND_MODULES.md#86-the-conformance-suite)), each
 failure a sentence naming the file and the fix:

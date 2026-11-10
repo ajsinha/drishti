@@ -255,11 +255,12 @@ public class HealthController {
         }
         out.put("tmp", com.ash.drishti.common.TempFiles.info());
         out.put("externalLib", com.ash.drishti.common.ExternalLib.info());
+        out.put("lib", com.ash.drishti.common.SharedLib.get().info());   // the shared lib folder (drishti.lib.path): each jar with its SHA-256, marked lib
         out.put("sources", sources);
         if (access != null) {
             out.put("modules", modules(access));                      // the thin jar: no code modules, and Health says so
         }
-        for (HealthFigures f : moduleFigures) {                     // the modules' engines' figures (DOMAIN_MODULES.md J4)
+        for (HealthFigures f : com.ash.drishti.common.Extensions.with(moduleFigures, HealthFigures.class)) {                     // the modules' engines' figures (DOMAIN_MODULES.md J4)
             out.put(f.key(), f.value());
         }
         Map<String, Object> identityPool = PoolReport.identity(identityDataSource.getIfAvailable(), identity.sqlite()).map(com.ash.drishti.api.pool.PoolStats::toMap).orElse(null);

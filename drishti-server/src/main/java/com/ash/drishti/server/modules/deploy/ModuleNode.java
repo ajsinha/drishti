@@ -102,9 +102,24 @@ public final class ModuleNode implements AutoCloseable {
     private final java.util.concurrent.locks.ReentrantLock swapLock = new java.util.concurrent.locks.ReentrantLock();
     private final java.util.concurrent.locks.Condition swapSignal = swapLock.newCondition();
     private final long drainMillis;
+    private final List<Path> folders;
+    private final com.ash.drishti.server.modules.host.ModuleWiring wiring;
     private ModuleRuntime runtime;
 
     public ModuleNode(Path root, KernelFacts facts, PlacementService placement, ApiMounts mounts, long drainMillis) {
+        this(root, facts, placement, mounts, drainMillis, List.of(), null);
+    }
+
+    /**
+     * @param folders development mode's exploded module folders ({@code drishti.modules.dev}; empty otherwise): each a module's unpacked
+     *                build output (module.yaml at its root) or a folder of {@code <id>/<version>/}; loaded unverified, marked so in Health,
+     *                reloaded when they change. Production loads only verified {@code .dmod} packages, through {@code installed/}.
+     * @param wiring  the kernel's part of a loaded module (the registration bridge and its entry), or null for none
+     */
+    public ModuleNode(Path root, KernelFacts facts, PlacementService placement, ApiMounts mounts, long drainMillis, List<Path> folders,
+            com.ash.drishti.server.modules.host.ModuleWiring wiring) {
+        this.folders = List.copyOf(folders);
+        this.wiring = wiring;
         this.root = root;
         this.installed = root.resolve("installed");
         this.staging = root.resolve("staging");
@@ -132,6 +147,9 @@ public final class ModuleNode implements AutoCloseable {
                 @Override
                 public void started(LoadedModule module, Contributions contributions) {
                     ph.started(module, contributions);
+                    if (wiring != null) {
+                        wiring.started(module, contributions);
+                    }
                     if (mounts != null) {
                         mounts.mount(module, contributions);
                     }
@@ -143,20 +161,155 @@ public final class ModuleNode implements AutoCloseable {
                 }
 
                 @Override
+                public void stopping(LoadedModule module) {
+                    if (wiring != null) {
+                        wiring.stopping(module);
+                    }
+                }
+
+                @Override
                 public void event(String name, String module) {
                     LOG.info("{}: {}", name, module);
                 }
             };
-            runtime = new ModuleRuntime(facts, parent, ModuleNode.class.getClassLoader(), host, tombstones);
+            runtime = new ModuleRuntime(facts, parent, ModuleNode.class.getClassLoader(), host, tombstones)
+                    .development(c -> folders.stream().anyMatch(f -> c.dir().toAbsolutePath().normalize().startsWith(f)))
+                    .libraries(com.ash.drishti.common.SharedLib.get().any() ? com.ash.drishti.common.SharedLib.get().loader() : null);
             registry.values().stream().filter(e -> e.state() == State.ACTIVE).forEach(this::declare);
-            if (Files.isDirectory(installed)) {
-                runtime.start(List.of(installed), ModuleDiscovery.readActive(activeFile),
-                        id -> registry.containsKey(id) ? registry.get(id).state() == State.ACTIVE : true);
-            }
+            rescan();
             return this;
         } finally {
             lock.unlock();
         }
+    }
+
+    /**
+     * Looks in the module folders again (this node's installed modules, then development mode's exploded folders) and loads every module
+     * that is not loaded. Returns every module's Health row.
+     */
+    public List<ModuleHealth> rescan() {
+        lock.lock();
+        try {
+            List<Path> all = new ArrayList<>();
+            if (Files.isDirectory(installed)) {
+                all.add(installed);
+            }
+            all.addAll(folders);
+            if (all.isEmpty()) {
+                return runtime.health();
+            }
+            Map<String, String> active = new LinkedHashMap<>();
+            for (Path f : folders) {
+                ModuleDiscovery.readActive(f.resolve("active.yaml")).forEach(active::putIfAbsent);
+            }
+            active.putAll(ModuleDiscovery.readActive(activeFile));
+            List<ModuleHealth> rows = runtime.start(all, active, id -> !registry.containsKey(id) || registry.get(id).state() == State.ACTIVE);
+            if (!folders.isEmpty()) {
+                LOG.warn("modules in development mode from {}: {} (unverified; never in production)", folders,
+                        rows.stream().map(h -> h.id() + " " + h.state()).toList());
+                for (ModuleHealth h : rows) {
+                    runtime.loaded(h.id()).filter(m -> development(m.candidate().dir())).ifPresent(m -> stamps.put(h.id(), stamp(m.candidate().dir())));
+                }
+            }
+            return rows;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private final Map<String, Long> stamps = new ConcurrentHashMap<>();
+
+    private boolean development(Path dir) {
+        Path d = dir.toAbsolutePath().normalize();
+        return folders.stream().anyMatch(d::startsWith);
+    }
+
+    /** A stamp of a folder's files: their count, sizes and last changes. */
+    static long stamp(Path dir) {
+        long h = 17;
+        try (var s = Files.walk(dir)) {
+            for (Path p : s.filter(Files::isRegularFile).sorted().toList()) {
+                h = h * 31 + p.toString().hashCode();
+                h = h * 31 + Files.size(p);
+                h = h * 31 + Files.getLastModifiedTime(p).toMillis();
+            }
+        } catch (IOException | UncheckedIOException e) {
+            return -1;
+        }
+        return h;
+    }
+
+    /**
+     * Development mode's reload: every exploded module whose files changed since it loaded is unloaded (leak-checked) and loaded again;
+     * one that came to a folder is loaded. Returns what it did, a line a module.
+     */
+    public List<String> reloadChanged() {
+        lock.lock();
+        try {
+            List<String> did = new ArrayList<>();
+            if (folders.isEmpty() || runtime == null) {
+                return did;
+            }
+            for (Map.Entry<String, Long> e : List.copyOf(stamps.entrySet())) {
+                String id = e.getKey();
+                long now = loadedStamp(id);                // no reference to the module kept here: the unload's leak check follows
+                if (now == Long.MIN_VALUE) {
+                    stamps.remove(id);
+                    continue;
+                }
+                if (now == e.getValue()) {
+                    continue;
+                }
+                ModuleRuntime.UnloadReport r = runtime.unload(id, ModuleRuntime.Leave.DISABLE, true);
+                stamps.remove(id);
+                did.add(id + " changed: unloaded (" + (Boolean.TRUE.equals(r.leakFree()) ? "leak-free" : "LEAK: " + r.failures()) + ")");
+            }
+            int before = stamps.size();
+            rescan();
+            if (stamps.size() > before || !did.isEmpty()) {
+                did.add("loaded: " + stamps.keySet());
+            }
+            did.forEach(d -> LOG.info("development mode: {}", d));
+            return did;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /** The stamp of a loaded module's folder, or {@code Long.MIN_VALUE} when it is not loaded. */
+    private long loadedStamp(String id) {
+        return runtime.loaded(id).map(m -> stamp(m.candidate().dir())).orElse(Long.MIN_VALUE);
+    }
+
+    /** True when development mode is on here (exploded folders loaded). */
+    public boolean developmentMode() {
+        return !folders.isEmpty();
+    }
+
+    /**
+     * The module that owns an API path by the live route table, for a module the cluster's registry does not hold (one of
+     * {@code drishti.modules.path}): active, off (404) or removed (410), as its routes say.
+     */
+    public Optional<Entry> byApiPath(String path) {
+        ModuleRuntime rt = runtime;
+        if (rt == null) {
+            return Optional.empty();
+        }
+        return rt.routes().lookup(path).filter(m -> m.route().kind() == com.ash.drishti.module.runtime.RouteTable.Kind.API).map(m -> {
+            var r = m.route();
+            State s = switch (r.state()) {
+                case ACTIVE -> State.ACTIVE;
+                case OFF -> State.OFF;
+                case TOMBSTONE -> State.REMOVED;
+            };
+            String prefix = r.path().substring("/api/v1/".length(), r.path().indexOf('/', "/api/v1/".length()));
+            return new Entry(r.module(), r.version(), s, r.module(), prefix, List.of(), List.of(), null, null, null, null);
+        });
+    }
+
+    /** The extension types a loaded module's beans are connected through (empty without the kernel's wiring). */
+    public List<String> bridged() {
+        return wiring == null ? List.of() : wiring.types();
     }
 
     public ModuleRuntime runtime() {
@@ -651,8 +804,28 @@ public final class ModuleNode implements AutoCloseable {
             m.put("routes", runtime.routes().snapshot().of(e.id()).size());
             mods.add(m);
         }
+        for (ModuleHealth h : health.values()) {          // the modules of drishti.modules.path: not deployed, so not in the registry
+            if (registry.containsKey(h.id())) {
+                continue;
+            }
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("id", h.id());
+            m.put("version", h.version());
+            m.put("state", h.state() == ModuleHealth.State.LOADED ? "active" : h.state().name().toLowerCase(Locale.ROOT));
+            m.put("loaded", runtime.loaded(h.id()).map(x -> x.manifest().version()).orElse(null));
+            m.put("health", h.state().name());
+            m.put("reason", h.reason());
+            m.put("routes", runtime.routes().snapshot().of(h.id()).size());
+            m.put("from", developmentMode() && runtime.loaded(h.id()).map(x -> development(x.candidate().dir())).orElse(false)
+                    ? "development (unverified)" : "drishti.modules.path");
+            m.put("contributions", runtime.contributions().of(h.id()).stream().map(c -> c.surface() + " " + c.name()).toList());
+            mods.add(m);
+        }
         out.put("modules", mods);
         out.put("routeTable", runtime.routes().snapshot().version());
+        out.put("lib", com.ash.drishti.common.SharedLib.get().info());      // Admin → Modules: the shared lib jars, marked lib
+        out.put("development", developmentMode());
+        out.put("bridge", bridged());
         return out;
     }
 

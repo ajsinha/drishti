@@ -42,8 +42,19 @@ public final class ModuleClassLoader extends URLClassLoader implements SmartClas
     private final List<String> shared;
     private final List<String> sharedPaths;
 
+    private final ClassLoader lib;
+
     public ModuleClassLoader(String moduleId, URL[] jars, ClassLoader kernel, List<String> shared) {
+        this(moduleId, jars, kernel, shared, null);
+    }
+
+    /**
+     * @param lib the site's shared lib loader ({@code drishti.lib.path}), asked after the module's own jars for the classes its jars
+     *            define (never a kernel class through it), or null for none
+     */
+    public ModuleClassLoader(String moduleId, URL[] jars, ClassLoader kernel, List<String> shared, ClassLoader lib) {
         super("module:" + moduleId, jars, ClassLoader.getPlatformClassLoader());
+        this.lib = lib == kernel ? null : lib;
         this.moduleId = moduleId;
         this.kernel = kernel;
         this.shared = List.copyOf(shared);
@@ -78,7 +89,10 @@ public final class ModuleClassLoader extends URLClassLoader implements SmartClas
                     try {
                         c = findClass(name);
                     } catch (ClassNotFoundException e) {
-                        c = getParent().loadClass(name);       // the JDK's own javax.*, jdk.*, sun.*; never a kernel class
+                        c = fromLib(name);
+                        if (c == null) {
+                            c = getParent().loadClass(name);   // the JDK's own javax.*, jdk.*, sun.*; never a kernel class
+                        }
                     }
                 }
             }
@@ -121,6 +135,19 @@ public final class ModuleClassLoader extends URLClassLoader implements SmartClas
         List<URL> out = new ArrayList<>(Collections.list(findResources(name)));
         out.addAll(Collections.list(getParent().getResources(name)));
         return Collections.enumeration(out);
+    }
+
+    /** A class of the site's lib jars, or null (a kernel class the lib loader would hand on is not the lib's to give). */
+    private Class<?> fromLib(String name) {
+        if (lib == null) {
+            return null;
+        }
+        try {
+            Class<?> c = lib.loadClass(name);
+            return c.getClassLoader() == lib ? c : null;
+        } catch (ClassNotFoundException e) {
+            return null;
+        }
     }
 
     private boolean sharedResource(String name) {

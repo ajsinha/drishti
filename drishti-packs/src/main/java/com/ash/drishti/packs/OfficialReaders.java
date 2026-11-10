@@ -51,6 +51,26 @@ public final class OfficialReaders {
         return Map.copyOf(out);
     }
 
+    /** The lakes of official results: the class path's publishers, then a loaded module's. */
+    static Map<String, String> lakes() {
+        return withLive(LAKES, OfficialResults::lakes);
+    }
+
+    /** The settings prefix of each official kind's publisher: the class path's, then a loaded module's. */
+    static Map<String, String> prefixes() {
+        return withLive(PREFIX, OfficialResults::kinds);
+    }
+
+    private static Map<String, String> withLive(Map<String, String> fixed, java.util.function.Function<OfficialResults, Map<String, String>> part) {
+        java.util.List<OfficialResults> live = com.ash.drishti.common.Extensions.of(OfficialResults.class);
+        if (live.isEmpty()) {
+            return fixed;
+        }
+        Map<String, String> out = new LinkedHashMap<>(fixed);
+        live.forEach(r -> part.apply(r).forEach(out::putIfAbsent));
+        return out;
+    }
+
     private OfficialReaders() {
     }
 
@@ -59,15 +79,15 @@ public final class OfficialReaders {
         if (t == null || !(t.get("settings") instanceof Map<?, ?> s) || !"delta".equals(String.valueOf(t.get("plugin")))) {
             return null;
         }
-        if (LAKES.containsKey(String.valueOf(s.get("lake")))) {
-            return LAKES.get(String.valueOf(s.get("lake")));
+        if (lakes().containsKey(String.valueOf(s.get("lake")))) {
+            return lakes().get(String.valueOf(s.get("lake")));
         }
         if (!"risk-results".equals(String.valueOf(s.get("domain")))) {
             return null;
         }
         for (String k : ConnectorFiles.kindNames(t.get("kinds"))) {
-            if (PREFIX.containsKey(k)) {
-                return PREFIX.get(k);
+            if (prefixes().containsKey(k)) {
+                return prefixes().get(k);
             }
         }
         return null;
@@ -92,7 +112,7 @@ public final class OfficialReaders {
         }
         Map<String, Object> out = new LinkedHashMap<>(t);
         Map<String, Object> settings = new LinkedHashMap<>((Map<String, Object>) t.get("settings"));
-        if (LAKES.containsKey(String.valueOf(settings.get("lake")))) {   // the lake form: root and storage come from the lake file
+        if (lakes().containsKey(String.valueOf(settings.get("lake")))) {   // the lake form: root and storage come from the lake file
             out.put("plugin", "iceberg");
             settings.put("engine", "native");
             out.put("settings", settings);

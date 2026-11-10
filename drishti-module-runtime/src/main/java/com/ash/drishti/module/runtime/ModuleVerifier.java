@@ -45,19 +45,36 @@ public final class ModuleVerifier {
         this.facts = facts;
     }
 
+    /** The note a module of development mode carries in Health. */
+    public static final String DEVELOPMENT = "development (unverified): an exploded folder loaded in development mode, not a verified .dmod";
+
+    private java.util.function.Predicate<ModuleCandidate> development = c -> false;
+
+    /** Which candidates are exploded development folders (drishti.modules.dev): no folder naming, no hash list; marked in Health. */
+    public ModuleVerifier development(java.util.function.Predicate<ModuleCandidate> d) {
+        this.development = d == null ? c -> false : d;
+        return this;
+    }
+
     /** Runs V1 (folders), V2, the package rules, V3, V5, V7 and V8; returns the Health notes. */
     public List<String> verify(ModuleCandidate c) {
         DmodManifest m = c.manifest();
         String label = m.label();
         List<String> notes = new ArrayList<>();
+        boolean dev = development.test(c);
+        if (dev) {
+            notes.add(DEVELOPMENT);
+        }
         // V1: id = folder, version = folder
-        if (c.dir().getParent() == null || !m.id().equals(c.dir().getParent().getFileName().toString())
+        if (!dev && c.dir().getParent() == null || !m.id().equals(c.dir().getParent().getFileName().toString())
                 || !m.version().equals(c.dir().getFileName().toString())) {
             throw new ModuleRefusedException("V1", label + ": module.yaml's id and version must name its folder <id>/<version> (found "
                     + c.dir().getParent().getFileName() + "/" + c.dir().getFileName() + ")");
         }
         // V2: hashes (signature from release j)
-        notes.addAll(Dmod.verify(c.dir(), c.dmod(), label));
+        if (!dev) {
+            notes.addAll(Dmod.verify(c.dir(), c.dmod(), label));
+        }
         packageRules(c, notes);
         // V3: the API ranges this host knows
         for (String r : DmodManifest.RANGES) {
@@ -111,31 +128,38 @@ public final class ModuleVerifier {
                 }
             }
         }
-        List<String> jars = m.java() == null ? List.of() : m.java().jars();
+        List<String> jars = m.java() == null ? List.of() : m.java().classPath();
+        for (String f : files) {
+            if ((f.startsWith("java/") || f.startsWith("lib/")) && f.toLowerCase(Locale.ROOT).endsWith(".jar") && !jars.contains(f)) {
+                throw new ModuleRefusedException("V1", label + ": " + f + " is in the package but module.yaml does not name it (java.jars for the "
+                        + "module's own jars under java/, java.lib for third-party ones under lib/)");
+            }
+        }
         for (String j : jars) {
-            Path p = c.dir().resolve("java").resolve(j).normalize();
-            if (!p.startsWith(c.dir().resolve("java")) || !Files.isRegularFile(p)) {
-                throw new ModuleRefusedException("V1", label + ": java.jars names " + j + ", which is not in java/");
+            Path p = c.dir().resolve(j).normalize();
+            if (!p.startsWith(c.dir()) || !Files.isRegularFile(p)) {
+                throw new ModuleRefusedException("V1", label + ": " + (j.startsWith("lib/") ? "java.lib names " + j.substring(4) + ", which is not in lib/"
+                        : "java.jars names " + j.substring(5) + ", which is not in java/"));
             }
             boolean nativeCode = false;
             try (ZipFile z = new ZipFile(p.toFile())) {
                 for (Enumeration<? extends ZipEntry> en = z.entries(); en.hasMoreElements(); ) {
                     String n = en.nextElement().getName();
-                    if (n.startsWith(KERNEL_API_PATH)) {
-                        throw new ModuleRefusedException("V2", label + ": java/" + j + " bundles kernel API classes (" + n
+                    if (n.startsWith(KERNEL_API_PATH) || n.startsWith("com/ash/drishti/api/")) {
+                        throw new ModuleRefusedException("V2", label + ": " + j + " bundles kernel API classes (" + n
                                 + "); the kernel provides them");
                     }
                     String ln = n.toLowerCase(Locale.ROOT);
                     nativeCode |= ln.endsWith(".so") || ln.endsWith(".dll") || ln.endsWith(".dylib") || ln.endsWith(".jnilib");
                 }
             } catch (IOException e) {
-                throw new ModuleRefusedException("V2", label + ": java/" + j + " is not a jar", e);
+                throw new ModuleRefusedException("V2", label + ": " + j + " is not a jar", e);
             }
             if (nativeCode && !m.java().nativeCode()) {
-                throw new ModuleRefusedException("V2", label + ": java/" + j + " bundles native code but module.yaml does not declare java.native");
+                throw new ModuleRefusedException("V2", label + ": " + j + " bundles native code but module.yaml does not declare java.native");
             }
             if (nativeCode && !facts.allowNative()) {
-                throw new ModuleRefusedException("V2", label + ": java/" + j + " bundles native code, which this site forbids");
+                throw new ModuleRefusedException("V2", label + ": " + j + " bundles native code, which this site forbids");
             }
         }
     }

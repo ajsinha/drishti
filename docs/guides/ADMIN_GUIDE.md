@@ -1584,6 +1584,33 @@ offers none of its lenses, functions, packs or engines (its engines show *not in
 `DRISHTI_MODULES_<MODULE>_ENABLED`, and a change takes effect at the next start. The how-to, the licence file and what each module brings
 to the console are in [OPERATIONS_GUIDE.md, Modules on or off](OPERATIONS_GUIDE.md#65-engines-modules-and-editions).
 
+### 22.1 Module packages, auto-deploy and the shared lib folder
+
+Besides the modules built into the server, the kernel loads **module packages** (`.dmod`), each in its own class loader. Two folders
+under the data folder, as in Tomcat:
+
+| Folder | Setting | What it holds | When a change counts |
+|---|---|---|---|
+| `<data folder>/modules/` | `drishti.modules.path` (`DRISHTI_MODULES_PATH`, commas for several) | `.dmod` packages to deploy; the server keeps its own `installed/`, `store/`, `staging/` and `tombstones/` beside them | at once (auto-deploy) |
+| `<data folder>/lib/` | `drishti.lib.path` (`DRISHTI_LIB_PATH`) | jars every connector and module may use: JDBC drivers, connector plugins, a company's own libraries | at the next restart |
+
+**Auto-deploy.** A `.dmod` put into the module folder is deployed within `drishti.modules.autodeploy-seconds` (5) through the module
+deployment, exactly as an administrator's upload would be: its hash list verified, the fifteen conformance checks, installed under
+`installed/<id>/<version>/` and loaded; a new version is installed beside the old one and `active.yaml` switches to it when it is ready.
+A module is placed like any other (`config/placement.yaml`; on a single node, its parts on `local`). Taking the file out removes the module the same way (its API answers `410 DRS-1028`, its tombstone is kept for saved work). Every step is
+in the audit log as `autodeploy`; a package that fails a check is logged and tried again only when its bytes change. `drishti.modules.autodeploy`:
+empty (the default) means **on for a single node and off in a cluster**, where modules are deployed by plan → apply with two administrators
+([CLUSTER_GUIDE.md](CLUSTER_GUIDE.md)); `true` or `false` decides outright. **Production loads only verified `.dmod` packages**; the
+development mode that loads a module's exploded build folder (`drishti.modules.dev`) is for a developer's own server, refused in a cluster
+and under the `prod` or `production` profile, and marks each such module *development (unverified)* in Health
+([DEVELOPER_GUIDE.md section 1.6](DEVELOPER_GUIDE.md#16-the-module-sdk)).
+
+**The shared lib folder.** Every jar in `<data folder>/lib/` is read once, at start, into one *lib* class loader under the kernel's.
+Connectors and modules see its classes, a JDBC driver in it is registered (a connector's `jdbc:` URL finds it), and a connector plugin
+in it (its `META-INF/services` entry) is offered like a built-in one. It never replaces a kernel class: the kernel is asked first. Health
+(`lib`) and Admin → Modules list each jar with its size and SHA-256, marked **lib**: code the site added beside the product. A module's own
+third-party jars belong in its package (`java.lib`), not here.
+
 ## 23. Data bindings
 
 A module says which **kinds** it needs (banking: `trade`, `scenario-pv` or `pnl-vector`, `scenario-set`, `netting-set` …); the site decides

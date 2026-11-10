@@ -17,6 +17,24 @@
 
 ## Unreleased
 
+- **The kernel loads modules** (2.9.11.i2 + i3, wave 2; [DEVELOPER_GUIDE.md sections 1.6 and 1.7](docs/guides/DEVELOPER_GUIDE.md#17-what-a-module-can-contribute),
+  [ADMIN_GUIDE.md section 22.1](docs/guides/ADMIN_GUIDE.md#221-module-packages-auto-deploy-and-the-shared-lib-folder)). A loaded `.dmod`
+  module's beans of the kernel API's provider types are seen by the kernel while it is loaded and withdrawn when it unloads (the
+  registration bridge): a `KindProvider` is routed like any source, a new `function.FunctionProvider` adds Rachana functions, a
+  `ComputeEngine` joins the engine registry, and approval sources, explainers, view augmenters, pivot sources, Health and capacity figures,
+  vocabularies, official results, API aliases and AI tools reach their collection points; its `DrishtiModule` entry is started with the
+  kernel's `ModuleContext`. Its `@ModuleApi` controllers are mounted by the module deployment's mounting (off: 404, removed: 410
+  `DRS-1028`). **Several jars:** `java.jars` (the module's own, one or more) and `java.lib` (third-party, under the package's `lib/`); an undeclared jar
+  is refused (V1); `drishti:assemble` and `pack --more` put them in. **Auto-deploy:** a `.dmod` dropped into `drishti.modules.path` (default
+  `<data folder>/modules`) is stored, checked, installed and loaded through the module deployment, and removed when its file goes;
+  `drishti.modules.autodeploy` is on for a single node and off in a cluster. **Development mode** (`drishti.modules.dev`, off by default,
+  refused in a cluster and under the production profile): an exploded module folder loads unverified, is marked *development
+  (unverified)* in Health, and reloads when it changes. **The shared lib folder** (`drishti.lib.path`, default `<data folder>/lib`): its
+  jars load at start into one lib class loader under the kernel's, seen by connectors (plugins, JDBC drivers) and modules, never replacing a
+  kernel class; Health and Admin → Modules list each jar with its SHA-256, marked lib. The archetype now also contributes a kind provider,
+  a Rachana function and a REST API; the kernel API is 0.3 (`function.FunctionProvider`; the entity types of `com.ash.drishti.api` are
+  shared with modules). `ModuleHostServerTest` loads the archetype module and a three-jar module, uses their kind, function and route from
+  the kernel, reloads on an edit, unloads (410), reinstalls and unloads again, leak-free each time; and deploys and removes a dropped package.
 - **Module deployment, cluster-first** (2.9.11.i2 + i3, wave 3; [CLUSTER_GUIDE.md section 1.10](docs/guides/CLUSTER_GUIDE.md#110-deploying-a-module),
   [ADMIN_GUIDE.md section 25](docs/guides/ADMIN_GUIDE.md#25-modules-and-deploy)): a `.dmod` is uploaded once to the module store
   (`POST /api/v1/admin/modules/store`, the fifteen conformance checks, kept by id and version, never rebuilt); a plan says per node what

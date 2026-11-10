@@ -26,6 +26,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.ApplicationContext;
@@ -40,20 +41,107 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 @Configuration(proxyBeanMethods = false)
 public class ModuleDeployConfiguration {
 
+    /**
+     * The module folders ({@code drishti.modules.path}, commas or the path separator; default {@code <data folder>/modules}): unpacked
+     * modules ({@code <id>/<version>/}) loaded at start, and the {@code .dmod} packages auto-deploy watches.
+     */
+    static List<Path> modulesPath(Environment env) {
+        List<Path> folders = new ArrayList<>();
+        String setting = env.getProperty("drishti.modules.path", Path.of(env.getProperty("drishti.data.dir", "./data"), "modules").toString());
+        for (String s : setting.split("[," + java.io.File.pathSeparator + "]")) {
+            if (!s.isBlank()) {
+                folders.add(Path.of(s.strip()).toAbsolutePath().normalize());
+            }
+        }
+        return folders;
+    }
+
+    /**
+     * Auto-deploy ({@code drishti.modules.autodeploy}): {@code true}, {@code false}, or unset for on with a single node and off in a cluster
+     * (Drishti*net running), where plan → apply is the way.
+     */
+    static boolean autodeploy(Environment env, ObjectProvider<com.ash.drishti.server.net.NetService> net) {
+        String v = env.getProperty("drishti.modules.autodeploy", "");
+        if (!v.isBlank()) {
+            return Boolean.parseBoolean(v.strip());
+        }
+        com.ash.drishti.server.net.NetService n = net.getIfAvailable();
+        return n == null || !n.running();
+    }
+
+    @Bean
+    public ModuleAutoDeploy moduleAutoDeploy(ModuleDeployService deploy, ModuleNode node, Environment env) {
+        return new ModuleAutoDeploy(modulesPath(env), deploy, node);
+    }
+
+    /** The auto-deploy watch: a look at the module folders every {@code drishti.modules.autodeploy-seconds}, after the modules started. */
+    @Bean(destroyMethod = "shutdownNow")
+    public java.util.concurrent.ScheduledExecutorService moduleAutoDeployWatch(ModuleAutoDeploy auto, Environment env,
+            ObjectProvider<com.ash.drishti.server.net.NetService> net) {
+        java.util.concurrent.ScheduledExecutorService s = java.util.concurrent.Executors.newSingleThreadScheduledExecutor(
+                Thread.ofVirtual().name("drishti-module-autodeploy").factory());
+        long every = Math.max(1, env.getProperty("drishti.modules.autodeploy-seconds", Long.class, 5L));
+        s.scheduleWithFixedDelay(() -> {
+            try {
+                if (started && autodeploy(env, net)) {
+                    auto.scan();
+                }
+                ModuleNode node = nodeRef;
+                if (started && node != null && node.developmentMode()) {
+                    node.reloadChanged();
+                }
+            } catch (RuntimeException e) {
+                LoggerFactory.getLogger(ModuleAutoDeploy.class).warn("auto-deploy: {}", e.toString());
+            }
+        }, every, every, java.util.concurrent.TimeUnit.SECONDS);
+        return s;
+    }
+
+    private volatile boolean started;
+    private volatile ModuleNode nodeRef;
+
     static Path root(Environment env) {
         String dir = env.getProperty("drishti.module-deploy.dir", "");
         return (dir.isBlank() ? Path.of(env.getProperty("drishti.data.dir", "./data"), "modules") : Path.of(dir)).toAbsolutePath().normalize();
     }
 
+    /**
+     * Development mode ({@code drishti.modules.dev}, default false): the folders of {@code drishti.modules.path} are loaded as exploded
+     * modules, unverified, and reloaded when they change. Refused (with an error in the log, and nothing exploded loaded) in a cluster and
+     * under the {@code prod} or {@code production} profile: production loads only verified {@code .dmod} packages.
+     */
+    static List<Path> development(Environment env, ObjectProvider<com.ash.drishti.server.net.NetService> net) {
+        if (!env.getProperty("drishti.modules.dev", Boolean.class, false)) {
+            return List.of();
+        }
+        com.ash.drishti.server.net.NetService n = net.getIfAvailable();
+        String refused = n != null && n.running() ? "this server is in a cluster"
+                : env.acceptsProfiles(org.springframework.core.env.Profiles.of("prod", "production")) ? "the profile is production" : null;
+        if (refused != null) {
+            LoggerFactory.getLogger(ModuleNode.class).error("drishti.modules.dev=true is refused: {}; only verified .dmod packages load", refused);
+            return List.of();
+        }
+        return modulesPath(env);
+    }
+
     @Bean(destroyMethod = "close")
-    public ModuleNode moduleNode(PlacementService placement, ApplicationContext ctx, Environment env) {
+    public ModuleNode moduleNode(PlacementService placement, ApplicationContext ctx, Environment env,
+            ObjectProvider<com.ash.drishti.server.net.NetService> net) {
         ApiMounts mounts = new ApiMounts(() -> ctx.getBean("requestMappingHandlerMapping", RequestMappingHandlerMapping.class), () -> {
             Collection<Object> out = new ArrayList<>(ctx.getBeansOfType(RequestMappingHandlerAdapter.class).values());
             out.addAll(ctx.getBeansOfType(HandlerExceptionResolver.class).values());
+            out.addAll(ctx.getBeansOfType(org.springframework.core.convert.ConversionService.class).values());
             return out;
         });
         long drain = env.getProperty("drishti.module-deploy.drain-seconds", Long.class, 30L) * 1000;
-        return new ModuleNode(root(env), KernelFacts.ofKernel(), placement, mounts, drain);
+        List<Path> folders = development(env, net);
+        com.ash.drishti.server.modules.host.ModuleWiring wiring = new com.ash.drishti.server.modules.host.ModuleWiring(
+                () -> ctx.getBeanProvider(com.ash.drishti.engine.source.SourceRegistry.class).getIfAvailable(),
+                () -> ctx.getBeanProvider(com.ash.drishti.server.engines.EngineRegistry.class).getIfAvailable(),
+                () -> ctx.getBeanProvider(com.ash.drishti.engine.source.SourceRouter.class).getIfAvailable(),
+                () -> ctx.getBeanProvider(com.ash.drishti.identity.AuditLog.class).getIfAvailable(),
+                env instanceof org.springframework.core.env.ConfigurableEnvironment c ? c : null);
+        return new ModuleNode(root(env), KernelFacts.ofKernel(), placement, mounts, drain, folders, wiring);
     }
 
     @Bean
@@ -67,7 +155,8 @@ public class ModuleDeployConfiguration {
     /** Loads the active modules placed here once the server's web layer is up (the request mapping exists). */
     @org.springframework.context.event.EventListener(org.springframework.boot.context.event.ApplicationReadyEvent.class)
     public void startModules(org.springframework.boot.context.event.ApplicationReadyEvent e) {
-        e.getApplicationContext().getBean(ModuleNode.class).start(e.getApplicationContext());
+        nodeRef = e.getApplicationContext().getBean(ModuleNode.class).start(e.getApplicationContext());
+        started = true;
     }
 
     /** After placement's guard (4): removed 410, off 404, a swap waited for, requests counted for the drain. */

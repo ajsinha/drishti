@@ -58,19 +58,19 @@ public interface DomainVocabulary {
     /** The union of one part over every module, in load order. */
     static Set<String> union(Function<DomainVocabulary, Collection<String>> part) {
         Set<String> out = new LinkedHashSet<>();
-        Vocabularies.ALL.forEach(v -> out.addAll(part.apply(v)));
+        Vocabularies.all().forEach(v -> out.addAll(part.apply(v)));
         return java.util.Collections.unmodifiableSet(out);
     }
 
     /** The maps of one part over every module, a later module's entry winning. */
     static Map<String, String> notes(Function<DomainVocabulary, Map<String, String>> part) {
         Map<String, String> out = new LinkedHashMap<>();
-        Vocabularies.ALL.forEach(v -> out.putAll(part.apply(v)));
+        Vocabularies.all().forEach(v -> out.putAll(part.apply(v)));
         return java.util.Collections.unmodifiableMap(out);
     }
 
     /** True when some module's vocabulary says so. */
     static boolean anyMatch(Predicate<DomainVocabulary> test) {
-        return Vocabularies.ALL.stream().anyMatch(test);
+        return Vocabularies.all().stream().anyMatch(test);
     }
 }

@@ -60,8 +60,7 @@ public final class CapacityLive {
 
     /** The engines' contributions (a module's), in order. */
     public List<CapacityFigures> figures() {
-        List<CapacityFigures> f = figures.get();
-        return f == null ? List.of() : f;
+        return com.ash.drishti.common.Extensions.with(figures.get(), CapacityFigures.class);   // a loaded module's too
     }
 
     /** The figures, measured now. */

@@ -52,7 +52,8 @@ public final class ModuleRouteFilter extends OncePerRequestFilter {
         }
         String rest = path.substring("/api/v1/".length());
         String prefix = rest.contains("/") ? rest.substring(0, rest.indexOf('/')) : rest;
-        return node.byPrefix(prefix);
+        Optional<ModuleNode.Entry> e = node.byPrefix(prefix);
+        return e.isPresent() ? e : node.byApiPath(path);
     }
 
     @Override

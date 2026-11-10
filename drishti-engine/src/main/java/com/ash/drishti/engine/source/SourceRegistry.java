@@ -580,6 +580,46 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
         }
     }
 
+    private final java.util.Set<String> attached = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
+    /** True when the source is a loaded module's, routed by {@link #attach}. */
+    public boolean attached(String name) {
+        return attached.contains(name);
+    }
+
+    /**
+     * Routes a loaded module's source (a computed kind's provider) under its own name while the module is loaded
+     * (docs/architecture/KERNEL_AND_MODULES.md section 12.3); the returned action takes it out of routing and stops it. A name already
+     * routed is refused.
+     */
+    public Runnable attach(SourcePlugin plugin) {
+        String name = plugin.manifest().name();
+        synchronized (this) {
+            if (plugins.containsKey(name)) {
+                throw new IllegalStateException("a source named " + name + " is already routed");
+            }
+            try {
+                plugin.start(new EngineSourceContext(Map.of(), codec, scheduler, reader));
+            } catch (RuntimeException e) {
+                throw e;
+            } catch (Exception e) {
+                throw new IllegalStateException("the module source " + name + " did not start: " + e.getMessage(), e);
+            }
+            swap(name, plugin);
+            attached.add(name);
+        }
+        return () -> {
+            synchronized (this) {
+                if (plugins.get(name) != plugin) {
+                    return;
+                }
+                attached.remove(name);
+                swap(name, null);
+            }
+            closeQuietly(plugin);
+        };
+    }
+
     /** Stops a named connector and forgets its settings (its file was deleted). */
     public void remove(String name) {
         var lock = locks.computeIfAbsent(name, k -> new java.util.concurrent.locks.ReentrantLock());

@@ -63,6 +63,7 @@ public final class ModuleRuntime implements AutoCloseable {
     private final Map<String, ModuleCandidate> known = new ConcurrentHashMap<>();
     private final Map<String, ModuleHealth> health = new ConcurrentHashMap<>();
     private final Map<String, ModuleClassLoader> retained = new ConcurrentHashMap<>();
+    private volatile ClassLoader libraries;
 
     /**
      * @param facts        what the host is (versions, reserved names, licence, budget, shared libraries)
@@ -80,6 +81,20 @@ public final class ModuleRuntime implements AutoCloseable {
         this.claims = new Claims(facts);
     }
 
+    private volatile java.util.function.Predicate<ModuleCandidate> development = c -> false;
+
+    /** Development mode (drishti.modules.dev): which candidates are exploded folders, loaded unverified and marked so in Health. */
+    public ModuleRuntime development(java.util.function.Predicate<ModuleCandidate> d) {
+        this.development = d == null ? c -> false : d;
+        return this;
+    }
+
+    /** The site's shared lib loader ({@code drishti.lib.path}): every module sees its jars after its own (null: none). */
+    public ModuleRuntime libraries(ClassLoader lib) {
+        this.libraries = lib;
+        return this;
+    }
+
     /**
      * Discovers, verifies, orders and loads every module of the folders. {@code enabled} is the site switch (V9: off is not a refusal).
      * Returns every module's Health row.
@@ -93,7 +108,7 @@ public final class ModuleRuntime implements AutoCloseable {
             found.candidates().forEach(c -> c.manifest().kinds().values().forEach(kinds::addAll));
             f = facts.withKnownKinds(kinds);
         }
-        ModuleVerifier verifier = new ModuleVerifier(f);
+        ModuleVerifier verifier = new ModuleVerifier(f).development(development);
         Map<String, List<String>> notes = new LinkedHashMap<>();
         Map<String, ModuleRefusedException> refused = new LinkedHashMap<>(found.refused());
         List<ModuleCandidate> ok = new ArrayList<>();
@@ -151,10 +166,10 @@ public final class ModuleRuntime implements AutoCloseable {
             DmodManifest.JavaPart java = c.manifest().java();
             if (java != null) {
                 List<URL> urls = new ArrayList<>();
-                for (String j : java.jars()) {
-                    urls.add(c.dir().resolve("java").resolve(j).toUri().toURL());
+                for (String j : java.classPath()) {
+                    urls.add(c.dir().resolve(j).toUri().toURL());
                 }
-                loader = new ModuleClassLoader(c.id(), urls.toArray(URL[]::new), kernelLoader, facts.shared());
+                loader = new ModuleClassLoader(c.id(), urls.toArray(URL[]::new), kernelLoader, facts.shared(), libraries);
                 ctx = new AnnotationConfigApplicationContext();
                 ctx.setId("module:" + c.id());
                 ctx.setDisplayName("module " + c.manifest().label());

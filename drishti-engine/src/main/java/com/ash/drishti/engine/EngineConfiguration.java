@@ -89,6 +89,9 @@ public class EngineConfiguration {
                 return null;
             }
         }, EngineConfiguration.class.getClassLoader());
+        // the shared lib folder (Tomcat's lib/): read once, at start, before any plugin is looked for
+        com.ash.drishti.common.SharedLib.open(java.nio.file.Path.of(env.getProperty("drishti.lib.path",
+                java.nio.file.Path.of(env.getProperty("drishti.data.dir", "./data"), "lib").toString())));
         java.util.List<com.ash.drishti.api.SourcePlugin> plugins = new PluginDiscovery().discover(props.pluginDir()).stream()
                 .filter(pl -> access.classOn((pl instanceof com.ash.drishti.engine.source.ComputedKindSource c ? c.provider() : pl).getClass().getName())).toList();
         return new SourceRegistry(plugins, props, codec, com.ash.drishti.common.RetryPolicy.of(env::getProperty, "connectors"),

@@ -32,7 +32,8 @@ import java.util.Map;
  * without Maven, for any build (Gradle, a script, javac and a folder). The Maven plugin calls the same classes: one implementation.
  *
  * <pre>
- * pack    FOLDER [--jar JAR] [--out DIR]           FOLDER is the module in the .dmod layout (module.yaml at its root); writes DIR/ID-VERSION.dmod
+ * pack    FOLDER [--jar JAR] [--more JAR,JAR] [--out DIR]   FOLDER is the module in the .dmod layout (module.yaml at its root); writes
+ *         DIR/ID-VERSION.dmod; --more puts further jars where module.yaml names them (java.jars under java/, java.lib under lib/)
  * check   FOLDER|DMOD [--jar JAR] [--project DIR] [--cycles N]   the fifteen checks C1-C15 (a folder is packed first, into a temporary folder)
  * inspect FOLDER|DMOD                              the manifest, the parts, the routes, the files and the hash list's verdict
  * </pre>
@@ -43,7 +44,7 @@ public final class ModuleTool {
 
     private static final String USAGE = """
             usage: java -jar drishti-module-tool.jar COMMAND PATH [options]
-              pack    FOLDER [--jar JAR] [--out DIR]                   pack a module folder (module.yaml at its root) into DIR/<id>-<version>.dmod
+              pack    FOLDER [--jar JAR] [--more JAR,JAR] [--out DIR]  pack a module folder (module.yaml at its root) into DIR/<id>-<version>.dmod
               check   FOLDER|DMOD [--jar JAR] [--project DIR] [--cycles N]  the conformance checks C1-C15 (default 50 cycles for C15)
               inspect FOLDER|DMOD                                      what the module is and holds
             exit: 0 done, 1 a check failed or the module was refused, 2 usage""";
@@ -77,7 +78,7 @@ public final class ModuleTool {
         Path jar = opts.containsKey("--jar") ? Path.of(opts.get("--jar")).toAbsolutePath() : null;
         try {
             return switch (args[0]) {
-                case "pack" -> pack(path, jar, Path.of(opts.getOrDefault("--out", ".")).toAbsolutePath(), out, err);
+                case "pack" -> pack(path, jar, more(opts.get("--more")), Path.of(opts.getOrDefault("--out", ".")).toAbsolutePath(), out, err);
                 case "check" -> check(path, jar, opts, out, err);
                 case "inspect" -> inspect(path, out);
                 default -> {
@@ -95,7 +96,7 @@ public final class ModuleTool {
     private static Map<String, String> options(String[] args) {
         Map<String, String> out = new java.util.LinkedHashMap<>();
         for (int i = 2; i < args.length; i++) {
-            if (!List.of("--jar", "--out", "--project", "--cycles").contains(args[i]) || i + 1 >= args.length) {
+            if (!List.of("--jar", "--more", "--out", "--project", "--cycles").contains(args[i]) || i + 1 >= args.length) {
                 throw new IllegalArgumentException("unknown or incomplete option " + args[i]);
             }
             out.put(args[i], args[++i]);
@@ -103,14 +104,22 @@ public final class ModuleTool {
         return out;
     }
 
-    private static int pack(Path folder, Path jar, Path outDir, PrintStream out, PrintStream err) {
+    /** The further jars of {@code --more}: comma-separated paths. */
+    private static List<Path> more(String list) {
+        if (list == null || list.isBlank()) {
+            return List.of();
+        }
+        return java.util.Arrays.stream(list.split(",")).filter(s -> !s.isBlank()).map(s -> Path.of(s.strip()).toAbsolutePath()).toList();
+    }
+
+    private static int pack(Path folder, Path jar, List<Path> more, Path outDir, PrintStream out, PrintStream err) {
         if (!Files.isDirectory(folder)) {
             err.println(folder + " is not a folder: pack takes the module's folder (module.yaml at its root)");
             return 2;
         }
         Path work = temp();
         try {
-            Path dmod = ModuleAssembler.assemble(folder, jar, work, outDir);
+            Path dmod = ModuleAssembler.assemble(folder, jar, more, work, outDir);
             out.println("packed " + dmod + " (" + size(dmod) + " bytes; the hash of every file in META-INF/DMOD.MF)");
             return 0;
         } finally {
@@ -157,7 +166,7 @@ public final class ModuleTool {
             out.println("  publisher: " + m.publisher());
             out.println("  ranges:    " + m.ranges());
             out.println("  kinds:     " + m.kinds());
-            out.println("  java:      " + (m.java() == null ? "none" : m.java().jars() + " entry " + m.java().entry() + " spring " + m.java().spring()));
+            out.println("  java:      " + (m.java() == null ? "none" : m.java().jars() + (m.java().lib().isEmpty() ? "" : " lib " + m.java().lib()) + " entry " + m.java().entry() + " spring " + m.java().spring()));
             out.println("  console:   " + (m.console() == null || m.console().isEmpty() ? "none" : m.console()));
             out.println("  functions: " + m.section("functions"));
             List<String> files = new ArrayList<>(Dmod.files(dir));

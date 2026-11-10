@@ -83,8 +83,15 @@ public final class ModuleAssembler {
         if (version != null && !version.equals(m.version())) {
             out.add("module.yaml says version " + m.version() + " but the project is " + version + ": make them the same");
         }
-        if (m.java() != null && m.java().jars().size() != 1) {
-            out.add("java.jars must name exactly one jar, the project's own (it names " + m.java().jars() + ")");
+        if (m.java() != null && m.java().jars().isEmpty()) {
+            out.add("java.jars must name at least one jar, the project's own first (third-party jars go in java.lib)");
+        }
+        if (m.java() != null) {
+            for (String j : m.java().classPath()) {
+                if (j.contains("..") || j.contains("\\") || !j.endsWith(".jar") || j.indexOf('/') != j.lastIndexOf('/')) {
+                    out.add("java: " + j + " is not a jar name (java.jars: file names in java/, java.lib: file names in lib/)");
+                }
+            }
         }
         return out;
     }
@@ -102,6 +109,14 @@ public final class ModuleAssembler {
      * {@code .sha256} beside it. The one packer: the Maven plugin, the command-line tool and any other build call it.
      */
     public static Path assemble(Path source, Path jar, Path work, Path out) {
+        return assemble(source, jar, List.of(), work, out);
+    }
+
+    /**
+     * As above, with more jars: {@code more} are put under {@code java/} or {@code lib/} by their file names, as module.yaml names them
+     * ({@code java.jars} after the first, {@code java.lib}); a jar module.yaml does not name is refused. Every named jar must be there.
+     */
+    public static Path assemble(Path source, Path jar, List<Path> more, Path work, Path out) {
         DmodManifest m = manifest(source);
         Path stage = work.resolve(m.id());
         try {
@@ -116,6 +131,21 @@ public final class ModuleAssembler {
                 } else if (!Files.isRegularFile(to)) {           // a folder from any build may hold its jar under java/ already
                     throw new IllegalStateException(m.label() + ": module.yaml names java/" + m.java().jars().get(0)
                             + ", which is neither in the folder nor given (--jar)" + (jar == null ? "" : ": " + jar + " is not there"));
+                }
+                for (Path x : more == null ? List.<Path>of() : more) {
+                    String name = x.getFileName().toString();
+                    String rel = m.java().jars().contains(name) ? "java/" + name : m.java().lib().contains(name) ? "lib/" + name : null;
+                    if (rel == null) {
+                        throw new IllegalStateException(m.label() + ": " + name + " is given but module.yaml names it in neither java.jars nor java.lib");
+                    }
+                    Path t = stage.resolve(rel);
+                    Files.createDirectories(t.getParent());
+                    Files.copy(x, t, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                }
+                for (String rel : m.java().classPath()) {
+                    if (!Files.isRegularFile(stage.resolve(rel))) {
+                        throw new IllegalStateException(m.label() + ": module.yaml names " + rel + ", which is neither in the folder nor given");
+                    }
                 }
             }
             Path dmod = Dmod.pack(stage, out.resolve(Dmod.fileName(m.id(), m.version())));

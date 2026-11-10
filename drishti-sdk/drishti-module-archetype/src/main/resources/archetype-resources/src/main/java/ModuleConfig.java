@@ -14,4 +14,22 @@ public class ModuleConfig {
     public Greeting greeting() {
         return new Greeting();
     }
+
+    /** The kind it computes: the kernel routes {@code ${artifactId}-greeting} to it while the module is loaded. */
+    @Bean
+    public GreetingKinds greetingKinds(Greeting greeting) {
+        return new GreetingKinds(greeting);
+    }
+
+    /** The Rachana function it adds: {@code ${artifactId}_greet(name)}. */
+    @Bean
+    public GreetingFunctions greetingFunctions(Greeting greeting) {
+        return new GreetingFunctions(greeting);
+    }
+
+    /** Its REST API, under /api/v1/${artifactId}/. */
+    @Bean
+    public GreetingController greetingController(Greeting greeting) {
+        return new GreetingController(greeting);
+    }
 }
