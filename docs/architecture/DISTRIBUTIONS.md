@@ -13,9 +13,10 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+
 # Drishti distributions: Drishti Risk, Drishti Finance, Drishti Genomics, Drishti All
 
-**Status: plan, not built (product owner, 2026-11-10).** Built in 2.9.11.i2 + i3 wave 3 (white label), on the distribution file of
+**Status: built (2.9.11.i2 + i3 wave 3, white label; section 10 is how it works as built).** The distribution file of
 [KERNEL_AND_MODULES.md section 6](KERNEL_AND_MODULES.md#6-the-distribution-file-white-label). One kernel build, one console build; each
 distribution is a distribution file plus the modules it picks. The owner demos and tests **Drishti Risk** and **Drishti Finance**;
 **Drishti Genomics** is the sample that proves the kernel carries no finance.
@@ -150,3 +151,57 @@ http://<host>:17481. The Deployment and QA guide gets a step-by-step section for
    a shared **`market-data` module** that both distributions list.
 3. **The owner's demo: two consoles over one cluster** (Risk on 17480, Finance on 17481), from one stack file.
 4. **Drishti All is the default** when no distribution is named.
+
+## 10. How it works (as built)
+
+**The files.** `config/distributions/drishti.all.yaml`, `drishti.risk.yaml`, `drishti.finance.yaml` and `drishti.genomics.yaml`, and
+`config/distributions/modules.yaml`, which maps each module id to what carries it today (its packs, its command words, the engines it
+owns, its domain module, its top menus and the Help it owns) until every module ships as a `.dmod`. A site adds its own file beside them
+(or anywhere, named by path).
+
+**Choosing one.** `--distribution <name|path>` (the server's `--distribution=` argument, the console's `--distribution=` setting, every
+`bin/` start script), else `DRISHTI_DISTRIBUTION`, else `drishti.distribution` in the server's configuration (`distribution:` in the
+console's). Nothing named: Drishti All, and a server or console with no `config/distributions` folder behaves as Drishti All too. A named
+file that does not exist stops the start with the list of names.
+
+**One reader, two sides.** The kernel (drishti-packs `Distributions`) and the console (`core/distribution.py`) read the same file the same
+way and come to the same thing:
+
+| From the file | On the kernel | On the console |
+|---|---|---|
+| `brand` | `drishti.branding.*` (the About answer, messages) | `ui.product`, `ui.tagline`, `ui.copyright`, `ui.owner`, `ui.notice`, `ui.logo`, `ui.favicon` |
+| `theme` | | the default theme (`tokens`), mode and density; each person's own choice still wins |
+| `modules` | the packs to load (kernel's and its modules'), the engines of the modules it leaves out off | the visibility filter below |
+| `lenses` | `drishti.lenses` (the lenses a person may open) | the same; a lens never shows more than its distribution |
+| `menus`, `home` | | the top menus, the command line's placeholder, Home's cards |
+| `docs` | | Help's title ("Drishti Risk Help") |
+
+**The visibility filter.** A distribution other than All is a filter in the edition file's shape: the commands of its packs (each
+pack's mnemonics and code), the command words of the modules it leaves out switched off (Finance: VAR, EXP, SMAT, PLAY, FRSA, SIMM,
+MCUBE ...), its menus, and Help kept to the kernel's guides plus its modules' (by the guide's domain or engine; a pack's guide by its
+pack). What it leaves out does not exist there: not on the command line, the type-ahead, FUNC, menus, Home, Help or the catalogue the AI
+reads. A command of another module typed anyway answers `DRS-4023 VRES is not in Drishti Finance`; its pages answer 404.
+
+**A console of its own.** A console started with `--distribution` keeps it whatever the server runs, so one Drishti All cluster serves a
+Drishti Risk console on 17480 and a Drishti Finance console on 17481. A console started without one follows the server's (learned from
+its about answer).
+
+**The old keys, read for one release.** `drishti.edition` (`DRISHTI_EDITION`) still selects a lens file as the instance's filter when no
+distribution is named, and is ignored when one is; a site's `drishti.branding.*`, `DRISHTI_PRODUCT`, `ui.product`, `ui.tagline`,
+`ui.copyright`, `ui.owner`, `ui.notice` still win over the file. Health names each one as deprecated.
+
+**Health and Admin.** Admin → Health shows the console's and the server's distribution, which of its modules loaded ("loaded", "off",
+"not installed": Genomics until its module ships) and the deprecation notes; `GET /api/v1/health` carries the same under
+`distribution`. Admin → White label shows every distribution file side by side (mock-up A): brand, theme, modules (loaded here or not),
+lenses, menus, Home cards, Help title and how to start it, the running one first. It is read only: a distribution changes in its file
+and takes effect at the next start.
+
+**Starting.** `bin/start-all.sh --distribution risk` (`.ps1`, `.cmd` the same), `bin/start-server.sh --distribution finance`,
+`bin/start-console.sh --distribution finance --port 17481 --name finance`; a stack file's `consoles:` list (section 7) starts one
+console per entry, each `console-<name>` with its own pid file, log and temp folder; `bin/status.sh` shows each process's distribution.
+IntelliJ: `Drishti server (Risk)`, `(Finance)`, `(All)` and `Drishti console (Risk)` (17480), `(Finance)` (17481), `(All)`. The
+Deployment and QA guide has the step-by-step for each on Linux, macOS and Windows.
+
+**Not yet (wave 2 and later).** The Markets lens of Drishti Finance waits for capital-markets as a module (Finance offers World today);
+logos and favicons beyond the eye are blank until a distribution ships its own files; Genomics boots on the kernel alone until its
+module ships.

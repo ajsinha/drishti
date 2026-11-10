@@ -43,21 +43,23 @@ $dirs = @($o['datadir'] | Where-Object { $_ })
 if ($dirs.Count -eq 0) { $dirs = @('') }
 $rc = 0
 $any = $false
-Write-Host ('{0,-22} {1,8}  {2,-10} {3,-6} {4,-10} {5}' -f 'process', 'pid', 'state', 'port', 'health', 'address')
+Write-Host ('{0,-22} {1,8}  {2,-10} {3,-6} {4,-10} {5,-16} {6}' -f 'process', 'pid', 'state', 'port', 'health', 'distribution', 'address')
 foreach ($d in $dirs) {
     $data = Get-DataDir $d
     $files = @(Get-ChildItem -Path (Join-Path $data 'run') -Filter 'server*.pid' -ErrorAction SilentlyContinue | Sort-Object Name) +
-             @(Get-ChildItem -Path (Join-Path $data 'run') -Filter 'console.pid' -ErrorAction SilentlyContinue)
+             @(Get-ChildItem -Path (Join-Path $data 'run') -Filter 'console*.pid' -ErrorAction SilentlyContinue | Sort-Object Name)
     foreach ($f in $files) {
         $any = $true
-        $mark = if ($f.BaseName -eq 'console') { $script:ConsoleMark } else { $script:ServerMark }
+        $mark = if ($f.BaseName -like 'console*') { $script:ConsoleMark } else { $script:ServerMark }
         $id = Get-PidOf $f.FullName
         $state = 'running'
         if (-not (Test-Ours $id $mark)) { $state = 'stale pid'; $rc = 1 }
         $health = Get-PidField $f.FullName 'health'
         $answer = '-'
         if ($health) { if (Test-HttpOk $health) { $answer = 'UP' } else { $answer = 'no answer'; $rc = 1 } }
-        Write-Host ('{0,-22} {1,8}  {2,-10} {3,-6} {4,-10} {5}' -f $f.BaseName, $id, $state, (Get-PidField $f.FullName 'port'), $answer, (Get-PidField $f.FullName 'url'))
+        $dist = Get-PidField $f.FullName 'distribution'
+        if (-not $dist) { $dist = 'all' }
+        Write-Host ('{0,-22} {1,8}  {2,-10} {3,-6} {4,-10} {5,-16} {6}' -f $f.BaseName, $id, $state, (Get-PidField $f.FullName 'port'), $answer, $dist, (Get-PidField $f.FullName 'url'))
     }
 }
 if (-not $any) { Write-Host '(no Drishti process started with bin\ in this data folder)' }

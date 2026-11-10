@@ -58,7 +58,7 @@
   {% if me %}<link rel="stylesheet" href="/static/css/drishti_explain.css?v={{ ASSET_V }}">{% endif %}
   {% block head %}{% endblock %}
 </head>
-<body{% if (error is defined and error and ((error.code is defined and error.code == 'DRS-5003') or (error is string and 'unreachable' in error))) %} data-server-down="1"{% endif %} class="{% block body_class %}{% endblock %}{% if (settings or {}).density == 'compact' %} density-compact{% endif %}{% if (settings or {}).flash == false %} no-flash{% endif %}" data-product="{{ PRODUCT }}" data-screen="{% block screen %}{{ screen | default('landing') }}{% endblock %}">
+<body{% if (error is defined and error and ((error.code is defined and error.code == 'DRS-5003') or (error is string and 'unreachable' in error))) %} data-server-down="1"{% endif %} class="{% block body_class %}{% endblock %}{% if ((settings or {}).density or DEFAULT_DENSITY) == 'compact' %} density-compact{% endif %}{% if (settings or {}).flash == false %} no-flash{% endif %}" data-product="{{ PRODUCT }}" data-screen="{% block screen %}{{ screen | default('landing') }}{% endblock %}">
   <a class="skip-link" href="#main">Skip to content</a>
   {% block nav %}{% if me %}{% include "terminal/_topbar.html" %}{% else %}{% include "_nav_public.html" %}{% endif %}{% endblock %}{# one top bar for anyone signed in, on every page #}
   <main id="main">{% block content %}{% endblock %}</main>

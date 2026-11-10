@@ -1,0 +1,66 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# Admin → White label (docs/guides/ADMIN_GUIDE.md, "White label"; docs/architecture/DISTRIBUTIONS.md; mock-up A, side by side,
+   docs/architecture/kernel-and-modules/mockups/white-label.html): every distribution file in config/distributions as a card, the running
+   one first, each with its brand, theme, modules (loaded here or not), lenses, menus, Home cards and Help title, and how to start it. Read
+   only, no form: a distribution is a file, taken at the next start. The modules table is a console table (drishti-grid, Drishti Elements). #}
+{% extends "base.html" %}
+{% block title %}White label · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-inbox.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-white-label.css?v={{ ASSET_V }}">{% endblock %}
+{% block screen %}admin{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm ib" data-white-label>
+  {% with tab='white-label' %}{% include "admin/_nav.html" %}{% endwith %}
+  <h1 class="ws-h">White label</h1>
+  <p class="text-muted-d ib-intro">One kernel build, one console build; each distribution is a file in <span class="mono">{{ directory }}</span>
+    naming its brand, theme, modules, lenses, Home and Help. What a distribution leaves out does not exist in it. A change to a file is taken at
+    the next start; a site adds its own file beside the shipped ones. See the <a href="/help/admin">Administration guide</a>.</p>
+  {% for p in problems %}<p class="adm-warn" role="alert" data-white-label-problem>{{ p }}</p>{% endfor %}
+  {% for d in deprecated %}<p class="ib-warn" data-white-label-deprecated>Deprecated: {{ d }}</p>{% endfor %}
+  <div class="wl-grid" data-white-label-cards>
+  {% for r in rows %}{% set d = r.d %}
+    <section class="wl-card{{ ' wl-on' if r.running }}" data-distribution="{{ d.id }}" aria-labelledby="wl-{{ d.name }}">
+      <header class="wl-head">
+        <span class="wl-mark" aria-hidden="true"><i class="bi bi-eye"></i></span>
+        <div><h2 class="ib-h2" id="wl-{{ d.name }}">{{ d.title }}</h2><div class="text-muted-d">{{ d.brand.tagline or '' }}</div></div>
+        {% if r.running %}<span class="st st-ok" data-white-label-running>running{{ ' (this console)' if own else '' }}</span>{% endif %}
+      </header>
+      <dl class="wl-facts">
+        <dt>Id</dt><dd class="mono">{{ d.id }}</dd>
+        <dt>Theme</dt><dd class="mono">{{ d.theme.tokens or 'terminal' }} · {{ d.theme.mode or 'dark' }} · {{ d.theme.density or 'comfortable' }}</dd>
+        <dt>Lenses</dt><dd>{{ d.lenses | join(', ') or 'none' }}{% if d.default_lens %} (default {{ d.default_lens }}){% endif %}</dd>
+        <dt>Menus</dt><dd>{{ r.menus | join(' · ') if r.menus else 'every menu' }}</dd>
+        <dt>Home cards</dt><dd class="mono">{{ r.cards | join(' · ') if r.cards else 'the product Home' }}</dd>
+        <dt>Help</dt><dd>{{ d.help_title if not d.all else 'Help (every guide)' }}</dd>
+        <dt>Commands</dt><dd>{{ r.commands if not d.all else 'every one' }}</dd>
+        <dt>Copyright</dt><dd>{{ d.brand.copyright or '' }}</dd>
+      </dl>
+      <div class="tbl-wrap"><table class="tbl adm-tbl" data-white-label-modules>
+        <caption class="visually-hidden">The modules of {{ d.title }} and whether each is loaded here</caption>
+        <thead><tr><th scope="col">Module</th><th scope="col">Here</th></tr></thead>
+        <tbody>
+        {% if d.all %}<tr><td>every module</td><td><span class="st st-ok">loaded</span></td></tr>{% endif %}
+        {% for m in r.modules %}<tr data-module="{{ m.id }}"><td class="mono">{{ m.id }}</td><td><span class="st {{ 'st-ok' if m.state == 'loaded' else 'st-warn' }}">{{ m.state }}</span></td></tr>{% endfor %}
+        </tbody>
+      </table></div>
+      <p class="wl-start"><span class="text-muted-d">Start:</span> <code>bin/start-all.sh --distribution {{ r.start }}</code></p>
+    </section>
+  {% endfor %}
+  </div>
+</div>
+{% endblock %}

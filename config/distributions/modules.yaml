@@ -1,0 +1,56 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The module ids a distribution file names (docs/architecture/DISTRIBUTIONS.md), mapped to what exists today until every module is a
+# .dmod of its own (2.9.11.i2 + i3 wave 2): its packs (their commands are the module's), its command words, the engine features it owns,
+# the domain module that carries it now (config/modules/<domain>.yaml), its top menus and its Help sections. The kernel and the console
+# read this one file; a distribution shows exactly the kernel plus its modules: everything else does not exist there (not greyed out).
+format: 1
+
+kernel:                                    # in every distribution
+  packs: [core]
+  words: [BI, RUPAKA, FORM, FUNC, WHAT, DATAMAP, DATA, EXPORT, PIVOT]
+  menus: [views, bi, build, admin, help, me]
+
+modules:
+  market-data:                             # curves, FX, quotes, surfaces: shared by Drishti Risk and Drishti Finance (decision 2)
+    title: Market data
+    domain: banking                        # the pack ships in the banking module until market-data is its own .dmod
+    packs: [market-data]
+    menus: [markets]                       # the one Markets menu (it gathers Curves, Volatility, FX and Credit)
+  banking:
+    title: Banking and risk
+    domain: banking
+    packs: [trading, market-risk, counterparty-risk]
+    words: [VAR, PVAR, SMAT, SWIN, PLAY, PREDEAL, EXP, FRSA, SIMM, MCUBE, SENS, RFAC, CCUBE]
+    features: [var, exposure, frtb-sa, simm]   # the compute engines it owns: off on a kernel whose distribution leaves banking out
+    menus: [blotter, positions, risk, counterparties]
+    docs: [banking]                        # the Help pages it owns: help.yaml domain: banking, and its engines' guides
+  capital-markets:
+    title: Capital markets
+    domain: capitalmarkets
+    packs: [us-equities, funds, gleif]
+    menus: [companies]
+    docs: [capitalmarkets]
+  economy:
+    title: Economy and markets
+    domain: economy
+    packs: [world-economy, news-and-markets, official-news, gdelt-events]
+    menus: [economies, markets]            # Markets: its News and quotes column
+    docs: [economy]
+  genomics:                                # the sample module (built from the Module SDK alone); not installed until it ships
+    title: Genomics (sample)
+    domain: genomics
+    packs: []
+    docs: [genomics]

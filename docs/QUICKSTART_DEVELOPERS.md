@@ -119,6 +119,31 @@ setting: [OPERATIONS_GUIDE.md › Start the server](guides/OPERATIONS_GUIDE.md#2
 Everything the two write at run time is under `data/` (git-ignored except `data/testdata/`); deleting `data/delta`, `data/bi-store` and
 `data/cache` while both are stopped starts you fresh.
 
+### Starting a white-labelled instance
+
+The same build starts as **Drishti Risk**, **Drishti Finance**, **Drishti Genomics** or **Drishti All** with one argument
+(`config/distributions/drishti.<name>.yaml`; [DISTRIBUTIONS.md](architecture/DISTRIBUTIONS.md)). Without it you run Drishti All, every
+module: what the drill, the page walk and the tutorials use.
+
+| Distribution | Linux and macOS | Windows | You should see |
+|---|---|---|---|
+| Drishti Risk | `bin/start-all.sh --demo --distribution risk` | `bin\start-all.cmd --demo --distribution risk` | **Drishti Risk**, navy dark; Risk, Counterparties and Markets menus; `VAR BANK` works, `ECON CAN` answers *not in Drishti Risk*; Help titled *Drishti Risk Help* |
+| Drishti Finance | `bin/start-all.sh --demo --distribution finance` | `bin\start-all.cmd --demo --distribution finance` | **Drishti Finance**, light; Economies, Markets and Companies menus, no Risk menu; `CRV` works, `VAR BANK` answers *not in Drishti Finance*; Help titled *Drishti Finance Help* with no VaR guide |
+| Drishti Genomics | `bin/start-all.sh --demo --distribution genomics` | `bin\start-all.cmd --demo --distribution genomics` | **Drishti Genomics**, green; the kernel's menus only; Admin → Health: module `genomics` *not installed* (the sample ships later) |
+| Drishti All | `bin/start-all.sh --demo` | `bin\start-all.cmd --demo` | **Drishti**, exactly as above |
+
+`bin/status.sh` (Windows `bin\status.cmd`) shows each process's distribution; Admin → White label shows them all side by side. The
+setting behind the argument is `DRISHTI_DISTRIBUTION` (both programs read it).
+
+**In the IDEs.** IntelliJ IDEA lists, under *Drishti*, `Drishti server (Risk)`, `(Finance)` and `(All)` (each sets the environment
+variable `DRISHTI_DISTRIBUTION`) and the Python configurations `Drishti console (Risk)` (argument `--distribution=risk`, port 17480),
+`Drishti console (Finance)` (`--distribution=finance`, port 17481) and `Drishti console (All)` (`--distribution=all`), all in
+`run-configs/`. Run the console ones from IntelliJ with the Python plugin or from PyCharm opened on the repository root. **Two consoles
+against one server:** run `Drishti server (All)`, then `Drishti console (Risk)` and `Drishti console (Finance)`; Drishti Risk opens on
+`http://localhost:17480` and Drishti Finance on `http://127.0.0.1:17481` (use a different host name, or another browser profile, for the
+second: browsers share sign-in cookies across ports of one host). Every step, Linux, macOS and Windows:
+[DEPLOYMENT_AND_QA_GUIDE.md › 6.7](DEPLOYMENT_AND_QA_GUIDE.md#67-starting-a-white-labelled-instance).
+
 ## 4. The repository map
 
 Two programs: the **server** (Java 21, Spring Boot, a Maven reactor) computes every number and lays out every screen; the **console**

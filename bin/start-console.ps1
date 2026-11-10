@@ -33,6 +33,9 @@ prints the address people open.
   --reinstall         remake drishti-console\.venv (after drishti-console\requirements.txt changed)
   --background        detach: log in <data>\logs\console.log, pid in <data>\run\console.pid
   --wait SECONDS      how long to wait for the health answer (default 90)
+  --distribution NAME the distribution this console shows: risk, finance, genomics, all or a file path (DRISHTI_DISTRIBUTION; default
+                      the server's, else Drishti All); docs\architecture\DISTRIBUTIONS.md
+  --name NAME         a name for this console when several run from one data folder (run\console-<name>.pid, logs\console-<name>.log)
   -h, --help          this text
 
 Environment: DRISHTI_SERVER_URL, DRISHTI_PYTHON (the console's Python; default drishti-console\.venv), DRISHTI_CONSOLE_PORT,
@@ -45,14 +48,18 @@ examples:
 '@
 
 $o = Read-Options $args @{ server = 'list'; backend = 'list'; port = 'value'; datadir = 'value'; envfile = 'value'; demo = 'switch'
-    python = 'value'; reinstall = 'switch'; background = 'switch'; wait = 'value' }
+    python = 'value'; reinstall = 'switch'; background = 'switch'; wait = 'value'; distribution = 'value'; name = 'value' }
 if ($o['help']) { Write-Host $usage; exit 0 }
 if ($o['envfile']) { Import-EnvFile $o['envfile'] }
 $data = Get-DataDir (Opt $o 'datadir')
 $env:DRISHTI_DATA_DIR = $data
 $port = [int](Opt $o 'port' $(if ($env:DRISHTI_CONSOLE_PORT) { $env:DRISHTI_CONSOLE_PORT } else { $script:DefaultConsolePort }))
-$pidFile = Join-Path $data 'run\console.pid'
-$log = Join-Path $data 'logs\console.log'
+$cname = Opt $o 'name' ''
+$suffix = $(if ($cname) { "-$cname" } else { '' })
+if ($o['distribution']) { $env:DRISHTI_DISTRIBUTION = $o['distribution'] }   # risk, finance, genomics, all or a file (DISTRIBUTIONS.md)
+if ($cname -and -not $env:DRISHTI_CONSOLE_TMP_DIR) { $env:DRISHTI_CONSOLE_TMP_DIR = Join-Path $data "tmp\console$suffix" }
+$pidFile = Join-Path $data "run\console$suffix.pid"
+$log = Join-Path $data "logs\console$suffix.log"
 $wait = [int](Opt $o 'wait' 90)
 
 $existing = Get-PidOf $pidFile
@@ -131,7 +138,7 @@ $health = "http://127.0.0.1:$port/healthz"
 Write-Host "Drishti console on port $port, given $($env:DRISHTI_BACKEND_URLS) (using $first first), data $data"
 if ($devSecrets.Count -gt 0) { Warn "DEVELOPMENT secrets in use (NOT FOR PRODUCTION): $($devSecrets -join ' '). Put your own in an --env-file for anything shared." }
 New-Item -ItemType Directory -Force -Path (Join-Path $data 'run'), (Join-Path $data 'logs') | Out-Null
-$fields = @{ port = $port; url = $url; health = $health; data = $data }
+$fields = @{ port = $port; url = $url; health = $health; data = $data; distribution = $(if ($env:DRISHTI_DISTRIBUTION) { $env:DRISHTI_DISTRIBUTION } else { 'from-server' }) }
 $runArgs = Join-ProcessArgs @((Join-Path $script:DrishtiRoot 'drishti-console\run_drishti_web.py'), "--server.port=$port")
 
 if ($o['background']) {

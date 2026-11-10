@@ -1,0 +1,50 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Drishti Genomics (docs/architecture/DISTRIBUTIONS.md section 4): the sample that proves the kernel carries no finance. The genomics
+# module (a VCF reader; kinds variant, gene, sample, cohort) is not installed yet: the distribution boots on the kernel alone, and Health
+# says which module it asked for and that it did not load.
+format: 1
+distribution: drishti.genomics
+version: 1.0.0
+kernel: ">=2.9.11 <2.10"
+
+brand:
+  product: Drishti Genomics
+  product_native: दृष्टि
+  tagline: What is in this cohort's data?
+  owner: Ashutosh Sinha
+  copyright: Copyright © 2026 Ashutosh Sinha. All rights reserved. Proprietary and confidential.
+  notice: Unauthorised copying, use or distribution is prohibited.
+  logo: ""
+  favicon: ""
+  about: ""
+  support: { email: "", url: "" }
+
+theme: { tokens: green, mode: light, density: comfortable }
+
+modules:
+  - { id: genomics, required: false }
+
+lenses:
+  offered: []
+  default: ""
+
+menus:
+  top: [views, bi, admin, help]
+  placeholder: "FUNC, PIVOT, BI …  then <GO>"
+
+docs: { title: Drishti Genomics Help }
+demo: { ships: false, enabled: false }
+locale: { language: en }

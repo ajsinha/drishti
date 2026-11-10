@@ -288,6 +288,11 @@ help:
   api_docs_dir: ${DRISHTI_API_DOCS_DIR:web/apidocs}
   # the address of the server's OpenAPI UI as a browser reaches it (blank: the page names /api/docs/ui on the server)
   openapi_url: ${DRISHTI_OPENAPI_URL:}
+# The distribution this console shows (docs/architecture/DISTRIBUTIONS.md): risk, finance, genomics, all, or a path to a site's own file.
+# Blank: the server's (learned from its about answer), else Drishti All, exactly as before distributions. bin/start-console.sh
+# --distribution <name> sets it; a stack file's consoles: list gives each console its own (Risk on 17480, Finance on 17481).
+distribution: ${DRISHTI_DISTRIBUTION:}
+distributions_dir: ${DRISHTI_DISTRIBUTIONS_DIR:../config/distributions}   # the distribution files, drishti.<name>.yaml, and modules.yaml
 packs:
   dir: ${DRISHTI_PACKS_DIR:../config/packs}   # the same packs directory the server uses (one variable sets both)
   installed_dir: ${DRISHTI_PACKS_INSTALLED:}   # packs installed from the registry or by Deploy archive (the server's drishti.packs.installed-dir); blank: <data dir>/packs/installed

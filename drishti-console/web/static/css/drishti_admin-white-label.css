@@ -1,0 +1,26 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* Admin -> White label (mock-up A, side by side): the distributions as cards. Colours are the console's tokens only. */
+.wl-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 12px; margin-top: 12px; }
+.wl-card { border: 1px solid var(--d-border); border-radius: var(--d-radius); background: var(--d-surface); padding: 12px; min-width: 0; }
+.wl-card.wl-on { border-color: var(--d-accent); box-shadow: inset 3px 0 0 var(--d-accent); }
+.wl-head { display: flex; gap: 10px; align-items: flex-start; }
+.wl-head > div { flex: 1; min-width: 0; }
+.wl-mark { color: var(--d-accent); font-size: var(--d-fs-20); line-height: 1; }
+.wl-facts { display: grid; grid-template-columns: max-content 1fr; gap: 2px 12px; margin: 10px 0; }
+.wl-facts dt { color: var(--d-muted); font-weight: 400; }
+.wl-facts dd { margin: 0; overflow-wrap: anywhere; }
+.wl-start { margin: 8px 0 0; overflow-wrap: anywhere; }

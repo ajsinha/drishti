@@ -17,12 +17,13 @@
 . (Join-Path $PSScriptRoot 'lib\common.ps1')
 
 $usage = @'
-usage: bin\start-all.ps1 [--demo] [--env-file FILE] [--data-dir DIR] [--server-port N] [--console-port N] [--heap SIZE]
+usage: bin\start-all.ps1 [--demo] [--distribution NAME] [--env-file FILE] [--data-dir DIR] [--server-port N] [--console-port N] [--heap SIZE]
 
 Starts one server and one console on this machine in the background (the simplest case), the console pointed at the server's LAN
 address. The options go to bin\start-server.ps1 and bin\start-console.ps1 (see their --help).
 
   --demo              the demo with DEVELOPMENT secrets: NOT FOR PRODUCTION
+  --distribution NAME risk, finance, genomics or all (the default), or a file path: the product both show (DISTRIBUTIONS.md)
   --env-file FILE     the secrets and settings of both (KEY=VALUE lines)
   --data-dir DIR      the data folder of both
   --server-port N     the server's port (default 18480)
@@ -33,12 +34,13 @@ address. The options go to bin\start-server.ps1 and bin\start-console.ps1 (see t
 Exit codes: 0 both up; otherwise the failing script's code. bin\stop-all.ps1 stops both.
 '@
 
-$o = Read-Options $args @{ demo = 'switch'; envfile = 'value'; datadir = 'value'; serverport = 'value'; consoleport = 'value'; heap = 'value' }
+$o = Read-Options $args @{ demo = 'switch'; envfile = 'value'; datadir = 'value'; serverport = 'value'; consoleport = 'value'; heap = 'value'; distribution = 'value' }
 if ($o['help']) { Write-Host $usage; exit 0 }
 $common = @()
 if ($o['demo']) { $common += '--demo' }
 if ($o['envfile']) { $common += @('--env-file', $o['envfile']) }
 if ($o['datadir']) { $common += @('--data-dir', $o['datadir']) }
+if ($o['distribution']) { $common += @('--distribution', $o['distribution']) }
 $serverPort = Opt $o 'serverport' $script:DefaultServerPort
 $serverArgs = $common + @('--port', $serverPort, '--background')
 if ($o['heap']) { $serverArgs += @('--heap', $o['heap']) }

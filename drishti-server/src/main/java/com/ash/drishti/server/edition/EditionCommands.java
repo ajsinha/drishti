@@ -74,6 +74,10 @@ public final class EditionCommands {
     }
 
     private DrishtiException hidden(String code, String kind) {
+        if (edition().distribution()) {                                  // a distribution: the command does not exist there
+            return new DrishtiException(ErrorCode.EDITION_COMMAND_HIDDEN, code + (kind.isEmpty() ? "" : " (" + kind + ")") + " is not in "
+                    + edition().title() + " (FUNC lists the commands you can use)");
+        }
         return new DrishtiException(ErrorCode.EDITION_COMMAND_HIDDEN, "the command " + code + (kind.isEmpty() ? "" : " (" + kind + ")")
                 + " is not part of the edition '" + edition().name() + "' (FUNC lists the commands you can use)");
     }

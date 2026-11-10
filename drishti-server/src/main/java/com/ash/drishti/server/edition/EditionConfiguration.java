@@ -49,6 +49,50 @@ public class EditionConfiguration {
         return new EditionCommands(context, mnemonics);
     }
 
+    /**
+     * Health's distribution card (docs/architecture/DISTRIBUTIONS.md): the running distribution, the modules it asked for and which of them
+     * loaded (each module's domain module, today), and the old product keys the site still sets (read for one release).
+     */
+    @Bean
+    public com.ash.drishti.kernel.api.health.HealthFigures distributionHealth(Environment env,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.modules.ModuleConfiguration.Started> started) {
+        String info = com.ash.drishti.packs.edition.EditionEnvironmentPostProcessor.INFO;
+        return new com.ash.drishti.kernel.api.health.HealthFigures() {
+            @Override
+            public String key() {
+                return "distribution";
+            }
+
+            @Override
+            public Object value() {
+                java.util.Map<String, Object> m = new java.util.LinkedHashMap<>();
+                m.put("id", env.getProperty(info + ".id", "drishti.all"));
+                m.put("title", env.getProperty(info + ".title", env.getProperty("drishti.branding.product", "")));
+                m.put("file", env.getProperty(info + ".file", ""));
+                boolean all = Boolean.parseBoolean(env.getProperty(info + ".all", "true"));
+                com.ash.drishti.server.modules.ModuleConfiguration.Started s = started.getIfAvailable();
+                java.util.Map<String, Boolean> loaded = s == null ? java.util.Map.of() : s.loaded();
+                java.util.List<String> asked = java.util.Arrays.stream(env.getProperty(info + ".modules", "").split(",")).filter(x -> !x.isBlank()).toList();
+                java.util.List<String> domains = java.util.Arrays.stream(env.getProperty(info + ".domains", "").split(",")).filter(x -> !x.isBlank()).toList();
+                java.util.Map<String, Object> modules = new java.util.LinkedHashMap<>();
+                if (all) {
+                    loaded.forEach((k, v) -> modules.put(k, Boolean.TRUE.equals(v) ? "loaded" : "off"));
+                } else {
+                    for (String pair : domains) {                       // market-data=banking: the module and the domain module carrying it
+                        String d = pair.substring(pair.indexOf('=') + 1);
+                        modules.put(pair.substring(0, pair.indexOf('=') < 0 ? pair.length() : pair.indexOf('=')),
+                                Boolean.TRUE.equals(loaded.get(d)) ? "loaded" : loaded.containsKey(d) ? "off" : "not installed");
+                    }
+                }
+                m.put("all", all);
+                m.put("asked", all ? java.util.List.of("all") : asked);
+                m.put("modules", modules);
+                m.put("deprecated", java.util.Arrays.stream(env.getProperty(info + ".deprecated", "").split("\n")).filter(x -> !x.isBlank()).toList());
+                return m;
+            }
+        };
+    }
+
     @Bean
     public EditionBi editionBi(EditionContext context) {
         return new EditionBi(context);

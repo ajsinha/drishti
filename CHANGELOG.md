@@ -17,6 +17,22 @@
 
 ## Unreleased
 
+- **Distributions: Drishti Risk, Drishti Finance, Drishti Genomics and Drishti All** (2.9.11.i2 + i3, wave 3, white label;
+  [DISTRIBUTIONS.md](docs/architecture/DISTRIBUTIONS.md)). One build, one file per product: `config/distributions/drishti.<name>.yaml`
+  (brand, theme, modules, lenses, menus, Home, Help), chosen by `--distribution <name|path>`, `DRISHTI_DISTRIBUTION` or
+  `drishti.distribution`; none named is Drishti All, exactly as before. The kernel and the console read the same file
+  (`config/distributions/modules.yaml` maps each module id to today's packs, words and engines until modules ship as `.dmod`s). What a
+  distribution leaves out does not exist in it: commands, words, menus, Home cards, Help and the catalogue the AI reads; Drishti Finance
+  has no VaR or any risk number, Drishti Risk no economy command, market data is in both; a command typed anyway answers
+  `DRS-4023 VRES is not in Drishti Finance`. Help is titled per distribution ("Drishti Risk Help") with its modules' guides and the
+  kernel's. A console with its own `--distribution` keeps it over any cluster, so one cluster serves Drishti Risk on 17480 and Drishti
+  Finance on 17481. **Admin → White label** (mock-up A) shows every distribution side by side; Health shows the running one and which
+  of its modules loaded. The old keys (`drishti.edition`, `drishti.branding.*`, `DRISHTI_PRODUCT`, `ui.product`, `ui.tagline`,
+  `ui.copyright`, `ui.owner`, `ui.notice`) are read for one release with a Health deprecation note. Start scripts: `--distribution` on
+  `bin/start-all`, `start-server` and `start-console` (`.sh`, `.ps1`, `.cmd`), `--name` for a second console in one data folder, a stack
+  file's `consoles:` list with a `distribution:` each, `bin/status` shows each process's distribution; IntelliJ run configurations for
+  Risk, Finance and All. A person's density follows the distribution's until they choose one.
+
 - VaR explorer: turning on **Include matured positions** no longer makes the scope tree disappear (the tree library refused the switch's own "of which matured" column); a screen's own tree measure with a label is accepted.
 
 - **The Module SDK** (2.9.11.i2 + i3, wave 1; [DEVELOPER_GUIDE.md section 1.6](docs/guides/DEVELOPER_GUIDE.md#16-the-module-sdk),
