@@ -276,7 +276,7 @@ the module *development (unverified)*. `drishti.modules.dev` is refused in a clu
 server logs the refusal and loads only verified packages. Run `mvn verify` (the fifteen checks) before you ship.
 
 **Several jars.** `java.jars` names the module's own jars (the project's first: a service jar, a compute jar ...); `java.lib` names
-third-party jars, packed under `java/lib/`. Every jar of the package is named in one of the two (V1 refuses one that is not); all of them are
+third-party jars, packed under the package's `lib/`. Every jar of the package is named in one of the two (V1 refuses one that is not); all of them are
 the module's class path, its own first. `drishti:assemble` takes the others from the project's compile and runtime dependencies by file
 name (`commons-math3-3.6.1.jar`); the tool takes them with `pack <folder> --jar <own jar> --more <jar>,<jar>`.
 

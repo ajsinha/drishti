@@ -140,7 +140,8 @@ drishti:
   # config/distributions/drishti.<name>.yaml (brand, theme, modules, lenses, Home, Help) and is the one way to make the product. Blank:
   # Drishti All, exactly as before. Also --distribution=<name> on the command line (bin/start-server.sh --distribution <name>).
   distribution: ${DRISHTI_DISTRIBUTION:}
-  distributions-dir: ${DRISHTI_DISTRIBUTIONS_DIR:./config/distributions}   # the distribution files and modules.yaml (each module's packs today)
+  distributions-dir: ${DRISHTI_DISTRIBUTIONS_DIR:./config/distributions}   # the distribution files and kernel.yaml (the kernel's packs and words)
+  module-manifests-dir: ${DRISHTI_MODULE_MANIFESTS_DIR:./modules}   # the modules' own manifests (modules/<id>/module.yaml): what a distribution's modules hold
   # DEPRECATED (read for one release; Health names it): the edition, config/lenses/<module>/<lens>.yaml as the instance's filter. Name a
   # distribution instead; with one named, this is ignored. A change needs a restart.
   edition: ${DRISHTI_EDITION:}
@@ -382,6 +383,7 @@ drishti:
     # A personal API token reads by default: GET and HEAD, plus these POSTs, which carry a query in the body and change nothing
     # (a pivot of a search, a command line). Add a path only if it writes nothing.
     token-read-posts:
+      - /api/v1/modules/needs            # which saved items need a switched-off or removed module ("needs module X"): reads, writes nothing
       - /api/v1/pivot/query              # the pivot engine (PIVOT_GUIDE.md): a view's answer, its estimate, a node opened, two dates compared,
       - /api/v1/pivot/estimate           # a cell's rows and an export: each reads as the caller and writes nothing
       - /api/v1/pivot/decompose          # one split of a decomposition tree: reads as the caller, writes nothing

@@ -47,7 +47,8 @@ almost everything here; it is all under **Admin** in the top bar. Every setting 
 22. [Modules on or off](#22-modules-on-or-off)
 23. [Data bindings](#23-data-bindings)
 24. [White label: distributions](#24-white-label-distributions)
-25. [Troubleshooting](#25-troubleshooting)
+25. [Modules and Deploy](#25-modules-and-deploy)
+26. [Troubleshooting](#26-troubleshooting)
 
 ## 1. Signing in and out
 
@@ -1676,7 +1677,7 @@ a Drishti Risk console and a Drishti Finance console ([DEPLOYMENT_AND_QA_GUIDE.m
 
 **Your own brand.** Copy a shipped file to a new `drishti.acme.yaml` beside it in config/distributions, change `distribution: drishti.acme` and its
 `brand:` (`product`, `tagline`, `owner`, `copyright`, `notice`, `logo`, `favicon`, `about`, `support`), `theme:` (`tokens`: one of the
-console's themes, `mode`, `density`), `modules:` (ids from `config/distributions/modules.yaml`), `lenses:`, `menus:`, `home:` and
+console's themes, `mode`, `density`), `modules:` (module ids: each module's own manifest under `modules/<id>/`), `lenses:`, `menus:`, `home:` and
 `docs: { title }`; start with `--distribution acme`. A distribution names modules; it never contains code, connectors or credentials,
 and it cannot widen the licence.
 
@@ -1688,7 +1689,27 @@ change the file and restart. **Admin → Health** shows the console's and the se
 `ui.notice`) are read for one release and named on Health as deprecated; sections 13 and 17 describe them. With a distribution named,
 `drishti.edition` is ignored.
 
-## 25. Troubleshooting
+## 25. Modules and Deploy
+
+**Admin → Modules** (mock-up A, table and detail) lists every module of the cluster: its version, state (*LOADED*, *OFF*, *REMOVED*, *IN
+THE STORE*), the nodes it is placed on and the versions in the module store; the plans waiting for a second administrator are pinned on top
+with *Review*; the chosen module's detail shows its API prefix, the names it owns, the store's verify report and the actions (*Upgrade*,
+*Switch off*, *Remove*, *Switch on*, *Reinstall*), each a plan; every deployment is listed below with who proposed and applied it and the
+outcome.
+
+**Admin → Modules → Deploy** (mock-up C, placement | plan): upload the `.dmod` (checked once with the fifteen conformance checks and kept
+in the store; a version is never rebuilt), see where it is placed (change that in Admin → Cluster → Modules, section 23.1), choose the
+action and say why, and *Plan*: the plan lists every node, what it does now and after, and that unplaced nodes receive nothing. A second
+administrator opens it (from *Review*) and *Applies*: staged on every placed node, then activated together (an upgrade: node by node, the
+others serving the old version meanwhile); a failure on any node rolls every node back and the page says which node and why. The same
+steps from a terminal: `drishti.py module deploy | apply | list` ([CLI_REFERENCE.md](CLI_REFERENCE.md)); the rules:
+[CLUSTER_GUIDE.md section 1.10](CLUSTER_GUIDE.md#110-deploying-a-module).
+
+A removed module's pages show *… is no longer installed on this system* (410; administrators also see who removed it, when and the
+deployment), a switched-off one's *Not available* (404). Alert rules that use it show *paused · needs module X*; nothing saved is deleted,
+and a reinstall restores it.
+
+## 26. Troubleshooting
 
 **Users, roles and sign-in**
 

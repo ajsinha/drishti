@@ -378,6 +378,8 @@ class Editions:
         self.dir = d if d.is_absolute() else (console_dir / d).resolve()
         p = Path(str(settings.get("packs.dir", "../config/packs") or "../config/packs"))
         self.packs_dir = p if p.is_absolute() else (console_dir / p).resolve()
+        md = Path(str(settings.get("module_manifests_dir", "../modules") or "../modules"))   # the modules' own manifests (DISTRIBUTIONS.md)
+        self.modules_dir = md if md.is_absolute() else (console_dir / md).resolve()
         self.settings = settings
         self.instance: Edition = Edition.NONE
         self.lenses: dict[str, Edition] = {}

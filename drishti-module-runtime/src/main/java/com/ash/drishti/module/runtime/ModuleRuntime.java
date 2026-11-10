@@ -167,7 +167,7 @@ public final class ModuleRuntime implements AutoCloseable {
             if (java != null) {
                 List<URL> urls = new ArrayList<>();
                 for (String j : java.classPath()) {
-                    urls.add(c.dir().resolve("java").resolve(j).toUri().toURL());
+                    urls.add(c.dir().resolve(j).toUri().toURL());
                 }
                 loader = new ModuleClassLoader(c.id(), urls.toArray(URL[]::new), kernelLoader, facts.shared(), libraries);
                 ctx = new AnnotationConfigApplicationContext();

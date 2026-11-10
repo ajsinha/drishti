@@ -16,7 +16,7 @@
 
 # The kernel and its modules
 
-**Status: design, not built** (except P1's kernel API, section 2.3, the module runtime, section 10.4, placement, section 4.11 (`config/placement.yaml` per part by node or role, the singleton election behind one interface, the heavy-work guard and the node × part matrix in Admin → Cluster → Modules), and from wave 1 of 2.9.11.i2 + i3 the Module SDK of section 8 (the archetype, the parent pom and the Maven plugin with the conformance checks C1-C15), banking's sources under `modules/banking/` building on their own with the kernel internals they still reach listed in `modules/banking/kernel-internals.txt`, and the thin jar `drishti-kernel-app`, which boots with no modules; from wave 2 the kernel loading `.dmod` modules (the registration bridge of section 12.3 for the kernel API's provider types, multi-jar packages with `java.lib`, auto-deploy from `drishti.modules.path`, development mode for exploded folders, and the shared lib folder `drishti.lib.path`); the rest of P2 and P3 is being built in 2.9.11.i2 + i3). Written for 2.9.11.i, now split into **i1, i2, i3 and i4** (section 14.2), on the product owner's request of 2026-11-08: Drishti
+**Status: design, not built** (except P1's kernel API, section 2.3, the module runtime, section 10.4, deployment, sections 4.11.4, 4.11.8, 7.6 and 12 (the module store, plans per node following the placement, four-eyes apply, two-phase activation with rollback, rolling upgrade, remove with 410 and saved work marked *needs module X*, `drishti.py module deploy|plan|apply|list|…|run`, Admin → Modules and Deploy), placement, section 4.11 (`config/placement.yaml` per part by node or role, the singleton election behind one interface, the heavy-work guard and the node × part matrix in Admin → Cluster → Modules), and from wave 1 of 2.9.11.i2 + i3 the Module SDK of section 8 (the archetype, the parent pom and the Maven plugin with the conformance checks C1-C15), banking's sources under `modules/banking/` building on their own with the kernel internals they still reach listed in `modules/banking/kernel-internals.txt`, and the thin jar `drishti-kernel-app`, which boots with no modules; the kernel loading `.dmod` modules (the registration bridge of section 12.3 for the kernel API's provider types, multi-jar packages with `java.lib`, auto-deploy from `drishti.modules.path`, development mode for exploded folders, and the shared lib folder `drishti.lib.path`); the rest of P2 and P3 is being built in 2.9.11.i2 + i3). Written for 2.9.11.i, now split into **i1, i2, i3 and i4** (section 14.2), on the product owner's request of 2026-11-08: Drishti
 becomes a domain-free **kernel** for BI and aggregation; capabilities arrive as separately built, signed **modules** loaded from
 folders; connectors stay the kernel's; a **distribution file** white-labels the product. Banking is the first module and the worked example
 throughout. The same day the owner decided the three building blocks (section 1.1): the **Drishti Kernel**, the **Drishti Console**, now a
@@ -391,6 +391,21 @@ the registry (other kernel parts ask the registry). Every field:
 | `health` | no | its health checks' ids |
 | `taint` | no | set by the kernel, never by the publisher |
 
+**First-party modules, like in-tree Linux drivers** (product owner, 2026-11-10). The manifest's `origin:` says `first-party` (built and
+shipped by the Drishti product, like a driver built in the kernel tree) or `third-party` (the default, like an out-of-tree driver). The
+claim is **verified, never trusted**: until signing (2.9.11.j) the kernel ships `first-party.yaml`, the ids and content hashes of its own
+modules, and a `.dmod` is first-party only when its id and its `DMOD.MF` hash match; from j, when it carries the product's signature. Only
+a verified first-party module may use a **declared allowance** of kernel internals (`kernel-internals:` in its manifest, the list that may
+only shrink; banking's 44 packages in i2 + i3); conformance check C1 honours the allowance for it and refuses internals for every other
+module. Health and `drishti.py module list` show the origin; a third-party module, or a first-party claim that does not verify, loads as
+third-party and, where it needs more than the public API, is refused with the reason. `drishti.py module inspect` prints the origin and why.
+
+**Exact kernel version for an allowance** (product owner, 2026-11-10). A first-party module that uses a `kernel-internals:` allowance is
+built for **one exact kernel build** (its manifest's `kernel-build:`, the kernel's version and build id, like a Linux in-tree driver's
+vermagic) and loads only on that build; on any other the kernel refuses it with "built for kernel X, this is Y: install the matching
+module". First-party modules without an allowance, and every third-party module, keep the ordinary `kernel-api` version range. The product's
+one build and release train builds banking with each kernel, so the two always ship together.
+
 **The full banking example:** [examples/banking/module.yaml](kernel-and-modules/examples/banking/module.yaml). It lists the two jars
 (`drishti-banking`, `drishti-compute-banking`), the six engines, the Python package `drishti_banking` with its items, the five packs (with
 `banking-reference`, decision Q1), the 30-odd data needs, the console plugin and `drishti-risk`, the six lenses, 60 functions, the
@@ -420,8 +435,18 @@ Representative stub files with real-looking content:
 | `drishti.modules.active` | `config/modules/active.yaml` | which version of each installed module is active (written by install, upgrade, rollback; four eyes) |
 | `drishti.modules.trust` | `config/trust/publishers/` | publisher certificates the site trusts |
 | `drishti.modules.<id>.enabled` | `true` | the existing switch ([ACCESS_MODEL.md section 8](ACCESS_MODEL.md#8-as-built-the-backend-phase-1-of-the-split)) |
+| `drishti.lib.path` | `${drishti.data.dir}/lib` | **the site's shared jars, Tomcat `lib/` style**: every jar there is loaded at start into one shared *lib* class loader (section 4.4); restart to pick up changes |
+| `drishti.modules.autodeploy` | `true` on a single node, `false` in a cluster | **Tomcat `webapps/` style**: a `.dmod` dropped into the modules folder is verified, exploded and loaded; deleting it unloads the module. In a cluster, deploy is plan → four-eyes apply (section 10), so one node never changes behind the others |
+| `drishti.modules.dev` | `false` | **development only**: a module's unpacked build folder loads without packing and reloads on change; Health marks it *development (unverified)*; refused in a cluster and in a production distribution |
 
 All folders live under the configurable data folder (no root litter, visible names); the server never writes to a module's folder.
+
+**Dropping a `.dmod` in, like a `.war` in Tomcat** (product owner, 2026-11-10). The kernel **verifies before it unpacks** (section 4.3:
+hashes, the 15 checks, origin and exact kernel build), then **explodes** it into `modules/<id>/<version>/` (an unpack that would leave the
+folder is refused), then loads it. A new version is exploded **beside** the running one and `active.yaml` switches when it is ready, so
+the old version serves until then (the rolling upgrade of section 10 uses the same step). Deleting the file unloads the module (section 10:
+every surface goes; saved work shows *needs module X*). Unlike Tomcat, nothing unverified ever runs, except a development folder under
+`drishti.modules.dev`.
 
 ### 4.2 Discovery
 
@@ -470,6 +495,18 @@ every module that requires it (*refused: requires banking, which is refused*).
   entries in that context; the kernel collects them through the registry of contributions (`ModuleContributions`), never by scanning a
   module's packages.
 - **No module sees another module's classes**; modules talk through kinds, functions and events.
+
+**Where every library comes from** (product owner, 2026-11-10):
+
+| Library | Lives in | Loaded by | Seen by |
+|---|---|---|---|
+| The JDK, the kernel API and the shared libraries above (Spring, Jackson, SLF4J, Arrow, Micrometer, Jakarta) | the kernel jar | the kernel | everyone, **parent-first: never replaced**; a module that bundles them fails a conformance check |
+| The kernel's own dependencies | **built into the kernel jar** by Maven, versioned and tested with it | the kernel application loader | the kernel only (hidden from modules) |
+| A module's own jars and third-party libraries | the `.dmod`'s **`lib/`** (and `java/`) | that module's loader, **child-first** | that module only; two modules may carry different versions of one library |
+| Site additions: JDBC drivers, connector plugins, a company's shared library | the server's **`lib/` folder** (`drishti.lib.path`) | one shared *lib* loader under the kernel | the kernel's connectors and every module; listed in Health and Admin → Modules with SHA-256 and marked *lib* |
+
+**A module's lookup order:** (1) the JDK and the kernel's shared libraries, always first; (2) the module's own `lib/`; (3) the server's
+`lib/`; every other kernel class is hidden, except a verified first-party module's declared `kernel-internals:` allowance (section 3.3).
 - **Stop**: `DrishtiModule.stop()`, then the child context closes, the contributions are withdrawn, the class loader is dropped (P5 hot
   unload depends on this being leak-free; a leak test loads and unloads 50 times in the SDK harness).
 

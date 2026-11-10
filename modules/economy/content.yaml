@@ -1,0 +1,78 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# What the packer brings in from the repository (paths from this folder), so each file keeps one home: the packs without
+# their connector templates (a module carries no connector), the lens and the tutorial. This list itself is not packed.
+copy:
+- from: ../../config/packs/economy/world-economy
+  to: packs/world-economy
+  leave-out:
+  - tests
+  - tools
+  - samples
+  sections-out:
+  - connectors
+- from: ../../config/packs/economy/news-and-markets
+  to: packs/news-and-markets
+  leave-out:
+  - tests
+  - tools
+  sections-out:
+  - connectors
+- from: ../../config/packs/economy/world-development
+  to: packs/world-development
+  leave-out:
+  - tests
+  - tools
+  sections-out:
+  - connectors
+- from: ../../config/packs/economy/central-banks
+  to: packs/central-banks
+  leave-out:
+  - tests
+  - tools
+  sections-out:
+  - connectors
+- from: ../../config/packs/economy/national-statistics
+  to: packs/national-statistics
+  leave-out:
+  - tests
+  - tools
+  sections-out:
+  - connectors
+- from: ../../config/packs/economy/oecd
+  to: packs/oecd
+  leave-out:
+  - tests
+  - tools
+  sections-out:
+  - connectors
+- from: ../../config/packs/economy/official-news
+  to: packs/official-news
+  leave-out:
+  - tests
+  - tools
+  sections-out:
+  - connectors
+- from: ../../config/packs/economy/gdelt-events
+  to: packs/gdelt-events
+  leave-out:
+  - tests
+  - tools
+  sections-out:
+  - connectors
+- from: ../../config/lenses/economy/world.yaml
+  to: lenses/world.yaml
+- from: ../../docs/tutorials/14-public-sector-data.md
+  to: tutorials/14-public-sector-data.md

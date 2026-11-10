@@ -24,7 +24,7 @@
   `ComputeEngine` joins the engine registry, and approval sources, explainers, view augmenters, pivot sources, Health and capacity figures,
   vocabularies, official results, API aliases and AI tools reach their collection points; its `DrishtiModule` entry is started with the
   kernel's `ModuleContext`. Its `@ModuleApi` controllers are mounted by the module deployment's mounting (off: 404, removed: 410
-  `DRS-1028`). **Several jars:** `java.jars` (the module's own, one or more) and `java.lib` (third-party, under `java/lib/`); an undeclared jar
+  `DRS-1028`). **Several jars:** `java.jars` (the module's own, one or more) and `java.lib` (third-party, under the package's `lib/`); an undeclared jar
   is refused (V1); `drishti:assemble` and `pack --more` put them in. **Auto-deploy:** a `.dmod` dropped into `drishti.modules.path` (default
   `<data folder>/modules`) is stored, checked, installed and loaded through the module deployment, and removed when its file goes;
   `drishti.modules.autodeploy` is on for a single node and off in a cluster. **Development mode** (`drishti.modules.dev`, off by default,
@@ -35,12 +35,34 @@
   a Rachana function and a REST API; the kernel API is 0.3 (`function.FunctionProvider`; the entity types of `com.ash.drishti.api` are
   shared with modules). `ModuleHostServerTest` loads the archetype module and a three-jar module, uses their kind, function and route from
   the kernel, reloads on an edit, unloads (410), reinstalls and unloads again, leak-free each time; and deploys and removes a dropped package.
+- **Module deployment, cluster-first** (2.9.11.i2 + i3, wave 3; [CLUSTER_GUIDE.md section 1.10](docs/guides/CLUSTER_GUIDE.md#110-deploying-a-module),
+  [ADMIN_GUIDE.md section 25](docs/guides/ADMIN_GUIDE.md#25-modules-and-deploy)): a `.dmod` is uploaded once to the module store
+  (`POST /api/v1/admin/modules/store`, the fifteen conformance checks, kept by id and version, never rebuilt); a plan says per node what
+  happens, following the placement (unplaced nodes receive nothing); a second administrator applies it: phase 1 stages on every placed node
+  (each checks the SHA-256 and V1–V9 itself, the package sent in chunks over Drishti\*net), phase 2 activates; any failure rolls every
+  node back (`DRS-1034`). An upgrade rolls node by node, the others serving the old version, requests to a switching node waiting for it.
+  Switch-off answers 404 `DRS-1025`; removal unloads hot (leak-checked), answers 410 `DRS-1028` on every node, shows the *no longer
+  installed* page for its console paths and marks saved work *needs module X* (`POST /api/v1/modules/needs`; alert rules show *paused ·
+  needs module X*); a reinstall restores it. `@ModuleApi` controllers (with `@RestController`) are mounted under `/api/v1/<prefix>/` and
+  unmounted leak-free. `drishti.py module deploy|upgrade|plan|remove|disable|enable|apply|reject|withdraw|status|list|run`, **Admin →
+  Modules** (mock-up A) and **Deploy** (mock-up C); the token scope `modules:deploy`; settings `drishti.module-deploy.*`. Tested on three
+  nodes (`ModuleDeployClusterTest`: placed on two, nothing on the third; a phase-2 failure rolled back; a rolling upgrade under load with no
+  failed request; remove, saved work marked, reinstall; leak-free).
+- **Content modules for the distributions** (2.9.11.i2 + i3, wave 2; [DISTRIBUTIONS.md section 10](docs/architecture/DISTRIBUTIONS.md)):
+  `market-data` (split out of banking; banking now requires it), `capital-markets` (us-equities and funds, and Drishti Finance's new
+  **Markets lens** with Home's Markets cards) and `economy` (the eight public-data packs and the World lens), each a folder under
+  `modules/` that the module tool packs into a `.dmod` passing the fifteen conformance checks. The module tool brings repository content in
+  through a module's `content.yaml` (a pack without its connector templates, a lens, a tutorial), reads a pack's own contracts
+  (`<kind>.contract.yaml`) in C8 and the keys of YAML files, not their sentences, in C9. The distributions' visibility filter reads the
+  modules' manifests: `config/distributions/modules.yaml` is gone (`kernel.yaml` holds the kernel's part; `DRISHTI_MODULE_MANIFESTS_DIR`).
+  Drishti Finance offers Markets and World (Markets first); the registry knows `market-data` as a module of its own, so the market data
+  stays on when banking or capital markets is switched off.
 
 - **Distributions: Drishti Risk, Drishti Finance, Drishti Genomics and Drishti All** (2.9.11.i2 + i3, wave 3, white label;
   [DISTRIBUTIONS.md](docs/architecture/DISTRIBUTIONS.md)). One build, one file per product: `config/distributions/drishti.<name>.yaml`
   (brand, theme, modules, lenses, menus, Home, Help), chosen by `--distribution <name|path>`, `DRISHTI_DISTRIBUTION` or
-  `drishti.distribution`; none named is Drishti All, exactly as before. The kernel and the console read the same file
-  (`config/distributions/modules.yaml` maps each module id to today's packs, words and engines until modules ship as `.dmod`s). What a
+  `drishti.distribution`; none named is Drishti All, exactly as before. The kernel and the console read the same file, and each module's
+  own manifest for what it holds (`modules/<id>/module.yaml`; `config/distributions/kernel.yaml` for the kernel's part). What a
   distribution leaves out does not exist in it: commands, words, menus, Home cards, Help and the catalogue the AI reads; Drishti Finance
   has no VaR or any risk number, Drishti Risk no economy command, market data is in both; a command typed anyway answers
   `DRS-4023 VRES is not in Drishti Finance`. Help is titled per distribution ("Drishti Risk Help") with its modules' guides and the
@@ -93,6 +115,17 @@
   banking, beside the full jar (`drishti-server/target/drishti-server-<version>-exec.jar`, still the default). It boots with no modules;
   Health (`GET /api/v1/admin/health`) has a `modules` row: the code modules and content modules with whether each is on, and *no modules:
   the kernel runs alone* when there is no code module.
+- **Module placement** (2.9.11.i2 + i3, wave 2; [CLUSTER_GUIDE.md section 1.9](docs/guides/CLUSTER_GUIDE.md#19-module-placement),
+  [KERNEL_AND_MODULES.md section 4.11](docs/architecture/KERNEL_AND_MODULES.md#411-modules-in-a-cluster)): `config/placement.yaml` says which
+  module parts (API, compute, pages, feeds) run on which nodes, by node name or role (a node label such as `heavy` or `web`), with no
+  all-nodes default: a part not placed runs nowhere and Health says so. Feed and singleton parts have one owner, the first live placed node
+  by name (one `SingletonElection` interface, `FirstLiveElection` today), failing over only inside the placement. A node runs a part only
+  where it is placed: others forward the request to a placed node (`X-Drishti-Placement` names it) or refuse it with `503 DRS-1032` when
+  none is up. Changes are plans applied by a second administrator (`DRS-1030` heavy work everywhere or over max-nodes, `DRS-1031` the
+  cluster changed since the plan, `DRS-2007` four eyes), without a restart, adopted by every member by version. The node × part matrix:
+  `GET /api/v1/admin/cluster/modules` and **Admin → Cluster → Modules**. The module runtime's host asks `placedHere` before loading
+  (`NOT_PLACED`). Banking and the other built-in modules count as placed on every node, so nothing changes for them.
+
 - **The module runtime** (2.9.11.i2 + i3, wave 1; new Maven module `drishti-module-runtime`,
   [KERNEL_AND_MODULES.md section 10.4](docs/architecture/KERNEL_AND_MODULES.md#104-one-module-runtime-library-two-hosts),
   [DEVELOPER_GUIDE.md section 1.5](docs/guides/DEVELOPER_GUIDE.md#15-the-module-runtime)): the `.dmod` package (pack, unpack, the

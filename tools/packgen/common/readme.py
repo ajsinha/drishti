@@ -385,6 +385,21 @@ def _ancestors(packs_dir: Path, manifest: dict, seen: set | None = None) -> list
     return out
 
 
+def module_of(pack: str) -> str | None:
+    """The module that ships a pack, from the modules' own manifests (DISTRIBUTIONS.md): a content module's modules/<id>/module.yaml
+    (packs.list), a module jar's META-INF/drishti/module.yaml (contributes.packs); None for the kernel's packs."""
+    for f in sorted((ROOT / "modules").glob("*/module.yaml")):
+        y = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
+        if pack in ((y.get("packs") or {}).get("list") or []):
+            return str(y.get("id"))
+    for f in sorted((ROOT / "modules").glob("*/*/src/main/resources/META-INF/drishti/module.yaml")):
+        y = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
+        for m in ([y["module"]] if isinstance(y.get("module"), dict) else []) + list(y.get("modules") or []):
+            if pack in ((m.get("contributes") or {}).get("packs") or []):
+                return str(m.get("id"))
+    return None
+
+
 def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None = None, intro: Path | None = None) -> str:
     """A pack's README.md. ``files``: {path: text} a generator is about to write (pack.yaml, samples), read before the disk."""
     pack_dir = Path(pack_dir)
@@ -427,8 +442,9 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
     sources = imeta.get("sources") or []
     summary = imeta.get("summary") or _first_sentence(m.get("description", ""))
 
+    module = module_of(name)
     front = dict([
-        ("pack", name), ("version", str(m.get("version", ""))), ("code", m.get("code")), ("title", m.get("title")),
+        ("pack", name)] + ([("module", module)] if module else []) + [("version", str(m.get("version", ""))), ("code", m.get("code")), ("title", m.get("title")),
         ("summary", summary), ("kinds", kinds),
         ("commands", dict([(c, v.get("kind")) for c, v in mnemonics.items()] + ([(m["code"], "pack overview")] if m.get("code") else []))),
         ("depends-on", dict([("packs", packs), ("connectors", sorted(own | set(routes.values()))),

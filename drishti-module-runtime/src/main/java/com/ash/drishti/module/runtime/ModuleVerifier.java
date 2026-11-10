@@ -130,36 +130,36 @@ public final class ModuleVerifier {
         }
         List<String> jars = m.java() == null ? List.of() : m.java().classPath();
         for (String f : files) {
-            if (f.startsWith("java/") && f.toLowerCase(Locale.ROOT).endsWith(".jar") && !jars.contains(f.substring("java/".length()))) {
+            if ((f.startsWith("java/") || f.startsWith("lib/")) && f.toLowerCase(Locale.ROOT).endsWith(".jar") && !jars.contains(f)) {
                 throw new ModuleRefusedException("V1", label + ": " + f + " is in the package but module.yaml does not name it (java.jars for the "
-                        + "module's own jars, java.lib for third-party ones under java/lib/)");
+                        + "module's own jars under java/, java.lib for third-party ones under lib/)");
             }
         }
         for (String j : jars) {
-            Path p = c.dir().resolve("java").resolve(j).normalize();
-            if (!p.startsWith(c.dir().resolve("java")) || !Files.isRegularFile(p)) {
-                throw new ModuleRefusedException("V1", label + ": " + (j.startsWith("lib/") ? "java.lib names " + j.substring(4) + ", which is not in java/lib/"
-                        : "java.jars names " + j + ", which is not in java/"));
+            Path p = c.dir().resolve(j).normalize();
+            if (!p.startsWith(c.dir()) || !Files.isRegularFile(p)) {
+                throw new ModuleRefusedException("V1", label + ": " + (j.startsWith("lib/") ? "java.lib names " + j.substring(4) + ", which is not in lib/"
+                        : "java.jars names " + j.substring(5) + ", which is not in java/"));
             }
             boolean nativeCode = false;
             try (ZipFile z = new ZipFile(p.toFile())) {
                 for (Enumeration<? extends ZipEntry> en = z.entries(); en.hasMoreElements(); ) {
                     String n = en.nextElement().getName();
                     if (n.startsWith(KERNEL_API_PATH) || n.startsWith("com/ash/drishti/api/")) {
-                        throw new ModuleRefusedException("V2", label + ": java/" + j + " bundles kernel API classes (" + n
+                        throw new ModuleRefusedException("V2", label + ": " + j + " bundles kernel API classes (" + n
                                 + "); the kernel provides them");
                     }
                     String ln = n.toLowerCase(Locale.ROOT);
                     nativeCode |= ln.endsWith(".so") || ln.endsWith(".dll") || ln.endsWith(".dylib") || ln.endsWith(".jnilib");
                 }
             } catch (IOException e) {
-                throw new ModuleRefusedException("V2", label + ": java/" + j + " is not a jar", e);
+                throw new ModuleRefusedException("V2", label + ": " + j + " is not a jar", e);
             }
             if (nativeCode && !m.java().nativeCode()) {
-                throw new ModuleRefusedException("V2", label + ": java/" + j + " bundles native code but module.yaml does not declare java.native");
+                throw new ModuleRefusedException("V2", label + ": " + j + " bundles native code but module.yaml does not declare java.native");
             }
             if (nativeCode && !facts.allowNative()) {
-                throw new ModuleRefusedException("V2", label + ": java/" + j + " bundles native code, which this site forbids");
+                throw new ModuleRefusedException("V2", label + ": " + j + " bundles native code, which this site forbids");
             }
         }
     }

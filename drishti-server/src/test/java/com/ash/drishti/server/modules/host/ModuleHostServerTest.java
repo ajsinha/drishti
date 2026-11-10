@@ -59,7 +59,7 @@ import org.springframework.test.web.servlet.MockMvc;
 /**
  * The kernel loads modules (docs/architecture/KERNEL_AND_MODULES.md sections 4 and 12): two {@code .dmod} modules in the folder of
  * {@code drishti.modules.path} load at the server's start, the SDK's archetype module and a module of several jars (a service jar, a compute
- * jar and a third-party jar under {@code java/lib/}). Each contributes a kind, a Rachana function, a REST route and a page, used from the
+ * jar and a third-party jar under {@code lib/}). Each contributes a kind, a Rachana function, a REST route and a page, used from the
  * kernel as its own; unloaded, every one is gone (the route answers 410); put back, they return, and the class loader is collected each time.
  */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=trading", "drishti.modules.dev=true",
@@ -238,7 +238,7 @@ class ModuleHostServerTest {
         return out;
     }
 
-    /** A module of three jars: its service jar, its compute jar, and a third-party jar under java/lib/. */
+    /** A module of three jars: its service jar, its compute jar, and a third-party jar under lib/. */
     private static Path multiJarModule(Path work) throws IOException {
         Path lib = ModuleFixtures.jarOf(Map.of("thirdparty/shout/Shout.java", """
                 package thirdparty.shout;

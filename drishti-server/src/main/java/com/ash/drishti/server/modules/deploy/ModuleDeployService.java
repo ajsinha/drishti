@@ -18,10 +18,8 @@ package com.ash.drishti.server.modules.deploy;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.identity.AuditLog;
-import com.ash.drishti.module.runtime.Claims;
 import com.ash.drishti.module.runtime.Dmod;
 import com.ash.drishti.module.runtime.DmodManifest;
-import com.ash.drishti.module.runtime.ModuleCandidate;
 import com.ash.drishti.module.runtime.ModuleDiscovery;
 import com.ash.drishti.module.runtime.ModuleRuntime;
 import com.ash.drishti.module.runtime.RouteTable;
@@ -515,24 +513,7 @@ public final class ModuleDeployService {
 
     /** Every node records the cluster's word on the module (placed or not). */
     private void recordAll(Deployment d, ModuleNode.State state, String by, List<NodeStep> steps) {
-        DmodManifest m = manifestOf(d.module(), d.version());
-        ModuleCandidate c = new ModuleCandidate(m, store.resolve(d.module()).resolve(d.version()).resolve("pkg"), null);
-        List<String> routes = new ArrayList<>();
-        List<String> claims;
-        try {
-            routes.addAll(routesOf(c));
-            claims = Claims.of(c, List.of());
-        } catch (RuntimeException e) {
-            claims = List.of();
-        }
-        String manifest;
-        try {
-            manifest = Files.readString(c.dir().resolve(DmodManifest.FILE));
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-        ModuleNode.Entry e = new ModuleNode.Entry(m.id(), m.version(), state, m.title(), m.api() == null ? null : m.api().prefix(), claims, routes,
-                manifest, by, now(), d.id());
+        ModuleNode.Entry e = ModuleNode.entryOf(store.resolve(d.module()).resolve(d.version()).resolve("pkg"), state, by, d.id());
         for (int i = 0; i < steps.size(); i++) {
             NodeCalls.Answer a = calls.record(steps.get(i).node(), e);
             if (!a.ok()) {
@@ -541,24 +522,6 @@ public final class ModuleDeployService {
                         + " (it catches up at its next deployment)", now()));
             }
         }
-    }
-
-    /** The console route paths a module declares (format 2), for the tombstone the registry keeps. */
-    private static List<String> routesOf(ModuleCandidate c) {
-        Object plugin = c.manifest().console() == null ? null : c.manifest().console().get("plugin");
-        List<String> out = new ArrayList<>();
-        if (plugin == null) {
-            return out;
-        }
-        Map<String, Object> p = c.yaml(String.valueOf(plugin), "V1");
-        if (p.get("routes") instanceof List<?> list) {
-            for (Object o : list) {
-                if (o instanceof Map<?, ?> r && r.get("path") != null) {
-                    out.add("/m/" + c.id() + r.get("path"));
-                }
-            }
-        }
-        return out;
     }
 
     private static String placedList(List<NodeStep> steps) {

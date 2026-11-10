@@ -33,7 +33,7 @@ import java.util.Map;
  *
  * <pre>
  * pack    FOLDER [--jar JAR] [--more JAR,JAR] [--out DIR]   FOLDER is the module in the .dmod layout (module.yaml at its root); writes
- *         DIR/ID-VERSION.dmod; --more puts further jars where module.yaml names them (java.jars, or java.lib under java/lib/)
+ *         DIR/ID-VERSION.dmod; --more puts further jars where module.yaml names them (java.jars under java/, java.lib under lib/)
  * check   FOLDER|DMOD [--jar JAR] [--project DIR] [--cycles N]   the fifteen checks C1-C15 (a folder is packed first, into a temporary folder)
  * inspect FOLDER|DMOD                              the manifest, the parts, the routes, the files and the hash list's verdict
  * </pre>
@@ -190,7 +190,8 @@ public final class ModuleTool {
 
     private static Path temp() {
         try {
-            return Files.createTempDirectory("drishti-module-tool-");
+            // under java.io.tmpdir (the launcher's -Djava.io.tmpdir), a folder of its own, removed when the command ends
+            return Files.createDirectories(Path.of(System.getProperty("java.io.tmpdir"), "drishti-module-tool-" + java.util.UUID.randomUUID()));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

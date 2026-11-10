@@ -29,15 +29,14 @@ import org.slf4j.LoggerFactory;
 /**
  * Auto-deploy, as Tomcat's {@code webapps/} (docs/guides/ADMIN_GUIDE.md, Admin → Modules): a {@code .dmod} dropped into a module folder
  * ({@code drishti.modules.path}, default {@code <data folder>/modules}) is stored (its hash list, the fifteen conformance checks and the
- * origin rules), planned and applied through the module deployment, as an administrator would; when its file is removed, the module is
- * removed the same way (410, its tombstone kept). Every step is audited as {@code autodeploy}. On by default for a single node; off by
+ * origin rules) in the module store, then installed on this node by the deployment's single-node path ({@link ModuleNode#install});
+ * when its file is removed, the module is removed the same way ({@link ModuleNode#remove}: 410, its tombstone kept), as {@code autodeploy}. On by default for a single node; off by
  * default in a cluster, where plan → apply by two administrators is the way ({@code drishti.modules.autodeploy}).
  */
 public final class ModuleAutoDeploy {
 
     private static final Logger LOG = LoggerFactory.getLogger(ModuleAutoDeploy.class);
-    static final String PLANNER = "autodeploy";
-    static final String APPLIER = "autodeploy-apply";
+    static final String BY = "autodeploy";
 
     /** A package this watch deployed: its module, version and the bytes' hash. */
     record Deployed(String id, String version, String sha) {
@@ -45,10 +44,12 @@ public final class ModuleAutoDeploy {
 
     private final List<Path> folders;
     private final ModuleDeployService deploy;
+    private final ModuleNode node;
     private final Map<Path, Deployed> deployed = new LinkedHashMap<>();
     private final Map<Path, String> refused = new LinkedHashMap<>();
 
-    public ModuleAutoDeploy(List<Path> folders, ModuleDeployService deploy) {
+    public ModuleAutoDeploy(List<Path> folders, ModuleDeployService deploy, ModuleNode node) {
+        this.node = node;
         this.folders = List.copyOf(folders);
         this.deploy = deploy;
     }
@@ -64,10 +65,10 @@ public final class ModuleAutoDeploy {
                 if (d != null && d.sha().equals(sha) || sha.equals(refused.get(p))) {
                     continue;
                 }
-                ModuleDeployService.Stored s = deploy.upload(Files.readAllBytes(p), PLANNER);
+                ModuleDeployService.Stored s = deploy.upload(Files.readAllBytes(p), BY);   // the store: hash list, the fifteen checks
                 Map<String, String> active = deploy.activeHere();
                 if (!s.version().equals(active.get(s.id()))) {
-                    run("install", s.id(), s.version(), "auto-deploy: " + p.getFileName() + " was put in " + p.getParent());
+                    node.install(p, BY);                         // this node alone: stage, activate, record
                     did.add("deployed " + s.id() + " " + s.version());
                 }
                 deployed.put(p, new Deployed(s.id(), s.version(), sha));
@@ -91,7 +92,7 @@ public final class ModuleAutoDeploy {
             boolean stillDropped = deployed.values().stream().anyMatch(x -> x.id().equals(id));
             if (!stillDropped && deploy.activeHere().containsKey(id)) {
                 try {
-                    run("remove", id, null, "auto-deploy: " + e.getKey().getFileName() + " was taken out of " + e.getKey().getParent());
+                    node.remove(id, BY);
                     did.add("removed " + id);
                 } catch (RuntimeException ex) {
                     LOG.warn("auto-deploy: removing {} refused: {}", id, ex.getMessage());
@@ -113,11 +114,6 @@ public final class ModuleAutoDeploy {
         out.put("deployed", files);
         out.put("refused", refused.keySet().stream().map(p -> p.getFileName().toString()).toList());
         return out;
-    }
-
-    private void run(String action, String id, String version, String reason) {
-        ModuleDeployService.Deployment d = deploy.plan(action, id, version, reason, PLANNER);
-        deploy.apply(d.id(), "the auto-deploy watch (drishti.modules.autodeploy)", APPLIER);
     }
 
     private List<Path> packages() {

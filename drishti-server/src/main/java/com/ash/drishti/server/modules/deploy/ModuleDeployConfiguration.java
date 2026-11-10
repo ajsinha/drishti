@@ -70,8 +70,8 @@ public class ModuleDeployConfiguration {
     }
 
     @Bean
-    public ModuleAutoDeploy moduleAutoDeploy(ModuleDeployService deploy, Environment env) {
-        return new ModuleAutoDeploy(modulesPath(env), deploy);
+    public ModuleAutoDeploy moduleAutoDeploy(ModuleDeployService deploy, ModuleNode node, Environment env) {
+        return new ModuleAutoDeploy(modulesPath(env), deploy, node);
     }
 
     /** The auto-deploy watch: a look at the module folders every {@code drishti.modules.autodeploy-seconds}, after the modules started. */

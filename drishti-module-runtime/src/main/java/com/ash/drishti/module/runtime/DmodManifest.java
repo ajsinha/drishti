@@ -78,7 +78,7 @@ public record DmodManifest(int format, String id, String version, String title, 
      * The Java part.
      *
      * @param jars    the module's own jar files under {@code java/} (one or more: a service jar, a compute jar ...)
-     * @param lib     third-party jars under {@code java/lib/}, on the module's class path after its own
+     * @param lib     third-party jars under the package's {@code lib/}, on the module's class path after its own
      * @param entry   the module's entry class (made a bean of its context), or null
      * @param spring  its configuration classes, registered in its child context
      * @param exports packages other modules may see (none by default)
@@ -91,9 +91,10 @@ public record DmodManifest(int format, String id, String version, String title, 
             lib = lib == null ? List.of() : List.copyOf(lib);
         }
 
-        /** Every jar of the module's class path, relative to {@code java/}: its own, then {@code lib/<jar>} for each third-party one. */
+        /** Every jar of the module's class path, relative to the package: {@code java/<jar>} for its own, then {@code lib/<jar>}. */
         public List<String> classPath() {
-            List<String> out = new ArrayList<>(jars);
+            List<String> out = new ArrayList<>();
+            jars.forEach(j -> out.add("java/" + j));
             lib.forEach(l -> out.add("lib/" + l));
             return out;
         }

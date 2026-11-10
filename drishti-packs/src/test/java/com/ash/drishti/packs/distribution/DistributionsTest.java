@@ -35,11 +35,13 @@ import org.springframework.core.env.StandardEnvironment;
 class DistributionsTest {
 
     static final Path DIR = Path.of("../config/distributions");
+    static final Path MODULES = Path.of("../modules");
     static final String PRODUCT_DEFAULTS = "Config resource 'class path resource [application.yaml]' via location 'optional:classpath:/'";
 
     static StandardEnvironment boot(Object... site) {
         Map<String, Object> s = new LinkedHashMap<>();
         s.put(Distributions.DIR, DIR.toString());
+        s.put(Distributions.MODULES_DIR, MODULES.toString());
         s.put("drishti.packs.dir", "../config/packs");
         s.put("drishti.lens-dir", "../config/lenses");
         for (int i = 0; i < site.length; i += 2) {
@@ -56,7 +58,7 @@ class DistributionsTest {
     }
 
     static Distribution read(String name) {
-        return Distributions.read(Distributions.file(DIR, name), DIR.resolve(Distributions.MODULES), Path.of("../config/packs"));
+        return Distributions.read(Distributions.file(DIR, name), DIR.resolve(Distributions.KERNEL), MODULES, Path.of("../config/packs"));
     }
 
     @Test
@@ -89,7 +91,33 @@ class DistributionsTest {
         assertThat(e.wordOn("PIVOT")).isTrue();
         assertThat(env.getProperty("drishti.engines.var.enabled")).isEqualTo("false");   // the engines Finance leaves out are off on its kernel
         assertThat(PackPaths.enabled(env)).doesNotContain("market-risk").contains("market-data", "us-equities", "world-economy");
-        assertThat(read("finance").featuresOff()).contains("var", "exposure");
+        assertThat(read("finance").featuresOff()).contains("var", "exposure", "frtb-sa", "simm", "sensitivities", "mr-cube");
+        assertThat(env.getProperty("drishti.lenses")).isEqualTo("markets,world");          // the Markets lens: capital-markets' own
+        assertThat(Editions.lenses(env)).containsOnlyKeys("markets", "world");
+        Edition markets = Editions.lenses(env).get("markets");
+        for (String c : List.of("USEQ", "FUND", "CRV", "FXV")) {
+            assertThat(markets.commandShown(c)).as(c).isTrue();
+        }
+        for (String w : List.of("VAR", "EXP", "SMAT", "PLAY")) {
+            assertThat(markets.wordOn(w)).as(w).isFalse();
+        }
+    }
+
+    @Test
+    void theModulesManifestsDriveTheFilterAndARequiredModuleComesAlong() {
+        java.util.Map<String, ModuleManifests.Entry> known = ModuleManifests.read(MODULES);
+        assertThat(known).containsKeys("banking", "market-data", "capital-markets", "economy");
+        List<String> order = List.copyOf(known.keySet());
+        assertThat(order.indexOf("market-data")).isLessThan(order.indexOf("banking"));
+        assertThat(known.get("banking").requires()).containsExactly("market-data");
+        assertThat(known.get("banking").packs()).doesNotContain("market-data");
+        assertThat(known.get("market-data").packs()).containsExactly("market-data");
+        assertThat(known.get("economy").packs()).contains("world-economy", "central-banks", "gdelt-events");
+        assertThat(DIR.resolve("modules.yaml")).doesNotExist();                       // the hand mapping is gone: one source of truth
+        assertThat(ModuleManifests.withRequired(List.of("banking"), known)).containsExactly("banking", "market-data");
+        assertThat(read("risk").packs()).contains("market-data", "trading").doesNotContain("world-economy", "us-equities");
+        assertThatThrownBy(() -> Distributions.read(Distributions.file(DIR, "risk"), DIR.resolve(Distributions.KERNEL), Path.of("no-such"),
+                Path.of("../config/packs"))).hasMessageContaining("has no manifest");
     }
 
     @Test
@@ -144,7 +172,8 @@ class DistributionsTest {
         Distribution g = read("genomics");
         assertThat(g.packs()).containsExactly("core");
         assertThat(g.wordsOff()).contains("VAR", "EXP");
-        assertThat(g.domains()).containsEntry("genomics", "genomics");
+        assertThat(g.modules()).containsExactly("genomics");                            // listed, not installed (required: false)
+        assertThat(g.domains()).doesNotContainKey("genomics");
         assertThat(Editions.of(boot("drishti.distribution", "genomics")).commandShown("CRV")).isFalse();
     }
 }

@@ -1,0 +1,87 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The capital-markets module's manifest (docs/architecture/KERNEL_AND_MODULES.md section 4; DISTRIBUTIONS.md): content only, no code.
+# The distribution files list it by id, and their visibility filter reads this file: its packs, functions, menus and Help.
+format: 1
+id: capital-markets
+version: 1.0.0
+title: Capital markets
+about: US equities (SEC EDGAR filings and facts, indices, sectors) and the largest US funds and ETFs with their holdings; the Markets lens
+domain: capitalmarkets
+publisher:
+  id: drishti
+  name: Ashutosh Sinha
+licence:
+  feature: capital-markets
+kernel: '>=0.2 <1.0'
+rachana: '>=1.0'
+contracts: '>=1.0'
+plugin-api: '>=2.0'
+elements: '>=1.4 <2'
+requires:
+  optional:
+    market-data: '>=1.0 <2'
+provides:
+  kinds:
+    us-equities:
+    - us-company
+    - index-membership
+    - sic-sector
+    - filing-feed
+    - filing
+    - financial-fact
+    - price-history
+    funds:
+    - fund
+    - fund-holder
+    - index-funds
+packs:
+  folder: packs
+  list:
+  - us-equities
+  - funds
+data:
+  needs: data/needs.yaml
+console:
+  plugin: console/plugin.yaml
+  menus:
+  - companies
+  - markets
+functions:
+- USEQS
+- USEQ
+- IDX
+- SIC
+- EDGAR
+- FILING
+- FACT
+- PXH
+- FUNDS
+- FUND
+- HELD
+- TRACK
+lenses: lenses/markets.yaml
+docs:
+  readme: docs/README.md
+  help: docs/help.yaml
+  domains:
+  - capitalmarkets
+  guides:
+  - packs/us-equities/guides/us-equities.md
+  - packs/funds/guides/funds.md
+  tutorials:
+  - tutorials/13-world-data.md
+resources:
+  memory-mb: 64

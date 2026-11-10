@@ -39,9 +39,10 @@ import org.springframework.core.env.Environment;
  * {@code --distribution <name|path>} ({@code distribution}), {@code DRISHTI_DISTRIBUTION} or {@code drishti.distribution}. Nothing named:
  * Drishti All, so behaviour is unchanged. The console reads the same files the same way (drishti-console/core/distribution.py).
  *
- * <p>Until modules ship as {@code .dmod}s, {@code modules.yaml} beside the files maps each module id to today's packs, words, engine
- * features and domain module; a distribution comes to a visibility filter in the edition file's shape: the kernel's and its modules'
- * commands, the words of the modules it leaves out switched off, those modules' engines off, its menus, Help and Home.
+ * <p>The modules a file lists are read from their own manifests ({@link ModuleManifests}: {@code modules/<id>/module.yaml}, a module
+ * jar's {@code META-INF/drishti/module.yaml}), the kernel's own packs, words and menus from {@code kernel.yaml} beside the files; a
+ * distribution comes to a visibility filter in the edition file's shape: the kernel's and its modules' commands (with the modules they
+ * require), the words of the modules it leaves out switched off, those modules' engines off, its menus, Help and Home.
  */
 public final class Distributions {
 
@@ -53,8 +54,11 @@ public final class Distributions {
     public static final String DIR = "drishti.distributions-dir";
     public static final String DEFAULT_DIR = "./config/distributions";
     public static final String DEFAULT = "all";
-    /** The module map's file name, beside the distribution files. */
-    public static final String MODULES = "modules.yaml";
+    /** The kernel's own packs, words and menus, beside the distribution files. */
+    public static final String KERNEL = "kernel.yaml";
+    /** The folder of the module manifests (DRISHTI_MODULE_MANIFESTS_DIR). */
+    public static final String MODULES_DIR = "drishti.module-manifests-dir";
+    public static final String DEFAULT_MODULES_DIR = "./modules";
 
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
     private static final Pattern SHORT = Pattern.compile("[a-z0-9][a-z0-9-]{0,63}");
@@ -105,7 +109,7 @@ public final class Distributions {
             return builtInAll();                                       // a server with no config/distributions folder: today's product
         }
         String packsDir = env.getProperty("drishti.packs.dir", "./config/packs");
-        return read(f, f.toAbsolutePath().getParent().resolve(MODULES), Path.of(packsDir));
+        return read(f, dir.resolve(KERNEL), Path.of(env.getProperty(MODULES_DIR, DEFAULT_MODULES_DIR)), Path.of(packsDir));
     }
 
     /** Drishti All with no file: every module, no filter, the product's own brand. */
@@ -116,14 +120,15 @@ public final class Distributions {
                 Map.of(), spec, null);
     }
 
-    /** Reads a distribution file and compiles it against the module map and the packs folder. */
-    public static Distribution read(Path file, Path modulesFile, Path packsDir) {
+    /** Reads a distribution file and compiles it against the kernel's file, the module manifests and the packs folder. */
+    public static Distribution read(Path file, Path kernelFile, Path modulesDir, Path packsDir) {
         if (!Files.isRegularFile(file)) {
             throw new IllegalStateException("no distribution file " + file.toAbsolutePath().normalize() + " (set " + DIR
                     + " / DRISHTI_DISTRIBUTIONS_DIR to the folder of the distribution files, or name one of: risk, finance, genomics, all)");
         }
         JsonNode spec = tree(file);
-        JsonNode map = Files.isRegularFile(modulesFile) ? tree(modulesFile) : YAML.createObjectNode();
+        JsonNode kernel = Files.isRegularFile(kernelFile) ? tree(kernelFile).path("kernel") : YAML.createObjectNode();
+        Map<String, ModuleManifests.Entry> known = ModuleManifests.read(modulesDir);
         String id = spec.path("distribution").asText("").strip();
         if (id.isEmpty()) {
             throw new IllegalStateException("distribution file " + file + " has no 'distribution:' id (drishti.<name>)");
@@ -140,44 +145,38 @@ public final class Distributions {
         if (all) {
             return new Distribution(id, title, file, true, List.of(), Map.of(), List.of(), Set.of(), Set.of(), Set.of(), lenses, brand, spec, null);
         }
-        List<String> modules = new ArrayList<>();
+        List<String> listed = new ArrayList<>();
         for (JsonNode m : spec.path("modules")) {
             String mid = (m.isObject() ? m.path("id") : m).asText("").strip();
             if (!mid.isEmpty() && (!m.isObject() || m.path("enabled").asBoolean(true))) {
-                modules.add(mid);
+                listed.add(mid);
+                if (!known.containsKey(mid) && m.path("required").asBoolean(true)) {
+                    throw new IllegalStateException("distribution " + id + " requires the module '" + mid + "', which has no manifest under "
+                            + modulesDir.toAbsolutePath().normalize() + " (modules/<id>/module.yaml)");
+                }
             }
         }
-        JsonNode known = map.path("modules");
-        for (String m : modules) {
-            if (!known.has(m)) {
-                throw new IllegalStateException("distribution " + id + " names the module '" + m + "', which " + modulesFile + " does not know");
-            }
-        }
-        Set<String> packs = new LinkedHashSet<>(texts(map.path("kernel").path("packs")));
+        List<String> modules = new ArrayList<>(ModuleManifests.withRequired(listed, known));   // a listed module brings the ones it requires
+        Set<String> packs = new LinkedHashSet<>(texts(kernel.path("packs")));
         Map<String, String> domains = new LinkedHashMap<>();
-        Set<String> menus = new LinkedHashSet<>(texts(map.path("kernel").path("menus")));
+        Set<String> menus = new LinkedHashSet<>(texts(kernel.path("menus")));
         Set<String> wordsOff = new LinkedHashSet<>();
         Set<String> featuresOff = new LinkedHashSet<>();
-        List<String> inMapOrder = new ArrayList<>();                     // the map's order: market-data before the packs that extend it
-        known.fieldNames().forEachRemaining(k -> { if (modules.contains(k)) { inMapOrder.add(k); } });
-        for (String m : inMapOrder) {
-            JsonNode mod = known.path(m);
-            packs.addAll(texts(mod.path("packs")));
-            domains.put(m, mod.path("domain").asText(m));
-            menus.addAll(texts(mod.path("menus")));
+        Set<String> wordsOn = new LinkedHashSet<>(texts(kernel.path("words")));
+        for (ModuleManifests.Entry mod : known.values()) {                 // requirement order: market-data before the packs that extend it
+            if (modules.contains(mod.id())) {
+                packs.addAll(mod.packs());
+                domains.put(mod.id(), mod.domain());
+                menus.addAll(mod.menus());
+                wordsOn.addAll(mod.words());
+            }
         }
-        Set<String> wordsOn = new LinkedHashSet<>(texts(map.path("kernel").path("words")));
-        known.fields().forEachRemaining(e -> {
-            if (modules.contains(e.getKey())) {
-                wordsOn.addAll(texts(e.getValue().path("words")));
+        for (ModuleManifests.Entry mod : known.values()) {
+            if (!modules.contains(mod.id())) {
+                mod.words().stream().filter(w -> !wordsOn.contains(w)).forEach(wordsOff::add);
+                featuresOff.addAll(mod.features());
             }
-        });
-        known.fields().forEachRemaining(e -> {
-            if (!modules.contains(e.getKey())) {
-                texts(e.getValue().path("words")).stream().filter(w -> !wordsOn.contains(w)).forEach(wordsOff::add);
-                featuresOff.addAll(texts(e.getValue().path("features")));
-            }
-        });
+        }
         Set<String> commands = commands(packsDir, packs);
         ObjectNode ed = YAML.createObjectNode();
         ed.put("edition", id);
@@ -208,7 +207,7 @@ public final class Distributions {
         ArrayNode knowledge = help.putArray("knowledge");
         packs.forEach(knowledge::add);
         ArrayNode dom = help.putArray("domains");
-        modules.forEach(m -> texts(known.path(m).path("docs")).stream().filter(x -> !texts(dom).contains(x)).forEach(dom::add));   // the Help each module owns
+        modules.stream().filter(known::containsKey).flatMap(m -> known.get(m).docs().stream()).distinct().forEach(dom::add);   // the Help each owns
         if (spec.path("docs").has("title")) {
             help.put("title", spec.path("docs").path("title").asText());
         }
