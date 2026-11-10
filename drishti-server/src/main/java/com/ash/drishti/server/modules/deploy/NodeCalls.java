@@ -94,7 +94,7 @@ public final class NodeCalls {
 
     public Answer activate(String node, String deployment, String id, String version) {
         if (local(node)) {
-            return run(() -> String.valueOf(self.activate(deployment, id, version)));
+            return run(() -> json(self.activate(deployment, id, version)));
         }
         return remote(node, "/api/v1/net/modules/activate/" + deployment, Map.of("id", id, "version", version));
     }
@@ -111,7 +111,7 @@ public final class NodeCalls {
 
     public Answer rollback(String node, String id, String version, String previous) {
         if (local(node)) {
-            return run(() -> String.valueOf(self.rollback(id, version, previous)));
+            return run(() -> json(self.rollback(id, version, previous)));
         }
         Map<String, Object> b = new LinkedHashMap<>();
         b.put("id", id);
@@ -122,7 +122,7 @@ public final class NodeCalls {
 
     public Answer unload(String node, String id, ModuleRuntime.Leave leave) {
         if (local(node)) {
-            return run(() -> String.valueOf(self.unload(id, leave)));
+            return run(() -> json(self.unload(id, leave)));
         }
         return remote(node, "/api/v1/net/modules/unload", Map.of("id", id, "leave", leave.name()));
     }
@@ -156,6 +156,14 @@ public final class NodeCalls {
             return d.isEmpty() ? a.status() + " " + a.body() : d;
         } catch (IOException e) {
             return a.status() + " " + a.body();
+        }
+    }
+
+    private static String json(Object o) {
+        try {
+            return JSON.writeValueAsString(o);
+        } catch (IOException e) {
+            return String.valueOf(o);
         }
     }
 

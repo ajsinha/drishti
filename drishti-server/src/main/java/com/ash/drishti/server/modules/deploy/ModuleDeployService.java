@@ -145,10 +145,7 @@ public final class ModuleDeployService {
             try (InputStream in = Files.newInputStream(dir.resolve(DmodManifest.FILE))) {
                 m = DmodManifest.read(in, "the upload");
             }
-            List<String> bad = Dmod.verify(dir, dmod, m.label());
-            if (!bad.isEmpty()) {
-                throw ModuleNode.refused(m.label() + ": " + String.join("; ", bad));
-            }
+            Dmod.verify(dir, dmod, m.label());   // V2: refused when a file is missing, changed or not listed; the rest are notes
             String sha = sha(dmod);
             Path at = store.resolve(m.id()).resolve(m.version());
             Path meta = at.resolve("stored.json");

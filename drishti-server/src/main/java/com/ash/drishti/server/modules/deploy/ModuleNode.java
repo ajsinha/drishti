@@ -208,10 +208,7 @@ public final class ModuleNode implements AutoCloseable {
             Path dir = staged(deployment).resolve(id).resolve(version);
             Dmod.unpack(f, dir);
             Files.copy(f, dir.getParent().resolve(Dmod.fileName(id, version)), StandardCopyOption.REPLACE_EXISTING);
-            List<String> bad = Dmod.verify(dir, f, id + " " + version);
-            if (!bad.isEmpty()) {
-                throw refused(String.join("; ", bad));
-            }
+            Dmod.verify(dir, f, id + " " + version);   // V2 here, on this node's own copy (refused when a file is missing or changed)
             ModuleCandidate c = candidate(staged(deployment), id, version);
             if (!c.manifest().id().equals(id) || !c.manifest().version().equals(version)) {
                 throw refused("the package is " + c.manifest().label() + ", not " + id + " " + version);
