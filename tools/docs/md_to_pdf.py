@@ -45,7 +45,7 @@ sys.path.insert(0, str(ROOT / "drishti-console"))
 from core.guides import GithubSlugger  # noqa: E402  (the help centre's heading anchors, so a link inside the PDF lands where Help's does)
 
 PDFS = [ROOT / "docs" / "DEPLOYMENT_AND_QA_GUIDE.md", ROOT / "docs" / "QUICKSTART_DEVELOPERS.md", ROOT / "docs" / "guides" / "CLUSTER_GUIDE.md",
-        ROOT / "docs" / "architecture" / "KERNEL_AND_MODULES.md"]   # generated and checked together
+        ROOT / "docs" / "architecture" / "KERNEL_AND_MODULES.md", ROOT / "HOW_IT_FITS.md"]   # generated and checked together
 PICTURE = re.compile(r"!\[[^\]]*\]\(([^)\s]+)\)")
 MARK = "source "                                                    # the PDF's title ends with "source <fingerprint>"
 COMMENT = re.compile(r"<!--.*?-->", re.S)

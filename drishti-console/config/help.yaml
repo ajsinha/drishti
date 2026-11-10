@@ -344,7 +344,6 @@ moved:
   runbook-sutra-broken: operations#202-a-sutra-is-broken-or-an-edit-does-not-show
   runbook-live-latency: operations#203-live-latency-high-or-live-views-stop-ticking
   runbook-sign-in: operations#204-users-cannot-sign-in
-  how-it-fits: docs-architecture-architecture#5-walk-through-one-request   # HOW_IT_FITS.md deleted (2.9.6): its walk is ARCHITECTURE section 5
   elements: docs-architecture-architecture#30-the-client-renderer-and-drishti-elements
   mcp-client: ai#2-the-mcp-client-other-servers-tools-behind-drishtis-policy
   rupaka: docs-architecture-architecture#28-business-intelligence-on-the-table-layer

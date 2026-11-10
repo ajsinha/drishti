@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 560" width="760" height="560" role="img" aria-label="Where things run: placement.yaml places the sample module&#x27;s api part on nodes tagged web (drishti-main and drishti-b), its heavy compute part on one node tagged heavy (drishti-b), and its feeds on main and b with one owner; drishti-c holds nothing of it and forwards calls once to a placed node. Heavy parts are capped by max-nodes and never spread to every node without allow-all." font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'DejaVu Sans', Arial, sans-serif">
+<!-- Copyright (c) 2026 Ashutosh Sinha. All rights reserved. PROPRIETARY AND CONFIDENTIAL. -->
+<title>Where things run</title>
+<desc>Where things run: placement.yaml places the sample module&#x27;s api part on nodes tagged web (drishti-main and drishti-b), its heavy compute part on one node tagged heavy (drishti-b), and its feeds on main and b with one owner; drishti-c holds nothing of it and forwards calls once to a placed node. Heavy parts are capped by max-nodes and never spread to every node without allow-all.</desc>
+<defs><marker id="a1a2333" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1a2333"/></marker><marker id="a1f5fbf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1f5fbf"/></marker><marker id="a1e8a55" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1e8a55"/></marker><marker id="ac62828" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#c62828"/></marker><marker id="ac27a12" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#c27a12"/></marker><marker id="a1d8c7f" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1d8c7f"/></marker><marker id="a5c6a80" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#5c6a80"/></marker><marker id="a12324f" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#12324f"/></marker><marker id="a6a4fb3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#6a4fb3"/></marker></defs>
+<rect x="0.5" y="0.5" width="759" height="559" rx="14" fill="#f7f9fc" stroke="#cdd6e3"/>
+<text x="24" y="38" font-size="20" font-weight="700" fill="#12324f" text-anchor="start">Where things run</text>
+<text x="24" y="60" font-size="13" font-weight="400" fill="#5c6a80" text-anchor="start">config/placement.yaml puts each part of a module on named nodes or on nodes with a tag.</text>
+<rect x="24" y="220" width="228" height="170" rx="8" fill="#e3eaf3" stroke="#12324f" stroke-width="1.5"/>
+<text x="36" y="242" font-size="14" font-weight="700" fill="#12324f" text-anchor="start">drishti-main</text>
+<text x="36" y="260.5" font-size="12.5" font-weight="400" fill="#1a2333" text-anchor="start">tags: web</text>
+<text x="36" y="278.0" font-size="12.5" font-weight="400" fill="#1a2333" text-anchor="start"></text>
+<text x="36" y="295.5" font-size="12.5" font-weight="400" fill="#1a2333" text-anchor="start">api</text>
+<text x="36" y="313.0" font-size="12.5" font-weight="400" fill="#1a2333" text-anchor="start">feeds (standby)</text>
+<rect x="266" y="220" width="228" height="170" rx="8" fill="#e3eaf3" stroke="#12324f" stroke-width="1.5"/>
+<text x="278" y="242" font-size="14" font-weight="700" fill="#12324f" text-anchor="start">drishti-b</text>
+<text x="278" y="260.5" font-size="12.5" font-weight="400" fill="#1a2333" text-anchor="start">tags: web, heavy</text>
+<text x="278" y="278.0" font-size="12.5" font-weight="400" fill="#1a2333" text-anchor="start"></text>
+<text x="278" y="295.5" font-size="12.5" font-weight="400" fill="#1a2333" text-anchor="start">api</text>
+<text x="278" y="313.0" font-size="12.5" font-weight="400" fill="#1a2333" text-anchor="start">compute (heavy)</text>
+<text x="278" y="330.5" font-size="12.5" font-weight="400" fill="#1a2333" text-anchor="start">feeds (owner ★)</text>
+<rect x="508" y="220" width="228" height="170" rx="8" fill="#e3eaf3" stroke="#12324f" stroke-width="1.5"/>
+<text x="520" y="242" font-size="14" font-weight="700" fill="#12324f" text-anchor="start">drishti-c</text>
+<text x="520" y="260.5" font-size="12.5" font-weight="400" fill="#1a2333" text-anchor="start">no tags</text>
+<text x="520" y="278.0" font-size="12.5" font-weight="400" fill="#1a2333" text-anchor="start"></text>
+<text x="520" y="295.5" font-size="12.5" font-weight="400" fill="#1a2333" text-anchor="start">nothing of sample:</text>
+<text x="520" y="313.0" font-size="12.5" font-weight="400" fill="#1a2333" text-anchor="start">forwards its calls</text>
+<rect x="24" y="84" width="712" height="104" rx="8" fill="#fbefd9" stroke="#c27a12" stroke-width="1.5"/>
+<text x="36" y="106" font-size="14" font-weight="700" fill="#c27a12" text-anchor="start">config/placement.yaml (module sample, parts from its manifest)</text>
+<text x="36" y="124.5" font-size="12.5" font-weight="400" fill="#1a2333" text-anchor="start" xml:space="preserve" font-family="DejaVu Sans Mono, Consolas, Menlo, monospace">api:     { roles: [web] }                       light: every node tagged web</text>
+<text x="36" y="142.0" font-size="12.5" font-weight="400" fill="#1a2333" text-anchor="start" xml:space="preserve" font-family="DejaVu Sans Mono, Consolas, Menlo, monospace">compute: { roles: [heavy], max-nodes: 1 }       heavy: one node at most</text>
+<text x="36" y="159.5" font-size="12.5" font-weight="400" fill="#1a2333" text-anchor="start" xml:space="preserve" font-family="DejaVu Sans Mono, Consolas, Menlo, monospace">feeds:   { nodes: [drishti-main, drishti-b] }   one runner: first live node by name</text>
+<path d="M640,368 L496,368" fill="none" stroke="#c62828" stroke-width="1.8" marker-end="url(#ac62828)"/>
+<text x="600" y="360" font-size="12" font-weight="400" fill="#c62828" text-anchor="middle" font-style="italic">forward once</text>
+<rect x="24" y="410" width="712" height="108" rx="8" fill="#ffffff" stroke="#5c6a80" stroke-width="1.5"/>
+<text x="36" y="432" font-size="14" font-weight="700" fill="#5c6a80" text-anchor="start">The guards</text>
+<text x="36" y="450.5" font-size="12.5" font-weight="400" fill="#1a2333" text-anchor="start">a third-party module not listed runs nowhere; a first-party one defaults to every node</text>
+<text x="36" y="468.0" font-size="12.5" font-weight="400" fill="#1a2333" text-anchor="start">a heavy part over max-nodes, or on every node without allow-all: true, is refused (DRS-1030)</text>
+<text x="36" y="485.5" font-size="12.5" font-weight="400" fill="#1a2333" text-anchor="start">a feed or singleton runs once; failover stays inside the placement; none up: 503 DRS-1032</text>
+</svg>

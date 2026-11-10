@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 560" width="760" height="560" role="img" aria-label="One build, several products: one kernel build, one console build and the module packages make Drishti Risk (banking and market-data), Drishti Finance (capital markets, economy, market-data), Drishti Genomics (the sample) and Drishti All (every module, the default), each from one distribution file. Two consoles, Risk on 17480 and Finance on 17481, can run over one cluster." font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'DejaVu Sans', Arial, sans-serif">
+<!-- Copyright (c) 2026 Ashutosh Sinha. All rights reserved. PROPRIETARY AND CONFIDENTIAL. -->
+<title>One build, several products</title>
+<desc>One build, several products: one kernel build, one console build and the module packages make Drishti Risk (banking and market-data), Drishti Finance (capital markets, economy, market-data), Drishti Genomics (the sample) and Drishti All (every module, the default), each from one distribution file. Two consoles, Risk on 17480 and Finance on 17481, can run over one cluster.</desc>
+<defs><marker id="a1a2333" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1a2333"/></marker><marker id="a1f5fbf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1f5fbf"/></marker><marker id="a1e8a55" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1e8a55"/></marker><marker id="ac62828" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#c62828"/></marker><marker id="ac27a12" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#c27a12"/></marker><marker id="a1d8c7f" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1d8c7f"/></marker><marker id="a5c6a80" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#5c6a80"/></marker><marker id="a12324f" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#12324f"/></marker><marker id="a6a4fb3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#6a4fb3"/></marker></defs>
+<rect x="0.5" y="0.5" width="759" height="559" rx="14" fill="#f7f9fc" stroke="#cdd6e3"/>
+<text x="24" y="38" font-size="20" font-weight="700" fill="#12324f" text-anchor="start">One build, several products</text>
+<text x="24" y="60" font-size="13" font-weight="400" fill="#5c6a80" text-anchor="start">A distribution file picks the modules, brand, theme, lenses, menus, Home and Help.</text>
+<rect x="24" y="84" width="712" height="46" rx="8" fill="#e3eaf3" stroke="#12324f" stroke-width="1.5"/>
+<text x="380.0" y="106" font-size="13" font-weight="400" fill="#1a2333" text-anchor="middle">one kernel build + one console build + the module packages (.dmod)</text>
+<path d="M107,130 L107,156" fill="none" stroke="#5c6a80" stroke-width="1.8" marker-end="url(#a5c6a80)"/>
+<rect x="24" y="160" width="166" height="140" rx="8" fill="#ebe5f7" stroke="#6a4fb3" stroke-width="1.5"/>
+<text x="36" y="182" font-size="13.5" font-weight="700" fill="#6a4fb3" text-anchor="start">Drishti Risk</text>
+<text x="36" y="200" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">drishti.risk.yaml</text>
+<text x="36" y="217" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start"></text>
+<text x="36" y="234" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">banking, market-data</text>
+<text x="36" y="251" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">Risk, Trading, Market</text>
+<path d="M287,130 L287,156" fill="none" stroke="#5c6a80" stroke-width="1.8" marker-end="url(#a5c6a80)"/>
+<rect x="204" y="160" width="166" height="140" rx="8" fill="#dcf3f0" stroke="#1d8c7f" stroke-width="1.5"/>
+<text x="216" y="182" font-size="13.5" font-weight="700" fill="#1d8c7f" text-anchor="start">Drishti Finance</text>
+<text x="216" y="200" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">drishti.finance.yaml</text>
+<text x="216" y="217" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start"></text>
+<text x="216" y="234" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">capitalmarkets,</text>
+<text x="216" y="251" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">economy, market-data</text>
+<text x="216" y="268" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">Markets, World</text>
+<path d="M467,130 L467,156" fill="none" stroke="#5c6a80" stroke-width="1.8" marker-end="url(#a5c6a80)"/>
+<rect x="384" y="160" width="166" height="140" rx="8" fill="#dff2ea" stroke="#1e8a55" stroke-width="1.5"/>
+<text x="396" y="182" font-size="13.5" font-weight="700" fill="#1e8a55" text-anchor="start">Drishti Genomics</text>
+<text x="396" y="200" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">drishti.genomics.yaml</text>
+<text x="396" y="217" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start"></text>
+<text x="396" y="234" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">genomics (sample)</text>
+<text x="396" y="251" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">Research</text>
+<path d="M647,130 L647,156" fill="none" stroke="#5c6a80" stroke-width="1.8" marker-end="url(#a5c6a80)"/>
+<rect x="564" y="160" width="166" height="140" rx="8" fill="#fbefd9" stroke="#c27a12" stroke-width="1.5"/>
+<text x="576" y="182" font-size="13.5" font-weight="700" fill="#c27a12" text-anchor="start">Drishti All</text>
+<text x="576" y="200" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">drishti.all.yaml</text>
+<text x="576" y="217" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start"></text>
+<text x="576" y="234" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">every module</text>
+<text x="576" y="251" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">every lens</text>
+<text x="576" y="268" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">(the default)</text>
+<text x="24" y="336" font-size="12" font-weight="700" fill="#5c6a80" text-anchor="start">TWO CONSOLES OVER ONE CLUSTER</text>
+<rect x="24" y="348" width="300" height="52" rx="8" fill="#ebe5f7" stroke="#6a4fb3" stroke-width="1.5"/>
+<text x="36" y="370" font-size="13" font-weight="700" fill="#6a4fb3" text-anchor="start">console :17480</text>
+<text x="36" y="388" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">--distribution risk</text>
+<rect x="436" y="348" width="300" height="52" rx="8" fill="#dcf3f0" stroke="#1d8c7f" stroke-width="1.5"/>
+<text x="448" y="370" font-size="13" font-weight="700" fill="#1d8c7f" text-anchor="start">console :17481</text>
+<text x="448" y="388" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">--distribution finance</text>
+<path d="M174,400 L300,440" fill="none" stroke="#6a4fb3" stroke-width="1.8" marker-end="url(#a6a4fb3)"/>
+<path d="M586,400 L460,440" fill="none" stroke="#1d8c7f" stroke-width="1.8" marker-end="url(#a1d8c7f)"/>
+<rect x="24" y="444" width="712" height="70" rx="8" fill="#e3eaf3" stroke="#12324f" stroke-width="1.5"/>
+<text x="36" y="466" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="start">one cluster of kernels (every module installed)</text>
+<text x="36" y="484.5" font-size="12.5" font-weight="400" fill="#1a2333" text-anchor="start">each console shows only its own distribution; what it leaves out does not exist there:</text>
+<text x="36" y="502.0" font-size="12.5" font-weight="400" fill="#1a2333" text-anchor="start">VRES typed in Finance answers DRS-4023 VRES is not in Drishti Finance</text>
+</svg>

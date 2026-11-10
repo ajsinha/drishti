@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 600" width="760" height="600" role="img" aria-label="Inside a .dmod: module.yaml, the META-INF/DMOD.MF hash list, java/ and lib/ jars, packs, data/needs.yaml, console/plugin.yaml and docs, never connectors or credentials. A module&#x27;s classes are looked up in the JDK and the kernel&#x27;s shared libraries first, then its own lib/, then the server&#x27;s lib/ folder; every other kernel class is hidden. First-party modules are verified against first-party.yaml and may carry an allowance tied to one exact kernel build; third-party modules use the public kernel API only." font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'DejaVu Sans', Arial, sans-serif">
+<!-- Copyright (c) 2026 Ashutosh Sinha. All rights reserved. PROPRIETARY AND CONFIDENTIAL. -->
+<title>What is inside a module</title>
+<desc>Inside a .dmod: module.yaml, the META-INF/DMOD.MF hash list, java/ and lib/ jars, packs, data/needs.yaml, console/plugin.yaml and docs, never connectors or credentials. A module&#x27;s classes are looked up in the JDK and the kernel&#x27;s shared libraries first, then its own lib/, then the server&#x27;s lib/ folder; every other kernel class is hidden. First-party modules are verified against first-party.yaml and may carry an allowance tied to one exact kernel build; third-party modules use the public kernel API only.</desc>
+<defs><marker id="a1a2333" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1a2333"/></marker><marker id="a1f5fbf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1f5fbf"/></marker><marker id="a1e8a55" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1e8a55"/></marker><marker id="ac62828" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#c62828"/></marker><marker id="ac27a12" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#c27a12"/></marker><marker id="a1d8c7f" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1d8c7f"/></marker><marker id="a5c6a80" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#5c6a80"/></marker><marker id="a12324f" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#12324f"/></marker><marker id="a6a4fb3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#6a4fb3"/></marker></defs>
+<rect x="0.5" y="0.5" width="759" height="599" rx="14" fill="#f7f9fc" stroke="#cdd6e3"/>
+<text x="24" y="38" font-size="20" font-weight="700" fill="#12324f" text-anchor="start">What is inside a module</text>
+<text x="24" y="60" font-size="13" font-weight="400" fill="#5c6a80" text-anchor="start">A .dmod is a zip with a hash list; the kernel verifies it before anything runs.</text>
+<rect x="24" y="84" width="330" height="470" rx="8" fill="#e1ebfa" stroke="#1f5fbf" stroke-width="1.5"/>
+<text x="36" y="106" font-size="14" font-weight="700" fill="#1f5fbf" text-anchor="start">banking-1.0.0.dmod</text>
+<text x="36" y="125" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start" xml:space="preserve" font-family="DejaVu Sans Mono, Consolas, Menlo, monospace">module.yaml       the manifest</text>
+<text x="36" y="143" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start" xml:space="preserve" font-family="DejaVu Sans Mono, Consolas, Menlo, monospace">META-INF/DMOD.MF  SHA-256 of every file</text>
+<text x="36" y="161" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start" xml:space="preserve" font-family="DejaVu Sans Mono, Consolas, Menlo, monospace">java/             the module&#x27;s own jars</text>
+<text x="36" y="179" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start" xml:space="preserve" font-family="DejaVu Sans Mono, Consolas, Menlo, monospace">lib/              its third-party jars</text>
+<text x="36" y="197" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start" xml:space="preserve" font-family="DejaVu Sans Mono, Consolas, Menlo, monospace">packs/&lt;pack&gt;/     pack.yaml, contracts,</text>
+<text x="36" y="215" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start" xml:space="preserve" font-family="DejaVu Sans Mono, Consolas, Menlo, monospace">                  Sutras, samples</text>
+<text x="36" y="233" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start" xml:space="preserve" font-family="DejaVu Sans Mono, Consolas, Menlo, monospace">data/needs.yaml   the kinds it needs</text>
+<text x="36" y="251" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start" xml:space="preserve" font-family="DejaVu Sans Mono, Consolas, Menlo, monospace">console/          plugin.yaml: pages,</text>
+<text x="36" y="269" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start" xml:space="preserve" font-family="DejaVu Sans Mono, Consolas, Menlo, monospace">                  menus, words, Home</text>
+<text x="36" y="287" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start" xml:space="preserve" font-family="DejaVu Sans Mono, Consolas, Menlo, monospace">docs/             README, help.yaml,</text>
+<text x="36" y="305" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start" xml:space="preserve" font-family="DejaVu Sans Mono, Consolas, Menlo, monospace">                  guides, tutorials</text>
+<text x="36" y="323" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start"></text>
+<text x="36" y="341" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">never: connectors, hosts, passwords</text>
+<text x="374" y="104" font-size="12" font-weight="700" fill="#5c6a80" text-anchor="start">WHERE A MODULE&#x27;S CLASSES COME FROM</text>
+<rect x="374" y="116" width="362" height="58" rx="8" fill="#e3eaf3" stroke="#12324f" stroke-width="1.5"/>
+<text x="386" y="138" font-size="13" font-weight="700" fill="#12324f" text-anchor="start">1  the JDK + the kernel API + shared libs</text>
+<text x="386" y="156" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">Spring, Jackson, Arrow …: asked first, never replaced</text>
+<path d="M555,174 L555,186" fill="none" stroke="#5c6a80" stroke-width="1.8" marker-end="url(#a5c6a80)"/>
+<rect x="374" y="190" width="362" height="58" rx="8" fill="#e1ebfa" stroke="#1f5fbf" stroke-width="1.5"/>
+<text x="386" y="212" font-size="13" font-weight="700" fill="#1f5fbf" text-anchor="start">2  the module&#x27;s own lib/ and java/</text>
+<text x="386" y="230" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">child-first, private: two modules, two versions</text>
+<path d="M555,248 L555,260" fill="none" stroke="#5c6a80" stroke-width="1.8" marker-end="url(#a5c6a80)"/>
+<rect x="374" y="264" width="362" height="58" rx="8" fill="#fbefd9" stroke="#c27a12" stroke-width="1.5"/>
+<text x="386" y="286" font-size="13" font-weight="700" fill="#c27a12" text-anchor="start">3  the server&#x27;s lib/ folder</text>
+<text x="386" y="304" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">the site&#x27;s JDBC drivers, plugins, shared jars</text>
+<rect x="374" y="334" width="362" height="40" rx="8" fill="#fbe3e3" stroke="#c62828" stroke-width="1.5"/>
+<text x="386" y="356" font-size="12.5" font-weight="400" fill="#1a2333" text-anchor="start">hidden: every other kernel class (ClassNotFound)</text>
+<text x="374" y="404" font-size="12" font-weight="700" fill="#5c6a80" text-anchor="start">WHO MADE IT</text>
+<rect x="374" y="416" width="176" height="138" rx="8" fill="#dcf3f0" stroke="#1d8c7f" stroke-width="1.5"/>
+<text x="386" y="438" font-size="13" font-weight="700" fill="#1d8c7f" text-anchor="start">first-party</text>
+<text x="386" y="456" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">the product&#x27;s own;</text>
+<text x="386" y="473" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">checked against</text>
+<text x="386" y="490" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">first-party.yaml;</text>
+<text x="386" y="507" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">may carry a kernel-</text>
+<text x="386" y="524" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">internals allowance,</text>
+<text x="386" y="541" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">then: exact kernel build</text>
+<rect x="560" y="416" width="176" height="138" rx="8" fill="#ffffff" stroke="#5c6a80" stroke-width="1.5"/>
+<text x="572" y="438" font-size="13" font-weight="700" fill="#5c6a80" text-anchor="start">third-party</text>
+<text x="572" y="456" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">anyone&#x27;s, e.g. the</text>
+<text x="572" y="473" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">genomics sample;</text>
+<text x="572" y="490" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">public kernel API</text>
+<text x="572" y="507" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">only; loads on any</text>
+<text x="572" y="524" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">kernel in its</text>
+<text x="572" y="541" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">kernel range</text>
+<text x="380" y="580" font-size="12.5" font-weight="400" fill="#5c6a80" text-anchor="middle">Like a Linux driver (.ko, in-tree or not, vermagic) and a Tomcat .war (webapps/, lib/).</text>
+</svg>

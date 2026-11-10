@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 700" width="900" height="700" role="img" aria-label="How the files relate: a distribution file lists module ids; each id is a .dmod whose module.yaml names its packs, contracts, data needs and console plugin, with DMOD.MF hashing every file and first-party.yaml in the server verifying the product&#x27;s own; active.yaml picks the version, config/modules switches it, engines files switch its engines, placement.yaml puts its parts on nodes from node.yaml; the kinds it needs are mapped by bindings.yaml to connectors, which point at lakes; application.yaml picks the distribution and the folders." font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'DejaVu Sans', Arial, sans-serif">
+<!-- Copyright (c) 2026 Ashutosh Sinha. All rights reserved. PROPRIETARY AND CONFIDENTIAL. -->
+<title>The files and how they relate</title>
+<desc>How the files relate: a distribution file lists module ids; each id is a .dmod whose module.yaml names its packs, contracts, data needs and console plugin, with DMOD.MF hashing every file and first-party.yaml in the server verifying the product&#x27;s own; active.yaml picks the version, config/modules switches it, engines files switch its engines, placement.yaml puts its parts on nodes from node.yaml; the kinds it needs are mapped by bindings.yaml to connectors, which point at lakes; application.yaml picks the distribution and the folders.</desc>
+<defs><marker id="a1a2333" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1a2333"/></marker><marker id="a1f5fbf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1f5fbf"/></marker><marker id="a1e8a55" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1e8a55"/></marker><marker id="ac62828" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#c62828"/></marker><marker id="ac27a12" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#c27a12"/></marker><marker id="a1d8c7f" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1d8c7f"/></marker><marker id="a5c6a80" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#5c6a80"/></marker><marker id="a12324f" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#12324f"/></marker><marker id="a6a4fb3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#6a4fb3"/></marker></defs>
+<rect x="0.5" y="0.5" width="899" height="699" rx="14" fill="#f7f9fc" stroke="#cdd6e3"/>
+<text x="24" y="38" font-size="20" font-weight="700" fill="#12324f" text-anchor="start">The files and how they relate</text>
+<text x="24" y="60" font-size="13" font-weight="400" fill="#5c6a80" text-anchor="start">Who writes each file (colour) and what it points at (arrows).</text>
+<rect x="24" y="74" width="14" height="14" rx="3" fill="#fbefd9" stroke="#c27a12" stroke-width="1.5"/>
+<text x="44" y="86" font-size="12" font-weight="400" fill="#5c6a80" text-anchor="start">the product</text>
+<rect x="131" y="74" width="14" height="14" rx="3" fill="#e1ebfa" stroke="#1f5fbf" stroke-width="1.5"/>
+<text x="151" y="86" font-size="12" font-weight="400" fill="#5c6a80" text-anchor="start">the module author</text>
+<rect x="280" y="74" width="14" height="14" rx="3" fill="#e3eaf3" stroke="#12324f" stroke-width="1.5"/>
+<text x="300" y="86" font-size="12" font-weight="400" fill="#5c6a80" text-anchor="start">the site&#x27;s administrators</text>
+<rect x="485" y="74" width="14" height="14" rx="3" fill="#dff2ea" stroke="#1e8a55" stroke-width="1.5"/>
+<text x="505" y="86" font-size="12" font-weight="400" fill="#5c6a80" text-anchor="start">the server writes it</text>
+<rect x="24" y="110" width="236" height="62" rx="8" fill="#fbefd9" stroke="#c27a12" stroke-width="1.5"/>
+<text x="36" y="132" font-size="13" font-weight="700" fill="#c27a12" text-anchor="start">drishti.&lt;name&gt;.yaml</text>
+<text x="36" y="150" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">a distribution: brand, theme,</text>
+<text x="36" y="167" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">module ids, lenses, Home</text>
+<rect x="24" y="184" width="236" height="46" rx="8" fill="#fbefd9" stroke="#c27a12" stroke-width="1.5"/>
+<text x="36" y="206" font-size="13" font-weight="700" fill="#c27a12" text-anchor="start">kernel.yaml</text>
+<text x="36" y="224" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">the kernel&#x27;s packs, words, menus</text>
+<rect x="24" y="262" width="236" height="62" rx="8" fill="#fbefd9" stroke="#c27a12" stroke-width="1.5"/>
+<text x="36" y="284" font-size="13" font-weight="700" fill="#c27a12" text-anchor="start">first-party.yaml</text>
+<text x="36" y="302" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">in the server jar: the product&#x27;s</text>
+<text x="36" y="319" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">module ids + DMOD.MF hashes</text>
+<rect x="24" y="560" width="236" height="110" rx="8" fill="#e3eaf3" stroke="#12324f" stroke-width="1.5"/>
+<text x="36" y="582" font-size="13" font-weight="700" fill="#12324f" text-anchor="start">application.yaml (settings)</text>
+<text x="36" y="600" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">drishti.distribution</text>
+<text x="36" y="617" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">drishti.modules.path: .dmod</text>
+<text x="36" y="634" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">drishti.lib.path: shared jars</text>
+<text x="36" y="651" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">drishti.module.&lt;id&gt;.*: settings</text>
+<rect x="296" y="104" width="300" height="456" rx="10" fill="none" stroke="#1f5fbf" stroke-width="1.5" stroke-dasharray="7 5"/>
+<text x="310" y="124" font-size="13" font-weight="700" fill="#1f5fbf" text-anchor="start">&lt;id&gt;-&lt;version&gt;.dmod</text>
+<rect x="318" y="136" width="262" height="82" rx="8" fill="#e1ebfa" stroke="#1f5fbf" stroke-width="1.5"/>
+<text x="330" y="158" font-size="13" font-weight="700" fill="#1f5fbf" text-anchor="start">module.yaml</text>
+<text x="330" y="176" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">id, version, origin, kernel range,</text>
+<text x="330" y="193" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">requires, kinds, functions, engines,</text>
+<text x="330" y="210" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">parts, kernel-internals allowance</text>
+<rect x="318" y="226" width="262" height="46" rx="8" fill="#e1ebfa" stroke="#1f5fbf" stroke-width="1.5"/>
+<text x="330" y="248" font-size="13" font-weight="700" fill="#1f5fbf" text-anchor="start">META-INF/DMOD.MF</text>
+<text x="330" y="266" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">the SHA-256 of every file</text>
+<rect x="318" y="284" width="262" height="46" rx="8" fill="#e1ebfa" stroke="#1f5fbf" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="330" y="306" font-size="13" font-weight="700" fill="#1f5fbf" text-anchor="start">content.yaml</text>
+<text x="330" y="324" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">pack time only: repository files in</text>
+<rect x="318" y="342" width="262" height="46" rx="8" fill="#e1ebfa" stroke="#1f5fbf" stroke-width="1.5"/>
+<text x="330" y="364" font-size="13" font-weight="700" fill="#1f5fbf" text-anchor="start">packs/&lt;pack&gt;/pack.yaml</text>
+<text x="330" y="382" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">kinds, Sutras; routes: = defaults</text>
+<rect x="318" y="400" width="262" height="46" rx="8" fill="#e1ebfa" stroke="#1f5fbf" stroke-width="1.5"/>
+<text x="330" y="422" font-size="13" font-weight="700" fill="#1f5fbf" text-anchor="start">*.contract.yaml</text>
+<text x="330" y="440" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">a kind&#x27;s fields, key, binding-hint</text>
+<rect x="318" y="458" width="262" height="40" rx="8" fill="#e1ebfa" stroke="#1f5fbf" stroke-width="1.5"/>
+<text x="330" y="480" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">data/needs.yaml: the kinds it needs</text>
+<rect x="318" y="508" width="262" height="40" rx="8" fill="#e1ebfa" stroke="#1f5fbf" stroke-width="1.5"/>
+<text x="330" y="530" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">console/plugin.yaml: pages, menus</text>
+<rect x="632" y="110" width="244" height="46" rx="8" fill="#dff2ea" stroke="#1e8a55" stroke-width="1.5"/>
+<text x="644" y="132" font-size="13" font-weight="700" fill="#1e8a55" text-anchor="start">installed/active.yaml</text>
+<text x="644" y="150" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">which version of each is active</text>
+<rect x="632" y="166" width="244" height="46" rx="8" fill="#e3eaf3" stroke="#12324f" stroke-width="1.5"/>
+<text x="644" y="188" font-size="13" font-weight="700" fill="#12324f" text-anchor="start">config/modules/&lt;id&gt;.yaml</text>
+<text x="644" y="206" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">the module&#x27;s on/off switch</text>
+<rect x="632" y="222" width="244" height="46" rx="8" fill="#e3eaf3" stroke="#12324f" stroke-width="1.5"/>
+<text x="644" y="244" font-size="13" font-weight="700" fill="#12324f" text-anchor="start">config/engines/*.yaml</text>
+<text x="644" y="262" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">each engine on/off + settings</text>
+<rect x="632" y="286" width="244" height="46" rx="8" fill="#e3eaf3" stroke="#12324f" stroke-width="1.5"/>
+<text x="644" y="308" font-size="13" font-weight="700" fill="#12324f" text-anchor="start">config/placement.yaml</text>
+<text x="644" y="326" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">module parts → nodes or tags</text>
+<rect x="632" y="342" width="244" height="46" rx="8" fill="#e3eaf3" stroke="#12324f" stroke-width="1.5"/>
+<text x="644" y="364" font-size="13" font-weight="700" fill="#12324f" text-anchor="start">net/node.yaml · stack.yaml</text>
+<text x="644" y="382" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">a node&#x27;s name, address, tags</text>
+<rect x="632" y="434" width="244" height="46" rx="8" fill="#e3eaf3" stroke="#12324f" stroke-width="1.5"/>
+<text x="644" y="456" font-size="13" font-weight="700" fill="#12324f" text-anchor="start">config/bindings.yaml</text>
+<text x="644" y="474" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">kind → connectors, read order</text>
+<rect x="632" y="512" width="244" height="46" rx="8" fill="#e3eaf3" stroke="#12324f" stroke-width="1.5"/>
+<text x="644" y="534" font-size="13" font-weight="700" fill="#12324f" text-anchor="start">config/connectors/*.yaml</text>
+<text x="644" y="552" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">plugin, settings, lake; secrets</text>
+<rect x="632" y="590" width="244" height="46" rx="8" fill="#e3eaf3" stroke="#12324f" stroke-width="1.5"/>
+<text x="644" y="612" font-size="13" font-weight="700" fill="#12324f" text-anchor="start">config/lakes/*.yaml</text>
+<text x="644" y="630" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">a lake&#x27;s root, format, tables</text>
+<path d="M260,141 L316,160" fill="none" stroke="#c27a12" stroke-width="1.8" marker-end="url(#ac27a12)"/>
+<text x="266" y="136" font-size="11" font-weight="400" fill="#c27a12" text-anchor="start" font-style="italic">lists ids</text>
+<path d="M260,293 L316,249" fill="none" stroke="#c27a12" stroke-width="1.8" marker-end="url(#ac27a12)"/>
+<text x="266" y="312" font-size="11" font-weight="400" fill="#c27a12" text-anchor="start" font-style="italic">verifies</text>
+<path d="M24,615 L12,615 L12,141 L22,141" fill="none" stroke="#12324f" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#a12324f)"/>
+<text x="24" y="450" font-size="11" font-weight="400" fill="#12324f" text-anchor="start" font-style="italic">drishti.distribution picks the file</text>
+<path d="M330,218 L330,226" fill="none" stroke="#1f5fbf" stroke-width="1.8" marker-end="url(#a1f5fbf)"/>
+<path d="M308,190 L308,365 L316,365" fill="none" stroke="#1f5fbf" stroke-width="1.8" marker-end="url(#a1f5fbf)"/>
+<path d="M449,388 L449,400" fill="none" stroke="#1f5fbf" stroke-width="1.8" marker-end="url(#a1f5fbf)"/>
+<path d="M308,365 L308,478 L316,478" fill="none" stroke="#1f5fbf" stroke-width="1.8" marker-end="url(#a1f5fbf)"/>
+<path d="M308,478 L308,528 L316,528" fill="none" stroke="#1f5fbf" stroke-width="1.8" marker-end="url(#a1f5fbf)"/>
+<path d="M630,133 L582,150" fill="none" stroke="#1e8a55" stroke-width="1.8" marker-end="url(#a1e8a55)"/>
+<text x="626" y="126" font-size="11" font-weight="400" fill="#1e8a55" text-anchor="end" font-style="italic">picks version</text>
+<path d="M630,189 L582,176" fill="none" stroke="#12324f" stroke-width="1.8" marker-end="url(#a12324f)"/>
+<text x="626" y="202" font-size="11" font-weight="400" fill="#12324f" text-anchor="end" font-style="italic">on/off</text>
+<path d="M630,245 L582,196" fill="none" stroke="#12324f" stroke-width="1.8" marker-end="url(#a12324f)"/>
+<text x="626" y="262" font-size="11" font-weight="400" fill="#12324f" text-anchor="end" font-style="italic">engines</text>
+<path d="M630,309 L582,204" fill="none" stroke="#12324f" stroke-width="1.8" marker-end="url(#a12324f)"/>
+<text x="626" y="324" font-size="11" font-weight="400" fill="#12324f" text-anchor="end" font-style="italic">parts</text>
+<path d="M754,332 L754,340" fill="none" stroke="#12324f" stroke-width="1.8" marker-end="url(#a12324f)"/>
+<path d="M580,478 L612,478 L612,457 L630,457" fill="none" stroke="#1f5fbf" stroke-width="1.8" marker-end="url(#a1f5fbf)"/>
+<text x="600" y="498" font-size="11" font-weight="400" fill="#1f5fbf" text-anchor="middle" font-style="italic">kinds</text>
+<path d="M580,365 L606,365 L606,448 L630,448" fill="none" stroke="#1f5fbf" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#a1f5fbf)"/>
+<text x="586" y="400" font-size="11" font-weight="400" fill="#1f5fbf" text-anchor="start" font-style="italic">default</text>
+<path d="M754,480 L754,510" fill="none" stroke="#12324f" stroke-width="1.8" marker-end="url(#a12324f)"/>
+<text x="762" y="499" font-size="11" font-weight="400" fill="#12324f" text-anchor="start" font-style="italic">names</text>
+<path d="M754,558 L754,588" fill="none" stroke="#12324f" stroke-width="1.8" marker-end="url(#a12324f)"/>
+<text x="762" y="577" font-size="11" font-weight="400" fill="#12324f" text-anchor="start" font-style="italic">lake:</text>
+</svg>
