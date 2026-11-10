@@ -66,7 +66,7 @@ def _walk(browser, base: str, hrefs: list[str]) -> list[dict]:
         for r in out:   # a page over the budget is opened once more: a cold cache or a busy moment is not a slow page, slow twice is
             if r["secs"] > BUDGET_S and not r["faults"]:
                 again = open_page(pg, base, r["href"])
-                r["secs"], r["faults"] = min(r["secs"], again["secs"]), again["faults"]
+                r["first"], r["secs"], r["faults"] = r["secs"], min(r["secs"], again["secs"]), again["faults"]
         return out
     finally:
         pg.context.close()
@@ -78,6 +78,9 @@ def _assert_clean(results: list[dict]) -> None:
     print(f"page walk: {len(results)} pages, {len(bad)} with faults, {len(slow)} over {BUDGET_S:.0f} s, {len(off)} of engines off: {off}")
     for line in slow:
         print("  slow", line)
+    for r in results:
+        if "first" in r:
+            print(f"  slow on first open only {r['href']}: {r['first']:.1f}s, then {r['secs']:.1f}s")
     assert not bad and not slow, "\n".join(["faults:"] + bad + [f"over {BUDGET_S:.0f} s:"] + slow)
 
 

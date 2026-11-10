@@ -288,9 +288,14 @@ VaR demo lake (the bank, its desks, the Murex and Endur trades), signed in as th
   sections and a few pages with a demo id (`/var?scope=BANK`, a desk);
 - every link the top bar draws, in the full product and inside each lens, that the first walk did not open, and each lens's own home.
 
-A page fails on a 4xx or 5xx answer, a server error page, a browser console error, an uncaught exception, a failed request, an empty main
-area, or taking longer than the budget to open and settle (`DRISHTI_PAGEWALK_BUDGET`, default 5 seconds). One failure lists every faulty page
-and every slow one, slowest first.
+A page fails on a 4xx or 5xx answer, a server error page (an alert naming a `DRS-5xxx` code or a server error), a browser console error
+(a Content Security Policy refusal names the script and line), an uncaught exception, a failed request (a file answering 4xx or 5xx, an
+`/api/` call answering 5xx; an `/api/` 4xx is the page's own answer, such as no data for the date), an empty main area, or taking longer
+than the budget to open and settle (`DRISHTI_PAGEWALK_BUDGET`, default 5 seconds; a page over it is opened once more and fails when slow
+twice; pages slow only on their first open are printed). A page of an engine switched off on this server (404, "is not running on this
+server") is gone by design and only counted. One failure lists every faulty page and every slow one, slowest first. `page_walk.py` keeps
+two short lists, each entry with its reason: `KNOWN_FAULTS` (reported, not failed, until fixed) and `SLOW_ALLOWED`. The walk's stack runs
+the data inbox, so Admin → Data loads → Inbox and Upload are opened too.
 
 The layout checks open the key pages (Home, the VaR explorer, Why it moved, the market-risk cube, the Pivot, the BI designer, Forms, Admin →
 Engines, Connectors, Data loads and Upload, Help) at 1366 and 1920 px, dark (`terminal`) and light, and measure them: no sideways scroll, no two
