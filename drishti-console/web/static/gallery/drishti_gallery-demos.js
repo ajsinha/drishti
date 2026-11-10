@@ -202,6 +202,10 @@
       return gridBuild(Object.assign({}, values, { rows: values.rows }), ctx, { datasource: ds, names: new Map([[ds, 'datasource']]) });
     },
     agNote: 'rowModelType serverSide',
+    page: function (values, ctx) {                                    // the page's datasource: a stand-in server over 2,000 rows written in it
+      return GAL.writePage(this.build(values, ctx), { rows: ctx.data.trades(2000), code: { datasource: 'datasource' },
+        before: 'const datasource = Drishti.elements.grid.memoryDatasource(rows, { delay: ' + (+values.delay) + ' });' });
+    },
     sutra: () => null
   }));
 
@@ -219,6 +223,11 @@
         names: new Map([[ds, 'datasource'], [isGroup, 'isServerSideGroup'], [key, 'getServerSideGroupKey']]) });
     },
     agNote: 'rowModelType serverSide with treeData, isServerSideGroup and getServerSideGroupKey',
+    page: function (values, ctx) {
+      return GAL.writePage(this.build(values, ctx), { rows: ctx.data.trades(+values.rows),
+        code: { datasource: 'datasource', isServerSideGroup: '(r) => r.treeGroup', getServerSideGroupKey: '(r) => r.treeKey', getRowId: "(r, i, keys) => keys.concat([r.treeKey]).join('/')" },
+        before: 'const datasource = Drishti.elements.grid.memoryDatasource(rows, { delay: ' + (+values.delay) + ", keyField: 'ID', getDataPath: (r) => ['Bank', r.DESK, r.BOOK, r.ID] });" });
+    },
     sutra: () => null
   }));
 

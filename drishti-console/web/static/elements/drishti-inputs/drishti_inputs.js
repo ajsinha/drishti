@@ -300,10 +300,34 @@
         lineComment: '#'
       };
     }
+    function scriptMode() {
+      const KEYWORDS = /^(const|let|var|function|return|if|else|for|while|new|class|extends|import|from|export|await|async|try|catch|throw|typeof|null|true|false|this)\b/;
+      return {
+        startState: () => ({ block: false, tag: false }),
+        token: (stream, state) => {
+          if (state.block) { if (stream.match(/^.*?\*\//)) { state.block = false; } else { stream.skipToEnd(); } return 'comment'; }
+          if (stream.eatSpace()) { return null; }
+          if (stream.match(/^\/\*/)) { state.block = true; return 'comment'; }
+          if (stream.match(/^\/\/.*/) || stream.match(/^<!--.*?-->/)) { return 'comment'; }
+          if (stream.match(/^<\/?[A-Za-z][\w-]*/)) { state.tag = true; return 'tag'; }
+          if (state.tag && stream.match(/^\/?>/)) { state.tag = false; return 'tag'; }
+          if (stream.match(/^"(?:[^"\\]|\\.)*"?/) || stream.match(/^'(?:[^'\\]|\\.)*'?/) || stream.match(/^`[^`]*`?/)) { return 'string'; }
+          if (stream.match(KEYWORDS)) { return 'keyword'; }
+          if (stream.match(/^-?\d+(\.\d+)?\b/)) { return 'number'; }
+          if (stream.match(/^[{}()[\],;]/)) { return 'bracket'; }
+          if (stream.match(/^[A-Za-z_$][\w$]*/)) { return null; }
+          stream.next();
+          return null;
+        },
+        lineComment: '//'
+      };
+    }
     const MODES = Object.freeze({
       rachana: { cm: 'drishti-rachana', ours: rachanaMode },
       yaml: { cm: 'rachana-yaml', ours: yamlMode },
       python: { cm: 'python', vendor: 'vendor/codemirror/mode/python/python.js' },
+      javascript: { cm: 'drishti-script', ours: scriptMode },
+      html: { cm: 'drishti-script', ours: scriptMode },
       text: { cm: null }
     });
     function defineModes(CM) {
@@ -347,7 +371,7 @@
         return out;
       });
     }
-    return { "rachanaMode": rachanaMode, "yamlMode": yamlMode, "MODES": MODES, "defineModes": defineModes, "MiniStream": MiniStream, "tokens": tokens };
+    return { "rachanaMode": rachanaMode, "yamlMode": yamlMode, "scriptMode": scriptMode, "MODES": MODES, "defineModes": defineModes, "MiniStream": MiniStream, "tokens": tokens };
   })();
   /* ---- src/drishti_code-text.js ---- */
   __m["src/drishti_code-text.js"] = (function () {

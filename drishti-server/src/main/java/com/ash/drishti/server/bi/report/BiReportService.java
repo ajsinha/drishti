@@ -495,6 +495,13 @@ public final class BiReportService {
         } else {
             out.put("highlight", null);
         }
+        if (!pre.built().levels().isEmpty()) {
+            List<Map<String, Object>> levels = new ArrayList<>();
+            for (var lq : pre.built().levels()) {
+                levels.add(new LinkedHashMap<>(datasets.json(shortNames(pre, datasets.asked(p, pre.dsItem(), lq, false).result()))));
+            }
+            out.put("levels", levels);
+        }
         out.put("visual", pre.visual().id());
         if (pre.resolved()) {
             out.put("wells", pre.visual().wells());                 // a field parameter's choice in place of param.<name>: what the client draws (2.6.0)

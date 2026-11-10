@@ -1,6 +1,6 @@
 {
   "bytes": {
-    "css": 232357,
+    "css": 234827,
     "js": 174086,
     "js_gzip": 65338
   },
@@ -81,8 +81,8 @@
       "integrity": "sha384-XWrIbE3euUUMijR3HEsgk4BnNZbQ4W55155UetDfjtnWalSDov2e5d6qFitNgGKn"
     },
     "drishti-render.css": {
-      "bytes": 232357,
-      "integrity": "sha384-IL7yNbpFFnnjNnfILv7qNeAaQmvwloJP1ZtAx2FXexweXs+WzPFGexm4Y8+1u+8S"
+      "bytes": 234827,
+      "integrity": "sha384-KIbP1Kc1iKfgv1LSNw7R9fx5Iak56NupN6t3Lwmbgq2+7NMWqW3lnqbh0m0vBwYU"
     },
     "drishti-render.d.ts": {
       "bytes": 12529,

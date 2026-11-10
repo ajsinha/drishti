@@ -144,6 +144,14 @@ public class PivotController {
         return a;
     }
 
+    /** One split of a decomposition tree: the node's figure, each member's own, and the gap (Σ members − node) for a measure that does not add. */
+    @PostMapping("/decompose")
+    public Map<String, Object> decompose(@RequestAttribute(Principal.ATTRIBUTE) Principal p, @RequestBody Map<String, Object> body) {
+        Map<String, Object> a = com.ash.drishti.bicompute.core.PivotDecomposition.answer(core, on(p), body);
+        audit.record(p.user(), "pivot.decompose", String.valueOf(a.get("source")), "measure=" + a.get("measure") + "; split=" + a.get("split") + "; path=" + a.get("path"));
+        return a;
+    }
+
     @PostMapping("/estimate")
     public Map<String, Object> estimate(@RequestAttribute(Principal.ATTRIBUTE) Principal p, @RequestBody Map<String, Object> body) {
         Viewer v = on(p);

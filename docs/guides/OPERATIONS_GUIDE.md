@@ -1502,7 +1502,7 @@ python3 tools/drishti.py server packs rollback my-bank --version 1.0.0          
 With a breaking change it prints the preview and exits 1 until `--accept-breaking`. A personal API token needs the **packs:admin** scope (and its
 user the admin role) ([CLI_REFERENCE.md](CLI_REFERENCE.md#server-packs-deploy-history-rollback-and-datasource)).
 
-| | Copy ([section 8](#8-deploy-promote-and-roll-back-by-copying)) | Admin → Packs / `server packs deploy` |
+| | Copy (described in [section 8](#8-deploy-promote-and-roll-back-by-copying)) | Admin → Packs / `server packs deploy` |
 |---|---|---|
 | Needs a running server and a login | no | yes (administrator; `packs:admin` for a token) |
 | Checks before anything changes | `pack verify` on your machine | the server's checks, on the server |

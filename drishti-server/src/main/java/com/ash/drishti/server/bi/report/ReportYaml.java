@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
 public final class ReportYaml {
 
     private static final List<String> TOP = List.of("rachana", "report", "board", "version", "title", "description", "sample", "owner", "tags", "endorsement", "endorsedBy",
-            "audience", "dataset", "theme", "statement", "dates", "filters", "bookmarks", "layouts", "links", "tests", "rotate", "notify", "pages");
+            "audience", "dataset", "theme", "statement", "dates", "filters", "bookmarks", "layouts", "links", "tests", "rotate", "notify", "selection", "pages");
     private static final List<String> PAGE = List.of("id", "title", "layout", "tooltip", "drillthrough", "filters", "interactions", "visuals");
     private static final List<String> VISUAL = List.of("id", "type", "title", "dataset", "from", "at", "wells", "filters", "sort", "limit", "hierarchy", "drillthrough", "tooltip", "format", "alert",
             "text", "src", "alt", "interacts", "action");

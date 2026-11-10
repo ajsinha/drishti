@@ -16,7 +16,7 @@
 # colour rule is its `alert:`, not a format key). See common.yaml.
 
 $id: static
-x-types: [text, image, button, tile]
+x-types: [text, image, button, tile, decomposition]
 x-order: [Title, Text, Frame, Statement]
 allOf:
   - $ref: "common#/$defs/frame"
@@ -24,6 +24,27 @@ allOf:
 type: object
 additionalProperties: false
 properties:
+  source:
+    type: string
+    x-label: Pivot source
+    x-group: Decomposition
+    x-types: [decomposition]
+  measure:
+    type: string
+    x-label: Measure (a function of the pivot source, var() or sum(NOTIONAL))
+    x-group: Decomposition
+    x-types: [decomposition]
+  splits:
+    type: array
+    items: { type: string }
+    x-label: The dimensions a person may split by, in order
+    x-group: Decomposition
+    x-types: [decomposition]
+  options:
+    type: object
+    x-label: The provider's options of the view (VaR scope, horizon)
+    x-group: Decomposition
+    x-types: [decomposition]
   size:
     type: string
     enum: [heading]

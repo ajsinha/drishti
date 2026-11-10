@@ -15,7 +15,7 @@
 # The format of the other charts: scatter, bubble, pie, donut, funnel, waterfall, treemap, heatmap, histogram, box and map. See common.yaml.
 
 $id: other-chart
-x-types: [scatter, bubble, pie, donut, funnel, waterfall, treemap, heatmap, histogram, box, map]
+x-types: [scatter, bubble, pie, donut, funnel, waterfall, treemap, heatmap, histogram, box, map, sunburst, icicle, calendar]
 x-order: [Title, Data labels, Legend, Colours, Values, Map, Frame]
 allOf:
   - $ref: "common#/$defs/frame"

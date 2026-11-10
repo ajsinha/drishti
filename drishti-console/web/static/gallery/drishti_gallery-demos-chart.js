@@ -226,6 +226,23 @@
     sutra: () => null
   }));
 
+  const calendarSpec = (ctx) => ctx.memo('calendar-spec', () => {
+    const rows = [];
+    const d = new Date(Date.UTC(2026, 0, 2));
+    let i = 7;
+    while (d.getUTCFullYear() === 2026) {
+      if (d.getUTCDay() !== 0 && d.getUTCDay() !== 6) { i = (i * 16807) % 2147483647; rows.push({ day: d.toISOString().slice(0, 10), breaches: i % 7 === 0 ? (i % 3) + 1 : 0 }); }
+      d.setUTCDate(d.getUTCDate() + 1);
+    }
+    return { kind: 'calendar', title: 'Limit breaches per day', x: { field: 'day' }, value: { field: 'breaches', title: 'Breaches' }, data: { rows: rows } };
+  });
+  demos.push(chartDemo({
+    id: 'calendar', title: 'Calendar heatmap', summary: 'A figure per business date on a month grid, a day with no row hollow (a non-business day never reads as a zero); click a day to select it.',
+    values: { mode: 'card', density: 'compact', height: 240 }, examples: [{ title: 'Limit breaches', values: {} }],
+    build: function (values, ctx) { return chartBuild(calendarSpec(ctx), values, ctx); },
+    sutra: () => null
+  }));
+
   demos.push(chartDemo({
     id: 'vega-lite', title: 'Vega-Lite translated', about: 'drishti_chart-vega.js', summary: 'fromVegaLite(vl, {rows}) gives a drishti-chart spec, with what it could not translate named (O1: Vega is retired as the screens move).',
     values: { density: 'compact' },

@@ -32,6 +32,7 @@ export { PANEL_MODES, readTableTree, isChain, TreePanel, treeTables } from './dr
 export { flattenTree, findNode, isWithin, moveNode, nodesSource } from './drishti_tree-nodes.js';
 export { OUTLINE_TONES, outlineFilter, outlineKey, TreeOutline } from './drishti_tree-outline.js';
 export { TREE_ELEMENT, defineTreeElement } from './drishti_tree-element.js';
+export { Decomposition } from './drishti_decomposition.js';
 
 /**
  * Starts drishti-tree in a page (the bundle calls it when it loads): defines <drishti-tree>.

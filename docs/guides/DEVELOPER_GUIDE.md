@@ -2842,7 +2842,7 @@ curl -s $B/entities/trade/MX-20000001/raw | jq '.data | {tradeId, productType, a
 Everything you can open in the terminal you can also read from code, as yourself, with a **personal API token**.
 A token reads what you may read (your roles and packs, at the time of each call) and, unless you gave it a **write scope**,
 **never changes anything**: any request other than `GET` with a read-only token is refused (`403 DRS-5002 API tokens only
-read`), except the `POST`s that only read (`/pivot/query`, `/pivot/estimate`, `/pivot/expand`, `/pivot/compare`, `/pivot/rows`, `/pivot/export`, `/command`, the allow-list
+read`), except the `POST`s that only read (`/pivot/query`, `/pivot/decompose`, `/pivot/estimate`, `/pivot/expand`, `/pivot/compare`, `/pivot/rows`, `/pivot/export`, `/command`, the allow-list
 `drishti.security.token-read-posts`, which also lets a token ask a BI model, `POST /api/v1/bi/mq`). Tools and CI that must change things get a token with the scope for
 that job; see "Personal API tokens" in [CLI_REFERENCE.md](CLI_REFERENCE.md) and below.
 
