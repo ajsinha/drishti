@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Admin → Data bindings: Bind… opens the form for a kind; Propose sends {kind, binding, reason} (POST /admin/api/bindings/propose); a
    second administrator's Approve or Reject, or the proposer's Withdraw, is sent the same way. The server decides and says why it refuses
    (DRS-1029, DRS-2007); the answer stays in the line above the tables and the page reloads to show the change. The tables are console
