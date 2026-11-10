@@ -2189,6 +2189,8 @@ Static, self-contained (no CDN), in Drishti's terminal look with light and dark;
 | (d) Module removed: an open page and a saved view | [mockups/module-removed.html](kernel-and-modules/mockups/module-removed.html) | A in place: the page frozen under a notice bar, saved views kept in their list with a *needs genomics* chip · B replaced: the page swapped for a full notice card, saved views moved to an *Unavailable* group | **A** (people keep their bearings and their work stays where they left it; nothing jumps); B for phones |
 | (e) Admin → Modules → Deploy | [mockups/module-deploy.html](kernel-and-modules/mockups/module-deploy.html) | A step wizard (choose, place, plan, approve, apply, result) · B one page, the plan matrix updating live as placement changes · C split view: placement on the left, the plan on the right | **C** (placement and its consequence side by side, the plan always visible before approval; it steps through approval and apply in the right pane); A for first-time administrators as a *guided* toggle; B gets crowded with more than five nodes |
 | (f) The kernel switcher: one console, several kernels | [mockups/kernel-switcher.html](kernel-and-modules/mockups/kernel-switcher.html) | A a kernel chip in the header with a menu (current kernel, the others with their health), menus and Home labelled per kernel · B a kernel rail: one coloured tab per kernel across the top, each with its own menus | **A** (one header for any number of kernels, the current kernel always visible beside the brand, a down kernel greyed in the menu and on its cards; the union of menus stays one menu bar); B is clearer for two kernels but crowds at three or more and splits search |
+| (g) Admin → Cluster: the node × module placement matrix | [mockups/admin-cluster.html](kernel-and-modules/mockups/admin-cluster.html) | A matrix (part × node) with a detail drawer · B node cards · C terminal `cluster modules --matrix` | **A** (where each part runs at a glance, drift in words with its fix); B as its *By node* tab and phone layout; C as the CLI output |
+| (h) Module SDK: `drishti.py module run` | [mockups/module-run.html](kernel-and-modules/mockups/module-run.html) | A terminal and browser side by side, a developer bar on the page · B the browser with a developer drawer (checks, bindings, routes, log) · C a floating developer pill | **A** (the terminal stays the source of truth, the page stays as people will see it); C for `--shots` runs |
 
 ### 17.1 The recommended options
 
@@ -2232,3 +2234,26 @@ menus and Home cards, the genomics kernel down and greyed):
 
 The same option in the light theme: [kernel-switcher-A-light.png](kernel-and-modules/mockups/kernel-switcher-A-light.png); option B:
 [kernel-switcher-B.png](kernel-and-modules/mockups/kernel-switcher-B.png).
+
+**(g) Admin → Cluster, option A** (the node × module placement matrix: banking's API on main and b, VaR compute and exposure on b with
+max nodes 1, feeds and jobs as singletons on main, nothing placed on c; b's API drifted to 3.0.0 and c holds a leftover package):
+
+![Admin → Cluster, option A](kernel-and-modules/mockups/admin-cluster-A.png)
+
+Recommendation: **A**. One row per module part and one column per node answers *where does what run* without reading every node; the node
+headers carry role, free memory and health, the part labels carry the resource class and the max-nodes limit, singleton leaders are starred,
+and every cell says its state in words as well as colour (green placed and active, red placed but missing or at another version, amber
+present but not placed). Clicking a cell opens the drawer with the version, the routing consequence and the one fix (*Resync*, *Clean up*);
+any change of placement goes to Deploy (e), so this screen only reads and repairs. B (node cards) becomes its *By node* tab and the phone
+layout; C is what `drishti.py cluster modules --matrix` prints. The light theme: [admin-cluster-A-light.png](kernel-and-modules/mockups/admin-cluster-A-light.png).
+
+**(h) Module SDK, `drishti.py module run`, option A** (the genomics module: the fast conformance set C1–C15, the kernel API range, data
+bindings resolved against `samples/`, pages and routes with their URLs, hot-reload lines; beside it the module's page with the developer bar):
+
+![Module run, option A](kernel-and-modules/mockups/module-run-A.png)
+
+Recommendation: **A**. The terminal stays the one source of truth for checks, bindings, routes and reloads, and the browser shows the module
+exactly as people will see it, plus one thin developer bar (module id and version, kernel API, the C1–C15 tally, errors, last reload,
+*Reload*). The kernel injects the bar from the development key only under `module run`, never from the module, so the page itself stays
+conformant and screenshots taken with `--shots` leave it out. B repeats the terminal in a drawer that covers the page being designed;
+C hides errors in a corner and is kept only for `--shots` runs.

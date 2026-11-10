@@ -1,0 +1,167 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  Mock-up (static, design only): the Module SDK's `drishti.py module run` for the genomics sample module, three alternatives
+  (docs/architecture/KERNEL_AND_MODULES.md sections 8.4, 8.6 and 17): A terminal and browser side by side with a developer bar on top,
+  B the browser with a developer drawer, C a floating developer pill.
+  ?v=A|B|C or #A|#B|#C and ?theme=dark|light pick the view (for screenshots).
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Module run mock-ups</title>
+<style>
+:root{--bg:#0e1628;--bg2:#121c33;--sf:#16213a;--sf2:#1b2744;--bd:#26345a;--ink:#e7ecf5;--mu:#93a0b8;--ac:#e8a33a;--acink:#14100a;--ln:#7fb2ff;--ok:#5fd39a;--wa:#f2c14e;--bad:#ff7a7a;--code:#0a1120;--top:#0a1120;--dev:#3b2a6b;--devink:#efe9ff}
+:root[data-theme=light]{--bg:#f4f6fa;--bg2:#e9eef5;--sf:#ffffff;--sf2:#eef2f8;--bd:#cdd6e3;--ink:#1a2333;--mu:#5c6a80;--ac:#c47d12;--acink:#ffffff;--ln:#1f5fbf;--ok:#1e8a55;--wa:#a86f00;--bad:#c62828;--code:#f1f4f9;--top:#ffffff;--dev:#5b3fb0;--devink:#ffffff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.45 system-ui,"Segoe UI",Roboto,sans-serif}
+.top{display:flex;gap:10px;align-items:center;padding:10px 16px;background:var(--top);border-bottom:1px solid var(--bd);flex-wrap:wrap}
+.top b{color:var(--ac);letter-spacing:.08em}.top .cmd{flex:1;min-width:160px;background:var(--sf);border:1px solid var(--bd);border-radius:4px;padding:5px 9px;color:var(--mu);font-family:ui-monospace,monospace}
+.pick{display:flex;gap:6px;padding:10px 16px;border-bottom:1px solid var(--bd);background:var(--bg2);align-items:center;flex-wrap:wrap}
+.pick button{background:var(--sf);color:var(--ink);border:1px solid var(--bd);border-radius:4px;padding:6px 12px;cursor:pointer;font-weight:600}
+.pick button.on{background:var(--ac);color:var(--acink);border-color:var(--ac)}.sp{flex:1}
+.v{display:none;padding:14px 16px}.v.on{display:block}
+.btn{display:inline-block;background:var(--sf2);border:1px solid var(--bd);color:var(--ink);border-radius:4px;padding:3px 9px;font-size:12px;white-space:nowrap}
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:6px;padding:10px 12px;margin-top:10px}
+.card h3{margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mu)}
+.tw{overflow-x:auto}table{width:100%;border-collapse:collapse}td,th{padding:5px 6px;border-bottom:1px solid var(--bd);text-align:left;font-size:12px;white-space:nowrap}th{color:var(--mu);font-weight:600}
+.ok{color:var(--ok)}.wa{color:var(--wa)}.bad{color:var(--bad)}.mu{color:var(--mu)}.ln{color:var(--ln)}
+.chip{font-size:11px;padding:1px 8px;border-radius:10px;border:1px solid var(--bd);white-space:nowrap;display:inline-block;margin:1px}
+.note{margin-top:14px;padding:10px 12px;border-left:3px solid var(--ln);background:var(--bg2);color:var(--mu);font-size:12px}.note b{color:var(--ink)}
+.term{background:var(--code);border:1px solid var(--bd);border-radius:6px;padding:10px 12px;font:11.5px/1.5 ui-monospace,Menlo,Consolas,monospace;white-space:pre;overflow:auto;margin:0}
+.win{border:1px solid var(--bd);border-radius:8px;overflow:hidden;background:var(--bg)}
+.wbar{display:flex;gap:8px;align-items:center;padding:6px 10px;background:var(--bg2);border-bottom:1px solid var(--bd);font-size:11px;color:var(--mu)}
+.wbar .url{flex:1;background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:2px 10px;font-family:ui-monospace,monospace}
+.devbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:5px 10px;background:var(--dev);color:var(--devink);font-size:11.5px}
+.devbar .k{opacity:.75}.devbar .pill{background:rgba(255,255,255,.14);border-radius:10px;padding:1px 8px}.devbar .pill.e{background:var(--bad);color:#fff}
+.app{padding:10px 12px}.app h2{font-size:15px;margin:0 0 2px}
+.mtop{display:flex;gap:10px;align-items:center;padding:7px 12px;background:var(--top);border-bottom:1px solid var(--bd);font-size:12px}.mtop b{color:var(--ac);letter-spacing:.08em}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0}.kpi{background:var(--sf);border:1px solid var(--bd);border-radius:6px;padding:6px 8px}.kpi b{display:block;font-size:16px}.kpi span{font-size:11px;color:var(--mu)}
+.side{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:12px;align-items:start}
+.drawer{border-top:2px solid var(--dev);background:var(--sf)}.tabs{display:flex;gap:0;border-bottom:1px solid var(--bd)}.tabs span{padding:6px 12px;font-size:12px;color:var(--mu);font-weight:600}.tabs span.on{color:var(--ink);border-bottom:2px solid var(--ac)}
+.fpill{position:absolute;right:14px;bottom:14px;background:var(--dev);color:var(--devink);border-radius:18px;padding:6px 12px;font-size:12px;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.fpanel{position:absolute;right:14px;bottom:52px;width:320px;background:var(--sf);border:1px solid var(--dev);border-radius:8px;padding:10px 12px;font-size:12px;box-shadow:0 6px 20px rgba(0,0,0,.35)}
+.rel{position:relative;min-height:470px}
+@media (max-width:1000px){.side{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}}
+</style></head><body>
+<div class="top"><b>DRISHTI</b><div class="cmd">MODULE SDK · drishti.py module run</div><span class="mu">Developer machine · genomics</span></div>
+<div class="pick"><button data-v="A" class="on">A · Terminal | browser, developer bar</button><button data-v="B">B · Browser + developer drawer</button><button data-v="C">C · Floating developer pill</button>
+<span class="sp"></span><button id="theme">Light / dark</button></div>
+
+<!-- ================= A ================= -->
+<div class="v on" id="A">
+<div class="side">
+<div class="win"><div class="wbar">terminal · ~/src/genomics</div>
+<pre class="term" style="border:0;border-radius:0">$ python3 tools/drishti.py module run
+Drishti Module SDK 1.0 · kernel 3.2.0 (kernel API 1.4) · Java 21.0.5
+module    genomics 0.3.0-SNAPSHOT · publisher acme-bio · dev key, taint D
+requires  kernel API [1.3,2.0) <span class="ok">✓ 1.4</span> · elements-core ^1.2 <span class="ok">✓ 1.2.3</span>
+data      target/run/data · demo lake from samples/ (3 tables, 8,960 rows)
+licence   development · feature genomics · expires with this run
+
+Conformance (fast set at start; all: module verify --deep)
+  C1  no kernel internals ............... <span class="ok">ok</span>
+  C2  no bespoke UI ..................... <span class="ok">ok</span>
+  C3  theme tokens only ................. <span class="ok">ok</span>
+  C4  drishti_ asset prefix ............. <span class="ok">ok</span>
+  C5  CSP-clean ......................... <span class="ok">ok</span>
+  C6  routes namespaced ................. <span class="ok">ok</span>
+  C7  help, guide, tutorial ............. <span class="wa">warn</span> tutorial has no screenshots (--shots)
+  C8  data contracts present ............ <span class="ok">ok</span>
+  C9  no secrets, no connectors ......... <span class="ok">ok</span>
+  C10 licence headers ................... <span class="ok">ok</span>
+  C11 functions answer .................. <span class="ok">ok</span> VARX, SAMP
+  C12 two people at once ................ <span class="mu">skip  (--two-people)</span>
+  C13 off means gone .................... <span class="ok">ok</span>
+  C14 absent everywhere ................. <span class="mu">skip  (deep)</span>
+  C15 class loader unloads .............. <span class="mu">skip  (deep)</span>
+
+Data bindings (resolved against samples/)
+  variant-call     contract variant-call@1  &lt;- samples/variants.jsonl  <span class="ok">✓ 8,000 rows</span>
+  sample           contract sample@1        &lt;- samples/samples.jsonl   <span class="ok">✓ 480 rows</span>
+  gene-annotation  contract gene@2 (optional)  <span class="wa">not bound: pages say "no annotation source"</span>
+
+Pages and routes  (console http://192.168.1.24:28731)
+  Home              /m/genomics/                 http://192.168.1.24:28731/m/genomics/
+  Variant explorer  /m/genomics/variants         http://192.168.1.24:28731/m/genomics/variants
+  Sample            /m/genomics/samples/{id}     http://192.168.1.24:28731/m/genomics/samples/S-0001
+  API (api part)    GET /api/v1/m/genomics/variants   kernel http://192.168.1.24:28480
+  Functions         VARX, SAMP · help /help/genomics
+
+<span class="ok">Ready in 6.8 s</span> · watching templates, plugin.yaml, static, i18n, sutras, contracts, help
+Ctrl-C stops and removes target/run
+10:41:07 <span class="ln">reload</span>  templates/variants.html (0.2 s)
+10:41:31 <span class="ln">reload</span>  i18n/en.yaml
+10:42:05 <span class="ln">rebuild</span> genomics-server (3.9 s) · part api restarted · kernel stayed up
+10:42:40 <span class="bad">C3</span>      static/drishti_genomics.css:41 colour #ff0000: use var(--bad)</pre></div>
+
+<div class="win"><div class="wbar"><span>●●●</span><span class="url">http://192.168.1.24:28731/m/genomics/variants</span></div>
+<div class="devbar"><b>DEV</b><span><span class="k">module</span> genomics 0.3.0-SNAPSHOT</span><span><span class="k">kernel API</span> 1.4</span><span class="pill">C1–C15: 11 ok · 1 warn · 3 skip</span><span class="pill e">1 error · C3</span><span class="sp"></span><span class="pill">↻ reloaded 10:42:05</span><span class="btn" style="padding:1px 7px">Reload</span></div>
+<div class="mtop"><b>DRISHTI</b><span class="mu">Genomics › Variant explorer</span><span class="sp"></span><span class="chip">dev user · analyst</span></div>
+<div class="app"><h2>Variant explorer</h2><div class="mu" style="font-size:12px">samples/ demo lake · 480 samples · 8,000 calls</div>
+<div class="kpis"><div class="kpi"><b>8,000</b><span>variant calls</span></div><div class="kpi"><b>1,212</b><span>pathogenic or likely</span></div><div class="kpi"><b>480</b><span>samples</span></div></div>
+<div class="card tw" style="margin-top:0"><table><tr><th>Gene</th><th>Variant</th><th>Class</th><th>Samples</th><th>Annotation</th></tr>
+<tr><td>BRCA2</td><td>c.5946delT</td><td class="bad">pathogenic</td><td>14</td><td class="mu">no annotation source</td></tr>
+<tr><td>TP53</td><td>c.743G&gt;A</td><td class="bad">pathogenic</td><td>9</td><td class="mu">no annotation source</td></tr>
+<tr><td>CFTR</td><td>c.1521_1523del</td><td class="wa">likely</td><td>22</td><td class="mu">no annotation source</td></tr>
+<tr><td>MLH1</td><td>c.350C&gt;T</td><td class="mu">uncertain</td><td>31</td><td class="mu">no annotation source</td></tr></table></div>
+<div class="card" style="border-color:var(--bad)"><h3 class="bad">Developer · 1 error (only in module run)</h3>
+<div style="font-size:12px"><b>C3 theme tokens</b> · static/drishti_genomics.css line 41: <code>color:#ff0000</code>. Use <code>var(--bad)</code>. Release builds refuse to sign until it is fixed.</div></div>
+</div></div>
+</div>
+<div class="note"><b>A, terminal and browser side by side, developer bar on top (recommended).</b> The terminal is the source of truth (checks, kernel API range, bindings against <code>samples/</code>, every page and route with its URL, each hot reload); the page shows the module exactly as people will see it, plus one thin developer bar (module id and version, kernel API, the C1–C15 tally, errors, last reload, Reload). The bar exists only under <code>module run</code>: the kernel injects it from the dev key, never from the module, so the module's own page stays conformant. Weak spot: needs a wide screen or two windows.</div>
+</div>
+
+<!-- ================= B ================= -->
+<div class="v" id="B">
+<div class="win"><div class="wbar"><span>●●●</span><span class="url">http://192.168.1.24:28731/m/genomics/variants</span></div>
+<div class="mtop"><b>DRISHTI</b><span class="mu">Genomics › Variant explorer</span><span class="sp"></span><span class="chip">dev user · analyst</span></div>
+<div class="app"><h2>Variant explorer</h2><div class="mu" style="font-size:12px">samples/ demo lake · 480 samples · 8,000 calls</div>
+<div class="kpis"><div class="kpi"><b>8,000</b><span>variant calls</span></div><div class="kpi"><b>1,212</b><span>pathogenic or likely</span></div><div class="kpi"><b>480</b><span>samples</span></div></div></div>
+<div class="drawer"><div class="devbar"><b>DEV</b><span>genomics 0.3.0-SNAPSHOT · kernel API 1.4</span><span class="pill">11 ok · 1 warn · 3 skip</span><span class="pill e">1 error</span><span class="sp"></span><span class="pill">↻ 10:42:05</span><span class="btn" style="padding:1px 7px">Reload</span><span class="btn" style="padding:1px 7px">▾</span></div>
+<div class="tabs"><span class="on">Checks</span><span>Bindings</span><span>Routes</span><span>Log</span></div>
+<div style="padding:8px 12px" class="tw"><table><tr><th>#</th><th>Check</th><th>Result</th><th>Where</th></tr>
+<tr><td>C3</td><td>theme tokens only</td><td class="bad">error</td><td>static/drishti_genomics.css:41 · #ff0000 → var(--bad)</td></tr>
+<tr><td>C7</td><td>help, guide, tutorial</td><td class="wa">warn</td><td>tutorial has no screenshots: run with --shots</td></tr>
+<tr><td>C12</td><td>two people at once</td><td class="mu">skip</td><td>run with --two-people</td></tr>
+<tr><td>C1, C2, C4–C6, C8–C11, C13</td><td>10 more</td><td class="ok">ok</td><td></td></tr></table></div></div>
+</div>
+<div class="note"><b>B, browser with a developer drawer.</b> Everything in one window: the drawer's tabs repeat the terminal's checks, bindings, routes and log. Weak spot: the drawer covers a third of the page being designed (wrong for screenshots and layout work) and duplicates what the terminal already prints. Kept as an option for developers on one small screen (the drawer folds to the bar).</div>
+</div>
+
+<!-- ================= C ================= -->
+<div class="v" id="C">
+<div class="win rel"><div class="wbar"><span>●●●</span><span class="url">http://192.168.1.24:28731/m/genomics/variants</span></div>
+<div class="mtop"><b>DRISHTI</b><span class="mu">Genomics › Variant explorer</span><span class="sp"></span><span class="chip">dev user · analyst</span></div>
+<div class="app"><h2>Variant explorer</h2><div class="mu" style="font-size:12px">samples/ demo lake · 480 samples · 8,000 calls</div>
+<div class="kpis"><div class="kpi"><b>8,000</b><span>variant calls</span></div><div class="kpi"><b>1,212</b><span>pathogenic or likely</span></div><div class="kpi"><b>480</b><span>samples</span></div></div>
+<div class="card tw" style="margin-top:0"><table><tr><th>Gene</th><th>Variant</th><th>Class</th><th>Samples</th></tr>
+<tr><td>BRCA2</td><td>c.5946delT</td><td class="bad">pathogenic</td><td>14</td></tr><tr><td>TP53</td><td>c.743G&gt;A</td><td class="bad">pathogenic</td><td>9</td></tr></table></div></div>
+<div class="fpanel"><div style="font-weight:700;margin-bottom:4px">genomics 0.3.0-SNAPSHOT · kernel API 1.4</div>
+<div class="mu">reloaded 10:42:05 · rebuild 3.9 s</div>
+<div style="margin-top:6px">Conformance <span class="ok">11 ok</span> · <span class="wa">1 warn</span> · <span class="mu">3 skip</span> · <span class="bad">1 error</span></div>
+<div style="margin-top:6px" class="bad">C3 · drishti_genomics.css:41 · #ff0000</div>
+<div style="margin-top:8px"><span class="btn">Reload</span> <span class="btn">Open in terminal log</span></div></div>
+<div class="fpill">DEV · genomics · <b class="bad" style="color:#fff">1 error</b></div>
+</div>
+<div class="note"><b>C, floating developer pill.</b> The least intrusive: the page is untouched until the pill is clicked. Weak spot: an error is easy to miss in a corner, and the pill floats over content that the module itself places at the bottom right. Good for <code>--shots</code> runs, where the pill is hidden anyway.</div>
+</div>
+
+<script>
+(function(){var q=new URLSearchParams(location.search);function show(v){document.querySelectorAll('.v').forEach(function(e){e.classList.toggle('on',e.id===v)});document.querySelectorAll('.pick button[data-v]').forEach(function(b){b.classList.toggle('on',b.dataset.v===v)})}
+document.querySelectorAll('.pick button[data-v]').forEach(function(b){b.onclick=function(){show(b.dataset.v);history.replaceState(null,'','#'+b.dataset.v)}});
+var t=q.get('theme')||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');document.documentElement.dataset.theme=t;
+document.getElementById('theme').onclick=function(){var r=document.documentElement;r.dataset.theme=r.dataset.theme==='light'?'dark':'light'};
+var h=location.hash.slice(1);if(q.get('v'))show(q.get('v'));else if(/^[ABC]$/.test(h))show(h);})();
+</script>
+</body></html>
