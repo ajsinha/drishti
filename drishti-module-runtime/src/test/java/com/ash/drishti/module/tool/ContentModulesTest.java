@@ -71,9 +71,10 @@ class ContentModulesTest {
 
     @Test
     void bankingIsNotACarrierOfTheMarketDataPackAnyMore() throws Exception {
-        String banking = Files.readString(MODULES.resolve("banking/banking-service/src/main/resources/META-INF/drishti/module.yaml"),
-                StandardCharsets.UTF_8);
-        assertThat(banking).containsPattern("requires: \\[market-data\\]");
+        DmodManifest banking = ModuleAssembler.manifest(MODULES.resolve("banking/dmod"));
+        assertThat(banking.requires()).extracting(DmodManifest.Requirement::id).containsExactly("market-data");
+        assertThat(banking.section("packs").toString()).doesNotContain("market-data");
+        assertThat(banking.firstPartyClaim()).isTrue();
         assertThat(ModuleAssembler.manifest(MODULES.resolve("market-data")).section("packs").toString()).contains("market-data");
         for (String id : List.of("capital-markets", "economy")) {
             assertThat(ModuleAssembler.manifest(MODULES.resolve(id)).requires()).extracting(DmodManifest.Requirement::id).containsExactly("market-data");

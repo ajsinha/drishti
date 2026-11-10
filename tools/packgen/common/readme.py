@@ -388,7 +388,7 @@ def _ancestors(packs_dir: Path, manifest: dict, seen: set | None = None) -> list
 def module_of(pack: str) -> str | None:
     """The module that ships a pack, from the modules' own manifests (DISTRIBUTIONS.md): a content module's modules/<id>/module.yaml
     (packs.list), a module jar's META-INF/drishti/module.yaml (contributes.packs); None for the kernel's packs."""
-    for f in sorted((ROOT / "modules").glob("*/module.yaml")):
+    for f in sorted((ROOT / "modules").glob("*/module.yaml")) + sorted((ROOT / "modules").glob("*/dmod/module.yaml")):
         y = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
         if pack in ((y.get("packs") or {}).get("list") or []):
             return str(y.get("id"))

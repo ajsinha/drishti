@@ -96,8 +96,9 @@ def module_manifests(directory: Path | None) -> dict[str, ModuleEntry]:
     if directory is None or not directory.is_dir():
         return by_id
     for m in sorted(p for p in directory.iterdir() if p.is_dir()):
-        dmod = m / "module.yaml"
-        if dmod.is_file():
+        for dmod in (m / "module.yaml", m / "dmod" / "module.yaml"):   # a content module's folder; a module with code's dmod/ (banking)
+            if not dmod.is_file():
+                continue
             y = _read(dmod)
             mid = str(y.get("id") or "").strip()
             req = [k for k in (y.get("requires") or {}) if k != "optional"] if isinstance(y.get("requires"), dict) else []

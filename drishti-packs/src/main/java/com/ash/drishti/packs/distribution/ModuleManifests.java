@@ -58,10 +58,11 @@ public final class ModuleManifests {
         }
         try (DirectoryStream<Path> modules = Files.newDirectoryStream(dir, Files::isDirectory)) {
             for (Path m : modules) {
-                Path dmod = m.resolve("module.yaml");
-                if (Files.isRegularFile(dmod)) {
-                    Entry e = ofDmod(tree(dmod), dmod);
-                    byId.put(e.id(), e);
+                for (Path dmod : List.of(m.resolve("module.yaml"), m.resolve("dmod").resolve("module.yaml"))) {   // banking's is in dmod/
+                    if (Files.isRegularFile(dmod)) {
+                        Entry e = ofDmod(tree(dmod), dmod);
+                        byId.put(e.id(), e);
+                    }
                 }
                 try (DirectoryStream<Path> parts = Files.newDirectoryStream(m, Files::isDirectory)) {
                     for (Path part : parts) {

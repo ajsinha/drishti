@@ -242,7 +242,7 @@ public final class ModuleDeployService {
     List<String> placedNodes(DmodManifest m) {
         List<ModuleParts> mods = new ArrayList<>(placement.modules().stream().filter(x -> !x.module().equals(m.id())).toList());
         mods.add(ModuleParts.of(m));
-        PlacementResolver.Matrix mx = PlacementResolver.resolve(placement.current(), mods, placement.matrix().nodes());
+        PlacementResolver.Matrix mx = PlacementResolver.resolve(placement.withDefaults(placement.current(), mods), mods, placement.matrix().nodes());
         Set<String> out = new LinkedHashSet<>();
         mx.parts().stream().filter(p -> p.module().equals(m.id())).forEach(p -> out.addAll(p.placed()));
         return List.copyOf(out);

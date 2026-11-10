@@ -17,6 +17,18 @@
 
 ## Unreleased
 
+- **Banking is a module** (2.9.11.i2 + i3, wave 2, option A; [KERNEL_AND_MODULES.md section 3.3](docs/architecture/KERNEL_AND_MODULES.md#33-the-manifest-moduleyaml),
+  [DEVELOPER_GUIDE.md section 1.7](docs/guides/DEVELOPER_GUIDE.md#17-what-a-module-can-contribute), [DISTRIBUTIONS.md section 10](docs/architecture/DISTRIBUTIONS.md#10-how-it-works-as-built)).
+  First-party modules: `origin: first-party` is verified against the `first-party.yaml` the build ships (ids and hash-list hashes); only
+  such a module may declare a `kernel-internals:` allowance, honoured by conformance check C1 and the module class loader, and a module
+  with one loads only on the exact kernel build stamped into it ("built for kernel X, this is Y: install the matching module"). One
+  implementation for the module tool and the kernel; `module inspect`, `drishti.py module list` and Health show the origin. Banking is
+  packed as `banking-1.0.0.dmod` in the normal build (`modules/dist`, with market-data, capital-markets and economy) and passes the fifteen
+  checks; the full jar is the thin kernel with these four installed by default (`drishti.modules.shipped`) and placed on every node by the
+  default placement for first-party modules. The in-process banking wiring is gone from the jar (it stays only as banking's own tests'
+  harness). The bridge now also connects connector types, engine catalogues and defaults, engine caches, readiness gates, drains, cache
+  reports, ready rules, Flight forms, controllers already in the module's namespace and the module's class loader. C12 reads the class
+  initialiser (unmodifiable constants pass) and honours `@EngineWide`.
 - **The kernel loads modules** (2.9.11.i2 + i3, wave 2; [DEVELOPER_GUIDE.md sections 1.6 and 1.7](docs/guides/DEVELOPER_GUIDE.md#17-what-a-module-can-contribute),
   [ADMIN_GUIDE.md section 22.1](docs/guides/ADMIN_GUIDE.md#221-module-packages-auto-deploy-and-the-shared-lib-folder)). A loaded `.dmod`
   module's beans of the kernel API's provider types are seen by the kernel while it is loaded and withdrawn when it unloads (the

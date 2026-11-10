@@ -113,8 +113,13 @@ public final class PlacementService {
 
     /** The placement with the shipped default for first-party modules the site's file does not name. */
     Placement withDefaults(Placement p) {
+        return withDefaults(p, declared.values());
+    }
+
+    /** As above, for these modules (a plan's: one not loaded yet included). */
+    public Placement withDefaults(Placement p, java.util.Collection<ModuleParts> modules) {
         Map<String, Map<String, Placement.Target>> all = new LinkedHashMap<>(p.modules());
-        for (ModuleParts m : declared.values()) {
+        for (ModuleParts m : modules) {
             if (!all.containsKey(m.module()) && firstParty.test(m.module())) {
                 Map<String, Placement.Target> parts = new LinkedHashMap<>();
                 m.parts().keySet().forEach(part -> parts.put(part, new Placement.Target(List.of(), List.of("all"), 0, true)));
