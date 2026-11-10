@@ -247,7 +247,7 @@ under **My account** before you ever put real data in; tutorials here leave it s
 ![The home page: the command line, the date box, the menus and a list of commands to try](img/t01/02-home.jpg)
 
 You should see, from left to right in the top bar: the **command line** (the rounded box, `> TRD MX-20000001, CPTY ...` is its hint), the **business date** box, the menu icons
-(**Views**, then Engines, BI, Build, Admin, Help; **Engines** lists the compute engines your roles open, VaR, exposure, FRTB-SA and SIMM among them, and is not in this picture, which is to be re-run), the bell for your inbox, the packs icon with a count, the theme button, the round **Live** button and your name.
+(**Views**, then Risk, BI, Build, Admin, Help; **Risk** holds the pages of the risk engines your roles open, VaR, exposure, FRTB-SA and SIMM among them), the bell for your inbox, the packs icon with a count, the theme button, the round **Live** button and your name.
 Below it is a list of commands you can click.
 
 The command line is the heart of Drishti. A command is a **mnemonic** (a short code for a kind of thing: `TRD` is a trade) and an **identifier**:

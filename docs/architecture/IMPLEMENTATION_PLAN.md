@@ -939,7 +939,7 @@ Drishti database (SQLite by default on one server, PostgreSQL for a cluster, per
 migrations): roles, permissions per engine, command word, pack, kind, page, API path and action (read, run, save, approve, administer),
 row rules and column masks by role, groups and role inheritance, time-bound grants, an administrator screen to edit them (mock-ups first),
 an audit of every change, the API and CLI, and today's configuration-file roles moved in once (one place, no dual machinery). The engine
-switches decide what runs on a server; roles decide who may use it: the Engines menu, commands, Help and API all follow both.
+switches decide what runs on a server; roles decide who may use it: the Risk menu's engine pages, commands, Help and API all follow both.
 
 ## 2.9.14: oversight (proposed)
 

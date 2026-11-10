@@ -1145,7 +1145,8 @@ $py = "<drishti>\drishti-console\.venv\Scripts\python.exe"; $tools = "<drishti>\
    `trade_endur.2026-10-16.jsonl` (or `.jsonl.gz`, `.jsonl.zip`, or a tar of `trade_endur\2026-10-16\` folders). A file named only by its
    date is refused, with the name to give it.
 3. **Two IDE projects, never one folder** (when you use the IDEs): IntelliJ opens `<drishti>` (its run configurations in `run-configs\`:
-   **Drishti build server jar**, **Drishti server (demo lakes)**); PyCharm opens `<drishti>\drishti-console` (`drishti-console\run-configs\`:
+   **Drishti build server jar**, **Drishti server (demo lakes)**, which run module `drishti-app` with the class path in an argument
+   file, so Windows' command-line limit raises no warning); PyCharm opens `<drishti>\drishti-console` (`drishti-console\run-configs\`:
    **Drishti console**, **Build demo lakes**, **Load ENDUR file into the lake**), with the `.venv` interpreter
    ([OPERATIONS_GUIDE.md › PyCharm](guides/OPERATIONS_GUIDE.md#33-pycharm-run-and-debug-the-console)). Opened on the same folder they
    overwrite each other's `.idea` (IntelliJ then says **module not specified**: close both, delete `<drishti>\.idea`, reopen).
