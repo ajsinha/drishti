@@ -17,6 +17,13 @@
 
 ## Unreleased
 
+- **Visual snapshots of the key pages** (2.9.11.i2 + i3, wave 4; [TEST_HARNESS.md section 3.20](docs/architecture/TEST_HARNESS.md#320-the-visual-snapshots)):
+  about 30 key pages (Home and each lens's, the World page, the VaR explorer for the bank, a desk and a basket, Why it moved, the cubes, a BI
+  report, FRTB-SA, SIMM, exposure, Forms, Trades, Curves, FUND, USEQ, the Admin pages of engines, connectors, loads, bindings, cluster
+  modules, modules, deploy and white label, Help, the Elements gallery and Playground) at 1366 and 1920 px, dark and light, compared with
+  committed golden images (half size, 128 colours) in the page walk on its own server; the walk's lake ends on a fixed date, the live clock
+  is masked; per-page tolerance, a diff image on a change; `--update-snapshots` refreshes them by hand, never in a drill; the drill lists
+  every changed page and the goldens its commit refreshed.
 - **Module deployment, cluster-first** (2.9.11.i2 + i3, wave 3; [CLUSTER_GUIDE.md section 1.10](docs/guides/CLUSTER_GUIDE.md#110-deploying-a-module),
   [ADMIN_GUIDE.md section 25](docs/guides/ADMIN_GUIDE.md#25-modules-and-deploy)): a `.dmod` is uploaded once to the module store
   (`POST /api/v1/admin/modules/store`, the fifteen conformance checks, kept by id and version, never rebuilt); a plan says per node what

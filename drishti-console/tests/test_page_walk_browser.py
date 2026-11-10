@@ -20,13 +20,18 @@
   (DRISHTI_PAGEWALK_BUDGET, 10 s); every fault and every slow page is listed in one failure;
 - the key pages (VaR explorer, Why it moved, MR cube, a pivot, BI, a FORM page, Admin → Engines, Connectors, Data loads, Upload, Home,
   Help) at 1366 and 1920 px, dark and light: no sideways scroll, no overlapping controls, labels beside their controls, no field group
-  taller than its content, the main content using the width; a drishti-inputs Form on the page by tests/form_layout.py's measure.
+  taller than its content, the main content using the width; a drishti-inputs Form on the page by tests/form_layout.py's measure;
+- the visual snapshots: about 30 key pages (KEY_SNAPSHOTS) at 1366 and 1920 px, dark and light, against their golden images
+  (tests/snapshots.py; ``--update-snapshots`` writes them). The lake ends on a fixed date (SNAPSHOT_DATE) so the figures never move.
 
 DRISHTI_PAGEWALK_BASE=<console URL> walks a console that is already running instead of starting one (an owner's stack, a QA machine).
 Skipped when Playwright, Chromium, the built server jar or a JDK is missing."""
 import os
+from pathlib import Path
 
 import pytest
+
+import snapshots
 
 from form_layout import _MEASURE
 from page_walk import BUDGET_S, dedupe, go, layout_faults, menu_links, new_page, open_page, report, sitemap_addresses
@@ -36,6 +41,44 @@ from var_stack import VAR_TRADES, var_data, var_lake, var_server
 KEY_PAGES = ["/", "/var?scope=BANK", go("VAR BANK EXPLAIN"), "/pivot?preset=mr", "/pivot", "/bi/designer", "/forms", "/admin/engines",
              "/admin/connectors", "/admin/loads", "/admin/loads/upload", "/help"]
 THEMES = {"dark": "terminal", "light": "light"}
+#: the business date the page walk's lake ends on: fixed, so the visual snapshots' figures and dates are the same on every run
+SNAPSHOT_DATE = "2026-11-06"
+#: the visual snapshots: name -> (address, {tolerance, mask: more selectors covered}); a lens's home is opened by entering the lens
+KEY_SNAPSHOTS: dict[str, tuple[str, dict]] = {
+    "home": ("/", {}),
+    "home-risk": ("/lens/risk", {}),
+    "home-trading": ("/lens/trading", {}),
+    "home-market": ("/lens/market", {}),
+    "home-markets": ("/lens/markets", {}),
+    "world": ("/lens/world", {}),
+    "var-bank": ("/var?scope=BANK", {}),
+    "var-desk": ("/var?scope=DESK:DESK-RATES", {}),
+    "var-basket": ("/var?scope=BASKET:PF-ASHA-UNWIND", {}),
+    "why-it-moved": (go("VAR BANK EXPLAIN"), {}),
+    "mr-cube": ("/pivot?preset=mr", {}),
+    "pivot": ("/pivot", {}),
+    "bi-report": ("/bi/r/file:report:desk-wall", {}),
+    "frtb": (go("FRSA BANK"), {}),
+    "simm": (go("SIMM"), {}),
+    "exposure": ("/exposure", {}),
+    "form": ("/forms", {}),
+    "trades": (go("TRD"), {}),
+    "curves": (go("CRV"), {}),
+    "fund": (go("FUND"), {}),
+    "useq": (go("USEQ"), {}),
+    "admin-engines": ("/admin/engines", {}),
+    "admin-connectors": ("/admin/connectors", {}),
+    "admin-loads": ("/admin/loads", {}),
+    "admin-upload": ("/admin/loads/upload", {}),
+    "admin-bindings": ("/admin/bindings", {}),
+    "admin-cluster-modules": ("/admin/net?tab=modules", {}),
+    "admin-modules": ("/admin/modules", {}),
+    "admin-deploy": ("/admin/modules/deploy", {}),
+    "admin-white-label": ("/admin/white-label", {}),
+    "help": ("/help", {}),
+    "elements-gallery": ("/elements?mode=docs", {}),
+    "elements-playground": ("/elements?mode=playground", {}),
+}
 #: in-context pages opened from a link on the page that lists them (they need its parameters)
 FROM = {"/admin/lakes/table": "/admin/lakes"}
 
@@ -45,7 +88,7 @@ def stack(tmp_path_factory):
     if os.environ.get("DRISHTI_PAGEWALK_BASE"):
         yield os.environ["DRISHTI_PAGEWALK_BASE"].rstrip("/")
         return
-    lake = var_lake(tmp_path_factory, var_data(*VAR_TRADES))
+    lake = var_lake(tmp_path_factory, var_data(*VAR_TRADES), as_of=SNAPSHOT_DATE)
     # the data inbox on (Admin -> Data loads -> Inbox and Upload are its pages), over an empty folder of its own
     yield from var_server(tmp_path_factory, lake, DRISHTI_DATALOAD_ENABLED="true", DRISHTI_DATALOAD_DIR=str(tmp_path_factory.mktemp("walk-dataload")))
 
@@ -82,6 +125,40 @@ def _assert_clean(results: list[dict]) -> None:
         if "first" in r:
             print(f"  slow on first open only {r['href']}: {r['first']:.1f}s, then {r['secs']:.1f}s")
     assert not bad and not slow, "\n".join(["faults:"] + bad + [f"over {BUDGET_S:.0f} s:"] + slow)
+
+
+def test_the_key_pages_look_as_approved(stack, browser, request, tmp_path):
+    """Each key page at 1366 and 1920 px, dark and light, against its golden image; first in the file, so what the walk opens later
+    (recent pages, workspaces) never shows in it. ``--update-snapshots`` writes the goldens; the drill never does."""
+    if os.environ.get("DRISHTI_PAGEWALK_BASE"):
+        pytest.skip("the goldens are of the test stack's fixed demo lake, not of a running console's data")
+    updating = request.config.getoption("--update-snapshots")
+    if updating and os.environ.get("DRILL_TIMINGS_OUT"):
+        pytest.fail("a drill never updates the visual snapshots: run --update-snapshots by hand and commit the goldens")
+    base, diffs = str(stack), Path(os.environ.get("DRISHTI_SNAPSHOT_DIFFS") or tmp_path / "snapshot-diffs")
+    changed, faults = [], []
+    for width in (1366, 1920):
+        for theme in sorted(THEMES):
+            pg = new_page(browser, width=width)
+            try:
+                pg.context.add_init_script("try { localStorage.setItem('drishti.theme', %r); } catch (e) {}" % THEMES[theme])
+                for name, (href, opts) in KEY_SNAPSHOTS.items():
+                    r = open_page(pg, base, href)
+                    faults += [f"{name}: {f}" for f in r["faults"]]
+                    pg.evaluate("(t) => document.documentElement.setAttribute('data-theme', t)", THEMES[theme])
+                    png = snapshots.capture(pg, opts.get("mask", []))
+                    if href.startswith("/lens/"):
+                        pg.goto(base + "/lens/leave")
+                    if updating:
+                        snapshots.update(name, width, theme, png)
+                        continue
+                    row = snapshots.compare(name, width, theme, png, opts.get("tolerance", snapshots.TOLERANCE), diffs)
+                    if row["changed"]:
+                        changed.append(f"{name} {width} {theme}: {row['share']:.2%} changed, see {row['diff']}")
+            finally:
+                pg.context.close()
+    assert not faults, "pages with faults:\n" + "\n".join(faults)
+    assert not changed, "pages that look different from their golden (refresh with --update-snapshots when meant):\n" + "\n".join(changed)
 
 
 def test_every_sitemap_page_opens_clean(stack, browser):
