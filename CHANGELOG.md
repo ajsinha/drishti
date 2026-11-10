@@ -85,6 +85,7 @@
 
 ### Docs
 
+- **Catch-up for i1, i1b and the VaR page:** the README rewritten from the product as built (numbers regenerated); the IntelliJ server configurations (module `drishti-app`, class path in an argument file) in OPERATIONS_GUIDE section 3.2, the developer guide and the deployment guide; the Risk menu in place of Engines in the user and admin guides and tutorial 1; the kernel boundary, the copy-paste ratchet, `--affected` and the 10 s page budget among the developer rules; the deployment guide's VaR and Elements checks; `var/tree?within=` in the API reference; Iceberg's storage roots; the Help summaries of the VaR, BI and quickstart pages; the PDFs regenerated.
 - **Plan:** i2 and i3 become one release with one drill after i1 + i1b, in four waves, with deploy built once, cluster-first.
 - **Source file limit:** 2,000 lines (was 1,500); `SourceFileSizeTest`, the console's checks and the guides.
 - **Roadmap:** every visual lives in Drishti Elements; a Drishti Elements Playground (live pages with editable data) closes the BI depth release.
