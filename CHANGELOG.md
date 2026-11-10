@@ -26,8 +26,12 @@
   `drishti-module-parent` is the parent it inherits (Java 21, the kernel API and Spring as `provided`); `drishti-module-maven-plugin` runs
   `drishti:validate` (the manifest against the pom), `drishti:assemble` (packs `target/dmod/<id>-<version>.dmod` with the module runtime's
   packer and its hash list) and `drishti:conformance` (the fifteen checks C1–C15, each failure a sentence naming the file and the fix; C11
-  and C13–C15 load the module into the module runtime, C15 for 50 load/unload cycles). `ModuleSdkTest` generates a module from the
-  archetype, builds it, passes the checks and loads, routes and unloads it; a broken copy fails the checks in plain words.
+  and C13–C15 load the module into the module runtime, C15 for 50 load/unload cycles). Maven is not the only way: the packer and the
+  checks are one implementation in `drishti-module-runtime`, also run as `java -jar drishti-module-tool.jar pack|check|inspect` (one
+  self-contained jar, any build: Gradle, a script, `javac` and a folder) and `drishti.py module pack|check|inspect`; the plugin is a thin
+  wrapper over it. A `.dmod` is a documented zip anyone can produce, as long as it passes `check`. `ModuleToolTest` generates a module
+  from the archetype, builds it, passes the checks and loads, routes and unloads it; packs, checks and inspects one built with `javac` and
+  a folder through the tool and loads it; a broken copy fails the checks in plain words.
 - **Banking's sources build on their own:** `drishti-banking` and `drishti-compute-banking` moved to `modules/banking/banking-service` and
   `modules/banking/banking-compute` (artifact ids unchanged; built alone with `./mvnw -f modules/banking/pom.xml`). The kernel internals
   banking still reaches are recorded in `modules/banking/kernel-internals.txt` (44 packages: 20 of `drishti-server`, 24 of the kernel's

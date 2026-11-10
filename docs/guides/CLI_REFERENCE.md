@@ -1241,6 +1241,21 @@ registry:   (not configured)
 (Here the scratch server has no registry configured; with one, each row shows the version, whether the publisher is trusted, and
 the installed and loaded versions.)
 
+### `module pack`, `module check`, `module inspect`: a module package without Maven
+
+The module tool ([DEVELOPER_GUIDE.md section 1.6](DEVELOPER_GUIDE.md#16-the-module-sdk)): `pack` turns a module folder (`module.yaml` at
+its root, its jar under `java/` or given with `--jar`) into `<out>/<id>-<version>.dmod`; `check` runs the conformance checks C1–C15 on a
+`.dmod` or a folder; `inspect` says what a package is and whether its files match its hash list. It runs
+`drishti-module-runtime/target/drishti-module-tool.jar` (or `--tool`, `DRISHTI_MODULE_TOOL`) with Java only.
+
+```bash
+python3 tools/drishti.py module pack build/greet --jar build/libs/greet.jar --out dist
+python3 tools/drishti.py module check dist/greet-0.1.0.dmod --project .
+python3 tools/drishti.py module inspect dist/greet-0.1.0.dmod
+```
+
+Exit: 0 done (every check passed), 1 a check failed or the module was refused, 2 usage.
+
 ## 6. `data`: profile, ingest and load
 
 ### `data profile`: what is in your JSON Lines

@@ -57,7 +57,7 @@ shipped as packages (their signatures and the licence check in 2.9.11.j), is a d
 
 Banking's Java builds on its own under `modules/banking/` (the kernel internals it still reaches are listed in
 `modules/banking/kernel-internals.txt`, a list that only shrinks). A module of your own starts from the **Module SDK**: the archetype
-`drishti-module-archetype`, then `mvn verify` packs `target/dmod/<id>-<version>.dmod` and runs the conformance checks C1–C15
+`drishti-module-archetype`, then `mvn verify` packs `target/dmod/<id>-<version>.dmod` and runs the conformance checks C1–C15; any other build uses the module tool (`java -jar drishti-module-tool.jar pack|check|inspect`, or `drishti.py module`)
 ([DEVELOPER_GUIDE.md section 1.6](docs/guides/DEVELOPER_GUIDE.md#16-the-module-sdk)). Beside the full server jar (the default) the build
 makes the **thin jar**, `drishti-kernel-app/target/drishti-kernel-<version>-exec.jar`: the kernel alone, with no modules, as Health says.
 
