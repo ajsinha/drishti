@@ -73,6 +73,8 @@
 
 ### Testing and the drill
 
+- **The page walk:** every drill opens every sitemap page and every top-bar link (the product's and each lens's) as the administrator over the cached VaR demo lake, and fails on an error answer, a server error page, a console error, an uncaught exception, an empty page or a page over 5 s; the key pages are measured at 1366 and 1920 px, dark and light (no sideways scroll, no overlapping controls, labels beside their controls, no oversized field groups). `test_page_walk_browser.py`; `DRISHTI_PAGEWALK_BASE` walks a running console.
+- **`/admin` answers at once:** it opens the first Admin tab the person may open instead of the not-found page.
 - **The VaR proof runs in seconds:** an in-process golden test covers all three demo dates, the 509 and 250 windows, USD and EUR, every hierarchy and all 28 system baskets. The server-against-server API comparison now runs for releases only.
 - **`tools/drill.sh --affected [--base REF]`** runs only the Maven modules and test files a diff can reach, for builders; shared infrastructure, and anything it cannot place, selects more. `tools/docs/shots_affected.py` does the same for screenshots.
 - **Cached demo lakes:** built once per hash of the test data, generators and lake code, and reused by every test stack and check.

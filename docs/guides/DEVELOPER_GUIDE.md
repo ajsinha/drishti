@@ -423,6 +423,7 @@ Both kinds are listed here.
 | No `synchronized` around blocking I/O (virtual threads) | `NoBlockingUnderSynchronizedTest` |
 | Front end vendored: no CDN, no external URL, no inline script, handler or style | `drishti-console/tests/test_assets_policy.py`, the console's Content Security Policy |
 | Phone: no sideways scroll, targets of at least 44 px | `test_page_widths_browser.py` and the pages' own browser tests |
+| Every sitemap page and top-bar link opens clean and within 5 s; the key pages laid out at 1366 and 1920 px, dark and light | `test_page_walk_browser.py` (TEST_HARNESS.md, "The page walk"; `DRISHTI_PAGEWALK_BASE=<console URL>` walks a running console) |
 | No hidden file or folder of our own; everything written at run time under the data folder | `tools/test_no_hidden_names.py` |
 | Generated files match their generators | `--check` in the drill |
 | Sutras shown in docs and pack guides are valid | `DocumentedSutrasTest` |
