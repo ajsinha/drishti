@@ -54,6 +54,30 @@ public final class ModuleLoaders {
         LEAVING.add(listener);
     }
 
+    /**
+     * As above, for a kernel object that holds what modules registered with it (a listener list, a folder list): held weakly, so a kernel
+     * object that is itself gone (a test's server) is not kept.
+     */
+    public static <T> void onLeave(T owner, java.util.function.BiConsumer<T, ClassLoader> drop) {
+        java.lang.ref.WeakReference<T> ref = new java.lang.ref.WeakReference<>(owner);
+        LEAVING.add(new Consumer<>() {
+            @Override
+            public void accept(ClassLoader loader) {
+                T o = ref.get();
+                if (o == null) {
+                    LEAVING.remove(this);
+                } else {
+                    drop.accept(o, loader);
+                }
+            }
+        });
+    }
+
+    static {
+        // the kernel's own static registry a module's engine joins (the dates its engines hold open)
+        onLeave(loader -> com.ash.drishti.api.DatesInUse.forget(loader));
+    }
+
     /** True when the object's class is of a module's loader, or of one that it loaded. */
     public static boolean of(Object o, ClassLoader loader) {
         for (ClassLoader l = o == null ? null : o.getClass().getClassLoader(); l != null; l = l.getParent()) {

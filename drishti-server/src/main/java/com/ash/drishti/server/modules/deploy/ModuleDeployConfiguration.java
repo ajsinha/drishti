@@ -131,6 +131,12 @@ public class ModuleDeployConfiguration {
             Collection<Object> out = new ArrayList<>(ctx.getBeansOfType(RequestMappingHandlerAdapter.class).values());
             out.addAll(ctx.getBeansOfType(HandlerExceptionResolver.class).values());
             out.addAll(ctx.getBeansOfType(org.springframework.core.convert.ConversionService.class).values());
+            out.addAll(ctx.getBeansOfType(com.fasterxml.jackson.databind.ObjectMapper.class).values());
+            ctx.getBeansOfType(RequestMappingHandlerAdapter.class).values().forEach(a -> a.getMessageConverters().forEach(c -> {
+                if (c instanceof org.springframework.http.converter.json.AbstractJackson2HttpMessageConverter j) {
+                    out.add(j.getObjectMapper());
+                }
+            }));
             return out;
         });
         long drain = env.getProperty("drishti.module-deploy.drain-seconds", Long.class, 30L) * 1000;

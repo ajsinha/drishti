@@ -152,6 +152,19 @@ public final class ApiMounts {
         }
         java.util.Set<Object> seen = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
         for (Object o : mvcCaches.get()) {
+            if (o instanceof com.fasterxml.jackson.databind.ObjectMapper om) {     // its serializers and deserializers of the module's types
+                if (om.getSerializerProvider() instanceof com.fasterxml.jackson.databind.ser.DefaultSerializerProvider p) {
+                    p.flushCachedSerializers();
+                }
+                try {
+                    Field f = om.getDeserializationContext().getClass().getSuperclass().getDeclaredField("_cache");
+                    f.setAccessible(true);
+                    ((com.fasterxml.jackson.databind.deser.DeserializerCache) f.get(om.getDeserializationContext())).flushCachedDeserializers();
+                } catch (ReflectiveOperationException | RuntimeException e) {
+                    LOG.debug("the deserializers of {} were not flushed: {}", om, e.toString());
+                }
+                continue;
+            }
             if (o instanceof org.springframework.core.convert.support.GenericConversionService g) {
                 g.removeConvertible(Void.class, Void.class);   // empties its converter cache (keys hold a handler's method parameters)
                 continue;
