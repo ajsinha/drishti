@@ -107,14 +107,14 @@ def test_finance_has_the_markets_lens_and_market_data_and_no_risk_number(backend
     for typed in ("VAR BANK", "VRES DESK:RATES", "EXP CPTY:CP-ALDERSHOT", "PLAY VAR", "FRTB", "SIMM", "SENS"):
         assert not markets.typed_shown(typed) and not eds.instance.typed_shown(typed), typed
     d = eds.distribution
-    assert {"capital-markets", "economy", "market-data"} <= set(d.modules) and "banking" not in d.modules
+    assert {"capitalmarkets", "economy", "market-data"} <= set(d.modules) and "banking" not in d.modules
     assert {"var", "exposure", "frtb-sa", "simm", "sensitivities", "mr-cube"} <= set(d.features_off)
     assert "market-data" in d.packs and "market-risk" not in d.packs
 
 
 def test_the_modules_manifests_drive_the_filter():
     known = dist.module_manifests(MODULES)
-    assert {"banking", "market-data", "capital-markets", "economy"} <= set(known)
+    assert {"banking", "market-data", "capitalmarkets", "economy"} <= set(known)
     order = list(known)
     assert order.index("market-data") < order.index("banking")                     # a required module first
     assert known["banking"].requires == ["market-data"] and "market-data" not in known["banking"].packs

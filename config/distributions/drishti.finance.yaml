@@ -35,7 +35,7 @@ brand:
 theme: { tokens: light, mode: light, density: comfortable }   # slate and teal, light, comfortable
 
 modules:
-  - { id: capital-markets, required: true }
+  - { id: capitalmarkets,  required: true }
   - { id: economy,         required: true }
   - { id: market-data,     required: true }
 

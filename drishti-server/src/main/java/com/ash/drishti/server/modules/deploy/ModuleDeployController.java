@@ -164,6 +164,65 @@ public class ModuleDeployController {
         return out;
     }
 
+    // ---- the console part (KERNEL_AND_MODULES.md sections 4.7 and 14.2.1): the console hosts what the kernel verified --------------
+
+    /**
+     * Every module of the registry as a console hosts it: id, version, state (active, off, removed), title, whether this server can hand
+     * its console part over, and the names it owned (claims: lenses, words, kinds), with a fingerprint that changes with any of them.
+     */
+    @GetMapping("/public/modules/console")
+    public Map<String, Object> consoleParts() {
+        List<Map<String, Object>> out = new ArrayList<>();
+        StringBuilder print = new StringBuilder();
+        for (ModuleNode.Entry e : node.entries()) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("id", e.id());
+            m.put("version", e.version());
+            m.put("state", e.state().name().toLowerCase(java.util.Locale.ROOT));
+            m.put("title", e.title());
+            m.put("console", deploy.consoleFolder(e.id(), e.version()) != null);
+            m.put("claims", e.claims());
+            out.add(m);
+            print.append(e.id()).append('@').append(e.version()).append(':').append(e.state()).append('|');
+        }
+        return Map.of("modules", out, "fingerprint", Integer.toHexString(print.toString().hashCode()));
+    }
+
+    /**
+     * An active module version's console part as a zip ({@code module.yaml}, {@code console/}, {@code elements/}, {@code docs/}): the
+     * console reads it declaratively and runs nothing of it. 410 when the module was removed, 404 when it is off, unknown or not that
+     * version.
+     */
+    @GetMapping("/public/modules/console/{id}/{version}")
+    public org.springframework.http.ResponseEntity<byte[]> consolePart(@PathVariable String id, @PathVariable String version) {
+        ModuleNode.Entry e = node.entry(id).orElse(null);
+        java.nio.file.Path dir = e == null ? null : deploy.consoleFolder(id, version);
+        if (dir == null) {
+            int status = e != null && e.state() == ModuleNode.State.REMOVED ? 410 : 404;
+            return org.springframework.http.ResponseEntity.status(status).build();
+        }
+        java.io.ByteArrayOutputStream bytes = new java.io.ByteArrayOutputStream();
+        try (java.util.zip.ZipOutputStream zip = new java.util.zip.ZipOutputStream(bytes)) {
+            for (String part : List.of("module.yaml", "console", "elements", "docs")) {
+                java.nio.file.Path p = dir.resolve(part);
+                if (!java.nio.file.Files.exists(p)) {
+                    continue;
+                }
+                try (java.util.stream.Stream<java.nio.file.Path> s = java.nio.file.Files.walk(p)) {
+                    for (java.nio.file.Path f : s.filter(java.nio.file.Files::isRegularFile).sorted().toList()) {
+                        zip.putNextEntry(new java.util.zip.ZipEntry(dir.relativize(f).toString().replace(java.io.File.separatorChar, '/')));
+                        java.nio.file.Files.copy(f, zip);
+                        zip.closeEntry();
+                    }
+                }
+            }
+        } catch (java.io.IOException ex) {
+            throw new java.io.UncheckedIOException(ex);
+        }
+        return org.springframework.http.ResponseEntity.ok().contentType(MediaType.parseMediaType("application/zip"))
+                .header("Cache-Control", "no-store").body(bytes.toByteArray());
+    }
+
     /** Modules no longer active, with the names they owned (the console marks saved work with them). */
     @GetMapping("/api/v1/modules/gone")
     public Map<String, Object> gone() {

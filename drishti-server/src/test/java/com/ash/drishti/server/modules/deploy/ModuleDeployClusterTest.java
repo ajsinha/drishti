@@ -26,6 +26,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -198,6 +199,17 @@ class ModuleDeployClusterTest {
         assertThat(cluster.node("c").root().resolve("data/modules/installed/greeter")).doesNotExist();
         assertThat(moduleNode("c").entry("greeter")).isPresent();
         assertThat(needs("c")).isEmpty();
+        // the console part: listed on every node, handed over as a zip by a node that holds it (a: installed) and one that does not (c:
+        // the store, on a, is not c's either, so c lists it without a part)
+        JsonNode parts = ok(call("a", "GET", "/public/modules/console", null, "reader"));
+        assertThat(parts.path("modules").get(0).path("state").asText()).isEqualTo("active");
+        assertThat(parts.path("modules").get(0).path("console").asBoolean()).isTrue();
+        HttpResponse<byte[]> zip = HTTP.send(HttpRequest.newBuilder(URI.create(cluster.node("a").url() + "/public/modules/console/greeter/1.0.0")).build(),
+                HttpResponse.BodyHandlers.ofByteArray());
+        assertThat(zip.statusCode()).isEqualTo(200);
+        assertThat(new String(zip.body(), StandardCharsets.ISO_8859_1)).contains("console/plugin.yaml", "console/pages/greet.html", "module.yaml")
+                .doesNotContain("java/greeter.jar");
+        assertThat(call("a", "GET", "/public/modules/console/greeter/9.9.9", null, "reader").statusCode()).isEqualTo(404);
 
         // switch-off: 404 everywhere; a plan made before another was applied is stale
         JsonNode off1 = plan("disable", null, "pause it");
@@ -276,6 +288,8 @@ class ModuleDeployClusterTest {
         JsonNode route = ok(call("b", "GET", "/api/v1/modules/route?path=/m/greeter/greet/asha", null, "reader"));
         assertThat(route.path("status").asInt()).isEqualTo(410);
         assertThat(route.path("by").asText()).isEqualTo("admin-two");
+        assertThat(call("a", "GET", "/public/modules/console/greeter/1.0.0", null, "reader").statusCode()).isEqualTo(410);
+        assertThat(ok(call("a", "GET", "/public/modules/console", null, "reader")).path("modules").get(0).path("state").asText()).isEqualTo("removed");
 
         // reinstall: everything back, nothing marked
         JsonNode again = apply(plan("install", "1.1.0", "reinstall").path("id").asText());
