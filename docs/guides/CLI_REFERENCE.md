@@ -1256,6 +1256,29 @@ python3 tools/drishti.py module inspect dist/greet-0.1.0.dmod
 
 Exit: 0 done (every check passed), 1 a check failed or the module was refused, 2 usage.
 
+### `module deploy|upgrade|plan|remove|disable|enable|apply|reject|withdraw|status|list|run`: deploying on a cluster
+
+The same server API as Admin → Modules → Deploy ([CLUSTER_GUIDE.md section 1.10](CLUSTER_GUIDE.md#110-deploying-a-module)). An
+administrator; a personal token also needs the `modules:deploy` scope.
+
+```bash
+python3 tools/drishti.py module deploy dist/greeter-1.0.0.dmod --reason "first install" --out plan.json   # upload once, then the plan
+python3 tools/drishti.py module apply plan.json                 # a second administrator: stage on the placed nodes, then activate
+python3 tools/drishti.py module upgrade dist/greeter-1.1.0.dmod --reason "new greeting"                # rolling, node by node
+python3 tools/drishti.py module plan install greeter --version 1.0.0 --reason "reinstall"              # a version already in the store
+python3 tools/drishti.py module disable greeter --reason "pause"    # also: remove, enable; each is a plan another administrator applies
+python3 tools/drishti.py module list                            # modules, state, version, placed nodes, the store, the plans waiting
+python3 tools/drishti.py module status dpl-3f9a12c0             # one deployment, per node
+python3 tools/drishti.py module run dist/greeter-1.0.0.dmod     # the kernel's thin jar with this module only, on a free port
+```
+
+`deploy` and `upgrade` upload the `.dmod` to the module store (checked once there with the fifteen conformance checks; the same version
+with other bytes is refused) and print the plan per node: the placed nodes stage and activate, the others receive nothing. `apply` exits
+**0** applied, **1** failed (rolled back on every node), **2** a stale plan (`DRS-1031`: plan again), **3** waiting for a second
+administrator (`DRS-2007`). `run` lays out a run folder (the module installed and active, every part placed on this node; `--dir` keeps
+it, otherwise it is removed on exit) and starts `drishti-kernel-app/target/drishti-kernel-*-exec.jar` (or `--jar`); `--dry-run` prints the
+command. Hot reload while it runs is not built yet.
+
 ## 6. `data`: profile, ingest and load
 
 ### `data profile`: what is in your JSON Lines
