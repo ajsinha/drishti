@@ -94,12 +94,17 @@ public final class PlaygroundTemplate {
         }
     }
 
-    /** The built-in template of a metric, {@code playground/<metric>/template/} on the classpath. */
+    /**
+     * The built-in template of a metric, {@code playground/<metric>/template/} in the jars of the class that asks (a module's own, when the
+     * metric is a module's), else the server's.
+     */
     public static PlaygroundTemplate builtIn(String metric, Collection<String> requiredStyles) {
+        ClassLoader caller = StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE).getCallerClass().getClassLoader();
         String base = "playground/" + metric + "/template/";
         Map<String, String> parts = new LinkedHashMap<>();
         for (String part : PARTS) {
-            try (InputStream in = PlaygroundTemplate.class.getClassLoader().getResourceAsStream(base + part)) {
+            InputStream found = caller == null ? null : caller.getResourceAsStream(base + part);
+            try (InputStream in = found != null ? found : PlaygroundTemplate.class.getClassLoader().getResourceAsStream(base + part)) {
                 if (in == null) {
                     throw new IllegalStateException("the built-in playground template has no " + base + part);
                 }

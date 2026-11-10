@@ -140,7 +140,8 @@ public class ModuleDeployConfiguration {
                 () -> ctx.getBeanProvider(com.ash.drishti.server.engines.EngineRegistry.class).getIfAvailable(),
                 () -> ctx.getBeanProvider(com.ash.drishti.engine.source.SourceRouter.class).getIfAvailable(),
                 () -> ctx.getBeanProvider(com.ash.drishti.identity.AuditLog.class).getIfAvailable(),
-                env instanceof org.springframework.core.env.ConfigurableEnvironment c ? c : null);
+                env instanceof org.springframework.core.env.ConfigurableEnvironment c ? c : null,
+                () -> ctx.getBeanProvider(com.ash.drishti.server.caches.MemoryBudget.class).getIfAvailable());
         return new ModuleNode(root(env), KernelFacts.ofKernel(), placement, mounts, drain, folders, wiring);
     }
 
@@ -156,7 +157,37 @@ public class ModuleDeployConfiguration {
     @org.springframework.context.event.EventListener(org.springframework.boot.context.event.ApplicationReadyEvent.class)
     public void startModules(org.springframework.boot.context.event.ApplicationReadyEvent e) {
         nodeRef = e.getApplicationContext().getBean(ModuleNode.class).start(e.getApplicationContext());
+        if (e.getApplicationContext().getEnvironment().getProperty("drishti.modules.shipped", Boolean.class, true)) {
+            nodeRef.installShipped(shipped(ModuleDeployConfiguration.root(e.getApplicationContext().getEnvironment()).resolve("shipped")))
+                    .forEach(l -> LoggerFactory.getLogger(ModuleNode.class).info("the distribution's modules: {}", l));
+        }
         started = true;
+    }
+
+    /**
+     * The first-party modules the distribution carries ({@code drishti/modules/*.dmod} on the class path: the full jar has banking,
+     * market-data, capital-markets and economy; the thin jar none), copied out to {@code folder} so they install like any package.
+     */
+    static List<Path> shipped(Path folder) {
+        List<Path> out = new ArrayList<>();
+        try {
+            org.springframework.core.io.Resource[] all = new org.springframework.core.io.support.PathMatchingResourcePatternResolver(
+                    ModuleDeployConfiguration.class.getClassLoader()).getResources("classpath*:drishti/modules/*.dmod");
+            if (all.length == 0) {
+                return out;
+            }
+            java.nio.file.Files.createDirectories(folder);
+            for (org.springframework.core.io.Resource r : all) {
+                Path to = folder.resolve(java.util.Objects.requireNonNull(r.getFilename()));
+                try (java.io.InputStream in = r.getInputStream()) {
+                    java.nio.file.Files.copy(in, to, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                }
+                out.add(to);
+            }
+        } catch (java.io.IOException ex) {
+            throw new java.io.UncheckedIOException("the distribution's modules do not read", ex);
+        }
+        return out;
     }
 
     /** After placement's guard (4): removed 410, off 404, a swap waited for, requests counted for the drain. */

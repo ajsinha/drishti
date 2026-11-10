@@ -171,6 +171,11 @@ public final class EngineRegistry implements AutoCloseable {
      * installed is refused.
      */
     public Runnable attach(ComputeEngine eng) {
+        return attach(eng, null);
+    }
+
+    /** As above, listed with the module's own catalogue entry (its words, menus, Help) when it has one. */
+    public Runnable attach(ComputeEngine eng, EngineCatalogue.Entry listed) {
         String id = eng.id();
         boolean added;
         synchronized (changing) {
@@ -179,6 +184,9 @@ public final class EngineRegistry implements AutoCloseable {
             }
             added = !entries.containsKey(id);
             engines.put(id, eng);
+            if (listed != null) {
+                entries.putIfAbsent(id, listed);
+            }
             entries.computeIfAbsent(id, x -> new EngineCatalogue.Entry(x, x, "", x + ".yaml", "drishti.engines." + x + ".enabled", "", List.of(),
                     true, true, true, Map.of()));
             inFlight.putIfAbsent(id, new AtomicInteger());

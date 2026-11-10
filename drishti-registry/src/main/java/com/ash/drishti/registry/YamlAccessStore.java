@@ -60,6 +60,7 @@ public final class YamlAccessStore implements AccessStore {
     private final Path modulesDir;
     private final Path accessDir;
     private final ClassLoader loader;
+    private final Path store;
 
     /**
      * @param modulesDir the site's module files ({@code config/modules})
@@ -67,6 +68,16 @@ public final class YamlAccessStore implements AccessStore {
      * @param loader     where the shipped manifests and lenses are looked for
      */
     public YamlAccessStore(Path modulesDir, Path accessDir, ClassLoader loader) {
+        this(modulesDir, accessDir, loader, null);
+    }
+
+    /**
+     * @param store the module store ({@code <data folder>/modules}): the {@code .dmod} modules installed there, and the distribution's own
+     *              ({@code drishti/modules/*.dmod} beside {@code first-party.yaml} in the server's jar) unless an administrator removed
+     *              them, are modules of this server like the manifests on the class path; null for none
+     */
+    public YamlAccessStore(Path modulesDir, Path accessDir, ClassLoader loader, Path store) {
+        this.store = store;
         this.modulesDir = modulesDir;
         this.accessDir = accessDir;
         this.loader = loader == null ? YamlAccessStore.class.getClassLoader() : loader;
@@ -97,6 +108,7 @@ public final class YamlAccessStore implements AccessStore {
                 }
             }
         }
+        packaged(modules, warnings);
         Map<String, Boolean> switches = new LinkedHashMap<>();
         for (Path f : yamlFiles(modulesDir)) {
             String id = ModuleManifest.norm(f.getFileName().toString().replaceFirst("\\.ya?ml$", ""));
@@ -282,6 +294,81 @@ public final class YamlAccessStore implements AccessStore {
             }
         }
         return out;
+    }
+
+    /**
+     * The modules that come as packages (KERNEL_AND_MODULES.md section 3.3): the distribution's first-party ones (the ids of its
+     * {@code first-party.yaml}, each read from its {@code drishti/modules/<id>-<version>.dmod}), installed unless the module store says an
+     * administrator removed or switched it off; then every other active module of the store ({@code installed/active.yaml}).
+     */
+    @SuppressWarnings("unchecked")
+    private void packaged(Map<String, ModuleManifest> modules, List<String> warnings) {
+        Map<String, String> states = new LinkedHashMap<>();
+        Path registry = store == null ? null : store.resolve("registry.json");
+        if (registry != null && Files.isRegularFile(registry)) {
+            try {
+                for (Object o : new ObjectMapper().readValue(registry.toFile(), List.class)) {
+                    if (o instanceof Map<?, ?> e && e.get("id") != null) {
+                        states.put(String.valueOf(e.get("id")), String.valueOf(e.get("state")));
+                    }
+                }
+            } catch (IOException | RuntimeException e) {
+                warnings.add("the module store's registry.json: " + e.getMessage());
+            }
+        }
+        try (InputStream in = loader.getResourceAsStream("META-INF/drishti/first-party.yaml")) {
+            Map<String, Object> fp = in == null ? Map.of() : YAML.readValue(in, Map.class);
+            if (fp != null && fp.get("modules") instanceof List<?> list) {
+                for (Object o : list) {
+                    if (o instanceof Map<?, ?> e && e.get("id") != null && !modules.containsKey(String.valueOf(e.get("id")))) {
+                        String id = String.valueOf(e.get("id"));
+                        String state = states.getOrDefault(id, "ACTIVE");
+                        Map<String, Object> m = shippedManifest("drishti/modules/" + id + "-" + e.get("version") + ".dmod");
+                        if (m != null) {
+                            modules.put(id, ModuleManifest.ofDmod(m, "ACTIVE".equals(state), "the distribution's " + id + ".dmod"));
+                        }
+                    }
+                }
+            }
+        } catch (IOException | RuntimeException e) {
+            warnings.add("first-party.yaml: " + e.getMessage());
+        }
+        if (store == null) {
+            return;
+        }
+        Path active = store.resolve("installed").resolve("active.yaml");
+        if (!Files.isRegularFile(active)) {
+            return;
+        }
+        for (Map.Entry<String, Object> e : safeRead(active, warnings).entrySet()) {
+            String id = e.getKey();
+            Path manifest = store.resolve("installed").resolve(id).resolve(String.valueOf(e.getValue())).resolve("module.yaml");
+            if (modules.containsKey(id) || !Files.isRegularFile(manifest) || !"ACTIVE".equals(states.getOrDefault(id, "ACTIVE"))) {
+                continue;
+            }
+            try {
+                modules.put(id, ModuleManifest.ofDmod(readMap(manifest), true, "the module store's " + id));
+            } catch (RuntimeException ex) {
+                warnings.add("the module store's " + id + ": " + ex.getMessage());
+            }
+        }
+    }
+
+    /** The manifest inside a package on the class path, or null when the package is not there. */
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> shippedManifest(String resource) throws IOException {
+        try (InputStream in = loader.getResourceAsStream(resource)) {
+            if (in == null) {
+                return null;
+            }
+            java.util.zip.ZipInputStream z = new java.util.zip.ZipInputStream(in);
+            for (java.util.zip.ZipEntry en; (en = z.getNextEntry()) != null; ) {
+                if (en.getName().equals("module.yaml")) {
+                    return YAML.readValue(z.readAllBytes(), Map.class);
+                }
+            }
+            return null;
+        }
     }
 
     /** Every class-path resource of the name, by where it came from (the jar's file name), in class-path order. */

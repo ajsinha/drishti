@@ -87,6 +87,44 @@ public record ModuleManifest(String id, String domain, String title, String abou
                 functions(c.get("functions")), source);
     }
 
+    /**
+     * A {@code .dmod} manifest ({@code module.yaml} of a package, KERNEL_AND_MODULES.md section 3.3) as the registry reads it: the module's
+     * packages ({@code java.packages}), engines ({@code compute.engines}), connectors ({@code compute.connectors}), packs
+     * ({@code packs.list}), its API namespace with the old prefixes it still answers ({@code api.legacy}) and its functions.
+     */
+    @SuppressWarnings("unchecked")
+    static ModuleManifest ofDmod(Map<String, Object> m, boolean installed, String source) {
+        Object id = m.get("id");
+        if (id == null || String.valueOf(id).isBlank()) {
+            throw new IllegalArgumentException(source + ": a module manifest needs an id");
+        }
+        Map<String, Object> java = m.get("java") instanceof Map<?, ?> j ? (Map<String, Object>) j : Map.of();
+        Map<String, Object> compute = m.get("compute") instanceof Map<?, ?> c ? (Map<String, Object>) c : Map.of();
+        Map<String, Object> packs = m.get("packs") instanceof Map<?, ?> p ? (Map<String, Object>) p : Map.of();
+        Map<String, Object> api = m.get("api") instanceof Map<?, ?> a ? (Map<String, Object>) a : Map.of();
+        Map<String, Object> licence = m.get("licence") instanceof Map<?, ?> l ? (Map<String, Object>) l : Map.of();
+        List<String> requires = new ArrayList<>();
+        if (m.get("requires") instanceof Map<?, ?> req) {
+            req.keySet().stream().map(String::valueOf).filter(k -> !"optional".equals(k)).forEach(requires::add);
+        } else {
+            requires.addAll(list(m.get("requires")));
+        }
+        List<String> engines = new ArrayList<>();
+        if (compute.get("engines") instanceof List<?> es) {
+            for (Object e : es) {
+                engines.add(e instanceof Map<?, ?> em ? String.valueOf(em.get("id")) : String.valueOf(e));
+            }
+        }
+        List<String> paths = new ArrayList<>();
+        if (api.get("prefix") != null) {
+            paths.add("/api/v1/" + api.get("prefix"));
+        }
+        paths.addAll(list(api.get("legacy")));
+        return new ModuleManifest(String.valueOf(id), str(m.get("domain")), str(m.get("title")), str(m.get("about")), str(m.get("version")),
+                requires, str(licence.get("feature")), m.get("java") != null, true, installed, list(java.get("packages")), engines,
+                list(packs.get("list")), list(compute.get("connectors")), paths, functions(m.get("functions")), source);
+    }
+
     /** True when the class (its binary name) belongs to this module's code. */
     public boolean ownsClass(String className) {
         if (className == null || CORE.equals(id)) {

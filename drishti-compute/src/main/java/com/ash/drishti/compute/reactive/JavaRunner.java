@@ -60,12 +60,27 @@ public final class JavaRunner implements EngineRunner {
                     + "the server's own Java engines there (compute.in-process-java: false)");
         }
         try {
-            ClassLoader cl = Thread.currentThread().getContextClassLoader() != null ? Thread.currentThread().getContextClassLoader() : JavaRunner.class.getClassLoader();
-            String moved = moved(cl).get(className);
-            if (moved != null) {                     // a class a module moved (a connector file written before the move still names it)
-                LOG.info("{}: the engine class {} is now {}; the connector's file can name the new one", connector, className, moved);
+            ClassLoader own = Thread.currentThread().getContextClassLoader() != null ? Thread.currentThread().getContextClassLoader() : JavaRunner.class.getClassLoader();
+            List<ClassLoader> loaders = new java.util.ArrayList<>();
+            loaders.add(own);
+            loaders.addAll(com.ash.drishti.common.ModuleLoaders.live());     // a loaded module's engine (its code is in its package)
+            Class<?> c = null;
+            ClassNotFoundException missing = null;
+            for (ClassLoader cl : loaders) {
+                String moved = moved(cl).get(className);
+                if (moved != null) {                 // a class a module moved (a connector file written before the move still names it)
+                    LOG.info("{}: the engine class {} is now {}; the connector's file can name the new one", connector, className, moved);
+                }
+                try {
+                    c = Class.forName(moved != null ? moved : className, true, cl);
+                    break;
+                } catch (ClassNotFoundException e) {
+                    missing = e;
+                }
             }
-            Class<?> c = Class.forName(moved != null ? moved : className, true, cl);
+            if (c == null) {
+                throw missing;
+            }
             if (!ComputeEngine.class.isAssignableFrom(c)) {
                 throw new IllegalArgumentException(connector + ": " + className + " is not a ComputeEngine");
             }

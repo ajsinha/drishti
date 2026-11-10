@@ -603,6 +603,7 @@ public final class ModuleDeployService {
             m.put("state", e == null ? "stored" : e.state().name().toLowerCase(Locale.ROOT));
             m.put("title", e != null ? e.title() : st.stream().filter(s -> s.id().equals(id)).map(Stored::title).findFirst().orElse(id));
             m.put("prefix", e == null ? null : e.prefix());
+            m.put("origin", node.origin(id).map(com.ash.drishti.module.runtime.FirstParty.Origin::word).orElse(null));
             m.put("claims", e == null ? List.of() : e.claims());
             m.put("by", e == null ? null : e.by());
             m.put("at", e == null ? null : e.at());

@@ -143,16 +143,30 @@ public final class EngineCatalogue {
     static EngineCatalogue parse(JsonNode root) {
         List<Entry> out = new ArrayList<>();
         for (JsonNode n : root.path("engines")) {
-            Map<String, List<String>> lists = new LinkedHashMap<>();
-            for (String k : LISTS) {
-                lists.put(k, strings(n.path(k)));
-            }
-            String id = n.path("id").asText();
-            out.add(new Entry(id, n.path("title").asText(id), n.path("about").asText(""), n.path("file").asText(id + ".yaml"),
-                    n.path("switch").asText("drishti.engines." + id + ".enabled"), n.path("env").asText(""), strings(n.path("aliases")),
-                    n.path("shipped").asBoolean(false), n.path("installed").asBoolean(false), n.path("live-on").asBoolean(true), Map.copyOf(lists)));
+            out.add(entry(n));
         }
         return new EngineCatalogue(out);
+    }
+
+    private static Entry entry(JsonNode n) {
+        Map<String, List<String>> lists = new LinkedHashMap<>();
+        for (String k : LISTS) {
+            lists.put(k, strings(n.path(k)));
+        }
+        String id = n.path("id").asText();
+        return new Entry(id, n.path("title").asText(id), n.path("about").asText(""), n.path("file").asText(id + ".yaml"),
+                n.path("switch").asText("drishti.engines." + id + ".enabled"), n.path("env").asText(""), strings(n.path("aliases")),
+                n.path("shipped").asBoolean(false), n.path("installed").asBoolean(false), n.path("live-on").asBoolean(true), Map.copyOf(lists));
+    }
+
+    /** A module's own engines ({@value #MODULE_RESOURCE} in its jar), by id: what the registry lists when the module's engine attaches. */
+    public static Map<String, Entry> moduleEntries(InputStream in) throws IOException {
+        Map<String, Entry> out = new LinkedHashMap<>();
+        for (JsonNode n : YAML.readTree(in).path("engines")) {    // their needs name the kernel's engines: checked when they attach
+            Entry e = entry(n);
+            out.put(e.id(), e);
+        }
+        return out;
     }
 
     private static List<String> strings(JsonNode n) {

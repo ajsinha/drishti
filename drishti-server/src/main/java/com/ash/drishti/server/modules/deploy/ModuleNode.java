@@ -20,6 +20,7 @@ import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.module.runtime.Contributions;
 import com.ash.drishti.module.runtime.Dmod;
 import com.ash.drishti.module.runtime.DmodManifest;
+import com.ash.drishti.module.runtime.FirstParty;
 import com.ash.drishti.module.runtime.KernelFacts;
 import com.ash.drishti.module.runtime.LoadedModule;
 import com.ash.drishti.module.runtime.ModuleCandidate;
@@ -145,6 +146,13 @@ public final class ModuleNode implements AutoCloseable {
                 }
 
                 @Override
+                public void preparing(ModuleCandidate candidate, org.springframework.context.support.GenericApplicationContext context) {
+                    if (wiring != null) {
+                        wiring.preparing(candidate, context);
+                    }
+                }
+
+                @Override
                 public void started(LoadedModule module, Contributions contributions) {
                     ph.started(module, contributions);
                     if (wiring != null) {
@@ -176,6 +184,7 @@ public final class ModuleNode implements AutoCloseable {
                     .development(c -> folders.stream().anyMatch(f -> c.dir().toAbsolutePath().normalize().startsWith(f)))
                     .libraries(com.ash.drishti.common.SharedLib.get().any() ? com.ash.drishti.common.SharedLib.get().loader() : null);
             registry.values().stream().filter(e -> e.state() == State.ACTIVE).forEach(this::declare);
+            placement.firstParty(id -> origin(id).map(FirstParty.Origin::firstParty).orElse(false));
             rescan();
             return this;
         } finally {
@@ -575,6 +584,80 @@ public final class ModuleNode implements AutoCloseable {
         }
     }
 
+    /**
+     * The first-party modules the distribution ships ({@code drishti/modules/*.dmod} in the server's jar), installed by default: each one
+     * not installed here, or installed at the same version with other content (a new build of the product), is installed as by
+     * {@link #install}; one an administrator removed or switched off stays as it is. Returns a line per module.
+     */
+    public List<String> installShipped(List<Path> shipped) {
+        lock.lock();
+        try {
+            List<String> out = new ArrayList<>();
+            List<Path> ordered = new ArrayList<>(shipped);
+            ordered.sort(java.util.Comparator.comparing(p -> requiresAny(p) ? 1 : 0));   // what others require first
+            for (Path dmod : ordered) {
+                DmodManifest m = manifestIn(dmod);
+                Entry e = registry.get(m.id());
+                if (e != null && e.state() != State.ACTIVE) {
+                    out.add(m.id() + ": " + e.state().name().toLowerCase(Locale.ROOT) + " by an administrator; not installed again");
+                    continue;
+                }
+                Path here = installed.resolve(m.id()).resolve(m.version());
+                String hash = FirstParty.listHash(here);
+                if (e != null && !e.version().equals(m.version())) {
+                    out.add(m.id() + ": " + e.version() + " is installed; the distribution's " + m.version() + " is left in the store");
+                    continue;
+                }
+                if (hash != null && hash.equals(listHashIn(dmod)) && runtime.loaded(m.id()).isPresent()) {
+                    out.add(m.id() + " " + m.version() + ": installed");
+                    continue;
+                }
+                try {
+                    install(dmod, "the distribution");
+                    out.add(m.id() + " " + m.version() + ": installed from the distribution");
+                } catch (RuntimeException ex) {
+                    out.add(m.id() + " " + m.version() + ": not installed: " + ex.getMessage());
+                    LOG.warn("module {}: the distribution's package was not installed: {}", m.id(), ex.getMessage());
+                }
+            }
+            return out;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private static DmodManifest manifestIn(Path dmod) {
+        try (java.util.zip.ZipFile z = new java.util.zip.ZipFile(dmod.toFile());
+                InputStream in = z.getInputStream(java.util.Objects.requireNonNull(z.getEntry(DmodManifest.FILE), "no module.yaml"))) {
+            return DmodManifest.read(in, dmod.getFileName().toString());
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    private static boolean requiresAny(Path dmod) {
+        return manifestIn(dmod).requires().stream().anyMatch(q -> !q.optional());
+    }
+
+    private static String listHashIn(Path dmod) {
+        try (java.util.zip.ZipFile z = new java.util.zip.ZipFile(dmod.toFile())) {
+            java.util.zip.ZipEntry mf = z.getEntry(Dmod.HASHES);
+            if (mf == null) {
+                return null;
+            }
+            try (InputStream in = z.getInputStream(mf)) {
+                return Dmod.sha256(in);
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    /** A module's verified origin here ({@code first-party} only when the kernel's first-party.yaml verifies it). */
+    public Optional<FirstParty.Origin> origin(String id) {
+        return runtime == null ? Optional.empty() : runtime.origin(id);
+    }
+
     /** Removes a module from this node alone (410, tombstone, saved work marked; files kept for a reinstall): the single-server path. */
     public Map<String, Object> remove(String id, String by) {
         lock.lock();
@@ -801,6 +884,8 @@ public final class ModuleNode implements AutoCloseable {
             ModuleHealth h = health.get(e.id());
             m.put("health", h == null ? null : h.state().name());
             m.put("reason", h == null ? null : h.reason());
+            m.put("origin", origin(e.id()).map(FirstParty.Origin::word).orElse(null));
+            m.put("originWhy", origin(e.id()).map(FirstParty.Origin::why).orElse(null));
             m.put("routes", runtime.routes().snapshot().of(e.id()).size());
             mods.add(m);
         }
@@ -815,6 +900,8 @@ public final class ModuleNode implements AutoCloseable {
             m.put("loaded", runtime.loaded(h.id()).map(x -> x.manifest().version()).orElse(null));
             m.put("health", h.state().name());
             m.put("reason", h.reason());
+            m.put("origin", origin(h.id()).map(FirstParty.Origin::word).orElse(null));
+            m.put("originWhy", origin(h.id()).map(FirstParty.Origin::why).orElse(null));
             m.put("routes", runtime.routes().snapshot().of(h.id()).size());
             m.put("from", developmentMode() && runtime.loaded(h.id()).map(x -> development(x.candidate().dir())).orElse(false)
                     ? "development (unverified)" : "drishti.modules.path");

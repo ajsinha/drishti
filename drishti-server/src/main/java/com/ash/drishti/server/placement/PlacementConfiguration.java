@@ -93,6 +93,7 @@ public class PlacementConfiguration {
     /** Today's modules built into the server (banking and the rest): placed on every node until each becomes a module. */
     static List<ModuleParts> inProcess(AccessRegistry access) {
         return access == null ? List.of() : access.modules().stream().filter(ModuleState::installed)
+                .filter(m -> access.manifest(m.id()).map(x -> !x.source().endsWith(".dmod") && !x.source().startsWith("the module store")).orElse(true))
                 .map(m -> ModuleParts.inProcess(m.id(), "built-in")).toList();
     }
 

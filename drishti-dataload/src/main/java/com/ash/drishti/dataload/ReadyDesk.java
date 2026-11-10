@@ -184,7 +184,7 @@ public final class ReadyDesk {
     }
 
     List<ReadyRule> rules() {
-        return rules;
+        return com.ash.drishti.common.Extensions.with(rules, ReadyRule.class);     // a loaded module's too
     }
 
     Routes routes() throws IOException {

@@ -96,6 +96,22 @@ public final class MemoryBudget {
         return System.currentTimeMillis() < squeezedUntil && p.squeezeOrder() >= 2 ? bytes / 2 : bytes;
     }
 
+    /** The names of every member of every pool (a module's caches are told apart by what joining added). */
+    public java.util.Set<String> memberNames() {
+        java.util.Set<String> out = new java.util.HashSet<>();
+        pools.values().forEach(p -> p.members().forEach(m -> out.add(m.name())));
+        return out;
+    }
+
+    /** Takes a member out of its pool (a module unloads: its caches go with it) and shares the pool again. */
+    public void leave(String name) {
+        for (Pool p : pools.values()) {
+            if (p.members().removeIf(x -> x.name().equals(name))) {
+                apply(p);
+            }
+        }
+    }
+
     /** Joins a cache to a pool and gives every member of it its share now. */
     public void join(String pool, Member m) {
         Pool p = pools.get(pool);

@@ -63,6 +63,7 @@ public final class ModuleRuntime implements AutoCloseable {
     private final Map<String, ModuleCandidate> known = new ConcurrentHashMap<>();
     private final Map<String, ModuleHealth> health = new ConcurrentHashMap<>();
     private final Map<String, ModuleClassLoader> retained = new ConcurrentHashMap<>();
+    private final Map<String, FirstParty.Origin> origins = new ConcurrentHashMap<>();
     private volatile ClassLoader libraries;
 
     /**
@@ -116,6 +117,7 @@ public final class ModuleRuntime implements AutoCloseable {
             known.put(c.id(), c);
             try {
                 notes.put(c.id(), verifier.verify(c));
+                origins.put(c.id(), f.firstParty().origin(c.manifest(), c.dir()));
                 ok.add(c);
             } catch (ModuleRefusedException e) {
                 refused.put(c.id(), e);
@@ -149,6 +151,7 @@ public final class ModuleRuntime implements AutoCloseable {
     /** Loads one verified candidate (after its dependencies); a failure refuses it and leaves nothing behind. */
     public synchronized LoadedModule load(ModuleCandidate c, List<String> notes) {
         known.put(c.id(), c);
+        origins.put(c.id(), facts.firstParty().origin(c.manifest(), c.dir()));
         List<String> n = new ArrayList<>(notes == null ? List.of() : notes);
         List<RouteTable.Route> rs;
         try {
@@ -177,6 +180,11 @@ public final class ModuleRuntime implements AutoCloseable {
                 ctx.setClassLoader(loader);
                 if (parent != null) {
                     ctx.setParent(parent);
+                    if (parent instanceof org.springframework.context.ConfigurableApplicationContext p
+                            && p.getBeanFactory().getConversionService() != null) {
+                        // the host's conversions (a setting's "a,b,c" to a list, durations, sizes), as the host's own beans get them
+                        ctx.getBeanFactory().setConversionService(p.getBeanFactory().getConversionService());
+                    }
                 }
                 List<Class<?>> classes = new ArrayList<>();
                 for (String s : java.spring()) {
@@ -393,6 +401,11 @@ public final class ModuleRuntime implements AutoCloseable {
     private void refuse(String id, String version, ModuleRefusedException e) {
         LOG.warn("module refused: {}", e.getMessage());
         health.put(id, new ModuleHealth(id, version, ModuleHealth.State.REFUSED, e.check(), e.getMessage(), List.of()));
+    }
+
+    /** A known module's verified origin (first-party only when the shipped list verifies it), if verified here. */
+    public Optional<FirstParty.Origin> origin(String id) {
+        return Optional.ofNullable(origins.get(id));
     }
 
     /** The live route table. */
