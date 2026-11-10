@@ -259,7 +259,7 @@ public class HealthController {
         if (access != null) {
             out.put("modules", modules(access));                      // the thin jar: no code modules, and Health says so
         }
-        for (HealthFigures f : moduleFigures) {                     // the modules' engines' figures (DOMAIN_MODULES.md J4)
+        for (HealthFigures f : com.ash.drishti.common.Extensions.with(moduleFigures, HealthFigures.class)) {                     // the modules' engines' figures (DOMAIN_MODULES.md J4)
             out.put(f.key(), f.value());
         }
         Map<String, Object> identityPool = PoolReport.identity(identityDataSource.getIfAvailable(), identity.sqlite()).map(com.ash.drishti.api.pool.PoolStats::toMap).orElse(null);

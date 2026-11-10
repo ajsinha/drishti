@@ -77,13 +77,26 @@ public record DmodManifest(int format, String id, String version, String title, 
     /**
      * The Java part.
      *
-     * @param jars    jar files under {@code java/}
+     * @param jars    the module's own jar files under {@code java/} (one or more: a service jar, a compute jar ...)
+     * @param lib     third-party jars under {@code java/lib/}, on the module's class path after its own
      * @param entry   the module's entry class (made a bean of its context), or null
      * @param spring  its configuration classes, registered in its child context
      * @param exports packages other modules may see (none by default)
      * @param nativeCode true when a jar bundles native code
      */
-    public record JavaPart(List<String> jars, String entry, List<String> spring, List<String> exports, boolean nativeCode) {
+    public record JavaPart(List<String> jars, List<String> lib, String entry, List<String> spring, List<String> exports, boolean nativeCode) {
+
+        public JavaPart {
+            jars = List.copyOf(jars);
+            lib = lib == null ? List.of() : List.copyOf(lib);
+        }
+
+        /** Every jar of the module's class path, relative to {@code java/}: its own, then {@code lib/<jar>} for each third-party one. */
+        public List<String> classPath() {
+            List<String> out = new ArrayList<>(jars);
+            lib.forEach(l -> out.add("lib/" + l));
+            return out;
+        }
     }
 
     /** The REST part: the namespace ({@code /api/v1/<prefix>/}), old paths kept for one release, and token scopes. */
@@ -163,7 +176,7 @@ public record DmodManifest(int format, String id, String version, String title, 
         JavaPart java = null;
         if (m.get("java") != null) {
             Map<String, Object> j = map(m.get("java"));
-            java = new JavaPart(strings(j.get("jars")), str(j.get("entry")), strings(j.get("spring")), strings(j.get("exports")),
+            java = new JavaPart(strings(j.get("jars")), strings(j.get("lib")), str(j.get("entry")), strings(j.get("spring")), strings(j.get("exports")),
                     Boolean.TRUE.equals(j.get("native")) || "true".equals(str(j.get("native"))));
         }
         ApiPart api = null;

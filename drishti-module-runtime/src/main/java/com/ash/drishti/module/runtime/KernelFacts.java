@@ -44,7 +44,7 @@ public record KernelFacts(Map<String, String> versions, Set<String> reservedPath
         Predicate<String> licensed, long budgetMb, boolean strictResources, boolean allowNative, List<String> shared) {
 
     /** The shared libraries of section 4.4, parent-first in every module loader; part of the kernel API (a MAJOR removes, a MINOR adds). */
-    public static final List<String> SHARED = List.of("com.ash.drishti.kernel.api.", "org.springframework.", "com.fasterxml.jackson.",
+    public static final List<String> SHARED = List.of("com.ash.drishti.kernel.api.", "com.ash.drishti.api.", "org.springframework.", "com.fasterxml.jackson.",
             "org.slf4j.", "org.apache.arrow.", "io.micrometer.", "jakarta.servlet.", "jakarta.validation.", "jakarta.annotation.",
             "jakarta.inject.", "org.aopalliance.");
 

@@ -49,13 +49,13 @@ public final class ApiAliasFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return aliases.isEmpty() || !RequestPaths.routed(request).startsWith("/api/");
+        return !RequestPaths.routed(request).startsWith("/api/");
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain) throws ServletException, IOException {
         String routed = RequestPaths.routed(req);
-        for (ApiAlias a : aliases) {
+        for (ApiAlias a : com.ash.drishti.common.Extensions.with(aliases, ApiAlias.class)) {
             String to = a.rewrite(routed);
             if (to != null) {
                 if (told.add(a.from())) {

@@ -43,6 +43,17 @@ public final class NumberExplainService {
     public static final String PLANNED = "explain-";
 
     private final Map<String, Explainer> byKind = new TreeMap<>();
+
+    /** The explainers by kind: the beans, then a loaded module's (a kind already explained keeps its bean). */
+    private Map<String, Explainer> explainers() {
+        List<Explainer> live = com.ash.drishti.common.Extensions.of(Explainer.class);
+        if (live.isEmpty()) {
+            return byKind;
+        }
+        Map<String, Explainer> all = new TreeMap<>(byKind);
+        live.forEach(e -> all.putIfAbsent(e.kind(), e));
+        return all;
+    }
     private final ObjectProvider<EngineRegistry> engines;
     private final ObjectProvider<UnderConstruction> registry;
 
@@ -59,7 +70,7 @@ public final class NumberExplainService {
     /** The kinds that can be explained here (their engines running), their measures, and the Explain work registered as not built. */
     public Map<String, Object> kinds() {
         List<Map<String, Object>> kinds = new ArrayList<>();
-        for (Explainer e : byKind.values()) {
+        for (Explainer e : explainers().values()) {
             if (!running(e)) {
                 continue;
             }
@@ -85,12 +96,12 @@ public final class NumberExplainService {
     /** The explanation of one number, as the person; the parts asked for ({@link ExplainRequest#part()}). */
     public Map<String, Object> explain(Principal p, ExplainRequest r) {
         if (r.kind().isEmpty()) {
-            throw new DrishtiException(ErrorCode.BAD_REQUEST, "give the kind of number: kind=" + String.join(", kind=", byKind.keySet()));
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "give the kind of number: kind=" + String.join(", kind=", explainers().keySet()));
         }
-        Explainer e = byKind.get(r.kind());
+        Explainer e = explainers().get(r.kind());
         if (e == null) {
             throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no explainer of the kind " + r.kind() + " on this server (the kinds: "
-                    + String.join(", ", byKind.keySet()) + ")");
+                    + String.join(", ", explainers().keySet()) + ")");
         }
         if (!running(e)) {
             EngineRegistry reg = engines.getIfAvailable();

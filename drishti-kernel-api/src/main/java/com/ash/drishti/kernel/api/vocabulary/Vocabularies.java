@@ -24,6 +24,11 @@ final class Vocabularies {
     static final List<DomainVocabulary> ALL = ServiceLoader.load(DomainVocabulary.class, DomainVocabulary.class.getClassLoader()).stream()
             .map(ServiceLoader.Provider::get).toList();
 
+    /** The class path's vocabularies, then a loaded module's. */
+    static List<DomainVocabulary> all() {
+        return com.ash.drishti.common.Extensions.with(ALL, DomainVocabulary.class);
+    }
+
     private Vocabularies() {
     }
 }

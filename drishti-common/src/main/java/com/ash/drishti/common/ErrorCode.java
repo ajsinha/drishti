@@ -70,6 +70,8 @@ public enum ErrorCode {
     FUNCTION_OFF("DRS-1026", 404),
     /** A function this person may not use (per-person grants and denials, 2.9.11.i): 403 with the reason, audited. */
     FUNCTION_NOT_ALLOWED("DRS-1027", 403),
+    /** A module removed from this server (a .dmod module unloaded for good): its API and pages answer 410, its tombstone kept for saved work. */
+    MODULE_REMOVED("DRS-1028", 410),
     /** A data binding refused (Admin → Data bindings, config/bindings.yaml): a computed kind, a connector no file defines, a credential, demo and real mixed. */
     BINDING_REFUSED("DRS-1029", 422),
     /** A module placement refused (Admin → Cluster, config/placement.yaml): a heavy part over its max-nodes or on every node without allow-all, an unknown part, an in-process module, a file that does not read. */

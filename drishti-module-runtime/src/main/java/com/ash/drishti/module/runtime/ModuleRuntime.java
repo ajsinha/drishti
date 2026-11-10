@@ -151,7 +151,7 @@ public final class ModuleRuntime implements AutoCloseable {
             DmodManifest.JavaPart java = c.manifest().java();
             if (java != null) {
                 List<URL> urls = new ArrayList<>();
-                for (String j : java.jars()) {
+                for (String j : java.classPath()) {
                     urls.add(c.dir().resolve("java").resolve(j).toUri().toURL());
                 }
                 loader = new ModuleClassLoader(c.id(), urls.toArray(URL[]::new), kernelLoader, facts.shared());

@@ -40,6 +40,7 @@
     <dependencies>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-kernel-api</artifactId><version>${drishti.sdk.version}</version><scope>provided</scope></dependency>
       <dependency><groupId>org.springframework</groupId><artifactId>spring-context</artifactId><version>${spring-framework.version}</version><scope>provided</scope></dependency>
+      <dependency><groupId>org.springframework</groupId><artifactId>spring-web</artifactId><version>${spring-framework.version}</version><scope>provided</scope></dependency>
       <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><version>${junit-jupiter.version}</version><scope>test</scope></dependency>
       <dependency><groupId>org.assertj</groupId><artifactId>assertj-core</artifactId><version>${assertj.version}</version><scope>test</scope></dependency>
     </dependencies>
@@ -48,6 +49,7 @@
   <dependencies>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-kernel-api</artifactId></dependency>
     <dependency><groupId>org.springframework</groupId><artifactId>spring-context</artifactId></dependency>
+    <dependency><groupId>org.springframework</groupId><artifactId>spring-web</artifactId></dependency>
     <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId></dependency>
     <dependency><groupId>org.assertj</groupId><artifactId>assertj-core</artifactId></dependency>
   </dependencies>

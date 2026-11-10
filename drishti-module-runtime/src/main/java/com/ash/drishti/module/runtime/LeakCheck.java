@@ -55,6 +55,7 @@ public final class LeakCheck {
         ReflectionUtils.clearCache();
         AnnotationUtils.clearCache();
         ResolvableType.clearCache();
+        com.fasterxml.jackson.databind.type.TypeFactory.defaultInstance().clearCache();   // Jackson's shared type cache (a module's REST answers)
         // the @Bean method caches of configuration-class proxies: soft, so only memory pressure would free them; emptied for the loader
         for (String field : new String[] {"beanNameCache", "scopedProxyCache"}) {
             try {

@@ -614,7 +614,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
 
     /** {@code doc} with what the augmenters of its kind add (also a Sutra Next panel's entity sourced by id: ScreenWire). */
     private EntityDocument augmented(EntityDocument doc, AsOf asOf) {
-        for (ViewAugmenter a : augmenters) {
+        for (ViewAugmenter a : com.ash.drishti.common.Extensions.with(augmenters, ViewAugmenter.class)) {
             if (doc != null && a.augments(doc.ref().kind())) {
                 doc = a.augment(doc, asOf);
             }

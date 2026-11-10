@@ -409,9 +409,9 @@ final class Parser {
         }
         next();
         String name = t.text();
-        int[] arity = macros.contains(name) ? new int[] {0, 64} : Functions.ARITY.get(name);
+        int[] arity = macros.contains(name) ? new int[] {0, 64} : Functions.arityOf(name);
         if (arity == null) {
-            throw new ElException("unknown function '" + name + "'; known: " + String.join(", ", new java.util.TreeSet<>(Functions.ARITY.keySet())),
+            throw new ElException("unknown function '" + name + "'; known: " + String.join(", ", new java.util.TreeSet<>(Functions.arity().keySet())),
                     t.pos());
         }
         if ("let".equals(name)) {

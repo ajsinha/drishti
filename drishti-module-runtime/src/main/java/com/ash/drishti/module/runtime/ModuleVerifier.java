@@ -111,17 +111,24 @@ public final class ModuleVerifier {
                 }
             }
         }
-        List<String> jars = m.java() == null ? List.of() : m.java().jars();
+        List<String> jars = m.java() == null ? List.of() : m.java().classPath();
+        for (String f : files) {
+            if (f.startsWith("java/") && f.toLowerCase(Locale.ROOT).endsWith(".jar") && !jars.contains(f.substring("java/".length()))) {
+                throw new ModuleRefusedException("V1", label + ": " + f + " is in the package but module.yaml does not name it (java.jars for the "
+                        + "module's own jars, java.lib for third-party ones under java/lib/)");
+            }
+        }
         for (String j : jars) {
             Path p = c.dir().resolve("java").resolve(j).normalize();
             if (!p.startsWith(c.dir().resolve("java")) || !Files.isRegularFile(p)) {
-                throw new ModuleRefusedException("V1", label + ": java.jars names " + j + ", which is not in java/");
+                throw new ModuleRefusedException("V1", label + ": " + (j.startsWith("lib/") ? "java.lib names " + j.substring(4) + ", which is not in java/lib/"
+                        : "java.jars names " + j + ", which is not in java/"));
             }
             boolean nativeCode = false;
             try (ZipFile z = new ZipFile(p.toFile())) {
                 for (Enumeration<? extends ZipEntry> en = z.entries(); en.hasMoreElements(); ) {
                     String n = en.nextElement().getName();
-                    if (n.startsWith(KERNEL_API_PATH)) {
+                    if (n.startsWith(KERNEL_API_PATH) || n.startsWith("com/ash/drishti/api/")) {
                         throw new ModuleRefusedException("V2", label + ": java/" + j + " bundles kernel API classes (" + n
                                 + "); the kernel provides them");
                     }
