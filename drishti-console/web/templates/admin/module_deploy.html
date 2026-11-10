@@ -1,0 +1,120 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# Admin → Modules → Deploy (mock-up C, split: placement | plan; docs/architecture/kernel-and-modules/mockups/module-deploy.html): the
+   package (upload once; the store's checks) and where it is placed on the left; the plan per node on the right, from the same API call the
+   CLI makes (drishti.py module plan / deploy), then the approval and apply with the outcome per node. Forms are drishti-inputs' Form
+   (core/admin_forms.py), tables are console tables; drishti_admin-modules.js sends the upload, the plan and the decision. #}
+{% extends "base.html" %}
+{% block title %}Deploy a module · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-inbox.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-modules.css?v={{ ASSET_V }}">{% endblock %}
+{% block screen %}admin{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+{% set d = deployment %}
+<div class="adm ib" data-module-deploy>
+  {% with tab='modules' %}{% include "admin/_nav.html" %}{% endwith %}
+  <p class="text-muted-d"><a href="/admin/modules">Modules</a> › Deploy</p>
+  <h1 class="ws-h">{% if d %}{{ d.action|capitalize }} {{ d.module }} {{ d.version }}{% if d.previous %} <span class="text-muted-d">from {{ d.previous }}</span>{% endif %}{% else %}Deploy a module{% endif %}</h1>
+  <p class="ib-said" data-module-said role="status" aria-live="polite"></p>
+  {% if error %}<p class="adm-warn" role="alert" data-module-error>{{ error }}</p>{% endif %}
+
+  <div class="mod-split mod-even">
+    <div>
+      <section class="mod-card" aria-labelledby="pkg-h" data-module-package>
+        <h2 class="ib-h2" id="pkg-h">Package</h2>
+        {% if stored %}
+        <dl class="mod-facts">
+          <dt>File</dt><dd class="mono">{{ stored.id }}-{{ stored.version }}.dmod · {{ '{:,}'.format(stored.bytes or 0) }} bytes · in the module store</dd>
+          <dt>SHA-256</dt><dd class="mono">{{ (stored.sha or '')[:24] }}…</dd>
+          <dt>Publisher</dt><dd>{{ stored.publisher or '-' }}</dd>
+          <dt>Parts</dt><dd class="mono">{{ (stored.parts or [])|join(', ') }}</dd>
+          <dt>Checks</dt><dd>{{ (stored.checks or [])|length }} of 15 passed (stored by {{ stored.storedBy }})</dd>
+        </dl>
+        {% else %}<p class="text-muted-d">Choose a <span class="mono">.dmod</span>: it is uploaded once to the module store and checked there
+          (the fifteen conformance checks); a version is never rebuilt.</p>{% endif %}
+        <div data-module-upload>{{ admin_form('module_upload') }}
+          <p><button type="button" class="btn-pill ib-btn" data-module-upload-go>Upload and check</button></p></div>
+      </section>
+      <section class="mod-card" aria-labelledby="place-h" data-module-placement>
+        <h2 class="ib-h2" id="place-h">Placement{% if chosen %} · {{ chosen.id }}{% endif %}</h2>
+        <div class="tbl-wrap"><table class="tbl adm-tbl">
+          <caption class="visually-hidden">Each node, its labels and whether a part of the module is placed on it</caption>
+          <thead><tr><th scope="col">Node</th><th scope="col">Labels</th><th scope="col">Up</th><th scope="col">Placed</th></tr></thead>
+          <tbody>
+          {% for n in data.nodes or [] %}{% set placed = chosen and n.id in (chosen.placed or []) %}
+            <tr data-node="{{ n.id }}" data-placed="{{ 'yes' if placed else 'no' }}"><td class="mono">{{ n.id }}{% if n.id == data.node %} <span class="net-tag">this node</span>{% endif %}</td>
+              <td>{{ (n.tags or [])|join(', ') or '-' }}</td><td><span class="st {{ 'st-ok' if n.up else 'st-bad' }}">{{ 'up' if n.up else 'down' }}</span></td>
+              <td>{{ 'placed' if placed else 'not placed: receives nothing' }}</td></tr>
+          {% endfor %}
+          </tbody>
+        </table></div>
+        <p class="text-muted-d">Where each part runs is the placement: change it in <a href="/admin/net?tab=modules">Admin → Cluster → Modules</a>
+          (heavy parts on every node need <span class="mono">allow-all</span> and a second approval).</p>
+      </section>
+    </div>
+
+    <div>
+      <section class="mod-card" aria-labelledby="plan-h" data-module-plan>
+        <h2 class="ib-h2" id="plan-h">{% if d %}The plan · <span class="mono">{{ d.id }}</span> · against cluster <span class="mono">{{ d.fingerprint }}</span>{% else %}The plan{% endif %}</h2>
+        {% if d %}
+        <div class="tbl-wrap"><table class="tbl adm-tbl" data-plan-nodes>
+          <caption class="visually-hidden">What happens on each node, and what happened</caption>
+          <thead><tr><th scope="col">Node</th><th scope="col">Now → after</th><th scope="col">What happens</th><th scope="col">Status</th></tr></thead>
+          <tbody>
+          {% for n in d.nodes or [] %}
+            <tr data-plan-node="{{ n.node }}" data-placed="{{ 'yes' if n.placed else 'no' }}" data-status="{{ n.status }}">
+              <td class="mono">{{ n.node }}</td><td class="mono">{{ n.now or '-' }} → {{ n.after or '-' }}</td><td>{{ n.action }}</td>
+              <td><span class="st {{ 'st-ok' if n.status in ('activated', 'removed', 'off', 'staged') else ('st-bad' if n.status in ('failed', 'refused') else '') }}">{{ n.status }}</span>{% if n.detail %}<div class="text-muted-d">{{ n.detail[:200] }}</div>{% endif %}</td></tr>
+          {% endfor %}
+          </tbody>
+        </table></div>
+        <dl class="mod-facts">
+          <dt>Copy to</dt><dd class="mono">{{ (d.nodes or [])|selectattr('placed')|map(attribute='node')|join(', ') or 'no node' }}{% set rest = (d.nodes or [])|rejectattr('placed')|map(attribute='node')|list %}{% if rest %} · {{ rest|join(', ') }} receive nothing{% endif %}</dd>
+          <dt>Warnings</dt><dd>{{ (d.warnings or [])|join('; ') or 'none' }}</dd>
+          {% if d.outcome %}<dt>Outcome</dt><dd data-plan-outcome>{{ d.outcome }}</dd>{% endif %}
+        </dl>
+        {% else %}
+        <div data-module-plan-form>{{ admin_form('module_plan', modules=(data.modules or [])|map(attribute='id')|list, module=(chosen.id if chosen else ''),
+                                                   version=(stored.version if stored and action != 'remove' and action != 'disable' else ''), action=action) }}
+          <p><button type="button" class="btn-pill ib-btn" data-module-plan-go>Plan (changes nothing)</button></p></div>
+        {% endif %}
+      </section>
+
+      {% if d %}
+      <section class="mod-card" aria-labelledby="apply-h" data-module-apply data-id="{{ d.id }}">
+        <h2 class="ib-h2" id="apply-h">Approval and apply</h2>
+        <dl class="mod-facts">
+          <dt>Proposed</dt><dd>{{ d.proposedBy }} · {{ (d.proposedAt or '')[:16] }} · "{{ d.reason }}"</dd>
+          <dt>Approval</dt><dd>{% if d.state == 'proposed' %}<span class="t-warn">waiting for a second administrator</span>{% else %}{{ d.state }} by {{ d.decidedBy or '-' }} {{ (d.decidedAt or '')[:16] }}{% endif %}</dd>
+        </dl>
+        {% if d.state == 'proposed' %}
+        <div class="mod-actions">
+          {% if me and d.proposedBy == me.user %}<button type="button" class="btn-pill ib-btn" data-module-act="withdraw">Withdraw</button>
+          {% else %}<button type="button" class="btn-pill ib-btn" data-module-act="apply">Apply (stage on every placed node, then activate)</button>
+          <button type="button" class="btn-pill ib-btn" data-module-act="reject">Reject</button>{% endif %}
+        </div>
+        {% endif %}
+        <p class="text-muted-d">After apply: <a href="/admin/health">Health</a> · <a href="/admin/net?tab=modules">node × module matrix</a> ·
+          <a href="/admin/audit">audit entry</a> · <a href="/admin/modules">Modules</a></p>
+      </section>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block footer %}{% include "_footer.html" %}{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_admin-modules.js?v={{ ASSET_V }}"></script>{% endblock %}

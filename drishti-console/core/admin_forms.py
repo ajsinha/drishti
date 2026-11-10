@@ -456,8 +456,32 @@ def placement_plan(*, placement: str = "", **_) -> Markup:
                   attrs={"data-placement-fields": ""}, label="The placement", **ALONE)
 
 
+MODULE_ACTIONS = [("install", "Install (or upgrade, when another version runs)"), ("upgrade", "Upgrade, node by node"),
+                  ("remove", "Remove: its paths answer 410, saved work is marked"), ("disable", "Switch off: its paths answer 404"),
+                  ("enable", "Switch on again")]
+
+
+def module_upload(**_) -> Markup:
+    """Admin › Modules › Deploy, the package: a .dmod uploaded once to the module store (the server runs the fifteen checks)."""
+    props = {"file": K.file("The module package (.dmod)", None, accept=".dmod", hook={"data-module-file": ""})}
+    return K.host(K.schema(props), {}, attrs={"data-module-upload-fields": ""}, label="The package", **ALONE)
+
+
+def module_plan(*, modules=(), module: str = "", version: str = "", action: str = "install", **_) -> Markup:
+    """Admin › Modules › Deploy, the plan: what, which module and version, and why (the page's script sends ``{action, module, version,
+    reason}``; the server answers the plan per node and a second administrator applies it)."""
+    props = {"action": K.select("Action", "action", MODULE_ACTIONS),
+             "module": K.select("Module", "module", [(m, m) for m in modules] or [("", "upload a .dmod first")]),
+             "version": K.text("Version (blank: the newest in the store; remove and switch-off take the running one)", "version"),
+             "reason": K.text("Why", "reason", maxLength=500)}
+    return K.host(K.schema(props, required=["action", "module", "reason"]), {"action": action, "module": module or (modules[0] if modules else ""),
+                                                                            "version": version, "reason": ""},
+                  attrs={"data-module-plan-fields": ""}, label="The plan", **ALONE)
+
+
 BUILDERS: dict[str, Callable[..., Markup]] = {
     "bindings_bind": bindings_bind,
+    "module_upload": module_upload, "module_plan": module_plan,
     "placement_plan": placement_plan,
     "connector_head": connector_head,
     "net_explain": net_explain, "net_node": net_node,

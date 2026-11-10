@@ -1,0 +1,36 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* Admin -> Modules (mock-up A, table + detail), Deploy (mock-up C, placement | plan) and the removed-module notice (mock-up A, in place).
+   Colours are the console's tokens only. */
+.mod-split { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 12px; margin-top: 12px; }
+.mod-split.mod-even { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+@media (max-width: 900px) { .mod-split, .mod-split.mod-even { grid-template-columns: minmax(0, 1fr); } }
+.mod-card { border: 1px solid var(--d-border); border-radius: var(--d-radius); background: var(--d-surface); padding: 12px; min-width: 0; margin-bottom: 12px; }
+.mod-card h2 { margin-top: 0; }
+.mod-strip { border: 1px solid var(--d-accent); border-radius: var(--d-radius); padding: 8px 12px; margin: 8px 0; display: flex; gap: 12px;
+  align-items: center; flex-wrap: wrap; }
+.mod-strip > span:first-child { flex: 1; min-width: 0; }
+.mod-facts { display: grid; grid-template-columns: max-content 1fr; gap: 2px 12px; margin: 8px 0; }
+.mod-facts dt { color: var(--d-muted); font-weight: 400; }
+.mod-facts dd { margin: 0; overflow-wrap: anywhere; }
+.mod-row-on { box-shadow: inset 3px 0 0 var(--d-accent); }
+.mod-checks { list-style: none; padding: 0; margin: 4px 0; columns: 2; }
+.mod-checks li { break-inside: avoid; }
+.mod-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.mod-notice { border-left: 3px solid var(--d-accent); background: var(--d-surface); padding: 12px 16px; border-radius: var(--d-radius); margin: 16px 0; }
+.mod-notice h1 { margin: 0 0 4px; }
+.mod-admin { border: 1px dashed var(--d-border); padding: 6px 10px; margin: 8px 0; }
+.mod-head { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
