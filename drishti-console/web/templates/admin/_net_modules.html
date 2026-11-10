@@ -39,7 +39,7 @@
         <div class="text-muted-d">{{ (n.tags or [])|join(', ') or 'no labels' }} · <span class="st {{ 'st-ok' if n.up else 'st-bad' }}">{{ 'up' if n.up else 'down' }}</span></div></th>{% endfor %}
       <th scope="col">Status</th></tr></thead>
     <tbody>
-    {% for r in modules.parts or [] %}
+    {% for r in (modules.parts or [])|sort(attribute='part')|sort(attribute='module') %}
       <tr data-part="{{ r.module }}.{{ r.part }}" data-status="{{ r.status }}">
         <td class="mono">{{ r.module }}.{{ r.part }} <span class="text-muted-d">{{ r.version }}</span></td>
         <td>{{ r['class'] }}{% if r.maxNodes %} · max {{ r.maxNodes }}{% endif %}{% if r.memoryMb %} · {{ '{:,}'.format(r.memoryMb) }} MB{% endif %}</td>

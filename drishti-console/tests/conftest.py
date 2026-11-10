@@ -1266,6 +1266,11 @@ PHONE_DISPLAY_TESTS = {"test_phone_browser.py", "test_var_explain_browser.py", "
 _SHOW_EVERYTHING = {"on": True}
 
 
+def pytest_addoption(parser):
+    """``--update-snapshots``: the visual snapshots write their goldens instead of comparing (tests/snapshots.py); never in a drill."""
+    parser.addoption("--update-snapshots", action="store_true", default=False, help="write the visual snapshots' golden images (tests/snapshots/)")
+
+
 @pytest.hookimpl(tryfirst=True)
 def pytest_runtest_setup(item):
     _SHOW_EVERYTHING["on"] = Path(str(item.fspath)).name not in PHONE_DISPLAY_TESTS

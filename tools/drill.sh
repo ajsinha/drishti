@@ -254,7 +254,7 @@ console_files() {   # name, workers, failed files re-run at a time, then the fil
   local out="$LOGS/console-$name.txt" rc=0 dist=loadfile
   # the browser lane by test: a file's tests stay one group on one worker unless they are marked spread (TEST_HARNESS.md)
   [[ $name == browser ]] && dist=loadgroup
-  DRISHTI_PAGELOAD_LOG="$LOGS/pageloads.jsonl" DRILL_MIN_FREE_GB="${DRILL_MIN_FREE_GB:-6}" DRILL_TIMINGS_OUT="$LOGS/timings-$name.json" PYTHONPATH="$PWD/tools/drillkit${PYTHONPATH:+:$PYTHONPATH}" \
+  DRISHTI_SNAPSHOT_REPORT="$LOGS/snapshots.jsonl" DRISHTI_SNAPSHOT_DIFFS="$LOGS/snapshot-diffs" DRISHTI_PAGELOAD_LOG="$LOGS/pageloads.jsonl" DRILL_MIN_FREE_GB="${DRILL_MIN_FREE_GB:-6}" DRILL_TIMINGS_OUT="$LOGS/timings-$name.json" PYTHONPATH="$PWD/tools/drillkit${PYTHONPATH:+:$PYTHONPATH}" \
     timeout --kill-after=60 "$LANE_LIMIT" "$PY" -m pytest -q -rfE -p drill_timings -n "$workers" --dist "$dist" --no-loadscope-reorder "$@" \
     > "$out" 2>&1 || rc=$?
   tail -n 5 "$out"
@@ -552,6 +552,7 @@ else
   mv "$LOGS/lanes/browser.txt" "$LOGS/lane-browser.txt"; mv "$LOGS/lanes/other.txt" "$LOGS/lane-other.txt"; rmdir "$LOGS/lanes"
   stage2=(console-browser console-other tools-a tools-b java21 java21-docker)
   : > "$LOGS/pageloads.jsonl"                   # each page's load time in the lanes' browser tests (tools/drillkit/pageloads.py)
+  : > "$LOGS/snapshots.jsonl"; rm -rf "$LOGS/snapshot-diffs"   # the visual snapshots of the page walk (drishti-console/tests/snapshots.py)
   start_job console-browser console_lane browser "$browser_workers" "${DRILL_BROWSER_RERUNS:-1}"
   start_job console-other niced 5 console_lane other "$other_workers" 2
   start_job tools-a niced 5 tools_lane_a
@@ -563,6 +564,10 @@ else
   rc=0; watch_jobs "${stage2[@]}" || rc=1
   # p95 and median per page, slowest first; the latest into BENCHMARK.md 18.2 (reported, never failed: the tests' budget is 10 s)
   python3 tools/drillkit/pageloads.py "$LOGS/pageloads.jsonl" --top 25 --write docs/admin/BENCHMARK.md || true
+  # the visual snapshots: each changed page (its test failed the lane) and the goldens this commit refreshed (TEST_HARNESS.md)
+  python3 drishti-console/tests/snapshots.py "$LOGS/snapshots.jsonl" || true
+  refreshed=$(git diff --name-only HEAD~1 HEAD -- drishti-console/tests/snapshots/ 2>/dev/null | cut -d/ -f4 | sort -u | tr '\n' ' ')
+  [[ -n $refreshed ]] && echo "drill: visual snapshots refreshed in this commit: $refreshed"
   config_unchanged || rc=1; data_unchanged || rc=1
   (( rc == 0 )) || { echo "drill: FAILED (logs in $LOGS/)" >&2; exit 1; }
   stage_done "console lanes | tools (two lanes) | Java 21 | Java 25" $t
