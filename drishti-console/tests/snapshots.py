@@ -47,15 +47,12 @@ MASK = ["[data-clock]", "#asofDate", "[data-dyk]", "[data-ready-facts]", "[data-
 #: times, a live board's last update; their words replaced by one dot
 QUIET = ["[data-vx-timing]", "[data-vx-fresh]", "[data-live-time]"]
 
-_STILL = """async ([part, quiet]) => {
+_STILL = """async (quiet) => {
   for (const e of document.querySelectorAll(quiet.join(','))) { if (e.textContent) { e.textContent = '\u00b7'; } }
   if (document.fonts && document.fonts.ready) { await document.fonts.ready; }
   if (document.activeElement && document.activeElement.blur) { document.activeElement.blur(); }
   window.scrollTo(0, 0);
   for (const e of document.querySelectorAll('*')) { if (e.scrollTop > 0) { e.scrollTop = 0; } }   // a page that scrolls a panel to its anchor
-  const at = part && document.querySelector(part);
-  // the part at the top; the top bar (shown or hidden by the way the page last scrolled) left out of the picture
-  if (at) { at.scrollIntoView({ block: 'start', behavior: 'instant' }); for (const h of document.querySelectorAll('header.tbar')) { h.style.visibility = 'hidden'; } }
   const st = document.createElement('style');
   st.textContent = '*, *::before, *::after { transition: none !important; animation: none !important; caret-color: transparent !important; scroll-behavior: auto !important; }'
                  + ' ::-webkit-scrollbar { display: none; } .toasts { display: none !important; }';
@@ -65,11 +62,13 @@ _STILL = """async ([part, quiet]) => {
 
 
 def capture(pg, masks: list[str] = (), part: str | None = None) -> bytes:
-    """The page's viewport as PNG, still (toasts hidden), at its top or with ``part`` brought to the top, ``MASK`` and ``masks`` covered."""
-    pg.evaluate(_STILL, [part, QUIET])
+    """The page's viewport at its top as PNG, or only the element ``part`` (a page that scrolls itself to a part when it has drawn),
+    still (toasts hidden) with ``MASK`` and ``masks`` covered."""
+    pg.evaluate(_STILL, QUIET)
     pg.mouse.move(0, 0)
     locs = [pg.locator(s) for s in (*MASK, *masks)]
-    return pg.screenshot(animations="disabled", caret="hide", mask=locs, mask_color="#808080", full_page=False)
+    shot = dict(animations="disabled", caret="hide", mask=locs, mask_color="#808080")
+    return pg.locator(part).first.screenshot(**shot) if part else pg.screenshot(full_page=False, **shot)
 
 
 def _small(png: bytes):

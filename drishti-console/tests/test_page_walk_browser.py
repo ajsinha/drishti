@@ -45,7 +45,7 @@ THEMES = {"dark": "terminal", "light": "light"}
 #: the business date the page walk's lake ends on: fixed, so the visual snapshots' figures and dates are the same on every run
 SNAPSHOT_DATE = "2026-11-06"
 #: the visual snapshots: name -> (address, {tolerance, mask: more selectors covered, idle: wait for the network to go quiet, wait: a
-#: script true once the page has drawn, scroll: the part brought to the top instead of the page's top});
+#: script true once the page has drawn, scroll: capture this part of the page alone instead of the viewport});
 #: a lens's Home is captured after entering the lens (its page asks to confirm: a POST), then the lens is left the same way
 KEY_SNAPSHOTS: dict[str, tuple[str, dict]] = {
     "home": ("/", {}),
@@ -57,7 +57,7 @@ KEY_SNAPSHOTS: dict[str, tuple[str, dict]] = {
     "var-bank": ("/var?scope=BANK", {"idle": True}),
     "var-desk": ("/var?scope=DESK:DESK-RATES", {"idle": True}),
     "var-basket": ("/var?scope=BASKET:PF-ASHA-UNWIND", {"idle": True}),
-    # the page brings its "why" part into view when it has drawn: captured there, every run
+    # the page scrolls itself to its "why" part when it has drawn, and its lineage shows the time it computed: the part alone
     "why-it-moved": (go("VAR BANK EXPLAIN"), {"idle": True, "scroll": "[data-dx-part=\"why\"]", "wait": "(() => { const p = document.querySelector('[data-explain-page]'); const w = document.querySelector('[data-dx-part=\"why\"] [data-dx-why]');"
                                                        " return p && p.dataset.state === 'ready' && w && w.dataset.painted === 'waterfall'; })()"}),
     # the cube's columns are sized as its rows arrive: a figure is cut short on one run and whole on another (2%)
