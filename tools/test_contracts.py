@@ -90,10 +90,10 @@ class MiniPack:
 
 
 def java_source(cls: str) -> Path:
-    """The source file of a Java class in whichever module holds it (drishti-banking, drishti-compute-banking, ...: the domain modules
+    """The source file of a Java class in whichever module holds it (modules/banking/banking-service, modules/banking/banking-compute, ...: the domain modules
     moved the risk engines and publishers out of drishti-server and drishti-compute); a path that does not exist when no module has it."""
     rel = Path("src", "main", "java", *cls.split(".")).with_suffix(".java")
-    found = sorted(p / rel for p in C.ROOT.iterdir() if p.is_dir() and (p / rel).is_file())
+    found = sorted(p / rel for p in [*C.ROOT.iterdir(), *C.ROOT.glob("modules/*/*")] if p.is_dir() and (p / rel).is_file())
     return found[0] if found else C.ROOT / rel
 
 

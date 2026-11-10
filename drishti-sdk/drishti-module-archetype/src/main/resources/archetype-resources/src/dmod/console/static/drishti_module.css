@@ -1,0 +1,9 @@
+/*
+ * Copyright (c) the publisher of ${artifactId}. All rights reserved.
+ * The module's styles: theme tokens only (conformance C3).
+ */
+.drishti-${artifactId}-card {
+    padding: var(--drishti-space-3);
+    border-radius: var(--drishti-radius-2);
+    color: var(--drishti-text);
+}

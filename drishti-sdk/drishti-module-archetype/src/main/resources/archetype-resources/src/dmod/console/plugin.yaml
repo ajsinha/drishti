@@ -1,0 +1,4 @@
+# The console part (plugin.yaml format 2): every route declared, served under /m/${artifactId}/ (section 9).
+format: 2
+routes:
+  - {id: hello, path: "/hello/{name}", page: hello.html, function: ${artifactId.toUpperCase()}}

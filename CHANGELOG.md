@@ -19,6 +19,28 @@
 
 - VaR explorer: turning on **Include matured positions** no longer makes the scope tree disappear (the tree library refused the switch's own "of which matured" column); a screen's own tree measure with a label is accepted.
 
+- **The Module SDK** (2.9.11.i2 + i3, wave 1; [DEVELOPER_GUIDE.md section 1.6](docs/guides/DEVELOPER_GUIDE.md#16-the-module-sdk),
+  [KERNEL_AND_MODULES.md section 8](docs/architecture/KERNEL_AND_MODULES.md#8-the-module-sdk-and-the-developer-path)): three new Maven
+  modules under `drishti-sdk/`. `drishti-module-archetype` makes a module project that builds green on its first `mvn verify` (module.yaml,
+  a function with its route and page, a kind with its data contract, data needs, README, Help, a guide, a tutorial, a test);
+  `drishti-module-parent` is the parent it inherits (Java 21, the kernel API and Spring as `provided`); `drishti-module-maven-plugin` runs
+  `drishti:validate` (the manifest against the pom), `drishti:assemble` (packs `target/dmod/<id>-<version>.dmod` with the module runtime's
+  packer and its hash list) and `drishti:conformance` (the fifteen checks C1–C15, each failure a sentence naming the file and the fix; C11
+  and C13–C15 load the module into the module runtime, C15 for 50 load/unload cycles). Maven is not the only way: the packer and the
+  checks are one implementation in `drishti-module-runtime`, also run as `java -jar drishti-module-tool.jar pack|check|inspect` (one
+  self-contained jar, any build: Gradle, a script, `javac` and a folder) and `drishti.py module pack|check|inspect`; the plugin is a thin
+  wrapper over it. A `.dmod` is a documented zip anyone can produce, as long as it passes `check`. `ModuleToolTest` generates a module
+  from the archetype, builds it, passes the checks and loads, routes and unloads it; packs, checks and inspects one built with `javac` and
+  a folder through the tool and loads it; a broken copy fails the checks in plain words.
+- **Banking's sources build on their own:** `drishti-banking` and `drishti-compute-banking` moved to `modules/banking/banking-service` and
+  `modules/banking/banking-compute` (artifact ids unchanged; built alone with `./mvnw -f modules/banking/pom.xml`). The kernel internals
+  banking still reaches are recorded in `modules/banking/kernel-internals.txt` (44 packages: 20 of `drishti-server`, 24 of the kernel's
+  libraries); `BankingReachTest` fails a new one and asks for a package no longer reached to be removed, so the list only shrinks. No
+  behaviour change: banking still loads in-process from the full jar.
+- **The thin server jar:** `drishti-kernel-app` builds `drishti-kernel-app/target/drishti-kernel-<version>-exec.jar`, the kernel without
+  banking, beside the full jar (`drishti-server/target/drishti-server-<version>-exec.jar`, still the default). It boots with no modules;
+  Health (`GET /api/v1/admin/health`) has a `modules` row: the code modules and content modules with whether each is on, and *no modules:
+  the kernel runs alone* when there is no code module.
 - **The module runtime** (2.9.11.i2 + i3, wave 1; new Maven module `drishti-module-runtime`,
   [KERNEL_AND_MODULES.md section 10.4](docs/architecture/KERNEL_AND_MODULES.md#104-one-module-runtime-library-two-hosts),
   [DEVELOPER_GUIDE.md section 1.5](docs/guides/DEVELOPER_GUIDE.md#15-the-module-runtime)): the `.dmod` package (pack, unpack, the

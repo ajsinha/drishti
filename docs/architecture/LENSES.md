@@ -3216,7 +3216,7 @@ inputs above; retention (0.4 to 2 TB a date) and entitlements by counterparty, g
 ## 8. CRO lens
 
 **Status: proposed (design, not built).** The lens id `cro` has a registry entry in the banking module
-(`drishti-banking/src/main/resources/META-INF/drishti/lenses.yaml`); there is no lens file, landing or pack yet. Purpose: the
+(`modules/banking/banking-service/src/main/resources/META-INF/drishti/lenses.yaml`); there is no lens file, landing or pack yet. Purpose: the
 executive, cross-risk-type view that answers *"Is the bank within its risk appetite, what changed overnight, and what do I need to act
 on or tell the board?"* It summarises and owns no engine; every figure opens the lens that computed it (MCUBE, CCUBE, Oversight,
 Market, World). Its rows are the plan's candidates CRO1 to CRO13

@@ -1038,7 +1038,7 @@ scope, nine series and the 50 incremental helpers within 16,384 columns: about 1
 scenarios columns, the same formulas through the other orientation.
 
 **The template: in git, built into each export.** The look and the words are a template kept in the repository as text, under
-`drishti-banking/src/main/resources/playground/var/template/`: `template.properties` (name, version, every cell format by name, the check
+`modules/banking/banking-service/src/main/resources/playground/var/template/`: `template.properties` (name, version, every cell format by name, the check
 colours), `xl/styles.xml` (the look), `docProps/core.xml` and `docProps/app.xml` (with `{{PRODUCT}}`, `{{COPYRIGHT}}`, `{{OWNER}}` and
 `{{TEMPLATE_VERSION}}` filled from the branding configuration) and `explain.txt` (the Explain tab's steps; `{Name}` a cell reference,
 `{Name:v}` its value). The sheets, the named cells and every formula are written by the generator (`VarPlaygroundBook`) for exactly the

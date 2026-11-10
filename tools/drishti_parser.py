@@ -105,6 +105,27 @@ def build_parser(h) -> argparse.ArgumentParser:
     g.add_argument("--tests-dir", type=pathlib.Path, help="put the samples here instead of <out>/tests")
     g.add_argument("--no-lint", action="store_true", help="do not run `sutra lint` on the result")
 
+    # module -----------------------------------------------------------------------------------------------
+    mg = group("module", "Modules: pack a folder into a .dmod, run the conformance checks C1-C15, inspect a package (the module tool; no Maven needed)")
+    for name, what in (("pack", "pack a module folder (module.yaml at its root, its jar under java/ or given with --jar) into <out>/<id>-<version>.dmod"),
+                       ("check", "the conformance checks C1-C15 on a .dmod or a folder (packed first); exit 1 when one fails"),
+                       ("inspect", "what a .dmod or a module folder is and holds; the hash list's verdict")):
+        mp = add(mg, name, h.cmd_module, f"module {name}: {what}", [],
+                 "examples:\n  drishti.py module pack build/greet --jar build/libs/greet.jar --out dist\n"
+                 "  drishti.py module check dist/greet-0.1.0.dmod --project .\n  drishti.py module inspect dist/greet-0.1.0.dmod\n"
+                 "exit: 0 done, 1 a check failed or the module was refused, 2 usage")
+        mp.set_defaults(module_cmd=name)
+        mp.add_argument("path", help="a module folder (module.yaml at its root) or, for check and inspect, a .dmod")
+        mp.add_argument("--tool", help="the module tool's jar (default: DRISHTI_MODULE_TOOL, then drishti-module-runtime/target/drishti-module-tool.jar)")
+        mp.add_argument("--java", help="the java binary (default: JAVA_HOME, then JDK 21, then java on the PATH)")
+        if name in ("pack", "check"):
+            mp.add_argument("--jar", dest="module_jar", help="the module's jar, copied to java/ under the name module.yaml gives")
+        if name == "pack":
+            mp.add_argument("--out", default=".", help="the folder the .dmod is written to (default: the current folder)")
+        if name == "check":
+            mp.add_argument("--project", help="the project folder, whose Java sources C10 reads for licence headers")
+            mp.add_argument("--cycles", type=int, help="load/unload cycles of C15 (default 50)")
+
     # pack -------------------------------------------------------------------------------------------------
     k = group("pack", "Packs: generate from JSON Lines, check in CI, find missing help text, publish and install")
     pn = add(k, "new", h.cmd_pack_new, "pack new: create a complete pack from JSON Lines (kinds, Sutras, samples, tests, about text, a lake or files store)",

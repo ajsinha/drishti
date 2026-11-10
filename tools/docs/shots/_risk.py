@@ -37,7 +37,7 @@ def start_servers(work) -> list:
     """The toy SIMM version in the scratch folder's simm/, then the VaR scratch stack over the larger lake."""
     simm = work / "simm"
     simm.mkdir(parents=True, exist_ok=True)
-    shutil.copy(ROOT / "drishti-compute-banking" / "src" / "test" / "resources" / "simm" / "simm-toy.yaml", simm / "simm-toy.yaml")
+    shutil.copy(ROOT / "modules" / "banking" / "banking-compute" / "src" / "test" / "resources" / "simm" / "simm-toy.yaml", simm / "simm-toy.yaml")
     os.environ["DRISHTI_SIMM_PARAMETERS"] = str(simm)          # read by the scratch server started below (it inherits the environment)
     lake = work / "delta"
     if (lake / "risk" / "position-sensitivity").is_dir():       # a kept scratch folder (DRISHTI_SHOTS_WORK) already holds the lake: start on it

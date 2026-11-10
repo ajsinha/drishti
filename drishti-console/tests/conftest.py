@@ -734,7 +734,7 @@ class FakeBackend:
         ``META-INF/drishti/lenses.yaml``), each with its modules, functions and Home cards; nothing off."""
         import yaml
         lenses = []
-        for f in ("drishti-server/src/main/resources/META-INF/drishti/lenses.yaml", "drishti-banking/src/main/resources/META-INF/drishti/lenses.yaml"):
+        for f in ("drishti-server/src/main/resources/META-INF/drishti/lenses.yaml", "modules/banking/banking-service/src/main/resources/META-INF/drishti/lenses.yaml"):
             lenses += (yaml.safe_load((CONSOLE.parent / f).read_text(encoding="utf-8")) or {}).get("lenses") or []
         return {"modules": [{"id": m, "title": m, "domain": m} for m in ("core", "banking", "economy", "capitalmarkets")], "off": [],
                 "lenses": lenses, "functions": {"off": []}}

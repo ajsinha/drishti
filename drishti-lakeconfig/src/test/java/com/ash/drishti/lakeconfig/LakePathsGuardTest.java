@@ -50,9 +50,13 @@ class LakePathsGuardTest {
     private static List<Path> sources() throws IOException {
         Path root = repo();
         List<Path> out = new ArrayList<>();
-        for (String top : new String[] {".", "plugins"}) {
+        List<String> tops = new ArrayList<>(List.of(".", "plugins"));
+        try (Stream<Path> domains = Files.list(root.resolve("modules"))) {         // modules/<domain>/<part>: the domain modules' sources
+            domains.filter(Files::isDirectory).forEach(d -> tops.add(root.relativize(d).toString()));
+        }
+        for (String top : tops) {
             try (Stream<Path> mods = Files.list(root.resolve(top))) {
-                for (Path m : (Iterable<Path>) mods.filter(d -> d.getFileName().toString().startsWith("drishti-"))::iterator) {
+                for (Path m : (Iterable<Path>) mods.filter(d -> top.startsWith("modules") || d.getFileName().toString().startsWith("drishti-"))::iterator) {
                     Path main = m.resolve("src/main/java");
                     if (Files.isDirectory(main)) {
                         try (Stream<Path> w = Files.walk(main)) {

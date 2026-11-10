@@ -36,8 +36,8 @@ def test_a_file_it_cannot_place_selects_everything():
 
 
 def test_java_reaches_its_users_and_the_mapped_console_tests():
-    plan = affected.classify(["drishti-compute-banking/src/main/java/com/ash/X.java"])
-    assert {"drishti-compute-banking", "drishti-banking", "drishti-app"} <= plan.modules
+    plan = affected.classify(["modules/banking/banking-compute/src/main/java/com/ash/X.java"])
+    assert {"modules/banking/banking-compute", "modules/banking/banking-service", "drishti-app"} <= plan.modules
     assert "drishti-rachana" not in plan.modules
     assert any("test_var_lens" in c for c in plan.console) and not any("test_funds" in c for c in plan.console)
     assert not plan.all_console and not plan.everything
@@ -48,8 +48,8 @@ def test_java_the_map_does_not_narrow_selects_every_console_test():
 
 
 def test_a_java_test_stays_in_its_module():
-    plan = affected.classify(["drishti-banking/src/test/java/com/ash/XTest.java"])
-    assert plan.modules == {"drishti-banking"} and not plan.console and not plan.all_console
+    plan = affected.classify(["modules/banking/banking-service/src/test/java/com/ash/XTest.java"])
+    assert plan.modules == {"modules/banking/banking-service"} and not plan.console and not plan.all_console
 
 
 def test_a_console_test_runs_alone_and_docs_run_the_docs_tests():
@@ -66,10 +66,10 @@ def test_a_tool_runs_its_tests_and_one_no_test_names_runs_them_all():
 
 
 def test_commands_build_before_the_console():
-    plan = affected.Plan(modules={"drishti-banking"}, console={"drishti-console/tests/test_var_lens_browser.py"})
+    plan = affected.Plan(modules={"modules/banking/banking-service"}, console={"drishti-console/tests/test_var_lens_browser.py"})
     cmds = affected.commands(plan)
     assert [c[0] for c in cmds] == ["maven", "console"]
-    assert "drishti-banking" in cmds[0][1] and any(a.startswith("-Dtest=") and "VarGoldenMatrixTest" in a for a in cmds[0][1])
+    assert any("modules/banking/banking-service" in a for a in cmds[0][1]) and any(a.startswith("-Dtest=") and "VarGoldenMatrixTest" in a for a in cmds[0][1])
     assert "--dist" in cmds[1][1] and cmds[1][1][cmds[1][1].index("-n") + 1] == str(affected.CONSOLE_WORKERS)
 
 
