@@ -1596,7 +1596,7 @@ under the data folder, as in Tomcat:
 **Auto-deploy.** A `.dmod` put into the module folder is deployed within `drishti.modules.autodeploy-seconds` (5) through the module
 deployment, exactly as an administrator's upload would be: its hash list verified, the fifteen conformance checks, installed under
 `installed/<id>/<version>/` and loaded; a new version is installed beside the old one and `active.yaml` switches to it when it is ready.
-Taking the file out removes the module the same way (its API answers `410 DRS-1028`, its tombstone is kept for saved work). Every step is
+A module is placed like any other (`config/placement.yaml`; on a single node, its parts on `local`). Taking the file out removes the module the same way (its API answers `410 DRS-1028`, its tombstone is kept for saved work). Every step is
 in the audit log as `autodeploy`; a package that fails a check is logged and tried again only when its bytes change. `drishti.modules.autodeploy`:
 empty (the default) means **on for a single node and off in a cluster**, where modules are deployed by plan → apply with two administrators
 ([CLUSTER_GUIDE.md](CLUSTER_GUIDE.md)); `true` or `false` decides outright. **Production loads only verified `.dmod` packages**; the

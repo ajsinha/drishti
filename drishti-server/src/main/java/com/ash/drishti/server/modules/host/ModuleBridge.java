@@ -62,8 +62,8 @@ final class ModuleBridge {
         port(FunctionProvider.class, Contributions.Surface.FUNCTION, (m, f) -> Functions.register(new RachanaFunctions(f)));
         port(ComputeEngine.class, Contributions.Surface.SPI, (m, e) -> required(engines, "the engine registry").attach(e));
         live(ApprovalSource.class, Contributions.Surface.SPI);
-        live(HealthFigures.class, Contributions.Surface.METRICS);
-        live(CapacityFigures.class, Contributions.Surface.METRICS);
+        live(HealthFigures.class, Contributions.Surface.SPI);           // objects of the module: withdrawn before its loader is checked (step 4, not 9)
+        live(CapacityFigures.class, Contributions.Surface.SPI);
         live(Explainer.class, Contributions.Surface.SPI);
         live(ViewAugmenter.class, Contributions.Surface.SPI);
         live(PivotSourceProvider.class, Contributions.Surface.SPI);

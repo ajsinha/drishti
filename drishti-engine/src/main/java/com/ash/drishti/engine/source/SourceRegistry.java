@@ -580,6 +580,13 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
         }
     }
 
+    private final java.util.Set<String> attached = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
+    /** True when the source is a loaded module's, routed by {@link #attach}. */
+    public boolean attached(String name) {
+        return attached.contains(name);
+    }
+
     /**
      * Routes a loaded module's source (a computed kind's provider) under its own name while the module is loaded
      * (docs/architecture/KERNEL_AND_MODULES.md section 12.3); the returned action takes it out of routing and stops it. A name already
@@ -599,12 +606,14 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
                 throw new IllegalStateException("the module source " + name + " did not start: " + e.getMessage(), e);
             }
             swap(name, plugin);
+            attached.add(name);
         }
         return () -> {
             synchronized (this) {
                 if (plugins.get(name) != plugin) {
                     return;
                 }
+                attached.remove(name);
                 swap(name, null);
             }
             closeQuietly(plugin);

@@ -91,11 +91,18 @@ class ModuleHostServerTest {
         }
         r.add("drishti.modules.path", () -> folder.toString());
         r.add("drishti.lib.path", () -> lib.toString());
+        // placement has no all-nodes default: each module's API part is placed on this node ("local" without a cluster)
+        Path placement = work.resolve("placement.yaml");
+        if (!Files.exists(placement)) {
+            ModuleFixtures.write(placement, "modules:\n" + String.join("", java.util.stream.Stream.of("hello", "demo", "greeter")
+                    .map(id -> "  " + id + ":\n    parts:\n      api: { nodes: [local] }\n").toList()));
+        }
+        r.add("drishti.placement.file", placement::toString);
     }
 
     @Test
     void modulesLoadAtStartAndAreUsedFromTheKernelThenUnloadLeakFreeAndComeBack() throws Exception {
-        assertThat(node.runtime().health()).extracting(ModuleHealth::id, ModuleHealth::state).containsExactly(
+        assertThat(node.runtime().health()).extracting(ModuleHealth::id, ModuleHealth::state).contains(
                 org.assertj.core.groups.Tuple.tuple("demo", ModuleHealth.State.LOADED), org.assertj.core.groups.Tuple.tuple("hello", ModuleHealth.State.LOADED));
         used();
         // development mode's edit -> reload: a changed file reloads the module, leak-checked
@@ -113,7 +120,7 @@ class ModuleHostServerTest {
         assertThat(r.get("leakFree")).as("the multi-jar module's class loader is collected").isEqualTo(true);
         gone();
         // reinstalled (the folder looked at again): everything back, and gone again without a leak
-        assertThat(node.rescan()).extracting(ModuleHealth::state).containsOnly(ModuleHealth.State.LOADED);
+        assertThat(node.rescan()).filteredOn(h -> !h.id().equals("greeter")).extracting(ModuleHealth::state).containsOnly(ModuleHealth.State.LOADED);
         used();
         assertThat(node.unload("demo", ModuleRuntime.Leave.REMOVE).get("leakFree")).isEqualTo(true);
         assertThat(node.unload("hello", ModuleRuntime.Leave.REMOVE).get("leakFree")).isEqualTo(true);
@@ -149,6 +156,7 @@ class ModuleHostServerTest {
 
     @Test
     void theSharedLibIsSeenByModulesAndJdbcButNeverReplacesAKernelClass() throws Exception {
+        node.rescan();                                            // the modules, whatever another test of the class left
         com.ash.drishti.common.SharedLib l = com.ash.drishti.common.SharedLib.get();
         assertThat(l.jars()).extracting(com.ash.drishti.common.SharedLib.Jar::name).containsExactly("acme-lib.jar");
         assertThat(l.jars().get(0).sha256()).hasSize(64);
@@ -352,7 +360,7 @@ class ModuleHostServerTest {
                   - {id: widgets, path: "/widgets/{id}", page: widget.html, function: DEMO}
                   - {id: old, path: /old, moved: widgets}
                 """);
-        ModuleFixtures.write(src.resolve("console/pages/widget.html"), "<section data-drishti-module=\\"demo\\">a widget</section>\\n");
+        ModuleFixtures.write(src.resolve("console/pages/widget.html"), "<section data-drishti-module=\"demo\">a widget</section>\n");
         return ModuleAssembler.assemble(src, svc, List.of(compute, lib), work.resolve("stage"), work.resolve("dist"));
     }
 

@@ -238,12 +238,11 @@ public final class ModuleNode implements AutoCloseable {
         }
         for (Map.Entry<String, Long> e : List.copyOf(stamps.entrySet())) {
             String id = e.getKey();
-            var m = runtime.loaded(id).orElse(null);
-            if (m == null) {
+            long now = loadedStamp(id);                // no reference to the module kept here: the unload's leak check follows
+            if (now == Long.MIN_VALUE) {
                 stamps.remove(id);
                 continue;
             }
-            long now = stamp(m.candidate().dir());
             if (now == e.getValue()) {
                 continue;
             }
@@ -258,6 +257,11 @@ public final class ModuleNode implements AutoCloseable {
         }
         did.forEach(d -> LOG.info("development mode: {}", d));
         return did;
+    }
+
+    /** The stamp of a loaded module's folder, or {@code Long.MIN_VALUE} when it is not loaded. */
+    private long loadedStamp(String id) {
+        return runtime.loaded(id).map(m -> stamp(m.candidate().dir())).orElse(Long.MIN_VALUE);
     }
 
     /** True when development mode is on here (exploded folders loaded). */

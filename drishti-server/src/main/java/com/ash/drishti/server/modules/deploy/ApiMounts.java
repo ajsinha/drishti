@@ -117,6 +117,10 @@ public final class ApiMounts {
         }
         java.util.Set<Object> seen = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
         for (Object o : mvcCaches.get()) {
+            if (o instanceof org.springframework.core.convert.support.GenericConversionService g) {
+                g.removeConvertible(Void.class, Void.class);   // empties its converter cache (keys hold a handler's method parameters)
+                continue;
+            }
             sweep(o, loader, 4, seen);
         }
     }

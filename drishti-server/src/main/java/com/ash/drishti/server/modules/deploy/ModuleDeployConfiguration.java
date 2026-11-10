@@ -130,6 +130,7 @@ public class ModuleDeployConfiguration {
         ApiMounts mounts = new ApiMounts(() -> ctx.getBean("requestMappingHandlerMapping", RequestMappingHandlerMapping.class), () -> {
             Collection<Object> out = new ArrayList<>(ctx.getBeansOfType(RequestMappingHandlerAdapter.class).values());
             out.addAll(ctx.getBeansOfType(HandlerExceptionResolver.class).values());
+            out.addAll(ctx.getBeansOfType(org.springframework.core.convert.ConversionService.class).values());
             return out;
         });
         long drain = env.getProperty("drishti.module-deploy.drain-seconds", Long.class, 30L) * 1000;

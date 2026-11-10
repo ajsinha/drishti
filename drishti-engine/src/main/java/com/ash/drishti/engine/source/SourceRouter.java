@@ -122,6 +122,13 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
 
     /** Plugins to try for {@code kind}, in order. */
     List<SourcePlugin> candidates(String kind) {
+        // a kind a loaded .dmod module computes is always its provider's, never a connector's (KERNEL_AND_MODULES.md section 5.7)
+        List<SourcePlugin> computed = registry.plugins().stream()
+                .filter(p -> registry.attached(p.manifest().name()) && p.manifest().kinds().contains(kind))
+                .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
+        if (!computed.isEmpty()) {
+            return computed;
+        }
         Map<String, SourcePlugin> ordered = new LinkedHashMap<>();
         for (String name : bound.getOrDefault(kind, List.of())) {
             registry.plugin(name).filter(p -> p.manifest().serves(kind)).ifPresent(p -> ordered.put(name, p));
