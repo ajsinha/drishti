@@ -1682,6 +1682,14 @@ A removed module's pages show *… is no longer installed on this system* (410; 
 deployment), a switched-off one's *Not available* (404). Alert rules that use it show *paused · needs module X*; nothing saved is deleted,
 and a reinstall restores it.
 
+**What the console shows of a module.** Its console part (its pages under `/m/<id>/`, menu entries, Home cards, command words, Help
+section, AI tools; [DEVELOPER_GUIDE.md section 1.7](DEVELOPER_GUIDE.md#17-a-modules-console-part)) appears on every console within
+`modules.parts_refresh_seconds` (5) of the apply, at once on the console that applied it, and goes the same way when the module is
+switched off or removed: an open page of it is frozen under the notice, Build's lists keep saved Sutras, reports, dashboards and baskets
+that use it with a *needs module X* chip (not openable until it is back). A part that carries its own copy of Drishti Elements or of a
+vendored library, code, or a template that reaches past the kernel's layouts is refused (not shown anywhere); `GET /api/modules/hosted`
+lists what the console hosts, what is gone and what it refused, with the reasons.
+
 ## 26. Troubleshooting
 
 **Users, roles and sign-in**
