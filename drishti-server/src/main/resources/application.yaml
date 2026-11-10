@@ -332,6 +332,12 @@ drishti:
     # connectors serve it in read order. Written once from the connectors' kinds: lists when missing; changed from Admin -> Data bindings.
     file: ${DRISHTI_BINDINGS_FILE:}         # where config/bindings.yaml is; empty: bindings.yaml beside the connectors' folder
     refresh-seconds: 30                     # how often an edited bindings.yaml is read again and applied (an approval applies at once)
+  placement:
+    # Where each module part runs (docs/guides/CLUSTER_GUIDE.md "Module placement", KERNEL_AND_MODULES.md section 4.11): by node name or
+    # role (a node label such as heavy or web). No all-nodes default: a part not placed runs nowhere. Changed by plan and apply in
+    # Admin -> Cluster -> Modules (two administrators); every member adopts the highest version. Today's in-process modules run everywhere.
+    file: ${DRISHTI_PLACEMENT_FILE:}        # where config/placement.yaml is; empty: placement.yaml beside the connectors' folder
+    refresh-seconds: 10                     # how often the file is read again and a member's higher version fetched (an apply sends it at once)
   business-date:
     # Every read is for a business date. The default is today in `zone`, rolled back to a business day of
     # `calendar` (weekends and holidays roll to the previous business day). Users pick another date in the top
@@ -652,6 +658,7 @@ drishti:
       - "* /api/v1/admin/settings/proposals"      # Admin -> Configuration: settings changes proposed and decided by two administrators; never a token
       - "* /api/v1/admin/settings/proposals/**"
       - "* /api/v1/admin/bindings/**"             # Admin -> Data bindings: proposals decided by two administrators, reload; never a token
+      - "* /api/v1/admin/cluster/placement/**"    # Admin -> Cluster -> Modules: placement plans applied by a second administrator; never a token
       - "POST /api/v1/admin/data-out/streams/*/stop"   # Admin -> Data out: stop a live Flight stream (DRS-5610 to its reader); an administrator from the console, never a token
       - "* /api/v1/admin/collab/**"
       - "* /api/v1/admin/reports/**"

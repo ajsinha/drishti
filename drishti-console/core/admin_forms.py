@@ -445,8 +445,20 @@ def bindings_bind(*, connectors=(), **_) -> Markup:
                   attrs={"data-bind-fields": ""}, label="The binding", **ALONE)
 
 
+def placement_plan(*, placement: str = "", **_) -> Markup:
+    """Admin → Cluster → Modules, Plan a placement: the whole config/placement.yaml and why (the page's script sends ``{placement, reason}``;
+    the server refuses heavy work everywhere, unknown parts and in-process modules, and a second administrator applies)."""
+    props = {"placement": K.area("Placement (config/placement.yaml)", "placement", rows=12, mono=True,
+                                 description="Each part by nodes: [names] or roles: [labels such as heavy or web]; max-nodes for heavy parts; "
+                                             "no all-nodes default"),
+             "reason": K.text("Why", "reason", maxLength=500)}
+    return K.host(K.schema(props, required=["placement", "reason"]), {"placement": placement, "reason": ""},
+                  attrs={"data-placement-fields": ""}, label="The placement", **ALONE)
+
+
 BUILDERS: dict[str, Callable[..., Markup]] = {
     "bindings_bind": bindings_bind,
+    "placement_plan": placement_plan,
     "connector_head": connector_head,
     "net_explain": net_explain, "net_node": net_node,
     "lake_file": lake_file, "lake_fields": lake_fields, "lake_target": lake_target,

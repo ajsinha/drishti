@@ -22,7 +22,7 @@ import java.util.List;
  *
  * @param id      the module's id
  * @param version its version, or blank when its manifest did not read
- * @param state   loaded, off, refused, leaving or removed
+ * @param state   loaded, off, refused, leaving, removed, or not placed (no part of it placed on this node)
  * @param check   the check that refused it ({@code V1}..{@code V8}, {@code START}), or null
  * @param reason  the words of a refusal or a switch, or null
  * @param notes   notes that do not refuse (an absent signature, a resource warning)
@@ -30,7 +30,7 @@ import java.util.List;
 public record ModuleHealth(String id, String version, State state, String check, String reason, List<String> notes) {
 
     /** A module's state. */
-    public enum State { LOADED, OFF, REFUSED, LEAVING, REMOVED }
+    public enum State { LOADED, OFF, REFUSED, LEAVING, REMOVED, NOT_PLACED }
 
     public ModuleHealth {
         notes = notes == null ? List.of() : List.copyOf(notes);

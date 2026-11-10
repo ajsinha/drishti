@@ -118,6 +118,9 @@ public final class ModuleRuntime implements AutoCloseable {
             if (enabled != null && !enabled.test(c.id())) {
                 health.put(c.id(), new ModuleHealth(c.id(), c.manifest().version(), ModuleHealth.State.OFF, null, "administrator",
                         notes.get(c.id())));
+            } else if (!host.placedHere(c.manifest())) {
+                health.put(c.id(), new ModuleHealth(c.id(), c.manifest().version(), ModuleHealth.State.NOT_PLACED, null,
+                        "no part of it is placed on this node (config/placement.yaml)", notes.get(c.id())));
             } else if (requiresAbsent) {
                 health.put(c.id(), new ModuleHealth(c.id(), c.manifest().version(), ModuleHealth.State.OFF, null,
                         "a module it requires is off", notes.get(c.id())));

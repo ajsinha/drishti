@@ -44,6 +44,7 @@
 
   <div class="net-tabs" role="tablist" aria-label="{{ PRODUCT }}*net" data-tabs>
     <button type="button" role="tab" id="netTabMembers" aria-controls="netPaneMembers" aria-selected="{{ 'true' if tab == 'members' else 'false' }}" {% if tab != 'members' %}tabindex="-1"{% endif %} data-tab="members">Members</button>
+    <button type="button" role="tab" id="netTabModules" aria-controls="netPaneModules" aria-selected="{{ 'true' if tab == 'modules' else 'false' }}" {% if tab != 'modules' %}tabindex="-1"{% endif %} data-tab="modules">Modules</button>
     <button type="button" role="tab" id="netTabMap" aria-controls="netPaneMap" aria-selected="{{ 'true' if tab == 'map' else 'false' }}" {% if tab != 'map' %}tabindex="-1"{% endif %} data-tab="map">Capability map</button>
     <button type="button" role="tab" id="netTabRouting" aria-controls="netPaneRouting" aria-selected="{{ 'true' if tab == 'routing' else 'false' }}" {% if tab != 'routing' %}tabindex="-1"{% endif %} data-tab="routing">Routing</button>
     <button type="button" role="tab" id="netTabAccess" aria-controls="netPaneAccess" aria-selected="{{ 'true' if tab == 'access' else 'false' }}" {% if tab != 'access' %}tabindex="-1"{% endif %} data-tab="access">Access</button>
@@ -162,6 +163,8 @@ secret: ${DRISHTI_NET_SECRET}
     </table></div>
     {% endif %}
   </section>
+
+  {% include "admin/_net_modules.html" %}
 
   <section role="tabpanel" id="netPaneMap" aria-labelledby="netTabMap" data-pane="map" {% if tab != 'map' %}hidden{% endif %}>
     <p class="text-muted-d">Each kind, the nodes that render it (the pack's version there; the newest is the one served) and the nodes that hold its
@@ -317,4 +320,4 @@ secret: ${DRISHTI_NET_SECRET}
 </div>
 {% endblock %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-net.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-net-ring.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-net.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-net-ring.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-placement.js?v={{ ASSET_V }}"></script>{% endblock %}

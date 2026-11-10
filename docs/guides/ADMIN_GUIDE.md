@@ -1622,6 +1622,16 @@ lists are still read in this release and Health lists each file that carries one
 list*); the next release stops reading them. Health's `bindings` block also gives the counts, the unbound required needs and the functions
 they switched off. The API: `GET /api/v1/admin/bindings`, `POST /api/v1/admin/bindings/proposals` and `…/proposals/{id}/approve|reject|withdraw`.
 
+### 23.1 Module placement (Admin → Cluster → Modules)
+
+**Admin → Cluster → Modules** shows where every module part runs: one row per part (its resource class, max-nodes, memory), one column per
+node (its labels, up or down), each cell **active**, **standby**, **down**, **not placed** or **in process**, the owner of a feed or
+singleton starred. A part with no placement runs nowhere, and the page says so. To change it, **Plan a placement** (the whole
+`config/placement.yaml` and why): the server refuses heavy work on every node without `allow-all: true` or over `max-nodes` (`DRS-1030`);
+another administrator **Applies** it (four eyes, `DRS-2007` for the proposer; `DRS-1031` when the cluster changed since the plan). It takes
+effect at once on every member, with no restart. Banking and the other modules still built into the server run on every node until they
+become modules. The rules: [CLUSTER_GUIDE.md section 1.9](CLUSTER_GUIDE.md#19-module-placement).
+
 ## 24. White label: distributions
 
 A **distribution** makes the product: its name, tagline, copyright, logo and theme, its modules, lenses, menus, Home cards and Help.

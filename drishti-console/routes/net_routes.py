@@ -83,11 +83,44 @@ async def page(request: Request):
     security = await _optional(request, "/security")
     traffic = await _optional(request, "/traffic")
     try:
+        modules = await request.app.state.backend.admin("GET", "/cluster/modules", me)   # the node x part placement matrix (2.9.11.i3)
+    except BackendError:
+        modules = {}
+    try:
         stop = await request.app.state.backend.admin("GET", "/node", me)    # readiness and the drain before a stop (CD1, CD2)
     except BackendError:
         stop = {}                                                          # a server older than 2.9.7
     return render(request, "admin/net.html", members=members, files=files, status=status, console=_console_servers(request), caps=caps,
-                  access=access, security=security, traffic=traffic, stop=stop, tab=request.query_params.get("tab", "members"))
+                  access=access, security=security, traffic=traffic, stop=stop, modules=modules, me=me, tab=request.query_params.get("tab", "members"))
+
+
+@router.post("/api/placement/{action}")
+async def placement_action(request: Request, action: str):
+    """``plan`` {placement, reason} · ``apply``/``reject`` {id, comment} · ``withdraw`` {id} · ``reload``: the server decides (administrators
+    only, four eyes, audited) and refuses with words (DRS-1030, DRS-1031, DRS-2007)."""
+    me = _admin(request)
+    if me is None:
+        return _forbidden()
+    try:
+        body = await request.json()
+    except ValueError:
+        return JSONResponse({"code": "DRS-5001", "detail": "a JSON body"}, status_code=400)
+    body = body if isinstance(body, dict) else {}
+    pid = quote(str(body.get("id") or ""), safe="")
+    b = request.app.state.backend
+    try:
+        if action == "plan":
+            return await b.admin("POST", "/cluster/placement/plans", me, {"placement": str(body.get("placement") or "")[:65536],
+                                                                          "reason": str(body.get("reason") or "")[:500]})
+        if action in ("apply", "reject"):
+            return await b.admin("POST", f"/cluster/placement/plans/{pid}/{action}", me, {"comment": str(body.get("comment") or "")[:500]})
+        if action == "withdraw":
+            return await b.admin("POST", f"/cluster/placement/plans/{pid}/withdraw", me, {})
+        if action == "reload":
+            return await b.admin("POST", "/cluster/placement/reload", me, {})
+    except BackendError as e:
+        return _problem(e)
+    return JSONResponse({"code": "DRS-5001", "detail": "unknown action"}, status_code=400)
 
 
 @router.get("/api/explain")

@@ -373,6 +373,42 @@ the same `config/store/store.yaml`**: the default file-system store needs a shar
 PostgreSQL or S3 need none. A member that finds another recorded with a different store root logs `content store roots differ`
 ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)).
 
+### 1.9 Module placement
+
+A module's **parts** (its API, compute, pages, feeds) run on the nodes the site places them on, in **`config/placement.yaml`** (beside the
+connectors' folder; `drishti.placement.file` moves it). The design is
+[KERNEL_AND_MODULES.md section 4.11](../architecture/KERNEL_AND_MODULES.md#411-modules-in-a-cluster).
+
+```yaml
+format: 1
+version: 4                       # raised by every applied change; every member adopts the highest
+modules:
+  sample:
+    parts:
+      api:     { roles: [web] }                     # every node labelled web (node.yaml tags: web, or role:web)
+      compute: { roles: [heavy], max-nodes: 1 }     # heavy: one node at most
+      feeds:   { nodes: [drishti-main, drishti-b] } # one runner, elected among these two
+```
+
+- **By node name or role.** `nodes:` names members; `roles:` matches a node label (a resource class such as `heavy` or `web`, or
+  `role:<name>`), so a new node with the label is placed without changing the file.
+- **No all-nodes default.** A module or part not listed runs nowhere; Health (`placement`) and Admin → Cluster → Modules say *not placed*.
+- **Resource classes** come from the module's manifest (`parts:`): `light`, `heavy` (with `memory-mb`), `feed`, `singleton`.
+- **Singletons.** A `feed` or `singleton` part has exactly one owner: the **first live placed node by name**. Every node sees the same
+  placement and the same members, so all agree without a vote; when the owner stops, the next placed node takes over, never a node outside
+  the placement. With no placed node up the part is *unavailable*.
+- **Heavy-work guards.** A request for a part (`/api/v1/<module>/…`, the part by the paths its manifest declares) runs on a node only when
+  the part is placed there; any other node forwards it once, for the same person, to a placed node that is up (the owner of a one-runner
+  part), and the answer's `X-Drishti-Placement` header names the node that ran it. With none up it is refused with `503 DRS-1032`. A plan
+  that puts a heavy part over its `max-nodes`, or on every node of the cluster without `allow-all: true`, is refused with `DRS-1030`.
+- **Plan, then apply.** A change is a plan (`POST /api/v1/admin/cluster/placement/plans` `{placement, reason}`: the matrix before and after,
+  warnings), applied by a second administrator (`…/plans/{id}/apply`; the proposer gets `DRS-2007`). An apply after the cluster changed (a
+  member or its labels, a module, the placement) is refused with `DRS-1031`: plan again. The apply writes the file (the old one kept as
+  `.bak`), takes effect at once without a restart and is sent to every member; a member that was away adopts it from the version in the
+  digest. Audited as `placement-planned`, `placement-applied`, `placement-rejected`, `placement-withdrawn`, `placement-adopted`.
+- **Today's built-in modules** (banking and the others still inside the server) count as placed on every node, unguarded, until each
+  becomes a module: their behaviour is unchanged, and a placement that names one is refused.
+
 ---
 
 ## 2. A cluster of three
@@ -552,6 +588,12 @@ nodes learn them with this node's digest. API: `GET`/`PUT /api/v1/net/access`.
 
 **Security.** Whether the key is set, whether a previous key is accepted and which peers last signed with it, mutual TLS and certificate
 expiry, and refused calls (when, address, node, why). API: `GET /api/v1/net/security`.
+
+**Modules.** The node × part matrix (`GET /api/v1/admin/cluster/modules`): one row per module part with its resource class, max-nodes and
+memory, one column per node with its labels and whether it is up; each cell in words and colour: **active**, **standby** (a placed node
+waiting while another owns the one-runner part), **down**, **not placed**, **in process** (built into the server). The owner of a feed or
+singleton is starred. Below: the problems (*not placed*, *unavailable*), **Plan a placement** (the whole file and why) and the **plans
+waiting**, which another administrator applies or rejects (section [1.9](#19-module-placement)).
 
 **Files.** Every file of the folder, **in force**, **refused** (with its problems) or **not there (defaults)**. **Check** says what the
 server would make of the text without writing it; **Save** writes it with the version you read (`If-Match`), so two administrators cannot
