@@ -52,5 +52,7 @@ bin\status.cmd
 
 Files go under the data folder (`--data-dir`, `DRISHTI_DATA_DIR`, else `data/`): `run/server[-<node>].pid`, `run/console[-<name>].pid`,
 `logs/server[-<node>].log`, `logs/console[-<name>].log`, `tmp/server[-<node>]`. Exit codes: 0 ok, 1 failed, 2 a wrong option, 3 already running or
-the port is in use. `lib/` holds what the scripts share. Every option, the environment they read, a cluster of three on one machine and
+the port is in use. `lib/` holds what the scripts share. The server reads two more folders under the data folder: `lib/` (jars every
+connector and module may use, read at start) and `modules/` (`.dmod` packages, auto-deployed on a single node):
+[ADMIN_GUIDE.md section 22.1](../docs/guides/ADMIN_GUIDE.md#221-module-packages-auto-deploy-and-the-shared-lib-folder). Every option, the environment they read, a cluster of three on one machine and
 on three machines, and the errors: [DEPLOYMENT_AND_QA_GUIDE.md › section 6](../docs/DEPLOYMENT_AND_QA_GUIDE.md#6-start-the-server-and-the-console).

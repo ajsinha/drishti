@@ -23,7 +23,8 @@ import java.lang.annotation.Target;
 
 /**
  * Marks a module's REST controller (docs/architecture/KERNEL_AND_MODULES.md sections 2.3 and 4.5): the kernel mounts it under the module's
- * namespace, {@code /api/v1/<value>/…}, and unmounts it when the module unloads.
+ * namespace, {@code /api/v1/<value>/…}, and unmounts it when the module unloads. The class is a REST controller ({@code @RestController}
+ * beside this annotation): its answers are the response body; a class without it is not mounted.
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

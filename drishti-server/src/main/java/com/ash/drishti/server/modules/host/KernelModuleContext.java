@@ -129,7 +129,7 @@ final class KernelModuleContext implements ModuleContext {
 
     @Override
     public LocalDate businessDate() {
-        return LocalDate.now();
+        return LocalDate.now(java.time.ZoneOffset.UTC);
     }
 
     private static Map<String, String> read(ConfigurableEnvironment env, String prefix) {

@@ -56,7 +56,7 @@
     <a class="btn-pill btn-accent dist-act" href="/alerts/new" data-new-alert>New alert rule</a>{% if me and me.is_admin %}<a class="lnk dist-link" href="/alerts/all">Everyone's alerts and board tiles</a>{% endif %}</header><div class="pnl-b">
     {% if measure %}<div class="tbl-wrap"><table class="tbl dist-tbl" data-plain>
       <thead><tr><th>Name</th><th>Watching</th><th>Now</th><th>Tell me when</th><th>State</th><th>Last</th><th></th></tr></thead>
-      <tbody>{% for a in measure %}<tr data-alert-row="{{ a.name }}"><td><a class="lnk dist-link" href="/alerts/measure/{{ a.name | urlencode }}">{{ a.name }}</a></td>
+      <tbody>{% for a in measure %}<tr data-alert-row="{{ a.name }}"><td><a class="lnk dist-link" href="/alerts/measure/{{ a.name | urlencode }}">{{ a.name }}</a>{% for n in (needs or {}).get(a.name, []) %} <span class="st st-warn" data-needs-module="{{ n.module }}">paused · {{ n.words }}</span>{% endfor %}</td>
         <td><a class="lnk dist-link" href="{{ a.link }}">{{ a.label }}</a></td>
         <td data-alert-now data-alert-source="{{ (a.source or {}) | tojson | forceescape }}">—</td>
         <td>{{ a.describe }}<div class="cmp-path">{{ a.trigger.mode }}{% if a.trigger.schedule %} · {{ a.trigger.schedule }}{% endif %}</div></td>

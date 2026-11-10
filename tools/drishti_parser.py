@@ -106,7 +106,7 @@ def build_parser(h) -> argparse.ArgumentParser:
     g.add_argument("--no-lint", action="store_true", help="do not run `sutra lint` on the result")
 
     # module -----------------------------------------------------------------------------------------------
-    mg = group("module", "Modules: pack a folder into a .dmod, run the conformance checks C1-C15, inspect a package (the module tool; no Maven needed)")
+    mg = group("module", "Modules: pack a folder into a .dmod, run the conformance checks C1-C15, inspect a package (the module tool; no Maven needed); deploy, plan, apply, list, remove, disable, enable, upgrade on a cluster; run one module alone")
     for name, what in (("pack", "pack a module folder (module.yaml at its root, its jar under java/ or given with --jar) into <out>/<id>-<version>.dmod"),
                        ("check", "the conformance checks C1-C15 on a .dmod or a folder (packed first); exit 1 when one fails"),
                        ("inspect", "what a .dmod or a module folder is and holds; the hash list's verdict")):
@@ -125,6 +125,7 @@ def build_parser(h) -> argparse.ArgumentParser:
         if name == "check":
             mp.add_argument("--project", help="the project folder, whose Java sources C10 reads for licence headers")
             mp.add_argument("--cycles", type=int, help="load/unload cycles of C15 (default 50)")
+    load_module("modulecli", "modulecli.py").register(h, mg, add, srv, js)   # deploy, plan, apply, list, remove, disable, enable, upgrade, run
 
     # pack -------------------------------------------------------------------------------------------------
     k = group("pack", "Packs: generate from JSON Lines, check in CI, find missing help text, publish and install")

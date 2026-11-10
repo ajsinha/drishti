@@ -591,7 +591,13 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
             if (plugins.containsKey(name)) {
                 throw new IllegalStateException("a source named " + name + " is already routed");
             }
-            plugin.start(new EngineSourceContext(Map.of(), codec, scheduler, reader));
+            try {
+                plugin.start(new EngineSourceContext(Map.of(), codec, scheduler, reader));
+            } catch (RuntimeException e) {
+                throw e;
+            } catch (Exception e) {
+                throw new IllegalStateException("the module source " + name + " did not start: " + e.getMessage(), e);
+            }
             swap(name, plugin);
         }
         return () -> {

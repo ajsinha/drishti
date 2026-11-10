@@ -45,19 +45,36 @@ public final class ModuleVerifier {
         this.facts = facts;
     }
 
+    /** The note a module of development mode carries in Health. */
+    public static final String DEVELOPMENT = "development (unverified): an exploded folder loaded in development mode, not a verified .dmod";
+
+    private java.util.function.Predicate<ModuleCandidate> development = c -> false;
+
+    /** Which candidates are exploded development folders (drishti.modules.dev): no folder naming, no hash list; marked in Health. */
+    public ModuleVerifier development(java.util.function.Predicate<ModuleCandidate> d) {
+        this.development = d == null ? c -> false : d;
+        return this;
+    }
+
     /** Runs V1 (folders), V2, the package rules, V3, V5, V7 and V8; returns the Health notes. */
     public List<String> verify(ModuleCandidate c) {
         DmodManifest m = c.manifest();
         String label = m.label();
         List<String> notes = new ArrayList<>();
+        boolean dev = development.test(c);
+        if (dev) {
+            notes.add(DEVELOPMENT);
+        }
         // V1: id = folder, version = folder
-        if (c.dir().getParent() == null || !m.id().equals(c.dir().getParent().getFileName().toString())
+        if (!dev && c.dir().getParent() == null || !m.id().equals(c.dir().getParent().getFileName().toString())
                 || !m.version().equals(c.dir().getFileName().toString())) {
             throw new ModuleRefusedException("V1", label + ": module.yaml's id and version must name its folder <id>/<version> (found "
                     + c.dir().getParent().getFileName() + "/" + c.dir().getFileName() + ")");
         }
         // V2: hashes (signature from release j)
-        notes.addAll(Dmod.verify(c.dir(), c.dmod(), label));
+        if (!dev) {
+            notes.addAll(Dmod.verify(c.dir(), c.dmod(), label));
+        }
         packageRules(c, notes);
         // V3: the API ranges this host knows
         for (String r : DmodManifest.RANGES) {

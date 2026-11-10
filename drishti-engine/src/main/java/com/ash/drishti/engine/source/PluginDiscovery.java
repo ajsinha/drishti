@@ -44,6 +44,10 @@ public final class PluginDiscovery {
         ServiceLoader.load(SourcePlugin.class, SourcePlugin.class.getClassLoader()).forEach(found::add);
         // modules bring computed kinds as KindProviders (KERNEL_AND_MODULES.md section 5.7); the kernel routes them as sources of their kinds
         ServiceLoader.load(com.ash.drishti.kernel.api.data.KindProvider.class, SourcePlugin.class.getClassLoader()).forEach(k -> found.add(new ComputedKindSource(k)));
+        // the shared lib folder (drishti.lib.path): connector plugins the site added, in the one lib class loader under the kernel's
+        com.ash.drishti.common.SharedLib lib = com.ash.drishti.common.SharedLib.get();
+        found.addAll(lib.services(SourcePlugin.class));
+        lib.services(com.ash.drishti.kernel.api.data.KindProvider.class).forEach(k -> found.add(new ComputedKindSource(k)));
         if (pluginDir != null && !pluginDir.isBlank() && Files.isDirectory(Path.of(pluginDir))) {
             try (Stream<Path> jars = Files.list(Path.of(pluginDir))) {
                 for (Path jar : jars.filter(p -> p.toString().endsWith(".jar")).sorted().toList()) {

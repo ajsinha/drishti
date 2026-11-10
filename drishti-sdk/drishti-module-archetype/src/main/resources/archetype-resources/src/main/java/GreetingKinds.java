@@ -21,7 +21,7 @@ import java.util.function.Consumer;
 public class GreetingKinds implements KindProvider {
 
     static final String KIND = "${artifactId}-greeting";
-    private static final List<String> NAMES = List.of("ASHA", "RAVI");
+    private final List<String> names = List.of("ASHA", "RAVI");
 
     private final Greeting greeting;
 
@@ -49,7 +49,7 @@ public class GreetingKinds implements KindProvider {
         if (!KIND.equals(kind)) {
             return false;
         }
-        NAMES.forEach(n -> sink.accept(document(n)));
+        names.forEach(n -> sink.accept(document(n)));
         return true;
     }
 

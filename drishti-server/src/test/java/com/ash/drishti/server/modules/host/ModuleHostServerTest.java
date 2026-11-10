@@ -18,7 +18,6 @@ package com.ash.drishti.server.modules.host;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -33,6 +32,7 @@ import com.ash.drishti.kernel.api.health.HealthFigures;
 import com.ash.drishti.module.runtime.Dmod;
 import com.ash.drishti.module.runtime.ModuleHealth;
 import com.ash.drishti.module.runtime.ModuleRuntime;
+import com.ash.drishti.server.modules.deploy.ModuleNode;
 import com.ash.drishti.module.tool.ModuleAssembler;
 import com.ash.drishti.rachana.el.ElCompiler;
 import com.ash.drishti.rachana.el.ElException;
@@ -62,16 +62,19 @@ import org.springframework.test.web.servlet.MockMvc;
  * jar and a third-party jar under {@code java/lib/}). Each contributes a kind, a Rachana function, a REST route and a page, used from the
  * kernel as its own; unloaded, every one is gone (the route answers 410); put back, they return, and the class loader is collected each time.
  */
-@SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=trading"})
+@SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=trading", "drishti.modules.dev=true",
+        "drishti.modules.autodeploy-seconds=3600"})
 @AutoConfigureMockMvc
 class ModuleHostServerTest {
 
     private static Path folder;
+    private static Path work;
+    private static Path lib;
 
     @Autowired
     MockMvc mvc;
     @Autowired
-    KernelModuleHost host;
+    ModuleNode node;
     @Autowired
     SourceRouter router;
     @Autowired
@@ -80,32 +83,40 @@ class ModuleHostServerTest {
     @DynamicPropertySource
     static synchronized void modules(DynamicPropertyRegistry r) throws IOException {
         if (folder == null) {
-            Path work = Path.of(System.getProperty("drishti.test.dir", System.getProperty("java.io.tmpdir"))).resolve("module-host-" + System.nanoTime());
+            work = Path.of(System.getProperty("drishti.test.dir", System.getProperty("java.io.tmpdir"))).resolve("module-host-" + System.nanoTime());
             folder = work.resolve("modules");
+            lib = sharedLib(work);
             install(archetypeModule(work), folder);
             install(multiJarModule(work), folder);
         }
         r.add("drishti.modules.path", () -> folder.toString());
+        r.add("drishti.lib.path", () -> lib.toString());
     }
 
     @Test
     void modulesLoadAtStartAndAreUsedFromTheKernelThenUnloadLeakFreeAndComeBack() throws Exception {
-        assertThat(host.health()).extracting(ModuleHealth::id, ModuleHealth::state).containsExactly(
+        assertThat(node.runtime().health()).extracting(ModuleHealth::id, ModuleHealth::state).containsExactly(
                 org.assertj.core.groups.Tuple.tuple("demo", ModuleHealth.State.LOADED), org.assertj.core.groups.Tuple.tuple("hello", ModuleHealth.State.LOADED));
         used();
+        // development mode's edit -> reload: a changed file reloads the module, leak-checked
+        Path page = folder.resolve("demo/1.0.0/console/pages/widget.html");
+        Files.writeString(page, "<section data-drishti-module=\"demo\">an edited widget</section>\n");
+        Files.setLastModifiedTime(page, java.nio.file.attribute.FileTime.fromMillis(System.currentTimeMillis() + 5_000));
+        assertThat(node.reloadChanged()).anySatisfy(l -> assertThat(l).startsWith("demo changed: unloaded (leak-free)"));
+        used();
         // the off switch: off (404), back with a rescan
-        assertThat(host.unload("hello", false).leakFree()).isTrue();
+        assertThat(node.unload("hello", ModuleRuntime.Leave.DISABLE).get("leakFree")).isEqualTo(true);
         mvc.perform(get("/api/v1/hello/greeting/Asha")).andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("DRS-1025"));
         // removed: everything gone, its routes 410
-        ModuleRuntime.UnloadReport r = host.unload("demo", true);
-        assertThat(r.failures()).isEmpty();
-        assertThat(r.leakFree()).as("the multi-jar module's class loader is collected").isTrue();
+        Map<String, Object> r = node.unload("demo", ModuleRuntime.Leave.REMOVE);
+        assertThat((List<?>) r.get("failures")).isEmpty();
+        assertThat(r.get("leakFree")).as("the multi-jar module's class loader is collected").isEqualTo(true);
         gone();
         // reinstalled (the folder looked at again): everything back, and gone again without a leak
-        assertThat(host.rescan()).extracting(ModuleHealth::state).containsOnly(ModuleHealth.State.LOADED);
+        assertThat(node.rescan()).extracting(ModuleHealth::state).containsOnly(ModuleHealth.State.LOADED);
         used();
-        assertThat(host.unload("demo", true).leakFree()).isTrue();
-        assertThat(host.unload("hello", true).leakFree()).isTrue();
+        assertThat(node.unload("demo", ModuleRuntime.Leave.REMOVE).get("leakFree")).isEqualTo(true);
+        assertThat(node.unload("hello", ModuleRuntime.Leave.REMOVE).get("leakFree")).isEqualTo(true);
         gone();
         assertThat(Extensions.describe(null)).isEmpty();
     }
@@ -125,15 +136,41 @@ class ModuleHostServerTest {
                 .andExpect(jsonPath("$.area").value(6.0));
         mvc.perform(get("/api/v1/hello/greeting/Asha")).andExpect(status().isOk()).andExpect(jsonPath("$.greeting").value("Hello, Asha, from the hello module"));
         mvc.perform(get("/api/v1/demo/nothing-here")).andExpect(status().isNotFound());
-        // the pages, and a route that moved
-        mvc.perform(get(ModuleDispatchFilter.PAGES + "/demo/widgets/W1")).andExpect(status().isOk()).andExpect(header().string("X-Drishti-Route", "widgets"));
-        mvc.perform(get(ModuleDispatchFilter.PAGES + "/hello/hello/Asha")).andExpect(status().isOk());
-        mvc.perform(get(ModuleDispatchFilter.PAGES + "/demo/old")).andExpect(status().isPermanentRedirect())
-                .andExpect(header().string("Location", ModuleDispatchFilter.PAGES + "/demo/widgets/{id}"));
+        // the pages, as the console's dispatcher asks the route table, and a route that moved
+        assertThat(page("/m/demo/widgets/W1")).isEqualTo(200);
+        assertThat(node.runtime().routes().lookup("/m/demo/widgets/W1").orElseThrow().route().target()).isEqualTo("widget.html");
+        assertThat(page("/m/hello/hello/Asha")).isEqualTo(200);
+        assertThat(page("/m/demo/old")).isEqualTo(308);
         // Health: the module's own figures and the host's card
         assertThat(Extensions.of(HealthFigures.class)).extracting(HealthFigures::key).contains("demo-module");
-        assertThat(host.describe().toString()).contains("KIND_PROVIDER", "FUNCTION", "controllers of /api/v1/demo");
+        assertThat(node.status().toString()).contains("development (unverified)", "KIND_PROVIDER", "FUNCTION", "endpoint /api/v1/demo/shout/{text}");
         assertThat(DemoState.started()).isTrue();
+    }
+
+    @Test
+    void theSharedLibIsSeenByModulesAndJdbcButNeverReplacesAKernelClass() throws Exception {
+        com.ash.drishti.common.SharedLib l = com.ash.drishti.common.SharedLib.get();
+        assertThat(l.jars()).extracting(com.ash.drishti.common.SharedLib.Jar::name).containsExactly("acme-lib.jar");
+        assertThat(l.jars().get(0).sha256()).hasSize(64);
+        assertThat(l.info().toString()).contains("mark=lib");
+        assertThat(l.loader().loadClass("com.ash.drishti.common.Branding").getClassLoader()).isNotSameAs(l.loader());
+        assertThat(java.sql.DriverManager.getDriver("jdbc:acme:test")).isNotNull();
+        // a module uses a lib class it does not bundle
+        assertThat(eval("demo_tax(100)")).isEqualTo(107.0);
+    }
+
+    @Test
+    void aDroppedPackageIsDeployedAndRemovedWhenItsFileGoes(@Autowired com.ash.drishti.server.modules.deploy.ModuleAutoDeploy auto) throws Exception {
+        Path dmod = Files.copy(archetypeModule(work, "greeter"), folder.resolve("greeter-0.1.0.dmod"));
+        assertThat(auto.scan()).containsExactly("deployed greeter 0.1.0");
+        mvc.perform(get("/api/v1/greeter/greeting/Asha")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.greeting").value("Hello, Asha, from the greeter module"));
+        assertThat(eval("greeter_greet('Ravi')")).isEqualTo("Hello, Ravi, from the greeter module");
+        assertThat(auto.scan()).isEmpty();                       // nothing changed, nothing done
+        Files.delete(dmod);
+        assertThat(auto.scan()).containsExactly("removed greeter");
+        mvc.perform(get("/api/v1/greeter/greeting/Asha")).andExpect(status().isGone());
+        assertThatThrownBy(() -> eval("greeter_greet('Ravi')")).isInstanceOf(ElException.class);
     }
 
     private void gone() throws Exception {
@@ -141,9 +178,13 @@ class ModuleHostServerTest {
         assertThat(router.documents("demo-widget", AsOf.LATEST, d -> { })).isFalse();
         assertThatThrownBy(() -> eval("demo_shout('hi')")).isInstanceOf(ElException.class);
         mvc.perform(get("/api/v1/demo/shout/quiet")).andExpect(status().isGone()).andExpect(jsonPath("$.code").value("DRS-1028"));
-        mvc.perform(get(ModuleDispatchFilter.PAGES + "/demo/widgets/W1")).andExpect(status().isGone());
+        assertThat(page("/m/demo/widgets/W1")).isEqualTo(410);
         assertThat(Extensions.describe("demo")).isEmpty();
         assertThat(DemoState.started()).isFalse();
+    }
+
+    private int page(String path) {
+        return node.runtime().routes().lookup(path).orElseThrow().status();
     }
 
     private static Object eval(String expression) {
@@ -154,9 +195,39 @@ class ModuleHostServerTest {
 
     /** The SDK's archetype, generated as {@code mvn archetype:generate} would, compiled and packed. */
     private static Path archetypeModule(Path work) {
-        Path project = ModuleFixtures.generate(Path.of(System.getProperty("drishti.sdk.archetype")), "hello", work.resolve("hello"));
-        Path jar = ModuleFixtures.jarOf(project.resolve("src/main/java"), null, work.resolve("hello-build"), work.resolve("hello-build/hello-0.1.0.jar"));
-        return ModuleAssembler.assemble(project.resolve("src/dmod"), jar, work.resolve("stage"), work.resolve("dist"));
+        return archetypeModule(work, "hello");
+    }
+
+    private static Path archetypeModule(Path work, String id) {
+        Path project = ModuleFixtures.generate(Path.of(System.getProperty("drishti.sdk.archetype")), id, work.resolve(id));
+        Path jar = ModuleFixtures.jarOf(project.resolve("src/main/java"), null, work.resolve(id + "-build"), work.resolve(id + "-build/" + id + "-0.1.0.jar"));
+        return ModuleAssembler.assemble(project.resolve("src/dmod"), jar, work.resolve("stage"), work.resolve("dist-" + id));
+    }
+
+    /** The shared lib folder: one jar with a class modules use, a JDBC driver, and a kernel class's name it must never replace. */
+    private static Path sharedLib(Path work) throws IOException {
+        Path out = work.resolve("lib");
+        Path build = work.resolve("acme-build");
+        ModuleFixtures.write(build.resolve("classes/META-INF/services/java.sql.Driver"), "com.acme.AcmeDriver\n");
+        Map<String, String> src = new LinkedHashMap<>();
+        src.put("com/acme/Tax.java", "package com.acme;\npublic final class Tax {\n    private Tax() {}\n    public static double gross(double net) { return net * 1.07; }\n}\n");
+        src.put("com/acme/AcmeDriver.java", """
+                package com.acme;
+                import java.sql.*;
+                import java.util.Properties;
+                public class AcmeDriver implements Driver {
+                    public Connection connect(String url, Properties info) { return null; }
+                    public boolean acceptsURL(String url) { return url != null && url.startsWith("jdbc:acme:"); }
+                    public DriverPropertyInfo[] getPropertyInfo(String url, Properties info) { return new DriverPropertyInfo[0]; }
+                    public int getMajorVersion() { return 1; }
+                    public int getMinorVersion() { return 0; }
+                    public boolean jdbcCompliant() { return false; }
+                    public java.util.logging.Logger getParentLogger() { return java.util.logging.Logger.getLogger("acme"); }
+                }
+                """);
+        src.put("com/ash/drishti/common/Branding.java", "package com.ash.drishti.common;\npublic final class Branding {}\n");
+        ModuleFixtures.jarOf(src, null, build, out.resolve("acme-lib.jar"));
+        return out;
     }
 
     /** A module of three jars: its service jar, its compute jar, and a third-party jar under java/lib/. */
@@ -210,7 +281,9 @@ class ModuleHostServerTest {
                             public String source() { return "the demo module"; }
                             public List<Provided> functions() {
                                 return List.of(new Provided("demo_shout", 1, 1, "text", "the text, loud",
-                                        args -> thirdparty.shout.Shout.loud(String.valueOf(args.get(0)))));
+                                        args -> thirdparty.shout.Shout.loud(String.valueOf(args.get(0)))),
+                                        new Provided("demo_tax", 1, 1, "net", "the gross of a net amount (the site's lib)",
+                                        args -> com.acme.Tax.gross(((Number) args.get(0)).doubleValue())));
                             }
                         };
                     }
@@ -249,7 +322,7 @@ class ModuleHostServerTest {
                     public void stop() { System.clearProperty("drishti.test.demo-module.started"); }
                 }
                 """);
-        String cp = lib + File.pathSeparator + compute;
+        String cp = lib + File.pathSeparator + compute + File.pathSeparator + ModuleHostServerTest.lib.resolve("acme-lib.jar");
         Path svc = ModuleFixtures.jarOf(service, cp, work.resolve("service-build"), work.resolve("jars/demo-service.jar"));
         Path src = work.resolve("demo-src");
         ModuleFixtures.write(src.resolve("module.yaml"), """

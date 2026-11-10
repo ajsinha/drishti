@@ -108,6 +108,17 @@
   explain.Explanation public java.util.Map<java.lang.String, java.lang.String> com.ash.drishti.kernel.api.explain.Explanation.unbuilt()
   explain.Explanation public static java.lang.String com.ash.drishti.kernel.api.explain.Explanation.number(double)
   explain.Explanation public static java.lang.String com.ash.drishti.kernel.api.explain.Explanation.signed(double)
+  function.FunctionProvider public abstract java.lang.String com.ash.drishti.kernel.api.function.FunctionProvider.source()
+  function.FunctionProvider public abstract java.util.List<com.ash.drishti.kernel.api.function.FunctionProvider$Provided> com.ash.drishti.kernel.api.function.FunctionProvider.functions()
+  function.FunctionProvider$Provided public final boolean com.ash.drishti.kernel.api.function.FunctionProvider$Provided.equals(java.lang.Object)
+  function.FunctionProvider$Provided public final int com.ash.drishti.kernel.api.function.FunctionProvider$Provided.hashCode()
+  function.FunctionProvider$Provided public final java.lang.String com.ash.drishti.kernel.api.function.FunctionProvider$Provided.toString()
+  function.FunctionProvider$Provided public int com.ash.drishti.kernel.api.function.FunctionProvider$Provided.maxArgs()
+  function.FunctionProvider$Provided public int com.ash.drishti.kernel.api.function.FunctionProvider$Provided.minArgs()
+  function.FunctionProvider$Provided public java.lang.String com.ash.drishti.kernel.api.function.FunctionProvider$Provided.args()
+  function.FunctionProvider$Provided public java.lang.String com.ash.drishti.kernel.api.function.FunctionProvider$Provided.description()
+  function.FunctionProvider$Provided public java.lang.String com.ash.drishti.kernel.api.function.FunctionProvider$Provided.name()
+  function.FunctionProvider$Provided public java.util.function.Function<java.util.List<java.lang.Object>, java.lang.Object> com.ash.drishti.kernel.api.function.FunctionProvider$Provided.body()
   health.HealthFigures public abstract java.lang.Object com.ash.drishti.kernel.api.health.HealthFigures.value()
   health.HealthFigures public abstract java.lang.String com.ash.drishti.kernel.api.health.HealthFigures.key()
   module.DrishtiModule public abstract java.lang.String com.ash.drishti.kernel.api.module.DrishtiModule.id()
@@ -469,6 +480,8 @@ engines.ComputeEngine
 explain.ExplainRequest
 explain.Explainer
 explain.Explanation
+function.FunctionProvider
+function.FunctionProvider$Provided
 health.HealthFigures
 module.DrishtiModule
 module.ModuleApi

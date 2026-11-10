@@ -128,7 +128,11 @@ async def alerts(request: Request, kind: str = "", id: str = "", msg: str = "", 
         rules = []
     recent = sorted((dict(e, alert=a["name"]) for a in rules for e in (a.get("history") or []) if e.get("action") == "fired"), key=lambda e: e.get("at", ""), reverse=True)[:20]
     suggestions = [s for p in await packs(request) for s in p["alerts"] if not kind or s.get("kind") == kind]
-    return render(request, "alerts.html", raised=raised, stage=stage, measure=rules, recent=recent, suggestions=suggestions, kind=kind, id=id, msg=msg, screen="alerts")
+    from routes.module_admin_routes import needs as _needs     # a rule that uses a removed or switched-off module: kept, marked (KERNEL_AND_MODULES.md 12.6)
+    import json as _json
+    needs = await _needs(request, [{"id": str(a.get("name")), "text": _json.dumps(a, default=str)} for a in rules])
+    return render(request, "alerts.html", raised=raised, stage=stage, measure=rules, recent=recent, suggestions=suggestions, kind=kind, id=id, msg=msg, screen="alerts",
+                  needs=needs)
 
 
 @router.post("/alerts/raised/{action}")

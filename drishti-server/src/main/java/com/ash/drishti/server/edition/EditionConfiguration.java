@@ -55,7 +55,8 @@ public class EditionConfiguration {
      */
     @Bean
     public com.ash.drishti.kernel.api.health.HealthFigures distributionHealth(Environment env,
-            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.modules.ModuleConfiguration.Started> started) {
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.modules.ModuleConfiguration.Started> started,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.modules.deploy.ModuleNode> node) {
         String info = com.ash.drishti.packs.edition.EditionEnvironmentPostProcessor.INFO;
         return new com.ash.drishti.kernel.api.health.HealthFigures() {
             @Override
@@ -71,7 +72,11 @@ public class EditionConfiguration {
                 m.put("file", env.getProperty(info + ".file", ""));
                 boolean all = Boolean.parseBoolean(env.getProperty(info + ".all", "true"));
                 com.ash.drishti.server.modules.ModuleConfiguration.Started s = started.getIfAvailable();
-                java.util.Map<String, Boolean> loaded = s == null ? java.util.Map.of() : s.loaded();
+                java.util.Map<String, Boolean> loaded = new java.util.LinkedHashMap<>(s == null ? java.util.Map.of() : s.loaded());
+                com.ash.drishti.server.modules.deploy.ModuleNode n = node.getIfAvailable();   // and the .dmod modules this node holds
+                if (n != null && n.runtime() != null) {
+                    n.runtime().health().forEach(h -> loaded.putIfAbsent(h.id(), h.state() == com.ash.drishti.module.runtime.ModuleHealth.State.LOADED));
+                }
                 java.util.List<String> asked = java.util.Arrays.stream(env.getProperty(info + ".modules", "").split(",")).filter(x -> !x.isBlank()).toList();
                 java.util.List<String> domains = java.util.Arrays.stream(env.getProperty(info + ".domains", "").split(",")).filter(x -> !x.isBlank()).toList();
                 java.util.Map<String, Object> modules = new java.util.LinkedHashMap<>();

@@ -1,0 +1,124 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# Admin → Modules (mock-up A, table + detail: docs/architecture/kernel-and-modules/mockups/admin-modules.html), from GET
+   /api/v1/admin/modules/deployments as `data`: the plans waiting for a second administrator pinned on top; one row per module (version,
+   state, the nodes it is placed on, the versions in the module store); the chosen module's detail beside it (its names, the store's checks,
+   the actions, each a plan on the Deploy page); every deployment below. Console tables and links only (Drishti Elements). #}
+{% extends "base.html" %}
+{% block title %}Modules · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-inbox.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-modules.css?v={{ ASSET_V }}">{% endblock %}
+{% block screen %}admin{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+{% set STATE = {'active': ('st-ok', 'LOADED'), 'off': ('', 'OFF'), 'removed': ('st-bad', 'REMOVED'), 'stored': ('', 'IN THE STORE')} %}
+<div class="adm ib" data-admin-modules>
+  {% with tab='modules' %}{% include "admin/_nav.html" %}{% endwith %}
+  <div class="mod-head">
+    <span><h1 class="ws-h">Modules</h1>
+      <span class="text-muted-d">This node <span class="mono">{{ data.node or '-' }}</span> · cluster <span class="mono">{{ data.fingerprint or '-' }}</span> ·
+        {{ (data.nodes or [])|length }} node(s)</span></span>
+    <a class="btn-pill ib-btn" href="/admin/modules/deploy" data-module-install>Install module…</a>
+  </div>
+  <p class="text-muted-d ib-intro">Each module is uploaded once to the module store (checked there: the fifteen conformance checks) and
+    deployed by plan: the plan says what each node does, following the placement (a node where no part is placed receives nothing); a
+    second administrator applies it. Removing a module takes every surface away (its paths answer 410) and marks saved work that used it;
+    a reinstall restores it. See the <a href="/help/admin">Administration guide</a> and, from a terminal, <span class="mono">drishti.py module</span>.</p>
+  {% if error %}<p class="adm-warn" role="alert" data-modules-error>The server did not give the modules: {{ error }}</p>{% endif %}
+
+  {% for d in data.waiting or [] %}
+  <div class="mod-strip" data-module-waiting="{{ d.id }}"><span><span class="st">WAITING FOR A SECOND ADMINISTRATOR</span>
+    {{ d.proposedBy }} proposes <b>{{ d.action }} {{ d.module }} {{ d.version }}</b> · reason "{{ d.reason }}"</span>
+    <a class="btn-pill ib-btn" href="/admin/modules/deploy?plan={{ d.id|urlencode }}">Review</a></div>
+  {% endfor %}
+
+  <div class="mod-split">
+    <section class="mod-card" aria-labelledby="modules-h">
+      <h2 class="ib-h2" id="modules-h">Modules ({{ (data.modules or [])|length }})</h2>
+      {% if not data.modules %}<p class="text-muted-d" data-modules-none>No module is deployed yet: <a href="/admin/modules/deploy">install one</a>.</p>{% else %}
+      <div class="tbl-wrap"><table class="tbl adm-tbl" data-modules-table>
+        <caption class="visually-hidden">The modules of the cluster: version, state, nodes and the versions in the store</caption>
+        <thead><tr><th scope="col">Module</th><th scope="col">Version</th><th scope="col">State</th><th scope="col">Placed on</th><th scope="col">In the store</th></tr></thead>
+        <tbody>
+        {% for m in data.modules %}{% set look = STATE.get(m.state, ('', m.state)) %}
+          <tr data-module="{{ m.id }}" data-state="{{ m.state }}"{% if chosen and chosen.id == m.id %} class="mod-row-on"{% endif %}>
+            <td><a href="/admin/modules?module={{ m.id|urlencode }}"><b>{{ m.id }}</b></a><div class="text-muted-d">{{ m.title }}</div></td>
+            <td class="mono">{{ m.version or '-' }}</td>
+            <td><span class="st {{ look[0] }}">{{ look[1] }}</span></td>
+            <td class="mono">{{ (m.placed or [])|join(', ') or 'not placed' }}</td>
+            <td class="mono">{{ (m.versions or [])|map(attribute='version')|join(', ') or '-' }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table></div>
+      {% endif %}
+    </section>
+
+    {% if chosen %}
+    <section class="mod-card" aria-labelledby="module-h" data-module-detail="{{ chosen.id }}">
+      <h2 class="ib-h2" id="module-h">{{ chosen.id }} {{ chosen.version or '' }}</h2>
+      <dl class="mod-facts">
+        <dt>State</dt><dd>{{ STATE.get(chosen.state, ('', chosen.state))[1] }}{% if chosen.by %} · by {{ chosen.by }} {{ (chosen.at or '')[:16] }}{% endif %}</dd>
+        <dt>API</dt><dd class="mono">{{ '/api/v1/' ~ chosen.prefix if chosen.prefix else '-' }}</dd>
+        <dt>Owns</dt><dd>{{ (chosen.claims or [])|join(' · ') or '-' }}</dd>
+        <dt>Placed on</dt><dd class="mono">{{ (chosen.placed or [])|join(', ') or 'no node: place it in Admin → Cluster → Modules' }}</dd>
+        <dt>Deployment</dt><dd class="mono">{% if chosen.deployment %}<a href="/admin/modules/deploy?plan={{ chosen.deployment|urlencode }}">{{ chosen.deployment }}</a>{% else %}-{% endif %}</dd>
+      </dl>
+      {% set v = (chosen.versions or [None])[0] %}
+      {% if v %}
+      <h3 class="ib-h3">Verify report ({{ v.version }})</h3>
+      <ul class="mod-checks" data-module-checks>{% for c in v.checks or [] %}<li class="{{ 't-ok' if c.endswith('passed') else 't-bad' }}">{{ c }}</li>{% endfor %}</ul>
+      <p class="text-muted-d mono">sha256 {{ (v.sha or '')[:16] }}… · {{ '{:,}'.format(v.bytes or 0) }} bytes · stored by {{ v.storedBy }}</p>
+      {% endif %}
+      <div class="mod-actions">
+        {% if chosen.state == 'active' %}
+        <a class="btn-pill ib-btn" href="/admin/modules/deploy?module={{ chosen.id|urlencode }}&action=upgrade">Upgrade…</a>
+        <a class="btn-pill ib-btn" href="/admin/modules/deploy?module={{ chosen.id|urlencode }}&action=disable">Switch off…</a>
+        <a class="btn-pill ib-btn" href="/admin/modules/deploy?module={{ chosen.id|urlencode }}&action=remove">Remove…</a>
+        {% elif chosen.state == 'off' %}
+        <a class="btn-pill ib-btn" href="/admin/modules/deploy?module={{ chosen.id|urlencode }}&action=enable">Switch on…</a>
+        <a class="btn-pill ib-btn" href="/admin/modules/deploy?module={{ chosen.id|urlencode }}&action=remove">Remove…</a>
+        {% else %}
+        <a class="btn-pill ib-btn" href="/admin/modules/deploy?module={{ chosen.id|urlencode }}&action=install">{{ 'Reinstall…' if chosen.state == 'removed' else 'Install…' }}</a>
+        {% endif %}
+      </div>
+      <p class="text-muted-d">Every action is a plan: a second administrator applies it.</p>
+    </section>
+    {% endif %}
+  </div>
+
+  <section class="mod-card" aria-labelledby="deployments-h">
+    <h2 class="ib-h2" id="deployments-h">Deployments</h2>
+    {% if not data.deployments %}<p class="text-muted-d">None yet.</p>{% else %}
+    <div class="tbl-wrap"><table class="tbl adm-tbl" data-deployments>
+      <caption class="visually-hidden">Every deployment, newest first: who proposed it, who applied it, the outcome</caption>
+      <thead><tr><th scope="col">Deployment</th><th scope="col">What</th><th scope="col">State</th><th scope="col">Proposed</th><th scope="col">Decided</th><th scope="col">Outcome</th></tr></thead>
+      <tbody>
+      {% for d in data.deployments[:50] %}
+        <tr data-deployment="{{ d.id }}" data-state="{{ d.state }}"><td class="mono"><a href="/admin/modules/deploy?plan={{ d.id|urlencode }}">{{ d.id }}</a></td>
+          <td>{{ d.action }} {{ d.module }} {{ d.version }}</td>
+          <td><span class="st {{ 'st-ok' if d.state == 'applied' else ('st-bad' if d.state == 'failed' else '') }}">{{ d.state }}</span></td>
+          <td>{{ d.proposedBy }} <span class="mono text-muted-d">{{ (d.proposedAt or '')[:16] }}</span></td>
+          <td>{{ d.decidedBy or '-' }} <span class="mono text-muted-d">{{ (d.decidedAt or '')[:16] }}</span></td>
+          <td>{{ d.outcome or d.reason }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}
+{% block footer %}{% include "_footer.html" %}{% endblock %}
