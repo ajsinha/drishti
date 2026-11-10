@@ -28,16 +28,27 @@ modules:
       packs: [world-economy, news-and-markets, world-development, central-banks, national-statistics, oecd, official-news, gdelt-events]
       functions: [ECON, MACRO, FCST, LABR, FISC, ECG, REGE, JUR, PARTY, OFFC, ELEC, REGN, SOCI, TOPIC, NEWS, CO, QUOTE,
         WDI, WDIS, CBANK, CBSER, NSTAT, OECD, OECDS, PRESS, PREL, GDELT]
-  # capital markets (the owner, 2026-11-07): listed companies, funds, and the market data's prices, curves and volatilities as functions.
-  # The market-data pack itself stays the banking module's while the banking engines read it (it moves here when banking can require this
-  # module); its commands are this module's functions already. GLEIF's legal entities are core reference data (every domain uses them).
+  # market data (the owner, 2026-11-10: in both Drishti Risk and Drishti Finance): curves, FX, quotes and surfaces, their own module
+  # (modules/market-data); banking requires it, because its engines read the curves and surfaces.
+  - id: market-data
+    domain: market-data
+    title: Market data
+    about: "Curves, volatility surfaces, FX, equities, credit, inflation, commodities, fixings and bonds"
+    code: false
+    feature: market-data
+    enabled: true
+    contributes:
+      packs: [market-data]
+      functions: [MKT, CRV, REPO, FX, FXF, FXV, IRV, CPV, EQ, EQX, DIV, EQV, CDS, INF, INFC, CMD, CMDC, CMDV, FIX, BND, CORR, CORRC, EQB]
+  # capital markets (the owner, 2026-11-07): listed companies and funds (modules/capital-markets). GLEIF's legal entities are core
+  # reference data (every domain uses them).
   - id: capitalmarkets
     domain: capitalmarkets
     title: Capital markets
-    about: "US equities (SEC EDGAR filings and facts, indices, prices), funds and ETFs, and the market data's functions (curves, FX, vols, equities, bonds)"
+    about: "US equities (SEC EDGAR filings and facts, indices, prices), funds and ETFs"
     code: false
     feature: capitalmarkets
     enabled: true
     contributes:
       packs: [us-equities, funds]
-      functions: [USEQ, IDX, SIC, EDGAR, FILING, FACT, PXH, FUND, HELD, TRACK, CRV, REPO, FX, FXF, FXV, IRV, CPV, EQ, EQX, DIV, EQV, CDS, INF, INFC, CMD, CMDC, CMDV, FIX, BND, CORR, CORRC, EQB]
+      functions: [USEQ, IDX, SIC, EDGAR, FILING, FACT, PXH, FUND, HELD, TRACK]

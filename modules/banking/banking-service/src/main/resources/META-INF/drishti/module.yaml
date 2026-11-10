@@ -24,16 +24,19 @@ module:
   about: "VaR and ES (historical, parametric, regulatory), exposure and CCR, FRTB-SA, ISDA SIMM, sensitivities, the MR cube, the official risk results"
   feature: banking
   enabled: true
-  requires: []
+  requires: [market-data]                 # the market-data module (modules/market-data): the engines read its curves and surfaces
   contributes:
     packages: [com.ash.drishti.banking]
     engines: [var, exposure, sensitivities, frtb-sa, simm, mr-cube]
-    packs: [trading, market-data, market-risk, counterparty-risk]
+    packs: [trading, market-risk, counterparty-risk]
+    # what a distribution's visibility filter reads besides the packs and functions (DISTRIBUTIONS.md): the top menus and Help it owns
+    menus: [blotter, positions, risk, counterparties]
+    help: [banking]
     connectors: [var-engine, var-positions, var-pv-stream, exposure-engine]
     # the API (the old prefixes beside the new: answered for one release by the module, and refused with it when the module is off)
     api: [/api/v1/risk, /api/v1/var, /api/v1/exposure, /api/v1/frtb, /api/v1/simm, /api/v1/sensitivities, /api/v1/risk-factors, /api/v1/pivot/mr]
     # the functions (command words): the engines' words with the APIs behind them, then the packs' commands (their kinds' own APIs); the
-    # market-data pack's commands are the capitalmarkets module's functions (the pack stays here while the engines read it)
+    # market-data pack's commands are the market-data module's functions
     functions:
       - {word: VAR, api: [/api/v1/risk/var]}
       - PVAR
@@ -46,6 +49,8 @@ module:
       - {word: MCUBE, api: [/api/v1/risk/mr]}
       - {word: SENS, api: [/api/v1/risk/sensitivities]}
       - {word: RFAC, api: [/api/v1/risk/risk-factors]}
+      - PLAY                               # the playgrounds (PLAY VAR, PLAY FRTB, PLAY SIMM, PLAY EXP)
+      - CCUBE                              # the counterparty cube
       # trading
       - TRD
       - CTRD

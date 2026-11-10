@@ -40,8 +40,8 @@ modules:
   - { id: market-data,     required: true }
 
 lenses:
-  offered: [world]                         # the Markets lens joins when capital-markets ships as a module (wave 2)
-  default: world
+  offered: [markets, world]                # Markets: the capital-markets module's lens (companies, funds, market data); World: economy's
+  default: markets
 
 menus:
   top: [views, economies, markets, companies, bi, admin, help]

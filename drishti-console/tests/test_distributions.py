@@ -30,6 +30,7 @@ from core.auth import Identity
 from core.config import load_settings
 
 DIR = CONSOLE.parent / "config" / "distributions"
+MODULES = CONSOLE.parent / "modules"   # the modules' own manifests: what a distribution's modules hold
 ALL_ABOUT = {"product": "Drishti", "tagline": "Any data. Any domain. One grammar.", "edition": None, "lenses": ["risk", "world", "market", "trading"]}
 
 
@@ -62,12 +63,12 @@ def _commands(client, q: str) -> list[str]:
 @pytest.mark.parametrize("name,product", [("all", "Drishti"), ("risk", "Drishti Risk"), ("finance", "Drishti Finance"),
                                           ("genomics", "Drishti Genomics")])
 def test_each_distribution_boots_from_its_file_alone(name, product):
-    d = dist.read(dist.file_of(DIR, name), DIR / dist.MODULES, CONSOLE.parent / "config" / "packs")
+    d = dist.read(dist.file_of(DIR, name), DIR / dist.KERNEL, MODULES, CONSOLE.parent / "config" / "packs")
     assert d.id == f"drishti.{name}" and d.title == product
     assert d.settings_layer()["ui"]["product"] == product
     assert d.all is (name == "all")
     with pytest.raises(ValueError):
-        dist.read(dist.file_of(DIR, "nosuch"), DIR / dist.MODULES, CONSOLE.parent / "config" / "packs")
+        dist.read(dist.file_of(DIR, "nosuch"), DIR / dist.KERNEL, MODULES, CONSOLE.parent / "config" / "packs")
 
 
 def test_finance_has_no_var_commands_menus_help_or_ai_tools(backend, monkeypatch):
@@ -93,6 +94,36 @@ def test_finance_has_no_var_commands_menus_help_or_ai_tools(backend, monkeypatch
     for slug in ("var-guide", "docs-guides-var-guide", "exposure-guide", "frtb-sa-guide"):
         assert f'href="/help/{slug}"' not in centre, slug
     assert c.get("/help/var-guide").status_code == 404
+
+
+def test_finance_has_the_markets_lens_and_market_data_and_no_risk_number(backend, monkeypatch):
+    app = _app(backend, monkeypatch, "--distribution=finance")
+    app.state.editions.learn(ALL_ABOUT)
+    eds = app.state.editions
+    assert set(eds.lenses) == {"markets", "world"} and eds.distribution.default_lens == "markets"
+    markets = eds.for_request("markets")
+    for c in ("USEQ", "FUND", "IDX", "CRV", "FX", "FXV", "CDS"):
+        assert markets.command_shown(c), c
+    for typed in ("VAR BANK", "VRES DESK:RATES", "EXP CPTY:CP-ALDERSHOT", "PLAY VAR", "FRTB", "SIMM", "SENS"):
+        assert not markets.typed_shown(typed) and not eds.instance.typed_shown(typed), typed
+    d = eds.distribution
+    assert {"capital-markets", "economy", "market-data"} <= set(d.modules) and "banking" not in d.modules
+    assert {"var", "exposure", "frtb-sa", "simm", "sensitivities", "mr-cube"} <= set(d.features_off)
+    assert "market-data" in d.packs and "market-risk" not in d.packs
+
+
+def test_the_modules_manifests_drive_the_filter():
+    known = dist.module_manifests(MODULES)
+    assert {"banking", "market-data", "capital-markets", "economy"} <= set(known)
+    order = list(known)
+    assert order.index("market-data") < order.index("banking")                     # a required module first
+    assert known["banking"].requires == ["market-data"] and "market-data" not in known["banking"].packs
+    assert dist.with_required(["banking"], known) == ["banking", "market-data"]
+    assert not (DIR / "modules.yaml").exists()                                        # the hand mapping is gone: one source of truth
+    risk = dist.read(DIR / "drishti.risk.yaml", DIR / dist.KERNEL, MODULES, CONSOLE.parent / "config" / "packs")
+    assert "market-data" in risk.packs and "world-economy" not in risk.packs and "ECON" in risk.words_off
+    with pytest.raises(ValueError, match="has no manifest"):
+        dist.read(DIR / "drishti.risk.yaml", DIR / dist.KERNEL, CONSOLE.parent / "no-such", CONSOLE.parent / "config" / "packs")
 
 
 def test_risk_has_no_economy_commands_and_market_data_is_in_both(backend, monkeypatch):
@@ -179,6 +210,5 @@ def test_a_path_names_a_sites_own_file(tmp_path: Path):
     own = tmp_path / "acme.yaml"
     own.write_text((DIR / "drishti.finance.yaml").read_text(encoding="utf-8").replace("Drishti Finance", "Acme Markets")
                    .replace("drishti.finance", "drishti.acme"), encoding="utf-8")
-    (tmp_path / dist.MODULES).write_text((DIR / dist.MODULES).read_text(encoding="utf-8"), encoding="utf-8")
-    d = dist.read(dist.file_of(DIR, str(own)), own.parent / dist.MODULES, CONSOLE.parent / "config" / "packs")
+    d = dist.read(dist.file_of(DIR, str(own)), DIR / dist.KERNEL, MODULES, CONSOLE.parent / "config" / "packs")
     assert d.title == "Acme Markets" and d.help_title == "Acme Markets Help"

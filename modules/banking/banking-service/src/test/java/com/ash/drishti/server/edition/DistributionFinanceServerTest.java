@@ -36,7 +36,7 @@ import org.springframework.test.web.servlet.MvcResult;
  * data among them), no VaR, exposure or trading command in FUNC or the type-ahead (what the AI reads), a VaR command answering "not in
  * Drishti Finance", the VaR and exposure engines off, and Health's distribution card.
  */
-@SpringBootTest(properties = {"drishti.distribution=finance", "drishti.distributions-dir=../config/distributions", "drishti.packs.dir=../config/packs",
+@SpringBootTest(properties = {"drishti.distribution=finance", "drishti.distributions-dir=../config/distributions", "drishti.module-manifests-dir=../modules", "drishti.packs.dir=../config/packs",
         "drishti.packs.enabled=default", "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.enabled=false",
         "drishti.bi.dir=../config/bi", "drishti.tables.root=../config/tables", "drishti.bi.query.store-dir=${drishti.test.dir}/finance-bi-store/${random.uuid}",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/finance-${random.uuid}/identity.db"})

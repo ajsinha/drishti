@@ -37,9 +37,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * The capital-markets module off (a content module: the us-equities and funds packs, and the market data's functions): its packs and their
- * connectors do not load and its functions are off, while the banking module (its beans, engines and API, the market-data pack it reads)
- * and the core reference data (GLEIF) are unaffected.
+ * The capital-markets module off (a content module: the us-equities and funds packs): its packs and their connectors do not load and its
+ * functions are off, while the market-data module (its own since 2.9.11.i2: CRV, FX, EQV stay on), the banking module (its beans, engines
+ * and API) and the core reference data (GLEIF) are unaffected.
  */
 @SpringBootTest(properties = {"drishti.modules.capitalmarkets.enabled=false", "drishti.rachana.hot-reload=false",
         "drishti.packs.enabled=core,market-data,us-equities,funds,gleif,world-economy", "drishti.sources.plugins.demo.enabled=false",
@@ -72,10 +72,10 @@ class CapitalMarketsModuleOffTest {
 
     @Test
     void itsFunctionsAreOffAndTheOthersOn() {
-        for (String w : List.of("USEQ", "EDGAR", "FUND", "HELD", "EQV", "CRV", "FX")) {
+        for (String w : List.of("USEQ", "EDGAR", "FUND", "HELD")) {
             assertThat(registry.functionOn(w)).as(w).isFalse();
         }
-        for (String w : List.of("VAR", "EXP", "TRD", "LEI", "ECON", "BI")) {
+        for (String w : List.of("VAR", "EXP", "TRD", "LEI", "ECON", "BI", "EQV", "CRV", "FX")) {
             assertThat(registry.functionOn(w)).as(w).isTrue();
         }
         assertThat(registry.lensOffered("market")).isFalse();

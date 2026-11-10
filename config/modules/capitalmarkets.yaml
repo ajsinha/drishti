@@ -12,7 +12,6 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# config/modules/capitalmarkets.yaml: the capitalmarkets module at this site (docs/architecture/ACCESS_MODEL.md): content only (the us-equities and funds packs, and the
-# market data's functions), shipped with the core server. This file holds the administrator's switch; the setting
+# config/modules/capitalmarkets.yaml: the capitalmarkets module at this site (docs/architecture/ACCESS_MODEL.md): content only (the us-equities and funds packs), shipped with the core server. This file holds the administrator's switch; the setting
 # drishti.modules.capitalmarkets.enabled (DRISHTI_MODULES_CAPITALMARKETS_ENABLED) wins over it. A change takes effect at the next start.
 enabled: true

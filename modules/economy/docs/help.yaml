@@ -1,0 +1,37 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The module's Help section: its packs' guides and its tutorial.
+sections:
+- id: economy
+  title: Economy and public sector
+  pages:
+  - title: 'World economy: world economy'
+    file: ../packs/world-economy/guides/world-economy.md
+  - title: 'News and markets: news and markets'
+    file: ../packs/news-and-markets/guides/news-and-markets.md
+  - title: 'World development: world development'
+    file: ../packs/world-development/guides/world-development.md
+  - title: 'Central banks: central banks'
+    file: ../packs/central-banks/guides/central-banks.md
+  - title: 'National statistics: national statistics'
+    file: ../packs/national-statistics/guides/national-statistics.md
+  - title: 'OECD: oecd'
+    file: ../packs/oecd/guides/oecd.md
+  - title: 'Official news: official news'
+    file: ../packs/official-news/guides/official-news.md
+  - title: 'GDELT events: gdelt events'
+    file: ../packs/gdelt-events/guides/gdelt-events.md
+  - title: 'Tutorial: public sector data'
+    file: ../tutorials/14-public-sector-data.md

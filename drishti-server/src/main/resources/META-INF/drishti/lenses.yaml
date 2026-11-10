@@ -29,6 +29,18 @@ lenses:
       - { title: "A fund: holdings, the index it tracks", cmd: FUND SPY, icon: briefcase }
     chips: [ECON USA, ECG ECG-WLD, REGE REGE-US-NY, USEQ MSFT, SIC 3674, IDX SP500, LEIC US, FUND QQQ, TOPIC RATES, NEWS rates, DATAMAP]   # Home's chips (shown only while their function is on)
   # the economy module's Public sector lens: development indicators, central banks, national statistics, the OECD, official news, world events
+  - id: markets                          # Drishti Finance's markets desk (config/lenses/capitalmarkets/markets.yaml): no risk number
+    title: Markets
+    modules: [capitalmarkets]
+    functions: [USEQ, USEQS, IDX, SIC, EDGAR, FILING, FACT, PXH, LEI, LEIG, LEIR, LEIC, LEIM, FUND, FUNDS, HELD, TRACK,
+      MKT, CRV, REPO, IRV, CPV, FIX, INF, INFC, FX, FXF, FXV, CDS, BND, EQ, EQX, DIV, EQV, CMD, CMDC, CMDV, CORR, CORRC, EQB]
+    cards:                               # Home's "Markets" cards: each opens its command; one whose function is off is not shown
+      - { title: "A company: financials, filings, index membership", cmd: USEQ AAPL, icon: building }
+      - { title: "A fund: holdings, the index it tracks", cmd: FUND SPY, icon: briefcase }
+      - { title: "An index and its members", cmd: IDX SP500, icon: list-ul }
+      - { title: "A yield curve", cmd: CRV CRV-USD-OIS, icon: graph-up }
+      - { title: "An FX volatility surface", cmd: FXV FXV-EURUSD, icon: activity }
+    chips: [USEQ MSFT, SIC 3674, FUND QQQ, EQ EQ-AAPL, FX FX-EURUSD, CDS where SPREAD_5Y > 100]
   - id: publicsector
     title: Public sector
     modules: [economy]

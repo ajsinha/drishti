@@ -965,7 +965,7 @@ async def white_label_page(request: Request):
     rows, problems = [], []
     for f in sorted(directory.glob("drishti.*.yaml")):
         try:
-            d = _dist.read(f, directory / _dist.MODULES, eds.packs_dir)
+            d = _dist.read(f, directory / _dist.KERNEL, eds.modules_dir, eds.packs_dir)
         except (ValueError, OSError) as e:
             problems.append(f"{f.name}: {e}")
             continue
