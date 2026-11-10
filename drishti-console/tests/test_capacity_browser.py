@@ -157,8 +157,8 @@ def test_dark_and_light_draw_and_f1_opens_the_guide(browser, stack):
         if theme == "light":
             pg.keyboard.press("F1")
             pg.wait_for_url("**/help/**")
-            assert "#124-admin--capacity-today-against-the-plan" in pg.url
-            assert pg.locator("[id='124-admin--capacity-today-against-the-plan']").count() == 1
+            assert "#146-admin--capacity-today-against-the-plan" in pg.url
+            assert pg.locator("[id='146-admin--capacity-today-against-the-plan']").count() == 1
         assert pg.errors == [], pg.errors
         pg.close()
     assert seen["terminal"][0] != seen["light"][0]
