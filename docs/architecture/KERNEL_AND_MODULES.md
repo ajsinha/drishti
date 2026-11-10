@@ -435,8 +435,18 @@ Representative stub files with real-looking content:
 | `drishti.modules.active` | `config/modules/active.yaml` | which version of each installed module is active (written by install, upgrade, rollback; four eyes) |
 | `drishti.modules.trust` | `config/trust/publishers/` | publisher certificates the site trusts |
 | `drishti.modules.<id>.enabled` | `true` | the existing switch ([ACCESS_MODEL.md section 8](ACCESS_MODEL.md#8-as-built-the-backend-phase-1-of-the-split)) |
+| `drishti.lib.path` | `${drishti.data.dir}/lib` | **the site's shared jars, Tomcat `lib/` style**: every jar there is loaded at start into one shared *lib* class loader (section 4.4); restart to pick up changes |
+| `drishti.modules.autodeploy` | `true` on a single node, `false` in a cluster | **Tomcat `webapps/` style**: a `.dmod` dropped into the modules folder is verified, exploded and loaded; deleting it unloads the module. In a cluster, deploy is plan → four-eyes apply (section 10), so one node never changes behind the others |
+| `drishti.modules.dev` | `false` | **development only**: a module's unpacked build folder loads without packing and reloads on change; Health marks it *development (unverified)*; refused in a cluster and in a production distribution |
 
 All folders live under the configurable data folder (no root litter, visible names); the server never writes to a module's folder.
+
+**Dropping a `.dmod` in, like a `.war` in Tomcat** (product owner, 2026-11-10). The kernel **verifies before it unpacks** (section 4.3:
+hashes, the 15 checks, origin and exact kernel build), then **explodes** it into `modules/<id>/<version>/` (an unpack that would leave the
+folder is refused), then loads it. A new version is exploded **beside** the running one and `active.yaml` switches when it is ready, so
+the old version serves until then (the rolling upgrade of section 10 uses the same step). Deleting the file unloads the module (section 10:
+every surface goes; saved work shows *needs module X*). Unlike Tomcat, nothing unverified ever runs, except a development folder under
+`drishti.modules.dev`.
 
 ### 4.2 Discovery
 
@@ -485,6 +495,18 @@ every module that requires it (*refused: requires banking, which is refused*).
   entries in that context; the kernel collects them through the registry of contributions (`ModuleContributions`), never by scanning a
   module's packages.
 - **No module sees another module's classes**; modules talk through kinds, functions and events.
+
+**Where every library comes from** (product owner, 2026-11-10):
+
+| Library | Lives in | Loaded by | Seen by |
+|---|---|---|---|
+| The JDK, the kernel API and the shared libraries above (Spring, Jackson, SLF4J, Arrow, Micrometer, Jakarta) | the kernel jar | the kernel | everyone, **parent-first: never replaced**; a module that bundles them fails a conformance check |
+| The kernel's own dependencies | **built into the kernel jar** by Maven, versioned and tested with it | the kernel application loader | the kernel only (hidden from modules) |
+| A module's own jars and third-party libraries | the `.dmod`'s **`lib/`** (and `java/`) | that module's loader, **child-first** | that module only; two modules may carry different versions of one library |
+| Site additions: JDBC drivers, connector plugins, a company's shared library | the server's **`lib/` folder** (`drishti.lib.path`) | one shared *lib* loader under the kernel | the kernel's connectors and every module; listed in Health and Admin → Modules with SHA-256 and marked *lib* |
+
+**A module's lookup order:** (1) the JDK and the kernel's shared libraries, always first; (2) the module's own `lib/`; (3) the server's
+`lib/`; every other kernel class is hidden, except a verified first-party module's declared `kernel-internals:` allowance (section 3.3).
 - **Stop**: `DrishtiModule.stop()`, then the child context closes, the contributions are withdrawn, the class loader is dropped (P5 hot
   unload depends on this being leak-free; a leak test loads and unloads 50 times in the SDK harness).
 
