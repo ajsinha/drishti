@@ -150,6 +150,17 @@ def test_two_consoles_over_one_server_show_two_distributions(backend, monkeypatc
     assert risk.state.editions.instance.command_shown("VRES") and not finance.state.editions.instance.command_shown("VRES")
 
 
+def test_admin_white_label_shows_the_distributions_side_by_side(backend, monkeypatch):
+    app = _app(backend, monkeypatch, "--distribution=finance")
+    page = _client(app).get("/admin/white-label")
+    assert page.status_code == 200, page.text[:300]
+    t = page.text
+    for d in ("drishti.all", "drishti.risk", "drishti.finance", "drishti.genomics"):
+        assert f'data-distribution="{d}"' in t, d
+    assert t.index('data-distribution="drishti.finance"') < t.index('data-distribution="drishti.risk"')   # the running one first
+    assert "data-white-label-running" in t and "Drishti Finance Help" in t and "bin/start-all.sh --distribution finance" in t
+
+
 def test_a_path_names_a_sites_own_file(tmp_path: Path):
     own = tmp_path / "acme.yaml"
     own.write_text((DIR / "drishti.finance.yaml").read_text(encoding="utf-8").replace("Drishti Finance", "Acme Markets")

@@ -948,6 +948,43 @@ async def act(request: Request, username: str, action: str):
     return JSONResponse({"code": "DRS-5001", "detail": "unknown action"}, status_code=400)
 
 
+# -- Admin → White label (docs/guides/ADMIN_GUIDE.md, "White label"; DISTRIBUTIONS.md; mock-up white-label A) ------------------------------
+
+@router.get("/white-label")
+async def white_label_page(request: Request):
+    """The distributions side by side (mock-up A): each shipped or site file in config/distributions with its brand, theme, modules (and
+    whether each is loaded here), lenses, menus, Home cards and Help title; the running one marked, with how to start each. Read only: a
+    distribution is a file, changed in the file and taken at the next start (KERNEL_AND_MODULES.md section 6)."""
+    me = ident(request)
+    if not me.is_admin:
+        return _forbidden(request)
+    from core import distribution as _dist
+    from core import modules as _mods
+    eds = request.app.state.editions
+    directory = _white_label_dir(request.app)
+    rows, problems = [], []
+    for f in sorted(directory.glob("drishti.*.yaml")):
+        try:
+            d = _dist.read(f, directory / _dist.MODULES, eds.packs_dir)
+        except (ValueError, OSError) as e:
+            problems.append(f"{f.name}: {e}")
+            continue
+        spec = d.edition_spec or {}
+        rows.append({"d": d, "running": d.id == eds.distribution.id, "start": d.name,
+                     "modules": [{"id": m, "state": "loaded" if _mods.module_on(d.domains.get(m, m)) else "not loaded"} for m in d.modules],
+                     "menus": (spec.get("menus") or {}).get("top") or [], "cards": ((d.spec.get("home") or {}).get("cards") or []),
+                     "commands": len((spec.get("commands") or {}).get("allow") or [])})
+    rows.sort(key=lambda r: (not r["running"], r["d"].id != "drishti.all", r["d"].id))
+    return render(request, "admin/white_label.html", rows=rows, problems=problems, directory=str(directory), me=me,
+                  own=eds.own_distribution, deprecated=_dist.deprecated(request.app.state.settings), status=await _status(request))
+
+
+def _white_label_dir(app):
+    from pathlib import Path
+    d = Path(str(app.state.settings.get("distributions_dir", "../config/distributions") or "../config/distributions"))
+    return d if d.is_absolute() else (app.state.editions.console_dir / d).resolve()
+
+
 # -- Admin → Data bindings (docs/guides/ADMIN_GUIDE.md, "Data bindings"; KERNEL_AND_MODULES.md section 5, mock-up A) ------------------------
 
 @router.get("/bindings")
