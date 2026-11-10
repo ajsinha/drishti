@@ -32,10 +32,10 @@ home:
     - {title: "A gene: its variants along the protein", route: gene, params: {id: TP53}, cmd: "GENE TP53"}
     - {title: "A cohort: samples and variants", route: cohort, params: {id: COH-A}, cmd: "COHORT COH-A"}
     - {title: "A variant and its carriers", route: variant, params: {id: HX-A001}, cmd: "VARIANT HX-A001"}
-visuals:                     # the module's own visual types (the custom-visual SDK): kinds of drishti-chart's registry from its library
+visuals:                     # the module's own visual types (the custom-visual SDK): kinds of drishti-chart's registry, from its library
+                             # elements/<library>/<file>, served at /m/genomics/elements/<library>/<module version>/<file>
   - kind: genomics.lollipop
     library: drishti-genomics
-    version: 0.1.0
     file: drishti_genomics.js
     title: Variant lollipop
     summary: "A protein's variants: a stem and head at each amino acid position, the head's height the carriers, its colour the impact, the protein's domains as bands"

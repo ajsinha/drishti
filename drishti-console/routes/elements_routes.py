@@ -16,7 +16,7 @@ gallery page, ``static/gallery/drishti_gallery.html``, with the address's query 
 same file a developer opens from the file system: it needs no server. ``/elements`` is a Build page: the edition gate answers 404 when the
 build feature is off for the person (core/edition.py FEATURE_PATHS), and Build → Learn lists it (config/sitemap.yaml)."""
 from fastapi import APIRouter, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 
 router = APIRouter(include_in_schema=False)
 
@@ -30,3 +30,14 @@ async def gallery(request: Request) -> RedirectResponse:
     """The gallery page, its query kept (the gallery reads its mode, component, tab and options from the address)."""
     query = ("?" + request.url.query) if request.url.query else ""
     return RedirectResponse(PAGE + query, status_code=302)
+
+
+@router.get("/api/elements/visuals")
+async def module_visuals(request: Request) -> JSONResponse:
+    """The visual types the hosted modules bring (the custom-visual SDK, ELEMENTS.md section 7.4): each kind with its module, title and the
+    library file that registers it in drishti-chart's registry. The gallery loads them and shows a page per kind; a module that is off
+    or removed (or off for this person) brings none. Nothing of any person is kept."""
+    from core import modules as _modules
+
+    parts = request.app.state.module_parts
+    return JSONResponse({"visuals": [v for v in parts.visuals() if _modules.module_on(v["module"])]}, headers={"Cache-Control": "no-store"})

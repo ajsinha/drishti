@@ -30,5 +30,20 @@
     problems.forEach((m) => core.toast({ text: m, timeout: 8000 }));
   };
   const problems = [];
-  names.reduce((at, n) => at.then(() => core.load(n).catch((e) => { problems.push(e.message); })), Promise.resolve()).then(() => start(problems));
+  /* the hosted modules' own visuals (the custom-visual SDK): their libraries loaded, each kind a page; none when the page is opened from
+     the file system or the console hosts no module with a visual */
+  const script = (src) => new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = () => reject(new Error('Could not load ' + src));
+    document.head.appendChild(s);
+  });
+  const moduleVisuals = () => (location.protocol === 'file:' ? Promise.resolve([]) : fetch('/api/elements/visuals', { credentials: 'same-origin' })
+    .then((r) => (r.ok ? r.json() : { visuals: [] })).then((b) => b.visuals || []).catch(() => []))
+    .then((list) => list.reduce((at, v) => at.then(() => script(v.script)
+      .then(() => (NS.elements.visuals && NS.elements.visuals[v.module] ? NS.elements.visuals[v.module].ready : null))
+      .then(() => G.moduleVisual(v)).catch((e) => { problems.push(e.message); })), Promise.resolve()));
+  names.reduce((at, n) => at.then(() => core.load(n).catch((e) => { problems.push(e.message); })), Promise.resolve())
+    .then(moduleVisuals).then(() => start(problems));
 }());

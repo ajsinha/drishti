@@ -170,6 +170,23 @@ async def hosted(request: Request):
                          "refused": s.refused}, headers={"Cache-Control": "no-store"})
 
 
+@router.get("/m/{module}/api/{rest:path}")
+async def module_api(request: Request, module: str, rest: str):
+    """A hosted module's own API for its pages (the ``api('<path>')`` of its templates): ``/m/<id>/api/<path>`` read from the server's
+    ``/api/v1/<id>/<path>`` as the person (GET only: a page reads rows, never a layout). Gone with the module: 410 removed, else 404."""
+    p = _hosted(request, module)
+    if p is None:
+        status = _gone_status(request, module)
+        return JSONResponse({"code": "DRS-1028" if status == 410 else "DRS-1025", "detail": f"the module '{module}' is not on here"},
+                            status_code=status, headers={"Cache-Control": "no-store"})
+    try:
+        answer = await request.app.state.backend._send("GET", f"/{quote(module, safe='')}/{rest}", ident(request),
+                                                       params=dict(request.query_params))
+    except BackendError as e:
+        return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.status if 400 <= (e.status or 0) < 600 else 502)
+    return JSONResponse(answer, headers={"Cache-Control": "no-store"})
+
+
 @router.get("/m/{module}/static/{version}/{rest:path}")
 async def module_static(request: Request, module: str, version: str, rest: str):
     """A hosted module's static file (``console/static/``), at ``/m/<id>/static/<version>/<path>`` (section 9.7)."""

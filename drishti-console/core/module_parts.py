@@ -83,6 +83,12 @@ class Part:
     lenses: tuple = ()
     help: dict = field(default_factory=dict, hash=False, compare=False)
     source: str = "server"
+    visuals: tuple = ()          # its own visual types (``visuals:`` of plugin.yaml): kinds its domain library registers (the custom-visual SDK)
+
+    def visual_list(self) -> list[dict]:
+        """Each visual with the address of the library file that registers it (``/m/<id>/elements/<lib>/<version>/<file>``)."""
+        return [dict(v, module=self.id, version=self.version, script=f"/m/{self.id}/elements/{v['library']}/{self.version}/{v['file']}")
+                for v in self.visuals]
 
     @property
     def templates(self) -> Path:
@@ -279,8 +285,11 @@ class ModuleParts:
         cards = tuple(dict(x, module=mid) for x in (plugin.get("home") or {}).get("cards") or [] if isinstance(x, dict) and x.get("title"))
         tools = tuple(dict(x, module=mid) for x in (plugin.get("ai") or {}).get("tools") or [] if isinstance(x, dict) and x.get("name"))
         lenses = tuple(str(x) for x in plugin.get("lenses") or [])
+        visuals = tuple({k: str(x.get(k) or "") for k in ("kind", "library", "file", "title", "summary")}
+                        for x in plugin.get("visuals") or [] if isinstance(x, dict) and x.get("kind") and x.get("library") and x.get("file")
+                        and (folder / "elements" / str(x["library"]) / str(x["file"])).is_file())
         parts[mid] = Part(mid, str(manifest.get("version") or ""), title, folder, _routes(mid, plugin.get("routes")), menus, cards, tools, lenses,
-                          _help(mid, title, folder, manifest), source)
+                          _help(mid, title, folder, manifest), source, visuals=visuals)
 
     # ---- the checks (section 11: Elements are the console's; section 14.2.1: declarative only) ------------------------------------
     def kernel_hashes(self) -> frozenset[str]:
@@ -354,6 +363,10 @@ class ModuleParts:
 
     def tools(self) -> list[dict]:
         return [t for p in self.snapshot.parts.values() for t in p.tools]
+
+    def visuals(self) -> list[dict]:
+        """Every hosted module's own visuals (the Elements gallery shows them while the module is on, and only then)."""
+        return [v for p in self.snapshot.parts.values() for v in p.visual_list()]
 
     def help_heads(self) -> list[dict]:
         return [h for p in self.snapshot.parts.values() for h in p.help.get("help-sections") or []]

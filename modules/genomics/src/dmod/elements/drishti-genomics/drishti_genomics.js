@@ -14,8 +14,8 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* drishti-genomics 0.1.0: the genomics module's domain library on Drishti Elements (KERNEL_AND_MODULES.md section 11.4; the custom-visual
-   SDK, DEVELOPER_GUIDE "A module's own visual"). It ships inside the module's .dmod (elements/drishti-genomics/0.1.0/), is served by the
-   console at /m/genomics/elements/drishti-genomics/0.1.0/ while the module is on, and goes with it.
+   SDK, DEVELOPER_GUIDE "A module's own visual"). It ships inside the module's .dmod (elements/drishti-genomics/), is served by the
+   console at /m/genomics/elements/drishti-genomics/<module version>/ while the module is on, and goes with it.
 
    One visual, registered in the Elements' visual registry (drishti-chart's kinds: registerKind) and built from drishti-chart's own
    primitives, so it gets the card, theme, tooltips, Explain, the data table, export and the keyboard like every kind:
@@ -58,6 +58,11 @@
       annotations: (spec.annotations || []).concat(bands)
     });
     const built = C.buildScatter(s, rows, env);
+    built.option.series.forEach((x) => {                     // each impact's heads and legend entry in its tone (HIGH bad, MODERATE warn, LOW muted)
+      if (IMPACT_TONES[x.name]) { x.itemStyle = Object.assign({}, x.itemStyle, { color: C.toneColour(env.theme, IMPACT_TONES[x.name]) }); }
+    });
+    built.legend = built.legend.map((l) => (IMPACT_TONES[l.name] ? Object.assign({}, l, { colour: C.toneColour(env.theme, IMPACT_TONES[l.name]) }) : l))
+      .sort((a, b) => (order.indexOf(a.name) < 0 ? 99 : order.indexOf(a.name)) - (order.indexOf(b.name) < 0 ? 99 : order.indexOf(b.name)));
     const stems = { type: 'bar', name: 'stems', barWidth: 1, silent: true, z: 1, tooltip: { show: false },
       itemStyle: { color: C.toneColour(env.theme, 'muted') },
       data: rows.filter((r) => C.num(r[xf]) !== null && C.num(r[yf]) !== null).map((r) => [C.num(r[xf]), C.num(r[yf])]) };
