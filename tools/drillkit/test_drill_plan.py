@@ -130,3 +130,21 @@ class Monitor(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_every_subcommand_can_be_run():
+    """Every subcommand sets the `run` default `main` calls (the drill's Java 25 lane failed on one that set `func`)."""
+    import argparse
+    import drill_plan as dp
+    seen = []
+    real = argparse.ArgumentParser.parse_args
+
+    def spy(self, *a, **k):
+        seen.append(self)
+        return real(self, *a, **k)
+    for cmd, extra in (("wait-memory", ["--gb", "0", "--limit", "1"]), ("workers", ["--mem-gb", "64", "--threads", "8"])):
+        argparse.ArgumentParser.parse_args = spy
+        try:
+            assert dp.main([cmd, *extra]) == 0
+        finally:
+            argparse.ArgumentParser.parse_args = real

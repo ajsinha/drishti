@@ -462,7 +462,7 @@ def main(argv: list[str] | None = None) -> int:
     s = sub.add_parser("wait-memory", help="block until this much memory is free")
     s.add_argument("--gb", type=float, default=20.0)
     s.add_argument("--limit", type=int, default=3600)
-    s.set_defaults(func=cmd_wait_memory)
+    s.set_defaults(run=cmd_wait_memory)
     s = sub.add_parser("budget", help="flag the files of one run over the per-file time budget")
     s.add_argument("--timings", required=True)
     s.add_argument("--tests", default=str(ROOT / "drishti-console" / "tests"))
