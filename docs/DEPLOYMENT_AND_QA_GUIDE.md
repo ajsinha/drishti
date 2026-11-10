@@ -489,8 +489,10 @@ Home's cards `USEQ AAPL`, `FUND SPY`, `ECON CAN`, `NEWS rates`; Help titled **Dr
 guide; `VAR BANK <GO>` answers *DRS-4023 VAR is not in Drishti Finance*; `CRV <GO>` (market data) works.
 
 **Drishti Genomics (the sample).** `bin/start-all.sh --demo --distribution genomics` (Windows: `bin\start-all.cmd --demo --distribution genomics`). **You should see** **Drishti Genomics** on the green theme with only the
-kernel's menus (Views, BI, Admin, Help); Admin → Health says the `genomics` module was asked for and is *not installed* (the sample
-module ships later): the kernel boots and is useful with no finance at all.
+kernel's menus (Views, BI, Admin, Help) and no finance anywhere; Admin → Health says the `genomics` module was asked for and is *not
+installed*. **Install the sample module:** build it (`./mvnw -q package -pl modules/genomics -am`) and copy
+`modules/genomics/target/dmod/genomics-0.1.0.dmod` into the data folder's `modules/`. **You should see** it install itself within seconds
+(auto-deploy on a single node): the Research lens with VARIANT, GENE and COHORT, and the lollipop visual in Build → Elements gallery.
 
 **Drishti Risk and Drishti Finance over one cluster (the owner's stack).** In the stack file, a `consoles:` list beside the nodes:
 
