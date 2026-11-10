@@ -112,7 +112,7 @@ public final class Distributions {
     public static Distribution builtInAll() {
         ObjectNode spec = YAML.createObjectNode();
         spec.put("distribution", "drishti.all");
-        return new Distribution("drishti.all", "Drishti", null, true, List.of(), Map.of(), List.of(), Set.of(), Set.of(), Set.of(), List.of(),
+        return new Distribution("drishti.all", "", null, true, List.of(), Map.of(), List.of(), Set.of(), Set.of(), Set.of(), List.of(),
                 Map.of(), spec, null);
     }
 

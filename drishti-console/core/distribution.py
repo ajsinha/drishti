@@ -167,7 +167,7 @@ class Distribution:
 
 
 def builtin_all() -> Distribution:
-    return Distribution("drishti.all", "Drishti", None, True, {"distribution": "drishti.all"})
+    return Distribution("drishti.all", "", None, True, {"distribution": "drishti.all"})   # no title: the product name from ui.product
 
 
 def read(f: Path, modules_file: Path, packs_dir: Path) -> Distribution:

@@ -67,7 +67,7 @@ public class EditionConfiguration {
             public Object value() {
                 java.util.Map<String, Object> m = new java.util.LinkedHashMap<>();
                 m.put("id", env.getProperty(info + ".id", "drishti.all"));
-                m.put("title", env.getProperty(info + ".title", "Drishti"));
+                m.put("title", env.getProperty(info + ".title", env.getProperty("drishti.branding.product", "")));
                 m.put("file", env.getProperty(info + ".file", ""));
                 boolean all = Boolean.parseBoolean(env.getProperty(info + ".all", "true"));
                 com.ash.drishti.server.modules.ModuleConfiguration.Started s = started.getIfAvailable();
