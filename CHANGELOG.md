@@ -98,7 +98,6 @@
 
 - **Scenario PVs at position grain:** `data/testdata/position-grain/` holds 2026-09-30 for Endur, Calypso and Murex (`GRAIN: POSITION`, 7,984 positions, 509 scenarios), kept out of the demo lake.
 
-## Unreleased
 
 ### BI depth: visuals
 
