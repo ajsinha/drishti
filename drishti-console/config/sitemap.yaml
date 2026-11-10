@@ -392,7 +392,7 @@ in-context:
   /explain: "Explain › Open as a page, on any explained number (the one Explain's drawer)"
 
 # Addresses that are not pages: data for a page's script, redirects of old addresses, sign-in, health and files.
-not-pages: [/about/competitive, /admin/commands, /asof, /auth/oidc/callback, /auth/oidc/login, /bi, /bi/explore, /bi/model-api/consumers,
+not-pages: [/about/competitive, /admin, /admin/commands, /asof, /auth/oidc/callback, /auth/oidc/login, /bi, /bi/explore, /bi/model-api/consumers,
             /bi/model-api/dataset, /bi/model-api/datasets, /bi/model-api/fields, /bi/model-api/roles, /bi/notebook/status, /bi/python/status,
             /bi/transform/snippets, /build/binding, /build/reviews, /build/shape, /build/tables/workspaces, /datamap/data, /designer,
             /dist/status, /favicon.ico, /go, /healthz, /healthz/backend, /lens/leave, /login, /logout, /manifest.webmanifest, /pyconsole,

@@ -279,6 +279,36 @@ The browser lane's workers are sized for 3 GB each; below the memory floor (`DRI
 ease off at the Java lane's peak. The Java 25 lane compiles the whole tree and runs only the tests of the code a JDK version can change (`tools/drill-java25.txt`:
 native maths and memory access, codecs, the store libraries); it starts once 20 GB are free. Java 21, what production runs, still runs every test.
 
+### 3.19 The page walk
+
+`drishti-console/tests/test_page_walk_browser.py` (helpers in `page_walk.py`) runs in every drill's browser lane. On a real server over the cached
+VaR demo lake (the bank, its desks, the Murex and Endur trades), signed in as the administrator, it opens:
+
+- every page of `config/sitemap.yaml`: each menu item (an item with only a command opens `/go?q=<command> <GO>`), the in-context pages, Help's
+  sections and a few pages with a demo id (`/var?scope=BANK`, a desk);
+- every link the top bar draws, in the full product and inside each lens, that the first walk did not open, and each lens's own home.
+
+A page fails on a 4xx or 5xx answer, a server error page (an alert naming a `DRS-5xxx` code or a server error), a browser console error
+(a Content Security Policy refusal names the script and line), an uncaught exception, a failed request (a file answering 4xx or 5xx, an
+`/api/` call answering 5xx; an `/api/` 4xx is the page's own answer, such as no data for the date), an empty main area, or taking longer
+than the budget to open and settle (`DRISHTI_PAGEWALK_BUDGET`, default 5 seconds; a page over it is opened once more and fails when slow
+twice; pages slow only on their first open are printed). A page of an engine switched off on this server (404, "is not running on this
+server") is gone by design and only counted. One failure lists every faulty page and every slow one, slowest first. `page_walk.py` keeps
+two short lists, each entry with its reason: `KNOWN_FAULTS` (reported, not failed, until fixed) and `SLOW_ALLOWED`. The walk's stack runs
+the data inbox, so Admin → Data loads → Inbox and Upload are opened too.
+
+The layout checks open the key pages (Home, the VaR explorer, Why it moved, the market-risk cube, the Pivot, the BI designer, Forms, Admin →
+Engines, Connectors, Data loads and Upload, Help) at 1366 and 1920 px, dark (`terminal`) and light, and measure them: no sideways scroll, no two
+controls on top of each other, each `<label for>` beside its control, no fieldset taller than what it holds, the main content over 60% of
+the width; a drishti-inputs Form on the page is measured as `form_layout.py` measures one (each label on its control, no box taller than it holds).
+
+Run it alone:
+
+```bash
+drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_page_walk_browser.py      # starts its own stack
+DRISHTI_PAGEWALK_BASE=http://<host>:<console port> drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_page_walk_browser.py   # a running console
+```
+
 ## 4. Numbers to hold
 
 | What | Number |
