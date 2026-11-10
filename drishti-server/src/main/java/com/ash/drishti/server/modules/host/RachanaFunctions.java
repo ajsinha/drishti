@@ -16,25 +16,17 @@
 package com.ash.drishti.server.modules.host;
 
 import com.ash.drishti.kernel.api.function.FunctionProvider;
-import java.util.List;
 
-/** A module's functions (the kernel API's {@link FunctionProvider}) as Rachana's provider of functions: scalars, arguments evaluated. */
-final class RachanaFunctions implements com.ash.drishti.rachana.el.FunctionProvider {
+/** A module's functions (the kernel API's {@link FunctionProvider}) as Rachana's table entries: scalars, their arguments evaluated. */
+final class RachanaFunctions {
 
-    private final FunctionProvider module;
-
-    RachanaFunctions(FunctionProvider module) {
-        this.module = module;
+    private RachanaFunctions() {
     }
 
-    @Override
-    public String source() {
-        return module.source();
-    }
-
-    @Override
-    public List<Provided> functions() {
-        return module.functions().stream().map(f -> new Provided(f.name(), f.minArgs(), f.maxArgs(), f.args(), "scalar", f.description(), "",
-                (args, context) -> f.body().apply(args))).toList();
+    /** Adds the module's functions to Rachana while it is loaded; the returned action takes them out. */
+    static Runnable register(FunctionProvider module) {
+        return com.ash.drishti.rachana.el.Functions.register(module.source(), module.functions().stream()
+                .map(f -> new com.ash.drishti.rachana.el.FunctionProvider.Provided(f.name(), f.minArgs(), f.maxArgs(), f.args(), "scalar",
+                        f.description(), "", (args, context) -> f.body().apply(args))).toList());
     }
 }

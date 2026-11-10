@@ -47,6 +47,7 @@ public final class ModuleAutoDeploy {
     private final ModuleNode node;
     private final Map<Path, Deployed> deployed = new LinkedHashMap<>();
     private final Map<Path, String> refused = new LinkedHashMap<>();
+    private final java.util.concurrent.locks.ReentrantLock lock = new java.util.concurrent.locks.ReentrantLock();
 
     public ModuleAutoDeploy(List<Path> folders, ModuleDeployService deploy, ModuleNode node) {
         this.node = node;
@@ -55,65 +56,75 @@ public final class ModuleAutoDeploy {
     }
 
     /** One look at the folders: deploys a new or changed package, removes the module of a package that left. Returns what it did. */
-    public synchronized List<String> scan() {
-        List<String> did = new ArrayList<>();
-        List<Path> now = packages();
-        for (Path p : now) {
-            try {
-                String sha = sha(p);
-                Deployed d = deployed.get(p);
-                if (d != null && d.sha().equals(sha) || sha.equals(refused.get(p))) {
+    public List<String> scan() {
+        lock.lock();
+        try {
+            List<String> did = new ArrayList<>();
+            List<Path> now = packages();
+            for (Path p : now) {
+                try {
+                    String sha = sha(p);
+                    Deployed d = deployed.get(p);
+                    if (d != null && d.sha().equals(sha) || sha.equals(refused.get(p))) {
+                        continue;
+                    }
+                    ModuleDeployService.Stored s = deploy.upload(Files.readAllBytes(p), BY);   // the store: hash list, the fifteen checks
+                    Map<String, String> active = deploy.activeHere();
+                    if (!s.version().equals(active.get(s.id()))) {
+                        node.install(p, BY);                         // this node alone: stage, activate, record
+                        did.add("deployed " + s.id() + " " + s.version());
+                    }
+                    deployed.put(p, new Deployed(s.id(), s.version(), sha));
+                    refused.remove(p);
+                } catch (IOException | RuntimeException e) {
+                    LOG.warn("auto-deploy: {} refused: {}", p.getFileName(), e.getMessage());
+                    try {
+                        refused.put(p, sha(p));                // not tried again until its bytes change
+                    } catch (IOException ignored) {
+                        // gone again
+                    }
+                    did.add("refused " + p.getFileName() + ": " + e.getMessage());
+                }
+            }
+            for (Map.Entry<Path, Deployed> e : List.copyOf(deployed.entrySet())) {
+                if (now.contains(e.getKey())) {
                     continue;
                 }
-                ModuleDeployService.Stored s = deploy.upload(Files.readAllBytes(p), BY);   // the store: hash list, the fifteen checks
-                Map<String, String> active = deploy.activeHere();
-                if (!s.version().equals(active.get(s.id()))) {
-                    node.install(p, BY);                         // this node alone: stage, activate, record
-                    did.add("deployed " + s.id() + " " + s.version());
+                deployed.remove(e.getKey());
+                String id = e.getValue().id();
+                boolean stillDropped = deployed.values().stream().anyMatch(x -> x.id().equals(id));
+                if (!stillDropped && deploy.activeHere().containsKey(id)) {
+                    try {
+                        node.remove(id, BY);
+                        did.add("removed " + id);
+                    } catch (RuntimeException ex) {
+                        LOG.warn("auto-deploy: removing {} refused: {}", id, ex.getMessage());
+                        did.add("refused removing " + id + ": " + ex.getMessage());
+                    }
                 }
-                deployed.put(p, new Deployed(s.id(), s.version(), sha));
-                refused.remove(p);
-            } catch (IOException | RuntimeException e) {
-                LOG.warn("auto-deploy: {} refused: {}", p.getFileName(), e.getMessage());
-                try {
-                    refused.put(p, sha(p));                // not tried again until its bytes change
-                } catch (IOException ignored) {
-                    // gone again
-                }
-                did.add("refused " + p.getFileName() + ": " + e.getMessage());
             }
+            refused.keySet().retainAll(now);
+            did.forEach(d -> LOG.info("auto-deploy: {}", d));
+            return did;
+        } finally {
+            lock.unlock();
         }
-        for (Map.Entry<Path, Deployed> e : List.copyOf(deployed.entrySet())) {
-            if (now.contains(e.getKey())) {
-                continue;
-            }
-            deployed.remove(e.getKey());
-            String id = e.getValue().id();
-            boolean stillDropped = deployed.values().stream().anyMatch(x -> x.id().equals(id));
-            if (!stillDropped && deploy.activeHere().containsKey(id)) {
-                try {
-                    node.remove(id, BY);
-                    did.add("removed " + id);
-                } catch (RuntimeException ex) {
-                    LOG.warn("auto-deploy: removing {} refused: {}", id, ex.getMessage());
-                    did.add("refused removing " + id + ": " + ex.getMessage());
-                }
-            }
-        }
-        refused.keySet().retainAll(now);
-        did.forEach(d -> LOG.info("auto-deploy: {}", d));
-        return did;
     }
 
     /** The packages this watch deployed, by file name (Health and Admin → Modules). */
-    public synchronized Map<String, Object> status() {
-        Map<String, Object> out = new LinkedHashMap<>();
-        out.put("folders", folders.stream().map(Path::toString).toList());
-        Map<String, String> files = new LinkedHashMap<>();
-        deployed.forEach((p, d) -> files.put(p.getFileName().toString(), d.id() + " " + d.version()));
-        out.put("deployed", files);
-        out.put("refused", refused.keySet().stream().map(p -> p.getFileName().toString()).toList());
-        return out;
+    public Map<String, Object> status() {
+        lock.lock();
+        try {
+            Map<String, Object> out = new LinkedHashMap<>();
+            out.put("folders", folders.stream().map(Path::toString).toList());
+            Map<String, String> files = new LinkedHashMap<>();
+            deployed.forEach((p, d) -> files.put(p.getFileName().toString(), d.id() + " " + d.version()));
+            out.put("deployed", files);
+            out.put("refused", refused.keySet().stream().map(p -> p.getFileName().toString()).toList());
+            return out;
+        } finally {
+            lock.unlock();
+        }
     }
 
     private List<Path> packages() {

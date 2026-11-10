@@ -163,17 +163,17 @@ public final class Functions {
      * provider already has is refused (nothing is added). An expression compiled while the function was there and evaluated after it left is
      * refused with the reason, the way a missing aggregate is.
      */
-    public static synchronized Runnable register(FunctionProvider p) {
-        List<FunctionProvider.Provided> fs = List.copyOf(p.functions());
+    public static synchronized Runnable register(String source, List<FunctionProvider.Provided> functions) {
+        List<FunctionProvider.Provided> fs = List.copyOf(functions);
         for (FunctionProvider.Provided f : fs) {
             if (ARITY.containsKey(f.name()) || LIVE.containsKey(f.name())) {
                 throw new IllegalStateException("Rachana-EL function " + f.name() + " is provided twice ("
-                        + (LIVE.containsKey(f.name()) ? LIVE_SOURCE.get(f.name()) : "Rachana") + ", " + p.source() + ")");
+                        + (LIVE.containsKey(f.name()) ? LIVE_SOURCE.get(f.name()) : "Rachana") + ", " + source + ")");
             }
         }
         for (FunctionProvider.Provided f : fs) {
             LIVE.put(f.name(), f);
-            LIVE_SOURCE.put(f.name(), p.source());
+            LIVE_SOURCE.put(f.name(), source);
         }
         return () -> {
             synchronized (Functions.class) {

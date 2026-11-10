@@ -54,6 +54,7 @@ public final class SharedLib {
 
     private static final java.util.logging.Logger JUL = java.util.logging.Logger.getLogger(SharedLib.class.getName());
     private static volatile SharedLib instance;
+    private static final java.util.concurrent.locks.ReentrantLock LOCK = new java.util.concurrent.locks.ReentrantLock();
 
     private final Path folder;
     private final List<Jar> jars;
@@ -100,23 +101,31 @@ public final class SharedLib {
     public static SharedLib get() {
         SharedLib s = instance;
         if (s == null) {
-            synchronized (SharedLib.class) {
+            LOCK.lock();
+            try {
                 if (instance == null) {
                     instance = new SharedLib(folder(), SharedLib.class.getClassLoader());
                 }
                 s = instance;
+            } finally {
+                LOCK.unlock();
             }
         }
         return s;
     }
 
     /** The lib of a folder (the server's start, from its settings): the process's one, replaced when the folder differs. */
-    public static synchronized SharedLib open(Path folder) {
+    public static SharedLib open(Path folder) {
         Path f = folder.toAbsolutePath().normalize();
-        if (instance == null || !instance.folder.equals(f)) {
-            instance = new SharedLib(f, SharedLib.class.getClassLoader());
+        LOCK.lock();
+        try {
+            if (instance == null || !instance.folder.equals(f)) {
+                instance = new SharedLib(f, SharedLib.class.getClassLoader());
+            }
+            return instance;
+        } finally {
+            LOCK.unlock();
         }
-        return instance;
     }
 
     /** The lib class loader (the kernel's own loader when the folder holds no jar). */

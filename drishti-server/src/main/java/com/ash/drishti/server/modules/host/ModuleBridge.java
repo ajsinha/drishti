@@ -33,7 +33,6 @@ import com.ash.drishti.kernel.api.view.ViewAugmenter;
 import com.ash.drishti.kernel.api.vocabulary.DomainVocabulary;
 import com.ash.drishti.module.runtime.Contributions;
 import com.ash.drishti.module.runtime.LoadedModule;
-import com.ash.drishti.rachana.el.Functions;
 import com.ash.drishti.server.engines.EngineRegistry;
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
@@ -59,7 +58,7 @@ final class ModuleBridge {
 
     ModuleBridge(Supplier<SourceRegistry> sources, Supplier<EngineRegistry> engines) {
         port(KindProvider.class, Contributions.Surface.KIND_PROVIDER, (m, k) -> required(sources, "the source registry").attach(new ComputedKindSource(k)));
-        port(FunctionProvider.class, Contributions.Surface.FUNCTION, (m, f) -> Functions.register(new RachanaFunctions(f)));
+        port(FunctionProvider.class, Contributions.Surface.FUNCTION, (m, f) -> RachanaFunctions.register(f));
         port(ComputeEngine.class, Contributions.Surface.SPI, (m, e) -> required(engines, "the engine registry").attach(e));
         live(ApprovalSource.class, Contributions.Surface.SPI);
         live(HealthFigures.class, Contributions.Surface.SPI);           // objects of the module: withdrawn before its loader is checked (step 4, not 9)
