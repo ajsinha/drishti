@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Rupaka phase 3: the frame around one visual - title, the buttons that belong to the visual, the body the renderer draws in, and the line under it that says
    how many rows came back, how long the query took and which layer answered. The viewer and the designer's canvas both use it, so a visual looks and reads the
    same in both. A visual whose query was refused shows the server's code and words in place of the picture, with a Retry button. */

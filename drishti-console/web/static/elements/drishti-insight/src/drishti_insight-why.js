@@ -118,7 +118,7 @@ export function renderWhyPage(root, a, k, asked) {
   const lines = ans.lines || [];
   const row = h('div', 'dx-why-row');
   const left = h('section', 'dx-card dx-why-wf');
-  left.dataset.dxPart = 'why';
+  left.dataset.dxWhyWaterfall = '';
   left.appendChild(h('h2', null, 'Why it moved · steps that add up to the change'));
   const chart = h('div', 'dx-wf');
   chart.setAttribute('data-dx-waterfall', '');
@@ -199,4 +199,38 @@ export function renderWhyPage(root, a, k, asked) {
   if (ckBody.childNodes.length) { folds.appendChild(ck); }
   grid.appendChild(folds);
   return Promise.all(jobs.concat([drawn, sideDone])).then(() => undefined);
+}
+
+/**
+ * Layout A on the full page: the Workbook button in its head, the page drawn, and another compare date kept in the link (from) and
+ * asked again (k.rerender).
+ * @param {Element} root the [data-explain-page] element
+ * @param {Object} req the request the page asked
+ * @param {Object} a the answer
+ * @param {Object} k h, part, checks, paint, rerender(root)
+ * @returns {Promise<void>}
+ */
+export function mountWhyPage(root, req, a, k) {
+  const win = root.ownerDocument.defaultView;
+  const wb = ((a.workbook || {}).links || [])[0], head = root.querySelector('.dx-page-head');
+  if (wb && head && !root.querySelector('[data-dx-wb]')) {
+    const w = k.h('a', 'dx-btn', 'Workbook');
+    w.href = wb.href;
+    w.setAttribute('data-dx-wb', '');
+    head.insertBefore(w, head.querySelector('[data-dx-print]'));
+  }
+  const deps = Object.assign({}, k, {
+    recompare(from) {
+      const next = Object.assign({}, req);
+      if (from) { next.from = from; } else { delete next.from; }
+      const u = new URL(win.location.href);
+      if (from) { u.searchParams.set('from', from); } else { u.searchParams.delete('from'); }
+      win.history.replaceState(win.history.state, '', u.toString());
+      root.setAttribute('data-explain-request', JSON.stringify(next));
+      k.rerender(root);
+    } });
+  return renderWhyPage(root, a, deps, req.from || '').then(() => {
+    k.checks(root.querySelector('[data-dx-checks]'), { checks: [] });
+    root.dataset.state = 'ready';
+  });
 }

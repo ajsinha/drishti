@@ -91,8 +91,13 @@
 .vx-ver { position: relative; }
 .vx-ver > summary { cursor: pointer; list-style: none; color: var(--d-muted); white-space: nowrap; }
 .vx-ver > summary::-webkit-details-marker { display: none; }
-.vx-ver-pop { position: absolute; z-index: 30; top: 100%; left: 0; margin-top: var(--d-sp-4); padding: var(--d-sp-6) var(--d-sp-8); max-width: min(520px, 90vw);
+.vx-ver-pop { position: absolute; z-index: 30; top: 100%; left: 0; width: max-content; margin-top: var(--d-sp-4); padding: var(--d-sp-6) var(--d-sp-8); max-width: min(520px, 90vw);
   background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius-4); overflow-wrap: anywhere; }
 
 /* one toolbar row on a desktop: baskets, the matured switch, Backtest, MR cube, What-if, Explain */
 @media (min-width: 1200px) { .vx-bar { flex-wrap: nowrap; } .vx-bar > * { flex-shrink: 0; } }
+
+/* a row's name gives way (ellipsis) so its Explain › and + basket stay in view at the cell's right end */
+.vx-tree .nm { display: flex; align-items: center; gap: var(--d-sp-4); min-width: 0; width: 100%; }
+.vx-tree .nm > .vx-nm-t { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vx-tree .nm > .vx-ex, .vx-tree .nm > button { flex: none; }

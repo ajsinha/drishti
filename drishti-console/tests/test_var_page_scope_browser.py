@@ -33,7 +33,7 @@ import urllib.request
 import pytest
 
 from page_walk import layout_faults
-from test_var_explorer_browser import open_var, painted
+from test_var_explorer_browser import open_var, painted, shot
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
 from var_stack import VAR_TRADES, var_data, var_lake, var_server
 
@@ -91,6 +91,7 @@ def test_the_tree_shows_only_the_chosen_scope(stack, browser):
     wait(pg, "%s.length === %d" % (TREE_SCOPES, len(whole)))
 
     # Explain › on a row: hidden until the row is hovered or chosen; it opens Why it moved in the drawer
+    shot(pg, "var-page-bank")
     links = pg.locator("[data-vx-tree] [data-explain-link]")
     assert links.count() >= 3
     assert pg.evaluate("[...document.querySelectorAll('[data-vx-tree] [data-explain-link]')].every((a) => JSON.parse(a.dataset.explain).kind === 'var' && a.getAttribute('href').includes('tab=why'))")
@@ -114,6 +115,8 @@ def test_a_basket_shows_its_own_positions_by_the_chosen_hierarchy(stack, browser
     assert part["var"] == round(_get(base, "/api/var/scope?scope=" + urllib.parse.quote(part["scope"]))["var"])
     pg = open_var(browser, base, "/var?scope=" + urllib.parse.quote(BASKET), size={"width": 1366, "height": 900})
     painted(pg, BASKET)
+    pg.wait_for_timeout(3000)
+    shot(pg, "var-page-basket")
     wait(pg, "%s[0] === %r" % (TREE_SCOPES, BASKET))
     scopes = _tree_scopes(pg)
     assert len(scopes) == len(t["nodes"]) and all(s == BASKET or s.startswith("(" + BASKET + ") & ") for s in scopes)
@@ -129,6 +132,7 @@ def test_why_it_moved_layout_a_with_the_compare_date(stack, browser):
     pg = browser.new_page(viewport={"width": 1366, "height": 900})
     pg.goto(base + "/go?q=" + urllib.parse.quote("VAR BANK EXPLAIN <GO>"))
     wait(pg, "document.querySelector('[data-explain-page]') && document.querySelector('[data-explain-page]').dataset.state === 'ready'", seconds=120)
+    shot(pg, "why-it-moved-a")
     assert pg.evaluate("document.querySelector('[data-explain-page]').dataset.layout") == "why-a"
     assert pg.locator(".dx-kpi").count() == 4
     order = pg.evaluate("['[data-dx-compare]', '.dx-kpis', '.dx-why-row', '.dx-folds'].map((s) => document.querySelector(s).getBoundingClientRect().top)")

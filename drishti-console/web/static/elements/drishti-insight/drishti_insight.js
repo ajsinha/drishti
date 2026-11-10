@@ -113,7 +113,7 @@
       const lines = ans.lines || [];
       const row = h('div', 'dx-why-row');
       const left = h('section', 'dx-card dx-why-wf');
-      left.dataset.dxPart = 'why';
+      left.dataset.dxWhyWaterfall = '';
       left.appendChild(h('h2', null, 'Why it moved · steps that add up to the change'));
       const chart = h('div', 'dx-wf');
       chart.setAttribute('data-dx-waterfall', '');
@@ -193,11 +193,109 @@
       grid.appendChild(folds);
       return Promise.all(jobs.concat([drawn, sideDone])).then(() => undefined);
     }
-    return { "whyPageFits": whyPageFits, "compareDate": compareDate, "renderWhyPage": renderWhyPage };
+    function mountWhyPage(root, req, a, k) {
+      const win = root.ownerDocument.defaultView;
+      const wb = ((a.workbook || {}).links || [])[0], head = root.querySelector('.dx-page-head');
+      if (wb && head && !root.querySelector('[data-dx-wb]')) {
+        const w = k.h('a', 'dx-btn', 'Workbook');
+        w.href = wb.href;
+        w.setAttribute('data-dx-wb', '');
+        head.insertBefore(w, head.querySelector('[data-dx-print]'));
+      }
+      const deps = Object.assign({}, k, {
+        recompare(from) {
+          const next = Object.assign({}, req);
+          if (from) { next.from = from; } else { delete next.from; }
+          const u = new URL(win.location.href);
+          if (from) { u.searchParams.set('from', from); } else { u.searchParams.delete('from'); }
+          win.history.replaceState(win.history.state, '', u.toString());
+          root.setAttribute('data-explain-request', JSON.stringify(next));
+          k.rerender(root);
+        } });
+      return renderWhyPage(root, a, deps, req.from || '').then(() => {
+        k.checks(root.querySelector('[data-dx-checks]'), { checks: [] });
+        root.dataset.state = 'ready';
+      });
+    }
+    return { "whyPageFits": whyPageFits, "compareDate": compareDate, "renderWhyPage": renderWhyPage, "mountWhyPage": mountWhyPage };
+  })();
+  /* ---- src/drishti_insight-link.js ---- */
+  __m["src/drishti_insight-link.js"] = (function () {
+    const TITLE = 'Explain: the formula with its values, the inputs and lineage, why it moved, the workbook (E)';
+    function explainLink(doc, req, o, pageUrl) {
+      o = o || {};
+      const a = doc.createElement('a');
+      a.className = 'dx-link' + (o.cls ? ' ' + o.cls : '');
+      a.textContent = o.text || 'Explain ›';
+      a.href = pageUrl(req, o.tab || 'why');
+      a.setAttribute('data-explain', JSON.stringify(req));
+      a.setAttribute('data-explain-tab', o.tab || 'why');
+      a.setAttribute('data-explain-trigger', '');
+      a.setAttribute('data-explain-link', '');
+      a.title = o.title || TITLE;
+      return a;
+    }
+    function upgradeLinks(root, pageUrl) {
+      root.querySelectorAll('[data-explain-link][data-explain]:not(.dx-link)').forEach((el) => {
+        let req = null;
+        try { req = JSON.parse(el.getAttribute('data-explain') || '{}'); } catch (e) { req = null; }
+        if (!(req && req.kind)) { return; }
+        const tab = el.getAttribute('data-explain-tab') || 'why';
+        el.classList.add('dx-link');
+        el.setAttribute('data-explain-trigger', '');
+        el.setAttribute('data-explain-tab', tab);
+        if (el.tagName === 'A') { el.href = pageUrl(req, tab); }
+        if (!el.textContent.trim()) { el.textContent = 'Explain ›'; }
+        if (!el.title) { el.title = TITLE; }
+      });
+    }
+    function drawNote(doc, host, n) {
+      const h = (tag, cls, text) => { const e = doc.createElement(tag); if (cls) { e.className = cls; } if (text !== undefined && text !== null) { e.textContent = text; } return e; };
+      host.appendChild(h("p", "dx-note", n.text));
+      var list = n.list;
+      if (!list) return;
+      var det = h("details", "dx-details"), t = h("table", "dx-table"), head = h("tr"), tb = h("tbody"), th = h("thead"), page = 0;
+      det.appendChild(h("summary", null, list.summary));
+      list.columns.forEach(function (c) { head.appendChild(h("th", null, c)); });
+      th.appendChild(head);
+      t.appendChild(th);
+      t.appendChild(tb);
+      det.appendChild(t);
+      function add(rows) {
+        rows.forEach(function (r) {
+          var tr = h("tr");
+          r.cells.forEach(function (c, i) {
+            var td = h("td", "mono");
+            if (i === 0 && r.href) { var a = h("a", null, c); a.href = r.href; td.appendChild(a); } else td.textContent = c;
+            tr.appendChild(td);
+          });
+          tb.appendChild(tr);
+        });
+      }
+      add(list.rows || []);
+      if (list.moreHref) {
+        var more = h("button", "dx-more", "Show more");
+        more.type = "button";
+        more.addEventListener("click", function () {
+          page += 1;
+          fetch(list.moreHref + "&page=" + page).then(function (r) { return r.json(); }).then(function (b) {
+            add((b.rows || []).map(function (r) {
+              return { cells: [r.position, (r.trades || []).map(function (x) { return x.trade + " (" + x.maturity + ")"; }).join(", ")],
+                href: "/v/position/" + encodeURIComponent(r.position) + "?asOf=" + encodeURIComponent(b.businessDate) };
+            }));
+            more.hidden = !b.more;
+          });
+        });
+        det.appendChild(more);
+      }
+      host.appendChild(det);
+    }
+    return { "explainLink": explainLink, "upgradeLinks": upgradeLinks, "drawNote": drawNote };
   })();
   /* ---- src/drishti_insight-explain.js ---- */
   __m["src/drishti_insight-explain.js"] = (function () {
-    var renderWhyPage = __m["src/drishti_insight-why.js"].renderWhyPage, whyPageFits = __m["src/drishti_insight-why.js"].whyPageFits;
+    var mountWhyPage = __m["src/drishti_insight-why.js"].mountWhyPage, whyPageFits = __m["src/drishti_insight-why.js"].whyPageFits;
+    var explainLink = __m["src/drishti_insight-link.js"].explainLink, upgradeLinks = __m["src/drishti_insight-link.js"].upgradeLinks, drawNote = __m["src/drishti_insight-link.js"].drawNote;
     function installExplain(win) {
       const window = win, document = win.document;
       window.Drishti = window.Drishti || {};
@@ -408,46 +506,6 @@
         p.appendChild(document.createTextNode(" " + (u.about || "") + (u.release ? " (" + u.release + ")" : "")));
         host.appendChild(p);
       }
-      function note(host, n) {
-        host.appendChild(h("p", "dx-note", n.text));
-        var list = n.list;
-        if (!list) return;
-        var det = h("details", "dx-details"), t = h("table", "dx-table"), head = h("tr"), tb = h("tbody"), th = h("thead"), page = 0;
-        det.appendChild(h("summary", null, list.summary));
-        list.columns.forEach(function (c) { head.appendChild(h("th", null, c)); });
-        th.appendChild(head);
-        t.appendChild(th);
-        t.appendChild(tb);
-        det.appendChild(t);
-        function add(rows) {
-          rows.forEach(function (r) {
-            var tr = h("tr");
-            r.cells.forEach(function (c, i) {
-              var td = h("td", "mono");
-              if (i === 0 && r.href) { var a = h("a", null, c); a.href = r.href; td.appendChild(a); } else td.textContent = c;
-              tr.appendChild(td);
-            });
-            tb.appendChild(tr);
-          });
-        }
-        add(list.rows || []);
-        if (list.moreHref) {
-          var more = h("button", "dx-more", "Show more");
-          more.type = "button";
-          more.addEventListener("click", function () {
-            page += 1;
-            fetch(list.moreHref + "&page=" + page).then(function (r) { return r.json(); }).then(function (b) {
-              add((b.rows || []).map(function (r) {
-                return { cells: [r.position, (r.trades || []).map(function (x) { return x.trade + " (" + x.maturity + ")"; }).join(", ")],
-                  href: "/v/position/" + encodeURIComponent(r.position) + "?asOf=" + encodeURIComponent(b.businessDate) };
-              }));
-              more.hidden = !b.more;
-            });
-          });
-          det.appendChild(more);
-        }
-        host.appendChild(det);
-      }
       function part(host, a, tab, inDrawer) {
         var x = a[tab] || {};
         if (tab === "formula") {
@@ -465,7 +523,7 @@
           var dl = h("dl", "dx-dl");
           (x.rows || []).forEach(function (row) { dl.appendChild(h("dt", null, row.label)); dl.appendChild(h("dd", "mono", row.value)); });
           host.appendChild(dl);
-          (x.notes || []).forEach(function (n) { note(host, n); });
+          (x.notes || []).forEach(function (n) { drawNote(document, host, n); });
           if ((x.lineage || []).length) {
             host.appendChild(h("h3", "dx-h3", "Lineage"));
             var t = h("table", "dx-table");
@@ -603,52 +661,8 @@
         });
       }
       function whyPage(root, req, a) {
-        var wb = ((a.workbook || {}).links || [])[0], head = root.querySelector(".dx-page-head"), w = root.querySelector("[data-dx-wb]");
-        if (wb && head && !w) {
-          w = h("a", "dx-btn", "Workbook");
-          w.href = wb.href;
-          w.setAttribute("data-dx-wb", "");
-          head.insertBefore(w, head.querySelector("[data-dx-print]"));
-        }
-        var deps = { h: h, part: part, checks: checks,
-          paint: function (host, t, panels) { return paintPanels(host, a, t, panels); },
-          recompare: function (from) {
-            var next = Object.assign({}, req);
-            if (from) next.from = from; else delete next.from;
-            var u = new URL(window.location.href);
-            if (from) u.searchParams.set("from", from); else u.searchParams.delete("from");
-            window.history.replaceState(window.history.state, "", u.toString());
-            root.setAttribute("data-explain-request", JSON.stringify(next));
-            renderPage(root);
-          } };
-        return renderWhyPage(root, a, deps, req.from || "").then(function () {
-          checks(root.querySelector("[data-dx-checks]"), { checks: [] });
-          root.dataset.state = "ready";
-        });
-      }
-      function link(req, o) {
-        o = o || {};
-        var a = h("a", "dx-link" + (o.cls ? " " + o.cls : ""), o.text || "Explain ›");
-        a.href = pageUrl(req, o.tab || "why");
-        a.setAttribute("data-explain", JSON.stringify(req));
-        a.setAttribute("data-explain-tab", o.tab || "why");
-        a.setAttribute("data-explain-trigger", "");
-        a.setAttribute("data-explain-link", "");
-        a.title = o.title || "Explain: the formula with its values, the inputs and lineage, why it moved, the workbook (E)";
-        return a;
-      }
-      function upgrade(root) {
-        (root || document).querySelectorAll("[data-explain-link][data-explain]:not(.dx-link)").forEach(function (el) {
-          var req = reqOf(el);
-          if (!(req && req.kind)) return;
-          var tab = el.getAttribute("data-explain-tab") || "why";
-          el.classList.add("dx-link");
-          el.setAttribute("data-explain-trigger", "");
-          el.setAttribute("data-explain-tab", tab);
-          if (el.tagName === "A") el.href = pageUrl(req, tab);
-          if (!el.textContent.trim()) el.textContent = "Explain ›";
-          if (!el.title) el.title = "Explain: the formula with its values, the inputs and lineage, why it moved, the workbook (E)";
-        });
+        return mountWhyPage(root, req, a, { h: h, part: part, checks: checks, rerender: renderPage,
+          paint: function (host, t, panels) { return paintPanels(host, a, t, panels); } });
       }
       function target(ev) { return ev.target && ev.target.closest ? ev.target.closest("[data-explain]") : null; }
       document.addEventListener("click", function (ev) {
@@ -686,6 +700,8 @@
           if (!(r2 && r2.kind)) return false;
           lastAnchor = f; preview(f, r2);
         } });
+      var link = function (req, o) { return explainLink(document, req, o, pageUrl); };
+      var upgrade = function (root) { upgradeLinks(root || document, pageUrl); };
       if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { upgrade(document); }); else upgrade(document);
       var pageRoot = document.querySelector("[data-explain-page]");
       if (pageRoot) {

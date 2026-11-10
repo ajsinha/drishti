@@ -1097,7 +1097,7 @@
       q.setAttribute("aria-label", r.blankNote);
       s.appendChild(q);
     } else {
-      s.appendChild(document.createTextNode(r.name));
+      s.appendChild(h("span", "vx-nm-t", r.name));
     }
     var ex = explainLink(r);
     if (ex) s.appendChild(ex);
@@ -1135,7 +1135,7 @@
     if (lay) lay.setAttribute("data-resize-mode", pcols ? "parametric" : "historical");      // the side panel's width a person set, kept per mode
     t.classList.toggle("vp-cols", !!pcols);
     // the columns' widths a person set, kept per mode in this browser (drishti-grid's own resize handles)
-    var wkey = "drishti.var.tree.widths." + (pcols ? "parametric" : "historical"), sig = wkey + "|" + S.ccy + (S.matured ? "|matured" : "");
+    var wkey = "drishti.var.tree.widths." + (pcols ? "parametric" : "historical"), sig = wkey + "|" + S.ccy + (S.matured ? "|matured" : "") + "|" + (treeRoot() || "") + "|" + (S.within || "");
     var el = t.querySelector(":scope > drishti-tree"), opts = treeOptions(treeRows(), pcols, wkey);
     renderTreeCrumb();
     if (el && el.tree && el.dataset.sig === sig) { el.tree.setData(opts.data); markTree(); return; }
