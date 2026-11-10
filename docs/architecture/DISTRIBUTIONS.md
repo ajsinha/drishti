@@ -89,6 +89,14 @@ A module built from the Module SDK alone: a VCF reader as a kernel connector ext
 commands VAR-free (`VARIANT`, `GENE`, `COHORT`); one page folder; synthetic data. Purpose: the release's proof that the kernel boots and
 is useful with no finance at all. Not for the owner's demos.
 
+**As built (wave 3).** `modules/genomics` (publisher Helix Lab, a sample third party) is made from the archetype and finished by hand
+([DEVELOPER_GUIDE.md section 1.9](../guides/DEVELOPER_GUIDE.md#19-the-genomics-sample-step-by-step)): the VCF reader is a `SourcePlugin`
+inside the module (it serves only the module's kinds and must go with it, so not the lib folder); `gene` and `cohort` are computed;
+`GENE TP53` draws the module's own visual, `genomics.lollipop`, a kind of drishti-chart's registry. Its `.dmod` passes C1 to C15. The file
+takes **none of the kernel's packs** (`kernel-packs: []`: no counterparty, book or desk) and offers one lens, **Research**
+(`config/lenses/genomics/research.yaml`); the module's words are its commands. `GenomicsDistributionServerTest` boots it on the thin
+kernel with the package dropped into the modules folder; `test_genomics_walk_browser.py` walks it in a browser on the thin jar.
+
 ## 5. What is shared, and what is not
 
 - **One kernel build and one console build.** A distribution never forks code: it is a file (brand, theme, lenses, Home, menus, docs,
@@ -161,7 +169,9 @@ path). What each module holds is read from **its own manifest**, never from a ha
 `META-INF/drishti/module.yaml` in its sources (`modules/banking/banking-service/...`: `contributes.packs`, `functions`, `engines`,
 `menus`, `help`, `requires`). The folder is `drishti.module-manifests-dir` (`module_manifests_dir` on the console,
 `DRISHTI_MODULE_MANIFESTS_DIR` for both; default `./modules`). A listed module brings the modules it requires (banking brings
-market-data); a listed module with no manifest stops the start unless the file says `required: false` (Genomics: listed, not installed).
+market-data); a listed module with no manifest stops the start unless the file says `required: false`. A module project made from the
+SDK keeps its manifest in `modules/<id>/src/dmod/module.yaml` (genomics), read the same way. A file may name the kernel's packs it takes
+(`kernel-packs:`; Genomics takes none, and a distribution of no packs loads none, not the default list).
 
 **The content modules.** Three `.dmod`s, each a folder in the `.dmod` layout (`module.yaml`, `console/plugin.yaml` with a Sutra page per
 function under `/m/<id>/`, `docs/` with a README, Help section, guides and tutorial, `data/needs.yaml`) plus `content.yaml`, the
@@ -210,7 +220,7 @@ distribution is named, and is ignored when one is; a site's `drishti.branding.*`
 `ui.copyright`, `ui.owner`, `ui.notice` still win over the file. Health names each one as deprecated.
 
 **Health and Admin.** Admin → Health shows the console's and the server's distribution, which of its modules loaded ("loaded", "off",
-"not installed": Genomics until its module ships) and the deprecation notes; `GET /api/v1/health` carries the same under
+"not installed": a listed module whose package is not deployed) and the deprecation notes; `GET /api/v1/health` carries the same under
 `distribution`. Admin → White label shows every distribution file side by side (mock-up A): brand, theme, modules (loaded here or not),
 lenses, menus, Home cards, Help title and how to start it, the running one first. It is read only: a distribution changes in its file
 and takes effect at the next start.
@@ -222,5 +232,4 @@ IntelliJ: `Drishti server (Risk)`, `(Finance)`, `(All)` and `Drishti console (Ri
 Deployment and QA guide has the step-by-step for each on Linux, macOS and Windows.
 
 **Not yet (wave 2 and later).** The kernel loading `.dmod`s (until then the packs load from `config/packs` and the registry's content
-modules from the server's manifest); logos and favicons beyond the eye are blank until a distribution ships its own files; Genomics boots
-on the kernel alone until its module ships.
+modules from the server's manifest); logos and favicons beyond the eye are blank until a distribution ships its own files.

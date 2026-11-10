@@ -299,6 +299,7 @@ the kernel API (`com.ash.drishti.kernel.api`) and the entity types its signature
 | Type (kernel API) | What the kernel does with it |
 |---|---|
 | `data.KindProvider` | routes the kinds it computes like any source: views, Rachana, the pivot, BI |
+| `SourcePlugin` (the plugin API, `com.ash.drishti.api`): a **connector extension** | routed under its own name while the module is loaded, started with `module-dir` (the installed module) and `data-dir` (`<data>/modules/<id>`); the genomics module's VCF reader (section 1.9). A connector only one module's kinds use ships inside the module; a jar every part may use (a JDBC driver) goes in the lib folder |
 | `function.FunctionProvider` | adds its functions to Rachana (the archetype's `<id>_greet(name)` in any expression, Sutra or measure); a name already taken refuses the start |
 | `engines.ComputeEngine` | lists and starts it as the engine registry would at start (its switch and needs apply) |
 | `@ModuleApi` + `@RestController` | mounts its endpoints under `/api/v1/<prefix>/` (its manifest's `api.prefix`); off: 404, removed: 410 |
@@ -315,7 +316,7 @@ failure a sentence naming the file and the fix:
 
 | Check | How the tool (and so the plugin) checks it |
 |---|---|
-| C1 No kernel internals | every class file's constant pool: a type of `com.ash.drishti` outside `kernel.api` and the module's own packages fails |
+| C1 No kernel internals | every class file's constant pool: a type of `com.ash.drishti` outside `kernel.api`, the plugin API (`com.ash.drishti.api`) and the module's own packages fails |
 | C2 No bespoke UI | pages draw no `<table>`, `<canvas>` or `<svg>`; scripts import only `@drishti/elements-*` and their own files |
 | C3 Theme tokens only | CSS: no hex, `rgb()`/`hsl()` or named colours outside `var(--…)`, no `!important` |
 | C4 `drishti_` asset prefix | every file under `console/static/` and `elements/` is `drishti_<name>`; no vendored library |
@@ -373,6 +374,62 @@ ships (`modules/<id>/`, `module_manifests_dir`) while the server lists them load
 links disappear; an open page of it is frozen under the notice within 15 seconds; saved work that uses it (Sutras, BI reports and
 dashboards, baskets in Build; saved searches in Forms; alert rules) stays, marked *needs module X* and not openable, and comes back on reinstall. Nothing of it
 is kept per person.
+
+**A page reads its module's API** through the console: `api('genes/TP53')` in a template is `/m/<id>/api/genes/TP53`, which the console
+reads from the server's `/api/v1/<id>/genes/TP53` as the person (GET only; 410 removed, 404 off). The page's own script draws the rows
+with Drishti Elements (`Drishti.elements.grid`, `Drishti.elements.load('drishti-chart')`).
+
+### 1.8 A module's own visual (the custom-visual SDK)
+
+A module that needs a chart Drishti does not have ships it **as a Drishti Elements extension**, never as a drawing of its own: a **kind
+of drishti-chart's registry** (`registerKind(name, {build, label, family, cartesian, sample})`), built from drishti-chart's primitives
+(`buildScatter`, `buildSeriesChart`, `buildWaterfall`, the annotations, `toneColour`), in the module's **domain library**
+`elements/drishti-<module>/drishti_<module>.js`. Because the chart card draws it, the kind gets the theme, tooltips, Explain on a mark, the
+data table, export, zoom and the keyboard like every kind, and the conformance checks hold (no canvas, svg or table of its own, no colour:
+tones `good`, `bad`, `warn`, `accent`, `muted` come from the theme).
+
+```bash
+mvn drishti:visual -Dname=lollipop -Dtitle="Variant lollipop"     # in a module project made from the archetype
+```
+
+writes the library (once) with a kind `<module>.lollipop` started on `buildSeriesChart`, and declares it in `console/plugin.yaml`:
+
+```yaml
+visuals:
+  - kind: genomics.lollipop
+    library: drishti-genomics
+    file: drishti_genomics.js
+    title: Variant lollipop
+    summary: "A protein's variants: a stem and head at each amino acid position ..."
+```
+
+**Where it shows.** The module's pages load the library (`/m/<id>/elements/<library>/<module version>/<file>`) and draw the kind with
+`new Chart(el, {kind: 'genomics.lollipop', ...})`. The **Elements gallery** asks the console for the hosted modules' visuals
+(`GET /api/elements/visuals`), loads each library and gives each kind a page drawn from its `sample()`; a module that is off or removed
+is not listed, so its visual is gone from the gallery (and its library answers 404 or 410). The library registers the kind once
+(`kindOf` first) and exposes `Drishti.elements.visuals.<module>.ready`.
+
+### 1.9 The genomics sample, step by step
+
+`modules/genomics` is a third party's module (publisher Helix Lab, a sample) made from the archetype and finished by hand: it uses
+`drishti-kernel-api` and the plugin API only (C1) and carries no finance. Drishti Genomics (`--distribution genomics`) runs the thin
+kernel with it alone ([DISTRIBUTIONS.md section 4](../architecture/DISTRIBUTIONS.md#4-drishti-genomics-sample)).
+
+1. **Generated.** `mvn archetype:generate -DarchetypeArtifactId=drishti-module-archetype -DgroupId=org.helixlab -DartifactId=genomics
+   -Dpackage=org.helixlab.genomics -Ddomain=genomics` (the first commit of the module is the archetype's output, unchanged).
+2. **The VCF reader** (`VcfConnector`, a `SourcePlugin`): reads `data/samples/*.vcf` inside the package and `<data>/modules/genomics/vcf/`
+   (plain or gzipped VCF 4.x); one `variant` per alternate allele, the samples and their `##SAMPLE` cohorts (`Vcf`, `GenomicsData`, one
+   immutable snapshot).
+3. **The kinds** `gene` and `cohort` (`GenomicsKinds`, a `KindProvider`), computed from the variants and `gene.jsonl`; the contracts in
+   `packs/genomics/contracts/`.
+4. **The API** (`GenomicsController`, `@ModuleApi("genomics")`): `/api/v1/genomics/variants`, `/genes/{id}`, `/cohorts/{id}`; the Rachana
+   function `genomics_af_class(af)`.
+5. **One page folder**, `console/pages/explorer.html`, for the six routes (`VARIANT`, `GENE`, `COHORT` and their lists), drawn with the
+   Elements macros and `drishti_genomics-pages.js`; the gene's page draws `genomics.lollipop` (section 1.8).
+6. **Synthetic data**: `tools/make_samples.py` (seeded) writes two cohorts of twelve samples and 120 variants over eight genes.
+7. **Built in the kernel's reactor**: `./mvnw -o package -pl modules/genomics -am` packs `target/dmod/genomics-0.1.0.dmod` and runs the
+   fifteen checks at `package`. `GenomicsDistributionServerTest` boots Drishti Genomics with the package dropped in;
+   `test_genomics_walk_browser.py` walks it in a browser on the thin jar.
 
 ## 2. Building and running from source
 
