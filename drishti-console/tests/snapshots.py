@@ -27,6 +27,7 @@ DRISHTI_SNAPSHOT_REPORT (the drill: <data>/drill/snapshots.jsonl). ``pytest --up
 never does (it refuses under DRILL_TIMINGS_OUT)."""
 from __future__ import annotations
 
+import datetime
 import io
 import json
 import os
@@ -47,7 +48,15 @@ MASK = ["[data-clock]", "#asofDate", "[data-dyk]", "[data-ready-facts]", "[data-
 #: times, a live board's last update; their words replaced by one dot
 QUIET = ["[data-vx-timing]", "[data-vx-fresh]", "[data-live-time]"]
 
-_STILL = """async (quiet) => {
+_STILL = """async ([quiet, today]) => {
+  // what the run, not the page, decides: the test's scratch folders and the real day's date and time (the business date is fixed)
+  const run = [[/\\S*pytest-\\d+\\/(?:popen-gw\\d+\\/)?[^\\/\\s]+\\//g, '<test folder>/'], [new RegExp(today + '(?:[ T]\\\\d\\\\d:\\\\d\\\\d(?::\\\\d\\\\d)?)?', 'g'), 'today']];
+  const walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  for (let n = walk.nextNode(); n; n = walk.nextNode()) {
+    let v = n.nodeValue;
+    for (const [re, to] of run) { v = v.replace(re, to); }
+    if (v !== n.nodeValue) { n.nodeValue = v; }
+  }
   for (const e of document.querySelectorAll(quiet.join(','))) { if (e.textContent) { e.textContent = '\u00b7'; } }
   if (document.fonts && document.fonts.ready) { await document.fonts.ready; }
   if (document.activeElement && document.activeElement.blur) { document.activeElement.blur(); }
@@ -64,7 +73,7 @@ _STILL = """async (quiet) => {
 def capture(pg, masks: list[str] = (), part: str | None = None) -> bytes:
     """The page's viewport at its top as PNG, or only the element ``part`` (a page that scrolls itself to a part when it has drawn),
     still (toasts hidden) with ``MASK`` and ``masks`` covered."""
-    pg.evaluate(_STILL, QUIET)
+    pg.evaluate(_STILL, [QUIET, datetime.date.today().isoformat()])
     pg.mouse.move(0, 0)
     locs = [pg.locator(s) for s in (*MASK, *masks)]
     shot = dict(animations="disabled", caret="hide", mask=locs, mask_color="#808080")
