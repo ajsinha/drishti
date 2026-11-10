@@ -29,17 +29,21 @@ import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.StandardEnvironment;
 
 /**
- * The bindings upgrade reads the site's connector files: a connector switched off (by its file or the properties) binds nothing, and a
- * connector defined only in properties is never written into the site's file (the next start may define other connectors).
+ * The bindings upgrade reads the site's own connector files: a connector switched off (by its file or the properties), a pack template's
+ * unedited file and a connector defined only in properties bind nothing.
  */
 class UpgradeConnectorsTodayTest {
 
     @Test
-    void aConnectorSwitchedOffOrOnlyInThePropertiesBindsNothing(@TempDir Path dir) throws Exception {
+    void onlyTheSitesOwnFilesThatAreOnAreBound(@TempDir Path dir) throws Exception {
         Path conn = Files.createDirectories(dir.resolve("connectors"));
         Files.writeString(conn.resolve("finance-lake.yaml"), "plugin: delta\nkinds: [counterparty, trade]\n");
         Files.writeString(conn.resolve("risk-store.yaml"), "plugin: delta\nkinds: [scenario-pv]\n");
-        Map<String, ConnectorFiles.Definition> files = new ConnectorFiles(conn, dir.resolve("data")).readAll(new HashMap<>());
+        String generated = "# Generated at first start\nplugin: delta\nkinds: [fx-spot]\n";
+        Files.writeString(conn.resolve("market-lake.yaml"), generated);
+        ConnectorFiles cf = new ConnectorFiles(conn, dir.resolve("data"));
+        cf.writeMarker("market-lake", generated, "fp", java.util.List.of("fx-spot"));
+        Map<String, ConnectorFiles.Definition> files = cf.readAll(new HashMap<>());
         StandardEnvironment env = new StandardEnvironment();
         env.getPropertySources().addFirst(new MapPropertySource("test", Map.of(
                 "drishti.sources.connectors.finance-lake.enabled", "false",
@@ -48,12 +52,17 @@ class UpgradeConnectorsTodayTest {
                 "drishti.sources.connectors.ccr-lake.kinds[1]", "counterparty",
                 "drishti.sources.connectors.ccr-lake.settings.refresh-seconds", "1")));
 
-        Map<String, ConnectorFiles.Definition> today = PackEnvironmentPostProcessor.connectorsToday(env, files);
+        Map<String, ConnectorFiles.Definition> today = PackEnvironmentPostProcessor.connectorsToday(env, cf, files);
         assertThat(today).as("a connector of the properties is not the site's file").containsOnlyKeys("risk-store");
+
+        Files.writeString(conn.resolve("market-lake.yaml"), generated + "description: edited by the site\n");
+        assertThat(PackEnvironmentPostProcessor.connectorsToday(env, cf, cf.readAll(new HashMap<>()))).as("an edited file is the site's")
+                .containsKey("market-lake");
 
         Bindings b = BindingsFile.besideConnectors(conn).upgradeFrom(today).orElseThrow();
         assertThat(b.of("counterparty")).as("only the switched-off connector's file listed it").isEmpty();
         assertThat(b.of("trade")).isEmpty();
+        assertThat(b.of("fx-spot")).as("a pack template's unedited file is the distribution's default, not the site's").isEmpty();
         assertThat(b.of("scenario-pv").orElseThrow().read()).containsExactly("risk-store");
     }
 }

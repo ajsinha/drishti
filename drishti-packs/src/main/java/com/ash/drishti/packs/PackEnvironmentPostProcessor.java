@@ -125,7 +125,7 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
         com.ash.drishti.packs.bindings.Bindings bound = com.ash.drishti.packs.bindings.Bindings.NONE;
         com.ash.drishti.packs.bindings.BindingsFile bfile = bindingsFile(env, connDir);
         try {
-            java.util.Optional<com.ash.drishti.packs.bindings.Bindings> up = bfile.upgradeFrom(connectorsToday(env, defs));
+            java.util.Optional<com.ash.drishti.packs.bindings.Bindings> up = bfile.upgradeFrom(connectorsToday(env, files, defs));
             up.ifPresent(b -> System.getLogger(PackEnvironmentPostProcessor.class.getName()).log(System.Logger.Level.INFO,
                     "data bindings: wrote {0} from the kinds: lists of the connector files ({1} kinds); those lists are read this release only",
                     bfile.path(), b.byKind().size()));
@@ -153,16 +153,20 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
     }
 
     /**
-     * The connector files the bindings upgrade reads: every file but those switched off, by the file or by the server's properties
-     * ({@code drishti.sources.connectors.<name>.enabled}). A connector defined only in properties (an environment's or a test's) is never
-     * written into the site's file: the next start may define other connectors, and a binding to one no longer there is a stale binding.
+     * The connector files the bindings upgrade reads: the site's own files (written or edited by the site), but not those switched off, by
+     * the file or by the server's properties ({@code drishti.sources.connectors.<name>.enabled}). A file a pack's template generated and
+     * nobody edited is the distribution's default, not a site's choice: its kinds resolve by the pack's routes and the lake convention
+     * (section 5.5), and binding them would pin them to that file for every later start. A connector defined only in properties (an
+     * environment's or a test's) is never written into the site's file: the next start may define other connectors.
      */
-    static java.util.Map<String, ConnectorFiles.Definition> connectorsToday(org.springframework.core.env.Environment env,
-            java.util.Map<String, ConnectorFiles.Definition> files) {
+    static java.util.Map<String, ConnectorFiles.Definition> connectorsToday(org.springframework.core.env.Environment env, ConnectorFiles files,
+            java.util.Map<String, ConnectorFiles.Definition> defs) {
         java.util.Map<String, ConnectorFiles.Definition> out = new java.util.LinkedHashMap<>();
-        files.forEach((n, d) -> {
+        defs.forEach((n, d) -> {
+            ConnectorFiles.Marker mk = files == null ? null : files.marker(n);
+            boolean generated = mk != null && d.text() != null && mk.fileEtag().equals(ConnectorFiles.etag(d.text()));
             String on = env.resolvePlaceholders(env.getProperty("drishti.sources.connectors." + n + ".enabled", d.enabled())).trim();
-            if (!"false".equalsIgnoreCase(on)) {
+            if (!generated && !"false".equalsIgnoreCase(on)) {
                 out.put(n, d);
             }
         });
