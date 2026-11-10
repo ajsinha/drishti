@@ -146,7 +146,8 @@ public final class BindingResolver {
         for (Bindings.Binding b : site.byKind().values()) {
             for (String c : b.connectors()) {
                 if (!defined.contains(c)) {
-                    problems.add(b.kind() + " is bound to '" + c + "', which no connector file defines");
+                    problems.add(b.kind() + " is bound to '" + c + "', which no connector file defines" + (dangling(b, defined)
+                            ? ": the binding is set aside and the kind resolves without it" : ""));
                 }
             }
             if (needs.computed().containsKey(b.kind())) {
@@ -156,7 +157,7 @@ public final class BindingResolver {
         for (String kind : all) {
             out.put(kind, one(kind, site, needs, facts));
         }
-        return new Result(out, off(out, needs), List.copyOf(problems));
+        return new Result(out, off(out, needs, offered(site, facts)), List.copyOf(problems));
     }
 
     private static Resolution one(String kind, Bindings site, DataNeeds needs, Facts facts) {
@@ -166,7 +167,7 @@ public final class BindingResolver {
         List<String> usedBy = mine.stream().flatMap(n -> n.usedBy().stream()).distinct().toList();
         boolean demoAllowed = mine.isEmpty() || mine.stream().allMatch(DataNeeds.Need::demo);
         List<Source> sources = facts.sources(kind);
-        Bindings.Binding b = site.of(kind).orElse(null);
+        Bindings.Binding b = site.of(kind).filter(x -> !dangling(x, facts.connectors())).orElse(null);
         if (needs.computed().containsKey(kind) || sources.stream().anyMatch(Source::computed)) {
             String by = needs.computed().getOrDefault(kind, sources.stream().filter(Source::computed).map(Source::name).findFirst().orElse(""));
             return new Resolution(kind, BindingState.COMPUTED, Origin.COMPUTED, names(sources.stream().filter(Source::computed).toList()), null,
@@ -245,8 +246,31 @@ public final class BindingResolver {
         };
     }
 
-    /** The functions an unserved need switches off: a required need, a {@code for:} need, an any-of group with no member served. */
-    static Map<String, String> off(Map<String, Resolution> kinds, DataNeeds needs) {
+    /**
+     * A binding that names only connectors the site does not define (their files removed, their pack not loaded): Health lists it as a
+     * problem and the kind resolves as if it were not bound (section 5.5), so a binding left behind does not switch functions off. A
+     * binding to a connector that is defined but not running stays: that is the site's choice, and UNBOUND says so.
+     */
+    static boolean dangling(Bindings.Binding b, Set<String> defined) {
+        return !b.demo() && !b.writes() && !b.connectors().isEmpty() && b.connectors().stream().noneMatch(defined::contains);
+    }
+
+    /**
+     * The kinds the site offers: those its loaded packs define and those it binds. A need on a kind the site offers in no way (its pack is
+     * not loaded, nothing binds it) is outside the site's content (the pack switch decides those functions, ACCESS_MODEL.md), so it
+     * switches nothing off; it still resolves UNBOUND in Health.
+     */
+    static Set<String> offered(Bindings site, Facts facts) {
+        Set<String> out = new java.util.HashSet<>(facts.kinds());
+        out.addAll(site.byKind().keySet());
+        return out;
+    }
+
+    /**
+     * The functions an unserved need switches off: a required need, a {@code for:} need, an any-of group with no member served; only for
+     * kinds the site offers ({@link #offered}).
+     */
+    static Map<String, String> off(Map<String, Resolution> kinds, DataNeeds needs, Set<String> offered) {
         Map<String, String> out = new TreeMap<>();
         Map<String, List<DataNeeds.Need>> groups = new LinkedHashMap<>();
         for (DataNeeds.Need n : needs.needs()) {
@@ -260,14 +284,14 @@ public final class BindingResolver {
             if (n.requiredWith() != null && !usable(kinds, n.requiredWith())) {
                 continue;
             }
-            if (!usable(kinds, n.kind())) {
+            if (offered.contains(n.kind()) && !usable(kinds, n.kind())) {
                 for (String f : n.gates()) {
                     out.putIfAbsent(f, f + " needs " + n.kind() + ": " + kinds.get(n.kind()).reason() + "; ask your data administrator");
                 }
             }
         }
         groups.values().forEach(g -> {
-            if (g.stream().noneMatch(n -> usable(kinds, n.kind()))) {
+            if (g.stream().anyMatch(n -> offered.contains(n.kind())) && g.stream().noneMatch(n -> usable(kinds, n.kind()))) {
                 String names = String.join(" or ", g.stream().map(DataNeeds.Need::kind).toList());
                 g.stream().flatMap(n -> n.gates().stream()).distinct().forEach(f -> out.putIfAbsent(f, f + " needs " + names
                         + ": no source is bound; ask your data administrator"));

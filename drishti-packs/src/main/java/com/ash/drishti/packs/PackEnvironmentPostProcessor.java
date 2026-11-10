@@ -125,7 +125,7 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
         com.ash.drishti.packs.bindings.Bindings bound = com.ash.drishti.packs.bindings.Bindings.NONE;
         com.ash.drishti.packs.bindings.BindingsFile bfile = bindingsFile(env, connDir);
         try {
-            java.util.Optional<com.ash.drishti.packs.bindings.Bindings> up = bfile.upgradeFrom(defs);
+            java.util.Optional<com.ash.drishti.packs.bindings.Bindings> up = bfile.upgradeFrom(connectorsToday(env, defs));
             up.ifPresent(b -> System.getLogger(PackEnvironmentPostProcessor.class.getName()).log(System.Logger.Level.INFO,
                     "data bindings: wrote {0} from the kinds: lists of the connector files ({1} kinds); those lists are read this release only",
                     bfile.path(), b.byKind().size()));
@@ -150,6 +150,23 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
         }
         problems.forEach((n, m) -> fileProps.put("drishti.sources.connector-file-problems." + n, m));
         env.getPropertySources().addBefore(SOURCE, new MapPropertySource(FILES_SOURCE, fileProps));
+    }
+
+    /**
+     * The connector files the bindings upgrade reads: every file but those switched off, by the file or by the server's properties
+     * ({@code drishti.sources.connectors.<name>.enabled}). A connector defined only in properties (an environment's or a test's) is never
+     * written into the site's file: the next start may define other connectors, and a binding to one no longer there is a stale binding.
+     */
+    static java.util.Map<String, ConnectorFiles.Definition> connectorsToday(org.springframework.core.env.Environment env,
+            java.util.Map<String, ConnectorFiles.Definition> files) {
+        java.util.Map<String, ConnectorFiles.Definition> out = new java.util.LinkedHashMap<>();
+        files.forEach((n, d) -> {
+            String on = env.resolvePlaceholders(env.getProperty("drishti.sources.connectors." + n + ".enabled", d.enabled())).trim();
+            if (!"false".equalsIgnoreCase(on)) {
+                out.put(n, d);
+            }
+        });
+        return out;
     }
 
     /** The site's {@code bindings.yaml}: {@code drishti.bindings.file}, else beside the connectors' folder. */

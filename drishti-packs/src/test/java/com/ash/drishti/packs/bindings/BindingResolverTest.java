@@ -34,7 +34,7 @@ class BindingResolverTest {
     private static final LocalDate TODAY = LocalDate.of(2026, 11, 10);
 
     /** Facts a test sets by hand. */
-    static final class Fake implements BindingResolver.Facts {
+    static class Fake implements BindingResolver.Facts {
         final Map<String, List<Source>> sources = new HashMap<>();
         final Map<String, String> routes = new HashMap<>();
         final Map<String, LocalDate> latest = new HashMap<>();
@@ -150,6 +150,22 @@ class BindingResolverTest {
     }
 
     @Test
+    void aKindTheSiteDoesNotOfferSwitchesNothingOff() {
+        Fake f = new Fake() {
+            @Override
+            public Set<String> kinds() {
+                return Set.of("trade", "var-limit", "position");          // the packs of scenario-pv, pnl-vector and desk-pnl are not loaded
+            }
+        };
+        f.sources.put("trade", List.of(real("trade-endur")));
+        BindingResolver.Result r = BindingResolver.resolve(Bindings.NONE, needs(), f);
+        assertThat(r.off()).isEmpty();
+        assertThat(r.kinds().get("desk-pnl").state()).as("Health still says so").isEqualTo(BindingState.UNBOUND);
+        Bindings site = Bindings.NONE.with("desk-pnl", Bindings.binding("desk-pnl", Map.of("read", List.of("lake-a"))));
+        assertThat(BindingResolver.resolve(site, needs(), f).off()).as("a kind the site binds is offered").containsOnlyKeys("DPNL");
+    }
+
+    @Test
     void demoOnlyWhileDemoIsOnAndTheNeedAllowsIt() {
         Fake f = new Fake();
         f.sources.put("var-limit", List.of(demo()));
@@ -179,5 +195,7 @@ class BindingResolverTest {
         assertThat(r.kinds().get("pnl-vector").reason()).contains("none of which is running");
         assertThat(r.off()).containsKeys("VRES", "POS");                       // a mismatch is unbound for its needs
         assertThat(r.problems()).anyMatch(p -> p.contains("'nowhere'")).anyMatch(p -> p.contains("position is computed"));
+        assertThat(r.kinds().get("var-limit").origin()).as("a binding to connectors no file defines is set aside").isNotEqualTo(Origin.SITE);
+        assertThat(r.problems()).anyMatch(p -> p.contains("set aside"));
     }
 }
