@@ -1613,7 +1613,10 @@ third-party jars belong in its package (`java.lib`), not here.
 
 ## 23. Data bindings
 
-A module says which **kinds** it needs (banking: `trade`, `scenario-pv` or `pnl-vector`, `scenario-set`, `netting-set` …); the site decides
+A module says which **kinds** it needs (banking: `trade`, [`scenario-pv`](../contracts/samples/market-risk.md#scenario-pv) ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv))
+or [`pnl-vector`](../contracts/samples/market-risk.md#pnl-vector) ([contract](../contracts/packs/market-risk.md#pnlv-pl-vector-509-scenarios-pnl-vector)),
+[`scenario-set`](../contracts/samples/market-risk.md#scenario-set) ([contract](../contracts/packs/market-risk.md#sset-scenario-set-scenario-set)),
+[`netting-set`](../contracts/samples/counterparty-risk.md#netting-set) ([contract](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set)) …); the site decides
 which connector or lake table serves each one. That decision is the **binding**, one per kind, shared by every module that needs the kind,
 kept in `config/bindings.yaml` (`drishti.bindings.file` names another place). A binding names connectors and lakes only; hosts, URLs and
 credentials stay in the connector files and the secret store, and no module ever sees them. The file's format and examples:
