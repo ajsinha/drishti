@@ -272,7 +272,7 @@ public final class BindingService {
     public List<String> deprecated() {
         List<String> out = new ArrayList<>();
         connectors.deprecatedKinds().forEach((n, k) -> out.add(n + ".yaml lists kinds: " + k + ": read this release only; "
-                + (file.exists() ? "the binding in " + file.path().getFileName() + " is the one home, remove the list" : "run drishti.py bindings migrate")));
+                + (file.exists() ? "the binding in " + file.path().getFileName() + " is the one home, remove the list" : "the next start writes " + file.path().getFileName() + " from them")));
         return out;
     }
 

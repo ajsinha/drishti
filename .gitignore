@@ -51,7 +51,7 @@ drishti-console/web/static/vendor/duckdb-wasm/*/
 /config/connectors/
 # this site's Drishti*net files (written by the server, Admin -> Net and drishti.py net; examples are in config/net.examples/)
 /config/net/
-# this site's data bindings (written by the upgrade, Admin -> Data bindings and drishti.py bindings; an example is config/bindings.example.yaml)
+# this site's data bindings (written by the upgrade and Admin -> Data bindings; the format: docs/guides/DATA_LAKE_GUIDE.md section 6.1)
 /config/bindings.yaml
 /config/bindings.yaml.bak
 

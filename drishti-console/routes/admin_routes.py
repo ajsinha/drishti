@@ -938,3 +938,52 @@ async def act(request: Request, username: str, action: str):
     finally:
         request.app.state.auth.forget(user=username)
     return JSONResponse({"code": "DRS-5001", "detail": "unknown action"}, status_code=400)
+
+
+# -- Admin → Data bindings (docs/guides/ADMIN_GUIDE.md, "Data bindings"; KERNEL_AND_MODULES.md section 5, mock-up A) ------------------------
+
+@router.get("/bindings")
+async def bindings_page(request: Request):
+    """One row per kind: who needs it, what serves it in read order, its state (BOUND, AUTO, DEMO, STALE, MISMATCH, UNBOUND, COMPUTED), the
+    functions an unserved required need switched off, the deprecated kinds: lists, and the proposals a second administrator decides. Every
+    figure is the server's (GET /api/v1/admin/bindings); the page places them, drishti_admin-bindings.js sends a proposal or a decision."""
+    me = ident(request)
+    if not me.is_admin:
+        return _forbidden(request)
+    error = None
+    try:
+        st = await request.app.state.backend.admin("GET", "/bindings", me)
+    except BackendError as e:
+        if e.status in (401, 403):
+            return render(request, "admin/forbidden.html", status_code=e.page_status, error=e)
+        st, error = {}, e
+    return render(request, "admin/bindings.html", st=st or {}, error=error, me=me, status=await _status(request))
+
+
+@router.post("/api/bindings/{action}")
+async def bindings_action(request: Request, action: str):
+    """``propose`` {kind, binding, reason} · ``approve``/``reject`` {id, comment} · ``withdraw`` {id} · ``reload``: the server decides
+    (administrators only, four eyes, audited) and refuses with words (DRS-1029, DRS-2007)."""
+    me = ident(request)
+    if not me.is_admin:
+        return _admins_only()
+    try:
+        body = await json_body(request)
+    except BodyError as e:
+        return JSONResponse({"code": "DRS-5001", "detail": str(e)}, status_code=400)
+    pid = quote(str(body.get("id") or ""), safe="")
+    b = request.app.state.backend
+    try:
+        if action == "propose":
+            binding = body.get("binding") if isinstance(body.get("binding"), dict) else None
+            return await b.admin("POST", "/bindings/proposals", me, {"kind": str(body.get("kind") or ""), "binding": binding,
+                                                                    "reason": str(body.get("reason") or "")[:500]})
+        if action in ("approve", "reject"):
+            return await b.admin("POST", f"/bindings/proposals/{pid}/{action}", me, {"comment": str(body.get("comment") or "")[:500]})
+        if action == "withdraw":
+            return await b.admin("POST", f"/bindings/proposals/{pid}/withdraw", me, {})
+        if action == "reload":
+            return await b.admin("POST", "/bindings/reload", me, {})
+    except BackendError as e:
+        return _problem(e)
+    return JSONResponse({"code": "DRS-5001", "detail": "unknown action"}, status_code=400)
