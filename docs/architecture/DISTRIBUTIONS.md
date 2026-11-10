@@ -18,7 +18,7 @@ distribution is a distribution file plus the modules it picks. The owner demos a
 | Id | `drishti.risk` | `drishti.finance` | `drishti.genomics` |
 | For | traders, risk analysts, risk managers, middle office, model validation | investment and research analysts, economists, portfolio and fund analysts | research scientists, bioinformaticians (a demonstration) |
 | Question it answers | "What is my risk, why did it move, am I within limits?" | "What are these companies, funds and economies doing, and what moves them?" | "What is in this cohort's data?" |
-| Modules | `banking` (wave 2: one `.dmod`; later split into banking-core, var, exposure, frtb, simm) | `capital-markets`, `economy` | `genomics` (sample) |
+| Modules | `banking` (wave 2: one `.dmod`; later split into banking-core, var, exposure, frtb, simm), `market-data` | `capital-markets`, `economy`, `market-data` (no VaR or any risk number) | `genomics` (sample) |
 | Lenses | **Risk** (default), Trading, Market | **Markets** (default), World | Research |
 | Theme | navy, dark by default, terminal density | slate/teal, light by default, comfortable density | green, light |
 | Data | trades, positions, scenario PVs, market data, limits, agreements (bank feeds, `.ready` files) | public data packs: US equities, funds, central banks, national statistics, OECD, World Bank, news, GDELT | a VCF connector (kernel extension) and sample cohorts |
@@ -39,7 +39,7 @@ Admin, Help, AI, Drishti Elements, the cluster.
 | Regulatory capital | FRTB (SA: SBM, DRC, RRAO), DRCI, CAPI, regulatory reporting |
 | Counterparty | EXP, XPATH, XRUN, XOFC, SACCR, SIMM, CCR, CVA, CSA, AGR, NSET, NSMTM, CPMTM, COLL, MC, CMP, LIM |
 | Trading | TRD, CTRD, ITRD, LTRD, PTRD, TRDS, LEGS, SWAP, FUT, DEP, CSH, FLOWS, PAY, PAYM, EVT, EVTL, MAT, DLV, BAS, INV, PROD, IDX, DES |
-| Market data | MKT, CRV, IRV, SURF, FX, FXF, FXV, EQ, EQV, EQB, EQX, CMD, CMDC, CMDV, INF, INFC, BND, CDS, REPO, DIV, CORR, CORRC, CPV, FIX, OHLC |
+| Market data (the shared `market-data` module, also in Finance) | MKT, CRV, IRV, SURF, FX, FXF, FXV, EQ, EQV, EQB, EQX, CMD, CMDC, CMDV, INF, INFC, BND, CDS, REPO, DIV, CORR, CORRC, CPV, FIX, OHLC |
 | Playgrounds | PLAY VAR, PLAY FRTB, PLAY SIMM, exposure playground (k) |
 
 **Screens:** Home "Risk today" (bank VaR and ES, limit board, biggest movers, breaches, data health); VaR explorer; Why it moved
@@ -130,14 +130,14 @@ http://<host>:17481. The Deployment and QA guide gets a step-by-step section for
 
 | Wave | Item |
 |---|---|
-| 2 | `banking` as a `.dmod` (in progress); **`capital-markets` and `economy` packaged as modules** (added for these distributions) |
+| 2 | `banking` as a `.dmod` (in progress); **`market-data` split out of banking as its own module**; **`capital-markets` and `economy` packaged as modules** (added for these distributions) |
 | 3 | the distribution file reader (kernel and console), `drishti.risk.yaml`, `drishti.finance.yaml`, `drishti.genomics.yaml`, `drishti.all.yaml` (the default); `--distribution` on every bin/ script and stack file consoles; Home, menus, Help and AI filtered by distribution; themes; Admin → White label (option A); the old product keys read once |
 | 4 | proofs: each distribution boots from its file alone; the owner's stack runs Risk on 17480 and Finance on 17481 over one cluster; genomics boots with no finance |
 
-## 9. Open questions for the product owner
+## 9. Decisions (product owner, 2026-11-10)
 
-1. Drishti Finance with portfolio risk: should Finance users see VaR on a fund or an equity portfolio (the VaR engine placed for
-   them), or does every risk number stay in Drishti Risk?
-2. Market data screens (curves, FX, quotes) appear in both: keep them in Risk only, with Finance using QUOTE and the series screens?
-3. The owner's demo: two consoles over one cluster (recommended), or two separate stacks?
-4. Drishti All as the default when no distribution is given (recommended), or must every install name one?
+1. **Drishti Finance shows no VaR** or any other risk number; every risk number stays in Drishti Risk.
+2. **Market data screens are in both** Drishti Risk and Drishti Finance (curves, FX, quotes, surfaces): they move out of `banking` into
+   a shared **`market-data` module** that both distributions list.
+3. **The owner's demo: two consoles over one cluster** (Risk on 17480, Finance on 17481), from one stack file.
+4. **Drishti All is the default** when no distribution is named.
