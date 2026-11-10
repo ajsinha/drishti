@@ -23,7 +23,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Response
 
 from core.backend import BackendError
-from core.csrf import BodyError, limited_body
+from core.csrf import BodyError, json_body, limited_body
 from routes.common import ident, render
 
 router = APIRouter(include_in_schema=False)
@@ -107,11 +107,7 @@ async def act(request: Request, action: str):
     me = _admin(request)
     if me is None:
         return JSONResponse({"code": "DRS-5002", "detail": "administrators only"}, status_code=403)
-    try:
-        body = await request.json()
-    except ValueError:
-        return JSONResponse({"code": "DRS-5001", "detail": "a JSON body"}, status_code=400)
-    body = body if isinstance(body, dict) else {}
+    body = await json_body(request)                                  # 400/415 problems for a body that is not a JSON object
     pid = quote(str(body.get("id") or ""), safe="")
     b = request.app.state.backend
     try:
