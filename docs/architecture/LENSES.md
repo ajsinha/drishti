@@ -1350,9 +1350,9 @@ The mock-ups follow [the mock-up rules](#mock-ups); the lens menus mock-up (LX1)
 ![The World landing mock-ups: A World desk, B Explorer, C World map](../lenses/mockups/world/world-landing.png)
 
 [Open the mock-up](../lenses/mockups/world/world-landing.html). **Chosen:** all three, A the default. **Code:**
-[`world_landing.html`](../../drishti-console/plugins/economy/templates/home/world_landing.html),
-[`drishti_world-landing.js`](../../drishti-console/plugins/economy/static/js/drishti_world-landing.js),
-[`drishti_world-landing.css`](../../drishti-console/plugins/economy/static/css/drishti_world-landing.css),
+[`world_landing.html`](../../modules/economy/console/templates/world_landing.html),
+[`drishti_world-landing.js`](../../modules/economy/console/static/js/drishti_world-landing.js),
+[`drishti_world-landing.css`](../../modules/economy/console/static/css/drishti_world-landing.css),
 [`world.yaml`](../../config/lenses/economy/world.yaml). Figures illustrative. The mock-up's warning (*IMF figures and Yahoo prices are for
 internal demonstrations only*) is a decision, not a panel: shown inside the bank; an external showing needs a decision and WL12.
 

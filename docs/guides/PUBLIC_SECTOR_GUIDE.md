@@ -40,7 +40,7 @@ feed) is the [External data guide](EXTERNAL_DATA.md); every column of every kind
 
 | Part | What it is |
 |---|---|
-| Module | `economy`: content only (packs, functions, lenses; no Java of its own), declared in the core server's manifest (`drishti-server/src/main/resources/META-INF/drishti/module.yaml`) beside world-economy and news-and-markets, and switched by `config/modules/economy.yaml` ([ACCESS_MODEL.md](../architecture/ACCESS_MODEL.md)). One module (the owner, 2026-11-07): the public sector is not licensed or switched apart from the economy |
+| Module | `economy`: content only (packs, functions, lenses; no Java of its own), declared by its own manifest (`modules/economy/module.yaml`, the one source the access registry reads), and switched by `config/modules/economy.yaml` ([ACCESS_MODEL.md](../architecture/ACCESS_MODEL.md)). One module (the owner, 2026-11-07): the public sector is not licensed or switched apart from the economy |
 | Lens | **Public sector** (`publicsector`, in `META-INF/drishti/lenses.yaml`): the ten functions below; offered while the economy module is on |
 | World lens | carries the free news too: `PRESS`, `PREL` and `GDELT` |
 | Packs | `world-development`, `central-banks`, `national-statistics`, `oecd`, `official-news`, `gdelt-events`, each with `domain: economy` |

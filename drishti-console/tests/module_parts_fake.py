@@ -84,9 +84,10 @@ class Registry:
                         "by": "admin-two", "at": "2026-11-10T10:42:00Z", "deployment": "dpl-7"}
             return await before(method, path, ident, **kw)
 
-        monkeypatch.setattr(backend, "public", public, raising=False)
-        monkeypatch.setattr(backend, "_send", send)
+        put = (lambda o, n, v: monkeypatch.setattr(o, n, v, raising=False)) if monkeypatch is not None else setattr   # None: a stand-in of its own
+        put(backend, "public", public)
+        put(backend, "_send", send)
 
         async def sutras(ident=None):
             return [{"name": "greetings-board", "kind": "greeter-greeting", "latest": 2}]
-        monkeypatch.setattr(backend, "sutras", sutras, raising=False)
+        put(backend, "sutras", sutras)
