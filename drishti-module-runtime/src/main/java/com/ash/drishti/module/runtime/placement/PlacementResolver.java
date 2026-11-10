@@ -27,9 +27,9 @@ import java.util.stream.Collectors;
 
 /**
  * Resolves a placement against the modules and the nodes (KERNEL_AND_MODULES.md section 4.11): for every module part, the nodes it is
- * placed on, those up, and for a one-runner part ({@code feed}, {@code singleton}) its owner. The owner is <b>the first placed node that is
- * up</b>, in the placement's order (named nodes as listed, then the role's nodes by name), so every node that sees the same placement and
- * the same members agrees on it without a vote, and failover only ever moves to the next placed node: never to an unplaced one.
+ * placed on, those up, and for a one-runner part ({@code feed}, {@code singleton}) its owner, so every node that sees the same placement and
+ * the same members agrees on it without a vote, and failover only ever moves to the next placed node: never to an unplaced one. The
+ * owner comes from the one {@link SingletonElection} (today {@link FirstLiveElection}: the first live placed node by name).
  *
  * <p>A module still built into the server ({@link ModuleParts#inProcess()}) counts as placed on every node, unguarded, until it becomes a
  * module. Pure functions: no state, no I/O.
@@ -76,7 +76,7 @@ public final class PlacementResolver {
         }
     }
 
-    /** The nodes a target names, in election order: named nodes as listed (known ones), then the role's nodes by name. */
+    /** The nodes a target names: named nodes as listed (known ones), then the role's nodes by name. */
     public static List<String> placed(Placement.Target t, List<NodeView> nodes) {
         Set<String> out = new LinkedHashSet<>();
         Set<String> known = nodes.stream().map(NodeView::id).collect(Collectors.toSet());
@@ -86,8 +86,13 @@ public final class PlacementResolver {
         return List.copyOf(out);
     }
 
-    /** Resolves every known module's parts. */
+    /** Resolves every known module's parts, electing with {@link FirstLiveElection} on the nodes' up flags. */
     public static Matrix resolve(Placement placement, Collection<ModuleParts> modules, List<NodeView> nodes) {
+        return resolve(placement, modules, nodes, new FirstLiveElection(() -> nodes.stream().filter(NodeView::up).map(NodeView::id).toList()));
+    }
+
+    /** Resolves every known module's parts; one-runner parts' owners from {@code election} (told each part's placed nodes first). */
+    public static Matrix resolve(Placement placement, Collection<ModuleParts> modules, List<NodeView> nodes, SingletonElection election) {
         List<PartView> rows = new ArrayList<>();
         List<String> problems = new ArrayList<>();
         Map<String, NodeView> byId = nodes.stream().collect(Collectors.toMap(NodeView::id, n -> n, (a, b) -> a, java.util.LinkedHashMap::new));
@@ -104,7 +109,12 @@ public final class PlacementResolver {
                 Optional<Placement.Target> t = placement.target(m.module(), part.name());
                 List<String> placed = t.map(x -> placed(x, nodes)).orElse(List.of());
                 List<String> up = placed.stream().filter(id -> byId.get(id).up()).toList();
-                String owner = part.cls().oneRunner() && !up.isEmpty() ? up.get(0) : null;
+                String owner = null;
+                if (part.cls().oneRunner()) {
+                    String key = SingletonElection.key(m.module(), part.name());
+                    election.candidates(key, placed);
+                    owner = election.owner(key).filter(up::contains).orElse(null);
+                }
                 any |= !placed.isEmpty();
                 String status = placed.isEmpty() ? "not-placed" : up.isEmpty() ? "unavailable" : "placed";
                 List<Cell> cells = new ArrayList<>();

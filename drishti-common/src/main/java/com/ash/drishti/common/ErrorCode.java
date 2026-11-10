@@ -72,6 +72,12 @@ public enum ErrorCode {
     FUNCTION_NOT_ALLOWED("DRS-1027", 403),
     /** A data binding refused (Admin → Data bindings, config/bindings.yaml): a computed kind, a connector no file defines, a credential, demo and real mixed. */
     BINDING_REFUSED("DRS-1029", 422),
+    /** A module placement refused (Admin → Cluster, config/placement.yaml): a heavy part over its max-nodes or on every node without allow-all, an unknown part, an in-process module, a file that does not read. */
+    PLACEMENT_REFUSED("DRS-1030", 422),
+    /** A placement plan applied after the cluster changed (a member, its labels, a module or the placement): plan again. */
+    PLACEMENT_STALE("DRS-1031", 409),
+    /** A module part with no placed node up (or not placed at all): unavailable, never run on an unplaced node. */
+    MODULE_PART_UNAVAILABLE("DRS-1032", 503),
     SUTRA_PARSE("DRS-2001", 422),
     SUTRA_INVALID("DRS-2002", 422),
     SUTRA_NOT_FOUND("DRS-2003", 404),

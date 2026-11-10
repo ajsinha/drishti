@@ -69,11 +69,21 @@ class PlacementResolverTest {
     void aSingletonHasOneOwnerAndFailsOverOnlyInsideItsPlacement() {
         Placement p = Placement.read(YAML);
         PlacementResolver.PartView f = PlacementResolver.resolve(p, List.of(SAMPLE), nodes(true, true, true)).part("sample", "feeds").orElseThrow();
-        assertThat(f.owner()).isEqualTo("b");                                   // the listed order
-        assertThat(f.cells()).extracting(PlacementResolver.Cell::state).containsExactly(State.STANDBY, State.ACTIVE, State.NOT_PLACED);
-        // b goes down: a (placed) takes over, never c
-        assertThat(PlacementResolver.resolve(p, List.of(SAMPLE), nodes(true, false, true)).part("sample", "feeds").orElseThrow().owner())
-                .isEqualTo("a");
+        assertThat(f.owner()).isEqualTo("a");                                   // the first live candidate by name
+        assertThat(f.cells()).extracting(PlacementResolver.Cell::state).containsExactly(State.ACTIVE, State.STANDBY, State.NOT_PLACED);
+        // a goes down: b (placed) takes over, never c
+        assertThat(PlacementResolver.resolve(p, List.of(SAMPLE), nodes(false, true, true)).part("sample", "feeds").orElseThrow().owner())
+                .isEqualTo("b");
+        // one election object: told of the change when the owner moves
+        java.util.Set<String> live = new java.util.HashSet<>(List.of("a", "b", "c"));
+        FirstLiveElection e = new FirstLiveElection(() -> live);
+        List<String> changed = new java.util.ArrayList<>();
+        e.onChange(changed::add);
+        e.candidates("sample.feeds", List.of("b", "a"));
+        assertThat(e.owner("sample.feeds")).contains("a");
+        live.remove("a");
+        assertThat(e.owner("sample.feeds")).contains("b");
+        assertThat(changed).containsExactly("sample.feeds");
         // a and b down: unavailable, not moved to c
         PlacementResolver.Matrix gone = PlacementResolver.resolve(p, List.of(SAMPLE), nodes(false, false, true));
         assertThat(gone.part("sample", "feeds").orElseThrow().owner()).isNull();
