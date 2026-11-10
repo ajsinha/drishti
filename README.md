@@ -55,6 +55,12 @@ shipped as packages (their signatures and the licence check in 2.9.11.j), is a d
 | **capital markets** | US equities (SEC EDGAR filings and facts, indices), funds and ETFs, and the market data's functions |
 | **economy** | economies, forecasts, governments and news; the public sector: World Bank indicators, central banks, Statistics Canada, the OECD, official press releases, GDELT world events |
 
+Banking's Java builds on its own under `modules/banking/` (the kernel internals it still reaches are listed in
+`modules/banking/kernel-internals.txt`, a list that only shrinks). A module of your own starts from the **Module SDK**: the archetype
+`drishti-module-archetype`, then `mvn verify` packs `target/dmod/<id>-<version>.dmod` and runs the conformance checks C1–C15
+([DEVELOPER_GUIDE.md section 1.6](docs/guides/DEVELOPER_GUIDE.md#16-the-module-sdk)). Beside the full server jar (the default) the build
+makes the **thin jar**, `drishti-kernel-app/target/drishti-kernel-<version>-exec.jar`: the kernel alone, with no modules, as Health says.
+
 - **A module** is on when it is installed, licensed and enabled (`config/modules/<module>.yaml`). A module that is off loads no engine,
   job, pack or API, and its screens, menus, commands, Help pages and Build items are gone for everyone
   ([ADMIN_GUIDE.md section 22](docs/guides/ADMIN_GUIDE.md#22-modules-on-or-off)).
@@ -298,7 +304,7 @@ About **759k lines of product code** and **278k lines of tests** (37% of the pro
 
 | What | Count |
 |---|---|
-| Maven modules | 52 (19 of them connector plugins) |
+| Maven modules | 58 (19 of them connector plugins) |
 | Domain modules | 4: core, banking, economy, capitalmarkets |
 | Lenses | 10: risk, trading, market, cro, mr-cube, ccr-cube, world, publicsector, cio, oversight |
 | Functions a module declares | 105 (46 banking, 32 capitalmarkets, 27 economy); every other command word is the core's |

@@ -78,6 +78,9 @@ All Java code lives under the package `com.ash.drishti`. The parent POM (`pom.xm
 | `drishti-lakeload` | `lakeload` | The parallel lake loader: JSON Lines from a folder or S3 into Delta or Iceberg, readers, parsers and writers on every core, memory bounded by `memory.budget-mb` (sorted runs spilled to disk), one commit per business date ([PARALLEL_LOADER.md](../architecture/DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-drishti-lakeload)). | `LakeLoad`, `Loader`, `RowParser`, `Runs`, `DeltaTarget`, `IcebergTarget` |
 | `drishti-testkit` | `testkit` | Contract tests every source plugin of a kind must pass. | `DatedSourceContract`, `MessageSourceContract`, `BrokerOutage` |
 | `drishti-module-runtime` | `module.runtime` | The module runtime ([§1.5](#15-the-module-runtime)): the `.dmod` package and its hash list, the manifest, verification V1–V8, discovery, the dependency resolver, a class loader and a child Spring context per module, the live route table, the registry of contributions and the unload sequence with its leak check. Spring and Jackson only; one implementation for the kernel and, from i4, the console. | `ModuleRuntime`, `DmodManifest`, `Dmod`, `ModuleVerifier`, `DependencyResolver`, `ModuleClassLoader`, `RouteTable`, `Contributions`, `LeakCheck` |
+| `drishti-sdk/drishti-module-maven-plugin`, `-archetype`, `-parent` | `sdk` | The Module SDK ([§1.6](#16-the-module-sdk)): the archetype of a module project, the parent it inherits, and the plugin that validates, packs the `.dmod` and runs the conformance checks C1–C15. | `ModuleAssembler`, `ModuleConformance`, `ValidateMojo`, `AssembleMojo`, `ConformanceMojo` |
+| `modules/banking/banking-compute`, `banking-service` | `banking` | The banking module's sources, built on their own (`./mvnw -f modules/banking/pom.xml`; artifacts `drishti-compute-banking`, `drishti-banking`): the maths, then the services, storage, Spring wiring and API. The kernel internals it still reaches are listed in `modules/banking/kernel-internals.txt` (`BankingReachTest`: the list only shrinks). | `BankingModule`, `var.*`, `exposure.*`, `compute.var.*` |
+| `drishti-app`, `drishti-kernel-app` | (none) | The runnable jars, no code: `drishti-app` the full jar (the kernel with banking, the default, `drishti-server/target/drishti-server-<v>-exec.jar`); `drishti-kernel-app` the thin jar (the kernel alone, `drishti-kernel-app/target/drishti-kernel-<v>-exec.jar`, Health: *no modules: the kernel runs alone*). | |
 | `drishti-server` | `server` | The Spring Boot application: REST and SSE controllers, security, alerts, Sutra governance, and one sub-package per feature area (`admin`, `ai`, `alerts`, `bi`, `calc`, `cli`, `collab`, `connectors`, `deploy`, `design`, `dist`, `embed`, `explain`, `governance`, `layout`, `loads`, `notify`, `pivot`, `registry`, `reports`). `bi` is the BI engine (section 4.4). | `DrishtiApplication`, `api.*Controller`, `security.Entitlements`, `security.TokenFilter`, `alerts.AlertEngine`, `governance.SutraGovernance`, `bi.mq.MqService`, `bi.engine.QueryService` |
 | `drishti-it` | `it` | Repository-wide rules, as tests only. | `ArchitectureRulesTest`, `LicenseHeaderTest`, `SourceFileSizeTest`, `NoBlockingUnderSynchronizedTest` |
 | `drishti-benchmarks` | `benchmarks` | JMH benchmarks of the hot paths (fingerprint, Rachana-EL, formats, cold inference). | `HotPathBenchmark` |
@@ -203,6 +206,56 @@ rt.unload("genomics", ModuleRuntime.Leave.REMOVE, hot);  // the design's steps 1
 A refused module is absent: no class loaded, no route, only its Health row with the check (`V1`–`V8`, `START`) and the words. The tests
 build a small module from Java source at test time (`TestModule`), load, route and unload it (leak-free, five times over) and cover every
 refusal.
+
+### 1.6 The Module SDK
+
+A module is its own Maven project, built apart from the kernel against the SDK (the design: [KERNEL_AND_MODULES.md section 8](../architecture/KERNEL_AND_MODULES.md#8-the-module-sdk-and-the-developer-path)).
+The SDK is three artifacts of this repository, `com.ash.drishti:*` at the product's version:
+
+| Artifact | What it is |
+|---|---|
+| `drishti-module-archetype` | makes a module project that builds green on its first `mvn verify`: `src/dmod/module.yaml`, a function (`Greeting`, a bean of the module's Spring configuration) with its route and page (`console/plugin.yaml` format 2, `console/pages/hello.html`), a style on the theme tokens, a kind with its data contract and the data needs, `docs/` (README with front matter, Help, a guide, a tutorial) and a JUnit test |
+| `drishti-module-parent` | the parent the project inherits: Java 21; the kernel API and Spring as `provided` (the kernel supplies them; never inside a `.dmod`); JUnit and AssertJ; the plugin's executions |
+| `drishti-module-maven-plugin` | `drishti:validate` (validate phase: the manifest reads, its id and version are the pom's), `drishti:assemble` (package: `src/dmod/` plus the project's jar under `java/`, packed by the module runtime's packer into `target/dmod/<id>-<version>.dmod` with its hash list and `.sha256`), `drishti:conformance` (verify: the checks C1–C15) |
+
+**Quickstart: archetype → build → load.**
+
+```bash
+./mvnw -q install -pl .,drishti-sdk/drishti-module-maven-plugin,drishti-sdk/drishti-module-archetype,drishti-sdk/drishti-module-parent -am -DskipTests
+mvn -B archetype:generate -DarchetypeGroupId=com.ash.drishti -DarchetypeArtifactId=drishti-module-archetype \
+    -DarchetypeVersion=2.9.11.g -DgroupId=com.example.greet -DartifactId=greet -Dpackage=com.example.greet
+cd greet && mvn verify          # the test, target/dmod/greet-0.1.0.dmod, then "C1 No kernel internals: passed" ... C15
+mkdir -p <modules folder>/greet/0.1.0 && unzip -q target/dmod/greet-0.1.0.dmod -d <modules folder>/greet/0.1.0 \
+    && cp target/dmod/greet-0.1.0.dmod <modules folder>/greet/       # what the kernel's ModuleRuntime loads (§1.5)
+```
+
+(To keep your `~/.m2` untouched while trying it, add `-Dmaven.repo.local=<folder> -Dmaven.repo.local.tail=$HOME/.m2/repository` to each
+Maven command: installs go to the folder, reads fall back to `~/.m2`.) The kernel loading `.dmod` files from its modules folder at start
+comes in wave 2; until then `ModuleRuntime` loads them in tests and tools.
+
+**The conformance checks** ([KERNEL_AND_MODULES.md section 8.6](../architecture/KERNEL_AND_MODULES.md#86-the-conformance-suite)), each
+failure a sentence naming the file and the fix:
+
+| Check | How the plugin checks it |
+|---|---|
+| C1 No kernel internals | every class file's constant pool: a type of `com.ash.drishti` outside `kernel.api` and the module's own packages fails |
+| C2 No bespoke UI | pages draw no `<table>`, `<canvas>` or `<svg>`; scripts import only `@drishti/elements-*` and their own files |
+| C3 Theme tokens only | CSS: no hex, `rgb()`/`hsl()` or named colours outside `var(--…)`, no `!important` |
+| C4 `drishti_` asset prefix | every file under `console/static/` and `elements/` is `drishti_<name>`; no vendored library |
+| C5 CSP-clean | no inline `<script>`, `on*=` handler, `javascript:` URL, `eval`, `new Function` or remote origin |
+| C6 Routes namespaced | `plugin.yaml` format 2, unique route ids, paths inside the module (served under `/m/<id>/`), each page present; no code in the console part |
+| C7 Help, guide, tutorial present | README with front matter, the Help file, at least one guide and one tutorial, every relative link and image of `docs/` present |
+| C8 Data contracts present | each provided kind has `packs/<pack>/contracts/<kind>.yaml` with `contract-format: 1`, a `binding-hint:` and no `storage:`; each need names a contract range |
+| C9 No secrets, no connectors | private keys, cloud keys, `jdbc:` anywhere; connector and secret keys (`connector:`, `password:`, `token:` …) in YAML |
+| C10 Licence headers | the publisher's copyright at the top of every Java source, script and style |
+| C11 Functions answer | loaded into `ModuleRuntime`, every function word has a route that answers 200 |
+| C12 Two people at once | no static field that is not final, and no static collection, in the module's classes (state every person would share) |
+| C13 Off means gone | switched off, every route answers 404 and nothing stays loaded |
+| C14 Absent everywhere | removed, every route answers 410, no contribution is left, Health says REMOVED |
+| C15 Class loader unloads | 50 load/unload cycles (`-Ddrishti.conformance.cycles`); the class loader is collected each time |
+
+`ModuleSdkTest` (in the plugin module) runs this path without Maven in the loop: it generates a module from the archetype's templates,
+compiles it, packs it, passes the fifteen checks, and loads, routes and unloads it; a broken copy fails the checks with their words.
 
 ## 2. Building and running from source
 
