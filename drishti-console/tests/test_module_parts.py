@@ -49,7 +49,16 @@ def _menu_links(page: str) -> list[str]:
 def test_install_remove_and_reinstall_take_every_surface_with_them(client, backend, monkeypatch, tmp_path):
     reg = Registry()
     c = _console(client, tmp_path, reg, backend, monkeypatch)
-    assert c.get("/m/greeter/hello/asha").status_code == 404                         # never installed: the ordinary 404
+
+    async def settings(ident=None):                                                    # a saved search (FORM) over the module's kind
+        return {"savedSearches": [{"name": "hellos", "path": "/form/greeter-pack/greeter-greeting?q=a"}]}
+    monkeypatch.setattr(backend, "settings", settings, raising=False)
+
+    async def form(pack, kind, ident=None):
+        from core.backend import BackendError
+        raise BackendError(404, "DRS-4040", "no form here")
+    monkeypatch.setattr(backend, "form", form, raising=False)
+    assert c.get("/m/greeter/hello/asha").status_code == 404                        # never installed: the ordinary 404
     assert "/m/greeter/hello/world" not in c.get("/t").text
 
     reg.state = "active"                                                               # installed
@@ -81,6 +90,7 @@ def test_install_remove_and_reinstall_take_every_surface_with_them(client, backe
     build = c.get("/build?type=sutras").text                                           # the saved Sutra: kept, marked, not openable
     assert 'data-needs-module="greeter"' in build and "greetings-board" in build and "/studio?sutra=greetings-board" not in build
     assert c.get("/api/modules/hosted").json()["gone"]["greeter"]["state"] == "removed"
+    assert 'data-needs-module="greeter"' in c.get("/forms").text                      # the saved search: kept, marked
 
     reg.state = "off"                                                                  # switched off: 404, not 410
     assert c.get("/m/greeter/hello/asha").status_code == 404

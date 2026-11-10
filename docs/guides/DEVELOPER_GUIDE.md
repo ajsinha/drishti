@@ -318,7 +318,7 @@ ships (`modules/<id>/`, `module_manifests_dir`) while the server lists them load
 **When the module goes** (switched off or removed) every surface goes with it: its pages answer the Module removed A page (410 removed,
 404 off), its statics 410/404, its menu entries, Home cards, words (*… is not available: needs module X*), Help section, AI tools and lens
 links disappear; an open page of it is frozen under the notice within 15 seconds; saved work that uses it (Sutras, BI reports and
-dashboards, baskets in Build; alert rules) stays, marked *needs module X* and not openable, and comes back on reinstall. Nothing of it
+dashboards, baskets in Build; saved searches in Forms; alert rules) stays, marked *needs module X* and not openable, and comes back on reinstall. Nothing of it
 is kept per person.
 
 ## 2. Building and running from source

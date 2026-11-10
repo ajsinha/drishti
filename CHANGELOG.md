@@ -25,7 +25,8 @@
   Home cards, Help (`docs/help.yaml`) and AI tool descriptions (Admin → AI, `GET /api/ai/module-tools`); statics at
   `/m/<id>/static/<version>/…`, cached a year. A part carrying a copy of Drishti Elements or a vendored library, code, an unprefixed static
   file or a template reaching past `kernel/` is refused. Switched off or removed, every surface goes (Module removed A, 410/404; an open
-  page frozen under the notice; words *needs module X*; lens links), saved Sutras, reports, dashboards and baskets in Build are kept and
+  page frozen under the notice; words *needs module X*; lens links), saved Sutras, reports, dashboards and baskets in Build and saved
+  searches in Forms are kept and
   marked *needs module X*, and a reinstall restores them. The SDK archetype declares a menu entry, a Home card and an AI tool. Setting
   `modules.parts_refresh_seconds` (5).
 - **The economy module's World page** moves into the module (`modules/economy/console/`, `economy:world_landing.html` in the World lens),

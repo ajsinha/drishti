@@ -56,7 +56,10 @@ async def forms_home(request: Request):
 
     rows = [r for r in await asyncio.gather(*(one(p) for p in current)) if r]
     saved = [s for s in (getattr(request.state, "settings", None) or {}).get("savedSearches") or [] if str(s.get("path", "")).startswith("/form/")]
-    return render(request, "terminal/form_index.html", packs=rows, saved=saved, screen="form")
+    from routes.module_admin_routes import needs as _needs        # a saved search over a kind of a module that went: kept, marked
+    needs = await _needs(request, [{"id": str(s.get("name")), "text": str(s.get("path"))} for s in saved]
+                         ) if saved and request.app.state.module_parts.snapshot.gone else {}
+    return render(request, "terminal/form_index.html", packs=rows, saved=saved, screen="form", needs=needs)
 
 
 @router.post("/form/save")
