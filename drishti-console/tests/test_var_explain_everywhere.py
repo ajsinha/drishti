@@ -32,7 +32,8 @@ SITES = [
     (JS / "drishti_var-reports.js", "the period-end tile", "E.link({ kind: \"var\", measure: \"var\", scope: String(st.node)"),
     (JS / "drishti_risk-landing.js", "Home's VaR tile", 'E.link({ kind: "var", measure: "var", scope: "BANK" }'),
     (CONSOLE / "web" / "static" / "js" / "drishti_bi-frame.js", "a BI visual of one VaR or ES", "E.link(req, { cls: 'bi-vis-explain' })"),
-    (CONSOLE / "web" / "templates" / "_macros" / "view.html", "a Sutra page's VaR and ES", "data-explain-link"),
+    (CONSOLE / "web" / "templates" / "_macros" / "view.html", "a Sutra page's VaR and ES", "figure_explain(vm, c)"),
+    (CONSOLE / "plugins" / "banking" / "console_hooks.py", "the rule naming the VaR and ES figures", 'plugins.figure_explainer({"kind": "var"'),
     (JS / "drishti_mr-lens.js", "the MR cube's figures", 'setAttribute("data-explain"'),
 ]
 

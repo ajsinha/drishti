@@ -470,6 +470,9 @@ def create_app(settings: Settings) -> FastAPI:
 
     templates.env.globals["known_local"] = to_local
     from core.admin_forms import admin_form
+    from core import plugins as _plugins
+    templates.env.globals["figure_explain"] = _plugins.figure_explain            # a Sutra figure's Explain › by the modules' rules
+    templates.env.globals["figure_explainers"] = _plugins.figure_explainers      # the rules, for the page's scripts (BI, the renderer)
     templates.env.globals["admin_form"] = admin_form          # the Admin screens' forms: drishti-inputs' Form from a server-built schema
     from jinja2 import pass_context
 

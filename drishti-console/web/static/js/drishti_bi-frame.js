@@ -42,18 +42,23 @@
     return out;
   };
 
-  /** The one Explain › (drishti-insight) of a visual whose one row is a VaR or ES of a scope (the var-result kind: CANONICAL or SCOPE,
-      BUSINESS_DATE, VAR or ES); null otherwise. */
-  B.varExplain = (res) => {
-    const E = window.Drishti && window.Drishti.Explain;
-    if (!E || !res || !Array.isArray(res.columns) || res.rowCount !== 1 || !res.rows || !res.rows.length) { return null; }
+  /** The one Explain › (drishti-insight) of a visual whose one row is a figure a module's rule names (the page's figure-explainers:
+      its measure columns, its scope and date columns; core/plugins.figure_explainer); null otherwise. */
+  B.figureExplain = (res) => {
+    const E = window.Drishti && window.Drishti.Explain, el = document.getElementById('drishti-figure-explainers');
+    if (!E || !el || !res || !Array.isArray(res.columns) || res.rowCount !== 1 || !res.rows || !res.rows.length) { return null; }
+    let rules = [];
+    try { rules = JSON.parse(el.textContent || '[]'); } catch (e) { rules = []; }
     const names = res.columns.map((c) => String(c.name || '').toUpperCase()), row = res.rows[0];
     const at = (n) => { const i = names.indexOf(n); return i < 0 ? undefined : (Array.isArray(row) ? row[i] : row[res.columns[i].name]); };
-    const scope = at('CANONICAL') || at('SCOPE'), measure = names.indexOf('VAR') >= 0 ? 'var' : names.indexOf('ES') >= 0 ? 'es' : null;
-    if (!scope || !measure) { return null; }
-    const req = { kind: 'var', measure: measure, scope: String(scope) };
-    if (at('BUSINESS_DATE')) { req.date = String(at('BUSINESS_DATE')).slice(0, 10); }
-    return E.link(req, { cls: 'bi-vis-explain' });
+    for (const r of rules) {
+      const col = Object.keys(r.columns || {}).find((c) => names.indexOf(c) >= 0), scope = (r.scope || []).map(at).find(Boolean);
+      if (!col || !scope) { continue; }
+      const req = { kind: r.kind, measure: r.columns[col], scope: String(scope) };
+      if (r.date && at(r.date)) { req.date = String(at(r.date)).slice(0, 10); }
+      return E.link(req, { cls: 'bi-vis-explain' });
+    }
+    return null;
   };
 
   B.frame = function (spec, o) {
@@ -106,7 +111,7 @@
               foot.appendChild(more);
             }
           }
-          const ex = B.varExplain(res);                                          // a VaR or ES of one scope: the one Explain › (VAR_GUIDE.md 3.11)
+          const ex = B.figureExplain(res);                                       // a module's figure of one scope: the one Explain ›
           if (ex) { foot.appendChild(document.createTextNode(' · ')); foot.appendChild(ex); }
           const none = B.noAccess(m);
           if (none.length) {                                                   // the reader's role has no row rule on a dataset: said, never "no rows for this selection"

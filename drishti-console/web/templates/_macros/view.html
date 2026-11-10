@@ -25,14 +25,13 @@
 {% if vm.title.with %}<span class="with">with</span> <span class="with-cp">{{ cell_text(vm.title.with) }}</span>{% endif %}
 {%- endmacro %}
 
-{# a VaR or ES the VaR engine computed for the page (VAR_ENGINE, VarFigures) carries the one Explain › of its scope (VAR_GUIDE.md 3.11) #}
+{# a figure a module's rule names (core/plugins.figure_explainer: the VaR engine's VaR and ES) carries the one Explain › of its scope #}
 {% macro strip(vm) -%}
-{% set VAR_WORDS = {'system-basket': 'PORT', 'position': 'POS', 'desk': 'DESK', 'book': 'BOOK', 'legal-entity': 'LE', 'trade': 'TRD'} %}
 <dl class="strip">
   {% for c in vm.strip %}<div class="strip-i"><dt>{{ c.label }}</dt>
     <dd class="mono{{ tone(c) }}{% if c.emphasis %} emph{% endif %}"{% if c.path %} data-path="{{ c.path }}"{% endif %} title="{{ cell_text(c) | striptags }}">{{ cell_text(c) }}</dd>
-    {%- set m = 'VAR' if (c.path or '').endswith('VAR_ENGINE.VAR') else 'ES' if (c.path or '').endswith('VAR_ENGINE.ES') else '' %}
-    {%- if m and VAR_WORDS.get(vm.ref.kind) %}<a data-explain-link data-explain="{{ {'kind': 'var', 'measure': m | lower, 'scope': VAR_WORDS[vm.ref.kind] ~ ':' ~ vm.ref.id} | tojson | forceescape }}" data-explain-tab="why">Explain ›</a>{% endif %}</div>{% endfor %}
+    {%- set ex = figure_explain(vm, c) if figure_explain is defined else none %}
+    {%- if ex %}<a data-explain-link data-explain="{{ ex | tojson | forceescape }}" data-explain-tab="why">Explain ›</a>{% endif %}</div>{% endfor %}
 </dl>
 {%- endmacro %}
 
