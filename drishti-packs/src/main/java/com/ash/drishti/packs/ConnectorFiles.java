@@ -754,14 +754,16 @@ public final class ConnectorFiles {
     }
 
     /** The Spring properties a set of definitions contributes ({@code drishti.sources.connectors.<name>.*}). */
-    public static Map<String, Object> properties(Map<String, Definition> defs) {
+    /** Each connector's kinds follow the site's data bindings ({@link com.ash.drishti.packs.bindings.Bindings#effectiveKinds}). */
+    public static Map<String, Object> properties(Map<String, Definition> defs, com.ash.drishti.packs.bindings.Bindings bindings) {
         Map<String, Object> p = new LinkedHashMap<>();
         defs.forEach((name, d) -> {
             String base = "drishti.sources.connectors." + name;
             p.put(base + ".plugin", d.plugin());
             p.put(base + ".enabled", d.enabled());
-            for (int i = 0; i < d.kinds().size(); i++) {
-                p.put(base + ".kinds[" + i + "]", d.kinds().get(i));
+            List<String> kinds = bindings.effectiveKinds(name, d.kinds());
+            for (int i = 0; i < kinds.size(); i++) {
+                p.put(base + ".kinds[" + i + "]", kinds.get(i));
             }
             d.settings().forEach((k, v) -> p.put(base + ".settings." + k, v));
         });

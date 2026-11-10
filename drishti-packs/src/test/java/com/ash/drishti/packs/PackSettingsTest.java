@@ -56,7 +56,7 @@ class PackSettingsTest {
         Map<String, Object> after = plain.properties(plain.load(dir.resolve("packs"), List.of("risk")));
         assertThat(after).doesNotContainKey("drishti.sources.connectors.lake.settings.root")      // the template yields completely: not merged
                 .doesNotContainKey("drishti.sources.connectors.lake.settings.domain");
-        Map<String, Object> fromFile = ConnectorFiles.properties(files.readAll(new java.util.HashMap<>()));
+        Map<String, Object> fromFile = ConnectorFiles.properties(files.readAll(new java.util.HashMap<>()), com.ash.drishti.packs.bindings.Bindings.NONE);
         assertThat(fromFile).containsEntry("drishti.sources.connectors.lake.settings.root", "/mnt/lake")
                 .containsEntry("drishti.sources.connectors.lake.settings.engine", "native")
                 .containsEntry("drishti.sources.connectors.lake.enabled", "false");

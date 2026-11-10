@@ -120,7 +120,21 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
                 }
             }
         }
-        java.util.Map<String, Object> fileProps = new java.util.LinkedHashMap<>(ConnectorFiles.properties(defs));
+        // the site's data bindings (config/bindings.yaml, KERNEL_AND_MODULES.md section 5.4): written once from today's kinds: lists when
+        // missing (the upgrade), then the one home of which connectors serve each kind; a connector's kinds follow them
+        com.ash.drishti.packs.bindings.Bindings bound = com.ash.drishti.packs.bindings.Bindings.NONE;
+        com.ash.drishti.packs.bindings.BindingsFile bfile = bindingsFile(env, connDir);
+        try {
+            java.util.Optional<com.ash.drishti.packs.bindings.Bindings> up = bfile.upgradeFrom(defs);
+            up.ifPresent(b -> System.getLogger(PackEnvironmentPostProcessor.class.getName()).log(System.Logger.Level.INFO,
+                    "data bindings: wrote {0} from the kinds: lists of the connector files ({1} kinds); those lists are read this release only",
+                    bfile.path(), b.byKind().size()));
+            bound = bfile.read();
+        } catch (RuntimeException e) {
+            System.getLogger(PackEnvironmentPostProcessor.class.getName()).log(System.Logger.Level.WARNING,  // Health says it again
+                    "data bindings: {0} is not usable, every kind resolves without it: {1}", bfile.path(), e.getMessage());
+        }
+        java.util.Map<String, Object> fileProps = new java.util.LinkedHashMap<>(ConnectorFiles.properties(defs, bound));
         int si = 0;
         for (String n : suppressed) {
             fileProps.put("drishti.sources.connectors-suppressed[" + si++ + "]", n);
@@ -136,6 +150,13 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
         }
         problems.forEach((n, m) -> fileProps.put("drishti.sources.connector-file-problems." + n, m));
         env.getPropertySources().addBefore(SOURCE, new MapPropertySource(FILES_SOURCE, fileProps));
+    }
+
+    /** The site's {@code bindings.yaml}: {@code drishti.bindings.file}, else beside the connectors' folder. */
+    public static com.ash.drishti.packs.bindings.BindingsFile bindingsFile(org.springframework.core.env.Environment env, String connectorsDir) {
+        String f = env.getProperty(com.ash.drishti.packs.bindings.BindingsFile.PROPERTY, "");
+        return f.isBlank() ? com.ash.drishti.packs.bindings.BindingsFile.besideConnectors(java.nio.file.Path.of(connectorsDir))
+                : new com.ash.drishti.packs.bindings.BindingsFile(java.nio.file.Path.of(f));
     }
 
     /** A pack's template as the server reads it: the readers of official results follow their publishing format (OfficialReaders). */

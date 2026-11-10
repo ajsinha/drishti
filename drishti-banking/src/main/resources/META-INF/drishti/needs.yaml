@@ -1,0 +1,59 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The banking module's data needs (docs/architecture/KERNEL_AND_MODULES.md section 5.3; the data/needs.yaml of a .dmod). The kernel binds each
+# kind to what the site configured (config/bindings.yaml, Admin -> Data bindings); this file never names a connector, a plugin, a location or
+# a credential. A required need that nothing serves switches off exactly the functions in its used-by (or its required.for), with the reason.
+#   use:       read | live | write
+#   required:  true | false | { for: [functions] } | { with: kind }
+#   any-of:    a group satisfied by one served member
+#   demo:      the demo lake's samples may serve it
+format: 1
+module: banking
+
+needs:
+  # ---- trades: one store across the booking systems
+  - { kind: trade,          contract: ">=1.0 <2", use: [read, live], required: true, demo: true, used-by: [TRD, CTRD, PTRD, LTRD, ITRD, POS, VRES, EXP] }
+
+  # ---- VaR inputs: a trade's scenario PVs or its P&L vector, per business date
+  - { kind: scenario-pv,    contract: ">=1.1 <2", use: [read, live], any-of: A, demo: true, used-by: [VRES, POS] }
+  - { kind: pnl-vector,     contract: ">=1.0 <2", use: [read], any-of: A, demo: true, used-by: [VRES, POS] }
+  - { kind: fx-scenario,    contract: ">=1.0 <2", use: [read], required: { with: scenario-pv }, demo: true, used-by: [VRES] }
+  - { kind: scenario-set,   contract: ">=1.0 <2", use: [read], required: true, demo: true, used-by: [VRES] }
+  - { kind: var-limit,      contract: ">=1.0 <2", use: [read], required: false, demo: true, used-by: [VLIM] }
+  - { kind: desk-pnl,       contract: ">=1.0 <2", use: [read], required: false, demo: true, used-by: [DPNL] }
+  - { kind: pnl-history,    contract: ">=1.0 <2", use: [read], required: false, demo: true, used-by: [PNLH] }
+
+  # ---- sensitivities
+  - { kind: position-sensitivity, contract: ">=1.0 <2", use: [read], required: false, demo: true, used-by: [SENS] }
+  - { kind: risk-factor,          contract: ">=1.0 <2", use: [read], required: false, demo: true, used-by: [RFAC] }
+
+  # ---- counterparty credit: netting, collateral, limits, and the market data exposure simulates
+  - { kind: agreement,          contract: ">=1.0 <2", use: [read], required: { for: [EXP, XPATH] }, demo: true, used-by: [AGR, EXP] }
+  - { kind: csa,                contract: ">=1.0 <2", use: [read], required: { for: [EXP, XPATH] }, demo: true, used-by: [CSA, EXP] }
+  - { kind: netting-set,        contract: ">=1.0 <2", use: [read], required: { for: [EXP, XPATH] }, demo: true, used-by: [NSET, EXP] }
+  - { kind: collateral-balance, contract: ">=1.0 <2", use: [read], required: false, demo: true, used-by: [COLL, EXP] }
+  - { kind: credit-limit,       contract: ">=1.0 <2", use: [read], required: false, demo: true, used-by: [LIM] }
+  - { kind: ir-curve,           contract: ">=1.0 <2", use: [read], required: { for: [EXP, XPATH] }, demo: true, used-by: [EXP] }
+  - { kind: fx-spot,            contract: ">=1.0 <2", use: [read], required: { for: [EXP, XPATH] }, demo: true, used-by: [EXP] }
+
+  # ---- what it produces: written where the site binds them (write: {lake, table}); unbound means not published
+  - { kind: var-official,           contract: ">=1.0 <2", use: [write], required: false, demo: true, used-by: [VOFF] }
+  - { kind: exposure-official-cpty, contract: ">=1.0 <2", use: [write], required: false, demo: true, used-by: [XOFC] }
+
+computed:                       # the module's KindProviders and engines: not needs, never bound
+  - { kind: position,        from: [trade, scenario-pv, pnl-vector] }
+  - { kind: system-basket,   from: [trade] }
+  - { kind: var-result,      from: [position, scenario-set, var-limit] }
+  - { kind: exposure-result, from: [trade, netting-set, csa, collateral-balance, ir-curve, fx-spot] }
