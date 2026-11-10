@@ -17,6 +17,8 @@
 
 ## Unreleased
 
+- VaR explorer: turning on **Include matured positions** no longer makes the scope tree disappear (the tree library refused the switch's own "of which matured" column); a screen's own tree measure with a label is accepted.
+
 - **Explain → Why it moved answers in about a second, not a minute** (the drill's failing Explain test, and "Why it moved looks broken"):
   opening the earlier date ran the load's maturity check, which read every trade (about 8,000) one document at a time because one union
   connector of `trade` (a source system with no table yet, such as Calypso in a lake without it) made the union's columns unreadable. A union
