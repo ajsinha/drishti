@@ -44,29 +44,44 @@
    */
   GAL.pageSource = function (d, values, ctx) {
     if (d.page) { return d.page(values, ctx); }
-    if (!d.build) { return null; }
-    const b = d.build(values, ctx), short = JS_LIB[b.library];
+    return d.build ? GAL.writePage(d.build(values, ctx)) : null;
+  };
+
+  /**
+   * A page written from a component's build: the rows first (the Data grid edits them), then its spec and options, then the component.
+   * @param {Object} b the build ({library, ctor, spec?, options?, jsOptions?})
+   * @param {{rows?: Object[], code?: Object<string, string>, before?: string}} [o] rows to use instead of the build's; options written as
+   *   code (a datasource, a function), by key; lines put before the component
+   * @returns {?{html: string, js: string, rows: ?Object[]}}
+   */
+  GAL.writePage = function (b, o) {
+    o = o || {};
+    const short = JS_LIB[b.tag] || JS_LIB[b.library];
     if (!short || !b.ctor) { return null; }
-    const rows = rowsIn(b), drop = new Set(rows ? [rows] : []);
+    const found = rowsIn(b), rows = o.rows || found, drop = new Set(found ? [found] : []);
     const spec = b.spec ? plain(b.spec, drop) : null, options = plain(Object.assign({}, b.options || {}, b.jsOptions || {}), drop);
-    if (spec && spec.data && rows) { delete spec.data.rows; }
-    if (options.data && rows) { delete options.data.rows; }
-    const put = (name, o) => 'const ' + name + ' = ' + JSON.stringify(o, null, 2) + ';\n';
-    const args = spec ? 'spec, options' : 'options';
-    const js = [DATA_START, 'const rows = ' + JSON.stringify(rows || [], null, 2) + ';', DATA_END, '',
-      spec ? put('spec', Object.assign(spec, { data: Object.assign({}, spec.data, { rows: '__ROWS__' }) })) + put('options', options) : put('options', Object.assign(options, { data: Object.assign({}, options.data, { rows: '__ROWS__' }) })),
-      'new Drishti.elements.' + short + '.' + b.ctor + "(document.getElementById('visual'), " + args + ');'].join('\n').replace(/"__ROWS__"/g, 'rows');
-    return { html: '<div id="visual" style="height: 360px"></div>', js: js, rows: rows };
+    const code = o.code || {};
+    Object.keys(code).forEach((k) => { options[k] = '__CODE_' + k + '__'; });
+    if (rows && !o.rows) {                                         // the rows go back where the build had them
+      if (spec && spec.data && Array.isArray(b.spec.data.rows)) { spec.data.rows = '__ROWS__'; } else if (options.data && b.options.data && Array.isArray(b.options.data.rows)) { options.data.rows = '__ROWS__'; } else { options.rows = '__ROWS__'; }
+    }
+    const put = (name, x) => 'const ' + name + ' = ' + JSON.stringify(x, null, 2) + ';\n';
+    let js = [DATA_START, 'const rows = ' + JSON.stringify(rows || [], null, 2) + ';', DATA_END, '', o.before ? o.before + '\n' : '',
+      (spec ? put('spec', spec) : '') + put('options', options),
+      'new Drishti.elements.' + short + '.' + b.ctor + "(document.getElementById('visual'), " + (spec ? 'spec, options' : 'options') + ');'].join('\n').replace(/"__ROWS__"/g, 'rows');
+    Object.keys(code).forEach((k) => { js = js.split('"__CODE_' + k + '__"').join(code[k]); });
+    return { html: '<div id="visual" style="height: 360px"></div>', js: js.replace(/\n{3,}/g, '\n\n'), rows: rows, uses: 'drishti-' + short };
   };
 
   /** The libraries a page needs, deepest first (their bundles inlined in the sandbox: it can load nothing). */
-  function closure(manifest, lib) {
+  function closure(manifest, libs) {
     const out = [];
-    (function add(n) {
+    function add(n) {
       if (out.indexOf(n) >= 0 || !manifest.libraries[n]) { return; }
       (manifest.libraries[n].requires || []).forEach(add);
       out.push(n);
-    }(lib));
+    }
+    libs.forEach(add);
     return ['drishti-core'].concat(out.filter((n) => n !== 'drishti-core'));
   }
 
@@ -76,10 +91,10 @@
     return FETCHED.get(u);
   }
 
-  /** The page written in the sandbox: tokens and bundles inlined, the error reporter, then the person's code; offset is the code's first line. */
-  async function compose(g, lib, html, js) {
+  /** The page written in the sandbox: tokens and bundles inlined, the error reporter, then the person's code; the code is named drishti-playground-code.js, so an error thrown in a library still finds its line in it. */
+  async function compose(g, libs, html, js) {
     const M = g.E.core.manifest(), base = new URL('../elements/', location.href).href, stat = new URL('../', location.href).href;
-    const names = closure(M, lib), css = [text(stat + 'css/drishti_tokens.css')], scripts = [];
+    const names = closure(M, libs), css = [text(stat + 'css/drishti_tokens.css')], scripts = [];
     names.forEach((n) => {
       const L = M.libraries[n];
       (L.css || []).forEach((c) => css.push(text(new URL(c, stat).href)));
@@ -88,10 +103,9 @@
     });
     const [sheets, codes] = await Promise.all([Promise.all(css), Promise.all(scripts)]);
     const headTop = '<!doctype html><html data-theme="' + (g.doc.documentElement.getAttribute('data-theme') || 'terminal') + '"><head><meta charset="utf-8"><style>' + sheets.join('\n') + '</style></head><body>' + html +
-      '\n<script>' + codes.join('\n;\n').replace(/<\/script/gi, '<\\/script') + '\n<\/script>\n<script>var failed=false;function rep(m,l){failed=true;parent.postMessage({type:"drishti-playground-error",message:String(m),line:l},"*");}window.addEventListener("error",function(e){rep(e.message,e.lineno);});window.addEventListener("unhandledrejection",function(e){rep(e.reason&&e.reason.message||e.reason,0);});<\/script>\n<script>';
-    const offset = headTop.split('\n').length - 1;
-    const html2 = headTop + js + '\n<\/script>\n<script>setTimeout(function(){if(!failed){parent.postMessage({type:"drishti-playground-ok"},"*");}},60);<\/script></body></html>';
-    return { html: html2, offset: offset };
+      '\n<script>' + codes.join('\n;\n').replace(/<\/script/gi, '<\\/script') + '\n<\/script>\n<script>var failed=false;function at(x){var m=/drishti-playground-code\.js:(\d+)/.exec(x&&x.stack||"");return m?+m[1]:0;}function rep(m,own,l){failed=true;parent.postMessage({type:"drishti-playground-error",message:String(m),own:own,line:l},"*");}window.addEventListener("error",function(e){var own=/drishti-playground-code\.js$/.test(e.filename||"");rep(e.message,own,own?e.lineno:at(e.error));});window.addEventListener("unhandledrejection",function(e){rep(e.reason&&e.reason.message||e.reason,false,at(e.reason));});<\/script>\n<script>';
+    const html2 = headTop + js + '\n//# sourceURL=drishti-playground-code.js\n<\/script>\n<script>setTimeout(function(){if(!failed){parent.postMessage({type:"drishti-playground-ok"},"*");}},60);<\/script></body></html>';
+    return { html: html2 };
   }
 
   /**
@@ -105,7 +119,7 @@
     const doc = g.doc, h = g.h, values = g.values[d.id] || g.initial(d);
     const src = GAL.pageSource(d, values, g.makeContext());
     if (!src) { panel.appendChild(h(doc, 'p', { cls: 'gx-note', text: 'This component has no editable page yet: see Examples.' })); return; }
-    const lib = d.library;
+    const libs = [d.library].concat(src.uses ? [src.uses] : []);
     const original = { html: src.html, js: src.js };
     let rows = src.rows ? src.rows.map((r) => Object.assign({}, r)) : null;
     const live = h(doc, 'div', { cls: 'gx-page-visual gx-stage', attrs: { 'data-page-live': d.id } });
@@ -139,7 +153,7 @@
     const CE = g.E.inputs.CodeEditor;
     const ed = { html: new CE(htmlHost, { mode: 'html', value: original.html, height: 80 }), js: new CE(jsHost, { mode: 'javascript', value: original.js, height: 320 }) };
 
-    let frame = null, timer = 0, seq = 0, good = false, mark = null;
+    let frame = null, timer = 0, seq = 0, good = false, mark = null, draws = 0;
     function setError(msg, line) {
       errBox.hidden = false;
       errBox.textContent = '';
@@ -163,7 +177,7 @@
 
     async function run() {
       const my = ++seq;
-      const page = await compose(g, lib, ed.html.getValue(), ed.js.getValue());
+      const page = await compose(g, libs, ed.html.getValue(), ed.js.getValue());
       if (my !== seq) { return; }
       const f = doc.createElement('iframe');
       f.setAttribute('sandbox', 'allow-scripts');
@@ -185,9 +199,10 @@
           frame = f; f.style.visibility = ''; f.style.position = '';
           status.textContent = 'Drawn from the code below.';
           good = true;
+          draws += 1;
         } else if (t === 'drishti-playground-error') {
           off();
-          setError(e.data.message, e.data.line ? (e.data.line > page.offset ? e.data.line - page.offset : e.data.line) : null);
+          setError(e.data.own ? e.data.message : e.data.message + ' (in a library, called from the code below)', e.data.line || null);
           f.remove();
           good = false;
         }
@@ -201,7 +216,9 @@
     ed.html.on('change', (x) => { if (x.origin !== 'setValue') { schedule(); } });
     reset.addEventListener('click', () => { ed.html.setValue(original.html); ed.js.setValue(original.js); if (rows && gridRef) { rows = src.rows.map((r) => Object.assign({}, r)); gridRef.setRows(rows); } clearError(); run(); });
     run();
-    g.pageState = () => ({ good, error: !errBox.hidden, seq });
+    g.pageState = () => ({ good, error: !errBox.hidden, seq, draws });
+    g.pageGrid = gridRef;
+    g.pageRows = () => rows;
     g.pageEditors = ed;
   };
 }(typeof window !== 'undefined' ? window : null));

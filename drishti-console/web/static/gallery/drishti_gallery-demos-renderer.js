@@ -51,6 +51,8 @@
     values: { rows: '4', title: 'US Treasury 4.25% 2038' },
     examples: [{ title: 'A bond with its lifecycle', values: {} }, { title: 'Two rows', values: { rows: '2' } }],
     sutra: () => null,
+    page: (values, ctx) => ({ html: '<div id="visual"></div>',
+      js: 'const viewModel = ' + ctx.code.literal(viewModel(values)) + ";\n\nDrishti.elements.renderer.render(document.getElementById('visual'), viewModel, { live: false });\n" }),
     mount: function (host, values, ctx) {
       const doc = host.ownerDocument, R = ctx.E.renderer;
       const el = ctx.h(doc, 'div', { cls: 'gx-fn gx-render', attrs: { 'data-render-demo': '' } });
