@@ -20,7 +20,7 @@
 # A page is a console guide (web/guides/<slug>.md) or, with `doc:`, a repository document rendered as-is (so the in-app reference is the
 # repository's docs). Its keys: slug, doc, title, icon, kind (guide, tutorial, knowledge), summary, packs, roles, engine, pair, domain and lenses:
 #   engine: the compute engine the page is about (config/engines.yaml): left out while the engine runs on no server (an administrator
-#           sees it greyed instead); Help is documentation, open to anyone who can open Help, whatever the Engines menu's opens: say;
+#           sees it greyed instead); Help is documentation, open to anyone who can open Help, whatever an engine's opens: (its catalogue entry) says;
 #   pair:   the tutorial drawn beside a guide on its row (the tutorial is a page of the same group);
 #   roles:  only people with one of these roles (or an administrator) see the page: hidden from the sections and search, 404 at its address.
 #   domain: the domain module the page belongs to (core, banking, capitalmarkets, economy; config/docs-features.yaml agrees): while that

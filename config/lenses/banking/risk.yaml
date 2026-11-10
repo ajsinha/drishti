@@ -74,9 +74,13 @@ phone:                                   # the phone display in this edition (do
   pages: {}                              # the VaR and exposure pages' parts, as ui.phone.pages: { var: { hist: glance } }
 
 menus:                                   # by id, per menu; a menu not named shows every item its switches allow
-  top: [views, engines, bi, admin, help]  # the top menus by id, in order; one not named is not drawn
+  top: [views, risk, counterparties, bi, admin, help]  # the top menus by id, in order; one not named is not drawn
   # the Views menu's items by id, in order (drishti-console/config/sitemap.yaml)
   views: [terminal, search, functions, datamap, data, reports, workspaces, monitors, alerts]
+  # the Risk and Counterparties menus' items by id: the VaR and exposure engines' pages (their switches and status: Admin -> Engines)
+  risk: [my-var, vlim, pnlv, var-explorer, var-explain, play-var, smat, var-reports, backtesting, stress-window, var-results, var-official,
+         exp-explorer, exp-cpty, exp-nset]
+  counterparties: [cpty, nset, lim, predeal, exp]
   help: [help-centre, knowledge, install, about]  # the Help menu's items by id
   footer: [help, about, release-notes]  # the footer's links by id
   placeholder: "VAR BANK, VAR DESK RATES, EXP CPTY:CP-ALDERSHOT, VRES DESK:RATES …  then <GO>"  # the command line's placeholder text

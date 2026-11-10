@@ -18,6 +18,7 @@
 engines:
   - id: var
     title: VaR
+    opens: [role:market-risk, pack:market-risk]  # who opens its pages and command words: role:<name>, pack:<name> (assigned); an administrator always; none: everyone
     about: "VaR, ES, stressed VaR, the what-if, why it moved, regulatory VaR (backtesting, report runs, sign-off)"
     file: var.yaml
     switch: drishti.engines.var.enabled
@@ -46,6 +47,7 @@ engines:
     ai-tools: []
   - id: exposure
     title: Exposure
+    opens: [role:credit-risk, pack:counterparty-risk]  # who opens its pages and command words: role:<name>, pack:<name> (assigned); an administrator always; none: everyone
     about: "EE, ENE, PFE, EPE, EEPE, the exposure what-if and its playground"
     file: exposure.yaml
     switch: drishti.engines.exposure.enabled
@@ -102,6 +104,7 @@ engines:
     ai-tools: []
   - id: frtb-sa
     title: FRTB-SA
+    opens: [role:market-risk, pack:market-risk]  # who opens its pages and command words: role:<name>, pack:<name> (assigned); an administrator always; none: everyone
     about: "FRTB-SA: the sensitivities-based method, DRC, RRAO and its playground"
     file: frtb-sa.yaml
     switch: drishti.engines.frtb-sa.enabled
@@ -130,6 +133,7 @@ engines:
     ai-tools: []
   - id: simm
     title: SIMM
+    opens: [role:credit-risk, role:market-risk, pack:counterparty-risk, pack:market-risk]  # who opens its pages and command words: role:<name>, pack:<name> (assigned); an administrator always; none: everyone
     about: "ISDA SIMM initial margin per netting set and regime, collect and post, and its playground"
     file: simm.yaml
     switch: drishti.engines.simm.enabled

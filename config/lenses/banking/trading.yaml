@@ -72,9 +72,12 @@ bi:                                      # the trading and VaR datasets and mode
 
 menus:                                   # by id, per menu; a menu not named shows every item its switches allow
   # the top menus by id, in order; one not named is not drawn. BI and Admin are reached by command (BI <GO>, ADMIN <GO>), not from the bar
-  top: [views, engines, markets, blotter, positions, risk, counterparties, help]
+  top: [views, markets, blotter, positions, risk, counterparties, help]
   markets: [crv, repo, fix, irv, cpv, fxv, fx-spot, fxf, cds, bnd, eq, eqx, cmd, cmdc]   # the one Markets menu: rates, vols, FX, credit, equities and commodities
   views: [terminal, search, functions, data, reports, workspaces, monitors, alerts]
+  # the Risk menu's items by id: the book's risk, then the VaR, exposure, FRTB-SA and SIMM engines' pages (switches and status: Admin -> Engines)
+  risk: [my-var, vlim, tval, pnlv, dpnl, pnl, sens, var-explorer, var-explain, play-var, smat, var-reports, backtesting, stress-window, var-results,
+         exp-explorer, exp-cpty, exp-nset, frsa, play-frtb, simm, play-simm]
   help: [help-centre, knowledge, install, about]
   footer: [help, about, release-notes]
   placeholder: "TRD 1000001, BOOK BOOK-RATES-1, VAR BOOK BOOK-RATES-1, EXP CPTY:CP-ALDERSHOT, CTRD CP-ALDERSHOT …  then <GO>"

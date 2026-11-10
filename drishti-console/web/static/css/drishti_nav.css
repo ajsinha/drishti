@@ -163,60 +163,6 @@
 /* the pending-review count beside Build, Govern, Reviews (filled when the menu opens) */
 .rv-count { display: inline-block; min-width: 1.2em; margin-left: var(--d-sp-5_6); padding: 0 var(--d-sp-5_6); border-radius: var(--d-radius-pill); background: var(--d-bad); color: var(--d-on-color); font-size: var(--d-fs-11_2); text-align: center; vertical-align: 1px; }
 
-/* ---- the Engines menu (terminal/_topbar.html, mock-up engines-menu/A): a column per running engine, its command word in the head ---- */
-/* Under the whole bar, at its right (the bar is the panel's anchor, so a wide panel stays on screen whatever the button's place). */
-.tbar-menu.tbar-engines { position: static; }
-.tbar-menus .mega-engines { left: auto; right: 16px; max-width: calc(100vw - 32px); box-sizing: border-box; }
-.mega-engines.show { display: block; }
-.mega-engines.eng-c1 { width: 320px; }
-.mega-engines.eng-c2 { width: 560px; }
-.mega-engines.eng-c3 { width: 800px; }
-.mega-engines.eng-c4 { width: 1000px; }
-.mega-engines.eng-c5, .mega-engines.eng-c6 { width: 1180px; }
-.eng-top { display: flex; align-items: center; flex-wrap: wrap; gap: var(--d-sp-8) var(--d-sp-16); padding: 0 var(--d-sp-8) var(--d-sp-12); margin-bottom: var(--d-sp-12);
-  border-bottom: 1px solid var(--d-border); }
-.eng-ttl { font-size: var(--d-fs-11_52); font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--d-muted); }
-.eng-search { flex: 1 1 14rem; display: flex; align-items: center; gap: var(--d-sp-6_4); min-width: 0; max-width: 26rem; padding: 0 var(--d-sp-9_6);
-  border: 1px solid var(--d-border); border-radius: var(--d-radius-pill); background: var(--d-surface-2); color: var(--d-muted); }
-.eng-search:focus-within { border-color: var(--d-accent); }
-.eng-q { flex: 1 1 auto; min-width: 0; height: 32px; border: 0; background: transparent; color: var(--d-ink); font-size: var(--d-fs-13_76); outline: 0; }
-.eng-adm { margin-left: auto; font-size: var(--d-fs-13_12); font-weight: 600; color: var(--d-link); text-decoration: none; white-space: nowrap; }
-.eng-adm:hover, .eng-adm:focus-visible { text-decoration: underline; }
-.eng-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: var(--d-sp-16); }
-.eng-head { display: flex; align-items: baseline; gap: var(--d-sp-8); width: 100%; padding: 0; margin: 0 0 var(--d-sp-6_4); border: 0; background: transparent;
-  color: inherit; text-align: left; cursor: default; }
-.eng-head .mega-title { padding: 0 0 0 var(--d-sp-8); font-size: var(--d-fs-12_48); color: var(--d-ink); }
-.eng-word { font-size: var(--d-fs-11_52); color: var(--d-accent); }
-.eng-chev { display: none; }
-.eng-mark { padding: 0 var(--d-sp-0_8); border-radius: var(--d-radius-3); background: var(--d-accent-tint); color: inherit; }
-.eng-none, .eng-count { margin: var(--d-sp-9_6) var(--d-sp-8) 0; font-size: var(--d-fs-12_8); color: var(--d-muted); }
-.eng-off { display: flex; flex-wrap: wrap; align-items: center; gap: var(--d-sp-6_4) var(--d-sp-9_6); margin-top: var(--d-sp-14_4); padding: var(--d-sp-9_6) var(--d-sp-8) 0;
-  border-top: 1px dashed var(--d-border); font-size: var(--d-fs-12_48); color: var(--d-muted); }
-.eng-offc { padding: var(--d-sp-1_6) var(--d-sp-8); border: 1px dashed var(--d-border); border-radius: var(--d-radius-pill); opacity: .75; cursor: not-allowed; }
-.eng-offc code { color: var(--d-muted); }
-
-/* A phone: the drawer of the lens menus' phone form. Engines opens to its engines, an engine to its pages, one at a time; 44 px rows. */
-@media (max-width: 639.98px) {
-  .mega-engines.eng-c1, .mega-engines.eng-c2, .mega-engines.eng-c3, .mega-engines.eng-c4, .mega-engines.eng-c5,
-  .mega-engines.eng-c6 { width: auto; }
-  .tbar-menus .mega-engines { left: 16px; right: 16px; }
-  .eng-top { padding-bottom: var(--d-sp-8); margin-bottom: var(--d-sp-4); }
-  .eng-search { flex-basis: 100%; max-width: none; }
-  .eng-q { height: 40px; }
-  .eng-adm { margin-left: 0; min-height: 44px; display: inline-flex; align-items: center; }
-  .eng-cols { display: block; }
-  .eng-col + .eng-col { border-top: 1px solid var(--d-border); }
-  .eng-head { min-height: 44px; align-items: center; margin: 0; cursor: pointer; }
-  .eng-head .mega-title { padding: 0 var(--d-sp-4); font-size: var(--d-fs-14_4); letter-spacing: .02em; text-transform: none; }
-  .eng-chev { display: inline-block; margin-left: auto; padding-right: var(--d-sp-6_4); color: var(--d-muted); transition: rotate .15s; }
-  .eng-col:not(.eng-open) .eng-items { display: none; }
-  .eng-col:not(.eng-open) .eng-chev { rotate: -90deg; }
-  .eng-items .mega-item { min-height: 44px; align-items: center; }
-  .eng-items .mega-desc { display: none; }
-  .eng-off { display: none; }                                   /* engines not running are left out on a phone */
-}
-@media (prefers-reduced-motion: reduce) { .eng-chev { transition: none; } }
-
 /* the as-of date: drishti-inputs' business-date picker (drishti_app.js upgrades #asofDate); its refusal floats under the bar */
 .tbar .asof .di-upgraded { position: relative; min-width: 9.5rem; width: 9.5rem; }
 .tbar .asof .di-control { min-height: 28px; }
