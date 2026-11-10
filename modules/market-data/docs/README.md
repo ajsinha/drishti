@@ -19,7 +19,7 @@ module requires it, because the VaR, sensitivity and exposure engines read its c
 
 | Part | Where in the package |
 |---|---|
-| The pack: kinds, contracts, Sutras, samples, Python items | [packs/market-data](../packs/market-data/README.md) |
+| The pack: kinds, contracts, Sutras, samples, Python items | `packs/market-data` |
 | Functions | `MKT` and CRV, REPO, FX, FXF, FXV, IRV, CPV, EQ, EQX, DIV, EQV, CDS, INF, INFC, CMD, CMDC, CMDV, FIX, BND, CORR, CORRC, EQB |
 | Pages | `console/plugin.yaml` (a Sutra page per function) |
 | Lens | `lenses/market.yaml` (Drishti Market) |

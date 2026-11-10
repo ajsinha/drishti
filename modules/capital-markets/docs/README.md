@@ -20,7 +20,7 @@ it (Drishti Finance lists both) the Markets lens also shows curves, FX, quotes a
 
 | Part | Where in the package |
 |---|---|
-| The packs | [packs/us-equities](../packs/us-equities/README.md), [packs/funds](../packs/funds/README.md) |
+| The packs | `packs/us-equities`, `packs/funds` |
 | Functions | `USEQS`, USEQ, IDX, SIC, EDGAR, FILING, FACT, PXH; `FUNDS`, FUND, HELD, TRACK |
 | Pages | `console/plugin.yaml` (a Sutra page per function) |
 | Lens | `lenses/markets.yaml` (Drishti Markets; Home's Markets cards) |

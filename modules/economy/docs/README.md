@@ -18,7 +18,7 @@ function under `/m/economy/`), the **World lens** and its Help. Each pack is fil
 
 | Part | Where in the package |
 |---|---|
-| The packs | [world-economy](../packs/world-economy/README.md), [news-and-markets](../packs/news-and-markets/README.md), [world-development](../packs/world-development/README.md), [central-banks](../packs/central-banks/README.md), [national-statistics](../packs/national-statistics/README.md), [oecd](../packs/oecd/README.md), [official-news](../packs/official-news/README.md), [gdelt-events](../packs/gdelt-events/README.md) |
+| The packs | `packs/world-economy`, `packs/news-and-markets`, `packs/world-development`, `packs/central-banks`, `packs/national-statistics`, `packs/oecd`, `packs/official-news`, `packs/gdelt-events` |
 | Functions | ECON, MACRO, FCST, LABR, FISC, ECG, REGE, JUR, PARTY, OFFC, ELEC, REGN, SOCI; TOPIC, NEWS, CO, QUOTE; WDI, WDIS; CBANK, CBSER; NSTAT; OECD, OECDS; PRESS, PREL; GDELT; and each pack's code |
 | Pages | `console/plugin.yaml` (a Sutra page per function) |
 | Lens | `lenses/world.yaml` (Drishti World) |
