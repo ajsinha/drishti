@@ -90,13 +90,13 @@ def _words(functions) -> list[str]:
 
 def module_manifests(directory: Path | None) -> dict[str, ModuleEntry]:
     """Every module manifest under ``directory``, by id, in requirement order (a required module before the ones that need it): a
-    content module's ``<id>/module.yaml`` (the ``.dmod`` manifest) and a module jar's ``<id>/<part>/src/main/resources/META-INF/drishti/
+    content module's ``<id>/module.yaml`` (the ``.dmod`` manifest; a module project made from the SDK keeps it in ``<id>/src/dmod/``) and a module jar's ``<id>/<part>/src/main/resources/META-INF/drishti/
     module.yaml``. The kernel reads the same files the same way (drishti-packs ``ModuleManifests``)."""
     by_id: dict[str, ModuleEntry] = {}
     if directory is None or not directory.is_dir():
         return by_id
     for m in sorted(p for p in directory.iterdir() if p.is_dir()):
-        dmod = m / "module.yaml"
+        dmod = m / "module.yaml" if (m / "module.yaml").is_file() else m / "src" / "dmod" / "module.yaml"   # a module project from the SDK
         if dmod.is_file():
             y = _read(dmod)
             mid = str(y.get("id") or "").strip()
@@ -265,7 +265,8 @@ def read(f: Path, kernel_file: Path, modules_dir: Path | None, packs_dir: Path) 
                                  "(modules/<id>/module.yaml)")
     modules = with_required(listed, known)                       # a listed module brings the ones it requires
     kernel = (_read(kernel_file).get("kernel") or {}) if kernel_file.is_file() else {}
-    packs = list(_texts(kernel.get("packs")))
+    # a distribution may name the kernel's packs it takes (``kernel-packs:``; Drishti Genomics takes none: no counterparty or book anywhere)
+    packs = list(_texts(spec.get("kernel-packs") if "kernel-packs" in spec else kernel.get("packs")))
     menus = list(_texts(kernel.get("menus")))
     domains: dict[str, str] = {}
     words_on = set(_texts(kernel.get("words")))
@@ -287,8 +288,9 @@ def read(f: Path, kernel_file: Path, modules_dir: Path | None, packs_dir: Path) 
     top = _texts((spec.get("menus") or {}).get("top"))
     ed: dict[str, Any] = {
         "edition": did, "title": title, "distribution": True,
-        "packs": {"enabled": packs},
-        "commands": {"allow": pack_commands(packs_dir, packs), "words": words},
+        "packs": {"enabled": packs} if packs else {"none": True},   # a distribution of no packs (Genomics) loads none
+        "commands": {"allow": pack_commands(packs_dir, packs) + [w for m in modules if m in known for w in known[m].words
+                                                                if w not in pack_commands(packs_dir, packs)], "words": words},
         "features": features,
         "menus": {"top": [x for x in top if x in menus] if top else menus},
         "help": {"knowledge": packs, "domains": sorted({x for m, mod in known.items() if m in modules for x in mod.docs}),

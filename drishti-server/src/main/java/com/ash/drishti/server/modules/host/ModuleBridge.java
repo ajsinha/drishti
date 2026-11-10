@@ -57,7 +57,18 @@ final class ModuleBridge {
     private final List<Port<?>> ports = new ArrayList<>();
 
     ModuleBridge(Supplier<SourceRegistry> sources, Supplier<EngineRegistry> engines) {
+        this(sources, engines, (m, p) -> Map.of());
+    }
+
+    /**
+     * @param settings the settings a module's connector extension starts with ({@code module-dir}: its installed folder, {@code data-dir}:
+     *                 its own data folder), by module
+     */
+    ModuleBridge(Supplier<SourceRegistry> sources, Supplier<EngineRegistry> engines, BiFunction<String, com.ash.drishti.api.SourcePlugin, Map<String, String>> settings) {
         port(KindProvider.class, Contributions.Surface.KIND_PROVIDER, (m, k) -> required(sources, "the source registry").attach(new ComputedKindSource(k)));
+        // a connector extension (the plugin API's SourcePlugin, a VCF reader for one): routed under its own name while the module is loaded
+        port(com.ash.drishti.api.SourcePlugin.class, Contributions.Surface.KIND_PROVIDER,
+                (m, p) -> required(sources, "the source registry").attach(p, settings.apply(m, p)));
         port(FunctionProvider.class, Contributions.Surface.FUNCTION, (m, f) -> RachanaFunctions.register(f));
         port(ComputeEngine.class, Contributions.Surface.SPI, (m, e) -> required(engines, "the engine registry").attach(e));
         live(ApprovalSource.class, Contributions.Surface.SPI);

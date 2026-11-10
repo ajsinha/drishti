@@ -157,7 +157,8 @@ public final class Distributions {
             }
         }
         List<String> modules = new ArrayList<>(ModuleManifests.withRequired(listed, known));   // a listed module brings the ones it requires
-        Set<String> packs = new LinkedHashSet<>(texts(kernel.path("packs")));
+        // a distribution may name the kernel's packs it takes (kernel-packs:; Drishti Genomics takes none: no counterparty or book anywhere)
+        Set<String> packs = new LinkedHashSet<>(texts(spec.has("kernel-packs") ? spec.path("kernel-packs") : kernel.path("packs")));
         Map<String, String> domains = new LinkedHashMap<>();
         Set<String> menus = new LinkedHashSet<>(texts(kernel.path("menus")));
         Set<String> wordsOff = new LinkedHashSet<>();
@@ -178,12 +179,17 @@ public final class Distributions {
             }
         }
         Set<String> commands = commands(packsDir, packs);
+        modules.stream().filter(known::containsKey).forEach(m -> commands.addAll(known.get(m).words()));   // a module's own functions (GENE)
         ObjectNode ed = YAML.createObjectNode();
         ed.put("edition", id);
         ed.put("title", title);
         ed.put("distribution", true);
-        ArrayNode pe = ed.putObject("packs").putArray("enabled");
-        packs.forEach(pe::add);
+        if (packs.isEmpty()) {
+            ed.putObject("packs").put("none", true);                   // a distribution of no packs (Genomics) loads none, not the default list
+        } else {
+            ArrayNode pe = ed.putObject("packs").putArray("enabled");
+            packs.forEach(pe::add);
+        }
         ObjectNode cmd = ed.putObject("commands");
         ArrayNode allow = cmd.putArray("allow");
         commands.forEach(allow::add);

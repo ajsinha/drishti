@@ -51,6 +51,9 @@ public final class PackPaths {
         if (!DEFAULT_WORD.equals(v.strip())) {
             return v;
         }
+        if (Boolean.parseBoolean(env.getProperty(com.ash.drishti.packs.edition.Editions.SPEC + ".packs.none", "false"))) {
+            return "";                                         // a distribution of no packs (Drishti Genomics): none, not the default list
+        }
         java.util.List<String> edition = com.ash.drishti.packs.edition.Editions.of(env).packs();
         return edition.isEmpty() ? DEFAULT_ENABLED : String.join(",", edition);
     }

@@ -172,6 +172,23 @@ def test_a_single_function_off_is_gone_and_the_rest_stays(backend, monkeypatch):
     assert c.get("/var").status_code == 200
 
 
+def test_a_function_waiting_for_data_explains_itself(backend, monkeypatch):
+    """EXP with no exposure-path bound: its page is here and says what it needs (200, links to Admin -> Data bindings and Help), its
+    console API answers 409 DRS-1035, the command line says the same words; nothing answers 404."""
+    answer = _answer()
+    text = "EXP needs data: exposure-path is not bound; ask your data administrator"
+    answer["functions"]["off"] = [{"word": "EXP", "module": "banking", "gate": "data", "reason": text, "text": text}]
+    c = _client(_console(backend, monkeypatch, ALL_ON, answer))
+    r = c.get("/exposure", follow_redirects=False)
+    assert r.status_code == 200, r.status_code
+    assert 'data-needs-data="EXP"' in r.text and "needs data" in r.text and "exposure-path is not bound" in r.text
+    assert 'href="/admin/bindings"' in r.text and "/help?q=" in r.text
+    api = c.get("/api/exposure/scope?scope=BANK")
+    assert api.status_code == 409 and api.json()["code"] == "DRS-1035" and "exposure-path" in api.json()["detail"]
+    assert _refusal(c.get("/go", params={"q": "EXP <GO>"}, follow_redirects=False)).endswith(text)
+    assert c.get("/var").status_code == 200
+
+
 def test_a_lens_that_does_not_use_a_module_does_not_get_its_assets(backend, monkeypatch):
     app = _console(backend, monkeypatch, {**ALL_ON, "lenses": ["world"]},
                    _answer(lenses=[{"id": "world", "modules": ["economy"]}, {"id": "risk", "modules": ["banking"]}]))

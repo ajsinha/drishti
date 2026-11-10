@@ -17,6 +17,24 @@
 
 ## Unreleased
 
+- **The genomics sample module and Drishti Genomics** (2.9.11.i2 + i3, wave 3; [DEVELOPER_GUIDE.md section 1.9](docs/guides/DEVELOPER_GUIDE.md#19-the-genomics-sample-step-by-step),
+  [DISTRIBUTIONS.md section 4](docs/architecture/DISTRIBUTIONS.md#4-drishti-genomics-sample)). `modules/genomics`, a third party's module
+  made from the archetype and finished by hand on the kernel API and the plugin API only: a VCF reader as a connector extension inside
+  the module (a module's `SourcePlugin` is routed while it is loaded, started with its folders), the kinds `variant`, `sample`, `gene`,
+  `cohort`, the functions `VARIANT`, `GENE`, `COHORT` on one page folder, synthetic samples (a seeded generator), its `.dmod` built in the
+  reactor and passing C1 to C15. Drishti Genomics boots the thin kernel and the module from its file alone: the Research lens, none of the
+  kernel's packs (`kernel-packs: []`), no finance anywhere; a module project's manifest is read from `src/dmod/`.
+- **The custom-visual SDK** ([DEVELOPER_GUIDE.md section 1.8](docs/guides/DEVELOPER_GUIDE.md#18-a-modules-own-visual-the-custom-visual-sdk),
+  [ELEMENTS.md section 7.4](docs/architecture/ELEMENTS.md#74-a-modules-own-visual-types-the-visual-registry-for-modules)). A module ships
+  its own visual type as a kind of drishti-chart's registry in its Elements library, built from drishti-chart's primitives, and declares
+  it under `visuals:`; the gallery shows it while the module is hosted and not after it goes (`GET /api/elements/visuals`). The first is
+  `genomics.lollipop`; `mvn drishti:visual -Dname=<name>` is the template. A module's pages read its API through `/m/<id>/api/`.
+- **Gated functions explain themselves.** A function that is on but whose required data no source serves no longer answers 404: its
+  page is the needs-data page (*Exposure needs data: exposure-path is not bound*, 200, links to Admin → Data bindings and Help), its API
+  answers `409 DRS-1035` with the need, and the command line says the same words.
+- **One way for jars: the lib folder** (`drishti.lib.path`). The launcher's `external_lib/java` and `drishti.sources.plugin-dir` are gone:
+  at the first start that finds jars in either, the server moves them into lib, writes `lib/moved-<date-time>.bak` and Health says so;
+  `drishti.sources.plugin-dir` is deprecated (ignored, said in Health) for one release. `external_lib/python` stays the console's.
 - **The kernel loads modules** (2.9.11.i2 + i3, wave 2; [DEVELOPER_GUIDE.md sections 1.6 and 1.7](docs/guides/DEVELOPER_GUIDE.md#17-what-a-module-can-contribute),
   [ADMIN_GUIDE.md section 22.1](docs/guides/ADMIN_GUIDE.md#221-module-packages-auto-deploy-and-the-shared-lib-folder)). A loaded `.dmod`
   module's beans of the kernel API's provider types are seen by the kernel while it is loaded and withdrawn when it unloads (the

@@ -286,18 +286,23 @@ public final class BindingResolver {
             }
             if (offered.contains(n.kind()) && !usable(kinds, n.kind())) {
                 for (String f : n.gates()) {
-                    out.putIfAbsent(f, f + " needs " + n.kind() + ": " + kinds.get(n.kind()).reason() + "; ask your data administrator");
+                    out.putIfAbsent(f, f + " needs data: " + unserved(n.kind(), kinds.get(n.kind()).reason()) + "; ask your data administrator");
                 }
             }
         }
         groups.values().forEach(g -> {
             if (g.stream().anyMatch(n -> offered.contains(n.kind())) && g.stream().noneMatch(n -> usable(kinds, n.kind()))) {
                 String names = String.join(" or ", g.stream().map(DataNeeds.Need::kind).toList());
-                g.stream().flatMap(n -> n.gates().stream()).distinct().forEach(f -> out.putIfAbsent(f, f + " needs " + names
-                        + ": no source is bound; ask your data administrator"));
+                g.stream().flatMap(n -> n.gates().stream()).distinct().forEach(f -> out.putIfAbsent(f, f + " needs data: " + names
+                        + " is not bound; ask your data administrator"));
             }
         });
         return out;
+    }
+
+    /** {@code exposure-path is not bound}, or {@code ... is not served (only the demo lake holds it, and demo is off)}. */
+    private static String unserved(String kind, String reason) {
+        return reason == null || reason.isBlank() || reason.startsWith("no source is bound") ? kind + " is not bound" : kind + " is not served (" + reason + ")";
     }
 
     private static boolean usable(Map<String, Resolution> kinds, String kind) {

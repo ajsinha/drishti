@@ -1629,7 +1629,7 @@ credentials stay in the connector files and the secret store, and no module ever
 | `DEMO` | the demo lake's samples serve it (only while demo is on) | works; demo data |
 | `STALE` | bound, but nothing loaded within its contract's cadence | works; amber |
 | `MISMATCH` | the source breaks the contract | treated as unbound for the needs |
-| `UNBOUND` | nothing serves it | a **required** need switches off exactly the functions that use it, with the reason (*VRES needs scenario-pv or pnl-vector: no source is bound*); an optional one hides its features |
+| `UNBOUND` | nothing serves it | a **required** need switches off exactly the functions that use it, and they explain themselves: the page is the needs-data page (*Exposure needs data: exposure-path is not bound*, with links to Admin → Data bindings and Help), the command line says the same and the API answers `409 DRS-1035`; an optional one hides its features |
 | `COMPUTED` | a module computes it (`position`, `system-basket`, `var-result`) | never bound |
 
 A kind finds its data in this order, first hit wins: the site's binding, the distribution's default, a lake by convention, the demo lake,

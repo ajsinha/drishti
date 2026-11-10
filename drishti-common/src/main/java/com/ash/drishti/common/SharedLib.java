@@ -128,6 +128,65 @@ public final class SharedLib {
         }
     }
 
+    private static volatile List<String> moved = List.of();
+
+    /**
+     * The one-time move of the two older ways into the lib folder (no dual machinery): the jars of each old folder ({@code external_lib/java},
+     * once on the launcher's class path; {@code drishti.sources.plugin-dir}, connector jars in their own class loaders) are moved into
+     * {@code lib}, and {@code lib/moved-<date-time>.bak} lists what moved from where. Called at start before the lib is opened; a folder
+     * that does not exist or holds no jar moves nothing. Returns (and keeps for Health) one note per folder that moved something and one
+     * per old setting still named. A jar of the same name already in {@code lib} is left where it was and named in the note.
+     *
+     * @param old each old folder by what it was ({@code "external_lib/java"}, {@code "drishti.sources.plugin-dir"})
+     * @param deprecated the old settings still set, by name to the note Health shows
+     */
+    public static List<String> migrate(Path lib, Map<String, Path> old, Map<String, String> deprecated) {
+        List<String> notes = new ArrayList<>();
+        Path target = lib.toAbsolutePath().normalize();
+        StringBuilder listing = new StringBuilder();
+        for (Map.Entry<String, Path> e : old.entrySet()) {
+            Path from = e.getValue() == null ? null : e.getValue().toAbsolutePath().normalize();
+            if (from == null || from.equals(target) || !Files.isDirectory(from)) {
+                continue;
+            }
+            List<String> done = new ArrayList<>();
+            List<String> left = new ArrayList<>();
+            try (Stream<Path> s = Files.list(from)) {
+                for (Path f : s.filter(p -> p.getFileName().toString().endsWith(".jar") && Files.isRegularFile(p)).sorted().toList()) {
+                    Path to = target.resolve(f.getFileName().toString());
+                    if (Files.exists(to)) {
+                        left.add(f.getFileName().toString());
+                        continue;
+                    }
+                    Files.createDirectories(target);
+                    Files.move(f, to);
+                    done.add(f.getFileName().toString());
+                    listing.append(f).append(" -> ").append(to).append('\n');
+                }
+            } catch (IOException ex) {
+                notes.add(e.getKey() + " (" + from + "): not moved: " + ex.getMessage());
+                continue;
+            }
+            if (!done.isEmpty() || !left.isEmpty()) {
+                notes.add(e.getKey() + " (" + from + "): " + done.size() + " jar(s) moved into " + target + (left.isEmpty() ? ""
+                        : "; left there, a jar of that name is in lib already: " + left) + ". The folder is no longer read: delete it.");
+            }
+        }
+        if (!listing.isEmpty()) {
+            try {
+                Path bak = target.resolve("moved-" + java.time.LocalDateTime.now(java.time.ZoneOffset.UTC).format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss")) + ".bak");
+                Files.writeString(bak, "# jars moved into the lib folder (drishti.lib.path) from the older folders, at the first start that found them\n"
+                        + listing, java.nio.charset.StandardCharsets.UTF_8);
+            } catch (IOException ex) {
+                notes.add("the listing of what moved was not written: " + ex.getMessage());
+            }
+        }
+        deprecated.forEach((k, v) -> notes.add(k + " is deprecated and ignored: " + v));
+        notes.forEach(JUL::warning);
+        moved = List.copyOf(notes);
+        return moved;
+    }
+
     /** The lib class loader (the kernel's own loader when the folder holds no jar). */
     public ClassLoader loader() {
         return loader;
@@ -172,6 +231,7 @@ public final class SharedLib {
         }
         out.put("jars", list);
         out.put("note", "loaded at start; a change takes effect at the next restart");
+        out.put("moved", moved);                     // the one-time move of external_lib/java and drishti.sources.plugin-dir, and old settings
         return out;
     }
 

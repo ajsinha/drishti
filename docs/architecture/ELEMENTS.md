@@ -422,6 +422,20 @@ Codes are ISO 3166 (alpha-3 for countries, 3166-2 for regions, as the files hold
 drishti-chart's place lookup (today `drishti_geomap.js`'s `find`). Projections: Equal Earth for the world, Albers for the USA (with
 Alaska and Hawaii insets) and Canada, a conic fitted to the country otherwise.
 
+### 7.4 A module's own visual types (the visual registry for modules)
+
+drishti-chart's kind registry (`registerKind`, `kindOf`, `kindList`) is **the visual registry** for modules too. A module that needs a
+chart Drishti does not have ships a kind in its domain library (`elements/drishti-<module>/` in its `.dmod`, served at
+`/m/<id>/elements/drishti-<module>/<module version>/`), built from drishti-chart's primitives (`buildScatter`, `buildSeriesChart`,
+`buildWaterfall`, the annotations, `toneColour`): the card, theme, tooltips, Explain, data table, export, zoom and keyboard come with it,
+and nothing is drawn by hand (conformance C2, C3). The library registers its kinds once and exposes `Drishti.elements.visuals.<module>`
+(`kinds`, `sample`, `ready`). The module declares them in `console/plugin.yaml` (`visuals:` with `kind`, `library`, `file`, `title`,
+`summary`); the console lists the hosted modules' visuals at `GET /api/elements/visuals` (a module off or removed, or off for the person,
+brings none), and **the gallery** loads each library and gives each kind a page from its `sample()`, under its library. The first such
+kind is the genomics module's `genomics.lollipop` (a protein's variants: stems and heads by impact tone, its domains as bands). The SDK's
+template, `mvn drishti:visual -Dname=<name>`, writes a starting library and its `visuals:` entry ([DEVELOPER_GUIDE.md section
+1.8](../guides/DEVELOPER_GUIDE.md#18-a-modules-own-visual-the-custom-visual-sdk)).
+
 ## 8. Packaging, versions and licensing
 
 **Where the files live.** Each library is a folder per version, `drishti-console/web/static/elements/<library>/<version>/` (entry,

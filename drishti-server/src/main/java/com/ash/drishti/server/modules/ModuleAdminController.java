@@ -32,6 +32,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import org.springframework.beans.factory.ObjectProvider;
@@ -169,7 +170,13 @@ public class ModuleAdminController {
             f.put("word", w);
             f.put("module", registry.moduleOfFunction(w).orElse(ModuleManifest.CORE));
             f.put("reason", registry.functionOffReason(w).orElse("not granted to you"));
-            f.put("text", w + " is not available to you: ask your administrator");
+            Optional<String> data = registry.dataGateReason(w);
+            if (data.isPresent()) {
+                f.put("gate", "data");                          // here, waiting for data: its page says what to bind (DRS-1035)
+                f.put("text", data.get());
+            } else {
+                f.put("text", w + " is not available to you: ask your administrator");
+            }
             off.add(f);
         }
         return off;

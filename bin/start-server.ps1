@@ -153,7 +153,6 @@ if ($demo) {
     $env:DRISHTI_SEED_ADMIN = 'true'
     $env:DRISHTI_STUDIO_SAVE = 'true'
     if (-not $env:DRISHTI_LENSES) { $env:DRISHTI_LENSES = 'risk,world,market,trading' }
-    if (-not $env:DRISHTI_EXTERNAL_LIB) { $env:DRISHTI_EXTERNAL_LIB = Join-Path $script:DrishtiRoot 'external_lib' }
     if (-not $env:DRISHTI_SEED_USERNAME) { $env:DRISHTI_SEED_USERNAME = 'drishti-dev-admin' }
     $devSecrets += Set-DevSecret 'DRISHTI_SEED_PASSWORD' 'drishti-dev-admin123'
     $devSecrets += Set-DevSecret 'DRISHTI_TOKEN_SECRET' 'drishti-dev-only-token-secret-change-me-0123456789'

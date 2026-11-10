@@ -29,7 +29,6 @@
       <env name="DRISHTI_SEED_ADMIN" value="true" />
       <env name="DRISHTI_SEED_USERNAME" value="drishti-dev-admin" />
       <env name="DRISHTI_SEED_PASSWORD" value="drishti-dev-admin123" />
-      <env name="DRISHTI_EXTERNAL_LIB" value="$PROJECT_DIR$/external_lib" />
       <env name="DRISHTI_PORT" value="18480" />
       <env name="DRISHTI_DISTRIBUTION" value="all" />
     </envs>

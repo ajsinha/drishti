@@ -12,6 +12,6 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Spring Boot PropertiesLauncher (layout ZIP): every jar in the external library folder joins the class path at start.
-# The base is DRISHTI_EXTERNAL_LIB (default: external_lib under the working directory); -Dloader.path overrides it.
-loader.path=${drishti.external-lib:${DRISHTI_EXTERNAL_LIB:external_lib}}/java
+# What the module reads (section 5): kinds and contract ranges, never where they live (the site binds them). The genomics module reads
+# nothing the kernel binds: its VCF reader serves variant and sample itself, and gene and cohort are computed from them.
+needs: []

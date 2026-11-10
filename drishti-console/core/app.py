@@ -242,6 +242,14 @@ class AuthGate(BaseHTTPMiddleware):
             except Exception:  # noqa: BLE001 - the switcher is a convenience; never fail a page for it
                 request.state.pack_switcher = []
         await _edition_of(request, path)
+        need = None if path.startswith(("/static/", PYODIDE, EMBED)) or request.state.identity is None else _edition_gate.needs_data(path)
+        if need is not None:                       # here, waiting for data: the page explains itself (200), an API call says why (409)
+            if path.startswith("/api/") or "/api/" in path:
+                return JSONResponse({"code": "DRS-1035", "title": "needs data", "detail": "DRS-1035 " + need["text"], "function": need["word"],
+                                     "bindings": "/admin/bindings"}, status_code=409)
+            from routes.common import render as _render
+
+            return _render(request, "needs_data.html", need=need, path=path)
         why = None if path.startswith(("/static/", PYODIDE, EMBED)) else _edition_gate.hidden(request, request.state.edition, path)
         if why is not None and request.state.identity is not None:
             from core.notfound import not_found

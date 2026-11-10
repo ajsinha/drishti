@@ -13,16 +13,16 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# external_lib: your own libraries
+# external_lib: the console's own Python libraries
 
-Put libraries here and Drishti picks them up at start, with no rebuild:
+Put Python libraries in `python/` and the console picks them up at start, with no rebuild: modules (`mylib.py`), packages (folders
+with `__init__.py`), or pure-Python `.whl` / `.zip` / `.egg` files. Python items in the sandbox may import one only when it is on the
+allow-list `bi.python.packages`. Restart the console after a change.
 
-| Folder | What goes in it | Who loads it |
-|---|---|---|
-| `java/` | jars: JDBC drivers, connector plugins, any library a plugin needs | the **server**: every jar is on its class path from the start (restart after adding or removing one) |
-| `python/` | modules (`mylib.py`), packages (folders with `__init__.py`), or pure-Python `.whl` / `.zip` / `.egg` files | the **console**: importable from the start (restart after a change); Python items in the sandbox may import one only when it is on the allow-list `bi.python.packages` |
+**Jars do not go here.** JDBC drivers, connector plugins and any library a connector or a module needs go in the server's **lib
+folder** (`drishti.lib.path`, `DRISHTI_LIB_PATH`, default `<data folder>/lib`), the one place for them. A server that finds jars in the
+old `external_lib/java` folder moves them into lib once, at start, lists them in `lib/moved-<date-time>.bak` and says so in Admin → Health.
 
-The folder is configurable: `DRISHTI_EXTERNAL_LIB=/opt/drishti/lib` (both processes), or the console setting
-`external_lib`. Default: `external_lib` in the working directory (server) and in the repository root (console).
-Admin → Health lists what each process found. Only administrators should be able to write here: what is in it runs
-inside the server and the console. Details: docs/admin/CONFIGURATION.md, "External libraries".
+The folder is configurable: `DRISHTI_EXTERNAL_LIB=/opt/drishti/external_lib`, or the console setting `external_lib`. Default:
+`external_lib` in the repository root. Only administrators should be able to write here: what is in it runs inside the console.
+Details: docs/admin/CONFIGURATION.md, "Your own libraries".

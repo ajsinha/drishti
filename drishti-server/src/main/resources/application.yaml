@@ -278,7 +278,7 @@ drishti:
     # (another pack's data, for example) before the panel shows that it failed. 10 s: the first read of a business date on a large
     # table loads that date's id index first (300K trades: a few seconds), and a slow source is not reported as missing.
     fetch-timeout: 10s
-    # Optional directory of extra plugin jars; each gets its own class loader.
+    # DEPRECATED (one release): its jars are moved once into the lib folder (drishti.lib.path), then it is ignored; Health says so.
     plugin-dir: ${DRISHTI_PLUGIN_DIR:}
     # kind -> plugin. Kinds without a route try default-route first, then any plugin that serves them.
     default-route: demo
@@ -299,7 +299,7 @@ drishti:
           path: /{kind}/{id}  # the path of one entity under the base URL ({kind} and {id} filled in)
           source-name: rest  # the name its documents carry as provenance
           timeout-ms: 2000  # connect and request timeout, in milliseconds
-      jdbc:                         # a database; the driver jar goes on the class path or plugin-dir
+      jdbc:                         # a database; the driver jar goes in the lib folder (drishti.lib.path)
         enabled: ${DRISHTI_JDBC_ENABLED:false}  # run the jdbc source as itself (one instance)
         settings:
           url: ${DRISHTI_JDBC_URL:}  # the JDBC URL of that instance

@@ -1459,7 +1459,9 @@ command output below was captured on a fresh clone with the demo lakes (`drishti
 
 Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `drishti.sources`](../admin/CONFIGURATION.md#drishtisources) (also at Help → Configuration in the console).
 
-The folder holds the connector files and nothing else. What the server keeps *about* them lives in the **data folder**, never beside
+The folder holds the connector files and nothing else. A connector plugin that is not shipped (a vendor's, a JDBC driver for
+`jdbc`) is a jar in the server's **lib folder** (`drishti.lib.path`, default `<data folder>/lib`), loaded at start; that is the only
+place for one ([CONFIGURATION.md › Your own libraries](../admin/CONFIGURATION.md#your-own-libraries-the-servers-lib-folder-drishtilibpath-and-the-consoles-external_libpython)). What the server keeps *about* them lives in the **data folder**, never beside
 them and never in a hidden folder:
 
 ```

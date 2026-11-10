@@ -102,6 +102,15 @@ public interface AccessRegistry {
     default void dataGate(java.util.function.Function<String, Optional<String>> gate) {
     }
 
+    /**
+     * Why the function waits for data, when that is the only reason it is off: its module is on, no administrator switched it off, and a
+     * required data need is unserved ({@code EXP needs exposure-path: ...}). A page, a command or an API of such a function explains itself
+     * (409 {@code DRS-1035}, the console's "needs data" page) instead of answering 404. Empty otherwise.
+     */
+    default Optional<String> dataGateReason(String word) {
+        return Optional.empty();
+    }
+
     /** The administrator's installation-level function switches, as the registry reads them. */
     @FunctionalInterface
     interface FunctionSwitches {
