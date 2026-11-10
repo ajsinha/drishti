@@ -27,6 +27,7 @@
 DRISHTI_PAGEWALK_BASE=<console URL> walks a console that is already running instead of starting one (an owner's stack, a QA machine).
 Skipped when Playwright, Chromium, the built server jar or a JDK is missing."""
 import os
+import sys
 from pathlib import Path
 
 import pytest
@@ -58,18 +59,19 @@ KEY_SNAPSHOTS: dict[str, tuple[str, dict]] = {
     "var-basket": ("/var?scope=BASKET:PF-ASHA-UNWIND", {}),
     "why-it-moved": (go("VAR BANK EXPLAIN"), {"idle": True, "wait": "(() => { const p = document.querySelector('[data-explain-page]'); const w = document.querySelector('[data-dx-part=\"why\"] [data-dx-why]');"
                                                        " return p && p.dataset.state === 'ready' && w && w.dataset.painted === 'waterfall'; })()"}),
-    "mr-cube": ("/pivot?preset=mr", {"idle": True, "wait": "!/Computing the grid/i.test(document.querySelector('#main').innerText)"}),
+    # the cube's columns are sized as its rows arrive: a figure is cut short on one run and whole on another (2%)
+    "mr-cube": ("/pivot?preset=mr", {"idle": True, "tolerance": 0.02, "wait": "!/Computing the grid/i.test(document.querySelector('#main').innerText)"}),
     "pivot": ("/pivot", {}),
-    "bi-report": ("/bi/r/file:report:desk-wall", {}),
-    "frtb": (go("FRSA BANK"), {}),
+    "bi-report": ("/bi/r/file:report:desk-wall", {"idle": True, "wait": "/Net MTM/.test(document.querySelector('#main').innerText)"}),
+    "frtb": (go("FRSA BANK"), {"idle": True, "wait": "!/loading/i.test(document.querySelector('#main').innerText)"}),
     "simm": (go("SIMM"), {"idle": True, "wait": "!/Loading/i.test(document.querySelector('#main').innerText)"}),
-    "exposure": (go("EXP"), {}),
+    "exposure": (go("EXP"), {"idle": True}),
     "form": ("/forms", {}),
     "trades": (go("TRD"), {}),
     "curves": (go("CRV"), {}),
     "fund": (go("FUND"), {}),
     "useq": (go("USEQ"), {}),
-    "admin-engines": ("/admin/engines", {}),
+    "admin-engines": ("/admin/engines", {"idle": True}),
     "admin-connectors": ("/admin/connectors", {}),
     "admin-loads": ("/admin/loads", {}),
     "admin-upload": ("/admin/loads/upload", {}),
@@ -153,6 +155,8 @@ def test_the_key_pages_look_as_approved(stack, browser, request, tmp_path):
     (recent pages, workspaces) never shows in it. ``--update-snapshots`` writes the goldens; the drill never does."""
     if os.environ.get("DRISHTI_PAGEWALK_BASE"):
         pytest.skip("the goldens are of the test stack's fixed demo lake, not of a running console's data")
+    if sys.platform != "linux":
+        pytest.skip("the goldens are drawn by Chromium on Linux (the release machine); fonts render differently elsewhere")
     updating = request.config.getoption("--update-snapshots")
     if updating and os.environ.get("DRILL_TIMINGS_OUT"):
         pytest.fail("a drill never updates the visual snapshots: run --update-snapshots by hand and commit the goldens")

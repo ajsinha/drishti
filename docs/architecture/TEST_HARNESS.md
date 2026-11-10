@@ -319,11 +319,13 @@ server (no extra one), and compares each with its golden image in `drishti-conso
 
 - **Deterministic.** The walk's lake ends on a fixed business date (`SNAPSHOT_DATE`), so figures and dates never move; the test runs first in
   the file, before the walk adds recent pages; animations and transitions are off, the caret hidden, fonts (vendored) loaded, the scroll at
-  the top; the live clock and anything marked `data-snapshot-mask` are covered (`snapshots.MASK`, and per page `mask` in `KEY_SNAPSHOTS`).
+  the top; the business date is picked (`/asof`), pages that draw late are waited on (`idle`, `wait`); the live clock, the date box, Home's fact of the day, the VaR timings, the inbox's facts and anything marked `data-snapshot-mask` are covered (`snapshots.MASK`, and per page `mask` in `KEY_SNAPSHOTS`).
 - **Small goldens.** Each golden is the viewport at half size in at most 128 colours (PNG): a quarter of the pixels and a palette keep the
-  whole set at about SIZE_MB MB, while a moved panel, a lost border, a wrong theme colour or a missing chart still shows. A full-size capture
+  whole set (132 images) at about 4 MB, while a moved panel, a lost border, a wrong theme colour or a missing chart still shows. A full-size capture
   would be about ten times that; a perceptual hash alone would not draw what changed. The capture is mapped onto the golden's own palette,
   so an unchanged page compares to zero changed pixels.
+- **One platform.** The goldens are drawn by Chromium on Linux, the release machine; fonts render differently on Windows and macOS, so
+  the test skips there.
 - **Per-page tolerance.** A pixel changed when a channel is off by more than 40 of 255; a page changed when more than 0.2% of its pixels did
   (`tolerance` per page in `KEY_SNAPSHOTS`). On a change the capture and a diff image (golden | capture | changed pixels in red) are
   written to `DRISHTI_SNAPSHOT_DIFFS` (default the test's temporary folder; the drill: `<data>/drill/snapshot-diffs/`).

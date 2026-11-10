@@ -16,7 +16,7 @@
 browser's viewport (animations off, caret hidden, fonts loaded, the live clock and figures that move masked), scaled to half its size and
 mapped onto the golden's own palette, then compared pixel by pixel with its golden image (tests/snapshots/<page>/<width>-<theme>.png).
 
-The golden is a half-size PNG of at most 128 colours: a quarter of the pixels and a palette keep the whole set near 3 MB, small enough
+The golden is a half-size PNG of at most 128 colours: a quarter of the pixels and a palette keep the whole set (132 images) near 4 MB, small enough
 to commit and to refresh in a release, yet a moved panel, a lost border, a wrong theme colour or a missing chart still shows (a full-size
 capture would be about ten times the size; a perceptual hash alone would not draw what changed). Mapping the capture onto the golden's
 palette makes an unchanged page compare to zero pixels changed.
@@ -48,6 +48,7 @@ _STILL = """async () => {
   if (document.fonts && document.fonts.ready) { await document.fonts.ready; }
   if (document.activeElement && document.activeElement.blur) { document.activeElement.blur(); }
   window.scrollTo(0, 0);
+  for (const e of document.querySelectorAll('*')) { if (e.scrollTop > 0) { e.scrollTop = 0; } }   // a page that scrolls a panel to its anchor
   const st = document.createElement('style');
   st.textContent = '*, *::before, *::after { transition: none !important; animation: none !important; caret-color: transparent !important; scroll-behavior: auto !important; }'
                  + ' ::-webkit-scrollbar { display: none; }';
