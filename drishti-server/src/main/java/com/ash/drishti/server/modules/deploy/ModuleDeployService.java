@@ -128,6 +128,56 @@ public final class ModuleDeployService {
      * Stores a package once: unpacked, its hash list checked and the fifteen conformance checks run (C15 with {@code cycles} load/unload
      * cycles); refused with every failed check in words. The same version again is accepted only with the same bytes.
      */
+    /**
+     * The distribution's own modules (KERNEL_AND_MODULES.md section 3.3): each verified first-party package is put in the store as the
+     * product's build left it (its conformance checks ran in that build; a rebuild of the same version replaces the stored copy, which an
+     * upload never may), then installed on this node unless an administrator removed or switched it off. Returns a line per module.
+     */
+    public List<String> installShipped(List<Path> shipped, String by) {
+        com.ash.drishti.module.runtime.FirstParty list = com.ash.drishti.module.runtime.KernelFacts.ofKernel().firstParty();
+        List<Path> verified = new ArrayList<>();
+        List<String> out = new ArrayList<>();
+        for (Path dmod : shipped) {
+            Path work = store.resolve(".shipped-" + UUID.randomUUID().toString().substring(0, 8));
+            try {
+                Path dir = work.resolve("pkg");
+                Dmod.unpack(dmod, dir);
+                DmodManifest m;
+                try (InputStream in = Files.newInputStream(dir.resolve(DmodManifest.FILE))) {
+                    m = DmodManifest.read(in, dmod.getFileName().toString());
+                }
+                Dmod.verify(dir, dmod, m.label());
+                com.ash.drishti.module.runtime.FirstParty.Origin origin = list.origin(m, dir);
+                if (!origin.firstParty()) {
+                    out.add(m.label() + ": not installed by default: " + origin.why());
+                    continue;
+                }
+                String sha = sha(dmod);
+                Path at = store.resolve(m.id()).resolve(m.version());
+                Path meta = at.resolve("stored.json");
+                boolean same = Files.isRegularFile(meta) && JSON.readValue(meta.toFile(), Stored.class).sha().equalsIgnoreCase(sha);
+                if (!same) {
+                    Files.createDirectories(at);
+                    Files.copy(dmod, at.resolve(Dmod.fileName(m.id(), m.version())), StandardCopyOption.REPLACE_EXISTING);
+                    ModuleNode.delete(at.resolve("pkg"));
+                    Files.move(dir, at.resolve("pkg"));
+                    Stored s = new Stored(m.id(), m.version(), m.title(), m.about(), m.publisher().getOrDefault("name", ""), sha, Files.size(dmod),
+                            List.of("the fifteen conformance checks ran in the product's build (first-party, " + origin.why() + ")"),
+                            ModuleParts.of(m).parts().keySet().stream().toList(), by, clock.instant().toString());
+                    JSON.writerWithDefaultPrettyPrinter().writeValue(meta.toFile(), s);
+                    audit.record(by, "module-stored", "module/" + m.id(), m.version() + " | sha256 " + sha + " | the distribution's");
+                }
+                verified.add(dmod);
+            } catch (IOException | RuntimeException e) {
+                out.add(dmod.getFileName() + ": not installed by default: " + e.getMessage());
+            } finally {
+                ModuleNode.delete(work);
+            }
+        }
+        out.addAll(node.installShipped(verified));
+        return out;
+    }
+
     public Stored upload(byte[] bytes, String by) {
         if (bytes == null || bytes.length == 0) {
             throw ModuleNode.refused("no package: send the .dmod's bytes");

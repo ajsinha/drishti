@@ -158,7 +158,8 @@ public class ModuleDeployConfiguration {
     public void startModules(org.springframework.boot.context.event.ApplicationReadyEvent e) {
         nodeRef = e.getApplicationContext().getBean(ModuleNode.class).start(e.getApplicationContext());
         if (e.getApplicationContext().getEnvironment().getProperty("drishti.modules.shipped", Boolean.class, true)) {
-            nodeRef.installShipped(shipped(ModuleDeployConfiguration.root(e.getApplicationContext().getEnvironment()).resolve("shipped")))
+            e.getApplicationContext().getBean(ModuleDeployService.class).installShipped(shipped(ModuleDeployConfiguration.root(
+                    e.getApplicationContext().getEnvironment()).resolve("shipped")), "the distribution")
                     .forEach(l -> LoggerFactory.getLogger(ModuleNode.class).info("the distribution's modules: {}", l));
         }
         started = true;
