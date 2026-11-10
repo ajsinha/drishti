@@ -42,6 +42,11 @@ def _fresh(client, tmp_path, monkeypatch, listed: dict | None):
         from core.backend import BackendError
         raise BackendError(404, "DRS-4040", path)
     monkeypatch.setattr(backend, "public", public, raising=False)
+    plain = parts.refresh
+
+    async def refresh(backend, loaded=None, force=False):     # the server says genomics is loaded (a module project is hosted only then)
+        return await plain(backend, (set(loaded) if loaded is not None else set(parts._shipped())) | {"genomics"}, force)
+    monkeypatch.setattr(parts, "refresh", refresh)
     return parts
 
 

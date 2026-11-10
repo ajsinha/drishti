@@ -237,7 +237,8 @@ class ModuleParts:
                         continue
                 self._read(mid, folder, "server", parts, refused)
             shipped = self._shipped()                   # the product's own modules, while the server has them loaded and nothing replaced them
-            for mid in sorted(shipped if loaded is None else set(loaded) & set(shipped)):
+            content = {m for m, f in shipped.items() if f.name != "dmod"}   # a module project (src/dmod: genomics) only when the server says it is loaded
+            for mid in sorted(content if loaded is None else set(loaded) & set(shipped)):
                 if mid not in parts and mid not in gone:
                     self._read(mid, shipped[mid], "shipped", parts, refused)
             self.snapshot = Snapshot(parts, gone, refused, key)
