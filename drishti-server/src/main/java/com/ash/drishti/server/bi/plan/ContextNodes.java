@@ -35,7 +35,7 @@ import java.util.TreeMap;
 final class ContextNodes {
 
     /** The functions that are their own sub-plan (a {@code calc} with only {@code where=}, {@code closing}, {@code opening} along the answer are filters). */
-    private static final Set<String> SUB_PLANS = Set.of("calc", "share_of", "parent_of", "avg_by", "avg_over", "as_of", "last", "first");
+    private static final Set<String> SUB_PLANS = Set.of("calc", "share_of", "parent_of", "avg_by", "sum_by", "min_by", "max_by", "avg_over", "as_of", "last", "first");
 
     private ContextNodes() {}
 

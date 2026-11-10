@@ -45,7 +45,7 @@ public final class ModelDefParser {
         }
     }
 
-    static final Set<String> TOP = Set.of("rachana", "model", "version", "id", "tables", "history", "scan-warn-rows", "relationships", "measures", "calc-groups", "hierarchies", "parameters",
+    static final Set<String> TOP = Set.of("rachana", "model", "version", "id", "tables", "history", "scan-warn-rows", "relationships", "bridges", "functions", "measures", "calc-groups", "hierarchies", "parameters",
             "calendars", "fx", "security", "contract", "ai", "golden", "tests", "rollups", "lifecycle", "replaced-by", "layout", "title", "description", "owner", "tags",
             "endorsement", "endorsedBy", "audience", "sample", "implicit-from", "fields", "perspectives");
     private static final Set<String> MEASURE_KEYS = Set.of("id", "expr", "format", "description", "currency", "additive", "python", "inputs", "by", "via", "implicit", "title",
@@ -110,8 +110,21 @@ public final class ModelDefParser {
             y.error("DRS-9120", "version", "`version:` is the semver of the model's contract, such as 1.0.0, not '" + version + "'");
         }
         Map<String, ModelDef.Use> datasets = tables(root.path("tables"), y);
-        List<ModelDef.Rel> rels = relationships(root.path("relationships"), datasets, y);
+        List<ModelDef.Rel> rels = new ArrayList<>(relationships(root.path("relationships"), datasets, y));
+        rels.addAll(bridges(root.path("bridges"), datasets, y));
+        Map<String, com.ash.drishti.rachana.el.MeasureFunctions.Def> functions = functions(root.path("functions"), y);
         Map<String, ModelDef.Meas> measures = measures(root.path("measures"), y);
+        if (!functions.isEmpty()) {
+            for (String mName : new ArrayList<>(measures.keySet())) {
+                ModelDef.Meas x = measures.get(mName);
+                try {
+                    String expanded = com.ash.drishti.rachana.el.MeasureFunctions.expand(x.expr(), functions);
+                    measures.put(mName, new ModelDef.Meas(x.name(), x.id(), expanded, x.format(), x.description(), x.currency(), x.additive(), x.python(), x.inputs(), x.by(), x.via(), x.implicit()));
+                } catch (IllegalArgumentException e) {
+                    y.error("DRS-9127", "measures." + mName, e.getMessage());
+                }
+            }
+        }
         Map<String, List<String>> hierarchies = new LinkedHashMap<>();
         root.path("hierarchies").fields().forEachRemaining(e -> hierarchies.put(e.getKey(), y.strings(e.getValue(), "hierarchies." + e.getKey(), "DRS-9120")));
         ModelDef.Security security = security(root.path("security"), datasets, y);
@@ -125,6 +138,10 @@ public final class ModelDefParser {
             }
             if (r.name() != null) {
                 relIds.add(r.name());
+            }
+            if (r.bridge() != null) {
+                relIds.add(r.bridge().leftName());
+                relIds.add(r.bridge().rightName());
             }
             relIds.add(r.label());
         });
@@ -311,12 +328,10 @@ public final class ModelDefParser {
             if (!CARDINALITIES.contains(card)) {
                 y.error("DRS-9122", path + ".cardinality", "cardinality is one of " + CARDINALITIES);
             } else if ("many-to-many".equals(card)) {
-                y.error("DRS-9129", path + ".cardinality", "many-to-many (through a bridge) arrives in wave W2");
+                y.error("DRS-9129", path + ".cardinality", "a many-to-many is declared with `bridges:` naming its bridge table, not on a relationship");
             }
-            if ("both".equals(direction)) {
-                y.error("DRS-9129", path + ".direction", "direction: both arrives in wave W2; W1 filters flow from the one side to the many side");
-            } else if (!"single".equals(direction)) {
-                y.error("DRS-9122", path + ".direction", "direction is single (or both, from W2)");
+            if (!"single".equals(direction) && !"both".equals(direction)) {
+                y.error("DRS-9122", path + ".direction", "direction is single or both");
             }
             JsonNode s = r.path("suggested");
             boolean oneToMany = "one-to-many".equals(card);
@@ -324,6 +339,48 @@ public final class ModelDefParser {
                     oneToMany ? from[1] : to[1], oneToMany ? "many-to-one" : card, direction, r.path("active").asBoolean(true), LayerYaml.text(r, "name", ""),
                     s.isObject() ? LayerYaml.text(s, "from", "") : null));
         }
+        return out;
+    }
+
+    /** {@code bridges:}: each becomes a many-to-many, not an ordinary relationship: only the compiler crosses it, with a semi-join. */
+    private static List<ModelDef.Rel> bridges(JsonNode n, Map<String, ModelDef.Use> datasets, LayerYaml y) {
+        List<ModelDef.Rel> out = new ArrayList<>();
+        int i = 0;
+        for (JsonNode b : n) {
+            String path = "bridges[" + i++ + "]";
+            String[] left = field(LayerYaml.text(b, "left", ""));
+            String[] right = field(LayerYaml.text(b, "right", ""));
+            String through = LayerYaml.text(b, "through", "");
+            if (left == null || right == null || !datasets.containsKey(through)) {
+                y.error("DRS-9122", path, "a bridge is { name, left: alias.KEY, right: alias.KEY, through: alias of the bridge table }");
+                continue;
+            }
+            for (String[] f : List.of(left, right)) {
+                if (!datasets.containsKey(f[0])) {
+                    y.error("DRS-9122", path, "'" + f[0] + "' is not a dataset alias of this model");
+                }
+            }
+            String name = LayerYaml.text(b, "name", "bridge_" + left[0] + "_" + right[0]);
+            out.add(new ModelDef.Rel("", left[0], left[1], right[0], right[1], "many-to-many", "single", false, name, null,
+                    new Dataset.Bridge(through, LayerYaml.text(b, "left-key", left[1]), LayerYaml.text(b, "right-key", right[1]), LayerYaml.text(b, "left-name", "bridge_" + left[0]),
+                            LayerYaml.text(b, "right-name", "bridge_" + right[0]), !"one_way".equals(LayerYaml.text(b, "left-filter", "both")),
+                            "both".equals(LayerYaml.text(b, "right-filter", "one_way")))));
+        }
+        return out;
+    }
+
+    private static Map<String, com.ash.drishti.rachana.el.MeasureFunctions.Def> functions(JsonNode n, LayerYaml y) {
+        Map<String, com.ash.drishti.rachana.el.MeasureFunctions.Def> out = new LinkedHashMap<>();
+        n.fields().forEachRemaining(e -> {
+            List<String> params = new ArrayList<>();
+            e.getValue().path("params").forEach(p -> params.add(p.asText()));
+            String expr = LayerYaml.text(e.getValue(), "expr", "");
+            if (expr.isBlank()) {
+                y.error("DRS-9127", "functions." + e.getKey(), "a measure function is { params: [a, b], expr: \"...\" }");
+            } else {
+                out.put(e.getKey(), new com.ash.drishti.rachana.el.MeasureFunctions.Def(params, expr));
+            }
+        });
         return out;
     }
 

@@ -34,7 +34,7 @@ import java.util.Set;
  */
 public final class ModelYaml {
 
-    static final Set<String> TOP = Set.of("rachana", "model", "version", "tables", "relationships", "measures", "hierarchies", "security");
+    static final Set<String> TOP = Set.of("rachana", "model", "version", "tables", "relationships", "measures", "hierarchies", "security", "bridges", "functions");
     static final Set<String> MEASURE = Set.of("expr", "python", "inputs", "by", "format", "description", "currency", "additive", "id", "title",
             "display", "folder", "hidden", "implicit");
     static final Set<String> RELATIONSHIP = Set.of("id", "from", "to", "cardinality", "direction", "active", "name", "suggested");
@@ -164,9 +164,6 @@ public final class ModelYaml {
             if (v.isValueNode()) {
                 out.put(e.getKey(), new ModelDef.Measure(e.getKey(), v.asText(), null, null));
                 continue;
-            }
-            if (v.has("via")) {
-                y.error(TableCodes.UNREADABLE, p + ".via", "one way to name an inactive relationship: expr: \"calc(..., via = '" + v.get("via").asText() + "')\"");
             }
             Set<String> known = new java.util.HashSet<>(MEASURE);
             known.add("via");

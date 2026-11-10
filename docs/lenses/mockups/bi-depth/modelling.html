@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A screen mock-up (bi-depth/modelling.html), self-contained: system fonts, everything inline, nothing from a CDN.
+  Modelling: declare a many-to-many bridge, both-ways filtering per relationship, an ambiguous path refused with its fix.
+  See README.md beside it. The address keeps option, state and theme.
+-->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<script>if(location.hash.indexOf('light')>=0)document.documentElement.classList.add('light');</script>
+<style>:root{--bg:#0e1628;--bg2:#121c33;--panel:#16213a;--panel2:#1b2744;--line:#26345a;--line2:#1f2b49;--ink:#e7ecf5;--muted:#93a0b8;--faint:#8490a9;--amber:#e8a33a;--amber2:#f2b453;--amber-t:rgba(232,163,58,.14);--link:#7fb2ff;--ok:#5fd39a;--warn:#f2c14e;--bad:#ff7a7a;--onacc:#14100a;--ok-t:rgba(95,211,154,.14);--warn-t:rgba(242,193,78,.16);--bad-t:rgba(255,122,122,.15);--sy-k:#7fb2ff;--sy-s:#5fd39a;--sy-n:#f2b453;--sy-c:#8490a9;--sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;color-scheme:dark}
+html.light{--bg:#f7f5f0;--bg2:#efebe3;--panel:#fff;--panel2:#faf8f4;--line:#e2dcd0;--line2:#ece7dd;--ink:#172440;--muted:#55607a;--faint:#60697e;--amber:#985b0a;--amber2:#7c4805;--amber-t:rgba(184,110,12,.10);--link:#1f5fc4;--ok:#1b784c;--warn:#8a6100;--bad:#b42323;--onacc:#fff;--ok-t:rgba(27,120,76,.10);--warn-t:rgba(138,97,0,.10);--bad-t:rgba(180,35,35,.09);--sy-k:#1f5fc4;--sy-s:#1b784c;--sy-n:#985b0a;--sy-c:#60697e;color-scheme:light}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:13px/1.45 var(--sans)}
+button,select,input,textarea{font:inherit;color:inherit}
+.cap{display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:7px 14px;background:var(--bg2);border-bottom:1px solid var(--line);font-size:12px}
+.cap b{color:var(--amber2);letter-spacing:.04em;text-transform:uppercase;font-size:11px}
+.cap .grp{display:flex;align-items:center;gap:3px}.cap .grp>span{color:var(--faint);margin-right:4px}
+.cap button,.btn{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:3px 9px;cursor:pointer}
+.cap button.on,.btn.on{background:var(--amber);border-color:var(--amber);color:var(--onacc);font-weight:600}
+.btn.pri{background:var(--amber);border-color:var(--amber);color:var(--onacc);font-weight:600}
+.btn:hover,.cap button:hover{border-color:var(--amber)}
+.top{display:flex;align-items:baseline;gap:12px;padding:10px 16px 8px;border-bottom:1px solid var(--line2)}
+.top h1{font-size:15px;margin:0;font-weight:600}.top .sub{color:var(--muted);font-size:12px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:4px}
+.ph{display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid var(--line2);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.ph .r{margin-left:auto;text-transform:none;letter-spacing:0}
+.muted{color:var(--muted)}.num{font-family:var(--mono);font-variant-numeric:tabular-nums}.mono{font-family:var(--mono)}
+.ok{color:var(--ok)}.bad{color:var(--bad)}.warn{color:var(--warn)}.amb{color:var(--amber2)}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border-radius:10px;background:var(--amber-t);border:1px solid var(--amber);font-size:12px}
+.chip button{background:none;border:0;cursor:pointer;color:var(--amber2);padding:0 2px;font-size:13px}
+.note{padding:8px 10px;border-left:3px solid var(--amber);background:var(--amber-t);font-size:12px;border-radius:0 3px 3px 0}
+.refuse{padding:10px 12px;border-left:3px solid var(--bad);background:var(--bad-t);border-radius:0 3px 3px 0}
+select,input[type=text],input[type=number]{background:var(--panel2);border:1px solid var(--line);border-radius:3px;padding:2px 6px}
+table.g{border-collapse:collapse;width:100%;font-size:12px}table.g th{color:var(--muted);text-align:left;font-weight:500;padding:4px 8px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--panel)}table.g td{padding:3px 8px;border-bottom:1px solid var(--line2)}
+pre.y{margin:0;padding:10px 12px;font:12px/1.5 var(--mono);white-space:pre;overflow:auto}
+.y .k{color:var(--sy-k)}.y .s{color:var(--sy-s)}.y .c{color:var(--sy-c)}.y .h{background:var(--amber-t);display:inline-block;min-width:100%}
+svg text{fill:var(--muted);font:11px var(--sans)}
+</style>
+<style>#stage{padding:12px 16px}.lay{display:grid;grid-template-columns:1fr 430px;gap:12px}.lay.B{grid-template-columns:1fr 1fr}
+.form{padding:10px;display:grid;grid-template-columns:140px 1fr;gap:7px 10px;align-items:center}.form label{color:var(--muted);font-size:12px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:3px;overflow:hidden}.seg button{background:var(--panel2);border:0;padding:3px 10px;cursor:pointer}.seg button.on{background:var(--amber);color:var(--onacc);font-weight:600}
+.tb text{fill:var(--ink)}.tb rect{fill:var(--panel2);stroke:var(--line)}.tb.bridge rect{stroke:var(--amber);stroke-dasharray:4 3}
+.rel{cursor:pointer}.rel path{fill:none;stroke:var(--faint);stroke-width:1.4}.rel.sel path{stroke:var(--amber);stroke-width:2.2}.rel.bad path{stroke:var(--bad);stroke-width:2.2}.rel.inactive path{stroke-dasharray:5 4}
+.fix{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}table.g tr.sel td{background:var(--amber-t)}table.g tr.bad td{background:var(--bad-t)}table.g tr{cursor:pointer}</style>
+<title>Modelling relationships</title>
+</head><body>
+<div id=cap class=cap></div><div class=top><h1>Risk model · relationships</h1><span class=sub id=sub></span></div><div id=stage></div>
+<script>
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+function el(t,a,...c){const e=document.createElement(t);for(const k in a||{}){if(k.startsWith('on'))e[k]=a[k];else if(k==='html')e.innerHTML=a[k];else e.setAttribute(k,a[k]);}c.flat(9).forEach(x=>e.append(x));return e;}
+function rng(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function gauss(r){return Math.sqrt(-2*Math.log(1-r()))*Math.cos(2*Math.PI*r());}
+function money(v){const a=Math.abs(v),s=v<0?'-':'';return s+'$'+(a>=1e9?(a/1e9).toFixed(2)+'B':a>=1e6?(a/1e6).toFixed(1)+'M':a>=1e3?(a/1e3).toFixed(0)+'K':a.toFixed(0));}
+function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+function yaml(t){return t.split('\n').map(l=>{let h=l.endsWith('  #!');if(h)l=l.slice(0,-4);let o=esc(l).replace(/(#.*)$/,'<span class=c>$1</span>').replace(/^(\s*-?\s*)([\w.]+):/,'$1<span class=k>$2</span>:').replace(/('[^']*')/g,'<span class=s>$1</span>');return h?'<span class=h>'+o+'</span>':o;}).join('\n');}
+function pct1(arr){const a=[...arr].sort((x,y)=>x-y);return -a[Math.floor(a.length*.01)];}
+// The caption bar: option, state, theme; the address keeps the choice (#B-error-light)
+function Caption(title,opts,states,go,extra){
+ const parts=location.hash.slice(1).split('-');let o=opts.find(x=>x[0]===parts[0])?parts[0]:opts[0][0];let s=states.find(x=>x[0]===parts[1])?parts[1]:states[0][0];
+ const c=$('#cap');
+ function grp(l,list,cur,set){return el('span',{class:'grp'},el('span',{},l),list.map(x=>el('button',{class:x[0]===cur?'on':'',title:x[1],onclick:()=>set(x[0])},x[1])));}
+ function draw(){c.innerHTML='';c.append(el('b',{},title),grp('Option',opts,o,v=>{o=v;up();}),grp('State',states,s,v=>{s=v;up();}),el('span',{class:'grp'},el('button',{onclick:()=>{document.documentElement.classList.toggle('light');up(true);}},document.documentElement.classList.contains('light')?'Dark':'Light')),el('span',{class:'muted',style:'margin-left:auto'},'Mock-up · synthetic data'));if(extra)c.append(extra());}
+ function up(themeOnly){location.hash=o+'-'+s+(document.documentElement.classList.contains('light')?'-light':'');draw();if(!themeOnly)go(o,s);else if(window.onTheme)onTheme();}
+ window.addEventListener('hashchange',()=>{const p=location.hash.slice(1).split('-');let ch=false;if(p[0]&&p[0]!==o&&opts.find(x=>x[0]===p[0])){o=p[0];ch=true;}if(p[1]&&p[1]!==s&&states.find(x=>x[0]===p[1])){s=p[1];ch=true;}if(ch){draw();go(o,s);}});
+ draw();go(o,s);
+}
+
+const TB={trades:[300,150,'trades','fact'],books:[120,60,'books'],desks:[120,-30,'desks'],groups:[490,-20,'limit_groups'],bridge:[300,10,'book_limit_group','bridge'],cpty:[490,150,'counterparties'],dates:[120,250,'dates']};
+const R0={r1:{a:'trades',b:'books',k:'BOOK_ID',n:'trade_book',dir:'single',act:1},r2:{a:'books',b:'desks',k:'DESK_ID',n:'book_desk',dir:'single',act:1},r3:{a:'bridge',b:'books',k:'BOOK_ID',n:'bridge_book',dir:'both',act:1,b2:1},r4:{a:'bridge',b:'groups',k:'GROUP_ID',n:'bridge_group',dir:'single',act:1,b2:1},r5:{a:'trades',b:'cpty',k:'CPTY_ID',n:'trade_cpty',dir:'single',act:1},r6:{a:'cpty',b:'groups',k:'LIMIT_GROUP_ID',n:'cpty_group',dir:'single',act:1},r7:{a:'trades',b:'dates',k:'TRADE_DATE',n:'trade_date',dir:'single',act:1},r8:{a:'trades',b:'dates',k:'SETTLE_DATE',n:'settle_date',dir:'single',act:0}};
+let Rs,sel,fixed=false,opt='A',state='bridge';
+const BAD=['r3','r4','r5','r6','r1'];
+function center(t){const b=TB[t];return[b[0]+75,b[1]+22];}
+function dirMark(p,r){const t=r.dir==='both'?'⇄':'→';return`<text x=${p[0]} y=${p[1]+5} text-anchor=middle style="fill:var(--amber2);font-size:14px;font-weight:700">${t}</text>`+(r.act?'':`<text x=${p[0]} y=${p[1]+20} text-anchor=middle>inactive</text>`);}
+function diagram(){let s='';const bad=state==='refused'&&!fixed;for(const id in Rs){const r=Rs[id],[x0,y0]=center(r.a),[x1,y1]=center(r.b),cls=['rel',id===sel?'sel':'',!r.act?'inactive':'',bad&&BAD.includes(id)?'bad':''].join(' '),bend=id==='r8'?46:0,mid=[(x0+x1)/2-bend,(y0+y1)/2+bend],q=[mid[0]*2-(x0+x1)/2,mid[1]*2-(y0+y1)/2];s+=`<g class="${cls}" data-r="${id}"><path d="M${x0} ${y0}Q${q[0]} ${q[1]} ${x1} ${y1}"/>${dirMark(mid,r)}</g>`;}
+ for(const k in TB){const[x,y,n,t]=TB[k];s+=`<g class="tb ${t||''}"><rect x=${x} y=${y} width=150 height=44 rx=4 /><text x=${x+10} y=${y+18} style="font-weight:600">${n}</text><text x=${x+10} y=${y+34} style="fill:var(--muted)">${t==='fact'?'fact':t==='bridge'?'many-to-many bridge':'dimension'}</text></g>`;}
+ const d=el('div',{html:`<svg viewBox="100 -40 560 350" width=100% style="max-height:430px;display:block">${s}</svg>`});d.onclick=e=>{const g=e.target.closest('[data-r]');if(g){sel=g.dataset.r;draw();}};return d;}
+function ymlRel(r){return `  - { name: ${r.n}, from: ${TB[r.a][2]}.${r.k}, to: ${TB[r.b][2]}.${r.k}, filter: ${r.dir==='both'?'both':'one_way'}${r.act?'':', active: false'} }`;}
+function ymlText(){const lines=['relationships:'];for(const id in Rs){const r=Rs[id];if(r.b2)continue;lines.push(ymlRel(r)+(id===sel?'  #!':''));}
+ lines.push('','bridges:','  - name: book_limit_group','    left: books.BOOK_ID','    right: limit_groups.GROUP_ID','    through: book_limit_group   # each trade counted once in a total');
+ if(fixed||state==='direction')lines.push('','measures:','  Notional by settle date:','    expr: "sum(trades.NOTIONAL)"','    via: settle_date  #!');return lines.join('\n');}
+function yamlP(){return el('div',{class:'panel'},el('div',{class:'ph'},'model.yaml',el('span',{class:'r muted'},'what this page writes (proposed keys)')),el('pre',{class:'y',html:yaml(ymlText())}));}
+function bridgeForm(){const preview=[['Liquid Macro','$4.20B',''],['Regulatory Cap','$3.05B','overlaps Liquid Macro'],['Total (each trade once)','$5.61B','not $7.25B']];return el('div',{class:'panel'},el('div',{class:'ph'},'Many-to-many through a bridge'),el('div',{class:'form'},el('label',{},'Left table'),el('select',{},el('option',{},'books')),el('label',{},'Right table'),el('select',{},el('option',{},'limit_groups')),el('label',{},'Bridge table'),el('select',{},el('option',{},'book_limit_group')),el('label',{},'Keys'),el('span',{class:'mono',style:'font-size:12px'},'BOOK_ID, GROUP_ID'),el('label',{},'Totals'),el('span',{},el('input',{type:'checkbox',checked:'',disabled:''}),' each trade once (always)')),el('div',{style:'padding:0 10px 10px'},el('table',{class:'g'},el('tr',{},el('th',{},'Limit group'),el('th',{},'Notional'),el('th',{},'')),preview.map(p=>el('tr',{},el('td',{},p[0]),el('td',{class:'num'},p[1]),el('td',{class:'muted'},p[2])))),el('div',{class:'note',style:'margin-top:8px'},'Group rows do not add to the total because a book may sit in two groups. Totals are from each level’s own rows.')));}
+function dirForm(){const r=Rs[sel];return el('div',{class:'panel'},el('div',{class:'ph'},'Relationship ',el('span',{class:'mono'},r.n)),el('div',{class:'form'},el('label',{},'Joins'),el('span',{class:'mono',style:'font-size:12px'},`${TB[r.a][2]}.${r.k} → ${TB[r.b][2]}`),el('label',{},'Filter direction'),el('span',{class:'seg'},[['single','One way'],['both','Both ways']].map(([v,l])=>el('button',{class:r.dir===v?'on':'',onclick:()=>{r.dir=v;draw();}},l))),el('label',{},'Active'),el('span',{class:'seg'},[[1,'Active'],[0,'Inactive']].map(([v,l])=>el('button',{class:r.act===v?'on':'',onclick:()=>{r.act=v;draw();}},l))),el('label',{},'Per measure'),el('div',{style:'display:flex;gap:6px;align-items:center;flex-wrap:wrap'},el('span',{},'Notional by settle date'),el('select',{},el('option',{},'via: settle_date'),el('option',{},'via: trade_date')))),el('div',{class:'note',style:'margin:0 10px 10px'},r.dir==='both'?'Both ways: a filter on either side reaches the other. It costs a semi-join per query and can change totals, so it is off unless you turn it on.':'One way: only the one-side filters the many-side, the safe default.'));}
+function refused(){return el('div',{class:'panel'},el('div',{class:'ph'},'Check on save'),el('div',{style:'padding:10px'},fixed?el('div',{class:'note',html:'<b>Fixed.</b> limit_groups now reaches trades by one path. A measure that needs the other says so with <span class=mono>via:</span>.'}):el('div',{class:'refuse',html:'<b>Refused: two filter paths from <span class=mono>limit_groups</span> to <span class=mono>trades</span>.</b><br>1 · limit_groups → book_limit_group → books → trades<br>2 · limit_groups → counterparties → trades<br><span class=muted>A filter on a limit group cannot choose, and the two can keep different trades. The model is not saved.</span>'}),fixed?el('button',{class:'btn',style:'margin-top:8px',onclick:()=>go(opt,'refused')},'Undo'):el('div',{class:'fix'},el('button',{class:'btn pri',onclick:()=>{Rs.r6.act=0;fixed=true;sel='r6';draw();}},'Make cpty_group inactive, use via: per measure'),el('button',{class:'btn',onclick:()=>{Rs.r3.dir='single';fixed=true;sel='r3';draw();}},'Turn off both ways on bridge_book'))));}
+function list(){return el('div',{class:'panel'},el('div',{class:'ph'},'Relationships'),el('table',{class:'g'},el('tr',{},['Name','From','To','Filter','State'].map(h=>el('th',{},h))),Object.keys(Rs).map(id=>{const r=Rs[id],bad=state==='refused'&&!fixed&&BAD.includes(id);return el('tr',{class:(id===sel?'sel ':'')+(bad?'bad':''),onclick:()=>{sel=id;draw();}},el('td',{class:'mono'},r.n),el('td',{class:'mono'},TB[r.a][2]+'.'+r.k),el('td',{class:'mono'},TB[r.b][2]),el('td',{},r.dir==='both'?'⇄ both':'→ one way'),el('td',{},r.act?'active':el('span',{class:'muted'},'inactive')));})));}
+function panelFor(){return state==='bridge'?bridgeForm():state==='direction'?dirForm():refused();}
+function draw(){const s=$('#stage');s.innerHTML='';$('#sub').textContent={bridge:'Declare a bridge: limit groups share books, books sit in several groups',direction:'Both-ways filtering is per relationship; a measure can override it',refused:'An ambiguous path is refused at save, with the fix one click away'}[state];
+ if(opt==='A')s.append(el('div',{class:'lay'},el('div',{class:'panel'},el('div',{class:'ph'},'Model'),diagram()),el('div',{style:'display:flex;flex-direction:column;gap:10px'},panelFor(),yamlP())));
+ else s.append(el('div',{class:'lay B'},el('div',{style:'display:flex;flex-direction:column;gap:10px'},list(),yamlP()),el('div',{style:'display:flex;flex-direction:column;gap:10px'},panelFor(),el('div',{class:'panel'},el('div',{class:'ph'},'Paths'),diagram()))));}
+function go(o,st){opt=o;state=st;fixed=false;Rs=JSON.parse(JSON.stringify(R0));sel={bridge:'r3',direction:'r3',refused:'r6'}[st];draw();}
+Caption('5 · Modelling',[['A','Canvas + inspector'],['B','Table first']],[['bridge','Many-to-many bridge'],['direction','Both-ways filtering'],['refused','Ambiguous path refused']],go);
+</script>
+</body></html>

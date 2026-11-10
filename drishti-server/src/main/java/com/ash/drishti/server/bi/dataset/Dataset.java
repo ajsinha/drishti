@@ -50,10 +50,16 @@ public record Dataset(String name, int version, String title, String description
      * the pack's), the month its fiscal year starts, where its FX rates are, and the per-row currency column of each amount ({@code trades.notional} to
      * {@code trades.currency}, or an ISO code for a fixed currency).
      */
-    public record Model(String holidays, int fiscalYearStart, Fx fx, Map<String, String> currencyOf) {
-        public static final Model NONE = new Model(null, 1, null, Map.of());
+    public record Model(String holidays, int fiscalYearStart, Fx fx, Map<String, String> currencyOf, java.util.Set<String> notAdditive) {
+        public static final Model NONE = new Model(null, 1, null, Map.of(), java.util.Set.of());
+
+        /** A model with every measure additive. */
+        public Model(String holidays, int fiscalYearStart, Fx fx, Map<String, String> currencyOf) {
+            this(holidays, fiscalYearStart, fx, currencyOf, java.util.Set.of());
+        }
 
         public Model {
+            notAdditive = notAdditive == null ? java.util.Set.of() : java.util.Set.copyOf(notAdditive);
             currencyOf = currencyOf == null ? Map.of() : Map.copyOf(currencyOf);
             fiscalYearStart = fiscalYearStart < 1 || fiscalYearStart > 12 ? 1 : fiscalYearStart;
         }
@@ -273,9 +279,16 @@ public record Dataset(String name, int version, String title, String description
      * A relationship, {@code from} the many side, {@code to} the one side for {@code many-to-one}.
      *
      * @param direction {@code single} (filters flow from the one side to the many side) or {@code both}; stored, queries use the join as written
-     * @param active an inactive relationship is not joined by a query
+     * @param active an inactive relationship is not joined by a query (a bridge is carried with {@code active} false and {@code bridge} set; only {@code SqlCompiler} crosses it)
+     * @param name the relationship's name in words ({@code via:} and {@code calc(..., via = 'name')} accept it), or null
+     * @param bridge a many-to-many through a bridge table, or null for an ordinary relationship
      */
-    public record Relationship(String fromTable, String fromColumn, String toTable, String toColumn, String cardinality, String direction, boolean active, String id) {
+    public record Relationship(String fromTable, String fromColumn, String toTable, String toColumn, String cardinality, String direction, boolean active, String id, String name, Bridge bridge) {
+
+        /** A relationship with no name and no bridge. */
+        public Relationship(String fromTable, String fromColumn, String toTable, String toColumn, String cardinality, String direction, boolean active, String id) {
+            this(fromTable, fromColumn, toTable, toColumn, cardinality, direction, active, id, null, null);
+        }
 
         /** A relationship without a stable id (a version-1 dataset's). */
         public Relationship(String fromTable, String fromColumn, String toTable, String toColumn, String cardinality, String direction, boolean active) {
@@ -285,7 +298,25 @@ public record Dataset(String name, int version, String title, String description
         public String label() {
             return fromTable + "." + fromColumn + " -> " + toTable + "." + toColumn;
         }
+
+        /** True when {@code text} is this relationship's id, name, label or (for a bridge) one of its two legs. */
+        public boolean named(String text) {
+            return text.equals(id) || text.equals(name) || text.equals(label()) || bridge != null && (text.equals(bridge.leftName()) || text.equals(bridge.rightName()));
+        }
     }
+
+    /**
+     * A many-to-many: {@code fromTable.fromColumn} and {@code toTable.toColumn} (the left and right tables) meet through rows of the bridge table.
+     *
+     * @param through the bridge table
+     * @param leftKey the bridge table's column holding the left key
+     * @param rightKey the bridge table's column holding the right key
+     * @param leftName the name of the bridge-to-left leg ({@code bridge_books})
+     * @param rightName the name of the bridge-to-right leg
+     * @param leftBoth a filter on the right reaches the left (the bridge-to-left leg filters both ways)
+     * @param rightBoth a filter on the left reaches the right
+     */
+    public record Bridge(String through, String leftKey, String rightKey, String leftName, String rightName, boolean leftBoth, boolean rightBoth) {}
 
     /**
      * A measure: an aggregate expression, or a Python measure (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 20.8): {@code python} names a Python item, {@code inputs} the columns its

@@ -32,7 +32,7 @@ NO_STORE = {"Cache-Control": "no-store"}
 #: The editor API's paths the page may call, with their methods (anything else is 404 here).
 ROUTES = {
     "objects": {"GET"}, "object": {"GET"}, "sources": {"GET"}, "impact": {"GET"}, "history": {"GET"},
-    "check": {"POST"}, "statement": {"POST"}, "preview": {"POST"}, "access": {"POST"}, "suggest": {"POST"}, "save": {"POST"},
+    "check": {"POST"}, "statement": {"POST"}, "preview": {"POST"}, "access": {"POST"}, "suggest": {"POST"}, "save": {"POST"}, "dax": {"POST"},
     "propose": {"POST"}, "prefs": {"GET", "PUT"},
     "python/templates": {"GET"}, "python/notebook": {"POST"}, "python/contract": {"POST"}, "python/run": {"POST"}, "python/runtime": {"GET"},
 }

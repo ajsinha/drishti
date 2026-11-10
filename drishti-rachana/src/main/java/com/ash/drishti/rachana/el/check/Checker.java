@@ -706,6 +706,9 @@ public final class Checker {
             }
             case "fields", "fields-or-all" -> {
                 List<String> all = parts(a);
+                if (all != null && all.equals(List.of("GROUP")) && "fields-or-all".equals(p.type())) {
+                    return ElType.LIST;                                          // the group layer only: ignore = GROUP
+                }
                 if (all != null && all.equals(List.of("ALL"))) {
                     return "fields-or-all".equals(p.type()) ? ElType.LIST
                             : err(Problem.LANGUAGE, what + " is a list of fields; ALL is only for " + spelling.named("ignore").strip() + " and "
@@ -719,9 +722,11 @@ public final class Checker {
                     List<String> fp = parts(item);
                     if (fp == null || fp.isEmpty() || "user".equals(fp.get(0)) || "param".equals(fp.get(0))) {
                         err(Problem.LANGUAGE, what + " lists fields (alias.COLUMN)", null, item);
+                    } else if (fp.size() == 1 && "fields-or-all".equals(p.type()) && (fields.alias(fp.get(0)) || !fields.known())) {
+                        // ignore = [desks]: a table name means all its fields
                     } else {
                         field(fp, item, true);
-                        if ("by".equals(p.name()) && "avg_by".equals(f.name())) {
+                        if ("by".equals(p.name()) && List.of("avg_by", "sum_by", "min_by", "max_by").contains(f.name())) {
                             fields.field(fp).filter(Fields.Field::masked).ifPresent(x -> err(Problem.MASKED, "'" + String.join(".", fp)
                                     + "' is masked for you: avg_by cannot group on it", null, item));
                         }

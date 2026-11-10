@@ -115,7 +115,8 @@ public final class MqValidator {
         // ---- 4 local measures
         Dataset ds = withDefine(base, q, com.ash.drishti.server.bi.layer.Flattener.measureIds(v.measureDefs()), out);
         fail(out);
-        ds = MqBindings.bind(v, q, ds);                                        // mq: 2: what-if values bound into the measures, calculation groups applied
+        List<String> notApplicable = new ArrayList<>();
+        ds = MqBindings.bind(v, q, ds, notApplicable);                                        // mq: 2: what-if values bound into the measures, calculation groups applied
 
         // ---- 5 filters
         List<String> fields = new ArrayList<>(q.fields());
@@ -156,7 +157,7 @@ public final class MqValidator {
         fail(out);
 
         // ---- 8 the correctness guards
-        List<String> warnings = new ArrayList<>();
+        List<String> warnings = new ArrayList<>(notApplicable);
         if (q.rows()) {
             Set<String> facts = new LinkedHashSet<>();
             fields.forEach(f -> {

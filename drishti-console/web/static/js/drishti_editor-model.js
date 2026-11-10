@@ -141,13 +141,15 @@
     }));
     panel.appendChild(h('h3', { text: 'Relationships (from the many side)' }));
     var all = fields(ctx, doc).map(function (f) { return f.name; });
-    var rels = (doc.relationships || []).map(function (r, i) { return { i: i, from: r.from || '', to: r.to || '', active: r.active !== false }; });
+    var rels = (doc.relationships || []).map(function (r, i) { return { i: i, name: r.name || '', from: r.from || '', to: r.to || '', active: r.active !== false, direction: r.direction || 'single' }; });
     var ends = choices(all, rels.map(function (r) { return r.from; }).concat(rels.map(function (r) { return r.to; })));
     panel.appendChild(E.rowGrid(ctx, 'relationships', { label: 'Relationships', rows: rels, id: function (r) { return r.i; },
       rowData: function (r) { return { path: 'relationships[' + r.i + ']', rel: r.i }; },
       columns: [
-        { field: 'from', header: 'From', width: 220, options: ends, set: function (d, r, v) { d.relationships[r.i].from = v; } },
-        { field: 'to', header: 'To', width: 220, options: ends, set: function (d, r, v) { d.relationships[r.i].to = v; } },
+        { field: 'name', header: 'Name', width: 130, set: function (d, r, v) { if (v) { d.relationships[r.i].name = v; } else { delete d.relationships[r.i].name; } } },
+        { field: 'from', header: 'From', width: 200, options: ends, set: function (d, r, v) { d.relationships[r.i].from = v; } },
+        { field: 'to', header: 'To', width: 200, options: ends, set: function (d, r, v) { d.relationships[r.i].to = v; } },
+        { field: 'direction', header: 'Filter', width: 110, options: [{ value: 'single', label: 'One way' }, { value: 'both', label: 'Both ways' }], set: function (d, r, v) { if (v === 'both') { d.relationships[r.i].direction = 'both'; } else { delete d.relationships[r.i].direction; } } },
         { field: 'active', header: 'Active', width: 80, type: 'boolean', set: function (d, r, v) { if (v) { delete d.relationships[r.i].active; } else { d.relationships[r.i].active = false; } } },
         { field: 'remove', header: '', width: 90, render: function (r) {
           return remove(ctx, 'Remove relationship ' + (r.i + 1), 'data-remove-rel', String(r.i), function () {
@@ -158,8 +160,96 @@
       ctx.change(function (d) { d.relationships = d.relationships || []; d.relationships.push({ from: all[0] || '', to: all[1] || all[0] || '' }); }, 'relationships');
       ctx.redraw();
     }));
+    bridges(ctx, panel, doc, all);
     panel.appendChild(h('div', { 'data-model-cost': '' }));
     refresh(ctx, panel.parentNode);
+    refusal(ctx, panel, doc);
+    daxBox(ctx, panel);
+  }
+
+  /* ---- Many-to-many bridges: table first; the paths are drawn on a refusal or when asked ------------------------------------------- */
+  function bridges(ctx, panel, doc, all) {
+    var h = ctx.h;
+    panel.appendChild(h('h3', { text: 'Many-to-many bridges' }));
+    panel.appendChild(h('p', { class: 'ed-small', text: 'Dimensions filter across a bridge by a semi-join: a fact is never counted twice, and group rows may not add to the total because a book can sit in two groups.' }));
+    var rows = (doc.bridges || []).map(function (b, i) { return { i: i, name: b.name || '', left: b.left || '', right: b.right || '', through: b.through || '', leftFilter: b['left-filter'] || 'both' }; });
+    var aliases = Object.keys(doc.tables || {});
+    var ends = choices(all, rows.map(function (r) { return r.left; }).concat(rows.map(function (r) { return r.right; })));
+    panel.appendChild(E.rowGrid(ctx, 'bridges', { label: 'Bridges', rows: rows, id: function (r) { return r.i; },
+      rowData: function (r) { return { path: 'bridges[' + r.i + ']', bridge: r.i }; },
+      columns: [
+        { field: 'name', header: 'Name', width: 140, set: function (d, r, v) { d.bridges[r.i].name = v; } },
+        { field: 'left', header: 'Left key', width: 180, options: ends, set: function (d, r, v) { d.bridges[r.i].left = v; } },
+        { field: 'right', header: 'Right key', width: 180, options: ends, set: function (d, r, v) { d.bridges[r.i].right = v; } },
+        { field: 'through', header: 'Bridge table', width: 160, options: aliases, set: function (d, r, v) { d.bridges[r.i].through = v; } },
+        { field: 'leftFilter', header: 'Right filters left', width: 130, options: [{ value: 'both', label: 'Yes' }, { value: 'one_way', label: 'No' }], set: function (d, r, v) { if (v === 'one_way') { d.bridges[r.i]['left-filter'] = 'one_way'; } else { delete d.bridges[r.i]['left-filter']; } } },
+        { field: 'remove', header: '', width: 90, render: function (r) {
+          return remove(ctx, 'Remove bridge ' + (r.i + 1), 'data-remove-bridge', String(r.i), function () { ctx.change(function (d) { d.bridges.splice(r.i, 1); if (!d.bridges.length) { delete d.bridges; } }, 'bridges'); ctx.redraw(); });
+        } }] }));
+    panel.appendChild(addButton(ctx, '+ Bridge', 'data-add-bridge', function () {
+      ctx.change(function (d) { d.bridges = d.bridges || []; d.bridges.push({ name: 'bridge_' + ((d.bridges.length || 0) + 1), left: all[0] || '', right: all[1] || all[0] || '', through: aliases[0] || '' }); }, 'bridges');
+      ctx.redraw();
+    }));
+  }
+
+  /* an ambiguous path comes back from the server's check with both paths and the fix: shown with the fixes one click away and the paths drawn */
+  function refusal(ctx, panel, doc) {
+    var h = ctx.h;
+    var p = (ctx.S.problems || []).filter(function (x) { return String(x.message).indexOf('Two filter paths') === 0; })[0];
+    var draw = h('div', { 'data-model-paths': '', style: 'min-height:0' });
+    var shown = !!p;
+    function paint() {
+      E.clear(draw);
+      if (shown) { paths(ctx, draw, doc); }
+    }
+    if (p) {
+      var msg = String(p.message);
+      var off = /make '([^']+)' inactive/.exec(msg), both = /turn off both ways on '([^']+)'/.exec(msg);
+      panel.appendChild(h('div', { class: 'ed-cost ed-warn', 'data-model-refusal': '' },
+        h('p', { text: msg }),
+        off ? h('button', { type: 'button', class: 'ed-linkbtn', 'data-always': '', 'data-fix-inactive': off[1], on: { click: function () {
+          ctx.change(function (d) { (d.relationships || []).forEach(function (r) { if (r.name === off[1] || r.id === off[1]) { r.active = false; } }); }, 'relationships'); ctx.redraw(); } }, text: 'Make ' + off[1] + ' inactive' }) : null,
+        both ? h('button', { type: 'button', class: 'ed-linkbtn', 'data-always': '', 'data-fix-oneway': both[1], on: { click: function () {
+          ctx.change(function (d) {
+            (d.relationships || []).forEach(function (r) { if (r.name === both[1] || r.id === both[1]) { delete r.direction; } });
+            (d.bridges || []).forEach(function (b) { var leftAlias = String(b.left || '').split('.')[0]; if ((b['left-name'] || ('bridge_' + leftAlias)) === both[1]) { b['left-filter'] = 'one_way'; } });
+          }, 'relationships'); ctx.redraw(); } }, text: 'Turn off both ways on ' + both[1] }) : null));
+    }
+    panel.appendChild(addButton(ctx, shown ? 'Hide the paths' : 'Show the paths', 'data-show-paths', function () { shown = !shown; paint(); }));
+    panel.appendChild(draw);
+    paint();
+  }
+
+  /* drawn only on a refusal or when asked: the same relationships as the grid, through drishti-graph */
+  function paths(ctx, host, doc) {
+    var nodes = Object.keys(doc.tables || {}).map(function (a) { return { id: a, label: a, group: doc.tables[a].role || '' }; });
+    var edges = (doc.relationships || []).filter(function (r) { return r.active !== false; }).map(function (r) { return { from: String(r.from).split('.')[0], to: String(r.to).split('.')[0], label: r.direction === 'both' ? 'both ways' : '' }; });
+    (doc.bridges || []).forEach(function (b) {
+      edges.push({ from: b.through, to: String(b.left).split('.')[0], label: 'bridge' });
+      edges.push({ from: b.through, to: String(b.right).split('.')[0], label: 'bridge' });
+    });
+    window.Drishti.elements.core.load('drishti-graph').then(function (G) {
+      host.style.height = '320px';
+      (G.drawGraphPanel || window.Drishti.elements.graph.drawGraphPanel)(host, { nodes: nodes, edges: edges }, { density: 'compact' });
+    });
+  }
+
+  /* DAX to Rachana: the server converts and names exactly what it could not */
+  function daxBox(ctx, panel) {
+    var h = ctx.h;
+    panel.appendChild(h('h3', { text: 'Convert DAX to Rachana' }));
+    var input = h('input', { type: 'text', 'data-dax-input': '', 'aria-label': 'DAX expression', placeholder: 'CALCULATE(SUM(trades[MTM]), ALL(desks))', style: 'width:100%' });
+    var out = h('div', { 'data-dax-output': '' });
+    panel.appendChild(input);
+    panel.appendChild(addButton(ctx, 'Convert', 'data-dax-convert', function () {
+      ctx.api('POST', 'dax', { dax: input.value }).then(function (r) {
+        E.clear(out);
+        if (r.rachana) { out.appendChild(h('p', { class: 'ed-small', text: r.rachana })); }
+        (r.notes || []).forEach(function (n) { out.appendChild(h('p', { class: 'ed-small', text: 'Note: ' + n })); });
+        (r.notConverted || []).forEach(function (n) { out.appendChild(h('p', { class: 'ed-cost ed-warn', text: 'Not converted: ' + n })); });
+      });
+    }));
+    panel.appendChild(out);
   }
 
   /* ---- Fields ------------------------------------------------------------------------------------------------------------------- */

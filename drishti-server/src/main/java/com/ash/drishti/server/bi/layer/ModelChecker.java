@@ -174,6 +174,10 @@ public final class ModelChecker {
         for (int i = 0; i < m.relationships().size(); i++) {
             ModelDef.Rel r = m.relationships().get(i);
             String path = "relationships[" + i + "]";
+            if (r.bridge() != null) {
+                bridge(r, datasets, y, path);
+                continue;
+            }
             ResolvedDataset from = datasets.get(r.fromAlias());
             ResolvedDataset to = datasets.get(r.toAlias());
             if (from == null || to == null) {
@@ -191,6 +195,26 @@ public final class ModelChecker {
             if (!unique(to.def(), r.toColumn())) {
                 y.error("DRS-9123", path, r.toAlias() + "." + r.toColumn() + " is not the grain key of " + to.def().name() + " (keys " + to.def().grain().keys()
                         + "), so one row of " + r.fromAlias() + " could meet several: join to the key, or make the key part of the grain");
+            }
+        }
+    }
+
+    private static void bridge(ModelDef.Rel r, Map<String, ResolvedDataset> datasets, LayerYaml y, String path) {
+        ResolvedDataset through = datasets.get(r.bridge().through());
+        ResolvedDataset left = datasets.get(r.fromAlias());
+        ResolvedDataset right = datasets.get(r.toAlias());
+        if (through == null || left == null || right == null) {
+            return;
+        }
+        for (String[] k : List.of(new String[] {r.bridge().leftKey(), r.fromColumn(), r.fromAlias()}, new String[] {r.bridge().rightKey(), r.toColumn(), r.toAlias()})) {
+            String own = typeOf(through.def(), k[0]);
+            String far = typeOf(datasets.get(k[2]).def(), k[1]);
+            if (own == null) {
+                y.error("DRS-9122", path, k[0] + " is not a column of the bridge table " + r.bridge().through());
+            } else if (far == null) {
+                y.error("DRS-9122", path, k[2] + "." + k[1] + " is not a column of the model");
+            } else if (!own.equals(far)) {
+                y.error("DRS-9122", path, r.bridge().through() + "." + k[0] + " is a " + own + " and " + k[2] + "." + k[1] + " is a " + far + ": a key joins values of one type");
             }
         }
     }
@@ -246,6 +270,20 @@ public final class ModelChecker {
             } else {
                 parent.put(a, b);
             }
+        }
+        List<com.ash.drishti.tables.check.FilterPaths.Link> links = new ArrayList<>();
+        for (ModelDef.Rel r : m.relationships()) {
+            String name = r.name() != null && !r.name().isBlank() ? r.name() : !r.id().isBlank() ? r.id() : r.label();
+            if (r.bridge() != null) {
+                links.add(new com.ash.drishti.tables.check.FilterPaths.Link(r.bridge().leftName(), r.bridge().through(), r.fromAlias(), r.bridge().leftBoth(), true));
+                links.add(new com.ash.drishti.tables.check.FilterPaths.Link(r.bridge().rightName(), r.bridge().through(), r.toAlias(), r.bridge().rightBoth(), true));
+            } else if (r.active()) {
+                links.add(new com.ash.drishti.tables.check.FilterPaths.Link(name, r.fromAlias(), r.toAlias(), "both".equals(r.direction()), false));
+            }
+        }
+        String ambiguous = com.ash.drishti.tables.check.FilterPaths.ambiguous(links);
+        if (ambiguous != null) {
+            y.error("DRS-9124", "relationships", ambiguous);
         }
     }
 

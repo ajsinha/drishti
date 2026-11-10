@@ -9055,3 +9055,27 @@ M 2–3 days, L 4–5 days.
 | 6 | About text authored in a Design | Yes, as a Design part exported with the pack fragment; not governed-live until a later step |
 | 7 | What Ask sends | `labels-only` by default; values only when an administrator sets `shown`; server-side only; per-pack opt-in |
 | 8 | Source health for viewers | Show one word (`up`, `degraded`, `down`), reduced as `HealthController` does; the details stay on the admin health page |
+
+## DAX-to-Rachana cookbook
+
+A DAX author's first map of Rachana. There is no DAX engine: one grammar. `drishti.py bi dax "..."` and the model editor's Tables tab (**Convert DAX to Rachana**) apply this table and name exactly what they did not convert.
+
+| DAX | Rachana |
+|---|---|
+| `SUM(t[C])`, `AVERAGE`, `MIN`, `MAX`, `DISTINCTCOUNT`, `COUNTROWS(t)` | `sum(t.C)`, `avg`, `min`, `max`, `distinct(t.C)`, `count(t)` |
+| `DIVIDE(a, b)` | `ratio(a, b)` (null on a zero divisor) |
+| `CALCULATE(m, t[C] = "x")` | `calc(m, ignore = [t.C], where = t.C == 'x')`: a DAX filter argument **replaces**; Rachana's `where` adds, so say `ignore` too |
+| `KEEPFILTERS(cond)` | `where = cond` |
+| `ALL(t[C])`, `REMOVEFILTERS(t[C])` | `ignore = [t.C]` |
+| `ALL()`, `REMOVEFILTERS()` | `ignore = ALL` |
+| `ALL(t)` | `ignore = [t]` |
+| `ALLEXCEPT(t, t[C])` | `ignore = [t], keep = [t.C]` |
+| `ALLSELECTED()` | `ignore = GROUP` (the group layer only; slicers stay) |
+| `FILTER(ALL(t[C]), [M] > x)` | `ignore = [t.C], by = [t.C], having = measure('M') > x` |
+| `USERELATIONSHIP(a, b)` | a measure's `via: name` (or `via = 'name'`) |
+| `CROSSFILTER(a, b, ONEWAY)` | `via = 'name', filter = 'one_way'` (`'both'` for BOTH) |
+| `SUMX(VALUES(t[C]), m)` and `AVERAGEX`/`MINX`/`MAXX` | `sum_by(m, by = [t.C])`, `avg_by`, `min_by`, `max_by`: the row-to-filter context transition, with its grain written |
+| `SELECTEDMEASURE()` in a calculation item | `SELECTED` |
+| a calculated table | a virtual table with `from: { model: ..., query }`; see [Tables](TABLES_GUIDE.md) |
+
+Not converted, and named when met: `VAR`/`RETURN`, `RANKX`, `SWITCH`, `FILTER` over a whole table, `SUMX` over a table without `VALUES`. Write those by hand from the patterns above.

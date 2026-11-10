@@ -221,6 +221,24 @@ final class MqBindings {
 
     /** The dataset with the parameters bound into its measures and the calculation groups applied to the selected measures. */
     static Dataset bind(ModelView v, ModelQuery q, Dataset ds) {
+        return bind(v, q, ds, new ArrayList<>());
+    }
+
+    /** Functions that accumulate a figure over time: a measure that does not add has no such figure. */
+    private static final java.util.Set<String> ACCUMULATING = java.util.Set.of("ytd", "mtd", "qtd", "fiscal_ytd", "running", "sum_by");
+
+    /** Why a template cannot apply to a measure, or null: the cell reads "not applicable" and the reason goes in the answer's warnings. */
+    private static String notApplicable(ModelView v, Dataset.Measure m, Node template) {
+        if (m.expr() == null) {
+            return "it is a Python measure, answered by its runner";
+        }
+        boolean accumulates = com.ash.drishti.server.bi.dataset.Node.anyMatch(template, x -> x instanceof Node.Call c && ACCUMULATING.contains(c.function()));
+        boolean notAdditive = v.def().measures().values().stream().anyMatch(d -> d.name().equals(m.name()) && "false".equals(d.additive()));
+        return accumulates && notAdditive ? "it does not add over time or across groups" : null;
+    }
+
+    /** As {@link #bind(ModelView, ModelQuery, Dataset)}, adding to {@code notes} the cells a calculation group left not applicable. */
+    static Dataset bind(ModelView v, ModelQuery q, Dataset ds, List<String> notes) {
         Map<String, Object> values = values(v, q);
         Map<String, Dataset.Measure> measures = new LinkedHashMap<>(ds.measures());
         boolean changed = false;
@@ -238,8 +256,22 @@ final class MqBindings {
                     .sorted(Comparator.comparingInt(ModelDef.CalcGroup::precedence).reversed()).toList();
             for (String name : q.measures()) {
                 Dataset.Measure m = measures.get(name);
-                if (m == null || m.expr() == null) {
-                    throw new MqException(MqException.Problem.of("DRS-9165", "calc", "a calculation group applies to measures with an expression; '" + name + "' is a Python measure"));
+                if (m == null) {
+                    throw new MqException(MqException.Problem.of("DRS-9165", "calc", "no measure '" + name + "'"));
+                }
+                String why = null;
+                for (ModelDef.CalcGroup g : groups) {
+                    String reason = notApplicable(v, m, Expressions.node(g.items().get(q.ext().calc().get(g.name()))));
+                    if (reason != null) {
+                        why = g.name() + "." + q.ext().calc().get(g.name()) + " does not apply to '" + name + "': " + reason;
+                        break;
+                    }
+                }
+                if (why != null) {
+                    notes.add("DRS-9165 not applicable: " + why);
+                    measures.put(name, new Dataset.Measure(m.name(), "null", m.format(), why, null, m.inputs(), m.by()));
+                    changed = true;
+                    continue;
                 }
                 String base = BASE + name;
                 measures.put(base, new Dataset.Measure(base, m.expr(), m.format(), m.description(), null, m.inputs(), m.by()));

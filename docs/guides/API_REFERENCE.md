@@ -478,6 +478,7 @@ Reading needs the `bi` power (else `403 DRS-9002`); saving and proposing need `b
 | `POST` | `/tables/editor/access` | `{yaml}`: a model's roles against rows, columns and editing |
 | `GET` | `/tables/editor/impact?kind=&name=` | what uses the object |
 | `GET` | `/tables/editor/history?item=` | the item's versions |
+| `POST` | `/tables/editor/dax` | `{dax}`: `{rachana, notConverted, notes}`: common DAX patterns as Rachana, with what could not be converted named |
 | `POST` | `/tables/editor/suggest` | `{kind, name, grain}`: a table over a kind with columns from a sample of its documents |
 | `POST` | `/tables/editor/save` | `{kind, yaml, item?, workspace?, message?, python?}`: a draft (a BI item of kind `table` or `model`; a Python-driven table's build function as its Python item) |
 | `POST` | `/tables/editor/propose` | `{item, note}`: proposed for review (four eyes) |

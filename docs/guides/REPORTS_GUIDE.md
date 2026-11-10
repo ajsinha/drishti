@@ -431,6 +431,21 @@ of *No rows for this selection*.
 
 ### 5.3 Relationships and how a question joins
 
+**Many-to-many.** Declare the bridge once; the bridge table's own rows are not repeated into the facts.
+
+```yaml
+bridges:
+  - name: book_limit_group
+    left: books.BOOK_ID
+    right: limit_groups.GROUP_ID
+    through: book_limit_group        # optional: left-key, right-key, left-name, right-name, left-filter, right-filter
+```
+
+A dimension across a bridge filters and groups by a semi-join: a fact row is counted once per value of what is asked, never once per bridge row, so group rows may not add to the total (a book in two groups) and the total is from its own rows. Row rules and masks on the bridge and the far table are applied inside the semi-join, as the reader, before any join; a restricted far table reaches the facts too. A measure that reads a table beyond the bridge is refused in words: bring the column onto the near side with a look-up.
+
+**Both ways.** `direction: both` on a relationship lets a filter on the many side reach the one side; it is read as a semi-join, so a one-side measure is never repeated. A model where a table can reach another by two paths and one of them is both-ways or across a bridge is refused when saved, naming both paths and the fix (`Two filter paths ... make 'cpty_group' inactive and name it with via: ..., or turn off both ways on 'bridge_book'`). A measure names the other path with `via: settle_date`.
+
+
 A model's relationships go from the many side to the one side (`{ from: trades.DESK, to: desks.id }`), and the packs' links are suggested
 for you. A question joins along **active** relationships, many-to-one, `LEFT JOIN`ed from the table the measures aggregate, so a measure is
 never counted twice:
