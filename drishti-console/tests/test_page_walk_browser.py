@@ -126,3 +126,56 @@ def test_the_key_pages_are_laid_out(stack, browser, width, theme):
     finally:
         pg.context.close()
     assert not faults, f"{width} px, {theme}:\n" + "\n".join(faults)
+
+
+def _distribution_console(server_url: str, name: str):
+    """A second console over the same server, showing the distribution ``name`` (docs/architecture/DISTRIBUTIONS.md): one cluster, a
+    Drishti Risk console and a Drishti Finance console, as the owner's stack runs them."""
+    import threading
+    import time
+
+    import uvicorn
+
+    from conftest import CONSOLE
+    from core.app import create_app
+    from core.config import Settings, load_settings
+    from wb_live import free_port
+
+    data = load_settings(CONSOLE / "config").as_dict()
+    data.setdefault("backend", {})["url"] = server_url
+    data["distribution"] = name
+    app = create_app(Settings(data))
+    port = free_port("")
+    srv = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning", timeout_graceful_shutdown=2))
+    th = threading.Thread(target=srv.run, daemon=True)
+    th.start()
+    deadline = time.monotonic() + 20
+    while not srv.started and time.monotonic() < deadline:
+        time.sleep(0.05)   # wait-ok: the console thread starting
+    assert srv.started, "the distribution's console did not start"
+    return f"http://127.0.0.1:{port}", srv, th
+
+
+@pytest.mark.parametrize("name,product,shown,gone", [("risk", "Drishti Risk", "/var", "MACRO"), ("finance", "Drishti Finance", None, "/var")])
+def test_the_page_walk_per_distribution(stack, browser, name, product, shown, gone):
+    """Each distribution's console over the one server: its top bar's every link opens clean, its brand is drawn, and a page of a module
+    it leaves out is not linked (Finance has no VaR, Risk no economy)."""
+    server = getattr(stack, "server", None)
+    if not server:
+        pytest.skip("DRISHTI_PAGEWALK_BASE walks one running console; start each distribution's console and walk it the same way")
+    base, srv, th = _distribution_console(server, name)
+    try:
+        pg = new_page(browser)
+        try:
+            pg.goto(base + "/")
+            assert product in pg.content()
+            links = dedupe(menu_links(pg, base))
+        finally:
+            pg.context.close()
+        assert not [h for h in links if h == gone or h.startswith(gone + "?") or (gone.isupper() and gone in h)], (name, gone)
+        if shown:
+            assert shown in links, (name, shown)
+        _assert_clean(_walk(browser, base, [h for h in links if not h.startswith("/lens/")] + ["/admin/white-label", "/help"]))
+    finally:
+        srv.should_exit = True
+        th.join(10)

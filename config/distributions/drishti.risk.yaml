@@ -43,7 +43,7 @@ lenses:
   default: risk
 
 menus:
-  top: [views, blotter, positions, risk, counterparties, curves, volatility, fx, credit, bi, admin, help]
+  top: [views, blotter, positions, risk, counterparties, markets, bi, admin, help]
   placeholder: "VAR BANK, VRES DESK:RATES, EXP CPTY:CP-ALDERSHOT, CRV USD-SOFR …  then <GO>"
 
 home:

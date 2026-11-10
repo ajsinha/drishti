@@ -856,10 +856,12 @@ administrator (four eyes), audited, applied **hot**: the kernel validates the ne
 
 ![White label: drishti.finance and drishti.genomics drawn from one kernel build with different modules, brand, theme, lenses and Home](kernel-and-modules/diagrams/distributions.svg)
 
-One YAML file, `config/distribution.yaml` (or `DRISHTI_DISTRIBUTION=<path>`), that turns the kernel into a product: which modules, which
+One YAML file, `config/distributions/drishti.<name>.yaml` (chosen by `--distribution <name|path>`, `DRISHTI_DISTRIBUTION` or
+`drishti.distribution`; none: Drishti All), that turns the kernel into a product: which modules, which
 brand and theme, which lenses and Home, which docs, which default bindings. It folds today's scattered product settings
 (`drishti.edition`, `ui.product`, `ui.copyright`, `drishti.branding.*`, the lens files' `title`, `config/packs/default-packs.yaml`) into
-one place, **as the one way**: the old keys are read for one release when no distribution file exists.
+one place, **as the one way**: the old keys are read for one release, each named on Health as deprecated. Built:
+[DISTRIBUTIONS.md section 10](DISTRIBUTIONS.md#10-how-it-works-as-built).
 
 **Kernel and console.** The same file format serves both blocks. On a kernel it decides **what is loaded** (modules, default bindings); on
 a Drishti Console it decides **the presentation** (brand, theme, lenses, Home, the modules shown, docs). A console in front of several

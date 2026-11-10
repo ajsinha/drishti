@@ -46,7 +46,8 @@ almost everything here; it is all under **Admin** in the top bar. Every setting 
 21. [Compute engines on or off](#21-compute-engines-on-or-off)
 22. [Modules on or off](#22-modules-on-or-off)
 23. [Data bindings](#23-data-bindings)
-24. [Troubleshooting](#24-troubleshooting)
+24. [White label: distributions](#24-white-label-distributions)
+25. [Troubleshooting](#25-troubleshooting)
 
 ## 1. Signing in and out
 
@@ -756,7 +757,8 @@ lenses, functions or packs.
 
 ## 13. Run a whole instance as one lens
 
-The setting is `drishti.edition` (environment variable `DRISHTI_EDITION`): the name of a lens file in `drishti.lens-dir`
+**Deprecated: name a distribution instead (section 24); `drishti.edition` is read for one release and ignored when a distribution is
+named.** The setting is `drishti.edition` (environment variable `DRISHTI_EDITION`): the name of a lens file in `drishti.lens-dir`
 ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtiedition--editions-and-lenses)). Set it **on the server only**: the console asks the
 server (`/public/about`, the same answer as `/api/v1/about`'s `edition`) and follows. A change needs a restart of the server; the console
 follows within its check interval (`backend.check_seconds`, 5 s) or at its next start. The examples use `risk`; `trading`, `market` and
@@ -1179,7 +1181,8 @@ menu is no subject menu and stays in the bar, its columns folding into a drawer.
 
 ### 17.2 White-labelling checklist
 
-A lens keeps Drishti's name and eye by default. A licensee who wants its own name sets, on both sides:
+**Use a distribution file instead (section 24): its `brand:` and `theme:` are the one way.** The keys below are read for one release
+(Health names each as deprecated). A lens keeps Drishti's name and eye by default. A licensee who wants its own name sets, on both sides:
 
 | What | Server | Console |
 |---|---|---|
@@ -1619,7 +1622,36 @@ lists are still read in this release and Health lists each file that carries one
 list*); the next release stops reading them. Health's `bindings` block also gives the counts, the unbound required needs and the functions
 they switched off. The API: `GET /api/v1/admin/bindings`, `POST /api/v1/admin/bindings/proposals` and `…/proposals/{id}/approve|reject|withdraw`.
 
-## 24. Troubleshooting
+## 24. White label: distributions
+
+A **distribution** makes the product: its name, tagline, copyright, logo and theme, its modules, lenses, menus, Home cards and Help.
+It is one file, `config/distributions/drishti.<name>.yaml`, and the one way to brand Drishti
+([DISTRIBUTIONS.md](../architecture/DISTRIBUTIONS.md), [KERNEL_AND_MODULES.md section 6](../architecture/KERNEL_AND_MODULES.md#6-the-distribution-file-white-label)).
+Shipped: **Drishti All** (every module, the default), **Drishti Risk** (banking and market data; Risk, Trading and Market lenses; navy
+dark), **Drishti Finance** (capital markets, economy and market data; no VaR or any risk number; light) and **Drishti Genomics** (the
+sample). What a distribution leaves out does not exist in it: its commands, words, menus, Home cards, Help pages and the catalogue the
+AI reads; a command typed anyway answers *DRS-4023 VRES is not in Drishti Finance*.
+
+**Choose one** at start: `bin/start-all.sh --distribution finance` (Windows `bin\start-all.cmd --distribution finance`), or
+`DRISHTI_DISTRIBUTION=finance`, or `drishti.distribution: finance` (server) and `distribution: finance` (console). A path instead of a
+name loads a site's own file. A console started with its own `--distribution` keeps it whatever the server runs, so one cluster can serve
+a Drishti Risk console and a Drishti Finance console ([DEPLOYMENT_AND_QA_GUIDE.md 6.7](../DEPLOYMENT_AND_QA_GUIDE.md#67-a-distribution-drishti-risk-drishti-finance-drishti-genomics)).
+
+**Your own brand.** Copy a shipped file to `config/distributions/drishti.acme.yaml`, change `distribution: drishti.acme` and its
+`brand:` (`product`, `tagline`, `owner`, `copyright`, `notice`, `logo`, `favicon`, `about`, `support`), `theme:` (`tokens`: one of the
+console's themes, `mode`, `density`), `modules:` (ids from `config/distributions/modules.yaml`), `lenses:`, `menus:`, `home:` and
+`docs: { title }`; start with `--distribution acme`. A distribution names modules; it never contains code, connectors or credentials,
+and it cannot widen the licence.
+
+**Admin → White label** (mock-up A, side by side): every distribution file as a card, the running one first, each with its brand, theme,
+modules (and whether each is loaded on this server), lenses, menus, Home cards, Help title and the command that starts it. Read only:
+change the file and restart. **Admin → Health** shows the console's and the server's distribution and which of its modules loaded.
+
+**The old keys** (`drishti.edition`, `drishti.branding.*`, `DRISHTI_PRODUCT`, `ui.product`, `ui.tagline`, `ui.copyright`, `ui.owner`,
+`ui.notice`) are read for one release and named on Health as deprecated; sections 13 and 17 describe them. With a distribution named,
+`drishti.edition` is ignored.
+
+## 25. Troubleshooting
 
 **Users, roles and sign-in**
 

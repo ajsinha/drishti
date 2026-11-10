@@ -107,6 +107,13 @@ warning that the demo's **development** secrets are in use (fine on your machine
 sign in as `drishti-dev-admin` (password `drishti-dev-admin123`), type `TRD 1000001` and press Enter: an ENDUR commodity swap with its
 legs and cash flows. `VAR BANK` answers the bank's value at risk.
 
+**A distribution.** The same build starts as Drishti Risk, Drishti Finance or Drishti Genomics with one argument:
+`bin/start-all.sh --demo --distribution finance` (Windows `bin\start-all.cmd --demo --distribution finance`). Without it you run Drishti
+All, every module, which is what the drill, the page walk and the tutorials use. **You should see** *Drishti Finance* in the top bar and
+no Risk menu; `bin/status.sh` shows each process's distribution. The files are `config/distributions/drishti.<name>.yaml`; the IntelliJ
+run configurations **Drishti server (Risk)**, **(Finance)**, **(All)** and **Drishti console (Risk)**, **(Finance)**, **(All)** start
+each ([DISTRIBUTIONS.md](architecture/DISTRIBUTIONS.md), [DEPLOYMENT_AND_QA_GUIDE.md › 6.7](DEPLOYMENT_AND_QA_GUIDE.md#67-a-distribution-drishti-risk-drishti-finance-drishti-genomics)).
+
 To watch a program's output, start each in the foreground in its own terminal instead (`Ctrl+C` stops it):
 `bin/start-server.sh --demo`, then `bin/start-console.sh --demo` (Windows: `bin\start-server.cmd --demo`, `bin\start-console.cmd --demo`).
 Logs are in `data/logs/` (`server.log`, `console.log`), process ids in `data/run/`. Every option of the scripts (ports, heap, an

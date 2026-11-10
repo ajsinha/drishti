@@ -450,6 +450,69 @@ machine and on three machines, are in [section 10.6](#106-start-order-and-joinin
 | macOS: `permission denied` | `chmod +x bin/*.sh`; *cannot be opened because the developer cannot be verified* does not apply (these are text scripts), but a downloaded copy may carry quarantine: `xattr -dr com.apple.quarantine <drishti>` |
 | Windows: `… cannot be loaded because running scripts is disabled on this system` | run the `.cmd`, or `powershell -ExecutionPolicy Bypass -File bin\….ps1 …` |
 
+### 6.7 A distribution: Drishti Risk, Drishti Finance, Drishti Genomics
+
+One build, several products: a distribution (`config/distributions/drishti.<name>.yaml`,
+[DISTRIBUTIONS.md](architecture/DISTRIBUTIONS.md)) decides the name, theme, modules, lenses, Home and Help. Without one you get
+Drishti All, exactly as in 6.2. What a distribution leaves out does not exist in it: Drishti Finance has no VaR command, menu, Help page
+or AI tool; Drishti Risk has no economy command; market data is in both.
+
+**Drishti Risk, one machine.** Linux and macOS:
+
+```bash
+cd <drishti>
+bin/start-all.sh --demo --distribution risk
+```
+
+Windows (`cmd` or PowerShell):
+
+```powershell
+cd <drishti>
+bin\start-all.cmd --demo --distribution risk
+```
+
+**You should see** the same lines as in 6.2, then, at `http://<host>:17480`: **Drishti Risk** in the top bar on the navy dark theme,
+the menus Views, Blotter, Positions, Risk, Counterparties, Markets, BI, Admin, Help; Home's cards `VAR BANK`, `VAR DESK RATES`; Help
+titled **Drishti Risk Help**. Typing `ECON CAN <GO>` answers *DRS-4023 ECON is not in Drishti Risk*. `bin/status.sh` (Windows
+`bin\status.cmd`):
+
+```text
+process                     pid  state      port   health     distribution     address
+server                  2031144  running    18480  UP         risk             http://192.168.2.77:18480
+console                 2031702  running    17480  UP         risk             http://192.168.2.77:17480
+```
+
+**Drishti Finance, one machine.** The same with `--distribution finance` (Windows: `bin\start-all.cmd --demo --distribution finance`).
+**You should see** **Drishti Finance** on the light theme, the menus Views, Economies, Markets, Companies, BI, Admin, Help; no Risk menu;
+Home's cards `USEQ AAPL`, `FUND SPY`, `ECON CAN`, `NEWS rates`; Help titled **Drishti Finance Help** with no VaR, exposure, FRTB or SIMM
+guide; `VAR BANK <GO>` answers *DRS-4023 VAR is not in Drishti Finance*; `CRV <GO>` (market data) works.
+
+**Drishti Genomics (the sample).** `--distribution genomics`. **You should see** **Drishti Genomics** on the green theme with only the
+kernel's menus (Views, BI, Admin, Help); Admin → Health says the `genomics` module was asked for and is *not installed* (the sample
+module ships later): the kernel boots and is useful with no finance at all.
+
+**Drishti Risk and Drishti Finance over one cluster (the owner's stack).** In the stack file, a `consoles:` list beside the nodes:
+
+```yaml
+consoles:
+  - { name: risk,    port: 17480, distribution: risk }
+  - { name: finance, port: 17481, distribution: finance }
+```
+
+then `bin/start-cluster.sh --cluster drishti-stack/stack.yaml` (Windows: `bin\start-cluster.cmd --cluster drishti-stack\stack.yaml`).
+**You should see** each node start, then `console-risk: up on http://<host>:17480` and `console-finance: up on http://<host>:17481`;
+`bin/status.sh --cluster drishti-stack/stack.yaml` lists `console-risk … risk` and `console-finance … finance`. The nodes run Drishti
+All; each console shows its own distribution. Without a stack file, start a second console by hand:
+`bin/start-console.sh --server http://<host>:18480 --port 17481 --distribution finance --name finance --background` (Windows the same
+with `bin\start-console.cmd`), and stop it with `bin/stop-console.sh --name finance`.
+
+**By setting instead of an argument.** `DRISHTI_DISTRIBUTION=finance` in the environment or the env-file, or a path to a site's own file
+(`DRISHTI_DISTRIBUTION=/etc/drishti/acme.yaml`). IntelliJ: the run configurations *Drishti server (Risk)*, *(Finance)*, *(All)* and
+*Drishti console (Risk)* (17480), *(Finance)* (17481), *(All)*.
+
+**Verify.** Admin → Health, the Distribution line: the console's and the server's distribution and each module *loaded*. Admin → White
+label: every distribution side by side, the running one first.
+
 ## 7. Run them as services
 
 **Linux (systemd).** The shipped unit is `deploy/systemd/drishti-server.service` (the layout `/opt/drishti`, the user `drishti`,

@@ -28,7 +28,7 @@ modules:
     title: Market data
     domain: banking                        # the pack ships in the banking module until market-data is its own .dmod
     packs: [market-data]
-    menus: [curves, volatility, fx, credit]
+    menus: [markets]                       # the one Markets menu (it gathers Curves, Volatility, FX and Credit)
   banking:
     title: Banking and risk
     domain: banking
@@ -47,7 +47,7 @@ modules:
     title: Economy and markets
     domain: economy
     packs: [world-economy, news-and-markets, official-news, gdelt-events]
-    menus: [economies, markets]
+    menus: [economies, markets]            # Markets: its News and quotes column
     docs: [economy]
   genomics:                                # the sample module (built from the Module SDK alone); not installed until it ships
     title: Genomics (sample)
