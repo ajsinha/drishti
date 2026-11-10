@@ -68,7 +68,17 @@ def capture(pg, masks: list[str] = (), part: str | None = None) -> bytes:
     pg.mouse.move(0, 0)
     locs = [pg.locator(s) for s in (*MASK, *masks)]
     shot = dict(animations="disabled", caret="hide", mask=locs, mask_color="#808080")
-    return pg.locator(part).first.screenshot(**shot) if part else pg.screenshot(full_page=False, **shot)
+    if not part:
+        return pg.screenshot(full_page=False, **shot)
+    # the part's first screenful, the sticky top bar left out (it would be drawn over the part wherever the capture scrolled)
+    pg.evaluate("() => document.querySelectorAll('header.tbar').forEach((h) => { h.style.visibility = 'hidden'; })")
+    png = pg.locator(part).first.screenshot(**shot)
+    from PIL import Image
+
+    im = Image.open(io.BytesIO(png))
+    out = io.BytesIO()
+    im.crop((0, 0, im.width, min(im.height, pg.viewport_size["height"]))).save(out, format="PNG")
+    return out.getvalue()
 
 
 def _small(png: bytes):
