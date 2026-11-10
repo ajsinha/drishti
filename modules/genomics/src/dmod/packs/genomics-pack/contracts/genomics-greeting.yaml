@@ -1,8 +1,0 @@
-# The data contract of the kind this module provides (section 5.2): no storage, a hint for the data administrator.
-contract-format: 1
-kind: genomics-greeting
-version: "1.0"
-binding-hint: any table with one row per greeting (NAME, TEXT); the demo binding serves the samples
-fields:
-  - {name: NAME, type: string, key: true}
-  - {name: TEXT, type: string}

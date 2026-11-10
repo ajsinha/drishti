@@ -1,35 +1,53 @@
 /*
- * Copyright (c) the publisher of genomics. All rights reserved.
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
  */
 package org.helixlab.genomics;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/** The module's Spring configuration: its beans live in a child context of the kernel's, closed when the module unloads. */
+/** The module's Spring configuration: the kernel connects each bean of an extension type through its registration bridge. */
 @Configuration
 public class ModuleConfig {
 
     @Bean
-    public Greeting greeting() {
-        return new Greeting();
+    public GenomicsData genomicsData() {
+        return new GenomicsData();
     }
 
-    /** The kind it computes: the kernel routes {@code genomics-greeting} to it while the module is loaded. */
+    /** The VCF reader, a connector extension: the kinds variant and sample. */
     @Bean
-    public GreetingKinds greetingKinds(Greeting greeting) {
-        return new GreetingKinds(greeting);
+    public VcfConnector vcfConnector(GenomicsData data) {
+        return new VcfConnector(data);
     }
 
-    /** The Rachana function it adds: {@code genomics_greet(name)}. */
+    /** The kinds computed from them: gene and cohort. */
     @Bean
-    public GreetingFunctions greetingFunctions(Greeting greeting) {
-        return new GreetingFunctions(greeting);
+    public GenomicsKinds genomicsKinds(GenomicsData data) {
+        return new GenomicsKinds(data);
+    }
+
+    /** The Rachana function genomics_af_class(af). */
+    @Bean
+    public GenomicsFunctions genomicsFunctions() {
+        return new GenomicsFunctions();
     }
 
     /** Its REST API, under /api/v1/genomics/. */
     @Bean
-    public GreetingController greetingController(Greeting greeting) {
-        return new GreetingController(greeting);
+    public GenomicsController genomicsController(GenomicsData data) {
+        return new GenomicsController(data);
     }
 }

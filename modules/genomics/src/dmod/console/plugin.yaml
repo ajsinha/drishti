@@ -1,13 +1,44 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
 # The console part (plugin.yaml format 2): everything the console shows of the module is declared here, served under /m/genomics/
 # (KERNEL_AND_MODULES.md section 9); the console runs none of it. Removing the module takes every door with it (section 12).
 format: 2
+title: Genomics
 routes:
-  - {id: hello, path: "/hello/{name}", page: hello.html, function: GENOMICS, title: "Hello"}
-menus:                       # an entry of a top-bar menu (menu: a menu of the product, else the module's own)
-  - {menu: help, label: "Say hello", route: hello, params: {name: world}, icon: emoji-smile, desc: "The genomics module's page"}
+  - {id: variants, path: /variants, page: explorer.html, title: "Variants"}
+  - {id: variant, path: "/variants/{id}", page: explorer.html, function: VARIANT, title: "Variant"}
+  - {id: genes, path: /genes, page: explorer.html, title: "Genes"}
+  - {id: gene, path: "/genes/{id}", page: explorer.html, function: GENE, title: "Gene"}
+  - {id: cohorts, path: /cohorts, page: explorer.html, title: "Cohorts"}
+  - {id: cohort, path: "/cohorts/{id}", page: explorer.html, function: COHORT, title: "Cohort"}
+menus:                       # the module's own top menu (Genomics)
+  - {label: "Variants", route: variants, icon: list-ul, desc: "Every variant read from the VCF files"}
+  - {label: "Genes", route: genes, icon: diagram-2, desc: "Genes and their variants along the protein"}
+  - {label: "Cohorts", route: cohorts, icon: people, desc: "Cohorts, their samples and what they carry"}
 home:
   cards:                     # Home's quick cards
-    - {title: "Say hello", route: hello, params: {name: world}, cmd: "GENOMICS world"}
+    - {title: "A gene: its variants along the protein", route: gene, params: {id: TP53}, cmd: "GENE TP53"}
+    - {title: "A cohort: samples and variants", route: cohort, params: {id: COH-A}, cmd: "COHORT COH-A"}
+    - {title: "A variant and its carriers", route: variant, params: {id: HX-A001}, cmd: "VARIANT HX-A001"}
+visuals:                     # the module's own visual types (the custom-visual SDK): kinds of drishti-chart's registry from its library
+  - kind: genomics.lollipop
+    library: drishti-genomics
+    version: 0.1.0
+    file: drishti_genomics.js
+    title: Variant lollipop
+    summary: "A protein's variants: a stem and head at each amino acid position, the head's height the carriers, its colour the impact, the protein's domains as bands"
 ai:
   tools:                     # what the assistant may offer (a description; the console calls nothing of the module)
-    - {name: genomics_greet, description: "Greets a person by name (the genomics module)", route: hello, params: {name: world}}
+    - {name: genomics_gene, description: "Opens a gene's variants along its protein (the genomics module)", route: gene, params: {id: TP53}}
