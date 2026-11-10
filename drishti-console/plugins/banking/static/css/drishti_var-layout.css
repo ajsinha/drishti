@@ -83,7 +83,7 @@
 .vx-tree-crumb { font-size: var(--d-fs-12); color: var(--d-muted); margin: 0 0 var(--d-sp-6); }
 .vx-tree-crumb[hidden] { display: none; }
 .vx-tree-crumb a { text-decoration: none; }
-.vx-tree .vx-ex { visibility: hidden; white-space: nowrap; }
+.vx-tree .vx-ex { visibility: hidden; white-space: nowrap; margin-left: var(--d-sp-6); }
 .vx-tree .dg-row:hover .vx-ex, .vx-tree .dg-selected .vx-ex, .vx-tree .vx-current .vx-ex, .vx-tree .vx-ex:focus { visibility: visible; }
 @media (hover: none) { .vx-tree .vx-ex { visibility: visible; } }
 

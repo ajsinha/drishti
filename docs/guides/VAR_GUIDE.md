@@ -349,10 +349,13 @@ set says so in place of the figures.
 
 ### 3.2 The screen
 
-Two columns and a toolbar, as the approved mock-up (`docs/lenses/mockups/var-layout/A.html`, and `A-drawer.html` with the drawer open):
+Two columns and a toolbar, as the approved mock-ups (`docs/lenses/mockups/var/var-page.html`; the drop-downs from
+`docs/lenses/mockups/var-layout/A.html`):
 
-- **The toolbar** (under the status line): two searchable drop-downs for the baskets, **+ New basket**, **Backtest ›**, **What-if…** and
-  **Explain ›**.
+- **The status line** names the command, the business date and the scenario set; the long data-version text is behind **ⓘ data
+  versions** (click it to read the versions the figures were computed from).
+- **The toolbar**, one row: two searchable drop-downs for the baskets, **+ New basket**, **Include matured items**, **Backtest ›**,
+  **MR cube ›**, **What-if…** and **Explain ›**.
   - **Backtest ›** opens the regulatory backtest of the scope in view, on the date in view (the same page as `VAR <scope> BACKTEST`,
     [REGULATORY_VAR_REPORTING.md section 4.6](REGULATORY_VAR_REPORTING.md#46-backtesting)): its VaR against the P&L of the last 250
     business days, the exceptions and the zone.
@@ -372,7 +375,21 @@ Two columns and a toolbar, as the approved mock-up (`docs/lenses/mockups/var-lay
   - **Explain ›** (key **E**) opens the Explain drawer of the scope's VaR over the right of the screen: the formula with its values,
     how the number was built, why it moved and the workbook ([section 3.6](#36-how-this-number-was-built)). Every figure tile has its
     own: hover it for a one-line preview, click it for the drawer.
-- **Scopes** (left): the hierarchy chosen in the selector above it (Management: bank, division, desk, book; Legal entities: bank, legal
+- **Scopes** (left; the tree fills the column, with no panel under it). **The tree shows only the chosen scope:**
+  - **the whole bank**: the whole tree;
+  - **a node** (a division, a desk, a book): that node and everything below it, with a breadcrumb above the tree
+    (*Drishti Bank › DIV-MARKETS › Equity derivatives*) whose links go back up; the rest of the bank is not shown;
+  - **a system basket or a saved basket** (`PORT`, `BASKET`): the basket's own positions grouped by the hierarchy chosen in the selector
+    (Management by default): the basket at the top, under it the nodes that hold any of its positions, each node's VaR and ES those of the
+    basket's part in it (`(PORT:PF-EQD-DESK) & NODE:…`), computed by the VaR engine (`GET /api/v1/risk/var/tree?within=<scope>`,
+    [section 11.4](#114-history-the-tree-and-the-status)); nodes are not shown with their limits there. **All of the bank** above the
+    tree goes back;
+  - a position, a trade or a part of a basket keeps the tree it was picked from.
+
+  **Explain ›** is on every row: it shows as you point at the row and on the chosen row, and opens **Why it moved** of that row's VaR
+  ([section 3.11](#311-why-it-moved-the-var-change-explained)).
+
+  The hierarchy is the one chosen in the selector above it (Management: bank, division, desk, book; Legal entities: bank, legal
   entity, desk, book; and every configured hierarchy by its title, such as *Limit letters*: letter, desk; the choice kept
   in the link as `hierarchy=LL`; a node of rows with no value at its level is *(Blank)*, muted, its `?` saying how many trades and
   the fix: [section 15.14](#1514-hierarchies-from-promoted-columns)) with each
@@ -803,7 +820,26 @@ From the command line: `drishti.py var playground <scope> [--ids ...] [--xlsx FI
 
 VaR moved from one business date to the next; **Why it moved** says why, in causes that **add up exactly** to the change, and who drove
 each one. It is the **Why it moved** tab of the VaR figure's Explain (the drawer, or the page `VAR EXPLAIN <scope> <GO>`, or
-`VAR <scope> EXPLAIN [from] [to]`, opens), in three views (**Waterfall**, **Matrix**: the scope and each child node, the steps across,
+`VAR <scope> EXPLAIN [from] [to]`, or `VAR <scope> EXPLAIN vs <date>`, opens).
+
+**Explain › everywhere VaR or ES is shown.** One control, drishti-insight's **Explain ›** (`Drishti.Explain.link`), sits beside every VaR
+and ES: the explorer's tree rows and tiles, the regulatory reports (a cell's lineage, the period-end tile), Home's VaR tile, the Sutra
+pages' engine figures (a system basket, a position, a desk, a book, a legal entity), a BI visual of one VaR or ES, the MR cube and the
+pivots. It opens the drawer at Why it moved; the drawer's **Open as a page** gives the page below. A guard test
+(`drishti-console/tests/test_var_explain_everywhere.py`) keeps every such figure carrying it.
+
+**The page** (the approved mock-up `docs/lenses/mockups/var/why-it-moved.html`, layout A), top down:
+
+1. **The compare line**: *compare 10 Nov 2026 with 09 Nov 2026* and four choices: **Previous day** (the default), **1 week**, **Month
+   end** (the last day of the month before) and **Pick a date…**; the choice goes into the link (`from=`) and the engine compares with
+   the newest business date it has on or before it. **Workbook**, **Print** and **Back to the screen** sit at the top right.
+2. **Four figures**: the VaR on each date, the change (and in per cent), the tail scenario (the VaR scenario day now, and what it was).
+3. **The waterfall, first and wide**: the earlier VaR, each step, the later VaR. **Click a step** and the right column lists its biggest
+   contributors (the trades, books, children or scenario days that drove it) with a summary in plain words; the largest step is shown
+   when the page opens.
+4. **Formula**, **Inputs & lineage** (sources, versions, batches) and **Checks**, folded below; open them for an audit.
+
+In the drawer the same answer has three views (**Waterfall**, **Matrix**: the scope and each child node, the steps across,
 and **Sentences**) with the two dates to compare; it answers any scope the page answers (a node, a portfolio, a basket, an ad-hoc scope), and by default it compares the business date before the newest with the
 newest. The design and its reasoning are in [OVERSIGHT_LENS.md section 4.1](../architecture/LENSES.md#531-ro1-var-change-explanation).
 

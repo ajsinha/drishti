@@ -26,7 +26,7 @@ JS = CONSOLE / "plugins" / "banking" / "static" / "js"
 
 #: (file, what it shows, the text that proves the one control is used there)
 SITES = [
-    (JS / "drishti_var-explorer.js", "the tree's rows", 'E.link(explainReq("var", c.row.scope)'),
+    (JS / "drishti_var-explorer.js", "the tree's rows", 'E.link(explainReq("var", r.scope)'),
     (JS / "drishti_var-explorer.js", "the VaR and ES tiles", 'E.link(explainReq(x[1])'),
     (JS / "drishti_var-reports.js", "a report cell's lineage", 'E.link({ kind: "var", measure: "var", scope: "NODE:" + l.node'),
     (JS / "drishti_var-reports.js", "the period-end tile", "E.link({ kind: \"var\", measure: \"var\", scope: String(st.node)"),

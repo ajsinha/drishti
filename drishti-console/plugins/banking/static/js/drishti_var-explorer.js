@@ -1099,18 +1099,17 @@
     } else {
       s.appendChild(document.createTextNode(r.name));
     }
+    var ex = explainLink(r);
+    if (ex) s.appendChild(ex);
     if (r.scope && r.scope.charAt(0) !== "(") s.appendChild(addButton(r.scope, { type: r.kind === "position" ? "POS" : r.kind === "trade" ? "TRD" : r.scope.split(":")[0], id: r.scope.replace(/^[A-Z]+:/, ""), name: r.name }));
     return s;
   }
 
   /** Explain › on a row (the one control, drishti-insight's Explain.link): shown on hover and on the chosen row; opens Why it moved. */
-  function explainColumn() {
-    return { id: "explain", header: "", width: 78, sortable: false, valueGetter: function () { return ""; },
-      cellRenderer: function (c) {
-        var E = window.Drishti.Explain;
-        if (!E || !c.row.scope) return null;
-        return E.link(explainReq("var", c.row.scope), { cls: "vx-ex", title: "Why " + c.row.name + "'s VaR moved: the steps, the contributors, the formula (E)" });
-      } };
+  function explainLink(r) {
+    var E = window.Drishti.Explain;
+    if (!E || !r.scope) return null;
+    return E.link(explainReq("var", r.scope), { cls: "vx-ex", title: "Why " + r.name + "'s VaR moved: the steps, the contributors, the formula (E)" });
   }
 
   /** The tree's options: drishti-risk's VaR hierarchy with this screen's columns, its look of a scope's row and its lazy parts. */
@@ -1124,7 +1123,7 @@
                   ES: { label: "ES", column: { width: 80, cellClass: function () { return R.TONES.muted; } } },
                   LIMIT_USE: { label: "Limit", column: { width: 96, sortable: false } } },
       grid: { fitRows: 40, widths: widths, labelColumn: { header: "Scope", width: 230, pinned: "left", cellRenderer: nameCell },
-        columns: (P ? P.treeColumns() : []).concat([explainColumn()]),   // the Parametric and Gap columns, each with its ?; Explain ›
+        columns: P ? P.treeColumns() : [],                       // the Parametric and Gap columns, each with its ?
         rowClass: function (r) { return r.scope && r.scope === S.scope ? "vx-current" : null; },
         rowData: function (r) { return { scope: r.scope || null, current: r.scope ? String(r.scope === S.scope) : null }; },
         onResize: function (w) { try { localStorage.setItem(wkey, JSON.stringify(w)); } catch (e) { /* kept for this page only */ } } } });

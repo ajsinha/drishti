@@ -17,6 +17,19 @@
 
 ## Unreleased
 
+- **The VaR page as the owner approved it** (`docs/lenses/mockups/var/var-page.html`; VAR_GUIDE.md section 3.2): the scope tree shows
+  only the chosen scope (the whole bank; a node and below with a breadcrumb up; a system or saved basket its own positions grouped by the
+  chosen hierarchy, each part's VaR computed by the engine: `GET /api/v1/risk/var/tree?within=<scope>`, with **All of the bank** to go
+  back); the tree fills its column (drishti-grid no longer draws an empty Explain pane for a grid without an Explain hook); **Explain ›**
+  on every row (on hover and on the chosen row) and on the VaR and ES tiles; one toolbar row (baskets, the matured switch, Backtest, MR
+  cube, What-if, Explain); the data versions behind an ⓘ.
+- **Why it moved, layout A** (`docs/lenses/mockups/var/why-it-moved.html`; VAR_GUIDE.md section 3.11): the compare date is back
+  (Previous day, 1 week, Month end, Pick a date; `from=` in the link; `VAR <scope> EXPLAIN vs <date>`), four figures (VaR on each date,
+  the change, the tail scenario), the waterfall first and wide with a clicked step's biggest contributors and plain words on its right,
+  Formula, Inputs & lineage and Checks folded below. Other explained kinds keep the four-card page.
+- **Explain › everywhere VaR or ES is shown**: one control from drishti-insight (`Drishti.Explain.link`, `[data-explain-link]`) on the
+  explorer, the regulatory reports, Home's VaR tile, the Sutra pages' engine figures, a BI visual of one VaR or ES, the MR cube and
+  pivots; a guard test keeps every such figure carrying it.
 - VaR explorer: turning on **Include matured positions** no longer makes the scope tree disappear (the tree library refused the switch's own "of which matured" column); a screen's own tree measure with a label is accepted.
 
 - **Explain → Why it moved answers in about a second, not a minute** (the drill's failing Explain test, and "Why it moved looks broken"):

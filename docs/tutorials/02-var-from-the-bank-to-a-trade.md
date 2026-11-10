@@ -184,6 +184,22 @@ sent as scenario PVs, `USD · as booked` for one sent as a P&L vector).
 then one of its trades. Every panel moves in place; the breadcrumb grows (bank › division › desk › book › position › trade); the
 browser's Back steps back up.
 
+**You should see** the tree follow the scope: on the bank, the whole tree; on *Rates · Swaps and options*, only that desk and its books,
+with *Drishti Bank › Markets › Rates · Swaps and options* above the tree (click *Drishti Bank* there to see the whole tree again); a
+position or a trade keeps the desk's tree. Point at any row: **Explain ›** appears at its right end; click it and the Explain drawer opens
+at **Why it moved** for that row. The data versions are behind **ⓘ data versions** in the status line.
+
+**A basket's own tree.** Open **System baskets ▾**, type `usd` and press **Enter** on *PF-USD-RATES*: the tree now holds only the
+basket's positions, grouped by Management (the basket at the top, under it the divisions, desks and books that hold its positions, each
+with the VaR of the basket's part in it). Choose *Legal entities* in the selector above the tree to group them by legal entity instead.
+**All of the bank** above the tree goes back.
+
+**Why it moved.** Type `VAR BANK EXPLAIN <GO>` (or `VAR BANK EXPLAIN vs 2026-09-23 <GO>` for a week back): the page compares the bank's
+VaR on two dates, with **Previous day**, **1 week**, **Month end** and **Pick a date…** to change the earlier one. **You should see** four
+figures (the VaR on each date, the change, the tail scenario), the waterfall of the steps across the page, and on its right the biggest
+contributors of the largest step with a sentence in plain words; click another step to see its own. Formula, Inputs & lineage and
+Checks are folded at the foot.
+
 ![A bond future in BOOK-RATES-1: the breadcrumb from the bank, its own VaR and ES](img/t25/02-trade.jpg)
 
 A book lists its positions, each LONG or SHORT, with its VaR and its component in the book:
