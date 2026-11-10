@@ -423,7 +423,7 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
             throw new IllegalStateException("no plugin named '" + c.plugin() + "'");
         }
         try {
-            return new ConnectorInstance(name, new java.util.HashSet<>(c.kinds()), proto.getClass().getDeclaredConstructor().newInstance());
+            return new ConnectorInstance(name, new java.util.HashSet<>(c.kinds()), ComputedKindSource.fresh(proto));
         } catch (ReflectiveOperationException e) {
             throw new IllegalStateException("cannot create " + c.plugin() + ": " + e.getMessage());
         }

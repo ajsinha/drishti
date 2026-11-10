@@ -90,7 +90,7 @@ public class EngineConfiguration {
             }
         }, EngineConfiguration.class.getClassLoader());
         java.util.List<com.ash.drishti.api.SourcePlugin> plugins = new PluginDiscovery().discover(props.pluginDir()).stream()
-                .filter(pl -> access.classOn(pl.getClass().getName())).toList();
+                .filter(pl -> access.classOn((pl instanceof com.ash.drishti.engine.source.ComputedKindSource c ? c.provider() : pl).getClass().getName())).toList();
         return new SourceRegistry(plugins, props, codec, com.ash.drishti.common.RetryPolicy.of(env::getProperty, "connectors"),
                 com.ash.drishti.engine.source.OfflineMode.of(env::getProperty));
     }

@@ -98,7 +98,7 @@ public final class ConnectionProbe {
 
     private Result run(SourcePlugin proto, List<String> kinds, Map<String, String> settings, int maxDates, ScheduledExecutorService scheduler, long t0)
             throws Exception {
-        SourcePlugin fresh = proto.getClass().getDeclaredConstructor().newInstance();
+        SourcePlugin fresh = ComputedKindSource.fresh(proto);
         SourcePlugin instance = new ConnectorInstance("probe", new java.util.HashSet<>(kinds), fresh);
         Map<String, String> own = new LinkedHashMap<>(settings);
         own.putIfAbsent("source-name", "probe");

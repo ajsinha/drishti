@@ -32,11 +32,8 @@ dated-by: business_date
 cadence:
   frequency: daily
   due: to be confirmed
-storage:
-  connector: collateral-store
-  plugin: delta
-  domain: collateral
-  table: <root>/collateral/simm/
+binding-hint:
+  lake-table: collateral.simm
   test-data:
   - data/testdata/counterparty-risk/simm
 fields:

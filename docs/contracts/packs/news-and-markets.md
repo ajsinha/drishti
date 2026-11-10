@@ -41,7 +41,7 @@ A topic and the news about it: headlines (newest first) with their publishers an
 | Id pattern | `^TOPIC-` |
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
-| Storage | connector `news-store` (plugin `delta`), table `<root>/news/news-topic/` |
+| Binding hint | lake table `news.news-topic`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | config/packs/economy/news-and-markets/samples |
 | Worked example | [news-and-markets/news-topic](../samples/news-and-markets.md#news-topic) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -95,7 +95,7 @@ The headlines for one name, as the news connector computed them: newest first, f
 | Id pattern | `^NEWS-` |
 | Dated by | `snapshot` |
 | Cadence | intraday (due: on demand, when the connector is on) |
-| Storage | connector `news` (plugin `news`) |
+| Binding hint | any source the site binds; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/news-and-markets/news |
 | Worked example | [news-and-markets/news](../samples/news-and-markets.md#news) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -194,7 +194,7 @@ A listed company: its live quote and price history (yfinance connector) and its 
 | Id pattern | `^CO-` |
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
-| Storage | connector `news-store` (plugin `delta`), table `<root>/news/listed-company/` |
+| Binding hint | lake table `news.listed-company`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | config/packs/economy/news-and-markets/samples |
 | Worked example | [news-and-markets/listed-company](../samples/news-and-markets.md#listed-company) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -252,7 +252,7 @@ A quote and recent price history for a ticker, as the yfinance connector compute
 | Id pattern | `^QUOTE-` |
 | Dated by | `snapshot` |
 | Cadence | intraday (due: on demand, when the connector is on) |
-| Storage | connector `yfinance` (plugin `yfinance`) |
+| Binding hint | any source the site binds; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/news-and-markets/quote |
 | Worked example | [news-and-markets/quote](../samples/news-and-markets.md#quote) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 

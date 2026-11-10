@@ -81,9 +81,47 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
         return out;
     }
 
+    /** The site's bindings: each bound kind's connectors in read order (config/bindings.yaml), swapped whole when a binding changes. */
+    private volatile Map<String, List<String>> bound = Map.of();
+
+    /**
+     * The site's bindings take effect (docs/architecture/KERNEL_AND_MODULES.md section 5.8): a bound kind is read from its connectors in their
+     * order before any route of a pack. Applied at once, no restart.
+     */
+    public void bind(Map<String, List<String>> readOrder) {
+        bound = readOrder == null ? Map.of() : Map.copyOf(readOrder);
+    }
+
+    /** Each bound kind's read order as applied. */
+    public Map<String, List<String>> bound() {
+        return bound;
+    }
+
+    /** One running source of a kind, for the bindings' resolution: its connector, plugin and lake, demo samples or computed by a module. */
+    public record Serving(String name, String plugin, String lake, boolean demo, boolean computed) {}
+
+    /** The running sources of {@code kind} in read order, leaving out those that surely hold none of it. */
+    public List<Serving> serving(String kind) {
+        List<Serving> out = new ArrayList<>();
+        for (SourcePlugin p : candidates(kind)) {
+            if (p.holdsNone(kind)) {
+                continue;
+            }
+            String name = p.manifest().name();
+            SourcePlugin inner = p instanceof ConnectorInstance ci ? ci.delegate() : p;
+            String plugin = registry.applied(name).map(c -> c.plugin()).orElse(inner.manifest().name());
+            out.add(new Serving(name, plugin, registry.lakeOf(name), samples(name) || DEMO_LAKE.equals(registry.lakeOf(name)),
+                    inner instanceof ComputedKindSource));
+        }
+        return out;
+    }
+
     /** Plugins to try for {@code kind}, in order. */
     List<SourcePlugin> candidates(String kind) {
         Map<String, SourcePlugin> ordered = new LinkedHashMap<>();
+        for (String name : bound.getOrDefault(kind, List.of())) {
+            registry.plugin(name).filter(p -> p.manifest().serves(kind)).ifPresent(p -> ordered.put(name, p));
+        }
         for (String name : new String[] {routes.get(kind), props.defaultRoute()}) {
             if (name != null) {
                 registry.plugin(name).filter(p -> p.manifest().serves(kind)).ifPresent(p -> ordered.put(name, p));

@@ -23,6 +23,17 @@ throughout. The same day the owner decided the three building blocks (section 1.
 **separate Spring Boot application** in front of one or many kernels (section 10), and **Drishti modules**; and that Drishti Elements is the
 one controlled set of UI statics (section 11). Surveyed on `wip/train` `89f010df5`. A printable copy with the diagrams and mock-ups: [KERNEL_AND_MODULES.pdf](KERNEL_AND_MODULES.pdf).
 
+**Built so far.** The kernel API jar (`drishti-kernel-api`, kernel API 0.2) carries the SPIs of section 2.3 that i1 moved plus
+`DrishtiModule`, `ModuleContext` (with `Kinds` and `KindWriter`), `ModuleSettings`, `KindProvider`, `BindingState`, `AiToolProvider`,
+`@ModuleApi` and `ApprovalSource`; `FunctionProvider` (its `ElFunction` and `EvalContext`), `CacheGroup` (`MemoryBudget`), `CacheReport`
+(Caffeine) and `FlightForm` (Arrow Flight types) stay at their homes until their types move. Banking's `var-positions` and
+`var-system-baskets` are `KindProvider`s the kernel routes as computed kinds; `var-pv-stream` (the Kafka PV transport) is still a source
+plugin until the kernel's Kafka connector serves a kind's `live:` binding. Kernel-controlled bindings (section 5) are built:
+`config/bindings.yaml`, the resolution order, the states, the data gate on functions, four-eyes changes applied without a restart, Admin →
+Data bindings (mock-up A), contracts with `binding-hint:`, banking's needs as `META-INF/drishti/needs.yaml`, and the one-time upgrade from
+the connectors' `kinds:` lists. `MISMATCH` is decided by the resolver but not yet detected (no source is schema-checked against its
+contract), and the distribution default is a pack's `routes:` until distribution files exist (section 6).
+
 This is the one home for the three blocks, the module package, loading, data binding, distributions, the SDK and the console tier. It builds on what is already
 built and does not repeat it: the access chain (licence → module → lens → function → permission) and the registry are
 [ACCESS_MODEL.md](ACCESS_MODEL.md); the boundary survey, the dependency rules and the split as built are
@@ -219,7 +230,7 @@ Still at their old homes and to move with i2: `FunctionProvider` (its `EvalConte
 | `ViewAugmenter` (`drishti-engine`) | fields added to a kind's view as the page opens | `VAR_ENGINE.*` on a position, trade, book |
 | `Explainer` (`server.explain`) | the Explain drawer's formula, inputs and lineage for its numbers | VaR, component VaR, EPE, FRTB charge |
 | `CacheGroup` / `CacheReport.Owner` (`server.caches`) | caches the kernel reports and clears in order | VaR and exposure date caches |
-| `ApprovalSource` (`server.approvals`) | items in the Approvals inbox | regulatory VaR sign-off, scope changes |
+| `ApprovalSource` (`kernel.api.approvals`, moved in i2) | items in the Approvals inbox | regulatory VaR sign-off, scope changes |
 | `ShardedMeasure` (`server.shard`) | a measure computed across shards | VaR by hierarchy at scale |
 | `FlightForm` (`server.flight`) | an Arrow Flight descriptor it serves | P&L vectors out |
 | `CapacityFigures` (`server.capacity`) | its rows in the capacity planner | VaR memory and time per date |

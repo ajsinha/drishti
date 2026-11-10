@@ -1,0 +1,113 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# Admin → Data bindings (docs/guides/ADMIN_GUIDE.md, "Data bindings"; KERNEL_AND_MODULES.md section 5; mock-up A,
+   docs/architecture/kernel-and-modules/mockups/data-bindings.html), from GET /api/v1/admin/bindings as `st`: one row per kind, the red banner
+   when a required need is unbound, the bind form and the proposals a second administrator decides. The tables are console tables
+   (drishti-grid, Drishti Elements: sort, filter, pages, keyboard); drishti_admin-bindings.js sends a proposal or a decision. #}
+{% extends "base.html" %}
+{% block title %}Data bindings · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-loads.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-inbox.css?v={{ ASSET_V }}">{% endblock %}
+{% block screen %}admin{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+{% set PILL = {'BOUND': 'st-ok', 'AUTO': 'st-warn', 'DEMO': 'st-warn', 'STALE': 'st-warn', 'MISMATCH': 'st-bad', 'UNBOUND': 'st-bad', 'COMPUTED': ''} %}
+<div class="adm ib" data-bindings>
+  {% with tab='bindings' %}{% include "admin/_nav.html" %}{% endwith %}
+  <h1 class="ws-h">Data bindings</h1>
+  <p class="text-muted-d ib-intro">Which connector or lake table serves each kind the modules need. One binding per kind, shared by every module that
+    needs it; connectors and credentials are the site's, modules only name kinds. A change is proposed here and applied, without a restart, when a
+    second administrator approves it. The file is <span class="mono">{{ st.file or 'config/bindings.yaml' }}</span>; see the
+    <a href="/help/admin#23-data-bindings">Administration guide</a>.</p>
+  <p class="ib-said" data-bindings-said role="status" aria-live="polite"></p>
+{% if error %}
+  <p class="adm-warn" role="alert" data-bindings-error><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+    The server did not give the bindings: {{ error.detail or error }}.</p>
+{% else %}
+  {% if st.unboundRequired %}
+  <p class="adm-warn" role="alert" data-bindings-banner><span class="st st-bad">{{ st.unboundRequired|length }} required need{{ '' if st.unboundRequired|length == 1 else 's' }} unbound</span>
+    <b>{{ st.unboundRequired|join(', ') }}</b>{% if st.off %}: {{ st.off.keys()|list|join(', ') }} {{ 'is' if st.off|length == 1 else 'are' }} off for everyone until it is bound{% endif %}.</p>
+  {% endif %}
+  {% if st.fileProblem %}<p class="adm-warn" role="alert" data-bindings-file-problem>{{ st.fileProblem }}</p>{% endif %}
+  {% for d in st.deprecated or [] %}<p class="ib-warn" data-bindings-deprecated>Deprecated: {{ d }}</p>{% endfor %}
+  {% for p in st.problems or [] %}<p class="ib-warn" data-bindings-problem>{{ p }}</p>{% endfor %}
+  <p data-bindings-counts>{% for s, n in (st.counts or {}).items() %}{% if n %}<span class="st {{ PILL.get(s, '') }}">{{ s }} {{ n }}</span> {% endif %}{% endfor %}</p>
+
+  <section class="ib-sec" aria-labelledby="bd-h">
+    <h2 class="ib-h2" id="bd-h">Kinds</h2>
+    <div class="tbl-wrap"><table class="tbl adm-tbl" data-bindings-table>
+      <caption class="visually-hidden">Every kind: the modules that need it, what serves it in read order, its state</caption>
+      <thead><tr><th scope="col">Kind</th><th scope="col">Needed by</th><th scope="col">Used by</th><th scope="col">Served by (read order)</th>
+        <th scope="col">Live</th><th scope="col">From</th><th scope="col">Last load</th><th scope="col">State</th><th scope="col"><span class="visually-hidden">Bind</span></th></tr></thead>
+      <tbody>
+      {% for k in st.kinds or [] %}
+        <tr data-binding-kind="{{ k.kind }}" data-state="{{ k.state }}">
+          <td class="mono">{{ k.kind }}{% if k.required %} <span class="text-muted-d">required</span>{% endif %}</td>
+          <td>{{ (k.neededBy or [])|join(', ') or '-' }}</td>
+          <td class="mono">{{ (k.usedBy or [])|join(', ') or '-' }}</td>
+          <td class="mono">{{ (k.read or [])|join(', ') or '-' }}{% if k.binding and k.binding.union %} <span class="text-muted-d">(union)</span>{% endif %}
+            {% if k.binding and k.binding.write %}<div class="text-muted-d">writes {{ k.binding.write.lake }} · {{ k.binding.write.table }}</div>{% endif %}</td>
+          <td class="mono">{{ (k.binding or {}).get('live') or '-' }}</td>
+          <td>{{ {'SITE': 'site binding', 'DEFAULT': 'distribution default', 'CONVENTION': 'convention', 'DEMO': 'demo lake', 'COMPUTED': 'a module', 'NONE': '-'}.get(k.origin, k.origin) }}</td>
+          <td class="mono">{{ k.lastLoad or '-' }}</td>
+          <td><span class="st {{ PILL.get(k.state, '') }}">{{ k.state }}</span>{% if k.reason %}<div class="text-muted-d">{{ k.reason }}</div>{% endif %}</td>
+          <td>{% if k.state != 'COMPUTED' %}<button type="button" class="btn-pill ib-btn" data-binding-edit="{{ k.kind }}" data-read="{{ (k.binding or {}).get('read', [])|join(', ') }}"
+            data-live="{{ (k.binding or {}).get('live') or '' }}" data-union="{{ 'true' if (k.binding or {}).get('union') else '' }}" data-demo="{{ 'true' if (k.binding or {}).get('demo') else '' }}">Bind…</button>{% endif %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="ib-sec" aria-labelledby="bd-form-h" data-bindings-form hidden>
+    <h2 class="ib-h2" id="bd-form-h">Bind <span class="mono" data-bind-kind-label></span></h2>
+    <form data-bind-form>
+      <input type="hidden" name="kind">
+      <p><label>Read from (connectors, in read order, comma separated) <input type="text" name="read" list="bd-connectors" size="60" class="mono"></label></p>
+      <datalist id="bd-connectors">{% for c in st.connectors or [] %}<option value="{{ c }}">{% endfor %}</datalist>
+      <p><label><input type="checkbox" name="union"> One store across them (union)</label>
+        <label><input type="checkbox" name="demo"> The demo lake's samples</label></p>
+      <p><label>Live (a connector that pushes changes) <input type="text" name="live" list="bd-connectors" class="mono"></label></p>
+      <p><label>Why <input type="text" name="reason" size="80" required></label></p>
+      <p><button type="submit" class="btn-pill ib-btn">Propose (a second administrator approves)</button>
+        <button type="button" class="btn-pill ib-btn" data-bind-remove>Propose removing the binding</button>
+        <button type="button" class="btn-pill ib-btn" data-bind-cancel>Cancel</button></p>
+    </form>
+  </section>
+
+  <section class="ib-sec" aria-labelledby="bd-props-h">
+    <h2 class="ib-h2" id="bd-props-h">Waiting for a decision</h2>
+    {% if not st.proposals %}<p class="text-muted-d" data-bindings-no-proposals>No change waits.</p>{% else %}
+    <div class="tbl-wrap"><table class="tbl adm-tbl" data-bindings-proposals>
+      <caption class="visually-hidden">Binding changes proposed, each decided by an administrator other than its proposer</caption>
+      <thead><tr><th scope="col">Kind</th><th scope="col">Now</th><th scope="col">Proposed</th><th scope="col">Why</th><th scope="col">By</th><th scope="col">At</th><th scope="col"><span class="visually-hidden">Decide</span></th></tr></thead>
+      <tbody>
+      {% for p in st.proposals %}
+        <tr data-proposal="{{ p.id }}"><td class="mono">{{ p.kind }}</td><td class="mono">{{ p.was or '-' }}</td><td class="mono">{{ p.binding if p.binding is not none else 'remove' }}</td>
+          <td>{{ p.reason }}</td><td>{{ p.proposedBy }}</td><td class="mono">{{ (p.proposedAt or '')[:19] }}</td>
+          <td>{% if p.proposedBy == me.user %}<button type="button" class="btn-pill ib-btn" data-proposal-act="withdraw" data-id="{{ p.id }}">Withdraw</button>
+            {% else %}<button type="button" class="btn-pill ib-btn" data-proposal-act="approve" data-id="{{ p.id }}">Approve</button>
+            <button type="button" class="btn-pill ib-btn" data-proposal-act="reject" data-id="{{ p.id }}">Reject</button>{% endif %}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+    {% endif %}
+  </section>
+{% endif %}
+</div>
+
+{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-bindings.js?v={{ ASSET_V }}"></script>{% endblock %}

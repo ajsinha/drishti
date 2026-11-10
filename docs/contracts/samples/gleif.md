@@ -27,7 +27,7 @@ Every data type of `gleif` as a real record of the committed test data, every fi
 
 ## LEI legal entity: lei-entity (LEI)
 
-A legal entity from its LEI record: key facts, addresses, registration and renewal, parents, children and identifiers. One row per lei legal entity, keyed by LEI. Read by the **gleif** pack's connector `gleif-store` (table `<root>/gleif/lei-entity/`). A **snapshot of public data**, captured 2026-10-25 from GLEIF LEI records, relationship records and mapping files (drishti.py feed run gleif), refreshed whole by its script (External data); 9,937 records. A refresh replaces the whole snapshot.
+A legal entity from its LEI record: key facts, addresses, registration and renewal, parents, children and identifiers. One row per lei legal entity, keyed by LEI. Read by the **gleif** pack's connector `gleif-store` (lake table `gleif.lei-entity`). A **snapshot of public data**, captured 2026-10-25 from GLEIF LEI records, relationship records and mapping files (drishti.py feed run gleif), refreshed whole by its script (External data); 9,937 records. A refresh replaces the whole snapshot.
 
 ### File layout
 
@@ -493,7 +493,7 @@ Fields no record above has, found by reading all 9,937 rows, with how many rows 
 
 ## LEI parent relationship: lei-relationship (LEIR)
 
-One consolidation relationship from GLEIF's level 2 data: the child, its direct or ultimate parent, status and periods. One row per lei parent relationship, keyed by RELATIONSHIP_ID. Read by the **gleif** pack's connector `gleif-store` (table `<root>/gleif/lei-relationship/`). A **snapshot of public data**, captured 2026-10-25 from GLEIF LEI records, relationship records and mapping files (drishti.py feed run gleif), refreshed whole by its script (External data); 9,347 records. A refresh replaces the whole snapshot.
+One consolidation relationship from GLEIF's level 2 data: the child, its direct or ultimate parent, status and periods. One row per lei parent relationship, keyed by RELATIONSHIP_ID. Read by the **gleif** pack's connector `gleif-store` (lake table `gleif.lei-relationship`). A **snapshot of public data**, captured 2026-10-25 from GLEIF LEI records, relationship records and mapping files (drishti.py feed run gleif), refreshed whole by its script (External data); 9,347 records. A refresh replaces the whole snapshot.
 
 ### File layout
 
@@ -633,7 +633,7 @@ Fields no record above has, found by reading all 9,347 rows, with how many rows 
 
 ## ISIN or BIC to LEI: lei-mapping (LEIM)
 
-An ISIN, BIC or MIC and the legal entity GLEIF's mapping files give it. One row per isin or bic to lei, keyed by IDENTIFIER. Read by the **gleif** pack's connector `gleif-store` (table `<root>/gleif/lei-mapping/`). A **snapshot of public data**, captured 2026-10-25 from GLEIF LEI records, relationship records and mapping files (drishti.py feed run gleif), refreshed whole by its script (External data); 3,381 records. A refresh replaces the whole snapshot.
+An ISIN, BIC or MIC and the legal entity GLEIF's mapping files give it. One row per isin or bic to lei, keyed by IDENTIFIER. Read by the **gleif** pack's connector `gleif-store` (lake table `gleif.lei-mapping`). A **snapshot of public data**, captured 2026-10-25 from GLEIF LEI records, relationship records and mapping files (drishti.py feed run gleif), refreshed whole by its script (External data); 3,381 records. A refresh replaces the whole snapshot.
 
 ### File layout
 

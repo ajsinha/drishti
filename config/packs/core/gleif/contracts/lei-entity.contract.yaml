@@ -32,11 +32,8 @@ dated-by: snapshot
 cadence:
   frequency: static
   due: to be confirmed
-storage:
-  connector: gleif-store
-  plugin: delta
-  domain: gleif
-  table: <root>/gleif/lei-entity/
+binding-hint:
+  lake-table: gleif.lei-entity
   columns:
   - LEI
   - NAME

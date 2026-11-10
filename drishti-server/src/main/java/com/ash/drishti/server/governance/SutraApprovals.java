@@ -18,7 +18,7 @@ package com.ash.drishti.server.governance;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.server.admin.ArtifactImpact;
-import com.ash.drishti.server.approvals.ApprovalSource;
+import com.ash.drishti.kernel.api.approvals.ApprovalSource;
 import com.ash.drishti.kernel.api.security.Principal;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -115,7 +115,7 @@ public class SutraApprovals implements ApprovalSource {
         if (x.comment() != null && !x.pending()) {
             facts.put("decision", x.comment());
         }
-        return new Detail(item(x, p), ApprovalSource.textDiff(before, x.text()), effect, rules, facts);
+        return new Detail(item(x, p), com.ash.drishti.server.bi.gov.LineDiff.approvalDiff(before, x.text()), effect, rules, facts);
     }
 
     @Override

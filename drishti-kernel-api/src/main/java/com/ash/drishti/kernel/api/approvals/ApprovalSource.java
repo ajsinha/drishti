@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.server.approvals;
+package com.ash.drishti.kernel.api.approvals;
 
 import com.ash.drishti.kernel.api.security.Principal;
 import java.time.Instant;
@@ -100,14 +100,6 @@ public interface ApprovalSource {
      * @param facts other facts the kind shows (checks, evidence, versions), by name
      */
     record Detail(Item item, Map<String, Object> diff, List<String> effect, List<String> rules, Map<String, Object> facts) {}
-
-    /** A text diff, line by line: {@code {format: lines, identical, added, removed, changed, rows: [{op, left, right, leftNo, rightNo}]}}. */
-    static Map<String, Object> textDiff(String before, String after) {
-        Map<String, Object> m = new java.util.LinkedHashMap<>();
-        m.put("format", "lines");
-        m.putAll(com.ash.drishti.server.bi.gov.LineDiff.diff(before == null ? "" : before, after == null ? "" : after).toMap());
-        return m;
-    }
 
     /** A field-by-field diff: each row {@code {field, before, after}}. */
     static Map<String, Object> fieldDiff(List<Map<String, Object>> rows) {

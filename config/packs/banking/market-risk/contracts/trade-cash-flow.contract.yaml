@@ -36,11 +36,8 @@ dated-by: BUSINESS_DATE
 cadence:
   frequency: daily
   due: with the day's scenario PVs (the same end-of-day batch), before the next morning's run; a day with no flow sends no row
-storage:
-  connector: risk-store
-  plugin: delta
-  domain: risk
-  table: <root>/risk/trade-cash-flow/
+binding-hint:
+  lake-table: risk.trade-cash-flow
   columns:
   - CASH_FLOW_ID
   - TRADE_ID

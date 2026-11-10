@@ -34,11 +34,8 @@ dated-by: BUSINESS_DATE
 cadence:
   frequency: daily
   due: by the next business day's morning run (a desk missing on a date is named by the backtest, never read as zero)
-storage:
-  connector: risk-store
-  plugin: delta
-  domain: risk
-  table: <root>/risk/desk-pnl/
+binding-hint:
+  lake-table: risk.desk-pnl
   columns:
   - DESK_PNL_ID
   - DESK_ID

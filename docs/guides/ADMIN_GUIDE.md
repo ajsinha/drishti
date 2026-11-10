@@ -45,7 +45,8 @@ almost everything here; it is all under **Admin** in the top bar. Every setting 
 20. [Functions (FUNC): every command, and turning one on or off](#20-functions-func-every-command-and-turning-one-on-or-off)
 21. [Compute engines on or off](#21-compute-engines-on-or-off)
 22. [Modules on or off](#22-modules-on-or-off)
-23. [Troubleshooting](#23-troubleshooting)
+23. [Data bindings](#23-data-bindings)
+24. [Troubleshooting](#24-troubleshooting)
 
 ## 1. Signing in and out
 
@@ -1579,7 +1580,46 @@ offers none of its lenses, functions, packs or engines (its engines show *not in
 `DRISHTI_MODULES_<MODULE>_ENABLED`, and a change takes effect at the next start. The how-to, the licence file and what each module brings
 to the console are in [OPERATIONS_GUIDE.md, Modules on or off](OPERATIONS_GUIDE.md#65-engines-modules-and-editions).
 
-## 23. Troubleshooting
+## 23. Data bindings
+
+A module says which **kinds** it needs (banking: `trade`, `scenario-pv` or `pnl-vector`, `scenario-set`, `netting-set` …); the site decides
+which connector or lake table serves each one. That decision is the **binding**, one per kind, shared by every module that needs the kind,
+kept in `config/bindings.yaml` (`drishti.bindings.file` names another place). A binding names connectors and lakes only; hosts, URLs and
+credentials stay in the connector files and the secret store, and no module ever sees them. The file's format and examples:
+[DATA_LAKE_GUIDE.md, Data bindings](DATA_LAKE_GUIDE.md#61-data-bindings); the design: [KERNEL_AND_MODULES.md section 5](../architecture/KERNEL_AND_MODULES.md#5-data-needs-and-connector-binding).
+
+**Admin → Data bindings** shows one row per kind: the modules that need it, the functions that use it, what serves it in read order (with
+*union* and the live connector), where the answer came from, the last load and the **state**:
+
+| State | Meaning | Effect |
+|---|---|---|
+| `BOUND` | the site's binding, or the distribution's default (a pack's route), serves it | normal |
+| `AUTO` | nobody bound it, but a lake holds it (found by convention) | normal; bind it to confirm |
+| `DEMO` | the demo lake's samples serve it (only while demo is on) | works; demo data |
+| `STALE` | bound, but nothing loaded within its contract's cadence | works; amber |
+| `MISMATCH` | the source breaks the contract | treated as unbound for the needs |
+| `UNBOUND` | nothing serves it | a **required** need switches off exactly the functions that use it, with the reason (*VRES needs scenario-pv or pnl-vector: no source is bound*); an optional one hides its features |
+| `COMPUTED` | a module computes it (`position`, `system-basket`, `var-result`) | never bound |
+
+A kind finds its data in this order, first hit wins: the site's binding, the distribution's default, a lake by convention, the demo lake,
+else unbound. The red banner names every required need that is unbound and the functions it switched off (they answer `404 DRS-1026` with
+that reason until the kind is bound).
+
+**Changing a binding takes two administrators.** *Bind…* on a row opens the form (connectors in read order, union, live, the demo lake,
+why); *Propose* records it; a second administrator approves or rejects it under *Waiting for a decision*, and the proposer may withdraw it.
+An approval writes `config/bindings.yaml` (the previous file kept as `bindings.yaml.bak`) and applies it **without a restart**: the
+connectors whose kinds change are applied again and the read order is swapped. Every step is in the audit log (`binding-proposed`,
+`binding-approved`, `binding-rejected`, `binding-withdrawn`). A refusal says why (`422 DRS-1029`): a computed kind, a connector no file
+defines, a host or credential in the binding, demo and real together; deciding your own proposal is `403 DRS-2007`. An edit of the file
+by hand is picked up within `drishti.bindings.refresh-seconds` (30), or at once with `POST /api/v1/admin/bindings/reload`.
+
+**The upgrade.** A site that has no `config/bindings.yaml` gets one at the next start, written from its connector files' `kinds:` lists
+(each kind bound to the connectors that list it, `union: true` where they are a union), so it keeps reading what it read. Those `kinds:`
+lists are still read in this release and Health lists each file that carries one (*deprecated: the binding is the one home, remove the
+list*); the next release stops reading them. Health's `bindings` block also gives the counts, the unbound required needs and the functions
+they switched off. The API: `GET /api/v1/admin/bindings`, `POST /api/v1/admin/bindings/proposals` and `…/proposals/{id}/approve|reject|withdraw`.
+
+## 24. Troubleshooting
 
 **Users, roles and sign-in**
 

@@ -42,7 +42,7 @@ A booked trade as its source system (ENDUR, CALYPSO or MUREX) extracts it in the
 | Id pattern | `^(MX\|CLY)-\d+$` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `trade-endur` (plugin `delta`), table `<root>/trading/trade_endur/` |
+| Binding hint | lake table `trading.trade_endur`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `TRADE_ID`, `SOURCE_SYSTEM`, `PRODUCT_TYPE`, `PRODUCT_SUB_TYPE`, `PRODUCT_GROUP`, `TRADE_STATUS`, `TRADE_VERSION`, `BUY_SELL_CODE`, `CURRENCY`, `QUANTITY`, `TRADE_DATE`, `MATURITY_DATE`, `COUNTERPARTY`, `LEGAL_ENTITY`, `PORTFOLIO`, `TRADER_ID`, `NOTIONAL`, `INDEX_NAME` |
 | Partitioned by | `PRODUCT_TYPE` |
 | Test data | data/testdata/trades/endur, data/testdata/trades/calypso, data/testdata/trades/murex |
@@ -251,7 +251,7 @@ Every trade with a counterparty, from every source system: its trades (every sta
 | Id pattern | — |
 | Dated by | `on request` |
 | Cadence | on change (due: recomputed from its source kind (connector refresh 60s)) |
-| Storage | connector `trade-pages` (plugin `derived`) |
+| Binding hint | computed by Drishti, never bound; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 
 **Fields**
 
@@ -323,7 +323,7 @@ Every trade of a portfolio (book), from every source system: its trades (every s
 | Id pattern | — |
 | Dated by | `on request` |
 | Cadence | on change (due: recomputed from its source kind (connector refresh 60s)) |
-| Storage | connector `trade-pages` (plugin `derived`) |
+| Binding hint | computed by Drishti, never bound; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 
 **Fields**
 
@@ -395,7 +395,7 @@ Every trade a legal entity of the bank booked, from every source system: its tra
 | Id pattern | — |
 | Dated by | `on request` |
 | Cadence | on change (due: recomputed from its source kind (connector refresh 60s)) |
-| Storage | connector `trade-pages` (plugin `derived`) |
+| Binding hint | computed by Drishti, never bound; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 
 **Fields**
 
@@ -467,7 +467,7 @@ Every trade with a leg on an index (the first leg that names one): its trades (e
 | Id pattern | — |
 | Dated by | `on request` |
 | Cadence | on change (due: recomputed from its source kind (connector refresh 60s)) |
-| Storage | connector `trade-pages` (plugin `derived`) |
+| Binding hint | computed by Drishti, never bound; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 
 **Fields**
 

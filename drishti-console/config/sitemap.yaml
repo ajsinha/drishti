@@ -297,6 +297,7 @@ menus:
         items:
           - { id: packs, href: /admin/packs, icon: box-seam, label: Packs, desc: "Switch domain packs on and off; deploy archives; the connectors each uses", match: /admin/packs, requires: [admin, admin-page:packs] }
           - { id: connectors, href: /admin/connectors, icon: plug, label: Connectors, desc: "Where each pack reads its data: create, test, change, switch off", match: /admin/connectors, requires: [admin, admin-page:connectors] }
+          - { id: bindings, href: /admin/bindings, icon: diagram-3, label: Data bindings, desc: "Which connector or lake table serves each kind the modules need: one binding per kind, four eyes, applied without a restart", match: /admin/bindings, requires: [admin, admin-page:bindings] }
           - { id: loads, href: /admin/loads, icon: cloud-upload, label: Data loads, desc: "What your ETL announced, what is due, what is late", match: /admin/loads, requires: [admin, admin-page:loads] }
           - { id: lakes, href: /admin/lakes, icon: layers, label: Lakes, desc: "Delta tables: load a file, see every table, maintain them now or on a schedule", match: /admin/lakes, requires: [admin, admin-page:lakes, feature:lakes] }
           - { id: edits, href: /admin/edits, icon: pencil-square, label: Record edits, desc: "Write-back: who may correct which records, and the approvals each change needs", match: /admin/edits, requires: [admin, admin-page:edits] }

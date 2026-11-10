@@ -1242,7 +1242,6 @@ partitions and promoted columns come from the lake file. To read your scenario P
 ```yaml
 plugin: delta
 enabled: true
-kinds: [scenario-pv, var-limit]               # only what risklake holds
 settings:
   lake: risklake
   lake-tables: risk.scenario-pv,risk.var-limit
@@ -1283,6 +1282,44 @@ another data folder) to compare.
 
 **Going back to the demo**: set the connector files back to `lake: demo` and their pack's `lake-tables:` (or delete the file: the
 pack's template is written again at the next start), and restart. Nothing in either lake changes.
+
+### 6.1 Data bindings
+
+Which connectors serve a kind is the site's **binding**, one per kind in `config/bindings.yaml`, shared by every module that needs the kind
+(changed from Admin → Data bindings with a second administrator's approval, and applied without a restart:
+[ADMIN_GUIDE.md section 23](ADMIN_GUIDE.md#23-data-bindings)). A connector file says *how to reach* a store (`plugin`, `lake:`, settings,
+`${secret:…}` references); the binding says *which kinds it serves and in what order*:
+
+```yaml
+format: 1
+bindings:
+  trade:
+    read: [trade-endur, trade-calypso, trade-murex]   # connectors (config/connectors/<name>.yaml), in read order
+    union: true                                        # one trade store across them
+    live: trade-kafka                                  # a connector that pushes changes
+  scenario-pv:   { read: [risk-store] }
+  var-limit:     { read: [risk-store] }
+  var-official:  { write: { lake: risklake, table: banking.var-official } }
+  pnl-vector:    { demo: true }                        # explicitly the demo lake's samples
+```
+
+| Key | Meaning |
+|---|---|
+| `read` | the connectors that serve the kind, in read order (the first that holds the date answers; a union is read as one) |
+| `union` | the read connectors are one store together (one source system each, ids unique across them); two or more |
+| `live` | the connector that pushes changes of the kind |
+| `write` | where a produced kind is written: `{lake, table}` |
+| `demo` | `true`: the demo lake's samples serve it (only while demo is on); never with `read` |
+| `note` | the administrator's note |
+
+A binding never holds a host, a URL, a placeholder or a credential (refused); a computed kind (`position`, `system-basket`, `var-result`)
+is never bound. A kind nobody bound still finds its data, in this order: the distribution's default (a pack's `routes:`), a lake whose file
+holds the contract's `binding-hint.lake-table` (`AUTO`, *found by convention: confirm*), the demo lake (`DEMO`), else `UNBOUND`: an unbound
+**required** need switches off exactly the functions that use it, with the reason. A contract names no connector: its `binding-hint`
+gives the lake table, partitions and promoted columns a site usually binds ([contracts README](../contracts/README.md)).
+
+A connector file that still lists `kinds:` is read in this release, the kinds bound to it added; Health lists it as deprecated. A site
+with no `bindings.yaml` gets one at the next start, written from those lists, so it keeps reading what it read.
 
 ## 7. The demo lake's one-time move
 

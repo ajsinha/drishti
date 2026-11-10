@@ -6,7 +6,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": ["kind", "mnemonic", "pack", "version", "class", "status", "title", "description", "source", "grain", "key",
-               "dated-by", "cadence", "storage", "fields", "validation", "review"],
+               "dated-by", "cadence", "binding-hint", "fields", "validation", "review"],
   "properties": {
     "kind": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
     "mnemonic": {"type": "string", "pattern": "^[A-Z][A-Z0-9]*$"},
@@ -30,17 +30,16 @@
         "due": {"type": "string"}
       }
     },
-    "storage": {
-      "type": "object", "additionalProperties": false, "required": ["connector", "plugin"],
+    "binding-hint": {
+      "description": "What a site usually binds (docs/architecture/KERNEL_AND_MODULES.md section 5.2): never a connector, a plugin or a location.",
+      "type": "object", "additionalProperties": false,
       "properties": {
-        "connector": {"type": "string"},
-        "plugin": {"type": "string"},
-        "domain": {"type": "string"},
-        "table": {"type": "string"},
+        "lake-table": {"type": "string", "pattern": "^[a-z0-9_-]+\\.[a-z0-9_.-]+$"},
+        "partition": {"type": "array", "items": {"type": "string"}},
+        "live": {"enum": ["optional", "required", "none"]},
+        "computed": {"type": "boolean"},
         "columns": {"type": "array", "items": {"type": "string"}},
         "vectors": {"type": "array", "items": {"type": "string"}},
-        "partition-by": {"type": "array", "items": {"type": "string"}},
-        "other-connectors": {"type": "array", "items": {"type": "string"}},
         "test-data": {"type": "array", "items": {"type": "string"}}
       }
     },

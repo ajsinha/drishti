@@ -36,11 +36,8 @@ dated-by: BUSINESS_DATE
 cadence:
   frequency: on change
   due: before the first business date a new factor or mapping applies to; a change takes effect from VALID_FROM
-storage:
-  connector: risk-store
-  plugin: delta
-  domain: risk
-  table: <root>/risk/risk-factor/
+binding-hint:
+  lake-table: risk.risk-factor
   columns:
   - RISK_FACTOR
   - FACTOR_TYPE

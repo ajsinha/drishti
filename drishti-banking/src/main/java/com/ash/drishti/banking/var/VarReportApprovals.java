@@ -18,7 +18,7 @@ package com.ash.drishti.banking.var;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.server.approvals.ApprovalProperties;
-import com.ash.drishti.server.approvals.ApprovalSource;
+import com.ash.drishti.kernel.api.approvals.ApprovalSource;
 import com.ash.drishti.kernel.api.security.Principal;
 import java.time.LocalDate;
 import java.util.ArrayList;

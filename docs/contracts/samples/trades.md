@@ -27,7 +27,7 @@ Every data type of `trades` as a real record of the committed test data, every f
 
 ## ENDUR trades: trade (TRD)
 
-A booked trade as its source system (ENDUR, CALYPSO or MUREX) extracts it in the common schema: the deal, its legs with their cash flows and resets, and its events. One row per trade per business date, keyed by TRADE_ID. Read by the **trading** pack's connector `trade-endur` (table `<root>/trading/trade_endur/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (4,407 records); each later day's file holds only the records new or changed that day (108–164 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 12,477 rows in all.
+A booked trade as its source system (ENDUR, CALYPSO or MUREX) extracts it in the common schema: the deal, its legs with their cash flows and resets, and its events. One row per trade per business date, keyed by TRADE_ID. Read by the **trading** pack's connector `trade-endur` (lake table `trading.trade_endur`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (4,407 records); each later day's file holds only the records new or changed that day (108–164 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 12,477 rows in all.
 
 ### File layout
 
@@ -1094,7 +1094,7 @@ Fields no record above has, found by reading all 12,477 rows, with how many rows
 
 ## CALYPSO trades: trade (TRD)
 
-A booked trade as its source system (ENDUR, CALYPSO or MUREX) extracts it in the common schema: the deal, its legs with their cash flows and resets, and its events. One row per trade per business date, keyed by TRADE_ID. Read by the **trading** pack's connector `trade-calypso` (table `<root>/trading/trade_endur/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (3,471 records); each later day's file holds only the records new or changed that day (174–373 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 18,493 rows in all.
+A booked trade as its source system (ENDUR, CALYPSO or MUREX) extracts it in the common schema: the deal, its legs with their cash flows and resets, and its events. One row per trade per business date, keyed by TRADE_ID. Read by the **trading** pack's connector `trade-calypso` (lake table `trading.trade_endur`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (3,471 records); each later day's file holds only the records new or changed that day (174–373 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 18,493 rows in all.
 
 ### File layout
 
@@ -8147,7 +8147,7 @@ Fields no record above has, found by reading all 18,493 rows, with how many rows
 
 ## MUREX trades: trade (TRD)
 
-A booked trade as its source system (ENDUR, CALYPSO or MUREX) extracts it in the common schema: the deal, its legs with their cash flows and resets, and its events. One row per trade per business date, keyed by TRADE_ID. Read by the **trading** pack's connector `trade-murex` (table `<root>/trading/trade_endur/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (4,198 records); each later day's file holds only the records new or changed that day (214–313 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 19,596 rows in all.
+A booked trade as its source system (ENDUR, CALYPSO or MUREX) extracts it in the common schema: the deal, its legs with their cash flows and resets, and its events. One row per trade per business date, keyed by TRADE_ID. Read by the **trading** pack's connector `trade-murex` (lake table `trading.trade_endur`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (4,198 records); each later day's file holds only the records new or changed that day (214–313 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 19,596 rows in all.
 
 ### File layout
 

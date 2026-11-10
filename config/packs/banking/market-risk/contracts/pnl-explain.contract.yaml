@@ -32,11 +32,8 @@ dated-by: business_date
 cadence:
   frequency: daily
   due: to be confirmed
-storage:
-  connector: risk-store
-  plugin: delta
-  domain: risk
-  table: <root>/risk/pnl-explain/
+binding-hint:
+  lake-table: risk.pnl-explain
   test-data:
   - data/testdata/market-risk/pnl-explain
 fields:

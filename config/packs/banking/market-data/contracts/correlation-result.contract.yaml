@@ -30,9 +30,8 @@ dated-by: on request
 cadence:
   frequency: on change
   due: computed on request and again when the correlation sets, equities or FX spots load (data-version trigger)
-storage:
-  connector: correlation-engine
-  plugin: reactive
+binding-hint:
+  computed: true
 fields:
 - name: MATRIX_ID
   type: id

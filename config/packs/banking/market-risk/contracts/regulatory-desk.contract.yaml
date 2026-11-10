@@ -35,11 +35,8 @@ dated-by: VALID_FROM
 cadence:
   frequency: on change
   due: before the first business date it applies to (a desk change approved by the supervisor takes effect from VALID_FROM)
-storage:
-  connector: risk-store
-  plugin: delta
-  domain: risk
-  table: <root>/risk/regulatory-desk/
+binding-hint:
+  lake-table: risk.regulatory-desk
   columns:
   - REG_DESK_ID
   - DESK_ID

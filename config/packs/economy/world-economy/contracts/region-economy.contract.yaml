@@ -34,11 +34,8 @@ dated-by: snapshot
 cadence:
   frequency: static
   due: to be confirmed
-storage:
-  connector: macro-store
-  plugin: delta
-  domain: macro
-  table: <root>/macro/region-economy/
+binding-hint:
+  lake-table: macro.region-economy
   columns:
   - ISO3
   - COUNTRY_NAME

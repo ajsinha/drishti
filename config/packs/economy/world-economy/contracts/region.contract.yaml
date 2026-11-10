@@ -33,11 +33,8 @@ dated-by: snapshot
 cadence:
   frequency: static
   due: to be confirmed
-storage:
-  connector: civic-store
-  plugin: delta
-  domain: civic
-  table: <root>/civic/region/
+binding-hint:
+  lake-table: civic.region
   test-data:
   - config/packs/economy/world-economy/samples
 fields:

@@ -95,6 +95,13 @@ public interface AccessRegistry {
      */
     void functionSwitches(FunctionSwitches switches);
 
+    /**
+     * The kernel's data bindings, asked after the switches (docs/architecture/KERNEL_AND_MODULES.md section 5.6): a function whose required
+     * data need no source serves is off, with the reason ({@code VAR needs scenario-pv or pnl-vector: no source is bound}). Empty: on.
+     */
+    default void dataGate(java.util.function.Function<String, Optional<String>> gate) {
+    }
+
     /** The administrator's installation-level function switches, as the registry reads them. */
     @FunctionalInterface
     interface FunctionSwitches {

@@ -27,6 +27,23 @@
   dependencies with cycles and missing ones, licence, claims against reserved names and other modules, data needs, memory budget), a class
   loader and a child Spring context per module, the live route table (200, 308, 404 off, 410 removed), the registry of contributions and
   the unload sequence in the design's order with a class-loader leak check. A library only: the kernel with no modules behaves as before.
+- **Kernel-controlled data bindings** ([KERNEL_AND_MODULES.md](docs/architecture/KERNEL_AND_MODULES.md) section 5;
+  [ADMIN_GUIDE.md](docs/guides/ADMIN_GUIDE.md) section 23; [DATA_LAKE_GUIDE.md](docs/guides/DATA_LAKE_GUIDE.md) section 6.1):
+  `config/bindings.yaml` is the one home of which connectors serve each kind (one binding per kind, shared by every module: `read` in
+  order, `union`, `live`, `write`, `demo`; never a host or a credential). A kind resolves by the site's binding, the distribution's default
+  (a pack's route), a lake by convention (`AUTO`), the demo lake (`DEMO`), else `UNBOUND`; states `BOUND`, `AUTO`, `DEMO`, `STALE`,
+  `MISMATCH`, `UNBOUND`, `COMPUTED`. An unbound required need switches off exactly the functions that use it, with the reason
+  (`404 DRS-1026`). **Admin → Data bindings** (mock-up A): one row per kind, the unbound-required banner, propose and a second
+  administrator's approve, reject or withdraw (four eyes, audited), applied without a restart; refusals `422 DRS-1029`.
+  `GET /api/v1/admin/bindings`, Health's `bindings` block, `drishti.bindings.file`, `drishti.bindings.refresh-seconds`. **Upgrade:** a site
+  without the file gets one at its next start from its connector files' `kinds:` lists (kept as `bindings.yaml.bak` when rewritten); the
+  lists are still read this release, each listed as deprecated in Health, and removed in the next.
+- **Contracts name no connector:** `storage:` (connector, plugin, path) is replaced by a connector-free `binding-hint:` (lake table,
+  partitions, promoted columns, `computed: true`) in all 125 contracts, the schema, `drishti.py contract` and the generated contract, sample
+  and pack-guide pages.
+- **Kernel API 0.2:** `DrishtiModule`, `ModuleContext` (`Kinds`, `KindWriter`), `ModuleSettings`, `KindProvider`, `BindingState`,
+  `AiToolProvider`, `@ModuleApi`; `ApprovalSource` moved into the kernel API (`com.ash.drishti.kernel.api.approvals`). Banking's
+  `var-positions` and `var-system-baskets` are `KindProvider`s (computed kinds) instead of source plugins; banking declares its data needs.
 - **Explain → Why it moved answers in about a second, not a minute** (the drill's failing Explain test, and "Why it moved looks broken"):
   opening the earlier date ran the load's maturity check, which read every trade (about 8,000) one document at a time because one union
   connector of `trade` (a source system with no table yet, such as Calypso in a lake without it) made the union's columns unreadable. A union

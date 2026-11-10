@@ -323,6 +323,11 @@ drishti:
     # DEPRECATED: connectors defined here still work (and override the file of the same name, setting by setting), but the
     # server logs a warning naming the equivalent file. Move them to <connectors-dir>/<name>.yaml.
     connectors: {}
+  bindings:
+    # The site's data bindings (docs/guides/DATA_LAKE_GUIDE.md section 6.1, ADMIN_GUIDE.md section 23): one binding per kind, which
+    # connectors serve it in read order. Written once from the connectors' kinds: lists when missing; changed from Admin -> Data bindings.
+    file: ${DRISHTI_BINDINGS_FILE:}         # where config/bindings.yaml is; empty: bindings.yaml beside the connectors' folder
+    refresh-seconds: 30                     # how often an edited bindings.yaml is read again and applied (an approval applies at once)
   business-date:
     # Every read is for a business date. The default is today in `zone`, rolled back to a business day of
     # `calendar` (weekends and holidays roll to the previous business day). Users pick another date in the top

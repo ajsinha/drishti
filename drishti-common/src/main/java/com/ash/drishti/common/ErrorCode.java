@@ -70,6 +70,8 @@ public enum ErrorCode {
     FUNCTION_OFF("DRS-1026", 404),
     /** A function this person may not use (per-person grants and denials, 2.9.11.i): 403 with the reason, audited. */
     FUNCTION_NOT_ALLOWED("DRS-1027", 403),
+    /** A data binding refused (Admin → Data bindings, config/bindings.yaml): a computed kind, a connector no file defines, a credential, demo and real mixed. */
+    BINDING_REFUSED("DRS-1029", 422),
     SUTRA_PARSE("DRS-2001", 422),
     SUTRA_INVALID("DRS-2002", 422),
     SUTRA_NOT_FOUND("DRS-2003", 404),

@@ -28,7 +28,7 @@ import java.util.function.Consumer;
 
 /**
  * The positions Drishti derives (VAR_GUIDE.md section 15.6) as documents of the {@code position} kind, served by the {@code var-positions}
- * connector ({@link VarPositionsPlugin}): a position's instrument and key, its direction and signed quantity, its trades (each with its
+ * connector ({@link VarPositionsProvider}): a position's instrument and key, its direction and signed quantity, its trades (each with its
  * own quantity, direction, PV, product and counterparty), where it is held, its market value and counts. No VaR figure is stored on it:
  * its page shows the engine's figures computed when asked ({@link VarFigures}). Positions live in memory with their date; this builds
  * the document of one when it is asked for.

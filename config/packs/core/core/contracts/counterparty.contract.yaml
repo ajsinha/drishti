@@ -32,11 +32,8 @@ dated-by: business_date
 cadence:
   frequency: daily
   due: to be confirmed
-storage:
-  connector: reference-store
-  plugin: delta
-  domain: reference
-  table: <root>/reference/counterparty/
+binding-hint:
+  lake-table: reference.counterparty
   test-data:
   - data/testdata/core/counterparty
 fields:

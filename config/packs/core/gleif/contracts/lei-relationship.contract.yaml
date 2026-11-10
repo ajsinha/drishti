@@ -32,11 +32,8 @@ dated-by: snapshot
 cadence:
   frequency: static
   due: to be confirmed
-storage:
-  connector: gleif-store
-  plugin: delta
-  domain: gleif
-  table: <root>/gleif/lei-relationship/
+binding-hint:
+  lake-table: gleif.lei-relationship
   columns:
   - RELATIONSHIP_ID
   - LEVEL

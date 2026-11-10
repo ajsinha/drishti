@@ -35,12 +35,9 @@ dated-by: BUSINESS_DATE
 cadence:
   frequency: daily
   due: when the date's inputs load (the data-load signal), at start for the newest date without a record, or by an administrator
-storage:
-  connector: exposure-results
-  plugin: delta
-  domain: risk-results
-  table: <root>/risk-results/exposure-official-cpty/
-  partition-by:
+binding-hint:
+  lake-table: risk-results.exposure-official-cpty
+  partition:
   - business_date
   columns:
   - HIERARCHY

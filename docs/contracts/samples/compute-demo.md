@@ -26,7 +26,7 @@ Every data type of `compute-demo` as a real record of the committed test data, e
 
 ## Path book: path-book (PBOOK)
 
-A book of synthetic P&L strips, and the sum of their paths computed when the page asks: by a Python engine and by its Java twin. One row per path book, keyed by BOOK_ID. Read by the **compute-demo** pack's connector `compute-demo-store` (table `<root>/compute-demo/path-book/`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/core/compute-demo/samples/path-book.jsonl`, 3 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+A book of synthetic P&L strips, and the sum of their paths computed when the page asks: by a Python engine and by its Java twin. One row per path book, keyed by BOOK_ID. Read by the **compute-demo** pack's connector `compute-demo-store` (lake table `compute-demo.path-book`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/core/compute-demo/samples/path-book.jsonl`, 3 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 
@@ -106,7 +106,7 @@ None: all 3 rows were read, and every field any of them has is in the record abo
 
 ## P&L strip: path-strip (PSTRIP)
 
-A synthetic P&L strip of the compute-demo pack: one path vector in a path book, summed by the demo engines. One row per p&l strip, keyed by STRIP_ID. Read by the **compute-demo** pack's connector `compute-demo-store` (table `<root>/compute-demo/path-strip/`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/core/compute-demo/samples/path-strip.jsonl`, 120 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+A synthetic P&L strip of the compute-demo pack: one path vector in a path book, summed by the demo engines. One row per p&l strip, keyed by STRIP_ID. Read by the **compute-demo** pack's connector `compute-demo-store` (lake table `compute-demo.path-strip`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/core/compute-demo/samples/path-strip.jsonl`, 120 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 

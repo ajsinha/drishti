@@ -35,11 +35,8 @@ dated-by: BUSINESS_DATE
 cadence:
   frequency: daily
   due: to be confirmed
-storage:
-  connector: risk-store
-  plugin: delta
-  domain: risk
-  table: <root>/risk/scenario-pv/
+binding-hint:
+  lake-table: risk.scenario-pv
   columns:
   - VALUE_TYPE
   - GRAIN

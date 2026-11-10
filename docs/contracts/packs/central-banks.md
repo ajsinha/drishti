@@ -39,7 +39,7 @@ One central bank: its policy rate, the last move, the rate's history and the mar
 | Id pattern | `^CBANK-` |
 | Dated by | `snapshot` |
 | Cadence | daily (due: the central-banks feed's schedule (15 22 * * 1-5 UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
-| Storage | connector `centralbank-store` (plugin `delta`), table `<root>/centralbank/central-bank/` |
+| Binding hint | lake table `centralbank.central-bank`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | config/packs/economy/central-banks/samples |
 | Worked example | [central-banks/central-bank](../samples/central-banks.md#central-bank) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -124,7 +124,7 @@ One central-bank or market series from FRED or the Bank of Canada: the history, 
 | Id pattern | `^CBSER-` |
 | Dated by | `snapshot` |
 | Cadence | daily (due: the central-banks feed's schedule (15 22 * * 1-5 UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
-| Storage | connector `centralbank-store` (plugin `delta`), table `<root>/centralbank/rate-series/` |
+| Binding hint | lake table `centralbank.rate-series`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | config/packs/economy/central-banks/samples |
 | Worked example | [central-banks/rate-series](../samples/central-banks.md#rate-series) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 

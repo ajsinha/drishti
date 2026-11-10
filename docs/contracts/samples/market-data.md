@@ -44,7 +44,7 @@ Every data type of `market-data` as a real record of the committed test data, ev
 
 ## Bond (security master): bond (BND)
 
-A listed bond: terms, price, yield, spreads and analytics. One row per bond (security master) per business date, keyed by ISIN. Read by the **market-data** pack's connector `market-store` (table `<root>/market/bond/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (32 records); each later day's file holds only the records new or changed that day (32–32 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 1,920 rows in all.
+A listed bond: terms, price, yield, spreads and analytics. One row per bond (security master) per business date, keyed by ISIN. Read by the **market-data** pack's connector `market-store` (lake table `market.bond`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (32 records); each later day's file holds only the records new or changed that day (32–32 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 1,920 rows in all.
 
 ### File layout
 
@@ -170,7 +170,7 @@ None: all 1,920 rows were read, and every field any of them has is in the record
 
 ## Cap/floor volatility surface: cap-vol-surface (CPV)
 
-Cap vols by maturity and strike. One row per cap/floor volatility surface per business date, keyed by SURFACE_ID. Read by the **market-data** pack's connector `market-store` (table `<root>/market/cap-vol-surface/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (7 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 7 rows in all.
+Cap vols by maturity and strike. One row per cap/floor volatility surface per business date, keyed by SURFACE_ID. Read by the **market-data** pack's connector `market-store` (lake table `market.cap-vol-surface`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (7 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 7 rows in all.
 
 ### File layout
 
@@ -259,7 +259,7 @@ None: all 7 rows were read, and every field any of them has is in the record abo
 
 ## Commodity: commodity (CMD)
 
-A traded commodity with its benchmark, unit and venue. One row per commodity per business date, keyed by COMMODITY_ID. Read by the **market-data** pack's connector `market-store` (table `<root>/market/commodity/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (8 records); each later day's file holds only the records new or changed that day (8–8 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 480 rows in all.
+A traded commodity with its benchmark, unit and venue. One row per commodity per business date, keyed by COMMODITY_ID. Read by the **market-data** pack's connector `market-store` (lake table `market.commodity`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (8 records); each later day's file holds only the records new or changed that day (8–8 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 480 rows in all.
 
 ### File layout
 
@@ -373,7 +373,7 @@ None: all 480 rows were read, and every field any of them has is in the record a
 
 ## Commodity forward curve: commodity-curve (CMDC)
 
-Futures settlement prices by delivery month. One row per commodity forward curve per business date, keyed by CURVE_ID. Read by the **market-data** pack's connector `market-store` (table `<root>/market/commodity-curve/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (8 records); each later day's file holds only the records new or changed that day (7–8 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 475 rows in all.
+Futures settlement prices by delivery month. One row per commodity forward curve per business date, keyed by CURVE_ID. Read by the **market-data** pack's connector `market-store` (lake table `market.commodity-curve`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (8 records); each later day's file holds only the records new or changed that day (7–8 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 475 rows in all.
 
 ### File layout
 
@@ -459,7 +459,7 @@ None: all 475 rows were read, and every field any of them has is in the record a
 
 ## Commodity volatility surface: commodity-vol-surface (CMDV)
 
-Implied vols by delivery month and moneyness. One row per commodity volatility surface per business date, keyed by SURFACE_ID. Read by the **market-data** pack's connector `market-store` (table `<root>/market/commodity-vol-surface/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (8 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 8 rows in all.
+Implied vols by delivery month and moneyness. One row per commodity volatility surface per business date, keyed by SURFACE_ID. Read by the **market-data** pack's connector `market-store` (lake table `market.commodity-vol-surface`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (8 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 8 rows in all.
 
 ### File layout
 
@@ -540,7 +540,7 @@ None: all 8 rows were read, and every field any of them has is in the record abo
 
 ## Correlation matrix: correlation-matrix (CORR)
 
-A correlation set: the factors whose pairwise correlations basket, quanto and spread products use. The set keeps its definition only; the correlations are the computed kind correlation-result (CORRC), worked out from the factors' price history when asked. One row per correlation matrix per business date, keyed by MATRIX_ID. Read by the **market-data** pack's connector `market-store` (table `<root>/market/correlation-matrix/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (3 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 3 rows in all.
+A correlation set: the factors whose pairwise correlations basket, quanto and spread products use. The set keeps its definition only; the correlations are the computed kind correlation-result (CORRC), worked out from the factors' price history when asked. One row per correlation matrix per business date, keyed by MATRIX_ID. Read by the **market-data** pack's connector `market-store` (lake table `market.correlation-matrix`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (3 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 3 rows in all.
 
 ### File layout
 
@@ -618,7 +618,7 @@ Fields no record above has, found by reading all 3 rows, with how many rows fill
 
 ## Credit curve: credit-curve (CDS)
 
-CDS par spreads by tenor, recovery and implied default probabilities. One row per credit curve per business date, keyed by CURVE_ID. Read by the **market-data** pack's connector `market-store` (table `<root>/market/credit-curve/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (16 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 16 rows in all.
+CDS par spreads by tenor, recovery and implied default probabilities. One row per credit curve per business date, keyed by CURVE_ID. Read by the **market-data** pack's connector `market-store` (lake table `market.credit-curve`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (16 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 16 rows in all.
 
 ### File layout
 
@@ -711,7 +711,7 @@ None: all 16 rows were read, and every field any of them has is in the record ab
 
 ## Dividend curve: dividend-curve (DIV)
 
-Expected dividends by year (implied from dividend futures and forwards). One row per dividend curve per business date, keyed by CURVE_ID. Read by the **market-data** pack's connector `market-store` (table `<root>/market/dividend-curve/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (15 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 15 rows in all.
+Expected dividends by year (implied from dividend futures and forwards). One row per dividend curve per business date, keyed by CURVE_ID. Read by the **market-data** pack's connector `market-store` (lake table `market.dividend-curve`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (15 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 15 rows in all.
 
 ### File layout
 
@@ -792,7 +792,7 @@ Fields no record above has, found by reading all 15 rows, with how many rows fil
 
 ## Equity: equity (EQ)
 
-A listed stock: price, dividends, sector and identifiers. One row per equity per business date, keyed by TICKER. Read by the **market-data** pack's connector `market-store` (table `<root>/market/equity/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (10 records); each later day's file holds only the records new or changed that day (10–10 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 600 rows in all.
+A listed stock: price, dividends, sector and identifiers. One row per equity per business date, keyed by TICKER. Read by the **market-data** pack's connector `market-store` (lake table `market.equity`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (10 records); each later day's file holds only the records new or changed that day (10–10 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 600 rows in all.
 
 ### File layout
 
@@ -922,7 +922,7 @@ None: all 600 rows were read, and every field any of them has is in the record a
 
 ## Equity index: equity-index (EQX)
 
-Index level with its largest constituents. One row per equity index per business date, keyed by INDEX_ID. Read by the **market-data** pack's connector `market-store` (table `<root>/market/equity-index/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (5 records); each later day's file holds only the records new or changed that day (5–5 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 300 rows in all.
+Index level with its largest constituents. One row per equity index per business date, keyed by INDEX_ID. Read by the **market-data** pack's connector `market-store` (lake table `market.equity-index`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (5 records); each later day's file holds only the records new or changed that day (5–5 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 300 rows in all.
 
 ### File layout
 
@@ -1017,7 +1017,7 @@ None: all 300 rows were read, and every field any of them has is in the record a
 
 ## Equity volatility surface: equity-vol-surface (EQV)
 
-Implied vols by expiry and moneyness. One row per equity volatility surface per business date, keyed by SURFACE_ID. Read by the **market-data** pack's connector `market-store` (table `<root>/market/equity-vol-surface/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (15 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 15 rows in all.
+Implied vols by expiry and moneyness. One row per equity volatility surface per business date, keyed by SURFACE_ID. Read by the **market-data** pack's connector `market-store` (lake table `market.equity-vol-surface`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (15 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 15 rows in all.
 
 ### File layout
 
@@ -1110,7 +1110,7 @@ None: all 15 rows were read, and every field any of them has is in the record ab
 
 ## FX forward curve: fx-forward-curve (FXF)
 
-Forward points by tenor for a pair. One row per fx forward curve per business date, keyed by CURVE_ID. Read by the **market-data** pack's connector `market-store` (table `<root>/market/fx-forward-curve/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (12 records); each later day's file holds only the records new or changed that day (11–12 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 719 rows in all.
+Forward points by tenor for a pair. One row per fx forward curve per business date, keyed by CURVE_ID. Read by the **market-data** pack's connector `market-store` (lake table `market.fx-forward-curve`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (12 records); each later day's file holds only the records new or changed that day (11–12 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 719 rows in all.
 
 ### File layout
 
@@ -1194,7 +1194,7 @@ None: all 719 rows were read, and every field any of them has is in the record a
 
 ## FX spot rate: fx-spot (FX)
 
-Spot rate for a currency pair with bid/ask. One row per fx spot rate per business date, keyed by PAIR. Read by the **market-data** pack's connector `market-store` (table `<root>/market/fx-spot/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (12 records); each later day's file holds only the records new or changed that day (12–12 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 720 rows in all.
+Spot rate for a currency pair with bid/ask. One row per fx spot rate per business date, keyed by PAIR. Read by the **market-data** pack's connector `market-store` (lake table `market.fx-spot`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (12 records); each later day's file holds only the records new or changed that day (12–12 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 720 rows in all.
 
 ### File layout
 
@@ -1296,7 +1296,7 @@ None: all 720 rows were read, and every field any of them has is in the record a
 
 ## FX volatility surface: fx-vol-surface (FXV)
 
-Implied vols by expiry and delta (ATM, 25D RR/BF). One row per fx volatility surface per business date, keyed by SURFACE_ID. Read by the **market-data** pack's connector `market-store` (table `<root>/market/fx-vol-surface/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (12 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 12 rows in all.
+Implied vols by expiry and delta (ATM, 25D RR/BF). One row per fx volatility surface per business date, keyed by SURFACE_ID. Read by the **market-data** pack's connector `market-store` (lake table `market.fx-vol-surface`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (12 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 12 rows in all.
 
 ### File layout
 
@@ -1397,7 +1397,7 @@ None: all 12 rows were read, and every field any of them has is in the record ab
 
 ## Inflation curve: inflation-curve (INFC)
 
-Zero-coupon breakevens by tenor, with monthly seasonality. One row per inflation curve per business date, keyed by CURVE_ID. Read by the **market-data** pack's connector `market-store` (table `<root>/market/inflation-curve/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (4 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 4 rows in all.
+Zero-coupon breakevens by tenor, with monthly seasonality. One row per inflation curve per business date, keyed by CURVE_ID. Read by the **market-data** pack's connector `market-store` (lake table `market.inflation-curve`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (4 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 4 rows in all.
 
 ### File layout
 
@@ -1490,7 +1490,7 @@ None: all 4 rows were read, and every field any of them has is in the record abo
 
 ## Inflation index: inflation-index (INF)
 
-Published CPI fixings (US CPI-U NSA, HICPxT, UK RPI…). One row per inflation index per business date, keyed by INDEX_ID. Read by the **market-data** pack's connector `market-store` (table `<root>/market/inflation-index/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (4 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 4 rows in all.
+Published CPI fixings (US CPI-U NSA, HICPxT, UK RPI…). One row per inflation index per business date, keyed by INDEX_ID. Read by the **market-data** pack's connector `market-store` (lake table `market.inflation-index`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (4 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 4 rows in all.
 
 ### File layout
 
@@ -1576,7 +1576,7 @@ None: all 4 rows were read, and every field any of them has is in the record abo
 
 ## Interest rate curve: ir-curve (CRV)
 
-Discounting (OIS), projection (IBOR/term RFR), government or basis curve for a currency. One row per interest rate curve per business date, keyed by CURVE_ID. Read by the **market-data** pack's connector `market-store` (table `<root>/market/ir-curve/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (28 records); each later day's file holds only the records new or changed that day (28–28 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 1,680 rows in all.
+Discounting (OIS), projection (IBOR/term RFR), government or basis curve for a currency. One row per interest rate curve per business date, keyed by CURVE_ID. Read by the **market-data** pack's connector `market-store` (lake table `market.ir-curve`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (28 records); each later day's file holds only the records new or changed that day (28–28 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 1,680 rows in all.
 
 ### File layout
 
@@ -1852,7 +1852,7 @@ None: all 1,680 rows were read, and every field any of them has is in the record
 
 ## Swaption volatility cube: ir-vol-cube (IRV)
 
-Normal (bp) swaption vols by expiry × tenor. One row per swaption volatility cube per business date, keyed by CUBE_ID. Read by the **market-data** pack's connector `market-store` (table `<root>/market/ir-vol-cube/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (7 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 7 rows in all.
+Normal (bp) swaption vols by expiry × tenor. One row per swaption volatility cube per business date, keyed by CUBE_ID. Read by the **market-data** pack's connector `market-store` (lake table `market.ir-vol-cube`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (7 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 7 rows in all.
 
 ### File layout
 
@@ -1943,7 +1943,7 @@ None: all 7 rows were read, and every field any of them has is in the record abo
 
 ## Rate index fixings: rate-fixing (FIX)
 
-Published overnight and term rate fixings (SOFR, €STR, SONIA…). One row per rate index fixings per business date, keyed by INDEX_ID. Read by the **market-data** pack's connector `market-store` (table `<root>/market/rate-fixing/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (7 records); each later day's file holds only the records new or changed that day (5–7 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 418 rows in all.
+Published overnight and term rate fixings (SOFR, €STR, SONIA…). One row per rate index fixings per business date, keyed by INDEX_ID. Read by the **market-data** pack's connector `market-store` (lake table `market.rate-fixing`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (7 records); each later day's file holds only the records new or changed that day (5–7 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 418 rows in all.
 
 ### File layout
 
@@ -2030,7 +2030,7 @@ None: all 418 rows were read, and every field any of them has is in the record a
 
 ## Repo curve: repo-curve (REPO)
 
-General-collateral or specials repo rates by term. One row per repo curve per business date, keyed by CURVE_ID. Read by the **market-data** pack's connector `market-store` (table `<root>/market/repo-curve/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (7 records); each later day's file holds only the records new or changed that day (7–7 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 420 rows in all.
+General-collateral or specials repo rates by term. One row per repo curve per business date, keyed by CURVE_ID. Read by the **market-data** pack's connector `market-store` (lake table `market.repo-curve`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (7 records); each later day's file holds only the records new or changed that day (7–7 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 420 rows in all.
 
 ### File layout
 

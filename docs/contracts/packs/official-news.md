@@ -39,7 +39,7 @@ One publisher of official news (a central bank, a regulator, a government): its 
 | Id pattern | `^PRESS-` |
 | Dated by | `snapshot` |
 | Cadence | daily (due: the official-news feed's schedule (0 23 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
-| Storage | connector `officialnews-store` (plugin `delta`), table `<root>/officialnews/release-source/` |
+| Binding hint | lake table `officialnews.release-source`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | config/packs/economy/official-news/samples |
 | Worked example | [official-news/release-source](../samples/official-news.md#release-source) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -124,7 +124,7 @@ One official press release: its title, publisher, date, summary and the link to 
 | Id pattern | `^PREL-` |
 | Dated by | `snapshot` |
 | Cadence | daily (due: the official-news feed's schedule (0 23 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
-| Storage | connector `officialnews-store` (plugin `delta`), table `<root>/officialnews/press-release/` |
+| Binding hint | lake table `officialnews.press-release`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | config/packs/economy/official-news/samples |
 | Worked example | [official-news/press-release](../samples/official-news.md#press-release) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 

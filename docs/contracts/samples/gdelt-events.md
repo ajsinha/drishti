@@ -25,7 +25,7 @@ Every data type of `gdelt-events` as a real record of the committed test data, e
 
 ## World events by country: event-country (GDELT)
 
-What the world's news reported about one country yesterday (GDELT): events, tone, conflict, categories, the world map by tone, the top stories. One row per world events by country, keyed by EVENT_COUNTRY_ID. Read by the **gdelt-events** pack's connector `gdelt-store` (table `<root>/gdelt/event-country/`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/gdelt-events/samples/event-country.jsonl`, 13 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+What the world's news reported about one country yesterday (GDELT): events, tone, conflict, categories, the world map by tone, the top stories. One row per world events by country, keyed by EVENT_COUNTRY_ID. Read by the **gdelt-events** pack's connector `gdelt-store` (lake table `gdelt.event-country`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/gdelt-events/samples/event-country.jsonl`, 13 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 

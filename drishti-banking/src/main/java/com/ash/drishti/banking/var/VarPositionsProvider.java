@@ -20,12 +20,9 @@ import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.EntityDocument;
 import com.ash.drishti.api.EntityHit;
 import com.ash.drishti.api.EntityRef;
-import com.ash.drishti.api.PluginManifest;
 import com.ash.drishti.api.Provenance;
-import com.ash.drishti.api.SourceCapabilities;
-import com.ash.drishti.api.SourceContext;
-import com.ash.drishti.api.SourcePlugin;
 import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.kernel.api.data.KindProvider;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -37,51 +34,36 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 /**
- * The {@code var-positions} connector plugin: the positions Drishti derives from the trades when a date loads (VAR_GUIDE.md section 15.6),
- * served as the {@code position} kind from the VaR engine's memory (never stored: rebuilt from the date's trades and the rules,
- * reproducible). Dated: a position is read on a business date, the newest with vectors when it is later. A read when the engine is off
- * or has no vectors finds nothing.
- *
- * <pre>
- *   connectors:
- *     var-positions:
- *       plugin: var-positions
- *       kinds: [position]
- * </pre>
+ * The computed {@code position} kind (docs/architecture/KERNEL_AND_MODULES.md section 5.7): the positions Drishti derives from the trades
+ * when a date loads (VAR_GUIDE.md section 15.6), served from the VaR engine's memory (never stored: rebuilt from the date's trades and the
+ * rules, reproducible). Dated: a position is read on a business date, the newest with vectors when it is later. A read when the engine is
+ * off or has no vectors finds nothing. Not bindable: the kernel serves {@code position} from this provider, shown as COMPUTED.
  */
-public final class VarPositionsPlugin implements SourcePlugin {
+public final class VarPositionsProvider implements KindProvider {
 
     public static final String NAME = "var-positions";
-    private volatile String source = NAME;
-    private volatile Set<String> kinds = Set.of("position");
+    private static final String KIND = "position";
 
     @Override
-    public PluginManifest manifest() {
-        return new PluginManifest(NAME, "1.0", kinds, new SourceCapabilities(false, false, true, true));
+    public String name() {
+        return NAME;
     }
 
     @Override
-    public void start(SourceContext context) {
-        source = context.setting("source-name", NAME);
-        String k = context.setting("kind", "position");
-        kinds = Set.of(k);
-    }
-
-    @Override
-    public Optional<EntityDocument> fetch(EntityRef ref) {
-        return fetch(ref, AsOf.LATEST);
+    public Set<String> kinds() {
+        return Set.of(KIND);
     }
 
     @Override
     public Optional<EntityDocument> fetch(EntityRef ref, AsOf asOf) {
-        if (!kinds.contains(ref.kind())) {
+        if (!KIND.equals(ref.kind())) {
             return Optional.empty();
         }
         return positions().flatMap(p -> {
             try {
                 LocalDate d = asOf == null ? null : asOf.businessDate();
                 return p.position(ref.id(), d).map(m -> new EntityDocument(ref, DataNode.of(m),
-                        new Provenance(source, generation(p, d), Instant.now(), false, LocalDate.parse(String.valueOf(m.get("BUSINESS_DATE"))))));
+                        new Provenance(NAME, generation(p, d), Instant.now(), false, LocalDate.parse(String.valueOf(m.get("BUSINESS_DATE"))))));
             } catch (DrishtiException e) {
                 return Optional.empty();                                // no vectors, the engine off, a date that cannot load: nothing
             }
@@ -94,7 +76,7 @@ public final class VarPositionsPlugin implements SourcePlugin {
 
     @Override
     public boolean documents(String kind, AsOf asOf, Consumer<EntityDocument> sink) {
-        if (!kinds.contains(kind)) {
+        if (!KIND.equals(kind)) {
             return false;
         }
         Optional<VarPositions> p = positions();
@@ -105,7 +87,7 @@ public final class VarPositionsPlugin implements SourcePlugin {
             LocalDate d = asOf == null ? null : asOf.businessDate();
             long gen = generation(p.get(), d);
             p.get().positions(d, m -> sink.accept(new EntityDocument(EntityRef.of(kind, String.valueOf(m.get("POSITION_ID"))), DataNode.of(m),
-                    new Provenance(source, gen, Instant.now(), false, LocalDate.parse(String.valueOf(m.get("BUSINESS_DATE")))))));
+                    new Provenance(NAME, gen, Instant.now(), false, LocalDate.parse(String.valueOf(m.get("BUSINESS_DATE")))))));
         } catch (DrishtiException e) {
             // nothing loaded: an empty listing
         }
@@ -113,14 +95,9 @@ public final class VarPositionsPlugin implements SourcePlugin {
     }
 
     @Override
-    public List<EntityHit> search(String kind, String text, int limit) {
-        return search(kind, text, limit, AsOf.LATEST);
-    }
-
-    @Override
     public List<EntityHit> search(String kind, String text, int limit, AsOf asOf) {
         List<EntityHit> out = new ArrayList<>();
-        if (!kinds.contains(kind)) {
+        if (!KIND.equals(kind)) {
             return out;
         }
         String q = text == null ? "" : text.trim().toUpperCase(Locale.ROOT);
@@ -138,12 +115,12 @@ public final class VarPositionsPlugin implements SourcePlugin {
 
     @Override
     public Optional<LocalDate> latestDate(String kind) {
-        return kinds.contains(kind) ? positions().map(VarPositions::latest) : Optional.empty();
+        return KIND.equals(kind) ? positions().map(VarPositions::latest) : Optional.empty();
     }
 
     @Override
     public Optional<String> dataVersion(String kind, LocalDate date) {
-        if (!kinds.contains(kind)) {
+        if (!KIND.equals(kind)) {
             return Optional.empty();
         }
         try {
@@ -160,7 +137,7 @@ public final class VarPositionsPlugin implements SourcePlugin {
     }
 
     @Override
-    public Map<String, Object> cacheStats() {
+    public Map<String, Object> stats() {
         return Map.of("cached", "the VaR engine's loaded dates (GET /api/v1/risk/var/status)");
     }
 
