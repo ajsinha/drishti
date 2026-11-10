@@ -27,6 +27,7 @@ import com.ash.drishti.api.Provenance;
 import com.ash.drishti.api.SourceCapabilities;
 import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.api.SourcePlugin;
+import com.ash.drishti.common.ReferenceScanner;
 import com.github.benmanes.caffeine.cache.AsyncCache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import io.delta.kernel.engine.Engine;
@@ -1119,8 +1120,10 @@ public final class DeltaSourcePlugin implements SourcePlugin {
 
     @Override
     public Optional<String> listingProblem(String kind) {
-        if (!memoryOnly && !lake.reachable()) {
-            return Optional.of(unreachable());                 // a search says why, instead of an empty list
+        // a search says why, instead of an empty list: for a kind this connector is known to read (a table it holds, or any kind
+        // of a lake file's connector); an older-form root that found no tables claims no kind, so it never marks other searches partial
+        if (!memoryOnly && !lake.reachable() && (tables.containsKey(kind) || !lakeName.isEmpty())) {
+            return Optional.of(unreachable());
         }
         return problems.listing(kind);
     }

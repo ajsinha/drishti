@@ -77,6 +77,7 @@ public final class DeltaRowsCli {
 
     /** Reads the table the arguments name and writes its rows to standard output; exit 1 with the reason on standard error. */
     public static void main(String[] args) throws Exception {
+        System.setOut(System.err);                             // the engine's log lines must never land among the rows on standard output
         String table = null;
         Long version = null;
         String date = null;
@@ -119,7 +120,9 @@ public final class DeltaRowsCli {
         }
         ScanBuilder b = s.getScanBuilder().withReadSchema(schema);
         if (date != null && s.getPartitionColumnNames().contains("business_date")) {
-            b = b.withFilter(new Predicate("=", new Column("business_date"), Literal.ofDate((int) LocalDate.parse(date).toEpochDay())));
+            boolean text = s.getSchema().get("business_date").getDataType() instanceof io.delta.kernel.types.StringType;   // delta-rs may write a string column
+            b = b.withFilter(new Predicate("=", new Column("business_date"),
+                    text ? Literal.ofString(date) : Literal.ofDate((int) LocalDate.parse(date).toEpochDay())));
         }
         Scan scan = b.build();
         Row state = scan.getScanState(engine);

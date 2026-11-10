@@ -3116,6 +3116,19 @@ An item past its maturity on the business date (`MATURITY_DATE` before the date)
 
 Without `TRADE_IDS` or a trade feed holding the maturities, the commentary says the trades **could not be checked**, never zero. Nothing is said when there is nothing to report. The counts are for the scope when each flagged position can be placed in it, otherwise for the whole date (the sentence says so). A position outside what the reader may see one by one is counted, not named. The same counts are on Admin → Health and in `provenance.matured` of `/api/v1/risk/var/scope`; `/api/v1/risk/var/scope/matured` pages the list.
 
+**Include matured items (the explorer's switch).** One switch beside Explain, **Include matured positions** on a date sent at position grain, **Include matured trades** at trade grain (**items** when the systems differ). It is off whenever the page opens and is never kept or put in the link. On, the server adds the matured records of the scope back, at the grain they came in, and every figure it changes says so:
+
+- the VaR and ES tiles show the figure with them, tagged *INCLUDES MATURED · official 41.19m*, and a band under the toolbar says *"This view includes 14 matured positions. It is not the official figure"* with the official figure, the difference and **Back to official**;
+- the method strip under the tiles starts with *"Includes 14 matured positions."*;
+- the tree shows each node's VaR with them and an **of which matured** column;
+- the P&L path and its CSV and JSON Lines downloads are the path with them: a `SCOPE` column on each row and the scope line of the CSV say *"Includes 14 matured positions (not the official figure)"*.
+
+What ignores the switch: the official record, captures and sign-off, limit use and breaches (always on the official figure), the contributions, the history and the other currencies tab. A matured trade inside a live position is flagged only, as above, and stays in the figure either way. Stressed VaR never adds them.
+
+How it is computed: the load keeps each excluded matured record (its id, grain, hierarchy columns and its USD P&L vector as float32), only when the date is loaded whole on one server (not a sharded date, not the stress set); a mapped date keeps them in its hot-file header too, so a date opened again has them. The first request with the switch on builds a small book of them with the date's hierarchies; the same scope is resolved on it as the person sees it (roles apply), its vector added to the scope's 1-day vector, then the horizon and confidences.
+
+**Memory.** About 2.3 KB of heap a matured record at 509 scenarios, plus about 2.7 KB in a mapped date's hot-file header, against about 0.72 KB of heap a live position on the mapped tier (the 1,000,000-position benchmark above) and 4.1 KB on the heap tier. A date whose matured records are more than 1% of its records keeps none and the switch says why, so the records cost at most about 7% of a mapped date's heap and 1% of a heap-tier date's. The small book is built on the switch's first use of a date (a few dates kept). The demo dates have none: 0 bytes.
+
 **Production loading checklist:** ask each source whether it removes matured trades from a position's PVs before sending. When it does not, the flag above shows how many are still inside, and send `TRADE_IDS` so that it can.
 
 ### 15.14 Hierarchies: from promoted columns

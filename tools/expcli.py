@@ -24,6 +24,8 @@ from __future__ import annotations
 import json
 import urllib.parse
 
+from clitable import money, table
+
 EPILOG = ("examples:\n  drishti.py exposure show NSET:NS-ALDERSHOT-NY\n  drishti.py exposure show CPTY:CP-ALDERSHOT --q 0.99 --date 2026-09-30\n"
           "  drishti.py exposure parts CPTY:CP-ALDERSHOT\n  drishti.py exposure parts NSET:NS-ALDERSHOT-NY --by trade --figure EE --top 10\n"
           "  drishti.py exposure tree\n  drishti.py exposure profile NSET:NS-ALDERSHOT-NY --csv > ns-ny.csv\n"
@@ -34,20 +36,6 @@ EPILOG = ("examples:\n  drishti.py exposure show NSET:NS-ALDERSHOT-NY\n  drishti
           "  drishti.py exposure whatif CPTY:CP-ALDERSHOT --candidates new-swap.json --method addon\n"
           "  drishti.py exposure predeal \"PREDEAL CP-ALDERSHOT LIKE CLY-4003028 250M\"\n"
           "  drishti.py exposure predeal \"PREDEAL CP-ALDERSHOT RATES 250M 5Y\" --date 2026-09-30")
-
-
-def money(v) -> str:
-    return "—" if not isinstance(v, (int, float)) or isinstance(v, bool) else f"{v:,.0f}"
-
-
-def table(rows: list[list[str]], say) -> None:
-    if not rows:
-        return
-    widths = [max(len(r[i]) for r in rows) for i in range(len(rows[0]))]
-    for n, r in enumerate(rows):
-        say("  ".join(c.rjust(widths[i]) if i and n else c.ljust(widths[i]) for i, c in enumerate(r)).rstrip())
-        if n == 0:
-            say("  ".join("-" * w for w in widths))
 
 
 def render_headline(h: dict, say) -> None:

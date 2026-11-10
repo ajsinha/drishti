@@ -376,13 +376,19 @@ final class QueryMode {
 
     private static Object plain(Object v) {
         if (v instanceof BigDecimal b) {
-            return b.scale() <= 0 ? (Object) b.longValue() : (Object) b.doubleValue();
+            if (b.scale() > 0) {
+                return b.doubleValue();
+            }
+            return b.precision() - b.scale() <= 18 ? (Object) b.longValue() : b;     // an integer beyond a long stays exact
         }
         if (v instanceof java.sql.Date d) {
             return d.toLocalDate().toString();
         }
         if (v instanceof java.sql.Timestamp t) {
             return t.toInstant().toString();
+        }
+        if (v instanceof byte[] bytes) {
+            return java.util.Base64.getEncoder().encodeToString(bytes);
         }
         return v instanceof Number || v instanceof Boolean || v == null ? v : v.toString();
     }

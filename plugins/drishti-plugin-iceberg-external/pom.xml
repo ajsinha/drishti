@@ -36,5 +36,11 @@
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId><scope>test</scope></dependency>
     <!-- the tests add merge-on-read delete files to fixture tables with the Iceberg library, a writer independent of drishti-iceberg -->
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-iceberg</artifactId><version>${project.version}</version><scope>test</scope></dependency>
+    <!-- the interop oracle, test scope only: Apache Iceberg's Parquet readers and writers, over Hadoop -->
+    <dependency><groupId>org.apache.iceberg</groupId><artifactId>iceberg-parquet</artifactId><version>${iceberg.version}</version><scope>test</scope></dependency>
+    <dependency><groupId>org.apache.iceberg</groupId><artifactId>iceberg-data</artifactId><version>${iceberg.version}</version><scope>test</scope><exclusions><exclusion><groupId>org.apache.orc</groupId><artifactId>orc-core</artifactId></exclusion></exclusions></dependency>
+    <dependency><groupId>org.apache.parquet</groupId><artifactId>parquet-column</artifactId><version>${parquet.version}</version><scope>test</scope></dependency>
+    <dependency><groupId>org.apache.hadoop</groupId><artifactId>hadoop-client-api</artifactId><version>${hadoop.version}</version><scope>test</scope></dependency>
+    <dependency><groupId>org.apache.hadoop</groupId><artifactId>hadoop-client-runtime</artifactId><version>${hadoop.version}</version><scope>test</scope></dependency>
   </dependencies>
 </project>

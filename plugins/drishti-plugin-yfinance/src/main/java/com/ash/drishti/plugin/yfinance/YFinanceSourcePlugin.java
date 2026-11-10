@@ -24,6 +24,8 @@ import com.ash.drishti.api.Provenance;
 import com.ash.drishti.api.SourceCapabilities;
 import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.api.SourcePlugin;
+import com.ash.drishti.common.BoundedCache;
+import com.ash.drishti.common.HttpFetcher;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.ByteArrayInputStream;
 import java.net.URI;
@@ -92,7 +94,7 @@ public final class YFinanceSourcePlugin implements SourcePlugin {
                 b = com.ash.drishti.api.tls.TlsHttp.apply(b, tls);
             }
         }
-        this.fetcher = new HttpFetcher(b.build(), settings, proxy);
+        this.fetcher = new HttpFetcher(b.build(), settings, proxy, "application/json");
         String bm = ctx.settings().getOrDefault("benchmark", "");
         this.benchmark = bm == null || !SYMBOL.matcher(bm.strip()).matches() ? "" : bm.strip().toUpperCase(Locale.ROOT);
         // nothing is fetched at start: there is no symbol yet and the web may be unreachable

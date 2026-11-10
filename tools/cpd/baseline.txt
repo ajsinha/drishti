@@ -1,4 +1,4 @@
 # Duplicated lines per language (tools/duplicates.py). Only ever lowered: python3 tools/duplicates.py --write
-java 4523
+java 3579
 javascript 560
-python 612
+python 318

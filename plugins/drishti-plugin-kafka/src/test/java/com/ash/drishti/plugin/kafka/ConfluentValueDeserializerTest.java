@@ -246,4 +246,15 @@ class ConfluentValueDeserializerTest {
                 "schema-registry.tls.verify-hostname", "false"));
         assertThat(lax.schema(7).type()).isEqualTo("AVRO");
     }
+
+    @org.junit.jupiter.api.Test
+    void avroLogicalTypesReadAsTheirValues() {
+        org.apache.avro.Schema date = org.apache.avro.LogicalTypes.date().addToSchema(org.apache.avro.Schema.create(org.apache.avro.Schema.Type.INT));
+        org.assertj.core.api.Assertions.assertThat(ConfluentValueDeserializer.toJson(20361, date).asText()).isEqualTo("2025-09-30");
+        org.apache.avro.Schema ts = org.apache.avro.LogicalTypes.timestampMillis().addToSchema(org.apache.avro.Schema.create(org.apache.avro.Schema.Type.LONG));
+        org.assertj.core.api.Assertions.assertThat(ConfluentValueDeserializer.toJson(0L, ts).asText()).isEqualTo("1970-01-01T00:00:00Z");
+        org.apache.avro.Schema dec = org.apache.avro.LogicalTypes.decimal(9, 2).addToSchema(org.apache.avro.Schema.create(org.apache.avro.Schema.Type.BYTES));
+        var bytes = new org.apache.avro.Conversions.DecimalConversion().toBytes(new java.math.BigDecimal("12345.67"), dec, dec.getLogicalType());
+        org.assertj.core.api.Assertions.assertThat(ConfluentValueDeserializer.toJson(bytes, dec).decimalValue()).isEqualByComparingTo("12345.67");
+    }
 }

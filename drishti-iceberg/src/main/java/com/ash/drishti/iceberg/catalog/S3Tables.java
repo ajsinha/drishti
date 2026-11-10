@@ -76,7 +76,7 @@ public final class S3Tables {
 
         /** The REST path prefix: the ARN, URL-encoded as one path segment. */
         public String prefix() {
-            return RestClient.segment(arn);
+            return java.net.URLEncoder.encode(arn, java.nio.charset.StandardCharsets.UTF_8).replace("+", "%20");
         }
     }
 

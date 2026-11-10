@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import org.slf4j.Logger;
@@ -34,16 +33,7 @@ public final class McpRegistry implements AutoCloseable {
     private static final Logger LOG = LoggerFactory.getLogger(McpRegistry.class);
 
     /** Counters per server. */
-    public static final class State {
-        final AtomicLong calls = new AtomicLong();
-        final AtomicLong failures = new AtomicLong();
-        volatile Instant lastOk;
-        volatile Instant lastFailure;
-        volatile String lastError = "";
-        volatile boolean lastWasFailure;
-    }
-
-    public record Entry(McpServerConfig config, McpClient client, String error, State state) {
+    public record Entry(McpServerConfig config, McpClient client, String error, CallTally state) {
         public boolean usable() {
             return client != null && config.enabled();
         }
@@ -65,7 +55,13 @@ public final class McpRegistry implements AutoCloseable {
     }
 
     public McpRegistry(List<McpClientFactory> factories, Supplier<McpServerConfigLoader.Loaded> source, com.ash.drishti.common.RetryPolicy policy) {
-        this.retry = new com.ash.drishti.common.RetryBoard("mcp server", policy);
+        this(factories, source, policy, java.time.Clock.systemUTC());
+    }
+
+    /** With the clock the retry schedule reads (a test moves it instead of sleeping). */
+    public McpRegistry(List<McpClientFactory> factories, Supplier<McpServerConfigLoader.Loaded> source, com.ash.drishti.common.RetryPolicy policy,
+            java.time.Clock clock) {
+        this.retry = new com.ash.drishti.common.RetryBoard("mcp server", policy, clock);
         factories.forEach(f -> this.factories.putIfAbsent(f.transport().toLowerCase(java.util.Locale.ROOT), f));
         this.source = source;
     }
@@ -110,7 +106,7 @@ public final class McpRegistry implements AutoCloseable {
         for (McpServerConfig c : l.servers()) {
             names.add(c.name());
             Entry prev = old.entries().get(c.name());
-            State st = prev != null ? prev.state() : new State();
+            CallTally st = prev != null ? prev.state() : new CallTally();
             if (!c.enabled()) {
                 retry.forget(c.name());
                 entries.put(c.name(), new Entry(c, null, null, st));
@@ -156,7 +152,7 @@ public final class McpRegistry implements AutoCloseable {
             if (!e.usable()) {
                 continue;
             }
-            State s = e.state();
+            CallTally s = e.state();
             if (s.lastWasFailure) {
                 if (!retry.failing(name)) {
                     retry.failed(name, "connection lost: " + s.lastError, com.ash.drishti.common.RetryPolicy.looksPermanent(s.lastError));
@@ -192,21 +188,11 @@ public final class McpRegistry implements AutoCloseable {
     }
 
     public void record(Entry e, boolean ok, String error) {
-        State s = e.state();
-        s.calls.incrementAndGet();
-        if (ok) {
-            s.lastOk = Instant.now();
-            s.lastWasFailure = false;
-        } else {
-            s.failures.incrementAndGet();
-            s.lastFailure = Instant.now();
-            s.lastError = error == null ? "" : error;
-            s.lastWasFailure = true;
-        }
+        e.state().record(ok, error);
     }
 
     public Health health(Entry e) {
-        State s = e.state();
+        CallTally s = e.state();
         if (!e.config().enabled()) {
             return new Health(LlmRegistry.Status.OFF, "enabled: false in the server file", null, null, 0, 0);
         }

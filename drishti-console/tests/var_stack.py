@@ -90,6 +90,23 @@ def trade_grain(lake: Path, budget: int = 40) -> None:
         pytest.skip("could not write the trade-grain morning: " + (r.stderr or r.stdout)[-400:])
 
 
+def trade_grain_copy(lake: Path, dest: Path, budget: int = 40) -> Path:
+    """A copy of a (cached, shared) lake with :func:`trade_grain` on its newest date; the original is never written. Data files are hard
+    links (Delta writes new files and never changes one), each _delta_log a real copy (a log file may be rewritten in place)."""
+    import os
+    import shutil
+
+    def copy(src: Path, dst: Path) -> None:
+        shutil.copytree(src, dst, copy_function=os.link, ignore=shutil.ignore_patterns("_delta_log"))
+        for log in src.rglob("_delta_log"):
+            shutil.copytree(log, dst / log.relative_to(src))
+
+    out = dest / "delta"
+    copy(lake, out)
+    trade_grain(out, budget)
+    return out
+
+
 def var_server(tmp_path_factory, lake: Path, **env: str):
     """A real server and console over ``lake``, its VaR engine ready; ``env``: more DRISHTI_* settings. Its VaR hot folder and the root
     it publishes the official results to (``<root>/risk-results``, VAR_GUIDE section 19) are its own: the lake is read, never written."""

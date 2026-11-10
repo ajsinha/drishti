@@ -17,47 +17,44 @@ package com.ash.drishti.iceberg.catalog;
 
 import com.ash.drishti.api.proxy.ProxySettings;
 import com.ash.drishti.iceberg.Table;
+import com.ash.drishti.iceberg.io.DrishtiFileIO;
 import com.ash.drishti.iceberg.io.FileAccess;
+import com.ash.drishti.iceberg.meta.Bridge;
 import com.ash.drishti.iceberg.meta.PartitionSpec;
-import com.ash.drishti.iceberg.meta.SchemaJson;
 import com.ash.drishti.iceberg.meta.SortOrder;
-import com.ash.drishti.iceberg.meta.TableMetadata;
 import com.ash.drishti.iceberg.types.Schema;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.apache.iceberg.catalog.Namespace;
+import org.apache.iceberg.catalog.TableIdentifier;
+import org.apache.iceberg.exceptions.AlreadyExistsException;
+import org.apache.iceberg.exceptions.NoSuchNamespaceException;
+import org.apache.iceberg.exceptions.NoSuchTableException;
 
 /**
- * A namespace of an Iceberg REST catalog (Apache Polaris, Snowflake Open Catalog, AWS Glue's Iceberg endpoint, Unity
- * Catalog, Nessie, Lakekeeper, Gravitino), spoken directly over HTTP: {@code GET /v1/config} for the server's defaults,
- * overrides and {@code prefix}; then list, load, create and commit tables under {@code /v1/{prefix}/namespaces/{ns}}.
- * Settings as the library engine's: {@code uri}, {@code warehouse}, {@code credential} or {@code token}, {@code scope},
- * {@code oauth2-server-uri}, {@code prefix}, {@code namespace}, {@code catalog.<key>} (Iceberg catalog properties, such
- * as {@code catalog.rest.sigv4-enabled}); {@code vended-credentials: false} stops asking for the table's own S3
- * credentials. Thread-safe.
+ * A namespace of an Iceberg REST catalog (Apache Polaris, Snowflake Open Catalog, AWS Glue's Iceberg endpoint, Unity Catalog, Nessie,
+ * Lakekeeper, Gravitino) through Apache Iceberg's own REST client. Settings: {@code uri}, {@code warehouse}, {@code credential} or
+ * {@code token}, {@code scope}, {@code oauth2-server-uri}, {@code prefix}, {@code namespace}, {@code catalog.<key>} (Iceberg catalog
+ * properties, such as {@code catalog.rest.sigv4-enabled}); {@code vended-credentials: false} stops asking for the table's own S3
+ * credentials. Files are read through {@link DrishtiFileIO}. Thread-safe.
  */
 public final class RestCatalog implements Catalog {
 
-    private final RestClient client;
-    private final String prefixPath;
-    private final List<String> namespace;
+    private final org.apache.iceberg.rest.RESTCatalog catalog;
+    private final Namespace namespace;
     private final FileAccess io;
-    private final boolean vend;
     private final String uri;
+    private final ProxySettings proxy;
 
-    private RestCatalog(RestClient client, String prefixPath, List<String> namespace, FileAccess io, boolean vend, String uri) {
-        this.client = client;
-        this.prefixPath = prefixPath;
+    private RestCatalog(org.apache.iceberg.rest.RESTCatalog catalog, Namespace namespace, FileAccess io, String uri, ProxySettings proxy) {
+        this.catalog = catalog;
         this.namespace = namespace;
         this.io = io;
-        this.vend = vend;
         this.uri = uri;
+        this.proxy = proxy;
     }
 
     static RestCatalog open(Map<String, String> s, String domain, FileAccess io) {
@@ -66,139 +63,110 @@ public final class RestCatalog implements Catalog {
             io.close();
             throw new IllegalArgumentException("a REST catalog needs uri");
         }
-        Map<String, String> given = new HashMap<>();
+        Map<String, String> props = new HashMap<>(s);                  // the connector's s3.*, tls.*, proxy.*, relocate: DrishtiFileIO reads them
         s.forEach((k, v) -> {
             if (k.startsWith("catalog.")) {
-                given.put(k.substring(8), v);
+                props.put(k.substring(8), v);
             }
         });
-        Map<String, String> props = given;
-        RestClient client = new RestClient(uri, s, given);
-        String warehouse = s.getOrDefault("warehouse", "");
-        try {
-            RestClient.Answer a = client.get("/v1/config" + (warehouse.isBlank() ? "" : "?warehouse=" + RestClient.segment(warehouse)), Map.of());
-            if (a.status() != 200) {
-                throw new IOException("GET /v1/config: HTTP " + a.status() + " " + RestClient.error(a));
+        props.put("uri", uri);
+        props.put("io-impl", DrishtiFileIO.class.getName());
+        for (String k : List.of("warehouse", "credential", "token", "scope", "oauth2-server-uri", "prefix")) {
+            if (s.getOrDefault(k, "").isBlank()) {
+                props.remove(k);
             }
-            Map<String, String> merged = new HashMap<>();
-            a.body().path("defaults").fields().forEachRemaining(e -> merged.put(e.getKey(), e.getValue().asText()));
-            merged.putAll(given);
-            a.body().path("overrides").fields().forEachRemaining(e -> merged.put(e.getKey(), e.getValue().asText()));
-            if (merged.containsKey("uri") && !merged.get("uri").replaceAll("/+$", "").equals(uri.replaceAll("/+$", ""))) {
-                client = new RestClient(merged.get("uri"), s, merged);
-            }
-            props = merged;
-        } catch (IOException e) {
-            io.close();
-            throw new java.io.UncheckedIOException("cannot reach the REST catalog at " + uri + ": " + com.ash.drishti.iceberg.io.Reasons.of(e), e);   // never ": null" (QA4-07)
         }
-        String prefix = !s.getOrDefault("prefix", "").isBlank() ? s.get("prefix") : props.getOrDefault("prefix", "");
+        if (Boolean.parseBoolean(s.getOrDefault("vended-credentials", "true"))) {
+            props.put("header.X-Iceberg-Access-Delegation", "vended-credentials");
+        }
+        ProxySettings proxy = ProxySettings.resolve(s, uri);
+        if (proxy.appliesTo(java.net.URI.create(uri).getHost())) {
+            props.put("rest.client.proxy.hostname", proxy.host());
+            props.put("rest.client.proxy.port", String.valueOf(proxy.port()));
+            if (proxy.hasCredentials()) {
+                props.put("rest.client.proxy.username", proxy.username());
+                props.put("rest.client.proxy.password", proxy.password());
+            }
+        }
+        org.apache.iceberg.rest.RESTCatalog c = new org.apache.iceberg.rest.RESTCatalog();
+        try {
+            c.initialize(s.getOrDefault("source-name", "drishti"), props);
+        } catch (org.apache.iceberg.exceptions.NotAuthorizedException e) {
+            io.close();
+            throw new IllegalStateException("the REST catalog at " + uri + " refused the credential: " + e.getMessage(), e);
+        } catch (RuntimeException e) {
+            io.close();
+            throw new IllegalStateException("cannot reach the REST catalog at " + uri + ": " + com.ash.drishti.iceberg.io.Reasons.of(e), e);
+        }
         String ns = s.getOrDefault("namespace", "").isBlank() ? domain : s.get("namespace");
-        List<String> levels = ns.isBlank() ? List.of() : Arrays.asList(ns.split("\\."));
-        return new RestCatalog(client, prefix.isBlank() ? "/v1" : "/v1/" + prefix.replaceAll("^/+|/+$", ""), levels, io,
-                Boolean.parseBoolean(s.getOrDefault("vended-credentials", "true")), uri);
-    }
-
-    private String nsPath() {
-        return prefixPath + "/namespaces/" + RestClient.segment(String.join("\u001f", namespace));
-    }
-
-    private String tablePath(String name) {
-        return nsPath() + "/tables/" + RestClient.segment(name);
-    }
-
-    private RestTableOps ops(String name) {
-        return new RestTableOps(client, tablePath(name), namespace, name, io, vend);
+        return new RestCatalog(c, ns.isBlank() ? Namespace.empty() : Namespace.of(ns.split("\\.")), io, uri, proxy);
     }
 
     public ProxySettings proxy() {
-        return client.proxy();
+        return proxy;
+    }
+
+    private TableIdentifier id(String name) {
+        return TableIdentifier.of(namespace, name);
     }
 
     @Override
-    public Optional<Table> load(String name) throws IOException {
-        RestTableOps ops = ops(name);
+    public Optional<Table> load(String name) {
         try {
-            return Optional.of(Table.load(name, ops));
-        } catch (NoSuchTable e) {
+            return Optional.of(new Table(name, catalog.loadTable(id(name)), () -> catalog.loadTable(id(name))));
+        } catch (NoSuchTableException | NoSuchNamespaceException e) {
             return Optional.empty();
         }
     }
 
     @Override
-    public List<String> tables() throws IOException {
-        List<String> out = new ArrayList<>();
-        String page = null;
-        do {
-            RestClient.Answer a = client.get(nsPath() + "/tables" + (page == null ? "" : "?pageToken=" + RestClient.segment(page)), Map.of());
-            if (a.status() == 404) {
-                return List.of();
-            }
-            if (a.status() != 200) {
-                throw new IOException("listTables " + String.join(".", namespace) + ": HTTP " + a.status() + " " + RestClient.error(a));
-            }
-            a.body().path("identifiers").forEach(i -> out.add(i.path("name").asText()));
-            JsonNode next = a.body().path("next-page-token");
-            page = next.isTextual() && !next.asText().isEmpty() ? next.asText() : null;
-        } while (page != null);
-        out.sort(null);
-        return out;
+    public List<String> tables() {
+        try {
+            return catalog.listTables(namespace).stream().map(TableIdentifier::name).sorted().toList();
+        } catch (NoSuchNamespaceException e) {
+            return List.of();
+        }
     }
 
     @Override
     public Table create(String name, Schema schema, PartitionSpec spec, SortOrder order, Map<String, String> properties) throws IOException {
-        if (!namespace.isEmpty() && !namespaceExists()) {
-            ObjectNode body = RestClient.object();
-            var levels = body.putArray("namespace");
-            namespace.forEach(levels::add);
-            body.putObject("properties");
-            RestClient.Answer a = client.post(prefixPath + "/namespaces", body, Map.of());
-            if (a.status() != 200 && a.status() != 409) {
-                throw new IOException("createNamespace " + String.join(".", namespace) + ": HTTP " + a.status() + " " + RestClient.error(a));
+        if (!namespace.isEmpty() && !catalog.namespaceExists(namespace)) {
+            try {
+                catalog.createNamespace(namespace);
+            } catch (AlreadyExistsException e) {
+                // another writer created it meanwhile
             }
         }
-        ObjectNode body = RestClient.object();
-        body.put("name", name);
-        body.set("schema", SchemaJson.write(schema));
-        body.set("partition-spec", spec.write());
-        body.set("write-order", order.write());
-        body.put("stage-create", false);
-        ObjectNode props = body.putObject("properties");
-        properties.forEach(props::put);
-        Map<String, String> h = vend ? Map.of("X-Iceberg-Access-Delegation", "vended-credentials") : Map.of();
-        RestClient.Answer a = client.post(nsPath() + "/tables", body, h);
-        if (a.status() == 409) {
-            throw new TableExists("the catalog already has a table " + String.join(".", namespace) + "." + name);
+        org.apache.iceberg.Schema s = Bridge.iceberg(schema);
+        try {
+            return new Table(name, catalog.buildTable(id(name), s).withPartitionSpec(Bridge.iceberg(spec, schema, s))
+                    .withSortOrder(Bridge.iceberg(order, schema, s)).withProperties(properties).create(), () -> catalog.loadTable(id(name)));
+        } catch (AlreadyExistsException e) {
+            throw new TableExists("the catalog already has a table " + namespace + "." + name);
         }
-        if (a.status() != 200) {
-            throw new IOException("createTable " + name + ": HTTP " + a.status() + " " + RestClient.error(a));
-        }
-        RestTableOps ops = ops(name);
-        return new Table(name, ops, new TableOps.Loaded(new TableMetadata((ObjectNode) a.body().get("metadata")),
-                a.body().path("metadata-location").asText(null), a.etag()));
-    }
-
-    private boolean namespaceExists() throws IOException {
-        RestClient.Answer a = client.get(nsPath(), Map.of());
-        return a.status() == 200 || a.status() == 204;
     }
 
     @Override
     public boolean reachable() {
         try {
-            return namespace.isEmpty() || namespaceExists();
-        } catch (IOException | RuntimeException e) {
+            return namespace.isEmpty() || catalog.namespaceExists(namespace);
+        } catch (RuntimeException e) {
             return false;
         }
     }
 
     @Override
     public String describe() {
-        return uri + " namespace " + String.join(".", namespace);
+        return uri + " namespace " + namespace;
     }
 
     @Override
     public void close() {
+        try {
+            catalog.close();
+        } catch (IOException e) {
+            // closing: nothing to save
+        }
         io.close();
     }
 }

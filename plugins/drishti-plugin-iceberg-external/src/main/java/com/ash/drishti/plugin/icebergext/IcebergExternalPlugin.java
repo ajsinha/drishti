@@ -48,7 +48,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -138,14 +137,6 @@ public final class IcebergExternalPlugin implements SourcePlugin {
         if (ctx.setting("root", "").isBlank() && ctx.setting("uri", "").isBlank() && !S3Tables.named(ctx.settings())
                 && ctx.settings().keySet().stream().noneMatch(k -> k.startsWith("metadata-location."))) {
             throw new com.ash.drishti.api.PluginNotConfigured("iceberg-external needs settings.root, settings.uri (a REST catalog) or metadata-location.<kind>");
-        }
-        String engine = ctx.setting("engine", System.getenv().getOrDefault("DRISHTI_ICEBERG_ENGINE", "auto")).trim().toLowerCase(Locale.ROOT);
-        if (engine.equals("library")) {
-            throw new IllegalArgumentException("iceberg-external reads through drishti-iceberg (engine: native or auto); engine: library is the "
-                    + "iceberg connector's only. For tables in Azure, Google Cloud Storage or HDFS put a REST catalog with S3 in front, or use the iceberg connector");
-        }
-        if (!engine.equals("native") && !engine.equals("auto")) {
-            throw new IllegalArgumentException("unknown Iceberg engine '" + engine + "': use native or auto");
         }
         this.context = ctx;
         this.settings = Map.copyOf(ctx.settings());
@@ -576,7 +567,6 @@ public final class IcebergExternalPlugin implements SourcePlugin {
         m.put("columnSets", columnSets.synchronous().estimatedSize());
         m.put("documents", docs.estimatedSize());
         m.put("ids", index.size());
-        m.put("engine", "native");
         if (!partial.isEmpty()) {
             m.put("partial", new TreeSet<>(partial).toString());
         }

@@ -381,7 +381,6 @@ def test_the_python_reader_reads_every_feature_as_the_java_reader(tmp_path, fixt
     shutil.copytree(FEATURES / fixture, table)
     plain = _keyed(deltalake.DeltaTable(str(FEATURES / "plain")).to_pyarrow_table())
     assert len(plain) == 80
-    assert deltaread.needs_kernel(str(table)) is not None                # delta-rs's pyarrow reader would refuse it or half-read it
     got = deltaread.read(table)
     _, java_rows = java_reader(table)
     assert _keyed(got, numbers=False) == _keyed(java_rows, numbers=False)          # the test's Java reader prints text and dates
@@ -394,8 +393,7 @@ def test_the_python_reader_reads_every_feature_as_the_java_reader(tmp_path, fixt
     assert day.column_names == ["id", "mtm"] and day.num_rows == 40
 
 
-def test_a_table_delta_rs_reads_completely_stays_with_delta_rs():
+def test_a_plain_table_is_read_by_kernel_as_well(java_reader):
     import deltaread
-    assert deltaread.needs_kernel(str(FEATURES / "plain")) is None
     t = deltaread.read(FEATURES / "plain", date="2026-09-29", columns=["id", "mtm"])
     assert t.num_rows == 40 and t.column_names == ["id", "mtm"]

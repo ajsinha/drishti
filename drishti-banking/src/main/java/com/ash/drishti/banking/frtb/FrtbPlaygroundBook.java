@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.frtb;
 
+import com.ash.drishti.banking.PlaygroundSheets;
 import com.ash.drishti.banking.compute.frtb.Drc;
 import com.ash.drishti.banking.compute.frtb.FrtbChoices;
 import com.ash.drishti.banking.compute.frtb.FrtbInput;
@@ -409,13 +410,10 @@ final class FrtbPlaygroundBook {
     private void config(SheetStream s) {
         s.width(0, 34).width(1, 22).width(2, 22).width(3, 34).width(4, 18).width(5, 90);
         s.row(1).text(0, "Config: the switches and the parameters actually used", "title");
-        s.row(3).text(0, "Switch", "head").text(1, "Value (choose)", "head").text(2, "Default", "head").text(3, "Options", "head").text(4, "Rule", "head")
-                .text(5, "Why the default", "head");
+        PlaygroundSheets.switchHead(s);
         for (FrtbChoices.Switch x : FrtbChoices.SWITCHES) {
             int row = switchRow.get(x.name());
-            s.row(row).text(0, x.name(), "label").text(1, ch.get(x.name()), "input.text").text(2, x.dflt(), "text").text(3, String.join(", ", x.options()), "text")
-                    .text(4, x.rule(), "text").text(5, x.why(), "wrap");
-            s.list("B" + row, x.options());
+            PlaygroundSheets.switchRow(s, row, x, ch.get(x.name()));
         }
         s.row(11).text(0, "Parameter", "head").text(1, "Value", "head").text(2, "Rule", "head");
         int row = 12;
@@ -1301,37 +1299,16 @@ final class FrtbPlaygroundBook {
     // ---- Explain, Provenance -----------------------------------------------------------------------------------------------------
 
     private void explain(SheetStream s) {
-        s.width(0, 44).width(1, 150);
-        s.row(1).text(0, com.ash.drishti.common.Branding.current().productOr("") + " · FRTB-SA Playground · how each figure is worked out", "title");
-        s.blank(1, "title");
-        int row = 3;
-        for (String[] step : t.explain()) {
-            s.row(row++).text(0, step[0], "label.wrap").text(1, step[1], "wrap");
-        }
+        PlaygroundSheets.explain(s, "FRTB-SA Playground", t.explain());
     }
 
     private void provenance(SheetStream s) {
-        s.width(0, 38).width(1, 120);
-        s.row(1).text(0, "Provenance", "title");
-        s.blank(1, "title");
         Map<String, Object> prov = new LinkedHashMap<>(run.provenance());
         prov.put("Scope", run.scope() + " (" + run.canonical() + ")");
         prov.put("Reporting currency", run.reporting());
         prov.put("Inputs digest (SHA-256)", run.inputsDigest());
         prov.put("Recipe", recipe == null ? "not saved" : recipe);
         prov.put("Exported by", user + " at " + now);
-        int row = 3;
-        for (Map.Entry<String, Object> en : prov.entrySet()) {
-            Object v = en.getValue();
-            s.row(row++).text(0, en.getKey(), "label");
-            if (v instanceof List<?> list) {
-                s.text(1, list.isEmpty() ? "none" : String.valueOf(list.size()), "text");
-                for (Object o : list) {
-                    s.row(row++).text(1, String.valueOf(o), "text");
-                }
-            } else {
-                s.text(1, v == null ? "" : String.valueOf(v), "text");
-            }
-        }
+        PlaygroundSheets.provenance(s, prov);
     }
 }

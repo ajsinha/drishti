@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.yfinance;
 
+import com.ash.drishti.common.HttpFetcher;
 import com.ash.drishti.common.RetryPolicy;
 import java.time.Duration;
 import java.util.LinkedHashMap;
@@ -39,7 +40,7 @@ import java.util.Set;
  * @param sourceName the name shown as the document's source
  */
 public record YFinanceSettings(String baseUrl, String range, String interval, Duration timeout, Duration cacheTtl, int cacheMax, int maxBytes,
-        String userAgent, int retries, RetryPolicy retryPolicy, String idPrefix, String kind, String sourceName) {
+        String userAgent, int retries, RetryPolicy retryPolicy, String idPrefix, String kind, String sourceName) implements HttpFetcher.Limits {
 
     private static final Set<String> RANGES = Set.of("1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max");
     private static final Set<String> INTERVALS = Set.of("1m", "2m", "5m", "15m", "30m", "60m", "90m", "1h", "1d", "5d", "1wk", "1mo", "3mo");

@@ -71,7 +71,8 @@ def test_the_header_and_the_shebang():
             assert line in text, f"{p.relative_to(ROOT)}: the licence header"
     for p in BIN.glob("*.sh"):
         assert p.read_text(encoding="utf-8").startswith("#!/bin/sh\n" if p.stem == "drishti-node" else "#!/usr/bin/env bash\n"), p.name
-        assert "set -euo pipefail" in p.read_text(encoding="utf-8"), p.name
+        # drishti-node.sh is POSIX sh (server images): no pipefail there, and it reads exit codes itself, so set -u only
+        assert ("set -u\n" if p.stem == "drishti-node" else "set -euo pipefail") in p.read_text(encoding="utf-8"), p.name
         assert p.stat().st_mode & 0o111, f"{p.name} is not executable (git update-index --chmod=+x)"
     for p in BIN.glob("*.cmd"):
         assert "Copyright (c) 2026 Ashutosh Sinha" in p.read_text(encoding="utf-8"), p.name

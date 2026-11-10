@@ -35,6 +35,31 @@ class RetryRecoveryTest {
     @TempDir Path dir;
 
     private static final RetryPolicy FAST = new RetryPolicy(true, Duration.ofMillis(60), 2.0, Duration.ofMillis(240), 0, 3);
+    /** The retry schedule's clock: moved by the test, never slept on (a busy machine cannot make "too early" late). */
+    private final Moved clock = new Moved();
+
+    private static final class Moved extends java.time.Clock {
+        private volatile java.time.Instant now = java.time.Instant.parse("2026-01-01T00:00:00Z");
+
+        void advance(long millis) {
+            now = now.plusMillis(millis);
+        }
+
+        @Override
+        public java.time.ZoneId getZone() {
+            return java.time.ZoneOffset.UTC;
+        }
+
+        @Override
+        public java.time.Clock withZone(java.time.ZoneId zone) {
+            return this;
+        }
+
+        @Override
+        public java.time.Instant instant() {
+            return now;
+        }
+    }
 
     /** A provider type that cannot be built while the stub is "down". */
     static final class Flaky implements ProviderFactory {
@@ -78,19 +103,19 @@ class RetryRecoveryTest {
     void aProviderThatCouldNotBeBuiltIsTriedOnTheScheduleAndLoadsWhenTheStubIsUp() throws Exception {
         Files.writeString(dir.resolve("p.yaml"), "type: flaky\n");
         Flaky f = new Flaky();
-        LlmRegistry r = new LlmRegistry(List.of(f), () -> ProviderConfigLoader.load(dir, k -> null), "", FAST);
+        LlmRegistry r = new LlmRegistry(List.of(f), () -> ProviderConfigLoader.load(dir, k -> null), "", FAST, clock);
         r.reload();
         assertThat(r.provider("p").orElseThrow().error()).contains("connection refused");
         assertThat(r.retry().status("p").orElseThrow().attempt()).isEqualTo(1);
         int tries = f.tries;
         r.reload();                                                             // too early: not tried again
         assertThat(f.tries).isEqualTo(tries);
-        Thread.sleep(150);
+        clock.advance(150);
         r.reload();
         assertThat(f.tries).isEqualTo(tries + 1);
         assertThat(r.retry().status("p").orElseThrow().attempt()).isEqualTo(2);
         f.up.set(true);
-        Thread.sleep(300);
+        clock.advance(300);
         r.reload();
         assertThat(r.provider("p").orElseThrow().error()).isNull();
         assertThat(r.provider("p").orElseThrow().usable()).isTrue();
@@ -161,16 +186,16 @@ class RetryRecoveryTest {
     void anMcpServerWhoseCallFailedReconnectsOnTheScheduleAndIsUpAgain() throws Exception {
         Files.writeString(dir.resolve("s.yaml"), "transport: stub\nmock:\n  tools:\n    - name: ping\n      reply: pong\n");
         StubMcp stub = new StubMcp();
-        McpRegistry r = new McpRegistry(List.of(stub, new MockMcpClient.Factory()), () -> McpServerConfigLoader.load(dir, k -> null), FAST);
+        McpRegistry r = new McpRegistry(List.of(stub, new MockMcpClient.Factory()), () -> McpServerConfigLoader.load(dir, k -> null), FAST, clock);
         r.reload();
         McpRegistry.Entry e = r.server("s").orElseThrow();
         r.record(e, false, "stub server is down");                                // the gateway saw a failed call
         assertThat(r.health(r.server("s").orElseThrow()).status()).isEqualTo(LlmRegistry.Status.DOWN);
         r.reload();                                                               // lists it as failing
         assertThat(r.retry().status("s").orElseThrow().lastError()).contains("connection lost");
-        Thread.sleep(100);
+        clock.advance(100);
         r.reload();
-        Thread.sleep(300);
+        clock.advance(300);
         r.reload();
         assertThat(r.health(r.server("s").orElseThrow()).status()).isEqualTo(LlmRegistry.Status.UP);
         assertThat(r.retry().statuses()).isEmpty();

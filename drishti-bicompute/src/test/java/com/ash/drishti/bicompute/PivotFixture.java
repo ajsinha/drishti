@@ -46,6 +46,7 @@ final class PivotFixture implements AutoCloseable {
     /** The same engine over the tabular provider itself, not the counting wrapper: what needs the tabular provider (a what-if) runs here. */
     final PivotCore plain;
     final List<String> statements = new ArrayList<>();
+    Counting counting;
 
     /** With units: NOTIONAL and PNL are money in each row's CCY, RATE_PCT a percentage. */
     final boolean units;
@@ -161,8 +162,8 @@ final class PivotFixture implements AutoCloseable {
         };
         TabularProvider base = new TabularProvider(exec, resolver);
         this.provider = base;
-        PivotProvider counting = new Counting(base, statements);
-        this.core = new PivotCore(List.of(counting), cache, settings);
+        this.counting = new Counting(base, statements);
+        this.core = new PivotCore(List.of(this.counting), cache, settings);
         this.plain = new PivotCore(List.of(base), cache, settings);
     }
 
@@ -186,6 +187,12 @@ final class PivotFixture implements AutoCloseable {
     static final class Counting implements PivotProvider {
         final PivotProvider d;
         final List<String> statements;
+        java.util.function.BinaryOperator<String> names = (dim, value) -> null;
+
+        @Override
+        public java.util.function.BinaryOperator<String> memberNames(com.ash.drishti.kernel.api.pivot.Viewer v, String source, String date) {
+            return names;
+        }
 
         Counting(PivotProvider d, List<String> statements) {
             this.d = d;

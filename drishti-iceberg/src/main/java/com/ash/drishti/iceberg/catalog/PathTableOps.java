@@ -15,54 +15,60 @@
  */
 package com.ash.drishti.iceberg.catalog;
 
+import com.ash.drishti.iceberg.io.DrishtiFileIO;
 import com.ash.drishti.iceberg.io.FileAccess;
-import com.ash.drishti.iceberg.meta.TableMetadata;
-import com.ash.drishti.iceberg.meta.TableUpdate;
 import com.ash.drishti.lakeio.FileEntry;
 import com.ash.drishti.lakeio.S3Storage;
 import com.ash.drishti.lakeio.Storage;
+import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.GZIPOutputStream;
+import org.apache.iceberg.LocationProviders;
+import org.apache.iceberg.TableMetadata;
+import org.apache.iceberg.TableMetadataParser;
+import org.apache.iceberg.TableOperations;
+import org.apache.iceberg.exceptions.CommitFailedException;
+import org.apache.iceberg.exceptions.NoSuchTableException;
+import org.apache.iceberg.io.FileIO;
+import org.apache.iceberg.io.LocationProvider;
 
 /**
- * A path-based table (Iceberg's {@code HadoopTables} convention, so tables move between this engine and the library
- * unchanged): a folder whose {@code metadata/version-hint.text} names the current version N and whose
- * {@code metadata/vN.metadata.json} (or {@code vN.gz.metadata.json}) is it. With no hint, the highest version is
- * found by listing; a hint that lags (a writer stopped between its two steps) is caught up by looking for N+1.
+ * A path-based table for Apache Iceberg (the {@code HadoopTables} layout, so tables move between engines unchanged, with no Hadoop): a
+ * folder whose {@code metadata/version-hint.text} names the current version N and whose {@code metadata/vN.metadata.json} (or
+ * {@code vN.gz.metadata.json}) is it. With no hint, the highest version is found by listing; a hint that lags is caught up by looking
+ * for N+1.
  *
- * <p>A table a catalog wrote (pyiceberg, a JDBC or Glue catalog, Spark through one) names its metadata
- * {@code NNNNN-<uuid>.metadata.json} and writes no hint: with neither a hint nor a {@code vN} file, the file with the highest
- * sequence number NNNNN is the current one, as Iceberg's own readers take it (QA2-09). Such a table is read; this engine
- * commits only to the {@code vN} convention.
+ * <p>A table a catalog wrote (pyiceberg, a JDBC or Glue catalog) names its metadata {@code NNNNN-<uuid>.metadata.json} and writes no hint:
+ * with neither a hint nor a {@code vN} file, the highest NNNNN is current. Such a table is read; commits use only the {@code vN} convention.
  *
- * <p>A commit writes {@code vN+1.metadata.json} as one exclusive create ({@link Storage#createIfAbsent}: a hard link
- * on local disk, a conditional PUT on S3), so of two writers exactly one wins and the other gets
- * {@link CommitConflict}; then it replaces the hint. Metadata files beyond {@code write.metadata.previous-versions-max}
- * are removed after a commit when {@code write.metadata.delete-after-commit.enabled}. An S3-compatible store that does
- * not honour conditional writes is detected by a probe at the first commit and the table is then
- * <em>single-writer</em> ({@link #exclusiveCommits()} false): commits still work, but two writers at once must not
- * happen.
+ * <p>A commit writes {@code vN+1.metadata.json} as one exclusive create ({@link Storage#createIfAbsent}: a hard link on local disk, a
+ * conditional PUT on S3), so of two writers exactly one wins and the other's commit is retried by Iceberg; then it replaces the hint. An
+ * S3-compatible store that does not honour conditional writes is detected by a probe at the first commit and the table is then
+ * single-writer ({@link #exclusiveCommits()} false).
  */
-public final class PathTableOps implements TableOps {
+public final class PathTableOps implements TableOperations {
 
     private static final Pattern VERSION = Pattern.compile("v(\\d+)(\\.gz)?\\.metadata\\.json(\\.gz)?$");
-    /** A catalog's metadata file: {@code 00003-1b2c...-uuid.metadata.json} (also {@code .gz.metadata.json}, {@code .metadata.json.gz}). */
     private static final Pattern CATALOG_NAMED = Pattern.compile("(\\d+)-[0-9A-Za-z-]+(\\.gz)?\\.metadata\\.json(\\.gz)?$");
 
     private final String location;
     private final FileAccess io;
+    private final DrishtiFileIO fileIO;
     private volatile Boolean exclusive;
+    private volatile TableMetadata current;
 
     /** @param location the table's folder (canonical: a {@code file:} or {@code s3a://} URI string, no trailing slash) */
     public PathTableOps(String location, FileAccess io) {
         this.location = location.replaceAll("/+$", "");
         this.io = io;
+        this.fileIO = new DrishtiFileIO(io);
     }
 
     public String location() {
@@ -82,7 +88,6 @@ public final class PathTableOps implements TableOps {
         return currentVersion() > 0 || catalogNamed() != null;
     }
 
-    /** The catalog-named metadata file with the highest sequence number ({@code NNNNN-<uuid>.metadata.json}), or null when there is none. */
     String catalogNamed() throws IOException {
         String best = null;
         long seq = -1;
@@ -90,12 +95,9 @@ public final class PathTableOps implements TableOps {
             for (FileEntry f : storage().listFrom(io.resolve(metadataDir() + "/0"))) {
                 String name = f.path().substring(f.path().lastIndexOf('/') + 1);
                 Matcher m = CATALOG_NAMED.matcher(name);
-                if (m.matches()) {
-                    long n = Long.parseLong(m.group(1));
-                    if (n > seq) {
-                        seq = n;
-                        best = metadataDir() + "/" + name;
-                    }
+                if (m.matches() && Long.parseLong(m.group(1)) > seq) {
+                    seq = Long.parseLong(m.group(1));
+                    best = metadataDir() + "/" + name;
                 }
             }
         } catch (FileNotFoundException e) {
@@ -104,13 +106,11 @@ public final class PathTableOps implements TableOps {
         return best;
     }
 
-    /** The newest version: the hint (caught up when it lags), else the highest listed; 0 when there is none. */
     int currentVersion() throws IOException {
         Storage s = storage();
-        int v = 0;
+        int v;
         try {
-            String hint = new String(s.readAll(io.resolve(metadataDir() + "/version-hint.text")), StandardCharsets.UTF_8).trim();
-            v = Integer.parseInt(hint);
+            v = Integer.parseInt(new String(s.readAll(io.resolve(metadataDir() + "/version-hint.text")), StandardCharsets.UTF_8).trim());
         } catch (FileNotFoundException | NumberFormatException e) {
             v = listedVersion();
         }
@@ -135,7 +135,6 @@ public final class PathTableOps implements TableOps {
         return max;
     }
 
-    /** The metadata file of version {@code v}, or null. */
     private String file(int v) throws IOException {
         for (String name : List.of("v" + v + ".metadata.json", "v" + v + ".gz.metadata.json", "v" + v + ".metadata.json.gz")) {
             String p = metadataDir() + "/" + name;
@@ -150,74 +149,93 @@ public final class PathTableOps implements TableOps {
     }
 
     private static int versionOf(String file) {
+        if (file == null) {
+            return 0;
+        }
         Matcher m = VERSION.matcher(file.substring(file.lastIndexOf('/') + 1));
         return m.find() ? Integer.parseInt(m.group(1)) : 0;
     }
 
-    @Override
-    public Loaded load() throws IOException {
+    private String newestFile() throws IOException {
         int v = currentVersion();
-        if (v == 0) {
-            String named = catalogNamed();
-            if (named != null) {
-                return new Loaded(TableMetadata.read(io.readAll(named)), named, null);
+        if (v > 0) {
+            String f = file(v);
+            if (f == null) {
+                throw new NoSuchTableException("metadata/version-hint.text of %s names version %s, which is not there", location, v);
             }
-            throw new NoSuchTable("no Iceberg table at " + location + " (no metadata/version-hint.text, no metadata/v*.metadata.json and no catalog's"
-                    + " metadata/NNNNN-<uuid>.metadata.json)");
+            return f;
         }
-        String f = file(v);
-        if (f == null) {
-            throw new NoSuchTable("metadata/version-hint.text of " + location + " names version " + v + ", which is not there");
-        }
-        return new Loaded(TableMetadata.read(io.readAll(f)), f, null);
+        return catalogNamed();
     }
 
     @Override
-    public Optional<Loaded> refresh(Loaded current) throws IOException {
-        int v = currentVersion();
-        if (v == 0) {
-            String named = catalogNamed();                    // a catalog-written table: a newer sequence number is a new version
-            return named == null || named.equals(current.location()) ? Optional.empty() : Optional.of(load());
-        }
-        if (v == versionOf(current.location())) {
-            return Optional.empty();
-        }
-        return Optional.of(load());
+    public TableMetadata current() {
+        TableMetadata c = current;
+        return c != null ? c : refresh();
     }
 
     @Override
-    public Loaded commit(Loaded base, TableUpdate update) throws IOException {
-        long now = System.currentTimeMillis();
-        TableMetadata next = update.apply(base.metadata(), base.location(), Math.max(now, base.metadata().lastUpdatedMs() + 1));
-        int v = versionOf(base.location()) + 1;
-        return write(next, v);
+    public TableMetadata refresh() {
+        try {
+            String f = newestFile();
+            if (f == null) {
+                current = null;
+                throw new NoSuchTableException("no Iceberg table at %s (no metadata/version-hint.text, no metadata/v*.metadata.json and no catalog's"
+                        + " metadata/NNNNN-<uuid>.metadata.json)", location);
+            }
+            TableMetadata c = current;
+            if (c == null || !f.equals(c.metadataFileLocation())) {
+                current = TableMetadataParser.read(fileIO, f);
+            }
+            return current;
+        } catch (IOException e) {
+            throw new UncheckedIOException("reading the metadata of " + location, e);
+        }
     }
 
-    /** Writes {@code md} as version {@code v} (1: a new table); {@link CommitConflict} when the version exists. */
-    public Loaded write(TableMetadata md, int v) throws IOException {
+    @Override
+    public void commit(TableMetadata base, TableMetadata metadata) {
+        if (base != null && !base.metadataFileLocation().equals(current().metadataFileLocation())) {
+            throw new CommitFailedException("%s changed since the commit began", location);
+        }
+        try {
+            int v = base == null ? 1 : versionOf(base.metadataFileLocation()) + 1;
+            write(metadata, v);
+            refresh();
+        } catch (IOException e) {
+            throw new UncheckedIOException("committing to " + location, e);
+        }
+    }
+
+    private void write(TableMetadata md, int v) throws IOException {
         boolean gzip = "gzip".equalsIgnoreCase(md.property("write.metadata.compression-codec", "none"));
         String f = metadataDir() + "/v" + v + (gzip ? ".gz" : "") + ".metadata.json";
         Storage s = storage();
         probe(s);
-        if (!s.createIfAbsent(io.resolve(f), md.toBytes(gzip))) {
-            throw new CommitConflict("version " + v + " of " + location + " was committed by another writer");
+        byte[] json = TableMetadataParser.toJson(md).getBytes(StandardCharsets.UTF_8);
+        if (gzip) {
+            ByteArrayOutputStream b = new ByteArrayOutputStream();
+            try (GZIPOutputStream g = new GZIPOutputStream(b)) {
+                g.write(json);
+            }
+            json = b.toByteArray();
+        }
+        if (!s.createIfAbsent(io.resolve(f), json)) {
+            throw new CommitFailedException("version %s of %s was committed by another writer", v, location);
         }
         s.put(io.resolve(metadataDir() + "/version-hint.text"), String.valueOf(v).getBytes(StandardCharsets.UTF_8));
-        // Hadoop's local file system keeps a checksum beside the hint it wrote; a stale one makes the Apache library fail its check and
-        // fall back to listing, so it goes with the hint it no longer matches (the library writes a fresh one at its next commit)
+        // Hadoop's local file system keeps a checksum beside the hint it wrote; a stale one makes a Hadoop reader fail its check, so it goes
         if ("file".equals(com.ash.drishti.lakeio.LocalPaths.scheme(location))) {
             s.delete(io.resolve(metadataDir() + "/.version-hint.text.crc"));
         }
         if (Boolean.parseBoolean(md.property("write.metadata.delete-after-commit.enabled", "false"))) {
             removeOldVersions(md, s);
         }
-        return new Loaded(md, f, null);
     }
 
-    /** Old metadata files no longer in the metadata log go (the log keeps previous-versions-max of them). */
     private void removeOldVersions(TableMetadata md, Storage s) {
         List<String> kept = new ArrayList<>();
-        md.metadataLog().forEach(e -> kept.add(e.metadataFile()));
+        md.previousFiles().forEach(e -> kept.add(e.file()));
         int oldest = kept.stream().mapToInt(PathTableOps::versionOf).filter(x -> x > 0).min().orElse(0);
         for (int v = oldest - 1; v >= 1 && oldest > 0; v--) {
             try {
@@ -243,19 +261,25 @@ public final class PathTableOps implements TableOps {
         }
     }
 
-    @Override
+    /** False on a store that does not honour conditional writes. */
     public boolean exclusiveCommits() {
         Boolean e = exclusive;
         return e == null || e;
     }
 
     @Override
-    public FileAccess io(Loaded current) {
-        return io;
+    public FileIO io() {
+        return fileIO;
     }
 
     @Override
-    public String describe() {
-        return location;
+    public String metadataFileLocation(String fileName) {
+        return metadataDir() + "/" + fileName;
+    }
+
+    @Override
+    public LocationProvider locationProvider() {
+        TableMetadata c = current();
+        return LocationProviders.locationsFor(c.location(), c.properties());
     }
 }

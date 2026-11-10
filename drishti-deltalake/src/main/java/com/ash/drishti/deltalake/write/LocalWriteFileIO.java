@@ -18,12 +18,9 @@ package com.ash.drishti.deltalake.write;
 import com.ash.drishti.lakeio.LocalPaths;
 import com.ash.drishti.deltalake.NativeFileIO;
 import com.ash.drishti.lakeio.S3Settings;
-import io.delta.kernel.defaults.engine.fileio.FileIO;
-import io.delta.kernel.defaults.engine.fileio.InputFile;
 import io.delta.kernel.defaults.engine.fileio.OutputFile;
 import io.delta.kernel.defaults.engine.fileio.PositionOutputStream;
 import io.delta.kernel.utils.CloseableIterator;
-import io.delta.kernel.utils.FileStatus;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -33,7 +30,6 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -42,14 +38,10 @@ import java.util.UUID;
  * place; when the target must not exist yet (a Delta commit), it is linked rather than moved, so of two writers of the same
  * version exactly one wins and the other gets {@link FileAlreadyExistsException}, which Kernel reads as a conflict.
  */
-final class LocalWriteFileIO implements FileIO {
-
-    private final NativeFileIO reads;
-    private final Map<String, String> conf;
+final class LocalWriteFileIO extends ReadingFileIO {
 
     LocalWriteFileIO(Map<String, String> conf) {
-        this.conf = Map.copyOf(conf);
-        this.reads = new NativeFileIO(S3Settings.from(Map.of()), conf);
+        super(new NativeFileIO(S3Settings.from(Map.of()), conf), conf);
     }
 
     /** The operating-system path of a path or {@code file:} URI, read as the reads read it ({@code LocalStorage#path}): Kernel's
@@ -61,31 +53,6 @@ final class LocalWriteFileIO implements FileIO {
                     + " (use --engine deltalake for object storage)");
         }
         return Path.of(LocalPaths.toLocal(LocalPaths.decodeUri(path), LocalPaths.WINDOWS));
-    }
-
-    @Override
-    public CloseableIterator<FileStatus> listFrom(String filePath) throws IOException {
-        return reads.listFrom(filePath);
-    }
-
-    @Override
-    public FileStatus getFileStatus(String path) throws IOException {
-        return reads.getFileStatus(path);
-    }
-
-    @Override
-    public String resolvePath(String path) throws IOException {
-        return reads.resolvePath(path);
-    }
-
-    @Override
-    public InputFile newInputFile(String path, long fileSize) {
-        return reads.newInputFile(path, fileSize);
-    }
-
-    @Override
-    public Optional<String> getConf(String confKey) {
-        return Optional.ofNullable(conf.get(confKey));
     }
 
     @Override

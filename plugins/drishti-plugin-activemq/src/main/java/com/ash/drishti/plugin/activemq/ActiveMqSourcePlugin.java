@@ -201,7 +201,12 @@ public final class ActiveMqSourcePlugin extends MessageStateSource {
                 Message m = consumers.get(i).receive(consumers.size() == 1 ? 500 : 50);
                 if (m != null) {
                     any = true;
-                    if (accept(new Inbound(names.get(i), property(m, "id"), body(m), flag(m, "deleted")))) {
+                    String text = body(m);
+                    if (text == null && !flag(m, "deleted")) {                // a Map, Object or Stream message: never an entity's delete
+                        m.acknowledge();
+                        continue;
+                    }
+                    if (accept(new Inbound(names.get(i), property(m, "id"), text, flag(m, "deleted")))) {
                         m.acknowledge();                      // after it is kept (state.durability, sync by default)
                     } else {
                         try {

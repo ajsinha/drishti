@@ -18,6 +18,7 @@ package com.ash.drishti.banking.var;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.ash.drishti.banking.compute.var.VarBook;
@@ -413,5 +414,104 @@ class VarInputsApiTest {
         // the positions name their trades and this server has no trade feed: never a zero
         assertThat(m.at("/inside/status").asText()).isEqualTo("could not be checked");
         assertThat(m.at("/inside/positions").isNull()).isTrue();
+    }
+
+    private JsonNode askAs(String user, String url, LocalDate day) throws Exception {
+        var req = get(url).param("asOf", day.toString()).header("Authorization", "Bearer " + tokens.mint(user, List.of("risk"), 300));
+        return json.readTree(mvc.perform(req).andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+    }
+
+    private static void sameSeries(JsonNode on, JsonNode off, JsonNode... added) {
+        for (int j = 0; j < off.size(); j++) {
+            double want = off.get(j).asDouble();
+            for (JsonNode a : added) {
+                want += a.get(j).asDouble();
+            }
+            assertThat(on.get(j).asDouble()).as("scenario " + j).isCloseTo(want, within(3 + 1e-5 * Math.abs(want)));   // float32 kept, rounded
+        }
+    }
+
+    @Test
+    @Order(93)
+    void theMaturedSwitchAddsTheMaturedItemsAtTheirGrainOnlyWhenAskedAndOffIsTheOfficialFigure() throws Exception {
+        // the date of the test before: MUREX at position grain with POS-MATURED, ENDUR per trade with T-MATURED, each a copy of a live one
+        String pos = (String) asPositions(VarIntradayLake.morningVectors(MIXED_SYSTEMS), "PNL", MIXED_SYSTEMS).get(0).get("POSITION_ID");
+        String trade = (String) VarIntradayLake.morningPvs(MIXED_SYSTEMS).get(0).get("TRADE_ID");
+        JsonNode off = ask("/api/v1/risk/var/scope", "BANK", MIXED_SYSTEMS);
+        assertThat(off.has("matured")).isFalse();
+        JsonNode on = ask("/api/v1/risk/var/scope?matured=true", "BANK", MIXED_SYSTEMS);
+        assertThat(on.get("var").asDouble()).isEqualTo(off.get("var").asDouble());        // the official fields stay official
+        assertThat(on.get("limitUse")).isEqualTo(off.get("limitUse"));
+        JsonNode m = on.get("matured");
+        assertThat(m.get("positions").asInt()).isEqualTo(1);
+        assertThat(m.get("trades").asInt()).isEqualTo(1);
+        assertThat(m.get("label").asText()).isEqualTo("includes 1 matured position and 1 matured trade");
+        assertThat(m.get("grain").asText()).isEqualTo("items");
+        assertThat(m.get("officialVar").asDouble()).isEqualTo(off.get("var").asDouble());
+        assertThat(m.get("note").asText()).contains("Not the official figure");
+        // the path with them: the official path plus the matured position's and trade's own P&L, scenario by scenario, labelled
+        JsonNode pathOff = ask("/api/v1/risk/var/scope/path?size=1", "BANK", MIXED_SYSTEMS);
+        JsonNode pathOn = ask("/api/v1/risk/var/scope/path?size=1&matured=true", "BANK", MIXED_SYSTEMS);
+        assertThat(pathOff.has("matured")).isFalse();
+        assertThat(pathOn.at("/matured/label").asText()).isEqualTo("includes 1 matured position and 1 matured trade");
+        sameSeries(pathOn.get("series"), pathOff.get("series"), ask("/api/v1/risk/var/scope/path?size=1", "POS:" + pos, MIXED_SYSTEMS).get("series"),
+                ask("/api/v1/risk/var/scope/path?size=1", "TRD:" + trade, MIXED_SYSTEMS).get("series"));
+        assertThat(pathOn.get("var").asDouble()).isEqualTo(m.get("var").asDouble());
+        // a scope that holds no matured item: the official figure, said as none
+        JsonNode lone = ask("/api/v1/risk/var/scope?matured=true", "TRD:" + trade, MIXED_SYSTEMS).get("matured");
+        assertThat(lone.get("items").asInt()).isZero();
+        assertThat(lone.get("var").asDouble()).isEqualTo(lone.get("officialVar").asDouble());
+        // the tree: each node's figure with its matured items beside, limit use on the official figure
+        JsonNode treeOff = askAs("rita", "/api/v1/risk/var/tree", MIXED_SYSTEMS);
+        JsonNode treeOn = askAs("rita", "/api/v1/risk/var/tree?matured=true", MIXED_SYSTEMS);
+        JsonNode rootOff = treeOff.get("nodes").get(0);
+        JsonNode rootOn = treeOn.get("nodes").get(0);
+        assertThat(rootOff.has("matured")).isFalse();
+        assertThat(rootOn.get("var")).isEqualTo(rootOff.get("var"));
+        assertThat(rootOn.get("limitUse")).isEqualTo(rootOff.get("limitUse"));
+        assertThat(rootOn.at("/matured/label").asText()).isEqualTo("includes 1 matured position and 1 matured trade");
+        assertThat(treeOn.at("/maturedSwitch/on").asBoolean()).isTrue();
+        assertThat(treeOff.at("/maturedSwitch/kept").asInt()).isEqualTo(2);
+        // the switch names the input's grain: positions on a position-grain date, trades on a trade-grain one
+        assertThat(askAs("rita", "/api/v1/risk/var/tree", POSITIONS).at("/maturedSwitch/grain").asText()).isEqualTo("positions");
+        assertThat(askAs("rita", "/api/v1/risk/var/tree", TRADES).at("/maturedSwitch/grain").asText()).isEqualTo("trades");
+        // off again is the official answer: nothing kept from the request before
+        assertThat(ask("/api/v1/risk/var/scope", "BANK", MIXED_SYSTEMS).get("var")).isEqualTo(off.get("var"));
+        // a capture never includes them, whatever the request says
+        var cap = post("/api/v1/risk/var/captures").param("asOf", MIXED_SYSTEMS.toString()).param("matured", "true")
+                .contentType(org.springframework.http.MediaType.APPLICATION_JSON).content("{\"scope\": \"BANK\"}")
+                .header("Authorization", "Bearer " + tokens.mint("rita", List.of("risk"), 300));
+        JsonNode c = json.readTree(mvc.perform(cap).andExpect(status().isCreated()).andReturn().getResponse().getContentAsString());
+        assertThat(c.get("var").asDouble()).isCloseTo(off.get("var").asDouble(), within(0.5));
+        // the engine's official figure of the scope: never with them
+        assertThat(svc.scoped(null, "BANK", MIXED_SYSTEMS, VarDate.USD, null).measures().var()).isCloseTo(off.get("var").asDouble(), within(0.5));
+    }
+
+    @Test
+    @Order(94)
+    void theSwitchIsPerRequestTwoPeopleAskingAtOnceEachGetTheirOwn() throws Exception {
+        double official = ask("/api/v1/risk/var/scope", "BANK", MIXED_SYSTEMS).get("var").asDouble();
+        double with = ask("/api/v1/risk/var/scope?matured=true", "BANK", MIXED_SYSTEMS).at("/matured/var").asDouble();
+        assertThat(with).isNotEqualTo(official);
+        java.util.concurrent.ExecutorService pool = java.util.concurrent.Executors.newFixedThreadPool(8);
+        try {
+            List<java.util.concurrent.Future<String>> answers = new ArrayList<>();
+            for (int i = 0; i < 40; i++) {
+                boolean on = i % 2 == 0;
+                String user = on ? "rita" : "omar";
+                answers.add(pool.submit(() -> {
+                    JsonNode h = askAs(user, "/api/v1/risk/var/scope?scope=BANK" + (on ? "&matured=true" : ""), MIXED_SYSTEMS);
+                    if (on != h.has("matured") || h.get("var").asDouble() != official || on && h.at("/matured/var").asDouble() != with) {
+                        return user + " got " + h.get("var") + " " + h.get("matured");
+                    }
+                    return null;
+                }));
+            }
+            for (var f : answers) {
+                assertThat(f.get()).isNull();
+            }
+        } finally {
+            pool.shutdownNow();
+        }
     }
 }

@@ -417,6 +417,9 @@ level. The answer says what it did: "18 cells · 6 sets (4 from the cache) · 1 
 - **Open to level N** (`1`–`9`): every member down to level N.
 - The open nodes are part of the view (its `expanded` list), so a saved view and a link reopen them.
 
+**Names on the rows.** A source can name its members: the VaR source shows the desk, book or legal entity's name, as the VaR tree does, and the row's tooltip
+keeps the id. Keys, paths, filters and figures use the id. A member with no name shows its id. In the answer, a named row has a `name` next to its `value`.
+
 ## 6. Top N, Others and sorting
 
 A level may show its top N members by a measure and one **Others** member: "Others (3 of 5)". Others' figures are computed from **its own
@@ -1056,7 +1059,7 @@ Each trade's scenario P&L; its columns (`LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_
 `COUNTERPARTY`, …) are the cube's dimensions.
 
 - **Data contract:** [`pnl-vector`](../contracts/packs/market-risk.md#pnlv-pl-vector-509-scenarios-pnl-vector) (PNLV), key `VECTOR_ID`; 39 fields, 27 required; the file [`pnl-vector.contract.yaml`](../../config/packs/banking/market-risk/contracts/pnl-vector.contract.yaml).
-- **Example:** no sample in the demo data.
+- **Example:** none in the demo data (it ships scenario PVs); the record's shape is [its sample](../contracts/samples/market-risk.md#pnl-vector).
 
 ### 27.6 `scenario-set`: the scenario days
 

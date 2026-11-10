@@ -26,15 +26,20 @@
   </parent>
   <artifactId>drishti-iceberg</artifactId>
   <name>drishti-iceberg</name>
-  <description>Drishti's own Apache Iceberg engine, with no Hadoop: table metadata, manifests (Avro), planning with partition and metric pruning, field-id Parquet reads with schema evolution and deletes, path-based and REST catalogs, the Parquet writer and safe commits; on local disk (Windows included) and S3</description>
+  <description>Apache Iceberg on iceberg-core, with no Hadoop: Drishti's FileIO over java.nio and S3, path-based tables, and Drishti's Parquet reader and writer; on local disk (Windows included) and S3</description>
   <dependencies>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakeio</artifactId></dependency>
-    <!-- manifests and manifest lists are Avro container files: Avro's core library only (no Hadoop) -->
-    <dependency><groupId>org.apache.avro</groupId><artifactId>avro</artifactId><version>${avro.version}</version></dependency>
+    <!-- the Iceberg protocol: metadata, manifests, planning, commits, the REST client; no Hadoop at run time -->
+    <dependency><groupId>org.apache.iceberg</groupId><artifactId>iceberg-core</artifactId><version>${iceberg.version}</version></dependency>
+    <!-- SigV4 for AWS Glue's and S3 Tables' REST endpoints -->
+    <dependency><groupId>org.apache.iceberg</groupId><artifactId>iceberg-aws</artifactId><version>${iceberg.version}</version></dependency>
     <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-databind</artifactId></dependency>
     <dependency><groupId>com.github.ben-manes.caffeine</groupId><artifactId>caffeine</artifactId></dependency>
-    <!-- SigV4 request signing for AWS Glue's Iceberg REST endpoint -->
+    <!-- the AWS modules iceberg-aws's SigV4 signer needs -->
+    <dependency><groupId>software.amazon.awssdk</groupId><artifactId>kms</artifactId><version>${awssdk.version}</version></dependency>
+    <dependency><groupId>software.amazon.awssdk</groupId><artifactId>apache-client</artifactId><version>${awssdk.version}</version></dependency>
+    <dependency><groupId>software.amazon.awssdk</groupId><artifactId>sts</artifactId><version>${awssdk.version}</version></dependency>
     <dependency><groupId>software.amazon.awssdk</groupId><artifactId>auth</artifactId><version>${awssdk.version}</version></dependency>
     <dependency><groupId>software.amazon.awssdk</groupId><artifactId>http-auth-aws</artifactId><version>${awssdk.version}</version></dependency>
     <dependency><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></dependency>

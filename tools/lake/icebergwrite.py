@@ -37,21 +37,30 @@ import stores
 import writers
 
 
-def lines(domain: str, table: str, by_day: dict, partition_names: list[str]):
-    """The loader's lines for every staged row: its promoted values, and the partition values as columns."""
+def lines(domain: str, table: str, by_day: dict, partition_names: list[str], types: dict | None = None):
+    """The loader's lines for every staged row: its promoted values, and the partition values as columns. A promoted list or object
+    that is not a vector (``types``: Stager.types(), a column's kind; an id list such as TRADE_IDS) goes as its JSON text, as the
+    Delta writers store it (writers._cell): the loader reads every list as a vector."""
+    vectors = {n for n, k in (types or {}).items() if k == "vector"}
     for day, parts in by_day.items():
         iso = day.isoformat()
         for part in parts:
             fixed = {n: v for n, v in zip(partition_names, part.values) if v is not None}
             for chunk in stage.read_rows(part.file, 2000):
                 for ident, doc, promoted in chunk:
-                    cols = {**fixed, **{k: v for k, v in promoted.items() if v is not None}}
+                    cols = {**fixed, **{k: _cell(k, v, vectors) for k, v in promoted.items() if v is not None}}
                     yield json.dumps({"domain": domain, "kind": table, "id": ident, "date": iso, "doc": doc, "columns": cols},
                                      ensure_ascii=False, separators=(",", ":")) + "\n"
 
 
+def _cell(name: str, v, vectors: set[str]):
+    if isinstance(v, (list, dict)) and name not in vectors:
+        return json.dumps(v, ensure_ascii=False, separators=(",", ":"))
+    return v
+
+
 def write(lake, domain: str, table: str, by_day: dict, partition_names: list[str], workdir: pathlib.Path,
-          jar: str | None = None, java: str | None = None, progress=None, settings: list[str] | None = None) -> dict:
+          jar: str | None = None, java: str | None = None, progress=None, settings: list[str] | None = None, types: dict | None = None) -> dict:
     """Streams the staged rows into ``<lake>/<domain>/<table>``; {format, table, rows, dates, engine}. Raises writers.WriteError with the
     loader's own last line when it fails (nothing of a day that did not commit is visible)."""
     spill = workdir / "spill"
@@ -75,7 +84,7 @@ def write(lake, domain: str, table: str, by_day: dict, partition_names: list[str
             # the load rules (DATA_LAKE_GUIDE.md): rows of several dates go as a tar of <table>/<YYYY-MM-DD>/ folders, each row
             # in its own day's folder (the day lake build decided for it)
             out = feedfiles.RowsTarStream(proc.stdin.buffer)
-            for line in lines(domain, table, by_day, partition_names):
+            for line in lines(domain, table, by_day, partition_names, types):
                 out.add(table, json.loads(line)["date"], line)
                 n += 1
             out.close()

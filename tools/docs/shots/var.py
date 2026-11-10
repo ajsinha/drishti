@@ -85,15 +85,16 @@ def basket_pick(c: Ctx, text: str) -> None:
 
 def basket_live(c: Ctx) -> None:
     """Waits until the sheet shows the server's answer for what it holds now."""
-    c.until("(() => { const l = document.querySelector('[data-vb-live]'); return l && l.dataset.sig === window.Drishti.VarBasket.signature()"
+    c.until("(() => { const l = document.querySelector('[data-var-basket] .vb-kpis'); return l && l.dataset.sig === window.Drishti.VarBasket.signature()"
             " && !l.classList.contains('computing'); })()", 60)
 
 
 def basket_paste(c: Ctx, key: str, row: int, text: str) -> None:
     """Pastes Excel's text into the sheet at a cell, as Ctrl+V does."""
-    c.page.locator(f'[data-vb-cell="{key}:{row}"]').click()
+    c.page.locator('[data-var-basket] [aria-label^="The basket\'s sheet"]').first.wait_for(state="visible", timeout=30000)
     c.page.evaluate("""(t) => { const dt = new DataTransfer(); dt.setData('text/plain', t);
-        document.querySelector('[data-vb-sheet]').dispatchEvent(new ClipboardEvent('paste', {clipboardData: dt, bubbles: true, cancelable: true})); }""", text)
+        document.querySelector('[data-var-basket] [aria-label^="The basket\\'s sheet"]').dispatchEvent(new ClipboardEvent('paste', {clipboardData: dt, bubbles: true, cancelable: true})); }""",
+                    key + "\n" + text)                      # a heading row puts the column under its key
 
 
 @shot("06-basket.jpg")
@@ -157,11 +158,14 @@ def capture(c: Ctx):
 
 @shot("08-provenance.jpg")
 def provenance(c: Ctx):
-    open_var(c, "/var?scope=DESK:DESK-RATES%20-%20BOOK:BOOK-RATES-1&how=1")    # How calculated open: the drawer (how=1)
+    open_var(c, "/var?scope=DESK:DESK-RATES%20-%20BOOK:BOOK-RATES-1")
     painted(c, "DESK:DESK-RATES - BOOK:BOOK-RATES-1")
     c.page.set_viewport_size({"width": WIDE, "height": 1900})          # the drawer is the window's height: tall enough for every line
+    c.page.locator("[data-vx-explain]").click()                        # how a figure was calculated is the Explain drawer's
+    c.until("document.querySelector('.dx-drawer [data-dx-body]') && document.querySelector('.dx-drawer [data-dx-body]').innerText.trim().length > 50", 60)
     c.page.wait_for_timeout(300)
-    c.save("08-provenance.jpg", locator=".vx-prov")
+    c.save("08-provenance.jpg", locator=".dx-drawer")
+    c.page.locator("[data-dx-close]").click()
     c.page.set_viewport_size({"width": WIDE, "height": 1000})
 
 

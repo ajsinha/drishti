@@ -27,8 +27,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
 /**
- * A data domain's tables, one per kind, through the engine the settings choose ({@link IcebergEngine}): what the
- * connector reads through, whichever engine it is.
+ * A data domain's tables, one per kind: what the connector reads through.
  */
 interface LakeTables extends Closeable {
 
@@ -44,9 +43,6 @@ interface LakeTables extends Closeable {
     /** For messages: where this is. */
     String describe();
 
-    /** {@code native} or {@code library}. */
-    IcebergEngine engine();
-
     TlsMaterial tls();
 
     ProxySettings proxy();
@@ -55,8 +51,7 @@ interface LakeTables extends Closeable {
     void close() throws IOException;
 
     static LakeTables open(Map<String, String> settings) {
-        IcebergEngine e = IcebergEngine.of(settings);
-        LakeTables lake = e == IcebergEngine.NATIVE ? new Native(Catalogs.open(settings), settings) : new Library(IcebergLake.of(settings));
+        LakeTables lake = new Native(Catalogs.open(settings), settings);
         Map<String, String> names = Named.of(settings);
         return names.isEmpty() ? lake : new Named(lake, names);
     }
@@ -108,54 +103,6 @@ interface LakeTables extends Closeable {
         @Override
         public String describe() {
             return lake.describe() + " " + names;
-        }
-
-        @Override
-        public IcebergEngine engine() {
-            return lake.engine();
-        }
-
-        @Override
-        public TlsMaterial tls() {
-            return lake.tls();
-        }
-
-        @Override
-        public ProxySettings proxy() {
-            return lake.proxy();
-        }
-
-        @Override
-        public void close() throws IOException {
-            lake.close();
-        }
-    }
-
-    /** Apache Iceberg Java. */
-    record Library(IcebergLake lake) implements LakeTables {
-        @Override
-        public KindTable table(String kind, ExecutorService pool) {
-            return new IcebergTable(kind, lake, pool);
-        }
-
-        @Override
-        public List<String> kinds() throws IOException {
-            return lake.kinds();
-        }
-
-        @Override
-        public boolean reachable() {
-            return lake.reachable();
-        }
-
-        @Override
-        public String describe() {
-            return lake.describe();
-        }
-
-        @Override
-        public IcebergEngine engine() {
-            return IcebergEngine.LIBRARY;
         }
 
         @Override
@@ -217,11 +164,6 @@ interface LakeTables extends Closeable {
         @Override
         public String describe() {
             return catalog.describe();
-        }
-
-        @Override
-        public IcebergEngine engine() {
-            return IcebergEngine.NATIVE;
         }
 
         @Override

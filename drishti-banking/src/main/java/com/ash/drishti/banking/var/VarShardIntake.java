@@ -128,7 +128,7 @@ final class VarShardIntake {
                     + String.join(", ", other) + " beside the date's set " + setId);
         }
         return new VarIntake.Summary(rejected, List.copyOf(rejections), excluded, List.copyOf(batches), List.copyOf(sets), rules, rulesDigest,
-                Map.copyOf(notLive), scenarioPv, Set.copyOf(pvTrades), inputs, Map.copyOf(positionTrades), setLength, oldIds, VarMatured.merge(matured));
+                Map.copyOf(notLive), scenarioPv, Set.copyOf(pvTrades), inputs, Map.copyOf(positionTrades), setLength, oldIds, VarMatured.merge(matured), null);
     }
 
     private static int number(Object o) {

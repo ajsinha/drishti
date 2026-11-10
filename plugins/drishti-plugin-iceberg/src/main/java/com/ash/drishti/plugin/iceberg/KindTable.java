@@ -34,7 +34,7 @@ import java.util.function.Consumer;
 import java.util.function.IntFunction;
 
 /**
- * One kind's Iceberg table as the connector reads it, whichever engine reads it ({@code native}: drishti-iceberg,
+ * One kind's Iceberg table as the connector reads it ({@code native}: drishti-iceberg,
  * {@code library}: Apache Iceberg Java): a row per entity per business date ({@link IcebergLayout}). A snapshot's
  * data files are planned once and grouped by business date ({@link Layout}); a date's files are then read on demand,
  * only the columns asked for, with the row-group filter of the read (one entity: {@code id = …}). Delete files are

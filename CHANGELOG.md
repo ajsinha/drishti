@@ -17,17 +17,34 @@
 
 ## Unreleased
 
+- **VaR explorer: include matured items.** A switch beside Explain (`<drishti-switch>`, new in drishti-inputs) adds back the positions or trades,
+  at the input's grain, that the load left out because they had matured. Off whenever the page opens; on, the tiles, a band with **Back to official**,
+  the method strip, the tree's **of which matured** column and the path's CSV and JSON Lines say *includes N matured …*. The server computes it
+  (`matured=true` on `/var/scope`, `/var/scope/path`, `/var/tree`), per request; the official record, captures and limit use never include them.
+  A load keeps about 2.3 KB of heap a matured record (2.7 KB more in a mapped date's hot-file header), none beyond 1% of the date's records.
+- **Fixes before the drill:** `lake build --format iceberg` sends a promoted id list (`TRADE_IDS`) as its JSON text, as the Delta writers store it, instead of
+  refusing the rows as a bad vector; a Delta connector of the older form (a `root`, no lake file) that finds no tables no longer marks every search partial;
+  `lake-name` is in the Delta connector's settings catalogue; the console's engine catalogue copy and sitemap list Data loads › Upload.
+- **Duplicates folded, behaviour unchanged:** the loaders' line parsing (`LoadLine`), `ReferenceScanner`, `HttpFetcher` and `BoundedCache` in `drishti-common`; `MethodChoices` and `PlaygroundSheets` for FRTB and SIMM;
+  `ForwardingTabularSource`, `ReadingFileIO`, `CallTally`; one real-IP rule (`drishti-console/core/hostrule.py`, loaded by `tools/hostaddr.py`), `tools/clitable.py`, the IAM policy steps in `deploy/aws/lib`, `shotlib.start_pack_servers`. Duplicated lines: Java 4523 to 3613, Python 612 to 318.
 - **Copy-paste ratchet and code volume:** `tools/duplicates.py` runs PMD's copy-paste detector over Java, JavaScript and Python at 100 tokens (`tools/cpd/pom.xml`, outside the
   root build, nothing that ships); the gate fails if any language has more duplicated lines than `tools/cpd/baseline.txt`, which is only lowered. `tools/code_volume.py` writes lines of code per
   release from git into `docs/admin/BENCHMARK.md` section 22.
 - **Kernel boundary (P1):** the core names no banking string (`tools/domain_strings_allowed.yaml` is empty); banking's words go through `DomainVocabulary` and the
   console's new plugin hooks (reserved words, console commands, phone pages, connector actions, the view toolbar slot). New `drishti-kernel-api` jar (kernel API 0.1) holds
   the SPIs of KERNEL_AND_MODULES section 2.3, with `ApiSurfaceTest` pinning the surface; `KernelWithoutModulesTest` boots the kernel with no banking on the class path.
+- **Pivot rows show entity names** (desk, book, legal entity), as the VaR tree does, with the id in the tooltip. Figures are unchanged.
+- **Screenshot scripts** t33, t37 and var follow the current pivot field pane, the Explain drawer and the basket sheet.
+- **Mock-ups** for including matured items on the VaR explorer: `docs/lenses/mockups/var-matured/`.
 
 ### Operations
 
 - **One home for start and stop scripts.** `bin/start-cluster`, `bin/stop-cluster` (`.sh`, `.ps1`, `.cmd`) and `bin/status --cluster FILE` start, stop and show a cluster on one machine from a cluster file (default `drishti-stack/stack.yaml`, the same format). `drishti-stack/` is configuration only. **`drishti-stack/start.sh`, `stop.sh` and `status.sh` are gone: run `bin/start-cluster.sh`, `bin/stop-cluster.sh` and `bin/status.sh --cluster drishti-stack/stack.yaml`.** The server jar copy moves to `data/stack/server.jar`. `deploy/bin/drishti-node` is now `bin/drishti-node`.
 - **The file is the connector.** The file in `config/connectors/` is the only truth; every Admin save writes it, with its history and audit entry. At the first start of this release each node folds connector edits an earlier release kept in the content store into its own files; a file changed since then is kept and the edit is saved beside it as `<name>.yaml.content-store-<date>.bak`, logged and audited. The override marks, *Remove override* and its Health warning are gone. On a cluster a save applies to its node: Admin → Health warns when nodes' connector files differ.
+- **Iceberg on `iceberg-core`, one engine.** Metadata, manifests, planning, commits and the REST client now come from Apache Iceberg's library with Drishti's `FileIO` and Parquet reader; no Hadoop at run time. `engine: library`, `DRISHTI_ICEBERG_ENGINE` and Azure/GCS/HDFS roots are gone (the setting is ignored, those roots are refused by name). Interop is proved both ways with every special partition character.
+- **Python reads Delta only through Delta Kernel** (`tools/lake/deltaread.py`); delta-rs stays for writes.
+- **Connector fixes from the data-standards review:** ActiveMQ no longer treats a Map/Object/Stream message as a delete; JDBC keeps integers beyond a long exact and reads binary as base64; Mongo reads Decimal128 NaN and Infinity; Kafka maps Avro decimal, date and timestamp logical types; an uncompressed Parquet page of the wrong size is an error; AWS keeps the SDK's checksums.
+
 
 ### Data loads
 
@@ -40,6 +57,7 @@
 
 ### Docs
 
+- **Plan:** i2 and i3 become one release with one drill after i1 + i1b, in four waves, with deploy built once, cluster-first.
 - **Source file limit:** 2,000 lines (was 1,500); `SourceFileSizeTest`, the console's checks and the guides.
 - **Roadmap:** every visual lives in Drishti Elements; a Drishti Elements Playground (live pages with editable data) closes the BI depth release.
 - **Roadmap:** a BI depth release (2.9.11.i1b) after i1: many-to-many and both-ways relationships, Rachana filter-context control, a decomposition tree; the comparison with Power BI lists it as planned.
@@ -6591,7 +6609,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   GETTING_STARTED's Windows table loses its Iceberg row. Proven by a pyiceberg interop suite (fixtures written by pyiceberg, read
   back equal; tables written by drishti-iceberg read back by pyiceberg), every plugin test on both engines, a class-loader test that
   refuses Hadoop's file systems, `Shell` and `Configuration` for the connector, the loader and maintenance, writers committing at once
-  (local disk, a REST catalog), and refusal and Windows path tests ([DRISHTI_ICEBERG.md](docs/architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine)).
+  (local disk, a REST catalog), and refusal and Windows path tests ([DRISHTI_ICEBERG.md](docs/architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop)).
 - **New: the `iceberg-external` connector, for Iceberg tables Drishti does not write** (Spark, Flink, Trino, Snowflake, Glue, dbt):
   read-only through drishti-iceberg, the row is the document (structs, lists, maps; `decimals: string`, `binary: omit`), the id comes
   from the identifier fields or named columns, the business date from a column, a timestamp's day in a zone or the partition spec
@@ -6599,7 +6617,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   `tables: auto` serves a namespace and names tables without an id, and `StarterSchemas` drafts a pack's schemas from the tables
   ([ICEBERG_EXTERNAL_CONNECTOR.md](plugins/drishti-plugin-iceberg-external/README.md)).
 - **Changed: the native Delta engine's file access is a module of its own, `drishti-lakeio`**, shared with the coming Iceberg engine
-  ([DRISHTI_ICEBERG.md](docs/architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine) step I1): local disk and S3 storage, byte ranges, the Parquet page codecs
+  ([DRISHTI_ICEBERG.md](docs/architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop) step I1): local disk and S3 storage, byte ranges, the Parquet page codecs
   (which now also compress, for writers) and the per-file Parquet footer cache moved out of `drishti-deltalake` unchanged; local disk gains
   an exclusive create (a hard link of a finished file) and S3 a conditional PUT (`If-None-Match: *`) with a start-up probe, for safe commits.
   Every Delta test passes as before; the tests of the moved classes moved with them.

@@ -130,7 +130,7 @@ A Delta connector never writes per edit: write-back keeps corrections as overlay
 |---|---|---|---|
 | `lake` | string |  | The lake this connector reads (config/lakes/<lake>.yaml, docs/guides/DATA_LAKE_GUIDE.md): root, storage, catalog, table folders, promoted columns and vectors come from its file; with lake set, root, domain, table.<kind> and layout.<kind>.* are refused here. Not set: the older form (those keys in this file, one warning) |
 | `lake-tables` | list |  | With lake: the lake file's entries this connector reads (trading.trade_endur), where a kind has several tables; not set: the one table of each kind |
-| `lake-name` | string |  | Set from lake when the lake file is read, not by hand: the lake's name, used in what the connector says |
+| `lake-name` | string |  | Written by the server from lake: (the lake's name, so what the connector says when it cannot reach its tables names the lake); not set by hand |
 | `root` | path | `<data dir>/delta` | Lake root (folder, or s3://bucket/prefix); default: the delta folder of the data directory |
 | `domain` | string |  | The data-domain folder under the root; may not contain `..` or start with `/` |
 | `kinds` | list |  | Kinds to serve (comma list); not set: every table found under the domain |

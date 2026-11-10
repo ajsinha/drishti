@@ -271,3 +271,40 @@ def run(main, argv=None) -> int:
     except KeyboardInterrupt:
         say("interrupted")
         return EXIT_FAILED
+
+
+def ensure_policy(run: "Runner", iam, parn: str, name: str, doc: str, description: str, dry_run: bool) -> None:
+    """Creates the IAM policy, or gives an existing one a new default version (IAM keeps five versions: the oldest non-default one goes)."""
+    try:
+        iam.get_policy(PolicyArn=parn)
+        say(f"policy {name} exists: a new default version with this document")
+        versions = iam.list_policy_versions(PolicyArn=parn)["Versions"]
+        old = [v for v in versions if not v["IsDefaultVersion"]]
+        if len(versions) >= 5 and old:
+            run.do(iam, "delete_policy_version", PolicyArn=parn, VersionId=sorted(old, key=lambda v: v["CreateDate"])[0]["VersionId"])
+        run.do(iam, "create_policy_version", PolicyArn=parn, PolicyDocument=doc, SetAsDefault=True)
+    except Exception as e:  # noqa: BLE001
+        if error_code(e) not in ("NoSuchEntity", "NoSuchEntityException") and not dry_run:
+            raise
+        run.do(iam, "create_policy", PolicyName=name, PolicyDocument=doc, Description=description)
+
+
+def delete_policy(run: "Runner", iam, parn: str, name: str, dry_run: bool) -> None:
+    """Detaches the IAM policy from everything that holds it, then deletes its versions and the policy; not there is not an error."""
+    try:
+        iam.get_policy(PolicyArn=parn)
+        ents = iam.list_entities_for_policy(PolicyArn=parn)
+        for r in ents.get("PolicyRoles", []):
+            run.do(iam, "detach_role_policy", RoleName=r["RoleName"], PolicyArn=parn)
+        for u in ents.get("PolicyUsers", []):
+            run.do(iam, "detach_user_policy", UserName=u["UserName"], PolicyArn=parn)
+        for g in ents.get("PolicyGroups", []):
+            run.do(iam, "detach_group_policy", GroupName=g["GroupName"], PolicyArn=parn)
+        for v in iam.list_policy_versions(PolicyArn=parn)["Versions"]:
+            if not v["IsDefaultVersion"]:
+                run.do(iam, "delete_policy_version", PolicyArn=parn, VersionId=v["VersionId"])
+        run.do(iam, "delete_policy", PolicyArn=parn)
+    except Exception as e:  # noqa: BLE001
+        if error_code(e) not in ("NoSuchEntity", "NoSuchEntityException") and not dry_run:
+            raise
+        say(f"policy {name}: not there")
