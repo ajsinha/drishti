@@ -427,8 +427,8 @@ public class HealthController {
         List<Map<String, Object>> code = new ArrayList<>();
         List<Map<String, Object>> content = new ArrayList<>();
         for (com.ash.drishti.registry.ModuleState s : access.modules()) {
-            if (!s.installed()) {
-                continue;
+            if (!s.installed() || "core".equals(s.id())) {
+                continue;                                               // the registry's "core" is the kernel itself, not a module
             }
             Map<String, Object> row = new LinkedHashMap<>();
             row.put("id", s.id());
