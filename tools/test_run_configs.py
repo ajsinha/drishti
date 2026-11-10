@@ -15,7 +15,8 @@
 """Guard: the committed IDE run configurations work on Windows, macOS and Linux without editing.
 
 Two projects, so IntelliJ and PyCharm never share one .idea folder: IntelliJ opens the repository root and reads the Java ones in
-run-configs/; PyCharm opens drishti-console/ and reads the Python ones in drishti-console/run-configs/. A Python run configuration uses
+run-configs/ (with the consoles of each distribution, Drishti console (Risk), (Finance), (All), which run from the repository root);
+PyCharm opens drishti-console/ and reads the Python ones in drishti-console/run-configs/. A Python run configuration uses
 the project interpreter (SDK_HOME empty, IS_MODULE_SDK false: PyCharm's "Project Default"), never a path such as
 drishti-console/.venv/bin/python, which does not exist on Windows (there it is .venv\\Scripts\\python.exe). Every configuration runs
 from the repository root ($PROJECT_DIR$ for IntelliJ, $PROJECT_DIR$/.. for PyCharm) and parses as XML. docs/architecture/TEST_HARNESS.md and
@@ -53,9 +54,13 @@ class RunConfigs(unittest.TestCase):
             o = options(conf)
             self.assertEqual(o.get("SDK_HOME"), "", f"{f.name}: SDK_HOME must be empty (the project interpreter), not {o.get('SDK_HOME')}")
             self.assertEqual(o.get("IS_MODULE_SDK"), "false", f"{f.name}: IS_MODULE_SDK must be false (the project interpreter)")
-            self.assertIn(f, PYTHON, f"{f.name}: a Python configuration belongs in drishti-console/run-configs (PyCharm's project)")
-            self.assertEqual(o.get("WORKING_DIRECTORY"), "$PROJECT_DIR$/..", f"{f.name}: runs from the repository root")
-            self.assertNotIn("$PROJECT_DIR$/tools", f.read_text(encoding="utf-8"), f"{f.name}: PyCharm's $PROJECT_DIR$ is drishti-console")
+            if f in PYTHON:                                  # PyCharm's project, drishti-console/: the repository root is $PROJECT_DIR$/..
+                self.assertEqual(o.get("WORKING_DIRECTORY"), "$PROJECT_DIR$/..", f"{f.name}: runs from the repository root")
+                self.assertNotIn("$PROJECT_DIR$/tools", f.read_text(encoding="utf-8"), f"{f.name}: PyCharm's $PROJECT_DIR$ is drishti-console")
+            else:                                            # the distributions' consoles beside the servers (run-configs/, the repository root)
+                self.assertTrue(f.name.startswith("Drishti console ("), f"{f.name}: a Python configuration belongs in drishti-console/run-configs")
+                self.assertEqual(o.get("WORKING_DIRECTORY"), "$PROJECT_DIR$", f.name)
+                self.assertEqual(o.get("SCRIPT_NAME"), "$PROJECT_DIR$/drishti-console/run_drishti_web.py", f.name)
             self.assertNotIn("/bin/python", f.read_text(encoding="utf-8"), f.name)
         self.assertGreaterEqual(python, 10)
 

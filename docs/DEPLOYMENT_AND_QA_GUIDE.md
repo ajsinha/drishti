@@ -450,7 +450,7 @@ machine and on three machines, are in [section 10.6](#106-start-order-and-joinin
 | macOS: `permission denied` | `chmod +x bin/*.sh`; *cannot be opened because the developer cannot be verified* does not apply (these are text scripts), but a downloaded copy may carry quarantine: `xattr -dr com.apple.quarantine <drishti>` |
 | Windows: `… cannot be loaded because running scripts is disabled on this system` | run the `.cmd`, or `powershell -ExecutionPolicy Bypass -File bin\….ps1 …` |
 
-### 6.7 A distribution: Drishti Risk, Drishti Finance, Drishti Genomics
+### 6.7 Starting a white-labelled instance
 
 One build, several products: a distribution (`config/distributions/drishti.<name>.yaml`,
 [DISTRIBUTIONS.md](architecture/DISTRIBUTIONS.md)) decides the name, theme, modules, lenses, Home and Help. Without one you get
@@ -487,7 +487,7 @@ console                 2031702  running    17480  UP         risk             h
 Home's cards `USEQ AAPL`, `FUND SPY`, `ECON CAN`, `NEWS rates`; Help titled **Drishti Finance Help** with no VaR, exposure, FRTB or SIMM
 guide; `VAR BANK <GO>` answers *DRS-4023 VAR is not in Drishti Finance*; `CRV <GO>` (market data) works.
 
-**Drishti Genomics (the sample).** `--distribution genomics`. **You should see** **Drishti Genomics** on the green theme with only the
+**Drishti Genomics (the sample).** `bin/start-all.sh --demo --distribution genomics` (Windows: `bin\start-all.cmd --demo --distribution genomics`). **You should see** **Drishti Genomics** on the green theme with only the
 kernel's menus (Views, BI, Admin, Help); Admin → Health says the `genomics` module was asked for and is *not installed* (the sample
 module ships later): the kernel boots and is useful with no finance at all.
 
@@ -506,9 +506,37 @@ All; each console shows its own distribution. Without a stack file, start a seco
 `bin/start-console.sh --server http://<host>:18480 --port 17481 --distribution finance --name finance --background` (Windows the same
 with `bin\start-console.cmd`), and stop it with `bin/stop-console.sh --name finance`.
 
-**By setting instead of an argument.** `DRISHTI_DISTRIBUTION=finance` in the environment or the env-file, or a path to a site's own file
-(`DRISHTI_DISTRIBUTION=/etc/drishti/acme.yaml`). IntelliJ: the run configurations *Drishti server (Risk)*, *(Finance)*, *(All)* and
-*Drishti console (Risk)* (17480), *(Finance)* (17481), *(All)*.
+**Drishti All (the default).** No argument, or `--distribution all` (Windows: `bin\start-all.cmd --demo --distribution all`).
+**You should see** exactly 6.2: **Drishti** on the terminal theme, every menu, Help titled **Help**, the lens switch offering Risk,
+World, Market and Trading; `bin/status.sh` shows `all` for both processes.
+
+**By setting instead of an argument.** `DRISHTI_DISTRIBUTION=finance` in the environment or the env-file (both programs read it), or a
+path to a site's own file (`DRISHTI_DISTRIBUTION=/etc/drishti/acme.yaml`; Windows `C:\drishti\acme.yaml`). On the server it is the
+setting `drishti.distribution` (`--drishti.distribution=finance` as a server argument); on the console the setting `distribution`
+(`--distribution=finance` as a console argument). A console given its own keeps it whatever the server runs.
+
+**From the IDEs.** The run configurations in `run-configs/` (IntelliJ IDEA opens the repository root and lists them under *Drishti*):
+
+| Run configuration | Program | What it sets |
+|---|---|---|
+| `Drishti server (Risk)` | the server on 18480 | environment `DRISHTI_DISTRIBUTION=risk` |
+| `Drishti server (Finance)` | the server on 18480 | environment `DRISHTI_DISTRIBUTION=finance` |
+| `Drishti server (All)` | the server on 18480 | environment `DRISHTI_DISTRIBUTION=all` (and today's `DRISHTI_PACKS`) |
+| `Drishti console (Risk)` | the console on 17480 | argument `--distribution=risk`, `--server.port=17480`; temp folder `data/tmp/console-risk` |
+| `Drishti console (Finance)` | the console on 17481 | argument `--distribution=finance`, `--server.port=17481`; temp folder `data/tmp/console-finance` |
+| `Drishti console (All)` | the console on 17480 | argument `--distribution=all` |
+
+The server configurations run in **IntelliJ IDEA** (module `drishti-app`, so banking is on the class path). The console
+configurations are Python configurations: run them from IntelliJ IDEA with the Python plugin, or from **PyCharm** opened on the
+repository root (they run `drishti-console/run_drishti_web.py` from the repository root with the project interpreter, the console's
+`.venv`). PyCharm opened on `drishti-console/` keeps its own `Drishti console`; to run a distribution there, add `--distribution=finance`
+to its parameters (or `DRISHTI_DISTRIBUTION=finance` to its environment).
+
+**Two consoles against one server from the IDEs:** start `Drishti server (All)` (every module; a Risk or Finance server would limit
+both consoles to its own), then `Drishti console (Risk)` and `Drishti console (Finance)`. **You should see** Drishti Risk at
+`http://localhost:17480` and Drishti Finance at `http://127.0.0.1:17481`, each with its own top bar, theme and Help. Open
+the second by another host name (or in another browser profile): browsers share sign-in cookies across the ports of one host. The same works on Linux, macOS and Windows: the configurations
+use `$PROJECT_DIR$` paths only.
 
 **Verify.** Admin → Health, the Distribution line: the console's and the server's distribution and each module *loaded*. Admin → White
 label: every distribution side by side, the running one first.

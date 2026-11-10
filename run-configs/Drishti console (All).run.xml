@@ -14,7 +14,7 @@
   See the LICENSE file in the root of this repository for the full terms.
 -->
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Drishti console (Risk)" type="PythonConfigurationType" factoryName="Python" folderName="Drishti">
+  <configuration default="false" name="Drishti console (All)" type="PythonConfigurationType" factoryName="Python" folderName="Drishti">
     <module name="drishti-console" />
     <option name="ENV_FILES" value="" />
     <option name="INTERPRETER_OPTIONS" value="" />
@@ -27,12 +27,12 @@
       <env name="DRISHTI_SECURE_COOKIE" value="false" />
     </envs>
     <option name="SDK_HOME" value="" />
-    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
     <option name="IS_MODULE_SDK" value="false" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
-    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/run_drishti_web.py" />
-    <option name="PARAMETERS" value="--server.port=17480 --backend.url=http://127.0.0.1:18480 --distribution=risk" />
+    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/drishti-console/run_drishti_web.py" />
+    <option name="PARAMETERS" value="--server.port=17480 --backend.url=http://127.0.0.1:18480 --distribution=all" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="false" />

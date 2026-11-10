@@ -1635,7 +1635,7 @@ AI reads; a command typed anyway answers *DRS-4023 VRES is not in Drishti Financ
 **Choose one** at start: `bin/start-all.sh --distribution finance` (Windows `bin\start-all.cmd --distribution finance`), or
 `DRISHTI_DISTRIBUTION=finance`, or `drishti.distribution: finance` (server) and `distribution: finance` (console). A path instead of a
 name loads a site's own file. A console started with its own `--distribution` keeps it whatever the server runs, so one cluster can serve
-a Drishti Risk console and a Drishti Finance console ([DEPLOYMENT_AND_QA_GUIDE.md 6.7](../DEPLOYMENT_AND_QA_GUIDE.md#67-a-distribution-drishti-risk-drishti-finance-drishti-genomics)).
+a Drishti Risk console and a Drishti Finance console ([DEPLOYMENT_AND_QA_GUIDE.md 6.7](../DEPLOYMENT_AND_QA_GUIDE.md#67-starting-a-white-labelled-instance)).
 
 **Your own brand.** Copy a shipped file to `config/distributions/drishti.acme.yaml`, change `distribution: drishti.acme` and its
 `brand:` (`product`, `tagline`, `owner`, `copyright`, `notice`, `logo`, `favicon`, `about`, `support`), `theme:` (`tokens`: one of the
