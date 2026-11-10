@@ -40,6 +40,9 @@
     <module>drishti-common</module>
     <module>drishti-kernel-api</module>
     <module>drishti-module-runtime</module>
+    <module>drishti-sdk/drishti-module-parent</module>
+    <module>drishti-sdk/drishti-module-maven-plugin</module>
+    <module>drishti-sdk/drishti-module-archetype</module>
     <module>drishti-rachana</module>
     <module>drishti-inference</module>
     <module>drishti-graph</module>

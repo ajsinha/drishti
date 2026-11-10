@@ -1,0 +1,25 @@
+# The module's manifest (docs/architecture/KERNEL_AND_MODULES.md section 3.3). Its id and version are the pom's (drishti:validate).
+format: 1
+id: ${artifactId}
+version: ${version}
+title: ${artifactId}
+about: A Drishti module made from the SDK's archetype; it greets whoever asks
+domain: ${domain}
+publisher: {name: ${groupId}, id: ${groupId}}
+licence: {feature: ${artifactId}}
+kernel: ">=0.2 <1.0"
+rachana: ">=1.0"
+contracts: ">=1.0"
+plugin-api: ">=2.0"
+elements: ">=1.4 <2"
+provides: {kinds: {${artifactId}-pack: [${artifactId}-greeting]}}
+java: {jars: [${artifactId}.jar], entry: ${package}.HelloModule, spring: [${package}.ModuleConfig]}
+console: {plugin: console/plugin.yaml}
+data: {needs: data/needs.yaml}
+functions: [{word: ${artifactId.toUpperCase()}}]
+docs:
+  readme: docs/README.md
+  help: docs/help.yaml
+  guides: [docs/guide.md]
+  tutorials: [docs/tutorial.md]
+resources: {memory-mb: 64}
