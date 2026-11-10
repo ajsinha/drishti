@@ -21,7 +21,7 @@ import json
 from urllib.parse import quote
 
 from fastapi import APIRouter, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 
 from core.csrf import BodyError, json_body, limited_body
 from core.backend import BackendError
@@ -47,6 +47,18 @@ async def _status(request: Request) -> dict:
         return await request.app.state.backend.admin("GET", "/status", ident(request))
     except BackendError:
         return {}
+
+
+@router.get("")
+async def admin_home(request: Request):
+    """/admin: the first Admin tab this person may open (the sitemap's admin menu, as the tab strip draws it), at once; no tab: forbidden."""
+    from core.menus import admin_tabs
+
+    me = ident(request)
+    tabs = [t for t in admin_tabs(request, {"me": me, "bi_me": getattr(request.state, "bi_me", None)}) if t["href"].startswith("/admin/")]
+    if not me.is_admin or not tabs:
+        return _forbidden(request)
+    return RedirectResponse(tabs[0]["href"], status_code=303)
 
 
 @router.get("/users")
