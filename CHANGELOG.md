@@ -72,6 +72,15 @@
 
 ### Fixes
 
+- **Forms laid out again (query by form, the alert form, Admin filters):** a form in columns put each group in a narrow column and
+  stretched every field box to its row's tallest, so labels floated far from their controls. In drishti-inputs a group now takes the row and
+  lays its fields out in columns, a field's parts sit side by side with each label on its control, nothing is stretched, and a server-drawn
+  form in a page's bar takes the room left (the Data loads filter was one narrow column). Browser tests measure it.
+- **Engines menu removed: pages live in their lens/Views; switches in Admin → Engines.** The VaR, exposure, FRTB-SA and SIMM pages are
+  under **Risk** (in the full product's bar and the Risk and Trading lenses), each shown while its engine runs and the person's role opens
+  it (the engine catalogue's `opens:`, one rule for its pages and its command words); the Pivot stays under Views, uploads under Admin → Data loads.
+- **Admin → Engines no longer waits on a slow answer:** the page asks the server's answers together, each within 0.8 s, and fills in a late
+  one when it comes (or says the server is not answering).
 - **Connectors no longer stuck on a frozen copy of their settings:** a pack reload could write a connector's generated file into the shared Admin overlay, where it then outranked the file for good, so a later move of the demo lake left those connectors on the old folder (`FUND` listed nothing). The server's own writes now go to the file, and an older generated file that names tables its lake lost follows its pack's template (`.bak` kept). Admin → Connectors marks a connector whose override is in force, shows what it changes against the file and offers Remove override; Health warns while a node has any. A search names a connector it cannot reach instead of showing an empty list, and a Delta connector with neither `lake:` nor `root:` is refused rather than reading the demo folder.
 - **The demo's trade feed keeps step with its VaR records:** `lake demo` moves a trade's `MATURITY_DATE` with the other dates, so the matured-items check does not flag live trades on a moved demo. The committed test data is unchanged.
 - **The demo's VaR no longer drifts with the day it is built:** `lake demo` moves `MATURITY_DATE` on dated records with the other dates, so moving the demo no longer matures records that are live on the test data's own date.

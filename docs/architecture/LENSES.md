@@ -363,10 +363,10 @@ file with the same switches (an item shows only when the lens keeps its command 
 
 | # | Panel | Data, API or contract | Status |
 |---|---|---|---|
-| X1 | Bar: Views · Engines · BI · Admin · Help | the lens's `menus.top`, [`sitemap.yaml`](../../drishti-console/config/sitemap.yaml), drawn by [`core/menus.py`](../../drishti-console/core/menus.py) | **Built**; the mock-up's VaR and Exposure menus are one **Engines** menu (mock-up [engines-menu/A](mockups/engines-menu/A.html)) |
-| X2 | VaR column of the Engines menu: VaR explorer, Why it moved, VaR Playground, Scenario matrix, Regulatory reports, Backtesting, Stress window, VaR results, Official records, Hierarchies | the `engines` menu's `var` column; each item only when the lens keeps its command | **Built** (Playground, Regulatory reports, Backtesting show once their screens are on the server) |
+| X1 | Bar: Views · Risk · Counterparties · BI · Admin · Help | the lens's `menus.top`, [`sitemap.yaml`](../../drishti-console/config/sitemap.yaml), drawn by [`core/menus.py`](../../drishti-console/core/menus.py) | **Built** |
+| X2 | Risk menu's VaR column: VaR explorer, Why it moved, VaR Playground, Scenario matrix, Regulatory reports, Backtesting, Stress window, VaR results, Official records | the `risk` menu's items with `requires: engine:var`, picked by `menus.risk` | **Built** |
 | X3 | Exposure column: Exposure explorer, a counterparty, a netting set | its `exposure` column | **Built** (`EXP CPTY`, `EXP NSET` put in the command line for the id) |
-| X4 | Phone form: the Engines menu as a drawer, one engine open at a time, 44 px items | the bar's template, [`drishti_engines-menu.js`](../../drishti-console/web/static/js/drishti_engines-menu.js) | **Built** |
+| X4 | Phone form: Risk and Counterparties fold into the lens menu, 44 px items | the bar's template (the lens menu) | **Built** |
 
 #### 1.4.5 The VaR screen's layout (`var-layout/A.html`)
 
