@@ -259,7 +259,7 @@ def test_an_enum_with_many_values_is_one_dropdown_with_search_and_the_url_stays_
     page.locator(".qf-toggle").click()                                                                                                   # the criteria fold away after a search
     box = page.locator(".qf-field .di-multiselect").first
     assert box.locator(".di-chip-label").all_inner_texts() == ["BOND", "PUTTABLE_BOND", "REPO"]                                          # and the page comes back as chosen
-    box.locator(".di-ms-control").click()
+    box.locator("input[role=combobox]").click()                                         # its field (a click on a chip's x would remove it)
     page.locator(".di-ms-pop [data-act='clear']").click()
     assert box.locator(".di-chip").count() == 0
 
