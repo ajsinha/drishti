@@ -75,7 +75,7 @@
     const sl = {};
     Object.keys(state.slicers).forEach((k) => { if (state.slicers[k] != null) { sl[k] = state.slicers[k]; } });
     st.slicers = sl;
-    st.selections = state.selections.map((s) => ({ visual: s.visual, field: s.field, values: s.values, highlight: state.mode === 'highlight' }));
+    st.selections = state.selections.map((s) => ({ visual: s.visual, field: s.field, values: s.values, range: !!s.range, highlight: state.mode === 'highlight' }));
     st.drill = state.drills[spec.id] || [];
     if (state.rows[spec.id]) { st.rows = state.rows[spec.id] === true ? true : state.rows[spec.id]; }
     if (state.all && state.all[spec.id]) { st.limit = 5000; }                       // "Show all" of a visual that said it was cut
@@ -88,7 +88,7 @@
     const sel = state.selections.find((s) => s.visual === spec.id);
     return {
       index: idxOf(spec), palette, t: tokens, interactive: true, selected: sel || null, rolling, entity: true, selections: state.selections, theme,
-      onMark: (mark) => selectMark(spec, mark), navigate: (a) => navigate(a),
+      onMark: (mark) => selectMark(spec, mark), onBrush: (b) => selectRange(spec, b), navigate: (a) => navigate(a),
       onHover: spec.tooltip && tips ? (mark, at) => tips.hover(spec, mark, at) : null, onHoverEnd: spec.tooltip && tips ? () => tips.end() : null,
       slicer: spec.type === 'slicer' ? { value: state.slicers[spec.id] == null ? null : state.slicers[spec.id], onChange: (v) => { setSlicer(spec, v); refreshAll(spec.id); } } : null
     };
@@ -377,11 +377,30 @@
     } else if (cur && multi) {
       cur.values.push(mark.value);
     } else {
-      state.selections = state.selections.filter((s) => s.visual !== spec.id);
+      state.selections = crossfilter() ? state.selections.filter((s) => s.visual !== spec.id) : [];
       state.selections.push({ visual: spec.id, field, values: [mark.value], label: mark.label });
     }
     live.textContent = (state.selections.find((s) => s.visual === spec.id) ? 'Selected ' + mark.label : 'Cleared ' + mark.label) + '.';
     pageOf(pageId).visuals.forEach((v) => { if (v.id !== spec.id) { load(v); } else { refreshButtons(v); draw(v.id); } });
+    syncChips();
+  }
+
+  /** Crossfilter (a report setting): a selection per visual, each chart ignoring only its own; otherwise one selection at a time. */
+  function crossfilter() { return rep.report.selection === 'crossfilter'; }
+
+  /** A brushed range: the report's one selection (or this visual's, under crossfilter); the other visuals ask the server again. */
+  function selectRange(spec, b) {
+    state.selections = crossfilter() ? state.selections.filter((s) => s.visual !== spec.id) : [];
+    state.selections.push({ visual: spec.id, field: b.field, values: b.values, range: !!b.range, label: b.label });
+    live.textContent = 'Selected ' + b.label + '.';
+    pageOf(pageId).visuals.forEach((v) => { if (v.id !== spec.id) { load(v); } else { refreshButtons(v); } });
+    syncChips();
+  }
+
+  function clearAllSelections() {
+    if (!state.selections.length) { return; }
+    state.selections = [];
+    refreshAll(null);
     syncChips();
   }
 
@@ -415,7 +434,7 @@
 
   function visualKey(spec, e) {
     if (e.target.closest('input,select,textarea') || e.ctrlKey || e.metaKey || e.altKey) { return; }
-    if (e.key === 'Escape') { clearSelection(spec.id); } else if (e.key === 't' || e.key === 'T') { state.asTable[spec.id] = !state.asTable[spec.id]; redraw(spec.id); }
+    if (e.key === 'Escape') { if (state.selections.some((x) => x.visual === spec.id)) { clearSelection(spec.id); } else { clearAllSelections(); } } else if (e.key === 't' || e.key === 'T') { state.asTable[spec.id] = !state.asTable[spec.id]; redraw(spec.id); }
     else if (e.key === 'r' || e.key === 'R') { toggleRows(spec, state.selections.find((s) => s.visual === spec.id)); }
     else if ((e.key === 'k' || e.key === 'K') && chartable(spec)) { e.preventDefault(); chartOf(spec, e.currentTarget); }          // before the board's kiosk K, which then stands aside
     else if (e.key === 'd' && levels(spec)) { drill(spec, 'down'); } else if (e.key === 'u' && levels(spec)) { drill(spec, 'up'); }
@@ -489,7 +508,9 @@
   function syncChips() {
     const box = B.clear(q('[data-chips]'));
     state.carry.forEach((c) => box.appendChild(h('span', { class: 'bi-chip', 'data-chip': 'carry' }, B.icon('funnel'), ' ' + c.field + ': ' + c.values.join(', '))));
-    state.selections.forEach((s) => box.appendChild(h('span', { class: 'bi-chip', 'data-chip': 'selection' }, B.icon('cursor'), ' ' + s.field + ': ' + s.values.join(', '))));
+    state.selections.forEach((s) => box.appendChild(h('span', { class: 'bi-chip', 'data-chip': 'selection' }, B.icon('cursor'), ' ' + s.field + ': ' + (s.range ? s.label : s.values.join(', ')),
+      h('button', { type: 'button', class: 'bi-chip-x', 'aria-label': 'Clear ' + s.field, text: '×', onclick: () => clearSelection(s.visual) }))));
+    if (state.selections.length > 1) { box.appendChild(h('button', { type: 'button', class: 'bi-chip-clear', 'data-chip-clear': '', text: 'Clear all', onclick: clearAllSelections })); }
     Object.keys(state.slicers).forEach((k) => {
       const v = state.slicers[k];
       if (v == null) { return; }

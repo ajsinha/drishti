@@ -37,7 +37,14 @@ import java.util.Set;
 public final class VisualQueries {
 
     /** The query for the visual; {@code highlight} is the same query with the marks selected on other visuals applied, null when nothing is highlighted. */
-    public record Built(QueryRequest query, QueryRequest highlight) {}
+    public record Built(QueryRequest query, QueryRequest highlight, List<QueryRequest> levels) {
+        public Built(QueryRequest query, QueryRequest highlight) {
+            this(query, highlight, List.of());
+        }
+    }
+
+    /** The visuals whose inner nodes have their own figures (a non-additive colour measure is asked at every level, never added). */
+    private static final Set<String> HIERARCHIES = Set.of("sunburst", "icicle");
 
     /** The most rows "show all" asks for: what one answer in JSON holds by default ({@code drishti.bi.query.json-max-rows}). */
     static final int SHOW_ALL = 5_000;
@@ -135,9 +142,9 @@ public final class VisualQueries {
                 boolean wantsHighlight = how == null ? s.highlight() : "highlight".equals(how);
                 if (wantsHighlight && HIGHLIGHTS.contains(visual.type()) && state.rows() == null) {
                     highlight = true;
-                    marks.add(new QueryRequest.Filter(field, "in", s.values()));
+                    marks.add(new QueryRequest.Filter(field, s.range() ? "between" : "in", s.values()));
                 } else {
-                    base.add(new QueryRequest.Filter(field, "in", s.values()));
+                    base.add(new QueryRequest.Filter(field, s.range() ? "between" : "in", s.values()));
                 }
             }
         }
@@ -163,7 +170,13 @@ public final class VisualQueries {
             withMarks.addAll(marks);
             h = new QueryRequest(fields, measures, withMarks, from, to, sorts, limit, "auto");
         }
-        return new Built(q, h);
+        List<QueryRequest> levels = new ArrayList<>();
+        if (HIERARCHIES.contains(visual.type()) && !visual.well("colour").isEmpty()) {
+            for (int i = 1; i < fields.size(); i++) {
+                levels.add(new QueryRequest(new ArrayList<>(fields.subList(0, i)), measures, base, from, to, sorts(fields.subList(0, i), measures), limit, "auto"));
+            }
+        }
+        return new Built(q, h, levels);
     }
 
     // ---- the pieces --------------------------------------------------------------------------------------------------
@@ -257,6 +270,7 @@ public final class VisualQueries {
                 m.addAll(visual.well("values"));
                 m.addAll(visual.well("secondary"));
                 m.addAll(visual.well("target"));
+                m.addAll(visual.well("colour"));
             }
         }
         if (!m.isEmpty()) {

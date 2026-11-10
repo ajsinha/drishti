@@ -22,7 +22,7 @@ import com.ash.drishti.flight.FlightSqlCatalog;
 import com.ash.drishti.server.bi.BiAccess;
 import com.ash.drishti.server.bi.BiService;
 import com.ash.drishti.server.bi.mq.ModelCatalog;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;

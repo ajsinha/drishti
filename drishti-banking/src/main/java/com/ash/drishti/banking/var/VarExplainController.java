@@ -17,9 +17,9 @@ package com.ash.drishti.banking.var;
 
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
-import com.ash.drishti.server.explain.ExplainRequest;
+import com.ash.drishti.kernel.api.explain.ExplainRequest;
 import com.ash.drishti.server.explain.NumberExplainService;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import jakarta.servlet.http.HttpServletResponse;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;

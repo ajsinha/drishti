@@ -21,7 +21,7 @@ import com.ash.drishti.server.bi.DatasetController;
 import com.ash.drishti.server.bi.engine.ArrowIpcWriter;
 import com.ash.drishti.server.bi.engine.QueryService;
 import com.ash.drishti.server.bi.transform.TransformProperties;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

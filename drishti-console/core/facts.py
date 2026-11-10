@@ -41,12 +41,23 @@ from core.pack_paths import pack_dirs
 log = logging.getLogger(__name__)
 
 FILE = "config/facts.yaml"                 # in a pack's folder
-FETCHES = ("var", "exposure", "search", "raw")
-KINDS = FETCHES + ("let", "pick")
+BASE_FETCHES = ("search", "raw")
+
+
+def fetches() -> tuple[str, ...]:
+    """A step's fetch keys: search, raw, and each compute engine with an API (``var: /tree``)."""
+    from core import engines as _eng
+    return tuple(str(e["id"]) for e in _eng.entries() if e.get("api")) + BASE_FETCHES
+
+
+def kinds() -> tuple[str, ...]:
+    return fetches() + ("let", "pick")
+
+
 PICTURES = ("bars", "share", "line")
 TONES = ("base", "alert", "muted")
 FACT_KEYS = {"id", "domain", "title", "needs", "steps", "when", "text", "why", "picture", "open", "what", "knowledge"}
-STEP_KEYS = {"as", "params", "each", "limit", "where", "order", "desc", *KINDS}
+STEP_BASE_KEYS = {"as", "params", "each", "limit", "where", "order", "desc"}
 MAX_EACH = 500                             # most calls one ``each`` step makes
 
 
@@ -91,18 +102,18 @@ def _template(value: Any, where: str) -> Template:
 def _step(raw: Any, where: str) -> Step:
     if not isinstance(raw, dict):
         raise ExprError(f"{where}: a step is a mapping")
-    unknown = set(raw) - STEP_KEYS
+    unknown = set(raw) - STEP_BASE_KEYS - set(kinds())
     if unknown:
         raise ExprError(f"{where}: unknown key(s) {', '.join(sorted(unknown))}")
-    kinds = [k for k in KINDS if k in raw]
-    if len(kinds) != 1:
-        raise ExprError(f"{where}: one of {', '.join(KINDS)} per step")
+    present = [k for k in kinds() if k in raw]
+    if len(present) != 1:
+        raise ExprError(f"{where}: one of {', '.join(kinds())} per step")
     name = str(raw.get("as") or "").strip()
     if not name.isidentifier() or name.startswith("_") or name in ("it", "asOf"):
         raise ExprError(f"{where}: 'as' names the step's result (a name, not it or asOf)")
-    kind = kinds[0]
+    kind = present[0]
     s = Step(name, kind, limit=int(raw.get("limit", 100) or 100), desc=bool(raw.get("desc", True)))
-    if kind in ("var", "exposure"):
+    if kind not in BASE_FETCHES + ("let", "pick"):                 # a compute engine's step: its API path
         path = str(raw[kind] or "")
         if not path.startswith("/") or ".." in path or "?" in path:
             raise ExprError(f"{where}: {kind} takes an API path such as /tree (parameters under params)")
@@ -121,8 +132,8 @@ def _step(raw: Any, where: str) -> Step:
         raise ExprError(f"{where}: params is a mapping")
     s.params = {str(k): Template(str(v)) for k, v in params.items()}
     if raw.get("each") is not None:
-        if kind not in FETCHES:
-            raise ExprError(f"{where}: each goes with a fetch ({', '.join(FETCHES)})")
+        if kind not in fetches():
+            raise ExprError(f"{where}: each goes with a fetch ({', '.join(fetches())})")
         s.each = Expr(raw["each"])
         s.limit = max(1, min(MAX_EACH, s.limit))
     if kind == "pick":

@@ -472,6 +472,48 @@ functions:
   - {expr: 'avg_by(count(trades), by = [trades.PORTFOLIO])', says: 'trades per book, on average'}
   edge-cases: {nulls: Groups of by whose aggregate is null are left out of the average., empty: null when no group of by has rows., masked: 'A masked field in by
       is refused (DRS-9161): the inner groups would split on hidden values.'}
+- name: sum_by
+  family: aggregate
+  runs: E
+  signature: sum_by(agg, by = [fields])
+  params:
+  - {name: agg, type: aggregate}
+  - {name: by, type: fields, keyword-only: true}
+  returns: decimal
+  scopes: [aggregate, context]
+  description: 'A two-level aggregate: agg per value of by, then the sum of those values. The row-to-filter context transition, with its grain written: per value of by the inner aggregate is evaluated with that value as a filter. A measure that does not add (additive: false, such as VaR) is refused: use max_by, min_by or avg_by.'
+  examples:
+  - {expr: 'sum_by(max(trades.MTM), by = [desks.NAME])', says: the sum of each desk's largest MTM}
+  - {expr: 'sum_by(count(trades), by = [trades.PORTFOLIO])', says: 'trades, counted book by book'}
+  edge-cases: {nulls: Groups of by whose aggregate is null are left out., empty: null when no group of by has rows.}
+- name: min_by
+  family: aggregate
+  runs: E
+  signature: min_by(agg, by = [fields])
+  params:
+  - {name: agg, type: aggregate}
+  - {name: by, type: fields, keyword-only: true}
+  returns: decimal
+  scopes: [aggregate, context]
+  description: 'A two-level aggregate: agg per value of by, then the smallest of those values.'
+  examples:
+  - {expr: 'min_by(measure(''MTM''), by = [desks.NAME])', says: the smallest desk MTM}
+  - {expr: 'min_by(sum(trades.MTM), by = [trades.TRADE_DATE])', says: the worst day's MTM}
+  edge-cases: {nulls: Groups of by whose aggregate is null are left out., empty: null when no group of by has rows.}
+- name: max_by
+  family: aggregate
+  runs: E
+  signature: max_by(agg, by = [fields])
+  params:
+  - {name: agg, type: aggregate}
+  - {name: by, type: fields, keyword-only: true}
+  returns: decimal
+  scopes: [aggregate, context]
+  description: 'A two-level aggregate: agg per value of by, then the largest of those values. Good for a measure that does not add, such as the largest desk VaR.'
+  examples:
+  - {expr: 'max_by(measure(''VaR''), by = [desks.NAME])', says: the largest desk VaR}
+  - {expr: 'max_by(sum(trades.MTM), by = [trades.TRADE_DATE])', says: the best day's MTM}
+  edge-cases: {nulls: Groups of by whose aggregate is null are left out., empty: null when no group of by has rows.}
 - name: ytd
   family: time intelligence
   runs: E
@@ -795,18 +837,22 @@ functions:
 - name: calc
   family: filter context
   runs: E
-  signature: calc(agg, where = ..., ignore = [...] | ALL, keep = [...], via = 'rel_id')
+  signature: calc(agg, where = ..., ignore = [...] | ALL | GROUP, keep = [...], via = 'rel_id', filter = 'one_way' | 'both', by = [...], having = ...)
   params:
   - {name: agg, type: aggregate}
   - {name: where, type: boolean, default: 'null', keyword-only: true}
   - {name: ignore, type: fields-or-all, default: '[]', keyword-only: true}
   - {name: keep, type: fields, default: '[]', keyword-only: true}
   - {name: via, type: string-literal, default: 'null', keyword-only: true}
+  - {name: filter, type: string-literal, default: 'null', keyword-only: true}
+  - {name: by, type: fields, default: '[]', keyword-only: true}
+  - {name: having, type: boolean, default: 'null', keyword-only: true}
   returns: same
   scopes: [aggregate, context]
   description: 'The aggregate in an edited filter context: add conditions (where=, a row condition ANDed to the aggregate''s), drop the query''s and the group''s
-    filters on some fields (ignore=[...]) or on all (ignore=ALL), drop every filter except those on some fields (keep=[...]), or follow an inactive relationship (via=''r_5'',
-    the active one for the same pair switched off). Security is never in scope: ignore=ALL means everything you may see.'
+    filters on some fields or a whole table (ignore=[desks.NAME], ignore=[desks]) or on all (ignore=ALL), the group alone (ignore=GROUP, slicers stay), narrow what ignore drops (with ignore, keep=[...]),
+    drop every filter except those on some fields (keep alone), follow an inactive relationship (via=''r_5''), override a relationship''s direction for this measure (via=''name'', filter=''one_way''|''both''),
+    or keep only the groups of by that pass a condition (by=[...], having=...). Security is never in scope: ignore=ALL means everything you may see.'
   examples:
   - {expr: 'calc(measure(''MTM''), ignore = [desks.NAME])', says: MTM ignoring the desk slicer and the desk of the row}
   - {expr: 'calc(sum(trades.MTM), where = trades.TRADE_STATUS != ''MATURED'')', says: 'MTM of the live trades, whatever else is filtered'}

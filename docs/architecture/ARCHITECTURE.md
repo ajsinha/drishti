@@ -965,7 +965,7 @@ Maven multi-module reactor on `spring-boot-starter-parent`, `groupId com.ash.dri
 | `drishti-lakeio` | Lake file access without Hadoop, shared by the native Delta and Iceberg engines: local disk (Windows included) and S3, byte ranges, Parquet page codecs, the Parquet footer cache; other schemes through a registered `StorageProvider` (`StorageProviders`) | – |
 | `drishti-tables` | The table layer, plain Java ([TABLES_GUIDE.md](../guides/TABLES_GUIDE.md), [section 24](#24-virtual-tables-the-central-table-layer)): the catalogue of virtual tables and models (`config/tables`, stored items), their definitions and checks, preview, lineage, the materialisation's API, `tables migrate`; on Rachana and the pivot engine, never on BI | read by the server (`tables` on the command line); BI reads it with the switch |
 | `drishti-memlake` | The in-memory lake, plain Java ([IN_MEMORY_LAKE.md](DATA_ARCHITECTURE.md#98-the-module-drishti-memlake)): the `mem://` stores (the `mem` storage provider of `drishti-lakeio`), tables, replenish jobs, eviction, compaction, the owner binding, the guard (`Retention`), the host checks | wired by `server.memlake.MemoryLakeConfiguration` |
-| `drishti-iceberg` | Drishti's own Apache Iceberg engine without Hadoop (reads, writes, path-based and REST catalogs), used by the `iceberg` (engine `native`) and `iceberg-external` connectors ([DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine)) | – |
+| `drishti-iceberg` | Drishti's own Apache Iceberg engine without Hadoop (reads, writes, path-based and REST catalogs), used by the `iceberg` (engine `native`) and `iceberg-external` connectors ([DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#3-drishti-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop)) | – |
 | `drishti-deltalake` | A Delta Kernel engine without Hadoop (local disk, Windows included, and S3), used by the Delta connector | – |
 | `drishti-lakeload` | The parallel lake loader: JSON Lines (folder or S3) into Delta or Iceberg tables of the connectors' layout, every stage multi-threaded and memory bounded, one commit per business date; `drishti.py lake build --engine java` ([PARALLEL_LOADER.md](DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-drishti-lakeload)) | `drishti-lakeio`, `drishti-deltalake`, `drishti-iceberg` |
 | `drishti-net` | Drishti*net's core, no Spring ([CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)): the member table and SWIM-style gossip over HTTP (`MemberTable`, `Gossiper`, `PeersFile`), the cluster key and on-behalf-of tokens (`ClusterKey`, `OnBehalfOf`), the `config/net/` folder and its schema (`NetFolder`, `NetSchema`), signed HTTP between nodes (`PeerHttp`) | – |
@@ -2235,6 +2235,77 @@ different names.
 yet, `DRS-9152` unknown name, `DRS-9161` a masked field filtered. The same text means the same thing checked or not; checked mode only refuses
 more. One function catalogue feeds validation, completion, `describe` for AI and the documentation. The console never parses an expression for
 meaning: it asks the server's validate endpoints as you type.
+
+#### Filter-context control: the design beside DAX
+
+The principle stays: **every edit of the context is written, and one function
+does each job.** Rachana gets no second `CALCULATE`: `calc` grows just enough, and the things DAX does implicitly become named arguments.
+
+**Filter edits.**
+
+| DAX | Rachana | Status |
+|---|---|---|
+| `CALCULATE([MTM], KEEPFILTERS(trades[STATUS] = "LIVE"))` | `calc(measure('MTM'), where = trades.STATUS == 'LIVE')` | built |
+| `CALCULATE([MTM], trades[STATUS] = "LIVE")` | `calc(measure('MTM'), ignore = [trades.STATUS], where = trades.STATUS == 'LIVE')` | built |
+| `CALCULATE([MTM], REMOVEFILTERS(desks[NAME]))`, or `ALL(desks[NAME])` as a modifier | `calc(measure('MTM'), ignore = [desks.NAME])` | built |
+| `CALCULATE([MTM], REMOVEFILTERS())`, or `ALL()` | `calc(measure('MTM'), ignore = ALL)`: everything *you* may see | built |
+| `CALCULATE([MTM], ALL(desks))` | `calc(measure('MTM'), ignore = [desks])`: a table name means all its fields | built |
+| `CALCULATE([MTM], ALLEXCEPT(desks, desks[REGION]))` | `calc(measure('MTM'), ignore = [desks], keep = [desks.REGION])` | built |
+| `CALCULATE([MTM], ALLSELECTED())` | `calc(measure('MTM'), ignore = GROUP)`: the group layer only, slicers and page filters stay | built |
+
+The second row is the one difference a DAX author must learn. A DAX filter argument **replaces** the filters on its column; Rachana's `where`
+**adds** to them, which is DAX's `KEEPFILTERS`. To replace, say so with `ignore`; the converter writes both arguments. We keep `where` as it is:
+it can only narrow an answer, so a reader sees what it does.
+
+`keep` alone stays as it is today: every layer 2 and 3 filter goes except those named. With `ignore`, `keep` narrows what `ignore` drops, which
+is what `ALLEXCEPT` means: filters on other tables are untouched. `ALL` as a table function, returning rows, has no equivalent in an
+expression: rows are a calculated table (below).
+
+**Context transition.** DAX turns a row into a filter silently, whenever `CALCULATE` or a measure runs inside an iterator. Rachana writes
+the iteration as `*_by`: per value of the `by` fields the inner aggregate is evaluated with that value as a filter, and the outer function
+combines the results. That *is* the transition, with its grain visible.
+
+| DAX | Rachana | Status |
+|---|---|---|
+| `AVERAGEX(VALUES(dates[DAY]), [MTM])` | `avg_by(measure('MTM'), by = [dates.DAY])` | built |
+| `SUMX(VALUES(desks[NAME]), CALCULATE(MAX(trades[MTM])))` | `sum_by(max(trades.MTM), by = [desks.NAME])` | built, with `min_by`, `max_by` |
+| `CALCULATE([MTM], FILTER(ALL(desks[NAME]), [VaR] > 1000000))` | `calc(measure('MTM'), ignore = [desks.NAME], by = [desks.NAME], having = measure('VAR') > 1000000)` | built: a semi-join on the groups that pass |
+
+An engine measure can be iterated but not added: `max_by(measure('VAR'), by = [desks.NAME])` is the largest desk VaR; `sum_by(measure('VAR'), ...)` is
+refused with `DRS-9127`, as any stacking of VaR is. An aggregate in a table column stays refused too: where DAX writes a calculated column
+with `CALCULATE`, Rachana writes a calculated table and relates it.
+
+**Calculated tables** are not a new thing: a virtual table can already take a model's answer as its source (`from: { model: ..., query }`, see
+[TABLES_GUIDE.md](../guides/TABLES_GUIDE.md)), so `SUMMARIZECOLUMNS` and `ADDCOLUMNS` become that query, and `FILTER` its `where`.
+`UNION` and `CROSSJOIN` are a SQL table. Such a table may be related in the same model that produces it, as long as its query does not read itself (that cycle is refused). The table
+is computed per business date, like any answer, never held as a stale copy.
+
+```yaml
+# DAX: Desk Usage = SUMMARIZECOLUMNS(desks[NAME], "Notional", SUM(trades[NOTIONAL]))
+name: risk.desk_usage
+from: { model: risk-model@1, query: "an ordinary MQ: sum(trades.NOTIONAL) by desks.NAME" }
+```
+
+**Calculation groups** are built: a group's items are templates over `SELECTED` with a precedence (higher applies first) and a format per item
+(`ModelDef.CalcGroup`). DAX's `CALCULATE(SELECTEDMEASURE(), DATESYTD(dates[DAY]))` is the item `ytd(SELECTED, dates.DAY)`, and
+`SELECTEDMEASURE() / CALCULATE(SELECTEDMEASURE(), ALL(desks))` is `share_of(SELECTED, over = [desks])`. When a template cannot apply to a
+measure (a year-to-date of VaR), the cell reads *not applicable, and why* rather than failing the whole visual.
+
+**`via:` per measure.** Inactive relationships are followed with `calc(agg, via = 'name')`, by name or generated id.
+Relationships have names, and a measure may say so once for all of its expression. It is the same mechanism: `via:` compiles to the `calc`.
+
+```yaml
+measures:
+  Notional by settle date:              # DAX: CALCULATE(SUM(trades[NOTIONAL]), USERELATIONSHIP(trades[SETTLE_DATE], dates[DAY]))
+    expr: "sum(trades.NOTIONAL)"
+    via: settle_date
+  Notional, groups one way:             # DAX: CALCULATE(SUM(trades[NOTIONAL]), CROSSFILTER(bridge[BOOK_ID], books[BOOK_ID], ONEWAY))
+    expr: "calc(sum(trades.NOTIONAL), via = 'bridge_book', filter = 'one_way')"
+```
+
+The `filter =` argument is the per-measure override of a relationship's direction. Two active paths between the same tables are refused when
+the model is saved, naming both paths; `via:` is how a measure chooses the other one. Screens:
+[bi-depth mock-ups](../lenses/mockups/bi-depth/README.md).
 
 ### 28.5 The query engine and the plan
 

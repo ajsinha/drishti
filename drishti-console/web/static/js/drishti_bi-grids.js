@@ -366,6 +366,7 @@
   V.draw = function (host, spec, ctx, res) {
     if (res && res.wells) { spec = Object.assign({}, spec, { wells: res.wells }); }       // a field parameter (param.<name>) drawn as the field or measure chosen (2.6.0)
     if (spec.type === 'entity-view') { return V.entityView(host, spec, ctx); }
+    if (spec.type === 'decomposition') { return V.decomposition(host, spec, ctx); }
     if (['text', 'image', 'button'].indexOf(spec.type) >= 0) { return V.staticVisual(host, spec, ctx); }
     if (spec.type === 'table') { return V.dataTable(host, spec, ctx, res, false); }
     if (spec.type === 'matrix') { return V.matrix(host, spec, ctx, res); }

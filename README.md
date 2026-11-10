@@ -46,7 +46,7 @@ TRD MX-20000001 <GO>                           →  a trade: terms, legs, cashfl
 
 What a person can do is decided in one place, the access registry: licence → module → lens → function → permission
 ([ACCESS_MODEL.md](docs/architecture/ACCESS_MODEL.md), [DOMAIN_MODULES.md](docs/architecture/DOMAIN_MODULES.md)). The next step, a domain-free kernel with modules
-shipped as signed packages, is a design for 2.9.11.i: [KERNEL_AND_MODULES.md](docs/architecture/KERNEL_AND_MODULES.md) ([PDF](docs/architecture/KERNEL_AND_MODULES.pdf)).
+shipped as packages (their signatures and the licence check in 2.9.11.j), is a design for 2.9.11.i: [KERNEL_AND_MODULES.md](docs/architecture/KERNEL_AND_MODULES.md) ([PDF](docs/architecture/KERNEL_AND_MODULES.pdf)).
 
 | Module | Brings |
 |---|---|
@@ -219,7 +219,7 @@ development account, never for a shared machine) and try `TRD MX-20000001`, `VAR
 
 - **The command line** is `tools/drishti.py`, run with the console's Python: lakes and loads, feeds, Elements, approvals, VaR, exposure
   and more ([CLI_REFERENCE.md](docs/guides/CLI_REFERENCE.md), [COMMAND_CATALOG.md](docs/guides/COMMAND_CATALOG.md)).
-- **A local cluster of three** with its console, from one file: [drishti-stack/](drishti-stack/README.md) (it starts them through `bin/`).
+- **A local cluster of three** with its console, from one file: `bin/start-cluster.sh` with [drishti-stack/stack.yaml](drishti-stack/README.md).
 - **Other ways**: [Windows](docs/guides/OPERATIONS_GUIDE.md#4-drishti-on-windows) (Java and Python only),
   [Docker Compose](docs/guides/OPERATIONS_GUIDE.md#54-docker-compose) and the
   [IDEs](docs/guides/OPERATIONS_GUIDE.md#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm).

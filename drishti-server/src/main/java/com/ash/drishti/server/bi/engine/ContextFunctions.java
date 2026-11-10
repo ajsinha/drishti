@@ -80,6 +80,14 @@ final class ContextFunctions {
                 Node.Call by = Node.keyword(c, "by");
                 yield contexts(e, f).register(FilterContext.Kind.AVERAGE, kept(agg, e), null, null, null, by == null ? List.of() : by.args(), null, null, null);
             }
+            case "sum_by", "min_by", "max_by" -> {
+                Node.Call by = Node.keyword(c, "by");
+                if ("sum_by".equals(f) && agg instanceof Node.MeasureRef m && Contexts.notAdditive(e.dataset(), m.name())) {
+                    throw new DrishtiException(ErrorCode.MQ_CONTEXT, "DRS-9127 '" + m.name() + "' does not add across " + (by == null ? "groups" : com.ash.drishti.server.bi.dataset.NodeText.print(by))
+                            + ": it may be iterated (max_by, min_by, avg_by) but never summed");
+                }
+                yield contexts(e, f).iterate(f.substring(0, 3), kept(agg, e), by == null ? List.of() : by.args());
+            }
             case "avg_over" -> contexts(e, f).register(FilterContext.Kind.AVERAGE, kept(agg, e), null, null, null, List.of(pos.get(1)), null, null, null);
             case "as_of" -> contexts(e, f).register(FilterContext.Kind.DATED, kept(agg, e), null, null, null, null, constant(e, pos.get(1)), null, null);
             case "last", "first" -> {
@@ -100,14 +108,22 @@ final class ContextFunctions {
         Node.Call ignore = Node.keyword(c, "ignore");
         Node.Call keep = Node.keyword(c, "keep");
         Node.Call via = Node.keyword(c, "via");
+        Node.Call dir = Node.keyword(c, "filter");
+        Node.Call by = Node.keyword(c, "by");
+        Node.Call having = Node.keyword(c, "having");
+        if ((by == null) != (having == null)) {
+            throw new DrishtiException(ErrorCode.MQ_CONTEXT, "calc needs by = [...] and having = ... together: having names the groups that pass, by = which fields they are");
+        }
         Node cond = where == null || where.args().isEmpty() || where.args().get(0) instanceof Node.Null ? null : where.args().get(0);
         String viaText = via == null || via.args().isEmpty() || !(via.args().get(0) instanceof Node.Str s) ? null : s.value();
-        boolean edits = ignore != null && !ignore.args().isEmpty() || keep != null || viaText != null;
+        String filter = dir == null || dir.args().isEmpty() || !(dir.args().get(0) instanceof Node.Str s2) ? null : s2.value();
+        boolean edits = ignore != null && !ignore.args().isEmpty() || keep != null || viaText != null || having != null;
         if (!edits) {
             return cond == null ? e.emit(agg, inAgg) : e.restricted(cond, agg, inAgg);
         }
         Node inner = kept(cond == null ? agg : new Node.Call("calc", List.of(agg, new Node.Call(Node.KEYWORD + "where", List.of(cond)))), e);
-        return contexts(e, "calc").register(FilterContext.Kind.EDIT, inner, ignore == null ? null : ignore.args(), keep == null ? null : keep.args(), viaText, null, null, null, null);
+        return contexts(e, "calc").edit(inner, ignore == null ? null : ignore.args(), keep == null ? null : keep.args(), viaText, filter,
+                by == null ? null : by.args(), having == null || having.args().isEmpty() ? null : having.args().get(0));
     }
 
     /** The aggregate with the conditions the emitter is now under (an outer {@code calc(where=)}), which a context sub-query must keep. */

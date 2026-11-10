@@ -31,7 +31,7 @@ import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.server.api.ProcessResources;
 import com.ash.drishti.server.api.RequestActivity;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.ByteArrayInputStream;
@@ -169,7 +169,7 @@ class CapacityControllerTest {
     @SuppressWarnings("unchecked")
     void theLiveFiguresSayWhenAndWhatTheyStandFor() {
         Map<String, Object> m = controller.live(ROOT);
-        assertThat(m).containsKeys("measuredAt", "server", "var", "disk", "load", "inputs");
+        assertThat(m).containsKeys("measuredAt", "server", "engine", "disk", "load", "inputs");
         Map<String, Object> server = (Map<String, Object>) m.get("server");
         assertThat(server).containsKeys("heapMaxMb", "heapAfterGcMb", "rssMb", "cpus", "javaVersion");
         assertThat((Map<String, Object>) m.get("inputs")).containsEntry("JavaVersion", Runtime.version().feature()).containsKey("Users");

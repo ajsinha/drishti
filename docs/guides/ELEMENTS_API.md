@@ -23,7 +23,7 @@ one bundled file next to them; a page loads drishti-core and then `Drishti.eleme
 | Library | Version | What it is |
 |---|---|---|
 | [drishti-core](#drishti-core) | 1.1.0 | Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts, the filter model every library shares, the element maker and placements, Explain's drawing, the CSV writer, reading typed numbers, loading vendored engines |
-| [drishti-inputs](#drishti-inputs) | 0.3.0 | Inputs: business-date and range pickers with holiday calendars, the tree picker, the multi-select, the combobox with server type-ahead (on its own field or a page's), forms from a schema (live or embedded, steps, named fields, hooks, custom widgets, time, date-and-time and money) with four eyes, the time and date-and-time pickers, the filter bar, the code editor over CodeMirror, and a page's own date fields and checkbox lists upgraded in place |
+| [drishti-inputs](#drishti-inputs) | 0.3.1 | Inputs: business-date and range pickers with holiday calendars, the on/off switch, the tree picker, the multi-select, the combobox with server type-ahead (on its own field or a page's), forms from a schema (live or embedded, steps, named fields, hooks, custom widgets, time, date-and-time and money) with four eyes, the time and date-and-time pickers, the filter bar, the code editor over CodeMirror, and a page's own date fields and checkbox lists upgraded in place |
 | [drishti-grid](#drishti-grid) | 0.4.0 | The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and &lt;drishti-grid&gt; in three layouts and three densities), cell editing with undo, paste, write-back and four eyes, and the AG Grid-style adapter (createGridFromAgOptions) |
 | [drishti-tree](#drishti-tree) | 0.2.0 | The tree: hierarchies as an org chart, an indented tree with measures (on drishti-grid's tree data), a sunburst and an icicle; expand and collapse, search with breadcrumbs, measures on nodes with non-additive ones (◆) asked of the server and never summed, Explain, re-parenting in an edit mode that proposes the move for four eyes, the outline of an authoring screen (marks, a hiding filter, a designer's selection followed both ways, moves by drag or Alt+arrows), export, keyboard and ARIA |
 | [drishti-designer](#drishti-designer) | 0.2.0 | The designer kit: the layout canvas over a layout model (grid or flow: place, move, resize with snap, multi-select, align, distribute, z-order, groups, copy and paste, a phone's order, the keys, undo and redo on one command stack), the palette, the inspector (a form from a schema), the outline (drishti-tree's, drag to re-order or re-parent), the YAML pane kept in step with the model both ways (completion and lint from a JSON Schema) and the designer shell (three panes, Visual / YAML / Both, versions, Validate, Preview, History, Impact, Propose for review) |
@@ -1672,7 +1672,7 @@ A table to export.
 
 ## drishti-inputs
 
-Version 0.3.0. Bundle `static/elements/drishti-inputs/drishti_inputs.js`, global `Drishti.elements.inputs`; requires drishti-core.
+Version 0.3.1. Bundle `static/elements/drishti-inputs/drishti_inputs.js`, global `Drishti.elements.inputs`; requires drishti-core.
 
 ### drishti_calendar.js
 
@@ -3292,6 +3292,61 @@ True when a name ends with one of the endings (any case; no endings: every name)
 
 Returns `boolean`.
 
+### drishti_switch.js
+
+#### class `Switch`
+
+A switch. Events: change {value}.
+
+##### `new Switch(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `options` | `SwitchOptions` |  |
+
+##### `Switch.getValue()`
+
+The value: on or off.
+
+Returns `boolean`.
+
+##### `Switch.setValue(v)`
+
+Turns it on or off, without an event.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `boolean` | on |
+
+Returns `void`.
+
+##### `Switch.setLabel(text)`
+
+Changes the words beside the track.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` | the words |
+
+Returns `void`.
+
+##### `Switch.setDisabled(off)`
+
+Turns the switch off for use, or back on.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `off` | `boolean` | disabled |
+
+Returns `void`.
+
+##### `Switch.focus()`
+
+Moves the focus to the switch.
+
+Returns `void`.
+
 ### drishti_form.js
 
 #### class `Form`
@@ -4471,6 +4526,15 @@ A field of a form schema.
 | `[disabled=false]` | `boolean` |  |
 | `[renderOption]` | `function(Object, HTMLElement): void` | draws an option's content |
 | `[native=false]` | `boolean` | a change also fires input and change on the host, as a native select's did (a page's own listeners and delegated handlers keep working); selectElement turns it on, and so does the attribute native on a page's &lt;drishti-select&gt; |
+
+#### `SwitchOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[label]` | `string` | the words beside the track |
+| `[help]` | `string` | what the switch does, on its ? (title and aria-description) |
+| `[value=false]` | `boolean` | on or off |
+| `[disabled=false]` | `boolean` |  |
 
 #### `TimePickerOptions` : `Object`
 
@@ -10516,6 +10580,71 @@ Defines &lt;drishti-tree&gt; in a registry (once; the bundle does it when it loa
 
 Returns `boolean`: whether it was defined now.
 
+### drishti_decomposition.js
+
+#### class `Decomposition`
+
+The tree: the root's column, then one column per open split.
+
+##### `new Decomposition(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `options` | `DecompositionOptions` |  |
+
+##### `Decomposition.load(depth, split, path)`
+
+Asks column depth anew (its split changed, or its parent was opened), drops those to its right.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `depth` | `number` |  |
+| `split` | `?string` |  |
+| `path` | `Array&lt;{field: string, value: string}&gt;` |  |
+
+Returns `void`.
+
+##### `Decomposition.open(depth, index)`
+
+Opens a member (its children below, by the next unused split or the one already chosen).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `depth` | `number` |  |
+| `index` | `number` |  |
+
+Returns `void`.
+
+##### `Decomposition.splitBy(depth, field)`
+
+Splits column depth by a dimension.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `depth` | `number` |  |
+| `field` | `?string` |  |
+
+Returns `void`.
+
+##### `Decomposition.draw()`
+
+Draws the whole strip (columns, then the links over them).
+
+Returns `void`.
+
+##### `Decomposition.resize()`
+
+Draws again at the size the host now has.
+
+Returns `void`.
+
+##### `Decomposition.dispose()`
+
+Empties the host.
+
+Returns `void`.
+
 ### drishti_index.js
 
 #### `install(root)`
@@ -10529,6 +10658,32 @@ Starts drishti-tree in a page (the bundle calls it when it loads): defines &lt;d
 Returns `void`.
 
 ### Types of drishti-tree
+
+#### `DecompositionAnswer` : `Object`
+
+One column of the answer the host gives.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `node` | `{value: ?number, component: ?number, note: (string\|undefined)}` | the node's own figures |
+| `children` | `Array&lt;{member: ?string, label: string, value: ?number, component: ?number, others: boolean, note: (string\|undefined)}&gt;` | each member's own figures |
+| `additive` | `boolean` | whether the measure adds up (a plain sum) |
+| `[sumStandalone]` | `number` | Σ of the members' standalone figures (a measure that does not add), from the server |
+| `[diversification]` | `number` | Σ members − node, from the server |
+| `[componentLabel]` | `?string` | the name of the component measure, when the source has one |
+| `[unit]` | `string` | money, count… |
+
+#### `DecompositionOptions` : `Object`
+
+The options of a decomposition tree.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `title` | `string` | the measure's name (the root box and the first heading) |
+| `splits` | `Array&lt;{field: string, label: string}&gt;` | the dimensions the reader may split by |
+| `load` | `function({split: ?string, path: Array&lt;{field: string, value: string}&gt;}): Promise&lt;DecompositionAnswer&gt;` | one node's answer, asked of the host |
+| `[first]` | `string[]` | the dimensions the columns start with (default: none open, the reader picks) |
+| `[format]` | `function(?number, string): string` | a figure in words, given the value and the unit (default: compact) |
 
 #### `DrawContext` : `Object`
 
@@ -14407,6 +14562,20 @@ Drag-to-zoom on a chart's plot: a drag across draws a band and zooms the x axis 
 
 Returns `void`.
 
+#### `rangeBrush(engine, active, colour, onBrush, axis)`
+
+A drag on the grid that picks a range of the axis (linked brushing): a band while it moves, onBrush(from, to) with the axis's own values at the end; the band stays until the returned function clears it.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `engine` | `Object` | the chart's engine instance |
+| `active` | `function(): boolean` | whether the chart brushes now |
+| `colour` | `string` | the band's fill |
+| `onBrush` | `function(*, *): void` | given the axis values at the two ends, lower first |
+| `[axis='x']` | `('x'\|'y')` |  |
+
+Returns `function(): void`: clears the band.
+
 #### `svgOf(E, option, width, height)`
 
 The chart as SVG text, drawn off screen by the engine's server-side renderer at the card's size (the export's SVG).
@@ -14756,6 +14925,20 @@ Shows the crosshair and the tooltip at a row (a page's selected row followed by 
 | `index` | `number` | the row's index in the chart's rows (the category's, for one series by category) |
 
 Returns `void`.
+
+### drishti_chart-calendar.js
+
+#### `buildCalendar(spec, rows, env)`
+
+Calendar: a value per date.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` | x (the date field), value (the measure field), scale ({type: 'diverging', mid}), title |
+| `rows` | `Object[]` |  |
+| `env` | `Object` |  |
+
+Returns `import('./drishti_chart-spec.js').BuiltChart`.
 
 ### drishti_link.js
 

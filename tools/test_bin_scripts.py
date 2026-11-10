@@ -27,7 +27,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 BIN = ROOT / "bin"
-SCRIPTS = ("start-server", "stop-server", "start-console", "stop-console", "status", "start-all", "stop-all")
+SCRIPTS = ("start-server", "stop-server", "start-console", "stop-console", "status", "start-all", "stop-all", "start-cluster", "stop-cluster", "drishti-node")
 HEADER = ("# Project Drishti · Any data. Any domain. One grammar.", "Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.",
           "PROPRIETARY AND CONFIDENTIAL.", "See the LICENSE file in the root of this repository for the full terms.")
 SH = sorted(BIN.glob("*.sh")) + [BIN / "lib" / "common.sh"]
@@ -70,8 +70,9 @@ def test_the_header_and_the_shebang():
         for line in HEADER:
             assert line in text, f"{p.relative_to(ROOT)}: the licence header"
     for p in BIN.glob("*.sh"):
-        assert p.read_text(encoding="utf-8").startswith("#!/usr/bin/env bash\n"), p.name
-        assert "set -euo pipefail" in p.read_text(encoding="utf-8"), p.name
+        assert p.read_text(encoding="utf-8").startswith("#!/bin/sh\n" if p.stem == "drishti-node" else "#!/usr/bin/env bash\n"), p.name
+        # drishti-node.sh is POSIX sh (server images): no pipefail there, and it reads exit codes itself, so set -u only
+        assert ("set -u\n" if p.stem == "drishti-node" else "set -euo pipefail") in p.read_text(encoding="utf-8"), p.name
         assert p.stat().st_mode & 0o111, f"{p.name} is not executable (git update-index --chmod=+x)"
     for p in BIN.glob("*.cmd"):
         assert "Copyright (c) 2026 Ashutosh Sinha" in p.read_text(encoding="utf-8"), p.name
@@ -79,7 +80,7 @@ def test_the_header_and_the_shebang():
 
 @pytest.mark.static
 def test_nothing_stops_a_process_by_name():
-    for p in SH + PS1 + sorted(BIN.glob("*.cmd")) + [ROOT / "drishti-stack" / "stack.py"]:
+    for p in SH + PS1 + sorted(BIN.glob("*.cmd")) + [BIN / "lib" / "cluster.py"]:
         for n, line in code_lines(p):
             assert not NAME_KILLS.search(line), f"{p.relative_to(ROOT)}:{n}: stops by name: {line.strip()}"
 

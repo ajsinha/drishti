@@ -16,7 +16,6 @@
 package com.ash.drishti.plugin.iceberg;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.EntityRef;
@@ -114,7 +113,7 @@ public class IcebergNativeNoHadoopTest {                          // public: the
         Map<String, Boolean> trade = new LinkedHashMap<>();
         trade.put("mtm", true);
         trade.put("nettingSet", false);
-        try (IcebergLake lake = IcebergLake.of(Map.of("root", root.toString(), "domain", "desk"))) {   // written outside, by the library
+        try (OracleLake lake = OracleLake.of(Map.of("root", root.toString(), "domain", "desk"))) {   // written outside, by the library
             IcebergSourcePluginTest.write(lake, DatedSourceContract.ROWS, Map.of("trade", trade));
         }
         return root;
@@ -190,17 +189,6 @@ public class IcebergNativeNoHadoopTest {                          // public: the
             }
             assertThat(loader.refused).isEmpty();
             assertThat(result).isEqualTo("t7 100.0; days false; columns 30");          // two days kept, the oldest gone
-        }
-    }
-
-    @Test
-    void theGuardCatchesTheLibraryEngine() throws Exception {
-        Path root = lake();
-        try (Isolated loader = isolated()) {
-            Class<?> self = loader.loadClass(IcebergNativeNoHadoopTest.class.getName());
-            assertThatThrownBy(() -> self.getMethod("probe", String.class, String.class).invoke(null, root.toString(), "library"))
-                    .isInstanceOf(InvocationTargetException.class);
-            assertThat(loader.refused).isNotEmpty();
         }
     }
 }

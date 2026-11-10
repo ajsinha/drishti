@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.bicompute.lang;
 
-import com.ash.drishti.bicompute.spi.AggFunction;
+import com.ash.drishti.kernel.api.pivot.AggFunction;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;

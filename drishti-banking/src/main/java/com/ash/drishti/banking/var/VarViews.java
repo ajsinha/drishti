@@ -26,7 +26,7 @@ import com.ash.drishti.banking.compute.var.VarCalc;
 import com.ash.drishti.banking.compute.var.VarLens;
 import com.ash.drishti.banking.compute.var.VarMath;
 import com.ash.drishti.compute.vector.OrdinalSet;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -1110,7 +1110,14 @@ final class VarViews {
     }
 
     Map<String, Object> path(Principal p, String scope, LocalDate date, int page, int size, String ccy, VarLens lens) {
-        VarService.Scoped s = svc.scoped(p, scope, date, ccy, lens);
+        return path(p, scope, date, page, size, ccy, lens, false);
+    }
+
+    /** The same with the matured-items switch: the path of the scope with its matured items added, labelled (VAR_GUIDE.md, "Matured items"). */
+    Map<String, Object> path(Principal p, String scope, LocalDate date, int page, int size, String ccy, VarLens lens, boolean matured) {
+        VarService.Scoped official = svc.scoped(p, scope, date, ccy, lens);
+        VarService.WithMatured w = matured ? svc.withMatured(p, official) : null;
+        VarService.Scoped s = w == null ? official : w.scoped();
         List<LocalDate> dates = s.dates();
         List<LocalDate> all = s.date().book().scenarioDates();
         boolean windows = lens(s).method() == VarLens.Method.SUM;
@@ -1119,6 +1126,9 @@ final class VarViews {
         int[] order = s.measures().order();
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("canonical", s.res().canonical());
+        if (w != null) {
+            out.put("matured", VarMaturedSwitch.block(official, w, VarMaturedSwitch.grainWord(s.date().intake())));
+        }
         out.put("currency", s.date().currency());
         out.put("intraday", intradayNote(s.date()));
         out.put("var", round(s.measures().var()));
@@ -1361,6 +1371,11 @@ final class VarViews {
     }
 
     Map<String, Object> tree(Principal p, String hierarchy, LocalDate date, String ccy, VarLens lens) {
+        return tree(p, hierarchy, date, ccy, lens, false);
+    }
+
+    /** The same with the matured-items switch ({@code matured}: each node's figure with its matured items beside, VAR_GUIDE.md, "Matured items"). */
+    Map<String, Object> tree(Principal p, String hierarchy, LocalDate date, String ccy, VarLens lens, boolean matured) {
         VarDate d = svc.date(date, ccy);
         VarBook b = d.book();
         List<String> present = b.hierarchies();
@@ -1372,9 +1387,10 @@ final class VarViews {
                     + (present.isEmpty() ? "none: configure hierarchies: in the pack or drishti.var.hierarchies" : String.join(", ", present)) + ")");
         }
         List<Map<String, Object>> rows = new ArrayList<>();
-        walk(p, b, root, 0, rows, date, d.currency(), lens);
+        walk(p, b, root, 0, rows, date, d.currency(), lens, matured);
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("hierarchy", h);
+        out.put("maturedSwitch", maturedSwitch(d, matured));
         out.put("currency", d.currency());
         out.put("intraday", intradayNote(d));
         // the date's hierarchies: their ids in the configured order, and each with its title, word, levels and (Blank) label
@@ -1416,7 +1432,8 @@ final class VarViews {
         return out;
     }
 
-    private void walk(Principal p, VarBook b, VarBook.Node n, int depth, List<Map<String, Object>> rows, LocalDate date, String ccy, VarLens lens) {
+    private void walk(Principal p, VarBook b, VarBook.Node n, int depth, List<Map<String, Object>> rows, LocalDate date, String ccy, VarLens lens,
+            boolean matured) {
         VarService.Scoped s;
         try {
             s = svc.scoped(p, "NODE:" + n.id(), date, ccy, lens);
@@ -1452,13 +1469,46 @@ final class VarViews {
         if (pf != null) {
             m.put("parametric", parametric.treeCell(pf, lens(s), n.name(), s.measures().var(), s.measures().es()));
         }
+        if (matured) {                                                  // the node with its matured items: limit use stays official
+            Map<String, Object> mc = VarMaturedSwitch.cell(s, svc.withMatured(p, s));
+            if (mc != null) {
+                m.put("matured", mc);
+            }
+        }
         rows.add(m);
         for (String c : n.children()) {
             VarBook.Node cn = b.node(c);
             if (cn != null) {
-                walk(p, b, cn, depth + 1, rows, date, ccy, lens);
+                walk(p, b, cn, depth + 1, rows, date, ccy, lens, matured);
             }
         }
+    }
+
+    /**
+     * A headline answer with the matured-items switch on (VAR_GUIDE.md, "Matured items"): the official answer as it is, and its
+     * {@code matured} block (the figure with the scope's matured items added, the label, the official figure beside).
+     */
+    Map<String, Object> withMatured(Map<String, Object> headline, Principal p, String scope, LocalDate date, String ccy, VarLens lens) {
+        VarService.Scoped s = svc.scoped(p, scope, date, ccy, lens);
+        Map<String, Object> out = new LinkedHashMap<>(headline);
+        out.put("matured", VarMaturedSwitch.block(s, svc.withMatured(p, s), VarMaturedSwitch.grainWord(s.date().intake())));
+        return out;
+    }
+
+    /** The tree's word on the switch: the grain it names, whether it is on, the matured items of the date, or why none can be added. */
+    private Map<String, Object> maturedSwitch(VarDate d, boolean on) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        VarMaturedItems items = d.intake() == null ? null : d.intake().maturedItems();
+        m.put("grain", VarMaturedSwitch.grainWord(d.intake()));
+        m.put("on", on);
+        m.put("kept", items == null ? 0 : items.items().size());
+        if (items != null && items.dropped() != null) {
+            m.put("why", items.dropped());
+        }
+        if (on) {
+            m.put("note", VarMaturedSwitch.NOT_OFFICIAL);
+        }
+        return m;
     }
 
     // ------------------------------------------------------------------------------------------------------------------- helpers

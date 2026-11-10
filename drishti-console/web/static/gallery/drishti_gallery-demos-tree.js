@@ -111,6 +111,12 @@
     build: function (values, ctx) { return companyBuild(values, ctx); }
   }));
 
+  ['sunburst', 'icicle'].forEach((mode) => demos.push(treeDemo({
+    id: mode, title: mode === 'sunburst' ? 'Sunburst' : 'Icicle', summary: 'Size by an additive measure, colour by a non-additive one read per node: click a part to select, Zoom in and out from the side panel.',
+    values: { mode: mode, density: 'compact', title: 'Company', openDepth: -1 }, examples: [{ title: 'Sized by headcount', values: {} }, { title: 'Sized by cost', values: { sizeBy: 'cost' } }],
+    build: function (values, ctx) { return companyBuild(values, ctx); }
+  })));
+
   demos.push(treeDemo({
     id: 'tree-edit', title: 'Tree: propose a change', summary: 'The edit mode: drag a node onto its new parent (or pick it from "Move to"); the moves collect into one proposal for another person to approve (four eyes). Nothing changes until the host applies it.',
     values: { mode: 'org', density: 'compact', title: 'Company', editable: true, openDepth: 1 },

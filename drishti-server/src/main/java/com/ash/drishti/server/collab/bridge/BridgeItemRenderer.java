@@ -33,7 +33,7 @@ import com.ash.drishti.server.collab.mail.ItemRenderer;
 import com.ash.drishti.server.collab.mail.MailContentPolicy;
 import com.ash.drishti.server.collab.thread.CommentRenderer;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.time.Clock;
 import java.util.List;
 

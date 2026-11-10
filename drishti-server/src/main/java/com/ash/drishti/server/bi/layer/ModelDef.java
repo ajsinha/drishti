@@ -224,7 +224,12 @@ public record ModelDef(String name, String version, String id, String title, Str
      * @param suggested where a designer's suggestion came from ({@code pack-reference}, {@code values}, {@code name}), or null
      */
     public record Rel(String id, String fromAlias, String fromColumn, String toAlias, String toColumn, String cardinality, String direction, boolean active, String name,
-            String suggested) {
+            String suggested, Dataset.Bridge bridge) {
+
+        /** A relationship that is not a bridge. */
+        public Rel(String id, String fromAlias, String fromColumn, String toAlias, String toColumn, String cardinality, String direction, boolean active, String name, String suggested) {
+            this(id, fromAlias, fromColumn, toAlias, toColumn, cardinality, direction, active, name, suggested, null);
+        }
 
         public String label() {
             return fromAlias + "." + fromColumn + " -> " + toAlias + "." + toColumn;

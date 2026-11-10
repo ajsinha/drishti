@@ -23,7 +23,7 @@ import com.ash.drishti.identity.collab.Hold;
 import com.ash.drishti.identity.collab.HoldStore;
 import com.ash.drishti.identity.collab.ThreadStore;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;

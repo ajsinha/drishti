@@ -25,7 +25,7 @@ import com.ash.drishti.server.collab.DirectoryService;
 import com.ash.drishti.server.collab.Principals;
 import com.ash.drishti.server.collab.ShareService;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;

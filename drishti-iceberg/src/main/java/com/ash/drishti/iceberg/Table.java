@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.iceberg;
 
-import com.ash.drishti.iceberg.catalog.TableOps;
 import com.ash.drishti.iceberg.expr.Expr;
+import com.ash.drishti.iceberg.io.DrishtiFileIO;
 import com.ash.drishti.iceberg.io.FileAccess;
 import com.ash.drishti.iceberg.meta.Snapshot;
 import com.ash.drishti.iceberg.meta.TableMetadata;
@@ -30,69 +30,74 @@ import java.io.UncheckedIOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Supplier;
+import org.apache.iceberg.HasTableOperations;
 
 /**
- * One Iceberg table read (and written) by drishti-iceberg: its current metadata, re-read on {@link #refresh()}, the
- * plans of its snapshots and the rows of their files. The metadata is swapped atomically, so readers on any thread
- * see one version or the next, never a mix. Writes go through {@link com.ash.drishti.iceberg.write.Transaction}.
+ * One Iceberg table: Apache Iceberg's own {@link org.apache.iceberg.Table} for metadata, planning and commits, Drishti's Parquet reader
+ * for rows. The metadata view is swapped atomically, so readers on any thread see one version or the next, never a mix.
  */
 public final class Table {
 
+    private static final long RENEW_BEFORE_MS = 5 * 60_000L;
+
     private final String name;
-    private final TableOps ops;
-    private volatile TableOps.Loaded state;
+    private final Supplier<org.apache.iceberg.Table> reload;
+    private volatile org.apache.iceberg.Table table;
+    private volatile TableMetadata view;
 
-    public Table(String name, TableOps ops, TableOps.Loaded state) {
+    /** @param reload loads the table again, for fresh vended credentials (null: its file access never expires) */
+    public Table(String name, org.apache.iceberg.Table table, Supplier<org.apache.iceberg.Table> reload) {
         this.name = name;
-        this.ops = ops;
-        this.state = state;
-    }
-
-    /** Opens the table at its current version. */
-    public static Table load(String name, TableOps ops) throws IOException {
-        return new Table(name, ops, ops.load());
+        this.table = table;
+        this.reload = reload;
     }
 
     public String name() {
         return name;
     }
 
-    public TableOps ops() {
-        return ops;
+    /** Apache Iceberg's table. */
+    public org.apache.iceberg.Table iceberg() {
+        return table;
+    }
+
+    private org.apache.iceberg.TableMetadata current() {
+        return ((HasTableOperations) table).operations().current();
     }
 
     public TableMetadata metadata() {
-        return state.metadata();
+        org.apache.iceberg.TableMetadata c = current();
+        TableMetadata v = view;
+        if (v == null || v.iceberg() != c) {
+            v = new TableMetadata(c);
+            view = v;
+        }
+        return v;
     }
 
-    /** The metadata file (or REST metadata location) the current version was read from. */
+    /** The metadata file the current version was read from. */
     public String metadataLocation() {
-        return state.location();
-    }
-
-    public TableOps.Loaded state() {
-        return state;
+        return current().metadataFileLocation();
     }
 
     /** The files of this table (through the catalog's vended credentials, when it gives any). */
     public FileAccess io() {
-        return ops.io(state);
+        return ((DrishtiFileIO) table.io()).access();
     }
 
     /** Re-reads the metadata; true when it changed. */
     public boolean refresh() {
-        try {
-            Optional<TableOps.Loaded> next = ops.refresh(state);
-            next.ifPresent(n -> state = n);
-            return next.isPresent();
-        } catch (IOException e) {
-            throw new UncheckedIOException("refreshing " + ops.describe(), e);
+        if (reload != null && ((DrishtiFileIO) table.io()).expiring(RENEW_BEFORE_MS)) {
+            try {
+                table = reload.get();
+            } catch (RuntimeException e) {
+                // the catalog is unreachable: the old credentials serve until they really expire
+            }
         }
-    }
-
-    /** After a commit: the version it made is current. */
-    public void committed(TableOps.Loaded next) {
-        state = next;
+        org.apache.iceberg.TableMetadata before = current();
+        table.refresh();
+        return current() != before && !java.util.Objects.equals(current().metadataFileLocation(), before.metadataFileLocation());
     }
 
     public Optional<Snapshot> currentSnapshot() {
@@ -101,7 +106,7 @@ public final class Table {
 
     /** The data files of a snapshot that may hold rows matching {@code filter}, with their deletes. */
     public List<FileTask> plan(Snapshot snapshot, Expr filter, ExecutorService pool) {
-        return Planner.plan(metadata(), snapshot, filter, io(), pool);
+        return Planner.plan(table, metadata().schemaFor(snapshot), snapshot, filter, pool);
     }
 
     /**
@@ -125,6 +130,6 @@ public final class Table {
 
     @Override
     public String toString() {
-        return name + " (" + ops.describe() + ")";
+        return name + " (" + table.location() + ")";
     }
 }

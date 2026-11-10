@@ -21,7 +21,7 @@ import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.server.connectors.ConnectorManager;
 import com.ash.drishti.server.deploy.PackDeployService;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.LinkedHashMap;

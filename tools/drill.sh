@@ -23,6 +23,8 @@
 #   tools/drill.sh --no-push    verify only: no push, no merge (the timing of each stage is printed either way)
 #   tools/drill.sh --keep-going run every job to its end even after one has failed (the default stops the rest at the first failure)
 #   tools/drill.sh --gate       the gate only (stage 1), then stop: no lanes, no push; on any branch (a quick check before a drill)
+#   tools/drill.sh --affected [--base REF] [--dry-run]   only the Maven modules and test files the diff against REF (default origin/develop) can reach
+#                               (tools/drillkit/affected.py; for builders, never a release proof; working-tree edits included; no push)
 #   DRILL_MVN_ARGS="..."        extra Maven arguments for every Maven run (e.g. -Ddrishti.test.forks=1 to run the test classes serially)
 #   DRILL_BROWSER_WORKERS, DRILL_OTHER_WORKERS   the console lanes' pytest workers (default from the CPUs and the memory; the browser
 #                               lane's from the memory available: tools/drillkit/drill_plan.py workers)
@@ -44,10 +46,12 @@
 #      "other" (the rest; more workers, lower priority, by file), each file ordered longest first from the durations the last runs
 #      recorded (<data>/drill/durations.json). The browser lane's memory is sampled (<data>/drill/monitor-browser.csv) and every
 #      browser file over the per-file time budget is flagged (<data>/drill/budget-browser.txt; tools/drill-budgets.txt lists the
-#      files allowed over it, each with its reason);
+#      files allowed over it, each with its reason); every page a browser test opens is timed (<data>/drill/pageloads.jsonl), and
+#      after the lanes p95 and median per page are printed, slowest first, and written to docs/admin/BENCHMARK.md 18.2;
 #    - the Python tool tests;
 #    - the Java 21 verify (clean verify -P api-docs, every test, containers included) in a copy of the committed tree, so it
-#      cannot touch the jar the console runs; then the Java 25 verify, in a copy too, once the lighter lanes have finished.
+#      cannot touch the jar the console runs; and the Java 25 lane, in a copy too: the whole tree compiled on Java 25 and the tests of
+#      what the JDK version can change (tools/drill-java25.txt), started once 20 GB are free.
 #    A console test that fails is run once more on its own (file by file, every file, under a time limit of twice the file's
 #    recorded time); one that passes then is a flake, kept in <data>/drill/flakes.log; one listed in tools/drill-known.txt is
 #    reported as accepted and does not fail the drill. Every test that ran before still runs.
@@ -60,6 +64,18 @@ export JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-21-openjdk-amd64}"   # producti
 # <module>/target/tmp (the parent pom's argLine), and the console and tool tests start java through tools/javacmd.py.
 
 MODE=auto; PUSH=1; KEEP_GOING=0; GATE_ONLY=0
+if [[ "${1:-}" == --affected ]]; then
+  shift; base=(); dry=()
+  while (( $# )); do
+    case "$1" in
+      --base) base=(--base "$2"); shift 2 ;;
+      --base=*) base=(--base "${1#--base=}"); shift ;;
+      --dry-run) dry=(--dry-run); shift ;;
+      *) echo "drill: --affected takes --base REF and --dry-run" >&2; exit 2 ;;
+    esac
+  done
+  exec python3 tools/drillkit/affected.py run "${base[@]}" "${dry[@]}"
+fi
 for a in "$@"; do
   case "$a" in
     --gate) GATE_ONLY=1; PUSH=0 ;;
@@ -67,7 +83,7 @@ for a in "$@"; do
     --full) MODE=full ;;
     --no-push) PUSH=0 ;;
     --keep-going) KEEP_GOING=1 ;;
-    *) echo "drill: unknown option $a (use --docs, --full, --no-push, --keep-going, --gate)" >&2; exit 2 ;;
+    *) echo "drill: unknown option $a (use --docs, --full, --no-push, --keep-going, --gate, --affected)" >&2; exit 2 ;;
   esac
 done
 
@@ -121,8 +137,9 @@ clamp() { local v=$1; (( v < $2 )) && v=$2; (( v > $3 )) && v=$3; echo "$v"; }
 other_workers=${DRILL_OTHER_WORKERS:-$(clamp $(( cpus / 3 )) 1 8)}
 while (( other_workers + 20 > mem_gb && other_workers > 2 )); do other_workers=$(( other_workers - 1 )); done
 # the browser lane: (memory available now less the Java verify's 20 GB, the other lane's GB per worker and 4 GB to spare) divided by one
-# browser worker's measured budget, at most the CPU threads less two and the scratch ports' 12 (TEST_HARNESS.md, "Worker sizing")
+# browser worker's budget, at most the CPU threads less two and the scratch ports' 12 (TEST_HARNESS.md, "Worker sizing")
 browser_workers=${DRILL_BROWSER_WORKERS:-$(python3 tools/drillkit/drill_plan.py workers --reserve-gb $(( 20 + other_workers + 4 )) --threads "$cpus")}
+export DRISHTI_LAKE_CACHE="${DRISHTI_LAKE_CACHE:-$(pwd -P)/$DATA/tmp/lake-cache}"   # the demo lakes, built once per hash (tools/drillkit/lake_cache.py)
 LANE_LIMIT=${DRILL_LANE_LIMIT:-10800}   # a console lane that runs three hours has hung: it fails the drill instead of blocking it
 echo "drill: $cpus CPUs, ${mem_gb} GB: console lanes browser $browser_workers workers, other $other_workers workers"
 
@@ -237,7 +254,7 @@ console_files() {   # name, workers, failed files re-run at a time, then the fil
   local out="$LOGS/console-$name.txt" rc=0 dist=loadfile
   # the browser lane by test: a file's tests stay one group on one worker unless they are marked spread (TEST_HARNESS.md)
   [[ $name == browser ]] && dist=loadgroup
-  DRILL_TIMINGS_OUT="$LOGS/timings-$name.json" PYTHONPATH="$PWD/tools/drillkit${PYTHONPATH:+:$PYTHONPATH}" \
+  DRISHTI_PAGELOAD_LOG="$LOGS/pageloads.jsonl" DRILL_MIN_FREE_GB="${DRILL_MIN_FREE_GB:-6}" DRILL_TIMINGS_OUT="$LOGS/timings-$name.json" PYTHONPATH="$PWD/tools/drillkit${PYTHONPATH:+:$PYTHONPATH}" \
     timeout --kill-after=60 "$LANE_LIMIT" "$PY" -m pytest -q -rfE -p drill_timings -n "$workers" --dist "$dist" --no-loadscope-reorder "$@" \
     > "$out" 2>&1 || rc=$?
   tail -n 5 "$out"
@@ -403,15 +420,28 @@ java21_docker() {
   [[ -n "$classes" ]] || { echo "drill: java21-docker: no container tests found" >&2; return 1; }
   copy_verify java21-docker "$JAVA21_HOME" 21783,21784,21785 none -Dtest="$classes" -Dsurefire.failIfNoSpecifiedTests=false
 }
-# Java 21 and newer are supported: the same tests again on Java 25, so a library that breaks on a newer JVM (Hadoop and the
-# removed Security Manager, Unsafe memory access) fails the drill. It starts once the browser lane has
-# finished and Java 21 has (with three heavy jobs at once a 61 GB machine ran short of memory), at lower priority, with two test forks. Docker is
-# hidden from it: the container tests ran on 21 and test the brokers, not the JVM.
+# Java 21 is what production runs; Java 25 checks forward compatibility: the whole tree compiles on it (a removed API fails here) and the tests of
+# the code the JDK version can change run on it (native maths and memory access, codecs, the store that relies on Unsafe or the Foreign API: the
+# lists in tools/drill-java25.txt, "@class" a test class, "module" every test of a module). It starts once 20 GB are free (the memory budget), not after both heavy
+# lanes, at lower priority with two test forks. Docker is hidden from it: the container tests ran on 21 and test the brokers, not the JVM.
+java25_tests() {   # Maven's -Dtest list
+  local line m out=()
+  while read -r line; do
+    line=${line%%#*}; line=${line//[[:space:]]/}; [[ -n "$line" ]] || continue
+    if [[ $line == @* ]]; then out+=("${line#@}"); else
+      [[ -d "$line/src/test/java" ]] || { echo "drill: tools/drill-java25.txt names no module $line" >&2; return 1; }
+      while read -r m; do out+=("$(basename "$m" .java)"); done < <(find "$line/src/test/java" -name '*Test.java')
+    fi
+  done < tools/drill-java25.txt
+  (( ${#out[@]} > 5 )) || { echo "drill: the Java 25 lane names only ${#out[@]} tests" >&2; return 1; }
+  local IFS=,; echo "${out[*]}"
+}
 java25_verify() {
-  after 5400 "$LOGS/console-browser.secs" "$LOGS/java21.secs"   # never beside both heavy lanes: three JVM-heavy jobs at once ran a 61 GB machine short of memory
+  python3 "$PLAN" wait-memory --gb 20 --limit 5400
   echo "drill: java25 starts at $(date +%T)"
+  local tests; tests=$(java25_tests)
   export DOCKER_HOST=unix:///nonexistent/drill-java25 TESTCONTAINERS_RYUK_DISABLED=true
-  copy_verify java25 "$JAVA25_HOME" 19783,19784,19785 none -Ddrishti.test.forks=2
+  copy_verify java25 "$JAVA25_HOME" 19783,19784,19785 none -Ddrishti.test.forks=2 -Dtest="$tests" -Dsurefire.failIfNoSpecifiedTests=false
 }
 
 # ---- clean-up and the working tree's checks ----------------------------------------------------------------------------------
@@ -420,6 +450,7 @@ java25_verify() {
 DRILL_MARK=$(mktemp "${TMPDIR:-/tmp}/drill-mark.XXXXXX")
 drill_cleanup() {
   stop_jobs 2>/dev/null || true
+  python3 tools/drillkit/lake_cache.py prune >/dev/null 2>&1 || true
   python3 "$PLAN" merge --durations "$DURATIONS" "$LOGS"/timings-*.json 2>/dev/null || true
   local tmp="${TMPDIR:-/tmp}"
   # || true: a folder already gone (or none made) is not a failure; under set -e it would turn a green drill's exit into 1
@@ -450,12 +481,12 @@ config_unchanged() {
 
 # The same for the data folder: no test writes to it (the sutra command line, too, writes to a scratch folder of its own). Every
 # file under it (name, time, size) is listed before the tests; one added or changed during the run fails the drill with its name.
-# Not compared: the drill's own logs (drill/), Maven's temp folder (tmp/maven), the drill's temporary folder (tmp/drill), the committed test data (testdata/) and the
+# Not compared: the drill's own logs (drill/), Maven's temp folder (tmp/maven), the drill's temporary folder (tmp/drill), the cached demo lakes (tmp/lake-cache), the committed test data (testdata/) and the
 # local cluster's other nodes (stack/). A server running with this folder as its working folder (your own stack) writes here
 # while the tests run, so then the changes are listed as a warning, not failed: the drill cannot tell its files from the tests'.
 data_files() {
   [[ -d "$DATA" ]] || return 0
-  find "$DATA" \( -path "$DATA/drill" -o -path "$DATA/tmp/maven" -o -path "$DATA/tmp/drill" -o -path "$DRILL_TMP" -o -path "$DATA/testdata" -o -path "$DATA/stack" \) -prune \
+  find "$DATA" \( -path "$DATA/drill" -o -path "$DATA/tmp/maven" -o -path "$DATA/tmp/drill" -o -path "$DATA/tmp/lake-cache" -o -path "$DRILL_TMP" -o -path "$DATA/testdata" -o -path "$DATA/stack" \) -prune \
     -o -type f -printf '%P\t%T@\t%s\n' 2>/dev/null | sort
 }
 servers_here() {   # java processes whose working folder is this repository (a server started from the IDE or by drishti-stack)
@@ -520,6 +551,7 @@ else
     --exclude "${GATE_CONSOLE[@]}"
   mv "$LOGS/lanes/browser.txt" "$LOGS/lane-browser.txt"; mv "$LOGS/lanes/other.txt" "$LOGS/lane-other.txt"; rmdir "$LOGS/lanes"
   stage2=(console-browser console-other tools-a tools-b java21 java21-docker)
+  : > "$LOGS/pageloads.jsonl"                   # each page's load time in the lanes' browser tests (tools/drillkit/pageloads.py)
   start_job console-browser console_lane browser "$browser_workers" "${DRILL_BROWSER_RERUNS:-1}"
   start_job console-other niced 5 console_lane other "$other_workers" 2
   start_job tools-a niced 5 tools_lane_a
@@ -529,6 +561,8 @@ else
   if [[ -x "$JAVA25_HOME/bin/java" ]]; then start_job java25 niced 10 java25_verify; stage2+=(java25)
   else echo "drill: no JDK 25 at $JAVA25_HOME (set JAVA25_HOME): the forward-compatibility run is skipped" >&2; fi
   rc=0; watch_jobs "${stage2[@]}" || rc=1
+  # p95 and median per page, slowest first; the latest into BENCHMARK.md 18.2 (reported, never failed: the tests' budget is 10 s)
+  python3 tools/drillkit/pageloads.py "$LOGS/pageloads.jsonl" --top 25 --write docs/admin/BENCHMARK.md || true
   config_unchanged || rc=1; data_unchanged || rc=1
   (( rc == 0 )) || { echo "drill: FAILED (logs in $LOGS/)" >&2; exit 1; }
   stage_done "console lanes | tools (two lanes) | Java 21 | Java 25" $t

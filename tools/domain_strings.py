@@ -22,7 +22,8 @@ asks for the list to be lowered (``--write`` rewrites it from the tree).
 
 The core is every source file outside the domain modules: Java under drishti-*/src/main (but drishti-banking and drishti-compute-banking),
 the console's core/, routes/, web/static/js, web/static/css and web/templates (not drishti-console/plugins). Comments count: a core
-file that explains a banking screen names it."""
+file that explains a banking screen names it. A line that only looks like banking (the statistics function var, Excel's EXP) carries the
+comment ``domain-strings: generic`` and is not counted."""
 from __future__ import annotations
 
 import re
@@ -46,6 +47,8 @@ NAMES = re.compile(
     | com\.ash\.drishti\.banking\b                                                                 # its packages
     """)
 
+#: a line that is not about banking, marked so: the VAR of statistics, Excel's EXP (name the reason after the mark)
+MARK = "domain-strings: generic"
 DOMAIN_MODULES = ("drishti-banking", "drishti-compute-banking")
 
 
@@ -64,7 +67,7 @@ def core_files() -> list[Path]:
 def counts() -> dict[str, int]:
     out = {}
     for p in core_files():
-        n = len(NAMES.findall(p.read_text(encoding="utf-8", errors="ignore")))
+        n = sum(len(NAMES.findall(l)) for l in p.read_text(encoding="utf-8", errors="ignore").splitlines() if MARK not in l)
         if n:
             out[str(p.relative_to(ROOT))] = n
     return out

@@ -16,11 +16,11 @@
 package com.ash.drishti.banking.var;
 
 import com.ash.drishti.api.AsOf;
-import com.ash.drishti.bicompute.core.PivotView;
+import com.ash.drishti.kernel.api.pivot.PivotView;
 import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.server.explain.NumberExplainService;
 import com.ash.drishti.server.pivot.PivotViews;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.LinkedHashMap;
 import java.util.Map;

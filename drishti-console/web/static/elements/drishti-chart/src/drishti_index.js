@@ -36,11 +36,13 @@ export { equalEarth, albers, plateCarree, projectGeometry, bounds, coreExtent, c
   createGeoLoader, holdAntimeridian, fitView } from './drishti_chart-geo.js';
 export { mapMetrics, placeValues, mapScale, ranking, buildMap, registerMapKind } from './drishti_chart-map.js';
 export { colourTone, d3Format, fromVegaLite, vegaLiteAlternative, vegaLiteRefusal, vegaLiteIn } from './drishti_chart-vega.js';
-export { valueText, tooltipElement, dataTable, legendElement, markSelection, addZoom, dragBrush, svgOf } from './drishti_chart-parts.js';
+export { valueText, tooltipElement, dataTable, legendElement, markSelection, addZoom, dragBrush, rangeBrush, svgOf } from './drishti_chart-parts.js';
 export { MAP_MODES, geoLoader, MapView } from './drishti_map-view.js';
 export { Studio } from './drishti_chart-studio.js';
 export { CHART_EVENTS, CHART_MODES, Chart } from './drishti_chart-view.js';
 export { ChartIO } from './drishti_chart-io.js';
+export { buildCalendar } from './drishti_chart-calendar.js';
+import { buildCalendar } from './drishti_chart-calendar.js';
 export { SELECTION_EVENT, linkGrid, publishSelection } from '../../drishti-core/src/drishti_index.js';
 export { PANEL_KINDS, escapeTip, panelCompact, panelLineCompact, panelTokens, labelFit, panelOption } from './drishti_chart-panels.js';
 export { drawMap, PanelCharts } from './drishti_chart-panel-draw.js';
@@ -49,6 +51,7 @@ export { CHART_ELEMENT, defineChartElement, chartIn } from './drishti_chart-elem
 registerAxisKinds();
 registerOtherKinds();
 registerMapKind();
+registerKind('calendar', { build: buildCalendar, label: 'calendar heatmap', cartesian: false });
 registerKind('layer', { label: 'layers', cartesian: true, build: (spec, rows, env) => buildLayers(spec, rows, env, kindOf, (l) => rowsOf(l.data)) });
 
 /**

@@ -15,9 +15,12 @@
  */
 package com.ash.drishti.bicompute.core;
 
-import com.ash.drishti.bicompute.core.AggregationPlan.FunctionCall;
-import com.ash.drishti.bicompute.spi.Kind;
-import com.ash.drishti.bicompute.spi.PivotProvider;
+import com.ash.drishti.kernel.api.pivot.CellKey;
+import com.ash.drishti.kernel.api.pivot.Dim;
+import com.ash.drishti.kernel.api.pivot.PivotView;
+import com.ash.drishti.kernel.api.pivot.AggregationPlan.FunctionCall;
+import com.ash.drishti.kernel.api.pivot.Kind;
+import com.ash.drishti.kernel.api.pivot.PivotProvider;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -236,7 +239,8 @@ final class PivotAnswer {
             return n.othersCount < 0 ? "Others (≈: the rest after a top N chosen by a summary)"
                     : "Others (" + n.othersCount + " of " + n.parent.levelMembers + ")";
         }
-        return n.value;
+        String name = c.memberName(n.dim(), n.value);
+        return name == null ? n.value : name;
     }
 
     private static Map<String, Object> entry(PivotCore.Computation c, Axis a, Axis.Node n, String kind) {
@@ -247,6 +251,10 @@ final class PivotAnswer {
         m.put("label", n.path.isEmpty() ? "Grand total" : "total".equals(kind) ? label(c, n) + " total" : label(c, n));
         m.put("dim", n.dim());
         m.put("value", n.others ? null : n.value);
+        String name = n.others || n.path.isEmpty() ? null : c.memberName(n.dim(), n.value);
+        if (name != null) {
+            m.put("name", name);                                 // the entity's name; label shows it, value and path keep the id
+        }
         m.put("path", n.pairs());
         m.put("coords", n.coords());
         // + opens the next level of the axis; a member on the last level is a leaf and has no + (another field is Expand by…, E)

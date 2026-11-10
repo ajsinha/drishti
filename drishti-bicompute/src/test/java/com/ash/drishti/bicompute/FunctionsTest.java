@@ -20,12 +20,12 @@ import static org.assertj.core.data.Offset.offset;
 
 import com.ash.drishti.bicompute.cache.StateCache;
 import com.ash.drishti.bicompute.core.PivotCore;
-import com.ash.drishti.bicompute.core.PivotView;
+import com.ash.drishti.kernel.api.pivot.PivotView;
 import com.ash.drishti.bicompute.functions.Functions;
 import com.ash.drishti.bicompute.harness.FunctionHarness;
-import com.ash.drishti.bicompute.spi.AggFunction;
-import com.ash.drishti.bicompute.spi.Batch;
-import com.ash.drishti.bicompute.spi.Viewer;
+import com.ash.drishti.kernel.api.pivot.AggFunction;
+import com.ash.drishti.kernel.api.pivot.Batch;
+import com.ash.drishti.kernel.api.pivot.Viewer;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -100,7 +100,7 @@ class FunctionsTest {
         AggFunction<Object> sum = Functions.builtIn("sum", List.of("x"), List.of()).orElseThrow();
         AggFunction<Object> wrong = new AggFunction<>() {
             public String name() { return "bad_sum"; }
-            public com.ash.drishti.bicompute.spi.Kind kind() { return sum.kind(); }
+            public com.ash.drishti.kernel.api.pivot.Kind kind() { return sum.kind(); }
             public int inputs() { return 1; }
             public Object start() { return sum.start(); }
             public Object add(Object s, Batch b) { return sum.add(s, b); }

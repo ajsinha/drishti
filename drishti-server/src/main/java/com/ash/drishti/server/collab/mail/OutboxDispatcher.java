@@ -22,7 +22,7 @@ import com.ash.drishti.identity.collab.CollabProperties;
 import com.ash.drishti.identity.collab.OutboxItem;
 import com.ash.drishti.identity.collab.OutboxStore;
 import com.ash.drishti.server.collab.Principals;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Clock;

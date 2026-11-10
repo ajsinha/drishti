@@ -16,21 +16,21 @@
 package com.ash.drishti.server.pivot;
 
 import com.ash.drishti.bicompute.core.PivotCore;
-import com.ash.drishti.bicompute.core.PivotView;
+import com.ash.drishti.kernel.api.pivot.PivotView;
 import com.ash.drishti.bicompute.custom.CustomFunctions;
 import com.ash.drishti.bicompute.custom.FunctionDef;
 import com.ash.drishti.bicompute.harness.FunctionCheck;
 import com.ash.drishti.bicompute.harness.Playground;
-import com.ash.drishti.bicompute.spi.Batch;
-import com.ash.drishti.bicompute.spi.Viewer;
+import com.ash.drishti.kernel.api.pivot.Batch;
+import com.ash.drishti.kernel.api.pivot.Viewer;
 import com.ash.drishti.bicompute.whatif.Overlay;
 import com.ash.drishti.bicompute.whatif.WhatIf;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.identity.AuditLog;
-import com.ash.drishti.server.explain.ExplainRequest;
+import com.ash.drishti.kernel.api.explain.ExplainRequest;
 import com.ash.drishti.server.explain.NumberExplainService;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;

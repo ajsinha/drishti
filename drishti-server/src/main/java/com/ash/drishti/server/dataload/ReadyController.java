@@ -24,7 +24,7 @@ import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.net.transport.PeerHttp;
 import com.ash.drishti.server.engines.EngineGateFilter;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

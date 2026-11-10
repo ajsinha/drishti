@@ -17,7 +17,7 @@ package com.ash.drishti.server.bi.mq;
 
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.server.bi.engine.GenerationBus;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;

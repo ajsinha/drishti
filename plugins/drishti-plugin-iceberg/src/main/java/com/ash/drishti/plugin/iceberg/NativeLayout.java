@@ -40,7 +40,7 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * {@link IcebergLayout} written by drishti-iceberg, the native engine (no Hadoop): the same schema (field ids 1
+ * {@link IcebergLayout} written through Apache Iceberg with no Hadoop: the same schema (field ids 1
  * {@code id}, 2 {@code doc}, 3 {@code business_date}, then the promoted columns), the same identity partition on
  * {@code business_date}, sort order, table properties and files of {@code file-rows} rows, so tables move between the
  * engines unchanged. Stateless.
@@ -147,7 +147,7 @@ final class NativeLayout {
                 // table another engine re-partitioned is refused rather than given files whose other values read as null
                 throw new IllegalStateException("not in the layout: the partition spec " + spec.specId() + " has the field '" + f.name() + "' ("
                         + f.transform() + ") beside the identity partition on " + IcebergLayout.DATE + "; this writer writes only tables partitioned by "
-                        + IcebergLayout.DATE + " alone (write this table with engine: library, or restore its spec)");
+                        + IcebergLayout.DATE + " alone (restore its spec)");
             }
         }
         if (found < 0) {

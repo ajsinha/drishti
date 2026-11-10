@@ -25,7 +25,7 @@ import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.DatasetParser;
 import com.ash.drishti.server.bi.engine.QueryRequest;
 import com.ash.drishti.server.bi.engine.QueryService;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
@@ -494,6 +494,13 @@ public final class BiReportService {
             out.put("highlight", datasets.json(datasets.ask(p, pre.dsItem(), pre.built().highlight(), false)));
         } else {
             out.put("highlight", null);
+        }
+        if (!pre.built().levels().isEmpty()) {
+            List<Map<String, Object>> levels = new ArrayList<>();
+            for (var lq : pre.built().levels()) {
+                levels.add(new LinkedHashMap<>(datasets.json(shortNames(pre, datasets.asked(p, pre.dsItem(), lq, false).result()))));
+            }
+            out.put("levels", levels);
         }
         out.put("visual", pre.visual().id());
         if (pre.resolved()) {

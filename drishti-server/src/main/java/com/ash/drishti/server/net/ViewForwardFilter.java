@@ -18,7 +18,7 @@ package com.ash.drishti.server.net;
 import com.ash.drishti.identity.AccessLog;
 import com.ash.drishti.net.security.NetHeaders;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.ash.drishti.server.security.RequestPaths;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

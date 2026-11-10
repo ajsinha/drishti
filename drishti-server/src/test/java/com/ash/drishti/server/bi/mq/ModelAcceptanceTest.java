@@ -977,7 +977,7 @@ class ModelAcceptanceTest {
         JsonNode state = json.readTree("{\"dates\":{\"from\":\"" + DAY + "\",\"to\":\"" + DAY + "\"}}");
         Map<String, String> profile = new TreeMap<>();
         for (String[] who : new String[][] {{"rita", "bi-risk"}, {"rob", "bi-risk"}, {"ann", "bi-analyst"}, {"hana", "desk-head"}}) {
-            var shared = reportService.accessProfile(new com.ash.drishti.server.security.Principal(who[0], List.of(who[1])), REPORT, "main", "by-desk", state);
+            var shared = reportService.accessProfile(new com.ash.drishti.kernel.api.security.Principal(who[0], List.of(who[1])), REPORT, "main", "by-desk", state);
             assertThat(shared).as(who[0]).isPresent();
             profile.put(who[0], shared.get().signature());
         }
@@ -985,7 +985,7 @@ class ModelAcceptanceTest {
         assertThat(profile.get("ann")).isNotEqualTo(profile.get("rita"));
         assertThat(profile.get("hana")).isNotEqualTo(profile.get("rita")).isNotEqualTo(profile.get("ann"));
         JsonNode mine = json.readTree("{\"dates\":{\"from\":\"" + DAY + "\",\"to\":\"" + DAY + "\"},\"selections\":[{\"visual\":\"total\",\"field\":\"trades.desk\",\"values\":[\"@me\"]}]}");
-        assertThat(reportService.accessProfile(new com.ash.drishti.server.security.Principal("rita", List.of("bi-risk")), REPORT, "main", "by-desk", mine)).isEmpty();
+        assertThat(reportService.accessProfile(new com.ash.drishti.kernel.api.security.Principal("rita", List.of("bi-risk")), REPORT, "main", "by-desk", mine)).isEmpty();
     }
 
     /** ARCHITECTURE §28 › BI runs, 14.1: a rerun as of the same resolved date (the default) or the latest held now, and fresh (computed anew, never reused); its owner only. */

@@ -20,13 +20,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.ash.drishti.bicompute.cache.StateCache;
 import com.ash.drishti.bicompute.core.PivotCore;
-import com.ash.drishti.bicompute.core.PivotView;
+import com.ash.drishti.kernel.api.pivot.PivotView;
 import com.ash.drishti.bicompute.core.ScaleOptions;
 import com.ash.drishti.bicompute.functions.Hll;
 import com.ash.drishti.bicompute.functions.Kll;
 import com.ash.drishti.bicompute.functions.SpaceSaving;
 import com.ash.drishti.bicompute.scale.ScalePolicy;
-import com.ash.drishti.bicompute.spi.Viewer;
+import com.ash.drishti.kernel.api.pivot.Viewer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;

@@ -18,7 +18,7 @@ package com.ash.drishti.server.bi.mq;
 import com.ash.drishti.server.bi.engine.ArrowIpcWriter;
 import com.ash.drishti.server.bi.engine.QueryService;
 import com.ash.drishti.server.bi.layer.DatasetDef;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;

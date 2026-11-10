@@ -15,20 +15,20 @@
  */
 package com.ash.drishti.server.pivot.functions;
 
-import com.ash.drishti.bicompute.core.AggregationPlan.FunctionCall;
+import com.ash.drishti.kernel.api.pivot.AggregationPlan.FunctionCall;
 import com.ash.drishti.bicompute.core.PivotCore;
 import com.ash.drishti.bicompute.custom.CustomFunctions;
 import com.ash.drishti.bicompute.custom.JavaPlugins;
 import com.ash.drishti.bicompute.custom.SqlMacroFunction;
-import com.ash.drishti.bicompute.spi.PivotProvider;
-import com.ash.drishti.bicompute.spi.Viewer;
+import com.ash.drishti.kernel.api.pivot.PivotProvider;
+import com.ash.drishti.kernel.api.pivot.Viewer;
 import com.ash.drishti.bicompute.sql.DuckDbExecutor;
 import com.ash.drishti.bicompute.sql.TabularProvider;
 import com.ash.drishti.compute.worker.Sdk;
 import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.identity.content.ContentStore;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;

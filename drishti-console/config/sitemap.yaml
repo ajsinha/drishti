@@ -61,66 +61,10 @@ menus:
           - { id: monitors, href: /m, icon: list-columns, label: Monitors, desc: Live watchlists of entities, match: /m, requires: [feature:monitors] }
           - { id: alerts, href: /alerts, icon: bell, label: Alerts, desc: "Alerts raised for you (acknowledge, snooze, resolve) and your alert rules", match: /alerts, requires: [feature:alerts] }
           - { id: approvals, href: /approvals, icon: patch-check, label: Approvals, desc: "Everything waiting for your four eyes, of every kind, due soon on top", match: /approvals }
-  # The Engines menu (2.9.11.a, mock-up engines-menu/A): one top menu for every compute engine, a column per engine (engine: its id in
-  # config/engines.yaml) with its command word, drawn only for a person whose role opens at least one engine and only with the engines
-  # running in the cluster (the server's about answer). A column's opens: who opens the engine, any of: role:<name> (the person holds the
-  # role) or pack:<name> (a pack assigned to the person); an administrator opens every engine; no opens: everyone. The same rule drops the
-  # engine's command words (config/engines.yaml words:) from the type-ahead and refuses them on the command line, in words (core/menus.py
-  # engine_refused); Help is not gated by it (documentation is open to anyone who can open Help). The search box shows
-  # when more than search-over engines run; an administrator also sees Admin -> Engines (admin-link) and the engines not running.
-  # An item's cmd: is the command it runs (its link: /go?q=<cmd> <GO>, unless it has an href) and fill: the words it puts in the command
-  # line for the person to finish; either is shown beside its label. cmd:<WORD> in requires: the edition shows that command.
-  - id: engines
-    label: Engines
-    icon: cpu
-    engines: true
-    search-over: 4
-    admin-link: { href: /admin/engines, label: "Admin → Engines", requires: [admin, admin-page:engines] }
-    columns:
-      - engine: var
-        domain: banking
-        title: VaR
-        word: VAR
-        opens: [role:market-risk, pack:market-risk]
-        items:
-          - { id: var-explorer, href: /var, cmd: VAR BANK, icon: shield-check, label: VaR explorer, desc: "The bank's VaR, then any desk, book or set of trades", match: /var, requires: [word:VAR] }
-          - { id: var-explain, cmd: VAR BANK EXPLAIN, icon: arrow-left-right, label: Why it moved, desc: "Day on day: the trades, factors and scenarios that moved it", requires: [word:VAR] }
-          - { id: play-var, cmd: PLAY VAR, icon: calculator, label: VaR Playground, desc: "Every figure worked in a grid and a workbook of formulas", match: /play, requires: [word:VAR, word:PLAY, route:/play] }
-          - { id: smat, cmd: SMAT, href: /smat, icon: grid-3x3, label: Scenario matrix, desc: "Each scenario's P&L of a trade, position or scope", match: /smat, requires: [word:SMAT] }
-          - { id: var-reports, href: /var/reports, icon: bank, label: Regulatory reports, desc: "Canada and the US, to the cell, signed runs", match: /var/reports, requires: [word:VAR, route:/var/reports] }
-          - { id: backtesting, cmd: VAR BANK BACKTEST, icon: activity, label: Backtesting, desc: "VaR against the P&L, with the traffic light", match: /var/backtesting, requires: [word:VAR, route:/var/backtesting] }
-          - { id: stress-window, cmd: SWIN BANK, icon: calendar-range, label: Stress window, desc: "The most stressful year of history for stressed VaR", match: /var/stress-window, requires: [word:VAR] }
-          - { id: var-results, cmd: VRES, icon: table, label: VaR results, desc: "The stored results of every hierarchy node", requires: [cmd:VRES] }
-          - { id: mcube, cmd: MCUBE, href: "/pivot?preset=mr", icon: grid-3x3-gap, label: Market-risk cube, desc: "The Pivot's market-risk preset: desks by risk class with the right totals, the tail, why it moved, the DV01 ladder and a what-if · also MCUBE <GO>", requires: [word:VAR, word:PIVOT, word:MCUBE] }
-          - { id: var-official, cmd: VOFF, icon: patch-check, label: Official records, desc: "The signed-off VaR of each business date", requires: [cmd:VOFF] }
-          - { id: var-limits, cmd: VLIM, icon: diagram-3, label: Hierarchy limits, desc: "The VaR limits of every hierarchy's nodes (the hierarchies are built from the trades' columns)", requires: [cmd:VLIM] }
-      - engine: exposure
-        domain: banking
-        title: Exposure
-        word: EXP
-        opens: [role:credit-risk, pack:counterparty-risk]
-        items:
-          - { id: exp-explorer, href: /exposure, cmd: EXP, icon: graph-up, label: Exposure explorer, desc: "EE, PFE and EPE of the bank, then any counterparty", match: /exposure, requires: [word:EXP] }
-          - { id: exp-cpty, fill: EXP CPTY, icon: building, label: A counterparty, desc: "Type the counterparty's id after the words", requires: [word:EXP] }
-          - { id: exp-nset, fill: EXP NSET, icon: diagram-2, label: A netting set, desc: "Type the netting set's id after the words", requires: [word:EXP] }
-      - engine: frtb-sa
-        domain: banking
-        title: FRTB-SA
-        word: FRSA
-        opens: [role:market-risk, pack:market-risk]
-        items:
-          - { id: frsa, cmd: FRSA BANK, icon: bank2, label: FRTB-SA capital, desc: "Standardised market-risk capital for any scope", match: /frtb, requires: [word:VAR, route:/frtb] }
-          - { id: play-frtb, cmd: PLAY FRTB EXAMPLE, icon: calculator, label: FRTB-SA Playground, desc: "Every method choice a switch, compared", match: /play/frtb, requires: [word:VAR, word:PLAY, route:/play/frtb] }
-      - engine: simm
-        domain: banking
-        title: SIMM
-        word: SIMM
-        opens: [role:credit-risk, role:market-risk, pack:counterparty-risk, pack:market-risk]
-        items:
-          - { id: simm, cmd: SIMM, icon: shield-lock, label: Netting sets, desc: "Initial margin per netting set, collect and post", match: /simm, requires: [word:SIMM, route:/simm] }
-          - { id: play-simm, cmd: PLAY SIMM EXAMPLE, icon: calculator, label: SIMM Playground, desc: "Every SIMM figure worked in a grid and a workbook of formulas", match: /play/simm, requires: [word:PLAY, route:/play/simm] }
   # The subject menus of the lenses (docs/architecture/LENSES.md, the lens menus): drawn only where an edition (or a lens) names them in its
-  # menus.top. An item's cmd: and fill: as in the Engines menu above.
+  # menus.top. An item's cmd: is the command it runs (its link: /go?q=<cmd> <GO>, unless it has an href)
+  # and fill: the words it puts in the command line for the person to finish; either is shown beside its label. requires: engine:<id> draws
+  # an engine's page only when the engine runs in the cluster and the person's role opens it (its catalogue entry's opens:).
   - id: blotter
     domain: banking
     label: Blotter
@@ -150,6 +94,7 @@ menus:
     label: Risk
     icon: shield-check
     subject: true
+    without-lens: true                    # the home of the engines' pages: in the full product's bar too
     columns:
       - title: Risk on my book
         items:
@@ -160,6 +105,29 @@ menus:
           - { id: dpnl, cmd: DPNL, icon: cash-coin, label: Desk P&L, desc: "Each desk's actual and hypothetical P&L, day by day", requires: [cmd:DPNL] }
           - { id: pnl, cmd: PNL, icon: bar-chart-steps, label: P&L explain, desc: "A day's P&L by risk factor, new trades and residual", requires: [cmd:PNL] }
           - { id: sens, cmd: SENS, icon: speedometer, label: Sensitivities, desc: "Delta, vega and curvature of each position by risk factor", requires: [cmd:SENS] }
+      - title: VaR
+        items:
+          - { id: var-explorer, href: /var, cmd: VAR BANK, icon: shield-check, label: VaR explorer, desc: "The bank's VaR, then any desk, book or set of trades", match: /var, requires: [engine:var, word:VAR] }
+          - { id: var-explain, cmd: VAR BANK EXPLAIN, icon: arrow-left-right, label: Why it moved, desc: "Day on day: the trades, factors and scenarios that moved it", requires: [engine:var, word:VAR] }
+          - { id: play-var, cmd: PLAY VAR, icon: calculator, label: VaR Playground, desc: "Every figure worked in a grid and a workbook of formulas", match: /play, requires: [engine:var, word:VAR, word:PLAY, route:/play] }
+          - { id: smat, cmd: SMAT, href: /smat, icon: grid-3x3, label: Scenario matrix, desc: "Each scenario's P&L of a trade, position or scope", match: /smat, requires: [engine:var, word:SMAT] }
+          - { id: var-reports, cmd: VAR REPORTS, href: /var/reports, icon: bank, label: Regulatory reports, desc: "Canada and the US, to the cell, signed runs", match: /var/reports, requires: [engine:var, word:VAR, route:/var/reports] }
+          - { id: backtesting, cmd: VAR BANK BACKTEST, icon: activity, label: Backtesting, desc: "VaR against the P&L, with the traffic light", match: /var/backtesting, requires: [engine:var, word:VAR, route:/var/backtesting] }
+          - { id: stress-window, cmd: SWIN BANK, icon: calendar-range, label: Stress window, desc: "The most stressful year of history for stressed VaR", match: /var/stress-window, requires: [engine:var, word:VAR] }
+          - { id: var-results, cmd: VRES, icon: table, label: VaR results, desc: "The stored results of every hierarchy node", requires: [engine:var, cmd:VRES] }
+          - { id: mcube, cmd: MCUBE, href: "/pivot?preset=mr", icon: grid-3x3-gap, label: Market-risk cube, desc: "The Pivot's market-risk preset: desks by risk class with the right totals, the tail, why it moved, the DV01 ladder and a what-if · also MCUBE <GO>", requires: [engine:var, word:VAR, word:PIVOT, word:MCUBE] }
+          - { id: var-official, cmd: VOFF, icon: patch-check, label: Official records, desc: "The signed-off VaR of each business date", requires: [engine:var, cmd:VOFF] }
+      - title: Exposure
+        items:
+          - { id: exp-explorer, href: /exposure, cmd: EXP, icon: graph-up, label: Exposure explorer, desc: "EE, PFE and EPE of the bank, then any counterparty", match: /exposure, requires: [engine:exposure, word:EXP] }
+          - { id: exp-cpty, fill: EXP CPTY, icon: building, label: A counterparty, desc: "Type the counterparty's id after the words", requires: [engine:exposure, word:EXP] }
+          - { id: exp-nset, fill: EXP NSET, icon: diagram-2, label: A netting set, desc: "Type the netting set's id after the words", requires: [engine:exposure, word:EXP] }
+      - title: Capital and margin
+        items:
+          - { id: frsa, cmd: FRSA BANK, icon: bank2, label: FRTB-SA capital, desc: "Standardised market-risk capital for any scope", match: /frtb, requires: [engine:frtb-sa, word:VAR, route:/frtb] }
+          - { id: play-frtb, cmd: PLAY FRTB EXAMPLE, icon: calculator, label: FRTB-SA Playground, desc: "Every method choice a switch, compared", match: /play/frtb, requires: [engine:frtb-sa, word:VAR, word:PLAY, route:/play/frtb] }
+          - { id: simm, cmd: SIMM, icon: shield-lock, label: SIMM by netting set, desc: "Initial margin per netting set, collect and post", match: /simm, requires: [engine:simm, word:SIMM, route:/simm] }
+          - { id: play-simm, cmd: PLAY SIMM EXAMPLE, icon: calculator, label: SIMM Playground, desc: "Every SIMM figure worked in a grid and a workbook of formulas", match: /play/simm, requires: [engine:simm, word:PLAY, route:/play/simm] }
   - id: counterparties
     domain: banking
     label: Counterparties
@@ -403,6 +371,7 @@ in-context:
   /admin/connectors/template-updates: "Connectors"
   /admin/lakes/table: "Lakes"
   /admin/loads/inbox: "Data loads"
+  /admin/loads/upload: "Data loads"
   /admin/loads/feeds: "Data loads"
   /alerts/all: "Alerts"
   /alerts/new: "Alerts"
@@ -423,7 +392,7 @@ in-context:
   /explain: "Explain › Open as a page, on any explained number (the one Explain's drawer)"
 
 # Addresses that are not pages: data for a page's script, redirects of old addresses, sign-in, health and files.
-not-pages: [/about/competitive, /admin/commands, /asof, /auth/oidc/callback, /auth/oidc/login, /bi, /bi/explore, /bi/model-api/consumers,
+not-pages: [/about/competitive, /admin, /admin/commands, /asof, /auth/oidc/callback, /auth/oidc/login, /bi, /bi/explore, /bi/model-api/consumers,
             /bi/model-api/dataset, /bi/model-api/datasets, /bi/model-api/fields, /bi/model-api/roles, /bi/notebook/status, /bi/python/status,
             /bi/transform/snippets, /build/binding, /build/reviews, /build/shape, /build/tables/workspaces, /datamap/data, /designer,
             /dist/status, /favicon.ico, /go, /healthz, /healthz/backend, /lens/leave, /login, /logout, /manifest.webmanifest, /pyconsole,

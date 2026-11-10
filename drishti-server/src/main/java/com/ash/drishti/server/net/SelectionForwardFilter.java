@@ -17,7 +17,7 @@ package com.ash.drishti.server.net;
 
 import com.ash.drishti.net.transport.PeerHttp;
 import com.ash.drishti.server.api.IdTokens;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.ash.drishti.server.security.RequestPaths;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

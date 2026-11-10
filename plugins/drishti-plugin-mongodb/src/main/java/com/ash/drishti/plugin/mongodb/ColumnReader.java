@@ -191,7 +191,7 @@ final class ColumnReader {
                 case DOUBLE -> range.number(c, r.readDouble());
                 case INT32 -> range.number(c, r.readInt32());
                 case INT64 -> range.number(c, r.readInt64());
-                case DECIMAL128 -> range.number(c, r.readDecimal128().bigDecimalValue().doubleValue());
+                case DECIMAL128 -> range.number(c, r.readDecimal128().doubleValue());
                 case STRING -> range.text(c, r.readString());
                 case BOOLEAN -> range.text(c, String.valueOf(r.readBoolean()));
                 default -> r.skipValue();                              // null, or a type a column cannot hold

@@ -23,7 +23,7 @@ import com.ash.drishti.identity.content.ContentDocs;
 import com.ash.drishti.server.dist.ExportDoc;
 import com.ash.drishti.server.dist.XlsxWriter;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

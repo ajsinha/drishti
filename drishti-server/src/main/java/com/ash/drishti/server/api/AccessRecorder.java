@@ -16,7 +16,7 @@
 package com.ash.drishti.server.api;
 
 import com.ash.drishti.identity.AccessLog;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.time.Instant;

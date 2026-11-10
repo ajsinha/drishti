@@ -20,18 +20,27 @@ set -euo pipefail
 
 usage() {
   cat <<'EOF'
-usage: bin/status.sh [--data-dir DIR ...] [--env-file FILE]
+usage: bin/status.sh [--data-dir DIR ...] [--env-file FILE] [--cluster FILE]
 
 For each pid file in <data>/run (server.pid, server-<node>.pid, console.pid): the process id, whether it runs, its port, whether
 its health URL answers, and the address other machines open.
 
   --data-dir DIR      the data folder (repeatable; default DRISHTI_DATA_DIR, else <drishti>/data)
   --env-file FILE     read DRISHTI_DATA_DIR from this file
+  --cluster FILE      a cluster file: also the members each node sees and the console's servers
   -h, --help          this text
 
 Exit codes: 0 every process found runs and answers (or none was started); 1 one is not running or not answering; 2 a wrong option.
 EOF
 }
+
+for a in "$@"; do
+  if [ "$a" = --cluster ]; then
+    PY="$(python_for_tools)"
+    [ -n "$PY" ] || die "no Python found for --cluster" 1
+    exec "$PY" "$DRISHTI_ROOT/bin/lib/cluster.py" status "$@"
+  fi
+done
 
 DIRS=("") ENV_FILE="" GIVEN=false
 while [ $# -gt 0 ]; do

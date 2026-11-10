@@ -29,6 +29,7 @@ import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.api.SourcePlugin;
 import com.ash.drishti.api.pool.PoolStats;
 import com.ash.drishti.api.tls.TlsMaterial;
+import com.ash.drishti.common.ReferenceScanner;
 import com.datastax.oss.driver.api.core.cql.Row;
 import com.datastax.oss.driver.api.core.metadata.schema.TableMetadata;
 import com.github.benmanes.caffeine.cache.Cache;

@@ -59,7 +59,9 @@
             // the lens (2.9.7): "" is the default (1-day; the setting's 10-day method; the configured confidences)
             h: root.dataset.h || "", m: root.dataset.m || "", q: root.dataset.q || "", esq: root.dataset.esq || "", lensStatus: null,
             // Normal or Stressed (VAR_GUIDE.md section 18.8): "" the date's own scenarios, "stressed" its stress scenario set (in USD)
-            set: root.dataset.set === "stressed" ? "stressed" : "" };
+            set: root.dataset.set === "stressed" ? "stressed" : "",
+            // the matured-items switch (VAR_GUIDE.md, "Matured items"): off whenever the page opens, never kept or put in the link
+            matured: false };
   if (S.h !== "10d") { S.h = ""; S.m = ""; }
   var B = window.Drishti.VarBasket || null;
   var cache = new Map();
@@ -104,10 +106,13 @@
   /** The Parametric toggle on (pm=1; the PVAR command): the parametric blocks come with the answers; off, they are asked away
    *  (parametric=false: lean answers, historical only). */
   var PM = root.dataset.pm === "1", PARAMETRIC_PATHS = { scope: 1, "scope/path": 1, "scope/contributions": 1, tree: 1 };
+  /** The answers the matured-items switch changes: the headline, the P&L path (and its exports) and the tree. */
+  var MATURED_PATHS = { scope: 1, "scope/path": 1, tree: 1 };
   function api(path, q, fresh) {
     var p = new URLSearchParams();
     Object.keys(q || {}).forEach(function (k) { if (q[k] !== undefined && q[k] !== null && q[k] !== "") p.set(k, q[k]); });
     if (!PM && PARAMETRIC_PATHS[path] && !p.has("parametric")) p.set("parametric", "false");
+    if (S.matured && MATURED_PATHS[path] && !p.has("matured")) p.set("matured", "true");
     if (LENS_PATHS[path]) { var lp = lensParams(); Object.keys(lp).forEach(function (k) { if (!p.has(k)) p.set(k, lp[k]); }); }
     if (S.asOf) p.set("asOf", S.asOf);
     // stressed VaR is in USD, the stress set's own currency: the page's currency is not sent with it
@@ -348,6 +353,7 @@
     renderIntraday(d.intraday);
     bindExplain(d);
     if (PM && window.Drishti.VarParametric) window.Drishti.VarParametric.headline(d);   // the parametric tiles, each with its ? (drishti_var-parametric.js)
+    renderMatured(d);
     document.title = "VaR · " + d.label + (document.body.dataset.product ? " · " + document.body.dataset.product : "");
   }
 
@@ -926,6 +932,7 @@
       box.removeAttribute("aria-busy");
       S.tree = d;
       fillHierarchies(d);
+      maturedSwitch(d);
       var byId = {};
       d.nodes.forEach(function (n) { byId[n.id] = n; });
       S.byId = byId;
@@ -970,9 +977,13 @@
   // that scope the first time its row opens ("computing…" until then) and are kept for the next drawing, as is what is open.
   /** A hierarchy node's row for the tree (2.9.7: "n/c" when the limit is of another horizon or confidence). */
   function nodeRow(n) {
-    return { ID: n.id, PARENT: n.parent || null, LABEL: n.name, name: n.name, LEVEL: n.level, level: n.level, scope: n.scope, parametric: n.parametric,
+    var r = { ID: n.id, PARENT: n.parent || null, LABEL: n.name, name: n.name, LEVEL: n.level, level: n.level, scope: n.scope, parametric: n.parametric,
       VAR: n["var"], ES: n.es, LIMIT_USE: n.limitUse, LIMIT_STATUS: n.limitStatus, LIMIT_NOTE: n.limitComparable === false ? "n/c" : "no limit",
-      blank: !!n.blank, blankNote: n.blankNote || "" };
+      blank: !!n.blank, blankNote: n.blankNote || "",
+      // the switch on: the node's figure with its matured items (limit use stays official), and what they add
+      MATURED: n.matured ? n.matured.add : null, maturedLabel: n.matured ? n.matured.label : "" };
+    if (n.matured) { r.VAR = n.matured["var"]; r.ES = n.matured.es; }
+    return r;
   }
   /** A book's positions, or a position's trades (the contributions of that scope), as rows under the part's row; a position's are lazy. */
   function partRows(parentId, kids) {
@@ -1032,8 +1043,9 @@
     var widths = {}, P = pcols && window.Drishti.VarParametric;
     try { widths = JSON.parse(localStorage.getItem(wkey) || "{}") || {}; } catch (e) { widths = {}; }
     return R.varHierarchyTree(rows, { title: "Scope", label: "Scope tree", chrome: false, openDepth: 2, lazyText: "computing…", loadChildren: loadChildren,
-      fields: ["VAR", "ES", "LIMIT_USE"],
+      fields: S.matured ? ["VAR", "MATURED", "ES", "LIMIT_USE"] : ["VAR", "ES", "LIMIT_USE"],
       measures: { VAR: { label: "VaR " + S.ccy, childSum: false, column: { width: 86 } },
+                  MATURED: { label: "of which matured", childSum: false, column: { width: 96, cellClass: function () { return "vx-matured-add"; } } },
                   ES: { label: "ES", column: { width: 80, cellClass: function () { return R.TONES.muted; } } },
                   LIMIT_USE: { label: "Limit", column: { width: 96, sortable: false } } },
       grid: { fitRows: 40, widths: widths, labelColumn: { header: "Scope", width: 230, pinned: "left", cellRenderer: nameCell },
@@ -1049,7 +1061,7 @@
     if (lay) lay.setAttribute("data-resize-mode", pcols ? "parametric" : "historical");      // the side panel's width a person set, kept per mode
     t.classList.toggle("vp-cols", !!pcols);
     // the columns' widths a person set, kept per mode in this browser (drishti-grid's own resize handles)
-    var wkey = "drishti.var.tree.widths." + (pcols ? "parametric" : "historical"), sig = wkey + "|" + S.ccy;
+    var wkey = "drishti.var.tree.widths." + (pcols ? "parametric" : "historical"), sig = wkey + "|" + S.ccy + (S.matured ? "|matured" : "");
     var el = t.querySelector(":scope > drishti-tree"), opts = treeOptions(treeRows(), pcols, wkey);
     if (el && el.tree && el.dataset.sig === sig) { el.tree.setData(opts.data); markTree(); return; }
     if (!el) { el = document.createElement("drishti-tree"); t.textContent = ""; t.appendChild(el); }
@@ -1182,6 +1194,53 @@
     root.querySelectorAll("[data-pane]").forEach(function (p) { p.hidden = p.dataset.pane !== tab; });
   }
 
+  // ---------------------------------------------------------------------------------------------------------------- matured items
+  // The matured-items switch (VAR_GUIDE.md, "Matured items"; the approved mock-up var-matured A): drishti-inputs' <drishti-switch>
+  // beside Explain, naming the date's input grain; on, every answer it changes is asked with matured=true and the server's figure is
+  // labelled in the tiles, the band, the method strip and the exports. Limit use, the official record and captures never follow it.
+  function cap(t) { return t ? t.charAt(0).toUpperCase() + t.slice(1) : ""; }
+  var MSW = $("[data-vx-matured]");
+  function maturedSwitch(tree) {
+    var m = (tree && tree.maturedSwitch) || {}, c = MSW && MSW.component;
+    if (!c) return;
+    c.setLabel("Include matured " + (m.grain || "items"));
+    c.setDisabled(!!m.why);
+    MSW.title = m.why || "Adds back the " + (m.grain || "items") + " that matured before the business date: this view only. Off whenever the page opens.";
+  }
+  function setMatured(on) {
+    S.matured = !!on;
+    if (MSW && MSW.value !== S.matured) MSW.value = S.matured;
+    root.dataset.matured = S.matured ? "on" : "off";
+    S.tree = null; S.children = {};
+    loadTree();
+    select(S.scope, { noPush: true });
+  }
+  function renderMatured(d) {
+    var band = $("[data-vx-matured-band]"), m = S.matured ? d.matured : null;
+    if (band) {
+      band.hidden = !m;
+      if (m) $("[data-vx-matured-text]").textContent = "This view " + m.label + (m.why ? " (" + m.why + ")" : "") + ". It is not the official figure: official "
+        + money(m.officialVar) + ", " + (m.difference >= 0 ? "+" : "−") + money(Math.abs(m.difference)) + ". Limit use, contributions, captures and the official record leave them out.";
+    }
+    if (!m) return;
+    var tiles = $("[data-vx-tiles]").children;
+    [[0, m["var"]], [1, m.es]].forEach(function (x) {
+      var tile = tiles[x[0]];
+      if (!tile) return;
+      tile.classList.add("vx-matured-on");
+      tile.querySelector(".v").lastChild.textContent = money(x[1]);
+      var tag = h("div", "s mono vx-matured-tag", "INCLUDES MATURED · official " + money(x[0] === 0 ? m.officialVar : m.officialEs));
+      tile.appendChild(tag);
+    });
+    var strip = $("[data-vx-method]");
+    strip.insertBefore(h("b", "vx-matured-lead", cap(m.label) + ". "), strip.firstChild);
+  }
+  if (MSW) {
+    MSW.addEventListener("drishti:change", function (ev) { setMatured(ev.detail.value); });
+    var off = $("[data-vx-matured-off]");
+    if (off) off.addEventListener("click", function () { setMatured(false); });
+  }
+
   // ---------------------------------------------------------------------------------------------------------------- tabs, toggles, exports
   function switchTab(tab) {
     S.tab = tab;
@@ -1218,11 +1277,12 @@
     ev.preventDefault();
     if (!S.path) return;
     var ln = (S.path && S.path.lens) || {};
-    var lines = ["# scope: " + S.scope, "# business date: " + (S.head ? S.head.businessDate : ""), "# horizon: " + (ln.label || "1-day")
-      + " · VaR " + pctWord(ln.confidence || 0.99) + "% · ES " + pctWord(ln.esConfidence || 0.975) + "%", "rank,scenario_date,pnl"];
+    var mt = S.path.matured, said = mt ? "\"" + cap(mt.label) + " (not the official figure)\"" : "";
+    var lines = ["# scope: " + S.scope + (mt ? " · " + cap(mt.label) + ": not the official figure" : ""), "# business date: " + (S.head ? S.head.businessDate : ""), "# horizon: " + (ln.label || "1-day")
+      + " · VaR " + pctWord(ln.confidence || 0.99) + "% · ES " + pctWord(ln.esConfidence || 0.975) + "%", "rank,scenario_date,pnl" + (mt ? ",SCOPE" : "")];
     var order = S.path.series.map(function (v, i) { return [v, i]; }).sort(function (a, b) { return a[0] - b[0] || a[1] - b[1]; });
     var dates = scenarioDates(S.path);
-    order.forEach(function (o, r) { lines.push((r + 1) + "," + (dates[o[1]] || "#" + o[1]) + "," + o[0]); });
+    order.forEach(function (o, r) { lines.push((r + 1) + "," + (dates[o[1]] || "#" + o[1]) + "," + o[0] + (mt ? "," + said : "")); });
     var a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([lines.join("\n") + "\n"], { type: "text/csv" }));
     a.download = "var-path-" + S.scope.replace(/[^A-Za-z0-9_-]+/g, "_").slice(0, 60) + ".csv";
@@ -1237,8 +1297,12 @@
     ev.preventDefault();
     if (!S.path) return;
     var order = S.path.series.map(function (v, i) { return [v, i]; }).sort(function (a, b) { return a[0] - b[0] || a[1] - b[1]; });
-    var dates = scenarioDates(S.path), text = "";
-    order.forEach(function (o, r) { text += JSON.stringify({ rank: r + 1, scenario_date: dates[o[1]] || "#" + o[1], pnl: o[0] }) + "\n"; });
+    var dates = scenarioDates(S.path), text = "", mt = S.path.matured;
+    order.forEach(function (o, r) {
+      var row = { rank: r + 1, scenario_date: dates[o[1]] || "#" + o[1], pnl: o[0] };
+      if (mt) row.SCOPE = cap(mt.label) + " (not the official figure)";
+      text += JSON.stringify(row) + "\n";
+    });
     var a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([text], { type: "application/jsonl" }));
     a.download = "var-path-" + S.scope.replace(/[^A-Za-z0-9_-]+/g, "_").slice(0, 60) + ".jsonl";

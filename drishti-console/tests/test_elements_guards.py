@@ -43,6 +43,8 @@ RULES = {
                 "formats numbers itself: use drishti-core's formatNumber, formatCompact, formatPercent or formatNamed"),
     "live": (re.compile(r"\bnew\s+(?:[\w$.]*\.)?(?:EventSource|WebSocket)\b|\b(?:window|self|globalThis)\.(?:EventSource|WebSocket)\s*="),
              "opens its own EventSource or WebSocket: use drishti-data's LiveClient"),
+    "visual": (re.compile(r"createElementNS\(|getContext\(\s*['\"]2d|<svg\b"),
+               "draws a visual by hand: every visual lives in a Drishti Elements library (a domain visual in the domain's library)"),
     "inputs": (re.compile(r"drishtiModules\.multiselect|\bms-(?:box|pop|sum|q)\b|Drishti\.People\.attach\(\s*[\w$.]+\s*,\s*[^{\s][^,{]*,"),
                "draws its own multi-select or picker list: use drishti-inputs (MultiSelect, upgradeCheckboxes, Combobox; Drishti.People.attach(input, opts))"),
 }
@@ -52,8 +54,18 @@ DATE_LINE = re.compile(r"\bDate\b|\bmonth\s*:|\bhour\s*:|\bat\b\.toLocaleString|
 
 BI = "wip/e-migrate-bi"
 VAR = "wip/e-migrate-var"
+VISUALS = "wip/i1b-visuals (hand-drawn before the rule; they move to a library, the list only shrinks)"
 # file (relative to drishti-console/web) -> {rule: the branch moving it}
 ALLOWED = {
+    # hand-drawn visuals left from before the rule (2.9.11.i1b): nothing is added here
+    "static/js/drishti_admin-data-out.js": {"visual": VISUALS},
+    "static/js/drishti_admin-net-ring.js": {"visual": VISUALS},
+    "static/js/drishti_busy.js": {"visual": VISUALS},
+    "static/js/drishti_dyk.js": {"visual": VISUALS},
+    "static/js/drishti_landing.js": {"visual": VISUALS},
+    "plugins/banking/static/js/drishti_market-landing.js": {"visual": VISUALS},
+    "plugins/banking/static/js/drishti_trading-landing.js": {"visual": VISUALS},
+    "static/js/drishti_bi-transform-view.js": {"numbers": BI, "visual": VISUALS},
     # BI and the Pivot (wip/e-migrate-bi)
     "static/js/drishti_bi-ai.js": {"echarts": BI},
     "static/js/drishti_bi-govern.js": {"numbers": BI},
@@ -63,7 +75,6 @@ ALLOWED = {
     "static/js/drishti_bi-python.js": {"echarts": BI},
     "static/js/drishti_bi-runs-admin.js": {"numbers": BI},
     "static/js/drishti_bi-runs.js": {"numbers": BI},
-    "static/js/drishti_bi-transform-view.js": {"numbers": BI},
     "static/js/drishti_bi-transform.js": {"numbers": BI},
     "static/js/drishti_bi-visuals.js": {"echarts": BI},
     "static/js/drishti_geomap.js": {"echarts": BI},
@@ -104,7 +115,7 @@ def _broken(text, script=True):
     code = COMMENT.sub(lambda m: "\n" * m.group(0).count("\n"), text)
     out = {}
     for rule, (pattern, _) in RULES.items():
-        if rule == "grid" and not script:
+        if rule in ("grid", "visual") and not script:
             continue
         for line in code.splitlines():
             if pattern.search(line) and not (rule == "numbers" and ".toLocaleString" in line
@@ -137,7 +148,7 @@ def test_the_allow_list_only_shrinks():
             continue
         found = _broken(sources[name].read_text(encoding="utf-8", errors="replace"), name.endswith(".js"))
         for rule, branch in rules.items():
-            assert branch in (BI, VAR), f"{name}: an allowed file names the branch moving it"
+            assert branch in (BI, VAR, VISUALS), f"{name}: an allowed file names the branch moving it"
             if rule not in found:
                 stale.append(f"{name}: keeps the rule {rule} now (take it off the list)")
     assert not stale, "\n".join(stale)

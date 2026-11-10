@@ -52,7 +52,7 @@ BASELINE: dict[str, tuple[int, int]] = {
     "test_block_sutras_browser.py": (1, 0), "test_busy_browser.py": (1, 0), "test_colfilter_browser.py": (2, 0),
     "test_comswap_ui_end_to_end_browser.py": (1, 0), "test_controls_browser.py": (1, 0), "test_designer_browser.py": (3, 0),
     "test_edition_trading_browser.py": (1, 0), "test_embed_elements_browser.py": (15, 0), "test_embed_frameworks_browser.py": (1, 0),
-    "test_embed_report_browser.py": (1, 0), "test_engines_menu_browser.py": (7, 0), "test_exposure_explorer_browser.py": (1, 0),
+    "test_embed_report_browser.py": (1, 0), "test_exposure_explorer_browser.py": (1, 0),
     "test_help_configuration_browser.py": (2, 0), "test_help_hub_browser.py": (1, 0), "test_history_browser.py": (1, 0),
     "test_lens_menus_browser.py": (3, 0), "test_live_tabs_browser.py": (3, 0), "test_live_toggle_browser.py": (1, 0),
     "test_maps_browser.py": (9, 0), "test_news_browser.py": (0, 4), "test_pack_new_browser.py": (2, 0),

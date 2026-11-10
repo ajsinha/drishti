@@ -16,9 +16,8 @@
 package com.ash.drishti.bicompute.sql;
 
 import com.ash.drishti.bicompute.core.PivotCore;
-import com.ash.drishti.bicompute.spi.PivotProvider;
-import com.ash.drishti.bicompute.spi.Viewer;
-import java.util.List;
+import com.ash.drishti.kernel.api.pivot.PivotProvider;
+import com.ash.drishti.kernel.api.pivot.Viewer;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -71,37 +70,7 @@ public final class SampledResolver implements TabularSource.Resolver {
         TabularSource s = d.open(v, source, date);
         String method = s.rows() > SYSTEM_ABOVE_ROWS ? "system" : "bernoulli";
         String pct = String.format(Locale.ROOT, "%.6f", fraction * 100);
-        return new TabularSource() {
-            @Override
-            public String id() {
-                return s.id();
-            }
-
-            @Override
-            public String title() {
-                return s.title();
-            }
-
-            @Override
-            public List<PivotProvider.Field> fields() {
-                return s.fields();
-            }
-
-            @Override
-            public int masked() {
-                return s.masked();
-            }
-
-            @Override
-            public String date() {
-                return s.date();
-            }
-
-            @Override
-            public List<String> dates() {
-                return s.dates();
-            }
-
+        return new ForwardingTabularSource(s) {
             @Override
             public String version() {
                 return s.version() + "|sampled " + pct + "%";
@@ -129,12 +98,12 @@ public final class SampledResolver implements TabularSource.Resolver {
 
             /** A document plan's relation (its lists unnested) sampled the same way: its rows, not its documents. */
             @Override
-            public Relation relation(DuckDbExecutor exec, com.ash.drishti.bicompute.core.AggregationPlan plan) {
+            public Relation relation(DuckDbExecutor exec, com.ash.drishti.kernel.api.pivot.AggregationPlan plan) {
                 return sampled(s.relation(exec, plan));
             }
 
             @Override
-            public com.ash.drishti.bicompute.core.PivotView prepare(com.ash.drishti.bicompute.core.PivotView view) {
+            public com.ash.drishti.kernel.api.pivot.PivotView prepare(com.ash.drishti.kernel.api.pivot.PivotView view) {
                 return s.prepare(view);
             }
 

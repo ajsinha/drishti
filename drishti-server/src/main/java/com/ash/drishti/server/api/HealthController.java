@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.api;
 
+import com.ash.drishti.kernel.api.health.HealthFigures;
 import com.ash.drishti.api.SourcePlugin;
 import com.ash.drishti.engine.live.LiveMetrics;
 import com.ash.drishti.engine.live.TopicHub;
@@ -25,7 +26,7 @@ import com.ash.drishti.packs.PackRegistry;
 import com.ash.drishti.rachana.SutraProblem;
 import com.ash.drishti.rachana.SutraRegistry;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.nio.file.Files;

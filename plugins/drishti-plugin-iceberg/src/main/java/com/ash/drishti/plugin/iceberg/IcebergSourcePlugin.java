@@ -28,6 +28,7 @@ import com.ash.drishti.api.Provenance;
 import com.ash.drishti.api.SourceCapabilities;
 import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.api.SourcePlugin;
+import com.ash.drishti.common.ReferenceScanner;
 import com.ash.drishti.iceberg.catalog.S3Tables;
 import com.ash.drishti.plugin.iceberg.KindTable.Day;
 import com.ash.drishti.plugin.iceberg.KindTable.IdMap;
@@ -133,8 +134,6 @@ public final class IcebergSourcePlugin implements SourcePlugin {
     private boolean discover;
     private volatile Instant lastUpdate;
     private TableProblems problems = new TableProblems("iceberg", k -> null);
-    /** Set when {@code relocate} is given to the library engine, which does not read it (QA2-22). */
-    private String relocateIgnored;
     private volatile java.util.concurrent.ScheduledFuture<?> refreshTask;
 
     @Override
@@ -204,11 +203,6 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         this.problems = new TableProblems(sourceName, kind -> root.isBlank() || !ctx.setting("uri", "").isBlank() ? null
                 : root + (domain.isBlank() ? "" : "/" + domain) + "/" + (lake instanceof LakeTables.Named n ? n.tableOf(kind) : kind),
                 relocation(ctx.setting("relocate", "")));
-        if (!ctx.setting("relocate", "").isBlank() && lake.engine() == IcebergEngine.LIBRARY) {
-            relocateIgnored = "relocate is read by engine: native only; engine: library ignores it";
-            java.lang.System.getLogger(IcebergSourcePlugin.class.getName()).log(java.lang.System.Logger.Level.WARNING, "{0}: {1}",
-                    sourceName, relocateIgnored);
-        }
         this.memoryOnly = com.ash.drishti.lakeio.StorageProviders.memoryOnly(root) || com.ash.drishti.lakeio.StorageProviders.memoryOnly(ctx.setting("warehouse", ""));
         this.dated = new DatedHitIndex(memoryOnly ? null : sourceName, memoryOnly ? null : DatedHitIndex.defaultRoot(), ctx.settings(), this::dayHits, (k, d) -> {
             Long v = datedSnapshots.get(k);
@@ -257,11 +251,8 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         refreshTask = ctx.scheduler().scheduleWithFixedDelay(() -> loaders.execute(this::refresh), every, every, TimeUnit.SECONDS);
     }
 
-    /** The {@code relocate} pairs the native engine reads through (the library engine ignores them: none). */
+    /** The {@code relocate} pairs tables are read through. */
     private com.ash.drishti.iceberg.io.Relocation relocation(String spec) {
-        if (lake.engine() != IcebergEngine.NATIVE) {
-            return com.ash.drishti.iceberg.io.Relocation.none();
-        }
         return com.ash.drishti.iceberg.io.Relocation.parse(spec);   // read already by the catalog: a pair that cannot be read failed the start there
     }
 
@@ -1126,7 +1117,6 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         Map<String, Object> m = new java.util.LinkedHashMap<>(Map.of("tables", tables.size(), "snapshots", layouts.synchronous().estimatedSize(), "idMaps", idMaps.synchronous().estimatedSize(),
                 "columnSets", columnSets.synchronous().estimatedSize(), "documents", docs.estimatedSize(),
                 "partitions", parts.synchronous().estimatedSize(), "daysWithDeletes", deletes, "ids", index.size()));
-        m.put("engine", lake.engine().label());
         m.putAll(disk.stats());
         if (dated.enabled()) {
             m.putAll(dated.health());
@@ -1147,11 +1137,9 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         parts.synchronous().invalidateAll();
         docs.invalidateAll();
         disk.purge();
-        if (lake.engine() == IcebergEngine.NATIVE) {           // the native engine's per-file caches (footers, manifests, delete files)
-            com.ash.drishti.lakeio.ParquetFooters.purge();
-            com.ash.drishti.iceberg.scan.Planner.purge();
-            com.ash.drishti.iceberg.read.Deletes.purge();
-        }
+        com.ash.drishti.lakeio.ParquetFooters.purge();         // the per-file caches (footers, manifests, delete files)
+        com.ash.drishti.iceberg.scan.Planner.purge();
+        com.ash.drishti.iceberg.read.Deletes.purge();
     }
 
     /** One date's id maps, column sets and day parts go, in memory and its id-map files on disk (2.9.7); documents by their key. */
@@ -1228,12 +1216,9 @@ public final class IcebergSourcePlugin implements SourcePlugin {
             }
         });
         if (!problems.isEmpty()) {
-            return "DEGRADED: cannot read " + problems.summary() + (relocateIgnored == null ? "" : " (" + relocateIgnored + ")");
+            return "DEGRADED: cannot read " + problems.summary();
         }
         String indexNote = dated.enabled() ? dated.summary() : null;
-        if (relocateIgnored != null) {
-            indexNote = indexNote == null ? relocateIgnored : relocateIgnored + "; " + indexNote;
-        }
         String up = notLaidOut.isEmpty() ? (indexNote == null ? "UP" : "UP (" + indexNote + ")")
                 : "UP (not laid out as the pack declares: " + String.join(", ", notLaidOut) + "; searches read documents"
                         + (indexNote == null ? "" : "; " + indexNote) + ")";

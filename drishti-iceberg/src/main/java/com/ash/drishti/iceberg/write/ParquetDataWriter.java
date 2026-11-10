@@ -17,7 +17,6 @@ package com.ash.drishti.iceberg.write;
 
 import com.ash.drishti.iceberg.io.FileAccess;
 import com.ash.drishti.iceberg.manifest.DataFile;
-import com.ash.drishti.iceberg.meta.SchemaJson;
 import com.ash.drishti.iceberg.types.NestedField;
 import com.ash.drishti.iceberg.types.Schema;
 import com.ash.drishti.iceberg.types.Type;
@@ -430,7 +429,7 @@ public final class ParquetDataWriter implements Closeable {
 
         @Override
         public WriteContext init(ParquetConfiguration configuration) {
-            return new WriteContext(message, Map.of("iceberg.schema", SchemaJson.write(schema).toString()));
+            return new WriteContext(message, Map.of("iceberg.schema", org.apache.iceberg.SchemaParser.toJson(com.ash.drishti.iceberg.meta.Bridge.iceberg(schema))));
         }
 
         @Override

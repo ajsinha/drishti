@@ -20,7 +20,7 @@ import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.banking.compute.ccr.ExposureBook;
 import com.ash.drishti.banking.compute.ccr.ExposureGrid;
 import com.ash.drishti.banking.compute.ccr.ExposureMath;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;

@@ -20,7 +20,7 @@ import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.server.bi.engine.ArrowAnswers;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -152,8 +152,16 @@ public class VarController {
             @RequestParam(required = false) String window, @RequestParam(required = false) Double confidence,
             @RequestParam(name = "es-confidence", required = false) Double esConfidence, @RequestParam(required = false) String horizon, @RequestParam(required = false) String method,
             @RequestParam(name = "esConfidence", required = false) Double esq, @RequestParam(required = false) String set, AsOf asOf,
-            @RequestParam(required = false) Boolean parametric, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return parametric(headline(scope, ccy, window, confidence, esConfidence, horizon, method, esq, set, asOf, p), parametric);
+            @RequestParam(required = false) Boolean parametric, @RequestParam(defaultValue = "false") boolean matured,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        Map<String, Object> h = headline(scope, ccy, window, confidence, esConfidence, horizon, method, esq, set, asOf, p);
+        if (matured) {                                                  // the matured-items switch (VAR_GUIDE.md, "Matured items"): this answer only
+            if (window != null || esConfidence != null) {
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, "matured items are added on the offered lens only, not with window or es-confidence");
+            }
+            h = views.withMatured(h, p, scope(scope), date(asOf), ccy, lens(horizon, method, confidence, esq, set));
+        }
+        return parametric(h, parametric);
     }
 
     private Map<String, Object> headline(String scope, String ccy, String window, Double confidence, Double esConfidence, String horizon,
@@ -219,8 +227,9 @@ public class VarController {
     public Map<String, Object> path(@RequestParam String scope, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "0") int size,
             @RequestParam(required = false) String ccy, @RequestParam(required = false) Double confidence, @RequestParam(required = false) String horizon, @RequestParam(required = false) String method,
             @RequestParam(name = "esConfidence", required = false) Double esq, @RequestParam(required = false) String set, AsOf asOf,
-            @RequestParam(required = false) Boolean parametric, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return parametric(views.path(p, scope(scope), date(asOf), page, size, ccy, lens(horizon, method, confidence, esq, set)), parametric);
+            @RequestParam(required = false) Boolean parametric, @RequestParam(defaultValue = "false") boolean matured,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return parametric(views.path(p, scope(scope), date(asOf), page, size, ccy, lens(horizon, method, confidence, esq, set), matured), parametric);
     }
 
     /** The positions of the scope holding trades past their maturity, page by page (VAR_GUIDE.md, "Matured items"). */
@@ -319,8 +328,9 @@ public class VarController {
     public Map<String, Object> tree(@RequestParam(required = false) String hierarchy, @RequestParam(required = false) String ccy,
             @RequestParam(required = false) Double confidence, @RequestParam(required = false) String horizon, @RequestParam(required = false) String method,
             @RequestParam(name = "esConfidence", required = false) Double esq, @RequestParam(required = false) String set, AsOf asOf,
-            @RequestParam(required = false) Boolean parametric, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return parametric(views.tree(p, hierarchy, date(asOf), ccy, lens(horizon, method, confidence, esq, set)), parametric);
+            @RequestParam(required = false) Boolean parametric, @RequestParam(defaultValue = "false") boolean matured,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return parametric(views.tree(p, hierarchy, date(asOf), ccy, lens(horizon, method, confidence, esq, set), matured), parametric);
     }
 
     @GetMapping("/status")

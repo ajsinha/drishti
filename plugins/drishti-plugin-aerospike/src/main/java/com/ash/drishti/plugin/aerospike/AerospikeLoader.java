@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.aerospike;
 
+import com.ash.drishti.common.LoadLine;
 import com.ash.drishti.common.RowFeed;
 import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.Host;
@@ -22,10 +23,7 @@ import com.aerospike.client.policy.ClientPolicy;
 import com.aerospike.client.policy.WritePolicy;
 import com.ash.drishti.api.LoadGuard;
 import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
 import java.time.LocalDate;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -121,38 +119,8 @@ public final class AerospikeLoader {
     private record Row(String domain, String kind, String id, LocalDate date, String doc, Map<String, Object> columns) {}
 
     private static Row parse(JsonFactory json, String line) throws java.io.IOException {
-        String domain = null;
-        String kind = null;
-        String id = null;
-        String date = null;
-        String doc = null;
-        Map<String, Object> columns = new LinkedHashMap<>();
-        try (JsonParser p = json.createParser(line)) {
-            p.nextToken();
-            while (p.nextToken() == JsonToken.FIELD_NAME) {
-                String name = p.currentName();
-                JsonToken t = p.nextToken();
-                switch (name) {
-                    case "domain" -> domain = p.getText();
-                    case "kind" -> kind = p.getText();
-                    case "id" -> id = p.getText();
-                    case "date" -> date = p.getText();
-                    case "doc" -> doc = p.getText();
-                    case "columns" -> {
-                        if (t == JsonToken.START_OBJECT) {
-                            while (p.nextToken() == JsonToken.FIELD_NAME) {
-                                String path = p.currentName();
-                                JsonToken v = p.nextToken();
-                                columns.put(path, v == JsonToken.VALUE_NUMBER_INT || v == JsonToken.VALUE_NUMBER_FLOAT ? (Object) p.getDoubleValue()
-                                        : v == JsonToken.VALUE_NULL ? null : p.getText());
-                            }
-                        }
-                    }
-                    default -> p.skipChildren();
-                }
-            }
-        }
-        return new Row(domain, kind, id, date == null ? null : LocalDate.parse(date), doc, columns);
+        LoadLine l = LoadLine.parse(json, line);
+        return new Row(l.domain(), l.kind(), l.id(), l.day(), l.doc(), l.columns());
     }
 
     private static String option(String[] args, String name, String fallback) {

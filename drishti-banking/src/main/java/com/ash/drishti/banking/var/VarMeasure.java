@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.banking.var;
 
-import com.ash.drishti.compute.shard.ShardGather;
-import com.ash.drishti.server.shard.ShardedMeasure;
+import com.ash.drishti.kernel.api.shard.ShardGather;
+import com.ash.drishti.kernel.api.shard.ShardedMeasure;
 import java.util.List;
 
 /**

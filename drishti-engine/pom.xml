@@ -28,6 +28,7 @@
   <name>drishti-engine</name>
   <description>View pipeline, caches, live hub</description>
   <dependencies>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-kernel-api</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-inference</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-bicompute</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-graph</artifactId></dependency>

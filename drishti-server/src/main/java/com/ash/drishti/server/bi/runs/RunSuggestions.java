@@ -85,7 +85,7 @@ public final class RunSuggestions {
     /** Adds the drafted rollup to the model's draft as the administrator; the model item's id, or empty when the model cannot be edited (a pack's). */
     @FunctionalInterface
     public interface Drafter {
-        Optional<String> draft(com.ash.drishti.server.security.Principal admin, String model, Map<String, Object> rollup);
+        Optional<String> draft(com.ash.drishti.kernel.api.security.Principal admin, String model, Map<String, Object> rollup);
     }
 
     private final RunsProperties.Suggest settings;
@@ -259,7 +259,7 @@ public final class RunSuggestions {
      * Accepts a suggestion: the rollup is added to the model's draft (reviewed and published as any change), and the suggestion says {@code accepted}
      * with the item. A model that cannot be edited here (a pack's, a file's) is accepted with the YAML to add by hand.
      */
-    public Suggestion accept(String id, Collection<Run> log, Instant now, com.ash.drishti.server.security.Principal admin) {
+    public Suggestion accept(String id, Collection<Run> log, Instant now, com.ash.drishti.kernel.api.security.Principal admin) {
         Suggestion s = of(log, now, NONE_BUILT).stream().filter(x -> x.id().equals(id)).findFirst().orElseThrow(() -> gone(id));
         Optional<String> item = drafter.draft(admin, s.shape().model(), s.rollup());
         Map<String, String> d = new LinkedHashMap<>();

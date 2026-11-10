@@ -20,7 +20,7 @@ import com.ash.drishti.banking.compute.ccr.ExposureBook;
 import com.ash.drishti.banking.compute.ccr.ExposureCalc;
 import com.ash.drishti.banking.compute.ccr.ExposureGrid;
 import com.ash.drishti.banking.compute.ccr.ExposureMath;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;

@@ -108,7 +108,7 @@ class TransformServiceTest {
     }
 
     TransformService.Prepared prepared() {
-        return new TransformService.Prepared(Map.of("name", "t"), List.of(new byte[0]), Map.of(), new com.ash.drishti.server.security.Principal("u", List.of()));
+        return new TransformService.Prepared(Map.of("name", "t"), List.of(new byte[0]), Map.of(), new com.ash.drishti.kernel.api.security.Principal("u", List.of()));
     }
 
     @BeforeEach

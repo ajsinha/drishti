@@ -53,7 +53,7 @@ public sealed interface Lowered {
     }
 
     /**
-     * A measure of the model ({@code measure('MTM')}), or a compute engine's for a scope ({@code measure('VAR', 'DESK:DESK-COMM')}).
+     * A measure of the model ({@code measure('MTM')}), or a compute engine's for a scope ({@code measure('MEASURE', 'GROUP:G-1')}).
      *
      * @param scope the engine's scope, or null for the model's own measure
      */

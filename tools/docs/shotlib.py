@@ -205,3 +205,30 @@ def start_servers(work: Path, extra_env: dict | None = None) -> list:
     for p in (server, console):
         p.terminate()
     sys.exit("the scratch server or console did not start; see " + str(work))
+
+
+def start_pack_servers(work: Path, packs: str, server_port: int, console_port: int, data_dir: Path | None = None) -> list:
+    """A scratch server and console with the packs on, for a pack's guide picture: the two processes, once both listen."""
+    jars = sorted((ROOT / "drishti-server" / "target").glob("drishti-server-*-exec.jar"))
+    if not jars:
+        sys.exit("build the server first: ./mvnw -o package -DskipTests -pl drishti-app -am")
+    if not (work / "config").exists():
+        (work / "config").symlink_to(ROOT / "config")
+    java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
+    env = dict(os.environ, DRISHTI_PORT=str(server_port), DRISHTI_PACKS=packs, DRISHTI_LAKE_ENABLED="false")
+    if data_dir is not None:
+        env["DRISHTI_DATA_DIR"] = str(data_dir)
+    server = subprocess.Popen(java_cmd(java, ["-Xmx2g", "-jar", str(jars[-1])], cwd=work, env=env), cwd=work, env=env,
+                              stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
+    py = ROOT / "drishti-console" / ".venv" / "bin" / "python"
+    py = py if py.exists() else Path(sys.executable)
+    cenv = dict(os.environ, DRISHTI_BACKEND_URL=f"http://127.0.0.1:{server_port}", DRISHTI_CONSOLE_PORT=str(console_port))
+    console = subprocess.Popen([str(py), str(ROOT / "drishti-console" / "run_drishti_web.py")], cwd=ROOT, env=cenv,
+                               stdout=(work / "console.log").open("w"), stderr=subprocess.STDOUT)
+    for _ in range(360):
+        if listening(server_port) and listening(console_port):
+            return [server, console]
+        time.sleep(0.5)
+    for p in (server, console):
+        p.terminate()
+    sys.exit("the scratch server or console did not start; see " + str(work))

@@ -124,14 +124,12 @@
   function reset(name) {
     fetchDetail(name).then(function (d) {
       if (!d.ok) { say(msg, why(d), true); return; }
-      var shared = d.body.source === 'shared' || d.body.source === 'shared-hidden';
-      ask(shared ? 'Remove the shared edit of ' + name + '?' : 'Reset ' + name + ' to the default of pack ' + d.body.template + '?',
-        shared ? 'Every node goes back to ' + (d.body.file || name + '.yaml') + (d.body.template ? ' (or the pack\'s default when there is no file)' : '') + '; the edit is kept in the history and can be restored.'
-          : 'The file is replaced by the pack\'s suggestion; your current text is kept in the history and can be restored.', usesOf(d.body), 'Reset').then(function (yes) {
+      ask('Reset ' + name + ' to the default of pack ' + d.body.template + '?',
+        'The file is replaced by the pack\'s suggestion; your current text is kept in the history and can be restored.', usesOf(d.body), 'Reset').then(function (yes) {
         if (!yes) { return; }
         call('POST', '/' + q(name) + '/reset', null, d.body.etag ? { 'If-Match': d.body.etag } : {}).then(function (r) {
           if (!r.ok) { say(msg, why(r), true); return; }
-          say(msg, shared ? name + ': the shared edit is removed.' : name + ' is back to the pack\'s default.');
+          say(msg, name + ' is back to the pack\'s default.');
           reloadSoon();
         });
       });
@@ -614,9 +612,9 @@
       else if (act === 'test') { openExisting(me, b).then(function () { $('[data-test]').click(); }); }
       else if (act === 'enable' || act === 'disable') { toggle(me, act === 'enable', b); }
       else if (act === 'reset') { reset(me); }
-      else if (act === 'var-apply-now') {               // a var-pv-stream connector: its waiting window applied now (VAR_GUIDE.md 8.4)
+      else if (act === 'post-action') {               // a module's connector action (core/plugins.py connector_action)
         b.disabled = true;
-        fetch('/api/var/intraday/streams/' + q(me) + '/apply', { method: 'POST' }).then(function (r) {
+        fetch(b.dataset.url.replace('{name}', q(me)), { method: 'POST' }).then(function (r) {
           return r.json().catch(function () { return {}; }).then(function (x) { return { ok: r.ok, status: r.status, body: x }; });
         }).then(function (r) {
           b.disabled = false;

@@ -15,18 +15,18 @@
  */
 package com.ash.drishti.server.pivot;
 
-import com.ash.drishti.bicompute.core.CellKey;
+import com.ash.drishti.kernel.api.pivot.CellKey;
 import com.ash.drishti.bicompute.core.PivotCore;
-import com.ash.drishti.bicompute.core.PivotView;
+import com.ash.drishti.kernel.api.pivot.PivotView;
 import com.ash.drishti.bicompute.export.PivotExport;
-import com.ash.drishti.bicompute.spi.PivotProvider;
-import com.ash.drishti.bicompute.spi.Viewer;
+import com.ash.drishti.kernel.api.pivot.PivotProvider;
+import com.ash.drishti.kernel.api.pivot.Viewer;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.server.bi.engine.ArrowIpcWriter;
 import com.ash.drishti.server.edition.EditionCommands;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -141,6 +141,14 @@ public class PivotController {
             a.put("savedView", id);
         }
         audited(p, "pivot.query", view, "; cells=" + a.get("cellCount"));
+        return a;
+    }
+
+    /** One split of a decomposition tree: the node's figure, each member's own, and the gap (Σ members − node) for a measure that does not add. */
+    @PostMapping("/decompose")
+    public Map<String, Object> decompose(@RequestAttribute(Principal.ATTRIBUTE) Principal p, @RequestBody Map<String, Object> body) {
+        Map<String, Object> a = com.ash.drishti.bicompute.core.PivotDecomposition.answer(core, on(p), body);
+        audit.record(p.user(), "pivot.decompose", String.valueOf(a.get("source")), "measure=" + a.get("measure") + "; split=" + a.get("split") + "; path=" + a.get("path"));
         return a;
     }
 

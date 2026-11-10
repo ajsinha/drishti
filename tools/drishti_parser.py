@@ -325,6 +325,11 @@ def build_parser(h) -> argparse.ArgumentParser:
     # bi (Rupaka phase 1) ------------------------------------------------------------------------------------
     bi = group("bi", "Business intelligence (Rupaka) over REST: workspaces and the catalogue, as the token's user sees them (a write needs the bi:write scope)")
     srv_b = server_parent()
+    p_dax = bi.add_parser("dax", help="convert a DAX expression to Rachana, naming what cannot be converted", parents=[srv_b],
+                          description="bi dax: convert a DAX measure to Rachana (the cookbook is in RACHANA_REFERENCE); prints what could not be converted",
+                          epilog='examples:\n  drishti.py bi dax "CALCULATE(SUM(trades[MTM]), ALL(desks))"', formatter_class=argparse.RawDescriptionHelpFormatter)
+    p_dax.add_argument("text", help="the DAX expression, or Name = expression")
+    p_dax.set_defaults(func=h.cmd_bi_dax)
     for noun, func, what in (("workspace", h.cmd_bi_workspace, "list the workspaces you belong to, or show one with its members and items"),
                              ("catalogue", h.cmd_bi_catalogue, "search the catalogue, show an item, or publish one")):
         sp_b = bi.add_parser(noun, help=f"bi {noun} " + ("list|get" if noun == "workspace" else "list|get|publish"), description=what)

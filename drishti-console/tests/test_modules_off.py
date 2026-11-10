@@ -14,7 +14,7 @@
 
 """The guarantee, console part (docs/architecture/ACCESS_MODEL.md section 6): a module that is off is gone from every door the console
 draws, and so is a function the person may not use. The console asks the server (the public about answer's ``modules``; the person's
-``GET /api/v1/modules``) and nothing else: pages and routes answer 404, menus, the Engines menu, the Admin strip, search, the command line
+``GET /api/v1/modules``) and nothing else: pages and routes answer 404, menus, the Admin strip, search, the command line
 and its type-ahead, Help and the Build home leave them out, a word typed anyway says "<WORD> is not available to you: ask your
 administrator", and the module's static assets are not served (nor to a person whose lens does not use the module). The backend part:
 drishti-banking's BankingModuleOffTest and BankingModuleOnTest."""
@@ -70,7 +70,7 @@ def test_banking_off_is_gone_from_every_door(backend, monkeypatch):
     c = _client(app)
     t = c.get("/t").text
     links = _menu_links(t)
-    assert "/var" not in links and "/exposure" not in links and "data-engines-menu" not in t      # the Engines menu: banking's columns gone
+    assert "/var" not in links and "/exposure" not in links      # Risk (the engines' pages): banking's menu gone
     assert "/admin/scopes" not in t                                                                   # the Admin strip's Saved VaR baskets
     assert '<meta name="drishti-modules" content="economy">' in t                                     # the Elements loader refuses drishti-risk
     for page in ("/var", "/var/reports", "/exposure", "/predeal", "/frtb", "/simm", "/smat", "/play", "/mcube", "/admin/scopes"):
@@ -114,7 +114,7 @@ def test_banking_on_draws_every_door_again(backend, monkeypatch):
     app = _console(backend, monkeypatch, ALL_ON, _answer())
     c = _client(app)
     t = c.get("/t").text
-    assert "/var" in _menu_links(t) and "data-engines-menu" in t
+    assert "/var" in _menu_links(t)
     assert 'content="banking economy"' in t
     assert c.get("/help/docs-guides-var-guide").status_code == 200
     assert 'data-kind="var-baskets"' in c.get("/build").text

@@ -15,10 +15,8 @@
  */
 package com.ash.drishti.banking.compute.frtb;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import com.ash.drishti.banking.compute.MethodChoices;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -38,10 +36,7 @@ import java.util.TreeMap;
  * @param overrides parameter overrides, path → value (empty: none)
  */
 public record FrtbChoices(String curvatureSource, String girrCurvatureShock, String fxCurvatureDivisor, String girrCorrelation, String scenario,
-        Map<String, String> overrides) {
-
-    /** One switch as the Choices panel and the workbook's Config tab show it. */
-    public record Switch(String name, String dflt, List<String> options, String rule, String why) {}
+        Map<String, String> overrides) implements MethodChoices<FrtbChoices> {
 
     public static final List<Switch> SWITCHES = List.of(
             new Switch("curvature-source", "revaluation", List.of("revaluation", "gamma"), "MAR21.5, MAR21.17",
@@ -70,15 +65,7 @@ public record FrtbChoices(String curvatureSource, String girrCurvatureShock, Str
     }
 
     private static String pick(String name, String value) {
-        Switch s = SWITCHES.stream().filter(x -> x.name().equals(name)).findFirst().orElseThrow();
-        if (value == null || value.isBlank()) {
-            return s.dflt();
-        }
-        String v = value.strip().toLowerCase(Locale.ROOT);
-        if (!s.options().contains(v)) {
-            throw new IllegalArgumentException(name + " is one of " + s.options() + ", not " + value);
-        }
-        return v;
+        return MethodChoices.pick(SWITCHES, name, value);
     }
 
     /** The value of a switch by name. */
@@ -112,49 +99,8 @@ public record FrtbChoices(String curvatureSource, String girrCurvatureShock, Str
                 s.get("scenario"), overrides);
     }
 
-    /** Every switch name → value, in the panel's order. */
-    public Map<String, String> asMap() {
-        Map<String, String> m = new LinkedHashMap<>();
-        for (Switch s : SWITCHES) {
-            m.put(s.name(), get(s.name()));
-        }
-        return m;
-    }
-
-    /** The switches that differ from the defaults (name → value). */
-    public Map<String, String> changed() {
-        Map<String, String> m = new LinkedHashMap<>();
-        for (Switch s : SWITCHES) {
-            if (!s.dflt().equals(get(s.name()))) {
-                m.put(s.name(), get(s.name()));
-            }
-        }
-        return m;
-    }
-
-    /** True when every switch is its default and nothing is overridden. */
-    public boolean regulatory() {
-        return changed().isEmpty() && overrides.isEmpty();
-    }
-
-    /** Each single-switch alternative of these choices (one switch flipped to each of its other options). */
-    public List<FrtbChoices> alternatives() {
-        List<FrtbChoices> out = new ArrayList<>();
-        for (Switch s : SWITCHES) {
-            for (String o : s.options()) {
-                if (!o.equals(get(s.name()))) {
-                    out.add(with(s.name(), o));
-                }
-            }
-        }
-        return out;
-    }
-
-    /** A stable text of the choices (a recipe's and a cache's key). */
-    public String key() {
-        StringBuilder b = new StringBuilder();
-        asMap().forEach((k, v) -> b.append(k).append('=').append(v).append(';'));
-        overrides.forEach((k, v) -> b.append("param.").append(k).append('=').append(v).append(';'));
-        return b.toString();
+    @Override
+    public List<Switch> switches() {
+        return SWITCHES;
     }
 }

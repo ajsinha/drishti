@@ -45,7 +45,7 @@ public record ModelDef(String name, String version, Map<String, Object> about, M
 
     /** The keys {@link #extras} holds. */
     public static final Set<String> EXTRA_KEYS = Set.of("calc-groups", "parameters", "calendars", "fx", "tests", "rollups", "history",
-            "scan-warn-rows");
+            "scan-warn-rows", "bridges", "functions");
 
     /** The model's own {@code scan-warn-rows} (a whole number above zero), or null when it has none or it is not one. */
     public Long scanWarnRows() {

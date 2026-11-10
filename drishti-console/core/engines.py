@@ -194,7 +194,7 @@ def lens_hidden(name: str) -> bool:
 
 def path_engine(path: str) -> dict | None:
     """The engine available nowhere whose console page or API the path is (the longest prefix of any engine wins, so
-    /api/frtb/sensitivities is the sensitivities' and not FRTB-SA's); ``=/play`` is that path only."""
+    a longer prefix belongs to the engine that registers it); ``=<path>`` is that path only."""
     best, length = None, -1
     for e in entries():
         for p in e.get("console") or []:

@@ -54,7 +54,7 @@ import org.slf4j.LoggerFactory;
  * {@code coalesce}, {@code cache}, {@code limits}, {@code history}); a value it has is never overwritten, and a different one is a
  * conflict with a <i>use the pack's value</i> button ({@link #useTemplateValue}).
  * With {@code template-updates: additive} (the default) the additive part is merged automatically, keeping every edit, through
- * {@link ConnectorManager#save} (so a shared edit, on every node, with the previous text in the history); {@code notify} only lists;
+ * {@link ConnectorManager#save} (with the previous text in the history); {@code notify} only lists;
  * {@code off} does nothing automatically. Conflicting and obsolete parts are only ever changed by an administrator's button.
  */
 public final class TemplateUpdates implements AutoCloseable {
@@ -269,10 +269,10 @@ public final class TemplateUpdates implements AutoCloseable {
                 mergedCompute, computeAdded, computeConflicts, newDescription, pristine, moved));
     }
 
-    /** The marker of an older generation (a file on disk only: a shared edit has none), or null. */
+    /** The marker of an older generation, or null. */
     private ConnectorFiles.Marker markerOf(String name) {
         try {
-            return manager.files().source(name) != null && manager.files().source(name).startsWith("shared") ? null : manager.files().marker(name);
+            return manager.files().marker(name);
         } catch (RuntimeException e) {
             return null;
         }
@@ -380,7 +380,7 @@ public final class TemplateUpdates implements AutoCloseable {
     }
 
     private ConnectorManager.Change write(String name, String ifMatch, boolean additive, boolean dropObsolete, String user, String what) {
-        Drift drift = drift(name).orElseThrow(() -> new DrishtiException(ErrorCode.CONNECTOR_NOT_FOUND, "connector '" + name + "' has no file or shared edit"));
+        Drift drift = drift(name).orElseThrow(() -> new DrishtiException(ErrorCode.CONNECTOR_NOT_FOUND, "connector '" + name + "' has no file"));
         if (ifMatch != null && !ifMatch.equals(drift.etag())) {
             throw new DrishtiException(ErrorCode.CONNECTOR_CONFLICT, "connector '" + name + "' changed since you read it; reload it");
         }
@@ -398,7 +398,7 @@ public final class TemplateUpdates implements AutoCloseable {
 
     /**
      * Keeps the connector's file as it was before columns were added to its layout: {@code <name>.yaml.before-<yyyyMMdd-HHmmss>.bak} in
-     * the connectors folder (not a {@code .yaml}, so never read as a connector); a shared edit's previous text stays in the history.
+     * the connectors folder (not a {@code .yaml}, so never read as a connector).
      */
     private void backup(String name) {
         try {
@@ -456,10 +456,8 @@ public final class TemplateUpdates implements AutoCloseable {
         java.nio.file.Path kept = manager.files().keepBeside(d.name(), "before-upgrade");
         String text = com.ash.drishti.packs.ConnectorBootstrap.generate(manager.files(), d.name(), t.pack(), t.definition());
         manager.save(d.name(), text, d.etag(), true);
-        if (manager.files().source(d.name()) == null || !manager.files().source(d.name()).startsWith("shared")) {
-            manager.files().writeMarker(d.name(), text, com.ash.drishti.packs.ConnectorBootstrap.fingerprint(manager.files(), d.name(), t.definition()),
-                    com.ash.drishti.packs.ConnectorBootstrap.kindsOf(t.definition()));
-        }
+        manager.files().writeMarker(d.name(), text, com.ash.drishti.packs.ConnectorBootstrap.fingerprint(manager.files(), d.name(), t.definition()),
+                com.ash.drishti.packs.ConnectorBootstrap.kindsOf(t.definition()));
         String what = "replaced by pack " + t.pack() + "'s new template: it had never been edited"
                 + (kept == null ? " (the text before is in the history)" : " (the file before is kept as " + kept.getFileName() + " and in the history)");
         LOG.info("connector {}: {}", d.name(), what);
@@ -477,7 +475,7 @@ public final class TemplateUpdates implements AutoCloseable {
      */
     @SuppressWarnings("unchecked")
     public ConnectorManager.Change useTemplateValue(String name, String where, String key, String ifMatch, String user) {
-        Drift drift = drift(name).orElseThrow(() -> new DrishtiException(ErrorCode.CONNECTOR_NOT_FOUND, "connector '" + name + "' has no file or shared edit"));
+        Drift drift = drift(name).orElseThrow(() -> new DrishtiException(ErrorCode.CONNECTOR_NOT_FOUND, "connector '" + name + "' has no file"));
         if (ifMatch != null && !ifMatch.equals(drift.etag())) {
             throw new DrishtiException(ErrorCode.CONNECTOR_CONFLICT, "connector '" + name + "' changed since you read it; reload it");
         }

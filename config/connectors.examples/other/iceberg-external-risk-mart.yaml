@@ -26,7 +26,6 @@ settings:
   uri: ${RISK_MART_CATALOG_URI:https://polaris.example.com/api/catalog}
   warehouse: risk
   credential: ${RISK_MART_CREDENTIAL}
-  engine: native
   decimals: string
   tables:
     trade:

@@ -38,9 +38,9 @@ About 45 minutes.
 The outputs of the command line below were captured on this version; paths are shortened to `~/drishti`.
 
 **The ready-made local cluster: `drishti-stack/`.** This tutorial builds a cluster by hand so that you see each file. To have one running
-without the steps, use `drishti-stack/` at the repository's root: `drishti-stack/start.sh` starts three servers (your own stack on 18480 with
+without the steps, use `drishti-stack/` at the repository's root: `bin/start-cluster.sh` starts three servers (your own stack on 18480 with
 the demo lakes, and two more on 18791 and 18792 with synthetic ENDUR, CALYPSO and MUREX trades) and a console on 17480 given the first
-alone; `status.sh` shows the members and `stop.sh` stops them by process id. The secrets are made on the first start and stay out of git.
+alone; `bin/status --cluster` shows the members and `bin/stop-cluster` stops them by process id. The secrets are made on the first start and stay out of git.
 See [drishti-stack/README.md](../../drishti-stack/README.md).
 
 ## What you will learn
@@ -295,8 +295,8 @@ also shows the node's **Readiness** and, while it is not ready, what it waits fo
 
 ```bash
 # the same from a terminal (an administrator's API token with the node:drain scope; with sign-in off none is needed)
-DRISHTI_NODE_URL=http://$IP:18783 DRISHTI_DRAIN_TOKEN=drk_... deploy/bin/drishti-node.sh drain    # waits for safe to stop
-DRISHTI_NODE_URL=http://$IP:18783 deploy/bin/drishti-node.sh undrain                              # or restart it: it takes work again
+DRISHTI_NODE_URL=http://$IP:18783 DRISHTI_DRAIN_TOKEN=drk_... bin/drishti-node.sh drain    # waits for safe to stop
+DRISHTI_NODE_URL=http://$IP:18783 bin/drishti-node.sh undrain                              # or restart it: it takes work again
 curl -s http://$IP:18783/actuator/health/readiness                                                # {"status":"OUT_OF_SERVICE"} while drained
 ```
 

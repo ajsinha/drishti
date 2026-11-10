@@ -23,7 +23,7 @@ import com.ash.drishti.banking.compute.frtb.FrtbChoices;
 import com.ash.drishti.banking.compute.frtb.FrtbCompare;
 import com.ash.drishti.banking.compute.frtb.FrtbSa;
 import com.ash.drishti.server.playground.PlaygroundTemplate;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.time.LocalDate;

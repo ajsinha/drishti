@@ -249,7 +249,7 @@ public final class AlertService implements AutoCloseable {
      * its owner may not see, so it could never fire), and a visual or model query that answers several rows needs the cell to watch (a state that filters it to
      * one row) or how its rows become one number ({@code source.reduce}).
      */
-    private void watchable(AlertSpec spec, JsonNode body, com.ash.drishti.server.security.Principal owner) {
+    private void watchable(AlertSpec spec, JsonNode body, com.ash.drishti.kernel.api.security.Principal owner) {
         String type = spec.source().type();
         if (!Set.of("visual", "dataset", "model").contains(type)) {
             return;

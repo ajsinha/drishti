@@ -22,7 +22,7 @@ import com.ash.drishti.identity.User;
 import com.ash.drishti.identity.UserService;
 import com.ash.drishti.identity.UserView;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.time.Duration;
 import java.time.Instant;
 import org.springframework.http.HttpStatus;

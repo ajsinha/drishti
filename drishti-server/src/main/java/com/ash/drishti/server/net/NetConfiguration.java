@@ -228,7 +228,7 @@ public class NetConfiguration {
         // a live relay from a peer is masked there for the user it was opened for: while the cluster runs, viewers share an upstream only
         // with viewers of the same roles (CLUSTER_GUIDE.md › Drishti*net: many servers, one Drishti, section 8, as built)
         java.util.function.Supplier<String> partition = () -> !net.running() ? "" : NetCaller.current().map(NetCaller.Caller::principal)
-                .map(com.ash.drishti.server.security.Principal::securitySignature).orElse("");
+                .map(com.ash.drishti.kernel.api.security.Principal::securitySignature).orElse("");
         hub.partition(partition);
         router.partition(partition);           // the map panels' cache of documents read through peers (SOAK2-01)
         PeerSources sources = new PeerSources(routing, net, codec, log, router);
@@ -301,13 +301,13 @@ public class NetConfiguration {
             }
 
             @Override
-            public java.net.http.HttpResponse<java.io.InputStream> stream(String node, String pathAndQuery, com.ash.drishti.server.security.Principal p)
+            public java.net.http.HttpResponse<java.io.InputStream> stream(String node, String pathAndQuery, com.ash.drishti.kernel.api.security.Principal p)
                     throws java.io.IOException {
                 return cluster.stream(node, pathAndQuery, p);
             }
 
             @Override
-            public int delete(String node, String path, com.ash.drishti.server.security.Principal p) throws java.io.IOException {
+            public int delete(String node, String path, com.ash.drishti.kernel.api.security.Principal p) throws java.io.IOException {
                 return cluster.call(node, "DELETE", path, new byte[0], p, cluster.timeout()).status();
             }
         };

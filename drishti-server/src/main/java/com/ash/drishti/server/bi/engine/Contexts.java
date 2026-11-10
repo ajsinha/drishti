@@ -111,14 +111,36 @@ final class Contexts {
      * @param edge the date column of an {@link Kind#EDGE} context, whose {@code edgeFn} ({@code max} or {@code min}) per group it computes
      */
     String register(Kind kind, Node inner, List<Node> ignore, List<Node> keep, String via, List<Node> by, LocalDate date, Node edge, String edgeFn) {
+        return register(kind, inner, ignore, keep, via, by, date, edge, edgeFn, null, null, null, null);
+    }
+
+    /** {@code calc} with its edits, a per-measure direction ({@code filter}) and the groups that pass ({@code by}, {@code having}). */
+    String edit(Node inner, List<Node> ignore, List<Node> keep, String via, String filter, List<Node> by, Node having) {
+        return register(Kind.EDIT, inner, ignore, keep, via, null, null, null, null, null, filter, by, having);
+    }
+
+    /** The aggregate per value of {@code by}, combined by {@code outer} ({@code sum}, {@code min}, {@code max}, {@code avg}): the row-to-filter transition, grain written. */
+    String iterate(String outer, Node inner, List<Node> by) {
+        return register(Kind.AVERAGE, inner, null, null, null, by, null, null, null, outer, null, null, null);
+    }
+
+    private String register(Kind kind, Node inner, List<Node> ignore, List<Node> keep, String via, List<Node> by, LocalDate date, Node edge, String edgeFn, String outer, String dir,
+            List<Node> havingBy, Node having) {
         try {
             FilterContext.checkDepth(depth);                                   // the engine's rule 2 (BI_DESIGN 3.3.5)
         } catch (IllegalArgumentException x) {
             throw new DrishtiException(ErrorCode.MQ_CONTEXT, x.getMessage());
         }
         boolean all = ignore != null && ignore.size() == 1 && ignore.get(0) instanceof Node.Ref r && r.parts().equals(List.of("ALL"));
-        FilterContext.Edit edit = new FilterContext.Edit(kind, all, columns(all ? List.of() : ignore), keep == null ? null : columns(keep), via,
-                by == null ? List.of() : by.stream().map(b -> ((Node.Ref) b).text()).toList(), date);
+        boolean groupOnly = ignore != null && ignore.size() == 1 && ignore.get(0) instanceof Node.Ref r && r.parts().equals(List.of("GROUP"));
+        if (dir != null && !List.of("one_way", "both").contains(dir)) {
+            throw new DrishtiException(ErrorCode.MQ_CONTEXT, "filter = '" + dir + "' is one_way or both");
+        }
+        if (dir != null && via == null) {
+            throw new DrishtiException(ErrorCode.MQ_CONTEXT, "filter = needs via = 'relationship': it changes the direction of the relationship it names");
+        }
+        FilterContext.Edit edit = new FilterContext.Edit(kind, all, columns(all || groupOnly ? List.of() : ignore), keep == null ? null : columns(keep), via,
+                by == null ? List.of() : by.stream().map(b -> ((Node.Ref) b).text()).toList(), date, groupOnly, outer, dir, having == null ? null : NodeText.print(having) + " by " + havingBy.stream().map(NodeText::print).toList());
         List<FilterContext.Field> answer = new ArrayList<>();
         for (SqlCompiler.Field f : fields) {
             answer.add(new FilterContext.Field(f.text(), f.ref().table() + "." + f.ref().column(), f.masked()));
@@ -134,7 +156,7 @@ final class Contexts {
         List<String> on = question.on();
         List<QueryRequest.Filter> filters = new ArrayList<>();
         question.filters().forEach(i -> filters.add(query.filters().get(i)));
-        Dataset sub = via == null ? ds : switched(via);
+        Dataset sub = via == null ? ds : switched(via, dir);
         Node measure = inner;
         if (kind == Kind.EDGE) {
             measure = new Node.Call(edgeFn, List.of(edge));
@@ -151,6 +173,9 @@ final class Contexts {
             LocalDate to = date != null ? date : query.to();
             QueryRequest q = new QueryRequest(grouped, List.of(MEASURE), filters, from, to, List.of(), null, "columns");
             SqlCompiler compiler = new SqlCompiler(sub, dialect).depth(depth + 1);
+            if (having != null) {
+                compiler.restrict(having(sub, havingBy.stream().map(b -> ((Node.Ref) b).text()).toList(), having, filters, from, to, date));
+            }
             SqlCompiler.Plan plan = compiler.plan(q, reader);
             Map<String, SqlCompiler.Source> from0 = new LinkedHashMap<>();
             for (String t : plan.tables()) {
@@ -169,7 +194,7 @@ final class Contexts {
             String sql = c.sql();
             List<Object> params = c.params();
             if (kind == Kind.AVERAGE) {
-                sql = FilterContext.average(sql, subFields.stream().map(Dialect::quote).toList(), Dialect.quote(MEASURE));
+                sql = FilterContext.iterate(edit.outer(), sql, on.stream().map(Dialect::quote).toList(), Dialect.quote(MEASURE));
             }
             joined.add(new Joined(alias, sql, params, on));
             byKey.put(key, alias);
@@ -209,6 +234,11 @@ final class Contexts {
         Resolver resolver = new Resolver(ds);
         for (Node n : list) {
             if (n instanceof Node.Ref r) {
+                if (r.parts().size() == 1 && ds.tables().containsKey(r.parts().get(0))) {        // a table name means all its fields
+                    Dataset.Table t = ds.tables().get(r.parts().get(0));
+                    t.columns().keySet().forEach(c -> out.add(r.parts().get(0) + "." + c));
+                    continue;
+                }
                 out.add(column(resolver, r.text()));
             }
         }
@@ -224,19 +254,81 @@ final class Contexts {
         }
     }
 
-    /** The dataset with the relationship {@code via} (its id, name or label) active and every other active one between the same two tables inactive. */
-    private Dataset switched(String via) {
-        Dataset.Relationship chosen = ds.relationships().stream().filter(r -> via.equals(r.id()) || via.equals(r.label())).findFirst().orElseThrow(
+    /** The groups of {@code by} that pass {@code having}: the same filters and reader, as a sub-query the context restricts its rows to (a semi-join on the groups). */
+    private SqlCompiler.Restriction having(Dataset sub, List<String> by, Node having, List<QueryRequest.Filter> filters, LocalDate from, LocalDate to, LocalDate date) {
+        Map<String, Dataset.Measure> measures = new LinkedHashMap<>(sub.measures());
+        String name = "__having";
+        measures.put(name, new Dataset.Measure(name, "if(" + NodeText.print(having) + ", 1, 0)", null, "the groups that pass", null));
+        List<QueryRequest.Filter> kept = new ArrayList<>(filters);
+        kept.add(new QueryRequest.Filter(name, "eq", List.of(1)));
+        QueryRequest q = new QueryRequest(by, List.of(name), kept, from, to, List.of(), null, "columns");
+        SqlCompiler compiler = new SqlCompiler(sub.withMeasures(measures), dialect).depth(depth + 1);
+        SqlCompiler.Plan plan = compiler.plan(q, reader);
+        Map<String, SqlCompiler.Source> sql = new LinkedHashMap<>();
+        for (String t : plan.tables()) {
+            SqlCompiler.Source s = date == null ? sources.get(t) : null;
+            if (s == null) {
+                if (more == null) {
+                    throw new DrishtiException(ErrorCode.MQ_CONTEXT, "having needs table '" + t + "', which this query cannot read here");
+                }
+                s = more.of(t, from, to);
+            }
+            sql.put(t, s);
+        }
+        SqlCompiler.Compiled c = compiler.compile(plan, reader, sql, Integer.MAX_VALUE - 1, null, time, more);
+        return new SqlCompiler.Restriction(by, c.sql(), c.params());
+    }
+
+    /** True when the model says a measure does not add ({@code additive: false}): a {@code sum_by} of it stacks a figure that has no sum. */
+    static boolean notAdditive(Dataset ds, String measure) {
+        return ds.model().notAdditive().contains(measure);
+    }
+
+    /** The dataset with the relationship {@code via} (its id, name, label or a bridge's leg) active and every other active one between the same two tables inactive; {@code dir} overrides its direction. */
+    private Dataset switched(String via, String dir) {
+        Dataset.Relationship chosen = ds.relationships().stream().filter(r -> r.named(via)).findFirst().orElseThrow(
                 () -> new DrishtiException(ErrorCode.MQ_CONTEXT, "via='" + via + "' names no relationship of this model (relationships: "
                         + ds.relationships().stream().map(r -> r.id() == null ? r.label() : r.id()).toList() + ")"));
         List<Dataset.Relationship> rels = new ArrayList<>();
         for (Dataset.Relationship r : ds.relationships()) {
             boolean samePair = r.fromTable().equals(chosen.fromTable()) && r.toTable().equals(chosen.toTable())
                     || r.fromTable().equals(chosen.toTable()) && r.toTable().equals(chosen.fromTable());
+            if (r.bridge() != null) {
+                rels.add(r == chosen && dir != null ? redirected(r, via, dir) : r);
+                continue;
+            }
             boolean active = r == chosen || r.active() && !samePair;
-            rels.add(new Dataset.Relationship(r.fromTable(), r.fromColumn(), r.toTable(), r.toColumn(), r.cardinality(), r.direction(), active, r.id()));
+            String direction = r == chosen && dir != null ? ("both".equals(dir) ? "both" : "single") : r.direction();
+            rels.add(new Dataset.Relationship(r.fromTable(), r.fromColumn(), r.toTable(), r.toColumn(), r.cardinality(), direction, active, r.id(), r.name(), r.bridge()));
+        }
+        String ambiguous = "both".equals(dir) ? com.ash.drishti.tables.check.FilterPaths.ambiguous(links(rels)) : null;
+        if (ambiguous != null) {
+            throw new DrishtiException(ErrorCode.MQ_CONTEXT, ambiguous);
         }
         return ds.withRelationships(rels);
+    }
+
+    private static List<com.ash.drishti.tables.check.FilterPaths.Link> links(List<Dataset.Relationship> rels) {
+        List<com.ash.drishti.tables.check.FilterPaths.Link> out = new ArrayList<>();
+        for (Dataset.Relationship r : rels) {
+            if (r.bridge() != null) {
+                Dataset.Bridge b = r.bridge();
+                out.add(new com.ash.drishti.tables.check.FilterPaths.Link(b.leftName(), b.through(), r.fromTable(), b.leftBoth(), true));
+                out.add(new com.ash.drishti.tables.check.FilterPaths.Link(b.rightName(), b.through(), r.toTable(), b.rightBoth(), true));
+            } else if (r.active()) {
+                String name = r.name() != null ? r.name() : r.id() != null ? r.id() : r.label();
+                out.add(new com.ash.drishti.tables.check.FilterPaths.Link(name, r.fromTable(), r.toTable(), "both".equals(r.direction()) || "one-to-one".equals(r.cardinality()), false));
+            }
+        }
+        return out;
+    }
+
+    private static Dataset.Relationship redirected(Dataset.Relationship r, String via, String dir) {
+        Dataset.Bridge b = r.bridge();
+        boolean left = via.equals(b.leftName()) ? "both".equals(dir) : b.leftBoth();
+        boolean right = via.equals(b.rightName()) ? "both".equals(dir) : b.rightBoth();
+        return new Dataset.Relationship(r.fromTable(), r.fromColumn(), r.toTable(), r.toColumn(), r.cardinality(), r.direction(), false, r.id(), r.name(),
+                new Dataset.Bridge(b.through(), b.leftKey(), b.rightKey(), b.leftName(), b.rightName(), left, right));
     }
 
     /** True when a measure (or one it names) needs a context or a balance function: the rollups cannot answer it, nor a several-facts query combine it. */

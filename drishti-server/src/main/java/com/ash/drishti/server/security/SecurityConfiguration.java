@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.security;
 
+import com.ash.drishti.kernel.api.security.Principal;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;

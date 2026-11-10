@@ -21,7 +21,7 @@ import com.ash.drishti.compute.ComputeResult;
 import com.ash.drishti.compute.cluster.PeerTransport;
 import com.ash.drishti.net.transport.PeerHttp;
 import com.ash.drishti.server.net.RunCluster;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;

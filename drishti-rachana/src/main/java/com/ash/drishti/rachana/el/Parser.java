@@ -22,6 +22,7 @@ import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Recursive-descent parser for Rachana-EL. Grammar (EBNF):
@@ -90,6 +91,16 @@ final class Parser {
     static Expr parse(String src, ElLimits limits) {
         return parseWithSpans(src, limits).expr();
     }
+
+    /** Parses with extra function names (measure functions) that are later expanded: arguments are parsed, nothing else is checked. */
+    static Expr parse(String src, Set<String> macros) {
+        Parser parser = new Parser(src, Lexer.tokens(src), ElLimits.DEFAULTS);
+        parser.macros = macros;
+        Expr e = parser.expr();
+        return e;
+    }
+
+    private Set<String> macros = Set.of();
 
     static Parsed parseWithSpans(String src, ElLimits limits) {
         if (src.length() > limits.maxLength()) {
@@ -398,7 +409,7 @@ final class Parser {
         }
         next();
         String name = t.text();
-        int[] arity = Functions.ARITY.get(name);
+        int[] arity = macros.contains(name) ? new int[] {0, 64} : Functions.ARITY.get(name);
         if (arity == null) {
             throw new ElException("unknown function '" + name + "'; known: " + String.join(", ", new java.util.TreeSet<>(Functions.ARITY.keySet())),
                     t.pos());
@@ -437,6 +448,9 @@ final class Parser {
             } while (peek().type() == Type.COMMA && next() != null);
         }
         expect(Type.RPAREN, "')'");
+        if (macros.contains(name)) {
+            return at(new Expr.Call(name, null, args, named), s);
+        }
         if (!named.isEmpty()) {
             bind(name, args, named, names);
         }

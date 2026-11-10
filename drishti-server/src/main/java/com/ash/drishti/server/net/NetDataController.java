@@ -24,7 +24,7 @@ import com.ash.drishti.common.JsonCodec;
 import com.ash.drishti.engine.source.SourceRouter;
 import com.ash.drishti.net.security.OnBehalfOf;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.LinkedHashMap;
 import java.util.Map;

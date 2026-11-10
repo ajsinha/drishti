@@ -17,7 +17,7 @@ package com.ash.drishti.banking.exposure;
 
 import com.ash.drishti.identity.content.ContentDocs;
 import com.ash.drishti.identity.content.ContentStore;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

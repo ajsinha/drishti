@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.news;
 
+import com.ash.drishti.common.HttpFetcher;
 import com.ash.drishti.common.RetryPolicy;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -51,7 +52,7 @@ import java.util.stream.Collectors;
  */
 public record NewsSettings(String baseUrl, String language, String country, int maxItems, Duration timeout, Duration cacheTtl, int cacheMax,
         int maxBytes, String userAgent, String queryTemplate, boolean relevanceInTitle, Set<String> allowSources, Set<String> denySources,
-        Map<String, List<String>> aliases, int retries, RetryPolicy retryPolicy, String idPrefix, String kind, String sourceName) {
+        Map<String, List<String>> aliases, int retries, RetryPolicy retryPolicy, String idPrefix, String kind, String sourceName) implements HttpFetcher.Limits {
 
     static NewsSettings of(Map<String, String> s) {
         Map<String, String> retry = new LinkedHashMap<>();

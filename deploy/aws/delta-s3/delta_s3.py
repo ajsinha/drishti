@@ -143,19 +143,7 @@ class DeltaS3Tool:
         iam = self.client("iam")
         parn = self.policy_arn(account)
         doc = json.dumps(policy_document(self.region(), self.args.bucket, self.prefix, self.args.read_only, self.args.kms_key))
-        try:
-            iam.get_policy(PolicyArn=parn)
-            A.say(f"policy {policy_name(self.args)} exists: a new default version with this document")
-            versions = iam.list_policy_versions(PolicyArn=parn)["Versions"]
-            old = [v for v in versions if not v["IsDefaultVersion"]]
-            if len(versions) >= 5 and old:
-                self.run.do(iam, "delete_policy_version", PolicyArn=parn, VersionId=sorted(old, key=lambda v: v["CreateDate"])[0]["VersionId"])
-            self.run.do(iam, "create_policy_version", PolicyArn=parn, PolicyDocument=doc, SetAsDefault=True)
-        except Exception as e:  # noqa: BLE001
-            if A.error_code(e) not in ("NoSuchEntity", "NoSuchEntityException") and not self.args.dry_run:
-                raise
-            self.run.do(iam, "create_policy", PolicyName=policy_name(self.args), PolicyDocument=doc,
-                        Description=f"Drishti Delta Lake connector on s3://{self.args.bucket}/{self.prefix}")
+        A.ensure_policy(self.run, iam, parn, policy_name(self.args), doc, f"Drishti Delta Lake connector on s3://{self.args.bucket}/{self.prefix}", self.args.dry_run)
         if self.args.role:
             self.run.do(iam, "attach_role_policy", RoleName=self.args.role, PolicyArn=parn)
 
@@ -271,23 +259,7 @@ class DeltaS3Tool:
         A.say(f"as {who} in {self.region()}")
         iam, s3, b = self.client("iam"), self.client("s3"), self.args.bucket
         parn = self.policy_arn(account)
-        try:
-            iam.get_policy(PolicyArn=parn)
-            ents = iam.list_entities_for_policy(PolicyArn=parn)
-            for r in ents.get("PolicyRoles", []):
-                self.run.do(iam, "detach_role_policy", RoleName=r["RoleName"], PolicyArn=parn)
-            for u in ents.get("PolicyUsers", []):
-                self.run.do(iam, "detach_user_policy", UserName=u["UserName"], PolicyArn=parn)
-            for g in ents.get("PolicyGroups", []):
-                self.run.do(iam, "detach_group_policy", GroupName=g["GroupName"], PolicyArn=parn)
-            for v in iam.list_policy_versions(PolicyArn=parn)["Versions"]:
-                if not v["IsDefaultVersion"]:
-                    self.run.do(iam, "delete_policy_version", PolicyArn=parn, VersionId=v["VersionId"])
-            self.run.do(iam, "delete_policy", PolicyArn=parn)
-        except Exception as e:  # noqa: BLE001
-            if A.error_code(e) not in ("NoSuchEntity", "NoSuchEntityException") and not self.args.dry_run:
-                raise
-            A.say(f"policy {policy_name(self.args)}: not there")
+        A.delete_policy(self.run, iam, parn, policy_name(self.args), self.args.dry_run)
         if not self.bucket_exists():
             A.say(f"bucket {b}: not there")
             return A.EXIT_OK

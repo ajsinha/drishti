@@ -25,7 +25,7 @@ import com.ash.drishti.server.collab.Principals;
 import com.ash.drishti.server.collab.snapshot.SnapshotService;
 import com.ash.drishti.server.collab.thread.CommentRenderer;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 
 /**
  * The email for a share, built when it is sent: the sender's name, the kind and id, the panel, the date of the pin, and the note

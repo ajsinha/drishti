@@ -21,7 +21,7 @@ import com.ash.drishti.banking.compute.var.VarBook;
 import com.ash.drishti.banking.compute.var.VarCalc;
 import com.ash.drishti.banking.compute.var.VarMath;
 import com.ash.drishti.compute.vector.OrdinalSet;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.ash.drishti.banking.var.VarExplainMath.Op;
 import com.ash.drishti.banking.var.VarExplainMath.State;
 import com.ash.drishti.banking.var.VarExplainMath.Step;

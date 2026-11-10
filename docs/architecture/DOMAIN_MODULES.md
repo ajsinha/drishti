@@ -233,12 +233,12 @@ the VaR and exposure lakes; package `com.ash.drishti.server.connectors` kept, in
 - **The console asks the server** and nothing else. The public about answer lists the `modules` loaded at the server's start (polled with
   the edition and the engines, kept per console app: `core/modules.py` `State`); `GET /api/v1/modules`, as the person, answers the modules
   loaded and not (with why), the lenses open to them (with the modules and functions each needs) and `functions.off`: every function they
-  may not use (its module off, an administrator's switch, from 2.9.11.i not granted), each with its module and the words to say (*VRES is
+  may not use (its module off, an administrator's switch, from 2.9.11.j not granted), each with its module and the words to say (*VRES is
   not available to you: ask your administrator*). The console caches it per person (`ui.user_cache_seconds`, dropped on a change seen by
   any worker) and sets it per request; an older server that says nothing hides nothing.
 - **Every door asks** `core/modules.py`: the routes (`core/edition_gate.py`: a module's pages and APIs 404), the words
   (`Edition.word_on`, `command_shown`, `typed_shown`: menus' `word:` and `cmd:` requirements, the Build home's, the landings' chips),
-  menus, the Engines menu and the Admin strip (sitemap `domain:` tags on a menu, column or item, the innermost wins; `requires:
+  menus (Risk's engine pages included) and the Admin strip (sitemap `domain:` tags on a menu, column or item, the innermost wins; `requires:
   module:<id>`), search and the type-ahead (`modules.allowed`), the command line (`/go`: typed anyway, the refusal in words), Help (a
   guide's module is its engine's, else its section's `domain:`; the section too), the Build home (a type's `domain`), keys (a module's
   keys are registered only by its own pages, which are refused) and the static files.
@@ -254,7 +254,7 @@ the VaR and exposure lakes; package `com.ash.drishti.server.connectors` kept, in
   person's modules and lens; `configure({modules})`; `refused(name)`), and every library that requires it.
 - **C1 to C7 broken in place** (section 5), and the console on `/api/v1/risk` (its client, the workbook streams, the MR cube's extras);
   the old aliases stay one release for other clients.
-- **Tests**: `test_modules_off.py` (banking off: pages, APIs, menus, the Engines menu, the Admin strip, the command line, the type-ahead,
+- **Tests**: `test_modules_off.py` (banking off: pages, APIs, menus, the Admin strip, the command line, the type-ahead,
   search, Help, the Build home, the files and the page's module list; banking on draws them again; an older server hides nothing;
   capital markets off: its functions refused and not offered; single functions off (VRES, SMAT): their menu items, command, type-ahead and
   pages gone, VAR kept; a lens without the module gets none of its files), `test_module_boundaries.py` (static: the plugins name files
@@ -277,7 +277,7 @@ the VaR and exposure lakes; package `com.ash.drishti.server.connectors` kept, in
   counts only where the module is installed.
 - **Rule 4 (strings)**: `tools/domain_strings.py` counts the banking names (command words, engine ids, connectors, API and console paths,
   packages) in the core's code (Java outside the banking modules; the console's core, routes, scripts, styles and templates) against
-  `tools/domain_strings_allowed.yaml`, which only shrinks (a quick file check, `tools/test_domain_strings.py`).
+  `tools/domain_strings_allowed.yaml` (empty since 2.9.11.i1: a line that only looks like banking carries `domain-strings: generic`), which only shrinks (a quick file check, `tools/test_domain_strings.py`).
 
 **Phase 2, second half, as built (2.9.11.f, the configuration):**
 

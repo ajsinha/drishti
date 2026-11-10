@@ -19,7 +19,7 @@ import com.ash.drishti.net.transport.PeerHttp;
 import com.ash.drishti.server.bi.runs.Run;
 import com.ash.drishti.server.bi.runs.RunId;
 import com.ash.drishti.server.bi.runs.RunService;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.ash.drishti.server.security.RequestPaths;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

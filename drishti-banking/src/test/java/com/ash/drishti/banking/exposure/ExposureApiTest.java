@@ -409,7 +409,7 @@ class ExposureApiTest {
                 new com.ash.drishti.api.Provenance("ccr-lake", 1, java.time.Instant.now(), false, ExposureLakeFixture.DAY));
         com.ash.drishti.api.EntityDocument[] seen = new com.ash.drishti.api.EntityDocument[1];
         com.ash.drishti.server.net.NetCaller.with(new com.ash.drishti.server.net.NetCaller.Caller(
-                new com.ash.drishti.server.security.Principal("rita", List.of("risk")), null, "t"),
+                new com.ash.drishti.kernel.api.security.Principal("rita", List.of("risk")), null, "t"),
                 () -> seen[0] = figures.augment(stored, com.ash.drishti.api.AsOf.of(ExposureLakeFixture.DAY)));
         JsonNode f = json.readTree(json.writeValueAsString(seen[0].data().unwrap())).get(ExposureFigures.FIELD);
         assertThat(f.get("STATUS").asText()).isEqualTo("no-paths");
@@ -417,7 +417,7 @@ class ExposureApiTest {
         com.ash.drishti.api.EntityDocument x = new com.ash.drishti.api.EntityDocument(com.ash.drishti.api.EntityRef.of("netting-set", "NS-X"),
                 com.ash.drishti.api.DataNode.of(java.util.Map.of("NETTING_SET_ID", "NS-X")), stored.provenance());
         com.ash.drishti.server.net.NetCaller.with(new com.ash.drishti.server.net.NetCaller.Caller(
-                new com.ash.drishti.server.security.Principal("rita", List.of("risk")), null, "t"),
+                new com.ash.drishti.kernel.api.security.Principal("rita", List.of("risk")), null, "t"),
                 () -> seen[0] = figures.augment(x, com.ash.drishti.api.AsOf.of(ExposureLakeFixture.DAY)));
         JsonNode fx = json.readTree(json.writeValueAsString(seen[0].data().unwrap())).get(ExposureFigures.FIELD);
         assertThat(fx.get("STATUS").asText()).isEqualTo("ok");

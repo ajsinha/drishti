@@ -351,8 +351,8 @@ touch data/dataload/inbox/trade_endur.2026-11-06.ready          # or trade_endur
 ```
 
 **Loading production position-level scenario PVs.** Each morning's batch is one file of `scenario-pv` records (every field in the checklist of
-[VAR_GUIDE.md section 15.13](VAR_GUIDE.md#1513-inputs-any-form-any-grain)), its currency FX in `fx-scenario` and the date's scenario set in
-`scenario-set`; the `.ready` file goes in last:
+[VAR_GUIDE.md section 15.13](VAR_GUIDE.md#1513-inputs-any-form-any-grain)), its currency FX in `fx-scenario` ([contract](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-509-scenarios-fx-scenario), [example](../contracts/samples/market-risk.md#fx-scenario)) and the date's scenario set in
+`scenario-set` ([contract](../contracts/packs/market-risk.md#sset-scenario-set-scenario-set), [example](../contracts/samples/market-risk.md#scenario-set)); the `.ready` file goes in last:
 
 ```bash
 # drop/scenario-pv.2026-11-06.jsonl.gz holds one object per position, for example (the vector cut here to 3 of 509 values):
@@ -1851,15 +1851,12 @@ characters): *partition column 'PRODUCT GROUP' cannot name a Delta partition fol
 Each feature below was put on a table with delta-rs 1.6.6, appended to and read back by both readers. Delta Kernel 4.4.0's own list
 (`TableFeatures`) declares read support for every feature it knows, including the ones delta-rs cannot create.
 
-**The Python reader** is `tools/lake/deltaread.py`: delta-rs reads a table its pyarrow reader reads completely; any other table is read
-by Delta Kernel, the server's reader, through the server's exec jar (`com.ash.drishti.deltalake.read.DeltaRowsCli`), so Python reads
-exactly what the server reads. delta-rs alone is not enough: version 1.6.6 (the latest) refuses deletion vectors and v2 checkpoints,
-and reads a column-mapped table of reader version 2 (the protocol Databricks gives column mapping) as all nulls.
+**The Python reader** is `tools/lake/deltaread.py`: Delta Kernel, the server's reader, through the server's exec jar (`com.ash.drishti.deltalake.read.DeltaRowsCli`), for every table, so Python reads exactly what the server reads. delta-rs stays for writing tables and listing their files; it is not used to read rows, because it refuses deletion vectors and v2 checkpoints and reads a column-mapped table of reader version 2 as all nulls. Reading needs the exec jar and Java 21 on the machine.
 
 | Feature | Java reader (server) | Python reader (`deltaread`) | delta-rs appends (the feature's flag only) |
 |---|---|---|---|
-| `appendOnly`, `invariants`, `checkConstraints`, `generatedColumns`, `changeDataFeed` | reads | reads (delta-rs) | yes |
-| `timestampNtz`, `variantType`, `variantType-preview` | reads | reads (delta-rs) | yes |
+| `appendOnly`, `invariants`, `checkConstraints`, `generatedColumns`, `changeDataFeed` | reads | reads (Kernel) | yes |
+| `timestampNtz`, `variantType`, `variantType-preview` | reads | reads (Kernel) | yes |
 | `deletionVectors` | reads, the deleted rows left out (tested with real deletion-vector files) | reads (Kernel), the same rows | yes |
 | `v2Checkpoint` | reads a table whose files only its single-file checkpoint names (tested); with sidecar files: **not verified** | reads (Kernel), the same | yes |
 | `columnMapping`, mode `name` or `id` | reads: every path (documents, columns, type-ahead, vectors, partition values, statistics) uses the physical names (tested) | reads (Kernel) | yes |
@@ -1916,7 +1913,7 @@ Section 10 is the other way round: Drishti reading the tables a lakehouse writes
 Drishti's Iceberg tables are standard Apache Iceberg tables, and Drishti reads other engines' Iceberg tables to the
 [Iceberg table spec](https://iceberg.apache.org/spec/) with no workaround: Spark, Trino, Flink, Snowflake, AWS Glue, pyiceberg and the Apache
 Iceberg Java library read what Drishti writes, and Drishti reads what they write, or refuses a table by name. It never reads one wrongly.
-The design is in [DATA_ARCHITECTURE.md › drishti-iceberg](../architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine);
+The design is in [DATA_ARCHITECTURE.md › drishti-iceberg](../architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop);
 the connectors are [ICEBERG_CONNECTOR.md](../../plugins/drishti-plugin-iceberg/README.md) and
 [ICEBERG_EXTERNAL_CONNECTOR.md](../../plugins/drishti-plugin-iceberg-external/README.md).
 
@@ -1924,8 +1921,7 @@ the connectors are [ICEBERG_CONNECTOR.md](../../plugins/drishti-plugin-iceberg/R
 
 | Engine | Where | Reads | Writes |
 |---|---|---|---|
-| **drishti-iceberg** (`engine: native`, the default) | inside the server, the loader (`IcebergLoader`, `lake build --format iceberg`, the data inbox) and maintenance (`IcebergMaintenance`); the `iceberg-external` connector | format v1 and v2 | v1 and v2 tables in Drishti's layout (section 1): partitioned by `business_date` |
-| **Apache Iceberg Java 1.10.1** (`engine: library`) | the `iceberg` connector, loader and maintenance when chosen | everything the library reads | everything the library writes |
+| **Apache Iceberg `iceberg-core` with Drishti's file access and Parquet reader** | inside the server, the loader (`IcebergLoader`, `lake build --format iceberg`, the data inbox) and maintenance (`IcebergMaintenance`); the `iceberg-external` connector | everything below | everything below |
 | **Python** (`tools/lake`) | `lake build --format iceberg` streams rows to the loader above; `lake maintain` and Admin → Lakes read the metadata JSON for the figures, then run `IcebergMaintenance` | | no Iceberg writer of its own |
 
 ### 15.2 File paths and partition values
@@ -1950,13 +1946,13 @@ with the table at `file:///…/wh/ns/t`:
 Drishti opens each of these as written: `g=a%2Fb` is that folder, not `g=a/b`. The same holds through `relocate`, whose two sides are also
 compared as written. The pairs in `relocate` are plain folders or `file:` paths spelled as the metadata spells them (`/data/100%25` names
 the folder `100%25`). Drishti's own writers make `business_date=YYYY-MM-DD` folders and plain `file:` locations (`file:/srv/my lake/…`),
-the form the library uses. The library engine's lake is the folder its `root` names, spaces, `%` and unicode included.
+the form the library uses.
 
 ### 15.3 The feature table
 
 | Area | Drishti reads | Drishti writes | Otherwise |
 |---|---|---|---|
-| Format versions | 1, 2 | 1, 2 (the loader makes 2) | 3: refused by name |
+| Format versions | 1, 2, and 3 tables that use nothing v3 adds | 2 | v3 deletion vectors, `variant`, `timestamp_ns` and geospatial columns: refused by name |
 | Partition transforms | identity, bucket[N], truncate[W], year, month, day, hour, void; pruned by each; the partition values the library computes, value for value | identity on `business_date` | an unknown transform is read, never pruned; a table another engine **re-partitioned** (any field besides `business_date`) is refused for writing |
 | Partition evolution | every spec, void fields, a field whose source column was dropped | | |
 | Schema evolution by field id | add, drop, rename, reorder, int→long, float→double, decimal widening; nested structs, lists, maps; `schema.name-mapping.default` for files without ids | adds optional columns | |

@@ -179,8 +179,8 @@ file, and written with the offset.
 ### 3.9 Worker sizing
 
 `tools/drillkit/drill_plan.py workers`: the memory available (`MemAvailable`) less what runs beside the lane (in the drill: the Java
-verify's 20 GB, 1 GB per worker of the other lane and 4 GB to spare), divided by one browser worker's budget (4 GB: its Chromium,
-its stand-in console, its session server's JVM and the JVM of the file it runs), at most the CPU threads less two and at most 12 (the
+verify's 20 GB, 1 GB per worker of the other lane and 4 GB to spare), divided by one browser worker's budget (3 GB: its Chromium,
+its stand-in console, its session server's JVM and the JVM of the file it runs; section 3.18), at most the CPU threads less two and at most 12 (the
 ports), at least 1. `DRILL_BROWSER_WORKERS` overrides it.
 
 ### 3.10 The drill's lane
@@ -198,6 +198,7 @@ server, console or browser, and takes seconds. It is marked **`static`** (`pytes
 `@pytest.mark.static` for one test; the marker is registered in the root `pytest.ini`) and runs in the drill's **gate**, beside the
 static scripts and the Java build, so a mistake it finds stops the drill in the first minutes instead of failing a lane an hour later.
 A guard that sat in the browser lane because its text names Chromium (the Java launch guard) failed one drill that late.
+The copy-paste ratchet (`tools/test_duplicates.py`, seconds) is one of these: duplicated lines per language may only fall below `tools/cpd/baseline.txt`.
 
 - `tools/drillkit/drill_plan.py static` lists the console test files with a static test; `--kind tools` the tools test files marked
   static as a whole. Finding none fails the gate (a mark misspelt or a folder moved is never a silent pass).
@@ -226,6 +227,9 @@ lake once more per part. Instead `var_stack.py` builds each lake **once per test
 read the same folder) and starts a server per file over it, with its own VaR hot folder (`var_lake`, `var_server`). The servers only read
 the lake. A file split later asks the same lake and pays only its server's start again.
 
+The VaR files take their lake from `tools/drillkit/lake_cache.py` ("The cached demo lake", section 3.15), so it is built once per hash of its
+sources, not once per run.
+
 ### 3.13 A component on a page of its own
 
 A console component that needs no data (the resize handles, drishti-core's `static/elements/drishti-core/src/drishti_resize.js`) is tested on a page of its own markup, with
@@ -245,6 +249,65 @@ compares them pixel by pixel (a per-channel difference of 2 on at most 0.05% of 
 screen × theme table, writes a diff image for each picture that differs and exits 1 when one does. The theme is set as the app sets
 it (`localStorage 'drishti.theme'`), the pictures wait on `Drishti.settled()`, and parts that change on their own (the clock, the
 paint timings) are masked.
+
+### 3.15 The cached demo lake
+
+`tools/drillkit/lake_cache.py` builds a demo lake once per hash of what makes it: the committed test data, its generators, the lake code and the pack
+definitions (the working tree's edits included). The lake is under `<cache>/<hash>/`, where `<cache>` is `DRISHTI_LAKE_CACHE`, else
+`<data>/tmp/lake-cache` (a drill keeps the newest three hashes). Every test stack and check reuses it across runs; a build runs under a lock held across
+processes, so workers wait for it rather than repeat it. A cached lake is read only: a test that writes to a lake (`trade_grain`) builds its own.
+`python3 tools/drillkit/lake_cache.py build --only market-risk --as-of 2026-09-30` builds or finds one and prints its path.
+
+### 3.16 Affected tests
+
+For a builder's iterations: `tools/drill.sh --affected [--base REF] [--dry-run]` (`tools/drillkit/affected.py`, default base `origin/develop`, working-tree
+edits included) runs only what the diff can reach: Java from the poms' module graph (the changed module and every module that depends on it; a change only
+under `src/test` stays in its module), the console and tools by `tools/drillkit/affected-map.txt` and the test files' own text. It is conservative: shared
+infrastructure (the build, the harness, `drishti-common`, `drishti-api`) selects everything, and a file it cannot place selects more, never less. It waits
+for 20 GB free before it starts. It does not replace the gate before a merge or the release's full drill.
+
+### 3.17 The VaR proof
+
+`VarGoldenMatrixTest` (`drishti-banking`, a few seconds) is the VaR proof of a patch: the three demo dates, the 509 and 250 windows, USD and EUR, every node of every
+hierarchy and all 28 system baskets, against `var/golden-matrix.json.gz`. VaR, ES, component VaR and limit use agree to 1e-6; trees, members, limits and worst
+scenarios exactly. **The server-against-server comparison over the API runs for releases only**, in a release's preparation, never for a patch. A change that means to move the numbers records the file
+again (the class's comment gives the command) and says why in the commit.
+
+### 3.18 The memory budget and the Java 25 lane
+
+The browser lane's workers are sized for 3 GB each; below the memory floor (`DRILL_MIN_FREE_GB`, default 6) a test waits to start, up to five minutes, so the workers
+ease off at the Java lane's peak. The Java 25 lane compiles the whole tree and runs only the tests of the code a JDK version can change (`tools/drill-java25.txt`:
+native maths and memory access, codecs, the store libraries); it starts once 20 GB are free. Java 21, what production runs, still runs every test.
+
+### 3.19 The page walk
+
+`drishti-console/tests/test_page_walk_browser.py` (helpers in `page_walk.py`) runs in every drill's browser lane. On a real server over the cached
+VaR demo lake (the bank, its desks, the Murex and Endur trades), signed in as the administrator, it opens:
+
+- every page of `config/sitemap.yaml`: each menu item (an item with only a command opens `/go?q=<command> <GO>`), the in-context pages, Help's
+  sections and a few pages with a demo id (`/var?scope=BANK`, a desk);
+- every link the top bar draws, in the full product and inside each lens, that the first walk did not open, and each lens's own home.
+
+A page fails on a 4xx or 5xx answer, a server error page (an alert naming a `DRS-5xxx` code or a server error), a browser console error
+(a Content Security Policy refusal names the script and line), an uncaught exception, a failed request (a file answering 4xx or 5xx, an
+`/api/` call answering 5xx; an `/api/` 4xx is the page's own answer, such as no data for the date), an empty main area, or taking longer
+than the budget to open and settle (`DRISHTI_PAGEWALK_BUDGET`, default 10 seconds, the tests' page-load budget; a page over it is opened once more and fails when slow
+twice; pages slow only on their first open are printed). A page of an engine switched off on this server (404, "is not running on this
+server") is gone by design and only counted. One failure lists every faulty page and every slow one, slowest first. `page_walk.py` keeps
+two short lists, each entry with its reason: `KNOWN_FAULTS` (reported, not failed, until fixed) and `SLOW_ALLOWED`. The walk's stack runs
+the data inbox, so Admin → Data loads → Inbox and Upload are opened too.
+
+The layout checks open the key pages (Home, the VaR explorer, Why it moved, the market-risk cube, the Pivot, the BI designer, Forms, Admin →
+Engines, Connectors, Data loads and Upload, Help) at 1366 and 1920 px, dark (`terminal`) and light, and measure them: no sideways scroll, no two
+controls on top of each other, each `<label for>` beside its control, no fieldset taller than what it holds, the main content over 60% of
+the width; a drishti-inputs Form on the page is measured as `form_layout.py` measures one (each label on its control, no box taller than it holds).
+
+Run it alone:
+
+```bash
+drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_page_walk_browser.py      # starts its own stack
+DRISHTI_PAGEWALK_BASE=http://<host>:<console port> drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_page_walk_browser.py   # a running console
+```
 
 ## 4. Numbers to hold
 

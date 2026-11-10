@@ -23,7 +23,7 @@ import com.ash.drishti.banking.compute.ccr.ExposureMath;
 import com.ash.drishti.banking.compute.ccr.ExposureScopes;
 import com.ash.drishti.compute.vector.OrdinalSet;
 import com.ash.drishti.identity.AuditLog;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

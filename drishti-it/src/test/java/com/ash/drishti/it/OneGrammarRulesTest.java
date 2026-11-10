@@ -18,7 +18,7 @@ package com.ash.drishti.it;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
-import com.ash.drishti.bicompute.spi.AggFunction;
+import com.ash.drishti.kernel.api.pivot.AggFunction;
 import com.ash.drishti.rachana.el.FunctionProvider;
 import com.tngtech.archunit.base.DescribedPredicate;
 import com.tngtech.archunit.core.domain.JavaClass;

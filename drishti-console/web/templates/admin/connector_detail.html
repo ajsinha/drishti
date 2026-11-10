@@ -34,8 +34,7 @@
     <dl class="det-kv">
       <dt>Plugin</dt><dd class="mono">{{ c.plugin or '—' }}</dd>
       <dt>Origin</dt><dd><span class="st{{ '' if c.origin == 'file' else ' st-warn' }}">{{ c.origin }}</span>
-        {% if c.file %}<span class="mono text-muted-d">{{ c.file }}</span>{% endif %}
-        {% if c.source in ('shared', 'shared-hidden') %}<span class="st st-warn" data-source="{{ c.source }}" title="An override in the shared store: every node of the cluster applies it over the file">override in force</span>{% endif %}</dd>
+        {% if c.file %}<span class="mono text-muted-d">{{ c.file }}</span>{% endif %}</dd>
       <dt>Switched</dt><dd><span class="st {{ 'st-ok' if c.enabled else '' }}" data-enabled>{{ 'on' if c.enabled else 'off' }}</span></dd>
       <dt>Status</dt><dd><span class="st {{ {'ok': 'st-ok', 'down': 'st-bad', 'warn': 'st-warn'}.get(c.level, '') }}" data-state>{{ c.label or (c.state | lower) }}</span>
         {% if c.health %}<span class="{{ 't-bad' if c.level == 'down' else 't-warn' if c.level == 'warn' else 'text-muted-d' }}" data-health>{{ c.health }}</span>{% endif %}
@@ -67,10 +66,9 @@
     <p class="adm-actions det-actions">
       <button type="button" class="fk" data-act="edit" aria-label="Edit {{ c.name }}">Edit</button>
       <button type="button" class="fk" data-act="test" aria-label="Test the connection of {{ c.name }}">Test connection</button>
-      {% if c.plugin == 'var-pv-stream' and c.enabled %}<button type="button" class="fk" data-act="var-apply-now" aria-label="Apply the waiting window of {{ c.name }} now, as one intraday batch" title="The PV topic's waiting window applied now, as one intraday batch (VAR_GUIDE.md section 8.4)">Apply now</button>{% endif %}
+      {% if c.enabled %}{% for a in connector_actions(c.plugin) %}<button type="button" class="fk" data-act="post-action" data-url="{{ a.url }}" aria-label="{{ a.aria | replace('{name}', c.name) }}" title="{{ a.title }}">{{ a.label }}</button>{% endfor %}{% endif %}
       <button type="button" class="fk" data-act="{{ 'disable' if c.enabled else 'enable' }}" aria-label="{{ 'Disable' if c.enabled else 'Enable' }} {{ c.name }}">{{ 'Disable' if c.enabled else 'Enable' }}</button>
-      {% if c.source == 'shared' %}<button type="button" class="fk" data-act="reset" data-remove-override aria-label="Remove the override of {{ c.name }}: its file counts again">Remove override</button>
-      {% elif c.template %}<button type="button" class="fk" data-act="reset" aria-label="Reset {{ c.name }} to the default of pack {{ c.template }}">Reset to pack default</button>
+      {% if c.template %}<button type="button" class="fk" data-act="reset" aria-label="Reset {{ c.name }} to the default of pack {{ c.template }}">Reset to pack default</button>
       {% elif c.origin == 'file' %}<button type="button" class="fk emb-danger" data-uninstall data-kind="connector" data-name="{{ c.name }}" aria-label="Uninstall {{ c.name }}">Uninstall…</button>{% endif %}
     </p>
   </section>
@@ -123,10 +121,6 @@
 
   <section aria-labelledby="cdSettings" class="det-sec">
     <h2 class="ws-h" id="cdSettings">Settings in effect</h2>
-    {% if c.overlay %}<p class="t-warn" role="status" data-overlay-note>This connector's override is in force, not its file. What it changes:</p>
-    <div class="tbl-wrap"><table class="tbl adm-tbl" data-plain data-overlay-diff>
-      <thead><tr><th scope="col">Setting</th><th scope="col">In the file</th><th scope="col">In the override</th></tr></thead>
-      <tbody>{% for d in c.overlay %}<tr><th scope="row" class="mono">{{ d.what }}</th><td class="mono">{{ d.file }}</td><td class="mono">{{ d.override }}</td></tr>{% endfor %}</tbody></table></div>{% endif %}
     {% if c.settings %}<div class="tbl-wrap"><table class="tbl adm-tbl" data-plain data-settings>
       <caption class="visually-hidden">The settings this connector runs with; credentials are masked</caption>
       <thead><tr><th scope="col">Setting</th><th scope="col">Value</th></tr></thead>

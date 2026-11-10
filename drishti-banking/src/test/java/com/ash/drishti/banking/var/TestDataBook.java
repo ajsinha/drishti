@@ -61,10 +61,15 @@ final class TestDataBook {
 
     /** The documents of a folder of the demo date's normal scenario set. */
     static void lines(Path folder, Consumer<JsonNode> each) throws IOException {
+        lines(folder, DATE, each);
+    }
+
+    /** The documents of a folder of a date's normal scenario set. */
+    static void lines(Path folder, String date, Consumer<JsonNode> each) throws IOException {
         if (!Files.isDirectory(folder)) {
             return;                                                     // a kind the demo does not send (P&L vectors)
         }
-        for (String line : FeedFiles.lines(folder, p -> p.date().equals(DATE) && !p.name().startsWith("stress-"))) {
+        for (String line : FeedFiles.lines(folder, p -> p.date().equals(date) && !p.name().startsWith("stress-"))) {
             each.accept(JSON.readTree(line));
         }
     }
@@ -89,8 +94,13 @@ final class TestDataBook {
 
     /** Every var-limit row of the date: its hierarchy and node id to the limit (USD). */
     static Map<String, Double> limits(Path data, String hierarchy) throws IOException {
+        return limits(data, hierarchy, DATE);
+    }
+
+    /** The same on another date. */
+    static Map<String, Double> limits(Path data, String hierarchy, String date) throws IOException {
         Map<String, Double> out = new LinkedHashMap<>();
-        lines(data.resolve("var-limit"), n -> {
+        lines(data.resolve("var-limit"), date, n -> {
             boolean pf = "PORTFOLIO".equalsIgnoreCase(text(n, "HIERARCHY"));
             if (hierarchy == null ? !pf : pf) {
                 out.put(n.path("NODE_ID").asText(), n.path("LIMIT_VAR").asDouble());
@@ -101,12 +111,26 @@ final class TestDataBook {
 
     /** The date's book in USD. */
     static VarBook build(Path repo, ParallelSums sums) throws IOException {
+        return books(repo, sums, DATE, 509).get(509).usd();
+    }
+
+    /** A book in USD with what converts it: the newest {@code scenarios.size()} scenarios and their FX. */
+    record Book(VarBook usd, ScenarioFx fx, List<LocalDate> scenarios) {}
+
+    /** One builder of {@link #books}. */
+    private record Open(int window, VarBook.Builder builder, ScenarioFx fx, List<LocalDate> scenarios) {}
+
+    /**
+     * The date's books in USD, one per window (the newest N scenarios, as drishti.var.scenario-window keeps them), from one pass over the files. A
+     * window is the full window's vectors cut to their newest N; P&amp;L from scenario PVs is computed on the full set first.
+     */
+    static Map<Integer, Book> books(Path repo, ParallelSums sums, String date, int... windows) throws IOException {
         Path data = repo.resolve("data/testdata/market-risk");
         PositionRules rules = rules(repo);
         List<LocalDate> scen = new ArrayList<>();
-        lines(data.resolve("scenario-set"), n -> n.path("SCENARIO_DATES").forEach(d -> scen.add(LocalDate.parse(d.asText()))));
+        lines(data.resolve("scenario-set"), date, n -> n.path("SCENARIO_DATES").forEach(d -> scen.add(LocalDate.parse(d.asText()))));
         List<ScenarioFx.Rates> rates = new ArrayList<>();
-        lines(data.resolve("fx-scenario"), n -> {
+        lines(data.resolve("fx-scenario"), date, n -> {
             double[] r = new double[n.path("RATES").size()];
             for (int j = 0; j < r.length; j++) {
                 r[j] = n.path("RATES").get(j).asDouble();
@@ -114,10 +138,23 @@ final class TestDataBook {
             rates.add(new ScenarioFx.Rates(text(n, "CURRENCY"), n.path("RATE").asDouble(), r, "supplied"));
         });
         ScenarioFx fx = new ScenarioFx(scen.size(), rates);
-        VarBook.Builder b = new VarBook.Builder(LocalDate.parse(DATE), "HS-509", scen, 65_536, Long.MAX_VALUE);
-        b.columnHierarchies(hierarchies(repo), limits(data, null));
-        b.currencyRates(c -> fx.rates(c).orElse(null));
-        lines(data.resolve("scenario-pv"), n -> {
+        Map<String, Double> nodeLimits = limits(data, null, date);
+        List<HierarchySpec> specs = hierarchies(repo);
+        List<Open> open = new ArrayList<>();
+        for (int w : windows) {
+            int from = scen.size() - w;
+            List<LocalDate> cut = List.copyOf(scen.subList(from, scen.size()));
+            List<ScenarioFx.Rates> cutRates = new ArrayList<>();
+            for (ScenarioFx.Rates r : rates) {
+                cutRates.add(new ScenarioFx.Rates(r.currency(), r.base(), java.util.Arrays.copyOfRange(r.scenarios(), from, r.scenarios().length), "supplied"));
+            }
+            ScenarioFx wfx = new ScenarioFx(w, cutRates);
+            VarBook.Builder b = new VarBook.Builder(LocalDate.parse(date), "HS-" + w, cut, 65_536, Long.MAX_VALUE);
+            b.columnHierarchies(specs, nodeLimits);
+            b.currencyRates(c -> wfx.rates(c).orElse(null));
+            open.add(new Open(w, b, wfx, cut));
+        }
+        lines(data.resolve("scenario-pv"), date, n -> {
             if (rules.live(text(n, "TRADE_STATUS"))) {
                 JsonNode pvs = n.get("SCENARIO_PV");
                 double[] p = new double[pvs.size()];
@@ -127,20 +164,32 @@ final class TestDataBook {
                 ScenarioFx.Rates r = fx.rates(text(n, "CURRENCY")).orElseThrow();
                 double[] v = new double[p.length];
                 ScenarioFx.pnlFromPv(n.path("BASE_PV").asDouble(), p, p.length, r, v);
-                add(b, rules, n, v, n.path("BASE_PV").asDouble() * r.base(), text(n, "CURRENCY"));
+                for (Open o : open) {
+                    add(o.builder(), rules, n, tail(v, o.window()), n.path("BASE_PV").asDouble() * r.base(), text(n, "CURRENCY"));
+                }
             }
         });
-        lines(data.resolve("pnl-vector"), n -> {
+        lines(data.resolve("pnl-vector"), date, n -> {
             if (rules.live(text(n, "TRADE_STATUS"))) {
                 JsonNode pnl = n.get("PNL");
                 double[] v = new double[pnl.size()];
                 for (int j = 0; j < v.length; j++) {
                     v[j] = pnl.get(j).asDouble();
                 }
-                add(b, rules, n, v, n.path("PV").asDouble(Double.NaN), null);
+                for (Open o : open) {
+                    add(o.builder(), rules, n, tail(v, o.window()), n.path("PV").asDouble(Double.NaN), null);
+                }
             }
         });
-        return b.build(sums);
+        Map<Integer, Book> out = new LinkedHashMap<>();
+        for (Open o : open) {
+            out.put(o.window(), new Book(o.builder().build(sums), o.fx(), o.scenarios()));
+        }
+        return out;
+    }
+
+    private static double[] tail(double[] v, int n) {
+        return n == v.length ? v.clone() : java.util.Arrays.copyOfRange(v, v.length - n, v.length);
     }
 
     private static void add(VarBook.Builder b, PositionRules rules, JsonNode n, double[] v, double pvUsd, String pvCurrency) {

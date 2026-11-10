@@ -25,7 +25,7 @@ import com.ash.drishti.engine.control.ControlValues;
 import com.ash.drishti.engine.view.ViewModel;
 import com.ash.drishti.engine.wire.ScreenWire;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Clock;
 import java.time.Duration;

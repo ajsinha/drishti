@@ -55,7 +55,11 @@ public record ReportState(Map<String, JsonNode> slicers, List<Selection> selecti
     }
 
     /** A mark selected on another visual: its field, its values, and whether other visuals highlight it (instead of filtering to it). */
-    public record Selection(String visual, String field, List<Object> values, boolean highlight) {}
+    public record Selection(String visual, String field, List<Object> values, boolean highlight, boolean range) {
+        public Selection(String visual, String field, List<Object> values, boolean highlight) {
+            this(visual, field, values, highlight, false);
+        }
+    }
 
     /** A filter carried to a drill-through page (or applied by a bookmark): {@code in} unless {@code op} says another comparison. */
     public record Carry(String field, String op, List<Object> values) {}
@@ -85,7 +89,7 @@ public record ReportState(Map<String, JsonNode> slicers, List<Selection> selecti
             if (!x.path("visual").isTextual() || !x.path("field").isTextual()) {
                 throw bad("a selection is { visual, field, values }");
             }
-            selections.add(new Selection(x.path("visual").asText(), x.path("field").asText(), values(x.path("values")), x.path("highlight").asBoolean(false)));
+            selections.add(new Selection(x.path("visual").asText(), x.path("field").asText(), values(x.path("values")), x.path("highlight").asBoolean(false), x.path("range").asBoolean(false)));
         }
         List<Carry> carry = new ArrayList<>();
         for (JsonNode x : list(n, "carry")) {

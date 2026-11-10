@@ -87,11 +87,10 @@ public final class S3Storage implements Storage, AutoCloseable {
         }
         S3ClientBuilder b = S3Client.builder()
                 .httpClientBuilder(http)
-                // S3-compatible stores do not all speak the SDK's newer default checksums
-                .requestChecksumCalculation(RequestChecksumCalculation.WHEN_REQUIRED)
-                .responseChecksumValidation(ResponseChecksumValidation.WHEN_REQUIRED)
                 .region(region(s.region()));
         if (!s.endpoint().isEmpty()) {
+            // S3-compatible stores do not all speak the SDK's newer default checksums; AWS keeps them
+            b.requestChecksumCalculation(RequestChecksumCalculation.WHEN_REQUIRED).responseChecksumValidation(ResponseChecksumValidation.WHEN_REQUIRED);
             b.endpointOverride(URI.create(s.endpoint()));
         }
         b.forcePathStyle(s.pathStyle());

@@ -292,7 +292,7 @@ def test_remove_deletes_the_tables_the_namespace_the_policy_and_the_bucket_when_
 
 
 def test_the_signatures_are_the_ones_drishti_iceberg_is_held_to():
-    rec = json.loads((ROOT / "drishti-iceberg/src/test/resources/s3tables/sigv4-recorded.json").read_text())
+    rec = json.loads((Path(__file__).with_name("sigv4-recorded.json")).read_text())
     creds = Credentials(rec["access-key-id"], rec["secret-access-key"])
     when = datetime.fromisoformat(rec["time"].replace("Z", "+00:00")).astimezone(timezone.utc)
     for r in rec["requests"]:

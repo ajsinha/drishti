@@ -28,7 +28,7 @@ import com.ash.drishti.server.bi.engine.QueryService;
 import com.ash.drishti.server.bi.report.BiReportService;
 import com.ash.drishti.server.bi.report.Report;
 import com.ash.drishti.server.bi.report.ReportParser;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.time.LocalDate;

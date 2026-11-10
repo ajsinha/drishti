@@ -50,6 +50,7 @@ work is in the [VaR guide](../guides/VAR_GUIDE.md) and the [exposure guide](../g
 19. [The BI scale gate](#19-the-bi-scale-gate)
 20. [Drishti Elements: the grid engine at 1,000,000 rows](#20-drishti-elements-the-grid-engine-at-1000000-rows)
 21. [Measuring one installation](#21-measuring-one-installation)
+22. [Code volume by release](#22-code-volume-by-release)
 
 ## 1. What is measured, and why
 
@@ -1638,6 +1639,35 @@ The console's browser tests as the release drill runs them (the design, its rule
 | the browser lane by test (`--dist loadgroup`), the redesigned harness, three runs (no Java verify beside it) | 9 | 25 min 15 s, 28 min 55 s, 25 min 54 s | 13,444 s, 15,420 s, 13,848 s | about 36 GB (18 to 19 server JVMs, 81 Chromium processes); at least 10.8 GB left available |
 | both render suites alone, by test, measured on a shared machine | 4 | 353 s | | |
 
+### 18.1 The full drill: before and after
+
+The lanes as last measured on the release machine, and what the changes to the drill are expected to give. **"After" is an estimate until the release's single full drill measures it.**
+
+| Lane | Before (measured) | After (estimate) | What changes |
+|---|---:|---:|---|
+| Gate | 197 s (measured on this change) | same | |
+| Browser lane | 3,222 s (4 workers by the sizing formula at 49 GB free) | about 2,000 s (7-8 workers on a quiet machine) | sized at 3 GB a worker with a memory floor, cached demo lakes |
+| Java 21 | 2,443 s | same | every test, unchanged |
+| Java 21 Docker | 519 s, after the browser lane | same | |
+| Java 25 | 4,775 s, after the browser lane and Java 21 | about 500 s, from 20 GB free | whole tree compiled, tests of the code a JDK version can change |
+| Tools | about 1,180 s each | same | |
+| **Full drill** | **about 80 minutes** (older releases 82 to 115) | **about 50 to 55 minutes** | the Java 21 lane becomes the longest job |
+
+"Before" is the last full run on record, on a machine shared with other work. Measured for the new pieces: `VarGoldenMatrixTest`, 12 cases with all hierarchies and baskets, about 3 s in the test JVM; a VaR browser file's set-up with the demo lake built, 589 s, and reusing the cached lake, 93 s; `tools/drill.sh --affected` on a two-file diff (one module's tests, one console file), 25 s.
+
+### 18.2 Page load in the browser tests
+
+Every page a browser test opens is timed from its main document's request to its load event (`drishti-console/tests/pageload_log.py`,
+on when `DRISHTI_PAGELOAD_LOG` names a file; the drill sets `<data>/drill/pageloads.jsonl`). After its lanes the drill prints p95 and
+median per page, slowest first, and writes the table below (`tools/drillkit/pageloads.py`). The numbers are taken under the drill's full
+load (many workers and the Java builds beside them), so they are an upper bound for one person on a quiet server. A page whose p95 is
+2 s or more is marked slow and reported, not failed; a test fails a page only over the 10 s page budget (the page walk's
+`DRISHTI_PAGEWALK_BUDGET`).
+
+<!-- pageloads:begin (tools/drillkit/pageloads.py --write; the last drill's browser lane) -->
+Not measured yet: the next drill writes it.
+<!-- pageloads:end -->
+
 ## 19. The BI scale gate
 
 A small, always-on guard for the BI engine: one model query timed and its Java allocation counted, failing the build when the
@@ -2027,3 +2057,16 @@ In-memory files are 4 to 42 times smaller than the decoded documents and 1.6 to 
 JSON-lines index loaded inside a cache's compute in the file connector (and the same pattern in the S3 connector); after the change no pin.
 Pins that need no change: Hadoop's `Shell.runCommand` and RocksDB's libc check (once, at start), Hadoop security's `LoginContext` (once),
 DuckDB, lz4 and zstd JNI calls (they do not park).
+
+## 22. Code volume by release
+
+Lines of code at each release and now, **measured** from git by `python3 tools/code_volume.py --write`, run in each release's preparation: Java under `src/main` and
+`src/test`; the console's Python, without its tests; the console's JavaScript, without `static/vendor`, the frozen `render/1.2.0` and `web/embed`.
+
+<!-- code-volume:begin (tools/code_volume.py --write) -->
+| Release | Date | Java main | Java test | Console python | Console js |
+|---|---|---:|---:|---:|---:|
+| v2.9.11.d | 2026-11-07 | 421,661 | 160,177 | 43,438 | 56,384 |
+| v2.9.11.g | 2026-11-08 | 431,422 | 164,993 | 46,531 | 119,031 |
+| current | 2026-11-09 | 436,337 | 167,731 | 46,788 | 122,291 |
+<!-- code-volume:end -->

@@ -90,6 +90,10 @@ CSP = ("default-src 'self'; img-src 'self' data:; style-src 'self'; script-src '
 # It may also fetch only the console's static files and the runtime (connect-src names those two paths on this host),
 # never an /api route: Calc code in the worker carries the user's session cookie, so any other route it could reach it
 # would reach as the user (QA 2026-10-01 SEC-17). Its reads go by message to the page, which fetches an allow-listed few.
+# The gallery's Playground frame (sandboxed, opaque origin): its scripts are inline (they are written into it); no network of any kind.
+PLAYGROUND_FRAME = "/static/gallery/drishti_playground-frame.html"
+PLAYGROUND_CSP = ("default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval'; style-src 'unsafe-inline'; img-src data:; font-src data:; "
+                  "frame-ancestors 'self'")
 WORKER_CSP = "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src {connect}"
 _HOST = re.compile(r"^[A-Za-z0-9.\-]+(:\d{1,5})?$|^\[[0-9A-Fa-f:.]+\](:\d{1,5})?$")
 WORKER = "/static/js/drishti_calc-worker.js"
@@ -305,7 +309,7 @@ class SecurityHeaders(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         response = await call_next(request)
         path = request.url.path
-        policy = worker_csp(request.headers.get("host", "")) if path == WORKER else CSP
+        policy = worker_csp(request.headers.get("host", "")) if path == WORKER else PLAYGROUND_CSP if path == PLAYGROUND_FRAME else CSP
         response.headers.setdefault("Content-Security-Policy", policy)
         if path.startswith(PYODIDE) and response.status_code == 200:
             response.headers["Cache-Control"] = "public, max-age=31536000, immutable"   # the URL names the version
@@ -316,6 +320,12 @@ class SecurityHeaders(BaseHTTPMiddleware):
         response.headers.setdefault("Referrer-Policy", "same-origin")
         response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
         return response
+
+
+
+def _plugins_connector_actions(plugin: str) -> list:
+    from core import plugins
+    return plugins.connector_actions(plugin)
 
 
 def create_app(settings: Settings) -> FastAPI:
@@ -505,15 +515,6 @@ def create_app(settings: Settings) -> FastAPI:
 
     templates.env.globals["design_on"] = _design_on
 
-    def _smat_on() -> bool:
-        """The scenario matrix (SMAT) as this request's person sees it: a lens or an edition without the word offers no "Scenario matrix"
-        link (Drishti Market and Drishti World), so no link answers DRS-4023."""
-        from core import edition as _ed
-        e = app.state.editions.for_request(_ed.current_lens())
-        return e.word_on("SMAT") and e.word_on("VAR")
-
-    templates.env.globals["smat_on"] = _smat_on
-
     def _pivot_on() -> bool:
         """The pivot screen (PIVOT) as this request's person sees it: offered where the edition or lens has the word."""
         from core import edition as _ed
@@ -521,13 +522,13 @@ def create_app(settings: Settings) -> FastAPI:
 
     templates.env.globals["pivot_on"] = _pivot_on
 
-    def _play_on() -> bool:
-        """The VaR Playground (PLAY) as this request's person sees it: offered where the edition or lens has the word and VaR."""
+    def _word_on(word: str) -> bool:
+        """A reserved word as this request's person sees it: offered where the edition or lens has the word."""
         from core import edition as _ed
-        e = app.state.editions.for_request(_ed.current_lens())
-        return e.word_on("PLAY") and e.word_on("VAR")
+        return app.state.editions.for_request(_ed.current_lens()).word_on(word)
 
-    templates.env.globals["play_on"] = _play_on
+    templates.env.globals["word_on"] = _word_on
+    templates.env.globals["connector_actions"] = _plugins_connector_actions
     from core import modules as _modules_state
 
     def _page_modules(request) -> list[str]:
@@ -547,7 +548,6 @@ def create_app(settings: Settings) -> FastAPI:
     templates.env.globals["command_placeholder"] = _menus.placeholder
     templates.env.globals["lens_links"] = _menus.lens_links
     templates.env.globals["lens_menu"] = _menus.lens_menu          # the subject menus folded into one on a phone (LX1 option C)
-    templates.env.globals["engines_panel"] = _menus.engines_panel  # the Engines menu's panel: search, Admin -> Engines, engines not running
     from core import engines as _engines_state
     templates.env.globals["engine_available"] = _engines_state.engine_available   # an engine running here or on a peer (Admin -> Data out: flight)
     from core import phone as _phone

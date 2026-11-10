@@ -30,7 +30,7 @@ import com.ash.drishti.identity.collab.Share;
 import com.ash.drishti.server.collab.Principals;
 import com.ash.drishti.server.collab.mail.MailRenderer;
 import com.ash.drishti.server.collab.mail.ShareItemRenderer;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.ash.drishti.server.security.TokenVerifier;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

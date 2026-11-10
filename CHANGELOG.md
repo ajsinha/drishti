@@ -17,6 +17,48 @@
 
 ## Unreleased
 
+- **Explain → Why it moved answers in about a second, not a minute** (the drill's failing Explain test, and "Why it moved looks broken"):
+  opening the earlier date ran the load's maturity check, which read every trade (about 8,000) one document at a time because one union
+  connector of `trade` (a source system with no table yet, such as Calypso in a lake without it) made the union's columns unreadable. A union
+  member that holds nothing of the kind is now left out of the columnar read (it adds no rows; documents would find none there either).
+  The drawer's From and To dates and their Explain button wrap inside the drawer instead of running off its edge.
+- **Model editor: no inline styles** on the Relationships tab (the drawn paths' height and the DAX box take the editors' classes): the
+  console's CSP no longer refuses six `style` attributes there.
+- **Tests: one page-load budget of 10 s** (owner 2026-11-10): the page walk (`DRISHTI_PAGEWALK_BUDGET`, was 5 s) and Admin → Engines'
+  budget test (was 1 s; the server's 400 ms per-engine probe is unchanged). **Page-load statistics:** every page a browser test opens is
+  timed (`DRISHTI_PAGELOAD_LOG`, `drishti-console/tests/pageload_log.py`); the drill prints p95 and median per page, slowest first, and
+  writes them to [BENCHMARK.md](docs/admin/BENCHMARK.md) section 18.2 (`tools/drillkit/pageloads.py`). Slow pages are reported, not failed.
+- **VaR explorer: include matured items.** A switch beside Explain (`<drishti-switch>`, new in drishti-inputs) adds back the positions or trades,
+  at the input's grain, that the load left out because they had matured. Off whenever the page opens; on, the tiles, a band with **Back to official**,
+  the method strip, the tree's **of which matured** column and the path's CSV and JSON Lines say *includes N matured …*. The server computes it
+  (`matured=true` on `/var/scope`, `/var/scope/path`, `/var/tree`), per request; the official record, captures and limit use never include them.
+  A load keeps about 2.3 KB of heap a matured record (2.7 KB more in a mapped date's hot-file header), none beyond 1% of the date's records.
+- **Fixes before the drill:** `lake build --format iceberg` sends a promoted id list (`TRADE_IDS`) as its JSON text, as the Delta writers store it, instead of
+  refusing the rows as a bad vector; a Delta connector of the older form (a `root`, no lake file) that finds no tables no longer marks every search partial;
+  `lake-name` is in the Delta connector's settings catalogue; the console's engine catalogue copy and sitemap list Data loads › Upload.
+- **Duplicates folded, behaviour unchanged:** the loaders' line parsing (`LoadLine`), `ReferenceScanner`, `HttpFetcher` and `BoundedCache` in `drishti-common`; `MethodChoices` and `PlaygroundSheets` for FRTB and SIMM;
+  `ForwardingTabularSource`, `ReadingFileIO`, `CallTally`; one real-IP rule (`drishti-console/core/hostrule.py`, loaded by `tools/hostaddr.py`), `tools/clitable.py`, the IAM policy steps in `deploy/aws/lib`, `shotlib.start_pack_servers`. Duplicated lines: Java 4523 to 3613, Python 612 to 318.
+- **BI modelling depth (2.9.11.i1b):** many-to-many through a declared `bridges:` table (semi-join, never double-counted, totals from each level's own rows, row rules and masks inside the join); both-ways filtering per relationship with a per-measure override, and an ambiguous filter path refused at save with its reason and the fix; relationships named, `via:` per measure; Rachana `calc` grows `ignore = [table] | GROUP`, `keep` narrowing `ignore`, `by`/`having`, `filter =`; `sum_by`, `min_by`, `max_by` (the context transition, grain written; a measure that does not add is refused in `sum_by`); a calculated table may be related in the model that produces it (a self-read refused); a calculation group's template that cannot apply reads *not applicable, and why*; model-level measure functions; `tools/drishti.py bi dax` and the model editor's Tables tab convert common DAX to Rachana and name what they cannot; the Tables tab is table first (name and filter columns, bridges grid, paths drawn on a refusal or on request).
+
+- **Copy-paste ratchet and code volume:** `tools/duplicates.py` runs PMD's copy-paste detector over Java, JavaScript and Python at 100 tokens (`tools/cpd/pom.xml`, outside the
+  root build, nothing that ships); the gate fails if any language has more duplicated lines than `tools/cpd/baseline.txt`, which is only lowered. `tools/code_volume.py` writes lines of code per
+  release from git into `docs/admin/BENCHMARK.md` section 22.
+- **Kernel boundary (P1):** the core names no banking string (`tools/domain_strings_allowed.yaml` is empty); banking's words go through `DomainVocabulary` and the
+  console's new plugin hooks (reserved words, console commands, phone pages, connector actions, the view toolbar slot). New `drishti-kernel-api` jar (kernel API 0.1) holds
+  the SPIs of KERNEL_AND_MODULES section 2.3, with `ApiSurfaceTest` pinning the surface; `KernelWithoutModulesTest` boots the kernel with no banking on the class path.
+- **Pivot rows show entity names** (desk, book, legal entity), as the VaR tree does, with the id in the tooltip. Figures are unchanged.
+- **Screenshot scripts** t33, t37 and var follow the current pivot field pane, the Explain drawer and the basket sheet.
+- **Mock-ups** for including matured items on the VaR explorer: `docs/lenses/mockups/var-matured/`.
+
+### Operations
+
+- **One home for start and stop scripts.** `bin/start-cluster`, `bin/stop-cluster` (`.sh`, `.ps1`, `.cmd`) and `bin/status --cluster FILE` start, stop and show a cluster on one machine from a cluster file (default `drishti-stack/stack.yaml`, the same format). `drishti-stack/` is configuration only. **`drishti-stack/start.sh`, `stop.sh` and `status.sh` are gone: run `bin/start-cluster.sh`, `bin/stop-cluster.sh` and `bin/status.sh --cluster drishti-stack/stack.yaml`.** The server jar copy moves to `data/stack/server.jar`. `deploy/bin/drishti-node` is now `bin/drishti-node`.
+- **The file is the connector.** The file in `config/connectors/` is the only truth; every Admin save writes it, with its history and audit entry. At the first start of this release each node folds connector edits an earlier release kept in the content store into its own files; a file changed since then is kept and the edit is saved beside it as `<name>.yaml.content-store-<date>.bak`, logged and audited. The override marks, *Remove override* and its Health warning are gone. On a cluster a save applies to its node: Admin → Health warns when nodes' connector files differ.
+- **Iceberg on `iceberg-core`, one engine.** Metadata, manifests, planning, commits and the REST client now come from Apache Iceberg's library with Drishti's `FileIO` and Parquet reader; no Hadoop at run time. `engine: library`, `DRISHTI_ICEBERG_ENGINE` and Azure/GCS/HDFS roots are gone (the setting is ignored, those roots are refused by name). Interop is proved both ways with every special partition character.
+- **Python reads Delta only through Delta Kernel** (`tools/lake/deltaread.py`); delta-rs stays for writes.
+- **Connector fixes from the data-standards review:** ActiveMQ no longer treats a Map/Object/Stream message as a delete; JDBC keeps integers beyond a long exact and reads binary as base64; Mongo reads Decimal128 NaN and Infinity; Kafka maps Avro decimal, date and timestamp logical types; an uncompressed Parquet page of the wrong size is an error; AWS keeps the SDK's checksums.
+
+
 ### Data loads
 
 - **Admin → Data loads → Upload** (split view): upload a data file or pick one in the inbox folder, a searchable **Table** picker filled from the file name (kind, pack and connector shown read-only), the exact `.ready` live beside the form, checks against a sample (contract, key, grain and id, `DRS-5210`, hierarchy columns) as pass, warning or refused, and Push: data first, `.ready` last. A replace of a date that already holds rows names the systems and counts, offers a tar or append, and needs a tick. `drishti.py dataload ready`; `.ready` parsing from text and one writer; settings `drishti.dataload.upload.*`; **File drop** in drishti-inputs.
@@ -28,6 +70,7 @@
 
 ### Docs
 
+- **Plan:** i2 and i3 become one release with one drill after i1 + i1b, in four waves, with deploy built once, cluster-first.
 - **Source file limit:** 2,000 lines (was 1,500); `SourceFileSizeTest`, the console's checks and the guides.
 - **Roadmap:** every visual lives in Drishti Elements; a Drishti Elements Playground (live pages with editable data) closes the BI depth release.
 - **Roadmap:** a BI depth release (2.9.11.i1b) after i1: many-to-many and both-ways relationships, Rachana filter-context control, a decomposition tree; the comparison with Power BI lists it as planned.
@@ -41,8 +84,35 @@
 
 ## Unreleased
 
+### BI depth: visuals
+
+- **Decomposition tree** (`decomposition` report visual, `Decomposition` in drishti-tree): one measure split level by level, the next split the reader's choice, every figure the pivot engine's for that slice (`POST /api/v1/pivot/decompose`); a split of a non-additive measure says *Σ standalone − diversification = parent*, with component VaR beside standalone when the source has it.
+- **Linked brushing:** drag across a line, area, histogram or scatter in a report to select a range; the other visuals filter to it, VaR recomputed; `selection: crossfilter` keeps one selection per visual. A selection has a clear button, and Esc clears it (`rangeBrush` in drishti-chart).
+- **New visuals:** `sunburst`, `icicle` (drishti-tree's modes, in reports; an additive size, a colour read per node) and `calendar` (drishti-chart).
+- **Playground page** of every element in the gallery (`/elements`, tab Playground page, side list of elements): the visual live, its data (an editable grid) and options below, its HTML and JavaScript editable and drawn in a sandboxed frame (no same origin, no network: no cookie, storage, page or `/api`); an error names its line, also when thrown inside a library, and keeps the last good drawing greyed; Reset. Every visual has its page, the server-side grids with a stand-in datasource and the risk presets with their libraries; a grid's page now carries its rows.
+- **Every visual in a library:** a guard fails a screen, plugin or report script that draws by hand (existing cases are listed and only shrink).
+
+### Testing and the drill
+
+- **The page walk:** every drill opens every sitemap page and every top-bar link (the product's and each lens's) as the administrator over the cached VaR demo lake, and fails on an error answer, a server error page, a console error, an uncaught exception, an empty page or a page over 5 s; the key pages are measured at 1366 and 1920 px, dark and light (no sideways scroll, no overlapping controls, labels beside their controls, no oversized field groups). `test_page_walk_browser.py`; `DRISHTI_PAGEWALK_BASE` walks a running console.
+- **`/admin` answers at once:** it opens the first Admin tab the person may open instead of the not-found page.
+- **Found by the page walk:** Admin → Python workers threw on opening (its requests table carried the Approvals queue's `data-approvals` hook, so the queue's script started on it); the market-risk cube's limit bar drew with inline styles the Content Security Policy refused (now set through the CSSOM).
+- **The VaR proof runs in seconds:** an in-process golden test covers all three demo dates, the 509 and 250 windows, USD and EUR, every hierarchy and all 28 system baskets. The server-against-server API comparison now runs for releases only.
+- **`tools/drill.sh --affected [--base REF]`** runs only the Maven modules and test files a diff can reach, for builders; shared infrastructure, and anything it cannot place, selects more. `tools/docs/shots_affected.py` does the same for screenshots.
+- **Cached demo lakes:** built once per hash of the test data, generators and lake code, and reused by every test stack and check.
+- **A faster full drill:** the Java 25 lane compiles everything and runs only the tests of what a JDK version can change, the browser lane has more workers under a memory floor, and heavy jobs follow a memory budget instead of strict order. Before and after are in docs/admin/BENCHMARK.md.
+
 ### Fixes
 
+- **Forms laid out again (query by form, the alert form, Admin filters):** a form in columns put each group in a narrow column and
+  stretched every field box to its row's tallest, so labels floated far from their controls. In drishti-inputs a group now takes the row and
+  lays its fields out in columns, a field's parts sit side by side with each label on its control, nothing is stretched, and a server-drawn
+  form in a page's bar takes the room left (the Data loads filter was one narrow column). Browser tests measure it.
+- **Engines menu removed: pages live in their lens/Views; switches in Admin → Engines.** The VaR, exposure, FRTB-SA and SIMM pages are
+  under **Risk** (in the full product's bar and the Risk and Trading lenses), each shown while its engine runs and the person's role opens
+  it (the engine catalogue's `opens:`, one rule for its pages and its command words); the Pivot stays under Views, uploads under Admin → Data loads.
+- **Admin → Engines no longer waits on a slow answer:** the page asks the server's answers together, each within 0.8 s, and fills in a late
+  one when it comes (or says the server is not answering).
 - **Connectors no longer stuck on a frozen copy of their settings:** a pack reload could write a connector's generated file into the shared Admin overlay, where it then outranked the file for good, so a later move of the demo lake left those connectors on the old folder (`FUND` listed nothing). The server's own writes now go to the file, and an older generated file that names tables its lake lost follows its pack's template (`.bak` kept). Admin → Connectors marks a connector whose override is in force, shows what it changes against the file and offers Remove override; Health warns while a node has any. A search names a connector it cannot reach instead of showing an empty list, and a Delta connector with neither `lake:` nor `root:` is refused rather than reading the demo folder.
 - **The demo's trade feed keeps step with its VaR records:** `lake demo` moves a trade's `MATURITY_DATE` with the other dates, so the matured-items check does not flag live trades on a moved demo. The committed test data is unchanged.
 - **The demo's VaR no longer drifts with the day it is built:** `lake demo` moves `MATURITY_DATE` on dated records with the other dates, so moving the demo no longer matures records that are live on the test data's own date.
@@ -5767,7 +5837,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   Admin create, edit, enable or disable, restore or delete is a shared edit in the content store (`config/connectors/<name>.yaml`, with
   history) that every node applies over its file within `drishti.store.watch-ms` (2 s), hot-reloading as for a file edit. Admin →
   Connectors marks it *shared edit*; Reset removes it. Placeholders stay unresolved in the store. Two nodes editing one connector get one
-  `409 DRS-5032`. `drishti.connectors.store: file` for one node. [CONNECTOR_FILES.md](docs/guides/DATA_GUIDE.md#shared-edits-on-a-cluster), CONTENT_STORE.md section 11.
+  `409 DRS-5032`. `drishti.connectors.store: file` for one node. [CONNECTOR_FILES.md](docs/guides/DATA_GUIDE.md#connector-files-on-a-cluster), CONTENT_STORE.md section 11.
 
 - **New: collaboration, notes, embed apps, pack switches, the audit trail, Sutra proposals and load history on every node of a cluster.** They moved
   into the content store (docs/architecture/CONTENT_STORE.md section 9): one document per comment thread (its comments, sealed revision
@@ -6564,7 +6634,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   GETTING_STARTED's Windows table loses its Iceberg row. Proven by a pyiceberg interop suite (fixtures written by pyiceberg, read
   back equal; tables written by drishti-iceberg read back by pyiceberg), every plugin test on both engines, a class-loader test that
   refuses Hadoop's file systems, `Shell` and `Configuration` for the connector, the loader and maintenance, writers committing at once
-  (local disk, a REST catalog), and refusal and Windows path tests ([DRISHTI_ICEBERG.md](docs/architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine)).
+  (local disk, a REST catalog), and refusal and Windows path tests ([DRISHTI_ICEBERG.md](docs/architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop)).
 - **New: the `iceberg-external` connector, for Iceberg tables Drishti does not write** (Spark, Flink, Trino, Snowflake, Glue, dbt):
   read-only through drishti-iceberg, the row is the document (structs, lists, maps; `decimals: string`, `binary: omit`), the id comes
   from the identifier fields or named columns, the business date from a column, a timestamp's day in a zone or the partition spec
@@ -6572,7 +6642,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   `tables: auto` serves a namespace and names tables without an id, and `StarterSchemas` drafts a pack's schemas from the tables
   ([ICEBERG_EXTERNAL_CONNECTOR.md](plugins/drishti-plugin-iceberg-external/README.md)).
 - **Changed: the native Delta engine's file access is a module of its own, `drishti-lakeio`**, shared with the coming Iceberg engine
-  ([DRISHTI_ICEBERG.md](docs/architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine) step I1): local disk and S3 storage, byte ranges, the Parquet page codecs
+  ([DRISHTI_ICEBERG.md](docs/architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop) step I1): local disk and S3 storage, byte ranges, the Parquet page codecs
   (which now also compress, for writers) and the per-file Parquet footer cache moved out of `drishti-deltalake` unchanged; local disk gains
   an exclusive create (a hard link of a finished file) and S3 a conditional PUT (`If-None-Match: *`) with a start-up probe, for safe commits.
   Every Delta test passes as before; the tests of the moved classes moved with them.

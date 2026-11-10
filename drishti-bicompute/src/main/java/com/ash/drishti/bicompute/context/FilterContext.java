@@ -30,7 +30,7 @@ import java.util.Set;
  *
  * <p>The rules, unchanged: (1) security is never in scope, so {@code ignore = ALL} means everything the reader may see (a context
  * edits only layers 2 and 3; rules and masks apply to it as to the answer); (2) closed and compositional, nesting at most
- * {@value #MAX_DEPTH} deep; (3) no context transition, iteration is explicit ({@code avg_by}); (4) every sub-plan keeps grain safety
+ * {@value #MAX_DEPTH} deep; (3) the row-to-filter transition is written, never implicit ({@code avg_by}, {@code sum_by}, {@code min_by}, {@code max_by}); (4) every sub-plan keeps grain safety
  * and the fan-out refusal (it is planned by the same compiler); (5) the incremental class of a standing query is derived per function;
  * (6) calculation-group items are templates expanded at bind time, parameters bind as {@code param.name}; (7) {@code as_of}'s date may
  * not depend on a row ({@code DRS-9166}) and a live table has no other dates ({@code DRS-9157}). A masked field is never a group, in
@@ -86,17 +86,27 @@ public final class FilterContext {
      * @param via a relationship to follow instead of the active one for the same pair, or null
      * @param by the extra fields an {@link Kind#AVERAGE} groups by
      * @param date the business date of a {@link Kind#DATED} sub-plan
+     * @param group {@code ignore = GROUP}: the group layer only, the query's filters stay
+     * @param outer what combines the values of an {@link Kind#AVERAGE} sub-plan: {@code avg}, {@code sum}, {@code min} or {@code max}
+     * @param filter a per-measure override of the direction of {@code via}: {@code one_way} or {@code both}, or null
+     * @param having the condition on groups of {@code calc(..., by =, having =)} (its identity within an answer), or null
      */
-    public record Edit(Kind kind, boolean all, Set<String> ignore, Set<String> keep, String via, List<String> by, LocalDate date) {
+    public record Edit(Kind kind, boolean all, Set<String> ignore, Set<String> keep, String via, List<String> by, LocalDate date, boolean group, String outer, String filter, String having) {
         public Edit {
             ignore = ignore == null ? Set.of() : Set.copyOf(ignore);
             keep = keep == null ? null : Set.copyOf(keep);
             by = by == null ? List.of() : List.copyOf(by);
+            outer = outer == null ? "avg" : outer;
+        }
+
+        /** An edit with no group-only drop, no iteration function beyond the average, no relationship direction and no condition on groups. */
+        public Edit(Kind kind, boolean all, Set<String> ignore, Set<String> keep, String via, List<String> by, LocalDate date) {
+            this(kind, all, ignore, keep, via, by, date, false, null, null, null);
         }
 
         /** True when the edit changes layers 2 and 3 (else {@code calc} is only its {@code where}, a filter on the aggregate). */
         public boolean edits() {
-            return all || !ignore.isEmpty() || keep != null || via != null;
+            return all || group || !ignore.isEmpty() || keep != null || via != null || having != null;
         }
     }
 
@@ -127,7 +137,7 @@ public final class FilterContext {
             if (f.masked()) {
                 continue;                                                      // a masked field is never a group, in the answer or in a context
             }
-            if (!dropped(edit, f.column())) {
+            if (!edit.group() && !dropped(edit, f.column())) {
                 groups.add(f.text());
                 on.add(f.text());
             }
@@ -154,12 +164,20 @@ public final class FilterContext {
 
     /** True when the edit drops the filters and the group of a column (only an {@link Kind#EDIT} drops any). */
     static boolean dropped(Edit edit, String column) {
-        return edit.kind() == Kind.EDIT && (edit.all() || edit.ignore().contains(column) || edit.keep() != null && !edit.keep().contains(column));
+        if (edit.kind() != Kind.EDIT) {
+            return false;
+        }
+        boolean named = edit.all() || edit.ignore().contains(column);
+        if (edit.keep() != null) {
+            return (edit.all() || !edit.ignore().isEmpty()) ? named && !edit.keep().contains(column) : !edit.keep().contains(column);   // with ignore, keep narrows what it drops
+        }
+        return named;
     }
 
     /** A context's identity within one answer: two functions that ask the same question share one sub-plan. */
     public static String key(Edit edit, String measure, Question q, List<?> keptFilters) {
-        return edit.kind() + "|" + measure + "|" + q.groups() + "|" + keptFilters + "|" + edit.via() + "|" + edit.date();
+        return edit.kind() + "|" + measure + "|" + q.groups() + "|" + keptFilters + "|" + edit.via() + "|" + edit.date()
+                + (edit.group() || !"avg".equals(edit.outer()) || edit.filter() != null || edit.having() != null ? "|" + edit.group() + "|" + edit.outer() + "|" + edit.filter() + "|" + edit.having() : "");
     }
 
     /** The alias of the {@code n}-th context of an answer at a depth. */
@@ -168,11 +186,11 @@ public final class FilterContext {
     }
 
     /**
-     * An {@link Kind#AVERAGE} sub-plan: the measure per value of the extra fields ({@code inner}), averaged per group of the answer
-     * ({@code on}, already quoted). No context transition: the iteration is the one the function names (rule 3).
+     * An {@link Kind#AVERAGE} sub-plan: the measure per value of the extra fields ({@code inner}), combined by {@code outer} per group of the answer
+     * ({@code on}, already quoted). The iteration is the one the function names (rule 3): that is the row-to-filter transition, with its grain written.
      */
-    public static String average(String inner, List<String> on, String quotedMeasure) {
-        return "SELECT " + (on.isEmpty() ? "" : String.join(", ", on) + ", ") + "avg(" + quotedMeasure + ") AS " + quotedMeasure + " FROM ("
+    public static String iterate(String outer, String inner, List<String> on, String quotedMeasure) {
+        return "SELECT " + (on.isEmpty() ? "" : String.join(", ", on) + ", ") + outer + "(" + quotedMeasure + ") AS " + quotedMeasure + " FROM ("
                 + inner + ") AS \"a\"" + (on.isEmpty() ? "" : " GROUP BY " + String.join(", ", on));
     }
 

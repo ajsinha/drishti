@@ -15,6 +15,9 @@
  */
 package com.ash.drishti.bicompute.core;
 
+import com.ash.drishti.kernel.api.pivot.CellKey;
+import com.ash.drishti.kernel.api.pivot.CellSet;
+import com.ash.drishti.kernel.api.pivot.Dim;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;

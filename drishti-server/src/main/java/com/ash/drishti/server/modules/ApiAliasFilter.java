@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.modules;
 
+import com.ash.drishti.kernel.api.modules.ApiAlias;
 import com.ash.drishti.server.security.RequestPaths;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

@@ -19,30 +19,26 @@ Three Drishti servers on one machine acting as one cluster ([OPERATIONS_GUIDE.md
 server alone and learns the other two from the cluster. One command starts it, one stops it, and one shows how it is doing.
 
 ```bash
-drishti-stack/start.sh       # start what is not running: the three servers, then the console
-drishti-stack/status.sh      # the processes and ports, the members, the console's servers
-drishti-stack/stop.sh        # stop everything start.sh started (by process id, never by name)
+bin/start-cluster.sh       # start what is not running: the three servers, then the console
+bin/status.sh --cluster drishti-stack/stack.yaml      # the processes and ports, the members, the console's servers
+bin/stop-cluster.sh        # stop everything bin/start-cluster started (by process id, never by name)
 ```
 
-The three are thin callers of the start and stop scripts of [bin/](../bin/README.md): each node is started with
-`bin/start-server.sh --node <name> --node-dir drishti-stack/nodes/<name>/net --env-file drishti-stack/secrets.env --background` (with its port,
-heap, data folder and settings from `stack.yaml`), the console with `bin/start-console.sh --server http://<this machine's address>:18480`,
-and `stop.sh` and `status.sh` use `bin/stop-server.sh`, `bin/stop-console.sh` and `bin/status.sh`. To run a cluster without this folder
-(on several machines, or on Windows), use `bin/` directly: [DEPLOYMENT_AND_QA_GUIDE.md › section 10.6](../docs/DEPLOYMENT_AND_QA_GUIDE.md#106-start-order-and-joining).
+This folder is configuration only (`stack.yaml`, `nodes/`, `secrets.env`); the commands are in [bin/](../bin/README.md). `--cluster FILE` runs any other file of this format; the default is this one. Each node is started by `bin/start-server`, the console by `bin/start-console`, with the settings of `stack.yaml`.
 
-Open the console at `http://<this machine's address>:17480` (start.sh prints it) and go to **Admin → Cluster**: the three members are alive.
+Open the console at `http://<this machine's address>:17480` (`bin/start-cluster` prints it) and go to **Admin → Cluster**: the three members are alive.
 
 ## What runs where
 
 | Process | Address | What it serves | Its data |
 |---|---|---|---|
-| `drishti-main` | `http://<this machine's address>:18480` (start.sh prints it) | your own stack: the seven default packs, the demo lakes, live news | the repository's `data/` and `config/connectors/` (it runs in the repository, as from the IDE) |
-| `drishti-b` | `http://<this machine's address>:18791` (start.sh prints it) | synthetic ENDUR and CALYPSO trades (ids `10000000`+, `CLY-30000000`+), pack `trading` | `data/stack/nodes/drishti-b/`, lake `data/stack/lakes/shared/` |
-| `drishti-c` | `http://<this machine's address>:18792` (start.sh prints it) | synthetic MUREX trades (`MX-50000000`+), packs `trading`, `counterparty-risk`, `market-risk` | `data/stack/nodes/drishti-c/`, lake `data/stack/lakes/murex/` |
-| console | `http://<this machine's address>:17480` (start.sh prints it) | the console, given `drishti-main` alone; it learns `drishti-b` and `drishti-c` and fails over to them | the repository's `data/console/` |
+| `drishti-main` | `http://<this machine's address>:18480` (`bin/start-cluster` prints it) | your own stack: the seven default packs, the demo lakes, live news | the repository's `data/` and `config/connectors/` (it runs in the repository, as from the IDE) |
+| `drishti-b` | `http://<this machine's address>:18791` (`bin/start-cluster` prints it) | synthetic ENDUR and CALYPSO trades (ids `10000000`+, `CLY-30000000`+), pack `trading` | `data/stack/nodes/drishti-b/`, lake `data/stack/lakes/shared/` |
+| `drishti-c` | `http://<this machine's address>:18792` (`bin/start-cluster` prints it) | synthetic MUREX trades (`MX-50000000`+), packs `trading`, `counterparty-risk`, `market-risk` | `data/stack/nodes/drishti-c/`, lake `data/stack/lakes/murex/` |
+| console | `http://<this machine's address>:17480` (`bin/start-cluster` prints it) | the console, given `drishti-main` alone; it learns `drishti-b` and `drishti-c` and fails over to them | the repository's `data/console/` |
 
 **The nodes advertise this machine's real address, never 127.0.0.1** (members never advertise localhost, a loopback or a wildcard address:
-[OPERATIONS_GUIDE.md](../docs/guides/CLUSTER_GUIDE.md#2-a-cluster-of-three)). `start.sh` finds it (the default route's interface, never a docker bridge) and gives
+[OPERATIONS_GUIDE.md](../docs/guides/CLUSTER_GUIDE.md#2-a-cluster-of-three)). `bin/start-cluster` finds it (the default route's interface, never a docker bridge) and gives
 it to every node as `DRISHTI_STACK_HOST`, which the checked-in `node.yaml` and seed files name (`advertise-url: http://${DRISHTI_STACK_HOST}:18480`),
 so the files stay the same on every machine; the console is given `drishti-main` at that address too, so its discovered list matches what the
 cluster advertises. On a machine with several interfaces, set `host:` in `stack.yaml`. `status.sh` shows each member's advertised address.
@@ -55,19 +51,17 @@ Open `/v/trade/10000001` on the console: the trade is held by `drishti-b` only, 
 
 | File | Checked in | What it is |
 |---|---|---|
-| `stack.yaml` | yes | the nodes (port, heap, packs, lake, connectors switched off), the lakes, the shared settings and the console. `start.sh` reads it |
-| `start.sh`, `stop.sh`, `status.sh`, `stack.py` | yes | the commands (`stack.py` does the work; the console's Python runs it) |
+| `stack.yaml` | yes | the nodes (port, heap, packs, lake, connectors switched off), the lakes, the shared settings and the console. `bin/start-cluster` reads it |
 | `nodes/<node>/net/` | yes | each node's Drishti*net folder: `node.yaml` (its id, its address as `http://${DRISHTI_STACK_HOST}:<port>` and `secret: ${DRISHTI_NET_SECRET}`, references, never the key or this machine's IP), `gossip.yaml`, `peers/` (the seed) |
 | `secrets.env.example` | yes | the names of the secrets, no values |
 | `secrets.env` | **no** (git-ignored) | the secrets themselves, mode 600 |
-| `run/` | **no** (git-ignored) | `server.jar` (the copy the servers run) |
 | `../data/run/`, `../data/logs/` | **no** (`data/` is git-ignored) | the process ids (`server-<node>.pid`, `console.pid`) and the logs (`server-<node>.log`, `console.log`), where `bin/` keeps them |
-| `../data/stack/` | **no** (`data/` is git-ignored) | the nodes' data and connector folders, the synthetic lakes |
+| `../data/stack/` | **no** (`data/` is git-ignored) | `server.jar` (the copy the servers run), the nodes' data and connector folders, the synthetic lakes |
 
-On the first start `start.sh` makes what is missing: the secrets, `run/server.jar` (a copy of the newest
+On the first start `bin/start-cluster` makes what is missing: the secrets, `data/stack/server.jar` (a copy of the newest
 `drishti-server/target/drishti-server-*-exec.jar`; it tells you to build when there is none), a node's net folder, and the two synthetic
 lakes (`tools/bench/trades.py`: 1,500 trades a day per system for two business days, 300 counterparties). The servers run the copy, so a
-rebuild never replaces the jar under a running server: the next `start.sh` copies a newer build, and a restarted node runs it.
+rebuild never replaces the jar under a running server: the next `bin/start-cluster` copies a newer build, and a restarted node runs it.
 
 The synthetic lakes are laid out as the demo lake's file says (`config/lakes/demo.yaml`, [DATA_LAKE_GUIDE.md](../docs/guides/DATA_LAKE_GUIDE.md)):
 `trades.py` writes through it (`lake build --lake demo --lake-root data/stack/lakes/<name>`), and a node with `lake:` reads the same file
@@ -84,7 +78,7 @@ The repository is public, so no secret is ever in it. `secrets.env` holds three:
 | `DRISHTI_SESSION_SECRET` | every server and the console | the console's session cookie |
 | `DRISHTI_NET_SECRET` | every server | every call between the nodes (the cluster key; `node.yaml` names it, `secret: ${DRISHTI_NET_SECRET}`) |
 
-`start.sh` makes any that is missing with `openssl rand -hex 32` and keeps it, so sessions and tokens survive restarts. They reach the
+`bin/start-cluster` makes any that is missing with `openssl rand -hex 32` and keeps it, so sessions and tokens survive restarts. They reach the
 processes through their environment only; no command prints them. To use your own, copy `secrets.env.example` to `secrets.env` and fill
 it. Changing one signs everyone out (token, session) or splits the cluster until every node has the new key (net secret: rotate it as
 [OPERATIONS_GUIDE.md › Drishti*net: running several servers as one, section 6](../docs/guides/CLUSTER_GUIDE.md#16-security-the-key-mutual-tls-nodes-per-role), *Rotating the key with no downtime*, describes). `.gitignore` keeps `secrets.env`, any `net-key` file and `run/` out, and
@@ -93,12 +87,12 @@ it. Changing one signs everyone out (token, session) or splits the cluster until
 ## Restart one node
 
 ```bash
-drishti-stack/stop.sh drishti-b
-drishti-stack/start.sh drishti-b
+bin/stop-cluster.sh drishti-b
+bin/start-cluster.sh drishti-b
 ```
 
 The others see it `suspect` after 3 s and `dead` after 10 s (`gossip.yaml`), and `alive` again a second after it is back. A request for its
-trades meanwhile answers "the node that holds it is down", never "not found". `console` is a name too: `stop.sh console`, `start.sh console`.
+trades meanwhile answers "the node that holds it is down", never "not found". `console` is a name too: `bin/stop-cluster.sh console`, `bin/start-cluster.sh console`.
 
 ## Add a node
 
@@ -114,7 +108,7 @@ Add one entry under `nodes:` in `stack.yaml`, for example:
     args: [--drishti.security.registered-users-only=false]
 ```
 
-Then `drishti-stack/start.sh drishti-d`. It makes `nodes/drishti-d/net/` (with the seed `drishti-main` as its peer) and its data folder,
+Then `bin/start-cluster.sh drishti-d`. It makes `nodes/drishti-d/net/` (with the seed `drishti-main` as its peer) and its data folder,
 starts it, and the cluster learns it within seconds. Commit the new net folder with the entry.
 
 ## Logs
@@ -128,7 +122,7 @@ writes its temporary files under `data/tmp/server-<node>`, never the system `/tm
 
 ## Stopping
 
-`stop.sh` stops the console first, then each node, through `bin/stop-console.sh` and `bin/stop-server.sh --node <name>`: by the process id
+`bin/stop-cluster` stops the console first, then each node, through `bin/stop-console.sh` and `bin/stop-server.sh --node <name>`: by the process id
 in `data/run/<process>.pid`, after checking that the id is still a Drishti server or console; `SIGTERM` first, `SIGKILL` only after 60 s.
 Other Java or Python processes on the machine are never touched. A stack started before `bin/` (its ids in `run/pids.txt`) is stopped the
 same way once, from that file.

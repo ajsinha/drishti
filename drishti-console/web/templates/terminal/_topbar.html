@@ -23,8 +23,6 @@
 {# The menus are data: config/sitemap.yaml, each item with its requires:, and the edition's (or the person's lens's) menus: lists
    (core/menus.py, docs/guides/ADMIN_GUIDE.md › The design). #}
 {% set MENU = top_bar_menus(request, {'me': me, 'bi_me': bi_me, 'pack_switcher': pack_switcher, 'PRODUCT': PRODUCT}) %}
-{# The Engines menu (mock-up engines-menu/A): a column per running engine the person's role opens; its panel in terminal/_engines_menu.html #}
-{% set ENGINES = engines_panel(request, {'me': me, 'bi_me': bi_me, 'pack_switcher': pack_switcher, 'PRODUCT': PRODUCT}) %}
 {% set MENU_LINKS = {} %}
 {% set TIPS = {} %}
 {% macro _on(href, match) -%}{{ 'yes' if (path == href) or (match and path.startswith(match)) else '' }}{%- endmacro %}
@@ -97,48 +95,7 @@
   {% for label, icon, columns in MENU %}
     {% set ns = namespace(active=False) %}
     {% for _t, items in columns %}{% for href, _i, _l, _d, match, _c in items %}{% if _on(href, match) %}{% set ns.active = True %}{% endif %}{% endfor %}{% endfor %}
-    {% if ENGINES and label == ENGINES.label %}
-    {# The Engines menu: a column per engine, its command word in the head, every page one click away with its command on the right; a
-       search box when many engines run; Admin -> Engines and the engines not running for an administrator. On a phone (below 640 px)
-       the columns fold: an engine's head opens its pages, one engine at a time (static/js/drishti_engines-menu.js, drishti_nav.css). #}
-    {% set n = ENGINES.columns | length %}
-    <div class="dropdown tbar-menu tbar-engines" data-engines-menu>
-      <button class="tbar-menu-btn{% if ns.active %} active{% endif %}" type="button" data-bs-toggle="dropdown" data-bs-display="static" data-bs-auto-close="outside"
-              aria-expanded="false"{% if ns.active %} aria-current="true"{% endif %} title="{{ label }}: {{ ENGINES.columns | map(attribute='title') | join(', ') }}">
-        <i class="bi bi-{{ icon }}" aria-hidden="true"></i><span class="tbar-menu-l">{{ label }}</span></button>
-      <div class="dropdown-menu mega-panel mega-engines eng-c{{ n if n < 6 else 6 }}" data-engines-panel>
-        <div class="eng-top">
-          <span class="eng-ttl">{{ label }} · {{ n }} running</span>
-          {% if ENGINES.search %}<span class="eng-search"><i class="bi bi-search" aria-hidden="true"></i>
-            <label class="visually-hidden" for="engQ">Search the engines' pages</label>
-            <input id="engQ" class="eng-q" type="search" autocomplete="off" spellcheck="false" data-engines-q
-                   placeholder="Search {{ ENGINES.pages }} pages of {{ n }} engines…"></span>{% endif %}
-          {% if ENGINES.admin %}<a class="eng-adm" href="{{ ENGINES.admin.href }}" data-engines-admin>{{ ENGINES.admin.label }} <i class="bi bi-chevron-right" aria-hidden="true"></i></a>{% endif %}
-        </div>
-        <div class="eng-cols">
-          {% for c in ENGINES.columns %}
-          <div class="mega-col eng-col{% if loop.first %} eng-open{% endif %}" data-engine="{{ c.engine }}">
-            <button type="button" class="eng-head" data-engine-head aria-expanded="{{ 'true' if loop.first else 'false' }}">
-              <span class="mega-title eng-name">{{ c.title }}</span>{% if c.word %}<code class="eng-word mono">{{ c.word }}</code>{% endif %}
-              <i class="bi bi-chevron-down eng-chev" aria-hidden="true"></i></button>
-            <div class="eng-items">
-            {% for href, i, l, d, match, cmd in c.links %}{% set on = _on(href, match) %}
-            <a class="mega-item{% if on %} active{% endif %}" href="{{ href }}"{% if on %} aria-current="page"{% endif %}{% if cmd and href.startswith('/t?cmd=') %} data-fill="{{ cmd }}"{% endif %}
-               data-search="{{ (l ~ ' ' ~ d ~ ' ' ~ cmd ~ ' ' ~ c.title) | lower }}">
-              <span class="mega-icon"><i class="bi bi-{{ i }}" aria-hidden="true"></i></span>
-              <span class="mega-text"><span class="mega-label"><span class="eng-l">{{ l }}</span>{% if cmd %}<code class="mega-cmd mono">{{ cmd }}{% if href.startswith('/t?cmd=') %} …{% endif %}</code>{% endif %}</span><span class="mega-desc">{{ d }}</span></span></a>
-            {% endfor %}
-            </div>
-          </div>
-          {% endfor %}
-        </div>
-        {% if ENGINES.search %}<p class="eng-none" data-engines-none hidden>No page of a running engine matches.</p>
-        <p class="eng-count" data-engines-count hidden></p>{% endif %}
-        {% if ENGINES.off %}<div class="eng-off" data-engines-off><span>Not running on any server:</span>
-          {% for t, w in ENGINES.off %}<span class="eng-offc" aria-disabled="true">{{ t }}{% if w %} <code class="mono">{{ w }}</code>{% endif %}</span>{% endfor %}</div>{% endif %}
-      </div>
-    </div>
-    {% elif label in MENU_LINKS %}{% set href = MENU_LINKS[label] %}{% set on = path == href or path.startswith('/form') %}
+    {% if label in MENU_LINKS %}{% set href = MENU_LINKS[label] %}{% set on = path == href or path.startswith('/form') %}
     <a class="tbar-menu-btn{% if on %} active{% endif %}" href="{{ href }}"{% if on %} aria-current="page"{% endif %} title="{{ TIPS[label] if label in TIPS else label }}"{% if label in TIPS %} aria-label="{{ TIPS[label] }}"{% endif %}>
       <i class="bi bi-{{ icon }}" aria-hidden="true"></i><span class="tbar-menu-l">{{ label }}</span></a>
     {% else %}

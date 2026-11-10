@@ -180,6 +180,33 @@ export function svgOf(E, option, width, height) {
 }
 
 /**
+ * A drag on the grid that picks a range of the axis (linked brushing): a band while it moves, onBrush(from, to) with the axis's own values
+ * at the end; the band stays until the returned function clears it.
+ * @param {Object} engine the chart's engine instance
+ * @param {function(): boolean} active whether the chart brushes now
+ * @param {string} colour the band's fill
+ * @param {function(*, *): void} onBrush given the axis values at the two ends, lower first
+ * @param {('x'|'y')} [axis='x']
+ * @returns {function(): void} clears the band
+ */
+export function rangeBrush(engine, active, colour, onBrush, axis) {
+  const zr = engine.getZr(), dim = axis === 'y' ? 'offsetY' : 'offsetX';
+  let from = null, moved = false;
+  const band = (a, b) => engine.setOption({ graphic: [{ id: 'dc-range', type: 'rect', silent: true, z: 100, shape: axis === 'y' ? { x: 0, y: Math.min(a, b), width: zr.getWidth(), height: Math.abs(b - a) } : { x: Math.min(a, b), y: 0, width: Math.abs(b - a), height: zr.getHeight() }, style: { fill: colour } }] });
+  zr.on('mousedown', (e) => { from = active() && engine.containPixel('grid', [e.offsetX, e.offsetY]) ? e[dim] : null; moved = false; });
+  zr.on('mousemove', (e) => { if (from !== null && Math.abs(e[dim] - from) > 4) { moved = true; band(from, e[dim]); } });
+  zr.on('mouseup', (e) => {
+    if (from === null) { return; }
+    const a = from, b = e[dim];
+    from = null;
+    if (!moved) { return; }
+    const finder = axis === 'y' ? { yAxisIndex: 0 } : { xAxisIndex: 0 };
+    onBrush(engine.convertFromPixel(finder, Math.min(a, b)), engine.convertFromPixel(finder, Math.max(a, b)));
+  });
+  return () => engine.setOption({ graphic: [{ id: 'dc-range', $action: 'remove' }] });
+}
+
+/**
  * Drag-to-zoom on a chart's plot: a drag across draws a band and zooms the x axis to it when the mouse is let go (a click, with no
  * drag, stays a click on a mark).
  * @param {Object} engine the chart's engine instance

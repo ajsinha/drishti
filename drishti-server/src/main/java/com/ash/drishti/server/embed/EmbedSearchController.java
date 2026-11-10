@@ -19,7 +19,7 @@ import com.ash.drishti.api.AsOf;
 import com.ash.drishti.engine.command.Suggestion;
 import com.ash.drishti.identity.EmbedAppStore;
 import com.ash.drishti.server.api.CommandController;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;

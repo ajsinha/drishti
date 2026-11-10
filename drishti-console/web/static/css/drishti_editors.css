@@ -56,6 +56,7 @@
 .ed-tag { margin-left: var(--d-sp-4); font-size: var(--d-fs-10); padding: 0 var(--d-sp-5); border: 1px solid var(--d-border); border-radius: var(--d-radius-8); color: var(--d-muted); }
 .ed-at { outline: 2px solid var(--d-accent); outline-offset: -2px; }
 .ed-cost { font-size: var(--d-fs-12); margin: var(--d-sp-6) 0; }
+.ed-paths-on { height: 320px; }                                                            /* the model's filter paths, drawn by drishti-graph */
 .ed-checks { list-style: none; padding: 0; margin: 0; font-size: var(--d-fs-12); }
 .ed-checks li { padding: var(--d-sp-2) 0; }
 .ed-c-ok { color: var(--d-ok); }

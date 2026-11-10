@@ -18,7 +18,7 @@ package com.ash.drishti.server.datamap;
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.packs.Pack;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;

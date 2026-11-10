@@ -208,7 +208,7 @@ class NetLiveBiTest {
         JsonNode b = JSON.readTree(onB.body());
         assertThat(b.path("rows")).isEqualTo(a.path("rows"));
         assertThat(a.path("rows").toString()).contains("465000");          // 1000 + 2000 + ... + 30000
-        var route = cluster.node("b").bean(NetRouting.class).report(REPORT, java.util.Set.of("trade"), com.ash.drishti.server.security.Principal.anonymous("x"));
+        var route = cluster.node("b").bean(NetRouting.class).report(REPORT, java.util.Set.of("trade"), com.ash.drishti.kernel.api.security.Principal.anonymous("x"));
         assertThat(route.route()).isEqualTo(NetRouting.Route.VIEW);
     }
 }

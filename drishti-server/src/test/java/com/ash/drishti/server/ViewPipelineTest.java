@@ -50,9 +50,9 @@ class ViewPipelineTest {
     /** An augmenter of a kind adds to every view of it (an engine's figures computed as the page opens); the stored document never has it. */
     @Test
     void anAugmenterAddsToTheViewNeverToTheStoredDocument() {
-        java.util.List<com.ash.drishti.engine.ViewAugmenter> before = pipeline.augmenters();
+        java.util.List<com.ash.drishti.kernel.api.view.ViewAugmenter> before = pipeline.augmenters();
         java.util.concurrent.atomic.AtomicInteger calls = new java.util.concurrent.atomic.AtomicInteger();
-        pipeline.augmenters(java.util.List.of(new com.ash.drishti.engine.ViewAugmenter() {
+        pipeline.augmenters(java.util.List.of(new com.ash.drishti.kernel.api.view.ViewAugmenter() {
             @Override
             public boolean augments(String kind) {
                 return kind.equals("trade");

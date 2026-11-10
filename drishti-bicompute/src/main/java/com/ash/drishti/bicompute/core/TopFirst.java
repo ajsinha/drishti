@@ -15,7 +15,12 @@
  */
 package com.ash.drishti.bicompute.core;
 
-import com.ash.drishti.bicompute.core.AggregationPlan.FunctionCall;
+import com.ash.drishti.kernel.api.pivot.AggregationPlan;
+import com.ash.drishti.kernel.api.pivot.CellSet;
+import com.ash.drishti.kernel.api.pivot.Dim;
+import com.ash.drishti.kernel.api.pivot.Partials;
+import com.ash.drishti.kernel.api.pivot.PivotView;
+import com.ash.drishti.kernel.api.pivot.AggregationPlan.FunctionCall;
 import com.ash.drishti.bicompute.functions.Sketches;
 import com.ash.drishti.bicompute.functions.SpaceSaving;
 import java.util.ArrayList;
@@ -78,7 +83,7 @@ final class TopFirst {
         if (d == null || d.group() != null || d.width() > 0 || !"string".equals(c.types.get(d.field()))) {
             return "a summary ranks a text field's own values; " + dim + " is grouped or not text";
         }
-        if (!c.provider.capabilities().builtIns() || "var".equals(c.provider.id())) {
+        if (!c.provider.capabilities().builtIns() || c.provider.exactOnly() != null) {
             return "the source's own measures are never approximated";
         }
         FunctionCall f = c.functions.get(c.measureIndex(top.by(), false));

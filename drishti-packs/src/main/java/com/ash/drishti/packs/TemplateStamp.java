@@ -30,7 +30,7 @@ import java.util.regex.Pattern;
  * naming the pack, the fingerprint of the template it was generated from ({@link ConnectorBootstrap#fingerprint}) and the etag of the text
  * below the line as it was written. A file whose text below the line still has that etag was never edited: at an upgrade it follows the
  * pack and is replaced in full by the new template. Kept in the text, the stamp travels wherever the text does: a file on disk, a shared
- * edit in the content store (the overlay keeps the whole text), the history, a copy to another server. Line endings do not count (a file
+ * the history, a copy to another server. Line endings do not count (a file
  * saved on Windows with CRLF is not an edit). Stateless.
  */
 public final class TemplateStamp {

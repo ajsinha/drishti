@@ -18,11 +18,11 @@ package com.ash.drishti.banking.var;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.bicompute.core.PivotCore;
-import com.ash.drishti.bicompute.core.PivotView;
-import com.ash.drishti.bicompute.spi.Viewer;
+import com.ash.drishti.kernel.api.pivot.PivotView;
+import com.ash.drishti.kernel.api.pivot.Viewer;
 import com.ash.drishti.banking.compute.var.VarBook;
 import com.ash.drishti.server.PinnedBusinessDate;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;

@@ -27,7 +27,7 @@ import com.ash.drishti.identity.UserService;
 import com.ash.drishti.server.admission.AdmissionGate;
 import com.ash.drishti.server.admission.Work;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.LinkedHashSet;

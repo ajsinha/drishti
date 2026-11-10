@@ -40,7 +40,7 @@ import com.ash.drishti.server.collab.mail.MailTemplates;
 import com.ash.drishti.server.collab.mail.OutboxDispatcher;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.server.security.PackAccess;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.sun.net.httpserver.HttpServer;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.io.IOException;

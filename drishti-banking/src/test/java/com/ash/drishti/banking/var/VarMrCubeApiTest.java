@@ -21,7 +21,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 
 import com.ash.drishti.banking.compute.var.VarLens;
 import com.ash.drishti.server.PinnedBusinessDate;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.ash.drishti.server.security.TokenVerifier;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -217,6 +217,31 @@ class VarMrCubeApiTest {
         String someCell = again.get("cells").fieldNames().next();
         JsonNode prov = call(rita, get("/api/v1/pivot/provenance/" + again.get("provenance").asText()).param("cell", someCell), null, 200);
         assertThat(prov.at("/cell/scope").asText()).isNotBlank();
+    }
+
+    @Test
+    void aDecompositionStatesDiversificationAndItsEulerPartsAddUpToTheNode() throws Exception {
+        String rita = as("rita", "risk");
+        Map<String, Object> ask = new LinkedHashMap<>();
+        ask.put("source", "var");
+        ask.put("measure", "var()");
+        ask.put("split", "DESK");
+        ask.put("options", Map.of("scope", "BANK"));
+        JsonNode a = call(rita, post("/api/v1/pivot/decompose"), ask, 200);
+        double parent = a.at("/node/value").asDouble(), sum = 0, comp = 0;
+        for (JsonNode c : a.get("children")) {
+            sum += c.get("value").asDouble();
+            comp += c.get("component").asDouble();
+        }
+        assertThat(a.get("additive").asBoolean()).isFalse();
+        assertThat(a.get("sumStandalone").asDouble()).isCloseTo(sum, CENT);
+        assertThat(a.get("diversification").asDouble()).isCloseTo(sum - parent, CENT);
+        assertThat(comp).isCloseTo(parent, org.assertj.core.data.Offset.offset(parent * 0.02));
+        JsonNode first = a.get("children").get(0);
+        ask.put("path", List.of(Map.of("field", "DESK", "value", first.get("member").asText())));
+        ask.put("split", "CURRENCY");
+        JsonNode b = call(rita, post("/api/v1/pivot/decompose"), ask, 200);
+        assertThat(b.at("/node/value").asDouble()).isCloseTo(first.get("value").asDouble(), CENT);
     }
 
     @Test

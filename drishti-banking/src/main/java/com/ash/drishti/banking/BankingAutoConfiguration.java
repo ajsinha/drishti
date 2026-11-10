@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.banking;
 
-import com.ash.drishti.server.modules.ApiAlias;
+import com.ash.drishti.kernel.api.modules.ApiAlias;
 import com.ash.drishti.server.modules.ConditionalOnModule;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;

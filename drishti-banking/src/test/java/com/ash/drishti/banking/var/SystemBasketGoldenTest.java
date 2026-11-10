@@ -94,6 +94,11 @@ class SystemBasketGoldenTest {
 
     /** Every portfolio's figures, and the page's, as the golden file keeps them. */
     static Map<String, Object> describe(Map<String, VarDate.Portfolio> defs) {
+        return describe(defs, book, sums);
+    }
+
+    /** The same over any book (the golden matrix: another date, window or currency). */
+    static Map<String, Object> describe(Map<String, VarDate.Portfolio> defs, VarBook book, ParallelSums sums) {
         ScopeResolver resolver = new ScopeResolver(book, new ScopeResolver.Definitions() {
             @Override
             public Optional<String> portfolio(String id) {
@@ -128,7 +133,7 @@ class SystemBasketGoldenTest {
             m.put("limit", Double.isNaN(pf.limit()) ? null : pf.limit());
             m.put("limitUse", Double.isNaN(pf.limit()) || pf.limit() == 0 ? null : ms.var() / pf.limit());
             if (pf.id().equals(PAGE)) {
-                m.put("page", page(calc, r.set(), v, ms));
+                m.put("page", page(book, sums, calc, r.set(), v, ms));
             }
             all.put(pf.id(), m);
         }
@@ -136,7 +141,7 @@ class SystemBasketGoldenTest {
     }
 
     /** The page's figures: its positions (trades in scope, VaR on its own, component VaR, direction, market value) and the strip's counts. */
-    private static Map<String, Object> page(VarCalc calc, OrdinalSet set, double[] total, VarCalc.Measures ms) {
+    private static Map<String, Object> page(VarBook book, ParallelSums sums, VarCalc calc, OrdinalSet set, double[] total, VarCalc.Measures ms) {
         List<VarCalc.Part> parts = new ArrayList<>();
         List<Integer> idx = new ArrayList<>();
         for (int p = 0; p < book.positionCount(); p++) {

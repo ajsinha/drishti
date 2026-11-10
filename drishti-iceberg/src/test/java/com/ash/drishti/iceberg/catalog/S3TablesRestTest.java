@@ -46,7 +46,7 @@ class S3TablesRestTest {
     void start() throws Exception {
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         server.createContext("/", ex -> {
-            String path = ex.getRequestURI().getRawPath() + (ex.getRequestURI().getRawQuery() == null ? "" : "?" + ex.getRequestURI().getRawQuery());
+            String path = ex.getRequestURI().getRawPath() + (ex.getRequestURI().getRawQuery() == null || ex.getRequestURI().getRawQuery().startsWith("pageToken=") || ex.getRequestURI().getRawQuery().startsWith("snapshots=") ? "" : "?" + ex.getRequestURI().getRawQuery());
             String auth = String.valueOf(ex.getRequestHeaders().getFirst("Authorization"));
             calls.add(ex.getRequestMethod() + " " + path + " | " + auth + " | " + ex.getRequestHeaders().getFirst("X-Iceberg-Access-Delegation"));
             String body;
@@ -113,6 +113,6 @@ class S3TablesRestTest {
         Map<String, String> s = settings();
         s.put("catalog", "rest");                        // a plain REST catalog: no SigV4, so the stand-in answers 403
         s.put("warehouse", S3TablesTest.ARN);
-        org.assertj.core.api.Assertions.assertThatThrownBy(() -> Catalogs.open(s)).hasMessageContaining("403");
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> Catalogs.open(s)).hasMessageContaining("Forbidden");
     }
 }

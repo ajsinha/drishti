@@ -36,7 +36,7 @@ import com.ash.drishti.server.bi.engine.SqlCompiler;
 import com.ash.drishti.server.bi.model.PackModels;
 import com.ash.drishti.server.loads.LoadRecord;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.ash.drishti.server.security.SecurityProperties;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;

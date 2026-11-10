@@ -152,7 +152,7 @@ class NativeOnS3Test {
         try (Catalog c = Catalogs.open(s)) {
             Table t = c.load("trade").orElseThrow();
             Operations.setProperties(t, Map.of("drishti.probe", "1"));          // a commit, so the probe has run
-            exclusive = t.ops().exclusiveCommits();
+            exclusive = ((com.ash.drishti.iceberg.catalog.PathTableOps) ((org.apache.iceberg.HasTableOperations) t.iceberg()).operations()).exclusiveCommits();
         }
         if (!exclusive || !atOnce) {
             System.out.println(exclusive ? "writers at once are not tried on this store" : "the store does not honour conditional writes: the table is single-writer");
@@ -199,7 +199,7 @@ class NativeOnS3Test {
             LocalDate day = LocalDate.of(2026, 9, 30);
             NativeLayout.commitDays(t, Map.of(day, NativeLayout.writeDay(t, day, NativeCommitTest.rows("A", 4).iterator(), 100)));
             assertThat(NativeCommitTest.liveRows(t, pool)).isEqualTo(4);
-            boolean exclusive = t.ops().exclusiveCommits();
+            boolean exclusive = ((com.ash.drishti.iceberg.catalog.PathTableOps) ((org.apache.iceberg.HasTableOperations) t.iceberg()).operations()).exclusiveCommits();
             System.out.println("S3Mock honours conditional writes: " + exclusive);
             assertThat(t.plan(t.currentSnapshot().orElseThrow(), Expr.TRUE, pool)).hasSize(1);
         }

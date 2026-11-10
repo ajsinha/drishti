@@ -19,7 +19,7 @@ import com.ash.drishti.common.Branding;
 import com.ash.drishti.net.security.ClusterKey;
 import com.ash.drishti.net.security.NetHeaders;
 import com.ash.drishti.net.security.OnBehalfOf;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.ash.drishti.server.security.RequestPaths;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ReadListener;

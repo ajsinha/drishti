@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.bicompute.custom;
 
-import com.ash.drishti.bicompute.spi.Kind;
+import com.ash.drishti.kernel.api.pivot.Kind;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;

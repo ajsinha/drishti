@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.bicompute.rollup;
 
-import com.ash.drishti.bicompute.core.CellKey;
-import com.ash.drishti.bicompute.core.Dim;
+import com.ash.drishti.kernel.api.pivot.CellKey;
+import com.ash.drishti.kernel.api.pivot.Dim;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;

@@ -41,7 +41,7 @@ public final class Compiler {
     static final Set<String> AGGREGATES = Set.of("sum", "avg", "min", "max", "count", "distinct", "percentile", "median", "wavg", "variance",
             "stddev", "variance_pop", "stddev_pop", "nmiss", "range", "stderr", "cv", "skewness", "kurtosis", "geomean", "harmean", "corr",
             "covar", "slope", "intercept", "rsq", "mode", "iqr", "trimmean", "kth_largest", "kth_smallest");
-    static final Set<String> CONTEXT = Set.of("calc", "share_of", "parent_of", "avg_by", "avg_over", "as_of");
+    static final Set<String> CONTEXT = Set.of("calc", "share_of", "parent_of", "avg_by", "sum_by", "min_by", "max_by", "avg_over", "as_of");
     static final Set<String> WINDOWS = Set.of("lag", "lead", "rank", "dense_rank", "percent_rank", "moving_avg", "moving_sum", "moving_min",
             "moving_max");
     static final Set<String> TIME = Set.of("ytd", "mtd", "qtd", "prior_period", "same_period_last_year", "running", "fiscal_ytd", "latest",
@@ -177,8 +177,8 @@ public final class Compiler {
             }
             case "parent_of" -> new Lowered.Context(fn, new FilterContext.Edit(FilterContext.Kind.EDIT, false, Set.of(), null, null, List.of(), null),
                     inner, null, null, text(c.arg("hierarchy")));
-            case "avg_by" -> new Lowered.Context(fn, new FilterContext.Edit(FilterContext.Kind.AVERAGE, false, Set.of(), null, null,
-                    new ArrayList<>(fieldSet(c.arg("by"))), null), inner, null, null, null);
+            case "avg_by", "sum_by", "min_by", "max_by" -> new Lowered.Context(fn, new FilterContext.Edit(FilterContext.Kind.AVERAGE, false, Set.of(), null, null,
+                    new ArrayList<>(fieldSet(c.arg("by"))), null, false, fn.substring(0, 3), null, null), inner, null, null, null);
             case "avg_over" -> new Lowered.Context(fn, new FilterContext.Edit(FilterContext.Kind.AVERAGE, false, Set.of(), null, null,
                     List.of(field(c.args().get(1))), null), inner, null, null, null);
             default -> {

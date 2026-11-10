@@ -79,10 +79,10 @@ def test_the_shipped_engine_file_is_off_and_names_its_variable():
 
 
 def test_every_launcher_asks_the_one_place_and_passes_arrows_cap():
-    for launcher in ("start-server.sh", "start-server.ps1"):                # drishti-stack starts its nodes through bin/start-server.sh
+    for launcher in ("start-server.sh", "start-server.ps1"):                # bin/start-cluster starts its nodes through bin/start-server.sh
         text = (ROOT / "bin" / launcher).read_text(encoding="utf-8")
         assert "--extra-only" in text and "--arrow-only" in text and "drishti.arrow.max-bytes" in text, launcher
-    assert "bin_run(\"start-server\"" in (ROOT / "drishti-stack" / "stack.py").read_text(encoding="utf-8")
+    assert "bin_run(\"start-server\"" in (ROOT / "bin" / "lib" / "cluster.py").read_text(encoding="utf-8")
     ecs = (ROOT / "deploy" / "docker" / "ecs" / "server-entrypoint.sh").read_text(encoding="utf-8")
     assert "DRISHTI_ARROW_MB" in ecs and "drishti.arrow.max-bytes" in ecs
     for f in (ROOT / "run-configs").glob("Drishti server*.run.xml"):

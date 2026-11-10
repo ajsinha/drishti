@@ -22,7 +22,7 @@ import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.engine.source.SourceRegistry;
 import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;

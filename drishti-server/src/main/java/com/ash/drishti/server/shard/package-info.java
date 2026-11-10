@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /**
- * What a measure brings to the sharding machinery ({@link com.ash.drishti.server.shard.ShardedMeasure}) and the members' view of it:
+ * What a measure brings to the sharding machinery ({@link com.ash.drishti.kernel.api.shard.ShardedMeasure}) and the members' view of it:
  * who owns which shard, stability and drain ({@link com.ash.drishti.server.shard.ShardMembership}) and readiness in the capability digest
  * ({@link com.ash.drishti.server.shard.ShardPeers}).
  */

@@ -23,7 +23,7 @@ import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.identity.FilePreferenceStore;
 import com.ash.drishti.identity.collab.Notice;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.nio.file.Path;
 import java.time.Clock;
 import java.time.Instant;

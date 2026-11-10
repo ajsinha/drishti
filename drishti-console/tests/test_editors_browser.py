@@ -403,7 +403,7 @@ def test_model_tabs_measure_card_and_access(pg):
     wait(pg, f"/{last}:[\\s\\S]*role: dimension/.test(window.Drishti.editors.yamlText())")
     pg.click("[data-add-rel]")
     wait(pg, "document.querySelectorAll('[data-rel]').length === 2")
-    gcell(pg, "relationships", "1", 2)                                       # Active: a checkbox cell turns at once
+    gcell(pg, "relationships", "1", 4)                                       # Active (after Name, From, To, Filter): a checkbox cell turns at once
     wait(pg, "window.Drishti.editors.yamlText().includes('active: false')")
     pg.click("[data-remove-rel] >> nth=1")
     pg.click("[data-remove-alias] >> nth=2")

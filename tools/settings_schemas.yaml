@@ -72,19 +72,11 @@ schemas:
       - { key: "menus[].also", type: list, default: "[]", meaning: "Items listed in other menus that this menu's strip also draws, by id (the Admin tabs' BI settings and My account, the BI rail's Pivot and Build home), without listing them twice" }
       - { key: "menus[].personal", type: boolean, default: "false", meaning: "The person's own menu (My account): never drawn as a top menu" }
       - { key: "menus[].subject", type: boolean, default: "false", meaning: "A lens's subject menu (Curves, Economies ...): drawn only where an edition's menus.top names it" }
-      - { key: "menus[].gather", type: list, default: none, meaning: "A menu that gathers the columns of other menus by id (the Trading lens's one Markets menu gathers Curves, Volatility, FX and Credit), each drawn as its own column" }
-      - { key: "menus[].engines", type: boolean, default: "false", meaning: "The Engines menu: a column per compute engine, drawn for the engines running in the cluster that the person's role opens" }
-      - { key: "menus[].search-over", type: number, default: "4", meaning: "The Engines menu: its search box shows when more engines than this run" }
-      - { key: "menus[].admin-link", type: map, default: none, meaning: "The Engines menu: its Admin -> Engines link {href, label, requires} (administrators)" }
-      - { key: "menus[].admin-link.href", type: string, meaning: "Where it goes (/admin/engines)" }
-      - { key: "menus[].admin-link.label", type: string, meaning: "Its text" }
-      - { key: "menus[].admin-link.requires", type: list, default: "[]", meaning: "Conditions that must all hold for it to show (as an item's requires)" }
+      - { key: "menus[].without-lens", type: boolean, default: "false", meaning: "A subject menu drawn in the full product's bar too (Risk: the home of the engines' pages, each item with requires engine:<id>)" }
+      - { key: "menus[].gather",type: list, default: none, meaning: "A menu that gathers the columns of other menus by id (the Trading lens's one Markets menu gathers Curves, Volatility, FX and Credit), each drawn as its own column" }
       - { key: "menus[].columns", type: list, meaning: "The menu's columns, each a title and its items" }
       - { key: "menus[].columns[].title", type: string, meaning: "A column's heading" }
       - { key: "menus[].columns[].domain", type: string, default: "the menu's", meaning: "The domain module of the column's items" }
-      - { key: "menus[].columns[].engine", type: string, default: none, meaning: "The Engines menu: the column's engine (its id in config/engines.yaml); drawn only while it runs on a server of the cluster" }
-      - { key: "menus[].columns[].word", type: string, default: "", meaning: "The Engines menu: the engine's command word, shown in the column's head" }
-      - { key: "menus[].columns[].opens", type: list, default: "[]", meaning: "The Engines menu: who opens the engine, any of role:<name> or pack:<name> (a pack assigned to the person); administrators always; none: everyone. The engine's command words follow it (left out of the type-ahead, refused when typed); Help does not" }
       - { key: "menus[].columns[].items", type: list, meaning: "A column's items" }
       - { key: "menus[].columns[].items[].id", type: string, meaning: "The item's id (what an edition lists to keep it)" }
       - { key: "menus[].columns[].items[].href", type: string, meaning: "Where it goes (blank with cmd: the command run; with fill: the command line filled)" }
@@ -473,6 +465,7 @@ schemas:
 # Environment variables no settings file above names: read by the packs' manifests, the server's profile files, the code or the tools.
 # by: server, console, packs, profile, tools.
 env:
+  - { name: DRISHTI_LAKE_CACHE, by: tools, default: "<data>/tmp/lake-cache", sets: "the cached demo lakes' folder", meaning: "Where tools/drillkit/lake_cache.py keeps the demo lakes the test stacks and checks reuse, one per hash of the test data, generators and lake code" }
   # the packs' connectors (config/packs/<domain>/<pack>/pack.yaml)
   - { name: DRISHTI_DELTA_ROOT, by: packs, default: "./data/delta/demo", sets: "the demo lake's root (config/lakes/demo.yaml)", meaning: "Root of the demo lake, which every pack's Delta connector reads (lake: demo); every lake's own default is <data>/delta/<lake>" }
   - { name: DRISHTI_LAKES_RELOCATE_ON_START, by: server, default: "true", sets: "drishti.lakes.relocate-on-start", meaning: "At start, move a demo lake built in the older layout (<data>/delta/<domain>) into <data>/delta/demo once, safely (verified, moved back on any error, never a delete); false: only by drishti.py lake relocate demo (docs/guides/OPERATIONS_GUIDE.md)" }
@@ -539,9 +532,9 @@ env:
   - { name: DRISHTI_ARROW_EXCHANGE_MB, by: tools, default: "512", sets: "the launchers' -XX:MaxDirectMemorySize and -Ddrishti.arrow.max-bytes", meaning: "Arrow's budget in MB beyond Arrow Flight: the compute workers' exchange and BI answers sent as Arrow (the official Arrow library's buffers are direct memory); added to the direct-memory limit with Flight's memory.total-mb when its engine is on (tools/lake/memory_caps.py)" }
   - { name: DRISHTI_ARROW_MB, by: tools, default: "512", sets: "the Windows and ECS launchers' -XX:MaxDirectMemorySize and -Ddrishti.arrow.max-bytes", meaning: "Arrow's whole budget in MB, used as it is (an ECS task has no Python: set it to what tools/lake/memory_caps.py --arrow-only prints); unset, the Windows launcher asks memory_caps.py and the ECS entrypoint uses 512" }
   - { name: DRISHTI_LAKE_MEMORY_, by: tools, default: "", sets: "one store's cap for the launchers", meaning: "Prefix: DRISHTI_LAKE_MEMORY_<STORE>_MAX_MB overrides one in-memory lake store's max-mb when the launchers compute the direct-memory limit (tools/lake/memory_caps.py)" }
-  - { name: DRISHTI_DRAIN_TOKEN, by: tools, default: ~, sets: "rolling.py, deploy/bin/drishti-node.sh", meaning: "An administrator's personal API token with the node:drain scope: the stop hooks and the rolling upgrade runner drain a server with it (secret; else DRISHTI_DRAIN_TOKEN_FILE, else DRISHTI_TOKEN)" }
-  - { name: DRISHTI_DRAIN_WAIT, by: tools, default: "90", sets: "deploy/bin/drishti-node.sh", meaning: "Seconds the stop hook waits for safeToStop after the drain (ECS on Fargate: at most 120 s for the whole stop)" }
-  - { name: DRISHTI_NODE_URL, by: tools, default: "http://localhost:18480", sets: "deploy/bin/drishti-node.sh", meaning: "The server the stop hook drains and checks" }
+  - { name: DRISHTI_DRAIN_TOKEN, by: tools, default: ~, sets: "rolling.py, bin/drishti-node.sh", meaning: "An administrator's personal API token with the node:drain scope: the stop hooks and the rolling upgrade runner drain a server with it (secret; else DRISHTI_DRAIN_TOKEN_FILE, else DRISHTI_TOKEN)" }
+  - { name: DRISHTI_DRAIN_WAIT, by: tools, default: "90", sets: "bin/drishti-node.sh", meaning: "Seconds the stop hook waits for safeToStop after the drain (ECS on Fargate: at most 120 s for the whole stop)" }
+  - { name: DRISHTI_NODE_URL, by: tools, default: "http://localhost:18480", sets: "bin/drishti-node.sh", meaning: "The server the stop hook drains and checks" }
   - { name: DRISHTI_HEARTBEAT_SECONDS, by: tools, default: "30", sets: "build_demo_lakes.py", meaning: "How often a long lake build prints that it is alive" }
   - { name: DRISHTI_LAKE_LOADER_HEAP, by: tools, default: ~, sets: "lake load", meaning: "The Java lake loader's heap" }
   - { name: DRISHTI_LAKE_CLASSPATH, by: tools, default: ~, sets: "lake load", meaning: "The class path of the Java lake loader" }

@@ -33,12 +33,19 @@ import pytest
 
 from test_var_explorer_browser import open_var, painted, shot
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
-from var_stack import VAR_TRADES, var_data, var_lake, var_server
+from var_stack import VAR_TRADES, trade_grain_copy, var_data, var_lake, var_server
 from select_helpers import choose, options, value, values  # <drishti-select>: drishti-inputs' Select
 
 @pytest.fixture(scope="module")
 def stack(tmp_path_factory):
     yield from var_server(tmp_path_factory, var_lake(tmp_path_factory, var_data(*VAR_TRADES)))
+
+
+@pytest.fixture(scope="module")
+def trade_stack(tmp_path_factory):
+    """The same data with a small trade-grain morning on its newest date (the demo is position grain): a trade page and its currency."""
+    lake = trade_grain_copy(var_lake(tmp_path_factory, var_data(*VAR_TRADES)), tmp_path_factory.mktemp("var-trade-lake"))
+    yield from var_server(tmp_path_factory, lake)
 
 
 def requests_to(pg, part):
@@ -136,18 +143,18 @@ def test_on_a_phone_the_picker_and_the_tab_fit(stack, browser):
     pg.close()
 
 
-def test_a_trade_page_says_its_trade_currency(stack, browser):
+def test_a_trade_page_says_its_trade_currency(trade_stack, browser):
     """An Endur trade sent as scenario PVs in EUR: the strip's Trade currency is EUR, as priced; its Risk group says where it comes from and
     its base PV in it; the VaR contributions by trade list it too."""
     rows = []
     for scope in ("NODE:MGMT~DESK-COMM", "BANK"):
-        with urllib.request.urlopen(str(stack) + f"/api/var/scope/contributions?scope={scope}&by=trade", timeout=60) as r:
+        with urllib.request.urlopen(str(trade_stack) + f"/api/var/scope/contributions?scope={scope}&by=trade", timeout=60) as r:
             rows = [x for x in json.loads(r.read())["rows"] if x.get("tradeCurrency") == "EUR" and x.get("tradeCurrencyFrom") == "scenario PVs"]
         if rows:
             break
     assert rows, "no EUR trade sent as scenario PVs in the demo data"
     tid = rows[0]["key"]
-    pg = open_var(browser, str(stack), "/go?q=" + f"TRD {tid} <GO>".replace(" ", "+"))
+    pg = open_var(browser, str(trade_stack), "/go?q=" + f"TRD {tid} <GO>".replace(" ", "+"))
     wait(pg, "!!document.querySelector('#p-risk')", 60)
     wait(pg, "document.querySelector('#p-risk').innerText.indexOf('HS-509') >= 0 || document.querySelector('#p-risk').innerText.indexOf('not loaded') >= 0", 30)
     if "not loaded" in pg.locator("#p-risk").inner_text():

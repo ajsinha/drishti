@@ -15,15 +15,15 @@
  */
 package com.ash.drishti.bicompute.rollup;
 
-import com.ash.drishti.bicompute.core.AggregationPlan;
-import com.ash.drishti.bicompute.core.AggregationPlan.FunctionCall;
-import com.ash.drishti.bicompute.core.CellKey;
-import com.ash.drishti.bicompute.core.CellSet;
-import com.ash.drishti.bicompute.core.Partials;
+import com.ash.drishti.kernel.api.pivot.AggregationPlan;
+import com.ash.drishti.kernel.api.pivot.AggregationPlan.FunctionCall;
+import com.ash.drishti.kernel.api.pivot.CellKey;
+import com.ash.drishti.kernel.api.pivot.CellSet;
+import com.ash.drishti.kernel.api.pivot.Partials;
 import com.ash.drishti.bicompute.core.PivotCore;
 import com.ash.drishti.bicompute.core.ScaleOptions;
-import com.ash.drishti.bicompute.spi.PivotProvider;
-import com.ash.drishti.bicompute.spi.Viewer;
+import com.ash.drishti.kernel.api.pivot.PivotProvider;
+import com.ash.drishti.kernel.api.pivot.Viewer;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -223,7 +223,7 @@ public final class AggregateAwareness implements PivotCore.Hooks {
         });
         Set<String> fns = new java.util.TreeSet<>();
         for (FunctionCall f : plan.functions()) {
-            if (f.fn().sqlStateMergeable() && f.fn().kind() != com.ash.drishti.bicompute.spi.Kind.HOLISTIC) {
+            if (f.fn().sqlStateMergeable() && f.fn().kind() != com.ash.drishti.kernel.api.pivot.Kind.HOLISTIC) {
                 fns.add(f.id());
             }
         }

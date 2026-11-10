@@ -27,7 +27,7 @@ import com.ash.drishti.engine.command.SuggestionService;
 import com.ash.drishti.engine.source.SourceRouter;
 import com.ash.drishti.engine.view.ViewModel;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;

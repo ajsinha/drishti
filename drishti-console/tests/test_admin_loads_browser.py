@@ -150,4 +150,7 @@ def test_the_page_fits_a_phone_and_both_themes(browser, loads_console, width, th
     assert page.evaluate("document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1")      # no sideways page scroll
     for bad in page.locator("[data-loads-table] .st-bad").all():
         assert bad.inner_text().strip()                                                                # a state always has its word
+    if width > 1000:                                                                                   # the filter's fields side by side, labels on controls
+        from form_layout import assert_columns_layout
+        assert_columns_layout(page, "[data-loads-filter]", min_per_row=3)
     page.close()

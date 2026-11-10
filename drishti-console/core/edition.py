@@ -41,14 +41,13 @@ LOG = logging.getLogger("drishti.console.edition")
 LENS_HEADER = "X-Drishti-Lens"                       # the server's EditionContext.HEADER: the person's lens, on every backend call
 _lens: contextvars.ContextVar[str | None] = contextvars.ContextVar("drishti_lens", default=None)
 
-WORDS = ("BI", "RUPAKA", "FORM", "FUNC", "WHAT", "DATAMAP", "DATA", "EXPORT", "VAR", "EXP", "SMAT", "PLAY", "PIVOT")
+WORDS = ("BI", "RUPAKA", "FORM", "FUNC", "WHAT", "DATAMAP", "DATA", "EXPORT", "PIVOT")
 #: A command word and the switch it shares: EXPORT (Export data) is switched by an edition's DATA, its older name, kept as an alias.
 WORD_SWITCH = {"EXPORT": "DATA"}
 
 # The console pages each reserved word, console word and feature opens: hidden ones answer 404 (core/edition_gate.py).
 WORD_PATHS = {"BI": ("/bi",), "FORM": ("/forms", "/form/"), "FUNC": ("/func",), "WHAT": ("/what",), "DATAMAP": ("/datamap",), "DATA": ("/data", "/api/data/"),
-              "VAR": ("/var", "/api/var/", "/admin/scopes"), "EXP": ("/exposure", "/api/exposure/"), "SMAT": ("/smat", "/api/smat/"),
-              "PLAY": ("/play", "/api/play/"), "PIVOT": ("/pivot", "/api/pivot/")}
+              "PIVOT": ("/pivot", "/api/pivot/")}
 FEATURE_PATHS = {"bi": ("/bi", "/admin/bi"), "forms": ("/forms", "/form/"), "datamap": ("/datamap",), "data": ("/data", "/api/data/"), "workspaces": ("/w",),
                  "monitors": ("/m",), "alerts": ("/alerts",), "build": ("/build", "/review/", "/studio", "/elements"), "calc": ("/calc",),
                  "reports": ("/reports",), "lakes": ("/admin/lakes", "/admin/api/lakes"),
@@ -66,6 +65,33 @@ ADMIN_PAGES = ("users", "roles", "packs", "commands", "tokens", "access", "conne
 _LANDING_TEMPLATE = re.compile(r"home/[a-z0-9_]+_landing\.html")
 DEFAULT_LANDING_TEMPLATE = "home/risk_landing.html"
 DEFAULT_LANDING_TITLES = {"desk": "Risk desk", "command": "Command first", "map": "Risk map"}
+
+
+def words() -> set[str]:
+    """Every reserved word: the kernel's and those the modules register (core/plugins.py)."""
+    from core import plugins as _plugins
+    return set(WORDS) | {w.word for w in _plugins.words()}
+
+
+def word_paths() -> dict[str, tuple[str, ...]]:
+    """Each word's console pages: the kernel's and the modules' (core/edition_gate.py answers 404 for one switched off)."""
+    from core import plugins as _plugins
+    out = dict(WORD_PATHS)
+    for w in _plugins.words():
+        out[w.word] = out.get(w.word, ()) + w.paths
+    return out
+
+
+def mnemonics() -> set[str]:
+    """The registered words that are also a pack's mnemonic: run as the pack's where the edition switches the word off."""
+    from core import plugins as _plugins
+    return {w.word for w in _plugins.words() if w.mnemonic}
+
+
+def landing_refused() -> set[str]:
+    """Words a landing's read refuses: the kernel's own words (not PIVOT) and the modules' that are not also mnemonics."""
+    from core import plugins as _plugins
+    return (set(WORDS) - {"PIVOT"}) | {w.word for w in _plugins.words() if not w.mnemonic}
 
 
 def set_lens(name: str | None) -> None:
@@ -177,7 +203,7 @@ class Edition:
         if _modules.typed_refusal(text) is not None:              # PLAY VAR with banking off; VRES switched off or not granted
             return False
         head = str(text or "").split()[0].upper() if str(text or "").split() else ""
-        return self.word_on(head) if head in WORDS else self.command_shown(head)
+        return self.word_on(head) if head in words() else self.command_shown(head)
 
     def word_on(self, word: str) -> bool:
         if _engines.word_hidden(word):                           # the engine runs on no server of the cluster: gone, whatever the edition

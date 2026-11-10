@@ -27,7 +27,7 @@ import com.ash.drishti.rachana.el.Values;
 import com.ash.drishti.rachana.format.Formats;
 import com.ash.drishti.server.alerts.AlertLogic.Reading;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.concurrent.ExecutionException;

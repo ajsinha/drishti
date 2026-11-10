@@ -15,10 +15,10 @@
  */
 package com.ash.drishti.bicompute.functions;
 
-import com.ash.drishti.bicompute.core.AggregationPlan.FunctionCall;
-import com.ash.drishti.bicompute.core.PivotView;
-import com.ash.drishti.bicompute.spi.AggFunction;
-import com.ash.drishti.bicompute.spi.PivotProvider;
+import com.ash.drishti.kernel.api.pivot.AggregationPlan.FunctionCall;
+import com.ash.drishti.kernel.api.pivot.PivotView;
+import com.ash.drishti.kernel.api.pivot.AggFunction;
+import com.ash.drishti.kernel.api.pivot.PivotProvider;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -121,7 +121,8 @@ public final class Functions {
             case "min" -> new Builtins.MinMax(false);
             case "max" -> new Builtins.MinMax(true);
             case "wavg", "weighted_avg" -> new Builtins.WeightedAvg();
-            case "var", "variance", "var_samp" -> new Builtins.Welford("var_samp");
+            case "var", "variance", "var_samp" -> // domain-strings: generic (the statistics function)
+                new Builtins.Welford("var_samp");
             case "var_pop" -> new Builtins.Welford("var_pop");
             case "stddev", "stddev_samp" -> new Builtins.Welford("stddev_samp");
             case "stddev_pop" -> new Builtins.Welford("stddev_pop");
@@ -170,14 +171,14 @@ public final class Functions {
     @FunctionalInterface
     public interface Resolver {
         /** The call as a function call for this reader, or empty when the text is not one of its functions. */
-        Optional<FunctionCall> resolve(com.ash.drishti.bicompute.spi.Viewer v, String text, String label);
+        Optional<FunctionCall> resolve(com.ash.drishti.kernel.api.pivot.Viewer v, String text, String label);
     }
 
     /**
      * As {@link #parse(String, String, PivotProvider)}, with custom functions ({@code resolver}) and formulas of the built-ins
      * ({@code sum(PNL) / sum(abs(PNL))}, Rachana; section 8.2) on a provider that evaluates built-ins.
      */
-    public static FunctionCall parse(String text, String label, PivotProvider provider, Resolver resolver, com.ash.drishti.bicompute.spi.Viewer v) {
+    public static FunctionCall parse(String text, String label, PivotProvider provider, Resolver resolver, com.ash.drishti.kernel.api.pivot.Viewer v) {
         if (resolver != null && text != null && text.strip().startsWith("fn:")) {
             if (!provider.capabilities().builtIns()) {
                 throw PivotView.bad(text + ": custom functions run over a source's rows; " + provider.id() + "'s measures are its own");

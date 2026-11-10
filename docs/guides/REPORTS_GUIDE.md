@@ -431,6 +431,21 @@ of *No rows for this selection*.
 
 ### 5.3 Relationships and how a question joins
 
+**Many-to-many.** Declare the bridge once; the bridge table's own rows are not repeated into the facts.
+
+```yaml
+bridges:
+  - name: book_limit_group
+    left: books.BOOK_ID
+    right: limit_groups.GROUP_ID
+    through: book_limit_group        # optional: left-key, right-key, left-name, right-name, left-filter, right-filter
+```
+
+A dimension across a bridge filters and groups by a semi-join: a fact row is counted once per value of what is asked, never once per bridge row, so group rows may not add to the total (a book in two groups) and the total is from its own rows. Row rules and masks on the bridge and the far table are applied inside the semi-join, as the reader, before any join; a restricted far table reaches the facts too. A measure that reads a table beyond the bridge is refused in words: bring the column onto the near side with a look-up.
+
+**Both ways.** `direction: both` on a relationship lets a filter on the many side reach the one side; it is read as a semi-join, so a one-side measure is never repeated. A model where a table can reach another by two paths and one of them is both-ways or across a bridge is refused when saved, naming both paths and the fix (`Two filter paths ... make 'cpty_group' inactive and name it with via: ..., or turn off both ways on 'bridge_book'`). A measure names the other path with `via: settle_date`.
+
+
 A model's relationships go from the many side to the one side (`{ from: trades.DESK, to: desks.id }`), and the packs' links are suggested
 for you. A question joins along **active** relationships, many-to-one, `LEFT JOIN`ed from the table the measures aggregate, so a measure is
 never counted twice:
@@ -829,7 +844,8 @@ the cache") and the layer that answered (`columns`, `rollup`, `direct`, `live`);
 
 * **Click a mark.** The other visuals filter to it: here DESK-COMM was clicked, the cards, the line and the table are that desk's, the bar
   keeps all desks but dims the others, and a chip says what is selected. Click it again, press `Esc`, or use the visual's clear button to
-  let go; Ctrl or Shift adds marks. With **highlight**, bar, column, line, area and combo charts keep the whole answer and draw the chosen
+  let go (the chip's ✕, or *Clear all* when there are several); Ctrl or Shift adds marks. **Drag across a line, area, histogram or scatter** to
+  select a range the same way (a brush: the other visuals filter to it, VaR recomputed for the selection). One selection at a time is the default; `selection: crossfilter` at the top of the report file keeps one per visual, each chart ignoring only its own. With **highlight**, bar, column, line, area and combo charts keep the whole answer and draw the chosen
   share over it.
 
   ![A selected bar filters the page](img/bi-reports/viewer-select.png)
@@ -1141,6 +1157,9 @@ vendored chart library; everything else is plain elements. Required wells must b
 | `pie`, `donut` | `axis` field (1, required), `values` measure (1, required) | shares of the whole, the percentage in the tip |
 | `waterfall` | `axis` field (1, required), `values` measure (1, required) | each step from the running total, and a total |
 | `treemap` | `axis` fields (1 or 2, required), `values` measure (1, required) | nested rectangles |
+| `sunburst`, `icicle` | `axis` fields (1 to 5, required), `values` measure (1, required, additive: it sizes the parts), `colour` measure (1) | the hierarchy as rings or bars, sized by a measure that adds up; `colour` is read per node, so it may be a measure that does not add (VaR use of limit), asked of the server at every level (`format: { warnAt: 0.9, badAt: 1 }` set where a node turns amber or red; a node with no figure is hollow). Click to select; the side panel zooms |
+| `calendar` | `axis` date field (1, required), `values` measure (1, required) | a square per day on a month grid (limit breaches, exceptions); a day with no row is left hollow |
+| `decomposition` | no wells; `format: { source, measure, splits: [...] }` | one measure split level by level through the [pivot engine](PIVOT_GUIDE.md): see below |
 | `heatmap` | `axis` and `legend` fields (1 each, required), `values` measure (1, required) | a grid coloured by the measure |
 | `bubble` | `details` field (1, required), `x`, `y` and `size` measures (1 each, required) | a scatter sized by `size` (section 9.4) |
 | `funnel` | `axis` field (1, required), `values` measure (1, required) | stages from the largest down |
@@ -1275,6 +1294,28 @@ refuses, or a measure masked for the reader, stays `–` with its reason in the 
 
 The grand total of *Largest notional* is the largest, 7,000,000 (its sum would have been 21,000,000); the cells the engine worked out say so
 in their tip.
+
+### 9.7a The decomposition tree
+
+A `decomposition` visual asks the pivot engine one split at a time (`POST /api/v1/pivot/decompose`). Its format names a pivot source, a measure
+(a function: `var()`, `sum(NOTIONAL)`) and the dimensions a reader may split by. The reader chooses the next split in the list at each column
+head and opens a box to go a level down.
+
+```yaml
+- id: var-tree
+  type: decomposition
+  title: 99% VaR
+  format:
+    source: var                   # the pivot source
+    measure: var()
+    splits: [DESK, LEGAL_ENTITY, PRODUCT_GROUP, CURRENCY]
+    options: { scope: BANK }      # the provider's options of the view
+```
+
+Every box is its own figure, recomputed for that slice by the engine; nothing is added in the browser. A measure that adds up (a plain sum)
+says the parts add to the parent. For a measure that does not (VaR), each split says **Σ standalone − diversification = parent**, the server's
+figures; when the source has the Euler component (`comp_var`), each box shows **component VaR** beside its standalone figure, and the
+components add up to the parent. In the designer: *Add a visual → Decomposition*, then Format.
 
 ### 9.8 Filters
 

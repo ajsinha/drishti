@@ -17,7 +17,7 @@ package com.ash.drishti.server.tables;
 
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -100,6 +100,17 @@ public class EditorController {
     }
 
     /** {@code {name, kind, grain}}: the + New steps' suggested table over a kind. */
+    /** Converts DAX to Rachana for the Tables tab and {@code drishti.py bi dax}: names exactly what could not be converted. */
+    @PostMapping("/dax")
+    public java.util.Map<String, Object> dax(@org.springframework.web.bind.annotation.RequestBody java.util.Map<String, Object> body) {
+        com.ash.drishti.server.bi.dax.DaxConverter.Result r = com.ash.drishti.server.bi.dax.DaxConverter.convert(String.valueOf(body.getOrDefault("dax", "")));
+        java.util.Map<String, Object> out = new java.util.LinkedHashMap<>();
+        out.put("rachana", r.rachana());
+        out.put("notConverted", r.notConverted());
+        out.put("notes", r.notes());
+        return out;
+    }
+
     @PostMapping("/suggest")
     public Map<String, Object> suggest(@RequestAttribute(Principal.ATTRIBUTE) Principal p, @RequestBody Map<String, Object> body) {
         return editors.suggest(p, opt(body, "name"), text(body, "kind"), opt(body, "grain"));

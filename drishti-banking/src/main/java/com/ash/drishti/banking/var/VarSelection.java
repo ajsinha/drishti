@@ -21,7 +21,7 @@ import com.ash.drishti.banking.compute.var.ScopeResolver;
 import com.ash.drishti.banking.compute.var.VarBook;
 import com.ash.drishti.banking.compute.var.VarCalc;
 import com.ash.drishti.compute.vector.OrdinalSet;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;

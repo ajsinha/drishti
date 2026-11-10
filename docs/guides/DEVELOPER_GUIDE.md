@@ -341,7 +341,9 @@ tools/drill.sh
 Options: `--docs` (the light drill, below), `--full` (the full drill even when only docs changed), `--no-push` (verify only: no push,
 no merge, and it may run on any branch), `--keep-going` (run every job to its end after one has failed, to see every failure at
 once; by default the first failure stops the rest), `--gate` (the gate only, stage 1 below, then stop: no lanes and no push, on any
-branch; a check of a few minutes before a drill). `DRILL_MVN_ARGS="..."` adds Maven arguments to every Maven run (for example
+branch; a check of a few minutes before a drill), `--affected [--base REF] [--dry-run]` (only the Maven modules and test files the diff can reach, for a builder's
+iterations: [TEST_HARNESS.md](../architecture/TEST_HARNESS.md) section 3.16; `tools/docs/shots_affected.py` does the same for screenshots). The VaR proof of a patch is the
+in-process `VarGoldenMatrixTest`; the server-against-server API comparison runs for releases only. `DRILL_MVN_ARGS="..."` adds Maven arguments to every Maven run (for example
 `-Ddrishti.test.forks=1` to run the test classes serially). `DRILL_BROWSER_WORKERS` and `DRILL_OTHER_WORKERS` set the console
 lanes' workers (the browser lane's default comes from the memory available), `DRILL_BROWSER_RERUNS` the browser-lane files re-run at a time (default 1), `DRILL_LANE_LIMIT` a console lane's
 time limit in seconds (default three hours), `DRILL_GATE_THREADS` the gate build's Maven threads (default `1C`, one per CPU). The
@@ -421,6 +423,7 @@ Both kinds are listed here.
 | No `synchronized` around blocking I/O (virtual threads) | `NoBlockingUnderSynchronizedTest` |
 | Front end vendored: no CDN, no external URL, no inline script, handler or style | `drishti-console/tests/test_assets_policy.py`, the console's Content Security Policy |
 | Phone: no sideways scroll, targets of at least 44 px | `test_page_widths_browser.py` and the pages' own browser tests |
+| Every sitemap page and top-bar link opens clean and within 5 s; the key pages laid out at 1366 and 1920 px, dark and light | `test_page_walk_browser.py` (TEST_HARNESS.md, "The page walk": how to run it alone or against a running console) |
 | No hidden file or folder of our own; everything written at run time under the data folder | `tools/test_no_hidden_names.py` |
 | Generated files match their generators | `--check` in the drill |
 | Sutras shown in docs and pack guides are valid | `DocumentedSutrasTest` |
@@ -689,7 +692,7 @@ import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.engine.command.CommandsProperties;
 import com.ash.drishti.engine.command.Mnemonics;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.util.List;
 import java.util.Locale;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -2840,7 +2843,7 @@ curl -s $B/entities/trade/MX-20000001/raw | jq '.data | {tradeId, productType, a
 Everything you can open in the terminal you can also read from code, as yourself, with a **personal API token**.
 A token reads what you may read (your roles and packs, at the time of each call) and, unless you gave it a **write scope**,
 **never changes anything**: any request other than `GET` with a read-only token is refused (`403 DRS-5002 API tokens only
-read`), except the `POST`s that only read (`/pivot/query`, `/pivot/estimate`, `/pivot/expand`, `/pivot/compare`, `/pivot/rows`, `/pivot/export`, `/command`, the allow-list
+read`), except the `POST`s that only read (`/pivot/query`, `/pivot/decompose`, `/pivot/estimate`, `/pivot/expand`, `/pivot/compare`, `/pivot/rows`, `/pivot/export`, `/command`, the allow-list
 `drishti.security.token-read-posts`, which also lets a token ask a BI model, `POST /api/v1/bi/mq`). Tools and CI that must change things get a token with the scope for
 that job; see "Personal API tokens" in [CLI_REFERENCE.md](CLI_REFERENCE.md) and below.
 

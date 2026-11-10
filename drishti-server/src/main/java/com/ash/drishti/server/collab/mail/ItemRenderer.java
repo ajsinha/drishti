@@ -16,7 +16,7 @@
 package com.ash.drishti.server.collab.mail;
 
 import com.ash.drishti.identity.collab.OutboxItem;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 
 /**
  * Turns one outbox row of a template into a message, at send time, for the recipient's rights then. A new kind of email (a mention,

@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.bicompute.python;
 
-import com.ash.drishti.bicompute.spi.Batch;
+import com.ash.drishti.kernel.api.pivot.Batch;
 import java.util.List;
 import java.util.Map;
 

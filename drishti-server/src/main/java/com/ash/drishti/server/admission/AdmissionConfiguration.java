@@ -16,7 +16,7 @@
 package com.ash.drishti.server.admission;
 
 import com.ash.drishti.identity.AuditLog;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.nio.file.Path;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;

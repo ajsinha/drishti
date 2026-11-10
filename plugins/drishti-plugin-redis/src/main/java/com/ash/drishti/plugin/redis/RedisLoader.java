@@ -15,12 +15,11 @@
  */
 package com.ash.drishti.plugin.redis;
 
+import com.ash.drishti.common.LoadLine;
 import com.ash.drishti.common.RowFeed;
 import com.ash.drishti.api.ColumnSet;
 import com.ash.drishti.api.LoadGuard;
 import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
 import io.lettuce.core.Range;
 import io.lettuce.core.RedisFuture;
 import io.lettuce.core.ScriptOutputType;
@@ -635,40 +634,10 @@ public final class RedisLoader {
     }
 
     static Row parse(String line) throws java.io.IOException {
-        String domain = null;
-        String kind = null;
-        String id = null;
-        String date = null;
-        String doc = null;
-        Map<String, Object> columns = new LinkedHashMap<>();
-        try (JsonParser p = JSON.createParser(line)) {
-            p.nextToken();
-            while (p.nextToken() == JsonToken.FIELD_NAME) {
-                String name = p.currentName();
-                JsonToken t = p.nextToken();
-                switch (name) {
-                    case "domain" -> domain = p.getText();
-                    case "kind" -> kind = p.getText();
-                    case "id" -> id = p.getText();
-                    case "date" -> date = p.getText();
-                    case "doc" -> doc = p.getText();
-                    case "columns" -> {
-                        if (t == JsonToken.START_OBJECT) {
-                            while (p.nextToken() == JsonToken.FIELD_NAME) {
-                                String path = p.currentName();
-                                JsonToken v = p.nextToken();
-                                columns.put(path, v == JsonToken.VALUE_NUMBER_INT || v == JsonToken.VALUE_NUMBER_FLOAT ? (Object) p.getDoubleValue()
-                                        : v == JsonToken.VALUE_NULL ? null : p.getText());
-                            }
-                        }
-                    }
-                    default -> p.skipChildren();
-                }
-            }
-        }
-        if (domain == null || kind == null || id == null || doc == null) {
+        LoadLine l = LoadLine.parse(JSON, line);
+        if (l.domain() == null || l.kind() == null || l.id() == null || l.doc() == null) {
             throw new IllegalArgumentException("a line without domain, kind, id or doc: " + line.substring(0, Math.min(200, line.length())));
         }
-        return new Row(domain, kind, id, date == null ? null : LocalDate.parse(date), doc, columns);
+        return new Row(l.domain(), l.kind(), l.id(), l.day(), l.doc(), l.columns());
     }
 }

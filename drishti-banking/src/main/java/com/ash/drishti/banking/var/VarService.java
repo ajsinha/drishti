@@ -26,7 +26,7 @@ import com.ash.drishti.banking.compute.var.VarCalc;
 import com.ash.drishti.compute.vector.OrdinalSet;
 import com.ash.drishti.compute.vector.ParallelSums;
 import com.ash.drishti.identity.AuditLog;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -616,6 +616,107 @@ public final class VarService implements AutoCloseable {
         }
         double[] v = totals(usd, set, res.node()).in(fx(usd), d.currency());
         return v != null ? v : vector(d, set, res);
+    }
+
+    // ---------------------------------------------------------------------------------------------------------- matured items
+
+    /**
+     * A scope with its matured items added (VAR_GUIDE.md, "Matured items"): the explorer's switch, for this request only. {@code scoped}
+     * the official scope with the matured records of the same scope added to its 1-day vector (the lens applied after), or the official
+     * scope when none are added; {@code positions} and {@code trades} the matured records added, by the grain they came in; {@code why}
+     * in words when the switch cannot add them (null otherwise).
+     */
+    record WithMatured(Scoped scoped, int positions, int trades, String why) {
+        int items() {
+            return positions + trades;
+        }
+    }
+
+    /** The small books of the dates' matured records, per date and version (built on the switch's first use; a few dates kept). */
+    private final Map<String, java.util.Optional<VarDate>> matured = new ConcurrentHashMap<>();
+    /** The order the matured books were built in: the oldest leaves once more than four are kept. */
+    private final java.util.concurrent.ConcurrentLinkedQueue<String> maturedOrder = new java.util.concurrent.ConcurrentLinkedQueue<>();
+
+    /** The date's matured records as a date of their own (their book, the date's hierarchies), or empty when it kept none. */
+    java.util.Optional<VarDate> maturedDate(VarDate usd) {
+        String key = usd.date() + "|" + usd.version();
+        java.util.Optional<VarDate> hit = matured.get(key);
+        if (hit != null) {
+            return hit;
+        }
+        VarBook b = loader.maturedBook(usd);
+        java.util.Optional<VarDate> out = b == null ? java.util.Optional.empty() : java.util.Optional.of(new VarDate(usd.date(), b,
+                usd.portfolioLimits(), usd.version() + "|matured", java.time.Instant.now(), 0, 0, usd.intake(), usd.versions(), List.of(),
+                VarDate.USD, usd.fx()));
+        if (matured.put(key, out) == null) {
+            maturedOrder.add(key);
+        }
+        while (maturedOrder.size() > 4) {
+            String old = maturedOrder.poll();
+            if (old != null) {
+                matured.remove(old);
+            }
+        }
+        return out;
+    }
+
+    /**
+     * {@code s} with the matured records of its scope added, as the person sees them: the same scope resolved on the matured records'
+     * book, its vector in the answer's currency added to the scope's 1-day vector, the lens applied after. The official answer, its
+     * records, captures and limits never come here.
+     */
+    WithMatured withMatured(Principal p, Scoped s) {
+        if (s.lens() != null && s.lens().stressed()) {
+            return new WithMatured(s, 0, 0, "stressed VaR revalues today's positions: matured items are not added to it");
+        }
+        VarDate usd = load(s.date().date(), 0);
+        VarMaturedItems items = usd.intake() == null ? null : usd.intake().maturedItems();
+        if (items != null && items.dropped() != null) {
+            return new WithMatured(s, 0, 0, items.dropped());
+        }
+        if (usd.book().morning().sharded()) {
+            return new WithMatured(s, 0, 0, "a sharded date does not keep its matured items");
+        }
+        java.util.Optional<VarDate> md = items == null ? java.util.Optional.empty() : maturedDate(usd);
+        if (md.isEmpty()) {
+            return new WithMatured(s, 0, 0, null);                      // none on the date: the figure is the official one
+        }
+        VarDate m = md.get();
+        OrdinalSet set;
+        try {
+            ScopeResolver.Resolution res = new ScopeResolver(m.book(), definitions(p, m), words()).resolve(s.res().canonical());
+            VarAccess.View view = access.view(p, m);
+            set = view.full() ? res.set() : res.set().and(view.visible());
+        } catch (IllegalArgumentException | DrishtiException e) {
+            return new WithMatured(s, 0, 0, null);                      // the scope names nothing matured
+        }
+        if (set.isEmpty()) {
+            return new WithMatured(s, 0, 0, null);
+        }
+        double[] add;
+        if (VarDate.USD.equals(s.date().currency())) {
+            add = m.book().vector(set, sums);
+        } else {
+            ScenarioFx fx = fx(usd);
+            add = CurrencyTotals.of(m.book(), set, fx, sums).in(fx, s.date().currency());
+            if (add == null) {
+                return new WithMatured(s, 0, 0, "the date's FX lacks a currency of its matured items: they are added in USD only");
+            }
+        }
+        int[] n = new int[2];
+        set.forEach(o -> n[m.book().supplied(o) ? 0 : 1]++);           // a supplied position, or a trade
+        double[] base = s.oneDay() != null ? s.oneDay() : s.vector();
+        double[] oneDay = base.clone();
+        for (int j = 0; j < oneDay.length && j < add.length; j++) {
+            oneDay[j] += add[j];
+        }
+        com.ash.drishti.banking.compute.var.VarLens l = s.lens();
+        Scoped out = l == null || l.equals(props.defaultLens())
+                ? new Scoped(s.date(), s.view(), s.res(), s.set(), s.hidden(), oneDay, calc.measures(oneDay), s.kind(), s.label(), s.computeMs(),
+                        false, s.shards(), l, oneDay)
+                : new Scoped(s.date(), s.view(), s.res(), s.set(), s.hidden(), l.apply(oneDay), l.measures(calc, oneDay, l.apply(oneDay)), s.kind(),
+                        s.label(), s.computeMs(), false, s.shards(), l, oneDay);
+        return new WithMatured(out, n[0], n[1], null);
     }
 
     // ---------------------------------------------------------------------------------------------------------------- intraday

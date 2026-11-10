@@ -22,7 +22,7 @@ import com.ash.drishti.server.caches.CacheBoard;
 import com.ash.drishti.server.net.NetCaller;
 import com.ash.drishti.server.net.PeerCalls;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.LinkedHashMap;

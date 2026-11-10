@@ -194,7 +194,7 @@ public enum ErrorCode {
      * refused at start, or the date is refused, saying why.
      */
     VAR_HIERARCHY_INVALID("DRS-5213", 422),
-    /** VaR (2.9.5): the tree of a hierarchy the date does not have ({@code GET /api/v1/var/tree?hierarchy=LL}). */
+    /** VaR (2.9.5): the tree of a hierarchy the date does not have (the engine's tree endpoint). */
     VAR_HIERARCHY_UNKNOWN("DRS-5214", 404),
     /**
      * VaR sharding (2.9.6, DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built): a shard of the date has no live owner that holds it (every replica down, draining or refusing),

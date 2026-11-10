@@ -39,7 +39,7 @@ KEY_STEMS = ("trade", "deal", "contract", "order", "position", "account", "instr
 IDENTIFYING = re.compile(r"(?i)(counterpart|cpty|customer|client|party|trader|entity|legal|portfolio|book|desk|uen|lei|account|address|email|phone|"
                          r"user|owner|broker|issuer|guarantor|transit|branch|firm|name|person|contact)")
 ACRONYMS = {"ID", "UEN", "DVP", "ISO", "LEI", "UTI", "UPI", "ISIN", "CUSIP", "SEDOL", "FX", "PV", "MTM", "NPV", "CCY", "OTC", "CSA", "PNL", "URL", "BIC",
-            "IBAN", "NY", "TT", "UK", "US", "EU", "DV01", "CS01", "VAR", "ETRM"}
+            "IBAN", "NY", "TT", "UK", "US", "EU", "DV01", "CS01", "VAR", "ETRM"}  # domain-strings: generic (a column word, spelt in capitals)
 LINK_NAME = re.compile(r"^(.+?)(Ids?|_ids?|_IDS?|Keys?|_keys?|_KEYS?|Refs?|_refs?|_REFS?)$")   # bookId, book_id, BOOK_ID
 DATE_PREFERRED = ("businessdate", "business_date", "asof", "asofdate", "as_of", "as_of_date", "reportingdate", "date", "valuationdate", "tradedate")
 LOOSE_DATES = ("date", "tradedate")              # names that may be a business date, or a per-document date (taken only when few distinct)
@@ -77,7 +77,7 @@ def humanize(name: str) -> str:
         return " ".join(caps)
     out = []
     for i, w in enumerate(ws):
-        if w.upper() in ACRONYMS and w.upper() != "VAR":
+        if w.upper() in ACRONYMS and w.upper() != "VAR":  # domain-strings: generic
             out.append(w.upper())
         elif w.lower() == "id":
             out.append("ID")

@@ -21,7 +21,7 @@ import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.net.config.NetFolder;
 import com.ash.drishti.net.config.NetSchema;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.net.URI;
 import java.util.LinkedHashMap;

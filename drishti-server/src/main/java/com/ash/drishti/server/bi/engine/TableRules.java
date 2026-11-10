@@ -59,7 +59,29 @@ public final class TableRules {
                 }
             }
         }
+        for (Dataset.Relationship r : ds.relationships()) {                    // a restricted far table or bridge filters the facts across a many-to-many too
+            if (r.bridge() == null) {
+                continue;
+            }
+            Dataset.Bridge b = r.bridge();
+            if (b.leftBoth() && restricted(ds, r.toTable(), b.through(), reader) && !from.contains(r.toTable()) && from.stream().anyMatch(t -> t.equals(r.fromTable()) || reaches(ds, t, r.fromTable()))) {
+                out.add(r.toTable());
+            }
+            if (b.rightBoth() && restricted(ds, r.fromTable(), b.through(), reader) && !from.contains(r.fromTable()) && from.stream().anyMatch(t -> t.equals(r.toTable()) || reaches(ds, t, r.toTable()))) {
+                out.add(r.fromTable());
+            }
+        }
         return out;
+    }
+
+    private static boolean restricted(Dataset ds, String far, String through, SqlCompiler.Reader reader) {
+        for (String t : List.of(far, through)) {
+            Dataset.TableSecurity s = ds.security().tables().get(t);
+            if (s != null && !s.open() && !openFor(s, reader)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

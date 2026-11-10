@@ -62,6 +62,7 @@ if not os.environ.get("DRISHTI_CONSOLE_TMP_DIR"):
 
 from harness_plugin import pytest_collection_modifyitems, pytest_configure  # noqa: E402,F401 - the hooks: distribution by test (TEST_HARNESS.md)
 from worker_fixtures import browsers, pack_views, render_site  # noqa: E402,F401 - the per-worker fixtures (TEST_HARNESS.md)
+import pageload_log  # noqa: E402
 import select_helpers  # noqa: E402
 
 select_helpers.install_playwright_shim()          # select_option and input_value on drishti-inputs' <drishti-select> (select_helpers.py)
@@ -1287,11 +1288,14 @@ def _show_everything_in_browsers():
     def wrapped_context(self, *a, **k):
         ctx = new_context(self, *a, **k)
         cookies(ctx)
+        if os.environ.get("DRISHTI_PAGELOAD_LOG"):          # each page's load time (pageload_log.py)
+            ctx.on("page", pageload_log.watch)
         return ctx
 
     def wrapped_page(self, *a, **k):
         page = new_page(self, *a, **k)
         cookies(page.context)
+        pageload_log.watch(page)
         return page
 
     Browser.new_context, Browser.new_page = wrapped_context, wrapped_page

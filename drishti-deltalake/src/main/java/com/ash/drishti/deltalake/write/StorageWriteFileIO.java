@@ -19,19 +19,15 @@ import com.ash.drishti.deltalake.NativeFileIO;
 import com.ash.drishti.lakeio.LocalPaths;
 import com.ash.drishti.lakeio.S3Settings;
 import com.ash.drishti.lakeio.Storage;
-import io.delta.kernel.defaults.engine.fileio.FileIO;
-import io.delta.kernel.defaults.engine.fileio.InputFile;
 import io.delta.kernel.defaults.engine.fileio.OutputFile;
 import io.delta.kernel.defaults.engine.fileio.PositionOutputStream;
 import io.delta.kernel.utils.CloseableIterator;
-import io.delta.kernel.utils.FileStatus;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileAlreadyExistsException;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * The lake writer's file access for object storage (2.9.5: official results to {@code s3://}), through drishti-lakeio's {@link Storage}:
@@ -41,43 +37,14 @@ import java.util.Optional;
  * and retries on the newer version. Credentials come from {@link S3Settings} (the settings given, else the AWS default chain). Local
  * paths work too, through the same exclusive create.
  */
-final class StorageWriteFileIO implements FileIO {
-
-    private final NativeFileIO reads;
-    private final Map<String, String> conf;
+final class StorageWriteFileIO extends ReadingFileIO {
 
     StorageWriteFileIO(S3Settings s3, Map<String, String> conf) {
-        this.conf = Map.copyOf(conf);
-        this.reads = new NativeFileIO(s3, conf);
+        super(new NativeFileIO(s3, conf), conf);
     }
 
     private Storage storage(String path) {
         return reads.storage(path);
-    }
-
-    @Override
-    public CloseableIterator<FileStatus> listFrom(String filePath) throws IOException {
-        return reads.listFrom(filePath);
-    }
-
-    @Override
-    public FileStatus getFileStatus(String path) throws IOException {
-        return reads.getFileStatus(path);
-    }
-
-    @Override
-    public String resolvePath(String path) throws IOException {
-        return reads.resolvePath(path);
-    }
-
-    @Override
-    public InputFile newInputFile(String path, long fileSize) {
-        return reads.newInputFile(path, fileSize);
-    }
-
-    @Override
-    public Optional<String> getConf(String confKey) {
-        return Optional.ofNullable(conf.get(confKey));
     }
 
     @Override

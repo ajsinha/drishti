@@ -32,8 +32,6 @@ KEYS_JS = JS / "drishti_keys.js"
 
 # Page-level key listeners that stay outside the keymap: file (relative to web/static/js) -> (how many, why).
 ALLOWED = {
-    # widget-internal: the engines drop-down's filter box must see Escape on the window, in the capture phase, before Bootstrap's dropdown
-    "drishti_engines-menu.js": (1, "widget-internal: the engines menu's filter box, ahead of Bootstrap's dropdown"),
     # a host page without the console's keymap (the client-side renderer's 'console' behaviours): the drill binds the document itself
     "drishti_drill.js": (1, "fallback for a host page that has no keymap; on a console page the drill registers drill.keys"),
     # BI's tab lists in <drishti-report> on another site (no keymap there): the same fallback

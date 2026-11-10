@@ -474,6 +474,9 @@ final class VarLoader {
         }
         VarIntake intake = new VarIntake(b, pr, date, columns.subList(1, columns.size())).scenarioSet(setId)
                 .inputs(new VarInputs(props::input)).setLength(setLength).pnlFx(() -> fx(date, scenarioDates, fxSet));
+        if (shard == null && fxSet == null) {
+            intake.keepMatured();                                     // the explorer's matured-items switch: the whole normal set only
+        }
         boolean read;
         boolean readPv;
         try {
@@ -957,6 +960,39 @@ final class VarLoader {
             org.slf4j.LoggerFactory.getLogger(VarLoader.class).warn("VaR: the intraday updates of {} could not be read: {}", date, e.getMessage());
             return vd.warned(intradayUnread(date, e));                 // said on every answer, never a silent morning run
         }
+    }
+
+    /**
+     * The small book of a date's matured records (VAR_GUIDE.md, "Matured items"), for the explorer's switch: built from the items the load
+     * kept, on the heap, with the date's hierarchies (the same node ids), the scenario dates and FX of the date. Null when the date kept
+     * none. Never part of the date: the official book, its records, captures and limits do not see it.
+     */
+    VarBook maturedBook(VarDate d) {
+        VarMaturedItems m = d.intake() == null ? null : d.intake().maturedItems();
+        if (m == null || m.empty()) {
+            return null;
+        }
+        LocalDate date = d.date();
+        VarBook official = d.book();
+        List<LocalDate> days = official.scenarioDates();
+        Hierarchies hs = effective(date, hierarchies.get());
+        VarBook.Builder b = new VarBook.Builder(date, official.scenarioSet(), days, m.items().size(), Long.MAX_VALUE);
+        b.currencyRates(c -> fx(date, days, null).rates(c).orElse(null));
+        b.columnHierarchies(hs.specs().stream().map(s -> s.withRootName(props.rootName(s.id(), null, s.rootName()))).toList(), Map.of(),
+                names(AsOf.of(date), hs));
+        if (!b.textColumns().equals(m.columns())) {
+            return null;                                               // the hierarchies changed since the load: its next load keeps them again
+        }
+        double[] v = new double[days.size()];
+        java.util.Set<String> seen = new java.util.HashSet<>();
+        for (VarMaturedItems.Item it : m.items()) {
+            if (!seen.add(it.id())) {
+                continue;                                              // the same record sent twice: once
+            }
+            it.vector(v);
+            b.trade(it.id(), v, v.length, it.texts().toArray(new String[0]), it.numbers());
+        }
+        return b.build(sums);
     }
 
     /** The warning of a date answered without its intraday updates because they could not be read (the next data-load signal reads them). */

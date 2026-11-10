@@ -19,7 +19,7 @@ import com.ash.drishti.server.net.NetCallFilter;
 import com.ash.drishti.server.net.NetCaller;
 import com.ash.drishti.server.net.PeerCalls;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;

@@ -16,7 +16,7 @@
 package com.ash.drishti.server.compute;
 
 import com.ash.drishti.api.compute.Viewer;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 
 /**
  * The reactive connectors' viewer of a principal (user, roles, the hash of their rights), for a service that asks a computed kind itself

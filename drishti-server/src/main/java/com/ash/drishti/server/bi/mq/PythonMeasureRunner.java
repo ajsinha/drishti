@@ -19,7 +19,7 @@ import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.plan.SecuritySignature;
 import com.ash.drishti.server.bi.python.PythonItems;
 import com.ash.drishti.server.bi.transform.TransformRunner;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.util.LinkedHashMap;
 import java.util.List;

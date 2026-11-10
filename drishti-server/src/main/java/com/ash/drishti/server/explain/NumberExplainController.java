@@ -15,10 +15,12 @@
  */
 package com.ash.drishti.server.explain;
 
+import com.ash.drishti.kernel.api.explain.ExplainRequest;
+import com.ash.drishti.kernel.api.explain.Explainer;
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.rachana.UnderConstruction;
 import com.ash.drishti.server.engines.EngineRegistry;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;

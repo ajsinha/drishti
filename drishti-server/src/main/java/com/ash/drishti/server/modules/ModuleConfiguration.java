@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.modules;
 
+import com.ash.drishti.kernel.api.modules.ApiAlias;
 import com.ash.drishti.packs.Modules;
 import com.ash.drishti.registry.AccessRegistry;
 import com.ash.drishti.registry.EmbeddedAccessRegistry;

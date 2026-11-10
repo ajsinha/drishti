@@ -20,7 +20,7 @@ import com.ash.drishti.server.collab.mail.ItemRenderer;
 import com.ash.drishti.server.collab.mail.MailRenderer;
 import com.ash.drishti.server.collab.mail.NotifyPrefs;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 
 /**
  * The email for a data load or for late data ({@code load} outbox rows): the one-line summary, and a link to the pack's Data loads page.

@@ -34,6 +34,181 @@
 })(typeof window !== 'undefined' ? window : globalThis, function (__lib) {
   'use strict';
   var __m = {};
+  /* ---- src/drishti_decomposition.js ---- */
+  __m["src/drishti_decomposition.js"] = (function () {
+    var formatCompact = __lib("drishti-core").formatCompact, formatNumber = __lib("drishti-core").formatNumber;
+    const NS = 'http://www.w3.org/2000/svg';
+    class Decomposition {
+      constructor(host, options) {
+        this.host = host;
+        this.o = options;
+        this.doc = host.ownerDocument;
+        this.levels = [];                                // {answer, split, selected}
+        this.seq = 0;
+        this.host.classList.add('dt-decomp');
+        this.host.setAttribute('role', 'group');
+        this.host.setAttribute('aria-label', 'Decomposition of ' + options.title);
+        this.load(0, null, []);
+      }
+      fmt(v, unit) {
+        if (v === null || v === undefined) { return '–'; }
+        if (this.o.format) { return this.o.format(v, unit); }
+        return unit === 'money' ? '$' + formatCompact(v) : formatCompact(v);
+      }
+      path(depth) {
+        const out = [];
+        for (let d = 0; d < depth; d++) {
+          const l = this.levels[d], s = l && l.selected;
+          if (l && s !== null && s !== undefined && l.split) { out.push({ field: l.split, value: l.answer.children[s].member }); }
+        }
+        return out;
+      }
+      load(depth, split, path) {
+        this.levels.length = depth + 1;
+        this.levels[depth] = { answer: null, split: split, selected: null, busy: true };
+        this.draw();
+        const seq = ++this.seq;
+        this.o.load({ split: split, path: path }).then((a) => {
+          if (seq !== this.seq) { return; }
+          this.levels[depth] = { answer: a, split: split, selected: null };
+          this.draw();
+        }, (e) => {
+          if (seq !== this.seq) { return; }
+          this.levels[depth] = { answer: null, split: split, selected: null, error: (e && e.message) || String(e) };
+          this.draw();
+        });
+      }
+      open(depth, index) {
+        const l = this.levels[depth];
+        if (!l || !l.answer || !l.answer.children[index] || l.answer.children[index].others) { return; }
+        l.selected = index;
+        const used = this.levels.slice(0, depth + 1).map((x) => x.split);
+        const next = (this.levels[depth + 1] && this.levels[depth + 1].split && used.indexOf(this.levels[depth + 1].split) < 0) ? this.levels[depth + 1].split
+          : (this.o.splits.find((s) => used.indexOf(s.field) < 0) || {}).field;
+        this.levels.length = depth + 1;
+        if (next) { this.load(depth + 1, next, this.path(depth + 1)); } else { this.draw(); }
+      }
+      splitBy(depth, field) {
+        this.load(depth, field || null, this.path(depth));
+      }
+      line(a, label) {
+        if (!a.children.length) { return null; }
+        if (a.additive || a.diversification === undefined) { return 'The parts add up to ' + this.fmt(a.node.value, a.unit) + (a.additive ? '' : ' (no diversification figure)'); }
+        return { sum: this.fmt(a.sumStandalone, a.unit), div: this.fmt(a.diversification, a.unit), node: this.fmt(a.node.value, a.unit),
+          pct: a.sumStandalone ? formatNumber(100 * a.diversification / a.sumStandalone, { decimals: 0 }) + '% offset' : '', label: label };
+      }
+      el(tag, cls, text) {
+        const e = this.doc.createElement(tag);
+        if (cls) { e.className = cls; }
+        if (text !== undefined) { e.textContent = text; }
+        return e;
+      }
+      box(depth, i, item, unit, max, selected, componentLabel) {
+        const b = this.el('button', 'dt-box' + (selected ? ' dt-box-on' : '') + (item.others ? ' dt-box-others' : ''));
+        b.type = 'button';
+        b.setAttribute('aria-pressed', selected ? 'true' : 'false');
+        b.dataset.depth = String(depth);
+        b.dataset.index = String(i);
+        const top = this.el('div', 'dt-box-top');
+        top.appendChild(this.el('span', 'dt-box-label', item.label));
+        top.appendChild(this.el('span', 'dt-box-value', this.fmt(item.value, unit)));
+        b.appendChild(top);
+        if (item.component !== null && item.component !== undefined) {
+          const c = this.el('div', 'dt-box-comp');
+          c.appendChild(this.el('span', '', componentLabel || 'Component'));
+          c.appendChild(this.el('span', 'dt-box-value', this.fmt(item.component, unit)));
+          b.appendChild(c);
+        }
+        const bar = this.el('div', 'dt-box-bar'), fill = this.el('div', 'dt-box-fill');
+        fill.style.width = (max > 0 && item.value ? Math.max(2, Math.round(Math.abs(item.value) / max * 100)) : 0) + '%';
+        bar.appendChild(fill);
+        b.appendChild(bar);
+        if (item.note) { b.title = item.note; }
+        if (depth >= 0) { b.addEventListener('click', () => this.open(depth, i)); }
+        return b;
+      }
+      column(depth, l) {
+        const col = this.el('section', 'dt-col');
+        col.dataset.depth = String(depth);
+        const head = this.el('div', 'dt-col-head');
+        if (depth === 0 && !l.split) {
+          head.appendChild(this.el('span', 'dt-col-title', this.o.title));
+        } else {
+          head.appendChild(this.el('span', 'dt-col-by', 'Split by'));
+        }
+        const used = this.levels.slice(0, depth).map((x) => x.split);
+        this.o.splits.filter((s) => used.indexOf(s.field) < 0).forEach((s) => {
+          const b = this.el('button', 'dt-split-opt', s.label);
+          b.type = 'button';
+          b.dataset.field = s.field;
+          b.setAttribute('aria-pressed', l.split === s.field ? 'true' : 'false');
+          b.addEventListener('click', () => this.splitBy(depth, s.field));
+          head.appendChild(b);
+        });
+        col.appendChild(head);
+        if (l.busy) { col.appendChild(this.el('p', 'dt-col-note', 'Working…')); return col; }
+        if (l.error) { const p = this.el('p', 'dt-col-note dt-col-error', l.error); p.setAttribute('role', 'alert'); col.appendChild(p); return col; }
+        const a = l.answer;
+        if (depth === 0) {
+          const root = this.box(-1, 0, { label: 'Total', value: a.node && a.node.value, component: null }, a.unit, Math.abs((a.node && a.node.value) || 0), true, a.componentLabel);
+          root.classList.add('dt-box-root');
+          col.appendChild(root);
+        }
+        if (!l.split) { return col; }
+        const line = this.line(a);
+        if (line) {
+          const lineEl = this.el('div', 'dt-line');
+          lineEl.setAttribute('role', 'note');
+          if (typeof line === 'string') { lineEl.textContent = line; } else {
+            lineEl.appendChild(this.el('span', '', 'Σ standalone ' + line.sum + ' − '));
+            lineEl.appendChild(this.el('span', 'dt-line-div', 'diversification ' + line.div));
+            lineEl.appendChild(this.el('span', 'dt-line-eq', ' = ' + line.node));
+            if (line.pct) { lineEl.appendChild(this.el('span', 'dt-line-pct', ' (' + line.pct + ')')); }
+          }
+          col.appendChild(lineEl);
+        }
+        if (!a.children.length) { col.appendChild(this.el('p', 'dt-col-note', 'No members.')); return col; }
+        const max = a.children.reduce((m, c) => Math.max(m, Math.abs(c.value || 0)), 0);
+        a.children.forEach((c, i) => col.appendChild(this.box(depth, i, c, a.unit, max, l.selected === i, a.componentLabel)));
+        return col;
+      }
+      links(strip) {
+        const svg = this.doc.createElementNS(NS, 'svg');
+        svg.setAttribute('class', 'dt-links');
+        svg.setAttribute('aria-hidden', 'true');
+        strip.appendChild(svg);
+        const base = strip.getBoundingClientRect();
+        const cols = strip.querySelectorAll('.dt-col');
+        let w = 0, h = 0;
+        cols.forEach((c) => { const r = c.getBoundingClientRect(); w = Math.max(w, r.right - base.left); h = Math.max(h, r.bottom - base.top); });
+        svg.setAttribute('width', String(Math.ceil(w)));
+        svg.setAttribute('height', String(Math.ceil(h)));
+        for (let d = 0; d + 1 < cols.length; d++) {
+          const from = cols[d].querySelector('.dt-box-on') || cols[d].querySelector('.dt-box-root');
+          const targets = cols[d + 1].querySelectorAll('.dt-box');
+          if (!from || !targets.length) { continue; }
+          const f = from.getBoundingClientRect();
+          targets.forEach((t) => {
+            const r = t.getBoundingClientRect(), x0 = f.right - base.left, y0 = f.top + f.height / 2 - base.top, x1 = r.left - base.left, y1 = r.top + r.height / 2 - base.top, mid = (x0 + x1) / 2;
+            const p = this.doc.createElementNS(NS, 'path');
+            p.setAttribute('d', 'M' + x0 + ' ' + y0 + ' C ' + mid + ' ' + y0 + ', ' + mid + ' ' + y1 + ', ' + x1 + ' ' + y1);
+            p.setAttribute('class', 'dt-link' + (t.classList.contains('dt-box-on') ? ' dt-link-on' : ''));
+            svg.appendChild(p);
+          });
+        }
+      }
+      draw() {
+        while (this.host.firstChild) { this.host.removeChild(this.host.firstChild); }
+        const strip = this.el('div', 'dt-strip');
+        this.host.appendChild(strip);
+        this.levels.forEach((l, d) => strip.appendChild(this.column(d, l)));
+        this.links(strip);
+      }
+      resize() { this.draw(); }
+      dispose() { this.seq++; while (this.host.firstChild) { this.host.removeChild(this.host.firstChild); } }
+    }
+    return { "Decomposition": Decomposition };
+  })();
   /* ---- src/drishti_tree-model.js ---- */
   __m["src/drishti_tree-model.js"] = (function () {
     var EventBus = __lib("drishti-core").EventBus;
@@ -1743,7 +1918,7 @@
   __m["src/drishti_index.js"] = (function () {
     var defineTreeElement = __m["src/drishti_tree-element.js"].defineTreeElement;
     function install(root) { if (root && root.document && root.customElements) { defineTreeElement(root.customElements, root); } }
-    return { "install": install, "PATH_SEP": __m["src/drishti_tree-model.js"].PATH_SEP, "HierarchyModel": __m["src/drishti_tree-model.js"].HierarchyModel, "orgLayout": __m["src/drishti_tree-layout.js"].orgLayout, "partition": __m["src/drishti_tree-layout.js"].partition, "arcPath": __m["src/drishti_tree-layout.js"].arcPath, "statusTone": __m["src/drishti_tree-layout.js"].statusTone, "svg": __m["src/drishti_tree-draw.js"].svg, "nodeColour": __m["src/drishti_tree-draw.js"].nodeColour, "drawOrg": __m["src/drishti_tree-draw.js"].drawOrg, "drawPartition": __m["src/drishti_tree-draw.js"].drawPartition, "partitionTable": __m["src/drishti_tree-draw.js"].partitionTable, "gridRows": __m["src/drishti_tree-grid.js"].gridRows, "TreeGrid": __m["src/drishti_tree-grid.js"].TreeGrid, "loadOpenChildren": __m["src/drishti_tree-hooks.js"].loadOpenChildren, "sideContent": __m["src/drishti_tree-side.js"].sideContent, "statusParts": __m["src/drishti_tree-side.js"].statusParts, "TREE_EXPORTS": __m["src/drishti_tree-io.js"].TREE_EXPORTS, "svgText": __m["src/drishti_tree-io.js"].svgText, "pngOf": __m["src/drishti_tree-io.js"].pngOf, "dataText": __m["src/drishti_tree-io.js"].dataText, "keyMove": __m["src/drishti_tree-io.js"].keyMove, "exportTree": __m["src/drishti_tree-io.js"].exportTree, "TREE_MODES": __m["src/drishti_tree-view.js"].TREE_MODES, "TREE_EVENTS": __m["src/drishti_tree-view.js"].TREE_EVENTS, "Tree": __m["src/drishti_tree-view.js"].Tree, "PANEL_MODES": __m["src/drishti_tree-panel.js"].PANEL_MODES, "readTableTree": __m["src/drishti_tree-panel.js"].readTableTree, "isChain": __m["src/drishti_tree-panel.js"].isChain, "TreePanel": __m["src/drishti_tree-panel.js"].TreePanel, "treeTables": __m["src/drishti_tree-panel.js"].treeTables, "flattenTree": __m["src/drishti_tree-nodes.js"].flattenTree, "findNode": __m["src/drishti_tree-nodes.js"].findNode, "isWithin": __m["src/drishti_tree-nodes.js"].isWithin, "moveNode": __m["src/drishti_tree-nodes.js"].moveNode, "nodesSource": __m["src/drishti_tree-nodes.js"].nodesSource, "OUTLINE_TONES": __m["src/drishti_tree-outline.js"].OUTLINE_TONES, "outlineFilter": __m["src/drishti_tree-outline.js"].outlineFilter, "outlineKey": __m["src/drishti_tree-outline.js"].outlineKey, "TreeOutline": __m["src/drishti_tree-outline.js"].TreeOutline, "TREE_ELEMENT": __m["src/drishti_tree-element.js"].TREE_ELEMENT, "defineTreeElement": __m["src/drishti_tree-element.js"].defineTreeElement };
+    return { "install": install, "PATH_SEP": __m["src/drishti_tree-model.js"].PATH_SEP, "HierarchyModel": __m["src/drishti_tree-model.js"].HierarchyModel, "orgLayout": __m["src/drishti_tree-layout.js"].orgLayout, "partition": __m["src/drishti_tree-layout.js"].partition, "arcPath": __m["src/drishti_tree-layout.js"].arcPath, "statusTone": __m["src/drishti_tree-layout.js"].statusTone, "svg": __m["src/drishti_tree-draw.js"].svg, "nodeColour": __m["src/drishti_tree-draw.js"].nodeColour, "drawOrg": __m["src/drishti_tree-draw.js"].drawOrg, "drawPartition": __m["src/drishti_tree-draw.js"].drawPartition, "partitionTable": __m["src/drishti_tree-draw.js"].partitionTable, "gridRows": __m["src/drishti_tree-grid.js"].gridRows, "TreeGrid": __m["src/drishti_tree-grid.js"].TreeGrid, "loadOpenChildren": __m["src/drishti_tree-hooks.js"].loadOpenChildren, "sideContent": __m["src/drishti_tree-side.js"].sideContent, "statusParts": __m["src/drishti_tree-side.js"].statusParts, "TREE_EXPORTS": __m["src/drishti_tree-io.js"].TREE_EXPORTS, "svgText": __m["src/drishti_tree-io.js"].svgText, "pngOf": __m["src/drishti_tree-io.js"].pngOf, "dataText": __m["src/drishti_tree-io.js"].dataText, "keyMove": __m["src/drishti_tree-io.js"].keyMove, "exportTree": __m["src/drishti_tree-io.js"].exportTree, "TREE_MODES": __m["src/drishti_tree-view.js"].TREE_MODES, "TREE_EVENTS": __m["src/drishti_tree-view.js"].TREE_EVENTS, "Tree": __m["src/drishti_tree-view.js"].Tree, "PANEL_MODES": __m["src/drishti_tree-panel.js"].PANEL_MODES, "readTableTree": __m["src/drishti_tree-panel.js"].readTableTree, "isChain": __m["src/drishti_tree-panel.js"].isChain, "TreePanel": __m["src/drishti_tree-panel.js"].TreePanel, "treeTables": __m["src/drishti_tree-panel.js"].treeTables, "flattenTree": __m["src/drishti_tree-nodes.js"].flattenTree, "findNode": __m["src/drishti_tree-nodes.js"].findNode, "isWithin": __m["src/drishti_tree-nodes.js"].isWithin, "moveNode": __m["src/drishti_tree-nodes.js"].moveNode, "nodesSource": __m["src/drishti_tree-nodes.js"].nodesSource, "OUTLINE_TONES": __m["src/drishti_tree-outline.js"].OUTLINE_TONES, "outlineFilter": __m["src/drishti_tree-outline.js"].outlineFilter, "outlineKey": __m["src/drishti_tree-outline.js"].outlineKey, "TreeOutline": __m["src/drishti_tree-outline.js"].TreeOutline, "TREE_ELEMENT": __m["src/drishti_tree-element.js"].TREE_ELEMENT, "defineTreeElement": __m["src/drishti_tree-element.js"].defineTreeElement, "Decomposition": __m["src/drishti_decomposition.js"].Decomposition };
   })();
   return Object.freeze(Object.assign({ library: "drishti-tree", version: "0.2.0" }, __m["src/drishti_index.js"]));
 });

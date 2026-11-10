@@ -37,4 +37,3 @@ description: risk-store read from AWS S3 Tables (the market-risk pack's risk dom
 settings:
   lake: s3tables
   lake-tables: risk.stress-scenario,risk.stress-result,risk.frtb-sensitivity,risk.pnl-explain,risk.trade-valuation,risk.pnl-vector,risk.scenario-pv,risk.fx-scenario,risk.scenario-set,risk.var-limit,risk.desk-pnl,risk.pnl-history
-  engine: native

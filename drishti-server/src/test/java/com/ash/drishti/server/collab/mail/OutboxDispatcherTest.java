@@ -25,7 +25,7 @@ import com.ash.drishti.identity.collab.FileOutboxStore;
 import com.ash.drishti.identity.collab.OutboxItem;
 import com.ash.drishti.identity.collab.OutboxStore;
 import com.ash.drishti.server.collab.Principals;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.time.Clock;
 import java.time.Duration;

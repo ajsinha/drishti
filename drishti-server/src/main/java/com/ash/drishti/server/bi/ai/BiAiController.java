@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.bi.ai;
 
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.util.Map;
 import org.springframework.http.HttpHeaders;

@@ -15,16 +15,16 @@
  */
 package com.ash.drishti.banking.var;
 
-import com.ash.drishti.bicompute.core.AggregationPlan;
-import com.ash.drishti.bicompute.core.CellKey;
-import com.ash.drishti.bicompute.core.CellSet;
-import com.ash.drishti.bicompute.core.Partials;
-import com.ash.drishti.bicompute.core.PivotView;
+import com.ash.drishti.kernel.api.pivot.AggregationPlan;
+import com.ash.drishti.kernel.api.pivot.CellKey;
+import com.ash.drishti.kernel.api.pivot.CellSet;
+import com.ash.drishti.kernel.api.pivot.Partials;
+import com.ash.drishti.kernel.api.pivot.PivotView;
 import com.ash.drishti.bicompute.functions.Final;
-import com.ash.drishti.bicompute.spi.AggFunction;
-import com.ash.drishti.bicompute.spi.Kind;
-import com.ash.drishti.bicompute.spi.PivotProvider;
-import com.ash.drishti.bicompute.spi.Viewer;
+import com.ash.drishti.kernel.api.pivot.AggFunction;
+import com.ash.drishti.kernel.api.pivot.Kind;
+import com.ash.drishti.kernel.api.pivot.PivotProvider;
+import com.ash.drishti.kernel.api.pivot.Viewer;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.banking.compute.var.Columns;
@@ -33,7 +33,7 @@ import com.ash.drishti.banking.compute.var.VarCalc;
 import com.ash.drishti.banking.compute.var.VarMath;
 import com.ash.drishti.compute.vector.OrdinalSet;
 import com.ash.drishti.banking.frtb.FrtbService;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -136,6 +136,46 @@ public final class VarPivotProvider implements PivotProvider {
         return frtb;
     }
 
+    /** The names of the last date asked: reference data, the same for every viewer (the loader reads each kind's names once per load). */
+    private volatile Map.Entry<String, java.util.function.BinaryOperator<String>> names;
+
+    /**
+     * Desk, book, legal entity and the other hierarchy levels by their entity's name (the VaR tree's, {@code VarLoader.names}). A dimension
+     * is a position column ({@code DESK}) or a level of a hierarchy ({@code MGMT.DESK}); a level with no name, or a name not readable, shows its id.
+     */
+    @Override
+    public java.util.function.BinaryOperator<String> memberNames(Viewer v, String source, String date) {
+        if (!on.getAsBoolean()) {
+            return (dim, value) -> null;
+        }
+        String key;
+        LocalDate day;
+        try {
+            day = svc.scoped(principal(v), "BANK", day(date)).date().date();
+            key = version(v, source, date).split("\\|", 4)[2] + "|" + day;
+        } catch (RuntimeException e) {
+            return (dim, value) -> null;                         // no date to name: the ids stand
+        }
+        Map.Entry<String, java.util.function.BinaryOperator<String>> held = names;
+        if (held != null && held.getKey().equals(key)) {
+            return held.getValue();
+        }
+        Hierarchies hs = svc.hierarchies();
+        Map<String, String> levels = new HashMap<>();
+        hs.specs().forEach(s -> s.levelNames().forEach(l -> levels.put(l.toUpperCase(Locale.ROOT).replace('-', '_'), l)));
+        com.ash.drishti.banking.compute.var.Cells.Names read = svc.loader().names(com.ash.drishti.api.AsOf.of(day), hs);
+        java.util.function.BinaryOperator<String> out = (dim, value) -> {
+            String level = levels.get(dim.substring(dim.lastIndexOf('.') + 1).toUpperCase(Locale.ROOT).replace('-', '_'));
+            try {
+                return level == null ? null : read.of(level, value);
+            } catch (RuntimeException e) {
+                return null;
+            }
+        };
+        names = Map.entry(key, out);
+        return out;
+    }
+
     /** True when the MR cube runs here. */
     boolean mr() {
         return mr.getAsBoolean();
@@ -166,6 +206,11 @@ public final class VarPivotProvider implements PivotProvider {
             return Map.of();
         }
         return Map.of(SOURCE, mr() ? "VaR · MR cube (the VaR engine's trades and scenario vectors)" : "VaR (the VaR engine's trades and scenario vectors)");
+    }
+
+    @Override
+    public String exactOnly() {
+        return "VaR is never sampled: it shows when exact";
     }
 
     @Override
@@ -302,6 +347,8 @@ public final class VarPivotProvider implements PivotProvider {
             notes.put("defaultView", defaultView(o));
         }
         notes.put("folders", FOLDERS);
+        notes.put("cellLink", java.util.Map.of("label", "Ask the VaR engine", "href", "/var?scope="));   // the cell popover's link (drishti_pivot.js)
+        notes.put("defaultValues", java.util.List.of(java.util.Map.of("measure", "var()", "as", "VaR"), java.util.Map.of("measure", "es()", "as", "ES")));
         notes.put("measureGroup", "VaR engine");                         // the field pickers' group of the measures, and each one's note
         notes.put("perCellNote", "Computed per cell by the VaR engine from the cell's own trades: a total is the VaR of its trades, never a sum"
                 + " of the cells (\u03a3 \u2212 total = the diversification)");
@@ -757,9 +804,9 @@ public final class VarPivotProvider implements PivotProvider {
         return new Rows(cols, rows, members.size(), "the cell's trades as the VaR engine holds them; open the cell's scope with VAR <scope>");
     }
 
-    private static Map<String, com.ash.drishti.bicompute.core.Dim> dimsOf(CellKey key) {
-        Map<String, com.ash.drishti.bicompute.core.Dim> m = new LinkedHashMap<>();
-        key.coords().keySet().forEach(d -> m.put(d, new com.ash.drishti.bicompute.core.Dim(d, null)));
+    private static Map<String, com.ash.drishti.kernel.api.pivot.Dim> dimsOf(CellKey key) {
+        Map<String, com.ash.drishti.kernel.api.pivot.Dim> m = new LinkedHashMap<>();
+        key.coords().keySet().forEach(d -> m.put(d, new com.ash.drishti.kernel.api.pivot.Dim(d, null)));
         return m;
     }
 

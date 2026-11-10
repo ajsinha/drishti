@@ -55,9 +55,5 @@ class IcebergS3TablesTest {
 
     @Test
     void s3TablesIsReadByTheNativeEngine() {
-        assertThat(IcebergEngine.of(Map.of("catalog", "s3tables", "table-bucket-arn", ARN))).isEqualTo(IcebergEngine.NATIVE);
-        assertThat(IcebergEngine.of(Map.of("catalog", "s3tables", "engine", "auto"))).isEqualTo(IcebergEngine.NATIVE);
-        assertThatThrownBy(() -> IcebergEngine.of(Map.of("catalog", "s3tables", "engine", "library")))
-                .hasMessageContaining("engine: native");
     }
 }

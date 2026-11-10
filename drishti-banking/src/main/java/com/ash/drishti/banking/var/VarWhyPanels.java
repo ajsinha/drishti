@@ -20,7 +20,7 @@ import static com.ash.drishti.server.explain.ExplainPanels.riseTone;
 import static com.ash.drishti.server.explain.ExplainPanels.row;
 
 import com.ash.drishti.server.explain.ExplainPanels;
-import com.ash.drishti.server.explain.Explanation;
+import com.ash.drishti.kernel.api.explain.Explanation;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;

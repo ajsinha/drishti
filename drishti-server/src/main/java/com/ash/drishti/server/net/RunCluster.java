@@ -23,7 +23,7 @@ import com.ash.drishti.net.transport.PeerHttp;
 import com.ash.drishti.server.bi.mq.ShardDirectory;
 import com.ash.drishti.server.bi.runs.RunService;
 import com.ash.drishti.server.bi.runs.RunsProperties;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.http.HttpResponse;

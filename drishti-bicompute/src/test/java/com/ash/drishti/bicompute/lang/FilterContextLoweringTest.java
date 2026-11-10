@@ -146,7 +146,7 @@ class FilterContextLoweringTest {
         assertThat(q.groups()).containsExactly("desks.NAME", "books.NAME", "trades.STATUS");
         assertThat(q.on()).containsExactly("desks.NAME", "books.NAME");
         assertThat(q.filters()).containsExactly(0, 1);
-        assertThat(FilterContext.average("SELECT …", List.of("\"desks.NAME\""), "\"__ctx\"")).isEqualTo(
+        assertThat(FilterContext.iterate("avg", "SELECT …", List.of("\"desks.NAME\""), "\"__ctx\"")).isEqualTo(
                 "SELECT \"desks.NAME\", avg(\"__ctx\") AS \"__ctx\" FROM (SELECT …) AS \"a\" GROUP BY \"desks.NAME\"");
         assertThat(((Lowered.Context) lower("avg_over(sum(trades.MTM), trades.TRADE_DATE)")).edit().by()).containsExactly("trades.TRADE_DATE");
         assertThat(CheckedMode.check("sum(sum(trades.MTM))", Scope.AGGREGATE, MODEL).firstError().orElseThrow().message())
