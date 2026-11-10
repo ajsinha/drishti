@@ -191,6 +191,8 @@ class ArchitectureRulesTest {
     static final ArchRule temporaryFilesComeFromTempFiles = noClasses()
             .that().doNotHaveFullyQualifiedName("com.ash.drishti.common.TempFiles")
             .and().resideOutsideOfPackage("com.ash.drishti.testkit..")
+            // the standalone module tool (java -jar drishti-module-tool.jar) runs outside any server and its data folder: the system temp is its place
+            .and().resideOutsideOfPackage("com.ash.drishti.module.tool..")
             .should().callMethodWhere(com.tngtech.archunit.core.domain.JavaCall.Predicates.target(
                     com.tngtech.archunit.base.DescribedPredicate.describe("is Files.createTempFile, Files.createTempDirectory or File.createTempFile",
                             (com.tngtech.archunit.core.domain.AccessTarget.CodeUnitCallTarget t) -> (t.getOwner().isEquivalentTo(java.nio.file.Files.class)
