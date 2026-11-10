@@ -271,6 +271,6 @@ class EngineRegistryTest {
         Map<String, Object> exp = rows.stream().filter(x -> "exposure".equals(x.get("id"))).findFirst().orElseThrow();
         assertThat(exp.get("answering")).isEqualTo(true);
         assertThat(exp.get("memoryBytes")).isEqualTo(64L << 20);
-        assertThat(exp.get("threads")).isEqualTo(1);
+        assertThat(exp.get("threads")).as("the same count as one look per engine").isEqualTo(ComputeEngine.threadsNamed(f[1].threadPrefixes()));
     }
 }
