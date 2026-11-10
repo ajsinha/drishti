@@ -45,8 +45,8 @@ TOLERANCE = 0.002   # a page changed: more than this share of its pixels changed
 MASK = ["[data-clock]", "#asofDate", "[data-dyk]", "[data-ready-facts]", "[data-inbox-next]", "[data-snapshot-mask]", "time.timeago",
         "[data-relative-time]"]
 #: timings that change their own width (a mask over them would move with it): the VaR explorer's paint, server and aggregation
-#: times, a live board's last update; their words replaced by one dot
-QUIET = ["[data-vx-timing]", "[data-vx-fresh]", "[data-live-time]"]
+#: times, a live board's last update, a search's or a form's time taken; their words replaced by one dot
+QUIET = ["[data-vx-timing]", "[data-vx-fresh]", "[data-live-time]", "[data-elapsed]"]
 
 _STILL = """async ([quiet, today]) => {
   // what the run, not the page, decides: the test's scratch folders and the real day's date and time (the business date is fixed)

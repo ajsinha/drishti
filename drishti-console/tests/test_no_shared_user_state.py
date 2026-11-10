@@ -35,6 +35,7 @@ CHANGES = {"append", "add", "update", "pop", "popitem", "clear", "setdefault", "
 #: module-level mutable state, each with why it holds nothing one person could read of another
 ALLOWED = {
     "core/distribution.py:_KNOWN": "every command and word the packs folder and the module map name, by packs folder (product files, nothing of a person's)",
+    "core/distribution.py:_PACK_COMMANDS": "each pack.yaml's commands while the file is unchanged (product files, nothing of a person's)",
     "core/plugins.py:_commands": "the modules' command hooks, registered at import (code, not data: DOMAIN_MODULES.md C2)",
     "core/plugins.py:_retired": "the modules' retired-link hooks, registered at import (code, not data)",
     "core/plugins.py:_type_ahead": "the modules' type-ahead hooks, registered at import (code, not data: C3)",
