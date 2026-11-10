@@ -400,6 +400,12 @@ only shrink; banking's 44 packages in i2 + i3); conformance check C1 honours the
 module. Health and `drishti.py module list` show the origin; a third-party module, or a first-party claim that does not verify, loads as
 third-party and, where it needs more than the public API, is refused with the reason. `drishti.py module inspect` prints the origin and why.
 
+**Exact kernel version for an allowance** (product owner, 2026-11-10). A first-party module that uses a `kernel-internals:` allowance is
+built for **one exact kernel build** (its manifest's `kernel-build:`, the kernel's version and build id, like a Linux in-tree driver's
+vermagic) and loads only on that build; on any other the kernel refuses it with "built for kernel X, this is Y: install the matching
+module". First-party modules without an allowance, and every third-party module, keep the ordinary `kernel-api` version range. The product's
+one build and release train builds banking with each kernel, so the two always ship together.
+
 **The full banking example:** [examples/banking/module.yaml](kernel-and-modules/examples/banking/module.yaml). It lists the two jars
 (`drishti-banking`, `drishti-compute-banking`), the six engines, the Python package `drishti_banking` with its items, the five packs (with
 `banking-reference`, decision Q1), the 30-odd data needs, the console plugin and `drishti-risk`, the six lenses, 60 functions, the
