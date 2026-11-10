@@ -44,7 +44,7 @@ public record SimmProperties(Boolean enabled, String parametersDir, String defau
         Integer cacheMinutes, String playgroundTemplate) {
 
     /** The mapping when none is configured: rates, inflation, money market and FX in RatesFX; the others by their name. */
-    public static final Map<String, String> PRODUCT_CLASSES = defaultsMap();
+    public static final Map<String, String> PRODUCT_CLASSES = java.util.Collections.unmodifiableMap(defaultsMap());
 
     public SimmProperties {
         enabled = enabled == null || enabled;

@@ -190,7 +190,7 @@ public final class ModuleAssembler {
                     out.add("kernel-internals:");
                     for (String p : Files.readAllLines(list, StandardCharsets.UTF_8)) {
                         if (!p.isBlank() && !p.strip().startsWith("#")) {
-                            out.add("- " + p.strip());
+                            out.add("- " + p.replaceAll("\\s+#.*$", "").strip());
                         }
                     }
                     continue;

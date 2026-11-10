@@ -105,6 +105,11 @@ public final class ModuleConformance {
      * runtime checks load the module as that kernel would.
      */
     public static List<Check> run(Path dmod, Path project, Path work, int cycles, KernelFacts facts) {
+        return run(dmod, project, work, cycles, facts, List.of());
+    }
+
+    /** As above, with the packages of the modules it requires installed beside it for the runtime checks ({@code --with}). */
+    public static List<Check> run(Path dmod, Path project, Path work, int cycles, KernelFacts facts, List<Path> with) {
         Path dir;
         DmodManifest m;
         try {
@@ -127,7 +132,7 @@ public final class ModuleConformance {
         out.add(check("C8", "Data contracts present", contractsPresent(dir, m, files)));
         out.add(check("C9", "No secrets, no connectors", noSecrets(dir, files)));
         out.add(check("C10", "Licence headers", licenceHeaders(dir, files, project)));
-        out.addAll(runtimeChecks(dmod, m, work, cycles, facts));
+        out.addAll(runtimeChecks(dmod, m, work, cycles, facts, with));
         out.add(11, check("C12", "Two people at once", twoPeople(dir, m)));
         return out;
     }
@@ -193,10 +198,11 @@ public final class ModuleConformance {
         List<String> out = new ArrayList<>();
         for (ClassFiles.Info c : classes(dir, m)) {
             for (ClassFiles.StaticField f : c.statics()) {
-                if (!f.isFinal() || MUTABLE.contains(f.descriptor())) {
+                if (!f.engineWide() && (!f.isFinal() || (MUTABLE.contains(f.descriptor()) && !f.unmodifiable()))) {
                     out.add(c.name().replace('/', '.') + "." + f.name() + " is " + (f.isFinal() ? "a static collection" : "a static field that is "
                             + "not final") + ": every person using the module at once would share it; keep a person's data in the request "
-                            + "or in a bean the kernel scopes, and make constants final and immutable");
+                            + "or in a bean the kernel scopes, make constants final and unmodifiable (List.of, Map.copyOf, Collections.unmodifiableMap), "
+                            + "and mark state that is one value for the whole engine @EngineWide with the reason");
                 }
             }
         }
@@ -483,14 +489,14 @@ public final class ModuleConformance {
 
     // ---- C11, C13, C14, C15: the module in the runtime ------------------------------------------------------------------------------
 
-    private static List<Check> runtimeChecks(Path dmod, DmodManifest m, Path work, int cycles, KernelFacts facts) {
+    private static List<Check> runtimeChecks(Path dmod, DmodManifest m, Path work, int cycles, KernelFacts facts, List<Path> with) {
         List<String> answer = new ArrayList<>();
         List<String> off = new ArrayList<>();
         List<String> absent = new ArrayList<>();
         List<String> unloads = new ArrayList<>();
         try {
             // C11 and C13: load, every word answers through a route; switched off, every route answers 404
-            Path modules = install(dmod, m, work.resolve("run-off"));
+            Path modules = install(dmod, m, work.resolve("run-off"), with);
             try (ModuleRuntime rt = runtime(work.resolve("run-off"), facts)) {
                 if (load(rt, modules, m, answer)) {
                     Map<String, RouteTable.Route> byWord = new LinkedHashMap<>();
@@ -522,7 +528,7 @@ public final class ModuleConformance {
                 }
             }
             // C14: removed, every surface gone, nothing left in the registry, its saved work marked
-            modules = install(dmod, m, work.resolve("run-remove"));
+            modules = install(dmod, m, work.resolve("run-remove"), with);
             try (ModuleRuntime rt = runtime(work.resolve("run-remove"), facts)) {
                 if (load(rt, modules, m, absent)) {
                     ModuleRuntime.UnloadReport rep = rt.unload(m.id(), ModuleRuntime.Leave.REMOVE, true);
@@ -544,7 +550,7 @@ public final class ModuleConformance {
             for (int i = 1; i <= cycles && unloads.isEmpty(); i++) {
                 Path run = work.resolve("run-cycle");
                 ModuleAssembler.delete(run);
-                modules = install(dmod, m, run);
+                modules = install(dmod, m, run, with);
                 try (ModuleRuntime rt = runtime(run, facts)) {
                     if (!load(rt, modules, m, unloads)) {
                         break;
@@ -567,9 +573,17 @@ public final class ModuleConformance {
         return out;
     }
 
-    private static Path install(Path dmod, DmodManifest m, Path run) throws IOException {
+    private static Path install(Path dmod, DmodManifest m, Path run, List<Path> with) throws IOException {
         ModuleAssembler.delete(run);
         Path modules = run.resolve("modules");
+        for (Path w : with) {
+            Path peek = run.resolve("peek");
+            Dmod.unpack(w, peek);
+            DmodManifest wm = ModuleAssembler.manifest(peek);
+            ModuleAssembler.delete(peek);
+            Dmod.unpack(w, modules.resolve(wm.id()).resolve(wm.version()));
+            Files.copy(w, modules.resolve(wm.id()).resolve(w.getFileName()));
+        }
         Path at = modules.resolve(m.id()).resolve(m.version());
         Dmod.unpack(dmod, at);
         Files.copy(dmod, modules.resolve(m.id()).resolve(dmod.getFileName()));

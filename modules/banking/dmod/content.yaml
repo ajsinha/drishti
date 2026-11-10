@@ -1,0 +1,50 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The repository content the banking package brings in (not packed itself): its packs without their connector
+# templates, its lenses and its tutorials. Every file keeps one home.
+copy:
+- from: ../../../config/packs/banking/trading
+  to: packs/trading
+  leave-out:
+  - tests
+  - tools
+  sections-out:
+  - connectors
+- from: ../../../config/packs/banking/market-risk
+  to: packs/market-risk
+  leave-out:
+  - tests
+  - tools
+  sections-out:
+  - connectors
+- from: ../../../config/packs/banking/counterparty-risk
+  to: packs/counterparty-risk
+  leave-out:
+  - tests
+  - tools
+  sections-out:
+  - connectors
+- from: ../../../config/lenses/banking/risk.yaml
+  to: lenses/risk.yaml
+- from: ../../../config/lenses/banking/trading.yaml
+  to: lenses/trading.yaml
+- from: ../../../docs/tutorials/02-var-from-the-bank-to-a-trade.md
+  to: tutorials/02-var-from-the-bank-to-a-trade.md
+- from: ../../../docs/tutorials/03-exposure-from-the-bank-to-a-trade.md
+  to: tutorials/03-exposure-from-the-bank-to-a-trade.md
+- from: ../../../docs/tutorials/04-frtb-sa.md
+  to: tutorials/04-frtb-sa.md
+- from: ../../../docs/tutorials/05-simm.md
+  to: tutorials/05-simm.md

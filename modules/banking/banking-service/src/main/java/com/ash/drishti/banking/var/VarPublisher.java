@@ -43,7 +43,7 @@ final class VarPublisher {
     static final String TABLE = "var-official";
 
     /** The published columns and their types, in order (VAR_GUIDE.md section 19; BUSINESS_DATE is the partition column business_date). */
-    static final Map<String, String> COLUMNS = columns();
+    static final Map<String, String> COLUMNS = java.util.Collections.unmodifiableMap(columns());
 
     private final com.ash.drishti.banking.official.OfficialSink sink;
     private final boolean jsonl;

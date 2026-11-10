@@ -17,7 +17,6 @@ package com.ash.drishti.banking.var;
 
 import com.ash.drishti.banking.compute.var.PositionRules;
 import com.ash.drishti.compute.vector.ParallelSums;
-import com.ash.drishti.engine.ViewPipeline;
 import com.ash.drishti.engine.source.SourceRouter;
 import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.identity.content.ContentStore;
@@ -29,7 +28,6 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.function.Supplier;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -323,22 +321,27 @@ public class VarConfiguration {
         return out;
     }
 
+    /** The VaR figures views show (the kernel collects every ViewAugmenter: its own context's beans, a module's through the bridge). */
     @Bean
-    VarFigures varFigures(VarService svc, VarViews views, ObjectProvider<ViewPipeline> pipeline) {
-        VarFigures f = new VarFigures(svc, views);
-        ViewPipeline p = pipeline.getIfAvailable();
-        if (p != null) {
-            java.util.List<com.ash.drishti.kernel.api.view.ViewAugmenter> all = new java.util.ArrayList<>(p.augmenters());
-            all.add(f);                                                // beside the others (the exposure engine's on netting sets)
-            all.add(new VarTradeLinks(f.service()));                   // a trade page's Risk links: its P&L vector and its VaR
-            p.augmenters(all);
-        }
-        return f;
+    VarFigures varFigures(VarService svc, VarViews views) {
+        return new VarFigures(svc, views);
     }
 
-    /** At start: the newest date captured officially when it has not been (a lake built while the server was down). */
-    @EventListener(ApplicationReadyEvent.class)
-    void captureNewest(ApplicationReadyEvent e) {
+    /** A trade page's Risk links: its P&L vector and its VaR. */
+    @Bean
+    com.ash.drishti.kernel.api.view.ViewAugmenter varTradeLinks(VarFigures f) {
+        return new VarTradeLinks(f.service());
+    }
+
+    /**
+     * At start (this context refreshed: the server's, or the module's own when banking loads as a module): the newest date captured
+     * officially when it has not been (a lake built while the server was down).
+     */
+    @EventListener(org.springframework.context.event.ContextRefreshedEvent.class)
+    void captureNewest(org.springframework.context.event.ContextRefreshedEvent e) {
+        if (!e.getApplicationContext().containsLocalBean("varService")) {
+            return;                                                    // another context's refresh (a parent's or a child's)
+        }
         VarProperties props = e.getApplicationContext().getBean(VarProperties.class);
         VarService svc = e.getApplicationContext().getBean(VarService.class);
         if (!svc.running() || !props.official().enabled() || !props.official().onStart()) {

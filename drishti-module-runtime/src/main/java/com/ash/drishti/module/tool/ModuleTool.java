@@ -55,6 +55,7 @@ public final class ModuleTool {
               check   FOLDER|DMOD [--jar JAR] [--project DIR] [--cycles N]  the conformance checks C1-C15 (default 50 cycles for C15)
               inspect FOLDER|DMOD                                      what the module is and holds, and its origin
               first-party DIR [--out FILE]                             the first-party list of every .dmod in DIR (first-party.yaml)
+            --with DMOD,DMOD    (check) the modules it requires, installed beside it for the runtime checks
             --kernel-build ID   the kernel build to stamp (pack) or check against; --first-party FILE   the first-party list to verify against
             exit: 0 done, 1 a check failed or the module was refused, 2 usage""";
 
@@ -88,7 +89,7 @@ public final class ModuleTool {
         try {
             return switch (args[0]) {
                 case "pack" -> pack(path, jar, more(opts.get("--more")), Path.of(opts.getOrDefault("--out", ".")).toAbsolutePath(),
-                        opts.get("--kernel-build"), out, err);
+                        opts.getOrDefault("--kernel-build", KernelFacts.thisBuild()), out, err);
                 case "check" -> check(path, jar, opts, out, err);
                 case "inspect" -> inspect(path, facts(opts), out);
                 case "first-party" -> firstParty(path, opts.get("--out"), out);
@@ -107,7 +108,7 @@ public final class ModuleTool {
     private static Map<String, String> options(String[] args) {
         Map<String, String> out = new java.util.LinkedHashMap<>();
         for (int i = 2; i < args.length; i++) {
-            if (!List.of("--jar", "--more", "--out", "--project", "--cycles", "--kernel-build", "--first-party").contains(args[i]) || i + 1 >= args.length) {
+            if (!List.of("--jar", "--more", "--out", "--project", "--cycles", "--kernel-build", "--first-party", "--with").contains(args[i]) || i + 1 >= args.length) {
                 throw new IllegalArgumentException("unknown or incomplete option " + args[i]);
             }
             out.put(args[i], args[++i]);
@@ -183,7 +184,8 @@ public final class ModuleTool {
         try {
             Path dmod = Files.isDirectory(path) ? ModuleAssembler.assemble(path, jar, work.resolve("stage"), work.resolve("dmod")) : path;
             Path project = opts.containsKey("--project") ? Path.of(opts.get("--project")).toAbsolutePath() : null;
-            List<ModuleConformance.Check> checks = ModuleConformance.run(dmod, project, work.resolve("checks"), cycles, facts(opts));
+            List<ModuleConformance.Check> checks = ModuleConformance.run(dmod, project, work.resolve("checks"), cycles, facts(opts),
+                    more(opts.get("--with")));
             checks.forEach(c -> out.println(c.line()));
             long failed = checks.stream().filter(c -> c.status() == ModuleConformance.Status.FAIL).count();
             out.println(failed == 0 ? "all " + checks.size() + " conformance checks passed" : failed + " of " + checks.size() + " checks failed");

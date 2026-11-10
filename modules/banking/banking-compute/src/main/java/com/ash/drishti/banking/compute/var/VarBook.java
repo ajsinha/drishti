@@ -170,6 +170,7 @@ public final class VarBook {
      */
     private final Map<Integer, double[]> positionCache = new ConcurrentHashMap<>();
     private final java.util.concurrent.atomic.AtomicLong positionCached = new java.util.concurrent.atomic.AtomicLong();
+    @com.ash.drishti.kernel.api.module.EngineWide("one memory limit for the heap-tier position vectors on this server, set by the server")
     private static volatile long positionCacheLimit = Runtime.getRuntime().maxMemory() / 16;
 
     /** The most bytes one date's heap-tier position vectors may keep (the server sets a quarter of the date's memory budget). */

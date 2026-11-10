@@ -16,16 +16,13 @@
 package com.ash.drishti.banking.exposure;
 
 import com.ash.drishti.kernel.api.view.ViewAugmenter;
-import com.ash.drishti.engine.ViewPipeline;
 import com.ash.drishti.engine.source.SourceRouter;
 import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.identity.content.ContentStore;
 import com.ash.drishti.server.loads.LoadService;
 import com.ash.drishti.server.security.Entitlements;
-import java.util.ArrayList;
-import java.util.List;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -113,22 +110,27 @@ public class ExposureConfiguration {
         return o;
     }
 
+    /** The exposure figures views show (the kernel collects every ViewAugmenter: its own context's beans, a module's through the bridge). */
     @Bean
-    ExposureFigures exposureFigures(ExposureService svc, ExposureViews views, ObjectProvider<ViewPipeline> pipeline) {
-        ExposureFigures f = new ExposureFigures(svc, views);
-        ViewPipeline p = pipeline.getIfAvailable();
-        if (p != null) {
-            List<ViewAugmenter> all = new ArrayList<>(p.augmenters());
-            all.add(f);
-            all.add(new ExposureTradeLinks(svc));                      // a trade page's Risk links: its exposure
-            p.augmenters(all);
-        }
-        return f;
+    ExposureFigures exposureFigures(ExposureService svc, ExposureViews views) {
+        return new ExposureFigures(svc, views);
     }
 
-    /** At start: the newest date captured officially when it has not been (a lake built while the server was down). */
-    @EventListener(ApplicationReadyEvent.class)
-    void captureNewest(ApplicationReadyEvent e) {
+    /** A trade page's Risk links: its exposure. */
+    @Bean
+    ViewAugmenter exposureTradeLinks(ExposureService svc) {
+        return new ExposureTradeLinks(svc);
+    }
+
+    /**
+     * At start (this context refreshed: the server's, or the module's own when banking loads as a module): the newest date captured
+     * officially when it has not been (a lake built while the server was down).
+     */
+    @EventListener(ContextRefreshedEvent.class)
+    void captureNewest(ContextRefreshedEvent e) {
+        if (!e.getApplicationContext().containsLocalBean("exposureService")) {
+            return;                                                    // another context's refresh (a parent's or a child's)
+        }
         ExposureProperties props = e.getApplicationContext().getBean(ExposureProperties.class);
         ExposureService svc = e.getApplicationContext().getBean(ExposureService.class);
         if (!svc.running() || !props.official().enabled() || !props.official().onStart()) {
