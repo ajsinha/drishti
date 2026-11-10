@@ -339,8 +339,9 @@ public class VarConfiguration {
      */
     @EventListener(org.springframework.context.event.ContextRefreshedEvent.class)
     void captureNewest(org.springframework.context.event.ContextRefreshedEvent e) {
-        if (!e.getApplicationContext().containsLocalBean("varService")) {
-            return;                                                    // another context's refresh (a parent's or a child's)
+        if (!(e.getApplicationContext().getAutowireCapableBeanFactory() instanceof org.springframework.beans.factory.config.SingletonBeanRegistry r)
+                || !r.containsSingleton("varService")) {
+            return;                                                    // another context's refresh, or the engine not made (lazy)
         }
         VarProperties props = e.getApplicationContext().getBean(VarProperties.class);
         VarService svc = e.getApplicationContext().getBean(VarService.class);

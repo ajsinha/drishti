@@ -128,8 +128,9 @@ public class ExposureConfiguration {
      */
     @EventListener(ContextRefreshedEvent.class)
     void captureNewest(ContextRefreshedEvent e) {
-        if (!e.getApplicationContext().containsLocalBean("exposureService")) {
-            return;                                                    // another context's refresh (a parent's or a child's)
+        if (!(e.getApplicationContext().getAutowireCapableBeanFactory() instanceof org.springframework.beans.factory.config.SingletonBeanRegistry r)
+                || !r.containsSingleton("exposureService")) {
+            return;                                                    // another context's refresh, or the engine not made (lazy)
         }
         ExposureProperties props = e.getApplicationContext().getBean(ExposureProperties.class);
         ExposureService svc = e.getApplicationContext().getBean(ExposureService.class);
