@@ -284,6 +284,17 @@ class ModuleDeployClusterTest {
         assertThat(needs("a")).isEmpty();
         assertThat(ok(call("b", "GET", "/api/v1/modules/route?path=/m/greeter/greet/asha", null, "reader")).path("status").asInt()).isEqualTo(200);
 
+        // one node, no plan: the entry points of a single server's auto-deploy (install a file, remove an id)
+        ModuleNode c = moduleNode("c");
+        Path solo = new DeployTestModule("solo", "1.0.0", "SOLO").pack(work);
+        assertThat(c.install(solo, "auto-deploy").get("loaded")).isEqualTo("1.0.0");
+        assertThat(c.runtime().loaded("solo")).isPresent();
+        assertThat(c.entry("solo").orElseThrow().state()).isEqualTo(ModuleNode.State.ACTIVE);
+        assertThat(c.remove("solo", "auto-deploy").get("leakFree")).isEqualTo(true);
+        assertThat(hello("c").statusCode()).isEqualTo(200);   // greeter is untouched
+        HttpResponse<String> gone = call("c", "GET", "/api/v1/solo/hello/x", null, "reader");
+        assertThat(gone.statusCode()).as(gone.body()).isEqualTo(410);
+
         // the audit list
         JsonNode list = ok(call("a", "GET", "/api/v1/admin/modules/deployments", null, "admin-one"));
         assertThat(list.path("deployments").size()).isGreaterThanOrEqualTo(8);

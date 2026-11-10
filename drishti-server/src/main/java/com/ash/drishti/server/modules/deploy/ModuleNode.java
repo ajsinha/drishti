@@ -360,6 +360,74 @@ public final class ModuleNode implements AutoCloseable {
         return out;
     }
 
+    // ---- one node, no plan: the entry points of a single server (auto-deploy, module run) ------------------------------------------
+
+    /**
+     * Installs a {@code .dmod} on this node alone, the same path a deployment takes here (stage: SHA-256, V2, V1–V9; activate: the version
+     * running here unloaded, the new one loaded; record): for a single server's auto-deploy folder and {@code module run}. A cluster
+     * deploys by plan and apply instead. Returns the activation's answer; refused or failed, nothing is left changed.
+     */
+    public synchronized Map<String, Object> install(Path dmod, String by) {
+        String deployment = "local-" + java.util.UUID.randomUUID().toString().substring(0, 8);
+        try {
+            String sha;
+            try (InputStream in = Files.newInputStream(dmod)) {
+                sha = Dmod.sha256(in);
+            }
+            DmodManifest m;
+            try (java.util.zip.ZipFile z = new java.util.zip.ZipFile(dmod.toFile());
+                    InputStream in = z.getInputStream(java.util.Objects.requireNonNull(z.getEntry(DmodManifest.FILE), "no module.yaml"))) {
+                m = DmodManifest.read(in, dmod.getFileName().toString());
+            }
+            chunkFrom(deployment, dmod);
+            stage(deployment, m.id(), m.version(), sha);
+            Map<String, Object> out = activate(deployment, m.id(), m.version());
+            record(entryOf(installed.resolve(m.id()).resolve(m.version()), State.ACTIVE, by, deployment));
+            return out;
+        } catch (IOException | RuntimeException e) {
+            abort(deployment);
+            throw e instanceof DrishtiException d ? d : refused(dmod.getFileName() + ": " + e.getMessage());
+        }
+    }
+
+    /** Removes a module from this node alone (410, tombstone, saved work marked; files kept for a reinstall): the single-server path. */
+    public synchronized Map<String, Object> remove(String id, String by) {
+        Entry e = registry.get(id);
+        Map<String, Object> out = unload(id, ModuleRuntime.Leave.REMOVE);
+        if (e != null) {
+            record(new Entry(e.id(), e.version(), State.REMOVED, e.title(), e.prefix(), e.claims(), e.routes(), e.manifest(), by, now(), e.deployment()));
+        }
+        return out;
+    }
+
+    /** The registry entry of an unpacked module folder: its names (claims), console routes and manifest. */
+    public static Entry entryOf(Path dir, State state, String by, String deployment) {
+        try {
+            String manifest = Files.readString(dir.resolve(DmodManifest.FILE));
+            DmodManifest m = DmodManifest.read(new ByteArrayInputStream(manifest.getBytes(StandardCharsets.UTF_8)), dir.toString());
+            ModuleCandidate c = new ModuleCandidate(m, dir, null);
+            List<String> routes = new ArrayList<>();
+            List<String> claims;
+            try {
+                Object plugin = m.console() == null ? null : m.console().get("plugin");
+                if (plugin != null && c.yaml(String.valueOf(plugin), "V1").get("routes") instanceof List<?> list) {
+                    for (Object o : list) {
+                        if (o instanceof Map<?, ?> r && r.get("path") != null) {
+                            routes.add("/m/" + m.id() + r.get("path"));
+                        }
+                    }
+                }
+                claims = com.ash.drishti.module.runtime.Claims.of(c, List.of());
+            } catch (RuntimeException ex) {
+                claims = List.of();
+            }
+            return new Entry(m.id(), m.version(), state, m.title(), m.api() == null ? null : m.api().prefix(), claims, routes, manifest, by, now(),
+                    deployment);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
     // ---- the registry --------------------------------------------------------------------------------------------------------------
 
     /** Records the cluster's word on a module (every node, placed or not): placement learns its parts, or forgets it when it leaves. */

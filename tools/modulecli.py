@@ -258,8 +258,9 @@ def cmd_run(cli, a, extra) -> int:
         port = a.port or free_port()
         jar = find_kernel_jar(cli, a.jar)
         java = cli.find_java(getattr(a, "java", None))
-        args = [java, "-jar", jar, f"--server.port={port}", f"--drishti.data.dir={run_dir / 'data'}",
-                f"--drishti.module-deploy.dir={run_dir / 'modules'}", f"--drishti.placement.file={run_dir / 'placement.yaml'}", *extra]
+        (run_dir / "tmp").mkdir(exist_ok=True)
+        args = cli.java_cmd(java, ["-jar", jar, f"--server.port={port}", f"--drishti.data.dir={run_dir / 'data'}",
+                f"--drishti.module-deploy.dir={run_dir / 'modules'}", f"--drishti.placement.file={run_dir / 'placement.yaml'}", *extra], tmp=run_dir / "tmp")
         print(f"module run: {m['id']} {m['version']} alone on the kernel at http://localhost:{port}  (data under {run_dir}; Ctrl-C stops"
               + (" and removes it)" if not keep else ")"))
         print(f"  its API: http://localhost:{port}/api/v1/{m['id']}/...   the kernel's view of it: /api/v1/admin/modules/deployments")
