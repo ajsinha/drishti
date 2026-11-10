@@ -29,6 +29,7 @@
   <description>The Drishti Spring Boot application</description>
   <dependencies>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-kernel-api</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-module-runtime</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-engine</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-net</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-compute</artifactId></dependency>

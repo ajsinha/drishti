@@ -126,6 +126,27 @@ class ModuleRuntimeTest {
     }
 
     @Test
+    void aModuleWithNoPartPlacedHereIsNotLoaded() throws Exception {
+        new TestModule("hello").install(tmp, modules());
+        try (AnnotationConfigApplicationContext kernel = new AnnotationConfigApplicationContext()) {
+            kernel.refresh();
+            ModuleRuntime rt = new ModuleRuntime(KernelFacts.ofKernel(), kernel, ModuleRuntime.class.getClassLoader(), new ModuleHost() {
+                @Override
+                public boolean placedHere(DmodManifest manifest) {
+                    return false;
+                }
+            }, tmp.resolve("tombstones"));
+            List<ModuleHealth> rows = rt.start(List.of(modules()), Map.of(), id -> true);
+            assertThat(rows).singleElement().satisfies(h -> {
+                assertThat(h.state()).isEqualTo(ModuleHealth.State.NOT_PLACED);
+                assertThat(h.reason()).contains("placement.yaml");
+            });
+            assertThat(rt.loaded("hello")).isEmpty();
+            rt.close();
+        }
+    }
+
+    @Test
     void loadAndUnloadManyTimesWithoutLeaking() {
         new TestModule("hello").install(tmp, modules());
         ModuleRuntime rt = runtime(KernelFacts.ofKernel(), new ArrayList<>());

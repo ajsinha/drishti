@@ -22,6 +22,15 @@ package com.ash.drishti.module.runtime;
  */
 public interface ModuleHost {
 
+    /**
+     * Whether this node holds the module at all (KERNEL_AND_MODULES.md section 4.11): true when at least one of its parts is placed here.
+     * A module that is not is never loaded on this node ({@code NOT_PLACED}: the node forwards its requests). The default, for a host
+     * without a cluster (a test, the SDK's harness), is true; the kernel's host answers from {@code config/placement.yaml}.
+     */
+    default boolean placedHere(DmodManifest manifest) {
+        return true;
+    }
+
     /** After the module's child context is refreshed and its routes are in the table: start it and record its contributions. */
     default void started(LoadedModule module, Contributions contributions) {
     }

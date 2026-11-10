@@ -1,0 +1,80 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# Admin → Cluster → Modules (option A of docs/architecture/kernel-and-modules/mockups/admin-cluster.html), from GET /api/v1/admin/cluster/modules
+   as `modules`: one row per module part, one column per node; node headers carry the labels and whether the node is up, part labels the
+   resource class, max-nodes and memory; the owner of a one-runner part is starred; every cell says its state in words as well as colour.
+   The table is a console table (drishti-grid); the plan form is drishti-inputs' Form (core/admin_forms.py); drishti_admin-placement.js sends
+   a plan or a decision. #}
+{% set CELL = {'ACTIVE': ('st-ok', 'active'), 'STANDBY': ('', 'standby'), 'DOWN': ('st-bad', 'down'), 'NOT_PLACED': ('', 'not placed'), 'IN_PROCESS': ('st-ok', 'in process')} %}
+<section role="tabpanel" id="netPaneModules" aria-labelledby="netTabModules" data-pane="modules" data-drishti-placement {% if tab != 'modules' %}hidden{% endif %}>
+  <p class="text-muted-d">Where each module part runs: by node name or by role (a node label such as <span class="mono">heavy</span> or
+    <span class="mono">web</span>). There is no all-nodes default: a part that is not placed runs nowhere. A heavy part runs only on its placed
+    nodes (every other node forwards its requests); a feed or singleton runs on one owner (<span aria-hidden="true">★</span>), the first live
+    placed node by name, and fails over only inside its placement. Modules built into the server run on every node. The file is
+    <span class="mono">{{ modules.file or 'config/placement.yaml' }}</span>, version {{ modules.version or 0 }}; see the
+    <a href="/help/cluster#19-module-placement">Cluster guide</a>.</p>
+  <p class="ib-said" data-placement-said role="status" aria-live="polite"></p>
+{% if not modules %}
+  <p class="adm-warn" role="alert" data-placement-error>The server did not give the placement (a server before 2.9.11.i3, or the call failed).</p>
+{% else %}
+  {% if modules.fileProblem %}<p class="adm-warn" role="alert" data-placement-file-problem>{{ modules.fileProblem }}</p>{% endif %}
+  {% for p in modules.problems or [] %}<p class="ib-warn" data-placement-problem>{{ p }}</p>{% endfor %}
+  <div class="tbl-wrap"><table class="tbl adm-tbl" data-placement-matrix>
+    <caption class="visually-hidden">Each module part (rows) on each node (columns): active, standby, down, not placed or in process</caption>
+    <thead><tr><th scope="col">Module part</th><th scope="col">Class</th>
+      {% for n in modules.nodes or [] %}<th scope="col" data-node="{{ n.id }}"><span class="mono">{{ n.id }}</span>{% if n.self %} <span class="net-tag">this node</span>{% endif %}
+        <div class="text-muted-d">{{ (n.tags or [])|join(', ') or 'no labels' }} · <span class="st {{ 'st-ok' if n.up else 'st-bad' }}">{{ 'up' if n.up else 'down' }}</span></div></th>{% endfor %}
+      <th scope="col">Status</th></tr></thead>
+    <tbody>
+    {% for r in modules.parts or [] %}
+      <tr data-part="{{ r.module }}.{{ r.part }}" data-status="{{ r.status }}">
+        <td class="mono">{{ r.module }}.{{ r.part }} <span class="text-muted-d">{{ r.version }}</span></td>
+        <td>{{ r['class'] }}{% if r.maxNodes %} · max {{ r.maxNodes }}{% endif %}{% if r.memoryMb %} · {{ '{:,}'.format(r.memoryMb) }} MB{% endif %}</td>
+        {% for n in modules.nodes or [] %}{% set c = (r.cells or {}).get(n.id, 'NOT_PLACED') %}{% set look = CELL.get(c, ('', c)) %}
+        <td data-cell="{{ n.id }}" data-state="{{ c }}">{% if c == 'NOT_PLACED' %}<span class="text-muted-d">{{ look[1] }}</span>{% else %}<span class="st {{ look[0] }}">{{ look[1] }}</span>{% endif %}{% if r.owner == n.id %} <span title="owner (one runner)" data-owner>★<span class="visually-hidden"> owner</span></span>{% endif %}</td>
+        {% endfor %}
+        <td>{{ {'placed': 'placed', 'not-placed': 'not placed: runs nowhere', 'unavailable': 'unavailable: no placed node is up', 'in-process': 'built in: every node'}.get(r.status, r.status) }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+
+  <h2 class="net-h2">Plan a placement</h2>
+  <p class="text-muted-d">A plan shows the matrix after the change; a second administrator applies it, without a restart, and every member takes
+    it. A plan is refused when a heavy part would run on every node without <span class="mono">allow-all: true</span>, or over its max-nodes.</p>
+  <div data-placement-form>
+    {{ admin_form('placement_plan', placement=modules.placement or '') }}
+    <p><button type="button" class="btn-pill ib-btn" data-placement-plan>Plan (a second administrator applies)</button></p>
+  </div>
+
+  <h2 class="net-h2">Plans waiting</h2>
+  {% if not modules.plans %}<p class="text-muted-d" data-placement-no-plans>No plan waits.</p>{% else %}
+  <div class="tbl-wrap"><table class="tbl adm-tbl" data-placement-plans>
+    <caption class="visually-hidden">Placement plans, each applied by an administrator other than its proposer</caption>
+    <thead><tr><th scope="col">Plan</th><th scope="col">Why</th><th scope="col">By</th><th scope="col">At</th><th scope="col">Warnings</th><th scope="col"><span class="visually-hidden">Decide</span></th></tr></thead>
+    <tbody>
+    {% for p in modules.plans %}
+      <tr data-plan="{{ p.id }}"><td class="mono">{{ p.id }}</td><td>{{ p.reason }}</td><td>{{ p.proposedBy }}</td><td class="mono">{{ (p.proposedAt or '')[:19] }}</td>
+        <td>{{ (p.warnings or [])|join('; ') or '-' }}</td>
+        <td>{% if me and p.proposedBy == me.user %}<button type="button" class="btn-pill ib-btn" data-plan-act="withdraw" data-id="{{ p.id }}">Withdraw</button>
+          {% else %}<button type="button" class="btn-pill ib-btn" data-plan-act="apply" data-id="{{ p.id }}">Apply</button>
+          <button type="button" class="btn-pill ib-btn" data-plan-act="reject" data-id="{{ p.id }}">Reject</button>{% endif %}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% endif %}
+{% endif %}
+</section>
