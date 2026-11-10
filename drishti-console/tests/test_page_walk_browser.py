@@ -25,6 +25,7 @@
 DRISHTI_PAGEWALK_BASE=<console URL> walks a console that is already running instead of starting one (an owner's stack, a QA machine).
 Skipped when Playwright, Chromium, the built server jar or a JDK is missing."""
 import os
+from urllib.parse import quote_plus
 
 import pytest
 
@@ -38,12 +39,18 @@ KEY_PAGES = ["/", "/var?scope=BANK", go("VAR BANK EXPLAIN"), "/pivot?preset=mr",
 THEMES = {"dark": "terminal", "light": "light"}
 
 
+EXTRA: list[str] = []   # pages only this stack can name (a table of its lake)
+
+
 @pytest.fixture(scope="module")
 def stack(tmp_path_factory):
     if os.environ.get("DRISHTI_PAGEWALK_BASE"):
         yield os.environ["DRISHTI_PAGEWALK_BASE"].rstrip("/")
         return
-    yield from var_server(tmp_path_factory, var_lake(tmp_path_factory, var_data(*VAR_TRADES)))
+    lake = var_lake(tmp_path_factory, var_data(*VAR_TRADES))
+    EXTRA[:] = [f"/admin/lakes/table?root={quote_plus(str(lake))}&table=risk/scenario-pv"]
+    # the data inbox on (Admin -> Data loads -> Inbox and Upload are its pages), over an empty folder of its own
+    yield from var_server(tmp_path_factory, lake, DRISHTI_DATALOAD_ENABLED="true", DRISHTI_DATALOAD_DIR=str(tmp_path_factory.mktemp("walk-dataload")))
 
 
 def _walk(browser, base: str, hrefs: list[str]) -> list[dict]:
@@ -56,14 +63,15 @@ def _walk(browser, base: str, hrefs: list[str]) -> list[dict]:
 
 def _assert_clean(results: list[dict]) -> None:
     bad, slow = report(results)
-    print(f"page walk: {len(results)} pages, {len(bad)} with faults, {len(slow)} over {BUDGET_S:.0f} s")
+    off = [r["href"] for r in results if r.get("off")]
+    print(f"page walk: {len(results)} pages, {len(bad)} with faults, {len(slow)} over {BUDGET_S:.0f} s, {len(off)} of engines off: {off}")
     for line in slow:
         print("  slow", line)
     assert not bad and not slow, "\n".join(["faults:"] + bad + [f"over {BUDGET_S:.0f} s:"] + slow)
 
 
 def test_every_sitemap_page_opens_clean(stack, browser):
-    _assert_clean(_walk(browser, str(stack), sitemap_addresses()))
+    _assert_clean(_walk(browser, str(stack), [h for h in sitemap_addresses() if h != "/admin/lakes/table"] + EXTRA))
 
 
 def test_every_top_bar_link_in_the_product_and_each_lens_opens_clean(stack, browser):

@@ -34,6 +34,12 @@ BUDGET_S = float(os.environ.get("DRISHTI_PAGEWALK_BUDGET", "5"))   # a page slow
 PARAMETERISED = ["/var?scope=BANK", "/var?scope=DESK:DESK-RATES", "/go?q=" + quote_plus("VAR DESK DESK-RATES <GO>")]
 #: addresses never opened: they leave the session or the lens, or are downloads
 SKIP_PREFIX = ("/logout", "/lens/leave", "/auth/", "/login", "/static/", "/api/")
+#: in-context pages opened with what the page they open from gives them; None: only reached inside a lens (the lens walk opens it there)
+IN_CONTEXT = {"/w/new": "/w/new?name=page-walk", "/home/trading/view-as": None}
+#: pages allowed over the budget, each with its reason (a page leaves the list when it is made fast)
+SLOW_ALLOWED: dict[str, str] = {}
+#: known faults not yet fixed, each with its reason: reported on every walk, not failed (a page leaves the list when it is fixed)
+KNOWN_FAULTS: dict[str, str] = {}
 
 
 def sitemap() -> dict:
@@ -54,7 +60,7 @@ def sitemap_addresses() -> list[str]:
                 href = it.get("href") or (go(str(it["cmd"])) if it.get("cmd") else "")
                 if href:
                     out.append(str(href))
-    out += [str(p) for p in (spec.get("in-context") or {})]
+    out += [IN_CONTEXT.get(str(p), str(p)) for p in (spec.get("in-context") or {}) if IN_CONTEXT.get(str(p), str(p))]
     out += [f"/help/section/{s['id']}" for s in spec.get("help-sections") or []]
     out += PARAMETERISED
     return dedupe(out)
@@ -87,21 +93,36 @@ def new_page(browser, width: int = 1366, height: int = 900):
     """A page that records its console errors, uncaught exceptions and failed responses (pg.problems)."""
     ctx = browser.new_context(viewport={"width": width, "height": height})
     ctx.add_init_script(path=str(SETTLED_JS))
+    ctx.add_init_script(_CSP)
     pg = ctx.new_page()
     pg.problems = []
-    pg.on("console", lambda m: pg.problems.append(f"console: {m.text[:300]}") if m.type == "error" else None)
-    pg.on("pageerror", lambda e: pg.problems.append(f"exception: {str(e)[:300]}"))
-    pg.on("response", lambda r: pg.problems.append(f"HTTP {r.status} {urlsplit(r.url).path}") if r.status >= 400 and r.request.resource_type != "document" else None)
+    pg.on("console", lambda m: pg.problems.append(f"console: {m.text[:300]}") if m.type == "error" and not m.text.startswith("Failed to load resource") else None)
+    pg.on("pageerror", lambda e: pg.problems.append(f"exception: {str(e)[:200]} at {(e.stack or '').splitlines()[1:2]}"))
+    pg.on("response", lambda r: pg.problems.append(f"HTTP {r.status} {urlsplit(r.url).path}") if _failed(r) else None)
     return pg
+
+
+#: where a Content Security Policy refusal came from (Chromium's own message does not say)
+_CSP = """document.addEventListener('securitypolicyviolation', (e) => {
+  console.error('CSP ' + e.violatedDirective + ' at ' + (e.sourceFile || '?') + ':' + e.lineNumber + ' ' + (e.sample || ''));
+});"""
+
+
+def _failed(r) -> bool:
+    """A request that failed: a file (script, style, image, font) answering 4xx or 5xx, or an /api/ call answering 5xx. An /api/ call
+    answering 4xx is the page's own answer (no data for this date, a refusal it shows) and the page handles it."""
+    if r.request.resource_type == "document" or r.status < 400:
+        return False
+    return r.status >= 500 or "/api/" not in urlsplit(r.url).path
 
 
 _JUDGE = """() => {
   const main = document.querySelector('#main') || document.body;
   const text = (main.innerText || '').trim();
   const drawn = main.querySelector('canvas, svg, img, iframe, drishti-grid, input, select, textarea, [data-var], table');
-  const body = document.body.innerText || '';
-  return { empty: !text && !drawn, down: document.body.dataset.serverDown === '1',
-           server: /Internal Server Error|Traceback \\(most recent|DRS-5\\d\\d\\d/.test(body) };
+  const alerts = [...document.querySelectorAll('[role=alert]')].filter((e) => e.offsetParent !== null).map((e) => e.innerText || '').join(' ');
+  return { empty: !text && !drawn, down: document.body.dataset.serverDown === '1', off: /is not running on this server/.test(main.innerText || ''),
+           server: /Internal Server Error|Bad Gateway|Traceback \\(most recent|DRS-5\\d\\d\\d/.test(alerts) || /^Internal Server Error/.test(document.body.innerText || '') };
 }"""
 
 
@@ -118,9 +139,11 @@ def open_page(pg, base: str, href: str, timeout_s: float = 60) -> dict:
     except Exception as e:  # noqa: BLE001 - a page that does not open is the fault reported
         return {"href": href, "status": 0, "secs": time.monotonic() - t0, "faults": [f"did not open: {str(e).splitlines()[0][:200]}"]}
     secs = time.monotonic() - t0
+    j = pg.evaluate(_JUDGE)
+    if status == 404 and j["off"]:   # an engine switched off on this server: its pages are gone everywhere, by design
+        return {"href": href, "status": status, "secs": secs, "faults": [], "off": True}
     if status >= 400:
         faults.append(f"HTTP {status}")
-    j = pg.evaluate(_JUDGE)
     if j["down"] or j["server"]:
         faults.append("server error page")
     if j["empty"]:
@@ -131,8 +154,11 @@ def open_page(pg, base: str, href: str, timeout_s: float = 60) -> dict:
 
 def report(results: list[dict], budget: float = BUDGET_S) -> tuple[list[str], list[str]]:
     """(faults, slow): one line per faulty page, one per page over the budget (slowest first)."""
-    bad = [f"{r['href']}: " + "; ".join(r["faults"]) for r in results if r["faults"]]
-    slow = [f"{r['href']}: {r['secs']:.1f}s" for r in sorted(results, key=lambda r: -r["secs"]) if r["secs"] > budget]
+    for r in results:
+        if r["faults"] and r["href"] in KNOWN_FAULTS:
+            print(f"  known {r['href']} ({KNOWN_FAULTS[r['href']]}): " + "; ".join(r["faults"]))
+    bad = [f"{r['href']}: " + "; ".join(r["faults"]) for r in results if r["faults"] and r["href"] not in KNOWN_FAULTS]
+    slow = [f"{r['href']}: {r['secs']:.1f}s" for r in sorted(results, key=lambda r: -r["secs"]) if r["secs"] > budget and r["href"] not in SLOW_ALLOWED]
     return bad, slow
 
 
