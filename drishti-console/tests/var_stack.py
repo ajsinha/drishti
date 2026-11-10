@@ -54,22 +54,22 @@ def last_weekday() -> str:
     return d.isoformat()
 
 
-def var_lake(tmp_path_factory, only: str, as_of: str | None = None) -> Path:
+def var_lake(tmp_path_factory, only: str, as_of: str | None = None, extra: tuple[str, ...] = ()) -> Path:
     """The lake of ``only`` ending ``as_of`` (default: :func:`last_weekday`), built by the first worker of the run that asks; skips when
-    it cannot be built."""
+    it cannot be built. ``extra``: more ``lake demo`` options (``--exposure committed``)."""
     import browser_harness
 
     as_of = as_of or last_weekday()
 
     run = browser_harness.run_dir(tmp_path_factory)
-    key = "var-lake-" + hashlib.sha1(f"{only}|{as_of}".encode()).hexdigest()[:12]
+    key = "var-lake-" + hashlib.sha1("|".join((only, as_of, *extra)).encode()).hexdigest()[:12]
 
     def make():
         sys.path.insert(0, str(ROOT / "tools" / "drillkit"))
         import lake_cache   # built once per hash of the test data, generators and lake code, across runs (TEST_HARNESS.md, "The cached demo lake")
 
         try:
-            lake = lake_cache.demo_lake(only, as_of) / "delta"   # the Python writer: auto starts a JVM for every table and business day
+            lake = lake_cache.demo_lake(only, as_of, extra) / "delta"   # the Python writer: auto starts a JVM for every table and business day
         except RuntimeError as e:
             return {"lake": "", "error": "could not build the VaR demo lake: " + str(e)}
         return {"lake": str(lake), "error": None if (lake / "risk" / "scenario-pv").is_dir() else f"no scenario-pv in the cached lake {lake}"}

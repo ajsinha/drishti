@@ -153,12 +153,27 @@ def pack_commands(packs_dir: Path, packs: list[str]) -> list[str]:
         f = found.get(p)
         if f is None:
             continue
-        spec = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
-        for c in ([spec.get("code")] if spec.get("code") else []) + list((spec.get("mnemonics") or {}).keys()):
-            c = str(c).strip().upper()
-            if c and c not in out:
+        for c in _pack_file_commands(f):
+            if c not in out:
                 out.append(c)
     return out
+
+
+#: a pack.yaml's commands, parsed once while the file is unchanged (path -> (mtime, size, commands)): a large pack's YAML takes a
+#: second or more to parse, and Admin -> White label reads every distribution's packs on each open
+_PACK_COMMANDS: dict[Path, tuple[int, int, tuple[str, ...]]] = {}
+
+
+def _pack_file_commands(f: Path) -> tuple[str, ...]:
+    st = f.stat()
+    got = _PACK_COMMANDS.get(f)
+    if got and got[0] == st.st_mtime_ns and got[1] == st.st_size:
+        return got[2]
+    spec = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
+    cmds = tuple(dict.fromkeys(c for c in (str(x).strip().upper() for x in ([spec.get("code")] if spec.get("code") else [])
+                                                                     + list((spec.get("mnemonics") or {}).keys())) if c))
+    _PACK_COMMANDS[f] = (st.st_mtime_ns, st.st_size, cmds)
+    return cmds
 
 
 _KNOWN: dict[str, frozenset] = {}
@@ -289,11 +304,11 @@ def read(f: Path, kernel_file: Path, modules_dir: Path | None, packs_dir: Path) 
     features = {x: "off" for x in features_off}
     features.update(spec.get("features") or {})
     top = _texts((spec.get("menus") or {}).get("top"))
+    cmds = pack_commands(packs_dir, packs)
     ed: dict[str, Any] = {
         "edition": did, "title": title, "distribution": True,
         "packs": {"enabled": packs} if packs else {"none": True},   # a distribution of no packs (Genomics) loads none
-        "commands": {"allow": pack_commands(packs_dir, packs) + [w for m in modules if m in known for w in known[m].words
-                                                                if w not in pack_commands(packs_dir, packs)], "words": words},
+        "commands": {"allow": cmds + [w for m in modules if m in known for w in known[m].words if w not in cmds], "words": words},
         "features": features,
         "menus": {"top": [x for x in top if x in menus] if top else menus},
         "help": {"knowledge": packs, "domains": sorted({x for m, mod in known.items() if m in modules for x in mod.docs}),

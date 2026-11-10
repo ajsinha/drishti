@@ -15,7 +15,7 @@
 """The page walk and the layout checks (docs/architecture/TEST_HARNESS.md, "The page walk"), part of every drill's browser lane:
 
 - every page of the sitemap (each menu item, the in-context pages, Help's sections, a few pages with a demo id) and every link of the
-  top bar, in the full product and in each lens, opened as an administrator on a real server over the cached VaR demo lake: none
+  top bar, in the full product and in each lens, opened as an administrator on a real server over the cached demo lake (WALK_DATA): none
   answers 4xx/5xx, shows a server error page, logs a console error, throws, leaves the main area empty or takes longer than the budget
   (DRISHTI_PAGEWALK_BUDGET, 10 s); every fault and every slow page is listed in one failure;
 - the key pages (VaR explorer, Why it moved, MR cube, a pivot, BI, a FORM page, Admin → Engines, Connectors, Data loads, Upload, Home,
@@ -87,6 +87,11 @@ KEY_SNAPSHOTS: dict[str, tuple[str, dict]] = {
     "elements-gallery": ("/elements?mode=docs", {}),
     "elements-playground": ("/elements?mode=playground", {}),
 }
+#: the walk's lake: the VaR files' trades and VaR inputs, the exposure engine's committed run (its paths, netting sets, CSAs, collateral,
+#: limits, counterparties), the funds and the US equities, so the Trades, EXP, FUND and USEQ pages and the Markets lens show their data
+WALK_DATA = VAR_TRADES + tuple("counterparty-risk/" + k for k in ("simulation-run", "exposure-path", "netting-set", "csa", "collateral-balance",
+                                                                  "credit-limit", "agreement")) + ("core/counterparty", "core/counterparty-group", "us-equities", "funds")
+WALK_PACKS = "core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,funds"
 #: in-context pages opened from a link on the page that lists them (they need its parameters)
 FROM = {"/admin/lakes/table": "/admin/lakes"}
 
@@ -96,9 +101,11 @@ def stack(tmp_path_factory):
     if os.environ.get("DRISHTI_PAGEWALK_BASE"):
         yield os.environ["DRISHTI_PAGEWALK_BASE"].rstrip("/")
         return
-    lake = var_lake(tmp_path_factory, var_data(*VAR_TRADES), as_of=SNAPSHOT_DATE)
-    # the data inbox on (Admin -> Data loads -> Inbox and Upload are its pages), over an empty folder of its own
-    yield from var_server(tmp_path_factory, lake, DRISHTI_DATALOAD_ENABLED="true", DRISHTI_DATALOAD_DIR=str(tmp_path_factory.mktemp("walk-dataload")))
+    lake = var_lake(tmp_path_factory, var_data(*WALK_DATA), as_of=SNAPSHOT_DATE, extra=("--exposure", "committed"))
+    # the data inbox on (Admin -> Data loads -> Inbox and Upload are its pages), over an empty folder of its own; the full product's packs and
+    # the capital-markets module's (off by default: config/packs/default-packs.yaml), and the Markets lens beside the four default ones
+    yield from var_server(tmp_path_factory, lake, DRISHTI_DATALOAD_ENABLED="true", DRISHTI_DATALOAD_DIR=str(tmp_path_factory.mktemp("walk-dataload")),
+                          DRISHTI_PACKS=WALK_PACKS, DRISHTI_LENSES="risk,world,market,trading,markets")
 
 
 def _walk(browser, base: str, hrefs: list[str]) -> list[dict]:

@@ -282,7 +282,9 @@ native maths and memory access, codecs, the store libraries); it starts once 20 
 ### 3.19 The page walk
 
 `drishti-console/tests/test_page_walk_browser.py` (helpers in `page_walk.py`) runs in every drill's browser lane. On a real server over the cached
-VaR demo lake (the bank, its desks, the Murex and Endur trades), signed in as the administrator, it opens:
+demo lake of `WALK_DATA` (the bank, its desks, the Murex and Endur trades and their VaR inputs, the exposure engine's committed run, the funds
+and the US equities, so the Trades, EXP, FUND and USEQ pages show data), with the capital-markets packs enabled and the Markets lens beside
+the four default ones, signed in as the administrator, it opens:
 
 - every page of `config/sitemap.yaml`: each menu item (an item with only a command opens `/go?q=<command> <GO>`), the in-context pages, Help's
   sections and a few pages with a demo id (`/var?scope=BANK`, a desk);
@@ -319,7 +321,7 @@ server (no extra one), and compares each with its golden image in `drishti-conso
 
 - **Deterministic.** The walk's lake ends on a fixed business date (`SNAPSHOT_DATE`), so figures and dates never move; the test runs first in
   the file, before the walk adds recent pages; animations and transitions are off, the caret hidden, fonts (vendored) loaded, the scroll at
-  the top; the business date is picked (`/asof`), pages that draw late are waited on (`idle`, `wait`); the live clock, the date box, Home's fact of the day, the VaR timings, the inbox's facts and anything marked `data-snapshot-mask` are covered, timings replaced by a dot, the test's scratch folders and the real day's date and time by fixed words (`snapshots.MASK`, and per page `mask` in `KEY_SNAPSHOTS`).
+  the top; the business date is picked (`/asof`), pages that draw late are waited on (`idle`, `wait`); the live clock, the date box, Home's fact of the day, the VaR timings, a search's time taken, the inbox's facts and anything marked `data-snapshot-mask` are covered, timings replaced by a dot, the test's scratch folders and the real day's date and time by fixed words (`snapshots.MASK`, and per page `mask` in `KEY_SNAPSHOTS`).
 - **Small goldens.** Each golden is the viewport at half size in at most 128 colours (PNG): a quarter of the pixels and a palette keep the
   whole set (132 images) at about 4 MB, while a moved panel, a lost border, a wrong theme colour or a missing chart still shows. A full-size capture
   would be about ten times that; a perceptual hash alone would not draw what changed. The capture is mapped onto the golden's own palette,

@@ -187,7 +187,7 @@ public record DmodManifest(int format, String id, String version, String title, 
             ranges.put(r, v);
         }
         List<Requirement> requires = requirements(m.get("requires"), label);
-        Map<String, List<String>> kinds = new LinkedHashMap<>();
+        Map<String, List<String>> kinds = new LinkedHashMap<>();                       // in the file's order: the claims list them so (Admin -> Modules)
         map(map(m.get("provides")).get("kinds")).forEach((pack, l) -> kinds.put(pack, strings(l)));
         JavaPart java = null;
         if (m.get("java") != null) {
@@ -228,7 +228,7 @@ public record DmodManifest(int format, String id, String version, String title, 
         pub.forEach((k, v) -> { if (str(v) != null) { publisher.put(k, str(v)); } });
         return new DmodManifest(1, id, version, str(m.get("title")), str(m.get("about")), str(m.get("domain")), Map.copyOf(publisher),
                 new Licence(str(lic.get("feature")), strings(lic.get("limits"))), Map.copyOf(ranges), requires, strings(m.get("conflicts")),
-                Map.copyOf(kinds), java, api, map(m.get("console")), memory, Collections.unmodifiableMap(rest));
+                Collections.unmodifiableMap(kinds), java, api, map(m.get("console")), memory, Collections.unmodifiableMap(rest));
     }
 
     private static List<Requirement> requirements(Object o, String label) {

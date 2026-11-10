@@ -90,7 +90,11 @@
   modules, modules, deploy and white label, Help, the Elements gallery and Playground) at 1366 and 1920 px, dark and light, compared with
   committed golden images (half size, 128 colours) in the page walk on its own server; the walk's lake ends on a fixed date, the live clock
   is masked; per-page tolerance, a diff image on a change; `--update-snapshots` refreshes them by hand, never in a drill; the drill lists
-  every changed page and the goldens its commit refreshed.
+  every changed page and the goldens its commit refreshed. The walk's lake holds the trades, the exposure engine's committed run, the funds
+  and the US equities, with the capital-markets packs and the Markets lens on, so Trades, EXP, FUND, USEQ and the Markets lens's Home show
+  their data; a search's time taken is quietened like the VaR timings; a module's kinds keep their file order (Admin → Modules listed them
+  in a different order on each start); Admin → White label opens in a fraction of a second (it parsed every pack file once per command,
+  about 20 s per distribution).
 - **Module deployment, cluster-first** (2.9.11.i2 + i3, wave 3; [CLUSTER_GUIDE.md section 1.10](docs/guides/CLUSTER_GUIDE.md#110-deploying-a-module),
   [ADMIN_GUIDE.md section 25](docs/guides/ADMIN_GUIDE.md#25-modules-and-deploy)): a `.dmod` is uploaded once to the module store
   (`POST /api/v1/admin/modules/store`, the fifteen conformance checks, kept by id and version, never rebuilt); a plan says per node what
