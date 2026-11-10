@@ -1969,12 +1969,12 @@ the form the library uses.
 | Metadata tables (`snapshots`, `files`, …) | | | not offered as tables; Admin → Lakes and Health show snapshots and files |
 | Encryption | | | refused (`encryption-keys`, a file's `key_metadata`) |
 | Catalogs | path-based (`version-hint.text` and `vN.metadata.json`, or a catalog's `NNNNN-uuid.metadata.json`), a metadata file named directly, REST (Polaris, Snowflake Open Catalog, AWS Glue's REST endpoint, Unity Catalog, Nessie, Lakekeeper, Gravitino), AWS S3 Tables | path-based, REST | Hive metastore, JDBC/SQL catalog, the Glue SDK: through a REST catalog in front, or `metadata-location.<table>` |
-| Storage | local disk (Windows too), `s3://`, `s3a://`, `s3n://`, `mem://` | the same | `abfs://`, `gs://`, `hdfs://`: `engine: library` |
+| Storage | local disk (Windows too), `s3://`, `s3a://`, `s3n://`, `mem://` | the same | `abfs://`, `gs://`, `hdfs://`: refused by name |
 | Maintenance | | expire snapshots (keeping every branch and tag), rewrite a day's files, rewrite manifests, remove orphans, drop old days ([ICEBERG_CONNECTOR.md](../../plugins/drishti-plugin-iceberg/README.md#retention-and-maintenance)) | |
 
 ### 15.4 What a refusal says
 
-A table or file the native engine does not read stops the read with this message (`[…]` names the table or file where it was met):
+A table or file outside the feature table stops the read with this message (`[…]` names the table or file where it was met). Rewrite such a table without the feature, with the engine that wrote it, and Drishti reads it:
 
 ```text
 drishti-iceberg does not read format version 3 tables; use the connector's engine: library for this table [<table>]
@@ -1990,6 +1990,8 @@ A load into a table another engine re-partitioned stops before any file is writt
 <table> is not in the layout: its partition spec 1 has the field 'id_bucket_8' (bucket[8]) beside the identity partition on
 business_date; this writer writes only tables partitioned by business_date alone (write this table with engine: library, or restore its spec)
 ```
+
+Write such a table with the engine that re-partitioned it, or restore its spec.
 
 ### 15.5 Check it yourself
 
