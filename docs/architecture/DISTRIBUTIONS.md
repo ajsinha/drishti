@@ -89,6 +89,14 @@ A module built from the Module SDK alone: a VCF reader as a kernel connector ext
 commands VAR-free (`VARIANT`, `GENE`, `COHORT`); one page folder; synthetic data. Purpose: the release's proof that the kernel boots and
 is useful with no finance at all. Not for the owner's demos.
 
+**As built (wave 3).** `modules/genomics` (publisher Helix Lab, a sample third party) is made from the archetype and finished by hand
+([DEVELOPER_GUIDE.md section 1.9](../guides/DEVELOPER_GUIDE.md#19-the-genomics-sample-step-by-step)): the VCF reader is a `SourcePlugin`
+inside the module (it serves only the module's kinds and must go with it, so not the lib folder); `gene` and `cohort` are computed;
+`GENE TP53` draws the module's own visual, `genomics.lollipop`, a kind of drishti-chart's registry. Its `.dmod` passes C1 to C15. The file
+takes **none of the kernel's packs** (`kernel-packs: []`: no counterparty, book or desk) and offers one lens, **Research**
+(`config/lenses/genomics/research.yaml`); the module's words are its commands. `GenomicsDistributionServerTest` boots it on the thin
+kernel with the package dropped into the modules folder; `test_genomics_walk_browser.py` walks it in a browser on the thin jar.
+
 ## 5. What is shared, and what is not
 
 - **One kernel build and one console build.** A distribution never forks code: it is a file (brand, theme, lenses, Home, menus, docs,
@@ -160,7 +168,9 @@ path). What each module holds is read from **its own manifest**, never from a ha
 and a module with code's `modules/<id>/dmod/module.yaml` (banking's), both the `.dmod` manifest (`packs.list`, `functions`,
 `compute.engines`, `console.menus`, `docs.domains`, `requires`). The folder is `drishti.module-manifests-dir` (`module_manifests_dir` on the console,
 `DRISHTI_MODULE_MANIFESTS_DIR` for both; default `./modules`). A listed module brings the modules it requires (banking brings
-market-data); a listed module with no manifest stops the start unless the file says `required: false` (Genomics: listed, not installed).
+market-data); a listed module with no manifest stops the start unless the file says `required: false`. A module project made from the
+SDK keeps its manifest in `modules/<id>/src/dmod/module.yaml` (genomics), read the same way. A file may name the kernel's packs it takes
+(`kernel-packs:`; Genomics takes none, and a distribution of no packs loads none, not the default list).
 
 **The content modules.** Three `.dmod`s, each a folder in the `.dmod` layout (`module.yaml`, `console/plugin.yaml` with a Sutra page per
 function under `/m/<id>/`, `docs/` with a README, Help section, guides and tutorial, `data/needs.yaml`) plus `content.yaml`, the
@@ -209,7 +219,7 @@ distribution is named, and is ignored when one is; a site's `drishti.branding.*`
 `ui.copyright`, `ui.owner`, `ui.notice` still win over the file. Health names each one as deprecated.
 
 **Health and Admin.** Admin → Health shows the console's and the server's distribution, which of its modules loaded ("loaded", "off",
-"not installed": Genomics until its module ships) and the deprecation notes; `GET /api/v1/health` carries the same under
+"not installed": a listed module whose package is not deployed) and the deprecation notes; `GET /api/v1/health` carries the same under
 `distribution`. Admin → White label shows every distribution file side by side (mock-up A): brand, theme, modules (loaded here or not),
 lenses, menus, Home cards, Help title and how to start it, the running one first. It is read only: a distribution changes in its file
 and takes effect at the next start.
@@ -228,5 +238,5 @@ off stays so. The default placement for first-party modules puts every part on e
 module. The access registry reads these manifests (installed unless the module store says removed), so their packs and functions are the
 modules'. Banking's code is no longer on the kernel's class path; its in-process wiring survives only as its own tests' harness.
 
-**Not yet.** The packs still load from `config/packs` (the packages carry copies); logos and favicons beyond the eye are blank until a distribution ships its own files; Genomics boots
-on the kernel alone until its module ships.
+**Not yet.** The packs still load from `config/packs` (the packages carry copies); logos and favicons beyond the eye are blank until a
+distribution ships its own files.

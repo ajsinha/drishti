@@ -1446,6 +1446,8 @@ them on your monitoring network in production.
 | `/api/docs` | the OpenAPI 3 document (JSON) for every endpoint |
 | `/api/docs/ui` | Swagger UI (redirects to the UI page) |
 | `/public/about` | no sign-in needed: `{product, version, notice, signIn: {required, password, singleSignOn}}`, what the console's sign-in page shows |
+| `/public/modules/console` | no sign-in needed: `{modules: [{id, version, state, title, console, claims}], fingerprint}`, every module of the registry as a console hosts it (active, off or removed; KERNEL_AND_MODULES.md 4.7) |
+| `/public/modules/console/{id}/{version}` | an active version's console part as a zip (`module.yaml`, `console/`, `elements/`, `docs/`), from this node's installed copy or the module store; 410 when removed, 404 when off, unknown or another version |
 | `/actuator/health` | `{"status":"UP","groups":["liveness","readiness"]}`; probes at `/actuator/health/liveness` and `/actuator/health/readiness`. readiness is its own group and means ready: `DOWN` (`503`) while the node joins Drishti\*net, while an engine's newest date opens or a VaR shard it owns is not ready, `OUT_OF_SERVICE` (`503`) while drained; `/actuator/health` and liveness never wait for it ([node readiness](#225-administration-node-readiness-and-the-drain-before-a-stop)) |
 | `/actuator/info` | build information |
 | `/actuator/metrics` · `/actuator/metrics/{name}` | Micrometer metrics |
@@ -3118,6 +3120,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-1028 | 410 | module not installed | a removed module's API (and its console pages): `Cache-Control: no-store`; saved work that used it is marked "needs module X" and comes back with a reinstall |
 | DRS-1033 | 422 | module deploy refused | a `.dmod` that fails a conformance check or its hash list, a version already stored with other bytes, a module not in the store or placed on no node, an action that does not fit the module's state |
 | DRS-1034 | 409 | module deploy failed | a node refused or failed in phase 2 (the words name it); every node was rolled back |
+| DRS-1035 | 409 | needs data | a function that is installed and on but whose required data no source serves (`EXP needs data: exposure-path is not bound; ask your data administrator`): its API answers this with the need and `function`; its console page is the needs-data page (200, links to Admin → Data bindings and Help) and the command line says the same words. Binding the data turns it on; never 404 |
 | DRS-1032 | 503 | module part unavailable | a module part runs on no node that is up (or is not placed at all, or a forwarded request reached a node it is not placed on); it is never run on an unplaced node |
 | DRS-1017 | 403 | edition pack refused | the server's edition lists its packs with allow-only ([LENSES.md](ADMIN_GUIDE.md#12-what-a-lens-is)): Admin → Packs load, Deploy archive (a failed check) and the registry install refuse any other pack. Add the pack to the edition's packs, or set `drishti.edition-spec.packs.allow-only=false` |
 | DRS-1015 | 503 | connector restarting | the connector the kind is routed to is being restarted (its file changed, a retry) and was not back within 30 s; a read waits that long for it (and for any connector of the kind being restarted) before answering; try again |

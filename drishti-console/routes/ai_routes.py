@@ -84,7 +84,24 @@ async def page(request: Request, tools: str = "", where: str = "console"):
         except (BackendError, LlmError) as e:
             tool_error = getattr(e, "detail", None) or getattr(e, "message", str(e))
     return render(request, "admin/ai.html", local=_local(ai), remote=remote, remote_error=remote_error, tools_of=tools, tools_where=where,
-                  tool_list=tool_list, tool_error=tool_error)
+                  tool_list=tool_list, tool_error=tool_error, module_tools=module_tools(request))
+
+
+def module_tools(request: Request) -> list[dict]:
+    """The AI tools the hosted modules describe (``ai: tools:`` of a plugin.yaml format 2: name, description, the word or route it opens),
+    of the modules on for this person: what the assistant may offer (KERNEL_AND_MODULES.md 4.7). A module that goes takes its own."""
+    from core import modules as _modules
+
+    parts = request.app.state.module_parts
+    return [{"name": str(t["name"]), "description": str(t.get("description") or ""), "module": t["module"],
+             "href": parts.href(t) if (t.get("route") or t.get("cmd")) else ""}
+            for t in parts.tools() if _modules.module_on(t["module"])]
+
+
+@router.get("/api/ai/module-tools")
+async def module_tools_api(request: Request):
+    """The hosted modules' AI tools for the signed-in person (the assistant's list)."""
+    return JSONResponse({"tools": module_tools(request)})
 
 
 @router.post("/admin/api/retry/{area}")

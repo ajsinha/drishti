@@ -48,6 +48,8 @@ public final class ModuleWiring {
     private final ConfigurableEnvironment env;
     private final Path dataDir;
     private final Map<String, List<DrishtiModule>> entries = new ConcurrentHashMap<>();
+    /** Each loaded module's folders, for its connector extensions' settings ({@code module-dir}, {@code data-dir}). */
+    private final Map<String, Map<String, String>> folders = new ConcurrentHashMap<>();
 
     public ModuleWiring(Supplier<SourceRegistry> sources, Supplier<EngineRegistry> engines, Supplier<SourceRouter> router, Supplier<AuditLog> audit,
             ConfigurableEnvironment env) {
@@ -57,11 +59,11 @@ public final class ModuleWiring {
     /** As above, with the server's memory budget (a module's engine caches join it). */
     public ModuleWiring(Supplier<SourceRegistry> sources, Supplier<EngineRegistry> engines, Supplier<SourceRouter> router, Supplier<AuditLog> audit,
             ConfigurableEnvironment env, Supplier<com.ash.drishti.server.caches.MemoryBudget> budget) {
-        this.bridge = new ModuleBridge(sources, engines, budget);
         this.router = router;
         this.audit = audit;
         this.env = env;
         this.dataDir = Path.of(env == null ? "./data" : env.getProperty("drishti.data.dir", "./data")).toAbsolutePath().normalize();
+        this.bridge = new ModuleBridge(sources, engines, (id, p) -> folders.getOrDefault(id, Map.of()), budget);
     }
 
     /** The extension types the bridge connects, by simple name. */
@@ -109,6 +111,12 @@ public final class ModuleWiring {
 
     /** A module started: its contributions connected, then its entry started. A failure fails the module's start (nothing stays). */
     public void started(LoadedModule module, Contributions contributions) {
+        Map<String, String> where = new java.util.LinkedHashMap<>();
+        if (module.candidate() != null && module.candidate().dir() != null) {
+            where.put("module-dir", module.candidate().dir().toAbsolutePath().toString());
+        }
+        where.put("data-dir", dataDir.resolve("modules").resolve(module.id()).toString());
+        folders.put(module.id(), Map.copyOf(where));
         int n = bridge.connect(module, contributions);
         List<DrishtiModule> started = new ArrayList<>();
         try {
@@ -126,6 +134,7 @@ public final class ModuleWiring {
 
     /** Unload step 7, before its context closes: the module's entry stops. */
     public void stopping(LoadedModule module) {
+        folders.remove(module.id());
         List<DrishtiModule> started = entries.remove(module.id());
         if (started != null) {
             started.forEach(ModuleWiring::stopQuietly);

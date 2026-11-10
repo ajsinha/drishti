@@ -16,30 +16,23 @@
 package com.ash.drishti.engine.source;
 
 import com.ash.drishti.api.SourcePlugin;
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
-import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Finds source plugins: those on the application class path, and each jar in an optional plugin
- * directory, loaded in its own class loader whose parent exposes only the application (and so the API).
+ * Finds source plugins: those on the application class path (the shipped connectors), the computed kinds' providers, and the connectors
+ * of the shared lib folder ({@code drishti.lib.path}, one class loader under the kernel's). The lib folder is the one way to add a
+ * connector or a JDBC driver: the older plugin folder ({@code drishti.sources.plugin-dir}, each jar in its own loader) is gone; its
+ * jars are moved into lib once, at start ({@link com.ash.drishti.common.SharedLib#migrate}).
  */
 public final class PluginDiscovery {
 
     private static final Logger LOG = LoggerFactory.getLogger(PluginDiscovery.class);
 
-    public List<SourcePlugin> discover(String pluginDir) {
+    public List<SourcePlugin> discover() {
         List<SourcePlugin> found = new ArrayList<>();
         ServiceLoader.load(SourcePlugin.class, SourcePlugin.class.getClassLoader()).forEach(found::add);
         // modules bring computed kinds as KindProviders (KERNEL_AND_MODULES.md section 5.7); the kernel routes them as sources of their kinds
@@ -48,29 +41,7 @@ public final class PluginDiscovery {
         com.ash.drishti.common.SharedLib lib = com.ash.drishti.common.SharedLib.get();
         found.addAll(lib.services(SourcePlugin.class));
         lib.services(com.ash.drishti.kernel.api.data.KindProvider.class).forEach(k -> found.add(new ComputedKindSource(k)));
-        if (pluginDir != null && !pluginDir.isBlank() && Files.isDirectory(Path.of(pluginDir))) {
-            try (Stream<Path> jars = Files.list(Path.of(pluginDir))) {
-                for (Path jar : jars.filter(p -> p.toString().endsWith(".jar")).sorted().toList()) {
-                    found.addAll(loadIsolated(jar));
-                }
-            } catch (IOException e) {
-                throw new DrishtiException(ErrorCode.PLUGIN_LOAD_FAILED, "cannot list " + pluginDir, e);
-            }
-        }
         found.forEach(p -> LOG.info("source plugin found: {} {}", p.manifest().name(), p.manifest().version()));
         return found;
-    }
-
-    private List<SourcePlugin> loadIsolated(Path jar) {
-        try {
-            URLClassLoader loader = new URLClassLoader("plugin:" + jar.getFileName(),
-                    new URL[] {jar.toUri().toURL()}, SourcePlugin.class.getClassLoader());
-            List<SourcePlugin> out = new ArrayList<>();
-            ServiceLoader.load(SourcePlugin.class, loader).forEach(out::add);
-            ServiceLoader.load(com.ash.drishti.kernel.api.data.KindProvider.class, loader).forEach(k -> out.add(new ComputedKindSource(k)));
-            return out;
-        } catch (MalformedURLException e) {
-            throw new DrishtiException(ErrorCode.PLUGIN_LOAD_FAILED, "bad plugin jar " + jar, e);
-        }
     }
 }

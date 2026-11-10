@@ -254,7 +254,6 @@ public class HealthController {
             }
         }
         out.put("tmp", com.ash.drishti.common.TempFiles.info());
-        out.put("externalLib", com.ash.drishti.common.ExternalLib.info());
         out.put("lib", com.ash.drishti.common.SharedLib.get().info());   // the shared lib folder (drishti.lib.path): each jar with its SHA-256, marked lib
         out.put("sources", sources);
         if (access != null) {

@@ -85,6 +85,6 @@ class DistributionFinanceServerTest {
         assertThat(d.path("id").asText()).isEqualTo("drishti.finance");
         assertThat(d.path("modules").path("economy").asText()).isEqualTo("loaded");
         assertThat(d.path("modules").path("market-data").asText()).isEqualTo("loaded");
-        assertThat(d.path("asked").toString()).contains("capital-markets", "economy", "market-data");
+        assertThat(d.path("asked").toString()).contains("capitalmarkets", "economy", "market-data");
     }
 }

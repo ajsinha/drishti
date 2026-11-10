@@ -1629,7 +1629,7 @@ credentials stay in the connector files and the secret store, and no module ever
 | `DEMO` | the demo lake's samples serve it (only while demo is on) | works; demo data |
 | `STALE` | bound, but nothing loaded within its contract's cadence | works; amber |
 | `MISMATCH` | the source breaks the contract | treated as unbound for the needs |
-| `UNBOUND` | nothing serves it | a **required** need switches off exactly the functions that use it, with the reason (*VRES needs scenario-pv or pnl-vector: no source is bound*); an optional one hides its features |
+| `UNBOUND` | nothing serves it | a **required** need switches off exactly the functions that use it, and they explain themselves: the page is the needs-data page (*Exposure needs data: exposure-path is not bound*, with links to Admin → Data bindings and Help), the command line says the same and the API answers `409 DRS-1035`; an optional one hides its features |
 | `COMPUTED` | a module computes it (`position`, `system-basket`, `var-result`) | never bound |
 
 A kind finds its data in this order, first hit wins: the site's binding, the distribution's default, a lake by convention, the demo lake,
@@ -1708,6 +1708,14 @@ steps from a terminal: `drishti.py module deploy | apply | list` ([CLI_REFERENCE
 A removed module's pages show *… is no longer installed on this system* (410; administrators also see who removed it, when and the
 deployment), a switched-off one's *Not available* (404). Alert rules that use it show *paused · needs module X*; nothing saved is deleted,
 and a reinstall restores it.
+
+**What the console shows of a module.** Its console part (its pages under `/m/<id>/`, menu entries, Home cards, command words, Help
+section, AI tools; [DEVELOPER_GUIDE.md section 1.7](DEVELOPER_GUIDE.md#17-a-modules-console-part)) appears on every console within
+`modules.parts_refresh_seconds` (5) of the apply, at once on the console that applied it, and goes the same way when the module is
+switched off or removed: an open page of it is frozen under the notice, Build's lists and Forms' saved searches keep saved Sutras, reports, dashboards, baskets and searches
+that use it with a *needs module X* chip (not openable until it is back). A part that carries its own copy of Drishti Elements or of a
+vendored library, code, or a template that reaches past the kernel's layouts is refused (not shown anywhere); `GET /api/modules/hosted`
+lists what the console hosts, what is gone and what it refused, with the reasons.
 
 ## 26. Troubleshooting
 

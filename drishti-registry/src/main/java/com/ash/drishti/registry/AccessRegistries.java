@@ -15,6 +15,8 @@
  */
 package com.ash.drishti.registry;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Clock;
 import java.util.Locale;
@@ -31,6 +33,8 @@ public final class AccessRegistries {
     public static final String MODULES_DIR = "./config/modules";
     /** The site's access files. */
     public static final String ACCESS_DIR = "./config/access";
+    /** The content modules' own manifests ({@code <id>/module.yaml}), {@code drishti.module-manifests-dir}. */
+    public static final String MANIFESTS_DIR = "./modules";
 
     private AccessRegistries() {
     }
@@ -55,7 +59,27 @@ public final class AccessRegistries {
         String deploy = property.apply("drishti.module-deploy.dir");
         Path store = deploy != null && !deploy.isBlank() ? Path.of(deploy.strip())
                 : Path.of(orDefault(property.apply("drishti.data.dir"), "./data"), "modules");
-        return new EmbeddedAccessRegistry(new YamlAccessStore(Path.of(modules), Path.of(access), loader, store), overrides, Clock.systemUTC());
+        return new EmbeddedAccessRegistry(new YamlAccessStore(Path.of(modules), Path.of(access), loader, manifests(property), store), overrides,
+                Clock.systemUTC());
+    }
+
+    /**
+     * The content modules' manifests folder: {@code drishti.module-manifests-dir} (default {@value #MANIFESTS_DIR}, the folder the
+     * distributions read too); when that folder is not there (a server started in a scratch folder), the {@code modules} folder beside the
+     * packs' {@code config} folder ({@code drishti.packs.dir}'s real path, two folders up).
+     */
+    static Path manifests(Function<String, String> property) {
+        Path named = Path.of(orDefault(property.apply("drishti.module-manifests-dir"), MANIFESTS_DIR));
+        if (Files.isDirectory(named)) {
+            return named;
+        }
+        try {
+            Path packs = Path.of(orDefault(property.apply("drishti.packs.dir"), "./config/packs")).toRealPath();
+            Path beside = packs.getParent() == null || packs.getParent().getParent() == null ? null : packs.getParent().getParent().resolve("modules");
+            return beside != null && Files.isDirectory(beside) ? beside : named;
+        } catch (IOException | RuntimeException e) {
+            return named;
+        }
     }
 
     private static final java.util.Map<Object, EmbeddedAccessRegistry> SHARED = new java.util.WeakHashMap<>();

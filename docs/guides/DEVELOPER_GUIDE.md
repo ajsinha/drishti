@@ -299,6 +299,7 @@ the kernel API (`com.ash.drishti.kernel.api`) and the entity types its signature
 | Type (kernel API) | What the kernel does with it |
 |---|---|
 | `data.KindProvider` | routes the kinds it computes like any source: views, Rachana, the pivot, BI |
+| `SourcePlugin` (the plugin API, `com.ash.drishti.api`): a **connector extension** | routed under its own name while the module is loaded, started with `module-dir` (the installed module) and `data-dir` (`<data>/modules/<id>`); the genomics module's VCF reader (section 1.9). A connector only one module's kinds use ships inside the module; a jar every part may use (a JDBC driver) goes in the lib folder |
 | `function.FunctionProvider` | adds its functions to Rachana (the archetype's `<id>_greet(name)` in any expression, Sutra or measure); a name already taken refuses the start |
 | `engines.ComputeEngine` | lists and starts it as the engine registry would at start (its switch and needs apply) |
 | `@ModuleApi` + `@RestController` | mounts its endpoints under `/api/v1/<prefix>/` (its manifest's `api.prefix`); off: 404, removed: 410 |
@@ -341,7 +342,7 @@ failure a sentence naming the file and the fix:
 
 | Check | How the tool (and so the plugin) checks it |
 |---|---|
-| C1 No kernel internals | every class file's constant pool: a type of `com.ash.drishti` outside `kernel.api` and the module's own packages fails, except a verified first-party module's declared allowance (below) |
+| C1 No kernel internals | every class file's constant pool: a type of `com.ash.drishti` outside `kernel.api`, the plugin API (`com.ash.drishti.api`) and the module's own packages fails, except a verified first-party module's declared allowance (below) |
 | C2 No bespoke UI | pages draw no `<table>`, `<canvas>` or `<svg>`; scripts import only `@drishti/elements-*` and their own files |
 | C3 Theme tokens only | CSS: no hex, `rgb()`/`hsl()` or named colours outside `var(--…)`, no `!important` |
 | C4 `drishti_` asset prefix | every file under `console/static/` and `elements/` is `drishti_<name>`; no vendored library |
@@ -360,6 +361,101 @@ failure a sentence naming the file and the fix:
 `ModuleToolTest` (in `drishti-module-runtime`) runs these paths without Maven: it generates a module from the archetype's templates,
 compiles it, packs it, passes the fifteen checks, and loads, routes and unloads it; it builds a second one with `javac` and a folder and
 takes it through the tool's `pack`, `check` and `inspect` into the runtime; a broken copy fails the checks with their words.
+
+### 1.7 A module's console part
+
+The console hosts a module's `console/` part **declaratively** (design: [KERNEL_AND_MODULES.md sections 4.7, 9 and 14.2.1](../architecture/KERNEL_AND_MODULES.md#47-the-console-part-loaded-by-the-drishti-console)):
+it reads the files the kernel verified and runs none of them, so a module brings no Python, no Java and no route registration to the
+console. Everything is declared in `console/plugin.yaml` (`format: 2`):
+
+| Key | What it gives | Example (the archetype) |
+|---|---|---|
+| `routes:` | pages under `/m/<id>/…`: `page:` a template of the module (tier 2), `sutra:` a Sutra, opened as the kernel's page of its `function:` (tier 1); the word opens the route (`GREET asha` → `/m/greet/hello/asha`) | `{id: hello, path: "/hello/{name}", page: hello.html, function: GREET}` |
+| `menus:` | top-bar entries: `menu:` a menu of the product (`help`, `views`, `economies` …) or a new one of the module; `route:` + `params:`, `href:` or `cmd:` | `{menu: help, label: Say hello, route: hello, params: {name: world}}` |
+| `home: cards:` | Home's quick cards (`lens:` to show one in one lens only) | `{title: Say hello, route: hello, params: {name: world}, cmd: GREET world}` |
+| `ai: tools:` | the tools the assistant may offer (a name, a description, the route or word it opens; Admin → AI lists them) | `{name: greet_greet, description: Greets a person, route: hello}` |
+
+Help comes from `docs/help.yaml` (`sections:` with `pages:` of `file:` relative to it; one Help section each, `/help/section/module-<id>`).
+
+**Templates** live in `console/templates/` (or `console/pages/`) and are rendered in the module's **own Jinja environment**: they extend
+`kernel/page.html` (the console's shell: top bar, command line, theme; blocks `title`, `assets`, `page` or `content`, `aside`, `scripts`),
+use the Elements macros of `kernel/elements.html` through `elements` (`elements.card`, `elements.grid`, `elements.header`,
+`elements.notice`) and the phone parts of `kernel/phone.html`, and name their own files `<id>:<path>`. Nothing else is reachable: a
+template that includes or extends any other console template is refused. The context has `module` (id, version, title), `route`,
+`params`, `asset(path)` (`/m/<id>/static/<version>/<path>`, cached a year: the version busts it), `url_for(route_id, **params)` and
+`api(path)`, besides the shell's own values.
+
+**Statics** are `console/static/drishti_<module>-*.js|css` (the `drishti_` prefix, theme tokens only); a domain Elements library is
+`elements/<lib>/`, served at `/m/<id>/elements/<lib>/<version>/`. Drishti Elements and the vendored libraries are the console's: **a part
+that carries a copy of one (by content), a `vendor/` folder, a library with an Elements name, code (`.py`, `.jar`, `.class` …) or an
+unprefixed static file is refused whole**, and Admin → Modules and `GET /api/modules/hosted` say why.
+
+**Where parts come from.** The server's module registry (`GET /public/modules/console`; an active version's part arrives as a zip from
+`/public/modules/console/<id>/<version>`, kept under the console's data folder, `module-parts/<id>/<version>/`), and the modules the product
+ships (`modules/<id>/`, `module_manifests_dir`) while the server lists them loaded. The console asks every
+`modules.parts_refresh_seconds` (5) and at once after an apply in Admin → Modules.
+
+**When the module goes** (switched off or removed) every surface goes with it: its pages answer the Module removed A page (410 removed,
+404 off), its statics 410/404, its menu entries, Home cards, words (*… is not available: needs module X*), Help section, AI tools and lens
+links disappear; an open page of it is frozen under the notice within 15 seconds; saved work that uses it (Sutras, BI reports and
+dashboards, baskets in Build; saved searches in Forms; alert rules) stays, marked *needs module X* and not openable, and comes back on reinstall. Nothing of it
+is kept per person.
+
+**A page reads its module's API** through the console: `api('genes/TP53')` in a template is `/m/<id>/api/genes/TP53`, which the console
+reads from the server's `/api/v1/<id>/genes/TP53` as the person (GET only; 410 removed, 404 off). The page's own script draws the rows
+with Drishti Elements (`Drishti.elements.grid`, `Drishti.elements.load('drishti-chart')`).
+
+### 1.8 A module's own visual (the custom-visual SDK)
+
+A module that needs a chart Drishti does not have ships it **as a Drishti Elements extension**, never as a drawing of its own: a **kind
+of drishti-chart's registry** (`registerKind(name, {build, label, family, cartesian, sample})`), built from drishti-chart's primitives
+(`buildScatter`, `buildSeriesChart`, `buildWaterfall`, the annotations, `toneColour`), in the module's **domain library**
+`elements/drishti-<module>/drishti_<module>.js`. Because the chart card draws it, the kind gets the theme, tooltips, Explain on a mark, the
+data table, export, zoom and the keyboard like every kind, and the conformance checks hold (no canvas, svg or table of its own, no colour:
+tones `good`, `bad`, `warn`, `accent`, `muted` come from the theme).
+
+```bash
+mvn drishti:visual -Dname=lollipop -Dtitle="Variant lollipop"     # in a module project made from the archetype
+```
+
+writes the library (once) with a kind `<module>.lollipop` started on `buildSeriesChart`, and declares it in `console/plugin.yaml`:
+
+```yaml
+visuals:
+  - kind: genomics.lollipop
+    library: drishti-genomics
+    file: drishti_genomics.js
+    title: Variant lollipop
+    summary: "A protein's variants: a stem and head at each amino acid position ..."
+```
+
+**Where it shows.** The module's pages load the library (`/m/<id>/elements/<library>/<module version>/<file>`) and draw the kind with
+`new Chart(el, {kind: 'genomics.lollipop', ...})`. The **Elements gallery** asks the console for the hosted modules' visuals
+(`GET /api/elements/visuals`), loads each library and gives each kind a page drawn from its `sample()`; a module that is off or removed
+is not listed, so its visual is gone from the gallery (and its library answers 404 or 410). The library registers the kind once
+(`kindOf` first) and exposes `Drishti.elements.visuals.<module>.ready`.
+
+### 1.9 The genomics sample, step by step
+
+`modules/genomics` is a third party's module (publisher Helix Lab, a sample) made from the archetype and finished by hand: it uses
+`drishti-kernel-api` and the plugin API only (C1) and carries no finance. Drishti Genomics (`--distribution genomics`) runs the thin
+kernel with it alone ([DISTRIBUTIONS.md section 4](../architecture/DISTRIBUTIONS.md#4-drishti-genomics-sample)).
+
+1. **Generated.** `mvn archetype:generate -DarchetypeArtifactId=drishti-module-archetype -DgroupId=org.helixlab -DartifactId=genomics
+   -Dpackage=org.helixlab.genomics -Ddomain=genomics` (the first commit of the module is the archetype's output, unchanged).
+2. **The VCF reader** (`VcfConnector`, a `SourcePlugin`): reads `data/samples/*.vcf` inside the package and `<data>/modules/genomics/vcf/`
+   (plain or gzipped VCF 4.x); one `variant` per alternate allele, the samples and their `##SAMPLE` cohorts (`Vcf`, `GenomicsData`, one
+   immutable snapshot).
+3. **The kinds** `gene` and `cohort` (`GenomicsKinds`, a `KindProvider`), computed from the variants and `gene.jsonl`; the contracts in
+   `packs/genomics/contracts/`.
+4. **The API** (`GenomicsController`, `@ModuleApi("genomics")`): `/api/v1/genomics/variants`, `/genes/{id}`, `/cohorts/{id}`; the Rachana
+   function `genomics_af_class(af)`.
+5. **One page folder**, `console/pages/explorer.html`, for the six routes (`VARIANT`, `GENE`, `COHORT` and their lists), drawn with the
+   Elements macros and `drishti_genomics-pages.js`; the gene's page draws `genomics.lollipop` (section 1.8).
+6. **Synthetic data**: `tools/make_samples.py` (seeded) writes two cohorts of twelve samples and 120 variants over eight genes.
+7. **Built in the kernel's reactor**: `./mvnw -o package -pl modules/genomics -am` packs `target/dmod/genomics-0.1.0.dmod` and runs the
+   fifteen checks at `package`. `GenomicsDistributionServerTest` boots Drishti Genomics with the package dropped in;
+   `test_genomics_walk_browser.py` walks it in a browser on the thin jar.
 
 ## 2. Building and running from source
 
@@ -2516,10 +2612,10 @@ Drishti finds plugins with the JDK's `ServiceLoader` (`PluginDiscovery` in `dris
    ```
 
    The class needs a public no-argument constructor.
-2. Make the jar visible, in either of two ways. On the **class path** of the server (a Maven dependency of
-   `drishti-server`, as the shipped plugins are), or in a folder named by `drishti.sources.plugin-dir`
-   (`DRISHTI_PLUGIN_DIR`): every `*.jar` in it is loaded in **its own class loader**, so its libraries cannot clash
-   with the server's, and a jar added there needs no rebuild of the server, only a restart.
+2. Make the jar visible: put it in the server's **lib folder** (`drishti.lib.path`, default `<data folder>/lib`). Every jar there
+   is loaded at start into one lib class loader under the kernel's (it never replaces a kernel class); a jar added needs no rebuild,
+   only a restart. A shipped plugin is a Maven dependency of `drishti-server` instead. A connector that only one module's kinds use
+   ships **inside that module** (the genomics module's VCF reader, section 1.8): it goes with the module.
 
 A plugin whose name no connector uses and that is not listed under `plugins` starts with empty settings, and, if it
 needs one, stays idle (see below). `GET /api/v1/sources` lists the running connectors; the failures are under
@@ -2536,7 +2632,8 @@ each, which the server writes to the file at the first start ([DATA_GUIDE.md sec
 # application.local.yaml: the server's own settings
 drishti:
   sources:
-    plugin-dir: ./plugins                       # extra jars, each in its own class loader
+    lib:
+      path: ./data/lib                          # extra jars (connectors, JDBC drivers), in one lib class loader
 ```
 
 ```yaml
@@ -2842,7 +2939,6 @@ mkdir -p plugins-extra && cp docs/guides/examples/connector/target/drishti-examp
 # application.local.yaml
 drishti:
   sources:
-    plugin-dir: ./plugins-extra
     routes: { trade: desk-days, counterparty: desk-days }
 ```
 

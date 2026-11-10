@@ -63,7 +63,7 @@ ADMIN_PAGES = ("users", "roles", "packs", "commands", "tokens", "access", "conne
 
 # The landings' page (LENSES.md › The design): each edition names its own (home.template, home.titles); a file that names none keeps
 # Drishti Risk's, as before 2.9.7. Only templates under home/ named *_landing.html are taken.
-_LANDING_TEMPLATE = re.compile(r"home/[a-z0-9_]+_landing\.html")
+_LANDING_TEMPLATE = re.compile(r"(?:home/|[a-z0-9-]+:)[a-z0-9_]+_landing\.html")
 DEFAULT_LANDING_TEMPLATE = "home/risk_landing.html"
 DEFAULT_LANDING_TITLES = {"desk": "Risk desk", "command": "Command first", "map": "Risk map"}
 
@@ -287,9 +287,9 @@ class Edition:
 
     @property
     def landing_template(self) -> str:
-        """The page that draws the edition's landings (``home.template``, e.g. ``home/world_landing.html``; it names its own script and
-        style). Only a ``home/<name>_landing.html`` template is taken; a file that names none (written before 2.9.7) keeps the Drishti
-        Risk page."""
+        """The page that draws the edition's landings (``home.template``: the console's ``home/<name>_landing.html``, or a hosted module's
+        ``<module>:<name>_landing.html``, e.g. ``economy:world_landing.html``; it names its own script and style). Anything else, or a file
+        that names none (written before 2.9.7), keeps the Drishti Risk page."""
         t = str(self._get("home.template") or "") if self.active else ""
         return t if _LANDING_TEMPLATE.fullmatch(t) else DEFAULT_LANDING_TEMPLATE
 

@@ -28,8 +28,27 @@
   default placement for first-party modules. The in-process banking wiring is gone from the jar (it stays only as banking's own tests'
   harness). The bridge now also connects connector types, engine catalogues and defaults, engine caches, readiness gates, drains, cache
   reports, ready rules, Flight forms, controllers already in the module's namespace and the module's class loader. C12 reads the class
-  initialiser (unmodifiable constants pass) and honours `@EngineWide`. Removing banking from a running server answers 410 (*needs module
-  banking*) for its API and pages, installing it again brings back the same VaR, and its class loader is collected (leak-free).
+  initialiser (unmodifiable constants pass) and honours `@EngineWide`. Its API-token scopes are read from its package while it is
+  loaded. Removing banking from a running server answers 410 (*needs module
+  banking*) for its API (old prefixes too) and pages, installing it again brings back the same VaR, and its class loader is collected (leak-free).
+- **The genomics sample module and Drishti Genomics** (2.9.11.i2 + i3, wave 3; [DEVELOPER_GUIDE.md section 1.9](docs/guides/DEVELOPER_GUIDE.md#19-the-genomics-sample-step-by-step),
+  [DISTRIBUTIONS.md section 4](docs/architecture/DISTRIBUTIONS.md#4-drishti-genomics-sample)). `modules/genomics`, a third party's module
+  made from the archetype and finished by hand on the kernel API and the plugin API only: a VCF reader as a connector extension inside
+  the module (a module's `SourcePlugin` is routed while it is loaded, started with its folders), the kinds `variant`, `sample`, `gene`,
+  `cohort`, the functions `VARIANT`, `GENE`, `COHORT` on one page folder, synthetic samples (a seeded generator), its `.dmod` built in the
+  reactor and passing C1 to C15. Drishti Genomics boots the thin kernel and the module from its file alone: the Research lens, none of the
+  kernel's packs (`kernel-packs: []`), no finance anywhere; a module project's manifest is read from `src/dmod/`.
+- **The custom-visual SDK** ([DEVELOPER_GUIDE.md section 1.8](docs/guides/DEVELOPER_GUIDE.md#18-a-modules-own-visual-the-custom-visual-sdk),
+  [ELEMENTS.md section 7.4](docs/architecture/ELEMENTS.md#74-a-modules-own-visual-types-the-visual-registry-for-modules)). A module ships
+  its own visual type as a kind of drishti-chart's registry in its Elements library, built from drishti-chart's primitives, and declares
+  it under `visuals:`; the gallery shows it while the module is hosted and not after it goes (`GET /api/elements/visuals`). The first is
+  `genomics.lollipop`; `mvn drishti:visual -Dname=<name>` is the template. A module's pages read its API through `/m/<id>/api/`.
+- **Gated functions explain themselves.** A function that is on but whose required data no source serves no longer answers 404: its
+  page is the needs-data page (*Exposure needs data: exposure-path is not bound*, 200, links to Admin → Data bindings and Help), its API
+  answers `409 DRS-1035` with the need, and the command line says the same words.
+- **One way for jars: the lib folder** (`drishti.lib.path`). The launcher's `external_lib/java` and `drishti.sources.plugin-dir` are gone:
+  at the first start that finds jars in either, the server moves them into lib, writes `lib/moved-<date-time>.bak` and Health says so;
+  `drishti.sources.plugin-dir` is deprecated (ignored, said in Health) for one release. `external_lib/python` stays the console's.
 - **The kernel loads modules** (2.9.11.i2 + i3, wave 2; [DEVELOPER_GUIDE.md sections 1.6 and 1.7](docs/guides/DEVELOPER_GUIDE.md#17-what-a-module-can-contribute),
   [ADMIN_GUIDE.md section 22.1](docs/guides/ADMIN_GUIDE.md#221-module-packages-auto-deploy-and-the-shared-lib-folder)). A loaded `.dmod`
   module's beans of the kernel API's provider types are seen by the kernel while it is loaded and withdrawn when it unloads (the
@@ -48,6 +67,23 @@
   a Rachana function and a REST API; the kernel API is 0.3 (`function.FunctionProvider`; the entity types of `com.ash.drishti.api` are
   shared with modules). `ModuleHostServerTest` loads the archetype module and a three-jar module, uses their kind, function and route from
   the kernel, reloads on an edit, unloads (410), reinstalls and unloads again, leak-free each time; and deploys and removes a dropped package.
+- **The console part of a module** (2.9.11.i2 + i3; [DEVELOPER_GUIDE.md section 1.7](docs/guides/DEVELOPER_GUIDE.md#17-a-modules-console-part),
+  [ADMIN_GUIDE.md section 25](docs/guides/ADMIN_GUIDE.md#25-modules-and-deploy)): the console hosts a module's `console/` part
+  declaratively under `/m/<id>/`, from the server's registry (`GET /public/modules/console` and the part's zip) or from the modules the
+  product ships: `plugin.yaml` format 2's routes (a page of the module's own templates, rendered in its own Jinja environment over
+  `kernel/page.html` and the Elements macros of `kernel/elements.html`; a Sutra route opens the kernel's page of its word), menus, words,
+  Home cards, Help (`docs/help.yaml`) and AI tool descriptions (Admin → AI, `GET /api/ai/module-tools`); statics at
+  `/m/<id>/static/<version>/…`, cached a year. A part carrying a copy of Drishti Elements or a vendored library, code, an unprefixed static
+  file or a template reaching past `kernel/` is refused. Switched off or removed, every surface goes (Module removed A, 410/404; an open
+  page frozen under the notice; words *needs module X*; lens links), saved Sutras, reports, dashboards and baskets in Build and saved
+  searches in Forms are kept and
+  marked *needs module X*, and a reinstall restores them. The SDK archetype declares a menu entry, a Home card and an AI tool. Setting
+  `modules.parts_refresh_seconds` (5).
+- **The economy module's World page** moves into the module (`modules/economy/console/`, `economy:world_landing.html` in the World lens),
+  its two lists on the Elements grid instead of hand-drawn tables; `drishti-console/plugins/economy` is gone.
+- **One source for content modules:** the access registry reads market-data, capital markets and economy from their own manifests
+  (`modules/<id>/module.yaml`, `drishti.module-manifests-dir`); the server's copies of them are deleted. Capital markets' id is
+  `capitalmarkets` in its manifest too (the distribution file follows).
 - **Module deployment, cluster-first** (2.9.11.i2 + i3, wave 3; [CLUSTER_GUIDE.md section 1.10](docs/guides/CLUSTER_GUIDE.md#110-deploying-a-module),
   [ADMIN_GUIDE.md section 25](docs/guides/ADMIN_GUIDE.md#25-modules-and-deploy)): a `.dmod` is uploaded once to the module store
   (`POST /api/v1/admin/modules/store`, the fifteen conformance checks, kept by id and version, never rebuilt); a plan says per node what

@@ -77,7 +77,7 @@ it is a retired example pack):
                                    │  │  graph · TopicHub │  │
                                    │  └─────────┬─────────┘  │
                                    └────────────┼────────────┘
-                     SourcePlugin SPI (ServiceLoader; jars in plugin-dir get their own class loader)
+                     SourcePlugin SPI (ServiceLoader; site jars in the lib folder)
      ┌──────────┬──────────┬──────────┬─────────┴┬──────────┬──────────┬──────────┬──────────┐
      ▼          ▼          ▼          ▼          ▼          ▼          ▼          ▼          ▼
    demo      file / s3    delta      jdbc     aerospike   rest     kafka     activemq /   feeds

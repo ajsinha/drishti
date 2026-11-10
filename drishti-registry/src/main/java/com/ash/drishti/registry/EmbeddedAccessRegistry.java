@@ -203,6 +203,16 @@ public final class EmbeddedAccessRegistry implements AccessRegistry, AutoCloseab
     }
 
     @Override
+    public Optional<String> dataGateReason(String word) {
+        Optional<String> off = functionOffReason(word);
+        if (off.isEmpty()) {
+            return off;
+        }
+        Optional<String> data = dataGate.apply(word.strip().toUpperCase(java.util.Locale.ROOT));
+        return data.isPresent() && data.get().equals(off.get()) ? data : Optional.empty();
+    }
+
+    @Override
     public void dataGate(Function<String, Optional<String>> gate) {
         this.dataGate = gate == null ? w -> Optional.empty() : gate;
     }

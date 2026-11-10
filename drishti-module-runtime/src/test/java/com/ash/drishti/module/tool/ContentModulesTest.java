@@ -51,7 +51,7 @@ class ContentModulesTest {
         PrintStream e = new PrintStream(err, true, StandardCharsets.UTF_8);
         Path folder = MODULES.resolve(id);
         assertThat(ModuleTool.run(new String[] {"pack", folder.toString(), "--out", tmp.toString()}, o, e)).as(err.toString()).isZero();
-        Path dmod = tmp.resolve(id + "-1.0.0.dmod");
+        Path dmod = tmp.resolve(ModuleAssembler.manifest(folder).id() + "-1.0.0.dmod");   // capital-markets/ holds the module capitalmarkets
         assertThat(ModuleTool.run(new String[] {"check", dmod.toString(), "--cycles", "2"}, o, e)).as(out + "\n" + err).isZero();
         assertThat(out.toString()).contains("all 15 conformance checks passed");
 

@@ -104,10 +104,14 @@ public record ModuleManifest(String id, String domain, String title, String abou
         Map<String, Object> api = m.get("api") instanceof Map<?, ?> a ? (Map<String, Object>) a : Map.of();
         Map<String, Object> licence = m.get("licence") instanceof Map<?, ?> l ? (Map<String, Object>) l : Map.of();
         List<String> requires = new ArrayList<>();
-        if (m.get("requires") instanceof Map<?, ?> req) {
-            req.keySet().stream().map(String::valueOf).filter(k -> !"optional".equals(k)).forEach(requires::add);
-        } else {
-            requires.addAll(list(m.get("requires")));
+        Object r = m.get("requires");
+        Object required = r instanceof Map<?, ?> rm && rm.containsKey("required") ? rm.get("required") : r;
+        if (required instanceof Map<?, ?> rm) {
+            rm.keySet().stream().map(String::valueOf).filter(k -> !"optional".equals(k)).forEach(requires::add);
+        } else if (required instanceof List<?> l) {
+            for (Object o : l) {
+                requires.add(o instanceof Map<?, ?> om ? String.valueOf(om.get("id")) : String.valueOf(o));
+            }
         }
         List<String> engines = new ArrayList<>();
         if (compute.get("engines") instanceof List<?> es) {
@@ -123,6 +127,15 @@ public record ModuleManifest(String id, String domain, String title, String abou
         return new ModuleManifest(String.valueOf(id), str(m.get("domain")), str(m.get("title")), str(m.get("about")), str(m.get("version")),
                 requires, str(licence.get("feature")), m.get("java") != null, true, installed, list(java.get("packages")), engines,
                 list(packs.get("list")), list(compute.get("connectors")), paths, functions(m.get("functions")), source);
+    }
+
+    /**
+     * A content module's {@code .dmod} manifest ({@code modules/<id>/module.yaml}, KERNEL_AND_MODULES.md section 3.3) as the registry reads
+     * it: the one source of what the module is (its id, domain, title, licence feature, packs and words); code when it names {@code java:}.
+     * Only required {@code requires:} entries count ({@code optional:} ones never switch the module off).
+     */
+    static ModuleManifest ofDmod(Map<String, Object> m, String source) {
+        return ofDmod(m, true, source);
     }
 
     /** True when the class (its binary name) belongs to this module's code. */

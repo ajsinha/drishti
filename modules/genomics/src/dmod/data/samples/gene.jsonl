@@ -1,0 +1,8 @@
+{"GENE": "BRCA1", "CHROM": "17", "START": 43044295, "PROTEIN_LENGTH": 1863, "DOMAINS": [{"NAME": "RING", "FROM": 24, "TO": 64}, {"NAME": "BRCT1", "FROM": 1642, "TO": 1736}, {"NAME": "BRCT2", "FROM": 1756, "TO": 1855}]}
+{"GENE": "BRCA2", "CHROM": "13", "START": 32315474, "PROTEIN_LENGTH": 3418, "DOMAINS": [{"NAME": "BRC repeats", "FROM": 1002, "TO": 2082}, {"NAME": "DNA binding", "FROM": 2479, "TO": 3192}]}
+{"GENE": "TP53", "CHROM": "17", "START": 7661779, "PROTEIN_LENGTH": 393, "DOMAINS": [{"NAME": "Transactivation", "FROM": 1, "TO": 61}, {"NAME": "DNA binding", "FROM": 102, "TO": 292}, {"NAME": "Tetramerisation", "FROM": 325, "TO": 356}]}
+{"GENE": "EGFR", "CHROM": "7", "START": 55019017, "PROTEIN_LENGTH": 1210, "DOMAINS": [{"NAME": "Receptor L", "FROM": 57, "TO": 167}, {"NAME": "Kinase", "FROM": 712, "TO": 979}]}
+{"GENE": "KRAS", "CHROM": "12", "START": 25205246, "PROTEIN_LENGTH": 189, "DOMAINS": [{"NAME": "G domain", "FROM": 1, "TO": 166}]}
+{"GENE": "PTEN", "CHROM": "10", "START": 87863113, "PROTEIN_LENGTH": 403, "DOMAINS": [{"NAME": "Phosphatase", "FROM": 14, "TO": 185}, {"NAME": "C2", "FROM": 190, "TO": 350}]}
+{"GENE": "APC", "CHROM": "5", "START": 112707498, "PROTEIN_LENGTH": 2843, "DOMAINS": [{"NAME": "Armadillo", "FROM": 453, "TO": 767}, {"NAME": "Beta-catenin binding", "FROM": 1020, "TO": 1169}]}
+{"GENE": "MLH1", "CHROM": "3", "START": 36993332, "PROTEIN_LENGTH": 756, "DOMAINS": [{"NAME": "ATPase", "FROM": 22, "TO": 330}, {"NAME": "MutL C", "FROM": 501, "TO": 756}]}

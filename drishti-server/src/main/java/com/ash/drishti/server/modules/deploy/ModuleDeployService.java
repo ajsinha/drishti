@@ -684,6 +684,24 @@ public final class ModuleDeployService {
         return node.entries().stream().filter(e -> e.state() != ModuleNode.State.ACTIVE).toList();
     }
 
+    /**
+     * The verified package folder of an active module version, for its console part (KERNEL_AND_MODULES.md sections 4.7 and 14.2.1): this
+     * node's installed copy, else the module store's (a console's server need not be one the module is placed on); null when neither holds
+     * it or the version is not the active one.
+     */
+    public Path consoleFolder(String id, String version) {
+        ModuleNode.Entry e = node.entry(id).orElse(null);
+        if (e == null || e.state() != ModuleNode.State.ACTIVE || !e.version().equals(version)) {
+            return null;
+        }
+        Path installed = node.root().resolve("installed").resolve(ModuleNode.safe(id)).resolve(ModuleNode.safe(version));
+        if (Files.isRegularFile(installed.resolve(DmodManifest.FILE))) {
+            return installed;
+        }
+        Path pkg = store.resolve(ModuleNode.safe(id)).resolve(ModuleNode.safe(version)).resolve("pkg");
+        return Files.isRegularFile(pkg.resolve(DmodManifest.FILE)) ? pkg : null;
+    }
+
     /** For a test: the route table of this node (the console's notice page asks it). */
     public RouteTable.Snapshot routes() {
         return node.runtime().routes().snapshot();

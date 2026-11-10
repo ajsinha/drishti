@@ -77,6 +77,7 @@
   <script src="/static/js/drishti_tables.js?v={{ ASSET_V }}"></script>
   <script src="/static/js/drishti_phone.js?v={{ ASSET_V }}"></script>
   <script src="/static/js/drishti_settled.js?v={{ ASSET_V }}"></script>{# Drishti.settled(): the page-settled signal browser tests wait on; inert until asked #}
+  <script src="/static/js/drishti_module-gone.js?v={{ ASSET_V }}"></script>{# a module page told when its module goes (KERNEL_AND_MODULES.md 12.4) #}
   {% if me %}<script src="/static/js/drishti_alerts.js?v={{ ASSET_V }}"></script>{% endif %}
   {% block scripts %}{% endblock %}
 </body>

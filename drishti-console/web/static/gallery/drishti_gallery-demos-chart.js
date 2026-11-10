@@ -277,4 +277,29 @@
       sutra: () => null
     }));
   });
+
+  /* ---------------- a module's own visual types (the custom-visual SDK) ----------------
+     The console lists the visuals of the modules hosted now (/api/elements/visuals); the boot script loads each module's library (which
+     registers its kinds in drishti-chart's registry) and calls this for each kind: a library entry in the catalogue (once per library)
+     and a page for the kind, drawn from the kind's own sample. A module that is off or removed is not listed: its pages are not here. */
+  GAL.moduleVisual = function (v, catalogue) {
+    const cat = catalogue || GAL.catalogue;
+    if (!cat.libraries.some((l) => l.name === v.library)) {
+      cat.libraries.push({ name: v.library, version: v.version, title: 'The ' + v.module + " module's library (served while the module is on)",
+        requires: ['drishti-core', 'drishti-chart'], module: v.module, server: 'none', global: 'Drishti.elements.libs[\'' + v.library + '\']',
+        bundle: { path: v.script, bytes: 0, lines: 0 }, tests: { node: 0, files: [], browser: [] }, modules: [{ file: v.file, about: v.summary }],
+        symbols: [], types: [], constants: {}, changelog: [] });
+    }
+    if (demos.some((d) => d.id === v.kind)) { return; }
+    demos.push(chartDemo({
+      id: v.kind, library: v.library, typesFrom: 'drishti-chart', title: v.title, summary: v.summary, about: v.file, moduleVisual: v.module,
+      values: { density: 'compact', height: 320 },
+      examples: [{ title: v.title, values: {} }],
+      build: function (values, ctx) {
+        const C = ctx.E.chart, def = C.kindOf(v.kind), spec = def && def.sample ? def.sample() : { kind: v.kind, data: { rows: [] } };
+        return Object.assign(chartBuild(spec, values, ctx), { library: v.library });
+      },
+      sutra: () => null
+    }));
+  };
 }(typeof window !== 'undefined' ? window : globalThis));

@@ -1,0 +1,48 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{#- The module's one page folder: every route draws this page in the kernel layout with the Drishti Elements macros only (conformance
+    C2, C5); drishti_genomics-pages.js fills it from the module's API (rows, never a layout): the grids on drishti-grid, the gene's
+    lollipop on drishti-chart through the module's own kind, genomics.lollipop (elements/drishti-genomics). -#}
+{% extends "kernel/page.html" %}
+{% block assets %}<link rel="stylesheet" href="{{ asset('css/drishti_genomics.css') }}">{% endblock %}
+{% block page %}
+<div class="drishti-genomics" data-genomics-route="{{ route.id }}" data-genomics-id="{{ params.id or '' }}"
+     data-genomics-api="{{ api('') }}" data-genomics-base="{{ url_for('variants')|replace('/variants', '') }}">
+{% if route.id == 'gene' %}
+{{ elements.header("Gene " ~ params.id, "Its variants along the protein: height the carriers, colour the impact, bands its domains") }}
+<div class="drishti-genomics-chart" data-genomics-chart role="region" aria-label="The variants of {{ params.id }} along the protein"></div>
+{{ elements.grid("variants", "The variants of " ~ params.id) }}
+{% elif route.id == 'variant' %}
+{{ elements.header("Variant " ~ params.id, "Where it is, what it does and who carries it") }}
+{{ elements.grid("variant", "Variant " ~ params.id) }}
+{{ elements.grid("carriers", "The samples carrying it") }}
+{% elif route.id == 'cohort' %}
+{{ elements.header("Cohort " ~ params.id, "Its samples and the variants they carry") }}
+{{ elements.grid("variants", "The variants carried in " ~ params.id) }}
+{% elif route.id == 'genes' %}
+{{ elements.header("Genes", "Each gene with how many variants fall in it; open one for its lollipop") }}
+{{ elements.grid("genes", "Genes") }}
+{% elif route.id == 'cohorts' %}
+{{ elements.header("Cohorts", "Each cohort with its samples and the variants they carry") }}
+{{ elements.grid("cohorts", "Cohorts") }}
+{% else %}
+{{ elements.header("Variants", "Every variant read from the VCF files, by position") }}
+{{ elements.grid("variants", "Variants") }}
+{% endif %}
+{{ elements.notice("Synthetic data: every sample and variant here is made up.", tone="info") }}
+</div>
+{% endblock %}
+{% block scripts %}<script src="/m/{{ module.id }}/elements/drishti-genomics/{{ module.version }}/drishti_genomics.js"></script><script src="{{ asset('js/drishti_genomics-pages.js') }}"></script>{% endblock %}

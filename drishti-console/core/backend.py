@@ -127,6 +127,17 @@ class BackendClient:
         """The server a call goes to: the session's in the pool, else the client's own base (a relative path)."""
         return self._servers.current() if self._servers is not None else ""
 
+    async def public(self, path: str, raw: bool = False, timeout: float = 30.0) -> Any:
+        """A ``/public/...`` answer of the server (no person: the modules' console parts, KERNEL_AND_MODULES.md section 4.7); JSON, or the
+        bytes with ``raw``. Raises :class:`BackendError` with the server's status."""
+        try:
+            r = await self._client.get(self._base() + path, timeout=timeout)
+        except httpx.HTTPError as e:
+            raise BackendError(503, "DRS-5003", f"backend unreachable: {e}") from e
+        if r.status_code >= 400:
+            raise BackendError(r.status_code, "DRS-5003" if r.status_code >= 500 else "DRS-4040", f"{path}: {r.status_code}")
+        return r.content if raw else r.json()
+
     async def _get(self, url: str, ident=None, **params: Any) -> Any:
         return await self._send("GET", url, ident, params=params)
 

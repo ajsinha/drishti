@@ -34,10 +34,6 @@
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-server</artifactId></dependency>
   </dependencies>
   <build>
-    <resources>
-      <!-- the same class-path extension as the full jar (external_lib/java) -->
-      <resource><directory>../drishti-app/src/main/resources</directory></resource>
-    </resources>
     <finalName>drishti-kernel-${project.version}</finalName>
     <plugins>
       <!-- the executable jar's manifest grants native access (RocksDB, SQLite, DuckDB, Hadoop load native libraries):

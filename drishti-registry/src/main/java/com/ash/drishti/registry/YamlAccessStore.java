@@ -39,6 +39,8 @@ import java.util.stream.Stream;
  *
  * <ul>
  *   <li>each module's manifest, shipped in its jar as {@value #MANIFEST} (found on the class path: installed exactly when present);</li>
+ *   <li>the content modules' own manifests, {@code modules/<id>/module.yaml} (the {@code .dmod} manifest, KERNEL_AND_MODULES.md section
+ *       3.3): the one source of what a content module is (a module with {@code java:} is read from its jar);</li>
  *   <li>the lenses the jars ship, {@value #LENSES} (each module ships the lenses that compose it);</li>
  *   <li>the site's {@code config/modules/<id>.yaml}: the administrator's switch ({@code enabled}), or the whole manifest of a content-only
  *       module ({@code code: false});</li>
@@ -60,6 +62,7 @@ public final class YamlAccessStore implements AccessStore {
     private final Path modulesDir;
     private final Path accessDir;
     private final ClassLoader loader;
+    private final Path manifestsDir;
     private final Path store;
 
     /**
@@ -71,16 +74,22 @@ public final class YamlAccessStore implements AccessStore {
         this(modulesDir, accessDir, loader, null);
     }
 
+    /** As above, with the folder of the content modules' own manifests ({@code modules}: {@code <id>/module.yaml}; null: none). */
+    public YamlAccessStore(Path modulesDir, Path accessDir, ClassLoader loader, Path manifestsDir) {
+        this(modulesDir, accessDir, loader, manifestsDir, null);
+    }
+
     /**
-     * @param store the module store ({@code <data folder>/modules}): the {@code .dmod} modules installed there, and the distribution's own
-     *              ({@code drishti/modules/*.dmod} beside {@code first-party.yaml} in the server's jar) unless an administrator removed
-     *              them, are modules of this server like the manifests on the class path; null for none
+     * As above, with the module store ({@code <data folder>/modules}): the {@code .dmod} modules installed there, and the distribution's own
+     * ({@code drishti/modules/*.dmod} beside {@code first-party.yaml} in the server's jar) unless an administrator removed them, are modules
+     * of this server like the manifests on the class path (null: none)
      */
-    public YamlAccessStore(Path modulesDir, Path accessDir, ClassLoader loader, Path store) {
+    public YamlAccessStore(Path modulesDir, Path accessDir, ClassLoader loader, Path manifestsDir, Path store) {
         this.store = store;
         this.modulesDir = modulesDir;
         this.accessDir = accessDir;
         this.loader = loader == null ? YamlAccessStore.class.getClassLoader() : loader;
+        this.manifestsDir = manifestsDir;
     }
 
     @Override
@@ -108,7 +117,34 @@ public final class YamlAccessStore implements AccessStore {
                 }
             }
         }
+        java.util.Set<String> before = new java.util.HashSet<>(modules.keySet());
         packaged(modules, warnings);
+        java.util.Set<String> packagedIds = new java.util.HashSet<>(modules.keySet());
+        packagedIds.removeAll(before);
+        if (manifestsDir != null && Files.isDirectory(manifestsDir)) {      // the content modules' own manifests: one source of truth
+            try (Stream<Path> dirs = Files.list(manifestsDir)) {
+                for (Path f : dirs.map(d -> d.resolve("module.yaml")).filter(Files::isRegularFile).sorted().toList()) {
+                    String where = "modules/" + f.getParent().getFileName() + "/module.yaml";
+                    try {
+                        Map<String, Object> raw = readMap(f);
+                        if (raw.get("java") != null) {
+                            continue;                                  // a module with code: its jar's manifest is the one read
+                        }
+                        ModuleManifest m = ModuleManifest.ofDmod(raw, where);
+                        if (packagedIds.contains(m.id())) {
+                            continue;                                  // the installed package's manifest is the one read
+                        }
+                        if (modules.putIfAbsent(m.id(), m) != null) {
+                            warnings.add(where + ": a second manifest of the module '" + m.id() + "'; the first is kept");
+                        }
+                    } catch (RuntimeException ex) {
+                        warnings.add(where + ": " + ex.getMessage());
+                    }
+                }
+            } catch (IOException ex) {
+                warnings.add(manifestsDir + ": " + ex.getMessage());
+            }
+        }
         Map<String, Boolean> switches = new LinkedHashMap<>();
         for (Path f : yamlFiles(modulesDir)) {
             String id = ModuleManifest.norm(f.getFileName().toString().replaceFirst("\\.ya?ml$", ""));

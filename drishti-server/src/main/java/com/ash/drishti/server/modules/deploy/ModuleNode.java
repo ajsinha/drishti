@@ -743,6 +743,36 @@ public final class ModuleNode implements AutoCloseable {
         return new TreeMap<>(registry).values().stream().toList();
     }
 
+    private final Map<String, List<String>> legacy = new ConcurrentHashMap<>();
+    private static final ObjectMapper YAML_READER = new ObjectMapper(new com.fasterxml.jackson.dataformat.yaml.YAMLFactory());
+
+    /**
+     * The module, removed or off, whose old API prefixes ({@code api.legacy} in its manifest, answered by its aliases while it is loaded)
+     * hold the path: so an old path of a module that left answers like its new one (410 removed, 404 off).
+     */
+    public Optional<Entry> byLegacyPath(String path) {
+        for (Entry e : registry.values()) {
+            if (e.state() == State.ACTIVE || e.manifest() == null) {
+                continue;
+            }
+            List<String> old = legacy.computeIfAbsent(e.id() + " " + e.version() + " " + e.manifest().hashCode(), k -> {
+                List<String> out = new ArrayList<>();
+                try {
+                    YAML_READER.readTree(e.manifest()).path("api").path("legacy").forEach(x -> out.add(x.asText()));
+                } catch (IOException ex) {
+                    LOG.debug("module {}: its manifest's old prefixes do not read", e.id());
+                }
+                return List.copyOf(out);
+            });
+            for (String p : old) {
+                if (path.equals(p) || path.startsWith(p + "/") || path.startsWith(p + ".")) {
+                    return Optional.of(e);
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
     /** The registry entry whose API prefix is {@code prefix}. */
     public Optional<Entry> byPrefix(String prefix) {
         return registry.values().stream().filter(e -> prefix.equals(e.prefix())).findFirst();
