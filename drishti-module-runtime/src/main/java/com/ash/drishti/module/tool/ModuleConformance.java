@@ -196,7 +196,7 @@ public final class ModuleConformance {
             }
             String text = text(dir, f);
             if (f.endsWith(".html") && BESPOKE.matcher(text).find()) {
-                out.add(f + " draws its own " + group(BESPOKE, text) + ": use the kernel's layouts and the Drishti Elements macros (grid, chart) "
+                out.add(f + " draws its own " + group(BESPOKE, text) + ": use the kernel's layouts and the Elements macros (grid, chart) "
                         + "instead of hand-made widgets");
             }
             if (f.endsWith(".js")) {
@@ -204,7 +204,7 @@ public final class ModuleConformance {
                 while (i.find()) {
                     String spec = i.group(1);
                     if (!spec.startsWith("@drishti/elements-") && !spec.startsWith("./") && !spec.startsWith("../")) {
-                        out.add(f + " imports " + spec + ": a module's scripts import only the Drishti Elements public entry points "
+                        out.add(f + " imports " + spec + ": a module's scripts import only the Elements public entry points "
                                 + "(@drishti/elements-*) and its own files");
                     }
                 }
