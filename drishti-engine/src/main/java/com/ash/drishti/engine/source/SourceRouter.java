@@ -100,11 +100,15 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
     /** One running source of a kind, for the bindings' resolution: its connector, plugin and lake, demo samples or computed by a module. */
     public record Serving(String name, String plugin, String lake, boolean demo, boolean computed) {}
 
-    /** The running sources of {@code kind} in read order, leaving out those that surely hold none of it. */
+    /**
+     * The running sources of {@code kind} in read order. A source that names the kind (its connector's kinds, a binding, a computed kind)
+     * serves it even before its first load; one that would serve any kind is left out when it surely holds none of it.
+     */
     public List<Serving> serving(String kind) {
         List<Serving> out = new ArrayList<>();
         for (SourcePlugin p : candidates(kind)) {
-            if (p.holdsNone(kind)) {
+            String n = p.manifest().name();
+            if (!p.manifest().kinds().contains(kind) && !bound.getOrDefault(kind, List.of()).contains(n) && !n.equals(routes.get(kind)) && p.holdsNone(kind)) {
                 continue;
             }
             String name = p.manifest().name();

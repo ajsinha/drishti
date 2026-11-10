@@ -138,6 +138,7 @@ public final class BindingResolver {
     public static Result resolve(Bindings site, DataNeeds needs, Facts facts) {
         Set<String> all = new TreeSet<>(facts.kinds());
         needs.needs().forEach(n -> all.add(n.kind()));
+        all.addAll(needs.computed().keySet());
         all.addAll(site.byKind().keySet());
         Map<String, Resolution> out = new TreeMap<>();
         List<String> problems = new ArrayList<>();
