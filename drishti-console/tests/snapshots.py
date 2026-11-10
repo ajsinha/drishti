@@ -39,27 +39,33 @@ THRESHOLD = 40      # a pixel changed: any channel off by more than this (of 255
 TOLERANCE = 0.002   # a page changed: more than this share of its pixels changed (per page in the test's KEY_SNAPSHOTS)
 
 #: masked on every page: the live clock, the business date box, Home's fact of the day (it changes on "Another fact" and by day), the
-#: VaR explorer's paint and server times, the data inbox's facts (its next cycle, the free disk, this host's name), relative times and
+#: data inbox's facts (its next cycle, the free disk, this host's name), relative times and
 #: anything marked data-snapshot-mask
-MASK = ["[data-clock]", "#asofDate", "[data-dyk]", "[data-vx-timing]", "[data-ready-facts]", "[data-inbox-next]", "[data-snapshot-mask]",
-        "time.timeago", "[data-relative-time]"]
+MASK = ["[data-clock]", "#asofDate", "[data-dyk]", "[data-ready-facts]", "[data-inbox-next]", "[data-snapshot-mask]", "time.timeago",
+        "[data-relative-time]"]
+#: timings that change their own width (a mask over them would move with it): the VaR explorer's paint, server and aggregation
+#: times, a live board's last update; their words replaced by one dot
+QUIET = ["[data-vx-timing]", "[data-vx-fresh]", "[data-live-time]"]
 
-_STILL = """async () => {
+_STILL = """async ([part, quiet]) => {
+  for (const e of document.querySelectorAll(quiet.join(','))) { if (e.textContent) { e.textContent = '\u00b7'; } }
   if (document.fonts && document.fonts.ready) { await document.fonts.ready; }
   if (document.activeElement && document.activeElement.blur) { document.activeElement.blur(); }
   window.scrollTo(0, 0);
   for (const e of document.querySelectorAll('*')) { if (e.scrollTop > 0) { e.scrollTop = 0; } }   // a page that scrolls a panel to its anchor
+  const at = part && document.querySelector(part);
+  if (at) { at.scrollIntoView({ block: 'start', behavior: 'instant' }); }
   const st = document.createElement('style');
   st.textContent = '*, *::before, *::after { transition: none !important; animation: none !important; caret-color: transparent !important; scroll-behavior: auto !important; }'
-                 + ' ::-webkit-scrollbar { display: none; }';
+                 + ' ::-webkit-scrollbar { display: none; } .toasts { display: none !important; }';
   document.head.appendChild(st);
   await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
 }"""
 
 
-def capture(pg, masks: list[str] = ()) -> bytes:
-    """The page's viewport as PNG, still and with ``MASK`` and ``masks`` covered."""
-    pg.evaluate(_STILL)
+def capture(pg, masks: list[str] = (), part: str | None = None) -> bytes:
+    """The page's viewport as PNG, still (toasts hidden), at its top or with ``part`` brought to the top, ``MASK`` and ``masks`` covered."""
+    pg.evaluate(_STILL, [part, QUIET])
     pg.mouse.move(0, 0)
     locs = [pg.locator(s) for s in (*MASK, *masks)]
     return pg.screenshot(animations="disabled", caret="hide", mask=locs, mask_color="#808080", full_page=False)

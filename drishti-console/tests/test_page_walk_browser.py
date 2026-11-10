@@ -45,7 +45,7 @@ THEMES = {"dark": "terminal", "light": "light"}
 #: the business date the page walk's lake ends on: fixed, so the visual snapshots' figures and dates are the same on every run
 SNAPSHOT_DATE = "2026-11-06"
 #: the visual snapshots: name -> (address, {tolerance, mask: more selectors covered, idle: wait for the network to go quiet, wait: a
-#: script true once the page has drawn});
+#: script true once the page has drawn, scroll: the part brought to the top instead of the page's top});
 #: a lens's Home is captured after entering the lens (its page asks to confirm: a POST), then the lens is left the same way
 KEY_SNAPSHOTS: dict[str, tuple[str, dict]] = {
     "home": ("/", {}),
@@ -54,15 +54,17 @@ KEY_SNAPSHOTS: dict[str, tuple[str, dict]] = {
     "home-market": ("/lens/market", {}),
     "home-markets": ("/lens/markets", {}),
     "world": ("/lens/world", {}),
-    "var-bank": ("/var?scope=BANK", {}),
-    "var-desk": ("/var?scope=DESK:DESK-RATES", {}),
-    "var-basket": ("/var?scope=BASKET:PF-ASHA-UNWIND", {}),
-    "why-it-moved": (go("VAR BANK EXPLAIN"), {"idle": True, "wait": "(() => { const p = document.querySelector('[data-explain-page]'); const w = document.querySelector('[data-dx-part=\"why\"] [data-dx-why]');"
+    "var-bank": ("/var?scope=BANK", {"idle": True}),
+    "var-desk": ("/var?scope=DESK:DESK-RATES", {"idle": True}),
+    "var-basket": ("/var?scope=BASKET:PF-ASHA-UNWIND", {"idle": True}),
+    # the page brings its "why" part into view when it has drawn: captured there, every run
+    "why-it-moved": (go("VAR BANK EXPLAIN"), {"idle": True, "scroll": "[data-dx-part=\"why\"]", "wait": "(() => { const p = document.querySelector('[data-explain-page]'); const w = document.querySelector('[data-dx-part=\"why\"] [data-dx-why]');"
                                                        " return p && p.dataset.state === 'ready' && w && w.dataset.painted === 'waterfall'; })()"}),
     # the cube's columns are sized as its rows arrive: a figure is cut short on one run and whole on another (2%)
     "mr-cube": ("/pivot?preset=mr", {"idle": True, "tolerance": 0.02, "wait": "!/Computing the grid/i.test(document.querySelector('#main').innerText)"}),
     "pivot": ("/pivot", {}),
-    "bi-report": ("/bi/r/file:report:desk-wall", {"idle": True, "wait": "/Net MTM/.test(document.querySelector('#main').innerText)"}),
+    # a live board: its trend's time axis moves with the clock (1%)
+    "bi-report": ("/bi/r/file:report:desk-wall", {"idle": True, "tolerance": 0.01, "wait": "/Net MTM/.test(document.querySelector('#main').innerText)"}),
     "frtb": (go("FRSA BANK"), {"idle": True, "wait": "!/loading/i.test(document.querySelector('#main').innerText)"}),
     "simm": (go("SIMM"), {"idle": True, "wait": "!/Loading/i.test(document.querySelector('#main').innerText)"}),
     "exposure": (go("EXP"), {"idle": True}),
@@ -71,7 +73,8 @@ KEY_SNAPSHOTS: dict[str, tuple[str, dict]] = {
     "curves": (go("CRV"), {}),
     "fund": (go("FUND"), {}),
     "useq": (go("USEQ"), {}),
-    "admin-engines": ("/admin/engines", {"idle": True}),
+    # the memory each engine holds now and the server's folder (a temporary one per run) move: covered
+    "admin-engines": ("/admin/engines", {"idle": True, "mask": ["[data-eng-meta]", "td:has(> .eng-bar)"]}),
     "admin-connectors": ("/admin/connectors", {}),
     "admin-loads": ("/admin/loads", {}),
     "admin-upload": ("/admin/loads/upload", {}),
@@ -181,7 +184,7 @@ def test_the_key_pages_look_as_approved(stack, browser, request, tmp_path):
                         _until(pg, opts["wait"])
                     faults += [f"{name}: {f}" for f in r["faults"]]
                     pg.evaluate("(t) => document.documentElement.setAttribute('data-theme', t)", THEMES[theme])
-                    png = snapshots.capture(pg, opts.get("mask", []))
+                    png = snapshots.capture(pg, opts.get("mask", []), opts.get("scroll"))
                     if href.startswith("/lens/"):
                         open_page(pg, base, "/lens/leave")
                         _confirm(pg, base, settle=False)
