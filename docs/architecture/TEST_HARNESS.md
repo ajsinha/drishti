@@ -319,7 +319,7 @@ server (no extra one), and compares each with its golden image in `drishti-conso
 
 - **Deterministic.** The walk's lake ends on a fixed business date (`SNAPSHOT_DATE`), so figures and dates never move; the test runs first in
   the file, before the walk adds recent pages; animations and transitions are off, the caret hidden, fonts (vendored) loaded, the scroll at
-  the top; the business date is picked (`/asof`), pages that draw late are waited on (`idle`, `wait`); the live clock, the date box, Home's fact of the day, the VaR timings, the inbox's facts and anything marked `data-snapshot-mask` are covered (`snapshots.MASK`, and per page `mask` in `KEY_SNAPSHOTS`).
+  the top; the business date is picked (`/asof`), pages that draw late are waited on (`idle`, `wait`); the live clock, the date box, Home's fact of the day, the VaR timings, the inbox's facts and anything marked `data-snapshot-mask` are covered, timings replaced by a dot, the test's scratch folders and the real day's date and time by fixed words (`snapshots.MASK`, and per page `mask` in `KEY_SNAPSHOTS`).
 - **Small goldens.** Each golden is the viewport at half size in at most 128 colours (PNG): a quarter of the pixels and a palette keep the
   whole set (132 images) at about 4 MB, while a moved panel, a lost border, a wrong theme colour or a missing chart still shows. A full-size capture
   would be about ten times that; a perceptual hash alone would not draw what changed. The capture is mapped onto the golden's own palette,
