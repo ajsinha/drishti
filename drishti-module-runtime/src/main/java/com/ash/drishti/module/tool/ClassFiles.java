@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.sdk;
+package com.ash.drishti.module.tool;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;

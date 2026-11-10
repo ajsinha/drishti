@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.sdk;
+package com.ash.drishti.module.tool;
 
 import com.ash.drishti.module.runtime.Dmod;
 import com.ash.drishti.module.runtime.DmodManifest;
@@ -82,25 +82,35 @@ public final class ModuleAssembler {
      * {@code target/dmod/<id>-<version>.dmod} with its hash list and writes its {@code .sha256} beside it. Returns the package.
      */
     public static Path assemble(Path source, Path jar, Path target) {
+        return assemble(source, jar, target.resolve("dmod-stage"), target.resolve("dmod"));
+    }
+
+    /**
+     * Stages {@code source} and {@code jar} under {@code work/<id>/} and packs {@code out/<id>-<version>.dmod} with its hash list and its
+     * {@code .sha256} beside it. The one packer: the Maven plugin, the command-line tool and any other build call it.
+     */
+    public static Path assemble(Path source, Path jar, Path work, Path out) {
         DmodManifest m = manifest(source);
-        Path stage = target.resolve("dmod-stage").resolve(m.id());
+        Path stage = work.resolve(m.id());
         try {
             delete(stage);
             copyTree(source, stage);
             if (m.java() != null) {
-                if (jar == null || !Files.isRegularFile(jar)) {
-                    throw new IllegalStateException(m.label() + ": module.yaml has a java part but the project's jar was not built (" + jar + ")");
-                }
                 Path to = stage.resolve("java").resolve(m.java().jars().get(0));
-                Files.createDirectories(to.getParent());
-                Files.copy(jar, to);
+                if (jar != null && Files.isRegularFile(jar)) {
+                    Files.createDirectories(to.getParent());
+                    Files.copy(jar, to, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                } else if (!Files.isRegularFile(to)) {           // a folder from any build may hold its jar under java/ already
+                    throw new IllegalStateException(m.label() + ": module.yaml names java/" + m.java().jars().get(0)
+                            + ", which is neither in the folder nor given (--jar)" + (jar == null ? "" : ": " + jar + " is not there"));
+                }
             }
-            Path out = Dmod.pack(stage, target.resolve("dmod").resolve(Dmod.fileName(m.id(), m.version())));
-            try (InputStream in = Files.newInputStream(out)) {
-                Files.writeString(out.resolveSibling(out.getFileName() + ".sha256"), Dmod.sha256(in) + "  " + out.getFileName() + "\n",
+            Path dmod = Dmod.pack(stage, out.resolve(Dmod.fileName(m.id(), m.version())));
+            try (InputStream in = Files.newInputStream(dmod)) {
+                Files.writeString(dmod.resolveSibling(dmod.getFileName() + ".sha256"), Dmod.sha256(in) + "  " + dmod.getFileName() + "\n",
                         StandardCharsets.UTF_8);
             }
-            return out;
+            return dmod;
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

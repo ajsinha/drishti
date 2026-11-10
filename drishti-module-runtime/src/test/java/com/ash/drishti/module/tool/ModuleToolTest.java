@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.sdk;
+package com.ash.drishti.module.tool;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -47,11 +47,12 @@ import org.w3c.dom.NodeList;
 
 /**
  * The Module SDK end to end, without Maven in the loop: a module generated from the archetype's own templates (as {@code mvn
- * archetype:generate} would: the descriptor's file sets, packaged Java, the properties), compiled, packed by the plugin's assembler with the
- * runtime's packer, put through the fifteen conformance checks, then loaded into the module runtime: load, route, unload. A second case
- * breaks the generated module in the ways the checks exist for and reads their plain words.
+ * archetype:generate} would: the descriptor's file sets, packaged Java, the properties), compiled, packed by the one packer (the Maven
+ * plugin's and the tool's), put through the fifteen conformance checks, then loaded into the module runtime: load, route, unload. A second
+ * case builds a module with javac and a folder only and takes it through the standalone tool (pack, check, inspect) into the runtime. A
+ * third breaks the generated module in the ways the checks exist for and reads their plain words.
  */
-class ModuleSdkTest {
+class ModuleToolTest {
 
     @TempDir
     Path tmp;
@@ -89,6 +90,46 @@ class ModuleSdkTest {
             assertThat(r.leakFree()).isTrue();
             assertThat(rt.routes().lookup("/m/hello/hello/Asha").orElseThrow().status()).isEqualTo(410);
             assertThat(rt.loaded("hello")).isEmpty();
+        }
+    }
+
+    @Test
+    void aModuleBuiltWithJavacAndAFolderIsPackedCheckedAndInspectedByTheToolAndLoads() throws Exception {
+        Path project = generate("plain");
+        Path jar = build(project, "plain");
+        // any build: the module's files in the .dmod layout, its jar under java/ by the name module.yaml gives
+        Path folder = tmp.resolve("plain-module");
+        ModuleAssembler.copyTree(project.resolve("src/dmod"), folder);
+        Files.createDirectories(folder.resolve("java"));
+        Files.copy(jar, folder.resolve("java/plain.jar"));
+
+        java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        java.io.ByteArrayOutputStream err = new java.io.ByteArrayOutputStream();
+        java.io.PrintStream o = new java.io.PrintStream(out, true, StandardCharsets.UTF_8);
+        java.io.PrintStream e = new java.io.PrintStream(err, true, StandardCharsets.UTF_8);
+        Path dist = tmp.resolve("dist");
+        assertThat(ModuleTool.run(new String[] {"pack", folder.toString(), "--out", dist.toString()}, o, e)).as(err.toString()).isZero();
+        Path dmod = dist.resolve("plain-0.1.0.dmod");
+        assertThat(dmod).isRegularFile();
+        assertThat(ModuleTool.run(new String[] {"check", dmod.toString(), "--project", project.toString(), "--cycles", "2"}, o, e))
+                .as(out.toString()).isZero();
+        assertThat(out.toString()).contains("C1 No kernel internals: passed", "C15 Class loader unloads: passed",
+                "all 15 conformance checks passed");
+        assertThat(ModuleTool.run(new String[] {"check", folder.toString(), "--cycles", "1"}, o, e)).isZero();   // a folder: packed first
+        out.reset();
+        assertThat(ModuleTool.run(new String[] {"inspect", dmod.toString()}, o, e)).isZero();
+        assertThat(out.toString()).contains("plain 0.1.0", "java:      [plain.jar] entry com.example.plain.HelloModule",
+                "every file matches META-INF/DMOD.MF");
+        assertThat(ModuleTool.run(new String[] {"pack"}, o, e)).isEqualTo(2);
+        assertThat(ModuleTool.run(new String[] {"pack", folder.toString(), "--bogus", "x"}, o, e)).isEqualTo(2);
+
+        Path modules = tmp.resolve("plain-kernel/modules");
+        com.ash.drishti.module.runtime.Dmod.unpack(dmod, modules.resolve("plain/0.1.0"));
+        Files.copy(dmod, modules.resolve("plain").resolve(dmod.getFileName()));
+        try (ModuleRuntime rt = new ModuleRuntime(KernelFacts.ofKernel(), null, getClass().getClassLoader(), null, tmp.resolve("plain-tomb"))) {
+            assertThat(rt.start(List.of(modules), Map.of(), id -> true)).extracting(ModuleHealth::state).containsExactly(ModuleHealth.State.LOADED);
+            assertThat(rt.routes().lookup("/m/plain/hello/x").orElseThrow().status()).isEqualTo(200);
+            assertThat(rt.unload("plain", ModuleRuntime.Leave.REMOVE, true).leakFree()).isTrue();
         }
     }
 

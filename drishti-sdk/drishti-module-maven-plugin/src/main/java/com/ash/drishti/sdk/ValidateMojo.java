@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.sdk;
 
+import com.ash.drishti.module.tool.ModuleAssembler;
 import java.util.List;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.sdk;
 
+import com.ash.drishti.module.tool.ModuleAssembler;
 import java.io.File;
 import java.nio.file.Path;
 import org.apache.maven.plugins.annotations.LifecyclePhase;

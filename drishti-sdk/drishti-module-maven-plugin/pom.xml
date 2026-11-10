@@ -28,7 +28,8 @@
   <description>The Module SDK's Maven plugin (docs/architecture/KERNEL_AND_MODULES.md section 8.2): drishti:validate (the manifest against
     the pom), drishti:assemble (packs target/dmod/ID-VERSION.dmod with the module runtime's packer and its hash list) and
     drishti:conformance (the fifteen conformance checks C1-C15 of section 8.6, with plain-words failures; C11 and C13-C15 load the module
-    into the module runtime). The checks are plain Java (ModuleConformance), so the SDK's own test runs them without Maven.</description>
+    into the module runtime). A thin wrapper: the packer and the checks are drishti-module-runtime's (com.ash.drishti.module.tool), the same code as the
+    standalone tool (java -jar drishti-module-tool.jar).</description>
   <properties>
     <maven-plugin-tools.version>3.15.1</maven-plugin-tools.version>
     <maven-api.version>3.9.12</maven-api.version>
@@ -51,17 +52,6 @@
         <artifactId>maven-plugin-plugin</artifactId>
         <version>${maven-plugin-tools.version}</version>
         <configuration><goalPrefix>drishti</goalPrefix></configuration>
-      </plugin>
-      <!-- the SDK's own test generates a module from the archetype's templates (the sibling module's sources) and builds it -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <systemPropertyVariables>
-            <drishti.sdk.archetype>${project.basedir}/../drishti-module-archetype/src/main/resources</drishti.sdk.archetype>
-            <drishti.sdk.version>${project.version}</drishti.sdk.version>
-          </systemPropertyVariables>
-        </configuration>
       </plugin>
     </plugins>
   </build>

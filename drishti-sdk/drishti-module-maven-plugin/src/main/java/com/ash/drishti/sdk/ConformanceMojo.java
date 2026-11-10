@@ -15,6 +15,8 @@
  */
 package com.ash.drishti.sdk;
 
+import com.ash.drishti.module.tool.ModuleAssembler;
+import com.ash.drishti.module.tool.ModuleConformance;
 import com.ash.drishti.module.runtime.Dmod;
 import com.ash.drishti.module.runtime.DmodManifest;
 import java.nio.file.Path;
