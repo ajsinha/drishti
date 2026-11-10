@@ -157,15 +157,8 @@ public final class ModuleDeployService {
                 Path meta = at.resolve("stored.json");
                 boolean same = Files.isRegularFile(meta) && JSON.readValue(meta.toFile(), Stored.class).sha().equalsIgnoreCase(sha);
                 if (!same) {
-                    Files.createDirectories(at);
-                    Files.copy(dmod, at.resolve(Dmod.fileName(m.id(), m.version())), StandardCopyOption.REPLACE_EXISTING);
-                    ModuleNode.delete(at.resolve("pkg"));
-                    Files.move(dir, at.resolve("pkg"));
-                    Stored s = new Stored(m.id(), m.version(), m.title(), m.about(), m.publisher().getOrDefault("name", ""), sha, Files.size(dmod),
-                            List.of("the fifteen conformance checks ran in the product's build (first-party, " + origin.why() + ")"),
-                            ModuleParts.of(m).parts().keySet().stream().toList(), by, clock.instant().toString());
-                    JSON.writerWithDefaultPrettyPrinter().writeValue(meta.toFile(), s);
-                    audit.record(by, "module-stored", "module/" + m.id(), m.version() + " | sha256 " + sha + " | the distribution's");
+                    keep(dmod, dir, m, sha, Files.size(dmod), List.of("the fifteen conformance checks ran in the product's build (first-party, "
+                            + origin.why() + ")"), by, "the distribution's");
                 }
                 verified.add(dmod);
             } catch (IOException | RuntimeException e) {
@@ -176,6 +169,20 @@ public final class ModuleDeployService {
         }
         out.addAll(node.installShipped(verified));
         return out;
+    }
+
+    /** Puts a verified package and its unpacked folder in the store ({@code <id>/<version>/}), with its record; audited. */
+    private Stored keep(Path dmod, Path dir, DmodManifest m, String sha, long bytes, List<String> lines, String by, String note) throws IOException {
+        Path at = store.resolve(m.id()).resolve(m.version());
+        Files.createDirectories(at);
+        Files.copy(dmod, at.resolve(Dmod.fileName(m.id(), m.version())), StandardCopyOption.REPLACE_EXISTING);
+        ModuleNode.delete(at.resolve("pkg"));
+        Files.move(dir, at.resolve("pkg"));
+        Stored s = new Stored(m.id(), m.version(), m.title(), m.about(), m.publisher().getOrDefault("name", ""), sha, bytes, lines,
+                ModuleParts.of(m).parts().keySet().stream().toList(), by, clock.instant().toString());
+        JSON.writerWithDefaultPrettyPrinter().writeValue(at.resolve("stored.json").toFile(), s);
+        audit.record(by, "module-stored", "module/" + m.id(), m.version() + " | sha256 " + sha + " | " + note);
+        return s;
     }
 
     public Stored upload(byte[] bytes, String by) {
@@ -211,15 +218,7 @@ public final class ModuleDeployService {
                 audit.record(by, "module-store-refused", "module/" + m.id(), m.version() + " | " + failed(checks));
                 throw ModuleNode.refused(m.label() + " fails the conformance checks: " + failed(checks));
             }
-            Files.createDirectories(at);
-            Files.copy(dmod, at.resolve(Dmod.fileName(m.id(), m.version())), StandardCopyOption.REPLACE_EXISTING);
-            ModuleNode.delete(at.resolve("pkg"));
-            Files.move(dir, at.resolve("pkg"));
-            Stored s = new Stored(m.id(), m.version(), m.title(), m.about(), m.publisher().getOrDefault("name", ""), sha, bytes.length, lines,
-                    ModuleParts.of(m).parts().keySet().stream().toList(), by, clock.instant().toString());
-            JSON.writerWithDefaultPrettyPrinter().writeValue(meta.toFile(), s);
-            audit.record(by, "module-stored", "module/" + m.id(), m.version() + " | sha256 " + sha + " | " + bytes.length + " bytes");
-            return s;
+            return keep(dmod, dir, m, sha, bytes.length, lines, by, bytes.length + " bytes");
         } catch (IOException e) {
             throw ModuleNode.refused("the package does not read: " + e.getMessage());
         } catch (com.ash.drishti.module.runtime.ModuleRefusedException e) {
