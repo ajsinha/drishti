@@ -204,6 +204,7 @@
   pivot.PivotProvider public default java.util.Optional<com.ash.drishti.kernel.api.pivot.AggFunction<java.lang.Object>> com.ash.drishti.kernel.api.pivot.PivotProvider.nativeFunction(java.lang.String,java.util.List<java.lang.String>)
   pivot.PivotProvider public default java.util.Optional<com.ash.drishti.kernel.api.pivot.PivotProvider$Cap> com.ash.drishti.kernel.api.pivot.PivotProvider.cap(java.lang.String)
   pivot.PivotProvider public default java.util.Optional<java.lang.String> com.ash.drishti.kernel.api.pivot.PivotProvider.scopeOf(com.ash.drishti.kernel.api.pivot.Viewer,com.ash.drishti.kernel.api.pivot.AggregationPlan,com.ash.drishti.kernel.api.pivot.CellKey)
+  pivot.PivotProvider public default java.util.function.BinaryOperator<java.lang.String> com.ash.drishti.kernel.api.pivot.PivotProvider.memberNames(com.ash.drishti.kernel.api.pivot.Viewer,java.lang.String,java.lang.String)
   pivot.PivotProvider$Cap public final boolean com.ash.drishti.kernel.api.pivot.PivotProvider$Cap.equals(java.lang.Object)
   pivot.PivotProvider$Cap public final int com.ash.drishti.kernel.api.pivot.PivotProvider$Cap.hashCode()
   pivot.PivotProvider$Cap public final java.lang.String com.ash.drishti.kernel.api.pivot.PivotProvider$Cap.toString()

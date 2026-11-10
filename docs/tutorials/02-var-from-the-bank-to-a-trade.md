@@ -574,6 +574,18 @@ exceptions are too many or too few, a Christoffersen p-value below 0.05 that the
 
 **Further in the guide:** [section 7](../guides/VAR_GUIDE.md#7-history-and-backtesting) (history), [section 18.4](../guides/VAR_GUIDE.md#184-history-and-backtest) (the backtest's formulas), [section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results) (official records).
 
+**Matured items.** The **Include matured positions** switch beside Explain (trades on a trade-grain date) adds back the records the load left
+out because they had matured, for this view only: the VaR and ES tiles say *INCLUDES MATURED* with the official figure beside, a band offers
+**Back to official**, the tree gains an **of which matured** column and the path's downloads a `SCOPE` column. It is off whenever the page opens;
+the official record, captures and limit use never include them. The demo dates have no matured records, so on them the band says *includes no
+matured items*. From the command line, ask the same answer with `matured=true`:
+
+```bash
+curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" "$DRISHTI_SERVER/api/v1/risk/var/scope?scope=BANK&matured=true" | jq .matured
+```
+
+([VAR_GUIDE.md, Matured items](../guides/VAR_GUIDE.md#matured-items).)
+
 ## Step 9 · How the date sits in memory and on disk
 
 **In the UI.** **Explain ›** in the toolbar (or the key **E**, or a click on the VaR tile) slides the Explain drawer in from the right
