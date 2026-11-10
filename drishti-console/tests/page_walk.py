@@ -28,7 +28,7 @@ import yaml
 
 CONSOLE = Path(__file__).resolve().parents[1]
 SETTLED_JS = CONSOLE / "web" / "static" / "js" / "drishti_settled.js"
-BUDGET_S = float(os.environ.get("DRISHTI_PAGEWALK_BUDGET", "5"))   # a page slower than this fails (opened, drawn and settled)
+BUDGET_S = float(os.environ.get("DRISHTI_PAGEWALK_BUDGET", "10"))  # a page slower than this fails (opened, drawn and settled; owner 2026-11-10: 10 s)
 
 #: parameterised pages, opened with a known demo id (the VaR lake's bank and desk)
 PARAMETERISED = ["/var?scope=BANK", "/var?scope=DESK:DESK-RATES", "/go?q=" + quote_plus("VAR DESK DESK-RATES <GO>")]

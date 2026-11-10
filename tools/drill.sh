@@ -46,7 +46,8 @@
 #      "other" (the rest; more workers, lower priority, by file), each file ordered longest first from the durations the last runs
 #      recorded (<data>/drill/durations.json). The browser lane's memory is sampled (<data>/drill/monitor-browser.csv) and every
 #      browser file over the per-file time budget is flagged (<data>/drill/budget-browser.txt; tools/drill-budgets.txt lists the
-#      files allowed over it, each with its reason);
+#      files allowed over it, each with its reason); every page a browser test opens is timed (<data>/drill/pageloads.jsonl), and
+#      after the lanes p95 and median per page are printed, slowest first, and written to docs/admin/BENCHMARK.md 18.2;
 #    - the Python tool tests;
 #    - the Java 21 verify (clean verify -P api-docs, every test, containers included) in a copy of the committed tree, so it
 #      cannot touch the jar the console runs; and the Java 25 lane, in a copy too: the whole tree compiled on Java 25 and the tests of
@@ -253,7 +254,7 @@ console_files() {   # name, workers, failed files re-run at a time, then the fil
   local out="$LOGS/console-$name.txt" rc=0 dist=loadfile
   # the browser lane by test: a file's tests stay one group on one worker unless they are marked spread (TEST_HARNESS.md)
   [[ $name == browser ]] && dist=loadgroup
-  DRILL_MIN_FREE_GB="${DRILL_MIN_FREE_GB:-6}" DRILL_TIMINGS_OUT="$LOGS/timings-$name.json" PYTHONPATH="$PWD/tools/drillkit${PYTHONPATH:+:$PYTHONPATH}" \
+  DRISHTI_PAGELOAD_LOG="$LOGS/pageloads.jsonl" DRILL_MIN_FREE_GB="${DRILL_MIN_FREE_GB:-6}" DRILL_TIMINGS_OUT="$LOGS/timings-$name.json" PYTHONPATH="$PWD/tools/drillkit${PYTHONPATH:+:$PYTHONPATH}" \
     timeout --kill-after=60 "$LANE_LIMIT" "$PY" -m pytest -q -rfE -p drill_timings -n "$workers" --dist "$dist" --no-loadscope-reorder "$@" \
     > "$out" 2>&1 || rc=$?
   tail -n 5 "$out"
@@ -550,6 +551,7 @@ else
     --exclude "${GATE_CONSOLE[@]}"
   mv "$LOGS/lanes/browser.txt" "$LOGS/lane-browser.txt"; mv "$LOGS/lanes/other.txt" "$LOGS/lane-other.txt"; rmdir "$LOGS/lanes"
   stage2=(console-browser console-other tools-a tools-b java21 java21-docker)
+  : > "$LOGS/pageloads.jsonl"                   # each page's load time in the lanes' browser tests (tools/drillkit/pageloads.py)
   start_job console-browser console_lane browser "$browser_workers" "${DRILL_BROWSER_RERUNS:-1}"
   start_job console-other niced 5 console_lane other "$other_workers" 2
   start_job tools-a niced 5 tools_lane_a
@@ -559,6 +561,8 @@ else
   if [[ -x "$JAVA25_HOME/bin/java" ]]; then start_job java25 niced 10 java25_verify; stage2+=(java25)
   else echo "drill: no JDK 25 at $JAVA25_HOME (set JAVA25_HOME): the forward-compatibility run is skipped" >&2; fi
   rc=0; watch_jobs "${stage2[@]}" || rc=1
+  # p95 and median per page, slowest first; the latest into BENCHMARK.md 18.2 (reported, never failed: the tests' budget is 10 s)
+  python3 tools/drillkit/pageloads.py "$LOGS/pageloads.jsonl" --top 25 --write docs/admin/BENCHMARK.md || true
   config_unchanged || rc=1; data_unchanged || rc=1
   (( rc == 0 )) || { echo "drill: FAILED (logs in $LOGS/)" >&2; exit 1; }
   stage_done "console lanes | tools (two lanes) | Java 21 | Java 25" $t
