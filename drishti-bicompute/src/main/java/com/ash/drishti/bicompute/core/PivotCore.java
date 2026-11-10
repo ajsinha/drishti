@@ -250,6 +250,7 @@ public final class PivotCore {
         final PivotView view;
         final PivotProvider provider;
         final PivotProvider.Catalogue catalogue;
+        private java.util.function.BinaryOperator<String> names;
         final List<FunctionCall> functions = new ArrayList<>();
         final Map<String, Dim> dims = new LinkedHashMap<>();
         final Map<String, String> types = new HashMap<>();
@@ -269,6 +270,14 @@ public final class PivotCore {
         final Map<Integer, PivotProvider.Cap> capped = new LinkedHashMap<>();
         /** The set each known cell came from (a capped measure asks the provider for the cell alone, cut from it). */
         final Map<CellKey, CellSet> origin = new HashMap<>();
+
+        /** A member's display name from the provider, or null to show its value (read once per answer). */
+        String memberName(String dim, String value) {
+            if (names == null) {
+                names = provider.memberNames(viewer, view.source(), view.date());
+            }
+            return dim == null || value == null ? null : names.apply(dim, value);
+        }
 
         Computation(Viewer viewer, PivotView asked) {
             this(viewer, asked, ScaleOptions.AUTO);

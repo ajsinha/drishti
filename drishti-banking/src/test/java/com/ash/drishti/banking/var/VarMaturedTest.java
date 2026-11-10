@@ -54,6 +54,45 @@ class VarMaturedTest {
     }
 
     @Test
+    void theSwitchSaysWhatItAddsAtTheGrainItCameIn() {
+        assertThat(VarMaturedSwitch.label(14, 0)).isEqualTo("includes 14 matured positions");
+        assertThat(VarMaturedSwitch.label(0, 1)).isEqualTo("includes 1 matured trade");
+        assertThat(VarMaturedSwitch.label(1, 3)).isEqualTo("includes 1 matured position and 3 matured trades");
+        assertThat(VarMaturedSwitch.label(0, 0)).isEqualTo("includes no matured items");
+    }
+
+    @Test
+    void maturedItemsKeepTheirVectorAsFloat32AndAreDroppedInWordsBeyondOnePercent() {
+        int width = 509;
+        double[] v = new double[width];
+        for (int i = 0; i < width; i++) {
+            v[i] = (i - 254) * 1234.5678;
+        }
+        VarMaturedItems.Collector c = new VarMaturedItems.Collector(List.of("POSITION_ID", "DESK"));
+        assertThat(c.build(1000)).isNull();                                // none matured: nothing kept, nothing to say
+        c.add("P1", "POSITION", "2026-01-15", new String[] {"P1", "DESK-FX"}, new double[] {1, 2}, v, width);
+        VarMaturedItems kept = c.build(1000);
+        assertThat(kept.dropped()).isNull();
+        double[] back = new double[width];
+        kept.items().get(0).vector(back);
+        for (int i = 0; i < width; i++) {
+            assertThat(back[i]).isEqualTo((double) (float) v[i]);
+        }
+        // the memory a kept item costs (VAR_GUIDE.md, "Matured items"): its float32 vector and its texts, about 2.3 KB at 509
+        long bytes = kept.bytes();
+        System.out.printf("a matured item at %d scenarios keeps about %,d bytes%n", width, bytes);
+        assertThat(bytes).isBetween(4L * width, 6L * width);
+        VarMaturedItems.Collector many = new VarMaturedItems.Collector(List.of("POSITION_ID"));
+        for (int i = 0; i < 200; i++) {
+            many.add("P" + i, "TRADE", "2026-01-15", new String[] {"P" + i}, new double[] {0, 0}, v, width);
+        }
+        assertThat(many.build(50_000).dropped()).isNull();                 // 0.4% of the date's records
+        VarMaturedItems over = many.build(10_000);                         // 2%: none kept, said
+        assertThat(over.items()).isEmpty();
+        assertThat(over.dropped()).contains("200 matured records are more than 1% of the date's records");
+    }
+
+    @Test
     void nothingMaturedHasNothingToSay() {
         VarMatured m = NONE.checked(Map.of("P1", List.of("T1")), DAY, feed(Map.of("T1", "2030-01-15")));
         assertThat(m.positions()).isZero();

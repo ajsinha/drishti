@@ -649,3 +649,41 @@ def test_a_system_basket_of_positions_and_a_paste_into_the_trade_column(stack, b
     assert d["found"] == 1 and d["notFound"] == 1, d
     assert "sends whole" in d["cells"][0]["reason"] and "DRS-" not in d["cells"][0]["reason"], d
 
+
+def test_the_matured_items_switch_is_off_on_open_labels_every_figure_and_goes_back_to_official(stack, browser):
+    """The matured-items switch (VAR_GUIDE.md, "Matured items"; mock-up var-matured A): drishti-inputs' <drishti-switch> naming the input's
+    grain (the demo is position grain), off whenever the page opens; on, the server's answers come with matured=true and the band, the
+    tiles, the method strip and the path's CSV say so; Back to official turns it off. The demo dates have no matured records: the figure
+    stays the official one, said as none."""
+    pg = open_var(browser, str(stack), "/var?scope=BANK")
+    painted(pg, "BANK")
+    sw = pg.locator("drishti-switch[data-vx-matured] [role=switch]")
+    wait(pg, "(document.querySelector('[data-vx-matured] .di-switch-label') || {}).textContent === 'Include matured positions'", 60)
+    assert sw.get_attribute("aria-checked") == "false"
+    assert pg.locator("[data-vx-matured-band]").is_hidden()
+    official = pg.locator('.vx-tile[data-tile="0"] .v').inner_text()
+    asked = []
+    pg.on("request", lambda r: asked.append(r.url) if "/api/var/scope?" in r.url and "matured=true" in r.url else None)
+    sw.click()
+    wait(pg, "!document.querySelector('[data-vx-matured-band]').hidden && !!document.querySelector('.vx-tile.vx-matured-on')", 60)
+    assert asked, "the headline is asked with matured=true"
+    assert "INCLUDES MATURED" in pg.locator("[data-vx-matured-band]").inner_text()
+    assert "includes no matured items" in pg.locator("[data-vx-matured-text]").inner_text()
+    assert "INCLUDES MATURED" in pg.locator('.vx-tile[data-tile="0"]').inner_text()
+    assert pg.locator('.vx-tile[data-tile="0"] .v').inner_text() == official      # none on the demo date: the official figure
+    assert pg.locator("[data-vx-method]").inner_text().startswith("Includes no matured items.")
+    wait(pg, "document.querySelector('[data-var]').dataset.painted === 'BANK'", 60)
+    with pg.expect_download() as dl:
+        pg.locator("[data-vx-csv-path]").click()
+    lines = Path(dl.value.path()).read_text().splitlines()
+    assert "Includes no matured items: not the official figure" in lines[0], lines[:5]
+    assert lines[3] == "rank,scenario_date,pnl,SCOPE" and "(not the official figure)" in lines[4], lines[:5]
+    shot(pg, "explorer-matured-on")
+    pg.locator("[data-vx-matured-off]").click()
+    wait(pg, "document.querySelector('[data-vx-matured-band]').hidden && !document.querySelector('.vx-tile.vx-matured-on')", 60)
+    assert sw.get_attribute("aria-checked") == "false"
+    pg.reload()                                                       # never kept: off again on the next open
+    painted(pg, "BANK")
+    assert pg.locator("drishti-switch[data-vx-matured] [role=switch]").get_attribute("aria-checked") == "false"
+    pg.close()
+

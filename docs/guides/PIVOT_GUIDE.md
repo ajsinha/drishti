@@ -417,6 +417,9 @@ level. The answer says what it did: "18 cells · 6 sets (4 from the cache) · 1 
 - **Open to level N** (`1`–`9`): every member down to level N.
 - The open nodes are part of the view (its `expanded` list), so a saved view and a link reopen them.
 
+**Names on the rows.** A source can name its members: the VaR source shows the desk, book or legal entity's name, as the VaR tree does, and the row's tooltip
+keeps the id. Keys, paths, filters and figures use the id. A member with no name shows its id. In the answer, a named row has a `name` next to its `value`.
+
 ## 6. Top N, Others and sorting
 
 A level may show its top N members by a measure and one **Others** member: "Others (3 of 5)". Others' figures are computed from **its own

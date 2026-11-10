@@ -17,6 +17,11 @@
 
 ## Unreleased
 
+- **VaR explorer: include matured items.** A switch beside Explain (`<drishti-switch>`, new in drishti-inputs) adds back the positions or trades,
+  at the input's grain, that the load left out because they had matured. Off whenever the page opens; on, the tiles, a band with **Back to official**,
+  the method strip, the tree's **of which matured** column and the path's CSV and JSON Lines say *includes N matured …*. The server computes it
+  (`matured=true` on `/var/scope`, `/var/scope/path`, `/var/tree`), per request; the official record, captures and limit use never include them.
+  A load keeps about 2.3 KB of heap a matured record (2.7 KB more in a mapped date's hot-file header), none beyond 1% of the date's records.
 - **Fixes before the drill:** `lake build --format iceberg` sends a promoted id list (`TRADE_IDS`) as its JSON text, as the Delta writers store it, instead of
   refusing the rows as a bad vector; a Delta connector of the older form (a `root`, no lake file) that finds no tables no longer marks every search partial;
   `lake-name` is in the Delta connector's settings catalogue; the console's engine catalogue copy and sitemap list Data loads › Upload.
@@ -28,6 +33,9 @@
 - **Kernel boundary (P1):** the core names no banking string (`tools/domain_strings_allowed.yaml` is empty); banking's words go through `DomainVocabulary` and the
   console's new plugin hooks (reserved words, console commands, phone pages, connector actions, the view toolbar slot). New `drishti-kernel-api` jar (kernel API 0.1) holds
   the SPIs of KERNEL_AND_MODULES section 2.3, with `ApiSurfaceTest` pinning the surface; `KernelWithoutModulesTest` boots the kernel with no banking on the class path.
+- **Pivot rows show entity names** (desk, book, legal entity), as the VaR tree does, with the id in the tooltip. Figures are unchanged.
+- **Screenshot scripts** t33, t37 and var follow the current pivot field pane, the Explain drawer and the basket sheet.
+- **Mock-ups** for including matured items on the VaR explorer: `docs/lenses/mockups/var-matured/`.
 
 ### Operations
 

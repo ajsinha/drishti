@@ -101,8 +101,12 @@
     <a class="vx-link vx-backtest" data-vx-backtest href="/var/backtesting?scope={{ (scope or 'BANK')|urlencode }}" title="This scope's backtest: its VaR against the P&amp;L of the last 250 business days, the exceptions and the zone (VAR &lt;scope&gt; BACKTEST)">Backtest ›</a>
     {% if mr_cube %}<a class="vx-link vx-cube" data-vx-cube href="/pivot?preset=mr&amp;text={{ (scope or 'BANK')|urlencode }}" title="This scope in the MR cube: the Pivot's market-risk preset, by desk and risk class with the right totals (MCUBE &lt;scope&gt;)">MR cube ›</a>{% endif %}
     <button type="button" class="vx-how" data-vx-whatif{{ part(PP, 'whatif') }} title="Pre-deal what-if: add a copy of a booked trade, scaled, to this scope's basket">What-if…</button>
+    {# the matured-items switch (VAR_GUIDE.md, "Matured items"; the approved mock-up var-matured A): drishti-inputs' switch, off whenever the page opens #}
+    <drishti-switch class="vx-matured" data-vx-matured label="Include matured items" help="Adds back the items that matured before the business date, at the input's grain. This view only: the official record, captures and limit use leave them out."></drishti-switch>
     <button type="button" class="vx-how" data-vx-explain data-explain-primary aria-keyshortcuts="E" title="Explain the VaR: the formula with its values, the inputs and lineage, why it moved, the workbook (E)">Explain ›</button>
   </div>
+  <div class="vx-matured-band" data-vx-matured-band role="status" hidden><span class="vx-matured-chip">INCLUDES MATURED</span>
+    <span data-vx-matured-text></span><button type="button" class="vx-how" data-vx-matured-off>Back to official</button></div>
   <p class="vx-notice" data-vx-notice role="status" hidden></p>
   <ul class="vx-notices" data-vx-notices role="status" hidden></ul>
   <div class="vx-basket" data-vx-basket hidden></div>

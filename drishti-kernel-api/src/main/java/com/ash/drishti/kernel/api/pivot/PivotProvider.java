@@ -65,6 +65,15 @@ public interface PivotProvider {
         return view;
     }
 
+    /**
+     * The display names of a source's members on a date (a member's label in an answer, its id in the row's tooltip), read once per answer:
+     * given a dimension and a member's value, its name, or null to show the value. Names change labels only, never a key, path or figure.
+     * The default: none.
+     */
+    default java.util.function.BinaryOperator<String> memberNames(Viewer v, String source, String date) {
+        return (dim, value) -> null;
+    }
+
     default Optional<AggFunction<Object>> nativeFunction(String name, List<String> args) {
         return Optional.empty();
     }

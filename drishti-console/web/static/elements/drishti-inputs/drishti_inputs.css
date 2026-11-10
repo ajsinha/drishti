@@ -306,6 +306,17 @@ input[data-di-code-upgraded][hidden], textarea[data-di-code-upgraded][hidden] { 
 .di-code-line .CodeMirror-lines { padding: 5px 0; }
 
 /* the file drop (drishti_file-drop.js) */
+/* drishti-switch: an on/off switch, its track and words in one button; on, the accent */
+.di-switch { display: inline-flex; align-items: center; gap: var(--d-sp-4, 4px); }
+.di-switch .di-switch-btn { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--d-border); background: var(--d-surface, transparent); color: var(--d-ink); border-radius: var(--d-radius); padding: 4px 10px; font: inherit; cursor: pointer; }
+.di-switch .di-switch-track { width: 30px; height: 16px; border-radius: 9px; background: var(--d-border); position: relative; display: inline-block; flex: none; }
+.di-switch .di-switch-track::after { content: ""; position: absolute; width: 12px; height: 12px; border-radius: 50%; background: var(--d-ink); top: 2px; left: 2px; transition: left .12s; }
+.di-switch.di-on .di-switch-btn { border-color: var(--d-accent); }
+.di-switch.di-on .di-switch-track { background: var(--d-accent); }
+.di-switch.di-on .di-switch-track::after { left: 16px; background: var(--d-surface, #fff); }
+.di-switch .di-switch-btn:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 2px; }
+.di-switch.di-disabled .di-switch-btn { opacity: .55; cursor: not-allowed; }
+.di-switch .di-switch-q { display: inline-flex; width: 15px; height: 15px; border-radius: 50%; border: 1px solid var(--d-muted); color: var(--d-muted); font-size: 10px; align-items: center; justify-content: center; cursor: help; }
 .di-file-drop .di-drop-zone { border: 1.5px dashed var(--d-border); border-radius: var(--d-radius); padding: var(--d-sp-16); text-align: center; color: var(--d-muted); cursor: pointer; }
 .di-file-drop .di-drop-zone b { color: var(--d-ink); }
 .di-file-drop .di-drop-zone:hover, .di-file-drop .di-drop-zone.di-over, .di-file-drop .di-drop-zone:focus-visible { border-color: var(--d-accent); }

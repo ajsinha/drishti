@@ -71,12 +71,12 @@ final class VarIntake {
     record Summary(int rejected, List<String> rejections, int excluded, List<String> batchIds, List<String> scenarioSets, String rules,
             String rulesDigest, Map<String, String> notLive, int scenarioPv, java.util.Set<String> pvTrades,
             Map<String, Map<String, Object>> inputs, Map<String, List<String>> positionTrades, int setLength, Boolean oldPnlIds,
-            VarMatured matured) {
+            VarMatured matured, VarMaturedItems maturedItems) {
 
         /** The same record with the date's matured items checked. */
         Summary withMatured(VarMatured m) {
             return new Summary(rejected, rejections, excluded, batchIds, scenarioSets, rules, rulesDigest, notLive, scenarioPv, pvTrades, inputs,
-                    positionTrades, setLength, oldPnlIds, m);
+                    positionTrades, setLength, oldPnlIds, m, maturedItems);
         }
 
         /**
@@ -151,6 +151,11 @@ final class VarIntake {
     /** The supplied positions that went into the book and name their trades; the others are counted. */
     private final java.util.Set<String> liveNamed = new java.util.HashSet<>();
     private int liveUnnamed;
+    /** The matured records kept for the explorer's switch (VAR_GUIDE.md, "Matured items"): made on the first one; null: none, or not kept. */
+    private VarMaturedItems.Collector maturedItems;
+    private boolean keepMatured;
+    /** The records the morning run gave the book (the share the matured items may reach). */
+    private int booked;
     private final TreeSet<String> pvTrades = new TreeSet<>();
     /** Per currency met in scenario PVs: how its rates were found, and today's rate (VarDate.fx). */
     private final Map<String, Object> fxUsed = new TreeMap<>();
@@ -341,21 +346,25 @@ final class VarIntake {
         String status = text(row, "TRADE_STATUS");
         String maturity = text(row, "MATURITY_DATE");
         boolean live = rules.live(status) && !matured(maturity);
+        boolean kept = false;                                           // a matured record kept for the switch: never the book's
         if (!live && !intra) {
             excluded++;
             if (rules.live(status) && matured(maturity) || "MATURED".equalsIgnoreCase(status)) {
                 maturedRecords.computeIfAbsent(system.strip(), x -> new java.util.TreeMap<>()).merge(supplied ? VarInputs.POSITION : VarInputs.TRADE, 1, Integer::sum);
+                kept = keepMatured && trade != null;
             }
             if (notLive.size() < NOT_LIVE_KEPT && trade != null) {
                 notLive.put(trade, !rules.live(status) ? "its status is " + status : "it matured on " + maturity.substring(0, 10));
             }
-            return;
+            if (!kept) {
+                return;
+            }
         }
         double[] vector = values;
         double pvUsd = Double.NaN;
         String[] why = null;
         String vectorCcy = null;                                        // a P&L vector's CURRENCY when it is not USD (converted)
-        if (live) {
+        if (live || kept) {
             if (fx == null) {
                 // a P&L vector's values are in its CURRENCY (2.9.4); REPORTING_CCY is a deprecated alias that must say the same
                 String ccy = currency(row);
@@ -377,7 +386,9 @@ final class VarIntake {
                         vector = usdPnl;
                         pvUsd = VarLoader.number(text(row, "PV")) * r.get().base();
                         vectorCcy = ccy;
-                        fxUsed.putIfAbsent(ccy, Map.of("source", r.get().source(), "base", r.get().base()));
+                        if (!kept) {
+                            fxUsed.putIfAbsent(ccy, Map.of("source", r.get().source(), "base", r.get().base()));
+                        }
                     }
                 }
             } else {
@@ -388,13 +399,17 @@ final class VarIntake {
                     ScenarioFx.pnlFromPv(base, values, length, r, usd);
                     vector = usd;
                     pvUsd = base * r.base();
-                    fxUsed.putIfAbsent(r.currency(), Map.of("source", r.source(), "base", r.base()));
+                    if (!kept) {
+                        fxUsed.putIfAbsent(r.currency(), Map.of("source", r.source(), "base", r.base()));
+                    }
                 }
             }
         }
-        if (why != null) {
-            reject(why, trade);
-            return;
+        if (why != null || kept && length != width) {
+            if (!kept) {
+                reject(why, trade);
+            }
+            return;                                                     // a matured record that would be refused: not kept either
         }
         for (int c = 0; c < texts.length; c++) {
             texts[c] = text(row, textColumns.get(c));
@@ -414,7 +429,7 @@ final class VarIntake {
         }
         if (fx != null) {
             numbers[VarBook.TRADE_NUMBERS.indexOf("PV")] = pvUsd;           // the trade's USD value today, as a P&L vector's PV
-            if (!intra) {
+            if (!intra && !kept) {
                 scenarioPv++;
                 if (pvTrades.size() < NOT_LIVE_KEPT && trade != null) {
                     pvTrades.add(trade);
@@ -422,7 +437,7 @@ final class VarIntake {
             }
         }
         if (supplied) {                                                 // a supplied position: as it is, never derived from trades
-            if (!intra) {
+            if (!intra && !kept) {
                 if (positionTrades.containsKey(trade)) {
                     liveNamed.add(trade);
                 } else {
@@ -460,6 +475,15 @@ final class VarIntake {
                             pnl == null ? null : pnl.clone()))});
             return;
         }
+        if (kept) {
+            if (maturedItems == null) {
+                maturedItems = new VarMaturedItems.Collector(textColumns);
+            }
+            maturedItems.add(trade, supplied ? VarInputs.POSITION : VarInputs.TRADE, maturity != null && maturity.length() >= 10
+                    ? maturity.substring(0, 10) : status, texts, numbers, vector, width);
+            return;
+        }
+        booked++;
         book.trade(trade, vector, length, texts, numbers);
     }
 
@@ -504,6 +528,12 @@ final class VarIntake {
     private boolean intradayOnly;
     private String setId;
     private String morningAt;
+
+    /** Keeps the matured records for the explorer's switch (a whole date's normal set; never a shard, the stress set or an update). */
+    VarIntake keepMatured() {
+        this.keepMatured = true;
+        return this;
+    }
 
     /** The date's scenario set: an intraday row of another is rejected ({@code DRS-5203}), never applied. */
     VarIntake scenarioSet(String id) {
@@ -692,7 +722,8 @@ final class VarIntake {
 
     Summary summary() {
         return new Summary(rejected, List.copyOf(rejections), excluded, List.copyOf(batches), List.copyOf(sets), rules.toString(), rules.digest(),
-                Map.copyOf(notLive), scenarioPv, java.util.Set.copyOf(pvTrades), inputs.describe(), Map.copyOf(positionTrades), full, oldPnlIds, VarMatured.ofIntake(maturedRecords, liveUnnamed));
+                Map.copyOf(notLive), scenarioPv, java.util.Set.copyOf(pvTrades), inputs.describe(), Map.copyOf(positionTrades), full, oldPnlIds, VarMatured.ofIntake(maturedRecords, liveUnnamed),
+                maturedItems == null ? null : maturedItems.build(booked));
     }
 
     /** The live supplied positions that name their trades, to those trades (the maturity check of the load). */
