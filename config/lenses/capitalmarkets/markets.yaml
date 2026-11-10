@@ -25,7 +25,7 @@ packs:
   enabled:                               # by module: a module that is off brings none of its packs
     core: [core, gleif]
     capitalmarkets: [us-equities, funds]
-    banking: [market-data]               # the market-data module's pack (the registry still counts it under banking's domain)
+    market-data: [market-data]           # the market-data module (Drishti Finance lists it beside capital-markets)
   allow-only: true                       # Admin -> Packs, Deploy archive and the registry refuse any other pack (DRS-1017)
 
 commands:                                # what people may type and see (command line, FUNC, type-ahead, examples, pages)

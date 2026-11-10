@@ -47,7 +47,7 @@ import org.springframework.test.web.servlet.MvcResult;
 @AutoConfigureMockMvc
 class BankingModuleOffTest {
 
-    static final List<String> BANKING_PACKS = List.of("trading", "market-data", "market-risk", "counterparty-risk");
+    static final List<String> BANKING_PACKS = List.of("trading", "market-risk", "counterparty-risk");   // market-data: a module of its own
 
     @Autowired ApplicationContext ctx;
     @Autowired AccessRegistry registry;
@@ -114,7 +114,7 @@ class BankingModuleOffTest {
     @Test
     void noPackOfItsDomainAndNoConnectorOfItsOwn() {
         List<String> loaded = packs.packs().stream().map(Pack::name).toList();
-        assertThat(loaded).contains("core", "world-economy").doesNotContainAnyElementsOf(BANKING_PACKS);
+        assertThat(loaded).contains("core", "world-economy", "market-data").doesNotContainAnyElementsOf(BANKING_PACKS);
         for (String c : List.of("var-engine", "var-positions", "var-pv-stream", "exposure-engine")) {
             assertThat(sources.connectorStatuses()).as(c).doesNotContainKey(c);
         }

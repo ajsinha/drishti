@@ -17,11 +17,21 @@
 
 ## Unreleased
 
+- **Content modules for the distributions** (2.9.11.i2 + i3, wave 2; [DISTRIBUTIONS.md section 10](docs/architecture/DISTRIBUTIONS.md)):
+  `market-data` (split out of banking; banking now requires it), `capital-markets` (us-equities and funds, and Drishti Finance's new
+  **Markets lens** with Home's Markets cards) and `economy` (the eight public-data packs and the World lens), each a folder under
+  `modules/` that the module tool packs into a `.dmod` passing the fifteen conformance checks. The module tool brings repository content in
+  through a module's `content.yaml` (a pack without its connector templates, a lens, a tutorial), reads a pack's own contracts
+  (`<kind>.contract.yaml`) in C8 and the keys of YAML files, not their sentences, in C9. The distributions' visibility filter reads the
+  modules' manifests: `config/distributions/modules.yaml` is gone (`kernel.yaml` holds the kernel's part; `DRISHTI_MODULE_MANIFESTS_DIR`).
+  Drishti Finance offers Markets and World (Markets first); the registry knows `market-data` as a module of its own, so the market data
+  stays on when banking or capital markets is switched off.
+
 - **Distributions: Drishti Risk, Drishti Finance, Drishti Genomics and Drishti All** (2.9.11.i2 + i3, wave 3, white label;
   [DISTRIBUTIONS.md](docs/architecture/DISTRIBUTIONS.md)). One build, one file per product: `config/distributions/drishti.<name>.yaml`
   (brand, theme, modules, lenses, menus, Home, Help), chosen by `--distribution <name|path>`, `DRISHTI_DISTRIBUTION` or
-  `drishti.distribution`; none named is Drishti All, exactly as before. The kernel and the console read the same file
-  (`config/distributions/modules.yaml` maps each module id to today's packs, words and engines until modules ship as `.dmod`s). What a
+  `drishti.distribution`; none named is Drishti All, exactly as before. The kernel and the console read the same file, and each module's
+  own manifest for what it holds (`modules/<id>/module.yaml`; `config/distributions/kernel.yaml` for the kernel's part). What a
   distribution leaves out does not exist in it: commands, words, menus, Home cards, Help and the catalogue the AI reads; Drishti Finance
   has no VaR or any risk number, Drishti Risk no economy command, market data is in both; a command typed anyway answers
   `DRS-4023 VRES is not in Drishti Finance`. Help is titled per distribution ("Drishti Risk Help") with its modules' guides and the
