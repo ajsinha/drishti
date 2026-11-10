@@ -6,7 +6,7 @@
 
 # Drishti documentation
 
-Most of these documents are also the console's in-app help (`/help`). The help centre lists **66 pages in 8 sections** (`drishti-console/config/help.yaml`; the table below is checked against it), each a tile of the help centre's front door that opens its own page: *Get started*, *Risk measures*, *Analytics and BI*, *Data*, *Build*, *Operate*, *Reference* and *Knowledge*; a ninth, *Internal*, is for administrators only.
+Most of these documents are also the console's in-app help (`/help`). The help centre lists **67 pages in 8 sections** (`drishti-console/config/help.yaml`; the table below is checked against it), each a tile of the help centre's front door that opens its own page: *Get started*, *Risk measures*, *Analytics and BI*, *Data*, *Build*, *Operate*, *Reference* and *Knowledge*; a ninth, *Internal*, is for administrators only.
 **The tutorials teach, the guides are reference:** every step-by-step walk-through lives in [tutorials/](tutorials/README.md); a guide says what a feature is, every option and every code, and points to the tutorial that
 shows it. The architecture documents, the per-plugin connector documents, the runbooks and the QA records stay in the repository (and open in the help centre when a page links to them), listed below. An address from
 before the consolidation (for example `/help/quickstart` or `/help/connector-kafka`) redirects to the page or section that took the subject over.

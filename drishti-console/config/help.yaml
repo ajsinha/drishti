@@ -55,6 +55,7 @@ sections:
     groups:
       - title: "Begin here"
         guides:
+          - { slug: how-it-fits, domain: core, doc: ../HOW_IT_FITS.md, title: "How Drishti fits together", icon: diagram-3, summary: "The kernel, the console and modules; what each YAML file and .dmod decides and how they point at each other; bindings, placement, deploy and distributions, with diagrams and VAR BANK traced through every file" }
           - { slug: user-guide, domain: core, doc: guides/USER_GUIDE.md, title: User guide, icon: terminal, summary: "Home and its fact of the day, the top bar, commands, type-ahead, every key, tables, filters, controls, layout mode, the Pivot tab, business dates, Compare, workspaces, monitors, alerts, a page on a phone, the ten themes and how to choose one, settings, and what changes (nothing) when several servers act as one." }
           - { slug: sharing-and-discussion, domain: core, title: Sharing and collaboration, icon: chat-square-text, summary: "Send a view with a note, read your inbox, discuss a number: what travels is your words and a link, and everyone sees the view with their own permissions." }
           - { slug: tutorials, domain: core, doc: tutorials/README.md, title: Tutorials, icon: mortarboard, kind: tutorial, summary: "{tutorials} hands-on tutorials with real screenshots, one worked example each: from your first 15 minutes to BI, AI, embedding, running it in production and a cluster of three servers." }
