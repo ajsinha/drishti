@@ -38,8 +38,11 @@ COLOURS = 128       # the golden's palette
 THRESHOLD = 40      # a pixel changed: any channel off by more than this (of 255)
 TOLERANCE = 0.002   # a page changed: more than this share of its pixels changed (per page in the test's KEY_SNAPSHOTS)
 
-#: masked on every page: the live clock, relative times and figures that move with the run
-MASK = ["[data-clock]", "[data-snapshot-mask]", "time.timeago", "[data-relative-time]"]
+#: masked on every page: the live clock, the business date box, Home's fact of the day (it changes on "Another fact" and by day), the
+#: VaR explorer's paint and server times, the data inbox's facts (its next cycle, the free disk, this host's name), relative times and
+#: anything marked data-snapshot-mask
+MASK = ["[data-clock]", "#asofDate", "[data-dyk]", "[data-vx-timing]", "[data-ready-facts]", "[data-inbox-next]", "[data-snapshot-mask]",
+        "time.timeago", "[data-relative-time]"]
 
 _STILL = """async () => {
   if (document.fonts && document.fonts.ready) { await document.fonts.ready; }

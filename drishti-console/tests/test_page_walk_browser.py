@@ -43,7 +43,8 @@ KEY_PAGES = ["/", "/var?scope=BANK", go("VAR BANK EXPLAIN"), "/pivot?preset=mr",
 THEMES = {"dark": "terminal", "light": "light"}
 #: the business date the page walk's lake ends on: fixed, so the visual snapshots' figures and dates are the same on every run
 SNAPSHOT_DATE = "2026-11-06"
-#: the visual snapshots: name -> (address, {tolerance, mask: more selectors covered}); a lens's home is opened by entering the lens
+#: the visual snapshots: name -> (address, {tolerance, mask: more selectors covered, wait: a script true once the page has drawn});
+#: a lens's Home is captured after entering the lens (its page asks to confirm: a POST), then the lens is left the same way
 KEY_SNAPSHOTS: dict[str, tuple[str, dict]] = {
     "home": ("/", {}),
     "home-risk": ("/lens/risk", {}),
@@ -54,13 +55,14 @@ KEY_SNAPSHOTS: dict[str, tuple[str, dict]] = {
     "var-bank": ("/var?scope=BANK", {}),
     "var-desk": ("/var?scope=DESK:DESK-RATES", {}),
     "var-basket": ("/var?scope=BASKET:PF-ASHA-UNWIND", {}),
-    "why-it-moved": (go("VAR BANK EXPLAIN"), {}),
-    "mr-cube": ("/pivot?preset=mr", {}),
+    "why-it-moved": (go("VAR BANK EXPLAIN"), {"wait": "(() => { const p = document.querySelector('[data-explain-page]'); const w = document.querySelector('[data-dx-part=\"why\"] [data-dx-why]');"
+                                                       " return p && p.dataset.state === 'ready' && w && w.dataset.painted === 'waterfall'; })()"}),
+    "mr-cube": ("/pivot?preset=mr", {"wait": "!/Computing the grid/i.test(document.querySelector('#main').innerText)"}),
     "pivot": ("/pivot", {}),
     "bi-report": ("/bi/r/file:report:desk-wall", {}),
     "frtb": (go("FRSA BANK"), {}),
     "simm": (go("SIMM"), {}),
-    "exposure": ("/exposure", {}),
+    "exposure": (go("EXP"), {}),
     "form": ("/forms", {}),
     "trades": (go("TRD"), {}),
     "curves": (go("CRV"), {}),
@@ -127,6 +129,24 @@ def _assert_clean(results: list[dict]) -> None:
     assert not bad and not slow, "\n".join(["faults:"] + bad + [f"over {BUDGET_S:.0f} s:"] + slow)
 
 
+def _until(pg, expr: str, timeout_s: float = 60) -> None:
+    """Waits until ``expr`` is true on the page (evaluated by the browser's debugger, which the page's CSP allows; a page-side poll would eval)."""
+    import time
+
+    deadline = time.monotonic() + timeout_s
+    while not pg.evaluate(expr):
+        assert time.monotonic() < deadline, f"the page did not draw in {timeout_s:.0f} s: {expr[:80]}"
+        pg.wait_for_timeout(100)   # wait-ok: polling a page-side condition the CSP keeps from wait_for_function
+
+
+def _confirm(pg, base: str, settle: bool = True) -> None:
+    """Presses the confirming page's button (entering or leaving a lens is a POST) and waits for the page it leads to."""
+    with pg.expect_navigation(wait_until="load"):
+        pg.locator("form[data-confirm-post] button[type=submit]").first.click()
+    if settle:
+        pg.evaluate("() => window.Drishti && window.Drishti.settled ? window.Drishti.settled({quiet: 50, timeout: 60000, animations: false}) : null")
+
+
 def test_the_key_pages_look_as_approved(stack, browser, request, tmp_path):
     """Each key page at 1366 and 1920 px, dark and light, against its golden image; first in the file, so what the walk opens later
     (recent pages, workspaces) never shows in it. ``--update-snapshots`` writes the goldens; the drill never does."""
@@ -142,13 +162,23 @@ def test_the_key_pages_look_as_approved(stack, browser, request, tmp_path):
             pg = new_page(browser, width=width)
             try:
                 pg.context.add_init_script("try { localStorage.setItem('drishti.theme', %r); } catch (e) {}" % THEMES[theme])
+                pg.goto(f"{base}/asof?d={SNAPSHOT_DATE}&next=/")   # the business date picked, not the server's today
                 for name, (href, opts) in KEY_SNAPSHOTS.items():
                     r = open_page(pg, base, href)
+                    if href.startswith("/lens/"):
+                        _confirm(pg, base)
+                    try:   # the page's last calls answered (a header's figures, a grid's rows), then its own condition
+                        pg.wait_for_load_state("networkidle", timeout=20_000)
+                    except Exception:  # noqa: BLE001 - a page that keeps a stream open: its own wait decides
+                        pass
+                    if opts.get("wait"):
+                        _until(pg, opts["wait"])
                     faults += [f"{name}: {f}" for f in r["faults"]]
                     pg.evaluate("(t) => document.documentElement.setAttribute('data-theme', t)", THEMES[theme])
                     png = snapshots.capture(pg, opts.get("mask", []))
                     if href.startswith("/lens/"):
-                        pg.goto(base + "/lens/leave")
+                        open_page(pg, base, "/lens/leave")
+                        _confirm(pg, base, settle=False)
                     if updating:
                         snapshots.update(name, width, theme, png)
                         continue
