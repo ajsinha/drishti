@@ -309,4 +309,9 @@ test('drishti-risk\'s VaR hierarchy for a screen: its fields in order, its label
   assert.equal(R.limitUseText(undefined, {}), 'no limit');
   assert.equal(R.VAR_TREE_MEASURES[0].format(1234567), R.riskMoney(1234567));
   assert.throws(() => R.varHierarchyTree([], { fields: ['PNL'] }), /no measure PNL/);
+  // the VaR page's matured-items switch adds its own column: the tree keeps drawing (it vanished when the switch was turned on)
+  const mt = R.varHierarchyTree([{ ID: 'BANK', LABEL: 'Bank', VAR: 10, MATURED: 2 }], { fields: ['VAR', 'MATURED', 'ES'], measures: { MATURED: { label: 'of which matured', childSum: false, column: { width: 96 } } } });
+  assert.deepEqual(mt.data.measures.map((m) => m.field), ['VAR', 'MATURED', 'ES']);
+  assert.equal(mt.data.measures[1].label, 'of which matured');
+  assert.equal(mt.data.measures[1].column.width, 96);
 });

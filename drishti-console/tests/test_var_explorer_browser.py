@@ -672,6 +672,9 @@ def test_the_matured_items_switch_is_off_on_open_labels_every_figure_and_goes_ba
     assert "INCLUDES MATURED" in pg.locator('.vx-tile[data-tile="0"]').inner_text()
     assert pg.locator('.vx-tile[data-tile="0"] .v').inner_text() == official      # none on the demo date: the official figure
     assert pg.locator("[data-vx-method]").inner_text().startswith("Includes no matured items.")
+    # the scope tree keeps drawing, with the switch's own column (it vanished: the tree refused the screen's MATURED measure)
+    wait(pg, "document.body.innerText.indexOf('of which matured') >= 0", 60)
+    assert "has no measure" not in pg.locator("body").inner_text()
     wait(pg, "document.querySelector('[data-var]').dataset.painted === 'BANK'", 60)
     with pg.expect_download() as dl:
         pg.locator("[data-vx-csv-path]").click()

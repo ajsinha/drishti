@@ -16939,7 +16939,7 @@ The options of a VaR hierarchy tree.
 | Parameter | Type | Meaning |
 |---|---|---|
 | `rows` | `Object[]` | the nodes: {ID, PARENT, LABEL, LEVEL} and any figures the server sent with them (VAR, ES, LIMIT, LIMIT_USE, POSITIONS, NOTIONAL), LIMIT_STATUS (the server's within, near or breach: the bar's tone), LIMIT_NOTE (why a node has no limit use), lazy (its children come later, loadChildren) and any field of the screen's own; the books' POSITIONS and NOTIONAL roll up, the risk figures never do |
-| `[o]` | `Object` | serverMeasures (the non-additive figures of the nodes that lack them), explain, link, editable, proposalNote, mode (default grid), density (default terminal), title, status; fields (the measures shown, in order: default all), measures (by field, what a screen changes of one: its label, childSum, its column); and any TreeOptions (chrome, grid, loadChildren ...) |
+| `[o]` | `Object` | serverMeasures (the non-additive figures of the nodes that lack them), explain, link, editable, proposalNote, mode (default grid), density (default terminal), title, status; fields (the measures shown, in order: default all), measures (by field, what a screen changes of one: its label, childSum, its column; a field not built in is the screen's own measure when it has a label); and any TreeOptions (chrome, grid, loadChildren ...) |
 
 Returns `Object`: TreeOptions (drishti-tree).
 
