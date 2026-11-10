@@ -36,7 +36,7 @@ import java.util.function.Consumer;
  */
 public interface KindProvider {
 
-    /** The provider's name, unique in the kernel ({@code var-positions}): the source a document's provenance names. */
+    /** The provider's name, unique in the kernel ({@code qc-samples}): the source a document's provenance names. */
     String name();
 
     /** The kinds it computes. */

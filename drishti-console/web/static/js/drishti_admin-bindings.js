@@ -35,10 +35,7 @@
   }
 
   function send(action, body) {
-    return fetch('/admin/api/bindings/' + action, { method: 'POST', credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(body || {}) })
-      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { ok: r.ok, body: j }; }); })
-      .catch(function () { return { ok: false, body: { detail: 'the console could not reach the server' } }; })
+    return window.Drishti.elements.core.api.send('POST', '/admin/api/bindings/' + action, body || {})   // drishti-core's client: never rejects
       .then(function (res) {
         var j = res.body || {};
         if (!res.ok) {

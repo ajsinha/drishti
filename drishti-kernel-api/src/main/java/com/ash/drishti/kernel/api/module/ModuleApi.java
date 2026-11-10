@@ -30,6 +30,6 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface ModuleApi {
 
-    /** The namespace: {@code risk} for {@code /api/v1/risk/**}. */
+    /** The namespace: {@code genomics} for {@code /api/v1/genomics/**}. */
     String value();
 }
