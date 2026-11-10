@@ -52,6 +52,7 @@ public final class BindingsFile {
             """;
 
     private final Path file;
+    private final java.util.concurrent.locks.ReentrantLock lock = new java.util.concurrent.locks.ReentrantLock();   // file I/O under a lock that never pins a virtual thread
 
     public BindingsFile(Path file) {
         this.file = file;
@@ -114,7 +115,8 @@ public final class BindingsFile {
     }
 
     /** Writes {@code b}, keeping the previous file as {@code bindings.yaml.bak}. */
-    public synchronized void write(Bindings b) {
+    public void write(Bindings b) {
+        lock.lock();
         try {
             Files.createDirectories(file.toAbsolutePath().getParent());
             if (Files.isRegularFile(file)) {
@@ -129,6 +131,8 @@ public final class BindingsFile {
             }
         } catch (IOException e) {
             throw new UncheckedIOException(e);
+        } finally {
+            lock.unlock();
         }
     }
 
