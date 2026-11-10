@@ -2529,10 +2529,10 @@ Drishti finds plugins with the JDK's `ServiceLoader` (`PluginDiscovery` in `dris
    ```
 
    The class needs a public no-argument constructor.
-2. Make the jar visible, in either of two ways. On the **class path** of the server (a Maven dependency of
-   `drishti-server`, as the shipped plugins are), or in a folder named by `drishti.sources.plugin-dir`
-   (`DRISHTI_PLUGIN_DIR`): every `*.jar` in it is loaded in **its own class loader**, so its libraries cannot clash
-   with the server's, and a jar added there needs no rebuild of the server, only a restart.
+2. Make the jar visible: put it in the server's **lib folder** (`drishti.lib.path`, default `<data folder>/lib`). Every jar there
+   is loaded at start into one lib class loader under the kernel's (it never replaces a kernel class); a jar added needs no rebuild,
+   only a restart. A shipped plugin is a Maven dependency of `drishti-server` instead. A connector that only one module's kinds use
+   ships **inside that module** (the genomics module's VCF reader, section 1.8): it goes with the module.
 
 A plugin whose name no connector uses and that is not listed under `plugins` starts with empty settings, and, if it
 needs one, stays idle (see below). `GET /api/v1/sources` lists the running connectors; the failures are under
@@ -2549,7 +2549,8 @@ each, which the server writes to the file at the first start ([DATA_GUIDE.md sec
 # application.local.yaml: the server's own settings
 drishti:
   sources:
-    plugin-dir: ./plugins                       # extra jars, each in its own class loader
+    lib:
+      path: ./data/lib                          # extra jars (connectors, JDBC drivers), in one lib class loader
 ```
 
 ```yaml
@@ -2855,7 +2856,6 @@ mkdir -p plugins-extra && cp docs/guides/examples/connector/target/drishti-examp
 # application.local.yaml
 drishti:
   sources:
-    plugin-dir: ./plugins-extra
     routes: { trade: desk-days, counterparty: desk-days }
 ```
 

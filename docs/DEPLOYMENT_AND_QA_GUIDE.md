@@ -149,6 +149,7 @@ Everything has a working default; a site changes only what differs. Settings com
 | **Modules** | `config/modules/<module>.yaml` (`enabled: true/false`), or `DRISHTI_MODULES_<MODULE>_ENABLED` | banking, capitalmarkets and economy on; the core is always on |
 | **Lenses** | `config/lenses/<module>/<lens>.yaml`; the lenses each person may open: `DRISHTI_LENSES` | risk, trading, market (banking), world (economy) |
 | **Engines** | `config/engines/<engine>.yaml`, **Admin → Engines** | VaR, exposure, FRTB-SA, SIMM, the MR cube on; the data inbox off |
+| **Your jars** (JDBC drivers, connector plugins) | the lib folder, `DRISHTI_LIB_PATH` (one place; jars found in the older `external_lib/java` or `drishti.sources.plugin-dir` are moved into it once, listed in `lib/moved-<date-time>.bak`, and Health says so) | `<data>/lib` |
 | **Secrets** | the environment only, never a file in `config/` | none: set them ([below](#secrets)) |
 
 **Modules** (YAML; `POST /api/v1/admin/modules` writes the same file; a change takes effect at the next start):
