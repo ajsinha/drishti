@@ -41,6 +41,20 @@
     return out;
   };
 
+  /** The one Explain › (drishti-insight) of a visual whose one row is a VaR or ES of a scope (the var-result kind: CANONICAL or SCOPE,
+      BUSINESS_DATE, VAR or ES); null otherwise. */
+  B.varExplain = (res) => {
+    const E = window.Drishti && window.Drishti.Explain;
+    if (!E || !res || !Array.isArray(res.columns) || res.rowCount !== 1 || !res.rows || !res.rows.length) { return null; }
+    const names = res.columns.map((c) => String(c.name || '').toUpperCase()), row = res.rows[0];
+    const at = (n) => { const i = names.indexOf(n); return i < 0 ? undefined : (Array.isArray(row) ? row[i] : row[res.columns[i].name]); };
+    const scope = at('CANONICAL') || at('SCOPE'), measure = names.indexOf('VAR') >= 0 ? 'var' : names.indexOf('ES') >= 0 ? 'es' : null;
+    if (!scope || !measure) { return null; }
+    const req = { kind: 'var', measure: measure, scope: String(scope) };
+    if (at('BUSINESS_DATE')) { req.date = String(at('BUSINESS_DATE')).slice(0, 10); }
+    return E.link(req, { cls: 'bi-vis-explain' });
+  };
+
   B.frame = function (spec, o) {
     o = o || {};
     const title = h('h3', { class: 'bi-vis-title', text: spec.title || '' });
@@ -91,6 +105,8 @@
               foot.appendChild(more);
             }
           }
+          const ex = B.varExplain(res);                                          // a VaR or ES of one scope: the one Explain › (VAR_GUIDE.md 3.11)
+          if (ex) { foot.appendChild(document.createTextNode(' · ')); foot.appendChild(ex); }
           const none = B.noAccess(m);
           if (none.length) {                                                   // the reader's role has no row rule on a dataset: said, never "no rows for this selection"
             const words = 'Your role has no rows of ' + none.join(', ') + ' in this model';

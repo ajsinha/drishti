@@ -107,7 +107,7 @@
 .dg-layout-panel .dg-main.dg-panes-closed { grid-template-columns: minmax(0, 1fr) 28px; }
 .dg-gridarea { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
 .dg-drawer { border-left: 1px solid var(--d-border); overflow: auto; padding: 12px 14px; background: var(--d-surface); position: relative; }
-.dg-drawer[hidden], .dg-card[hidden], .dg-side[hidden], .dg-wells[hidden] { display: none; }
+.dg-drawer[hidden], .dg-card[hidden], .dg-side[hidden], .dg-wells[hidden], .dg-split[hidden] { display: none; }
 
 /* the grid */
 .dg-scroll { flex: 1; min-height: 0; overflow: auto; position: relative; outline: none; font-variant-numeric: tabular-nums; }

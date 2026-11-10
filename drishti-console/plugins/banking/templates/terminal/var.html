@@ -41,7 +41,8 @@
     <span class="vx-cmd mono" data-vx-cmd>VAR {{ scope | replace(':', ' ') }}</span>
     <span>Business date <b class="mono" data-vx-date>…</b></span>
     <span>Scenario set <b class="mono" data-vx-set>…</b></span>
-    <span>Data <b class="mono" data-vx-version>…</b></span>
+    <details class="vx-ver"><summary title="The data versions this figure was computed from" aria-label="Data versions">ⓘ <span>data versions</span></summary>
+      <div class="vx-ver-pop" role="note">Data <b class="mono" data-vx-version>…</b></div></details>
     <span class="vx-intraday" data-vx-intraday role="status" hidden></span>
     <span class="vx-timing mono" data-vx-timing></span>
     <a class="vx-help" href="/help/context/var" title="Help: the VaR guide (F1)" aria-label="Help: the VaR guide" data-vx-help><i class="bi bi-question-circle" aria-hidden="true"></i></a>
@@ -97,12 +98,11 @@
     </div>
     {% endfor %}
     <button type="button" class="vx-link vx-newb" data-vx-basket-open{{ part(PP, 'basket') }} title="Construct your basket: the sheet (Alt+B)" aria-keyshortcuts="Alt+B">+ New basket <span class="tool-count" data-basket-count hidden>0</span></button>
-    <span class="vx-keys" aria-hidden="true"><b>B</b> system <b>M</b> mine <b>E</b> explain</span>
+    {# the matured-items switch (VAR_GUIDE.md, "Matured items"; the approved mock-up var-matured A): drishti-inputs' switch, off whenever the page opens #}
+    <drishti-switch class="vx-matured" data-vx-matured label="Include matured items" help="Adds back the items that matured before the business date, at the input's grain. This view only: the official record, captures and limit use leave them out."></drishti-switch>
     <a class="vx-link vx-backtest" data-vx-backtest href="/var/backtesting?scope={{ (scope or 'BANK')|urlencode }}" title="This scope's backtest: its VaR against the P&amp;L of the last 250 business days, the exceptions and the zone (VAR &lt;scope&gt; BACKTEST)">Backtest ›</a>
     {% if mr_cube %}<a class="vx-link vx-cube" data-vx-cube href="/pivot?preset=mr&amp;text={{ (scope or 'BANK')|urlencode }}" title="This scope in the MR cube: the Pivot's market-risk preset, by desk and risk class with the right totals (MCUBE &lt;scope&gt;)">MR cube ›</a>{% endif %}
     <button type="button" class="vx-how" data-vx-whatif{{ part(PP, 'whatif') }} title="Pre-deal what-if: add a copy of a booked trade, scaled, to this scope's basket">What-if…</button>
-    {# the matured-items switch (VAR_GUIDE.md, "Matured items"; the approved mock-up var-matured A): drishti-inputs' switch, off whenever the page opens #}
-    <drishti-switch class="vx-matured" data-vx-matured label="Include matured items" help="Adds back the items that matured before the business date, at the input's grain. This view only: the official record, captures and limit use leave them out."></drishti-switch>
     <button type="button" class="vx-how" data-vx-explain data-explain-primary aria-keyshortcuts="E" title="Explain the VaR: the formula with its values, the inputs and lineage, why it moved, the workbook (E)">Explain ›</button>
   </div>
   <div class="vx-matured-band" data-vx-matured-band role="status" hidden><span class="vx-matured-chip">INCLUDES MATURED</span>
@@ -116,6 +116,7 @@
       <div class="vx-ph"><h2>Scopes</h2>
         <drishti-select class="vx-select" data-vx-hierarchy label="Hierarchy"><option value="{{ hierarchy or 'MGMT' }}">{{ hierarchy or 'MGMT' }}</option></drishti-select>
         <span class="vx-fresh" data-vx-fresh="tree">loading…</span></div>
+      <nav class="vx-tree-crumb" data-vx-tree-crumb aria-label="The tree's scope" hidden></nav>
       <div class="vx-tree" data-vx-tree aria-label="Scope tree"></div>
     </aside>
 

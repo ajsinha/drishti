@@ -165,7 +165,7 @@ DAY = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
 def explain_command(words: list[str], user: str) -> str | None:
-    """Where ``VAR EXPLAIN <scope> [from] [to]`` (or ``VAR <scope> EXPLAIN [from] [to]``) goes: the one Explain's page of the scope's VaR
+    """Where ``VAR EXPLAIN <scope> [from] [to]`` (or ``VAR <scope> EXPLAIN [from] [to]``, or ``VAR <scope> EXPLAIN vs <date>``) goes: the one Explain's page of the scope's VaR
     (``/explain?kind=var``, SHARED_SCREENS.md section 3) at **Why it moved** (VAR_GUIDE.md section 3.11), the dates in the link (``from``,
     ``to``); no scope: the bank. None when the command does not ask for the explanation."""
     w = [x for x in words if x.upper() != "<GO>"]
@@ -174,6 +174,8 @@ def explain_command(words: list[str], user: str) -> str | None:
     dates = []
     while len(w) > 2 and DAY.match(w[-1]) and len(dates) < 2:
         dates.insert(0, w.pop())
+    if len(dates) == 1 and len(w) > 2 and w[-1].upper() == "VS":   # VAR <scope> EXPLAIN vs <date>: the compare date (from)
+        w.pop()
     up = [x.upper() for x in w]
     if up[1] == "EXPLAIN":
         rest = w[2:]

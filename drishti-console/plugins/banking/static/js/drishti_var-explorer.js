@@ -54,6 +54,8 @@
   function storedCcy() { try { return sessionStorage.getItem(CCY_KEY) || ""; } catch (e) { return ""; } }
   var S = { scope: root.dataset.scope || "BANK", hierarchy: root.dataset.hierarchy || "MGMT", tab: root.dataset.tab || "path", by: "child", page: 0,
             asOf: params.get("asOf") || "", tree: null, open: {}, children: {}, head: null, seq: 0, user: root.dataset.user || "",
+            // the tree shows only the chosen scope: a basket's own tree (within), else the node it is rooted at (none: the whole tree)
+            within: null, rootNode: null,
             admin: root.dataset.admin === "true",            // an administrator: Delete on every basket listed (the server checks again)
             ccy: (root.dataset.ccy || params.get("ccy") || storedCcy() || "USD").toUpperCase(),
             // the lens (2.9.7): "" is the default (1-day; the setting's 10-day method; the configured confidences)
@@ -252,6 +254,7 @@
       if (seq !== S.seq) return;
       S.head = d;
       if (retiredNotice(scope, d)) return;
+      scopeTree(d);
       renderHeadline(d);
       renderNotices(d);
       if (B) B.mirror(d);
@@ -442,6 +445,9 @@
     var v = $('[data-vx-tiles] [data-tile="0"] .v'), es = $('[data-vx-tiles] [data-tile="1"] .v');
     if (v) E.bind(v, explainReq("var"));
     if (es) E.bind(es, explainReq("es"));
+    [[v, "var"], [es, "es"]].forEach(function (x) {                // the one Explain › on each tile (ui-guarded: every VaR and ES figure)
+      if (x[0] && !x[0].parentNode.querySelector("[data-explain-link]")) x[0].parentNode.appendChild(E.link(explainReq(x[1]), { cls: "vx-tile-ex" }));
+    });
   }
 
   // ---------------------------------------------------------------------------------------------------------------- P&L path
@@ -926,7 +932,7 @@
     fresh("tree", "loading…", "computing");
     S.treeLoading = true;
     box.setAttribute("aria-busy", "true");
-    return api("tree", { hierarchy: S.hierarchy }).then(function (d) {
+    return api("tree", { hierarchy: S.hierarchy, within: S.within || "" }).then(function (d) {
       if (seq !== S.treeSeq) return;
       S.treeLoading = false;
       box.removeAttribute("aria-busy");
@@ -1001,13 +1007,72 @@
       partRows(id, kids).forEach(function (r) { out.push(r); if (r.lazy) r.lazy = parts(r.ID, r.scope); });
       return false;
     }
+    var top = treeRoot(), keep = null;
+    if (top) {                                         // a node chosen: it and below (the server's rows come parent first)
+      keep = {};
+      keep[top] = 1;
+      (S.tree.nodes || []).forEach(function (n) { if (n.parent && keep[n.parent]) keep[n.id] = 1; });
+    }
     (S.tree.nodes || []).forEach(function (n) {
+      if (keep && !keep[n.id]) return;
       var r = nodeRow(n);
+      if (n.id === top) r.PARENT = null;
       out.push(r);
       if (n.level === "book" && n.expandable) r.lazy = parts(n.id, n.scope);
     });
     return out;
   }
+  /** The node the tree is rooted at: the chosen node when it is in the tree and not its root (none: the whole tree, or a basket's). */
+  function treeRoot() {
+    if (S.within || !S.rootNode || !S.byId || !S.byId[S.rootNode] || !S.byId[S.rootNode].parent) return null;
+    return S.rootNode;
+  }
+
+  /** The tree shows only the chosen scope (VAR_GUIDE.md section 3.2; the approved mock-up docs/lenses/mockups/var/var-page.html): the
+      bank its whole tree, a node that node and below with a breadcrumb up, a system basket or a saved basket its own positions grouped by
+      the chosen hierarchy (the engine's GET /tree?within=, figures computed in Java); a position, a trade or a part of the basket keeps
+      the tree it was picked from. */
+  function scopeTree(d) {
+    if (d.kind === "portfolio" || d.kind === "basket") {
+      if (S.within !== d.canonical) { S.within = d.canonical; S.rootNode = null; S.tree = null; S.children = {}; loadTree(); }
+      return;
+    }
+    if (d.kind !== "node") return;
+    var was = S.within;
+    S.within = null;
+    S.rootNode = d.node || null;
+    if (was) { S.tree = null; S.children = {}; loadTree(); } else if (S.tree) renderTree();
+  }
+
+  /** The tree's own breadcrumb: up from the chosen node (each a link), or the basket's "by <hierarchy> · All of the bank". */
+  function renderTreeCrumb() {
+    var c = $("[data-vx-tree-crumb]");
+    if (!c) return;
+    c.textContent = "";
+    var top = treeRoot();
+    if (S.within) {
+      c.appendChild(h("span", "vx-chip amber", "Basket"));
+      c.appendChild(h("span", null, " " + ((S.tree && S.tree.withinLabel) || S.within) + " · by " + ((S.tree && S.tree.title) || S.hierarchy) + " · "));
+      var all = h("a", "vx-link", "All of the bank");
+      all.href = "?scope=BANK";
+      all.setAttribute("data-vx-all-bank", "");
+      all.addEventListener("click", function (ev) { ev.preventDefault(); select("BANK"); });
+      c.appendChild(all);
+    } else if (top) {
+      var chain = [], n = S.byId[top];
+      while (n) { chain.unshift(n); n = n.parent ? S.byId[n.parent] : null; }
+      chain.forEach(function (x, i) {
+        if (i) c.appendChild(h("span", "sep", " › "));
+        if (i === chain.length - 1) { c.appendChild(h("b", null, x.name)); return; }
+        var a = h("a", "vx-link", x.name);
+        a.href = "?scope=" + encodeURIComponent(x.scope);
+        a.addEventListener("click", function (ev) { ev.preventDefault(); select(x.scope); });
+        c.appendChild(a);
+      });
+    }
+    c.hidden = !c.childNodes.length;
+  }
+
   /** drishti-tree's loadChildren: a part's children, asked the first time its row opens (an answer for an older lens or currency is dropped). */
   function loadChildren(req) {
     var scope = req.data.scope, box = S.children, have = box[scope];
@@ -1034,8 +1099,18 @@
     } else {
       s.appendChild(document.createTextNode(r.name));
     }
-    s.appendChild(addButton(r.scope, { type: r.kind === "position" ? "POS" : r.kind === "trade" ? "TRD" : r.scope.split(":")[0], id: r.scope.replace(/^[A-Z]+:/, ""), name: r.name }));
+    if (r.scope && r.scope.charAt(0) !== "(") s.appendChild(addButton(r.scope, { type: r.kind === "position" ? "POS" : r.kind === "trade" ? "TRD" : r.scope.split(":")[0], id: r.scope.replace(/^[A-Z]+:/, ""), name: r.name }));
     return s;
+  }
+
+  /** Explain › on a row (the one control, drishti-insight's Explain.link): shown on hover and on the chosen row; opens Why it moved. */
+  function explainColumn() {
+    return { id: "explain", header: "", width: 78, sortable: false, valueGetter: function () { return ""; },
+      cellRenderer: function (c) {
+        var E = window.Drishti.Explain;
+        if (!E || !c.row.scope) return null;
+        return E.link(explainReq("var", c.row.scope), { cls: "vx-ex", title: "Why " + c.row.name + "'s VaR moved: the steps, the contributors, the formula (E)" });
+      } };
   }
 
   /** The tree's options: drishti-risk's VaR hierarchy with this screen's columns, its look of a scope's row and its lazy parts. */
@@ -1049,7 +1124,7 @@
                   ES: { label: "ES", column: { width: 80, cellClass: function () { return R.TONES.muted; } } },
                   LIMIT_USE: { label: "Limit", column: { width: 96, sortable: false } } },
       grid: { fitRows: 40, widths: widths, labelColumn: { header: "Scope", width: 230, pinned: "left", cellRenderer: nameCell },
-        columns: P ? P.treeColumns() : [],                       // the Parametric and Gap columns, each with its ?
+        columns: (P ? P.treeColumns() : []).concat([explainColumn()]),   // the Parametric and Gap columns, each with its ?; Explain ›
         rowClass: function (r) { return r.scope && r.scope === S.scope ? "vx-current" : null; },
         rowData: function (r) { return { scope: r.scope || null, current: r.scope ? String(r.scope === S.scope) : null }; },
         onResize: function (w) { try { localStorage.setItem(wkey, JSON.stringify(w)); } catch (e) { /* kept for this page only */ } } } });
@@ -1063,6 +1138,7 @@
     // the columns' widths a person set, kept per mode in this browser (drishti-grid's own resize handles)
     var wkey = "drishti.var.tree.widths." + (pcols ? "parametric" : "historical"), sig = wkey + "|" + S.ccy + (S.matured ? "|matured" : "");
     var el = t.querySelector(":scope > drishti-tree"), opts = treeOptions(treeRows(), pcols, wkey);
+    renderTreeCrumb();
     if (el && el.tree && el.dataset.sig === sig) { el.tree.setData(opts.data); markTree(); return; }
     if (!el) { el = document.createElement("drishti-tree"); t.textContent = ""; t.appendChild(el); }
     el.dataset.sig = sig;

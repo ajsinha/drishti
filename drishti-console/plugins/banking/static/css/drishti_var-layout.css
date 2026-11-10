@@ -53,8 +53,6 @@
 .vx-pick-new { display: inline-block; margin: var(--d-sp-6) var(--d-sp-2) 0; font-size: var(--d-fs-12_5); text-decoration: none; }
 .vx-newb { text-decoration: none; white-space: nowrap; position: relative; }
 .vx-newb .tool-count { margin-left: var(--d-sp-4); padding: 0 var(--d-sp-5); border-radius: var(--d-radius-8); background: var(--d-accent); color: var(--d-on-accent); font: 600 var(--d-fs-10_5) var(--d-font-sans); }
-.vx-keys { color: var(--d-muted); font-size: var(--d-fs-11); white-space: nowrap; margin-left: auto; }
-.vx-keys b { font: 600 var(--d-fs-10_5) var(--d-font-mono); padding: 0 var(--d-sp-4); border: 1px solid var(--d-border); border-radius: var(--d-radius-3); color: var(--d-ink); }
 .vx-how { padding: var(--d-sp-3) var(--d-sp-10); border: 1px solid var(--d-link); border-radius: var(--d-radius-12); background: none; color: var(--d-link); font: var(--d-fs-12) var(--d-font-sans);
   white-space: nowrap; cursor: pointer; }
 .vx-how.on { background: var(--d-accent); border-color: var(--d-accent); color: var(--d-on-accent); }
@@ -76,7 +74,25 @@
   .vx-pick-btn { height: 44px; }
   .vx-drop { position: absolute; left: 0; right: 0; width: auto; max-width: none; }
   .vx-opt { min-height: 44px; }
-  .vx-keys { display: none; }
   .vx-newb, .vx-how { min-height: 44px; display: inline-flex; align-items: center; }
   .vx-how { margin-left: auto; }
 }
+
+/* The tree shows only the chosen scope (the approved mock-up docs/lenses/mockups/var/var-page.html): its own breadcrumb (up from a
+   node, or a basket's "All of the bank"); Explain › on a row shows on hover and on the chosen row (and when focused) */
+.vx-tree-crumb { font-size: var(--d-fs-12); color: var(--d-muted); margin: 0 0 var(--d-sp-6); }
+.vx-tree-crumb[hidden] { display: none; }
+.vx-tree-crumb a { text-decoration: none; }
+.vx-tree .vx-ex { visibility: hidden; white-space: nowrap; }
+.vx-tree .dg-row:hover .vx-ex, .vx-tree .dg-selected .vx-ex, .vx-tree .vx-current .vx-ex, .vx-tree .vx-ex:focus { visibility: visible; }
+@media (hover: none) { .vx-tree .vx-ex { visibility: visible; } }
+
+/* the data versions behind an ⓘ in the status strip */
+.vx-ver { position: relative; }
+.vx-ver > summary { cursor: pointer; list-style: none; color: var(--d-muted); white-space: nowrap; }
+.vx-ver > summary::-webkit-details-marker { display: none; }
+.vx-ver-pop { position: absolute; z-index: 30; top: 100%; left: 0; margin-top: var(--d-sp-4); padding: var(--d-sp-6) var(--d-sp-8); max-width: min(520px, 90vw);
+  background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius-4); overflow-wrap: anywhere; }
+
+/* one toolbar row on a desktop: baskets, the matured switch, Backtest, MR cube, What-if, Explain */
+@media (min-width: 1200px) { .vx-bar { flex-wrap: nowrap; } .vx-bar > * { flex-shrink: 0; } }
