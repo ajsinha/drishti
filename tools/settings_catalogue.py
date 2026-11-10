@@ -386,7 +386,7 @@ def engine_rows() -> tuple[list[Row], list[str]]:
     rows: list[Row] = []
     problems: list[str] = []
     catalogue = []                                         # each module's engines (its jar's META-INF/drishti/engines.yaml) first, then the core's
-    for module_jar in sorted(ROOT.glob("drishti-*/src/main/resources/META-INF/drishti/engines.yaml")):
+    for module_jar in sorted([*ROOT.glob("drishti-*/src/main/resources/META-INF/drishti/engines.yaml"), *ROOT.glob("modules/*/*/src/main/resources/META-INF/drishti/engines.yaml")]):
         for e in yaml.safe_load(module_jar.read_text(encoding="utf-8")).get("engines") or []:
             catalogue.append({**e, "_jar": module_jar.parents[2] / "engines"})
     catalogue += yaml.safe_load((ENGINES_JAR / "catalogue.yaml").read_text(encoding="utf-8")).get("engines") or []

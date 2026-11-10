@@ -60,7 +60,6 @@
     <module>drishti-dataload</module>
     <module>drishti-net</module>
     <module>drishti-compute</module>
-    <module>drishti-compute-banking</module>
     <module>drishti-bicompute</module>
     <module>drishti-flight</module>
     <module>drishti-tables</module>
@@ -85,8 +84,9 @@
     <module>plugins/drishti-plugin-s3</module>
     <module>docs/guides/examples/connector</module>
     <module>drishti-server</module>
-    <module>drishti-banking</module>
+    <module>modules/banking</module>
     <module>drishti-app</module>
+    <module>drishti-kernel-app</module>
     <module>drishti-it</module>
     <module>drishti-benchmarks</module>
   </modules>

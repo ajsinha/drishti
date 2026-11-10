@@ -35,7 +35,7 @@ Every number below that is not a hand-made example is the engine's on the demo l
 (`--exposure demo`): the run `XR-2026-09-30-01` (business date 2026-09-30, 200 paths, 24 grid dates of which 13 primary) generated for
 every netting set of 23 of the 24 counterparties (74 netting sets, 8,022 live trades), on the data's own dates (`--as-of data`).
 The committed run of eight netting sets (523 trades) is a subset with the same figures; the netting-set and CP-ALDERSHOT figures are also those of
-`drishti-compute-banking/src/test/resources/ccr/reference.json`, which `ExposureParityTest` checks the Java engine against (to 1e-6 USD on the
+`modules/banking/banking-compute/src/test/resources/ccr/reference.json`, which `ExposureParityTest` checks the Java engine against (to 1e-6 USD on the
 heap). [Section 23](#23-test-data-and-generators) says how the data is made.
 
 ## Contents
@@ -1150,7 +1150,7 @@ paths (`copyOf` reads the booked trade's paths on the run from the lake; `mtm` o
 DRS-5442`), reads the scope and each joined netting set as the person (`NSET:<id>`: their entitlements apply; a set the scope does not
 cover whole `400 DRS-5440`; at most 50 sets), computes with `ExposureWhatIfMath` and audits the ask (`ccr-whatif`). Deterministic, nothing
 stored, no compute pool. Tests: `ExposureWhatIfMathTest` (the worked example of §2.1, and reference answers on a book of four netting
-sets under the three collateral models and both rank rules, `drishti-compute-banking/src/test/resources/ccr/whatif-parity.json`, given to the
+sets under the three collateral models and both rank rules, `modules/banking/banking-compute/src/test/resources/ccr/whatif-parity.json`, given to the
 cent) and `ExposureApiTest` (an unwind of a whole netting set, a copy of its own, a set outside the scope).
 
 ## 20. Official end-of-day results

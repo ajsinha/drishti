@@ -27,12 +27,12 @@ drishti-server/src/main/java/com/ash/drishti/server/collab/thread/PinnedDocs.jav
 drishti-server/src/main/java/com/ash/drishti/server/edit/EditRecords.java#overlayCache  an entity's overlays (usually none), 100,000, idle an hour (A6)
 drishti-server/src/main/java/com/ash/drishti/server/edit/EditRecords.java#ownedCache  an entity's owned values, 100,000, idle an hour (A6)
 drishti-server/src/main/java/com/ash/drishti/server/security/PackAccess.java#effectiveByUser  one small record a user, TTL 5 s
-drishti-banking/src/main/java/com/ash/drishti/banking/var/VarOfficialStore.java#indexes  official indexes, 2,000, idle a day (A6)
+modules/banking/banking-service/src/main/java/com/ash/drishti/banking/var/VarOfficialStore.java#indexes  official indexes, 2,000, idle a day (A6)
 plugins/drishti-plugin-delta/src/main/java/com/ash/drishti/plugin/delta/DeltaSourcePlugin.java#travelled  time-travel layouts, 256: to weigh (3.9 item 13)
 plugins/drishti-plugin-iceberg-external/src/main/java/com/ash/drishti/plugin/icebergext/IcebergExternalPlugin.java#layouts  64 layouts
 plugins/drishti-plugin-iceberg/src/main/java/com/ash/drishti/plugin/iceberg/IcebergSourcePlugin.java#layouts  64 layouts
 plugins/drishti-plugin-redis/src/main/java/com/ash/drishti/plugin/redis/RedisSourcePlugin.java#dictionaries  256 zstd dictionaries of bounded size
 plugins/drishti-plugin-s3/src/main/java/com/ash/drishti/plugin/s3/S3SourcePlugin.java#cache  S3 objects, 10,000, TTL 30 s: to weigh (3.9 item 13)
-drishti-banking/src/main/java/com/ash/drishti/banking/frtb/FrtbService.java#cache  FRTB-SA answers per scope and lens, 64, TTL 10 min; to weigh with the 2.9.11.a benchmark
-drishti-banking/src/main/java/com/ash/drishti/banking/simm/SimmService.java#cache  SIMM answers per netting set and regime, TTL 10 min; to weigh with the 2.9.11.a benchmark
-drishti-banking/src/main/java/com/ash/drishti/banking/simm/SimmService.java#overridden  parsed parameter files with a validator's overrides, 32, small
+modules/banking/banking-service/src/main/java/com/ash/drishti/banking/frtb/FrtbService.java#cache  FRTB-SA answers per scope and lens, 64, TTL 10 min; to weigh with the 2.9.11.a benchmark
+modules/banking/banking-service/src/main/java/com/ash/drishti/banking/simm/SimmService.java#cache  SIMM answers per netting set and regime, TTL 10 min; to weigh with the 2.9.11.a benchmark
+modules/banking/banking-service/src/main/java/com/ash/drishti/banking/simm/SimmService.java#overridden  parsed parameter files with a validator's overrides, 32, small

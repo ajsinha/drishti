@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.ash.drishti</groupId>
+    <artifactId>drishti-parent</artifactId>
+    <version>2.9.11.g</version>
+    <relativePath>../../../pom.xml</relativePath>
+  </parent>
+  <artifactId>drishti-compute-banking</artifactId>
+  <name>drishti-compute-banking</name>
+  <description>The banking domain's compute (docs/architecture/DOMAIN_MODULES.md): pure maths, no Spring, testable alone. VaR and ES (historical,
+    parametric, components, backtesting, the scope algebra, the scenario book), exposure (EE, PFE, EPE, EEPE), FRTB-SA, ISDA SIMM and the
+    equity analytics (beta, correlation), over the generic compute of drishti-compute (the vector store, parallel sums, sharding)</description>
+  <dependencies>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-compute</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
+    <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-databind</artifactId></dependency>
+    <dependency><groupId>com.fasterxml.jackson.dataformat</groupId><artifactId>jackson-dataformat-yaml</artifactId></dependency>
+    <dependency><groupId>org.apache.arrow</groupId><artifactId>arrow-vector</artifactId></dependency>
+    <dependency><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></dependency>
+    <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>org.assertj</groupId><artifactId>assertj-core</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>org.xerial</groupId><artifactId>sqlite-jdbc</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>ch.qos.logback</groupId><artifactId>logback-classic</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId><scope>test</scope></dependency>
+  </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <!-- the load and scale tests run only when asked, as in drishti-compute -->
+          <excludedGroups>${compute.excluded.groups}</excludedGroups>
+          <systemPropertyVariables>
+            <drishti.data.dir>${project.build.directory}/test-run/fork${surefire.forkNumber}/data</drishti.data.dir>
+          </systemPropertyVariables>
+        </configuration>
+        <executions>
+          <execution>
+            <id>default-test</id>
+            <configuration>
+              <excludes><exclude>**/HotFileDirectMemorySoakTest.java</exclude></excludes>
+            </configuration>
+          </execution>
+          <!-- the hot-file direct-memory soak runs alone in a JVM with a small direct-memory cap, as a server with
+               -XX:MaxDirectMemorySize would; no jdk.nio.maxCachedBufferSize, so it proves the code, not the launch flag -->
+          <execution>
+            <id>direct-memory-soak</id>
+            <phase>test</phase>
+            <goals><goal>test</goal></goals>
+            <configuration>
+              <forkCount>1</forkCount>
+              <reuseForks>false</reuseForks>
+              <includes><include>**/HotFileDirectMemorySoakTest.java</include></includes>
+              <argLine>@{argLine} -Djava.io.tmpdir=${project.build.directory}/tmp -XX:MaxDirectMemorySize=32m -Xmx2g</argLine>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+  <properties>
+    <!-- Arrow's memory module reads java.nio.Buffer.address -->
+    <argLine>--add-opens=java.base/java.nio=ALL-UNNAMED</argLine>
+    <compute.excluded.groups>load</compute.excluded.groups>
+  </properties>
+</project>

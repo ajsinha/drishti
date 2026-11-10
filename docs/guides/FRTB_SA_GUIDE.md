@@ -271,7 +271,7 @@ the engine's own figure for that alternative. The formulas use only functions Ex
 recalculates the workbook in headless LibreOffice and compares it with the engine to the cent, with the defaults and with each switch
 flipped. **Hand-built cases workbook** (`/api/frtb/template.xlsx`) is the same workbook on the cases of section 10.
 
-**The Explain tab's words** come from `drishti-banking/src/main/resources/playground/frtb-sa/template/explain.txt` (a line `## <title>`,
+**The Explain tab's words** come from `modules/banking/banking-service/src/main/resources/playground/frtb-sa/template/explain.txt` (a line `## <title>`,
 then its text; `#` lines are comments), read by the playground frame's `PlaygroundTemplate.explain()`: in plain words what FRTB-SA
 answers, why a bank must hold it, the tabs, signs and units, the regime and its parameters; 18 steps from the delivered sensitivity to the
 total and the contributions, each worked with the hand-built cases (cases 1 to 5 with the published table: GIRR delta 110,555.42, the

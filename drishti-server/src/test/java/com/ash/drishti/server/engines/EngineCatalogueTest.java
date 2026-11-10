@@ -69,7 +69,7 @@ class EngineCatalogueTest {
         }
         List<String> files = new java.util.ArrayList<>(c.all().stream().map(EngineCatalogue.Entry::file).toList());
         // a module's engines' files sit in the same site folder: named by its catalogue in its jar (drishti-banking's)
-        yaml.readTree(REPO.resolve("drishti-banking/src/main/resources/" + EngineCatalogue.MODULE_RESOURCE).toFile()).path("engines")
+        yaml.readTree(REPO.resolve("modules/banking/banking-service/src/main/resources/" + EngineCatalogue.MODULE_RESOURCE).toFile()).path("engines")
                 .forEach(n -> files.add(n.path("file").asText(n.path("id").asText() + ".yaml")));
         try (var listed = Files.list(site)) {
             assertThat(listed.map(f -> f.getFileName().toString()).sorted().toList()).as("a file without an engine")

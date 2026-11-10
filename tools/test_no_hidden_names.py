@@ -43,7 +43,7 @@ CONCAT = re.compile(r"""(?:resolveSibling\(|resolve\(|Path\.of\(|with_name\(|joi
 
 def sources():
     out = []
-    for pattern in ("drishti-*/src/main/**/*.java", "plugins/*/src/main/**/*.java", "drishti-console/core/**/*.py",
+    for pattern in ("drishti-*/src/main/**/*.java", "modules/*/*/src/main/**/*.java", "plugins/*/src/main/**/*.java", "drishti-console/core/**/*.py",
                     "drishti-console/routes/**/*.py", "tools/**/*.py", "tools/*.sh"):
         out += [p for p in ROOT.glob(pattern) if p.is_file() and not p.name.startswith("test_") and "/node_modules/" not in p.as_posix()
                 and "/vendor/" not in p.as_posix() and p.name != "test_no_hidden_names.py"]

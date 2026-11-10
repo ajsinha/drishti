@@ -14,7 +14,7 @@
 
 
 """Records the Python exposure what-if engine's answers (drishti_compute.exposure.whatif, as of origin/develop 2.9.11.a) on a synthetic
-book for the Java parity test (drishti-compute-banking/src/test/resources/ccr/whatif-parity.json). Runs the real engine's compute() over Arrow
+book for the Java parity test (modules/banking/banking-compute/src/test/resources/ccr/whatif-parity.json). Runs the real engine's compute() over Arrow
 inputs exactly as the reactive connector would give them. The engine is retired on this branch: run it from a checkout of 2.9.11.a,
 
     PYTHONPATH=<2.9.11.a checkout>/drishti-compute/src/main/python python3 tools/ccr/record_whatif_parity.py <out.json>"""

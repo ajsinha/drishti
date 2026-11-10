@@ -198,7 +198,10 @@ class ConnectorApiTest {
             Files.delete(files.dir().resolve("api-bad.yaml"));
             manager.scan();
         }
-        mvc.perform(get("/api/v1/admin/health")).andExpect(jsonPath("$.connectors.badFiles").isEmpty());
+        mvc.perform(get("/api/v1/admin/health")).andExpect(jsonPath("$.connectors.badFiles").isEmpty())
+                // the kernel without banking (the thin jar's class path): Health says it runs with no modules
+                .andExpect(jsonPath("$.modules.summary").value("no modules: the kernel runs alone"))
+                .andExpect(jsonPath("$.modules.code").isEmpty());
     }
 
     @Test

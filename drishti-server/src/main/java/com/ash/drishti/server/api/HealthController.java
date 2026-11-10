@@ -131,6 +131,14 @@ public class HealthController {
         this.moduleFigures = java.util.List.copyOf(figures);
     }
 
+    /** The access registry, for the modules row; none in a test that makes the controller itself. */
+    private com.ash.drishti.registry.AccessRegistry access;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void access(com.ash.drishti.registry.AccessRegistry access) {
+        this.access = access;
+    }
+
     public HealthController(SourceRegistry registry, SourceRouter router, PackRegistry packs, SutraRegistry sutras, LiveMetrics live,
             TopicHub hub, LiveStreamSlots slots, Entitlements entitlements, ObjectProvider<BuildProperties> build,
             org.springframework.core.env.Environment env, com.ash.drishti.server.loads.ExpectationService expectations, com.ash.drishti.server.connectors.ConnectorManager connectors,
@@ -248,6 +256,9 @@ public class HealthController {
         out.put("tmp", com.ash.drishti.common.TempFiles.info());
         out.put("externalLib", com.ash.drishti.common.ExternalLib.info());
         out.put("sources", sources);
+        if (access != null) {
+            out.put("modules", modules(access));                      // the thin jar: no code modules, and Health says so
+        }
         for (HealthFigures f : moduleFigures) {                     // the modules' engines' figures (DOMAIN_MODULES.md J4)
             out.put(f.key(), f.value());
         }
@@ -406,5 +417,33 @@ public class HealthController {
         m.put("rssMb", ProcessResources.rssMb(Path.of("/proc/self/status")));   // resident memory (Linux VmRSS), null elsewhere
         m.putAll(ProcessResources.snapshot());                    // direct and mapped memory, open files: what a long run exhausts
         return m;
+    }
+
+    /**
+     * The modules row: the code modules (a domain's Java, e.g. banking) and the content modules (packs and functions only) with whether each
+     * is on. The thin server jar has no code module: the summary says the kernel runs alone.
+     */
+    static Map<String, Object> modules(com.ash.drishti.registry.AccessRegistry access) {
+        List<Map<String, Object>> code = new ArrayList<>();
+        List<Map<String, Object>> content = new ArrayList<>();
+        for (com.ash.drishti.registry.ModuleState s : access.modules()) {
+            if (!s.installed()) {
+                continue;
+            }
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("id", s.id());
+            row.put("on", s.on());
+            if (!s.on()) {
+                row.put("reason", s.reason());
+            }
+            boolean hasCode = access.manifest(s.id()).map(com.ash.drishti.registry.ModuleManifest::code).orElse(false);
+            (hasCode ? code : content).add(row);
+        }
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("summary", code.isEmpty() ? "no modules: the kernel runs alone"
+                : code.size() + (code.size() == 1 ? " module: " : " modules: ") + String.join(", ", code.stream().map(r -> (String) r.get("id")).toList()));
+        out.put("code", code);
+        out.put("content", content);
+        return out;
     }
 }

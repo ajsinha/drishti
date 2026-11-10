@@ -85,13 +85,19 @@ def modules_of(root: Path) -> dict[str, dict]:
     """{module dir: {"artifact": id, "deps": artifact ids}} from the root pom's modules (profiles included) and each module's pom."""
     ns = {"m": "http://maven.apache.org/POM/4.0.0"}
     out = {}
-    for mod in ET.parse(root / "pom.xml").getroot().iterfind(".//m:module", ns):
-        pom = root / mod.text / "pom.xml"
+    todo = [(m.text, root / m.text) for m in ET.parse(root / "pom.xml").getroot().iterfind(".//m:module", ns)]
+    while todo:                                                    # an aggregator (modules/banking) lists its own modules
+        name, folder = todo.pop(0)
+        pom = folder / "pom.xml"
         if not pom.is_file():
             continue
         tree = ET.parse(pom).getroot()
+        subs = list(tree.iterfind("m:modules/m:module", ns))
+        if subs:
+            todo += [(f"{name}/{s.text}", folder / s.text) for s in subs]
+            continue
         deps = {d.text for d in tree.iterfind("m:dependencies/m:dependency/m:artifactId", ns)}
-        out[mod.text] = {"artifact": tree.find("m:artifactId", ns).text, "deps": deps}
+        out[name] = {"artifact": tree.find("m:artifactId", ns).text, "deps": deps}
     return out
 
 
