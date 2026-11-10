@@ -142,6 +142,15 @@ def open_var(browser, base, path, size=None):
     return pg
 
 
+def tree_go(pg, scope):
+    """A scope from the tree: its row when the tree shows it, else the tree's breadcrumb up to it (the tree shows only the chosen scope)."""
+    row = pg.locator('.vx-tree .dg-row[data-scope="%s"]' % scope)
+    if row.count():
+        row.click()
+    else:
+        pg.locator('[data-vx-tree-crumb] a[href="?scope=%s"]' % urllib.parse.quote(scope, safe="~")).click()
+
+
 def test_the_command_opens_the_desk_and_a_drill_from_bank_to_trade_stays_in_place(trade_stack, browser):
     pg = open_var(browser, str(trade_stack), "/go?q=" + "VAR DESK DESK-RATES <GO>".replace(" ", "+"))
     assert "/var?scope=DESK%3ADESK-RATES" in pg.url or "/var?scope=DESK:DESK-RATES" in pg.url
@@ -149,25 +158,26 @@ def test_the_command_opens_the_desk_and_a_drill_from_bank_to_trade_stays_in_plac
     assert pg.locator(".vx-tile").count() == 6
     assert pg.locator(".vx-crumb .cur").inner_text().startswith("Rates")
     pg.evaluate("window.__marker = 1")                                       # survives only while the page is not reloaded
-    wait(pg, "document.querySelectorAll('.vx-tree .dg-row[data-scope]').length > 5")
+    # the tree shows only the chosen scope: the desk and its books, a breadcrumb up (VAR_GUIDE.md 3.2)
+    wait(pg, "document.querySelectorAll('.vx-tree .dg-row[data-scope]').length > 1 && !document.querySelector('[data-vx-tree-crumb]').hidden")
 
-    pg.locator('.vx-tree .dg-row[data-scope="NODE:MGMT~BANK"]').click()
+    tree_go(pg, "NODE:MGMT~BANK")
     painted(pg, "NODE:MGMT~BANK")
     bank_var = pg.locator('.vx-tile[data-tile="0"] .v').inner_text()
     # a desk the page has not fetched ahead (the bank's children are its divisions): the whole round trip
-    pg.locator('.vx-tree .dg-row[data-scope="NODE:MGMT~DESK-INFL"]').click()
+    tree_go(pg, "NODE:MGMT~DESK-INFL")
     cold = painted(pg, "NODE:MGMT~DESK-INFL")
-    pg.locator('.vx-tree .dg-row[data-scope="NODE:MGMT~DIV-MARKETS"]').click()
+    tree_go(pg, "NODE:MGMT~DIV-MARKETS")
     painted(pg, "NODE:MGMT~DIV-MARKETS")
     # the desk, timed from the click (its children were fetched ahead while the division was read)
     pg.wait_for_timeout(300)
     ms = []
     for _ in range(3):
-        pg.locator('.vx-tree .dg-row[data-scope="NODE:MGMT~DESK-COMM"]').click()
+        tree_go(pg, "NODE:MGMT~DESK-COMM")
         ms.append(painted(pg, "NODE:MGMT~DESK-COMM"))
-        pg.locator('.vx-tree .dg-row[data-scope="NODE:MGMT~DIV-MARKETS"]').click()
+        tree_go(pg, "NODE:MGMT~DIV-MARKETS")
         painted(pg, "NODE:MGMT~DIV-MARKETS")
-    pg.locator('.vx-tree .dg-row[data-scope="NODE:MGMT~DESK-RATES"]').click()
+    tree_go(pg, "NODE:MGMT~DESK-RATES")
     first = painted(pg, "NODE:MGMT~DESK-RATES")
     print(f"\nVaR explorer, click to painted for a desk: not fetched ahead {cold} ms; fetched ahead (DESK-RATES) {first} ms; "
           f"again {ms} ms")
@@ -329,6 +339,9 @@ def test_construct_your_basket_sheet_paste_checks_save_reopen_edit_and_delete(tr
     assert port == "PORT:PF-USD-RATES"
     wait(pg, "(document.querySelector('[data-vb-cell=\"PORT:0\"]') || {}).textContent === 'PF-USD-RATES'")
     # "+ basket" on a tree row: the FX desk lands in the Desk column
+    pg.locator('[data-vx-tree-crumb] a[href="?scope=NODE%3AMGMT~BANK"]').click()     # up to the bank: the whole tree (it shows only the chosen scope)
+    painted(pg, "NODE:MGMT~BANK")
+    wait(pg, "!!document.querySelector('.vx-tree .dg-row[data-scope=\"NODE:MGMT~DESK-FX\"]')")
     pg.locator('.vx-tree .dg-row[data-scope="NODE:MGMT~DESK-FX"] [data-vx-add]').click(force=True)
     wait(pg, "(document.querySelector('[data-vb-cell=\"DESK:0\"]') || {}).textContent === 'DESK-FX'")
     # columns pasted from Excel: three trades of the portfolio (the third taken away by its leading "-") and one that is not live

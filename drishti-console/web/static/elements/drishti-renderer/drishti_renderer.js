@@ -940,11 +940,19 @@
       return d.textContent.replace(/\s+/g, ' ').trim();
     }
     function strip(R, vm) {
-      return h('dl', { class: 'strip' }, (vm.strip || []).map((c, i) => stripItem(R, c, i)));
+      return h('dl', { class: 'strip' }, (vm.strip || []).map((c, i) => stripItem(R, c, i, vm.ref)));
     }
-    function stripItem(R, c, i) {
+    const VAR_WORDS = { 'system-basket': 'PORT', position: 'POS', desk: 'DESK', book: 'BOOK', 'legal-entity': 'LE', trade: 'TRD' };
+    function varExplain(c, ref) {
+      const p = c.path || '', m = /VAR_ENGINE\.VAR$/.test(p) ? 'var' : /VAR_ENGINE\.ES$/.test(p) ? 'es' : '';
+      const w = ref && VAR_WORDS[ref.kind];
+      if (!m || !w) { return null; }
+      return h('a', { 'data-explain-link': '', 'data-explain': JSON.stringify({ kind: 'var', measure: m, scope: w + ':' + ref.id }), 'data-explain-tab': 'why' }, 'Explain ›');
+    }
+    function stripItem(R, c, i, ref) {
       return h('div', { class: 'strip-i', 'data-r-strip': String(i) }, h('dt', null, str(c.label)),
-        h('dd', { class: 'mono' + toneClass(c) + (c.emphasis ? ' emph' : ''), 'data-path': c.path || null, title: plain(cellText(R, c)) }, cellText(R, c)));
+        h('dd', { class: 'mono' + toneClass(c) + (c.emphasis ? ' emph' : ''), 'data-path': c.path || null, title: plain(cellText(R, c)) }, cellText(R, c)),
+        varExplain(c, ref));
     }
     function head(R, vm) {
       const t = vm.title || {};

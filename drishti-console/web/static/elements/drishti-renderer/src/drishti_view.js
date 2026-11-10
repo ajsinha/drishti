@@ -49,11 +49,20 @@ function plain(nodes) {
 }
 
 export function strip(R, vm) {
-  return h('dl', { class: 'strip' }, (vm.strip || []).map((c, i) => stripItem(R, c, i)));
+  return h('dl', { class: 'strip' }, (vm.strip || []).map((c, i) => stripItem(R, c, i, vm.ref)));
 }
-export function stripItem(R, c, i) {
+/** The VaR engine's scope word of a page's kind (VAR_GUIDE.md 3.11): its VaR and ES carry the one Explain ›, as the console's strip does. */
+const VAR_WORDS = { 'system-basket': 'PORT', position: 'POS', desk: 'DESK', book: 'BOOK', 'legal-entity': 'LE', trade: 'TRD' };
+function varExplain(c, ref) {
+  const p = c.path || '', m = /VAR_ENGINE\.VAR$/.test(p) ? 'var' : /VAR_ENGINE\.ES$/.test(p) ? 'es' : '';
+  const w = ref && VAR_WORDS[ref.kind];
+  if (!m || !w) { return null; }
+  return h('a', { 'data-explain-link': '', 'data-explain': JSON.stringify({ kind: 'var', measure: m, scope: w + ':' + ref.id }), 'data-explain-tab': 'why' }, 'Explain ›');
+}
+export function stripItem(R, c, i, ref) {
   return h('div', { class: 'strip-i', 'data-r-strip': String(i) }, h('dt', null, str(c.label)),
-    h('dd', { class: 'mono' + toneClass(c) + (c.emphasis ? ' emph' : ''), 'data-path': c.path || null, title: plain(cellText(R, c)) }, cellText(R, c)));
+    h('dd', { class: 'mono' + toneClass(c) + (c.emphasis ? ' emph' : ''), 'data-path': c.path || null, title: plain(cellText(R, c)) }, cellText(R, c)),
+    varExplain(c, ref));
 }
 
 export function head(R, vm) {

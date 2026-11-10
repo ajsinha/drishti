@@ -115,7 +115,7 @@ def test_a_basket_shows_its_own_positions_by_the_chosen_hierarchy(stack, browser
     assert part["var"] == round(_get(base, "/api/var/scope?scope=" + urllib.parse.quote(part["scope"]))["var"])
     pg = open_var(browser, base, "/var?scope=" + urllib.parse.quote(BASKET), size={"width": 1366, "height": 900})
     painted(pg, BASKET)
-    pg.wait_for_timeout(3000)
+    wait(pg, "!!(document.querySelector('[data-vx-tree] drishti-tree') || {}).tree")
     shot(pg, "var-page-basket")
     wait(pg, "%s[0] === %r" % (TREE_SCOPES, BASKET))
     scopes = _tree_scopes(pg)
