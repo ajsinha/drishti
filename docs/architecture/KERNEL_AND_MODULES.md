@@ -219,7 +219,7 @@ Still at their old homes and to move with i2: `FunctionProvider` (its `EvalConte
 | `ViewAugmenter` (`drishti-engine`) | fields added to a kind's view as the page opens | `VAR_ENGINE.*` on a position, trade, book |
 | `Explainer` (`server.explain`) | the Explain drawer's formula, inputs and lineage for its numbers | VaR, component VaR, EPE, FRTB charge |
 | `CacheGroup` / `CacheReport.Owner` (`server.caches`) | caches the kernel reports and clears in order | VaR and exposure date caches |
-| `ApprovalSource` (`server.approvals`) | items in the Approvals inbox | regulatory VaR sign-off, scope changes |
+| `ApprovalSource` (`kernel.api.approvals`, moved in i2) | items in the Approvals inbox | regulatory VaR sign-off, scope changes |
 | `ShardedMeasure` (`server.shard`) | a measure computed across shards | VaR by hierarchy at scale |
 | `FlightForm` (`server.flight`) | an Arrow Flight descriptor it serves | P&L vectors out |
 | `CapacityFigures` (`server.capacity`) | its rows in the capacity planner | VaR memory and time per date |

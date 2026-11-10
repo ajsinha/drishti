@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.approvals;
 
+import com.ash.drishti.kernel.api.approvals.ApprovalSource;
 import com.ash.drishti.kernel.api.security.Principal;
 import java.util.List;
 import java.util.Map;

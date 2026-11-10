@@ -42,6 +42,8 @@ public final class PluginDiscovery {
     public List<SourcePlugin> discover(String pluginDir) {
         List<SourcePlugin> found = new ArrayList<>();
         ServiceLoader.load(SourcePlugin.class, SourcePlugin.class.getClassLoader()).forEach(found::add);
+        // modules bring computed kinds as KindProviders (KERNEL_AND_MODULES.md section 5.7); the kernel routes them as sources of their kinds
+        ServiceLoader.load(com.ash.drishti.kernel.api.data.KindProvider.class, SourcePlugin.class.getClassLoader()).forEach(k -> found.add(new ComputedKindSource(k)));
         if (pluginDir != null && !pluginDir.isBlank() && Files.isDirectory(Path.of(pluginDir))) {
             try (Stream<Path> jars = Files.list(Path.of(pluginDir))) {
                 for (Path jar : jars.filter(p -> p.toString().endsWith(".jar")).sorted().toList()) {
@@ -61,6 +63,7 @@ public final class PluginDiscovery {
                     new URL[] {jar.toUri().toURL()}, SourcePlugin.class.getClassLoader());
             List<SourcePlugin> out = new ArrayList<>();
             ServiceLoader.load(SourcePlugin.class, loader).forEach(out::add);
+            ServiceLoader.load(com.ash.drishti.kernel.api.data.KindProvider.class, loader).forEach(k -> out.add(new ComputedKindSource(k)));
             return out;
         } catch (MalformedURLException e) {
             throw new DrishtiException(ErrorCode.PLUGIN_LOAD_FAILED, "bad plugin jar " + jar, e);

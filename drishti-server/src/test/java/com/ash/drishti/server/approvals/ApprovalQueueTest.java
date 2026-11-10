@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.approvals;
 
+import com.ash.drishti.kernel.api.approvals.ApprovalSource;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -113,7 +114,7 @@ class ApprovalQueueTest {
             if (!status.containsKey(id) || !sees(id, p)) {
                 throw new DrishtiException(ErrorCode.PROPOSAL_NOT_FOUND, "no " + id);
             }
-            return new Detail(item(id, p), ApprovalSource.textDiff("a\nb\n", "a\nc\n"), List.of("the effect"), List.of("the rule"), Map.of());
+            return new Detail(item(id, p), com.ash.drishti.server.bi.gov.LineDiff.approvalDiff("a\nb\n", "a\nc\n"), List.of("the effect"), List.of("the rule"), Map.of());
         }
 
         @Override

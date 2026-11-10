@@ -20,7 +20,7 @@ import com.ash.drishti.bicompute.custom.FunctionDef;
 import com.ash.drishti.kernel.api.pivot.Viewer;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
-import com.ash.drishti.server.approvals.ApprovalSource;
+import com.ash.drishti.kernel.api.approvals.ApprovalSource;
 import com.ash.drishti.kernel.api.security.Principal;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -120,7 +120,7 @@ public class FunctionApprovals implements ApprovalSource {
         facts.put("language", d.language().word());
         facts.put("harness", d.harness());
         facts.put("approvals", d.approvals());
-        return new Detail(item(d, v, f, p), ApprovalSource.textDiff(before, d.code()), effect, rules, facts);
+        return new Detail(item(d, v, f, p), com.ash.drishti.server.bi.gov.LineDiff.approvalDiff(before, d.code()), effect, rules, facts);
     }
 
     @Override

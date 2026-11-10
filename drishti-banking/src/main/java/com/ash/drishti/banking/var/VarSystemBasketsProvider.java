@@ -20,11 +20,8 @@ import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.EntityDocument;
 import com.ash.drishti.api.EntityHit;
 import com.ash.drishti.api.EntityRef;
-import com.ash.drishti.api.PluginManifest;
 import com.ash.drishti.api.Provenance;
-import com.ash.drishti.api.SourceCapabilities;
-import com.ash.drishti.api.SourceContext;
-import com.ash.drishti.api.SourcePlugin;
+import com.ash.drishti.kernel.api.data.KindProvider;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -36,34 +33,25 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 /**
- * The {@code var-system-baskets} connector plugin: the system baskets (VAR_GUIDE.md section 5.7), kept in the basket store, served as the
- * {@code system-basket} kind, so {@code PORT <id> <GO>} opens a system basket's page (its definition; the VaR engine adds its figures as
+ * The computed {@code system-basket} kind (docs/architecture/KERNEL_AND_MODULES.md section 5.7): the system baskets (VAR_GUIDE.md section
+ * 5.7) kept in the basket store, so {@code PORT <id> <GO>} opens a system basket's page (its definition; the VaR engine adds its figures as
  * the page opens) and {@code PORT <GO>} lists them. Dated: a basket is served on the business dates it is valid on; a read without a date
  * is the VaR engine's newest date. Nothing is stored here: a change in the store is seen at the next read (its data version follows the
  * store's sequence).
- *
- * <pre>
- *   connectors:
- *     var-system-baskets:
- *       plugin: var-system-baskets
- *       kinds: [system-basket]
- * </pre>
  */
-public final class VarSystemBasketsPlugin implements SourcePlugin {
+public final class VarSystemBasketsProvider implements KindProvider {
 
     public static final String NAME = "var-system-baskets";
-    private volatile String source = NAME;
-    private volatile Set<String> kinds = Set.of("system-basket");
+    private static final String KIND = "system-basket";
 
     @Override
-    public PluginManifest manifest() {
-        return new PluginManifest(NAME, "1.0", kinds, new SourceCapabilities(false, false, true, true));
+    public String name() {
+        return NAME;
     }
 
     @Override
-    public void start(SourceContext context) {
-        source = context.setting("source-name", NAME);
-        kinds = Set.of(context.setting("kind", "system-basket"));
+    public Set<String> kinds() {
+        return Set.of(KIND);
     }
 
     private static Optional<VarService> service() {
@@ -85,13 +73,8 @@ public final class VarSystemBasketsPlugin implements SourcePlugin {
     }
 
     @Override
-    public Optional<EntityDocument> fetch(EntityRef ref) {
-        return fetch(ref, AsOf.LATEST);
-    }
-
-    @Override
     public Optional<EntityDocument> fetch(EntityRef ref, AsOf asOf) {
-        if (!kinds.contains(ref.kind())) {
+        if (!KIND.equals(ref.kind())) {
             return Optional.empty();
         }
         return service().flatMap(s -> {
@@ -101,13 +84,13 @@ public final class VarSystemBasketsPlugin implements SourcePlugin {
         });
     }
 
-    private EntityDocument doc(String kind, VarSystemBaskets.Basket b, LocalDate d, long stamp) {
-        return new EntityDocument(EntityRef.of(kind, b.id()), DataNode.of(b.document(d)), new Provenance(source, stamp, Instant.now(), false, d));
+    private static EntityDocument doc(String kind, VarSystemBaskets.Basket b, LocalDate d, long stamp) {
+        return new EntityDocument(EntityRef.of(kind, b.id()), DataNode.of(b.document(d)), new Provenance(NAME, stamp, Instant.now(), false, d));
     }
 
     @Override
     public boolean documents(String kind, AsOf asOf, Consumer<EntityDocument> sink) {
-        if (!kinds.contains(kind)) {
+        if (!KIND.equals(kind)) {
             return false;
         }
         service().ifPresent(s -> {
@@ -120,14 +103,9 @@ public final class VarSystemBasketsPlugin implements SourcePlugin {
     }
 
     @Override
-    public List<EntityHit> search(String kind, String text, int limit) {
-        return search(kind, text, limit, AsOf.LATEST);
-    }
-
-    @Override
     public List<EntityHit> search(String kind, String text, int limit, AsOf asOf) {
         List<EntityHit> out = new ArrayList<>();
-        if (!kinds.contains(kind)) {
+        if (!KIND.equals(kind)) {
             return out;
         }
         String q = text == null ? "" : text.trim().toUpperCase(Locale.ROOT);
@@ -147,21 +125,16 @@ public final class VarSystemBasketsPlugin implements SourcePlugin {
 
     @Override
     public Optional<LocalDate> latestDate(String kind) {
-        return kinds.contains(kind) ? service().map(s -> date(s, AsOf.LATEST)) : Optional.empty();
-    }
-
-    @Override
-    public Optional<String> dataVersion(String kind) {
-        return kinds.contains(kind) ? service().map(s -> "sb-" + s.saved().system().stamp()) : Optional.empty();
+        return KIND.equals(kind) ? service().map(s -> date(s, AsOf.LATEST)) : Optional.empty();
     }
 
     @Override
     public Optional<String> dataVersion(String kind, LocalDate date) {
-        return dataVersion(kind);
+        return KIND.equals(kind) ? service().map(s -> "sb-" + s.saved().system().stamp()) : Optional.empty();
     }
 
     @Override
-    public Map<String, Object> cacheStats() {
+    public Map<String, Object> stats() {
         return Map.of("cached", "the system baskets of the basket store (GET /api/v1/risk/var/system-baskets)");
     }
 }
