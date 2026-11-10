@@ -888,6 +888,9 @@ differently branded consoles over the same kernels. Brand and theme are always t
 
 ### 6.3 Examples
 
+The shipped distributions (Drishti Risk, Drishti Finance, Drishti Genomics, Drishti All), what each holds and how to start each:
+[DISTRIBUTIONS.md](DISTRIBUTIONS.md).
+
 - [examples/distributions/drishti.finance.yaml](kernel-and-modules/examples/distributions/drishti.finance.yaml): banking + capital markets
   + economy; navy theme; Risk lens default; Help in the banking order; risklake defaults.
 - [examples/distributions/drishti.genomics.yaml](kernel-and-modules/examples/distributions/drishti.genomics.yaml): a hypothetical
