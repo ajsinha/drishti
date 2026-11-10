@@ -16,6 +16,8 @@
 
 # Kernel and modules: mock-ups
 
+**Status:** design, not built.
+
 Static, self-contained pages (no CDN) for the screens of [KERNEL_AND_MODULES.md](../../KERNEL_AND_MODULES.md); the list, the
 alternatives and the recommendation for each are in its [section 17](../../KERNEL_AND_MODULES.md#17-mock-ups). Each page holds its
 options as views: open it in a browser and use the A, B, C buttons, or address one directly with `?v=B` (or `#B` on the newer pages)
