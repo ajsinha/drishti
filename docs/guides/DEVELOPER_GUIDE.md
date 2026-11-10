@@ -330,6 +330,12 @@ mounted as it is), and its class loader, so a pack's reactive connector naming o
 The module's context gets the host's conversion service (`"a,b"` to a list, durations, sizes) and is refreshed with its own loader as the
 thread's, so a playground's built-in template is read from the module's jar.
 
+**Leaving without a trace.** When the module unloads, every kernel registry it joined directly (the load service's ready listeners, the
+disk budget's folders, the admission gate's load slots and open heaps, the dates engines hold open) drops what belongs to the module's
+class loader (`ModuleLoaders`), the shared JSON and conversion caches are emptied of its types, and the leak check waits up to about ten
+seconds for a stopping engine's last tasks. Removing banking from a running server and installing it again answers the same VaR, and the
+first class loader is collected (`leakFree: true` in the deployment's report).
+
 **The conformance checks** ([KERNEL_AND_MODULES.md section 8.6](../architecture/KERNEL_AND_MODULES.md#86-the-conformance-suite)), each
 failure a sentence naming the file and the fix:
 

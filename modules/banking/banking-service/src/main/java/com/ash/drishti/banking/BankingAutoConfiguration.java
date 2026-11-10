@@ -24,10 +24,10 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 
 /**
- * The banking module in the server (docs/architecture/DOMAIN_MODULES.md): found on the class path through
- * {@code META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports}, loaded only while the access registry says the
- * module is on ({@link ConditionalOnModule}). Off, nothing below loads: no bean, engine, job or API of VaR, exposure, FRTB-SA, SIMM,
- * sensitivities, the MR cube or the official results.
+ * The banking module's configuration (docs/architecture/KERNEL_AND_MODULES.md section 3.3): the manifest's {@code java.spring}, made by the
+ * module host in banking's own child context when the server loads {@code banking-1.0.0.dmod}. Not loaded (removed, or off by the site's
+ * switch), nothing below exists: no bean, engine, job or API of VaR, exposure, FRTB-SA, SIMM, sensitivities, the MR cube or the official
+ * results.
  *
  * <p>The API moved under {@code /api/v1/risk}; the old prefixes are answered as the new ones for this release ({@link ApiAlias}), then
  * removed.

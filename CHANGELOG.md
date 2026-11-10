@@ -28,7 +28,8 @@
   default placement for first-party modules. The in-process banking wiring is gone from the jar (it stays only as banking's own tests'
   harness). The bridge now also connects connector types, engine catalogues and defaults, engine caches, readiness gates, drains, cache
   reports, ready rules, Flight forms, controllers already in the module's namespace and the module's class loader. C12 reads the class
-  initialiser (unmodifiable constants pass) and honours `@EngineWide`.
+  initialiser (unmodifiable constants pass) and honours `@EngineWide`. Removing banking from a running server answers 410 (*needs module
+  banking*) for its API and pages, installing it again brings back the same VaR, and its class loader is collected (leak-free).
 - **The kernel loads modules** (2.9.11.i2 + i3, wave 2; [DEVELOPER_GUIDE.md sections 1.6 and 1.7](docs/guides/DEVELOPER_GUIDE.md#17-what-a-module-can-contribute),
   [ADMIN_GUIDE.md section 22.1](docs/guides/ADMIN_GUIDE.md#221-module-packages-auto-deploy-and-the-shared-lib-folder)). A loaded `.dmod`
   module's beans of the kernel API's provider types are seen by the kernel while it is loaded and withdrawn when it unloads (the

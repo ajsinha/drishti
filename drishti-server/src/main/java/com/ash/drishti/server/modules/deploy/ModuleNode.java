@@ -106,6 +106,16 @@ public final class ModuleNode implements AutoCloseable {
     private final List<Path> folders;
     private final com.ash.drishti.server.modules.host.ModuleWiring wiring;
     private ModuleRuntime runtime;
+    private volatile java.util.function.Predicate<String> siteSwitch = id -> true;
+
+    /**
+     * The site's switch of each module ({@code config/modules/<id>.yaml} {@code enabled}, {@code drishti.modules.<id>.enabled}): a module
+     * switched off there is not loaded (Health: off, administrator), whatever the store holds.
+     */
+    public ModuleNode siteSwitch(java.util.function.Predicate<String> on) {
+        this.siteSwitch = on == null ? id -> true : on;
+        return this;
+    }
 
     public ModuleNode(Path root, KernelFacts facts, PlacementService placement, ApiMounts mounts, long drainMillis) {
         this(root, facts, placement, mounts, drainMillis, List.of(), null);
@@ -212,7 +222,8 @@ public final class ModuleNode implements AutoCloseable {
                 ModuleDiscovery.readActive(f.resolve("active.yaml")).forEach(active::putIfAbsent);
             }
             active.putAll(ModuleDiscovery.readActive(activeFile));
-            List<ModuleHealth> rows = runtime.start(all, active, id -> !registry.containsKey(id) || registry.get(id).state() == State.ACTIVE);
+            List<ModuleHealth> rows = runtime.start(all, active, id -> (!registry.containsKey(id) || registry.get(id).state() == State.ACTIVE)
+                    && siteSwitch.test(id));
             if (!folders.isEmpty()) {
                 LOG.warn("modules in development mode from {}: {} (unverified; never in production)", folders,
                         rows.stream().map(h -> h.id() + " " + h.state()).toList());
@@ -598,6 +609,10 @@ public final class ModuleNode implements AutoCloseable {
             for (Path dmod : ordered) {
                 DmodManifest m = manifestIn(dmod);
                 Entry e = registry.get(m.id());
+                if (!siteSwitch.test(m.id())) {
+                    out.add(m.id() + ": off by the site's switch (config/modules/" + m.id() + ".yaml); not loaded");
+                    continue;
+                }
                 if (e != null && e.state() != State.ACTIVE) {
                     out.add(m.id() + ": " + e.state().name().toLowerCase(Locale.ROOT) + " by an administrator; not installed again");
                     continue;
