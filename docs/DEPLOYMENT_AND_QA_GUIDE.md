@@ -730,7 +730,7 @@ curl -s -X POST -H "Authorization: Bearer $ADMIN_TOKEN" -H 'Content-Type: applic
 
 Or for one run only: `DRISHTI_MODULES_BANKING_ENABLED=false` in the server's environment. Restart the server.
 
-**You should see** `GET /api/v1/modules` list banking under `off` with its reason; the Engines menu gone from the top bar (its engines
+**You should see** `GET /api/v1/modules` list banking under `off` with its reason; the Risk menu gone from the top bar (its engines
 are the banking module's); Home offering no Risk or Trading lens; `VAR BANK` answering *VAR is not available to you: ask your
 administrator (the module 'Banking and risk' is not on here …)*; and the risk API answering `404 DRS-1025`:
 

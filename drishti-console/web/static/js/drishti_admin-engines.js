@@ -78,7 +78,8 @@
             + '<span class="eng-sw-l">' + (on ? 'on' : 'off') + '</span>'
           : '<span class="eng-muted">not installed</span>') + '</td>'
         + '<td class="l eng-state">' + state + '</td>'
-        + '<td class="l"><span class="eng-bar" aria-hidden="true"><i data-w="' + share + '"></i></span> ' + mb(e.memoryBytes) + '</td>'
+        + '<td class="l">' + (e.answering === false ? '<span class="eng-muted" title="its figures did not come within the page\'s time">not answering</span>'
+          : '<span class="eng-bar" aria-hidden="true"><i data-w="' + share + '"></i></span> ' + mb(e.memoryBytes)) + '</td>'
         + '<td>' + (e.threads || (e.state === 'running' ? 0 : '-')) + '</td>'
         + '<td class="l eng-wrap">' + (e.needs.length ? esc(e.needs.join(', ')) : '-') + '</td>'
         + '<td class="l eng-wrap">' + esc(e.neededBy.concat(e.usedBy.map(function (u) { return u + ' (uses)'; })).join(', ') || '-') + '</td>'
@@ -92,6 +93,7 @@
     });
     $('[data-eng-notes]').textContent = notes.join(' ');
     var running = (view.engines || []).filter(function (e) { return e.state === 'running'; }).length;
+    if (!view.engines) { $('[data-eng-meta]').textContent = asking; return; }
     $('[data-eng-meta]').textContent = 'this server' + (view.node && view.node !== 'this server' ? ' · ' + view.node : '') + ' · ' + running
       + ' of ' + (view.installed || 0) + ' engines running · ' + (Number(view.memoryBytes) > 0 ? mb(view.memoryBytes) : 'nothing') + ' held by engines'
       + ' · files in ' + (view.dir || '');
@@ -312,16 +314,24 @@
       .catch(function (e) { $('[data-eng-error]').hidden = false; $('[data-eng-error]').textContent = String(e); btn.disabled = false; });
   }
 
+  // one answer within its own time: a server that does not answer is said in words (never a page held open)
+  function ask(url, ms) {
+    var ctl = window.AbortController ? new AbortController() : null;
+    var t = ctl ? setTimeout(function () { ctl.abort(); }, ms) : 0;
+    return fetch(url, {headers: {Accept: 'application/json'}, credentials: 'same-origin', signal: ctl ? ctl.signal : undefined})
+      .then(function (r) { clearTimeout(t); return r.ok ? r.json() : null; })
+      .catch(function () { clearTimeout(t); return null; });
+  }
+  var asking = 'asking the server…';
   function refresh() {
-    return Promise.all([
-      fetch('/admin/api/engines', {headers: {Accept: 'application/json'}, credentials: 'same-origin'}).then(function (r) { return r.json(); }),
-      fetch('/admin/api/engines/history?limit=50', {headers: {Accept: 'application/json'}, credentials: 'same-origin'}).then(function (r) { return r.json(); })
-    ]).then(function (both) {
-      if (both[0] && both[0].engines) { view = both[0]; }
-      history = (both[1] && both[1].changes) || history;
+    var engines = ask('/admin/api/engines', 15000).then(function (j) {     // each answer drawn as it arrives
+      if (j && j.engines) { view = j; asking = ''; } else if (!view.engines) { asking = 'the server is not answering: reload to ask again'; }
       drawAll();
     });
+    var hist = ask('/admin/api/engines/history?limit=50', 15000).then(function (j) { if (j && j.changes) { history = j.changes; drawHistory(); } });
+    return Promise.all([engines, hist]);
   }
 
   drawAll();
+  if (data.pending) { refresh(); }                          // the page was drawn before an answer came: ask for it now
 })();

@@ -18,8 +18,8 @@ dark (terminal) and light themes:
 * a phone gets the phone page (must, then glance in its compact form, More on this page, On desktop) without scrolling sideways, each
   control at least 44 px; a More row loads its panel in place, Show all brings the whole panel, Show everything the whole page;
 * the desktop is unchanged: every panel, no phone page;
-* in Drishti Trading the subject menus fold into one Trading menu on a phone, and stand in the bar on a desktop (Drishti Risk has none
-  since its Engines menu took the place of VaR and Exposure: test_engines_menu_browser.py).
+* in Drishti Trading the subject menus fold into one Trading menu on a phone, and stand in the bar on a desktop (Drishti Risk folds Risk and
+  Counterparties the same way: test_phone.py).
 
 DRISHTI_PHONE_SHOTS=<folder> also saves the screenshots the user guide shows. Skipped when Playwright or its Chromium is missing."""
 import os

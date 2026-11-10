@@ -72,19 +72,11 @@ schemas:
       - { key: "menus[].also", type: list, default: "[]", meaning: "Items listed in other menus that this menu's strip also draws, by id (the Admin tabs' BI settings and My account, the BI rail's Pivot and Build home), without listing them twice" }
       - { key: "menus[].personal", type: boolean, default: "false", meaning: "The person's own menu (My account): never drawn as a top menu" }
       - { key: "menus[].subject", type: boolean, default: "false", meaning: "A lens's subject menu (Curves, Economies ...): drawn only where an edition's menus.top names it" }
-      - { key: "menus[].gather", type: list, default: none, meaning: "A menu that gathers the columns of other menus by id (the Trading lens's one Markets menu gathers Curves, Volatility, FX and Credit), each drawn as its own column" }
-      - { key: "menus[].engines", type: boolean, default: "false", meaning: "The Engines menu: a column per compute engine, drawn for the engines running in the cluster that the person's role opens" }
-      - { key: "menus[].search-over", type: number, default: "4", meaning: "The Engines menu: its search box shows when more engines than this run" }
-      - { key: "menus[].admin-link", type: map, default: none, meaning: "The Engines menu: its Admin -> Engines link {href, label, requires} (administrators)" }
-      - { key: "menus[].admin-link.href", type: string, meaning: "Where it goes (/admin/engines)" }
-      - { key: "menus[].admin-link.label", type: string, meaning: "Its text" }
-      - { key: "menus[].admin-link.requires", type: list, default: "[]", meaning: "Conditions that must all hold for it to show (as an item's requires)" }
+      - { key: "menus[].without-lens", type: boolean, default: "false", meaning: "A subject menu drawn in the full product's bar too (Risk: the home of the engines' pages, each item with requires engine:<id>)" }
+      - { key: "menus[].gather",type: list, default: none, meaning: "A menu that gathers the columns of other menus by id (the Trading lens's one Markets menu gathers Curves, Volatility, FX and Credit), each drawn as its own column" }
       - { key: "menus[].columns", type: list, meaning: "The menu's columns, each a title and its items" }
       - { key: "menus[].columns[].title", type: string, meaning: "A column's heading" }
       - { key: "menus[].columns[].domain", type: string, default: "the menu's", meaning: "The domain module of the column's items" }
-      - { key: "menus[].columns[].engine", type: string, default: none, meaning: "The Engines menu: the column's engine (its id in config/engines.yaml); drawn only while it runs on a server of the cluster" }
-      - { key: "menus[].columns[].word", type: string, default: "", meaning: "The Engines menu: the engine's command word, shown in the column's head" }
-      - { key: "menus[].columns[].opens", type: list, default: "[]", meaning: "The Engines menu: who opens the engine, any of role:<name> or pack:<name> (a pack assigned to the person); administrators always; none: everyone. The engine's command words follow it (left out of the type-ahead, refused when typed); Help does not" }
       - { key: "menus[].columns[].items", type: list, meaning: "A column's items" }
       - { key: "menus[].columns[].items[].id", type: string, meaning: "The item's id (what an edition lists to keep it)" }
       - { key: "menus[].columns[].items[].href", type: string, meaning: "Where it goes (blank with cmd: the command run; with fill: the command line filled)" }

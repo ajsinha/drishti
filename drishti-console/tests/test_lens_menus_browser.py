@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The lens menus in a real browser (docs/architecture/LENSES.md section 1.4.4, mock-up docs/lenses/mockups/menus/A): with an edition's subject menus the top bar's controls
-never overlap at desktop widths and the page never scrolls sideways; an item to finish (Engines -> Exposure -> A counterparty) puts its words in
+never overlap at desktop widths and the page never scrolls sideways; an item to finish (Risk -> Exposure -> A counterparty) puts its words in
 the command line, the menu closed, instead of opening a page. Skipped when Playwright or Chromium is missing."""
 import threading
 import time
@@ -81,7 +81,7 @@ def test_an_item_to_finish_fills_the_command_line(browser, consoles):
     page = browser.new_page(viewport={"width": 1600, "height": 900})
     try:
         page.goto(consoles["risk"] + "/t", wait_until="load")
-        page.locator(".tbar-menu-btn", has_text="Engines").click()
+        page.locator(".tbar-menu-btn:has(.tbar-menu-l:text-is('Risk'))").click()
         item = page.locator("a.mega-item[data-fill='EXP CPTY']")
         item.wait_for(state="visible")
         assert item.locator(".mega-cmd").inner_text().startswith("EXP CPTY")

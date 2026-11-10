@@ -1210,7 +1210,7 @@ cp config/lenses/banking/risk.yaml config/lenses/banking/my-desk.yaml
 | `commands.words` | `BI`, `RUPAKA`, `FORM`, `FUNC`, `WHAT`, `DATAMAP`, `DATA`, `VAR`, `EXP`, `SMAT`, `PLAY`: `on` or `off`. Off, the word answers `DRS-4023` and its pages and APIs answer 404 (`DATA`: `/data`, `/api/data/...`, the server's `/api/v1/data`; `PLAY`: `/play`, `/api/play/...` and the VaR page's **Playground** link; `SMAT`: `/smat`, `/api/smat/...` and every **Scenario matrix** link) |
 | `features` | presets of existing switches (`config/lenses/features.yaml` says which settings each one sets); `off` presets false, anything else true. Every shipped lens sets `internal-only-data` off, so datasets marked internal only are listed but not downloaded |
 | `bi.datasets`, `bi.models` | the BI datasets and models offered (a name may end in `*`); reports and boards follow |
-| `menus.top` | the top menus by id, in order; a menu not named is not drawn (none: Views, Engines, BI, Build, Admin, Help). The Engines menu has a column per compute engine running in the cluster that the person's role opens. The subject menus (`subject: true`: `blotter`, `positions`, `risk`, `counterparties`; `curves`, `volatility`, `fx`, `credit`; `economies`, `markets`, `companies`) are drawn only where `menus.top` names them. A menu's `gather: [ids]` puts the columns of those menus first in its own: the one **Markets** menu gathers `curves`, `volatility`, `fx` and `credit`, each item picked by `menus.markets` |
+| `menus.top` | the top menus by id, in order; a menu not named is not drawn (none: Views, Risk, BI, Build, Admin, Help). Risk (`without-lens: true`) is drawn in the full product's bar too: it is the home of the engines' pages, each with `requires: engine:<id>` (drawn while the engine runs in the cluster and the person's role opens it). The subject menus (`subject: true`: `blotter`, `positions`, `risk`, `counterparties`; `curves`, `volatility`, `fx`, `credit`; `economies`, `markets`, `companies`) are drawn only where `menus.top` names them. A menu's `gather: [ids]` puts the columns of those menus first in its own: the one **Markets** menu gathers `curves`, `volatility`, `fx` and `credit`, each item picked by `menus.markets` |
 | `menus.<menu>` | the items shown per menu (`views`, `bi`, `build`, `admin`, `help`, `footer`, `markets`, or a subject menu), by the ids in `drishti-console/config/sitemap.yaml` |
 | `menus.placeholder` | the command line's placeholder |
 | `home.landing`, `home.landings`, `home.template`, `home.titles`, `home.landing-by-role`, `home.sections`, `home.hierarchies`, `home.topics` | Home ([section 15](#15-home-landings-cards-and-chips)); `template` is a `home/<name>_landing.html` page (none: Drishti Risk's); `sections` switches off `stats`, `grammar`, `pipeline`, `capabilities`, `views`, `close` |
@@ -1374,7 +1374,7 @@ How the engines are built is in [ARCHITECTURE.md section 27](../architecture/ARC
 
 | Id | Engine | Switch (environment variable) | As shipped | Brings to the screen |
 |---|---|---|---|---|
-| `var` | VaR, ES, stressed VaR, the what-if, why it moved, parametric VaR, regulatory VaR (backtesting, report runs, sign-off) | `DRISHTI_VAR_ENABLED` | on | `VAR`, `VAR EXPLAIN`, `SMAT`, `PLAY VAR`; its column of the Engines menu and its page; the VaR landings and tiles; the VaR guide's Help pages; `drishti.py var`; BI `market-risk-var-*` |
+| `var` | VaR, ES, stressed VaR, the what-if, why it moved, parametric VaR, regulatory VaR (backtesting, report runs, sign-off) | `DRISHTI_VAR_ENABLED` | on | `VAR`, `VAR EXPLAIN`, `SMAT`, `PLAY VAR`; its pages in the Risk menu; the VaR landings and tiles; the VaR guide's Help pages; `drishti.py var`; BI `market-risk-var-*` |
 | `exposure` | EE, ENE, PFE, EPE, EEPE, the exposure what-if, the pre-deal check and the playground | `DRISHTI_EXPOSURE_ENABLED` | on | `EXP`, `PLAY EXP`; its column and page; tiles; the exposure guide's Help pages; `drishti.py exposure`; BI `counterparty-exposure-*`, `live-exposure*` |
 | `sensitivities` | position sensitivities and the factor dictionary: load, checks, sums by bucket | `DRISHTI_SENSITIVITIES_ENABLED` | on | `SENS`, `RFAC`, the factor dictionary |
 | `frtb-sa` | FRTB-SA: SBM, DRC, RRAO and its playground | `DRISHTI_FRTB_ENABLED` | on | `FRSA`, `PLAY FRTB`; the capital page; the FRTB-SA guide's Help pages; `drishti.py frtb` |
@@ -1449,13 +1449,14 @@ counterparties are never affected). Its API answers `404` in words, never `403` 
 ```
 
 When no server of the cluster runs it, it disappears from the console everywhere: its command words (typed, they answer the same words),
-type-ahead, FUNC and examples; its column of the Engines menu and its menu items; its Help pages (a direct link opens a short page saying
+type-ahead, FUNC and examples; its pages in the Risk menu; its Help pages (a direct link opens a short page saying
 the engine is not running here); its Home tiles, cards and chips, and a lens whose engine is off is not offered (the MR cube); its pages and
 playgrounds (404); its BI datasets and the reports on them; its `drishti.py` commands (exit code 3 with the same words).
 `/actuator/health` lists each engine's state under `engines`; an engine that is off is `off`, never down.
 
-**Who opens a running engine.** A column of the Engines menu names the roles that see it (`opens:` in `drishti-console/config/sitemap.yaml`:
-`role:<name>`, `pack:<name>`; administrators always). A role it does not open does not see the column, is not offered its words in the
+**Who opens a running engine.** The engine's catalogue entry names the roles that see its pages (`opens:` in
+`drishti-console/plugins/banking/engines.yaml`, byte-equal to the banking jar's: `role:<name>`, `pack:<name>`; administrators always;
+none: everyone). A role it does not open does not see its pages under Risk, is not offered its words in the
 type-ahead and is told "<title> is not opened for your role; ask an administrator." when it types one. Help is documentation and stays
 listed. The server's own entitlements still decide the data.
 
@@ -1625,4 +1626,4 @@ to the console are in [OPERATIONS_GUIDE.md, Modules on or off](OPERATIONS_GUIDE.
 | The page says a change is written but another setting still decides | the switch is set in the environment, `application.local.yaml` or by another name (`DRS-1024` in the log) | remove that setting, or change it there |
 | An engine stays *restart needed* | `memory-lake` and `flight` start only at a server start | restart the server |
 | An engine shows *not installed* | its module is off | switch the module on ([section 22](#22-modules-on-or-off)) |
-| An engine's column is missing from the Engines menu for some people | the column's `opens:` does not name their role | add the role to the column's `opens:` in `sitemap.yaml` |
+| An engine's pages are missing from the Risk menu for some people | the engine's `opens:` does not name their role | add the role to its `opens:` in `plugins/banking/engines.yaml` (and the banking jar's copy) |

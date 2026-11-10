@@ -46,7 +46,7 @@ class EngineRegistryTest {
     @TempDir Path dir;
 
     /** A fake engine that starts a thread named after it, holds 64 MB while it runs and counts its starts and stops. */
-    static final class Fake implements ComputeEngine {
+    static class Fake implements ComputeEngine {
         final String id;
         volatile Boolean running;
         volatile Thread thread;
@@ -240,5 +240,37 @@ class EngineRegistryTest {
         assertThat(last.who()).isEmpty();
         assertThat(last.why()).isEmpty();
         assertThat(last.outcome()).isEqualTo("live");
+    }
+
+    /** Admin -> Engines' answer within its budget (owner 2026-11-09: the page took "forever"): one engine's figures slow on purpose. */
+    @Test
+    @SuppressWarnings("unchecked")
+    void aSlowEnginesFiguresNeverHoldTheEnginesAnswer() {
+        Fake[] f = all();
+        f[0] = new Fake("var") {
+            @Override
+            public long memoryBytes() {
+                try {
+                    Thread.sleep(5_000);                      // a probe that hangs
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                return 1;
+            }
+        };
+        EngineRegistry r = registry(Map.of(), f);
+        EngineAdminController c = new EngineAdminController(r, new EngineCluster(r, () -> null, () -> null), null, null);
+        long t0 = System.nanoTime();
+        Map<String, Object> view = c.view();
+        long ms = (System.nanoTime() - t0) / 1_000_000;
+        assertThat(ms).as("the answer's time").isLessThan(1_000);
+        List<Map<String, Object>> rows = (List<Map<String, Object>>) view.get("engines");
+        Map<String, Object> var = rows.stream().filter(x -> "var".equals(x.get("id"))).findFirst().orElseThrow();
+        assertThat(var.get("answering")).isEqualTo(false);
+        assertThat(var.get("state")).isEqualTo("running");
+        Map<String, Object> exp = rows.stream().filter(x -> "exposure".equals(x.get("id"))).findFirst().orElseThrow();
+        assertThat(exp.get("answering")).isEqualTo(true);
+        assertThat(exp.get("memoryBytes")).isEqualTo(64L << 20);
+        assertThat(exp.get("threads")).as("the same count as one look per engine").isEqualTo(ComputeEngine.threadsNamed(f[1].threadPrefixes()));
     }
 }

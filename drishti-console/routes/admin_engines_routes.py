@@ -20,6 +20,7 @@ file, audits it, and refuses with words (DRS-1021, DRS-1023). After a change the
 follow without waiting for the next about poll."""
 from __future__ import annotations
 
+import asyncio
 from urllib.parse import quote
 
 from fastapi import APIRouter, Request
@@ -30,6 +31,18 @@ from core.csrf import json_body
 from routes.common import ident, render
 
 router = APIRouter(prefix="/admin", include_in_schema=False)
+
+#: how long the page waits for each of the server's answers (asked together) before it is drawn; an answer not in by then is asked
+#: again by the page's script, which fills it in when it comes (or says the server is not answering): one slow answer never holds the page
+PAGE_BUDGET_S = 0.8
+
+
+async def _within(coro, budget: float = PAGE_BUDGET_S):
+    """The answer of ``coro``, or None when it takes longer than ``budget`` seconds (a refusal still raises)."""
+    try:
+        return await asyncio.wait_for(coro, budget)
+    except asyncio.TimeoutError:
+        return None
 
 
 def _problem(e: BackendError) -> JSONResponse:
@@ -53,13 +66,14 @@ async def page(request: Request):
     me = ident(request)
     if not me.is_admin:
         return render(request, "admin/forbidden.html", status_code=403)
-    try:
-        data = await request.app.state.backend.admin("GET", "/engines", me)
-        hist = await request.app.state.backend.admin("GET", "/engines/history", me, limit=50)
-        status = await request.app.state.backend.admin("GET", "/status", me)
+    b = request.app.state.backend
+    try:                                                    # asked together, each within the budget; the script asks again for what is missing
+        data, hist, status = await asyncio.gather(_within(b.admin("GET", "/engines", me)), _within(b.admin("GET", "/engines/history", me, limit=50)),
+                                                  _within(b.admin("GET", "/status", me)))
     except BackendError as e:
         return render(request, "admin/forbidden.html", status_code=e.page_status, error=e)
-    return render(request, "admin/engines.html", e=data, history=hist.get("changes") or [], status=status, screen="admin")
+    return render(request, "admin/engines.html", e=data, history=(hist or {}).get("changes") or [], status=status, screen="admin",
+                  pending=data is None or hist is None)
 
 
 @router.get("/api/engines")

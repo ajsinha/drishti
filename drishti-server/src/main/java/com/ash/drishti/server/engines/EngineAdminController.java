@@ -28,7 +28,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadInfo;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -192,8 +199,12 @@ public class EngineAdminController {
         }
         long total = 0;
         List<Map<String, Object>> rows = new ArrayList<>();
-        for (EngineCatalogue.Entry e : registry.entries()) {
-            Map<String, Object> r = row(e);
+        List<String> threads = threadNames();                       // one look at the threads for every engine (was one per engine)
+        List<EngineCatalogue.Entry> all = registry.entries();
+        List<CompletableFuture<long[]>> probes = all.stream().map(e -> CompletableFuture.supplyAsync(() -> probe(e.id()), PROBES)).toList();
+        long until = System.nanoTime() + PROBE_BUDGET_MS * 1_000_000L;  // the engines asked together, the page waits once
+        for (int i = 0; i < all.size(); i++) {
+            Map<String, Object> r = row(all.get(i), threads, answer(probes.get(i), until));
             total += ((Number) r.get("memoryBytes")).longValue();
             rows.add(r);
         }
@@ -213,7 +224,35 @@ public class EngineAdminController {
         return m;
     }
 
-    private Map<String, Object> row(EngineCatalogue.Entry e) {
+    /** How long the page waits, all engines together, for the engines' own figures (memory, dates open); a late one says "not answering". */
+    static final long PROBE_BUDGET_MS = 400;
+    private static final ExecutorService PROBES = Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("engine-probe-", 0).factory());
+
+    /** An engine's own figures when it runs: {memory bytes, dates open}. */
+    private long[] probe(String id) {
+        ComputeEngine eng = registry.engine(id);
+        return registry.running(id) && eng != null ? new long[] {eng.memoryBytes(), eng.datesOpen()} : new long[] {0, 0};
+    }
+
+    /** The probe's answer by {@code until} (System.nanoTime), or null when it is late or failed: the row says the engine is not answering. */
+    private static long[] answer(CompletableFuture<long[]> f, long until) {
+        try {
+            return f.get(Math.max(0, until - System.nanoTime()), TimeUnit.NANOSECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return null;
+        } catch (Exception e) {                                       // late, or the engine's figure threw: not answering
+            return null;
+        }
+    }
+
+    /** The names of the live threads, without their stacks (one cheap look). */
+    private static List<String> threadNames() {
+        var mx = ManagementFactory.getThreadMXBean();
+        return Arrays.stream(mx.getThreadInfo(mx.getAllThreadIds(), 0)).filter(java.util.Objects::nonNull).map(ThreadInfo::getThreadName).toList();
+    }
+
+    private Map<String, Object> row(EngineCatalogue.Entry e, List<String> threads, long[] figures) {
         Map<String, Object> r = new LinkedHashMap<>();
         String id = e.id();
         ComputeEngine eng = registry.engine(id);
@@ -227,10 +266,11 @@ public class EngineAdminController {
         r.put("on", registry.desired(id));
         r.put("liveOn", e.liveOn());
         r.put("restartNeeded", registry.restartNeeded(id));
-        boolean running = registry.running(id);
-        r.put("memoryBytes", running && eng != null ? eng.memoryBytes() : 0L);
-        r.put("threads", eng == null ? 0 : ComputeEngine.threadsNamed(eng.threadPrefixes()));
-        r.put("datesOpen", running && eng != null ? eng.datesOpen() : 0);
+        r.put("memoryBytes", figures == null ? 0L : figures[0]);
+        r.put("answering", figures != null);
+        List<String> prefixes = eng == null ? List.of() : eng.threadPrefixes();
+        r.put("threads", prefixes.isEmpty() ? 0 : (int) threads.stream().filter(n -> prefixes.stream().anyMatch(n::startsWith)).count());
+        r.put("datesOpen", figures == null ? 0 : (int) figures[1]);
         r.put("inFlight", registry.inFlight(id));
         r.put("needs", e.needs());
         r.put("uses", e.uses());

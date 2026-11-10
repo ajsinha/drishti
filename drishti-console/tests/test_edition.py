@@ -84,9 +84,9 @@ def test_without_an_edition_the_console_is_the_full_product(backend, monkeypatch
     for href in TODAY:
         assert href in links, href
     assert "/lens/risk" not in links
-    assert "/var" in links and "/exposure" in links and "data-engines-menu" in t       # the Engines menu (2.9.11.a): VaR and Exposure, any product
-    views = t[t.index('<span class="tbar-menu-l">Views</span>'):t.index("data-engines-menu")]
-    assert 'href="/var"' not in views and 'href="/exposure"' not in views             # no longer in Views: one place each
+    assert "/var" in links and "/exposure" in links and "data-engines-menu" not in t   # VaR and Exposure under Risk (the Engines menu removed)
+    views = t[t.index('<span class="tbar-menu-l">Views</span>'):t.index('<span class="tbar-menu-l">Risk</span>')]
+    assert 'href="/var"' not in views and 'href="/exposure"' not in views             # not in Views: one place each
     assert 'placeholder="TRD MX-20000001, CPTY north, TRD PRODUCT_TYPE=FX_QUANTO …  then &lt;GO&gt;"' in t
     assert c.get("/admin/ai").status_code == 200 and c.get("/admin/compute").status_code == 200
     home = c.get("/").text

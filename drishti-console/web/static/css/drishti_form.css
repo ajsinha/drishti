@@ -31,13 +31,9 @@
 .qf-group legend { font-size: var(--d-fs-12_8); letter-spacing: .04em; text-transform: uppercase; color: var(--d-muted); width: auto; padding: 0 var(--d-sp-6_4); margin: 0; float: none; }
 /* the fields: drishti-inputs' Form (drishti_form.js); a group and each field a fieldset, laid out in columns that fold to one on a phone */
 .qf-fields-host .di-form-el { max-width: none; }
-.qf-fields-host .qf-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(21rem, 100%), 1fr)); gap: var(--d-sp-11_2) var(--d-sp-19_2); }
-.qf-fields-host .qf-group > legend { grid-column: 1 / -1; }
-.qf-fields-host .qf-field { min-width: 0; margin: 0; }
-.qf-fields-host .qf-field > .di-form-body, .qf-fields-host .qf-field { display: flex; flex-wrap: wrap; gap: var(--d-sp-5_6) var(--d-sp-9_6); align-items: flex-end; }
-.qf-fields-host .qf-field > legend { flex: 1 1 100%; font-size: var(--d-fs-13_12); font-weight: 600; }
-.qf-fields-host .qf-field .di-form-field { flex: 1 1 9rem; min-width: 0; }
-.qf-fields-host .qf-field .di-t-array, .qf-fields-host .qf-t-id .di-form-field { flex: 1 1 100%; }
+.qf-fields-host .qf-group { gap: var(--d-sp-11_2) var(--d-sp-19_2); }   /* the group's columns are drishti-inputs' (layout columns) */
+.qf-fields-host .qf-field > legend { font-size: var(--d-fs-13_12); font-weight: 600; }   /* a field's parts side by side: drishti-inputs' columns */
+.qf-fields-host .qf-t-id .di-form-field { flex-basis: 100%; }
 .qf-chk { display: inline-flex; align-items: center; gap: var(--d-sp-5_6); font-size: var(--d-fs-13_12); font-weight: 400; margin: 0; cursor: pointer; }
 .qf-big-chips { list-style: none; display: flex; flex-wrap: wrap; gap: var(--d-sp-4_8); margin: 0 0 var(--d-sp-4_8); padding: 0; }
 .qf-result-opts drishti-select .di-control { min-height: 32px; }             /* drishti-inputs' Select: its look is the library's */

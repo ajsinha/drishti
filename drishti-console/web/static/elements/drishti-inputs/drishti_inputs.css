@@ -150,7 +150,20 @@
 /* forms */
 .di-form-el { display: flex; flex-direction: column; gap: 10px; max-width: 760px; }
 .di-form-body { display: flex; flex-direction: column; gap: 10px; }
-.di-columns .di-form-body { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+/* columns: the fields side by side, each as tall as its content (a short field never stretched to its row's tallest); a group (an
+   object at the top) takes the whole row and lays its own fields out in the same columns, so a form of groups uses the page's width */
+.di-form[data-di-form] { flex: 1 1 auto; min-width: 0; }   /* a server-drawn form in a page's bar (a flex row) takes the room left, not its narrowest */
+.di-columns .di-form-body { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr)); align-items: start; }
+.di-columns .di-form-body > .di-t-object { grid-column: 1 / -1; }
+.di-columns .di-form-body > .di-t-object > .di-fieldset { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr)); align-items: start; align-content: start; }
+.di-columns .di-form-body > .di-t-object > .di-fieldset > .di-help { grid-column: 1 / -1; }
+.di-columns .di-fieldset { min-width: 0; }
+/* an object inside a group (a field of parts: how to compare, a value, a second value) keeps its parts on a line while they fit, each
+   label on its control, the parts' bottoms aligned */
+.di-columns .di-t-object .di-t-object > .di-fieldset { flex-direction: row; flex-wrap: wrap; align-items: flex-end; align-content: flex-start; gap: 6px 10px; margin: 0; }
+.di-columns .di-t-object .di-t-object > .di-fieldset > :is(legend, .di-help) { flex: 1 1 100%; }
+.di-columns .di-t-object .di-t-object > .di-fieldset > .di-form-field { flex: 1 1 9rem; min-width: 0; }
+.di-columns .di-t-object .di-t-object > .di-fieldset > :is(.di-t-array, .di-t-object) { flex-basis: 100%; }
 .di-form-title { margin: 0; font-size: 1.15em; }
 .di-form-field { display: flex; flex-direction: column; gap: 3px; }
 .di-form-field[hidden] { display: none; }

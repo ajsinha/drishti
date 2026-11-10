@@ -50,28 +50,28 @@ def _commands(panel: str) -> list[str]:
     return re.findall(r'<code class="mega-cmd mono">([^<]+)</code>', panel)
 
 
-def test_a_full_drishti_keeps_its_menus_with_engines_after_views(backend, monkeypatch):
+def test_a_full_drishti_keeps_its_menus_with_risk_after_views(backend, monkeypatch):
+    """The Engines menu removed (owner 2026-11-09): the engines' pages live under Risk, drawn in the full product's bar too."""
     app = _app(backend, monkeypatch)
     app.state.editions.learn({"product": "Drishti", "edition": None, "lenses": []})
     page = _client(app).get("/t").text
-    assert _drawn(page) == ["Views", "Engines", "Admin", "Help"] and "Build" in _menus(page)
-    assert _menus(page)[:2] == ["Views", "Engines"]
+    assert _drawn(page) == ["Views", "Risk", "Admin", "Help"] and "Build" in _menus(page)
+    assert _menus(page)[:2] == ["Views", "Risk"]
 
 
-def test_the_risk_edition_draws_one_engines_menu_in_place_of_var_and_exposure(backend, monkeypatch):
-    """2.9.11.a: the Engines menu replaces the VaR and Exposure menus; a column per engine with its command word (mock-up engines-menu/A)."""
+def test_the_risk_edition_draws_risk_and_counterparties_with_the_engines_pages(backend, monkeypatch):
+    """The Risk menu holds the VaR and exposure engines' pages, each with its command (the Engines menu removed, owner 2026-11-09)."""
     app = _app(backend, monkeypatch)
     app.state.editions.learn(RISK_ABOUT)
     page = _client(app).get("/t").text
-    assert _drawn(page) == ["Views", "Engines", "Admin", "Help"] and "Build" not in _menus(page)   # Build is off in Risk
-    assert "VaR" not in _menus(page) and "Exposure" not in _menus(page) and "data-subject" not in page
-    eng = _panel(page, "Engines")
-    assert re.findall(r'class="mega-title eng-name">([^<]+)<', eng)[:2] == ["VaR", "Exposure"]
-    cmds = _commands(eng)
-    for c in ("VAR BANK", "VRES", "VOFF", "SMAT", "VLIM", "SWIN BANK", "EXP"):
+    assert _drawn(page) == ["Views", "Risk", "Counterparties", "Admin", "Help"] and "Build" not in _menus(page)   # Build is off in Risk
+    risk = _panel(page, "Risk")
+    assert re.findall(r'<div class="mega-title">([^<]+)<', risk) == ["Risk on my book", "VaR", "Exposure"]
+    cmds = _commands(risk)
+    for c in ("VAR BANK", "VAR BANK EXPLAIN", "VRES", "VOFF", "SMAT", "VLIM", "SWIN BANK", "EXP"):
         assert c in cmds, c
-    assert 'href="/go?q=SWIN%20BANK%20%3CGO%3E"' in eng and 'href="/smat"' in eng and 'href="/var"' in eng
-    assert 'data-fill="EXP CPTY"' in eng and 'href="/t?cmd=EXP%20CPTY"' in eng
+    assert 'href="/go?q=SWIN%20BANK%20%3CGO%3E"' in risk and 'href="/smat"' in risk and 'href="/var"' in risk
+    assert 'data-fill="EXP CPTY"' in risk and 'href="/t?cmd=EXP%20CPTY"' in risk
     assert "XWIF" not in cmds and "PREDEAL" not in cmds          # one place: Counterparties → Pre-deal check
 
 
@@ -82,7 +82,7 @@ def test_an_item_for_a_page_this_build_lacks_is_not_drawn(backend, monkeypatch):
     app.state.editions.learn(RISK_ABOUT)
     paths = _route_paths(app.routes)
     assert "/var" in paths and "/t" in paths                       # every included router is walked (FastAPI 0.142 keeps them whole)
-    eng = _panel(_client(app).get("/t").text, "Engines")
+    eng = _panel(_client(app).get("/t").text, "Risk")
     assert ("PLAY VAR" in _commands(eng)) == ("/play" in paths)
     assert ("VAR BANK BACKTEST" in _commands(eng)) == ("/var/backtesting" in paths)
 
@@ -93,12 +93,12 @@ def test_a_lens_draws_its_own_subject_menus_for_that_person_only(backend, monkey
     alice, bob = _client(app), _client(app, "bob")
     expected = {"world": ["Views", "Economies", "Markets", "Companies", "Admin", "Help"],
                 "market": ["Views", "Curves", "Volatility", "FX", "Credit", "Admin", "Help"],
-                "trading": ["Views", "Engines", "Markets", "Blotter", "Positions", "Risk", "Counterparties", "Help"]}   # BI and Admin by command
+                "trading": ["Views", "Markets", "Blotter", "Positions", "Risk", "Counterparties", "Help"]}   # BI and Admin by command
     for lens, menus in expected.items():
         alice.post(f"/lens/{lens}")
         page = alice.get("/t").text
         assert _drawn(page) == menus, lens
-        assert _drawn(bob.get("/t").text) == ["Views", "Engines", "Admin", "Help"]
+        assert _drawn(bob.get("/t").text) == ["Views", "Risk", "Admin", "Help"]
     alice.post("/lens/market")
     page = alice.get("/t").text
     assert _commands(_panel(page, "Curves")) == ["CRV", "REPO", "FIX", "INF"]
@@ -112,7 +112,7 @@ def test_a_lens_draws_its_own_subject_menus_for_that_person_only(backend, monkey
     alice.post("/lens/trading")
     page = alice.get("/t").text
     assert _commands(_panel(page, "Blotter")) == ["TRD", "CTRD", "PTRD", "LTRD"]
-    assert _commands(_panel(page, "Risk")) == ["VAR", "VLIM", "TVAL", "PNLV", "DPNL", "PNL", "SENS"]
+    assert _commands(_panel(page, "Risk"))[:7] == ["VAR", "VLIM", "TVAL", "PNLV", "DPNL", "PNL", "SENS"]
     assert _commands(_panel(page, "Counterparties")) == ["CPTY", "NSET", "LIM", "PREDEAL", "EXP", "CCUBE"]   # PREDEAL: Counterparties → Pre-deal check   # CCUBE: the Pivot's preset ccr, under construction
 
 
