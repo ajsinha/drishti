@@ -1,0 +1,97 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The kinds the module reads; the site binds each to its own connectors (config/bindings.yaml).
+needs:
+- kind: economy
+  contract: '>=1.0 <2'
+  required: false
+- kind: macro-indicator
+  contract: '>=1.0 <2'
+  required: false
+- kind: economic-forecast
+  contract: '>=1.0 <2'
+  required: false
+- kind: labour-market
+  contract: '>=1.0 <2'
+  required: false
+- kind: fiscal-position
+  contract: '>=1.0 <2'
+  required: false
+- kind: country-group
+  contract: '>=1.0 <2'
+  required: false
+- kind: region-economy
+  contract: '>=1.0 <2'
+  required: false
+- kind: jurisdiction
+  contract: '>=1.0 <2'
+  required: false
+- kind: party
+  contract: '>=1.0 <2'
+  required: false
+- kind: office-holder
+  contract: '>=1.0 <2'
+  required: false
+- kind: election
+  contract: '>=1.0 <2'
+  required: false
+- kind: region
+  contract: '>=1.0 <2'
+  required: false
+- kind: social-indicator
+  contract: '>=1.0 <2'
+  required: false
+- kind: news-topic
+  contract: '>=1.0 <2'
+  required: false
+- kind: news
+  contract: '>=1.0 <2'
+  required: false
+- kind: listed-company
+  contract: '>=1.0 <2'
+  required: false
+- kind: quote
+  contract: '>=1.0 <2'
+  required: false
+- kind: development-profile
+  contract: '>=1.0 <2'
+  required: false
+- kind: development-series
+  contract: '>=1.0 <2'
+  required: false
+- kind: central-bank
+  contract: '>=1.0 <2'
+  required: false
+- kind: rate-series
+  contract: '>=1.0 <2'
+  required: false
+- kind: statistics-series
+  contract: '>=1.0 <2'
+  required: false
+- kind: oecd-country
+  contract: '>=1.0 <2'
+  required: false
+- kind: oecd-series
+  contract: '>=1.0 <2'
+  required: false
+- kind: release-source
+  contract: '>=1.0 <2'
+  required: false
+- kind: press-release
+  contract: '>=1.0 <2'
+  required: false
+- kind: event-country
+  contract: '>=1.0 <2'
+  required: false

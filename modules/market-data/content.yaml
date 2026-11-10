@@ -1,0 +1,28 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# What the packer brings in from the repository (paths from this folder), so each file keeps one home: the packs without
+# their connector templates (a module carries no connector), the lens and the tutorial. This list itself is not packed.
+copy:
+- from: ../../config/packs/banking/market-data
+  to: packs/market-data
+  leave-out:
+  - tests
+  - tools
+  sections-out:
+  - connectors
+- from: ../../config/lenses/banking/market.yaml
+  to: lenses/market.yaml
+- from: ../../docs/tutorials/06-groupings-and-analytics.md
+  to: tutorials/06-groupings-and-analytics.md

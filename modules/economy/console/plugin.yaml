@@ -1,0 +1,194 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The module's pages: a Sutra page per function, under /m/economy/ (KERNEL_AND_MODULES.md section 9.8).
+format: 2
+module: economy
+title: Economy and public sector
+routes:
+- id: wrld
+  path: /world-economy
+  sutra: world-economy/catalog
+  function: WRLD
+  title: World economy
+- id: econ
+  path: /world-economy/economy/{id}
+  sutra: world-economy/economy
+  function: ECON
+  title: Economy
+- id: macro
+  path: /world-economy/macro-indicator/{id}
+  sutra: world-economy/macro-indicator
+  function: MACRO
+  title: Macro indicator
+- id: fcst
+  path: /world-economy/economic-forecast/{id}
+  sutra: world-economy/economic-forecast
+  function: FCST
+  title: Economic forecast
+- id: labr
+  path: /world-economy/labour-market/{id}
+  sutra: world-economy/labour-market
+  function: LABR
+  title: Labour market
+- id: fisc
+  path: /world-economy/fiscal-position/{id}
+  sutra: world-economy/fiscal-position
+  function: FISC
+  title: Fiscal position
+- id: ecg
+  path: /world-economy/country-group/{id}
+  sutra: world-economy/country-group
+  function: ECG
+  title: Country group
+- id: rege
+  path: /world-economy/region-economy/{id}
+  sutra: world-economy/region-economy
+  function: REGE
+  title: Region economy
+- id: jur
+  path: /world-economy/jurisdiction/{id}
+  sutra: world-economy/jurisdiction
+  function: JUR
+  title: Jurisdiction
+- id: party
+  path: /world-economy/party/{id}
+  sutra: world-economy/party
+  function: PARTY
+  title: Party
+- id: offc
+  path: /world-economy/office-holder/{id}
+  sutra: world-economy/office-holder
+  function: OFFC
+  title: Office holder
+- id: elec
+  path: /world-economy/election/{id}
+  sutra: world-economy/election
+  function: ELEC
+  title: Election
+- id: regn
+  path: /world-economy/region/{id}
+  sutra: world-economy/region
+  function: REGN
+  title: World region
+- id: soci
+  path: /world-economy/social-indicator/{id}
+  sutra: world-economy/social-indicator
+  function: SOCI
+  title: Social indicator
+- id: nwmk
+  path: /news-and-markets
+  sutra: news-and-markets/catalog
+  function: NWMK
+  title: News and markets
+- id: topic
+  path: /news-and-markets/news-topic/{id}
+  sutra: news-and-markets/news-topic
+  function: TOPIC
+  title: News topic
+- id: news
+  path: /news-and-markets/news/{id}
+  sutra: news-and-markets/news
+  function: NEWS
+  title: Headlines
+- id: co
+  path: /news-and-markets/listed-company/{id}
+  sutra: news-and-markets/listed-company
+  function: CO
+  title: Listed company
+- id: quote
+  path: /news-and-markets/quote/{id}
+  sutra: news-and-markets/quote
+  function: QUOTE
+  title: Quote and price history
+- id: wdev
+  path: /world-development
+  sutra: world-development/catalog
+  function: WDEV
+  title: World development
+- id: wdi
+  path: /world-development/development-profile/{id}
+  sutra: world-development/development-profile
+  function: WDI
+  title: Development profile
+- id: wdis
+  path: /world-development/development-series/{id}
+  sutra: world-development/development-series
+  function: WDIS
+  title: Development indicator series
+- id: cbnk
+  path: /central-banks
+  sutra: central-banks/catalog
+  function: CBNK
+  title: Central banks
+- id: cbank
+  path: /central-banks/central-bank/{id}
+  sutra: central-banks/central-bank
+  function: CBANK
+  title: Central bank
+- id: cbser
+  path: /central-banks/rate-series/{id}
+  sutra: central-banks/rate-series
+  function: CBSER
+  title: Central bank series
+- id: stcan
+  path: /national-statistics
+  sutra: national-statistics/catalog
+  function: STCAN
+  title: National statistics
+- id: nstat
+  path: /national-statistics/statistics-series/{id}
+  sutra: national-statistics/statistics-series
+  function: NSTAT
+  title: National statistic
+- id: oecdp
+  path: /oecd
+  sutra: oecd/catalog
+  function: OECDP
+  title: OECD
+- id: oecd
+  path: /oecd/oecd-country/{id}
+  sutra: oecd/oecd-country
+  function: OECD
+  title: OECD country
+- id: oecds
+  path: /oecd/oecd-series/{id}
+  sutra: oecd/oecd-series
+  function: OECDS
+  title: OECD series
+- id: onews
+  path: /official-news
+  sutra: official-news/catalog
+  function: ONEWS
+  title: Official news
+- id: press
+  path: /official-news/release-source/{id}
+  sutra: official-news/release-source
+  function: PRESS
+  title: Official press releases
+- id: prel
+  path: /official-news/press-release/{id}
+  sutra: official-news/press-release
+  function: PREL
+  title: Press release
+- id: gdlt
+  path: /gdelt-events
+  sutra: gdelt-events/catalog
+  function: GDLT
+  title: GDELT events
+- id: gdelt
+  path: /gdelt-events/event-country/{id}
+  sutra: gdelt-events/event-country
+  function: GDELT
+  title: World events by country

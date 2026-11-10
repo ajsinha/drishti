@@ -23,7 +23,8 @@ description: VaR and counterparty exposure, from your own pricing data, in one p
 packs:
   enabled:                               # by module: a module that is off brings none of its packs
     core: [core]
-    banking: [market-data, trading, counterparty-risk, market-risk]
+    market-data: [market-data]           # the market-data module (banking requires it)
+    banking: [trading, counterparty-risk, market-risk]   # the banking module: trades and the risk packs
   allow-only: true                       # Admin -> Packs, Deploy archive and the registry refuse any other pack (DRS-1017)
 
 commands:                                # what people may type and see (command line, FUNC, type-ahead, examples, pages);

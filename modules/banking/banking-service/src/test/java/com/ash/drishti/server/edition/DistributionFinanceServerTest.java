@@ -36,9 +36,9 @@ import org.springframework.test.web.servlet.MvcResult;
  * data among them), no VaR, exposure or trading command in FUNC or the type-ahead (what the AI reads), a VaR command answering "not in
  * Drishti Finance", the VaR and exposure engines off, and Health's distribution card.
  */
-@SpringBootTest(properties = {"drishti.distribution=finance", "drishti.distributions-dir=../config/distributions", "drishti.packs.dir=../config/packs",
+@SpringBootTest(properties = {"drishti.distribution=finance", "drishti.distributions-dir=../../../config/distributions", "drishti.module-manifests-dir=../../../modules", "drishti.packs.dir=../../../config/packs",
         "drishti.packs.enabled=default", "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.enabled=false",
-        "drishti.bi.dir=../config/bi", "drishti.tables.root=../config/tables", "drishti.bi.query.store-dir=${drishti.test.dir}/finance-bi-store/${random.uuid}",
+        "drishti.bi.dir=../../../config/bi", "drishti.tables.root=../../../config/tables", "drishti.bi.query.store-dir=${drishti.test.dir}/finance-bi-store/${random.uuid}",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/finance-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 class DistributionFinanceServerTest {
@@ -57,7 +57,7 @@ class DistributionFinanceServerTest {
         JsonNode about = getJson("/api/v1/about");
         assertThat(about.path("product").asText()).isEqualTo("Drishti Finance");
         assertThat(about.path("edition").path("name").asText()).isEqualTo("drishti.finance");
-        assertThat(getJson("/public/about").path("lenses").toString()).contains("world");
+        assertThat(getJson("/public/about").path("lenses").toString()).contains("markets", "world");   // the Markets lens: capital-markets
         List<String> packs = new ArrayList<>();
         getJson("/api/v1/packs").forEach(p -> packs.add(p.path("name").asText()));
         assertThat(packs).contains("market-data", "world-economy").doesNotContain("market-risk", "counterparty-risk", "trading");
@@ -84,6 +84,7 @@ class DistributionFinanceServerTest {
         JsonNode d = getJson("/api/v1/admin/health").path("distribution");
         assertThat(d.path("id").asText()).isEqualTo("drishti.finance");
         assertThat(d.path("modules").path("economy").asText()).isEqualTo("loaded");
+        assertThat(d.path("modules").path("market-data").asText()).isEqualTo("loaded");
         assertThat(d.path("asked").toString()).contains("capital-markets", "economy", "market-data");
     }
 }

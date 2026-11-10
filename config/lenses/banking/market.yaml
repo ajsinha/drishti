@@ -24,7 +24,7 @@ description: Curves, surfaces, fixings and prices, the market data that feeds ri
 packs:
   enabled:                               # by module: a module that is off brings none of its packs (market-data extends core)
     core: [core]                         # the core's packs this lens opens
-    banking: [market-data]               # the banking module's: the market data (issuers, curves, vols); no trading, no risk pack
+    market-data: [market-data]           # the market-data module: the market data (issuers, curves, vols); no trading, no risk pack
   allow-only: true                       # Admin -> Packs, Deploy archive and the registry refuse any other pack (DRS-1017)
 
 commands:                                # what people may type and see (command line, FUNC, type-ahead, examples, pages)

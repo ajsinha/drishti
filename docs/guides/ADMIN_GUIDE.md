@@ -1650,7 +1650,7 @@ a Drishti Risk console and a Drishti Finance console ([DEPLOYMENT_AND_QA_GUIDE.m
 
 **Your own brand.** Copy a shipped file to a new `drishti.acme.yaml` beside it in config/distributions, change `distribution: drishti.acme` and its
 `brand:` (`product`, `tagline`, `owner`, `copyright`, `notice`, `logo`, `favicon`, `about`, `support`), `theme:` (`tokens`: one of the
-console's themes, `mode`, `density`), `modules:` (ids from `config/distributions/modules.yaml`), `lenses:`, `menus:`, `home:` and
+console's themes, `mode`, `density`), `modules:` (module ids: each module's own manifest under `modules/<id>/`), `lenses:`, `menus:`, `home:` and
 `docs: { title }`; start with `--distribution acme`. A distribution names modules; it never contains code, connectors or credentials,
 and it cannot widen the licence.
 

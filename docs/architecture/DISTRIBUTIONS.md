@@ -140,7 +140,7 @@ http://<host>:17481. The Deployment and QA guide gets a step-by-step section for
 
 | Wave | Item |
 |---|---|
-| 2 | `banking` as a `.dmod` (in progress); **`market-data` split out of banking as its own module**; **`capital-markets` and `economy` packaged as modules** (added for these distributions) |
+| 2 | `banking` as a `.dmod` (in progress); **`market-data` split out of banking as its own module** (built: banking requires it); **`capital-markets` and `economy` packaged as modules** (built: `modules/<id>/`, each `.dmod` passing the fifteen checks) |
 | 3 | the distribution file reader (kernel and console), `drishti.risk.yaml`, `drishti.finance.yaml`, `drishti.genomics.yaml`, `drishti.all.yaml` (the default); `--distribution` on every bin/ script and stack file consoles; Home, menus, Help and AI filtered by distribution; themes; Admin → White label (option A); the old product keys read once |
 | 4 | proofs: each distribution boots from its file alone; the owner's stack runs Risk on 17480 and Finance on 17481 over one cluster; genomics boots with no finance |
 
@@ -155,9 +155,28 @@ http://<host>:17481. The Deployment and QA guide gets a step-by-step section for
 ## 10. How it works (as built)
 
 **The files.** `config/distributions/drishti.all.yaml`, `drishti.risk.yaml`, `drishti.finance.yaml` and `drishti.genomics.yaml`, and
-`config/distributions/modules.yaml`, which maps each module id to what carries it today (its packs, its command words, the engines it
-owns, its domain module, its top menus and the Help it owns) until every module ships as a `.dmod`. A site adds its own file beside them
-(or anywhere, named by path).
+`config/distributions/kernel.yaml`, the kernel's own packs, words and menus. A site adds its own file beside them (or anywhere, named by
+path). What each module holds is read from **its own manifest**, never from a hand list: a content module's `modules/<id>/module.yaml`
+(the `.dmod` manifest: `packs.list`, `functions`, `compute.engines`, `console.menus`, `docs.domains`, `requires`) and a module with code's
+`META-INF/drishti/module.yaml` in its sources (`modules/banking/banking-service/...`: `contributes.packs`, `functions`, `engines`,
+`menus`, `help`, `requires`). The folder is `drishti.module-manifests-dir` (`module_manifests_dir` on the console,
+`DRISHTI_MODULE_MANIFESTS_DIR` for both; default `./modules`). A listed module brings the modules it requires (banking brings
+market-data); a listed module with no manifest stops the start unless the file says `required: false` (Genomics: listed, not installed).
+
+**The content modules.** Three `.dmod`s, each a folder in the `.dmod` layout (`module.yaml`, `console/plugin.yaml` with a Sutra page per
+function under `/m/<id>/`, `docs/` with a README, Help section, guides and tutorial, `data/needs.yaml`) plus `content.yaml`, the
+repository content the module tool brings in when it packs (the packs without their connector templates, the lens, the tutorial), so
+every file keeps one home. `java -jar drishti-module-tool.jar pack modules/<id>` writes `<id>-1.0.0.dmod`; `check` passes C1 to C15.
+
+| Module | Packs | Lens | In |
+|---|---|---|---|
+| `market-data` | market-data (MKT, CRV, REPO, IRV, CPV, FIX, INF, INFC, FX, FXF, FXV, CDS, BND, EQ, EQX, DIV, EQV, CMD, CMDC, CMDV, CORR, CORRC, EQB) | Market | Risk, Finance, All |
+| `capital-markets` | us-equities, funds | **Markets** (Home's Markets cards: USEQ AAPL, FUND SPY, IDX SP500, CRV, FXV) | Finance, All |
+| `economy` | world-economy, news-and-markets, world-development, central-banks, national-statistics, oecd, official-news, gdelt-events | World | Finance, All |
+
+The IMF figures stay out of the economy package (world-economy's samples are left out); US equity prices stay internal-only and off.
+The World landing (Home's World desk) is still drawn by the console's economy plugin: its two hand-drawn tables move onto the Elements
+grid before the page can ship in the economy `.dmod` (conformance C2).
 
 **Choosing one.** `--distribution <name|path>` (the server's `--distribution=` argument, the console's `--distribution=` setting, every
 `bin/` start script), else `DRISHTI_DISTRIBUTION`, else `drishti.distribution` in the server's configuration (`distribution:` in the
@@ -202,6 +221,6 @@ console per entry, each `console-<name>` with its own pid file, log and temp fol
 IntelliJ: `Drishti server (Risk)`, `(Finance)`, `(All)` and `Drishti console (Risk)` (17480), `(Finance)` (17481), `(All)`. The
 Deployment and QA guide has the step-by-step for each on Linux, macOS and Windows.
 
-**Not yet (wave 2 and later).** The Markets lens of Drishti Finance waits for capital-markets as a module (Finance offers World today);
-logos and favicons beyond the eye are blank until a distribution ships its own files; Genomics boots on the kernel alone until its
-module ships.
+**Not yet (wave 2 and later).** The kernel loading `.dmod`s (until then the packs load from `config/packs` and the registry's content
+modules from the server's manifest); logos and favicons beyond the eye are blank until a distribution ships its own files; Genomics boots
+on the kernel alone until its module ships.

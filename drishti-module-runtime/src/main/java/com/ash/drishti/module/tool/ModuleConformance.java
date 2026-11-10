@@ -346,13 +346,18 @@ public final class ModuleConformance {
         for (Map.Entry<String, List<String>> e : m.kinds().entrySet()) {
             for (String kind : e.getValue()) {
                 String f = "packs/" + e.getKey() + "/contracts/" + kind + ".yaml";
+                String named = "packs/" + e.getKey() + "/contracts/" + kind + ".contract.yaml";   // a pack's own contract file (docs/contracts)
+                if (!files.contains(f) && files.contains(named)) {
+                    f = named;
+                }
                 if (!files.contains(f)) {
                     out.add("kind " + kind + " has no contract: write " + f + " (contract-format: 1, a binding-hint, no storage)");
                     continue;
                 }
                 Map<String, Object> c = yaml(dir, f);
-                if (!"1".equals(String.valueOf(c.get("contract-format")))) {
-                    out.add(f + " must say contract-format: 1");
+                boolean packContract = kind.equals(str(c.get("kind"))) && c.get("version") != null;   // the pack's contract format, kind and version
+                if (!"1".equals(String.valueOf(c.get("contract-format"))) && !packContract) {
+                    out.add(f + " must say contract-format: 1 (or be the pack's contract of kind " + kind + " with its version)");
                 }
                 if (c.get("binding-hint") == null) {
                     out.add(f + " has no binding-hint: (tell the data administrator what usually serves this kind)");
@@ -381,16 +386,48 @@ public final class ModuleConformance {
             }
             String text = text(dir, f);
             Matcher s = SECRET.matcher(text);
-            Matcher k = CONNECTOR_KEY.matcher(text);
-            // the connector keys are read in YAML only, and not in module.yaml (its console.plugin names the module's plugin file)
+            // the connector keys are read in YAML only, and not in module.yaml (its console.plugin names the module's plugin file): as keys of
+            // the parsed document, so a sentence that says "the prices connector: off as shipped" is not one
             boolean yaml = !DmodManifest.FILE.equals(f) && (f.endsWith(".yaml") || f.endsWith(".yml"));
-            String found = s.find() ? s.group() : yaml && k.find() ? k.group() : null;
+            String found = s.find() ? s.group() : yaml ? connectorKey(dir, f, text) : null;
             if (found != null) {
                 out.add(f + " has \"" + found.trim() + "\": a module carries no connector, host, user name, password, key or token; the "
                         + "site binds the module's kinds to its own connectors and keeps secrets in the kernel's secret store");
             }
         }
         return out;
+    }
+
+    /** The first connector key of a YAML file ({@code connector:}), read as a key of the document; unreadable YAML is read as text. */
+    private static String connectorKey(Path dir, String f, String text) {
+        Object doc;
+        try {
+            doc = YAML.readValue(dir.resolve(f).toFile(), Object.class);
+        } catch (IOException e) {
+            Matcher k = CONNECTOR_KEY.matcher(text);
+            return k.find() ? k.group() : null;
+        }
+        java.util.ArrayDeque<Object> todo = new java.util.ArrayDeque<>();
+        if (doc != null) {
+            todo.add(doc);
+        }
+        while (!todo.isEmpty()) {
+            Object o = todo.pop();
+            if (o instanceof Map<?, ?> m) {
+                for (Map.Entry<?, ?> e : m.entrySet()) {
+                    Matcher k = CONNECTOR_KEY.matcher(" " + e.getKey() + ":");
+                    if (k.find()) {
+                        return k.group();
+                    }
+                    if (e.getValue() != null) {
+                        todo.add(e.getValue());
+                    }
+                }
+            } else if (o instanceof List<?> l) {
+                l.stream().filter(java.util.Objects::nonNull).forEach(todo::add);
+            }
+        }
+        return null;
     }
 
     private static List<String> licenceHeaders(Path dir, List<String> files, Path project) {

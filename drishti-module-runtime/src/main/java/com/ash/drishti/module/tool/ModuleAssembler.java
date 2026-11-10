@@ -33,8 +33,20 @@ import java.util.stream.Stream;
  * Lays a module project's files into the {@code .dmod} layout and packs them with the module runtime's packer (section 8.2): everything
  * under {@code src/dmod/} as it is (module.yaml, console/, data/, packs/, docs/ ...) plus the module's jar under {@code java/} by the name
  * its manifest gives. Nothing is written into the sources: the files are staged under {@code target/dmod-stage/<id>/}.
+ *
+ * <p>A module folder may also hold {@value #CONTENT}: content the packer brings in from elsewhere in the same repository, so a pack, a
+ * lens or a page that the running product still reads from its old place has one home and is never copied by hand. Each entry copies
+ * {@code from} (a file or folder, relative to the module folder) to {@code to} inside the package, leaving out the folder or file names
+ * of {@code leave-out}; {@code sections-out} drops those top-level sections of every {@code pack.yaml} it copies (the pack's connector
+ * templates: a module carries no connector, the site binds its kinds). The file itself is not packed.
  */
 public final class ModuleAssembler {
+
+    /** The module folder's list of repository content to bring in (not packed). */
+    public static final String CONTENT = "content.yaml";
+
+    private static final com.fasterxml.jackson.databind.ObjectMapper YAML =
+            new com.fasterxml.jackson.databind.ObjectMapper(new com.fasterxml.jackson.dataformat.yaml.YAMLFactory());
 
     private ModuleAssembler() {
     }
@@ -95,6 +107,7 @@ public final class ModuleAssembler {
         try {
             delete(stage);
             copyTree(source, stage);
+            bringContent(source, stage);
             if (m.java() != null) {
                 Path to = stage.resolve("java").resolve(m.java().jars().get(0));
                 if (jar != null && Files.isRegularFile(jar)) {
@@ -115,6 +128,69 @@ public final class ModuleAssembler {
             throw new UncheckedIOException(e);
         }
     }
+
+    /** Copies what {@value #CONTENT} names into the stage, then removes the list from it. */
+    static void bringContent(Path source, Path stage) throws IOException {
+        Path list = source.resolve(CONTENT);
+        if (!Files.isRegularFile(list)) {
+            return;
+        }
+        Files.deleteIfExists(stage.resolve(CONTENT));
+        com.fasterxml.jackson.databind.JsonNode root = YAML.readTree(list.toFile());
+        for (com.fasterxml.jackson.databind.JsonNode e : root.path("copy")) {
+            Path from = source.resolve(e.path("from").asText("")).normalize();
+            String to = e.path("to").asText("");
+            if (to.isBlank() || to.contains("..") || to.startsWith("/") || !Files.exists(from)) {
+                throw new IllegalStateException(list + ": copy " + e + " needs an existing `from` and a `to` inside the package");
+            }
+            java.util.Set<String> leaveOut = new java.util.HashSet<>();
+            e.path("leave-out").forEach(x -> leaveOut.add(x.asText()));
+            List<String> sectionsOut = new ArrayList<>();
+            e.path("sections-out").forEach(x -> sectionsOut.add(x.asText()));
+            Path dest = stage.resolve(to);
+            try (Stream<Path> s = Files.walk(from)) {
+                for (Path p : (Iterable<Path>) s::iterator) {
+                    Path rel = from.relativize(p);
+                    boolean left = false;
+                    for (Path part : rel) {
+                        left |= leaveOut.contains(part.toString());
+                    }
+                    if (left) {
+                        continue;
+                    }
+                    Path t = rel.toString().isEmpty() ? dest : dest.resolve(rel.toString());
+                    if (Files.isDirectory(p)) {
+                        Files.createDirectories(t);
+                    } else {
+                        Files.createDirectories(t.getParent());
+                        if (!sectionsOut.isEmpty() && "pack.yaml".equals(p.getFileName().toString())) {
+                            Files.writeString(t, withoutSections(Files.readString(p, StandardCharsets.UTF_8), sectionsOut), StandardCharsets.UTF_8);
+                        } else {
+                            Files.copy(p, t, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /** The YAML text without the named top-level sections (each runs to the next top-level key). */
+    static String withoutSections(String yaml, List<String> sections) {
+        StringBuilder out = new StringBuilder();
+        boolean skipping = false;
+        for (String line : yaml.split("\n", -1)) {
+            java.util.regex.Matcher k = TOP_KEY.matcher(line);
+            if (k.lookingAt()) {
+                skipping = sections.contains(k.group(1));
+            }
+            if (!skipping) {
+                out.append(line).append('\n');
+            }
+        }
+        return out.substring(0, Math.max(0, out.length() - 1));
+    }
+
+    private static final java.util.regex.Pattern TOP_KEY = java.util.regex.Pattern.compile("([A-Za-z_][\\w-]*):");
 
     static void copyTree(Path from, Path to) throws IOException {
         try (Stream<Path> s = Files.walk(from)) {
