@@ -1080,13 +1080,15 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
 
     /**
      * The columns of every union connector of the kind, read concurrently and put one after the other (each source system's rows,
-     * ids unique across them). Empty, so documents are read instead, when one of them does not keep the paths as columns, fails or
-     * is too slow; a failure is added to {@code failures}.
+     * ids unique across them). A member that holds nothing of the kind (no table for it yet, such as a source system not loaded) adds
+     * no rows and is left out: documents would find none there either, and reading thousands of them one by one from the other members
+     * instead took a minute (a VaR date's load, its maturity check). Empty, so documents are read instead, when a member that holds
+     * some does not keep the paths as columns, fails or is too slow; a failure is added to {@code failures}.
      */
     private Optional<com.ash.drishti.api.ColumnSet> unionColumns(String kind, java.util.Collection<String> paths, AsOf asOf, List<SourcePlugin> candidates,
             long leftNanos, SourceFailures failures) {
-        List<SourcePlugin> union = candidates.stream().filter(p -> registry.union(p.manifest().name())).toList();
-        if (union.stream().anyMatch(p -> !p.columnar(kind).containsAll(paths))) {
+        List<SourcePlugin> union = candidates.stream().filter(p -> registry.union(p.manifest().name()) && !holdsNone(p, kind)).toList();
+        if (union.isEmpty() || union.stream().anyMatch(p -> !p.columnar(kind).containsAll(paths))) {
             return Optional.empty();
         }
         List<CompletableFuture<Optional<com.ash.drishti.api.ColumnSet>>> parts = union.stream().map(p -> CompletableFuture.supplyAsync(() -> {
@@ -1109,6 +1111,15 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
         }
         sets.stream().filter(c -> c.incomplete() != null).forEach(c -> failures.add(kind, c.incomplete()));
         return sets.isEmpty() ? Optional.empty() : Optional.of(com.ash.drishti.api.ColumnSet.concat(sets));
+    }
+
+    /** True when {@code p} says it holds nothing of the kind; a source that cannot tell may hold some. */
+    private static boolean holdsNone(SourcePlugin p, String kind) {
+        try {
+            return p.holdsNone(kind);
+        } catch (RuntimeException e) {
+            return false;
+        }
     }
 
     /** The newest business date any source of the kind holds (empty when none can say). */

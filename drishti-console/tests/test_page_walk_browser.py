@@ -17,7 +17,7 @@
 - every page of the sitemap (each menu item, the in-context pages, Help's sections, a few pages with a demo id) and every link of the
   top bar, in the full product and in each lens, opened as an administrator on a real server over the cached VaR demo lake: none
   answers 4xx/5xx, shows a server error page, logs a console error, throws, leaves the main area empty or takes longer than the budget
-  (DRISHTI_PAGEWALK_BUDGET, 5 s); every fault and every slow page is listed in one failure;
+  (DRISHTI_PAGEWALK_BUDGET, 10 s); every fault and every slow page is listed in one failure;
 - the key pages (VaR explorer, Why it moved, MR cube, a pivot, BI, a FORM page, Admin → Engines, Connectors, Data loads, Upload, Home,
   Help) at 1366 and 1920 px, dark and light: no sideways scroll, no overlapping controls, labels beside their controls, no field group
   taller than its content, the main content using the width; a drishti-inputs Form on the page by tests/form_layout.py's measure.

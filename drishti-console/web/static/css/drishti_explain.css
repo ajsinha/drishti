@@ -66,7 +66,9 @@ p.dx-pop-h { margin-right: var(--d-sp-18); font-size: var(--d-fs-13); }
 .dx-seg { display: inline-flex; border: 1px solid var(--d-border); border-radius: var(--d-radius-4); overflow: hidden; }
 .dx-segb { border: 0; background: none; color: var(--d-muted); padding: var(--d-sp-3) var(--d-sp-8); font-size: var(--d-fs-12); cursor: pointer; }
 .dx-segb[aria-pressed="true"] { background: var(--d-accent-tint); color: var(--d-ink); }
-.dx-dates { display: inline-flex; gap: var(--d-sp-6); align-items: center; }
+.dx-dates { display: flex; flex-wrap: wrap; gap: var(--d-sp-6); align-items: flex-end; flex: 1 1 100%; min-width: 0; max-width: 100%; }   /* the dates wrap inside the drawer, the button with them */
+.dx-dates label { display: flex; flex-direction: column; gap: var(--d-sp-2); flex: 1 1 9rem; min-width: 0; max-width: 14rem; }
+.dx-dates label > * { max-width: 100%; min-width: 0; }
 .dx-dates input { font-size: var(--d-fs-12); background: var(--d-bg); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: var(--d-radius-4); padding: var(--d-sp-1) var(--d-sp-4); }
 .dx-btn { font-size: var(--d-fs-12); border: 1px solid var(--d-border); background: var(--d-bg); color: var(--d-ink); border-radius: var(--d-radius-4); padding: var(--d-sp-2) var(--d-sp-8); cursor: pointer; }
 

@@ -196,10 +196,11 @@
   function refusal(ctx, panel, doc) {
     var h = ctx.h;
     var p = (ctx.S.problems || []).filter(function (x) { return String(x.message).indexOf('Two filter paths') === 0; })[0];
-    var draw = h('div', { 'data-model-paths': '', style: 'min-height:0' });
+    var draw = h('div', { class: 'ed-paths', 'data-model-paths': '' });
     var shown = !!p;
     function paint() {
       E.clear(draw);
+      draw.classList.toggle('ed-paths-on', shown);
       if (shown) { paths(ctx, draw, doc); }
     }
     if (p) {
@@ -229,7 +230,6 @@
       edges.push({ from: b.through, to: String(b.right).split('.')[0], label: 'bridge' });
     });
     window.Drishti.elements.core.load('drishti-graph').then(function (G) {
-      host.style.height = '320px';
       (G.drawGraphPanel || window.Drishti.elements.graph.drawGraphPanel)(host, { nodes: nodes, edges: edges }, { density: 'compact' });
     });
   }
@@ -238,7 +238,7 @@
   function daxBox(ctx, panel) {
     var h = ctx.h;
     panel.appendChild(h('h3', { text: 'Convert DAX to Rachana' }));
-    var input = h('input', { type: 'text', 'data-dax-input': '', 'aria-label': 'DAX expression', placeholder: 'CALCULATE(SUM(trades[MTM]), ALL(desks))', style: 'width:100%' });
+    var input = h('input', { type: 'text', 'data-dax-input': '', 'aria-label': 'DAX expression', placeholder: 'CALCULATE(SUM(trades[MTM]), ALL(desks))', class: 'ed-in' });
     var out = h('div', { 'data-dax-output': '' });
     panel.appendChild(input);
     panel.appendChild(addButton(ctx, 'Convert', 'data-dax-convert', function () {

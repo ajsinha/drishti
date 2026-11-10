@@ -291,7 +291,7 @@ VaR demo lake (the bank, its desks, the Murex and Endur trades), signed in as th
 A page fails on a 4xx or 5xx answer, a server error page (an alert naming a `DRS-5xxx` code or a server error), a browser console error
 (a Content Security Policy refusal names the script and line), an uncaught exception, a failed request (a file answering 4xx or 5xx, an
 `/api/` call answering 5xx; an `/api/` 4xx is the page's own answer, such as no data for the date), an empty main area, or taking longer
-than the budget to open and settle (`DRISHTI_PAGEWALK_BUDGET`, default 5 seconds; a page over it is opened once more and fails when slow
+than the budget to open and settle (`DRISHTI_PAGEWALK_BUDGET`, default 10 seconds, the tests' page-load budget; a page over it is opened once more and fails when slow
 twice; pages slow only on their first open are printed). A page of an engine switched off on this server (404, "is not running on this
 server") is gone by design and only counted. One failure lists every faulty page and every slow one, slowest first. `page_walk.py` keeps
 two short lists, each entry with its reason: `KNOWN_FAULTS` (reported, not failed, until fixed) and `SLOW_ALLOWED`. The walk's stack runs

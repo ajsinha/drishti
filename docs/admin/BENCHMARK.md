@@ -1655,6 +1655,19 @@ The lanes as last measured on the release machine, and what the changes to the d
 
 "Before" is the last full run on record, on a machine shared with other work. Measured for the new pieces: `VarGoldenMatrixTest`, 12 cases with all hierarchies and baskets, about 3 s in the test JVM; a VaR browser file's set-up with the demo lake built, 589 s, and reusing the cached lake, 93 s; `tools/drill.sh --affected` on a two-file diff (one module's tests, one console file), 25 s.
 
+### 18.2 Page load in the browser tests
+
+Every page a browser test opens is timed from its main document's request to its load event (`drishti-console/tests/pageload_log.py`,
+on when `DRISHTI_PAGELOAD_LOG` names a file; the drill sets `<data>/drill/pageloads.jsonl`). After its lanes the drill prints p95 and
+median per page, slowest first, and writes the table below (`tools/drillkit/pageloads.py`). The numbers are taken under the drill's full
+load (many workers and the Java builds beside them), so they are an upper bound for one person on a quiet server. A page whose p95 is
+2 s or more is marked slow and reported, not failed; a test fails a page only over the 10 s page budget (the page walk's
+`DRISHTI_PAGEWALK_BUDGET`).
+
+<!-- pageloads:begin (tools/drillkit/pageloads.py --write; the last drill's browser lane) -->
+Not measured yet: the next drill writes it.
+<!-- pageloads:end -->
+
 ## 19. The BI scale gate
 
 A small, always-on guard for the BI engine: one model query timed and its Java allocation counted, failing the build when the
