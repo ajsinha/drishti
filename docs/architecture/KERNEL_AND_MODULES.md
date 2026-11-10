@@ -807,6 +807,13 @@ to more than one lake is `DEGRADED` (today's warning, moved from packs to bindin
 | `UNBOUND`, required | nothing serves it | the module **loads but is degraded**: functions that depend on the need are off with the reason (*VAR needs scenario-pv or pnl-vector: no source is bound; ask your data administrator*); others work |
 | `UNBOUND`, optional | nothing serves it | info only; dependent features hidden (e.g. backtesting without `desk-pnl`) |
 
+A binding that names only connectors no file defines (their files removed, their pack not loaded) is set aside: Health lists it as a
+problem and the kind resolves as if unbound by the site (the next steps of section 5.5). A need on a kind the site does not offer at all
+(no loaded pack defines it and nothing binds it) switches nothing off: the pack switch decides those functions; Health still shows the
+kind UNBOUND. The one-time upgrade writes `bindings.yaml` from the site's own connector files only: a file a pack's template generated
+and nobody edited is the distribution's default (it resolves by step 2 or 3), a connector switched off by its file or the properties is
+left out, and a connector defined only in properties is never written into the file.
+
 `any-of` groups are satisfied by one bound member. Health lists `needs[]` per module; `GET /api/v1/admin/bindings` answers the same.
 
 ### 5.7 Computed kinds and the end of module connectors

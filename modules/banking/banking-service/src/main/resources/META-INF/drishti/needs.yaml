@@ -24,7 +24,7 @@ module: banking
 
 needs:
   # ---- trades: one store across the booking systems
-  - { kind: trade,          contract: ">=1.0 <2", use: [read, live], required: true, demo: true, used-by: [TRD, CTRD, PTRD, LTRD, ITRD, POS, VRES, EXP] }
+  - { kind: trade,          contract: ">=1.0 <2", use: [read, live], required: true, demo: true, used-by: [TRD, CTRD, PTRD, LTRD, ITRD, POS, VRES] }
 
   # ---- VaR inputs: a trade's scenario PVs or its P&L vector, per business date
   - { kind: scenario-pv,    contract: ">=1.1 <2", use: [read, live], any-of: A, demo: true, used-by: [VRES, POS] }
@@ -39,14 +39,17 @@ needs:
   - { kind: position-sensitivity, contract: ">=1.0 <2", use: [read], required: false, demo: true, used-by: [SENS] }
   - { kind: risk-factor,          contract: ">=1.0 <2", use: [read], required: false, demo: true, used-by: [RFAC] }
 
-  # ---- counterparty credit: netting, collateral, limits, and the market data exposure simulates
-  - { kind: agreement,          contract: ">=1.0 <2", use: [read], required: { for: [EXP, XPATH] }, demo: true, used-by: [AGR, EXP] }
-  - { kind: csa,                contract: ">=1.0 <2", use: [read], required: { for: [EXP, XPATH] }, demo: true, used-by: [CSA, EXP] }
-  - { kind: netting-set,        contract: ">=1.0 <2", use: [read], required: { for: [EXP, XPATH] }, demo: true, used-by: [NSET, EXP] }
+  # ---- counterparty credit: the simulated exposure paths the engine aggregates, netting, collateral, limits; exposure reads the paths, never
+  #      the trades or the market data the paths were simulated from
+  - { kind: exposure-path,      contract: ">=1.0 <2", use: [read], required: { for: [EXP, XPATH] }, demo: true, used-by: [XPATH, EXP] }
+  - { kind: simulation-run,     contract: ">=1.0 <2", use: [read], required: false, demo: true, used-by: [XRUN, EXP] }
+  - { kind: agreement,          contract: ">=1.0 <2", use: [read], required: false, demo: true, used-by: [AGR] }
+  - { kind: csa,                contract: ">=1.0 <2", use: [read], required: false, demo: true, used-by: [CSA, EXP] }
+  - { kind: netting-set,        contract: ">=1.0 <2", use: [read], required: false, demo: true, used-by: [NSET, EXP] }
   - { kind: collateral-balance, contract: ">=1.0 <2", use: [read], required: false, demo: true, used-by: [COLL, EXP] }
   - { kind: credit-limit,       contract: ">=1.0 <2", use: [read], required: false, demo: true, used-by: [LIM] }
-  - { kind: ir-curve,           contract: ">=1.0 <2", use: [read], required: { for: [EXP, XPATH] }, demo: true, used-by: [EXP] }
-  - { kind: fx-spot,            contract: ">=1.0 <2", use: [read], required: { for: [EXP, XPATH] }, demo: true, used-by: [EXP] }
+  - { kind: ir-curve,           contract: ">=1.0 <2", use: [read], required: false, demo: true, used-by: [VRES] }
+  - { kind: fx-spot,            contract: ">=1.0 <2", use: [read], required: false, demo: true, used-by: [VRES] }
 
   # ---- what it produces: written where the site binds them (write: {lake, table}); unbound means not published
   - { kind: var-official,           contract: ">=1.0 <2", use: [write], required: false, demo: true, used-by: [VOFF] }
@@ -56,4 +59,4 @@ computed:                       # the module's KindProviders and engines: not ne
   - { kind: position,        from: [trade, scenario-pv, pnl-vector] }
   - { kind: system-basket,   from: [trade] }
   - { kind: var-result,      from: [position, scenario-set, var-limit] }
-  - { kind: exposure-result, from: [trade, netting-set, csa, collateral-balance, ir-curve, fx-spot] }
+  - { kind: exposure-result, from: [exposure-path, simulation-run, netting-set, csa, collateral-balance] }

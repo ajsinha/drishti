@@ -33,6 +33,12 @@
   file's `consoles:` list with a `distribution:` each, `bin/status` shows each process's distribution; IntelliJ run configurations for
   Risk, Finance and All. A person's density follows the distribution's until they choose one.
 
+- **The data gate no longer switches exposure off by mistake** ([KERNEL_AND_MODULES.md sections 5.4–5.6](docs/architecture/KERNEL_AND_MODULES.md#56-what-a-missing-or-bad-binding-does)):
+  banking's data needs say what the exposure engine reads (EXP and XPATH need `exposure-path`; trades, CSAs, netting sets, curves and FX
+  spots no longer gate EXP); the bindings upgrade reads only the site's own connector files, leaving out a pack template's unedited file (the
+  distribution's default), a connector switched off by its file or the properties, and a connector defined only in properties; a binding that names only connectors
+  no file defines is set aside with a Health problem, and the kind resolves without it; a need on a kind the site does not offer (no
+  loaded pack defines it, nothing binds it) switches nothing off and still shows UNBOUND in Health.
 - VaR explorer: turning on **Include matured positions** no longer makes the scope tree disappear (the tree library refused the switch's own "of which matured" column); a screen's own tree measure with a label is accepted.
 
 - **The Module SDK** (2.9.11.i2 + i3, wave 1; [DEVELOPER_GUIDE.md section 1.6](docs/guides/DEVELOPER_GUIDE.md#16-the-module-sdk),
