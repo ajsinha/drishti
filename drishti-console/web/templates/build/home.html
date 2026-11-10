@@ -97,7 +97,8 @@
       <thead><tr><th>Name</th><th>Kind</th><th>Status</th><th>Uses</th><th>Used by</th><th>Changed</th></tr></thead>
       <tbody>{% for it in others %}
         <tr data-item="{{ it.ref }}">
-          <td>{% if it.href %}<a class="lnk" href="{{ it.href }}">{{ it.name }}</a>{% else %}{{ it.name }}{% endif %}</td>
+          {% set gone = (needs or {}).get(it.ref) %}{# kept, marked, not openable while a module it uses is off or removed (KERNEL_AND_MODULES.md 12.6) #}
+          <td>{% if it.href and not gone %}<a class="lnk" href="{{ it.href }}">{{ it.name }}</a>{% else %}{{ it.name }}{% endif %}{% for n in gone or [] %} <span class="st st-warn" data-needs-module="{{ n.module }}">{{ n.words }}</span>{% endfor %}</td>
           <td>{{ it.kind }}</td><td>{{ it.status }}</td>
           <td>{{ refs(it.uses) }}</td><td>{{ refs(lineage.get(it.ref, [])) }}</td>
           <td>{% if it.changed %}<time data-ms="{{ it.changed }}"></time>{% endif %}{% if it.by %}{% if it.changed %}, {% endif %}{{ it.by }}{% endif %}</td></tr>

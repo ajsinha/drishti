@@ -40,11 +40,11 @@
   flex-direction: column; gap: var(--d-sp-8); min-width: 0; }
 .wl-card h2, .wl-q h2 { margin: 0; font-size: var(--d-fs-14); font-weight: 600; color: var(--d-ink); }
 .wl-card h2 small { color: var(--d-muted); font-weight: 400; font-size: var(--d-fs-12); margin-left: var(--d-sp-6); }
-.wl-table { width: 100%; border-collapse: collapse; font-size: var(--d-fs-13); }
-.wl-table th { color: var(--d-muted); font-weight: 500; text-align: left; padding: var(--d-sp-4) var(--d-sp-6); border-bottom: 1px solid var(--d-border); }
-.wl-table td { padding: var(--d-sp-5) var(--d-sp-6); border-bottom: 1px solid var(--d-border); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
-.wl-table .n { text-align: right; font-family: var(--d-font-mono); white-space: nowrap; }
-.wl-table td > a.mono { white-space: nowrap; }
+
+
+
+
+
 .wl-feed { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--d-sp-8); font-size: var(--d-fs-13); }
 .wl-feed li { display: flex; gap: var(--d-sp-8); align-items: baseline; min-width: 0; }
 .wl-feed li > a:last-child, .wl-feed li > span:last-child { min-width: 0; overflow-wrap: anywhere; }

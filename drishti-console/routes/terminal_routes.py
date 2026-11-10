@@ -112,6 +112,10 @@ async def go(request: Request, q: str = ""):
     head = typed.split(None, 1)[0].upper() if typed else ""
     if (gone := _modules.typed_refusal(typed)) is not None:        # a function whose module is off, switched off or not the person's
         return RedirectResponse(f"/t?error={quote(gone)}", status_code=303)   # (ACCESS_MODEL.md): "VRES is not available to you: ..."
+    if (hosted := request.app.state.module_parts.word(head)) is not None and hosted[1].page and _modules.module_on(hosted[0].id):
+        part, route = hosted                                       # a hosted module's composed page (KERNEL_AND_MODULES.md 9.10): its route
+        names = re.findall(r"{(\w+)}", route.path)
+        return RedirectResponse(route.url(part.id, **dict(zip(names, typed.split()[1:]))), status_code=303)
     from core import engines as _engines
     if (off := _engines.typed_engine(typed)) is not None:          # FRSA with FRTB-SA running nowhere: said in the server's words (DRS-1020)
         return RedirectResponse(f"/t?error={quote(_engines.refusal(off))}", status_code=303)

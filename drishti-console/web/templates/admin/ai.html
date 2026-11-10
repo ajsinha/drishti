@@ -64,6 +64,10 @@
     {% if tool_error %}<p class="adm-warn" role="alert">{{ tool_error }}</p>
     {% else %}<ul>{% for t in tool_list or [] %}<li><span class="mono">{{ t.name }}</span> {{ t.description }}</li>{% else %}<li>No tools.</li>{% endfor %}</ul>{% endif %}
   </section>{% endif %}
+  {% if module_tools %}<section class="adm-sec" data-ai-module-tools>
+    <h2>Tools of the modules</h2>{# the hosted modules' AI tool descriptions (plugin.yaml ai: tools:); a module that goes takes its own #}
+    <ul>{% for t in module_tools %}<li data-ai-module-tool="{{ t.name }}"><span class="mono">{{ t.name }}</span> {{ t.description }} <span class="st">{{ t.module }}</span></li>{% endfor %}</ul>
+  </section>{% endif %}
 </div>
 {% endblock %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}

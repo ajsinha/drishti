@@ -72,7 +72,7 @@ def test_banking_off_is_gone_from_every_door(backend, monkeypatch):
     links = _menu_links(t)
     assert "/var" not in links and "/exposure" not in links      # Risk (the engines' pages): banking's menu gone
     assert "/admin/scopes" not in t                                                                   # the Admin strip's Saved VaR baskets
-    assert '<meta name="drishti-modules" content="economy">' in t                                     # the Elements loader refuses drishti-risk
+    assert '<meta name="drishti-modules" content="capitalmarkets economy">' in t                                     # the Elements loader refuses drishti-risk
     for page in ("/var", "/var/reports", "/exposure", "/predeal", "/frtb", "/simm", "/smat", "/play", "/mcube", "/admin/scopes"):
         assert c.get(page, follow_redirects=False).status_code == 404, page
     for api in ("/api/var/scope?scope=BANK", "/api/exposure/scope?scope=BANK", "/api/frtb/sa", "/api/simm/versions", "/api/pivot/mr/versions",
@@ -95,7 +95,7 @@ def test_banking_off_is_gone_from_every_door(backend, monkeypatch):
     for asset in BANKING_ASSETS:                                                                      # its files are not served
         assert c.get(asset).status_code == 404, asset
     assert c.get(CORE_ASSET).status_code == 200
-    assert c.get("/static/js/drishti_world-landing.js").status_code == 200                           # another module's still are
+    assert c.get("/m/economy/static/1.0.0/js/drishti_world-landing.js").status_code == 200           # another module's still are (hosted)
 
 
 def test_the_command_lines_examples_are_only_what_the_person_may_type(backend, monkeypatch):
@@ -115,7 +115,7 @@ def test_banking_on_draws_every_door_again(backend, monkeypatch):
     c = _client(app)
     t = c.get("/t").text
     assert "/var" in _menu_links(t)
-    assert 'content="banking economy"' in t
+    assert 'content="banking capitalmarkets economy"' in t
     assert c.get("/help/docs-guides-var-guide").status_code == 200
     assert 'data-kind="var-baskets"' in c.get("/build").text
     for asset in BANKING_ASSETS:
@@ -183,7 +183,7 @@ def test_a_lens_that_does_not_use_a_module_does_not_get_its_assets(backend, monk
     for asset in BANKING_ASSETS:
         assert wendy.get(asset).status_code == 404, asset                                             # the World lens: no banking file
         assert alice.get(asset).status_code == 200, asset                                             # the full product: every module on
-    assert wendy.get("/static/js/drishti_world-landing.js").status_code == 200
+    assert wendy.get("/m/economy/static/1.0.0/js/drishti_world-landing.js").status_code == 200
     assert wendy.get(CORE_ASSET).status_code == 200
 
 

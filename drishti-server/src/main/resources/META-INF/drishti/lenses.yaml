@@ -18,7 +18,7 @@ lenses:
   - id: world
     title: World
     modules: [economy]                 # the World edition also opens us-equities and funds: capital markets' functions, on while that module is
-    home: home/world_landing.html
+    home: economy:world_landing.html   # the economy module's page (modules/economy/console/)
     functions: [ECON, MACRO, FCST, LABR, FISC, ECG, REGE, JUR, PARTY, OFFC, ELEC, REGN, SOCI, TOPIC, NEWS, CO, QUOTE, USEQ, IDX, SIC, EDGAR, FILING,
       FACT, PXH, LEI, LEIG, LEIR, LEIC, LEIM, FUND, HELD, TRACK,
       PRESS, PREL, GDELT]               # the public sector's free news (official press releases, GDELT world events)

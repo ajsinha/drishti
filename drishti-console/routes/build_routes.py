@@ -85,6 +85,9 @@ async def build_home(request: Request, type_id: str = "", q: str = "", tiles: st
         listed = [it for t in mine if t.group != "work" for it in rows.get(t.id) or [] if build_registry.matches(it, words)]
     else:
         listed = list(rows.get(chosen.id) or []) if chosen else []
+    from routes.module_admin_routes import needs as _needs        # saved work that uses a module that is off or removed: kept, marked
+    needs = await _needs(request, [{"id": it.ref, "text": " ".join([it.name, it.kind, it.href, *it.uses, repr(it.extra)])} for it in listed]
+                         ) if request.app.state.module_parts.snapshot.gone else {}
     design_error = error or getattr(request.state, "build_design_error", None)
     show_tiles = tiles == "1" or (tiles != "0" and request.cookies.get(TILES_COOKIE) != "hide")
     groups = [{"id": g, "label": label, "types": [t for t in mine if t.group == g]} for g, label in build_registry.GROUPS]
@@ -95,7 +98,7 @@ async def build_home(request: Request, type_id: str = "", q: str = "", tiles: st
     page = render(request, "build/home.html", status_code=design_error.status if design_error else 200, groups=groups, rows=rows,
                   lineage=lineage, chosen=chosen, listed=listed, q=q, tasks=[t for t in tasks if t["first"]], show_tiles=show_tiles,
                   news=[t for t in mine if t.new], designs=designs, limits=data.get("limits") or {}, design_error=design_error,
-                  for_you=bool(ctx["bi_me"].get("enabled")) and not words and not type_id, screen="build")
+                  for_you=bool(ctx["bi_me"].get("enabled")) and not words and not type_id, screen="build", needs=needs)
     if tiles == "0":
         page.set_cookie(TILES_COOKIE, "hide", max_age=400 * 86400, samesite="lax", httponly=True)
     elif tiles == "1":

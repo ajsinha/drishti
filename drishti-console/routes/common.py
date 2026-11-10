@@ -53,7 +53,7 @@ def live_who(request: Request) -> str:
 def render(request: Request, template: str, status_code: int = 200, **context: Any):
     context.setdefault("LIVE_WHO", live_who(request))
     context.setdefault("STORE_WHO", store_who(request))
-    templates = request.app.state.templates
+    templates = context.pop("_templates", None) or request.app.state.templates   # a module's own environment (core/module_parts.py)
     context.setdefault("me", getattr(request.state, "identity", None))
     context.setdefault("pack_switcher", getattr(request.state, "pack_switcher", []))
     context.setdefault("AUTH_ENABLED", request.app.state.auth.enabled)
@@ -98,7 +98,8 @@ async def library(request: Request):
         stamp = (catalogue.stat().st_mtime_ns, (console_dir / "config" / "sitemap.yaml").stat().st_mtime_ns)
     except OSError:
         stamp = (0, 0)
-    key = (fingerprint(f"{p['name']}@{p.get('version', '')}" for p in current), stamp)
+    from core import modules as _modules
+    key = (fingerprint(f"{p['name']}@{p.get('version', '')}" for p in current), stamp, _modules.parts_fingerprint())   # a module that comes or goes
     libs = request.app.state.libraries                     # an LRU: a few pack sets kept, so people with different packs do not rebuild
     hit = libs.get(key)
     if hit is not None:

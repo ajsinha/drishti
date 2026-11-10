@@ -38,7 +38,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from core.edition import landing_refused
 from core import plugins
 from core.backend import BackendError
-from core.edition import Edition
+from core.edition import DEFAULT_LANDING_TEMPLATE, Edition
 from routes.common import ident, render
 
 router = APIRouter(include_in_schema=False)
@@ -99,7 +99,17 @@ async def render_landing(request, ed: Edition, landing: str, cards: list):
             recents = seen[:6]
         except BackendError:
             recents = []
-    return render(request, ed.landing_template, landing=landing, landings=offered, cards=cards, chips=chips, monitors=monitors,
+    template, extra = ed.landing_template, {}
+    if ":" in template:                                  # a hosted module's page (economy:world_landing.html), in the module's own environment
+        from starlette.templating import Jinja2Templates
+
+        from core import modules as _modules
+        part = request.app.state.module_parts.part(template.split(":", 1)[0])
+        if part is None or not _modules.module_on(part.id):
+            template = DEFAULT_LANDING_TEMPLATE         # its module went: the product's Home
+        else:
+            extra["_templates"] = Jinja2Templates(env=request.app.state.module_parts.env(part, request.app.state.templates.env))
+    return render(request, template, **extra, landing=landing, landings=offered, cards=cards, chips=chips, monitors=monitors,
                   recents=recents, topics=[str(t) for t in ed._get("home.topics") or []], stale_days=stale_days(ed),
                   hierarchies=[str(h) for h in ed._get("home.hierarchies") or ["MGMT"]], screen="home")
 
