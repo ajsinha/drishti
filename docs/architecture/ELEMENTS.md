@@ -832,7 +832,18 @@ library with its module: an unlicensed module's library is not served, its kinds
   Drishti server" or "banking module licence", element or function), the live component with its code tabs and status line (bundle size
   and lines, the Node tests and browser file, the accessibility check, the time to draw), and the options with the event log;
   `mode: 'docs'` (g4 B) is a page per component with the tabs Examples (each a runnable card with its code and "Open in playground"),
-  API, Accessibility and Changelog. The address keeps the state (`#mode=docs&c=pivot&tab=api&o={"layout":"terminal"}`).
+  API, Accessibility, Changelog and **Playground page**. The address keeps the state (`#mode=docs&c=pivot&tab=api&o={"layout":"terminal"}`).
+- **The Playground page** (`tab=page`, mock-up bi-depth/elements-playground, option A: one column, like a reference page). The visual live on
+  top; below it its data in a drishti-grid (edit a cell), its options (from the typedefs, as in the playground), then its HTML and
+  JavaScript in drishti-inputs' code editor, written out from what the gallery gives the component (`Drishti.gallery.writePage`: the rows
+  first, then the spec and options, then the constructor; a demo with a datasource or functions writes them as code). Every edit redraws
+  after 300 ms in a **new** frame `sandbox="allow-scripts"` with no same origin, served under `default-src 'none'` (inline scripts and
+  styles only, no network): the code cannot read the cookie, storage or the page, nor reach `/api`. The libraries it needs are inlined
+  into the frame (the component's library and the library of its constructor, with their `requires`). The new frame replaces the shown
+  one only if it ran cleanly; an error names its line (the code runs as `drishti-playground-code.js`, so an error thrown inside a library
+  names the line of the code that called it), marks the line, offers *Go to the line*, and keeps the last good drawing greyed. **Reset**
+  restores the example. Every element and every visual function (the decomposition tree, the renderer) has its page; the core, data,
+  designer and insight functions point to Examples.
 - **One home per fact: the catalogue.** `tools/docs/elements_api.py` writes `static/gallery/drishti_catalogue.js` from the same parse as
   ELEMENTS_API.md (`tools/docs/elements_catalogue.py`; `--check` refuses a stale copy of either): per library its version, title,
   licence, bundle size, Node tests and browser file, each module's opening words, every public symbol, **every typedef with its

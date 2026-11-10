@@ -3196,7 +3196,7 @@ curl -s -X POST -H "$AUTH" -H 'Content-Type: application/json' \
 ```
 
 **YAML.** See [9.7a](../guides/REPORTS_GUIDE.md#97a-the-decomposition-tree): a `decomposition` visual holds the source, the measure and the
-splits. To try an element's code, open **Elements → Playground page** (`/elements#mode=docs&c=decomposition&tab=page`): edit the JavaScript,
+splits. To try an element's code, open **Elements → Playground page** (`/elements#mode=docs&c=decomposition&tab=page`; every element has one, picked in the side list): edit a cell of its data or the JavaScript,
 the visual redraws in a sandboxed frame; a mistake names its line and the last good drawing stays, greyed.
 
 ## Next steps
