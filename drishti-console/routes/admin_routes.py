@@ -803,7 +803,15 @@ async def health(request: Request, partial: int = 0):
 
     return render(request, "admin/_health_body.html" if partial else "admin/health.html", h=data, connectors=connectors, console_tmp=tmpdir.info(), console_ext=external_lib.info(),
                   watch=request.app.state.backend_watch.snapshot(), relay=channel_relay.stats(request.app),
-                  console_cluster=(request.app.state.cluster.snapshot() if getattr(request.app.state, "cluster", None) is not None else None))
+                  console_cluster=(request.app.state.cluster.snapshot() if getattr(request.app.state, "cluster", None) is not None else None),
+                  console_distribution=_console_distribution(request.app))
+
+
+def _console_distribution(app) -> dict:
+    """This console's distribution for Health (docs/architecture/DISTRIBUTIONS.md) and the old keys it still reads."""
+    from core import distribution as _dist
+    d = app.state.editions.distribution
+    return {**d.about(), "own": app.state.editions.own_distribution, "deprecated": _dist.deprecated(app.state.settings)}
 
 
 @router.get("/caches")

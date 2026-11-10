@@ -22,7 +22,7 @@ import time
 from core.servers import scoped
 from core.user_stamps import NONE as NO_STAMPS
 
-DEFAULTS = {"theme": None, "landing": "/t", "clockZone": None, "locale": None, "density": "comfortable", "flash": True, "searchLimit": 100, "pinned": [], "savedSearches": []}
+DEFAULTS = {"theme": None, "landing": "/t", "clockZone": None, "locale": None, "density": None, "flash": True, "searchLimit": 100, "pinned": [], "savedSearches": []}
 
 
 #: the cookie that tells every worker (and every console behind one address) that this browser's user changed a setting:

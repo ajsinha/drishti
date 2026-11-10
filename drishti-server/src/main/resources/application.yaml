@@ -136,9 +136,13 @@ management:
           include: readinessState,nodeReadiness
 
 drishti:
-  # The edition (docs/guides/ADMIN_GUIDE.md): blank is the full Drishti; risk is Drishti Risk. It names
-  # config/lenses/<module>/<lens>.yaml, read as a layer under the site's configuration before the packs load; every member of a cluster sets the
-  # same value, and the console learns it from /api/v1/about. A change needs a restart.
+  # The distribution (docs/architecture/DISTRIBUTIONS.md): risk, finance, genomics or all, or the path of a site's own file; it names
+  # config/distributions/drishti.<name>.yaml (brand, theme, modules, lenses, Home, Help) and is the one way to make the product. Blank:
+  # Drishti All, exactly as before. Also --distribution=<name> on the command line (bin/start-server.sh --distribution <name>).
+  distribution: ${DRISHTI_DISTRIBUTION:}
+  distributions-dir: ${DRISHTI_DISTRIBUTIONS_DIR:./config/distributions}   # the distribution files and modules.yaml (each module's packs today)
+  # DEPRECATED (read for one release; Health names it): the edition, config/lenses/<module>/<lens>.yaml as the instance's filter. Name a
+  # distribution instead; with one named, this is ignored. A change needs a restart.
   edition: ${DRISHTI_EDITION:}
   lens-dir: ${DRISHTI_LENS_DIR:./config/lenses}   # the lenses' files: config/lenses/<module>/<lens>.yaml (one of no module in the folder itself), features.yaml
   # Lenses (LENSES.md › The design): editions a person may open on a full instance ("Open Drishti Risk"), for their own session; no restart,

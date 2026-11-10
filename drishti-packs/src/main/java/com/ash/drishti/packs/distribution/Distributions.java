@@ -208,7 +208,7 @@ public final class Distributions {
         ArrayNode knowledge = help.putArray("knowledge");
         packs.forEach(knowledge::add);
         ArrayNode dom = help.putArray("domains");
-        new LinkedHashSet<>(domains.values()).forEach(dom::add);
+        modules.forEach(m -> texts(known.path(m).path("docs")).stream().filter(x -> !texts(dom).contains(x)).forEach(dom::add));   // the Help each module owns
         if (spec.path("docs").has("title")) {
             help.put("title", spec.path("docs").path("title").asText());
         }

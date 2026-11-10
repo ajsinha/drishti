@@ -198,7 +198,7 @@ async def save_settings(request: Request):
     """Personal settings from the account page (W21); the server validates every value."""
     me = ident(request)
     form = {k: v[0] for k, v in parse_qs((await request.body()).decode(), keep_blank_values=True).items()}
-    changes = {"theme": form.get("theme") or None, "clockZone": form.get("clockZone") or None, "locale": (form.get("locale") or "").strip() or None, "density": form.get("density") or "comfortable",
+    changes = {"theme": form.get("theme") or None, "clockZone": form.get("clockZone") or None, "locale": (form.get("locale") or "").strip() or None, "density": form.get("density") or None,
                "flash": form.get("flash") == "on", "landing": form.get("landing") or "/t"}
     if form.get("notifyForm"):                           # the email opt-outs (ARCHITECTURE.md §31, build step 4/6): an unticked box is off
         changes["notify"] = {"email": {e: form.get(f"notify_email_{e}") == "on" for e in ("share", "mention", "reply")}}

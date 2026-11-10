@@ -17,13 +17,13 @@
    section (config/help.yaml sections:) with its one line and how many pages this person can open in it; a tile opens the section's own
    page (help/section.html). Old addresses /help#cat-<id> lead to their section (static/js/drishti_help.js, data-help-sections). #}
 {% extends "base.html" %}
-{% block title %}Help · {{ PRODUCT }}{% endblock %}
+{% block title %}{{ HELP_TITLE or "Help" }}{% endblock %}
 {% block body_class %}terminal help-page{% endblock %}
 {% block nav %}{% include "help/_nav.html" %}{% endblock %}
 {% block content %}
 <div class="help-wrap help-hub" data-help-hub data-help-sections="{{ section_names | tojson | forceescape }}">
   <header class="hub-head">
-    <h1>Help</h1>
+    <h1>{{ HELP_TITLE or "Help" }}</h1>
     <p class="hub-sub">{{ count }} page{{ '' if count == 1 else 's' }}{% if engines_hidden %} · the pages of engines not running here are left out{% endif %}
       · press <kbd>F1</kbd> anywhere for help on the screen you are on</p>
   </header>

@@ -47,7 +47,7 @@
       <label for="sLocale">Language of help text</label>
       <input id="sLocale" name="locale" class="mono" maxlength="20" value="{{ settings.locale or '' }}" placeholder="Default (your browser's language), or a tag such as fr">
       <label for="sDensity">Density</label>
-      <drishti-select id="sDensity" name="density" label="Density">{% for d in ['comfortable', 'compact'] %}<option value="{{ d }}"{% if settings.density == d %} selected{% endif %}>{{ d | capitalize }}</option>{% endfor %}</drishti-select>
+      <drishti-select id="sDensity" name="density" label="Density">{% for d in ['comfortable', 'compact'] %}<option value="{{ d }}"{% if (settings.density or DEFAULT_DENSITY or 'comfortable') == d %} selected{% endif %}>{{ d | capitalize }}</option>{% endfor %}</drishti-select>
       <label for="sFlash">Flash changed values</label>
       <input id="sFlash" name="flash" type="checkbox"{% if settings.flash != false %} checked{% endif %}>
       <label for="sLimit">Search results</label>

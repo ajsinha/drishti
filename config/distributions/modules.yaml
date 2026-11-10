@@ -36,18 +36,21 @@ modules:
     words: [VAR, PVAR, SMAT, SWIN, PLAY, PREDEAL, EXP, FRSA, SIMM, MCUBE, SENS, RFAC, CCUBE]
     features: [var, exposure, frtb-sa, simm]   # the compute engines it owns: off on a kernel whose distribution leaves banking out
     menus: [blotter, positions, risk, counterparties]
-    help: [risk]                           # its Help section
+    docs: [banking]                        # the Help pages it owns: help.yaml domain: banking, and its engines' guides
   capital-markets:
     title: Capital markets
     domain: capitalmarkets
     packs: [us-equities, funds, gleif]
     menus: [companies]
+    docs: [capitalmarkets]
   economy:
     title: Economy and markets
     domain: economy
     packs: [world-economy, news-and-markets, official-news, gdelt-events]
     menus: [economies, markets]
+    docs: [economy]
   genomics:                                # the sample module (built from the Module SDK alone); not installed until it ships
     title: Genomics (sample)
     domain: genomics
     packs: []
+    docs: [genomics]

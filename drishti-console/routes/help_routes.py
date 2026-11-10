@@ -49,6 +49,11 @@ def shown(edition, guide, aliases: dict | None = None) -> bool:
         return False
     if not guide.listed and edition.refuse_unlisted:
         return False
+    domains = edition.help_domains() if hasattr(edition, "help_domains") else None
+    if domains is not None and not guide.packs:                  # a distribution: its modules' guides and the kernel's (DISTRIBUTIONS.md)
+        module = _guide_module(guide)
+        if module and module != "core" and module not in domains:
+            return False
     if guide.packs:
         wanted = edition.knowledge_packs() if guide.category == "knowledge" else by_module(edition._get("packs.enabled"))
         if isinstance(wanted, list) and not set(guide.packs) & {str(p) for p in wanted}:
@@ -79,8 +84,14 @@ def _module_on(guide) -> bool:
     (help.yaml ``engine:``, the module's plugin.yaml ``engines:``), else its own (help.yaml ``domain:``), else its Help section's
     (sitemap.yaml ``help-sections[].domain``, a module's section: the module)."""
     from core import modules
+    return not modules.tag_hidden(_guide_module(guide))
+
+
+def _guide_module(guide) -> str:
+    """The domain module a guide belongs to: its engine's, else its own (help.yaml ``domain:``), else its Help section's."""
+    from core import modules
     module = modules.module_of_engine(guide.engine) if guide.engine else None
-    return not modules.tag_hidden(module or guide.domain or _section_domains().get(str(guide.category or ""), ""))
+    return module or guide.domain or _section_domains().get(str(guide.category or ""), "")
 
 
 def _section_domains() -> dict[str, str]:

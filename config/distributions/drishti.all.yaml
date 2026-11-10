@@ -40,6 +40,6 @@ lenses:
   offered: [risk, world, market, trading]
   default: ""                              # none: the full product's Home
 
-docs: { title: Drishti Help }
+docs: {}                                   # Help as it always was
 demo: { ships: true, enabled: true }
 locale: { language: en }
