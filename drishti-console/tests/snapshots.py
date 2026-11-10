@@ -54,7 +54,8 @@ _STILL = """async ([part, quiet]) => {
   window.scrollTo(0, 0);
   for (const e of document.querySelectorAll('*')) { if (e.scrollTop > 0) { e.scrollTop = 0; } }   // a page that scrolls a panel to its anchor
   const at = part && document.querySelector(part);
-  if (at) { at.scrollIntoView({ block: 'start', behavior: 'instant' }); }
+  // the part at the top; the top bar (shown or hidden by the way the page last scrolled) left out of the picture
+  if (at) { at.scrollIntoView({ block: 'start', behavior: 'instant' }); for (const h of document.querySelectorAll('header.tbar')) { h.style.visibility = 'hidden'; } }
   const st = document.createElement('style');
   st.textContent = '*, *::before, *::after { transition: none !important; animation: none !important; caret-color: transparent !important; scroll-behavior: auto !important; }'
                  + ' ::-webkit-scrollbar { display: none; } .toasts { display: none !important; }';

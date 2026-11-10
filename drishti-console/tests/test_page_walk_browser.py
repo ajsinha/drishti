@@ -135,7 +135,7 @@ def _assert_clean(results: list[dict]) -> None:
     assert not bad and not slow, "\n".join(["faults:"] + bad + [f"over {BUDGET_S:.0f} s:"] + slow)
 
 
-def _until(pg, expr: str, timeout_s: float = 60) -> None:
+def _until(pg, expr: str, timeout_s: float = 180) -> None:   # as long as test_engine_pages_browser gives Why it moved under a busy lane
     """Waits until ``expr`` is true on the page (evaluated by the browser's debugger, which the page's CSP allows; a page-side poll would eval)."""
     import time
 
@@ -165,13 +165,15 @@ def test_the_key_pages_look_as_approved(stack, browser, request, tmp_path):
         pytest.fail("a drill never updates the visual snapshots: run --update-snapshots by hand and commit the goldens")
     base, diffs = str(stack), Path(os.environ.get("DRISHTI_SNAPSHOT_DIFFS") or tmp_path / "snapshot-diffs")
     changed, faults = [], []
+    only = [n for n in os.environ.get("DRISHTI_SNAPSHOT_ONLY", "").split(",") if n]   # some pages only (refreshing one golden)
+    pages = {n: v for n, v in KEY_SNAPSHOTS.items() if not only or n in only}
     for width in (1366, 1920):
         for theme in sorted(THEMES):
             pg = new_page(browser, width=width)
             try:
                 pg.context.add_init_script("try { localStorage.setItem('drishti.theme', %r); } catch (e) {}" % THEMES[theme])
                 pg.goto(f"{base}/asof?d={SNAPSHOT_DATE}&next=/")   # the business date picked, not the server's today
-                for name, (href, opts) in KEY_SNAPSHOTS.items():
+                for name, (href, opts) in pages.items():
                     r = open_page(pg, base, href)
                     if href.startswith("/lens/"):
                         _confirm(pg, base)

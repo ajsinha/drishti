@@ -337,6 +337,7 @@ Refresh the goldens deliberately, look at them, and commit them with the change 
 ```bash
 drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_page_walk_browser.py -k approved --update-snapshots
 drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_page_walk_browser.py -k approved     # compare
+DRISHTI_SNAPSHOT_ONLY=why-it-moved,home drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_page_walk_browser.py -k approved --update-snapshots   # some pages
 ```
 
 ## 4. Numbers to hold
