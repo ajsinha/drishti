@@ -94,6 +94,25 @@ class ModuleToolTest {
     }
 
     @Test
+    void theVisualTemplateAddsAKindAsAnElementsExtensionAndThePackageStillPasses() throws Exception {
+        Path project = generate("tracks");
+        Path jar = build(project, "tracks");
+        Path source = project.resolve("src/dmod");
+        assertThat(VisualTemplate.add(source, "tracks", "gene-track", "Gene track")).extracting(p -> source.relativize(p).toString().replace('\\', '/'))
+                .containsExactly("elements/drishti-tracks/drishti_tracks.js", "console/plugin.yaml");
+        String js = Files.readString(source.resolve("elements/drishti-tracks/drishti_tracks.js"));
+        assertThat(js).contains("registerKind(KIND", "'tracks.gene-track'", "C.buildSeriesChart", "Copyright").doesNotContain("<canvas", "<svg", "#");
+        assertThat(Files.readString(source.resolve("console/plugin.yaml"))).contains("visuals:", "kind: tracks.gene-track", "library: drishti-tracks");
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> VisualTemplate.add(source, "tracks", "gene-track", null))
+                .hasMessageContaining("declared already");
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> VisualTemplate.add(source, "tracks", "Bad Name", null))
+                .hasMessageContaining("lower-case");
+        Path dmod = ModuleAssembler.assemble(source, jar, project.resolve("target"));
+        List<ModuleConformance.Check> checks = ModuleConformance.run(dmod, project, tmp.resolve("conformance-visual"), 2);
+        assertThat(checks).allSatisfy(c -> assertThat(c.status()).as(c.line()).isEqualTo(ModuleConformance.Status.PASS));
+    }
+
+    @Test
     void aModuleBuiltWithJavacAndAFolderIsPackedCheckedAndInspectedByTheToolAndLoads() throws Exception {
         Path project = generate("plain");
         Path jar = build(project, "plain");
