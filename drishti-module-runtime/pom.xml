@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.ash.drishti</groupId>
+    <artifactId>drishti-parent</artifactId>
+    <version>2.9.11.g</version>
+  </parent>
+  <artifactId>drishti-module-runtime</artifactId>
+  <name>drishti-module-runtime</name>
+  <description>The module runtime (docs/architecture/KERNEL_AND_MODULES.md sections 3, 4, 9.8, 10.4 and 12): the .dmod reader and its hash list, the manifest, verification V1-V8, discovery, the dependency resolver, a class loader and a child Spring context per module, the live route table, the registry of contributions and the unload sequence with its leak check. One implementation, used by the kernel and later by the console host.</description>
+  <dependencies>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-kernel-api</artifactId></dependency>
+    <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-databind</artifactId></dependency>
+    <dependency><groupId>com.fasterxml.jackson.dataformat</groupId><artifactId>jackson-dataformat-yaml</artifactId></dependency>
+    <dependency><groupId>org.springframework</groupId><artifactId>spring-context</artifactId></dependency>
+    <dependency><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></dependency>
+    <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-test</artifactId><scope>test</scope></dependency>
+  </dependencies>
+</project>
