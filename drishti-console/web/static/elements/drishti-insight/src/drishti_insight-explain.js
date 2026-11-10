@@ -26,13 +26,17 @@
    A number opts in with data-explain='{"kind":"var","measure":"es","scope":"DESK:RATES"}' (and data-explain-tab to open another tab
    first); a page may name its main number with data-explain-primary, which E opens when no number is focused. Script API:
    Drishti.Explain.open(request, tab), .preview(anchor, request), .close(), .pageUrl(request, tab), .bind(el, request, tab),
-   .ask(request, part) (the server's answer for a part, cached per page).
+   .ask(request, part) (the server's answer for a part, cached per page), .link(request, opts) (the one "Explain ›" control: every
+   figure of a measure that has an explanation carries it, ui-guarded), .upgrade(root) (each [data-explain-link] under root made one).
+   The full page at tab=why for an explanation with steps (VaR) is layout A (drishti_insight-why.js).
    Everything is the server's (GET /api/explain, the person's own entitlements): the browser computes nothing, it places text. */
 /**
  * Installs the one Explain in a page (once): the preview, the drawer, the full page when the page is /explain, the keys, and Drishti.Explain.
  * @param {Window} win the page's window
  * @returns {void}
  */
+import { renderWhyPage, whyPageFits } from './drishti_insight-why.js';
+
 export function installExplain(win) {
   const window = win, document = win.document;
   window.Drishti = window.Drishti || {};
@@ -403,14 +407,19 @@ export function installExplain(win) {
     var paint = h("div", "dx-why");
     paint.dataset.dxWhy = x.view || "";
     host.appendChild(paint);
-    var model = { contract: "1.0", ref: { kind: "explain", id: a.kind + ":" + a.subject }, title: { pill: "Why it moved", id: a.title + " · " + x.from + " to " + x.to },
-                  strip: [], panels: x.panels || [], keys: [], provenance: { source: "the server's Explain, GET /api/v1/explain?kind=" + a.kind } };
+    return paintPanels(paint, a, { title: a.title, from: x.from, to: x.to }, x.panels || []).then(function () { paint.dataset.painted = x.view || "waterfall"; });
+  }
+
+  /** The server's panels drawn by the one renderer (drishti-render) into host. */
+  function paintPanels(host, a, t, panels) {
+    var model = { contract: "1.0", ref: { kind: "explain", id: a.kind + ":" + a.subject }, title: { pill: "Why it moved", id: t.title + " · " + t.from + " to " + t.to },
+                  strip: [], panels: panels, keys: [], provenance: { source: "the server's Explain, GET /api/v1/explain?kind=" + a.kind } };
     lib = lib || import("/static/render/2.0.0/drishti-render.js");
     return lib.then(function (R) {
-      var v = R.render(paint, model, { theme: document.documentElement.getAttribute("data-theme") || "terminal", header: "none", help: false,
-                                       tables: true, live: false, navigation: "host", device: window.innerWidth <= 640 ? "phone" : "desk" });
+      var v = R.render(host, model, { theme: document.documentElement.getAttribute("data-theme") || "terminal", header: "none", help: false,
+                                      tables: true, live: false, navigation: "host", device: window.innerWidth <= 640 ? "phone" : "desk" });
       return v.ready;
-    }).then(function () { paint.dataset.painted = x.view || "waterfall"; });
+    });
   }
 
   function checks(host, a) {
@@ -436,6 +445,7 @@ export function installExplain(win) {
       root.querySelector("[data-dx-crumb]").textContent = "Explain · " + a.subject + (a.asOf ? " · " + a.asOf : "");
       root.querySelector("[data-dx-origin]").textContent = a.origin || "";
       document.title = "Explain · " + a.title + (document.body.dataset.product ? " · " + document.body.dataset.product : "");
+      if (first === "why" && whyPageFits(a)) return whyPage(root, req, a);
       var grid = root.querySelector("[data-dx-grid]");
       grid.textContent = "";
       var jobs = TABS.map(function (t) {
@@ -454,6 +464,60 @@ export function installExplain(win) {
     }).catch(function (e) {
       root.querySelector("[data-dx-grid]").textContent = e.message || String(e);
       root.dataset.state = "failed";
+    });
+  }
+
+  /** Layout A of the full page at tab=why (drishti_insight-why.js); another compare date asks again and redraws, kept in the link (from). */
+  function whyPage(root, req, a) {
+    var wb = ((a.workbook || {}).links || [])[0], head = root.querySelector(".dx-page-head"), w = root.querySelector("[data-dx-wb]");
+    if (wb && head && !w) {
+      w = h("a", "dx-btn", "Workbook");
+      w.href = wb.href;
+      w.setAttribute("data-dx-wb", "");
+      head.insertBefore(w, head.querySelector("[data-dx-print]"));
+    }
+    var deps = { h: h, part: part, checks: checks,
+      paint: function (host, t, panels) { return paintPanels(host, a, t, panels); },
+      recompare: function (from) {
+        var next = Object.assign({}, req);
+        if (from) next.from = from; else delete next.from;
+        var u = new URL(window.location.href);
+        if (from) u.searchParams.set("from", from); else u.searchParams.delete("from");
+        window.history.replaceState(window.history.state, "", u.toString());
+        root.setAttribute("data-explain-request", JSON.stringify(next));
+        renderPage(root);
+      } };
+    return renderWhyPage(root, a, deps, req.from || "").then(function () {
+      checks(root.querySelector("[data-dx-checks]"), { checks: [] });
+      root.dataset.state = "ready";
+    });
+  }
+
+  /** The one "Explain ›" control: a link to the number's full page (Why it moved) that opens the drawer in place (click, or E when focused). */
+  function link(req, o) {
+    o = o || {};
+    var a = h("a", "dx-link" + (o.cls ? " " + o.cls : ""), o.text || "Explain ›");
+    a.href = pageUrl(req, o.tab || "why");
+    a.setAttribute("data-explain", JSON.stringify(req));
+    a.setAttribute("data-explain-tab", o.tab || "why");
+    a.setAttribute("data-explain-trigger", "");
+    a.setAttribute("data-explain-link", "");
+    a.title = o.title || "Explain: the formula with its values, the inputs and lineage, why it moved, the workbook (E)";
+    return a;
+  }
+
+  /** Each [data-explain-link] under root that carries its request in data-explain made the one control (its text, link and title). */
+  function upgrade(root) {
+    (root || document).querySelectorAll("[data-explain-link][data-explain]:not(.dx-link)").forEach(function (el) {
+      var req = reqOf(el);
+      if (!(req && req.kind)) return;
+      var tab = el.getAttribute("data-explain-tab") || "why";
+      el.classList.add("dx-link");
+      el.setAttribute("data-explain-trigger", "");
+      el.setAttribute("data-explain-tab", tab);
+      if (el.tagName === "A") el.href = pageUrl(req, tab);
+      if (!el.textContent.trim()) el.textContent = "Explain ›";
+      if (!el.title) el.title = "Explain: the formula with its values, the inputs and lineage, why it moved, the workbook (E)";
     });
   }
 
@@ -497,6 +561,7 @@ export function installExplain(win) {
       lastAnchor = f; preview(f, r2);
     } });
 
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { upgrade(document); }); else upgrade(document);
   var pageRoot = document.querySelector("[data-explain-page]");
   if (pageRoot) {
     renderPage(pageRoot);
@@ -505,7 +570,7 @@ export function installExplain(win) {
   }
 
   window.Drishti.Explain = {
-    open: open, close: close, preview: preview, pageUrl: pageUrl, ask: ask,
+    open: open, close: close, preview: preview, pageUrl: pageUrl, ask: ask, link: link, upgrade: upgrade,
     /** Marks el as an explainable number: hover previews, click opens the drawer (on tab), E opens it when focused. */
     bind: function (el, req, tab) {
       el.setAttribute("data-explain", JSON.stringify(req));

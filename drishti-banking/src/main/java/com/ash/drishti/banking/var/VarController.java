@@ -329,8 +329,10 @@ public class VarController {
             @RequestParam(required = false) Double confidence, @RequestParam(required = false) String horizon, @RequestParam(required = false) String method,
             @RequestParam(name = "esConfidence", required = false) Double esq, @RequestParam(required = false) String set, AsOf asOf,
             @RequestParam(required = false) Boolean parametric, @RequestParam(defaultValue = "false") boolean matured,
-            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return parametric(views.tree(p, hierarchy, date(asOf), ccy, lens(horizon, method, confidence, esq, set), matured), parametric);
+            @RequestParam(required = false) String within, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        com.ash.drishti.banking.compute.var.VarLens l = lens(horizon, method, confidence, esq, set);
+        return parametric(within == null || within.isBlank() ? views.tree(p, hierarchy, date(asOf), ccy, l, matured)
+                : views.treeWithin(p, within.trim(), hierarchy, date(asOf), ccy, l, matured), parametric);
     }
 
     @GetMapping("/status")

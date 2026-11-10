@@ -323,7 +323,7 @@ def _mr_cube_door(request: Request) -> bool:
 #: GET endpoints of the engine the page may ask for, and the parameters each passes on
 #: "matured" is the explorer's matured-items switch (VAR_GUIDE.md, "Matured items"): this answer only, never kept for the person
 _GETS = {"scope": ("scope", "parametric", "matured"), "hints": ("q", "limit"), "scope/path": ("scope", "page", "size", "parametric", "matured"),
-         "scope/history": ("scope",), "scope/contributions": ("scope", "by", "scenario", "parametric", "matrix"), "tree": ("hierarchy", "parametric", "matured"), "baskets": (), "captures": ("scope",),
+         "scope/history": ("scope",), "scope/contributions": ("scope", "by", "scenario", "parametric", "matrix"), "tree": ("hierarchy", "parametric", "matured", "within"), "baskets": (), "captures": ("scope",),
          "compare": ("a", "b"), "status": (), "official": (), "scope/currencies": ("scope",), "currencies": (),
          "intraday/streams": (), "basket/sheet": ("scope",),         # a scope laid into the basket sheet (a basket, a portfolio's copy)
          # the stress window selection (VAR_GUIDE.md section 18.9): the analysis of a node and the frozen proposals

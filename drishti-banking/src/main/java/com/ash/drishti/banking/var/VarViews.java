@@ -1376,6 +1376,20 @@ final class VarViews {
 
     /** The same with the matured-items switch ({@code matured}: each node's figure with its matured items beside, VAR_GUIDE.md, "Matured items"). */
     Map<String, Object> tree(Principal p, String hierarchy, LocalDate date, String ccy, VarLens lens, boolean matured) {
+        return tree(p, null, hierarchy, date, ccy, lens, matured);
+    }
+
+    /**
+     * A basket's own tree (VAR_GUIDE.md section 3.2, "The scope tree shows only the chosen scope"): the basket ({@code within}, any
+     * scope: a system basket {@code PORT:}, a saved {@code BASKET:}) as the root row, and under it the chosen hierarchy's nodes that
+     * hold any of its positions, each node's figures those of the basket's part in it ({@code (within) & NODE:id}, computed here). A
+     * node none of the basket is in is left out with everything under it. Limits are the nodes', not the basket's parts': none shown.
+     */
+    Map<String, Object> treeWithin(Principal p, String within, String hierarchy, LocalDate date, String ccy, VarLens lens, boolean matured) {
+        return tree(p, within, hierarchy, date, ccy, lens, matured);
+    }
+
+    private Map<String, Object> tree(Principal p, String within, String hierarchy, LocalDate date, String ccy, VarLens lens, boolean matured) {
         VarDate d = svc.date(date, ccy);
         VarBook b = d.book();
         List<String> present = b.hierarchies();
@@ -1387,8 +1401,18 @@ final class VarViews {
                     + (present.isEmpty() ? "none: configure hierarchies: in the pack or drishti.var.hierarchies" : String.join(", ", present)) + ")");
         }
         List<Map<String, Object>> rows = new ArrayList<>();
-        walk(p, b, root, 0, rows, date, d.currency(), lens, matured);
         Map<String, Object> out = new LinkedHashMap<>();
+        if (within == null) {
+            walk(p, b, root, 0, rows, date, d.currency(), lens, matured, null);
+        } else {
+            VarService.Scoped all = svc.scoped(p, within, date, d.currency(), lens);     // refused or unknown: said, as the headline says it
+            out.put("within", all.res().canonical());
+            out.put("withinLabel", all.label());
+            out.put("withinKind", all.kind());
+            if (!all.set().isEmpty()) {
+                walk(p, b, root, 0, rows, date, d.currency(), lens, matured, all);
+            }
+        }
         out.put("hierarchy", h);
         out.put("maturedSwitch", maturedSwitch(d, matured));
         out.put("currency", d.currency());
@@ -1432,35 +1456,38 @@ final class VarViews {
         return out;
     }
 
+    /** One node's row and its children's ({@code within}: the basket's part in each node, a node without any left out with its subtree). */
     private void walk(Principal p, VarBook b, VarBook.Node n, int depth, List<Map<String, Object>> rows, LocalDate date, String ccy, VarLens lens,
-            boolean matured) {
+            boolean matured, VarService.Scoped within) {
         VarService.Scoped s;
+        String scope = within == null ? "NODE:" + n.id() : depth == 0 ? within.res().canonical() : "(" + within.res().canonical() + ") & NODE:" + n.id();
         try {
-            s = svc.scoped(p, "NODE:" + n.id(), date, ccy, lens);
+            s = depth == 0 && within != null ? within : svc.scoped(p, scope, date, ccy, lens);
         } catch (DrishtiException e) {
             return;
         }
-        if (s.set().isEmpty() && !s.view().full()) {
+        if (s.set().isEmpty() && (within != null || !s.view().full())) {
             return;
         }
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("id", n.id());
-        m.put("scope", "NODE:" + n.id());
-        m.put("name", n.name());
-        m.put("level", n.level());
+        m.put("scope", scope);
+        m.put("name", within != null && depth == 0 ? within.label() : n.name());
+        m.put("level", within != null && depth == 0 ? "basket" : n.level());
         m.put("parent", n.parent());
         m.put("depth", depth);
         m.put("var", round(s.measures().var()));
         m.put("es", round(s.measures().es()));
-        m.put("limit", Double.isNaN(n.limit()) ? null : round(n.limit()));
+        boolean noLimit = within != null || Double.isNaN(n.limit());
+        m.put("limit", noLimit ? null : round(n.limit()));
         boolean comparable = svc.loader().limitBasis(s.date().date(), n.id()).matches(lens(s));
-        m.put("limitUse", Double.isNaN(n.limit()) || n.limit() == 0 || !comparable ? null : s.measures().var() / n.limit());
+        m.put("limitUse", noLimit || n.limit() == 0 || !comparable ? null : s.measures().var() / n.limit());
         m.put("limitStatus", limits.status((Double) m.get("limitUse")));
-        m.put("limitComparable", Double.isNaN(n.limit()) ? null : comparable);
+        m.put("limitComparable", noLimit ? null : comparable);
         m.put("trades", s.set().size());
         m.put("hidden", s.hidden());
         m.put("expandable", !n.children().isEmpty() || s.view().seesPositions(s.set()));
-        String blank = svc.hierarchies().blankNote(n.hierarchy(), n.id(), n.level(), n.members().size());
+        String blank = within != null && depth == 0 ? null : svc.hierarchies().blankNote(n.hierarchy(), n.id(), n.level(), n.members().size());
         if (blank != null) {                                             // a (Blank) node: its rows have no value at its level
             m.put("blank", true);
             m.put("blankNote", blank);
@@ -1479,7 +1506,7 @@ final class VarViews {
         for (String c : n.children()) {
             VarBook.Node cn = b.node(c);
             if (cn != null) {
-                walk(p, b, cn, depth + 1, rows, date, ccy, lens, matured);
+                walk(p, b, cn, depth + 1, rows, date, ccy, lens, matured, within);
             }
         }
     }

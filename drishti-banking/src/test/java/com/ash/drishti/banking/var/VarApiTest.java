@@ -214,6 +214,33 @@ class VarApiTest {
     }
 
     @Test
+    @Order(3)
+    void aBasketsTreeIsItsOwnPositionsByTheChosenHierarchy() throws Exception {
+        // the explorer's tree for a system basket (VAR_GUIDE.md section 3.2): the basket the root, the nodes holding its members under it,
+        // each node's figure the basket's part in it, computed by the engine; a node none of it is in is left out
+        String body = mvc.perform(get("/api/v1/risk/var/tree").param("within", "PORT:PF-MIX").param("hierarchy", "MGMT")
+                .header("Authorization", as("rita", "risk"))).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        JsonNode t = json.readTree(body);
+        assertThat(t.get("within").asText()).isEqualTo("PORT:PF-MIX");
+        JsonNode nodes = t.get("nodes");
+        assertThat(nodes.get(0).get("scope").asText()).isEqualTo("PORT:PF-MIX");
+        assertThat(nodes.get(0).get("level").asText()).isEqualTo("basket");
+        assertThat(nodes.get(0).get("var").asDouble()).isEqualTo(540);
+        assertThat(nodes.get(0).get("limitUse").isNull()).isTrue();
+        assertThat(nodes.size()).isGreaterThan(1);
+        for (int i = 1; i < nodes.size(); i++) {
+            JsonNode n = nodes.get(i);
+            assertThat(n.get("scope").asText()).isEqualTo("(PORT:PF-MIX) & NODE:" + n.get("id").asText());
+            assertThat(n.get("var").asDouble()).as(n.get("id").asText()).isEqualTo(var(n.get("scope").asText()));
+            assertThat(n.get("trades").asInt()).isPositive();
+        }
+        JsonNode whole = json.readTree(mvc.perform(get("/api/v1/risk/var/tree").header("Authorization", as("rita", "risk")))
+                .andReturn().getResponse().getContentAsString());
+        assertThat(nodes.size()).isLessThanOrEqualTo(whole.get("nodes").size());
+        assertThat(whole.has("within")).isFalse();
+    }
+
+    @Test
     @Order(4)
     void pathReplayHistoryAndTree() throws Exception {
         JsonNode p = getJson("/api/v1/risk/var/scope/path?page=0&size=5", "BANK", as("rita", "risk"));
