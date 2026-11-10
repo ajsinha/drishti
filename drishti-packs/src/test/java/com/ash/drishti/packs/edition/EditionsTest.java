@@ -64,7 +64,8 @@ class EditionsTest {
     void noEditionAddsNothingAndAllowsEverything() {
         StandardEnvironment env = env(map(), map("drishti.packs.enabled", "${DRISHTI_PACKS:default}"));
         new EditionEnvironmentPostProcessor().postProcessEnvironment(env, new SpringApplication());
-        assertThat(env.getPropertySources().contains(EditionEnvironmentPostProcessor.SOURCE)).isFalse();
+        assertThat(env.getProperty("drishti.edition")).isNull();          // Drishti All: only the distribution facts, no filter
+        assertThat(env.getProperty(EditionEnvironmentPostProcessor.INFO + ".id")).isEqualTo("drishti.all");
         Edition none = Editions.of(env);
         assertThat(none).isSameAs(Edition.NONE);
         assertThat(none.packAllowed("anything")).isTrue();

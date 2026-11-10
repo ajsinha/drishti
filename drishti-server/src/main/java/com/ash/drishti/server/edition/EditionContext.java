@@ -61,16 +61,16 @@ public final class EditionContext {
 
     /** The edition the current request is seen through: the instance's, else the request's lens, else none. */
     public Edition current() {
-        if (instance.active() || lenses.isEmpty()) {
+        if (lenses.isEmpty()) {                                          // an edition (no lenses), or none offered
             return instance;
         }
         RequestAttributes a = RequestContextHolder.getRequestAttributes();
         if (a instanceof ServletRequestAttributes s) {
             String lens = s.getRequest().getHeader(HEADER);
             if (lens != null && !lens.isBlank()) {
-                return lenses.getOrDefault(lens.strip(), Edition.NONE);
+                return lenses.getOrDefault(lens.strip(), instance);     // a distribution's lens (Risk's Trading), else the distribution
             }
         }
-        return Edition.NONE;
+        return instance;
     }
 }

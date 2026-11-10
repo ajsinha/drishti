@@ -1,0 +1,45 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Drishti All (docs/architecture/DISTRIBUTIONS.md section 6): every module, every lens, every engine, the neutral Drishti brand. The
+# default when no distribution is named, so an install without --distribution behaves exactly as before distributions existed; the
+# developer and QA distribution (the drill, the page walk and the tutorials run on it). Genomics stays out (a sample).
+format: 1
+distribution: drishti.all
+version: 1.0.0
+kernel: ">=2.9.11 <2.10"
+
+brand:
+  product: Drishti
+  product_native: दृष्टि
+  tagline: Any data. Any domain. One grammar.
+  owner: Ashutosh Sinha
+  copyright: Copyright © 2026 Ashutosh Sinha. All rights reserved. Proprietary and confidential.
+  notice: Unauthorised copying, use or distribution is prohibited.
+  logo: ""                                 # blank: the Drishti eye
+  favicon: ""
+  about: ""                                # a line for the About page; blank: the product's own
+  support: { email: "", url: "" }
+
+theme: { tokens: terminal, mode: dark, density: comfortable }
+
+modules: all                               # every module the kernel has: no visibility filter at all
+
+lenses:
+  offered: [risk, world, market, trading]
+  default: ""                              # none: the full product's Home
+
+docs: { title: Drishti Help }
+demo: { ships: true, enabled: true }
+locale: { language: en }
