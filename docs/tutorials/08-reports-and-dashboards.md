@@ -3199,6 +3199,9 @@ curl -s -X POST -H "$AUTH" -H 'Content-Type: application/json' \
 splits. To try an element's code, open **Elements → Playground page** (`/elements#mode=docs&c=decomposition&tab=page`; every element has one, picked in the side list): edit a cell of its data or the JavaScript,
 the visual redraws in a sandboxed frame; a mistake names its line and the last good drawing stays, greyed.
 
+**You should see** five desk boxes under the root, the line *Σ standalone − diversification = parent* beside them, and in the
+Playground page the decomposition tree redrawn after each edit, with **Reset** bringing the example back.
+
 ## Next steps
 
 - [REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md) for every page of the BI area, [REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#9-the-report-file-pages-visuals-filters-and-slicers) for every visual and its wells (sections 3 and 6 are the map and the slicers), [REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#5-models-and-datasets-what-a-report-reads) for writing a dataset, and [REPORTS_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 17](../guides/REPORTS_GUIDE.md#59-worked-examples-the-shipped-models-row-rules-and-masks) for
