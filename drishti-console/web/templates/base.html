@@ -78,7 +78,7 @@
   <script src="/static/js/drishti_phone.js?v={{ ASSET_V }}"></script>
   <script src="/static/js/drishti_settled.js?v={{ ASSET_V }}"></script>{# Drishti.settled(): the page-settled signal browser tests wait on; inert until asked #}
   {% if me %}<script src="/static/js/drishti_alerts.js?v={{ ASSET_V }}"></script>{% endif %}
-  {% if me %}<script type="application/json" id="drishti-figure-explainers">{{ figure_explainers() | tojson }}</script>{% endif %}{# the modules' figures that carry Explain › (core/plugins.figure_explainer) #}
+  {% if me %}<div id="drishti-figure-explainers" hidden data-rules="{{ figure_explainers() | tojson | forceescape }}"></div>{% endif %}{# the modules' figures that carry Explain › (core/plugins.figure_explainer) #}
   {% block scripts %}{% endblock %}
 </body>
 </html>

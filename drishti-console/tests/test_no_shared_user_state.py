@@ -41,6 +41,7 @@ ALLOWED = {
     "core/plugins.py:_presets": "the Pivot presets' word grammars by lens, registered at import (code, not data: C5)",
     "core/plugins.py:_words": "the modules' reserved words, registered at import (code, not data: C8)",
     "core/plugins.py:_console_commands": "the modules' console commands, registered at import (code, not data: C8)",
+    "core/plugins.py:_figure_explainers": "the modules' rules of the figures that carry Explain ›, registered at import (code, not data: C8)",
     "core/plugins.py:_phone_pages": "the modules' phone page parts, registered at import (code, not data: C8)",
     "core/plugins.py:_connector_actions": "the modules' connector buttons, registered at import (code, not data: C8)",
     "core/plugins.py:_landing_rules": "the modules' landing rules, registered at import (code, not data: C6)",

@@ -48,7 +48,7 @@
     const E = window.Drishti && window.Drishti.Explain, el = document.getElementById('drishti-figure-explainers');
     if (!E || !el || !res || !Array.isArray(res.columns) || res.rowCount !== 1 || !res.rows || !res.rows.length) { return null; }
     let rules = [];
-    try { rules = JSON.parse(el.textContent || '[]'); } catch (e) { rules = []; }
+    try { rules = JSON.parse(el.getAttribute('data-rules') || '[]'); } catch (e) { rules = []; }
     const names = res.columns.map((c) => String(c.name || '').toUpperCase()), row = res.rows[0];
     const at = (n) => { const i = names.indexOf(n); return i < 0 ? undefined : (Array.isArray(row) ? row[i] : row[res.columns[i].name]); };
     for (const r of rules) {

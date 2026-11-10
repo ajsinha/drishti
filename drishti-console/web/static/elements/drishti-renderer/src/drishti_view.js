@@ -57,7 +57,7 @@ function figureExplain(c, ref) {
   const doc = typeof document !== 'undefined' ? document : null, el = doc && doc.getElementById('drishti-figure-explainers');
   if (!el || !ref) { return null; }
   let rules = [];
-  try { rules = JSON.parse(el.textContent || '[]'); } catch (e) { rules = []; }
+  try { rules = JSON.parse(el.getAttribute('data-rules') || '[]'); } catch (e) { rules = []; }
   const p = c.path || '';
   for (const r of rules) {
     const word = (r.pages || {})[ref.kind], suffix = Object.keys(r.paths || {}).find((x) => p.endsWith(x));
