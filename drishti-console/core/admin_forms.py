@@ -431,7 +431,22 @@ def lake_schedule(*, zone: str = "", **_) -> Markup:
     return K.host(K.schema(props), value, attrs={"class": "mt-schedule"}, layout="columns", label="New schedule for the selected tables")
 
 
+def bindings_bind(*, connectors=(), **_) -> Markup:
+    """Admin → Data bindings, Bind…: a kind's connectors in read order, union, the demo lake, the live connector and why (the page's script
+    sends them as the proposal ``{kind, binding, reason}``; the server checks everything)."""
+    names = list(connectors)
+    props = {"read": K.text("Read from (connectors in read order, comma separated)", "read", mono=True,
+                            description="Defined connectors: " + (", ".join(names) or "none")),
+             "union": K.check("One store across them (union)", "union"),
+             "demo": K.check("The demo lake's samples", "demo"),
+             "live": K.select("Live (a connector that pushes changes)", "live", [(n, n) for n in names], empty="none"),
+             "reason": K.text("Why", "reason", maxLength=500)}
+    return K.host(K.schema(props, required=["reason"]), {"read": "", "union": False, "demo": False, "live": "", "reason": ""},
+                  attrs={"data-bind-fields": ""}, label="The binding", **ALONE)
+
+
 BUILDERS: dict[str, Callable[..., Markup]] = {
+    "bindings_bind": bindings_bind,
     "connector_head": connector_head,
     "net_explain": net_explain, "net_node": net_node,
     "lake_file": lake_file, "lake_fields": lake_fields, "lake_target": lake_target,

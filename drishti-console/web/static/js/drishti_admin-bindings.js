@@ -23,7 +23,9 @@
   if (!root) { return; }
   var said = root.querySelector('[data-bindings-said]');
   var box = root.querySelector('[data-bindings-form]');
-  var form = root.querySelector('[data-bind-form]');
+  var host = root.querySelector('[data-bind-fields]');
+  var F = null;                                                  // drishti-inputs' Form from the server's schema (core/admin_forms.py), asked when first used
+  var kind = '';
 
   function say(text, bad) {
     if (!said) { return; }
@@ -54,20 +56,34 @@
   }
 
   function open(btn) {
-    form.elements.kind.value = btn.getAttribute('data-binding-edit');
-    form.elements.read.value = btn.getAttribute('data-read') || '';
-    form.elements.live.value = btn.getAttribute('data-live') || '';
-    form.elements.union.checked = !!btn.getAttribute('data-union');
-    form.elements.demo.checked = !!btn.getAttribute('data-demo');
-    form.elements.reason.value = '';
-    root.querySelector('[data-bind-kind-label]').textContent = form.elements.kind.value;
+    F = F || window.Drishti.elements.inputs.formOf(host);
+    kind = btn.getAttribute('data-binding-edit');
+    F.setValue({ read: btn.getAttribute('data-read') || '', live: btn.getAttribute('data-live') || '',
+      union: !!btn.getAttribute('data-union'), demo: !!btn.getAttribute('data-demo'), reason: '' });
+    root.querySelector('[data-bind-kind-label]').textContent = kind;
     box.hidden = false;
-    form.elements.read.focus();
+    var r = F.form.querySelector('[name=read]');
+    if (r) { r.focus(); }
+  }
+
+  function propose(remove) {
+    if (!F.validate().ok) { say('Say why the binding changes.', true); return; }
+    var v = F.getValue();
+    var b = null;
+    if (!remove) {
+      b = {};
+      var read = list(v.read);
+      if (read.length) { b.read = read; }
+      if (v.union) { b.union = true; }
+      if (v.demo) { b.demo = true; }
+      if (v.live) { b.live = v.live; }
+    }
+    send('propose', { kind: kind, binding: b, reason: v.reason });
   }
 
   root.addEventListener('click', function (e) {
     var edit = e.target.closest('[data-binding-edit]');
-    if (edit) { open(edit); return; }
+    if (edit && host) { open(edit); return; }
     var act = e.target.closest('[data-proposal-act]');
     if (act) {
       act.disabled = true;
@@ -75,21 +91,7 @@
       return;
     }
     if (e.target.closest('[data-bind-cancel]')) { box.hidden = true; return; }
-    if (e.target.closest('[data-bind-remove]')) {
-      send('propose', { kind: form.elements.kind.value, binding: null, reason: form.elements.reason.value });
-    }
+    if (e.target.closest('[data-bind-propose]')) { propose(false); return; }
+    if (e.target.closest('[data-bind-remove]')) { propose(true); }
   });
-
-  if (form) {
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      var b = {};
-      var read = list(form.elements.read.value);
-      if (read.length) { b.read = read; }
-      if (form.elements.union.checked) { b.union = true; }
-      if (form.elements.demo.checked) { b.demo = true; }
-      if (form.elements.live.value.trim()) { b.live = form.elements.live.value.trim(); }
-      send('propose', { kind: form.elements.kind.value, binding: b, reason: form.elements.reason.value });
-    });
-  }
 })();

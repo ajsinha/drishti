@@ -74,18 +74,12 @@
 
   <section class="ib-sec" aria-labelledby="bd-form-h" data-bindings-form hidden>
     <h2 class="ib-h2" id="bd-form-h">Bind <span class="mono" data-bind-kind-label></span></h2>
-    <form data-bind-form>
-      <input type="hidden" name="kind">
-      <p><label>Read from (connectors, in read order, comma separated) <input type="text" name="read" list="bd-connectors" size="60" class="mono"></label></p>
-      <datalist id="bd-connectors">{% for c in st.connectors or [] %}<option value="{{ c }}">{% endfor %}</datalist>
-      <p><label><input type="checkbox" name="union"> One store across them (union)</label>
-        <label><input type="checkbox" name="demo"> The demo lake's samples</label></p>
-      <p><label>Live (a connector that pushes changes) <input type="text" name="live" list="bd-connectors" class="mono"></label></p>
-      <p><label>Why <input type="text" name="reason" size="80" required></label></p>
-      <p><button type="submit" class="btn-pill ib-btn">Propose (a second administrator approves)</button>
+    <div data-bind-form>
+      {{ admin_form('bindings_bind', connectors=st.connectors or []) }}{# drishti-inputs' Form from the server's schema (core/admin_forms.py) #}
+      <p><button type="button" class="btn-pill ib-btn" data-bind-propose>Propose (a second administrator approves)</button>
         <button type="button" class="btn-pill ib-btn" data-bind-remove>Propose removing the binding</button>
         <button type="button" class="btn-pill ib-btn" data-bind-cancel>Cancel</button></p>
-    </form>
+    </div>
   </section>
 
   <section class="ib-sec" aria-labelledby="bd-props-h">
