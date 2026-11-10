@@ -75,6 +75,10 @@ public final class ModuleVerifier {
         if (!dev) {
             notes.addAll(Dmod.verify(c.dir(), c.dmod(), label));
         }
+        // the origin (first-party only when the shipped list verifies it) and the kernel-internals allowance with its exact build
+        FirstParty.Origin origin = facts.firstParty().origin(m, dev ? null : c.dir());
+        notes.add(0, origin.line());
+        FirstParty.allowance(m, origin, facts.kernelBuild());
         packageRules(c, notes);
         // V3: the API ranges this host knows
         for (String r : DmodManifest.RANGES) {

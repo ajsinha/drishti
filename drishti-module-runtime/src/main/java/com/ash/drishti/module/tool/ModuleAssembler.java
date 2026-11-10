@@ -117,12 +117,22 @@ public final class ModuleAssembler {
      * ({@code java.jars} after the first, {@code java.lib}); a jar module.yaml does not name is refused. Every named jar must be there.
      */
     public static Path assemble(Path source, Path jar, List<Path> more, Path work, Path out) {
+        return assemble(source, jar, more, work, out, null);
+    }
+
+    /**
+     * As above, stamping a first-party module's allowance: a {@code kernel-internals:} that names a file (relative to the folder: one
+     * package a line, {@code #} comments) is written into the packed manifest as the list, and {@code kernelBuild} (the kernel build this
+     * build made, section 3.3) as its {@code kernel-build:}. A module without an allowance is packed unchanged.
+     */
+    public static Path assemble(Path source, Path jar, List<Path> more, Path work, Path out, String kernelBuild) {
         DmodManifest m = manifest(source);
         Path stage = work.resolve(m.id());
         try {
             delete(stage);
             copyTree(source, stage);
             bringContent(source, stage);
+            stampAllowance(source, stage, kernelBuild);
             if (m.java() != null) {
                 Path to = stage.resolve("java").resolve(m.java().jars().get(0));
                 if (jar != null && Files.isRegularFile(jar)) {
@@ -157,6 +167,45 @@ public final class ModuleAssembler {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+    }
+
+    /** The allowance stamp of {@link #assemble(Path, Path, List, Path, Path, String)}. */
+    static void stampAllowance(Path source, Path stage, String kernelBuild) throws IOException {
+        Path file = stage.resolve(DmodManifest.FILE);
+        List<String> lines = new ArrayList<>(Files.readAllLines(file, StandardCharsets.UTF_8));
+        boolean allowance = false;
+        List<String> out = new ArrayList<>();
+        for (String l : lines) {
+            if (l.startsWith("kernel-build:")) {
+                continue;                                              // the build's own stamp replaces any
+            }
+            if (l.startsWith("kernel-internals:")) {
+                allowance = true;
+                String v = l.substring("kernel-internals:".length()).strip();
+                if (!v.isEmpty() && !v.startsWith("[") && !v.startsWith("#")) {
+                    Path list = source.resolve(v).normalize();
+                    if (!Files.isRegularFile(list)) {
+                        throw new IllegalStateException(file + ": kernel-internals names " + v + ", which is not a file");
+                    }
+                    out.add("kernel-internals:");
+                    for (String p : Files.readAllLines(list, StandardCharsets.UTF_8)) {
+                        if (!p.isBlank() && !p.strip().startsWith("#")) {
+                            out.add("- " + p.strip());
+                        }
+                    }
+                    continue;
+                }
+            }
+            out.add(l);
+        }
+        if (allowance) {
+            if (kernelBuild == null || kernelBuild.isBlank()) {
+                throw new IllegalStateException(file + ": a module with a kernel-internals allowance is packed for one kernel build: give it "
+                        + "(--kernel-build)");
+            }
+            out.add("kernel-build: '" + kernelBuild + "'");
+        }
+        Files.write(file, out, StandardCharsets.UTF_8);
     }
 
     /** Copies what {@value #CONTENT} names into the stage, then removes the list from it. */

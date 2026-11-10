@@ -16,6 +16,10 @@
 package com.ash.drishti.module.tool;
 
 import com.ash.drishti.module.runtime.Dmod;
+import com.ash.drishti.module.runtime.FirstParty;
+import com.ash.drishti.module.runtime.ModuleCandidate;
+import com.ash.drishti.module.runtime.ModuleHost;
+import com.ash.drishti.module.runtime.ModuleRefusedException;
 import com.ash.drishti.module.runtime.DmodManifest;
 import com.ash.drishti.module.runtime.KernelFacts;
 import com.ash.drishti.module.runtime.ModuleHealth;
@@ -93,6 +97,14 @@ public final class ModuleConformance {
      * (50 in the design).
      */
     public static List<Check> run(Path dmod, Path project, Path work, int cycles) {
+        return run(dmod, project, work, cycles, KernelFacts.ofKernel());
+    }
+
+    /**
+     * Runs C1-C15 for a kernel: its build and first-party list decide whether a kernel-internals allowance is honoured (C1) and the
+     * runtime checks load the module as that kernel would.
+     */
+    public static List<Check> run(Path dmod, Path project, Path work, int cycles, KernelFacts facts) {
         Path dir;
         DmodManifest m;
         try {
@@ -105,7 +117,7 @@ public final class ModuleConformance {
         }
         List<String> files = files(dir);
         List<Check> out = new ArrayList<>();
-        out.add(check("C1", "No kernel internals", noKernelInternals(dir, m)));
+        out.add(check("C1", "No kernel internals", noKernelInternals(dir, m, facts)));
         out.add(check("C2", "No bespoke UI", noBespokeUi(dir, files)));
         out.add(check("C3", "Theme tokens only", themeTokens(dir, files)));
         out.add(check("C4", "drishti_ asset prefix", assetPrefix(files)));
@@ -115,7 +127,7 @@ public final class ModuleConformance {
         out.add(check("C8", "Data contracts present", contractsPresent(dir, m, files)));
         out.add(check("C9", "No secrets, no connectors", noSecrets(dir, files)));
         out.add(check("C10", "Licence headers", licenceHeaders(dir, files, project)));
-        out.addAll(runtimeChecks(dmod, m, work, cycles));
+        out.addAll(runtimeChecks(dmod, m, work, cycles, facts));
         out.add(11, check("C12", "Two people at once", twoPeople(dir, m)));
         return out;
     }
@@ -153,16 +165,24 @@ public final class ModuleConformance {
         return out;
     }
 
-    private static List<String> noKernelInternals(Path dir, DmodManifest m) {
+    private static List<String> noKernelInternals(Path dir, DmodManifest m, KernelFacts facts) {
+        List<String> allowance;
+        try {
+            allowance = FirstParty.allowance(m, facts.firstParty().origin(m, dir), facts.kernelBuild());
+        } catch (ModuleRefusedException e) {
+            return List.of(e.getMessage());
+        }
         List<ClassFiles.Info> classes = classes(dir, m);
         Set<String> own = new TreeSet<>();
         classes.forEach(c -> own.add(pkg(c.name())));
         List<String> out = new ArrayList<>();
         for (ClassFiles.Info c : classes) {
             for (String t : c.types()) {
-                if (t.startsWith(KERNEL) && !t.startsWith(KERNEL_API) && !t.startsWith(ENTITY_API) && !own.contains(pkg(t))) {
+                if (t.startsWith(KERNEL) && !t.startsWith(KERNEL_API) && !t.startsWith(ENTITY_API) && !own.contains(pkg(t))
+                        && !FirstParty.allowed(allowance, t.replace('/', '.'))) {
                     out.add(c.name().replace('/', '.') + " uses " + t.replace('/', '.') + ", a kernel internal: a module may use only "
-                            + "drishti-kernel-api (com.ash.drishti.kernel.api) and its own classes");
+                            + "drishti-kernel-api (com.ash.drishti.kernel.api) and its own classes" + (allowance.isEmpty() ? ""
+                            : ", and this one its declared kernel-internals allowance"));
                 }
             }
         }
@@ -463,7 +483,7 @@ public final class ModuleConformance {
 
     // ---- C11, C13, C14, C15: the module in the runtime ------------------------------------------------------------------------------
 
-    private static List<Check> runtimeChecks(Path dmod, DmodManifest m, Path work, int cycles) {
+    private static List<Check> runtimeChecks(Path dmod, DmodManifest m, Path work, int cycles, KernelFacts facts) {
         List<String> answer = new ArrayList<>();
         List<String> off = new ArrayList<>();
         List<String> absent = new ArrayList<>();
@@ -471,7 +491,7 @@ public final class ModuleConformance {
         try {
             // C11 and C13: load, every word answers through a route; switched off, every route answers 404
             Path modules = install(dmod, m, work.resolve("run-off"));
-            try (ModuleRuntime rt = runtime(work.resolve("run-off"))) {
+            try (ModuleRuntime rt = runtime(work.resolve("run-off"), facts)) {
                 if (load(rt, modules, m, answer)) {
                     Map<String, RouteTable.Route> byWord = new LinkedHashMap<>();
                     rt.routes().snapshot().of(m.id()).forEach(r -> {
@@ -503,7 +523,7 @@ public final class ModuleConformance {
             }
             // C14: removed, every surface gone, nothing left in the registry, its saved work marked
             modules = install(dmod, m, work.resolve("run-remove"));
-            try (ModuleRuntime rt = runtime(work.resolve("run-remove"))) {
+            try (ModuleRuntime rt = runtime(work.resolve("run-remove"), facts)) {
                 if (load(rt, modules, m, absent)) {
                     ModuleRuntime.UnloadReport rep = rt.unload(m.id(), ModuleRuntime.Leave.REMOVE, true);
                     absent.addAll(rep.failures());
@@ -525,7 +545,7 @@ public final class ModuleConformance {
                 Path run = work.resolve("run-cycle");
                 ModuleAssembler.delete(run);
                 modules = install(dmod, m, run);
-                try (ModuleRuntime rt = runtime(run)) {
+                try (ModuleRuntime rt = runtime(run, facts)) {
                     if (!load(rt, modules, m, unloads)) {
                         break;
                     }
@@ -556,9 +576,26 @@ public final class ModuleConformance {
         return modules;
     }
 
-    private static ModuleRuntime runtime(Path run) {
-        return new ModuleRuntime(KernelFacts.ofKernel(), null, ModuleConformance.class.getClassLoader(), null, run.resolve("tombstones"));
+    private static ModuleRuntime runtime(Path run, KernelFacts facts) {
+        return new ModuleRuntime(facts, null, ModuleConformance.class.getClassLoader(), HARNESS, run.resolve("tombstones"));
     }
+
+    /**
+     * The harness's host: it has no kernel beans, so a module with a kernel-internals allowance (whose beans take the kernel's) is made
+     * with every bean lazy: its configuration is read, its routes and contributions go through the runtime, and its loader must unload.
+     */
+    private static final ModuleHost HARNESS = new ModuleHost() {
+        @Override
+        public void preparing(ModuleCandidate candidate, org.springframework.context.support.GenericApplicationContext context) {
+            if (!candidate.manifest().kernelInternals().isEmpty()) {
+                context.addBeanFactoryPostProcessor(bf -> {
+                    for (String n : bf.getBeanDefinitionNames()) {
+                        bf.getBeanDefinition(n).setLazyInit(true);
+                    }
+                });
+            }
+        }
+    };
 
     private static boolean load(ModuleRuntime rt, Path modules, DmodManifest m, List<String> problems) {
         List<ModuleHealth> rows = rt.start(List.of(modules), Map.of(), id -> true);

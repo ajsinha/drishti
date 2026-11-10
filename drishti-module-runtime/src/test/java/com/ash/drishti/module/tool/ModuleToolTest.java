@@ -16,7 +16,10 @@
 package com.ash.drishti.module.tool;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.ash.drishti.module.runtime.DmodManifest;
+import com.ash.drishti.module.runtime.FirstParty;
 import com.ash.drishti.module.runtime.KernelFacts;
 import com.ash.drishti.module.runtime.ModuleHealth;
 import com.ash.drishti.module.runtime.ModuleRuntime;
@@ -172,6 +175,113 @@ class ModuleToolTest {
         for (String passing : List.of("C6", "C11", "C13", "C14", "C15")) {
             assertThat(byId.get(passing).status()).as(byId.get(passing).line()).isEqualTo(ModuleConformance.Status.PASS);
         }
+    }
+
+    /**
+     * KERNEL_AND_MODULES.md section 3.3: only a verified first-party module may use a kernel-internals allowance, and only on the exact
+     * kernel build it was built for. One implementation answers for the tool (C1, inspect) and the kernel (verification, the class loader).
+     */
+    @Test
+    void anAllowanceIsHonouredOnlyForAVerifiedFirstPartyModuleOnItsOwnKernelBuild() throws Exception {
+        Path project = generate("insider");
+        Path java = project.resolve("src/main/java/com/example/insider");
+        Files.writeString(java.resolve("Inside.java"), """
+                /*
+                 * Copyright (c) the publisher of insider. All rights reserved.
+                 */
+                package com.example.insider;
+                public final class Inside {
+                    public String name() { return com.ash.drishti.module.runtime.Dmod.fileName("a", "1.0.0"); }
+                }
+                """);
+        Path src = project.resolve("src/dmod");
+        Files.writeString(src.resolve("kernel-internals.txt"), "# the kernel packages insider reaches\ncom.ash.drishti.module.runtime\n");
+        String manifest = Files.readString(src.resolve("module.yaml"));
+        Files.writeString(src.resolve("module.yaml"), manifest + "origin: first-party\nkernel-internals: kernel-internals.txt\n");
+        Path jar = build(project, "insider");
+        assertThatThrownBy(() -> ModuleAssembler.assemble(src, jar, List.of(), tmp.resolve("w0"), tmp.resolve("d0")))
+                .hasMessageContaining("packed for one kernel build");
+        Path dmod = ModuleAssembler.assemble(src, jar, List.of(), tmp.resolve("w1"), tmp.resolve("d1"), "9.9.9+build-1");
+        Path unpacked = tmp.resolve("insider-unpacked");
+        com.ash.drishti.module.runtime.Dmod.unpack(dmod, unpacked);
+        DmodManifest packed = ModuleAssembler.manifest(unpacked);
+        assertThat(packed.kernelInternals()).containsExactly("com.ash.drishti.module.runtime");
+        assertThat(packed.kernelBuild()).isEqualTo("9.9.9+build-1");
+        FirstParty shipped = FirstParty.of(Map.of("insider", FirstParty.listHash(unpacked)));
+        KernelFacts right = KernelFacts.ofKernel().withBuild("9.9.9+build-1", shipped);
+
+        // verified first-party on its own build: C1 honours the allowance, the kernel loads it and its loader sees the allowed package
+        Map<String, ModuleConformance.Check> ok = byId(ModuleConformance.run(dmod, project, tmp.resolve("c-ok"), 1, right));
+        assertThat(ok.values()).allSatisfy(c -> assertThat(c.status()).as(c.line()).isEqualTo(ModuleConformance.Status.PASS));
+        assertThat(load(dmod, right, "k-ok").state()).isEqualTo(ModuleHealth.State.LOADED);
+        assertThat(lastNotes.get(0)).startsWith("origin: first-party (verified");
+
+        // a forged claim: origin first-party, but not in the kernel's list (or another hash): third-party, and the allowance refused
+        for (FirstParty forged : List.of(FirstParty.none(), FirstParty.of(Map.of("insider", "00".repeat(32))))) {
+            KernelFacts k = KernelFacts.ofKernel().withBuild("9.9.9+build-1", forged);
+            assertThat(byId(ModuleConformance.run(dmod, project, tmp.resolve("c-forged-" + forged.ids().size()), 1, k)).get("C1").problems())
+                    .anyMatch(p -> p.contains("only a verified first-party module may") && p.contains("claims first-party, but"));
+            ModuleHealth h = load(dmod, k, "k-forged-" + forged.ids().size());
+            assertThat(h.state()).isEqualTo(ModuleHealth.State.REFUSED);
+            assertThat(h.check()).isEqualTo("C1");
+        }
+
+        // an allowance on a module that says it is third-party: refused, whatever the list says
+        Files.writeString(src.resolve("module.yaml"), manifest + "origin: third-party\nkernel-internals: kernel-internals.txt\n");
+        Path third = ModuleAssembler.assemble(src, jar, List.of(), tmp.resolve("w2"), tmp.resolve("d2"), "9.9.9+build-1");
+        assertThat(byId(ModuleConformance.run(third, project, tmp.resolve("c-third"), 1, right)).get("C1").problems())
+                .anyMatch(p -> p.contains("this one loads as third-party (declared third-party)"));
+        assertThat(load(third, right, "k-third").check()).isEqualTo("C1");
+
+        // the wrong kernel build: refused with the words that say what to do
+        KernelFacts other = KernelFacts.ofKernel().withBuild("9.9.9+build-2", shipped);
+        String words = "insider 0.1.0: built for kernel 9.9.9+build-1, this is 9.9.9+build-2: install the matching module";
+        assertThat(byId(ModuleConformance.run(dmod, project, tmp.resolve("c-build"), 1, other)).get("C1").problems()).containsExactly(words);
+        ModuleHealth h = load(dmod, other, "k-build");
+        assertThat(h.state()).isEqualTo(ModuleHealth.State.REFUSED);
+        assertThat(h.check()).isEqualTo("V3");
+        assertThat(h.reason()).isEqualTo(words);
+
+        // the tool says the origin and the allowance's verdict
+        java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        java.io.PrintStream o = new java.io.PrintStream(out, true, StandardCharsets.UTF_8);
+        Path list = tmp.resolve("first-party.yaml");
+        assertThat(ModuleTool.run(new String[] {"first-party", dmod.getParent().toString(), "--out", list.toString()}, o, o)).isZero();
+        assertThat(ModuleTool.run(new String[] {"inspect", dmod.toString(), "--first-party", list.toString(), "--kernel-build", "9.9.9+build-2"}, o, o))
+                .isZero();
+        assertThat(out.toString()).contains("origin: first-party (verified: its id and hash list are in first-party.yaml)",
+                "allowance: 1 kernel packages, built for kernel 9.9.9+build-1 (refused: " + words + ")");
+    }
+
+    private List<String> lastNotes = List.of();
+
+    private ModuleHealth load(Path dmod, KernelFacts facts, String name) throws Exception {
+        DmodManifest m = ModuleAssembler.manifest(unpackedOf(dmod));
+        Path modules = tmp.resolve(name).resolve("modules");
+        com.ash.drishti.module.runtime.Dmod.unpack(dmod, modules.resolve(m.id()).resolve(m.version()));
+        Files.copy(dmod, modules.resolve(m.id()).resolve(dmod.getFileName()));
+        try (ModuleRuntime rt = new ModuleRuntime(facts, null, getClass().getClassLoader(), null, tmp.resolve(name).resolve("tomb"))) {
+            ModuleHealth h = rt.start(List.of(modules), Map.of(), id -> true).get(0);
+            lastNotes = h.notes();
+            if (h.state() == ModuleHealth.State.LOADED) {
+                Class<?> seen = rt.loaded(m.id()).orElseThrow().loader().loadClass("com.ash.drishti.module.runtime.Dmod");
+                assertThat(seen).isSameAs(com.ash.drishti.module.runtime.Dmod.class);   // the kernel's own class, through the allowance
+                rt.unload(m.id(), ModuleRuntime.Leave.DISABLE, true);
+            }
+            return h;
+        }
+    }
+
+    private Path unpackedOf(Path dmod) throws IOException {
+        Path d = tmp.resolve("peek-" + java.util.UUID.randomUUID());
+        com.ash.drishti.module.runtime.Dmod.unpack(dmod, d);
+        return d;
+    }
+
+    private static Map<String, ModuleConformance.Check> byId(List<ModuleConformance.Check> checks) {
+        Map<String, ModuleConformance.Check> out = new LinkedHashMap<>();
+        checks.forEach(c -> out.put(c.id(), c));
+        return out;
     }
 
     /** Calls the module's function bean through its own class loader (a frame of its own, so nothing of the module stays reachable). */

@@ -169,7 +169,8 @@ public final class ModuleRuntime implements AutoCloseable {
                 for (String j : java.classPath()) {
                     urls.add(c.dir().resolve(j).toUri().toURL());
                 }
-                loader = new ModuleClassLoader(c.id(), urls.toArray(URL[]::new), kernelLoader, facts.shared(), libraries);
+                List<String> allowance = FirstParty.allowance(c.manifest(), facts.firstParty().origin(c.manifest(), c.dir()), facts.kernelBuild());
+                loader = new ModuleClassLoader(c.id(), urls.toArray(URL[]::new), kernelLoader, facts.shared(), libraries, allowance);
                 ctx = new AnnotationConfigApplicationContext();
                 ctx.setId("module:" + c.id());
                 ctx.setDisplayName("module " + c.manifest().label());
@@ -188,6 +189,7 @@ public final class ModuleRuntime implements AutoCloseable {
                 if (!classes.isEmpty()) {
                     ctx.register(classes.toArray(Class<?>[]::new));
                 }
+                host.preparing(c, ctx);
                 ctx.refresh();
             }
             LoadedModule m = new LoadedModule(c, loader, ctx, List.copyOf(rs), List.copyOf(n));

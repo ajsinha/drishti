@@ -39,9 +39,13 @@ import java.util.function.Predicate;
  * @param allowNative     false on a site that forbids native code bundled in jars
  * @param shared          the class-name prefixes every module loader asks the kernel for (parent-first): the kernel API and the shared
  *                        libraries (section 4.4)
+ * @param kernelBuild     this kernel's exact build ({@code <version>+<build time>}), the one a module with a kernel-internals allowance must
+ *                        have been built for (section 3.3); null when unknown
+ * @param firstParty      the product's list of its own modules ({@link FirstParty}), never null
  */
 public record KernelFacts(Map<String, String> versions, Set<String> reservedPaths, Set<String> reservedWords, Set<String> knownKinds,
-        Predicate<String> licensed, long budgetMb, boolean strictResources, boolean allowNative, List<String> shared) {
+        Predicate<String> licensed, long budgetMb, boolean strictResources, boolean allowNative, List<String> shared, String kernelBuild,
+        FirstParty firstParty) {
 
     /** The shared libraries of section 4.4, parent-first in every module loader; part of the kernel API (a MAJOR removes, a MINOR adds). */
     public static final List<String> SHARED = List.of("com.ash.drishti.kernel.api.", "com.ash.drishti.api.", "org.springframework.", "com.fasterxml.jackson.",
@@ -62,33 +66,63 @@ public record KernelFacts(Map<String, String> versions, Set<String> reservedPath
         knownKinds = knownKinds == null ? null : Set.copyOf(knownKinds);
         licensed = licensed == null ? f -> true : licensed;
         shared = List.copyOf(shared);
+        firstParty = firstParty == null ? FirstParty.none() : firstParty;
     }
 
     /** The facts of this kernel: its API version (from {@code drishti-kernel-api}), the reserved names, every feature licensed, no budget. */
     public static KernelFacts ofKernel() {
-        return new KernelFacts(Map.of("kernel", kernelApiVersion()), RESERVED_PATHS, RESERVED_WORDS, null, f -> true, 0, false, true, SHARED);
+        return new KernelFacts(Map.of("kernel", kernelApiVersion()), RESERVED_PATHS, RESERVED_WORDS, null, f -> true, 0, false, true, SHARED, thisBuild(),
+                FirstParty.shipped(KernelFacts.class.getClassLoader()));
     }
 
     /** A copy with more versions known (the host adds rachana, contracts, plugin-api, elements as it knows them). */
     public KernelFacts withVersions(Map<String, String> more) {
         Map<String, String> v = new LinkedHashMap<>(versions);
         v.putAll(more);
-        return new KernelFacts(v, reservedPaths, reservedWords, knownKinds, licensed, budgetMb, strictResources, allowNative, shared);
+        return new KernelFacts(v, reservedPaths, reservedWords, knownKinds, licensed, budgetMb, strictResources, allowNative, shared, kernelBuild, firstParty);
     }
 
     /** A copy with a licence check (V5). */
     public KernelFacts withLicence(Predicate<String> check) {
-        return new KernelFacts(versions, reservedPaths, reservedWords, knownKinds, check, budgetMb, strictResources, allowNative, shared);
+        return new KernelFacts(versions, reservedPaths, reservedWords, knownKinds, check, budgetMb, strictResources, allowNative, shared, kernelBuild, firstParty);
     }
 
     /** A copy with a memory budget (V8). */
     public KernelFacts withBudget(long mb, boolean strict) {
-        return new KernelFacts(versions, reservedPaths, reservedWords, knownKinds, licensed, mb, strict, allowNative, shared);
+        return new KernelFacts(versions, reservedPaths, reservedWords, knownKinds, licensed, mb, strict, allowNative, shared, kernelBuild, firstParty);
     }
 
     /** A copy with the kinds the kernel knows (V7). */
     public KernelFacts withKnownKinds(Set<String> kinds) {
-        return new KernelFacts(versions, reservedPaths, reservedWords, kinds, licensed, budgetMb, strictResources, allowNative, shared);
+        return new KernelFacts(versions, reservedPaths, reservedWords, kinds, licensed, budgetMb, strictResources, allowNative, shared, kernelBuild, firstParty);
+    }
+
+    /** A copy with another build and first-party list (the module tool's --kernel-build and --first-party, and tests). */
+    public KernelFacts withBuild(String build, FirstParty list) {
+        return new KernelFacts(versions, reservedPaths, reservedWords, knownKinds, licensed, budgetMb, strictResources, allowNative, shared, build,
+                list);
+    }
+
+    /**
+     * This kernel's exact build: the server's version and build time from its {@code META-INF/build-info.properties}
+     * ({@code <version>+<time>}), or null when the class path has no server build (a unit test of the runtime alone).
+     */
+    public static String thisBuild() {
+        try {
+            java.util.Enumeration<java.net.URL> all = KernelFacts.class.getClassLoader().getResources("META-INF/build-info.properties");
+            while (all.hasMoreElements()) {
+                Properties p = new Properties();
+                try (InputStream in = all.nextElement().openStream()) {
+                    p.load(in);
+                }
+                if ("drishti-server".equals(p.getProperty("build.artifact"))) {
+                    return p.getProperty("build.version") + "+" + p.getProperty("build.time");
+                }
+            }
+            return null;
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     /** The kernel API version, as {@code drishti-kernel-api} ships it ({@code META-INF/drishti/kernel-api.properties}). */

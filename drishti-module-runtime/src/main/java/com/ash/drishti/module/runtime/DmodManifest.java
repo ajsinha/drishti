@@ -64,7 +64,7 @@ public record DmodManifest(int format, String id, String version, String title, 
     public static final Set<String> FIELDS = Set.of("format", "id", "version", "title", "about", "domain", "publisher", "licence", "kernel",
             "rachana", "contracts", "plugin-api", "elements", "requires", "conflicts", "provides", "java", "compute", "python", "packs", "data",
             "api", "console", "functions", "lenses", "home", "feeds", "bi", "docs", "settings", "events", "parts", "resources", "health",
-            "taint");
+            "taint", "origin", "kernel-internals", "kernel-build");
 
     /** The licence part: the feature that unlocks the module and the limits it understands. */
     public record Licence(String feature, List<String> limits) {
@@ -109,6 +109,21 @@ public record DmodManifest(int format, String id, String version, String title, 
     /** One field outside the typed ones, as read (null when absent). */
     public Object section(String name) {
         return sections.get(name);
+    }
+
+    /** True when the manifest says {@code origin: first-party} (a claim: {@link FirstParty} verifies it). */
+    public boolean firstPartyClaim() {
+        return "first-party".equals(str(sections.get("origin")));
+    }
+
+    /** The kernel packages the module declares it still reaches ({@code kernel-internals:}), empty for none. */
+    public List<String> kernelInternals() {
+        return strings(sections.get("kernel-internals"));
+    }
+
+    /** The one kernel build a module with an allowance was built for ({@code kernel-build:}), or null. */
+    public String kernelBuild() {
+        return str(sections.get("kernel-build"));
     }
 
     /** {@code <id> <version>}, the way refusals name a module. */
@@ -198,9 +213,13 @@ public record DmodManifest(int format, String id, String version, String title, 
                 throw new ModuleRefusedException("V1", label + ": `resources.memory-mb` is not a number (" + mem + ")");
             }
         }
+        String origin = str(m.get("origin"));
+        if (origin != null && !origin.equals("first-party") && !origin.equals("third-party")) {
+            throw new ModuleRefusedException("V1", label + ": `origin` is first-party or third-party (found " + origin + ")");
+        }
         Map<String, Object> rest = new LinkedHashMap<>();
         for (String k : List.of("compute", "python", "packs", "data", "functions", "lenses", "home", "feeds", "bi", "docs", "settings",
-                "events", "parts", "resources", "health")) {
+                "events", "parts", "resources", "health", "origin", "kernel-internals", "kernel-build")) {
             if (m.containsKey(k)) {
                 rest.put(k, m.get(k));
             }
