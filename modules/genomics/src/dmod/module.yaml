@@ -1,0 +1,26 @@
+# The module's manifest (docs/architecture/KERNEL_AND_MODULES.md section 3.3). Its id and version are the pom's (drishti:validate).
+format: 1
+id: genomics
+version: 0.1.0
+title: genomics
+about: A Drishti module made from the SDK's archetype; it greets whoever asks
+domain: genomics
+publisher: {name: org.helixlab, id: org.helixlab}
+licence: {feature: genomics}
+kernel: ">=0.2 <1.0"
+rachana: ">=1.0"
+contracts: ">=1.0"
+plugin-api: ">=2.0"
+elements: ">=1.4 <2"
+provides: {kinds: {genomics-pack: [genomics-greeting]}}
+api: {prefix: genomics}
+java: {jars: [genomics.jar], lib: [], entry: org.helixlab.genomics.HelloModule, spring: [org.helixlab.genomics.ModuleConfig]}
+console: {plugin: console/plugin.yaml}
+data: {needs: data/needs.yaml}
+functions: [{word: GENOMICS}]
+docs:
+  readme: docs/README.md
+  help: docs/help.yaml
+  guides: [docs/guide.md]
+  tutorials: [docs/tutorial.md]
+resources: {memory-mb: 64}

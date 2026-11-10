@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A Drishti module project, made by drishti-module-archetype. `mvn verify` builds the jar, packs target/dmod/genomics-0.1.0.dmod
+     and runs the conformance checks C1-C15 (docs/guides/DEVELOPER_GUIDE.md, the Module SDK). -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.ash.drishti</groupId>
+    <artifactId>drishti-module-parent</artifactId>
+    <version>2.9.11.g</version>
+    <relativePath/>
+  </parent>
+  <groupId>org.helixlab</groupId>
+  <artifactId>genomics</artifactId>
+  <version>0.1.0</version>
+  <name>genomics</name>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>com.ash.drishti</groupId>
+        <artifactId>drishti-module-maven-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
+</project>
