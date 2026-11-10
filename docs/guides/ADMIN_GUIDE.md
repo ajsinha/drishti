@@ -1637,7 +1637,7 @@ AI reads; a command typed anyway answers *DRS-4023 VRES is not in Drishti Financ
 name loads a site's own file. A console started with its own `--distribution` keeps it whatever the server runs, so one cluster can serve
 a Drishti Risk console and a Drishti Finance console ([DEPLOYMENT_AND_QA_GUIDE.md 6.7](../DEPLOYMENT_AND_QA_GUIDE.md#67-starting-a-white-labelled-instance)).
 
-**Your own brand.** Copy a shipped file to `config/distributions/drishti.acme.yaml`, change `distribution: drishti.acme` and its
+**Your own brand.** Copy a shipped file to a new `drishti.acme.yaml` beside it in config/distributions, change `distribution: drishti.acme` and its
 `brand:` (`product`, `tagline`, `owner`, `copyright`, `notice`, `logo`, `favicon`, `about`, `support`), `theme:` (`tokens`: one of the
 console's themes, `mode`, `density`), `modules:` (ids from `config/distributions/modules.yaml`), `lenses:`, `menus:`, `home:` and
 `docs: { title }`; start with `--distribution acme`. A distribution names modules; it never contains code, connectors or credentials,
