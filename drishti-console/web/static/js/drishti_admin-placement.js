@@ -19,7 +19,7 @@
    DRS-1031, DRS-2007); the answer stays in the line above the matrix and the page reloads on the Modules tab to show the change. */
 (function () {
   'use strict';
-  var root = document.querySelector('[data-placement]');
+  var root = document.querySelector('[data-drishti-placement]');
   if (!root) { return; }
   var said = root.querySelector('[data-placement-said]');
   var host = root.querySelector('[data-placement-fields]');

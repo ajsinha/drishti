@@ -19,7 +19,7 @@
    The table is a console table (drishti-grid); the plan form is drishti-inputs' Form (core/admin_forms.py); drishti_admin-placement.js sends
    a plan or a decision. #}
 {% set CELL = {'ACTIVE': ('st-ok', 'active'), 'STANDBY': ('', 'standby'), 'DOWN': ('st-bad', 'down'), 'NOT_PLACED': ('', 'not placed'), 'IN_PROCESS': ('st-ok', 'in process')} %}
-<section role="tabpanel" id="netPaneModules" aria-labelledby="netTabModules" data-pane="modules" data-placement {% if tab != 'modules' %}hidden{% endif %}>
+<section role="tabpanel" id="netPaneModules" aria-labelledby="netTabModules" data-pane="modules" data-drishti-placement {% if tab != 'modules' %}hidden{% endif %}>
   <p class="text-muted-d">Where each module part runs: by node name or by role (a node label such as <span class="mono">heavy</span> or
     <span class="mono">web</span>). There is no all-nodes default: a part that is not placed runs nowhere. A heavy part runs only on its placed
     nodes (every other node forwards its requests); a feed or singleton runs on one owner (<span aria-hidden="true">★</span>), the first live
