@@ -39,6 +39,8 @@ import java.util.stream.Stream;
  *
  * <ul>
  *   <li>each module's manifest, shipped in its jar as {@value #MANIFEST} (found on the class path: installed exactly when present);</li>
+ *   <li>the content modules' own manifests, {@code modules/<id>/module.yaml} (the {@code .dmod} manifest, KERNEL_AND_MODULES.md section
+ *       3.3): the one source of what a content module is (a module with {@code java:} is read from its jar);</li>
  *   <li>the lenses the jars ship, {@value #LENSES} (each module ships the lenses that compose it);</li>
  *   <li>the site's {@code config/modules/<id>.yaml}: the administrator's switch ({@code enabled}), or the whole manifest of a content-only
  *       module ({@code code: false});</li>
@@ -60,6 +62,7 @@ public final class YamlAccessStore implements AccessStore {
     private final Path modulesDir;
     private final Path accessDir;
     private final ClassLoader loader;
+    private final Path manifestsDir;
 
     /**
      * @param modulesDir the site's module files ({@code config/modules})
@@ -67,9 +70,15 @@ public final class YamlAccessStore implements AccessStore {
      * @param loader     where the shipped manifests and lenses are looked for
      */
     public YamlAccessStore(Path modulesDir, Path accessDir, ClassLoader loader) {
+        this(modulesDir, accessDir, loader, null);
+    }
+
+    /** As above, with the folder of the content modules' own manifests ({@code modules}: {@code <id>/module.yaml}; null: none). */
+    public YamlAccessStore(Path modulesDir, Path accessDir, ClassLoader loader, Path manifestsDir) {
         this.modulesDir = modulesDir;
         this.accessDir = accessDir;
         this.loader = loader == null ? YamlAccessStore.class.getClassLoader() : loader;
+        this.manifestsDir = manifestsDir;
     }
 
     @Override
@@ -95,6 +104,27 @@ public final class YamlAccessStore implements AccessStore {
                 } catch (RuntimeException ex) {
                     warnings.add(e.getKey() + ": " + ex.getMessage());
                 }
+            }
+        }
+        if (manifestsDir != null && Files.isDirectory(manifestsDir)) {      // the content modules' own manifests: one source of truth
+            try (Stream<Path> dirs = Files.list(manifestsDir)) {
+                for (Path f : dirs.map(d -> d.resolve("module.yaml")).filter(Files::isRegularFile).sorted().toList()) {
+                    String where = "modules/" + f.getParent().getFileName() + "/module.yaml";
+                    try {
+                        Map<String, Object> raw = readMap(f);
+                        if (raw.get("java") != null) {
+                            continue;                                  // a module with code: its jar's manifest is the one read
+                        }
+                        ModuleManifest m = ModuleManifest.ofDmod(raw, where);
+                        if (modules.putIfAbsent(m.id(), m) != null) {
+                            warnings.add(where + ": a second manifest of the module '" + m.id() + "'; the first is kept");
+                        }
+                    } catch (RuntimeException ex) {
+                        warnings.add(where + ": " + ex.getMessage());
+                    }
+                }
+            } catch (IOException ex) {
+                warnings.add(manifestsDir + ": " + ex.getMessage());
             }
         }
         Map<String, Boolean> switches = new LinkedHashMap<>();

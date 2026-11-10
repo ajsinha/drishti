@@ -68,14 +68,19 @@
   function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt !== undefined) e.textContent = txt; return e; }
   function go(cmd) { return "/go?q=" + encodeURIComponent(cmd + " <GO>"); }
   function link(href, label, cls) { var a = el("a", cls || "", label); a.href = href; return a; }
-  function said(target, err, cols) {
+  function said(target, err) {
     if (!target) return;
     target.textContent = "";
-    var msg = "Not available: " + (err && err.message || err);
-    if (target.tagName === "TBODY") { var tr = el("tr"), td = el("td", "wl-muted", msg); td.colSpan = cols || 4; tr.appendChild(td); target.appendChild(tr); }
-    else target.appendChild(el(target.tagName === "UL" ? "li" : "p", "wl-muted", msg));
+    target.appendChild(el(target.tagName === "UL" ? "li" : "p", "wl-muted", "Not available: " + (err && err.message || err)));
   }
-  function cell(tr, content, cls) { var td = el("td", cls || ""); if (content && content.nodeType) td.appendChild(content); else td.textContent = content; tr.appendChild(td); }
+  /** A list on the Elements grid (drishti-grid: sort, keyboard, the theme), never a table of the page's own (conformance C2). */
+  function grid(host, label, data, columns) {
+    var G = window.Drishti.elements.grid;
+    host.textContent = "";
+    new G.Grid(host, { rows: data, columns: columns, getRowId: function (r) { return r.id; }, label: label, layout: "wells", density: "compact",
+      chrome: false, checkboxes: false, rowSelection: "none", clientAggregation: false });
+    host.style.height = (data.length * 32 + 48) + "px";
+  }
   function tone(e, v) { v = num(v); if (v !== null) e.classList.add(v > 0 ? "up" : v < 0 ? "down" : "flat"); return e; }
 
   // the meta line: the business date and the IMF outlook's vintage (the largest economy's forecast), the snapshot's time (quotes)
@@ -129,7 +134,7 @@
     }).catch(function (e) { text("[data-wl-funds-n]", "—"); text("[data-wl-funds-s]", e.message); });
 
     // the economies that moved: the twelve largest, this year's growth against the year before (each one's growth path)
-    var moved = $("[data-wl-moved]");
+    var moved = $("[data-grid=moved]");
     search("ECON where GDP_USD_BN > 0 order by GDP_USD_BN desc limit 12").then(function (a) {
       var list = rows(a);
       return Promise.all(list.map(function (e) {
@@ -142,21 +147,18 @@
         }).catch(function () { e.delta = null; return e; });
       }));
     }).then(function (list) {
-      moved.textContent = "";
       var shown = list.filter(function (e) { return e.delta !== null; })
         .sort(function (a, b) { return Math.abs(b.delta) - Math.abs(a.delta); }).slice(0, 6);
-      if (!shown.length) { said(moved, "no growth path served", 4); return; }
-      shown.forEach(function (e) {
-        var tr = el("tr"), name = el("span");
-        name.appendChild(link(go("ECON " + (e.ISO3 || e._id)), "ECON " + (e.ISO3 || e._id), "mono"));
-        name.appendChild(document.createTextNode(" " + (e.NAME || "")));
-        cell(tr, name);
-        cell(tr, pct(e.GROWTH), "n");
-        cell(tr, pct(e.INFLATION), "n");
-        cell(tr, tone(el("span", "", signed(e.delta)), e.delta), "n");
-        moved.appendChild(tr);
-      });
-    }).catch(function (e) { said(moved, e, 4); });
+      if (!shown.length) { said(moved, "no growth path served"); return; }
+      grid(moved, "Economies that moved", shown.map(function (e) {
+        return { id: e.ISO3 || e._id, name: e.NAME || "", growth: num(e.GROWTH), inflation: num(e.INFLATION), delta: e.delta };
+      }), [
+        { field: "id", header: "Economy", width: 260, cellRenderer: function (c) {
+          var s = el("span"); s.appendChild(link(go("ECON " + c.row.id), "ECON " + c.row.id, "mono")); s.appendChild(document.createTextNode(" " + c.row.name)); return s; } },
+        { field: "growth", header: "Growth", type: "number", width: 110, cellRenderer: function (c) { return pct(c.value); } },
+        { field: "inflation", header: "Inflation", type: "number", width: 110, cellRenderer: function (c) { return pct(c.value); } },
+        { field: "delta", header: "Δ growth", type: "number", width: 110, cellRenderer: function (c) { return tone(el("span", "", signed(c.value)), c.value); } }]);
+    }).catch(function (e) { said(moved, e); });
 
     // today's news by topic: each topic's latest stories (the edition's home.topics), newest first
     var feed = $("[data-wl-news]");
@@ -283,23 +285,20 @@
     }).catch(function (e) { said(bars, e); });
 
     // the largest funds, with the index each tracks (TRACK names the indexes)
-    var funds = $("[data-wl-funds]");
+    var funds = $("[data-grid=funds]");
     if (funds) Promise.all([search("FUND where NET_ASSETS > 0 and INDEX_ID != '-' order by NET_ASSETS desc limit 5").then(rows),
                  search("TRACK limit 50").then(rows).catch(function () { return []; })]).then(function (d) {
       var names = {};
       d[1].forEach(function (t) { names[t.INDEX || t._id] = t.NAME; });
-      funds.textContent = "";
-      if (!d[0].length) { said(funds, "no funds served", 4); return; }
-      d[0].forEach(function (f) {
-        var tr = el("tr");
-        cell(tr, link(go("FUND " + f._id), f._id, "mono"));
-        cell(tr, f.INDEX_ID ? (names[f.INDEX_ID] || f.INDEX_ID) : (f.TYPE || "—"));
-        cell(tr, count(f.HOLDING_COUNT), "n");
-        cell(tr, money(f.NET_ASSETS), "n");
-        tr.title = f.NAME || "";
-        funds.appendChild(tr);
-      });
-    }).catch(function (e) { said(funds, e, 4); });
+      if (!d[0].length) { said(funds, "no funds served"); return; }
+      grid(funds, "Largest funds", d[0].map(function (f) {
+        return { id: f._id, tracks: f.INDEX_ID ? (names[f.INDEX_ID] || f.INDEX_ID) : (f.TYPE || "—"), holdings: num(f.HOLDING_COUNT), assets: num(f.NET_ASSETS) };
+      }), [
+        { field: "id", header: "Fund", width: 120, cellRenderer: function (c) { return link(go("FUND " + c.row.id), c.row.id, "mono"); } },
+        { field: "tracks", header: "Tracks", width: 220 },
+        { field: "holdings", header: "Holdings", type: "number", width: 110, cellRenderer: function (c) { return count(c.value); } },
+        { field: "assets", header: "Assets", type: "number", width: 110, cellRenderer: function (c) { return money(c.value); } }]);
+    }).catch(function (e) { said(funds, e); });
 
     // what changed: the latest of each source (the IMF outlook's vintage, the filings feed, the market snapshot, GLEIF)
     var changes = $("[data-wl-changes]"), lines = [];

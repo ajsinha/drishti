@@ -335,6 +335,45 @@ failure a sentence naming the file and the fix:
 compiles it, packs it, passes the fifteen checks, and loads, routes and unloads it; it builds a second one with `javac` and a folder and
 takes it through the tool's `pack`, `check` and `inspect` into the runtime; a broken copy fails the checks with their words.
 
+### 1.7 A module's console part
+
+The console hosts a module's `console/` part **declaratively** (design: [KERNEL_AND_MODULES.md sections 4.7, 9 and 14.2.1](../architecture/KERNEL_AND_MODULES.md#47-the-console-part-loaded-by-the-drishti-console)):
+it reads the files the kernel verified and runs none of them, so a module brings no Python, no Java and no route registration to the
+console. Everything is declared in `console/plugin.yaml` (`format: 2`):
+
+| Key | What it gives | Example (the archetype) |
+|---|---|---|
+| `routes:` | pages under `/m/<id>/…`: `page:` a template of the module (tier 2), `sutra:` a Sutra, opened as the kernel's page of its `function:` (tier 1); the word opens the route (`GREET asha` → `/m/greet/hello/asha`) | `{id: hello, path: "/hello/{name}", page: hello.html, function: GREET}` |
+| `menus:` | top-bar entries: `menu:` a menu of the product (`help`, `views`, `economies` …) or a new one of the module; `route:` + `params:`, `href:` or `cmd:` | `{menu: help, label: Say hello, route: hello, params: {name: world}}` |
+| `home: cards:` | Home's quick cards (`lens:` to show one in one lens only) | `{title: Say hello, route: hello, params: {name: world}, cmd: GREET world}` |
+| `ai: tools:` | the tools the assistant may offer (a name, a description, the route or word it opens; Admin → AI lists them) | `{name: greet_greet, description: Greets a person, route: hello}` |
+
+Help comes from `docs/help.yaml` (`sections:` with `pages:` of `file:` relative to it; one Help section each, `/help/section/module-<id>`).
+
+**Templates** live in `console/templates/` (or `console/pages/`) and are rendered in the module's **own Jinja environment**: they extend
+`kernel/page.html` (the console's shell: top bar, command line, theme; blocks `title`, `assets`, `page` or `content`, `aside`, `scripts`),
+use the Elements macros of `kernel/elements.html` through `elements` (`elements.card`, `elements.grid`, `elements.header`,
+`elements.notice`) and the phone parts of `kernel/phone.html`, and name their own files `<id>:<path>`. Nothing else is reachable: a
+template that includes or extends any other console template is refused. The context has `module` (id, version, title), `route`,
+`params`, `asset(path)` (`/m/<id>/static/<version>/<path>`, cached a year: the version busts it), `url_for(route_id, **params)` and
+`api(path)`, besides the shell's own values.
+
+**Statics** are `console/static/drishti_<module>-*.js|css` (the `drishti_` prefix, theme tokens only); a domain Elements library is
+`elements/<lib>/`, served at `/m/<id>/elements/<lib>/<version>/`. Drishti Elements and the vendored libraries are the console's: **a part
+that carries a copy of one (by content), a `vendor/` folder, a library with an Elements name, code (`.py`, `.jar`, `.class` …) or an
+unprefixed static file is refused whole**, and Admin → Modules and `GET /api/modules/hosted` say why.
+
+**Where parts come from.** The server's module registry (`GET /public/modules/console`; an active version's part arrives as a zip from
+`/public/modules/console/<id>/<version>`, kept under the console's data folder, `module-parts/<id>/<version>/`), and the modules the product
+ships (`modules/<id>/`, `module_manifests_dir`) while the server lists them loaded. The console asks every
+`modules.parts_refresh_seconds` (5) and at once after an apply in Admin → Modules.
+
+**When the module goes** (switched off or removed) every surface goes with it: its pages answer the Module removed A page (410 removed,
+404 off), its statics 410/404, its menu entries, Home cards, words (*… is not available: needs module X*), Help section, AI tools and lens
+links disappear; an open page of it is frozen under the notice within 15 seconds; saved work that uses it (Sutras, BI reports and
+dashboards, baskets in Build; saved searches in Forms; alert rules) stays, marked *needs module X* and not openable, and comes back on reinstall. Nothing of it
+is kept per person.
+
 ## 2. Building and running from source
 
 ### 2.1 Prerequisites

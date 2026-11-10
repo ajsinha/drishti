@@ -106,7 +106,7 @@ class DistributionsTest {
     @Test
     void theModulesManifestsDriveTheFilterAndARequiredModuleComesAlong() {
         java.util.Map<String, ModuleManifests.Entry> known = ModuleManifests.read(MODULES);
-        assertThat(known).containsKeys("banking", "market-data", "capital-markets", "economy");
+        assertThat(known).containsKeys("banking", "market-data", "capitalmarkets", "economy");
         List<String> order = List.copyOf(known.keySet());
         assertThat(order.indexOf("market-data")).isLessThan(order.indexOf("banking"));
         assertThat(known.get("banking").requires()).containsExactly("market-data");

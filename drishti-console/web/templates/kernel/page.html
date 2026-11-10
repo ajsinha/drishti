@@ -1,0 +1,26 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# The kernel's public layout for a module's composed page (docs/architecture/KERNEL_AND_MODULES.md section 9.3): the console's shell (top
+   bar, menus, command line, notices, theme) around the module's blocks. A module page extends "kernel/page.html" and fills title, assets,
+   page (or content), aside and scripts; its own files are "<module>:<path>", its statics asset('<path>'), its links url_for('<route id>').
+   An open page is told when its module goes (section 12.4, drishti_module-gone.js). #}
+{% extends "base.html" %}
+{% block title %}{{ (route.title if route else module.title) }} · {{ PRODUCT }}{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block head %}<meta name="drishti-module-page" content="{{ module.id }}">{% block assets %}{% endblock %}{% endblock %}
+{% block content %}<div class="ib" data-module-page="{{ module.id }}"{% if route %} data-module-route="{{ route.id }}"{% endif %}>{% block page %}{% endblock %}{% block aside %}{% endblock %}</div>{% endblock %}
+{% block footer %}{% include "_footer.html" %}{% endblock %}

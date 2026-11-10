@@ -80,7 +80,7 @@ menus:                                   # by id, per menu; a menu not named sho
 home:
   landing: desk                          # the default landing: desk (A, World desk), explorer (B, Explorer), map (C, World map); today: the product's Home
   landings: [desk, explorer, map]        # the landings a person may pick on Home (their choice is kept in their settings)
-  template: home/world_landing.html      # the page that draws them (it names its script and style: drishti_world-landing.js, drishti_world-landing.css)
+  template: economy:world_landing.html   # the page that draws them: the economy module's (its console part, modules/economy/console/; its script and style)
   titles: { desk: World desk, explorer: Explorer, map: World map }
   landing-by-role: {}                    # {role: landing}: read, wins over the person's choice when set; wired to role-based access later
   topics: [TOPIC-RATES, TOPIC-INFLATION, TOPIC-OIL, TOPIC-FED, TOPIC-ECB, TOPIC-AI]   # A's news by topic (each topic's latest stories)

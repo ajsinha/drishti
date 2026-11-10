@@ -88,6 +88,34 @@ public record ModuleManifest(String id, String domain, String title, String abou
     }
 
     /** True when the class (its binary name) belongs to this module's code. */
+    /**
+     * A content module's {@code .dmod} manifest ({@code modules/<id>/module.yaml}, KERNEL_AND_MODULES.md section 3.3) as the registry reads
+     * it: the one source of what the module is (its id, domain, title, licence feature, packs and words); code when it names {@code java:}.
+     * Only required {@code requires:} entries count ({@code optional:} ones never switch the module off).
+     */
+    @SuppressWarnings("unchecked")
+    static ModuleManifest ofDmod(Map<String, Object> m, String source) {
+        Object id = m.get("id");
+        if (id == null || String.valueOf(id).isBlank()) {
+            throw new IllegalArgumentException(source + ": a module manifest needs an id");
+        }
+        Map<String, Object> licence = m.get("licence") instanceof Map<?, ?> x ? (Map<String, Object>) x : Map.of();
+        Map<String, Object> packs = m.get("packs") instanceof Map<?, ?> x ? (Map<String, Object>) x : Map.of();
+        List<String> requires = new ArrayList<>();
+        Object r = m.get("requires");
+        Object required = r instanceof Map<?, ?> rm ? rm.get("required") : r;
+        if (required instanceof Map<?, ?> rm) {
+            rm.keySet().forEach(k -> requires.add(String.valueOf(k)));
+        } else if (required instanceof List<?> l) {
+            for (Object o : l) {
+                requires.add(o instanceof Map<?, ?> om ? String.valueOf(om.get("id")) : String.valueOf(o));
+            }
+        }
+        return new ModuleManifest(String.valueOf(id), str(m.get("domain")), str(m.get("title")), str(m.get("about")), str(m.get("version")),
+                requires, str(licence.get("feature")), m.get("java") != null, true, true, List.of(), List.of(), list(packs.get("list")),
+                List.of(), List.of(), functions(m.get("functions")), source);
+    }
+
     public boolean ownsClass(String className) {
         if (className == null || CORE.equals(id)) {
             return false;

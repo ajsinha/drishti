@@ -293,7 +293,9 @@ help:
 # --distribution <name> sets it; a stack file's consoles: list gives each console its own (Risk on 17480, Finance on 17481).
 distribution: ${DRISHTI_DISTRIBUTION:}
 distributions_dir: ${DRISHTI_DISTRIBUTIONS_DIR:../config/distributions}   # the distribution files, drishti.<name>.yaml, and kernel.yaml
-module_manifests_dir: ${DRISHTI_MODULE_MANIFESTS_DIR:../modules}   # the modules' own manifests (modules/<id>/module.yaml): what a distribution's modules hold
+module_manifests_dir: ${DRISHTI_MODULE_MANIFESTS_DIR:../modules}   # the modules' own manifests (modules/<id>/module.yaml): what a distribution's modules hold, and the console parts of the modules the product ships (hosted while the server lists them loaded)
+modules:
+  parts_refresh_seconds: 5     # how often the console asks the server which modules are deployed (their console parts hosted under /m/<id>/, KERNEL_AND_MODULES.md 4.7); an applied change in this console is seen at once
 packs:
   dir: ${DRISHTI_PACKS_DIR:../config/packs}   # the same packs directory the server uses (one variable sets both)
   installed_dir: ${DRISHTI_PACKS_INSTALLED:}   # packs installed from the registry or by Deploy archive (the server's drishti.packs.installed-dir); blank: <data dir>/packs/installed

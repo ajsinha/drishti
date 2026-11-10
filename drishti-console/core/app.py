@@ -193,6 +193,9 @@ class AuthGate(BaseHTTPMiddleware):
             cluster.SESSION.set(hashlib.sha256(session.encode()).hexdigest()[:16] if session else "")
         # the session as the server knows it now (enabled, roles, password change due), not as the cookie remembers it
         path = request.url.path
+        if not path.startswith(("/static/", PYODIDE, "/healthz", "/readyz")):   # the hosted modules: at most every few seconds
+            from core import modules as _mods
+            await request.app.state.module_parts.refresh(request.app.state.backend, _mods.state().loaded)
         if path.startswith("/static/") and (refused := await _module_asset_refused(request, path[len("/static/"):])) is not None:
             return PlainTextResponse(f"Not found: {refused}", status_code=404, headers={"Cache-Control": "no-store"})
         request.state.identity = (None if path.startswith(("/static/", PYODIDE, EMBED))   # /embed/: a bearer token, never the cookie (core/embed.py)
@@ -585,6 +588,12 @@ def create_app(settings: Settings) -> FastAPI:
     from core.modules import Me as ModulesMe
 
     app.state.modules_me = ModulesMe(user_ttl, stamps)          # the person's modules, lenses and functions (core/modules.py)
+    from core.module_parts import ModuleParts
+
+    # the modules' console parts, hosted declaratively under /m/<id>/ (KERNEL_AND_MODULES.md 4.7, 14.2.1): this app's, never shared
+    app.state.module_parts = ModuleParts(_console_data_dir(settings) / "module-parts", WEB, app.state.editions.modules_dir,
+                                         float(settings.get("modules.parts_refresh_seconds", 5) or 5))
+    app.state.editions.modules.parts = app.state.module_parts
     app.state.bi_on = str(settings.get("bi.enabled", True)).lower() in ("true", "1", "yes", "on")      # false: no BI menu, no /bi pages
     console_dir = WEB.parent
     docs_dir = Path(settings.get("help.docs_dir", "../docs"))

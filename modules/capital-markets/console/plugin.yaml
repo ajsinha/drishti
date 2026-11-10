@@ -12,9 +12,9 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The module's pages: a Sutra page per function, under /m/capital-markets/ (KERNEL_AND_MODULES.md section 9.8).
+# The module's pages: a Sutra page per function, under /m/capitalmarkets/ (KERNEL_AND_MODULES.md section 9.8).
 format: 2
-module: capital-markets
+module: capitalmarkets
 title: Capital markets
 routes:
 - id: useqs

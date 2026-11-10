@@ -364,6 +364,7 @@ help-sections:
 # Pages the menus do not list because they open from another page (the guard, tests/test_sitemap.py, holds each to a page of a menu):
 # the address and where it is reached from.
 in-context:
+  /admin/modules/deploy: "Admin → Modules (Install module…, Upgrade…, Remove…)"
   /: "the brand at the left of the top bar (Home)"
   /help/configuration: "Admin → Configuration (the reference) and Help → Operate"
   /help/developer: "Help centre"

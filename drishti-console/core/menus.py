@@ -162,8 +162,14 @@ def lens_links(request) -> list[dict]:
     out = [{"href": "/lens/leave", "label": f"Leave {current.title}", "leave": True, "name": current.name}] if current.lens else []
     verb = "Switch to" if current.lens else "Open"
     out += [{"href": f"/lens/{n}", "label": f"{verb} {e.title}", "leave": False, "name": n} for n, e in sorted(editions.lenses.items())
-            if (n != current.name or not current.lens) and not engines.lens_hidden(n)]   # a lens whose engine runs nowhere (MR cube)
+            if (n != current.name or not current.lens) and not engines.lens_hidden(n)   # a lens whose engine runs nowhere (MR cube)
+            and not _lens_gone(request, n)]                     # or whose module went (KERNEL_AND_MODULES.md 12.3)
     return out
+
+
+def _lens_gone(request, name: str) -> bool:
+    parts = getattr(request.app.state, "module_parts", None)
+    return parts is not None and parts.gone_lens(name) is not None
 
 
 def _lens_desc(lens) -> str:
@@ -254,9 +260,10 @@ def top_bar(request, ctx: dict) -> list:
     fill = {"product": ctx.get("PRODUCT") or g.get("PRODUCT", ""), "tutorials": g.get("TUTORIALS_WORD", "")}
     out = []
     every = _spec(_console_dir(request)).get("menus") or []
+    hosted = _hosted_menus(request)                             # the hosted modules' entries (plugin.yaml menus:), by menu
     for menu in _menu_order(edition, every):
         mid = str(menu.get("id") or "")
-        columns = []
+        columns = list(hosted.pop(mid, []))
         if _domain_hidden(menu):                                # a menu of a domain module that is off
             continue
         for col in _columns(menu, every):                       # an item of a gathered column is filtered as the gathering menu's
@@ -270,6 +277,26 @@ def top_bar(request, ctx: dict) -> list:
                 columns.append((_text(col.get("title"), fill), items))
         if columns:
             out.append((_text(menu.get("label"), fill), menu.get("icon"), columns))
+    for mid, columns in hosted.items():                         # a module's own menu: its title, after the product's
+        out.append((columns[0][0], "puzzle", columns))
+    return out
+
+
+def _hosted_menus(request) -> dict[str, list]:
+    """The hosted modules' menu entries (core/module_parts.py; ``menus:`` of a plugin.yaml format 2), each module a column of the menu its
+    entries name (``menu:``; a menu the product lacks is the module's own): ``{menu id: [(title, [item...])]}``. Only modules on are listed,
+    so a module that goes takes its entries with it."""
+    parts = getattr(request.app.state, "module_parts", None)
+    out: dict[str, list] = {}
+    for p in parts.snapshot.parts.values() if parts is not None else []:
+        if not p.menus or not modules.module_on(p.id):
+            continue
+        by_menu: dict[str, list] = {}
+        for m in p.menus:
+            by_menu.setdefault(str(m.get("menu") or p.id), []).append(
+                (parts.href(m), m.get("icon") or "puzzle", str(m["label"]), str(m.get("desc") or ""), None, str(m.get("cmd") or "")))
+        for mid, items in by_menu.items():
+            out.setdefault(mid, []).append((p.title, items))
     return out
 
 

@@ -18,15 +18,16 @@
    funds, chips, a counts strip, recents, Knowledge, Data map, Learn) and C "map" (regions and country groups with a group and measure
    switch, US sectors by revenue, the largest funds, what changed). A shell: every figure is the packs' own answer (/api/home/search, the
    server's search grammar, and /api/raw), drawn by drishti_world-landing.js; a panel whose answer is refused or empty says so and nothing is
-   invented. The terminal look with a teal accent. The choice of landing is the person's, kept in their settings (routes/edition_routes.py). #}
-{% extends "base.html" %}
+   invented. The terminal look with a teal accent. The choice of landing is the person's, kept in their settings (routes/edition_routes.py).
+   The economy module's page (its console part, KERNEL_AND_MODULES.md section 9): the kernel's layout, its files by asset(), the two lists
+   on the Elements grid (elements.grid, filled by the script); no table of its own. #}
+{% extends "kernel/page.html" %}
 {% block title %}{{ PRODUCT }}{% endblock %}
 {% block screen %}home{% endblock %}
-{% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_world-landing.css?v={{ ASSET_V }}">{% endblock %}
+{% block assets %}<link rel="stylesheet" href="{{ asset('css/drishti_world-landing.css') }}">{% endblock %}
 {% macro go(cmd) %}/go?q={{ (cmd ~ ' <GO>') | urlencode }}{% endmacro %}
 {% block content %}
-{% from "_macros/phone.html" import part, foot, back %}{% set PP = phone_parts(request, 'landing') %}{# the phone display (docs/guides/BUILD_GUIDE.md 8) #}
+{% from "kernel/phone.html" import part, foot, back %}{% set PP = phone_parts(request, 'landing') %}{# the phone display (docs/guides/BUILD_GUIDE.md 8) #}
 {% set cm = module_on('capitalmarkets') %}{# the World lens is economy with capital markets: their parts (every landing's) only while that module is on #}
 {{ back(request) }}
 <div class="wl" data-world-landing="{{ landing }}" data-topics="{{ topics | join(',') }}">
@@ -90,8 +91,7 @@
     </section>
     <section class="wl-card" aria-labelledby="wlFundH"{{ part(PP, 'table') }}>
       <h2 id="wlFundH">Largest funds<small>FUND, by net assets</small></h2>
-      <table class="wl-table"><thead><tr><th scope="col">Fund</th><th scope="col">Tracks</th><th scope="col" class="n">Holdings</th><th scope="col" class="n">Assets</th></tr></thead>
-        <tbody data-wl-funds><tr><td colspan="4" class="wl-muted">…</td></tr></tbody></table>
+      {{ elements.grid('funds', 'Largest funds', 'wl-grid') }}
     </section>{% endif %}
     <section class="wl-card" aria-labelledby="wlChgH"{{ part(PP, 'table') }}>
       <h2 id="wlChgH">What changed<small>the latest of each source</small></h2>
@@ -109,8 +109,7 @@
   <div class="wl-cols">
     <section class="wl-card" aria-labelledby="wlMovedH"{{ part(PP, 'table') }}>
       <h2 id="wlMovedH">Economies that moved<small>the largest, growth against the year before</small></h2>
-      <table class="wl-table"><thead><tr><th scope="col">Economy</th><th scope="col" class="n">Growth</th><th scope="col" class="n">Inflation</th><th scope="col" class="n">Δ growth</th></tr></thead>
-        <tbody data-wl-moved><tr><td colspan="4" class="wl-muted">…</td></tr></tbody></table>
+      {{ elements.grid('moved', 'Economies that moved', 'wl-grid') }}
     </section>
     <section class="wl-card" aria-labelledby="wlNewsH"{{ part(PP, 'table') }}>
       <h2 id="wlNewsH">Today's news<small>by topic</small></h2>
@@ -127,4 +126,4 @@
   {{ foot(PP, request.url | string) }}
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_world-landing.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ asset('js/drishti_world-landing.js') }}"></script>{% endblock %}

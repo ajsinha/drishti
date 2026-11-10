@@ -269,7 +269,7 @@ the VaR and exposure lakes; package `com.ash.drishti.server.connectors` kept, in
   landings' code and Build types (`trading_landing.py`, `market_landing.py`, `build_types.py`, `risk_api.py` in `drishti-console/plugins/banking`), its templates
   (`drishti-console/plugins/banking/templates`, the same names: the console searches each module's folder after `web/templates`) and its scripts and
   styles (`drishti-console/plugins/banking/static`, served at the same `/static/...` addresses after `web/static`, gated by module and lens); the World
-  landing into `drishti-console/plugins/economy`. drishti-risk stays an Elements library under `web/static/elements` (its manifest names its module).
+  landing into the economy module's console part (`modules/economy/console`, hosted under `/m/economy/`, KERNEL_AND_MODULES.md section 4.7). drishti-risk stays an Elements library under `web/static/elements` (its manifest names its module).
 - **The engine catalogue by module**: the banking engines' entries are drishti-banking's `META-INF/drishti/engines.yaml` (read before the
   core's `engines/catalogue.yaml`; absent when the module is not installed), their jar files `engines/<id>.yaml` are its own (imported
   `optional:` by `application.yaml`), and the console's copies are `plugins/banking/engines.yaml` and `config/engines.yaml` (the core's),

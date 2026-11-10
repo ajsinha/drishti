@@ -36,7 +36,7 @@
   </div>
   <p class="text-muted-d" data-forms-none{% if packs %} hidden{% endif %}>{% if packs %}Nothing matches that filter.{% else %}None of the packs open to you has a form to search with.{% endif %}</p>
   {% if saved %}<h2 class="ws-h">Your saved searches</h2>
-  <ul class="qf-saved">{% for s in saved %}<li><a class="lnk" href="{{ s.path }}">{{ s.name }}</a></li>{% endfor %}</ul>{% endif %}
+  <ul class="qf-saved">{% for s in saved %}{% set gone = (needs or {}).get(s.name) %}<li>{% if gone %}{{ s.name }}{% for n in gone %} <span class="st st-warn" data-needs-module="{{ n.module }}">{{ n.words }}</span>{% endfor %}{% else %}<a class="lnk" href="{{ s.path }}">{{ s.name }}</a>{% endif %}</li>{% endfor %}</ul>{% endif %}
 </div>
 {% endblock %}
 {% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_forms-home.js?v={{ ASSET_V }}"></script>{% endblock %}

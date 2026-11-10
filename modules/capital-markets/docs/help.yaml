@@ -14,7 +14,7 @@
 
 # The module's Help section: its packs' guides and its tutorial.
 sections:
-- id: capital-markets
+- id: capitalmarkets
   title: Capital markets
   pages:
   - title: 'US equities: us equities'
