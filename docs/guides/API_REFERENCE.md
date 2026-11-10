@@ -1446,6 +1446,8 @@ them on your monitoring network in production.
 | `/api/docs` | the OpenAPI 3 document (JSON) for every endpoint |
 | `/api/docs/ui` | Swagger UI (redirects to the UI page) |
 | `/public/about` | no sign-in needed: `{product, version, notice, signIn: {required, password, singleSignOn}}`, what the console's sign-in page shows |
+| `/public/modules/console` | no sign-in needed: `{modules: [{id, version, state, title, console, claims}], fingerprint}`, every module of the registry as a console hosts it (active, off or removed; KERNEL_AND_MODULES.md 4.7) |
+| `/public/modules/console/{id}/{version}` | an active version's console part as a zip (`module.yaml`, `console/`, `elements/`, `docs/`), from this node's installed copy or the module store; 410 when removed, 404 when off, unknown or another version |
 | `/actuator/health` | `{"status":"UP","groups":["liveness","readiness"]}`; probes at `/actuator/health/liveness` and `/actuator/health/readiness`. readiness is its own group and means ready: `DOWN` (`503`) while the node joins Drishti\*net, while an engine's newest date opens or a VaR shard it owns is not ready, `OUT_OF_SERVICE` (`503`) while drained; `/actuator/health` and liveness never wait for it ([node readiness](#225-administration-node-readiness-and-the-drain-before-a-stop)) |
 | `/actuator/info` | build information |
 | `/actuator/metrics` · `/actuator/metrics/{name}` | Micrometer metrics |
