@@ -70,7 +70,7 @@ engines:
     needs: []
     uses: []
     api: [/api/v1/admin/dataload]
-    console: [/admin/loads/inbox, /admin/api/dataload/]
+    console: [/admin/loads/inbox, /admin/loads/upload, /admin/api/dataload/]
     words: []
     menus: []
     help: []

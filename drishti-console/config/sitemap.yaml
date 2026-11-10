@@ -404,6 +404,7 @@ in-context:
   /admin/lakes/table: "Lakes"
   /admin/loads/inbox: "Data loads"
   /admin/loads/feeds: "Data loads"
+  /admin/loads/upload: "Data loads"
   /alerts/all: "Alerts"
   /alerts/new: "Alerts"
   /bi/datasets/new: "Datasets"

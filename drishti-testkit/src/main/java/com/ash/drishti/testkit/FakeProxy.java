@@ -240,7 +240,18 @@ public final class FakeProxy implements Closeable {
             uo.write(head.toString().getBytes(StandardCharsets.ISO_8859_1));
             uo.write(body);
             uo.flush();
-            upstream.getInputStream().transferTo(out);
+            // the answer's head says Connection: close: this proxy closes the client's connection after one exchange, and a client
+            // that pooled it (the answer named no close) would send its next request into a closed socket ("received no bytes")
+            InputStream ui = upstream.getInputStream();
+            StringBuilder answer = new StringBuilder();
+            for (String h = line(ui); h != null && !h.isEmpty(); h = line(ui)) {
+                String k = h.toLowerCase(java.util.Locale.ROOT);
+                if (!k.startsWith("connection:") && !k.startsWith("keep-alive:")) {
+                    answer.append(h).append("\r\n");
+                }
+            }
+            out.write(answer.append("Connection: close\r\n\r\n").toString().getBytes(StandardCharsets.ISO_8859_1));
+            ui.transferTo(out);
             out.flush();
         } catch (IOException e) {
             out.write("HTTP/1.1 502 Bad Gateway\r\nContent-Length: 0\r\n\r\n".getBytes(StandardCharsets.US_ASCII));

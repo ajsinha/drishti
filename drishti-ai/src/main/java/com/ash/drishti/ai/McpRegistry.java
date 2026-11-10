@@ -55,7 +55,13 @@ public final class McpRegistry implements AutoCloseable {
     }
 
     public McpRegistry(List<McpClientFactory> factories, Supplier<McpServerConfigLoader.Loaded> source, com.ash.drishti.common.RetryPolicy policy) {
-        this.retry = new com.ash.drishti.common.RetryBoard("mcp server", policy);
+        this(factories, source, policy, java.time.Clock.systemUTC());
+    }
+
+    /** With the clock the retry schedule reads (a test moves it instead of sleeping). */
+    public McpRegistry(List<McpClientFactory> factories, Supplier<McpServerConfigLoader.Loaded> source, com.ash.drishti.common.RetryPolicy policy,
+            java.time.Clock clock) {
+        this.retry = new com.ash.drishti.common.RetryBoard("mcp server", policy, clock);
         factories.forEach(f -> this.factories.putIfAbsent(f.transport().toLowerCase(java.util.Locale.ROOT), f));
         this.source = source;
     }

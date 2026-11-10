@@ -492,6 +492,7 @@ guides:
         required: "**one of the two**, per trade"
         for: "the MR cube preset: every trade's vector; its columns as dimensions"
         guide: "[29.3](#293-the-inputs)"
+        sample_note: none in the demo data (it ships scenario PVs); the record's shape is [its sample](../contracts/samples/market-risk.md#pnl-vector).
         about: |
           Each trade's scenario P&L; its columns (`LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `CURRENCY`,
           `COUNTERPARTY`, …) are the cube's dimensions.

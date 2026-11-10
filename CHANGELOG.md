@@ -17,6 +17,9 @@
 
 ## Unreleased
 
+- **Fixes before the drill:** `lake build --format iceberg` sends a promoted id list (`TRADE_IDS`) as its JSON text, as the Delta writers store it, instead of
+  refusing the rows as a bad vector; a Delta connector of the older form (a `root`, no lake file) that finds no tables no longer marks every search partial;
+  `lake-name` is in the Delta connector's settings catalogue; the console's engine catalogue copy and sitemap list Data loads › Upload.
 - **Duplicates folded, behaviour unchanged:** the loaders' line parsing (`LoadLine`), `ReferenceScanner`, `HttpFetcher` and `BoundedCache` in `drishti-common`; `MethodChoices` and `PlaygroundSheets` for FRTB and SIMM;
   `ForwardingTabularSource`, `ReadingFileIO`, `CallTally`; one real-IP rule (`drishti-console/core/hostrule.py`, loaded by `tools/hostaddr.py`), `tools/clitable.py`, the IAM policy steps in `deploy/aws/lib`, `shotlib.start_pack_servers`. Duplicated lines: Java 4523 to 3613, Python 612 to 318.
 - **Copy-paste ratchet and code volume:** `tools/duplicates.py` runs PMD's copy-paste detector over Java, JavaScript and Python at 100 tokens (`tools/cpd/pom.xml`, outside the
