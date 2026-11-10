@@ -332,6 +332,14 @@ drishti:
     # connectors serve it in read order. Written once from the connectors' kinds: lists when missing; changed from Admin -> Data bindings.
     file: ${DRISHTI_BINDINGS_FILE:}         # where config/bindings.yaml is; empty: bindings.yaml beside the connectors' folder
     refresh-seconds: 30                     # how often an edited bindings.yaml is read again and applied (an approval applies at once)
+  module-deploy:
+    # Module deployment (docs/guides/CLUSTER_GUIDE.md "Deploying a module", KERNEL_AND_MODULES.md section 7.6): the module store (each
+    # .dmod kept once, by id and version), the installed modules and active.yaml, staging and the registry, all under this folder.
+    dir: ${DRISHTI_MODULE_DEPLOY_DIR:}       # empty: modules/ under drishti.data.dir
+    conformance-cycles: 5                    # load/unload cycles of check C15 when a .dmod is uploaded (the SDK's own check runs 50)
+    drain-seconds: 30                        # an unload lets requests already inside the module finish, at most this long
+    swap-wait-seconds: 30                    # a request to a module switching versions on this node waits at most this long, then 503
+    node-call-seconds: 120                   # how long the coordinator waits for one node's stage, activate or unload
   placement:
     # Where each module part runs (docs/guides/CLUSTER_GUIDE.md "Module placement", KERNEL_AND_MODULES.md section 4.11): by node name or
     # role (a node label such as heavy or web). No all-nodes default: a part not placed runs nowhere. Changed by plan and apply in
@@ -548,6 +556,17 @@ drishti:
           - POST /api/v1/pivot/rollups
           - DELETE /api/v1/pivot/rollups/*
           - POST /api/v1/pivot/rollups/*/refresh
+      "[modules:deploy]":
+        description: "Modules: upload a .dmod to the module store, plan an install, upgrade, removal, switch-off or switch-on, and apply another administrator's plan (four eyes; drishti.py module deploy|plan|apply). Needs the admin role."
+        allow:
+          - GET /api/v1/admin/modules/deployments
+          - GET /api/v1/admin/modules/deployments/*
+          - GET /api/v1/admin/modules/store
+          - POST /api/v1/admin/modules/store
+          - POST /api/v1/admin/modules/deployments/plans
+          - POST /api/v1/admin/modules/deployments/*/apply
+          - POST /api/v1/admin/modules/deployments/*/reject
+          - POST /api/v1/admin/modules/deployments/*/withdraw
       "[packs:admin]":
         description: "Load, unload, switch on and off, deploy archives, install and roll back packs, and create, change, test and delete connectors (Admin -> Connectors), and Retry now for packs, connectors, AI providers and MCP servers. Needs the admin role."
         allow:
@@ -654,7 +673,6 @@ drishti:
       - "* /api/v1/admin/engines"             # Admin -> Engines: compute engines on or off on a node, written to its file, audited with a reason; never a token
       - "* /api/v1/admin/engines/**"
       - "* /api/v1/admin/modules"             # the module switch: a module switched on or off, written to config/modules/<id>.yaml, audited with a reason; never a token
-      - "* /api/v1/admin/modules/**"
       - "* /api/v1/admin/settings/proposals"      # Admin -> Configuration: settings changes proposed and decided by two administrators; never a token
       - "* /api/v1/admin/settings/proposals/**"
       - "* /api/v1/admin/bindings/**"             # Admin -> Data bindings: proposals decided by two administrators, reload; never a token

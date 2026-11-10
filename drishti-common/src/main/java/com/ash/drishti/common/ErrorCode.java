@@ -78,6 +78,12 @@ public enum ErrorCode {
     PLACEMENT_STALE("DRS-1031", 409),
     /** A module part with no placed node up (or not placed at all): unavailable, never run on an unplaced node. */
     MODULE_PART_UNAVAILABLE("DRS-1032", 503),
+    /** A removed module's page, API or asset (KERNEL_AND_MODULES.md section 12.10): 410 Gone; saved work that used it is marked, a reinstall restores it. */
+    MODULE_GONE("DRS-1028", 410),
+    /** A module deployment refused: the package fails a check, the module is not in the store, or the action does not fit its state. */
+    MODULE_DEPLOY_REFUSED("DRS-1033", 422),
+    /** A module deployment that failed on a node and was rolled back on every node (the words name the node and why). */
+    MODULE_DEPLOY_FAILED("DRS-1034", 409),
     SUTRA_PARSE("DRS-2001", 422),
     SUTRA_INVALID("DRS-2002", 422),
     SUTRA_NOT_FOUND("DRS-2003", 404),
