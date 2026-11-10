@@ -633,13 +633,9 @@ public final class VarService implements AutoCloseable {
     }
 
     /** The small books of the dates' matured records, per date and version (built on the switch's first use; a few dates kept). */
-    private final Map<String, java.util.Optional<VarDate>> matured = java.util.Collections.synchronizedMap(
-            new java.util.LinkedHashMap<>(8, 0.75f, true) {
-                @Override
-                protected boolean removeEldestEntry(Map.Entry<String, java.util.Optional<VarDate>> e) {
-                    return size() > 4;
-                }
-            });
+    private final Map<String, java.util.Optional<VarDate>> matured = new ConcurrentHashMap<>();
+    /** The order the matured books were built in: the oldest leaves once more than four are kept. */
+    private final java.util.concurrent.ConcurrentLinkedQueue<String> maturedOrder = new java.util.concurrent.ConcurrentLinkedQueue<>();
 
     /** The date's matured records as a date of their own (their book, the date's hierarchies), or empty when it kept none. */
     java.util.Optional<VarDate> maturedDate(VarDate usd) {
@@ -652,7 +648,15 @@ public final class VarService implements AutoCloseable {
         java.util.Optional<VarDate> out = b == null ? java.util.Optional.empty() : java.util.Optional.of(new VarDate(usd.date(), b,
                 usd.portfolioLimits(), usd.version() + "|matured", java.time.Instant.now(), 0, 0, usd.intake(), usd.versions(), List.of(),
                 VarDate.USD, usd.fx()));
-        matured.put(key, out);
+        if (matured.put(key, out) == null) {
+            maturedOrder.add(key);
+        }
+        while (maturedOrder.size() > 4) {
+            String old = maturedOrder.poll();
+            if (old != null) {
+                matured.remove(old);
+            }
+        }
         return out;
     }
 
