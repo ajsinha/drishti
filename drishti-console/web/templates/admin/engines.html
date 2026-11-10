@@ -82,7 +82,7 @@
       <p class="eng-muted eng-writes" data-eng-writes></p>
     </aside>
   </div>
-  <div hidden data-eng-json="{{ {"engines": e, "history": history} | tojson | forceescape }}"></div>
+  <div hidden data-eng-json="{{ {"engines": e, "history": history, "pending": pending} | tojson | forceescape }}"></div>
 </div>
 {% endblock %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}
