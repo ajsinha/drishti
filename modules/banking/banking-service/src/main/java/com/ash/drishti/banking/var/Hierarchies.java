@@ -122,6 +122,7 @@ public record Hierarchies(List<HierarchySpec> specs, String origin, Set<String> 
      * The hierarchy warnings now, by engine, hierarchy, level column and kind ({@code var LL LIMIT_LETTER scenario-pv}) to the words: a
      * level column a source kind does not promote (its rows sit under (Blank) at that level), with the fix. Admin → Health lists them.
      */
+    @com.ash.drishti.kernel.api.module.EngineWide("the hierarchy warnings of the engines on this server, which Health lists")
     private static final Map<String, String> WARNINGS = new java.util.concurrent.ConcurrentSkipListMap<>();
 
     /** Replaces an engine's hierarchy warnings ({@code key} without the engine's word, to the words). */

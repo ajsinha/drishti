@@ -53,6 +53,7 @@ public class NodeConfiguration {
                 all.add(netPart);
             }
             parts.orderedStream().forEach(all::add);
+            all.addAll(com.ash.drishti.common.Extensions.of(Drainable.class));      // a loaded module's
             return all;
         });
     }
@@ -80,6 +81,7 @@ public class NodeConfiguration {
             List<ReadinessGate> all = new ArrayList<>();
             all.add(joining);
             gates.orderedStream().forEach(all::add);
+            all.addAll(com.ash.drishti.common.Extensions.of(ReadinessGate.class));  // a loaded module's
             return all;
         }, drain);
     }

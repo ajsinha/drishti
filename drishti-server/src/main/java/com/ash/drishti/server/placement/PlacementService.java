@@ -101,6 +101,33 @@ public final class PlacementService {
     private volatile Placement current = Placement.EMPTY;
     private volatile String fileProblem;
     private volatile long seen = -1;
+    private volatile java.util.function.Predicate<String> firstParty = id -> false;
+
+    /**
+     * Which modules are verified first-party (the module host tells): the shipped default placement puts every part of one on every node,
+     * unless the site's {@code config/placement.yaml} names the module (the site's word wins).
+     */
+    public void firstParty(java.util.function.Predicate<String> verified) {
+        this.firstParty = verified == null ? id -> false : verified;
+    }
+
+    /** The placement with the shipped default for first-party modules the site's file does not name. */
+    Placement withDefaults(Placement p) {
+        return withDefaults(p, declared.values());
+    }
+
+    /** As above, for these modules (a plan's: one not loaded yet included). */
+    public Placement withDefaults(Placement p, java.util.Collection<ModuleParts> modules) {
+        Map<String, Map<String, Placement.Target>> all = new LinkedHashMap<>(p.modules());
+        for (ModuleParts m : modules) {
+            if (!all.containsKey(m.module()) && firstParty.test(m.module())) {
+                Map<String, Placement.Target> parts = new LinkedHashMap<>();
+                m.parts().keySet().forEach(part -> parts.put(part, new Placement.Target(List.of(), List.of("all"), 0, true)));
+                all.put(m.module(), parts);
+            }
+        }
+        return all.size() == p.modules().size() ? p : new Placement(p.format(), p.version(), all);
+    }
 
     public PlacementService(Path file, Path plansFile, Supplier<List<NodeView>> nodes, Supplier<String> self,
             Supplier<Collection<ModuleParts>> inProcess, AuditLog audit, Clock clock) {
@@ -175,7 +202,7 @@ public final class PlacementService {
     }
 
     public PlacementResolver.Matrix matrix() {
-        return PlacementResolver.resolve(current, modules(), nodes.get(), election);
+        return PlacementResolver.resolve(withDefaults(current), modules(), nodes.get(), election);
     }
 
     /** True when at least one part of the module is placed on this node (an in-process module always is). */
@@ -294,7 +321,7 @@ public final class PlacementService {
         java.util.Set<String> known = modules().stream().map(ModuleParts::module).collect(java.util.stream.Collectors.toSet());
         p.modules().keySet().stream().filter(id -> !known.contains(id)).forEach(id -> warnings.add(id + " is not installed: its placement waits for it"));
         Map<String, Object> before = Map.of("parts", rows(matrix()));
-        PlacementResolver.Matrix afterM = PlacementResolver.resolve(p, modules(), ns);
+        PlacementResolver.Matrix afterM = PlacementResolver.resolve(withDefaults(p), modules(), ns);
         warnings.addAll(afterM.problems());
         lock.lock();
         try {

@@ -55,22 +55,35 @@ final class ModuleBridge {
     }
 
     private final List<Port<?>> ports = new ArrayList<>();
+    private Supplier<SourceRegistry> sources = () -> null;
 
     ModuleBridge(Supplier<SourceRegistry> sources, Supplier<EngineRegistry> engines) {
-        this(sources, engines, (m, p) -> Map.of());
+        this(sources, engines, (m, p) -> Map.of(), () -> null);
     }
 
     /**
      * @param settings the settings a module's connector extension starts with ({@code module-dir}: its installed folder, {@code data-dir}:
      *                 its own data folder), by module
+     * @param budget   the server's memory budget, which a module's engine caches join ({@link com.ash.drishti.server.caches.CacheGroup}); null
+     *                 for none
      */
-    ModuleBridge(Supplier<SourceRegistry> sources, Supplier<EngineRegistry> engines, BiFunction<String, com.ash.drishti.api.SourcePlugin, Map<String, String>> settings) {
+    ModuleBridge(Supplier<SourceRegistry> sources, Supplier<EngineRegistry> engines, BiFunction<String, com.ash.drishti.api.SourcePlugin, Map<String, String>> settings,
+            Supplier<com.ash.drishti.server.caches.MemoryBudget> budget) {
         port(KindProvider.class, Contributions.Surface.KIND_PROVIDER, (m, k) -> required(sources, "the source registry").attach(new ComputedKindSource(k)));
-        // a connector extension (the plugin API's SourcePlugin, a VCF reader for one): routed under its own name while the module is loaded
+        // a connector extension (the plugin API's SourcePlugin): a type the site's connector files name (they start with it), else a source
+        // routed under its own name (a VCF reader), while the module is loaded
         port(com.ash.drishti.api.SourcePlugin.class, Contributions.Surface.KIND_PROVIDER,
-                (m, p) -> required(sources, "the source registry").attach(p, settings.apply(m, p)));
+                (m, p) -> required(sources, "the source registry").attachExtension(p, settings.apply(m, p)));
+        this.sources = sources;
         port(FunctionProvider.class, Contributions.Surface.FUNCTION, (m, f) -> RachanaFunctions.register(f));
-        port(ComputeEngine.class, Contributions.Surface.SPI, (m, e) -> required(engines, "the engine registry").attach(e));
+        port(ComputeEngine.class, Contributions.Surface.SPI, (m, e) -> required(engines, "the engine registry").attach(e, listed(m, e.id())));
+        port(com.ash.drishti.server.caches.CacheGroup.class, Contributions.Surface.SPI, (m, g) -> join(budget.get(), g));
+        // the kernel's own extension points a first-party module reaches through its allowance: collected live (Extensions) by the kernel
+        live(com.ash.drishti.server.node.ReadinessGate.class, Contributions.Surface.SPI);
+        live(com.ash.drishti.server.node.Drainable.class, Contributions.Surface.SPI);
+        live(com.ash.drishti.server.caches.CacheReport.Owner.class, Contributions.Surface.SPI);
+        live(com.ash.drishti.dataload.ReadyRule.class, Contributions.Surface.SPI);
+        live(com.ash.drishti.server.flight.FlightForm.class, Contributions.Surface.SPI);
         live(ApprovalSource.class, Contributions.Surface.SPI);
         live(HealthFigures.class, Contributions.Surface.SPI);           // objects of the module: withdrawn before its loader is checked (step 4, not 9)
         live(CapacityFigures.class, Contributions.Surface.SPI);
@@ -81,6 +94,27 @@ final class ModuleBridge {
         live(OfficialResults.class, Contributions.Surface.SPI);
         live(ApiAlias.class, Contributions.Surface.ROUTE);
         live(AiToolProvider.class, Contributions.Surface.AI_TOOL);
+    }
+
+    /** The module's own catalogue entry of an engine ({@code META-INF/drishti/engines.yaml} in its jars), or null. */
+    private static com.ash.drishti.server.engines.EngineCatalogue.Entry listed(String module, String engine) {
+        return CATALOGUES.getOrDefault(module, Map.of()).get(engine);
+    }
+
+    /** The modules' engine catalogues while they connect (read from the module's loader in {@link #connect}). */
+    private static final Map<String, Map<String, com.ash.drishti.server.engines.EngineCatalogue.Entry>> CATALOGUES =
+            new java.util.concurrent.ConcurrentHashMap<>();
+
+    /** A module's engine caches join the budget; the withdrawal takes exactly the members joining added out again. */
+    private static Runnable join(com.ash.drishti.server.caches.MemoryBudget b, com.ash.drishti.server.caches.CacheGroup g) {
+        if (b == null) {
+            return () -> { };
+        }
+        java.util.Set<String> before = b.memberNames();
+        g.join(b);
+        java.util.Set<String> added = new java.util.HashSet<>(b.memberNames());
+        added.removeAll(before);
+        return () -> added.forEach(b::leave);
     }
 
     private <T> void port(Class<T> type, Contributions.Surface surface, BiFunction<String, T, Runnable> attach) {
@@ -108,10 +142,28 @@ final class ModuleBridge {
     /** Connects every contribution of the module; returns how many. A failure withdraws what this call added and is thrown. */
     int connect(LoadedModule m, Contributions contributions) {
         List<Runnable> added = new ArrayList<>();
+        if (m.loader() != null) {
+            try (java.io.InputStream in = m.loader().getResourceAsStream(com.ash.drishti.server.engines.EngineCatalogue.MODULE_RESOURCE)) {
+                if (in != null) {
+                    CATALOGUES.put(m.id(), com.ash.drishti.server.engines.EngineCatalogue.moduleEntries(in));
+                }
+            } catch (java.io.IOException e) {
+                throw new java.io.UncheckedIOException(m.id() + ": " + com.ash.drishti.server.engines.EngineCatalogue.MODULE_RESOURCE + " does not read", e);
+            }
+        }
         try {
             int n = 0;
+            if (m.loader() != null) {                // its classes by name for the kernel (a pack's reactive engine), until it leaves
+                Runnable w = com.ash.drishti.common.ModuleLoaders.add(m.loader());
+                added.add(w);
+                contributions.add(m.id(), Contributions.Surface.SPI, "class loader " + m.id(), m.loader(), w);
+            }
             for (Port<?> p : ports) {
                 n += connect(m, contributions, p, added);
+            }
+            SourceRegistry reg = sources.get();
+            if (reg != null) {
+                reg.retryFailed();                   // a connector that named the module's engine or type starts now
             }
             return n;
         } catch (RuntimeException | LinkageError e) {
@@ -123,6 +175,8 @@ final class ModuleBridge {
                 }
             }
             throw e;
+        } finally {
+            CATALOGUES.remove(m.id());
         }
     }
 

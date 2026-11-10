@@ -64,11 +64,28 @@ public final class ApiMounts {
 
         String prefix = module.manifest().api() == null ? null : module.manifest().api().prefix();
         ClassLoader loader = module.loader();
-        for (String name : module.context().getBeanNamesForAnnotation(ModuleApi.class)) {
+        java.util.Set<String> names = new java.util.LinkedHashSet<>(java.util.Arrays.asList(module.context().getBeanNamesForAnnotation(ModuleApi.class)));
+        java.util.Set<String> absolute = new java.util.LinkedHashSet<>();
+        if (prefix != null) {        // a REST controller whose every path is already in the module's namespace (/api/v1/<prefix>/...) is mounted as it is
+            for (String name : module.context().getBeanNamesForAnnotation(org.springframework.web.bind.annotation.RestController.class)) {
+                if (!names.contains(name) && module.context().getBeanFactory().containsBeanDefinition(name)) {
+                    String ns = "/api/v1/" + prefix;
+                    java.util.List<String> full = paths(ClassUtils.getUserClass(module.context().getType(name)));
+                    if (!full.isEmpty() && full.stream().allMatch(p -> p.equals(ns) || p.startsWith(ns + "/") || p.startsWith(ns + "."))) {
+                        absolute.add(name);
+                    } else {
+                        LOG.warn("module {}: the controller {} is outside its namespace {} (and has no @ModuleApi): not mounted", module.id(), name, ns);
+                    }
+                }
+            }
+        }
+        names.addAll(absolute);
+        for (String name : names) {
             Object bean = module.context().getBean(name);
             Class<?> type = ClassUtils.getUserClass(bean);
-            ModuleApi api = AnnotatedElementUtils.findMergedAnnotation(type, ModuleApi.class);
-            if (api == null || !api.value().equals(prefix)) {
+            boolean asItIs = absolute.contains(name);
+            ModuleApi api = asItIs ? null : AnnotatedElementUtils.findMergedAnnotation(type, ModuleApi.class);
+            if (!asItIs && (api == null || !api.value().equals(prefix))) {
                 LOG.warn("module {}: {} names the namespace {}, not its own ({}): not mounted", module.id(), type.getName(),
                         api == null ? "none" : api.value(), prefix);
                 continue;
@@ -87,7 +104,7 @@ public final class ApiMounts {
                 String[] paths = rm.path().length == 0 ? new String[] {""} : rm.path();
                 for (String base : bases) {
                     for (String path : paths) {
-                        String full = "/api/v1/" + prefix + join(base, path);
+                        String full = asItIs ? join(base, path) : "/api/v1/" + prefix + join(base, path);
                         RequestMappingInfo info = RequestMappingInfo.paths(full).methods(rm.method()).produces(rm.produces())
                                 .consumes(rm.consumes()).params(rm.params()).headers(rm.headers()).options(m.getBuilderConfiguration()).build();
                         m.registerMapping(info, bean, method);
@@ -99,6 +116,24 @@ public final class ApiMounts {
                 }
             }
         }
+    }
+
+    /** Every path a controller class maps (its type's paths joined with each method's). */
+    private static java.util.List<String> paths(Class<?> type) {
+        java.util.List<String> out = new java.util.ArrayList<>();
+        RequestMapping typeMapping = AnnotatedElementUtils.findMergedAnnotation(type, RequestMapping.class);
+        String[] bases = typeMapping == null || typeMapping.path().length == 0 ? new String[] {""} : typeMapping.path();
+        for (Method method : type.getMethods()) {
+            RequestMapping rm = AnnotatedElementUtils.findMergedAnnotation(method, RequestMapping.class);
+            if (rm != null) {
+                for (String base : bases) {
+                    for (String path : rm.path().length == 0 ? new String[] {""} : rm.path()) {
+                        out.add(join(base, path));
+                    }
+                }
+            }
+        }
+        return out;
     }
 
     private static String join(String base, String path) {
@@ -117,6 +152,19 @@ public final class ApiMounts {
         }
         java.util.Set<Object> seen = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
         for (Object o : mvcCaches.get()) {
+            if (o instanceof com.fasterxml.jackson.databind.ObjectMapper om) {     // its serializers and deserializers of the module's types
+                if (om.getSerializerProvider() instanceof com.fasterxml.jackson.databind.ser.DefaultSerializerProvider p) {
+                    p.flushCachedSerializers();
+                }
+                try {
+                    Field f = om.getDeserializationContext().getClass().getSuperclass().getDeclaredField("_cache");
+                    f.setAccessible(true);
+                    ((com.fasterxml.jackson.databind.deser.DeserializerCache) f.get(om.getDeserializationContext())).flushCachedDeserializers();
+                } catch (ReflectiveOperationException | RuntimeException e) {
+                    LOG.debug("the deserializers of {} were not flushed: {}", om, e.toString());
+                }
+                continue;
+            }
             if (o instanceof org.springframework.core.convert.support.GenericConversionService g) {
                 g.removeConvertible(Void.class, Void.class);   // empties its converter cache (keys hold a handler's method parameters)
                 continue;

@@ -69,6 +69,31 @@ public class ModuleDeployConfiguration {
         return n == null || !n.running();
     }
 
+    static {
+        // a library object made while a module's code ran keeps that thread's context class loader: the Hadoop configuration of a
+        // Parquet codec (cached for the process) is given the kernel's back when the module leaves, so its loader can go
+        com.ash.drishti.common.ModuleLoaders.onLeave(ModuleDeployConfiguration::releaseLibraryLoaders);
+        // the JDK's one delay thread of CompletableFuture starts when first asked and keeps the access context of the code that asked:
+        // started here, by the kernel, before any module's code runs, so it never holds a module's protection domain (and loader)
+        new java.util.concurrent.CompletableFuture<Void>().completeOnTimeout(null, 1, java.util.concurrent.TimeUnit.MILLISECONDS);
+    }
+
+    static void releaseLibraryLoaders(ClassLoader leaving) {
+        try {
+            java.lang.reflect.Field f = Class.forName("org.apache.parquet.hadoop.CodecFactory").getDeclaredField("CODEC_BY_NAME");
+            f.setAccessible(true);
+            for (Object codec : List.copyOf(((java.util.Map<?, ?>) f.get(null)).values())) {
+                java.lang.reflect.Method getConf = codec.getClass().getMethod("getConf");
+                Object conf = getConf.invoke(codec);
+                if (conf != null && conf.getClass().getMethod("getClassLoader").invoke(conf) == leaving) {
+                    conf.getClass().getMethod("setClassLoader", ClassLoader.class).invoke(conf, ModuleDeployConfiguration.class.getClassLoader());
+                }
+            }
+        } catch (ReflectiveOperationException | RuntimeException | LinkageError e) {
+            LoggerFactory.getLogger(ModuleDeployConfiguration.class).debug("the Parquet codecs' configurations were not released: {}", e.toString());
+        }
+    }
+
     @Bean
     public ModuleAutoDeploy moduleAutoDeploy(ModuleDeployService deploy, ModuleNode node, Environment env) {
         return new ModuleAutoDeploy(modulesPath(env), deploy, node);
@@ -131,6 +156,12 @@ public class ModuleDeployConfiguration {
             Collection<Object> out = new ArrayList<>(ctx.getBeansOfType(RequestMappingHandlerAdapter.class).values());
             out.addAll(ctx.getBeansOfType(HandlerExceptionResolver.class).values());
             out.addAll(ctx.getBeansOfType(org.springframework.core.convert.ConversionService.class).values());
+            out.addAll(ctx.getBeansOfType(com.fasterxml.jackson.databind.ObjectMapper.class).values());
+            ctx.getBeansOfType(RequestMappingHandlerAdapter.class).values().forEach(a -> a.getMessageConverters().forEach(c -> {
+                if (c instanceof org.springframework.http.converter.json.AbstractJackson2HttpMessageConverter j) {
+                    out.add(j.getObjectMapper());
+                }
+            }));
             return out;
         });
         long drain = env.getProperty("drishti.module-deploy.drain-seconds", Long.class, 30L) * 1000;
@@ -140,8 +171,11 @@ public class ModuleDeployConfiguration {
                 () -> ctx.getBeanProvider(com.ash.drishti.server.engines.EngineRegistry.class).getIfAvailable(),
                 () -> ctx.getBeanProvider(com.ash.drishti.engine.source.SourceRouter.class).getIfAvailable(),
                 () -> ctx.getBeanProvider(com.ash.drishti.identity.AuditLog.class).getIfAvailable(),
-                env instanceof org.springframework.core.env.ConfigurableEnvironment c ? c : null);
-        return new ModuleNode(root(env), KernelFacts.ofKernel(), placement, mounts, drain, folders, wiring);
+                env instanceof org.springframework.core.env.ConfigurableEnvironment c ? c : null,
+                () -> ctx.getBeanProvider(com.ash.drishti.server.caches.MemoryBudget.class).getIfAvailable());
+        return new ModuleNode(root(env), KernelFacts.ofKernel(), placement, mounts, drain, folders, wiring)
+                .siteSwitch(id -> ctx.getBeanProvider(com.ash.drishti.registry.AccessRegistry.class).getIfAvailable() == null
+                        || ctx.getBean(com.ash.drishti.registry.AccessRegistry.class).module(id).map(s -> s.enabled() && s.licensed()).orElse(true));
     }
 
     @Bean
@@ -156,7 +190,38 @@ public class ModuleDeployConfiguration {
     @org.springframework.context.event.EventListener(org.springframework.boot.context.event.ApplicationReadyEvent.class)
     public void startModules(org.springframework.boot.context.event.ApplicationReadyEvent e) {
         nodeRef = e.getApplicationContext().getBean(ModuleNode.class).start(e.getApplicationContext());
+        if (e.getApplicationContext().getEnvironment().getProperty("drishti.modules.shipped", Boolean.class, true)) {
+            e.getApplicationContext().getBean(ModuleDeployService.class).installShipped(shipped(ModuleDeployConfiguration.root(
+                    e.getApplicationContext().getEnvironment()).resolve("shipped")), "the distribution")
+                    .forEach(l -> LoggerFactory.getLogger(ModuleNode.class).info("the distribution's modules: {}", l));
+        }
         started = true;
+    }
+
+    /**
+     * The first-party modules the distribution carries ({@code drishti/modules/*.dmod} on the class path: the full jar has banking,
+     * market-data, capital-markets and economy; the thin jar none), copied out to {@code folder} so they install like any package.
+     */
+    static List<Path> shipped(Path folder) {
+        List<Path> out = new ArrayList<>();
+        try {
+            org.springframework.core.io.Resource[] all = new org.springframework.core.io.support.PathMatchingResourcePatternResolver(
+                    ModuleDeployConfiguration.class.getClassLoader()).getResources("classpath*:drishti/modules/*.dmod");
+            if (all.length == 0) {
+                return out;
+            }
+            java.nio.file.Files.createDirectories(folder);
+            for (org.springframework.core.io.Resource r : all) {
+                Path to = folder.resolve(java.util.Objects.requireNonNull(r.getFilename()));
+                try (java.io.InputStream in = r.getInputStream()) {
+                    java.nio.file.Files.copy(in, to, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                }
+                out.add(to);
+            }
+        } catch (java.io.IOException ex) {
+            throw new java.io.UncheckedIOException("the distribution's modules do not read", ex);
+        }
+        return out;
     }
 
     /** After placement's guard (4): removed 410, off 404, a swap waited for, requests counted for the drain. */

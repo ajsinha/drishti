@@ -68,8 +68,10 @@ public final class VarPvStreamPlugin implements SourcePlugin {
     public static final String NAME = "var-pv-stream";
     private static final Logger LOG = LoggerFactory.getLogger(VarPvStreamPlugin.class);
     /** The running streams by connector name (the admin's status and "apply now"). */
+    @com.ash.drishti.kernel.api.module.EngineWide("the running PV streams of this server, by connector")
     static final Map<String, VarPvStreamPlugin> RUNNING = new ConcurrentHashMap<>();
     /** The VaR engine's side, installed by the server's configuration. */
+    @com.ash.drishti.kernel.api.module.EngineWide("the VaR engine's side of the PV streams, installed once by the engine")
     private static volatile java.util.function.Function<Map<String, String>, VarPvStream> sinks;
 
     private volatile String source = NAME;
@@ -87,6 +89,7 @@ public final class VarPvStreamPlugin implements SourcePlugin {
             p -> new KafkaConsumer<>(p, new StringDeserializer(), new StringDeserializer());
 
     /** The window's settings, drishti.var.intraday.kafka (installed by the server with the sink; the defaults until then). */
+    @com.ash.drishti.kernel.api.module.EngineWide("the engine's window settings, drishti.var.intraday.kafka")
     private static volatile VarProperties.Kafka kafka = new VarProperties.Kafka(null, null);
 
     static void install(java.util.function.Function<Map<String, String>, VarPvStream> s, VarProperties.Kafka k) {

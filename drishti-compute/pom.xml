@@ -32,6 +32,7 @@
   <dependencies>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-kernel-api</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-common</artifactId></dependency>
     <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-databind</artifactId></dependency>
     <dependency><groupId>com.fasterxml.jackson.dataformat</groupId><artifactId>jackson-dataformat-yaml</artifactId></dependency>
     <dependency><groupId>org.apache.arrow</groupId><artifactId>arrow-vector</artifactId></dependency>

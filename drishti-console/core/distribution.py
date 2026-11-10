@@ -96,14 +96,17 @@ def module_manifests(directory: Path | None) -> dict[str, ModuleEntry]:
     if directory is None or not directory.is_dir():
         return by_id
     for m in sorted(p for p in directory.iterdir() if p.is_dir()):
-        dmod = m / "module.yaml" if (m / "module.yaml").is_file() else m / "src" / "dmod" / "module.yaml"   # a module project from the SDK
-        if dmod.is_file():
+        # a content module's folder; a module project from the SDK (src/dmod/); a module with code's dmod/ (banking)
+        for dmod in (m / "module.yaml", m / "src" / "dmod" / "module.yaml", m / "dmod" / "module.yaml"):
+            if not dmod.is_file():
+                continue
             y = _read(dmod)
             mid = str(y.get("id") or "").strip()
             req = [k for k in (y.get("requires") or {}) if k != "optional"] if isinstance(y.get("requires"), dict) else []
             by_id[mid] = ModuleEntry(mid, str(y.get("domain") or mid), _texts((y.get("packs") or {}).get("list")), _words(y.get("functions")),
                                      [str(e.get("id")) for e in ((y.get("compute") or {}).get("engines") or []) if isinstance(e, dict)],
                                      _texts((y.get("console") or {}).get("menus")), _texts((y.get("docs") or {}).get("domains")), req)
+            break
         for part in sorted(p for p in m.iterdir() if p.is_dir()):
             jar = part / _IN_JAR
             if jar.is_file():

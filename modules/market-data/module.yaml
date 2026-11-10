@@ -21,6 +21,7 @@ title: Market data
 about: 'Curves, volatility surfaces, FX, equities, credit, inflation, commodities, fixings and bonds: the market data both Drishti Risk and Drishti
   Finance show'
 domain: market-data
+origin: first-party
 publisher:
   id: drishti
   name: Ashutosh Sinha

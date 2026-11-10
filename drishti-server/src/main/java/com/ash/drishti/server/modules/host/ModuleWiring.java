@@ -53,16 +53,60 @@ public final class ModuleWiring {
 
     public ModuleWiring(Supplier<SourceRegistry> sources, Supplier<EngineRegistry> engines, Supplier<SourceRouter> router, Supplier<AuditLog> audit,
             ConfigurableEnvironment env) {
+        this(sources, engines, router, audit, env, () -> null);
+    }
+
+    /** As above, with the server's memory budget (a module's engine caches join it). */
+    public ModuleWiring(Supplier<SourceRegistry> sources, Supplier<EngineRegistry> engines, Supplier<SourceRouter> router, Supplier<AuditLog> audit,
+            ConfigurableEnvironment env, Supplier<com.ash.drishti.server.caches.MemoryBudget> budget) {
         this.router = router;
         this.audit = audit;
         this.env = env;
         this.dataDir = Path.of(env == null ? "./data" : env.getProperty("drishti.data.dir", "./data")).toAbsolutePath().normalize();
-        this.bridge = new ModuleBridge(sources, engines, (id, p) -> folders.getOrDefault(id, Map.of()));
+        this.bridge = new ModuleBridge(sources, engines, (id, p) -> folders.getOrDefault(id, Map.of()), budget);
     }
 
     /** The extension types the bridge connects, by simple name. */
     public List<String> types() {
         return bridge.types();
+    }
+
+    private final Map<String, List<String>> defaults = new ConcurrentHashMap<>();
+
+    /**
+     * Before the module's context is made: the defaults of its engines ({@code engines/<id>.yaml} in its own jars, as the server's own
+     * engines ship theirs) join the server's settings last, so a site's {@code config/engines/<id>.yaml} and every other setting win, and
+     * the module's context sees the same. Taken out again when it stops.
+     */
+    public void preparing(com.ash.drishti.module.runtime.ModuleCandidate c, org.springframework.context.support.GenericApplicationContext ctx) {
+        ClassLoader loader = ctx.getClassLoader();
+        if (env == null || !(loader instanceof com.ash.drishti.module.runtime.ModuleClassLoader ml)) {
+            return;
+        }
+        List<String> names = new ArrayList<>();
+        try {
+            org.springframework.core.io.support.PathMatchingResourcePatternResolver r = new org.springframework.core.io.support.PathMatchingResourcePatternResolver(ml);
+            org.springframework.boot.env.YamlPropertySourceLoader yaml = new org.springframework.boot.env.YamlPropertySourceLoader();
+            for (org.springframework.core.io.Resource res : r.getResources("classpath*:engines/*.yaml")) {
+                String name = "module " + c.id() + ": engines/" + res.getFilename();
+                Map<String, Object> flat = new java.util.LinkedHashMap<>();
+                for (org.springframework.core.env.PropertySource<?> ps : yaml.load(name, res)) {
+                    if (ps instanceof org.springframework.core.env.EnumerablePropertySource<?> e) {
+                        for (String k : e.getPropertyNames()) {
+                            Object v = e.getProperty(k);
+                            flat.putIfAbsent(k, v == null ? null : String.valueOf(v));   // plain strings: nothing of the module's loader kept
+                        }
+                    }
+                }
+                org.springframework.core.env.MapPropertySource ps = new org.springframework.core.env.MapPropertySource(name, flat);
+                env.getPropertySources().addLast(ps);
+                ctx.getEnvironment().getPropertySources().addLast(ps);
+                names.add(name);
+            }
+        } catch (java.io.IOException e) {
+            throw new java.io.UncheckedIOException(c.id() + ": its engines' defaults do not read", e);
+        }
+        defaults.put(c.id(), names);
     }
 
     /** A module started: its contributions connected, then its entry started. A failure fails the module's start (nothing stays). */
@@ -94,6 +138,10 @@ public final class ModuleWiring {
         List<DrishtiModule> started = entries.remove(module.id());
         if (started != null) {
             started.forEach(ModuleWiring::stopQuietly);
+        }
+        List<String> names = defaults.remove(module.id());
+        if (names != null && env != null) {
+            names.forEach(env.getPropertySources()::remove);
         }
     }
 

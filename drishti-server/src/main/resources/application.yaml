@@ -210,6 +210,7 @@ drishti:
     path: ${DRISHTI_MODULES_PATH:${drishti.data.dir:./data}/modules}   # the module folders (commas): .dmod packages dropped here are auto-deployed; with dev on, exploded module folders here load unverified (docs/guides/ADMIN_GUIDE.md, Admin → Modules)
     autodeploy: ${DRISHTI_MODULES_AUTODEPLOY:}   # a .dmod dropped into or taken out of drishti.modules.path is deployed or removed through the module deployment; empty: on for a single node, off in a cluster (plan → apply)
     autodeploy-seconds: 5            # how often the module folders are looked at (auto-deploy, and development mode's reload)
+    shipped: ${DRISHTI_MODULES_SHIPPED:true}   # install the distribution's first-party modules (drishti/modules/*.dmod in the full jar: banking, market-data, capital-markets, economy) at start when not installed or rebuilt; one an administrator removed or switched off stays so
     dev: ${DRISHTI_MODULES_DEV:false}   # development mode: exploded module folders of drishti.modules.path load without a .dmod, unverified, reloaded on change; refused in a cluster and under the prod or production profile
   lib:                               # the shared lib folder, as Tomcat's lib/ (docs/guides/ADMIN_GUIDE.md): every jar in it is loaded at start into one lib class loader under the kernel's
     path: ${DRISHTI_LIB_PATH:${drishti.data.dir:./data}/lib}   # JDBC drivers, connector plugins, a company's own libraries; seen by connectors and modules, never replacing a kernel class; a change needs a restart

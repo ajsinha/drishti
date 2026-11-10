@@ -311,12 +311,38 @@ the kernel API (`com.ash.drishti.kernel.api`) and the entity types its signature
 
 Pages and their routes come from the console part (`console/plugin.yaml` format 2, served under `/m/<id>/`), through the live route table.
 
+**First-party modules and the allowance** ([KERNEL_AND_MODULES.md section 3.3](../architecture/KERNEL_AND_MODULES.md#33-the-manifest-moduleyaml)).
+The product's own modules say `origin: first-party`; the kernel believes it only when the module's id and the SHA-256 of its
+`META-INF/DMOD.MF` are in the `first-party.yaml` of the same build (`java -jar drishti-module-tool.jar first-party DIR --out FILE` writes
+it; `modules/dist` does in the build). Only such a module may declare `kernel-internals:` (a list, or a file the packer writes in): its
+class loader then asks the kernel for exactly those packages, C1 lets them through, and the packer stamps `kernel-build:`, the one kernel
+build it loads on (`pack --kernel-build ID`, default the kernel on the tool's class path). Anything else is refused in words: an allowance
+on a third-party module or on a first-party claim that does not verify (C1), or another kernel build ("built for kernel X, this is Y:
+install the matching module", V3). `module inspect` and `drishti.py module list` print the origin; Health's module rows carry it.
+`check --with a.dmod,b.dmod` installs the modules it requires beside it for the runtime checks; a module with an allowance is made with its
+beans lazy there (the harness has no kernel beans).
+
+**What the bridge also connects for a first-party module's allowance** (banking's beans, as the in-process wiring had them): a connector
+type (`com.ash.drishti.api.SourcePlugin` in `META-INF/services`: the connectors whose files name it start, and stop when it leaves), the
+engines' catalogue entries (`META-INF/drishti/engines.yaml` in its jar) and their defaults (`engines/<id>.yaml`, added to the settings
+last, so the site's `config/engines/<id>.yaml` wins), engine caches (`CacheGroup`, joining the memory budget), readiness gates, drains,
+cache reports, ready rules and Flight forms, a REST controller whose every path is already in its namespace (`/api/v1/<prefix>/...`,
+mounted as it is), and its class loader, so a pack's reactive connector naming one of its engine classes finds it while it is loaded.
+The module's context gets the host's conversion service (`"a,b"` to a list, durations, sizes) and is refreshed with its own loader as the
+thread's, so a playground's built-in template is read from the module's jar.
+
+**Leaving without a trace.** When the module unloads, every kernel registry it joined directly (the load service's ready listeners, the
+disk budget's folders, the admission gate's load slots and open heaps, the dates engines hold open) drops what belongs to the module's
+class loader (`ModuleLoaders`), the shared JSON and conversion caches are emptied of its types, and the leak check waits up to about ten
+seconds for a stopping engine's last tasks. Removing banking from a running server and installing it again answers the same VaR, and the
+first class loader is collected (`leakFree: true` in the deployment's report).
+
 **The conformance checks** ([KERNEL_AND_MODULES.md section 8.6](../architecture/KERNEL_AND_MODULES.md#86-the-conformance-suite)), each
 failure a sentence naming the file and the fix:
 
 | Check | How the tool (and so the plugin) checks it |
 |---|---|
-| C1 No kernel internals | every class file's constant pool: a type of `com.ash.drishti` outside `kernel.api`, the plugin API (`com.ash.drishti.api`) and the module's own packages fails |
+| C1 No kernel internals | every class file's constant pool: a type of `com.ash.drishti` outside `kernel.api`, the plugin API (`com.ash.drishti.api`) and the module's own packages fails, except a verified first-party module's declared allowance (below) |
 | C2 No bespoke UI | pages draw no `<table>`, `<canvas>` or `<svg>`; scripts import only `@drishti/elements-*` and their own files |
 | C3 Theme tokens only | CSS: no hex, `rgb()`/`hsl()` or named colours outside `var(--…)`, no `!important` |
 | C4 `drishti_` asset prefix | every file under `console/static/` and `elements/` is `drishti_<name>`; no vendored library |
@@ -327,7 +353,7 @@ failure a sentence naming the file and the fix:
 | C9 No secrets, no connectors | private keys, cloud keys, `jdbc:` anywhere; connector and secret keys (`connector:`, `password:`, `token:` …) in YAML |
 | C10 Licence headers | the publisher's copyright at the top of every Java source, script and style |
 | C11 Functions answer | loaded into `ModuleRuntime`, every function word has a route that answers 200 |
-| C12 Two people at once | no static field that is not final, and no static collection, in the module's classes (state every person would share) |
+| C12 Two people at once | no static field that is not final, and no static collection that is not unmodifiable (the class initialiser's `List.of`, `Map.copyOf`, `Collections.unmodifiable…`, `Stream.toList`), in the module's classes; a field that is one value for the whole engine on purpose carries `@EngineWide("why")` (kernel API) |
 | C13 Off means gone | switched off, every route answers 404 and nothing stays loaded |
 | C14 Absent everywhere | removed, every route answers 410, no contribution is left, Health says REMOVED |
 | C15 Class loader unloads | 50 load/unload cycles (`--cycles`, in Maven `-Ddrishti.conformance.cycles`); the class loader is collected each time |

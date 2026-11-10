@@ -89,6 +89,7 @@
     <module>docs/guides/examples/connector</module>
     <module>drishti-server</module>
     <module>modules/banking</module>
+    <module>modules/dist</module>
     <module>drishti-app</module>
     <module>drishti-kernel-app</module>
     <module>drishti-it</module>
@@ -213,6 +214,7 @@
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-server</artifactId><version>${project.version}</version><type>test-jar</type><scope>test</scope></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-banking</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-compute-banking</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-modules</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-diskcache</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-messaging</artifactId><version>${project.version}</version></dependency>

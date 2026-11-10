@@ -148,7 +148,7 @@ http://<host>:17481. The Deployment and QA guide gets a step-by-step section for
 
 | Wave | Item |
 |---|---|
-| 2 | `banking` as a `.dmod` (in progress); **`market-data` split out of banking as its own module** (built: banking requires it); **`capital-markets` and `economy` packaged as modules** (built: `modules/<id>/`, each `.dmod` passing the fifteen checks) |
+| 2 | `banking` as a `.dmod` (built: `modules/banking/dmod`, first-party with its kernel-internals allowance, loaded as a module by the full distribution); **`market-data` split out of banking as its own module** (built: banking requires it); **`capital-markets` and `economy` packaged as modules** (built: `modules/<id>/`, each `.dmod` passing the fifteen checks) |
 | 3 | the distribution file reader (kernel and console), `drishti.risk.yaml`, `drishti.finance.yaml`, `drishti.genomics.yaml`, `drishti.all.yaml` (the default); `--distribution` on every bin/ script and stack file consoles; Home, menus, Help and AI filtered by distribution; themes; Admin → White label (option A); the old product keys read once |
 | 4 | proofs: each distribution boots from its file alone; the owner's stack runs Risk on 17480 and Finance on 17481 over one cluster; genomics boots with no finance |
 
@@ -165,9 +165,8 @@ http://<host>:17481. The Deployment and QA guide gets a step-by-step section for
 **The files.** `config/distributions/drishti.all.yaml`, `drishti.risk.yaml`, `drishti.finance.yaml` and `drishti.genomics.yaml`, and
 `config/distributions/kernel.yaml`, the kernel's own packs, words and menus. A site adds its own file beside them (or anywhere, named by
 path). What each module holds is read from **its own manifest**, never from a hand list: a content module's `modules/<id>/module.yaml`
-(the `.dmod` manifest: `packs.list`, `functions`, `compute.engines`, `console.menus`, `docs.domains`, `requires`) and a module with code's
-`META-INF/drishti/module.yaml` in its sources (`modules/banking/banking-service/...`: `contributes.packs`, `functions`, `engines`,
-`menus`, `help`, `requires`). The folder is `drishti.module-manifests-dir` (`module_manifests_dir` on the console,
+and a module with code's `modules/<id>/dmod/module.yaml` (banking's), both the `.dmod` manifest (`packs.list`, `functions`,
+`compute.engines`, `console.menus`, `docs.domains`, `requires`). The folder is `drishti.module-manifests-dir` (`module_manifests_dir` on the console,
 `DRISHTI_MODULE_MANIFESTS_DIR` for both; default `./modules`). A listed module brings the modules it requires (banking brings
 market-data); a listed module with no manifest stops the start unless the file says `required: false`. A module project made from the
 SDK keeps its manifest in `modules/<id>/src/dmod/module.yaml` (genomics), read the same way. A file may name the kernel's packs it takes
@@ -231,5 +230,13 @@ console per entry, each `console-<name>` with its own pid file, log and temp fol
 IntelliJ: `Drishti server (Risk)`, `(Finance)`, `(All)` and `Drishti console (Risk)` (17480), `(Finance)` (17481), `(All)`. The
 Deployment and QA guide has the step-by-step for each on Linux, macOS and Windows.
 
-**Not yet (wave 2 and later).** The kernel loading `.dmod`s (until then the packs load from `config/packs` and the registry's content
-modules from the server's manifest); logos and favicons beyond the eye are blank until a distribution ships its own files.
+**Banking as a module.** The full jar (drishti-app) is the thin kernel plus `drishti-modules`: the four first-party packages
+(`drishti/modules/banking-1.0.0.dmod`, `market-data-`, `capital-markets-`, `economy-1.0.0.dmod`) and `first-party.yaml`, built by
+`modules/dist` in the normal build (banking is put through the fifteen checks there, with market-data beside it). At start the server
+installs each one that is not installed or was rebuilt (`drishti.modules.shipped`, default true); one an administrator removed or switched
+off stays so. The default placement for first-party modules puts every part on every node unless `config/placement.yaml` names the
+module. The access registry reads these manifests (installed unless the module store says removed), so their packs and functions are the
+modules'. Banking's code is no longer on the kernel's class path; its in-process wiring survives only as its own tests' harness.
+
+**Not yet.** The packs still load from `config/packs` (the packages carry copies); logos and favicons beyond the eye are blank until a
+distribution ships its own files.

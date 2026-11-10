@@ -119,8 +119,19 @@ public final class ServerFlightBackend implements FlightBackend {
         return new Principal(c.effective(), List.copyOf(c.roles()));
     }
 
+    /** The forms served here: the server's, then a loaded module's (its own engine's form wins over none). */
+    private Map<FlightRequest.Form, FlightForm> served() {
+        List<FlightForm> live = com.ash.drishti.common.Extensions.of(FlightForm.class);
+        if (live.isEmpty()) {
+            return forms;
+        }
+        Map<FlightRequest.Form, FlightForm> out = new EnumMap<>(forms);
+        live.forEach(f -> out.put(f.form(), f));
+        return out;
+    }
+
     private FlightForm form(FlightRequest r) {
-        FlightForm f = forms.get(r.form());
+        FlightForm f = served().get(r.form());
         if (f == null) {
             throw new FlightRefusal(ErrorCode.FLIGHT_BAD_TICKET, "form " + r.form().name().toLowerCase(java.util.Locale.ROOT)
                     + " is not served on this node (its engine is off)");
@@ -202,7 +213,7 @@ public final class ServerFlightBackend implements FlightBackend {
     public List<FlightRequest> catalogue(Caller caller) {
         Principal p = principal(caller);
         Set<FlightRequest> out = new LinkedHashSet<>();
-        for (FlightForm f : forms.values()) {
+        for (FlightForm f : served().values()) {
             try {
                 for (FlightRequest r : f.catalogue(p)) {
                     try {
@@ -242,7 +253,7 @@ public final class ServerFlightBackend implements FlightBackend {
 
     /** The forms served here, for Admin → Data out. */
     public List<String> forms() {
-        return forms.keySet().stream().map(f -> f.name().toLowerCase(java.util.Locale.ROOT)).toList();
+        return served().keySet().stream().map(f -> f.name().toLowerCase(java.util.Locale.ROOT)).toList();
     }
 
     private static String cut(String s, int max) {

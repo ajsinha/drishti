@@ -175,6 +175,26 @@ public final class ReactiveSourcePlugin implements SourcePlugin {
             this.className = className;
             this.connector = connector;
             this.hub = hub;
+            DEFERRED.add(this);
+        }
+
+        /** Every deferred engine, held weakly: a module that leaves takes its engine instances out of them (the leak check follows). */
+        private static final java.util.Set<DeferredJava> DEFERRED = java.util.Collections.newSetFromMap(
+                java.util.Collections.synchronizedMap(new java.util.WeakHashMap<>()));
+
+        static {
+            com.ash.drishti.common.ModuleLoaders.onLeave(loader -> {
+                synchronized (DEFERRED) {
+                    for (DeferredJava d : DEFERRED) {
+                        synchronized (d) {
+                            JavaRunner r = d.runner;
+                            if (r != null && com.ash.drishti.common.ModuleLoaders.of(r.engine(), loader)) {
+                                d.runner = null;                   // resolved again (or unavailable) when next asked
+                            }
+                        }
+                    }
+                }
+            });
         }
 
         JavaRunner resolve() {

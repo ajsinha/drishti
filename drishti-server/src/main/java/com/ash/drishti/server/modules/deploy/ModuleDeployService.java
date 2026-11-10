@@ -128,6 +128,63 @@ public final class ModuleDeployService {
      * Stores a package once: unpacked, its hash list checked and the fifteen conformance checks run (C15 with {@code cycles} load/unload
      * cycles); refused with every failed check in words. The same version again is accepted only with the same bytes.
      */
+    /**
+     * The distribution's own modules (KERNEL_AND_MODULES.md section 3.3): each verified first-party package is put in the store as the
+     * product's build left it (its conformance checks ran in that build; a rebuild of the same version replaces the stored copy, which an
+     * upload never may), then installed on this node unless an administrator removed or switched it off. Returns a line per module.
+     */
+    public List<String> installShipped(List<Path> shipped, String by) {
+        com.ash.drishti.module.runtime.FirstParty list = com.ash.drishti.module.runtime.KernelFacts.ofKernel().firstParty();
+        List<Path> verified = new ArrayList<>();
+        List<String> out = new ArrayList<>();
+        for (Path dmod : shipped) {
+            Path work = store.resolve(".shipped-" + UUID.randomUUID().toString().substring(0, 8));
+            try {
+                Path dir = work.resolve("pkg");
+                Dmod.unpack(dmod, dir);
+                DmodManifest m;
+                try (InputStream in = Files.newInputStream(dir.resolve(DmodManifest.FILE))) {
+                    m = DmodManifest.read(in, dmod.getFileName().toString());
+                }
+                Dmod.verify(dir, dmod, m.label());
+                com.ash.drishti.module.runtime.FirstParty.Origin origin = list.origin(m, dir);
+                if (!origin.firstParty()) {
+                    out.add(m.label() + ": not installed by default: " + origin.why());
+                    continue;
+                }
+                String sha = sha(dmod);
+                Path at = store.resolve(m.id()).resolve(m.version());
+                Path meta = at.resolve("stored.json");
+                boolean same = Files.isRegularFile(meta) && JSON.readValue(meta.toFile(), Stored.class).sha().equalsIgnoreCase(sha);
+                if (!same) {
+                    keep(dmod, dir, m, sha, Files.size(dmod), List.of("the fifteen conformance checks ran in the product's build (first-party, "
+                            + origin.why() + ")"), by, "the distribution's");
+                }
+                verified.add(dmod);
+            } catch (IOException | RuntimeException e) {
+                out.add(dmod.getFileName() + ": not installed by default: " + e.getMessage());
+            } finally {
+                ModuleNode.delete(work);
+            }
+        }
+        out.addAll(node.installShipped(verified));
+        return out;
+    }
+
+    /** Puts a verified package and its unpacked folder in the store ({@code <id>/<version>/}), with its record; audited. */
+    private Stored keep(Path dmod, Path dir, DmodManifest m, String sha, long bytes, List<String> lines, String by, String note) throws IOException {
+        Path at = store.resolve(m.id()).resolve(m.version());
+        Files.createDirectories(at);
+        Files.copy(dmod, at.resolve(Dmod.fileName(m.id(), m.version())), StandardCopyOption.REPLACE_EXISTING);
+        ModuleNode.delete(at.resolve("pkg"));
+        Files.move(dir, at.resolve("pkg"));
+        Stored s = new Stored(m.id(), m.version(), m.title(), m.about(), m.publisher().getOrDefault("name", ""), sha, bytes, lines,
+                ModuleParts.of(m).parts().keySet().stream().toList(), by, clock.instant().toString());
+        JSON.writerWithDefaultPrettyPrinter().writeValue(at.resolve("stored.json").toFile(), s);
+        audit.record(by, "module-stored", "module/" + m.id(), m.version() + " | sha256 " + sha + " | " + note);
+        return s;
+    }
+
     public Stored upload(byte[] bytes, String by) {
         if (bytes == null || bytes.length == 0) {
             throw ModuleNode.refused("no package: send the .dmod's bytes");
@@ -161,15 +218,7 @@ public final class ModuleDeployService {
                 audit.record(by, "module-store-refused", "module/" + m.id(), m.version() + " | " + failed(checks));
                 throw ModuleNode.refused(m.label() + " fails the conformance checks: " + failed(checks));
             }
-            Files.createDirectories(at);
-            Files.copy(dmod, at.resolve(Dmod.fileName(m.id(), m.version())), StandardCopyOption.REPLACE_EXISTING);
-            ModuleNode.delete(at.resolve("pkg"));
-            Files.move(dir, at.resolve("pkg"));
-            Stored s = new Stored(m.id(), m.version(), m.title(), m.about(), m.publisher().getOrDefault("name", ""), sha, bytes.length, lines,
-                    ModuleParts.of(m).parts().keySet().stream().toList(), by, clock.instant().toString());
-            JSON.writerWithDefaultPrettyPrinter().writeValue(meta.toFile(), s);
-            audit.record(by, "module-stored", "module/" + m.id(), m.version() + " | sha256 " + sha + " | " + bytes.length + " bytes");
-            return s;
+            return keep(dmod, dir, m, sha, bytes.length, lines, by, bytes.length + " bytes");
         } catch (IOException e) {
             throw ModuleNode.refused("the package does not read: " + e.getMessage());
         } catch (com.ash.drishti.module.runtime.ModuleRefusedException e) {
@@ -242,7 +291,7 @@ public final class ModuleDeployService {
     List<String> placedNodes(DmodManifest m) {
         List<ModuleParts> mods = new ArrayList<>(placement.modules().stream().filter(x -> !x.module().equals(m.id())).toList());
         mods.add(ModuleParts.of(m));
-        PlacementResolver.Matrix mx = PlacementResolver.resolve(placement.current(), mods, placement.matrix().nodes());
+        PlacementResolver.Matrix mx = PlacementResolver.resolve(placement.withDefaults(placement.current(), mods), mods, placement.matrix().nodes());
         Set<String> out = new LinkedHashSet<>();
         mx.parts().stream().filter(p -> p.module().equals(m.id())).forEach(p -> out.addAll(p.placed()));
         return List.copyOf(out);
@@ -603,6 +652,7 @@ public final class ModuleDeployService {
             m.put("state", e == null ? "stored" : e.state().name().toLowerCase(Locale.ROOT));
             m.put("title", e != null ? e.title() : st.stream().filter(s -> s.id().equals(id)).map(Stored::title).findFirst().orElse(id));
             m.put("prefix", e == null ? null : e.prefix());
+            m.put("origin", node.origin(id).map(com.ash.drishti.module.runtime.FirstParty.Origin::word).orElse(null));
             m.put("claims", e == null ? List.of() : e.claims());
             m.put("by", e == null ? null : e.by());
             m.put("at", e == null ? null : e.at());

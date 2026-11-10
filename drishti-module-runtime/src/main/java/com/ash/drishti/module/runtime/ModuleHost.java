@@ -31,6 +31,13 @@ public interface ModuleHost {
         return true;
     }
 
+    /**
+     * Before the module's child context is refreshed: the host's part of making it (the kernel adds the module's own engine defaults to
+     * its environment; the conformance harness, which has no kernel beans, makes a module with a kernel-internals allowance lazy).
+     */
+    default void preparing(ModuleCandidate candidate, org.springframework.context.support.GenericApplicationContext context) {
+    }
+
     /** After the module's child context is refreshed and its routes are in the table: start it and record its contributions. */
     default void started(LoadedModule module, Contributions contributions) {
     }

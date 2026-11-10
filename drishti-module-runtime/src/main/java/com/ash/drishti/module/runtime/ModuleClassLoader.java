@@ -43,6 +43,7 @@ public final class ModuleClassLoader extends URLClassLoader implements SmartClas
     private final List<String> sharedPaths;
 
     private final ClassLoader lib;
+    private final List<String> allowance;
 
     public ModuleClassLoader(String moduleId, URL[] jars, ClassLoader kernel, List<String> shared) {
         this(moduleId, jars, kernel, shared, null);
@@ -53,12 +54,21 @@ public final class ModuleClassLoader extends URLClassLoader implements SmartClas
      *            define (never a kernel class through it), or null for none
      */
     public ModuleClassLoader(String moduleId, URL[] jars, ClassLoader kernel, List<String> shared, ClassLoader lib) {
+        this(moduleId, jars, kernel, shared, lib, List.of());
+    }
+
+    /**
+     * @param allowance a verified first-party module's kernel-internals allowance ({@link FirstParty#allowance}): the kernel packages
+     *                  (exact, not their sub-packages) asked of the kernel like the shared list; empty for every other module
+     */
+    public ModuleClassLoader(String moduleId, URL[] jars, ClassLoader kernel, List<String> shared, ClassLoader lib, List<String> allowance) {
         super("module:" + moduleId, jars, ClassLoader.getPlatformClassLoader());
         this.lib = lib == kernel ? null : lib;
         this.moduleId = moduleId;
         this.kernel = kernel;
         this.shared = List.copyOf(shared);
         this.sharedPaths = shared.stream().map(p -> p.replace('.', '/')).toList();
+        this.allowance = List.copyOf(allowance);
     }
 
     /** The module's id. */
@@ -68,6 +78,9 @@ public final class ModuleClassLoader extends URLClassLoader implements SmartClas
 
     /** True when the class is asked of the kernel (the kernel API or a shared library). */
     public boolean isShared(String className) {
+        if (!allowance.isEmpty() && FirstParty.allowed(allowance, className)) {
+            return true;
+        }
         for (String p : shared) {
             if (className.startsWith(p)) {
                 return true;

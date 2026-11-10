@@ -44,9 +44,9 @@ final class ExposurePublisher {
     static final String CPTY = "exposure-official-cpty";
 
     /** The published columns of the node table, in order (BUSINESS_DATE is the partition column business_date). */
-    static final Map<String, String> COLUMNS = columns(false);
+    static final Map<String, String> COLUMNS = java.util.Collections.unmodifiableMap(columns(false));
     /** The counterparty table's: the node table's and the counterparty's own. */
-    static final Map<String, String> CPTY_COLUMNS = columns(true);
+    static final Map<String, String> CPTY_COLUMNS = java.util.Collections.unmodifiableMap(columns(true));
 
     private final com.ash.drishti.banking.official.OfficialSink sink;
     private final boolean jsonl;

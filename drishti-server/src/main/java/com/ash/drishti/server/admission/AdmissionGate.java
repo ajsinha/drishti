@@ -163,6 +163,12 @@ public final class AdmissionGate {
         this.clock = clock;
         this.audit = audit;
         this.requester = requester == null ? () -> null : requester;
+        // a module's engines leave with it: their load slots, open heaps and stores are no longer read
+        com.ash.drishti.common.ModuleLoaders.onLeave(this, (g, loader) -> {
+            g.loads.values().removeIf(x -> com.ash.drishti.common.ModuleLoaders.of(x.threads, loader));
+            g.openHeaps.removeIf(h -> com.ash.drishti.common.ModuleLoaders.of(h.used(), loader) || com.ash.drishti.common.ModuleLoaders.of(h.net(), loader));
+            g.offHeaps.removeIf(h -> com.ash.drishti.common.ModuleLoaders.of(h.used(), loader) || com.ash.drishti.common.ModuleLoaders.of(h.cap(), loader));
+        });
     }
 
     // ------------------------------------------------------------------------------------------------------------ the engines

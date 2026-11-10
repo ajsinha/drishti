@@ -42,13 +42,37 @@ public class MrCubeConfiguration {
      * The VaR source of the pivot engine, with the MR cube's lens (DOMAIN_MODULES.md J1: the pivot engine asks every
      * {@link com.ash.drishti.kernel.api.pivot.PivotSourceProvider}; it names no module's source).
      */
+    /** The VaR source, made once when first asked (the pivot engine asks at its start, or the module host when banking loads as a module). */
+    public static final class VarPivotSource implements com.ash.drishti.kernel.api.pivot.PivotSourceProvider {
+        private final java.util.function.Supplier<VarPivotProvider> make;
+        private volatile VarPivotProvider made;
+
+        VarPivotSource(java.util.function.Supplier<VarPivotProvider> make) {
+            this.make = make;
+        }
+
+        @Override
+        public VarPivotProvider provider() {
+            VarPivotProvider p = made;
+            if (p == null) {
+                synchronized (this) {
+                    if (made == null) {
+                        made = make.get();
+                    }
+                    p = made;
+                }
+            }
+            return p;
+        }
+    }
+
     @Bean
-    public com.ash.drishti.kernel.api.pivot.PivotSourceProvider varPivotSource(org.springframework.beans.factory.ObjectProvider<VarService> var,
+    public VarPivotSource varPivotSource(org.springframework.beans.factory.ObjectProvider<VarService> var,
             org.springframework.beans.factory.ObjectProvider<MrCubeProperties> mr,
             org.springframework.beans.factory.ObjectProvider<com.ash.drishti.banking.frtb.FrtbService> frtb, org.springframework.core.env.Environment env,
             org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.engines.EngineRegistry> engines,
             org.springframework.beans.factory.ObjectProvider<VarParametricProperties> parametric) {
-        return () -> {
+        return new VarPivotSource(() -> {
             VarService v = var.getIfAvailable();
             if (v == null) {
                 return null;
@@ -58,12 +82,16 @@ public class MrCubeConfiguration {
                     () -> com.ash.drishti.server.pivot.PivotConfiguration.running(engines, "mr-cube", mrSwitch), mr.getIfAvailable(MrCubeProperties::defaults),
                     () -> com.ash.drishti.server.pivot.PivotConfiguration.running(engines, "frtb-sa", true) ? MrCubeExtras.running(frtb.getIfAvailable()) : null)
                     .parametric(parametric.getIfAvailable());
-        };
+        });
     }
 
     @Bean
-    public MrCubeExtras mrCubeExtras(VarService svc, PivotCore core, com.ash.drishti.banking.RiskLimits limits) {
-        return new MrCubeExtras(svc, core, provider(core), limits);
+    public MrCubeExtras mrCubeExtras(VarService svc, PivotCore core, VarPivotSource source, com.ash.drishti.banking.RiskLimits limits) {
+        VarPivotProvider p = source.provider();
+        if (p == null) {
+            throw new IllegalStateException("the pivot engine has no VaR provider: the MR cube needs the VaR engine");
+        }
+        return new MrCubeExtras(svc, core, p, limits);
     }
 
     @Bean

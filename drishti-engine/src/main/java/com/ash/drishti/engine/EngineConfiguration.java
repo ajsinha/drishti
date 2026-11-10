@@ -176,9 +176,12 @@ public class EngineConfiguration {
     public ViewPipeline viewPipeline(SourceRouter router, SutraMatcher matcher, SutraRegistry registry, LayoutMerger merger,
             ShapeFingerprinter fingerprinter, ReferenceCatalog catalog, GraphProperties graph, Binder binder, ElCompiler el,
             Formats formats, Mnemonics mnemonics, ForkJoinPool drishtiBindPool, EngineProperties props,
-            com.ash.drishti.engine.time.BusinessDates businessDates) {
-        return new ViewPipeline(router, matcher, registry, merger, fingerprinter, catalog, graph, binder, el, formats, mnemonics,
+            com.ash.drishti.engine.time.BusinessDates businessDates,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.kernel.api.view.ViewAugmenter> augmenters) {
+        ViewPipeline p = new ViewPipeline(router, matcher, registry, merger, fingerprinter, catalog, graph, binder, el, formats, mnemonics,
                 drishtiBindPool, props, businessDates);
+        p.augmentersFrom(() -> augmenters.orderedStream().toList());    // the server's own; a module's through the registration bridge
+        return p;
     }
 
     /** About this page: the explanation of a view (layers 3 and 4), derived on request. */

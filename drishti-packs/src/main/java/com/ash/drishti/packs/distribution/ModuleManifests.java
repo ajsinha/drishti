@@ -60,10 +60,12 @@ public final class ModuleManifests {
         }
         try (DirectoryStream<Path> modules = Files.newDirectoryStream(dir, Files::isDirectory)) {
             for (Path m : modules) {
-                Path dmod = Files.isRegularFile(m.resolve("module.yaml")) ? m.resolve("module.yaml") : m.resolve(SDK_PROJECT);
-                if (Files.isRegularFile(dmod)) {
-                    Entry e = ofDmod(tree(dmod), dmod);
-                    byId.put(e.id(), e);
+                for (Path dmod : List.of(m.resolve("module.yaml"), m.resolve(SDK_PROJECT), m.resolve("dmod").resolve("module.yaml"))) {
+                    if (Files.isRegularFile(dmod)) {        // a content module's; an SDK project's src/dmod; banking's dmod/
+                        Entry e = ofDmod(tree(dmod), dmod);
+                        byId.put(e.id(), e);
+                        break;
+                    }
                 }
                 try (DirectoryStream<Path> parts = Files.newDirectoryStream(m, Files::isDirectory)) {
                     for (Path part : parts) {

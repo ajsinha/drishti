@@ -31,7 +31,8 @@
     so every launcher, script and guide is unchanged; the thin jar with a plugins folder (each site's modules beside it) comes later</description>
   <dependencies>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-server</artifactId></dependency>
-    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-banking</artifactId></dependency>
+    <!-- the first-party modules installed by default (banking, market-data, capital-markets, economy) and first-party.yaml -->
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-modules</artifactId></dependency>
   </dependencies>
   <build>
     <!-- named as the server's jar always was, and written beside it (drishti-server/target), so nothing that starts the server changes -->

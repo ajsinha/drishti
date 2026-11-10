@@ -56,7 +56,10 @@ public final class AccessRegistries {
             String s = v.strip().toLowerCase(Locale.ROOT);
             return "true".equals(s) || "on".equals(s) || "yes".equals(s);
         };
-        return new EmbeddedAccessRegistry(new YamlAccessStore(Path.of(modules), Path.of(access), loader, manifests(property)), overrides,
+        String deploy = property.apply("drishti.module-deploy.dir");
+        Path store = deploy != null && !deploy.isBlank() ? Path.of(deploy.strip())
+                : Path.of(orDefault(property.apply("drishti.data.dir"), "./data"), "modules");
+        return new EmbeddedAccessRegistry(new YamlAccessStore(Path.of(modules), Path.of(access), loader, manifests(property), store), overrides,
                 Clock.systemUTC());
     }
 

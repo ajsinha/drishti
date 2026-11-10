@@ -172,8 +172,9 @@ def cmd_list(cli, a, extra) -> int:
     rows = []
     for m in mods:
         stored = ", ".join(v["version"] for v in m.get("versions") or [])
-        rows.append([m["id"], m.get("version") or "-", m.get("state"), ", ".join(m.get("placed") or []) or "-", stored or "-", m.get("title") or ""])
-    heads = ["MODULE", "VERSION", "STATE", "PLACED ON", "IN THE STORE", "TITLE"]
+        rows.append([m["id"], m.get("version") or "-", m.get("state"), m.get("origin") or "-", ", ".join(m.get("placed") or []) or "-", stored or "-",
+                     m.get("title") or ""])
+    heads = ["MODULE", "VERSION", "STATE", "ORIGIN", "PLACED ON", "IN THE STORE", "TITLE"]
     w = [max([len(h)] + [len(str(r[i])) for r in rows]) for i, h in enumerate(heads)]
     print("  " + "  ".join(h.ljust(w[i]) for i, h in enumerate(heads)).rstrip())
     for r in rows:

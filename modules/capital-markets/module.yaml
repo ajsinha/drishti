@@ -20,6 +20,7 @@ version: 1.0.0
 title: Capital markets
 about: US equities (SEC EDGAR filings and facts, indices, sectors) and the largest US funds and ETFs with their holdings; the Markets lens
 domain: capitalmarkets
+origin: first-party
 publisher:
   id: drishti
   name: Ashutosh Sinha
