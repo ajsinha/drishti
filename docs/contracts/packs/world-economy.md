@@ -50,7 +50,7 @@ An economy: output, growth, prices, jobs, debt and external balance, and output 
 | Id pattern | `^ECON-` |
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
-| Storage | connector `macro-store` (plugin `delta`), table `<root>/macro/economy/` |
+| Binding hint | lake table `macro.economy`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `NAME`, `ISO3`, `REGION_NAME`, `INCOME_NAME`, `GDP_USD_BN`, `GDP_PER_CAPITA`, `GROWTH`, `INFLATION`, `UNEMPLOYMENT`, `POPULATION_M` |
 | Test data | config/packs/economy/world-economy/samples |
 | Worked example | [world-economy/economy](../samples/world-economy.md#economy) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
@@ -161,7 +161,7 @@ One headline statistic of one economy: the series, the latest value, the change 
 | Id pattern | `^MACRO-` |
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
-| Storage | connector `macro-store` (plugin `delta`), table `<root>/macro/macro-indicator/` |
+| Binding hint | lake table `macro.macro-indicator`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | config/packs/economy/world-economy/samples |
 | Worked example | [world-economy/macro-indicator](../samples/world-economy.md#macro-indicator) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -250,7 +250,7 @@ The IMF World Economic Outlook: growth, inflation, unemployment, external balanc
 | Id pattern | `^FCST-` |
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
-| Storage | connector `macro-store` (plugin `delta`), table `<root>/macro/economic-forecast/` |
+| Binding hint | lake table `macro.economic-forecast`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | config/packs/economy/world-economy/samples |
 | Worked example | [world-economy/economic-forecast](../samples/world-economy.md#economic-forecast) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -333,7 +333,7 @@ Unemployment, participation, youth and female labour, and employment and output 
 | Id pattern | `^LABR-` |
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
-| Storage | connector `macro-store` (plugin `delta`), table `<root>/macro/labour-market/` |
+| Binding hint | lake table `macro.labour-market`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | config/packs/economy/world-economy/samples |
 | Worked example | [world-economy/labour-market](../samples/world-economy.md#labour-market) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -414,7 +414,7 @@ Government debt and net lending (IMF) with revenue, expense and military spendin
 | Id pattern | `^FISC-` |
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
-| Storage | connector `macro-store` (plugin `delta`), table `<root>/macro/fiscal-position/` |
+| Binding hint | lake table `macro.fiscal-position`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | config/packs/economy/world-economy/samples |
 | Worked example | [world-economy/fiscal-position](../samples/world-economy.md#fiscal-position) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -500,7 +500,7 @@ A World Bank region or income group (or the world), computed from its member eco
 | Id pattern | `^ECG-` |
 | Dated by | `on request` |
 | Cadence | on change (due: recomputed from its source kind (connector refresh 60s)) |
-| Storage | connector `macro-groupings` (plugin `derived`) |
+| Binding hint | computed by Drishti, never bound; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 
 **Fields**
 
@@ -574,7 +574,7 @@ A state or territory (ISO 3166-2): population, GDP and GDP per head.
 | Id pattern | `^REGE-` |
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
-| Storage | connector `macro-store` (plugin `delta`), table `<root>/macro/region-economy/` |
+| Binding hint | lake table `macro.region-economy`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `ISO3`, `COUNTRY_NAME`, `REGION_CODE`, `NAME`, `POPULATION`, `GDP_USD_BN`, `GDP_PER_CAPITA`, `YEAR`, `SOURCE` |
 | Test data | config/packs/economy/world-economy/samples |
 | Worked example | [world-economy/region-economy](../samples/world-economy.md#region-economy) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
@@ -653,7 +653,7 @@ A country: government type, capital, legislature and seats by party, office hold
 | Id pattern | `^JUR-` |
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
-| Storage | connector `civic-store` (plugin `delta`), table `<root>/civic/jurisdiction/` |
+| Binding hint | lake table `civic.jurisdiction`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | config/packs/economy/world-economy/samples |
 | Worked example | [world-economy/jurisdiction](../samples/world-economy.md#jurisdiction) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -777,7 +777,7 @@ A political party that won seats in the lower chamber at the most recent electio
 | Id pattern | `^PARTY-` |
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
-| Storage | connector `civic-store` (plugin `delta`), table `<root>/civic/party/` |
+| Binding hint | lake table `civic.party`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | config/packs/economy/world-economy/samples |
 | Worked example | [world-economy/party](../samples/world-economy.md#party) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -851,7 +851,7 @@ The chief of state or head of government of a country as the CIA World Factbook 
 | Id pattern | `^OFFC-` |
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
-| Storage | connector `civic-store` (plugin `delta`), table `<root>/civic/office-holder/` |
+| Binding hint | lake table `civic.office-holder`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | config/packs/economy/world-economy/samples |
 | Worked example | [world-economy/office-holder](../samples/world-economy.md#office-holder) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -929,7 +929,7 @@ The most recent election to a chamber or to the executive, with the system, term
 | Id pattern | `^ELEC-` |
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
-| Storage | connector `civic-store` (plugin `delta`), table `<root>/civic/election/` |
+| Binding hint | lake table `civic.election`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | config/packs/economy/world-economy/samples |
 | Worked example | [world-economy/election](../samples/world-economy.md#election) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -1019,7 +1019,7 @@ A World Bank region: its countries, population, life expectancy, women in parlia
 | Id pattern | `^REGN-` |
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
-| Storage | connector `civic-store` (plugin `delta`), table `<root>/civic/region/` |
+| Binding hint | lake table `civic.region`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | config/packs/economy/world-economy/samples |
 | Worked example | [world-economy/region](../samples/world-economy.md#region) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -1106,7 +1106,7 @@ A social or governance statistic of one country over time, with the regional com
 | Id pattern | `^SOCI-` |
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
-| Storage | connector `civic-store` (plugin `delta`), table `<root>/civic/social-indicator/` |
+| Binding hint | lake table `civic.social-indicator`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | config/packs/economy/world-economy/samples |
 | Worked example | [world-economy/social-indicator](../samples/world-economy.md#social-indicator) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 

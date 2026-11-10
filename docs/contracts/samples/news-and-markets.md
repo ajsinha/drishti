@@ -325,7 +325,7 @@ Fields no record above has, found by reading all 71 rows, with how many rows fil
 
 ## News topic: news-topic (TOPIC)
 
-A topic and the news about it: headlines (newest first) with their publishers and links, a count by source, and how the headlines were chosen. One row per news topic, keyed by TOPIC_ID. Read by the **news-and-markets** pack's connector `news-store` (table `<root>/news/news-topic/`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/news-and-markets/samples/news-topic.jsonl`, 15 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+A topic and the news about it: headlines (newest first) with their publishers and links, a count by source, and how the headlines were chosen. One row per news topic, keyed by TOPIC_ID. Read by the **news-and-markets** pack's connector `news-store` (lake table `news.news-topic`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/news-and-markets/samples/news-topic.jsonl`, 15 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 
@@ -409,7 +409,7 @@ None: all 15 rows were read, and every field any of them has is in the record ab
 
 ## Listed company: listed-company (CO)
 
-A listed company: its live quote and price history (yfinance connector) and its news headlines (news connector), both computed on demand. One row per listed company, keyed by COMPANY_ID. Read by the **news-and-markets** pack's connector `news-store` (table `<root>/news/listed-company/`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/news-and-markets/samples/listed-company.jsonl`, 20 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+A listed company: its live quote and price history (yfinance connector) and its news headlines (news connector), both computed on demand. One row per listed company, keyed by COMPANY_ID. Read by the **news-and-markets** pack's connector `news-store` (lake table `news.listed-company`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/news-and-markets/samples/listed-company.jsonl`, 20 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 

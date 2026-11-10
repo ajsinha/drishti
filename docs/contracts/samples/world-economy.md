@@ -36,7 +36,7 @@ Every data type of `world-economy` as a real record of the committed test data, 
 
 ## Economy: economy (ECON)
 
-An economy: output, growth, prices, jobs, debt and external balance, and output by sector, from World Bank, IMF and CIA data. One row per economy, keyed by ECONOMY_ID. Read by the **world-economy** pack's connector `macro-store` (table `<root>/macro/economy/`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-economy/samples/economy.jsonl`, 213 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+An economy: output, growth, prices, jobs, debt and external balance, and output by sector, from World Bank, IMF and CIA data. One row per economy, keyed by ECONOMY_ID. Read by the **world-economy** pack's connector `macro-store` (lake table `macro.economy`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-economy/samples/economy.jsonl`, 213 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 
@@ -217,7 +217,7 @@ None: all 213 rows were read, and every field any of them has is in the record a
 
 ## Macro indicator: macro-indicator (MACRO)
 
-One headline statistic of one economy: the series, the latest value, the change and the rank among economies. One row per macro indicator, keyed by INDICATOR_ID. Read by the **world-economy** pack's connector `macro-store` (table `<root>/macro/macro-indicator/`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-economy/samples/macro-indicator.jsonl`, 3119 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+One headline statistic of one economy: the series, the latest value, the change and the rank among economies. One row per macro indicator, keyed by INDICATOR_ID. Read by the **world-economy** pack's connector `macro-store` (lake table `macro.macro-indicator`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-economy/samples/macro-indicator.jsonl`, 3119 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 
@@ -354,7 +354,7 @@ None: all 3,119 rows were read, and every field any of them has is in the record
 
 ## Economic forecast: economic-forecast (FCST)
 
-The IMF World Economic Outlook: growth, inflation, unemployment, external balance and debt, outturn and projections to 2031. One row per economic forecast, keyed by FORECAST_ID. Read by the **world-economy** pack's connector `macro-store` (table `<root>/macro/economic-forecast/`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-economy/samples/economic-forecast.jsonl`, 192 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+The IMF World Economic Outlook: growth, inflation, unemployment, external balance and debt, outturn and projections to 2031. One row per economic forecast, keyed by FORECAST_ID. Read by the **world-economy** pack's connector `macro-store` (lake table `macro.economic-forecast`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-economy/samples/economic-forecast.jsonl`, 192 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 
@@ -500,7 +500,7 @@ None: all 192 rows were read, and every field any of them has is in the record a
 
 ## Labour market: labour-market (LABR)
 
-Unemployment, participation, youth and female labour, and employment and output by sector. One row per labour market, keyed by LABOUR_ID. Read by the **world-economy** pack's connector `macro-store` (table `<root>/macro/labour-market/`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-economy/samples/labour-market.jsonl`, 185 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+Unemployment, participation, youth and female labour, and employment and output by sector. One row per labour market, keyed by LABOUR_ID. Read by the **world-economy** pack's connector `macro-store` (lake table `macro.labour-market`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-economy/samples/labour-market.jsonl`, 185 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 
@@ -638,7 +638,7 @@ None: all 185 rows were read, and every field any of them has is in the record a
 
 ## Fiscal position: fiscal-position (FISC)
 
-Government debt and net lending (IMF) with revenue, expense and military spending (World Bank), as shares of GDP. One row per fiscal position, keyed by FISCAL_ID. Read by the **world-economy** pack's connector `macro-store` (table `<root>/macro/fiscal-position/`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-economy/samples/fiscal-position.jsonl`, 192 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+Government debt and net lending (IMF) with revenue, expense and military spending (World Bank), as shares of GDP. One row per fiscal position, keyed by FISCAL_ID. Read by the **world-economy** pack's connector `macro-store` (lake table `macro.fiscal-position`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-economy/samples/fiscal-position.jsonl`, 192 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 
@@ -781,7 +781,7 @@ None: all 192 rows were read, and every field any of them has is in the record a
 
 ## Region economy: region-economy (REGE)
 
-A state or territory (ISO 3166-2): population, GDP and GDP per head. One row per region economy, keyed by REGION_ID. Read by the **world-economy** pack's connector `macro-store` (table `<root>/macro/region-economy/`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-economy/samples/region-economy.jsonl`, 59 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+A state or territory (ISO 3166-2): population, GDP and GDP per head. One row per region economy, keyed by REGION_ID. Read by the **world-economy** pack's connector `macro-store` (lake table `macro.region-economy`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-economy/samples/region-economy.jsonl`, 59 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 
@@ -902,7 +902,7 @@ Fields no record above has, found by reading all 59 rows, with how many rows fil
 
 ## Jurisdiction: jurisdiction (JUR)
 
-A country: government type, capital, legislature and seats by party, office holders, elections and governance indicators, from the CIA World Factbook, World Bank and UNDP. One row per jurisdiction, keyed by JURISDICTION_ID. Read by the **world-economy** pack's connector `civic-store` (table `<root>/civic/jurisdiction/`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-economy/samples/jurisdiction.jsonl`, 216 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+A country: government type, capital, legislature and seats by party, office holders, elections and governance indicators, from the CIA World Factbook, World Bank and UNDP. One row per jurisdiction, keyed by JURISDICTION_ID. Read by the **world-economy** pack's connector `civic-store` (lake table `civic.jurisdiction`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-economy/samples/jurisdiction.jsonl`, 216 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 
@@ -1104,7 +1104,7 @@ None: all 216 rows were read, and every field any of them has is in the record a
 
 ## Party: party (PARTY)
 
-A political party that won seats in the lower chamber at the most recent election, with the chamber's full result. One row per party, keyed by PARTY_ID. Read by the **world-economy** pack's connector `civic-store` (table `<root>/civic/party/`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-economy/samples/party.jsonl`, 282 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+A political party that won seats in the lower chamber at the most recent election, with the chamber's full result. One row per party, keyed by PARTY_ID. Read by the **world-economy** pack's connector `civic-store` (lake table `civic.party`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-economy/samples/party.jsonl`, 282 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 
@@ -1226,7 +1226,7 @@ None: all 282 rows were read, and every field any of them has is in the record a
 
 ## Office holder: office-holder (OFFC)
 
-The chief of state or head of government of a country as the CIA World Factbook publishes them, with how the office is filled. One row per office holder, keyed by OFFICE_ID. Read by the **world-economy** pack's connector `civic-store` (table `<root>/civic/office-holder/`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-economy/samples/office-holder.jsonl`, 430 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+The chief of state or head of government of a country as the CIA World Factbook publishes them, with how the office is filled. One row per office holder, keyed by OFFICE_ID. Read by the **world-economy** pack's connector `civic-store` (lake table `civic.office-holder`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-economy/samples/office-holder.jsonl`, 430 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 
@@ -1350,7 +1350,7 @@ None: all 430 rows were read, and every field any of them has is in the record a
 
 ## Election: election (ELEC)
 
-The most recent election to a chamber or to the executive, with the system, term, seats by party and the date of the next one. One row per election, keyed by ELECTION_ID. Read by the **world-economy** pack's connector `civic-store` (table `<root>/civic/election/`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-economy/samples/election.jsonl`, 378 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+The most recent election to a chamber or to the executive, with the system, term, seats by party and the date of the next one. One row per election, keyed by ELECTION_ID. Read by the **world-economy** pack's connector `civic-store` (lake table `civic.election`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-economy/samples/election.jsonl`, 378 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 
@@ -1498,7 +1498,7 @@ Fields no record above has, found by reading all 378 rows, with how many rows fi
 
 ## World region: region (REGN)
 
-A World Bank region: its countries, population, life expectancy, women in parliament, Internet use and the government types found in it. One row per world region, keyed by REGION_ID. Read by the **world-economy** pack's connector `civic-store` (table `<root>/civic/region/`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-economy/samples/region.jsonl`, 7 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+A World Bank region: its countries, population, life expectancy, women in parliament, Internet use and the government types found in it. One row per world region, keyed by REGION_ID. Read by the **world-economy** pack's connector `civic-store` (lake table `civic.region`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-economy/samples/region.jsonl`, 7 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 
@@ -1649,7 +1649,7 @@ None: all 7 rows were read, and every field any of them has is in the record abo
 
 ## Social indicator: social-indicator (SOCI)
 
-A social or governance statistic of one country over time, with the regional comparison: health, education, inequality, rights and rule of law. One row per social indicator, keyed by INDICATOR_ID. Read by the **world-economy** pack's connector `civic-store` (table `<root>/civic/social-indicator/`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-economy/samples/social-indicator.jsonl`, 4297 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+A social or governance statistic of one country over time, with the regional comparison: health, education, inequality, rights and rule of law. One row per social indicator, keyed by INDICATOR_ID. Read by the **world-economy** pack's connector `civic-store` (lake table `civic.social-indicator`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-economy/samples/social-indicator.jsonl`, 4297 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 

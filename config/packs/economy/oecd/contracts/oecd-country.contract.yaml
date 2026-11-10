@@ -32,11 +32,8 @@ dated-by: snapshot
 cadence:
   frequency: daily
   due: the oecd feed's schedule (0 12 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date
-storage:
-  connector: oecd-store
-  plugin: delta
-  domain: oecd
-  table: <root>/oecd/oecd-country/
+binding-hint:
+  lake-table: oecd.oecd-country
   test-data:
   - config/packs/economy/oecd/samples
 fields:

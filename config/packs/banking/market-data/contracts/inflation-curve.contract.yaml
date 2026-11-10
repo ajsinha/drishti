@@ -32,11 +32,8 @@ dated-by: business_date
 cadence:
   frequency: daily
   due: to be confirmed
-storage:
-  connector: market-store
-  plugin: delta
-  domain: market
-  table: <root>/market/inflation-curve/
+binding-hint:
+  lake-table: market.inflation-curve
   test-data:
   - data/testdata/market-data/inflation-curve
 fields:

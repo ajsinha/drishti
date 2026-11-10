@@ -32,11 +32,7 @@ dated-by: snapshot
 cadence:
   frequency: intraday
   due: on demand, when the connector is on
-storage:
-  connector: yfinance
-  plugin: yfinance
-  other-connectors:
-  - news-store
+binding-hint:
   test-data:
   - data/testdata/news-and-markets/quote
 fields:

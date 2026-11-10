@@ -31,9 +31,8 @@ dated-by: on request
 cadence:
   frequency: on change
   due: recomputed from its source kind (connector refresh 60s)
-storage:
-  connector: trade-pages
-  plugin: derived
+binding-hint:
+  computed: true
 fields:
 - name: INDEX_NAME
   type: id

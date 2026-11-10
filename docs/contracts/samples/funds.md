@@ -27,7 +27,7 @@ Every data type of `funds` as a real record of the committed test data, every fi
 
 ## Fund or ETF: fund (FUND)
 
-A US mutual fund or ETF from SEC public data: the fact sheet, the look-through holdings with derivatives and counterparties, and the fund against its index. One row per fund or etf, keyed by TICKER. Read by the **funds** pack's connector `funds-store` (table `<root>/funds/fund/`). A **snapshot of public data**, captured 2026-10-26 from SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (drishti.py feed run funds), refreshed whole by its script (External data); 200 records. A refresh replaces the whole snapshot.
+A US mutual fund or ETF from SEC public data: the fact sheet, the look-through holdings with derivatives and counterparties, and the fund against its index. One row per fund or etf, keyed by TICKER. Read by the **funds** pack's connector `funds-store` (lake table `funds.fund`). A **snapshot of public data**, captured 2026-10-26 from SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (drishti.py feed run funds), refreshed whole by its script (External data); 200 records. A refresh replaces the whole snapshot.
 
 ### File layout
 
@@ -1665,7 +1665,7 @@ Fields no record above has, found by reading all 200 rows, with how many rows fi
 
 ## Funds holding a company: fund-holder (HELD)
 
-The reverse look-through: every fund of the pack that holds one us-equities company, by value, and the share of the company they own. One row per funds holding a company, keyed by TICKER. Read by the **funds** pack's connector `funds-store` (table `<root>/funds/fund-holder/`). A **snapshot of public data**, captured 2026-10-26 from SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (drishti.py feed run funds), refreshed whole by its script (External data); 586 records. A refresh replaces the whole snapshot.
+The reverse look-through: every fund of the pack that holds one us-equities company, by value, and the share of the company they own. One row per funds holding a company, keyed by TICKER. Read by the **funds** pack's connector `funds-store` (lake table `funds.fund-holder`). A **snapshot of public data**, captured 2026-10-26 from SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (drishti.py feed run funds), refreshed whole by its script (External data); 586 records. A refresh replaces the whole snapshot.
 
 ### File layout
 
@@ -1813,7 +1813,7 @@ None: all 586 rows were read, and every field any of them has is in the record a
 
 ## Funds tracking an index: index-funds (TRACK)
 
-The funds and ETFs of the pack that track one us-equities index, by net assets, with their cost and how closely they follow it. One row per funds tracking an index, keyed by INDEX. Read by the **funds** pack's connector `funds-store` (table `<root>/funds/index-funds/`). A **snapshot of public data**, captured 2026-10-26 from SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (drishti.py feed run funds), refreshed whole by its script (External data); 3 records. A refresh replaces the whole snapshot.
+The funds and ETFs of the pack that track one us-equities index, by net assets, with their cost and how closely they follow it. One row per funds tracking an index, keyed by INDEX. Read by the **funds** pack's connector `funds-store` (lake table `funds.index-funds`). A **snapshot of public data**, captured 2026-10-26 from SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (drishti.py feed run funds), refreshed whole by its script (External data); 3 records. A refresh replaces the whole snapshot.
 
 ### File layout
 

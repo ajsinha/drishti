@@ -33,9 +33,8 @@ dated-by: on request
 cadence:
   frequency: on change
   due: recomputed from its source kind (connector refresh 60s)
-storage:
-  connector: macro-groupings
-  plugin: derived
+binding-hint:
+  computed: true
 fields:
 - name: GROUP_ID
   type: id

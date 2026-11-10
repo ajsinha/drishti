@@ -36,11 +36,8 @@ dated-by: VALID_FROM
 cadence:
   frequency: on change
   due: before the first business date it applies to; a change takes effect from VALID_FROM and never rewrites an official record
-storage:
-  connector: risk-store
-  plugin: delta
-  domain: risk
-  table: <root>/risk/risk-type-map/
+binding-hint:
+  lake-table: risk.risk-type-map
   columns:
   - MAP_ID
   - SCOPE_TYPE

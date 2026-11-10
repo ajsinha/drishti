@@ -34,7 +34,7 @@ Every data type of `core` as a real record of the committed test data, every fie
 
 ## Book: book (BOOK)
 
-A trading book: owner desk, trades and risk. One row per book per business date, keyed by BOOK_ID. Read by the **core** pack's connector `reference-store` (table `<root>/reference/book/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (30 records); each later day's file holds only the records new or changed that day (30–30 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 1,800 rows in all.
+A trading book: owner desk, trades and risk. One row per book per business date, keyed by BOOK_ID. Read by the **core** pack's connector `reference-store` (lake table `reference.book`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (30 records); each later day's file holds only the records new or changed that day (30–30 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 1,800 rows in all.
 
 ### File layout
 
@@ -149,7 +149,7 @@ None: all 1,800 rows were read, and every field any of them has is in the record
 
 ## Holiday calendar: calendar (CAL)
 
-Business-day calendar (USNY, TARGET, GBLO, JPTO…). One row per holiday calendar per business date, keyed by CALENDAR_ID. Read by the **core** pack's connector `reference-store` (table `<root>/reference/calendar/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (4 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 4 rows in all.
+Business-day calendar (USNY, TARGET, GBLO, JPTO…). One row per holiday calendar per business date, keyed by CALENDAR_ID. Read by the **core** pack's connector `reference-store` (lake table `reference.calendar`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (4 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 4 rows in all.
 
 ### File layout
 
@@ -245,7 +245,7 @@ None: all 4 rows were read, and every field any of them has is in the record abo
 
 ## Central counterparty: ccp (CCP)
 
-A clearing house with its default fund and margin model. One row per central counterparty per business date, keyed by CCP_ID. Read by the **core** pack's connector `reference-store` (table `<root>/reference/ccp/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (5 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 5 rows in all.
+A clearing house with its default fund and margin model. One row per central counterparty per business date, keyed by CCP_ID. Read by the **core** pack's connector `reference-store` (lake table `reference.ccp`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (5 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 5 rows in all.
 
 ### File layout
 
@@ -320,7 +320,7 @@ None: all 5 rows were read, and every field any of them has is in the record abo
 
 ## Clearing account: clearing-account (CLR)
 
-An account at a CCP holding cleared trades and margin. One row per clearing account per business date, keyed by ACCOUNT_ID. Read by the **core** pack's connector `reference-store` (table `<root>/reference/clearing-account/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (5 records); each later day's file holds only the records new or changed that day (2–2 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 123 rows in all.
+An account at a CCP holding cleared trades and margin. One row per clearing account per business date, keyed by ACCOUNT_ID. Read by the **core** pack's connector `reference-store` (lake table `reference.clearing-account`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (5 records); each later day's file holds only the records new or changed that day (2–2 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 123 rows in all.
 
 ### File layout
 
@@ -426,7 +426,7 @@ None: all 123 rows were read, and every field any of them has is in the record a
 
 ## Counterparty: counterparty (CPTY)
 
-A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, country of risk and parent group. One row per counterparty per business date, keyed by COUNTERPARTY_ID. Read by the **core** pack's connector `reference-store` (table `<root>/reference/counterparty/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (24 records); each later day's file holds only the records new or changed that day (24–24 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 1,440 rows in all.
+A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, country of risk and parent group. One row per counterparty per business date, keyed by COUNTERPARTY_ID. Read by the **core** pack's connector `reference-store` (lake table `reference.counterparty`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (24 records); each later day's file holds only the records new or changed that day (24–24 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 1,440 rows in all.
 
 ### File layout
 
@@ -584,7 +584,7 @@ None: all 1,440 rows were read, and every field any of them has is in the record
 
 ## Counterparty group: counterparty-group (GRP)
 
-Economic group of related counterparties (obligor group). One row per counterparty group per business date, keyed by GROUP_ID. Read by the **core** pack's connector `reference-store` (table `<root>/reference/counterparty-group/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (23 records); each later day's file holds only the records new or changed that day (21–23 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 1,362 rows in all.
+Economic group of related counterparties (obligor group). One row per counterparty group per business date, keyed by GROUP_ID. Read by the **core** pack's connector `reference-store` (lake table `reference.counterparty-group`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (23 records); each later day's file holds only the records new or changed that day (21–23 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 1,362 rows in all.
 
 ### File layout
 
@@ -659,7 +659,7 @@ None: all 1,362 rows were read, and every field any of them has is in the record
 
 ## Desk: desk (DESK)
 
-A trading desk: books, limits and risk results. One row per desk per business date, keyed by DESK_ID. Read by the **core** pack's connector `reference-store` (table `<root>/reference/desk/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (10 records); each later day's file holds only the records new or changed that day (10–10 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 600 rows in all.
+A trading desk: books, limits and risk results. One row per desk per business date, keyed by DESK_ID. Read by the **core** pack's connector `reference-store` (lake table `reference.desk`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (10 records); each later day's file holds only the records new or changed that day (10–10 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 600 rows in all.
 
 ### File layout
 
@@ -773,7 +773,7 @@ None: all 600 rows were read, and every field any of them has is in the record a
 
 ## Issuer: issuer (ISS)
 
-Issuer of bonds and reference entity for CDS. One row per issuer per business date, keyed by ISSUER_ID. Read by the **core** pack's connector `reference-store` (table `<root>/reference/issuer/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (16 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 16 rows in all.
+Issuer of bonds and reference entity for CDS. One row per issuer per business date, keyed by ISSUER_ID. Read by the **core** pack's connector `reference-store` (lake table `reference.issuer`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (16 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 16 rows in all.
 
 ### File layout
 
@@ -861,7 +861,7 @@ None: all 16 rows were read, and every field any of them has is in the record ab
 
 ## Bank legal entity: legal-entity (LE)
 
-The bank's own booking entity. One row per bank legal entity per business date, keyed by ENTITY_ID. Read by the **core** pack's connector `reference-store` (table `<root>/reference/legal-entity/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (4 records); each later day's file holds only the records new or changed that day (4–4 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 240 rows in all.
+The bank's own booking entity. One row per bank legal entity per business date, keyed by ENTITY_ID. Read by the **core** pack's connector `reference-store` (lake table `reference.legal-entity`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (4 records); each later day's file holds only the records new or changed that day (4–4 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 240 rows in all.
 
 ### File layout
 
@@ -965,7 +965,7 @@ None: all 240 rows were read, and every field any of them has is in the record a
 
 ## Trader: trader (TRDR)
 
-A trader and their books. One row per trader per business date, keyed by TRADER_ID. Read by the **core** pack's connector `reference-store` (table `<root>/reference/trader/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (20 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 20 rows in all.
+A trader and their books. One row per trader per business date, keyed by TRADER_ID. Read by the **core** pack's connector `reference-store` (lake table `reference.trader`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (20 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 20 rows in all.
 
 ### File layout
 

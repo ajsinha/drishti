@@ -32,11 +32,8 @@ dated-by: snapshot
 cadence:
   frequency: daily
   due: the national-statistics feed's schedule (0 14 * * 1-5 UTC); a pull with nothing new writes nothing and the lake keeps its latest date
-storage:
-  connector: statistics-store
-  plugin: delta
-  domain: statistics
-  table: <root>/statistics/statistics-series/
+binding-hint:
+  lake-table: statistics.statistics-series
   test-data:
   - config/packs/economy/national-statistics/samples
 fields:

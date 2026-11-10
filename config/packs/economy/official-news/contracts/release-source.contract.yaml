@@ -33,11 +33,8 @@ dated-by: snapshot
 cadence:
   frequency: daily
   due: the official-news feed's schedule (0 23 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date
-storage:
-  connector: officialnews-store
-  plugin: delta
-  domain: officialnews
-  table: <root>/officialnews/release-source/
+binding-hint:
+  lake-table: officialnews.release-source
   test-data:
   - config/packs/economy/official-news/samples
 fields:

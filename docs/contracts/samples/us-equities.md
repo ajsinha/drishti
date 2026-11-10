@@ -29,7 +29,7 @@ Every data type of `us-equities` as a real record of the committed test data, ev
 
 ## US company: us-company (USEQ)
 
-A US listed company: key facts, ten years of annual financials, recent SEC filings and index memberships, from public data. One row per us company, keyed by TICKER. Read by the **us-equities** pack's connector `us-equities-store` (table `<root>/us-equities/us-company/`). A **snapshot of public data**, captured 2026-10-24 from SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities), refreshed whole by its script (External data); 586 records. A refresh replaces the whole snapshot.
+A US listed company: key facts, ten years of annual financials, recent SEC filings and index memberships, from public data. One row per us company, keyed by TICKER. Read by the **us-equities** pack's connector `us-equities-store` (lake table `us-equities.us-company`). A **snapshot of public data**, captured 2026-10-24 from SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities), refreshed whole by its script (External data); 586 records. A refresh replaces the whole snapshot.
 
 ### File layout
 
@@ -284,7 +284,7 @@ Fields no record above has, found by reading all 586 rows, with how many rows fi
 
 ## Index members: index-membership (IDX)
 
-An equity index's members (Dow 30, Nasdaq-100, S&P 500) as their tracking ETF reports holding them; a click opens the member's summary beside. One row per index members, keyed by INDEX. Read by the **us-equities** pack's connector `us-equities-store` (table `<root>/us-equities/index-membership/`). A **snapshot of public data**, captured 2026-10-24 from SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities), refreshed whole by its script (External data); 6 records. A refresh replaces the whole snapshot.
+An equity index's members (Dow 30, Nasdaq-100, S&P 500) as their tracking ETF reports holding them; a click opens the member's summary beside. One row per index members, keyed by INDEX. Read by the **us-equities** pack's connector `us-equities-store` (lake table `us-equities.index-membership`). A **snapshot of public data**, captured 2026-10-24 from SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities), refreshed whole by its script (External data); 6 records. A refresh replaces the whole snapshot.
 
 ### File layout
 
@@ -410,7 +410,7 @@ None: all 6 rows were read, and every field any of them has is in the record abo
 
 ## EDGAR filings browser: filing-feed (EDGAR)
 
-The filings browser: the latest SEC filings of the covered companies, of every form or one; a click opens a filing beside. One row per edgar filings browser, keyed by FEED. Read by the **us-equities** pack's connector `us-equities-store` (table `<root>/us-equities/filing-feed/`). A **snapshot of public data**, captured 2026-10-24 from SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities), refreshed whole by its script (External data); 6 records. A refresh replaces the whole snapshot.
+The filings browser: the latest SEC filings of the covered companies, of every form or one; a click opens a filing beside. One row per edgar filings browser, keyed by FEED. Read by the **us-equities** pack's connector `us-equities-store` (lake table `us-equities.filing-feed`). A **snapshot of public data**, captured 2026-10-24 from SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities), refreshed whole by its script (External data); 6 records. A refresh replaces the whole snapshot.
 
 ### File layout
 
@@ -543,7 +543,7 @@ None: all 6 rows were read, and every field any of them has is in the record abo
 
 ## SEC filing: filing (FILING)
 
-One SEC filing: its company, form, dates, 8-K items and its links on EDGAR (metadata only; the document stays on sec.gov). One row per sec filing, keyed by ACCESSION. Read by the **us-equities** pack's connector `us-equities-store` (table `<root>/us-equities/filing/`). A **snapshot of public data**, captured 2026-10-24 from SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities), refreshed whole by its script (External data); 11,691 records. A refresh replaces the whole snapshot.
+One SEC filing: its company, form, dates, 8-K items and its links on EDGAR (metadata only; the document stays on sec.gov). One row per sec filing, keyed by ACCESSION. Read by the **us-equities** pack's connector `us-equities-store` (lake table `us-equities.filing`). A **snapshot of public data**, captured 2026-10-24 from SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities), refreshed whole by its script (External data); 11,691 records. A refresh replaces the whole snapshot.
 
 ### File layout
 
@@ -647,7 +647,7 @@ None: all 11,691 rows were read, and every field any of them has is in the recor
 
 ## Financial fact: financial-fact (FACT)
 
-One financial concept of one company (revenue, net income, assets...) over up to ten fiscal years, from its 10-K XBRL filings. One row per financial fact, keyed by FACT_ID. Read by the **us-equities** pack's connector `us-equities-store` (table `<root>/us-equities/financial-fact/`). A **snapshot of public data**, captured 2026-10-24 from SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities), refreshed whole by its script (External data); 4,026 records. A refresh replaces the whole snapshot.
+One financial concept of one company (revenue, net income, assets...) over up to ten fiscal years, from its 10-K XBRL filings. One row per financial fact, keyed by FACT_ID. Read by the **us-equities** pack's connector `us-equities-store` (lake table `us-equities.financial-fact`). A **snapshot of public data**, captured 2026-10-24 from SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities), refreshed whole by its script (External data); 4,026 records. A refresh replaces the whole snapshot.
 
 ### File layout
 

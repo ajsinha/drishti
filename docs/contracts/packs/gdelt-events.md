@@ -38,7 +38,7 @@ What the world's news reported about one country yesterday (GDELT): events, tone
 | Id pattern | `^GDELT-` |
 | Dated by | `snapshot` |
 | Cadence | daily (due: the gdelt-events feed's schedule (30 8 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
-| Storage | connector `gdelt-store` (plugin `delta`), table `<root>/gdelt/event-country/` |
+| Binding hint | lake table `gdelt.event-country`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | config/packs/economy/gdelt-events/samples |
 | Worked example | [gdelt-events/event-country](../samples/gdelt-events.md#event-country) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 

@@ -26,7 +26,7 @@ Every data type of `oecd` as a real record of the committed test data, every fie
 
 ## OECD country: oecd-country (OECD)
 
-One OECD member: the latest leading indicator, unemployment, inflation and growth, and the members on a map shaded by inflation. One row per oecd country, keyed by COUNTRY_ID. Read by the **oecd** pack's connector `oecd-store` (table `<root>/oecd/oecd-country/`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/oecd/samples/oecd-country.jsonl`, 10 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+One OECD member: the latest leading indicator, unemployment, inflation and growth, and the members on a map shaded by inflation. One row per oecd country, keyed by COUNTRY_ID. Read by the **oecd** pack's connector `oecd-store` (lake table `oecd.oecd-country`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/oecd/samples/oecd-country.jsonl`, 10 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 
@@ -154,7 +154,7 @@ None: all 10 rows were read, and every field any of them has is in the record ab
 
 ## OECD series: oecd-series (OECDS)
 
-One OECD measure of one member by period: the history, the latest value and the change. One row per oecd series, keyed by SERIES_ID. Read by the **oecd** pack's connector `oecd-store` (table `<root>/oecd/oecd-series/`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/oecd/samples/oecd-series.jsonl`, 10 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+One OECD measure of one member by period: the history, the latest value and the change. One row per oecd series, keyed by SERIES_ID. Read by the **oecd** pack's connector `oecd-store` (lake table `oecd.oecd-series`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/oecd/samples/oecd-series.jsonl`, 10 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 

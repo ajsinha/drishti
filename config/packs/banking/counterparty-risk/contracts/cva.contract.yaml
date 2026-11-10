@@ -32,11 +32,8 @@ dated-by: business_date
 cadence:
   frequency: daily
   due: to be confirmed
-storage:
-  connector: credit-store
-  plugin: delta
-  domain: credit
-  table: <root>/credit/cva/
+binding-hint:
+  lake-table: credit.cva
   test-data:
   - data/testdata/counterparty-risk/cva
 fields:

@@ -30,11 +30,8 @@ dated-by: snapshot
 cadence:
   frequency: static
   due: quarterly, when the SEC publishes the data sets (drishti.py feed run funds)
-storage:
-  connector: funds-store
-  plugin: delta
-  domain: funds
-  table: <root>/funds/fund-holder/
+binding-hint:
+  lake-table: funds.fund-holder
   columns:
   - TICKER
   - NAME

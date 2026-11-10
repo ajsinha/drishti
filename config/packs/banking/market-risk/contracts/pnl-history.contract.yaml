@@ -33,11 +33,8 @@ dated-by: BUSINESS_DATE
 cadence:
   frequency: on change
   due: monthly at least, from a month-end run of the pricing system (the stress window review is monthly); any date may have one
-storage:
-  connector: risk-store
-  plugin: delta
-  domain: risk
-  table: <root>/risk/pnl-history/
+binding-hint:
+  lake-table: risk.pnl-history
   columns:
   - HIERARCHY
   - NODE_ID

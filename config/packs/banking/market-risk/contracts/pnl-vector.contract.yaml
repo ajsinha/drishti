@@ -33,11 +33,8 @@ dated-by: BUSINESS_DATE
 cadence:
   frequency: daily
   due: to be confirmed
-storage:
-  connector: risk-store
-  plugin: delta
-  domain: risk
-  table: <root>/risk/pnl-vector/
+binding-hint:
+  lake-table: risk.pnl-vector
   columns:
   - VALUE_TYPE
   - GRAIN

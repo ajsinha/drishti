@@ -32,11 +32,8 @@ dated-by: business_date
 cadence:
   frequency: daily
   due: to be confirmed
-storage:
-  connector: market-store
-  plugin: delta
-  domain: market
-  table: <root>/market/equity-vol-surface/
+binding-hint:
+  lake-table: market.equity-vol-surface
   test-data:
   - data/testdata/market-data/equity-vol-surface
 fields:

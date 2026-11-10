@@ -32,11 +32,8 @@ dated-by: business_date
 cadence:
   frequency: daily
   due: to be confirmed
-storage:
-  connector: credit-store
-  plugin: delta
-  domain: credit
-  table: <root>/credit/netting-set/
+binding-hint:
+  lake-table: credit.netting-set
   test-data:
   - data/testdata/counterparty-risk/netting-set
 fields:

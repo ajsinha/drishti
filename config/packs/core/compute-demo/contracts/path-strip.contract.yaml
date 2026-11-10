@@ -32,11 +32,8 @@ dated-by: snapshot
 cadence:
   frequency: static
   due: to be confirmed
-storage:
-  connector: compute-demo-store
-  plugin: delta
-  domain: compute-demo
-  table: <root>/compute-demo/path-strip/
+binding-hint:
+  lake-table: compute-demo.path-strip
   columns:
   - STRIP_ID
   - BOOK_ID

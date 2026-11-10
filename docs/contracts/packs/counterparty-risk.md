@@ -52,7 +52,7 @@ ISDA, GMRA or GMSLA master agreement with its key elections.
 | Id pattern | `^AGR-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `legal-store` (plugin `delta`), table `<root>/legal/agreement/` |
+| Binding hint | lake table `legal.agreement`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/counterparty-risk/agreement |
 | Worked example | [counterparty-risk/agreement](../samples/counterparty-risk.md#agreement) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -119,7 +119,7 @@ Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts
 | Id pattern | `^CSA-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `legal-store` (plugin `delta`), table `<root>/legal/csa/` |
+| Binding hint | lake table `legal.csa`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/counterparty-risk/csa |
 | Worked example | [counterparty-risk/csa](../samples/counterparty-risk.md#csa) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -195,7 +195,7 @@ Trades that net on close-out under one agreement and CSA, with exposure and coll
 | Id pattern | `^NS-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `credit-store` (plugin `delta`), table `<root>/credit/netting-set/` |
+| Binding hint | lake table `credit.netting-set`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/counterparty-risk/netting-set |
 | Worked example | [counterparty-risk/netting-set](../samples/counterparty-risk.md#netting-set) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -299,7 +299,7 @@ PFE limit by tenor bucket for a counterparty, with utilisation.
 | Id pattern | `^LIM-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `credit-store` (plugin `delta`), table `<root>/credit/credit-limit/` |
+| Binding hint | lake table `credit.credit-limit`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/counterparty-risk/credit-limit |
 | Worked example | [counterparty-risk/credit-limit](../samples/counterparty-risk.md#credit-limit) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -366,7 +366,7 @@ Credit, debit and funding valuation adjustments with sensitivities.
 | Id pattern | `^CVA-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `credit-store` (plugin `delta`), table `<root>/credit/cva/` |
+| Binding hint | lake table `credit.cva`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/counterparty-risk/cva |
 | Worked example | [counterparty-risk/cva](../samples/counterparty-risk.md#cva) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -441,7 +441,7 @@ Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier.
 | Id pattern | `^SACCR-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `credit-store` (plugin `delta`), table `<root>/credit/sa-ccr/` |
+| Binding hint | lake table `credit.sa-ccr`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/counterparty-risk/sa-ccr |
 | Worked example | [counterparty-risk/sa-ccr](../samples/counterparty-risk.md#sa-ccr) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -518,7 +518,7 @@ Collateral held and posted under a CSA, by asset, after haircuts.
 | Id pattern | `^COLL-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `collateral-store` (plugin `delta`), table `<root>/collateral/collateral-balance/` |
+| Binding hint | lake table `collateral.collateral-balance`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/counterparty-risk/collateral-balance |
 | Worked example | [counterparty-risk/collateral-balance](../samples/counterparty-risk.md#collateral-balance) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -583,7 +583,7 @@ A variation or initial margin call and its settlement status.
 | Id pattern | `^MC-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `collateral-store` (plugin `delta`), table `<root>/collateral/margin-call/` |
+| Binding hint | lake table `collateral.margin-call`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/counterparty-risk/margin-call |
 | Worked example | [counterparty-risk/margin-call](../samples/counterparty-risk.md#margin-call) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -656,7 +656,7 @@ Initial margin by risk class and product class.
 | Id pattern | `^SIMM-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `collateral-store` (plugin `delta`), table `<root>/collateral/simm/` |
+| Binding hint | lake table `collateral.simm`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/counterparty-risk/simm |
 | Worked example | [counterparty-risk/simm](../samples/counterparty-risk.md#simm) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -717,7 +717,7 @@ An upstream exposure simulation of a business date: its paths, its grid of futur
 | Id pattern | `^XR-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]+$` |
 | Dated by | `BUSINESS_DATE` |
 | Cadence | daily (due: to be agreed with the simulator's owner (EXPOSURE_GUIDE.md open question 1); before its paths) |
-| Storage | connector `exposure-store` (plugin `delta`), table `<root>/risk/simulation-run/` |
+| Binding hint | lake table `risk.simulation-run`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `RUN_ID`, `CALIBRATION`, `PATHS`, `STATUS`, `BATCH_ID` |
 | Test data | data/testdata/counterparty-risk/simulation-run |
 | Worked example | [counterparty-risk/simulation-run](../samples/counterparty-risk.md#simulation-run) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
@@ -787,7 +787,7 @@ One trade's mark to market on every path of a simulation run at one grid date, i
 | Id pattern | `^XR-[^~]+~.+~[0-9]+$` |
 | Dated by | `BUSINESS_DATE` |
 | Cadence | daily (due: to be agreed with the simulator's owner (EXPOSURE_GUIDE.md open question 1); a bank's run often lands 04:00-07:00) |
-| Storage | connector `exposure-store` (plugin `delta`), table `<root>/risk/exposure-path/` |
+| Binding hint | lake table `risk.exposure-path`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `TRADE_ID`, `NETTING_SET`, `COUNTERPARTY`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `LIMIT_LETTER`, `ASSET_CLASS`, `PRODUCT`, `SOURCE_SYSTEM`, `MATURITY_DATE`, `NOTIONAL`, `GRID_INDEX`, `GRID_DATE`, `RUN_ID`, `BATCH_ID`, `STATUS` |
 | Vectors | `MTM` |
 | Test data | data/testdata/counterparty-risk/exposure-path |
@@ -867,7 +867,7 @@ The exposure profile (EE, ENE, EEE, PFE at 95% and 99%, EE without collateral) a
 | Id pattern | — |
 | Dated by | `on request` |
 | Cadence | on change (due: computed on request and again when the date's inputs load (data-version trigger)) |
-| Storage | connector `exposure-engine` (plugin `reactive`) |
+| Binding hint | computed by Drishti, never bound; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 
 **Fields**
 
@@ -927,7 +927,7 @@ The official end-of-day exposure (current exposure, EPE, effective EPE, peak EE,
 | Id pattern | — |
 | Dated by | `BUSINESS_DATE` |
 | Cadence | daily (due: when the date's inputs load (the data-load signal), at start for the newest date without a record, or by an administrator) |
-| Storage | connector `exposure-results` (plugin `delta`), table `<root>/risk-results/exposure-official-cpty/` |
+| Binding hint | lake table `risk-results.exposure-official-cpty`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `HIERARCHY`, `NODE_ID`, `NODE_NAME`, `PARENT_ID`, `LEVEL`, `COUNTERPARTY`, `LEGAL_ENTITY`, `RESULT_VERSION`, `RUN_ID`, `PATHS`, `CE`, `EPE`, `EEPE`, `PEAK_EE`, `PEAK_PFE_95`, `PEAK_PFE_99`, `EAD_IMM`, `PEAK_PFE_DATE`, `PFE_95_1Y`, `PFE_95_5Y`, `EE_1Y`, `EE_5Y`, `NETTING_SETS`, `TRADES`, `FAILED_TRADES`, `PARTIAL_SETS` |
 | Partitioned by | `business_date` |
 
@@ -996,7 +996,7 @@ A netting set's MtM totals derived from the trade valuations of its live trades,
 | Id pattern | — |
 | Dated by | `on request` |
 | Cadence | on change (due: recomputed from its source kind (connector refresh 60s)) |
-| Storage | connector `ccr-derived` (plugin `derived`) |
+| Binding hint | computed by Drishti, never bound; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 
 **Fields**
 
@@ -1070,7 +1070,7 @@ A counterparty's MtM totals derived from the trade valuations of its live trades
 | Id pattern | — |
 | Dated by | `on request` |
 | Cadence | on change (due: recomputed from its source kind (connector refresh 60s)) |
-| Storage | connector `ccr-derived` (plugin `derived`) |
+| Binding hint | computed by Drishti, never bound; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 
 **Fields**
 

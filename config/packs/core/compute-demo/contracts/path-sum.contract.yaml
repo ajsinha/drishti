@@ -29,9 +29,8 @@ dated-by: on request
 cadence:
   frequency: on change
   due: computed on request and on its triggers
-storage:
-  connector: path-sum-python
-  plugin: reactive
+binding-hint:
+  computed: true
 fields:
 - name: SUM
   type: amount

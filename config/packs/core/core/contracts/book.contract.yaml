@@ -32,11 +32,8 @@ dated-by: business_date
 cadence:
   frequency: daily
   due: to be confirmed
-storage:
-  connector: reference-store
-  plugin: delta
-  domain: reference
-  table: <root>/reference/book/
+binding-hint:
+  lake-table: reference.book
   test-data:
   - data/testdata/core/book
 fields:

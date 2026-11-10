@@ -31,9 +31,8 @@ dated-by: on request
 cadence:
   frequency: on change
   due: computed on request and again when the equities or indices load (data-version trigger)
-storage:
-  connector: equity-analytics
-  plugin: reactive
+binding-hint:
+  computed: true
 fields:
 - name: EQUITY
   type: id

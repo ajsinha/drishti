@@ -32,11 +32,8 @@ dated-by: snapshot
 cadence:
   frequency: daily
   due: the gdelt-events feed's schedule (30 8 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date
-storage:
-  connector: gdelt-store
-  plugin: delta
-  domain: gdelt
-  table: <root>/gdelt/event-country/
+binding-hint:
+  lake-table: gdelt.event-country
   test-data:
   - config/packs/economy/gdelt-events/samples
 fields:

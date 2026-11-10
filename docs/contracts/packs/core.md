@@ -47,7 +47,7 @@ A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, cou
 | Id pattern | `^CP-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/counterparty/` |
+| Binding hint | lake table `reference.counterparty`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/core/counterparty |
 | Worked example | [core/counterparty](../samples/core.md#counterparty) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -166,7 +166,7 @@ Economic group of related counterparties (obligor group).
 | Id pattern | `^GRP-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/counterparty-group/` |
+| Binding hint | lake table `reference.counterparty-group`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/core/counterparty-group |
 | Worked example | [core/counterparty-group](../samples/core.md#counterparty-group) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -222,7 +222,7 @@ Issuer of bonds and reference entity for CDS.
 | Id pattern | `^ISS-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/issuer/` |
+| Binding hint | lake table `reference.issuer`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/core/issuer |
 | Worked example | [core/issuer](../samples/core.md#issuer) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -284,7 +284,7 @@ A clearing house with its default fund and margin model.
 | Id pattern | `^CCP-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/ccp/` |
+| Binding hint | lake table `reference.ccp`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/core/ccp |
 | Worked example | [core/ccp](../samples/core.md#ccp) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -339,7 +339,7 @@ The bank's own booking entity.
 | Id pattern | `^LE-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/legal-entity/` |
+| Binding hint | lake table `reference.legal-entity`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/core/legal-entity |
 | Worked example | [core/legal-entity](../samples/core.md#legal-entity) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -415,7 +415,7 @@ A trading book: owner desk, trades and risk.
 | Id pattern | `^BOOK-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/book/` |
+| Binding hint | lake table `reference.book`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/core/book |
 | Worked example | [core/book](../samples/core.md#book) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -493,7 +493,7 @@ A trading desk: books, limits and risk results.
 | Id pattern | `^DESK-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/desk/` |
+| Binding hint | lake table `reference.desk`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/core/desk |
 | Worked example | [core/desk](../samples/core.md#desk) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -569,7 +569,7 @@ A trader and their books.
 | Id pattern | `^TRDR-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/trader/` |
+| Binding hint | lake table `reference.trader`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/core/trader |
 | Worked example | [core/trader](../samples/core.md#trader) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -626,7 +626,7 @@ Business-day calendar (USNY, TARGET, GBLO, JPTO…).
 | Id pattern | `^CAL-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/calendar/` |
+| Binding hint | lake table `reference.calendar`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/core/calendar |
 | Worked example | [core/calendar](../samples/core.md#calendar) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -686,7 +686,7 @@ An account at a CCP holding cleared trades and margin.
 | Id pattern | `^CLR-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/clearing-account/` |
+| Binding hint | lake table `reference.clearing-account`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/core/clearing-account |
 | Worked example | [core/clearing-account](../samples/core.md#clearing-account) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 

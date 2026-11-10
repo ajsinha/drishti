@@ -32,11 +32,8 @@ dated-by: snapshot
 cadence:
   frequency: daily
   due: the world-development feed's schedule (30 6 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date
-storage:
-  connector: development-store
-  plugin: delta
-  domain: development
-  table: <root>/development/development-profile/
+binding-hint:
+  lake-table: development.development-profile
   test-data:
   - config/packs/economy/world-development/samples
 fields:

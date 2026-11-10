@@ -35,7 +35,7 @@ Every data type of `counterparty-risk` as a real record of the committed test da
 
 ## Master agreement: agreement (AGR)
 
-ISDA, GMRA or GMSLA master agreement with its key elections. One row per master agreement per business date, keyed by AGREEMENT_ID. Read by the **counterparty-risk** pack's connector `legal-store` (table `<root>/legal/agreement/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (24 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 24 rows in all.
+ISDA, GMRA or GMSLA master agreement with its key elections. One row per master agreement per business date, keyed by AGREEMENT_ID. Read by the **counterparty-risk** pack's connector `legal-store` (lake table `legal.agreement`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (24 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 24 rows in all.
 
 ### File layout
 
@@ -128,7 +128,7 @@ None: all 24 rows were read, and every field any of them has is in the record ab
 
 ## Collateral balance: collateral-balance (COLL)
 
-Collateral held and posted under a CSA, by asset, after haircuts. One row per collateral balance per business date, keyed by BALANCE_ID. Read by the **counterparty-risk** pack's connector `collateral-store` (table `<root>/collateral/collateral-balance/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (76 records); each later day's file holds only the records new or changed that day (76–76 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 4,560 rows in all.
+Collateral held and posted under a CSA, by asset, after haircuts. One row per collateral balance per business date, keyed by BALANCE_ID. Read by the **counterparty-risk** pack's connector `collateral-store` (lake table `collateral.collateral-balance`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (76 records); each later day's file holds only the records new or changed that day (76–76 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 4,560 rows in all.
 
 ### File layout
 
@@ -228,7 +228,7 @@ None: all 4,560 rows were read, and every field any of them has is in the record
 
 ## Credit limit: credit-limit (LIM)
 
-PFE limit by tenor bucket for a counterparty, with utilisation. One row per credit limit per business date, keyed by LIMIT_ID. Read by the **counterparty-risk** pack's connector `credit-store` (table `<root>/credit/credit-limit/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (24 records); each later day's file holds only the records new or changed that day (24–24 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 1,440 rows in all.
+PFE limit by tenor bucket for a counterparty, with utilisation. One row per credit limit per business date, keyed by LIMIT_ID. Read by the **counterparty-risk** pack's connector `credit-store` (lake table `credit.credit-limit`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (24 records); each later day's file holds only the records new or changed that day (24–24 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 1,440 rows in all.
 
 ### File layout
 
@@ -325,7 +325,7 @@ None: all 1,440 rows were read, and every field any of them has is in the record
 
 ## Credit support annex: csa (CSA)
 
-Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts. One row per credit support annex per business date, keyed by CSA_ID. Read by the **counterparty-risk** pack's connector `legal-store` (table `<root>/legal/csa/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (76 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 76 rows in all.
+Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts. One row per credit support annex per business date, keyed by CSA_ID. Read by the **counterparty-risk** pack's connector `legal-store` (lake table `legal.csa`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (76 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 76 rows in all.
 
 ### File layout
 
@@ -434,7 +434,7 @@ None: all 76 rows were read, and every field any of them has is in the record ab
 
 ## CVA / XVA: cva (CVA)
 
-Credit, debit and funding valuation adjustments with sensitivities. One row per cva / xva per business date, keyed by RESULT_ID. Read by the **counterparty-risk** pack's connector `credit-store` (table `<root>/credit/cva/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (76 records); each later day's file holds only the records new or changed that day (69–75 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 4,373 rows in all.
+Credit, debit and funding valuation adjustments with sensitivities. One row per cva / xva per business date, keyed by RESULT_ID. Read by the **counterparty-risk** pack's connector `credit-store` (lake table `credit.cva`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (76 records); each later day's file holds only the records new or changed that day (69–75 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 4,373 rows in all.
 
 ### File layout
 
@@ -538,7 +538,7 @@ None: all 4,373 rows were read, and every field any of them has is in the record
 
 ## Margin call: margin-call (MC)
 
-A variation or initial margin call and its settlement status. One row per margin call per business date, keyed by CALL_ID. Read by the **counterparty-risk** pack's connector `collateral-store` (table `<root>/collateral/margin-call/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (152 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 152 rows in all.
+A variation or initial margin call and its settlement status. One row per margin call per business date, keyed by CALL_ID. Read by the **counterparty-risk** pack's connector `collateral-store` (lake table `collateral.margin-call`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (152 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 152 rows in all.
 
 ### File layout
 
@@ -631,7 +631,7 @@ None: all 152 rows were read, and every field any of them has is in the record a
 
 ## Netting set: netting-set (NSET)
 
-Trades that net on close-out under one agreement and CSA, with exposure and collateral. One row per netting set per business date, keyed by NETTING_SET_ID. Read by the **counterparty-risk** pack's connector `credit-store` (table `<root>/credit/netting-set/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (76 records); each later day's file holds only the records new or changed that day (76–76 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 4,560 rows in all.
+Trades that net on close-out under one agreement and CSA, with exposure and collateral. One row per netting set per business date, keyed by NETTING_SET_ID. Read by the **counterparty-risk** pack's connector `credit-store` (lake table `credit.netting-set`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (76 records); each later day's file holds only the records new or changed that day (76–76 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 4,560 rows in all.
 
 ### File layout
 
@@ -783,7 +783,7 @@ None: all 4,560 rows were read, and every field any of them has is in the record
 
 ## SA-CCR exposure: sa-ccr (SACCR)
 
-Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier. One row per sa-ccr exposure per business date, keyed by CALC_ID. Read by the **counterparty-risk** pack's connector `credit-store` (table `<root>/credit/sa-ccr/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (76 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 76 rows in all.
+Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier. One row per sa-ccr exposure per business date, keyed by CALC_ID. Read by the **counterparty-risk** pack's connector `credit-store` (lake table `credit.sa-ccr`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (76 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 76 rows in all.
 
 ### File layout
 
@@ -885,7 +885,7 @@ None: all 76 rows were read, and every field any of them has is in the record ab
 
 ## ISDA SIMM initial margin: simm (SIMM)
 
-Initial margin by risk class and product class. One row per isda simm initial margin per business date, keyed by CALC_ID. Read by the **counterparty-risk** pack's connector `collateral-store` (table `<root>/collateral/simm/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (24 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 24 rows in all.
+Initial margin by risk class and product class. One row per isda simm initial margin per business date, keyed by CALC_ID. Read by the **counterparty-risk** pack's connector `collateral-store` (lake table `collateral.simm`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (24 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 24 rows in all.
 
 ### File layout
 
@@ -970,7 +970,7 @@ None: all 24 rows were read, and every field any of them has is in the record ab
 
 ## Exposure simulation run: simulation-run (XRUN)
 
-An upstream exposure simulation of a business date: its paths, its grid of future dates (primary and look-back), its model and seed; the exposure engine reads it beside the paths (EXPOSURE_GUIDE.md section 15.2). One row per simulation run and business date, keyed by RUN_ID; the newest complete run of a date answers. Read by the **counterparty-risk** pack's connector `exposure-store` (table `<root>/risk/simulation-run/`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (1 records), never a change on the day before.
+An upstream exposure simulation of a business date: its paths, its grid of future dates (primary and look-back), its model and seed; the exposure engine reads it beside the paths (EXPOSURE_GUIDE.md section 15.2). One row per simulation run and business date, keyed by RUN_ID; the newest complete run of a date answers. Read by the **counterparty-risk** pack's connector `exposure-store` (lake table `risk.simulation-run`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (1 records), never a change on the day before.
 
 ### File layout
 
@@ -1097,7 +1097,7 @@ None: all 1 rows were read, and every field any of them has is in the record abo
 
 ## Exposure path (a trade's MtM on every path at a grid date): exposure-path (XPATH)
 
-One trade's mark to market on every path of a simulation run at one grid date, in USD (the vector column MTM); the grain every exposure is netted, collateralised and counted from (EXPOSURE_GUIDE.md section 15.3). One row per trade, grid date and run per business date, keyed by PATH_ROW_ID (<run>~<trade>~<grid index>); sparse by maturity. Read by the **counterparty-risk** pack's connector `exposure-store` (table `<root>/risk/exposure-path/`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (7,540 records), never a change on the day before.
+One trade's mark to market on every path of a simulation run at one grid date, in USD (the vector column MTM); the grain every exposure is netted, collateralised and counted from (EXPOSURE_GUIDE.md section 15.3). One row per trade, grid date and run per business date, keyed by PATH_ROW_ID (<run>~<trade>~<grid index>); sparse by maturity. Read by the **counterparty-risk** pack's connector `exposure-store` (lake table `risk.exposure-path`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (7,540 records), never a change on the day before.
 
 ### File layout
 

@@ -31,9 +31,7 @@ dated-by: snapshot
 cadence:
   frequency: intraday
   due: on demand, when the connector is on
-storage:
-  connector: us-equities-prices
-  plugin: yfinance
+binding-hint: {}
 fields:
 - name: AS_OF
   type: unknown

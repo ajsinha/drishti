@@ -346,7 +346,7 @@ are fundamental, **8** engine inputs (`PNLV`, `SSET`, `VLIM`, `PORT`, `XRUN`, `X
 ```text
 kind: netting-set   mnemonic: NSET   pack: counterparty-risk   class: fundamental   source: xva-engine
 grain: One row per netting set per business date, keyed by NETTING_SET_ID.     id-pattern: ^NS-     cadence: daily
-storage: the credit-store connector, a Delta table <root>/credit/netting-set/, test data data/testdata/counterparty-risk/netting-set
+binding-hint: the lake table credit.netting-set, test data data/testdata/counterparty-risk/netting-set (the site binds the connector: config/bindings.yaml)
 fields: NETTING_SET_ID, TRADE_COUNT, NET_MTM (USD), COLLATERAL (USD, held less posted, after haircut), LIMIT, CVA, TRADES[], BY_ASSET[] ...
 links:  COUNTERPARTY → counterparty, AGREEMENT → agreement, CSA → csa, CREDIT_LIMIT → credit-limit, CVA_RESULT → cva, SACCR → sa-ccr,
         SIMM → simm, COLLATERAL_BALANCE → collateral-balance, LEGAL_ENTITY → legal-entity, TRADE_IDS → trade
