@@ -50,7 +50,32 @@ public final class LeakCheck {
      * The CGLIB class cache of {@code @Configuration} classes is never filled for a module: its loader is a {@code SmartClassLoader} that
      * marks its classes reloadable, so Spring generates their proxies uncached.
      */
+    /** A record of the kernel's own, whose methods replace the JDK's one-slot caches of the last record type seen. */
+    private record Probe(Probe other) {
+    }
+
+    /**
+     * The JDK keeps, per shared method handle of a record's generated {@code equals}, {@code hashCode} and {@code toString}, the last
+     * adaptation to a record component's type in a soft cache: a module's record type would stay there (softly) until memory runs low.
+     * Making the same methods for the kernel's own record puts the kernel's type in that slot instead.
+     */
+    static void releaseRecordMethodCaches() {
+        try {
+            java.lang.invoke.MethodHandles.Lookup l = java.lang.invoke.MethodHandles.lookup();
+            java.lang.invoke.MethodHandle getter = l.findGetter(Probe.class, "other", Probe.class);
+            java.lang.runtime.ObjectMethods.bootstrap(l, "equals", java.lang.invoke.MethodType.methodType(boolean.class, Probe.class, Object.class),
+                    Probe.class, "other", getter);
+            java.lang.runtime.ObjectMethods.bootstrap(l, "hashCode", java.lang.invoke.MethodType.methodType(int.class, Probe.class), Probe.class,
+                    "other", getter);
+            java.lang.runtime.ObjectMethods.bootstrap(l, "toString", java.lang.invoke.MethodType.methodType(String.class, Probe.class), Probe.class,
+                    "other", getter);
+        } catch (Throwable e) {
+            LOG.debug("the record methods' caches were not replaced: {}", e.toString());
+        }
+    }
+
     public static void clearSharedCaches(ClassLoader loader) {
+        releaseRecordMethodCaches();
         CachedIntrospectionResults.clearClassLoader(loader);
         ReflectionUtils.clearCache();
         AnnotationUtils.clearCache();
@@ -77,7 +102,7 @@ public final class LeakCheck {
                 break;
             }
             try {
-                Thread.sleep(10L * (i + 1));
+                Thread.sleep(Math.min(1000L, 25L * (i + 1)));   // a stopping engine's last tasks finish within seconds
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 break;

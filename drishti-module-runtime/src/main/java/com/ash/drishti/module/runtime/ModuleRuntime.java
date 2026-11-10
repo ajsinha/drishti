@@ -306,7 +306,7 @@ public final class ModuleRuntime implements AutoCloseable {
         if (check == null) {
             steps.add("7 stopped" + (hot ? "" : ": a class loader, if any, kept until the next restart"));
         } else {
-            leakFree = check.collected(20);
+            leakFree = check.collected(30);
             if (!leakFree) {
                 failures.add(check.words());
             }
@@ -342,6 +342,10 @@ public final class ModuleRuntime implements AutoCloseable {
             failures.addAll(contributions.withdraw(id, 7));
             if (m.context() != null) {
                 step(failures, m.context()::close);
+                // the host's conversion service, shared with the module's context, caches converters by the module's types (softly)
+                if (m.context().getBeanFactory().getConversionService() instanceof org.springframework.core.convert.support.GenericConversionService g) {
+                    step(failures, () -> g.removeConvertible(Void.class, Void.class));    // empties its converter cache
+                }
             }
         } finally {
             t.setContextClassLoader(before);

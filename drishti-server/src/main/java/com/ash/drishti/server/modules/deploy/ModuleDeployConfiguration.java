@@ -69,6 +69,31 @@ public class ModuleDeployConfiguration {
         return n == null || !n.running();
     }
 
+    static {
+        // a library object made while a module's code ran keeps that thread's context class loader: the Hadoop configuration of a
+        // Parquet codec (cached for the process) is given the kernel's back when the module leaves, so its loader can go
+        com.ash.drishti.common.ModuleLoaders.onLeave(ModuleDeployConfiguration::releaseLibraryLoaders);
+        // the JDK's one delay thread of CompletableFuture starts when first asked and keeps the access context of the code that asked:
+        // started here, by the kernel, before any module's code runs, so it never holds a module's protection domain (and loader)
+        new java.util.concurrent.CompletableFuture<Void>().completeOnTimeout(null, 1, java.util.concurrent.TimeUnit.MILLISECONDS);
+    }
+
+    static void releaseLibraryLoaders(ClassLoader leaving) {
+        try {
+            java.lang.reflect.Field f = Class.forName("org.apache.parquet.hadoop.CodecFactory").getDeclaredField("CODEC_BY_NAME");
+            f.setAccessible(true);
+            for (Object codec : List.copyOf(((java.util.Map<?, ?>) f.get(null)).values())) {
+                java.lang.reflect.Method getConf = codec.getClass().getMethod("getConf");
+                Object conf = getConf.invoke(codec);
+                if (conf != null && conf.getClass().getMethod("getClassLoader").invoke(conf) == leaving) {
+                    conf.getClass().getMethod("setClassLoader", ClassLoader.class).invoke(conf, ModuleDeployConfiguration.class.getClassLoader());
+                }
+            }
+        } catch (ReflectiveOperationException | RuntimeException | LinkageError e) {
+            LoggerFactory.getLogger(ModuleDeployConfiguration.class).debug("the Parquet codecs' configurations were not released: {}", e.toString());
+        }
+    }
+
     @Bean
     public ModuleAutoDeploy moduleAutoDeploy(ModuleDeployService deploy, ModuleNode node, Environment env) {
         return new ModuleAutoDeploy(modulesPath(env), deploy, node);
