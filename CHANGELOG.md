@@ -17,6 +17,17 @@
 
 ## Unreleased
 
+- **Explain → Why it moved answers in about a second, not a minute** (the drill's failing Explain test, and "Why it moved looks broken"):
+  opening the earlier date ran the load's maturity check, which read every trade (about 8,000) one document at a time because one union
+  connector of `trade` (a source system with no table yet, such as Calypso in a lake without it) made the union's columns unreadable. A union
+  member that holds nothing of the kind is now left out of the columnar read (it adds no rows; documents would find none there either).
+  The drawer's From and To dates and their Explain button wrap inside the drawer instead of running off its edge.
+- **Model editor: no inline styles** on the Relationships tab (the drawn paths' height and the DAX box take the editors' classes): the
+  console's CSP no longer refuses six `style` attributes there.
+- **Tests: one page-load budget of 10 s** (owner 2026-11-10): the page walk (`DRISHTI_PAGEWALK_BUDGET`, was 5 s) and Admin → Engines'
+  budget test (was 1 s; the server's 400 ms per-engine probe is unchanged). **Page-load statistics:** every page a browser test opens is
+  timed (`DRISHTI_PAGELOAD_LOG`, `drishti-console/tests/pageload_log.py`); the drill prints p95 and median per page, slowest first, and
+  writes them to [BENCHMARK.md](docs/admin/BENCHMARK.md) section 18.2 (`tools/drillkit/pageloads.py`). Slow pages are reported, not failed.
 - **VaR explorer: include matured items.** A switch beside Explain (`<drishti-switch>`, new in drishti-inputs) adds back the positions or trades,
   at the input's grain, that the load left out because they had matured. Off whenever the page opens; on, the tiles, a band with **Back to official**,
   the method strip, the tree's **of which matured** column and the path's CSV and JSON Lines say *includes N matured …*. The server computes it

@@ -59,6 +59,7 @@ class UnionConnectorsTest {
         private String name = "slice";
         private List<String> ids = List.of();
         private boolean numericIds;
+        private boolean noTable;
 
         @Override
         public PluginManifest manifest() {
@@ -70,6 +71,7 @@ class UnionConnectorsTest {
             name = c.setting("source-name", "slice");
             ids = Arrays.stream(c.setting("ids", "").split(",")).filter(s -> !s.isBlank()).toList();
             numericIds = Boolean.parseBoolean(c.setting("numeric", "false"));
+            noTable = Boolean.parseBoolean(c.setting("no-table", "false"));
         }
 
         @Override
@@ -101,7 +103,12 @@ class UnionConnectorsTest {
 
         @Override
         public Set<String> columnar(String kind) {
-            return Set.of("TRADE_ID", "SOURCE_SYSTEM");
+            return noTable ? Set.of() : Set.of("TRADE_ID", "SOURCE_SYSTEM");   // a table not there yet keeps no columns
+        }
+
+        @Override
+        public boolean holdsNone(String kind) {
+            return noTable;
         }
 
         @Override
@@ -185,5 +192,14 @@ class UnionConnectorsTest {
         assertThat(c.value("TRADE_ID", 0)).isEqualTo(1000001.0);
         assertThat(c.value("TRADE_ID", 4)).isEqualTo("MX-20000001");
         assertThat(c.businessDate()).isEqualTo(DAY);
+    }
+
+    @Test
+    void aSourceSystemWithNoTableYetLeavesTheOthersColumnsReadable() {
+        var cfg = threeSystems();
+        cfg.put("CALYPSO", new SourcesProperties.ConnectorSettings("slice", true, List.of("trade"),
+                Map.of("ids", "", "union", "true", "numeric", "false", "no-table", "true")));
+        ColumnSet c = router(cfg).columns("trade", List.of("TRADE_ID", "SOURCE_SYSTEM"), AsOf.of(DAY), Duration.ofSeconds(2)).orElseThrow();
+        assertThat(c.ids()).containsExactly("1000001", "1000002", "MX-20000001");
     }
 }
