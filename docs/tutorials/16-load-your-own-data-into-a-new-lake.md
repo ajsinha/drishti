@@ -1498,7 +1498,7 @@ its own format, Iceberg's by snapshot expiry and orphan-file removal under the 7
 tables are maintained here like the ones `drishti.py lake build --format iceberg` writes: the copy leaves the same build record
 (`<iceberg root>/_drishti-lake/tables-built.json`, with the Delta table's pack and kind).
 
-**Further:** [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#16-lake-maintenance-and-scheduling).
+**Further:** lake maintenance and its schedule are in [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#16-lake-maintenance-and-scheduling).
 
 ## Step 34 · BI's reader of the official results follows the format
 
