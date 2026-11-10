@@ -17,6 +17,12 @@
 
 ## Unreleased
 
+- **Developer guide: How to create …** ([DEVELOPER_GUIDE.md part 12](docs/guides/DEVELOPER_GUIDE.md#12-how-to-create-)): step-by-step
+  chapters for a module (manifest fields, the contributions, the three builds, the fifteen checks and what a failure means, install,
+  remove and reinstall), a connector plugin (plugin or module, `lib/` or inside a module, testkit, Admin → Connectors), a binding (needs,
+  the bindings file's keys, resolution order, four eyes, gated functions), a distribution (an annotated file, the themes, logo and
+  favicon), a compute (an engine inside a module, a Python engine through the worker SDK and a reactive connector, heavy parts and
+  placement) and a custom visual; then one worked example joining them end to end, linked to How Drishti fits together.
 - **How it fits together** ([HOW_IT_FITS.md](HOW_IT_FITS.md), [PDF](HOW_IT_FITS.pdf)): a root-level tour for newcomers with one SVG per
   idea (`docs/how-it-fits/`): the three blocks, a request's journey, what is inside a `.dmod` and its class lookup order, data bindings,
   placement, a module's life, distributions, and every configuration file with who writes it, when it is read, what it decides, its
