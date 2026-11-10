@@ -58,6 +58,8 @@
         <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-compiler-plugin</artifactId><version>3.14.1</version></plugin>
         <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-surefire-plugin</artifactId><version>3.5.6</version></plugin>
         <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-jar-plugin</artifactId><version>3.4.2</version></plugin>
+        <!-- the kernel's build runs spotless:check on every module of its reactor (this pom included); a module project may use it too -->
+        <plugin><groupId>com.diffplug.spotless</groupId><artifactId>spotless-maven-plugin</artifactId><version>3.10.2</version></plugin>
         <!-- a module project names the plugin in its <build><plugins> (the archetype does): these executions then apply -->
         <plugin>
         <groupId>com.ash.drishti</groupId>
