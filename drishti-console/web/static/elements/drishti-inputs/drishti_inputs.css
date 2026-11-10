@@ -152,6 +152,7 @@
 .di-form-body { display: flex; flex-direction: column; gap: 10px; }
 /* columns: the fields side by side, each as tall as its content (a short field never stretched to its row's tallest); a group (an
    object at the top) takes the whole row and lays its own fields out in the same columns, so a form of groups uses the page's width */
+.di-form[data-di-form] { flex: 1 1 auto; min-width: 0; }   /* a server-drawn form in a page's bar (a flex row) takes the room left, not its narrowest */
 .di-columns .di-form-body { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr)); align-items: start; }
 .di-columns .di-form-body > .di-t-object { grid-column: 1 / -1; }
 .di-columns .di-form-body > .di-t-object > .di-fieldset { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr)); align-items: start; align-content: start; }

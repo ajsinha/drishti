@@ -340,3 +340,14 @@ def test_endur_and_comswap_offer_only_their_sub_types_and_find_only_endur_swaps(
         assert len(rows) == 2 and all(r[si] == "ENDUR" and r[pi] == "ComSwap" for r in rows)
     finally:
         be.systems = False
+
+
+@pytest.mark.parametrize("theme", ["dark", "light"])
+def test_the_criteria_use_the_width_with_each_label_on_its_control(page, url, theme):
+    """The groups span the page, their fields sit several to a row, a label sits on its control and no field box is a tall empty box."""
+    from form_layout import assert_columns_layout
+    page.goto(url + "/form/trading", wait_until="load")
+    page.evaluate(f"document.documentElement.setAttribute('data-theme', '{theme}')")
+    page.locator(".qf-fields-host .di-form-body").wait_for()
+    m = assert_columns_layout(page, ".qf-fields-host", min_per_row=2)
+    assert len(m["groups"]) >= 3
