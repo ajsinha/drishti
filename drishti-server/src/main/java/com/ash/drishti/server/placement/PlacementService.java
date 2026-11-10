@@ -210,8 +210,8 @@ public final class PlacementService {
         }
         List<String> others = row.up().stream().filter(n -> !n.equals(me)).toList();
         if (others.isEmpty()) {
-            return new Route(false, null, row.placed().isEmpty() ? module + "'s " + part + " is not placed on any node"
-                    : module + "'s " + part + " is unavailable right now (none of its nodes is up: " + String.join(", ", row.placed()) + "); try again later");
+            return new Route(false, null, row.status().equals("not-placed") ? module + "'s " + part + " is not placed on any node"
+                    : module + "'s " + part + " is unavailable right now (none of its placed nodes is up" + (row.placed().isEmpty() ? "" : ": " + String.join(", ", row.placed())) + "); try again later");
         }
         String to = others.get(Math.floorMod(spread.getAndIncrement(), others.size()));
         return new Route(false, to, "placed on " + String.join(", ", row.placed()));

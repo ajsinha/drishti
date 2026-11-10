@@ -116,7 +116,7 @@ public final class PlacementResolver {
                     owner = election.owner(key).filter(up::contains).orElse(null);
                 }
                 any |= !placed.isEmpty();
-                String status = placed.isEmpty() ? "not-placed" : up.isEmpty() ? "unavailable" : "placed";
+                String status = t.isEmpty() ? "not-placed" : up.isEmpty() ? "unavailable" : "placed";
                 List<Cell> cells = new ArrayList<>();
                 for (NodeView n : nodes) {
                     State s = !placed.contains(n.id()) ? State.NOT_PLACED : !n.up() ? State.DOWN
