@@ -17,6 +17,12 @@
 
 ## Unreleased
 
+- **How it fits together** ([HOW_IT_FITS.md](HOW_IT_FITS.md), [PDF](HOW_IT_FITS.pdf)): a root-level tour for newcomers with one SVG per
+  idea (`docs/how-it-fits/`): the three blocks, a request's journey, what is inside a `.dmod` and its class lookup order, data bindings,
+  placement, a module's life, distributions, and every configuration file with who writes it, when it is read, what it decides, its
+  Admin page, how the files point at each other and `VAR BANK` in Drishti Risk traced through all of them. README's three-blocks section
+  shows the new picture (the old flow diagram is deleted) and links the page; the PDF is generated and
+  checked with the other guides' (`tools/docs/md_to_pdf.py`).
 - **Banking is a module** (2.9.11.i2 + i3, wave 2, option A; [KERNEL_AND_MODULES.md section 3.3](docs/architecture/KERNEL_AND_MODULES.md#33-the-manifest-moduleyaml),
   [DEVELOPER_GUIDE.md section 1.7](docs/guides/DEVELOPER_GUIDE.md#17-what-a-module-can-contribute), [DISTRIBUTIONS.md section 10](docs/architecture/DISTRIBUTIONS.md#10-how-it-works-as-built)).
   First-party modules: `origin: first-party` is verified against the `first-party.yaml` the build ships (ids and hash-list hashes); only

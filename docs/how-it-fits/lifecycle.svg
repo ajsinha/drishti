@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 600" width="760" height="600" role="img" aria-label="A module&#x27;s life: built with Maven, the standalone module tool or drishti.py module pack into a checked .dmod; deployed by uploading it once, planning, approval by a second administrator, then staging and verifying on every placed node before all activate together; a failure rolls every node back and an upgrade rolls node by node. On one node a .dmod dropped into the modules folder auto-deploys; a development folder loads unverified on a developer&#x27;s own server. Unloading keeps saved work, marked needs module X." font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'DejaVu Sans', Arial, sans-serif">
+<!-- Copyright (c) 2026 Ashutosh Sinha. All rights reserved. PROPRIETARY AND CONFIDENTIAL. -->
+<title>A module&#x27;s life</title>
+<desc>A module&#x27;s life: built with Maven, the standalone module tool or drishti.py module pack into a checked .dmod; deployed by uploading it once, planning, approval by a second administrator, then staging and verifying on every placed node before all activate together; a failure rolls every node back and an upgrade rolls node by node. On one node a .dmod dropped into the modules folder auto-deploys; a development folder loads unverified on a developer&#x27;s own server. Unloading keeps saved work, marked needs module X.</desc>
+<defs><marker id="a1a2333" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1a2333"/></marker><marker id="a1f5fbf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1f5fbf"/></marker><marker id="a1e8a55" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1e8a55"/></marker><marker id="ac62828" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#c62828"/></marker><marker id="ac27a12" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#c27a12"/></marker><marker id="a1d8c7f" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1d8c7f"/></marker><marker id="a5c6a80" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#5c6a80"/></marker><marker id="a12324f" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#12324f"/></marker><marker id="a6a4fb3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#6a4fb3"/></marker></defs>
+<rect x="0.5" y="0.5" width="759" height="599" rx="14" fill="#f7f9fc" stroke="#cdd6e3"/>
+<text x="24" y="38" font-size="20" font-weight="700" fill="#12324f" text-anchor="start">A module&#x27;s life</text>
+<text x="24" y="60" font-size="13" font-weight="400" fill="#5c6a80" text-anchor="start">Built one of three ways, stored once, planned, approved by a second person, applied in two phases.</text>
+<text x="24" y="100" font-size="12" font-weight="700" fill="#5c6a80" text-anchor="start">BUILD</text>
+<rect x="24" y="110" width="160" height="58" rx="8" fill="#e1ebfa" stroke="#1f5fbf" stroke-width="1.5"/>
+<text x="36" y="132" font-size="13" font-weight="700" fill="#1f5fbf" text-anchor="start">Maven</text>
+<text x="36" y="149.5" font-size="11.5" font-weight="400" fill="#1a2333" text-anchor="start">mvn verify</text>
+<rect x="192" y="110" width="160" height="58" rx="8" fill="#e1ebfa" stroke="#1f5fbf" stroke-width="1.5"/>
+<text x="204" y="132" font-size="13" font-weight="700" fill="#1f5fbf" text-anchor="start">the module tool</text>
+<text x="204" y="149.5" font-size="11.5" font-weight="400" fill="#1a2333" text-anchor="start">java -jar … pack</text>
+<rect x="360" y="110" width="160" height="58" rx="8" fill="#e1ebfa" stroke="#1f5fbf" stroke-width="1.5"/>
+<text x="372" y="132" font-size="13" font-weight="700" fill="#1f5fbf" text-anchor="start">the command line</text>
+<text x="372" y="149.5" font-size="11.5" font-weight="400" fill="#1a2333" text-anchor="start">drishti.py module pack</text>
+<path d="M526,139 L562,139" fill="none" stroke="#1f5fbf" stroke-width="1.8" marker-end="url(#a1f5fbf)"/>
+<rect x="566" y="110" width="170" height="58" rx="8" fill="#e1ebfa" stroke="#1f5fbf" stroke-width="1.5"/>
+<text x="578" y="132" font-size="13" font-weight="700" fill="#1f5fbf" text-anchor="start">name-1.0.0.dmod</text>
+<text x="578" y="150" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">checked: C1–C15</text>
+<text x="24" y="200" font-size="12" font-weight="700" fill="#5c6a80" text-anchor="start">DEPLOY, CLUSTER-FIRST</text>
+<rect x="24" y="210" width="131" height="58" rx="8" fill="#fbefd9" stroke="#c27a12" stroke-width="1.5"/>
+<text x="36" y="232" font-size="13" font-weight="700" fill="#c27a12" text-anchor="start">upload once</text>
+<text x="36" y="250" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">to the store</text>
+<path d="M155,239 L167,239" fill="none" stroke="#5c6a80" stroke-width="1.8" marker-end="url(#a5c6a80)"/>
+<rect x="169" y="210" width="131" height="58" rx="8" fill="#fbefd9" stroke="#c27a12" stroke-width="1.5"/>
+<text x="181" y="232" font-size="13" font-weight="700" fill="#c27a12" text-anchor="start">plan</text>
+<text x="181" y="250" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">each node&#x27;s steps</text>
+<path d="M300,239 L312,239" fill="none" stroke="#5c6a80" stroke-width="1.8" marker-end="url(#a5c6a80)"/>
+<rect x="314" y="210" width="131" height="58" rx="8" fill="#fbefd9" stroke="#c27a12" stroke-width="1.5"/>
+<text x="326" y="232" font-size="13" font-weight="700" fill="#c27a12" text-anchor="start">approve</text>
+<text x="326" y="250" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">a second admin</text>
+<path d="M445,239 L457,239" fill="none" stroke="#5c6a80" stroke-width="1.8" marker-end="url(#a5c6a80)"/>
+<rect x="459" y="210" width="131" height="58" rx="8" fill="#e3eaf3" stroke="#12324f" stroke-width="1.5"/>
+<text x="471" y="232" font-size="13" font-weight="700" fill="#12324f" text-anchor="start">phase 1</text>
+<text x="471" y="250" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">stage + verify</text>
+<path d="M590,239 L602,239" fill="none" stroke="#5c6a80" stroke-width="1.8" marker-end="url(#a5c6a80)"/>
+<rect x="604" y="210" width="131" height="58" rx="8" fill="#e3eaf3" stroke="#12324f" stroke-width="1.5"/>
+<text x="616" y="232" font-size="13" font-weight="700" fill="#12324f" text-anchor="start">phase 2</text>
+<text x="616" y="250" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">activate together</text>
+<rect x="24" y="280" width="350" height="58" rx="8" fill="#fbe3e3" stroke="#c62828" stroke-width="1.5"/>
+<text x="36" y="302" font-size="13" font-weight="700" fill="#c62828" text-anchor="start">a failure on any node</text>
+<text x="36" y="320" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">rolls every node back; the page says which and why</text>
+<rect x="386" y="280" width="350" height="58" rx="8" fill="#dcf3f0" stroke="#1d8c7f" stroke-width="1.5"/>
+<text x="398" y="302" font-size="13" font-weight="700" fill="#1d8c7f" text-anchor="start">an upgrade</text>
+<text x="398" y="320" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">rolls node by node; the others serve the old one</text>
+<text x="24" y="372" font-size="12" font-weight="700" fill="#5c6a80" text-anchor="start">ON ONE NODE, AND WHILE DEVELOPING</text>
+<rect x="24" y="382" width="350" height="76" rx="8" fill="#dff2ea" stroke="#1e8a55" stroke-width="1.5"/>
+<text x="36" y="404" font-size="13" font-weight="700" fill="#1e8a55" text-anchor="start">auto-deploy: &lt;data&gt;/modules/</text>
+<text x="36" y="422" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">drop a .dmod in: verified and loaded in seconds;</text>
+<text x="36" y="439" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">take it out: unloaded. Off in a cluster.</text>
+<rect x="386" y="382" width="350" height="76" rx="8" fill="#ffffff" stroke="#5c6a80" stroke-width="1.5"/>
+<text x="398" y="404" font-size="13" font-weight="700" fill="#5c6a80" text-anchor="start">development: drishti.modules.dev</text>
+<text x="398" y="422" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">loads a build folder, reloads on rebuild;</text>
+<text x="398" y="439" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">refused in a cluster and in production</text>
+<text x="24" y="492" font-size="12" font-weight="700" fill="#5c6a80" text-anchor="start">UNLOAD</text>
+<rect x="24" y="502" width="712" height="62" rx="8" fill="#ffffff" stroke="#5c6a80" stroke-width="1.5"/>
+<text x="36" y="524" font-size="12.5" font-weight="400" fill="#1a2333" text-anchor="start">switched off: its API answers 404 DRS-1025; removed: 410 DRS-1028 and &quot;no longer installed&quot; pages</text>
+<text x="36" y="541.5" font-size="12.5" font-weight="400" fill="#1a2333" text-anchor="start">saved Sutras, reports, dashboards, alert rules: kept, marked &quot;needs module X&quot;; a reinstall restores them</text>
+</svg>
