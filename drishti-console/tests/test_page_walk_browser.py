@@ -43,7 +43,8 @@ KEY_PAGES = ["/", "/var?scope=BANK", go("VAR BANK EXPLAIN"), "/pivot?preset=mr",
 THEMES = {"dark": "terminal", "light": "light"}
 #: the business date the page walk's lake ends on: fixed, so the visual snapshots' figures and dates are the same on every run
 SNAPSHOT_DATE = "2026-11-06"
-#: the visual snapshots: name -> (address, {tolerance, mask: more selectors covered, wait: a script true once the page has drawn});
+#: the visual snapshots: name -> (address, {tolerance, mask: more selectors covered, idle: wait for the network to go quiet, wait: a
+#: script true once the page has drawn});
 #: a lens's Home is captured after entering the lens (its page asks to confirm: a POST), then the lens is left the same way
 KEY_SNAPSHOTS: dict[str, tuple[str, dict]] = {
     "home": ("/", {}),
@@ -55,13 +56,13 @@ KEY_SNAPSHOTS: dict[str, tuple[str, dict]] = {
     "var-bank": ("/var?scope=BANK", {}),
     "var-desk": ("/var?scope=DESK:DESK-RATES", {}),
     "var-basket": ("/var?scope=BASKET:PF-ASHA-UNWIND", {}),
-    "why-it-moved": (go("VAR BANK EXPLAIN"), {"wait": "(() => { const p = document.querySelector('[data-explain-page]'); const w = document.querySelector('[data-dx-part=\"why\"] [data-dx-why]');"
+    "why-it-moved": (go("VAR BANK EXPLAIN"), {"idle": True, "wait": "(() => { const p = document.querySelector('[data-explain-page]'); const w = document.querySelector('[data-dx-part=\"why\"] [data-dx-why]');"
                                                        " return p && p.dataset.state === 'ready' && w && w.dataset.painted === 'waterfall'; })()"}),
-    "mr-cube": ("/pivot?preset=mr", {"wait": "!/Computing the grid/i.test(document.querySelector('#main').innerText)"}),
+    "mr-cube": ("/pivot?preset=mr", {"idle": True, "wait": "!/Computing the grid/i.test(document.querySelector('#main').innerText)"}),
     "pivot": ("/pivot", {}),
     "bi-report": ("/bi/r/file:report:desk-wall", {}),
     "frtb": (go("FRSA BANK"), {}),
-    "simm": (go("SIMM"), {}),
+    "simm": (go("SIMM"), {"idle": True, "wait": "!/Loading/i.test(document.querySelector('#main').innerText)"}),
     "exposure": (go("EXP"), {}),
     "form": ("/forms", {}),
     "trades": (go("TRD"), {}),
@@ -167,10 +168,11 @@ def test_the_key_pages_look_as_approved(stack, browser, request, tmp_path):
                     r = open_page(pg, base, href)
                     if href.startswith("/lens/"):
                         _confirm(pg, base)
-                    try:   # the page's last calls answered (a header's figures, a grid's rows), then its own condition
-                        pg.wait_for_load_state("networkidle", timeout=20_000)
-                    except Exception:  # noqa: BLE001 - a page that keeps a stream open: its own wait decides
-                        pass
+                    if opts.get("idle"):   # the page's last calls answered (a header's figures, a grid's rows)
+                        try:
+                            pg.wait_for_load_state("networkidle", timeout=10_000)
+                        except Exception:  # noqa: BLE001 - a call still open: its own wait decides
+                            pass
                     if opts.get("wait"):
                         _until(pg, opts["wait"])
                     faults += [f"{name}: {f}" for f in r["faults"]]
