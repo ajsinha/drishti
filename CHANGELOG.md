@@ -17,6 +17,14 @@
 
 ## Unreleased
 
+- **The module runtime** (2.9.11.i2 + i3, wave 1; new Maven module `drishti-module-runtime`,
+  [KERNEL_AND_MODULES.md section 10.4](docs/architecture/KERNEL_AND_MODULES.md#104-one-module-runtime-library-two-hosts),
+  [DEVELOPER_GUIDE.md section 1.5](docs/guides/DEVELOPER_GUIDE.md#15-the-module-runtime)): the `.dmod` package (pack, unpack, the
+  `DMOD.MF` hash list), the `module.yaml` manifest with every field of the design, discovery from the module folders (`active.yaml` or the
+  highest version), the checks V1–V8 refusing with plain words (manifest, hashes, no executables, no kernel API classes in a jar, API ranges,
+  dependencies with cycles and missing ones, licence, claims against reserved names and other modules, data needs, memory budget), a class
+  loader and a child Spring context per module, the live route table (200, 308, 404 off, 410 removed), the registry of contributions and
+  the unload sequence in the design's order with a class-loader leak check. A library only: the kernel with no modules behaves as before.
 - **Explain → Why it moved answers in about a second, not a minute** (the drill's failing Explain test, and "Why it moved looks broken"):
   opening the earlier date ran the load's maturity check, which read every trade (about 8,000) one document at a time because one union
   connector of `trade` (a source system with no table yet, such as Calypso in a lake without it) made the union's columns unreadable. A union

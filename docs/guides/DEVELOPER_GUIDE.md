@@ -77,6 +77,7 @@ All Java code lives under the package `com.ash.drishti`. The parent POM (`pom.xm
 | `drishti-memlake` | `memlake` | The in-memory lake, plain Java with no Spring ([IN_MEMORY_LAKE.md](../architecture/DATA_ARCHITECTURE.md#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk)): the `mem://` memory stores (Parquet files in off-heap chunks under a hard cap; registered with `drishti-lakeio` as the `mem` storage provider), the tables and their replenish jobs, the eviction ladder, automated compaction, the owner node's binding, the never-on-disk guard and the host checks. The server keeps only its Spring wiring (`server.memlake`: settings binding, beans, the Admin, Lakes controller). | `MemoryLake`, `MemoryLakeSettings`, `Retention`, `MemoryBinding`, `store.MemoryStores`, `store.MemoryStorage` |
 | `drishti-lakeload` | `lakeload` | The parallel lake loader: JSON Lines from a folder or S3 into Delta or Iceberg, readers, parsers and writers on every core, memory bounded by `memory.budget-mb` (sorted runs spilled to disk), one commit per business date ([PARALLEL_LOADER.md](../architecture/DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-drishti-lakeload)). | `LakeLoad`, `Loader`, `RowParser`, `Runs`, `DeltaTarget`, `IcebergTarget` |
 | `drishti-testkit` | `testkit` | Contract tests every source plugin of a kind must pass. | `DatedSourceContract`, `MessageSourceContract`, `BrokerOutage` |
+| `drishti-module-runtime` | `module.runtime` | The module runtime ([§1.5](#15-the-module-runtime)): the `.dmod` package and its hash list, the manifest, verification V1–V8, discovery, the dependency resolver, a class loader and a child Spring context per module, the live route table, the registry of contributions and the unload sequence with its leak check. Spring and Jackson only; one implementation for the kernel and, from i4, the console. | `ModuleRuntime`, `DmodManifest`, `Dmod`, `ModuleVerifier`, `DependencyResolver`, `ModuleClassLoader`, `RouteTable`, `Contributions`, `LeakCheck` |
 | `drishti-server` | `server` | The Spring Boot application: REST and SSE controllers, security, alerts, Sutra governance, and one sub-package per feature area (`admin`, `ai`, `alerts`, `bi`, `calc`, `cli`, `collab`, `connectors`, `deploy`, `design`, `dist`, `embed`, `explain`, `governance`, `layout`, `loads`, `notify`, `pivot`, `registry`, `reports`). `bi` is the BI engine (section 4.4). | `DrishtiApplication`, `api.*Controller`, `security.Entitlements`, `security.TokenFilter`, `alerts.AlertEngine`, `governance.SutraGovernance`, `bi.mq.MqService`, `bi.engine.QueryService` |
 | `drishti-it` | `it` | Repository-wide rules, as tests only. | `ArchitectureRulesTest`, `LicenseHeaderTest`, `SourceFileSizeTest`, `NoBlockingUnderSynchronizedTest` |
 | `drishti-benchmarks` | `benchmarks` | JMH benchmarks of the hot paths (fingerprint, Rachana-EL, formats, cold inference). | `HotPathBenchmark` |
@@ -172,6 +173,36 @@ server nor Spring, and the lake engines and connectors never see `memlake` (they
 | `data/` | The **data folder** (`DRISHTI_DATA_DIR`): everything Drishti writes at run time, all git-ignored except `testdata/`: `delta/` (the demo lakes), `bi-store/` (BI columns and rollups), `connectors/` (`generated/` and `history/`), `identity/`, `feeds/`, `packs/` (`added.yaml`, installed archives), `loads/`, `governance/`, `collab/`, `reports/`, `qa/` (the QA profile), `build/` (tool output and staging), `drill/` (the drill's logs) |
 | `docs/` | These documents, by audience: `guides/` (getting started, user, developer, API, Rachana, reports and troubleshooting guides), `tutorials/` (18 hands-on tutorials), `connectors/` (the connector and plugin guides, a design document per store, demo data), `admin/` (operations, configuration, users, performance; the runbooks are in OPERATIONS_GUIDE.md), `architecture/` (architecture, design notes and the ADRs under `architecture/adr/`); `README.md` is the index; reference mockups and logos under `requirements/` |
 | `.github/workflows/fast.yml`, `windows.yml` | CI: `fast.yml` runs `./mvnw -B -q verify` and the header check on Java 21 and 25 and `pytest` for the console on Python 3.13; `windows.yml` builds on Windows, runs the native Delta engine, the Delta connector and server tests, and asks a server on a small lake for a view, a search and a past date |
+
+### 1.5 The module runtime
+
+`drishti-module-runtime` loads **modules**: separately built packages (`<id>-<version>.dmod`) installed unpacked under a module folder
+as `<folder>/<id>/<version>/` with the package beside them (the design: [KERNEL_AND_MODULES.md sections 3, 4, 9.8 and 12](../architecture/KERNEL_AND_MODULES.md#3-the-module-package-dmod)).
+It is a library; a host (the kernel, from i4 also the console) makes one `ModuleRuntime` and adds only its own kind of contribution through
+`ModuleHost`. With no module folder, or an empty one, it does nothing.
+
+```java
+ModuleRuntime rt = new ModuleRuntime(KernelFacts.ofKernel(), kernelContext, kernelClassLoader, host, tombstonesDir);
+List<ModuleHealth> rows = rt.start(List.of(modulesDir), ModuleDiscovery.readActive(activeYaml), id -> enabled(id));
+rt.routes().lookup("/m/genomics/variants/c1");          // 200 draw it, 308 moved, 404 off, 410 removed (a tombstone)
+rt.unload("genomics", ModuleRuntime.Leave.REMOVE, hot);  // the design's steps 1-9; hot drops the class loader and checks it is collected
+```
+
+| Step | Class | What it does |
+|---|---|---|
+| Package | `Dmod` | packs a folder (`module.yaml` first and stored, `META-INF/DMOD.MF`: `<sha-256>  <path>` per file), unpacks one (a path leaving the folder is refused), verifies an unpacked folder and the package beside it against the hash list. Signatures (`DMOD.SIG`) arrive in j: an absent one is accepted with a Health note |
+| Manifest | `DmodManifest` | every field of the design's `module.yaml`; V1 refuses an unknown field, a missing required one, `format` other than 1, an unreadable version or range, and `taint` |
+| Discovery | `ModuleDiscovery` | `<folder>/<id>/<version>/module.yaml` in folder order (first wins), the version `active.yaml` names, else the highest |
+| Checks | `ModuleVerifier`, `Claims` | V1 (id and version name the folders), V2 (hashes; no executables; no kernel API classes in a jar; native code only when declared and allowed), V3 (the API ranges the host knows), V5 (licence), V6 (API prefix, aliases, words, kinds and lenses against the kernel's reserved names and every loaded module), V7 (data needs parse; satisfiable when the host knows its kinds), V8 (memory budget: a warning, a refusal when strict) |
+| Order | `DependencyResolver` | V4: topological by `requires`, then by id; a missing, out-of-range, refused or conflicting module refuses its dependants; a cycle is refused with its path |
+| Code | `ModuleClassLoader` | the JDK, then the shared list (`KernelFacts.SHARED`: the kernel API, Spring, Jackson, SLF4J, Arrow, Micrometer, Jakarta) from the kernel, then the module's own jars child-first; every other kernel class is invisible. It is a Spring `SmartClassLoader`, so Spring keeps no cache of the module's classes |
+| Context | `ModuleRuntime` | one `AnnotationConfigApplicationContext` per module, parent the host's, with the module's loader; `java.spring` classes and `java.entry` registered |
+| Routes | `RouteTable` | the API namespace `/api/v1/<prefix>/…` and the format-2 `plugin.yaml` routes under `/m/<id>/…`, with aliases; immutable snapshots swapped atomically, looked up without a lock |
+| Unload | `Contributions`, `LeakCheck` | a host records each surface with the action that withdraws it; unload runs the design's steps in order, a failing step does not stop the next (its entry stays for a retry); hot unload drops the loader and checks it is collected |
+
+A refused module is absent: no class loaded, no route, only its Health row with the check (`V1`–`V8`, `START`) and the words. The tests
+build a small module from Java source at test time (`TestModule`), load, route and unload it (leak-free, five times over) and cover every
+refusal.
 
 ## 2. Building and running from source
 

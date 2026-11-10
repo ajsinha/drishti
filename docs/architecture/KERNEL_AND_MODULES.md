@@ -16,7 +16,7 @@
 
 # The kernel and its modules
 
-**Status: design, not built.** Written for 2.9.11.i, now split into **i1, i2, i3 and i4** (section 14.2), on the product owner's request of 2026-11-08: Drishti
+**Status: design; P1 built (the kernel API, section 2.3); the module runtime built (section 10.4), the rest of P2 and P3 being built in 2.9.11.i2 + i3.** Written for 2.9.11.i, now split into **i1, i2, i3 and i4** (section 14.2), on the product owner's request of 2026-11-08: Drishti
 becomes a domain-free **kernel** for BI and aggregation; capabilities arrive as separately built, signed **modules** loaded from
 folders; connectors stay the kernel's; a **distribution file** white-labels the product. Banking is the first module and the worked example
 throughout. The same day the owner decided the three building blocks (section 1.1): the **Drishti Kernel**, the **Drishti Console**, now a
@@ -1493,6 +1493,13 @@ The runtime is the glue drawn in section 1.1's picture.
   ranges, claims, reserved names); the **class loader per module** with its export list; the **live route table** (immutable snapshots
   swapped on events, section 9.8); tombstones; the **unload sequence's** generic steps and the inventory that the **absence suite** records
   (section 12).
+- **Built** in `drishti-module-runtime` (package `com.ash.drishti.module.runtime`; [DEVELOPER_GUIDE.md section 1.5](../guides/DEVELOPER_GUIDE.md#15-the-module-runtime)):
+  the `.dmod` packer, unpacker and hash list (`Dmod`; V2 verifies the hashes, an absent signature is a Health note until j), the manifest
+  with every field of section 3.3 (`DmodManifest`), discovery (`ModuleDiscovery`), V1–V3 and V5–V8 (`ModuleVerifier`, `Claims`), V4 and the
+  load order (`DependencyResolver`), the class loader per module (`ModuleClassLoader`, a Spring `SmartClassLoader` so no Spring cache keeps a
+  module's classes), the child Spring context, the live route table (`RouteTable`), the registry of contributions with the unload order of
+  section 12.2 (`Contributions`) and the leak check (`LeakCheck`), behind one facade (`ModuleRuntime`) and the host's hooks (`ModuleHost`).
+  Its tests build a module at test time and load, route and unload it leak-free. The kernel's start calls it once banking is a module.
 - **Two hosts.** The **kernel** uses it for a module's server parts: Java and its child Spring context, Python items, packs, REST. The
   **console** uses it for the `console/` part: declared routes, the per-module Jinjava namespace, static files and the domain Elements
   library, Help pages and **context builders**. Each host adds only its own kind of contribution. No check, loader or route table exists
