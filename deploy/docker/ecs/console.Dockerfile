@@ -15,21 +15,21 @@
 # Drishti console image for Amazon ECS with EFS, a separate container from the server (docs/architecture/AWS_DEPLOYMENT.md
 # section 6). Build from the repository root:
 #   docker build -f deploy/docker/ecs/console.Dockerfile -t drishti-console-ecs:2.9.11.g .
-# Calc's Python runtime (Pyodide) and DuckDB-Wasm are fetched in the first stage (pinned, SHA-256 checked), so a running
-# console needs no internet.
+# Calc's Python runtime (Pyodide) is fetched in the first stage (pinned, SHA-256 checked), so a running console needs no
+# internet; the stage sees only the fetch script and the vendored libraries, so a console change does not fetch it again.
 FROM python:3.13-slim AS pyodide
 WORKDIR /src
 COPY tools/fetch-pyodide.sh tools/fetch-pyodide.sh
-COPY tools/fetch-duckdb-wasm.sh tools/fetch-duckdb-wasm.sh
-COPY drishti-console/ drishti-console/
-RUN bash tools/fetch-pyodide.sh && bash tools/fetch-duckdb-wasm.sh && rm -rf /root/.cache/drishti
+COPY drishti-console/web/static/vendor/ drishti-console/web/static/vendor/
+RUN bash tools/fetch-pyodide.sh && rm -rf /root/.cache/drishti
 
 FROM python:3.13-slim
 RUN useradd --system --uid 10001 drishti
 WORKDIR /opt/drishti/console
 COPY drishti-console/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-COPY --from=pyodide /src/drishti-console/ .
+COPY drishti-console/ .
+COPY --from=pyodide /src/drishti-console/web/static/vendor/pyodide/ web/static/vendor/pyodide/
 # the help centre renders the repository's documents; packs as shipped, outside the EFS paths (as in the server image)
 COPY docs/ /opt/drishti/docs/
 COPY config/packs/ /opt/drishti/shipped/packs/
