@@ -152,7 +152,7 @@ class NetFolder(ServerCase):
         """QA1-202, QA1-206: the table the server's AdvertiseUrlCasesTest reads; port 0 or past 65535, %-escapes, a trailing dot refused,
         a global IPv6 address taken, each with the server's reason."""
         import hostaddr
-        table = pathlib.Path(__file__).resolve().parent.parent / "drishti-net/src/test/resources/net/advertise-urls.tsv"
+        table = pathlib.Path(__file__).resolve().parent.parent / "net/drishti-net/src/test/resources/net/advertise-urls.tsv"
         cases = [ln.split("\t") for ln in table.read_text(encoding="utf-8").splitlines() if ln.strip() and not ln.startswith("#")]
         self.assertGreater(len(cases), 30)
         os.environ["DRISHTI_NET_SECRET"] = KEY

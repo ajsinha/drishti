@@ -57,7 +57,7 @@ import lakeconfig  # noqa: E402  (the demo lake root's variable)
 WORK = ROOT / "data" / "tmp" / "cssvis"
 MAIN = Path("/home/ashutosh/IdeaProjects/drishti")
 VENV_PY = Path(os.environ.get("CSSVIS_PYTHON", str(MAIN / "drishti-console" / ".venv" / "bin" / "python")))
-JAR = Path(os.environ.get("CSSVIS_JAR", str(MAIN / "drishti-server" / "target" / "drishti-server-2.9.11.g-exec.jar")))
+JAR = Path(os.environ.get("CSSVIS_JAR", str(MAIN / "kernel/drishti-server" / "target" / "drishti-server-2.9.11.g-exec.jar")))
 JAVA = Path(os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64")) / "bin" / "java"
 SERVER_PORT = int(os.environ.get("CSSVIS_SERVER_PORT", 18991))
 CONSOLE_PORTS = (int(os.environ.get("CSSVIS_CONSOLE_PORT_A", 17991)), int(os.environ.get("CSSVIS_CONSOLE_PORT_B", 17992)))

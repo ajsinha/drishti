@@ -40,7 +40,7 @@ every kind; some come from the demo swap `IRS-48213`.
 8. [Compatibility and versioning](#8-compatibility-and-versioning)
 9. [The JSON Schema](#9-the-json-schema)
 
-The code: `drishti-engine/src/main/java/com/ash/drishti/engine/view/` (`ViewModel.java`, `PanelData.java`,
+The code: `kernel/drishti-engine/src/main/java/com/ash/drishti/engine/view/` (`ViewModel.java`, `PanelData.java`,
 `Emptiness.java`, `MaskCount.java`, `ScreenGrid.java`, `ViewModelSchema.java`), the binders that fill `data`
 (`engine/bind/Binder.java`, `ChartBinder.java`, `PivotBinder.java`, `MapBinder.java`), and the live code
 (`engine/live/PatchDiffer.java`, `Patch.java`, `Frame.java`, `ViewStream.java`; `server/api/StreamController.java`,
@@ -303,7 +303,7 @@ Record `ViewModel.PanelView`. Written with "leave out nulls": `inferred` and `em
 
 ### The 22 kinds
 
-Verified against `PanelKind` (`drishti-rachana/.../model/PanelKind.java`) and the binders: the grammar has **twenty-two**
+Verified against `PanelKind` (`compute/drishti-rachana/.../model/PanelKind.java`) and the binders: the grammar has **twenty-two**
 kinds. (Older documents say twenty; `metric` and `map` came later.) Several kinds share one `data` record:
 
 | `data` record | Kinds |
@@ -885,7 +885,7 @@ curl -s $B/viewmodel/schema | jq -c '."$defs".PanelView.allOf[0]'
 
 ### How it is produced
 
-`ViewModelSchema.build()` (`drishti-engine/.../view/ViewModelSchema.java`) **generates** it from the Java records by
+`ViewModelSchema.build()` (`kernel/drishti-engine/.../view/ViewModelSchema.java`) **generates** it from the Java records by
 reflection, the way `RachanaSchema` builds the Sutra schema served at `GET /api/v1/rachana/schema`:
 
 - Every component of every record becomes a property; a field added to a record is in the schema at once.

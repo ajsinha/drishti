@@ -76,11 +76,11 @@ def jar_has_writer(jar: str) -> bool:
 
 
 def find_jar(explicit: str | None = None) -> str | None:
-    """--jar, then DRISHTI_JAR, then the newest drishti-server/target/drishti-server-*-exec.jar of this checkout."""
+    """--jar, then DRISHTI_JAR, then the newest kernel/drishti-server/target/drishti-server-*-exec.jar of this checkout."""
     for j in (explicit, os.environ.get("DRISHTI_JAR")):
         if j:
             return j if os.path.isfile(j) else None
-    found = sorted((ROOT / "drishti-server" / "target").glob("drishti-server-*-exec.jar"), key=lambda p: p.stat().st_mtime)
+    found = sorted((ROOT / "kernel/drishti-server" / "target").glob("drishti-server-*-exec.jar"), key=lambda p: p.stat().st_mtime)
     return str(found[-1]) if found else None
 
 
@@ -128,7 +128,7 @@ def choose(engine: str, jar: str | None = None, java: str | None = None) -> tupl
             return "drishti", "Drishti's Java writer in " + (os.path.basename(args[-1]) if args[-2] == "-jar" else "DRISHTI_LAKE_CLASSPATH")
         if engine == "drishti":
             raise WriteError("--engine drishti needs the server's exec jar with the lake writer (--jar, DRISHTI_JAR or a built "
-                             "drishti-server/target/drishti-server-*-exec.jar) and Java 21")
+                             "kernel/drishti-server/target/drishti-server-*-exec.jar) and Java 21")
     if deltalake_available():
         return "deltalake", "the Python deltalake package" + ("; no server jar with the lake writer was found" if engine == "auto" else "")
     raise WriteError("no engine: build the server (its exec jar carries Drishti's writer) or install deltalake and pyarrow "

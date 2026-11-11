@@ -52,12 +52,12 @@ def _expand(cell: str) -> set[str]:
 
 
 def _server_codes() -> set[str]:
-    return set(CODE.findall(_read("drishti-common/src/main/java/com/ash/drishti/common/ErrorCode.java")))
+    return set(CODE.findall(_read("kernel/drishti-common/src/main/java/com/ash/drishti/common/ErrorCode.java")))
 
 
 def _parser_codes() -> set[str]:
     found: set[str] = set()
-    for path in (ROOT / "drishti-rachana/src/main").rglob("*.java"):
+    for path in (ROOT / "compute/drishti-rachana/src/main").rglob("*.java"):
         found |= set(CODE.findall(path.read_text(encoding="utf-8")))
     return {c for c in found if c.startswith("DRS-20") and c not in ("DRS-2101", "DRS-2102")}
 
@@ -96,7 +96,7 @@ def test_rachana_reference_lists_every_problem_code_the_parser_reports():
 def _raised_anywhere() -> set[str]:
     """Every DRS code written in the server's, the parsers' and the console's main code (not in tests or docs)."""
     found: set[str] = set()
-    for pattern in ("*/src/main/**/*.java", "modules/*/*/src/main/**/*.java", "drishti-console/core/**/*.py", "drishti-console/routes/**/*.py", "drishti-console/web/static/js/**/*.js"):
+    for pattern in ("*/src/main/**/*.java", "*/*/src/main/**/*.java", "modules/*/*/src/main/**/*.java", "drishti-console/core/**/*.py", "drishti-console/routes/**/*.py", "drishti-console/web/static/js/**/*.js"):
         for path in ROOT.glob(pattern):
             if ".venv" in path.parts or "target" in path.parts:
                 continue

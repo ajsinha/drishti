@@ -29,7 +29,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends python3 python3
  && /opt/drishti/venv/bin/pip install --no-cache-dir "deltalake==1.6.6" "pyarrow==26.0.0" "pyyaml>=6,<7" \
  && useradd --system --uid 10001 drishti
 WORKDIR /opt/drishti/app
-COPY drishti-server/target/drishti-server-*-exec.jar /opt/drishti/app.jar
+COPY kernel/drishti-server/target/drishti-server-*-exec.jar /opt/drishti/app.jar
 COPY tools/ tools/
 COPY config/packs/ config/packs/
 COPY deploy/aws/ deploy/aws/

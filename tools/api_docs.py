@@ -60,6 +60,14 @@ def config() -> dict:
     return yaml.safe_load(CONFIG.read_text(encoding="utf-8"))
 
 
+def module_dir(name: str) -> Path:
+    """A module's folder from its artifact id (the modules sit in subject folders: kernel/, compute/, lake/, ...)."""
+    found = sorted(p.parent for p in ROOT.glob(f"*/{name}/pom.xml")) or sorted(p.parent for p in ROOT.glob(f"{name}/pom.xml"))
+    if not found:
+        raise SystemExit(f"api_docs: no module {name}")
+    return found[0]
+
+
 def version() -> str:
     """The product version, from the parent pom (the release the reference belongs to)."""
     pom = (ROOT / "pom.xml").read_text(encoding="utf-8")
@@ -92,9 +100,9 @@ def check_java(cfg: dict) -> list[str]:
     """Every documented module's built Javadoc: what lacks a comment, or that it was not built."""
     problems = []
     for m in cfg["java"]:
-        folder = ROOT / m["module"] / APIDOCS
+        folder = module_dir(m["module"]) / APIDOCS
         if not (folder / "index.html").is_file():
-            problems.append(f"{m['module']}: no Javadoc at {folder.relative_to(ROOT)} (build it: ./mvnw -o -P api-docs -pl {m['module']} -am process-classes)")
+            problems.append(f"{m['module']}: no Javadoc at {folder.relative_to(ROOT)} (build it: ./mvnw -o -P api-docs -pl :{m['module']} -am process-classes)")
             continue
         for page in sorted(folder.rglob("*.html")):
             rel = page.relative_to(folder)
@@ -204,13 +212,13 @@ def build_python(cfg: dict, dest: Path) -> None:
 def build_java(cfg: dict, dest: Path, maven: bool) -> None:
     """Copies each module's Javadoc into ``dest/<module>`` (``maven``: builds it first)."""
     if maven:
-        mods = ",".join(m["module"] for m in cfg["java"])
+        mods = ",".join(":" + m["module"] for m in cfg["java"])
         subprocess.run([str(ROOT / "mvnw"), "-q", "-o", "-P", "api-docs", "-pl", mods, "-am", "process-classes"], check=True, cwd=ROOT)
     for m in cfg["java"]:
-        src = ROOT / m["module"] / APIDOCS
+        src = module_dir(m["module"]) / APIDOCS
         if not (src / "index.html").is_file():
             raise SystemExit(f"api_docs: no Javadoc for {m['module']} at {src.relative_to(ROOT)}: run with --maven, or ./mvnw -o -P api-docs "
-                             f"-pl {m['module']} -am process-classes")
+                             f"-pl :{m['module']} -am process-classes")
         shutil.copytree(src, dest / m["module"], ignore=shutil.ignore_patterns("options", "argfile", "packages", "files", "javadoc.sh"))
 
 

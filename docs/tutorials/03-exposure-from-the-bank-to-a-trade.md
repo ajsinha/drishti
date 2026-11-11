@@ -531,7 +531,7 @@ of the lake: Delta by default (`"published": "… (Delta version 0)"`), Iceberg 
 ([EXPOSURE_GUIDE.md section 20](../guides/EXPOSURE_GUIDE.md); [tutorial 16, Part E](16-load-your-own-data-into-a-new-lake.md#part-e--the-risk-lake-and-the-official-results-on-iceberg) for VaR's). A
 second capture of the same run is `unchanged`; a new run of the date makes `resultVersion` 2. `--capture` is for administrators.
 
-The settings (`drishti-server/src/main/resources/application.yaml`):
+The settings (`kernel/drishti-server/src/main/resources/application.yaml`):
 
 ```yaml
 drishti:

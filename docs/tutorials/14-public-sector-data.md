@@ -52,7 +52,7 @@ among them), its functions and the World and Public sector lenses. Start the ser
 
 ```bash
 DRISHTI_PACKS=core,world-economy,world-development,central-banks,national-statistics,oecd,official-news,gdelt-events \
-  java -jar drishti-server/target/drishti-server-*-exec.jar
+  java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
 ```
 
 **Command line.**

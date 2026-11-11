@@ -176,12 +176,12 @@ apply` refuse a credential written in clear. There is no loader for these files:
 - [Connector files](../../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors): the folder, the format, live reload, copying these examples.
 - [TLS and the outbound proxy](../../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy): every `tls.*` and `proxy.*` setting and the start-up checks.
 - The plugins' documents: [Kafka](../../../plugins/drishti-plugin-kafka/README.md), [ActiveMQ](../../../plugins/drishti-plugin-activemq/README.md),
-  [RabbitMQ](../../../plugins/drishti-plugin-rabbitmq/README.md), [REST](../../../plugins/drishti-plugin-rest/README.md),
+  [RabbitMQ](../../../plugins/drishti-plugin-rabbitmq/README.md), [REST](../../../docs/connectors/types/rest/README.md),
   [PostgreSQL](../../../plugins/drishti-plugin-jdbc/README.md), [MongoDB](../../../plugins/drishti-plugin-mongodb/README.md),
   [Redis](../../../plugins/drishti-plugin-redis/README.md), [Aerospike](../../../plugins/drishti-plugin-aerospike/README.md),
   [Cassandra](../../../plugins/drishti-plugin-cassandra/README.md), [Delta Lake](../../../plugins/drishti-plugin-delta/README.md),
   [Iceberg](../../../plugins/drishti-plugin-iceberg/README.md), [external Iceberg](../../../plugins/drishti-plugin-iceberg-external/README.md),
-  [S3](../../../plugins/drishti-plugin-s3/README.md), [news](../../../plugins/drishti-plugin-news/README.md), [yfinance](../../../plugins/drishti-plugin-yfinance/README.md).
+  [S3](../../../plugins/drishti-plugin-s3/README.md), [news](../../../docs/connectors/types/news/README.md), [yfinance](../../../docs/connectors/types/yfinance/README.md).
 
 The Delta and Iceberg files here name a lake (`lake:`, `lake-tables:`); the lake itself, its root or catalog, storage and tables, is the matching
 file in [config/lakes.examples/other/](../../lakes.examples/other/): copy both (docs/guides/DATA_LAKE_GUIDE.md).

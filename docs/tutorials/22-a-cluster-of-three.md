@@ -28,7 +28,7 @@ About 45 minutes.
 
 ## Before you start
 
-- Tutorial 1, Part A done: the built server jar (`./mvnw -o -q package -DskipTests -pl drishti-app -am`), the console's Python, the demo lakes.
+- Tutorial 1, Part A done: the built server jar (`./mvnw -o -q package -DskipTests -pl :drishti-app -am`), the console's Python, the demo lakes.
 - Three free ports for the servers (here 18783, 18784, 18785) and one for the console (17784). On three machines, use each machine's address.
 - A cluster key: one secret of at least 32 bytes, the same on every node, given to each server as `DRISHTI_NET_SECRET`. Generate it, never
   invent it: `openssl rand -hex 32`.
@@ -37,11 +37,11 @@ About 45 minutes.
 
 The outputs of the command line below were captured on this version; paths are shortened to `~/drishti`.
 
-**The ready-made local cluster: `drishti-stack/`.** This tutorial builds a cluster by hand so that you see each file. To have one running
-without the steps, use `drishti-stack/` at the repository's root: `bin/start-cluster.sh` starts three servers (your own stack on 18480 with
+**The ready-made local cluster: `deploy/stack/`.** This tutorial builds a cluster by hand so that you see each file. To have one running
+without the steps, use `deploy/stack/` at the repository's root: `bin/start-cluster.sh` starts three servers (your own stack on 18480 with
 the demo lakes, and two more on 18791 and 18792 with synthetic ENDUR, CALYPSO and MUREX trades) and a console on 17480 given the first
 alone; `bin/status --cluster` shows the members and `bin/stop-cluster` stops them by process id. The secrets are made on the first start and stay out of git.
-See [drishti-stack/README.md](../../drishti-stack/README.md).
+See [deploy/stack/README.md](../../deploy/stack/README.md).
 
 ## What you will learn
 

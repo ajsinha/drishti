@@ -49,7 +49,7 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
  * {@code drishti.ccr.bench.dir} and deletes it at the end.
  *
  * <pre>
- *   measured this way:  ./mvnw -o test -pl drishti-server -Dtest=ExposureTierBenchmark -Dsurefire.failIfNoSpecifiedTests=false
+ *   measured this way:  ./mvnw -o test -pl :drishti-server -Dtest=ExposureTierBenchmark -Dsurefire.failIfNoSpecifiedTests=false
  *       -Ddrishti.ccr.bench.trades=10000 -Ddrishti.ccr.bench.paths=200 -Ddrishti.ccr.bench.grid=24 -DargLine=-Xmx4g
  *   (optional) -Ddrishti.ccr.bench.trades-per-set=10 -Ddrishti.ccr.bench.sets-per-cpty=20 -Ddrishti.ccr.bench.big-set=1000
  *       -Ddrishti.ccr.bench.dir=/local/ccr-bench

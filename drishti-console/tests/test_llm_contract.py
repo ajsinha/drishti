@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The shared LLM contract against the mock provider, through the canonical abstractions (``LLMProvider``, ``LLMModel``). The Java layer runs the same file
-(``drishti-ai/src/test/resources/contract/llm_contract.json``) in ``LLMContractTest``; if the two layers drift one of the tests fails. Also ``BaseMCPTool``."""
+(``kernel/drishti-ai/src/test/resources/contract/llm_contract.json``) in ``LLMContractTest``; if the two layers drift one of the tests fails. Also ``BaseMCPTool``."""
 import asyncio
 import json
 from pathlib import Path
@@ -30,7 +30,7 @@ from core.ai.registry import LlmRegistry
 from core.ai import config as cfgmod
 from core.ai.types import CallContext
 
-CONTRACT = json.loads((Path(__file__).resolve().parents[2] / "drishti-ai/src/test/resources/contract/llm_contract.json").read_text(encoding="utf-8"))
+CONTRACT = json.loads((Path(__file__).resolve().parents[2] / "kernel/drishti-ai/src/test/resources/contract/llm_contract.json").read_text(encoding="utf-8"))
 P = CONTRACT["provider"]
 
 

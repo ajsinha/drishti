@@ -43,7 +43,7 @@ CONCAT = re.compile(r"""(?:resolveSibling\(|resolve\(|Path\.of\(|with_name\(|joi
 
 def sources():
     out = []
-    for pattern in ("drishti-*/src/main/**/*.java", "modules/*/*/src/main/**/*.java", "plugins/*/src/main/**/*.java", "drishti-console/core/**/*.py",
+    for pattern in ("*/drishti-*/src/main/**/*.java", "modules/*/*/src/main/**/*.java", "plugins/*/src/main/**/*.java", "drishti-console/core/**/*.py",
                     "drishti-console/routes/**/*.py", "tools/**/*.py", "tools/*.sh"):
         out += [p for p in ROOT.glob(pattern) if p.is_file() and not p.name.startswith("test_") and "/node_modules/" not in p.as_posix()
                 and "/vendor/" not in p.as_posix() and p.name != "test_no_hidden_names.py"]
@@ -86,7 +86,7 @@ class NoLitterInTheRepoRoot(unittest.TestCase):
         def status():
             return subprocess.run(["git", "status", "--porcelain", "--ignored"], cwd=ROOT, capture_output=True, text=True, check=True).stdout
 
-        if not os.environ.get("DRISHTI_JAR") and not list((ROOT / "drishti-server" / "target").glob("drishti-server-*-exec.jar")):
+        if not os.environ.get("DRISHTI_JAR") and not list((ROOT / "kernel/drishti-server" / "target").glob("drishti-server-*-exec.jar")):
             self.skipTest("pack make needs the server jar (DRISHTI_JAR or ./mvnw -q -DskipTests package)")
         before = status()
         with tempfile.TemporaryDirectory(prefix="drishti-nohidden-") as t:
@@ -103,17 +103,17 @@ class NoLitterInTheRepoRoot(unittest.TestCase):
 
 
 class NoSecretTracked(unittest.TestCase):
-    """The repository is public: the local cluster's secrets (drishti-stack/secrets.env, a cluster key file net-key) and server jars are never
+    """The repository is public: the local cluster's secrets (deploy/stack/secrets.env, a cluster key file net-key) and server jars are never
     tracked; .gitignore keeps them out and this fails if one is added anyway (git add -f)."""
 
     def test_no_secret_file_or_jar_is_tracked(self):
         files = subprocess.run(["git", "ls-files"], cwd=ROOT, capture_output=True, text=True, check=True).stdout.splitlines()
-        bad = [f for f in files if f == "drishti-stack/secrets.env" or f.split("/")[-1] == "net-key" or f.startswith("drishti-stack/run/")
+        bad = [f for f in files if f == "deploy/stack/secrets.env" or f.split("/")[-1] == "net-key" or f.startswith("deploy/stack/run/")
                or f.endswith(".jar")]
         self.assertEqual(bad, [], "a secret or a jar is tracked: git rm --cached it (the repository is public)")
 
     def test_gitignore_keeps_the_stack_secrets_and_run_folder_out(self):
-        for path in ("drishti-stack/secrets.env", "drishti-stack/run/server.jar", "drishti-stack/run/pids.txt", "drishti-stack/nodes/x/net/net-key",
+        for path in ("deploy/stack/secrets.env", "deploy/stack/run/server.jar", "deploy/stack/run/pids.txt", "deploy/stack/nodes/x/net/net-key",
                      "data/stack/lakes/shared/x"):
             r = subprocess.run(["git", "check-ignore", "-q", "--no-index", path], cwd=ROOT)
             self.assertEqual(r.returncode, 0, path + " is not git-ignored")

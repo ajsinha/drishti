@@ -26,7 +26,7 @@ string, a null) and a date partition (``business_date``).
    path on disk; ``partitionValues`` hold the raw values.
 
 An empty partition string reads back as null, as Spark and delta-rs read it. The Java parts need the server's exec jar (DRISHTI_JAR,
-else drishti-server/target) and a JDK (javac compiles the small reader against the jar's own libraries).
+else kernel/drishti-server/target) and a JDK (javac compiles the small reader against the jar's own libraries).
 
     uv run --with deltalake --with pyarrow --with pyyaml --with pytest python -m pytest tools/lake/test_delta_interop.py -q
 """
@@ -180,7 +180,7 @@ def java_reader(tmp_path_factory):
     jar = writers.find_jar()
     java = writers.find_java()
     if not jar or not java:
-        pytest.skip("no server exec jar (DRISHTI_JAR or drishti-server/target) or no java")
+        pytest.skip("no server exec jar (DRISHTI_JAR or kernel/drishti-server/target) or no java")
     work = tmp_path_factory.mktemp("java-reader")
     libs, classes = work / "libs", work / "classes"
     libs.mkdir()

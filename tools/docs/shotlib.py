@@ -180,9 +180,9 @@ def listening(port: int) -> bool:
 
 def start_servers(work: Path, extra_env: dict | None = None) -> list:
     """Starts the scratch server and console; `extra_env` (a guide's SERVER_ENV) is added to the environment of both."""
-    jars = sorted((ROOT / "drishti-server" / "target").glob("drishti-server-*-exec.jar"))
+    jars = sorted((ROOT / "kernel/drishti-server" / "target").glob("drishti-server-*-exec.jar"))
     if not jars:
-        sys.exit("build the server first: ./mvnw -o package -DskipTests -pl drishti-app -am")
+        sys.exit("build the server first: ./mvnw -o package -DskipTests -pl :drishti-app -am")
     java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
     for name in ("config",):
         if not (work / name).exists() and (ROOT / name).exists():
@@ -209,9 +209,9 @@ def start_servers(work: Path, extra_env: dict | None = None) -> list:
 
 def start_pack_servers(work: Path, packs: str, server_port: int, console_port: int, data_dir: Path | None = None) -> list:
     """A scratch server and console with the packs on, for a pack's guide picture: the two processes, once both listen."""
-    jars = sorted((ROOT / "drishti-server" / "target").glob("drishti-server-*-exec.jar"))
+    jars = sorted((ROOT / "kernel/drishti-server" / "target").glob("drishti-server-*-exec.jar"))
     if not jars:
-        sys.exit("build the server first: ./mvnw -o package -DskipTests -pl drishti-app -am")
+        sys.exit("build the server first: ./mvnw -o package -DskipTests -pl :drishti-app -am")
     if not (work / "config").exists():
         (work / "config").symlink_to(ROOT / "config")
     java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"

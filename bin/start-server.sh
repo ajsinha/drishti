@@ -27,7 +27,7 @@ and the logs under the data folder, waits for /actuator/health and prints the ad
 
   --port N            the server's port (default DRISHTI_PORT, else 18480)
   --heap SIZE         the heap limit, -Xmx (default 2g; 4g with --demo)
-  --jar FILE          the server jar (default the newest drishti-server/target/drishti-server-*-exec.jar, then drishti-server*.jar here)
+  --jar FILE          the server jar (default the newest kernel/drishti-server/target/drishti-server-*-exec.jar, then drishti-server*.jar here)
   --java-home DIR     the JDK (default DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH, then /usr/libexec/java_home -v 21 on macOS)
   --packs LIST        the packs to load (DRISHTI_PACKS; default the server's own, or the demo's ten with --demo)
   --data-dir DIR      the data folder (default DRISHTI_DATA_DIR, else <drishti>/data): run/, logs/, tmp/ and dumps/ are under it
@@ -159,8 +159,8 @@ MAJOR="$(printf '%s' "$VERSION_LINE" | sed -n 's/.*version "\([0-9]*\).*/\1/p')"
 
 # the jar
 if [ -z "$JAR" ]; then
-  JAR="$(ls -t "$DRISHTI_ROOT"/drishti-server/target/drishti-server-*-exec.jar "$DRISHTI_ROOT"/drishti-server*.jar 2>/dev/null | head -n 1 || true)"
-  [ -n "$JAR" ] || die "no server jar: build it (./mvnw -q package -DskipTests -pl drishti-app -am) or pass --jar"
+  JAR="$(ls -t "$DRISHTI_ROOT"/kernel/drishti-server/target/drishti-server-*-exec.jar "$DRISHTI_ROOT"/drishti-server*.jar 2>/dev/null | head -n 1 || true)"
+  [ -n "$JAR" ] || die "no server jar: build it (./mvnw -q package -DskipTests -pl :drishti-app -am) or pass --jar"
 fi
 [ -f "$JAR" ] || die "no jar $JAR"
 [ -d "$DRISHTI_ROOT/config/packs" ] || warn "no config/packs/ in $DRISHTI_ROOT: the server starts without domain packs"

@@ -29,7 +29,7 @@ import pytest
 pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it (TEST_HARNESS.md, "Quick file checks")
 
 ROOT = Path(__file__).resolve().parents[1]
-SERVER = ROOT / "drishti-server" / "src" / "main" / "java" / "com" / "ash" / "drishti" / "server"
+SERVER = ROOT / "kernel/drishti-server" / "src" / "main" / "java" / "com" / "ash" / "drishti" / "server"
 BANKING = ROOT / "modules" / "banking" / "banking-service" / "src" / "main" / "java" / "com" / "ash" / "drishti" / "banking"   # the banking module's (DOMAIN_MODULES.md)
 CONSOLE = ROOT / "drishti-console"
 
