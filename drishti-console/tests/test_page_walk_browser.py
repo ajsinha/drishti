@@ -58,8 +58,12 @@ KEY_SNAPSHOTS: dict[str, tuple[str, dict]] = {
     "var-desk": ("/var?scope=DESK:DESK-RATES", {"idle": True}),
     "var-basket": ("/var?scope=BASKET:PF-ASHA-UNWIND", {"idle": True}),
     # the page scrolls itself to its "why" part when it has drawn, and its lineage shows the time it computed: the part alone
+    # its ready state: data-state turns ready once every part, the waterfall painted too, is in, or failed with the server's words
     "why-it-moved": (go("VAR BANK EXPLAIN"), {"idle": True, "scroll": "[data-dx-part=\"why\"]", "wait": "(() => { const p = document.querySelector('[data-explain-page]'); const w = document.querySelector('[data-dx-part=\"why\"] [data-dx-why]');"
-                                                       " return p && p.dataset.state === 'ready' && w && w.dataset.painted === 'waterfall'; })()"}),
+                                                       " return p && p.dataset.state === 'ready' && w && w.dataset.painted === 'waterfall'; })()",
+                                                       "failed": "(() => { const p = document.querySelector('[data-explain-page]'); if (!p || p.dataset.state === 'loading') return null;"
+                                                       " if (p.dataset.state === 'failed') return 'the page failed: ' + p.innerText.slice(0, 300);"
+                                                       " return document.querySelector('[data-dx-part=\"why\"] [data-dx-why]') ? null : 'ready without a waterfall: ' + p.innerText.slice(0, 300); })()"}),
     # the cube's columns are sized as its rows arrive: a figure is cut short on one run and whole on another (2%)
     "mr-cube": ("/pivot?preset=mr", {"idle": True, "tolerance": 0.02, "wait": "!/Computing the grid/i.test(document.querySelector('#main').innerText)"}),
     "pivot": ("/pivot", {}),
@@ -104,8 +108,33 @@ def stack(tmp_path_factory):
     lake = var_lake(tmp_path_factory, var_data(*WALK_DATA), as_of=SNAPSHOT_DATE, extra=("--exposure", "committed"))
     # the data inbox on (Admin -> Data loads -> Inbox and Upload are its pages), over an empty folder of its own; the full product's packs and
     # the capital-markets module's (off by default: config/packs/default-packs.yaml), and the Markets lens beside the four default ones
-    yield from var_server(tmp_path_factory, lake, DRISHTI_DATALOAD_ENABLED="true", DRISHTI_DATALOAD_DIR=str(tmp_path_factory.mktemp("walk-dataload")),
-                          DRISHTI_PACKS=WALK_PACKS, DRISHTI_LENSES="risk,world,market,trading,markets")
+    for st in var_server(tmp_path_factory, lake, DRISHTI_DATALOAD_ENABLED="true", DRISHTI_DATALOAD_DIR=str(tmp_path_factory.mktemp("walk-dataload")),
+                         DRISHTI_PACKS=WALK_PACKS, DRISHTI_LENSES="risk,world,market,trading,markets"):
+        _why_ready(str(st))
+        yield st
+
+
+def _why_ready(base: str, seconds: float = 300) -> None:
+    """Why it moved compares two business dates: the engine opens the earlier one at the first ask, which under a busy lane can outlast the
+    console's call. Asked here once (the page's own question) until it answers, so the walk's pages open over both dates already open."""
+    import json
+    import time
+    import urllib.error
+    import urllib.request
+
+    url, deadline, last = f"{base}/api/explain?kind=var&scope=BANK&part=why&date={SNAPSHOT_DATE}", time.monotonic() + seconds, ""
+    while time.monotonic() < deadline:
+        try:
+            with urllib.request.urlopen(url, timeout=150) as r:
+                if (json.load(r).get("why") or {}).get("available"):
+                    return
+                last = "answered without why it moved"
+        except urllib.error.HTTPError as e:
+            last = f"HTTP {e.code}: {e.read()[:200]!r}"
+        except (urllib.error.URLError, OSError) as e:
+            last = str(e)
+        time.sleep(1)   # wait-ok: polling the server's answer, a deadline not a pause
+    pytest.fail(f"Why it moved did not answer within {seconds:.0f} s: {last}")
 
 
 def _walk(browser, base: str, hrefs: list[str]) -> list[dict]:
@@ -142,12 +171,15 @@ def _assert_clean(results: list[dict]) -> None:
     assert not bad and not slow, "\n".join(["faults:"] + bad + [f"over {BUDGET_S:.0f} s:"] + slow)
 
 
-def _until(pg, expr: str, timeout_s: float = 180) -> None:   # as long as test_engine_pages_browser gives Why it moved under a busy lane
-    """Waits until ``expr`` is true on the page (evaluated by the browser's debugger, which the page's CSP allows; a page-side poll would eval)."""
+def _until(pg, expr: str, timeout_s: float = 180, failed: str | None = None) -> None:
+    """Waits until ``expr`` is true on the page (evaluated by the browser's debugger, which the page's CSP allows; a page-side poll would eval);
+    ``failed``: a script giving the page's own words once it has settled without drawing (its error), which ends the wait at once."""
     import time
 
     deadline = time.monotonic() + timeout_s
     while not pg.evaluate(expr):
+        why = pg.evaluate(failed) if failed else None
+        assert not why, why
         assert time.monotonic() < deadline, f"the page did not draw in {timeout_s:.0f} s: {expr[:80]}"
         pg.wait_for_timeout(100)   # wait-ok: polling a page-side condition the CSP keeps from wait_for_function
 
@@ -190,7 +222,7 @@ def test_the_key_pages_look_as_approved(stack, browser, request, tmp_path):
                         except Exception:  # noqa: BLE001 - a call still open: its own wait decides
                             pass
                     if opts.get("wait"):
-                        _until(pg, opts["wait"])
+                        _until(pg, opts["wait"], failed=opts.get("failed"))
                     faults += [f"{name}: {f}" for f in r["faults"]]
                     pg.evaluate("(t) => document.documentElement.setAttribute('data-theme', t)", THEMES[theme])
                     png = snapshots.capture(pg, opts.get("mask", []), opts.get("scroll"))

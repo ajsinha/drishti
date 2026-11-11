@@ -26,6 +26,10 @@
   installed package is a module of the registry too.
 - **A dropped module loads on a single node without a placement entry**: with no cluster, a module `config/placement.yaml` does not
   name is placed on the node (Health and Admin → Cluster → Modules note *single node: placed here*); a cluster keeps no all-nodes default.
+- **A loaded module's lakes are found**: the lakes a module ships (`drishti/lakes/shipped.txt` in its jar: banking's `ccr-official` and
+  `var-official`) are read from the module's own class loader once it is live, not only from the kernel's class path, so a server with
+  banking loaded from its `.dmod` starts `exposure-results` and `var-results` without a `config/lakes` file of its own; the lakes leave
+  with the module. Test stacks wait for `/actuator/health/readiness` (the modules loaded) before they ask.
 - **Developer guide: How to create …** ([DEVELOPER_GUIDE.md part 12](docs/guides/DEVELOPER_GUIDE.md#12-how-to-create-)): step-by-step
   chapters for a module (manifest fields, the contributions, the three builds, the fifteen checks and what a failure means, install,
   remove and reinstall), a connector plugin (plugin or module, `lib/` or inside a module, testkit, Admin → Connectors), a binding (needs,

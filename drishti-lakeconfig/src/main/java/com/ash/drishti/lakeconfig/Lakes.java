@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.lakeconfig;
 
+import com.ash.drishti.common.ModuleLoaders;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import java.io.IOException;
@@ -137,8 +138,8 @@ public final class Lakes {
                 throw new UncheckedIOException("cannot list the lake folder " + d + ": " + e.getMessage(), e);
             }
         }
-        for (String name : SHIPPED) {
-            try (java.io.InputStream in = Lakes.class.getClassLoader().getResourceAsStream("drishti/lakes/" + name + ".yaml")) {
+        for (String name : shipped()) {
+            try (java.io.InputStream in = shippedFile(name)) {
                 if (in != null) {
                     Matcher m = NAMED.matcher(new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8));
                     while (m.find()) {
@@ -220,10 +221,10 @@ public final class Lakes {
                 throw new UncheckedIOException("cannot list the lake folder " + dir + ": " + e.getMessage(), e);
             }
         }
-        for (String name : SHIPPED) {                   // the shipped lakes (the demo lake) when the folder has no file of theirs:
-            if (!out.containsKey(name)) {               // a server started in another working folder, a container, a stack node
+        for (String name : shipped()) {                 // the shipped lakes (the demo lake, a live module's) when the folder has no file of
+            if (!out.containsKey(name)) {               // theirs: a server started in another working folder, a container, a stack node
                 String res = "drishti/lakes/" + name + ".yaml";
-                try (java.io.InputStream in = Lakes.class.getClassLoader().getResourceAsStream(res)) {
+                try (java.io.InputStream in = shippedFile(name)) {
                     if (in != null) {
                         out.put(name, parse(new YAMLMapper().readTree(in), name, null, env));
                     }
@@ -238,12 +239,38 @@ public final class Lakes {
     /** The index each jar that ships lakes carries: one lake name per line ({@code #} comments). */
     public static final String SHIPPED_INDEX = "drishti/lakes/shipped.txt";
 
+    /** The lakes the kernel's own jars ship (the demo lake). */
+    private static final List<String> CORE = shipped(Lakes.class.getClassLoader());
+
+    /** Each live module loader's index, read once per loader (a module's loader is new at every load). */
+    private static final Map<ClassLoader, List<String>> MODULES = java.util.Collections.synchronizedMap(new java.util.WeakHashMap<>());
+
     /**
-     * The lakes shipped in the jars on the class path ({@code drishti/lakes/<name>.yaml}, each a copy of the repository's lake file): the
-     * core's demo lake, and a module's own (the banking module's official results) only when its jar is there. Each jar lists its lakes in
+     * The lakes shipped now ({@code drishti/lakes/<name>.yaml}, each a copy of the repository's lake file): the kernel's (the demo lake)
+     * and each live module's own (the banking module's official results), whether its jar is on the class path or it was loaded from a
+     * {@code .dmod} by its own loader ({@link ModuleLoaders#live()}); a module's lakes leave with it. Each jar lists its lakes in
      * {@value #SHIPPED_INDEX}.
      */
-    public static final List<String> SHIPPED = shipped(Lakes.class.getClassLoader());
+    public static List<String> shipped() {
+        java.util.Set<String> out = new java.util.LinkedHashSet<>(CORE);
+        for (ClassLoader l : ModuleLoaders.live()) {
+            out.addAll(MODULES.computeIfAbsent(l, Lakes::shipped));
+        }
+        return List.copyOf(out);
+    }
+
+    /** A shipped lake's file ({@link #shipped()}): from the kernel's jars, else a live module's; null when none holds it. */
+    static java.io.InputStream shippedFile(String name) {
+        String res = "drishti/lakes/" + name + ".yaml";
+        java.io.InputStream in = Lakes.class.getClassLoader().getResourceAsStream(res);
+        for (ClassLoader l : ModuleLoaders.live()) {
+            if (in != null) {
+                break;
+            }
+            in = l.getResourceAsStream(res);
+        }
+        return in;
+    }
 
     static List<String> shipped(ClassLoader loader) {
         java.util.Set<String> out = new java.util.LinkedHashSet<>();

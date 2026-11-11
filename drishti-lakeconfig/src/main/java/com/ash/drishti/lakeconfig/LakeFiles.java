@@ -681,7 +681,7 @@ public final class LakeFiles {
         for (Path f : Lakes.files(lakesDir)) {
             lakes.add(f.getFileName().toString().replaceFirst("\\.yaml$", ""));
         }
-        lakes.addAll(Lakes.SHIPPED);
+        lakes.addAll(Lakes.shipped());
         for (String lake : lakes) {
             if (lake.equals("demo")) {
                 continue;
@@ -695,7 +695,7 @@ public final class LakeFiles {
                     continue;                                       // not a lake file this can read: it owns nothing
                 }
             } else {
-                try (java.io.InputStream in = LakeFiles.class.getClassLoader().getResourceAsStream("drishti/lakes/" + lake + ".yaml")) {
+                try (java.io.InputStream in = Lakes.shippedFile(lake)) {
                     root = in == null ? null : YAML.readTree(in);
                 }
             }

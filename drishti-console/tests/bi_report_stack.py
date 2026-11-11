@@ -32,7 +32,7 @@ import sys
 import time
 from pathlib import Path
 
-from bi_stack import FORBIDDEN, call, listening, wait  # noqa: F401  (call is re-created below for this stack's port)
+from bi_stack import FORBIDDEN, call, listening, wait, wait_ready  # noqa: F401  (call is re-created below for this stack's port)
 from java_launch import java_cmd
 from scratch_ports import worker_port
 
@@ -212,7 +212,7 @@ class ReportStack:
                 (work / "config" / "connectors" / "trade-endur.yaml").write_text(TRADE_CONNECTOR.format(root=lake / "trade"))
         self.procs["server"] = subprocess.Popen(java_cmd(java, ["-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}", "--drishti.security.registered-users-only=false",
                                                  f"--drishti.bi.query.store-dir={self.tmp / 'store'}", *self.server_args], tmp=self.tmp / "jvm-tmp"), cwd=work, env=env, stdout=open(self.tmp / "server.log", "ab"), stderr=subprocess.STDOUT)
-        wait(SERVER + "/actuator/health", proc=self.procs["server"])
+        wait_ready(SERVER, proc=self.procs["server"])           # the modules loaded: their engines and lakes (ccr-official, var-official) are in
         seed(['trading', 'counterparty-risk', 'market-risk'] if self.delta_root else ['trading', 'market-risk'])
         cenv = dict(os.environ, DRISHTI_AUTH_ENABLED="true", DRISHTI_SESSION_SECRET="s" * 40, DRISHTI_TOKEN_SECRET=SECRET, DRISHTI_SECURE_COOKIE="false",
                     DRISHTI_SESSION_RECHECK_SECONDS="1")

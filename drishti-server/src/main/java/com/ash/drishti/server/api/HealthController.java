@@ -363,7 +363,7 @@ public class HealthController {
         Map<String, List<String>> out = new java.util.TreeMap<>();
         for (String c : refs) {
             String lake = registry.lakeOf(c);
-            if (lake != null && (!com.ash.drishti.lakeconfig.Lakes.SHIPPED.contains(lake) || SourceRouter.DEMO_LAKE.equals(lake))) {
+            if (lake != null && (!com.ash.drishti.lakeconfig.Lakes.shipped().contains(lake) || SourceRouter.DEMO_LAKE.equals(lake))) {
                 out.computeIfAbsent(lake, k -> new ArrayList<>()).add(c);
             }
         }
