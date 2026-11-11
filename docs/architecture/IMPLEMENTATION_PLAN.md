@@ -1076,7 +1076,7 @@ facility *i*, scenario *s* and periods *t* (a month by default): `ECL_i,s = Σ_t
 value of the bank's expected recoveries. Staging, first rule that applies: POCI for life; credit-impaired (90 DPD, unlikely to pay) to
 stage 3; the 30 DPD backstop, the watchlist and forborne-performing to stage 2; the low-credit-risk exemption (off by default); then the
 relative and absolute SICR tests on the weighted lifetime PD. **Principles:** every method choice is a named switch with a decided default,
-shown on the screen and in the workbook; parameters live in `config/engines/ifrs9.yaml` with the policy or paragraph they come from (the
+shown on the screen and in the workbook; parameters live in the engine's own file (`ifrs9.yaml` under `config/engines/`, to be written) with the policy or paragraph they come from (the
 bank owns every value); the bank's PD curves or migration matrices, LGD, CCF and scenario paths are inputs, applied exactly (no model
 fitting in Drishti); every figure explains itself (stage and rule, each period's mPD, LGD, EAD and DF, each scenario's ECL) and a scope's
 provision change explains itself in exact steps S0 to S10 with the IFRS 7.35H table; a missing input is refused and counted, never zero;
