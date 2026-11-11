@@ -17,6 +17,15 @@
 
 ## Unreleased
 
+- **A `.dmod`'s data needs reach the data gate**: a loaded module's needs file (`data: {needs: …}` in its manifest) joins the gate on load
+  and leaves it on unload, so an unserved required kind switches its functions off with the needs-data page (genomics: `variant` →
+  VARIANT). Before, only built-in modules' `META-INF/drishti/needs.yaml` on the kernel's class path counted.
+- **Distributions see installed and shipped `.dmod` modules**: the distribution reads module manifests with the registry's one package
+  reader (first-party packages in the server's jar, then the module store's active ones), not only the manifests folder. The reader
+  takes `installed/active.yaml` as the module node writes it (`modules: {id: version}`) and looks the store up when it reads, so an
+  installed package is a module of the registry too.
+- **A dropped module loads on a single node without a placement entry**: with no cluster, a module `config/placement.yaml` does not
+  name is placed on the node (Health and Admin → Cluster → Modules note *single node: placed here*); a cluster keeps no all-nodes default.
 - **Developer guide: How to create …** ([DEVELOPER_GUIDE.md part 12](docs/guides/DEVELOPER_GUIDE.md#12-how-to-create-)): step-by-step
   chapters for a module (manifest fields, the contributions, the three builds, the fifteen checks and what a failure means, install,
   remove and reinstall), a connector plugin (plugin or module, `lib/` or inside a module, testkit, Admin → Connectors), a binding (needs,

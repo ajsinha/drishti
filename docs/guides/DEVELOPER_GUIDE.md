@@ -259,7 +259,8 @@ rm <data folder>/modules/greet-0.1.0.dmod                  # removed the same wa
 (To keep your `~/.m2` untouched while trying it, add `-Dmaven.repo.local=<folder> -Dmaven.repo.local.tail=$HOME/.m2/repository` to each
 Maven command: installs go to the folder, reads fall back to `~/.m2`.) The `.dmod` dropped into the module folder (`drishti.modules.path`,
 default `<data folder>/modules`) goes through the module deployment as an administrator's would: its hash list, the fifteen checks, then
-installed under `modules/installed/<id>/<version>/` and loaded. Auto-deploy is on for a single node and off in a cluster, where a module is
+installed under `modules/installed/<id>/<version>/` and loaded (a single node needs no `config/placement.yaml` entry: a module the file
+does not name is placed on it, and Health notes *single node: placed here*). Auto-deploy is on for a single node and off in a cluster, where a module is
 deployed by plan → apply ([CLUSTER_GUIDE.md](CLUSTER_GUIDE.md)). **Production loads only verified `.dmod` packages.**
 
 **Edit → reload, in development mode.** While you work on a module, the kernel can load its build output without packing a `.dmod` and
@@ -3668,8 +3669,10 @@ python3 tools/drishti.py module inspect build/dmod/freight-0.1.0.dmod           
 | one server | drop the `.dmod` into `<data folder>/modules/` (`drishti.modules.path`); auto-deploy checks, installs and loads it | Admin → Modules: *LOADED* |
 | a cluster | place its parts (section 12.5), then Admin → Modules → Deploy, or `drishti.py module deploy <file> --reason … --out plan.json`; a **second** administrator applies: `drishti.py module apply plan.json` ([CLUSTER_GUIDE.md section 1.10](CLUSTER_GUIDE.md#110-deploying-a-module)) | the plan per node, then *applied* on every placed node |
 
-A third-party module runs only where `config/placement.yaml` places it, also on one server: there `{ roles: [all] }` places a part on it
-([CLUSTER_GUIDE.md section 1.9](CLUSTER_GUIDE.md#19-module-placement)). A module placed on no node is refused at deploy (`DRS-1033`).
+On a single node (no cluster) a module that `config/placement.yaml` does not name is placed on that node: it loads with no placement
+entry, and Health notes *freight: single node: placed here*. In a cluster there is no all-nodes default: a third-party module runs only
+where `config/placement.yaml` places it ([CLUSTER_GUIDE.md section 1.9](CLUSTER_GUIDE.md#19-module-placement)), and one placed on no node
+is refused at deploy (`DRS-1033`).
 
 **7. Remove and reinstall.** One server: take the `.dmod` out of the modules folder; put it back to reinstall. A cluster:
 `drishti.py module disable freight --reason …` (its API answers `404 DRS-1025`) or `module remove freight --reason …` (`410 DRS-1028`,
@@ -3781,7 +3784,9 @@ The keys are exactly `read`, `union`, `live`, `write`, `demo` and `note`; anythi
 
 **6. What an unbound need does.** A **required** kind that nothing serves switches off exactly the functions that use it, and they say
 why: the needs-data page (*… needs data: shipment is not bound*), the same words on the command line, `409 DRS-1035` from the API. The rest
-of the module keeps working; an optional kind only hides its features. Bind it and the functions come back without a restart.
+of the module keeps working; an optional kind only hides its features. Bind it and the functions come back without a restart. A `.dmod`'s
+needs join the gate when it loads and leave it when it unloads (the genomics sample: binding `variant` where nothing serves it shows
+VARIANT's needs-data page).
 
 ### 12.4 How to create a distribution
 
@@ -3842,10 +3847,13 @@ the file in the console's static folder, `drishti-console/web/static/img/`, name
 and write `/static/img/drishti_<name>.<ext>`; or give a `data:` URL. The logo is drawn as an image in the top bar and on the public
 pages, so any format a browser draws (SVG best, PNG, WebP); the favicon is the page's icon link, so SVG, PNG or ICO.
 
-**2. Make its modules known.** A distribution reads each module's own manifest from the manifests folder
-(`drishti.module-manifests-dir`, console `module_manifests_dir`, default `./modules`): `modules/<id>/module.yaml`, an SDK project's
-`modules/<id>/src/dmod/module.yaml`, or `modules/<id>/dmod/module.yaml`. That is where its words, menus, packs and Help come from;
-a module with `required: false` and no manifest there adds none.
+**2. Make its modules known.** A distribution reads each module's own manifest, with the same package reader as the module registry:
+the `.dmod` packages the server ships and those installed in the module store (`<data folder>/modules/installed/`, the package's
+manifest winning), then the manifests folder (`drishti.module-manifests-dir`, default `./modules`; the console's own filter,
+`module_manifests_dir`, reads this folder only):
+`modules/<id>/module.yaml`, an SDK project's `modules/<id>/src/dmod/module.yaml`, or `modules/<id>/dmod/module.yaml`. So a third-party
+`.dmod` installed once (dropped in, or deployed) is listed by its id with nothing copied into `modules/`. That is where its words, menus,
+packs and Help come from; a module with `required: false` and no manifest anywhere adds none.
 
 **3. Start it**: `bin/start-all.sh --distribution freight` (`bin\start-all.ps1 -Distribution freight`), or `bin/start-server.sh` and
 `bin/start-console.sh` each with `--distribution freight`, or `DRISHTI_DISTRIBUTION=freight`, or `drishti.distribution: freight`; a path

@@ -40,7 +40,7 @@ import org.springframework.core.env.Environment;
  * Drishti All, so behaviour is unchanged. The console reads the same files the same way (drishti-console/core/distribution.py).
  *
  * <p>The modules a file lists are read from their own manifests ({@link ModuleManifests}: {@code modules/<id>/module.yaml}, a module
- * jar's {@code META-INF/drishti/module.yaml}), the kernel's own packs, words and menus from {@code kernel.yaml} beside the files; a
+ * jar's {@code META-INF/drishti/module.yaml}, and the shipped and installed {@code .dmod} packages, read as the registry reads them), the kernel's own packs, words and menus from {@code kernel.yaml} beside the files; a
  * distribution comes to a visibility filter in the edition file's shape: the kernel's and its modules' commands (with the modules they
  * require), the words of the modules it leaves out switched off, those modules' engines off, its menus, Help and Home.
  */
@@ -109,7 +109,9 @@ public final class Distributions {
             return builtInAll();                                       // a server with no config/distributions folder: today's product
         }
         String packsDir = env.getProperty("drishti.packs.dir", "./config/packs");
-        return read(f, dir.resolve(KERNEL), Path.of(env.getProperty(MODULES_DIR, DEFAULT_MODULES_DIR)), Path.of(packsDir));
+        List<com.ash.drishti.registry.ModulePackages.Package> packages = com.ash.drishti.registry.ModulePackages.read(
+                Distributions.class.getClassLoader(), com.ash.drishti.registry.ModulePackages.store(env::getProperty), Set.of(), new ArrayList<>());
+        return read(f, dir.resolve(KERNEL), Path.of(env.getProperty(MODULES_DIR, DEFAULT_MODULES_DIR)), Path.of(packsDir), packages);
     }
 
     /** Drishti All with no file: every module, no filter, the product's own brand. */
@@ -122,13 +124,19 @@ public final class Distributions {
 
     /** Reads a distribution file and compiles it against the kernel's file, the module manifests and the packs folder. */
     public static Distribution read(Path file, Path kernelFile, Path modulesDir, Path packsDir) {
+        return read(file, kernelFile, modulesDir, packsDir, List.of());
+    }
+
+    /** As above, with the packaged modules (shipped and installed {@code .dmod}s, {@link com.ash.drishti.registry.ModulePackages}). */
+    public static Distribution read(Path file, Path kernelFile, Path modulesDir, Path packsDir,
+            List<com.ash.drishti.registry.ModulePackages.Package> packages) {
         if (!Files.isRegularFile(file)) {
             throw new IllegalStateException("no distribution file " + file.toAbsolutePath().normalize() + " (set " + DIR
                     + " / DRISHTI_DISTRIBUTIONS_DIR to the folder of the distribution files, or name one of: risk, finance, genomics, all)");
         }
         JsonNode spec = tree(file);
         JsonNode kernel = Files.isRegularFile(kernelFile) ? tree(kernelFile).path("kernel") : YAML.createObjectNode();
-        Map<String, ModuleManifests.Entry> known = ModuleManifests.read(modulesDir);
+        Map<String, ModuleManifests.Entry> known = ModuleManifests.read(modulesDir, packages);
         String id = spec.path("distribution").asText("").strip();
         if (id.isEmpty()) {
             throw new IllegalStateException("distribution file " + file + " has no 'distribution:' id (drishti.<name>)");
@@ -152,7 +160,7 @@ public final class Distributions {
                 listed.add(mid);
                 if (!known.containsKey(mid) && m.path("required").asBoolean(true)) {
                     throw new IllegalStateException("distribution " + id + " requires the module '" + mid + "', which has no manifest under "
-                            + modulesDir.toAbsolutePath().normalize() + " (modules/<id>/module.yaml)");
+                            + modulesDir.toAbsolutePath().normalize() + " (modules/<id>/module.yaml) and is not a shipped or installed .dmod");
                 }
             }
         }

@@ -66,6 +66,14 @@ public final class ModuleWiring {
         this.bridge = new ModuleBridge(sources, engines, (id, p) -> folders.getOrDefault(id, Map.of()), budget);
     }
 
+    private volatile Supplier<com.ash.drishti.server.bindings.BindingService> bindings = () -> null;
+
+    /** The data gate a loaded module's declared needs join (its manifest's {@code data: {needs: …}}), withdrawn when it stops. */
+    public ModuleWiring bindings(Supplier<com.ash.drishti.server.bindings.BindingService> gate) {
+        this.bindings = gate == null ? () -> null : gate;
+        return this;
+    }
+
     /** The extension types the bridge connects, by simple name. */
     public List<String> types() {
         return bridge.types();
@@ -129,11 +137,16 @@ public final class ModuleWiring {
             throw e;
         }
         entries.put(module.id(), started);
+        needs(module);
         LOG.info("module {}: {} contributions connected, {} entr{} started", module.id(), n, started.size(), started.size() == 1 ? "y" : "ies");
     }
 
     /** Unload step 7, before its context closes: the module's entry stops. */
     public void stopping(LoadedModule module) {
+        com.ash.drishti.server.bindings.BindingService gate = bindings.get();
+        if (gate != null) {
+            gate.withdrawNeeds(module.id());
+        }
         folders.remove(module.id());
         List<DrishtiModule> started = entries.remove(module.id());
         if (started != null) {
@@ -142,6 +155,24 @@ public final class ModuleWiring {
         List<String> names = defaults.remove(module.id());
         if (names != null && env != null) {
             names.forEach(env.getPropertySources()::remove);
+        }
+    }
+
+    /** The module's needs file (verified at V7) joins the data gate, so a function of it whose need is unserved is switched off. */
+    private void needs(LoadedModule module) {
+        com.ash.drishti.server.bindings.BindingService gate = bindings.get();
+        com.ash.drishti.module.runtime.ModuleCandidate c = module.candidate();
+        if (gate == null || c == null) {
+            return;
+        }
+        Object file = c.manifest().section("data") instanceof Map<?, ?> d ? d.get("needs") : null;
+        if (file == null || String.valueOf(file).isBlank()) {
+            return;
+        }
+        com.ash.drishti.packs.bindings.DataNeeds n = com.ash.drishti.packs.bindings.DataNeeds.of(module.id(), c.yaml(String.valueOf(file), "V7"));
+        gate.moduleNeeds(module.id(), n);
+        if (!n.needs().isEmpty()) {
+            LOG.info("module {}: {} data need{} joined the data gate", module.id(), n.needs().size(), n.needs().size() == 1 ? "" : "s");
         }
     }
 

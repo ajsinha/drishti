@@ -12,6 +12,8 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# What the module reads (section 5): kinds and contract ranges, never where they live (the site binds them). The genomics module reads
-# nothing the kernel binds: its VCF reader serves variant and sample itself, and gene and cohort are computed from them.
-needs: []
+# What the module reads (section 5): kinds and contract ranges, never where they live (the site binds them). Its VCF reader serves variant
+# and sample itself (found by convention, nothing to bind), and gene and cohort are computed from them. VARIANT cannot work without
+# variants: a site that binds variant elsewhere and leaves it unserved sees VARIANT's "needs data" page.
+needs:
+  - {kind: variant, contract: ">=1.0 <2", use: [read], required: true, used-by: [VARIANT]}

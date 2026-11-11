@@ -32,14 +32,16 @@ import java.util.TreeMap;
 
 /**
  * The modules a distribution may list, read from their own manifests (docs/architecture/DISTRIBUTIONS.md section 10): a content module's
- * {@code modules/<id>/module.yaml} (the {@code .dmod} manifest) and a module with code's {@code META-INF/drishti/module.yaml} in its
- * sources ({@code modules/<id>/<part>/src/main/resources/...}). The console reads the same files the same way
+ * {@code modules/<id>/module.yaml} (the {@code .dmod} manifest), a module with code's {@code META-INF/drishti/module.yaml} in its
+ * sources ({@code modules/<id>/<part>/src/main/resources/...}), and the packaged modules the registry reads with the same reader
+ * ({@link com.ash.drishti.registry.ModulePackages}: the shipped first-party {@code .dmod} packages and those installed in the module store),
+ * whose manifest wins over a folder's copy. The console reads the same files the same way
  * (drishti-console/core/distribution.py). Each comes to its packs, its function words, the engines it owns, its top menus, the Help
  * domains it owns and the modules it requires; the list is in requirement order (a required module before the modules that need it).
  */
 public final class ModuleManifests {
 
-    /** One module as a distribution sees it. */
+    /** One module as a distribution sees it ({@code source}: its manifest file; null for a package). */
     public record Entry(String id, String domain, List<String> packs, List<String> words, List<String> features, List<String> menus,
             List<String> docs, List<String> requires, Path source) {
     }
@@ -54,10 +56,27 @@ public final class ModuleManifests {
 
     /** Every module manifest under {@code dir}, by id, in requirement order; an empty map when the folder does not exist. */
     public static Map<String, Entry> read(Path dir) {
+        return read(dir, List.of());
+    }
+
+    /** As above, with the packaged modules ({@link com.ash.drishti.registry.ModulePackages#read}): a package's manifest is the one read. */
+    public static Map<String, Entry> read(Path dir, List<com.ash.drishti.registry.ModulePackages.Package> packages) {
         Map<String, Entry> byId = new TreeMap<>();
-        if (dir == null || !Files.isDirectory(dir)) {
-            return byId;
+        if (dir != null && Files.isDirectory(dir)) {
+            folder(dir, byId);
         }
+        for (com.ash.drishti.registry.ModulePackages.Package p : packages) {
+            Entry e = ofDmod(YAML.valueToTree(p.manifest()), null);
+            if (!e.id().isEmpty()) {
+                byId.put(e.id(), e);
+            }
+        }
+        Map<String, Entry> ordered = new LinkedHashMap<>();
+        byId.keySet().forEach(id -> visit(id, byId, ordered, new LinkedHashSet<>()));
+        return ordered;
+    }
+
+    private static void folder(Path dir, Map<String, Entry> byId) {
         try (DirectoryStream<Path> modules = Files.newDirectoryStream(dir, Files::isDirectory)) {
             for (Path m : modules) {
                 for (Path dmod : List.of(m.resolve("module.yaml"), m.resolve(SDK_PROJECT), m.resolve("dmod").resolve("module.yaml"))) {
@@ -81,9 +100,6 @@ public final class ModuleManifests {
         } catch (IOException e) {
             throw new IllegalStateException("module manifests under " + dir + " cannot be read: " + e.getMessage(), e);
         }
-        Map<String, Entry> ordered = new LinkedHashMap<>();
-        byId.keySet().forEach(id -> visit(id, byId, ordered, new LinkedHashSet<>()));
-        return ordered;
     }
 
     /** The modules {@code listed} with every module they require, transitively (unknown ones are left to the caller). */

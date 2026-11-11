@@ -30,8 +30,9 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * What the modules say they need (docs/architecture/KERNEL_AND_MODULES.md section 5.3): each module's {@code META-INF/drishti/needs.yaml}
- * (the {@code data/needs.yaml} of a {@code .dmod}), read from the class path. A need names a kind and never a connector; the kernel binds it.
+ * What the modules say they need (docs/architecture/KERNEL_AND_MODULES.md section 5.3): each built-in module's
+ * {@code META-INF/drishti/needs.yaml}, read from the class path, and each loaded {@code .dmod}'s needs file (its manifest's
+ * {@code data: {needs: …}}, read by {@link #of(String, Map)} when it loads). A need names a kind and never a connector; the kernel binds it.
  *
  * @param needs every need of every module, in file order
  * @param computed the kinds the modules compute (their {@code KindProvider}s), by kind to its module
@@ -94,6 +95,30 @@ public record DataNeeds(List<Need> needs, Map<String, String> computed, List<Str
             problems.add(RESOURCE + ": " + e.getMessage());
         }
         return new DataNeeds(List.copyOf(needs), Map.copyOf(computed), List.copyOf(problems));
+    }
+
+    /** One loaded module's needs file ({@code needs:}, {@code computed:}); the module is {@code module} whatever the file says. */
+    public static DataNeeds of(String module, Map<String, Object> file) {
+        List<Need> needs = new ArrayList<>();
+        Map<String, String> computed = new LinkedHashMap<>();
+        Map<String, Object> m = new LinkedHashMap<>(file == null ? Map.of() : file);
+        m.put("module", module);
+        read(m, needs, computed);
+        return new DataNeeds(List.copyOf(needs), Map.copyOf(computed), List.of());
+    }
+
+    /** These needs and {@code more}'s, in that order. */
+    public DataNeeds plus(DataNeeds more) {
+        if (more.needs.isEmpty() && more.computed.isEmpty() && more.problems.isEmpty()) {
+            return this;
+        }
+        List<Need> n = new ArrayList<>(needs);
+        n.addAll(more.needs);
+        Map<String, String> c = new LinkedHashMap<>(computed);
+        more.computed.forEach(c::putIfAbsent);
+        List<String> p = new ArrayList<>(problems);
+        p.addAll(more.problems);
+        return new DataNeeds(List.copyOf(n), Map.copyOf(c), List.copyOf(p));
     }
 
     /** One file's values. */

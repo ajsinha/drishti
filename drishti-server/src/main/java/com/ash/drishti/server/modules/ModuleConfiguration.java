@@ -42,16 +42,24 @@ public class ModuleConfiguration {
 
     private static final Logger LOG = LoggerFactory.getLogger(ModuleConfiguration.class);
 
-    /** The modules as this server started: which were loaded (a switch changed since takes effect at the next start). */
-    public record Started(Map<String, Boolean> loaded) {
+    /**
+     * The modules as this server started: which were loaded (a switch changed since takes effect at the next start), and the {@code .dmod}
+     * packages the module node holds now ({@code live}: a package deployed after the start is loaded without one).
+     */
+    public record Started(Map<String, Boolean> loaded, java.util.function.Predicate<String> live) {
 
         public Started {
             loaded = Map.copyOf(loaded);
+            live = live == null ? id -> false : live;
         }
 
-        /** True when the module's code was loaded at this start. */
+        public Started(Map<String, Boolean> loaded) {
+            this(loaded, null);
+        }
+
+        /** True when the module's code was loaded at this start, or its package is loaded on this node now. */
         public boolean loaded(String id) {
-            return Boolean.TRUE.equals(loaded.get(id));
+            return Boolean.TRUE.equals(loaded.get(id)) || live.test(id);
         }
     }
 
@@ -67,12 +75,15 @@ public class ModuleConfiguration {
     }
 
     @Bean
-    public Started modulesStarted(AccessRegistry registry) {
+    public Started modulesStarted(AccessRegistry registry, ObjectProvider<com.ash.drishti.server.modules.deploy.ModuleNode> node) {
         Map<String, Boolean> m = new LinkedHashMap<>();
         for (ModuleState s : registry.modules()) {
             m.put(s.id(), s.on());
         }
-        return new Started(m);
+        return new Started(m, id -> {
+            com.ash.drishti.server.modules.deploy.ModuleNode n = node.getIfAvailable();
+            return n != null && n.runtime() != null && n.runtime().loaded(id).isPresent();
+        });
     }
 
     /** Outermost of the server's own filters: an old path is the new one from here on. */
@@ -87,8 +98,12 @@ public class ModuleConfiguration {
 
     /** Just before the engine gate (4), after the caller is known: a module that is off says so, before its engines are asked. */
     @Bean
-    public FilterRegistrationBean<ModuleGateFilter> moduleGateFilter(AccessRegistry registry, Started started) {
-        FilterRegistrationBean<ModuleGateFilter> r = new FilterRegistrationBean<>(new ModuleGateFilter(registry, started::loaded));
+    public FilterRegistrationBean<ModuleGateFilter> moduleGateFilter(AccessRegistry registry, Started started,
+            ObjectProvider<com.ash.drishti.server.modules.deploy.ModuleNode> node) {
+        // a package the module node holds (loaded, switched off or removed) is the node's to answer: its own 404 DRS-1025 or 410 DRS-1028
+        java.util.function.Predicate<String> here = id -> started.loaded(id) || java.util.Optional.ofNullable(node.getIfAvailable())
+                .flatMap(n -> n.entry(id)).isPresent();
+        FilterRegistrationBean<ModuleGateFilter> r = new FilterRegistrationBean<>(new ModuleGateFilter(registry, here));
         r.addUrlPatterns("/api/*");
         r.setOrder(3);
         return r;

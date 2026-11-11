@@ -86,6 +86,8 @@ public final class BindingService {
     private final Clock clock;
     private final ReentrantLock lock = new ReentrantLock();
     private final Map<String, Map<String, Object>> contracts = new ConcurrentHashMap<>();
+    /** The needs of each loaded {@code .dmod} (its manifest's needs file), added on load and withdrawn on unload. */
+    private final Map<String, DataNeeds> loaded = new ConcurrentHashMap<>();
 
     private volatile Bindings applied = Bindings.NONE;
     private volatile String appliedEtag = null;
@@ -152,6 +154,40 @@ public final class BindingService {
         }
     }
 
+    /** A loaded module's declared needs join the gate (they replace any it declared before), and the gate is worked out again. */
+    public void moduleNeeds(String module, DataNeeds needs) {
+        loaded.put(module, needs);
+        regate();
+    }
+
+    /** An unloaded module's needs leave the gate. */
+    public void withdrawNeeds(String module) {
+        if (loaded.remove(module) != null) {
+            regate();
+        }
+    }
+
+    private void regate() {
+        lock.lock();
+        try {
+            last = resolve(false);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /** The needs the gate reads: the built-in modules' that are on, then each loaded {@code .dmod}'s (a loaded module is on). */
+    DataNeeds needs() {
+        DataNeeds out = allNeeds.of(moduleOn);
+        for (String id : new java.util.TreeSet<>(loaded.keySet())) {
+            DataNeeds n = loaded.get(id);
+            if (n != null) {
+                out = out.plus(n);
+            }
+        }
+        return out;
+    }
+
     /** The functions switched off by an unserved need, with the reason (the registry asks this; lock-free). */
     public Optional<String> offReason(String function) {
         return Optional.ofNullable(last.off().get(function));
@@ -166,7 +202,7 @@ public final class BindingService {
 
     /** Every kind's resolution; {@code fresh} also reads each needed kind's newest date (for STALE): the page, not the gate. */
     public BindingResolver.Result resolve(boolean fresh) {
-        DataNeeds needs = allNeeds.of(moduleOn);
+        DataNeeds needs = needs();
         Set<String> needed = new LinkedHashSet<>();
         needs.needs().forEach(n -> needed.add(n.kind()));
         LocalDate today = LocalDate.now(clock);
@@ -303,7 +339,7 @@ public final class BindingService {
             throw new DrishtiException(ErrorCode.BINDING_REFUSED, "say why the binding changes (the reason is kept in the audit log)");
         }
         String k = kind == null ? "" : kind.trim();
-        if (allNeeds.computed().containsKey(k) || router.serving(k).stream().anyMatch(SourceRouter.Serving::computed)) {
+        if (needs().computed().containsKey(k) || router.serving(k).stream().anyMatch(SourceRouter.Serving::computed)) {
             throw new DrishtiException(ErrorCode.BINDING_REFUSED, k + " is computed by a module: it is not bound to a connector");
         }
         Bindings.Binding b = null;

@@ -56,9 +56,7 @@ public final class AccessRegistries {
             String s = v.strip().toLowerCase(Locale.ROOT);
             return "true".equals(s) || "on".equals(s) || "yes".equals(s);
         };
-        String deploy = property.apply("drishti.module-deploy.dir");
-        Path store = deploy != null && !deploy.isBlank() ? Path.of(deploy.strip())
-                : Path.of(orDefault(property.apply("drishti.data.dir"), "./data"), "modules");
+        java.util.function.Supplier<Path> store = () -> ModulePackages.store(property);   // where the module node installs, read when used
         return new EmbeddedAccessRegistry(new YamlAccessStore(Path.of(modules), Path.of(access), loader, manifests(property), store), overrides,
                 Clock.systemUTC());
     }

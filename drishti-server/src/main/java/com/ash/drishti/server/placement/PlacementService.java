@@ -52,7 +52,8 @@ import org.slf4j.LoggerFactory;
 /**
  * Where each module part runs (KERNEL_AND_MODULES.md section 4.11, CLUSTER_GUIDE.md "Module placement"): {@code config/placement.yaml}
  * resolved against the modules the runtime loaded (told through {@link PlacementHost}, the runtime's {@code ModuleHost}) and the members of
- * Drishti*net. No all-nodes default: a part not placed runs nowhere. A one-runner part ({@code feed}, {@code singleton}) is owned through the
+ * Drishti*net. No all-nodes default in a cluster: a part not placed runs nowhere. On a single node (no cluster) a module the file does not
+ * name is placed here by default (Health notes "single node: placed here"). A one-runner part ({@code feed}, {@code singleton}) is owned through the
  * one {@link SingletonElection} (the first live placed node by name), so every node agrees on the owner and failover never leaves the
  * placement. Today's in-process modules (banking)
  * count as placed on every node, unguarded, so their behaviour is unchanged.
@@ -102,6 +103,7 @@ public final class PlacementService {
     private volatile String fileProblem;
     private volatile long seen = -1;
     private volatile java.util.function.Predicate<String> firstParty = id -> false;
+    private volatile java.util.function.BooleanSupplier singleNode = () -> false;
 
     /**
      * Which modules are verified first-party (the module host tells): the shipped default placement puts every part of one on every node,
@@ -111,7 +113,24 @@ public final class PlacementService {
         this.firstParty = verified == null ? id -> false : verified;
     }
 
-    /** The placement with the shipped default for first-party modules the site's file does not name. */
+    /**
+     * Whether this server is a single node (no cluster): then a module the site's file does not name is placed here by default (there is
+     * nowhere else for it to run). In a cluster there is no all-nodes default.
+     */
+    public void singleNode(java.util.function.BooleanSupplier single) {
+        this.singleNode = single == null ? () -> false : single;
+    }
+
+    /** The modules placed here only by the single-node default (the file does not name them), each noted on Health. */
+    public List<String> notes() {
+        if (!singleNode.getAsBoolean()) {
+            return List.of();
+        }
+        return declared.values().stream().map(ModuleParts::module).filter(id -> !current.modules().containsKey(id) && !firstParty.test(id))
+                .sorted().map(id -> id + ": single node: placed here").toList();
+    }
+
+    /** The placement with the shipped default for first-party modules the site's file does not name (every module, on a single node). */
     Placement withDefaults(Placement p) {
         return withDefaults(p, declared.values());
     }
@@ -120,7 +139,7 @@ public final class PlacementService {
     public Placement withDefaults(Placement p, java.util.Collection<ModuleParts> modules) {
         Map<String, Map<String, Placement.Target>> all = new LinkedHashMap<>(p.modules());
         for (ModuleParts m : modules) {
-            if (!all.containsKey(m.module()) && firstParty.test(m.module())) {
+            if (!all.containsKey(m.module()) && (firstParty.test(m.module()) || singleNode.getAsBoolean())) {
                 Map<String, Placement.Target> parts = new LinkedHashMap<>();
                 m.parts().keySet().forEach(part -> parts.put(part, new Placement.Target(List.of(), List.of("all"), 0, true)));
                 all.put(m.module(), parts);
@@ -256,6 +275,7 @@ public final class PlacementService {
         out.put("nodes", m.nodes().stream().map(n -> Map.of("id", n.id(), "tags", n.tags(), "up", n.up(), "self", n.id().equals(me))).toList());
         out.put("parts", rows(m));
         out.put("problems", m.problems());
+        out.put("notes", notes());
         out.put("placement", current.toYaml());
         out.put("plans", plans().stream().filter(p -> "proposed".equals(p.state())).toList());
         return out;
@@ -468,6 +488,10 @@ public final class PlacementService {
         m.parts().forEach(p -> by.merge(p.status(), 1L, Long::sum));
         out.put("parts", by);
         out.put("problems", m.problems());
+        List<String> notes = notes();
+        if (!notes.isEmpty()) {
+            out.put("notes", notes);
+        }
         if (fileProblem != null) {
             out.put("fileProblem", fileProblem);
         }
