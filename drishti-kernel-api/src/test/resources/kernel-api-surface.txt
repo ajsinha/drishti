@@ -125,6 +125,7 @@
   module.DrishtiModule public abstract void com.ash.drishti.kernel.api.module.DrishtiModule.start(com.ash.drishti.kernel.api.module.ModuleContext)
   module.DrishtiModule public default java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.module.DrishtiModule.health()
   module.DrishtiModule public default void com.ash.drishti.kernel.api.module.DrishtiModule.stop()
+  module.EngineWide public abstract java.lang.String com.ash.drishti.kernel.api.module.EngineWide.value()
   module.ModuleApi public abstract java.lang.String com.ash.drishti.kernel.api.module.ModuleApi.value()
   module.ModuleContext public abstract com.ash.drishti.kernel.api.module.ModuleContext$KindWriter com.ash.drishti.kernel.api.module.ModuleContext.writer()
   module.ModuleContext public abstract com.ash.drishti.kernel.api.module.ModuleContext$Kinds com.ash.drishti.kernel.api.module.ModuleContext.kinds()
@@ -484,6 +485,7 @@ function.FunctionProvider
 function.FunctionProvider$Provided
 health.HealthFigures
 module.DrishtiModule
+module.EngineWide
 module.ModuleApi
 module.ModuleContext
 module.ModuleContext$KindWriter

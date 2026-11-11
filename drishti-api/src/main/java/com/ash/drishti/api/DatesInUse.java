@@ -53,13 +53,13 @@ public final class DatesInUse {
         return () -> ENGINES.remove(e);
     }
 
-    /** True when at least one engine says which dates it has open: a connector may then expire a mapped map of another date. */
     /** Drops every registration whose owner or reader is of a class loader that is leaving (a module unloads). */
     public static void forget(ClassLoader loader) {
         ENGINES.removeIf(e -> e.dates().getClass().getClassLoader() == loader
                 || (e.owner().get() != null && e.owner().get().getClass().getClassLoader() == loader));
     }
 
+    /** True when at least one engine says which dates it has open: a connector may then expire a mapped map of another date. */
     public static boolean known() {
         ENGINES.removeIf(e -> e.owner().get() == null);
         return !ENGINES.isEmpty();
