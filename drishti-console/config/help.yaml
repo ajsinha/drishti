@@ -174,6 +174,7 @@ sections:
 # slug or slug#anchor. Documents that left the list (architecture, the per-plugin connector pages, the runbooks) are still in
 # the help centre at their path slug, so the old addresses keep working.
 moved:
+  docs-strategy-competitive-landscape: competitive-analysis#part-ii--kernel-and-modules-against-plug-in-platforms   # docs/strategy/COMPETITIVE_LANDSCAPE.md folded into docs/strategy/COMPETITIVE_ANALYSIS.md
   docs-deployment-and-qa-guide: deployment-qa   # the guide's path slug
   docs-quickstart-developers: developer-quickstart   # the quickstart's path slug
   qa-windows: deployment-qa#11-offline-qa-with-your-own-trade-files   # the Windows QA script folded into the Deployment and QA guide
