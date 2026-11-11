@@ -1,7 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" class="hm" viewBox="0 0 1004 554" width="1004" height="554" role="img" aria-label="Option C, kernel and rooms: a minimal mark. A kernel core with module tiles (banking, market data, capital markets, economy) plugged around it like Linux drivers, with an empty socket where a new .dmod plugs in. The same tiles, under a roof with a door (the console) and on one kernel bar, form the Drishti Risk, Drishti Finance and Drishti All houses. A small icon-size lockup shows it as a logo-like mark.">
+<svg xmlns="http://www.w3.org/2000/svg" class="hm" viewBox="0 0 1004 554" width="1004" height="554" role="img" aria-label="Kernel and rooms: a minimal mark. A kernel core with module tiles (banking, market data, capital markets, economy) plugged around it like Linux drivers, with an empty socket where a new .dmod plugs in. The same tiles, under a roof with a door (the console) and on one kernel bar, form the Drishti Risk, Drishti Finance and Drishti All houses. A small icon-size lockup shows it as a logo-like mark.">
 <!-- Copyright (c) 2026 Ashutosh Sinha. All rights reserved. PROPRIETARY AND CONFIDENTIAL. -->
 <title>Kernel and rooms</title>
-<desc>Option C, kernel and rooms: a minimal mark. A kernel core with module tiles (banking, market data, capital markets, economy) plugged around it like Linux drivers, with an empty socket where a new .dmod plugs in. The same tiles, under a roof with a door (the console) and on one kernel bar, form the Drishti Risk, Drishti Finance and Drishti All houses. A small icon-size lockup shows it as a logo-like mark.</desc>
+<desc>Kernel and rooms: a minimal mark. A kernel core with module tiles (banking, market data, capital markets, economy) plugged around it like Linux drivers, with an empty socket where a new .dmod plugs in. The same tiles, under a roof with a door (the console) and on one kernel bar, form the Drishti Risk, Drishti Finance and Drishti All houses. A small icon-size lockup shows it as a logo-like mark.</desc>
 <style>
 .hm{--bg:#0e1628;--panel:#16213a;--panel2:#1b2744;--line:#33446e;--ink:#e7ecf5;--muted:#93a0b8;--amber:#e8a33a;
 --bank:#7fb2ff;--mkt:#e8a33a;--cap:#c69cf2;--eco:#5fd39a;--pipe:#4fc3dc;--kern:#1d2b4d;--kern2:#25365e}
@@ -28,7 +28,7 @@ html.light .hm{--bg:#f7f5f0;--panel:#ffffff;--panel2:#faf8f4;--line:#cfc7b8;--in
 .hm .shelf{stroke:var(--muted);stroke-width:2.5}.hm .hl{fill:var(--amber)}
 </style>
 <rect width="1004" height="554" class="bg"/>
-<text x="30" y="34" class="h1" text-anchor="start">C · Kernel and rooms</text>
+<text x="30" y="34" class="h1" text-anchor="start">Kernel and rooms</text>
 <text x="30" y="56" class="m" text-anchor="start">Modules plug into one kernel like drivers; stack the same tiles under a roof and you have a product.</text>
 <circle cx="230" cy="246" r="128" class="ln" stroke-dasharray="3 5"/>
 <path d="M230.0,194.0L230.0,154.0" class="arrow"/>

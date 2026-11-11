@@ -17,6 +17,15 @@
 
 ## Unreleased
 
+- **How it fits opens with the house** (the owner's pick of the house mock-ups): HOW_IT_FITS.md starts with *The house*, the street
+  picture (`docs/how-it-fits/house-street.svg`) and the mapping (kernel = foundation, distributions = houses, modules = rooms, console =
+  front door, workspaces = shelves, screens = books, bindings = pipes, placement, deploy, Admin, Health, keys), the rule *every function
+  has one room, every room one door, every setting one switch on one wall*, and the Linux and Tomcat parallel; section 3 shows the
+  cutaway (`house-cutaway.svg`) for rooms, shelves and books. The PDF is regenerated. Picture C is kept as `kernel-and-rooms.svg`; the
+  A/B/C choice page is removed (git keeps it). **Landing page mock-up** (`docs/how-it-fits/landing-mockup.html` and its PNGs, for the
+  owner's approval; the real Home is unchanged): picture C as Home's hero, "One kernel. Modules plug in. Your product, your way.", the
+  product name, tagline and rooms from the distribution file's brand and modules, the mark down to 16 px, for Drishti and Drishti Risk
+  in the dark and light themes, desktop and phone.
 - **Competitive landscape: kernel and modules** (`docs/strategy/COMPETITIVE_LANDSCAPE.md`, internal): does any commercial product share Drishti's
   kernel, `.dmod` module and distribution architecture for data, BI and risk; a summary table (Atoti, Murex, Calypso, FIS, Numerix, MSCI,
   Bloomberg MARS, Snowflake Native Apps, Salesforce packages, Splunk, Elastic, Grafana, Superset, Kubernetes operators, Power BI, Tableau,

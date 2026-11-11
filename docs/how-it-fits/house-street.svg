@@ -1,7 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" class="hm" viewBox="0 0 1000 586" width="1000" height="586" role="img" aria-label="Option A, the street: the Drishti Risk, Drishti Finance and Drishti All houses (distributions) stand side by side on one long foundation, the kernel, whose utilities are lakes and connectors (water), compute engines (power), Rachana and BI (common language and tools), security and the cluster. Rooms are modules; market data is the same room in Risk, Finance and All. Each house has one front door, its console, with Health by the door; pipes from the foundation are data bindings. A new room, a .dmod package, slides in like a Linux driver.">
+<svg xmlns="http://www.w3.org/2000/svg" class="hm" viewBox="0 0 1000 586" width="1000" height="586" role="img" aria-label="The street: the Drishti Risk, Drishti Finance and Drishti All houses (distributions) stand side by side on one long foundation, the kernel, whose utilities are lakes and connectors (water), compute engines (power), Rachana and BI (common language and tools), security and the cluster. Rooms are modules; market data is the same room in Risk, Finance and All. Each house has one front door, its console, with Health by the door; pipes from the foundation are data bindings. A new room, a .dmod package, slides in like a Linux driver.">
 <!-- Copyright (c) 2026 Ashutosh Sinha. All rights reserved. PROPRIETARY AND CONFIDENTIAL. -->
 <title>The street: one foundation, many houses</title>
-<desc>Option A, the street: the Drishti Risk, Drishti Finance and Drishti All houses (distributions) stand side by side on one long foundation, the kernel, whose utilities are lakes and connectors (water), compute engines (power), Rachana and BI (common language and tools), security and the cluster. Rooms are modules; market data is the same room in Risk, Finance and All. Each house has one front door, its console, with Health by the door; pipes from the foundation are data bindings. A new room, a .dmod package, slides in like a Linux driver.</desc>
+<desc>The street: the Drishti Risk, Drishti Finance and Drishti All houses (distributions) stand side by side on one long foundation, the kernel, whose utilities are lakes and connectors (water), compute engines (power), Rachana and BI (common language and tools), security and the cluster. Rooms are modules; market data is the same room in Risk, Finance and All. Each house has one front door, its console, with Health by the door; pipes from the foundation are data bindings. A new room, a .dmod package, slides in like a Linux driver.</desc>
 <style>
 .hm{--bg:#0e1628;--panel:#16213a;--panel2:#1b2744;--line:#33446e;--ink:#e7ecf5;--muted:#93a0b8;--amber:#e8a33a;
 --bank:#7fb2ff;--mkt:#e8a33a;--cap:#c69cf2;--eco:#5fd39a;--pipe:#4fc3dc;--kern:#1d2b4d;--kern2:#25365e}
@@ -28,7 +28,7 @@ html.light .hm{--bg:#f7f5f0;--panel:#ffffff;--panel2:#faf8f4;--line:#cfc7b8;--in
 .hm .shelf{stroke:var(--muted);stroke-width:2.5}.hm .hl{fill:var(--amber)}
 </style>
 <rect width="1000" height="586" class="bg"/>
-<text x="30" y="34" class="h1" text-anchor="start">A · The street</text>
+<text x="30" y="34" class="h1" text-anchor="start">The street</text>
 <text x="30" y="56" class="m" text-anchor="start">One foundation, many houses: the kernel carries every utility, each distribution is a house, each module a room.</text>
 <rect x="30" y="400" width="940" height="76" rx="3" class="kern"/>
 <text x="42" y="418" class="cap" text-anchor="start">KERNEL · THE FOUNDATION</text>
