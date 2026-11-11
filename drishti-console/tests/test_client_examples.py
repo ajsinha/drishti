@@ -133,7 +133,7 @@ def _kind_reads():
 
 def _mq_keys():
     """The keys a model query may have: MqParser.TOP in the server's source (anything else is DRS-9150 "unknown key")."""
-    src = (REPO / "drishti-server/src/main/java/com/ash/drishti/server/bi/mq/MqParser.java").read_text(encoding="utf-8")
+    src = (REPO / "kernel/drishti-server/src/main/java/com/ash/drishti/server/bi/mq/MqParser.java").read_text(encoding="utf-8")
     m = re.search(r"Set<String> TOP = Set\.of\(([^;]*)\);", src)
     return set(re.findall(r'"([\w-]+)"', m.group(1)))
 

@@ -26,7 +26,7 @@ a double-click. The options are the same everywhere; on Windows `--env-file` may
 | `stop-server`, `stop-console` | stop by the pid file only (never by name): graceful first, forced after a timeout; `--node`, `--all-nodes` |
 | `status` | pid, state, port, health answer, distribution and LAN address of every process started from here; with `--cluster FILE` also the members each node sees and the console's servers |
 | `start-all`, `stop-all` | one server and one console on this machine; `--distribution risk\|finance\|genomics\|all` (or a file) for both |
-| `start-cluster`, `stop-cluster` | a cluster on one machine from a cluster file (`--cluster FILE`, default `drishti-stack/stack.yaml`): the nodes, then the console (or each console of a `consoles:` list, each with its `distribution:`); or only those named |
+| `start-cluster`, `stop-cluster` | a cluster on one machine from a cluster file (`--cluster FILE`, default `deploy/stack/stack.yaml`): the nodes, then the console (or each console of a `consoles:` list, each with its `distribution:`); or only those named |
 | `drishti-node` | one node's drain before a stop and its readiness (`drain`, `undrain`, `status`, `wait-ready`, `run`): the stop hook of the service unit and the images |
 
 ```bash
@@ -38,9 +38,9 @@ bin/start-console.sh --server http://192.168.1.20:18480 --env-file /etc/drishti/
 bin/start-server.sh --node drishti-b --seed 192.168.1.20:18480 --env-file cluster.env --background
 bin/status.sh
 bin/stop-server.sh --all-nodes
-bin/start-cluster.sh --cluster drishti-stack/stack.yaml   # three nodes and a console from a file
-bin/status.sh --cluster drishti-stack/stack.yaml          # adds the members and the console's servers
-bin/stop-cluster.sh --cluster drishti-stack/stack.yaml
+bin/start-cluster.sh --cluster deploy/stack/stack.yaml   # three nodes and a console from a file
+bin/status.sh --cluster deploy/stack/stack.yaml          # adds the members and the console's servers
+bin/stop-cluster.sh --cluster deploy/stack/stack.yaml
 ```
 
 ```powershell

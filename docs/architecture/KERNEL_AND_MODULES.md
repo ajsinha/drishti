@@ -157,13 +157,13 @@ them or off the glue between them. The names below are used throughout; *the ker
 
 ### 2.1 What is in it
 
-| Area | Kernel (Maven modules / folders) |
+| Area | Kernel (Maven modules, in the subject folders `kernel/`, `compute/`, `lake/`, `net/`, `plugins/`) |
 |---|---|
 | Foundations | `drishti-common`, `drishti-api` (data SPIs), `drishti-registry` (access registry, licence), `drishti-identity` |
-| Grammar and screens | `drishti-rachana` (Rachana, Sutras), `drishti-engine` (view pipeline, inference, search, phrase, view augmenters), `drishti-packs` (pack loader and pack runtime) |
-| Analysis | `drishti-bicompute` (pivot engine, Rachana functions, Explain, what-if), `drishti-tables` (virtual tables, models), `drishti-graph`, `drishti-inference` |
-| Data | `drishti-lakeio`, `drishti-lakeconfig`, `drishti-lakeload`, `drishti-deltalake`, `drishti-iceberg`, `drishti-memlake`, `drishti-diskcache`, `drishti-dataload` (the inbox), `drishti-flight`, `drishti-messaging` |
-| Connectors | every `plugins/drishti-plugin-*` (delta, iceberg, iceberg-external, file, s3, jdbc, duckdb, kafka, rabbitmq, activemq, redis, mongodb, cassandra, aerospike, rest, feeds, news, demo, yfinance); the connector files, credentials and **bindings** (section 5) |
+| Grammar and screens | `drishti-rachana` (Rachana, Sutras), `drishti-engine` (view pipeline, inference, search, phrase, view augmenters, entity links), `drishti-packs` (pack loader and pack runtime) |
+| Analysis | `drishti-bicompute` (pivot engine, Rachana functions, Explain, what-if), `drishti-tables` (virtual tables, models), `drishti-inference` |
+| Data | `drishti-lakeio` (the lake core: the lake files and file access), `drishti-lakeload` (the loader, the inbox, the in-memory lake), `drishti-deltalake`, `drishti-iceberg`, `drishti-flight`; the disk cache and the message-queue state store in `drishti-common` |
+| Connectors | `plugins/drishti-connectors` (the built-in light ones: file, rest, feed, news, demo, yfinance) and every `plugins/drishti-plugin-*` (delta, iceberg, iceberg-external, s3, jdbc, duckdb, kafka, rabbitmq, activemq, redis, mongodb, cassandra, aerospike); the connector files, credentials and **bindings** (section 5) |
 | Compute | `drishti-compute` (generic: vector store, many-set sums, sharding, the Python pool and sandbox, the scheduler), `drishti-native` (BLAS/LAPACK with Java fallbacks) |
 | Platform | `drishti-server` (REST, security, approvals, collaboration, alerts, cluster `drishti-net`, Health, audit, Admin), `drishti-ai` (LLM providers, MCP), `drishti-app` (the runnable kernel jar) |
 | Module runtime | `drishti-module-runtime`: manifest reading, verification, class loader per module, live route table, unload and absence machinery; **shared with the Drishti Console** (section 10.4) |
@@ -407,7 +407,7 @@ module". First-party modules without an allowance, and every third-party module,
 one build and release train builds banking with each kernel, so the two always ship together.
 
 **As built (2.9.11.i2 + i3, wave 2).** One implementation, `FirstParty` in the module runtime, answers for the module tool and the kernel.
-The build (`modules/dist`) packs the product's modules with `java -jar drishti-module-tool.jar pack` and writes
+The build (`packaging/dist`) packs the product's modules with `java -jar drishti-module-tool.jar pack` and writes
 `META-INF/drishti/first-party.yaml` (id, version, SHA-256 of each `DMOD.MF`) from the packed files; both server jars carry it. A manifest
 whose `kernel-internals:` names a file (banking's `../kernel-internals.txt`) gets the list written in by the packer, and the packer stamps
 `kernel-build:` with the kernel on its class path (`<version>+<build time>` from the server's `build-info.properties`, or `--kernel-build`).

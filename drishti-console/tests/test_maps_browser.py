@@ -79,9 +79,9 @@ def wait(url: str, seconds: int = 150) -> None:
 
 @pytest.fixture(scope="module")
 def stack(tmp_path_factory):
-    jars = sorted(glob.glob(str(ROOT / "drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)
+    jars = sorted(glob.glob(str(ROOT / "kernel/drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)
     if not jars or not Path(JAVA).exists():
-        pytest.skip("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-app -am")
+        pytest.skip("needs the built server: ./mvnw -o -q package -DskipTests -pl :drishti-app -am")
     for port in (SERVER_PORT, CONSOLE_PORT):
         if listening(port):
             pytest.skip(f"port {port} is in use")

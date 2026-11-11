@@ -69,7 +69,7 @@ def test_every_new_type_is_in_the_catalogue_of_the_designer_and_has_an_icon():
         assert re.search(rf"\b{t}: '", icons), t
         icon = re.search(rf"\b{t}: '([a-z0-9-]+)'", icons).group(1)
         assert f".bi-{icon}::before" in (STATIC / "vendor/bootstrap-icons/bootstrap-icons.css").read_text(encoding="utf-8"), icon
-    schemas = "".join(p.read_text(encoding="utf-8") for p in (ROOT / "drishti-server/src/main/resources/bi/report/format").glob("*.yaml"))   # the Format pane is generated from them (2.4.0)
+    schemas = "".join(p.read_text(encoding="utf-8") for p in (ROOT / "kernel/drishti-server/src/main/resources/bi/report/format").glob("*.yaml"))   # the Format pane is generated from them (2.4.0)
     assert "x-hook: format-bins" in schemas and "x-hook: format-totals" in schemas and "data-time" in panes
 
 

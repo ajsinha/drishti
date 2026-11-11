@@ -67,15 +67,15 @@ IDEA on the root, PyCharm on `drishti-console/`, never one folder for both) is
 ## 2. Build the server
 
 ```bash
-./mvnw -q clean package -DskipTests -pl drishti-app -am
-ls drishti-server/target/*-exec.jar
+./mvnw -q clean package -DskipTests -pl :drishti-app -am
+ls kernel/drishti-server/target/*-exec.jar
 ```
 
-**You should see** nothing from Maven (`-q`), then `drishti-server/target/drishti-server-2.9.11.g-exec.jar`. The first build downloads
-its libraries (several minutes); later ones take about a minute. `-pl drishti-app -am` builds the jar that runs (the core server with
+**You should see** nothing from Maven (`-q`), then `kernel/drishti-server/target/drishti-server-2.9.11.g-exec.jar`. The first build downloads
+its libraries (several minutes); later ones take about a minute. `-pl :drishti-app -am` builds the jar that runs (the core server with
 the banking module and the plugins) and only what it needs; `clean` keeps exactly one exec jar in `target/`. Every Maven command and
 what it builds: [DEVELOPER_GUIDE.md › Maven commands](guides/DEVELOPER_GUIDE.md#22-maven-commands). On Windows: `.\mvnw.cmd -q clean
-package -DskipTests -pl drishti-app -am`.
+package -DskipTests -pl :drishti-app -am`.
 
 ## 3. Run the server and the console on the demo lake
 
@@ -112,7 +112,7 @@ To watch a program's output, start each in the foreground in its own terminal in
 Logs are in `data/logs/` (`server.log`, `console.log`), process ids in `data/run/`. Every option of the scripts (ports, heap, an
 env-file for your own secrets, a cluster of several servers with `--node`, the console's `--server`), where the files go, the exit codes
 and what to do when a script stops with an error: [DEPLOYMENT_AND_QA_GUIDE.md › section 6](DEPLOYMENT_AND_QA_GUIDE.md#6-start-the-server-and-the-console).
-A cluster of three servers and a console on this machine, from one file: `bin/start-cluster.sh` (Windows `bin\start-cluster.cmd`), `bin/status.sh --cluster drishti-stack/stack.yaml`, `bin/stop-cluster.sh`
+A cluster of three servers and a console on this machine, from one file: `bin/start-cluster.sh` (Windows `bin\start-cluster.cmd`), `bin/status.sh --cluster deploy/stack/stack.yaml`, `bin/stop-cluster.sh`
 ([bin/README.md](../bin/README.md)). The IntelliJ run configurations **Drishti server (demo lakes)** (module `drishti-app`) and **Drishti console** set the same demo settings for debugging; why each
 setting: [OPERATIONS_GUIDE.md › Start the server](guides/OPERATIONS_GUIDE.md#25-start-the-server) and
 [› Start the console](guides/OPERATIONS_GUIDE.md#26-start-the-console).
@@ -149,19 +149,19 @@ second: browsers share sign-in cookies across ports of one host). Every step, Li
 
 Two programs: the **server** (Java 21, Spring Boot, a Maven reactor) computes every number and lays out every screen; the **console**
 (Python, FastAPI and Jinja2) renders what the server sends, and the browser draws it. Domains are **modules**: the core plus banking,
-capitalmarkets and economy. The full map, module by module: [DEVELOPER_GUIDE.md › The repository](guides/DEVELOPER_GUIDE.md#1-the-repository).
+capitalmarkets and economy. The modules sit in subject folders (`kernel/`, `compute/`, `lake/`, `net/`, `plugins/`, `modules/`, `packaging/`, `testing/`, `drishti-sdk/`); the full map, module by module: [DEVELOPER_GUIDE.md › The repository](guides/DEVELOPER_GUIDE.md#1-the-repository).
 
 | Where | What |
 |---|---|
 | `drishti-api`, `drishti-common` | the source SPI (Spring-free) and the shared types, errors and file-date rules |
-| `drishti-engine`, `drishti-rachana`, `drishti-inference`, `drishti-graph` | the view pipeline, the Rachana grammar (Sutras, the expression language), layout inference, links |
+| `drishti-engine`, `drishti-rachana`, `drishti-inference` | the view pipeline, the Rachana grammar (Sutras, the expression language), layout inference, links |
 | `drishti-registry` | modules, lenses, functions and their switches: what is on at this site |
 | `drishti-banking`, `drishti-compute-banking` | the banking module: VaR and ES, exposure, FRTB-SA, SIMM, sensitivities, the MR cube; its compute kernels |
-| `drishti-lakeconfig`, `drishti-lakeio`, `drishti-deltalake`, `drishti-iceberg`, `drishti-memlake`, `drishti-lakeload`, `drishti-dataload` | the lakes: their files, readers and writers, the in-memory lake, the parallel loader and the data inbox |
+| `drishti-lakeio`, `drishti-deltalake`, `drishti-iceberg`, `drishti-lakeload` | the lakes: the lake core (their files and file access), Delta, Iceberg, and loading (the parallel loader, the data inbox, the in-memory lake) |
 | `drishti-identity`, `drishti-net`, `drishti-compute`, `drishti-bicompute`, `drishti-tables`, `drishti-flight`, `drishti-ai` | users and tokens; Drishti\*net (clusters); compute workers; the pivot and BI engine; tables and models; Arrow Flight; the AI layer |
-| `drishti-server` | the Spring Boot application: controllers, the core's configuration, the exec jar (`drishti-server/target/*-exec.jar`) |
-| `drishti-app` | the assembly the release ships: the server with the banking module and the plugins (`-pl drishti-app -am`) |
-| `plugins/drishti-plugin-*` | the connectors: delta, iceberg, file, jdbc, kafka, s3, rest, feeds and more ([DATA_GUIDE.md](guides/DATA_GUIDE.md)) |
+| `drishti-server` | the Spring Boot application: controllers, the core's configuration, the exec jar (`kernel/drishti-server/target/*-exec.jar`) |
+| `drishti-app` | the assembly the release ships: the server with the banking module and the plugins (`-pl :drishti-app -am`) |
+| `plugins/drishti-connectors`, `plugins/drishti-plugin-*` | the connectors: the built-in light ones (file, rest, feed, news, demo, yfinance) in one module, and a plugin each for delta, iceberg, jdbc, kafka, s3 and more ([DATA_GUIDE.md](guides/DATA_GUIDE.md)) |
 | `drishti-elements`, `drishti-console/web/static/elements/` | Drishti Elements, the JavaScript libraries every screen is made of (core, inputs, grid, chart, data, insight, renderer, risk, graph, tree, designer), and their WebJar ([ELEMENTS_API.md](guides/ELEMENTS_API.md)) |
 | `drishti-console/` | `run_drishti_web.py`, `core/` (one module per feature), `routes/`, `web/templates/`, `plugins/<module>/` (a module's console pages, help and static files: `banking`, `economy`), `config/` (`application.yaml`, `help.yaml`), `tests/` |
 | `config/packs/<domain>/<pack>/` | the packs (content, not code): `core/`, `banking/`, `capitalmarkets/`, `economy/` ([BUILD_GUIDE.md](guides/BUILD_GUIDE.md)) |
@@ -181,7 +181,7 @@ Run these before every commit; each takes seconds to a few minutes. The whole te
 | The quick file checks | `drishti-console/.venv/bin/python -m pytest -q -m static drishti-console/tests` | every test that reads files and starts nothing: docs and help, asset names, branding, CSS tokens, guards, licences |
 | The Elements unit tests | `node --test drishti-console/tests/elements/` (or `pytest drishti-console/tests/test_elements_node.py`) | the libraries in Node, no browser |
 | One browser file | `drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_elements_gallery_browser.py` | Chromium on a real console; name the file of the screen you changed |
-| One Java module | `./mvnw -q verify -pl drishti-registry -am` | that module's tests and the rules it must keep |
+| One Java module | `./mvnw -q verify -pl :drishti-registry -am` | that module's tests and the rules it must keep |
 | What your branch touched | `tools/drill.sh --affected` (`--base REF`, default `origin/develop`; `--dry-run` lists the selection) | only the Maven modules and test files the diff can reach; shared infrastructure selects more; never a release proof |
 | The gate | `tools/drill.sh --gate` | everything the release drill checks first (headers, generated files, docs, static tests, the rule tests and one build); a few minutes, on any branch, no push |
 

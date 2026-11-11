@@ -496,7 +496,7 @@ report: {summary: runs/scenario-pv.summary.json}
 ```
 
 ```bash
-java -Xmx2g -Dloader.main=com.ash.drishti.lakeload.LakeLoad -jar drishti-server/target/drishti-server-<version>-exec.jar \
+java -Xmx2g -Dloader.main=com.ash.drishti.lakeload.LakeLoad -jar kernel/drishti-server/target/drishti-server-<version>-exec.jar \
     --config load-scenario-pv.yaml
 ```
 
@@ -950,7 +950,7 @@ and `trades.jsonl.gz`) releases neither, and the Inbox screen says why.
 
 Every key a `.ready` file can carry, each with what it does and its default. All are optional: a real file uses only those it needs (most
 need none, or `lake:`, `mode:`, `sha256:` and `rows:`). The keys are one list shared by the inbox and the command-line loaders
-(`ReadyNote.KEYS` in drishti-dataload, `READY_KEYS` in `tools/lake/feedroute.py`, compared by a test); this example is parsed against it
+(`ReadyNote.KEYS` in drishti-lakeload, `READY_KEYS` in `tools/lake/feedroute.py`, compared by a test); this example is parsed against it
 by `drishti-console/tests/test_docs_ready_example.py`, so a renamed key fails the docs.
 
 ```yaml
@@ -1578,7 +1578,7 @@ results are published.
 **An Iceberg copy of a demo store**: `tools/build_demo_lakes.py --store risk=iceberg` copies the tables into Iceberg with a lake file
 `demo-iceberg.yaml` and connectors naming it ([tutorial 16, Part E](../tutorials/16-load-your-own-data-into-a-new-lake.md#part-e--the-risk-lake-and-the-official-results-on-iceberg)).
 
-**The local cluster** (`drishti-stack`): the stack's synthetic lakes are written through the demo lake's file with another root
+**The local cluster** (`deploy/stack`): the stack's synthetic lakes are written through the demo lake's file with another root
 (`lake build --lake demo --lake-root data/stack/lakes/<name>`); every node reads the same description.
 
 **Admin → Lakes** lists every lake (format, root, in memory or not) and each table (kind, path, partitions, promoted columns, vectors, id,

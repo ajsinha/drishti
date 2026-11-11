@@ -78,8 +78,8 @@ def test_each_public_sector_pack_reads_its_lake_and_its_feed_loads_it():
 
 def test_nothing_else_shipped_points_at_them():
     places = [*ROOT.glob("config/connectors/*.yaml"), *ROOT.glob("config/engines/*.yaml"), ROOT / "config" / "dataload.yaml",
-              *ROOT.glob("config/packs/**/*.yaml"), *ROOT.glob("drishti-server/src/main/resources/**/*.yaml"),
-              *ROOT.glob("drishti-stack/*.yaml")]
+              *ROOT.glob("config/packs/**/*.yaml"), *ROOT.glob("kernel/drishti-server/src/main/resources/**/*.yaml"),
+              *ROOT.glob("deploy/stack/*.yaml")]
     allowed = {pack_dir(p) for p in PUBLIC_SECTOR}         # the public-sector packs' own files
     hits = []
     for f in places:

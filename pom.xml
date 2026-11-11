@@ -36,40 +36,32 @@
   </developers>
 
   <modules>
-    <module>drishti-api</module>
-    <module>drishti-common</module>
-    <module>drishti-kernel-api</module>
-    <module>drishti-module-runtime</module>
+    <module>kernel/drishti-api</module>
+    <module>kernel/drishti-common</module>
+    <module>kernel/drishti-kernel-api</module>
+    <module>kernel/drishti-module-runtime</module>
     <module>drishti-sdk/drishti-module-parent</module>
     <module>drishti-sdk/drishti-module-maven-plugin</module>
     <module>drishti-sdk/drishti-module-archetype</module>
     <module>modules/genomics</module>
-    <module>drishti-rachana</module>
-    <module>drishti-inference</module>
-    <module>drishti-graph</module>
-    <module>drishti-engine</module>
-    <module>drishti-identity</module>
-    <module>drishti-packs</module>
-    <module>drishti-ai</module>
-    <module>drishti-testkit</module>
-    <module>drishti-diskcache</module>
-    <module>drishti-messaging</module>
-    <module>drishti-registry</module>
-    <module>drishti-lakeconfig</module>
-    <module>drishti-lakeio</module>
-    <module>drishti-deltalake</module>
-    <module>drishti-iceberg</module>
-    <module>drishti-memlake</module>
-    <module>drishti-lakeload</module>
-    <module>drishti-dataload</module>
-    <module>drishti-net</module>
-    <module>drishti-compute</module>
-    <module>drishti-bicompute</module>
-    <module>drishti-flight</module>
-    <module>drishti-tables</module>
-    <module>plugins/drishti-plugin-demo</module>
-    <module>plugins/drishti-plugin-file</module>
-    <module>plugins/drishti-plugin-rest</module>
+    <module>compute/drishti-rachana</module>
+    <module>compute/drishti-inference</module>
+    <module>kernel/drishti-engine</module>
+    <module>kernel/drishti-identity</module>
+    <module>kernel/drishti-packs</module>
+    <module>kernel/drishti-ai</module>
+    <module>testing/drishti-testkit</module>
+    <module>kernel/drishti-registry</module>
+    <module>lake/drishti-lakeio</module>
+    <module>lake/drishti-deltalake</module>
+    <module>lake/drishti-iceberg</module>
+    <module>lake/drishti-lakeload</module>
+    <module>net/drishti-net</module>
+    <module>compute/drishti-compute</module>
+    <module>compute/drishti-bicompute</module>
+    <module>net/drishti-flight</module>
+    <module>compute/drishti-tables</module>
+    <module>plugins/drishti-connectors</module>
     <module>plugins/drishti-plugin-jdbc</module>
     <module>plugins/drishti-plugin-delta</module>
     <module>plugins/drishti-plugin-aerospike</module>
@@ -79,21 +71,18 @@
     <module>plugins/drishti-plugin-iceberg</module>
     <module>plugins/drishti-plugin-iceberg-external</module>
     <module>plugins/drishti-plugin-duckdb</module>
-    <module>plugins/drishti-plugin-feeds</module>
-    <module>plugins/drishti-plugin-news</module>
-    <module>plugins/drishti-plugin-yfinance</module>
     <module>plugins/drishti-plugin-kafka</module>
     <module>plugins/drishti-plugin-activemq</module>
     <module>plugins/drishti-plugin-rabbitmq</module>
     <module>plugins/drishti-plugin-s3</module>
-    <module>docs/guides/examples/connector</module>
-    <module>drishti-server</module>
+    <module>examples/connector</module>
+    <module>kernel/drishti-server</module>
     <module>modules/banking</module>
-    <module>modules/dist</module>
-    <module>drishti-app</module>
-    <module>drishti-kernel-app</module>
-    <module>drishti-it</module>
-    <module>drishti-benchmarks</module>
+    <module>packaging/dist</module>
+    <module>packaging/drishti-app</module>
+    <module>packaging/drishti-kernel-app</module>
+    <module>testing/drishti-it</module>
+    <module>testing/drishti-benchmarks</module>
   </modules>
 
   <properties>
@@ -173,12 +162,10 @@
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-module-runtime</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-rachana</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-inference</artifactId><version>${project.version}</version></dependency>
-      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-graph</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-engine</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-identity</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-packs</artifactId><version>${project.version}</version></dependency>
-      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-demo</artifactId><version>${project.version}</version></dependency>
-      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-file</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-connectors</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-delta</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-aerospike</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-cassandra</artifactId><version>${project.version}</version></dependency>
@@ -204,11 +191,7 @@
       <dependency><groupId>org.apache.arrow</groupId><artifactId>flight-core</artifactId><version>${arrow.version}</version></dependency>
       <dependency><groupId>org.apache.arrow</groupId><artifactId>flight-sql</artifactId><version>${arrow.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-flight</artifactId><version>${project.version}</version></dependency>
-      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-feeds</artifactId><version>${project.version}</version></dependency>
-      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-news</artifactId><version>${project.version}</version></dependency>
-      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-yfinance</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-kafka</artifactId><version>${project.version}</version></dependency>
-      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-rest</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-jdbc</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-server</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-server</artifactId><version>${project.version}</version><type>test-jar</type><scope>test</scope></dependency>
@@ -216,16 +199,11 @@
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-compute-banking</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-modules</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId><version>${project.version}</version></dependency>
-      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-diskcache</artifactId><version>${project.version}</version></dependency>
-      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-messaging</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-deltalake</artifactId><version>${project.version}</version></dependency>
-      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakeconfig</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-registry</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakeio</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-iceberg</artifactId><version>${project.version}</version></dependency>
-      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-memlake</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakeload</artifactId><version>${project.version}</version></dependency>
-      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-dataload</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-net</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-compute</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-bicompute</artifactId><version>${project.version}</version></dependency>
@@ -355,12 +333,12 @@
   </build>
 
   <profiles>
-    <!-- Drishti Elements as a WebJar (docs/guides/EMBED_GUIDE.md): `mvn -P elements -pl drishti-elements package` writes
-         drishti-elements/target/drishti-elements-<train>.jar; the files come from tools/elements/cli.py webjar-tree (Python 3). -->
+    <!-- Drishti Elements as a WebJar (docs/guides/EMBED_GUIDE.md): `mvn -P elements -pl :drishti-elements package` writes
+         packaging/drishti-elements/target/drishti-elements-<train>.jar; the files come from tools/elements/cli.py webjar-tree (Python 3). -->
     <profile>
       <id>elements</id>
       <modules>
-        <module>drishti-elements</module>
+        <module>packaging/drishti-elements</module>
       </modules>
     </profile>
     <!-- The Java API reference (IMPLEMENTATION_PLAN row 2g, docs/guides/CLI_REFERENCE.md › API references): `-P api-docs` runs Javadoc right

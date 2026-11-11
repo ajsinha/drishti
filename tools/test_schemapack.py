@@ -17,7 +17,7 @@
     python3 -m unittest -q tools/test_schemapack.py
 
 The commands that draft Sutras start the Java auto-designer: those tests are skipped when there is no server jar
-(DRISHTI_JAR, or drishti-server/target/*-exec.jar). The argument and error tests need no jar.
+(DRISHTI_JAR, or kernel/drishti-server/target/*-exec.jar). The argument and error tests need no jar.
 """
 import contextlib
 import glob
@@ -34,7 +34,7 @@ import drishti as D  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 FIX = ROOT / "docs" / "guides" / "examples" / "schemas"
-HAVE_JAR = bool(os.environ.get("DRISHTI_JAR") or glob.glob(str(ROOT / "drishti-server/target/drishti-server-*-exec.jar")))
+HAVE_JAR = bool(os.environ.get("DRISHTI_JAR") or glob.glob(str(ROOT / "kernel/drishti-server/target/drishti-server-*-exec.jar")))
 
 
 _DATA: dict = {}

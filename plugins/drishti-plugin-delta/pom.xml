@@ -31,7 +31,6 @@
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
     <!-- the Hadoop-free engine (engine: native, the default); Hadoop's stays for engine: hadoop and abfs:// or gs:// lakes -->
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-deltalake</artifactId></dependency>
-    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-diskcache</artifactId></dependency>
     <dependency><groupId>io.delta</groupId><artifactId>delta-kernel-api</artifactId><version>${delta-kernel.version}</version></dependency>
     <dependency>
       <groupId>io.delta</groupId><artifactId>delta-kernel-defaults</artifactId><version>${delta-kernel.version}</version>
@@ -63,8 +62,7 @@
     <dependency><groupId>com.github.ben-manes.caffeine</groupId><artifactId>caffeine</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-common</artifactId></dependency>   <!-- ReferenceScanner -->
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId><scope>test</scope></dependency>
-    <!-- DeltaOnAwsS3Test expands the shipped delta-s3 example (a connector naming a lake) as the server does -->
-    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakeconfig</artifactId><scope>test</scope></dependency>
+    <!-- DeltaOnAwsS3Test expands the shipped delta-s3 example (a connector naming a lake) as the server does: the lake core (drishti-lakeio), through drishti-deltalake -->
     <!-- S3Mock in the test JVM (no Docker): the Delta Lake on S3 connector's test, DeltaOnAwsS3Test -->
     <dependency><groupId>com.adobe.testing</groupId><artifactId>s3mock</artifactId><version>${s3mock.version}</version><scope>test</scope></dependency>
   </dependencies>

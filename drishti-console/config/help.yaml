@@ -118,7 +118,7 @@ sections:
           - { slug: deployment-qa, domain: core, doc: DEPLOYMENT_AND_QA_GUIDE.md, title: "Deployment and QA guide", icon: clipboard-check, summary: "Step by step on Windows, Linux and macOS: prerequisites (Windows with nothing but Java and Python), the release, configuration (data folder, lakes, modules, lenses, secrets), the demo lake, starting the server and the console and running them as services (systemd, a scheduled task, launchd), verifying every part with what you should see (health, modules, sign-in, the Home of each lens, VaR, exposure, BI, the MR cube, the Elements gallery, the data inbox and feeds, modules off and on, the phone, logs and metrics), the QA checklist, a cluster of three end to end, offline QA with your own trade files, troubleshooting. Also as a PDF." }
           - { slug: operations, domain: core, pair: docs-tutorials-21-run-it-in-production, doc: guides/OPERATIONS_GUIDE.md, title: "Install and operate", icon: hdd-stack, summary: "Install and run on one machine (prerequisites, build, the demo lakes, start the server and the console, sign in, a personal API token), Maven and the IDEs, Windows; installing for other people (layout, systemd, Docker, Kubernetes, console workers); configuring; data stores, lakes and feeds; deploying, promoting and rolling back by copying, Admin → Packs and Admin → Artifacts; the security checklist; monitoring and health; memory, caches and capacity; compute workers; lake maintenance and scheduling; backups; upgrades; the four runbooks; troubleshooting and the error codes." }
           - { slug: docs-tutorials-21-run-it-in-production, domain: core, doc: tutorials/21-run-it-in-production.md, title: "Operations tutorial: run it in production", icon: mortarboard, kind: tutorial, summary: "Nine steps, in the UI and on the command line: security on and proved, your own administrator, roles, BI powers and masks, tokens and their secret, backups, the heap, caches and pools, what to watch in health, upgrade and roll back, and taking something out safely." }
-          - { slug: cluster, domain: core, pair: docs-tutorials-22-a-cluster-of-three, doc: guides/CLUSTER_GUIDE.md, title: "Clusters and scale", icon: diagram-3, summary: "Several servers as one ({product}*net: real addresses only, the files of config/net, membership, routing, Admin → Cluster), a cluster of three (drishti-stack, step by step, in production), the roles and how many, sharding, high availability, load balancing, zero downtime and rolling upgrades, the daily cycle, security zones, operations and disaster recovery, {product} on AWS (ECS, EFS and S3), the Delta lake in S3 at scale, the scale strategy for one server, sizing (memory, CPU, disk, the sizing planner) and tuning." }
+          - { slug: cluster, domain: core, pair: docs-tutorials-22-a-cluster-of-three, doc: guides/CLUSTER_GUIDE.md, title: "Clusters and scale", icon: diagram-3, summary: "Several servers as one ({product}*net: real addresses only, the files of config/net, membership, routing, Admin → Cluster), a cluster of three (deploy/stack, step by step, in production), the roles and how many, sharding, high availability, load balancing, zero downtime and rolling upgrades, the daily cycle, security zones, operations and disaster recovery, {product} on AWS (ECS, EFS and S3), the Delta lake in S3 at scale, the scale strategy for one server, sizing (memory, CPU, disk, the sizing planner) and tuning." }
           - { slug: docs-tutorials-22-a-cluster-of-three, domain: core, doc: tutorials/22-a-cluster-of-three.md, title: "Cluster tutorial: a cluster of three", icon: mortarboard, kind: tutorial, summary: "Eight steps: each node's folder and key, one seed, three nodes starting and meeting, a trade only one node holds, the console with several servers, who may reach which node, draining and stopping a node, and what follows you." }
           - { slug: benchmark, domain: core, doc: admin/BENCHMARK.md, title: "Benchmark: every measurement and how to run it", icon: speedometer2, summary: "The one home of every benchmark: what is measured and why, the harness (tools/bench, the store-only benchmarks) and the exact commands to run each again, the machine and data; VaR at 200,000 positions on one server and a three-node cluster with 50 to 200 users, Java 21 and 25, G1 and ZGC; the VaR store, first open and cost per request; exposure; the Python and Java loaders; trades at scale; every store compared; memory and heap; scaling fits and extrapolations to 2.3M and 10M positions; how to read the numbers." }
   - id: reference
@@ -155,64 +155,64 @@ sections:
 # slug or slug#anchor. Documents that left the list (architecture, the per-plugin connector pages, the runbooks) are still in
 # the help centre at their path slug, so the old addresses keep working.
 moved:
-  docs-architecture-adr-001-backend-is-a-spring-boot-application: how-it-fits#adr-001   # docs/architecture/adr/001-backend-is-a-spring-boot-application.md folded into HOW_IT_FITS.md
-  docs-architecture-adr-002-layout-is-sutra-plus-inference: how-it-fits#adr-002   # docs/architecture/adr/002-layout-is-sutra-plus-inference.md folded into HOW_IT_FITS.md
-  docs-architecture-adr-003-sutra-is-yaml-with-a-closed-expression-language: how-it-fits#adr-003   # docs/architecture/adr/003-sutra-is-yaml-with-a-closed-expression-language.md folded into HOW_IT_FITS.md
-  docs-architecture-adr-004-server-returns-a-view-model: how-it-fits#adr-004   # docs/architecture/adr/004-server-returns-a-view-model.md folded into HOW_IT_FITS.md
-  docs-architecture-adr-005-server-sent-events-for-live-updates: how-it-fits#adr-005   # docs/architecture/adr/005-server-sent-events-for-live-updates.md folded into HOW_IT_FITS.md
-  docs-architecture-adr-006-vendored-front-end-without-a-build-pipeline: how-it-fits#adr-006   # docs/architecture/adr/006-vendored-front-end-without-a-build-pipeline.md folded into HOW_IT_FITS.md
-  docs-architecture-adr-007-build-gates-in-tests: how-it-fits#adr-007   # docs/architecture/adr/007-build-gates-in-tests.md folded into HOW_IT_FITS.md
-  docs-architecture-adr-008-rachana-is-the-grammar-a-sutra-is-a-layout: how-it-fits#adr-008   # docs/architecture/adr/008-rachana-is-the-grammar-a-sutra-is-a-layout.md folded into HOW_IT_FITS.md
-  docs-architecture-adr-009-users-live-in-the-server: how-it-fits#adr-009   # docs/architecture/adr/009-users-live-in-the-server.md folded into HOW_IT_FITS.md
-  docs-architecture-adr-010-industries-are-domain-packs: how-it-fits#adr-010   # docs/architecture/adr/010-industries-are-domain-packs.md folded into HOW_IT_FITS.md
-  docs-architecture-adr-012-business-dates-and-delta-lake: how-it-fits#adr-012   # docs/architecture/adr/012-business-dates-and-delta-lake.md folded into HOW_IT_FITS.md
-  docs-architecture-adr-013-sutras-go-live-through-review: how-it-fits#adr-013   # docs/architecture/adr/013-sutras-go-live-through-review.md folded into HOW_IT_FITS.md
-  docs-architecture-adr-014-single-sign-on-verified-by-the-server: how-it-fits#adr-014   # docs/architecture/adr/014-single-sign-on-verified-by-the-server.md folded into HOW_IT_FITS.md
-  docs-architecture-adr-015-packs-inherit: how-it-fits#adr-015   # docs/architecture/adr/015-packs-inherit.md folded into HOW_IT_FITS.md
-  docs-architecture-adr-016-one-console-many-servers: how-it-fits#adr-016   # docs/architecture/adr/016-one-console-many-servers.md folded into HOW_IT_FITS.md
-  docs-architecture-adr-017-sutras-are-yaml: how-it-fits#adr-017   # docs/architecture/adr/017-sutras-are-yaml.md folded into HOW_IT_FITS.md
-  docs-architecture-adr-018-signed-pack-registry: how-it-fits#adr-018   # docs/architecture/adr/018-signed-pack-registry.md folded into HOW_IT_FITS.md
-  docs-architecture-adr-019-pricing-is-a-quantlib-service-behind-the-server: how-it-fits#adr-019   # docs/architecture/adr/019-pricing-is-a-quantlib-service-behind-the-server.md folded into HOW_IT_FITS.md
-  docs-architecture-adr-020-collaboration-records-live-in-the-identity-database: how-it-fits#adr-020   # docs/architecture/adr/020-collaboration-records-live-in-the-identity-database.md folded into HOW_IT_FITS.md
-  docs-architecture-adr-021-embedding-is-html-over-the-wire: how-it-fits#adr-021   # docs/architecture/adr/021-embedding-is-html-over-the-wire.md folded into HOW_IT_FITS.md
-  docs-architecture-adr-022-one-renderer-in-the-browser: how-it-fits#adr-022   # docs/architecture/adr/022-one-renderer-in-the-browser.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-001-backend-is-a-spring-boot-application: how-it-fits#adr-001   # HOW_IT_FITS.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-002-layout-is-sutra-plus-inference: how-it-fits#adr-002   # HOW_IT_FITS.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-003-sutra-is-yaml-with-a-closed-expression-language: how-it-fits#adr-003   # HOW_IT_FITS.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-004-server-returns-a-view-model: how-it-fits#adr-004   # HOW_IT_FITS.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-005-server-sent-events-for-live-updates: how-it-fits#adr-005   # HOW_IT_FITS.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-006-vendored-front-end-without-a-build-pipeline: how-it-fits#adr-006   # HOW_IT_FITS.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-007-build-gates-in-tests: how-it-fits#adr-007   # HOW_IT_FITS.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-008-rachana-is-the-grammar-a-sutra-is-a-layout: how-it-fits#adr-008   # HOW_IT_FITS.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-009-users-live-in-the-server: how-it-fits#adr-009   # HOW_IT_FITS.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-010-industries-are-domain-packs: how-it-fits#adr-010   # HOW_IT_FITS.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-012-business-dates-and-delta-lake: how-it-fits#adr-012   # HOW_IT_FITS.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-013-sutras-go-live-through-review: how-it-fits#adr-013   # HOW_IT_FITS.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-014-single-sign-on-verified-by-the-server: how-it-fits#adr-014   # HOW_IT_FITS.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-015-packs-inherit: how-it-fits#adr-015   # HOW_IT_FITS.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-016-one-console-many-servers: how-it-fits#adr-016   # HOW_IT_FITS.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-017-sutras-are-yaml: how-it-fits#adr-017   # HOW_IT_FITS.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-018-signed-pack-registry: how-it-fits#adr-018   # HOW_IT_FITS.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-019-pricing-is-a-quantlib-service-behind-the-server: how-it-fits#adr-019   # HOW_IT_FITS.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-020-collaboration-records-live-in-the-identity-database: how-it-fits#adr-020   # HOW_IT_FITS.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-021-embedding-is-html-over-the-wire: how-it-fits#adr-021   # HOW_IT_FITS.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-022-one-renderer-in-the-browser: how-it-fits#adr-022   # HOW_IT_FITS.md folded into HOW_IT_FITS.md
   docs-architecture-adr-readme: how-it-fits#part-vi--decisions   # docs/architecture/adr/README.md folded into HOW_IT_FITS.md
-  docs-architecture-architecture: how-it-fits#part-ii--architecture   # docs/architecture/ARCHITECTURE.md folded into HOW_IT_FITS.md
-  docs-architecture-data-architecture: how-it-fits#part-iii--data-architecture   # docs/architecture/DATA_ARCHITECTURE.md folded into HOW_IT_FITS.md
-  docs-architecture-shared-screens: how-it-fits#part-v--shared-screens   # docs/architecture/SHARED_SCREENS.md folded into HOW_IT_FITS.md
-  viewmodel: how-it-fits#part-iv--the-viewmodel-contract   # docs/architecture/VIEWMODEL.md folded into HOW_IT_FITS.md
-  docs-architecture-function-catalogue: rachana-reference#the-function-catalogue   # docs/architecture/FUNCTION_CATALOGUE.md folded into docs/guides/RACHANA_REFERENCE.md
-  docs-guides-examples-all-panels-showcase: examples#all-panels-showcase   # docs/guides/examples/all-panels-showcase.md folded into docs/guides/examples/README.md
-  docs-guides-examples-exposure-profile: examples#exposure-profile   # docs/guides/examples/exposure-profile.md folded into docs/guides/examples/README.md
-  docs-guides-examples-linked-sources: examples#linked-sources   # docs/guides/examples/linked-sources.md folded into docs/guides/examples/README.md
-  docs-guides-examples-map: examples#map   # docs/guides/examples/map.md folded into docs/guides/examples/README.md
-  docs-guides-examples-market-charts: examples#market-charts   # docs/guides/examples/market-charts.md folded into docs/guides/examples/README.md
-  docs-guides-examples-metric: examples#metric   # docs/guides/examples/metric.md folded into docs/guides/examples/README.md
-  docs-guides-examples-operations-status: examples#operations-status   # docs/guides/examples/operations-status.md folded into docs/guides/examples/README.md
-  docs-guides-examples-pivot-row-groups: examples#pivot-row-groups   # docs/guides/examples/pivot-row-groups.md folded into docs/guides/examples/README.md
-  docs-guides-examples-pnl-explain: examples#pnl-explain   # docs/guides/examples/pnl-explain.md folded into docs/guides/examples/README.md
-  docs-guides-examples-relationships: examples#relationships   # docs/guides/examples/relationships.md folded into docs/guides/examples/README.md
-  docs-guides-examples-risk-distribution: examples#risk-distribution   # docs/guides/examples/risk-distribution.md folded into docs/guides/examples/README.md
-  docs-guides-examples-tree-table: examples#tree-table   # docs/guides/examples/tree-table.md folded into docs/guides/examples/README.md
-  functions: rachana-reference#every-function-generated-from-the-registries   # docs/guides/FUNCTIONS.md folded into docs/guides/RACHANA_REFERENCE.md
-  bi-and-power-bi: bi-guide#part-6--drishti-bi-and-power-bi-compared   # docs/strategy/BI_AND_POWER_BI.md folded into docs/guides/BI_GUIDE.md
-  docs-guides-groupings-analytics-guide: bi-guide#part-5--groupings-and-analytics   # docs/guides/GROUPINGS_ANALYTICS_GUIDE.md folded into docs/guides/BI_GUIDE.md
-  docs-guides-pivot-guide: bi-guide#part-1--pivot-cubes-and-explain   # docs/guides/PIVOT_GUIDE.md folded into docs/guides/BI_GUIDE.md
-  docs-tutorials-06-groupings-and-analytics: bi-guide#tutorial-groupings-and-analytics-computed   # docs/tutorials/06-groupings-and-analytics.md folded into docs/guides/BI_GUIDE.md
-  docs-tutorials-07-pivot-cubes-and-explain: bi-guide#tutorial-pivot-cubes-and-explain   # docs/tutorials/07-pivot-cubes-and-explain.md folded into docs/guides/BI_GUIDE.md
-  docs-tutorials-08-reports-and-dashboards: bi-guide#tutorial-reports-and-dashboards   # docs/tutorials/08-reports-and-dashboards.md folded into docs/guides/BI_GUIDE.md
-  docs-tutorials-09-notebook-and-python: bi-guide#tutorial-the-notebook-and-python   # docs/tutorials/09-notebook-and-python.md folded into docs/guides/BI_GUIDE.md
-  docs-tutorials-18-tables-and-models: bi-guide#tutorial-virtual-tables-and-models   # docs/tutorials/18-tables-and-models.md folded into docs/guides/BI_GUIDE.md
-  notebook-guide: bi-guide#part-4--the-notebook-and-python   # docs/guides/NOTEBOOK_GUIDE.md folded into docs/guides/BI_GUIDE.md
-  tables-guide: bi-guide#part-2--virtual-tables-and-models   # docs/guides/TABLES_GUIDE.md folded into docs/guides/BI_GUIDE.md
-  docs-tutorials-02-var-from-the-bank-to-a-trade: docs-guides-var-guide#part-v--tutorial-var-from-the-bank-to-a-trade   # docs/tutorials/02-var-from-the-bank-to-a-trade.md folded into docs/guides/VAR_GUIDE.md
-  docs-tutorials-03-exposure-from-the-bank-to-a-trade: docs-guides-exposure-guide#part-iv--tutorial-exposure-from-the-bank-to-a-trade   # docs/tutorials/03-exposure-from-the-bank-to-a-trade.md folded into docs/guides/EXPOSURE_GUIDE.md
-  docs-tutorials-04-frtb-sa: docs-guides-frtb-sa-guide#17-tutorial-frtb-sa-from-the-hand-built-cases-to-a-desk   # docs/tutorials/04-frtb-sa.md folded into docs/guides/FRTB_SA_GUIDE.md
-  docs-tutorials-05-simm: docs-guides-simm-guide#14-tutorial-simm-from-the-hand-built-examples-to-a-netting-set   # docs/tutorials/05-simm.md folded into docs/guides/SIMM_GUIDE.md
-  docs-architecture-docs-plan: docs-architecture-implementation-plan#the-documentation-rules   # docs/architecture/DOCS_PLAN.md folded into docs/architecture/IMPLEMENTATION_PLAN.md
-  docs-architecture-financial-crime: docs-architecture-implementation-plan#2921-and-2922-financial-crime-aml-fraud-fcu-proposed   # docs/architecture/FINANCIAL_CRIME.md folded into docs/architecture/IMPLEMENTATION_PLAN.md
-  docs-architecture-ifrs9-ecl: docs-architecture-implementation-plan#2920-ifrs-9-expected-credit-loss-proposed   # docs/architecture/IFRS9_ECL.md folded into docs/architecture/IMPLEMENTATION_PLAN.md
-  docs-strategy-competitive-landscape: competitive-analysis#part-ii--kernel-and-modules-against-plug-in-platforms   # docs/strategy/COMPETITIVE_LANDSCAPE.md folded into docs/strategy/COMPETITIVE_ANALYSIS.md
+  docs-architecture-architecture: how-it-fits#part-ii--architecture   # HOW_IT_FITS.md folded into HOW_IT_FITS.md
+  docs-architecture-data-architecture: how-it-fits#part-iii--data-architecture   # HOW_IT_FITS.md folded into HOW_IT_FITS.md
+  docs-architecture-shared-screens: how-it-fits#part-v--shared-screens   # HOW_IT_FITS.md folded into HOW_IT_FITS.md
+  viewmodel: how-it-fits#part-iv--the-viewmodel-contract   # HOW_IT_FITS.md folded into HOW_IT_FITS.md
+  docs-architecture-function-catalogue: rachana-reference#the-function-catalogue   # docs/guides/RACHANA_REFERENCE.md folded into docs/guides/RACHANA_REFERENCE.md
+  docs-guides-examples-all-panels-showcase: examples#all-panels-showcase   # docs/guides/examples/README.md folded into docs/guides/examples/README.md
+  docs-guides-examples-exposure-profile: examples#exposure-profile   # docs/guides/examples/README.md folded into docs/guides/examples/README.md
+  docs-guides-examples-linked-sources: examples#linked-sources   # docs/guides/examples/README.md folded into docs/guides/examples/README.md
+  docs-guides-examples-map: examples#map   # docs/guides/examples/README.md folded into docs/guides/examples/README.md
+  docs-guides-examples-market-charts: examples#market-charts   # docs/guides/examples/README.md folded into docs/guides/examples/README.md
+  docs-guides-examples-metric: examples#metric   # docs/guides/examples/README.md folded into docs/guides/examples/README.md
+  docs-guides-examples-operations-status: examples#operations-status   # docs/guides/examples/README.md folded into docs/guides/examples/README.md
+  docs-guides-examples-pivot-row-groups: examples#pivot-row-groups   # docs/guides/examples/README.md folded into docs/guides/examples/README.md
+  docs-guides-examples-pnl-explain: examples#pnl-explain   # docs/guides/examples/README.md folded into docs/guides/examples/README.md
+  docs-guides-examples-relationships: examples#relationships   # docs/guides/examples/README.md folded into docs/guides/examples/README.md
+  docs-guides-examples-risk-distribution: examples#risk-distribution   # docs/guides/examples/README.md folded into docs/guides/examples/README.md
+  docs-guides-examples-tree-table: examples#tree-table   # docs/guides/examples/README.md folded into docs/guides/examples/README.md
+  functions: rachana-reference#every-function-generated-from-the-registries   # docs/guides/RACHANA_REFERENCE.md folded into docs/guides/RACHANA_REFERENCE.md
+  bi-and-power-bi: bi-guide#part-6--drishti-bi-and-power-bi-compared   # docs/guides/BI_GUIDE.md folded into docs/guides/BI_GUIDE.md
+  docs-guides-groupings-analytics-guide: bi-guide#part-5--groupings-and-analytics   # docs/guides/BI_GUIDE.md folded into docs/guides/BI_GUIDE.md
+  docs-guides-pivot-guide: bi-guide#part-1--pivot-cubes-and-explain   # docs/guides/BI_GUIDE.md folded into docs/guides/BI_GUIDE.md
+  docs-tutorials-06-groupings-and-analytics: bi-guide#tutorial-groupings-and-analytics-computed   # docs/guides/BI_GUIDE.md folded into docs/guides/BI_GUIDE.md
+  docs-tutorials-07-pivot-cubes-and-explain: bi-guide#tutorial-pivot-cubes-and-explain   # docs/guides/BI_GUIDE.md folded into docs/guides/BI_GUIDE.md
+  docs-tutorials-08-reports-and-dashboards: bi-guide#tutorial-reports-and-dashboards   # docs/guides/BI_GUIDE.md folded into docs/guides/BI_GUIDE.md
+  docs-tutorials-09-notebook-and-python: bi-guide#tutorial-the-notebook-and-python   # docs/guides/BI_GUIDE.md folded into docs/guides/BI_GUIDE.md
+  docs-tutorials-18-tables-and-models: bi-guide#tutorial-virtual-tables-and-models   # docs/guides/BI_GUIDE.md folded into docs/guides/BI_GUIDE.md
+  notebook-guide: bi-guide#part-4--the-notebook-and-python   # docs/guides/BI_GUIDE.md folded into docs/guides/BI_GUIDE.md
+  tables-guide: bi-guide#part-2--virtual-tables-and-models   # docs/guides/BI_GUIDE.md folded into docs/guides/BI_GUIDE.md
+  docs-tutorials-02-var-from-the-bank-to-a-trade: docs-guides-var-guide#part-v--tutorial-var-from-the-bank-to-a-trade   # docs/guides/VAR_GUIDE.md folded into docs/guides/VAR_GUIDE.md
+  docs-tutorials-03-exposure-from-the-bank-to-a-trade: docs-guides-exposure-guide#part-iv--tutorial-exposure-from-the-bank-to-a-trade   # docs/guides/EXPOSURE_GUIDE.md folded into docs/guides/EXPOSURE_GUIDE.md
+  docs-tutorials-04-frtb-sa: docs-guides-frtb-sa-guide#17-tutorial-frtb-sa-from-the-hand-built-cases-to-a-desk   # docs/guides/FRTB_SA_GUIDE.md folded into docs/guides/FRTB_SA_GUIDE.md
+  docs-tutorials-05-simm: docs-guides-simm-guide#14-tutorial-simm-from-the-hand-built-examples-to-a-netting-set   # docs/guides/SIMM_GUIDE.md folded into docs/guides/SIMM_GUIDE.md
+  docs-architecture-docs-plan: docs-architecture-implementation-plan#the-documentation-rules   # docs/architecture/IMPLEMENTATION_PLAN.md folded into docs/architecture/IMPLEMENTATION_PLAN.md
+  docs-architecture-financial-crime: docs-architecture-implementation-plan#2921-and-2922-financial-crime-aml-fraud-fcu-proposed   # docs/architecture/IMPLEMENTATION_PLAN.md folded into docs/architecture/IMPLEMENTATION_PLAN.md
+  docs-architecture-ifrs9-ecl: docs-architecture-implementation-plan#2920-ifrs-9-expected-credit-loss-proposed   # docs/architecture/IMPLEMENTATION_PLAN.md folded into docs/architecture/IMPLEMENTATION_PLAN.md
+  docs-strategy-competitive-landscape: competitive-analysis#part-ii--kernel-and-modules-against-plug-in-platforms   # docs/strategy/COMPETITIVE_ANALYSIS.md folded into docs/strategy/COMPETITIVE_ANALYSIS.md
   docs-deployment-and-qa-guide: deployment-qa   # the guide's path slug
   docs-quickstart-developers: developer-quickstart   # the quickstart's path slug
   qa-windows: deployment-qa#11-offline-qa-with-your-own-trade-files   # the Windows QA script folded into the Deployment and QA guide
@@ -238,8 +238,8 @@ moved:
   docs-guides-flight-java: docs-guides-flight-reference#72-java   # java folded into docs/guides/FLIGHT_REFERENCE.md
   docs-guides-flight-jdbc: docs-guides-flight-reference#73-jdbc-dbeaver-datagrip-any-jdbc-program   # jdbc folded into docs/guides/FLIGHT_REFERENCE.md
   docs-guides-flight-odbc: docs-guides-flight-reference#74-odbc-excel-power-bi-tableau   # odbc folded into docs/guides/FLIGHT_REFERENCE.md
-  docs-connectors-news: data-guide#8-connectors   # news folded into plugins/drishti-plugin-news/README.md
-  docs-connectors-yfinance: data-guide#8-connectors   # yfinance folded into plugins/drishti-plugin-yfinance/README.md
+  docs-connectors-news: data-guide#8-connectors   # news folded into docs/connectors/types/news/README.md
+  docs-connectors-yfinance: data-guide#8-connectors   # yfinance folded into docs/connectors/types/yfinance/README.md
   docs-connectors-reactive-connector: docs-connectors-types-reactive-readme   # reactive connector folded into docs/connectors/types/reactive/README.md
   docs-architecture-parametric-var: docs-guides-var-guide   # parametric var folded into docs/guides/VAR_GUIDE.md
   docs-architecture-var-playground: docs-guides-var-guide   # var playground folded into docs/guides/VAR_GUIDE.md
@@ -258,10 +258,10 @@ moved:
   docs-connectors-aerospike-connector: data-guide#8-connectors   # aerospike connector folded into plugins/drishti-plugin-aerospike/README.md
   docs-connectors-cassandra-connector: data-guide#8-connectors   # cassandra connector folded into plugins/drishti-plugin-cassandra/README.md
   docs-connectors-delta-connector: data-guide#8-connectors   # delta connector folded into plugins/drishti-plugin-delta/README.md
-  docs-connectors-demo-connector: data-guide#8-connectors   # demo connector folded into plugins/drishti-plugin-demo/README.md
+  docs-connectors-demo-connector: data-guide#8-connectors   # demo connector folded into docs/connectors/types/demo/README.md
   docs-connectors-duckdb-connector: data-guide#8-connectors   # duckdb connector folded into plugins/drishti-plugin-duckdb/README.md
-  docs-connectors-feeds-connector: data-guide#8-connectors   # feeds connector folded into plugins/drishti-plugin-feeds/README.md
-  docs-connectors-file-connector: data-guide#8-connectors   # file connector folded into plugins/drishti-plugin-file/README.md
+  docs-connectors-feeds-connector: data-guide#8-connectors   # feeds connector folded into docs/connectors/types/feed/README.md
+  docs-connectors-file-connector: data-guide#8-connectors   # file connector folded into docs/connectors/types/file/README.md
   docs-connectors-redis-connector: data-guide#8-connectors   # redis connector folded into plugins/drishti-plugin-redis/README.md
   docs-connectors-mongodb-connector: data-guide#8-connectors   # mongodb connector folded into plugins/drishti-plugin-mongodb/README.md
   docs-connectors-postgres-connector: data-guide#8-connectors   # postgres connector folded into plugins/drishti-plugin-jdbc/README.md
@@ -271,7 +271,7 @@ moved:
   docs-connectors-s3-connector: data-guide#8-connectors   # s3 connector folded into plugins/drishti-plugin-s3/README.md
   docs-connectors-kafka-connector: data-guide#8-connectors   # kafka connector folded into plugins/drishti-plugin-kafka/README.md
   docs-connectors-rabbitmq-connector: data-guide#8-connectors   # rabbitmq connector folded into plugins/drishti-plugin-rabbitmq/README.md
-  docs-connectors-rest-connector: data-guide#8-connectors   # rest connector folded into plugins/drishti-plugin-rest/README.md
+  docs-connectors-rest-connector: data-guide#8-connectors   # rest connector folded into docs/connectors/types/rest/README.md
   lake-guide: data-lake-guide   # docs/guides/DATA_LAKE_GUIDE.md folded into DATA_LAKE_GUIDE.md (2.9.11.d)
   docs-guides-lake-guide: data-lake-guide
   docs-architecture-data-load-rules: data-lake-guide#5-routing-business-dates-modes-repeats-and-undo   # DATA_LAKE_GUIDE.md folded into DATA_LAKE_GUIDE.md (2.9.11.d)
@@ -322,7 +322,7 @@ moved:
   history-tutorial: docs-tutorials-01-first-15-minutes#part-e--an-entity-over-time                 # tutorial 1, Part E (2.6.5)
   paginated-reports: bi-guide#r12-statements-paginated-reports-page-exact-one-per-reader
   field-parameters: bi-guide#r11-field-parameters             # field parameters in a report's wells (2.6.0)
-  drishti-stack: cluster#2-a-cluster-of-three                     # the ready-made local cluster (drishti-stack/)
+  drishti-stack: cluster#2-a-cluster-of-three                     # the ready-made local cluster (deploy/stack/)
   quickstart: operations#2-install-and-run-on-one-machine
   windows: operations#4-drishti-on-windows
   ide-guide: operations#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm

@@ -53,7 +53,7 @@ from core.guides import GithubSlugger  # noqa: E402
 
 # Markdown that is not documentation a reader opens: vendored libraries' notes, test resources, the generator's
 # README fragments (they are pasted into the packs' READMEs, which are checked) and the parallel gleif build.
-NOT_DOCS = ("drishti-console/web/static/vendor/", "plugins/drishti-plugin-feeds/src/test/",
+NOT_DOCS = ("drishti-console/web/static/vendor/", "plugins/drishti-connectors/src/test/",
             "tools/packgen/", "tools/elements-demo/", "data/", "config/packs/core/gleif/")
 # History: names that were true when written. Links in these must still resolve; the names in them need not exist.
 HISTORY = ("CHANGELOG.md", "RELEASE_NOTES.md")
@@ -256,7 +256,7 @@ EXAMPLE_PATHS = {
 
 
 def _expand(token: str) -> list[str]:
-    """``drishti-server/.../cli/{SutraCli,ExpectFile}.java`` is two paths."""
+    """``kernel/drishti-server/.../cli/{SutraCli,ExpectFile}.java`` is two paths."""
     m = re.search(r"\{([^{}]+)\}", token)
     return [t for part in m.group(1).split(",") for t in _expand(token[:m.start()] + part + token[m.end():])] if m else [token]
 
@@ -271,7 +271,7 @@ def path_exists(token: str, rel: str) -> bool:
     here = str(Path(rel).parent)
     for base in ["", here] + _pack_roots(rel) + list(pack_roots_all()):
         cand = f"{base}/{token}".strip("/") if base and base != "." else token
-        if "..." in cand or "*" in cand:                                 # drishti-engine/.../view/PanelData.java: any depth
+        if "..." in cand or "*" in cand:                                 # kernel/drishti-engine/.../view/PanelData.java: any depth
             pattern = re.escape(cand).replace(r"\.\.\.", ".*").replace(r"\*", "[^/]*")
             if any(re.fullmatch(pattern, p) for p in tracked_set()):
                 return True
@@ -407,7 +407,7 @@ def _camel(s: str) -> str:
 
 @functools.lru_cache(maxsize=None)
 def server_keys() -> frozenset[str]:
-    rels = [p for p in tracked() if p.startswith("drishti-server/src/main/resources/application") and p.endswith(".yaml")]
+    rels = [p for p in tracked() if p.startswith("kernel/drishti-server/src/main/resources/application") and p.endswith(".yaml")]
     return yaml_keys(*rels)
 
 
@@ -415,7 +415,7 @@ def server_keys() -> frozenset[str]:
 def properties_prefixes() -> dict[str, str]:
     """prefix -> the text of every class bound to it: a @ConfigurationProperties class, or a plain record the server binds
     with Spring's ``Binder`` (``Binder.get(env).bind("drishti.lake.memory", MemoryLakeSettings.class)``: the in-memory
-    lake's settings live in the Spring-free drishti-memlake)."""
+    lake's settings live in the Spring-free in-memory lake of drishti-lakeload)."""
     out: dict[str, str] = {}
     for p in tracked():
         if p.endswith(".java") and "/src/main/" in p:
@@ -573,7 +573,7 @@ RESERVED_WORDS = {"BI", "RUPAKA", "FORM", "FUNC", "VAR", "WHAT", "DATAMAP", "DAT
 def packs() -> list[dict]:
     out = []
     for p in tracked():
-        if re.match(r"(config/|examples/|docs/guides/examples/)packs?/(?:[^/]+/)?[^/]+/pack\.yaml$", p) or re.match(r"drishti-[a-z-]+/src/test/resources/.*packs/[^/]+/pack\.yaml$", p):
+        if re.match(r"(config/|examples/|docs/guides/examples/)packs?/(?:[^/]+/)?[^/]+/pack\.yaml$", p) or re.match(r"(?:[a-z]+/)?drishti-[a-z-]+/src/test/resources/.*packs/[^/]+/pack\.yaml$", p):
             try:
                 out.append(yaml.safe_load(read(p)) or {})
             except yaml.YAMLError:
@@ -697,7 +697,7 @@ def test_obsolete_designs_are_deleted_not_archived():
 
 def test_the_corpus_is_the_whole_documentation():
     docs = documents()
-    assert "README.md" in docs and "drishti-stack/README.md" in docs
+    assert "README.md" in docs and "deploy/stack/README.md" in docs
     assert any(d.startswith("config/packs/") and d.endswith("/README.md") for d in docs)
     assert any(d.startswith("plugins/") for d in docs) and any(d.startswith("docs/tutorials/") for d in docs)
     assert len(docs) > 200

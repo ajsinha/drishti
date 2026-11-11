@@ -30,7 +30,7 @@ doc: docs/connectors/types/reactive/README.md
 ---
 # The reactive connector
 
-Built-in plugin `reactive` (`drishti-compute/src/main/java/com/ash/drishti/compute/reactive/`, `ReactiveSourcePlugin` and
+Built-in plugin `reactive` (`compute/drishti-compute/src/main/java/com/ash/drishti/compute/reactive/`, `ReactiveSourcePlugin` and
 `ReactiveConnector`): a connector whose answer is a computation (HOW_IT_FITS.md). Its file names the kinds it computes with
 their typed parameters, the inputs it reads, the engine, the triggers, coalescing, the cache and the limits. A pack routes the computed
 kinds to it like any kind; a Sutra panel reads them with `source: { kind, id, params }`.

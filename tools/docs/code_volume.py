@@ -128,6 +128,8 @@ def inventory(files: list[str], pom: str) -> dict:
     docs = [f for f in files if f.startswith("docs/") and f.endswith(".md")]
     return {
         "maven": len(poms), "plugins": sum(1 for p in poms if p.startswith("plugins/drishti-plugin-")),
+        "folders": sorted({p.split("/")[0] for p in poms if "/" in p and not p.startswith("docs/")}),
+        "built_ins": sum(1 for d in (ROOT / "docs" / "connectors" / "types").iterdir() if (d / "README.md").is_file()),
         "domains": sorted(m["id"] for m in modules), "functions": functions, "lenses": lenses,
         "routes": sum(len(ROUTE.findall(_read(f))) for f in console),
         "handlers": sum(len(HANDLER.findall(_read(f))) for f in server),
@@ -149,7 +151,7 @@ def render(m: dict) -> str:
     tests = sum(L[x] for x in TESTS)
     t = inv["tests"]
     fn = ", ".join(f"{n} {d}" for d, n in sorted(inv["functions"].items()))
-    rows = [("Maven modules", f"{inv['maven']} ({inv['plugins']} of them connector plugins)"),
+    rows = [("Maven modules", f"{inv['maven']} in {len(inv['folders'])} subject folders: " + ", ".join(f"`{d}/`" for d in inv["folders"])),
             ("Modules (`.dmod`)", f"{len(inv['domains'])}: {', '.join(inv['domains'])}"),
             ("Lenses", f"{len(inv['lenses'])}: {', '.join(inv['lenses'])}"),
             ("Functions a module declares", f"{sum(inv['functions'].values())} ({fn}); every other command word is the kernel's"),
@@ -158,7 +160,7 @@ def render(m: dict) -> str:
             ("Drishti Elements", f"{len(inv['libraries'])} libraries, {inv['lib_modules']} ES modules"),
             ("Domain packs", f"{sum(inv['packs'].values())}: " + ", ".join(f"{d} {n}" for d, n in inv["packs"].items())),
             ("Sutras in the shipped packs", f"{inv['sutras']}"),
-            ("Connector plugins", f"{inv['plugins']}"),
+            ("Connectors", f"{inv['plugins']} plugins (a driver or native library each) and {inv['built_ins']} built-in types"),
             ("Feeds", f"{inv['feeds']}"),
             ("Lake files", f"{inv['lakes']}"),
             ("Test files", f"{sum(t.values()):,}: Java {t.get('java', 0)}, console {t.get('console', 0)}, browser {t.get('browser', 0)}, "

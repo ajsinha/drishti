@@ -100,7 +100,7 @@ def test_every_key_of_the_two_application_files_is_a_row():
     gen = _generated()
     server = gen[gen.index("### The server"):gen.index("### The console:")]
     console = gen[gen.index("### The console:"):gen.index("### The console's other files")]
-    for rel, section, collapsed in (("drishti-server/src/main/resources/application.yaml", server, cat.COLLAPSE["server"]),
+    for rel, section, collapsed in (("kernel/drishti-server/src/main/resources/application.yaml", server, cat.COLLAPSE["server"]),
                                     ("drishti-console/config/application.yaml", console, cat.COLLAPSE["console"])):
         keys = _row_keys(section)
         flow = {e.key for e in S.read_commented_yaml(ROOT / rel) if e.kind in ("map", "list") and not e.section}
@@ -139,7 +139,7 @@ def test_every_environment_variable_is_indexed():
     index = gen[gen.index("### Environment variable index"):]
     named = set(re.findall(r"^\| `([A-Z][A-Z0-9_]*)` \|", index, re.M))
     placed = set()
-    for rel in ("drishti-server/src/main/resources/application.yaml", "drishti-console/config/application.yaml"):
+    for rel in ("kernel/drishti-server/src/main/resources/application.yaml", "drishti-console/config/application.yaml"):
         for line in (ROOT / rel).read_text(encoding="utf-8").splitlines():
             if not line.lstrip().startswith("#"):
                 placed |= set(re.findall(r"\$\{([A-Z][A-Z0-9_]*)[:}]", S.split_comment(line)[0]))
@@ -182,7 +182,7 @@ def test_the_engines_area_lists_every_engine_file_key_and_the_old_names(tmp_path
     assert {"drishti.var.hot-dates", "drishti.regulatory.average-days", "drishti.ccr.exposure.alpha", "drishti.frtb.max-factors",
             "drishti.simm.max-factors", "drishti.sensitivities.factor-kind", "drishti.lake.memory.job-threads"} <= keys
     assert {"drishti.var.enabled", "drishti.ccr.exposure.enabled", "drishti.frtb.enabled", "drishti.simm.enabled"} <= keys
-    server = {r.key for r in cat.yaml_rows("server", [ROOT / "drishti-server/src/main/resources/application.yaml"], "server", "restart")}
+    server = {r.key for r in cat.yaml_rows("server", [ROOT / "kernel/drishti-server/src/main/resources/application.yaml"], "server", "restart")}
     assert not {k for k in server if k.startswith(("drishti.var.", "drishti.frtb.", "drishti.simm.", "drishti.ccr.exposure.", "drishti.lake.memory."))}
     # a site copy that differs from the jar's is a problem the check names
     site = tmp_path / "engines"

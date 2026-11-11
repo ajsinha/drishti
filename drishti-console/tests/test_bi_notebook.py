@@ -32,7 +32,7 @@ from conftest import CONSOLE  # noqa: E402
 from core.app import create_app  # noqa: E402
 from core.config import load_settings  # noqa: E402
 from core.notebook import Limits, NotebookError, check_extracts, from_arrow, parse_notebook, promote_python, promote_transform  # noqa: E402
-sys.path.insert(0, str(CONSOLE.parent / "drishti-compute" / "src" / "main" / "python"))
+sys.path.insert(0, str(CONSOLE.parent / "compute/drishti-compute" / "src" / "main" / "python"))
 from drishti_compute.items import check_source  # noqa: E402  (the compute pool's static check, parsed here: nothing runs)
 
 DS = "file:dataset:trades-basic"
@@ -268,7 +268,7 @@ def test_the_page_is_live_strict_and_wired():
 
 def test_the_servers_python_packages_are_all_pinned():
     root = Path(__file__).resolve().parents[2]
-    java = (root / "drishti-server/src/main/java/com/ash/drishti/server/bi/report/BiReportProperties.java").read_text(encoding="utf-8")
+    java = (root / "kernel/drishti-server/src/main/java/com/ash/drishti/server/bi/report/BiReportProperties.java").read_text(encoding="utf-8")
     default = re.search(r'java\.util\.List\.of\(([^)]*)\)\s*:\s*java\.util\.List\.copyOf\(pythonPackages\)', java)
     assert default, "the server's default python-packages list was not found in BiReportProperties"
     server = re.findall(r'"([a-z0-9_]+)"', default.group(1))

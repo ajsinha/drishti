@@ -44,7 +44,7 @@ Drishti is proprietary. It bundles or builds with these third-party components u
 | Apache Avro (decodes Schema Registry messages in the Kafka connector, `drishti-plugin-kafka`), with Apache Commons Compress | Apache-2.0 |
 | PostgreSQL JDBC driver (pgjdbc; the Drishti database and the `jdbc` connector) | BSD-2-Clause |
 | Apache Hadoop client (`hadoop-client-api`, `hadoop-client-runtime`; the Delta and Iceberg connectors' library engines) and Apache Iceberg Java (`drishti-plugin-iceberg`) | Apache-2.0 |
-| RocksDB (`rocksdbjni`; the disk caches and the message connectors' state store, `drishti-diskcache`) | Apache-2.0 / GPL-2.0 (dual; used under Apache-2.0) |
+| RocksDB (`rocksdbjni`; the disk caches and the message connectors' state store, in `drishti-common`) | Apache-2.0 / GPL-2.0 (dual; used under Apache-2.0) |
 | Apache Kafka client (`kafka-clients`, `drishti-plugin-kafka`) | Apache-2.0 |
 | Apache ActiveMQ client (`activemq-client`, `drishti-plugin-activemq`) | Apache-2.0 |
 | Jakarta Messaging API (`jakarta.jms-api`, with the ActiveMQ client) | EPL-2.0 / GPL-2.0 with Classpath Exception |
