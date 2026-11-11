@@ -2516,7 +2516,7 @@ and whether the token is accepted, with the exact id, scopes and expiry of the t
 ```
 $ python3 tools/drishti.py doctor --server http://localhost:18971
 GREEN  java                    /usr/lib/jvm/java-21-openjdk-amd64/bin/java: Java 21.0 (Ubuntu)
-GREEN  server jar              ~/drishti/drishti-server/target/drishti-server-<version>-exec.jar (version <version>)
+GREEN  server jar              ~/drishti/kernel/drishti-server/target/drishti-server-<version>-exec.jar (version <version>)
 GREEN  python                  /usr/bin/python3: Python 3.14.4
 GREEN  python pyyaml           installed
 YELLOW python deltalake        not installed (needed for data ingest --store delta)
@@ -3999,7 +3999,7 @@ empty PyCharm to a run configuration for each common task.
 | **Script path** (not *Module name*; switch the toggle on the left of the field) | `<repo>/tools/drishti.py` |
 | **Python interpreter** | the `drishti-console/.venv` interpreter made above |
 | **Working directory** | **the repository root**: relative paths in *Parameters* resolve from here |
-| **Environment variables** | `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64;DRISHTI_JAR=<repo>/drishti-server/target/drishti-server-<version>-exec.jar;PYTHONUNBUFFERED=1`, and for server commands `DRISHTI_SERVER=http://localhost:18480;DRISHTI_TOKEN=drk_...` |
+| **Environment variables** | `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64;DRISHTI_JAR=<repo>/kernel/drishti-server/target/drishti-server-<version>-exec.jar;PYTHONUNBUFFERED=1`, and for server commands `DRISHTI_SERVER=http://localhost:18480;DRISHTI_TOKEN=drk_...` |
 
 Click the folder icon next to **Environment variables** to edit them as a table (one row per variable). `JAVA_HOME` and
 `DRISHTI_JAR` may be left out: the tool then looks for JDK 21 and for the newest `kernel/drishti-server/target/*-exec.jar` itself.
@@ -4380,7 +4380,7 @@ empty PyCharm to a run configuration for each common task.
 | **Script path** (not *Module name*; switch the toggle on the left of the field) | `<repo>/tools/drishti.py` |
 | **Python interpreter** | the `drishti-console/.venv` interpreter from 14.1 |
 | **Working directory** | **the repository root**: relative paths in *Parameters* resolve from here |
-| **Environment variables** | `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64;DRISHTI_JAR=<repo>/drishti-server/target/drishti-server-2.9.11.g-exec.jar;PYTHONUNBUFFERED=1`, and for server commands `DRISHTI_SERVER=http://localhost:18480;DRISHTI_TOKEN=drk_...` |
+| **Environment variables** | `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64;DRISHTI_JAR=<repo>/kernel/drishti-server/target/drishti-server-2.9.11.g-exec.jar;PYTHONUNBUFFERED=1`, and for server commands `DRISHTI_SERVER=http://localhost:18480;DRISHTI_TOKEN=drk_...` |
 
 Click the folder icon next to **Environment variables** to edit them as a table (one row per variable). `JAVA_HOME` and
 `DRISHTI_JAR` may be left out: the tool then looks for JDK 21 and for the newest `kernel/drishti-server/target/*-exec.jar` itself.

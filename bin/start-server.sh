@@ -159,7 +159,7 @@ MAJOR="$(printf '%s' "$VERSION_LINE" | sed -n 's/.*version "\([0-9]*\).*/\1/p')"
 
 # the jar
 if [ -z "$JAR" ]; then
-  JAR="$(ls -t "$DRISHTI_ROOT"/drishti-server/target/drishti-server-*-exec.jar "$DRISHTI_ROOT"/drishti-server*.jar 2>/dev/null | head -n 1 || true)"
+  JAR="$(ls -t "$DRISHTI_ROOT"/kernel/drishti-server/target/drishti-server-*-exec.jar "$DRISHTI_ROOT"/drishti-server*.jar 2>/dev/null | head -n 1 || true)"
   [ -n "$JAR" ] || die "no server jar: build it (./mvnw -q package -DskipTests -pl :drishti-app -am) or pass --jar"
 fi
 [ -f "$JAR" ] || die "no jar $JAR"

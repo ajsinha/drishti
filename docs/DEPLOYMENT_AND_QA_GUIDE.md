@@ -682,7 +682,7 @@ once) into `~/drishti-token`.
 ```text
 $ drishti-console/.venv/bin/python tools/drishti.py doctor --server http://<host>:18480 --token-file ~/drishti-token
 GREEN  java                    …/bin/java: Java 21.0
-GREEN  server jar              <drishti>/drishti-server/target/drishti-server-2.9.11.g-exec.jar (version 2.9.11.g)
+GREEN  server jar              <drishti>/kernel/drishti-server/target/drishti-server-2.9.11.g-exec.jar (version 2.9.11.g)
 GREEN  python                  <drishti>/drishti-console/.venv/bin/python: Python 3.13.15
 …
 GREEN  server                  http://<host>:18480: version 2.9.11.g, java 21.0.12.1, status UP
