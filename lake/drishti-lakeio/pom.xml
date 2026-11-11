@@ -26,9 +26,17 @@
   </parent>
   <artifactId>drishti-lakeio</artifactId>
   <name>drishti-lakeio</name>
-  <description>Lake file access shared by the native Delta and Iceberg engines, with no Hadoop: local disk (Windows included) and S3 through java.nio and the AWS SDK, byte ranges, Parquet page codecs and the Parquet footer cache</description>
+  <description>The lake core (2.9.11.i4: drishti-lakeio with drishti-lakeconfig): the lake configuration (config/lakes/*.yaml, package
+    lakeconfig), one description of each lake and every table in it, read by the writers (the loader, the data inbox, lake build, the demo
+    lakes) and the readers (the Delta and Iceberg connectors) alike; and lake file access shared by the native Delta and Iceberg engines,
+    with no Hadoop: local disk (Windows included) and S3 through java.nio and the AWS SDK, byte ranges, Parquet page codecs and the
+    Parquet footer cache</description>
   <dependencies>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
+    <!-- the lake configuration: domain vocabularies (kernel API) and where a pack is -->
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-kernel-api</artifactId></dependency>
+    <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-databind</artifactId></dependency>
+    <dependency><groupId>com.fasterxml.jackson.dataformat</groupId><artifactId>jackson-dataformat-yaml</artifactId></dependency>
     <dependency><groupId>com.github.ben-manes.caffeine</groupId><artifactId>caffeine</artifactId></dependency>
     <dependency><groupId>org.apache.parquet</groupId><artifactId>parquet-hadoop</artifactId></dependency>
     <dependency><groupId>org.apache.parquet</groupId><artifactId>parquet-column</artifactId></dependency>
@@ -45,7 +53,7 @@
   </dependencies>
   <build>
     <plugins>
-      <!-- the test jar: drishti-memlake's tests reuse the Storage contract suite (StorageContract) -->
+      <!-- the test jar: the in-memory lake's tests (drishti-lakeload) reuse the Storage contract suite (StorageContract) -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>

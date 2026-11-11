@@ -42,7 +42,7 @@ import java.util.TreeMap;
 /**
  * Reads a Delta table with any engine the way the Delta connector does (scan files, then each file's rows with
  * deletion vectors applied), returning plain Java values so two engines' answers compare with {@code equals}. Public for the in-memory
- * lake's tests ({@code drishti-memlake}, through this module's test jar).
+ * lake's tests ({@code drishti-lakeload}, through this module's test jar).
  */
 public final class TableReader {
 

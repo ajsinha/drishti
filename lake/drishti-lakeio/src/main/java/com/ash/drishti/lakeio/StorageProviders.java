@@ -71,7 +71,7 @@ public final class StorageProviders {
      */
     public static Storage storage(String path) {
         return forPath(path).orElseThrow(() -> new UnsupportedOperationException("no storage serves " + LocalPaths.scheme(path.trim())
-                + ":// here (the in-memory lake's mem:// needs drishti-memlake on the class path)")).storage(path);
+                + ":// here (the in-memory lake's mem:// needs drishti-lakeload on the class path)")).storage(path);
     }
 
     /** Whether {@code path} is under a memory-only scheme ({@link StorageProvider#memoryOnly()}): nothing of it may reach a disk. */

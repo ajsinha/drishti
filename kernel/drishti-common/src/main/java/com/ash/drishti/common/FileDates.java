@@ -241,7 +241,7 @@ public final class FileDates {
     /**
      * The business date a {@code .ready} file beside a local data file gives ({@code <file>.ready}, or its name without the data extension
      * {@code .ready}; docs/guides/DATA_LAKE_GUIDE.md section 4): its {@code business-date}, null without one. The inbox reads every
-     * key of it (drishti-dataload {@code ReadyNote}); a command-line load takes the date from it, below its own {@code as-of}.
+     * key of it (drishti-lakeload {@code ReadyNote}); a command-line load takes the date from it, below its own {@code as-of}.
      */
     public static LocalDate readyDate(String path) {
         if (path == null || path.contains("://") || path.contains("!/")) {

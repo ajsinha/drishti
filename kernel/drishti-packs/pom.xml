@@ -30,7 +30,7 @@
   <dependencies>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-kernel-api</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-common</artifactId></dependency>
-    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakeconfig</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakeio</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-registry</artifactId></dependency>
     <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot</artifactId></dependency>
     <dependency><groupId>com.fasterxml.jackson.dataformat</groupId><artifactId>jackson-dataformat-yaml</artifactId></dependency>

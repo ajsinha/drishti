@@ -17,12 +17,12 @@
  * The lake configuration (docs/architecture/DATA_ARCHITECTURE.md, docs/guides/DATA_LAKE_GUIDE.md): {@code config/lakes/<lake>.yaml}, one file per
  * lake, describes where the lake is and every table in it, and every writer and reader refers to it.
  *
- * <p><b>Why a module of its own.</b> Its consumers sit on both sides of the plugin boundary and at both ends of the build: the parallel
- * loader (drishti-lakeload, run alone as a command), the data inbox (drishti-dataload), the source registry that hands every connector its
- * settings (drishti-engine), the in-memory lake (drishti-memlake), the server's Admin page, and the Python tools through
- * {@link com.ash.drishti.lakeconfig.LakesCli}. drishti-api has no YAML reader and must stay dependency-free; drishti-common brings Spring,
- * which the loader run as a command does not need. So the reader lives here, with Jackson as its only dependency, once: the Python tools
- * call {@code LakesCli} for the JSON of a lake rather than keeping a second reader with its own rules.
+ * <p><b>Why in the lake core.</b> Its consumers sit on both sides of the plugin boundary and at both ends of the build: the parallel
+ * loader and the data inbox (drishti-lakeload, the loader run alone as a command), the source registry that hands every connector its
+ * settings (drishti-engine), the in-memory lake (drishti-lakeload), the server's Admin page, and the Python tools through
+ * {@link com.ash.drishti.lakeconfig.LakesCli}. drishti-api has no YAML reader and must stay dependency-free. So the reader lives once in
+ * the lake core (drishti-lakeio, beside the lake file access every lake engine shares), with Jackson as the only library it touches: the
+ * Python tools call {@code LakesCli} for the JSON of a lake rather than keeping a second reader with its own rules.
  *
  * <ul>
  *   <li>{@link com.ash.drishti.lakeconfig.Lakes} reads and checks the folder; {@link com.ash.drishti.lakeconfig.Lake} and

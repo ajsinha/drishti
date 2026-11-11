@@ -49,7 +49,7 @@ import org.springframework.core.env.Environment;
 
 /**
  * The server's wiring of the data inbox (docs/guides/DATA_LAKE_GUIDE.md; the inbox itself is the plain-Java module
- * {@code drishti-dataload}): {@code drishti.dataload.*} bound onto {@link DataLoadSettings}, the loaded packs for routing, busy protection
+ * {@code drishti-lakeload}): {@code drishti.dataload.*} bound onto {@link DataLoadSettings}, the loaded packs for routing, busy protection
  * for the busy check, the bridge to {@link LoadService} for the signal (the same service method the HTTP data-load signal calls), and the
  * inbox as a compute engine ({@code config/engines/dataload.yaml}, off as shipped); in a cluster each signal is passed on to the other
  * members ({@link LoadForwarding}, as this node): on starts its schedule, off stops it and a load that runs.

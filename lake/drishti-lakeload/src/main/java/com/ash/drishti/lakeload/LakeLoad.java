@@ -54,7 +54,7 @@ public final class LakeLoad {
     /**
      * Whether the loader reads a file of this name: JSON Lines ({@code .jsonl}, {@code .ndjson}, {@code .json}; plain, {@code .gz} or
      * {@code .zst}) or an archive ({@code .zip}, {@code .tar}, {@code .tar.gz}, {@code .tgz}) by the archive rule. The data inbox
-     * (drishti-dataload) asks before it claims a file, so its names are the loader's own.
+     * (package dataload) asks before it claims a file, so its names are the loader's own.
      */
     public static boolean reads(String fileName) {
         return fileName != null && (Archives.isJsonl(fileName) || Archives.isArchive(fileName));

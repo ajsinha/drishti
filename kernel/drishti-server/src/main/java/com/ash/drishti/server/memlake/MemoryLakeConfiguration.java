@@ -36,7 +36,7 @@ import org.springframework.scheduling.support.CronExpression;
 
 /**
  * The server's wiring of the in-memory lake (docs/architecture/DATA_ARCHITECTURE.md; the lake itself is the plain-Java module
- * {@code drishti-memlake}): {@code drishti.lake.memory.*} bound onto {@link MemoryLakeSettings}, the stores and replenish jobs, the guard
+ * {@code drishti-lakeload}): {@code drishti.lake.memory.*} bound onto {@link MemoryLakeSettings}, the stores and replenish jobs, the guard
  * that keeps memory-only data off every disk, the cron parser, and the joins to the memory budget (an off-heap pool) and busy protection.
  * The stores are defined when the bean is made, before the connectors read them; the warm-up starts when the server is ready.
  */

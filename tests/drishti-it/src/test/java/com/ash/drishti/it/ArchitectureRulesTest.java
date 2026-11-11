@@ -117,6 +117,35 @@ class ArchitectureRulesTest {
                     "com.ash.drishti.memlake..", "io.delta..", "org.apache.iceberg..", "org.apache.parquet..", "org.apache.arrow..");
 
     /** The lake engines and connectors reach mem:// through lakeio's StorageProviders, never through the in-memory lake's module. */
+    /** The lake core: the lake configuration and the lake file access, two packages of drishti-lakeio that do not know each other. */
+    @ArchTest
+    static final ArchRule lakeConfigurationAndFileAccessStayApart = noClasses()
+            .that().resideInAPackage("com.ash.drishti.lakeconfig..")
+            .should().dependOnClassesThat().resideInAPackage("com.ash.drishti.lakeio..");
+
+    @ArchTest
+    static final ArchRule lakeFileAccessDoesNotReadTheLakeFiles = noClasses()
+            .that().resideInAPackage("com.ash.drishti.lakeio..")
+            .should().dependOnClassesThat().resideInAPackage("com.ash.drishti.lakeconfig..");
+
+    /** The engine and the packs read the lake configuration only, never the lake files themselves. */
+    @ArchTest
+    static final ArchRule engineAndPacksReachNoLakeFile = noClasses()
+            .that().resideInAnyPackage("com.ash.drishti.engine..", "com.ash.drishti.packs..")
+            .should().dependOnClassesThat().resideInAnyPackage("com.ash.drishti.lakeio..", "com.ash.drishti.deltalake..",
+                    "com.ash.drishti.iceberg..", "com.ash.drishti.lakeload..", "com.ash.drishti.dataload..", "com.ash.drishti.memlake..");
+
+    /** Loading the lakes (drishti-lakeload): the loader sees neither the inbox nor the in-memory lake, and the in-memory lake neither. */
+    @ArchTest
+    static final ArchRule theLoaderSeesNeitherTheInboxNorTheMemoryLake = noClasses()
+            .that().resideInAPackage("com.ash.drishti.lakeload..")
+            .should().dependOnClassesThat().resideInAnyPackage("com.ash.drishti.dataload..", "com.ash.drishti.memlake..");
+
+    @ArchTest
+    static final ArchRule theMemoryLakeLoadsNothing = noClasses()
+            .that().resideInAPackage("com.ash.drishti.memlake..")
+            .should().dependOnClassesThat().resideInAnyPackage("com.ash.drishti.dataload..", "com.ash.drishti.lakeload..");
+
     @ArchTest
     static final ArchRule lakeReadersDoNotSeeTheMemoryLake = noClasses()
             .that().resideInAnyPackage("com.ash.drishti.lakeio..", "com.ash.drishti.deltalake..", "com.ash.drishti.iceberg..",
