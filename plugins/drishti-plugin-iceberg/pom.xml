@@ -32,7 +32,6 @@
     <!-- Apache Iceberg on iceberg-core with Drishti's file access and Parquet reader; no Hadoop -->
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-iceberg</artifactId></dependency>
     <!-- documents already read, on disk across restarts (as the Delta connector) -->
-    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-diskcache</artifactId></dependency>
     <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-core</artifactId></dependency>
     <dependency><groupId>com.github.ben-manes.caffeine</groupId><artifactId>caffeine</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-common</artifactId></dependency>   <!-- RowFeed: the load rules of the loader -->

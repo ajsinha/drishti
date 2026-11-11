@@ -21,7 +21,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/** Beans contributed by {@code drishti-graph}. */
+/** Beans of the entity references and links (package {@code graph} of drishti-engine). */
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(GraphProperties.class)
 public class GraphConfiguration {

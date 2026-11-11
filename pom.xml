@@ -46,14 +46,11 @@
     <module>modules/genomics</module>
     <module>compute/drishti-rachana</module>
     <module>compute/drishti-inference</module>
-    <module>drishti-graph</module>
     <module>kernel/drishti-engine</module>
     <module>kernel/drishti-identity</module>
     <module>kernel/drishti-packs</module>
     <module>kernel/drishti-ai</module>
     <module>tests/drishti-testkit</module>
-    <module>drishti-diskcache</module>
-    <module>drishti-messaging</module>
     <module>kernel/drishti-registry</module>
     <module>drishti-lakeconfig</module>
     <module>lake/drishti-lakeio</module>
@@ -173,7 +170,6 @@
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-module-runtime</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-rachana</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-inference</artifactId><version>${project.version}</version></dependency>
-      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-graph</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-engine</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-identity</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-packs</artifactId><version>${project.version}</version></dependency>
@@ -216,8 +212,6 @@
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-compute-banking</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-modules</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId><version>${project.version}</version></dependency>
-      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-diskcache</artifactId><version>${project.version}</version></dependency>
-      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-messaging</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-deltalake</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakeconfig</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-registry</artifactId><version>${project.version}</version></dependency>

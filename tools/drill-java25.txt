@@ -16,7 +16,8 @@
 # compiles on Java 25 in that lane. Java 21, what production runs, runs every test.
 
 compute/drishti-compute            # BLAS, vectors, Arrow memory
-drishti-diskcache          # off-heap and mapped stores
+@DiskCacheTest
+@SortedStoreInUseTest
 lake/drishti-lakeio             # mapped files, LZ4 pages, Parquet footers
 drishti-memlake            # the in-memory lakes
 lake/drishti-iceberg            # Parquet and Iceberg libraries (Hadoop-free)
