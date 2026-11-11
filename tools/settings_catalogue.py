@@ -397,7 +397,7 @@ def engine_rows() -> tuple[list[Row], list[str]]:
     lakes = ROOT / "config" / "lakes"                                               # the shipped lake files and their jar copies (Lakes):
     for lake in sorted([*lakes.glob("*.yaml"), *lakes.glob("*/*.yaml")]):            # a domain folder's in its module's jar
         module = ROOT / ("drishti-lakeconfig" if lake.parent == lakes else f"drishti-{lake.parent.name}")
-        if not module.is_dir():                                                     # a domain module laid out on its own: modules/<domain>/
+        if not (module / "src").is_dir():                                          # a domain module laid out on its own: modules/<domain>/ (a folder left with only an old build's target/ is not a module)
             module = next((m for m in sorted((ROOT / "modules" / lake.parent.name).glob("*")) if (m / "src/main/resources/drishti/lakes" / lake.name).is_file()), module)
         jar = module / "src/main/resources/drishti/lakes" / lake.name
         if not jar.is_file() or lake.read_bytes() != jar.read_bytes():
