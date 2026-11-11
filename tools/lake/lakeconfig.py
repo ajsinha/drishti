@@ -71,11 +71,13 @@ def _jars(m2: pathlib.Path, group: str, art: str) -> dict[str, pathlib.Path]:
 
 
 def _maven_classpath() -> str | None:
-    """The compiled drishti-lakeio with Jackson from the local Maven repository: databind, core and the YAML format of ONE version
+    """The compiled drishti-lakeio (and the two classes of the kernel it names: drishti-common's ModuleLoaders, the kernel API's
+    DomainVocabulary) with Jackson from the local Maven repository: databind, core and the YAML format of ONE version
     (the newest present for all three; the annotations of that version or its minor line), never the newest of each (a mixed Jackson
     fails with NoSuchMethodError before a lake file is read)."""
     classes = ROOT / "lake/drishti-lakeio" / "target" / "classes"
-    if not (classes / "com" / "ash" / "drishti" / "lakeconfig" / "LakesCli.class").is_file():
+    kernel = [ROOT / "kernel" / m / "target" / "classes" for m in ("drishti-common", "drishti-kernel-api")]
+    if not (classes / "com" / "ash" / "drishti" / "lakeconfig" / "LakesCli.class").is_file() or not all(k.is_dir() for k in kernel):
         return None
     m2 = pathlib.Path(os.environ.get("MAVEN_REPO") or pathlib.Path.home() / ".m2" / "repository")
     core = "com/fasterxml/jackson/core"
@@ -91,7 +93,7 @@ def _maven_classpath() -> str | None:
     snake = _jars(m2, "org/yaml", "snakeyaml")
     if not ann or not snake:
         return None
-    return os.pathsep.join([str(classes), str(databind[v]), str(jcore[v]), str(ann), str(yaml[v]),
+    return os.pathsep.join([str(classes), *map(str, kernel), str(databind[v]), str(jcore[v]), str(ann), str(yaml[v]),
                             str(snake[max(snake, key=_version_key)])])
 
 
