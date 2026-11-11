@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.function.DoubleUnaryOperator;
 
 /**
- * Finance on flows and rates the data already carries (FUNCTION_CATALOGUE.md section 8, tier 2), each Excel's function under one name:
+ * Finance on flows and rates the data already carries (RACHANA_REFERENCE.md section F8, tier 2), each Excel's function under one name:
  * {@code npv}, {@code xnpv}, {@code irr}, {@code xirr}, {@code mirr}, {@code pv}, {@code fv}, {@code pmt}, {@code ipmt}, {@code ppmt},
  * {@code nper}, {@code rate}, {@code cumipmt}, {@code cumprinc}, {@code effect}, {@code nominal}, {@code fvschedule}, {@code rri},
  * {@code pduration}, {@code accrued}, {@code dollarde}, {@code dollarfr}, {@code macaulay_duration}, {@code modified_duration},

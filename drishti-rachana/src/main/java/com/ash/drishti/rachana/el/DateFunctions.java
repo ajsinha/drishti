@@ -28,7 +28,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Dates, on the bank's calendars (FUNCTION_CATALOGUE.md section 3): {@code today}, {@code days_between}, {@code eomonth},
+ * Dates, on the bank's calendars (RACHANA_REFERENCE.md section F3): {@code today}, {@code days_between}, {@code eomonth},
  * {@code edate}, {@code yearfrac}, {@code intck}, {@code is_business_day}. A date is ISO text ({@code 2026-10-16}; a
  * timestamp counts by its date) and a date result is ISO text. Business days are the platform's own calendars
  * ({@link BusinessCalendar}: {@code USNY}, {@code GBLO}, {@code EUTA}, {@code JPTO}, {@code CATO}, {@code WEEKENDS}, or a

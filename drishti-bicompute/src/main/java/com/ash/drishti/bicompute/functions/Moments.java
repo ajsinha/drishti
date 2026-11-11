@@ -23,7 +23,7 @@ import java.nio.ByteBuffer;
 import java.util.List;
 
 /**
- * The descriptive statistics of one input (FUNCTION_CATALOGUE.md section 4), every one mergeable:
+ * The descriptive statistics of one input (RACHANA_REFERENCE.md section F4), every one mergeable:
  * <ul>
  *   <li>{@code stderr}, {@code cv}, {@code skewness}, {@code kurtosis}: the central moments to the fourth order (n, mean, M2, M3, M4),
  *       each batch's computed in two passes, merged by Pébay's formulas (Chan's to the second order). The finished figures are Excel's

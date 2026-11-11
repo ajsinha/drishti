@@ -24,7 +24,7 @@ import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Text (FUNCTION_CATALOGUE.md section 2): {@code fmt}, {@code upper}, {@code lower}, the tests {@code contains},
+ * Text (RACHANA_REFERENCE.md section F2): {@code fmt}, {@code upper}, {@code lower}, the tests {@code contains},
  * {@code starts_with}, {@code ends_with}, {@code matches}, {@code matches_case}, and {@code concat}, {@code left},
  * {@code right}, {@code mid}, {@code replace}, {@code split}, {@code trim}, {@code pad}, {@code regex_extract}. The tests
  * are false for an empty value (a condition on a missing field is never true); the other functions give empty for an

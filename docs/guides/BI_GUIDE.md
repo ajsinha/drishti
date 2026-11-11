@@ -390,7 +390,7 @@ as two views.*
 | `pv()`, `trades()` (source `var`) | holistic (adds up) | the engine's answer for the cell's scope | value |
 
 So the desks' VaRs add up to more than the bank's: the grand total is the bank's own VaR, and the gap (Σ children − total) is shown beside
-every open node's total as **Σ−total**, the diversification. A function has one name ([FUNCTION_CATALOGUE.md](../architecture/FUNCTION_CATALOGUE.md));
+every open node's total as **Σ−total**, the diversification. A function has one name ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#the-function-catalogue));
 its sketch is how it is computed when ≈ is accepted, with a stated error, never a second name, and never for VaR
 ([section 23](#p23-scale-sketches-rollups-progressive-answers-and-the-cluster)); custom functions are in [section 19](#p19-custom-functions).
 
@@ -401,7 +401,7 @@ is written as a function around the aggregate, which is how the catalogue names 
 among the siblings), `diff(sum(PNL), 1, TRADE_DATE:month)` and `pct_change(sum(PNL), 1, TRADE_DATE:month)` (along a dimension on the
 rows or the columns). The column header is the text as written; the raw figure stays in the answer beside the shown one. The statistics
 (`skewness`, `kurtosis`, `corr`, `slope`, `iqr`, `trimmean`, `mode`, `string_agg` …) are ordinary values:
-[FUNCTIONS.md](FUNCTIONS.md).
+[RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#every-function-generated-from-the-registries).
 
 #### Choosing a function in the screen
 
@@ -685,7 +685,7 @@ The engine is also Rachana's only source of aggregates ([ONE_GRAMMAR.md](../arch
 into Rachana's function table (`sum`, `count`, `avg`, `min`, `max`, `median`, `percentile`, `distinct`, `wavg`, `variance`, `stddev`,
 the `_once` forms), the grouping behind `group(...)`, and `measure(...)` and `cell(...)`, so a sum in a Sutra and a sum in a pivot cell
 are the same `AggFunction`. A Sutra's `pivot` panel writes its groupings as Rachana paths and its value as one of these
-(`by: "@.BOOK"`, `across: "@.CURRENCY"`, `value: sum(@.MTM)`). Every function, once, is listed in [FUNCTIONS.md](FUNCTIONS.md).
+(`by: "@.BOOK"`, `across: "@.CURRENCY"`, `value: sum(@.MTM)`). Every function, once, is listed in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#every-function-generated-from-the-registries).
 
 ### P19. Custom functions
 
@@ -707,7 +707,7 @@ A view uses a function as `fn:owner/name@version(FIELD, FIELD)`: the fields are 
 written straight into a view's values, unnamed: `sum(PNL) / sum(abs(PNL))`.
 
 A formula is a Rachana expression ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#rachana-el-expressions)) over the cell's rows: the
-aggregates of [FUNCTIONS.md](FUNCTIONS.md) with an optional `where = <condition>`, `count()` for the rows, `&&`, `||`, `!`, `null`,
+aggregates of [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#every-function-generated-from-the-registries) with an optional `where = <condition>`, `count()` for the rows, `&&`, `||`, `!`, `null`,
 `c ? a : b` and `power(x, n)`. A formula saved in a view, a view's version or a formula function in Python's style (`and`, `None`,
 `x if c else y`, `**`) is rewritten into Rachana once when the server starts, in place and audited (`pivot-formula-migrate`); its figures do
 not change.
@@ -2702,7 +2702,7 @@ Every expression is written in one of four scopes, decided by where it stands: *
 table's `rules`, a model's `security.rows`), **aggregate** (a model's measures, MQ `define` and `having`) and **context** (the first
 argument of `calc`, `share_of`, `parent_of`, `as_of`). What each scope may name: [ARCHITECTURE.md §28 section
 18.2](../architecture/ARCHITECTURE.md#284-the-expression-language-del-and-its-checks). Every function, with its arguments and where it runs:
-[FUNCTIONS.md](FUNCTIONS.md).
+[RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#every-function-generated-from-the-registries).
 
 A measure is evaluated per group of the answer in four layers: the reader's **security** (fixed: no function touches it), the **query**
 (MQ `where`, report, page and visual filters, slicers, drill, cross-filter), the **group** (the current group's values) and the
@@ -3499,7 +3499,7 @@ accepted: { from: trades.DESK, to: desk_pnl.id, cardinality: many-to-one }
 #### R5.4 Measures: the expression language
 
 Measures are **Rachana** expressions in aggregate scope ([RACHANA_REFERENCE.md › Rachana-EL expressions](RACHANA_REFERENCE.md#rachana-el-expressions),
-every function in [FUNCTIONS.md](FUNCTIONS.md); filter context and what is refused: [BI_GUIDE.md section T12](#t12-measures-in-a-model-filter-context-and-what-is-refused)).
+every function in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#every-function-generated-from-the-registries); filter context and what is refused: [BI_GUIDE.md section T12](#t12-measures-in-a-model-filter-context-and-what-is-refused)).
 They compile to SQL on the server and are never run as code; every value is a bound parameter. The expression editor completes fields,
 measures (writing `measure('…')`), functions with their signature and an example, and named arguments, shows the server's problems as you
 type with the fix as a button, and **Try it** answers on the saved draft, as you.
@@ -12369,7 +12369,7 @@ The **Lead today** column looks only at what ships today. Where Drishti plans so
 | **Data connectivity** | Power Query connectors, a [list of several hundred entries](https://learn.microsoft.com/en-us/power-query/connectors/) including SaaS, databases, files, SAP and Snowflake; an on-premises gateway | 19 connector plugins (Delta, Iceberg, JDBC, DuckDB, Kafka, MongoDB, Cassandra, Redis, S3, REST and others) and 3 built in. See the [Data guide](DATA_GUIDE.md) | Built | **Power BI** |
 | **Data preparation** | Power Query (a visual tool and the M language) | Python Transforms and the Notebook; no visual data-prep tool, by decision ([Notebook guide](#part-4--the-notebook-and-python)) | Built (Python); visual tool not built | **Power BI** for analysts |
 | **Modelling: relationships** | [One-to-many, one-to-one, many-to-many; single or both cross-filter directions; inactive relationships activated with `USERELATIONSHIP`](https://learn.microsoft.com/en-us/power-bi/transform-model/desktop-relationships-understand) | Facts and dimensions; active relationships joined many-to-one; several facts in a question, each aggregated at its own grain ([section 5.3 of the Reports guide](#r53-relationships-and-how-a-question-joins)) | Built: both-ways filtering per relationship, many-to-many through a declared bridge table, inactive relationships per measure, an ambiguous path refused at save | **Power BI** |
-| **Modelling: calculation language** | [DAX](https://learn.microsoft.com/en-us/dax/dax-overview): measures, calculated columns and tables, filter and row context, `CALCULATE`, user-defined functions, calculation groups | Rachana expressions compiled to SQL: time intelligence, windows, `calc`, `share_of`, `parent_of`, `as_of`, calculation groups, field and what-if parameters ([section 12 of the Tables guide](#t12-measures-in-a-model-filter-context-and-what-is-refused), [Functions](FUNCTIONS.md)). `calc` with `ignore = table | GROUP`, `having`, per-measure direction and iteration (`sum_by`, `avg_by`, `min_by`, `max_by`); [DAX-to-Rachana cookbook and converter](RACHANA_REFERENCE.md#dax-to-rachana-cookbook) | Built | **Power BI** on depth; see section 6 |
+| **Modelling: calculation language** | [DAX](https://learn.microsoft.com/en-us/dax/dax-overview): measures, calculated columns and tables, filter and row context, `CALCULATE`, user-defined functions, calculation groups | Rachana expressions compiled to SQL: time intelligence, windows, `calc`, `share_of`, `parent_of`, `as_of`, calculation groups, field and what-if parameters ([section 12 of the Tables guide](#t12-measures-in-a-model-filter-context-and-what-is-refused), [Functions](RACHANA_REFERENCE.md#every-function-generated-from-the-registries)). `calc` with `ignore = table | GROUP`, `having`, per-measure direction and iteration (`sum_by`, `avg_by`, `min_by`, `max_by`); [DAX-to-Rachana cookbook and converter](RACHANA_REFERENCE.md#dax-to-rachana-cookbook) | Built | **Power BI** on depth; see section 6 |
 | **Query engine** | [Import (VertiPaq), DirectQuery, Direct Lake, composite and hybrid tables](https://learn.microsoft.com/en-us/power-bi/connect-data/desktop-directquery-about) | DuckDB over a columns layer per business date, rollups, or the source; one `GROUPING SETS` statement per fact for totals; sketches with a stated error ([section 22](#p22-bi-on-the-pivot-engine) and [section 23](#p23-scale-sketches-rollups-progressive-answers-and-the-cluster) of the Pivot guide) | Built | Differ; no benchmark |
 | **Clustered compute** | Capacity scales up by SKU; read-only replicas for query load | Pivot views scatter across nodes and merge partial states. BI model questions run on one node | Built, in part ([section 5](#c5-clustered-compute-behind-bi)) | Differ |
 | **Visuals** | A wide built-in set including ribbon, Gantt (preview), decomposition tree, key influencers, smart narrative, plus [AppSource](https://learn.microsoft.com/en-us/power-bi/visuals/power-bi-visualizations-overview) | About 30 types (charts, map, matrix, KPI, live chart, entity view, Vega-Lite, Python): [section 9.3](#r93-the-visuals-and-their-wells) | Built | **Power BI** |

@@ -26,7 +26,7 @@ import static org.assertj.core.api.Assertions.within;
 import org.junit.jupiter.api.Test;
 
 /**
- * The distributions (FUNCTION_CATALOGUE.md section 9) on the examples of Excel's own documentation (NORM.DIST, NORM.INV, NORM.S.DIST,
+ * The distributions (RACHANA_REFERENCE.md section F9) on the examples of Excel's own documentation (NORM.DIST, NORM.INV, NORM.S.DIST,
  * NORM.S.INV, LOGNORM.DIST, LOGNORM.INV, T.DIST, T.DIST.2T, T.DIST.RT, T.INV, T.INV.2T, CHISQ.DIST, CHISQ.INV, F.DIST, F.INV, BINOM.DIST,
  * BINOM.INV, POISSON.DIST, EXPON.DIST, GAMMA.DIST, GAMMA.INV, GAMMALN, GAMMA, BETA.DIST, BETA.INV, WEIBULL.DIST, HYPGEOM.DIST,
  * NEGBINOM.DIST, CONFIDENCE.NORM, CONFIDENCE.T, STANDARDIZE, FISHER, FISHERINV, ERF), to the digits Excel's pages print; the numerics against

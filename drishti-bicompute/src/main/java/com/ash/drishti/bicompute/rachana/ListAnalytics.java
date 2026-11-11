@@ -26,7 +26,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * MATLAB's (and Octave's) list analytics that rest on an aggregate (FUNCTION_CATALOGUE.md section 6, "MATLAB/Octave coverage"), provided
+ * MATLAB's (and Octave's) list analytics that rest on an aggregate (RACHANA_REFERENCE.md section F6, "MATLAB/Octave coverage"), provided
  * to Rachana by the pivot engine so every sum, mean, standard deviation, median, minimum and maximum in them is the engine's one
  * implementation (the same {@link AggFunction} a pivot cell runs): {@code cumsum}, {@code cumprod}, {@code cummax}, {@code cummin} (running
  * forms over a list), {@code movsum}, {@code movmean}, {@code movstd}, {@code movmedian} (moving windows), {@code maxk}, {@code mink},

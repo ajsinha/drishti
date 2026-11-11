@@ -12,9 +12,10 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Rachana examples (``docs/guides/examples``): each a ``<name>.sutra.yaml``, a self-contained ``<name>.json`` and a
-``<name>.md`` note. Studio opens them and the help centre lists them. A name is served only if its three files are present
-in the directory when asked, so a request can never name a path."""
+"""The Rachana examples (``docs/guides/examples``): each a ``<name>.sutra.yaml``, a self-contained ``<name>.json`` and its note, a
+section of the examples page (``README.md``, under its heading, or an ``<a id="<name>">`` just above it). Studio opens them and the
+help centre shows the page. A name is served only if its two files and its note are present when asked, so a request can never name
+a path."""
 from __future__ import annotations
 
 import re
@@ -23,6 +24,11 @@ from pathlib import Path
 
 _KIND = re.compile(r"^match:\s*\{[^}]*?\bkind:\s*([A-Za-z0-9_-]+)", re.M)
 _NAME = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+_ANCHOR = re.compile(r'^<a id="([a-z0-9-]+)"></a>\s*$')
+
+
+def _slug(title: str) -> str:
+    return re.sub(r"[^\w\- ]", "", title.strip().lower()).replace(" ", "-")
 
 
 @dataclass(frozen=True)
@@ -51,14 +57,39 @@ class Examples:
         return sorted(found, key=lambda n: (n != self.default, n))
 
     def _complete(self, name: str) -> bool:
-        return all((self.directory / f"{name}{ext}").is_file() for ext in (".sutra.yaml", ".json", ".md"))
+        return all((self.directory / f"{name}{ext}").is_file() for ext in (".sutra.yaml", ".json")) and name in self.notes()
+
+    def notes(self) -> dict[str, str]:
+        """Each example's note: its section of the examples page (a ``###`` heading under "The examples"), as a small document."""
+        page = self.directory / "README.md"
+        if not page.is_file():
+            return {}
+        lines = page.read_text(encoding="utf-8").split("\n")
+        out, name, body, anchor = {}, None, [], None
+        for line in [*lines, "### "]:
+            a = _ANCHOR.match(line)
+            if a:
+                anchor = a.group(1)
+                continue
+            if line.startswith("### ") or line.startswith("## "):
+                if name:
+                    out[name] = "\n".join(body).strip() + "\n"
+                name, body = None, []
+                if line.startswith("### ") and line[4:].strip():
+                    name = anchor or _slug(line[4:])
+                    body = ["# " + line[4:].strip()]
+                anchor = None
+                continue
+            if name:
+                body.append(line[1:] if line.startswith("####") else line)
+        return out
 
     def get(self, name: str | None) -> Example | None:
         """The named example, or None: names are checked against the files present, never joined into a path first."""
         if not name or not _NAME.match(name) or name not in self.names():
             return None
         text = lambda ext: (self.directory / f"{name}{ext}").read_text(encoding="utf-8")  # noqa: E731
-        readme = text(".md")
+        readme = self.notes()[name]
         heading = next((ln[2:].strip() for ln in readme.splitlines() if ln.startswith("# ")), name)
         yaml_text = text(".sutra.yaml")
         kind = _KIND.search(yaml_text)

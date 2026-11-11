@@ -26,7 +26,7 @@ import java.math.BigDecimal;
 import org.junit.jupiter.api.Test;
 
 /**
- * Finance on given flows (FUNCTION_CATALOGUE.md section 8) on the examples of Excel's documentation (NPV, XNPV, IRR, XIRR, MIRR, PV, FV,
+ * Finance on given flows (RACHANA_REFERENCE.md section F8) on the examples of Excel's documentation (NPV, XNPV, IRR, XIRR, MIRR, PV, FV,
  * PMT, IPMT, PPMT, NPER, RATE, CUMIPMT, CUMPRINC, EFFECT, NOMINAL, FVSCHEDULE, RRI, PDURATION, ACCRINTM, DOLLARDE, DOLLARFR, DURATION),
  * to the digits those pages print; the root finders' refusals in words; and the rules on empty, masked and wrong-typed flows.
  */

@@ -33,7 +33,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /**
- * MATLAB's list analytics provided by the engine (FUNCTION_CATALOGUE.md section 6) and the new aggregates reached over a Rachana list
+ * MATLAB's list analytics provided by the engine (RACHANA_REFERENCE.md section F6) and the new aggregates reached over a Rachana list
  * (section 4), on MATLAB's and Excel's documented examples: the same engine functions a pivot cell runs, with missing elements, masks and
  * wrong arguments.
  */

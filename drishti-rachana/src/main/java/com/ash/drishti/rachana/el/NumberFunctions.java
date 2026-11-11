@@ -24,7 +24,7 @@ import java.util.Locale;
 import java.util.function.DoubleUnaryOperator;
 
 /**
- * More math (FUNCTION_CATALOGUE.md section 1), beside {@link MathFunctions}: {@code round} (half away from zero, Excel's ROUND),
+ * More math (RACHANA_REFERENCE.md section F1), beside {@link MathFunctions}: {@code round} (half away from zero, Excel's ROUND),
  * {@code round_sig} (to significant digits), {@code log(x, [base])}, {@code fact}, {@code combin}, {@code permut}, {@code gcd},
  * {@code lcm}, {@code even}, {@code odd}, {@code pi}, the trigonometric functions ({@code sin}, {@code cos}, {@code tan}, {@code asin},
  * {@code acos}, {@code atan}, {@code atan2}, {@code sinh}, {@code cosh}, {@code tanh}, {@code radians}, {@code degrees}), and

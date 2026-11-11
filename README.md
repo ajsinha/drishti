@@ -237,7 +237,7 @@ report sign-offs go through one Approvals queue with four eyes. Anything that de
 - **Corrections and approvals**: correct a record in a form, approve it in the one queue, the edit log and the audit trail
   ([APPROVALS_GUIDE.md](docs/guides/APPROVALS_GUIDE.md), [tutorial 11](docs/tutorials/11-correct-and-approve.md)).
 - **One grammar**: Rachana paths and expressions in Sutras, search, the Pivot, reports and custom functions; every function in one
-  catalogue ([FUNCTIONS.md](docs/guides/FUNCTIONS.md), [RACHANA_REFERENCE.md](docs/guides/RACHANA_REFERENCE.md)).
+  catalogue ([RACHANA_REFERENCE.md](docs/guides/RACHANA_REFERENCE.md#every-function-generated-from-the-registries), [RACHANA_REFERENCE.md](docs/guides/RACHANA_REFERENCE.md)).
 
 ## Build
 
@@ -385,7 +385,7 @@ the modules they may use. The map of every document is [docs/README.md](docs/REA
 | install, operate, scale, administer | [DEPLOYMENT_AND_QA_GUIDE](docs/DEPLOYMENT_AND_QA_GUIDE.md) ([PDF](docs/DEPLOYMENT_AND_QA_GUIDE.pdf)), [OPERATIONS_GUIDE](docs/guides/OPERATIONS_GUIDE.md), [CLUSTER_GUIDE](docs/guides/CLUSTER_GUIDE.md) ([PDF](docs/guides/CLUSTER_GUIDE.pdf)), [ADMIN_GUIDE](docs/guides/ADMIN_GUIDE.md) | [21](docs/tutorials/21-run-it-in-production.md), [22](docs/tutorials/22-a-cluster-of-three.md) |
 
 **References**, one home each: [CONFIGURATION](docs/admin/CONFIGURATION.md), [API_REFERENCE](docs/guides/API_REFERENCE.md),
-[CLI_REFERENCE](docs/guides/CLI_REFERENCE.md), [COMMAND_CATALOG](docs/guides/COMMAND_CATALOG.md), [FUNCTIONS](docs/guides/FUNCTIONS.md),
+[CLI_REFERENCE](docs/guides/CLI_REFERENCE.md), [COMMAND_CATALOG](docs/guides/COMMAND_CATALOG.md), [FUNCTIONS](docs/guides/RACHANA_REFERENCE.md#every-function-generated-from-the-registries),
 [RACHANA_REFERENCE](docs/guides/RACHANA_REFERENCE.md), [ELEMENTS_API](docs/guides/ELEMENTS_API.md), [FLIGHT_REFERENCE](docs/guides/FLIGHT_REFERENCE.md),
 [VIEWMODEL](docs/architecture/VIEWMODEL.md), [BENCHMARK](docs/admin/BENCHMARK.md), [the data contracts](docs/contracts/README.md) and
 [the Knowledge primers](docs/knowledge/README.md). The design is [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) and

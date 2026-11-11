@@ -247,11 +247,12 @@ class Library:
                 pass
         return n
 
-    def _html(self, path: Path) -> tuple[str, markdown.Markdown]:
-        """A markdown file as help HTML: examples, boxes, tables, screenshots and links to other documents."""
+    def _html(self, path: Path, text: str | None = None) -> tuple[str, markdown.Markdown]:
+        """A markdown file (or ``text`` read as if it were that file) as help HTML: examples, boxes, tables, screenshots and links to
+        other documents."""
         md = markdown.Markdown(extensions=["tables", "fenced_code", "sane_lists", "admonition", "attr_list", "toc"],
                                extension_configs={"toc": {"toc_depth": "2-3", "slugify": GithubSlugger()}})
-        text = path.read_text(encoding="utf-8")
+        text = path.read_text(encoding="utf-8") if text is None else text
         front = _FRONT.match(text)                                                   # a README's YAML front matter (the README standard) is data, not text
         body = md.convert(text[:front.start(1)] + text[front.end():] if front else text)
         body = _CODE.sub(_figure, body)
@@ -278,9 +279,10 @@ class Library:
             return f'{m.group(1)}data-unavailable="{m.group(2)}" src="{m.group(2)}"'
         return f'{m.group(1)}src="/help/files/{html.escape(rel.as_posix())}"'
 
-    def fragment(self, path: Path) -> str:
-        """One markdown note (an example's) as help HTML, its links resolved like any guide's."""
-        return self._html(path)[0]
+    def fragment(self, path: Path, text: str | None = None) -> str:
+        """One markdown note (an example's: ``text``, a section of the page at ``path``) as help HTML, its links resolved like any
+        guide's, from ``path``."""
+        return self._html(path, text)[0]
 
     def _link(self, source: Path, m: re.Match) -> str:
         """A link between documents opens inside the help centre (an example's note opens on the Examples page); a

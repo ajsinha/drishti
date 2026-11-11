@@ -25,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.TreeSet;
 import org.junit.jupiter.api.Test;
 
-/** The logic functions (FUNCTION_CATALOGUE.md section 1): only the branch taken is evaluated, and a mask is never seen through. */
+/** The logic functions (RACHANA_REFERENCE.md section F1): only the branch taken is evaluated, and a mask is never seen through. */
 class LogicFunctionsTest {
 
     @Test

@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * More list functions (FUNCTION_CATALOGUE.md section 6), MATLAB's and Octave's that are not aggregates: {@code fillmissing},
+ * More list functions (RACHANA_REFERENCE.md section F6), MATLAB's and Octave's that are not aggregates: {@code fillmissing},
  * {@code interp1}, {@code polyval}, {@code trapz}, {@code cumtrapz}, and the set functions {@code union}, {@code intersect},
  * {@code difference} (MATLAB's setdiff) and {@code is_member} (MATLAB's ismember). The statistics over a list (running and moving forms,
  * {@code zscore}, {@code isoutlier}, {@code polyfit} …) are the pivot engine's, registered into Rachana (docs/architecture/ARCHITECTURE.md part 2).

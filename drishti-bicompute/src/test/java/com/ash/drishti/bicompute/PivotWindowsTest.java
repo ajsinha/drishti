@@ -31,7 +31,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 /**
- * The statistics of FUNCTION_CATALOGUE.md section 4 on the pivot (every cell against a naive DuckDB query of its own rows: their SQL
+ * The statistics of RACHANA_REFERENCE.md section F4 on the pivot (every cell against a naive DuckDB query of its own rows: their SQL
  * forms and the rows fed to the ones without) and the shares, ranks and windows of section 5 over an answer's cells:
  * {@code pct_of_total}, {@code pct_of_row}, {@code pct_of_column}, {@code pct_of_parent}, {@code ntile}, {@code diff},
  * {@code pct_change}, each against the raw figures it is made from, and each wrong form refused in words.

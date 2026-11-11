@@ -34,7 +34,7 @@ import java.util.Map;
  * dotted path), or {@code f(xs, ys)} (parallel lists, for the functions of two inputs: {@code wavg(prices, quantities)},
  * {@code sum_once(quantities, tradeIds)}); a number argument is the function's parameter ({@code percentile(list, 0.95)}).
  *
- * <p>Rules (FUNCTION_CATALOGUE.md): a value that is not a number (text that is not number-like, a boolean, an object) is not counted;
+ * <p>Rules (RACHANA_REFERENCE.md): a value that is not a number (text that is not number-like, a boolean, an object) is not counted;
  * a masked value makes the result masked (it is never added up); {@code sum} and {@code count} of nothing are 0 (as Excel's), every
  * other aggregate of nothing is empty. A whole result is a whole number ({@code 1 + 1} prints 2).
  */

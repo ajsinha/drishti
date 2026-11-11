@@ -24,7 +24,7 @@ import java.util.Locale;
 import java.util.Set;
 
 /**
- * More dates (FUNCTION_CATALOGUE.md section 3), beside {@link DateFunctions}: {@code date} (ISO text, or year, month and day with Excel's
+ * More dates (RACHANA_REFERENCE.md section F3), beside {@link DateFunctions}: {@code date} (ISO text, or year, month and day with Excel's
  * overflow: month 14 is February of the next year), the parts {@code year}, {@code quarter}, {@code month}, {@code week} (ISO),
  * {@code day}, {@code hour}, {@code minute}, {@code second} (of a timestamp's text; 0 for a plain date), {@code weekday} (with Excel's
  * return types), {@code days360} (US or European), {@code datedif} (complete years, months, days, Excel's units).

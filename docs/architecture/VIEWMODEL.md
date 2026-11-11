@@ -25,7 +25,7 @@ The shape is checked by a machine-readable [JSON Schema](#9-the-json-schema), se
 and generated from the Java records, and a test validates real views and live frames against it.
 
 Every example below is real output, abbreviated (lists cut to two items, long text cut). Most come from the
-[all-panels showcase](../guides/examples/all-panels-showcase.md), the bond trade `DEMO-BOND-1` that holds one panel of
+[all-panels showcase](../guides/examples/README.md#all-panels-showcase), the bond trade `DEMO-BOND-1` that holds one panel of
 every kind; some come from the demo swap `IRS-48213`.
 
 ## Contents

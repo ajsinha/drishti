@@ -28,7 +28,7 @@ import com.ash.drishti.api.DataNode;
 import java.util.TreeSet;
 import org.junit.jupiter.api.Test;
 
-/** The list functions (FUNCTION_CATALOGUE.md section 6): Excel's dynamic arrays over [*], with @ the element. */
+/** The list functions (RACHANA_REFERENCE.md section F6): Excel's dynamic arrays over [*], with @ the element. */
 class ListFunctionsTest {
 
     @Test

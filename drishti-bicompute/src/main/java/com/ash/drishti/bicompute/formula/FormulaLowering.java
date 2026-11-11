@@ -48,7 +48,7 @@ public final class FormulaLowering {
     public static final int MAX_LENGTH = 2000;
 
     /**
-     * The aggregates, under their one name each (FUNCTION_CATALOGUE.md section 4), and their row inputs (-1: none, the rows, or one). Each
+     * The aggregates, under their one name each (RACHANA_REFERENCE.md section F4), and their row inputs (-1: none, the rows, or one). Each
      * maps to the engine's built-in of {@link #ENGINE_NAME}.
      */
     public static final Map<String, Integer> AGGREGATES = Map.ofEntries(Map.entry("sum", 1), Map.entry("count", -1), Map.entry("avg", 1),
@@ -61,7 +61,7 @@ public final class FormulaLowering {
             "distinct", "count_distinct");
 
     /**
-     * The scalar functions of row values (and, outside an aggregate, of figures), under their one name each (FUNCTION_CATALOGUE.md sections
+     * The scalar functions of row values (and, outside an aggregate, of figures), under their one name each (RACHANA_REFERENCE.md sections
      * 1 and 4), and how many arguments each takes (-1: one or more).
      */
     public static final Map<String, Integer> SCALARS = Map.ofEntries(Map.entry("abs", 1), Map.entry("sqrt", 1), Map.entry("ln", 1),

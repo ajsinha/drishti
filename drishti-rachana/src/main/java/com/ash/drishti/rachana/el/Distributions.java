@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.function.DoubleUnaryOperator;
 
 /**
- * Distributions and the statistics a person builds a test from (FUNCTION_CATALOGUE.md section 9), each Excel's function under one name:
+ * Distributions and the statistics a person builds a test from (RACHANA_REFERENCE.md section F9), each Excel's function under one name:
  * {@code norm_dist}, {@code norm_inv}, {@code norm_s_dist}, {@code norm_s_inv}, {@code lognorm_dist}, {@code lognorm_inv},
  * {@code t_dist}, {@code t_inv}, {@code chisq_dist}, {@code chisq_inv}, {@code f_dist}, {@code f_inv}, {@code binom_dist},
  * {@code binom_inv}, {@code poisson_dist}, {@code expon_dist}, {@code gamma_dist}, {@code gamma_inv}, {@code gamma}, {@code gamma_ln},

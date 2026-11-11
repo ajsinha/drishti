@@ -128,8 +128,7 @@ sections:
           - { slug: api, domain: core, doc: guides/API_REFERENCE.md, title: "API reference", icon: braces-asterisk, summary: "Every REST endpoint by area (views, search, BI, models, SQL, runs, reports, approvals, alerts, administration, {product}*net) and the one error code table." }
           - { slug: developer, domain: core, title: "Developer: API references", icon: code-square, summary: "Every programming surface in one place: the REST API (OpenAPI), the renderer's TypeScript API, the Javadoc of the plugin and connector SPI and the shard machinery, and the Python references of the compute worker SDK, BI Python items, drishti.py and its client library and the pack and test-data generator helpers; generated at build time, versioned, self-contained, and how to document what you add." }
           - { slug: viewmodel, domain: core, doc: architecture/VIEWMODEL.md, title: "ViewModel contract", icon: braces, summary: "The JSON the server returns for every entity screen: the top level, cells, tones, provenance and masks, the data of all 22 panel kinds with real examples, live frames and patches, how to render it, versioning, and its JSON Schema." }
-          - { slug: rachana-reference, domain: core, doc: guides/RACHANA_REFERENCE.md, title: Rachana reference, icon: book, summary: "Every key (fragments and use:, emits and @panel.event, source:, children, refresh:, layout:, form:), panel option, format, tone, Rachana-EL expression and problem code." }
-          - { slug: functions, domain: core, doc: guides/FUNCTIONS.md, title: Functions, icon: calculator, summary: "Every function of Rachana and the pivot engine under its one name, generated from the registries: the scalars (math, logic, text, dates on the bank's calendars, lists) and the engine's aggregates (sum, count, avg, min, max, median, percentile, distinct, wavg, variance, stddev, the once-per-parent forms, group, measure, cell) with their arguments, form and source; the old spellings and what to write instead." }
+          - { slug: rachana-reference, domain: core, doc: guides/RACHANA_REFERENCE.md, title: Rachana reference, icon: book, summary: "The grammar and its functions in one reference: the function catalogue (every function once, with its example and its Excel and SAS names) and the list generated from the registries; Every key (fragments and use:, emits and @panel.event, source:, children, refresh:, layout:, form:), panel option, format, tone, Rachana-EL expression and problem code." }
       - title: "Command line"
         guides:
           - { slug: cli-guide, domain: core, doc: guides/CLI_REFERENCE.md, title: "Command line", icon: command, summary: "One program for the terminal and CI, every command group with its how-to: sutra, pack (make, check, bundle, deploy, roll back), data and dataload, lake (a large JSON export into a Delta lake, the demo lakes, publish, the parallel loader), server and doctor, connector and net, view, design, bi and tables, the risk engines (var, exposure, sens, frtb, simm, pivot), compute, contract, elements, feed; the store loaders, generators and developer tools; recipes, JSON output and exit codes." }
@@ -157,6 +156,20 @@ sections:
 # slug or slug#anchor. Documents that left the list (architecture, the per-plugin connector pages, the runbooks) are still in
 # the help centre at their path slug, so the old addresses keep working.
 moved:
+  docs-architecture-function-catalogue: rachana-reference#the-function-catalogue   # docs/architecture/FUNCTION_CATALOGUE.md folded into docs/guides/RACHANA_REFERENCE.md
+  docs-guides-examples-all-panels-showcase: examples#all-panels-showcase   # docs/guides/examples/all-panels-showcase.md folded into docs/guides/examples/README.md
+  docs-guides-examples-exposure-profile: examples#exposure-profile   # docs/guides/examples/exposure-profile.md folded into docs/guides/examples/README.md
+  docs-guides-examples-linked-sources: examples#linked-sources   # docs/guides/examples/linked-sources.md folded into docs/guides/examples/README.md
+  docs-guides-examples-map: examples#map   # docs/guides/examples/map.md folded into docs/guides/examples/README.md
+  docs-guides-examples-market-charts: examples#market-charts   # docs/guides/examples/market-charts.md folded into docs/guides/examples/README.md
+  docs-guides-examples-metric: examples#metric   # docs/guides/examples/metric.md folded into docs/guides/examples/README.md
+  docs-guides-examples-operations-status: examples#operations-status   # docs/guides/examples/operations-status.md folded into docs/guides/examples/README.md
+  docs-guides-examples-pivot-row-groups: examples#pivot-row-groups   # docs/guides/examples/pivot-row-groups.md folded into docs/guides/examples/README.md
+  docs-guides-examples-pnl-explain: examples#pnl-explain   # docs/guides/examples/pnl-explain.md folded into docs/guides/examples/README.md
+  docs-guides-examples-relationships: examples#relationships   # docs/guides/examples/relationships.md folded into docs/guides/examples/README.md
+  docs-guides-examples-risk-distribution: examples#risk-distribution   # docs/guides/examples/risk-distribution.md folded into docs/guides/examples/README.md
+  docs-guides-examples-tree-table: examples#tree-table   # docs/guides/examples/tree-table.md folded into docs/guides/examples/README.md
+  functions: rachana-reference#every-function-generated-from-the-registries   # docs/guides/FUNCTIONS.md folded into docs/guides/RACHANA_REFERENCE.md
   bi-and-power-bi: bi-guide#part-6--drishti-bi-and-power-bi-compared   # docs/strategy/BI_AND_POWER_BI.md folded into docs/guides/BI_GUIDE.md
   docs-guides-groupings-analytics-guide: bi-guide#part-5--groupings-and-analytics   # docs/guides/GROUPINGS_ANALYTICS_GUIDE.md folded into docs/guides/BI_GUIDE.md
   docs-guides-pivot-guide: bi-guide#part-1--pivot-cubes-and-explain   # docs/guides/PIVOT_GUIDE.md folded into docs/guides/BI_GUIDE.md

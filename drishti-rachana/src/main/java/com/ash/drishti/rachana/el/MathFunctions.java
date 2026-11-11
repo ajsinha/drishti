@@ -22,7 +22,7 @@ import java.math.RoundingMode;
 import java.util.List;
 
 /**
- * Math (FUNCTION_CATALOGUE.md section 1): {@code abs}, {@code round_up}, {@code round_down}, {@code mround}, {@code ceiling},
+ * Math (RACHANA_REFERENCE.md section F1): {@code abs}, {@code round_up}, {@code round_down}, {@code mround}, {@code ceiling},
  * {@code floor}, {@code mod}, {@code power}, {@code sqrt}, {@code exp}, {@code ln}, {@code log10}, {@code sign},
  * {@code clamp}, {@code least}, {@code greatest}, and {@code min}/{@code max} (over a list, or the old spelling of
  * {@code least}/{@code greatest}). Rounding, multiples, remainders, whole powers and roots are worked in decimal, so

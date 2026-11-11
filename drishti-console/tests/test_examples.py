@@ -47,8 +47,8 @@ def test_every_example_has_its_three_files_and_parses():
         assert sutra["rachana"] == 1 and sutra["sutra"] == name, name
         assert isinstance(json.loads((EXAMPLES / f"{name}.json").read_text(encoding="utf-8")), dict), name
         assert (EXAMPLES / f"{name}.json").stat().st_size < 60_000, f"{name}.json is not small"
-        assert any(ln.startswith("# ") for ln in (EXAMPLES / f"{name}.md").read_text(encoding="utf-8").splitlines()), name
-        assert f"]({name}.md)" in index, f"{name} is not in the index"
+        assert Examples(EXAMPLES).notes()[name].startswith("# "), name           # its note: a section of the examples page
+        assert f"](#{name})" in index, f"{name} is not in the index"
 
 
 def test_the_set_covers_every_panel_kind_a_nested_pivot_and_a_tree_table():

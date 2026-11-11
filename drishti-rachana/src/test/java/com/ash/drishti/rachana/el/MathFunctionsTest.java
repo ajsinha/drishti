@@ -25,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.math.BigDecimal;
 import org.junit.jupiter.api.Test;
 
-/** The math functions (FUNCTION_CATALOGUE.md section 1): decimal results, empty in empty out, masked in masked out, clear problems. */
+/** The math functions (RACHANA_REFERENCE.md section F1): decimal results, empty in empty out, masked in masked out, clear problems. */
 class MathFunctionsTest {
 
     @Test

@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 #
 # The expression recipes test_expression_recipes.py runs on the demo lake against the trading-risk model, written in Rachana
-# (RACHANA_REFERENCE.md, Rachana-EL expressions; the functions in FUNCTIONS.md). Each: id, title, expr, by (the fields it is grouped by),
+# (RACHANA_REFERENCE.md, Rachana-EL expressions; the functions in RACHANA_REFERENCE.md). Each: id, title, expr, by (the fields it is grouped by),
 # scope (aggregate, row or rule).
 recipes:
   - { id: R1, title: "MTM by desk", expr: "sum(trades.MTM)", by: [desks.NAME], scope: aggregate }

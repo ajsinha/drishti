@@ -22,7 +22,7 @@ import java.nio.ByteBuffer;
 import java.util.List;
 
 /**
- * The two-variable statistics (FUNCTION_CATALOGUE.md section 4): {@code corr(a, b)}, {@code covar(a, b)} (sample, Excel's
+ * The two-variable statistics (RACHANA_REFERENCE.md section F4): {@code corr(a, b)}, {@code covar(a, b)} (sample, Excel's
  * {@code COVARIANCE.S}), and the least-squares line of {@code y} on {@code x}: {@code slope(y, x)}, {@code intercept(y, x)},
  * {@code rsq(y, x)}, written in Excel's order (y first). The state is the co-moments (n, mean a, mean b, Σ(a−ā)², Σ(b−b̄)², Σ(a−ā)(b−b̄)),
  * each batch's in two passes, merged by Chan's formulas: mergeable. Only rows where both values are present count, as Excel's

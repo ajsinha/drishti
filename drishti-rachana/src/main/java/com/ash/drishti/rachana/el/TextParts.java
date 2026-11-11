@@ -27,7 +27,7 @@ import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * More text (FUNCTION_CATALOGUE.md section 2), beside {@link TextFunctions}: {@code len}, {@code proper}, {@code rept}, {@code exact},
+ * More text (RACHANA_REFERENCE.md section F2), beside {@link TextFunctions}: {@code len}, {@code proper}, {@code rept}, {@code exact},
  * {@code char}, {@code code} (Unicode, Excel's UNICHAR and UNICODE), {@code find} (case counts) and {@code search} (ignoring case), both
  * a 1-based position or 0 when not found (SAS's INDEX rule, so {@code find(...) > 0} is a test), {@code text_before}, {@code text_after},
  * {@code regex_replace}, {@code reverse}, {@code clean}, {@code value} (text read as a number) and {@code text} (a number or a date written

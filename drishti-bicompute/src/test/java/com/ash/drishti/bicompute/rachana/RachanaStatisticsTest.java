@@ -33,7 +33,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /**
- * The engine's statistics reached from Rachana over a document's lists (FUNCTION_CATALOGUE.md section 4): the same implementation a pivot
+ * The engine's statistics reached from Rachana over a document's lists (RACHANA_REFERENCE.md section F4): the same implementation a pivot
  * cell runs, on Excel's documented examples, with nulls, on nothing, masked, and refused on a wrong argument.
  */
 class RachanaStatisticsTest {

@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * The holistic statistics of FUNCTION_CATALOGUE.md section 4 (each cell and total from its own values, never from other cells' figures):
+ * The holistic statistics of RACHANA_REFERENCE.md section F4 (each cell and total from its own values, never from other cells' figures):
  * {@link Iqr} (p75 − p25), {@link TrimMean} (Excel's {@code TRIMMEAN}), {@link Kth} ({@code kth_largest}, {@code kth_smallest}: Excel's
  * {@code LARGE}, {@code SMALL}), {@link Mode} (the most frequent value, a number or a name) and {@link StringAgg} (the values joined,
  * bounded). The numeric ones keep the cell's values ({@link Values}); the text ones a count per distinct value, whose merge is the exact

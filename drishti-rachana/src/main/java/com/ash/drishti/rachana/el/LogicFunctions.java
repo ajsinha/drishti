@@ -21,7 +21,7 @@ import com.ash.drishti.common.DrishtiException;
 import java.util.List;
 
 /**
- * Logic and references (FUNCTION_CATALOGUE.md section 1, and section 2's tests on a range or a list): {@code if},
+ * Logic and references (RACHANA_REFERENCE.md section F1, and section 2's tests on a range or a list): {@code if},
  * {@code ifs}, {@code switch}, {@code iferror}, {@code let}, {@code coalesce}, {@code nonblank}, {@code within},
  * {@code one_of}, {@code link}. {@code if}, {@code ifs} and {@code let} are built by the parser ({@code if} and
  * {@code ifs} as the conditional {@code ?:}, so only the branch taken is evaluated; {@code let} binds names).

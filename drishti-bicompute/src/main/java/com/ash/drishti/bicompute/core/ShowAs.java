@@ -29,7 +29,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 /**
- * Show values as (ARCHITECTURE.md section 26.11) and the shares, ranks and windows over an answer's cells (FUNCTION_CATALOGUE.md section 5,
+ * Show values as (ARCHITECTURE.md section 26.11) and the shares, ranks and windows over an answer's cells (RACHANA_REFERENCE.md section F5,
  * {@link Windows}): each figure shown is computed from the finished figures of the answer's cells, after the cells, Top N and Others are
  * made, so a total is never broken and no rows are read again. The raw figure stays beside the shown one ({@code raw}).
  */

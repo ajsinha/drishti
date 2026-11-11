@@ -273,7 +273,7 @@ async def help_examples(request: Request):
     if g is None:
         return await help_guide(request, "examples")
     items = [{"name": e.name, "title": e.title, "yaml": e.yaml, "json": e.json,
-              "note": lib.fragment(request.app.state.examples.directory / f"{e.name}.md")} for e in request.app.state.examples.all()]
+              "note": lib.fragment(request.app.state.examples.directory / "README.md", e.readme)} for e in request.app.state.examples.all()]
     body = request.app.state.templates.get_template("help/_examples.html").render(examples=items)
     page = {"html": body, "toc": [{"id": e["name"], "name": e["title"], "children": []} for e in items]}
     category = _siblings(request, lib, g)

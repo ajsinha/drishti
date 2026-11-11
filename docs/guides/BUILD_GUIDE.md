@@ -2903,7 +2903,7 @@ Preview it against another counterparty (`CP-NORTHPLAINS`): the same layout serv
 
 Every `bind`, `rows`, `where` and `highlight` is a Rachana-EL expression. This section builds them up against the Murex swap `MX-20000001` (look at it
 with `curl -s -H "$AUTH" $DRISHTI/entities/trade/MX-20000001/raw | python3 -m json.tool`; its shape is in [section 6.1](#61-the-shape-of-the-document)).
-Every function is in [FUNCTIONS.md](FUNCTIONS.md) and the [reference](RACHANA_REFERENCE.md#functions).
+Every function is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#every-function-generated-from-the-registries) and the [reference](RACHANA_REFERENCE.md#functions).
 
 **Paths.**
 
@@ -3572,7 +3572,7 @@ panels:
 
 Previewed on `MX-20000001`, you should see four tabs, `NS-MERIDIAN-RE-FRA` to `NS-MERIDIAN-RE-TKY`, the London one with `Trades 191` and `Net MTM
 −316,071,572`; and the rates desk's grid, three books (`BOOK-RATES-1` `6.0bn`, `BOOK-RATES-2` `−1.5bn`, `BOOK-RATES-3` `−393.7m`) across `swap`,
-`linear`, `future`, `option` and `exotic`, the desk `4.1bn` in all. The runnable version is the [linked-sources example](examples/linked-sources.md).
+`linear`, `future`, `option` and `exotic`, the desk `4.1bn` in all. The runnable version is the [linked-sources example](examples/README.md#linked-sources).
 
 - `source` is an expression that gives a `link(id, kind)`. Then write `rows`, `each` and the other options as if the linked document were the page's own;
   `@` is still the row. The title line still reads this entity.
@@ -3670,7 +3670,7 @@ breadcrumb: [section 9.6](#96-drill-down-leg--cash-flow--resets),
 [levels](RACHANA_REFERENCE.md#levels-drill-down-level-by-level)).
 
 A pivot **aggregates** rows by fields you name; a tree table or `levels` **shows** a hierarchy the document already has. Runnable versions:
-[pivot-row-groups](examples/pivot-row-groups.md) and [tree-table](examples/tree-table.md). Do not confuse the **`pivot` panel kind** with the **`pivot:`
+[pivot-row-groups](examples/README.md#pivot-row-groups) and [tree-table](examples/README.md#tree-table). Do not confuse the **`pivot` panel kind** with the **`pivot:`
 option** that gives a table a user-driven Pivot.
 
 ## 22. Dates, live data, imperfect data and controls

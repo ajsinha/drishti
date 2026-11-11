@@ -21,7 +21,7 @@ import com.ash.drishti.common.DrishtiException;
 import java.util.List;
 
 /**
- * Information and choice (FUNCTION_CATALOGUE.md section 1): {@code is_number}, {@code is_text}, {@code is_date}, {@code is_boolean},
+ * Information and choice (RACHANA_REFERENCE.md section F1): {@code is_number}, {@code is_text}, {@code is_date}, {@code is_boolean},
  * {@code is_blank}, {@code is_error}, {@code type_of} and {@code choose}. The tests answer true or false, never empty: {@code is_blank}
  * is the one that is true for an empty value; a masked value gives a masked answer (whether a hidden field is filled in is itself
  * hidden). {@code is_number} is true for a number as the data holds it, not for number-like text (Excel's ISNUMBER; arithmetic still

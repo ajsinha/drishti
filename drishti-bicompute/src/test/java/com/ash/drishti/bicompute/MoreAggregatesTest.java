@@ -38,7 +38,7 @@ import java.util.Random;
 import org.junit.jupiter.api.Test;
 
 /**
- * The aggregates that complete Excel's and SAS's everyday set (FUNCTION_CATALOGUE.md section 4): Excel's documented examples (SUMPRODUCT,
+ * The aggregates that complete Excel's and SAS's everyday set (RACHANA_REFERENCE.md section F4): Excel's documented examples (SUMPRODUCT,
  * SUMSQ, PRODUCT, DEVSQ, SKEW.P, COVARIANCE.P, STEYX, AVEDEV, PERCENTILE.EXC, QUARTILE.EXC, RANK.AVG, PERCENTRANK.INC, MODE.MULT); nulls,
  * nothing and wrong arguments; every mergeable one through the split-and-merge harness (2, 3 and 16 parts, five seeds, states serialised)
  * within 1e-12, and the holistic ones merging their values exactly.

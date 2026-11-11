@@ -26,7 +26,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /**
- * MATLAB's and Octave's list functions that are not aggregates (FUNCTION_CATALOGUE.md section 6): fillmissing, interp1, polyval, trapz,
+ * MATLAB's and Octave's list functions that are not aggregates (RACHANA_REFERENCE.md section F6): fillmissing, interp1, polyval, trapz,
  * cumtrapz, the set functions and sort by several keys (sortrows), on MATLAB's documented examples where it has one.
  */
 class ListMoreTest {

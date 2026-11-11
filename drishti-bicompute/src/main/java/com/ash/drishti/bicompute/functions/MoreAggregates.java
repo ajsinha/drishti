@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * The aggregates that complete Excel's and SAS's everyday set (FUNCTION_CATALOGUE.md section 4, "Excel and SAS coverage"):
+ * The aggregates that complete Excel's and SAS's everyday set (RACHANA_REFERENCE.md section F4, "Excel and SAS coverage"):
  * <ul>
  *   <li>mergeable: {@link SumProduct} (Excel's SUMPRODUCT of two ranges), {@link SumSq} (SUMSQ, SAS's USS), {@link Product} (PRODUCT,
  *       kept as a mantissa and a binary exponent so a long product neither overflows nor underflows on the way);</li>

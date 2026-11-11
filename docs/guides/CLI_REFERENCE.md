@@ -3214,7 +3214,7 @@ drishti: the server said 403 DRS-9002: DRS-9002 cat does not hold the bi-author 
 
 ### `bi expr`, `bi migrate`, `bi sql`: the BI languages
 
-Rachana, BI's expression language ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#rachana-el-expressions); the functions in [FUNCTIONS.md](FUNCTIONS.md)),
+Rachana, BI's expression language ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#rachana-el-expressions); the functions in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#every-function-generated-from-the-registries)),
 and Drishti SQL over REST, as the token's user (the server owns the one parser of each; [API_REFERENCE.md](API_REFERENCE.md#6-expressions-apiv1biexpr)). Reads
 need no scope.
 

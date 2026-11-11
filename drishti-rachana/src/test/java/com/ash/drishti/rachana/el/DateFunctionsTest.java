@@ -28,7 +28,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.api.Test;
 
-/** The date functions (FUNCTION_CATALOGUE.md section 3): month ends, leap years, Excel's YEARFRAC, and the platform's calendars. */
+/** The date functions (RACHANA_REFERENCE.md section F3): month ends, leap years, Excel's YEARFRAC, and the platform's calendars. */
 class DateFunctionsTest {
 
     @Test

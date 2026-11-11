@@ -1403,8 +1403,8 @@ empty lists, masks, zero divisors, mixed currencies) and compares value for valu
 ### 23.3 The function catalogue
 
 Each function lands **once**: scalars in Rachana, aggregates, windows and context functions in the engine. The catalogue page (Help →
-Functions, [FUNCTIONS.md](../guides/FUNCTIONS.md)) is generated from the two registries (`FunctionCataloguePage`) and checked against
-[FUNCTION_CATALOGUE.md](FUNCTION_CATALOGUE.md), the list function by function with its Excel, SAS and MATLAB equivalents. Every function
+Functions, [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#every-function-generated-from-the-registries)) is generated from the two registries (`FunctionCataloguePage`) and checked against
+[../guides/RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#the-function-catalogue), the list function by function with its Excel, SAS and MATLAB equivalents. Every function
 has typed arguments and result, a null rule, a mergeable form or the word *holistic* (so totals and the cluster stay right), currency and
 unit rules (a sum of two currencies is refused unless converted), masks respected, a worked example the docs test runs, and its Excel
 equivalent where one exists, so the pivot's Excel export writes a live formula. Excel and SAS names are documentation, never aliases.

@@ -31,7 +31,7 @@ import java.util.Random;
 import org.junit.jupiter.api.Test;
 
 /**
- * The descriptive, two-variable and holistic statistics of FUNCTION_CATALOGUE.md section 4 (2.9.11.e front-loaded): each on its normal
+ * The descriptive, two-variable and holistic statistics of RACHANA_REFERENCE.md section F4 (2.9.11.e front-loaded): each on its normal
  * case, with nulls, on nothing, and refused on a wrong argument; Excel's documented examples ({@code SKEW}, {@code KURT}, {@code CORREL},
  * {@code COVARIANCE.S}, {@code SLOPE}, {@code INTERCEPT}, {@code RSQ}, {@code TRIMMEAN}, {@code GEOMEAN}, {@code HARMEAN},
  * {@code MODE.SNGL}, {@code LARGE}, {@code SMALL}, {@code QUARTILE.INC}) to their printed digits; and every mergeable one through the

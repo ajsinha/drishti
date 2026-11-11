@@ -25,7 +25,7 @@ import static org.assertj.core.api.Assertions.within;
 import org.junit.jupiter.api.Test;
 
 /**
- * The scalars of 2.9.11.e beside the earlier families (FUNCTION_CATALOGUE.md sections 1 to 3): math (round, round_sig, log, fact, combin,
+ * The scalars of 2.9.11.e beside the earlier families (RACHANA_REFERENCE.md sections F1 to 3): math (round, round_sig, log, fact, combin,
  * permut, gcd, lcm, even, odd, pi, the trigonometric functions, base, decimal), text (len, proper, rept, exact, char, code, find, search,
  * text_before, text_after, regex_replace, reverse, clean, value, text), dates (date, year … second, weekday, days360, datedif, shift_date)
  * and information (is_number … type_of, choose), on Excel's documented examples where Excel has one; empty, masked and wrong-typed
