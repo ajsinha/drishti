@@ -1665,7 +1665,35 @@ load (many workers and the Java builds beside them), so they are an upper bound 
 `DRISHTI_PAGEWALK_BUDGET`).
 
 <!-- pageloads:begin (tools/drillkit/pageloads.py --write; the last drill's browser lane) -->
-Not measured yet: the next drill writes it.
+Measured 2026-11-11: 3,063 page loads of 397 pages; the 25 slowest by p95 (slow from 2 s).
+
+| Page | Loads | p95 | Median |
+|---|---:|---:|---:|
+| `/v/trade/1000101` (slow) | 2 | 10.60 s | 6.08 s |
+| `/admin/white-label` (slow) | 14 | 9.09 s | 0.44 s |
+| `/v/system-basket/PF-RATES-DESK` (slow) | 1 | 8.90 s | 8.90 s |
+| `/func` (slow) | 9 | 8.12 s | 0.32 s |
+| `/admin/bindings` (slow) | 12 | 7.89 s | 0.42 s |
+| `/admin/loads` (slow) | 16 | 6.91 s | 0.47 s |
+| `/admin/connectors` (slow) | 32 | 6.63 s | 0.51 s |
+| `/page.html` (slow) | 5 | 6.24 s | 3.99 s |
+| `/v/listed-company/CO-AAPL` (slow) | 4 | 6.16 s | 4.50 s |
+| `/lens/risk` (slow) | 6 | 5.84 s | 0.22 s |
+| `/forms` (slow) | 24 | 5.71 s | 0.32 s |
+| `/var` (slow) | 106 | 5.67 s | 0.73 s |
+| `/admin/net` (slow) | 31 | 5.25 s | 0.60 s |
+| `/bi/r/file:report:python-desk-risk/vega` (slow) | 1 | 5.19 s | 5.19 s |
+| `/lens/leave` (slow) | 22 | 5.12 s | 0.07 s |
+| `/v/development-profile/WDI-CAN` (slow) | 1 | 4.99 s | 4.99 s |
+| `/v/trade/MX-20000001` (slow) | 17 | 4.62 s | 1.29 s |
+| `/v/jurisdiction/JUR-AUS` (slow) | 2 | 4.59 s | 3.69 s |
+| `/admin/modules/deploy` (slow) | 9 | 4.55 s | 0.29 s |
+| `/v/fund/QQQ` (slow) | 1 | 4.50 s | 4.50 s |
+| `/v/central-bank/CBANK-BOC` (slow) | 1 | 4.34 s | 4.34 s |
+| `/var/reports` (slow) | 3 | 4.34 s | 0.42 s |
+| `/bi/r/file:report:counterparty-risk` (slow) | 10 | 4.22 s | 0.45 s |
+| `/datamap` (slow) | 10 | 3.94 s | 0.48 s |
+| `/admin/engines` (slow) | 16 | 3.90 s | 0.36 s |
 <!-- pageloads:end -->
 
 ## 19. The BI scale gate
