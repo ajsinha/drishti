@@ -20,7 +20,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.DoubleSupplier;
-import java.util.random.RandomGenerator;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * The retry state of one thing that failed (a pack, a connector, an AI provider, an MCP server): how many times it has
@@ -60,7 +60,7 @@ public final class RetryTracker {
     }
 
     public RetryTracker(RetryPolicy policy) {
-        this(policy, Clock.systemUTC(), () -> RandomGenerator.getDefault().nextDouble());
+        this(policy, Clock.systemUTC(), () -> ThreadLocalRandom.current().nextDouble());
     }
 
     /**

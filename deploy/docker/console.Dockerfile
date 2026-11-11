@@ -25,6 +25,8 @@ COPY config/lenses/ /opt/drishti/config/lenses/
 # Build -> New pack makes its bundle with the same module as `drishti.py pack bundle` (builder.tools_dir, ../tools from the console).
 COPY tools/packbundle.py /opt/drishti/tools/packbundle.py
 COPY LICENSE CHANGELOG.md RELEASE_NOTES.md THIRD-PARTY-NOTICES.md /opt/drishti/
+# the console writes under the data folder (<repo>/data: /opt/drishti/data), its temp folder first: the one folder it may write
+RUN mkdir -p /opt/drishti/data/tmp && chown -R drishti /opt/drishti/data
 USER drishti
 EXPOSE 17480
 ENV DRISHTI_CONSOLE_HOST=0.0.0.0
