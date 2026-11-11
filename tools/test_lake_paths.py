@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 """The guard: no code outside the lake configuration hard-codes where a lake is (DATA_LAKE_GUIDE.md section 2). Every lake is in its own folder,
-<data>/delta/<lake>, or where its lake file says; the server and the loader resolve it through drishti-lakeconfig, the tools through
+<data>/delta/<lake>, or where its lake file says; the server and the loader resolve it through drishti-lakeio, the tools through
 tools/lake/lakeconfig.py. Code (Java, Python, JavaScript; tests excluded) may not:
 
 - spell a lake's folder as a path: a string that is ``data/delta`` or starts with it (``./data/delta/trading``), or ``data`` joined to
@@ -30,7 +30,7 @@ import subprocess
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 # the tutorials' picture scripts build a scratch site and show its folders exactly as a reader sees them (data/delta/risklake/...)
-ALLOWED = ("drishti-lakeconfig/", "tools/lake/lakeconfig.py", "tools/docs/shots/")
+ALLOWED = ("lake/drishti-lakeio/", "tools/lake/lakeconfig.py", "tools/docs/shots/")
 PATH = re.compile(r"^\.?[/\\]?data[/\\]delta([/\\]|$)")
 REF = re.compile(r"DRISHTI_DELTA_ROOT")
 JOIN = re.compile(r"""\bdata(?:_dir\(\))?["']?\s*\)?\s*/\s*["']delta["']""")
@@ -99,7 +99,7 @@ def violations() -> list[str]:
 
 def test_no_code_outside_the_lake_configuration_spells_where_a_lake_is():
     bad = violations()
-    assert not bad, ("a lake's folder is the lake file's (resolve it through drishti-lakeconfig or tools/lake/lakeconfig.py: root(), "
+    assert not bad, ("a lake's folder is the lake file's (resolve it through drishti-lakeio or tools/lake/lakeconfig.py: root(), "
                      "DEMO_ROOT_ENV, DEMO_ROOT_REF):\n  " + "\n  ".join(bad))
 
 

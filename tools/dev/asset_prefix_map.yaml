@@ -845,7 +845,7 @@ patches:
   old: 'global.window = { DrishtiChannel: { subscribe: (ch, h) => { handlers = h; return () => {}; } } };'
   new: 'global.window = { Drishti: { Channel: { subscribe: (ch, h) => { handlers = h; return () => {}; } } } };'
   why: 'a Node stub of window: the global moved into the namespace'
-- file: drishti-it/src/test/java/com/ash/drishti/it/AggregationOwnerTest.java
+- file: testing/drishti-it/src/test/java/com/ash/drishti/it/AggregationOwnerTest.java
   old: rel.contains("/static/js/pivot")
   new: rel.contains("/static/js/drishti_pivot")
   why: the pivot scripts by the start of their name

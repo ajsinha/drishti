@@ -170,7 +170,7 @@ class ScratchServer:
     def start(self) -> str:
         if self.a.port in FORBIDDEN or listening(self.a.port):
             raise SystemExit(f"capture-market: port {self.a.port} is in use or reserved; pass --port")
-        jars = sorted(glob.glob(str(ROOT / "drishti-server" / "target" / "drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)
+        jars = sorted(glob.glob(str(ROOT / "kernel/drishti-server" / "target" / "drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)
         jar = self.a.jar or os.environ.get("DRISHTI_JAR") or (jars[0] if jars else None)
         java = shutil.which("java") if not os.environ.get("JAVA_HOME") else str(pathlib.Path(os.environ["JAVA_HOME"]) / "bin" / "java")
         if not jar or not pathlib.Path(jar).is_file():
@@ -362,7 +362,7 @@ def run(a, say=print, sleep=time.sleep) -> int:
 
 def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
     p.add_argument("--server", help="a running server with the live connectors on (default: start a scratch server from the built jar)")
-    p.add_argument("--jar", help="the server's exec jar for the scratch server (default DRISHTI_JAR, else the newest in drishti-server/target)")
+    p.add_argument("--jar", help="the server's exec jar for the scratch server (default DRISHTI_JAR, else the newest in kernel/drishti-server/target)")
     p.add_argument("--port", type=int, default=18977, help="the scratch server's port (default 18977)")
     p.add_argument("--range", default="1y", help="quote history for the scratch server's yfinance connector (default 1y of daily bars)")
     p.add_argument("--delay", type=float, default=2.0, help="seconds between calls, at least 2 (default 2)")

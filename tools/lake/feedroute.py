@@ -14,7 +14,7 @@
 
 """Where a feed file goes, for the command-line loaders (``lake build``, ``data ingest``): the one place that pairs a file with its
 ``.ready`` file and maps a table name (a file name's first segment, a tar's folder) to a pack and kind
-(docs/guides/DATA_LAKE_GUIDE.md sections 5 and 5). The data inbox does the same in drishti-dataload (``Routes``, ``ReadyNote``).
+(docs/guides/DATA_LAKE_GUIDE.md sections 5 and 5). The data inbox does the same in drishti-lakeload (``Routes``, ``ReadyNote``).
 
 * **Pairing**: ``<file>.ready`` (the data file's full name), or the name without its data extension (``trades.2026-11-03.ready``,
   ``eod.tar.ready``). A short name that could pair with two data files releases neither.
@@ -41,7 +41,7 @@ if str(_CONSOLE) not in sys.path:
 from core.pack_paths import pack_dirs  # noqa: E402  (the one rule for where a pack's folder is)
 
 READY = ".ready"
-#: the keys of a .ready file, in the documentation's order: the same list as the inbox's (drishti-dataload ReadyNote.KEYS; a test compares them)
+#: the keys of a .ready file, in the documentation's order: the same list as the inbox's (drishti-lakeload ReadyNote.KEYS; a test compares them)
 READY_KEYS = ("business-date", "table", "pack", "kind", "connector", "mode", "new-table", "key", "folders", "sha256", "rows", "hold", "lake")
 MODES = {"append": "append", "replace": "overwrite-dates", "overwrite-dates": "overwrite-dates"}
 DATA_EXTENSIONS = (".tar.gz", ".tar.zip", ".jsonl.gz", ".jsonl.zip", ".jsonl.zst", ".ndjson.gz", ".ndjson.zst", ".json.gz", ".tgz", ".tar",
@@ -155,7 +155,7 @@ def _pack_doc(pack: pathlib.Path) -> dict:
 
 def contract_key(pack: pathlib.Path, kind: str | None) -> str | None:
     """The key of a kind's data contract (``<pack>/contracts/<kind>.contract.yaml``, ``key:``): every kind declares one. Only a single
-    field is a row id; a key of several fields, or none, gives None (the same rule as drishti-lakeconfig PackEntry.contractKey)."""
+    field is a row id; a key of several fields, or none, gives None (the same rule as drishti-lakeio PackEntry.contractKey)."""
     if not kind:
         return None
     f = pathlib.Path(pack) / "contracts" / f"{kind}.contract.yaml"

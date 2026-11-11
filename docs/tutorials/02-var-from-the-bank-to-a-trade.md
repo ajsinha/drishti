@@ -985,7 +985,7 @@ $ drishti.py var show BANK --confidence 95
 same as `horizon`, `method`, `confidence` and `esConfidence` (`GET /api/v1/risk/var/scope?scope=BANK&horizon=10d&method=sum`), and VRES as
 parameters (`VRES BANK~horizon=10d~method=sum <GO>`).
 
-**The YAML behind it.** The server's settings (`drishti-server/src/main/resources/application.yaml`, or your own configuration):
+**The YAML behind it.** The server's settings (`kernel/drishti-server/src/main/resources/application.yaml`, or your own configuration):
 
 ```yaml
 drishti:
@@ -1172,7 +1172,7 @@ $ python3 tools/drishti.py var playground BANK --count 1000 --xlsx bank.xlsx
 The first prints the headline, the checks and the largest positions' figures; `--estimate` each export size's file size, recalculation
 time and the applications that open it; `--xlsx` writes the workbook.
 
-**The YAML** (`drishti-server/src/main/resources/application.yaml`; a site overrides it in its own file):
+**The YAML** (`kernel/drishti-server/src/main/resources/application.yaml`; a site overrides it in its own file):
 
 ```yaml
 drishti:

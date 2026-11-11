@@ -72,7 +72,7 @@ python3 tools/drishti.py lake demo                    # every table; or: python3
 ```
 
 On Windows, `bin\start-server.cmd --demo` loads the public-data packs including `funds`, and
-`python tools\build_demo_lakes.py --only funds` builds its three tables. The demo cluster (`drishti-stack/stack.yaml`) loads it on
+`python tools\build_demo_lakes.py --only funds` builds its three tables. The demo cluster (`deploy/stack/stack.yaml`) loads it on
 every node. Type `FUNDS` and press Enter: the pack's overview lists its three commands with their counts (200 funds, 586 companies
 held, 3 indexes tracked).
 

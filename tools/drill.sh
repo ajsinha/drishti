@@ -289,14 +289,14 @@ console_files() {   # name, workers, failed files re-run at a time, then the fil
 # modules side by side; nothing is installed into ~/.m2.
 gate_java() {
   set -e
-  local rules; rules=$(cd drishti-it/src/test/java && find . -name '*Test.java' -printf '%f\n' | sed 's/\.java$//' | sort | paste -sd, -)
+  local rules; rules=$(cd testing/drishti-it/src/test/java && find . -name '*Test.java' -printf '%f\n' | sed 's/\.java$//' | sort | paste -sd, -)
   JAVA_HOME="$JAVA21_HOME" ./mvnw -q -o clean package spotless:check -P api-docs -T "${DRILL_GATE_THREADS:-1C}" \
     -Dtest="$rules,TokenScopeGuardTest,ArrowAnswersTest" -Dsurefire.failIfNoSpecifiedTests=false ${DRILL_MVN_ARGS:-}
-  compgen -G 'drishti-server/target/drishti-server-*-exec.jar' >/dev/null || { echo "drill: the gate's build made no server jar" >&2; return 1; }
+  compgen -G 'kernel/drishti-server/target/drishti-server-*-exec.jar' >/dev/null || { echo "drill: the gate's build made no server jar" >&2; return 1; }
   # a filter that matched nothing would pass in silence: every rule test must have its report
   local c missing=()
   for c in ${rules//,/ } TokenScopeGuardTest ArrowAnswersTest; do
-    compgen -G "*/target/surefire-reports/TEST-*.$c.xml" >/dev/null || missing+=("$c")
+    compgen -G "*/*/target/surefire-reports/TEST-*.$c.xml" >/dev/null || missing+=("$c")   # the modules sit in subject folders
   done
   (( ${#missing[@]} == 0 )) || { echo "drill: the gate's build ran no tests of: ${missing[*]}" >&2; return 1; }
 }
@@ -357,7 +357,7 @@ tools_lane_b() {
   run_tool_tests "${files[@]}" || rc=1
   # outside tools/: the compute worker SDK and its engines (pure Python), and the AWS connectors' tool scripts (botocore's Stubber and
   # an in-memory S3, no AWS account)
-  timeout --kill-after=30 600 uv run -q --with pytest python -m pytest -q -p no:cacheprovider drishti-compute/src/test/python || rc=1
+  timeout --kill-after=30 600 uv run -q --with pytest python -m pytest -q -p no:cacheprovider compute/drishti-compute/src/test/python || rc=1
   timeout --kill-after=30 600 uv run -q --with pytest --with boto3 --with pyarrow --with deltalake python -m pytest -q -p no:cacheprovider deploy/aws/s3-tables deploy/aws/delta-s3 || rc=1
   return $rc
 }
@@ -541,7 +541,7 @@ data_files() {
   find "$DATA" \( -path "$DATA/drill" -o -path "$DATA/tmp/maven" -o -path "$DATA/tmp/drill" -o -path "$DATA/tmp/lake-cache" -o -path "$DRILL_TMP" -o -path "$DATA/testdata" -o -path "$DATA/stack" \) -prune \
     -o -type f -printf '%P\t%T@\t%s\n' 2>/dev/null | sort
 }
-servers_here() {   # java processes whose working folder is this repository (a server started from the IDE or by drishti-stack)
+servers_here() {   # java processes whose working folder is this repository (a server started from the IDE or by deploy/stack)
   local here p; here=$(pwd -P)
   for p in /proc/[0-9]*; do
     [[ "$(readlink "$p/cwd" 2>/dev/null)" == "$here" && "$(cat "$p/comm" 2>/dev/null)" == java ]] && echo "${p#/proc/}"

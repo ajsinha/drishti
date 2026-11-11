@@ -190,7 +190,7 @@ def run(a, p: dict, as_of, lake: str, iceberg: bool, workdir: pathlib.Path, prog
     base = command(getattr(a, "jar", None), getattr(a, "java", None))
     if not base:
         raise LoaderError("--engine java needs the server's exec jar with the parallel loader (--jar, DRISHTI_JAR or a built "
-                          "drishti-server/target/drishti-server-*-exec.jar; or DRISHTI_LAKE_CLASSPATH) and Java 21")
+                          "kernel/drishti-server/target/drishti-server-*-exec.jar; or DRISHTI_LAKE_CLASSPATH) and Java 21")
     workdir.mkdir(parents=True, exist_ok=True)
     env = dict(os.environ)
     cfg = config(a, p, as_of, lake, iceberg, workdir, env)

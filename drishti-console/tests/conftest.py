@@ -734,7 +734,7 @@ class FakeBackend:
         ``META-INF/drishti/lenses.yaml``), each with its modules, functions and Home cards; nothing off."""
         import yaml
         lenses = []
-        for f in ("drishti-server/src/main/resources/META-INF/drishti/lenses.yaml", "modules/banking/banking-service/src/main/resources/META-INF/drishti/lenses.yaml"):
+        for f in ("kernel/drishti-server/src/main/resources/META-INF/drishti/lenses.yaml", "modules/banking/banking-service/src/main/resources/META-INF/drishti/lenses.yaml"):
             lenses += (yaml.safe_load((CONSOLE.parent / f).read_text(encoding="utf-8")) or {}).get("lenses") or []
         return {"modules": [{"id": m, "title": m, "domain": m} for m in ("core", "banking", "economy", "capitalmarkets")], "off": [],
                 "lenses": lenses, "functions": {"off": []}}
@@ -1056,7 +1056,7 @@ class FakeBackend:
         name = self.HISTORY.get((kind, id_))
         if name is None:
             raise BackendError(404, "DRS-1001", f"no source holds {kind}/{id_}")
-        data = json.loads((CONSOLE.parent / "drishti-testkit" / "src" / "main" / "resources" / "history" / name).read_text())
+        data = json.loads((CONSOLE.parent / "testing/drishti-testkit" / "src" / "main" / "resources" / "history" / name).read_text())
         if params.get("diff") == "true":
             labels = {c["path"]: c.get("label") for c in data["columns"]}
             prev = None

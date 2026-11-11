@@ -1120,7 +1120,7 @@ Which definition wins (environment and the deprecated `drishti.sources.connector
 
 | Your data is… | Plugin | Use it for, in one line | Its README |
 |---|---|---|---|
-| JSON lines (or JSON) files in a folder | `file` | a demo, a nightly export, reference data kept by hand, a first connector; no live updates, new files found every `rescan-seconds` | [file](../../plugins/drishti-plugin-file/README.md) |
+| JSON lines (or JSON) files in a folder | `file` | a demo, a nightly export, reference data kept by hand, a first connector; no live updates, new files found every `rescan-seconds` | [file](../../docs/connectors/types/file/README.md) |
 | in a Delta Lake (local disk, EFS, `s3://`) | `delta` | business dates at a million trades a day for years; a table per kind partitioned by business date | [delta](../../plugins/drishti-plugin-delta/README.md) |
 | in Iceberg tables behind a catalog (REST, Glue, AWS S3 Tables) | `iceberg` | the same at scale on Iceberg | [iceberg](../../plugins/drishti-plugin-iceberg/README.md) |
 | in Iceberg tables other engines write (Spark, Flink, Trino, Glue), read-only | `iceberg-external` | reading an existing lakehouse in its own layout | [iceberg-external](../../plugins/drishti-plugin-iceberg-external/README.md) |
@@ -1132,13 +1132,13 @@ Which definition wins (environment and the deprecated `drishti.sources.connector
 | in Aerospike | `aerospike` | a million trades a day for years | [aerospike](../../plugins/drishti-plugin-aerospike/README.md) |
 | in Apache Cassandra, ScyllaDB, DataStax Astra or Amazon Keyspaces | `cassandra` | a partition per business day; a day appears whole or not at all | [cassandra](../../plugins/drishti-plugin-cassandra/README.md) |
 | JSON objects in a bucket (S3, MinIO, Ceph) | `s3` | documents another system writes, one per entity; no reverse lookups | [s3](../../plugins/drishti-plugin-s3/README.md) |
-| behind an in-house HTTP/JSON API | `rest` | one GET per entity, the owner's current answer; no search, undated | [rest](../../plugins/drishti-plugin-rest/README.md) |
+| behind an in-house HTTP/JSON API | `rest` | one GET per entity, the owner's current answer; no search, undated | [rest](../../docs/connectors/types/rest/README.md) |
 | on Kafka (live) | `kafka` | entities whose latest state is published to a topic; `mode: ticks` as a change feed over a store | [kafka](../../plugins/drishti-plugin-kafka/README.md) |
 | on ActiveMQ Classic or RabbitMQ (live) | `activemq`, `rabbitmq` | queues that deliver once: the latest document per entity kept in a local state store | [activemq](../../plugins/drishti-plugin-activemq/README.md), [rabbitmq](../../plugins/drishti-plugin-rabbitmq/README.md) |
-| public rates and FX (SOFR, €STR, ECB FX, the Treasury curve, FRED) | `feed` | real reference rates beside a pack's own; needs outbound HTTPS or a mirror | [feeds](../../plugins/drishti-plugin-feeds/README.md) |
-| headlines for a named entity | `news` | computed on demand (`NEWS-Federal_Reserve`); off as shipped | [news](../../plugins/drishti-plugin-news/README.md) |
-| a quote and price history for a ticker | `yfinance` | `QUOTE-AAPL`, computed on demand; samples only, not for production | [yfinance](../../plugins/drishti-plugin-yfinance/README.md) |
-| the packs' sample entities | `demo` (runs as itself, no file) | a first look, demos, writing a pack; switch it off in production | [demo](../../plugins/drishti-plugin-demo/README.md) |
+| public rates and FX (SOFR, €STR, ECB FX, the Treasury curve, FRED) | `feed` | real reference rates beside a pack's own; needs outbound HTTPS or a mirror | [feeds](../../docs/connectors/types/feed/README.md) |
+| headlines for a named entity | `news` | computed on demand (`NEWS-Federal_Reserve`); off as shipped | [news](../../docs/connectors/types/news/README.md) |
+| a quote and price history for a ticker | `yfinance` | `QUOTE-AAPL`, computed on demand; samples only, not for production | [yfinance](../../docs/connectors/types/yfinance/README.md) |
+| the packs' sample entities | `demo` (runs as itself, no file) | a first look, demos, writing a pack; switch it off in production | [demo](../../docs/connectors/types/demo/README.md) |
 
 What each can do (history, live ticks, search, reverse lookups) and the rules of thumb are compared in
 [Which connector should I use?](DEVELOPER_GUIDE.md#103-which-connector-should-i-use). Three connector types are built
@@ -2640,10 +2640,10 @@ Every connector with a network client reads these settings. This is what each do
 | [ActiveMQ](../../plugins/drishti-plugin-activemq/README.md#security) | `broker-url` has `ssl://` | yes | checked, not narrowed (JVM's) | yes | yes | ActiveMQ Classic in Docker |
 | [RabbitMQ](../../plugins/drishti-plugin-rabbitmq/README.md#security) | `amqps://` | yes (also the log-in, `auth-mechanism: external`) | yes | yes | yes | RabbitMQ 4.1 in Docker |
 | [Redis](../../plugins/drishti-plugin-redis/README.md#security-tls-and-credentials) | `rediss://` | yes | yes | yes (chain only) | yes | Redis 8.2 in Docker, `tls-auth-clients yes` |
-| [REST](../../plugins/drishti-plugin-rest/README.md#tls-for-the-rest-connector) | `https://` `base-url` | yes | yes | yes | yes | an HTTPS server in the test process |
-| [Feeds](../../plugins/drishti-plugin-feeds/README.md#security) (a mirror) | `https://` `url` | yes | yes | yes | yes | an HTTPS server in the test process |
-| [News](../../plugins/drishti-plugin-news/README.md) (a mirror or proxy) | `https://` `base-url` | yes | yes | yes | no | no TLS-specific test: it applies the shared `TlsHttp` as REST and Feeds do |
-| [yfinance](../../plugins/drishti-plugin-yfinance/README.md) (a mirror or proxy) | `https://` `base-url` | yes | yes | yes | no | as News |
+| [REST](../../docs/connectors/types/rest/README.md#tls-for-the-rest-connector) | `https://` `base-url` | yes | yes | yes | yes | an HTTPS server in the test process |
+| [Feeds](../../docs/connectors/types/feed/README.md#security) (a mirror) | `https://` `url` | yes | yes | yes | yes | an HTTPS server in the test process |
+| [News](../../docs/connectors/types/news/README.md) (a mirror or proxy) | `https://` `base-url` | yes | yes | yes | no | no TLS-specific test: it applies the shared `TlsHttp` as REST and Feeds do |
+| [yfinance](../../docs/connectors/types/yfinance/README.md) (a mirror or proxy) | `https://` `base-url` | yes | yes | yes | no | as News |
 | [S3](../../plugins/drishti-plugin-s3/README.md#tls-for-the-s3-connector) | `https://` `endpoint` | yes | checked, not narrowed | **refused** (the AWS client always checks) | yes | an HTTPS stand-in S3 in the test process |
 | [MongoDB](../../plugins/drishti-plugin-mongodb/README.md#security-tls-certificate-log-in-and-credentials) | `tls.enabled` or `tls=true` in the `uri` | yes (also the log-in, `auth-mechanism: x509`) | checked, not narrowed | yes | yes | MongoDB 7 in Docker, `requireTLS`, x.509 user |
 | [PostgreSQL](../../plugins/drishti-plugin-jdbc/README.md#security-tls-and-credentials) (`jdbc:postgresql:`) | `tls.enabled` | yes (also the log-in, `cert` in `pg_hba.conf`) | yes | yes (`sslmode=require`) | yes | PostgreSQL 18 in Docker, `ssl=on` |
@@ -3118,10 +3118,10 @@ private CA.
 
 | Connector | Through the proxy | How |
 |---|---|---|
-| [REST](../../plugins/drishti-plugin-rest/README.md#outbound-proxy) | yes | the JDK HTTP client's proxy selector and authenticator |
-| [Feeds](../../plugins/drishti-plugin-feeds/README.md#outbound-proxy) | yes, built-in feeds and a mirror `url` | same |
-| [News](../../plugins/drishti-plugin-news/README.md#outbound-proxy) | yes | same |
-| [yfinance](../../plugins/drishti-plugin-yfinance/README.md#outbound-proxy) | yes | same |
+| [REST](../../docs/connectors/types/rest/README.md#outbound-proxy) | yes | the JDK HTTP client's proxy selector and authenticator |
+| [Feeds](../../docs/connectors/types/feed/README.md#outbound-proxy) | yes, built-in feeds and a mirror `url` | same |
+| [News](../../docs/connectors/types/news/README.md#outbound-proxy) | yes | same |
+| [yfinance](../../docs/connectors/types/yfinance/README.md#outbound-proxy) | yes | same |
 | [S3](../../plugins/drishti-plugin-s3/README.md#outbound-proxy) | yes, AWS and S3-compatible endpoints | the AWS SDK's proxy configuration; with a proxy the Apache HTTP client is used (the URL-connection client cannot answer a proxy's login when it tunnels https) |
 | [Delta](../../plugins/drishti-plugin-delta/README.md#outbound-proxy) over S3 | yes, both engines | native engine: the SDK's proxy configuration; Hadoop engine: `fs.s3a.proxy.*` |
 | [Iceberg](../../plugins/drishti-plugin-iceberg/README.md#outbound-proxy) over S3 / REST catalog | yes | the REST catalog's own client (`rest.client.proxy.*`), the S3 file IO (SDK proxy configuration), Hadoop `fs.s3a.proxy.*` for path tables |
@@ -3301,7 +3301,7 @@ BI answer the same whatever the storage. Every other dataset stays in Delta.
 - **How it is written:** the system is built as Delta first (by `lake demo`, or by `lake build` of your files into a staging folder,
   `<data>/build/iceberg-stage`, removed after), so its documents and promoted columns are exactly those of a Delta build; then
   `tools/lake/stores.py` streams the rows into Drishti's own Iceberg loader (`IcebergLoader`, `engine: native`: no Hadoop, so it works on
-  Windows), started from the server's exec jar (`drishti-server/target/drishti-server-*-exec.jar` or `DRISHTI_JAR`: build the server first;
+  Windows), started from the server's exec jar (`kernel/drishti-server/target/drishti-server-*-exec.jar` or `DRISHTI_JAR`: build the server first;
   heap `DRISHTI_LOADER_HEAP`, default 2g). The loader's progress lines (`iceberg: … rows read`, `iceberg: written in … s`) and the usual
   30-second heartbeat show while it copies.
 - **Connector files:** the build writes `trade-<system>.yaml` (in `config/connectors`, or `--connectors-dir`) from the trading pack's
@@ -3377,7 +3377,7 @@ memory, partitions and promoted columns ([CLI_REFERENCE.md](CLI_REFERENCE.md)).
 docker compose -f deploy/docker/compose.data.yaml up -d postgres                                       # or your own server
 tools/load-postgres.sh jdbc:postgresql://localhost:5432/drishti                                 # the samples, 10 days
 tools/load-postgres.sh jdbc:postgresql://localhost:5432/drishti --trades 10000                  # and a book
-SPRING_PROFILES_ACTIVE=postgres DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
+SPRING_PROFILES_ACTIVE=postgres DRISHTI_PACKS=market-risk,counterparty-risk java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
 ```
 
 The profile is deprecated; the same connectors as files are in `config/connectors.examples/postgres/` (copy them to
@@ -3392,7 +3392,7 @@ load within a minute. Layout and design: [POSTGRES_CONNECTOR.md](../../plugins/d
 ```bash
 tools/load-iceberg.sh ./data/iceberg                       # the samples
 tools/load-iceberg.sh ./data/iceberg --trades 10000        # and a book, for a laptop
-SPRING_PROFILES_ACTIVE=iceberg DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
+SPRING_PROFILES_ACTIVE=iceberg DRISHTI_PACKS=market-risk,counterparty-risk java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
 ```
 
 Design: [ICEBERG_CONNECTOR.md](../../plugins/drishti-plugin-iceberg/README.md). (`load-iceberg.sh` builds the plugin with Maven; on Windows use
@@ -3403,7 +3403,7 @@ Design: [ICEBERG_CONNECTOR.md](../../plugins/drishti-plugin-iceberg/README.md). 
 ```bash
 tools/load-duckdb.sh data/duckdb/drishti.duckdb                              # the samples
 tools/load-duckdb.sh data/duckdb/drishti.duckdb --trades 10000 --days 3      # and a book, for a laptop
-SPRING_PROFILES_ACTIVE=duckdb DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
+SPRING_PROFILES_ACTIVE=duckdb DRISHTI_PACKS=market-risk,counterparty-risk java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
 ```
 
 No server to run: one file holds every data domain, and the server reads it in-process. Each load writes a new file and renames it
@@ -3416,7 +3416,7 @@ over the old one, so it can run while the server answers; the server picks it up
 docker run -d --name drishti-mongo -m 2g -p 27017:27017 mongo:7 --wiredTigerCacheSizeGB 0.5
 tools/load-mongodb.sh mongodb://localhost:27017 drishti                       # the samples
 tools/load-mongodb.sh mongodb://localhost:27017 drishti --trades 10000        # and a book, for a laptop
-SPRING_PROFILES_ACTIVE=mongodb DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
+SPRING_PROFILES_ACTIVE=mongodb DRISHTI_PACKS=market-risk,counterparty-risk java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
 ```
 
 Design: [MONGODB_CONNECTOR.md](../../plugins/drishti-plugin-mongodb/README.md).
@@ -3428,7 +3428,7 @@ docker run -d --name drishti-redis -m 2g -p 6380:6379 redis:8 --maxmemory 1gb
 tools/load-redis.sh redis://localhost:6380                       # the samples
 tools/load-redis.sh redis://localhost:6380 --trades 10000        # and a book, for a laptop
 DRISHTI_REDIS_URI=redis://localhost:6380 SPRING_PROFILES_ACTIVE=redis DRISHTI_PACKS=market-risk,counterparty-risk \
-  java -jar drishti-server/target/drishti-server-*-exec.jar
+  java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
 ```
 
 (Port 6380 on the host leaves a Redis you already run on 6379 alone.) Redis holds everything in memory: about 1 GB per million trades
@@ -3441,7 +3441,7 @@ a day, so keep large books for a server. Each load replaces the business days it
 docker compose -f deploy/docker/compose.data.yaml up -d aerospike
 tools/load-aerospike.sh localhost:3000 test                                  # the samples
 tools/load-aerospike.sh localhost:3000 test --trades 10000                   # and a book
-SPRING_PROFILES_ACTIVE=aerospike DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
+SPRING_PROFILES_ACTIVE=aerospike DRISHTI_PACKS=market-risk,counterparty-risk java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
 ```
 
 `--ttl-days N` lets Aerospike expire each day after N days. The default namespace of the Docker image keeps data in memory and is too
@@ -3465,10 +3465,10 @@ expires cells after N days; `--keep-days N` drops the older days. See [CASSANDRA
 ```bash
 tools/load-files.sh                              # the samples: data/files
 tools/load-files.sh --trades 10000               # and 10,000 trades a day for 3 days
-SPRING_PROFILES_ACTIVE=files DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
+SPRING_PROFILES_ACTIVE=files DRISHTI_PACKS=market-risk,counterparty-risk java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
 ```
 
-One file per kind per business day, `data/files/<domain>/<date>/<kind>.jsonl`: see [FILE_CONNECTOR.md](../../plugins/drishti-plugin-file/README.md).
+One file per kind per business day, `data/files/<domain>/<date>/<kind>.jsonl`: see [FILE_CONNECTOR.md](../../docs/connectors/types/file/README.md).
 
 ### 11.13 Your own JSONL
 
@@ -3480,7 +3480,7 @@ instead (streamed, flat memory).
 ```bash
 # Delta lake (default): <root>/<domain>/<kind>/business_date=...; serve with DRISHTI_DELTA_ROOT
 drishti-console/.venv/bin/python tools/drishti.py data ingest --from data/trade.jsonl --pack config/packs/my-bank --lake /tmp/lake
-DRISHTI_PACKS=my-bank DRISHTI_DELTA_ROOT=/tmp/lake java -jar drishti-server/target/drishti-server-*-exec.jar
+DRISHTI_PACKS=my-bank DRISHTI_DELTA_ROOT=/tmp/lake java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
 # JSON-lines files (stdlib + PyYAML only): <root>/<domain>/<date>/<kind>.jsonl; serve with DRISHTI_FILES_ROOT
 drishti-console/.venv/bin/python tools/drishti.py data ingest --from your-folder/ --domain my-bank --key trade=TRADE_ID \
     --store files --root /tmp/files --dry-run
@@ -3564,7 +3564,7 @@ feeds: …/data/feeds/fixing.jsonl
 
 #### Live walks by kind
 
-A live sample ticks while someone watches it (the `demo` source, [DEMO_CONNECTOR.md](../../plugins/drishti-plugin-demo/README.md#coherent-walks-a-group-that-moves-together)).
+A live sample ticks while someone watches it (the `demo` source, [DEMO_CONNECTOR.md](../../docs/connectors/types/demo/README.md#coherent-walks-a-group-that-moves-together)).
 Its `_meta.walk` (the `_meta` block keeps its lower-case keys; the paths inside the walk are the document's UPPER_SNAKE names) moves a headline **and everything that must agree with it**, so a table, a chart and a headline never
 disagree. The specs are built by `tools/packgen/common/walks.py` from the finished sample; `DemoPackWalksTest` ticks every sample of
 every kind below 40 times and checks the identities in the second column. The kinds of the seven packs that walk:

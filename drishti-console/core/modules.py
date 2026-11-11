@@ -203,7 +203,8 @@ def reset_person(token) -> None:
 
 
 def _shape(answer: dict) -> dict:
-    """``GET /api/v1/modules`` as the doors read it: ``off`` {module: reason}, ``lenses`` {id: modules}, ``functions`` {WORD: text}."""
+    """``GET /api/v1/modules`` as the doors read it: ``off`` {module: reason}, ``lenses`` {id: modules}, ``functions`` {WORD: text},
+    ``loaded`` and their ``titles`` {module: title} (Home's house, core/house.py)."""
     off = {str(m.get("id")): str(m.get("reason") or "") for m in answer.get("off") or [] if isinstance(m, dict) and m.get("id")}
     lenses = {str(l.get("id")): frozenset(str(x) for x in l.get("modules") or []) for l in answer.get("lenses") or []
               if isinstance(l, dict) and l.get("id")}
@@ -218,7 +219,8 @@ def _shape(answer: dict) -> dict:
     chips = {str(l.get("id")): [str(c) for c in l.get("chips") or [] if str(c).strip()]
              for l in answer.get("lenses") or [] if isinstance(l, dict) and l.get("id") and l.get("chips")}
     return {"off": off, "lenses": lenses, "functions": funcs, "cards": cards, "chips": chips,
-            "loaded": frozenset(str(m.get("id")) for m in answer.get("modules") or [] if isinstance(m, dict) and m.get("id"))}
+            "loaded": frozenset(str(m.get("id")) for m in answer.get("modules") or [] if isinstance(m, dict) and m.get("id")),
+            "titles": {str(m.get("id")): str(m.get("title") or "") for m in answer.get("modules") or [] if isinstance(m, dict) and m.get("id")}}
 
 
 def lens_chips(lens: str | None) -> list | None:

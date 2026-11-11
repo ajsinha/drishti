@@ -365,7 +365,7 @@ describes every kind in depth. The full grammar is in
 options) and to the binder on the Java side, plus a Jinja macro in `_macros/panels.html` and its client-side
 handling on the console ([section 7a](#7a-how-a-screen-is-made-generic-not-bespoke) maps each kind to its macro).
 
-**Formats** (`fmt`) are named and config driven: the core set is in `drishti-rachana/src/main/resources/formats.yaml`
+**Formats** (`fmt`) are named and config driven: the core set is in `compute/drishti-rachana/src/main/resources/formats.yaml`
 (`text`, `amount0`, `amount2`, `signed0`, `signed2`, `pct0`, `pct2`, `price2`, `compact` (4.1m), `date`, `dmy`), a
 site file can be named in `drishti.rachana.formats-file`, and packs add their own (the finance pack's
 `config/formats.yaml` adds `pct4`, `rate5`, `pips1`, `df4`, `bp1`). **Tones** (`sign`, `threshold`, `status`) colour
@@ -395,7 +395,7 @@ strip itself from the top-scoring scalars (at most 8). A `Linked entities` panel
 The strip comes from top-level scalars ranked by semantic weight (money, rate, date); references (`NS-*`, `CSA-*`)
 are found by the entity graph, not by a rule (section 8). Semantic hints come from field names and value shape
 (`*notional*`, `*rate*`, ISO dates, currency codes, tenor strings) and from config: the core
-`drishti-inference/src/main/resources/inference/semantics.yaml` plus each pack's `semantics:` file. Every inferred
+`compute/drishti-inference/src/main/resources/inference/semantics.yaml` plus each pack's `semantics:` file. Every inferred
 panel carries `"inferred": true`, and the provenance label says `+ inference`; Sutra Studio can show the inferred
 layout as a Sutra to start from (`GET /api/v1/studio/inferred/{kind}/{id}`).
 
@@ -725,7 +725,7 @@ APIs, entitlements and masks as the generic view; none is a screen for one produ
 
 ## 8. Entity graph and navigation
 
-- **Reference catalog** (`drishti-graph`, `ReferenceCatalog`) maps identifier patterns and field names to kinds.
+- **Reference catalog** (`drishti-engine`, `graph.ReferenceCatalog`) maps identifier patterns and field names to kinds.
   Packs declare them in `pack.yaml` (`graph: {id-patterns, fields, badges}`), sites add more under
   `drishti.graph.id-patterns` and `drishti.graph.fields`, e.g. `^NS-[A-Z]+-\d+$ → netting-set`,
   `nettingSet → netting-set`.
@@ -952,28 +952,24 @@ Maven multi-module reactor on `spring-boot-starter-parent`, `groupId com.ash.dri
 | Module | Responsibility | Contributes |
 |---|---|---|
 | `drishti-api` | Plugin SPI: `SourcePlugin`, `PluginManifest`, `SourceCapabilities`, `DataNode`, `EntityRef`, `EntityDocument`, `Provenance`, `AsOf`, `HitIndex`, `Subscription` (no Spring, so plugins stay light) | – |
-| `drishti-common` | Error codes (`ErrorCode`, `DRS-nnnn`), `DrishtiException`, JSON codec, `ShapeFingerprinter`, `BusinessCalendar` | `CommonConfiguration` |
+| `drishti-common` | Error codes (`ErrorCode`, `DRS-nnnn`), `DrishtiException`, JSON codec, `ShapeFingerprinter`, `BusinessCalendar`; `diskcache.DiskCache`: a size-bounded, daily-cleared RocksDB cache on local disk for live connectors; `messaging.MessageStateSource`: the shared half of the ActiveMQ and RabbitMQ connectors (latest document per entity in a persistent RocksDB store plus a memory cache) | `CommonConfiguration` |
 | `drishti-rachana` | Sutra model, YAML parser and validator, the language's JSON Schema (`RachanaSchema`), Rachana-EL compiler, formats and tones, `SutraRegistry` + hot reload, `SutraMatcher` | `RachanaConfiguration` |
 | `drishti-inference` | Shape analysis, semantic hints, rules, scorer, packer, `LayoutMerger` (Sutra ⊕ inference) | `InferenceConfiguration` |
-| `drishti-graph` | `ReferenceCatalog` (identifier patterns, reference fields), badges | `GraphConfiguration` |
-| `drishti-engine` | `ViewPipeline`, `Binder`, caches, `SourceRouter`, `SourceRegistry`, `PluginDiscovery`, `TopicHub`, `ViewStream`, `PatchDiffer`, suggestions, structured search, impact, business dates | `EngineConfiguration` |
+| `drishti-engine` | `ViewPipeline`, `Binder`, caches, `graph.ReferenceCatalog` (identifier patterns, reference fields) and badges, `SourceRouter`, `SourceRegistry`, `PluginDiscovery`, `TopicHub`, `ViewStream`, `PatchDiffer`, suggestions, structured search, impact, business dates | `EngineConfiguration`, `GraphConfiguration` |
 | `drishti-identity` | Users, roles, passwords, lockout, audit, per-user preferences (workspaces, settings); the collaboration records (`com.ash.drishti.identity.collab`: shares, inbox, outbox, threads, holds, `HashChain`); stored in a JPA database (section 18) | `IdentityConfiguration` |
 | `drishti-packs` | Domain packs: reads `config/packs/<domain>/<name>/pack.yaml`, resolves inheritance, contributes lowest-precedence properties (an `EnvironmentPostProcessor`) | `PackRegistry` |
 | `drishti-ai` | The LLM provider layer and MCP client, no Spring: `LlmGateway`, `LlmRegistry`, providers (`openai`, `anthropic`, `mock`), `LlmPolicy` (masking, limits, audit), `McpGateway`, `McpRegistry`; off by default ([AI_GUIDE.md](../guides/AI_GUIDE.md#1-model-providers), [AI_GUIDE.md](../guides/AI_GUIDE.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy)) | – |
-| `drishti-diskcache` | `DiskCache`: a size-bounded, daily-cleared RocksDB cache on local disk for live connectors | – |
-| `drishti-messaging` | `MessageStateSource`: the shared half of the ActiveMQ and RabbitMQ connectors (latest document per entity in a persistent RocksDB store plus a memory cache) | – |
-| `drishti-lakeio` | Lake file access without Hadoop, shared by the native Delta and Iceberg engines: local disk (Windows included) and S3, byte ranges, Parquet page codecs, the Parquet footer cache; other schemes through a registered `StorageProvider` (`StorageProviders`) | – |
+| `drishti-lakeio` | The lake core: the lake files (`lakeconfig`: `Lakes`, `ConnectorLake`, `LakesCli`) and lake file access without Hadoop, shared by the native Delta and Iceberg engines: local disk (Windows included) and S3, byte ranges, Parquet page codecs, the Parquet footer cache; other schemes through a registered `StorageProvider` (`StorageProviders`) | – |
 | `drishti-tables` | The table layer, plain Java ([TABLES_GUIDE.md](../guides/TABLES_GUIDE.md), [section 24](#24-virtual-tables-the-central-table-layer)): the catalogue of virtual tables and models (`config/tables`, stored items), their definitions and checks, preview, lineage, the materialisation's API, `tables migrate`; on Rachana and the pivot engine, never on BI | read by the server (`tables` on the command line); BI reads it with the switch |
-| `drishti-memlake` | The in-memory lake, plain Java ([IN_MEMORY_LAKE.md](DATA_ARCHITECTURE.md#98-the-module-drishti-memlake)): the `mem://` stores (the `mem` storage provider of `drishti-lakeio`), tables, replenish jobs, eviction, compaction, the owner binding, the guard (`Retention`), the host checks | wired by `server.memlake.MemoryLakeConfiguration` |
 | `drishti-iceberg` | Drishti's own Apache Iceberg engine without Hadoop (reads, writes, path-based and REST catalogs), used by the `iceberg` (engine `native`) and `iceberg-external` connectors ([DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#3-drishti-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop)) | – |
 | `drishti-deltalake` | A Delta Kernel engine without Hadoop (local disk, Windows included, and S3), used by the Delta connector | – |
-| `drishti-lakeload` | The parallel lake loader: JSON Lines (folder or S3) into Delta or Iceberg tables of the connectors' layout, every stage multi-threaded and memory bounded, one commit per business date; `drishti.py lake build --engine java` ([PARALLEL_LOADER.md](DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-drishti-lakeload)) | `drishti-lakeio`, `drishti-deltalake`, `drishti-iceberg` |
+| `drishti-lakeload` | The parallel lake loader: JSON Lines (folder or S3) into Delta or Iceberg tables of the connectors' layout, every stage multi-threaded and memory bounded, one commit per business date; `drishti.py lake build --engine java` ([PARALLEL_LOADER.md](DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-drishti-lakeload)); the data inbox (`dataload`); the in-memory lake, plain Java ([IN_MEMORY_LAKE.md](DATA_ARCHITECTURE.md#98-the-package-memlake-in-drishti-lakeload)): the `mem://` stores (the `mem` storage provider of `drishti-lakeio`), tables, replenish jobs, eviction, compaction, the owner binding, the guard (`Retention`), the host checks | `drishti-lakeio`, `drishti-deltalake`, `drishti-iceberg` |
 | `drishti-net` | Drishti*net's core, no Spring ([CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)): the member table and SWIM-style gossip over HTTP (`MemberTable`, `Gossiper`, `PeersFile`), the cluster key and on-behalf-of tokens (`ClusterKey`, `OnBehalfOf`), the `config/net/` folder and its schema (`NetFolder`, `NetSchema`), signed HTTP between nodes (`PeerHttp`) | – |
 | `drishti-registry` | The access registry, plain Java ([ACCESS_MODEL.md](ACCESS_MODEL.md)): licence → module → lens → function → permission decided in one place (`AccessRegistry`, `EmbeddedAccessRegistry`), over the YAML store (`AccessStore`, `YamlAccessStore`: the modules' manifests, `config/modules/`, `config/access/`); nothing else reads the access model | wired by `server.modules.ModuleConfiguration` |
 | `drishti-server` | **The** Spring Boot application, the core: `DrishtiApplication`, REST controllers, SSE, security (`TokenFilter`, OIDC), governance, alerts, actuator, OpenAPI; the SPIs a domain module fills (`PivotSourceProvider`, `CacheGroup`, `CapacityFigures`, `HealthFigures`, `ApiAlias`, `@ConditionalOnModule`) | controllers, filters |
 | `drishti-compute-banking` | The banking domain's maths, no Spring ([DOMAIN_MODULES.md](DOMAIN_MODULES.md)): VaR and ES, parametric, components, backtesting, the scope algebra, exposure, FRTB-SA, SIMM, beta and correlation (`com.ash.drishti.banking.compute`) | – |
 | `drishti-banking` | The banking domain module ([DOMAIN_MODULES.md](DOMAIN_MODULES.md)): the VaR, exposure, FRTB-SA, SIMM, sensitivities, MR cube and official-results services, storage and API under `/api/v1/risk` (`com.ash.drishti.banking`); its manifest and lenses; loaded only while the module is on | `BankingAutoConfiguration` |
-| `drishti-app` | The runnable jar: the core with the domain modules this build ships, at `drishti-server/target/drishti-server-<version>-exec.jar`; no code | – |
+| `drishti-app` | The runnable jar: the core with the domain modules this build ships, at `kernel/drishti-server/target/drishti-server-<version>-exec.jar`; no code | – |
 | `plugins/drishti-plugin-*` | Source plugins: `demo`, `file`, `rest`, `jdbc`, `delta`, `aerospike`, `cassandra`, `redis`, `mongodb`, `iceberg`, `iceberg-external`, `duckdb`, `feeds`, `news`, `yfinance`, `kafka`, `activemq`, `rabbitmq`, `s3` (ServiceLoader; all are on the server's class path, extra jars from `drishti.sources.plugin-dir` get their own class loader) | – |
 | `drishti-testkit` | Shared contract tests for plugins (`DatedSourceContract`, `MessageSourceContract`, `BrokerOutage`) | – |
 | `drishti-it` | Architecture (ArchUnit: the layers, and the domain rules: the core never imports a domain, domains never import each other, only the registry reads the access model), licence-header and file-size tests | – |
@@ -1034,12 +1030,12 @@ secrets in tracked files. The full key reference is [CONFIGURATION.md](../admin/
 
 | File | Owns |
 |---|---|
-| `drishti-server/src/main/resources/application.yaml` | server port, actuator, every `drishti.*` default: `sources`, `business-date`, `security`, `identity`, `rachana`, `governance`, `engine`, `packs`, `commands`, `live`, `graph` |
+| `kernel/drishti-server/src/main/resources/application.yaml` | server port, actuator, every `drishti.*` default: `sources`, `business-date`, `security`, `identity`, `rachana`, `governance`, `engine`, `packs`, `commands`, `live`, `graph` |
 | `config/packs/<domain>/<name>/pack.yaml` | a pack's kinds, mnemonics, references, badges, roles, the names of its connectors with their routes (and connector templates), Sutra and sample folders |
 | `config/connectors/<name>.yaml` | one connector of the site: plugin, switch, kinds and settings; watched and applied without a restart |
 | `config/packs/<domain>/<name>/config/*.yaml` | the pack's formats, semantic hints, help and starter workspaces |
-| `drishti-rachana/src/main/resources/formats.yaml` (+ `drishti.rachana.formats-file`) | core named number/date formats |
-| `drishti-inference/src/main/resources/inference/semantics.yaml` | core semantic hints and density limits |
+| `compute/drishti-rachana/src/main/resources/formats.yaml` (+ `drishti.rachana.formats-file`) | core named number/date formats |
+| `compute/drishti-inference/src/main/resources/inference/semantics.yaml` | core semantic hints and density limits |
 | `./sutras/**` (`drishti.rachana.dirs`) | site Sutras, in addition to the packs' |
 | `drishti-console/config/application.yaml` | console host and port, server URL, default theme, sign-in and OIDC, help docs folder |
 
@@ -1545,7 +1541,7 @@ scenario P&L matrix and repairing a non-PSD correlation matrix, SVD for low-rank
 
 **The module.** `com.ash.drishti.nativ.core` (`Capability`, `Registry`, `Guard`, `Canary`, `NativeMode`, the status record), `.linalg`,
 `.maths`, `.codec`, `.store`, `.sql`; plain Java on `drishti-common` only, wired by the server from its settings. Its users:
-`drishti-compute` (VaR and exposure kernels), the lake modules and loaders (codecs), `drishti-diskcache` (the store), the server (Health,
+`drishti-compute` (VaR and exposure kernels), the lake modules and loaders (codecs), `drishti-common`'s disk cache (the store), the server (Health,
 Admin, settings). The Java 25 sources (FFM, Vector API) compile only under a Maven profile active on JDK 25 and are found by
 `ServiceLoader`: one home for every native and accelerated implementation, no second seam.
 
@@ -1959,7 +1955,7 @@ node. How an administrator uses it (the files, what off means for people, depend
 
 ### 27.1 The catalogue
 
-The engine catalogue is part of the product: `drishti-server/src/main/resources/engines/catalogue.yaml`, with the console's byte-identical
+The engine catalogue is part of the product: `kernel/drishti-server/src/main/resources/engines/catalogue.yaml`, with the console's byte-identical
 copy `drishti-console/config/engines.yaml` (`EngineCatalogueTest`). Each entry holds the engine's id, title, file, the settings prefixes it
 owns, what it **needs** (on the same node: the needing engine calls the needed one in process) and **uses** (works without it, with the
 parts that read it hidden), and everything it brings to the screen: `words`, `menus`, `help`, `landings`, `tiles`, `lenses`, `bi`, `cli`,
@@ -1972,7 +1968,7 @@ one.
 
 ### 27.2 The files and their order
 
-Each engine's file exists twice, byte for byte: `drishti-server/src/main/resources/engines/<id>.yaml` in the jar and
+Each engine's file exists twice, byte for byte: `kernel/drishti-server/src/main/resources/engines/<id>.yaml` in the jar and
 `config/engines/<id>.yaml` for the site. `application.yaml` imports both, jar copy first, **before** the local file and the packs overlay:
 
 ```yaml
@@ -2446,7 +2442,7 @@ by group, and a sampled `history`. The stream that tells a page a live report ch
 
 A **report** is pages of visuals on a 12-column grid, bound to one model, parsed, checked and written by the server (`DRS-9030` to `9038`);
 nothing in it executes. Its `format` is typed per visual family by JSON Schemas in the server
-(`drishti-server/src/main/resources/bi/report/format/`), from which the designer's Format pane is generated, so the pane offers nothing the
+(`kernel/drishti-server/src/main/resources/bi/report/format/`), from which the designer's Format pane is generated, so the pane offers nothing the
 server refuses. A **board** is a page with `layout: board` whose tiles name another report's visual and are answered by that report as the reader;
 tile colours are evaluated in the browser over the reader's answer, notifications on the server per reader. A **statement** is a page with
 `layout: statement`, laid out by the server (`StatementLayout`) into page-exact PDF (written by the server, Helvetica, no library) and Excel with
@@ -2564,7 +2560,7 @@ checked against its **output contract** (the columns and types the dataset or ta
 checks its keys and never-empty columns). Dates reach Python as ISO text, so a text column the contract declares `date` or `timestamp` is
 read as one on the pool before the check; a value that does not read leaves the column as text and the check refuses it.
 
-**The engine.** The pool loads `drishti_compute.items:ItemsEngine` (`drishti-compute/src/main/python/drishti_compute/items.py`) with
+**The engine.** The pool loads `drishti_compute.items:ItemsEngine` (`compute/drishti-compute/src/main/python/drishti_compute/items.py`) with
 kinds `run` (an item: manifest, source, parameters, input files, limits), `check` (the source parsed, its entry and imports checked;
 nothing runs) and `about` (the interpreter's versions, for the pin check). A failure of the author's code is an **answer** (`ok: false`,
 its kind and the author's own traceback), never a crash of the worker. The plan's Python nodes (`PyAggregate`, `PyColumn`) are placed on
@@ -2636,7 +2632,7 @@ The pool `python` is the one exception: its engine runs **code people write**, s
 
 **Where it cannot be safe, it does not run.** The strict sandbox needs Linux (fork mode, user namespaces, Landlock, kernel 5.13+). There
 is no weaker fallback: elsewhere every run answers `DRS-9074` with the reason. Approved network sources are read by the server and handed
-in as inputs; the code itself never reaches a network. Tests: the SDK's pytest suite (`drishti-compute/src/test/python`, among them the
+in as inputs; the code itself never reaches a network. Tests: the SDK's pytest suite (`compute/drishti-compute/src/test/python`, among them the
 no-network, Landlock and refusal tests), `ComputePoolTest` (crash, loop, limits, isolation, cancel) and `PythonRunsTest` in the server.
 
 ### 29.5 The locked environment and the lock file
@@ -3260,7 +3256,7 @@ and scheduled reports are not copied: they act.
 
 ### 32.7 The shard map
 
-`ShardMap` (`drishti-compute/.../shard/`): per business date, the rows counted per value of the shard key (VaR: `LEGAL_ENTITY`, then
+`ShardMap` (`compute/drishti-compute/.../shard/`): per business date, the rows counted per value of the shard key (VaR: `LEGAL_ENTITY`, then
 `DESK`), read as columns without the vectors; walked in key order, a shard closes when the next key would take it over `target-shard-mb`
 (2048 by default; a row is 4 × scenarios bytes, the float32 hot row). A key value (a desk) is never split; the ranges cover the whole key
 space, so every row has exactly one shard. The map is a pure function of the counts, so every member computes the same map; its digest names

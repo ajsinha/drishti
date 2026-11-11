@@ -91,15 +91,15 @@ sizing planner (`tools/sizing_planner.py`, and **Admin → Capacity** in the con
 
 ```bash
 git clone https://github.com/ajsinha/drishti.git && cd drishti
-./mvnw -q clean package -DskipTests -pl drishti-app -am            # Windows: .\mvnw.cmd -q clean package -DskipTests -pl drishti-app -am
-ls drishti-server/target/*-exec.jar                                # drishti-server/target/drishti-server-2.9.11.g-exec.jar
+./mvnw -q clean package -DskipTests -pl :drishti-app -am            # Windows: .\mvnw.cmd -q clean package -DskipTests -pl :drishti-app -am
+ls kernel/drishti-server/target/*-exec.jar                                # kernel/drishti-server/target/drishti-server-2.9.11.g-exec.jar
 ```
 
 **B. Copy a release** built elsewhere (Java bytecode is the same on every operating system). The release folder holds:
 
 | Path | What |
 |---|---|
-| `drishti-server/target/drishti-server-2.9.11.g-exec.jar` (or `drishti-server.jar` at the top) | the server, every library inside |
+| `kernel/drishti-server/target/drishti-server-2.9.11.g-exec.jar` (or `drishti-server.jar` at the top) | the server, every library inside |
 | `config/` | packs, lakes, modules, lenses, engines, tables, BI files: the site's configuration |
 | `drishti-console/` | the console's code and `requirements.txt` (its `.venv` is made on the machine, never copied) |
 | `tools/` | `drishti.py` (the command line), `windows/*.ps1`, `lake/` |
@@ -111,7 +111,7 @@ To make that folder as a ZIP from a built clone:
 
 ```bash
 git archive --format=zip --prefix=drishti/ -o drishti-2.9.11.g.zip HEAD
-zip -g drishti-2.9.11.g.zip drishti-server/target/drishti-server-2.9.11.g-exec.jar      # Windows: Compress-Archive -Update
+zip -g drishti-2.9.11.g.zip kernel/drishti-server/target/drishti-server-2.9.11.g-exec.jar      # Windows: Compress-Archive -Update
 ```
 
 Unpack it anywhere (`C:\drishti`, `/opt/drishti`, `~/drishti`); every command below runs from that folder.
@@ -231,7 +231,7 @@ This section is the one place for the full list of options; [bin/README.md](../b
 | `status` | every process this machine started with `bin/`: pid, running or a stale pid, port, whether its health URL answers, its LAN address |
 | `start-all` | one server and one console on this machine, in the background (calls `start-server`, then `start-console`) |
 | `stop-all` | the console, then the server (`--all-nodes`: every node too) |
-| `start-cluster`, `stop-cluster` | a cluster on one machine from a cluster file (`--cluster FILE`, default `drishti-stack/stack.yaml`): every node, then the console, or only those named |
+| `start-cluster`, `stop-cluster` | a cluster on one machine from a cluster file (`--cluster FILE`, default `deploy/stack/stack.yaml`): every node, then the console, or only those named |
 | `drishti-node` | one node's drain before a stop and its readiness: the stop hook of the service unit and the images |
 
 **`start-server` options**
@@ -240,7 +240,7 @@ This section is the one place for the full list of options; [bin/README.md](../b
 |---|---|---|
 | `--port N` | `DRISHTI_PORT`, else `18480` | the server's port |
 | `--heap SIZE` | `2g` (`4g` with `--demo`) | the heap limit (`-Xmx`): about 4 GB per 400,000 trades a day |
-| `--jar FILE` | the newest `drishti-server/target/drishti-server-*-exec.jar`, then `drishti-server*.jar` in `<drishti>` | the server jar |
+| `--jar FILE` | the newest `kernel/drishti-server/target/drishti-server-*-exec.jar`, then `drishti-server*.jar` in `<drishti>` | the server jar |
 | `--java-home DIR` | `DRISHTI_JAVA_HOME`, `JAVA_HOME`, `java` on the `PATH`; on macOS then `/usr/libexec/java_home -v 21+` | the JDK (21 or newer; refused when older) |
 | `--packs LIST` | `DRISHTI_PACKS`, else the server's own (the demo's ten with `--demo`) | the packs to load |
 | `--data-dir DIR` | `DRISHTI_DATA_DIR`, else `<drishti>/data` | the data folder; the pid, log and temporary files go under it |
@@ -441,7 +441,7 @@ machine and on three machines, are in [section 10.6](#106-start-order-and-joinin
 |---|---|
 | `port 18480 is in use by another process` (exit 3) | another copy runs: `bin/status.sh` (is it ours?), then `bin/stop-server.sh`; something else on the port: pick another with `--port` |
 | `no Java` or `Drishti runs on Java 21 or newer; … says: …` | install Temurin JDK 21 and set `DRISHTI_JAVA_HOME` (or pass `--java-home`); on macOS `/usr/libexec/java_home -V` lists the JDKs |
-| `no server jar` | build it (`./mvnw -q package -DskipTests -pl drishti-app -am`) or pass `--jar` |
+| `no server jar` | build it (`./mvnw -q package -DskipTests -pl :drishti-app -am`) or pass `--jar` |
 | `already running (pid …)` (exit 3) | it is: `status` shows it; stop it first to restart |
 | `stale … removed (pid … is not running)` | nothing to do: the process had ended (a reboot, a crash); see its log for why |
 | the console's `no server answers yet at …` | the server is not up yet (the console keeps trying), or `--server` names the wrong address: `curl http://<host>:18480/actuator/health` |
@@ -502,9 +502,9 @@ consoles:
   - { name: finance, port: 17481, distribution: finance }
 ```
 
-then `bin/start-cluster.sh --cluster drishti-stack/stack.yaml` (Windows: `bin\start-cluster.cmd --cluster drishti-stack\stack.yaml`).
+then `bin/start-cluster.sh --cluster deploy/stack/stack.yaml` (Windows: `bin\start-cluster.cmd --cluster deploy/stack\stack.yaml`).
 **You should see** each node start, then `console-risk: up on http://<host>:17480` and `console-finance: up on http://<host>:17481`;
-`bin/status.sh --cluster drishti-stack/stack.yaml` lists `console-risk … risk` and `console-finance … finance`. The nodes run Drishti
+`bin/status.sh --cluster deploy/stack/stack.yaml` lists `console-risk … risk` and `console-finance … finance`. The nodes run Drishti
 All; each console shows its own distribution. Without a stack file, start a second console by hand:
 `bin/start-console.sh --server http://<host>:18480 --port 17481 --distribution finance --name finance --background` (Windows the same
 with `bin\start-console.cmd`), and stop it with `bin/stop-console.sh --name finance`.
@@ -592,7 +592,7 @@ Do the same for the console with `run-console.ps1` (`bin\start-console.ps1`). Be
   <key>WorkingDirectory</key><string>/Users/you/drishti</string>
   <key>ProgramArguments</key><array>
     <string>/opt/homebrew/opt/openjdk@21/bin/java</string><string>-Djava.io.tmpdir=data/tmp/server</string>
-    <string>-Xmx4g</string><string>-jar</string><string>drishti-server/target/drishti-server-2.9.11.g-exec.jar</string>
+    <string>-Xmx4g</string><string>-jar</string><string>kernel/drishti-server/target/drishti-server-2.9.11.g-exec.jar</string>
   </array>
   <key>EnvironmentVariables</key><dict>
     <key>DRISHTI_SECURITY_ENABLED</key><string>true</string>
@@ -682,7 +682,7 @@ once) into `~/drishti-token`.
 ```text
 $ drishti-console/.venv/bin/python tools/drishti.py doctor --server http://<host>:18480 --token-file ~/drishti-token
 GREEN  java                    …/bin/java: Java 21.0
-GREEN  server jar              <drishti>/drishti-server/target/drishti-server-2.9.11.g-exec.jar (version 2.9.11.g)
+GREEN  server jar              <drishti>/kernel/drishti-server/target/drishti-server-2.9.11.g-exec.jar (version 2.9.11.g)
 GREEN  python                  <drishti>/drishti-console/.venv/bin/python: Python 3.13.15
 …
 GREEN  server                  http://<host>:18480: version 2.9.11.g, java 21.0.12.1, status UP
@@ -915,7 +915,7 @@ depth: [CLUSTER_GUIDE.md](guides/CLUSTER_GUIDE.md) (the one home for the interna
 | the service must survive the loss of a machine, or be upgraded without downtime | a short stop for an upgrade is acceptable |
 | teams or regions want their own servers with their own packs, seen as one | |
 
-The three-node layout used here (and by `drishti-stack/`, the repository's ready-made local cluster):
+The three-node layout used here (and by `deploy/stack/`, the repository's ready-made local cluster):
 
 | Node | Role | Packs and engines | Special settings |
 |---|---|---|---|
@@ -996,7 +996,7 @@ drishti-console/.venv/bin/python tools/drishti.py net check                 # ex
 **In the UI** (once a server runs): **Admin → Cluster → Files** (open `node.yaml`, edit, **Check**, **Save**), **Admin → Cluster → Members →
 Add a seed**.
 
-**The environment per node** (the example layout of `drishti-stack/stack.yaml`, the repository's three-node cluster on one machine):
+**The environment per node** (the example layout of `deploy/stack/stack.yaml`, the repository's three-node cluster on one machine):
 
 | Variable | drishti-a | drishti-b | drishti-c |
 |---|---|---|---|
@@ -1103,9 +1103,9 @@ t-a: stopped (pid 1977639)
 t-b: stopped (pid 1978776)
 ```
 
-**The repository's own three on one machine.** `bin/start-cluster.sh` starts three servers and a console from `drishti-stack/stack.yaml`
+**The repository's own three on one machine.** `bin/start-cluster.sh` starts three servers and a console from `deploy/stack/stack.yaml`
 through these same scripts, with the real address and the secrets made for you; `status.sh` shows them, `stop.sh` stops them
-([drishti-stack/README.md](../drishti-stack/README.md)). The same scripts run on Windows (`bin\start-cluster.cmd`).
+([deploy/stack/README.md](../deploy/stack/README.md)). The same scripts run on Windows (`bin\start-cluster.cmd`).
 
 ### 10.7 Verify the cluster, step by step
 
@@ -1329,7 +1329,7 @@ which sets none of the demo settings). Then:
 The pictures are of the synthetic data, loaded exactly as in 11.2.
 
 **Optional: the S3 tests**, against simulators that need no `.exe` and no Docker: `pip install "moto[server]==5.2.3"`, then
-`.\mvnw.cmd -q -pl drishti-identity,plugins/drishti-plugin-iceberg -am test "-Dtest=S3ContentStoreTest,S3MockContentStoreTest,MinioContentStoreTest,NativeOnS3SimulatorTest" "-Dsurefire.failIfNoSpecifiedTests=false"`
+`.\mvnw.cmd -q -pl :drishti-identity,plugins/drishti-plugin-iceberg -am test "-Dtest=S3ContentStoreTest,S3MockContentStoreTest,MinioContentStoreTest,NativeOnS3SimulatorTest" "-Dsurefire.failIfNoSpecifiedTests=false"`
 and `& $py -m unittest -v tools\lake\test_s3_simulators.py`. The MinIO tests are skipped on Windows (they run a server binary).
 
 Afterwards stop both, and check that `git status` (in a clone) shows nothing new outside `data\` and that your files never left

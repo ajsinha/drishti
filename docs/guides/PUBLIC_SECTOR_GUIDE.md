@@ -71,7 +71,7 @@ public-sector packs load when the server's pack list names them:
 
 ```bash
 DRISHTI_PACKS=core,world-economy,world-development,central-banks,national-statistics,oecd,official-news,gdelt-events \
-  java -jar drishti-server/target/drishti-server-*-exec.jar
+  java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
 ```
 
 and a person opens the Public sector lens from Views (`drishti.lenses: risk,world,publicsector`).

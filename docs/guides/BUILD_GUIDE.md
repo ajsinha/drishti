@@ -154,7 +154,7 @@ the pack's `samples/`. Security is off unless you turn it on, so the `curl` line
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 DRISHTI_PORT=18996 DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,helpdesk \
-  java -jar drishti-server/target/drishti-server-*-exec.jar
+  java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
 DRISHTI_BACKEND_URL=http://127.0.0.1:18996 DRISHTI_CONSOLE_PORT=17996 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
 ```
 
@@ -527,7 +527,7 @@ nonEmpty: [history]       # these panels must render with data on every sample
 ```
 
 ```bash
-java -jar drishti-server/target/drishti-server-*-exec.jar sutra test config/packs/helpdesk --junit target/sutra-tests.xml
+java -jar kernel/drishti-server/target/drishti-server-*-exec.jar sutra test config/packs/helpdesk --junit target/sutra-tests.xml
 ```
 
 ```text
@@ -665,7 +665,7 @@ committed: the pack's Delta connector reads the lake its feed loads (`settings.l
 kind of a shipped pack has neither: no Delta connector with committed data, and none reading a lake an enabled feed fills with the kind.
 
 Real tickets live somewhere else; here, the ticketing system exports each business day's tickets as one JSON Lines file, the layout the `file`
-plugin reads ([the file connector](../../plugins/drishti-plugin-file/README.md)):
+plugin reads ([the file connector](../../docs/connectors/types/file/README.md)):
 
 ```text
 data/files/helpdesk/2026-10-16/ticket.jsonl      one ticket a line, the day's export
@@ -2589,7 +2589,7 @@ packs/my-bank/
 ```
 
 ```bash
-DRISHTI_PACKS=my-bank DRISHTI_DELTA_ROOT=$PWD/lake java -jar drishti-server/target/drishti-server-*-exec.jar     # alone: see below
+DRISHTI_PACKS=my-bank DRISHTI_DELTA_ROOT=$PWD/lake java -jar kernel/drishti-server/target/drishti-server-*-exec.jar     # alone: see below
 ```
 
 - **The folder name is the pack name.** `--out` defaults to `config/packs/<domain>/<name>`; a folder with another name makes `sutra lint` refuse the pack
@@ -3783,7 +3783,7 @@ Four layers, from the cheapest; the first three need no server.
 | Both, for CI | `drishti.py pack check config/packs/<domain>/<pack> [--strict] [--junit DIR]` | lint and test in one command, exit `0` / `1` / `2` |
 | A scratch server | the [checklist](#295-verifying-a-pack) | links resolve, connectors are up, commands open, the guide renders |
 
-`sutra lint` and `sutra test` are commands of the server's exec jar (`java -jar drishti-server/target/drishti-server-*-exec.jar sutra …`); `pack check`
+`sutra lint` and `sutra test` are commands of the server's exec jar (`java -jar kernel/drishti-server/target/drishti-server-*-exec.jar sutra …`); `pack check`
 finds the jar itself (`--jar`, `DRISHTI_JAR`). Both read the pack overlay of the checkout they run in (`<data>/packs/added.yaml`), so run them where it
 names only packs that exist (or set `DRISHTI_DATA_DIR` to an empty folder). Every command and option (`--junit`, `--out` snapshots, the shape and design
 commands) is in [CLI_REFERENCE.md, Testing Sutras](CLI_REFERENCE.md#testing-sutras-expectyaml-the-tests-convention-and-ci).
@@ -4706,7 +4706,7 @@ The `pack.yaml` names the link field `AUTHOR`, the badge `$.ON_LOAN + ' on loan'
 library`), with both kinds routed to it.
 
 **Step 7. Open it.** Copy (or write) the folder into the packs folder of a running server, or start one with it (`DRISHTI_PACKS=library java -jar
-drishti-server/target/drishti-server-*-exec.jar`, or `DRISHTI_PACKS=market-risk,library`). Then type `TI` (you see `TITLE` *Book* in the suggestions);
+kernel/drishti-server/target/drishti-server-*-exec.jar`, or `DRISHTI_PACKS=market-risk,library`). Then type `TI` (you see `TITLE` *Book* in the suggestions);
 type `TITLE TITLE-0001`: the pill *Library · Book*, the strip *Title Rivers of Light* (highlighted), *Author Ada Okafor*, *Copies 4*, *On loan 3* (it
 ticks), the panels *Loans per month* (F2) and *Copies* (F3), and *Linked entities* with *Author AUTH-001*; **F7** opens the author; the help centre has
 the *Library pack* guide. If an admin assigns packs per user, add `library` to your user under **Admin → Users**. Real history for the date picker needs
@@ -4848,7 +4848,7 @@ The server reads `drishti.packs.enabled` from `DRISHTI_PACKS` (a comma-separated
 
    ```bash
    export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-   DRISHTI_PACKS=market-risk,world-economy java -jar drishti-server/target/drishti-server-*-exec.jar
+   DRISHTI_PACKS=market-risk,world-economy java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
    ```
 
 2. Check what loaded (with security on, add an API token: [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)):

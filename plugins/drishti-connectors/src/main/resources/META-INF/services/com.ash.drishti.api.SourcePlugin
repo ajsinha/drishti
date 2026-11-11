@@ -1,0 +1,6 @@
+com.ash.drishti.plugin.demo.DemoSourcePlugin
+com.ash.drishti.plugin.feeds.FeedSourcePlugin
+com.ash.drishti.plugin.file.FileSourcePlugin
+com.ash.drishti.plugin.news.NewsSourcePlugin
+com.ash.drishti.plugin.rest.RestSourcePlugin
+com.ash.drishti.plugin.yfinance.YFinanceSourcePlugin

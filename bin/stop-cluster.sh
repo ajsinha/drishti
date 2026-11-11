@@ -14,7 +14,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Stops a cluster's console and nodes by their pid files (never by name), or only the nodes named.
-# The cluster file is drishti-stack/stack.yaml by default (bin/README.md; bin/stop-cluster.ps1 on Windows).
+# The cluster file is deploy/stack/stack.yaml by default (bin/README.md; bin/stop-cluster.ps1 on Windows).
 set -euo pipefail
 . "$(cd "$(dirname "$0")" && pwd -P)/lib/common.sh"
 
@@ -23,7 +23,7 @@ case "${1:-}" in
     cat <<'EOF'
 usage: bin/stop-cluster.sh [--cluster FILE] [--data-dir DIR] [node ...]
 
-  --cluster FILE   the cluster file (default drishti-stack/stack.yaml); its folder holds nodes/ and secrets.env
+  --cluster FILE   the cluster file (default deploy/stack/stack.yaml); its folder holds nodes/ and secrets.env
   --data-dir DIR   the data folder (default DRISHTI_DATA_DIR, else <drishti>/data)
   node ...         only these nodes; "console" for the console
   -h, --help       this text

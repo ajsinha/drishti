@@ -40,7 +40,7 @@ default. An Iceberg lake may be in object storage (--lake s3://bucket/prefix, or
 local scratch folder (TMPDIR) and no run record is kept in the lake (deploy/aws/iceberg/load-day.sh keeps its own).
 
 Engines (--engine): auto (default) uses Drishti's own Java writer in the server's exec jar when one is found (--jar, DRISHTI_JAR,
-drishti-server/target), else the Python deltalake package; the run says which ran and why. java (2.9.6): the whole build by the parallel
+kernel/drishti-server/target), else the Python deltalake package; the run says which ran and why. java (2.9.6): the whole build by the parallel
 lake loader in the same jar (tools/lake/javaload.py; Delta or Iceberg, every stage multi-threaded, memory bounded, input from a folder or
 s3://, a Delta lake in s3:// too; --loader-set KEY=VALUE for its settings), only when asked: the Python path stays the default. With
 --java-above-mb N, auto also picks it for every input JSON Lines of at least N MB in mode overwrite-dates.
@@ -400,7 +400,7 @@ def plan(a) -> dict:
 def lake_layout(a, p: dict) -> None:
     """``--lake NAME`` naming a lake of config/lakes/ (docs/guides/DATA_LAKE_GUIDE.md): the table's location, partitioning, promoted columns,
     vectors, flattened fields, id, date, latest-by and load mode come from its lake file, read by the one reader (lakeconfig.py runs
-    drishti-lakeconfig). A --partition-by, --promote or --vector that says otherwise is refused, naming both; a kind the lake file has
+    drishti-lakeio). A --partition-by, --promote or --vector that says otherwise is refused, naming both; a kind the lake file has
     no entry for is refused (a writer never creates a table its lake file does not describe). ``--lake-root DIR`` writes the same
     layout under another folder (a scratch or test lake); ``--lake DIR`` alone is the old form: the options and the pack decide."""
     import lakeconfig
@@ -932,7 +932,7 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
                    "never appended twice; a lake file's table with load-mode: append needs it (docs/guides/DATA_LAKE_GUIDE.md section 5.3)")
     g.add_argument("--batch-rows", type=int, default=50_000, help="most rows per batch written (default 50,000; also the most rows sorted at once)")
     g.add_argument("--batch-mb", type=int, default=128, help="most MB of documents per batch (default 128): large documents make smaller batches, so memory stays flat")
-    g.add_argument("--jar", help="the drishti-server exec jar (default: DRISHTI_JAR, then drishti-server/target)")
+    g.add_argument("--jar", help="the drishti-server exec jar (default: DRISHTI_JAR, then kernel/drishti-server/target)")
     g.add_argument("--java", help="the java binary (default: JAVA_HOME, then java on the PATH)")
     g.add_argument("--dry-run", action="store_true", help="read and count, write nothing")
     g.add_argument("--plan", action="store_true", help="say what the load would do, file by file (table, pack, business date, mode and where "

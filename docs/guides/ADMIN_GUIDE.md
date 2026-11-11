@@ -496,7 +496,7 @@ The server reaches it through JPA (Hibernate and Spring Data repositories), with
 
 ### 9.1 The schema: two files, no migrations
 
-The tables are written out in full, once per database, in `drishti-identity/src/main/resources/db/`: `schema-sqlite.sql` and
+The tables are written out in full, once per database, in `kernel/drishti-identity/src/main/resources/db/`: `schema-sqlite.sql` and
 `schema-postgres.sql`. The server runs the right file every time it starts. Each statement is `CREATE … IF NOT EXISTS`, so running it on an
 existing database changes nothing. There is no migration tool and no migration history: the file *is* the schema. On PostgreSQL the server
 also checks at start that its entities match the tables, and refuses to start, naming the column, if they do not.
@@ -560,7 +560,7 @@ To try it locally with Docker (the repository's compose file runs PostgreSQL 18 
 docker compose -f deploy/docker/compose.data.yaml up -d postgres
 docker compose -f deploy/docker/compose.data.yaml exec postgres psql -U drishti -c 'CREATE DATABASE drishti_identity'
 DRISHTI_IDENTITY_DB_URL=jdbc:postgresql://localhost:5432/drishti_identity DRISHTI_IDENTITY_DB_USER=drishti \
-DRISHTI_IDENTITY_DB_PASSWORD=drishti java -jar drishti-server/target/drishti-server-*.jar
+DRISHTI_IDENTITY_DB_PASSWORD=drishti java -jar kernel/drishti-server/target/drishti-server-*.jar
 ```
 
 ### 9.3 SQLite: what to know
@@ -717,7 +717,7 @@ licence  →  modules on  →  lenses offered  →  functions this person may us
 
 | Where | What it holds |
 |---|---|
-| **The registry** (`META-INF/drishti/lenses.yaml` in each module's jar: [the banking module's](../../modules/banking/banking-service/src/main/resources/META-INF/drishti/lenses.yaml), [the core server's](../../drishti-server/src/main/resources/META-INF/drishti/lenses.yaml)) | the lens's id and title, the modules it needs, the functions it bundles, its Home template, its Home **cards** (`cards:`) and **chips** (`chips:`), and for a lens with no file its menus and Help pages; a site's `config/access/lenses.yaml` adds a lens or replaces one by its id |
+| **The registry** (`META-INF/drishti/lenses.yaml` in each module's jar: [the banking module's](../../modules/banking/banking-service/src/main/resources/META-INF/drishti/lenses.yaml), [the core server's](../../kernel/drishti-server/src/main/resources/META-INF/drishti/lenses.yaml)) | the lens's id and title, the modules it needs, the functions it bundles, its Home template, its Home **cards** (`cards:`) and **chips** (`chips:`), and for a lens with no file its menus and Help pages; a site's `config/access/lenses.yaml` adds a lens or replaces one by its id |
 | **The lens file** (`config/lenses/<module>/<lens>.yaml`) | packs by module, commands and words, features, menus, Home landings, Help, Admin pages, BI, the phone display and branding: everything needed to run an instance as the lens |
 
 The shipped lenses:
@@ -775,13 +775,13 @@ drishti:
 or in the environment, from the repository root:
 
 ```bash
-DRISHTI_EDITION=risk java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-*-exec.jar
+DRISHTI_EDITION=risk java -Djava.io.tmpdir=data/tmp/server -jar kernel/drishti-server/target/drishti-server-*-exec.jar
 ```
 
 Leave `DRISHTI_PACKS` unset: the lens's packs load. If `DRISHTI_PACKS` is set it still wins (site configuration beats the lens file), but
 with `allow-only` the packs outside the lens are not loaded, and the log says which.
 
-**The 3-node stack (`drishti-stack/`).** Each node's settings are in `drishti-stack/stack.yaml`. Add the variable to the `env:` of every
+**The 3-node stack (`deploy/stack/`).** Each node's settings are in `deploy/stack/stack.yaml`. Add the variable to the `env:` of every
 node, then restart the stack:
 
 ```yaml
@@ -842,7 +842,7 @@ Each person then sees **Open Drishti Risk** (and the others listed) in the Views
 Opening one gives them, on every page and every server of the cluster, the lens's menus, commands (command line, `FUNC`, the type-ahead),
 Help, Home landings, Admin pages, BI datasets and branding, with **Leave Drishti Risk** to come back. Inside one lens the menu shows
 **Leave …** first, then **Switch to …** each of the others: switching needs no leaving first. The 3-node stack runs
-`DRISHTI_LENSES: risk,world,market,trading` (`drishti-stack/stack.yaml`, `settings:`); after changing it, restart the stack.
+`DRISHTI_LENSES: risk,world,market,trading` (`deploy/stack/stack.yaml`, `settings:`); after changing it, restart the stack.
 
 - **Kept per person.** The lens is the person's `lens` setting (the server's user store), so a refresh, another browser or another server
   keeps it; the console tells the server on each call (`X-Drishti-Lens: risk`), so the command line, `FUNC`, the type-ahead and BI follow
@@ -1110,7 +1110,7 @@ edition:
 **Public sector** (`publicsector`, economy module) is development indicators, central banks, national statistics, the OECD, official news
 and world events: the packs world-development, central-banks, national-statistics, oecd, official-news and gdelt-events
 ([PUBLIC_SECTOR_GUIDE.md](PUBLIC_SECTOR_GUIDE.md), section 2 to turn it on). It is defined by its registry entry alone
-([the core server's lenses](../../drishti-server/src/main/resources/META-INF/drishti/lenses.yaml)):
+([the core server's lenses](../../kernel/drishti-server/src/main/resources/META-INF/drishti/lenses.yaml)):
 
 | Part | As shipped |
 |---|---|
@@ -1217,7 +1217,7 @@ cp config/lenses/banking/risk.yaml config/lenses/banking/my-desk.yaml
 | `menus.top` | the top menus by id, in order; a menu not named is not drawn (none: Views, Risk, BI, Build, Admin, Help). Risk (`without-lens: true`) is drawn in the full product's bar too: it is the home of the engines' pages, each with `requires: engine:<id>` (drawn while the engine runs in the cluster and the person's role opens it). The subject menus (`subject: true`: `blotter`, `positions`, `risk`, `counterparties`; `curves`, `volatility`, `fx`, `credit`; `economies`, `markets`, `companies`) are drawn only where `menus.top` names them. A menu's `gather: [ids]` puts the columns of those menus first in its own: the one **Markets** menu gathers `curves`, `volatility`, `fx` and `credit`, each item picked by `menus.markets` |
 | `menus.<menu>` | the items shown per menu (`views`, `bi`, `build`, `admin`, `help`, `footer`, `markets`, or a subject menu), by the ids in `drishti-console/config/sitemap.yaml` |
 | `menus.placeholder` | the command line's placeholder |
-| `home.landing`, `home.landings`, `home.template`, `home.titles`, `home.landing-by-role`, `home.sections`, `home.hierarchies`, `home.topics` | Home ([section 15](#15-home-landings-cards-and-chips)); `template` is a `home/<name>_landing.html` page (none: Drishti Risk's); `sections` switches off `stats`, `grammar`, `pipeline`, `capabilities`, `views`, `close` |
+| `home.landing`, `home.landings`, `home.template`, `home.titles`, `home.landing-by-role`, `home.sections`, `home.hierarchies`, `home.topics` | Home ([section 15](#15-home-landings-cards-and-chips)); `template` is a `home/<name>_landing.html` page (none: Drishti Risk's); `sections` switches off `house`, `stats`, `grammar`, `pipeline`, `capabilities`, `views`, `close` |
 | `help.categories`, `help.knowledge`, `help.unlisted-slugs` | the Help centre's sections by id (`config/help.yaml` `sections:`, or a name its `aliases:` lists), the packs whose Knowledge pages show, `refuse` for documents not in the catalogue |
 | `admin.pages` | the Admin pages shown (the others answer 404) |
 | `phone` | the phone display ([section 17.1](#171-on-a-phone)) |

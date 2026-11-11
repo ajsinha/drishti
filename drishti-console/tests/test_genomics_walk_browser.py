@@ -16,7 +16,7 @@
 ``--distribution genomics`` and the genomics module's ``.dmod`` dropped into its modules folder (auto-deploy), a console in front of it.
 Its Home, every top-bar link, the Research lens, the module's pages (the gene's lollipop drawn) and Help open clean (the page walk's
 rules: no 4xx/5xx, no console error, nothing empty, within the budget); no finance is linked anywhere; the Elements gallery shows the
-module's visual. Skipped without the thin jar (./mvnw -o package -pl drishti-kernel-app -am -DskipTests) or the module's package
+module's visual. Skipped without the thin jar (./mvnw -o package -pl :drishti-kernel-app -am -DskipTests) or the module's package
 (./mvnw -o package -pl modules/genomics -am)."""
 from __future__ import annotations
 
@@ -34,7 +34,7 @@ FINANCE = ("/var", "/exposure", "/predeal", "/frtb", "/simm", "/mcube", "/play",
 
 
 def _thin_jar():
-    found = sorted((ROOT / "drishti-kernel-app" / "target").glob("drishti-kernel-*-exec.jar"), key=lambda p: p.stat().st_mtime)
+    found = sorted((ROOT / "packaging/drishti-kernel-app" / "target").glob("drishti-kernel-*-exec.jar"), key=lambda p: p.stat().st_mtime)
     return found[-1] if found else None
 
 
