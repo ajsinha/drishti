@@ -89,7 +89,7 @@ def wait_ready(server: str, seconds: float = START_S, proc: subprocess.Popen | N
             urllib.request.urlopen(url, timeout=2).read()
             return
         except Exception:  # noqa: BLE001 - not listening yet, or 503 while the modules load
-            time.sleep(0.4)
+            time.sleep(0.4)   # wait-ok: polling a server's readiness, a deadline not a pause
     raise RuntimeError(f"{url} did not answer ready")
 
 
