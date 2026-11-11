@@ -125,6 +125,9 @@ def still(pg, opts: dict, stats: dict) -> bytes:
     """One capture of a page that has drawn: after its drawn signal, a capture and a second one that must agree; the fallback (captures a
     second apart until two agree) only when the page never settles or the two differ. ``stats`` counts which way each page went."""
     masks, part = opts.get("mask", []), opts.get("scroll")
+    # the first capture stills the page (timings quieted, focus and hover dropped, transitions off): its own change, so it is not kept;
+    # measured: two captures straight after the drawn signal differed by a few bytes on every page until the page had been stilled once
+    snapshots.capture(pg, masks, part)
     signalled = drawn(pg)
     png = snapshots.capture(pg, masks, part)
     if signalled and drawn(pg) and snapshots.capture(pg, masks, part) == png:
@@ -161,6 +164,8 @@ def run_group(group: str, stack, browser, request, tmp_path) -> None:
     for width in (1366, 1920):
         for theme in sorted(THEMES):
             pg = new_page(browser, width=width)
+            lost: list[str] = []   # requests that failed, named when a page does not draw
+            pg.on("requestfailed", lambda q, lost=lost: lost.append(f"{q.url} ({q.failure})"))
             try:
                 pg.context.add_init_script("try { localStorage.setItem('drishti.theme', %r); } catch (e) {}" % THEMES[theme])
                 pg.goto(f"{base}/asof?d={SNAPSHOT_DATE}&next=/")   # the business date picked, not the server's today
@@ -175,7 +180,10 @@ def run_group(group: str, stack, browser, request, tmp_path) -> None:
                         except Exception:  # noqa: BLE001 - a call still open: its own wait decides
                             pass
                     if opts.get("wait"):
-                        _until(pg, opts["wait"], failed=opts.get("failed"))
+                        try:
+                            _until(pg, opts["wait"], failed=opts.get("failed"))
+                        except AssertionError as e:
+                            raise AssertionError(f"{name} at {width} {theme}: {e}; requests that failed: {lost[-6:]}") from None
                     faults += [f"{name}: {f}" for f in r["faults"]]
                     pg.evaluate("(t) => document.documentElement.setAttribute('data-theme', t)", THEMES[theme])
                     png = still(pg, opts, stats)
