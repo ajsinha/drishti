@@ -17,6 +17,7 @@
 
 ## Unreleased
 
+- **Documentation consolidated, part A**: How Drishti fits together holds the whole design (architecture, data architecture, the ViewModel contract, the shared screens, the 22 decisions as an appendix); one BI guide (pivot, tables and models, reports, the Notebook, groupings, Power BI compared, each part with its tutorial); one document per risk measure (VaR, exposure, FRTB-SA, SIMM: guide and tutorial together); one Rachana reference with the function catalogue and the generated function list; the example notes on one page; the unbuilt designs' gist in the plan; one internal competitive analysis; Help redirects every folded page (67 listed pages to 51).
 - **Home shows the house** (the owner's approved mock-up): below today's hero (the headline, the tagline and the animation unchanged),
   a new section, *One kernel. Modules plug in.*, draws picture C on the server: the kernel with the running distribution's loaded and
   switched-on modules as rooms round it and empty `.dmod` sockets for the rest, the product name and tagline from the distribution's
