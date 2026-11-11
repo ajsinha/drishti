@@ -17,6 +17,15 @@
 
 ## Unreleased
 
+- **Home shows the house** (the owner's approved mock-up): below today's hero (the headline, the tagline and the animation unchanged),
+  a new section, *One kernel. Modules plug in.*, draws picture C on the server: the kernel with the running distribution's loaded and
+  switched-on modules as rooms round it and empty `.dmod` sockets for the rest, the product name and tagline from the distribution's
+  brand, and **How it fits together** (`/help/how-it-fits`). One shared partial (`_macros/house.html`) from `core/house.py`'s
+  geometry, coloured by the theme's tokens (`drishti_theme.css`), no script; a room keeps its hue in every distribution of the site;
+  the picture sits under the text on a phone. `home.sections: { house: off }` leaves it out. The person's module answer now keeps each
+  module's title. `test_home_house_browser.py`: the rooms for Drishti All and Drishti Risk, the sockets, the brand, the link, and the
+  layout on a desktop and a phone in the dark and light themes. The Home snapshot goldens are viewport-only and the hero is unchanged,
+  so they stay as they are. USER_GUIDE (Home: the house), ADMIN_GUIDE (`home.sections`).
 - **How it fits opens with the house** (the owner's pick of the house mock-ups): HOW_IT_FITS.md starts with *The house*, the street
   picture (`docs/how-it-fits/house-street.svg`) and the mapping (kernel = foundation, distributions = houses, modules = rooms, console =
   front door, workspaces = shelves, screens = books, bindings = pipes, placement, deploy, Admin, Health, keys), the rule *every function

@@ -127,6 +127,17 @@ is left out and the headline stands alone. Under the headline, **quick cards** o
 with `ui.facts.enabled: false` (`DRISHTI_HOME_FACTS=false`) and sets the cards under `ui.home_cards` in the console's
 `application.yaml`; a pack author adds facts as the [pack developer guide](BUILD_GUIDE.md#74-facts-for-home) describes.
 
+### Home: the house
+
+Below the headline and its animation, **One kernel. Modules plug in.** draws the product you are running as a house: the kernel in
+the middle, and around it one room for each module this distribution has loaded and switched on (Drishti Risk: banking and market
+data; Drishti All: every module the server loaded), with empty `.dmod` sockets where another module could plug in. A room's colour
+stays the same in every distribution of the site. The sentence beside it names the product and its modules, the caption gives the
+product's name and tagline (both from the distribution's `brand`), and **How it fits together** opens
+[How Drishti fits together](../../HOW_IT_FITS.md#the-house). A module switched off, or not loaded, leaves its room out; the picture
+follows the theme, and on a phone it sits under the text. An edition or lens can leave the section out with
+`home.sections: { house: off }`.
+
 ## The top bar
 
 Every page has the same top bar, on one row: the terminal, the views, the engines, BI, Build, Admin, Help and the landing page when you are signed in, and the public pages (signed out) in the same height, logo and
