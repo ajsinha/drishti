@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The documentation's feature register (docs/architecture/DOCS_PLAN.md section 5): every major feature of the product with its ONE guide
+# The documentation's feature register (the documentation rules, docs/architecture/IMPLEMENTATION_PLAN.md): every major feature of the product with its ONE guide
 # and its ONE tutorial (paths under docs/), its domain module (core, banking, capitalmarkets, economy), the lenses whose Help shows it
 # (all: every lens) and the line budgets of both. drishti-console/tests/test_docs_gates.py holds the files to it:
 #   - every guide and tutorial named here exists, and every guide under docs/guides/ and tutorial under docs/tutorials/ is named here

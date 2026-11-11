@@ -174,6 +174,9 @@ sections:
 # slug or slug#anchor. Documents that left the list (architecture, the per-plugin connector pages, the runbooks) are still in
 # the help centre at their path slug, so the old addresses keep working.
 moved:
+  docs-architecture-docs-plan: docs-architecture-implementation-plan#the-documentation-rules   # docs/architecture/DOCS_PLAN.md folded into docs/architecture/IMPLEMENTATION_PLAN.md
+  docs-architecture-financial-crime: docs-architecture-implementation-plan#2921-and-2922-financial-crime-aml-fraud-fcu-proposed   # docs/architecture/FINANCIAL_CRIME.md folded into docs/architecture/IMPLEMENTATION_PLAN.md
+  docs-architecture-ifrs9-ecl: docs-architecture-implementation-plan#2920-ifrs-9-expected-credit-loss-proposed   # docs/architecture/IFRS9_ECL.md folded into docs/architecture/IMPLEMENTATION_PLAN.md
   docs-strategy-competitive-landscape: competitive-analysis#part-ii--kernel-and-modules-against-plug-in-platforms   # docs/strategy/COMPETITIVE_LANDSCAPE.md folded into docs/strategy/COMPETITIVE_ANALYSIS.md
   docs-deployment-and-qa-guide: deployment-qa   # the guide's path slug
   docs-quickstart-developers: developer-quickstart   # the quickstart's path slug

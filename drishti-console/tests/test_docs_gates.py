@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The documentation gates (docs/architecture/DOCS_PLAN.md section 5), beside the help, links, rot, placeholders, settings, error-code and
+"""The documentation gates (the documentation rules in docs/architecture/IMPLEMENTATION_PLAN.md), beside the help, links, rot, placeholders, settings, error-code and
 image tests. They fail:
   - the feature register (config/docs-features.yaml) and the files disagree, or a feature has not exactly one guide and one tutorial
     (or says `after <release>`);

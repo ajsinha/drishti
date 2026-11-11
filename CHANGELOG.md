@@ -604,7 +604,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   contract pages say so; `tools/test_guide_contract_links.py` now covers the pack guides and `tools/test_pack_guides.py` checks the links
   (and that no column is copied). Every generator's `--check` passes (banking, funds, us-equities, gleif, world-economy, guide_data).
 
-- **The documentation plan, for approval** ([DOCS_PLAN.md](docs/architecture/DOCS_PLAN.md)): 22 major features, each with one guide and one tutorial; every existing document kept, merged, generated or deleted (337 → about 138 under `docs/`); the data contracts from 118 pages to 28 with generated JSON examples; the generated references and the docs gates; the order of work around 2.9.11.e and f; open questions.
+- **The documentation plan, for approval** ([DOCS_PLAN.md](docs/architecture/IMPLEMENTATION_PLAN.md#the-documentation-rules)): 22 major features, each with one guide and one tutorial; every existing document kept, merged, generated or deleted (337 → about 138 under `docs/`); the data contracts from 118 pages to 28 with generated JSON examples; the generated references and the docs gates; the order of work around 2.9.11.e and f; open questions.
 
 ### Deployment and QA guide, developer quickstart, PDFs
 
@@ -3287,9 +3287,9 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   feed) and a basket shared with you have **Edit a copy**. The what-if trades, save with read-only sharing, Open without saving, Alt+B and
   the count on the link are kept.
 - **Designs: IFRS 9 expected credit loss and financial crime (docs only; product owner, 2026-11-02).**
-  [IFRS9_ECL.md](docs/architecture/IFRS9_ECL.md) designs the impairment engine (staging with SICR, backstop, exemption and cure; PD from
+  [IFRS9_ECL.md](docs/architecture/IMPLEMENTATION_PLAN.md#2920-ifrs-9-expected-credit-loss-proposed) designs the impairment engine (staging with SICR, backstop, exemption and cure; PD from
   curves or migration matrices; LGD with collateral; EAD with CCF; EIR discounting; weighted scenarios; overlays with four eyes; POCI;
-  why the provision moved in exact steps; contracts, playground, hand-built cases). [FINANCIAL_CRIME.md](docs/architecture/FINANCIAL_CRIME.md)
+  why the provision moved in exact steps; contracts, playground, hand-built cases). [FINANCIAL_CRIME.md](docs/architecture/IMPLEMENTATION_PLAN.md#2921-and-2922-financial-crime-aml-fraud-fcu-proposed)
   designs the FCU engines (trade surveillance, transaction monitoring with threshold tuning, network analytics, customer risk rating,
   sanctions and PEP screening, fraud scoring, alerts and cases, FINTRAC STR, LCTR and EFTR, rule effectiveness, data protection). The
   plan proposes 2.9.20 (IFRS 9) and 2.9.21 and 2.9.22 (financial crime, split in two), placement to confirm.

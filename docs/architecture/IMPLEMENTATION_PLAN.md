@@ -70,7 +70,14 @@ kept as they were planned, with notes where the delivery differed.
 - Sole author: Ashutosh Sinha. Commit messages explain *why*; no trailers.
 - Every file carries the copyright/proprietary header; build fails otherwise.
 - No source file over 2000 lines (UX templates excepted); build fails otherwise.
-- Each wave updates `docs/` (guides, ADRs, CHANGELOG) as it goes, not afterwards.
+- Each wave updates `docs/` (guides, CHANGELOG) as it goes, not afterwards.
+- <a id="the-documentation-rules"></a>**The documentation rules** (from the 2.9.11.h documentation plan, whose document was deleted when it
+  was done): fewer documents, no repeated content; each fact has one home (a field → its data contract, a setting → CONFIGURATION.md,
+  a function → the function catalogue in RACHANA_REFERENCE.md, an endpoint → the API reference, a measure's maths → its document); one
+  document per major feature (for a risk measure, its guide and tutorial in one); data contracts are the one home for data, generated
+  from `data/testdata`; no bugs or version history in customer documents; obsolete documents are deleted; Help lists only user documents,
+  grouped by domain and lens; every hands-on step shows the UI, the command line and the YAML. The gates are
+  `drishti-console/tests/test_docs_gates.py` over the register `config/docs-features.yaml`.
 
 ## Release rules (product owner, 2026-10-31)
 
@@ -657,9 +664,9 @@ documents (2.9.8, 2.9.9 and later) are moved onto this plan; a candidate not nam
 | **2.9.17** (proposed) | XVA and wrong-way risk | CVA; BA-CVA; SA-CVA; MVA and KVA; wrong-way risk; each with its playground |
 | **2.9.18** (proposed) | Advanced market risk | **(L)** FRTB-IMA; **(L)** QLRisk pre-deal |
 | **2.9.19** (proposed) | Executive | **(L)** the CRO and CIO lens builds; liquidity, capital and climate (climate an optional supplied-input tile, off by default) |
-| **2.9.20** (proposed; product owner 2026-11-02; placement and decisions as recommended) | IFRS 9 expected credit loss | **(L)** the ECL engine (staging with reasons and cure, PD from curves or migration matrices, LGD with collateral, EAD with CCF, discounting at the EIR, weighted scenarios, POCI); **(L)** why the provision moved (S0 to S10, the IFRS 7.35H table); the credit-risk pack and demo loan book; overlays with four eyes; the playground and workbook; the screens after mock-ups ([IFRS9_ECL.md](IFRS9_ECL.md)) |
-| **2.9.21** (proposed; product owner 2026-11-02; placement and decisions as recommended) | Financial crime I: AML core | **(L)** transaction monitoring on the scenario framework, with the threshold-tuning playground; **(L)** alerts and case management on write-back with the data-protection rules; customer risk rating; FINTRAC STR, LCTR and EFTR; rule effectiveness ([FINANCIAL_CRIME.md](FINANCIAL_CRIME.md)) |
-| **2.9.22** (proposed; product owner 2026-11-02; placement and decisions as recommended) | Financial crime II: screening, surveillance, networks, fraud | **(L)** sanctions and PEP screening; **(L)** trade surveillance (orders, ticks, five market-abuse scenarios, the replay); network analytics; fraud scoring; each with its playground ([FINANCIAL_CRIME.md](FINANCIAL_CRIME.md)) |
+| **2.9.20** (proposed; product owner 2026-11-02; placement and decisions as recommended) | IFRS 9 expected credit loss | **(L)** the ECL engine (staging with reasons and cure, PD from curves or migration matrices, LGD with collateral, EAD with CCF, discounting at the EIR, weighted scenarios, POCI); **(L)** why the provision moved (S0 to S10, the IFRS 7.35H table); the credit-risk pack and demo loan book; overlays with four eyes; the playground and workbook; the screens after mock-ups ([IMPLEMENTATION_PLAN.md](#2920-ifrs-9-expected-credit-loss-proposed)) |
+| **2.9.21** (proposed; product owner 2026-11-02; placement and decisions as recommended) | Financial crime I: AML core | **(L)** transaction monitoring on the scenario framework, with the threshold-tuning playground; **(L)** alerts and case management on write-back with the data-protection rules; customer risk rating; FINTRAC STR, LCTR and EFTR; rule effectiveness ([IMPLEMENTATION_PLAN.md](#2921-and-2922-financial-crime-aml-fraud-fcu-proposed)) |
+| **2.9.22** (proposed; product owner 2026-11-02; placement and decisions as recommended) | Financial crime II: screening, surveillance, networks, fraud | **(L)** sanctions and PEP screening; **(L)** trade surveillance (orders, ticks, five market-abuse scenarios, the replay); network analytics; fraud scoring; each with its playground ([IMPLEMENTATION_PLAN.md](#2921-and-2922-financial-crime-aml-fraud-fcu-proposed)) |
 
 ## 2.9.8: market-risk regulatory foundation and debugging (planned)
 
@@ -1057,7 +1064,27 @@ from the directory, later by decision), ML5, ML6, ML8, ML10, WL1 to WL11. RL7 (s
 
 ## 2.9.20: IFRS 9 expected credit loss (proposed)
 
-*Proposed; product owner 2026-11-02; placement and every decision as recommended. The design: [IFRS9_ECL.md](IFRS9_ECL.md) (its build checklist, section 21).*
+*Proposed; product owner 2026-11-02; placement and every decision as recommended. The design document was deleted when the docs were
+consolidated (git keeps it, tag v2.9.11.i_2_3); its gist is here.*
+
+**The design in short.** IFRS 9 impairment computed the way VaR is: from facility-grain inputs, when asked, for any scope (a portfolio,
+segment, legal entity, branch, one facility, an ad-hoc set), never stored except as an official month-, quarter- or year-end capture.
+Scope: assets at amortised cost and FVOCI debt, loan commitments and guarantees not at FVTPL, lease and contract assets (5.5.1). For
+facility *i*, scenario *s* and periods *t* (a month by default): `ECL_i,s = Σ_t mPD_i,s(t) · LGD_i,s(t) · EAD_i(t) · DF_i(t)`, with
+`mPD(t) = S(t−1) − S(t)`, `DF(t) = (1 + EIR)^(−τ(t))`, the horizon 12 months for stage 1 and the expected life for stages 2, 3 and POCI;
+`ECL_i = Σ_s w_s · ECL_i,s` and then the approved overlays. Stage 3: `EAD · LGD_default`, or the gross carrying amount less the present
+value of the bank's expected recoveries. Staging, first rule that applies: POCI for life; credit-impaired (90 DPD, unlikely to pay) to
+stage 3; the 30 DPD backstop, the watchlist and forborne-performing to stage 2; the low-credit-risk exemption (off by default); then the
+relative and absolute SICR tests on the weighted lifetime PD. **Principles:** every method choice is a named switch with a decided default,
+shown on the screen and in the workbook; parameters live in `config/engines/ifrs9.yaml` with the policy or paragraph they come from (the
+bank owns every value); the bank's PD curves or migration matrices, LGD, CCF and scenario paths are inputs, applied exactly (no model
+fitting in Drishti); every figure explains itself (stage and rule, each period's mPD, LGD, EAD and DF, each scenario's ECL) and a scope's
+provision change explains itself in exact steps S0 to S10 with the IFRS 7.35H table; a missing input is refused and counted, never zero;
+the engine is off as shipped. **Decisions** (all as recommended): monthly periods (annual a setting); one stage per facility on the
+weighted lifetime PD (per-scenario staging a switch); shipped SICR defaults relative 2.0× and absolute 0.5 %, the 30 DPD backstop, cure
+3 and 12 months, each labelled a default to replace; CECL later as a mode of the same engine; mock-ups first (provision, why it moved,
+staging monitor, facility); a synthetic demo book of 10,000 facilities with three scenarios; the general-ledger posting stays with the
+bank (an export of the capture by account); overlays are Drishti records with four-eyes approval and an expiry, never an edit of a figure.
 
 | # | Part | What |
 |---|---|---|
@@ -1071,9 +1098,28 @@ from the directory, later by decision), ML5, ML6, ML8, ML10, WL1 to WL11. RL7 (s
 
 ## 2.9.21 and 2.9.22: financial crime (AML, fraud, FCU) (proposed)
 
-*Proposed; product owner 2026-11-02; placement and every decision as recommended. **Split in two** to keep two large items each. The design:
-[FINANCIAL_CRIME.md](FINANCIAL_CRIME.md) (its build checklist, section 21). Drishti provides explainable, testable engines; the bank's FCU
-owns the rules, models and reporting decisions.*
+*Proposed; product owner 2026-11-02; placement and every decision as recommended. **Split in two** to keep two large items each. The design
+document was deleted when the docs were consolidated (git keeps it, tag v2.9.11.i_2_3); its gist is here. Drishti provides explainable,
+testable engines; the bank's FCU owns the rules, models and reporting decisions.*
+
+**The design in short.** Engines: (a) trade surveillance (spoofing and layering, wash trades, front-running, marking the close, insider
+timing; IOSCO, EU MAR 12 and 16, CIRO UMIR); (b) transaction monitoring (structuring, rapid movement, high-risk jurisdictions, dormancy,
+round amounts, velocity; FATF R.10 and 20, FINTRAC); (c) network analytics (mule rings, circular flows, shared attributes, hops to
+sanctioned parties, ownership through GLEIF); (d) customer risk rating (a weighted, explainable score and band); (e) sanctions and PEP
+screening (fuzzy matching with transliteration and aliases, audited discounting, rescreening on list change); (f) payment and card fraud
+scores with reason codes, near real time; (g) alerts and cases on write-back approvals; (h) regulatory reports (FINTRAC STR, LCTR, EFTR
+first; FinCEN SAR and CTR and the EU AMLR later); (i) rule effectiveness and model-risk evidence (OSFI E-23, SR 11-7). **Principles:**
+every alert carries its evidence (the scenario and version, parameters, measured values against thresholds and the exact records,
+pinned to their data versions); computed in Java on the server; scenarios are versioned, approved YAML with typed parameters; every
+scenario has hand-built cases and a threshold-tuning playground whose workbook recomputes its alerts; FCU data is visible to FCU roles
+only, never in search, AI, shares or exports, and tipping off is prevented by design; each engine has its own
+`config/engines/fcu-<engine>.yaml`, off as shipped; batch and near real time from streams, never in a payment's authorisation path.
+**Decisions** (all as recommended): two releases (AML core, then screening, networks, surveillance and fraud); Canada (FINTRAC) first;
+the bank submits reports from Drishti's signed export; the starting scenarios ship as documented examples, off until the FCU approves
+each version; new `order-event` and `market-tick` contracts; Drishti ships no lists (the demo's is invented); only transparent models
+(scorecards, logistic) run in Java, opaque models' scores come in as inputs; mock-ups first, three options per screen; a separate,
+encrypted FCU schema, AI off for FCU data, FCU roles never implied by administrator, retention five years after closing; bounded network
+algorithms (components, cycles to 6, 3 hops), community detection later on request.
 
 | # | Release | Part | What |
 |---|---|---|---|
