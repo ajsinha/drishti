@@ -20,7 +20,7 @@
 > a proposal or an e-mail to a prospect. Facts about other vendors are taken from their public material and the press, cited in
 > [section 7](#7-sources); where we could not verify a claim we say **not verified**.
 
-**Status: analysis and product description** (internal; owner: the product owner; as of 2026-11-01; reviewed at every release).
+**Status: analysis and product description** (internal; owner: the product owner; as of 2026-11-01; reviewed at every release). The architecture comparison (kernel, modules, distributions against plug-in platforms) is [COMPETITIVE_LANDSCAPE.md](COMPETITIVE_LANDSCAPE.md).
 
 ## Contents
 

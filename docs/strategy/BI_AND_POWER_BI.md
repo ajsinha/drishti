@@ -37,6 +37,7 @@ The **Lead today** column looks only at what ships today. Where Drishti plans so
 - **Its clearest leads are built:** VaR per cell with diversification, a provenance record for every pivot answer, numbers made as each recipient in subscriptions, and refusal rather than a guessed join.
 - **Speed is not compared.** No like-for-like benchmark of the two exists, so nothing here says either is faster.
 - **Most organisations would run both**, Power BI for enterprise reporting and Drishti for risk. Drishti can feed Power BI through ODBC ([section 6](#6-where-they-differ-by-design)).
+- **Architecture, not features:** whether any BI or risk product shares Drishti's kernel and `.dmod` module model is answered in the internal [competitive landscape](COMPETITIVE_LANDSCAPE.md).
 
 ## 2. Side by side
 
