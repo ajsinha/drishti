@@ -27,7 +27,7 @@ one controlled set of UI statics (section 11). Surveyed on `wip/train` `89f010df
 `DrishtiModule`, `ModuleContext` (with `Kinds` and `KindWriter`), `ModuleSettings`, `KindProvider`, `BindingState`, `AiToolProvider`,
 `@ModuleApi`, `@EngineWide` and `ApprovalSource`; `FunctionProvider` (its `ElFunction` and `EvalContext`), `CacheGroup` (`MemoryBudget`), `CacheReport`
 (Caffeine) and `FlightForm` (Arrow Flight types) stay at their homes until their types move. Banking's `var-positions` and
-`var-system-baskets` are `KindProvider`s the kernel routes as computed kinds; `var-pv-stream` (the Kafka PV transport) is still a source
+`var-system-baskets` are `KindProvider`s the kernel routes as computed kinds (from a loaded module, a provider a connector file names is that connector's type: the connector starts when the module loads and stops when it goes, as a `SourcePlugin` extension does); `var-pv-stream` (the Kafka PV transport) is still a source
 plugin until the kernel's Kafka connector serves a kind's `live:` binding. Kernel-controlled bindings (section 5) are built:
 `config/bindings.yaml`, the resolution order, the states, the data gate on functions, four-eyes changes applied without a restart, Admin →
 Data bindings (mock-up A), contracts with `binding-hint:`, banking's needs as `META-INF/drishti/needs.yaml`, and the one-time upgrade from

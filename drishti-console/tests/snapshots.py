@@ -34,6 +34,7 @@ import os
 from pathlib import Path
 
 GOLDEN = Path(__file__).resolve().parent / "snapshots"
+REPO = Path(__file__).resolve().parents[2]      # the checkout: its folder differs per copy (a worktree, the drill's), so pages show <repo>
 SCALE = 2           # the golden's pixels: one per SCALE x SCALE of the capture
 COLOURS = 128       # the golden's palette
 THRESHOLD = 40      # a pixel changed: any channel off by more than this (of 255)
@@ -48,9 +49,12 @@ MASK = ["[data-clock]", "#asofDate", "[data-dyk]", "[data-ready-facts]", "[data-
 #: times, a live board's last update, a search's or a form's time taken; their words replaced by one dot
 QUIET = ["[data-vx-timing]", "[data-vx-fresh]", "[data-live-time]", "[data-elapsed]"]
 
-_STILL = """async ([quiet, today]) => {
-  // what the run, not the page, decides: the test's scratch folders and the real day's date and time (the business date is fixed)
-  const run = [[/\\S*pytest-\\d+\\/(?:popen-gw\\d+\\/)?[^\\/\\s]+\\//g, '<test folder>/'], [new RegExp(today + '(?:[ T]\\\\d\\\\d:\\\\d\\\\d(?::\\\\d\\\\d)?)?', 'g'), 'today']];
+_STILL = """async ([quiet, today, repo]) => {
+  // what the run, not the page, decides: the checkout's folder, the test's scratch folders and the real day's date and time, local or UTC
+  // (the business date is fixed; a server stamps UTC, so after 19:00 in New York its day is tomorrow's)
+  const run = [[new RegExp(repo.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&'), 'g'), '<repo>'],
+               [/\\S*pytest-\\d+\\/(?:popen-gw\\d+\\/)?[^\\/\\s]+\\//g, '<test folder>/'],
+               [new RegExp('(?:' + today + ')(?:[ T]\\\\d\\\\d:\\\\d\\\\d(?::\\\\d\\\\d)?)?', 'g'), 'today']];
   const walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
   for (let n = walk.nextNode(); n; n = walk.nextNode()) {
     let v = n.nodeValue;
@@ -73,7 +77,8 @@ _STILL = """async ([quiet, today]) => {
 def capture(pg, masks: list[str] = (), part: str | None = None) -> bytes:
     """The page's viewport at its top as PNG, or only the element ``part`` (a page that scrolls itself to a part when it has drawn),
     still (toasts hidden) with ``MASK`` and ``masks`` covered."""
-    pg.evaluate(_STILL, [QUIET, datetime.date.today().isoformat()])
+    days = sorted({datetime.date.today().isoformat(), datetime.datetime.now(datetime.timezone.utc).date().isoformat()})
+    pg.evaluate(_STILL, [QUIET, "|".join(days), str(REPO)])
     pg.mouse.move(0, 0)
     locs = [pg.locator(s) for s in (*MASK, *masks)]
     shot = dict(animations="disabled", caret="hide", mask=locs, mask_color="#808080")
