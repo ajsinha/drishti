@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="hm" viewBox="0 0 1004 554" width="1004" height="554" role="img" aria-label="Option C, kernel and rooms: a minimal mark. A kernel core with module tiles (banking, market data, capital markets, economy) plugged around it like Linux drivers, with an empty socket where a new .dmod plugs in. The same tiles, under a roof with a door (the console) and on one kernel bar, form the Drishti Risk, Drishti Finance and Drishti All houses. A small icon-size lockup shows it as a logo-like mark.">
+<!-- Copyright (c) 2026 Ashutosh Sinha. All rights reserved. PROPRIETARY AND CONFIDENTIAL. -->
+<title>Kernel and rooms</title>
+<desc>Option C, kernel and rooms: a minimal mark. A kernel core with module tiles (banking, market data, capital markets, economy) plugged around it like Linux drivers, with an empty socket where a new .dmod plugs in. The same tiles, under a roof with a door (the console) and on one kernel bar, form the Drishti Risk, Drishti Finance and Drishti All houses. A small icon-size lockup shows it as a logo-like mark.</desc>
+<style>
+.hm{--bg:#0e1628;--panel:#16213a;--panel2:#1b2744;--line:#33446e;--ink:#e7ecf5;--muted:#93a0b8;--amber:#e8a33a;
+--bank:#7fb2ff;--mkt:#e8a33a;--cap:#c69cf2;--eco:#5fd39a;--pipe:#4fc3dc;--kern:#1d2b4d;--kern2:#25365e}
+@media (prefers-color-scheme: light){.hm{--bg:#f7f5f0;--panel:#ffffff;--panel2:#faf8f4;--line:#cfc7b8;--ink:#172440;--muted:#55607a;
+--amber:#985b0a;--bank:#1f5fc4;--mkt:#b4700a;--cap:#7a3fb8;--eco:#1b784c;--pipe:#11809a;--kern:#e9e3d6;--kern2:#ded6c5}}
+html:not(.light) .hm{--bg:#0e1628;--panel:#16213a;--panel2:#1b2744;--line:#33446e;--ink:#e7ecf5;--muted:#93a0b8;--amber:#e8a33a;
+--bank:#7fb2ff;--mkt:#e8a33a;--cap:#c69cf2;--eco:#5fd39a;--pipe:#4fc3dc;--kern:#1d2b4d;--kern2:#25365e}
+html.light .hm{--bg:#f7f5f0;--panel:#ffffff;--panel2:#faf8f4;--line:#cfc7b8;--ink:#172440;--muted:#55607a;
+--amber:#985b0a;--bank:#1f5fc4;--mkt:#b4700a;--cap:#7a3fb8;--eco:#1b784c;--pipe:#11809a;--kern:#e9e3d6;--kern2:#ded6c5}
+.hm{font-family:system-ui,-apple-system,'Segoe UI',Roboto,'DejaVu Sans',Arial,sans-serif}
+.hm .bg{fill:var(--bg)}.hm text{fill:var(--ink);font-size:12px}.hm .m{fill:var(--muted);font-size:11px}.hm .b{font-weight:700}
+.hm .h1{font-size:17px;font-weight:700}.hm .cap{fill:var(--amber);font-size:11px;font-weight:700;letter-spacing:.12em}
+.hm .wall{fill:var(--panel);stroke:var(--line);stroke-width:1.5}.hm .roof{fill:var(--panel2);stroke:var(--line);stroke-width:1.5}
+.hm .kern{fill:var(--kern);stroke:var(--amber);stroke-width:1.5}.hm .kseg{fill:var(--kern2);stroke:var(--line)}
+.hm .door{fill:var(--panel2);stroke:var(--amber);stroke-width:1.5}.hm .ln{stroke:var(--line);fill:none}
+.hm .pipe{stroke:var(--pipe);stroke-width:3;fill:none;stroke-linecap:round}.hm .pipet{fill:var(--pipe)}
+.hm .dash{fill:none;stroke:var(--muted);stroke-width:1.5;stroke-dasharray:5 4}.hm .show{fill:none;stroke:var(--amber);stroke-dasharray:6 4;stroke-width:1.2}
+.hm .arrow{stroke:var(--amber);stroke-width:2;fill:none}.hm .af{fill:var(--amber)}
+.hm .r-bank{fill:var(--bank);fill-opacity:.18;stroke:var(--bank);stroke-width:1.5}.hm .s-bank{fill:var(--bank)}
+.hm .r-mkt{fill:var(--mkt);fill-opacity:.2;stroke:var(--mkt);stroke-width:1.5}.hm .s-mkt{fill:var(--mkt)}
+.hm .r-cap{fill:var(--cap);fill-opacity:.18;stroke:var(--cap);stroke-width:1.5}.hm .s-cap{fill:var(--cap)}
+.hm .r-eco{fill:var(--eco);fill-opacity:.18;stroke:var(--eco);stroke-width:1.5}.hm .s-eco{fill:var(--eco)}
+.hm .book{fill:var(--panel2);stroke:var(--line)}.hm .book-hi{fill:var(--panel2);stroke:var(--amber);stroke-width:1.5}
+.hm .shelf{stroke:var(--muted);stroke-width:2.5}.hm .hl{fill:var(--amber)}
+</style>
+<rect width="1004" height="554" class="bg"/>
+<text x="30" y="34" class="h1" text-anchor="start">C · Kernel and rooms</text>
+<text x="30" y="56" class="m" text-anchor="start">Modules plug into one kernel like drivers; stack the same tiles under a roof and you have a product.</text>
+<circle cx="230" cy="246" r="128" class="ln" stroke-dasharray="3 5"/>
+<path d="M230.0,194.0L230.0,154.0" class="arrow"/>
+<rect x="196.0" y="84.0" width="68" height="68" rx="4" class="r-bank"/>
+<text x="230.0" y="122.0" class="b" text-anchor="middle">banking</text>
+<path d="M282.0,246.0L322.0,246.0" class="arrow"/>
+<rect x="324.0" y="212.0" width="68" height="68" rx="4" class="r-mkt"/>
+<text x="358.0" y="243.0" class="b" text-anchor="middle">market</text>
+<text x="358.0" y="257.0" class="b" text-anchor="middle">data</text>
+<path d="M230.0,298.0L230.0,338.0" class="arrow"/>
+<rect x="196.0" y="340.0" width="68" height="68" rx="4" class="r-cap"/>
+<text x="230.0" y="371.0" class="b" text-anchor="middle">capital</text>
+<text x="230.0" y="385.0" class="b" text-anchor="middle">markets</text>
+<path d="M178.0,246.0L138.0,246.0" class="arrow"/>
+<rect x="68.0" y="212.0" width="68" height="68" rx="4" class="r-eco"/>
+<text x="102.0" y="250.0" class="b" text-anchor="middle">economy</text>
+<circle cx="320.5" cy="155.5" r="6" class="dash"/>
+<circle cx="320.5" cy="336.5" r="6" class="dash"/>
+<circle cx="139.5" cy="336.5" r="6" class="dash"/>
+<rect x="113.5" y="129.5" width="52" height="52" rx="4" class="dash"/>
+<text x="139.5" y="159.5" class="b" text-anchor="middle">.dmod</text>
+<rect x="178" y="194" width="104" height="104" rx="10" class="kern"/>
+<text x="230" y="242" class="cap" text-anchor="middle" font-size="13">KERNEL</text>
+<text x="230" y="260" class="m" text-anchor="middle">one foundation</text>
+<text x="230" y="446" class="m" text-anchor="middle">rooms plug into the core like Linux drivers</text>
+<rect x="484" y="392" width="504" height="26" rx="4" class="kern"/>
+<text x="736" y="409" class="cap" text-anchor="middle">KERNEL</text>
+<path d="M490,294L543.0,246L596,294" class="arrow" stroke-linejoin="round"/>
+<rect x="500" y="300" width="40" height="40" rx="4" class="r-bank"/>
+<rect x="546" y="300" width="40" height="40" rx="4" class="r-mkt"/>
+<rect x="530.0" y="348" width="26" height="44" rx="2" class="door"/>
+<text x="543.0" y="440" class="b" text-anchor="middle">Drishti Risk</text>
+<path d="M616,294L692.0,246L768,294" class="arrow" stroke-linejoin="round"/>
+<rect x="626" y="300" width="40" height="40" rx="4" class="r-cap"/>
+<rect x="672" y="300" width="40" height="40" rx="4" class="r-eco"/>
+<rect x="718" y="300" width="40" height="40" rx="4" class="r-mkt"/>
+<rect x="679.0" y="348" width="26" height="44" rx="2" class="door"/>
+<text x="692.0" y="440" class="b" text-anchor="middle">Drishti Finance</text>
+<path d="M788,294L887.0,246L986,294" class="arrow" stroke-linejoin="round"/>
+<rect x="798" y="300" width="40" height="40" rx="4" class="r-bank"/>
+<rect x="844" y="300" width="40" height="40" rx="4" class="r-mkt"/>
+<rect x="890" y="300" width="40" height="40" rx="4" class="r-cap"/>
+<rect x="936" y="300" width="40" height="40" rx="4" class="r-eco"/>
+<rect x="874.0" y="348" width="26" height="44" rx="2" class="door"/>
+<text x="887.0" y="440" class="b" text-anchor="middle">Drishti All</text>
+<text x="887.0" y="236" class="cap" text-anchor="middle">SHOW HOME</text>
+<text x="736" y="462" class="m" text-anchor="middle">same tiles, same kernel: Risk, Finance and All are distributions</text>
+<rect x="30" y="470" width="230" height="64" rx="8" class="wall"/>
+<path d="M44,496L65,482L86,496" class="arrow" stroke-linejoin="round"/>
+<rect x="50" y="499" width="14" height="9" rx="1.5" class="s-bank"/>
+<rect x="68" y="499" width="14" height="9" rx="1.5" class="s-mkt"/>
+<rect x="50" y="511" width="14" height="9" rx="1.5" class="s-cap"/>
+<rect x="68" y="511" width="14" height="9" rx="1.5" class="s-eco"/>
+<rect x="44" y="524" width="42" height="5" rx="1" class="kern"/>
+<text x="100" y="502" class="b" text-anchor="start" font-size="17" letter-spacing="3">DRISHTI</text>
+<text x="100" y="520" class="m" text-anchor="start">the mark, at icon size</text>
+<rect x="300" y="488" width="674" height="46" rx="6" class="wall"/>
+<text x="316" y="515" class="cap" text-anchor="start">LEGEND</text>
+<rect x="386" y="504" width="14" height="14" rx="3" class="r-bank"/>
+<text x="406" y="515" class="m" text-anchor="start">banking</text>
+<rect x="504" y="504" width="14" height="14" rx="3" class="r-mkt"/>
+<text x="524" y="515" class="m" text-anchor="start">market data</text>
+<rect x="622" y="504" width="14" height="14" rx="3" class="r-cap"/>
+<text x="642" y="515" class="m" text-anchor="start">capital markets</text>
+<rect x="740" y="504" width="14" height="14" rx="3" class="r-eco"/>
+<text x="760" y="515" class="m" text-anchor="start">economy</text>
+<rect x="860" y="502" width="10" height="16" rx="1" class="door"/>
+<text x="876" y="515" class="m" text-anchor="start">console</text>
+<rect x="930" y="503" width="14" height="14" rx="2" class="dash"/>
+<text x="948" y="515" class="m" text-anchor="start">.dmod</text>
+</svg>
