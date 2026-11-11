@@ -67,7 +67,6 @@ public final class EngineRegistry implements AutoCloseable {
     /** The outcome of one change: {@code live}, {@code restart needed}, {@code written} (an override above the file decides), {@code unchanged}. */
     public record Outcome(String engine, boolean on, String outcome, String detail) {}
 
-    private final EngineCatalogue catalogue;
     private final EngineSwitches switches;
     private final EngineFiles files;
     private final EngineHistory history;
@@ -88,7 +87,6 @@ public final class EngineRegistry implements AutoCloseable {
 
     public EngineRegistry(EngineCatalogue catalogue, EngineSwitches switches, EngineFiles files, EngineHistory history, AuditLog audit,
             Supplier<String> node, Duration drain, List<ComputeEngine> found) {
-        this.catalogue = catalogue;
         this.switches = switches;
         this.files = files;
         this.history = history;
@@ -285,8 +283,11 @@ public final class EngineRegistry implements AutoCloseable {
 
     // ------------------------------------------------------------------------------------------------------------- what others ask
 
+    /** The engines listed now, the server's and each loaded module's: what needs and uses what, and whose API a path is under. */
     public EngineCatalogue catalogue() {
-        return catalogue;
+        synchronized (changing) {
+            return EngineCatalogue.listed(List.copyOf(entries.values()));
+        }
     }
 
     public EngineCatalogue.Entry entry(String id) {
@@ -452,7 +453,7 @@ public final class EngineRegistry implements AutoCloseable {
                     }
                 }
                 if (!w.getValue() && withDependents) {
-                    for (String d : catalogue.neededBy(w.getKey())) {
+                    for (String d : catalogue().neededBy(w.getKey())) {
                         if (!want.containsKey(d) && (running(d) || desired(d))) {
                             want.put(d, false);
                             grew = true;
@@ -482,7 +483,7 @@ public final class EngineRegistry implements AutoCloseable {
                             + titles(missing) + " first, or " + (missing.size() == 1 ? "both" : "all of them") + " together.");
                 }
             } else {
-                List<String> users = catalogue.neededBy(id).stream().filter(on::contains).toList();
+                List<String> users = catalogue().neededBy(id).stream().filter(on::contains).toList();
                 if (!users.isEmpty()) {
                     int n = users.size() + 1;
                     refuse(want, reason, actor, title(id) + " is needed by " + titles(users) + " on this server. Turn "

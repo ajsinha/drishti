@@ -103,6 +103,18 @@ public final class EngineCatalogue {
     private final Map<String, Entry> entries;
 
     public EngineCatalogue(List<Entry> entries) {
+        this(entries, true);
+    }
+
+    /**
+     * What a server lists now: its catalogue and each loaded module's engines (EngineRegistry). Not checked again: a module's engines attach
+     * one by one, so one may name a need that attaches next.
+     */
+    static EngineCatalogue listed(List<Entry> entries) {
+        return new EngineCatalogue(entries, false);
+    }
+
+    private EngineCatalogue(List<Entry> entries, boolean check) {
         Map<String, Entry> m = new LinkedHashMap<>();
         for (Entry e : entries) {
             if (m.put(e.id(), e) != null) {
@@ -111,7 +123,9 @@ public final class EngineCatalogue {
         }
         this.entries = Map.copyOf(m);
         this.order = List.copyOf(m.keySet());
-        check();
+        if (check) {
+            check();
+        }
     }
 
     private final List<String> order;

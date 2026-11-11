@@ -96,7 +96,7 @@ public final class ModuleWiring {
             org.springframework.core.io.support.PathMatchingResourcePatternResolver r = new org.springframework.core.io.support.PathMatchingResourcePatternResolver(ml);
             org.springframework.boot.env.YamlPropertySourceLoader yaml = new org.springframework.boot.env.YamlPropertySourceLoader();
             for (org.springframework.core.io.Resource res : r.getResources("classpath*:engines/*.yaml")) {
-                String name = "module " + c.id() + ": engines/" + res.getFilename();
+                String name = com.ash.drishti.server.engines.EngineSwitches.moduleCopy(c.id(), res.getFilename());
                 Map<String, Object> flat = new java.util.LinkedHashMap<>();
                 for (org.springframework.core.env.PropertySource<?> ps : yaml.load(name, res)) {
                     if (ps instanceof org.springframework.core.env.EnumerablePropertySource<?> e) {

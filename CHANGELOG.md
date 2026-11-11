@@ -57,7 +57,7 @@
   default placement for first-party modules. The in-process banking wiring is gone from the jar (it stays only as banking's own tests'
   harness). The bridge now also connects connector types, engine catalogues and defaults, engine caches, readiness gates, drains, cache
   reports, ready rules, Flight forms, controllers already in the module's namespace and the module's class loader. C12 reads the class
-  initialiser (unmodifiable constants pass) and honours `@EngineWide`. Its API-token scopes are read from its package while it is
+  initialiser (unmodifiable constants pass) and honours `@EngineWide` (kernel API 0.4, `module.EngineWide`). Its API-token scopes are read from its package while it is
   loaded. Removing banking from a running server answers 410 (*needs module
   banking*) for its API (old prefixes too) and pages, installing it again brings back the same VaR, and its class loader is collected (leak-free).
 - **The genomics sample module and Drishti Genomics** (2.9.11.i2 + i3, wave 3; [DEVELOPER_GUIDE.md section 1.9](docs/guides/DEVELOPER_GUIDE.md#19-the-genomics-sample-step-by-step),

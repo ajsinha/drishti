@@ -1500,7 +1500,7 @@ also **watched** (`drishti.engines.watch-seconds`, 5): an edit by hand takes eff
 
 **Admin → Engines** (`/admin/engines`, administrators only; admin page id `engines`, so a lens can list or hide it as any Admin page) lists
 every engine with its switch, its **state** (running, off, starting, stopping, blocked with the reason, restart needed, not installed), the
-**memory** it holds now, its threads, what it **needs** and what **uses** it, and **where its switch is set** (the shipped copy, the engine
+**memory** it holds now, its threads, what it **needs** and what **uses** it, and **where its switch is set** (the shipped copy, the server's or its module's, *shipped copy (module banking)*; the engine
 file, the local file, the environment, the lens, another name).
 
 1. Flip a switch. This only **stages** the change; the panel on the right opens.

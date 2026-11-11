@@ -23,9 +23,9 @@ throughout. The same day the owner decided the three building blocks (section 1.
 **separate Spring Boot application** in front of one or many kernels (section 10), and **Drishti modules**; and that Drishti Elements is the
 one controlled set of UI statics (section 11). Surveyed on `wip/train` `89f010df5`. A printable copy with the diagrams and mock-ups: [KERNEL_AND_MODULES.pdf](KERNEL_AND_MODULES.pdf).
 
-**Built so far.** The kernel API jar (`drishti-kernel-api`, kernel API 0.2) carries the SPIs of section 2.3 that i1 moved plus
+**Built so far.** The kernel API jar (`drishti-kernel-api`, kernel API 0.4) carries the SPIs of section 2.3 that i1 moved plus
 `DrishtiModule`, `ModuleContext` (with `Kinds` and `KindWriter`), `ModuleSettings`, `KindProvider`, `BindingState`, `AiToolProvider`,
-`@ModuleApi` and `ApprovalSource`; `FunctionProvider` (its `ElFunction` and `EvalContext`), `CacheGroup` (`MemoryBudget`), `CacheReport`
+`@ModuleApi`, `@EngineWide` and `ApprovalSource`; `FunctionProvider` (its `ElFunction` and `EvalContext`), `CacheGroup` (`MemoryBudget`), `CacheReport`
 (Caffeine) and `FlightForm` (Arrow Flight types) stay at their homes until their types move. Banking's `var-positions` and
 `var-system-baskets` are `KindProvider`s the kernel routes as computed kinds; `var-pv-stream` (the Kafka PV transport) is still a source
 plugin until the kernel's Kafka connector serves a kind's `live:` binding. Kernel-controlled bindings (section 5) are built:
