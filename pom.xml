@@ -75,7 +75,7 @@
     <module>plugins/drishti-plugin-activemq</module>
     <module>plugins/drishti-plugin-rabbitmq</module>
     <module>plugins/drishti-plugin-s3</module>
-    <module>docs/guides/examples/connector</module>
+    <module>examples/connector</module>
     <module>kernel/drishti-server</module>
     <module>modules/banking</module>
     <module>packaging/dist</module>

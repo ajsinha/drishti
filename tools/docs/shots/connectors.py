@@ -14,11 +14,11 @@
 
 """The pictures of the connector developer guide (docs/guides/DEVELOPER_GUIDE.md), written to docs/connectors/img/connectors/.
 
-This guide needs its own scratch server: the teaching plugin (docs/guides/examples/connector, built with ./mvnw package) in a plugin folder,
+This guide needs its own scratch server: the teaching plugin (examples/connector, built with ./mvnw package) in a plugin folder,
 a connector over its sample folder, and two connectors pointed at ports nothing listens on, so Admin -> Health shows UP and DOWN
 (reconnecting) side by side. start_servers() below replaces the shared one for this guide.
 
-    ./mvnw -o -q package -DskipTests -pl docs/guides/examples/connector -am
+    ./mvnw -o -q package -DskipTests -pl :connector -am
     drishti-console/.venv/bin/python tools/docs/screenshots.py --guide connectors [--only provenance]
     (DRISHTI_SHOTS_SERVER_PORT / DRISHTI_SHOTS_CONSOLE_PORT move it off :18997 / :17997 when another run holds them;
      DRISHTI_SHOTS_SERVER_JAR names a built server jar)"""
@@ -67,7 +67,7 @@ def start_servers(work: Path) -> list:
         sys.exit("build the server first (./mvnw -o package -DskipTests -pl :drishti-app -am) or pass --server-jar")
     plugin = sorted((EXAMPLE / "target").glob("drishti-example-dayfolder-*.jar"))
     if not plugin:
-        sys.exit("build the teaching plugin first: ./mvnw -o -q package -DskipTests -pl docs/guides/examples/connector -am")
+        sys.exit("build the teaching plugin first: ./mvnw -o -q package -DskipTests -pl :connector -am")
     (work / "plugins-extra").mkdir()
     shutil.copy(plugin[-1], work / "plugins-extra")
     shutil.copytree(EXAMPLE / "sample", work / "sample")

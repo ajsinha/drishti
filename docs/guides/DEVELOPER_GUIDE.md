@@ -163,7 +163,7 @@ drishti-benchmarks                (inference)
 `ArchitectureRulesTest` keeps these one-way (see [§3.4](#34-architecture-rules)): nothing below the engine may see `engine` or
 `server`, the engine may not see `server`, `api` sees nothing internal, `ai` sees only `api` and `common`, `memlake` sees neither the
 server nor Spring, and the lake engines and connectors never see `memlake` (they reach `mem://` through `lakeio`'s `StorageProviders`). The reactor also builds
-`docs/guides/examples/connector`, the worked example plugin of [section 10](#1013-a-worked-example-the-dayfolder-plugin).
+`examples/connector`, the worked example plugin of [section 10](#1013-a-worked-example-the-dayfolder-plugin).
 
 ### 1.4 Everything else
 
@@ -2901,12 +2901,12 @@ The contract covers the happy path. **Add your own tests for the failure semanti
 
 ### 10.13 A worked example: the dayfolder plugin
 
-`docs/guides/examples/connector/` is a complete, small, **dated** source plugin written for teaching. It is built and
+`examples/connector/` is a complete, small, **dated** source plugin written for teaching. It is built and
 tested with the rest of the project (`./mvnw verify`), but it is **not shipped**: the server does not depend on it,
 it is not one of the connectors that ship, and it exists to be copied.
 
 ```text
-docs/guides/examples/connector/
+examples/connector/
   pom.xml                                          depends on drishti-api (+ drishti-common and testkit for tests)
   src/main/java/.../DayFolderSourcePlugin.java     the plugin (under 300 lines)
   src/main/resources/META-INF/services/com.ash.drishti.api.SourcePlugin
@@ -2944,14 +2944,14 @@ The settings it reads are in the class's javadoc: `root`, `source-name`, `id-fie
 **Run its tests** (they run in every `./mvnw verify`):
 
 ```bash
-./mvnw -q -o test -pl docs/guides/examples/connector -am -Dtest='DayFolder*' -Dsurefire.failIfNoSpecifiedTests=false
+./mvnw -q -o test -pl :connector -am -Dtest='DayFolder*' -Dsurefire.failIfNoSpecifiedTests=false
 ```
 
 **Serve a view from it.** Build the jar, drop it in a plugin folder, and declare a connector:
 
 ```bash
-./mvnw -q -o package -DskipTests -pl docs/guides/examples/connector -am
-mkdir -p plugins-extra && cp docs/guides/examples/connector/target/drishti-example-dayfolder-*.jar plugins-extra/
+./mvnw -q -o package -DskipTests -pl :connector -am
+mkdir -p plugins-extra && cp examples/connector/target/drishti-example-dayfolder-*.jar plugins-extra/
 ```
 
 ```yaml
@@ -2965,7 +2965,7 @@ drishti:
 # config/connectors/desk-days.yaml
 plugin: dayfolder
 kinds: [trade, counterparty]
-settings: { root: docs/guides/examples/connector/sample, source-name: desk-days, mode.counterparty: effective,
+settings: { root: examples/connector/sample, source-name: desk-days, mode.counterparty: effective,
             link.trade.netting-set: nettingSet }
 ```
 
@@ -3710,7 +3710,7 @@ reinstalls. Saved work that uses it is kept, marked *needs module freight*, and 
 **1. Start from the shipped pattern.** Each shipped plugin is `plugins/drishti-plugin-<name>/`: a `pom.xml` depending on `drishti-api`,
 the classes under `com.ash.drishti.plugin.<name>`, `src/main/resources/META-INF/services/com.ash.drishti.api.SourcePlugin`, contract
 tests and a `README.md` in the connectors' README standard ([section 10.14](#1014-the-readme-standard-for-connectors)). For your own,
-copy the teaching plugin `docs/guides/examples/connector/` (the `dayfolder` plugin, [section 10.13](#1013-a-worked-example-the-dayfolder-plugin)).
+copy the teaching plugin `examples/connector/` (the `dayfolder` plugin, [section 10.13](#1013-a-worked-example-the-dayfolder-plugin)).
 
 **2. Implement the SPI.** `SourcePlugin`: `manifest()` (its name, the plugin type connector files name, version, kinds, capabilities),
 `start(SourceContext)`, `fetch`, `coverage`, `search`, `health()` and the optional reads your store can do; every method and its failure
@@ -3723,7 +3723,7 @@ semantics: [section 10.5](#105-the-sourceplugin-spi). Describe its settings with
 broker), then add the failure tests ([section 10.12](#1012-testing-with-drishti-testkit)):
 
 ```bash
-./mvnw -q -o test -pl docs/guides/examples/connector -am -Dtest='DayFolder*' -Dsurefire.failIfNoSpecifiedTests=false
+./mvnw -q -o test -pl :connector -am -Dtest='DayFolder*' -Dsurefire.failIfNoSpecifiedTests=false
 ```
 
 **5. Package it**, one of two ways:

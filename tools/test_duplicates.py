@@ -35,7 +35,7 @@ XML = """<pmd-cpd xmlns="https://pmd-code.org/schema/cpd-report">
 @pytest.mark.parametrize("path", [
     "kernel/drishti-engine/src/test/java/A.java", "drishti-console/tests/x.py", "tools/test_x.py", "testing/drishti-it/src/main/java/A.java",
     "drishti-console/web/static/vendor/x/y.js", "drishti-console/web/static/render/1.2.0/a.js", "drishti-console/web/embed/a.js",
-    "a/b.min.js", "docs/guides/examples/connector/src/main/java/A.java", "drishti-console/web/static/elements/drishti-grid/drishti_harness.js",
+    "a/b.min.js", "examples/connector/src/main/java/A.java", "drishti-console/web/static/elements/drishti-grid/drishti_harness.js",
 ])
 def test_excluded_paths(path: str) -> None:
     assert not d.counted(path, "")

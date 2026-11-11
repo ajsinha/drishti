@@ -24,7 +24,7 @@
     <groupId>com.ash.drishti</groupId>
     <artifactId>drishti-parent</artifactId>
     <version>2.9.11.g</version>
-    <relativePath>../../../../pom.xml</relativePath>
+    <relativePath>../../docs/guides/pom.xml</relativePath>
   </parent>
   <artifactId>drishti-example-dayfolder</artifactId>
   <name>drishti-example-dayfolder</name>

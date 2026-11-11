@@ -573,7 +573,7 @@ RESERVED_WORDS = {"BI", "RUPAKA", "FORM", "FUNC", "VAR", "WHAT", "DATAMAP", "DAT
 def packs() -> list[dict]:
     out = []
     for p in tracked():
-        if re.match(r"(config/|examples/|docs/guides/examples/)packs?/(?:[^/]+/)?[^/]+/pack\.yaml$", p) or re.match(r"drishti-[a-z-]+/src/test/resources/.*packs/[^/]+/pack\.yaml$", p):
+        if re.match(r"(config/|examples/|docs/guides/examples/)packs?/(?:[^/]+/)?[^/]+/pack\.yaml$", p) or re.match(r"(?:[a-z]+/)?drishti-[a-z-]+/src/test/resources/.*packs/[^/]+/pack\.yaml$", p):
             try:
                 out.append(yaml.safe_load(read(p)) or {})
             except yaml.YAMLError:
