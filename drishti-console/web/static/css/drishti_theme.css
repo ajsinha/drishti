@@ -130,13 +130,13 @@ a:hover { text-decoration: underline; }
 .house-ring { fill: none; stroke: var(--d-border); stroke-width: 1.5; stroke-dasharray: 3 6; }
 .house-wire { stroke: var(--d-accent); stroke-width: 2.5; }
 .house-core { fill: var(--d-surface-2); stroke: var(--d-accent); stroke-width: 2; }
-.house-cap { fill: var(--d-accent); font-weight: 700; letter-spacing: .14em; font-size: 15px; }
-.house-sub { fill: var(--d-muted); font-size: 12.5px; }
+.house-cap { fill: var(--d-accent); font-weight: 700; letter-spacing: .14em; font-size: var(--d-fs-15); }
+.house-sub { fill: var(--d-muted); font-size: var(--d-fs-12_5); }
 .house-free { fill: none; stroke: var(--d-muted); stroke-width: 1.5; stroke-dasharray: 6 5; }
-.house-socket text { fill: var(--d-muted); font-size: 12px; }
+.house-socket text { fill: var(--d-muted); font-size: var(--d-fs-12); }
 .house-room .house-back { fill: var(--d-bg-2); }
 .house-room .house-tint { fill: var(--house-hue); fill-opacity: .18; stroke: var(--house-hue); stroke-width: 2; }
-.house-room text { fill: var(--d-ink); font-weight: 700; font-size: 13.5px; }
+.house-room text { fill: var(--d-ink); font-weight: 700; font-size: var(--d-fs-13_5); }
 .house-h0 { --house-hue: var(--d-link); } .house-h1 { --house-hue: var(--d-accent); } .house-h2 { --house-hue: var(--d-cap-violet); }
 .house-h3 { --house-hue: var(--d-ok); } .house-h4 { --house-hue: var(--d-world-teal); } .house-h5 { --house-hue: var(--d-neg); }
 
