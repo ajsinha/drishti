@@ -2069,9 +2069,7 @@ On the demo lakes it lists the seven packs' connectors: the three trade connecto
 **Uninstalling safely.** The page has one way out for a connector that has a file, **Uninstall…** (there is no separate Delete button;
 `DELETE /{name}` remains for scripts and keeps the text in `<data dir>/connectors/history/`). It asks what depends on the connector
 (the packs and kinds that read through it, BI datasets that scan it, whether a pack's template would write it back), refuses while
-anything does, and otherwise **moves the file** to `<data dir>/uninstalled/` where **Admin → Artifacts → Uninstalled** restores it. A
-connector created or edited through Admin (the shared overlay in the content store) is archived the same way: the text in force goes to the
-archive, the overlay is removed (its text stays in the shared history) with any file under it, and a restore puts it back as a file. A
+anything does, and otherwise **moves the file** to `<data dir>/uninstalled/` where **Admin → Artifacts → Uninstalled** restores it as a file. A
 connector a pack's template names is only disabled or reset. See [OPERATIONS_GUIDE.md section 18](OPERATIONS_GUIDE.md#10-admin--artifacts-install-and-uninstall-safely).
 
 The list shows each connector's **origin** (`file`, `pack` for a template with no file yet, `application` for the deprecated

@@ -38,6 +38,9 @@ def test_var_explain_opens_the_explain_page_at_why_it_moved():
     assert var_command("VAR EXPLAIN BANK 2026-06-30".split(), "asha") == page + "BANK&from=2026-06-30&tab=why"
     assert var_command("VAR EXPLAIN DESK DESK-RATES 2026-09-29 2026-09-30".split(), "asha") == \
         page + "DESK%3ADESK-RATES&from=2026-09-29&to=2026-09-30&tab=why"
+    # the compare date (VAR <scope> EXPLAIN vs <date>): Why it moved against that date
+    assert var_command("VAR BANK EXPLAIN vs 2026-11-03".split(), "asha") == page + "BANK&from=2026-11-03&tab=why"
+    assert var_command("VAR DESK DESK-RATES EXPLAIN VS 2026-10-30 <GO>".split(), "asha") == page + "DESK%3ADESK-RATES&from=2026-10-30&tab=why"
     assert explain_command("VAR BANK".split(), "asha") is None                       # not asked: the explorer as before
     assert var_command("VAR BANK".split(), "asha") == "/var?scope=BANK"
     assert explain_command("TRD EXPLAIN".split(), "asha") is None

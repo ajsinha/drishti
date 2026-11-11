@@ -190,9 +190,11 @@ The banking module's engines run on the server, in Java, for any scope; the cons
   (within, near, breach), any reporting currency, the 509- or 250-scenario window, stressed and 10-day VaR, intraday updates, the official
   end-of-day record and backtests ([VAR_GUIDE.md](docs/guides/VAR_GUIDE.md), [tutorial 2](docs/tutorials/02-var-from-the-bank-to-a-trade.md));
   regulatory reporting to the cell in [REGULATORY_VAR_REPORTING.md](docs/guides/REGULATORY_VAR_REPORTING.md).
-- **The VaR page** (the VaR explorer): the scope tree from the bank down with VaR, ES, contribution and use of limit per node, the switch
-  that includes matured positions (with the matured share shown beside each node), baskets, **Why it moved** between two dates in steps
-  that add up, and the playground of the chosen scope.
+- **The VaR page** (the VaR explorer): a scope tree that shows **only the chosen scope** (the whole bank, a node and below with a
+  breadcrumb up, or a basket's own positions by the hierarchy you pick) with VaR, ES, contribution and use of limit per node; the switch
+  that includes matured positions (the matured share beside each node); **Explain ›** on every row and wherever VaR or ES shows;
+  **Why it moved** between the date on screen and a **compare date you pick** (previous day, 1 week, month end, any date), the
+  waterfall first and its biggest contributors beside it (`VAR <scope> EXPLAIN vs <date>`); and the playground of the chosen scope.
 - **Parametric VaR** (`PVAR`) beside historical, as a cross-check and never the official figure
   ([VAR_GUIDE.md section 3.12](docs/guides/VAR_GUIDE.md#312-parametric-var-beside-historical-pvar)).
 - **The market-risk cube** (`MCUBE`): VaR by desk and risk class as a Pivot preset, each cell the VaR engine's answer for its scope
@@ -411,22 +413,22 @@ the modules they may use. The map of every document is [docs/README.md](docs/REA
 
 <!-- code-volume:begin -->
 
-*Measured 2026-11-10 from the files the repository tracks (`python3 tools/docs/code_volume.py`; sample data and vendored libraries not counted).*
+*Measured 2026-11-11 from the files the repository tracks (`python3 tools/docs/code_volume.py`; sample data and vendored libraries not counted).*
 
 | Language | Lines | Files |
 |---|---|---|
-| Java, product | 450k | 2,262 |
-| Java, tests | 172k | 1,079 |
-| Python, product (console, tools, loaders, feeds) | 146k | 745 |
-| Python, tests | 110k | 628 |
-| JavaScript, product (console and Elements) | 130k | 503 |
+| Java, product | 450k | 2,263 |
+| Java, tests | 173k | 1,079 |
+| Python, product (console, tools, loaders, feeds) | 147k | 745 |
+| Python, tests | 110k | 631 |
+| JavaScript, product (console and Elements) | 131k | 505 |
 | JavaScript, tests | 5k | 24 |
 | CSS | 19k | 119 |
-| HTML (templates and pages) | 40k | 365 |
+| HTML (templates and pages) | 40k | 367 |
 | YAML: configuration, Sutras, data contracts | 114k | 1,465 |
-| Markdown: guides, tutorials, design | 225k | 323 |
+| Markdown: guides, tutorials, design | 253k | 330 |
 
-About **785k lines of product code** and **287k lines of tests** (37% of the product code), with **225k lines of documentation**.
+About **786k lines of product code** and **287k lines of tests** (37% of the product code), with **253k lines of documentation**.
 
 | What | Count |
 |---|---|
@@ -435,15 +437,15 @@ About **785k lines of product code** and **287k lines of tests** (37% of the pro
 | Lenses | 11: world, markets, publicsector, cio, oversight, risk, trading, market, cro, mr-cube, ccr-cube |
 | Functions a module declares | 121 (48 banking, 12 capitalmarkets, 35 economy, 3 genomics, 23 market-data); every other command word is the kernel's |
 | Console routes | 667 |
-| Server REST handlers | 816 |
-| Drishti Elements | 11 libraries, 194 ES modules |
+| Server REST handlers | 817 |
+| Drishti Elements | 11 libraries, 196 ES modules |
 | Domain packs | 17: banking 4, capitalmarkets 2, core 3, economy 8 |
 | Sutras in the shipped packs | 248 |
 | Connector plugins | 19 |
 | Feeds | 13 |
 | Lake files | 9 |
-| Test files | 1,576: Java 985, console 258, browser 182, tools 127, JavaScript 24 |
-| Documents under docs/ | 184 (32 guides, 22 tutorials) |
+| Test files | 1,579: Java 985, console 259, browser 184, tools 127, JavaScript 24 |
+| Documents under docs/ | 186 (34 guides, 22 tutorials) |
 
 <!-- code-volume:end -->
 

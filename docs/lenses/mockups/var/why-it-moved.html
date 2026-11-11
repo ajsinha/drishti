@@ -1,0 +1,87 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  Mock-up approved by the owner (2.9.11.i2+i3): docs/architecture/LENSES.md section 1.4.6. Made-up numbers.
+-->
+<!doctype html><html><head><meta charset="utf-8"><title>Why it moved: mock-ups</title>
+<style>
+:root{--bg:#0f1622;--p:#172133;--p2:#1d2a40;--b:#2a3a55;--t:#dbe4f0;--m:#8a9ab3;--a:#e0a63a;--up:#e05a5a;--dn:#3fb37f;--ac:#5aa0e0}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--t);font:13px/1.4 system-ui,sans-serif;padding:16px}
+h1{font-size:18px;margin:0 0 4px}h2{font-size:15px;margin:28px 0 8px;color:var(--a)}.m{color:var(--m)}
+.screen{border:1px solid var(--b);border-radius:8px;background:#121b2a;padding:12px;margin-bottom:12px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px;background:var(--p);border-radius:6px}
+.chip{border:1px solid var(--b);border-radius:14px;padding:3px 10px;background:var(--p2)}.chip.on{border-color:var(--a);color:var(--a)}
+.inp{border:1px solid var(--b);border-radius:4px;padding:4px 8px;background:#0c131e}
+.btn{border:1px solid var(--a);color:var(--a);border-radius:4px;padding:4px 10px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}.kpi{background:var(--p);border-radius:6px;padding:8px}.kpi b{display:block;font-size:18px}
+.grid{display:grid;grid-template-columns:2fr 1fr;gap:10px}.card{background:var(--p);border-radius:6px;padding:10px}
+.wf{display:flex;align-items:flex-end;gap:6px;height:190px;border-bottom:1px solid var(--b);padding-top:10px}
+.wf div{flex:1;border-radius:2px 2px 0 0;position:relative}.wf span{position:absolute;bottom:-18px;left:0;right:0;text-align:center;font-size:10px;color:var(--m)}
+table{width:100%;border-collapse:collapse}td{padding:3px 4px;border-bottom:1px solid var(--b)}td.n{text-align:right;font-family:monospace}
+.tabs{display:flex;gap:4px;margin-top:10px}.tab{padding:5px 12px;border:1px solid var(--b);border-bottom:none;border-radius:6px 6px 0 0;background:var(--p)}.tab.on{color:var(--a);border-color:var(--a)}
+.fold{background:var(--p);border-radius:6px;padding:8px;margin-top:8px;color:var(--m)}
+.rec{display:inline-block;background:var(--a);color:#000;border-radius:3px;padding:0 6px;font-size:11px;margin-left:6px}
+ul{margin:4px 0 0 18px;padding:0}
+</style></head><body>
+<h1>Why it moved: two layouts</h1><div class="m">Both: the compare date is back in the header; the picture comes first; Formula and Inputs &amp; lineage fold away below. Same numbers, made up for the mock-up.</div>
+
+<h2>A · Picture first, one page <span class="rec">recommended</span></h2>
+<div class="screen">
+ <div class="bar"><b>VaR 99% 1-day · BANK</b>
+  <span class="m">compare</span><span class="inp">10 Nov 2026</span><span class="m">with</span><span class="inp">09 Nov 2026 ▾</span>
+  <span class="chip on">Previous day</span><span class="chip">1 week</span><span class="chip">Month end</span><span class="chip">Pick a date…</span>
+  <span style="flex:1"></span><span class="btn">Workbook</span><span class="btn">Print</span><span class="btn">Back to the screen</span></div>
+ <div class="kpis">
+  <div class="kpi"><span class="m">VaR 09 Nov</span><b>158,904,210</b></div>
+  <div class="kpi"><span class="m">VaR 10 Nov</span><b>167,372,692</b></div>
+  <div class="kpi"><span class="m">Change</span><b style="color:var(--up)">+8,468,482 (+5.3%)</b></div>
+  <div class="kpi"><span class="m">Tail scenario</span><b style="font-size:14px">2026-02-23 (was 2025-12-04)</b></div></div>
+ <div class="grid">
+  <div class="card"><b>Why it moved</b> <span class="m">· steps that add up to the change</span>
+   <div class="wf">
+    <div style="height:70%;background:var(--ac)"><span>09 Nov</span></div>
+    <div style="height:12%;background:var(--up);margin-bottom:70%"><span>New trades</span></div>
+    <div style="height:5%;background:var(--dn);margin-bottom:77%"><span>Matured</span></div>
+    <div style="height:9%;background:var(--up);margin-bottom:72%"><span>Market moves</span></div>
+    <div style="height:4%;background:var(--dn);margin-bottom:77%"><span>Window roll</span></div>
+    <div style="height:2%;background:var(--up);margin-bottom:77%"><span>FX</span></div>
+    <div style="height:79%;background:var(--ac)"><span>10 Nov</span></div></div>
+   <div style="height:22px"></div><div class="m">Click a step to see its trades, desks or scenarios on the right.</div></div>
+  <div class="card"><b>Biggest contributors</b> <span class="m">· New trades</span>
+   <table><tr><td>MX-20004412 IR swap</td><td class="n" style="color:var(--up)">+3.1m</td></tr>
+   <tr><td>CL-11873 FX option</td><td class="n" style="color:var(--up)">+2.4m</td></tr>
+   <tr><td>EN-55021 Power swap</td><td class="n" style="color:var(--up)">+1.2m</td></tr>
+   <tr><td>… 37 more</td><td class="n">+1.1m</td></tr></table>
+   <div style="margin-top:8px"><b>In words</b><div class="m">VaR rose 5.3%, mostly from 40 new trades (rates desk); the tail scenario moved from 2025-12-04 to 2026-02-23 when the window rolled.</div></div></div></div>
+ <div class="fold">▸ Formula &nbsp; · &nbsp; ▸ Inputs &amp; lineage (sources, versions, batches) &nbsp; · &nbsp; ▸ Checks <span class="m">(folded; open for audit)</span></div>
+</div>
+
+<h2>B · Tabs, Why it moved as the first tab</h2>
+<div class="screen">
+ <div class="bar"><b>VaR 99% 1-day · BANK · 10 Nov 2026</b><span class="m">vs</span><span class="inp">09 Nov 2026 ▾</span><span class="chip on">Previous day</span><span class="chip">Pick a date…</span><span style="flex:1"></span><span class="btn">Back</span></div>
+ <div class="tabs"><span class="tab on">Why it moved</span><span class="tab">Formula</span><span class="tab">Inputs &amp; lineage</span><span class="tab">Workbook</span></div>
+ <div class="card" style="border-radius:0 6px 6px 6px"><div class="kpis" style="grid-template-columns:repeat(3,1fr)"><div class="kpi"><span class="m">09 Nov</span><b>158.9m</b></div><div class="kpi"><span class="m">10 Nov</span><b>167.4m</b></div><div class="kpi"><span class="m">Change</span><b style="color:var(--up)">+8.5m</b></div></div>
+ <div class="m">The same waterfall, full width, with the contributors table under it. Formula and lineage are one click away but out of sight.</div></div>
+</div>
+
+<h2>The Explain › link: where it goes (both layouts)</h2>
+<div class="card"><ul>
+<li><b>VaR explorer:</b> an Explain › button by the headline VaR, and on every tree row (opens for that node and date)</li>
+<li><b>VaR reports, Limits, system baskets:</b> on each VaR / ES figure</li>
+<li><b>Market-risk cube and pivots:</b> already there (select two cells or dates, Explain ›)</li>
+<li><b>Home tiles and BI visuals</b> showing VaR or ES: the tile's menu</li>
+<li><b>Command:</b> <code>VAR &lt;scope&gt; EXPLAIN [vs &lt;date&gt;]</code></li>
+<li>One shared Explain › control from Drishti Elements (no bespoke links), with a guard test that every VaR/ES number carries it</li></ul></div>
+</body></html>

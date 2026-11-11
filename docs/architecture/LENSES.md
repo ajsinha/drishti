@@ -245,6 +245,7 @@ lens menus shared by the four built lenses under [`mockups/menus/`](../lenses/mo
 | [VaR horizon picker](#143-the-var-horizon-picker-var-horizon-pickerhtml) | the one design shown | 11 | 2 | 1 |
 | [Lens menus (LX1)](#144-the-lens-menus-lx1) | A, subject menus in the bar | 4 | 0 | 0 |
 | [VaR screen layout](#145-the-var-screens-layout-var-layoutahtml) | A | 6 | 0 | 0 (2 folded) |
+| [VaR page and Why it moved](#146-the-var-page-and-why-it-moved-varvar-pagehtml-varwhy-it-movedhtml) | the one design; Why it moved layout A | 13 | 1 | 0 |
 
 #### 1.4.1 The Risk landings (`risk-landing.html`)
 
@@ -391,6 +392,34 @@ the VaR explorer: the baskets leave the left-hand column for two drop-downs, and
 | L6 | How calculated › | — | **H** | **Folded** into the one **Explain ›**, key **E** ([SHARED_SCREENS.md](SHARED_SCREENS.md)) |
 | L7 | The drawer | the scope's `provenance` | Esc, ✕ | **Folded** into the Explain drawer, tab Inputs & lineage |
 | L8 | Phone (700 px and below) | — | tap | **Built** (full-width drop-downs, the drawer a bottom sheet) |
+
+#### 1.4.6 The VaR page and Why it moved (`var/var-page.html`, `var/why-it-moved.html`)
+
+[Open the VaR page mock-up](../lenses/mockups/var/var-page.html) (three states: the whole bank, a desk, a basket) and
+[Why it moved](../lenses/mockups/var/why-it-moved.html). **Chosen:** the VaR page as drawn; Why it moved **layout A** (picture first, one
+page; layout B not built). **Code:** [`drishti_var-explorer.js`](../../drishti-console/plugins/banking/static/js/drishti_var-explorer.js),
+[`var.html`](../../drishti-console/plugins/banking/templates/terminal/var.html), `VarViews.treeWithin` (Java),
+[`drishti_insight-why.js`](../../drishti-console/web/static/elements/drishti-insight/src/drishti_insight-why.js) and `Explain.link`
+(drishti-insight). **Guide:** [VAR_GUIDE sections 3.2](../guides/VAR_GUIDE.md#32-the-screen) and
+[3.11](../guides/VAR_GUIDE.md#311-why-it-moved-the-var-change-explained). **Tests:** `test_var_page_scope_browser.py`,
+`test_var_explain_everywhere.py` (guard), `VarApiTest.aBasketsTreeIsItsOwnPositionsByTheChosenHierarchy`.
+
+| # | Item | Data, API or contract | Status |
+|---|---|---|---|
+| V1 | Whole bank chosen: the whole tree | `/api/var/tree` | **Built** |
+| V2 | A node chosen: it and below, a breadcrumb up | the tree's rows (parent links) | **Built** |
+| V3 | A basket chosen: its positions by the chosen hierarchy, **All of the bank** | `/api/var/tree?within=` (Java computes each part) | **Built** |
+| V4 | The tree fills the column; no Explain panel under it | drishti-grid: no empty pane without a hook | **Built** |
+| V5 | Explain › on every row (hover, chosen row) and in the toolbar | `Drishti.Explain.link` | **Built** |
+| V6 | One toolbar row: baskets, matured, Backtest, MR cube, What-if, Explain | — | **Built** (wraps on a phone) |
+| V7 | Data versions behind ⓘ | the headline's provenance | **Built** |
+| V8 | The matured switch keeps the tree and its band | `tree?matured=` | **Built** |
+| W1 | Compare date: Previous day, 1 week, Month end, Pick a date | `GET /api/v1/explain?…&from=` | **Built** |
+| W2 | Four figures: VaR on each date, change, tail scenario | `why.answer` | **Built** |
+| W3 | The waterfall first and wide; a step's contributors and words on the right | `why.panels` (drivers), `steps[].reads` | **Built** |
+| W4 | Formula, Inputs & lineage, Checks folded below | the answer's parts | **Built** |
+| W5 | Explain › everywhere VaR/ES is shown, with a guard | `test_var_explain_everywhere.py` | **Built**: explorer, reports, Home tile, Sutra pages, MR cube, pivots; **partly** for BI (a visual of one VaR or ES row) |
+| W6 | `VAR <scope> EXPLAIN vs <date>` | `var_routes.explain_command` | **Built** |
 
 ### 1.5 Relationship to the other lenses
 

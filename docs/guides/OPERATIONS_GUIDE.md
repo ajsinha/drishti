@@ -390,18 +390,21 @@ soon as the project is open. They use `$PROJECT_DIR$`, the project's JDK and no 
 
 | Run configuration | What it does | Ports |
 |---|---|---|
-| **Drishti server** | `DrishtiApplication` of `drishti-server`, working directory the repository root, the seven packs, sign-in on with the development administrator, `DRISHTI_EXTERNAL_LIB`, `-Xmx2g`; data in `./data` | 18480 |
-| **Drishti server (demo lakes)** | the same with `DRISHTI_DEMO_ENABLED=false` and `-Xmx4g` | 18480 |
+| **Drishti server** | `DrishtiApplication` on the class path of module `drishti-app` (the core with the domain modules this build ships), working directory the repository root, the seven packs, sign-in on with the development administrator, `DRISHTI_EXTERNAL_LIB`, `-Xmx2g`; data in `./data` | 18480 |
+| **Drishti server (demo lakes)** | the same with `DRISHTI_DEMO_ENABLED=false`, `DRISHTI_VAR_SYSTEM_BASKETS_SEED=true` (the system baskets) and `-Xmx4g` | 18480 |
 | **Drishti server (QA profile)** | its own data folder `data/qa/data`, so QA never touches `./data` | 18580 |
 | **Drishti server (debug-friendly)** | the QA profile with sign-in **off**, DEBUG logging for `com.ash.drishti`, `-Xmx1g` (pair it with a console whose sign-in is off) | 18580 |
 | **Drishti build server jar** | Maven `package -DskipTests -pl drishti-app -am` | |
 | **Build demo lakes** (PyCharm) | `drishti.py lake demo` (2.4) | |
 | **QA pack make**, **QA lake build**, **QA server smoke**, **QA doctor** (PyCharm) | the command-line tools against the QA server; edit *Parameters* | 18580 |
 
-They are plain Application configurations (the same in Community and Ultimate). Change one for yourself with **Copy Configuration**
-(Ctrl+D; the copy lives in the git-ignored `.idea/`). By hand: **Run → Edit Configurations → + → Application**, main class
-`com.ash.drishti.server.DrishtiApplication`, classpath of module `drishti-server`, JRE 21 or newer, **working directory the repository root**
-(the default, `drishti-server/`, finds no packs), and the environment above.
+They are plain Application configurations (the same in Community and Ultimate). Every server configuration uses the class path of
+module **`drishti-app`**: `drishti-server` alone carries no domain module, so `VAR` and every banking function would answer *not
+installed*. Each passes its class path through an argument file (**Shorten command line: @argfile (Java 9+)**, `ARGS_FILE` in the
+`.run.xml`), so Windows' command-line length limit raises no warning. Change one for yourself with **Copy Configuration** (Ctrl+D; the copy
+lives in the git-ignored `.idea/`). By hand: **Run → Edit Configurations → + → Application**, main class
+`com.ash.drishti.server.DrishtiApplication`, classpath of module `drishti-app`, **Shorten command line** *@argfile*, JRE 21 or newer,
+**working directory the repository root** (the default, the module's folder, finds no packs), and the environment above.
 
 **Run** (Shift+F10) ends its log with `Started DrishtiApplication`; `curl -s localhost:18480/actuator/info` gives the version, and the
 OpenAPI page is `http://127.0.0.1:18480/api/docs`. **Debug** (Shift+F9): good breakpoints are `com.ash.drishti.engine.ViewPipeline` (a view

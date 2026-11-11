@@ -178,6 +178,19 @@
   distribution's default), a connector switched off by its file or the properties, and a connector defined only in properties; a binding that names only connectors
   no file defines is set aside with a Health problem, and the kind resolves without it; a need on a kind the site does not offer (no
   loaded pack defines it, nothing binds it) switches nothing off and still shows UNBOUND in Health.
+- **The VaR page as the owner approved it** (`docs/lenses/mockups/var/var-page.html`; VAR_GUIDE.md section 3.2): the scope tree shows
+  only the chosen scope (the whole bank; a node and below with a breadcrumb up; a system or saved basket its own positions grouped by the
+  chosen hierarchy, each part's VaR computed by the engine: `GET /api/v1/risk/var/tree?within=<scope>`, with **All of the bank** to go
+  back); the tree fills its column (drishti-grid no longer draws an empty Explain pane for a grid without an Explain hook); **Explain ›**
+  on every row (on hover and on the chosen row) and on the VaR and ES tiles; one toolbar row (baskets, the matured switch, Backtest, MR
+  cube, What-if, Explain); the data versions behind an ⓘ.
+- **Why it moved, layout A** (`docs/lenses/mockups/var/why-it-moved.html`; VAR_GUIDE.md section 3.11): the compare date is back
+  (Previous day, 1 week, Month end, Pick a date; `from=` in the link; `VAR <scope> EXPLAIN vs <date>`), four figures (VaR on each date,
+  the change, the tail scenario), the waterfall first and wide with a clicked step's biggest contributors and plain words on its right,
+  Formula, Inputs & lineage and Checks folded below. Other explained kinds keep the four-card page.
+- **Explain › everywhere VaR or ES is shown**: one control from drishti-insight (`Drishti.Explain.link`, `[data-explain-link]`) on the
+  explorer, the regulatory reports, Home's VaR tile, the Sutra pages' engine figures, a BI visual of one VaR or ES, the MR cube and
+  pivots; a guard test keeps every such figure carrying it.
 - VaR explorer: turning on **Include matured positions** no longer makes the scope tree disappear (the tree library refused the switch's own "of which matured" column); a screen's own tree measure with a label is accepted.
 
 - **Module placement** (2.9.11.i2 + i3, wave 2; [CLUSTER_GUIDE.md section 1.9](docs/guides/CLUSTER_GUIDE.md#19-module-placement),
@@ -302,6 +315,7 @@
 
 ### Docs
 
+- **Catch-up for i1, i1b and the VaR page:** the README rewritten from the product as built (numbers regenerated); the IntelliJ server configurations (module `drishti-app`, class path in an argument file) in OPERATIONS_GUIDE section 3.2, the developer guide and the deployment guide; the Risk menu in place of Engines in the user and admin guides and tutorial 1; the kernel boundary, the copy-paste ratchet, `--affected` and the 10 s page budget among the developer rules; the deployment guide's VaR and Elements checks; `var/tree?within=` in the API reference; Iceberg's storage roots; the Help summaries of the VaR, BI and quickstart pages; the PDFs regenerated.
 - **Plan:** i2 and i3 become one release with one drill after i1 + i1b, in four waves, with deploy built once, cluster-first.
 - **Source file limit:** 2,000 lines (was 1,500); `SourceFileSizeTest`, the console's checks and the guides.
 - **Roadmap:** every visual lives in Drishti Elements; a Drishti Elements Playground (live pages with editable data) closes the BI depth release.
@@ -314,7 +328,6 @@
 
 - **Scenario PVs at position grain:** `data/testdata/position-grain/` holds 2026-09-30 for Endur, Calypso and Murex (`GRAIN: POSITION`, 7,984 positions, 509 scenarios), kept out of the demo lake.
 
-## Unreleased
 
 ### BI depth: visuals
 

@@ -900,7 +900,7 @@ more lines in the same file.
 |---|---|---|
 | **Packs** | core, market-data, trading, counterparty-risk, market-risk (allow-only) | world-economy, news-and-markets, us-equities, gleif, funds, the public sector's packs, the example packs (refused: `DRS-1017`) |
 | **Commands** | VaR (`VAR` and its page with the basket what-if; `VRES`, `VOFF`, `VLIM`, `PORT`, `POS`, `PNLV`, `SPV`, `FXS`, `SSET`); exposure (`EXP` and its page; `XRUN`, `XPATH`, `XOFC`, `AGR`, `CSA`, `NSET`, `LIM`, `COLL`, `MC`); the derived totals `NSMTM`, `CPMTM`; reference data `CPTY`, `GRP`, `LE`, `BOOK`, `DESK`, `TRDR`, `CCP`; trades `TRD`, `CTRD`, `PTRD`, `LTRD`; `FX`; the words `BI`, `FUNC`, `WHAT`, `DATAMAP`, `DATA` (Export data), `SMAT` (the scenario matrix), `PLAY` (the VaR Playground) | stress (`STR`, `SCN`, `SSPNL`), `PNL`, `TVAL`, `CVA`, `SACCR`, the curves and vol surfaces, `ISS`, `CAL`, `CLR`; the words `FORM`, `RUPAKA` |
-| **Menus** | Views (Terminal, Search, Functions, Data map, Export data, Reports, Workspaces, Monitors, Alerts), Engines (VaR, exposure and the other engines running), BI, Admin, Help (Help centre, Knowledge, Install and run, About); footer: Help, About, Release notes | Build, Forms |
+| **Menus** | Views (Terminal, Search, Functions, Data map, Export data, Reports, Workspaces, Monitors, Alerts), Risk (the VaR, exposure and other engines' pages, each while its engine runs), BI, Admin, Help (Help centre, Knowledge, Install and run, About); footer: Help, About, Release notes | Build, Forms |
 | **Features** | BI (the lens's datasets), VaR, exposure, the data map, Export data, layouts, workspaces, monitors, alerts, reports, lakes | Calc and Python visuals, the Sutra designer, Studio, Build, Forms, AI, embedding |
 | **Help** | Get started, Risk measures, Data, Operate, Reference, Knowledge (market risk, counterparty credit risk, core, trading, market data), Internal for administrators | Analytics and BI, Build; other packs' Knowledge pages; documents not in the catalogue |
 | **Admin** | users, roles, packs, commands, tokens, access, connectors, artifacts, loads, lakes, audit, net, engines, health, caches, capacity, BI, scopes (every person's VaR baskets), configuration | AI, collaboration, embedding, edits, compute (404) |
@@ -934,7 +934,7 @@ out.
 |---|---|---|
 | **Packs** | core, market-data, trading, market-risk, counterparty-risk (allow-only) | the public-data packs, the sample and example packs (`DRS-1017`) |
 | **Commands** | the blotter `TRD`, `CTRD`, `PTRD`, `LTRD`, `ITRD`; books and positions `BOOK`, `DESK`, `TRDR`, `POS`; risk on my book `VLIM`, `VRES`, `TVAL`, `PNLV`, `PORT`, `DPNL`, `PNL`, `SENS`; counterparties `CPTY`, `GRP`, `NSET`, `NSMTM`, `CPMTM`, `LIM`, `EXP`; market data `CRV`, `REPO`, `FIX`, `IRV`, `CPV`, `FX`, `FXF`, `FXV`, `EQ`, `EQX`, `CMD`, `CMDC`, `BND`, `CDS`; the words `VAR`, `EXP`, `BI`, `FUNC`, `WHAT`, `DATA`, `SMAT`, `PLAY` | regulatory (`SACCR`, `CVA`), stress (`SCN`, `STR`, `SSPNL`), collateral operations (`COLL`, `MC`), the exposure engine's runs, paths and official records, VaR's scenario inputs, macro economics; the words `DATAMAP`, `FORM`, `RUPAKA` |
-| **Menus** | Views (Terminal, Search, Functions, Export data, Reports, Workspaces, Monitors, Alerts); Engines; one **Markets** menu (rates, vols, FX, credit, equities and commodities: `menus.markets`); Blotter, Positions, Risk, Counterparties; Help. BI and Admin by command only (`BI <GO>`; `ADMIN <GO>` for administrators) | Forms, Data map, Build; BI and Admin in the bar |
+| **Menus** | Views (Terminal, Search, Functions, Export data, Reports, Workspaces, Monitors, Alerts); Engines; one **Markets** menu (rates, vols, FX, credit, equities and commodities: `menus.markets`); Blotter, Positions, Risk (with the engines' pages), Counterparties; Help. BI and Admin by command only (`BI <GO>`; `ADMIN <GO>` for administrators) | Forms, Data map, Build; BI and Admin in the bar |
 | **Features** | VaR, exposure, BI (the lens's datasets), layouts, workspaces, monitors, alerts, reports, lakes | Calc, Python visuals, the designer, Studio, Build, forms, the data map, AI, embedding |
 | **Help** | Knowledge (Trades and products, Market risk, Counterparty credit risk, Entities and ownership, Market data), with the other sections but Build | Build; the public-data packs' Knowledge pages |
 | **BI** | `banking.trading_risk_*`, `banking.trading_cashflows_*`, `banking.trades_basic_trade`, `banking.live_trading_trade`, the VaR datasets; their models and reports | exposure, stress, world and market-data items |
@@ -1177,8 +1177,7 @@ home:
   phone: { table: more }                             # parts: hero, tiles, quick, card-1, table, chart, map, feed
 ```
 
-On a phone the lens's subject menus fold into one menu named after it (its title without the product's name: **Trading**); the Engines
-menu is no subject menu and stays in the bar, its columns folding into a drawer.
+On a phone the lens's subject menus fold into one menu named after it (its title without the product's name: **Trading**).
 
 ### 17.2 White-labelling checklist
 

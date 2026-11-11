@@ -34,8 +34,269 @@
 })(typeof window !== 'undefined' ? window : globalThis, function (__lib) {
   'use strict';
   var __m = {};
+  /* ---- src/drishti_insight-why.js ---- */
+  __m["src/drishti_insight-why.js"] = (function () {
+    function whyPageFits(a) {
+      const x = a && a.why;
+      return !!(x && x.available && x.answer && Array.isArray(x.answer.lines) && x.answer.lines.length);
+    }
+    function compareDate(choice, to, picked) {
+      if (choice === 'prev' || !to) { return ''; }
+      if (choice === 'pick') { return picked || ''; }
+      const d = new Date(to + 'T00:00:00Z');
+      if (choice === 'week') { d.setUTCDate(d.getUTCDate() - 7); } else if (choice === 'month') { d.setUTCDate(0); }   // day 0: the month before's last
+      return d.toISOString().slice(0, 10);
+    }
+    function choiceOf(from, to, asked) {
+      if (!asked) { return 'prev'; }
+      if (asked === compareDate('week', to)) { return 'week'; }
+      if (asked === compareDate('month', to)) { return 'month'; }
+      return 'pick';
+    }
+    const CHOICES = [['prev', 'Previous day'], ['week', '1 week'], ['month', 'Month end'], ['pick', 'Pick a date…']];
+    function renderWhyPage(root, a, k, asked) {
+      const h = k.h, x = a.why, ans = x.answer, doc = root.ownerDocument, win = doc.defaultView;
+      const states = ans.states || [], first = states[0] || {}, last = states[states.length - 1] || {};
+      const money = (v) => (v === null || v === undefined || isNaN(v) ? '—' : Math.round(v).toLocaleString('en-US'));
+      const signed = (v) => (v > 0 ? '+' : v < 0 ? '−' : '') + money(Math.abs(v));
+      const grid = root.querySelector('[data-dx-grid]');
+      grid.textContent = '';
+      grid.className = 'dx-why-page';
+      root.dataset.layout = 'why-a';
+      const cmp = h('div', 'dx-compare');
+      cmp.setAttribute('data-dx-compare', '');
+      cmp.appendChild(h('span', 'dx-muted', 'compare '));
+      cmp.appendChild(h('b', 'mono', x.to));
+      cmp.appendChild(h('span', 'dx-muted', ' with '));
+      cmp.appendChild(h('b', 'mono', x.from));
+      const chips = h('span', 'dx-chips');
+      chips.setAttribute('role', 'group');
+      chips.setAttribute('aria-label', 'Compare with');
+      const on = choiceOf(x.from, x.to, asked);
+      const pick = h('input', 'dx-pick');
+      pick.type = 'date';
+      pick.hidden = on !== 'pick';
+      pick.value = on === 'pick' ? x.from : '';
+      pick.setAttribute('aria-label', 'Compare with this business date');
+      pick.setAttribute('data-dx-pick', '');
+      CHOICES.forEach((c) => {
+        const b = h('button', 'dx-chip' + (c[0] === on ? ' on' : ''), c[1]);
+        b.type = 'button';
+        b.dataset.dxCompare = c[0];
+        b.setAttribute('aria-pressed', c[0] === on ? 'true' : 'false');
+        b.addEventListener('click', () => {
+          if (c[0] === 'pick') { pick.hidden = false; pick.focus(); return; }
+          k.recompare(compareDate(c[0], x.to));
+        });
+        chips.appendChild(b);
+      });
+      pick.addEventListener('change', () => { if (pick.value) { k.recompare(compareDate('pick', x.to, pick.value)); } });
+      chips.appendChild(pick);
+      cmp.appendChild(chips);
+      const I = win.Drishti && win.Drishti.elements && win.Drishti.elements.inputs;   // drishti-inputs' date picker (T-1, ME, 6 Nov 2026, the calendar)
+      if (I && I.upgradeDateInput) { try { I.upgradeDateInput(pick); } catch (e) { /* the plain date field stays */ } }
+      grid.appendChild(cmp);
+      const pct = ans.varFrom ? (ans.change / ans.varFrom * 100) : null;
+      const kpis = h('div', 'dx-kpis');
+      [[a.title.split(' ')[0] + ' ' + x.from, money(ans.varFrom), 'from'], [a.title.split(' ')[0] + ' ' + x.to, money(ans.varTo), 'to'],
+       ['Change', signed(ans.change) + (pct === null ? '' : ' (' + (pct >= 0 ? '+' : '−') + Math.abs(pct).toFixed(1) + '%)'), 'change'],
+       ['Tail scenario', last.varScenario ? String(last.varScenario) : '—', 'tail', first.varScenario ? 'was ' + first.varScenario : '']].forEach((f) => {
+        const d = h('div', 'dx-kpi');
+        d.dataset.dxKpi = f[2];
+        d.appendChild(h('span', 'dx-muted', f[0]));
+        const b = h('b', 'mono' + (f[2] === 'change' ? (ans.change > 0 ? ' dx-up' : ans.change < 0 ? ' dx-down' : '') : ''), f[1]);
+        d.appendChild(b);
+        if (f[3]) { d.appendChild(h('span', 'dx-muted dx-was', f[3])); }
+        kpis.appendChild(d);
+      });
+      grid.appendChild(kpis);
+      const lines = ans.lines || [];
+      const row = h('div', 'dx-why-row');
+      const left = h('section', 'dx-card dx-why-wf');
+      left.dataset.dxWhyWaterfall = '';
+      left.appendChild(h('h2', null, 'Why it moved · steps that add up to the change'));
+      const chart = h('div', 'dx-wf');
+      chart.setAttribute('data-dx-waterfall', '');
+      left.appendChild(chart);
+      left.appendChild(h('p', 'dx-muted', 'Click a step to see its biggest contributors on the right.' + (ans.addsUp === false ? ' The steps do NOT add up: see the checks.' : '')));
+      const right = h('section', 'dx-card dx-why-side');
+      right.setAttribute('data-dx-side', '');
+      row.appendChild(left);
+      row.appendChild(right);
+      grid.appendChild(row);
+      const stepRows = [{ step: 'VaR ' + x.from.slice(5), value: ans.varFrom, total: 1, key: '' }]
+        .concat(lines.map((l) => ({ step: l.label, value: l.effect, total: 0, key: l.key })))
+        .concat([{ step: 'VaR ' + x.to.slice(5), value: ans.varTo, total: 1, key: '' }]);
+      const panels = x.panels || [];
+      function side(line) {
+        right.textContent = '';
+        right.dataset.step = line.key;
+        right.appendChild(h('h2', null, 'Biggest contributors · ' + line.label));
+        const keys = Array.isArray(line.steps) && line.steps.length ? line.steps : [line.key];
+        const mine = panels.filter((p) => keys.some((kk) => p.id === 'drivers-' + kk || p.id === 'note-' + kk))
+          .map((p) => Object.assign({}, p, { span: 12 }));
+        const steps = (ans.steps || []).filter((s) => keys.indexOf(s.key) >= 0);
+        const paint = h('div', 'dx-why');
+        right.appendChild(paint);
+        if (!mine.length) { paint.appendChild(h('p', 'dx-muted', 'No single contributor: ' + signed(line.effect) + ' for the whole scope.')); }
+        const words = steps.map((s) => s.reads).filter(Boolean);
+        const text = words.length ? words.join(' ') : (ans.sentences || [])[0] || '';
+        if (text) {
+          right.appendChild(h('h3', 'dx-h3', 'In words'));
+          const p = h('p', 'dx-words', text);
+          p.setAttribute('data-dx-words', '');
+          right.appendChild(p);
+        }
+        if (!mine.length) { return Promise.resolve(); }
+        return k.paint(paint, { title: line.label, from: x.from, to: x.to }, mine);
+      }
+      const biggest = lines.slice().sort((p, q) => Math.abs(q.effect) - Math.abs(p.effect))[0];
+      const chartLib = () => win.Drishti && win.Drishti.elements && win.Drishti.elements.chart;
+      const loaded = chartLib() || doc.readyState === 'complete' ? Promise.resolve() : new Promise((r) => win.addEventListener('load', r, { once: true }));
+      const drawn = loaded.then(() => new Promise((resolve) => {
+        const C = chartLib();
+        if (!(C && C.defineChartElement)) { chart.appendChild(h('p', 'dx-muted', 'The chart library is not on this page.')); resolve(); return; }
+        C.defineChartElement(win.customElements, win);
+        const el = doc.createElement('drishti-chart');
+        el.setAttribute('density', 'terminal');
+        el.style.display = 'block';
+        chart.appendChild(el);
+        el.addEventListener('drishti:mark-clicked', (e) => {
+          const r = e.detail && e.detail.rows && e.detail.rows[0];
+          const line = r && lines.find((l) => l.key === r.key);
+          if (line) { side(line); }
+        });
+        el.addEventListener('drishti:rendered', () => resolve(), { once: true });
+        el.options = { height: 260 };
+        el.spec = { kind: 'waterfall', title: '', category: 'step', value: 'value', totals: { field: 'total' }, up: 'bad', down: 'good', onClick: 'select',
+                    data: { rows: stepRows } };
+        if (el.mount) { el.mount(); }
+        setTimeout(resolve, 3000);                      // drawn or not, the page goes on
+      }));
+      const sideDone = biggest ? side(biggest) : Promise.resolve();
+      const folds = h('div', 'dx-folds');
+      const jobs = [['formula', 'Formula'], ['inputs', 'Inputs & lineage (sources, versions, batches)']].map((t) => {
+        const det = h('details', 'dx-fold');
+        det.dataset.dxPart = t[0];
+        det.id = 'dx-' + t[0];
+        det.appendChild(h('summary', null, t[1]));
+        const body = h('div', 'dx-fold-body');
+        det.appendChild(body);
+        folds.appendChild(det);
+        return k.part(body, a, t[0], false);
+      });
+      const ck = h('details', 'dx-fold');
+      ck.dataset.dxPart = 'checks';
+      ck.appendChild(h('summary', null, 'Checks (open for audit)'));
+      const ckBody = h('div', 'dx-fold-body');
+      ck.appendChild(ckBody);
+      k.checks(ckBody, a);
+      if (ckBody.childNodes.length) { folds.appendChild(ck); }
+      grid.appendChild(folds);
+      return Promise.all(jobs.concat([drawn, sideDone])).then(() => undefined);
+    }
+    function mountWhyPage(root, req, a, k) {
+      const wb = ((a.workbook || {}).links || [])[0], head = root.querySelector('.dx-page-head');
+      if (wb && head && !root.querySelector('[data-dx-wb]')) {
+        const w = k.h('a', 'dx-btn', 'Workbook');
+        w.href = wb.href;
+        w.setAttribute('data-dx-wb', '');
+        head.insertBefore(w, head.querySelector('[data-dx-print]'));
+      }
+      const deps = Object.assign({}, k, { recompare(from) { compareAgain(root, req, from, k.rerender); } });
+      return renderWhyPage(root, a, deps, req.from || '').then(() => {
+        k.checks(root.querySelector('[data-dx-checks]'), { checks: [] });
+        root.dataset.state = 'ready';
+      });
+    }
+    function compareAgain(root, req, from, rerender) {
+      const win = root.ownerDocument.defaultView, next = Object.assign({}, req);
+      if (from) { next.from = from; } else { delete next.from; }
+      const u = new URL(win.location.href);
+      if (from) { u.searchParams.set('from', from); } else { u.searchParams.delete('from'); }
+      win.history.replaceState(win.history.state, '', u.toString());
+      root.setAttribute('data-explain-request', JSON.stringify(next));
+      rerender(root);
+    }
+    return { "whyPageFits": whyPageFits, "compareDate": compareDate, "renderWhyPage": renderWhyPage, "mountWhyPage": mountWhyPage, "compareAgain": compareAgain };
+  })();
+  /* ---- src/drishti_insight-link.js ---- */
+  __m["src/drishti_insight-link.js"] = (function () {
+    const TITLE = 'Explain: the formula with its values, the inputs and lineage, why it moved, the workbook (E)';
+    function explainLink(doc, req, o, pageUrl) {
+      o = o || {};
+      const a = doc.createElement('a');
+      a.className = 'dx-link' + (o.cls ? ' ' + o.cls : '');
+      a.textContent = o.text || 'Explain ›';
+      a.href = pageUrl(req, o.tab || 'why');
+      a.setAttribute('data-explain', JSON.stringify(req));
+      a.setAttribute('data-explain-tab', o.tab || 'why');
+      a.setAttribute('data-explain-trigger', '');
+      a.setAttribute('data-explain-link', '');
+      a.title = o.title || TITLE;
+      return a;
+    }
+    function upgradeLinks(root, pageUrl) {
+      root.querySelectorAll('[data-explain-link][data-explain]:not(.dx-link)').forEach((el) => {
+        let req = null;
+        try { req = JSON.parse(el.getAttribute('data-explain') || '{}'); } catch (e) { req = null; }
+        if (!(req && req.kind)) { return; }
+        const tab = el.getAttribute('data-explain-tab') || 'why';
+        el.classList.add('dx-link');
+        el.setAttribute('data-explain-trigger', '');
+        el.setAttribute('data-explain-tab', tab);
+        if (el.tagName === 'A') { el.href = pageUrl(req, tab); }
+        if (!el.textContent.trim()) { el.textContent = 'Explain ›'; }
+        if (!el.title) { el.title = TITLE; }
+      });
+    }
+    function drawNote(doc, host, n) {
+      const h = (tag, cls, text) => { const e = doc.createElement(tag); if (cls) { e.className = cls; } if (text !== undefined && text !== null) { e.textContent = text; } return e; };
+      host.appendChild(h("p", "dx-note", n.text));
+      var list = n.list;
+      if (!list) return;
+      var det = h("details", "dx-details"), t = h("table", "dx-table"), head = h("tr"), tb = h("tbody"), th = h("thead"), page = 0;
+      det.appendChild(h("summary", null, list.summary));
+      list.columns.forEach(function (c) { head.appendChild(h("th", null, c)); });
+      th.appendChild(head);
+      t.appendChild(th);
+      t.appendChild(tb);
+      det.appendChild(t);
+      function add(rows) {
+        rows.forEach(function (r) {
+          var tr = h("tr");
+          r.cells.forEach(function (c, i) {
+            var td = h("td", "mono");
+            if (i === 0 && r.href) { var a = h("a", null, c); a.href = r.href; td.appendChild(a); } else td.textContent = c;
+            tr.appendChild(td);
+          });
+          tb.appendChild(tr);
+        });
+      }
+      add(list.rows || []);
+      if (list.moreHref) {
+        var more = h("button", "dx-more", "Show more");
+        more.type = "button";
+        more.addEventListener("click", function () {
+          page += 1;
+          fetch(list.moreHref + "&page=" + page).then(function (r) { return r.json(); }).then(function (b) {
+            add((b.rows || []).map(function (r) {
+              return { cells: [r.position, (r.trades || []).map(function (x) { return x.trade + " (" + x.maturity + ")"; }).join(", ")],
+                href: "/v/position/" + encodeURIComponent(r.position) + "?asOf=" + encodeURIComponent(b.businessDate) };
+            }));
+            more.hidden = !b.more;
+          });
+        });
+        det.appendChild(more);
+      }
+      host.appendChild(det);
+    }
+    return { "explainLink": explainLink, "upgradeLinks": upgradeLinks, "drawNote": drawNote };
+  })();
   /* ---- src/drishti_insight-explain.js ---- */
   __m["src/drishti_insight-explain.js"] = (function () {
+    var compareAgain = __m["src/drishti_insight-why.js"].compareAgain, mountWhyPage = __m["src/drishti_insight-why.js"].mountWhyPage, whyPageFits = __m["src/drishti_insight-why.js"].whyPageFits;
+    var explainLink = __m["src/drishti_insight-link.js"].explainLink, upgradeLinks = __m["src/drishti_insight-link.js"].upgradeLinks, drawNote = __m["src/drishti_insight-link.js"].drawNote;
     function installExplain(win) {
       const window = win, document = win.document;
       window.Drishti = window.Drishti || {};
@@ -246,46 +507,6 @@
         p.appendChild(document.createTextNode(" " + (u.about || "") + (u.release ? " (" + u.release + ")" : "")));
         host.appendChild(p);
       }
-      function note(host, n) {
-        host.appendChild(h("p", "dx-note", n.text));
-        var list = n.list;
-        if (!list) return;
-        var det = h("details", "dx-details"), t = h("table", "dx-table"), head = h("tr"), tb = h("tbody"), th = h("thead"), page = 0;
-        det.appendChild(h("summary", null, list.summary));
-        list.columns.forEach(function (c) { head.appendChild(h("th", null, c)); });
-        th.appendChild(head);
-        t.appendChild(th);
-        t.appendChild(tb);
-        det.appendChild(t);
-        function add(rows) {
-          rows.forEach(function (r) {
-            var tr = h("tr");
-            r.cells.forEach(function (c, i) {
-              var td = h("td", "mono");
-              if (i === 0 && r.href) { var a = h("a", null, c); a.href = r.href; td.appendChild(a); } else td.textContent = c;
-              tr.appendChild(td);
-            });
-            tb.appendChild(tr);
-          });
-        }
-        add(list.rows || []);
-        if (list.moreHref) {
-          var more = h("button", "dx-more", "Show more");
-          more.type = "button";
-          more.addEventListener("click", function () {
-            page += 1;
-            fetch(list.moreHref + "&page=" + page).then(function (r) { return r.json(); }).then(function (b) {
-              add((b.rows || []).map(function (r) {
-                return { cells: [r.position, (r.trades || []).map(function (x) { return x.trade + " (" + x.maturity + ")"; }).join(", ")],
-                  href: "/v/position/" + encodeURIComponent(r.position) + "?asOf=" + encodeURIComponent(b.businessDate) };
-              }));
-              more.hidden = !b.more;
-            });
-          });
-          det.appendChild(more);
-        }
-        host.appendChild(det);
-      }
       function part(host, a, tab, inDrawer) {
         var x = a[tab] || {};
         if (tab === "formula") {
@@ -303,7 +524,7 @@
           var dl = h("dl", "dx-dl");
           (x.rows || []).forEach(function (row) { dl.appendChild(h("dt", null, row.label)); dl.appendChild(h("dd", "mono", row.value)); });
           host.appendChild(dl);
-          (x.notes || []).forEach(function (n) { note(host, n); });
+          (x.notes || []).forEach(function (n) { drawNote(document, host, n); });
           if ((x.lineage || []).length) {
             host.appendChild(h("h3", "dx-h3", "Lineage"));
             var t = h("table", "dx-table");
@@ -386,14 +607,17 @@
         var paint = h("div", "dx-why");
         paint.dataset.dxWhy = x.view || "";
         host.appendChild(paint);
-        var model = { contract: "1.0", ref: { kind: "explain", id: a.kind + ":" + a.subject }, title: { pill: "Why it moved", id: a.title + " · " + x.from + " to " + x.to },
-                      strip: [], panels: x.panels || [], keys: [], provenance: { source: "the server's Explain, GET /api/v1/explain?kind=" + a.kind } };
+        return paintPanels(paint, a, { title: a.title, from: x.from, to: x.to }, x.panels || []).then(function () { paint.dataset.painted = x.view || "waterfall"; });
+      }
+      function paintPanels(host, a, t, panels) {
+        var model = { contract: "1.0", ref: { kind: "explain", id: a.kind + ":" + a.subject }, title: { pill: "Why it moved", id: t.title + " · " + t.from + " to " + t.to },
+                      strip: [], panels: panels, keys: [], provenance: { source: "the server's Explain, GET /api/v1/explain?kind=" + a.kind } };
         lib = lib || import("/static/render/2.0.0/drishti-render.js");
         return lib.then(function (R) {
-          var v = R.render(paint, model, { theme: document.documentElement.getAttribute("data-theme") || "terminal", header: "none", help: false,
-                                           tables: true, live: false, navigation: "host", device: window.innerWidth <= 640 ? "phone" : "desk" });
+          var v = R.render(host, model, { theme: document.documentElement.getAttribute("data-theme") || "terminal", header: "none", help: false,
+                                          tables: true, live: false, navigation: "host", device: window.innerWidth <= 640 ? "phone" : "desk" });
           return v.ready;
-        }).then(function () { paint.dataset.painted = x.view || "waterfall"; });
+        });
       }
       function checks(host, a) {
         host.textContent = "";
@@ -416,6 +640,7 @@
           root.querySelector("[data-dx-crumb]").textContent = "Explain · " + a.subject + (a.asOf ? " · " + a.asOf : "");
           root.querySelector("[data-dx-origin]").textContent = a.origin || "";
           document.title = "Explain · " + a.title + (document.body.dataset.product ? " · " + document.body.dataset.product : "");
+          if (first === "why" && whyPageFits(a)) return whyPage(root, req, a);
           var grid = root.querySelector("[data-dx-grid]");
           grid.textContent = "";
           var jobs = TABS.map(function (t) {
@@ -432,9 +657,22 @@
             if (first) { var c = root.querySelector("#dx-" + first); if (c) c.scrollIntoView(); }
           });
         }).catch(function (e) {
-          root.querySelector("[data-dx-grid]").textContent = e.message || String(e);
+          var g = root.querySelector("[data-dx-grid]");
+          g.textContent = e.message || String(e);
+          if (first === "why" && req.from) {                    // a compare date the engine cannot answer: said, and the way back
+            var back = h("button", "dx-chip", "Compare with the previous day");
+            back.type = "button";
+            back.setAttribute("data-dx-compare", "prev");
+            back.addEventListener("click", function () { compareAgain(root, req, '', renderPage); });
+            g.appendChild(document.createTextNode(" "));
+            g.appendChild(back);
+          }
           root.dataset.state = "failed";
         });
+      }
+      function whyPage(root, req, a) {
+        return mountWhyPage(root, req, a, { h: h, part: part, checks: checks, rerender: renderPage,
+          paint: function (host, t, panels) { return paintPanels(host, a, t, panels); } });
       }
       function target(ev) { return ev.target && ev.target.closest ? ev.target.closest("[data-explain]") : null; }
       document.addEventListener("click", function (ev) {
@@ -472,6 +710,9 @@
           if (!(r2 && r2.kind)) return false;
           lastAnchor = f; preview(f, r2);
         } });
+      var link = function (req, o) { return explainLink(document, req, o, pageUrl); };
+      var upgrade = function (root) { upgradeLinks(root || document, pageUrl); };
+      if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { upgrade(document); }); else upgrade(document);
       var pageRoot = document.querySelector("[data-explain-page]");
       if (pageRoot) {
         renderPage(pageRoot);
@@ -479,7 +720,7 @@
         if (printBtn) printBtn.addEventListener("click", function () { window.print(); });
       }
       window.Drishti.Explain = {
-        open: open, close: close, preview: preview, pageUrl: pageUrl, ask: ask,
+        open: open, close: close, preview: preview, pageUrl: pageUrl, ask: ask, link: link, upgrade: upgrade,
         bind: function (el, req, tab) {
           el.setAttribute("data-explain", JSON.stringify(req));
           if (tab) el.setAttribute("data-explain-tab", tab);
