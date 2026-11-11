@@ -75,7 +75,7 @@ artifact id (`./mvnw -pl :drishti-server -am ...`), which works wherever its fol
 | `modules/` | `banking`, `market-data`, `capital-markets`, `economy`, `genomics` | the domain modules, each packed into a `.dmod` |
 | `drishti-sdk/` | `drishti-module-parent`, `drishti-module-maven-plugin`, `drishti-module-archetype` | the Module SDK ([§1.6](#16-the-module-sdk)) |
 | `packaging/` | `drishti-app`, `drishti-kernel-app`, `dist` (`drishti-modules`), `drishti-elements` | what the build ships: the full and the thin server jar, the first-party `.dmod` packages, the Elements release |
-| `tests/` | `drishti-it`, `drishti-testkit`, `drishti-benchmarks` | repository-wide rules, the connector contract kit, the JMH benchmarks |
+| `testing/` | `drishti-it`, `drishti-testkit`, `drishti-benchmarks` | repository-wide rules, the connector contract kit, the JMH benchmarks |
 
 **A module per subject, not per class group.** A small part is a package of its neighbour rather than a module of its own: the disk
 cache (`diskcache`) and the message-queue connectors' state store (`messaging`) live in `drishti-common`, the entity links (`graph`) in
@@ -770,7 +770,7 @@ limit, split it by responsibility (the banking generator, for example, is a doze
 
 ### 3.4 Architecture rules
 
-`tests/drishti-it/src/test/java/com/ash/drishti/it/ArchitectureRulesTest.java` checks the compiled main code (tests are excluded) with
+`testing/drishti-it/src/test/java/com/ash/drishti/it/ArchitectureRulesTest.java` checks the compiled main code (tests are excluded) with
 ArchUnit:
 
 | Rule | Meaning |

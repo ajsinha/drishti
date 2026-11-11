@@ -149,7 +149,7 @@ second: browsers share sign-in cookies across ports of one host). Every step, Li
 
 Two programs: the **server** (Java 21, Spring Boot, a Maven reactor) computes every number and lays out every screen; the **console**
 (Python, FastAPI and Jinja2) renders what the server sends, and the browser draws it. Domains are **modules**: the core plus banking,
-capitalmarkets and economy. The modules sit in subject folders (`kernel/`, `compute/`, `lake/`, `net/`, `plugins/`, `modules/`, `packaging/`, `tests/`, `drishti-sdk/`); the full map, module by module: [DEVELOPER_GUIDE.md › The repository](guides/DEVELOPER_GUIDE.md#1-the-repository).
+capitalmarkets and economy. The modules sit in subject folders (`kernel/`, `compute/`, `lake/`, `net/`, `plugins/`, `modules/`, `packaging/`, `testing/`, `drishti-sdk/`); the full map, module by module: [DEVELOPER_GUIDE.md › The repository](guides/DEVELOPER_GUIDE.md#1-the-repository).
 
 | Where | What |
 |---|---|

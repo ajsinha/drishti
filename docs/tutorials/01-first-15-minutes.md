@@ -79,7 +79,7 @@ switch on, and searches the trades of all three booking systems (ENDUR, CALYPSO,
 
 The screens and outputs below come from this version's console and `drishti.py`, reading the history contract's two reference answers:
 trade `1000015` over 30 data days and equity `EQ-CSCA` over 3 months
-(`tests/drishti-testkit/src/main/resources/history/`, [DATA_ARCHITECTURE.md › History queries: an entity over time, section 8](../architecture/DATA_ARCHITECTURE.md#8-the-json-contract)).
+(`testing/drishti-testkit/src/main/resources/history/`, [DATA_ARCHITECTURE.md › History queries: an entity over time, section 8](../architecture/DATA_ARCHITECTURE.md#8-the-json-contract)).
 Your dates and values are your data's. Trade `1000015` and its *Trader* column are the reference answer's: on the demo lakes the
 trading pack's `history:` block (step 32) lists no trader column. On the sixty-day demo lakes, the
 trades amended most (ten times each) are ENDUR `1000279` and `1001049`, CALYPSO `CLY-4000509` and MUREX `MX-30001745`: try

@@ -113,7 +113,7 @@ class CodecsTest {
 
     @Test
     void aPackGivesTheDomainTableLayoutKeyAndFlattenedFieldsAsLakeBuildReadsThem() throws IOException {
-        java.nio.file.Path packs = java.nio.file.Path.of("").toAbsolutePath().getParent().resolve("config/packs");
+        java.nio.file.Path packs = java.nio.file.Path.of("").toAbsolutePath().getParent().getParent().resolve("config/packs");
         LoadConfig risk = LoadConfig.read(null, List.of("source.files=x.jsonl", "source.pack=" + packs.resolve("banking/market-risk"), "source.date=BUSINESS_DATE",
                 "target.lake=/l", "target.kind=scenario-pv"));
         assertThat(risk.target().domain()).isEqualTo("risk");

@@ -401,7 +401,7 @@ the modules they may use. The map of every document is [docs/README.md](docs/REA
   every front-end asset
   vendored or one of the Elements libraries, under a strict content security policy; it works on phones.
 - **The source tree**: the Maven modules sit in subject folders, `kernel/`, `compute/`, `lake/`, `net/`, `plugins/`, `modules/`,
-  `packaging/`, `tests/` and `drishti-sdk/` ([DEVELOPER_GUIDE.md section 1.1](docs/guides/DEVELOPER_GUIDE.md#11-java-modules)); a module's
+  `packaging/`, `testing/` and `drishti-sdk/` ([DEVELOPER_GUIDE.md section 1.1](docs/guides/DEVELOPER_GUIDE.md#11-java-modules)); a module's
   folder is its artifact id.
 - **Contributing**: work on `develop`; `./mvnw -q verify` and the console tests
   (`drishti-console/.venv/bin/python -m pytest -q drishti-console/tests`) must pass; no source file over 2,000 lines; every file carries
@@ -436,7 +436,7 @@ About **786k lines of product code** and **287k lines of tests** (37% of the pro
 
 | What | Count |
 |---|---|
-| Maven modules | 48 in 9 subject folders: `compute/`, `drishti-sdk/`, `kernel/`, `lake/`, `modules/`, `net/`, `packaging/`, `plugins/`, `tests/` |
+| Maven modules | 48 in 9 subject folders: `compute/`, `drishti-sdk/`, `kernel/`, `lake/`, `modules/`, `net/`, `packaging/`, `plugins/`, `testing/` |
 | Modules (`.dmod`) | 5: banking, capitalmarkets, economy, genomics, market-data |
 | Lenses | 11: world, markets, publicsector, cio, oversight, risk, trading, market, cro, mr-cube, ccr-cube |
 | Functions a module declares | 121 (48 banking, 12 capitalmarkets, 35 economy, 3 genomics, 23 market-data); every other command word is the kernel's |

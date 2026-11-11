@@ -66,7 +66,7 @@ import java.util.concurrent.Executors;
  * documents), warm (documents cached), the cached answer, and the default per-day loop (the connector's {@code days()} hidden) against the
  * Delta fast path. It exits 1 when the warm median passes 150 ms or the cold p95 passes 400 ms.
  *
- * <pre>java -Xmx4g -cp tests/drishti-benchmarks/target/classes:$(cat cp.txt) com.ash.drishti.benchmarks.HistoryBench [trades] [days] [sample]</pre>
+ * <pre>java -Xmx4g -cp testing/drishti-benchmarks/target/classes:$(cat cp.txt) com.ash.drishti.benchmarks.HistoryBench [trades] [days] [sample]</pre>
  */
 public final class HistoryBench {
 

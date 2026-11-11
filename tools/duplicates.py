@@ -50,7 +50,7 @@ LANGUAGES = {"java": (".java",), "ecmascript": (".js", ".mjs"), "python": (".py"
 LABEL = {"java": "java", "ecmascript": "javascript", "python": "python"}
 EXCLUDED = re.compile(
     r"(^|/)(tests?|target|node_modules|__pycache__|vendor|generated|docs|examples)/"
-    r"|/src/test/|^(tests|external_lib|data)/"
+    r"|/src/test/|^(testing|external_lib|data)/"
     r"|/static/render/1\.2\.0/|(^|/)web/embed/"
     r"|(^|/)(test_[^/]*|[^/]*_test|conftest)\.py$|\.min\.js$|\.test\.m?js$|(^|/)drishti_harness\.js$"
 )

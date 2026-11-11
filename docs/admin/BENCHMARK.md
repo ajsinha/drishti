@@ -1846,7 +1846,7 @@ from the repository root (3 one-second warm-ups and 5 measured iterations in one
 ```bash
 ./mvnw -q -pl :drishti-benchmarks -am install -DskipTests
 ./mvnw -q -pl :drishti-benchmarks dependency:build-classpath -Dmdep.outputFile="$PWD/cp.txt"
-java -cp "tests/drishti-benchmarks/target/classes:$(cat cp.txt)" org.openjdk.jmh.Main          # or add a pattern: … Main evalSum
+java -cp "testing/drishti-benchmarks/target/classes:$(cat cp.txt)" org.openjdk.jmh.Main          # or add a pattern: … Main evalSum
 ```
 
 | Benchmark | 2026-09-30 | What it is |

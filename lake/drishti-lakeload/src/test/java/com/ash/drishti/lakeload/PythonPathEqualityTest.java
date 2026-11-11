@@ -49,7 +49,7 @@ import org.junit.jupiter.api.io.TempDir;
  */
 class PythonPathEqualityTest {
 
-    static final Path REPO = Path.of("").toAbsolutePath().getParent();
+    static final Path REPO = Path.of("").toAbsolutePath().getParent().getParent();
 
     @TempDir
     Path tmp;

@@ -1272,7 +1272,7 @@ history), so the field dialog gets the fast paths and the 260-day constant becom
 ### 8. The JSON contract
 
 This is the contract between the two builders (section 18). Builder B builds the console against a fixture of exactly this shape
-(`tests/drishti-testkit/src/main/resources/history/trade-1000015-30.json`, added in H1) and the server's tests assert it.
+(`testing/drishti-testkit/src/main/resources/history/trade-1000015-30.json`, added in H1) and the server's tests assert it.
 
 ```json
 {
@@ -1723,7 +1723,7 @@ as a fixture file; neither touches the other's files. Each step is one push with
 
 | Step | Builder | What | Done when (its own tests) | Docs in the same push |
 |---|---|---|---|---|
-| **H1** | A | The contract: `HistoryRequest`, `HistoryDay`, `HistoryRead`, `SourcePlugin.history` and `days` defaults, `HistoryReads.perDay`; `ConnectorInstance` delegation; the fixture `tests/drishti-testkit/src/main/resources/history/trade-1000015-30.json` (and an equity one); `DatedSourceContract` history cases | every plugin that extends `DatedSourceContract` passes the new cases with the default | `docs/guides/DEVELOPER_GUIDE.md` (the SPI) |
+| **H1** | A | The contract: `HistoryRequest`, `HistoryDay`, `HistoryRead`, `SourcePlugin.history` and `days` defaults, `HistoryReads.perDay`; `ConnectorInstance` delegation; the fixture `testing/drishti-testkit/src/main/resources/history/trade-1000015-30.json` (and an equity one); `DatedSourceContract` history cases | every plugin that extends `DatedSourceContract` passes the new cases with the default | `docs/guides/DEVELOPER_GUIDE.md` (the SPI) |
 | **H2** | A | `engine/history`: `HistoryProperties`, `HistoryWindow` (ranges, business days, baseline), `HistoryRows` (latest per day, `changed`, parts, summary, diff), `HistoryCache`, `HistorySpec` (+ `DRS-2061`), `HistoryService`; `SourceRouter.history` (read order, coverage, budget, partial) | unit tests (section 19.1) | CONFIGURATION (settings), API_GUIDE and TROUBLESHOOTING (codes) |
 | **H3** | A | `HistoryController.rows` (`/{kind}/{id}` and `/~`), the new `ErrorCode`s, masks, `AccessRecorder.ACTIONS`; `series` re-pointed at the service (260 becomes `max-days`); `HistoryDefinitions` reading `history:`; deploy and `sutra lint` checks | controller tests with a fake router: masks per row, rights, every error, the JSON equals the fixture's shape | API_GUIDE endpoint, PACK_DEVELOPER_GUIDE `history:` |
 | **H4** | A | Drishti\*net: `PeerSource.history`, `NetDataController` `/net/history`, merge by date | in-process cluster test (two nodes, a kind's dates split across them) | OPERATIONS_GUIDE.md routing table |
@@ -2598,7 +2598,7 @@ machinery:
      applies a write-back's `delta` vector (`ComputeEvent.payload`); `affected(event, "scopes_of(trade.TT_BOOK)")` returns the book and
      its ancestors' scope ids from the hierarchy. The vector store's version for the date goes into the pin through `dataVersion` of
      the kind it serves (`pnl-vector`), so a new load is a new key.
-   - *Python, in a pool* (`compute/drishti-var`): `engine: { type: python, entry: drishti_var.connector:VarEngine, pool: risk }` with
+   - *Python, in a pool* (a Python package, `drishti_var`): `engine: { type: python, entry: drishti_var.connector:VarEngine, pool: risk }` with
      `reads: [{ kind: pnl-vector, as: vectors, ids: "{inputs.scope.MEMBERS}" }]` after a read of the scope's members; vectors arrive as
      fixed-size Arrow vectors; `split: vectors` and `reduce: { tables: { path: [PNL] }, then: { VAR: … } }` spread a bank-wide scope over
      every worker. Its `requires:` locks numpy and the package and waits for approval.

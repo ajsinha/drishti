@@ -50,7 +50,7 @@
     <module>kernel/drishti-identity</module>
     <module>kernel/drishti-packs</module>
     <module>kernel/drishti-ai</module>
-    <module>tests/drishti-testkit</module>
+    <module>testing/drishti-testkit</module>
     <module>kernel/drishti-registry</module>
     <module>lake/drishti-lakeio</module>
     <module>lake/drishti-deltalake</module>
@@ -81,8 +81,8 @@
     <module>packaging/dist</module>
     <module>packaging/drishti-app</module>
     <module>packaging/drishti-kernel-app</module>
-    <module>tests/drishti-it</module>
-    <module>tests/drishti-benchmarks</module>
+    <module>testing/drishti-it</module>
+    <module>testing/drishti-benchmarks</module>
   </modules>
 
   <properties>

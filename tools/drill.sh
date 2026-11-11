@@ -269,7 +269,7 @@ console_files() {   # name, workers, failed files re-run at a time, then the fil
 # modules side by side; nothing is installed into ~/.m2.
 gate_java() {
   set -e
-  local rules; rules=$(cd tests/drishti-it/src/test/java && find . -name '*Test.java' -printf '%f\n' | sed 's/\.java$//' | sort | paste -sd, -)
+  local rules; rules=$(cd testing/drishti-it/src/test/java && find . -name '*Test.java' -printf '%f\n' | sed 's/\.java$//' | sort | paste -sd, -)
   JAVA_HOME="$JAVA21_HOME" ./mvnw -q -o clean package spotless:check -P api-docs -T "${DRILL_GATE_THREADS:-1C}" \
     -Dtest="$rules,TokenScopeGuardTest,ArrowAnswersTest" -Dsurefire.failIfNoSpecifiedTests=false ${DRILL_MVN_ARGS:-}
   compgen -G 'kernel/drishti-server/target/drishti-server-*-exec.jar' >/dev/null || { echo "drill: the gate's build made no server jar" >&2; return 1; }

@@ -48,7 +48,7 @@ DOCS_TESTS = ("test_docs_*.py", "test_help*.py", "test_tools_guide.py")
 # whatever every test depends on: a change here reaches everything
 SHARED = ("pom.xml", "mvnw", ".mvn/*", "pytest.ini", "tools/drill.sh", "tools/drill-*.txt", "tools/drillkit/*", "tools/javacmd.py",
           "drishti-console/requirements*.txt", f"{CONSOLE_TESTS}/conftest.py", f"{CONSOLE_TESTS}/scratch_ports.py", f"{CONSOLE_TESTS}/*harness*.py",
-          f"{CONSOLE_TESTS}/wb_live.py", "kernel/drishti-api/*", "kernel/drishti-common/*", "tests/drishti-testkit/*", "tests/drishti-it/*")
+          f"{CONSOLE_TESTS}/wb_live.py", "kernel/drishti-api/*", "kernel/drishti-common/*", "testing/drishti-testkit/*", "testing/drishti-it/*")
 # words of a file name that say nothing about what the file is
 WEAK = {"drishti", "test", "tests", "browser", "index", "main", "utils", "util", "common", "core", "base", "js", "css", "html", "py"}
 

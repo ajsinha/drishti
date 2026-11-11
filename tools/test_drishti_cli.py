@@ -389,7 +389,7 @@ class Rest(unittest.TestCase):
 
 class History(unittest.TestCase):
     """drishti.py history KIND ID against the contract's fixture (drishti-testkit history/)."""
-    FIXTURE = ROOT / "tests/drishti-testkit" / "src" / "main" / "resources" / "history" / "trade-1000015-30.json"
+    FIXTURE = ROOT / "testing/drishti-testkit" / "src" / "main" / "resources" / "history" / "trade-1000015-30.json"
 
     @classmethod
     def setUpClass(cls):

@@ -96,7 +96,7 @@ class CachesWeighedInBytesTest {
 
     static Set<String> allowed() throws IOException {
         Set<String> out = new TreeSet<>();
-        for (String line : Files.readAllLines(RepositoryFiles.root().resolve("tests/drishti-it/src/test/resources/count-only-caches.txt"))) {
+        for (String line : Files.readAllLines(RepositoryFiles.root().resolve("testing/drishti-it/src/test/resources/count-only-caches.txt"))) {
             String t = line.strip();
             if (!t.isEmpty() && !t.startsWith("#")) {
                 out.add(t.split("\\s+", 2)[0]);
@@ -112,7 +112,7 @@ class CachesWeighedInBytesTest {
         List<String> fresh = new ArrayList<>(found);
         fresh.removeAll(allowed);
         assertThat(fresh).as("weigh these caches in bytes (Caffeine weigher + maximumWeight), or list them with the reason their entries are "
-                + "of a fixed small size in tests/drishti-it/src/test/resources/count-only-caches.txt").isEmpty();
+                + "of a fixed small size in testing/drishti-it/src/test/resources/count-only-caches.txt").isEmpty();
         List<String> gone = new ArrayList<>(allowed);
         gone.removeAll(found);
         assertThat(gone).as("these are weighed now (or gone): take them off count-only-caches.txt").isEmpty();

@@ -41,7 +41,7 @@ import org.openjdk.jmh.annotations.Warmup;
 
 /**
  * Hot paths of the view pipeline. Run with:
- * {@code ./mvnw -q -pl :drishti-benchmarks -am package -DskipTests && java -cp "tests/drishti-benchmarks/target/classes:$(cat cp.txt)" org.openjdk.jmh.Main}
+ * {@code ./mvnw -q -pl :drishti-benchmarks -am package -DskipTests && java -cp "testing/drishti-benchmarks/target/classes:$(cat cp.txt)" org.openjdk.jmh.Main}
  * (see docs/guides/CLUSTER_GUIDE.md).
  */
 @State(Scope.Benchmark)

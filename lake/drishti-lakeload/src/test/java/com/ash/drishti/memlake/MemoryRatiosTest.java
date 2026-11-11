@@ -46,7 +46,7 @@ import org.junit.jupiter.api.io.TempDir;
 class MemoryRatiosTest {
 
     private static final ObjectMapper JSON = new ObjectMapper();
-    private static final Path TESTDATA = Path.of("../data/testdata").toAbsolutePath().normalize();
+    private static final Path TESTDATA = Path.of("../../data/testdata").toAbsolutePath().normalize();
 
     @TempDir
     Path tmp;

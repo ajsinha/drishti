@@ -1056,7 +1056,7 @@ class FakeBackend:
         name = self.HISTORY.get((kind, id_))
         if name is None:
             raise BackendError(404, "DRS-1001", f"no source holds {kind}/{id_}")
-        data = json.loads((CONSOLE.parent / "tests/drishti-testkit" / "src" / "main" / "resources" / "history" / name).read_text())
+        data = json.loads((CONSOLE.parent / "testing/drishti-testkit" / "src" / "main" / "resources" / "history" / name).read_text())
         if params.get("diff") == "true":
             labels = {c["path"]: c.get("label") for c in data["columns"]}
             prev = None

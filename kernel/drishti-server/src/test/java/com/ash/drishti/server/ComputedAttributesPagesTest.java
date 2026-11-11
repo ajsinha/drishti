@@ -43,7 +43,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 class ComputedAttributesPagesTest {
 
-    static final Path PACKS = Path.of("").toAbsolutePath().getParent().resolve("config/packs");
+    static final Path PACKS = Path.of("").toAbsolutePath().getParent().getParent().resolve("config/packs");
     static final ObjectMapper JSON = new ObjectMapper();
 
     @Autowired MockMvc mvc;
