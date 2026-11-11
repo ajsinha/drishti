@@ -157,7 +157,7 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 | `EDGAR` | `filing-feed` | external: SEC EDGAR: tickers, submissions, XBRL company facts (public domain (US Government work); EDGAR fair access policy) — refreshed by `drishti.py feed run us-equities` | `data/testdata/us-equities/filing-feed/` → `lake demo` → connector `us-equities-store` |
 | `FILING` | `filing` | external: SEC EDGAR: tickers, submissions, XBRL company facts (public domain (US Government work); EDGAR fair access policy) — refreshed by `drishti.py feed run us-equities` | `data/testdata/us-equities/filing/` → `lake demo` → connector `us-equities-store` |
 | `FACT` | `financial-fact` | external: SEC EDGAR: tickers, submissions, XBRL company facts (public domain (US Government work); EDGAR fair access policy) — refreshed by `drishti.py feed run us-equities` | `data/testdata/us-equities/financial-fact/` → `lake demo` → connector `us-equities-store` |
-| `PXH` | `price-history` | external: Yahoo Finance daily prices (the us-equities-prices connector) (Yahoo terms: personal use, no redistribution; **internal only**) — refreshed by `drishti.py feed run us-equities` | read live by connector `us-equities-prices` (plugin `yfinance`) when it is switched on; nothing is committed |
+| `PXH` | `price-history` | external: Yahoo Finance daily prices (the us-equities-prices connector) (Yahoo terms: personal use, no redistribution; **internal only**) — refreshed by `drishti.py feed run us-equities` | read live by connector `us-equities-prices` (plugin `None`) when it is switched on; nothing is committed |
 
 ### External sources
 

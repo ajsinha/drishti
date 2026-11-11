@@ -41,7 +41,7 @@ A book of synthetic P&L strips, and the sum of their paths computed when the pag
 | Id pattern | `^BOOK-(RATES\|FX\|CREDIT)$` |
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
-| Storage | connector `compute-demo-store` (plugin `delta`), table `<root>/compute-demo/path-book/` |
+| Binding hint | lake table `compute-demo.path-book`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `BOOK_ID`, `NAME`, `DESK`, `STRIP_COUNT` |
 | Test data | config/packs/core/compute-demo/samples |
 | Worked example | [compute-demo/path-book](../samples/compute-demo.md#path-book) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
@@ -90,7 +90,7 @@ A synthetic P&L strip of the compute-demo pack: one path vector in a path book, 
 | Id pattern | `^STRIP-` |
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
-| Storage | connector `compute-demo-store` (plugin `delta`), table `<root>/compute-demo/path-strip/` |
+| Binding hint | lake table `compute-demo.path-strip`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `STRIP_ID`, `BOOK_ID`, `INSTRUMENT`, `DAYS` |
 | Test data | config/packs/core/compute-demo/samples |
 | Worked example | [compute-demo/path-strip](../samples/compute-demo.md#path-strip) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
@@ -139,7 +139,7 @@ Book path (Python) (the path-sum kind of the compute-demo pack)
 | Id pattern | — |
 | Dated by | `on request` |
 | Cadence | on change (due: computed on request and on its triggers) |
-| Storage | connector `path-sum-python` (plugin `reactive`) |
+| Binding hint | computed by Drishti, never bound; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 
 **Fields**
 
@@ -175,7 +175,7 @@ Book path (Java) (the path-sum-java kind of the compute-demo pack)
 | Id pattern | — |
 | Dated by | `on request` |
 | Cadence | on change (due: computed on request and on its triggers) |
-| Storage | connector `path-sum-java` (plugin `reactive`) |
+| Binding hint | computed by Drishti, never bound; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 
 **Fields**
 

@@ -30,6 +30,8 @@ import org.springframework.core.Ordered;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.PropertySource;
+import com.ash.drishti.packs.distribution.Distribution;
+import com.ash.drishti.packs.distribution.Distributions;
 
 /**
  * Loads the edition {@code drishti.edition} names (docs/guides/ADMIN_GUIDE.md) as a property layer just above the product's own
@@ -56,18 +58,30 @@ public final class EditionEnvironmentPostProcessor implements EnvironmentPostPro
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment env, SpringApplication app) {
-        String name = env.getProperty(Editions.NAME, "").strip();
-        if (name.isEmpty()) {
-            return;                                                          // the full Drishti, exactly as without editions
+        Distribution dist = Distributions.of(env);                         // the distribution file: the one way (DISTRIBUTIONS.md)
+        Map<String, Object> props = new LinkedHashMap<>(distributionProps(env, dist, deprecatedKeys(env, dist)));
+        String name;
+        Path file;
+        JsonNode spec;
+        if (!dist.all()) {
+            name = dist.id();
+            file = dist.file();
+            spec = dist.editionSpec();
+        } else {
+            name = env.getProperty(Editions.NAME, "").strip();
+            if (name.isEmpty()) {
+                addLayer(env, new MapPropertySource(SOURCE, props));
+                return;                                                      // Drishti All: the full Drishti, exactly as without editions
+            }
+            file = Editions.file(env, name);                                 // the old key, read for one release (Health says so)
+            spec = Editions.read(file);
         }
-        Path file = Editions.file(env, name);
-        JsonNode spec = Editions.read(file);
-        Map<String, Object> props = new LinkedHashMap<>(Editions.flatten(spec, Editions.SPEC));
+        props.putAll(Editions.flatten(spec, Editions.SPEC));
         List<String> packs = new ArrayList<>();
         com.fasterxml.jackson.databind.JsonNode enabled = spec.path("packs").path("enabled");      // by module (in order), or a plain list
         (enabled.isObject() ? enabled.elements() : java.util.List.of(enabled).iterator())
                 .forEachRemaining(m -> m.forEach(p -> { if (!packs.contains(p.asText().strip())) packs.add(p.asText().strip()); }));
-        if (!packs.isEmpty()) {
+        if (!packs.isEmpty() || spec.path("packs").path("none").asBoolean(false)) {   // a distribution of no packs (Genomics) has none
             props.put("drishti.packs.enabled", preset(env, "drishti.packs.enabled", String.join(",", packs)));
         }
         spec.path("branding").fields().forEachRemaining(e -> props.put("drishti.branding." + e.getKey(), preset(env, "drishti.branding." + e.getKey(), e.getValue().asText())));
@@ -79,16 +93,74 @@ public final class EditionEnvironmentPostProcessor implements EnvironmentPostPro
             }
         });
         spec.path("server").fields().forEachRemaining(e -> props.putAll(Editions.flatten(e.getValue(), e.getKey())));
-        MapPropertySource layer = new MapPropertySource(SOURCE, props);
+        addLayer(env, new MapPropertySource(SOURCE, props));
+        if (!dist.all()) {                                                   // the distribution's name wins over a site's old drishti.edition
+            env.getPropertySources().addFirst(new MapPropertySource(SOURCE + "-name", Map.of(Editions.NAME, name)));
+        }
+        System.getLogger(EditionEnvironmentPostProcessor.class.getName()).log(System.Logger.Level.INFO,
+                "edition {0} ({1}) from {2}: packs {3}", name, spec.path("title").asText(name), file.toAbsolutePath().normalize(),
+                packs.isEmpty() ? "the default list" : packs);
+    }
+
+    private static void addLayer(ConfigurableEnvironment env, MapPropertySource layer) {
         String above = productDefaults(env);
         if (above == null) {
             env.getPropertySources().addLast(layer);
         } else {
             env.getPropertySources().addBefore(above, layer);
         }
-        System.getLogger(EditionEnvironmentPostProcessor.class.getName()).log(System.Logger.Level.INFO,
-                "edition {0} ({1}) from {2}: packs {3}", name, spec.path("title").asText(name), file.toAbsolutePath().normalize(),
-                packs.isEmpty() ? "the default list" : packs);
+    }
+
+    /** Where the running distribution's facts live, for Health and the about answer. */
+    public static final String INFO = "drishti.distribution-info";
+
+    /** The settings the old product keys used to hold, as the distribution file says them (under the site's configuration). */
+    static Map<String, Object> distributionProps(ConfigurableEnvironment env, Distribution d, List<String> deprecated) {
+        Map<String, Object> props = new LinkedHashMap<>();
+        for (String k : List.of("product", "tagline", "owner", "copyright", "notice")) {
+            String v = d.brand().get(k);
+            if (v != null) {
+                props.put("drishti.branding." + k, preset(env, "drishti.branding." + k, v));
+            }
+        }
+        if (!d.all()) {
+            props.put(Editions.LENSES, String.join(",", d.lenses()));
+        }
+        props.put(INFO + ".id", d.id());
+        props.put(INFO + ".title", d.title());
+        props.put(INFO + ".file", d.file() == null ? "" : d.file().toAbsolutePath().normalize().toString());
+        props.put(INFO + ".all", String.valueOf(d.all()));
+        props.put(INFO + ".modules", String.join(",", d.modules()));
+        props.put(INFO + ".domains", String.join(",", d.modules().stream().map(m -> m + "=" + d.domains().get(m)).toList()));
+        props.put(INFO + ".deprecated", String.join("\n", deprecated));
+        return props;
+    }
+
+    /**
+     * The old product keys a site still sets ({@code drishti.edition}, {@code drishti.branding.*}): read for one release, each named on
+     * Health as deprecated (the distribution file is the one way: KERNEL_AND_MODULES.md section 6).
+     */
+    static List<String> deprecatedKeys(ConfigurableEnvironment env, Distribution d) {
+        List<String> out = new ArrayList<>();
+        for (PropertySource<?> ps : env.getPropertySources()) {
+            if (isProductDefaults(ps) || isEngineFile(ps) || ps.getName().startsWith(SOURCE)
+                    || !(ps instanceof org.springframework.core.env.EnumerablePropertySource<?> e)) {
+                continue;
+            }
+            for (String k : e.getPropertyNames()) {
+                String key = k.equals("DRISHTI_EDITION") ? Editions.NAME : k.equals("DRISHTI_PRODUCT") ? "drishti.branding.product" : k;
+                boolean old = key.equals(Editions.NAME) || key.startsWith("drishti.branding.");
+                Object v = ps.getProperty(k);
+                if (!old || v == null || v.toString().isBlank() || out.stream().anyMatch(o -> o.startsWith(key + " "))) {
+                    continue;
+                }
+                out.add(key + (key.equals(Editions.NAME)
+                        ? (d.all() ? " is read for one release: name a distribution instead (--distribution, DRISHTI_DISTRIBUTION)"
+                                : " is ignored: the distribution " + d.id() + " decides")
+                        : " is read for one release: set brand: in the distribution file instead"));
+            }
+        }
+        return out;
     }
 
     /**

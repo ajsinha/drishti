@@ -96,7 +96,7 @@ def test_rachana_reference_lists_every_problem_code_the_parser_reports():
 def _raised_anywhere() -> set[str]:
     """Every DRS code written in the server's, the parsers' and the console's main code (not in tests or docs)."""
     found: set[str] = set()
-    for pattern in ("*/src/main/**/*.java", "drishti-console/core/**/*.py", "drishti-console/routes/**/*.py", "drishti-console/web/static/js/**/*.js"):
+    for pattern in ("*/src/main/**/*.java", "modules/*/*/src/main/**/*.java", "drishti-console/core/**/*.py", "drishti-console/routes/**/*.py", "drishti-console/web/static/js/**/*.js"):
         for path in ROOT.glob(pattern):
             if ".venv" in path.parts or "target" in path.parts:
                 continue

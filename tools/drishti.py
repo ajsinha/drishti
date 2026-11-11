@@ -17,7 +17,7 @@
 
     python3 tools/drishti.py <group> <command> [options]          (or: uv run --with pyyaml python tools/drishti.py ...)
 
-Groups: sutra (the Java `sutra` tool, plus `sutra gen`), pack (make, new, regenerate, diff, catalogue, i18n, check, about-check, bundle, verify, deploy, rollback,
+Groups: sutra (the Java `sutra` tool, plus `sutra gen`), module (pack, check, inspect a .dmod with the module tool; deploy, plan, apply, list, remove, disable, enable, upgrade, run), pack (make, new, regenerate, diff, catalogue, i18n, check, about-check, bundle, verify, deploy, rollback,
 publish, keygen, install), data (profile and ingest your own JSON Lines or watch a drop folder, load the demo data), server (health, packs, smoke),
 lake (build a Delta lake from a large JSON export, scan, status, maintain), feed (pull external data into the lakes: list, run, status, schedule), testdata (capture-market: a real offline snapshot), view (get, explain), history (an entity over business days), doctor, completion, design (the Screen Designer's designs over
 REST: create, save, check, propose, approve, export, import, bind) and docs (screenshots).
@@ -133,6 +133,32 @@ def run_java(a: argparse.Namespace, args: list[str], capture: bool = False) -> s
         cmd = java_cmd(java, ["-jar", jar, "sutra", *args], tmp=tmp)
         try:
             return subprocess.run(cmd, cwd=ROOT, text=True, capture_output=capture)
+        except FileNotFoundError as e:
+            raise CliError(f"cannot run {cmd[0]}: {e.strerror}; pass --java or set JAVA_HOME") from None
+
+
+def find_module_tool(explicit: str | None = None) -> str:
+    """The module tool's jar: ``explicit``, else ``DRISHTI_MODULE_TOOL``, else ``drishti-module-runtime/target/drishti-module-tool.jar``."""
+    jar = explicit or os.environ.get("DRISHTI_MODULE_TOOL") or str(ROOT / "drishti-module-runtime/target/drishti-module-tool.jar")
+    if not os.path.isfile(jar):
+        raise CliError(f"module tool not found: {jar}; build it (./mvnw -q package -DskipTests -pl drishti-module-runtime -am) or pass --tool / DRISHTI_MODULE_TOOL")
+    return jar
+
+
+def cmd_module(a, extra) -> int:
+    """`module pack|check|inspect`: the standalone module tool (java -jar drishti-module-tool.jar), no Maven needed; the same code as the
+    Maven plugin's goals."""
+    args = [a.module_cmd, absolute(a.path)]
+    for flag, val in (("--jar", getattr(a, "module_jar", None)), ("--out", getattr(a, "out", None)), ("--project", getattr(a, "project", None))):
+        if val:
+            args += [flag, absolute(val)]
+    if getattr(a, "cycles", None) is not None:
+        args += ["--cycles", str(a.cycles)]
+    java = find_java(getattr(a, "java", None))
+    with cli_tmp() as tmp:
+        cmd = java_cmd(java, ["-jar", find_module_tool(a.tool), *args], tmp=tmp)
+        try:
+            return subprocess.run(cmd, cwd=ROOT).returncode
         except FileNotFoundError as e:
             raise CliError(f"cannot run {cmd[0]}: {e.strerror}; pass --java or set JAVA_HOME") from None
 

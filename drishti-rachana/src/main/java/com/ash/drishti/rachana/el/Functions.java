@@ -154,9 +154,73 @@ public final class Functions {
 
     private Functions() {}
 
+    /** The functions of loaded modules (KERNEL_AND_MODULES.md section 12.3): name to the function and its provider's source. */
+    private static final Map<String, FunctionProvider.Provided> LIVE = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final Map<String, String> LIVE_SOURCE = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /**
+     * Adds a loaded module's functions to the table while it is loaded; the returned action takes them out again. A name Rachana or another
+     * provider already has is refused (nothing is added). An expression compiled while the function was there and evaluated after it left is
+     * refused with the reason, the way a missing aggregate is.
+     */
+    public static synchronized Runnable register(String source, List<FunctionProvider.Provided> functions) {
+        List<FunctionProvider.Provided> fs = List.copyOf(functions);
+        for (FunctionProvider.Provided f : fs) {
+            if (ARITY.containsKey(f.name()) || LIVE.containsKey(f.name())) {
+                throw new IllegalStateException("Rachana-EL function " + f.name() + " is provided twice ("
+                        + (LIVE.containsKey(f.name()) ? LIVE_SOURCE.get(f.name()) : "Rachana") + ", " + source + ")");
+            }
+        }
+        for (FunctionProvider.Provided f : fs) {
+            LIVE.put(f.name(), f);
+            LIVE_SOURCE.put(f.name(), source);
+        }
+        return () -> {
+            synchronized (Functions.class) {
+                for (FunctionProvider.Provided f : fs) {
+                    LIVE.remove(f.name(), f);
+                    if (!LIVE.containsKey(f.name())) {
+                        LIVE_SOURCE.remove(f.name());
+                    }
+                }
+            }
+        };
+    }
+
+    /** The source of a loaded module's function, or null. */
+    public static String liveSource(String name) {
+        return LIVE_SOURCE.get(name);
+    }
+
+    /** {min, max} arguments of a function of the table or of a loaded module, or null when there is none of the name. */
+    static int[] arityOf(String name) {
+        int[] a = ARITY.get(name);
+        if (a != null) {
+            return a;
+        }
+        FunctionProvider.Provided f = LIVE.get(name);
+        return f == null ? null : new int[] {f.minArgs(), f.maxArgs()};
+    }
+
+    /** A loaded module's function, looked up by name on every call (an expression never holds the module's code). */
+    private static ElFunction live(String name) {
+        return (args, context) -> {
+            FunctionProvider.Provided f = LIVE.get(name);
+            if (f == null) {
+                throw new ElException(name + "(...) is not available: the module that provides it is not loaded", 0);
+            }
+            return f.function().apply(args, context);
+        };
+    }
+
     /** Every function of Rachana-EL with its argument count: {name: [min, max]}, old spellings included. */
     public static Map<String, int[]> arity() {
-        return ARITY;
+        if (LIVE.isEmpty()) {
+            return ARITY;
+        }
+        Map<String, int[]> all = new HashMap<>(ARITY);
+        LIVE.forEach((n, f) -> all.putIfAbsent(n, new int[] {f.minArgs(), f.maxArgs()}));
+        return Collections.unmodifiableMap(all);
     }
 
     /**
@@ -173,7 +237,8 @@ public final class Functions {
     }
 
     static ElFunction get(String name) {
-        return FUNCTIONS.get(name);
+        ElFunction f = FUNCTIONS.get(name);
+        return f != null || !LIVE.containsKey(name) ? f : live(name);
     }
 
     static ElForm form(String name) {

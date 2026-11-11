@@ -29,6 +29,7 @@ from core.csrf import BodyError, json_body
 from routes import api_routes, designer_routes, history_routes, phone_routes
 from core.edition import ADMIN_PAGES, mnemonics, words as reserved_words
 from routes.common import ident, packs, render
+from core import distribution as _dist
 from core import modules as _modules
 from core import plugins as _plugins
 from routes.pivot_routes import redirect_for as pivot_redirect
@@ -111,12 +112,21 @@ async def go(request: Request, q: str = ""):
     head = typed.split(None, 1)[0].upper() if typed else ""
     if (gone := _modules.typed_refusal(typed)) is not None:        # a function whose module is off, switched off or not the person's
         return RedirectResponse(f"/t?error={quote(gone)}", status_code=303)   # (ACCESS_MODEL.md): "VRES is not available to you: ..."
+    if (hosted := request.app.state.module_parts.word(head)) is not None and hosted[1].page and _modules.module_on(hosted[0].id):
+        part, route = hosted                                       # a hosted module's composed page (KERNEL_AND_MODULES.md 9.10): its route
+        names = re.findall(r"{(\w+)}", route.path)
+        return RedirectResponse(route.url(part.id, **dict(zip(names, typed.split()[1:]))), status_code=303)
     from core import engines as _engines
     if (off := _engines.typed_engine(typed)) is not None:          # FRSA with FRTB-SA running nowhere: said in the server's words (DRS-1020)
         return RedirectResponse(f"/t?error={quote(_engines.refusal(off))}", status_code=303)
     from core import menus as _menus
     if (closed := _menus.engine_refused(request, typed)) is not None:   # VAR for a role that does not open VaR: said in words, not run
         return RedirectResponse(f"/t?error={quote(_menus.refusal_for_role(closed))}", status_code=303)
+    eds = request.app.state.editions
+    if getattr(ed, "distribution", False) and head and not ed.typed_shown(typed) and (
+            head in reserved_words() or head in _dist.known_commands(eds.packs_dir, eds.modules_dir, eds.server_modules)):
+        title = ed.outer.title if getattr(ed, "outer", None) is not None and not ed.outer.typed_shown(typed) else ed.title
+        return RedirectResponse(f"/t?error={quote(f'DRS-4023 {head} is not in {title}: FUNC lists what you can use')}", status_code=303)
     if head in reserved_words() and head not in mnemonics() and not ed.word_on(head):    # a word the edition (or lens) switches off: said, not run (EXP is also a mnemonic)
         return RedirectResponse(f"/t?error={quote(f'DRS-4023 {head} is not part of {ed.title}: FUNC lists what you can use')}", status_code=303)
     if typed.split(None, 1)[:1] and typed.split(None, 1)[0].upper() in BI_WORDS:        # reserved (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 4), whatever packs define

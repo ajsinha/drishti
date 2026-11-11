@@ -32,11 +32,8 @@ dated-by: business_date
 cadence:
   frequency: daily
   due: to be confirmed
-storage:
-  connector: market-store
-  plugin: delta
-  domain: market
-  table: <root>/market/fx-forward-curve/
+binding-hint:
+  lake-table: market.fx-forward-curve
   test-data:
   - data/testdata/market-data/fx-forward-curve
 fields:

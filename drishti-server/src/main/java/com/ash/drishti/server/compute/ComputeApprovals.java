@@ -21,7 +21,7 @@ import com.ash.drishti.compute.ComputeException;
 import com.ash.drishti.compute.ComputeService;
 import com.ash.drishti.compute.approval.ApprovalItem;
 import com.ash.drishti.compute.approval.ApprovalRequest;
-import com.ash.drishti.server.approvals.ApprovalSource;
+import com.ash.drishti.kernel.api.approvals.ApprovalSource;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.kernel.api.security.Principal;
 import java.util.ArrayList;

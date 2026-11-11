@@ -147,4 +147,37 @@ class SourceRegistryRetryTest {
             assertThat(r.retryStatus("lake").orElseThrow().nextAt()).isNull();
         }
     }
+
+    /** A module's computed kind (banking's var-system-baskets): the connector file naming it waits for the module, then serves. */
+    public static final class Baskets implements com.ash.drishti.kernel.api.data.KindProvider {
+        public String name() {
+            return "baskets";
+        }
+
+        public Set<String> kinds() {
+            return Set.of("system-basket");
+        }
+
+        public Optional<EntityDocument> fetch(EntityRef ref, com.ash.drishti.api.AsOf asOf) {
+            return Optional.empty();
+        }
+
+        public boolean documents(String kind, com.ash.drishti.api.AsOf asOf, java.util.function.Consumer<EntityDocument> sink) {
+            return true;
+        }
+    }
+
+    @Test
+    void aModulesComputedKindThatAConnectorFileNamesStartsThatConnectorAndLeavesWithTheModule() throws Exception {
+        var file = new SourcesProperties.ConnectorSettings("baskets", true, List.of("system-basket"), Map.of());
+        try (SourceRegistry r = registry(Map.of("var-baskets", file))) {
+            assertThat(r.connectorStatuses().get("var-baskets").state()).isEqualTo("FAILED");    // no plugin named baskets: the module is not loaded yet
+            Runnable unload = r.attachExtension(new ComputedKindSource(new Baskets()), Map.of());
+            assertThat(r.plugin("var-baskets")).isPresent();
+            assertThat(r.connectorStatuses().get("var-baskets").state()).isEqualTo("RUNNING");
+            assertThat(r.plugin("baskets")).isEmpty();                                          // a type, not a source routed beside the file's
+            unload.run();
+            assertThat(r.plugin("var-baskets")).isEmpty();
+        }
+    }
 }

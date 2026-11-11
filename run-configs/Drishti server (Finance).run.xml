@@ -1,0 +1,38 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Drishti server (Finance)" type="Application" factoryName="Application" folderName="Drishti">
+    <option name="MAIN_CLASS_NAME" value="com.ash.drishti.server.DrishtiApplication" />
+    <module name="drishti-app" />
+    <shortenClasspath name="ARGS_FILE" />
+    <option name="VM_PARAMETERS" value="-Djava.io.tmpdir=$PROJECT_DIR$/data/tmp/server -Xmx2g -XX:MaxDirectMemorySize=256m -XX:MaxDirectMemorySize=768m -Ddrishti.arrow.max-bytes=536870912 --add-opens=java.base/java.nio=ALL-UNNAMED -XX:TrimNativeHeapInterval=60000 -Djdk.nio.maxCachedBufferSize=262144 -XX:NativeMemoryTracking=summary -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=$PROJECT_DIR$/data/tmp/server" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+    <envs>
+      <env name="MALLOC_ARENA_MAX" value="2" />
+      <env name="DRISHTI_STUDIO_SAVE" value="true" />
+      <env name="DRISHTI_SECURITY_ENABLED" value="true" />
+      <env name="DRISHTI_TOKEN_SECRET" value="drishti-dev-only-token-secret-change-me-0123456789" />
+      <env name="DRISHTI_SEED_ADMIN" value="true" />
+      <env name="DRISHTI_SEED_USERNAME" value="drishti-dev-admin" />
+      <env name="DRISHTI_SEED_PASSWORD" value="drishti-dev-admin123" />
+      <env name="DRISHTI_PORT" value="18480" />
+      <env name="DRISHTI_DISTRIBUTION" value="finance" />
+    </envs>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

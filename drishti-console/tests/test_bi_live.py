@@ -186,9 +186,7 @@ def test_the_hub_forwards_the_two_new_events():
 def test_the_live_settings_reach_the_page_and_are_bounded(live):
     page = live.get(f"/bi/r/{PLAIN}").text
     assert 'data-live-min="250"' in page and 'data-live-stale="30"' in page and 'data-rotate="30"' in page
-    settings = load_settings(CONSOLE / "config")
-    settings.as_dict()["bi"]["live"] = {"min_interval_ms": 5, "stale_seconds": 99999}
-    settings.as_dict()["bi"]["board"] = {"rotate_seconds": "soon"}
+    settings = load_settings(CONSOLE / "config", ["--bi.live.min_interval_ms=5", "--bi.live.stale_seconds=99999", "--bi.board.rotate_seconds=soon"])
     app = create_app(settings)
     app.state.backend = LiveBackend()
     text = TestClient(app).get(f"/bi/r/{PLAIN}").text

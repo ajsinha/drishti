@@ -45,7 +45,10 @@ almost everything here; it is all under **Admin** in the top bar. Every setting 
 20. [Functions (FUNC): every command, and turning one on or off](#20-functions-func-every-command-and-turning-one-on-or-off)
 21. [Compute engines on or off](#21-compute-engines-on-or-off)
 22. [Modules on or off](#22-modules-on-or-off)
-23. [Troubleshooting](#23-troubleshooting)
+23. [Data bindings](#23-data-bindings)
+24. [White label: distributions](#24-white-label-distributions)
+25. [Modules and Deploy](#25-modules-and-deploy)
+26. [Troubleshooting](#26-troubleshooting)
 
 ## 1. Signing in and out
 
@@ -714,7 +717,7 @@ licence  →  modules on  →  lenses offered  →  functions this person may us
 
 | Where | What it holds |
 |---|---|
-| **The registry** (`META-INF/drishti/lenses.yaml` in each module's jar: [the banking module's](../../drishti-banking/src/main/resources/META-INF/drishti/lenses.yaml), [the core server's](../../drishti-server/src/main/resources/META-INF/drishti/lenses.yaml)) | the lens's id and title, the modules it needs, the functions it bundles, its Home template, its Home **cards** (`cards:`) and **chips** (`chips:`), and for a lens with no file its menus and Help pages; a site's `config/access/lenses.yaml` adds a lens or replaces one by its id |
+| **The registry** (`META-INF/drishti/lenses.yaml` in each module's jar: [the banking module's](../../modules/banking/banking-service/src/main/resources/META-INF/drishti/lenses.yaml), [the core server's](../../drishti-server/src/main/resources/META-INF/drishti/lenses.yaml)) | the lens's id and title, the modules it needs, the functions it bundles, its Home template, its Home **cards** (`cards:`) and **chips** (`chips:`), and for a lens with no file its menus and Help pages; a site's `config/access/lenses.yaml` adds a lens or replaces one by its id |
 | **The lens file** (`config/lenses/<module>/<lens>.yaml`) | packs by module, commands and words, features, menus, Home landings, Help, Admin pages, BI, the phone display and branding: everything needed to run an instance as the lens |
 
 The shipped lenses:
@@ -755,7 +758,8 @@ lenses, functions or packs.
 
 ## 13. Run a whole instance as one lens
 
-The setting is `drishti.edition` (environment variable `DRISHTI_EDITION`): the name of a lens file in `drishti.lens-dir`
+**Deprecated: name a distribution instead (section 24); `drishti.edition` is read for one release and ignored when a distribution is
+named.** The setting is `drishti.edition` (environment variable `DRISHTI_EDITION`): the name of a lens file in `drishti.lens-dir`
 ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtiedition--editions-and-lenses)). Set it **on the server only**: the console asks the
 server (`/public/about`, the same answer as `/api/v1/about`'s `edition`) and follows. A change needs a restart of the server; the console
 follows within its check interval (`backend.check_seconds`, 5 s) or at its next start. The examples use `risk`; `trading`, `market` and
@@ -896,7 +900,7 @@ more lines in the same file.
 |---|---|---|
 | **Packs** | core, market-data, trading, counterparty-risk, market-risk (allow-only) | world-economy, news-and-markets, us-equities, gleif, funds, the public sector's packs, the example packs (refused: `DRS-1017`) |
 | **Commands** | VaR (`VAR` and its page with the basket what-if; `VRES`, `VOFF`, `VLIM`, `PORT`, `POS`, `PNLV`, `SPV`, `FXS`, `SSET`); exposure (`EXP` and its page; `XRUN`, `XPATH`, `XOFC`, `AGR`, `CSA`, `NSET`, `LIM`, `COLL`, `MC`); the derived totals `NSMTM`, `CPMTM`; reference data `CPTY`, `GRP`, `LE`, `BOOK`, `DESK`, `TRDR`, `CCP`; trades `TRD`, `CTRD`, `PTRD`, `LTRD`; `FX`; the words `BI`, `FUNC`, `WHAT`, `DATAMAP`, `DATA` (Export data), `SMAT` (the scenario matrix), `PLAY` (the VaR Playground) | stress (`STR`, `SCN`, `SSPNL`), `PNL`, `TVAL`, `CVA`, `SACCR`, the curves and vol surfaces, `ISS`, `CAL`, `CLR`; the words `FORM`, `RUPAKA` |
-| **Menus** | Views (Terminal, Search, Functions, Data map, Export data, Reports, Workspaces, Monitors, Alerts), Engines (VaR, exposure and the other engines running), BI, Admin, Help (Help centre, Knowledge, Install and run, About); footer: Help, About, Release notes | Build, Forms |
+| **Menus** | Views (Terminal, Search, Functions, Data map, Export data, Reports, Workspaces, Monitors, Alerts), Risk (the VaR, exposure and other engines' pages, each while its engine runs), BI, Admin, Help (Help centre, Knowledge, Install and run, About); footer: Help, About, Release notes | Build, Forms |
 | **Features** | BI (the lens's datasets), VaR, exposure, the data map, Export data, layouts, workspaces, monitors, alerts, reports, lakes | Calc and Python visuals, the Sutra designer, Studio, Build, Forms, AI, embedding |
 | **Help** | Get started, Risk measures, Data, Operate, Reference, Knowledge (market risk, counterparty credit risk, core, trading, market data), Internal for administrators | Analytics and BI, Build; other packs' Knowledge pages; documents not in the catalogue |
 | **Admin** | users, roles, packs, commands, tokens, access, connectors, artifacts, loads, lakes, audit, net, engines, health, caches, capacity, BI, scopes (every person's VaR baskets), configuration | AI, collaboration, embedding, edits, compute (404) |
@@ -930,7 +934,7 @@ out.
 |---|---|---|
 | **Packs** | core, market-data, trading, market-risk, counterparty-risk (allow-only) | the public-data packs, the sample and example packs (`DRS-1017`) |
 | **Commands** | the blotter `TRD`, `CTRD`, `PTRD`, `LTRD`, `ITRD`; books and positions `BOOK`, `DESK`, `TRDR`, `POS`; risk on my book `VLIM`, `VRES`, `TVAL`, `PNLV`, `PORT`, `DPNL`, `PNL`, `SENS`; counterparties `CPTY`, `GRP`, `NSET`, `NSMTM`, `CPMTM`, `LIM`, `EXP`; market data `CRV`, `REPO`, `FIX`, `IRV`, `CPV`, `FX`, `FXF`, `FXV`, `EQ`, `EQX`, `CMD`, `CMDC`, `BND`, `CDS`; the words `VAR`, `EXP`, `BI`, `FUNC`, `WHAT`, `DATA`, `SMAT`, `PLAY` | regulatory (`SACCR`, `CVA`), stress (`SCN`, `STR`, `SSPNL`), collateral operations (`COLL`, `MC`), the exposure engine's runs, paths and official records, VaR's scenario inputs, macro economics; the words `DATAMAP`, `FORM`, `RUPAKA` |
-| **Menus** | Views (Terminal, Search, Functions, Export data, Reports, Workspaces, Monitors, Alerts); Engines; one **Markets** menu (rates, vols, FX, credit, equities and commodities: `menus.markets`); Blotter, Positions, Risk, Counterparties; Help. BI and Admin by command only (`BI <GO>`; `ADMIN <GO>` for administrators) | Forms, Data map, Build; BI and Admin in the bar |
+| **Menus** | Views (Terminal, Search, Functions, Export data, Reports, Workspaces, Monitors, Alerts); Engines; one **Markets** menu (rates, vols, FX, credit, equities and commodities: `menus.markets`); Blotter, Positions, Risk (with the engines' pages), Counterparties; Help. BI and Admin by command only (`BI <GO>`; `ADMIN <GO>` for administrators) | Forms, Data map, Build; BI and Admin in the bar |
 | **Features** | VaR, exposure, BI (the lens's datasets), layouts, workspaces, monitors, alerts, reports, lakes | Calc, Python visuals, the designer, Studio, Build, forms, the data map, AI, embedding |
 | **Help** | Knowledge (Trades and products, Market risk, Counterparty credit risk, Entities and ownership, Market data), with the other sections but Build | Build; the public-data packs' Knowledge pages |
 | **BI** | `banking.trading_risk_*`, `banking.trading_cashflows_*`, `banking.trades_basic_trade`, `banking.live_trading_trade`, the VaR datasets; their models and reports | exposure, stress, world and market-data items |
@@ -1173,12 +1177,12 @@ home:
   phone: { table: more }                             # parts: hero, tiles, quick, card-1, table, chart, map, feed
 ```
 
-On a phone the lens's subject menus fold into one menu named after it (its title without the product's name: **Trading**); the Engines
-menu is no subject menu and stays in the bar, its columns folding into a drawer.
+On a phone the lens's subject menus fold into one menu named after it (its title without the product's name: **Trading**).
 
 ### 17.2 White-labelling checklist
 
-A lens keeps Drishti's name and eye by default. A licensee who wants its own name sets, on both sides:
+**Use a distribution file instead (section 24): its `brand:` and `theme:` are the one way.** The keys below are read for one release
+(Health names each as deprecated). A lens keeps Drishti's name and eye by default. A licensee who wants its own name sets, on both sides:
 
 | What | Server | Console |
 |---|---|---|
@@ -1495,7 +1499,7 @@ also **watched** (`drishti.engines.watch-seconds`, 5): an edit by hand takes eff
 
 **Admin → Engines** (`/admin/engines`, administrators only; admin page id `engines`, so a lens can list or hide it as any Admin page) lists
 every engine with its switch, its **state** (running, off, starting, stopping, blocked with the reason, restart needed, not installed), the
-**memory** it holds now, its threads, what it **needs** and what **uses** it, and **where its switch is set** (the shipped copy, the engine
+**memory** it holds now, its threads, what it **needs** and what **uses** it, and **where its switch is set** (the shipped copy, the server's or its module's, *shipped copy (module banking)*; the engine
 file, the local file, the environment, the lens, another name).
 
 1. Flip a switch. This only **stages** the change; the panel on the right opens.
@@ -1579,7 +1583,143 @@ offers none of its lenses, functions, packs or engines (its engines show *not in
 `DRISHTI_MODULES_<MODULE>_ENABLED`, and a change takes effect at the next start. The how-to, the licence file and what each module brings
 to the console are in [OPERATIONS_GUIDE.md, Modules on or off](OPERATIONS_GUIDE.md#65-engines-modules-and-editions).
 
-## 23. Troubleshooting
+### 22.1 Module packages, auto-deploy and the shared lib folder
+
+Besides the modules built into the server, the kernel loads **module packages** (`.dmod`), each in its own class loader. Two folders
+under the data folder, as in Tomcat:
+
+| Folder | Setting | What it holds | When a change counts |
+|---|---|---|---|
+| `<data folder>/modules/` | `drishti.modules.path` (`DRISHTI_MODULES_PATH`, commas for several) | `.dmod` packages to deploy; the server keeps its own `installed/`, `store/`, `staging/` and `tombstones/` beside them | at once (auto-deploy) |
+| `<data folder>/lib/` | `drishti.lib.path` (`DRISHTI_LIB_PATH`) | jars every connector and module may use: JDBC drivers, connector plugins, a company's own libraries | at the next restart |
+
+**Auto-deploy.** A `.dmod` put into the module folder is deployed within `drishti.modules.autodeploy-seconds` (5) through the module
+deployment, exactly as an administrator's upload would be: its hash list verified, the fifteen conformance checks, installed under
+`installed/<id>/<version>/` and loaded; a new version is installed beside the old one and `active.yaml` switches to it when it is ready.
+A module is placed like any other (`config/placement.yaml`; on a single node, its parts on `local`). Taking the file out removes the module the same way (its API answers `410 DRS-1028`, its tombstone is kept for saved work). Every step is
+in the audit log as `autodeploy`; a package that fails a check is logged and tried again only when its bytes change. `drishti.modules.autodeploy`:
+empty (the default) means **on for a single node and off in a cluster**, where modules are deployed by plan → apply with two administrators
+([CLUSTER_GUIDE.md](CLUSTER_GUIDE.md)); `true` or `false` decides outright. **Production loads only verified `.dmod` packages**; the
+development mode that loads a module's exploded build folder (`drishti.modules.dev`) is for a developer's own server, refused in a cluster
+and under the `prod` or `production` profile, and marks each such module *development (unverified)* in Health
+([DEVELOPER_GUIDE.md section 1.6](DEVELOPER_GUIDE.md#16-the-module-sdk)).
+
+**The shared lib folder.** Every jar in `<data folder>/lib/` is read once, at start, into one *lib* class loader under the kernel's.
+Connectors and modules see its classes, a JDBC driver in it is registered (a connector's `jdbc:` URL finds it), and a connector plugin
+in it (its `META-INF/services` entry) is offered like a built-in one. It never replaces a kernel class: the kernel is asked first. Health
+(`lib`) and Admin → Modules list each jar with its size and SHA-256, marked **lib**: code the site added beside the product. A module's own
+third-party jars belong in its package (`java.lib`), not here.
+
+## 23. Data bindings
+
+A module says which **kinds** it needs (banking: `trade`, [`scenario-pv`](../contracts/samples/market-risk.md#scenario-pv) ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv))
+or [`pnl-vector`](../contracts/samples/market-risk.md#pnl-vector) ([contract](../contracts/packs/market-risk.md#pnlv-pl-vector-509-scenarios-pnl-vector)),
+[`scenario-set`](../contracts/samples/market-risk.md#scenario-set) ([contract](../contracts/packs/market-risk.md#sset-scenario-set-scenario-set)),
+[`netting-set`](../contracts/samples/counterparty-risk.md#netting-set) ([contract](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set)) …); the site decides
+which connector or lake table serves each one. That decision is the **binding**, one per kind, shared by every module that needs the kind,
+kept in `config/bindings.yaml` (`drishti.bindings.file` names another place). A binding names connectors and lakes only; hosts, URLs and
+credentials stay in the connector files and the secret store, and no module ever sees them. The file's format and examples:
+[DATA_LAKE_GUIDE.md, Data bindings](DATA_LAKE_GUIDE.md#61-data-bindings); the design: [KERNEL_AND_MODULES.md section 5](../architecture/KERNEL_AND_MODULES.md#5-data-needs-and-connector-binding).
+
+**Admin → Data bindings** shows one row per kind: the modules that need it, the functions that use it, what serves it in read order (with
+*union* and the live connector), where the answer came from, the last load and the **state**:
+
+| State | Meaning | Effect |
+|---|---|---|
+| `BOUND` | the site's binding, or the distribution's default (a pack's route), serves it | normal |
+| `AUTO` | nobody bound it, but a lake holds it (found by convention) | normal; bind it to confirm |
+| `DEMO` | the demo lake's samples serve it (only while demo is on) | works; demo data |
+| `STALE` | bound, but nothing loaded within its contract's cadence | works; amber |
+| `MISMATCH` | the source breaks the contract | treated as unbound for the needs |
+| `UNBOUND` | nothing serves it | a **required** need switches off exactly the functions that use it, and they explain themselves: the page is the needs-data page (*Exposure needs data: exposure-path is not bound*, with links to Admin → Data bindings and Help), the command line says the same and the API answers `409 DRS-1035`; an optional one hides its features |
+| `COMPUTED` | a module computes it (`position`, `system-basket`, `var-result`) | never bound |
+
+A kind finds its data in this order, first hit wins: the site's binding, the distribution's default, a lake by convention, the demo lake,
+else unbound. The red banner names every required need that is unbound and the functions it switched off (they answer `404 DRS-1026` with
+that reason until the kind is bound).
+
+**Changing a binding takes two administrators.** *Bind…* on a row opens the form (connectors in read order, union, live, the demo lake,
+why); *Propose* records it; a second administrator approves or rejects it under *Waiting for a decision*, and the proposer may withdraw it.
+An approval writes `config/bindings.yaml` (the previous file kept as `bindings.yaml.bak`) and applies it **without a restart**: the
+connectors whose kinds change are applied again and the read order is swapped. Every step is in the audit log (`binding-proposed`,
+`binding-approved`, `binding-rejected`, `binding-withdrawn`). A refusal says why (`422 DRS-1029`): a computed kind, a connector no file
+defines, a host or credential in the binding, demo and real together; deciding your own proposal is `403 DRS-2007`. An edit of the file
+by hand is picked up within `drishti.bindings.refresh-seconds` (30), or at once with `POST /api/v1/admin/bindings/reload`.
+
+**The upgrade.** A site that has no `config/bindings.yaml` gets one at the next start, written from its connector files' `kinds:` lists
+(each kind bound to the connectors that list it, `union: true` where they are a union), so it keeps reading what it read. Those `kinds:`
+lists are still read in this release and Health lists each file that carries one (*deprecated: the binding is the one home, remove the
+list*); the next release stops reading them. Health's `bindings` block also gives the counts, the unbound required needs and the functions
+they switched off. The API: `GET /api/v1/admin/bindings`, `POST /api/v1/admin/bindings/proposals` and `…/proposals/{id}/approve|reject|withdraw`.
+
+### 23.1 Module placement (Admin → Cluster → Modules)
+
+**Admin → Cluster → Modules** shows where every module part runs: one row per part (its resource class, max-nodes, memory), one column per
+node (its labels, up or down), each cell **active**, **standby**, **down**, **not placed** or **in process**, the owner of a feed or
+singleton starred. A part with no placement runs nowhere, and the page says so. To change it, **Plan a placement** (the whole
+`config/placement.yaml` and why): the server refuses heavy work on every node without `allow-all: true` or over `max-nodes` (`DRS-1030`);
+another administrator **Applies** it (four eyes, `DRS-2007` for the proposer; `DRS-1031` when the cluster changed since the plan). It takes
+effect at once on every member, with no restart. Banking and the other modules still built into the server run on every node until they
+become modules. The rules: [CLUSTER_GUIDE.md section 1.9](CLUSTER_GUIDE.md#19-module-placement).
+
+## 24. White label: distributions
+
+A **distribution** makes the product: its name, tagline, copyright, logo and theme, its modules, lenses, menus, Home cards and Help.
+It is one file, `config/distributions/drishti.<name>.yaml`, and the one way to brand Drishti
+([DISTRIBUTIONS.md](../architecture/DISTRIBUTIONS.md), [KERNEL_AND_MODULES.md section 6](../architecture/KERNEL_AND_MODULES.md#6-the-distribution-file-white-label)).
+Shipped: **Drishti All** (every module, the default), **Drishti Risk** (banking and market data; Risk, Trading and Market lenses; navy
+dark), **Drishti Finance** (capital markets, economy and market data; no VaR or any risk number; light) and **Drishti Genomics** (the
+sample). What a distribution leaves out does not exist in it: its commands, words, menus, Home cards, Help pages and the catalogue the
+AI reads; a command typed anyway answers *DRS-4023 VRES is not in Drishti Finance*.
+
+**Choose one** at start: `bin/start-all.sh --distribution finance` (Windows `bin\start-all.cmd --distribution finance`), or
+`DRISHTI_DISTRIBUTION=finance`, or `drishti.distribution: finance` (server) and `distribution: finance` (console). A path instead of a
+name loads a site's own file. A console started with its own `--distribution` keeps it whatever the server runs, so one cluster can serve
+a Drishti Risk console and a Drishti Finance console ([DEPLOYMENT_AND_QA_GUIDE.md 6.7](../DEPLOYMENT_AND_QA_GUIDE.md#67-starting-a-white-labelled-instance)).
+
+**Your own brand.** Copy a shipped file to a new `drishti.acme.yaml` beside it in config/distributions, change `distribution: drishti.acme` and its
+`brand:` (`product`, `tagline`, `owner`, `copyright`, `notice`, `logo`, `favicon`, `about`, `support`), `theme:` (`tokens`: one of the
+console's themes, `mode`, `density`), `modules:` (module ids: each module's own manifest under `modules/<id>/`), `lenses:`, `menus:`, `home:` and
+`docs: { title }`; start with `--distribution acme`. A distribution names modules; it never contains code, connectors or credentials,
+and it cannot widen the licence.
+
+**Admin → White label** (mock-up A, side by side): every distribution file as a card, the running one first, each with its brand, theme,
+modules (and whether each is loaded on this server), lenses, menus, Home cards, Help title and the command that starts it. Read only:
+change the file and restart. **Admin → Health** shows the console's and the server's distribution and which of its modules loaded.
+
+**The old keys** (`drishti.edition`, `drishti.branding.*`, `DRISHTI_PRODUCT`, `ui.product`, `ui.tagline`, `ui.copyright`, `ui.owner`,
+`ui.notice`) are read for one release and named on Health as deprecated; sections 13 and 17 describe them. With a distribution named,
+`drishti.edition` is ignored.
+
+## 25. Modules and Deploy
+
+**Admin → Modules** (mock-up A, table and detail) lists every module of the cluster: its version, state (*LOADED*, *OFF*, *REMOVED*, *IN
+THE STORE*), the nodes it is placed on and the versions in the module store; the plans waiting for a second administrator are pinned on top
+with *Review*; the chosen module's detail shows its API prefix, the names it owns, the store's verify report and the actions (*Upgrade*,
+*Switch off*, *Remove*, *Switch on*, *Reinstall*), each a plan; every deployment is listed below with who proposed and applied it and the
+outcome.
+
+**Admin → Modules → Deploy** (mock-up C, placement | plan): upload the `.dmod` (checked once with the fifteen conformance checks and kept
+in the store; a version is never rebuilt), see where it is placed (change that in Admin → Cluster → Modules, section 23.1), choose the
+action and say why, and *Plan*: the plan lists every node, what it does now and after, and that unplaced nodes receive nothing. A second
+administrator opens it (from *Review*) and *Applies*: staged on every placed node, then activated together (an upgrade: node by node, the
+others serving the old version meanwhile); a failure on any node rolls every node back and the page says which node and why. The same
+steps from a terminal: `drishti.py module deploy | apply | list` ([CLI_REFERENCE.md](CLI_REFERENCE.md)); the rules:
+[CLUSTER_GUIDE.md section 1.10](CLUSTER_GUIDE.md#110-deploying-a-module).
+
+A removed module's pages show *… is no longer installed on this system* (410; administrators also see who removed it, when and the
+deployment), a switched-off one's *Not available* (404). Alert rules that use it show *paused · needs module X*; nothing saved is deleted,
+and a reinstall restores it.
+
+**What the console shows of a module.** Its console part (its pages under `/m/<id>/`, menu entries, Home cards, command words, Help
+section, AI tools; [DEVELOPER_GUIDE.md section 1.7](DEVELOPER_GUIDE.md#17-a-modules-console-part)) appears on every console within
+`modules.parts_refresh_seconds` (5) of the apply, at once on the console that applied it, and goes the same way when the module is
+switched off or removed: an open page of it is frozen under the notice, Build's lists and Forms' saved searches keep saved Sutras, reports, dashboards, baskets and searches
+that use it with a *needs module X* chip (not openable until it is back). A part that carries its own copy of Drishti Elements or of a
+vendored library, code, or a template that reaches past the kernel's layouts is refused (not shown anywhere); `GET /api/modules/hosted`
+lists what the console hosts, what is gone and what it refused, with the reasons.
+
+## 26. Troubleshooting
 
 **Users, roles and sign-in**
 

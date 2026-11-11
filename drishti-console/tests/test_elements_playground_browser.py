@@ -17,7 +17,7 @@ import asyncio
 import pytest
 
 from conftest import CONSOLE
-from test_elements_gallery_browser import ORIGIN, run
+from test_elements_gallery_browser import ORIGIN, VISUALS, run
 
 pytestmark = pytest.mark.browser
 DRAWN = "() => window.__gallery.pageState && window.__gallery.pageState().good && !document.querySelector('[data-page-error]:not([hidden])')"
@@ -98,7 +98,7 @@ def test_the_sandbox_reaches_neither_the_cookie_nor_the_storage_nor_the_page_nor
         assert spy == "cookie:denied storage:denied parent:denied api:denied", spy
         pg.errors.clear()                                          # the policy's own refusal of the fetch
     run(browsers, body, "#mode=docs&c=chart&tab=page", fetched=fetched)
-    assert not [u for u in fetched if u.startswith("/api")], fetched
+    assert not [u for u in fetched if u.startswith("/api") and u != VISUALS], fetched      # the gallery asks for the module visuals; the sandbox never reaches the api
 
 
 def test_every_visual_has_a_playground_page_that_draws(browsers):

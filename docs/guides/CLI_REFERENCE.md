@@ -1241,6 +1241,45 @@ registry:   (not configured)
 (Here the scratch server has no registry configured; with one, each row shows the version, whether the publisher is trusted, and
 the installed and loaded versions.)
 
+### `module pack`, `module check`, `module inspect`: a module package without Maven
+
+The module tool ([DEVELOPER_GUIDE.md section 1.6](DEVELOPER_GUIDE.md#16-the-module-sdk)): `pack` turns a module folder (`module.yaml` at
+its root, its jar under `java/` or given with `--jar`) into `<out>/<id>-<version>.dmod`; `check` runs the conformance checks C1–C15 on a
+`.dmod` or a folder; `inspect` says what a package is and whether its files match its hash list. It runs
+`drishti-module-runtime/target/drishti-module-tool.jar` (or `--tool`, `DRISHTI_MODULE_TOOL`) with Java only.
+
+```bash
+python3 tools/drishti.py module pack build/greet --jar build/libs/greet.jar --out dist
+python3 tools/drishti.py module check dist/greet-0.1.0.dmod --project .
+python3 tools/drishti.py module inspect dist/greet-0.1.0.dmod
+```
+
+Exit: 0 done (every check passed), 1 a check failed or the module was refused, 2 usage.
+
+### `module deploy|upgrade|plan|remove|disable|enable|apply|reject|withdraw|status|list|run`: deploying on a cluster
+
+The same server API as Admin → Modules → Deploy ([CLUSTER_GUIDE.md section 1.10](CLUSTER_GUIDE.md#110-deploying-a-module)). An
+administrator; a personal token also needs the `modules:deploy` scope.
+
+```bash
+python3 tools/drishti.py module deploy dist/greeter-1.0.0.dmod --reason "first install" --out plan.json   # upload once, then the plan
+python3 tools/drishti.py module apply plan.json                 # a second administrator: stage on the placed nodes, then activate
+python3 tools/drishti.py module upgrade dist/greeter-1.1.0.dmod --reason "new greeting"                # rolling, node by node
+python3 tools/drishti.py module plan install greeter --version 1.0.0 --reason "reinstall"              # a version already in the store
+python3 tools/drishti.py module disable greeter --reason "pause"    # also: remove, enable; each is a plan another administrator applies
+python3 tools/drishti.py module list                            # modules, state, version, placed nodes, the store, the plans waiting
+python3 tools/drishti.py module status dpl-3f9a12c0             # one deployment, per node
+python3 tools/drishti.py module run dist/greeter-1.0.0.dmod     # the kernel's thin jar with this module only, on a free port
+```
+
+`module remove`, `module disable` and `module enable` plan that action for a module; `module reject` (another administrator) and
+`module withdraw` (its proposer) close a waiting plan. The commands live in `tools/modulecli.py`. `deploy` and `upgrade` upload the `.dmod` to the module store (checked once there with the fifteen conformance checks; the same version
+with other bytes is refused) and print the plan per node: the placed nodes stage and activate, the others receive nothing. `apply` exits
+**0** applied, **1** failed (rolled back on every node), **2** a stale plan (`DRS-1031`: plan again), **3** waiting for a second
+administrator (`DRS-2007`). `run` lays out a run folder (the module installed and active, every part placed on this node; `--dir` keeps
+it, otherwise it is removed on exit) and starts `drishti-kernel-app/target/drishti-kernel-*-exec.jar` (or `--jar`); `--dry-run` prints the
+command. Hot reload while it runs is not built yet.
+
 ## 6. `data`: profile, ingest and load
 
 ### `data profile`: what is in your JSON Lines

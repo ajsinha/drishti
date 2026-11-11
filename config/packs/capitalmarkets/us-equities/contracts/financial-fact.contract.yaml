@@ -30,11 +30,8 @@ dated-by: snapshot
 cadence:
   frequency: static
   due: to be confirmed
-storage:
-  connector: us-equities-store
-  plugin: delta
-  domain: us-equities
-  table: <root>/us-equities/financial-fact/
+binding-hint:
+  lake-table: us-equities.financial-fact
   columns:
   - FACT_ID
   - COMPANY

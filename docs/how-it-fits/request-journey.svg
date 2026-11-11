@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 640" width="760" height="640" role="img" aria-label="A request&#x27;s journey in eight steps: the person types VAR BANK on the Risk console; the console calls the kernel as the person; any node takes the call; placement forwards it to a node where banking runs; the module checks access and runs the VaR engine; the engine asks for kinds, which bindings map to the risk-store connector; the connector reads the risklake Delta tables; the answer returns." font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'DejaVu Sans', Arial, sans-serif">
+<!-- Copyright (c) 2026 Ashutosh Sinha. All rights reserved. PROPRIETARY AND CONFIDENTIAL. -->
+<title>A request&#x27;s journey</title>
+<desc>A request&#x27;s journey in eight steps: the person types VAR BANK on the Risk console; the console calls the kernel as the person; any node takes the call; placement forwards it to a node where banking runs; the module checks access and runs the VaR engine; the engine asks for kinds, which bindings map to the risk-store connector; the connector reads the risklake Delta tables; the answer returns.</desc>
+<defs><marker id="a1a2333" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1a2333"/></marker><marker id="a1f5fbf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1f5fbf"/></marker><marker id="a1e8a55" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1e8a55"/></marker><marker id="ac62828" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#c62828"/></marker><marker id="ac27a12" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#c27a12"/></marker><marker id="a1d8c7f" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1d8c7f"/></marker><marker id="a5c6a80" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#5c6a80"/></marker><marker id="a12324f" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#12324f"/></marker><marker id="a6a4fb3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#6a4fb3"/></marker></defs>
+<rect x="0.5" y="0.5" width="759" height="639" rx="14" fill="#f7f9fc" stroke="#cdd6e3"/>
+<text x="24" y="38" font-size="20" font-weight="700" fill="#12324f" text-anchor="start">A request&#x27;s journey</text>
+<text x="24" y="60" font-size="13" font-weight="400" fill="#5c6a80" text-anchor="start">VAR BANK &lt;GO&gt; in Drishti Risk, on a cluster of three kernel nodes.</text>
+<rect x="70" y="84" width="666" height="54" rx="8" fill="#ebe5f7" stroke="#6a4fb3" stroke-width="1.5"/>
+<text x="82" y="106" font-size="13" font-weight="700" fill="#6a4fb3" text-anchor="start">Person → console</text>
+<text x="82" y="124.5" font-size="12.5" font-weight="400" fill="#1a2333" text-anchor="start">types VAR BANK &lt;GO&gt; on the Drishti Risk console (port 17480)</text>
+<circle cx="42" cy="111" r="12" fill="#6a4fb3"/>
+<text x="42" y="116" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">1</text>
+<path d="M400,138 L400,150" fill="none" stroke="#5c6a80" stroke-width="1.8" marker-end="url(#a5c6a80)"/>
+<rect x="70" y="150" width="666" height="54" rx="8" fill="#ebe5f7" stroke="#6a4fb3" stroke-width="1.5"/>
+<text x="82" y="172" font-size="13" font-weight="700" fill="#6a4fb3" text-anchor="start">Console</text>
+<text x="82" y="190.5" font-size="12.5" font-weight="400" fill="#1a2333" text-anchor="start">VAR is in this distribution and lens: calls /api/v1/risk/var as the person</text>
+<circle cx="42" cy="177" r="12" fill="#6a4fb3"/>
+<text x="42" y="182" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">2</text>
+<path d="M400,204 L400,216" fill="none" stroke="#5c6a80" stroke-width="1.8" marker-end="url(#a5c6a80)"/>
+<rect x="70" y="216" width="666" height="54" rx="8" fill="#e3eaf3" stroke="#12324f" stroke-width="1.5"/>
+<text x="82" y="238" font-size="13" font-weight="700" fill="#12324f" text-anchor="start">Any kernel node</text>
+<text x="82" y="256.5" font-size="12.5" font-weight="400" fill="#1a2333" text-anchor="start">the console&#x27;s entry node, say drishti-c, takes the call</text>
+<circle cx="42" cy="243" r="12" fill="#12324f"/>
+<text x="42" y="248" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">3</text>
+<path d="M400,270 L400,282" fill="none" stroke="#5c6a80" stroke-width="1.8" marker-end="url(#a5c6a80)"/>
+<rect x="70" y="282" width="666" height="54" rx="8" fill="#e3eaf3" stroke="#12324f" stroke-width="1.5"/>
+<text x="82" y="304" font-size="13" font-weight="700" fill="#12324f" text-anchor="start">Placement</text>
+<text x="82" y="322.5" font-size="12.5" font-weight="400" fill="#1a2333" text-anchor="start">banking is not placed on drishti-c: forwarded once to drishti-b</text>
+<circle cx="42" cy="309" r="12" fill="#12324f"/>
+<text x="42" y="314" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">4</text>
+<path d="M400,336 L400,348" fill="none" stroke="#5c6a80" stroke-width="1.8" marker-end="url(#a5c6a80)"/>
+<rect x="70" y="348" width="666" height="54" rx="8" fill="#e1ebfa" stroke="#1f5fbf" stroke-width="1.5"/>
+<text x="82" y="370" font-size="13" font-weight="700" fill="#1f5fbf" text-anchor="start">Module</text>
+<text x="82" y="388.5" font-size="12.5" font-weight="400" fill="#1a2333" text-anchor="start">access checked (module, function, permission), audited; VaR engine</text>
+<circle cx="42" cy="375" r="12" fill="#1f5fbf"/>
+<text x="42" y="380" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">5</text>
+<path d="M400,402 L400,414" fill="none" stroke="#5c6a80" stroke-width="1.8" marker-end="url(#a5c6a80)"/>
+<rect x="70" y="414" width="666" height="54" rx="8" fill="#fbefd9" stroke="#c27a12" stroke-width="1.5"/>
+<text x="82" y="436" font-size="13" font-weight="700" fill="#c27a12" text-anchor="start">Bindings</text>
+<text x="82" y="454.5" font-size="12.5" font-weight="400" fill="#1a2333" text-anchor="start">the engine asks for kinds: scenario-set, pnl-vector, trade …</text>
+<circle cx="42" cy="441" r="12" fill="#c27a12"/>
+<text x="42" y="446" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">6</text>
+<path d="M400,468 L400,480" fill="none" stroke="#5c6a80" stroke-width="1.8" marker-end="url(#a5c6a80)"/>
+<rect x="70" y="480" width="666" height="54" rx="8" fill="#dff2ea" stroke="#1e8a55" stroke-width="1.5"/>
+<text x="82" y="502" font-size="13" font-weight="700" fill="#1e8a55" text-anchor="start">Connector → lake</text>
+<text x="82" y="520.5" font-size="12.5" font-weight="400" fill="#1a2333" text-anchor="start">risk-store (Delta) reads the risklake tables for the date</text>
+<circle cx="42" cy="507" r="12" fill="#1e8a55"/>
+<text x="42" y="512" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">7</text>
+<path d="M400,534 L400,546" fill="none" stroke="#5c6a80" stroke-width="1.8" marker-end="url(#a5c6a80)"/>
+<rect x="70" y="546" width="666" height="54" rx="8" fill="#ebe5f7" stroke="#6a4fb3" stroke-width="1.5"/>
+<text x="82" y="568" font-size="13" font-weight="700" fill="#6a4fb3" text-anchor="start">Answer</text>
+<text x="82" y="586.5" font-size="12.5" font-weight="400" fill="#1a2333" text-anchor="start">figures with Explain go back the same way; Elements draw them</text>
+<circle cx="42" cy="573" r="12" fill="#6a4fb3"/>
+<text x="42" y="578" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">8</text>
+<text x="380" y="630" font-size="12" font-weight="400" fill="#5c6a80" text-anchor="middle">No node computes for a part it is not placed for; the answer&#x27;s X-Drishti-Placement header names the node that ran it.</text>
+</svg>

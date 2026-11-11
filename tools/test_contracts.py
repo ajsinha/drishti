@@ -90,10 +90,10 @@ class MiniPack:
 
 
 def java_source(cls: str) -> Path:
-    """The source file of a Java class in whichever module holds it (drishti-banking, drishti-compute-banking, ...: the domain modules
+    """The source file of a Java class in whichever module holds it (modules/banking/banking-service, modules/banking/banking-compute, ...: the domain modules
     moved the risk engines and publishers out of drishti-server and drishti-compute); a path that does not exist when no module has it."""
     rel = Path("src", "main", "java", *cls.split(".")).with_suffix(".java")
-    found = sorted(p / rel for p in C.ROOT.iterdir() if p.is_dir() and (p / rel).is_file())
+    found = sorted(p / rel for p in [*C.ROOT.iterdir(), *C.ROOT.glob("modules/*/*")] if p.is_dir() and (p / rel).is_file())
     return found[0] if found else C.ROOT / rel
 
 
@@ -126,7 +126,7 @@ class TheRepository(unittest.TestCase):
                 f = field(c, name, parent)
                 self.assertEqual((f["presence"], f.get("retiring-in")), ("derived", str(entry["release"])), f"{kind} {path}")
         pos = by_kind["position"]
-        self.assertEqual((pos["class"], pos["storage"]["plugin"]), ("drishti-owned", "var-positions"))
+        self.assertEqual((pos["class"], pos["binding-hint"].get("computed")), ("drishti-owned", True))
         self.assertEqual([f["name"] for f in pos["fields"] if f["presence"] == "derived"], [])
 
 
@@ -272,14 +272,14 @@ class TheRetiredStoredVersions(unittest.TestCase):
             self.assertNotIn(kind, {d.get("kind") for d in self.testdata["datasets"]}, f"test data of {kind}")
             self.assertFalse(any((C.TESTDATA / p / kind).exists() for p in self.manifests), f"a test-data folder of {kind}")
             self.assertNotIn(kind, (snap.PACKS.get(pack) or {}).get("keys", {}), f"the public-data generator of {pack} writes {kind}")
-            self.assertEqual((by_kind[kind]["class"], by_kind[kind]["storage"]["plugin"]), ("computed", "derived"), kind)
+            self.assertEqual((by_kind[kind]["class"], by_kind[kind]["binding-hint"].get("computed")), ("computed", True), kind)
         self.assertEqual(set(snap.COMPUTED["gleif"]) | set(snap.COMPUTED["us-equities"]), {"lei-group", "lei-country", "sic-sector"})
 
     def test_correlations_and_ratios_are_computed(self):
         """CORR keeps its factors and computes its correlations (correlation-result, a reactive Java engine); the USEQ ratios and PXH
         analytics are worked out when read (GROUPINGS_ANALYTICS_GUIDE.md, sections 15 to 17)."""
         by_kind = {cmd["kind"]: c for cmd, _, c in C.contracts()}
-        self.assertEqual((by_kind["correlation-result"]["class"], by_kind["correlation-result"]["storage"]["plugin"]), ("computed", "reactive"))
+        self.assertEqual((by_kind["correlation-result"]["class"], by_kind["correlation-result"]["binding-hint"].get("computed")), ("computed", True))
         self.assertEqual(by_kind["correlation-matrix"]["class"], "fundamental")
         md = self.manifests["market-data"]
         engine = md["connectors"]["correlation-engine"]["engine"]["class"]
@@ -296,7 +296,7 @@ class TheRetiredStoredVersions(unittest.TestCase):
         self.assertEqual(self.pol["removed"]["equity"]["figures"], ["BETA"])
         self.assertEqual(self.pol["removed"]["legal-entity"]["figures"], ["BOOKS[].VAR"])     # the books' VaR is the engine's (2.9.2)
         self.assertIn("BOOKS[].VAR", self.pol["engine-columns"]["var"])
-        self.assertEqual((by_kind["equity-beta"]["class"], by_kind["equity-beta"]["storage"]["plugin"]), ("computed", "reactive"))
+        self.assertEqual((by_kind["equity-beta"]["class"], by_kind["equity-beta"]["binding-hint"].get("computed")), ("computed", True))
         beta = md["connectors"]["equity-analytics"]["engine"]["class"]
         self.assertTrue(java_source(beta).is_file(), beta)
 
@@ -312,8 +312,8 @@ class Drafts(unittest.TestCase):
             self.assertEqual(C.schema_problems(c), [])
             self.assertEqual((c["kind"], c["mnemonic"], c["class"], c["status"], c["source"]), ("widget", "WID", "fundamental", "active", "widget-system"))
             self.assertEqual(c["id-pattern"], ["^W-"])
-            self.assertEqual(c["storage"]["columns"], ["WIDGET_ID", "COLOUR"])
-            self.assertEqual(c["storage"]["vectors"], ["PNL"])
+            self.assertEqual(c["binding-hint"]["columns"], ["WIDGET_ID", "COLOUR"])
+            self.assertEqual(c["binding-hint"]["vectors"], ["PNL"])
             self.assertEqual(field(c, "COLOUR")["enum"], ["red", "blue"])                    # from the glossary: a fact
             self.assertEqual((field(c, "PRICE")["type"], field(c, "PRICE")["unit"]), ("amount", "USD"))
             self.assertEqual(field(c, "COUNT_OF_PARTS")["type"], "integer")
@@ -397,7 +397,7 @@ class Checks(unittest.TestCase):
             m.save("gadget")
             c = yaml.safe_load(C.contract_file(m.packs, "mini", "gadget").read_text(encoding="utf-8"))
             c.update(kind="gizmo", mnemonic="GIZ", status="planned")
-            c["storage"].pop("test-data", None)
+            c["binding-hint"].pop("test-data", None)
             f = C.contract_file(m.packs, "mini", "gizmo")
             f.write_text(C.dump(c), encoding="utf-8")
             self.assertEqual(self.check(m), [])
@@ -406,7 +406,7 @@ class Checks(unittest.TestCase):
             self.assertIn("planned: no command or data yet", page)
             self.assertIn("`GIZ` (proposed)", C.render_docs(m.packs)[C.DOCS / "README.md"])
             c.update(mnemonic="WID")
-            c["storage"]["test-data"] = ["x/gizmo"]
+            c["binding-hint"]["test-data"] = ["x/gizmo"]
             f.write_text(C.dump(c), encoding="utf-8")
             probs = "\n".join(self.check(m))
             self.assertIn("the proposed mnemonic WID is already a command", probs)

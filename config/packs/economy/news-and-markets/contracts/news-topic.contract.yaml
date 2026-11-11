@@ -33,11 +33,8 @@ dated-by: snapshot
 cadence:
   frequency: static
   due: to be confirmed
-storage:
-  connector: news-store
-  plugin: delta
-  domain: news
-  table: <root>/news/news-topic/
+binding-hint:
+  lake-table: news.news-topic
   test-data:
   - config/packs/economy/news-and-markets/samples
 fields:

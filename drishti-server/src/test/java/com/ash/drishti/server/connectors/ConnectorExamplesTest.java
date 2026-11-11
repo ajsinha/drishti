@@ -45,7 +45,7 @@ class ConnectorExamplesTest {
     void everyExampleIsValidAndHoldsNoSecret() throws IOException {
         Path dir = Path.of("../config/connectors.examples");
         ConnectorFiles files = new ConnectorFiles(dir);
-        SettingCatalogue catalogue = new SettingCatalogue(new PluginDiscovery().discover(null));
+        SettingCatalogue catalogue = new SettingCatalogue(new PluginDiscovery().discover());
         List<Path> all;
         try (Stream<Path> s = Files.walk(dir)) {
             all = s.filter(p -> p.toString().endsWith(".yaml")).toList();

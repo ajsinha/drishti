@@ -145,7 +145,7 @@ free space, and the [business date](#business-dates-live-or-a-day-in-the-past) b
 The round **search button** after the command line (or `Alt+K` anywhere) opens [the global search](#search-everything-altk).
 Below 1100 pixels wide they move to a line of their own.
 
-**Then the menus**: **Views**, **Build** and **Help** for everyone, **Engines** where your role opens a compute engine, **BI** where you hold the `bi` power, **Admin** only for administrators: Views, Engines, BI, Build, Admin, Help for a risk administrator, and Views, BI, Build, Help for a role that opens no engine. Below 1280 pixels they show as icons only. Each opens a wide panel
+**Then the menus**: **Views**, **Build** and **Help** for everyone, **Risk** where your role opens a risk engine's page (the VaR, exposure, FRTB-SA and SIMM pages, each shown while its engine runs), **BI** where you hold the `bi` power, **Admin** only for administrators: Views, Risk, BI, Build, Admin, Help for a risk administrator, and Views, BI, Build, Help for a role that opens no engine. The engines' on and off switches are in **Admin → Engines**. Below 1280 pixels they show as icons only. Each opens a wide panel
 (a *mega menu*) in which every entry has an icon and one line saying what it does. The menu holding the page
 you are on is highlighted.
 
@@ -177,8 +177,8 @@ it changes); a test holds every page of the console to an entry or to the page i
 
 | Edition or lens | Menus |
 |---|---|
-| Drishti Risk | Views · **Engines** · BI · Admin · Help |
-| Drishti Trading | Views · Engines · **Markets** (rates `CRV`, `REPO`, `FIX`; vols `IRV`, `CPV`, `FXV`; FX `FX`, `FXF`; credit `CDS`, `BND`; equities and commodities `EQ`, `EQX`, `CMD`, `CMDC`) · **Blotter** (`TRD`, `CTRD`, `PTRD`, `LTRD`) · **Positions** (`BOOK`, `DESK`, `TRDR`, `POS`) · **Risk** (*My VaR* `VAR`, `VLIM`, `TVAL`, `PNLV`, `DPNL`, `PNL`, `SENS`) · **Counterparties** (`CPTY`, `NSET`, `LIM`, `PREDEAL`, `EXP`) · Help. BI and Admin by command: `BI <GO>`, `ADMIN <GO>` (administrators; `ADMIN LOADS` opens that page) |
+| Drishti Risk | Views · **Risk** · **Counterparties** · BI · Admin · Help |
+| Drishti Trading | Views · **Markets** (rates `CRV`, `REPO`, `FIX`; vols `IRV`, `CPV`, `FXV`; FX `FX`, `FXF`; credit `CDS`, `BND`; equities and commodities `EQ`, `EQX`, `CMD`, `CMDC`) · **Blotter** (`TRD`, `CTRD`, `PTRD`, `LTRD`) · **Positions** (`BOOK`, `DESK`, `TRDR`, `POS`) · **Risk** (*My VaR* `VAR`, `VLIM`, `TVAL`, `PNLV`, `DPNL`, `PNL`, `SENS`, and the engines' pages) · **Counterparties** (`CPTY`, `NSET`, `LIM`, `PREDEAL`, `EXP`) · Help. BI and Admin by command: `BI <GO>`, `ADMIN <GO>` (administrators; `ADMIN LOADS` opens that page) |
 | Drishti Market | Views · **Curves** (`CRV`, `REPO`, `FIX`, `INF`) · **Volatility** (`IRV`, `CPV`, `FXV`, `EQV`, `CMDV`) · **FX** (`FX`, `FXF`, `FXV`) · **Credit** (`CDS`, `BND`) · BI · Admin · Help |
 | Drishti World | Views · **Economies** (*A country* `ECON …`, `MACRO`, `FCST`, `REGE`) · **Markets** (`NEWS`, `QUOTE`, `IDX`) · **Companies** (`USEQ`, `EDGAR`, `LEIC`, `FUND`) · BI · Admin · Help |
 

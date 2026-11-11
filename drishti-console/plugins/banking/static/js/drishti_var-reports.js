@@ -45,6 +45,8 @@
     box.replaceChildren();
     if (!st || !st.periodEnd) { box.append(el("p", { class: "rg-note" }, (st && st.note) || "no official record in the period")); return; }
     tile(box, "Period end", mln(st.periodEnd.value), st.node + " " + st.periodEnd.date);
+    const E = window.Drishti && window.Drishti.Explain;             // the one Explain › of the period end's VaR (VAR_GUIDE.md 3.11)
+    if (E && st.node) { box.lastChild.append(E.link({ kind: "var", measure: "var", scope: String(st.node).indexOf(":") > 0 ? st.node : "NODE:" + st.node, date: st.periodEnd.date })); }
     tile(box, "Average", mln(st.average), st.records + " official records");
     tile(box, "High", mln(st.high.value), st.high.date);
     tile(box, "Low", mln(st.low.value), st.low.date);
@@ -209,6 +211,8 @@
     links.replaceChildren();
     if (l.date && l.node) {
       links.append(el("a", { class: "rg-btn", href: "/var?scope=" + encodeURIComponent("NODE:" + l.node) + "&asOf=" + l.date }, "Open the VaR page of " + l.date));
+      const E = window.Drishti && window.Drishti.Explain;           // the one Explain › of the cell's VaR (VAR_GUIDE.md 3.11)
+      if (E) { links.append(" ", E.link({ kind: "var", measure: "var", scope: "NODE:" + l.node, date: l.date })); }
     }
   }
 

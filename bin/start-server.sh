@@ -43,6 +43,8 @@ and the logs under the data folder, waits for /actuator/health and prints the ad
   --workdir DIR       the server's working folder (default <drishti>)
   --background        detach: log in <data>/logs/server[-<node>].log, pid in <data>/run/server[-<node>].pid
   --wait SECONDS      how long to wait for the health answer (default 300)
+  --distribution NAME the distribution: risk, finance, genomics, all, or a file path (DRISHTI_DISTRIBUTION; default Drishti All);
+                      config/distributions/drishti.<name>.yaml, docs/architecture/DISTRIBUTIONS.md
 
  A cluster node (docs/guides/CLUSTER_GUIDE.md):
   --node NAME         the node's id; its pid, log and temp folder are named after it, so several run on one machine
@@ -67,7 +69,7 @@ EOF
 }
 
 PORT="" HEAP="" JAR="" JAVA_HOME_DIR="" PACKS="" DATA="" ENV_FILE="" DEMO=false ENGINE="" LAKE_ROOT="" ICEBERG=false ICEBERG_ROOT=""
-WORKDIR="$DRISHTI_ROOT" BACKGROUND=false WAIT=300 NODE="" NODE_DIR="" NODE_DATA="" SEEDS="" ADVERTISE=""
+WORKDIR="$DRISHTI_ROOT" BACKGROUND=false WAIT=300 NODE="" NODE_DIR="" NODE_DATA="" SEEDS="" ADVERTISE="" DIST=""
 STOP=false
 JAVA_OPTS=()
 SERVER_ARGS=()
@@ -91,6 +93,7 @@ while [ $# -gt 0 ]; do
     --workdir) need "${2:-}" "$1"; WORKDIR="$2"; shift 2 ;;
     --background) BACKGROUND=true; shift ;;
     --wait) need "${2:-}" "$1"; WAIT="$2"; shift 2 ;;
+    --distribution) need "${2:-}" "$1"; DIST="$2"; shift 2 ;;
     --node) need "${2:-}" "$1"; NODE="$2"; shift 2 ;;
     --node-dir) need "${2:-}" "$1"; NODE_DIR="$2"; shift 2 ;;
     --node-data) need "${2:-}" "$1"; NODE_DATA="$2"; shift 2 ;;
@@ -114,6 +117,7 @@ fi
 [ -z "$NODE_DIR$NODE_DATA$SEEDS$ADVERTISE" ] || [ -n "$NODE" ] || die "--node-dir, --node-data, --seed and --advertise belong to a cluster node: give --node <name> too" 2
 
 [ -z "$ENV_FILE" ] || load_env_file "$ENV_FILE"
+[ -z "$DIST" ] || export DRISHTI_DISTRIBUTION="$DIST"   # the server reads it as drishti.distribution
 DATA="$(data_dir "$DATA")"
 SERVER_DATA="$(data_dir "${NODE_DATA:-$DATA}")"
 export DRISHTI_DATA_DIR="$SERVER_DATA"
@@ -168,7 +172,7 @@ if $DEMO; then
   PACKS="${PACKS:-${DRISHTI_PACKS:-core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif,funds}}"
   HEAP="${HEAP:-4g}"
   export DRISHTI_DEMO_ENABLED=false DRISHTI_VAR_SYSTEM_BASKETS_SEED=true DRISHTI_OFFLINE=true DRISHTI_SECURITY_ENABLED=true DRISHTI_SEED_ADMIN=true DRISHTI_STUDIO_SAVE=true
-  export DRISHTI_LENSES="${DRISHTI_LENSES:-risk,world,market,trading}" DRISHTI_EXTERNAL_LIB="${DRISHTI_EXTERNAL_LIB:-$DRISHTI_ROOT/external_lib}"
+  export DRISHTI_LENSES="${DRISHTI_LENSES:-risk,world,market,trading}"   # jars (connectors, JDBC drivers): the lib folder, drishti.lib.path
   export DRISHTI_SEED_USERNAME="${DRISHTI_SEED_USERNAME:-drishti-dev-admin}"
   dev_secret DRISHTI_SEED_PASSWORD drishti-dev-admin123
   dev_secret DRISHTI_TOKEN_SECRET drishti-dev-only-token-secret-change-me-0123456789
@@ -257,7 +261,7 @@ if [ -n "$DEV_SECRETS" ]; then
   warn "DEVELOPMENT secrets in use (NOT FOR PRODUCTION):$DEV_SECRETS. Put your own in an --env-file for anything shared."
 fi
 
-write_pid() { printf '%s\nport=%s\nurl=%s\nhealth=%s\ndata=%s\n' "$1" "$PORT" "$URL" "$HEALTH" "$SERVER_DATA" > "$PID_FILE"; }
+write_pid() { printf '%s\nport=%s\nurl=%s\nhealth=%s\ndata=%s\ndistribution=%s\n' "$1" "$PORT" "$URL" "$HEALTH" "$SERVER_DATA" "${DRISHTI_DISTRIBUTION:-all}" > "$PID_FILE"; }
 cd "$WORKDIR"
 if $BACKGROUND; then
   nohup "$JAVA" "${FLAGS[@]}" -jar "$JAR" "${ARGS[@]}" >> "$DATA/logs/$STEM.out" 2>&1 < /dev/null &

@@ -104,6 +104,9 @@ public final class LoadService {
 
     /** Calls {@code listener} after every load that finished ready (BI layers rebuild the date it names). A listener's failure never fails the load. */
     public void onReady(java.util.function.Consumer<LoadRecord> listener) {
+        if (readyListeners.isEmpty()) {           // a module's listeners leave with it
+            com.ash.drishti.common.ModuleLoaders.onLeave(this, (s, loader) -> s.readyListeners.removeIf(x -> com.ash.drishti.common.ModuleLoaders.of(x, loader)));
+        }
         readyListeners.add(listener);
     }
 

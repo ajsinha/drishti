@@ -46,6 +46,6 @@ public class DeployConfiguration {
 
     @Bean
     public ConnectionProbe connectionProbe(SourcesProperties sources, JsonCodec codec) {
-        return new ConnectionProbe(new PluginDiscovery().discover(sources.pluginDir()), codec);
+        return new ConnectionProbe(new PluginDiscovery().discover(), codec);
     }
 }

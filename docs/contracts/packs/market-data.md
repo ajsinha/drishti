@@ -59,7 +59,7 @@ Discounting (OIS), projection (IBOR/term RFR), government or basis curve for a c
 | Id pattern | `^CRV-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `market-store` (plugin `delta`), table `<root>/market/ir-curve/` |
+| Binding hint | lake table `market.ir-curve`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/ir-curve |
 | Worked example | [market-data/ir-curve](../samples/market-data.md#ir-curve) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -144,7 +144,7 @@ General-collateral or specials repo rates by term.
 | Id pattern | `^REPO-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `market-store` (plugin `delta`), table `<root>/market/repo-curve/` |
+| Binding hint | lake table `market.repo-curve`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/repo-curve |
 | Worked example | [market-data/repo-curve](../samples/market-data.md#repo-curve) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -202,7 +202,7 @@ Spot rate for a currency pair with bid/ask.
 | Id pattern | `^FX-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `market-store` (plugin `delta`), table `<root>/market/fx-spot/` |
+| Binding hint | lake table `market.fx-spot`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/fx-spot |
 | Worked example | [market-data/fx-spot](../samples/market-data.md#fx-spot) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -280,7 +280,7 @@ Forward points by tenor for a pair.
 | Id pattern | `^FXF-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `market-store` (plugin `delta`), table `<root>/market/fx-forward-curve/` |
+| Binding hint | lake table `market.fx-forward-curve`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/fx-forward-curve |
 | Worked example | [market-data/fx-forward-curve](../samples/market-data.md#fx-forward-curve) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -339,7 +339,7 @@ Implied vols by expiry and delta (ATM, 25D RR/BF).
 | Id pattern | `^FXV-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `market-store` (plugin `delta`), table `<root>/market/fx-vol-surface/` |
+| Binding hint | lake table `market.fx-vol-surface`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/fx-vol-surface |
 | Worked example | [market-data/fx-vol-surface](../samples/market-data.md#fx-vol-surface) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -406,7 +406,7 @@ Normal (bp) swaption vols by expiry × tenor.
 | Id pattern | `^IRV-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `market-store` (plugin `delta`), table `<root>/market/ir-vol-cube/` |
+| Binding hint | lake table `market.ir-vol-cube`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/ir-vol-cube |
 | Worked example | [market-data/ir-vol-cube](../samples/market-data.md#ir-vol-cube) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -466,7 +466,7 @@ Cap vols by maturity and strike.
 | Id pattern | `^CPV-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `market-store` (plugin `delta`), table `<root>/market/cap-vol-surface/` |
+| Binding hint | lake table `market.cap-vol-surface`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/cap-vol-surface |
 | Worked example | [market-data/cap-vol-surface](../samples/market-data.md#cap-vol-surface) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -525,7 +525,7 @@ A listed stock: price, dividends, sector and identifiers.
 | Id pattern | `^EQ-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `market-store` (plugin `delta`), table `<root>/market/equity/` |
+| Binding hint | lake table `market.equity`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/equity |
 | Worked example | [market-data/equity](../samples/market-data.md#equity) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -618,7 +618,7 @@ Index level with its largest constituents.
 | Id pattern | `^EQX-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `market-store` (plugin `delta`), table `<root>/market/equity-index/` |
+| Binding hint | lake table `market.equity-index`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/equity-index |
 | Worked example | [market-data/equity-index](../samples/market-data.md#equity-index) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -693,7 +693,7 @@ Expected dividends by year (implied from dividend futures and forwards).
 | Id pattern | `^DIV-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `market-store` (plugin `delta`), table `<root>/market/dividend-curve/` |
+| Binding hint | lake table `market.dividend-curve`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/dividend-curve |
 | Worked example | [market-data/dividend-curve](../samples/market-data.md#dividend-curve) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -754,7 +754,7 @@ Implied vols by expiry and moneyness.
 | Id pattern | `^EQV-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `market-store` (plugin `delta`), table `<root>/market/equity-vol-surface/` |
+| Binding hint | lake table `market.equity-vol-surface`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/equity-vol-surface |
 | Worked example | [market-data/equity-vol-surface](../samples/market-data.md#equity-vol-surface) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -815,7 +815,7 @@ CDS par spreads by tenor, recovery and implied default probabilities.
 | Id pattern | `^CDS-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `market-store` (plugin `delta`), table `<root>/market/credit-curve/` |
+| Binding hint | lake table `market.credit-curve`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/credit-curve |
 | Worked example | [market-data/credit-curve](../samples/market-data.md#credit-curve) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -883,7 +883,7 @@ Published CPI fixings (US CPI-U NSA, HICPxT, UK RPI…).
 | Id pattern | `^INF-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `market-store` (plugin `delta`), table `<root>/market/inflation-index/` |
+| Binding hint | lake table `market.inflation-index`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/inflation-index |
 | Worked example | [market-data/inflation-index](../samples/market-data.md#inflation-index) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -944,7 +944,7 @@ Zero-coupon breakevens by tenor, with monthly seasonality.
 | Id pattern | `^INFC-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `market-store` (plugin `delta`), table `<root>/market/inflation-curve/` |
+| Binding hint | lake table `market.inflation-curve`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/inflation-curve |
 | Worked example | [market-data/inflation-curve](../samples/market-data.md#inflation-curve) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -1011,7 +1011,7 @@ A traded commodity with its benchmark, unit and venue.
 | Id pattern | `^CMD-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `market-store` (plugin `delta`), table `<root>/market/commodity/` |
+| Binding hint | lake table `market.commodity`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/commodity |
 | Worked example | [market-data/commodity](../samples/market-data.md#commodity) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -1098,7 +1098,7 @@ Futures settlement prices by delivery month.
 | Id pattern | `^CMDC-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `market-store` (plugin `delta`), table `<root>/market/commodity-curve/` |
+| Binding hint | lake table `market.commodity-curve`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/commodity-curve |
 | Worked example | [market-data/commodity-curve](../samples/market-data.md#commodity-curve) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -1163,7 +1163,7 @@ Implied vols by delivery month and moneyness.
 | Id pattern | `^CMDV-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `market-store` (plugin `delta`), table `<root>/market/commodity-vol-surface/` |
+| Binding hint | lake table `market.commodity-vol-surface`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/commodity-vol-surface |
 | Worked example | [market-data/commodity-vol-surface](../samples/market-data.md#commodity-vol-surface) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -1219,7 +1219,7 @@ Published overnight and term rate fixings (SOFR, €STR, SONIA…).
 | Id pattern | `^FIX-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `market-store` (plugin `delta`), table `<root>/market/rate-fixing/` |
+| Binding hint | lake table `market.rate-fixing`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/rate-fixing |
 | Worked example | [market-data/rate-fixing](../samples/market-data.md#rate-fixing) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -1282,7 +1282,7 @@ A listed bond: terms, price, yield, spreads and analytics.
 | Id pattern | `^BND-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `market-store` (plugin `delta`), table `<root>/market/bond/` |
+| Binding hint | lake table `market.bond`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/bond |
 | Worked example | [market-data/bond](../samples/market-data.md#bond) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -1374,7 +1374,7 @@ A correlation set: the factors whose pairwise correlations basket, quanto and sp
 | Id pattern | `^CORR-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `market-store` (plugin `delta`), table `<root>/market/correlation-matrix/` |
+| Binding hint | lake table `market.correlation-matrix`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/correlation-matrix |
 | Worked example | [market-data/correlation-matrix](../samples/market-data.md#correlation-matrix) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -1423,7 +1423,7 @@ The pairwise correlations of a correlation set's factors, computed when asked fr
 | Id pattern | — |
 | Dated by | `on request` |
 | Cadence | on change (due: computed on request and again when the correlation sets, equities or FX spots load (data-version trigger)) |
-| Storage | connector `correlation-engine` (plugin `reactive`) |
+| Binding hint | computed by Drishti, never bound; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 
 **Fields**
 
@@ -1485,7 +1485,7 @@ An equity's beta, alpha, correlation and R squared against its index (EQUITY_IND
 | Id pattern | — |
 | Dated by | `on request` |
 | Cadence | on change (due: computed on request and again when the equities or indices load (data-version trigger)) |
-| Storage | connector `equity-analytics` (plugin `reactive`) |
+| Binding hint | computed by Drishti, never bound; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 
 **Fields**
 

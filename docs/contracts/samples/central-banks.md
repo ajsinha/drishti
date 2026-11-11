@@ -26,7 +26,7 @@ Every data type of `central-banks` as a real record of the committed test data, 
 
 ## Central bank: central-bank (CBANK)
 
-One central bank: its policy rate, the last move, the rate's history and the market series around it. One row per central bank, keyed by BANK_ID. Read by the **central-banks** pack's connector `centralbank-store` (table `<root>/centralbank/central-bank/`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/central-banks/samples/central-bank.jsonl`, 2 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+One central bank: its policy rate, the last move, the rate's history and the market series around it. One row per central bank, keyed by BANK_ID. Read by the **central-banks** pack's connector `centralbank-store` (lake table `centralbank.central-bank`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/central-banks/samples/central-bank.jsonl`, 2 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 
@@ -162,7 +162,7 @@ None: all 2 rows were read, and every field any of them has is in the record abo
 
 ## Central bank series: rate-series (CBSER)
 
-One central-bank or market series from FRED or the Bank of Canada: the history, the latest value, the change on the day and on the year. One row per central bank series, keyed by SERIES_ID. Read by the **central-banks** pack's connector `centralbank-store` (table `<root>/centralbank/rate-series/`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/central-banks/samples/rate-series.jsonl`, 13 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+One central-bank or market series from FRED or the Bank of Canada: the history, the latest value, the change on the day and on the year. One row per central bank series, keyed by SERIES_ID. Read by the **central-banks** pack's connector `centralbank-store` (lake table `centralbank.rate-series`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/central-banks/samples/rate-series.jsonl`, 13 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 

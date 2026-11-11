@@ -92,6 +92,7 @@ public class DiskBudget {
     public DiskBudget(DiskProperties props, Path root) {
         this.props = props;
         this.root = root;
+        com.ash.drishti.common.ModuleLoaders.onLeave(this, (b, loader) -> b.folders.removeIf(x -> com.ash.drishti.common.ModuleLoaders.of(x, loader)));
     }
 
     /** Registers a folder (a later registration of the same name replaces the earlier: a test's second server, a reload). */

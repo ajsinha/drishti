@@ -25,7 +25,7 @@ Every data type of `national-statistics` as a real record of the committed test 
 
 ## National statistic: statistics-series (NSTAT)
 
-One Statistics Canada series by vector: the latest value, the change on the period and the year, the history. One row per national statistic, keyed by SERIES_ID. Read by the **national-statistics** pack's connector `statistics-store` (table `<root>/statistics/statistics-series/`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/national-statistics/samples/statistics-series.jsonl`, 7 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+One Statistics Canada series by vector: the latest value, the change on the period and the year, the history. One row per national statistic, keyed by SERIES_ID. Read by the **national-statistics** pack's connector `statistics-store` (lake table `statistics.statistics-series`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/national-statistics/samples/statistics-series.jsonl`, 7 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 

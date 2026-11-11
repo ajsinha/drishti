@@ -95,6 +95,22 @@ public interface AccessRegistry {
      */
     void functionSwitches(FunctionSwitches switches);
 
+    /**
+     * The kernel's data bindings, asked after the switches (docs/architecture/KERNEL_AND_MODULES.md section 5.6): a function whose required
+     * data need no source serves is off, with the reason ({@code VAR needs scenario-pv or pnl-vector: no source is bound}). Empty: on.
+     */
+    default void dataGate(java.util.function.Function<String, Optional<String>> gate) {
+    }
+
+    /**
+     * Why the function waits for data, when that is the only reason it is off: its module is on, no administrator switched it off, and a
+     * required data need is unserved ({@code EXP needs exposure-path: ...}). A page, a command or an API of such a function explains itself
+     * (409 {@code DRS-1035}, the console's "needs data" page) instead of answering 404. Empty otherwise.
+     */
+    default Optional<String> dataGateReason(String word) {
+        return Optional.empty();
+    }
+
     /** The administrator's installation-level function switches, as the registry reads them. */
     @FunctionalInterface
     interface FunctionSwitches {

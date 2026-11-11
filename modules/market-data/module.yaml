@@ -1,0 +1,105 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The market-data module's manifest (docs/architecture/KERNEL_AND_MODULES.md section 4; DISTRIBUTIONS.md): content only, no code.
+# The distribution files list it by id, and their visibility filter reads this file: its packs, functions, menus and Help.
+format: 1
+id: market-data
+version: 1.0.0
+title: Market data
+about: 'Curves, volatility surfaces, FX, equities, credit, inflation, commodities, fixings and bonds: the market data both Drishti Risk and Drishti
+  Finance show'
+domain: market-data
+origin: first-party
+publisher:
+  id: drishti
+  name: Ashutosh Sinha
+licence:
+  feature: market-data
+kernel: '>=0.2 <1.0'
+rachana: '>=1.0'
+contracts: '>=1.0'
+plugin-api: '>=2.0'
+elements: '>=1.4 <2'
+provides:
+  kinds:
+    market-data:
+    - ir-curve
+    - repo-curve
+    - fx-spot
+    - fx-forward-curve
+    - fx-vol-surface
+    - ir-vol-cube
+    - cap-vol-surface
+    - equity
+    - equity-index
+    - dividend-curve
+    - equity-vol-surface
+    - credit-curve
+    - inflation-index
+    - inflation-curve
+    - commodity
+    - commodity-curve
+    - commodity-vol-surface
+    - rate-fixing
+    - bond
+    - correlation-matrix
+    - correlation-result
+    - equity-beta
+packs:
+  folder: packs
+  list:
+  - market-data
+data:
+  needs: data/needs.yaml
+console:
+  plugin: console/plugin.yaml
+  menus:
+  - markets
+functions:
+- MKT
+- CRV
+- REPO
+- FX
+- FXF
+- FXV
+- IRV
+- CPV
+- EQ
+- EQX
+- DIV
+- EQV
+- CDS
+- INF
+- INFC
+- CMD
+- CMDC
+- CMDV
+- FIX
+- BND
+- CORR
+- CORRC
+- EQB
+lenses: lenses/market.yaml
+docs:
+  readme: docs/README.md
+  help: docs/help.yaml
+  domains: []
+  guides:
+  - packs/market-data/guides/market-data-catalogue.md
+  - packs/market-data/guides/market-data.md
+  tutorials:
+  - tutorials/06-groupings-and-analytics.md
+resources:
+  memory-mb: 64

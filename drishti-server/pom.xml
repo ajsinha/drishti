@@ -29,6 +29,7 @@
   <description>The Drishti Spring Boot application</description>
   <dependencies>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-kernel-api</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-module-runtime</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-engine</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-net</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-compute</artifactId></dependency>
@@ -121,6 +122,7 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <systemPropertyVariables>
+            <drishti.sdk.archetype>${project.basedir}/../drishti-sdk/drishti-module-archetype/src/main/resources</drishti.sdk.archetype>
             <!-- the one folder a test fork writes into (TestRun in the tests): every path below and in the tests' properties is
                  under it, and the fork removes it when it ends, so a run leaves nothing in target/ but the build's own output -->
             <drishti.test.dir>${project.build.directory}/test-run/fork${surefire.forkNumber}</drishti.test.dir>

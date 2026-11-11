@@ -297,6 +297,7 @@ menus:
         items:
           - { id: packs, href: /admin/packs, icon: box-seam, label: Packs, desc: "Switch domain packs on and off; deploy archives; the connectors each uses", match: /admin/packs, requires: [admin, admin-page:packs] }
           - { id: connectors, href: /admin/connectors, icon: plug, label: Connectors, desc: "Where each pack reads its data: create, test, change, switch off", match: /admin/connectors, requires: [admin, admin-page:connectors] }
+          - { id: bindings, href: /admin/bindings, icon: diagram-3, label: Data bindings, desc: "Which connector or lake table serves each kind the modules need: one binding per kind, four eyes, applied without a restart", match: /admin/bindings, requires: [admin, admin-page:bindings] }
           - { id: loads, href: /admin/loads, icon: cloud-upload, label: Data loads, desc: "What your ETL announced, what is due, what is late", match: /admin/loads, requires: [admin, admin-page:loads] }
           - { id: lakes, href: /admin/lakes, icon: layers, label: Lakes, desc: "Delta tables: load a file, see every table, maintain them now or on a schedule", match: /admin/lakes, requires: [admin, admin-page:lakes, feature:lakes] }
           - { id: edits, href: /admin/edits, icon: pencil-square, label: Record edits, desc: "Write-back: who may correct which records, and the approvals each change needs", match: /admin/edits, requires: [admin, admin-page:edits] }
@@ -305,6 +306,8 @@ menus:
       - title: Platform
         items:
           - { id: configuration, href: /admin/configuration, icon: sliders2, label: Configuration, desc: "Every setting in three tiers (everyday, admin, expert): the value in effect, where it came from, and a change proposed for a second administrator to approve", match: /admin/configuration, requires: [admin, admin-page:configuration] }
+          - { id: white-label, href: /admin/white-label, icon: palette, label: White label, desc: "The distributions side by side: brand, theme, modules, lenses, Home and Help of each, the running one marked", match: /admin/white-label, requires: [admin, admin-page:white-label] }
+          - { id: modules, href: /admin/modules, icon: puzzle, label: Modules, desc: "The modules of the cluster: upload a .dmod once, plan where it goes, a second administrator applies; upgrade node by node, switch off, remove and reinstall", match: /admin/modules, requires: [admin, admin-page:modules] }
           - { id: engines, href: /admin/engines, icon: gear-wide-connected, label: Engines, desc: "Compute engines on or off on this server (the pivot engine, the in-memory lake and each module's own), each with its own file", match: /admin/engines, requires: [admin, admin-page:engines] }
           - { id: compute, href: /admin/compute, icon: cpu, label: Python workers, desc: "The Python worker pools, their environments and the requirements waiting for approval", match: /admin/compute, requires: [admin, admin-page:compute] }
           - { id: net, href: /admin/net, icon: diagram-3, label: Cluster, desc: "{product}*net: the servers acting as one, their packs and data, routing, access", match: /admin/net, requires: [admin, admin-page:net] }
@@ -361,6 +364,7 @@ help-sections:
 # Pages the menus do not list because they open from another page (the guard, tests/test_sitemap.py, holds each to a page of a menu):
 # the address and where it is reached from.
 in-context:
+  /admin/modules/deploy: "Admin → Modules (Install module…, Upgrade…, Remove…)"
   /: "the brand at the left of the top bar (Home)"
   /help/configuration: "Admin → Configuration (the reference) and Help → Operate"
   /help/developer: "Help centre"

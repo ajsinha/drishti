@@ -21,6 +21,7 @@ keeps ``reachable`` / ``since`` / ``lastError`` / ``version`` per server and log
 from __future__ import annotations
 
 import asyncio
+import inspect
 import logging
 import time
 
@@ -48,6 +49,13 @@ class BackendWatch:
         self._url_of = url_of or (lambda s: s.url)
         self.on_about = None                    # called with (server, about) after each answer: the console learns the edition
 
+    async def fetch(self, server, path: str) -> dict:
+        """One public answer of the server as the watch reaches it (``/public/modules/manifests``)."""
+        async with httpx.AsyncClient(timeout=max(self.timeout, 5.0)) as client:
+            r = await client.get(f"{self._url_of(server)}{path}")
+            r.raise_for_status()
+            return r.json()
+
     @property
     def enabled(self) -> bool:
         return self.seconds > 0
@@ -71,7 +79,9 @@ class BackendWatch:
             up, error, version = True, "", str(about.get("version") or "")
             if self.on_about is not None:
                 try:
-                    self.on_about(server, about)
+                    learned = self.on_about(server, about)
+                    if inspect.isawaitable(learned):            # the console may ask the server for more (its module list)
+                        await learned
                 except Exception:  # noqa: BLE001 - learning the edition never marks the server down
                     LOG.exception("reading the server's edition failed")
         except Exception as e:  # noqa: BLE001 - any failure means not reachable

@@ -38,7 +38,7 @@ One Statistics Canada series by vector: the latest value, the change on the peri
 | Id pattern | `^NSTAT-` |
 | Dated by | `snapshot` |
 | Cadence | daily (due: the national-statistics feed's schedule (0 14 * * 1-5 UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
-| Storage | connector `statistics-store` (plugin `delta`), table `<root>/statistics/statistics-series/` |
+| Binding hint | lake table `statistics.statistics-series`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | config/packs/economy/national-statistics/samples |
 | Worked example | [national-statistics/statistics-series](../samples/national-statistics.md#statistics-series) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 

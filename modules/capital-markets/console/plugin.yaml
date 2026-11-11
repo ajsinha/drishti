@@ -1,0 +1,79 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The module's pages: a Sutra page per function, under /m/capitalmarkets/ (KERNEL_AND_MODULES.md section 9.8).
+format: 2
+module: capitalmarkets
+title: Capital markets
+routes:
+- id: useqs
+  path: /us-equities
+  sutra: us-equities/catalog
+  function: USEQS
+  title: US equities
+- id: useq
+  path: /us-equities/us-company/{id}
+  sutra: us-equities/us-company
+  function: USEQ
+  title: US company
+- id: idx
+  path: /us-equities/index-membership/{id}
+  sutra: us-equities/index-membership
+  function: IDX
+  title: Index members
+- id: sic
+  path: /us-equities/sic-sector/{id}
+  sutra: us-equities/sic-sector
+  function: SIC
+  title: SIC sector
+- id: edgar
+  path: /us-equities/filing-feed/{id}
+  sutra: us-equities/filing-feed
+  function: EDGAR
+  title: EDGAR filings browser
+- id: filing
+  path: /us-equities/filing/{id}
+  sutra: us-equities/filing
+  function: FILING
+  title: SEC filing
+- id: fact
+  path: /us-equities/financial-fact/{id}
+  sutra: us-equities/financial-fact
+  function: FACT
+  title: Financial fact
+- id: pxh
+  path: /us-equities/price-history/{id}
+  sutra: us-equities/price-history
+  function: PXH
+  title: Price history (live, internal use only)
+- id: funds
+  path: /funds
+  sutra: funds/catalog
+  function: FUNDS
+  title: Funds and ETFs
+- id: fund
+  path: /funds/fund/{id}
+  sutra: funds/fund
+  function: FUND
+  title: Fund or ETF
+- id: held
+  path: /funds/fund-holder/{id}
+  sutra: funds/fund-holder
+  function: HELD
+  title: Funds holding a company
+- id: track
+  path: /funds/index-funds/{id}
+  sutra: funds/index-funds
+  function: TRACK
+  title: Funds tracking an index

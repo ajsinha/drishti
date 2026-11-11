@@ -20,6 +20,7 @@
 {% block title %}Explain · {{ PRODUCT }}{% endblock %}
 {% block screen %}explain{% endblock %}
 {% block body_class %}terminal{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/elements/drishti-chart/drishti_chart.css?v={{ ASSET_V }}">{% endblock %}
 {% block content %}
 <div class="dx-full" data-explain-page data-explain-request="{{ explain_request }}" data-explain-tab="{{ explain_tab }}">
   <div class="dx-page-head">
@@ -31,3 +32,4 @@
   <div class="dx-page-checks" data-dx-checks></div>
 </div>
 {% endblock %}
+{% block scripts %}{# the waterfall of Why it moved, layout A (drishti-chart) #}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/elements/drishti-chart/drishti_chart.js?v={{ ASSET_V }}"></script>{% endblock %}

@@ -17,6 +17,251 @@
 
 ## Unreleased
 
+- **A module's computed kinds start the connectors that name them**: a loaded module's `KindProvider` that a connector file names (banking's
+  `var-system-baskets` and `var-positions`) is installed as that connector's type, as a `SourcePlugin` extension is, so `PORT <id>` opens the
+  system basket's page again and `POS <id>` the position's; before, the provider was routed as a source of its own while the file's
+  connector kept failing with "no plugin named". Module pages (`kernel/page.html`) load drishti-grid's sheet, so the World landing's grids
+  scroll inside themselves on a phone.
+- **The visual snapshots run in a file of their own** (`test_page_snapshots_browser.py`, its own server over the page walk's cached lake), so
+  the walk and the snapshots each fit the drill's re-run time limit; the snapshots mask the checkout's folder (a worktree's or the drill's)
+  and the real day local or UTC (a server's UTC stamp after 19:00 in New York), and the goldens that showed a checkout's folder (White
+  label, Cluster → Modules, Connectors, Curves) are refreshed.
+- **The console's distribution follows the server's module list**: `drishti-console/core/distribution.py` reads the modules from the
+  server's one reader (`GET /public/modules/manifests`: shipped and installed `.dmod` packages, then the manifests folder) and reads
+  them again when `/public/about`'s `manifests` fingerprint changes, so a package installed after the start joins a running console's
+  distribution and a removed one leaves it. The console reads its own manifests folder only until a server answers.
+- **A `.dmod`'s data needs reach the data gate**: a loaded module's needs file (`data: {needs: …}` in its manifest) joins the gate on load
+  and leaves it on unload, so an unserved required kind switches its functions off with the needs-data page (genomics: `variant` →
+  VARIANT). Before, only built-in modules' `META-INF/drishti/needs.yaml` on the kernel's class path counted.
+- **Distributions see installed and shipped `.dmod` modules**: the distribution reads module manifests with the registry's one package
+  reader (first-party packages in the server's jar, then the module store's active ones), not only the manifests folder. The reader
+  takes `installed/active.yaml` as the module node writes it (`modules: {id: version}`) and looks the store up when it reads, so an
+  installed package is a module of the registry too.
+- **A dropped module loads on a single node without a placement entry**: with no cluster, a module `config/placement.yaml` does not
+  name is placed on the node (Health and Admin → Cluster → Modules note *single node: placed here*); a cluster keeps no all-nodes default.
+- **A loaded module's lakes are found**: the lakes a module ships (`drishti/lakes/shipped.txt` in its jar: banking's `ccr-official` and
+  `var-official`) are read from the module's own class loader once it is live, not only from the kernel's class path, so a server with
+  banking loaded from its `.dmod` starts `exposure-results` and `var-results` without a `config/lakes` file of its own; the lakes leave
+  with the module. Test stacks wait for `/actuator/health/readiness` (the modules loaded) before they ask.
+- **Developer guide: How to create …** ([DEVELOPER_GUIDE.md part 12](docs/guides/DEVELOPER_GUIDE.md#12-how-to-create-)): step-by-step
+  chapters for a module (manifest fields, the contributions, the three builds, the fifteen checks and what a failure means, install,
+  remove and reinstall), a connector plugin (plugin or module, `lib/` or inside a module, testkit, Admin → Connectors), a binding (needs,
+  the bindings file's keys, resolution order, four eyes, gated functions), a distribution (an annotated file, the themes, logo and
+  favicon), a compute (an engine inside a module, a Python engine through the worker SDK and a reactive connector, heavy parts and
+  placement) and a custom visual; then one worked example joining them end to end, linked to How Drishti fits together.
+- **How it fits together** ([HOW_IT_FITS.md](HOW_IT_FITS.md), [PDF](HOW_IT_FITS.pdf)): a root-level tour for newcomers with one SVG per
+  idea (`docs/how-it-fits/`): the three blocks, a request's journey, what is inside a `.dmod` and its class lookup order, data bindings,
+  placement, a module's life, distributions, and every configuration file with who writes it, when it is read, what it decides, its
+  Admin page, how the files point at each other and `VAR BANK` in Drishti Risk traced through all of them. README's three-blocks section
+  shows the new picture (the old flow diagram is deleted) and links the page; the PDF is generated and
+  checked with the other guides' (`tools/docs/md_to_pdf.py`).
+- **Banking is a module** (2.9.11.i2 + i3, wave 2, option A; [KERNEL_AND_MODULES.md section 3.3](docs/architecture/KERNEL_AND_MODULES.md#33-the-manifest-moduleyaml),
+  [DEVELOPER_GUIDE.md section 1.7](docs/guides/DEVELOPER_GUIDE.md#17-what-a-module-can-contribute), [DISTRIBUTIONS.md section 10](docs/architecture/DISTRIBUTIONS.md#10-how-it-works-as-built)).
+  First-party modules: `origin: first-party` is verified against the `first-party.yaml` the build ships (ids and hash-list hashes); only
+  such a module may declare a `kernel-internals:` allowance, honoured by conformance check C1 and the module class loader, and a module
+  with one loads only on the exact kernel build stamped into it ("built for kernel X, this is Y: install the matching module"). One
+  implementation for the module tool and the kernel; `module inspect`, `drishti.py module list` and Health show the origin. Banking is
+  packed as `banking-1.0.0.dmod` in the normal build (`modules/dist`, with market-data, capital-markets and economy) and passes the fifteen
+  checks; the full jar is the thin kernel with these four installed by default (`drishti.modules.shipped`) and placed on every node by the
+  default placement for first-party modules. The in-process banking wiring is gone from the jar (it stays only as banking's own tests'
+  harness). The bridge now also connects connector types, engine catalogues and defaults, engine caches, readiness gates, drains, cache
+  reports, ready rules, Flight forms, controllers already in the module's namespace and the module's class loader. C12 reads the class
+  initialiser (unmodifiable constants pass) and honours `@EngineWide` (kernel API 0.4, `module.EngineWide`). Its API-token scopes are read from its package while it is
+  loaded. Removing banking from a running server answers 410 (*needs module
+  banking*) for its API (old prefixes too) and pages, installing it again brings back the same VaR, and its class loader is collected (leak-free).
+- **The genomics sample module and Drishti Genomics** (2.9.11.i2 + i3, wave 3; [DEVELOPER_GUIDE.md section 1.9](docs/guides/DEVELOPER_GUIDE.md#19-the-genomics-sample-step-by-step),
+  [DISTRIBUTIONS.md section 4](docs/architecture/DISTRIBUTIONS.md#4-drishti-genomics-sample)). `modules/genomics`, a third party's module
+  made from the archetype and finished by hand on the kernel API and the plugin API only: a VCF reader as a connector extension inside
+  the module (a module's `SourcePlugin` is routed while it is loaded, started with its folders), the kinds `variant`, `sample`, `gene`,
+  `cohort`, the functions `VARIANT`, `GENE`, `COHORT` on one page folder, synthetic samples (a seeded generator), its `.dmod` built in the
+  reactor and passing C1 to C15. Drishti Genomics boots the thin kernel and the module from its file alone: the Research lens, none of the
+  kernel's packs (`kernel-packs: []`), no finance anywhere; a module project's manifest is read from `src/dmod/`.
+- **The custom-visual SDK** ([DEVELOPER_GUIDE.md section 1.8](docs/guides/DEVELOPER_GUIDE.md#18-a-modules-own-visual-the-custom-visual-sdk),
+  [ELEMENTS.md section 7.4](docs/architecture/ELEMENTS.md#74-a-modules-own-visual-types-the-visual-registry-for-modules)). A module ships
+  its own visual type as a kind of drishti-chart's registry in its Elements library, built from drishti-chart's primitives, and declares
+  it under `visuals:`; the gallery shows it while the module is hosted and not after it goes (`GET /api/elements/visuals`). The first is
+  `genomics.lollipop`; `mvn drishti:visual -Dname=<name>` is the template. A module's pages read its API through `/m/<id>/api/`.
+- **Gated functions explain themselves.** A function that is on but whose required data no source serves no longer answers 404: its
+  page is the needs-data page (*Exposure needs data: exposure-path is not bound*, 200, links to Admin → Data bindings and Help), its API
+  answers `409 DRS-1035` with the need, and the command line says the same words.
+- **One way for jars: the lib folder** (`drishti.lib.path`). The launcher's `external_lib/java` and `drishti.sources.plugin-dir` are gone:
+  at the first start that finds jars in either, the server moves them into lib, writes `lib/moved-<date-time>.bak` and Health says so;
+  `drishti.sources.plugin-dir` is deprecated (ignored, said in Health) for one release. `external_lib/python` stays the console's.
+- **The kernel loads modules** (2.9.11.i2 + i3, wave 2; [DEVELOPER_GUIDE.md sections 1.6 and 1.7](docs/guides/DEVELOPER_GUIDE.md#17-what-a-module-can-contribute),
+  [ADMIN_GUIDE.md section 22.1](docs/guides/ADMIN_GUIDE.md#221-module-packages-auto-deploy-and-the-shared-lib-folder)). A loaded `.dmod`
+  module's beans of the kernel API's provider types are seen by the kernel while it is loaded and withdrawn when it unloads (the
+  registration bridge): a `KindProvider` is routed like any source, a new `function.FunctionProvider` adds Rachana functions, a
+  `ComputeEngine` joins the engine registry, and approval sources, explainers, view augmenters, pivot sources, Health and capacity figures,
+  vocabularies, official results, API aliases and AI tools reach their collection points; its `DrishtiModule` entry is started with the
+  kernel's `ModuleContext`. Its `@ModuleApi` controllers are mounted by the module deployment's mounting (off: 404, removed: 410
+  `DRS-1028`). **Several jars:** `java.jars` (the module's own, one or more) and `java.lib` (third-party, under the package's `lib/`); an undeclared jar
+  is refused (V1); `drishti:assemble` and `pack --more` put them in. **Auto-deploy:** a `.dmod` dropped into `drishti.modules.path` (default
+  `<data folder>/modules`) is stored, checked, installed and loaded through the module deployment, and removed when its file goes;
+  `drishti.modules.autodeploy` is on for a single node and off in a cluster. **Development mode** (`drishti.modules.dev`, off by default,
+  refused in a cluster and under the production profile): an exploded module folder loads unverified, is marked *development
+  (unverified)* in Health, and reloads when it changes. **The shared lib folder** (`drishti.lib.path`, default `<data folder>/lib`): its
+  jars load at start into one lib class loader under the kernel's, seen by connectors (plugins, JDBC drivers) and modules, never replacing a
+  kernel class; Health and Admin → Modules list each jar with its SHA-256, marked lib. The archetype now also contributes a kind provider,
+  a Rachana function and a REST API; the kernel API is 0.3 (`function.FunctionProvider`; the entity types of `com.ash.drishti.api` are
+  shared with modules). `ModuleHostServerTest` loads the archetype module and a three-jar module, uses their kind, function and route from
+  the kernel, reloads on an edit, unloads (410), reinstalls and unloads again, leak-free each time; and deploys and removes a dropped package.
+- **The console part of a module** (2.9.11.i2 + i3; [DEVELOPER_GUIDE.md section 1.7](docs/guides/DEVELOPER_GUIDE.md#17-a-modules-console-part),
+  [ADMIN_GUIDE.md section 25](docs/guides/ADMIN_GUIDE.md#25-modules-and-deploy)): the console hosts a module's `console/` part
+  declaratively under `/m/<id>/`, from the server's registry (`GET /public/modules/console` and the part's zip) or from the modules the
+  product ships: `plugin.yaml` format 2's routes (a page of the module's own templates, rendered in its own Jinja environment over
+  `kernel/page.html` and the Elements macros of `kernel/elements.html`; a Sutra route opens the kernel's page of its word), menus, words,
+  Home cards, Help (`docs/help.yaml`) and AI tool descriptions (Admin → AI, `GET /api/ai/module-tools`); statics at
+  `/m/<id>/static/<version>/…`, cached a year. A part carrying a copy of Drishti Elements or a vendored library, code, an unprefixed static
+  file or a template reaching past `kernel/` is refused. Switched off or removed, every surface goes (Module removed A, 410/404; an open
+  page frozen under the notice; words *needs module X*; lens links), saved Sutras, reports, dashboards and baskets in Build and saved
+  searches in Forms are kept and
+  marked *needs module X*, and a reinstall restores them. The SDK archetype declares a menu entry, a Home card and an AI tool. Setting
+  `modules.parts_refresh_seconds` (5).
+- **The economy module's World page** moves into the module (`modules/economy/console/`, `economy:world_landing.html` in the World lens),
+  its two lists on the Elements grid instead of hand-drawn tables; `drishti-console/plugins/economy` is gone.
+- **One source for content modules:** the access registry reads market-data, capital markets and economy from their own manifests
+  (`modules/<id>/module.yaml`, `drishti.module-manifests-dir`); the server's copies of them are deleted. Capital markets' id is
+  `capitalmarkets` in its manifest too (the distribution file follows).
+- **Visual snapshots of the key pages** (2.9.11.i2 + i3, wave 4; [TEST_HARNESS.md section 3.20](docs/architecture/TEST_HARNESS.md#320-the-visual-snapshots)):
+  about 30 key pages (Home and each lens's, the World page, the VaR explorer for the bank, a desk and a basket, Why it moved, the cubes, a BI
+  report, FRTB-SA, SIMM, exposure, Forms, Trades, Curves, FUND, USEQ, the Admin pages of engines, connectors, loads, bindings, cluster
+  modules, modules, deploy and white label, Help, the Elements gallery and Playground) at 1366 and 1920 px, dark and light, compared with
+  committed golden images (half size, 128 colours) in the page walk on its own server; the walk's lake ends on a fixed date, the live clock
+  is masked; per-page tolerance, a diff image on a change; `--update-snapshots` refreshes them by hand, never in a drill; the drill lists
+  every changed page and the goldens its commit refreshed. The walk's lake holds the trades, the exposure engine's committed run, the funds
+  and the US equities, with the capital-markets packs and the Markets lens on, so Trades, EXP, FUND, USEQ and the Markets lens's Home show
+  their data; a search's time taken is quietened like the VaR timings; a module's kinds keep their file order (Admin → Modules listed them
+  in a different order on each start); Admin → White label opens in a fraction of a second (it parsed every pack file once per command,
+  about 20 s per distribution).
+- **Module deployment, cluster-first** (2.9.11.i2 + i3, wave 3; [CLUSTER_GUIDE.md section 1.10](docs/guides/CLUSTER_GUIDE.md#110-deploying-a-module),
+  [ADMIN_GUIDE.md section 25](docs/guides/ADMIN_GUIDE.md#25-modules-and-deploy)): a `.dmod` is uploaded once to the module store
+  (`POST /api/v1/admin/modules/store`, the fifteen conformance checks, kept by id and version, never rebuilt); a plan says per node what
+  happens, following the placement (unplaced nodes receive nothing); a second administrator applies it: phase 1 stages on every placed node
+  (each checks the SHA-256 and V1–V9 itself, the package sent in chunks over Drishti\*net), phase 2 activates; any failure rolls every
+  node back (`DRS-1034`). An upgrade rolls node by node, the others serving the old version, requests to a switching node waiting for it.
+  Switch-off answers 404 `DRS-1025`; removal unloads hot (leak-checked), answers 410 `DRS-1028` on every node, shows the *no longer
+  installed* page for its console paths and marks saved work *needs module X* (`POST /api/v1/modules/needs`; alert rules show *paused ·
+  needs module X*); a reinstall restores it. `@ModuleApi` controllers (with `@RestController`) are mounted under `/api/v1/<prefix>/` and
+  unmounted leak-free. `drishti.py module deploy|upgrade|plan|remove|disable|enable|apply|reject|withdraw|status|list|run`, **Admin →
+  Modules** (mock-up A) and **Deploy** (mock-up C); the token scope `modules:deploy`; settings `drishti.module-deploy.*`. Tested on three
+  nodes (`ModuleDeployClusterTest`: placed on two, nothing on the third; a phase-2 failure rolled back; a rolling upgrade under load with no
+  failed request; remove, saved work marked, reinstall; leak-free).
+- **Content modules for the distributions** (2.9.11.i2 + i3, wave 2; [DISTRIBUTIONS.md section 10](docs/architecture/DISTRIBUTIONS.md)):
+  `market-data` (split out of banking; banking now requires it), `capital-markets` (us-equities and funds, and Drishti Finance's new
+  **Markets lens** with Home's Markets cards) and `economy` (the eight public-data packs and the World lens), each a folder under
+  `modules/` that the module tool packs into a `.dmod` passing the fifteen conformance checks. The module tool brings repository content in
+  through a module's `content.yaml` (a pack without its connector templates, a lens, a tutorial), reads a pack's own contracts
+  (`<kind>.contract.yaml`) in C8 and the keys of YAML files, not their sentences, in C9. The distributions' visibility filter reads the
+  modules' manifests: `config/distributions/modules.yaml` is gone (`kernel.yaml` holds the kernel's part; `DRISHTI_MODULE_MANIFESTS_DIR`).
+  Drishti Finance offers Markets and World (Markets first); the registry knows `market-data` as a module of its own, so the market data
+  stays on when banking or capital markets is switched off.
+
+- **Distributions: Drishti Risk, Drishti Finance, Drishti Genomics and Drishti All** (2.9.11.i2 + i3, wave 3, white label;
+  [DISTRIBUTIONS.md](docs/architecture/DISTRIBUTIONS.md)). One build, one file per product: `config/distributions/drishti.<name>.yaml`
+  (brand, theme, modules, lenses, menus, Home, Help), chosen by `--distribution <name|path>`, `DRISHTI_DISTRIBUTION` or
+  `drishti.distribution`; none named is Drishti All, exactly as before. The kernel and the console read the same file, and each module's
+  own manifest for what it holds (`modules/<id>/module.yaml`; `config/distributions/kernel.yaml` for the kernel's part). What a
+  distribution leaves out does not exist in it: commands, words, menus, Home cards, Help and the catalogue the AI reads; Drishti Finance
+  has no VaR or any risk number, Drishti Risk no economy command, market data is in both; a command typed anyway answers
+  `DRS-4023 VRES is not in Drishti Finance`. Help is titled per distribution ("Drishti Risk Help") with its modules' guides and the
+  kernel's. A console with its own `--distribution` keeps it over any cluster, so one cluster serves Drishti Risk on 17480 and Drishti
+  Finance on 17481. **Admin → White label** (mock-up A) shows every distribution side by side; Health shows the running one and which
+  of its modules loaded. The old keys (`drishti.edition`, `drishti.branding.*`, `DRISHTI_PRODUCT`, `ui.product`, `ui.tagline`,
+  `ui.copyright`, `ui.owner`, `ui.notice`) are read for one release with a Health deprecation note. Start scripts: `--distribution` on
+  `bin/start-all`, `start-server` and `start-console` (`.sh`, `.ps1`, `.cmd`), `--name` for a second console in one data folder, a stack
+  file's `consoles:` list with a `distribution:` each, `bin/status` shows each process's distribution; IntelliJ run configurations for
+  Risk, Finance and All. A person's density follows the distribution's until they choose one.
+
+- **The data gate no longer switches exposure off by mistake** ([KERNEL_AND_MODULES.md sections 5.4–5.6](docs/architecture/KERNEL_AND_MODULES.md#56-what-a-missing-or-bad-binding-does)):
+  banking's data needs say what the exposure engine reads (EXP and XPATH need `exposure-path`; trades, CSAs, netting sets, curves and FX
+  spots no longer gate EXP); the bindings upgrade reads only the site's own connector files, leaving out a pack template's unedited file (the
+  distribution's default), a connector switched off by its file or the properties, and a connector defined only in properties; a binding that names only connectors
+  no file defines is set aside with a Health problem, and the kind resolves without it; a need on a kind the site does not offer (no
+  loaded pack defines it, nothing binds it) switches nothing off and still shows UNBOUND in Health.
+- **The VaR page as the owner approved it** (`docs/lenses/mockups/var/var-page.html`; VAR_GUIDE.md section 3.2): the scope tree shows
+  only the chosen scope (the whole bank; a node and below with a breadcrumb up; a system or saved basket its own positions grouped by the
+  chosen hierarchy, each part's VaR computed by the engine: `GET /api/v1/risk/var/tree?within=<scope>`, with **All of the bank** to go
+  back); the tree fills its column (drishti-grid no longer draws an empty Explain pane for a grid without an Explain hook); **Explain ›**
+  on every row (on hover and on the chosen row) and on the VaR and ES tiles; one toolbar row (baskets, the matured switch, Backtest, MR
+  cube, What-if, Explain); the data versions behind an ⓘ.
+- **Why it moved, layout A** (`docs/lenses/mockups/var/why-it-moved.html`; VAR_GUIDE.md section 3.11): the compare date is back
+  (Previous day, 1 week, Month end, Pick a date; `from=` in the link; `VAR <scope> EXPLAIN vs <date>`), four figures (VaR on each date,
+  the change, the tail scenario), the waterfall first and wide with a clicked step's biggest contributors and plain words on its right,
+  Formula, Inputs & lineage and Checks folded below. Other explained kinds keep the four-card page.
+- **Explain › everywhere VaR or ES is shown**: one control from drishti-insight (`Drishti.Explain.link`, `[data-explain-link]`) on the
+  explorer, the regulatory reports, Home's VaR tile, the Sutra pages' engine figures, a BI visual of one VaR or ES, the MR cube and
+  pivots; a guard test keeps every such figure carrying it.
+- VaR explorer: turning on **Include matured positions** no longer makes the scope tree disappear (the tree library refused the switch's own "of which matured" column); a screen's own tree measure with a label is accepted.
+
+- **Module placement** (2.9.11.i2 + i3, wave 2; [CLUSTER_GUIDE.md section 1.9](docs/guides/CLUSTER_GUIDE.md#19-module-placement),
+  [KERNEL_AND_MODULES.md section 4.11](docs/architecture/KERNEL_AND_MODULES.md#411-modules-in-a-cluster)): `config/placement.yaml` says which
+  module parts (API, compute, pages, feeds) run on which nodes, by node name or role (a node label such as `heavy` or `web`), with no
+  all-nodes default: a part not placed runs nowhere and Health says so. Feed and singleton parts have one owner, the first live placed node
+  by name (one `SingletonElection` interface, `FirstLiveElection` today), failing over only inside the placement. A node runs a part only
+  where it is placed: others forward the request to a placed node (`X-Drishti-Placement` names it) or refuse it with `503 DRS-1032` when
+  none is up. Changes are plans applied by a second administrator (`DRS-1030` heavy work everywhere or over max-nodes, `DRS-1031` the
+  cluster changed since the plan, `DRS-2007` four eyes), without a restart, adopted by every member by version. The node × part matrix:
+  `GET /api/v1/admin/cluster/modules` and **Admin → Cluster → Modules**. The module runtime's host asks `placedHere` before loading
+  (`NOT_PLACED`). Banking and the other built-in modules count as placed on every node, so nothing changes for them.
+
+- **The Module SDK** (2.9.11.i2 + i3, wave 1; [DEVELOPER_GUIDE.md section 1.6](docs/guides/DEVELOPER_GUIDE.md#16-the-module-sdk),
+  [KERNEL_AND_MODULES.md section 8](docs/architecture/KERNEL_AND_MODULES.md#8-the-module-sdk-and-the-developer-path)): three new Maven
+  modules under `drishti-sdk/`. `drishti-module-archetype` makes a module project that builds green on its first `mvn verify` (module.yaml,
+  a function with its route and page, a kind with its data contract, data needs, README, Help, a guide, a tutorial, a test);
+  `drishti-module-parent` is the parent it inherits (Java 21, the kernel API and Spring as `provided`); `drishti-module-maven-plugin` runs
+  `drishti:validate` (the manifest against the pom), `drishti:assemble` (packs `target/dmod/<id>-<version>.dmod` with the module runtime's
+  packer and its hash list) and `drishti:conformance` (the fifteen checks C1–C15, each failure a sentence naming the file and the fix; C11
+  and C13–C15 load the module into the module runtime, C15 for 50 load/unload cycles). Maven is not the only way: the packer and the
+  checks are one implementation in `drishti-module-runtime`, also run as `java -jar drishti-module-tool.jar pack|check|inspect` (one
+  self-contained jar, any build: Gradle, a script, `javac` and a folder) and `drishti.py module pack|check|inspect`; the plugin is a thin
+  wrapper over it. A `.dmod` is a documented zip anyone can produce, as long as it passes `check`. `ModuleToolTest` generates a module
+  from the archetype, builds it, passes the checks and loads, routes and unloads it; packs, checks and inspects one built with `javac` and
+  a folder through the tool and loads it; a broken copy fails the checks in plain words.
+- **Banking's sources build on their own:** `drishti-banking` and `drishti-compute-banking` moved to `modules/banking/banking-service` and
+  `modules/banking/banking-compute` (artifact ids unchanged; built alone with `./mvnw -f modules/banking/pom.xml`). The kernel internals
+  banking still reaches are recorded in `modules/banking/kernel-internals.txt` (44 packages: 20 of `drishti-server`, 24 of the kernel's
+  libraries); `BankingReachTest` fails a new one and asks for a package no longer reached to be removed, so the list only shrinks. No
+  behaviour change: banking still loads in-process from the full jar.
+- **The thin server jar:** `drishti-kernel-app` builds `drishti-kernel-app/target/drishti-kernel-<version>-exec.jar`, the kernel without
+  banking, beside the full jar (`drishti-server/target/drishti-server-<version>-exec.jar`, still the default). It boots with no modules;
+  Health (`GET /api/v1/admin/health`) has a `modules` row: the code modules and content modules with whether each is on, and *no modules:
+  the kernel runs alone* when there is no code module.
+- **Module placement** (2.9.11.i2 + i3, wave 2; [CLUSTER_GUIDE.md section 1.9](docs/guides/CLUSTER_GUIDE.md#19-module-placement),
+  [KERNEL_AND_MODULES.md section 4.11](docs/architecture/KERNEL_AND_MODULES.md#411-modules-in-a-cluster)): `config/placement.yaml` says which
+  module parts (API, compute, pages, feeds) run on which nodes, by node name or role (a node label such as `heavy` or `web`), with no
+  all-nodes default: a part not placed runs nowhere and Health says so. Feed and singleton parts have one owner, the first live placed node
+  by name (one `SingletonElection` interface, `FirstLiveElection` today), failing over only inside the placement. A node runs a part only
+  where it is placed: others forward the request to a placed node (`X-Drishti-Placement` names it) or refuse it with `503 DRS-1032` when
+  none is up. Changes are plans applied by a second administrator (`DRS-1030` heavy work everywhere or over max-nodes, `DRS-1031` the
+  cluster changed since the plan, `DRS-2007` four eyes), without a restart, adopted by every member by version. The node × part matrix:
+  `GET /api/v1/admin/cluster/modules` and **Admin → Cluster → Modules**. The module runtime's host asks `placedHere` before loading
+  (`NOT_PLACED`). Banking and the other built-in modules count as placed on every node, so nothing changes for them.
+
+- **The module runtime** (2.9.11.i2 + i3, wave 1; new Maven module `drishti-module-runtime`,
+  [KERNEL_AND_MODULES.md section 10.4](docs/architecture/KERNEL_AND_MODULES.md#104-one-module-runtime-library-two-hosts),
+  [DEVELOPER_GUIDE.md section 1.5](docs/guides/DEVELOPER_GUIDE.md#15-the-module-runtime)): the `.dmod` package (pack, unpack, the
+  `DMOD.MF` hash list), the `module.yaml` manifest with every field of the design, discovery from the module folders (`active.yaml` or the
+  highest version), the checks V1–V8 refusing with plain words (manifest, hashes, no executables, no kernel API classes in a jar, API ranges,
+  dependencies with cycles and missing ones, licence, claims against reserved names and other modules, data needs, memory budget), a class
+  loader and a child Spring context per module, the live route table (200, 308, 404 off, 410 removed), the registry of contributions and
+  the unload sequence in the design's order with a class-loader leak check. A library only: the kernel with no modules behaves as before.
+- **Kernel-controlled data bindings** ([KERNEL_AND_MODULES.md](docs/architecture/KERNEL_AND_MODULES.md) section 5;
+  [ADMIN_GUIDE.md](docs/guides/ADMIN_GUIDE.md) section 23; [DATA_LAKE_GUIDE.md](docs/guides/DATA_LAKE_GUIDE.md) section 6.1):
+  `config/bindings.yaml` is the one home of which connectors serve each kind (one binding per kind, shared by every module: `read` in
+  order, `union`, `live`, `write`, `demo`; never a host or a credential). A kind resolves by the site's binding, the distribution's default
+  (a pack's route), a lake by convention (`AUTO`), the demo lake (`DEMO`), else `UNBOUND`; states `BOUND`, `AUTO`, `DEMO`, `STALE`,
+  `MISMATCH`, `UNBOUND`, `COMPUTED`. An unbound required need switches off exactly the functions that use it, with the reason
+  (`404 DRS-1026`). **Admin → Data bindings** (mock-up A): one row per kind, the unbound-required banner, propose and a second
+  administrator's approve, reject or withdraw (four eyes, audited), applied without a restart; refusals `422 DRS-1029`.
+  `GET /api/v1/admin/bindings`, Health's `bindings` block, `drishti.bindings.file`, `drishti.bindings.refresh-seconds`. **Upgrade:** a site
+  without the file gets one at its next start from its connector files' `kinds:` lists (kept as `bindings.yaml.bak` when rewritten); the
+  lists are still read this release, each listed as deprecated in Health, and removed in the next.
+- **Contracts name no connector:** `storage:` (connector, plugin, path) is replaced by a connector-free `binding-hint:` (lake table,
+  partitions, promoted columns, `computed: true`) in all 125 contracts, the schema, `drishti.py contract` and the generated contract, sample
+  and pack-guide pages.
+- **Kernel API 0.2:** `DrishtiModule`, `ModuleContext` (`Kinds`, `KindWriter`), `ModuleSettings`, `KindProvider`, `BindingState`,
+  `AiToolProvider`, `@ModuleApi`; `ApprovalSource` moved into the kernel API (`com.ash.drishti.kernel.api.approvals`). Banking's
+  `var-positions` and `var-system-baskets` are `KindProvider`s (computed kinds) instead of source plugins; banking declares its data needs.
 - **Explain → Why it moved answers in about a second, not a minute** (the drill's failing Explain test, and "Why it moved looks broken"):
   opening the earlier date ran the load's maturity check, which read every trade (about 8,000) one document at a time because one union
   connector of `trade` (a source system with no table yet, such as Calypso in a lake without it) made the union's columns unreadable. A union
@@ -70,6 +315,7 @@
 
 ### Docs
 
+- **Catch-up for i1, i1b and the VaR page:** the README rewritten from the product as built (numbers regenerated); the IntelliJ server configurations (module `drishti-app`, class path in an argument file) in OPERATIONS_GUIDE section 3.2, the developer guide and the deployment guide; the Risk menu in place of Engines in the user and admin guides and tutorial 1; the kernel boundary, the copy-paste ratchet, `--affected` and the 10 s page budget among the developer rules; the deployment guide's VaR and Elements checks; `var/tree?within=` in the API reference; Iceberg's storage roots; the Help summaries of the VaR, BI and quickstart pages; the PDFs regenerated.
 - **Plan:** i2 and i3 become one release with one drill after i1 + i1b, in four waves, with deploy built once, cluster-first.
 - **Source file limit:** 2,000 lines (was 1,500); `SourceFileSizeTest`, the console's checks and the guides.
 - **Roadmap:** every visual lives in Drishti Elements; a Drishti Elements Playground (live pages with editable data) closes the BI depth release.
@@ -82,7 +328,6 @@
 
 - **Scenario PVs at position grain:** `data/testdata/position-grain/` holds 2026-09-30 for Endur, Calypso and Murex (`GRAIN: POSITION`, 7,984 positions, 509 scenarios), kept out of the demo lake.
 
-## Unreleased
 
 ### BI depth: visuals
 

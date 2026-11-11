@@ -32,11 +32,8 @@ dated-by: snapshot
 cadence:
   frequency: static
   due: to be confirmed
-storage:
-  connector: civic-store
-  plugin: delta
-  domain: civic
-  table: <root>/civic/party/
+binding-hint:
+  lake-table: civic.party
   test-data:
   - config/packs/economy/world-economy/samples
 fields:

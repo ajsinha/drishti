@@ -96,7 +96,8 @@ public final class Editions {
      */
     public static Map<String, Edition> lenses(Environment env) {
         Map<String, Edition> out = new LinkedHashMap<>();
-        if (!env.getProperty(NAME, "").isBlank()) {
+        String instance = env.getProperty(NAME, "").strip();
+        if (!instance.isEmpty() && !instance.startsWith("drishti.")) {   // an edition: no lenses; a distribution (drishti.risk) offers its own
             return out;
         }
         for (String n : list(Binder.get(env), LENSES)) {

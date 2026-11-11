@@ -32,11 +32,8 @@ dated-by: business_date
 cadence:
   frequency: daily
   due: to be confirmed
-storage:
-  connector: legal-store
-  plugin: delta
-  domain: legal
-  table: <root>/legal/agreement/
+binding-hint:
+  lake-table: legal.agreement
   test-data:
   - data/testdata/counterparty-risk/agreement
 fields:

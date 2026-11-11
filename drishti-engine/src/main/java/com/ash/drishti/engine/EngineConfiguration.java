@@ -89,10 +89,39 @@ public class EngineConfiguration {
                 return null;
             }
         }, EngineConfiguration.class.getClassLoader());
-        java.util.List<com.ash.drishti.api.SourcePlugin> plugins = new PluginDiscovery().discover(props.pluginDir()).stream()
-                .filter(pl -> access.classOn(pl.getClass().getName())).toList();
+        // the shared lib folder (Tomcat's lib/): read once, at start, before any plugin is looked for
+        java.nio.file.Path lib = java.nio.file.Path.of(env.getProperty("drishti.lib.path",
+                java.nio.file.Path.of(env.getProperty("drishti.data.dir", "./data"), "lib").toString()));
+        com.ash.drishti.common.SharedLib.migrate(lib, oldLibFolders(env, props), oldLibSettings(env, props));   // one way: lib/ (no dual machinery)
+        com.ash.drishti.common.SharedLib.open(lib);
+        java.util.List<com.ash.drishti.api.SourcePlugin> plugins = new PluginDiscovery().discover().stream()
+                .filter(pl -> access.classOn((pl instanceof com.ash.drishti.engine.source.ComputedKindSource c ? c.provider() : pl).getClass().getName())).toList();
         return new SourceRegistry(plugins, props, codec, com.ash.drishti.common.RetryPolicy.of(env::getProperty, "connectors"),
                 com.ash.drishti.engine.source.OfflineMode.of(env::getProperty));
+    }
+
+    /**
+     * The two older ways jars reached the server, folded into the lib folder (drishti.lib.path) and read once more only to move their jars:
+     * the launcher's external_lib/java (DRISHTI_EXTERNAL_LIB, drishti.external-lib; the console keeps external_lib/python) and
+     * drishti.sources.plugin-dir (DRISHTI_PLUGIN_DIR).
+     */
+    static java.util.Map<String, java.nio.file.Path> oldLibFolders(org.springframework.core.env.Environment env, SourcesProperties props) {
+        java.util.Map<String, java.nio.file.Path> old = new java.util.LinkedHashMap<>();
+        String ext = env.getProperty("drishti.external-lib", System.getenv().getOrDefault("DRISHTI_EXTERNAL_LIB", "external_lib"));
+        old.put("external_lib/java", java.nio.file.Path.of(ext.isBlank() ? "external_lib" : ext, "java"));
+        if (props.pluginDir() != null && !props.pluginDir().isBlank()) {
+            old.put("drishti.sources.plugin-dir", java.nio.file.Path.of(props.pluginDir()));
+        }
+        return old;
+    }
+
+    static java.util.Map<String, String> oldLibSettings(org.springframework.core.env.Environment env, SourcesProperties props) {
+        java.util.Map<String, String> out = new java.util.LinkedHashMap<>();
+        if (props.pluginDir() != null && !props.pluginDir().isBlank()) {
+            out.put("drishti.sources.plugin-dir (DRISHTI_PLUGIN_DIR)", "connector jars and JDBC drivers go in the lib folder (drishti.lib.path); "
+                    + "remove the setting");
+        }
+        return out;
     }
 
     @Bean
@@ -147,9 +176,12 @@ public class EngineConfiguration {
     public ViewPipeline viewPipeline(SourceRouter router, SutraMatcher matcher, SutraRegistry registry, LayoutMerger merger,
             ShapeFingerprinter fingerprinter, ReferenceCatalog catalog, GraphProperties graph, Binder binder, ElCompiler el,
             Formats formats, Mnemonics mnemonics, ForkJoinPool drishtiBindPool, EngineProperties props,
-            com.ash.drishti.engine.time.BusinessDates businessDates) {
-        return new ViewPipeline(router, matcher, registry, merger, fingerprinter, catalog, graph, binder, el, formats, mnemonics,
+            com.ash.drishti.engine.time.BusinessDates businessDates,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.kernel.api.view.ViewAugmenter> augmenters) {
+        ViewPipeline p = new ViewPipeline(router, matcher, registry, merger, fingerprinter, catalog, graph, binder, el, formats, mnemonics,
                 drishtiBindPool, props, businessDates);
+        p.augmentersFrom(() -> augmenters.orderedStream().toList());    // the server's own; a module's through the registration bridge
+        return p;
     }
 
     /** About this page: the explanation of a view (layers 3 and 4), derived on request. */

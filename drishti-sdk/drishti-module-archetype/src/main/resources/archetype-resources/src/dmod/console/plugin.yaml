@@ -1,0 +1,13 @@
+# The console part (plugin.yaml format 2): everything the console shows of the module is declared here, served under /m/${artifactId}/
+# (KERNEL_AND_MODULES.md section 9); the console runs none of it. Removing the module takes every door with it (section 12).
+format: 2
+routes:
+  - {id: hello, path: "/hello/{name}", page: hello.html, function: ${artifactId.toUpperCase()}, title: "Hello"}
+menus:                       # an entry of a top-bar menu (menu: a menu of the product, else the module's own)
+  - {menu: help, label: "Say hello", route: hello, params: {name: world}, icon: emoji-smile, desc: "The ${artifactId} module's page"}
+home:
+  cards:                     # Home's quick cards
+    - {title: "Say hello", route: hello, params: {name: world}, cmd: "${artifactId.toUpperCase()} world"}
+ai:
+  tools:                     # what the assistant may offer (a description; the console calls nothing of the module)
+    - {name: ${artifactId}_greet, description: "Greets a person by name (the ${artifactId} module)", route: hello, params: {name: world}}

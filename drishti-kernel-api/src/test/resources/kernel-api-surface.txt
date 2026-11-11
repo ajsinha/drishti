@@ -1,6 +1,66 @@
+  ai.AiToolProvider public abstract java.util.List<com.ash.drishti.kernel.api.ai.AiToolProvider$Tool> com.ash.drishti.kernel.api.ai.AiToolProvider.tools()
+  ai.AiToolProvider public abstract java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.ai.AiToolProvider.call(java.lang.String,java.util.Map<java.lang.String, java.lang.Object>,com.ash.drishti.kernel.api.security.Principal)
+  ai.AiToolProvider$Tool public final boolean com.ash.drishti.kernel.api.ai.AiToolProvider$Tool.equals(java.lang.Object)
+  ai.AiToolProvider$Tool public final int com.ash.drishti.kernel.api.ai.AiToolProvider$Tool.hashCode()
+  ai.AiToolProvider$Tool public final java.lang.String com.ash.drishti.kernel.api.ai.AiToolProvider$Tool.toString()
+  ai.AiToolProvider$Tool public java.lang.String com.ash.drishti.kernel.api.ai.AiToolProvider$Tool.description()
+  ai.AiToolProvider$Tool public java.lang.String com.ash.drishti.kernel.api.ai.AiToolProvider$Tool.function()
+  ai.AiToolProvider$Tool public java.lang.String com.ash.drishti.kernel.api.ai.AiToolProvider$Tool.name()
+  ai.AiToolProvider$Tool public java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.ai.AiToolProvider$Tool.inputSchema()
+  approvals.ApprovalSource public abstract com.ash.drishti.kernel.api.approvals.ApprovalSource$Detail com.ash.drishti.kernel.api.approvals.ApprovalSource.detail(java.lang.String,com.ash.drishti.kernel.api.security.Principal)
+  approvals.ApprovalSource public abstract com.ash.drishti.kernel.api.approvals.ApprovalSource$Item com.ash.drishti.kernel.api.approvals.ApprovalSource.decide(java.lang.String,java.lang.String,java.lang.String,java.util.Map<java.lang.String, java.lang.Object>,com.ash.drishti.kernel.api.security.Principal)
+  approvals.ApprovalSource public abstract java.lang.String com.ash.drishti.kernel.api.approvals.ApprovalSource.group()
+  approvals.ApprovalSource public abstract java.lang.String com.ash.drishti.kernel.api.approvals.ApprovalSource.kind()
+  approvals.ApprovalSource public abstract java.lang.String com.ash.drishti.kernel.api.approvals.ApprovalSource.label()
+  approvals.ApprovalSource public abstract java.util.List<com.ash.drishti.kernel.api.approvals.ApprovalSource$Item> com.ash.drishti.kernel.api.approvals.ApprovalSource.items(com.ash.drishti.kernel.api.security.Principal,int)
+  approvals.ApprovalSource public default boolean com.ash.drishti.kernel.api.approvals.ApprovalSource.enabled()
+  approvals.ApprovalSource public static java.lang.String com.ash.drishti.kernel.api.approvals.ApprovalSource.text(java.lang.Object)
+  approvals.ApprovalSource public static java.time.Instant com.ash.drishti.kernel.api.approvals.ApprovalSource.instant(java.lang.Object)
+  approvals.ApprovalSource public static java.util.List<java.lang.String> com.ash.drishti.kernel.api.approvals.ApprovalSource.actions(com.ash.drishti.kernel.api.approvals.ApprovalSource$Item)
+  approvals.ApprovalSource public static java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.approvals.ApprovalSource.fieldDiff(java.util.List<java.util.Map<java.lang.String, java.lang.Object>>)
+  approvals.ApprovalSource public static java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.approvals.ApprovalSource.row(java.lang.String,java.lang.Object,java.lang.Object)
+  approvals.ApprovalSource$Detail public com.ash.drishti.kernel.api.approvals.ApprovalSource$Item com.ash.drishti.kernel.api.approvals.ApprovalSource$Detail.item()
+  approvals.ApprovalSource$Detail public final boolean com.ash.drishti.kernel.api.approvals.ApprovalSource$Detail.equals(java.lang.Object)
+  approvals.ApprovalSource$Detail public final int com.ash.drishti.kernel.api.approvals.ApprovalSource$Detail.hashCode()
+  approvals.ApprovalSource$Detail public final java.lang.String com.ash.drishti.kernel.api.approvals.ApprovalSource$Detail.toString()
+  approvals.ApprovalSource$Detail public java.util.List<java.lang.String> com.ash.drishti.kernel.api.approvals.ApprovalSource$Detail.effect()
+  approvals.ApprovalSource$Detail public java.util.List<java.lang.String> com.ash.drishti.kernel.api.approvals.ApprovalSource$Detail.rules()
+  approvals.ApprovalSource$Detail public java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.approvals.ApprovalSource$Detail.diff()
+  approvals.ApprovalSource$Detail public java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.approvals.ApprovalSource$Detail.facts()
+  approvals.ApprovalSource$Item public boolean com.ash.drishti.kernel.api.approvals.ApprovalSource$Item.mayDecide()
+  approvals.ApprovalSource$Item public boolean com.ash.drishti.kernel.api.approvals.ApprovalSource$Item.mayWithdraw()
+  approvals.ApprovalSource$Item public boolean com.ash.drishti.kernel.api.approvals.ApprovalSource$Item.mine()
+  approvals.ApprovalSource$Item public boolean com.ash.drishti.kernel.api.approvals.ApprovalSource$Item.pending()
+  approvals.ApprovalSource$Item public final boolean com.ash.drishti.kernel.api.approvals.ApprovalSource$Item.equals(java.lang.Object)
+  approvals.ApprovalSource$Item public final int com.ash.drishti.kernel.api.approvals.ApprovalSource$Item.hashCode()
+  approvals.ApprovalSource$Item public final java.lang.String com.ash.drishti.kernel.api.approvals.ApprovalSource$Item.toString()
+  approvals.ApprovalSource$Item public java.lang.String com.ash.drishti.kernel.api.approvals.ApprovalSource$Item.decidedBy()
+  approvals.ApprovalSource$Item public java.lang.String com.ash.drishti.kernel.api.approvals.ApprovalSource$Item.id()
+  approvals.ApprovalSource$Item public java.lang.String com.ash.drishti.kernel.api.approvals.ApprovalSource$Item.kind()
+  approvals.ApprovalSource$Item public java.lang.String com.ash.drishti.kernel.api.approvals.ApprovalSource$Item.link()
+  approvals.ApprovalSource$Item public java.lang.String com.ash.drishti.kernel.api.approvals.ApprovalSource$Item.maker()
+  approvals.ApprovalSource$Item public java.lang.String com.ash.drishti.kernel.api.approvals.ApprovalSource$Item.reason()
+  approvals.ApprovalSource$Item public java.lang.String com.ash.drishti.kernel.api.approvals.ApprovalSource$Item.stage()
+  approvals.ApprovalSource$Item public java.lang.String com.ash.drishti.kernel.api.approvals.ApprovalSource$Item.status()
+  approvals.ApprovalSource$Item public java.lang.String com.ash.drishti.kernel.api.approvals.ApprovalSource$Item.title()
+  approvals.ApprovalSource$Item public java.time.Instant com.ash.drishti.kernel.api.approvals.ApprovalSource$Item.at()
+  approvals.ApprovalSource$Item public java.time.Instant com.ash.drishti.kernel.api.approvals.ApprovalSource$Item.decidedAt()
+  approvals.ApprovalSource$Item public java.time.LocalDate com.ash.drishti.kernel.api.approvals.ApprovalSource$Item.due()
   capacity.CapacityFigures public abstract java.lang.String com.ash.drishti.kernel.api.capacity.CapacityFigures.key()
   capacity.CapacityFigures public abstract java.util.List<java.lang.Object[]> com.ash.drishti.kernel.api.capacity.CapacityFigures.rows(java.util.Map<java.lang.String, java.lang.Object>)
   capacity.CapacityFigures public abstract java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.capacity.CapacityFigures.figures(com.ash.drishti.kernel.api.security.Principal,java.util.Map<java.lang.String, java.lang.Object>)
+  data.BindingState public boolean com.ash.drishti.kernel.api.data.BindingState.usable()
+  data.BindingState public static com.ash.drishti.kernel.api.data.BindingState com.ash.drishti.kernel.api.data.BindingState.valueOf(java.lang.String)
+  data.BindingState public static com.ash.drishti.kernel.api.data.BindingState[] com.ash.drishti.kernel.api.data.BindingState.values()
+  data.KindProvider public abstract boolean com.ash.drishti.kernel.api.data.KindProvider.documents(java.lang.String,com.ash.drishti.api.AsOf,java.util.function.Consumer<com.ash.drishti.api.EntityDocument>)
+  data.KindProvider public abstract java.lang.String com.ash.drishti.kernel.api.data.KindProvider.name()
+  data.KindProvider public abstract java.util.Optional<com.ash.drishti.api.EntityDocument> com.ash.drishti.kernel.api.data.KindProvider.fetch(com.ash.drishti.api.EntityRef,com.ash.drishti.api.AsOf)
+  data.KindProvider public abstract java.util.Set<java.lang.String> com.ash.drishti.kernel.api.data.KindProvider.kinds()
+  data.KindProvider public default boolean com.ash.drishti.kernel.api.data.KindProvider.dependsOn(java.lang.String)
+  data.KindProvider public default java.util.List<com.ash.drishti.api.EntityHit> com.ash.drishti.kernel.api.data.KindProvider.search(java.lang.String,java.lang.String,int,com.ash.drishti.api.AsOf)
+  data.KindProvider public default java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.data.KindProvider.stats()
+  data.KindProvider public default java.util.Optional<java.lang.String> com.ash.drishti.kernel.api.data.KindProvider.dataVersion(java.lang.String,java.time.LocalDate)
+  data.KindProvider public default java.util.Optional<java.time.LocalDate> com.ash.drishti.kernel.api.data.KindProvider.latestDate(java.lang.String)
   engines.ComputeEngine public abstract java.lang.Boolean com.ash.drishti.kernel.api.engines.ComputeEngine.running()
   engines.ComputeEngine public abstract java.lang.String com.ash.drishti.kernel.api.engines.ComputeEngine.id()
   engines.ComputeEngine public abstract void com.ash.drishti.kernel.api.engines.ComputeEngine.running(boolean)
@@ -48,8 +108,40 @@
   explain.Explanation public java.util.Map<java.lang.String, java.lang.String> com.ash.drishti.kernel.api.explain.Explanation.unbuilt()
   explain.Explanation public static java.lang.String com.ash.drishti.kernel.api.explain.Explanation.number(double)
   explain.Explanation public static java.lang.String com.ash.drishti.kernel.api.explain.Explanation.signed(double)
+  function.FunctionProvider public abstract java.lang.String com.ash.drishti.kernel.api.function.FunctionProvider.source()
+  function.FunctionProvider public abstract java.util.List<com.ash.drishti.kernel.api.function.FunctionProvider$Provided> com.ash.drishti.kernel.api.function.FunctionProvider.functions()
+  function.FunctionProvider$Provided public final boolean com.ash.drishti.kernel.api.function.FunctionProvider$Provided.equals(java.lang.Object)
+  function.FunctionProvider$Provided public final int com.ash.drishti.kernel.api.function.FunctionProvider$Provided.hashCode()
+  function.FunctionProvider$Provided public final java.lang.String com.ash.drishti.kernel.api.function.FunctionProvider$Provided.toString()
+  function.FunctionProvider$Provided public int com.ash.drishti.kernel.api.function.FunctionProvider$Provided.maxArgs()
+  function.FunctionProvider$Provided public int com.ash.drishti.kernel.api.function.FunctionProvider$Provided.minArgs()
+  function.FunctionProvider$Provided public java.lang.String com.ash.drishti.kernel.api.function.FunctionProvider$Provided.args()
+  function.FunctionProvider$Provided public java.lang.String com.ash.drishti.kernel.api.function.FunctionProvider$Provided.description()
+  function.FunctionProvider$Provided public java.lang.String com.ash.drishti.kernel.api.function.FunctionProvider$Provided.name()
+  function.FunctionProvider$Provided public java.util.function.Function<java.util.List<java.lang.Object>, java.lang.Object> com.ash.drishti.kernel.api.function.FunctionProvider$Provided.body()
   health.HealthFigures public abstract java.lang.Object com.ash.drishti.kernel.api.health.HealthFigures.value()
   health.HealthFigures public abstract java.lang.String com.ash.drishti.kernel.api.health.HealthFigures.key()
+  module.DrishtiModule public abstract java.lang.String com.ash.drishti.kernel.api.module.DrishtiModule.id()
+  module.DrishtiModule public abstract void com.ash.drishti.kernel.api.module.DrishtiModule.start(com.ash.drishti.kernel.api.module.ModuleContext)
+  module.DrishtiModule public default java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.module.DrishtiModule.health()
+  module.DrishtiModule public default void com.ash.drishti.kernel.api.module.DrishtiModule.stop()
+  module.EngineWide public abstract java.lang.String com.ash.drishti.kernel.api.module.EngineWide.value()
+  module.ModuleApi public abstract java.lang.String com.ash.drishti.kernel.api.module.ModuleApi.value()
+  module.ModuleContext public abstract com.ash.drishti.kernel.api.module.ModuleContext$KindWriter com.ash.drishti.kernel.api.module.ModuleContext.writer()
+  module.ModuleContext public abstract com.ash.drishti.kernel.api.module.ModuleContext$Kinds com.ash.drishti.kernel.api.module.ModuleContext.kinds()
+  module.ModuleContext public abstract com.ash.drishti.kernel.api.module.ModuleSettings com.ash.drishti.kernel.api.module.ModuleContext.settings()
+  module.ModuleContext public abstract java.lang.String com.ash.drishti.kernel.api.module.ModuleContext.moduleId()
+  module.ModuleContext public abstract java.nio.file.Path com.ash.drishti.kernel.api.module.ModuleContext.dataDir()
+  module.ModuleContext public abstract java.time.LocalDate com.ash.drishti.kernel.api.module.ModuleContext.businessDate()
+  module.ModuleContext public abstract void com.ash.drishti.kernel.api.module.ModuleContext.audit(java.lang.String,java.util.Map<java.lang.String, java.lang.Object>)
+  module.ModuleContext$KindWriter public abstract void com.ash.drishti.kernel.api.module.ModuleContext$KindWriter.write(java.lang.String,java.time.LocalDate,java.util.List<java.util.Map<java.lang.String, java.lang.Object>>)
+  module.ModuleContext$Kinds public abstract boolean com.ash.drishti.kernel.api.module.ModuleContext$Kinds.documents(java.lang.String,com.ash.drishti.api.AsOf,java.util.function.Consumer<com.ash.drishti.api.EntityDocument>)
+  module.ModuleContext$Kinds public abstract com.ash.drishti.api.Subscription com.ash.drishti.kernel.api.module.ModuleContext$Kinds.subscribe(com.ash.drishti.api.EntityRef,java.util.function.Consumer<com.ash.drishti.api.EntityDocument>)
+  module.ModuleContext$Kinds public abstract com.ash.drishti.kernel.api.data.BindingState com.ash.drishti.kernel.api.module.ModuleContext$Kinds.state(java.lang.String)
+  module.ModuleContext$Kinds public abstract java.util.Optional<com.ash.drishti.api.EntityDocument> com.ash.drishti.kernel.api.module.ModuleContext$Kinds.fetch(com.ash.drishti.api.EntityRef,com.ash.drishti.api.AsOf)
+  module.ModuleSettings public abstract <T extends java.lang.Record> T com.ash.drishti.kernel.api.module.ModuleSettings.bind(java.lang.Class<T>)
+  module.ModuleSettings public abstract java.util.Map<java.lang.String, java.lang.String> com.ash.drishti.kernel.api.module.ModuleSettings.all()
+  module.ModuleSettings public abstract java.util.Optional<java.lang.String> com.ash.drishti.kernel.api.module.ModuleSettings.get(java.lang.String)
   modules.ApiAlias public final boolean com.ash.drishti.kernel.api.modules.ApiAlias.equals(java.lang.Object)
   modules.ApiAlias public final int com.ash.drishti.kernel.api.modules.ApiAlias.hashCode()
   modules.ApiAlias public final java.lang.String com.ash.drishti.kernel.api.modules.ApiAlias.toString()
@@ -377,12 +469,28 @@
   vocabulary.DomainVocabulary public static boolean com.ash.drishti.kernel.api.vocabulary.DomainVocabulary.anyMatch(java.util.function.Predicate<com.ash.drishti.kernel.api.vocabulary.DomainVocabulary>)
   vocabulary.DomainVocabulary public static java.util.Map<java.lang.String, java.lang.String> com.ash.drishti.kernel.api.vocabulary.DomainVocabulary.notes(java.util.function.Function<com.ash.drishti.kernel.api.vocabulary.DomainVocabulary, java.util.Map<java.lang.String, java.lang.String>>)
   vocabulary.DomainVocabulary public static java.util.Set<java.lang.String> com.ash.drishti.kernel.api.vocabulary.DomainVocabulary.union(java.util.function.Function<com.ash.drishti.kernel.api.vocabulary.DomainVocabulary, java.util.Collection<java.lang.String>>)
+ai.AiToolProvider
+ai.AiToolProvider$Tool
+approvals.ApprovalSource
+approvals.ApprovalSource$Detail
+approvals.ApprovalSource$Item
 capacity.CapacityFigures
+data.BindingState
+data.KindProvider
 engines.ComputeEngine
 explain.ExplainRequest
 explain.Explainer
 explain.Explanation
+function.FunctionProvider
+function.FunctionProvider$Provided
 health.HealthFigures
+module.DrishtiModule
+module.EngineWide
+module.ModuleApi
+module.ModuleContext
+module.ModuleContext$KindWriter
+module.ModuleContext$Kinds
+module.ModuleSettings
 modules.ApiAlias
 official.OfficialResults
 pivot.AggFunction

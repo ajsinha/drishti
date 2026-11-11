@@ -734,7 +734,7 @@ class FakeBackend:
         ``META-INF/drishti/lenses.yaml``), each with its modules, functions and Home cards; nothing off."""
         import yaml
         lenses = []
-        for f in ("drishti-server/src/main/resources/META-INF/drishti/lenses.yaml", "drishti-banking/src/main/resources/META-INF/drishti/lenses.yaml"):
+        for f in ("drishti-server/src/main/resources/META-INF/drishti/lenses.yaml", "modules/banking/banking-service/src/main/resources/META-INF/drishti/lenses.yaml"):
             lenses += (yaml.safe_load((CONSOLE.parent / f).read_text(encoding="utf-8")) or {}).get("lenses") or []
         return {"modules": [{"id": m, "title": m, "domain": m} for m in ("core", "banking", "economy", "capitalmarkets")], "off": [],
                 "lenses": lenses, "functions": {"off": []}}
@@ -1264,6 +1264,11 @@ def open_studio(client, url, **params):
 PHONE_DISPLAY_TESTS = {"test_phone_browser.py", "test_var_explain_browser.py", "test_page_widths_browser.py", "test_lens_menus_browser.py",
                       "test_capacity_browser.py"}
 _SHOW_EVERYTHING = {"on": True}
+
+
+def pytest_addoption(parser):
+    """``--update-snapshots``: the visual snapshots write their goldens instead of comparing (tests/snapshots.py); never in a drill."""
+    parser.addoption("--update-snapshots", action="store_true", default=False, help="write the visual snapshots' golden images (tests/snapshots/)")
 
 
 @pytest.hookimpl(tryfirst=True)

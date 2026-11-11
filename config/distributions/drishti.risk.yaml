@@ -1,0 +1,56 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Drishti Risk (docs/architecture/DISTRIBUTIONS.md section 2): traders, risk analysts, risk managers, middle office, model validation.
+# "What is my risk, why did it move, am I within limits?" Banking plus the shared market data; no economy or capital-markets command,
+# menu, Help page or AI tool exists here.
+format: 1
+distribution: drishti.risk
+version: 1.0.0
+kernel: ">=2.9.11 <2.10"
+
+brand:
+  product: Drishti Risk
+  product_native: दृष्टि
+  tagline: VaR, exposure and limits from your own pricing data
+  owner: Ashutosh Sinha
+  copyright: Copyright © 2026 Ashutosh Sinha. All rights reserved. Proprietary and confidential.
+  notice: Unauthorised copying, use or distribution is prohibited.
+  logo: ""
+  favicon: ""
+  about: ""
+  support: { email: "", url: "" }
+
+theme: { tokens: terminal-blue, mode: dark, density: compact }   # navy, dark, terminal density
+
+modules:
+  - { id: banking,     required: true }
+  - { id: market-data, required: true }
+
+lenses:
+  offered: [risk, trading, market]
+  default: risk
+
+menus:
+  top: [views, blotter, positions, risk, counterparties, markets, bi, admin, help]
+  placeholder: "VAR BANK, VRES DESK:RATES, EXP CPTY:CP-ALDERSHOT, CRV USD-SOFR …  then <GO>"
+
+home:
+  cards: [VAR BANK, VAR DESK RATES, "VRES DESK:RATES", "EXP CPTY:CP-ALDERSHOT"]
+
+features: { var: on, exposure: on }
+
+docs: { title: Drishti Risk Help }
+demo: { ships: true, enabled: true }
+locale: { language: en }

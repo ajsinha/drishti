@@ -112,12 +112,38 @@ To watch a program's output, start each in the foreground in its own terminal in
 Logs are in `data/logs/` (`server.log`, `console.log`), process ids in `data/run/`. Every option of the scripts (ports, heap, an
 env-file for your own secrets, a cluster of several servers with `--node`, the console's `--server`), where the files go, the exit codes
 and what to do when a script stops with an error: [DEPLOYMENT_AND_QA_GUIDE.md › section 6](DEPLOYMENT_AND_QA_GUIDE.md#6-start-the-server-and-the-console).
-The IntelliJ run configurations **Drishti server (demo lakes)** and **Drishti console** set the same demo settings for debugging; why each
+A cluster of three servers and a console on this machine, from one file: `bin/start-cluster.sh` (Windows `bin\start-cluster.cmd`), `bin/status.sh --cluster drishti-stack/stack.yaml`, `bin/stop-cluster.sh`
+([bin/README.md](../bin/README.md)). The IntelliJ run configurations **Drishti server (demo lakes)** (module `drishti-app`) and **Drishti console** set the same demo settings for debugging; why each
 setting: [OPERATIONS_GUIDE.md › Start the server](guides/OPERATIONS_GUIDE.md#25-start-the-server) and
 [› Start the console](guides/OPERATIONS_GUIDE.md#26-start-the-console).
 
 Everything the two write at run time is under `data/` (git-ignored except `data/testdata/`); deleting `data/delta`, `data/bi-store` and
 `data/cache` while both are stopped starts you fresh.
+
+### Starting a white-labelled instance
+
+The same build starts as **Drishti Risk**, **Drishti Finance**, **Drishti Genomics** or **Drishti All** with one argument
+(`config/distributions/drishti.<name>.yaml`; [DISTRIBUTIONS.md](architecture/DISTRIBUTIONS.md)). Without it you run Drishti All, every
+module: what the drill, the page walk and the tutorials use.
+
+| Distribution | Linux and macOS | Windows | You should see |
+|---|---|---|---|
+| Drishti Risk | `bin/start-all.sh --demo --distribution risk` | `bin\start-all.cmd --demo --distribution risk` | **Drishti Risk**, navy dark; Risk, Counterparties and Markets menus; `VAR BANK` works, `ECON CAN` answers *not in Drishti Risk*; Help titled *Drishti Risk Help* |
+| Drishti Finance | `bin/start-all.sh --demo --distribution finance` | `bin\start-all.cmd --demo --distribution finance` | **Drishti Finance**, light; Economies, Markets and Companies menus, no Risk menu; `CRV` works, `VAR BANK` answers *not in Drishti Finance*; Help titled *Drishti Finance Help* with no VaR guide |
+| Drishti Genomics | `bin/start-all.sh --demo --distribution genomics` | `bin\start-all.cmd --demo --distribution genomics` | **Drishti Genomics**, green; the kernel's menus only; Admin → Health: module `genomics` *not installed* (the sample ships later) |
+| Drishti All | `bin/start-all.sh --demo` | `bin\start-all.cmd --demo` | **Drishti**, exactly as above |
+
+`bin/status.sh` (Windows `bin\status.cmd`) shows each process's distribution; Admin → White label shows them all side by side. The
+setting behind the argument is `DRISHTI_DISTRIBUTION` (both programs read it).
+
+**In the IDEs.** IntelliJ IDEA lists, under *Drishti*, `Drishti server (Risk)`, `(Finance)` and `(All)` (each sets the environment
+variable `DRISHTI_DISTRIBUTION`) and the Python configurations `Drishti console (Risk)` (argument `--distribution=risk`, port 17480),
+`Drishti console (Finance)` (`--distribution=finance`, port 17481) and `Drishti console (All)` (`--distribution=all`), all in
+`run-configs/`. Run the console ones from IntelliJ with the Python plugin or from PyCharm opened on the repository root. **Two consoles
+against one server:** run `Drishti server (All)`, then `Drishti console (Risk)` and `Drishti console (Finance)`; Drishti Risk opens on
+`http://localhost:17480` and Drishti Finance on `http://127.0.0.1:17481` (use a different host name, or another browser profile, for the
+second: browsers share sign-in cookies across ports of one host). Every step, Linux, macOS and Windows:
+[DEPLOYMENT_AND_QA_GUIDE.md › 6.7](DEPLOYMENT_AND_QA_GUIDE.md#67-starting-a-white-labelled-instance).
 
 ## 4. The repository map
 
@@ -156,6 +182,7 @@ Run these before every commit; each takes seconds to a few minutes. The whole te
 | The Elements unit tests | `node --test drishti-console/tests/elements/` (or `pytest drishti-console/tests/test_elements_node.py`) | the libraries in Node, no browser |
 | One browser file | `drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_elements_gallery_browser.py` | Chromium on a real console; name the file of the screen you changed |
 | One Java module | `./mvnw -q verify -pl drishti-registry -am` | that module's tests and the rules it must keep |
+| What your branch touched | `tools/drill.sh --affected` (`--base REF`, default `origin/develop`; `--dry-run` lists the selection) | only the Maven modules and test files the diff can reach; shared infrastructure selects more; never a release proof |
 | The gate | `tools/drill.sh --gate` | everything the release drill checks first (headers, generated files, docs, static tests, the rule tests and one build); a few minutes, on any branch, no push |
 
 **You should see** pytest end with `passed` and no `failed`, and `drill.sh --gate` end with its summary and exit 0. Read the exit code
@@ -175,6 +202,8 @@ Most rules are tests, so the fast checks above catch them; the rest is review. T
 | **The servers compute, the browser draws**: every risk and BI number is computed in Java on the server | review; [ARCHITECTURE.md](architecture/ARCHITECTURE.md) |
 | **Branding from configuration**: no product name or owner in code or templates (`ui.product`, `drishti.branding.*`) | `test_branding_guard.py` |
 | **Our files are named `drishti_<name>`** (JS, CSS, images we write); vendored libraries untouched under `static/vendor` with `VENDOR.md`; nothing from a CDN | `test_assets_policy.py` and the asset-name tests |
+| **The kernel names no domain**: banking's words reach the core through `DomainVocabulary` and the console's plugin hooks ([KERNEL_AND_MODULES.md](architecture/KERNEL_AND_MODULES.md)) | `tools/domain_strings.py` (allow-list `tools/domain_strings_allowed.yaml`, kept empty), `KernelWithoutModulesTest`, `ApiSurfaceTest` |
+| **No copy and paste**: duplicated lines per language never rise above `tools/cpd/baseline.txt` (only lowered) | `tools/duplicates.py` in the gate |
 | **The copyright header** on every source file; no source file over 2,000 lines | `LicenseHeaderTest`, `tools/license_headers.py`, `SourceFileSizeTest` |
 | **Docs with every change**: the guide, tutorial, Help entry and CHANGELOG that a change affects are updated in the same commit; one home per fact (link, do not copy); no bugs or version history in customer documents | `test_docs_rot.py`, `test_docs_gates.py`, `test_help*.py`, `test_guide_images.py` |
 | **Settings**: a new setting is declared where the generator finds it and appears in CONFIGURATION.md | the generated-document checks of the gate |

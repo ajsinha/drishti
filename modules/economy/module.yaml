@@ -1,0 +1,147 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The economy module's manifest (docs/architecture/KERNEL_AND_MODULES.md section 4; DISTRIBUTIONS.md): content only, no code.
+# The distribution files list it by id, and their visibility filter reads this file: its packs, functions, menus and Help.
+format: 1
+id: economy
+version: 1.0.0
+title: Economy and public sector
+about: Economies, forecasts, elections and governments; development indicators, central banks, national statistics, the OECD, official press releases,
+  news and quotes, and GDELT world events; the World lens
+domain: economy
+origin: first-party
+publisher:
+  id: drishti
+  name: Ashutosh Sinha
+licence:
+  feature: economy
+kernel: '>=0.2 <1.0'
+rachana: '>=1.0'
+contracts: '>=1.0'
+plugin-api: '>=2.0'
+elements: '>=1.4 <2'
+requires:
+  optional:
+    market-data: '>=1.0 <2'
+provides:
+  kinds:
+    world-economy:
+    - economy
+    - macro-indicator
+    - economic-forecast
+    - labour-market
+    - fiscal-position
+    - country-group
+    - region-economy
+    - jurisdiction
+    - party
+    - office-holder
+    - election
+    - region
+    - social-indicator
+    news-and-markets:
+    - news-topic
+    - news
+    - listed-company
+    - quote
+    world-development:
+    - development-profile
+    - development-series
+    central-banks:
+    - central-bank
+    - rate-series
+    national-statistics:
+    - statistics-series
+    oecd:
+    - oecd-country
+    - oecd-series
+    official-news:
+    - release-source
+    - press-release
+    gdelt-events:
+    - event-country
+packs:
+  folder: packs
+  list:
+  - world-economy
+  - news-and-markets
+  - world-development
+  - central-banks
+  - national-statistics
+  - oecd
+  - official-news
+  - gdelt-events
+data:
+  needs: data/needs.yaml
+console:
+  plugin: console/plugin.yaml
+  menus:
+  - economies
+  - markets
+functions:
+- WRLD
+- ECON
+- MACRO
+- FCST
+- LABR
+- FISC
+- ECG
+- REGE
+- JUR
+- PARTY
+- OFFC
+- ELEC
+- REGN
+- SOCI
+- NWMK
+- TOPIC
+- NEWS
+- CO
+- QUOTE
+- WDEV
+- WDI
+- WDIS
+- CBNK
+- CBANK
+- CBSER
+- STCAN
+- NSTAT
+- OECDP
+- OECD
+- OECDS
+- ONEWS
+- PRESS
+- PREL
+- GDLT
+- GDELT
+lenses: lenses/world.yaml
+docs:
+  readme: docs/README.md
+  help: docs/help.yaml
+  domains:
+  - economy
+  guides:
+  - packs/world-economy/guides/world-economy.md
+  - packs/news-and-markets/guides/news-and-markets.md
+  - packs/world-development/guides/world-development.md
+  - packs/central-banks/guides/central-banks.md
+  - packs/national-statistics/guides/national-statistics.md
+  - packs/oecd/guides/oecd.md
+  - packs/official-news/guides/official-news.md
+  - packs/gdelt-events/guides/gdelt-events.md
+  tutorials:
+  - tutorials/14-public-sector-data.md
+resources:
+  memory-mb: 64

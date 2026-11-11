@@ -38,11 +38,8 @@ cadence:
   frequency: daily
   due: the full run after the close, with the scenario PVs (by 06:30 New York the next business day in the demo); intraday batches
     replace a position's record whole
-storage:
-  connector: risk-store
-  plugin: delta
-  domain: risk
-  table: <root>/risk/position-sensitivity/
+binding-hint:
+  lake-table: risk.position-sensitivity
   columns:
   - SENSITIVITY_ID
   - GRAIN

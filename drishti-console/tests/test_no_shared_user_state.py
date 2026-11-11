@@ -34,6 +34,8 @@ CHANGES = {"append", "add", "update", "pop", "popitem", "clear", "setdefault", "
 
 #: module-level mutable state, each with why it holds nothing one person could read of another
 ALLOWED = {
+    "core/distribution.py:_KNOWN": "every command and word the packs folder and the module map name, by packs folder (product files, nothing of a person's)",
+    "core/distribution.py:_PACK_COMMANDS": "each pack.yaml's commands while the file is unchanged (product files, nothing of a person's)",
     "core/plugins.py:_commands": "the modules' command hooks, registered at import (code, not data: DOMAIN_MODULES.md C2)",
     "core/plugins.py:_retired": "the modules' retired-link hooks, registered at import (code, not data)",
     "core/plugins.py:_type_ahead": "the modules' type-ahead hooks, registered at import (code, not data: C3)",
@@ -41,6 +43,7 @@ ALLOWED = {
     "core/plugins.py:_presets": "the Pivot presets' word grammars by lens, registered at import (code, not data: C5)",
     "core/plugins.py:_words": "the modules' reserved words, registered at import (code, not data: C8)",
     "core/plugins.py:_console_commands": "the modules' console commands, registered at import (code, not data: C8)",
+    "core/plugins.py:_figure_explainers": "the modules' rules of the figures that carry Explain ›, registered at import (code, not data: C8)",
     "core/plugins.py:_phone_pages": "the modules' phone page parts, registered at import (code, not data: C8)",
     "core/plugins.py:_connector_actions": "the modules' connector buttons, registered at import (code, not data: C8)",
     "core/plugins.py:_landing_rules": "the modules' landing rules, registered at import (code, not data: C6)",

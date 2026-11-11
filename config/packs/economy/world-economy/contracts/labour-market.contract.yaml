@@ -32,11 +32,8 @@ dated-by: snapshot
 cadence:
   frequency: static
   due: to be confirmed
-storage:
-  connector: macro-store
-  plugin: delta
-  domain: macro
-  table: <root>/macro/labour-market/
+binding-hint:
+  lake-table: macro.labour-market
   test-data:
   - config/packs/economy/world-economy/samples
 fields:

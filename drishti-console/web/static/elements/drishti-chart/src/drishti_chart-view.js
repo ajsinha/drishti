@@ -237,7 +237,7 @@ export class Chart extends ChartIO {
     const src = (s.data && s.data.source) || (s.from === 'vega-lite' ? 'Vega-Lite, translated' : 'inline rows');
     this.status.textContent = '';
     [h(this.doc, 'b', { text: src }), this.o.asOf || s.asOf ? h(this.doc, 'span', { text: 'as of ' + (this.o.asOf || s.asOf) }) : null, h(this.doc, 'span', { cls: 'dc-rows', text: this.rows.length + ' rows' }),
-      h(this.doc, 'span', { text: ms + ' ms' }), h(this.doc, 'span', { cls: 'dc-hint', text: s.onClick === 'none' ? '' : 'click a mark to explain it' })].forEach((x) => { if (x) { this.status.appendChild(x); } });
+      h(this.doc, 'span', { cls: 'dc-ms', text: ms + ' ms' }), h(this.doc, 'span', { cls: 'dc-hint', text: s.onClick === 'none' ? '' : 'click a mark to explain it' })].forEach((x) => { if (x) { this.status.appendChild(x); } });
     if (this.studio) { this.studio.update(built); }
   }
 

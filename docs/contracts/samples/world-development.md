@@ -26,7 +26,7 @@ Every data type of `world-development` as a real record of the committed test da
 
 ## Development profile: development-profile (WDI)
 
-One country's World Development Indicators: the latest of each, the world map shaded by GDP per head, each series one click away. One row per development profile, keyed by PROFILE_ID. Read by the **world-development** pack's connector `development-store` (table `<root>/development/development-profile/`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-development/samples/development-profile.jsonl`, 12 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+One country's World Development Indicators: the latest of each, the world map shaded by GDP per head, each series one click away. One row per development profile, keyed by PROFILE_ID. Read by the **world-development** pack's connector `development-store` (lake table `development.development-profile`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-development/samples/development-profile.jsonl`, 12 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 
@@ -165,7 +165,7 @@ None: all 12 rows were read, and every field any of them has is in the record ab
 
 ## Development indicator series: development-series (WDIS)
 
-One World Development Indicator of one country by year: the history, the latest value and the change. One row per development indicator series, keyed by SERIES_ID. Read by the **world-development** pack's connector `development-store` (table `<root>/development/development-series/`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-development/samples/development-series.jsonl`, 16 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+One World Development Indicator of one country by year: the history, the latest value and the change. One row per development indicator series, keyed by SERIES_ID. Read by the **world-development** pack's connector `development-store` (lake table `development.development-series`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-development/samples/development-series.jsonl`, 16 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 

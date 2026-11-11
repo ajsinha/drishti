@@ -1,0 +1,134 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The module's pages: a Sutra page per function, under /m/market-data/ (KERNEL_AND_MODULES.md section 9.8).
+format: 2
+module: market-data
+title: Market data
+routes:
+- id: mkt
+  path: /market-data
+  sutra: market-data/catalog
+  function: MKT
+  title: Market data
+- id: crv
+  path: /market-data/ir-curve/{id}
+  sutra: market-data/ir-curve
+  function: CRV
+  title: Interest rate curve
+- id: repo
+  path: /market-data/repo-curve/{id}
+  sutra: market-data/repo-curve
+  function: REPO
+  title: Repo curve
+- id: fx
+  path: /market-data/fx-spot/{id}
+  sutra: market-data/fx-spot
+  function: FX
+  title: FX spot rate
+- id: fxf
+  path: /market-data/fx-forward-curve/{id}
+  sutra: market-data/fx-forward-curve
+  function: FXF
+  title: FX forward curve
+- id: fxv
+  path: /market-data/fx-vol-surface/{id}
+  sutra: market-data/fx-vol-surface
+  function: FXV
+  title: FX volatility surface
+- id: irv
+  path: /market-data/ir-vol-cube/{id}
+  sutra: market-data/ir-vol-cube
+  function: IRV
+  title: Swaption volatility cube
+- id: cpv
+  path: /market-data/cap-vol-surface/{id}
+  sutra: market-data/cap-vol-surface
+  function: CPV
+  title: Cap/floor volatility surface
+- id: eq
+  path: /market-data/equity/{id}
+  sutra: market-data/equity
+  function: EQ
+  title: Equity
+- id: eqx
+  path: /market-data/equity-index/{id}
+  sutra: market-data/equity-index
+  function: EQX
+  title: Equity index
+- id: div
+  path: /market-data/dividend-curve/{id}
+  sutra: market-data/dividend-curve
+  function: DIV
+  title: Dividend curve
+- id: eqv
+  path: /market-data/equity-vol-surface/{id}
+  sutra: market-data/equity-vol-surface
+  function: EQV
+  title: Equity volatility surface
+- id: cds
+  path: /market-data/credit-curve/{id}
+  sutra: market-data/credit-curve
+  function: CDS
+  title: Credit curve
+- id: inf
+  path: /market-data/inflation-index/{id}
+  sutra: market-data/inflation-index
+  function: INF
+  title: Inflation index
+- id: infc
+  path: /market-data/inflation-curve/{id}
+  sutra: market-data/inflation-curve
+  function: INFC
+  title: Inflation curve
+- id: cmd
+  path: /market-data/commodity/{id}
+  sutra: market-data/commodity
+  function: CMD
+  title: Commodity
+- id: cmdc
+  path: /market-data/commodity-curve/{id}
+  sutra: market-data/commodity-curve
+  function: CMDC
+  title: Commodity forward curve
+- id: cmdv
+  path: /market-data/commodity-vol-surface/{id}
+  sutra: market-data/commodity-vol-surface
+  function: CMDV
+  title: Commodity volatility surface
+- id: fix
+  path: /market-data/rate-fixing/{id}
+  sutra: market-data/rate-fixing
+  function: FIX
+  title: Rate index fixings
+- id: bnd
+  path: /market-data/bond/{id}
+  sutra: market-data/bond
+  function: BND
+  title: Bond (security master)
+- id: corr
+  path: /market-data/correlation-matrix/{id}
+  sutra: market-data/correlation-matrix
+  function: CORR
+  title: Correlation matrix
+- id: corrc
+  path: /market-data/correlation-result/{id}
+  sutra: market-data/correlation-result
+  function: CORRC
+  title: Correlations of a factor set (computed from price history)
+- id: eqb
+  path: /market-data/equity-beta/{id}
+  sutra: market-data/equity-beta
+  function: EQB
+  title: An equity's beta against its index (computed from price history)

@@ -72,6 +72,14 @@ public final class LineDiff {
 
     private LineDiff() {}
 
+    /** An approval's text diff, line by line: {@code {format: lines, identical, added, removed, changed, rows: [...]}} (the Approvals inbox). */
+    public static java.util.Map<String, Object> approvalDiff(String before, String after) {
+        java.util.Map<String, Object> m = new java.util.LinkedHashMap<>();
+        m.put("format", "lines");
+        m.putAll(diff(before == null ? "" : before, after == null ? "" : after).toMap());
+        return m;
+    }
+
     public static Result diff(String left, String right) {
         String[] a = lines(left);
         String[] b = lines(right);

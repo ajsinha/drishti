@@ -1,0 +1,57 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Drishti Finance (docs/architecture/DISTRIBUTIONS.md section 3): investment and research analysts, economists, portfolio and fund
+# analysts. "What are these companies, funds and economies doing, and what moves them?" No VaR or any other risk number (decision 1):
+# the banking module's commands, words, menus, Help and AI tools do not exist here; market data is shared with Drishti Risk (decision 2).
+format: 1
+distribution: drishti.finance
+version: 1.0.0
+kernel: ">=2.9.11 <2.10"
+
+brand:
+  product: Drishti Finance
+  product_native: दृष्टि
+  tagline: Companies, funds, markets and economies. One grammar.
+  owner: Ashutosh Sinha
+  copyright: Copyright © 2026 Ashutosh Sinha. All rights reserved. Proprietary and confidential.
+  notice: Unauthorised copying, use or distribution is prohibited.
+  logo: ""
+  favicon: ""
+  about: ""
+  support: { email: "", url: "" }
+
+theme: { tokens: light, mode: light, density: comfortable }   # slate and teal, light, comfortable
+
+modules:
+  - { id: capitalmarkets,  required: true }
+  - { id: economy,         required: true }
+  - { id: market-data,     required: true }
+
+lenses:
+  offered: [markets, world]                # Markets: the capital-markets module's lens (companies, funds, market data); World: economy's
+  default: markets
+
+menus:
+  top: [views, economies, markets, companies, bi, admin, help]
+  placeholder: "USEQ AAPL, FUND SPY, ECON CAN, NEWS rates, CRV USD-SOFR …  then <GO>"
+
+home:
+  cards: [USEQ AAPL, FUND SPY, ECON CAN, NEWS rates]
+
+features: { internal-only-data: off }      # IMF data and US equity prices stay internal-only, as today
+
+docs: { title: Drishti Finance Help }
+demo: { ships: true, enabled: true }
+locale: { language: en }

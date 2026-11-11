@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<!-- The parent every module project inherits (docs/architecture/KERNEL_AND_MODULES.md section 8.1). It stands alone (it does not
+     inherit the kernel's build): Java 21, the kernel API and Spring as `provided` (the kernel supplies them at run time; never inside a
+     .dmod), JUnit for the module's tests, and the module plugin bound to the lifecycle: validate (manifest), package (assemble the .dmod),
+     verify (the conformance checks C1-C15). Its version is the kernel's: a module built against 2.9.11.g runs on kernel API 0.2. -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.ash.drishti</groupId>
+  <artifactId>drishti-module-parent</artifactId>
+  <version>2.9.11.g</version>
+  <packaging>pom</packaging>
+  <name>drishti-module-parent</name>
+  <description>The parent pom of a Drishti module project (the Module SDK)</description>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.release>21</maven.compiler.release>
+    <drishti.sdk.version>2.9.11.g</drishti.sdk.version>
+    <spring-framework.version>6.2.19</spring-framework.version>
+    <junit-jupiter.version>5.12.2</junit-jupiter.version>
+    <assertj.version>3.27.7</assertj.version>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-kernel-api</artifactId><version>${drishti.sdk.version}</version><scope>provided</scope></dependency>
+      <dependency><groupId>org.springframework</groupId><artifactId>spring-context</artifactId><version>${spring-framework.version}</version><scope>provided</scope></dependency>
+      <dependency><groupId>org.springframework</groupId><artifactId>spring-web</artifactId><version>${spring-framework.version}</version><scope>provided</scope></dependency>
+      <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><version>${junit-jupiter.version}</version><scope>test</scope></dependency>
+      <dependency><groupId>org.assertj</groupId><artifactId>assertj-core</artifactId><version>${assertj.version}</version><scope>test</scope></dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-kernel-api</artifactId></dependency>
+    <dependency><groupId>org.springframework</groupId><artifactId>spring-context</artifactId></dependency>
+    <dependency><groupId>org.springframework</groupId><artifactId>spring-web</artifactId></dependency>
+    <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId></dependency>
+    <dependency><groupId>org.assertj</groupId><artifactId>assertj-core</artifactId></dependency>
+  </dependencies>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-compiler-plugin</artifactId><version>3.14.1</version></plugin>
+        <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-surefire-plugin</artifactId><version>3.5.6</version></plugin>
+        <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-jar-plugin</artifactId><version>3.4.2</version></plugin>
+        <!-- the kernel's build runs spotless:check on every module of its reactor (this pom included); a module project may use it too -->
+        <plugin><groupId>com.diffplug.spotless</groupId><artifactId>spotless-maven-plugin</artifactId><version>3.10.2</version></plugin>
+        <!-- a module project names the plugin in its <build><plugins> (the archetype does): these executions then apply -->
+        <plugin>
+        <groupId>com.ash.drishti</groupId>
+        <artifactId>drishti-module-maven-plugin</artifactId>
+        <version>${drishti.sdk.version}</version>
+        <executions>
+          <execution><id>drishti-validate</id><goals><goal>validate</goal></goals></execution>
+          <execution><id>drishti-assemble</id><goals><goal>assemble</goal></goals></execution>
+          <execution><id>drishti-conformance</id><goals><goal>conformance</goal></goals></execution>
+        </executions>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+</project>

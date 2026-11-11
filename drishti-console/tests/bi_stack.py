@@ -78,6 +78,21 @@ def wait(url: str, seconds: float = START_S, proc: subprocess.Popen | None = Non
     raise RuntimeError(f"{url} did not come up")
 
 
+def wait_ready(server: str, seconds: float = START_S, proc: subprocess.Popen | None = None) -> None:
+    """Polls the server's readiness until it answers 200: Spring's own state turns ready only once the modules loaded at start (banking,
+    its engines and lakes) are in, which is after the server listens and /actuator/health answers. Fails at once when ``proc`` has exited."""
+    url, end = server.rstrip("/") + "/actuator/health/readiness", time.time() + seconds
+    while time.time() < end:
+        if proc is not None and proc.poll() is not None:
+            raise RuntimeError(f"{url} did not come up: its process exited with {proc.returncode}")
+        try:
+            urllib.request.urlopen(url, timeout=2).read()
+            return
+        except Exception:  # noqa: BLE001 - not listening yet, or 503 while the modules load
+            time.sleep(0.4)   # wait-ok: polling a server's readiness, a deadline not a pause
+    raise RuntimeError(f"{url} did not answer ready")
+
+
 def call(method: str, path: str, user: str, roles: list, body=None):
     """The server's API as ``user`` (the stack's secret signs the token, as the console's does). Returns (status, json)."""
     sys.path.insert(0, str(CONSOLE))

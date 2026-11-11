@@ -32,9 +32,8 @@ dated-by: BUSINESS_DATE
 cadence:
   frequency: on change
   due: at once (a save in Drishti is read at the next request on every server)
-storage:
-  connector: var-system-baskets
-  plugin: var-system-baskets
+binding-hint:
+  computed: true
 fields:
 - name: PORTFOLIO_ID
   type: id

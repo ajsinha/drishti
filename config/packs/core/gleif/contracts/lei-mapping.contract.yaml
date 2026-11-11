@@ -30,11 +30,8 @@ dated-by: snapshot
 cadence:
   frequency: static
   due: to be confirmed
-storage:
-  connector: gleif-store
-  plugin: delta
-  domain: gleif
-  table: <root>/gleif/lei-mapping/
+binding-hint:
+  lake-table: gleif.lei-mapping
   columns:
   - IDENTIFIER
   - TYPE

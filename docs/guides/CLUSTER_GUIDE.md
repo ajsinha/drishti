@@ -373,6 +373,68 @@ the same `config/store/store.yaml`**: the default file-system store needs a shar
 PostgreSQL or S3 need none. A member that finds another recorded with a different store root logs `content store roots differ`
 ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)).
 
+### 1.9 Module placement
+
+A module's **parts** (its API, compute, pages, feeds) run on the nodes the site places them on, in **`config/placement.yaml`** (beside the
+connectors' folder; `drishti.placement.file` moves it). The design is
+[KERNEL_AND_MODULES.md section 4.11](../architecture/KERNEL_AND_MODULES.md#411-modules-in-a-cluster).
+
+```yaml
+format: 1
+version: 4                       # raised by every applied change; every member adopts the highest
+modules:
+  sample:
+    parts:
+      api:     { roles: [web] }                     # every node labelled web (node.yaml tags: web, or role:web)
+      compute: { roles: [heavy], max-nodes: 1 }     # heavy: one node at most
+      feeds:   { nodes: [drishti-main, drishti-b] } # one runner, elected among these two
+```
+
+- **By node name or role.** `nodes:` names members; `roles:` matches a node label (a resource class such as `heavy` or `web`, or
+  `role:<name>`), so a new node with the label is placed without changing the file.
+- **No all-nodes default in a cluster.** A module or part not listed runs nowhere; Health (`placement`) and Admin → Cluster → Modules say
+  *not placed*. A single node (no cluster) places a module the file does not name on itself and notes *single node: placed here*.
+- **Resource classes** come from the module's manifest (`parts:`): `light`, `heavy` (with `memory-mb`), `feed`, `singleton`.
+- **Singletons.** A `feed` or `singleton` part has exactly one owner: the **first live placed node by name**. Every node sees the same
+  placement and the same members, so all agree without a vote; when the owner stops, the next placed node takes over, never a node outside
+  the placement. With no placed node up the part is *unavailable*.
+- **Heavy-work guards.** A request for a part (`/api/v1/<module>/…`, the part by the paths its manifest declares) runs on a node only when
+  the part is placed there; any other node forwards it once, for the same person, to a placed node that is up (the owner of a one-runner
+  part), and the answer's `X-Drishti-Placement` header names the node that ran it. With none up it is refused with `503 DRS-1032`. A plan
+  that puts a heavy part over its `max-nodes`, or on every node of the cluster without `allow-all: true`, is refused with `DRS-1030`.
+- **Plan, then apply.** A change is a plan (`POST /api/v1/admin/cluster/placement/plans` `{placement, reason}`: the matrix before and after,
+  warnings), applied by a second administrator (`…/plans/{id}/apply`; the proposer gets `DRS-2007`). An apply after the cluster changed (a
+  member or its labels, a module, the placement) is refused with `DRS-1031`: plan again. The apply writes the file (the old one kept as
+  `.bak`), takes effect at once without a restart and is sent to every member; a member that was away adopts it from the version in the
+  digest. Audited as `placement-planned`, `placement-applied`, `placement-rejected`, `placement-withdrawn`, `placement-adopted`.
+- **Today's built-in modules** (banking and the others still inside the server) count as placed on every node, unguarded, until each
+  becomes a module: their behaviour is unchanged, and a placement that names one is refused.
+
+### 1.10 Deploying a module
+
+A module (`.dmod`) is deployed once for the whole cluster, from Admin → Modules → Deploy or `drishti.py module deploy`, both over one API
+(`/api/v1/admin/modules/…`, [API_REFERENCE.md](API_REFERENCE.md#2-entities-views-search-and-administration)):
+
+- **Built once, stored once.** The upload goes to the module store of the node you talk to (`modules/store/<id>/<version>/` under
+  `drishti.module-deploy.dir`, by default `<data>/modules`; on AWS with EFS every node reads the same folder). It is checked there with the
+  fifteen conformance checks (C15 with `drishti.module-deploy.conformance-cycles` cycles); a version is never rebuilt: the same version with
+  other bytes is refused. Plans and applies are made on that node (the coordinator).
+- **The plan follows the placement.** Place the module's parts first (section 1.9). The plan lists every node: a placed node stages and
+  activates it; a node where no part is placed receives nothing (it forwards the module's requests) and only records the module in its
+  registry. A module placed on no node is refused (`DRS-1033`).
+- **Four eyes, then two phases.** Another administrator applies (`DRS-2007` for the proposer; `DRS-1031` when the cluster changed since the
+  plan). Phase 1 sends the package to each placed node in chunks over Drishti\*net; each node checks the SHA-256 and runs V1–V9 itself.
+  Phase 2 activates on every placed node; any refusal or failure rolls every node back to what it ran before and the deployment ends
+  `failed` with the node and the reason.
+- **Rolling upgrade.** A newer version of an active module is staged everywhere first, then switched node by node; the other nodes serve
+  the old version until their turn, and requests that reach a node while it switches wait for it (`drishti.module-deploy.swap-wait-seconds`).
+  A failure puts the switched nodes back to the old version.
+- **Switch off and remove.** Switching off unloads it on every placed node (its API answers `404 DRS-1025`); removing unloads it hot
+  (with the class loader leak check), writes the tombstone, and every node answers its API `410 DRS-1028` and its console paths with the
+  *no longer installed* page. Saved work that uses it (alert rules, saved views and reports whose text names its API, pages, functions or
+  kinds) is kept and marked *needs module X*; a reinstall (a plan of the same or a newer version) restores everything.
+- **Audit.** `module-stored`, `module-deploy-planned`, `module-deploy-applying`, `module-deploy-applied|failed|rejected|withdrawn`.
+
 ---
 
 ## 2. A cluster of three
@@ -552,6 +614,12 @@ nodes learn them with this node's digest. API: `GET`/`PUT /api/v1/net/access`.
 
 **Security.** Whether the key is set, whether a previous key is accepted and which peers last signed with it, mutual TLS and certificate
 expiry, and refused calls (when, address, node, why). API: `GET /api/v1/net/security`.
+
+**Modules.** The node × part matrix (`GET /api/v1/admin/cluster/modules`): one row per module part with its resource class, max-nodes and
+memory, one column per node with its labels and whether it is up; each cell in words and colour: **active**, **standby** (a placed node
+waiting while another owns the one-runner part), **down**, **not placed**, **in process** (built into the server). The owner of a feed or
+singleton is starred. Below: the problems (*not placed*, *unavailable*), **Plan a placement** (the whole file and why) and the **plans
+waiting**, which another administrator applies or rejects (section [1.9](#19-module-placement)).
 
 **Files.** Every file of the folder, **in force**, **refused** (with its problems) or **not there (defaults)**. **Check** says what the
 server would make of the text without writing it; **Save** writes it with the version you read (`If-Match`), so two administrators cannot

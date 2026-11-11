@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.ash.drishti</groupId>
+    <artifactId>drishti-parent</artifactId>
+    <version>2.9.11.g</version>
+    <relativePath>../../pom.xml</relativePath>
+  </parent>
+  <artifactId>drishti-module-archetype</artifactId>
+  <name>drishti-module-archetype</name>
+  <description>The Module SDK's Maven archetype (docs/architecture/KERNEL_AND_MODULES.md section 8.3): a module project that builds green on
+    its first `mvn verify`: module.yaml, a function (a Spring bean and its route), its page, a kind with its data contract, data needs,
+    the README, Help, a guide and a tutorial, and a test. It inherits drishti-module-parent, which runs drishti-module-maven-plugin.
+    Its templates are Velocity files (archetype-resources), so they are neither compiled nor formatted here.</description>
+  <properties>
+    <spotless.check.skip>true</spotless.check.skip>
+    <spotless.apply.skip>true</spotless.apply.skip>
+  </properties>
+  <build>
+    <resources>
+      <!-- only the descriptor is filtered (the SDK version a generated module builds against); the templates are Velocity's -->
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+        <includes><include>META-INF/maven/archetype-metadata.xml</include></includes>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+        <excludes><exclude>META-INF/maven/archetype-metadata.xml</exclude></excludes>
+      </resource>
+    </resources>
+  </build>
+</project>

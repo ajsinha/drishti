@@ -193,6 +193,9 @@ class AuthGate(BaseHTTPMiddleware):
             cluster.SESSION.set(hashlib.sha256(session.encode()).hexdigest()[:16] if session else "")
         # the session as the server knows it now (enabled, roles, password change due), not as the cookie remembers it
         path = request.url.path
+        if not path.startswith(("/static/", PYODIDE, "/healthz", "/readyz")):   # the hosted modules: at most every few seconds
+            from core import modules as _mods
+            await request.app.state.module_parts.refresh(request.app.state.backend, _mods.state().loaded)
         if path.startswith("/static/") and (refused := await _module_asset_refused(request, path[len("/static/"):])) is not None:
             return PlainTextResponse(f"Not found: {refused}", status_code=404, headers={"Cache-Control": "no-store"})
         request.state.identity = (None if path.startswith(("/static/", PYODIDE, EMBED))   # /embed/: a bearer token, never the cookie (core/embed.py)
@@ -239,6 +242,14 @@ class AuthGate(BaseHTTPMiddleware):
             except Exception:  # noqa: BLE001 - the switcher is a convenience; never fail a page for it
                 request.state.pack_switcher = []
         await _edition_of(request, path)
+        need = None if path.startswith(("/static/", PYODIDE, EMBED)) or request.state.identity is None else _edition_gate.needs_data(path)
+        if need is not None:                       # here, waiting for data: the page explains itself (200), an API call says why (409)
+            if path.startswith("/api/") or "/api/" in path:
+                return JSONResponse({"code": "DRS-1035", "title": "needs data", "detail": "DRS-1035 " + need["text"], "function": need["word"],
+                                     "bindings": "/admin/bindings"}, status_code=409)
+            from routes.common import render as _render
+
+            return _render(request, "needs_data.html", need=need, path=path)
         why = None if path.startswith(("/static/", PYODIDE, EMBED)) else _edition_gate.hidden(request, request.state.edition, path)
         if why is not None and request.state.identity is not None:
             from core.notfound import not_found
@@ -470,6 +481,9 @@ def create_app(settings: Settings) -> FastAPI:
 
     templates.env.globals["known_local"] = to_local
     from core.admin_forms import admin_form
+    from core import plugins as _plugins
+    templates.env.globals["figure_explain"] = _plugins.figure_explain            # a Sutra figure's Explain › by the modules' rules
+    templates.env.globals["figure_explainers"] = _plugins.figure_explainers      # the rules, for the page's scripts (BI, the renderer)
     templates.env.globals["admin_form"] = admin_form          # the Admin screens' forms: drishti-inputs' Form from a server-built schema
     from jinja2 import pass_context
 
@@ -496,8 +510,9 @@ def create_app(settings: Settings) -> FastAPI:
 
     def _branding_changed() -> None:                    # the instance's edition or the server's branding changed: the pages follow
         for g, key in (("PRODUCT", "ui.product"), ("TAGLINE", "ui.tagline"), ("LOGO", "ui.logo"), ("FAVICON", "ui.favicon"),
-                       ("APPLE_TOUCH_ICON", "ui.apple_touch_icon")):
+                       ("APPLE_TOUCH_ICON", "ui.apple_touch_icon"), ("HELP_TITLE", "ui.help_title"), ("DEFAULT_DENSITY", "ui.default_density")):
             templates.env.globals[g] = settings.get(key, "") or ""
+        templates.env.globals["DEFAULT_THEME"] = settings.get("ui.default_theme", "terminal") or "terminal"   # the distribution's theme
 
     app.state.editions = Editions(settings, WEB.parent, on_change=_branding_changed)
     from core import under_construction as _uc
@@ -564,7 +579,13 @@ def create_app(settings: Settings) -> FastAPI:
     app.state.backend_watch = BackendWatch(catalogue, _seconds(settings.get("backend.check_seconds", 5)),
                                            url_of=(lambda s: pool.current() if s.id == catalogue.default else s.url) if pool.enabled else None)
     # the console learns the server's edition, lenses and branding from its about answer (docs/guides/ADMIN_GUIDE.md › The design)
-    app.state.backend_watch.on_about = lambda s, about: app.state.editions.learn(about) if s.id == catalogue.default and _real_backend(app) else None
+    async def _on_about(s, about):
+        if s.id != catalogue.default or not _real_backend(app):
+            return
+        app.state.editions.learn(about)
+        # the server's module registry changed: its module list (shipped and installed .dmod packages) and the distribution again
+        await app.state.editions.follow_modules(about, lambda: app.state.backend_watch.fetch(s, "/public/modules/manifests"))
+    app.state.backend_watch.on_about = _on_about
     from core.user_stamps import UserStamps
 
     # a change through one worker process (a setting, packs, a layout, a disabled user) reaches every worker of this console at once
@@ -584,6 +605,12 @@ def create_app(settings: Settings) -> FastAPI:
     from core.modules import Me as ModulesMe
 
     app.state.modules_me = ModulesMe(user_ttl, stamps)          # the person's modules, lenses and functions (core/modules.py)
+    from core.module_parts import ModuleParts
+
+    # the modules' console parts, hosted declaratively under /m/<id>/ (KERNEL_AND_MODULES.md 4.7, 14.2.1): this app's, never shared
+    app.state.module_parts = ModuleParts(_console_data_dir(settings) / "module-parts", WEB, app.state.editions.modules_dir,
+                                         float(settings.get("modules.parts_refresh_seconds", 5) or 5))
+    app.state.editions.modules.parts = app.state.module_parts
     app.state.bi_on = str(settings.get("bi.enabled", True)).lower() in ("true", "1", "yes", "on")      # false: no BI menu, no /bi pages
     console_dir = WEB.parent
     docs_dir = Path(settings.get("help.docs_dir", "../docs"))
@@ -707,6 +734,8 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(artifact_routes.router)
     app.include_router(lake_routes.router)
     app.include_router(net_routes.router)
+    from routes import module_admin_routes
+    app.include_router(module_admin_routes.router)     # Admin -> Modules and Deploy; a removed module's paths (KERNEL_AND_MODULES.md 7.6, 12.10)
     app.include_router(explain_routes.router)          # Explain: one for every number, the preview, the drawer and the page (SHARED_SCREENS.md 3)
     app.include_router(lake_maint_routes.router)
     app.include_router(form_routes.router)

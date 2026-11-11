@@ -149,6 +149,7 @@ Everything has a working default; a site changes only what differs. Settings com
 | **Modules** | `config/modules/<module>.yaml` (`enabled: true/false`), or `DRISHTI_MODULES_<MODULE>_ENABLED` | banking, capitalmarkets and economy on; the core is always on |
 | **Lenses** | `config/lenses/<module>/<lens>.yaml`; the lenses each person may open: `DRISHTI_LENSES` | risk, trading, market (banking), world (economy) |
 | **Engines** | `config/engines/<engine>.yaml`, **Admin → Engines** | VaR, exposure, FRTB-SA, SIMM, the MR cube on; the data inbox off |
+| **Your jars** (JDBC drivers, connector plugins) | the lib folder, `DRISHTI_LIB_PATH` (one place; jars found in the older `external_lib/java` or `drishti.sources.plugin-dir` are moved into it once, listed in `lib/moved-<date-time>.bak`, and Health says so) | `<data>/lib` |
 | **Secrets** | the environment only, never a file in `config/` | none: set them ([below](#secrets)) |
 
 **Modules** (YAML; `POST /api/v1/admin/modules` writes the same file; a change takes effect at the next start):
@@ -450,6 +451,99 @@ machine and on three machines, are in [section 10.6](#106-start-order-and-joinin
 | macOS: `permission denied` | `chmod +x bin/*.sh`; *cannot be opened because the developer cannot be verified* does not apply (these are text scripts), but a downloaded copy may carry quarantine: `xattr -dr com.apple.quarantine <drishti>` |
 | Windows: `… cannot be loaded because running scripts is disabled on this system` | run the `.cmd`, or `powershell -ExecutionPolicy Bypass -File bin\….ps1 …` |
 
+### 6.7 Starting a white-labelled instance
+
+One build, several products: a distribution (`config/distributions/drishti.<name>.yaml`,
+[DISTRIBUTIONS.md](architecture/DISTRIBUTIONS.md)) decides the name, theme, modules, lenses, Home and Help. Without one you get
+Drishti All, exactly as in 6.2. What a distribution leaves out does not exist in it: Drishti Finance has no VaR command, menu, Help page
+or AI tool; Drishti Risk has no economy command; market data is in both.
+
+**Drishti Risk, one machine.** Linux and macOS:
+
+```bash
+cd <drishti>
+bin/start-all.sh --demo --distribution risk
+```
+
+Windows (`cmd` or PowerShell):
+
+```powershell
+cd <drishti>
+bin\start-all.cmd --demo --distribution risk
+```
+
+**You should see** the same lines as in 6.2, then, at `http://<host>:17480`: **Drishti Risk** in the top bar on the navy dark theme,
+the menus Views, Blotter, Positions, Risk, Counterparties, Markets, BI, Admin, Help; Home's cards `VAR BANK`, `VAR DESK RATES`; Help
+titled **Drishti Risk Help**. Typing `ECON CAN <GO>` answers *DRS-4023 ECON is not in Drishti Risk*. `bin/status.sh` (Windows
+`bin\status.cmd`):
+
+```text
+process                     pid  state      port   health     distribution     address
+server                  2031144  running    18480  UP         risk             http://192.168.2.77:18480
+console                 2031702  running    17480  UP         risk             http://192.168.2.77:17480
+```
+
+**Drishti Finance, one machine.** The same with `--distribution finance` (Windows: `bin\start-all.cmd --demo --distribution finance`).
+**You should see** **Drishti Finance** on the light theme, the menus Views, Economies, Markets, Companies, BI, Admin, Help; no Risk menu;
+Home's cards `USEQ AAPL`, `FUND SPY`, `ECON CAN`, `NEWS rates`; Help titled **Drishti Finance Help** with no VaR, exposure, FRTB or SIMM
+guide; `VAR BANK <GO>` answers *DRS-4023 VAR is not in Drishti Finance*; `CRV <GO>` (market data) works.
+
+**Drishti Genomics (the sample).** `bin/start-all.sh --demo --distribution genomics` (Windows: `bin\start-all.cmd --demo --distribution genomics`). **You should see** **Drishti Genomics** on the green theme with only the
+kernel's menus (Views, BI, Admin, Help) and no finance anywhere; Admin → Health says the `genomics` module was asked for and is *not
+installed*. **Install the sample module:** build it (`./mvnw -q package -pl modules/genomics -am`) and copy
+`modules/genomics/target/dmod/genomics-0.1.0.dmod` into the data folder's `modules/`. **You should see** it install itself within seconds
+(auto-deploy on a single node): the Research lens with VARIANT, GENE and COHORT, and the lollipop visual in Build → Elements gallery.
+
+**Drishti Risk and Drishti Finance over one cluster (the owner's stack).** In the stack file, a `consoles:` list beside the nodes:
+
+```yaml
+consoles:
+  - { name: risk,    port: 17480, distribution: risk }
+  - { name: finance, port: 17481, distribution: finance }
+```
+
+then `bin/start-cluster.sh --cluster drishti-stack/stack.yaml` (Windows: `bin\start-cluster.cmd --cluster drishti-stack\stack.yaml`).
+**You should see** each node start, then `console-risk: up on http://<host>:17480` and `console-finance: up on http://<host>:17481`;
+`bin/status.sh --cluster drishti-stack/stack.yaml` lists `console-risk … risk` and `console-finance … finance`. The nodes run Drishti
+All; each console shows its own distribution. Without a stack file, start a second console by hand:
+`bin/start-console.sh --server http://<host>:18480 --port 17481 --distribution finance --name finance --background` (Windows the same
+with `bin\start-console.cmd`), and stop it with `bin/stop-console.sh --name finance`.
+
+**Drishti All (the default).** No argument, or `--distribution all` (Windows: `bin\start-all.cmd --demo --distribution all`).
+**You should see** exactly 6.2: **Drishti** on the terminal theme, every menu, Help titled **Help**, the lens switch offering Risk,
+World, Market and Trading; `bin/status.sh` shows `all` for both processes.
+
+**By setting instead of an argument.** `DRISHTI_DISTRIBUTION=finance` in the environment or the env-file (both programs read it), or a
+path to a site's own file (`DRISHTI_DISTRIBUTION=/etc/drishti/acme.yaml`; Windows `C:\drishti\acme.yaml`). On the server it is the
+setting `drishti.distribution` (`--drishti.distribution=finance` as a server argument); on the console the setting `distribution`
+(`--distribution=finance` as a console argument). A console given its own keeps it whatever the server runs.
+
+**From the IDEs.** The run configurations in `run-configs/` (IntelliJ IDEA opens the repository root and lists them under *Drishti*):
+
+| Run configuration | Program | What it sets |
+|---|---|---|
+| `Drishti server (Risk)` | the server on 18480 | environment `DRISHTI_DISTRIBUTION=risk` |
+| `Drishti server (Finance)` | the server on 18480 | environment `DRISHTI_DISTRIBUTION=finance` |
+| `Drishti server (All)` | the server on 18480 | environment `DRISHTI_DISTRIBUTION=all` (and today's `DRISHTI_PACKS`) |
+| `Drishti console (Risk)` | the console on 17480 | argument `--distribution=risk`, `--server.port=17480`; temp folder `data/tmp/console-risk` |
+| `Drishti console (Finance)` | the console on 17481 | argument `--distribution=finance`, `--server.port=17481`; temp folder `data/tmp/console-finance` |
+| `Drishti console (All)` | the console on 17480 | argument `--distribution=all` |
+
+The server configurations run in **IntelliJ IDEA** (module `drishti-app`, so banking is on the class path). The console
+configurations are Python configurations: run them from IntelliJ IDEA with the Python plugin, or from **PyCharm** opened on the
+repository root (they run `drishti-console/run_drishti_web.py` from the repository root with the project interpreter, the console's
+`.venv`). PyCharm opened on `drishti-console/` keeps its own `Drishti console`; to run a distribution there, add `--distribution=finance`
+to its parameters (or `DRISHTI_DISTRIBUTION=finance` to its environment).
+
+**Two consoles against one server from the IDEs:** start `Drishti server (All)` (every module; a Risk or Finance server would limit
+both consoles to its own), then `Drishti console (Risk)` and `Drishti console (Finance)`. **You should see** Drishti Risk at
+`http://localhost:17480` and Drishti Finance at `http://127.0.0.1:17481`, each with its own top bar, theme and Help. Open
+the second by another host name (or in another browser profile): browsers share sign-in cookies across the ports of one host. The same works on Linux, macOS and Windows: the configurations
+use `$PROJECT_DIR$` paths only.
+
+**Verify.** Admin → Health, the Distribution line: the console's and the server's distribution and each module *loaded*. Admin → White
+label: every distribution side by side, the running one first.
+
 ## 7. Run them as services
 
 **Linux (systemd).** The shipped unit is `deploy/systemd/drishti-server.service` (the layout `/opt/drishti`, the user `drishti`,
@@ -618,8 +712,11 @@ the other lakes listed empty.
 
 ### 8.6 A VaR answer: the bank, then a desk
 
-**In the UI.** Type `VAR BANK` in the command line and press Enter: the bank's historical VaR and expected shortfall, the hierarchy with
-every node's figure and limit bar, the P&L path. Then `VAR DESK RATES`: one desk.
+**In the UI.** Type `VAR BANK` in the command line (or **Risk → VaR explorer**) and press Enter: the bank's historical VaR and expected
+shortfall, the scope tree with every node's figure and limit bar, the P&L path. Then `VAR DESK RATES`: one desk, the tree below it with a
+breadcrumb up. **Explain ›** on a row or on the VaR tile opens how the figure was built; **Why it moved** compares it with the previous
+day (or a week, a month end, a date you pick) in steps that add up ([VAR_GUIDE.md section 3.2](guides/VAR_GUIDE.md#32-the-screen),
+[section 3.11](guides/VAR_GUIDE.md#311-why-it-moved-the-var-change-explained)).
 
 ![VAR BANK: the bank's VaR, its hierarchy and the P&L path](img/deploy/06-var-bank.jpg)
 
@@ -667,8 +764,10 @@ Details: [REPORTS_GUIDE.md](guides/REPORTS_GUIDE.md), [PIVOT_GUIDE.md](guides/PI
 
 ### 8.9 The Elements gallery
 
-**In the UI.** `http://<host>:17480/elements/gallery`: every component of the Drishti Elements libraries, live (grid, charts, inputs,
-maps, the risk widgets). A component that does not draw here will not draw on a screen either.
+**In the UI.** **Build → Elements gallery** (`http://<host>:17480/elements`): every component of the Drishti Elements libraries, live
+(grid, charts, inputs, maps, the risk widgets); each component's **Playground page** draws it over data you edit in a grid
+([ELEMENTS.md section 8.4](architecture/ELEMENTS.md#84-as-built-the-gallery)). A component that does not draw here will not draw on a screen
+either.
 
 ![The Elements gallery](img/deploy/12-elements-gallery.jpg)
 
@@ -790,10 +889,10 @@ Tick one column per operating system tested. *Expected* is what section 8 shows.
 | 8 | Sign in, change the password, make a token | Home opens; `doctor --token-file` green | ☐ | ☐ | ☐ |
 | 9 | Home through Risk and through World | each lens's Home with its cards | ☐ | ☐ | ☐ |
 | 10 | Admin → Lakes | the demo lake's tables with rows and dates | ☐ | ☐ | ☐ |
-| 11 | `VAR BANK`, `VAR DESK RATES` | the bank's VaR and ES, the hierarchy; one desk | ☐ | ☐ | ☐ |
+| 11 | `VAR BANK`, `VAR DESK RATES`; Explain ›, Why it moved | the bank's VaR and ES, the scope tree; one desk; the change in steps that add up | ☐ | ☐ | ☐ |
 | 12 | `EXP BANK`, Pre-deal check | the exposure explorer; the check's form | ☐ | ☐ | ☐ |
 | 13 | BI Trades overview; `MCUBE` | the report with live slicers; VaR by desk | ☐ | ☐ | ☐ |
-| 14 | Elements gallery | every component drawn | ☐ | ☐ | ☐ |
+| 14 | Build → Elements gallery, a Playground page | every component drawn; an edited cell redraws the visual | ☐ | ☐ | ☐ |
 | 15 | Admin → Data loads → Inbox and Feeds; `feed list`, `feed run gleif --dry-run` | the owner node; the feeds; `exit=0` | ☐ | ☐ | ☐ |
 | 16 | Banking off, restart | `off` lists banking; no risk pages; `DRS-1025` | ☐ | ☐ | ☐ |
 | 17 | Banking on, restart | VaR answers again | ☐ | ☐ | ☐ |
@@ -1145,7 +1244,8 @@ $py = "<drishti>\drishti-console\.venv\Scripts\python.exe"; $tools = "<drishti>\
    `trade_endur.2026-10-16.jsonl` (or `.jsonl.gz`, `.jsonl.zip`, or a tar of `trade_endur\2026-10-16\` folders). A file named only by its
    date is refused, with the name to give it.
 3. **Two IDE projects, never one folder** (when you use the IDEs): IntelliJ opens `<drishti>` (its run configurations in `run-configs\`:
-   **Drishti build server jar**, **Drishti server (demo lakes)**); PyCharm opens `<drishti>\drishti-console` (`drishti-console\run-configs\`:
+   **Drishti build server jar**, **Drishti server (demo lakes)**, which run module `drishti-app` with the class path in an argument
+   file, so Windows' command-line limit raises no warning); PyCharm opens `<drishti>\drishti-console` (`drishti-console\run-configs\`:
    **Drishti console**, **Build demo lakes**, **Load ENDUR file into the lake**), with the `.venv` interpreter
    ([OPERATIONS_GUIDE.md › PyCharm](guides/OPERATIONS_GUIDE.md#33-pycharm-run-and-debug-the-console)). Opened on the same folder they
    overwrite each other's `.idea` (IntelliJ then says **module not specified**: close both, delete `<drishti>\.idea`, reopen).

@@ -5490,7 +5490,11 @@
       if (!R) { return; }
       const L = R.layout;
       const close = () => v.closeExplain();
-      if (L === 'terminal') { renderExplain(R.split, v.ex, 'split', { explainable: !!v.o.explain }); return; }
+      if (L === 'terminal') {                    // a grid without an Explain hook keeps no empty pane under it (its figures explain elsewhere)
+        R.split.hidden = !v.o.explain && !v.ex;
+        renderExplain(R.split, v.ex, 'split', { explainable: !!v.o.explain });
+        return;
+      }
       const place = L === 'panel' ? R.card : R.drawer;
       place.hidden = !v.exOpen;
       R.main.classList.toggle('dg-open', !!v.exOpen);

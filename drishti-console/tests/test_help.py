@@ -299,7 +299,7 @@ def test_every_old_help_address_still_opens_something(client):
     moved = 0
     for slug in OLD_SLUGS:
         r = client.get(f"/help/{slug}", follow_redirects=False)
-        if slug in listed or slug == "changelog":
+        if slug in listed or slug in ("changelog",):   # root documents Help shows unlisted
             assert r.status_code == 200, slug
             continue
         assert r.status_code == 301, (slug, r.status_code)

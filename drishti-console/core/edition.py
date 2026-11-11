@@ -28,6 +28,7 @@ from __future__ import annotations
 import contextvars
 import copy
 import logging
+import os
 import re
 from pathlib import Path
 from typing import Any
@@ -57,12 +58,12 @@ FEATURE_PATHS = {"bi": ("/bi", "/admin/bi"), "forms": ("/forms", "/form/"), "dat
 # Admin pages by id (the edition's admin.pages); the path prefix each owns
 ADMIN_PAGES = ("users", "roles", "packs", "commands", "tokens", "access", "connectors", "artifacts", "ai", "loads", "lakes", "collab",
                "embedding", "bi", "audit", "net", "edits", "compute", "engines", "health", "caches", "capacity", "scopes", "data-out",
-               "configuration")
+               "configuration", "bindings", "white-label")
 
 
 # The landings' page (LENSES.md › The design): each edition names its own (home.template, home.titles); a file that names none keeps
 # Drishti Risk's, as before 2.9.7. Only templates under home/ named *_landing.html are taken.
-_LANDING_TEMPLATE = re.compile(r"home/[a-z0-9_]+_landing\.html")
+_LANDING_TEMPLATE = re.compile(r"(?:home/|[a-z0-9-]+:)[a-z0-9_]+_landing\.html")
 DEFAULT_LANDING_TEMPLATE = "home/risk_landing.html"
 DEFAULT_LANDING_TITLES = {"desk": "Risk desk", "command": "Command first", "map": "Risk map"}
 
@@ -119,6 +120,8 @@ def hidden_hint(edition, kind: str = "") -> str:
     what = _kinds_word(kind)
     if edition is not None and getattr(edition, "active", False) and getattr(edition, "lens", False):
         return f"You are inside the {edition.title} lens, which does not include {what}: leave the lens (Views → Leave) or choose an entity it shows."
+    if edition is not None and getattr(edition, "active", False) and getattr(edition, "distribution", False):
+        return f"{what[:1].upper() + what[1:]} are not in {edition.title}: choose an entity it shows."
     if edition is not None and getattr(edition, "active", False):
         return (f"This server runs the {edition.title} edition, which does not include {what}: choose an entity it shows, or ask an administrator "
                 "to add it (drishti.edition-spec.commands.also-allow).")
@@ -160,10 +163,23 @@ def _merge(base: dict, over: dict) -> dict:
 class Edition:
     """One edition (or lens) as the console reads it: the file's keys, with the site's ``edition:`` overrides for the instance's own."""
 
-    def __init__(self, name: str = "", spec: dict | None = None, lens: bool = False):
+    def __init__(self, name: str = "", spec: dict | None = None, lens: bool = False, outer: "Edition | None" = None):
         self.name = (name or "").strip()
         self.spec = spec or {}
         self.lens = lens
+        self.outer = outer                     # a lens inside a distribution (Risk's Trading): it never shows what the distribution does not
+
+    @property
+    def distribution(self) -> bool:
+        """True for a distribution's filter (docs/architecture/DISTRIBUTIONS.md): its id is ``drishti.<name>``."""
+        return self.name.startswith("drishti.") or bool(self.outer is not None and self.outer.distribution)
+
+    def help_domains(self) -> list[str] | None:
+        """The domain modules whose Help a distribution keeps (its modules', today); None: no such filter."""
+        d = self._get("help.domains") if self.active else None
+        if isinstance(d, list):
+            return [str(x) for x in d]
+        return self.outer.help_domains() if self.outer is not None else None
 
     @property
     def active(self) -> bool:
@@ -192,6 +208,8 @@ class Edition:
             return False
         if code and _modules.word_refusal(code) is not None:     # its module is off, or the function is off or not the person's (ACCESS_MODEL.md)
             return False
+        if self.outer is not None and not self.outer.command_shown(code):   # a lens never shows what its distribution does not
+            return False
         allow = self.commands() if self.active else set()
         return not allow or not code or code.strip().upper() in allow
 
@@ -209,6 +227,8 @@ class Edition:
         if _engines.word_hidden(word):                           # the engine runs on no server of the cluster: gone, whatever the edition
             return False
         if _modules.word_refusal(word) is not None:              # its module is off, or the function is off for the person: gone too
+            return False
+        if self.outer is not None and not self.outer.word_on(word):
             return False
         if not self.active:
             return True
@@ -267,9 +287,9 @@ class Edition:
 
     @property
     def landing_template(self) -> str:
-        """The page that draws the edition's landings (``home.template``, e.g. ``home/world_landing.html``; it names its own script and
-        style). Only a ``home/<name>_landing.html`` template is taken; a file that names none (written before 2.9.7) keeps the Drishti
-        Risk page."""
+        """The page that draws the edition's landings (``home.template``: the console's ``home/<name>_landing.html``, or a hosted module's
+        ``<module>:<name>_landing.html``, e.g. ``economy:world_landing.html``; it names its own script and style). Anything else, or a file
+        that names none (written before 2.9.7), keeps the Drishti Risk page."""
         t = str(self._get("home.template") or "") if self.active else ""
         return t if _LANDING_TEMPLATE.fullmatch(t) else DEFAULT_LANDING_TEMPLATE
 
@@ -358,6 +378,8 @@ class Editions:
         self.dir = d if d.is_absolute() else (console_dir / d).resolve()
         p = Path(str(settings.get("packs.dir", "../config/packs") or "../config/packs"))
         self.packs_dir = p if p.is_absolute() else (console_dir / p).resolve()
+        md = Path(str(settings.get("module_manifests_dir", "../modules") or "../modules"))   # the modules' own manifests (DISTRIBUTIONS.md)
+        self.modules_dir = md if md.is_absolute() else (console_dir / md).resolve()
         self.settings = settings
         self.instance: Edition = Edition.NONE
         self.lenses: dict[str, Edition] = {}
@@ -366,6 +388,14 @@ class Editions:
         self.engines = _engines.new_state()                      # what runs, learned from this app's server as the edition is: its own,
                                                                  # never another app's of the same process (core/engines.py State)
         self.modules = _modules.new_state()                      # the modules loaded on the server, the same way (core/modules.py State)
+        from core import distribution as _dist
+        self.console_dir = console_dir
+        self.own_distribution = _dist.selected(settings)[1]     # --distribution on this console: it decides, whatever the server runs
+        self.distribution = _dist.builtin_all()
+        self.server_modules = None                               # the server's module list (/public/modules/manifests); None: not yet
+        self._manifests = None                                   # its fingerprint, from /public/about
+        self._dist_name: str | None = None
+        self._use_distribution(None)                             # Drishti All when none is named: nothing changes
 
     def default_packs(self) -> list[str]:
         """The one default pack list (config/packs/default-packs.yaml, by module), as the server reads it from its jar."""
@@ -404,20 +434,28 @@ class Editions:
         True when anything changed (the settings layer and the pages follow at once)."""
         if not isinstance(about, dict):
             return False
-        name = str((about.get("edition") or {}).get("name") or "")
-        lenses = [str(n) for n in about.get("lenses") or []] if not name else []
-        brand = {k: about.get(k) for k in ("product", "tagline") if about.get(k)}
         engines_changed = _engines.learn(about.get("engines"), self.engines)   # the engines running in the cluster (ADMIN_GUIDE.md 5.2)
         engines_changed = _modules.learn(about.get("modules"), self.modules) or engines_changed   # the modules loaded (ACCESS_MODEL.md)
+        if self.own_distribution:                                   # this console's own --distribution: the server's edition and brand
+            if engines_changed and self.on_change is not None:      # do not change it (a Finance console over a Drishti All cluster)
+                self.on_change()
+            return engines_changed
+        name = str((about.get("edition") or {}).get("name") or "")
+        lenses = [str(n) for n in about.get("lenses") or []] if (not name or name.startswith("drishti.")) else []
+        brand = {k: about.get(k) for k in ("product", "tagline") if about.get(k)}
         changed = name != self.instance.name or sorted(lenses) != sorted(self.lenses) or brand != self._server_brand
         if not changed:
             if engines_changed and self.on_change is not None:
                 self.on_change()
             return engines_changed
         if name != self.instance.name:
-            LOG.warning("the server runs the edition %s: the console follows it", name or "(none: the full Drishti)")
-        self.instance = self.load(name) if name else Edition.NONE
-        self.lenses = {n: e for n, e in ((n, self.load(n, lens=True)) for n in lenses) if e.active}
+            LOG.warning("the server runs %s: the console follows it", name or "(none: the full Drishti)")
+        if name.startswith("drishti."):                             # the server's distribution: the same file, read here
+            self._use_distribution(name)
+        else:
+            self.instance = self.load(name) if name else Edition.NONE
+        outer = self.instance if self.instance.distribution else None
+        self.lenses = {n: e for n, e in ((n, self._lens(n, outer)) for n in lenses) if e.active}
         self._server_brand = brand
         server_layer: dict = {}
         if brand and not self.settings.site("ui.product"):          # the server's branding, under the console's own site settings
@@ -428,8 +466,57 @@ class Editions:
             self.on_change()
         return True
 
+    async def follow_modules(self, about: dict, fetch) -> bool:
+        """When the server's module registry changed (``about["manifests"]``), reads its module list (``await fetch()``: the answer of
+        ``/public/modules/manifests``) and the distribution again: a ``.dmod`` installed after the start joins it, a removed one leaves.
+        True when the distribution was read again; a list that does not read, or a distribution it refuses, keeps the last one."""
+        fp = about.get("manifests") if isinstance(about, dict) else None
+        if not fp or fp == self._manifests:
+            return False
+        from core import distribution as _dist
+        try:
+            known = _dist.entries(await fetch())
+        except Exception as e:  # noqa: BLE001 - the server's list is asked again at its next change
+            LOG.warning("the server's module list did not read (%s); the distribution stays as it is", e)
+            return False
+        self._manifests, before = fp, self.server_modules
+        self.server_modules = known
+        try:
+            self._use_distribution(self._dist_name)
+        except ValueError as e:
+            LOG.warning("the distribution stays as it was: %s", e)
+            self.server_modules = before
+            return False
+        if self.on_change is not None:
+            self.on_change()
+        return True
+
     def for_request(self, lens: str | None) -> Edition:
         """The instance's edition; on a full instance, the person's lens when the site offers it; else the full Drishti."""
-        if self.instance.active:
+        if self.instance.active and not self.instance.distribution:
             return self.instance
-        return self.lenses.get(lens or "", Edition.NONE)
+        return self.lenses.get(lens or "", self.instance)
+
+    # -- distributions (docs/architecture/DISTRIBUTIONS.md) --------------------------------------------------------------
+    def _lens(self, name: str, outer: Edition | None) -> Edition:
+        e = self.load(name, lens=True)
+        if e.active and outer is not None:
+            e.outer = outer
+        return e
+
+    def _use_distribution(self, name: str | None) -> None:
+        """Reads the distribution (``name``, else the console's own choice) and puts its brand layer and visibility filter in place."""
+        from core import distribution as _dist
+        # a listed module neither the server nor the folder knows (not installed yet, or removed) is left out with a warning
+        d = _dist.load(self.settings, self.console_dir, name, self.server_modules, strict=False)
+        self._dist_name = name
+        self.distribution = d
+        layer = d.settings_layer()
+        if os.environ.get("DRISHTI_PRODUCT"):                       # the old variable, read for one release (Health says so)
+            layer["ui"].pop("product", None)
+        self.settings.layer("distribution", layer)
+        self.instance = Edition(d.id, d.edition_spec) if not d.all else Edition.NONE
+        if not d.all:
+            outer = self.instance
+            self.lenses = {n: e for n, e in ((n, self._lens(n, outer)) for n in d.lenses) if e.active}
+        self.settings.layer("edition", self.instance.presets(self.mapping()) if self.instance.active else None)

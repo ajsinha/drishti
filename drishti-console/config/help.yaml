@@ -55,6 +55,7 @@ sections:
     groups:
       - title: "Begin here"
         guides:
+          - { slug: how-it-fits, domain: core, doc: ../HOW_IT_FITS.md, title: "How Drishti fits together", icon: diagram-3, summary: "The kernel, the console and modules; what each YAML file and .dmod decides and how they point at each other; bindings, placement, deploy and distributions, with diagrams and VAR BANK traced through every file" }
           - { slug: user-guide, domain: core, doc: guides/USER_GUIDE.md, title: User guide, icon: terminal, summary: "Home and its fact of the day, the top bar, commands, type-ahead, every key, tables, filters, controls, layout mode, the Pivot tab, business dates, Compare, workspaces, monitors, alerts, a page on a phone, the ten themes and how to choose one, settings, and what changes (nothing) when several servers act as one." }
           - { slug: sharing-and-discussion, domain: core, title: Sharing and collaboration, icon: chat-square-text, summary: "Send a view with a note, read your inbox, discuss a number: what travels is your words and a link, and everyone sees the view with their own permissions." }
           - { slug: tutorials, domain: core, doc: tutorials/README.md, title: Tutorials, icon: mortarboard, kind: tutorial, summary: "{tutorials} hands-on tutorials with real screenshots, one worked example each: from your first 15 minutes to BI, AI, embedding, running it in production and a cluster of three servers." }
@@ -63,7 +64,7 @@ sections:
       - title: "Business intelligence"
         words: [BI]
         guides:
-          - { slug: bi-guide, domain: core, pair: docs-tutorials-08-reports-and-dashboards, doc: guides/REPORTS_GUIDE.md, title: "Reports and dashboards", icon: bar-chart-line, summary: "Pivot → Report and the BI pages: the designer and BI Studio, visuals, models over tables, boards and live reports, statements and field parameters, background runs, AI in reports, publishing and governance, schedules, export, subscriptions, alerts and the Reports page." }
+          - { slug: bi-guide, domain: core, pair: docs-tutorials-08-reports-and-dashboards, doc: guides/REPORTS_GUIDE.md, title: "Reports and dashboards", icon: bar-chart-line, summary: "Pivot → Report and the BI pages: the designer and BI Studio, visuals (the decomposition tree, sunburst, icicle, calendar heatmap, linked brushing), models over tables (many-to-many through a bridge, filtering both ways, calculation groups), boards and live reports, statements and field parameters, background runs, AI in reports, publishing and governance, schedules, export, subscriptions, alerts and the Reports page." }
           - { slug: bi-and-power-bi, domain: core, doc: strategy/BI_AND_POWER_BI.md, title: "Drishti BI and Power BI compared", icon: bar-chart-line, summary: "Where Drishti BI is ahead, where it falls behind, what is planned, and how its clustered compute backs BI." }
           - { slug: docs-tutorials-08-reports-and-dashboards, domain: core, doc: tutorials/08-reports-and-dashboards.md, title: "Reports and dashboards tutorial", icon: mortarboard, kind: tutorial, summary: "Hands-on steps in seven parts, each in the UI, on the command line and in YAML: your first report from Pivot, several datasets in one report, statements and field parameters, BI that runs itself (schedules, subscriptions, alerts), scheduled searches and the Reports page, live BI and boards, and governance (review, certify, lineage)." }
           - { slug: notebook-guide, domain: core, pair: docs-tutorials-09-notebook-and-python, doc: guides/NOTEBOOK_GUIDE.md, title: "Notebook and Python", icon: journal-code, summary: "The Notebook (SQL and Python on the server), Python measures and visuals in reports, data prep in the Transform editor, the Python console, the command line and the administrator's compute pool." }
@@ -117,7 +118,7 @@ sections:
           - { slug: examples, domain: core, doc: guides/examples/README.md, title: Sutra examples, icon: collection, summary: "Working Sutras with their data, covering every panel kind, nested pivots and tree rows: read them here, open each as a copy in the workbench." }
       - title: "Extend and embed"
         guides:
-          - { slug: developer-quickstart, domain: core, doc: QUICKSTART_DEVELOPERS.md, title: "Developer quickstart", icon: rocket-takeoff, summary: "From a clean machine to your first change: clone, the JDK and Python on each operating system, the build, the server and console on the demo lake, the repository map, the fast checks, the rules a change must follow and a first change end to end. Also as a PDF." }
+          - { slug: developer-quickstart, domain: core, doc: QUICKSTART_DEVELOPERS.md, title: "Developer quickstart", icon: rocket-takeoff, summary: "From a clean machine to your first change: clone, the JDK and Python on each operating system, the build, the server and console on the demo lake (and a cluster of three) with the bin/ scripts, the repository map, the fast checks, the rules a change must follow and a first change end to end. Also as a PDF." }
           - { slug: developer-guide, domain: core, doc: guides/DEVELOPER_GUIDE.md, title: "Developer guide: connectors, plugins and the API", icon: plug, summary: "Write a connector (the source SPI, manifest, capabilities, TLS and proxy, its README), a plugin or a module; change Drishti's code; call the REST API from scripts, notebooks and Excel with a token." }
           - { slug: embed-guide, domain: core, pair: docs-tutorials-20-embed-drishti, doc: guides/EMBED_GUIDE.md, title: "Embed {product} in your pages", icon: window-stack, summary: "Views and reports in any web page with {product} Elements: the elements, their attributes and events, signing in, turning embedding on, the libraries in your own app, versions and integrity." }
           - { slug: docs-tutorials-20-embed-drishti, domain: core, doc: tutorials/20-embed-drishti.md, title: "Embed tutorial: a view in your page", icon: mortarboard, kind: tutorial, summary: "Hands-on steps to put a live view and a report in a page of your own." }
@@ -344,7 +345,6 @@ moved:
   runbook-sutra-broken: operations#202-a-sutra-is-broken-or-an-edit-does-not-show
   runbook-live-latency: operations#203-live-latency-high-or-live-views-stop-ticking
   runbook-sign-in: operations#204-users-cannot-sign-in
-  how-it-fits: docs-architecture-architecture#5-walk-through-one-request   # HOW_IT_FITS.md deleted (2.9.6): its walk is ARCHITECTURE section 5
   elements: docs-architecture-architecture#30-the-client-renderer-and-drishti-elements
   mcp-client: ai#2-the-mcp-client-other-servers-tools-behind-drishtis-policy
   rupaka: docs-architecture-architecture#28-business-intelligence-on-the-table-layer

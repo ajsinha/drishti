@@ -47,6 +47,15 @@ def _under(path: str, prefixes: tuple) -> bool:
     return any(path == p.rstrip("/") or path.startswith(p if p.endswith("/") else p + "/") or path == p for p in prefixes)
 
 
+def needs_data(path: str) -> dict | None:
+    """The function whose page this is, when it is here but waits for data (``modules.data_need``): its page explains itself (the
+    needs-data page with links to Admin → Data bindings and Help, HTTP 200; an /api/ call 409 DRS-1035) rather than answering 404."""
+    for word, prefixes in word_paths().items():
+        if _under(path, prefixes) and (need := modules.data_need(word)) is not None:
+            return need
+    return None
+
+
 def hidden(request, edition: Edition, path: str) -> str | None:
     """Why the page is hidden for this request (a short reason), or None when it is shown."""
     gone = modules.path_refusal(path)                               # a module that is off: its pages and APIs are not here (ACCESS_MODEL.md)

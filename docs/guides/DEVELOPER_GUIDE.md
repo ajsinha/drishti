@@ -19,7 +19,8 @@
 This guide is for people who change Drishti's code or connect it to other systems. It explains how the repository is laid out,
 how to build, run and test it from a fresh clone, which rules the build enforces, how a request (a view, a BI question, a live
 tick) travels through the code, and gives worked recipes for the changes people make most often. Then it shows how to choose,
-combine and write a **connector** (a source plugin), and how to call the server's **API** from scripts, notebooks and Excel.
+combine and write a **connector** (a source plugin), and how to call the server's **API** from scripts, notebooks and Excel. Part 12
+is **How to create …**: a module, a plugin, a binding, a distribution, a compute and a visual, then one example that joins them.
 Every class, path and command here exists in the repository; the recipes follow the idioms of the real classes they imitate.
 Every endpoint, with its parameters and a captured answer, and every error code are in [API_REFERENCE.md](API_REFERENCE.md).
 
@@ -42,6 +43,7 @@ The API references are at **Help → Developer**, generated from the code: the J
 9. [Releasing](#9-releasing)
 10. [Connectors: choosing, combining and writing one](#10-connectors-choosing-combining-and-writing-one)
 11. [The API: calling the server from scripts, notebooks and Excel](#11-the-api-calling-the-server-from-scripts-notebooks-and-excel)
+12. [How to create …](#12-how-to-create-) a module, a plugin, a binding, a distribution, a compute and a visual, step by step, and all of them together
 
 ## 1. The repository
 
@@ -77,6 +79,10 @@ All Java code lives under the package `com.ash.drishti`. The parent POM (`pom.xm
 | `drishti-memlake` | `memlake` | The in-memory lake, plain Java with no Spring ([IN_MEMORY_LAKE.md](../architecture/DATA_ARCHITECTURE.md#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk)): the `mem://` memory stores (Parquet files in off-heap chunks under a hard cap; registered with `drishti-lakeio` as the `mem` storage provider), the tables and their replenish jobs, the eviction ladder, automated compaction, the owner node's binding, the never-on-disk guard and the host checks. The server keeps only its Spring wiring (`server.memlake`: settings binding, beans, the Admin, Lakes controller). | `MemoryLake`, `MemoryLakeSettings`, `Retention`, `MemoryBinding`, `store.MemoryStores`, `store.MemoryStorage` |
 | `drishti-lakeload` | `lakeload` | The parallel lake loader: JSON Lines from a folder or S3 into Delta or Iceberg, readers, parsers and writers on every core, memory bounded by `memory.budget-mb` (sorted runs spilled to disk), one commit per business date ([PARALLEL_LOADER.md](../architecture/DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-drishti-lakeload)). | `LakeLoad`, `Loader`, `RowParser`, `Runs`, `DeltaTarget`, `IcebergTarget` |
 | `drishti-testkit` | `testkit` | Contract tests every source plugin of a kind must pass. | `DatedSourceContract`, `MessageSourceContract`, `BrokerOutage` |
+| `drishti-module-runtime` | `module.runtime` | The module runtime ([§1.5](#15-the-module-runtime)): the `.dmod` package and its hash list, the manifest, verification V1–V8, discovery, the dependency resolver, a class loader and a child Spring context per module, the live route table, the registry of contributions and the unload sequence with its leak check; and the module tool ([§1.6](#16-the-module-sdk): `module.tool`, the one packer and the conformance checks, `target/drishti-module-tool.jar`). Spring and Jackson only; one implementation for the kernel and, from i4, the console. | `ModuleRuntime`, `tool.ModuleTool`, `tool.ModuleConformance`, `DmodManifest`, `Dmod`, `ModuleVerifier`, `DependencyResolver`, `ModuleClassLoader`, `RouteTable`, `Contributions`, `LeakCheck` |
+| `drishti-sdk/drishti-module-maven-plugin`, `-archetype`, `-parent` | `sdk` | The Module SDK ([§1.6](#16-the-module-sdk)): the archetype of a module project, the parent it inherits, and the plugin that validates, packs the `.dmod` and runs the conformance checks C1–C15. | `ValidateMojo`, `AssembleMojo`, `ConformanceMojo` (over `module.tool`) |
+| `modules/banking/banking-compute`, `banking-service` | `banking` | The banking module's sources, built on their own (`./mvnw -f modules/banking/pom.xml`; artifacts `drishti-compute-banking`, `drishti-banking`): the maths, then the services, storage, Spring wiring and API. The kernel internals it still reaches are listed in `modules/banking/kernel-internals.txt` (`BankingReachTest`: the list only shrinks). | `BankingModule`, `var.*`, `exposure.*`, `compute.var.*` |
+| `drishti-app`, `drishti-kernel-app` | (none) | The runnable jars, no code: `drishti-app` the full jar (the kernel with banking, the default, `drishti-server/target/drishti-server-<v>-exec.jar`); `drishti-kernel-app` the thin jar (the kernel alone, `drishti-kernel-app/target/drishti-kernel-<v>-exec.jar`, Health: *no modules: the kernel runs alone*). | |
 | `drishti-server` | `server` | The Spring Boot application: REST and SSE controllers, security, alerts, Sutra governance, and one sub-package per feature area (`admin`, `ai`, `alerts`, `bi`, `calc`, `cli`, `collab`, `connectors`, `deploy`, `design`, `dist`, `embed`, `explain`, `governance`, `layout`, `loads`, `notify`, `pivot`, `registry`, `reports`). `bi` is the BI engine (section 4.4). | `DrishtiApplication`, `api.*Controller`, `security.Entitlements`, `security.TokenFilter`, `alerts.AlertEngine`, `governance.SutraGovernance`, `bi.mq.MqService`, `bi.engine.QueryService` |
 | `drishti-it` | `it` | Repository-wide rules, as tests only. | `ArchitectureRulesTest`, `LicenseHeaderTest`, `SourceFileSizeTest`, `NoBlockingUnderSynchronizedTest` |
 | `drishti-benchmarks` | `benchmarks` | JMH benchmarks of the hot paths (fingerprint, Rachana-EL, formats, cold inference). | `HotPathBenchmark` |
@@ -154,7 +160,7 @@ server nor Spring, and the lake engines and connectors never see `memlake` (they
 | `examples/packs/` | The retired packs (`finance`, `genomics`, `logistics`, `retail-banking`, `climate-risk`, `operational-risk`, `liquidity-risk`), kept as examples and as fixtures for tests written against them; loaded only with `DRISHTI_PACKS_EXTRA_DIRS=examples/packs` |
 | `config/connectors/`, `config/connectors.examples/` | The site's connector files (written by the server at its first start from the packs' templates; not committed) and ready-made examples per store ([DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors)) |
 | `config/bi/` | Shipped BI files: datasets, models, reports, boards |
-| `run-configs/` | The IntelliJ IDEA run configurations (IntelliJ opens the repository root; [OPERATIONS_GUIDE.md (IDE)](OPERATIONS_GUIDE.md#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm)): **Drishti build server jar**, **Drishti server**, **Drishti server (demo lakes)**, **Drishti server (debug-friendly)**, **Drishti server (QA profile)**. The PyCharm ones (PyCharm opens `drishti-console/`, so the two IDEs never share one `.idea`) are in `drishti-console/run-configs/`: **Drishti console**, **Build demo lakes**, **Load ENDUR file into the lake**, the QA console and the CLI tools |
+| `run-configs/` | The IntelliJ IDEA run configurations (IntelliJ opens the repository root; [OPERATIONS_GUIDE.md (IDE)](OPERATIONS_GUIDE.md#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm)): **Drishti build server jar**, **Drishti server**, **Drishti server (demo lakes)**, **Drishti server (debug-friendly)**, **Drishti server (QA profile)**, each on module `drishti-app` with the class path in an argument file (`ARGS_FILE`). The PyCharm ones (PyCharm opens `drishti-console/`, so the two IDEs never share one `.idea`) are in `drishti-console/run-configs/`: **Drishti console**, **Build demo lakes**, **Load ENDUR file into the lake**, the QA console and the CLI tools |
 | `data/testdata/` | The committed test data: sixty business days of every dataset the seven packs read (5,000 trades a day per source system), `.jsonl.gz`, with `testdata.yaml` and a README ([data/testdata/README.md](../../data/testdata/README.md)) |
 | `tools/drishti.py` | The one command line over the tools below and the server's REST: `sutra`, `pack ...` (`new`, `make`, `check`, `about-check`, `diff`, `i18n`, `publish`, `install`, `regenerate`, `catalogue`, `bundle`, `verify`, `deploy`, `rollback`, `keygen`), `data ingest|load|profile`, `server health|packs|smoke`, `connector ...`, `bi ...`, `view get|explain`, `design ...`, `lake build|publish|scan|status|demo|maintain`, `doctor`, `completion`, `docs shots`; the `test_cli_*.py` and `test_drishti_cli.py` suites cover it. See [CLI_REFERENCE.md](CLI_REFERENCE.md) and [CLI_REFERENCE.md](CLI_REFERENCE.md) |
 | `tools/lake/` | Delta lakes from Python: `build.py` (`lake build`: a large JSON export streamed into a Delta table, flat memory, partitions, promoted columns, the data-load signal or the BI-store stamp), `demo.py` (`lake demo`: the demo lakes from `data/testdata`), `scan.py`, `laketables.py` (`lake status`), `maintain.py` (retention, compaction, checkpoints, vacuum, `relayout`), each with its tests |
@@ -172,6 +178,287 @@ server nor Spring, and the lake engines and connectors never see `memlake` (they
 | `data/` | The **data folder** (`DRISHTI_DATA_DIR`): everything Drishti writes at run time, all git-ignored except `testdata/`: `delta/` (the demo lakes), `bi-store/` (BI columns and rollups), `connectors/` (`generated/` and `history/`), `identity/`, `feeds/`, `packs/` (`added.yaml`, installed archives), `loads/`, `governance/`, `collab/`, `reports/`, `qa/` (the QA profile), `build/` (tool output and staging), `drill/` (the drill's logs) |
 | `docs/` | These documents, by audience: `guides/` (getting started, user, developer, API, Rachana, reports and troubleshooting guides), `tutorials/` (18 hands-on tutorials), `connectors/` (the connector and plugin guides, a design document per store, demo data), `admin/` (operations, configuration, users, performance; the runbooks are in OPERATIONS_GUIDE.md), `architecture/` (architecture, design notes and the ADRs under `architecture/adr/`); `README.md` is the index; reference mockups and logos under `requirements/` |
 | `.github/workflows/fast.yml`, `windows.yml` | CI: `fast.yml` runs `./mvnw -B -q verify` and the header check on Java 21 and 25 and `pytest` for the console on Python 3.13; `windows.yml` builds on Windows, runs the native Delta engine, the Delta connector and server tests, and asks a server on a small lake for a view, a search and a past date |
+
+### 1.5 The module runtime
+
+`drishti-module-runtime` loads **modules**: separately built packages (`<id>-<version>.dmod`) installed unpacked under a module folder
+as `<folder>/<id>/<version>/` with the package beside them (the design: [KERNEL_AND_MODULES.md sections 3, 4, 9.8 and 12](../architecture/KERNEL_AND_MODULES.md#3-the-module-package-dmod)).
+It is a library; a host (the kernel, from i4 also the console) makes one `ModuleRuntime` and adds only its own kind of contribution through
+`ModuleHost`. With no module folder, or an empty one, it does nothing.
+
+```java
+ModuleRuntime rt = new ModuleRuntime(KernelFacts.ofKernel(), kernelContext, kernelClassLoader, host, tombstonesDir);
+List<ModuleHealth> rows = rt.start(List.of(modulesDir), ModuleDiscovery.readActive(activeYaml), id -> enabled(id));
+rt.routes().lookup("/m/genomics/variants/c1");          // 200 draw it, 308 moved, 404 off, 410 removed (a tombstone)
+rt.unload("genomics", ModuleRuntime.Leave.REMOVE, hot);  // the design's steps 1-9; hot drops the class loader and checks it is collected
+```
+
+| Step | Class | What it does |
+|---|---|---|
+| Package | `Dmod` | packs a folder (`module.yaml` first and stored, `META-INF/DMOD.MF`: `<sha-256>  <path>` per file), unpacks one (a path leaving the folder is refused), verifies an unpacked folder and the package beside it against the hash list. Signatures (`DMOD.SIG`) arrive in j: an absent one is accepted with a Health note |
+| Manifest | `DmodManifest` | every field of the design's `module.yaml`; V1 refuses an unknown field, a missing required one, `format` other than 1, an unreadable version or range, and `taint` |
+| Discovery | `ModuleDiscovery` | `<folder>/<id>/<version>/module.yaml` in folder order (first wins), the version `active.yaml` names, else the highest |
+| Checks | `ModuleVerifier`, `Claims` | V1 (id and version name the folders), V2 (hashes; no executables; no kernel API classes in a jar; native code only when declared and allowed), V3 (the API ranges the host knows), V5 (licence), V6 (API prefix, aliases, words, kinds and lenses against the kernel's reserved names and every loaded module), V7 (data needs parse; satisfiable when the host knows its kinds), V8 (memory budget: a warning, a refusal when strict) |
+| Order | `DependencyResolver` | V4: topological by `requires`, then by id; a missing, out-of-range, refused or conflicting module refuses its dependants; a cycle is refused with its path |
+| Code | `ModuleClassLoader` | the JDK, then the shared list (`KernelFacts.SHARED`: the kernel API, Spring, Jackson, SLF4J, Arrow, Micrometer, Jakarta) from the kernel, then the module's own jars child-first; every other kernel class is invisible. It is a Spring `SmartClassLoader`, so Spring keeps no cache of the module's classes |
+| Context | `ModuleRuntime` | one `AnnotationConfigApplicationContext` per module, parent the host's, with the module's loader; `java.spring` classes and `java.entry` registered |
+| Routes | `RouteTable` | the API namespace `/api/v1/<prefix>/…` and the format-2 `plugin.yaml` routes under `/m/<id>/…`, with aliases; immutable snapshots swapped atomically, looked up without a lock |
+| Unload | `Contributions`, `LeakCheck` | a host records each surface with the action that withdraws it; unload runs the design's steps in order, a failing step does not stop the next (its entry stays for a retry); hot unload drops the loader and checks it is collected |
+
+A refused module is absent: no class loaded, no route, only its Health row with the check (`V1`–`V8`, `START`) and the words. The tests
+build a small module from Java source at test time (`TestModule`), load, route and unload it (leak-free, five times over) and cover every
+refusal.
+
+### 1.6 The Module SDK
+
+A module is built apart from the kernel, against the kernel API (the design: [KERNEL_AND_MODULES.md section 8](../architecture/KERNEL_AND_MODULES.md#8-the-module-sdk-and-the-developer-path)).
+**A `.dmod` is a documented zip anyone can produce** ([KERNEL_AND_MODULES.md section 3](../architecture/KERNEL_AND_MODULES.md#3-the-module-package-dmod)):
+`module.yaml` first, then the module's folders (`java/`, `console/`, `data/`, `packs/`, `docs/` …) and `META-INF/DMOD.MF`, the SHA-256 of
+every file. Any build that produces one is fine, **as long as it passes `check`** (the fifteen conformance checks below). Maven is one way,
+not the only one: the packer and the checks are one implementation in `drishti-module-runtime` (`com.ash.drishti.module.tool`), reached
+three ways:
+
+| Way | For | Commands |
+|---|---|---|
+| **Maven** | a Maven project (the archetype makes one) | `mvn verify`: the plugin's `drishti:validate`, `drishti:assemble`, `drishti:conformance` |
+| **The tool** | Gradle, Bazel, a script, or `javac` and a folder | `java -jar drishti-module-tool.jar pack <folder> [--jar <jar>] [--out <dir>]`, then `check <.dmod>` and `inspect <.dmod>` |
+| **The command line** | Linux, macOS and Windows, with Java and Python only | `python3 tools/drishti.py module pack <folder>`, `module check <.dmod>`, `module inspect <.dmod>` (it runs the tool's jar) |
+
+The tool is built with the runtime: `drishti-module-runtime/target/drishti-module-tool.jar` (one self-contained jar; `--tool` or
+`DRISHTI_MODULE_TOOL` points the command line at another copy). `pack` takes a folder in the `.dmod` layout (`module.yaml` at its root);
+the jar named in `module.yaml`'s `java.jars` is either already under `java/` or given with `--jar`. `check` takes a `.dmod` or a folder
+(packed first) and `--project <dir>` (the sources C10 reads) and `--cycles <n>` (C15); exit 0 when every check passed, 1 when one failed or
+the module was refused, 2 for usage. `inspect` prints the manifest, the parts and the hash list's verdict. A Gradle build, for example:
+
+```bash
+gradle jar                                          # build/libs/greet.jar, compiled against drishti-kernel-api (compileOnly)
+java -jar drishti-module-tool.jar pack src/dmod --jar build/libs/greet.jar --out build/dmod
+java -jar drishti-module-tool.jar check build/dmod/greet-0.1.0.dmod --project .
+```
+
+For Maven the SDK is three more artifacts of this repository, `com.ash.drishti:*` at the product's version:
+
+| Artifact | What it is |
+|---|---|
+| `drishti-module-archetype` | makes a module project that builds green on its first `mvn verify`: `src/dmod/module.yaml`, a function (`Greeting`, a bean of the module's Spring configuration) with its route and page (`console/plugin.yaml` format 2, `console/pages/hello.html`), a style on the theme tokens, a kind with its data contract and the data needs, `docs/` (README with front matter, Help, a guide, a tutorial) and a JUnit test |
+| `drishti-module-parent` | the parent the project inherits: Java 21; the kernel API and Spring as `provided` (the kernel supplies them; never inside a `.dmod`); JUnit and AssertJ; the plugin's executions |
+| `drishti-module-maven-plugin` | a thin wrapper over the tool's classes: `drishti:validate` (validate phase: the manifest reads, its id and version are the pom's), `drishti:assemble` (package: `src/dmod/` plus the project's jar under `java/`, packed by the module runtime's packer into `target/dmod/<id>-<version>.dmod` with its hash list and `.sha256`), `drishti:conformance` (verify: the checks C1–C15) |
+
+**Quickstart with Maven: archetype → build → load.**
+
+```bash
+./mvnw -q install -pl .,drishti-sdk/drishti-module-maven-plugin,drishti-sdk/drishti-module-archetype,drishti-sdk/drishti-module-parent -am -DskipTests
+mvn -B archetype:generate -DarchetypeGroupId=com.ash.drishti -DarchetypeArtifactId=drishti-module-archetype \
+    -DarchetypeVersion=2.9.11.g -DgroupId=com.example.greet -DartifactId=greet -Dpackage=com.example.greet
+cd greet && mvn verify          # the test, target/dmod/greet-0.1.0.dmod, then "C1 No kernel internals: passed" ... C15
+cp target/dmod/greet-0.1.0.dmod <data folder>/modules/    # auto-deploy (a single node): stored, checked, installed and loaded
+curl -s localhost:18480/api/v1/greet/greeting/Asha         # the module's REST API, mounted by the kernel
+rm <data folder>/modules/greet-0.1.0.dmod                  # removed the same way: its paths answer 410, its tombstone is kept
+```
+
+(To keep your `~/.m2` untouched while trying it, add `-Dmaven.repo.local=<folder> -Dmaven.repo.local.tail=$HOME/.m2/repository` to each
+Maven command: installs go to the folder, reads fall back to `~/.m2`.) The `.dmod` dropped into the module folder (`drishti.modules.path`,
+default `<data folder>/modules`) goes through the module deployment as an administrator's would: its hash list, the fifteen checks, then
+installed under `modules/installed/<id>/<version>/` and loaded (a single node needs no `config/placement.yaml` entry: a module the file
+does not name is placed on it, and Health notes *single node: placed here*). Auto-deploy is on for a single node and off in a cluster, where a module is
+deployed by plan → apply ([CLUSTER_GUIDE.md](CLUSTER_GUIDE.md)). **Production loads only verified `.dmod` packages.**
+
+**Edit → reload, in development mode.** While you work on a module, the kernel can load its build output without packing a `.dmod` and
+reload it whenever it changes, as Tomcat runs an unpacked web application:
+
+```bash
+# once: a development server (single node, never the prod or production profile) pointed at the module's exploded build output
+DRISHTI_MODULES_DEV=true DRISHTI_MODULES_PATH=$PWD/target/dmod-stage/greet bin/start-server.sh
+# the loop: edit, rebuild, and the kernel reloads it within drishti.modules.autodeploy-seconds (unload, leak check, load)
+mvn -q package -DskipTests      # the server log says "development mode: greet changed: unloaded (leak-free)", then "loaded"
+```
+
+`target/dmod-stage/<id>/` is the folder `drishti:assemble` packs (module.yaml at its root, the jars under `java/`). A folder of
+`<id>/<version>/` folders works too. Development mode loads it **unverified** (no hash list, no checks), and Health and Admin → Modules mark
+the module *development (unverified)*. `drishti.modules.dev` is refused in a cluster and under the `prod` or `production` profile: the
+server logs the refusal and loads only verified packages. Run `mvn verify` (the fifteen checks) before you ship.
+
+**Several jars.** `java.jars` names the module's own jars (the project's first: a service jar, a compute jar ...); `java.lib` names
+third-party jars, packed under the package's `lib/`. Every jar of the package is named in one of the two (V1 refuses one that is not); all of them are
+the module's class path, its own first. `drishti:assemble` takes the others from the project's compile and runtime dependencies by file
+name (`commons-math3-3.6.1.jar`); the tool takes them with `pack <folder> --jar <own jar> --more <jar>,<jar>`.
+
+```yaml
+java: {jars: [genomics-service.jar, genomics-compute.jar], lib: [commons-math3-3.6.1.jar], entry: com.example.genomics.GenomicsModule,
+       spring: [com.example.genomics.ModuleConfig]}
+```
+
+A library every module and connector of the site shares (a JDBC driver, a company's own jar) goes into the shared lib folder instead
+(`drishti.lib.path`, default `<data folder>/lib`; [ADMIN_GUIDE.md](ADMIN_GUIDE.md)): a module sees it after its own jars.
+
+### 1.7 What a module can contribute
+
+A loaded module's beans (of its Spring configuration) and the `META-INF/services` entries of its jars that are of one of the kernel's
+extension types are seen by the kernel while the module is loaded and gone when it unloads: each one is recorded in the registry of
+contributions and withdrawn in the unload's own step ([KERNEL_AND_MODULES.md section 12](../architecture/KERNEL_AND_MODULES.md)). Only
+the kernel API (`com.ash.drishti.kernel.api`) and the entity types its signatures use (`com.ash.drishti.api`: `EntityRef`,
+`EntityDocument`, `AsOf`, `DataNode`) are visible to a module.
+
+| Type (kernel API) | What the kernel does with it |
+|---|---|
+| `data.KindProvider` | routes the kinds it computes like any source: views, Rachana, the pivot, BI |
+| `SourcePlugin` (the plugin API, `com.ash.drishti.api`): a **connector extension** | routed under its own name while the module is loaded, started with `module-dir` (the installed module) and `data-dir` (`<data>/modules/<id>`); the genomics module's VCF reader (section 1.9). A connector only one module's kinds use ships inside the module; a jar every part may use (a JDBC driver) goes in the lib folder |
+| `function.FunctionProvider` | adds its functions to Rachana (the archetype's `<id>_greet(name)` in any expression, Sutra or measure); a name already taken refuses the start |
+| `engines.ComputeEngine` | lists and starts it as the engine registry would at start (its switch and needs apply) |
+| `@ModuleApi` + `@RestController` | mounts its endpoints under `/api/v1/<prefix>/` (its manifest's `api.prefix`); off: 404, removed: 410 |
+| `module.DrishtiModule` (the manifest's `java.entry`) | started with the kernel's `ModuleContext` (kinds as rows, settings `drishti.module.<id>.*`, its data folder, audit, the business date); stopped before its context closes |
+| `approvals.ApprovalSource`, `explain.Explainer`, `view.ViewAugmenter`, `pivot.PivotSourceProvider` | the Approvals queue, Explain this number, the views, the pivot's sources |
+| `health.HealthFigures`, `capacity.CapacityFigures` | Health and the capacity page |
+| `vocabulary.DomainVocabulary`, `official.OfficialResults`, `modules.ApiAlias` | the domain words, the readers of official results, old API paths |
+| `ai.AiToolProvider` | held for the AI layer |
+
+Pages and their routes come from the console part (`console/plugin.yaml` format 2, served under `/m/<id>/`), through the live route table.
+
+**First-party modules and the allowance** ([KERNEL_AND_MODULES.md section 3.3](../architecture/KERNEL_AND_MODULES.md#33-the-manifest-moduleyaml)).
+The product's own modules say `origin: first-party`; the kernel believes it only when the module's id and the SHA-256 of its
+`META-INF/DMOD.MF` are in the `first-party.yaml` of the same build (`java -jar drishti-module-tool.jar first-party DIR --out FILE` writes
+it; `modules/dist` does in the build). Only such a module may declare `kernel-internals:` (a list, or a file the packer writes in): its
+class loader then asks the kernel for exactly those packages, C1 lets them through, and the packer stamps `kernel-build:`, the one kernel
+build it loads on (`pack --kernel-build ID`, default the kernel on the tool's class path). Anything else is refused in words: an allowance
+on a third-party module or on a first-party claim that does not verify (C1), or another kernel build ("built for kernel X, this is Y:
+install the matching module", V3). `module inspect` and `drishti.py module list` print the origin; Health's module rows carry it.
+`check --with a.dmod,b.dmod` installs the modules it requires beside it for the runtime checks; a module with an allowance is made with its
+beans lazy there (the harness has no kernel beans).
+
+**What the bridge also connects for a first-party module's allowance** (banking's beans, as the in-process wiring had them): a connector
+type (`com.ash.drishti.api.SourcePlugin` in `META-INF/services`: the connectors whose files name it start, and stop when it leaves), the
+engines' catalogue entries (`META-INF/drishti/engines.yaml` in its jar) and their defaults (`engines/<id>.yaml`, added to the settings
+last, so the site's `config/engines/<id>.yaml` wins), engine caches (`CacheGroup`, joining the memory budget), readiness gates, drains,
+cache reports, ready rules and Flight forms, a REST controller whose every path is already in its namespace (`/api/v1/<prefix>/...`,
+mounted as it is), and its class loader, so a pack's reactive connector naming one of its engine classes finds it while it is loaded.
+The module's context gets the host's conversion service (`"a,b"` to a list, durations, sizes) and is refreshed with its own loader as the
+thread's, so a playground's built-in template is read from the module's jar.
+
+**Leaving without a trace.** When the module unloads, every kernel registry it joined directly (the load service's ready listeners, the
+disk budget's folders, the admission gate's load slots and open heaps, the dates engines hold open) drops what belongs to the module's
+class loader (`ModuleLoaders`), the shared JSON and conversion caches are emptied of its types, and the leak check waits up to about ten
+seconds for a stopping engine's last tasks. Removing banking from a running server and installing it again answers the same VaR, and the
+first class loader is collected (`leakFree: true` in the deployment's report).
+
+**The conformance checks** ([KERNEL_AND_MODULES.md section 8.6](../architecture/KERNEL_AND_MODULES.md#86-the-conformance-suite)), each
+failure a sentence naming the file and the fix:
+
+| Check | How the tool (and so the plugin) checks it |
+|---|---|
+| C1 No kernel internals | every class file's constant pool: a type of `com.ash.drishti` outside `kernel.api`, the plugin API (`com.ash.drishti.api`) and the module's own packages fails, except a verified first-party module's declared allowance (below) |
+| C2 No bespoke UI | pages draw no `<table>`, `<canvas>` or `<svg>`; scripts import only `@drishti/elements-*` and their own files |
+| C3 Theme tokens only | CSS: no hex, `rgb()`/`hsl()` or named colours outside `var(--…)`, no `!important` |
+| C4 `drishti_` asset prefix | every file under `console/static/` and `elements/` is `drishti_<name>`; no vendored library |
+| C5 CSP-clean | no inline `<script>`, `on*=` handler, `javascript:` URL, `eval`, `new Function` or remote origin |
+| C6 Routes namespaced | `plugin.yaml` format 2, unique route ids, paths inside the module (served under `/m/<id>/`), each page present; no code in the console part |
+| C7 Help, guide, tutorial present | README with front matter, the Help file, at least one guide and one tutorial, every relative link and image of `docs/` present |
+| C8 Data contracts present | each provided kind has `packs/<pack>/contracts/<kind>.yaml` with `contract-format: 1`, a `binding-hint:` and no `storage:`; each need names a contract range |
+| C9 No secrets, no connectors | private keys, cloud keys, `jdbc:` anywhere; connector and secret keys (`connector:`, `password:`, `token:` …) in YAML |
+| C10 Licence headers | the publisher's copyright at the top of every Java source, script and style |
+| C11 Functions answer | loaded into `ModuleRuntime`, every function word has a route that answers 200 |
+| C12 Two people at once | no static field that is not final, and no static collection that is not unmodifiable (the class initialiser's `List.of`, `Map.copyOf`, `Collections.unmodifiable…`, `Stream.toList`), in the module's classes; a field that is one value for the whole engine on purpose carries `@EngineWide("why")` (kernel API) |
+| C13 Off means gone | switched off, every route answers 404 and nothing stays loaded |
+| C14 Absent everywhere | removed, every route answers 410, no contribution is left, Health says REMOVED |
+| C15 Class loader unloads | 50 load/unload cycles (`--cycles`, in Maven `-Ddrishti.conformance.cycles`); the class loader is collected each time |
+
+`ModuleToolTest` (in `drishti-module-runtime`) runs these paths without Maven: it generates a module from the archetype's templates,
+compiles it, packs it, passes the fifteen checks, and loads, routes and unloads it; it builds a second one with `javac` and a folder and
+takes it through the tool's `pack`, `check` and `inspect` into the runtime; a broken copy fails the checks with their words.
+
+### 1.7 A module's console part
+
+The console hosts a module's `console/` part **declaratively** (design: [KERNEL_AND_MODULES.md sections 4.7, 9 and 14.2.1](../architecture/KERNEL_AND_MODULES.md#47-the-console-part-loaded-by-the-drishti-console)):
+it reads the files the kernel verified and runs none of them, so a module brings no Python, no Java and no route registration to the
+console. Everything is declared in `console/plugin.yaml` (`format: 2`):
+
+| Key | What it gives | Example (the archetype) |
+|---|---|---|
+| `routes:` | pages under `/m/<id>/…`: `page:` a template of the module (tier 2), `sutra:` a Sutra, opened as the kernel's page of its `function:` (tier 1); the word opens the route (`GREET asha` → `/m/greet/hello/asha`) | `{id: hello, path: "/hello/{name}", page: hello.html, function: GREET}` |
+| `menus:` | top-bar entries: `menu:` a menu of the product (`help`, `views`, `economies` …) or a new one of the module; `route:` + `params:`, `href:` or `cmd:` | `{menu: help, label: Say hello, route: hello, params: {name: world}}` |
+| `home: cards:` | Home's quick cards (`lens:` to show one in one lens only) | `{title: Say hello, route: hello, params: {name: world}, cmd: GREET world}` |
+| `ai: tools:` | the tools the assistant may offer (a name, a description, the route or word it opens; Admin → AI lists them) | `{name: greet_greet, description: Greets a person, route: hello}` |
+
+Help comes from `docs/help.yaml` (`sections:` with `pages:` of `file:` relative to it; one Help section each, `/help/section/module-<id>`).
+
+**Templates** live in `console/templates/` (or `console/pages/`) and are rendered in the module's **own Jinja environment**: they extend
+`kernel/page.html` (the console's shell: top bar, command line, theme; blocks `title`, `assets`, `page` or `content`, `aside`, `scripts`),
+use the Elements macros of `kernel/elements.html` through `elements` (`elements.card`, `elements.grid`, `elements.header`,
+`elements.notice`) and the phone parts of `kernel/phone.html`, and name their own files `<id>:<path>`. Nothing else is reachable: a
+template that includes or extends any other console template is refused. The context has `module` (id, version, title), `route`,
+`params`, `asset(path)` (`/m/<id>/static/<version>/<path>`, cached a year: the version busts it), `url_for(route_id, **params)` and
+`api(path)`, besides the shell's own values.
+
+**Statics** are `console/static/drishti_<module>-*.js|css` (the `drishti_` prefix, theme tokens only); a domain Elements library is
+`elements/<lib>/`, served at `/m/<id>/elements/<lib>/<version>/`. Drishti Elements and the vendored libraries are the console's: **a part
+that carries a copy of one (by content), a `vendor/` folder, a library with an Elements name, code (`.py`, `.jar`, `.class` …) or an
+unprefixed static file is refused whole**, and Admin → Modules and `GET /api/modules/hosted` say why.
+
+**Where parts come from.** The server's module registry (`GET /public/modules/console`; an active version's part arrives as a zip from
+`/public/modules/console/<id>/<version>`, kept under the console's data folder, `module-parts/<id>/<version>/`), and the modules the product
+ships (`modules/<id>/`, `module_manifests_dir`) while the server lists them loaded. The console asks every
+`modules.parts_refresh_seconds` (5) and at once after an apply in Admin → Modules.
+
+**When the module goes** (switched off or removed) every surface goes with it: its pages answer the Module removed A page (410 removed,
+404 off), its statics 410/404, its menu entries, Home cards, words (*… is not available: needs module X*), Help section, AI tools and lens
+links disappear; an open page of it is frozen under the notice within 15 seconds; saved work that uses it (Sutras, BI reports and
+dashboards, baskets in Build; saved searches in Forms; alert rules) stays, marked *needs module X* and not openable, and comes back on reinstall. Nothing of it
+is kept per person.
+
+**A page reads its module's API** through the console: `api('genes/TP53')` in a template is `/m/<id>/api/genes/TP53`, which the console
+reads from the server's `/api/v1/<id>/genes/TP53` as the person (GET only; 410 removed, 404 off). The page's own script draws the rows
+with Drishti Elements (`Drishti.elements.grid`, `Drishti.elements.load('drishti-chart')`).
+
+### 1.8 A module's own visual (the custom-visual SDK)
+
+A module that needs a chart Drishti does not have ships it **as a Drishti Elements extension**, never as a drawing of its own: a **kind
+of drishti-chart's registry** (`registerKind(name, {build, label, family, cartesian, sample})`), built from drishti-chart's primitives
+(`buildScatter`, `buildSeriesChart`, `buildWaterfall`, the annotations, `toneColour`), in the module's **domain library**
+`elements/drishti-<module>/drishti_<module>.js`. Because the chart card draws it, the kind gets the theme, tooltips, Explain on a mark, the
+data table, export, zoom and the keyboard like every kind, and the conformance checks hold (no canvas, svg or table of its own, no colour:
+tones `good`, `bad`, `warn`, `accent`, `muted` come from the theme).
+
+```bash
+mvn drishti:visual -Dname=lollipop -Dtitle="Variant lollipop"     # in a module project made from the archetype
+```
+
+writes the library (once) with a kind `<module>.lollipop` started on `buildSeriesChart`, and declares it in `console/plugin.yaml`:
+
+```yaml
+visuals:
+  - kind: genomics.lollipop
+    library: drishti-genomics
+    file: drishti_genomics.js
+    title: Variant lollipop
+    summary: "A protein's variants: a stem and head at each amino acid position ..."
+```
+
+**Where it shows.** The module's pages load the library (`/m/<id>/elements/<library>/<module version>/<file>`) and draw the kind with
+`new Chart(el, {kind: 'genomics.lollipop', ...})`. The **Elements gallery** asks the console for the hosted modules' visuals
+(`GET /api/elements/visuals`), loads each library and gives each kind a page drawn from its `sample()`; a module that is off or removed
+is not listed, so its visual is gone from the gallery (and its library answers 404 or 410). The library registers the kind once
+(`kindOf` first) and exposes `Drishti.elements.visuals.<module>.ready`.
+
+### 1.9 The genomics sample, step by step
+
+`modules/genomics` is a third party's module (publisher Helix Lab, a sample) made from the archetype and finished by hand: it uses
+`drishti-kernel-api` and the plugin API only (C1) and carries no finance. Drishti Genomics (`--distribution genomics`) runs the thin
+kernel with it alone ([DISTRIBUTIONS.md section 4](../architecture/DISTRIBUTIONS.md#4-drishti-genomics-sample)).
+
+1. **Generated.** `mvn archetype:generate -DarchetypeArtifactId=drishti-module-archetype -DgroupId=org.helixlab -DartifactId=genomics
+   -Dpackage=org.helixlab.genomics -Ddomain=genomics` (the first commit of the module is the archetype's output, unchanged).
+2. **The VCF reader** (`VcfConnector`, a `SourcePlugin`): reads `data/samples/*.vcf` inside the package and `<data>/modules/genomics/vcf/`
+   (plain or gzipped VCF 4.x); one `variant` per alternate allele, the samples and their `##SAMPLE` cohorts (`Vcf`, `GenomicsData`, one
+   immutable snapshot).
+3. **The kinds** `gene` and `cohort` (`GenomicsKinds`, a `KindProvider`), computed from the variants and `gene.jsonl`; the contracts in
+   `packs/genomics/contracts/`.
+4. **The API** (`GenomicsController`, `@ModuleApi("genomics")`): `/api/v1/genomics/variants`, `/genes/{id}`, `/cohorts/{id}`; the Rachana
+   function `genomics_af_class(af)`.
+5. **One page folder**, `console/pages/explorer.html`, for the six routes (`VARIANT`, `GENE`, `COHORT` and their lists), drawn with the
+   Elements macros and `drishti_genomics-pages.js`; the gene's page draws `genomics.lollipop` (section 1.8).
+6. **Synthetic data**: `tools/make_samples.py` (seeded) writes two cohorts of twelve samples and 120 variants over eight genes.
+7. **Built in the kernel's reactor**: `./mvnw -o package -pl modules/genomics -am` packs `target/dmod/genomics-0.1.0.dmod` and runs the
+   fifteen checks at `package`. `GenomicsDistributionServerTest` boots Drishti Genomics with the package dropped in;
+   `test_genomics_walk_browser.py` walks it in a browser on the thin jar.
 
 ## 2. Building and running from source
 
@@ -423,7 +710,9 @@ Both kinds are listed here.
 | No `synchronized` around blocking I/O (virtual threads) | `NoBlockingUnderSynchronizedTest` |
 | Front end vendored: no CDN, no external URL, no inline script, handler or style | `drishti-console/tests/test_assets_policy.py`, the console's Content Security Policy |
 | Phone: no sideways scroll, targets of at least 44 px | `test_page_widths_browser.py` and the pages' own browser tests |
-| Every sitemap page and top-bar link opens clean and within 5 s; the key pages laid out at 1366 and 1920 px, dark and light | `test_page_walk_browser.py` (TEST_HARNESS.md, "The page walk": how to run it alone or against a running console) |
+| Every sitemap page and top-bar link opens clean and within the page-load budget (10 s); every page a browser test opens is timed, p95 and median per page in [BENCHMARK.md section 18.2](../admin/BENCHMARK.md#182-page-load-in-the-browser-tests); the key pages laid out at 1366 and 1920 px, dark and light; about 30 key pages look as their golden images (`--update-snapshots` refreshes them; TEST_HARNESS.md, "The visual snapshots") | `test_page_walk_browser.py` (TEST_HARNESS.md, "The page walk": how to run it alone or against a running console) and `test_page_snapshots_browser.py` (the snapshots) |
+| The core names no domain (banking's words go through `DomainVocabulary` and the console's plugin hooks); the kernel boots with no module | `tools/domain_strings.py`, `KernelWithoutModulesTest`, `ApiSurfaceTest` ([KERNEL_AND_MODULES.md](../architecture/KERNEL_AND_MODULES.md)) |
+| No copy and paste: duplicated lines per language never rise above `tools/cpd/baseline.txt`, which is only lowered | `tools/duplicates.py` (PMD's copy-paste detector at 100 tokens, in the gate) |
 | No hidden file or folder of our own; everything written at run time under the data folder | `tools/test_no_hidden_names.py` |
 | Generated files match their generators | `--check` in the drill |
 | Sutras shown in docs and pack guides are valid | `DocumentedSutrasTest` |
@@ -2328,10 +2617,10 @@ Drishti finds plugins with the JDK's `ServiceLoader` (`PluginDiscovery` in `dris
    ```
 
    The class needs a public no-argument constructor.
-2. Make the jar visible, in either of two ways. On the **class path** of the server (a Maven dependency of
-   `drishti-server`, as the shipped plugins are), or in a folder named by `drishti.sources.plugin-dir`
-   (`DRISHTI_PLUGIN_DIR`): every `*.jar` in it is loaded in **its own class loader**, so its libraries cannot clash
-   with the server's, and a jar added there needs no rebuild of the server, only a restart.
+2. Make the jar visible: put it in the server's **lib folder** (`drishti.lib.path`, default `<data folder>/lib`). Every jar there
+   is loaded at start into one lib class loader under the kernel's (it never replaces a kernel class); a jar added needs no rebuild,
+   only a restart. A shipped plugin is a Maven dependency of `drishti-server` instead. A connector that only one module's kinds use
+   ships **inside that module** (the genomics module's VCF reader, section 1.8): it goes with the module.
 
 A plugin whose name no connector uses and that is not listed under `plugins` starts with empty settings, and, if it
 needs one, stays idle (see below). `GET /api/v1/sources` lists the running connectors; the failures are under
@@ -2348,7 +2637,8 @@ each, which the server writes to the file at the first start ([DATA_GUIDE.md sec
 # application.local.yaml: the server's own settings
 drishti:
   sources:
-    plugin-dir: ./plugins                       # extra jars, each in its own class loader
+    lib:
+      path: ./data/lib                          # extra jars (connectors, JDBC drivers), in one lib class loader
 ```
 
 ```yaml
@@ -2654,7 +2944,6 @@ mkdir -p plugins-extra && cp docs/guides/examples/connector/target/drishti-examp
 # application.local.yaml
 drishti:
   sources:
-    plugin-dir: ./plugins-extra
     routes: { trade: desk-days, counterparty: desk-days }
 ```
 
@@ -3277,3 +3566,548 @@ curl -s -N $B/views/trade/MX-20000001/stream | grep --line-buffered '^data:{"seq
 ```
 
 You should see a line such as `MTM (USD) +1,595,251` each time the value ticks.
+
+## 12. How to create …
+
+Step by step: a module, a connector plugin, a binding, a distribution, a compute engine and a custom visual, then all of them together in
+one worked example. Each step links the section that holds the detail instead of repeating it. For the picture of how the pieces connect
+(the kernel, the console, modules, bindings, placement, distributions and every file between them), read
+[How Drishti fits together](../../HOW_IT_FITS.md) first.
+
+### 12.1 How to create a module
+
+A module is an industry's knowledge in one `.dmod`: its kinds and their contracts, computations, Rachana functions, a REST API, pages
+and Help ([HOW_IT_FITS.md section 3](../../HOW_IT_FITS.md#3-modules)). It never holds a connector, a host or a credential (C9).
+
+**1. Start a project.** Either the archetype (Maven) or a plain folder:
+
+```bash
+mvn -B archetype:generate -DarchetypeGroupId=com.ash.drishti -DarchetypeArtifactId=drishti-module-archetype \
+    -DarchetypeVersion=<the product's version> -DgroupId=com.example.freight -DartifactId=freight -Dpackage=com.example.freight -Ddomain=logistics
+```
+
+The archetype builds green on its first `mvn verify` and holds one of everything below ([section 1.6](#16-the-module-sdk) lists its files).
+Without Maven, make the same layout by hand: a folder with `module.yaml` at its root, your jar under `java/` (or given to `pack --jar`),
+and the `console/`, `data/`, `packs/` and `docs/` folders.
+
+**2. Write `module.yaml`.** The manifest is read strictly: an unknown field, a missing required one or `format` other than 1 refuses the
+module (V1). The fields that matter, in a minimal real manifest:
+
+```yaml
+format: 1                                   # required, always 1
+id: freight                                 # required: lower-case letters, digits, dashes; names the folder <id>/<version>
+version: 0.1.0                              # required: a version; a stored version is never rebuilt with other bytes
+title: Freight                              # required
+about: Shipments, lanes and their costs     # required: one line
+domain: logistics                           # required: the Help domain and the distribution's grouping
+publisher: {name: Example Logistics, id: com.example}   # required: both keys
+licence: {feature: freight}                 # required: the licence feature that must include it (V5)
+kernel: ">=0.2 <1.0"                        # required, all five: the API ranges it is built for (V3)
+rachana: ">=1.0"
+contracts: ">=1.0"
+plugin-api: ">=2.0"
+elements: ">=1.4 <2"
+provides: {kinds: {freight: [shipment, lane-cost]}}     # pack name -> the kinds whose contracts it ships (C8)
+api: {prefix: freight}                      # its REST namespace: /api/v1/freight/...
+java: {jars: [freight.jar], lib: [], entry: com.example.freight.FreightModule, spring: [com.example.freight.ModuleConfig]}
+console: {plugin: console/plugin.yaml, menus: [freight]}  # its console part; menus: the top-bar menus it adds (a distribution's menus.top picks from them)
+data: {needs: data/needs.yaml}              # the kinds it reads (section 12.3)
+functions: [{word: SHIP}]                   # its command words; each needs a route that answers (C11)
+docs: {readme: docs/README.md, help: docs/help.yaml, guides: [docs/guide.md], tutorials: [docs/tutorial.md], domains: [logistics]}
+resources: {memory-mb: 256}                 # its memory budget (V8)
+```
+
+Optional fields used later in this part: `requires:` (`{market-data: ">=1.0 <2"}`, the modules it needs, V4), `parts:` (section 12.5),
+`compute: {engines: [{id: …}]}` (section 12.5) and `java.lib` (third-party jars, [section 1.6](#16-the-module-sdk)). `origin` and
+`kernel-internals` are for the product's own modules only ([section 1.7](#17-what-a-module-can-contribute)).
+
+**3. Add what it contributes.** Each is an ordinary Spring bean of the module's configuration (`java.spring`); the full list of types
+is in [section 1.7](#17-what-a-module-can-contribute).
+
+| To add | Write | The archetype's example |
+|---|---|---|
+| a kind it computes | a `KindProvider` (`kernel.api.data`): `name()`, `kinds()`, `fetch(ref, asOf)`, `documents(kind, asOf, sink)`, plus the contract `packs/<pack>/contracts/<kind>.yaml` (`contract-format: 1`, `kind`, `version`, `binding-hint`, `fields`) | `GreetingKinds` |
+| a function | a `FunctionProvider` (`kernel.api.function`): `functions()` returns `Provided(name, minArgs, maxArgs, signature, description, fn)`; the name is usable in any Rachana expression, Sutra or measure | `GreetingFunctions` |
+| a REST API | a `@RestController` with `@ModuleApi("<prefix>")` (`kernel.api.module`); mounted under `/api/v1/<prefix>/` | `GreetingController` |
+| start and stop | the `java.entry` class, a `DrishtiModule`: `start(ModuleContext)` gives the kinds as rows (`kinds()`), a writer, its settings (`drishti.module.<id>.*`), its data folder, audit and the business date | `HelloModule` |
+| a page | `console/plugin.yaml` (`format: 2`, `routes:`, `menus:`, `home:`, `ai:`) and a template extending `kernel/page.html`: [section 1.7, the console part](#17-a-modules-console-part) | `console/pages/hello.html` |
+| Help | `docs/README.md` with front matter (`title`, `domain`, `summary`), `docs/help.yaml` (`sections:` of `pages:` with `file:`), a guide and a tutorial (C7); shown as `/help/section/module-<id>` | `docs/` |
+
+**4. Build it, one of three ways** (one packer, one set of checks; [section 1.6](#16-the-module-sdk)):
+
+```bash
+mvn verify                                                              # Maven: target/dmod/freight-0.1.0.dmod, then C1 ... C15
+java -jar drishti-module-tool.jar pack src/dmod --jar build/libs/freight.jar --out build/dmod      # any build
+python3 tools/drishti.py module pack src/dmod --jar build/libs/freight.jar --out build/dmod      # Java and Python only
+```
+
+**5. Check it.** `module check` (or `drishti:conformance` in `mvn verify`) runs the fifteen checks of
+[section 1.7](#17-what-a-module-can-contribute), each line `C<n> <title>: passed` or `FAILED` followed by its problems in words, then
+`all 15 conformance checks passed` or `<n> of 15 checks failed`. Exit 0 passed, 1 a check failed or the module was refused, 2 usage.
+
+```bash
+python3 tools/drishti.py module check build/dmod/freight-0.1.0.dmod --project .     # --project: the sources C10 reads
+python3 tools/drishti.py module inspect build/dmod/freight-0.1.0.dmod                # the manifest, its origin, the hash list's verdict
+```
+
+| A failure of | Usually means | The fix |
+|---|---|---|
+| C1 | a class uses a kernel type outside `kernel.api` and the plugin API | use the kernel API; ask for an extension point |
+| C2, C3, C4, C5 | a page draws its own `<table>`, `<canvas>` or `<svg>`; a colour literal or `!important`; a static file not named `drishti_<name>`; an inline script or handler | the Elements macros and libraries; theme tokens; rename; move the script to a static file |
+| C6 | `plugin.yaml` is not format 2, a route id repeats, a page file is missing | fix `console/plugin.yaml` |
+| C7, C8 | a README without front matter, a missing Help file, guide, tutorial or link; a provided kind without its contract, a contract without `binding-hint` or with `storage:`, a need without a contract range | add the file or field it names |
+| C9 | a connector key, host, `jdbc:` URL or key file in the package | move it to the site's connector files (section 12.2) |
+| C10 | a source without the publisher's copyright header | add the header |
+| C11 | a function word with no route that answers 200 | add the route with `function: <WORD>` |
+| C12 | a mutable static field | make it an instance field, or mark a deliberate one `@EngineWide("why")` |
+| C13, C14, C15 | something stays after switch-off, removal or unload: a route, a contribution, a thread, a static cache, the class loader | stop it in `DrishtiModule.stop()` or the bean's destroy method |
+
+**6. Install it.** Three ways, by where you are:
+
+| Where | How | What you see |
+|---|---|---|
+| your own machine, while you edit | a development server on the build folder: `DRISHTI_MODULES_DEV=true DRISHTI_MODULES_PATH=$PWD/target/dmod-stage/freight bin/start-server.sh`; every rebuild reloads it ([section 1.6](#16-the-module-sdk)) | the log's *development mode: freight changed: unloaded (leak-free)*, then *loaded*; Health marks it *development (unverified)* |
+| your own machine, the package alone | `python3 tools/drishti.py module run build/dmod/freight-0.1.0.dmod`: the kernel's thin jar with this module only, on a free port, every part placed on it | the address of its API; Ctrl-C stops and removes the run |
+| one server | drop the `.dmod` into `<data folder>/modules/` (`drishti.modules.path`); auto-deploy checks, installs and loads it | Admin → Modules: *LOADED* |
+| a cluster | place its parts (section 12.5), then Admin → Modules → Deploy, or `drishti.py module deploy <file> --reason … --out plan.json`; a **second** administrator applies: `drishti.py module apply plan.json` ([CLUSTER_GUIDE.md section 1.10](CLUSTER_GUIDE.md#110-deploying-a-module)) | the plan per node, then *applied* on every placed node |
+
+On a single node (no cluster) a module that `config/placement.yaml` does not name is placed on that node: it loads with no placement
+entry, and Health notes *freight: single node: placed here*. In a cluster there is no all-nodes default: a third-party module runs only
+where `config/placement.yaml` places it ([CLUSTER_GUIDE.md section 1.9](CLUSTER_GUIDE.md#19-module-placement)), and one placed on no node
+is refused at deploy (`DRS-1033`).
+
+**7. Remove and reinstall.** One server: take the `.dmod` out of the modules folder; put it back to reinstall. A cluster:
+`drishti.py module disable freight --reason …` (its API answers `404 DRS-1025`) or `module remove freight --reason …` (`410 DRS-1028`,
+its pages say it is no longer installed), each applied by a second administrator; `module plan install freight --version 0.1.0 --reason …`
+reinstalls. Saved work that uses it is kept, marked *needs module freight*, and comes back with it
+([HOW_IT_FITS.md section 6](../../HOW_IT_FITS.md#6-a-modules-life)).
+
+### 12.2 How to create a plugin (a connector type)
+
+**A plugin or a module?**
+
+| You want | Write | Because |
+|---|---|---|
+| to read a new kind of **store, protocol or file format** that any pack or module may use (a database, a broker, a vendor's files) | a **plugin**, in a jar | it knows no domain; the site makes as many connectors of it as it needs, each a file |
+| to bring a domain's **kinds, computations, functions, API, pages and Help** | a **module** (section 12.1) | it reads its data through bindings and connectors it never names |
+| a reader that **only one module's kinds** use (a format no one else reads) | a plugin **inside that module** | it arrives, starts and leaves with the module: the genomics module's VCF reader ([section 1.9](#19-the-genomics-sample-step-by-step)) |
+| a library several connectors or modules share (a JDBC driver) | neither: put the jar in `lib/` | one class loader for everyone |
+
+**1. Start from the shipped pattern.** Each shipped plugin is `plugins/drishti-plugin-<name>/`: a `pom.xml` depending on `drishti-api`,
+the classes under `com.ash.drishti.plugin.<name>`, `src/main/resources/META-INF/services/com.ash.drishti.api.SourcePlugin`, contract
+tests and a `README.md` in the connectors' README standard ([section 10.14](#1014-the-readme-standard-for-connectors)). For your own,
+copy the teaching plugin `docs/guides/examples/connector/` (the `dayfolder` plugin, [section 10.13](#1013-a-worked-example-the-dayfolder-plugin)).
+
+**2. Implement the SPI.** `SourcePlugin`: `manifest()` (its name, the plugin type connector files name, version, kinds, capabilities),
+`start(SourceContext)`, `fetch`, `coverage`, `search`, `health()` and the optional reads your store can do; every method and its failure
+semantics: [section 10.5](#105-the-sourceplugin-spi). Describe its settings with `settingSpecs()`, so Admin → Connectors draws its form.
+
+**3. Register it.** One line per class in `META-INF/services/com.ash.drishti.api.SourcePlugin`, a public no-argument constructor
+([section 10.6](#106-registration-and-discovery)).
+
+**4. Test it** with `drishti-testkit`: extend `DatedSourceContract` (a dated store) or `MessageSourceContract` and `BrokerOutage` (a
+broker), then add the failure tests ([section 10.12](#1012-testing-with-drishti-testkit)):
+
+```bash
+./mvnw -q -o test -pl docs/guides/examples/connector -am -Dtest='DayFolder*' -Dsurefire.failIfNoSpecifiedTests=false
+```
+
+**5. Package it**, one of two ways:
+
+- **A jar in `lib/`** (the one place for jars: `drishti.lib.path`, default `<data folder>/lib`). Every jar there is loaded at start into one
+  class loader under the kernel's and found by the `ServiceLoader`; adding one needs a restart, not a rebuild. Admin → Health lists each
+  jar of the lib folder with its SHA-256.
+- **Inside a module**: the class in the module's jar with the same `META-INF/services` line (or a bean of its configuration). It starts
+  while the module is loaded, with the settings `module-dir` (the installed module) and `data-dir` (`<data folder>/modules/<id>`); a
+  connector file may name its type, else it serves under its own name. It leaves when the module unloads.
+
+**6. Make a connector of it.** A file per connector, `config/connectors/<name>.yaml` (the file name is the connector's name):
+
+```yaml
+plugin: dayfolder                          # the plugin's name from its manifest
+description: The depot's shipment files
+settings: { root: /srv/depot/days, id-field.shipment: SHIPMENT_ID, rescan-seconds: 60 }
+```
+
+or **Admin → Connectors** (*New*, the form from `settingSpecs()`), or `drishti.py connector apply shipments-days.yaml --test-first`. A
+change to the file applies within seconds; credentials are only `${ENV_VAR}` or `file:` references
+([section 10.7](#107-configuration-binding), [DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors)).
+
+**7. See it run.** **Admin → Health** lists the connector with its status, kinds, reads, errors and cache; a connector that failed to
+start is listed with the reason. From a terminal: `drishti.py connector list`, `drishti.py connector test shipments-days`,
+`drishti.py connector plugins dayfolder` (the settings it reads) and `drishti.py server health`.
+
+### 12.3 How to create a binding
+
+A module says **what** it reads (kinds); the site says **where** each comes from (a binding)
+([HOW_IT_FITS.md section 4](../../HOW_IT_FITS.md#4-data-bindings)).
+
+**1. The module's needs** (`data/needs.yaml`, named by `data.needs` in `module.yaml`; V7 checks it parses and names contract ranges):
+
+```yaml
+needs:
+  - {kind: shipment, contract: ">=1.0 <2", required: true, used-by: [SHIP]}   # without it, SHIP is switched off
+  - {kind: fx-rate, contract: ">=1.0 <2", required: false}                    # optional: its features hide when unbound
+```
+
+Each need: `kind`, `contract` (a range of the kind's contract version), `required` (`true`, `false`, or `{for: [WORDS], with: <kind>}`:
+required only for those functions, or only while another kind is bound), `use` (`read`, `live`, `write`), `any-of` (a group one bound
+member satisfies), `demo: false` (the demo lake may not serve it) and `used-by` (the functions that depend on it).
+
+**2. The connector** that serves the kind exists first (section 12.2): a binding names connectors and lakes, never a host, URL or
+credential (the file refuses one).
+
+**3. The binding**, one per kind, shared by every module that needs it, in `config/bindings.yaml`:
+
+```yaml
+format: 1
+bindings:
+  shipment:
+    read: [shipments-days, shipments-archive]   # connectors, in read order
+    union: true                                 # rows from all of them as one store (needs two or more in read)
+    live: shipments-kafka                       # the connector that pushes changes
+    note: depot files, the archive before them
+  lane-cost-official:
+    write: { lake: freightlake, table: freight.lane-cost-official }   # where a produced kind is written
+  fx-rate:
+    demo: true                                  # the demo lake's samples, on purpose (never with read)
+```
+
+The keys are exactly `read`, `union`, `live`, `write`, `demo` and `note`; anything else is refused with the allowed list.
+
+**4. How a kind finds its data**, first hit wins: the site's binding (`BOUND`), the distribution's default from a pack's `routes:`
+(`BOUND`), a lake that holds the contract's `binding-hint` table (`AUTO`), the demo lake while demo is on (`DEMO`), else `UNBOUND`
+([HOW_IT_FITS.md section 4](../../HOW_IT_FITS.md#4-data-bindings)).
+
+**5. Change it with four eyes.** **Admin → Data bindings**: *Bind…* on the kind's row (connectors in read order, union, live, demo, why),
+*Propose*; a second administrator approves, and it applies without a restart. Over the API: `POST /api/v1/admin/bindings/proposals`
+(`{kind, binding, reason}`), then `…/proposals/{id}/approve`. A hand edit of the file is picked up within
+`drishti.bindings.refresh-seconds` (30) ([ADMIN_GUIDE.md section 23](ADMIN_GUIDE.md#23-data-bindings)).
+
+**6. What an unbound need does.** A **required** kind that nothing serves switches off exactly the functions that use it, and they say
+why: the needs-data page (*… needs data: shipment is not bound*), the same words on the command line, `409 DRS-1035` from the API. The rest
+of the module keeps working; an optional kind only hides its features. Bind it and the functions come back without a restart. A `.dmod`'s
+needs join the gate when it loads and leave it when it unloads (the genomics sample: binding `variant` where nothing serves it shows
+VARIANT's needs-data page).
+
+### 12.4 How to create a distribution
+
+A distribution is one file that makes a product of the kernel: brand, theme, modules, lenses, menus, Home and Help
+([HOW_IT_FITS.md section 7](../../HOW_IT_FITS.md#7-distributions-white-label), [ADMIN_GUIDE.md section 24](ADMIN_GUIDE.md#24-white-label-distributions)).
+
+**1. Copy a shipped file** in `config/distributions/` (`drishti.risk.yaml`, `drishti.finance.yaml`, `drishti.genomics.yaml`,
+`drishti.all.yaml`) to `drishti.<name>.yaml` beside it, and change it. Every field, annotated:
+
+```yaml
+format: 1
+distribution: drishti.freight          # its id, drishti.<name>: --distribution freight finds drishti.freight.yaml
+version: 1.0.0                         # informational (shown with the file, not acted on)
+kernel: ">=2.9.11 <2.10"               # informational
+brand:                                 # each value fills the console's ui.<key>; a blank one keeps the product's
+  product: Acme Freight                # the product name: top bar, title, About, the web manifest
+  product_native: ""                   # the name in a second script, beside the product name
+  tagline: Lanes, costs and shipments  # under the name on the landing page
+  headline: ""                         # the landing page's headline
+  owner: Acme Logistics                # the footer's owner
+  copyright: Copyright © 2026 Acme Logistics. All rights reserved.
+  notice: Internal use only.           # the footer's notice
+  logo: /static/img/drishti_acme-logo.svg   # instead of the eye: a URL under /static/ or a data: URL; blank: the eye
+  favicon: /static/img/drishti_acme-icon.svg   # the browser icon (and the web manifest's); blank: the eye
+  about: ""                            # a line for the About page
+  support: { email: help@acme.example, url: "" }   # shown where people look for help
+theme: { tokens: terminal-blue, mode: dark, density: compact }
+                                       # tokens: the default theme (list below); mode: dark or light, shown with it;
+                                       # density: compact or comfortable. A person's own choice still wins
+modules:                               # module ids; or the word all (Drishti All: every module, no filter)
+  - { id: freight, required: true }    # required (default true): start refuses without its manifest; enabled: false leaves it out
+  - { id: market-data, required: false }
+                                       # a listed module brings the modules it requires
+kernel-packs: [core]                   # the kernel's packs it takes (default: kernel.yaml's list); [] for none
+lenses:
+  offered: [trading]                   # the lenses people may open
+  default: trading                     # the one they land in; "" for the full Home
+menus:
+  top: [freight, views, bi, admin, help]   # the top bar, in order: kernel menus and the modules' console.menus only
+  placeholder: "SHIP LANE:LON-RTM …  then <GO>"   # the command line's hint
+home:
+  cards: [SHIP LON-RTM]                # the commands shown as Home cards
+features: { internal-only-data: off }  # features (a module's engines among them) switched on or off
+commands:
+  words: { PIVOT: off }                # one command word switched off (or on)
+docs:
+  title: Acme Freight Help             # Help's title
+  # categories: [...]                  # Help's categories, when it should show fewer than all (left out: all)
+demo: { ships: false, enabled: false } # informational
+locale: { language: en }               # informational
+```
+
+**Themes** (`theme.tokens`; the console's theme menu shows the same): `terminal` (Terminal), `light` (Parchment), `blue`, `wallstreet`
+(Wall Street), `green`, `crimson`, `crimson-dark`, `terminal-green`, `terminal-crimson`, `terminal-blue`.
+
+**Logo and favicon.** Each is a URL the console serves itself (its content policy allows images only from itself and `data:` URLs): put
+the file in the console's static folder, `drishti-console/web/static/img/`, named `drishti_<name>` like every static file of the console,
+and write `/static/img/drishti_<name>.<ext>`; or give a `data:` URL. The logo is drawn as an image in the top bar and on the public
+pages, so any format a browser draws (SVG best, PNG, WebP); the favicon is the page's icon link, so SVG, PNG or ICO.
+
+**2. Make its modules known.** A distribution reads each module's own manifest, with the same package reader as the module registry:
+the `.dmod` packages the server ships and those installed in the module store (`<data folder>/modules/installed/`, the package's
+manifest winning), then the manifests folder (`drishti.module-manifests-dir`, default `./modules`): `modules/<id>/module.yaml`, an SDK
+project's `modules/<id>/src/dmod/module.yaml`, or `modules/<id>/dmod/module.yaml`. So a third-party `.dmod` installed once (dropped in,
+or deployed) is listed by its id with nothing copied into `modules/`. That is where its words, menus, packs and Help come from; a module
+with `required: false` and no manifest anywhere adds none. The console's distribution reads the same list from the server
+(`GET /public/modules/manifests`) and reads it again whenever the module registry changes (`/public/about`'s `manifests`), so a package
+installed after the start joins a running console's distribution and a removed one leaves it; only while no server has answered does
+the console read its own manifests folder (`module_manifests_dir`).
+
+**3. Start it**: `bin/start-all.sh --distribution freight` (`bin\start-all.ps1 -Distribution freight`), or `bin/start-server.sh` and
+`bin/start-console.sh` each with `--distribution freight`, or `DRISHTI_DISTRIBUTION=freight`, or `drishti.distribution: freight`; a path
+instead of a name loads a file elsewhere. What it leaves out does not exist in it: a word typed anyway answers *DRS-4023 … is not in
+Acme Freight*.
+
+**4. Two consoles over one cluster.** A console keeps its own distribution whatever the servers run:
+
+```bash
+bin/start-console.sh --server http://<server>:18480 --port 17480 --distribution risk
+bin/start-console.sh --server http://<server>:18480 --port 17481 --distribution freight
+```
+
+In a stack file, a `consoles:` list does the same (`{ name: freight, port: 17481, distribution: freight }`, the `console:` block
+their defaults; `bin/start-cluster.sh` starts each).
+
+**5. Check it.** **Admin → White label** shows every distribution file side by side, the running one first: brand, theme, modules (and
+whether each is loaded), lenses, menus, Home cards, Help title and the command that starts it. **Admin → Health** shows the console's and
+the server's distribution.
+
+### 12.5 How to create a compute
+
+**(a) A compute engine inside a module.** An engine is a long-running computation the site switches on or off per node
+([ADMIN_GUIDE.md section 21](ADMIN_GUIDE.md#21-compute-engines-on-or-off)). A module contributes one in four pieces:
+
+| Piece | Where | What it does |
+|---|---|---|
+| the engine | a bean implementing `kernel.api.engines.ComputeEngine`: `id()`, `running(boolean)`, `running()`, and optionally `start()`, `stop()`, `memoryBytes()`, `threadPrefixes()` | attached to the engine registry while the module is loaded; started when its switch is on and its needs run |
+| its catalogue entry | `META-INF/drishti/engines.yaml` in the module's jar: `engines:` with `id`, `title`, `about`, `file`, `switch`, `env`, `aliases`, `live-on` and the lists `needs`, `uses`, `api`, `console`, `words`, `menus`, `help`, `kinds`, `inputs` … | what Admin → Engines shows and what disappears for people when it is off; without one: title = id, file `<id>.yaml`, switch `drishti.engines.<id>.enabled` |
+| its settings | `engines/<id>.yaml` in the module's jar | joins the server's settings **last**, so the site's `config/engines/<id>.yaml` and every other setting win |
+| its declaration | `compute: {engines: [{id: <id>}]}` in `module.yaml` | the distribution reader's list: a distribution without the module switches them off |
+
+**Admin → Engines** lists it like the kernel's own (switch, state, memory, needs, where the switch is set); `drishti.py admin engines
+list|show|on|off` does the same from a terminal. Banking's engines (`var`, `exposure`, `sensitivities`, `frtb-sa`, `simm`, `mr-cube`) arrive
+exactly this way: the catalogue in its jar, the six settings files in its jar's `engines/`, the switch read from `config/engines/<id>.yaml`.
+When the module unloads, its engines leave the registry.
+
+**(b) A Python compute.** The worker SDK (`drishti_compute`, pure Python, in `drishti-compute`) runs Python engines out of process in
+the kernel's compute pools. What is supported:
+
+- An engine is a class of the SDK: `class LaneCost(Engine)` with `kinds = ("lane-cost",)` and `compute(self, req, inputs, progress)`
+  returning `Result(rows=…)` (or raising `ComputeError("…")`, shown in those words); inputs arrive as Arrow tables
+  (`inputs.table("shipments")`). The contract and the protocol: [drishti-compute's README](../../drishti-compute/README.md).
+- It runs in a **pool** of `config/compute/compute.yaml` (`compute.enabled: true`): the pool's `engines:` lists `module:Class`, and its
+  `python-path:` adds the folder your package lives in; workers, memory, timeouts and the sandbox:
+  [OPERATIONS_GUIDE.md section 15](OPERATIONS_GUIDE.md#15-compute-workers).
+- It is reached through a **reactive connector** file (`plugin: reactive`, `engine: { type: python, entry: <module:Class>, pool: <pool> }`,
+  the kinds it computes, the inputs it reads, triggers): [the reactive connector](../connectors/types/reactive/README.md); a whole worked
+  run is [tutorial 19, step 23](../tutorials/19-build-a-pack-and-a-screen.md#step-23--switch-on-the-compute-workers-and-the-sample-pack).
+  The kinds it computes are then read like any other, and a module reads them through its needs.
+- **Not supported for modules:** a `.dmod` carries no Python that runs. The manifest's `python:` section is accepted but not acted on;
+  the Python engine is site configuration (the pool and the connector file), and its code is installed on the nodes that serve the pool.
+
+**(c) Placing heavy compute.** A module declares its **parts** and their resource class; the site places them in `config/placement.yaml`
+([HOW_IT_FITS.md section 5](../../HOW_IT_FITS.md#5-where-things-run-placement), [CLUSTER_GUIDE.md section 1.9](CLUSTER_GUIDE.md#19-module-placement)):
+
+```yaml
+# module.yaml: the parts; a request path belongs to the part whose paths match longest, every other path to api
+parts:
+  api:     { class: light }
+  compute: { class: heavy, memory-mb: 2048, paths: [estimate] }   # /api/v1/freight/estimate/...
+```
+
+```yaml
+# config/placement.yaml: where each part runs (roles: match a node's tags; nodes: by name; all: every node)
+format: 1
+modules:
+  freight:
+    parts:
+      api:     { nodes: [drishti-main, drishti-b] }
+      compute: { roles: [heavy], max-nodes: 1 }
+```
+
+Classes: `light`, `heavy` (with `memory-mb`), `feed` and `singleton` (exactly one runner, the first live placed node by name). A heavy part
+over its `max-nodes`, or on every node of a cluster without `allow-all: true`, is refused (`DRS-1030`). A node where a part is not placed
+forwards its requests once to a placed node (`X-Drishti-Placement` names who ran it); with none up, `503 DRS-1032`. The module itself
+(its engines, kinds and functions) loads on every node where any of its parts is placed. Change it from **Admin → Cluster → Modules**
+(*Plan a placement*, then a second administrator applies) or `POST /api/v1/admin/cluster/placement/plans` `{placement, reason}`.
+
+### 12.6 How to create a custom visual
+
+A chart Drishti does not have is a **kind of drishti-chart's registry** in the module's own Elements library, never a drawing of its own
+([ELEMENTS.md section 7.4](../architecture/ELEMENTS.md#74-a-modules-own-visual-types-the-visual-registry-for-modules)):
+
+```bash
+mvn drishti:visual -Dname=lane-flow -Dtitle="Lane flow"     # in the module project
+```
+
+It writes `elements/drishti-freight/drishti_freight.js` once (a kind `freight.lane-flow` started on drishti-chart's primitives; a second
+visual is added to that file by hand) and its `visuals:` entry in `console/plugin.yaml` (`kind`, `library`, `file`, `title`, `summary`).
+A page draws it with `new Chart(el, {kind: 'freight.lane-flow', ...})`; the **Elements gallery** gives it a page from its `sample()`
+while the module is on. The rules (no canvas, svg or colour of its own; tones from the theme): [section 1.8](#18-a-modules-own-visual-the-custom-visual-sdk).
+
+### 12.7 Putting it together: one module, end to end
+
+A small module `freight`: a kind it reads (`shipment`), a kind it computes (`lane-cost`), a Rachana function, a page with a custom
+visual; its data read through a plugin's connector, placed on two nodes, offered in its own distribution, deployed to a cluster. Each step
+says the file, then what you see in the console (UI), from a terminal (CLI) and in the file (YAML).
+
+**Step 1 · The project.** Generate it with the archetype (section 12.1, step 1) inside the repository's `modules/` folder, beside `genomics/`, so a
+distribution can read its manifest; write `src/dmod/module.yaml` as in section 12.1, step 2, with these two blocks added:
+
+```yaml
+parts:
+  api:     { class: light }
+  compute: { class: heavy, memory-mb: 1024, paths: [estimate] }
+compute: {engines: [{id: lane-costing}]}
+```
+
+*UI*: nothing yet. *CLI*: `mvn verify` builds the archetype's first package.
+
+**Step 2 · The kinds and their contracts.** `src/dmod/packs/freight/contracts/shipment.yaml` and `lane-cost.yaml`:
+
+```yaml
+contract-format: 1
+kind: shipment
+version: "1.0"
+binding-hint: freight.shipment          # the table a lake would hold it in
+fields:
+  - {name: SHIPMENT_ID, type: string, key: true}
+  - {name: LANE, type: string}
+  - {name: KG, type: number}
+  - {name: COST, type: number}
+```
+
+```yaml
+contract-format: 1
+kind: lane-cost
+version: "1.0"
+binding-hint: computed by the freight module
+fields:
+  - {name: LANE, type: string, key: true}
+  - {name: COST_PER_KG, type: number}
+```
+
+and the needs, `src/dmod/data/needs.yaml`:
+
+```yaml
+needs:
+  - {kind: shipment, contract: ">=1.0 <2", required: true, used-by: [SHIP]}
+```
+
+**Step 3 · The code.** Five beans in `ModuleConfig`, shaped like the archetype's:
+
+| Class | Type | Does |
+|---|---|---|
+| `FreightModule` | `DrishtiModule` (`java.entry`) | keeps the `ModuleContext` it is started with |
+| `LaneCosts` | `KindProvider` of `lane-cost` | sums the shipments per lane: `ctx.kinds().documents("shipment", asOf, …)` reads the bound kind as the kernel serves it |
+| `FreightFunctions` | `FunctionProvider` | `freight_cost_per_kg(cost, kg)` in any Rachana expression |
+| `FreightController` | `@RestController` `@ModuleApi("freight")` | `GET /api/v1/freight/lanes/{lane}` and, in the heavy part, `GET /api/v1/freight/estimate/{lane}` |
+| `LaneCosting` | `ComputeEngine` (`id()` = `lane-costing`) | the estimate's engine, switched in Admin → Engines; its defaults in `src/main/resources/engines/lane-costing.yaml` |
+
+```java
+@Override
+public boolean documents(String kind, AsOf asOf, Consumer<EntityDocument> sink) {
+    if (!KIND.equals(kind)) {
+        return false;
+    }
+    Map<String, double[]> byLane = new TreeMap<>();                          // lane -> {cost, kg}
+    module.context().kinds().documents("shipment", asOf, d -> add(byLane, d));   // the bound shipments
+    byLane.forEach((lane, t) -> sink.accept(document(lane, t[0] / t[1])));
+    return true;
+}
+```
+
+**Step 4 · The page and the visual.** `src/dmod/console/plugin.yaml`:
+
+```yaml
+format: 2
+routes:
+  - {id: lane, path: "/lane/{lane}", page: lane.html, function: SHIP, title: "Lane"}
+menus:
+  - {menu: freight, label: "Lanes", route: lane, params: {lane: LON-RTM}}
+home:
+  cards:
+    - {title: "London to Rotterdam", route: lane, params: {lane: LON-RTM}, cmd: "SHIP LON-RTM"}
+```
+
+`console/pages/lane.html` extends `kernel/page.html`, reads `api('lanes/' ~ params.lane)` and draws an `elements.card`; then
+`mvn drishti:visual -Dname=lane-flow -Dtitle="Lane flow"` adds the visual, which the page draws with its script. The Help:
+`docs/README.md`, `docs/help.yaml`, `docs/guide.md`, `docs/tutorial.md`.
+
+**Step 5 · Build and check.** *CLI*: `mvn verify`, which ends with `all 15 conformance checks passed` and
+`target/dmod/freight-0.1.0.dmod`; `python3 tools/drishti.py module inspect target/dmod/freight-0.1.0.dmod` shows the manifest and
+`hashes: every file matches META-INF/DMOD.MF`. A failure names the check and the file (section 12.1, step 5).
+
+**Step 6 · The plugin and its connector.** The depot's shipments are day files, `<root>/shipment/<yyyy-MM-dd>.jsonl`, one shipment per
+line: the `dayfolder` plugin reads exactly that (section 12.2). Copy it into your own plugin project, build its jar into `lib/`, restart,
+and write the connector:
+
+```yaml
+# config/connectors/shipments-days.yaml
+plugin: dayfolder
+description: The depot's shipment files
+settings: { root: /srv/depot/days, id-field.shipment: SHIPMENT_ID, rescan-seconds: 60 }
+```
+
+*UI*: Admin → Health lists `shipments-days` *UP*. *CLI*: `drishti.py connector test shipments-days`.
+
+**Step 7 · The binding.** The module's need meets the connector:
+
+```yaml
+# config/bindings.yaml
+format: 1
+bindings:
+  shipment:
+    read: [shipments-days]
+```
+
+*UI*: Admin → Data bindings, row `shipment`: *Bind…*, `shipments-days`, *Propose*; a second administrator approves; the state turns
+`BOUND`. Before that the row says `UNBOUND` and `SHIP` answers *… needs data: shipment is not bound* (`409 DRS-1035`). *CLI*:
+`POST /api/v1/admin/bindings/proposals` with `{"kind": "shipment", "binding": {"read": ["shipments-days"]}, "reason": "depot files"}`.
+
+**Step 8 · Placed on two nodes.** The light part on both nodes, the heavy part on the one tagged `heavy` (`tags: [heavy]` in that node's
+`config/net/node.yaml`):
+
+```yaml
+# config/placement.yaml
+format: 1
+modules:
+  freight:
+    parts:
+      api:     { nodes: [drishti-main, drishti-b] }
+      compute: { roles: [heavy], max-nodes: 1 }
+```
+
+*UI*: Admin → Cluster → Modules, *Plan a placement*, a second administrator *Applies*; the matrix shows `api` on both nodes, `compute`
+on the heavy one. *CLI*: `POST /api/v1/admin/cluster/placement/plans` `{placement, reason}`, then `…/plans/{id}/apply`.
+
+**Step 9 · Deployed.** *UI*: Admin → Modules → Deploy: upload `freight-0.1.0.dmod`, *Plan* (each node: what it does now and after), and a
+second administrator *Applies*: staged on both placed nodes, then activated together. *CLI*:
+
+```bash
+python3 tools/drishti.py module deploy target/dmod/freight-0.1.0.dmod --reason "first install" --out plan.json
+python3 tools/drishti.py module apply plan.json          # another administrator
+python3 tools/drishti.py module list
+```
+
+Admin → Modules shows *LOADED* on `drishti-main` and `drishti-b`; Admin → Engines lists `lane-costing`; Help has the section
+*Freight*.
+
+**Step 10 · Its own distribution.** `drishti.freight.yaml` from section 12.4 beside the shipped files in `config/distributions/`,
+naming `freight` (`required: true`; the distribution finds the project's `src/dmod/module.yaml` in the modules folder). *CLI*: a second console over the same
+cluster, `bin/start-console.sh --server http://<server>:18480 --port 17481 --distribution freight`. *UI*: on port 17481 the top bar says
+*Acme Freight* with the `freight` menu, Home shows the card *London to Rotterdam*; typing the word opens `/m/freight/lane/LON-RTM`, its
+figures read from the depot's files through `shipments-days`, and the page's lane-flow chart is drawn by the module's visual.
+Admin → White label shows *Acme Freight* beside the shipped distributions.
+
+**What you wrote, in order:** `module.yaml` (what the module is and declares) → contracts and `needs.yaml` (what it provides and reads)
+→ the beans (what it does) → `plugin.yaml` and the page (what people see) → the plugin's jar in `lib/` and the connector file (where the
+site's data is) → `bindings.yaml` (which connector serves each kind) → `placement.yaml` (where each part runs) → the deploy (the package
+on the placed nodes) → `drishti.freight.yaml` (the product people open). Every file of the chain, with who writes it and when it is
+read: [HOW_IT_FITS.md section 8](../../HOW_IT_FITS.md#8-the-files-and-how-they-relate).

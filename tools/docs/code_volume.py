@@ -105,7 +105,9 @@ def _manifests(files: list[str], name: str) -> list[dict]:
 def inventory(files: list[str], pom: str) -> dict:
     """What the product holds, each figure counted from the files (never typed in)."""
     poms = re.findall(r"<module>([^<]+)</module>", pom)
-    modules = [m for doc in _manifests(files, "module.yaml") for m in (doc.get("modules") or [doc.get("module") or {}]) if m.get("id")]
+    # a module's package manifest: modules/<id>/module.yaml, modules/<id>/dmod/module.yaml or a module project's src/dmod/module.yaml
+    package = re.compile(r"modules/[^/]+/(?:dmod/|src/dmod/)?module\.yaml")
+    modules = [doc for doc in (yaml.safe_load(_read(f)) or {} for f in files if package.fullmatch(f)) if doc.get("id")]
     functions = {m["id"]: len((m.get("contributes") or m).get("functions") or []) for m in modules}
     lenses = [lens["id"] for doc in _manifests(files, "lenses.yaml") for lens in doc.get("lenses") or []]
     libs = sorted({f[len(ELEMENTS):].split("/")[0] for f in files if f.startswith(ELEMENTS) and "/src/" in f})
@@ -126,7 +128,7 @@ def inventory(files: list[str], pom: str) -> dict:
     docs = [f for f in files if f.startswith("docs/") and f.endswith(".md")]
     return {
         "maven": len(poms), "plugins": sum(1 for p in poms if p.startswith("plugins/drishti-plugin-")),
-        "domains": ["core"] + [m["id"] for m in modules], "functions": functions, "lenses": lenses,
+        "domains": sorted(m["id"] for m in modules), "functions": functions, "lenses": lenses,
         "routes": sum(len(ROUTE.findall(_read(f))) for f in console),
         "handlers": sum(len(HANDLER.findall(_read(f))) for f in server),
         "libraries": libs, "lib_modules": lib_modules, "packs": dict(sorted(packs.items())),
@@ -148,9 +150,9 @@ def render(m: dict) -> str:
     t = inv["tests"]
     fn = ", ".join(f"{n} {d}" for d, n in sorted(inv["functions"].items()))
     rows = [("Maven modules", f"{inv['maven']} ({inv['plugins']} of them connector plugins)"),
-            ("Domain modules", f"{len(inv['domains'])}: {', '.join(inv['domains'])}"),
+            ("Modules (`.dmod`)", f"{len(inv['domains'])}: {', '.join(inv['domains'])}"),
             ("Lenses", f"{len(inv['lenses'])}: {', '.join(inv['lenses'])}"),
-            ("Functions a module declares", f"{sum(inv['functions'].values())} ({fn}); every other command word is the core's"),
+            ("Functions a module declares", f"{sum(inv['functions'].values())} ({fn}); every other command word is the kernel's"),
             ("Console routes", f"{inv['routes']}"),
             ("Server REST handlers", f"{inv['handlers']}"),
             ("Drishti Elements", f"{len(inv['libraries'])} libraries, {inv['lib_modules']} ES modules"),

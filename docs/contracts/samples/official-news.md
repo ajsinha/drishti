@@ -26,7 +26,7 @@ Every data type of `official-news` as a real record of the committed test data, 
 
 ## Official press releases: release-source (PRESS)
 
-One publisher of official news (a central bank, a regulator, a government): its latest releases newest first, each a link, and its terms. One row per official press releases, keyed by SOURCE_ID. Read by the **official-news** pack's connector `officialnews-store` (table `<root>/officialnews/release-source/`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/official-news/samples/release-source.jsonl`, 9 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+One publisher of official news (a central bank, a regulator, a government): its latest releases newest first, each a link, and its terms. One row per official press releases, keyed by SOURCE_ID. Read by the **official-news** pack's connector `officialnews-store` (lake table `officialnews.release-source`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/official-news/samples/release-source.jsonl`, 9 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 
@@ -160,7 +160,7 @@ Fields no record above has, found by reading all 9 rows, with how many rows fill
 
 ## Press release: press-release (PREL)
 
-One official press release: its title, publisher, date, summary and the link to the original. One row per press release, keyed by RELEASE_ID. Read by the **official-news** pack's connector `officialnews-store` (table `<root>/officialnews/press-release/`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/official-news/samples/press-release.jsonl`, 18 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+One official press release: its title, publisher, date, summary and the link to the original. One row per press release, keyed by RELEASE_ID. Read by the **official-news** pack's connector `officialnews-store` (lake table `officialnews.press-release`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/official-news/samples/press-release.jsonl`, 18 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 

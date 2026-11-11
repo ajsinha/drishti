@@ -33,11 +33,8 @@ dated-by: BUSINESS_DATE
 cadence:
   frequency: daily
   due: to be agreed with the simulator's owner (EXPOSURE_GUIDE.md open question 1); before its paths
-storage:
-  connector: exposure-store
-  plugin: delta
-  domain: risk
-  table: <root>/risk/simulation-run/
+binding-hint:
+  lake-table: risk.simulation-run
   columns:
   - RUN_ID
   - CALIBRATION

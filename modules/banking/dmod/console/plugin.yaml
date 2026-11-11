@@ -1,0 +1,260 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The module's pages: one per function, under /m/banking/ (KERNEL_AND_MODULES.md section 9.8). The console's own banking plugin
+# (drishti-console/plugins/banking) draws them until the console part moves into the module (2.9.11.i4).
+format: 2
+module: banking
+title: Banking and risk
+routes:
+- id: var
+  path: /var
+  sutra: banking/var
+  function: VAR
+  title: Value at risk
+- id: pvar
+  path: /pvar
+  sutra: banking/pvar
+  function: PVAR
+  title: Parametric VaR
+- id: smat
+  path: /smat
+  sutra: banking/smat
+  function: SMAT
+  title: Scenario matrix
+- id: swin
+  path: /swin
+  sutra: banking/swin
+  function: SWIN
+  title: Stress window
+- id: predeal
+  path: /predeal
+  sutra: banking/predeal
+  function: PREDEAL
+  title: Pre-deal check
+- id: exp
+  path: /counterparty-risk/exposure-result/{id}
+  sutra: counterparty-risk/exposure-result
+  function: EXP
+  title: Exposure
+- id: frsa
+  path: /frsa
+  sutra: banking/frsa
+  function: FRSA
+  title: FRTB standardised approach
+- id: simm
+  path: /counterparty-risk/simm/{id}
+  sutra: counterparty-risk/simm
+  function: SIMM
+  title: ISDA SIMM
+- id: mcube
+  path: /mcube
+  sutra: banking/mcube
+  function: MCUBE
+  title: Market risk cube
+- id: sens
+  path: /market-risk/position-sensitivity/{id}
+  sutra: market-risk/position-sensitivity
+  function: SENS
+  title: Sensitivities
+- id: rfac
+  path: /market-risk/risk-factor/{id}
+  sutra: market-risk/risk-factor
+  function: RFAC
+  title: Risk factors
+- id: play
+  path: /play
+  sutra: banking/play
+  function: PLAY
+  title: Playgrounds
+- id: ccube
+  path: /ccube
+  sutra: banking/ccube
+  function: CCUBE
+  title: Counterparty cube
+- id: trd
+  path: /trading/trade/{id}
+  sutra: trading/trade
+  function: TRD
+  title: Trade
+- id: ctrd
+  path: /trading/counterparty-trades/{id}
+  sutra: trading/counterparty-trades
+  function: CTRD
+  title: Counterparty trades (derived from trades)
+- id: ptrd
+  path: /trading/portfolio-trades/{id}
+  sutra: trading/portfolio-trades
+  function: PTRD
+  title: Portfolio trades (derived from trades)
+- id: ltrd
+  path: /trading/legal-entity-trades/{id}
+  sutra: trading/legal-entity-trades
+  function: LTRD
+  title: Legal entity trades (derived from trades)
+- id: itrd
+  path: /trading/index-trades/{id}
+  sutra: trading/index-trades
+  function: ITRD
+  title: Index trades (derived from trades)
+- id: scn
+  path: /market-risk/stress-scenario/{id}
+  sutra: market-risk/stress-scenario
+  function: SCN
+  title: Stress scenario
+- id: str
+  path: /market-risk/stress-result/{id}
+  sutra: market-risk/stress-result
+  function: STR
+  title: Stress result
+- id: frtb
+  path: /market-risk/frtb-sensitivity/{id}
+  sutra: market-risk/frtb-sensitivity
+  function: FRTB
+  title: FRTB sensitivities
+- id: pnl
+  path: /market-risk/pnl-explain/{id}
+  sutra: market-risk/pnl-explain
+  function: PNL
+  title: P&L explain
+- id: tval
+  path: /market-risk/trade-valuation/{id}
+  sutra: market-risk/trade-valuation
+  function: TVAL
+  title: Trade valuation
+- id: pos
+  path: /market-risk/position/{id}
+  sutra: market-risk/position
+  function: POS
+  title: Position
+- id: port
+  path: /market-risk/system-basket/{id}
+  sutra: market-risk/system-basket
+  function: PORT
+  title: System basket (the bank's baskets, kept in Drishti)
+- id: pnlv
+  path: /market-risk/pnl-vector/{id}
+  sutra: market-risk/pnl-vector
+  function: PNLV
+  title: P&L vector (509 scenarios)
+- id: spv
+  path: /market-risk/scenario-pv/{id}
+  sutra: market-risk/scenario-pv
+  function: SPV
+  title: Scenario PVs of a trade (509 scenarios, its currency)
+- id: fxs
+  path: /market-risk/fx-scenario/{id}
+  sutra: market-risk/fx-scenario
+  function: FXS
+  title: Scenario FX of a currency (509 scenarios)
+- id: sset
+  path: /market-risk/scenario-set/{id}
+  sutra: market-risk/scenario-set
+  function: SSET
+  title: Scenario set
+- id: vlim
+  path: /market-risk/var-limit/{id}
+  sutra: market-risk/var-limit
+  function: VLIM
+  title: VaR limit of a hierarchy node
+- id: dpnl
+  path: /market-risk/desk-pnl/{id}
+  sutra: market-risk/desk-pnl
+  function: DPNL
+  title: 'Desk P&L: actual and hypothetical (daily)'
+- id: pnlh
+  path: /market-risk/pnl-history/{id}
+  sutra: market-risk/pnl-history
+  function: PNLH
+  title: Long-history P&L of a hierarchy node (stress window selection)
+- id: vres
+  path: /market-risk/var-result/{id}
+  sutra: market-risk/var-result
+  function: VRES
+  title: VaR of a scope (computed)
+- id: voff
+  path: /market-risk/var-official/{id}
+  sutra: market-risk/var-official
+  function: VOFF
+  title: VaR official results (published)
+- id: sspnl
+  path: /market-risk/stress-scenario-pnl/{id}
+  sutra: market-risk/stress-scenario-pnl
+  function: SSPNL
+  title: Stress P&L of a scenario across desks (derived from the stress results)
+- id: agr
+  path: /counterparty-risk/agreement/{id}
+  sutra: counterparty-risk/agreement
+  function: AGR
+  title: Master agreement
+- id: csa
+  path: /counterparty-risk/csa/{id}
+  sutra: counterparty-risk/csa
+  function: CSA
+  title: Credit support annex
+- id: nset
+  path: /counterparty-risk/netting-set/{id}
+  sutra: counterparty-risk/netting-set
+  function: NSET
+  title: Netting set
+- id: lim
+  path: /counterparty-risk/credit-limit/{id}
+  sutra: counterparty-risk/credit-limit
+  function: LIM
+  title: Credit limit
+- id: cva
+  path: /counterparty-risk/cva/{id}
+  sutra: counterparty-risk/cva
+  function: CVA
+  title: CVA / XVA
+- id: saccr
+  path: /counterparty-risk/sa-ccr/{id}
+  sutra: counterparty-risk/sa-ccr
+  function: SACCR
+  title: SA-CCR exposure
+- id: coll
+  path: /counterparty-risk/collateral-balance/{id}
+  sutra: counterparty-risk/collateral-balance
+  function: COLL
+  title: Collateral balance
+- id: mc
+  path: /counterparty-risk/margin-call/{id}
+  sutra: counterparty-risk/margin-call
+  function: MC
+  title: Margin call
+- id: xrun
+  path: /counterparty-risk/simulation-run/{id}
+  sutra: counterparty-risk/simulation-run
+  function: XRUN
+  title: Exposure simulation run
+- id: xpath
+  path: /counterparty-risk/exposure-path/{id}
+  sutra: counterparty-risk/exposure-path
+  function: XPATH
+  title: Exposure path (a trade's MtM on every path at a grid date)
+- id: xofc
+  path: /counterparty-risk/exposure-official-cpty/{id}
+  sutra: counterparty-risk/exposure-official-cpty
+  function: XOFC
+  title: Exposure official results by netting set and counterparty (published)
+- id: nsmtm
+  path: /counterparty-risk/nset-mtm/{id}
+  sutra: counterparty-risk/nset-mtm
+  function: NSMTM
+  title: Netting-set MtM totals (derived from the trade valuations)
+- id: cpmtm
+  path: /counterparty-risk/cpty-mtm/{id}
+  sutra: counterparty-risk/cpty-mtm
+  function: CPMTM
+  title: Counterparty MtM totals (derived from the trade valuations)

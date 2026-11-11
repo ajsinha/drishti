@@ -35,11 +35,8 @@ dated-by: BUSINESS_DATE
 cadence:
   frequency: daily
   due: with the position sensitivities of the date
-storage:
-  connector: risk-store
-  plugin: delta
-  domain: risk
-  table: <root>/risk/default-risk/
+binding-hint:
+  lake-table: risk.default-risk
   columns:
   - DEFAULT_RISK_ID
   - POSITION_ID

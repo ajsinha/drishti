@@ -15,8 +15,6 @@
  */
 package com.ash.drishti.server.engines;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -41,13 +39,30 @@ public final class EngineSwitches {
      */
     public record Switch(boolean on, String source, String alias, boolean overridden) {}
 
-    private final Map<String, Switch> switches = new LinkedHashMap<>();
-    private final List<String> warnings = new ArrayList<>();
+    private final Map<String, Switch> switches = new java.util.concurrent.ConcurrentHashMap<>();
+    private final List<String> warnings = new java.util.concurrent.CopyOnWriteArrayList<>();
+    private final ConfigurableEnvironment env;
 
     public EngineSwitches(EngineCatalogue catalogue, ConfigurableEnvironment env) {
+        this.env = env;
         for (EngineCatalogue.Entry e : catalogue.all()) {
             switches.put(e.id(), read(e, env));
         }
+    }
+
+    /**
+     * Reads the switch of an engine a loaded module brought (its catalogue entry, its defaults now in the settings), as the server's own
+     * were read at the start; forgotten again when it leaves.
+     */
+    public void learn(EngineCatalogue.Entry e) {
+        if (env != null) {
+            switches.put(e.id(), read(e, env));
+        }
+    }
+
+    /** An engine that left with its module. */
+    public void forget(String id) {
+        switches.remove(id);
     }
 
     public Switch of(String id) {
@@ -122,10 +137,20 @@ public final class EngineSwitches {
         return "systemEnvironment".equals(ps.getName());
     }
 
-    /** The jar's own files: application.yaml and the engines' shipped copies. */
+    private static final String MODULE_COPY = "module shipped copy ";
+
+    /**
+     * The name of a module's shipped copy of an engine's settings ({@code engines/<file>} in the module's own jars), as the module host adds
+     * it: a shipped copy like the server's own, so a site's {@code config/engines/<file>} overrides it and Admin, Engines says where it came from.
+     */
+    public static String moduleCopy(String module, String file) {
+        return MODULE_COPY + "[" + module + "] engines/" + file;
+    }
+
+    /** The jar's own files: application.yaml and the engines' shipped copies, the server's and each module's. */
     static boolean shipped(PropertySource<?> ps) {
         String n = ps.getName();
-        return n.startsWith("Config resource") && n.contains("class path resource");
+        return n.startsWith("Config resource") && n.contains("class path resource") || n.startsWith(MODULE_COPY);
     }
 
     /** A source's name in words for Admin, Engines and {@code drishti.py server engines show --sources}. */
@@ -151,6 +176,9 @@ public final class EngineSwitches {
         }
         if (n.contains("class path resource [engines/")) {
             return "shipped copy";
+        }
+        if (n.startsWith(MODULE_COPY)) {
+            return "shipped copy (module " + n.substring(n.indexOf('[') + 1, n.indexOf(']')) + ")";
         }
         if (n.contains("class path resource")) {
             return "application.yaml";

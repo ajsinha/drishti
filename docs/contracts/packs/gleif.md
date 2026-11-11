@@ -42,7 +42,7 @@ A legal entity from its LEI record: key facts, addresses, registration and renew
 | Id pattern | `^[0-9A-Z]{18}[0-9]{2}$` |
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
-| Storage | connector `gleif-store` (plugin `delta`), table `<root>/gleif/lei-entity/` |
+| Binding hint | lake table `gleif.lei-entity`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `LEI`, `NAME`, `LEI_COUNTRY`, `LEGAL_CITY`, `LEGAL_FORM`, `REGISTRATION_STATUS`, `RENEWAL_LATE`, `SEGMENT`, `NEXT_RENEWAL`, `US_COMPANY` |
 | Test data | data/testdata/gleif/lei-entity |
 | Worked example | [gleif/lei-entity](../samples/gleif.md#lei-entity) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
@@ -184,7 +184,7 @@ An ownership group, computed from the entities when asked: the ultimate parent w
 | Id pattern | — |
 | Dated by | `on request` |
 | Cadence | on change (due: recomputed from its source kind (connector refresh 60s)) |
-| Storage | connector `gleif-groupings` (plugin `derived`) |
+| Binding hint | computed by Drishti, never bound; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 
 **Fields**
 
@@ -270,7 +270,7 @@ One consolidation relationship from GLEIF's level 2 data: the child, its direct 
 | Id pattern | `^LEIREL-` |
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
-| Storage | connector `gleif-store` (plugin `delta`), table `<root>/gleif/lei-relationship/` |
+| Binding hint | lake table `gleif.lei-relationship`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `RELATIONSHIP_ID`, `LEVEL`, `CHILD_ENTITY`, `PARENT_ENTITY`, `RELATIONSHIP_STATUS` |
 | Test data | data/testdata/gleif/lei-relationship |
 | Worked example | [gleif/lei-relationship](../samples/gleif.md#lei-relationship) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
@@ -342,7 +342,7 @@ A country's legal entities in the pack, computed from the entities when asked: t
 | Id pattern | — |
 | Dated by | `on request` |
 | Cadence | on change (due: recomputed from its source kind (connector refresh 60s)) |
-| Storage | connector `gleif-groupings` (plugin `derived`) |
+| Binding hint | computed by Drishti, never bound; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 
 **Fields**
 
@@ -409,7 +409,7 @@ An ISIN, BIC or MIC and the legal entity GLEIF's mapping files give it.
 | Id pattern | — |
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
-| Storage | connector `gleif-store` (plugin `delta`), table `<root>/gleif/lei-mapping/` |
+| Binding hint | lake table `gleif.lei-mapping`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `IDENTIFIER`, `TYPE`, `ENTITY_LEI`, `ENTITY_NAME` |
 | Test data | data/testdata/gleif/lei-mapping |
 | Worked example | [gleif/lei-mapping](../samples/gleif.md#lei-mapping) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |

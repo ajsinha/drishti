@@ -431,7 +431,58 @@ def lake_schedule(*, zone: str = "", **_) -> Markup:
     return K.host(K.schema(props), value, attrs={"class": "mt-schedule"}, layout="columns", label="New schedule for the selected tables")
 
 
+def bindings_bind(*, connectors=(), **_) -> Markup:
+    """Admin → Data bindings, Bind…: a kind's connectors in read order, union, the demo lake, the live connector and why (the page's script
+    sends them as the proposal ``{kind, binding, reason}``; the server checks everything)."""
+    names = list(connectors)
+    props = {"read": K.text("Read from (connectors in read order, comma separated)", "read", mono=True,
+                            description="Defined connectors: " + (", ".join(names) or "none")),
+             "union": K.check("One store across them (union)", "union"),
+             "demo": K.check("The demo lake's samples", "demo"),
+             "live": K.select("Live (a connector that pushes changes)", "live", [(n, n) for n in names], empty="none"),
+             "reason": K.text("Why", "reason", maxLength=500)}
+    return K.host(K.schema(props, required=["reason"]), {"read": "", "union": False, "demo": False, "live": "", "reason": ""},
+                  attrs={"data-bind-fields": ""}, label="The binding", **ALONE)
+
+
+def placement_plan(*, placement: str = "", **_) -> Markup:
+    """Admin → Cluster → Modules, Plan a placement: the whole config/placement.yaml and why (the page's script sends ``{placement, reason}``;
+    the server refuses heavy work everywhere, unknown parts and in-process modules, and a second administrator applies)."""
+    props = {"placement": K.area("Placement (config/placement.yaml)", "placement", rows=12, mono=True,
+                                 description="Each part by nodes: [names] or roles: [labels such as heavy or web]; max-nodes for heavy parts; "
+                                             "no all-nodes default"),
+             "reason": K.text("Why", "reason", maxLength=500)}
+    return K.host(K.schema(props, required=["placement", "reason"]), {"placement": placement, "reason": ""},
+                  attrs={"data-placement-fields": ""}, label="The placement", **ALONE)
+
+
+MODULE_ACTIONS = [("install", "Install (or upgrade, when another version runs)"), ("upgrade", "Upgrade, node by node"),
+                  ("remove", "Remove: its paths answer 410, saved work is marked"), ("disable", "Switch off: its paths answer 404"),
+                  ("enable", "Switch on again")]
+
+
+def module_upload(**_) -> Markup:
+    """Admin › Modules › Deploy, the package: a .dmod uploaded once to the module store (the server runs the fifteen checks)."""
+    props = {"file": K.file("The module package (.dmod)", None, accept=".dmod", hook={"data-module-file": ""})}
+    return K.host(K.schema(props), {}, attrs={"data-module-upload-fields": ""}, label="The package", **ALONE)
+
+
+def module_plan(*, modules=(), module: str = "", version: str = "", action: str = "install", **_) -> Markup:
+    """Admin › Modules › Deploy, the plan: what, which module and version, and why (the page's script sends ``{action, module, version,
+    reason}``; the server answers the plan per node and a second administrator applies it)."""
+    props = {"action": K.select("Action", "action", MODULE_ACTIONS),
+             "module": K.select("Module", "module", [(m, m) for m in modules] or [("", "upload a .dmod first")]),
+             "version": K.text("Version (blank: the newest in the store; remove and switch-off take the running one)", "version"),
+             "reason": K.text("Why", "reason", maxLength=500)}
+    return K.host(K.schema(props, required=["action", "module", "reason"]), {"action": action, "module": module or (modules[0] if modules else ""),
+                                                                            "version": version, "reason": ""},
+                  attrs={"data-module-plan-fields": ""}, label="The plan", **ALONE)
+
+
 BUILDERS: dict[str, Callable[..., Markup]] = {
+    "bindings_bind": bindings_bind,
+    "module_upload": module_upload, "module_plan": module_plan,
+    "placement_plan": placement_plan,
     "connector_head": connector_head,
     "net_explain": net_explain, "net_node": net_node,
     "lake_file": lake_file, "lake_fields": lake_fields, "lake_target": lake_target,

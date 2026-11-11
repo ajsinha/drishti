@@ -58,7 +58,7 @@
   {% if me %}<link rel="stylesheet" href="/static/css/drishti_explain.css?v={{ ASSET_V }}">{% endif %}
   {% block head %}{% endblock %}
 </head>
-<body{% if (error is defined and error and ((error.code is defined and error.code == 'DRS-5003') or (error is string and 'unreachable' in error))) %} data-server-down="1"{% endif %} class="{% block body_class %}{% endblock %}{% if (settings or {}).density == 'compact' %} density-compact{% endif %}{% if (settings or {}).flash == false %} no-flash{% endif %}" data-product="{{ PRODUCT }}" data-screen="{% block screen %}{{ screen | default('landing') }}{% endblock %}">
+<body{% if (error is defined and error and ((error.code is defined and error.code == 'DRS-5003') or (error is string and 'unreachable' in error))) %} data-server-down="1"{% endif %} class="{% block body_class %}{% endblock %}{% if ((settings or {}).density or DEFAULT_DENSITY) == 'compact' %} density-compact{% endif %}{% if (settings or {}).flash == false %} no-flash{% endif %}" data-product="{{ PRODUCT }}" data-screen="{% block screen %}{{ screen | default('landing') }}{% endblock %}">
   <a class="skip-link" href="#main">Skip to content</a>
   {% block nav %}{% if me %}{% include "terminal/_topbar.html" %}{% else %}{% include "_nav_public.html" %}{% endif %}{% endblock %}{# one top bar for anyone signed in, on every page #}
   <main id="main">{% block content %}{% endblock %}</main>
@@ -77,7 +77,9 @@
   <script src="/static/js/drishti_tables.js?v={{ ASSET_V }}"></script>
   <script src="/static/js/drishti_phone.js?v={{ ASSET_V }}"></script>
   <script src="/static/js/drishti_settled.js?v={{ ASSET_V }}"></script>{# Drishti.settled(): the page-settled signal browser tests wait on; inert until asked #}
+  <script src="/static/js/drishti_module-gone.js?v={{ ASSET_V }}"></script>{# a module page told when its module goes (KERNEL_AND_MODULES.md 12.4) #}
   {% if me %}<script src="/static/js/drishti_alerts.js?v={{ ASSET_V }}"></script>{% endif %}
+  {% if me %}<div id="drishti-figure-explainers" hidden data-rules="{{ figure_explainers() | tojson | forceescape }}"></div>{% endif %}{# the modules' figures that carry Explain › (core/plugins.figure_explainer) #}
   {% block scripts %}{% endblock %}
 </body>
 </html>

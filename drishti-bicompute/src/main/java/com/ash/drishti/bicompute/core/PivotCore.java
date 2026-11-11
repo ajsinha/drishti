@@ -165,12 +165,20 @@ public final class PivotCore {
     }
 
     public List<PivotProvider> providers() {
-        return providers;
+        List<com.ash.drishti.kernel.api.pivot.PivotSourceProvider> live = com.ash.drishti.common.Extensions.of(
+                com.ash.drishti.kernel.api.pivot.PivotSourceProvider.class);
+        if (live.isEmpty()) {
+            return providers;
+        }
+        List<PivotProvider> all = new java.util.ArrayList<>();      // a loaded module's own sources first
+        live.stream().map(com.ash.drishti.kernel.api.pivot.PivotSourceProvider::provider).filter(java.util.Objects::nonNull).forEach(all::add);
+        all.addAll(providers);
+        return all;
     }
 
     /** The provider of a source; refused in words when none serves it. */
     public PivotProvider provider(String source) {
-        for (PivotProvider p : providers) {
+        for (PivotProvider p : providers()) {
             if (p.serves(source)) {
                 return p;
             }
@@ -182,7 +190,7 @@ public final class PivotCore {
     /** Every source this person may pivot, by provider. */
     public List<Map<String, Object>> sources(Viewer v) {
         List<Map<String, Object>> out = new ArrayList<>();
-        for (PivotProvider p : providers) {
+        for (PivotProvider p : providers()) {
             p.sources(v).forEach((id, title) -> {
                 Map<String, Object> m = new LinkedHashMap<>();
                 m.put("source", id);

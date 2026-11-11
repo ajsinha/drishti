@@ -23,7 +23,8 @@ description: Your books, P&L, VaR and limits, today's trades and your counterpar
 packs:
   enabled:                               # by module: trading extends core and market-data; market-risk extends market-data and
     core: [core]
-    banking: [market-data, trading, market-risk, counterparty-risk]
+    market-data: [market-data]           # the market-data module (banking requires it)
+    banking: [trading, market-risk, counterparty-risk]   # the banking module: trades and the risk packs
   allow-only: true                       # trading; counterparty-risk extends trading. Any other pack is refused (DRS-1017)
 
 commands:                                # what people may type and see (command line, FUNC, type-ahead, examples, pages)

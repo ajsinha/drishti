@@ -39,6 +39,11 @@
     <module>drishti-api</module>
     <module>drishti-common</module>
     <module>drishti-kernel-api</module>
+    <module>drishti-module-runtime</module>
+    <module>drishti-sdk/drishti-module-parent</module>
+    <module>drishti-sdk/drishti-module-maven-plugin</module>
+    <module>drishti-sdk/drishti-module-archetype</module>
+    <module>modules/genomics</module>
     <module>drishti-rachana</module>
     <module>drishti-inference</module>
     <module>drishti-graph</module>
@@ -59,7 +64,6 @@
     <module>drishti-dataload</module>
     <module>drishti-net</module>
     <module>drishti-compute</module>
-    <module>drishti-compute-banking</module>
     <module>drishti-bicompute</module>
     <module>drishti-flight</module>
     <module>drishti-tables</module>
@@ -84,8 +88,10 @@
     <module>plugins/drishti-plugin-s3</module>
     <module>docs/guides/examples/connector</module>
     <module>drishti-server</module>
-    <module>drishti-banking</module>
+    <module>modules/banking</module>
+    <module>modules/dist</module>
     <module>drishti-app</module>
+    <module>drishti-kernel-app</module>
     <module>drishti-it</module>
     <module>drishti-benchmarks</module>
   </modules>
@@ -164,6 +170,7 @@
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-common</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-kernel-api</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-module-runtime</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-rachana</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-inference</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-graph</artifactId><version>${project.version}</version></dependency>
@@ -207,6 +214,7 @@
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-server</artifactId><version>${project.version}</version><type>test-jar</type><scope>test</scope></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-banking</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-compute-banking</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-modules</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-diskcache</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-messaging</artifactId><version>${project.version}</version></dependency>

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.approvals;
 
+import com.ash.drishti.kernel.api.approvals.ApprovalSource;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.identity.AuditLog;
@@ -78,6 +79,17 @@ public final class ApprovalQueue {
     public record Opened(ApprovalSource.Detail detail, String label, String group, boolean dueSoon, List<Post> questions, List<String> actions) {}
 
     private final Map<String, ApprovalSource> sources = new LinkedHashMap<>();
+
+    /** The sources by kind: the beans, then a loaded module's (a kind already taken keeps its bean). */
+    private Map<String, ApprovalSource> sources() {
+        List<ApprovalSource> live = com.ash.drishti.common.Extensions.of(ApprovalSource.class);
+        if (live.isEmpty()) {
+            return sources;
+        }
+        Map<String, ApprovalSource> all = new LinkedHashMap<>(sources);
+        live.forEach(s -> all.putIfAbsent(s.kind(), s));
+        return all;
+    }
     private final PreferenceStore store;
     private final AuditLog audit;
     private final ApprovalProperties props;
@@ -110,7 +122,7 @@ public final class ApprovalQueue {
     /** The kinds, in the order they were registered. */
     public List<Map<String, Object>> kinds() {
         List<Map<String, Object>> out = new ArrayList<>();
-        sources.values().forEach(s -> out.add(Map.of("kind", s.kind(), "label", s.label(), "group", s.group(), "enabled", s.enabled())));
+        sources().values().forEach(s -> out.add(Map.of("kind", s.kind(), "label", s.label(), "group", s.group(), "enabled", s.enabled())));
         return out;
     }
 
@@ -128,8 +140,8 @@ public final class ApprovalQueue {
         if (group != null && !group.isBlank() && !GROUPS.contains(group)) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "group is one of " + new java.util.TreeSet<>(GROUPS));
         }
-        if (kind != null && !kind.isBlank() && !sources.containsKey(kind)) {
-            throw new DrishtiException(ErrorCode.BAD_REQUEST, "kind is one of " + sources.keySet());
+        if (kind != null && !kind.isBlank() && !sources().containsKey(kind)) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "kind is one of " + sources().keySet());
         }
         List<String> unavailable = new ArrayList<>();
         List<Entry> all = gather(p, unavailable);
@@ -168,7 +180,7 @@ public final class ApprovalQueue {
 
     private List<Entry> gather(Principal p, List<String> unavailable) {
         List<Entry> all = new ArrayList<>();
-        for (ApprovalSource s : sources.values()) {
+        for (ApprovalSource s : sources().values()) {
             if (!s.enabled()) {
                 continue;
             }
@@ -194,9 +206,9 @@ public final class ApprovalQueue {
     // ---- one item -----------------------------------------------------------------------------------------------------------------
 
     private ApprovalSource source(String kind) {
-        ApprovalSource s = sources.get(kind);
+        ApprovalSource s = sources().get(kind);
         if (s == null || !s.enabled()) {
-            throw new DrishtiException(ErrorCode.PROPOSAL_NOT_FOUND, "no approval kind '" + kind + "' on this server (the kinds: " + sources.keySet() + ")");
+            throw new DrishtiException(ErrorCode.PROPOSAL_NOT_FOUND, "no approval kind '" + kind + "' on this server (the kinds: " + sources().keySet() + ")");
         }
         return s;
     }

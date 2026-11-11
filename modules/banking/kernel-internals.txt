@@ -1,0 +1,54 @@
+# The kernel internals banking still reaches: packages outside com.ash.drishti.kernel.api and banking's own, one per line.
+# Kept true by BankingReachTest: a package banking starts to reach fails it; a package no longer reached must be removed. The list only
+# shrinks: banking becomes a .dmod in wave 2 and passes conformance check C1 (no kernel internals) when it is empty.
+# Recorded 2026-11-10: 42 packages (19 of drishti-server, 23 of the kernel's libraries) reached in the sources; then the packages only
+# the compiled classes reach (a line with "# bytecode") and the third-party libraries banking shares with the kernel ("# library"),
+# which the package's allowance needs too (the class loader gives banking exactly these packages of the kernel).
+com.ash.drishti.api
+com.ash.drishti.api.compute
+com.ash.drishti.bicompute.core
+com.ash.drishti.bicompute.functions
+com.ash.drishti.common
+com.ash.drishti.compute.arrow
+com.ash.drishti.compute.linalg
+com.ash.drishti.compute.shard
+com.ash.drishti.compute.vector
+com.ash.drishti.dataload
+com.ash.drishti.deltalake.write
+com.ash.drishti.engine.source
+com.ash.drishti.engine.time
+com.ash.drishti.flight
+com.ash.drishti.identity
+com.ash.drishti.identity.collab
+com.ash.drishti.identity.content
+com.ash.drishti.lakeconfig
+com.ash.drishti.lakeio
+com.ash.drishti.net.transport
+com.ash.drishti.packs
+com.ash.drishti.plugin.iceberg
+com.ash.drishti.plugin.kafka
+com.ash.drishti.server.admission
+com.ash.drishti.server.approvals
+com.ash.drishti.server.bi.engine
+com.ash.drishti.server.caches
+com.ash.drishti.server.collab
+com.ash.drishti.server.compute
+com.ash.drishti.server.disk
+com.ash.drishti.server.dist
+com.ash.drishti.server.engines
+com.ash.drishti.server.explain
+com.ash.drishti.server.flight
+com.ash.drishti.server.loads
+com.ash.drishti.server.nativelib
+com.ash.drishti.server.net
+com.ash.drishti.server.node
+com.ash.drishti.server.pivot
+com.ash.drishti.server.playground
+com.ash.drishti.server.security
+com.ash.drishti.server.shard
+com.ash.drishti.server.collab.snapshot   # bytecode
+com.github.benmanes.caffeine.cache   # library
+org.apache.kafka.clients.consumer   # library
+org.apache.kafka.common   # library
+org.apache.kafka.common.serialization   # library
+org.yaml.snakeyaml   # library

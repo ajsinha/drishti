@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.ash.drishti</groupId>
+    <artifactId>drishti-parent</artifactId>
+    <version>2.9.11.g</version>
+    <relativePath>../../../pom.xml</relativePath>
+  </parent>
+  <artifactId>drishti-banking</artifactId>
+  <name>drishti-banking</name>
+  <description>The banking domain's services (docs/architecture/DOMAIN_MODULES.md): VaR and ES with regulatory VaR, exposure and CCR, FRTB-SA,
+    ISDA SIMM, sensitivities, the MR cube and the official risk results; their storage, engine switches and Spring wiring, and their API under
+    /api/v1/risk (the old paths answered for one release). A module: its manifest (META-INF/drishti/module.yaml) declares what it brings, and
+    its auto-configuration loads only while the access registry says it is on (installed, licensed, enabled)</description>
+  <dependencies>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-kernel-api</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-server</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-compute-banking</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-server</artifactId><type>test-jar</type><scope>test</scope></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-test</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>org.springframework.kafka</groupId><artifactId>spring-kafka-test</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>org.testcontainers</groupId><artifactId>testcontainers-postgresql</artifactId><version>${testcontainers.version}</version><scope>test</scope></dependency>
+    <dependency><groupId>org.testcontainers</groupId><artifactId>testcontainers-junit-jupiter</artifactId><version>${testcontainers.version}</version><scope>test</scope></dependency>
+    <dependency>
+      <groupId>com.icegreen</groupId><artifactId>greenmail-junit5</artifactId><scope>test</scope>
+      <exclusions>
+        <exclusion><groupId>jakarta.mail</groupId><artifactId>jakarta.mail-api</artifactId></exclusion>
+        <exclusion><groupId>org.eclipse.angus</groupId><artifactId>jakarta.mail</artifactId></exclusion>
+      </exclusions>
+    </dependency>
+  </dependencies>
+  <build>
+    <!-- the tests run the whole server (the core from drishti-server with this module), with the same settings as the server's own tests -->
+    <plugins>
+      <plugin>
+        <!-- each test run starts with no connector files in the forks' folders: a file generated from an older pack template is
+             kept as if edited (a pack's newer template never reaches it), so a test that lands in that fork read the old connector -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-clean-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>fresh-fork-connectors</id>
+            <phase>process-test-classes</phase>
+            <goals><goal>clean</goal></goals>
+            <configuration>
+              <excludeDefaultDirectories>true</excludeDefaultDirectories>
+              <filesets>
+                <fileset><directory>${project.build.directory}</directory><includes><include>fork*/connectors/**</include></includes></fileset>
+              </filesets>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <systemPropertyVariables>
+            <!-- the one folder a test fork writes into (TestRun in the tests): every path below and in the tests' properties is
+                 under it, and the fork removes it when it ends, so a run leaves nothing in target/ but the build's own output -->
+            <drishti.test.dir>${project.build.directory}/test-run/fork${surefire.forkNumber}</drishti.test.dir>
+            <drishti.data.dir>${project.build.directory}/test-run/fork${surefire.forkNumber}/data</drishti.data.dir>
+            <drishti.identity.users-file>${project.build.directory}/test-run/fork${surefire.forkNumber}/identity/users.json</drishti.identity.users-file>
+            <drishti.identity.audit-file>${project.build.directory}/test-run/fork${surefire.forkNumber}/identity/audit.jsonl</drishti.identity.audit-file>
+            <drishti.identity.iterations>1000</drishti.identity.iterations>
+            <!-- the tests' scratch may sit on a RAM disk beside other suites: a free-space guard of 1 GB and 1%, not the site's 20 GB and 10% -->
+            <drishti.disk.min-free-gb>1</drishti.disk.min-free-gb>
+            <drishti.disk.min-free-percent>1</drishti.disk.min-free-percent>
+            <spring.test.context.cache.maxSize>8</spring.test.context.cache.maxSize>
+            <drishti.packs.dir>${project.basedir}/../../../config/packs</drishti.packs.dir>
+            <drishti.lens-dir>${project.basedir}/../../../config/lenses</drishti.lens-dir>
+            <drishti.ui-kit.dir>${project.basedir}/../../../config/ui-kit</drishti.ui-kit.dir>
+            <drishti.ui-kit.site-dir>${project.build.directory}/test-run/fork${surefire.forkNumber}/ui-kit</drishti.ui-kit.site-dir>
+            <!-- the retired example packs stay loadable for the tests that use them as fixtures (finance, logistics…);
+                 tests that name no packs keep finance, the fixture most of them were written against -->
+            <drishti.packs.extra-dirs>${project.basedir}/../../../examples/packs</drishti.packs.extra-dirs>
+            <drishti.packs.enabled>finance</drishti.packs.enabled>
+            <drishti.rachana.dirs>${project.build.directory}/test-run/fork${surefire.forkNumber}/no-site-sutras</drishti.rachana.dirs>
+            <drishti.identity.preferences-dir>${project.build.directory}/test-run/fork${surefire.forkNumber}/identity/preferences</drishti.identity.preferences-dir>
+            <drishti.governance.dir>${project.build.directory}/test-run/fork${surefire.forkNumber}/governance</drishti.governance.dir>
+            <DRISHTI_CACHE_ROOT>${project.build.directory}/test-run/fork${surefire.forkNumber}/cache</DRISHTI_CACHE_ROOT>
+            <drishti.sources.connectors-dir>${project.build.directory}/test-run/fork${surefire.forkNumber}/connectors</drishti.sources.connectors-dir>
+            <drishti.bi.governance.imports-dir>${project.build.directory}/test-run/fork${surefire.forkNumber}/bi-imports</drishti.bi.governance.imports-dir>
+          </systemPropertyVariables>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  <properties>
+    <!-- Arrow's memory module (the official IPC writers, Arrow Flight) reads java.nio.Buffer.address -->
+    <argLine>--add-opens=java.base/java.nio=ALL-UNNAMED</argLine>
+  </properties>
+</project>

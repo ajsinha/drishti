@@ -39,7 +39,7 @@ One OECD member: the latest leading indicator, unemployment, inflation and growt
 | Id pattern | `^OECD-` |
 | Dated by | `snapshot` |
 | Cadence | daily (due: the oecd feed's schedule (0 12 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
-| Storage | connector `oecd-store` (plugin `delta`), table `<root>/oecd/oecd-country/` |
+| Binding hint | lake table `oecd.oecd-country`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | config/packs/economy/oecd/samples |
 | Worked example | [oecd/oecd-country](../samples/oecd.md#oecd-country) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -117,7 +117,7 @@ One OECD measure of one member by period: the history, the latest value and the 
 | Id pattern | `^OECDS-` |
 | Dated by | `snapshot` |
 | Cadence | daily (due: the oecd feed's schedule (0 12 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
-| Storage | connector `oecd-store` (plugin `delta`), table `<root>/oecd/oecd-series/` |
+| Binding hint | lake table `oecd.oecd-series`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | config/packs/economy/oecd/samples |
 | Worked example | [oecd/oecd-series](../samples/oecd.md#oecd-series) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 

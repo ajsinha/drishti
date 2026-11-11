@@ -35,11 +35,8 @@ dated-by: BUSINESS_DATE
 cadence:
   frequency: daily
   due: with the day's trades, before the quarter's metrics are produced (within 30 days of the quarter end)
-storage:
-  connector: risk-store
-  plugin: delta
-  domain: risk
-  table: <root>/risk/volcker-trade/
+binding-hint:
+  lake-table: risk.volcker-trade
   columns:
   - VOLCKER_TRADE_ID
   - TRADE_ID

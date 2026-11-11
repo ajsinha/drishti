@@ -67,7 +67,6 @@ public final class EngineRegistry implements AutoCloseable {
     /** The outcome of one change: {@code live}, {@code restart needed}, {@code written} (an override above the file decides), {@code unchanged}. */
     public record Outcome(String engine, boolean on, String outcome, String detail) {}
 
-    private final EngineCatalogue catalogue;
     private final EngineSwitches switches;
     private final EngineFiles files;
     private final EngineHistory history;
@@ -88,7 +87,6 @@ public final class EngineRegistry implements AutoCloseable {
 
     public EngineRegistry(EngineCatalogue catalogue, EngineSwitches switches, EngineFiles files, EngineHistory history, AuditLog audit,
             Supplier<String> node, Duration drain, List<ComputeEngine> found) {
-        this.catalogue = catalogue;
         this.switches = switches;
         this.files = files;
         this.history = history;
@@ -165,6 +163,84 @@ public final class EngineRegistry implements AutoCloseable {
         LOG.warn("engines: {} is not started: {} (DRS-1022); turn {} on, or {} off, in config/engines/", id, why, String.join(" and ", missing), id);
     }
 
+    /**
+     * A loaded module's engine (docs/architecture/KERNEL_AND_MODULES.md section 12.3): listed and started as its switch and needs say, as if
+     * it had been a bean at the start; the returned action stops it (draining what is in flight) and takes it out. An id already
+     * installed is refused.
+     */
+    public Runnable attach(ComputeEngine eng) {
+        return attach(eng, null);
+    }
+
+    /** As above, listed with the module's own catalogue entry (its words, menus, Help) when it has one. */
+    public Runnable attach(ComputeEngine eng, EngineCatalogue.Entry listed) {
+        String id = eng.id();
+        boolean added;
+        synchronized (changing) {
+            if (engines.containsKey(id)) {
+                throw new IllegalStateException("an engine " + id + " is already installed");
+            }
+            added = !entries.containsKey(id);
+            engines.put(id, eng);
+            if (listed != null) {
+                entries.putIfAbsent(id, listed);
+            }
+            entries.computeIfAbsent(id, x -> new EngineCatalogue.Entry(x, x, "", x + ".yaml", "drishti.engines." + x + ".enabled", "", List.of(),
+                    true, true, true, Map.of()));
+            inFlight.putIfAbsent(id, new AtomicInteger());
+            if (added) {
+                switches.learn(entries.get(id));                   // a module's engine: its switch from its defaults and the site's file
+            }
+            boolean on = switches.of(id).on();
+            desired.put(id, on);
+            List<String> missing = entry(id).needs().stream().filter(n -> states.get(n) != State.RUNNING).toList();
+            if (!on) {
+                states.put(id, State.OFF);
+                eng.running(false);
+            } else if (!missing.isEmpty()) {
+                block(id, missing);
+            } else {
+                start(id, eng);
+                // a module's engines attach one by one: one that waited for this one starts now
+                for (boolean more = true; more; ) {
+                    more = false;
+                    for (String other : List.copyOf(states.keySet())) {
+                        if (states.get(other) == State.BLOCKED && Boolean.TRUE.equals(desired.get(other)) && engines.containsKey(other)
+                                && entry(other).needs().stream().allMatch(n -> states.get(n) == State.RUNNING)) {
+                            reasons.remove(other);
+                            start(other, engines.get(other));
+                            more |= states.get(other) == State.RUNNING;
+                        }
+                    }
+                }
+            }
+        }
+        listeners.forEach(Runnable::run);
+        return () -> {
+            synchronized (changing) {
+                if (engines.get(id) != eng) {
+                    return;
+                }
+                if (states.get(id) == State.RUNNING) {
+                    stop(id, eng);
+                }
+                eng.running(false);
+                engines.remove(id);
+                states.put(id, State.NOT_INSTALLED);
+                desired.put(id, false);
+                reasons.remove(id);
+                if (added) {
+                    switches.forget(id);
+                    entries.remove(id);
+                    states.remove(id);
+                    desired.remove(id);
+                    inFlight.remove(id);
+                }
+            }
+            listeners.forEach(Runnable::run);
+        };
+    }
+
     private void start(String id, ComputeEngine eng) {
         states.put(id, State.STARTING);
         try {
@@ -207,8 +283,11 @@ public final class EngineRegistry implements AutoCloseable {
 
     // ------------------------------------------------------------------------------------------------------------- what others ask
 
+    /** The engines listed now, the server's and each loaded module's: what needs and uses what, and whose API a path is under. */
     public EngineCatalogue catalogue() {
-        return catalogue;
+        synchronized (changing) {
+            return EngineCatalogue.listed(List.copyOf(entries.values()));
+        }
     }
 
     public EngineCatalogue.Entry entry(String id) {
@@ -374,7 +453,7 @@ public final class EngineRegistry implements AutoCloseable {
                     }
                 }
                 if (!w.getValue() && withDependents) {
-                    for (String d : catalogue.neededBy(w.getKey())) {
+                    for (String d : catalogue().neededBy(w.getKey())) {
                         if (!want.containsKey(d) && (running(d) || desired(d))) {
                             want.put(d, false);
                             grew = true;
@@ -404,7 +483,7 @@ public final class EngineRegistry implements AutoCloseable {
                             + titles(missing) + " first, or " + (missing.size() == 1 ? "both" : "all of them") + " together.");
                 }
             } else {
-                List<String> users = catalogue.neededBy(id).stream().filter(on::contains).toList();
+                List<String> users = catalogue().neededBy(id).stream().filter(on::contains).toList();
                 if (!users.isEmpty()) {
                     int n = users.size() + 1;
                     refuse(want, reason, actor, title(id) + " is needed by " + titles(users) + " on this server. Turn "

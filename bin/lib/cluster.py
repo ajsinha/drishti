@@ -26,7 +26,12 @@ Secrets live in secrets.env beside the cluster file (git-ignored, mode 600): DRI
 DRISHTI_NET_SECRET, each made on the first start when missing and kept. They reach the processes through their environment only; nothing
 here prints them. The servers run a copy of the newest built jar, <data>/stack/server.jar, so a rebuild never replaces the jar under a
 running server. Process ids and logs are where bin/ keeps them (<data>/run/server-<node>.pid, <data>/run/console.pid, <data>/logs/); node
-data and the synthetic lakes in <data>/stack/."""
+data and the synthetic lakes in <data>/stack/.
+
+Consoles: the cluster file's ``console:`` block is one console; a ``consoles:`` list (each {name, port, distribution}, the console block
+its defaults) runs several over the same cluster, each with its own distribution (docs/architecture/DISTRIBUTIONS.md section 7): Drishti
+Risk on 17480 and Drishti Finance on 17481. A named console is the process console-<name> (run/console-<name>.pid); bin/status shows each
+one's distribution."""
 from __future__ import annotations
 
 import argparse
@@ -163,7 +168,20 @@ def server_jar() -> Path:
 
 # -- process ids -----------------------------------------------------------------------------------------------------------------
 def pid_file(name: str) -> Path:
-    return at.data / "run" / ("console.pid" if name == CONSOLE else f"server-{name}.pid")
+    if name == CONSOLE or name.startswith(CONSOLE + "-"):         # console, or console-<name> of a stack file's consoles: list
+        return at.data / "run" / f"{name}.pid"
+    return at.data / "run" / f"server-{name}.pid"
+
+
+def consoles(stack: dict) -> list[dict]:
+    """The stack file's consoles (docs/architecture/DISTRIBUTIONS.md section 7): its ``consoles:`` list, each {name, port, distribution,
+    servers, settings}, so one cluster serves a Risk console on 17480 and a Finance console on 17481; else the one ``console:`` block.
+    A named console's process is console-<name> (its pid file, log and temp folder)."""
+    base = stack.get("console") or {}
+    out = []
+    for c in stack.get("consoles") or []:
+        out.append({**base, **c, "process": f"{CONSOLE}-{c['name']}", "settings": {**(base.get("settings") or {}), **(c.get("settings") or {})}})
+    return out or ([{**base, "process": CONSOLE}] if base else [])
 
 
 def running(name: str) -> int | None:
@@ -324,26 +342,34 @@ def start_node(stack: dict, node: dict, jar: Path) -> bool:
     return bin_run("start-server", args, env) == 0
 
 
-def start_console(stack: dict) -> bool:
-    """The console through bin/start-console.sh, given the servers of stack.yaml (console.servers) at this machine's real address, so
-    its list matches what the cluster advertises; it learns the other members from the cluster."""
-    c = stack["console"]
+def start_console(stack: dict, c: dict) -> bool:
+    """A console through bin/start-console.sh, given the servers of stack.yaml (its servers) at this machine's real address, so its
+    list matches what the cluster advertises; it learns the other members from the cluster. Its distribution: ``distribution:``."""
     port = c["port"]
-    pid = running(CONSOLE)
+    proc = c.get("process", CONSOLE)
+    pid = running(proc)
     if pid:
-        say(f"console: already running (pid {pid}, port {port})")
+        say(f"{proc}: already running (pid {pid}, port {port})")
         return True
     if listening(port):
-        say(f"console: port {port} is in use by another process: not started")
+        say(f"{proc}: port {port} is in use by another process: not started")
         return False
     by_name = {n["name"]: n for n in stack["nodes"]}
     env = {**os.environ, **{k: str(v) for k, v in (stack.get("settings") or {}).items()}, **{k: str(v) for k, v in (c.get("settings") or {}).items()}}
     env.pop("DRISHTI_DATA_DIR", None)
     env["DRISHTI_PYTHON"] = python()
     host = stack_host(stack)
-    servers = ",".join(f"http://{host}:{by_name[s]['port']}" for s in c.get("servers", []))
-    return bin_run("start-console", ["--server", servers, "--port", str(port), "--data-dir", str(at.data), "--env-file", str(at.secrets),
-                                     "--background"], env) == 0
+    servers = ",".join(f"http://{host}:{by_name[s]['port']}" for s in (c.get("servers") or [stack["nodes"][0]["name"]]))
+    args = ["--server", servers, "--port", str(port), "--data-dir", str(at.data), "--env-file", str(at.secrets), "--background"]
+    if c.get("distribution"):
+        args += ["--distribution", str(c["distribution"])]              # risk, finance, genomics, all, or a file (DISTRIBUTIONS.md)
+    if proc != CONSOLE:
+        args += ["--name", proc[len(CONSOLE) + 1:]]
+    return bin_run("start-console", args, env) == 0
+
+
+def _console_named(c: dict, names: list[str]) -> bool:
+    return not names or CONSOLE in names or c["process"] in names or c.get("name") in names
 
 
 def start(names: list[str]) -> int:
@@ -354,17 +380,19 @@ def start(names: list[str]) -> int:
     for node in stack["nodes"]:
         if not names or node["name"] in names:
             ok = start_node(stack, node, jar) and ok
-    if not names or CONSOLE in names:
-        ok = start_console(stack) and ok
+    for c in consoles(stack):
+        if _console_named(c, names):
+            ok = start_console(stack, c) and ok
     say("" if ok else "some did not start: see above")
     return 0 if ok else 1
 
 
 def stop(names: list[str]) -> int:
-    """The console first, then the nodes, each through bin/stop-console.sh or bin/stop-server.sh (by its pid file, never by name)."""
+    """The consoles first, then the nodes, each through bin/stop-console.sh or bin/stop-server.sh (by its pid file, never by name)."""
     stack = load_stack()
-    if not names or CONSOLE in names:
-        bin_run("stop-console", ["--data-dir", str(at.data)])
+    for c in consoles(stack):
+        if _console_named(c, names):
+            bin_run("stop-console", ["--data-dir", str(at.data)] + (["--name", c["process"][len(CONSOLE) + 1:]] if c["process"] != CONSOLE else []))
     for node in stack["nodes"]:
         if not names or node["name"] in names:
             bin_run("stop-server", ["--node", node["name"], "--data-dir", str(at.data)])

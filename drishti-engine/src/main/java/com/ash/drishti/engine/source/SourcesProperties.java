@@ -26,7 +26,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param defaultRoute plugin tried first for kinds without a route
  * @param plugins per-plugin switch and settings, keyed by plugin name
  * @param fetchTimeout the longest a single fetch may take
- * @param pluginDir optional directory of extra plugin jars, each loaded in its own class loader
+ * @param pluginDir deprecated, read for one release only: its jars are moved once into the lib folder ({@code drishti.lib.path}), where
+ *                  connector jars and JDBC drivers load through the one shared lib class loader; the folder is not read otherwise
  * @param connectors connectors defined in the server's own configuration (deprecated: use connector files)
  * @param connectorsDir the folder of connector files, one {@code <name>.yaml} per connector (default {@code ./config/connectors})
  * @param connectorsWatch {@code auto} (file events, polling when unavailable), {@code poll}, or {@code off}

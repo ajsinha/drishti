@@ -43,6 +43,8 @@ ROOT = Path(__file__).resolve().parents[1]
 PACKS = ROOT / "config" / "packs"
 TESTDATA = ROOT / "data" / "testdata"
 POLICY = ROOT / "tools" / "contracts.policy.yaml"
+#: plugins whose connector computes its kinds (a binding hint says computed: true; never bound by a site)
+COMPUTED_PLUGINS = {"derived", "reactive", "var-positions", "var-system-baskets"}
 SCHEMA = ROOT / "tools" / "contracts.schema.json"
 DOCS = ROOT / "docs" / "contracts" / "packs"
 VERSION = "1.0"
@@ -138,6 +140,21 @@ def _connector(all_m: dict, pack: str, name: str | None) -> dict:
         if isinstance(c, dict):
             return c
     return {}
+
+
+def default_connector(c: dict, packs_dir: Path = PACKS, testdata: Path = TESTDATA) -> str | None:
+    """The connector a kind is served by in the product's defaults (the pack's route, else its test data's connector): what a site binds
+    unless it says otherwise (config/bindings.yaml). Contracts no longer name it (KERNEL_AND_MODULES.md section 5.2)."""
+    route = ((manifests(packs_dir).get(c.get("pack")) or {}).get("routes") or {}).get(c.get("kind"))
+    if route:
+        return route
+    sets = testdata_sets(c.get("pack"), c.get("kind"), testdata)
+    return sets[0].get("connector") if sets else None
+
+
+def default_plugin(c: dict, packs_dir: Path = PACKS) -> str | None:
+    """The plugin of {@link default_connector}."""
+    return _connector(manifests(packs_dir), c.get("pack"), default_connector(c, packs_dir)).get("plugin")
 
 
 def graph_links(all_m: dict, pack: str, packs_dir: Path) -> dict[str, str]:
@@ -537,13 +554,15 @@ class Draft:
             self.review.append(f"a snapshot refreshed when its data feed runs ({script.relative_to(ROOT)}; drishti.py feed run): confirm the refresh cadence.")
         return {"frequency": "static", "due": "to be confirmed"}
 
-    def storage(self) -> dict:
+    def binding_hint(self) -> dict:
+        """What a site usually binds (KERNEL_AND_MODULES.md section 5.2): the lake table, partitions, promoted columns; never a connector."""
         s = self.conn.get("settings") or {}
-        out = {"connector": self.route or "none", "plugin": str(self.conn.get("plugin") or "unknown")}
+        out = {}
+        if self.conn.get("plugin") in COMPUTED_PLUGINS:
+            out["computed"] = True
         if self.conn.get("plugin") == "delta":
-            out["domain"] = s.get("domain", "")
             table = (s.get("table") or {}).get(self.kind) if isinstance(s.get("table"), dict) else s.get(f"table.{self.kind}")
-            out["table"] = f"<root>/{s.get('domain', '')}/{table or self.kind}/"
+            out["lake-table"] = f"{s.get('domain', '')}.{table or self.kind}"
             layout = (s.get("layout") or {}).get(self.kind) or {}
             if layout.get("columns"):
                 out["columns"] = list(layout["columns"])
@@ -551,12 +570,11 @@ class Draft:
                 out["vectors"] = list(layout["vectors"])
         others = sorted({d.get("connector") for d in self.sets if d.get("connector") and d.get("connector") != self.route})
         if others:
-            out["other-connectors"] = others
             self.notes.append(f"Several source systems: the connector {self.route} and " + ", ".join(others) + " each serve this kind "
-                              "from a table of their own with the same layout; the storage above is the first one's.")
+                              "from a table of their own with the same layout; a site binds them as one union (config/bindings.yaml).")
         parts = [p for d in self.sets for p in d.get("partition-by") or []]
         if parts:
-            out["partition-by"] = sorted(set(parts), key=parts.index)
+            out["partition"] = sorted(set(parts), key=parts.index)
         td = [("data/testdata/" + d["folder"]) if d.get("folder") else d.get("samples") for d in self.sets]
         if td:
             out["test-data"] = [t for t in td if t]
@@ -736,7 +754,7 @@ class Draft:
         source = self.source()
         dated = self.dated_by()
         cadence = self.cadence(dated)
-        storage = self.storage()
+        hint = self.binding_hint()
         if self.derived_spec() is not None:
             top, nested = self.fields_from_derived(self.derived_spec(), figs, entry, key)
         elif self.shape.n:
@@ -764,7 +782,7 @@ class Draft:
             c["id-pattern"] = list(self.patterns[self.kind])
         c["dated-by"] = dated
         c["cadence"] = cadence
-        c["storage"] = storage
+        c["binding-hint"] = hint
         c["fields"] = top
         if nested:
             c["nested"] = nested
@@ -985,8 +1003,8 @@ def planned_problems(c: dict, f: Path, codes: set[str]) -> list[str]:
         probs.append(f"pack is '{c.get('pack')}', the folder says '{f.parent.parent.name}'")
     if c.get("mnemonic") in codes:
         probs.append(f"the proposed mnemonic {c.get('mnemonic')} is already a command")
-    if (c.get("storage") or {}).get("test-data"):
-        probs.append("a planned kind has no test data: remove storage.test-data")
+    if (c.get("binding-hint") or {}).get("test-data"):
+        probs.append("a planned kind has no test data: remove binding-hint.test-data")
     return probs
 
 
@@ -1047,18 +1065,20 @@ def _status(c: dict) -> str:
 
 def _contract_md(c: dict, f: Path, pack_dir_rel: str) -> list[str]:
     out = [f"## {c['mnemonic']}: {c['title']} (`{c['kind']}`)", "", c.get("description", ""), ""]
-    st = c.get("storage") or {}
+    st = c.get("binding-hint") or {}
+    where = ("computed by Drishti, never bound" if st.get("computed")
+             else (f"lake table `{st['lake-table']}`" if st.get("lake-table") else "any source the site binds"))
     rows = [["Contract", f"[{f.name}](../../../{pack_dir_rel}/contracts/{f.name}) · version {c['version']}"],
             ["Class", c["class"]], ["Status", _status(c) + (f", replaced by {c['replaced-by']}" if c.get("replaced-by") else "")],
             ["Source", c["source"]], ["Grain", c["grain"]], ["Key", _v(c.get("key"))], ["Id pattern", _v(c.get("id-pattern"))],
             ["Dated by", f"`{c['dated-by']}`"], ["Cadence", f"{c['cadence']['frequency']} (due: {c['cadence']['due']})"],
-            ["Storage", f"connector `{st.get('connector')}` (plugin `{st.get('plugin')}`)" + (f", table `{st['table']}`" if st.get("table") else "")]]
+            ["Binding hint", where + "; the site binds it (`config/bindings.yaml`, Admin → Data bindings)"]]
     if st.get("columns"):
         rows.append(["Columns", _v(st["columns"])])
     if st.get("vectors"):
         rows.append(["Vectors", _v(st["vectors"])])
-    if st.get("partition-by"):
-        rows.append(["Partitioned by", _v(st["partition-by"])])
+    if st.get("partition"):
+        rows.append(["Partitioned by", _v(st["partition"])])
     if st.get("test-data"):
         rows.append(["Test data", ", ".join(st["test-data"])])
     worked = sample_pages(c)

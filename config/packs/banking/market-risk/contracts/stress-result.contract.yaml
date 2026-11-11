@@ -32,11 +32,8 @@ dated-by: business_date
 cadence:
   frequency: daily
   due: to be confirmed
-storage:
-  connector: risk-store
-  plugin: delta
-  domain: risk
-  table: <root>/risk/stress-result/
+binding-hint:
+  lake-table: risk.stress-result
   test-data:
   - data/testdata/market-risk/stress-result
 fields:

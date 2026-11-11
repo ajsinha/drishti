@@ -18,5 +18,6 @@
 # it is set.
 packs:
   core: [core]                                                       # the core's packs
-  banking: [market-data, trading, counterparty-risk, market-risk]    # the banking module's (loaded only while it is on)
+  market-data: [market-data]                                        # the market-data module's (banking requires it)
+  banking: [trading, counterparty-risk, market-risk]                # the banking module's (loaded only while it is on)
   economy: [world-economy, news-and-markets]                         # the economy module's (loaded only while it is on)

@@ -78,7 +78,7 @@ public final class CacheBoard {
                         null, "data-version, ttl", s.manifest().capabilities().dated(), stats));
             }
         }
-        owners.orderedStream().forEach(o -> {
+        com.ash.drishti.common.Extensions.with(owners.orderedStream().toList(), CacheReport.Owner.class).forEach(o -> {
             try {
                 out.addAll(o.reports());
             } catch (RuntimeException e) {
@@ -104,7 +104,7 @@ public final class CacheBoard {
 
     /** The dates one cache holds, newest first (empty for a cache without dates); null when there is no such cache. */
     public List<Map<String, Object>> dates(String name) {
-        for (CacheReport.Owner o : owners.orderedStream().toList()) {
+        for (CacheReport.Owner o : com.ash.drishti.common.Extensions.with(owners.orderedStream().toList(), CacheReport.Owner.class)) {
             if (o.reports().stream().anyMatch(r -> r.name().equals(name))) {
                 return o.dates(name);
             }
@@ -140,7 +140,7 @@ public final class CacheBoard {
                 purged.add(s.manifest().name());
             }
         }
-        for (CacheReport.Owner o : owners.orderedStream().toList()) {
+        for (CacheReport.Owner o : com.ash.drishti.common.Extensions.with(owners.orderedStream().toList(), CacheReport.Owner.class)) {
             purged.addAll(o.purge(name, date));
         }
         Map<String, Object> at = new LinkedHashMap<>();

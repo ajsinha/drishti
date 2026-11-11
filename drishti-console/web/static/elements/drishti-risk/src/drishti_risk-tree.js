@@ -62,16 +62,17 @@ export const VAR_TREE_MEASURES = Object.freeze([
  *   screen's own; the books' POSITIONS and NOTIONAL roll up, the risk figures never do
  * @param {Object} [o] serverMeasures (the non-additive figures of the nodes that lack them), explain, link, editable, proposalNote,
  *   mode (default grid), density (default terminal), title, status; fields (the measures shown, in order: default all), measures
- *   (by field, what a screen changes of one: its label, childSum, its column); and any TreeOptions (chrome, grid, loadChildren ...)
+ *   (by field, what a screen changes of one: its label, childSum, its column; a field not built in is the screen's own measure when it has a label); and any TreeOptions (chrome, grid, loadChildren ...)
  * @returns {Object} TreeOptions (drishti-tree)
  */
 export function varHierarchyTree(rows, o) {
   o = o || {};
   const per = o.measures || {}, fields = o.fields || VAR_TREE_MEASURES.map((m) => m.field);
   const measures = fields.map((f) => {
-    const m = VAR_TREE_MEASURES.find((x) => x.field === f);
-    if (!m) { throw new Error('a VaR hierarchy has no measure ' + f); }
     const own = per[f] || {};
+    // a screen's own measure (o.measures[f] with its label, such as the matured-items switch's "of which matured") joins the built-in ones
+    const m = VAR_TREE_MEASURES.find((x) => x.field === f) || (own.label ? { field: f, label: own.label, format: own.format || riskMoney, additive: false } : null);
+    if (!m) { throw new Error('a VaR hierarchy has no measure ' + f); }
     return Object.assign({}, m, own, { column: Object.assign({}, m.column, own.column) });
   });
   const opts = Object.assign({ mode: 'grid', density: 'terminal', gridLayout: 'terminal', title: 'VaR hierarchy', openDepth: 2, colourBy: 'LIMIT_USE', shown: ['VAR', 'ES'],

@@ -41,6 +41,7 @@ the native memory settings and the logs under the data folder, waits for /actuat
   --workdir DIR       the server's working folder (default <drishti>)
   --background        detach: log in <data>\logs\server[-<node>].log, pid in <data>\run\server[-<node>].pid
   --wait SECONDS      how long to wait for the health answer (default 300)
+  --distribution NAME risk, finance, genomics, all (the default) or a file path (DRISHTI_DISTRIBUTION); docs\architecture\DISTRIBUTIONS.md
   --stop              the same as bin\stop-server.ps1 (kept for the old tools\windows\start-server.ps1 -Stop)
 
  A cluster node (docs\guides\CLUSTER_GUIDE.md):
@@ -67,7 +68,7 @@ examples:
 $o = Read-Options $args @{ port = 'value'; heap = 'value'; jar = 'value'; javahome = 'value'; packs = 'value'; datadir = 'value'; envfile = 'value'
     demo = 'switch'; demolakes = 'switch'; engine = 'value'; lakeroot = 'value'; iceberg = 'switch'; icebergroot = 'value'; javaopt = 'list'
     serverarg = 'list'; workdir = 'value'; background = 'switch'; wait = 'value'; stop = 'switch'; node = 'value'; nodedir = 'value'
-    nodedata = 'value'; seed = 'list'; advertise = 'value' }
+    nodedata = 'value'; seed = 'list'; advertise = 'value'; distribution = 'value' }
 if ($o['help']) { Write-Host $usage; exit 0 }
 $node = Opt $o 'node'
 if ($o['stop']) {
@@ -87,6 +88,7 @@ if (-not $node -and ($o['nodedir'] -or $o['nodedata'] -or $o['seed'] -or $o['adv
 }
 
 if ($o['envfile']) { Import-EnvFile $o['envfile'] }
+if ($o['distribution']) { $env:DRISHTI_DISTRIBUTION = $o['distribution'] }   # the server reads it as drishti.distribution
 $data = Get-DataDir (Opt $o 'datadir')
 $serverData = Get-DataDir (Opt $o 'nodedata' $data)
 $env:DRISHTI_DATA_DIR = $serverData
@@ -151,7 +153,6 @@ if ($demo) {
     $env:DRISHTI_SEED_ADMIN = 'true'
     $env:DRISHTI_STUDIO_SAVE = 'true'
     if (-not $env:DRISHTI_LENSES) { $env:DRISHTI_LENSES = 'risk,world,market,trading' }
-    if (-not $env:DRISHTI_EXTERNAL_LIB) { $env:DRISHTI_EXTERNAL_LIB = Join-Path $script:DrishtiRoot 'external_lib' }
     if (-not $env:DRISHTI_SEED_USERNAME) { $env:DRISHTI_SEED_USERNAME = 'drishti-dev-admin' }
     $devSecrets += Set-DevSecret 'DRISHTI_SEED_PASSWORD' 'drishti-dev-admin123'
     $devSecrets += Set-DevSecret 'DRISHTI_TOKEN_SECRET' 'drishti-dev-only-token-secret-change-me-0123456789'
@@ -251,7 +252,7 @@ $packsShown = if ($env:DRISHTI_PACKS) { $env:DRISHTI_PACKS } else { 'the default
 Write-Host "Drishti $(if ($node) { "node $node " })server: $(Split-Path $jar -Leaf) on Java $major, port $port, heap $heap, Delta engine $engine, packs $packsShown, data $serverData"
 if ($node) { Write-Host "  Drishti*net folder $nodeDir, advertising $url" }
 if ($devSecrets.Count -gt 0) { Warn "DEVELOPMENT secrets in use (NOT FOR PRODUCTION): $($devSecrets -join ' '). Put your own in an --env-file for anything shared." }
-$fields = @{ port = $port; url = $url; health = $health; data = $serverData }
+$fields = @{ port = $port; url = $url; health = $health; data = $serverData; distribution = $(if ($env:DRISHTI_DISTRIBUTION) { $env:DRISHTI_DISTRIBUTION } else { 'all' }) }
 
 if ($o['background']) {
     $p = Start-Process -FilePath $java -ArgumentList (Join-ProcessArgs $javaArgs) -WorkingDirectory $workdir -PassThru -WindowStyle Hidden `

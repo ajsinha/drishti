@@ -35,11 +35,8 @@ dated-by: BUSINESS_DATE
 cadence:
   frequency: daily
   due: with the desk P&L of the same date (by the next business day's morning run); restated with a later AS_OF after month-end adjustments
-storage:
-  connector: risk-store
-  plugin: delta
-  domain: risk
-  table: <root>/risk/finance-pnl/
+binding-hint:
+  lake-table: risk.finance-pnl
   columns:
   - FINANCE_PNL_ID
   - LEGAL_ENTITY

@@ -290,11 +290,51 @@ class AccessRegistryTest {
     }
 
     @Test
+    void aFunctionWaitingForDataSaysSoAndOnlyThen() throws IOException {
+        EmbeddedAccessRegistry r = registry();
+        Map<String, Boolean> ledger = new HashMap<>();
+        r.functionSwitches(ledger::get);
+        String need = "EXP needs data: exposure-path is not bound; ask your data administrator";
+        r.dataGate(w -> "EXP".equals(w) ? java.util.Optional.of(need) : java.util.Optional.empty());
+        assertThat(r.functionOn("EXP")).isFalse();
+        assertThat(r.dataGateReason("exp")).contains(need);                   // here, waiting for data: explains itself (DRS-1035)
+        assertThat(r.dataGateReason("VAR")).isEmpty();
+        ledger.put("EXP", false);                                              // switched off by an administrator: that reason wins
+        assertThat(r.dataGateReason("EXP")).isEmpty();
+        ledger.remove("EXP");
+        write(modules.resolve("banking.yaml"), "enabled: false\n");          // its module off: gone, not waiting
+        r.refresh();
+        assertThat(r.dataGateReason("EXP")).isEmpty();
+    }
+
+    @Test
     void theStoreStampFollowsTheFiles() throws IOException {
         YamlAccessStore s = new YamlAccessStore(modules, access, new URLClassLoader(new URL[] {jar.toUri().toURL()}, null));
         long before = s.stamp();
         write(access.resolve("licence.yaml"), "licence: {modules: ['*']}\n");
         assertThat(s.stamp()).isNotEqualTo(before);
+    }
+
+    @Test
+    void aContentModuleIsReadFromItsOwnDmodManifest() throws IOException {
+        Path manifests = modules.getParent().resolve("module-sources");
+        write(manifests.resolve("capital-markets/module.yaml"), """
+                format: 1
+                id: capitalmarkets
+                version: 1.0.0
+                title: Capital markets
+                domain: capitalmarkets
+                licence: {feature: capitalmarkets}
+                requires: {optional: {market-data: ">=1.0 <2"}}
+                packs: {folder: packs, list: [us-equities, funds]}
+                functions: [USEQ, FUND]
+                """);
+        write(manifests.resolve("hello/module.yaml"), "format: 1\nid: hello\nversion: 1.0.0\njava: {jars: [hello.jar]}\n");
+        ClassLoader cl = new URLClassLoader(new URL[] {jar.toUri().toURL()}, null);
+        EmbeddedAccessRegistry r = new EmbeddedAccessRegistry(new YamlAccessStore(modules, access, cl, manifests), overrides::get, clock);
+        assertThat(r.modules()).extracting(ModuleState::id).contains("capitalmarkets").doesNotContain("hello");   // a code module: its jar
+        assertThat(r.moduleOn("capitalmarkets")).isTrue();                     // the optional requirement does not switch it off
+        assertThat(r.words()).contains("USEQ", "FUND");
     }
 
     static void write(Path f, String text) throws IOException {

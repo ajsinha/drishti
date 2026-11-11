@@ -221,7 +221,7 @@ export DRISHTI_STUDIO_SAVE=true
 export DRISHTI_SECURITY_ENABLED=true
 export DRISHTI_TOKEN_SECRET=drishti-dev-only-token-secret-change-me-0123456789
 export DRISHTI_SEED_ADMIN=true DRISHTI_SEED_USERNAME=drishti-dev-admin DRISHTI_SEED_PASSWORD=drishti-dev-admin123
-export DRISHTI_EXTERNAL_LIB=$PWD/external_lib
+export DRISHTI_EXTERNAL_LIB=$PWD/external_lib   # the console's Python libraries; jars go in the lib folder (DRISHTI_LIB_PATH)
 export DRISHTI_DEMO_ENABLED=false
 mkdir -p data/tmp/server
 java -Djava.io.tmpdir=data/tmp/server -Xmx4g -jar drishti-server/target/drishti-server-<version>-exec.jar
@@ -241,7 +241,8 @@ java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-
 | `DRISHTI_SECURITY_ENABLED=true` | sign-in on: every call needs a token. Off by default |
 | `DRISHTI_TOKEN_SECRET` | the secret the server and the console share to sign tokens, at least 32 bytes. The value above is the development secret: never on a shared machine |
 | `DRISHTI_SEED_ADMIN`, `_USERNAME`, `_PASSWORD` | at the first start with no users, create this administrator (the values above are also the defaults) |
-| `DRISHTI_EXTERNAL_LIB` | extra jars and Python modules (`external_lib/java`, `external_lib/python`) |
+| `DRISHTI_LIB_PATH` | extra jars: connectors, JDBC drivers (the server's lib folder; default `<data folder>/lib`) |
+| `DRISHTI_EXTERNAL_LIB` | the console's extra Python modules (`external_lib/python`) |
 | `DRISHTI_DEMO_ENABLED=false` | the demo source (the packs' samples, ticking) off, so every page reads the lakes; on (the default) a sample answers before the lake for an id both hold, and [tutorial 8, Part F](../tutorials/README.md)'s live tiles need it |
 
 On Java 25 you may add `-XX:+UseCompactObjectHeaders` (about 10% less heap); Java 21 refuses to start with it. Leave the terminal
@@ -389,18 +390,21 @@ soon as the project is open. They use `$PROJECT_DIR$`, the project's JDK and no 
 
 | Run configuration | What it does | Ports |
 |---|---|---|
-| **Drishti server** | `DrishtiApplication` of `drishti-server`, working directory the repository root, the seven packs, sign-in on with the development administrator, `DRISHTI_EXTERNAL_LIB`, `-Xmx2g`; data in `./data` | 18480 |
-| **Drishti server (demo lakes)** | the same with `DRISHTI_DEMO_ENABLED=false` and `-Xmx4g` | 18480 |
+| **Drishti server** | `DrishtiApplication` on the class path of module `drishti-app` (the core with the domain modules this build ships), working directory the repository root, the seven packs, sign-in on with the development administrator, `DRISHTI_EXTERNAL_LIB`, `-Xmx2g`; data in `./data` | 18480 |
+| **Drishti server (demo lakes)** | the same with `DRISHTI_DEMO_ENABLED=false`, `DRISHTI_VAR_SYSTEM_BASKETS_SEED=true` (the system baskets) and `-Xmx4g` | 18480 |
 | **Drishti server (QA profile)** | its own data folder `data/qa/data`, so QA never touches `./data` | 18580 |
 | **Drishti server (debug-friendly)** | the QA profile with sign-in **off**, DEBUG logging for `com.ash.drishti`, `-Xmx1g` (pair it with a console whose sign-in is off) | 18580 |
 | **Drishti build server jar** | Maven `package -DskipTests -pl drishti-app -am` | |
 | **Build demo lakes** (PyCharm) | `drishti.py lake demo` (2.4) | |
 | **QA pack make**, **QA lake build**, **QA server smoke**, **QA doctor** (PyCharm) | the command-line tools against the QA server; edit *Parameters* | 18580 |
 
-They are plain Application configurations (the same in Community and Ultimate). Change one for yourself with **Copy Configuration**
-(Ctrl+D; the copy lives in the git-ignored `.idea/`). By hand: **Run → Edit Configurations → + → Application**, main class
-`com.ash.drishti.server.DrishtiApplication`, classpath of module `drishti-server`, JRE 21 or newer, **working directory the repository root**
-(the default, `drishti-server/`, finds no packs), and the environment above.
+They are plain Application configurations (the same in Community and Ultimate). Every server configuration uses the class path of
+module **`drishti-app`**: `drishti-server` alone carries no domain module, so `VAR` and every banking function would answer *not
+installed*. Each passes its class path through an argument file (**Shorten command line: @argfile (Java 9+)**, `ARGS_FILE` in the
+`.run.xml`), so Windows' command-line length limit raises no warning. Change one for yourself with **Copy Configuration** (Ctrl+D; the copy
+lives in the git-ignored `.idea/`). By hand: **Run → Edit Configurations → + → Application**, main class
+`com.ash.drishti.server.DrishtiApplication`, classpath of module `drishti-app`, **Shorten command line** *@argfile*, JRE 21 or newer,
+**working directory the repository root** (the default, the module's folder, finds no packs), and the environment above.
 
 **Run** (Shift+F10) ends its log with `Started DrishtiApplication`; `curl -s localhost:18480/actuator/info` gives the version, and the
 OpenAPI page is `http://127.0.0.1:18480/api/docs`. **Debug** (Shift+F9): good breakpoints are `com.ash.drishti.engine.ViewPipeline` (a view
@@ -947,7 +951,7 @@ Drishti is meant to run for months. Anything you can write as a file or set on a
 On a shared network folder where file events do not arrive, use `poll`. What does **not** change live: `application.yaml` and the
 environment of either process (ports, TLS, the token secret, OIDC, the identity database, `drishti.packs.enabled`, security and limits); a
 pack named in `drishti.packs.enabled` (it cannot be unloaded from Admin, and deleting its folder stops the next start); `${NAME}` values
-inside connector files (the file is live, the variable is read at start); new plugin jars in `drishti.sources.plugin-dir`; chat bridge URLs
+inside connector files (the file is live, the variable is read at start); new plugin jars in the lib folder (`drishti.lib.path`); chat bridge URLs
 and secrets and embedded applications declared in configuration; Python and Java code.
 
 ### 6.5 Engines, modules and editions
@@ -3381,7 +3385,7 @@ quote values with `{$.path}` so each reader sees their own.
 | A connector is idle, not failed (`… installed but not configured …; it stays idle`) | enabled without settings: nothing to do if unused; else give it `settings:` in `config/connectors/<name>.yaml` (applied with no restart) |
 | Health DEGRADED with `connectors.badFiles`, or `connector file site-quotes.yaml is not usable; the last good configuration keeps running` | not YAML, a top-level key other than `plugin`, `enabled`, `kinds`, `description`, `settings`, `name`; a `name:` that is not the file name; an unset `${VAR}`; a literal credential. Correct it (applied within `connectors-poll`, 5 s); `drishti.py connector test NAME`; a watch `STOPPED` or `OFF` needs a restart; names are lower-case letters, digits and hyphens |
 | A kind answers `DRS-1011` | the pack names a connector with no file: **Create** it ([6.6](#66-connectors-where-a-pack-reads-its-data)) |
-| `failedToStart` shows `no plugin named 'null'` or `'x'` | the file has no `plugin:`, or a misspelt one (`postgres` is `jdbc`); `DRISHTI_PLUGIN_DIR` for extra plugins |
+| `failedToStart` shows `no plugin named 'null'` or `'x'` | the file has no `plugin:`, or a misspelt one (`postgres` is `jdbc`); an extra plugin's jar goes in the lib folder (`drishti.lib.path`) |
 | A connector fails behind a proxy: `HTTP 407 Proxy Authentication Required`, `refused to open a tunnel (CONNECT)`, `cannot connect to the proxy`, `cannot resolve the name … (DNS)` | Admin → Connectors → the connector → **Proxy** shows the proxy in effect and where it came from. From the server's host: `curl -v -x http://proxy:3128 --proxy-user svc:… https://target/` and `curl -v --proxytunnel -x http://proxy:3128 https://target/`. Correct `proxy.username`/`proxy.password`, ask for the target on the allow-list (port 443), correct `proxy.url` (`http://host:port`), add to `proxy.no-proxy` or `proxy: none` ([DATA_GUIDE.md section 10](DATA_GUIDE.md#proxy-11-troubleshooting)) |
 | A TLS start-up message (`tls.keystore '…': wrong password`, `tls.key-file '…' does not match the certificate`, `tls.ca-file '…': file not found`), or `DOWN: … PKIX path building failed`, `No subject alternative DNS name matching …` | `openssl s_client -connect host:port -servername host -CAfile ca.pem -verify_hostname host < /dev/null` (`Verification: OK`); put the CA in `tls.ca-file` or `tls.truststore`; re-issue the server's certificate with SANs (last resort `tls.verify-hostname: false`); give client certificate and key for mutual TLS ([DATA_GUIDE.md section 10](DATA_GUIDE.md#108-start-up-checks-and-their-messages); each plugin's README) |
 | `tls.* is set but … is not https://` (or `rediss://`, `tls.enabled is not true`) | `tls.*` beside a plain address: change the address (`https://`, `rediss://`, `amqps://`, `ssl://`) or remove the keys. Where a library cannot take a private CA per connector (Delta `engine: hadoop`, Iceberg `catalog: hadoop`, the REST catalog) use the JVM truststore, `-Djavax.net.ssl.trustStore=…` |

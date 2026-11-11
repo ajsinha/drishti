@@ -25,10 +25,13 @@
 {% if vm.title.with %}<span class="with">with</span> <span class="with-cp">{{ cell_text(vm.title.with) }}</span>{% endif %}
 {%- endmacro %}
 
+{# a figure a module's rule names (core/plugins.figure_explainer: the VaR engine's VaR and ES) carries the one Explain › of its scope #}
 {% macro strip(vm) -%}
 <dl class="strip">
   {% for c in vm.strip %}<div class="strip-i"><dt>{{ c.label }}</dt>
-    <dd class="mono{{ tone(c) }}{% if c.emphasis %} emph{% endif %}"{% if c.path %} data-path="{{ c.path }}"{% endif %} title="{{ cell_text(c) | striptags }}">{{ cell_text(c) }}</dd></div>{% endfor %}
+    <dd class="mono{{ tone(c) }}{% if c.emphasis %} emph{% endif %}"{% if c.path %} data-path="{{ c.path }}"{% endif %} title="{{ cell_text(c) | striptags }}">{{ cell_text(c) }}</dd>
+    {%- set ex = figure_explain(vm, c) if figure_explain is defined else none %}
+    {%- if ex %}<a data-explain-link data-explain="{{ ex | tojson | forceescape }}" data-explain-tab="why">Explain ›</a>{% endif %}</div>{% endfor %}
 </dl>
 {%- endmacro %}
 

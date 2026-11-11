@@ -55,15 +55,16 @@ done
 
 rc=0
 any=false
-printf '%-22s %8s  %-10s %-6s %-10s %s\n' process pid state port health address
+printf '%-22s %8s  %-10s %-6s %-10s %-16s %s\n' process pid state port health distribution address
 for d in "${DIRS[@]}"; do
   DATA="$(data_dir "$d")"
-  for f in "$DATA"/run/server.pid "$DATA"/run/server-*.pid "$DATA"/run/console.pid; do
+  for f in "$DATA"/run/server.pid "$DATA"/run/server-*.pid "$DATA"/run/console.pid "$DATA"/run/console-*.pid; do
     [ -f "$f" ] || continue
     any=true
     name="$(basename "$f" .pid)"
     mark="$SERVER_MARK"
-    [ "$name" != console ] || mark="$CONSOLE_MARK"
+    case "$name" in console*) mark="$CONSOLE_MARK" ;; esac
+    dist="$(field_of "$f" distribution)"
     pid="$(pid_of "$f")"
     port="$(field_of "$f" port)"
     url="$(field_of "$f" url)"
@@ -73,7 +74,7 @@ for d in "${DIRS[@]}"; do
     if [ -n "$health" ]; then
       if http_ok "$health"; then answer=UP; else answer="no answer"; rc=1; fi
     fi
-    printf '%-22s %8s  %-10s %-6s %-10s %s\n' "$name" "${pid:--}" "$state" "${port:--}" "$answer" "${url:--}"
+    printf '%-22s %8s  %-10s %-6s %-10s %-16s %s\n' "$name" "${pid:--}" "$state" "${port:--}" "$answer" "${dist:-all}" "${url:--}"
   done
 done
 $any || say "(no Drishti process started with bin/ in this data folder)"

@@ -282,7 +282,9 @@ native maths and memory access, codecs, the store libraries); it starts once 20 
 ### 3.19 The page walk
 
 `drishti-console/tests/test_page_walk_browser.py` (helpers in `page_walk.py`) runs in every drill's browser lane. On a real server over the cached
-VaR demo lake (the bank, its desks, the Murex and Endur trades), signed in as the administrator, it opens:
+demo lake of `WALK_DATA` (the bank, its desks, the Murex and Endur trades and their VaR inputs, the exposure engine's committed run, the funds
+and the US equities, so the Trades, EXP, FUND and USEQ pages show data), with the capital-markets packs enabled and the Markets lens beside
+the four default ones, signed in as the administrator, it opens:
 
 - every page of `config/sitemap.yaml`: each menu item (an item with only a command opens `/go?q=<command> <GO>`), the in-context pages, Help's
   sections and a few pages with a demo id (`/var?scope=BANK`, a desk);
@@ -307,6 +309,37 @@ Run it alone:
 ```bash
 drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_page_walk_browser.py      # starts its own stack
 DRISHTI_PAGEWALK_BASE=http://<host>:<console port> drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_page_walk_browser.py   # a running console
+```
+
+### 3.20 The visual snapshots
+
+`drishti-console/tests/test_page_snapshots_browser.py` (`test_the_key_pages_look_as_approved`, helpers in `snapshots.py`) captures the key pages (`KEY_SNAPSHOTS`: Home
+and each lens's Home, the World page, the VaR explorer for the bank, a desk and a basket, Why it moved, the market-risk cube, the Pivot, a BI
+report, FRTB-SA, SIMM, exposure, Forms, Trades, Curves, FUND, USEQ, Admin → Engines, Connectors, Data loads, Upload, Data bindings, Cluster →
+Modules, Modules, Deploy, White label, Help, the Elements gallery and its Playground) at 1366 and 1920 px, dark and light, on a server of its own
+over the walk's cached lake (a file apart from the walk, so each fits its re-run time limit), and compares each with its golden image in `drishti-console/tests/snapshots/<page>/<width>-<theme>.png`.
+
+- **Deterministic.** The walk's lake ends on a fixed business date (`SNAPSHOT_DATE`), so figures and dates never move; its server has opened
+  nothing before (no recent pages, no workspaces); animations and transitions are off, the caret hidden, fonts (vendored) loaded, the scroll at
+  the top; the business date is picked (`/asof`), pages that draw late are waited on (`idle`, `wait`); the live clock, the date box, Home's fact of the day, the VaR timings, a search's time taken, the inbox's facts and anything marked `data-snapshot-mask` are covered, timings replaced by a dot, the checkout's folder, the test's scratch folders and the real day's date and time (local or UTC) by fixed words (`snapshots.MASK`, and per page `mask` in `KEY_SNAPSHOTS`).
+- **Small goldens.** Each golden is the viewport at half size in at most 128 colours (PNG): a quarter of the pixels and a palette keep the
+  whole set (128 images: 32 pages; Admin → Engines is left out because its native-maths notice depends on a timed probe) at about 4 MB, while a moved panel, a lost border, a wrong theme colour or a missing chart still shows. A full-size capture
+  would be about ten times that; a perceptual hash alone would not draw what changed. The capture is mapped onto the golden's own palette,
+  so an unchanged page compares to zero changed pixels.
+- **One platform.** The goldens are drawn by Chromium on Linux, the release machine; fonts render differently on Windows and macOS, so
+  the test skips there.
+- **Per-page tolerance.** A pixel changed when a channel is off by more than 40 of 255; a page changed when more than 0.2% of its pixels did
+  (`tolerance` per page in `KEY_SNAPSHOTS`). On a change the capture and a diff image (golden | capture | changed pixels in red) are
+  written to `DRISHTI_SNAPSHOT_DIFFS` (default the test's temporary folder; the drill: `<data>/drill/snapshot-diffs/`).
+- **The drill** lists every changed page from `<data>/drill/snapshots.jsonl` and the goldens refreshed in the commit under test. A changed
+  page fails the drill unless its golden was refreshed in the same commit; the drill never refreshes them (`--update-snapshots` fails under it).
+
+Refresh the goldens deliberately, look at them, and commit them with the change that meant them:
+
+```bash
+drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_page_snapshots_browser.py --update-snapshots
+drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_page_snapshots_browser.py     # compare
+DRISHTI_SNAPSHOT_ONLY=why-it-moved,home drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_page_snapshots_browser.py --update-snapshots   # some pages
 ```
 
 ## 4. Numbers to hold

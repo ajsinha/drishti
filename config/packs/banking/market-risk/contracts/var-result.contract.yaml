@@ -30,9 +30,8 @@ dated-by: on request
 cadence:
   frequency: on change
   due: computed on request and again when the date's inputs load (data-version trigger)
-storage:
-  connector: var-engine
-  plugin: reactive
+binding-hint:
+  computed: true
 fields:
 - name: SCOPE
   type: text

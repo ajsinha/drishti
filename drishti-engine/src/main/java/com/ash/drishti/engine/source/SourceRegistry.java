@@ -418,12 +418,13 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
 
     /** A fresh instance of the connector's plugin, named and limited to its kinds. */
     private SourcePlugin instantiate(String name, SourcesProperties.ConnectorSettings c) {
-        SourcePlugin proto = discovered.stream().filter(p -> p.manifest().name().equals(c.plugin())).findFirst().orElse(null);
+        SourcePlugin proto = java.util.stream.Stream.concat(discovered.stream(), types.stream())
+                .filter(p -> p.manifest().name().equals(c.plugin())).findFirst().orElse(null);
         if (proto == null) {
             throw new IllegalStateException("no plugin named '" + c.plugin() + "'");
         }
         try {
-            return new ConnectorInstance(name, new java.util.HashSet<>(c.kinds()), proto.getClass().getDeclaredConstructor().newInstance());
+            return new ConnectorInstance(name, new java.util.HashSet<>(c.kinds()), ComputedKindSource.fresh(proto));
         } catch (ReflectiveOperationException e) {
             throw new IllegalStateException("cannot create " + c.plugin() + ": " + e.getMessage());
         }
@@ -578,6 +579,100 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
         } finally {
             lock.unlock();
         }
+    }
+
+    private final java.util.Set<String> attached = java.util.concurrent.ConcurrentHashMap.newKeySet();
+    private final List<SourcePlugin> types = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+    /**
+     * A loaded module's connector type (a plugin its jar declares, docs/architecture/KERNEL_AND_MODULES.md section 12.3): the connectors
+     * whose files name it start now; the returned action takes the type out and brings those connectors to its absence (stopped, failed:
+     * no plugin of that name) while their files stay.
+     */
+    public Runnable attachType(SourcePlugin prototype) {
+        String type = prototype.manifest().name();
+        if (types.stream().anyMatch(p -> p.manifest().name().equals(type)) || discovered.stream().anyMatch(p -> p.manifest().name().equals(type))) {
+            throw new IllegalStateException("a connector type named " + type + " is already installed");
+        }
+        types.add(prototype);
+        reapply(type);
+        return () -> {
+            if (types.remove(prototype)) {
+                reapply(type);
+            }
+        };
+    }
+
+    private void reapply(String type) {
+        for (Map.Entry<String, SourcesProperties.ConnectorSettings> e : List.copyOf(applied.entrySet())) {
+            if (type.equals(e.getValue().plugin())) {
+                apply(e.getKey(), e.getValue());
+            }
+        }
+    }
+
+    /**
+     * A loaded module's connector extension, one way for every module: a plugin type the site's connector files name is installed as a
+     * type ({@link #attachType}: those connectors start with it); any other is routed as a source of its own with {@code settings}
+     * ({@link #attach(SourcePlugin, Map)}).
+     */
+    public Runnable attachExtension(SourcePlugin plugin, Map<String, String> settings) {
+        String type = plugin.manifest().name();
+        boolean named = applied.values().stream().anyMatch(c -> type.equals(c.plugin()));
+        return named ? attachType(plugin) : attach(plugin, settings);
+    }
+
+    /** Tries every failed connector again now (a module came: the class or type a connector named may be there now). */
+    public void retryFailed() {
+        for (String name : List.copyOf(failures.keySet())) {
+            SourcesProperties.ConnectorSettings c = applied.get(name);
+            if (c != null) {
+                apply(name, c);
+            }
+        }
+    }
+
+    /** True when the source is a loaded module's, routed by {@link #attach}. */
+    public boolean attached(String name) {
+        return attached.contains(name);
+    }
+
+    /**
+     * Routes a loaded module's source (a computed kind's provider) under its own name while the module is loaded
+     * (docs/architecture/KERNEL_AND_MODULES.md section 12.3); the returned action takes it out of routing and stops it. A name already
+     * routed is refused.
+     */
+    public Runnable attach(SourcePlugin plugin) {
+        return attach(plugin, Map.of());
+    }
+
+    /** As {@link #attach(SourcePlugin)}, the source started with {@code settings} (a module's connector extension: its folders). */
+    public Runnable attach(SourcePlugin plugin, Map<String, String> settings) {
+        String name = plugin.manifest().name();
+        synchronized (this) {
+            if (plugins.containsKey(name)) {
+                throw new IllegalStateException("a source named " + name + " is already routed");
+            }
+            try {
+                plugin.start(new EngineSourceContext(settings == null ? Map.of() : Map.copyOf(settings), codec, scheduler, reader));
+            } catch (RuntimeException e) {
+                throw e;
+            } catch (Exception e) {
+                throw new IllegalStateException("the module source " + name + " did not start: " + e.getMessage(), e);
+            }
+            swap(name, plugin);
+            attached.add(name);
+        }
+        return () -> {
+            synchronized (this) {
+                if (plugins.get(name) != plugin) {
+                    return;
+                }
+                attached.remove(name);
+                swap(name, null);
+            }
+            closeQuietly(plugin);
+        };
     }
 
     /** Stops a named connector and forgets its settings (its file was deleted). */

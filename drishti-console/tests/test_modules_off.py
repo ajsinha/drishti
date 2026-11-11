@@ -72,7 +72,7 @@ def test_banking_off_is_gone_from_every_door(backend, monkeypatch):
     links = _menu_links(t)
     assert "/var" not in links and "/exposure" not in links      # Risk (the engines' pages): banking's menu gone
     assert "/admin/scopes" not in t                                                                   # the Admin strip's Saved VaR baskets
-    assert '<meta name="drishti-modules" content="economy">' in t                                     # the Elements loader refuses drishti-risk
+    assert '<meta name="drishti-modules" content="capitalmarkets economy">' in t                                     # the Elements loader refuses drishti-risk
     for page in ("/var", "/var/reports", "/exposure", "/predeal", "/frtb", "/simm", "/smat", "/play", "/mcube", "/admin/scopes"):
         assert c.get(page, follow_redirects=False).status_code == 404, page
     for api in ("/api/var/scope?scope=BANK", "/api/exposure/scope?scope=BANK", "/api/frtb/sa", "/api/simm/versions", "/api/pivot/mr/versions",
@@ -95,7 +95,7 @@ def test_banking_off_is_gone_from_every_door(backend, monkeypatch):
     for asset in BANKING_ASSETS:                                                                      # its files are not served
         assert c.get(asset).status_code == 404, asset
     assert c.get(CORE_ASSET).status_code == 200
-    assert c.get("/static/js/drishti_world-landing.js").status_code == 200                           # another module's still are
+    assert c.get("/m/economy/static/1.0.0/js/drishti_world-landing.js").status_code == 200           # another module's still are (hosted)
 
 
 def test_the_command_lines_examples_are_only_what_the_person_may_type(backend, monkeypatch):
@@ -115,7 +115,7 @@ def test_banking_on_draws_every_door_again(backend, monkeypatch):
     c = _client(app)
     t = c.get("/t").text
     assert "/var" in _menu_links(t)
-    assert 'content="banking economy"' in t
+    assert 'content="banking capitalmarkets economy"' in t
     assert c.get("/help/docs-guides-var-guide").status_code == 200
     assert 'data-kind="var-baskets"' in c.get("/build").text
     for asset in BANKING_ASSETS:
@@ -172,6 +172,23 @@ def test_a_single_function_off_is_gone_and_the_rest_stays(backend, monkeypatch):
     assert c.get("/var").status_code == 200
 
 
+def test_a_function_waiting_for_data_explains_itself(backend, monkeypatch):
+    """EXP with no exposure-path bound: its page is here and says what it needs (200, links to Admin -> Data bindings and Help), its
+    console API answers 409 DRS-1035, the command line says the same words; nothing answers 404."""
+    answer = _answer()
+    text = "EXP needs data: exposure-path is not bound; ask your data administrator"
+    answer["functions"]["off"] = [{"word": "EXP", "module": "banking", "gate": "data", "reason": text, "text": text}]
+    c = _client(_console(backend, monkeypatch, ALL_ON, answer))
+    r = c.get("/exposure", follow_redirects=False)
+    assert r.status_code == 200, r.status_code
+    assert 'data-needs-data="EXP"' in r.text and "needs data" in r.text and "exposure-path is not bound" in r.text
+    assert 'href="/admin/bindings"' in r.text and "/help?q=" in r.text
+    api = c.get("/api/exposure/scope?scope=BANK")
+    assert api.status_code == 409 and api.json()["code"] == "DRS-1035" and "exposure-path" in api.json()["detail"]
+    assert _refusal(c.get("/go", params={"q": "EXP <GO>"}, follow_redirects=False)).endswith(text)
+    assert c.get("/var").status_code == 200
+
+
 def test_a_lens_that_does_not_use_a_module_does_not_get_its_assets(backend, monkeypatch):
     app = _console(backend, monkeypatch, {**ALL_ON, "lenses": ["world"]},
                    _answer(lenses=[{"id": "world", "modules": ["economy"]}, {"id": "risk", "modules": ["banking"]}]))
@@ -183,7 +200,7 @@ def test_a_lens_that_does_not_use_a_module_does_not_get_its_assets(backend, monk
     for asset in BANKING_ASSETS:
         assert wendy.get(asset).status_code == 404, asset                                             # the World lens: no banking file
         assert alice.get(asset).status_code == 200, asset                                             # the full product: every module on
-    assert wendy.get("/static/js/drishti_world-landing.js").status_code == 200
+    assert wendy.get("/m/economy/static/1.0.0/js/drishti_world-landing.js").status_code == 200
     assert wendy.get(CORE_ASSET).status_code == 200
 
 

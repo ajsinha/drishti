@@ -78,6 +78,11 @@ public record Edition(String name, String title, List<String> packs, boolean all
         return !name.isEmpty();
     }
 
+    /** True when the filter is a distribution's (docs/architecture/DISTRIBUTIONS.md): its id is {@code drishti.<name>}. */
+    public boolean distribution() {
+        return name.startsWith("drishti.");
+    }
+
     /** False for a pack the edition refuses: only with {@code allow-only} and a pack outside its list. */
     public boolean packAllowed(String pack) {
         return !active() || !allowOnly || packs.isEmpty() || packs.contains(pack);

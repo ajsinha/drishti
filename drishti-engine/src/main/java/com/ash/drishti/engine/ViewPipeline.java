@@ -596,15 +596,21 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
     }
 
     /** What adds to a document as its page shows it (the VaR engine's figures on a position, a portfolio, a desk): none by default. */
-    private volatile List<ViewAugmenter> augmenters = List.of();
+    private volatile java.util.function.Supplier<List<ViewAugmenter>> augmenters = List::of;
 
     /** Sets the augmenters every view, preview and panel record read applies, in order (the stored document is never changed). */
     public void augmenters(List<ViewAugmenter> list) {
-        this.augmenters = list == null ? List.of() : List.copyOf(list);
+        List<ViewAugmenter> fixed = list == null ? List.of() : List.copyOf(list);
+        this.augmenters = () -> fixed;
+    }
+
+    /** The augmenters as asked each time (the server's beans of the type; a loaded module's come through the registration bridge). */
+    public void augmentersFrom(java.util.function.Supplier<List<ViewAugmenter>> live) {
+        this.augmenters = live == null ? List::of : live;
     }
 
     public List<ViewAugmenter> augmenters() {
-        return augmenters;
+        return augmenters.get();
     }
 
     /** The document as views show it: the stored one, with what the augmenters of its kind add for the caller. */
@@ -614,7 +620,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
 
     /** {@code doc} with what the augmenters of its kind add (also a Sutra Next panel's entity sourced by id: ScreenWire). */
     private EntityDocument augmented(EntityDocument doc, AsOf asOf) {
-        for (ViewAugmenter a : augmenters) {
+        for (ViewAugmenter a : com.ash.drishti.common.Extensions.with(augmenters.get(), ViewAugmenter.class)) {
             if (doc != null && a.augments(doc.ref().kind())) {
                 doc = a.augment(doc, asOf);
             }

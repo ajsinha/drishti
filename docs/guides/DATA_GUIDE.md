@@ -1459,7 +1459,9 @@ command output below was captured on a fresh clone with the demo lakes (`drishti
 
 Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `drishti.sources`](../admin/CONFIGURATION.md#drishtisources) (also at Help → Configuration in the console).
 
-The folder holds the connector files and nothing else. What the server keeps *about* them lives in the **data folder**, never beside
+The folder holds the connector files and nothing else. A connector plugin that is not shipped (a vendor's, a JDBC driver for
+`jdbc`) is a jar in the server's **lib folder** (`drishti.lib.path`, default `<data folder>/lib`), loaded at start; that is the only
+place for one ([CONFIGURATION.md › Your own libraries](../admin/CONFIGURATION.md#your-own-libraries-the-servers-lib-folder-drishtilibpath-and-the-consoles-external_libpython)). What the server keeps *about* them lives in the **data folder**, never beside
 them and never in a hidden folder:
 
 ```
@@ -2067,9 +2069,7 @@ On the demo lakes it lists the seven packs' connectors: the three trade connecto
 **Uninstalling safely.** The page has one way out for a connector that has a file, **Uninstall…** (there is no separate Delete button;
 `DELETE /{name}` remains for scripts and keeps the text in `<data dir>/connectors/history/`). It asks what depends on the connector
 (the packs and kinds that read through it, BI datasets that scan it, whether a pack's template would write it back), refuses while
-anything does, and otherwise **moves the file** to `<data dir>/uninstalled/` where **Admin → Artifacts → Uninstalled** restores it. A
-connector created or edited through Admin (the shared overlay in the content store) is archived the same way: the text in force goes to the
-archive, the overlay is removed (its text stays in the shared history) with any file under it, and a restore puts it back as a file. A
+anything does, and otherwise **moves the file** to `<data dir>/uninstalled/` where **Admin → Artifacts → Uninstalled** restores it as a file. A
 connector a pack's template names is only disabled or reset. See [OPERATIONS_GUIDE.md section 18](OPERATIONS_GUIDE.md#10-admin--artifacts-install-and-uninstall-safely).
 
 The list shows each connector's **origin** (`file`, `pack` for a template with no file yet, `application` for the deprecated

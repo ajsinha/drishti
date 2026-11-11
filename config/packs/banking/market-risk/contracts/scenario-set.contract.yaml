@@ -32,11 +32,8 @@ dated-by: BUSINESS_DATE
 cadence:
   frequency: daily
   due: to be confirmed
-storage:
-  connector: risk-store
-  plugin: delta
-  domain: risk
-  table: <root>/risk/scenario-set/
+binding-hint:
+  lake-table: risk.scenario-set
   test-data:
   - data/testdata/market-risk/scenario-set
 fields:

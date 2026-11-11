@@ -32,11 +32,8 @@ dated-by: BUSINESS_DATE
 cadence:
   frequency: daily
   due: with the morning run's inputs (before the official capture)
-storage:
-  connector: risk-store
-  plugin: delta
-  domain: risk
-  table: <root>/risk/var-limit/
+binding-hint:
+  lake-table: risk.var-limit
   columns:
   - LIMIT_ID
   - HIERARCHY

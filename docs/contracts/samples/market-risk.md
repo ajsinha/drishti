@@ -38,7 +38,7 @@ Every data type of `market-risk` as a real record of the committed test data, ev
 
 ## FRTB sensitivities: frtb-sensitivity (FRTB)
 
-Delta, vega and curvature by risk class and bucket (SBM). One row per frtb sensitivities per business date, keyed by RESULT_ID. Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/frtb-sensitivity/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (30 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 30 rows in all.
+Delta, vega and curvature by risk class and bucket (SBM). One row per frtb sensitivities per business date, keyed by RESULT_ID. Read by the **market-risk** pack's connector `risk-store` (lake table `risk.frtb-sensitivity`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (30 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 30 rows in all.
 
 ### File layout
 
@@ -137,7 +137,7 @@ None: all 30 rows were read, and every field any of them has is in the record ab
 
 ## P&L explain: pnl-explain (PNL)
 
-Daily P&L attributed to risk factors, new trades and residual. One row per p&l explain per business date, keyed by RESULT_ID. Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/pnl-explain/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (30 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 30 rows in all.
+Daily P&L attributed to risk factors, new trades and residual. One row per p&l explain per business date, keyed by RESULT_ID. Read by the **market-risk** pack's connector `risk-store` (lake table `risk.pnl-explain`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (30 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 30 rows in all.
 
 ### File layout
 
@@ -233,7 +233,7 @@ None: all 30 rows were read, and every field any of them has is in the record ab
 
 ## Stress result: stress-result (STR)
 
-P&L of a desk under a scenario, by book. One row per stress result per business date, keyed by RESULT_ID. Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/stress-result/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (80 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 80 rows in all.
+P&L of a desk under a scenario, by book. One row per stress result per business date, keyed by RESULT_ID. Read by the **market-risk** pack's connector `risk-store` (lake table `risk.stress-result`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (80 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 80 rows in all.
 
 ### File layout
 
@@ -318,7 +318,7 @@ None: all 80 rows were read, and every field any of them has is in the record ab
 
 ## Stress scenario: stress-scenario (SCN)
 
-A named historical or hypothetical shock set. One row per stress scenario per business date, keyed by SCENARIO_ID. Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/stress-scenario/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (8 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 8 rows in all.
+A named historical or hypothetical shock set. One row per stress scenario per business date, keyed by SCENARIO_ID. Read by the **market-risk** pack's connector `risk-store` (lake table `risk.stress-scenario`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (8 records); the records never changed over the period, so every later day's file is empty. Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 8 rows in all.
 
 ### File layout
 
@@ -397,7 +397,7 @@ None: all 8 rows were read, and every field any of them has is in the record abo
 
 ## Trade valuation: trade-valuation (TVAL)
 
-A trade's valuation from the risk engine, for every source system: MTM, one-day P&L and DV01, with what it values (source system, portfolio, desk, product). One row per trade valuation per business date, keyed by VALUATION_ID. Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/trade-valuation/`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (12,076 records); each later day's file holds only the records new or changed that day (12,096–15,000 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 806,304 rows in all.
+A trade's valuation from the risk engine, for every source system: MTM, one-day P&L and DV01, with what it values (source system, portfolio, desk, product). One row per trade valuation per business date, keyed by VALUATION_ID. Read by the **market-risk** pack's connector `risk-store` (lake table `risk.trade-valuation`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (12,076 records); each later day's file holds only the records new or changed that day (12,096–15,000 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 806,304 rows in all.
 
 ### File layout
 
@@ -497,7 +497,7 @@ None: all 806,304 rows were read, and every field any of them has is in the reco
 
 ## Scenario set: scenario-set (SSET)
 
-The historical scenario days of a business date, oldest first: index i of every P&L vector, scenario-PV vector and FX scenario of the date is SCENARIO_DATES[i]. A date has one normal set and may have one stress set (SET_TYPE STRESS, for stressed VaR: today's trades revalued under the moves of a 12-month stress period, VAR_GUIDE.md section 18.8), whose rows carry its own SCENARIO_SET_ID in the same tables. One row per scenario set per BUSINESS_DATE (the normal set, and the stress set when the batch sends one), keyed by SCENARIO_SET_ID. Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/scenario-set/`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-28 to 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (2 records on 2026-09-30), never a change on the day before.
+The historical scenario days of a business date, oldest first: index i of every P&L vector, scenario-PV vector and FX scenario of the date is SCENARIO_DATES[i]. A date has one normal set and may have one stress set (SET_TYPE STRESS, for stressed VaR: today's trades revalued under the moves of a 12-month stress period, VAR_GUIDE.md section 18.8), whose rows carry its own SCENARIO_SET_ID in the same tables. One row per scenario set per BUSINESS_DATE (the normal set, and the stress set when the batch sends one), keyed by SCENARIO_SET_ID. Read by the **market-risk** pack's connector `risk-store` (lake table `risk.scenario-set`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-28 to 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (2 records on 2026-09-30), never a change on the day before.
 
 ### File layout
 
@@ -590,7 +590,7 @@ Fields no record above has, found by reading all 2 rows, with how many rows fill
 
 ## Scenario PVs of a trade (509 scenarios, its currency): scenario-pv (SPV)
 
-A trade's present value under each historical scenario and its base PV of the same run, in the trade's own currency: the form of a trade's scenario P&L a bank may send instead of a P&L vector (VAR_GUIDE.md section 15.9). The VaR engine turns it into the trade's USD P&L when it loads the date: P&L(s) = PV(s) x FX(s) - PV(base) x FX(base). One row per trade, business date and scenario set (BUSINESS_DATE), keyed by SCENARIO_PV_ID; a trade is in this kind or in pnl-vector, never both on one date. Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/scenario-pv/`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-28 to 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (15,986 records on 2026-09-30), never a change on the day before. Beside the morning run, intraday updates are appended during the day (only the changed trades, `RUN_KIND` `INTRADAY`); the forms the test data lacks come from the pack's samples (`config/packs/banking/market-risk/samples/scenario-pv.jsonl`, `config/packs/banking/market-risk/samples/intraday/scenario-pv.2026-09-30.jsonl`).
+A trade's present value under each historical scenario and its base PV of the same run, in the trade's own currency: the form of a trade's scenario P&L a bank may send instead of a P&L vector (VAR_GUIDE.md section 15.9). The VaR engine turns it into the trade's USD P&L when it loads the date: P&L(s) = PV(s) x FX(s) - PV(base) x FX(base). One row per trade, business date and scenario set (BUSINESS_DATE), keyed by SCENARIO_PV_ID; a trade is in this kind or in pnl-vector, never both on one date. Read by the **market-risk** pack's connector `risk-store` (lake table `risk.scenario-pv`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-28 to 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (15,986 records on 2026-09-30), never a change on the day before. Beside the morning run, intraday updates are appended during the day (only the changed trades, `RUN_KIND` `INTRADAY`); the forms the test data lacks come from the pack's samples (`config/packs/banking/market-risk/samples/scenario-pv.jsonl`, `config/packs/banking/market-risk/samples/intraday/scenario-pv.2026-09-30.jsonl`).
 
 ### File layout
 
@@ -938,7 +938,7 @@ Fields no record above has, found by reading all 15,993 rows, with how many rows
 
 ## Scenario FX of a currency (509 scenarios): fx-scenario (FXS)
 
-A currency's rate against USD today and under each historical scenario, as the risk batch supplies it (VAR_GUIDE.md section 15.9): the VaR engine converts scenario PVs and reporting currencies with it. A currency the batch does not supply is derived from the FX history (fx-spot). One row per currency, business date and scenario set (BUSINESS_DATE), keyed by FX_SCENARIO_ID (FXS-<CURRENCY>-<SCENARIO_SET_ID>). Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/fx-scenario/`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-28 to 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (12 records on 2026-09-30), never a change on the day before.
+A currency's rate against USD today and under each historical scenario, as the risk batch supplies it (VAR_GUIDE.md section 15.9): the VaR engine converts scenario PVs and reporting currencies with it. A currency the batch does not supply is derived from the FX history (fx-spot). One row per currency, business date and scenario set (BUSINESS_DATE), keyed by FX_SCENARIO_ID (FXS-<CURRENCY>-<SCENARIO_SET_ID>). Read by the **market-risk** pack's connector `risk-store` (lake table `risk.fx-scenario`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-28 to 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (12 records on 2026-09-30), never a change on the day before.
 
 ### File layout
 
@@ -1020,7 +1020,7 @@ None: all 12 rows were read, and every field any of them has is in the record ab
 
 ## VaR limit of a hierarchy node: var-limit (VLIM)
 
-The VaR limit of one node of a hierarchy, keyed by the hierarchy and the node's id, in USD; 1-day 99% unless the row's HORIZON and CONFIDENCE say otherwise. One row per hierarchy node with a limit per BUSINESS_DATE, keyed by LIMIT_ID (VL-<NODE_ID>). Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/var-limit/`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-28 to 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (157 records on 2026-09-30), never a change on the day before.
+The VaR limit of one node of a hierarchy, keyed by the hierarchy and the node's id, in USD; 1-day 99% unless the row's HORIZON and CONFIDENCE say otherwise. One row per hierarchy node with a limit per BUSINESS_DATE, keyed by LIMIT_ID (VL-<NODE_ID>). Read by the **market-risk** pack's connector `risk-store` (lake table `risk.var-limit`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-28 to 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (157 records on 2026-09-30), never a change on the day before.
 
 ### File layout
 
@@ -1100,7 +1100,7 @@ Fields no record above has, found by reading all 157 rows, with how many rows fi
 
 ## Desk P&L: actual and hypothetical (daily): desk-pnl (DPNL)
 
-The bank's daily P&L of each desk for regulatory backtesting (VAR_GUIDE.md section 15.16): the actual P&L from finance (clean: fees, commissions, reserves, net interest income and intraday trading left out) and the hypothetical P&L from front office (yesterday's positions revalued on today's market), in USD. Never an input of the VaR engine: the backtest compares the official VaR of the day before with them. Drishti's own risk-theoretical P&L (the official record's hypoPnl) is not this kind. One row per desk (and its legal entity) per BUSINESS_DATE, keyed by DESK_PNL_ID (DPNL-<DESK_ID>-<BUSINESS_DATE>). Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/desk-pnl/`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2025-09-17 to 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (10 records on 2026-09-30), never a change on the day before.
+The bank's daily P&L of each desk for regulatory backtesting (VAR_GUIDE.md section 15.16): the actual P&L from finance (clean: fees, commissions, reserves, net interest income and intraday trading left out) and the hypothetical P&L from front office (yesterday's positions revalued on today's market), in USD. Never an input of the VaR engine: the backtest compares the official VaR of the day before with them. Drishti's own risk-theoretical P&L (the official record's hypoPnl) is not this kind. One row per desk (and its legal entity) per BUSINESS_DATE, keyed by DESK_PNL_ID (DPNL-<DESK_ID>-<BUSINESS_DATE>). Read by the **market-risk** pack's connector `risk-store` (lake table `risk.desk-pnl`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2025-09-17 to 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (10 records on 2026-09-30), never a change on the day before.
 
 ### File layout
 
@@ -1178,7 +1178,7 @@ None: all 10 rows were read, and every field any of them has is in the record ab
 
 ## Long-history P&L of a hierarchy node (stress window selection): pnl-history (PNLH)
 
-Today's portfolio at one hierarchy node revalued over every business day of a long history (2007 to the day before the business date in the demo), one P&L per day in USD; the stress window selection values every 12-month window of it as a stressed VaR (VAR_GUIDE.md section 18.9). One row per hierarchy node per BUSINESS_DATE (the positions date), keyed by HISTORY_ID (PNLH-<NODE_ID>). Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/pnl-history/`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (28 records), never a change on the day before.
+Today's portfolio at one hierarchy node revalued over every business day of a long history (2007 to the day before the business date in the demo), one P&L per day in USD; the stress window selection values every 12-month window of it as a stressed VaR (VAR_GUIDE.md section 18.9). One row per hierarchy node per BUSINESS_DATE (the positions date), keyed by HISTORY_ID (PNLH-<NODE_ID>). Read by the **market-risk** pack's connector `risk-store` (lake table `risk.pnl-history`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (28 records), never a change on the day before.
 
 ### File layout
 
@@ -1281,7 +1281,7 @@ None: all 28 rows were read, and every field any of them has is in the record ab
 
 ## Position sensitivities: position-sensitivity (SENS)
 
-The first-order and curvature sensitivities of each position (or trade) to the standard risk factors, as the bank's pricing or risk system computes them after the close: rate, inflation and credit-spread sensitivities per basis point, spot and price deltas per one per cent, vegas per volatility point, and the curvature results of the regulatory shocks. One table feeds the FRTB standardised approach (the sensitivities-based method, Basel MAR21), ISDA SIMM, the MR cube's ladders and heat maps, sensitivity limits and P&L explain. Read by the server's FRTB-SA engine (docs/guides/FRTB_SA_GUIDE.md); SENS <scope> sums it by factor or bucket. One record per position (GRAIN POSITION) or trade (GRAIN TRADE), business date and batch, keyed by SENSITIVITY_ID (SENS-<POSITION_ID or TRADE_ID>-<BATCH_ID>); its sensitivities a sparse list, one element per risk factor and measure. Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/position-sensitivity/`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (8,052 records), never a change on the day before.
+The first-order and curvature sensitivities of each position (or trade) to the standard risk factors, as the bank's pricing or risk system computes them after the close: rate, inflation and credit-spread sensitivities per basis point, spot and price deltas per one per cent, vegas per volatility point, and the curvature results of the regulatory shocks. One table feeds the FRTB standardised approach (the sensitivities-based method, Basel MAR21), ISDA SIMM, the MR cube's ladders and heat maps, sensitivity limits and P&L explain. Read by the server's FRTB-SA engine (docs/guides/FRTB_SA_GUIDE.md); SENS <scope> sums it by factor or bucket. One record per position (GRAIN POSITION) or trade (GRAIN TRADE), business date and batch, keyed by SENSITIVITY_ID (SENS-<POSITION_ID or TRADE_ID>-<BATCH_ID>); its sensitivities a sparse list, one element per risk factor and measure. Read by the **market-risk** pack's connector `risk-store` (lake table `risk.position-sensitivity`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (8,052 records), never a change on the day before.
 
 ### File layout
 
@@ -1430,7 +1430,7 @@ None: all 8,052 rows were read, and every field any of them has is in the record
 
 ## Risk factor dictionary: risk-factor (RFAC)
 
-Every risk factor the bank's sensitivities use, named by the factor naming standard, with its parts (class, qualifier, curve, underlying, tenor), its FRTB standardised mapping (risk class and bucket, Basel MAR21), its ISDA SIMM mapping (risk class, bucket and labels), its liquidity horizon (MAR33.12) and the names the source systems give it. A sensitivity whose factor is not here, or whose source name maps to no factor, is refused. Read by the server's FRTB-SA engine with the sensitivities (docs/guides/FRTB_SA_GUIDE.md). One row per risk factor and business date (a slowly changing table; a date without a delivery keeps the last), keyed by RISK_FACTOR. Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/risk-factor/`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (867 records), never a change on the day before.
+Every risk factor the bank's sensitivities use, named by the factor naming standard, with its parts (class, qualifier, curve, underlying, tenor), its FRTB standardised mapping (risk class and bucket, Basel MAR21), its ISDA SIMM mapping (risk class, bucket and labels), its liquidity horizon (MAR33.12) and the names the source systems give it. A sensitivity whose factor is not here, or whose source name maps to no factor, is refused. Read by the server's FRTB-SA engine with the sensitivities (docs/guides/FRTB_SA_GUIDE.md). One row per risk factor and business date (a slowly changing table; a date without a delivery keeps the last), keyed by RISK_FACTOR. Read by the **market-risk** pack's connector `risk-store` (lake table `risk.risk-factor`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (867 records), never a change on the day before.
 
 ### File layout
 
@@ -1543,7 +1543,7 @@ Fields no record above has, found by reading all 867 rows, with how many rows fi
 
 ## P&L vector (509 scenarios): pnl-vector (PNLV)
 
-One trade's (or one position's) P&L under every scenario of the date's scenario set, gain positive, in CURRENCY, with the terms the VaR engine places it by. One row per trade (GRAIN TRADE) or position (GRAIN POSITION), business date and scenario set, keyed by VECTOR_ID (PNL-<TRADE_ID or POSITION_ID>-<SCENARIO_SET_ID>). Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/pnl-vector/`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/banking/market-risk/samples/pnl-vector.jsonl`, 2 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+One trade's (or one position's) P&L under every scenario of the date's scenario set, gain positive, in CURRENCY, with the terms the VaR engine places it by. One row per trade (GRAIN TRADE) or position (GRAIN POSITION), business date and scenario set, keyed by VECTOR_ID (PNL-<TRADE_ID or POSITION_ID>-<SCENARIO_SET_ID>). Read by the **market-risk** pack's connector `risk-store` (lake table `risk.pnl-vector`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/banking/market-risk/samples/pnl-vector.jsonl`, 2 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 

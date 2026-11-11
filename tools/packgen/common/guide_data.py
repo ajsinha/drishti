@@ -200,11 +200,31 @@ def _origin(s: dict, pack: str, c: dict) -> dict:
     return (p.get("kinds") or {}).get(c["kind"]) or p.get("default") or {}
 
 
+def _default_connector(c: dict) -> str | None:
+    """The connector the product serves the kind by unless the site binds another (tools/contracts.py default_connector)."""
+    if str(ROOT / "tools") not in sys.path:
+        sys.path.insert(0, str(ROOT / "tools"))
+    import importlib
+    return importlib.import_module("contracts").default_connector(c)
+
+
+def _default_plugin(c: dict) -> str | None:
+    """The plugin of the kind's default connector."""
+    _default_connector(c)
+    import importlib
+    return importlib.import_module("contracts").default_plugin(c)
+
+
+def _table_path(c: dict) -> str:
+    """The binding hint's lake table as a folder under the lake root (risk.scenario-pv → risk/scenario-pv)."""
+    return ((c.get("binding-hint") or {}).get("lake-table") or c["kind"]).replace(".", "/", 1)
+
+
 def _feed_lake(o: dict, c: dict, conn: str | None) -> str:
     """How a feed-filled kind reaches Drishti: its feed, its lake's table, its connector (the samples are never served beside it)."""
     feed = yaml.safe_load((ROOT / "config" / "feeds" / f"{o['feed']}.yaml").read_text(encoding="utf-8"))
-    st = c.get("storage") or {}
-    return (f"the daily feed `{o['feed']}` → `<data>/delta/{feed['lake']}/{st.get('domain')}/{c['kind']}/` (lake `{feed['lake']}`) → connector "
+    domain = _table_path(c).split("/", 1)[0]
+    return (f"the daily feed `{o['feed']}` → `<data>/delta/{feed['lake']}/{domain}/{c['kind']}/` (lake `{feed['lake']}`) → connector "
             f"`{conn}`; nothing is committed but a few documents in `samples/` for the tests")
 
 
@@ -220,17 +240,17 @@ def retrieval_section(pack: str, items: list[dict]) -> list[str]:
            "Drishti engine when it is asked, never stored by a source.", ""]
     rows, used_ext, used_gen = [], [], []
     for c in items:
-        st = c.get("storage") or {}
+        st = c.get("binding-hint") or {}
         o = _origin(s, pack, c)
-        conn = st.get("connector")
+        conn = _default_connector(c)
         if c.get("class") in ("computed", "drishti-owned"):
             guide = s["engines"].get(conn, "")
             how = " ".join(str(c.get("source", "")).split())
             for lead in ("computed by Drishti: ", "Drishti "):
                 how = how[len(lead):] if how.startswith(lead) else how
             origin = "computed by Drishti: " + how + (f"; see {guide}" if guide else "")
-            lake = "nothing to load: computed from its inputs when asked" if st.get("plugin") in ("reactive", "derived", "var-positions") else \
-                f"published by the server to `{st.get('table', '').replace('<root>/', '<data>/delta/')}`"
+            lake = "nothing to load: computed from its inputs when asked" if st.get("computed") else \
+                f"published by the server to `<data>/delta/{_table_path(c)}/`"
         elif o.get("external"):
             used_ext += [i for i in o["external"] if i not in used_ext]
             origin = "external: " + "; ".join(_ext(s, o["external"]))
@@ -255,7 +275,7 @@ def retrieval_section(pack: str, items: list[dict]) -> list[str]:
                 lake = ", ".join(f"`data/testdata/{f}/`" for f in folders) + " → `lake demo` → connector " + \
                        ", ".join(f"`{x.get('connector')}`" for x in td[c["kind"]] if x.get("folder"))
                 if conn and conn not in {x.get("connector") for x in td[c["kind"]]}:
-                    lake += f"; live through connector `{conn}` (plugin `{st.get('plugin')}`) when it is switched on (off as shipped)"
+                    lake += f"; live through connector `{conn}` (plugin `{_default_plugin(c)}`) when it is switched on (off as shipped)"
             elif d and d.get("samples"):
                 lake = f"`{d['samples']}/` → `lake demo` → connector `{d.get('connector')}`"
             elif st.get("test-data"):

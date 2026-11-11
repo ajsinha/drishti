@@ -136,9 +136,14 @@ management:
           include: readinessState,nodeReadiness
 
 drishti:
-  # The edition (docs/guides/ADMIN_GUIDE.md): blank is the full Drishti; risk is Drishti Risk. It names
-  # config/lenses/<module>/<lens>.yaml, read as a layer under the site's configuration before the packs load; every member of a cluster sets the
-  # same value, and the console learns it from /api/v1/about. A change needs a restart.
+  # The distribution (docs/architecture/DISTRIBUTIONS.md): risk, finance, genomics or all, or the path of a site's own file; it names
+  # config/distributions/drishti.<name>.yaml (brand, theme, modules, lenses, Home, Help) and is the one way to make the product. Blank:
+  # Drishti All, exactly as before. Also --distribution=<name> on the command line (bin/start-server.sh --distribution <name>).
+  distribution: ${DRISHTI_DISTRIBUTION:}
+  distributions-dir: ${DRISHTI_DISTRIBUTIONS_DIR:./config/distributions}   # the distribution files and kernel.yaml (the kernel's packs and words)
+  module-manifests-dir: ${DRISHTI_MODULE_MANIFESTS_DIR:./modules}   # the modules' own manifests (modules/<id>/module.yaml): what a distribution's modules hold, and the one source of what a content module is (the access registry; a folder that is not there: the modules folder beside the packs' config folder)
+  # DEPRECATED (read for one release; Health names it): the edition, config/lenses/<module>/<lens>.yaml as the instance's filter. Name a
+  # distribution instead; with one named, this is ignored. A change needs a restart.
   edition: ${DRISHTI_EDITION:}
   lens-dir: ${DRISHTI_LENS_DIR:./config/lenses}   # the lenses' files: config/lenses/<module>/<lens>.yaml (one of no module in the folder itself), features.yaml
   # Lenses (LENSES.md › The design): editions a person may open on a full instance ("Open Drishti Risk"), for their own session; no restart,
@@ -202,6 +207,13 @@ drishti:
   modules:                           # the modules (docs/architecture/ACCESS_MODEL.md; POST /api/v1/admin/modules): each on when installed, licensed and enabled
     dir: ${DRISHTI_MODULES_DIR:./config/modules}   # the folder of the modules' switches (config/modules/<id>.yaml: enabled), written by POST /api/v1/admin/modules; drishti.modules.<id>.enabled (DRISHTI_MODULES_<ID>_ENABLED) wins over a file
     watch-seconds: 5                 # how often the module and access files are compared with what was read (a change to a module takes effect at the next start; lenses and the licence at once)
+    path: ${DRISHTI_MODULES_PATH:${drishti.data.dir:./data}/modules}   # the module folders (commas): .dmod packages dropped here are auto-deployed; with dev on, exploded module folders here load unverified (docs/guides/ADMIN_GUIDE.md, Admin → Modules)
+    autodeploy: ${DRISHTI_MODULES_AUTODEPLOY:}   # a .dmod dropped into or taken out of drishti.modules.path is deployed or removed through the module deployment; empty: on for a single node, off in a cluster (plan → apply)
+    autodeploy-seconds: 5            # how often the module folders are looked at (auto-deploy, and development mode's reload)
+    shipped: ${DRISHTI_MODULES_SHIPPED:true}   # install the distribution's first-party modules (drishti/modules/*.dmod in the full jar: banking, market-data, capital-markets, economy) at start when not installed or rebuilt; one an administrator removed or switched off stays so
+    dev: ${DRISHTI_MODULES_DEV:false}   # development mode: exploded module folders of drishti.modules.path load without a .dmod, unverified, reloaded on change; refused in a cluster and under the prod or production profile
+  lib:                               # the shared lib folder, as Tomcat's lib/ (docs/guides/ADMIN_GUIDE.md): every jar in it is loaded at start into one lib class loader under the kernel's
+    path: ${DRISHTI_LIB_PATH:${drishti.data.dir:./data}/lib}   # JDBC drivers, connector plugins, a company's own libraries; seen by connectors and modules, never replacing a kernel class; a change needs a restart
   access:                            # the access model's files (docs/architecture/ACCESS_MODEL.md): the access registry reads them, nothing else does
     dir: ${DRISHTI_ACCESS_DIR:./config/access}     # licence.yaml (none: the development licence, every module), lenses.yaml, roles.yaml, assignments.yaml; none is needed
   metrics:                           # the platform metrics and alerts (docs/guides/OPERATIONS_GUIDE.md section 13.6; CLUSTER_GUIDE.md 8.3, 8.5)
@@ -267,7 +279,7 @@ drishti:
     # (another pack's data, for example) before the panel shows that it failed. 10 s: the first read of a business date on a large
     # table loads that date's id index first (300K trades: a few seconds), and a slow source is not reported as missing.
     fetch-timeout: 10s
-    # Optional directory of extra plugin jars; each gets its own class loader.
+    # DEPRECATED (one release): its jars are moved once into the lib folder (drishti.lib.path), then it is ignored; Health says so.
     plugin-dir: ${DRISHTI_PLUGIN_DIR:}
     # kind -> plugin. Kinds without a route try default-route first, then any plugin that serves them.
     default-route: demo
@@ -288,7 +300,7 @@ drishti:
           path: /{kind}/{id}  # the path of one entity under the base URL ({kind} and {id} filled in)
           source-name: rest  # the name its documents carry as provenance
           timeout-ms: 2000  # connect and request timeout, in milliseconds
-      jdbc:                         # a database; the driver jar goes on the class path or plugin-dir
+      jdbc:                         # a database; the driver jar goes in the lib folder (drishti.lib.path)
         enabled: ${DRISHTI_JDBC_ENABLED:false}  # run the jdbc source as itself (one instance)
         settings:
           url: ${DRISHTI_JDBC_URL:}  # the JDBC URL of that instance
@@ -323,6 +335,25 @@ drishti:
     # DEPRECATED: connectors defined here still work (and override the file of the same name, setting by setting), but the
     # server logs a warning naming the equivalent file. Move them to <connectors-dir>/<name>.yaml.
     connectors: {}
+  bindings:
+    # The site's data bindings (docs/guides/DATA_LAKE_GUIDE.md section 6.1, ADMIN_GUIDE.md section 23): one binding per kind, which
+    # connectors serve it in read order. Written once from the connectors' kinds: lists when missing; changed from Admin -> Data bindings.
+    file: ${DRISHTI_BINDINGS_FILE:}         # where config/bindings.yaml is; empty: bindings.yaml beside the connectors' folder
+    refresh-seconds: 30                     # how often an edited bindings.yaml is read again and applied (an approval applies at once)
+  module-deploy:
+    # Module deployment (docs/guides/CLUSTER_GUIDE.md "Deploying a module", KERNEL_AND_MODULES.md section 7.6): the module store (each
+    # .dmod kept once, by id and version), the installed modules and active.yaml, staging and the registry, all under this folder.
+    dir: ${DRISHTI_MODULE_DEPLOY_DIR:}       # empty: modules/ under drishti.data.dir
+    conformance-cycles: 5                    # load/unload cycles of check C15 when a .dmod is uploaded (the SDK's own check runs 50)
+    drain-seconds: 30                        # an unload lets requests already inside the module finish, at most this long
+    swap-wait-seconds: 30                    # a request to a module switching versions on this node waits at most this long, then 503
+    node-call-seconds: 120                   # how long the coordinator waits for one node's stage, activate or unload
+  placement:
+    # Where each module part runs (docs/guides/CLUSTER_GUIDE.md "Module placement", KERNEL_AND_MODULES.md section 4.11): by node name or
+    # role (a node label such as heavy or web). No all-nodes default: a part not placed runs nowhere. Changed by plan and apply in
+    # Admin -> Cluster -> Modules (two administrators); every member adopts the highest version. Today's in-process modules run everywhere.
+    file: ${DRISHTI_PLACEMENT_FILE:}        # where config/placement.yaml is; empty: placement.yaml beside the connectors' folder
+    refresh-seconds: 10                     # how often the file is read again and a member's higher version fetched (an apply sends it at once)
   business-date:
     # Every read is for a business date. The default is today in `zone`, rolled back to a business day of
     # `calendar` (weekends and holidays roll to the previous business day). Users pick another date in the top
@@ -353,6 +384,7 @@ drishti:
     # A personal API token reads by default: GET and HEAD, plus these POSTs, which carry a query in the body and change nothing
     # (a pivot of a search, a command line). Add a path only if it writes nothing.
     token-read-posts:
+      - /api/v1/modules/needs            # which saved items need a switched-off or removed module ("needs module X"): reads, writes nothing
       - /api/v1/pivot/query              # the pivot engine (PIVOT_GUIDE.md): a view's answer, its estimate, a node opened, two dates compared,
       - /api/v1/pivot/estimate           # a cell's rows and an export: each reads as the caller and writes nothing
       - /api/v1/pivot/decompose          # one split of a decomposition tree: reads as the caller, writes nothing
@@ -533,6 +565,17 @@ drishti:
           - POST /api/v1/pivot/rollups
           - DELETE /api/v1/pivot/rollups/*
           - POST /api/v1/pivot/rollups/*/refresh
+      "[modules:deploy]":
+        description: "Modules: upload a .dmod to the module store, plan an install, upgrade, removal, switch-off or switch-on, and apply another administrator's plan (four eyes; drishti.py module deploy|plan|apply). Needs the admin role."
+        allow:
+          - GET /api/v1/admin/modules/deployments
+          - GET /api/v1/admin/modules/deployments/*
+          - GET /api/v1/admin/modules/store
+          - POST /api/v1/admin/modules/store
+          - POST /api/v1/admin/modules/deployments/plans
+          - POST /api/v1/admin/modules/deployments/*/apply
+          - POST /api/v1/admin/modules/deployments/*/reject
+          - POST /api/v1/admin/modules/deployments/*/withdraw
       "[packs:admin]":
         description: "Load, unload, switch on and off, deploy archives, install and roll back packs, and create, change, test and delete connectors (Admin -> Connectors), and Retry now for packs, connectors, AI providers and MCP servers. Needs the admin role."
         allow:
@@ -639,9 +682,10 @@ drishti:
       - "* /api/v1/admin/engines"             # Admin -> Engines: compute engines on or off on a node, written to its file, audited with a reason; never a token
       - "* /api/v1/admin/engines/**"
       - "* /api/v1/admin/modules"             # the module switch: a module switched on or off, written to config/modules/<id>.yaml, audited with a reason; never a token
-      - "* /api/v1/admin/modules/**"
       - "* /api/v1/admin/settings/proposals"      # Admin -> Configuration: settings changes proposed and decided by two administrators; never a token
       - "* /api/v1/admin/settings/proposals/**"
+      - "* /api/v1/admin/bindings/**"             # Admin -> Data bindings: proposals decided by two administrators, reload; never a token
+      - "* /api/v1/admin/cluster/placement/**"    # Admin -> Cluster -> Modules: placement plans applied by a second administrator; never a token
       - "POST /api/v1/admin/data-out/streams/*/stop"   # Admin -> Data out: stop a live Flight stream (DRS-5610 to its reader); an administrator from the console, never a token
       - "* /api/v1/admin/collab/**"
       - "* /api/v1/admin/reports/**"

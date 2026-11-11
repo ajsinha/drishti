@@ -1,0 +1,46 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# A module's page when the module is gone (mock-up Module removed A, in place: docs/architecture/kernel-and-modules/mockups/module-removed.html;
+   KERNEL_AND_MODULES.md section 12.10): in the kernel shell, so menus and the command line still work; 410 when it was removed (who and when
+   for administrators), 404 when it is switched off or unknown (nothing reveals what a site installs). Saved work that used it is kept and
+   marked "needs module X"; a reinstall restores it. #}
+{% extends "base.html" %}
+{% block title %}{{ route.title or 'Not available' }} · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_admin-modules.css?v={{ ASSET_V }}">{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="ib" data-module-gone="{{ route.module or '' }}" data-status="{{ route.status }}">
+  <section class="mod-notice" role="alert">
+    {% if route.status == 410 %}
+    <h1 class="ib-h2">{{ route.title or route.module }} is no longer installed on this system</h1>
+    <p>This page belonged to the {{ route.title or route.module }} module. Nothing you saved is lost: saved views, reports, baskets and alerts
+      that use it are kept, marked <span class="st">needs module {{ route.module }}</span>, and come back when it is reinstalled.</p>
+    {% if me and me.is_admin %}<p class="mod-admin" data-module-gone-admin><b>Administrator:</b> removed by {{ route.by or '-' }} on
+      {{ (route.at or '')[:16]|replace('T', ' ') }} · deployment <span class="mono">{{ route.deployment or '-' }}</span> ·
+      <a href="/admin/modules?module={{ (route.module or '')|urlencode }}">Admin › Modules</a></p>{% endif %}
+    {% elif route.module and route.state == 'off' %}
+    <h1 class="ib-h2">Not available</h1>
+    <p>The {{ route.title or route.module }} module is switched off: ask your administrator.</p>
+    {% else %}
+    <h1 class="ib-h2">Not available</h1>
+    <p>There is no page at <span class="mono">{{ path }}</span>.</p>
+    {% endif %}
+    <p class="mod-actions"><a class="btn-pill ib-btn" href="/">Go to Home</a> <a class="btn-pill ib-btn" href="/help">Search</a></p>
+  </section>
+</div>
+{% endblock %}
+{% block footer %}{% include "_footer.html" %}{% endblock %}

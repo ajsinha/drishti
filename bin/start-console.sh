@@ -36,6 +36,10 @@ prints the address people open.
   --reinstall         remake drishti-console/.venv (after drishti-console/requirements.txt changed)
   --background        detach: log in <data>/logs/console.log, pid in <data>/run/console.pid
   --wait SECONDS      how long to wait for the health answer (default 90)
+  --distribution NAME the distribution this console shows: risk, finance, genomics, all, or a file path (DRISHTI_DISTRIBUTION; default
+                      the server's, else Drishti All); docs/architecture/DISTRIBUTIONS.md
+  --name NAME         a name for this console when several run from one data folder (pid run/console-<name>.pid, log
+                      logs/console-<name>.log): the Risk console on 17480 and the Finance console on 17481
   -h, --help          this text
 
 Environment: DRISHTI_SERVER_URL, DRISHTI_PYTHON (the console's Python; default drishti-console/.venv), DRISHTI_CONSOLE_PORT,
@@ -49,7 +53,7 @@ examples:
 EOF
 }
 
-SERVERS="" PORT="" DATA="" ENV_FILE="" DEMO=false BASE_PY="python3" REINSTALL=false BACKGROUND=false WAIT=90
+SERVERS="" PORT="" DATA="" ENV_FILE="" DEMO=false BASE_PY="python3" REINSTALL=false BACKGROUND=false WAIT=90 DIST="" CNAME=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --server) need "${2:-}" "$1"; SERVERS="${SERVERS:+$SERVERS,}$2"; shift 2 ;;
@@ -61,6 +65,8 @@ while [ $# -gt 0 ]; do
     --reinstall) REINSTALL=true; shift ;;
     --background) BACKGROUND=true; shift ;;
     --wait) need "${2:-}" "$1"; WAIT="$2"; shift 2 ;;
+    --distribution) need "${2:-}" "$1"; DIST="$2"; shift 2 ;;
+    --name) need "${2:-}" "$1"; CNAME="$2"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     *) die "unknown option $1 (see --help)" 2 ;;
   esac
@@ -70,8 +76,11 @@ done
 DATA="$(data_dir "$DATA")"
 export DRISHTI_DATA_DIR="$DATA"
 PORT="${PORT:-${DRISHTI_CONSOLE_PORT:-$DEFAULT_CONSOLE_PORT}}"
-PID_FILE="$DATA/run/console.pid"
-LOG="$DATA/logs/console.log"
+PID_FILE="$DATA/run/console${CNAME:+-$CNAME}.pid"
+LOG="$DATA/logs/console${CNAME:+-$CNAME}.log"
+[ -z "$DIST" ] || export DRISHTI_DISTRIBUTION="$DIST"
+DIST="${DRISHTI_DISTRIBUTION:-}"
+[ -z "$CNAME" ] || export DRISHTI_CONSOLE_TMP_DIR="${DRISHTI_CONSOLE_TMP_DIR:-$DATA/tmp/console-$CNAME}"   # its own temp folder beside the others
 
 pid="$(pid_of "$PID_FILE")"
 if alive "$pid" "$CONSOLE_MARK"; then
@@ -137,7 +146,7 @@ HEALTH="http://127.0.0.1:$PORT/healthz"
 say "Drishti console on port $PORT, given $LIST (using $FIRST first), data $DATA"
 [ -z "$DEV_SECRETS" ] || warn "DEVELOPMENT secrets in use (NOT FOR PRODUCTION):$DEV_SECRETS. Put your own in an --env-file for anything shared."
 mkdir -p "$DATA/run" "$DATA/logs"
-write_pid() { printf '%s\nport=%s\nurl=%s\nhealth=%s\n' "$1" "$PORT" "$URL" "$HEALTH" > "$PID_FILE"; }
+write_pid() { printf '%s\nport=%s\nurl=%s\nhealth=%s\ndistribution=%s\n' "$1" "$PORT" "$URL" "$HEALTH" "${DIST:-from-server}" > "$PID_FILE"; }
 cd "$DRISHTI_ROOT"
 if $BACKGROUND; then
   nohup "$PY" "$DRISHTI_ROOT/drishti-console/run_drishti_web.py" "--server.port=$PORT" >> "$LOG" 2>&1 < /dev/null &

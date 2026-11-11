@@ -32,11 +32,10 @@ dated-by: business_date
 cadence:
   frequency: daily
   due: to be confirmed
-storage:
-  connector: trade-endur
-  plugin: delta
-  domain: trading
-  table: <root>/trading/trade_endur/
+binding-hint:
+  lake-table: trading.trade_endur
+  partition:
+  - PRODUCT_TYPE
   columns:
   - TRADE_ID
   - SOURCE_SYSTEM
@@ -56,11 +55,6 @@ storage:
   - TRADER_ID
   - NOTIONAL
   - INDEX_NAME
-  other-connectors:
-  - trade-calypso
-  - trade-murex
-  partition-by:
-  - PRODUCT_TYPE
   test-data:
   - data/testdata/trades/endur
   - data/testdata/trades/calypso

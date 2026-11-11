@@ -21,12 +21,13 @@ HERE="$(cd "$(dirname "$0")" && pwd -P)"
 
 usage() {
   cat <<'EOF'
-usage: bin/start-all.sh [--demo] [--env-file FILE] [--data-dir DIR] [--server-port N] [--console-port N] [--heap SIZE]
+usage: bin/start-all.sh [--demo] [--distribution NAME] [--env-file FILE] [--data-dir DIR] [--server-port N] [--console-port N] [--heap SIZE]
 
 Starts one server and one console on this machine in the background (the simplest case), the console pointed at the server's LAN
 address. The options go to bin/start-server.sh and bin/start-console.sh (see their --help).
 
   --demo              the demo with DEVELOPMENT secrets: NOT FOR PRODUCTION
+  --distribution NAME risk, finance, genomics or all (the default), or a file path: the product both show (DISTRIBUTIONS.md)
   --env-file FILE     the secrets and settings of both (KEY=VALUE lines)
   --data-dir DIR      the data folder of both
   --server-port N     the server's port (default 18480)
@@ -45,7 +46,7 @@ SPORT="$DEFAULT_SERVER_PORT"
 while [ $# -gt 0 ]; do
   case "$1" in
     --demo) COMMON+=(--demo); shift ;;
-    --env-file|--data-dir) need "${2:-}" "$1"; COMMON+=("$1" "$2"); shift 2 ;;
+    --env-file|--data-dir|--distribution) need "${2:-}" "$1"; COMMON+=("$1" "$2"); shift 2 ;;
     --server-port) need "${2:-}" "$1"; SPORT="$2"; shift 2 ;;
     --console-port) need "${2:-}" "$1"; CONSOLE+=(--port "$2"); shift 2 ;;
     --heap) need "${2:-}" "$1"; SERVER+=(--heap "$2"); shift 2 ;;

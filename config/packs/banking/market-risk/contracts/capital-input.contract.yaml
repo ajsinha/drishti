@@ -36,11 +36,8 @@ dated-by: BUSINESS_DATE
 cadence:
   frequency: daily
   due: the charges as each is computed (incremental and comprehensive risk at least weekly in the US); the multiplier and add-on when the supervisor changes them
-storage:
-  connector: risk-store
-  plugin: delta
-  domain: risk
-  table: <root>/risk/capital-input/
+binding-hint:
+  lake-table: risk.capital-input
   columns:
   - CAPITAL_INPUT_ID
   - FILER

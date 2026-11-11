@@ -95,12 +95,24 @@ def help_heads(heads: list[dict]) -> list[dict]:
             head.setdefault("domain", p.id)
             at = next((i + 1 for i, x in enumerate(out) if x.get("id") == h.get("after")), len(out))
             out.insert(at, head)
+    hosted = state().parts                                    # the hosted modules' Help (core/module_parts.py): at the end, theirs
+    for h in hosted.help_heads() if hosted is not None else []:
+        if not any(x.get("id") == h["id"] for x in out):
+            out.append(dict(h))
     return out
 
 
 def help_pages() -> list[dict]:
-    """Every module's Help pages (``sections:`` of its Help file)."""
-    return [dict(s) for p in plugins() for s in p.help.get("sections") or [] if isinstance(s, dict) and s.get("id")]
+    """Every module's Help pages (``sections:`` of its Help file), the hosted modules' too."""
+    hosted = state().parts
+    return [dict(s) for p in plugins() for s in p.help.get("sections") or [] if isinstance(s, dict) and s.get("id")] + (
+        [dict(s) for s in hosted.help_pages()] if hosted is not None else [])
+
+
+def parts_fingerprint() -> str:
+    """What the hosted modules are now (a Help library is built per value: a module that comes or goes gives a new one)."""
+    hosted = state().parts
+    return hosted.snapshot.fingerprint if hosted is not None else ""
 
 
 def plugins() -> list[Plugin]:
@@ -131,10 +143,11 @@ def plugin(module_id: str) -> Plugin | None:
 class State:
     """What one console app has learned from its server: the modules loaded (None: not learned, nothing hidden)."""
 
-    __slots__ = ("loaded",)
+    __slots__ = ("loaded", "parts")
 
     def __init__(self) -> None:
         self.loaded: frozenset[str] | None = None
+        self.parts = None                          # the hosted modules' console parts (core/module_parts.py ModuleParts), this app's
 
 
 _default = State()
@@ -198,7 +211,7 @@ def _shape(answer: dict) -> dict:
     for f in ((answer.get("functions") or {}).get("off") or []):
         if isinstance(f, dict) and f.get("word"):
             w = str(f["word"]).upper()
-            funcs[w] = {"module": str(f.get("module") or CORE), "reason": str(f.get("reason") or ""),
+            funcs[w] = {"module": str(f.get("module") or CORE), "reason": str(f.get("reason") or ""), "gate": str(f.get("gate") or ""),
                         "text": str(f.get("text") or f"{w} is not available to you: ask your administrator")}
     cards = {str(l.get("id")): [dict(c) for c in l.get("cards") or [] if isinstance(c, dict) and c.get("cmd")]
              for l in answer.get("lenses") or [] if isinstance(l, dict) and l.get("id") and l.get("cards")}
@@ -271,6 +284,11 @@ def module_on(module_id: str | None) -> bool:
     p = person()
     if p is not None and m in p["off"]:
         return False
+    hosted = state().parts                       # a deployed module that is off or removed (core/module_parts.py), or one hosted now
+    if hosted is not None and hosted.gone(m) is not None:
+        return False
+    if hosted is not None and hosted.part(m) is not None and hosted.part(m).source == "server":
+        return True
     loaded = state().loaded
     return loaded is None or m in loaded
 
@@ -307,6 +325,9 @@ def word_refusal(word: str) -> str | None:
     w = " ".join(str(word or "").upper().split())
     if not w:
         return None
+    hosted = state().parts
+    if hosted is not None and (g := hosted.gone_word(w)) is not None:      # a word of a module that is off or removed: kept, said
+        return f"{w} is not available: {g.text} ({g.title})"
     m = module_of_word(w)
     if m is not None and not module_on(m):
         return f"{w} is not available to you: ask your administrator ({why_off(m)})"
@@ -314,6 +335,21 @@ def word_refusal(word: str) -> str | None:
     if p is not None and w in p["functions"]:
         return p["functions"][w]["text"]
     return None
+
+
+def data_need(word: str) -> dict | None:
+    """A function that is here but waits for data (the server's data gate: a required need no source serves): ``{word, title, text}``,
+    the text as the server says it (``EXP needs data: exposure-path is not bound; ask your data administrator``). Its pages explain
+    themselves (core/edition_gate.py ``needs_data``, the needs-data page, 200) instead of answering 404; None otherwise."""
+    w = " ".join(str(word or "").upper().split())
+    p = person()
+    f = (p or {}).get("functions", {}).get(w) if p else None
+    if not f or f.get("gate") != "data":
+        return None
+    from core import engines as _engines
+
+    title = next((str(e.get("title")) for e in _engines.entries() if e.get("title") and w in _engines._words(e)), "") or w
+    return {"word": w, "title": title, "text": f.get("text") or f.get("reason") or ""}
 
 
 def typed_refusal(text: str) -> str | None:
@@ -389,7 +425,9 @@ def modules_for_page(lens: str | None = None) -> list[str]:
     """The domain modules a page may load libraries of (the Elements loader's ``<meta name="drishti-modules">``): on, and needed by the
     person's lens when they work in one."""
     need = lens_modules(lens)
-    return [p.id for p in plugins() if module_on(p.id) and (need is None or p.id in need)]
+    hosted = state().parts
+    ids = [p.id for p in plugins()] + sorted(hosted.snapshot.parts) if hosted is not None else [p.id for p in plugins()]
+    return [m for i, m in enumerate(ids) if m not in ids[:i] and module_on(m) and (need is None or m in need)]
 
 
 def tag_hidden(domain: str | None) -> bool:

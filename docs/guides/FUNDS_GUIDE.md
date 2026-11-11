@@ -401,7 +401,7 @@ several files), `fund-holder/` and `index-funds/` one file each (`fund-holder.20
 rows is over 5 MB. The downloads
 (about 700 MB) never enter git.
 
-Offline, nothing is fetched: `python3 tools/drishti.py lake demo` builds the three tables from the committed snapshot (85 tables in the whole demo lake), and the server reads them with offline mode on. `refresh --offline` rebuilds the pack from the downloads already in
+Offline, nothing is fetched: `python3 tools/drishti.py lake demo` builds the three tables from the committed snapshot (86 tables in the whole demo lake), and the server reads them with offline mode on. `refresh --offline` rebuilds the pack from the downloads already in
 the cache; without them, `python3 tools/packgen/funds/make.py --check` checks the committed snapshot against what it derives (the
 samples, README, glossary and guide).
 

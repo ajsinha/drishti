@@ -56,7 +56,7 @@ A named historical or hypothetical shock set.
 | Id pattern | `^SCN-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/stress-scenario/` |
+| Binding hint | lake table `risk.stress-scenario`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-risk/stress-scenario |
 | Worked example | [market-risk/stress-scenario](../samples/market-risk.md#stress-scenario) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -112,7 +112,7 @@ P&L of a desk under a scenario, by book.
 | Id pattern | `^STR-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/stress-result/` |
+| Binding hint | lake table `risk.stress-result`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-risk/stress-result |
 | Worked example | [market-risk/stress-result](../samples/market-risk.md#stress-result) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -173,7 +173,7 @@ Delta, vega and curvature by risk class and bucket (SBM).
 | Id pattern | `^FRTB-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/frtb-sensitivity/` |
+| Binding hint | lake table `risk.frtb-sensitivity`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-risk/frtb-sensitivity |
 | Worked example | [market-risk/frtb-sensitivity](../samples/market-risk.md#frtb-sensitivity) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -247,7 +247,7 @@ Daily P&L attributed to risk factors, new trades and residual.
 | Id pattern | `^PNL-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/pnl-explain/` |
+| Binding hint | lake table `risk.pnl-explain`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-risk/pnl-explain |
 | Worked example | [market-risk/pnl-explain](../samples/market-risk.md#pnl-explain) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -315,7 +315,7 @@ A trade's valuation from the risk engine, for every source system: MTM, one-day 
 | Id pattern | `^TVAL-` |
 | Dated by | `business_date` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/trade-valuation/` |
+| Binding hint | lake table `risk.trade-valuation`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `VALUATION_ID`, `TRADE_ID`, `SOURCE_SYSTEM`, `PRODUCT_TYPE`, `PRODUCT_GROUP`, `PORTFOLIO`, `DESK`, `COUNTERPARTY`, `NETTING_SET`, `TRADER_ID`, `BUY_SELL_CODE`, `TRADE_STATUS`, `CURRENCY`, `NOTIONAL`, `MTM`, `MTM_CURRENCY`, `PNL_1D`, `DV01`, `TRADE_DATE`, `MATURITY_DATE`, `VALUATION_DATE` |
 | Test data | data/testdata/market-risk/trade-valuation |
 | Worked example | [market-risk/trade-valuation](../samples/market-risk.md#trade-valuation) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
@@ -393,7 +393,7 @@ A position: one security held in one book (or one OTC trade), the trades that bu
 | Id pattern | `^POS-` |
 | Dated by | `BUSINESS_DATE` |
 | Cadence | daily (due: when the date's pnl-vector rows are loaded (derived at once)) |
-| Storage | connector `var-positions` (plugin `var-positions`) |
+| Binding hint | computed by Drishti, never bound; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 
 **Fields**
 
@@ -486,7 +486,7 @@ A system basket in terms of the positions inside it: longs and shorts, market va
 | Id pattern | `^PF-` |
 | Dated by | `BUSINESS_DATE` |
 | Cadence | on change (due: at once (a save in Drishti is read at the next request on every server)) |
-| Storage | connector `var-system-baskets` (plugin `var-system-baskets`) |
+| Binding hint | computed by Drishti, never bound; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 
 **Fields**
 
@@ -555,7 +555,7 @@ One trade's (or one position's) P&L under every scenario of the date's scenario 
 | Id pattern | `^PNL-.+-HS-[0-9]+$`, `^PV-` |
 | Dated by | `BUSINESS_DATE` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/pnl-vector/` |
+| Binding hint | lake table `risk.pnl-vector`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `VALUE_TYPE`, `GRAIN`, `TRADE_ID`, `POSITION_ID`, `CURRENCY`, `SOURCE_SYSTEM`, `SECURITY_ID`, `INSTRUMENT`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `LIMIT_LETTER`, `PORTFOLIO`, `STRATEGY`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `COUNTERPARTY`, `DIRECTION`, `QUANTITY`, `PV`, `TAGS`, `TRADE_STATUS`, `MATURITY_DATE`, `STATUS`, `REPORTING_CCY`, `SCENARIO_SET_ID`, `BATCH_ID`, `RUN_KIND`, `COMPUTED_AT`, `TRADE_IDS` |
 | Vectors | `PNL` |
 | Test data | data/testdata/market-risk/pnl-vector |
@@ -661,7 +661,7 @@ A trade's present value under each historical scenario and its base PV of the sa
 | Id pattern | `^SPV-` |
 | Dated by | `BUSINESS_DATE` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/scenario-pv/` |
+| Binding hint | lake table `risk.scenario-pv`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `VALUE_TYPE`, `GRAIN`, `TRADE_ID`, `POSITION_ID`, `CURRENCY`, `SOURCE_SYSTEM`, `SECURITY_ID`, `INSTRUMENT`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `LIMIT_LETTER`, `PORTFOLIO`, `STRATEGY`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `COUNTERPARTY`, `DIRECTION`, `QUANTITY`, `BASE_PV`, `VALUATION_DATE`, `BASE_VALUATION_DATE`, `TAGS`, `TRADE_STATUS`, `MATURITY_DATE`, `STATUS`, `SCENARIO_SET_ID`, `BATCH_ID`, `RUN_KIND`, `COMPUTED_AT`, `TRADE_IDS` |
 | Vectors | `SCENARIO_PV` |
 | Test data | data/testdata/market-risk/scenario-pv |
@@ -773,7 +773,7 @@ A currency's rate against USD today and under each historical scenario, as the r
 | Id pattern | `^FXS-` |
 | Dated by | `BUSINESS_DATE` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/fx-scenario/` |
+| Binding hint | lake table `risk.fx-scenario`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `CURRENCY`, `RATE`, `SCENARIO_SET_ID` |
 | Test data | data/testdata/market-risk/fx-scenario |
 | Worked example | [market-risk/fx-scenario](../samples/market-risk.md#fx-scenario) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
@@ -827,7 +827,7 @@ The historical scenario days of a business date, oldest first: index i of every 
 | Id pattern | `^HS-` |
 | Dated by | `BUSINESS_DATE` |
 | Cadence | daily (due: to be confirmed) |
-| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/scenario-set/` |
+| Binding hint | lake table `risk.scenario-set`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-risk/scenario-set |
 | Worked example | [market-risk/scenario-set](../samples/market-risk.md#scenario-set) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
@@ -878,7 +878,7 @@ The VaR limit of one node of a hierarchy, keyed by the hierarchy and the node's 
 | Id pattern | `^VL-` |
 | Dated by | `BUSINESS_DATE` |
 | Cadence | daily (due: with the morning run's inputs (before the official capture)) |
-| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/var-limit/` |
+| Binding hint | lake table `risk.var-limit`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `LIMIT_ID`, `HIERARCHY`, `NODE_ID`, `LIMIT_VAR`, `CURRENCY` |
 | Test data | data/testdata/market-risk/var-limit |
 | Worked example | [market-risk/var-limit](../samples/market-risk.md#var-limit) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
@@ -925,7 +925,7 @@ The bank's daily P&L of each desk for regulatory backtesting (VAR_GUIDE.md secti
 | Id pattern | `^DPNL-` |
 | Dated by | `BUSINESS_DATE` |
 | Cadence | daily (due: by the next business day's morning run (a desk missing on a date is named by the backtest, never read as zero)) |
-| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/desk-pnl/` |
+| Binding hint | lake table `risk.desk-pnl`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `DESK_PNL_ID`, `DESK_ID`, `LEGAL_ENTITY`, `ACTUAL_PNL`, `HYPOTHETICAL_PNL`, `FEES_AND_COMMISSIONS`, `CURRENCY`, `SOURCE`, `AS_OF` |
 | Test data | data/testdata/market-risk/desk-pnl |
 | Worked example | [market-risk/desk-pnl](../samples/market-risk.md#desk-pnl) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
@@ -975,7 +975,7 @@ Today's portfolio at one hierarchy node revalued over every business day of a lo
 | Id pattern | `^PNLH-` |
 | Dated by | `BUSINESS_DATE` |
 | Cadence | on change (due: monthly at least, from a month-end run of the pricing system (the stress window review is monthly); any date may have one) |
-| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/pnl-history/` |
+| Binding hint | lake table `risk.pnl-history`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `HIERARCHY`, `NODE_ID`, `LEVEL`, `CURRENCY`, `FIRST_DAY`, `LAST_DAY`, `DAY_COUNT` |
 | Vectors | `PNL` |
 | Test data | data/testdata/market-risk/pnl-history |
@@ -1031,7 +1031,7 @@ The first-order and curvature sensitivities of each position (or trade) to the s
 | Id pattern | `^SENS-` |
 | Dated by | `BUSINESS_DATE` |
 | Cadence | daily (due: the full run after the close, with the scenario PVs (by 06:30 New York the next business day in the demo); intraday batches replace a position's record whole) |
-| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/position-sensitivity/` |
+| Binding hint | lake table `risk.position-sensitivity`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `SENSITIVITY_ID`, `GRAIN`, `POSITION_ID`, `TRADE_ID`, `SOURCE_SYSTEM`, `BATCH_ID`, `STATUS`, `DESK`, `TT_BOOK`, `PRODUCT_TYPE`, `CURRENCY` |
 | Test data | data/testdata/market-risk/position-sensitivity |
 | Worked example | [market-risk/position-sensitivity](../samples/market-risk.md#position-sensitivity) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
@@ -1132,7 +1132,7 @@ Every risk factor the bank's sensitivities use, named by the factor naming stand
 | Id pattern | `^(IR\|INF\|CR\|FX\|EQ\|CM\|VOL)/` |
 | Dated by | `BUSINESS_DATE` |
 | Cadence | on change (due: before the first business date a new factor or mapping applies to; a change takes effect from VALID_FROM) |
-| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/risk-factor/` |
+| Binding hint | lake table `risk.risk-factor`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `RISK_FACTOR`, `FACTOR_TYPE`, `RISK_CLASS`, `QUALIFIER`, `TENOR`, `FRTB_BUCKET`, `SIMM_RISK_CLASS`, `SIMM_BUCKET` |
 | Test data | data/testdata/market-risk/risk-factor |
 | Worked example | [market-risk/risk-factor](../samples/market-risk.md#risk-factor) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
@@ -1210,7 +1210,7 @@ The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the sco
 | Id pattern | — |
 | Dated by | `on request` |
 | Cadence | on change (due: computed on request and again when the date's inputs load (data-version trigger)) |
-| Storage | connector `var-engine` (plugin `reactive`) |
+| Binding hint | computed by Drishti, never bound; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 
 **Fields**
 
@@ -1285,7 +1285,7 @@ The official end-of-day VaR and ES of every node of the MGMT and LEGAL hierarchi
 | Id pattern | — |
 | Dated by | `BUSINESS_DATE` |
 | Cadence | daily (due: when the date's inputs load (the data-load signal), at start for the newest date without a record, or by an administrator) |
-| Storage | connector `var-results` (plugin `delta`), table `<root>/risk-results/var-official/` |
+| Binding hint | lake table `risk-results.var-official`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `HIERARCHY`, `NODE_ID`, `NODE_NAME`, `PARENT_ID`, `LEVEL`, `CAPTURE_ID`, `RESULT_VERSION`, `VAR`, `ES`, `LIMIT`, `LIMIT_USE`, `DIVERSIFICATION`, `HYPO_PNL`, `EXCEPTIONS_250`, `TRAFFIC_LIGHT`, `CONFIDENCE`, `ES_CONFIDENCE` |
 | Partitioned by | `business_date` |
 
@@ -1351,7 +1351,7 @@ The bank's stress P&L under one scenario: the desks' stored stress results added
 | Id pattern | — |
 | Dated by | `on request` |
 | Cadence | on change (due: recomputed from its source kind (connector refresh 60s)) |
-| Storage | connector `mr-derived` (plugin `derived`) |
+| Binding hint | computed by Drishti, never bound; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 
 **Fields**
 
@@ -1424,7 +1424,7 @@ What the market risk capital needs besides VaR, stressed VaR and the backtest: t
 | Id pattern | `^CAPI-` |
 | Dated by | `BUSINESS_DATE` |
 | Cadence | daily (due: the charges as each is computed (incremental and comprehensive risk at least weekly in the US); the multiplier and add-on when the supervisor changes them) |
-| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/capital-input/` |
+| Binding hint | lake table `risk.capital-input`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `CAPITAL_INPUT_ID`, `FILER`, `REGIME`, `MULTIPLIER_OVERRIDE`, `ADD_ON`, `ADD_ON_REASON`, `SPECIFIC_RISK_CHARGE`, `INCREMENTAL_RISK_CHARGE`, `COMPREHENSIVE_RISK_CHARGE`, `DE_MINIMIS_CHARGE`, `DEFAULT_RISK_CHARGE`, `CURRENCY`, `APPROVED_BY`, `SOURCE`, `AS_OF` |
 
 **Fields**
@@ -1483,7 +1483,7 @@ The jump-to-default inputs of the FRTB standardised default risk charge for non-
 | Id pattern | `^DRC-` |
 | Dated by | `BUSINESS_DATE` |
 | Cadence | daily (due: with the position sensitivities of the date) |
-| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/default-risk/` |
+| Binding hint | lake table `risk.default-risk`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `DEFAULT_RISK_ID`, `POSITION_ID`, `TRADE_ID`, `OBLIGOR`, `DRC_BUCKET`, `SENIORITY`, `CREDIT_QUALITY`, `NOTIONAL`, `MARKET_VALUE`, `CURRENCY` |
 
 **Fields**
@@ -1536,7 +1536,7 @@ Finance's daily trading P&L of each legal entity from the general ledger, with t
 | Id pattern | `^FPNL-` |
 | Dated by | `BUSINESS_DATE` |
 | Cadence | daily (due: with the desk P&L of the same date (by the next business day's morning run); restated with a later AS_OF after month-end adjustments) |
-| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/finance-pnl/` |
+| Binding hint | lake table `risk.finance-pnl`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `FINANCE_PNL_ID`, `LEGAL_ENTITY`, `TOTAL_TRADING_PNL`, `FEES_AND_COMMISSIONS`, `RESERVES`, `NET_INTEREST_INCOME`, `INTRADAY_PNL`, `OTHER_EXCLUDED`, `CLEAN_ACTUAL_PNL`, `CURRENCY`, `SOURCE`, `AS_OF` |
 
 **Fields**
@@ -1591,7 +1591,7 @@ The trading desks as the regulators see them, beside the management hierarchy's 
 | Id pattern | `^RDSK-` |
 | Dated by | `VALID_FROM` |
 | Cadence | on change (due: before the first business date it applies to (a desk change approved by the supervisor takes effect from VALID_FROM)) |
-| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/regulatory-desk/` |
+| Binding hint | lake table `risk.regulatory-desk`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `REG_DESK_ID`, `DESK_ID`, `REGULATORY_DESK_ID`, `LEGAL_ENTITY`, `MODEL_ELIGIBLE`, `DESK_BACKTESTED`, `VOLCKER_DESK_ID`, `COVERED_ACTIVITIES`, `TRADING_CALENDAR`, `VALID_TO`, `SOURCE`, `AS_OF` |
 
 **Fields**
@@ -1644,7 +1644,7 @@ The residual risk add-on's inputs (Basel MAR23): one row per trade and business 
 | Id pattern | `^RRAO-` |
 | Dated by | `BUSINESS_DATE` |
 | Cadence | daily (due: with the position sensitivities of the date) |
-| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/residual-risk/` |
+| Binding hint | lake table `risk.residual-risk`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `RESIDUAL_RISK_ID`, `TRADE_ID`, `POSITION_ID`, `RRAO_CLASS`, `GROSS_NOTIONAL`, `CURRENCY` |
 
 **Fields**
@@ -1693,7 +1693,7 @@ Which regulatory risk type each trade belongs to, for VaR by risk type (interest
 | Id pattern | `^RTM-` |
 | Dated by | `VALID_FROM` |
 | Cadence | on change (due: before the first business date it applies to; a change takes effect from VALID_FROM and never rewrites an official record) |
-| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/risk-type-map/` |
+| Binding hint | lake table `risk.risk-type-map`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `MAP_ID`, `SCOPE_TYPE`, `SCOPE_ID`, `HIERARCHY`, `RISK_TYPE`, `VALID_TO`, `SOURCE`, `AS_OF` |
 
 **Fields**
@@ -1743,7 +1743,7 @@ The cash each trade pays or receives on a business date (coupons, principal, opt
 | Id pattern | `^TCF-` |
 | Dated by | `BUSINESS_DATE` |
 | Cadence | daily (due: with the day's scenario PVs (the same end-of-day batch), before the next morning's run; a day with no flow sends no row) |
-| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/trade-cash-flow/` |
+| Binding hint | lake table `risk.trade-cash-flow`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `CASH_FLOW_ID`, `TRADE_ID`, `POSITION_ID`, `FLOW_TYPE`, `PAYMENT_DATE`, `AMOUNT`, `CURRENCY`, `SOURCE`, `AS_OF` |
 
 **Fields**
@@ -1796,7 +1796,7 @@ The trade-level facts the Volcker metrics (12 CFR 248 appendix A) need that a tr
 | Id pattern | `^VTRD-` |
 | Dated by | `BUSINESS_DATE` |
 | Cadence | daily (due: with the day's trades, before the quarter's metrics are produced (within 30 days of the quarter end)) |
-| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/volcker-trade/` |
+| Binding hint | lake table `risk.volcker-trade`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `VOLCKER_TRADE_ID`, `TRADE_ID`, `TRADING_DESK_ID`, `COVERED_ACTIVITY`, `COUNTERPARTY_CLASS`, `CUSTOMER_FACING`, `TRADE_DATE`, `TRANSACTION_VALUE`, `PRODUCT_CLASS`, `CURRENCY`, `SOURCE`, `AS_OF` |
 
 **Fields**
