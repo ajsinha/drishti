@@ -22,7 +22,7 @@ import java.util.Set;
 /**
  * A parsed dataset, the semantic model of ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 6 (immutable). Tables come from pack kinds by connector logical name, columns carry
  * a document path and a type, relationships join tables, measures and calculated columns are Rachana-EL extended with aggregation, security
- * holds row rules per role and masked columns. Produced by {@link DatasetParser}; the YAML reference is docs/guides/REPORTS_GUIDE.md.
+ * holds row rules per role and masked columns. Produced by {@link DatasetParser}; the YAML reference is docs/guides/BI_GUIDE.md.
  *
  * @param name the {@code dataset:} name (the item's id is its catalogue id)
  * @param version the author's version number
@@ -241,7 +241,7 @@ public record Dataset(String name, int version, String title, String description
     }
 
     /**
-     * A live table's history (docs/guides/REPORTS_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 7.1 "History of a live table"): every {@code every} the listed measures are worked out over the live table, grouped by
+     * A live table's history (docs/guides/BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 7.1 "History of a live table"): every {@code every} the listed measures are worked out over the live table, grouped by
      * {@code by}, and appended to a bounded in-memory table queryable as the dataset table {@code table}; the newest {@code keep} samples are kept.
      *
      * @param table the name of the history table in the dataset ({@code history} when not given)

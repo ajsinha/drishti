@@ -138,8 +138,8 @@ LINKS = {
 PACK_LINKS = {
     "core": [("knowledge/data.md", "2. Entities"), ("knowledge/risk.md", "2. Counterparty")],
     "market-data": [("knowledge/data.md", "1. Market data")],
-    "gleif": [("guides/EXTERNAL_DATA.md", "# "), ("knowledge/data.md", "2. Entities"), ("tutorials/06-groupings-and-analytics.md", "# ")],
-    "us-equities": [("guides/EXTERNAL_DATA.md", "# "), ("knowledge/world.md", "1. Companies"), ("tutorials/06-groupings-and-analytics.md", "# ")],
+    "gleif": [("guides/EXTERNAL_DATA.md", "# "), ("knowledge/data.md", "2. Entities"), ("guides/BI_GUIDE.md", "# ")],
+    "us-equities": [("guides/EXTERNAL_DATA.md", "# "), ("knowledge/world.md", "1. Companies"), ("guides/BI_GUIDE.md", "# ")],
     "news-and-markets": [("guides/EXTERNAL_DATA.md", "# ")],
     "world-economy": [("guides/EXTERNAL_DATA.md", "# "), ("knowledge/world.md", "2. Economies")],
     "market-risk": [("knowledge/risk.md", "1. Market risk")],

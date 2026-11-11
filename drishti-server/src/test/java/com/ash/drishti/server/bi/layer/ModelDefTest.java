@@ -25,7 +25,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /**
- * The data model of the table layer ({@code rachana: 3}, TABLES_GUIDE.md): parsing and Check, one case per row of the problem table (section
+ * The data model of the table layer ({@code rachana: 3}, BI_GUIDE.md): parsing and Check, one case per row of the problem table (section
  * 2.11), the security safeguard, flattening and contracts, over tables and a model written as the layer writes them.
  */
 class ModelDefTest {

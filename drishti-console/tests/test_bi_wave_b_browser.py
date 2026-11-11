@@ -231,7 +231,7 @@ def test_the_explain_panel_shows_tiers_layers_and_times(browser, made):
     expect(panel.locator("[data-explain-times]")).to_contain_text("ms")
     assert panel.locator("[data-explain-op]").count() >= 2
     assert "SecureScan" in panel.locator("[data-explain-text]").text_content() or panel.locator('[data-explain-op="SecureScan"]').count() >= 1
-    if os.environ.get("DRISHTI_CAPTURES"):                       # the answer the guide quotes (REPORTS_GUIDE.md section 25.1)
+    if os.environ.get("DRISHTI_CAPTURES"):                       # the answer the guide quotes (BI_GUIDE.md section R25.1)
         a = fetch(page, "POST", "/bi/api/mq", {"mq": 2, "model": made["model"] + "@1", "select": {"fields": ["trade.DESK"], "measures": ["MTM shocked"]},
                                                 "params": {"shock": 0.5}, "options": {"explain": True}})
         with open(os.path.join(os.environ["DRISHTI_CAPTURES"], "wave-b-explain.json"), "w") as f:

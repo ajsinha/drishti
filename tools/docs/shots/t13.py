@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 8, Part G, Govern BI (docs/tutorials/08-reports-and-dashboards.md), written to docs/tutorials/img/t13/.
+"""Pictures of tutorial 8, Part G, Govern BI (docs/guides/BI_GUIDE.md), written to docs/tutorials/img/t13/.
 
 Three people: ann writes (bi, bi-author), sue is a steward (bi, bi-steward) and the development administrator. A dataset of the model layer and a model over it
 (2.2): the model is saved twice, compared, restored, proposed, reviewed and published; a report is built on it; both are certified; the model's lineage is read;

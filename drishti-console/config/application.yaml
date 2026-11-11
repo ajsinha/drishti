@@ -316,7 +316,7 @@ bi:                          # Rupaka: the BI shell and catalogue (phase 1)
   board:
     rotate_seconds: ${DRISHTI_BI_BOARD_ROTATE_SECONDS:30}     # a board in kiosk mode turns to its next page after this long, unless the board sets rotate:; 3 to 3600
   # The Notebook (docs/guides/USER_GUIDE.md › The Notebook). Every Python run (python visuals and measures, Notebook cells, the Transform editor's steps) is the
-  # server's, on its compute pool python (config/compute/compute.yaml; docs/guides/NOTEBOOK_GUIDE.md section 19): the console runs no Python of anyone's.
+  # server's, on its compute pool python (config/compute/compute.yaml; docs/guides/BI_GUIDE.md section N19): the console runs no Python of anyone's.
   notebook:
     max_rows: ${DRISHTI_BI_NOTEBOOK_MAX_ROWS:10000}            # most rows of an extract (the reader's rows, cut here); 10 to 100000
     max_fields: 60                                              # most columns of an extract
@@ -327,7 +327,7 @@ bi:                          # Rupaka: the BI shell and catalogue (phase 1)
     cell_max_chars: 65536                                       # longest Python cell
     max_cells: 60                                               # most cells in a notebook
     max_extracts: 6                                             # most further extracts in a notebook (extract("name") in a cell), besides the first
-  # (docs/guides/REPORTS_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17): the Transform editor at /bi/transform, built step by step with a preview and profile after each step.
+  # (docs/guides/BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17): the Transform editor at /bi/transform, built step by step with a preview and profile after each step.
   transform:
     preview_rows: ${DRISHTI_BI_TRANSFORM_PREVIEW_ROWS:1000}     # rows of each input the step-by-step run starts from (the reader's rows, asked of the server); 10 to 50000
     timeout_seconds: 20                                         # the step-by-step run's time limit (also capped by drishti.bi.report.python-max-seconds)

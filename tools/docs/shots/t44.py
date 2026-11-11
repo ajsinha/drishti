@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 18, virtual tables and models (docs/tutorials/18-tables-and-models.md), written to docs/tutorials/img/t44/,
+"""Pictures of tutorial 18, virtual tables and models (docs/guides/BI_GUIDE.md), written to docs/tutorials/img/t44/,
 in the light theme. Runs on its own on the scratch stack (the demo source on, sign-in off):
 
     DRISHTI_SHOTS_SERVER_PORT=<port> DRISHTI_SHOTS_CONSOLE_PORT=<port> drishti-console/.venv/bin/python tools/docs/screenshots.py --guide t44
@@ -98,5 +98,5 @@ def measures(c: Ctx):
 @shot("05-tables-guide-in-help.jpg")
 def guide(c: Ctx):
     """Next steps: the tables guide in Help, beside this tutorial."""
-    go(c, "/help/tables-guide", width=WIDE, height=HIGH, wait="body", settle=1500)
+    go(c, "/help/bi-guide#part-2--virtual-tables-and-models", width=WIDE, height=HIGH, wait="body", settle=1500)
     c.save("05-tables-guide-in-help.jpg", clip={"x": 0, "y": 56, "width": WIDE, "height": HIGH - 56})

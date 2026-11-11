@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /**
- * Python compute across the cluster's nodes (docs/guides/NOTEBOOK_GUIDE.md section 7.6): the other nodes serving a pool as
+ * Python compute across the cluster's nodes (docs/guides/BI_GUIDE.md section N7.6): the other nodes serving a pool as
  * fan-out sees them ({@link com.ash.drishti.compute.cluster.PeerTransport}) and one request split into chunks run on every worker there is
  * ({@link com.ash.drishti.compute.cluster.FanOut}).
  */

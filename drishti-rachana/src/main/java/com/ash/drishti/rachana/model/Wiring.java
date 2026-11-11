@@ -76,7 +76,7 @@ public record Wiring(Source source, List<Emit> emits, String waits, List<Childre
      * @param asOf an expression for the business date read, or null for the screen's
      * @param params typed parameters of a computed kind (DATA_ARCHITECTURE.md › Reactive connectors, section 6.1): name to expression, sorted by name; empty
      *        for a kind that is read, not computed
-     * @param table a virtual table read instead of a kind ({@code <domain>.<name>}, TABLES_GUIDE.md; docs/architecture/ARCHITECTURE.md V13): its rows as the
+     * @param table a virtual table read instead of a kind ({@code <domain>.<name>}, BI_GUIDE.md; docs/architecture/ARCHITECTURE.md V13): its rows as the
      *        viewer may read them, kept by {@code where} (over each row, {@code @}) up to {@code limit}; null for a kind's source
      */
     public record Source(String pack, String kind, String id, String where, String search, int limit, String asOf, java.util.Map<String, String> params,

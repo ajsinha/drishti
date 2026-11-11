@@ -45,7 +45,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 /**
- * The MR cube on the pivot engine, on the tiny lake of {@link VarLakeFixture} (PIVOT_GUIDE.md#29-the-mr-cube-preset): {@code /api/v1/pivot/query} on source
+ * The MR cube on the pivot engine, on the tiny lake of {@link VarLakeFixture} (BI_GUIDE.md#p29-the-mr-cube-preset): {@code /api/v1/pivot/query} on source
  * {@code var}, where every cell's and total's VaR equals the VaR engine's own answer for the cell's scope to the cent
  * ({@code /api/v1/risk/var/scope} and the engine's unrounded figure), the totals are the union's VaR and never a sum (the desks' VaRs sum to more
  * than the bank's; the diversification is the difference), the components add up to the total, the limit of a whole desk, hierarchy levels

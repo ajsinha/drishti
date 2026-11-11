@@ -47,7 +47,7 @@ VaR, exposure, FRTB-SA and SIMM, each from the bank (or the hand-built cases) do
 | 3 | [Exposure from the bank to a trade](../guides/EXPOSURE_GUIDE.md#part-iv--tutorial-exposure-from-the-bank-to-a-trade) | the bank's exposure profile, a legal entity's counterparty board, a counterparty and its netting sets, collateral, a trade alone and in its netting set, capture and compare, the pre-deal check by `paths` and by the `addon` proxy, the official end-of-day record | 35 min | written |
 | 4 | [FRTB-SA from the hand-built cases to a desk](../guides/FRTB_SA_GUIDE.md#17-tutorial-frtb-sa-from-the-hand-built-cases-to-a-desk) | the hand-built cases (`FRSA EXAMPLE`), the three correlation scenarios, the playground (`PLAY FRTB`) and its workbook of live formulas, a recipe replayed to the cent, a desk of the demo data | 25 min | written |
 | 5 | [SIMM from the hand-built examples to a netting set](../guides/SIMM_GUIDE.md#14-tutorial-simm-from-the-hand-built-examples-to-a-netting-set) | install a parameter version, the hand-built examples (`SIMM EXAMPLE`), a netting set both ways, the playground (`PLAY SIMM`) and its workbook, a recipe replayed, the margin against the counterparty's call | 25 min | written |
-| 6 | [Groupings and analytics, computed](06-groupings-and-analytics.md) | an ownership group and every group, a country, a SIC sector and the currency rule, a company's margin and growth, a World Bank region, correlations with a window and an estimator, an equity's beta, PXH off and internal, the guard | 25 min | written |
+| 6 | [Groupings and analytics, computed](../guides/BI_GUIDE.md#tutorial-groupings-and-analytics-computed) | an ownership group and every group, a country, a SIC sector and the currency rule, a company's margin and growth, a World Bank region, correlations with a window and an estimator, an equity's beta, PXH off and internal, the guard | 25 min | written |
 
 ### BI and analysis
 
@@ -55,9 +55,9 @@ The pivot engine, reports and dashboards, the Notebook and Python, the AI assist
 
 | # | Tutorial | You will | Time | Status |
 |---|---|---|---|---|
-| 7 | [Pivot, cubes and explain](07-pivot-cubes-and-explain.md) | Part A: pivot the trades, their legs and VaR by desk with totals that are never sums, provenance, a chart, Excel with formulas, Exact / ≈, rollups and Live, a comment on a cell; Part B: a custom function proven by its harness and approved, why did it move, what-if; Part C: the MR cube (`MCUBE`), the View picker, the Rows picker and the panes, its lens, components, the DV01 ladder | 1 h 25 min | written |
-| 8 | [Reports and dashboards](08-reports-and-dashboards.md) | Part A: a first report in BI Studio, published, filtered, on a phone, two facts, relative dates, models; Part B: several datasets in one report; Part C: statements and field parameters; Part D: refresh, subscriptions, alerts, exports, expected values; Part E: scheduled searches and subscriptions to a view; Part F: live BI and boards for a wall; Part G: governance (history, review, certification, lineage, a bundle moved with a dry run) | 5 h 10 min | written |
-| 9 | [The Notebook and Python](09-notebook-and-python.md) | a Python measure and visual, the Notebook (SQL on the server, a Python cell, promote), two models, Vega-Lite, tests that ship with an item, Calc, raw trades prepared step by step in the Transform editor | 60 min | written |
+| 7 | [Pivot, cubes and explain](../guides/BI_GUIDE.md#tutorial-pivot-cubes-and-explain) | Part A: pivot the trades, their legs and VaR by desk with totals that are never sums, provenance, a chart, Excel with formulas, Exact / ≈, rollups and Live, a comment on a cell; Part B: a custom function proven by its harness and approved, why did it move, what-if; Part C: the MR cube (`MCUBE`), the View picker, the Rows picker and the panes, its lens, components, the DV01 ladder | 1 h 25 min | written |
+| 8 | [Reports and dashboards](../guides/BI_GUIDE.md#tutorial-reports-and-dashboards) | Part A: a first report in BI Studio, published, filtered, on a phone, two facts, relative dates, models; Part B: several datasets in one report; Part C: statements and field parameters; Part D: refresh, subscriptions, alerts, exports, expected values; Part E: scheduled searches and subscriptions to a view; Part F: live BI and boards for a wall; Part G: governance (history, review, certification, lineage, a bundle moved with a dry run) | 5 h 10 min | written |
+| 9 | [The Notebook and Python](../guides/BI_GUIDE.md#tutorial-the-notebook-and-python) | a Python measure and visual, the Notebook (SQL on the server, a Python cell, promote), two models, Vega-Lite, tests that ship with an item, Calc, raw trades prepared step by step in the Transform editor | 60 min | written |
 | 10 | [The AI assistant](10-ai-assistant.md) | the mock provider turned on safely, Test connection, the AI policy, report from words, ask the data and explain a number, the policy saying no, the providers, suggestions and the dataset helper | 30 min | written |
 | 11 | [Correct a trade and approve it: write-back](11-correct-and-approve.md) | editing switched on, a form that submits, a notional corrected and reviewed, four eyes in the Approvals queue, the change applied everywhere, a stale change conflicted, `drishti.py change` | 20 min | written |
 
@@ -80,7 +80,7 @@ Tables and models, packs and screens, and Drishti inside your own applications.
 
 | # | Tutorial | You will | Time | Status |
 |---|---|---|---|---|
-| 18 | [Virtual tables and models](18-tables-and-models.md) | trade legs as a table, its rows over samples, a column in dollars and a looked-up desk, rules per reader, a model over it, BI's samples migrated with a dry run | 30 min | written |
+| 18 | [Virtual tables and models](../guides/BI_GUIDE.md#tutorial-virtual-tables-and-models) | trade legs as a table, its rows over samples, a column in dollars and a looked-up desk, rules per reader, a model over it, BI's samples migrated with a dry run | 30 min | written |
 | 19 | [Build a pack and a screen](19-build-a-pack-and-a-screen.md) | Part A: a pack from a schema and a folder, deployed and rolled back, `pack make`; Part B: a screen in the Build workbench and on a live page with the Sutra designer (Customize, Describe, Outline, Grid); Part C: computed panels on a reactive connector | 2 h 10 min | written |
 | 20 | [Embed Drishti](20-embed-drishti.md) | a host application registered, a view and a report in its page under a strict CSP, tokens and limits, search and About elements, React, Vue and Angular samples | 40 min | written |
 
@@ -103,7 +103,7 @@ step 1).
 3. See what changed on a trade over the last 30 days: [tutorial 1, steps 27 to 29](01-first-15-minutes.md#step-27--a-range-after-the-id).
 4. Your desk's VaR, down to a trade, and who makes it: [the VaR tutorial, steps 2 to 4](../guides/VAR_GUIDE.md#step-2--drill-down-from-the-bank-to-a-trade).
 5. What a hedge would do before you deal: [the VaR tutorial, step 11](../guides/VAR_GUIDE.md#step-11--what-would-a-hedge-do-the-what-if).
-6. Your trades by product, as a pivot: [tutorial 7, steps 1 and 2](07-pivot-cubes-and-explain.md#step-1--a-first-pivot-of-the-trades).
+6. Your trades by product, as a pivot: [the pivot tutorial, steps 1 and 2](../guides/BI_GUIDE.md#step-1--a-first-pivot-of-the-trades).
 
 ## What you need once
 

@@ -24,5 +24,5 @@ copy:
   - connectors
 - from: ../../config/lenses/banking/market.yaml
   to: lenses/market.yaml
-- from: ../../docs/tutorials/06-groupings-and-analytics.md
-  to: tutorials/06-groupings-and-analytics.md
+- from: ../../docs/guides/BI_GUIDE.md
+  to: guides/BI_GUIDE.md

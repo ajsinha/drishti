@@ -5065,7 +5065,7 @@ The aggregations a value can take in the browser (a non-additive column's value 
 
 #### `FUNC_LABELS`
 
-The functions in plain words, as the value pickers say them (PIVOT_GUIDE.md section 4); a name not here reads as itself.
+The functions in plain words, as the value pickers say them (BI_GUIDE.md section P4); a name not here reads as itself.
 
 #### `FUNC_ARGS`
 

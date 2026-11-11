@@ -41,7 +41,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 /**
- * Live pivots (PIVOT_GUIDE.md, live pivots; API_REFERENCE.md, the pivot engine), the same subscribe-then-stream shape as BI's standing queries:
+ * Live pivots (BI_GUIDE.md, live pivots; API_REFERENCE.md, the pivot engine), the same subscribe-then-stream shape as BI's standing queries:
  *
  * <ul>
  *   <li>{@code POST /api/v1/pivot/live} {@code {view, exact, rollups}}: the live view, its first answer, its id and the node that holds it

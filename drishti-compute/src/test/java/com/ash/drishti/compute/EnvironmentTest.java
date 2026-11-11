@@ -45,7 +45,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * Steps C2 and C3's acceptance (docs/guides/NOTEBOOK_GUIDE.md section 16): a pool's environment builds from a local wheel folder
+ * Steps C2 and C3's acceptance (docs/guides/BI_GUIDE.md section N16): a pool's environment builds from a local wheel folder
  * with no network; a tampered wheel fails the build and names it; a tampered file in a built environment stops the worker; a pool with
  * unapproved requirements stays off and says so; approval by its requester is refused. The wheel is made by the test (pure Python), so this
  * runs on Windows too, with the console's Python.

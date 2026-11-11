@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The MR cube in the console, the Pivot's preset mr (config/pivot-presets.yaml, routes/pivot_routes.py, plugins/banking/routes/mcube_routes.py;
-docs/guides/PIVOT_GUIDE.md section 29, PIVOT_GUIDE.md › Presets): MCUBE and its forms lead to /pivot?preset=mr, the pivot screen on source var with the MR
+docs/guides/BI_GUIDE.md section P29, BI_GUIDE.md › Presets): MCUBE and its forms lead to /pivot?preset=mr, the pivot screen on source var with the MR
 lens (landing A, tabs B and C; one pivot engine, no second grid), the typed view laid over the landing, /mcube kept as the older address, every MR
 answer read from the server as the person through the same-origin proxy /api/pivot/mr/..., the server's refusals passed on in words. The
 parity of the preset with the cube it replaced is test_cube_presets.py; the figures themselves are the server's tests (VarMrCubeApiTest,

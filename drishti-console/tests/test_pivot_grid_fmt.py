@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""How a figure of the server's pivot answer is shown (drishti-grid's measureText, the Pivot screen's pivotFormat; PIVOT_GUIDE.md), driven
+"""How a figure of the server's pivot answer is shown (drishti-grid's measureText, the Pivot screen's pivotFormat; BI_GUIDE.md), driven
 only by the answer's own fields (a text value, the measure's unit and show-as); it formats and computes nothing. Run in Node, no browser:
 the drawn grid is test_pivot_screen_browser.py's. The grid sets text, never markup, so a text answer is shown as it is."""
 from __future__ import annotations

@@ -24,8 +24,8 @@ About 40 minutes.
 
 ## Before you start
 
-- The quick-start environment of [tutorial 8](08-reports-and-dashboards.md#before-you-start) (the demo lakes, **Drishti server (demo lakes)** with sign-in
-  on), with the **demo ticker on** as in [tutorial 8](08-reports-and-dashboards.md#before-you-start) (`DRISHTI_DEMO_ENABLED=true`): the live report of
+- The quick-start environment of [the reports tutorial](../guides/BI_GUIDE.md#before-you-start-2) (the demo lakes, **Drishti server (demo lakes)** with sign-in
+  on), with the **demo ticker on** as in [the reports tutorial](../guides/BI_GUIDE.md#before-you-start-2) (`DRISHTI_DEMO_ENABLED=true`): the live report of
   step 6 and the views of step 5 tick only with it. The host shows two **trade valuations** of the market-risk pack, `TVAL-1000008` and `TVAL-1000002`
   (a valuation's MTM and one-day P&L move with the demo; a trade itself does not tick: it changes when its source books a new version).
 - Embedding is **off by default**. This tutorial turns it on (step 1). It needs a third port for the host application (the sample host uses 17968 by default; the commands below use 17944, and the pictures were taken with the host on 17782), and the two demo users `viewer` and `author` in Drishti (step 2).
@@ -289,7 +289,7 @@ You should see the search box above the view; type `1000001` (an ENDUR trade) an
 ## Next steps
 
 - [Tutorial 21](21-run-it-in-production.md): the production checklist (security on, users, tokens, backups).
-- [EMBED_GUIDE.md](../guides/EMBED_GUIDE.md#5-the-elements-one-by-one): every attribute, property, method and event of the elements, the npm package, the CSP, the cookbook. [REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#18-distribution-the-reports-page-export-and-subscriptions) section 5 and [REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#9-the-report-file-pages-visuals-filters-and-slicers) cover embedding a report; [tools/elements-demo](../../tools/elements-demo/README.md) is the host you ran.
+- [EMBED_GUIDE.md](../guides/EMBED_GUIDE.md#5-the-elements-one-by-one): every attribute, property, method and event of the elements, the npm package, the CSP, the cookbook. [BI_GUIDE.md](../guides/BI_GUIDE.md#r18-distribution-the-reports-page-export-and-subscriptions) section 5 and [BI_GUIDE.md](../guides/BI_GUIDE.md#r9-the-report-file-pages-visuals-filters-and-slicers) cover embedding a report; [tools/elements-demo](../../tools/elements-demo/README.md) is the host you ran.
 
 ## If something goes wrong
 

@@ -623,7 +623,7 @@ Every source read on **2026-11-01** unless noted. Claims are the publisher's own
 
 - [README](../../README.md); [IMPLEMENTATION_PLAN](../architecture/IMPLEMENTATION_PLAN.md) (release table and themed releases);
   [VAR_GUIDE](../guides/VAR_GUIDE.md); [EXPOSURE_GUIDE](../guides/EXPOSURE_GUIDE.md);
-  [REGULATORY_VAR_REPORTING](../guides/REGULATORY_VAR_REPORTING.md); [REPORTS_GUIDE](../guides/REPORTS_GUIDE.md);
+  [REGULATORY_VAR_REPORTING](../guides/REGULATORY_VAR_REPORTING.md); [REPORTS_GUIDE](../guides/BI_GUIDE.md#part-3--reports-and-dashboards);
   [ARCHITECTURE](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer) (gap check against Power BI); [EDITIONS](../guides/ADMIN_GUIDE.md#12-what-a-lens-is);
   [MOBILE_DISPLAY](../guides/BUILD_GUIDE.md#32-designing-for-phones); [RESOURCES_AND_SCALE](../guides/CLUSTER_GUIDE.md#15-sizing-memory-cpu-and-disk);
   [BENCHMARK](../admin/BENCHMARK.md); [AI](../guides/AI_GUIDE.md); [lenses](../architecture/LENSES.md); [connectors](../guides/DATA_GUIDE.md#8-connectors).
@@ -732,7 +732,7 @@ formula workbook that recomputes its figures; phone support across the banking v
 **Status: analysis** (internal; owner: the product owner; every web source read on **2026-11-11**). It answers one question: **does any
 commercial product have Drishti's micro-kernel plus module (plug-in) architecture for data, BI and risk, and how does Drishti compare?**
 Vendor-by-vendor capability (VaR, FRTB, XVA, pricing, deal positioning) is in [Part I](#1-summary); Power BI
-area by area is in [BI_AND_POWER_BI.md](BI_AND_POWER_BI.md). This page covers only the **architecture**: how each product is extended,
+area by area is in [../guides/BI_GUIDE.md](../guides/BI_GUIDE.md#part-6--drishti-bi-and-power-bi-compared). This page covers only the **architecture**: how each product is extended,
 packaged and deployed. Every vendor statement is the vendor's own (we have tested none of these products); a statement we could not
 source says **not verified**.
 
@@ -783,7 +783,7 @@ loaded.
 | **Grafana plugins** | data source, panel and app plugins | app plugin bundles data sources, visuals and dashboards | **Yes**: three plugin types, five signature levels [G1] | self-hosted or Grafana Cloud (private plugins cannot be installed in Cloud) [G1] | by signature level: Grafana, Enterprise, Community, Commercial, Private [G1] |
 | **Apache Superset** | open-source BI | BI on the customer's own database | **Partial**: an extension architecture under development [SU1] | self-hosted | open source (Apache Software Foundation) |
 | **Kubernetes operators** | software extensions that manage an application through custom resources | placement, upgrade, leader election | not a product; a pattern [K1] | any Kubernetes cluster | n/a |
-| **Power BI** | Microsoft BI | BI and pivot | **Partial**: custom visuals and connectors on a closed core | see [BI_AND_POWER_BI.md](BI_AND_POWER_BI.md) | see that page |
+| **Power BI** | Microsoft BI | BI and pivot | **Partial**: custom visuals and connectors on a closed core | see [../guides/BI_GUIDE.md](../guides/BI_GUIDE.md#part-6--drishti-bi-and-power-bi-compared) | see that page |
 | **Tableau** | BI | BI and dashboards | **Partial**: dashboard and viz extensions (JavaScript, a manifest) [T1] | not checked here | not checked here |
 | **Qlik Sense** | BI with an associative engine | BI | **Partial**: visualization extensions (a zip with `.qext`); nebula.js for new work [Q1][Q2] | Qlik Cloud and client-managed [Q2] | not checked here |
 | **Looker** | BI on a semantic model (LookML) | the model as code, packaged content | **Partial**: Marketplace blocks (LookML models), applications on the extension framework [L1] | Google Cloud [L1] | not checked here |
@@ -848,7 +848,7 @@ does not have.
 
 All four extend a **closed BI core** with front-end pieces; none loads server-side domain logic as a package:
 
-- **Power BI**: custom visuals and connectors; the full comparison is [BI_AND_POWER_BI.md](BI_AND_POWER_BI.md).
+- **Power BI**: custom visuals and connectors; the full comparison is [../guides/BI_GUIDE.md](../guides/BI_GUIDE.md#part-6--drishti-bi-and-power-bi-compared).
 - **Tableau**: dashboard extensions and viz extensions, JavaScript with a manifest, served over HTTPS [T1].
 - **Qlik Sense**: visualization extensions; the Extension API is legacy and nebula.js is recommended for new work; Qlik Cloud takes a zip
   of up to 30 MB [Q1][Q2].

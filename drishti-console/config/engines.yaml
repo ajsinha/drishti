@@ -101,7 +101,7 @@ engines:
     console: [/pivot, /api/pivot/]
     words: [PIVOT]
     menus: [pivot]
-    help: [docs-guides-pivot-guide, docs-tutorials-07-pivot-cubes-and-explain]
+    help: [bi-guide#part-1--pivot-cubes-and-explain, bi-guide#tutorial-pivot-cubes-and-explain]
     landings: []
     tiles: []
     lenses: []

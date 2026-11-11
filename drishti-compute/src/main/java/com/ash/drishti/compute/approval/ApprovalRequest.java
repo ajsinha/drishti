@@ -19,7 +19,7 @@ import java.time.Instant;
 import java.util.List;
 
 /**
- * A request to approve what a connector or pool requires and is not approved yet (docs/guides/NOTEBOOK_GUIDE.md section 6): a row of
+ * A request to approve what a connector or pool requires and is not approved yet (docs/guides/BI_GUIDE.md section N6): a row of
  * {@code drishti_compute_request}. Its items become rows of {@code drishti_compute_approval} when it is approved.
  *
  * @param id {@code cr-...}

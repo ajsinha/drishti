@@ -385,7 +385,7 @@ drishti:
     # (a pivot of a search, a command line). Add a path only if it writes nothing.
     token-read-posts:
       - /api/v1/modules/needs            # which saved items need a switched-off or removed module ("needs module X"): reads, writes nothing
-      - /api/v1/pivot/query              # the pivot engine (PIVOT_GUIDE.md): a view's answer, its estimate, a node opened, two dates compared,
+      - /api/v1/pivot/query              # the pivot engine (BI_GUIDE.md): a view's answer, its estimate, a node opened, two dates compared,
       - /api/v1/pivot/estimate           # a cell's rows and an export: each reads as the caller and writes nothing
       - /api/v1/pivot/decompose          # one split of a decomposition tree: reads as the caller, writes nothing
       - /api/v1/pivot/expand
@@ -394,7 +394,7 @@ drishti:
       - /api/v1/pivot/export
       - /api/v1/pivot/inline             # rows the caller already holds (a chart of a table's shown rows), aggregated by the engine
       - /api/v1/explain                  # Explain any number with a body (a pivot cell's view): computed as the caller, written nowhere
-      - /api/v1/tables/editor/check      # the table and model editors (TABLES_GUIDE.md section 11): checks, previews and proposals that store nothing
+      - /api/v1/tables/editor/check      # the table and model editors (BI_GUIDE.md section T11): checks, previews and proposals that store nothing
       - /api/v1/tables/editor/statement
       - /api/v1/tables/editor/preview
       - /api/v1/tables/editor/access
@@ -785,7 +785,7 @@ drishti:
       per-user-per-day: 0  # calls a user may make per day (0 = no limit)
       cost-per-user-per-day: 0       # in the unit of the models' cost-per-1k-* prices
       features: {}                   # per feature: "[ask]": {roles: [..], per-user-per-minute: 6}
-      # BI hooks use the features bi-draft, bi-ask and bi-explain (docs/guides/REPORTS_GUIDE.md), e.g. "[bi-ask]": {roles: [analyst], per-user-per-minute: 10}
+      # BI hooks use the features bi-draft, bi-ask and bi-explain (docs/guides/BI_GUIDE.md), e.g. "[bi-ask]": {roles: [analyst], per-user-per-minute: 10}
   mcp:                               # MCP client (docs/guides/AI_GUIDE.md): OFF by default
     enabled: ${DRISHTI_MCP_ENABLED:false}  # turn on the MCP client: server files in drishti.mcp.dir are read and their tools become callable
     dir: ${DRISHTI_MCP_DIR:./config/mcp}      # one YAML per MCP server: transport, url, headers as ${ENV}, allowed-tools
@@ -915,7 +915,7 @@ drishti:
     workspace-creation: authors      # who creates shared workspaces: authors (bi-author), stewards (bi-steward), admins (bi-admin); Admin, BI settings changes it at run time
     max-body-bytes: 262144           # largest YAML body of one item
     versions-keep: 50                # published versions kept per item
-    ai:                              # the three BI hooks on the AI layer (docs/guides/REPORTS_GUIDE.md); they also need drishti.ai.enabled
+    ai:                              # the three BI hooks on the AI layer (docs/guides/BI_GUIDE.md); they also need drishti.ai.enabled
       model: ""                      # provider/model; blank = drishti.ai.default-model
       values: labels-only            # labels-only: the model sees names, types, descriptions, never a value | aggregates: it may also word the reader's own masked aggregates
       max-question-chars: 600  # longest question or description sent to the model
@@ -1016,10 +1016,10 @@ drishti:
       per-user-per-day: 100  # questions one user may ask a day (over it: 429 DRS-4009)
       log-questions: true            # the question text goes to the access log (action ask); answers are never stored
       log-answers: false             # true also writes the answer text to the server log
-  pivot:                             # the pivot engine's reads of a panel (PIVOT_GUIDE.md); its other settings are in config/engines/pivot.yaml
+  pivot:                             # the pivot engine's reads of a panel (BI_GUIDE.md); its other settings are in config/engines/pivot.yaml
     enabled: ${DRISHTI_PIVOT_ENABLED:${drishti.engines.pivot.enabled:true}}     # the old name of the pivot engine's switch (config/engines/pivot.yaml); false: no Pivot anywhere
     max-records: 50000               # the most rows of a panel a pivot of it reads (the table's limit does not apply); more is refused, never cut short
-  tables:                            # virtual tables and models (TABLES_GUIDE.md): the pivot, Sutras and Flight read them as the reader may see the source
+  tables:                            # virtual tables and models (BI_GUIDE.md): the pivot, Sutras and Flight read them as the reader may see the source
     root: ${DRISHTI_TABLES_ROOT:./config/tables}   # the definitions' folder: config/tables/<domain>/<name>.table.yaml and .model.yaml
     read-max-rows: 2000000           # the most rows one read of a virtual table stages; more is refused, never cut short
     scan-warn-rows: 1000000          # rows above which an unfiltered side of a model's join across connectors is warned about; a model's own scan-warn-rows wins

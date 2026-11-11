@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * A table of the table layer ({@code rachana: 3} with {@code table:}, TABLES_GUIDE.md) as BI's {@link DatasetDef}: read and checked by the layer's
+ * A table of the table layer ({@code rachana: 3} with {@code table:}, BI_GUIDE.md) as BI's {@link DatasetDef}: read and checked by the layer's
  * own reader and said in BI's terms by {@link LayerTables}. BI's own dataset files ({@code rachana: 2}) are not read: {@code drishti.py tables
  * migrate} writes them as tables ({@code DRS-9196}). Also the checks a model's row rules share with a table's: a rule's text, and a rule naming
  * only its own table's columns.
@@ -52,7 +52,7 @@ public final class DatasetDefParser {
             return LayerTables.read(yaml);
         }
         return new Result(null, List.of(new DatasetParser.Problem("error", DatasetParser.MIGRATE_FIRST, "", "not a table of the table layer (rachana: 3 with "
-                + "table:): a dataset in BI's old form is migrated by drishti.py tables migrate (TABLES_GUIDE.md, the migration)")));
+                + "table:): a dataset in BI's old form is migrated by drishti.py tables migrate (BI_GUIDE.md, the migration)")));
     }
 
     /** True when the text is a table of the layer ({@code rachana: 3} with {@code table:}). */

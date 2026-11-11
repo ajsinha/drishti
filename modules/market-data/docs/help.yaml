@@ -21,5 +21,5 @@ sections:
     file: ../packs/market-data/guides/market-data-catalogue.md
   - title: 'Market data: market data'
     file: ../packs/market-data/guides/market-data.md
-  - title: 'Tutorial: groupings and analytics'
-    file: ../tutorials/06-groupings-and-analytics.md
+  - title: 'BI guide (the groupings and analytics are its Part 5, with their tutorial)'
+    file: ../guides/BI_GUIDE.md

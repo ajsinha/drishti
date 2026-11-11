@@ -7,7 +7,7 @@
 
 **The request.** The screens for the BI-depth release: a decomposition tree that can break down VaR, a Playground for Drishti Elements,
 linked brushing, the first new visuals, and modelling of many-to-many and both-ways relationships. The gaps they close are in
-[BI_AND_POWER_BI.md](../../../strategy/BI_AND_POWER_BI.md).
+[BI_GUIDE.md](../../../guides/BI_GUIDE.md#part-6--drishti-bi-and-power-bi-compared).
 
 Each HTML file is self-contained (system fonts, no CDN). The caption bar switches option, state and theme; the address keeps the choice
 (`#B-error-light`). The interactions work, in plain JavaScript written for these mock-ups: the figures are synthetic, but VaR is really

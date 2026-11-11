@@ -24,8 +24,8 @@ About 30 minutes.
 
 ## Before you start
 
-- The quick-start environment of [tutorial 8](08-reports-and-dashboards.md#before-you-start) (the demo lakes and **Drishti server (demo lakes)**, sign-in on),
-  [tutorial 8, Part A](08-reports-and-dashboards.md#part-a--your-first-bi-report) done (the World economics report, which reads the model `world-economics@1`), [tutorial 8, Part G](08-reports-and-dashboards.md#part-g--govern-bi) for
+- The quick-start environment of [the reports tutorial](../guides/BI_GUIDE.md#before-you-start-2) (the demo lakes and **Drishti server (demo lakes)**, sign-in on),
+  [the reports tutorial, Part A](../guides/BI_GUIDE.md#part-a--your-first-bi-report) done (the World economics report, which reads the model `world-economics@1`), [the reports tutorial, Part G](../guides/BI_GUIDE.md#part-g--govern-bi) for
   the people `ann` (a writer) and `sue` (a steward).
 - The AI layer is a **restart** of the server and the console with two more variables (step 1): in the IDE, edit the run configurations **Drishti server
   (demo lakes)** and **Drishti console** and add them under *Environment variables*.
@@ -189,7 +189,7 @@ the report checker** on it, the same one **Check** and **Save** use. A draft tha
 
 ![The designer after using the draft: a GDP card with 117,327 and a bar chart of GDP for each region](img/t15/04-draft-used.jpg)
 
-You should see the draft in the designer as a card (`117,327`) and a bar of GDP by region, with real data. It is a draft in your editor like text you typed: **nothing was saved or published**, undo, Check and Save are unchanged, and publishing needs a person and the usual review ([tutorial 8, Part G](08-reports-and-dashboards.md#part-g--govern-bi)).
+You should see the draft in the designer as a card (`117,327`) and a bar of GDP by region, with real data. It is a draft in your editor like text you typed: **nothing was saved or published**, undo, Check and Save are unchanged, and publishing needs a person and the usual review ([the reports tutorial, Part G](../guides/BI_GUIDE.md#part-g--govern-bi)).
 The API behind the button:
 
 ```text
@@ -316,7 +316,7 @@ api-key: ${GROQ_API_KEY}              # an ${ENV_NAME} placeholder; export GROQ_
 default-model: llama-3.3-70b-versatile
 ```
 
-Everything about each type (settings, model catalogue, proxy, TLS, retries, errors that never carry a response body) is in [AI_GUIDE.md](../guides/AI_GUIDE.md#1-model-providers) section 11; the BI side (what the hooks send, `aggregates` mode, limits) is [REPORTS_GUIDE.md section 29](../guides/REPORTS_GUIDE.md#16-ai-in-bi-report-from-words-ask-the-data-explain-this-number). Then use **Test connection** on the new row: the first honest answer tells you whether the key, the address and the network are right,
+Everything about each type (settings, model catalogue, proxy, TLS, retries, errors that never carry a response body) is in [AI_GUIDE.md](../guides/AI_GUIDE.md#1-model-providers) section 11; the BI side (what the hooks send, `aggregates` mode, limits) is [BI_GUIDE.md section R29](../guides/BI_GUIDE.md#r16-ai-in-bi-report-from-words-ask-the-data-explain-this-number). Then use **Test connection** on the new row: the first honest answer tells you whether the key, the address and the network are right,
 before anyone asks the data a question. You should see `OK` or the reason on the new row.
 
 ## Step 8 · Suggestions, plain-words checks and the dataset helper
@@ -401,12 +401,12 @@ fields:
 ```
 
 (Asked of the shipped model itself, `{"dataset": "file:model:world-economics"}`, it proposes the same three items, but **Accept** needs a model you may
-edit. Asked of a version 1 dataset by its id, the helper still answers in that dataset's own YAML: `book: { type: string, description: ... }`.) The same layer writes the **summary at the top of a subscription's email** ([tutorial 8, Part D](08-reports-and-dashboards.md#part-d--bi-that-runs-itself), step 37). [REPORTS_GUIDE.md sections 9 to 11](../guides/REPORTS_GUIDE.md#183-subscriptions).
+edit. Asked of a version 1 dataset by its id, the helper still answers in that dataset's own YAML: `book: { type: string, description: ... }`.) The same layer writes the **summary at the top of a subscription's email** ([the reports tutorial, Part D](../guides/BI_GUIDE.md#part-d--bi-that-runs-itself), step 37). [BI_GUIDE.md sections R9 to 11](../guides/BI_GUIDE.md#r183-subscriptions).
 
 ## Next steps
 
 - [Tutorial 20](20-embed-drishti.md): put a view or a report on another web page.
-- [REPORTS_GUIDE.md section 29](../guides/REPORTS_GUIDE.md#16-ai-in-bi-report-from-words-ask-the-data-explain-this-number), [AI_GUIDE.md](../guides/AI_GUIDE.md#1-model-providers) and the policy settings in [CONFIGURATION.md](../admin/CONFIGURATION.md#ai-and-mcp-policy-settings).
+- [BI_GUIDE.md section R29](../guides/BI_GUIDE.md#r16-ai-in-bi-report-from-words-ask-the-data-explain-this-number), [AI_GUIDE.md](../guides/AI_GUIDE.md#1-model-providers) and the policy settings in [CONFIGURATION.md](../admin/CONFIGURATION.md#ai-and-mcp-policy-settings).
 
 ## If something goes wrong
 

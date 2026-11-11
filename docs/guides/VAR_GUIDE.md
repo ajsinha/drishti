@@ -1838,7 +1838,7 @@ systems are built** (the subsection *Intraday updates* below).
 
 **Pricing over the scenario days.** The pricer receives the trade, the base market of the business date (assembled by the server as
 AI_GUIDE.md › Server-side pricing: the quant service (proposed), section 7 describes) and the scenario set's market moves, and returns the 509 P&Ls. QLRisk's
-`MarketRiskEngine.scenario_pnl` is the default path ([NOTEBOOK_GUIDE.md section 9.2](../architecture/ARCHITECTURE.md#298-pricing-engines-planned)),
+`MarketRiskEngine.scenario_pnl` is the default path ([BI_GUIDE.md section N9.2](../architecture/ARCHITECTURE.md#298-pricing-engines-planned)),
 QuantLib-Java the Java alternative. The pricer's scenario moves must be the **same moves the batch used**; a **reprice check** proves it:
 for a sample of existing trades in the scope the engine reprices them and compares with their stored vectors, and shows the agreement on
 the what-if panel (*parity with the batch: 0.02%*); a scope whose check fails beyond tolerance shows its what-if numbers in amber with
@@ -4240,7 +4240,7 @@ No vectors and no trade or position rows are published; the capture itself keeps
 **In BI.** The published table is also the read-only kind `var-official` (`VOFF`) of the market-risk pack, served by the Delta
 connector `var-results` for BI and other readers (still no engine reads it; the guard allows only a read-only connector of computed
 kinds). The sample report **Market risk: VaR** (`config/bi/reports/banking/market-risk-var.report.yaml`, model `market-risk-var`;
-[REPORTS_GUIDE.md](REPORTS_GUIDE.md)) shows the bank's VaR and ES, VaR by desk and by legal entity, the bank and a desk over time, and every node
+[BI_GUIDE.md](BI_GUIDE.md#part-3--reports-and-dashboards)) shows the bank's VaR and ES, VaR by desk and by legal entity, the bank and a desk over time, and every node
 with its limit use, from the latest result version of each date; it never adds VaRs across nodes.
 
 ## 20. Validation, errors and data quality
@@ -4560,7 +4560,7 @@ as the viewer; packs stay declarative.
 **The compute boundary.** Base VaR is sums of stored vectors and measures over the sums, in the server's JVM on a bounded pool
 (`drishti.var.threads`). The heavy work that needs Python or a pricer (what-if pricing over the scenarios, intraday repricing:
 [section 8.4](#84-what-if-pricing-and-intraday-recomputes)) is a separate request of whole trades to price, which the compute
-workers of [NOTEBOOK_GUIDE.md](NOTEBOOK_GUIDE.md) serve: any number of workers (their count is configuration, never
+workers of [BI_GUIDE.md](BI_GUIDE.md#part-4--the-notebook-and-python) serve: any number of workers (their count is configuration, never
 code), one trade or a batch each, the 509 values each returns joining as a vector. Nothing in the engine assumes one worker or calls
 one in its request path. Moving gigabytes of vectors into a Python worker for every query would be too slow; every VaR figure is the
 server's.
@@ -7082,7 +7082,7 @@ connector's `lake` must then name `data/iceberg`); `drishti.py var intraday --lo
 - [PARAMETRIC_VAR.md](../guides/VAR_GUIDE.md): the design, the worked example and the open questions.
 - [API_REFERENCE.md, VaR engine](API_REFERENCE.md#19-var-engine-apiv1riskvar): the `parametric` block, `parametric=false`, `matrix=true`,
   `measure=parametric`; [CLI_REFERENCE.md, var](CLI_REFERENCE.md#var-the-var-engine): `--no-parametric`, `--matrix`, `--measure`.
-- [Tutorial 7, Part C](../tutorials/07-pivot-cubes-and-explain.md#part-c--the-mr-cube-desks-by-risk-class-with-the-right-totals): the MR cube.
+- [The pivot tutorial, Part C](BI_GUIDE.md#part-c--the-mr-cube-desks-by-risk-class-with-the-right-totals): the MR cube.
 
 ### If something goes wrong
 

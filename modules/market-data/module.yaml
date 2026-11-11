@@ -100,6 +100,6 @@ docs:
   - packs/market-data/guides/market-data-catalogue.md
   - packs/market-data/guides/market-data.md
   tutorials:
-  - tutorials/06-groupings-and-analytics.md
+  - guides/BI_GUIDE.md
 resources:
   memory-mb: 64

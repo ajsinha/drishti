@@ -35,7 +35,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.sqlite.SQLiteDataSource;
 
 /**
- * Step C3's rules (docs/guides/NOTEBOOK_GUIDE.md section 6), on memory and on the Drishti database's SQLite schema: unapproved
+ * Step C3's rules (docs/guides/BI_GUIDE.md section N6), on memory and on the Drishti database's SQLite schema: unapproved
  * requirements file one request; the person who asked can neither approve nor reject it (four eyes); an approval needs a reason; a revoked
  * approval stops covering its items; a new version or hash is a new item; every step is audited.
  */

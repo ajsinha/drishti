@@ -43,7 +43,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 /**
- * /api/v1/pivot on the demo trades (PIVOT_GUIDE.md): the sources a person may pivot, a catalogue without masked fields, a view whose every
+ * /api/v1/pivot on the demo trades (BI_GUIDE.md): the sources a person may pivot, a catalogue without masked fields, a view whose every
  * cell equals the same figure computed from the Data view's own download of the rows, a masked field refused as a dimension or an input
  * (masks before aggregation), the Excel export with its outline and SUM formulas only where a measure adds up, CSV, saved views and a cell
  * by reference, every run and export audited without values.
@@ -89,7 +89,7 @@ class PivotApiTest {
         return out;
     }
 
-    /** A number field, preferring one that is not money (a money total over several currencies is refused, PIVOT_GUIDE.md section 4). */
+    /** A number field, preferring one that is not money (a money total over several currencies is refused, BI_GUIDE.md section P4). */
     private String numberField(JsonNode catalogue) {
         String money = null;
         for (JsonNode f : catalogue.path("fields")) {

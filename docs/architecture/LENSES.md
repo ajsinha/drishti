@@ -1495,15 +1495,15 @@ Everything below is built in the engines and lenses the Oversight lens would reu
 | Backtesting (actual and hypothetical P&L, zone, multiplier, Kupiec, Christoffersen) | **Built, needs the bank's data** (`desk-pnl`) | [REGULATORY_VAR_REPORTING section 4.6](../guides/REGULATORY_VAR_REPORTING.md#46-backtesting), [VAR_GUIDE section 7](../guides/VAR_GUIDE.md#7-history-and-backtesting) |
 | Period statistics; VaR by risk type (by hierarchy) | **Built** (risk types need the bank's hierarchy) | [REGULATORY_VAR_REPORTING sections 4.4, 4.5](../guides/REGULATORY_VAR_REPORTING.md#44-period-statistics) |
 | Report definitions, checks, frozen runs with lineage, maker-checker-approver sign-off | **Built** (the pilot pack) | [REGULATORY_VAR_REPORTING section 6](../guides/REGULATORY_VAR_REPORTING.md#6-controls-definitions-checks-frozen-runs-and-sign-off) |
-| Position sensitivities by risk factor (`SENS`), the factor dictionary; FRTB standardised approach | **Built, needs the bank's data** | [PIVOT_GUIDE section 27.9](../guides/PIVOT_GUIDE.md#278-position-sensitivity-the-sensitivities), [FRTB_SA_GUIDE section 3](../guides/FRTB_SA_GUIDE.md#3-the-inputs-and-their-data-contract) |
-| DV01 ladder by currency and tenor bucket against configured two-sided bucket limits | **Built** (MR cube tab C) | [PIVOT_GUIDE section 29.6](../guides/PIVOT_GUIDE.md#296-tail-attribution-sensitivities-and-what-if) |
+| Position sensitivities by risk factor (`SENS`), the factor dictionary; FRTB standardised approach | **Built, needs the bank's data** | [PIVOT_GUIDE section 27.9](../guides/BI_GUIDE.md#p278-position-sensitivity-the-sensitivities), [FRTB_SA_GUIDE section 3](../guides/FRTB_SA_GUIDE.md#3-the-inputs-and-their-data-contract) |
+| DV01 ladder by currency and tenor bucket against configured two-sided bucket limits | **Built** (MR cube tab C) | [PIVOT_GUIDE section 29.6](../guides/BI_GUIDE.md#p296-tail-attribution-sensitivities-and-what-if) |
 | Intraday VaR from files and Kafka; the pre-deal what-if | **Built** | [VAR_GUIDE section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes), [8.5](../guides/VAR_GUIDE.md#85-the-pre-deal-what-if-under-the-baskets-sheet) |
 | Data trust: load checks and rejections, late loads, proxied/failed vector status, market-data quality | **Partly** (each in its own place; completeness against the trades booked not checked) | [VAR_GUIDE section 20.3](../guides/VAR_GUIDE.md#203-what-the-load-checks), [DATA_GUIDE section 8](../guides/DATA_GUIDE.md#8-expectations-and-late-data), the [Market lens](#3-market-lens) |
 | Stress: stored definitions and results per desk; the bank's P&L per scenario and each desk's stress limit use (derived) | **Partly** (no stress engine for any scope) | [VAR_GUIDE section 21.4](../guides/VAR_GUIDE.md#214-the-banks-stress-pl-by-scenario-derived), [STR.md](../contracts/STR.md) |
 | Concentration: VaR of any slice | **Partly**: scope words, rules and `WHERE:`; no concentration view | [VAR_GUIDE section 5.5](../guides/VAR_GUIDE.md#55-scope-words-by-a-trades-attribute) |
 | Counterparty exposure and credit limits (read for concentration) | **Built** | [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) |
 | Alerts on numbers; comment threads anchored to the data; write-back approval with four eyes | **Built** (a person sets each alert) | [USER_GUIDE, Alerts](../guides/USER_GUIDE.md#alerts), [ARCHITECTURE.md §31](../guides/USER_GUIDE.md#discussion), [APPROVALS_GUIDE section 10](../guides/APPROVALS_GUIDE.md#6-the-approvals-queue) |
-| Certified BI reports; entitlements and audit per answer | **Built** | [REPORTS_GUIDE, certification](../guides/REPORTS_GUIDE.md#174-certification-and-endorsement), [VAR_GUIDE section 9](../guides/VAR_GUIDE.md#9-who-sees-what-entitlements-and-audit) |
+| Certified BI reports; entitlements and audit per answer | **Built** | [REPORTS_GUIDE, certification](../guides/BI_GUIDE.md#r174-certification-and-endorsement), [VAR_GUIDE section 9](../guides/VAR_GUIDE.md#9-who-sees-what-entitlements-and-audit) |
 | P&L explain by cause; PLA test; FRTB internal models | **Not built** (P&L explain stored per desk as read, `PNL`) | [PNL.md](../contracts/PNL.md), [REGULATORY_VAR_REPORTING section 8.1](../guides/REGULATORY_VAR_REPORTING.md#81-coverage-report-by-report) |
 
 ### 5.3 Gaps and proposals
@@ -1691,7 +1691,7 @@ sides, the warning level, validity dates; a limit naming no node is reported, ne
 arbitrary scope with entitlements. Built: `SENS <scope>` sums `position-sensitivity` by factor or bucket; the MR cube's tab C draws the
 **DV01 ladder** by currency and bucket grid (`drishti.cube.mr.grids`: `BANK-IR-TENOR`, `FRTB-GIRR`) against two-sided bucket limits set in
 configuration (`ladder-limits`; `use = max(net / limit, −net / limit)`, near from 80%, breach over 100%)
-([PIVOT_GUIDE section 29.6](../guides/PIVOT_GUIDE.md#296-tail-attribution-sensitivities-and-what-if)). **Missing:** limits
+([PIVOT_GUIDE section 29.6](../guides/BI_GUIDE.md#p296-tail-attribution-sensitivities-and-what-if)). **Missing:** limits
 from the catalogue (RO3) instead of configuration; ladders for CS01 by rating × tenor, vega by underlying × expiry, FX delta by currency,
 equity delta by name; ladder breaches into RO2; a drill from a bucket to its trades. **Tests:** bucket sums equal trade sums; a bucket
 limit breached by a crafted trade; long and short netting within a bucket; two-sided limits.
@@ -1807,7 +1807,7 @@ The **house style** is its own file per style (`config/reports/banking/styles/<s
 a US bank; margins), `logo` (the bank's PNG or JPEG beside the style), `colours` (heading, rule, breach, near), `font` (the standard PDF
 fonts; nothing downloaded), `header`, `footer` (*Data as at {data-date} · run v{run} · from the official records · page {page} of
 {pages}*), `confidentiality`, `sign-off` (roles and what is shown). **Rendering** extends the server's own page-exact PDF writer of BI
-statements ([REPORTS_GUIDE section 24](../guides/REPORTS_GUIDE.md#12-statements-paginated-reports-page-exact-one-per-reader)) with a **chart band**
+statements ([REPORTS_GUIDE section 24](../guides/BI_GUIDE.md#r12-statements-paginated-reports-page-exact-one-per-reader)) with a **chart band**
 (lines, bars and the waterfall as PDF vector paths, every value also printed in a table) and an **image band** for the logo; the preview
 and the file are drawn from the same pages.
 
@@ -1842,8 +1842,8 @@ retires) at the grain and with the ids of the VaR inputs and a sparse list of fa
 [FRTB.md section 3.2](../contracts/FRTB.md#32-the-shared-sensitivity-table-position-sensitivity-sens)); Drishti's slash-separated **risk-factor naming standard** with a mapping from the bank's names (an unmapped name
 refused, never guessed) and the factor dictionary `risk-factor`; **both** the FRTB buckets and the bank's own limit grids, each limit
 naming its grid; an intraday record replaces a position's record whole. The contract and its load checks:
-[PIVOT_GUIDE section 27.9](../guides/PIVOT_GUIDE.md#278-position-sensitivity-the-sensitivities) and
-[14.8](../guides/PIVOT_GUIDE.md#279-risk-factor-the-factor-dictionary), [FRTB.md section 3.2](../contracts/FRTB.md#32-the-shared-sensitivity-table-position-sensitivity-sens);
+[PIVOT_GUIDE section 27.9](../guides/BI_GUIDE.md#p278-position-sensitivity-the-sensitivities) and
+[14.8](../guides/BI_GUIDE.md#p279-risk-factor-the-factor-dictionary), [FRTB.md section 3.2](../contracts/FRTB.md#32-the-shared-sensitivity-table-position-sensitivity-sens);
 the data-contract design (D8, D9) is in the [MR cube lens](#6-mr-cube-lens).
 
 | Risk type | Measure | Granularity oversight needs |
@@ -2038,9 +2038,9 @@ covers) with its rule that scoping never widens access. From the mechanism: one 
 **Built, as a Pivot preset.** The MR cube is the Pivot's preset `mr` (`MCUBE <GO>`, `/pivot?preset=mr`): the pivot engine on the VaR
 source with the MR lens around it (headline strip, time-travel slider, tabs B and C). It puts market risk on any rows and columns with
 **correct non-additive totals**: every cell, subtotal and total is the VaR (or ES, SBM …) of its own set of trades, re-aggregated from their
-scenario P&L vectors, never a sum of other cells. How to use it: [PIVOT_GUIDE.md section 29](../guides/PIVOT_GUIDE.md#29-the-mr-cube-preset) and
-[PIVOT_GUIDE.md › Presets](../guides/PIVOT_GUIDE.md#28-presets-the-risk-cubes); the tutorial is
-[tutorial 7, Part C](../tutorials/07-pivot-cubes-and-explain.md#part-c--the-mr-cube-desks-by-risk-class-with-the-right-totals). This section keeps the product view: who it serves, what is still
+scenario P&L vectors, never a sum of other cells. How to use it: [BI_GUIDE.md section P29](../guides/BI_GUIDE.md#p29-the-mr-cube-preset) and
+[BI_GUIDE.md › Presets](../guides/BI_GUIDE.md#p28-presets-the-risk-cubes); the tutorial is
+[the pivot tutorial, Part C](../guides/BI_GUIDE.md#part-c--the-mr-cube-desks-by-risk-class-with-the-right-totals). This section keeps the product view: who it serves, what is still
 open, the build checklist, and the **shared cube core** and **data contracts** that the CCR cube ([section 7](#7-ccr-cube-lens)) reuses.
 
 ### 6.1 Who uses it and their questions
@@ -2072,20 +2072,20 @@ open, the build checklist, and the **shared cube core** and **data contracts** t
 
 | Need | Status | Where it is described |
 |---|---|---|
-| Any rows and columns over the VaR book (hierarchy levels, position and trade columns, the derived `RISK_CLASS`, members) | **Built** | [PIVOT_GUIDE.md section 29.4](../guides/PIVOT_GUIDE.md#294-the-view-dimensions-options-cells-and-totals) |
-| VaR, ES, PV, trades, component VaR and ES, incremental VaR, limit and limit use, stressed VaR, DV01, CS01, SBM per cell | **Built** | [PIVOT_GUIDE.md section 29.2](../guides/PIVOT_GUIDE.md#292-the-measures) |
-| Totals as the union's own figure, diversification beside each total | **Built** | [PIVOT_GUIDE.md section 29.4](../guides/PIVOT_GUIDE.md#294-the-view-dimensions-options-cells-and-totals) |
-| The landing (layout A): headline, lens controls, slider, pivot, rail | **Built** | [PIVOT_GUIDE.md section 29.5](../guides/PIVOT_GUIDE.md#295-the-landing) |
-| Tab B (components, waterfall, histogram, DV01 heat map); tab C (DV01 ladder, what-if side by side, explain) | **Built** | [PIVOT_GUIDE.md section 29.6](../guides/PIVOT_GUIDE.md#296-tail-attribution-sensitivities-and-what-if) |
-| Explain the move, time travel, provenance per cell | **Built** (factor overlay not built) | [PIVOT_GUIDE.md section 29.7](../guides/PIVOT_GUIDE.md#297-explain-the-move-time-travel-and-provenance) |
-| Saved and shared views, export (Excel with outline and formulas, CSV, Arrow, JSON Lines, YAML) | **Built** | [PIVOT_GUIDE.md section 29.8](../guides/PIVOT_GUIDE.md#298-saved-views-sharing-and-export), [PIVOT_GUIDE.md section 10](../guides/PIVOT_GUIDE.md#10-export) |
-| The engine switch, cell budgets, refusals | **Built** | [PIVOT_GUIDE.md sections 29.9 and 29.11](../guides/PIVOT_GUIDE.md#299-settings-and-switching-the-cube-off) |
-| Sharded dates: one batched call per shard owner, equal to the bit | **Built** | [PIVOT_GUIDE.md section 29.12](../guides/PIVOT_GUIDE.md#2912-how-it-is-computed), [6.5.11](#6511-cluster-execution-sharded-cube-views-bit-equal) |
-| What the guide lists as not built | open | [PIVOT_GUIDE.md section 29.13](../guides/PIVOT_GUIDE.md#2913-not-built-yet), and [6.3](#63-gaps-and-proposals) below |
+| Any rows and columns over the VaR book (hierarchy levels, position and trade columns, the derived `RISK_CLASS`, members) | **Built** | [BI_GUIDE.md section P29.4](../guides/BI_GUIDE.md#p294-the-view-dimensions-options-cells-and-totals) |
+| VaR, ES, PV, trades, component VaR and ES, incremental VaR, limit and limit use, stressed VaR, DV01, CS01, SBM per cell | **Built** | [BI_GUIDE.md section P29.2](../guides/BI_GUIDE.md#p292-the-measures) |
+| Totals as the union's own figure, diversification beside each total | **Built** | [BI_GUIDE.md section P29.4](../guides/BI_GUIDE.md#p294-the-view-dimensions-options-cells-and-totals) |
+| The landing (layout A): headline, lens controls, slider, pivot, rail | **Built** | [BI_GUIDE.md section P29.5](../guides/BI_GUIDE.md#p295-the-landing) |
+| Tab B (components, waterfall, histogram, DV01 heat map); tab C (DV01 ladder, what-if side by side, explain) | **Built** | [BI_GUIDE.md section P29.6](../guides/BI_GUIDE.md#p296-tail-attribution-sensitivities-and-what-if) |
+| Explain the move, time travel, provenance per cell | **Built** (factor overlay not built) | [BI_GUIDE.md section P29.7](../guides/BI_GUIDE.md#p297-explain-the-move-time-travel-and-provenance) |
+| Saved and shared views, export (Excel with outline and formulas, CSV, Arrow, JSON Lines, YAML) | **Built** | [BI_GUIDE.md section P29.8](../guides/BI_GUIDE.md#p298-saved-views-sharing-and-export), [BI_GUIDE.md section P10](../guides/BI_GUIDE.md#p10-export) |
+| The engine switch, cell budgets, refusals | **Built** | [BI_GUIDE.md sections P29.9 and 29.11](../guides/BI_GUIDE.md#p299-settings-and-switching-the-cube-off) |
+| Sharded dates: one batched call per shard owner, equal to the bit | **Built** | [BI_GUIDE.md section P29.12](../guides/BI_GUIDE.md#p2912-how-it-is-computed), [6.5.11](#6511-cluster-execution-sharded-cube-views-bit-equal) |
+| What the guide lists as not built | open | [BI_GUIDE.md section P29.13](../guides/BI_GUIDE.md#p2913-not-built-yet), and [6.3](#63-gaps-and-proposals) below |
 
 #### 6.2.1 The lens: a Pivot preset, not a lens file
 
-The MR cube is **a preset of the one Pivot** (one grid, several doors; [PIVOT_GUIDE.md › Presets](../guides/PIVOT_GUIDE.md#28-presets-the-risk-cubes)),
+The MR cube is **a preset of the one Pivot** (one grid, several doors; [BI_GUIDE.md › Presets](../guides/BI_GUIDE.md#p28-presets-the-risk-cubes)),
 not a lens file of its own with its own endpoints:
 
 - **Doors:** `MCUBE <GO>` (with `<scope> BY rows,columns MEASURE … DATE … SORT desc`, or `@owner/name` for a saved view); **VaR → MR cube**;
@@ -2106,8 +2106,8 @@ cell budget refusing a view with its count, never truncating (P7, now the pivot 
 
 | Row | What | Status |
 |---|---|---|
-| MCP1 | The core: view model, planner, totals as the union's figure, batching per shard owner, provenance, saved views, cell budget | **Built** as the pivot engine plus the VaR provider ([PIVOT_GUIDE.md section 18](../guides/PIVOT_GUIDE.md#18-how-it-is-built)) |
-| MCP2 | MR endpoints: query, cell, explain, versions, sensitivities | **Built** under `/api/v1/pivot` and `/api/v1/risk/mr` ([PIVOT_GUIDE.md section 29.10](../guides/PIVOT_GUIDE.md#2910-api-and-command-line)); explain is the one Explain |
+| MCP1 | The core: view model, planner, totals as the union's figure, batching per shard owner, provenance, saved views, cell budget | **Built** as the pivot engine plus the VaR provider ([BI_GUIDE.md section P18](../guides/BI_GUIDE.md#p18-how-it-is-built)) |
+| MCP2 | MR endpoints: query, cell, explain, versions, sensitivities | **Built** under `/api/v1/pivot` and `/api/v1/risk/mr` ([BI_GUIDE.md section P29.10](../guides/BI_GUIDE.md#p2910-api-and-command-line)); explain is the one Explain |
 | MCP3 | Synthetic data: sensitivities from the factor model, factor dictionary, limits, per-class vectors | **Partly built**: `position-sensitivity` and `risk-factor` demo data built; ladder limits are configuration; per-class vectors not built |
 | MCP4 | Console and lens: landing A with tabs B and C, phone tiers, renderer kind, help | **Partly built**: landing and tabs built; phone tiers beyond the pivot's narrow layout and a `cube-view` renderer kind not built |
 | MCP5 | Tests: totals never summed, explain adds up, shard equality | **Built**: `VarMrCubeShardTest`, `test_mcube.py`, `test_cube_presets.py`, `test_mr_cube_browser.py` |
@@ -2180,7 +2180,7 @@ extended with one factor group at a time (5 more vectors a position, about 60 MB
 
 **What:** on an intraday batch (files or the Kafka PV stream), a visible cell whose members changed is recomputed and patched in place
 through the live channel, flashing with its old value on hover; a cell more than one batch behind says so; at most one recompute a batch.
-**Design:** the Pivot's live views ([PIVOT_GUIDE.md section 25](../guides/PIVOT_GUIDE.md#25-live-pivots)) applied to the VaR source's
+**Design:** the Pivot's live views ([BI_GUIDE.md section P25](../guides/BI_GUIDE.md#p25-live-pivots)) applied to the VaR source's
 intraday stamps. Within-date batches as stops of the slider come with it. **Size:** M.
 
 #### 6.3.6 MC11: corrections in the cube
@@ -2197,7 +2197,7 @@ are included in the official run by default, with the list on the run. **Data:**
 | Method | When | How | Status |
 |---|---|---|---|
 | **copy** | the new trade resembles a booked one | a booked trade's vector scaled (1, −1, 0.5) | **Built** ([VAR_GUIDE section 8.5](../guides/VAR_GUIDE.md#85-the-pre-deal-what-if-under-the-baskets-sheet); side by side per row in tab C) |
-| **price** | new terms | QLRisk prices the trade on the base market and under each scenario move; its vector joins the scope; its sensitivities feed the ladder and SBM | proposed (QLRisk design only until its API is stable; [NOTEBOOK_GUIDE.md section 9.2](../architecture/ARCHITECTURE.md#298-pricing-engines-planned)) |
+| **price** | new terms | QLRisk prices the trade on the base market and under each scenario move; its vector joins the scope; its sensitivities feed the ladder and SBM | proposed (QLRisk design only until its API is stable; [BI_GUIDE.md section N9.2](../architecture/ARCHITECTURE.md#298-pricing-engines-planned)) |
 | **delta-gamma** | no pricer, or a quick answer | `P&L_s ≈ Σ_f s_f Δx_{f,s} + ½ Σ_f Γ_f Δx_{f,s}²` from the trade's sensitivities and each scenario's factor moves; flagged, its error shown as the gap on the same product's booked trades | proposed |
 
 The QLRisk bridge is **shared with the CCR cube** (scenario P&L here, path MtMs there; CC12 in [7.3](#73-gaps-and-proposals)): one market
@@ -2351,7 +2351,7 @@ the screen. Three mock-ups ([README](../lenses/mockups/pivot-fields/README.md)):
 **Decided (owner, 2026-11-08): C + B is the default** (the View picker in front of B's compact line) **everywhere a pivot opens; A is behind
 Customize ›** (`\`); the BI designer, an authoring tool, keeps its panes. A preset names the view it opens with; any number of rows and
 columns; every value's function chosen in plain words from those valid for its field, show-as where the engine computes it. The guide is
-[PIVOT_GUIDE.md section 2](../guides/PIVOT_GUIDE.md#2-the-screen); the component is drishti-grid's wells (one model, three arrangements).
+[BI_GUIDE.md section P2](../guides/BI_GUIDE.md#p2-the-screen); the component is drishti-grid's wells (one model, three arrangements).
 
 ![C, the View picker open: the default](../lenses/mockups/pivot-fields/C-open-desk.png)
 
@@ -2369,7 +2369,7 @@ columns; every value's function chosen in plain words from those valid for its f
 ### 6.5 The shared cube core (MR and CCR)
 
 The machinery both cubes share; the CCR cube ([section 7](#7-ccr-cube-lens)) refers here and does not repeat it. As built it is the
-**pivot engine** ([PIVOT_GUIDE.md](../guides/PIVOT_GUIDE.md); design in [ARCHITECTURE.md section 26](ARCHITECTURE.md#26-the-pivot-engine)) with one
+**pivot engine** ([BI_GUIDE.md](../guides/BI_GUIDE.md#part-1--pivot-cubes-and-explain); design in [ARCHITECTURE.md section 26](ARCHITECTURE.md#26-the-pivot-engine)) with one
 provider per source: the VaR vector provider (built), the FRTB-SA and SIMM formula providers (built), the CCR provider (to come with the
 CCR cube, [ARCHITECTURE.md section 26.4](ARCHITECTURE.md#264-the-providers)).
 
@@ -2390,23 +2390,23 @@ of the sensitivities, reference data joined by id (an issuer's sector, a counter
 
 **A cell or a total is always computed from the vectors or inputs of its members, never from other cells.** Row, column and grand totals
 are each one more scope; the cube shows the **diversification** (Σ cells − total) beside each total. A pivot of R × C cells is
-R × C + R + C + 1 scopes. As built: [PIVOT_GUIDE.md section 29.4](../guides/PIVOT_GUIDE.md#294-the-view-dimensions-options-cells-and-totals),
-[PIVOT_GUIDE.md section 4](../guides/PIVOT_GUIDE.md#4-measures-and-how-each-total-is-made).
+R × C + R + C + 1 scopes. As built: [BI_GUIDE.md section P29.4](../guides/BI_GUIDE.md#p294-the-view-dimensions-options-cells-and-totals),
+[BI_GUIDE.md section P4](../guides/BI_GUIDE.md#p4-measures-and-how-each-total-is-made).
 
 #### 6.5.3 Drill-through, saved views and sharing
 
 Any cell opens its members with the same measures, down to the trade (`TRD`), the P&L vector (`PNLV`) or the scenario matrix (`SMAT`).
 A saved view (scope, dimensions, measures, filters, lens, sort, visual choices) opens by a link or a command (`MCUBE @asha/morning`) **with
 the reader's entitlements**, never as a copy of the numbers. Comments anchor to a cell by its dimension values and measure, so they survive
-a re-sort or a new date. As built: [PIVOT_GUIDE.md sections 11](../guides/PIVOT_GUIDE.md#11-saved-and-shared-views-compare) and
-[26](../guides/PIVOT_GUIDE.md#26-cell-comments).
+a re-sort or a new date. As built: [BI_GUIDE.md sections P11](../guides/BI_GUIDE.md#p11-saved-and-shared-views-compare) and
+[26](../guides/BI_GUIDE.md#p26-cell-comments).
 
 #### 6.5.4 Provenance per cell
 
 Every cell carries its business date, the lake data version of each input, the batches included, the scenario set and window, the method
 and lens, the reporting currency and FX source, the members, the proxied share, refused members by reason, the shards that answered and the
 time taken; compact in the answer (a provenance id), details on demand. As built:
-[PIVOT_GUIDE.md section 7](../guides/PIVOT_GUIDE.md#7-provenance-rows-and-cell-references) and the MR headline's provenance.
+[BI_GUIDE.md section P7](../guides/BI_GUIDE.md#p7-provenance-rows-and-cell-references) and the MR headline's provenance.
 
 #### 6.5.5 Explain
 
@@ -2414,7 +2414,7 @@ Beside the figures, never on another screen: **why it moved** (the exact steps b
 RO1, [section 5.3](#53-gaps-and-proposals); then the approximate factor overlay, [6.3.4](#634-mc12-the-factor-overlay-of-explain)),
 **what drives it** (components adding up exactly, incremental and marginal), and **how it was computed** (the formula with this cell's
 numbers). As built: the one Explain ([USER_GUIDE.md](../guides/USER_GUIDE.md#explain-one-for-every-number)), and
-[PIVOT_GUIDE.md section 20](../guides/PIVOT_GUIDE.md#20-why-did-it-move-explain-the-difference).
+[BI_GUIDE.md section P20](../guides/BI_GUIDE.md#p20-why-did-it-move-explain-the-difference).
 
 #### 6.5.6 Data correction: write-back with approvals
 
@@ -2427,7 +2427,7 @@ A visible cell whose members changed is recomputed and patched in place, at most
 #### 6.5.8 Export
 
 Excel (outline levels, `SUM` formulas only where a total is the plain sum, a Provenance sheet), CSV, Arrow, JSON Lines and YAML are built
-([PIVOT_GUIDE.md section 10](../guides/PIVOT_GUIDE.md#10-export)); Power Query, Tableau and Power BI through REST and Arrow are proposed
+([BI_GUIDE.md section P10](../guides/BI_GUIDE.md#p10-export)); Power Query, Tableau and Power BI through REST and Arrow are proposed
 ([6.3.9](#639-front-ends-embedding-and-phone)).
 
 #### 6.5.9 Embed and phone views
@@ -2482,7 +2482,7 @@ corrections, streaming, export, embedding, permissions, scatter-gather and cachi
 data as gzipped JSON Lines in `data/testdata/<domain>/<kind>/` for the demo, loaded into Delta or Iceberg partitioned by `business_date`;
 trade fields in Endur-style UPPER_SNAKE names. The built contracts are documented field by field in
 [docs/contracts/packs/market-risk.md](../contracts/packs/market-risk.md) and in each engine guide's data chapter
-([PIVOT_GUIDE.md section 27](../guides/PIVOT_GUIDE.md#27-pivot-data-the-sources-of-the-examples)); below are only what each contract
+([BI_GUIDE.md section P27](../guides/BI_GUIDE.md#p27-pivot-data-the-sources-of-the-examples)); below are only what each contract
 means to the cube and the **proposed** extensions. Sizes are at 2.3M positions (about 10M trades), estimates. **In production every
 input is the bank's**; the demo's synthetic data is labelled as such.
 
@@ -2694,7 +2694,7 @@ liquidity horizons, modellability and the approved stress period; retention, ent
 
 **Under construction: the preset exists, its source does not yet.** The CCR cube is the Pivot's preset `ccr` (`CCUBE <GO>`,
 **Counterparties → CCR cube**, `/pivot?preset=ccr`), landing on the **limit board** with the netting-set drill; its page says *Under
-construction* until the CCR provider is built ([PIVOT_GUIDE.md › Presets](../guides/PIVOT_GUIDE.md#28-presets-the-risk-cubes),
+construction* until the CCR provider is built ([BI_GUIDE.md › Presets](../guides/BI_GUIDE.md#p28-presets-the-risk-cubes),
 [UNDER_CONSTRUCTION.md](../admin/UNDER_CONSTRUCTION.md), item `ccr-cube-preset`). Its purpose: how much could each counterparty, group or
 legal entity owe us at a future date after netting and collateral, against which limit at which tenor, at what cost (CVA), capital
 (SA-CCR, IMM, CVA capital) and margin (SIMM), for any rows and columns. It runs on the **shared cube core** of
@@ -2736,7 +2736,7 @@ section holds only what is specific to counterparty risk. Meanwhile every counte
 | Official records, captures, compare | **Built** | [EXPOSURE_GUIDE section 20](../guides/EXPOSURE_GUIDE.md#20-official-end-of-day-results) |
 | The explorer: tree, tiles, profile, path fan, collateral, trades, pre-deal; phone layout | **Built** | [EXPOSURE_GUIDE section 3](../guides/EXPOSURE_GUIDE.md#3-the-explorer-screen-by-screen) |
 | SIMM computed per netting set and regime from the shared sensitivities | **Built** (CC8) | [SIMM_GUIDE.md](../guides/SIMM_GUIDE.md) |
-| The CCR cube preset, its word and its door | **Built**, under construction | [PIVOT_GUIDE.md section 28](../guides/PIVOT_GUIDE.md#28-presets-the-risk-cubes) |
+| The CCR cube preset, its word and its door | **Built**, under construction | [BI_GUIDE.md section P28](../guides/BI_GUIDE.md#p28-presets-the-risk-cubes) |
 | Open items of the exposure engine (large-bank load, stored limits sized low, several runs a date, sharding) | open | [EXPOSURE_GUIDE section 28](../guides/EXPOSURE_GUIDE.md#28-open-items) |
 
 **On the demo** (2026-09-30): the bank's peak PFE 95% is **2,897,620,439** USD at 2W (EPE 947,202,991); CP-ALDERSHOT's peak PFE
@@ -3792,7 +3792,7 @@ change and incidents, Ask, and an **evidence pack** for a supervisor or audit.
 | A contract per kind with validation and rejects | **Built** | [contracts README 10](../contracts/README.md#10-validation-and-rejects) |
 | Content checks (past maturity, unmapped factors, stale prices, no LEI match) | **Not built** as checks; the Market lens shows market-data quality | [section 3](#3-market-lens) |
 | Data versions and provenance on every answer | **Built** | [RESOURCES_AND_SCALE 4.2](../guides/CLUSTER_GUIDE.md#84-data-loads-configuration-and-maintenance-without-downtime) |
-| BI lineage and impact; official VaR and exposure records for any past date | **Built** | [REPORTS_GUIDE 32](../guides/REPORTS_GUIDE.md#17-publishing-and-governance-versions-review-certification-lineage-impact-environments), [VAR_GUIDE 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results) |
+| BI lineage and impact; official VaR and exposure records for any past date | **Built** | [REPORTS_GUIDE 32](../guides/BI_GUIDE.md#r17-publishing-and-governance-versions-review-certification-lineage-impact-environments), [VAR_GUIDE 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results) |
 | The configuration in one generated document, in the UI with value and origin | **Built** | [CONFIGURATION](../admin/CONFIGURATION.md#every-setting) |
 | Audit log (sign-ins, failures, locks, users, roles, tokens, packs, connectors, load settings, cache purges, secret rotations) | **Built** | [USER_MANAGEMENT, audit](../guides/ADMIN_GUIDE.md#26-read-the-audit-log) |
 | Write-back audit and four-eyes approval | **Built** | [APPROVALS_GUIDE 10](../guides/APPROVALS_GUIDE.md#6-the-approvals-queue) |

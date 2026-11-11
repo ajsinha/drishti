@@ -30,7 +30,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 /**
- * Pivot custom functions submitted for sharing (PIVOT_GUIDE.md) in the Approvals queue. A version stays its author's until an approver who
+ * Pivot custom functions submitted for sharing (BI_GUIDE.md) in the Approvals queue. A version stays its author's until an approver who
  * is not its author approves it for {@code everyone} or {@code group:<name>} (the decision's {@code scope}); a Java plug-in is approved by
  * an administrator; a version without a passed harness report cannot be approved. Withdrawing an approved function stays on the pivot's
  * Functions panel.

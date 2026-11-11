@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 8, Part F, Live BI and boards (docs/tutorials/08-reports-and-dashboards.md), written to docs/tutorials/img/t12/.
+"""Pictures of tutorial 8, Part F, Live BI and boards (docs/guides/BI_GUIDE.md), written to docs/tutorials/img/t12/.
 
 The demo source ticks: a curve that moves as a whole (CRV-USD-BASIS), a live dataset, a report that redraws as the trades change (with Pause and Resume),
 and the Desk wall board, on a screen and in kiosk mode."""

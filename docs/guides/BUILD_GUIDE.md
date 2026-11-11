@@ -57,7 +57,7 @@ Contents:
 
 Two packs have guides of their own: the funds and ETFs pack ([FUNDS_GUIDE.md](FUNDS_GUIDE.md): FUND, HELD, TRACK, the look-through,
 the contracts of `fund`, [`fund-holder`](../contracts/samples/funds.md#fund-holder) ([contract](../contracts/packs/funds.md#held-funds-holding-a-company-fund-holder)) and [`index-funds`](../contracts/samples/funds.md#index-funds) ([contract](../contracts/packs/funds.md#track-funds-tracking-an-index-index-funds)), sources, licences and the refresh script) and the computed groupings and analytics
-(LEIG, LEIC, SIC, ECG, CORR, EQB, the USEQ ratios, PXH: [GROUPINGS_ANALYTICS_GUIDE.md](GROUPINGS_ANALYTICS_GUIDE.md)).
+(LEIG, LEIC, SIC, ECG, CORR, EQB, the USEQ ratios, PXH: [BI_GUIDE.md](BI_GUIDE.md#part-5--groupings-and-analytics)).
 
 ## 1. What a pack is
 
@@ -945,7 +945,7 @@ You should see `['$.NAME', '$.DESK_NAME', '$.TRADE_COUNT', '$.MTM', '$.DV01']`.
 
 ### 4.4 `pivot`: Pivot on search results
 
-A kind's search results and pick lists can offer **Pivot**, the pivot screen on the kind ([PIVOT_GUIDE.md](PIVOT_GUIDE.md),
+A kind's search results and pick lists can offer **Pivot**, the pivot screen on the kind ([BI_GUIDE.md](BI_GUIDE.md#part-1--pivot-cubes-and-explain),
 [USER_GUIDE.md](USER_GUIDE.md#pivot-slice-a-table-your-way)). It is offered **only** for the kinds a pack names under `pivot:`:
 
 ```yaml
@@ -1317,7 +1317,7 @@ routes:
 - **Beyond grouping.** `also-group-by` puts a member in further groups (a region, `'ALL'`); `then` works fields out over the page (a ratio, a
   weighted average); `sort` orders a list field; `tree` builds the group's own hierarchy from a parent column; `unlisted` keeps a page over everything
   to its figures; `search-fields` lets the type-ahead find a group by a page field. The gleif, us-equities and world-economy packs compute LEIG, LEIC,
-  SIC and ECG this way ([GROUPINGS_ANALYTICS_GUIDE.md](GROUPINGS_ANALYTICS_GUIDE.md); every setting in
+  SIC and ECG this way ([BI_GUIDE.md](BI_GUIDE.md#part-5--groupings-and-analytics); every setting in
   [the derived connector's README](../connectors/types/derived/README.md)).
 - **Links.** Declare the members field under `graph.fields` (`TRADE_IDS: { kind: trade, label: Trade }`); an `id-field` that is already a link field
   (`COUNTERPARTY`) links the derived entity to its key's.
@@ -2507,7 +2507,7 @@ the same deal stacks: the strip in two columns, panels one under another, the fu
 ![The deal on a phone, 390 px wide](img/deepjson/08-phone.jpg)
 
 For analysis the pack ships a **BI model** with a table of the table layer for every level, each row carrying the keys above it, so a cash flow can be
-counted by its deal's counterparty or its leg's index ([TABLES_GUIDE.md](TABLES_GUIDE.md), [REPORTS_GUIDE.md](REPORTS_GUIDE.md)):
+counted by its deal's counterparty or its leg's index ([BI_GUIDE.md](BI_GUIDE.md#part-2--virtual-tables-and-models), [BI_GUIDE.md](BI_GUIDE.md#part-3--reports-and-dashboards)):
 
 ```yaml
 # config/bi/models/book-deals.model.yaml (shortened)
@@ -3750,7 +3750,7 @@ a kind (`FORM trading <GO>`) is not a Sutra feature: it is the pack's `form:` se
 
 **When a Sutra is not enough.** A Sutra is a fixed layout everyone sees. For a one-off question about the screen in front of you, `Alt+C` opens Calc,
 Python in the browser with the view's document and tables loaded ([USER_GUIDE.md](USER_GUIDE.md#calc-python-on-any-view)); for questions across many
-entities, use BI ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)).
+entities, use BI ([BI_GUIDE.md](BI_GUIDE.md#part-3--reports-and-dashboards)).
 
 ## 23. Sutra and inference together
 
@@ -4463,7 +4463,7 @@ Each is written up step by step, with pictures, in [OPERATIONS_GUIDE.md, section
   optional signature by a trusted publisher; shows what it **changes** from the running version (breaking first: kinds or mnemonics removed or renamed);
   and, once you confirm, swaps it into `drishti.packs.installed-dir`, keeps the version it replaces and puts the new version to use at once. If the pack
   cannot be used, the old files are put back. A pack may carry BI items in `config/bi/` inside its folder; deploying imports them into the shared
-  workspace `packs` ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)).
+  workspace `packs` ([BI_GUIDE.md](BI_GUIDE.md#part-3--reports-and-dashboards)).
 - **History and roll back.** Every deployment, rollback and reverted attempt is listed, with the kept versions (`drishti.packs.deploy.keep-versions`) and
   a **Roll back to this** button; `shipped` goes back to the copy that ships with the server.
 - **Data source.** Per loaded pack, a read-only view of the connectors it names: each one's state, plugin, the kinds this pack takes from it, and what
@@ -5020,7 +5020,7 @@ within seconds and offers **Refresh**; on a phone each pack is a card. Server si
 ### 31.9 BI over the packs' kinds, and data loads
 
 Every kind of every pack you may open is a BI **dataset** named `pack.<pack>.<kind>` (`pack.trading.trade`), certified by its pack, read-only, versioned
-with the pack, its columns, keys, meanings and masks taken from the pack ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)); every BI model is rooted in packs
+with the pack, its columns, keys, meanings and masks taken from the pack ([BI_GUIDE.md](BI_GUIDE.md#part-3--reports-and-dashboards)); every BI model is rooted in packs
 ([ARCHITECTURE.md](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer)). `config/bi/` holds the BI samples over the seven packs
 (models such as `trades-basic`, `trading-risk`, `trading-cashflows`, `counterparty-exposure`, `world-economics`), and a test checks that each reads only
 what the packs serve.

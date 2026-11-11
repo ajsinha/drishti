@@ -333,7 +333,7 @@ public final class PivotExport {
     /** The view's definition as YAML (no figures). */
     public static String definition(Map<String, Object> view) {
         try {
-            return "# a pivot view (docs/guides/PIVOT_GUIDE.md): POST it to /api/v1/pivot/query or open it with PIVOT\n"
+            return "# a pivot view (docs/guides/BI_GUIDE.md): POST it to /api/v1/pivot/query or open it with PIVOT\n"
                     + new ObjectMapper(new YAMLFactory()).writeValueAsString(view);
         } catch (IOException e) {
             throw new IllegalStateException(e);

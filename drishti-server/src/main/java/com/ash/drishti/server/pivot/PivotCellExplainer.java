@@ -31,7 +31,7 @@ import java.util.Map;
 import org.springframework.stereotype.Component;
 
 /**
- * Explain a pivot cell (kind {@code pivot}, core; PIVOT_GUIDE.md): a cell of a pivot answer on two dates (or two cells), its difference
+ * Explain a pivot cell (kind {@code pivot}, core; BI_GUIDE.md): a cell of a pivot answer on two dates (or two cells), its difference
  * split by a dimension's members in steps that add up, by the pivot engine's own explanation ({@link Explain}), as the person (the view is
  * resolved and checked as for every pivot query: row rules and masks apply). Asked with a POST, the body the pivot's own: {@code view},
  * {@code value} (the value's label or id), {@code from}, {@code fromDate}, {@code to}, {@code toDate}, {@code by}, {@code order}. Each

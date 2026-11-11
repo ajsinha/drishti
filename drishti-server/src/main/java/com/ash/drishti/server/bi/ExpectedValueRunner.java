@@ -38,7 +38,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Runs the expected values ({@link ExpectedValue}) of a report or a dataset (docs/guides/REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 14): Check shows each as passed, failed or
+ * Runs the expected values ({@link ExpectedValue}) of a report or a dataset (docs/guides/BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 14): Check shows each as passed, failed or
  * could-not-run, and publishing refuses a failing one unless a bi-admin forces it. A test runs <em>as a role</em>: its own {@code role:}, else the one the person
  * chose, else the person's own roles; so the figure is what a reader with that role's row rules and masks sees. A person may run as a role they hold; a
  * bi-steward (or bi-admin) as any. The load of the report and dataset is the caller's; only the query is the role's.

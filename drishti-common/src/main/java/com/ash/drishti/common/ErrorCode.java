@@ -127,7 +127,7 @@ public enum ErrorCode {
     AI_POLICY("DRS-4018", 403),
     /** No such model, provider, MCP server or tool. */
     AI_NOT_FOUND("DRS-4019", 404),
-    /** BI with AI (docs/guides/REPORTS_GUIDE.md): the model's answer could not be used (not a valid report, not a query the engine accepts); nothing was changed. */
+    /** BI with AI (docs/guides/BI_GUIDE.md): the model's answer could not be used (not a valid report, not a query the engine accepts); nothing was changed. */
     AI_ANSWER("DRS-4020", 422),
     /** History queries: a range of more business days than the kind's or the server's max-days. */
     HISTORY_RANGE_TOO_LARGE("DRS-4021", 400),
@@ -246,7 +246,7 @@ public enum ErrorCode {
     VAR_SYSTEM_BASKET_INVALID("DRS-5220", 422),
     /** {@code PORT:<id>} (or an edit) of a system basket there is none of on the date: {@code PORT <GO>} lists them. */
     VAR_SYSTEM_BASKET_UNKNOWN("DRS-5221", 404),
-    /** The pivot engine (PIVOT_GUIDE.md): a view it cannot answer (an unknown source, field or function, a field twice, a bad filter or sort). */
+    /** The pivot engine (BI_GUIDE.md): a view it cannot answer (an unknown source, field or function, a field twice, a bad filter or sort). */
     PIVOT_BAD_VIEW("DRS-5701", 400),
     /**
      * The pivot's cell budget ({@code drishti.pivot.max-cells}, {@code max-holistic-cells}): a view of more visible cells (totals included)
@@ -282,12 +282,12 @@ public enum ErrorCode {
     /** An explanation or a what-if the engine cannot make as asked (two cells of different measures, a holistic measure without its provider's steps). */
     PIVOT_EXPLAIN("DRS-5716", 400),
     /**
-     * A live pivot refused or ended (PIVOT_GUIDE.md, live pivots): live pivots switched off, a person's or the server's live views at their
+     * A live pivot refused or ended (BI_GUIDE.md, live pivots): live pivots switched off, a person's or the server's live views at their
      * most, a view over the live cell budget, an exact live view that reads more rows than {@code drishti.pivot.live.max-rows}, a view
      * pinned to a past version.
      */
     PIVOT_LIVE("DRS-5721", 422),
-    /** A cell comment refused (PIVOT_GUIDE.md, cell comments): empty or too long, a view not saved, a cell not of the view, not the author's. */
+    /** A cell comment refused (BI_GUIDE.md, cell comments): empty or too long, a view not saved, a cell not of the view, not the author's. */
     PIVOT_COMMENT("DRS-5722", 400),
     /** Exposure: a bad scope word or parameter ({@code q}, {@code collateral}, {@code date} not a grid date, {@code by}, {@code run}). */
     EXPOSURE_BAD_PARAMETER("DRS-5440", 400),
@@ -608,7 +608,7 @@ public enum ErrorCode {
     CONTENT_BAD_KEY("DRS-5058", 400),
     /** Content store: the backing store (database, bucket, shared folder) could not be reached or answered with an error. */
     CONTENT_UNAVAILABLE("DRS-5059", 503),
-    /** Compute workers (docs/guides/NOTEBOOK_GUIDE.md): compute is off on this server ({@code compute.enabled}). */
+    /** Compute workers (docs/guides/BI_GUIDE.md): compute is off on this server ({@code compute.enabled}). */
     COMPUTE_OFF("DRS-9201", 503),
     /** Compute: refused before any work (unknown pool, requirements not approved, an environment not built, four eyes, a bad request). */
     COMPUTE_REFUSED("DRS-9202", 409),
@@ -642,7 +642,7 @@ public enum ErrorCode {
     BUSY_BI_RUN("DRS-9504", 503),
     /** Busy protection: a bulk load of a pack's data did not start. */
     BUSY_BULK_LOAD("DRS-9505", 503),
-    /** Busy protection: a large pivot view (more cells than {@code drishti.pivot.busy-cells}) did not start (PIVOT_GUIDE.md). */
+    /** Busy protection: a large pivot view (more cells than {@code drishti.pivot.busy-cells}) did not start (BI_GUIDE.md). */
     BUSY_PIVOT_VIEW("DRS-9507", 503),
     /** Busy protection: an Arrow Flight read did not start (Arrow memory of the process near its cap, or the server very busy); retry later. */
     BUSY_FLIGHT("DRS-9506", 503),
@@ -666,7 +666,7 @@ public enum ErrorCode {
     FLIGHT_RESUME_GONE("DRS-5609", 410),
     /** Arrow Flight: an administrator stopped the stream (Admin → Data out). */
     FLIGHT_STOPPED("DRS-5610", 409),
-    /** Virtual tables (TABLES_GUIDE.md): a table or model the catalogue does not hold. */
+    /** Virtual tables (BI_GUIDE.md): a table or model the catalogue does not hold. */
     TABLE_NOT_FOUND("DRS-9609", 404),
     /** Virtual tables: a read refused (a date the source does not hold, known-at without history, too many rows, a condition on a masked column, a reader no rule names). */
     TABLE_READ("DRS-9615", 422),

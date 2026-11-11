@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """`drishti.py pivot functions|explain|whatif`: custom aggregation functions, explanations and what-ifs of the pivot engine
-(docs/guides/PIVOT_GUIDE.md sections on custom functions, explain and what-if; the API: /api/v1/pivot/functions, /explain, /whatif).
+(docs/guides/BI_GUIDE.md sections on custom functions, explain and what-if; the API: /api/v1/pivot/functions, /explain, /whatif).
 
     drishti.py pivot functions list
     drishti.py pivot functions test wret.yaml --sample rows.csv [--group DESK]

@@ -19,7 +19,7 @@ import com.ash.drishti.bicompute.live.LivePivots;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Live pivots ({@code drishti.pivot.live}, config/engines/pivot.yaml; PIVOT_GUIDE.md, live pivots).
+ * Live pivots ({@code drishti.pivot.live}, config/engines/pivot.yaml; BI_GUIDE.md, live pivots).
  *
  * @param enabled false: no live pivots on this node (the Live switch is not offered)
  * @param maxPerPerson live views one person may hold

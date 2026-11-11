@@ -35,7 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Runs a Java {@link ComputeEngine} in the server's own process (NOTEBOOK_GUIDE.md section 10): only for trusted, light code. Drishti's own
+ * Runs a Java {@link ComputeEngine} in the server's own process (BI_GUIDE.md section N10): only for trusted, light code. Drishti's own
  * engines ({@code com.ash.drishti.*}, shipped with the server) always may; any other class only when the site allows it
  * ({@code compute.in-process-java: true}); heavy or untrusted Java belongs in a Java worker (planned, C6). Each computation runs on its own
  * virtual thread with the request's budget; a computation past its budget is interrupted.

@@ -134,7 +134,7 @@ def test_the_pictures_of_the_later_tutorials_are_made_by_the_script_and_shown_at
         for rel in IMAGE.findall(doc.read_text()):
             if rel.startswith("img/t1"):
                 assert Path(rel).name in listed, f"{doc.name}: {rel} is not made by tools/docs/screenshots.py"
-    for name in ("08-reports-and-dashboards.md", "20-embed-drishti.md"):
+    for name in ("BI_GUIDE.md", "20-embed-drishti.md"):
         assert re.search(r"phone|390 px", (TUTORIALS / name).read_text()), name
 
 

@@ -43,7 +43,7 @@ final class WiringReader {
     static final String CHILDREN = "DRS-2056";
     private static final Pattern NAME = Pattern.compile("[a-z][a-z0-9-]{0,63}");
     private static final Set<String> SOURCE_KEYS = Set.of("pack", "kind", "id", "where", "search", "limit", "as-of", "model", "params", "table");
-    /** A virtual table's name: {@code <domain>.<name>} (TABLES_GUIDE.md section 2), with an optional major ({@code @1}). */
+    /** A virtual table's name: {@code <domain>.<name>} (BI_GUIDE.md section T2), with an optional major ({@code @1}). */
     private static final Pattern TABLE = Pattern.compile("[a-z][a-z0-9_]{0,62}\\.[a-z][a-z0-9_]{0,62}(@\\^?[0-9]+)?");
     private static final Pattern PARAM = Pattern.compile("[A-Za-z][A-Za-z0-9_-]{0,63}");
     private static final Set<String> EMIT_KEYS = Set.of("name", "on", "payload");

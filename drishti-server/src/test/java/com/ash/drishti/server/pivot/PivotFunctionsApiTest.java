@@ -36,7 +36,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 /**
- * /api/v1/pivot/functions, /explain and /whatif on the demo trades (PIVOT_GUIDE.md, custom functions, explain, what-if): the playground's
+ * /api/v1/pivot/functions, /explain and /whatif on the demo trades (BI_GUIDE.md, custom functions, explain, what-if): the playground's
  * harness and states, a function saved only after the harness, private until an approver who is not its author approves it, used in a view
  * with its label, withdrawn in its cells; Python off as shipped; an explanation whose steps add up; a what-if beside the original. Audited.
  */

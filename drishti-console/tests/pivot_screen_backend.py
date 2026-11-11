@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""A stand-in server for the pivot screen (PIVOT_GUIDE.md) in a real browser: synthetic trades only. The engine's answers come from the
+"""A stand-in server for the pivot screen (BI_GUIDE.md) in a real browser: synthetic trades only. The engine's answers come from the
 chart tests' stand-in (``inline_answer``: one level of rows and of columns, each cell from its own rows; the real figures are proved by
 PivotApiTest and RowsProviderTest), shaped as /api/v1/pivot/query answers them. Used by test_pivot_screen_browser.py and pivot_shots.py."""
 from core.backend import BackendError
@@ -101,7 +101,7 @@ class PivotBackend(ChartBackend):
             return live
         raise BackendError(404, "DRS-1001", "no such pivot call in the stand-in")
 
-    # ---- the screen's switches, live pivots and cell comments (PIVOT_GUIDE.md) --------------------------------------------------------
+    # ---- the screen's switches, live pivots and cell comments (BI_GUIDE.md) --------------------------------------------------------
     asked: list = []
     comments: list = []
     ended: list = []

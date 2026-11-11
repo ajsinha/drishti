@@ -184,7 +184,7 @@ Configuration ships with these:
 | `admin` | everything | yes | yes | — | yes (and admins may approve) | yes | yes |
 
 `pivot-approver` approves custom pivot functions someone else wrote (four eyes: never one's own; administrators may too); it is the role
-`drishti.pivot.functions.approver-role` names as shipped ([PIVOT_GUIDE.md](PIVOT_GUIDE.md)). Its `approve` is not the Sutra review's: a
+`drishti.pivot.functions.approver-role` names as shipped ([BI_GUIDE.md](BI_GUIDE.md#part-1--pivot-cubes-and-explain)). Its `approve` is not the Sutra review's: a
 pivot approver does not make Sutras live.
 
 Packs add their own. The shipped packs add `trader` (trading), `market-risk` (market-risk), `credit-risk` (counterparty-risk), `economist`
@@ -222,7 +222,7 @@ A lens ([section 12](#12-what-a-lens-is)) never widens or narrows this: it chang
 
 ### 3.4 BI powers (Rupaka)
 
-Business intelligence ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)) has four powers of its own. They are a list, `bi`, on a role:
+Business intelligence ([BI_GUIDE.md](BI_GUIDE.md#part-3--reports-and-dashboards)) has four powers of its own. They are a list, `bi`, on a role:
 `drishti.security.roles.<role>.bi: [bi, bi-author]` in configuration or a pack, or, for a role you define, **Admin → BI settings** (a
 table of roles with four tick boxes each; built-in roles are read-only there) or the `bi` list of `PUT /api/v1/admin/role-definitions/{name}`.
 Saving a role in **Admin → Roles** keeps the BI powers it has.
@@ -1383,8 +1383,8 @@ How the engines are built is in [ARCHITECTURE.md section 27](../architecture/ARC
 | `sensitivities` | position sensitivities and the factor dictionary: load, checks, sums by bucket | `DRISHTI_SENSITIVITIES_ENABLED` | on | `SENS`, `RFAC`, the factor dictionary |
 | `frtb-sa` | FRTB-SA: SBM, DRC, RRAO and its playground | `DRISHTI_FRTB_ENABLED` | on | `FRSA`, `PLAY FRTB`; the capital page; the FRTB-SA guide's Help pages; `drishti.py frtb` |
 | `simm` | ISDA SIMM initial margin per netting set and regime, and its playground | `DRISHTI_SIMM_ENABLED` | on | `SIMM`, `PLAY SIMM`; the netting set page's IM panel |
-| `pivot` | the pivot engine ([PIVOT_GUIDE.md](PIVOT_GUIDE.md)) | `DRISHTI_PIVOT_ENGINE_ENABLED` | on | `PIVOT`, Views → Pivot, Pivot on an Export data table, `drishti.py pivot` |
-| `mr-cube` | the market-risk cube on the pivot engine ([PIVOT_GUIDE.md section 29](PIVOT_GUIDE.md#29-the-mr-cube-preset)) | `DRISHTI_MR_CUBE_ENABLED` | on | `MCUBE`, `/mcube` |
+| `pivot` | the pivot engine ([BI_GUIDE.md](BI_GUIDE.md#part-1--pivot-cubes-and-explain)) | `DRISHTI_PIVOT_ENGINE_ENABLED` | on | `PIVOT`, Views → Pivot, Pivot on an Export data table, `drishti.py pivot` |
+| `mr-cube` | the market-risk cube on the pivot engine ([BI_GUIDE.md section P29](BI_GUIDE.md#p29-the-mr-cube-preset)) | `DRISHTI_MR_CUBE_ENABLED` | on | `MCUBE`, `/mcube` |
 | `memory-lake` | Delta tables held in memory only, with their replenish jobs ([DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md)) | `DRISHTI_MEMORY_LAKE_ENABLED` | off (it needs stores configured) | Admin → Lakes' Memory tab, `drishti.py lake memory`, `mem://` stores |
 | `dataload` | the data inbox: files dropped in its inbox with a `.ready` marker are loaded into the lake ([DATA_GUIDE.md](DATA_GUIDE.md)) | `DRISHTI_DATALOAD_ENABLED` | off | the inbox and its loads |
 | `flight` | Arrow Flight, data out to any client ([FLIGHT_GUIDE.md](FLIGHT_GUIDE.md)) | `DRISHTI_FLIGHT_ENABLED` | off | the Flight port |

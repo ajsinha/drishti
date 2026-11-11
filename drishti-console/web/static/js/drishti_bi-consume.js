@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Wave B, what every consumer of a model shares (docs/architecture/ARCHITECTURE.md §28 sections 4.5 to 4.7, console tasks 3 to 5; docs/guides/REPORTS_GUIDE.md section 25):
+/* Wave B, what every consumer of a model shares (docs/architecture/ARCHITECTURE.md §28 sections 4.5 to 4.7, console tasks 3 to 5; docs/guides/BI_GUIDE.md section R25):
 
      B.consume.timePicker(root, onChange)   now (live), as of a date, or a window: the three times one plan answers in. A past as-of date never changes, so it is
                                             asked once; now and a window are followed.

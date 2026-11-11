@@ -19,7 +19,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Decides whether a connector whose file has a {@code requires:} block may start (docs/guides/NOTEBOOK_GUIDE.md section 6): only when
+ * Decides whether a connector whose file has a {@code requires:} block may start (docs/guides/BI_GUIDE.md section N6): only when
  * an administrator has approved every library it names. Until then it stays off, its health says why, and a request for approval is filed
  * (Admin → Compute). Implemented by the compute wiring; without it, a connector with requirements never starts.
  */

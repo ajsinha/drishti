@@ -123,7 +123,7 @@ The browser column names the console page that runs the same engine; those pages
 | Run VaR's many-scope sums on the bundled OpenBLAS or on the pure-Java path, live | Admin → **Engines** → Linear algebra: OpenBLAS | `drishti.py server blas status`, `server blas java --reason ...`, `server blas native --reason ...` (also as `admin blas`; [OPERATIONS_GUIDE.md section 2.1](OPERATIONS_GUIDE.md#149-native-libraries-blas)) |
 | Make, check or remove the AWS side of the S3 Tables or Delta Lake on S3 connector (bucket, namespace or prefix, IAM policy) | | `deploy/aws/s3-tables/s3-tables.sh`, `deploy/aws/delta-s3/delta-s3.sh` (`.ps1` on Windows; [7.14](#714-the-aws-connectors-tool-scripts-s3-tables-and-delta-lake-on-s3)) |
 | See or check the shape of a command's data (its data contract), or draft the contract of a new kind | | `drishti.py contract list`, `contract show`, `contract check`, `contract docs`, `contract bootstrap` |
-| Pin the Python libraries code people write may use on the server's compute pool `python` (every file's sha256, for `pip --require-hashes`) | | `python tools/python_lock.py config/compute/locks/python.in --out config/compute/locks/python.lock` ([NOTEBOOK_GUIDE.md section 19](../architecture/ARCHITECTURE.md#291-one-python-runtime)) |
+| Pin the Python libraries code people write may use on the server's compute pool `python` (every file's sha256, for `pip --require-hashes`) | | `python tools/python_lock.py config/compute/locks/python.in --out config/compute/locks/python.lock` ([BI_GUIDE.md section N19](../architecture/ARCHITECTURE.md#291-one-python-runtime)) |
 
 Use the page for a one-off file, a first look at new data, or when you want to see each choice before it is made. Use the command
 line for anything that repeats, runs at night, or lives in a pipeline: it has exit codes, a lock, a log line and a JSON summary,
@@ -3171,7 +3171,7 @@ drishti-console/.venv/bin/python tools/drishti.py edits status
 
 ### `bi`: workspaces and the catalogue (Rupaka)
 
-Business intelligence over REST ([REPORTS_GUIDE.md](REPORTS_GUIDE.md), [API_REFERENCE.md](API_REFERENCE.md#3-business-intelligence-apiv1bi)), as the token's user sees it: the
+Business intelligence over REST ([BI_GUIDE.md](BI_GUIDE.md#part-3--reports-and-dashboards), [API_REFERENCE.md](API_REFERENCE.md#3-business-intelligence-apiv1bi)), as the token's user sees it: the
 server shows only what that person may open. Reads need no scope; `publish` needs a token with `bi:write` (and the user the `bi-author` power and the member role).
 
 ```
@@ -3227,7 +3227,7 @@ drishti.py bi sql "SELECT ..." --model M [--explain] [--format table|json|csv|js
 ```
 
 BI's own dataset and model files (`rachana: 1` and `2`) and their old expression syntax are migrated into tables and models of the table layer by
-`drishti.py tables migrate` ([TABLES_GUIDE.md](TABLES_GUIDE.md), the migration); BI refuses them where it reads (`DRS-9196`).
+`drishti.py tables migrate` ([BI_GUIDE.md](BI_GUIDE.md#part-2--virtual-tables-and-models), the migration); BI refuses them where it reads (`DRS-9196`).
 
 ```bash
 drishti-console/.venv/bin/python tools/drishti.py bi expr validate "sum(trades.NOTIONAL) / count(trades)" --model trading-risk
@@ -3248,7 +3248,7 @@ console the migration's state is on Admin → **BI** (items that could not be co
 ### `bi model`, `bi mq`: models and model queries
 
 What the model designer and a report's visuals do, over REST as the token's user (the server checks every model and answers every query with your row
-rules and masks; [REPORTS_GUIDE.md section 23](REPORTS_GUIDE.md#5-models-and-datasets-what-a-report-reads)). Reads need no scope.
+rules and masks; [BI_GUIDE.md section R23](BI_GUIDE.md#r5-models-and-datasets-what-a-report-reads)). Reads need no scope.
 
 ```
 drishti.py bi model list [--kind model|implicit|compat]          the models and datasets you may read, with the name@major a query uses
@@ -3266,7 +3266,7 @@ a table with its plan, its as-of date and the columns masked for you; `--json` p
 
 ### `bi transform`: a Transform's inputs as you, and the snippets
 
-What the Transform editor's inputs and snippets picker do (`tools/bitransform.py`, loaded by `drishti.py`; [NOTEBOOK_GUIDE.md › Data prep: the Transform editor](NOTEBOOK_GUIDE.md#5-data-prep-the-transform-editor)). `input`
+What the Transform editor's inputs and snippets picker do (`tools/bitransform.py`, loaded by `drishti.py`; [BI_GUIDE.md › Data prep: the Transform editor](BI_GUIDE.md#n5-data-prep-the-transform-editor)). `input`
 asks the server, as the token's user, for each input of a Python dataset (`POST /api/v1/bi/python/input`: a model query, or a pack kind read through a
 connector) and prints its rows, what is masked for you and a short profile of every column; `snippets` and `snippet` read the console's library
 (`drishti-console/config/prep-snippets.yaml`, no server) and print the step a snippet makes, each value written as a literal.
@@ -3277,7 +3277,7 @@ drishti.py bi transform snippets [--json]                                       
 drishti.py bi transform snippet ID [NAME=VALUE ...] [--inputs a,b]                              one step (a list: a,b; a mapping: from:to,from:to)
 ```
 
-Captured, the steps of [tutorial 9, step 12](../tutorials/09-notebook-and-python.md#step-12--prepare-raw-trades-step-by-step-the-transform-editor):
+Captured, the steps of [the Notebook tutorial, step 12](BI_GUIDE.md#step-12--prepare-raw-trades-step-by-step-the-transform-editor):
 
 ```text
 $ python3 tools/drishti.py bi transform input docs/tutorials/data/endur-trades-cleaned.dataset.yaml --rows 2
@@ -3305,7 +3305,7 @@ drishti.py bi item tests ID [--role R]                                          
 drishti.py bi dataset refresh ID [--now] [--wait S]                                 the refresh state; --now refreshes and waits until it ends (a rachana 2 dataset: through the models that read it)
 ```
 
-Publishing is `bi catalogue publish ID` (above). Captured, the steps of [tutorial 8, Part D, Part D](../tutorials/08-reports-and-dashboards.md#part-d--bi-that-runs-itself):
+Publishing is `bi catalogue publish ID` (above). Captured, the steps of [the reports tutorial, Part D, Part D](BI_GUIDE.md#part-d--bi-that-runs-itself):
 
 ```text
 $ python3 tools/drishti.py bi item new economics-desk docs/tutorials/data/trades-daily.dataset.yaml
@@ -3323,12 +3323,12 @@ fail  Close to 100 trades: expected 100 ± 1%, found 750
 ### `bi runs`, `bi mq --async`, `bi sql --async`: BI runs
 
 `drishti.py bi runs list|get|submit|estimate|wait|result|cancel|rerun|export|share|unshare|promote|keep|schedule|schedules|storage|suggestions` does what the BI
-Runs tab does (sharing, schedules, CSV and Excel export, and for a bi-admin the rollup suggestions), as the token's user (`tools/biruns.py`); `bi mq` and `bi sql` take `--async [--wait 2s] [--yes]`. Examples, exit codes and output: [REPORTS_GUIDE.md section 28](REPORTS_GUIDE.md#1512-on-the-command-line)
+Runs tab does (sharing, schedules, CSV and Excel export, and for a bi-admin the rollup suggestions), as the token's user (`tools/biruns.py`); `bi mq` and `bi sql` take `--async [--wait 2s] [--yes]`. Examples, exit codes and output: [BI_GUIDE.md section R28](BI_GUIDE.md#r1512-on-the-command-line)
 and [CLI_REFERENCE.md section 5.7](#12-bi-and-tables).
 
 ### `bi statement`
 
-A report's statement pages ([REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](REPORTS_GUIDE.md#12-statements-paginated-reports-page-exact-one-per-reader)) made for the token's user, with their own masks and row rules: what the BI Studio's Paper
+A report's statement pages ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](BI_GUIDE.md#r12-statements-paginated-reports-page-exact-one-per-reader)) made for the token's user, with their own masks and row rules: what the BI Studio's Paper
 tab previews and a subscription mails.
 
 ```
@@ -3374,7 +3374,7 @@ wrote empty.pdf (2,093 bytes)
 
 ### `tables`: virtual tables and models
 
-The table layer's definitions under `config/tables` (`tools/tablescli.py`; [TABLES_GUIDE.md](TABLES_GUIDE.md)): listed, checked, previewed over sample documents,
+The table layer's definitions under `config/tables` (`tools/tablescli.py`; [BI_GUIDE.md](BI_GUIDE.md#part-2--virtual-tables-and-models)): listed, checked, previewed over sample documents,
 traced, and BI's datasets and models migrated into them. The commands run in Java from the server's exec jar
 (`java -jar drishti-server-*-exec.jar tables ...`) without starting a server and write nothing under the data folder; paths are read from
 the folder you run them in (`--root` for another catalogue folder). Every command takes `--json`.
@@ -3625,7 +3625,7 @@ drishti-console/.venv/bin/python tools/drishti.py play simm NS-ALDERSHOT-LDN --s
 
 ### `pivot`: the pivot engine
 
-The pivot engine as the token's user sees it (`tools/pivotcli.py`; [PIVOT_GUIDE.md](PIVOT_GUIDE.md)); every figure is the server's:
+The pivot engine as the token's user sees it (`tools/pivotcli.py`; [BI_GUIDE.md](BI_GUIDE.md#part-1--pivot-cubes-and-explain)); every figure is the server's:
 
 - `pivot sources`: the tables (and `var`) you may pivot. `pivot fields SOURCE [--date]`: its fields with their types, its own measures,
   the built-in functions, what is masked for you.
@@ -3636,18 +3636,18 @@ The pivot engine as the token's user sees it (`tools/pivotcli.py`; [PIVOT_GUIDE.
   every sketch exactly (exact on request); `--approximate` answers distinct counts and percentiles by their sketches at any size and
   chooses a level's top N by a count with a Space-Saving summary; `--no-rollups` reads the table even when a rollup covers the view; the
   line `computed as:` says how the answer was computed
-  ([PIVOT_GUIDE.md sections 23 and 24](PIVOT_GUIDE.md#24-the-screens-switches-exact-or--progressive-rollups)).
+  ([BI_GUIDE.md sections P23 and 24](BI_GUIDE.md#p24-the-screens-switches-exact-or--progressive-rollups)).
 - `pivot live start [view flags] [--approximate]`: a live pivot (its id, the node that holds it, how it is kept current);
   `pivot live list` (yours: recomputes, unchanged checks, streaming or not); `pivot live stop ID`
-  ([PIVOT_GUIDE.md section 25](PIVOT_GUIDE.md#25-live-pivots)).
+  ([BI_GUIDE.md section P25](BI_GUIDE.md#p25-live-pivots)).
 - `pivot comments OWNER/NAME [--cell DIM=V,...] [--open]`: a saved view's cell comments; `--add TEXT --cell DIM=V,... [--measure M]`
   adds one (`--cell '*'`: the grand total); `--resolve ID`, `--reopen ID`, `--delete ID` (its author or the view's owner)
-  ([PIVOT_GUIDE.md section 26](PIVOT_GUIDE.md#26-cell-comments)).
+  ([BI_GUIDE.md section P26](BI_GUIDE.md#p26-cell-comments)).
 - `pivot estimate`: what the view reads before it runs.
 - `pivot export --format xlsx|csv|arrow [--what pivot|rows|definition] [--cell DIM=V,...] -o FILE`: the Excel workbook with its outline
   and `SUM` formulas only where a figure adds up and a Provenance sheet; CSV; Arrow; a cell's rows; the view as YAML. Audited.
 - `pivot views`; `pivot save NAME [view flags] [--share role:risk]`.
-- `--option KEY=V` (repeatable): a provider's option; the VaR source's (the MR cube, [PIVOT_GUIDE.md section 29](PIVOT_GUIDE.md#29-the-mr-cube-preset)) are `scope`,
+- `--option KEY=V` (repeatable): a provider's option; the VaR source's (the MR cube, [BI_GUIDE.md section P29](BI_GUIDE.md#p29-the-mr-cube-preset)) are `scope`,
   `horizon`, `method`, `confidence`, `esConfidence`, `set` and `ccy`.
 - `pivot mr headline|cell|versions|explain|ladder|heat|whatif`: the MR cube's lens (`/api/v1/risk/mr`): the view's headline, a cell's
   tail (`--cell DIM=V,...`), the slider's dates, why a scope moved (`--scope`, `--from`, `--to`), the DV01 ladder (`--grid`), the heat

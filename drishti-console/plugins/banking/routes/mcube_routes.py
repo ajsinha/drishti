@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The MR cube in the console (docs/guides/PIVOT_GUIDE.md#29-the-mr-cube-preset): a Pivot preset (config/pivot-presets.yaml ``mr``; the screen is
+"""The MR cube in the console (docs/guides/BI_GUIDE.md#p29-the-mr-cube-preset): a Pivot preset (config/pivot-presets.yaml ``mr``; the screen is
 ``/pivot?preset=mr``, terminal/pivot.html on source ``var`` with the MR lens: the headline strip, the lens controls, the time-travel slider and tabs
 A, B and C drawn by plugins/banking/static/js/drishti_mr-lens.js). This module is its word and its lens's API, not a page: ``MCUBE <GO>`` opens the preset's
 landing (the source's defaultView: desks by risk class, VaR); ``MCUBE <scope> [BY rows[,columns]] [MEASURE m,...] [DATE d] [SORT desc] <GO>``

@@ -119,7 +119,7 @@ public interface SourcePlugin extends AutoCloseable {
     /**
      * Every business date this source holds the kind for, oldest first, or empty when it cannot say. Must be cheap, as {@link #latestDate}
      * (what the source already keeps: a lake's layout, a folder per date): a statement for a date without data names the nearest dates that
-     * have some (REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24.6).
+     * have some (BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24.6).
      */
     default Optional<java.util.NavigableSet<java.time.LocalDate>> heldDates(String kind) {
         return Optional.empty();

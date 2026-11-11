@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * The field list's metadata of a source's catalogue (PIVOT_GUIDE.md section 2, the field pickers and panes): for each field its
+ * The field list's metadata of a source's catalogue (BI_GUIDE.md section P2, the field pickers and panes): for each field its
  * <b>group</b> ({@code hierarchy}, {@code field} or {@code measure}), its <b>display folder</b>, whether it is <b>hidden</b> (under "More
  * fields"), the hierarchy it is a level of, and the <b>functions valid for it</b>; the source's <b>hierarchies</b> as one item each with
  * their levels; and the <b>show-as</b> forms the engine computes (ShowAs). A provider sets folders, hidden fields and hierarchies through

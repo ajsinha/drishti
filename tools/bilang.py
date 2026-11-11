@@ -53,7 +53,7 @@ def register(bi, srv, ctx) -> None:
                       epilog="examples:\n  drishti.py bi migrate --boards config/bi/boards --write   # 2.3 boards to reports with board pages (2.4.0)\n"
                              "  drishti.py bi migrate --boards --dry-run                  # the server's stored boards")
     m.add_argument("files", nargs="*", metavar="FILE", help="board files or folders (searched for *.board.yaml); none: the stored boards")
-    m.add_argument("--boards", action="store_true", required=True, help="convert 2.3 boards to reports whose pages have layout: board (docs/guides/REPORTS_GUIDE.md)")
+    m.add_argument("--boards", action="store_true", required=True, help="convert 2.3 boards to reports whose pages have layout: board (docs/guides/BI_GUIDE.md)")
     m.add_argument("--write", action="store_true", help="FILEs: write the converted files")
     m.add_argument("--dry-run", action="store_true", help="stored boards: change nothing, show what would change")
     m.add_argument("--keep-old", action="store_true", help="keep the board files")

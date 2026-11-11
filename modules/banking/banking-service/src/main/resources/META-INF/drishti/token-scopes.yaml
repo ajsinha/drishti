@@ -18,7 +18,7 @@
 module: banking
 # POSTs that only read: a personal API token may call them with no scope
 read-posts:
-  - /api/v1/risk/mr/headline        # the MR cube's lens (PIVOT_GUIDE.md#29-the-mr-cube-preset): a view's headline, a cell's detail and history and the
+  - /api/v1/risk/mr/headline        # the MR cube's lens (BI_GUIDE.md#p29-the-mr-cube-preset): a view's headline, a cell's detail and history and the
   - /api/v1/risk/mr/detail          # what-if side by side, each computed by the VaR engine as the caller, written nowhere
   - /api/v1/risk/mr/history
   - /api/v1/risk/mr/what-if

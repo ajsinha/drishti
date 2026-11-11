@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The Pivot's presets (docs/guides/PIVOT_GUIDE.md › Presets: the risk cubes; core/pivot_presets.py). One grid: a preset is the pivot screen
+# The Pivot's presets (docs/guides/BI_GUIDE.md › Presets: the risk cubes; core/pivot_presets.py). One grid: a preset is the pivot screen
 # (/pivot?preset=<name>) opened on a source, with a lens and a landing, behind its own doors (a command word, a tab or a menu item). It
 # computes nothing and draws no grid of its own: every figure is the pivot engine's answer for the view, as the person asking.
 #   title        the screen's name
@@ -23,13 +23,13 @@
 #   help         the help address its ? opens (/help/context/<help>)
 #   engine       the compute engine it needs (config/engines.yaml): off on every server of the cluster, the preset is refused in words (DRS-1020)
 #   under_construction   the registry item (config/under-construction.yaml) while the preset's source is not built: its doors carry the chip
-#   mode         how the screen opens (PIVOT_GUIDE.md section 2): views (the View picker in front of the compact line, the default),
+#   mode         how the screen opens (BI_GUIDE.md section P2): views (the View picker in front of the compact line, the default),
 #                compact (the compact line alone) or panes (the Fields and Build panes); a person moves between them with Customize › (\)
 #   view         the ready-made view it opens with (its id below); none: the source's own landing
 #   views        the ready-made views of the View picker (keys 1-9), each a partial view laid over the landing: id, name, detail (what it
 #                shows), rows, columns, values ([{measure, as}]), and optionally sort, top, expandTo, options. A view naming a field the
 #                source does not have (a hierarchy not configured) is left out of the picker. My views and Shared with me are the saved
-#                and shared views (PIVOT_GUIDE.md section 11): no store of their own.
+#                and shared views (BI_GUIDE.md section P11): no store of their own.
 presets:
   mr:
     title: MR cube

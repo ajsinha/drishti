@@ -140,7 +140,7 @@ class ChannelSession:
             return self.backend.sse("/bi/runs/events", self.me, opened=responses), False
         if sub.startswith("monitor:"):
             return self.backend.sse(f"/me/monitors/{quote(sub[8:])}/stream", self.me, opened=responses), False
-        if sub.startswith("pivotlive:") and len(sub) > 10:     # a live pivot (PIVOT_GUIDE.md 25): answer, patch, reshape, status, ended, on
+        if sub.startswith("pivotlive:") and len(sub) > 10:     # a live pivot (BI_GUIDE.md 25): answer, patch, reshape, status, ended, on
             lid, _, node = sub[10:].partition("@")              # the node that holds it (pivotlive:<id>@<node>)
             stream = self.backend.sse(f"/pivot/live/{quote(lid, safe='')}/events", self.me, opened=responses, **({"node": node} if node else {}))
             return _renamed(stream, {"error": "failed"}), False       # an EventSource's own "error" is its connection's: the stream's is "failed"

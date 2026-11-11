@@ -64,7 +64,7 @@ retired:
     measure: the system baskets of the basket store (VAR_GUIDE.md section 5.7), not data
     note: "PORT <id>, PORT:<id> and /v/portfolio/<id> open the same system basket, served as the kind system-basket from the basket store"
 
-# The groupings and analytics (2.9.2, docs/guides/GROUPINGS_ANALYTICS_GUIDE.md): the stored pages retired, the same commands and ids
+# The groupings and analytics (2.9.2, docs/guides/BI_GUIDE.md): the stored pages retired, the same commands and ids
 # computed from the fundamental data when asked.
 computed-in-place:
   lei-group:

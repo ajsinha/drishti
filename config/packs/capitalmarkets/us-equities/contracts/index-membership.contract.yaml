@@ -178,10 +178,10 @@ validation:
   - Transportation, Communications, Electric, Gas and Sanitary Services
   - Wholesale Trade
 notes:
-- 'ROWS[].NET_MARGIN is not kept on the record: a member''s net margin is computed from its revenue and net income (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md,
+- 'ROWS[].NET_MARGIN is not kept on the record: a member''s net margin is computed from its revenue and net income (docs/guides/BI_GUIDE.md,
   section 16).'
 - 'SECTORS, REVENUE, NET_INCOME and BY_SECTOR are not kept on the record: the page sums the members'' rows (USD reporters) and counts their SIC
-  divisions (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md, section 16). The membership (ROWS) and MEMBERS stay.'
+  divisions (docs/guides/BI_GUIDE.md, section G16). The membership (ROWS) and MEMBERS stay.'
 - '1.1: ROWS[].SECTOR lists every SIC division of the data.'
 review:
 - 'required inferred from 100% coverage in 7 documents (1 samples and 6 test-data documents (data/testdata/us-equities/index-membership/index-membership.2026-10-24.jsonl.gz)):

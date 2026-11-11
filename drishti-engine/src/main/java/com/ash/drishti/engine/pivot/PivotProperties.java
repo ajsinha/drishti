@@ -18,7 +18,7 @@ package com.ash.drishti.engine.pivot;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * The pivot of a panel (PIVOT_GUIDE.md, a panel's Pivot): offered only where a Sutra ({@code pivot:} on a table or ladder) or a pack
+ * The pivot of a panel (BI_GUIDE.md, a panel's Pivot): offered only where a Sutra ({@code pivot:} on a table or ladder) or a pack
  * ({@code pivot:} beside a kind's {@code columns:}) opts in; its rows are read by the view pipeline and pivoted by the pivot engine.
  *
  * @param enabled false offers no Pivot on any panel (the old name of the pivot engine's switch; default true)

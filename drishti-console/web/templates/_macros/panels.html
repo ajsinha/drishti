@@ -137,10 +137,10 @@
 {%- endmacro %}
 
 {# A table or ladder whose Sutra says pivot: the table, and Pivot, which opens the pivot screen on the panel's own rows (the pivot engine:
-   PIVOT_GUIDE.md; the Sutra's arrangement is the view it opens with). Without the option the table is drawn alone, as always. #}
+   BI_GUIDE.md; the Sutra's arrangement is the view it opens with). Without the option the table is drawn alone, as always. #}
 {% macro pivot_link(source, title, date='') -%}
 <p class="pv-open"><a class="btn btn-sm btn-outline-secondary" href="/pivot?source={{ source | urlencode }}{% if date %}&amp;date={{ date | urlencode }}{% endif %}"
-  title="Pivot {{ title }}: rows, columns, values and filters, every total from its own rows (PIVOT_GUIDE.md)">Pivot</a></p>
+  title="Pivot {{ title }}: rows, columns, values and filters, every total from its own rows (BI_GUIDE.md)">Pivot</a></p>
 {%- endmacro %}
 
 {% macro pivotable(p) -%}

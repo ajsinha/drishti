@@ -255,7 +255,7 @@ public final class RachanaSchema {
         // Sutra Next (RACHANA_REFERENCE.md 6 to 8): sources over any pack, events, waiting words, child panels
         Map<String, Object> source = new LinkedHashMap<>();
         source.put("kind", text("The entity kind read (any enabled pack's)"));
-        source.put("table", text("A virtual table read instead of a kind (<domain>.<name>, TABLES_GUIDE.md): its rows, as you may read them, are $src; takes where, limit and as-of"));
+        source.put("table", text("A virtual table read instead of a kind (<domain>.<name>, BI_GUIDE.md): its rows, as you may read them, are $src; takes where, limit and as-of"));
         source.put("id", text(EL + " for one entity's id: $src is that record"));
         source.put("where", text(EL + " over each entity of the kind (@): $src is the list it keeps"));
         source.put("search", text(EL + " for the text searched in the kind: $src is the list found"));

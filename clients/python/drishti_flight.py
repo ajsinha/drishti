@@ -235,7 +235,7 @@ class Flight:
         return self.read(self.request("kind", q))
 
     def model(self, model: str, query: dict | None = None):
-        """A BI model query (MQ, REPORTS_GUIDE.md): its keys ``select`` ({"fields": [...], "measures": [...]}), ``where``, ``sort``,
+        """A BI model query (MQ, BI_GUIDE.md): its keys ``select`` ({"fields": [...], "measures": [...]}), ``where``, ``sort``,
         ``limit``, ``time`` ...; ``mq: 1`` is added by the server."""
         return self.read(self.request("model", {"model": model, "query": query or {}}))
 

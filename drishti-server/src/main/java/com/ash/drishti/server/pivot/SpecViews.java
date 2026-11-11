@@ -22,7 +22,7 @@ import java.util.Map;
 
 /**
  * A Sutra's or a pack's {@code pivot:} arrangement (Rachana {@code PivotSpec}: rows, columns, values with their aggregation and show-as,
- * filters) as the pivot engine's view (PIVOT_GUIDE.md section 13): the view a panel's or a kind's Pivot opens with. And back: a view as
+ * filters) as the pivot engine's view (BI_GUIDE.md section P13): the view a panel's or a kind's Pivot opens with. And back: a view as
  * the arrangement a Sutra's {@code pivot:} block holds, for an author's promotion. What one cannot say the other refuses in words.
  */
 public final class SpecViews {

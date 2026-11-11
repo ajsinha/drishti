@@ -11,7 +11,7 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""The table layer on the command line (docs/guides/TABLES_GUIDE.md, docs/guides/CLI_REFERENCE.md "tables"): virtual tables and models
+"""The table layer on the command line (docs/guides/BI_GUIDE.md, docs/guides/CLI_REFERENCE.md "tables"): virtual tables and models
 under config/tables, checked, previewed over sample documents, traced (lineage), offered for new tables, and BI's datasets and models
 migrated into them.
 

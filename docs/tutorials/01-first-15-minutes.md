@@ -391,8 +391,8 @@ Click the **BI** icon (or type `BI` and press Enter).
 
 ![The BI home: a menu on the left (Home, Catalogue, My workspace and more) and the sections Recent, Favourites, Certified for you and Shared with me](img/t01/09-bi-home.jpg)
 
-You should see the BI home: a menu on the left (Home, Catalogue, My workspace, Datasets, Insights and so on) and, in the middle, the sections *Recent*, *Favourites*, *Certified for you* and *Shared with me*, which fill as you use BI. Business intelligence is Drishti's second front: reports and boards built on models and datasets, with their own guide ([REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md)) and tutorial
-([tutorial 8, Part A](08-reports-and-dashboards.md#part-a--your-first-bi-report)). The shipped models read the same sixty days of the lakes.
+You should see the BI home: a menu on the left (Home, Catalogue, My workspace, Datasets, Insights and so on) and, in the middle, the sections *Recent*, *Favourites*, *Certified for you* and *Shared with me*, which fill as you use BI. Business intelligence is Drishti's second front: reports and boards built on models and datasets, with their own guide ([BI_GUIDE.md](../guides/BI_GUIDE.md#part-3--reports-and-dashboards)) and tutorial
+([the reports tutorial, Part A](../guides/BI_GUIDE.md#part-a--your-first-bi-report)). The shipped models read the same sixty days of the lakes.
 
 **From the command line** (with the token of Step 9), the catalogue as you may see it:
 
@@ -611,7 +611,7 @@ Key figures
 
 The **business date** box in the top bar says which day you are looking at. Empty means **live**: the latest business date (2026-10-16 here). The demo lakes are daily
 snapshots: they change only when a day is loaded, so nothing ticks on these pages. (With `DRISHTI_DEMO_ENABLED=true` the demo source ticks about twice a second and a live view
-moves as a whole: [tutorial 8, Part F](08-reports-and-dashboards.md#part-f--live-bi-and-boards).) Open `TRD MX-20000022` (a MUREX cross-currency swap that was amended on the last day), click the date box and type
+moves as a whole: [the reports tutorial, Part F](../guides/BI_GUIDE.md#part-f--live-bi-and-boards).) Open `TRD MX-20000022` (a MUREX cross-currency swap that was amended on the last day), click the date box and type
 `2026-10-15`, then press Enter.
 
 ![The trade on 15 October: an amber date box, a red Live button and a Compare link](img/t02/08-past-date.jpg)

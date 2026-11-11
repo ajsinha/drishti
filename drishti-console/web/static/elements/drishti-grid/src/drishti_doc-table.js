@@ -113,7 +113,7 @@ export function docPivotable(doc, panel, hooks) {
   if (!src) { return docTable(doc, panel.data, hooks); }
   const e = mk(doc), title = panel.title || panel.id;
   return [docTable(doc, panel.data, hooks), e('p', { class: 'pv-open' }, e('a', { class: 'btn btn-sm btn-outline-secondary', href: '/pivot?source=' + encodeURIComponent(src).replace(/%2F/g, '/'),
-    title: 'Pivot ' + title + ': rows, columns, values and filters, every total from its own rows (PIVOT_GUIDE.md)' }, 'Pivot'))];
+    title: 'Pivot ' + title + ': rows, columns, values and filters, every total from its own rows (BI_GUIDE.md)' }, 'Pivot'))];
 }
 
 // ---- drill-down -------------------------------------------------------------------------------------------------------------

@@ -35,7 +35,7 @@ import java.util.stream.Stream;
 /**
  * The record of a built environment ({@code drishti-environment.json} in its folder): what it was built from and the sha256 of every file
  * in it. A worker is started only after {@link #verify} finds every file as it was built: a changed, added or removed file stops the worker
- * and names the file (docs/guides/NOTEBOOK_GUIDE.md section 5).
+ * and names the file (docs/guides/BI_GUIDE.md section N5).
  */
 public final class Manifest {
 

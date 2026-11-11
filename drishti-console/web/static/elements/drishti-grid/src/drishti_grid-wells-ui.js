@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The wells as drawn (PIVOT_GUIDE.md section 2), three arrangements of one model (drishti_wells.js):
+/* The wells as drawn (BI_GUIDE.md section P2), three arrangements of one model (drishti_wells.js):
 
      ribbon (layout wells)    the compact line above the grid, the trader view (B): [View ▾] Rows [⋔ MGMT ▾ Desk › Book ▲▼] [Position ▾] +
                               · Columns [Risk class ▾] + · Filters [Trade status ▾] + · Values: the lit measure toggles ARE the values (▾ for

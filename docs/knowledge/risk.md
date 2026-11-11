@@ -712,7 +712,7 @@ booked the trade. See [Entities and ownership](data.md#2-entities-and-ownership)
 - [Exposure guide](../guides/EXPOSURE_GUIDE.md): every exposure measure with worked numbers, the explorer, collateral, the pre-deal what-if, the data contract.
 - [The exposure tutorial: exposure from the bank to a trade](../guides/EXPOSURE_GUIDE.md#part-iv--tutorial-exposure-from-the-bank-to-a-trade): eight hands-on steps.
 - [Tutorial 1, Part E: an entity over time](../tutorials/01-first-15-minutes.md#part-e--an-entity-over-time) (`TRD 1000015 30 <GO>`).
-- [Groupings and analytics guide](../guides/GROUPINGS_ANALYTICS_GUIDE.md).
+- [Groupings and analytics guide](../guides/BI_GUIDE.md#part-5--groupings-and-analytics).
 - The stored results' contracts: [NSET](../contracts/NSET.md), [CVA](../contracts/CVA.md), [SA-CCR](../contracts/SACCR.md),
   [SIMM](../contracts/SIMM.md), [collateral](../contracts/COLL.md), [margin calls](../contracts/MC.md), [limits](../contracts/LIM.md),
   [groups](../contracts/GRP.md), [wrong-way risk](../contracts/WWR.md); the [trading groupings contract](../contracts/TRADING_GROUPINGS.md)

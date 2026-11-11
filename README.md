@@ -198,7 +198,7 @@ The banking module's engines run on the server, in Java, for any scope; the cons
 - **Parametric VaR** (`PVAR`) beside historical, as a cross-check and never the official figure
   ([VAR_GUIDE.md section 3.12](docs/guides/VAR_GUIDE.md#312-parametric-var-beside-historical-pvar)).
 - **The market-risk cube** (`MCUBE`): VaR by desk and risk class as a Pivot preset, each cell the VaR engine's answer for its scope
-  ([PIVOT_GUIDE.md section 29](docs/guides/PIVOT_GUIDE.md#29-the-mr-cube-preset)).
+  ([BI_GUIDE.md section P29](docs/guides/BI_GUIDE.md#p29-the-mr-cube-preset)).
 - **Counterparty exposure** (EE, PFE, EPE, EEPE) from the simulator's paths with netting and collateral, and **the pre-deal check**
   (`PREDEAL`): a new trade added to its netting set path by path and answered approve, refer or decline against the credit limit and each
   tenor bucket, audited ([EXPOSURE_GUIDE.md](docs/guides/EXPOSURE_GUIDE.md), [section 18.9](docs/guides/EXPOSURE_GUIDE.md#189-the-pre-deal-check),
@@ -207,7 +207,7 @@ The banking module's engines run on the server, in Java, for any scope; the cons
   per netting set; ISDA's calibration is licensed, so the parameter file ships empty
   ([SIMM_GUIDE.md section 4](docs/guides/SIMM_GUIDE.md#4-the-licensed-parameter-file), [the SIMM tutorial](docs/guides/SIMM_GUIDE.md#14-tutorial-simm-from-the-hand-built-examples-to-a-netting-set)).
 - **Groupings and analytics** computed on request: ownership groups, sectors, correlations, an equity's beta
-  ([GROUPINGS_ANALYTICS_GUIDE.md](docs/guides/GROUPINGS_ANALYTICS_GUIDE.md), [tutorial 6](docs/tutorials/06-groupings-and-analytics.md)).
+  ([BI_GUIDE.md](docs/guides/BI_GUIDE.md#part-5--groupings-and-analytics), [the groupings tutorial](docs/guides/BI_GUIDE.md#tutorial-groupings-and-analytics-computed)).
 
 **Explained**: every computed number has one Explain (the formula, the inputs and lineage, why it moved between two dates in steps
 that add up, a workbook with live formulas), and VaR, FRTB-SA and SIMM each have a playground (`PLAY VAR`, `PLAY FRTB`, `PLAY SIMM`).
@@ -223,15 +223,15 @@ report sign-offs go through one Approvals queue with four eyes. Anything that de
 - **Search** by value (`TRD where QUANTITY > 200m order by QUANTITY desc`), in plain words without any AI service, or with a form;
   monitors and alerts on one alert engine.
 - **The Pivot** (`PIVOT`): any kind, table or measure, every total computed from its own members, custom functions, why a figure moved,
-  what-if, Excel with formulas; **Pivot → Report** turns a view into a report ([PIVOT_GUIDE.md](docs/guides/PIVOT_GUIDE.md),
-  [tutorial 7](docs/tutorials/07-pivot-cubes-and-explain.md)).
+  what-if, Excel with formulas; **Pivot → Report** turns a view into a report ([BI_GUIDE.md](docs/guides/BI_GUIDE.md#part-1--pivot-cubes-and-explain),
+  [the pivot tutorial](docs/guides/BI_GUIDE.md#tutorial-pivot-cubes-and-explain)).
 - **BI depth** on the models of the table layer: many-to-many relationships through a bridge, filtering both ways, Rachana measures with
   filter context, a converter from DAX measures, the decomposition tree, linked brushing between visuals, sunburst, icicle and the
-  calendar heatmap ([REPORTS_GUIDE.md](docs/guides/REPORTS_GUIDE.md), [TABLES_GUIDE.md section 12](docs/guides/TABLES_GUIDE.md#12-measures-in-a-model-filter-context-and-what-is-refused)).
+  calendar heatmap ([BI_GUIDE.md](docs/guides/BI_GUIDE.md#part-3--reports-and-dashboards), [BI_GUIDE.md section T12](docs/guides/BI_GUIDE.md#t12-measures-in-a-model-filter-context-and-what-is-refused)).
 - **Reports and dashboards** on the table layer: reports and boards, statements, schedules, subscriptions, publishing and governance
-  ([REPORTS_GUIDE.md](docs/guides/REPORTS_GUIDE.md), [tutorial 8](docs/tutorials/08-reports-and-dashboards.md)).
-- **The Notebook**: SQL on the server and Python on its one sandboxed Python runtime ([NOTEBOOK_GUIDE.md](docs/guides/NOTEBOOK_GUIDE.md),
-  [tutorial 9](docs/tutorials/09-notebook-and-python.md)).
+  ([BI_GUIDE.md](docs/guides/BI_GUIDE.md#part-3--reports-and-dashboards), [the reports tutorial](docs/guides/BI_GUIDE.md#tutorial-reports-and-dashboards)).
+- **The Notebook**: SQL on the server and Python on its one sandboxed Python runtime ([BI_GUIDE.md](docs/guides/BI_GUIDE.md#part-4--the-notebook-and-python),
+  [the Notebook tutorial](docs/guides/BI_GUIDE.md#tutorial-the-notebook-and-python)).
 - **AI**, off as shipped: Ask about a page and BI from words on any of the supported provider types, MCP servers' tools behind Drishti's
   policy, masking and audit of every call ([AI_GUIDE.md](docs/guides/AI_GUIDE.md), [tutorial 10](docs/tutorials/10-ai-assistant.md)).
 - **Corrections and approvals**: correct a record in a form, approve it in the one queue, the edit log and the audit trail
@@ -242,7 +242,7 @@ report sign-offs go through one Approvals queue with four eyes. Anything that de
 ## Build
 
 - **Tables and models** written once over any kind, lake table or query, with keys, rules and masks, edited in Build › Tables & models
-  with the YAML live beside the form ([TABLES_GUIDE.md](docs/guides/TABLES_GUIDE.md), [tutorial 18](docs/tutorials/18-tables-and-models.md)).
+  with the YAML live beside the form ([BI_GUIDE.md](docs/guides/BI_GUIDE.md#part-2--virtual-tables-and-models), [the tables tutorial](docs/guides/BI_GUIDE.md#tutorial-virtual-tables-and-models)).
 - **Packs and screens**: a pack from your JSON Schema or JSON Lines; a screen as a Sutra, designed in the Build workbench or on a live page;
   where there is no Sutra the inference engine lays the screen out from the data; forms and phones
   ([BUILD_GUIDE.md](docs/guides/BUILD_GUIDE.md), [tutorial 19](docs/tutorials/19-build-a-pack-and-a-screen.md)). The Build home (`/build`)
@@ -376,12 +376,12 @@ the modules they may use. The map of every document is [docs/README.md](docs/REA
 
 | You want to… | Guides | Tutorials |
 |---|---|---|
-| find anything, pivot, report, analyse | [USER_GUIDE](docs/guides/USER_GUIDE.md), [PIVOT_GUIDE](docs/guides/PIVOT_GUIDE.md), [REPORTS_GUIDE](docs/guides/REPORTS_GUIDE.md), [NOTEBOOK_GUIDE](docs/guides/NOTEBOOK_GUIDE.md), [AI_GUIDE](docs/guides/AI_GUIDE.md), [APPROVALS_GUIDE](docs/guides/APPROVALS_GUIDE.md) | [1](docs/tutorials/01-first-15-minutes.md), [7](docs/tutorials/07-pivot-cubes-and-explain.md), [8](docs/tutorials/08-reports-and-dashboards.md), [9](docs/tutorials/09-notebook-and-python.md), [10](docs/tutorials/10-ai-assistant.md), [11](docs/tutorials/11-correct-and-approve.md) |
-| measure risk | [VAR_GUIDE](docs/guides/VAR_GUIDE.md), [REGULATORY_VAR_REPORTING](docs/guides/REGULATORY_VAR_REPORTING.md), [EXPOSURE_GUIDE](docs/guides/EXPOSURE_GUIDE.md), [FRTB_SA_GUIDE](docs/guides/FRTB_SA_GUIDE.md), [SIMM_GUIDE](docs/guides/SIMM_GUIDE.md), [GROUPINGS_ANALYTICS_GUIDE](docs/guides/GROUPINGS_ANALYTICS_GUIDE.md) | [2](docs/guides/VAR_GUIDE.md#part-v--tutorial-var-from-the-bank-to-a-trade), [3](docs/guides/EXPOSURE_GUIDE.md#part-iv--tutorial-exposure-from-the-bank-to-a-trade), [4](docs/guides/FRTB_SA_GUIDE.md#17-tutorial-frtb-sa-from-the-hand-built-cases-to-a-desk), [5](docs/guides/SIMM_GUIDE.md#14-tutorial-simm-from-the-hand-built-examples-to-a-netting-set), [6](docs/tutorials/06-groupings-and-analytics.md) |
+| find anything, pivot, report, analyse | [USER_GUIDE](docs/guides/USER_GUIDE.md), [PIVOT_GUIDE](docs/guides/BI_GUIDE.md#part-1--pivot-cubes-and-explain), [REPORTS_GUIDE](docs/guides/BI_GUIDE.md#part-3--reports-and-dashboards), [NOTEBOOK_GUIDE](docs/guides/BI_GUIDE.md#part-4--the-notebook-and-python), [AI_GUIDE](docs/guides/AI_GUIDE.md), [APPROVALS_GUIDE](docs/guides/APPROVALS_GUIDE.md) | [1](docs/tutorials/01-first-15-minutes.md), [7](docs/guides/BI_GUIDE.md#tutorial-pivot-cubes-and-explain), [8](docs/guides/BI_GUIDE.md#tutorial-reports-and-dashboards), [9](docs/guides/BI_GUIDE.md#tutorial-the-notebook-and-python), [10](docs/tutorials/10-ai-assistant.md), [11](docs/tutorials/11-correct-and-approve.md) |
+| measure risk | [VAR_GUIDE](docs/guides/VAR_GUIDE.md), [REGULATORY_VAR_REPORTING](docs/guides/REGULATORY_VAR_REPORTING.md), [EXPOSURE_GUIDE](docs/guides/EXPOSURE_GUIDE.md), [FRTB_SA_GUIDE](docs/guides/FRTB_SA_GUIDE.md), [SIMM_GUIDE](docs/guides/SIMM_GUIDE.md), [GROUPINGS_ANALYTICS_GUIDE](docs/guides/BI_GUIDE.md#part-5--groupings-and-analytics) | [2](docs/guides/VAR_GUIDE.md#part-v--tutorial-var-from-the-bank-to-a-trade), [3](docs/guides/EXPOSURE_GUIDE.md#part-iv--tutorial-exposure-from-the-bank-to-a-trade), [4](docs/guides/FRTB_SA_GUIDE.md#17-tutorial-frtb-sa-from-the-hand-built-cases-to-a-desk), [5](docs/guides/SIMM_GUIDE.md#14-tutorial-simm-from-the-hand-built-examples-to-a-netting-set), [6](docs/guides/BI_GUIDE.md#tutorial-groupings-and-analytics-computed) |
 | work with bank, world and public data | [FUNDS_GUIDE](docs/guides/FUNDS_GUIDE.md), [PUBLIC_SECTOR_GUIDE](docs/guides/PUBLIC_SECTOR_GUIDE.md), [EXTERNAL_DATA](docs/guides/EXTERNAL_DATA.md) | [12](docs/tutorials/12-a-day-of-bank-data.md), [13](docs/tutorials/13-world-data.md), [14](docs/tutorials/14-public-sector-data.md) |
 | bring data in and take it out | [DATA_GUIDE](docs/guides/DATA_GUIDE.md), [DATA_LAKE_GUIDE](docs/guides/DATA_LAKE_GUIDE.md), [FLIGHT_GUIDE](docs/guides/FLIGHT_GUIDE.md) | [15](docs/tutorials/15-connect-your-data.md), [16](docs/tutorials/16-load-your-own-data-into-a-new-lake.md), [17](docs/tutorials/17-data-out-with-arrow-flight.md) |
 | understand the kernel, modules and distributions | [HOW_IT_FITS](HOW_IT_FITS.md) ([PDF](HOW_IT_FITS.pdf)), [KERNEL_AND_MODULES](docs/architecture/KERNEL_AND_MODULES.md) ([PDF](docs/architecture/KERNEL_AND_MODULES.pdf)), [DISTRIBUTIONS](docs/architecture/DISTRIBUTIONS.md) ([PDF](docs/architecture/DISTRIBUTIONS.pdf)), [DEVELOPER_GUIDE section 1.6](docs/guides/DEVELOPER_GUIDE.md#16-the-module-sdk) | [the genomics sample, step by step](docs/guides/DEVELOPER_GUIDE.md#19-the-genomics-sample-step-by-step) |
-| build tables, packs, screens and modules; embed; extend | [QUICKSTART_DEVELOPERS](docs/QUICKSTART_DEVELOPERS.md) ([PDF](docs/QUICKSTART_DEVELOPERS.pdf)), [TABLES_GUIDE](docs/guides/TABLES_GUIDE.md), [BUILD_GUIDE](docs/guides/BUILD_GUIDE.md), [EMBED_GUIDE](docs/guides/EMBED_GUIDE.md), [DEVELOPER_GUIDE](docs/guides/DEVELOPER_GUIDE.md) | [18](docs/tutorials/18-tables-and-models.md), [19](docs/tutorials/19-build-a-pack-and-a-screen.md), [20](docs/tutorials/20-embed-drishti.md) |
+| build tables, packs, screens and modules; embed; extend | [QUICKSTART_DEVELOPERS](docs/QUICKSTART_DEVELOPERS.md) ([PDF](docs/QUICKSTART_DEVELOPERS.pdf)), [TABLES_GUIDE](docs/guides/BI_GUIDE.md#part-2--virtual-tables-and-models), [BUILD_GUIDE](docs/guides/BUILD_GUIDE.md), [EMBED_GUIDE](docs/guides/EMBED_GUIDE.md), [DEVELOPER_GUIDE](docs/guides/DEVELOPER_GUIDE.md) | [18](docs/guides/BI_GUIDE.md#tutorial-virtual-tables-and-models), [19](docs/tutorials/19-build-a-pack-and-a-screen.md), [20](docs/tutorials/20-embed-drishti.md) |
 | install, operate, scale, administer | [DEPLOYMENT_AND_QA_GUIDE](docs/DEPLOYMENT_AND_QA_GUIDE.md) ([PDF](docs/DEPLOYMENT_AND_QA_GUIDE.pdf)), [OPERATIONS_GUIDE](docs/guides/OPERATIONS_GUIDE.md), [CLUSTER_GUIDE](docs/guides/CLUSTER_GUIDE.md) ([PDF](docs/guides/CLUSTER_GUIDE.pdf)), [ADMIN_GUIDE](docs/guides/ADMIN_GUIDE.md) | [21](docs/tutorials/21-run-it-in-production.md), [22](docs/tutorials/22-a-cluster-of-three.md) |
 
 **References**, one home each: [CONFIGURATION](docs/admin/CONFIGURATION.md), [API_REFERENCE](docs/guides/API_REFERENCE.md),

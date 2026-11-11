@@ -36,7 +36,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /**
- * The MR lens of the pivot screen beside the pivot engine's answers (PIVOT_GUIDE.md#29-the-mr-cube-preset sections 5 to 8; layout A and tabs B and C of
+ * The MR lens of the pivot screen beside the pivot engine's answers (BI_GUIDE.md#p29-the-mr-cube-preset sections P5 to 8; layout A and tabs B and C of
  * docs/architecture/LENSES.md section 6.7): the headline strip of the view's scope, a cell's tail and histogram, the sparklines (the same view on the
  * open dates before, from the pivot engine's cache when it can), the time-travel slider's stops (a cell's move is explained by the one
  * Explain, kind var on the cell's scope), the sensitivity ladder and the factor heat map ({@link MrSensitivities}), and the what-if side by side

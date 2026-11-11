@@ -27,7 +27,7 @@ import java.util.Map;
 
 /**
  * Custom pivot functions in the content store ({@code pivot/functions/<owner>/<name>.json}, every version in one document), so a function
- * follows its author across a cluster and its history is kept (PIVOT_GUIDE.md, custom functions).
+ * follows its author across a cluster and its history is kept (BI_GUIDE.md, custom functions).
  */
 public final class PivotFunctionStore implements FunctionStore {
 

@@ -37,7 +37,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 /**
- * Live pivots, the screen's switches and cell comments over /api/v1/pivot on the demo trades (PIVOT_GUIDE.md, live pivots, the screen's
+ * Live pivots, the screen's switches and cell comments over /api/v1/pivot on the demo trades (BI_GUIDE.md, live pivots, the screen's
  * switches, cell comments): a live view answers exactly what a plain query answers and says it is exact; its stream opens with the
  * answer; a data-load signal of its date computes it again and a load of another kind does not; it is its person's only; the per-person
  * limit is refused with DRS-5721; {@code exact}, {@code rollups} and {@code progressive} come back in {@code computedAs.asked}; a comment

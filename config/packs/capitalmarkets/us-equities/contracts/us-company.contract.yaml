@@ -566,7 +566,7 @@ validation:
   - Total liabilities
 notes:
 - 'NET_MARGIN, REVENUE_GROWTH and FINANCIALS[].NET_MARGIN are not kept on the record: the pages compute them from REVENUE, NET_INCOME and FINANCIALS
-  (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md, section 16).'
+  (docs/guides/BI_GUIDE.md, section G16).'
 review:
 - 'required inferred from 100% coverage in 506 documents (3 samples and 503 test-data documents (data/testdata/us-equities/us-company/us-company.2026-10-24.jsonl.gz)):
   confirm each required field is mandatory upstream, and each optional one may be empty.'

@@ -249,7 +249,7 @@ approvals tool (the badge beside the bell).
 |---|---|---|---|
 | Sutra | Screens | an approver (four eyes) | a workbench save, a designed screen, a terminal layout promoted ([USER_GUIDE.md › Reviews](USER_GUIDE.md#reviews-approving-a-sutra)) |
 | Correction | Data | an approver of changes (the policy may ask for several) | a form's Submit, `drishti.py change propose` ([section 4](#4-submitting-a-change)) |
-| BI item | Data | a bi-steward, or a member of the workspace with the approve power | *Propose for review* on a dataset, model, report or board ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)) |
+| BI item | Data | a bi-steward, or a member of the workspace with the approve power | *Propose for review* on a dataset, model, report or board ([BI_GUIDE.md](BI_GUIDE.md#part-3--reports-and-dashboards)) |
 | Pivot function | Data | an approver (a Java plug-in: an administrator); with a sharing scope | `pivot functions submit` |
 | Stress window | Risk | someone who sees every node, never the proposer | *Freeze and propose* on `SWIN` |
 | Report sign-off | Risk | the next step of the chain (maker, checker, approver); one person signs one step | `VAR REPORT <report> <period>`, *Generate* |

@@ -23,7 +23,7 @@ import java.util.Map;
 /**
  * A parsed report, the model of ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 8 (immutable): pages of visuals on a 12-column grid, bound to the fields and measures of one
  * dataset, with filters at report, page and visual level, bookmarks, drill-through targets and a theme. Produced by {@link ReportParser}; the YAML
- * reference is docs/guides/REPORTS_GUIDE.md. {@link #toMap()} gives the same structure the YAML has (defaults filled in), which is what the viewer and the
+ * reference is docs/guides/BI_GUIDE.md. {@link #toMap()} gives the same structure the YAML has (defaults filled in), which is what the viewer and the
  * designer exchange with the server.
  *
  * @param name the {@code report:} name

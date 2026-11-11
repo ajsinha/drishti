@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The pivot screen's switches, live pivots and cell comments (PIVOT_GUIDE.md) in a real browser against the stand-in engine: Exact /
+"""The pivot screen's switches, live pivots and cell comments (BI_GUIDE.md) in a real browser against the stand-in engine: Exact /
 Auto / ≈, Progressive and Use rollups are sent as the request's options and the line beside them says how the answer was computed; L turns
 Live on and a pushed patch changes only its cell, which flashes; on a saved view a comment added in a cell's popover marks the cell; on a
 phone the switches wrap inside the screen and stay large enough to tap. The browser computes no figure: every number is the stand-in's."""

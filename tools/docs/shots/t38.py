@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 7, Part C, the MR cube on the pivot engine (docs/tutorials/07-pivot-cubes-and-explain.md), written to
+"""Pictures of tutorial 7, Part C, the MR cube on the pivot engine (docs/guides/BI_GUIDE.md), written to
 docs/tutorials/img/t38/, in the light theme. Run it on its own: it builds the VaR pictures' scratch lake from the committed test data
 (2026-09-30) and starts its own scratch server and console (tools/docs/shots/_var.py):
 

@@ -149,7 +149,7 @@ final class PivotAnswer {
     }
 
     /**
-     * How the answer was computed, for the screen's switches and its provenance line (PIVOT_GUIDE.md, the screen's switches): what was
+     * How the answer was computed, for the screen's switches and its provenance line (BI_GUIDE.md, the screen's switches): what was
      * asked ({@code exact}, {@code auto} or {@code approximate}; progressive; rollups on or off) and what answered: {@code exact}, the
      * sketches (each measure answered ≈ with its stated error), a level's top N chosen by a summary, a sample, the rollups or nodes that
      * answered, each in words ("≈ from a sketch", "from rollup desk-month", "exact").

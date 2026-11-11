@@ -36,7 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * One pool on this node (docs/guides/NOTEBOOK_GUIDE.md section 7): its worker processes, its fair queue, and the dispatch between
+ * One pool on this node (docs/guides/BI_GUIDE.md section N7): its worker processes, its fair queue, and the dispatch between
  * them. Concurrency is the number of workers ({@code workers.max}, configuration only): each worker runs one request at a time, on its own
  * virtual thread on the server side. Workers start on demand up to the maximum, idle ones beyond the minimum stop after {@code idle-stop},
  * a worker is replaced after {@code recycle-after} requests, and a dead one is replaced by the next request that needs it.

@@ -45,7 +45,7 @@ import java.util.regex.Pattern;
  *
  * @param fields the fields offered, in order (for {@code pivot: true}, the panel's columns or the kind's key fields)
  * @param explicit true when the Sutra (or pack) listed {@code fields} itself
- * @param mode how the pivot screen opens it (PIVOT_GUIDE.md section 2): {@code views} (the View picker and the compact line, the default),
+ * @param mode how the pivot screen opens it (BI_GUIDE.md section P2): {@code views} (the View picker and the compact line, the default),
  *     {@code compact} (the compact line alone) or {@code panes} (the Fields and Build panes); null: the screen's default
  */
 public record PivotSpec(List<Field> fields, boolean explicit, List<String> rows, List<String> columns, List<Value> values, List<Filter> filters,

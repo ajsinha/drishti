@@ -50,7 +50,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 /**
- * The VaR provider of the pivot engine (ARCHITECTURE.md section 26.4, PIVOT_GUIDE.md#29-the-mr-cube-preset), source {@code var}: the VaR engine's book of a
+ * The VaR provider of the pivot engine (ARCHITECTURE.md section 26.4, BI_GUIDE.md#p29-the-mr-cube-preset), source {@code var}: the VaR engine's book of a
  * business date as the person sees it. Members are the date's trades; a cell is the view's scope ({@code options.scope}) under its filters
  * with each coordinate, its members found from per-trade dimension codes ({@link VarPivotCodes}); every cell's and total's vector is summed
  * in <b>one</b> batch for the whole plan ({@code VarBook.vectors}: on a sharded date one call per remote shard for all the sets) and its
@@ -343,7 +343,7 @@ public final class VarPivotProvider implements PivotProvider {
                     : "your role sees the bank in aggregate only: no dimension is offered (hierarchy levels come with the MR cube)");
         }
         if (mr()) {
-            notes.put("lens", "the MR cube: options scope, horizon, method, confidence, esConfidence, set and ccy (PIVOT_GUIDE.md section 29.4)");
+            notes.put("lens", "the MR cube: options scope, horizon, method, confidence, esConfidence, set and ccy (BI_GUIDE.md section P29.4)");
             notes.put("defaultView", defaultView(o));
         }
         notes.put("folders", FOLDERS);
@@ -363,7 +363,7 @@ public final class VarPivotProvider implements PivotProvider {
     /** The measures that add up (a total is the sum of its parts): their per-cell note says so. */
     static final List<String> ADDS_UP = List.of("pv", "trades", "comp_var", "comp_es", "dv01", "cs01");
 
-    /** The measures' display folders in the field pickers and panes (PIVOT_GUIDE.md section 29.2). */
+    /** The measures' display folders in the field pickers and panes (BI_GUIDE.md section P29.2). */
     static final Map<String, String> FOLDERS = Map.ofEntries(Map.entry("var", "VaR"), Map.entry("es", "VaR"), Map.entry("pvar", "VaR"),
             Map.entry("svar", "VaR"), Map.entry("comp_var", "Contribution"), Map.entry("comp_es", "Contribution"), Map.entry("incr_var", "Contribution"),
             Map.entry("limit", "Limits"), Map.entry("limit_use", "Limits"), Map.entry("dv01", "Sensitivities"), Map.entry("cs01", "Sensitivities"),

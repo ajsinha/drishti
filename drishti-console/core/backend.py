@@ -394,7 +394,7 @@ class BackendClient:
         return await self._send(method, "/explain" + path, ident, **kw)
 
     async def pivot(self, method: str, path: str, ident, body=None, raw: bool = False, **params) -> Any:
-        """The pivot engine (/api/v1/pivot, docs/guides/PIVOT_GUIDE.md), as the user. ``path`` starts after /api/v1/pivot (``/query``);
+        """The pivot engine (/api/v1/pivot, docs/guides/BI_GUIDE.md), as the user. ``path`` starts after /api/v1/pivot (``/query``);
         ``raw`` returns the bytes and headers of an export. A table's first pivot reads it through its connector: this waits up to two
         minutes."""
         kw: dict[str, Any] = {"params": {k: v for k, v in params.items() if v not in (None, "")}, "timeout": 120.0}
@@ -746,7 +746,7 @@ class BackendClient:
 
     async def sse_post(self, path: str, ident, body: dict, node: str | None = None):
         """Yields ``(event, data)`` from a server SSE endpoint under /api/v1 that is asked with a POST body (a progressive pivot answer:
-        ``/pivot/query?progressive=true``, docs/guides/PIVOT_GUIDE.md); ``node`` as for ``sse``."""
+        ``/pivot/query?progressive=true``, docs/guides/BI_GUIDE.md); ``node`` as for ``sse``."""
         headers = {"Accept": "text/event-stream", **(ident.headers() if ident is not None else {}), **asof.headers()}
         async for pair in self._events("/api/v1" + path, None, headers, None, node=node, method="POST", body=body):
             yield pair

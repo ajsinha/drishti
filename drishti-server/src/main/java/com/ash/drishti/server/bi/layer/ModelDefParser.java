@@ -69,7 +69,7 @@ public final class ModelDefParser {
         return read(root, y, histories(root.path("history"), y));
     }
 
-    /** The layer's model files say {@code rachana: 3} (TABLES_GUIDE.md): tables by alias, the live history on the model. */
+    /** The layer's model files say {@code rachana: 3} (BI_GUIDE.md): tables by alias, the live history on the model. */
     static final int LAYER = 3;
 
     /** {@code history: { every, keep, by, measures }} (the model's live tables sampled), or one such per alias. */
@@ -98,7 +98,7 @@ public final class ModelDefParser {
     private static ModelDef read(JsonNode root, LayerYaml y, Map<String, DatasetDef.History> histories) {
         if (root.path("rachana").asInt(0) != LAYER || !root.has("tables")) {
             y.error(DatasetParser.MIGRATE_FIRST, "rachana", "a model of the table layer says `rachana: 3` and names its tables (`tables: { <alias>: { table: <name> } }`); "
-                    + "a model in BI's old form is migrated by drishti.py tables migrate (TABLES_GUIDE.md, the migration)");
+                    + "a model in BI's old form is migrated by drishti.py tables migrate (BI_GUIDE.md, the migration)");
         }
         y.unknownKeys(root, TOP, "DRS-9120", "");
         String name = LayerYaml.text(root, "model", "");

@@ -174,7 +174,7 @@ python3 tools/drishti.py view get jurisdiction/JUR-GBR
 ```
 
 **In YAML.** A country group is computed from its member economies when opened; the computation, its YAML and a region worked through
-(`ECG ECG-SAS`) are in [tutorial 6, step 6](06-groupings-and-analytics.md#step-6--a-world-bank-region-from-its-economies).
+(`ECG ECG-SAS`) are in [the groupings tutorial, step 6](../guides/BI_GUIDE.md#step-6--a-world-bank-region-from-its-economies).
 
 **You should see**
 
@@ -185,7 +185,7 @@ python3 tools/drishti.py view get jurisdiction/JUR-GBR
   grows more slowly and its prices rise faster than the high-income median. `ECG ECG-WLD`: 213 economies, 117,327 bn USD, growth 2.80%.
 - `JUR JUR-GBR`: the government, the office holders, the legislature and the elections, each linked to its own page (`OFFC`, `PARTY`, `ELEC`).
 
-Further: [GROUPINGS_ANALYTICS_GUIDE.md section 5](../guides/GROUPINGS_ANALYTICS_GUIDE.md) (ECG with worked numbers).
+Further: [BI_GUIDE.md section G5](../guides/BI_GUIDE.md#part-5--groupings-and-analytics) (ECG with worked numbers).
 
 ### Part B · Companies
 
@@ -226,7 +226,7 @@ semiconductor companies, NVIDIA first by revenue (215.9bn), then Micron (133.2bn
 classes is keyed by one ticker: `USEQ GOOGL` is *Alphabet Inc.*, CIK `0001652044`, with the other tickers GOOG, GOOGM and GOOGN.
 
 The ratios worked out on the page (net margin, revenue growth) and a sector's totals with the currency rule are
-[tutorial 6, steps 4 and 5](06-groupings-and-analytics.md#step-4--a-sector-and-the-currency-rule).
+[the groupings tutorial, steps 4 and 5](../guides/BI_GUIDE.md#step-4--a-sector-and-the-currency-rule).
 
 Further: the pack's guide, [us-equities.md](../../config/packs/capitalmarkets/us-equities/guides/us-equities.md).
 
@@ -709,7 +709,7 @@ their LEI lapse**: a credit officer onboarding any of them would want to know. `
 us-equities company `AAPL` (Part B) and to 949 ISINs.
 
 How a group is computed from its entities, every group and the type-ahead, and a country's entities are
-[tutorial 6, steps 1 to 3](06-groupings-and-analytics.md#step-1--an-ownership-group-from-its-entities).
+[the groupings tutorial, steps 1 to 3](../guides/BI_GUIDE.md#step-1--an-ownership-group-from-its-entities).
 
 Further: the pack's guide, [gleif.md](../../config/packs/core/gleif/guides/gleif.md).
 
@@ -761,7 +761,7 @@ holding the news in memory only is [tutorial 16, Part D](16-load-your-own-data-i
 ## Next steps
 
 - [Tutorial 14](14-public-sector-data.md): the World Bank's development indicators, central banks, national statistics and official news, refreshed daily.
-- [Tutorial 6](06-groupings-and-analytics.md): a SIC sector's totals, a company's margin and growth, an equity's beta.
+- [The groupings tutorial](../guides/BI_GUIDE.md#tutorial-groupings-and-analytics-computed): a SIC sector's totals, a company's margin and growth, an equity's beta.
 - [The funds guide](../guides/FUNDS_GUIDE.md): each kind's contract and example (Part II) and every source (Part III).
 - [External data](../guides/EXTERNAL_DATA.md): every public-data pack and its refresh script.
 - [The exposure tutorial](../guides/EXPOSURE_GUIDE.md#part-iv--tutorial-exposure-from-the-bank-to-a-trade): a counterparty group's exposure, from the bank's side.

@@ -665,7 +665,7 @@ internal model), and traders (what a new trade does to a counterparty's PFE befo
 
 **Methodology.** Monte Carlo exposure simulation post-processing as in Basel CRE53 (internal models method: EE, effective EE, EEPE,
 alpha 1.4) and the industry's PFE practice for limits. Drishti does **not** simulate markets or price trades: the paths are inputs
-(the contracts' README.md section 3). QLRisk may later produce them ([NOTEBOOK_GUIDE.md](NOTEBOOK_GUIDE.md)).
+(the contracts' README.md section 3). QLRisk may later produce them ([BI_GUIDE.md](BI_GUIDE.md#part-4--the-notebook-and-python)).
 
 ## 15. Inputs from upstream engines
 

@@ -39,7 +39,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * An author's promotion of a panel's pivot to its Sutra (PIVOT_GUIDE.md section 11, kept from the retired Pivot tab): the view the author
+ * An author's promotion of a panel's pivot to its Sutra (BI_GUIDE.md section P11, kept from the retired Pivot tab): the view the author
  * arranged on a panel source ({@code panel/<kind>/<panel>/<id>}) becomes the panel's {@code pivot:} arrangement in the Sutra's next
  * version, written by {@link SutraPivotEditor}; with review on it is proposed, with review off live at once. {@code preview: true}
  * answers the next version's text and the changes in words without proposing anything. Needs the author power and Studio saving.

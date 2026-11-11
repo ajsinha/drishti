@@ -51,7 +51,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
 /**
- * The pivot engine's scale (PIVOT_GUIDE.md, scale; ARCHITECTURE.md section 26.6): the sketches' settings, exact or ≈ by size and request, the
+ * The pivot engine's scale (BI_GUIDE.md, scale; ARCHITECTURE.md section 26.6): the sketches' settings, exact or ≈ by size and request, the
  * rollups of partial states with their refresh on load (each rollup's source version checked every {@code refresh-seconds}; a new version
  * merges the new files' states), aggregate awareness, the cluster's scatter and gather of partial states over Drishti*net, sampled first
  * answers and measured scan rates; all as hooks on the one {@link PivotCore}. Nothing here aggregates.

@@ -32,7 +32,7 @@ import java.util.TreeMap;
 import java.util.function.Supplier;
 
 /**
- * The MR lens's sensitivity views (PIVOT_GUIDE.md section 29.7; tab C's ladder C2 and tab B's heat map B4): the sums of the position
+ * The MR lens's sensitivity views (BI_GUIDE.md section P29.7; tab C's ladder C2 and tab B's heat map B4): the sums of the position
  * sensitivities of a scope by bucket, in Java. The ladder is GIRR delta (DV01) by curve currency and a grid's tenor buckets
  * ({@code drishti.cube.mr.grids}), net and gross, each against its two-sided limit ({@code drishti.cube.mr.ladder-limits}); the heat map is one
  * class's and measure's sums by two factor parts. The elements are the sensitivities engine's, read as the person sees the scope.

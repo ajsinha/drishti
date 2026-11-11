@@ -524,7 +524,7 @@ table*, and, for a report over a live table, a live bar and redraws as the data 
 looking, so their row rules and masks apply to every update). Not in the element: drill down and through, *Alert me*, *Show the rows
 behind this visual*, Export and Subscribe, creating bookmarks, and cross-filtering **between** two elements. A `perspective-*` visual is
 drawn as in the viewer, Drishti's own grid of the server's answer (no element loads WebAssembly). How reports are made and published:
-[REPORTS_GUIDE.md](REPORTS_GUIDE.md).
+[BI_GUIDE.md](BI_GUIDE.md#part-3--reports-and-dashboards).
 
 ```html
 <drishti-report id="rep" report="file:report:live-trading-desk"
@@ -564,7 +564,7 @@ user's roles open. The application needs the scope `embed:report`, and only a **
 retries a `429` by itself.
 
 **On a phone.** The element measures **its own width**: at 640 px or narrower it draws the report's `layouts.phone` for the page when the
-report has one ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)), else the automatic single column, and swaps back as it grows, with no reload. A
+report has one ([BI_GUIDE.md](BI_GUIDE.md#part-3--reports-and-dashboards)), else the automatic single column, and swaps back as it grows, with no reload. A
 hidden visual is not queried. `drishti:page-changed` carries `phone: true` when the arranged page is on screen.
 
 ![The report in a host's card at 390 px, with its phone layout](img/bi-elements/host-phone-390.png)
@@ -1262,7 +1262,7 @@ const grid = new Grid(el, {
 ```
 
 The Explain hook answers words, an element or an ExplainResult, and the grid shows it in its layout's place; the Pivot screen's own
-hook (`static/js/drishti_pivot.js`, `explain`) is the complete example. The view is the pivot engine's ([PIVOT_GUIDE.md](PIVOT_GUIDE.md));
+hook (`static/js/drishti_pivot.js`, `explain`) is the complete example. The view is the pivot engine's ([BI_GUIDE.md](BI_GUIDE.md#part-1--pivot-cubes-and-explain));
 paged and live rows come from drishti-data (`serverSideSource(url)`, `restSource(url)`, `arrowSource(url)`, `live({url})`). **Where the
 page runs**: the console's `/api/` answers its own origin with the person's session, so an application calls it from behind the same
 origin (a path on the same host or a reverse proxy). From another origin, register the application as a host application

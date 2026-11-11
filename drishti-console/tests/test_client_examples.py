@@ -156,7 +156,7 @@ def _model_queries():
 
 
 def test_every_model_query_uses_the_servers_keys():
-    """A Flight model query is the MQ JSON (REPORTS_GUIDE.md): select {fields, measures}, where, sort, limit ...; the old report-visual body
+    """A Flight model query is the MQ JSON (BI_GUIDE.md): select {fields, measures}, where, sort, limit ...; the old report-visual body
     ({"fields", "measures", "orderBy"}) is refused with DRS-9150 "unknown key 'fields'"."""
     keys, queries = _mq_keys(), _model_queries()
     assert {"select", "where", "sort", "limit"} <= keys

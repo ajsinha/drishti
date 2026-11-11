@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Pivot's presets (config/pivot-presets.yaml; docs/guides/PIVOT_GUIDE.md › Presets: the risk cubes): the MR and CCR cubes are named settings of
+"""The Pivot's presets (config/pivot-presets.yaml; docs/guides/BI_GUIDE.md › Presets: the risk cubes): the MR and CCR cubes are named settings of
 the one pivot screen, a source, a lens and a landing, never grids of their own. Read once; the file is the product's, not a person's."""
 from __future__ import annotations
 
@@ -59,7 +59,7 @@ MODES = ("views", "compact", "panes")
 
 
 def mode_of(word) -> str:
-    """How the pivot screen opens (PIVOT_GUIDE.md section 2): views (the View picker in front of the compact line, the default), compact
+    """How the pivot screen opens (BI_GUIDE.md section P2): views (the View picker in front of the compact line, the default), compact
     (the compact line alone) or panes (the Fields and Build panes); anything else is the default."""
     w = str(word or "").strip().lower()
     return w if w in MODES else "views"

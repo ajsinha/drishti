@@ -463,9 +463,9 @@ internal use only. The External data page says which is which.
 
 ## 5. Where to go deeper
 
-- [Groupings and analytics guide](../guides/GROUPINGS_ANALYTICS_GUIDE.md): sections 2 and 3 (LEIG and LEIC), 6 and 8 (CORR, PXH and
+- [Groupings and analytics guide](../guides/BI_GUIDE.md#part-5--groupings-and-analytics): sections 2 and 3 (LEIG and LEIC), 6 and 8 (CORR, PXH and
   beta) with worked numbers, and the computed groupings.
-- [Tutorial 6: groupings and analytics](../tutorials/06-groupings-and-analytics.md).
+- [The groupings tutorial: groupings and analytics](../guides/BI_GUIDE.md#tutorial-groupings-and-analytics-computed).
 - [External data](../guides/EXTERNAL_DATA.md): every external source (ECB, US Treasury, NY Fed, Yahoo Finance, GLEIF ...), its
   licence and refresh script.
 - [Data contracts](../contracts/README.md): the rules every contract shares, and [every command's contract](../contracts/packs/README.md).

@@ -34,7 +34,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * The MR lens of the pivot engine, {@code /api/v1/pivot/mr} (PIVOT_GUIDE.md section 29.10; engine {@code mr-cube}: off, every path answers
+ * The MR lens of the pivot engine, {@code /api/v1/pivot/mr} (BI_GUIDE.md section P29.10; engine {@code mr-cube}: off, every path answers
  * {@code 404 DRS-1020} from the engines' gate). The grid is the pivot engine's own {@code POST /api/v1/pivot/query} on source {@code var};
  * these are what the MR lens draws beside it, as the person:
  * <pre>

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The pivot screen (docs/guides/PIVOT_GUIDE.md; mock-up A of docs/architecture/ARCHITECTURE.md section 26): ``PIVOT <GO>``,
+"""The pivot screen (docs/guides/BI_GUIDE.md; mock-up A of docs/architecture/ARCHITECTURE.md section 26): ``PIVOT <GO>``,
 ``PIVOT <table> <GO>`` (a table of Export data, or ``var``), ``PIVOT @owner/name <GO>`` (a saved view), Views → Pivot and "Pivot" on a
 table; ``/pivot?preset=<name>`` is a preset (config/pivot-presets.yaml: the MR cube, ``MCUBE``, and the CCR cube), the same screen with a source,
 a lens and a landing, never a grid of its own. The page is a shell that web/static/js/drishti_pivot-grid.js and drishti_pivot.js fill: the field list and its four zones on the right, the grid with
@@ -66,7 +66,7 @@ def _problem(e: BackendError) -> JSONResponse:
 @router.get("/pivot")
 async def page(request: Request, source: str = "", view: str = "", date: str = "", preset: str = "", text: str = "", mode: str = ""):
     """PIVOT: the pivot screen; with ``preset`` (and its word's ``text``), one of its presets: the MR cube, the CCR cube. ``mode`` opens it
-    as views (the View picker in front of the compact line, the default), compact or panes (PIVOT_GUIDE.md section 2); a saved view and an
+    as views (the View picker in front of the compact line, the default), compact or panes (BI_GUIDE.md section P2); a saved view and an
     address of before open the same, the old field list now behind Customize ›."""
     cube = pivot_presets.get(preset) if preset else None
     if cube is None:
@@ -166,7 +166,7 @@ async def delete_view(request: Request, name: str):
         return _problem(e)
 
 
-# ---- custom functions (PIVOT_GUIDE.md, custom functions): the playground's check, the list, a version, approval -----------------------------
+# ---- custom functions (BI_GUIDE.md, custom functions): the playground's check, the list, a version, approval -----------------------------
 
 @router.get("/api/pivot/functions")
 async def functions(request: Request):
@@ -190,7 +190,7 @@ async def function_op(request: Request, owner: str, ref: str, op: str):
     return await _call(request, "POST", f"/functions/{owner}/{ref}/{op}", await _body(request))
 
 
-# ---- the screen's switches, live pivots and cell comments (PIVOT_GUIDE.md: the screen's switches, live pivots, cell comments) -------------
+# ---- the screen's switches, live pivots and cell comments (BI_GUIDE.md: the screen's switches, live pivots, cell comments) -------------
 
 _SSE = {"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
 
