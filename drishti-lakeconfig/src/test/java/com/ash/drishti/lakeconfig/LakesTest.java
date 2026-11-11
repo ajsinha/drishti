@@ -343,6 +343,25 @@ class LakesTest {
     }
 
     @Test
+    void aLiveModulesShippedLakesAreReadAndLeaveWithIt() throws Exception {
+        Path jar = Files.createDirectories(tmp.resolve("module/drishti/lakes"));         // a module loaded from a .dmod by its own loader
+        Files.writeString(jar.resolve("shipped.txt"), "# the module's lakes\nmod-official\n");
+        Files.writeString(jar.resolve("mod-official.yaml"), "lake: mod-official\nroot: /m\ntables:\n  risk-results.x:\n    kind: x\n");
+        Path empty = Files.createDirectories(tmp.resolve("none"));
+        try (java.net.URLClassLoader loader = new java.net.URLClassLoader(new java.net.URL[] {tmp.resolve("module").toUri().toURL()}, null)) {
+            assertFalse(Lakes.read(empty, ENV).find("mod-official").isPresent());
+            Runnable leave = com.ash.drishti.common.ModuleLoaders.add(loader);
+            try {
+                assertTrue(Lakes.shipped().contains("mod-official"));
+                assertEquals("/m", Lakes.read(empty, ENV).get("mod-official").root());
+            } finally {
+                leave.run();
+            }
+            assertFalse(Lakes.read(empty, ENV).find("mod-official").isPresent());
+        }
+    }
+
+    @Test
     void theCommandPrintsJsonOrTheRefusal() throws Exception {
         Path lakes = Files.createDirectories(tmp.resolve("lakes"));
         Files.writeString(lakes.resolve("demo.yaml"), "lake: demo\nroot: /x\ntables:\n  trading.trade_endur:\n    kind: trade\n");

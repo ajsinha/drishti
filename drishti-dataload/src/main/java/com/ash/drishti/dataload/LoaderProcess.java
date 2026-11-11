@@ -138,7 +138,7 @@ public final class LoaderProcess implements LoadRunner {
         Path dir = com.ash.drishti.lakeconfig.Lakes.dir();
         Path file = dir.resolve(r.lake() + ".yaml");
         if (!Files.isRegularFile(file)) {
-            if (com.ash.drishti.lakeconfig.Lakes.SHIPPED.contains(r.lake())) {
+            if (com.ash.drishti.lakeconfig.Lakes.shipped().contains(r.lake())) {
                 return;                                     // a shipped lake (demo) read from the jar: its entries are the truth
             }
             List<com.ash.drishti.lakeconfig.LakeTable> tables = r.newDomain() != null ? List.of() : List.of(packEntry(r));
