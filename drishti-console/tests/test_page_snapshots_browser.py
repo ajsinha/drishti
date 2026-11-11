@@ -135,7 +135,7 @@ def test_the_key_pages_look_as_approved(stack, browser, request, tmp_path):
                     pg.evaluate("(t) => document.documentElement.setAttribute('data-theme', t)", THEMES[theme])
                     png = snapshots.capture(pg, opts.get("mask", []), opts.get("scroll"))
                     for _ in range(8):   # still drawing (a grid filling, a chart easing in): two captures a second apart must agree
-                        pg.wait_for_timeout(1000)
+                        pg.wait_for_timeout(1000)   # wait-ok: the interval between two captures that must agree (the page has no settled signal for its drawing)
                         again = snapshots.capture(pg, opts.get("mask", []), opts.get("scroll"))
                         if again == png:
                             break
