@@ -18,9 +18,11 @@ drishti-packs ``Distributions``).
 A distribution file (``config/distributions/drishti.<name>.yaml``) is chosen by ``--distribution <name|path>`` (the console's
 ``distribution`` setting), ``DRISHTI_DISTRIBUTION``, else learned from the server; none named: Drishti All, so nothing changes. On a
 console it decides the presentation: the brand and theme (a settings layer under the site's own), and a visibility filter in the edition
-file's shape, so commands, menus, Help, AI tools and Home cards of modules outside it do not exist here. The modules it lists are read
-from their own manifests (``modules/<id>/module.yaml``, a module jar's ``META-INF/drishti/module.yaml`` in its sources); the kernel's own
-packs, words and menus from ``kernel.yaml`` beside the files.
+file's shape, so commands, menus, Help, AI tools and Home cards of modules outside it do not exist here. The modules it lists come from
+the server's one reader (``GET /public/modules/manifests``: the shipped and installed ``.dmod`` packages, then the manifests folder), read
+again whenever the server's module registry changes (``/public/about``'s ``manifests``); only while no server has answered, from the
+manifests folder here (``modules/<id>/module.yaml``, a module jar's ``META-INF/drishti/module.yaml`` in its sources). The kernel's own
+packs, words and menus come from ``kernel.yaml`` beside the files.
 """
 from __future__ import annotations
 
@@ -130,6 +132,17 @@ def module_manifests(directory: Path | None) -> dict[str, ModuleEntry]:
     return ordered
 
 
+def entries(answer) -> dict[str, ModuleEntry]:
+    """The server's ``GET /public/modules/manifests`` answer as module entries, by id, in the server's (requirement) order."""
+    out: dict[str, ModuleEntry] = {}
+    for m in (answer or {}).get("modules") or [] if isinstance(answer, dict) else []:
+        mid = str(m.get("id") or "").strip() if isinstance(m, dict) else ""
+        if mid:
+            out[mid] = ModuleEntry(mid, str(m.get("domain") or mid), _texts(m.get("packs")), [w.upper() for w in _texts(m.get("words"))],
+                                   _texts(m.get("features")), _texts(m.get("menus")), _texts(m.get("docs")), _texts(m.get("requires")))
+    return out
+
+
 def with_required(listed: list[str], known: dict[str, ModuleEntry]) -> list[str]:
     """The listed modules with every module they require, transitively."""
     out: list[str] = []
@@ -179,14 +192,14 @@ def _pack_file_commands(f: Path) -> tuple[str, ...]:
 _KNOWN: dict[str, frozenset] = {}
 
 
-def known_commands(packs_dir: Path, modules_dir: Path | None = None) -> frozenset:
-    """Every command and word any module has (all packs' commands, the module manifests' words): what a distribution may leave out, so a
-    command typed in one that lacks it answers "not in Drishti Finance" instead of becoming a search."""
+def known_commands(packs_dir: Path, modules_dir: Path | None = None, known: dict[str, ModuleEntry] | None = None) -> frozenset:
+    """Every command and word any module has (all packs' commands, the module manifests' words; ``known``: the server's module list): what
+    a distribution may leave out, so a command typed in one that lacks it answers "not in Drishti Finance" instead of becoming a search."""
     modules_dir = modules_dir or packs_dir.parent.parent / "modules"
-    key = f"{packs_dir}|{modules_dir}"
+    key = f"{packs_dir}|{modules_dir}|{sorted(known) if known is not None else ''}"
     if key not in _KNOWN:
         names = [f.parent.name for f in sorted(packs_dir.glob("*/*/pack.yaml"))] if packs_dir.is_dir() else []
-        words = {w for m in module_manifests(modules_dir).values() for w in m.words}
+        words = {w for m in (module_manifests(modules_dir) if known is None else known).values() for w in m.words}
         _KNOWN[key] = frozenset(pack_commands(packs_dir, names)) | frozenset(words)
     return _KNOWN[key]
 
@@ -260,9 +273,11 @@ def builtin_all() -> Distribution:
     return Distribution("drishti.all", "", None, True, {"distribution": "drishti.all"})   # no title: the product name from ui.product
 
 
-def read(f: Path, kernel_file: Path, modules_dir: Path | None, packs_dir: Path) -> Distribution:
-    """A distribution file, compiled against the kernel's file, the module manifests and the packs folder (as the kernel's
-    Distributions.read)."""
+def read(f: Path, kernel_file: Path, modules_dir: Path | None, packs_dir: Path, known: dict[str, ModuleEntry] | None = None,
+         strict: bool = True) -> Distribution:
+    """A distribution file, compiled against the kernel's file, the modules and the packs folder (as the kernel's Distributions.read).
+    ``known``: the server's module list (:func:`entries`); None reads the manifests folder. ``strict=False`` (a console, which follows
+    the server's list as it changes): a required module not known now is left out with a warning instead of refusing."""
     if not f.is_file():
         raise ValueError(f"no distribution file {f.resolve()} (name one of: risk, finance, genomics, all)")
     spec = _read(f)
@@ -272,15 +287,18 @@ def read(f: Path, kernel_file: Path, modules_dir: Path | None, packs_dir: Path) 
     title = str((spec.get("brand") or {}).get("product") or did)
     if spec.get("modules") == "all":
         return Distribution(did, title, f, True, spec)
-    known = module_manifests(modules_dir)
+    known = module_manifests(modules_dir) if known is None else known
     listed = []
     for m in spec.get("modules") or []:
         mid = str(m.get("id") if isinstance(m, dict) else m).strip()
         if mid and (not isinstance(m, dict) or m.get("enabled", True) is not False):
             listed.append(mid)
             if mid not in known and (not isinstance(m, dict) or m.get("required", True) is not False):
+                if not strict:
+                    LOG.warning("distribution %s: the module '%s' is not installed now; it joins when the server lists it", did, mid)
+                    continue                                     # listed, with nothing of it until the server lists it
                 raise ValueError(f"distribution {did} requires the module '{mid}', which has no manifest under {modules_dir} "
-                                 "(modules/<id>/module.yaml)")
+                                 "(modules/<id>/module.yaml) and the server lists no such module")
     modules = with_required(listed, known)                       # a listed module brings the ones it requires
     kernel = (_read(kernel_file).get("kernel") or {}) if kernel_file.is_file() else {}
     # a distribution may name the kernel's packs it takes (``kernel-packs:``; Drishti Genomics takes none: no counterparty or book anywhere)
@@ -330,8 +348,10 @@ def selected(settings) -> tuple[str, bool]:
     return (v or DEFAULT), bool(v)
 
 
-def load(settings, console_dir: Path, name: str | None = None) -> Distribution:
-    """The distribution ``name`` (else the console's own choice); Drishti All built in when no file exists and none was named."""
+def load(settings, console_dir: Path, name: str | None = None, known: dict[str, ModuleEntry] | None = None,
+         strict: bool = True) -> Distribution:
+    """The distribution ``name`` (else the console's own choice); Drishti All built in when no file exists and none was named. ``known``
+    and ``strict`` as :func:`read`."""
     d = Path(str(settings.get("distributions_dir", "../config/distributions") or "../config/distributions"))
     directory = d if d.is_absolute() else (console_dir / d).resolve()
     p = Path(str(settings.get("packs.dir", "../config/packs") or "../config/packs"))
@@ -344,7 +364,7 @@ def load(settings, console_dir: Path, name: str | None = None) -> Distribution:
         f = (console_dir / f).resolve() if not f.is_file() else f.resolve()
     if not f.is_file() and not named:
         return builtin_all()
-    return read(f, directory / KERNEL, modules_dir, packs_dir)
+    return read(f, directory / KERNEL, modules_dir, packs_dir, known, strict)
 
 
 def deprecated(settings) -> list[str]:

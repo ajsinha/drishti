@@ -124,7 +124,7 @@ async def go(request: Request, q: str = ""):
         return RedirectResponse(f"/t?error={quote(_menus.refusal_for_role(closed))}", status_code=303)
     eds = request.app.state.editions
     if getattr(ed, "distribution", False) and head and not ed.typed_shown(typed) and (
-            head in reserved_words() or head in _dist.known_commands(eds.packs_dir, eds.modules_dir)):
+            head in reserved_words() or head in _dist.known_commands(eds.packs_dir, eds.modules_dir, eds.server_modules)):
         title = ed.outer.title if getattr(ed, "outer", None) is not None and not ed.outer.typed_shown(typed) else ed.title
         return RedirectResponse(f"/t?error={quote(f'DRS-4023 {head} is not in {title}: FUNC lists what you can use')}", status_code=303)
     if head in reserved_words() and head not in mnemonics() and not ed.word_on(head):    # a word the edition (or lens) switches off: said, not run (EXP is also a mnemonic)

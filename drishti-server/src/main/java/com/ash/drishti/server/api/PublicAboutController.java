@@ -41,11 +41,14 @@ public class PublicAboutController {
     private final com.ash.drishti.server.edition.EditionContext edition;
     private final ObjectProvider<com.ash.drishti.server.engines.EngineCluster> cluster;
     private final ObjectProvider<com.ash.drishti.server.modules.ModuleConfiguration.Started> modules;
+    private final ObjectProvider<com.ash.drishti.server.modules.deploy.ModuleNode> node;
 
     public PublicAboutController(Branding branding, ObjectProvider<BuildProperties> build, SecurityProperties security,
             ObjectProvider<OidcProperties> oidc, com.ash.drishti.server.edition.EditionContext edition,
             ObjectProvider<com.ash.drishti.server.engines.EngineCluster> cluster,
-            ObjectProvider<com.ash.drishti.server.modules.ModuleConfiguration.Started> modules) {
+            ObjectProvider<com.ash.drishti.server.modules.ModuleConfiguration.Started> modules,
+            ObjectProvider<com.ash.drishti.server.modules.deploy.ModuleNode> node) {
+        this.node = node;
         this.edition = edition;
         this.cluster = cluster;
         this.modules = modules;
@@ -69,6 +72,9 @@ public class PublicAboutController {
         // the modules loaded at this start (ACCESS_MODEL.md): the console serves no page, route or asset of a module not listed, for anyone
         com.ash.drishti.server.modules.ModuleConfiguration.Started started = modules.getIfAvailable();
         m.put("modules", started == null ? null : started.loaded().entrySet().stream().filter(Map.Entry::getValue).map(Map.Entry::getKey).sorted().toList());
+        // the module registry's fingerprint: when it changes, a console reads /public/modules/manifests again (its distribution's modules)
+        com.ash.drishti.server.modules.deploy.ModuleNode n = node.getIfAvailable();
+        m.put("manifests", n == null ? null : n.fingerprint());
         OidcProperties o = oidc.getIfAvailable();
         m.put("signIn", Map.of("required", security.enabled(), "password", true, "singleSignOn", o != null && Boolean.TRUE.equals(o.enabled())));
         return m;

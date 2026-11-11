@@ -3849,11 +3849,13 @@ pages, so any format a browser draws (SVG best, PNG, WebP); the favicon is the p
 
 **2. Make its modules known.** A distribution reads each module's own manifest, with the same package reader as the module registry:
 the `.dmod` packages the server ships and those installed in the module store (`<data folder>/modules/installed/`, the package's
-manifest winning), then the manifests folder (`drishti.module-manifests-dir`, default `./modules`; the console's own filter,
-`module_manifests_dir`, reads this folder only):
-`modules/<id>/module.yaml`, an SDK project's `modules/<id>/src/dmod/module.yaml`, or `modules/<id>/dmod/module.yaml`. So a third-party
-`.dmod` installed once (dropped in, or deployed) is listed by its id with nothing copied into `modules/`. That is where its words, menus,
-packs and Help come from; a module with `required: false` and no manifest anywhere adds none.
+manifest winning), then the manifests folder (`drishti.module-manifests-dir`, default `./modules`): `modules/<id>/module.yaml`, an SDK
+project's `modules/<id>/src/dmod/module.yaml`, or `modules/<id>/dmod/module.yaml`. So a third-party `.dmod` installed once (dropped in,
+or deployed) is listed by its id with nothing copied into `modules/`. That is where its words, menus, packs and Help come from; a module
+with `required: false` and no manifest anywhere adds none. The console's distribution reads the same list from the server
+(`GET /public/modules/manifests`) and reads it again whenever the module registry changes (`/public/about`'s `manifests`), so a package
+installed after the start joins a running console's distribution and a removed one leaves it; only while no server has answered does
+the console read its own manifests folder (`module_manifests_dir`).
 
 **3. Start it**: `bin/start-all.sh --distribution freight` (`bin\start-all.ps1 -Distribution freight`), or `bin/start-server.sh` and
 `bin/start-console.sh` each with `--distribution freight`, or `DRISHTI_DISTRIBUTION=freight`, or `drishti.distribution: freight`; a path

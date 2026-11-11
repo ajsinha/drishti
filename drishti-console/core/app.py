@@ -576,7 +576,13 @@ def create_app(settings: Settings) -> FastAPI:
     app.state.backend_watch = BackendWatch(catalogue, _seconds(settings.get("backend.check_seconds", 5)),
                                            url_of=(lambda s: pool.current() if s.id == catalogue.default else s.url) if pool.enabled else None)
     # the console learns the server's edition, lenses and branding from its about answer (docs/guides/ADMIN_GUIDE.md › The design)
-    app.state.backend_watch.on_about = lambda s, about: app.state.editions.learn(about) if s.id == catalogue.default and _real_backend(app) else None
+    async def _on_about(s, about):
+        if s.id != catalogue.default or not _real_backend(app):
+            return
+        app.state.editions.learn(about)
+        # the server's module registry changed: its module list (shipped and installed .dmod packages) and the distribution again
+        await app.state.editions.follow_modules(about, lambda: app.state.backend_watch.fetch(s, "/public/modules/manifests"))
+    app.state.backend_watch.on_about = _on_about
     from core.user_stamps import UserStamps
 
     # a change through one worker process (a setting, packs, a layout, a disabled user) reaches every worker of this console at once

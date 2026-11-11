@@ -55,8 +55,11 @@ public class ModuleDeployController {
     private final ModuleDeployService deploy;
     private final ModuleNode node;
     private final Entitlements entitlements;
+    private final org.springframework.core.env.Environment env;
 
-    public ModuleDeployController(ModuleDeployService deploy, ModuleNode node, Entitlements entitlements) {
+    public ModuleDeployController(ModuleDeployService deploy, ModuleNode node, Entitlements entitlements,
+            org.springframework.core.env.Environment env) {
+        this.env = env;
         this.deploy = deploy;
         this.node = node;
         this.entitlements = entitlements;
@@ -173,7 +176,6 @@ public class ModuleDeployController {
     @GetMapping("/public/modules/console")
     public Map<String, Object> consoleParts() {
         List<Map<String, Object>> out = new ArrayList<>();
-        StringBuilder print = new StringBuilder();
         for (ModuleNode.Entry e : node.entries()) {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("id", e.id());
@@ -183,9 +185,31 @@ public class ModuleDeployController {
             m.put("console", deploy.consoleFolder(e.id(), e.version()) != null);
             m.put("claims", e.claims());
             out.add(m);
-            print.append(e.id()).append('@').append(e.version()).append(':').append(e.state()).append('|');
         }
-        return Map.of("modules", out, "fingerprint", Integer.toHexString(print.toString().hashCode()));
+        return Map.of("modules", out, "fingerprint", node.fingerprint());
+    }
+
+    /**
+     * The modules a distribution may list, as this server reads them now (DISTRIBUTIONS.md section 10): the shipped and installed
+     * {@code .dmod} packages, then the manifests folder, each with what a distribution takes from it. The console's distributions read
+     * this list, so a package installed after the start is seen there too; the fingerprint is {@code /public/about}'s {@code manifests}.
+     */
+    @GetMapping("/public/modules/manifests")
+    public Map<String, Object> manifests() {
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (com.ash.drishti.packs.distribution.ModuleManifests.Entry e : com.ash.drishti.packs.distribution.Distributions.known(env).values()) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("id", e.id());
+            m.put("domain", e.domain());
+            m.put("packs", e.packs());
+            m.put("words", e.words());
+            m.put("features", e.features());
+            m.put("menus", e.menus());
+            m.put("docs", e.docs());
+            m.put("requires", e.requires());
+            out.add(m);
+        }
+        return Map.of("modules", out, "fingerprint", node.fingerprint());
     }
 
     /**

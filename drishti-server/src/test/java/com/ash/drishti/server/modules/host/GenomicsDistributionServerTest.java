@@ -120,6 +120,16 @@ class GenomicsDistributionServerTest {
         JsonNode d = getJson("/api/v1/admin/health").path("distribution");
         assertThat(d.path("id").asText()).isEqualTo("drishti.genomics");
         assertThat(d.path("modules").path("genomics").asText()).isEqualTo("loaded");
+        // the console's distributions read the server's module list, again whenever the about answer's fingerprint changes
+        JsonNode manifests = getJson("/public/modules/manifests");
+        assertThat(manifests.path("fingerprint").asText()).isEqualTo(getJson("/public/about").path("manifests").asText()).isNotBlank();
+        JsonNode genomics = null;
+        for (JsonNode m : manifests.path("modules")) {
+            genomics = "genomics".equals(m.path("id").asText()) ? m : genomics;
+        }
+        assertThat(genomics).isNotNull();
+        assertThat(genomics.path("words").toString()).contains("VARIANT", "GENE", "COHORT");
+        assertThat(genomics.path("domain").asText()).isEqualTo("genomics");
     }
 
     @Test

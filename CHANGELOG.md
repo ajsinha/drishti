@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+- **The console's distribution follows the server's module list**: `drishti-console/core/distribution.py` reads the modules from the
+  server's one reader (`GET /public/modules/manifests`: shipped and installed `.dmod` packages, then the manifests folder) and reads
+  them again when `/public/about`'s `manifests` fingerprint changes, so a package installed after the start joins a running console's
+  distribution and a removed one leaves it. The console reads its own manifests folder only until a server answers.
 - **A `.dmod`'s data needs reach the data gate**: a loaded module's needs file (`data: {needs: …}` in its manifest) joins the gate on load
   and leaves it on unload, so an unserved required kind switches its functions off with the needs-data page (genomics: `variant` →
   VARIANT). Before, only built-in modules' `META-INF/drishti/needs.yaml` on the kernel's class path counted.
