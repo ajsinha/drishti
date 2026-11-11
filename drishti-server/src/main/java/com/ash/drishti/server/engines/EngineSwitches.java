@@ -137,10 +137,20 @@ public final class EngineSwitches {
         return "systemEnvironment".equals(ps.getName());
     }
 
-    /** The jar's own files: application.yaml and the engines' shipped copies. */
+    private static final String MODULE_COPY = "module shipped copy ";
+
+    /**
+     * The name of a module's shipped copy of an engine's settings ({@code engines/<file>} in the module's own jars), as the module host adds
+     * it: a shipped copy like the server's own, so a site's {@code config/engines/<file>} overrides it and Admin, Engines says where it came from.
+     */
+    public static String moduleCopy(String module, String file) {
+        return MODULE_COPY + "[" + module + "] engines/" + file;
+    }
+
+    /** The jar's own files: application.yaml and the engines' shipped copies, the server's and each module's. */
     static boolean shipped(PropertySource<?> ps) {
         String n = ps.getName();
-        return n.startsWith("Config resource") && n.contains("class path resource");
+        return n.startsWith("Config resource") && n.contains("class path resource") || n.startsWith(MODULE_COPY);
     }
 
     /** A source's name in words for Admin, Engines and {@code drishti.py server engines show --sources}. */
@@ -166,6 +176,9 @@ public final class EngineSwitches {
         }
         if (n.contains("class path resource [engines/")) {
             return "shipped copy";
+        }
+        if (n.startsWith(MODULE_COPY)) {
+            return "shipped copy (module " + n.substring(n.indexOf('[') + 1, n.indexOf(']')) + ")";
         }
         if (n.contains("class path resource")) {
             return "application.yaml";
