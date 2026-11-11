@@ -323,7 +323,7 @@ over the walk's cached lake (a file apart from the walk, so each fits its re-run
   nothing before (no recent pages, no workspaces); animations and transitions are off, the caret hidden, fonts (vendored) loaded, the scroll at
   the top; the business date is picked (`/asof`), pages that draw late are waited on (`idle`, `wait`); the live clock, the date box, Home's fact of the day, the VaR timings, a search's time taken, the inbox's facts and anything marked `data-snapshot-mask` are covered, timings replaced by a dot, the checkout's folder, the test's scratch folders and the real day's date and time (local or UTC) by fixed words (`snapshots.MASK`, and per page `mask` in `KEY_SNAPSHOTS`).
 - **Small goldens.** Each golden is the viewport at half size in at most 128 colours (PNG): a quarter of the pixels and a palette keep the
-  whole set (132 images) at about 4 MB, while a moved panel, a lost border, a wrong theme colour or a missing chart still shows. A full-size capture
+  whole set (128 images: 32 pages; Admin → Engines is left out because its native-maths notice depends on a timed probe) at about 4 MB, while a moved panel, a lost border, a wrong theme colour or a missing chart still shows. A full-size capture
   would be about ten times that; a perceptual hash alone would not draw what changed. The capture is mapped onto the golden's own palette,
   so an unchanged page compares to zero changed pixels.
 - **One platform.** The goldens are drawn by Chromium on Linux, the release machine; fonts render differently on Windows and macOS, so

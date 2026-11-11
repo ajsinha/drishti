@@ -63,8 +63,9 @@ KEY_SNAPSHOTS: dict[str, tuple[str, dict]] = {
     "fund": (go("FUND"), {}),
     "useq": (go("USEQ"), {}),
     # the memory each engine holds now and the server's folder (a temporary one per run) move: covered
-    "admin-engines": ("/admin/engines", {"idle": True, "mask": ["[data-eng-meta]", "td:has(> .eng-bar)"]}),
-    "admin-connectors": ("/admin/connectors", {}),
+    # Admin -> Engines is left out: its native-maths notice depends on whether the server's BLAS probe answered within the page's budget,
+    # so the table moves between runs; the page is covered by test_engines_browser and test_admin_engines_budget
+    "admin-connectors": ("/admin/connectors", {"idle": True, "tolerance": 0.02}),   # live connector states settle at their own pace
     "admin-loads": ("/admin/loads", {}),
     "admin-upload": ("/admin/loads/upload", {}),
     "admin-bindings": ("/admin/bindings", {}),
