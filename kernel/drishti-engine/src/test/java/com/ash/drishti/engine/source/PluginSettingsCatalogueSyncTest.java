@@ -49,6 +49,9 @@ import org.junit.jupiter.api.Test;
  */
 class PluginSettingsCatalogueSyncTest {
 
+    /** The shared base class of the message-queue connectors (in drishti-common), scanned with each of them. */
+    private static final String MESSAGING = "kernel/drishti-common/src/main/java/com/ash/drishti/messaging";
+
     /** The plugin source folders (relative to the repository root); a messaging connector also runs the shared base class. */
     private static final Map<String, List<String>> SOURCES = Map.ofEntries(
             Map.entry("jdbc", List.of("plugins/drishti-plugin-jdbc")), Map.entry("duckdb", List.of("plugins/drishti-plugin-duckdb")),
@@ -61,8 +64,8 @@ class PluginSettingsCatalogueSyncTest {
             Map.entry("news", List.of("plugins/drishti-plugin-news")), Map.entry("yfinance", List.of("plugins/drishti-plugin-yfinance")),
             Map.entry("rest", List.of("plugins/drishti-plugin-rest")), Map.entry("s3", List.of("plugins/drishti-plugin-s3")),
             Map.entry("kafka", List.of("plugins/drishti-plugin-kafka")),
-            Map.entry("activemq", List.of("plugins/drishti-plugin-activemq", "drishti-messaging")),
-            Map.entry("rabbitmq", List.of("plugins/drishti-plugin-rabbitmq", "drishti-messaging")));
+            Map.entry("activemq", List.of("plugins/drishti-plugin-activemq", MESSAGING)),
+            Map.entry("rabbitmq", List.of("plugins/drishti-plugin-rabbitmq", MESSAGING)));
 
     /** Keys the scan meets that are not connector settings (a document field, a loader command line option). */
     private static final Set<String> NOT_SETTINGS = Set.of("name", "https", "http", "id", "doc", "keep-days");
@@ -109,7 +112,8 @@ class PluginSettingsCatalogueSyncTest {
     }
 
     private static List<Path> javaFiles(Path module) {
-        try (Stream<Path> w = Files.walk(module.resolve("src/main/java"))) {
+        Path src = module.toString().replace('\\', '/').contains("/src/main/java") ? module : module.resolve("src/main/java");   // a module, or one package of it
+        try (Stream<Path> w = Files.walk(src)) {
             return w.filter(f -> f.toString().endsWith(".java")).toList();
         } catch (IOException e) {
             throw new UncheckedIOException(e);

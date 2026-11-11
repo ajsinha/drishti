@@ -26,12 +26,15 @@
   </parent>
   <artifactId>drishti-common</artifactId>
   <name>drishti-common</name>
-  <description>Error codes, JSON, fingerprints, config</description>
+  <description>Error codes, JSON, fingerprints, config; the disk-backed, size-bounded, self-clearing cache (RocksDB) for live data; the
+    latest-state store and live fan-out shared by the message-queue connectors (ActiveMQ, RabbitMQ)</description>
   <dependencies>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
     <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-databind</artifactId></dependency>
     <dependency><groupId>com.fasterxml.jackson.dataformat</groupId><artifactId>jackson-dataformat-yaml</artifactId></dependency>
     <dependency><groupId>org.springframework</groupId><artifactId>spring-context</artifactId></dependency>
     <dependency><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></dependency>
+    <dependency><groupId>org.rocksdb</groupId><artifactId>rocksdbjni</artifactId><version>${rocksdb.version}</version></dependency>
+    <dependency><groupId>com.github.ben-manes.caffeine</groupId><artifactId>caffeine</artifactId></dependency>
   </dependencies>
 </project>

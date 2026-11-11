@@ -41,9 +41,20 @@ class ArchitectureRulesTest {
 
     @ArchTest
     static final ArchRule lowerLayersDoNotSeeEngine = noClasses()
-            .that().resideInAnyPackage("com.ash.drishti.common..", "com.ash.drishti.rachana..",
-                    "com.ash.drishti.inference..", "com.ash.drishti.graph..", "com.ash.drishti.identity..")
+            .that().resideInAnyPackage("com.ash.drishti.common..", "com.ash.drishti.diskcache..", "com.ash.drishti.messaging..",
+                    "com.ash.drishti.rachana..", "com.ash.drishti.inference..", "com.ash.drishti.graph..", "com.ash.drishti.identity..")
             .should().dependOnClassesThat().resideInAnyPackage("com.ash.drishti.engine..", "com.ash.drishti.server..");
+
+    /** The folded modules keep their direction as packages of drishti-common (module walls became these rules, 2.9.11.i4). */
+    @ArchTest
+    static final ArchRule commonSeesNeitherTheDiskCacheNorTheMessagingBase = noClasses()
+            .that().resideInAPackage("com.ash.drishti.common..")
+            .should().dependOnClassesThat().resideInAnyPackage("com.ash.drishti.diskcache..", "com.ash.drishti.messaging..");
+
+    @ArchTest
+    static final ArchRule theDiskCacheIsPlainJava = noClasses()
+            .that().resideInAPackage("com.ash.drishti.diskcache..")
+            .should().dependOnClassesThat().resideInAnyPackage("com.ash.drishti.messaging..", "com.ash.drishti.common..", "org.springframework..");
 
     @ArchTest
     static final ArchRule engineDoesNotSeeServer = noClasses()
