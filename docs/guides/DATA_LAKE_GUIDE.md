@@ -950,7 +950,7 @@ and `trades.jsonl.gz`) releases neither, and the Inbox screen says why.
 
 Every key a `.ready` file can carry, each with what it does and its default. All are optional: a real file uses only those it needs (most
 need none, or `lake:`, `mode:`, `sha256:` and `rows:`). The keys are one list shared by the inbox and the command-line loaders
-(`ReadyNote.KEYS` in drishti-dataload, `READY_KEYS` in `tools/lake/feedroute.py`, compared by a test); this example is parsed against it
+(`ReadyNote.KEYS` in drishti-lakeload, `READY_KEYS` in `tools/lake/feedroute.py`, compared by a test); this example is parsed against it
 by `drishti-console/tests/test_docs_ready_example.py`, so a renamed key fails the docs.
 
 ```yaml

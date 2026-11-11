@@ -235,7 +235,7 @@ Deployment and QA guide has the step-by-step for each on Linux, macOS and Window
 
 **Banking as a module.** The full jar (drishti-app) is the thin kernel plus `drishti-modules`: the four first-party packages
 (`drishti/modules/banking-1.0.0.dmod`, `market-data-`, `capital-markets-`, `economy-1.0.0.dmod`) and `first-party.yaml`, built by
-`modules/dist` in the normal build (banking is put through the fifteen checks there, with market-data beside it). At start the server
+`packaging/dist` in the normal build (banking is put through the fifteen checks there, with market-data beside it). At start the server
 installs each one that is not installed or was rebuilt (`drishti.modules.shipped`, default true); one an administrator removed or switched
 off stays so. The default placement for first-party modules puts every part on every node unless `config/placement.yaml` names the
 module. The access registry reads these manifests (installed unless the module store says removed), so their packs and functions are the

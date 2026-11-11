@@ -17,6 +17,19 @@
 
 ## Unreleased
 
+- **The Maven modules in subject folders, and fewer of them** (2.9.11.i4, item 2a): the root shows `kernel/`, `compute/`, `lake/`,
+  `net/`, `plugins/`, `modules/`, `packaging/`, `tests/` and `drishti-sdk/` instead of dozens of modules (a module's folder is its artifact
+  id; `modules/dist` is `packaging/dist`), and 59 modules became 48: `drishti-diskcache` and `drishti-messaging` are packages of
+  `drishti-common`, `drishti-graph` of `drishti-engine`, `drishti-lakeconfig` of `drishti-lakeio` (the lake core), `drishti-dataload` and
+  `drishti-memlake` of `drishti-lakeload` (loading the lakes), and the light connectors `file`, `rest`, `demo`, `feed`, `news` and
+  `yfinance` are one module, `plugins/drishti-connectors`, with their READMEs beside the other built-in types in
+  `docs/connectors/types/<type>/`. Artifact ids, Java packages and the exec jars' names and folders are unchanged where the module
+  survives (the full jar: `kernel/drishti-server/target/`); Maven commands name a module by artifact id (`-pl :drishti-app`). The walls
+  the folded modules had are architecture rules now (`ArchitectureRulesTest`: the lake files and the file access apart, the loader
+  seeing neither the inbox nor the in-memory lake, the engine and packs reaching no lake file, the disk cache plain Java). Every path
+  that named a module moved with it: the poms, `tools/` (the drill, affected tests, duplicates, code volume, the settings catalogue,
+  the API docs), `bin/`, the run configurations, the Dockerfiles, the Windows workflow, the tests and the documents (DEVELOPER_GUIDE
+  section 1.1 has the folders and why).
 - **Competitive landscape: kernel and modules** (`docs/strategy/COMPETITIVE_LANDSCAPE.md`, internal): does any commercial product share Drishti's
   kernel, `.dmod` module and distribution architecture for data, BI and risk; a summary table (Atoti, Murex, Calypso, FIS, Numerix, MSCI,
   Bloomberg MARS, Snowflake Native Apps, Salesforce packages, Splunk, Elastic, Grafana, Superset, Kubernetes operators, Power BI, Tableau,

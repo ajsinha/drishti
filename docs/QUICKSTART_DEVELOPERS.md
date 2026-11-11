@@ -149,19 +149,19 @@ second: browsers share sign-in cookies across ports of one host). Every step, Li
 
 Two programs: the **server** (Java 21, Spring Boot, a Maven reactor) computes every number and lays out every screen; the **console**
 (Python, FastAPI and Jinja2) renders what the server sends, and the browser draws it. Domains are **modules**: the core plus banking,
-capitalmarkets and economy. The full map, module by module: [DEVELOPER_GUIDE.md › The repository](guides/DEVELOPER_GUIDE.md#1-the-repository).
+capitalmarkets and economy. The modules sit in subject folders (`kernel/`, `compute/`, `lake/`, `net/`, `plugins/`, `modules/`, `packaging/`, `tests/`, `drishti-sdk/`); the full map, module by module: [DEVELOPER_GUIDE.md › The repository](guides/DEVELOPER_GUIDE.md#1-the-repository).
 
 | Where | What |
 |---|---|
 | `drishti-api`, `drishti-common` | the source SPI (Spring-free) and the shared types, errors and file-date rules |
-| `drishti-engine`, `drishti-rachana`, `drishti-inference`, `drishti-graph` | the view pipeline, the Rachana grammar (Sutras, the expression language), layout inference, links |
+| `drishti-engine`, `drishti-rachana`, `drishti-inference` | the view pipeline, the Rachana grammar (Sutras, the expression language), layout inference, links |
 | `drishti-registry` | modules, lenses, functions and their switches: what is on at this site |
 | `drishti-banking`, `drishti-compute-banking` | the banking module: VaR and ES, exposure, FRTB-SA, SIMM, sensitivities, the MR cube; its compute kernels |
-| `drishti-lakeconfig`, `drishti-lakeio`, `drishti-deltalake`, `drishti-iceberg`, `drishti-memlake`, `drishti-lakeload`, `drishti-dataload` | the lakes: their files, readers and writers, the in-memory lake, the parallel loader and the data inbox |
+| `drishti-lakeio`, `drishti-deltalake`, `drishti-iceberg`, `drishti-lakeload` | the lakes: the lake core (their files and file access), Delta, Iceberg, and loading (the parallel loader, the data inbox, the in-memory lake) |
 | `drishti-identity`, `drishti-net`, `drishti-compute`, `drishti-bicompute`, `drishti-tables`, `drishti-flight`, `drishti-ai` | users and tokens; Drishti\*net (clusters); compute workers; the pivot and BI engine; tables and models; Arrow Flight; the AI layer |
 | `drishti-server` | the Spring Boot application: controllers, the core's configuration, the exec jar (`kernel/drishti-server/target/*-exec.jar`) |
 | `drishti-app` | the assembly the release ships: the server with the banking module and the plugins (`-pl :drishti-app -am`) |
-| `plugins/drishti-plugin-*` | the connectors: delta, iceberg, file, jdbc, kafka, s3, rest, feeds and more ([DATA_GUIDE.md](guides/DATA_GUIDE.md)) |
+| `plugins/drishti-connectors`, `plugins/drishti-plugin-*` | the connectors: the built-in light ones (file, rest, feed, news, demo, yfinance) in one module, and a plugin each for delta, iceberg, jdbc, kafka, s3 and more ([DATA_GUIDE.md](guides/DATA_GUIDE.md)) |
 | `drishti-elements`, `drishti-console/web/static/elements/` | Drishti Elements, the JavaScript libraries every screen is made of (core, inputs, grid, chart, data, insight, renderer, risk, graph, tree, designer), and their WebJar ([ELEMENTS_API.md](guides/ELEMENTS_API.md)) |
 | `drishti-console/` | `run_drishti_web.py`, `core/` (one module per feature), `routes/`, `web/templates/`, `plugins/<module>/` (a module's console pages, help and static files: `banking`, `economy`), `config/` (`application.yaml`, `help.yaml`), `tests/` |
 | `config/packs/<domain>/<pack>/` | the packs (content, not code): `core/`, `banking/`, `capitalmarkets/`, `economy/` ([BUILD_GUIDE.md](guides/BUILD_GUIDE.md)) |

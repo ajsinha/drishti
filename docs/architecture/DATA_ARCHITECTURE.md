@@ -3232,11 +3232,11 @@ demo move and the `.ready` file's `lake:` added in 2.9.11.d (2026-11-07).
 |---|---|---|
 | Read JSON Lines, `.gz`, `.zst`, `.zip`, tars, with every archive guard | `drishti-lakeload`: `Archives`, `TarStream`, `GzipMembers`, `SourceReader` | the inbox's reader |
 | Write Delta and Iceberg in parallel, one commit per business date, a table lock, a run log, exit codes 0/1/2/3 | `LakeLoad`, `Loader`, `DeltaTarget`, `IcebergTarget`, `LoadConfig`, `LoadReport` | the inbox's writer, run as a child process |
-| A table's layout | the lake files (`drishti-lakeconfig`: `Lakes`, `LakeFiles`, `PackEntry`) and `PackLayout` | routing |
+| A table's layout | the lake files (`drishti-lakeio`, package `lakeconfig`: `Lakes`, `LakeFiles`, `PackEntry`) and `PackLayout` | routing |
 | Tell the server | `LoadService.announce` (what `POST /api/v1/packs/{pack}/loads` calls), `RefreshCoalescer`, `LoadForwarding` in a cluster | the signal, idempotent per pack, kind, date and batch |
 | Schedules, switches, busy protection, temp files | the scheduler, `config/engines/*.yaml`, `AdmissionGate` (`Work.BULK_LOAD`), `TempFiles` | as every engine |
 
-The module `drishti-dataload` only **finds, claims, routes, records and moves** files: `Inbox` (the hand-shake), `Claims` (`inprocess/`,
+The inbox (package `dataload` of `drishti-lakeload`) only **finds, claims, routes, records and moves** files: `Inbox` (the hand-shake), `Claims` (`inprocess/`,
 the lock and its heartbeat), `Ledger`, `Routes`, `ReadyNote`, `LoaderProcess` (the child `LakeLoad`, behind the `LoadRunner` contract),
 `Outbox`, `Recovery`, `Cycle`, `DataInbox` (the schedule, Load now, Retry, the status), `InboxStatus` (the one status source of the
 Inbox screen), `RowForms`, `Signal`. The server keeps the wiring (`server.dataload.DataLoadConfiguration`, `DataLoadController`).
@@ -3342,7 +3342,7 @@ forms are permanent. `drishti.py lake migrate-config` writes lake files from pat
 
 | Part | Where | Why this way |
 |---|---|---|
-| The reader | module `drishti-lakeconfig` (`Lakes`, `Lake`, `LakeTable`, `LakeCheck`, `LakeFiles`, `ConnectorLake`, `PackEntry`, `LakesCli`) | a module of its own with Jackson as its only dependency: its users sit on both sides of the plugin boundary (the source registry, the loader run alone, the data inbox, the in-memory lake, the server); drishti-api stays dependency-free and drishti-common brings Spring |
+| The reader | the lake core `drishti-lakeio`, package `lakeconfig` (`Lakes`, `Lake`, `LakeTable`, `LakeCheck`, `LakeFiles`, `ConnectorLake`, `PackEntry`, `LakesCli`) | a module of its own with Jackson as its only dependency: its users sit on both sides of the plugin boundary (the source registry, the loader run alone, the data inbox, the in-memory lake, the server); drishti-api stays dependency-free and drishti-common brings Spring |
 | Python | `tools/lake/lakeconfig.py` runs `LakesCli` (`dump`, `table`, `check`, `migrate-config`, `add-entry`) and reads its JSON | one reader, the Java one. The one exception is `tools/lake/memory_caps.py`, which sizes the JVM before any JVM runs and reads two keys (`root`, `memory.max-mb`) |
 | Several tables of one kind | an entry is `<domain>.<table>` with `kind:` (`trading.trade_endur`, `kind: trade`); connectors name entries with `lake-tables:`; the loader picks with `target.table` | the demo lake has three trade tables (ENDUR, CALYPSO, MUREX); a kind with several tables is never guessed |
 | Readers | `SourceRegistry.ownSettings` expands `lake:` into the settings the plugins already read (`root`, `domain`, `table.<kind>`, `layout.<kind>.columns`, `layout.<kind>.vectors`, `s3.<key>`, `catalog`, `uri`, `warehouse`) | one point every connector's settings pass, whatever file or template they came from; the plugins keep one way of reading. A connector that names a lake and also sets one of those keys is refused |
@@ -3476,9 +3476,9 @@ not load the store; a request for the pack's kinds is forwarded to the owner ove
 on their disks, exactly as any pack a peer holds ([CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md), `peer-only-packs`). The code is
 `MemoryBinding`: local routing and the digest leave the kinds to the owner.
 
-### 9.8 The module: drishti-memlake
+### 9.8 The package: memlake, in drishti-lakeload
 
-The in-memory lake is one Maven module, **`drishti-memlake`**, in plain Java (no Spring; `ArchitectureRulesTest.memoryLakeIsPlainJava`):
+The in-memory lake is one package, **`memlake`** of the module `drishti-lakeload` (loading the lakes), in plain Java (no Spring; `ArchitectureRulesTest.memoryLakeIsPlainJava`):
 
 | Package | What is in it |
 |---|---|
@@ -3490,13 +3490,13 @@ The in-memory lake is one Maven module, **`drishti-memlake`**, in plain Java (no
 memory budget and busy protection; `MemoryLakeController` is Admin → Lakes' REST API. The engine switch (`config/engines/memory-lake.yaml`)
 acts there too.
 
-**Which way the dependencies go.** `drishti-memlake` depends on `drishti-lakeio` and `drishti-deltalake` (it writes its tables with the
+**Which way the dependencies go.** The package `memlake` depends on `drishti-lakeio` and `drishti-deltalake` (it writes its tables with the
 lake writer and reads them back with Delta Kernel) and on the engine's connector registry. The lake readers must reach `mem://` without
 depending on it, which would be a cycle. So `drishti-lakeio` defines a small service interface, **`StorageProvider`** (a scheme, the
 storage for a path, whether the scheme is memory-only), and **`StorageProviders`**, which finds the providers on the class path once with
-Java's `ServiceLoader`. `drishti-memlake` lists `MemoryStorageProvider` in `META-INF/services/com.ash.drishti.lakeio.StorageProvider`.
+Java's `ServiceLoader`. `drishti-lakeload` lists `MemoryStorageProvider` in `META-INF/services/com.ash.drishti.lakeio.StorageProvider`.
 The native Delta engine, the lake writer, the Iceberg engine's file access and the Delta and Iceberg connectors ask `StorageProviders`
-for a path's storage and whether it is memory-only; none names a class of `drishti-memlake`
+for a path's storage and whether it is memory-only; none names a class of `memlake`
 (`ArchitectureRulesTest.lakeReadersDoNotSeeTheMemoryLake`). So: no cycle; one code path for every storage (a later scheme is one more
 provider); and it **fails closed**: a tool built without the module cannot read or write a memory table at all and gets an error naming
 the missing module, never a quiet detour through a disk.

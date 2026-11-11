@@ -60,24 +60,44 @@ which are content and configuration, not code: seven ship (`core`, `market-data`
 All Java code lives under the package `com.ash.drishti`. The parent POM (`pom.xml`, artifact `drishti-parent`) inherits from
 `spring-boot-starter-parent`, which aligns library versions, so there is no separate BOM module.
 
+**Subject folders.** The modules sit in a handful of folders by subject, so the repository's root shows these instead of every module.
+A module's folder is its artifact id (`kernel/drishti-server`, artifact `drishti-server`), and an artifact id never changes when a
+module moves, so jars, run configurations and anything outside the build do not notice; a Maven command names a module by its
+artifact id (`./mvnw -pl :drishti-server -am ...`), which works wherever its folder is.
+
+| Folder | Modules | What they are |
+|---|---|---|
+| `kernel/` | `drishti-api`, `drishti-common`, `drishti-kernel-api`, `drishti-module-runtime`, `drishti-registry`, `drishti-engine`, `drishti-identity`, `drishti-packs`, `drishti-ai`, `drishti-server` | the platform's spine: the plugin SPI and the kernel API, the shared library, the module runtime, the access registry, the view engine, identity, packs, the AI layer and the Spring Boot application |
+| `compute/` | `drishti-rachana`, `drishti-inference`, `drishti-compute`, `drishti-bicompute`, `drishti-tables` | what computes: the grammar and its expression language, layout inference, the compute engine (vectors, BLAS, sharding, the Python workers), the pivot engine, the table layer |
+| `lake/` | `drishti-lakeio`, `drishti-deltalake`, `drishti-iceberg`, `drishti-lakeload` | the lakes: the lake core (the lake files and the file access every engine shares), Delta, Iceberg, and loading (the parallel loader, the data inbox, the in-memory lake) |
+| `net/` | `drishti-net`, `drishti-flight` | between machines: Drishti\*net membership and routing, and Arrow Flight |
+| `plugins/` | `drishti-connectors` and the thirteen `drishti-plugin-*` | the connectors: the light ones built in, one module; each with a driver or a native library a plugin of its own ([§1.2](#12-source-plugins)) |
+| `modules/` | `banking`, `market-data`, `capital-markets`, `economy`, `genomics` | the domain modules, each packed into a `.dmod` |
+| `drishti-sdk/` | `drishti-module-parent`, `drishti-module-maven-plugin`, `drishti-module-archetype` | the Module SDK ([§1.6](#16-the-module-sdk)) |
+| `packaging/` | `drishti-app`, `drishti-kernel-app`, `dist` (`drishti-modules`), `drishti-elements` | what the build ships: the full and the thin server jar, the first-party `.dmod` packages, the Elements release |
+| `tests/` | `drishti-it`, `drishti-testkit`, `drishti-benchmarks` | repository-wide rules, the connector contract kit, the JMH benchmarks |
+
+**A module per subject, not per class group.** A small part is a package of its neighbour rather than a module of its own: the disk
+cache (`diskcache`) and the message-queue connectors' state store (`messaging`) live in `drishti-common`, the entity links (`graph`) in
+`drishti-engine`, the lake files (`lakeconfig`) in `drishti-lakeio`, the data inbox (`dataload`) and the in-memory lake (`memlake`) in
+`drishti-lakeload`, and the light connectors in `drishti-connectors`. Where a module wall would keep two parts apart, an architecture
+rule does ([§3.4](#34-architecture-rules)): the lake files and the lake file access do not see each other, the loader sees neither the
+inbox nor the in-memory lake, the disk cache sees nothing of `common`, and so on.
+
 | Module | Package | What it owns | Key classes |
 |---|---|---|---|
 | `drishti-api` | `api` | The plugin SPI and data model. **No Spring**, no internal dependencies. | `SourcePlugin`, `PluginManifest`, `SourceCapabilities`, `SourceContext`, `EntityRef`, `EntityDocument`, `Provenance`, `AsOf`, `DataNode`, `HitIndex`, `PluginNotConfigured` |
-| `drishti-common` | `common` | Error codes, the exception type, JSON, shape fingerprints, business calendars, branding, a pack's samples (`PackSamples`), retries and live settings. | `ErrorCode`, `DrishtiException`, `JsonCodec`, `ShapeFingerprinter`, `BusinessCalendar`, `PackSamples`, `RetryPolicy`, `RetryBoard`, `LiveSettings` |
+| `drishti-common` | `common`, `diskcache`, `messaging` | Error codes, the exception type, JSON, shape fingerprints, business calendars, branding, a pack's samples (`PackSamples`), retries and live settings; a disk-backed, size-bounded, self-clearing cache (RocksDB) for live connector state; the latest-state store and live fan-out shared by the ActiveMQ and RabbitMQ connectors. | `ErrorCode`, `DrishtiException`, `JsonCodec`, `ShapeFingerprinter`, `BusinessCalendar`, `PackSamples`, `RetryPolicy`, `RetryBoard`, `LiveSettings`, `diskcache.DiskCache`, `messaging.MessageStateSource` |
 | `drishti-rachana` | `rachana` | The Rachana grammar: the Sutra model, the YAML parser (`*.sutra.yaml`, `rachana: 1`), the registry with hot reload, the JSON Schema of the language, Rachana-EL, formats and tones. | `SutraRegistry`, `SutraMatcher`, `parse.SutraParser`, `parse.SutraBuilder`, `RachanaSchema`, `model.PanelKind`, `el.ElCompiler`, `el.Functions`, `format.Formats` |
 | `drishti-inference` | `inference` | Layout inference: semantic hints, rules, the merge of a Sutra with inferred panels. | `InferenceEngine`, `Rules`, `Semantics`, `LayoutMerger`, `EffectiveLayout` |
-| `drishti-graph` | `graph` | Entity references: which fields link to which kinds, and link badges. | `ReferenceCatalog`, `BadgeRenderer`, `GraphProperties` |
-| `drishti-engine` | `engine` | Sources and routing (including a **union** of connectors that serve one kind together), the view pipeline, binding, the ViewModel, commands and type-ahead, search, history, impact, business dates, live topics. | `ViewPipeline`, `source.SourceRegistry`, `source.SourceRouter`, `source.ConnectorInstance`, `bind.Binder`, `view.ViewModel`, `view.PanelData`, `live.TopicHub`, `live.ViewStream`, `command.CommandParser`, `search.StructuredSearch` |
+| `drishti-engine` | `engine`, `graph` | Sources and routing (including a **union** of connectors that serve one kind together), the view pipeline, binding, the ViewModel, commands and type-ahead, search, history, impact, business dates, live topics; entity references (which fields link to which kinds) and link badges. | `ViewPipeline`, `source.SourceRegistry`, `source.SourceRouter`, `source.ConnectorInstance`, `bind.Binder`, `view.ViewModel`, `view.PanelData`, `live.TopicHub`, `live.ViewStream`, `command.CommandParser`, `search.StructuredSearch` |
 | `drishti-identity` | `identity` | Users, passwords, roles, lockout, preferences, pack switches and the audit trail, in SQLite or PostgreSQL through JPA. | `UserService`, `JpaUserStore`, `RoleStore`, `PackStateStore`, `JpaAuditLog`, `IdentityDatabase`, `db.IdentityRepositories` |
 | `drishti-packs` | `packs` | Loads the enabled packs and turns them into the lowest-precedence property source; writes connector files from the packs' templates. | `PackLoader`, `PackLineage`, `PackEnvironmentPostProcessor` (registered in `META-INF/spring.factories`), `ConnectorBootstrap` |
 | `drishti-ai` | `ai` | The LLM provider layer and the MCP client: providers (Anthropic, OpenAI-compatible through Spring AI, a mock), model registry, call policy, prompt masking, MCP clients over streamable HTTP. Depends on `api` and `common` only (`ArchitectureRulesTest.aiLayerDependsOneWay`). **Off by default**; see [AI_GUIDE.md](AI_GUIDE.md#1-model-providers) and [AI_GUIDE.md](AI_GUIDE.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy). | `LlmGateway`, `LlmRegistry`, `LlmProvider`, `AnthropicProvider`, `SpringAiOpenAiProvider`, `McpGateway`, `McpRegistry`, `McpClient` |
-| `drishti-diskcache` | `diskcache` | A disk-backed, size-bounded, self-clearing cache (RocksDB) for live connector state. | `DiskCache` |
-| `drishti-messaging` | `messaging` | The latest-state store and live fan-out shared by the ActiveMQ and RabbitMQ connectors. | `MessageStateSource` |
-| `drishti-lakeio` | `lakeio` | Lake file access shared by the native Delta and Iceberg engines, no Hadoop: `Storage` (local disk through `java.nio`, Windows drive letters, backslashes and UNC shares included; S3 through the AWS SDK, with conditional PUTs for commits), byte ranges, Parquet page codecs (`NativeCodecs`, reading and writing) and the per-file Parquet footer cache. Other schemes come from a `StorageProvider` another module registers (`mem://`, the in-memory lake): the engines ask `StorageProviders` and never name that module. | `Storage`, `LocalStorage`, `S3Storage`, `LocalPaths`, `NativeCodecs`, `ParquetFooters`, `StorageProvider`, `StorageProviders` |
+| `drishti-lakeio` | `lakeio`, `lakeconfig` | The lake core. The lake files (`config/lakes/<lake>.yaml`, package `lakeconfig`): one description of each lake and every table in it, read by every writer and reader, and by the Python tools through `LakesCli`. Lake file access shared by the native Delta and Iceberg engines, no Hadoop: `Storage` (local disk through `java.nio`, Windows drive letters, backslashes and UNC shares included; S3 through the AWS SDK, with conditional PUTs for commits), byte ranges, Parquet page codecs (`NativeCodecs`, reading and writing) and the per-file Parquet footer cache. Other schemes come from a `StorageProvider` another module registers (`mem://`, the in-memory lake): the engines ask `StorageProviders` and never name that module. | `Storage`, `LocalStorage`, `S3Storage`, `LocalPaths`, `NativeCodecs`, `ParquetFooters`, `StorageProvider`, `StorageProviders`, `lakeconfig.Lakes`, `lakeconfig.ConnectorLake`, `lakeconfig.LakesCli` |
 | `drishti-iceberg` | `iceberg` | Drishti's own Apache Iceberg engine without Hadoop, on `drishti-lakeio`: metadata JSON kept whole, path-based, metadata-file and REST catalogs (JDK HTTP client, OAuth2, ETag, vended credentials, SigV4), Avro manifests, planning with partition and metric pruning, field-id Parquet reads with schema evolution and deletes, the Parquet writer with Iceberg metrics, safe commits and the table operations. Its tests prove the writer loads no Hadoop `Configuration`. | `Table`, `catalog.Catalogs`, `scan.Planner`, `read.TaskReader`, `write.Operations`, `write.ParquetDataWriter` |
 | `drishti-deltalake` | `deltalake` | A Delta Kernel engine without Hadoop on `drishti-lakeio` (local disk, Windows paths included, and S3; Parquet through parquet-java with the shared input files and codecs); and Drishti's own Delta writer (`lake build --engine drishti`). Its tests prove in an isolated class loader that no Hadoop `FileSystem`, `Shell` or `Configuration` loads. | `NativeEngine`, `write.LakeManifest` |
-| `drishti-memlake` | `memlake` | The in-memory lake, plain Java with no Spring ([IN_MEMORY_LAKE.md](../architecture/DATA_ARCHITECTURE.md#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk)): the `mem://` memory stores (Parquet files in off-heap chunks under a hard cap; registered with `drishti-lakeio` as the `mem` storage provider), the tables and their replenish jobs, the eviction ladder, automated compaction, the owner node's binding, the never-on-disk guard and the host checks. The server keeps only its Spring wiring (`server.memlake`: settings binding, beans, the Admin, Lakes controller). | `MemoryLake`, `MemoryLakeSettings`, `Retention`, `MemoryBinding`, `store.MemoryStores`, `store.MemoryStorage` |
-| `drishti-lakeload` | `lakeload` | The parallel lake loader: JSON Lines from a folder or S3 into Delta or Iceberg, readers, parsers and writers on every core, memory bounded by `memory.budget-mb` (sorted runs spilled to disk), one commit per business date ([PARALLEL_LOADER.md](../architecture/DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-drishti-lakeload)). | `LakeLoad`, `Loader`, `RowParser`, `Runs`, `DeltaTarget`, `IcebergTarget` |
+| `drishti-lakeload` | `lakeload`, `dataload`, `memlake` | The parallel lake loader: JSON Lines from a folder or S3 into Delta or Iceberg, readers, parsers and writers on every core, memory bounded by `memory.budget-mb` (sorted runs spilled to disk), one commit per business date ([PARALLEL_LOADER.md](../architecture/DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-drishti-lakeload)). The data inbox (package `dataload`): files dropped with a `.ready` marker, claimed, routed, loaded by the loader, recorded and moved to the outbox. The in-memory lake (package `memlake`, plain Java with no Spring, [IN_MEMORY_LAKE.md](../architecture/DATA_ARCHITECTURE.md#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk)): the `mem://` memory stores (Parquet files in off-heap chunks under a hard cap; registered with `drishti-lakeio` as the `mem` storage provider), the tables and their replenish jobs, the eviction ladder, automated compaction, the owner node's binding, the never-on-disk guard and the host checks; the server keeps only its Spring wiring (`server.memlake`, `server.dataload`). | `LakeLoad`, `Loader`, `RowParser`, `Runs`, `DeltaTarget`, `IcebergTarget`, `dataload.DataInbox`, `memlake.MemoryLake`, `memlake.store.MemoryStores` |
 | `drishti-testkit` | `testkit` | Contract tests every source plugin of a kind must pass. | `DatedSourceContract`, `MessageSourceContract`, `BrokerOutage` |
 | `drishti-module-runtime` | `module.runtime` | The module runtime ([§1.5](#15-the-module-runtime)): the `.dmod` package and its hash list, the manifest, verification V1–V8, discovery, the dependency resolver, a class loader and a child Spring context per module, the live route table, the registry of contributions and the unload sequence with its leak check; and the module tool ([§1.6](#16-the-module-sdk): `module.tool`, the one packer and the conformance checks, `target/drishti-module-tool.jar`). Spring and Jackson only; one implementation for the kernel and, from i4, the console. | `ModuleRuntime`, `tool.ModuleTool`, `tool.ModuleConformance`, `DmodManifest`, `Dmod`, `ModuleVerifier`, `DependencyResolver`, `ModuleClassLoader`, `RouteTable`, `Contributions`, `LeakCheck` |
 | `drishti-sdk/drishti-module-maven-plugin`, `-archetype`, `-parent` | `sdk` | The Module SDK ([§1.6](#16-the-module-sdk)): the archetype of a module project, the parent it inherits, and the plugin that validates, packs the `.dmod` and runs the conformance checks C1–C15. | `ValidateMojo`, `AssembleMojo`, `ConformanceMojo` (over `module.tool`) |
@@ -89,16 +109,17 @@ All Java code lives under the package `com.ash.drishti`. The parent POM (`pom.xm
 
 ### 1.2 Source plugins
 
-Each plugin is its own module under `plugins/`, depends on `drishti-api` only (plus `drishti-common` and `drishti-testkit` for
-tests), and registers itself in `src/main/resources/META-INF/services/com.ash.drishti.api.SourcePlugin`. The server depends on all of
+The connectors live under `plugins/`. The light ones (no client library, no native code) are **built in**: one module,
+`plugins/drishti-connectors`, a package each (`plugin.file`, `plugin.rest`, ...), their READMEs with the other built-in types in
+`docs/connectors/types/<type>/`. Every connector with a driver or a native library is a **plugin** module of its own (it can then go
+in the `lib/` folder instead of the jar). Each depends on `drishti-api` (plus `drishti-common`, and `drishti-testkit` for tests) and
+registers itself in `src/main/resources/META-INF/services/com.ash.drishti.api.SourcePlugin`. The server depends on all of
 them, so they are on its class path; each starts only when enabled or used by a named connector, one YAML file per connector in
 `config/connectors/` ([DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors), [section 10](#10-connectors-choosing-combining-and-writing-one)).
 
 | Module | Plugin name | Reads | Extra internal dependency |
 |---|---|---|---|
-| `drishti-plugin-demo` | `demo` | The enabled packs' `samples/` (`<kind>.jsonl`); random-walk ticks ([the demo plugin's README](../../docs/connectors/types/demo/README.md)) | — |
-| `drishti-plugin-file` | `file` | JSON or JSON Lines documents in a folder, dated by folder | — |
-| `drishti-plugin-rest` | `rest` | An HTTP/JSON service | — |
+| `drishti-connectors` | `demo`, `file`, `rest`, `feed`, `news`, `yfinance` | The built-in light connectors: the enabled packs' `samples/` with random-walk ticks ([demo](../connectors/types/demo/README.md)); JSON or JSON Lines documents in a folder, dated by folder ([file](../connectors/types/file/README.md)); an HTTP/JSON service ([rest](../connectors/types/rest/README.md)); public feeds: NY Fed SOFR, ECB €STR and FX, US Treasury, FRED ([feed](../connectors/types/feed/README.md)); headlines for a named entity from Google News RSS ([news](../connectors/types/news/README.md)); a quote and price history from Yahoo Finance ([yfinance](../connectors/types/yfinance/README.md)) | `drishti-common` |
 | `drishti-plugin-jdbc` | `jdbc` | A database by query, or the PostgreSQL entity-table mode | — |
 | `drishti-plugin-delta` | `delta` | Delta Lake tables through Delta Kernel (no Spark), with time travel; engine `native` (no Hadoop) or `hadoop`; the demo lakes and every shipped pack's store | `drishti-deltalake` |
 | `drishti-plugin-aerospike` | `aerospike` | A set per data domain: a record per entity per business date with promoted bins, an index record per entity, a record per kind (`AerospikeLayout`); `AerospikeLoader` writes it | — |
@@ -108,15 +129,12 @@ them, so they are on its class path; each starts only when enabled or used by a 
 | `drishti-plugin-iceberg` | `iceberg` | Apache Iceberg tables in Drishti's layout (path-based or a REST catalog), with time travel; engine `native` (drishti-iceberg, no Hadoop) or `library` | `drishti-iceberg` |
 | `drishti-plugin-iceberg-external` | `iceberg-external` | Iceberg tables other engines write, rows as documents, read-only, through drishti-iceberg | `drishti-iceberg` |
 | `drishti-plugin-duckdb` | `duckdb` | Every data domain in one embedded DuckDB file | — |
-| `drishti-plugin-feeds` | `feed` | Public feeds: NY Fed SOFR, ECB €STR and FX, US Treasury, FRED ([the feeds plugin's README](../../docs/connectors/types/feed/README.md)) | — |
-| `drishti-plugin-news` | `news` | Headlines for a named entity, computed on demand from Google News RSS (code, not a store) | `drishti-common` |
-| `drishti-plugin-yfinance` | `yfinance` | A quote and price history for a ticker, computed on demand from Yahoo Finance | `drishti-common` |
-| `drishti-plugin-kafka` | `kafka` | Compacted topics of entity documents | `drishti-diskcache` |
-| `drishti-plugin-activemq` | `activemq` | ActiveMQ queues and topics | `drishti-messaging` |
-| `drishti-plugin-rabbitmq` | `rabbitmq` | RabbitMQ queues | `drishti-messaging` |
+| `drishti-plugin-kafka` | `kafka` | Compacted topics of entity documents | `drishti-common` (`diskcache`) |
+| `drishti-plugin-activemq` | `activemq` | ActiveMQ queues and topics | `drishti-common` (`messaging`) |
+| `drishti-plugin-rabbitmq` | `rabbitmq` | RabbitMQ queues | `drishti-common` (`messaging`) |
 | `drishti-plugin-s3` | `s3` | Documents in Amazon S3 or an S3-compatible store | — |
 
-Besides these plugins, the engine has one built-in plugin type, `derived`: entities computed from other kinds (the trading
+Besides these, the engine has the built-in plugin type `derived`: entities computed from other kinds (the trading
 pack's `trade-pages` connector makes the counterparty, portfolio, legal-entity and index pages from the `trade` kind).
 
 ### 1.3 How the modules depend on each other
@@ -125,23 +143,19 @@ Compile-scope dependencies, from the POMs:
 
 ```text
 drishti-api                       (nothing internal; no Spring)
-└── drishti-common
+└── drishti-common                 (with the packages diskcache and messaging; RocksDB)
     ├── drishti-ai                 (api, common; Spring AI)
     ├── drishti-rachana
-    │   ├── drishti-inference ──┐
-    │   └── drishti-graph ──────┴── drishti-engine
+    │   └── drishti-inference ──── drishti-engine (with the package graph)
     ├── drishti-identity
     ├── drishti-packs
     └── drishti-testkit            (api, common)
-drishti-diskcache                 (nothing internal)
-drishti-messaging                 (api, diskcache)
-drishti-lakeio                    (api)
+drishti-lakeio                    (api, kernel-api; the lake core: lakeconfig and lakeio)
 drishti-deltalake                 (lakeio)
 drishti-iceberg                   (api, lakeio)
-drishti-memlake                   (api, common, engine, lakeio, deltalake; no Spring code: ArchitectureRulesTest)
-drishti-lakeload                  (api, lakeio, deltalake, iceberg)
-plugins/*                         (api; kafka adds diskcache; activemq and rabbitmq add messaging; delta adds deltalake; iceberg and iceberg-external add iceberg)
-drishti-server                    (engine, identity, packs, ai, lakeload, memlake, and all nineteen plugins)
+drishti-lakeload                  (api, common, engine, lakeio, deltalake, iceberg; the packages lakeload, dataload and memlake; no Spring code: ArchitectureRulesTest)
+plugins/*                         (api, common; delta adds deltalake; iceberg and iceberg-external add iceberg)
+drishti-server                    (engine, identity, packs, ai, lakeload, drishti-connectors and all thirteen plugins)
 drishti-it                        (server, testkit)
 drishti-benchmarks                (inference)
 ```
@@ -317,7 +331,7 @@ Pages and their routes come from the console part (`console/plugin.yaml` format 
 **First-party modules and the allowance** ([KERNEL_AND_MODULES.md section 3.3](../architecture/KERNEL_AND_MODULES.md#33-the-manifest-moduleyaml)).
 The product's own modules say `origin: first-party`; the kernel believes it only when the module's id and the SHA-256 of its
 `META-INF/DMOD.MF` are in the `first-party.yaml` of the same build (`java -jar drishti-module-tool.jar first-party DIR --out FILE` writes
-it; `modules/dist` does in the build). Only such a module may declare `kernel-internals:` (a list, or a file the packer writes in): its
+it; `packaging/dist` does in the build). Only such a module may declare `kernel-internals:` (a list, or a file the packer writes in): its
 class loader then asks the kernel for exactly those packages, C1 lets them through, and the packer stamps `kernel-build:`, the one kernel
 build it loads on (`pack --kernel-build ID`, default the kernel on the tool's class path). Anything else is refused in words: an allowance
 on a third-party module or on a first-party claim that does not verify (C1), or another kernel build ("built for kernel X, this is Y:
@@ -1895,7 +1909,7 @@ Releases are numbered `MAJOR.MINOR.PATCH` and tagged `vX.Y.Z` on `main` (`git ta
 
 ## 10. Connectors: choosing, combining and writing one
 
-This chapter is for the person who connects Drishti to data: choosing among the nineteen plugins that ship, combining
+This chapter is for the person who connects Drishti to data: choosing among the nineteen connectors that ship (six built in, thirteen plugins), combining
 and operating them, and, when none fits, writing a new one. The exact settings, data layouts, health texts and limits of each
 connector live in its README (`plugins/drishti-plugin-<name>/README.md`; the built-in types in `docs/connectors/types/<type>/README.md`),
 and this chapter links there instead of repeating them. Named connectors are **files**, one YAML file per connector in
@@ -2839,7 +2853,7 @@ both shipped connectors are `enabled: false` as shipped and name what they send 
 
 Test it without the network: a local `com.sun.net.httpserver.HttpServer` serving canned answers (and a bad answer for every rule above:
 an XXE attempt, an oversized body, a slow response, two 503s then success), and the contract of a source that is not dated. See
-`FakeNewsServer` and `NewsSourcePluginTest` in `plugins/drishti-plugin-news`, and `FakeYahooServer` in `plugins/drishti-plugin-yfinance`.
+`FakeNewsServer` and `NewsSourcePluginTest` in `plugins/drishti-connectors` (package `plugin.news`), and `FakeYahooServer` beside them (package `plugin.yfinance`).
 
 ### 10.12 Testing with drishti-testkit
 
@@ -2889,7 +2903,7 @@ The contract covers the happy path. **Add your own tests for the failure semanti
 
 `docs/guides/examples/connector/` is a complete, small, **dated** source plugin written for teaching. It is built and
 tested with the rest of the project (`./mvnw verify`), but it is **not shipped**: the server does not depend on it,
-it is not one of the nineteen plugins, and it exists to be copied.
+it is not one of the connectors that ship, and it exists to be copied.
 
 ```text
 docs/guides/examples/connector/
@@ -2976,7 +2990,7 @@ which.
 
 | To learn… | Read the shipped plugin |
 |---|---|
-| persistent indexes, id offsets, columns | `drishti-plugin-file` (JSON lines), `drishti-plugin-duckdb` |
+| persistent indexes, id offsets, columns | `drishti-connectors`' `file` (JSON lines), `drishti-plugin-duckdb` |
 | live updates, supervisors, backoff | `drishti-plugin-kafka`, `drishti-plugin-rabbitmq` |
 | time travel (`knownAt`) | `drishti-plugin-delta`, `drishti-plugin-iceberg` |
 | lazy connection slots and reconnecting | `drishti-plugin-jdbc` |

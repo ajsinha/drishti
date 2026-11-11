@@ -93,7 +93,7 @@ loaded.
   (*Exposure needs data: exposure-path is not bound*, with links to Admin → Data bindings and Help); its API answers `409 DRS-1035` with
   the need and the command line says the same words.
 
-**The modules that ship**: four first-party modules installed by default, each packed into a `.dmod` by the normal build (`modules/dist`) and passing C1–C15:
+**The modules that ship**: four first-party modules installed by default, each packed into a `.dmod` by the normal build (`packaging/dist`) and passing C1–C15:
 
 | Module | Folder | Brings | Lenses |
 |---|---|---|---|
@@ -261,7 +261,8 @@ report sign-offs go through one Approvals queue with four eyes. Anything that de
 ## Data in
 
 - **Connectors**: Delta Lake and Apache Iceberg (Drishti's own engines, local disk or S3, no Hadoop), JDBC databases, DuckDB, MongoDB,
-  Redis, Aerospike, Cassandra, Kafka, ActiveMQ, RabbitMQ, files, S3, REST and public feeds, each a plugin in `plugins/drishti-plugin-*/`: `demo`, `file`, `rest`, `jdbc`, `delta`, `iceberg`, `iceberg-external`, `duckdb`, `mongodb`, `redis`, `aerospike`, `cassandra`, `kafka`, `activemq`, `rabbitmq`, `s3`, `feeds`, `news`, `yfinance`;
+  Redis, Aerospike, Cassandra, Kafka, ActiveMQ, RabbitMQ, files, S3, REST and public feeds: the light ones built in (`plugins/drishti-connectors`: `demo`, `file`, `rest`, `feed`, `news`, `yfinance`),
+  each with a driver or native library a plugin in `plugins/drishti-plugin-*/`: `jdbc`, `delta`, `iceberg`, `iceberg-external`, `duckdb`, `mongodb`, `redis`, `aerospike`, `cassandra`, `kafka`, `activemq`, `rabbitmq`, `s3`;
   each with its README ([DATA_GUIDE.md](docs/guides/DATA_GUIDE.md#8-connectors), [tutorial 15](docs/tutorials/15-connect-your-data.md)).
 - **Lakes, each in its own folder** and described by one lake file (`config/lakes/<lake>.yaml`):
 
@@ -399,6 +400,9 @@ the modules they may use. The map of every document is [docs/README.md](docs/REA
 - **Console**: Python, FastAPI and Jinja2; a module's console part is declared in its own `console/` folder and hosted under `/m/<id>/`;
   every front-end asset
   vendored or one of the Elements libraries, under a strict content security policy; it works on phones.
+- **The source tree**: the Maven modules sit in subject folders, `kernel/`, `compute/`, `lake/`, `net/`, `plugins/`, `modules/`,
+  `packaging/`, `tests/` and `drishti-sdk/` ([DEVELOPER_GUIDE.md section 1.1](docs/guides/DEVELOPER_GUIDE.md#11-java-modules)); a module's
+  folder is its artifact id.
 - **Contributing**: work on `develop`; `./mvnw -q verify` and the console tests
   (`drishti-console/.venv/bin/python -m pytest -q drishti-console/tests`) must pass; no source file over 2,000 lines; every file carries
   the copyright header (`python3 tools/license_headers.py --fix`); every change updates the documents it affects and the changelog in
@@ -426,13 +430,13 @@ the modules they may use. The map of every document is [docs/README.md](docs/REA
 | CSS | 19k | 119 |
 | HTML (templates and pages) | 40k | 367 |
 | YAML: configuration, Sutras, data contracts | 114k | 1,465 |
-| Markdown: guides, tutorials, design | 226k | 324 |
+| Markdown: guides, tutorials, design | 227k | 325 |
 
-About **786k lines of product code** and **287k lines of tests** (37% of the product code), with **226k lines of documentation**.
+About **786k lines of product code** and **287k lines of tests** (37% of the product code), with **227k lines of documentation**.
 
 | What | Count |
 |---|---|
-| Maven modules | 59 (19 of them connector plugins) |
+| Maven modules | 48 in 9 subject folders: `compute/`, `drishti-sdk/`, `kernel/`, `lake/`, `modules/`, `net/`, `packaging/`, `plugins/`, `tests/` |
 | Modules (`.dmod`) | 5: banking, capitalmarkets, economy, genomics, market-data |
 | Lenses | 11: world, markets, publicsector, cio, oversight, risk, trading, market, cro, mr-cube, ccr-cube |
 | Functions a module declares | 121 (48 banking, 12 capitalmarkets, 35 economy, 3 genomics, 23 market-data); every other command word is the kernel's |
@@ -441,11 +445,11 @@ About **786k lines of product code** and **287k lines of tests** (37% of the pro
 | Drishti Elements | 11 libraries, 196 ES modules |
 | Domain packs | 17: banking 4, capitalmarkets 2, core 3, economy 8 |
 | Sutras in the shipped packs | 248 |
-| Connector plugins | 19 |
+| Connectors | 13 plugins (a driver or native library each) and 9 built-in types |
 | Feeds | 13 |
 | Lake files | 9 |
 | Test files | 1,579: Java 985, console 259, browser 184, tools 127, JavaScript 24 |
-| Documents under docs/ | 184 (32 guides, 22 tutorials) |
+| Documents under docs/ | 191 (32 guides, 22 tutorials) |
 
 <!-- code-volume:end -->
 
