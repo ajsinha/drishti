@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <!--
   Project Drishti · Any data. Any domain. One grammar.
@@ -14,124 +16,908 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 
-  A screen mock-up (landing-mockup.html) of the console's Home (/, landing.html) with the chosen picture C, kernel and rooms, as its hero.
-  MOCK-UP ONLY: the real landing page is unchanged until the owner approves. Self-contained: system fonts, inline SVG, nothing from a CDN.
-  The colours are the console's theme tokens (drishti_tokens.css, the terminal and light themes, same names). The product name, tagline and
-  module list come from the distribution file's brand and modules (config/distributions/<id>.yaml); the page writes no product name itself.
-  The address picks the distribution and theme: ?dist=all|risk&theme=terminal|light. Screenshots: landing-mockup-*.png beside it.
+  A screen mock-up (landing-mockup.html) of the console's Home (/, landing.html) WITH THE HOUSE ADDED: today's page exactly as the
+  console renders it (its markup, its CSS and its hero animation, loaded from drishti-console/web/static: nothing from a CDN), plus one
+  new section below the hero, "One kernel. Modules plug in.", drawing picture C (docs/how-it-fits/kernel-and-rooms.svg) from the
+  running distribution's modules. MOCK-UP ONLY: the real landing page is unchanged until the owner approves.
+  The product name and tagline come from configuration (the distribution file's brand; the headline from ui.headline); the page writes
+  no product name itself. The address picks the distribution and theme: ?dist=all|risk&theme=terminal|light (#house scrolls to the
+  new section; &shot hides the mock-up switcher). Open it from the repository so the console's static files resolve.
 -->
-<html lang="en" data-theme="terminal">
+<html lang="en" data-theme="terminal" data-default-theme="terminal">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Landing mock-up</title>
-<script>
-/* What the server would pass the template from the distribution file (config/distributions/drishti.<id>.yaml: brand.product,
-   brand.tagline, modules). In landing.html these are {{ PRODUCT }}, {{ TAGLINE }} and the distribution's module list. */
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0e1628">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Drishti">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="../../drishti-console/web/static/img/icons/drishti_apple-touch-icon.png">
+  <meta name="copyright" content="Copyright © 2026 Ashutosh Sinha. All rights reserved. Proprietary and confidential.">
+  <meta name="description" content="Drishti — Any data. Any domain. One grammar.">
+  <meta name="drishti-live" content="6c91e6e97540141fac43d729">
+  <meta name="drishti-me" content="ace11684c69e576f">
+  <meta name="drishti-modules" content="banking capitalmarkets economy market-data">
+  <title>{product} — See what your data hasn&#39;t told you yet.</title>
+  <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">
+  <link rel="icon" type="image/svg+xml" href="../../drishti-console/web/static/img/icons/drishti_favicon.svg">
+  <script src="../../drishti-console/web/static/js/drishti_theme-init.js"></script><script>
 var DIST = {
-  all:  {product: "Drishti",      tagline: "Any data. Any domain. One grammar.",
-         modules: ["banking", "market-data", "capitalmarkets", "economy"], cards: [["VAR BANK", "Value at risk"], ["EQ", "Equities"], ["ECON", "Economies"], ["BI", "Reports and boards"]]},
-  risk: {product: "Drishti Risk", tagline: "VaR, exposure and limits from your own pricing data",
-         modules: ["banking", "market-data"], cards: [["VAR BANK", "Value at risk"], ["EXP BANK", "Exposure"], ["SIMM", "Initial margin"], ["BI", "Reports and boards"]]}
+  all:  {product: "Drishti", tagline: "Any data. Any domain. One grammar.", modules: ["banking", "market-data", "capitalmarkets", "economy"]},
+  risk: {product: "Drishti Risk", tagline: "VaR, exposure and limits from your own pricing data", modules: ["banking", "market-data"]}
 };
-var Q = new URLSearchParams(location.search), D = DIST[Q.get("dist")] || DIST.all;
-document.documentElement.setAttribute("data-theme", Q.get("theme") === "light" ? "light" : "terminal");
+var Q = new URLSearchParams(location.search), DID = DIST[Q.get("dist")] ? Q.get("dist") : "all", D = DIST[DID];
+var THEME = Q.get("theme") === "light" ? "light" : "terminal";
+document.documentElement.setAttribute("data-theme", THEME);
 </script>
+  
+  <link rel="stylesheet" href="../../drishti-console/web/static/vendor/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="../../drishti-console/web/static/vendor/bootstrap-icons/bootstrap-icons.css">
+  <link rel="stylesheet" href="../../drishti-console/web/static/css/drishti_tokens.css">
+  <link rel="stylesheet" href="../../drishti-console/web/static/css/drishti_theme.css">
+  <link rel="stylesheet" href="../../drishti-console/web/static/css/drishti_terminal.css">
+  <link rel="stylesheet" href="../../drishti-console/web/static/css/drishti_under-construction.css">
+  <link rel="stylesheet" href="../../drishti-console/web/static/css/drishti_layout.css">
+  <link rel="stylesheet" href="../../drishti-console/web/static/css/drishti_help.css">
+  <link rel="stylesheet" href="../../drishti-console/web/static/css/drishti_gradients.css">
+  <link rel="stylesheet" href="../../drishti-console/web/static/css/drishti_nav.css">
+  <link rel="stylesheet" href="../../drishti-console/web/static/css/drishti_collab.css">
+  <link rel="stylesheet" href="../../drishti-console/web/static/css/drishti_busy.css">
+  <link rel="stylesheet" href="../../drishti-console/web/static/css/drishti_colfilter.css">
+  <link rel="stylesheet" href="../../drishti-console/web/static/css/drishti_controls.css">
+  <link rel="stylesheet" href="../../drishti-console/web/static/elements/drishti-inputs/drishti_inputs.css">
+  <link rel="stylesheet" href="../../drishti-console/web/static/css/drishti_touch.css">
+  <link rel="stylesheet" href="../../drishti-console/web/static/css/drishti_server-watch.css">
+  <link rel="stylesheet" href="../../drishti-console/web/static/css/drishti_phone.css">
+  <link rel="stylesheet" href="../../drishti-console/web/static/css/drishti_resize.css">
+  <link rel="stylesheet" href="../../drishti-console/web/static/css/drishti_keys.css">
+  <link rel="stylesheet" href="../../drishti-console/web/static/css/drishti_explain.css">
+  <link rel="stylesheet" href="../../drishti-console/web/static/css/drishti_dyk.css">
 <style>
-/* the console's tokens (drishti_tokens.css), the two themes shown */
-:root[data-theme="terminal"]{--d-bg:#0e1628;--d-bg-2:#121c33;--d-surface:#16213a;--d-surface-2:#1b2744;--d-border:#26345a;--d-ink:#e7ecf5;
-  --d-muted:#93a0b8;--d-accent:#e8a33a;--d-accent-strong:#f2b453;--d-accent-tint:rgba(232,163,58,.14);--d-on-accent:#14100a;--d-link:#7fb2ff;
-  --d-ok:#5fd39a;--d-cap-violet:#c792ea;--d-nav:rgba(14,22,40,.86);--d-shadow:0 10px 40px rgba(0,0,0,.35);color-scheme:dark}
-:root[data-theme="light"]{--d-bg:#f7f5f0;--d-bg-2:#efebe3;--d-surface:#ffffff;--d-surface-2:#faf8f4;--d-border:#e2dcd0;--d-ink:#172440;
-  --d-muted:#55607a;--d-accent:#985b0a;--d-accent-strong:#7c4805;--d-accent-tint:rgba(184,110,12,.10);--d-on-accent:#ffffff;--d-link:#1f5fc4;
-  --d-ok:#1b784c;--d-cap-violet:#7a45a8;--d-nav:rgba(247,245,240,.9);--d-shadow:0 10px 30px rgba(23,36,64,.10);color-scheme:light}
-:root{--m-banking:var(--d-link);--m-market-data:var(--d-accent);--m-capitalmarkets:var(--d-cap-violet);--m-economy:var(--d-ok);
-  --d-font-sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;--d-font-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-*{box-sizing:border-box}
-html,body{margin:0;background:var(--d-bg);color:var(--d-ink);font-family:var(--d-font-sans);font-size:14px}
-a{color:inherit;text-decoration:none}
-.nav{position:sticky;top:0;display:flex;align-items:center;gap:12px;padding:10px 24px;background:var(--d-nav);border-bottom:1px solid var(--d-border)}
-.brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:16px}
-.brand svg{width:26px;height:26px}
-.nav .sp{flex:1}.nav .lnk{color:var(--d-muted);font-size:13px}
-.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:8px 16px;font-weight:600;font-size:13.5px;border:1px solid var(--d-border)}
-.pill.accent{background:var(--d-accent);color:var(--d-on-accent);border-color:var(--d-accent)}
-.wrap{max-width:1240px;margin:0 auto;padding:0 24px}
-.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:40px;align-items:center;padding:48px 0 28px}
-.badge{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--d-border);border-radius:999px;padding:4px 12px;color:var(--d-muted);font-size:12.5px}
-.badge .dot{width:7px;height:7px;border-radius:50%;background:var(--d-ok)}
-h1{font-size:44px;line-height:1.1;margin:18px 0 10px;letter-spacing:-.01em}
-h1 .acc{color:var(--d-accent)}
-.product{font-size:15px;color:var(--d-muted);margin:0 0 4px;letter-spacing:.14em;text-transform:uppercase;font-weight:700}
-.tagline{font-size:17px;color:var(--d-muted);margin:0 0 24px;line-height:1.5}
-.cta{display:flex;flex-wrap:wrap;gap:10px}
-.stage{background:var(--d-bg-2);border:1px solid var(--d-border);border-radius:14px;padding:12px 12px 6px;box-shadow:var(--d-shadow)}
-.stage svg{display:block;width:100%;height:auto}
-.stage .cap{display:flex;flex-direction:column;gap:2px;color:var(--d-muted);font-size:12px;padding:6px 6px 4px;font-family:var(--d-font-mono)}
-.quick{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;padding:8px 0 32px}
-.qc{background:var(--d-surface);border:1px solid var(--d-border);border-radius:10px;padding:12px 14px}
-.qc b{display:block;font-family:var(--d-font-mono);color:var(--d-accent);font-size:13px}.qc span{color:var(--d-muted);font-size:12.5px}
-.notes{border-top:1px dashed var(--d-border);padding:16px 0 28px;color:var(--d-muted);font-size:12.5px;display:flex;flex-wrap:wrap;gap:22px;align-items:center}
-.notes .tag{color:var(--d-accent);font-weight:700;letter-spacing:.12em;font-size:11px}
-.sizes{display:flex;align-items:flex-end;gap:16px}.sizes figure{margin:0;text-align:center}.sizes figcaption{font-size:11px;margin-top:4px}
-.tab{display:inline-flex;align-items:center;gap:7px;background:var(--d-surface);border:1px solid var(--d-border);border-radius:8px 8px 0 0;padding:5px 12px;color:var(--d-ink);font-size:12px}
-/* the hero picture: picture C, kernel and rooms, drawn from the distribution's module list */
-.k-core{fill:var(--d-surface-2);stroke:var(--d-accent);stroke-width:2}
-.k-cap{fill:var(--d-accent);font-weight:700;letter-spacing:.14em;font-size:15px}
-.k-sub{fill:var(--d-muted);font-size:12.5px}
-.k-ring{fill:none;stroke:var(--d-border);stroke-width:1.5;stroke-dasharray:3 6}
-.k-wire{stroke:var(--d-accent);stroke-width:2.5}
-.k-room text,.k-lbl{fill:var(--d-ink);font-weight:700;font-size:14px}
-.k-free{fill:none;stroke:var(--d-muted);stroke-width:1.5;stroke-dasharray:6 5}
-.k-free-t{fill:var(--d-muted);font-size:12px}
+/* the house section: the console's own tokens; module hues from the token set */
+.lp-house{--m-banking:var(--d-link);--m-market-data:var(--d-accent);--m-capitalmarkets:var(--d-cap-violet);--m-economy:var(--d-ok)}
+.lp-house .lp-cta{justify-content:flex-start}
+.lp-house-pic{margin:0;border:1px solid var(--d-border);border-radius:14px;background:var(--d-bg-2);padding:12px 12px 8px}
+.lp-house-pic svg{display:block;width:100%;height:auto}
+.lp-house-pic figcaption{color:var(--d-muted);font-family:var(--d-font-mono);font-size:12px;padding:4px 6px 0}
+.lp-house-marks{display:flex;align-items:flex-end;gap:12px;color:var(--d-muted);font-size:12px;margin-top:1.4rem}
+.k-core{fill:var(--d-surface-2);stroke:var(--d-accent);stroke-width:2}.k-cap{fill:var(--d-accent);font-weight:700;letter-spacing:.14em;font-size:15px}
+.k-sub{fill:var(--d-muted);font-size:12.5px}.k-ring{fill:none;stroke:var(--d-border);stroke-width:1.5;stroke-dasharray:3 6}
+.k-wire{stroke:var(--d-accent);stroke-width:2.5}.k-room text{fill:var(--d-ink);font-weight:700;font-size:14px}
+.k-free{fill:none;stroke:var(--d-muted);stroke-width:1.5;stroke-dasharray:6 5}.k-free-t{fill:var(--d-muted);font-size:12px}
 .k-roof{fill:none;stroke:var(--d-accent);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
-@media (max-width:820px){
-  .nav{padding:10px 16px}.nav .lnk{display:none}
-  .wrap{padding:0 16px}
-  .hero{grid-template-columns:1fr;gap:22px;padding:26px 0 16px}
-  h1{font-size:31px}.tagline{font-size:15px;margin-bottom:18px}
-  .quick{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .stage .cap{flex-direction:column;gap:2px}
-}
+.mock-switch{position:fixed;right:12px;bottom:12px;z-index:2000;display:flex;gap:6px;align-items:center;background:var(--d-surface);
+  border:1px dashed var(--d-accent);border-radius:999px;padding:5px 10px;font-size:12px;color:var(--d-muted);box-shadow:var(--d-shadow)}
+.mock-switch a{color:var(--d-ink);padding:2px 6px;border-radius:999px}.mock-switch a.on{background:var(--d-accent-tint);color:var(--d-accent)}
 </style>
 </head>
-<body>
-<nav class="nav">
-  <a class="brand" href="#" aria-label="home"><span data-mark="26"></span><span data-brand="product"></span></a>
-  <span class="sp"></span>
-  <a class="lnk" href="#">Help</a><a class="lnk" href="#">How it fits</a>
-  <a class="pill accent" href="#">Sign in</a>
-</nav>
-<main class="wrap">
-  <section class="hero">
-    <div>
-      <span class="badge"><span class="dot" aria-hidden="true"></span><span data-brand="modcount"></span></span>
-      <h1>One kernel. Modules plug in. <span class="acc">Your product, your way.</span></h1>
-      <p class="product" data-brand="product"></p>
-      <p class="tagline" data-brand="tagline"></p>
-      <div class="cta">
-        <a class="pill accent" href="#">Open the terminal</a>
-        <a class="pill" href="#">How it fits together</a>
+<body class="" data-product="Drishti" data-screen="landing">
+  <a class="skip-link" href="#main">Skip to content</a>
+  
+
+
+
+
+
+
+
+
+
+<header class="tbar" role="banner">
+ <div class="tbar-row1">
+  <a class="tbar-brand" href="/" aria-label="{product} home" data-brand-attr="aria-label">
+<svg class="brand-mark" viewBox="0 0 200 120" aria-hidden="true" focusable="false">
+  <path d="M40 18c-12 0-14 6-14 16v14c0 8-4 12-10 12 6 0 10 4 10 12v14c0 10 2 16 14 16" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round"/>
+  <path d="M160 18c12 0 14 6 14 16v14c0 8 4 12 10 12-6 0-10 4-10 12v14c0 10-2 16-14 16" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round"/>
+  <path class="eye" d="M58 60c26-26 58-26 84 0-26 26-58 26-84 0z" fill="none" stroke-width="8" stroke-linejoin="round"/>
+  <circle cx="100" cy="60" r="15" fill="none" stroke="currentColor" stroke-width="8"/>
+  <circle cx="106" cy="54" r="4" fill="currentColor"/>
+</svg>
+    <span class="tbar-name"><span data-brand="product">Drishti</span></span></a>
+
+  <div class="tbar-find">
+  <form class="cmd" action="/go" method="get" role="search" autocomplete="off" data-command>
+    <label class="visually-hidden" for="cmdInput">Command</label>
+    <div class="cmd-box">
+      <span class="cmd-prompt mono" aria-hidden="true">&gt;</span>
+      <input id="cmdInput" name="q" class="cmd-input" type="text" spellcheck="false"
+             value="" placeholder="TRD MX-20000001, CPTY north, TRD PRODUCT_TYPE=FX_QUANTO …  then &lt;GO&gt;"
+             role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="cmdList">
+      <ul id="cmdList" class="cmd-list" role="listbox" aria-label="Suggestions" hidden></ul>
+    </div>
+  </form>
+  <button type="button" class="tbar-find-btn" data-find-open title="Search everything (Alt+K)" aria-label="Search everything (Alt+K)"><i class="bi bi-search" aria-hidden="true"></i></button>
+
+  
+  <form class="asof" action="/asof" method="get" data-asof
+        title="Live: the current business date (USNY calendar), streaming">
+    <input type="hidden" name="next" value="/">
+    <label for="asofDate" class="visually-hidden">Business date</label>
+    <input id="asofDate" class="asof-date mono" type="date" name="d" value="2026-09-30"
+           min="2021-09-30" max="2026-09-30"
+           data-holidays="2026-10-12,2026-11-11,2026-11-26" data-calendar-name="USNY" data-current="2026-09-30" data-business>
+    
+    
+    <noscript><button type="submit" class="asof-go">Go</button></noscript>
+    
+    
+  </form>
+  </div>
+
+  
+  <nav class="tbar-menus" aria-label="Main">
+  
+  
+    
+    
+    
+    <div class="dropdown tbar-menu">
+      <button class="tbar-menu-btn" type="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false"
+               title="Views">
+        <i class="bi bi-grid-1x2" aria-hidden="true"></i><span class="tbar-menu-l">Views</span></button>
+      <div class="dropdown-menu mega-panel cols-2">
+        
+        <div class="mega-col">
+          <div class="mega-title">Look up</div>
+          
+          <a class="mega-item" href="/t">
+            <span class="mega-icon"><i class="bi bi-terminal" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Terminal</span><span class="mega-desc">Type a command or an id, then &lt;GO&gt;</span></span></a>
+          
+          <a class="mega-item" href="/s">
+            <span class="mega-icon"><i class="bi bi-search" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Search &amp; pick lists</span><span class="mega-desc">TRD MX-200000, TRD PRODUCT_TYPE=FX_QUANTO, TRD where …</span></span></a>
+          
+          <a class="mega-item" href="/forms">
+            <span class="mega-icon"><i class="bi bi-card-checklist" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Forms</span><span class="mega-desc">Query by form: every pack with a search form, your recent forms and saved searches. Also: FORM &lt;GO&gt;</span></span></a>
+          
+          <a class="mega-item" href="/func">
+            <span class="mega-icon"><i class="bi bi-list-ul" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Functions</span><span class="mega-desc">Every command you can use, what it does · also FUNC &lt;GO&gt;</span></span></a>
+          
+          <a class="mega-item" href="/datamap">
+            <span class="mega-icon"><i class="bi bi-diagram-3" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Data map</span><span class="mega-desc">Every kind of data, how it joins and how much there is · also DATAMAP &lt;GO&gt;</span></span></a>
+          
+          <a class="mega-item" href="/data">
+            <span class="mega-icon"><i class="bi bi-cloud-arrow-down" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Export data</span><span class="mega-desc">Every dataset, its dates; choose columns and filters, download a day as .jsonl.gz · also EXPORT &lt;GO&gt; (or DATA)</span></span></a>
+          
+          <a class="mega-item" href="/pivot">
+            <span class="mega-icon"><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Pivot<code class="mega-cmd mono">PIVOT</code></span><span class="mega-desc">Any table, any entity document or VaR as a pivot: nested rows opened lazily, right totals, provenance, charts, Excel with formulas · also PIVOT &lt;GO&gt;</span></span></a>
+          
+          <a class="mega-item" href="/reports">
+            <span class="mega-icon"><i class="bi bi-file-earmark-bar-graph" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Reports</span><span class="mega-desc">Every report you have: scheduled reports, subscriptions, alerts, and BI reports</span></span></a>
+          
+        </div>
+        
+        <div class="mega-col">
+          <div class="mega-title">Watch</div>
+          
+          <a class="mega-item" href="/w">
+            <span class="mega-icon"><i class="bi bi-grid-1x2" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Workspaces</span><span class="mega-desc">Several live views on one screen</span></span></a>
+          
+          <a class="mega-item" href="/m">
+            <span class="mega-icon"><i class="bi bi-list-columns" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Monitors</span><span class="mega-desc">Live watchlists of entities</span></span></a>
+          
+          <a class="mega-item" href="/alerts">
+            <span class="mega-icon"><i class="bi bi-bell" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Alerts</span><span class="mega-desc">Alerts raised for you (acknowledge, snooze, resolve) and your alert rules</span></span></a>
+          
+          <a class="mega-item" href="/approvals">
+            <span class="mega-icon"><i class="bi bi-patch-check" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Approvals <span class="rv-count" data-approvals-count hidden></span></span><span class="mega-desc">Everything waiting for your four eyes, of every kind, due soon on top</span></span></a>
+          
+        </div>
+        
       </div>
     </div>
-    <figure class="stage" style="margin:0">
-      <div data-hero></div>
-      <figcaption class="cap"><span>rooms = modules · a socket takes a .dmod</span><span data-brand="modules"></span></figcaption>
-    </figure>
-  </section>
-  <nav class="quick" aria-label="Quick commands" data-cards></nav>
-  <section class="notes" aria-label="Mock-up notes">
-    <span class="tag">MOCK-UP NOTES</span>
-    <div class="sizes" aria-label="The mark at every size">
-      <figure><span data-mark="64"></span><figcaption>64</figcaption></figure>
-      <figure><span data-mark="32"></span><figcaption>32</figcaption></figure>
-      <figure><span data-mark="24"></span><figcaption>24</figcaption></figure>
-      <figure><span data-mark="16"></span><figcaption>16</figcaption></figure>
-      <figure><span class="tab"><span data-mark="16"></span><span data-brand="product"></span></span><figcaption>browser tab</figcaption></figure>
+    
+  
+    
+    
+    
+    <div class="dropdown tbar-menu">
+      <button class="tbar-menu-btn" type="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false"
+               title="Risk">
+        <i class="bi bi-shield-check" aria-hidden="true"></i><span class="tbar-menu-l">Risk</span></button>
+      <div class="dropdown-menu mega-panel cols-4">
+        
+        <div class="mega-col">
+          <div class="mega-title">Risk on my book</div>
+          
+          <a class="mega-item" href="/go?q=VAR%20%3CGO%3E">
+            <span class="mega-icon"><i class="bi bi-shield-check" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">My VaR<code class="mega-cmd mono">VAR</code></span><span class="mega-desc">The VaR of the books you trade</span></span></a>
+          
+          <a class="mega-item" href="/go?q=VLIM%20%3CGO%3E">
+            <span class="mega-icon"><i class="bi bi-speedometer2" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">VaR limits<code class="mega-cmd mono">VLIM</code></span><span class="mega-desc">Each limit and how much of it is used</span></span></a>
+          
+          <a class="mega-item" href="/go?q=TVAL%20%3CGO%3E">
+            <span class="mega-icon"><i class="bi bi-currency-exchange" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Trade valuations<code class="mega-cmd mono">TVAL</code></span><span class="mega-desc">Each trade&#39;s value and its sensitivities</span></span></a>
+          
+          <a class="mega-item" href="/go?q=PNLV%20%3CGO%3E">
+            <span class="mega-icon"><i class="bi bi-bar-chart" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">P&amp;L vectors<code class="mega-cmd mono">PNLV</code></span><span class="mega-desc">Each position&#39;s P&amp;L under every scenario</span></span></a>
+          
+          <a class="mega-item" href="/go?q=DPNL%20%3CGO%3E">
+            <span class="mega-icon"><i class="bi bi-cash-coin" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Desk P&amp;L<code class="mega-cmd mono">DPNL</code></span><span class="mega-desc">Each desk&#39;s actual and hypothetical P&amp;L, day by day</span></span></a>
+          
+          <a class="mega-item" href="/go?q=PNL%20%3CGO%3E">
+            <span class="mega-icon"><i class="bi bi-bar-chart-steps" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">P&amp;L explain<code class="mega-cmd mono">PNL</code></span><span class="mega-desc">A day&#39;s P&amp;L by risk factor, new trades and residual</span></span></a>
+          
+          <a class="mega-item" href="/go?q=SENS%20%3CGO%3E">
+            <span class="mega-icon"><i class="bi bi-speedometer" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Sensitivities<code class="mega-cmd mono">SENS</code></span><span class="mega-desc">Delta, vega and curvature of each position by risk factor</span></span></a>
+          
+        </div>
+        
+        <div class="mega-col">
+          <div class="mega-title">VaR</div>
+          
+          <a class="mega-item" href="/var">
+            <span class="mega-icon"><i class="bi bi-shield-check" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">VaR explorer<code class="mega-cmd mono">VAR BANK</code></span><span class="mega-desc">The bank&#39;s VaR, then any desk, book or set of trades</span></span></a>
+          
+          <a class="mega-item" href="/go?q=VAR%20BANK%20EXPLAIN%20%3CGO%3E">
+            <span class="mega-icon"><i class="bi bi-arrow-left-right" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Why it moved<code class="mega-cmd mono">VAR BANK EXPLAIN</code></span><span class="mega-desc">Day on day: the trades, factors and scenarios that moved it</span></span></a>
+          
+          <a class="mega-item" href="/go?q=PLAY%20VAR%20%3CGO%3E">
+            <span class="mega-icon"><i class="bi bi-calculator" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">VaR Playground<code class="mega-cmd mono">PLAY VAR</code></span><span class="mega-desc">Every figure worked in a grid and a workbook of formulas</span></span></a>
+          
+          <a class="mega-item" href="/smat">
+            <span class="mega-icon"><i class="bi bi-grid-3x3" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Scenario matrix<code class="mega-cmd mono">SMAT</code></span><span class="mega-desc">Each scenario&#39;s P&amp;L of a trade, position or scope</span></span></a>
+          
+          <a class="mega-item" href="/var/reports">
+            <span class="mega-icon"><i class="bi bi-bank" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Regulatory reports<code class="mega-cmd mono">VAR REPORTS</code></span><span class="mega-desc">Canada and the US, to the cell, signed runs</span></span></a>
+          
+          <a class="mega-item" href="/go?q=VAR%20BANK%20BACKTEST%20%3CGO%3E">
+            <span class="mega-icon"><i class="bi bi-activity" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Backtesting<code class="mega-cmd mono">VAR BANK BACKTEST</code></span><span class="mega-desc">VaR against the P&amp;L, with the traffic light</span></span></a>
+          
+          <a class="mega-item" href="/go?q=SWIN%20BANK%20%3CGO%3E">
+            <span class="mega-icon"><i class="bi bi-calendar-range" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Stress window<code class="mega-cmd mono">SWIN BANK</code></span><span class="mega-desc">The most stressful year of history for stressed VaR</span></span></a>
+          
+          <a class="mega-item" href="/go?q=VRES%20%3CGO%3E">
+            <span class="mega-icon"><i class="bi bi-table" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">VaR results<code class="mega-cmd mono">VRES</code></span><span class="mega-desc">The stored results of every hierarchy node</span></span></a>
+          
+          <a class="mega-item" href="/pivot?preset=mr">
+            <span class="mega-icon"><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Market-risk cube<code class="mega-cmd mono">MCUBE</code></span><span class="mega-desc">The Pivot&#39;s market-risk preset: desks by risk class with the right totals, the tail, why it moved, the DV01 ladder and a what-if · also MCUBE &lt;GO&gt;</span></span></a>
+          
+          <a class="mega-item" href="/go?q=VOFF%20%3CGO%3E">
+            <span class="mega-icon"><i class="bi bi-patch-check" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Official records<code class="mega-cmd mono">VOFF</code></span><span class="mega-desc">The signed-off VaR of each business date</span></span></a>
+          
+        </div>
+        
+        <div class="mega-col">
+          <div class="mega-title">Exposure</div>
+          
+          <a class="mega-item" href="/exposure">
+            <span class="mega-icon"><i class="bi bi-graph-up" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Exposure explorer<code class="mega-cmd mono">EXP</code></span><span class="mega-desc">EE, PFE and EPE of the bank, then any counterparty</span></span></a>
+          
+          <a class="mega-item" href="/t?cmd=EXP%20CPTY" data-fill="EXP CPTY">
+            <span class="mega-icon"><i class="bi bi-building" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">A counterparty<code class="mega-cmd mono">EXP CPTY …</code></span><span class="mega-desc">Type the counterparty&#39;s id after the words</span></span></a>
+          
+          <a class="mega-item" href="/t?cmd=EXP%20NSET" data-fill="EXP NSET">
+            <span class="mega-icon"><i class="bi bi-diagram-2" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">A netting set<code class="mega-cmd mono">EXP NSET …</code></span><span class="mega-desc">Type the netting set&#39;s id after the words</span></span></a>
+          
+        </div>
+        
+        <div class="mega-col">
+          <div class="mega-title">Capital and margin</div>
+          
+          <a class="mega-item" href="/go?q=FRSA%20BANK%20%3CGO%3E">
+            <span class="mega-icon"><i class="bi bi-bank2" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">FRTB-SA capital<code class="mega-cmd mono">FRSA BANK</code></span><span class="mega-desc">Standardised market-risk capital for any scope</span></span></a>
+          
+          <a class="mega-item" href="/go?q=PLAY%20FRTB%20EXAMPLE%20%3CGO%3E">
+            <span class="mega-icon"><i class="bi bi-calculator" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">FRTB-SA Playground<code class="mega-cmd mono">PLAY FRTB EXAMPLE</code></span><span class="mega-desc">Every method choice a switch, compared</span></span></a>
+          
+          <a class="mega-item" href="/go?q=SIMM%20%3CGO%3E">
+            <span class="mega-icon"><i class="bi bi-shield-lock" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">SIMM by netting set<code class="mega-cmd mono">SIMM</code></span><span class="mega-desc">Initial margin per netting set, collect and post</span></span></a>
+          
+          <a class="mega-item" href="/go?q=PLAY%20SIMM%20EXAMPLE%20%3CGO%3E">
+            <span class="mega-icon"><i class="bi bi-calculator" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">SIMM Playground<code class="mega-cmd mono">PLAY SIMM EXAMPLE</code></span><span class="mega-desc">Every SIMM figure worked in a grid and a workbook of formulas</span></span></a>
+          
+        </div>
+        
+      </div>
     </div>
-    <span>Name, tagline and rooms from the distribution file's <code>brand</code> and <code>modules</code>; nothing hard-coded.</span>
-  </section>
+    
+  
+    
+    
+    
+    <div class="dropdown tbar-menu">
+      <button class="tbar-menu-btn" type="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false"
+               title="Build">
+        <i class="bi bi-braces" aria-hidden="true"></i><span class="tbar-menu-l">Build</span></button>
+      <div class="dropdown-menu mega-panel cols-2">
+        
+        <div class="mega-col">
+          <div class="mega-title">Create</div>
+          
+          <a class="mega-item" href="/build">
+            <span class="mega-icon"><i class="bi bi-house-gear" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Build home</span><span class="mega-desc">Everything you can build in one place: data, screens, analysis, your drafts and reviews</span></span></a>
+          
+          <a class="mega-item" href="/build/new">
+            <span class="mega-icon"><i class="bi bi-plus-square" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">New screen</span><span class="mega-desc">Bring JSON files, a schema or stored entities, then design</span></span></a>
+          
+          <a class="mega-item" href="/build/pack/new">
+            <span class="mega-icon"><i class="bi bi-box-seam" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">New pack</span><span class="mega-desc">Schema files and/or a folder of JSON Lines in, a pack to download or deploy out</span></span></a>
+          
+          <a class="mega-item" href="/build/new#examples">
+            <span class="mega-icon"><i class="bi bi-journal-richtext" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Examples</span><span class="mega-desc">Every example opens as your own copy</span></span></a>
+          
+        </div>
+        
+        <div class="mega-col">
+          <div class="mega-title">Learn</div>
+          
+          <a class="mega-item" href="/help/tutorials">
+            <span class="mega-icon"><i class="bi bi-mortarboard" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Tutorials</span><span class="mega-desc">Twenty-two hands-on tutorials, a picture of every step</span></span></a>
+          
+          <a class="mega-item" href="/help/build-guide#8-a-pack-from-a-json-schema-build--new-pack">
+            <span class="mega-icon"><i class="bi bi-diagram-3" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Schema to pack</span><span class="mega-desc">Every rule that turns a JSON Schema into a pack, with examples</span></span></a>
+          
+          <a class="mega-item" href="/help/rachana-reference#screen-designer-and-the-build-workbench">
+            <span class="mega-icon"><i class="bi bi-bounding-box" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Screen designer guide</span><span class="mega-desc">From JSON files to a screen: the canvas, step by step</span></span></a>
+          
+          <a class="mega-item" href="/help/build-guide#11-what-a-sutra-is-and-when-one-applies">
+            <span class="mega-icon"><i class="bi bi-journal-code" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Screen developer guide</span><span class="mega-desc">Writing a screen (a Sutra) end to end, by example</span></span></a>
+          
+          <a class="mega-item" href="/help/rachana-reference#panels-the-twenty-two-kinds-and-developing-a-new-one">
+            <span class="mega-icon"><i class="bi bi-grid-1x2" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Panel kinds</span><span class="mega-desc">The 22 panel kinds, one entry each</span></span></a>
+          
+          <a class="mega-item" href="/help/rachana-reference">
+            <span class="mega-icon"><i class="bi bi-book" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Screen language reference</span><span class="mega-desc">Rachana, the screen language: every key, panel option, format and problem code</span></span></a>
+          
+          <a class="mega-item" href="/help/build-guide">
+            <span class="mega-icon"><i class="bi bi-box-seam" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Packs and screens guide</span><span class="mega-desc">Bring a new domain in, step by step</span></span></a>
+          
+          <a class="mega-item" href="/elements">
+            <span class="mega-icon"><i class="bi bi-puzzle" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Elements gallery</span><span class="mega-desc">Every Drishti Elements component live: its options, code, events, API and accessibility</span></span></a>
+          
+        </div>
+        
+      </div>
+    </div>
+    
+  
+    
+    
+    
+    <div class="dropdown tbar-menu">
+      <button class="tbar-menu-btn" type="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false"
+               title="Admin">
+        <i class="bi bi-shield-lock" aria-hidden="true"></i><span class="tbar-menu-l">Admin</span></button>
+      <div class="dropdown-menu mega-panel cols-3">
+        
+        <div class="mega-col">
+          <div class="mega-title">People &amp; access</div>
+          
+          <a class="mega-item" href="/admin/users">
+            <span class="mega-icon"><i class="bi bi-people" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Users</span><span class="mega-desc">Accounts, roles and packs per person</span></span></a>
+          
+          <a class="mega-item" href="/admin/roles">
+            <span class="mega-icon"><i class="bi bi-shield-lock" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Roles</span><span class="mega-desc">What each role opens and may do</span></span></a>
+          
+          <a class="mega-item" href="/admin/tokens">
+            <span class="mega-icon"><i class="bi bi-key" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">API tokens</span><span class="mega-desc">Every person&#39;s tokens for programs and the command line; revoke</span></span></a>
+          
+          <a class="mega-item" href="/admin/access">
+            <span class="mega-icon"><i class="bi bi-eye" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Who looked at what</span><span class="mega-desc">Every view of sensitive data, by person and page</span></span></a>
+          
+          <a class="mega-item" href="/admin/audit">
+            <span class="mega-icon"><i class="bi bi-journal-text" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Audit log</span><span class="mega-desc">Every sign-in and change, by whom</span></span></a>
+          
+          <a class="mega-item" href="/admin/scopes">
+            <span class="mega-icon"><i class="bi bi-basket" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Saved VaR baskets</span><span class="mega-desc">Everyone&#39;s saved VaR baskets: filter by owner, delete with a reason</span></span></a>
+          
+        </div>
+        
+        <div class="mega-col">
+          <div class="mega-title">Data</div>
+          
+          <a class="mega-item" href="/admin/packs">
+            <span class="mega-icon"><i class="bi bi-box-seam" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Packs</span><span class="mega-desc">Switch domain packs on and off; deploy archives; the connectors each uses</span></span></a>
+          
+          <a class="mega-item" href="/admin/connectors">
+            <span class="mega-icon"><i class="bi bi-plug" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Connectors</span><span class="mega-desc">Where each pack reads its data: create, test, change, switch off</span></span></a>
+          
+          <a class="mega-item" href="/admin/bindings">
+            <span class="mega-icon"><i class="bi bi-diagram-3" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Data bindings</span><span class="mega-desc">Which connector or lake table serves each kind the modules need: one binding per kind, four eyes, applied without a restart</span></span></a>
+          
+          <a class="mega-item" href="/admin/loads">
+            <span class="mega-icon"><i class="bi bi-cloud-upload" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Data loads</span><span class="mega-desc">What your ETL announced, what is due, what is late</span></span></a>
+          
+          <a class="mega-item" href="/admin/lakes">
+            <span class="mega-icon"><i class="bi bi-layers" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Lakes</span><span class="mega-desc">Delta tables: load a file, see every table, maintain them now or on a schedule</span></span></a>
+          
+          <a class="mega-item" href="/admin/edits">
+            <span class="mega-icon"><i class="bi bi-pencil-square" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Record edits</span><span class="mega-desc">Write-back: who may correct which records, and the approvals each change needs</span></span></a>
+          
+          <a class="mega-item" href="/admin/data-out">
+            <span class="mega-icon"><i class="bi bi-box-arrow-right" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Data out</span><span class="mega-desc">Arrow Flight: who reads the data from programs, live streams, limits</span></span></a>
+          
+          <a class="mega-item" href="/admin/artifacts">
+            <span class="mega-icon"><i class="bi bi-archive" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Installed items</span><span class="mega-desc">Everything installed (packs, reports, models, Sutras): disable, uninstall safely, restore, install</span></span></a>
+          
+        </div>
+        
+        <div class="mega-col">
+          <div class="mega-title">Platform</div>
+          
+          <a class="mega-item" href="/admin/configuration">
+            <span class="mega-icon"><i class="bi bi-sliders2" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Configuration</span><span class="mega-desc">Every setting in three tiers (everyday, admin, expert): the value in effect, where it came from, and a change proposed for a second administrator to approve</span></span></a>
+          
+          <a class="mega-item" href="/admin/white-label">
+            <span class="mega-icon"><i class="bi bi-palette" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">White label</span><span class="mega-desc">The distributions side by side: brand, theme, modules, lenses, Home and Help of each, the running one marked</span></span></a>
+          
+          <a class="mega-item" href="/admin/modules">
+            <span class="mega-icon"><i class="bi bi-puzzle" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Modules</span><span class="mega-desc">The modules of the cluster: upload a .dmod once, plan where it goes, a second administrator applies; upgrade node by node, switch off, remove and reinstall</span></span></a>
+          
+          <a class="mega-item" href="/admin/engines">
+            <span class="mega-icon"><i class="bi bi-gear-wide-connected" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Engines</span><span class="mega-desc">Compute engines on or off on this server (the pivot engine, the in-memory lake and each module&#39;s own), each with its own file</span></span></a>
+          
+          <a class="mega-item" href="/admin/compute">
+            <span class="mega-icon"><i class="bi bi-cpu" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Python workers</span><span class="mega-desc">The Python worker pools, their environments and the requirements waiting for approval</span></span></a>
+          
+          <a class="mega-item" href="/admin/net">
+            <span class="mega-icon"><i class="bi bi-diagram-3" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Cluster</span><span class="mega-desc">Drishti*net: the servers acting as one, their packs and data, routing, access</span></span></a>
+          
+          <a class="mega-item" href="/admin/ai">
+            <span class="mega-icon"><i class="bi bi-stars" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">AI</span><span class="mega-desc">Model providers, MCP servers and what the assistant may do</span></span></a>
+          
+          <a class="mega-item" href="/admin/collab">
+            <span class="mega-icon"><i class="bi bi-chat-square-text" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Collaboration</span><span class="mega-desc">Moderation, legal holds, export, mail outbox, bridges</span></span></a>
+          
+          <a class="mega-item" href="/admin/embedding">
+            <span class="mega-icon"><i class="bi bi-window-stack" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Embedded views</span><span class="mega-desc">Host applications that show views in their own pages</span></span></a>
+          
+          <a class="mega-item" href="/admin/health">
+            <span class="mega-icon"><i class="bi bi-heart-pulse" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Health</span><span class="mega-desc">Connectors, packs, live streams</span></span></a>
+          
+          <a class="mega-item" href="/admin/caches">
+            <span class="mega-icon"><i class="bi bi-hdd-stack" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Caches</span><span class="mega-desc">What each cache holds; purge</span></span></a>
+          
+          <a class="mega-item" href="/admin/capacity">
+            <span class="mega-icon"><i class="bi bi-speedometer" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Capacity</span><span class="mega-desc">Today against the plan: headroom, what breaks first, growth; the planner</span></span></a>
+          
+        </div>
+        
+      </div>
+    </div>
+    
+  
+    
+    
+    
+    <div class="dropdown tbar-menu">
+      <button class="tbar-menu-btn" type="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false"
+               title="Help">
+        <i class="bi bi-question-circle" aria-hidden="true"></i><span class="tbar-menu-l">Help</span></button>
+      <div class="dropdown-menu mega-panel cols-1">
+        
+        <div class="mega-col">
+          <div class="mega-title">Learn</div>
+          
+          <a class="mega-item" href="/help">
+            <span class="mega-icon"><i class="bi bi-question-circle" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Help centre</span><span class="mega-desc">Guides, concepts and reference (F1)</span></span></a>
+          
+          <a class="mega-item" href="/what">
+            <span class="mega-icon"><i class="bi bi-lightbulb" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Knowledge</span><span class="mega-desc">Market risk, counterparty risk and more, in plain words · WHAT &lt;term&gt;</span></span></a>
+          
+          <a class="mega-item" href="/help/operations#2-install-and-run-on-one-machine">
+            <span class="mega-icon"><i class="bi bi-flag" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Install and run</span><span class="mega-desc">From nothing to your first view</span></span></a>
+          
+          <a class="mega-item" href="/help/release-notes">
+            <span class="mega-icon"><i class="bi bi-tag" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">What&#39;s new</span><span class="mega-desc">The release notes: what changed in each release</span></span></a>
+          
+          <a class="mega-item" href="/about">
+            <span class="mega-icon"><i class="bi bi-info-circle" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">About Drishti</span><span class="mega-desc">Version, licence and credits</span></span></a>
+          
+          <a class="mega-item" href="/help/competitive-analysis">
+            <span class="mega-icon"><i class="bi bi-binoculars" aria-hidden="true"></i></span>
+            <span class="mega-text"><span class="mega-label">Competitive analysis</span><span class="mega-desc">Vendor by vendor: banking and risk, and data platforms · internal, administrators only</span></span></a>
+          
+        </div>
+        
+      </div>
+    </div>
+    
+  
+  </nav>
+
+  <div class="tbar-tools">
+    
+    <a class="tool approvals" href="/approvals" title="Approvals waiting for you" aria-label="Approvals waiting for you" data-approvals-tool><i class="bi bi-patch-check" aria-hidden="true"></i><span class="bell-count" data-approvals-top hidden>0</span></a>
+    <a class="tool bell" href="/inbox" title="Inbox and alerts (Alt+I)" aria-label="Inbox and alerts" aria-keyshortcuts="Alt+I" data-bell><i class="bi bi-bell" aria-hidden="true"></i><span class="bell-count" data-bell-count hidden>0</span></a>
+    
+    
+    <div class="dropdown">
+      <button class="tool" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false"
+              title="Packs shown: finance, logistics" aria-label="Packs shown">
+        <i class="bi bi-box-seam" aria-hidden="true"></i><span class="tool-count">2</span></button>
+      <form class="dropdown-menu dropdown-menu-end pack-menu" data-packs>
+        <div class="pack-menu-h"><span>Show these packs</span>
+          <span class="pack-menu-all"><button type="button" class="fk" data-packs-all>all</button> · <button type="button" class="fk" data-packs-none>none</button></span></div>
+        <div class="pack-menu-list">
+        
+          <label class="pack-item"><input type="checkbox" name="pack" value="finance" checked>
+            <span><span class="pack-t">Finance · capital markets</span><span class="pack-d">Trades (interest rate swaps, FX swaps, listed futures and more), netting sets, CSAs, master agreements, curves, credit limits, clearing accounts and books (and a book P&amp;L derived from the trades), with the four reference Sutras, finance vocabulary for inference, and live sample data behind the mockups.</span></span></label>
+        
+          <label class="pack-item"><input type="checkbox" name="pack" value="logistics" checked>
+            <span><span class="pack-t">Logistics · ocean freight</span><span class="pack-d">Shipments, reefer containers, vessels and ports, with a shipment Sutra, logistics vocabulary for inference (weights, temperatures, delays, knots, TEU) and live sample data.</span></span></label>
+        
+        </div>
+        <div class="pack-menu-f"><button type="submit" class="btn-pill btn-accent btn-sm-pill">Apply</button></div>
+      </form>
+    </div>
+    
+    
+<div class="dropdown">
+  <button class="theme-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Choose theme">
+    <i class="bi bi-palette" aria-hidden="true"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item" type="button" data-theme-choice="terminal"><span class="swatch swatch-terminal"></span>Terminal</button></li>
+    <li><button class="dropdown-item" type="button" data-theme-choice="light"><span class="swatch swatch-light"></span>Parchment</button></li>
+    <li><button class="dropdown-item" type="button" data-theme-choice="blue"><span class="swatch swatch-blue"></span>Blue</button></li>
+    <li><button class="dropdown-item" type="button" data-theme-choice="wallstreet"><span class="swatch swatch-wallstreet"></span>Wall Street</button></li>
+    <li><button class="dropdown-item" type="button" data-theme-choice="green"><span class="swatch swatch-green"></span>Green</button></li>
+    <li><button class="dropdown-item" type="button" data-theme-choice="crimson"><span class="swatch swatch-crimson"></span>Crimson</button></li>
+    <li><button class="dropdown-item" type="button" data-theme-choice="crimson-dark"><span class="swatch swatch-crimson-dark"></span>Crimson dark</button></li>
+    <li><button class="dropdown-item" type="button" data-theme-choice="terminal-green"><span class="swatch swatch-terminal-green"></span>Green Terminal</button></li>
+    <li><button class="dropdown-item" type="button" data-theme-choice="terminal-crimson"><span class="swatch swatch-terminal-crimson"></span>Crimson Terminal</button></li>
+    <li><button class="dropdown-item" type="button" data-theme-choice="terminal-blue"><span class="swatch swatch-terminal-blue"></span>Blue Terminal</button></li>
+  </ul>
+</div>
+    
+    <button type="button" class="asof-live on" data-asof-live data-live-status data-live-state="none" data-tip="Live updates on — click to pause" aria-pressed="true"
+            aria-label="Live updates on — click to pause" title="Live updates on — click to pause"
+            data-live-href="/asof?d=live&amp;next=/" data-pause-href="/asof?d=2026-09-30&amp;next=/"><span class="ring" aria-hidden="true"><span class="dot"></span></span><span class="visually-hidden" data-live-text></span></button>
+    <div class="dropdown">
+      
+      <button class="tool user" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Ash">
+        <span class="avatar" aria-hidden="true">A</span><span class="uname">Ash</span></button>
+      <div class="dropdown-menu dropdown-menu-end user-menu">
+        <div class="user-menu-h">
+          <div class="fw-semibold">Ash</div>
+          <div class="text-muted-d">Rates desk · *</div>
+          
+          <div class="mono user-menu-clock" data-clock data-tz="America/New_York" data-tz-label="NY"></div>
+        </div>
+        <div class="dropdown-divider"></div>
+        <a class="dropdown-item" href="/account"><i class="bi bi-person-circle" aria-hidden="true"></i> My account</a>
+        <a class="dropdown-item" href="/account#settings"><i class="bi bi-sliders" aria-hidden="true"></i> Settings</a>
+        <div class="dropdown-divider"></div>
+        <div class="dropdown-item-text text-muted-d small" data-sign-in-off><i class="bi bi-unlock" aria-hidden="true"></i> Sign-in is off on this server</div>
+        <a class="dropdown-item" href="/help/admin#1-signing-in-and-out"><i class="bi bi-question-circle" aria-hidden="true"></i> How to turn it on</a>
+      </div>
+    </div>
+  </div>
+ </div>
+</header>
+  <main id="main">
+<section class="lp-hero">
+  <div class="lp-wrap">
+    
+    <div class="lp-home has-dyk" data-lp-home>
+      <div class="lp-home-head">
+        <span class="lp-badge"><span class="dot" aria-hidden="true"></span>A live entity terminal</span>
+        
+        <h1 class="lp-title">See what your data <span class="lp-grad">hasn&#39;t told you yet.</span></h1>
+        
+        <p class="lp-tagline" data-tagline data-brand="tagline">Any data. Any domain. One grammar.</p>
+        <p class="lp-sub"><span data-brand="product">Drishti</span> turns any record from any system — a swap, an FX trade, a futures position,
+          a netting set — into a dense, linked, ticking view. No hand-built screens: a layout grammar
+          called <b>Sutra</b> describes the view, and inference fills whatever it leaves out.</p>
+        <div class="lp-cta">
+          
+          <a class="btn-pill btn-accent" href="/t"><i class="bi bi-terminal" aria-hidden="true"></i> Open the terminal</a>
+          <a class="btn-pill btn-ghost" href="#grammar">How the grammar works</a>
+          
+        </div>
+      </div>
+      
+
+<aside class="dyk" data-dyk aria-labelledby="dykKicker">
+  <div class="dyk-top">
+    <span class="dyk-kicker" id="dykKicker"><span data-dyk-kicker>Fact of the day</span><span data-dyk-domain></span></span>
+    <span class="dyk-date" data-dyk-date></span>
+  </div>
+  <p class="dyk-text" data-dyk-text>Today's fact, from the server, as now.</p>
+  <div class="dyk-pic" data-dyk-pic role="img" hidden></div>
+  <details class="dyk-why" data-dyk-why hidden>
+    <summary>Why does that happen?</summary>
+    <p data-dyk-why-text></p>
+    <a class="lnk dyk-more" data-dyk-more href="#" hidden>Read more in Knowledge</a>
+  </details>
+  <div class="dyk-actions" data-dyk-actions hidden>
+    <a class="btn-pill btn-accent dyk-open" data-dyk-open href="#"></a>
+    <a class="lnk dyk-what" data-dyk-what href="#" hidden></a>
+    <button type="button" class="btn-pill btn-ghost dyk-next" data-dyk-next hidden>Another fact</button>
+  </div>
+</aside>
+    </div>
+    <nav class="lp-quick" aria-label="Quick commands">
+      <a class="lp-quick-card" href="/go?q=DATAMAP%20%3CGO%3E" data-home-card="DATAMAP"><i class="bi bi-diagram-3" aria-hidden="true"></i><b>Data map</b><span>DATAMAP</span></a>
+      
+    </nav>
+    <div class="lp-stage">
+      <canvas id="lpHero" data-brand-attr="aria-label" data-commands="[&#34;TRD IRS-48213 \u003cGO\u003e&#34;, &#34;TRD FXS-20931 \u003cGO\u003e&#34;, &#34;TRD CFT-77120 \u003cGO\u003e&#34;, &#34;NSET NS-NORTH-01 \u003cGO\u003e&#34;]" aria-label="Raw JSON records flow into the {product} eye and come out as live terminal panels" role="img"></canvas>
+      <div class="lp-stage-caption"><span>raw JSON → fingerprint → Rachana (Sutra ⊕ inference) → view</span>
+        <span><span id="lpHeroClock">TRD IRS-48213 &lt;GO&gt;</span>
+        <button type="button" class="lp-replay" data-replay="lpHero"><i class="bi bi-arrow-repeat" aria-hidden="true"></i> Replay</button></span></div>
+    </div>
+  </div>
+</section>
+
+<section class="lp-section lp-house" id="house" aria-labelledby="houseTitle">
+  <div class="lp-wrap lp-grid2">
+    <div>
+      <div class="lp-kicker">How it fits</div>
+      <h2 class="lp-h2" id="houseTitle">One kernel. Modules plug in.</h2>
+      <p class="lp-lead"><span data-brand="product"></span> is one kernel with <span data-brand="modcount"></span> plugged in:
+        <span data-brand="modules"></span>. Each module is a room with its own screens; an empty socket takes another
+        <code>.dmod</code>. Your product, your way.</p>
+      <div class="lp-cta"><a class="btn-pill btn-ghost" href="/help/how-it-fits"><i class="bi bi-diagram-3" aria-hidden="true"></i> How it fits together</a></div>
+      <p class="lp-house-marks" aria-label="The mark at icon size"><span data-mark="32"></span><span data-mark="24"></span><span data-mark="16"></span>
+        <span>the mark, down to icon size</span></p>
+    </div>
+    <figure class="lp-house-pic"><div data-hero></div>
+      <figcaption>rooms = modules · a socket takes a .dmod</figcaption></figure>
+  </div>
+</section>
+
+
+
+<div class="lp-wrap">
+  <div class="lp-stats" role="list">
+    <div role="listitem"><b>0</b><span>hand-built screens</span></div>
+    <div role="listitem"><b>7</b><span>pipeline stages</span></div>
+    <div role="listitem"><b>&lt;50ms</b><span>warm view p99 target</span></div>
+    <div role="listitem"><a class="lp-stat-link" href="/help/rachana-reference#panels-the-twenty-two-kinds-and-developing-a-new-one" title="Key-value, table, tabs, line, area, bar, ladder, links, status, provenance, markdown, gauge, metric, surface, waterfall, histogram, scatter, candlestick, graph, timeline and pivot: what each shows"><b>21</b><span>panel kinds in the grammar</span></a></div>
+  </div>
+</div>
+
+<section class="lp-section" id="grammar">
+  <div class="lp-wrap lp-grid2">
+    <div>
+      <div class="lp-kicker">Rachana · the screen grammar</div>
+      <h2 class="lp-h2">A screen is a paragraph, not a project.</h2>
+      <p class="lp-lead">Rachana (रचना, <em>composition</em>) is <span data-brand="product">Drishti</span>'s screen grammar. Each product family gets a <b>Sutra</b>: a short, versioned YAML file written in it. It names the key figures, the panels, the
+        bindings and the function keys. It holds no code and no pixels. Wherever it says
+        <code>infer: true</code>, the inference engine reads the shape of the data and completes the layout.</p>
+      <p class="lp-lead">If a product has no Sutra at all, it still renders on day one: inference turns arrays into
+        tables, term structures into curves and identifiers into links.</p>
+    </div>
+    <div class="code-panel" aria-label="Example Sutra">
+      <div class="bar"><i></i><i></i><i></i>&nbsp; examples/packs/finance/sutras/rates/irs-vanilla.v3.sutra.yaml</div>
+<pre><span class="tok-k">sutra</span>: irs-vanilla
+<span class="tok-k">version</span>: 3
+<span class="tok-k">match</span>: { kind: trade, where: <span class="tok-s">"$.PRODUCT_TYPE == 'IRS_FIXFLOAT'"</span> }
+<span class="tok-k">strip</span>:
+  - { label: Notional (USD), bind: $.notional, fmt: amount0 }
+  - { label: MTM (USD), bind: $.mtm, emphasis: true }
+<span class="tok-k">panels</span>:
+  - { id: legs, key: F2, kind: tabs, infer: true }
+  - { id: flows, key: F3, kind: table, rows: $.cashflows }
+  - { id: curve, key: F4, kind: line, source: link($.curve) }
+  - { id: refs, kind: links }       <span class="tok-c"># every id becomes a door</span></pre>
+    </div>
+  </div>
+</section>
+
+<section class="lp-section" id="pipeline">
+  <div class="lp-wrap">
+    <div class="lp-kicker">The view pipeline</div>
+    <h2 class="lp-h2">Seven stages. Every view. Every tick.</h2>
+    <p class="lp-lead">Every request goes through the same stages. Layouts are cached by the <em>shape</em> of the data,
+      so the cost of inference is paid once per shape; warm requests only bind values.</p>
+    <svg class="lp-pipe" viewBox="0 0 1160 130" role="img" aria-label="Command, fetch, classify, fingerprint, layout, bind, link">
+      <line class="wire" x1="60" y1="65" x2="1100" y2="65"/>
+      
+      
+      <g class="node" transform="translate(10,30)">
+        <rect width="138" height="70" rx="10"/>
+        <text x="69" y="32" text-anchor="middle">Command</text>
+        <text class="sub" x="69" y="52" text-anchor="middle">parse</text>
+      </g>
+      
+      <g class="node" transform="translate(172,30)">
+        <rect width="138" height="70" rx="10"/>
+        <text x="69" y="32" text-anchor="middle">Fetch</text>
+        <text class="sub" x="69" y="52" text-anchor="middle">virtual threads</text>
+      </g>
+      
+      <g class="node" transform="translate(334,30)">
+        <rect width="138" height="70" rx="10"/>
+        <text x="69" y="32" text-anchor="middle">Classify</text>
+        <text class="sub" x="69" y="52" text-anchor="middle">product key</text>
+      </g>
+      
+      <g class="node" transform="translate(496,30)">
+        <rect width="138" height="70" rx="10"/>
+        <text x="69" y="32" text-anchor="middle">Fingerprint</text>
+        <text class="sub" x="69" y="52" text-anchor="middle">shape hash</text>
+      </g>
+      
+      <g class="node" transform="translate(658,30)">
+        <rect width="138" height="70" rx="10"/>
+        <text x="69" y="32" text-anchor="middle">Layout</text>
+        <text class="sub" x="69" y="52" text-anchor="middle">Sutra ⊕ infer</text>
+      </g>
+      
+      <g class="node" transform="translate(820,30)">
+        <rect width="138" height="70" rx="10"/>
+        <text x="69" y="32" text-anchor="middle">Bind</text>
+        <text class="sub" x="69" y="52" text-anchor="middle">parallel</text>
+      </g>
+      
+      <g class="node" transform="translate(982,30)">
+        <rect width="138" height="70" rx="10"/>
+        <text x="69" y="32" text-anchor="middle">Link</text>
+        <text class="sub" x="69" y="52" text-anchor="middle">time-boxed</text>
+      </g>
+      
+      <circle class="pulse" cx="40" cy="65" r="6"/>
+    </svg>
+  </div>
+</section>
+
+<section class="lp-section" id="capabilities">
+  <div class="lp-wrap">
+    <div class="lp-kicker">What you get</div>
+    <h2 class="lp-h2">Built for people who read numbers for a living.</h2>
+    <div class="lp-cards">
+      <div class="lp-card"><i class="bi bi-keyboard" aria-hidden="true"></i><h3>Keyboard first</h3><p>TRD IRS-48213 &lt;GO&gt;. Function keys per view, Alt+← to go back, F9 for the raw JSON — always.</p></div>
+      <div class="lp-card"><i class="bi bi-diagram-3" aria-hidden="true"></i><h3>Linked</h3><p>Every identifier opens another view: netting set, CSA, agreement, curve. A breadcrumb trail shows how you got there.</p></div>
+      <div class="lp-card"><i class="bi bi-activity" aria-hidden="true"></i><h3>Live</h3><p>Views tick over server-sent events. Only the changed cells repaint, and the top bar shows the measured p99 latency.</p></div>
+      <div class="lp-card"><i class="bi bi-plug" aria-hidden="true"></i><h3>Any source, any industry</h3><p>Plugins bring the data (caches, REST, JDBC, feed files); domain packs bring the vocabulary: seven packs ship (core, market data, trading, counterparty and market risk, world economy, news and markets), and yours is configuration only.</p></div>
+      <div class="lp-card"><i class="bi bi-fingerprint" aria-hidden="true"></i><h3>Provenance</h3><p>Each view says how it was built: Sutra and version, data fingerprint, source and generation.</p></div>
+      <div class="lp-card"><i class="bi bi-stars" aria-hidden="true"></i><h3>Inference</h3><p>Scored, explainable rules turn data shapes into panels. Studio lets you promote an inferred panel into the Sutra.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="lp-section" id="views">
+  <div class="lp-wrap">
+    <div class="lp-kicker">Four products · one grammar</div>
+    <h2 class="lp-h2">Different data. The same eye.</h2>
+    <div class="lp-shots">
+      
+      <figure class="lp-shot">
+        <img src="../../drishti-console/web/static/img/drishti_shot-irs.png" alt="Interest rate swap view" loading="lazy">
+        <figcaption class="meta"><span class="cmd">TRD IRS-48213 &lt;GO&gt;</span><span class="text-muted-d">Interest rate swap · Sutra irs-vanilla v3</span></figcaption>
+      </figure>
+      
+      <figure class="lp-shot">
+        <img src="../../drishti-console/web/static/img/drishti_shot-fx-swap.png" alt="FX swap view" loading="lazy">
+        <figcaption class="meta"><span class="cmd">TRD FXS-20931 &lt;GO&gt;</span><span class="text-muted-d">FX swap · Sutra fx-swap v2</span></figcaption>
+      </figure>
+      
+      <figure class="lp-shot">
+        <img src="../../drishti-console/web/static/img/drishti_shot-commodity-future.png" alt="Commodity future view" loading="lazy">
+        <figcaption class="meta"><span class="cmd">TRD CFT-77120 &lt;GO&gt;</span><span class="text-muted-d">Commodity future · Sutra listed-future v1</span></figcaption>
+      </figure>
+      
+      <figure class="lp-shot">
+        <img src="../../drishti-console/web/static/img/drishti_shot-netting-set.png" alt="Netting set view" loading="lazy">
+        <figcaption class="meta"><span class="cmd">NSET NS-NORTH-01 &lt;GO&gt;</span><span class="text-muted-d">Netting set · Sutra netting-set v1</span></figcaption>
+      </figure>
+      
+    </div>
+  </div>
+</section>
+
+<section class="lp-close">
+  <div class="lp-wrap">
+    <h2 class="lp-h2">See your data the way it wants to be seen.</h2>
+    <p class="lp-lead mx-auto">Drishti (दृष्टि) means <em>sight</em>.</p>
+  </div>
+</section>
 </main>
+  
+<footer class="site-footer">
+  <div class="inner">
+    <p class="sf-tag" data-brand="tagline">Any data. Any domain. One grammar.</p>
+    <p class="sf-links"><span class="sf-name" data-brand="product">Drishti</span> <span class="mono">2.9.11.g</span>
+      <a href="/help"><i class="bi bi-question-circle" aria-hidden="true"></i> Help</a>
+      <a href="/about"><i class="bi bi-info-circle" aria-hidden="true"></i> About</a>
+      <a href="/help/release-notes"><i class="bi bi-tag" aria-hidden="true"></i> Release notes</a>
+      <button type="button" class="sf-keys" data-keys-open title="The keys of this screen">Keys <kbd>?</kbd></button></p>
+    <p class="sf-fine">Copyright © 2026 Ashutosh Sinha. All rights reserved. Proprietary and confidential. · Unauthorised copying, use or distribution is prohibited.</p>
+  </div>
+</footer>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  <div id="drishti-figure-explainers" hidden data-rules="[{&#34;columns&#34;: {&#34;ES&#34;: &#34;es&#34;, &#34;VAR&#34;: &#34;var&#34;}, &#34;date&#34;: &#34;BUSINESS_DATE&#34;, &#34;kind&#34;: &#34;var&#34;, &#34;pages&#34;: {&#34;book&#34;: &#34;BOOK&#34;, &#34;desk&#34;: &#34;DESK&#34;, &#34;legal-entity&#34;: &#34;LE&#34;, &#34;position&#34;: &#34;POS&#34;, &#34;system-basket&#34;: &#34;PORT&#34;, &#34;trade&#34;: &#34;TRD&#34;}, &#34;paths&#34;: {&#34;VAR_ENGINE.ES&#34;: &#34;es&#34;, &#34;VAR_ENGINE.VAR&#34;: &#34;var&#34;}, &#34;scope&#34;: [&#34;CANONICAL&#34;, &#34;SCOPE&#34;]}]"></div>
+  <script src="../../drishti-console/web/static/js/drishti_landing.js"></script>
+
 <script>
 (function () {
   var NS = "http://www.w3.org/2000/svg";
@@ -146,61 +932,65 @@ h1 .acc{color:var(--d-accent)}
   }
   /* the mark: a roof, a 2x2 of rooms (the distribution's modules lit, the rest outlined) and the kernel bar; below 20px, outlines drop */
   function mark(size) {
-    var s = el("svg", {viewBox: "0 0 48 48", width: size, height: size, "aria-hidden": "true"});
-    var small = size < 20, sw = small ? 4.5 : 3.2;
-    el("path", {d: "M5 20 L24 6 L43 20", fill: "none", stroke: "var(--d-accent)", "stroke-width": sw, "stroke-linecap": "round", "stroke-linejoin": "round"}, s);
+    var s = el("svg", {viewBox: "0 0 48 48", width: size, height: size, "aria-hidden": "true"}), small = size < 20;
+    el("path", {d: "M5 20 L24 6 L43 20", fill: "none", stroke: "var(--d-accent)", "stroke-width": small ? 4.5 : 3.2, "stroke-linecap": "round", "stroke-linejoin": "round"}, s);
     ALL.forEach(function (m, i) {
-      var x = i % 2 ? 26 : 10, y = i < 2 ? 22 : 32, c = "var(--m-" + m[0] + ")";
-      if (has(m[0])) el("rect", {x: x, y: y, width: 12, height: 8, rx: 1.5, fill: c}, s);
+      var x = i % 2 ? 26 : 10, y = i < 2 ? 22 : 32;
+      if (has(m[0])) el("rect", {x: x, y: y, width: 12, height: 8, rx: 1.5, fill: "var(--m-" + m[0] + ")"}, s);
       else if (!small) el("rect", {x: x + .75, y: y + .75, width: 10.5, height: 6.5, rx: 1.5, fill: "none", stroke: "var(--d-muted)", "stroke-width": 1.2, "stroke-dasharray": "2 1.6"}, s);
     });
     el("rect", {x: 5, y: 42, width: 38, height: small ? 5 : 4, rx: 1.5, fill: "var(--d-accent)"}, s);
     return s;
   }
-  /* the hero: picture C's kernel and rooms; a module the distribution lacks is an empty socket */
+  /* picture C: the kernel with its rooms; a module the distribution lacks is an empty socket */
   function hero() {
     var s = el("svg", {viewBox: "0 0 560 404", role: "img", "aria-label": "The kernel with its rooms: " + D.modules.join(", ") + " plugged in; empty sockets take more modules"});
-    var cx = 280, cy = 222;
+    var cx = 280, cy = 222, pos = [[0, -1], [1, 0], [0, 1], [-1, 0]];
     el("path", {d: "M130 64 L280 8 L430 64", "class": "k-roof"}, s);
     el("circle", {cx: cx, cy: cy, r: 146, "class": "k-ring"}, s);
-    var pos = [[0, -1], [1, 0], [0, 1], [-1, 0]];
     ALL.forEach(function (m, i) {
-      var dx = pos[i][0], dy = pos[i][1], w = 136, h = 64;
-      var tx = cx + dx * 176 - w / 2, ty = cy + dy * 128 - h / 2;
+      var dx = pos[i][0], dy = pos[i][1], w = 136, h = 64, tx = cx + dx * 176 - w / 2, ty = cy + dy * 128 - h / 2;
       if (has(m[0])) {
         el("line", {x1: cx + dx * 66, y1: cy + dy * 52, x2: cx + dx * (176 - w / 2), y2: cy + dy * (128 - h / 2), "class": "k-wire"}, s);
         var g = el("g", {"class": "k-room"}, s), c = "var(--m-" + m[0] + ")";
         el("rect", {x: tx, y: ty, width: w, height: h, rx: 8, fill: c, "fill-opacity": .18, stroke: c, "stroke-width": 2}, g);
         el("text", {x: tx + w / 2, y: ty + h / 2 + 5, "text-anchor": "middle"}, g, m[1]);
       } else {
-        el("rect", {x: tx + 14, y: ty + 8, width: w - 28, height: h - 16, rx: 7, "class": "k-free"}, s);
+        el("rect", {x: tx + 22, y: ty + 8, width: w - 44, height: h - 16, rx: 7, "class": "k-free"}, s);
         el("text", {x: tx + w / 2, y: ty + h / 2 + 4, "text-anchor": "middle", "class": "k-free-t"}, s, ".dmod");
       }
     });
-    [[1, -1], [1, 1], [-1, 1], [-1, -1]].forEach(function (d) {
-      el("circle", {cx: cx + d[0] * 103, cy: cy + d[1] * 103, r: 7, "class": "k-free"}, s);
-    });
+    [[1, -1], [1, 1], [-1, 1], [-1, -1]].forEach(function (d) { el("circle", {cx: cx + d[0] * 103, cy: cy + d[1] * 103, r: 7, "class": "k-free"}, s); });
     el("rect", {x: cx - 66, y: cy - 52, width: 132, height: 104, rx: 12, "class": "k-core"}, s);
     el("text", {x: cx, y: cy - 2, "text-anchor": "middle", "class": "k-cap"}, s, "KERNEL");
     el("text", {x: cx, y: cy + 18, "text-anchor": "middle", "class": "k-sub"}, s, "one foundation");
     return s;
   }
   var names = {"banking": "banking", "market-data": "market data", "capitalmarkets": "capital markets", "economy": "economy"};
-  var fill = {
-    product: D.product, tagline: D.tagline,
-    modcount: D.modules.length + " modules on one kernel",
-    modules: D.modules.map(function (m) { return names[m]; }).join(" · ")
-  };
+  var fill = {product: D.product, tagline: D.tagline, modcount: D.modules.length + " modules",
+              modules: D.modules.map(function (m) { return names[m]; }).join(", ")};
   document.querySelectorAll("[data-brand]").forEach(function (e) { e.textContent = fill[e.getAttribute("data-brand")]; });
+  document.querySelectorAll("[data-brand-attr]").forEach(function (e) {
+    var a = e.getAttribute("data-brand-attr"); e.setAttribute(a, e.getAttribute(a).replace("{product}", D.product));
+  });
   document.querySelectorAll("[data-mark]").forEach(function (e) { e.appendChild(mark(+e.getAttribute("data-mark"))); });
   document.querySelector("[data-hero]").appendChild(hero());
-  document.title = D.product + " · landing mock-up";
-  var q = document.querySelector("[data-cards]");
-  D.cards.forEach(function (c) {
-    var a = document.createElement("a"); a.className = "qc"; a.href = "#";
-    var b = document.createElement("b"); b.textContent = c[0]; var sp = document.createElement("span"); sp.textContent = c[1];
-    a.appendChild(b); a.appendChild(sp); q.appendChild(a);
-  });
+  document.title = document.title.replace("{product}", D.product);
+  document.body.setAttribute("data-product", D.product);
+  /* the mock-up's own switcher (not part of the page) */
+  if (!Q.has("shot")) {
+    var bar = document.createElement("div"); bar.className = "mock-switch";
+    bar.innerHTML = "Mock-up:";
+    [["all", "Drishti All"], ["risk", "Drishti Risk"]].forEach(function (d) {
+      var a = document.createElement("a"); a.href = "?dist=" + d[0] + "&theme=" + THEME + "#house"; a.textContent = d[1];
+      if (d[0] === DID) a.className = "on"; bar.appendChild(a);
+    });
+    [["terminal", "Dark"], ["light", "Light"]].forEach(function (t) {
+      var a = document.createElement("a"); a.href = "?dist=" + DID + "&theme=" + t[0] + location.hash; a.textContent = t[1];
+      if (t[0] === THEME) a.className = "on"; bar.appendChild(a);
+    });
+    document.body.appendChild(bar);
+  }
 })();
 </script>
 </body>

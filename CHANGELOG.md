@@ -23,9 +23,10 @@
   has one room, every room one door, every setting one switch on one wall*, and the Linux and Tomcat parallel; section 3 shows the
   cutaway (`house-cutaway.svg`) for rooms, shelves and books. The PDF is regenerated. Picture C is kept as `kernel-and-rooms.svg`; the
   A/B/C choice page is removed (git keeps it). **Landing page mock-up** (`docs/how-it-fits/landing-mockup.html` and its PNGs, for the
-  owner's approval; the real Home is unchanged): picture C as Home's hero, "One kernel. Modules plug in. Your product, your way.", the
-  product name, tagline and rooms from the distribution file's brand and modules, the mark down to 16 px, for Drishti and Drishti Risk
-  in the dark and light themes, desktop and phone.
+  owner's approval; the real Home is unchanged): today's Home exactly as the console renders it (its headline, tagline and hero
+  animation, from the console's own CSS and scripts), with the house added as a new section below the hero: picture C drawn from the
+  running distribution's modules, "One kernel. Modules plug in.", a How it fits together link and the mark down to 16 px; the product
+  name and tagline from configuration; Drishti and Drishti Risk in the dark and light themes, desktop and phone.
 - **Competitive landscape: kernel and modules** (`docs/strategy/COMPETITIVE_LANDSCAPE.md`, internal): does any commercial product share Drishti's
   kernel, `.dmod` module and distribution architecture for data, BI and risk; a summary table (Atoti, Murex, Calypso, FIS, Numerix, MSCI,
   Bloomberg MARS, Snowflake Native Apps, Salesforce packages, Splunk, Elastic, Grafana, Superset, Kubernetes operators, Power BI, Tableau,
