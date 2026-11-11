@@ -15,12 +15,12 @@
 # The tests of the drill's Java 25 lane: the code a JDK version can change. One module (all its tests) or @TestClass per line. The whole tree still
 # compiles on Java 25 in that lane. Java 21, what production runs, runs every test.
 
-drishti-compute            # BLAS, vectors, Arrow memory
+compute/drishti-compute            # BLAS, vectors, Arrow memory
 drishti-diskcache          # off-heap and mapped stores
-drishti-lakeio             # mapped files, LZ4 pages, Parquet footers
+lake/drishti-lakeio             # mapped files, LZ4 pages, Parquet footers
 drishti-memlake            # the in-memory lakes
-drishti-iceberg            # Parquet and Iceberg libraries (Hadoop-free)
-drishti-deltalake
+lake/drishti-iceberg            # Parquet and Iceberg libraries (Hadoop-free)
+lake/drishti-deltalake
 plugins/drishti-plugin-duckdb    # native library
 plugins/drishti-plugin-delta
 @CodecsTest

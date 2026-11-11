@@ -25,7 +25,7 @@ the native memory settings and the logs under the data folder, waits for /actuat
 
   --port N            the server's port (default DRISHTI_PORT, else 18480)
   --heap SIZE         the heap limit, -Xmx (default 2g; 4g with --demo)
-  --jar FILE          the server jar (default the newest drishti-server\target\drishti-server-*-exec.jar, then drishti-server*.jar here)
+  --jar FILE          the server jar (default the newest kernel\drishti-server\target\drishti-server-*-exec.jar, then drishti-server*.jar here)
   --java-home DIR     the JDK (default DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH)
   --packs LIST        the packs to load (DRISHTI_PACKS; default the server's own, or the demo's ten with --demo)
   --data-dir DIR      the data folder (default DRISHTI_DATA_DIR, else <drishti>\data): run\, logs\, tmp\ and dumps\ are under it
@@ -130,7 +130,7 @@ if ($major -lt 21) { Fail "Drishti runs on Java 21 or newer; $java says: $versio
 # the jar
 $jar = Opt $o 'jar'
 if (-not $jar) {
-    $candidates = @(Get-ChildItem -Path (Join-Path $script:DrishtiRoot 'drishti-server\target') -Filter 'drishti-server-*-exec.jar' -ErrorAction SilentlyContinue) +
+    $candidates = @(Get-ChildItem -Path (Join-Path $script:DrishtiRoot 'kernel\drishti-server\target') -Filter 'drishti-server-*-exec.jar' -ErrorAction SilentlyContinue) +
                   @(Get-ChildItem -Path $script:DrishtiRoot -Filter 'drishti-server*.jar' -ErrorAction SilentlyContinue)
     if ($candidates.Count -eq 0) { Fail 'no server jar: build it (.\mvnw.cmd -q package -DskipTests) or copy drishti-server-<version>-exec.jar here, or pass --jar' }
     $jar = ($candidates | Sort-Object LastWriteTime -Descending | Select-Object -First 1).FullName

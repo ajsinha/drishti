@@ -64,7 +64,7 @@ unloading) used by the kernel and the console alike; the **distribution file** (
 **Module SDK**; and **placement** (which nodes run which part of a module).
 
 Two server jars come out of one build: the **full jar** (`drishti-server-*-exec.jar`, the default) is the kernel with the first-party
-modules installed at the first start (`drishti.modules.shipped`), and the **thin jar** (`drishti-kernel-app/target/drishti-kernel-*-exec.jar`)
+modules installed at the first start (`drishti.modules.shipped`), and the **thin jar** (`packaging/drishti-kernel-app/target/drishti-kernel-*-exec.jar`)
 is the kernel alone. Maven modules depend in one direction: the kernel imports no domain and no module reaches another's code; a test
 fails the build otherwise.
 
@@ -320,7 +320,7 @@ repository root ([OPERATIONS_GUIDE.md section 2](docs/guides/OPERATIONS_GUIDE.md
 
 ```bash
 # 1. Build the runnable server (the kernel, with the first-party modules it installs at the first start)
-./mvnw -q package -DskipTests -pl drishti-app -am
+./mvnw -q package -DskipTests -pl :drishti-app -am
 
 # 2. The console's Python environment (it also runs tools/drishti.py)
 uv venv --python 3.13 drishti-console/.venv

@@ -336,7 +336,7 @@ def add_arguments(p: argparse.ArgumentParser) -> None:
     p.add_argument("--no-fallback", dest="fallback", action="store_false", help="no catch-all Sutra")
     p.add_argument("--force", action="store_true", help="replace --out when it exists")
     p.add_argument("--samples", type=int, default=5, help="samples per group (default 5)")
-    p.add_argument("--jar", help="the drishti-server exec jar (default: DRISHTI_JAR, then drishti-server/target)")
+    p.add_argument("--jar", help="the drishti-server exec jar (default: DRISHTI_JAR, then kernel/drishti-server/target)")
     p.add_argument("--java", help="java binary (default: JAVA_HOME, then JDK 21, then java)")
     p.add_argument("-r", "--recursive", action="store_true", help="read *.jsonl in subfolders too")
     _schemapack().add_schema_arguments(p)

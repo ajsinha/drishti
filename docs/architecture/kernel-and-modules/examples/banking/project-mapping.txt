@@ -13,7 +13,7 @@ modules/banking/
 │   └── pom.xml                        drops drishti-server and drishti-compute; depends on drishti-kernel-api (provided) only
 ├── banking-service/                <- drishti-banking/          (BankingModule, REST controllers, SPI implementations)          → java/
 │   └── pom.xml                        @ModuleApi controllers under /api/v1/risk; ApiAlias for /api/v1/var ... for one release
-├── banking-python/                 <- drishti-compute/python/drishti_banking/ and config/packs/banking/*/python/                  → python/
+├── banking-python/                 <- compute/drishti-compute/python/drishti_banking/ and config/packs/banking/*/python/                  → python/
 │   └── pom.xml                        tools/varcli.py and the other banking CLIs move here as console scripts of the module
 ├── banking-packs/                  <- config/packs/banking/{banking-reference,trading,market-risk,counterparty-risk}/              → packs/
 │   │                                  + config/lenses/banking/ (→ lenses/), config/bi/banking/ (→ bi/),

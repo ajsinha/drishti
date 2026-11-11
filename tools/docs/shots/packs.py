@@ -141,8 +141,8 @@ def serve(work: Path) -> list:
     for port in (SERVER_PORT, CONSOLE_PORT):
         if listening(port):
             sys.exit(f":{port} already answers: stop it, or pass --base to use it as it is")
-    jars = sorted((ROOT / "drishti-server" / "target").glob("drishti-server-*-exec.jar")) or sorted(
-        Path(os.environ.get("DRISHTI_JAR_DIR", ROOT.parent / "drishti-server" / "target")).glob("drishti-server-*-exec.jar"))
+    jars = sorted((ROOT / "kernel/drishti-server" / "target").glob("drishti-server-*-exec.jar")) or sorted(
+        Path(os.environ.get("DRISHTI_JAR_DIR", ROOT.parent / "kernel/drishti-server" / "target")).glob("drishti-server-*-exec.jar"))
     if not jars:
         sys.exit("no drishti-server-*-exec.jar: run ./mvnw -q -o -DskipTests package")
     packs = work / "packs"

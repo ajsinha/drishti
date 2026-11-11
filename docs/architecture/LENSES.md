@@ -3743,7 +3743,7 @@ rather than one.
 ## 9. CIO lens
 
 **Status: proposed (design, not built).** The lens id `cio` has a registry entry in the server
-(`drishti-server/src/main/resources/META-INF/drishti/lenses.yaml`, no module); there is no lens file, landing or pack yet. Purpose: the
+(`kernel/drishti-server/src/main/resources/META-INF/drishti/lenses.yaml`, no module); there is no lens file, landing or pack yet. Purpose: the
 executive view of **the platform and the risk data behind the numbers**: *"Is the risk data estate healthy, trustworthy, on time,
 secure, affordable, and are people using it?"* Its strongest angle is a live **BCBS 239** scorecard with its evidence. Admin pages are
 for operators fixing things; the CIO lens is a **read-only executive summary with trends and evidence**, and every row opens the admin

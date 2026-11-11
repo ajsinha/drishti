@@ -82,7 +82,7 @@ All Java code lives under the package `com.ash.drishti`. The parent POM (`pom.xm
 | `drishti-module-runtime` | `module.runtime` | The module runtime ([§1.5](#15-the-module-runtime)): the `.dmod` package and its hash list, the manifest, verification V1–V8, discovery, the dependency resolver, a class loader and a child Spring context per module, the live route table, the registry of contributions and the unload sequence with its leak check; and the module tool ([§1.6](#16-the-module-sdk): `module.tool`, the one packer and the conformance checks, `target/drishti-module-tool.jar`). Spring and Jackson only; one implementation for the kernel and, from i4, the console. | `ModuleRuntime`, `tool.ModuleTool`, `tool.ModuleConformance`, `DmodManifest`, `Dmod`, `ModuleVerifier`, `DependencyResolver`, `ModuleClassLoader`, `RouteTable`, `Contributions`, `LeakCheck` |
 | `drishti-sdk/drishti-module-maven-plugin`, `-archetype`, `-parent` | `sdk` | The Module SDK ([§1.6](#16-the-module-sdk)): the archetype of a module project, the parent it inherits, and the plugin that validates, packs the `.dmod` and runs the conformance checks C1–C15. | `ValidateMojo`, `AssembleMojo`, `ConformanceMojo` (over `module.tool`) |
 | `modules/banking/banking-compute`, `banking-service` | `banking` | The banking module's sources, built on their own (`./mvnw -f modules/banking/pom.xml`; artifacts `drishti-compute-banking`, `drishti-banking`): the maths, then the services, storage, Spring wiring and API. The kernel internals it still reaches are listed in `modules/banking/kernel-internals.txt` (`BankingReachTest`: the list only shrinks). | `BankingModule`, `var.*`, `exposure.*`, `compute.var.*` |
-| `drishti-app`, `drishti-kernel-app` | (none) | The runnable jars, no code: `drishti-app` the full jar (the kernel with banking, the default, `drishti-server/target/drishti-server-<v>-exec.jar`); `drishti-kernel-app` the thin jar (the kernel alone, `drishti-kernel-app/target/drishti-kernel-<v>-exec.jar`, Health: *no modules: the kernel runs alone*). | |
+| `drishti-app`, `drishti-kernel-app` | (none) | The runnable jars, no code: `drishti-app` the full jar (the kernel with banking, the default, `kernel/drishti-server/target/drishti-server-<v>-exec.jar`); `drishti-kernel-app` the thin jar (the kernel alone, `packaging/drishti-kernel-app/target/drishti-kernel-<v>-exec.jar`, Health: *no modules: the kernel runs alone*). | |
 | `drishti-server` | `server` | The Spring Boot application: REST and SSE controllers, security, alerts, Sutra governance, and one sub-package per feature area (`admin`, `ai`, `alerts`, `bi`, `calc`, `cli`, `collab`, `connectors`, `deploy`, `design`, `dist`, `embed`, `explain`, `governance`, `layout`, `loads`, `notify`, `pivot`, `registry`, `reports`). `bi` is the BI engine (section 4.4). | `DrishtiApplication`, `api.*Controller`, `security.Entitlements`, `security.TokenFilter`, `alerts.AlertEngine`, `governance.SutraGovernance`, `bi.mq.MqService`, `bi.engine.QueryService` |
 | `drishti-it` | `it` | Repository-wide rules, as tests only. | `ArchitectureRulesTest`, `LicenseHeaderTest`, `SourceFileSizeTest`, `NoBlockingUnderSynchronizedTest` |
 | `drishti-benchmarks` | `benchmarks` | JMH benchmarks of the hot paths (fingerprint, Rachana-EL, formats, cold inference). | `HotPathBenchmark` |
@@ -224,7 +224,7 @@ three ways:
 | **The tool** | Gradle, Bazel, a script, or `javac` and a folder | `java -jar drishti-module-tool.jar pack <folder> [--jar <jar>] [--out <dir>]`, then `check <.dmod>` and `inspect <.dmod>` |
 | **The command line** | Linux, macOS and Windows, with Java and Python only | `python3 tools/drishti.py module pack <folder>`, `module check <.dmod>`, `module inspect <.dmod>` (it runs the tool's jar) |
 
-The tool is built with the runtime: `drishti-module-runtime/target/drishti-module-tool.jar` (one self-contained jar; `--tool` or
+The tool is built with the runtime: `kernel/drishti-module-runtime/target/drishti-module-tool.jar` (one self-contained jar; `--tool` or
 `DRISHTI_MODULE_TOOL` points the command line at another copy). `pack` takes a folder in the `.dmod` layout (`module.yaml` at its root);
 the jar named in `module.yaml`'s `java.jars` is either already under `java/` or given with `--jar`. `check` takes a `.dmod` or a folder
 (packed first) and `--project <dir>` (the sources C10 reads) and `--cycles <n>` (C15); exit 0 when every check passed, 1 when one failed or
@@ -488,7 +488,7 @@ You should see `Java version: 21…` in the output. Maven itself comes with the 
 git clone https://github.com/ajsinha/drishti.git && cd drishti
 uv venv --python 3.13 drishti-console/.venv
 uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt
-./mvnw -q package -DskipTests -pl drishti-app -am                 # 1 min 12 s with ~/.m2 filled
+./mvnw -q package -DskipTests -pl :drishti-app -am                 # 1 min 12 s with ~/.m2 filled
 drishti-console/.venv/bin/python tools/drishti.py lake demo           # about 15 min (943 s): 86 Delta tables, sixty days, under data/delta/demo
 ```
 
@@ -501,14 +501,14 @@ Run them from the repository root.
 | You want to… | Command |
 |---|---|
 | Build everything, no tests | `./mvnw -q package -DskipTests` |
-| Build only the server and what it needs | `./mvnw -q package -DskipTests -pl drishti-app -am` |
+| Build only the server and what it needs | `./mvnw -q package -DskipTests -pl :drishti-app -am` |
 | Build and run every test and rule | `./mvnw -q verify` |
 | The same, without touching the network (what the drill runs) | `./mvnw -q -o verify` |
-| Build one module and what it needs | `./mvnw -q -pl drishti-engine -am package -DskipTests` |
-| Run one module's tests | `./mvnw -q -o -pl drishti-rachana -am test` |
-| Run one test class | `./mvnw -q -o -pl drishti-server -am test -Dtest=ViewPipelineTest -Dsurefire.failIfNoSpecifiedTests=false` |
-| Run one test method | `./mvnw -q -o -pl drishti-rachana -am test -Dtest='ElTest#pathsOperatorsAndFunctions' -Dsurefire.failIfNoSpecifiedTests=false` |
-| Run only the repository rules | `./mvnw -q -o -pl drishti-it -am verify -Dtest='LicenseHeaderTest,SourceFileSizeTest,ArchitectureRulesTest' -Dsurefire.failIfNoSpecifiedTests=false` |
+| Build one module and what it needs | `./mvnw -q -pl :drishti-engine -am package -DskipTests` |
+| Run one module's tests | `./mvnw -q -o -pl :drishti-rachana -am test` |
+| Run one test class | `./mvnw -q -o -pl :drishti-server -am test -Dtest=ViewPipelineTest -Dsurefire.failIfNoSpecifiedTests=false` |
+| Run one test method | `./mvnw -q -o -pl :drishti-rachana -am test -Dtest='ElTest#pathsOperatorsAndFunctions' -Dsurefire.failIfNoSpecifiedTests=false` |
+| Run only the repository rules | `./mvnw -q -o -pl :drishti-it -am verify -Dtest='LicenseHeaderTest,SourceFileSizeTest,ArchitectureRulesTest' -Dsurefire.failIfNoSpecifiedTests=false` |
 | Format before committing | `./mvnw -o -q spotless:apply -pl <module>` |
 
 What the flags mean:
@@ -521,13 +521,13 @@ What the flags mean:
 - `-Dtest=…` selects tests; `-Dsurefire.failIfNoSpecifiedTests=false` stops the upstream modules that `-am` pulls in from failing
   because they hold no such test.
 
-The server jar is `drishti-server/target/drishti-server-<version>-exec.jar` (the `exec` classifier is set on the
-`spring-boot-maven-plugin` in `drishti-server/pom.xml`). The plain `drishti-server-<version>.jar` beside it is the library jar, not the
+The server jar is `kernel/drishti-server/target/drishti-server-<version>-exec.jar` (the `exec` classifier is set on the
+`spring-boot-maven-plugin` in `kernel/drishti-server/pom.xml`). The plain `drishti-server-<version>.jar` beside it is the library jar, not the
 application.
 
 > **Note:** tests read the same `${ENV:default}` placeholders as the running server. Run Maven in a shell where `DRISHTI_PACKS`,
 > `DRISHTI_SECURITY_ENABLED` and the other `DRISHTI_*` variables are **not** set (the run configurations set them only for the server
-> they start). The server's tests set their own packs in `drishti-server/pom.xml` (`drishti.packs.extra-dirs` is `examples/packs` and
+> they start). The server's tests set their own packs in `kernel/drishti-server/pom.xml` (`drishti.packs.extra-dirs` is `examples/packs` and
 > `drishti.packs.enabled` is `finance`, so the tests written against the retired `finance` pack, such as `ApiTest` with its
 > `IRS-48213`, keep it as a fixture).
 
@@ -593,12 +593,12 @@ Build the jar, then start it from the repository root (the server finds `./confi
 directory):
 
 ```bash
-./mvnw -q package -DskipTests -pl drishti-app -am
+./mvnw -q package -DskipTests -pl :drishti-app -am
 DRISHTI_DEMO_ENABLED=false DRISHTI_STUDIO_SAVE=true \
-  java -jar drishti-server/target/drishti-server-*-exec.jar
+  java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
 ```
 
-Server settings follow the same precedence as the console: `drishti-server/src/main/resources/application.yaml`, then
+Server settings follow the same precedence as the console: `kernel/drishti-server/src/main/resources/application.yaml`, then
 `./application.local.yaml` (git-ignored; imported by `spring.config.import`), then environment variables, then `--key=value`
 arguments. For example `--drishti.live.frame=100ms` or `--server.port=18481`. The run configurations in `run-configs/` carry the
 settings of each way of starting it (sign-in on with the development admin, the demo source on or off, the QA profile on its own ports
@@ -611,7 +611,7 @@ The development loop that works best:
 | A Sutra under `config/packs/*/sutras/` or a site Sutra directory | Nothing: `drishti.rachana.hot-reload` reloads it; an invalid edit keeps the last good version |
 | A connector file in `config/connectors/` | Nothing: the folder is watched and only that connector restarts |
 | A BI file under `config/bi/` | Nothing: the folder is watched (`drishti.bi.watch`, `BiFolder`); a changed file becomes the next version, one that does not parse keeps its last good version and is listed as a problem |
-| Java code | Rebuild the module and the server jar (`./mvnw -q -o -pl drishti-app -am package -DskipTests`), restart the server |
+| Java code | Rebuild the module and the server jar (`./mvnw -q -o -pl :drishti-app -am package -DskipTests`), restart the server |
 | `pack.yaml` or anything in a pack folder | Nothing, usually: the packs folder is watched (`drishti.packs.watch`, `PackReloader`) and the running packs are reconciled with it; a change that cannot be applied live keeps the last version running, is refused with the reason in the log and on Admin → Packs, and is tried again by itself |
 | The demo lakes | `drishti.py lake demo` again: a running server is told (or notices a rebuilt Delta date by itself), so no restart |
 | A console template | Reload the page |
@@ -756,7 +756,7 @@ limit, split it by responsibility (the banking generator, for example, is a doze
 
 ### 3.4 Architecture rules
 
-`drishti-it/src/test/java/com/ash/drishti/it/ArchitectureRulesTest.java` checks the compiled main code (tests are excluded) with
+`tests/drishti-it/src/test/java/com/ash/drishti/it/ArchitectureRulesTest.java` checks the compiled main code (tests are excluded) with
 ArchUnit:
 
 | Rule | Meaning |
@@ -812,7 +812,7 @@ The identity database (`drishti-identity`) is reached only through Spring Data J
 
 - Repositories are interfaces nested in `db.IdentityRepositories` and use **derived queries only**
   (`findBySubjectOrActorOrderByIdDesc`), never `@Query` strings or JDBC.
-- The schema is two files, `drishti-identity/src/main/resources/db/schema-sqlite.sql` and `db/schema-postgres.sql`. `IdentityDatabase`
+- The schema is two files, `kernel/drishti-identity/src/main/resources/db/schema-sqlite.sql` and `db/schema-postgres.sql`. `IdentityDatabase`
   applies the one for the configured URL at every start. Every statement is idempotent (`CREATE TABLE IF NOT EXISTS`), so the file *is*
   the schema: there are **no migrations**.
 - Hibernate never changes the schema. On PostgreSQL it **validates** the entities against it (`hibernate.hbm2ddl.auto: validate`), so a
@@ -961,7 +961,7 @@ snippets below leave it out to save space.
 **Goal:** `GET /api/v1/mnemonics` lists the mnemonics the caller may use; `GET /api/v1/mnemonics/{code}` gives one, or `404 DRS-4005`.
 (There is no such endpoint today: on the demo stack `GET /api/v1/mnemonics` answers `404`.)
 
-**1. Add the error code** to `drishti-common/src/main/java/com/ash/drishti/common/ErrorCode.java`, in its group (4 = engine and graph),
+**1. Add the error code** to `kernel/drishti-common/src/main/java/com/ash/drishti/common/ErrorCode.java`, in its group (4 = engine and graph),
 with the next free number. Never reuse a code.
 
 ```java
@@ -969,7 +969,7 @@ with the next free number. Never reuse a code.
     MNEMONIC_NOT_FOUND("DRS-4005", 404),
 ```
 
-**2. Write the controller** in `drishti-server/src/main/java/com/ash/drishti/server/api/MnemonicController.java`. Controllers live in
+**2. Write the controller** in `kernel/drishti-server/src/main/java/com/ash/drishti/server/api/MnemonicController.java`. Controllers live in
 `server.api` (an ArchUnit rule), take their collaborators in the constructor, read the caller from the request attribute, and check
 entitlements before doing anything:
 
@@ -1039,7 +1039,7 @@ Points to copy from the existing controllers:
 - A personal API token reads only, unless it was made with a scope that opens this `METHOD path`: a write endpoint adds its pattern to
   `drishti.security.token-scopes` in `application.yaml` (`TokenScopeGuardTest` fails when a write endpoint is in no scope).
 
-**3. Test it with MockMvc** in `drishti-server/src/test/java/com/ash/drishti/server/MnemonicApiTest.java`. With security off (the
+**3. Test it with MockMvc** in `kernel/drishti-server/src/test/java/com/ash/drishti/server/MnemonicApiTest.java`. With security off (the
 default), pass the user in `X-Drishti-User`. To test refusals, turn security on and mint a token with
 `TokenVerifier.mint(user, roles, ttlSeconds)`, as `CacheAdminTest` does. Name the shipped packs the test needs: here
 `counterparty-risk` (which brings `core`, `market-data` and `trading`), whose `credit-risk` role opens every kind and whose
@@ -1113,7 +1113,7 @@ Adding a function changes the grammar: record it as an amendment to
 `null`, never an exception) and cheap. (Rachana-EL lays out views; BI measures are written in DEL, which has its own catalogue,
 `bi.expr.FunctionCatalog`, and its own guide, [RACHANA_REFERENCE.md › Rachana-EL expressions](RACHANA_REFERENCE.md#rachana-el-expressions).)
 
-**1. Register it** in `drishti-rachana/src/main/java/com/ash/drishti/rachana/el/Functions.java`. `ARITY` holds `{min, max}` arguments
+**1. Register it** in `compute/drishti-rachana/src/main/java/com/ash/drishti/rachana/el/Functions.java`. `ARITY` holds `{min, max}` arguments
 (the parser checks it and says `unknown function '…'; known: …` for a name not in it), and `FUNCTIONS` holds the implementation:
 
 ```java
@@ -1140,7 +1140,7 @@ Adding a function changes the grammar: record it as an amendment to
 `Values.number` turns any value (a number, numeric text, a boolean) into a `double` (`NaN` when it cannot), and `Values.normalise` makes
 whole results `Long`, so `round(7.5)` prints `8`.
 
-**2. Test it** in `drishti-rachana/src/test/java/com/ash/drishti/rachana/el/ElTest.java`, with its `eval` helper over the test document
+**2. Test it** in `compute/drishti-rachana/src/test/java/com/ash/drishti/rachana/el/ElTest.java`, with its `eval` helper over the test document
 (`notional` is 50,000,000; the test document is the unit tests' own, so its names need not follow a pack's):
 
 ```java
@@ -1173,7 +1173,7 @@ Sutras a folder layout that suits it (folders are organisation only).
 
 **Goal:** a `drishti_notice` table: site-wide notices that administrators switch on and off.
 
-**1. The entity**, `drishti-identity/src/main/java/com/ash/drishti/identity/db/NoticeEntity.java`, in the style of `PackStateEntity`
+**1. The entity**, `kernel/drishti-identity/src/main/java/com/ash/drishti/identity/db/NoticeEntity.java`, in the style of `PackStateEntity`
 (public fields, explicit column names):
 
 ```java
@@ -1249,7 +1249,7 @@ table** is not added by `CREATE TABLE IF NOT EXISTS`; it needs its own idempoten
 new tables or nullable columns, and say in the release notes what an upgrade does. Hibernate validates the PostgreSQL schema at
 start-up, so a column the entity has and the file lacks stops the server.
 
-**4. The store**, `drishti-identity/src/main/java/com/ash/drishti/identity/NoticeStore.java`, in the style of `PackStateStore`: an
+**4. The store**, `kernel/drishti-identity/src/main/java/com/ash/drishti/identity/NoticeStore.java`, in the style of `PackStateStore`: an
 immutable snapshot for readers, a lock for writers, every change in a transaction and audited:
 
 ```java
@@ -1320,7 +1320,7 @@ public final class NoticeStore {
     }
 ```
 
-**6. The contract test.** Add a test to `drishti-identity/src/test/java/com/ash/drishti/identity/IdentityStoreContract.java`. It runs
+**6. The contract test.** Add a test to `kernel/drishti-identity/src/test/java/com/ash/drishti/identity/IdentityStoreContract.java`. It runs
 twice: `SqliteIdentityStoreTest` (always) and `PostgresIdentityStoreTest` (PostgreSQL 18 in Docker; skipped without Docker). The
 contract's `schemaIsIdempotentSoAStartAgainstAnExistingDatabaseChangesNothing` already checks that a second start against the same
 database works.
@@ -1340,7 +1340,7 @@ database works.
 Run it on both databases before you merge (Docker must be running for the PostgreSQL half):
 
 ```bash
-./mvnw -q -o -pl drishti-identity -am test -Dtest='SqliteIdentityStoreTest,PostgresIdentityStoreTest' -Dsurefire.failIfNoSpecifiedTests=false
+./mvnw -q -o -pl :drishti-identity -am test -Dtest='SqliteIdentityStoreTest,PostgresIdentityStoreTest' -Dsurefire.failIfNoSpecifiedTests=false
 ```
 
 ### 5.7 Add a configuration property
@@ -1349,7 +1349,7 @@ Run it on both databases before you merge (Docker must be running for the Postgr
 recipe (apply that one first).
 
 **1. A record** with its defaults in the compact constructor and each key documented as a `@param`, in
-`drishti-identity/src/main/java/com/ash/drishti/identity/NoticeProperties.java`:
+`kernel/drishti-identity/src/main/java/com/ash/drishti/identity/NoticeProperties.java`:
 
 ```java
 package com.ash.drishti.identity;
@@ -1415,7 +1415,7 @@ and `NoticeStore` keeps the limit and checks it first in `set` (add the imports 
 To add a key to an **existing** record instead, add a component to it. Every `new XxxProperties(...)` call in tests then needs the
 extra argument (for example `ImperfectDataTest` constructs `RachanaProperties` directly).
 
-**3. Put it in `drishti-server/src/main/resources/application.yaml`** with an environment override and a comment saying what it does.
+**3. Put it in `kernel/drishti-server/src/main/resources/application.yaml`** with an environment override and a comment saying what it does.
 The file has one `drishti:` block: add `notices:` inside it (for example after `identity:`), not a second `drishti:` key, which YAML
 rejects as a duplicate:
 
@@ -1443,7 +1443,7 @@ or in the identity contract by adding `props.put("drishti.notices.max-length", "
     }
 ```
 
-Then run `./mvnw -o -pl drishti-identity -am install` and `./mvnw -o test -pl drishti-server` (the server starts with the new property
+Then run `./mvnw -o -pl :drishti-identity -am install` and `./mvnw -o test -pl :drishti-server` (the server starts with the new property
 bound).
 
 **In the console** the pattern is the same YAML: add the key to `drishti-console/config/application.yaml` as
@@ -1707,7 +1707,7 @@ Habits that keep the suite fast and reliable:
 - Name the packs a test needs (`"drishti.packs.enabled=trading"`) rather than relying on the default. The build sets
   `drishti.packs.extra-dirs` to `examples/packs` and the default to `finance` for the server tests, so the tests written against the
   retired `finance` and `logistics` packs keep them as fixtures; a new test should name shipped packs and UPPER_SNAKE fields.
-- Server tests write only into their fork's run folder, `target/test-run/fork<N>/` (`drishti.test.dir`, `drishti-server/pom.xml`),
+- Server tests write only into their fork's run folder, `target/test-run/fork<N>/` (`drishti.test.dir`, `kernel/drishti-server/pom.xml`),
   which the fork removes when it ends (`TestRun` closes the Spring test contexts first), so a run leaves nothing in `target/` but the
   build's output and never touches `./data`. A test names its folders `${drishti.test.dir}/...` in its properties, seeds a folder before
   its context starts with `TestRun.dir(name)`, and takes a temporary folder from `TestRun.temp(prefix)`; a test without Spring uses
@@ -1753,7 +1753,7 @@ while it was stopped (`The lake was rebuilt while the server was stopped …`), 
 level for Drishti's packages with Spring's usual environment form:
 
 ```bash
-LOGGING_LEVEL_COM_ASH_DRISHTI=DEBUG java -jar drishti-server/target/drishti-server-*-exec.jar
+LOGGING_LEVEL_COM_ASH_DRISHTI=DEBUG java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
 ```
 
 The console runs Uvicorn with access logs off (`access_log=False` in `run_drishti_web.py`). The run configuration **Drishti server
@@ -2238,7 +2238,7 @@ Routes (`kind -> connector`) are the pack's `routes:`; the server's own settings
 **4. Start the server**, then the console in a second terminal:
 
 ```bash
-java -jar drishti-server/target/drishti-server-*-exec.jar
+java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
 ```
 
@@ -2484,7 +2484,7 @@ default Optional<SqlTarget> sqlTarget()                                      // 
   null) and `with(work)`, which runs work on a connection borrowed from **your** pool. The engine compiles one SELECT over the relation, values bound as parameters, and runs it there (`mode: direct` tables). The DuckDB connector (the `entities` table of its
   file) and the PostgreSQL connector (table mode) provide it; Delta and files do not (their pushdown is the scan above). A connector wrapper (`ConnectorInstance`, the named connector) forwards both methods.
 
-Test it as the engine does: [`ColumnScansTest`](../../drishti-api/src/test/java/com/ash/drishti/api/ColumnScansTest.java) is a stub source and the range, filter, batch and refusal cases; the engine's tests read a small generated lake through a stub connector.
+Test it as the engine does: [`ColumnScansTest`](../../kernel/drishti-api/src/test/java/com/ash/drishti/api/ColumnScansTest.java) is a stub source and the range, filter, batch and refusal cases; the engine's tests read a small generated lake through a stub connector.
 
 #### `history(request)` and `days(ref, from, to)`: one entity over business dates
 
@@ -2583,7 +2583,7 @@ public record SettingSpec(String name, String type, boolean required, String def
 ```
 
 A setting a file carries that no spec covers is a **warning** (a likely typo), never a refusal. The shipped plugins are described in
-`drishti-engine/src/main/resources/drishti/plugin-settings.yaml`, which also holds the settings every plugin shares (`source-name`, `mode.*`, `domain`,
+`kernel/drishti-engine/src/main/resources/drishti/plugin-settings.yaml`, which also holds the settings every plugin shares (`source-name`, `mode.*`, `domain`,
 `stale-after`) and the shared `tls.*` block; **a plugin that overrides `settingSpecs()` wins** over its entry there, and a plugin that declares nothing falls back
 to that catalogue. A plugin of yours that declares nothing still works: its form then offers only the free-form **Other settings** list.
 
@@ -3008,7 +3008,7 @@ doc: plugins/drishti-plugin-dayfolder/README.md   # the full document: for a plu
 # The dayfolder connector
 ## What it reads
 ## Settings
-<!-- settings:begin (generated by tools/connector_readmes.py from drishti-engine/src/main/resources/drishti/plugin-settings.yaml; edit the catalogue, not this table) -->
+<!-- settings:begin (generated by tools/connector_readmes.py from kernel/drishti-engine/src/main/resources/drishti/plugin-settings.yaml; edit the catalogue, not this table) -->
 <!-- settings:end -->
 ## Data structure              # the record it returns: the field mapping, the id rule, nested structures; for a store the table
                                # layout or DDL; when generic, "depends on the source; mapping via <settings>"
@@ -3900,7 +3900,7 @@ the kernel's compute pools. What is supported:
 
 - An engine is a class of the SDK: `class LaneCost(Engine)` with `kinds = ("lane-cost",)` and `compute(self, req, inputs, progress)`
   returning `Result(rows=…)` (or raising `ComputeError("…")`, shown in those words); inputs arrive as Arrow tables
-  (`inputs.table("shipments")`). The contract and the protocol: [drishti-compute's README](../../drishti-compute/README.md).
+  (`inputs.table("shipments")`). The contract and the protocol: [drishti-compute's README](../../compute/drishti-compute/README.md).
 - It runs in a **pool** of `config/compute/compute.yaml` (`compute.enabled: true`): the pool's `engines:` lists `module:Class`, and its
   `python-path:` adds the folder your package lives in; workers, memory, timeouts and the sandbox:
   [OPERATIONS_GUIDE.md section 15](OPERATIONS_GUIDE.md#15-compute-workers).

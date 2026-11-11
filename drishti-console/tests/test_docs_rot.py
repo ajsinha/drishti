@@ -256,7 +256,7 @@ EXAMPLE_PATHS = {
 
 
 def _expand(token: str) -> list[str]:
-    """``drishti-server/.../cli/{SutraCli,ExpectFile}.java`` is two paths."""
+    """``kernel/drishti-server/.../cli/{SutraCli,ExpectFile}.java`` is two paths."""
     m = re.search(r"\{([^{}]+)\}", token)
     return [t for part in m.group(1).split(",") for t in _expand(token[:m.start()] + part + token[m.end():])] if m else [token]
 
@@ -271,7 +271,7 @@ def path_exists(token: str, rel: str) -> bool:
     here = str(Path(rel).parent)
     for base in ["", here] + _pack_roots(rel) + list(pack_roots_all()):
         cand = f"{base}/{token}".strip("/") if base and base != "." else token
-        if "..." in cand or "*" in cand:                                 # drishti-engine/.../view/PanelData.java: any depth
+        if "..." in cand or "*" in cand:                                 # kernel/drishti-engine/.../view/PanelData.java: any depth
             pattern = re.escape(cand).replace(r"\.\.\.", ".*").replace(r"\*", "[^/]*")
             if any(re.fullmatch(pattern, p) for p in tracked_set()):
                 return True
@@ -407,7 +407,7 @@ def _camel(s: str) -> str:
 
 @functools.lru_cache(maxsize=None)
 def server_keys() -> frozenset[str]:
-    rels = [p for p in tracked() if p.startswith("drishti-server/src/main/resources/application") and p.endswith(".yaml")]
+    rels = [p for p in tracked() if p.startswith("kernel/drishti-server/src/main/resources/application") and p.endswith(".yaml")]
     return yaml_keys(*rels)
 
 

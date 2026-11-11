@@ -126,7 +126,7 @@ economy (markets and news).
 | `drishti-compute-banking` | `com.ash.drishti.banking.compute.{var,ccr,frtb,simm,analytics}` (was `compute.{var,ccr,frtb,simm,reactive.analytics}`), with their tests (the hot-file soak runs here alone); pure maths, no Spring | `drishti-compute` |
 | `drishti-server` | the core server: every generic package, the SPIs the domains fill (section 5), `server.modules` (the registry in the server, `@ConditionalOnModule`, the API aliases, the module gate, the module switch over REST, `/api/v1/admin/modules`), and the economy content module's manifest and the core lenses (`META-INF/drishti/`) | core modules, `drishti-registry` |
 | `drishti-banking` | `com.ash.drishti.banking.{var,exposure,frtb,simm,official}` (was `server.{var,exposure,frtb,simm,official}`), with their tests; `BankingAutoConfiguration` (`META-INF/spring/…AutoConfiguration.imports`, `@ConditionalOnModule("banking")`, a component scan of `com.ash.drishti.banking`); its manifest and lenses (`META-INF/drishti/`); the banking playground templates (`playground/{var,var-explain,exposure,frtb-sa,simm,saccr,fva}`); its connector plugins and official-results provider (`META-INF/services`); the API under **`/api/v1/risk/{var,exposure,frtb,simm,sensitivities,risk-factors,mr}`** | `drishti-server`, `drishti-compute-banking` |
-| `drishti-app` | no code: the runnable jar (the core with the domain modules this build ships), written as before to `drishti-server/target/drishti-server-<version>-exec.jar`, so every launcher, script, Docker file and guide is unchanged; `loader.properties` (the external library folder) moved here | `drishti-server`, `drishti-banking` |
+| `drishti-app` | no code: the runnable jar (the core with the domain modules this build ships), written as before to `kernel/drishti-server/target/drishti-server-<version>-exec.jar`, so every launcher, script, Docker file and guide is unchanged; `loader.properties` (the external library folder) moved here | `drishti-server`, `drishti-banking` |
 | `config/packs/*/pack.yaml` | each pack names its `domain:` (core, banking, economy); ids and folders unchanged | |
 | `docs/tutorials`, `docs/guides` | stay where they are; Help groups them by module in phase 2 | |
 
@@ -318,7 +318,7 @@ the VaR and exposure lakes; package `com.ash.drishti.server.connectors` kept, in
    follows the jar. **Deferred out of this release** (a packaging change across every launcher: the scripts, Docker, ECS, the stack and
    the drill gain the modules folder in the same change, and the release ships both jars); until then a module is installed with the one
    jar and switched off with `config/modules/<module>.yaml`.
-2. **Python worker code**: none of banking's is left in `drishti-compute/src/main/python/drishti_compute`; the tools' banking scripts
+2. **Python worker code**: none of banking's is left in `compute/drishti-compute/src/main/python/drishti_compute`; the tools' banking scripts
    (`varcli.py`, `expcli.py`, `frtbcli.py`, `simmcli.py`, `tools/ccr/`) move with the module.
 3. **The drills**: one with the banking module absent (the core starts, serves BI, Pivot and the economy packs, and says *not
    installed* for a banking word).

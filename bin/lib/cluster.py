@@ -152,8 +152,8 @@ def secrets() -> dict:
 
 # -- the jar -----------------------------------------------------------------------------------------------------------------------
 def server_jar() -> Path:
-    """<data>/stack/server.jar: a copy of the newest drishti-server/target/drishti-server-*-exec.jar, refreshed when a newer build exists."""
-    built = sorted((ROOT / "drishti-server" / "target").glob("drishti-server-*-exec.jar"), key=lambda p: p.stat().st_mtime, reverse=True)
+    """<data>/stack/server.jar: a copy of the newest kernel/drishti-server/target/drishti-server-*-exec.jar, refreshed when a newer build exists."""
+    built = sorted((ROOT / "kernel/drishti-server" / "target").glob("drishti-server-*-exec.jar"), key=lambda p: p.stat().st_mtime, reverse=True)
     JAR = at.jar
     if built and (not JAR.exists() or built[0].stat().st_mtime > JAR.stat().st_mtime):
         JAR.parent.mkdir(parents=True, exist_ok=True)
@@ -162,7 +162,7 @@ def server_jar() -> Path:
         os.replace(part, JAR)                    # a server still running keeps the jar it opened
         say(f"server jar: {built[0].name} copied to {JAR}")
     if not JAR.exists():
-        sys.exit("no server jar: build it first (./mvnw -o -q package -DskipTests -pl drishti-app -am), then run bin/start-cluster again")
+        sys.exit("no server jar: build it first (./mvnw -o -q package -DskipTests -pl :drishti-app -am), then run bin/start-cluster again")
     return JAR
 
 

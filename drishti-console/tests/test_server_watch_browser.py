@@ -44,7 +44,7 @@ def find_jar() -> str | None:
     """The built server: in this checkout, else in the main checkout this worktree hangs off."""
     roots = [ROOT, *([ROOT.parents[2]] if ROOT.parent.name == "worktrees" else [])]
     for r in roots:
-        jars = sorted(glob.glob(str(r / "drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)
+        jars = sorted(glob.glob(str(r / "kernel/drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)
         if jars:
             return jars[0]
     return None
@@ -54,7 +54,7 @@ def start_server(tmp: Path):
     java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
     jar = find_jar()
     if not jar or not Path(java).exists():
-        pytest.skip("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-app -am")
+        pytest.skip("needs the built server: ./mvnw -o -q package -DskipTests -pl :drishti-app -am")
     work = tmp / "server"
     work.mkdir(exist_ok=True)
     env = dict(os.environ, DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_PACKS="trading", DRISHTI_SECURITY_ENABLED="false",

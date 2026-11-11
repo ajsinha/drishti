@@ -51,9 +51,9 @@ import settings_sources as S  # noqa: E402
 
 DOC = ROOT / "docs" / "admin" / "CONFIGURATION.md"
 SCHEMAS = ROOT / "tools" / "settings_schemas.yaml"
-CATALOGUE = ROOT / "drishti-engine" / "src" / "main" / "resources" / "drishti" / "plugin-settings.yaml"
-TLS = ROOT / "drishti-api" / "src" / "main" / "java" / "com" / "ash" / "drishti" / "api" / "tls" / "TlsSettings.java"
-PROXY = ROOT / "drishti-api" / "src" / "main" / "java" / "com" / "ash" / "drishti" / "api" / "proxy" / "ProxySettings.java"
+CATALOGUE = ROOT / "kernel/drishti-engine" / "src" / "main" / "resources" / "drishti" / "plugin-settings.yaml"
+TLS = ROOT / "kernel/drishti-api" / "src" / "main" / "java" / "com" / "ash" / "drishti" / "api" / "tls" / "TlsSettings.java"
+PROXY = ROOT / "kernel/drishti-api" / "src" / "main" / "java" / "com" / "ash" / "drishti" / "api" / "proxy" / "ProxySettings.java"
 BEGIN = "<!-- generated: settings begin (tools/settings_catalogue.py writes everything down to the end marker; edit the sources, not this) -->"
 END = "<!-- generated: settings end -->"
 COLUMNS = ("Key", "Type", "Default", "Env var", "Applies to", "Meaning", "Restart or live", "Since", "Tier")
@@ -89,7 +89,7 @@ class Area:
 
 AREAS = [
     Area("server", "The server: `application.yaml`",
-         "`drishti-server/src/main/resources/application.yaml`, inside the jar. Override a key in `application.local.yaml`, with an "
+         "`kernel/drishti-server/src/main/resources/application.yaml`, inside the jar. Override a key in `application.local.yaml`, with an "
          "environment variable (the one named, or Spring's relaxed name) or a `--key=value` argument ([Precedence](#precedence))."),
     Area("engines", "Compute engines: `config/engines/*.yaml`",
          "One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR, FVA, the two cubes, the in-memory lake, the data inbox), "
@@ -367,7 +367,7 @@ def feature_rows() -> list[Row]:
 # ---- the compute engines' files ---------------------------------------------------------------------------------------------
 
 ENGINES_DIR = ROOT / "config" / "engines"
-ENGINES_JAR = ROOT / "drishti-server" / "src" / "main" / "resources" / "engines"
+ENGINES_JAR = ROOT / "kernel/drishti-server" / "src" / "main" / "resources" / "engines"
 
 
 def _flat_keys(doc, prefix: str = "") -> set[str]:
@@ -386,14 +386,14 @@ def engine_rows() -> tuple[list[Row], list[str]]:
     rows: list[Row] = []
     problems: list[str] = []
     catalogue = []                                         # each module's engines (its jar's META-INF/drishti/engines.yaml) first, then the core's
-    for module_jar in sorted([*ROOT.glob("drishti-*/src/main/resources/META-INF/drishti/engines.yaml"), *ROOT.glob("modules/*/*/src/main/resources/META-INF/drishti/engines.yaml")]):
+    for module_jar in sorted([*ROOT.glob("*/drishti-*/src/main/resources/META-INF/drishti/engines.yaml"), *ROOT.glob("modules/*/*/src/main/resources/META-INF/drishti/engines.yaml")]):
         for e in yaml.safe_load(module_jar.read_text(encoding="utf-8")).get("engines") or []:
             catalogue.append({**e, "_jar": module_jar.parents[2] / "engines"})
     catalogue += yaml.safe_load((ENGINES_JAR / "catalogue.yaml").read_text(encoding="utf-8")).get("engines") or []
     files = {e["file"] for e in catalogue}
     on_disk = {p.name for p in ENGINES_DIR.glob("*.yaml")}
     for name in sorted(on_disk - files):
-        problems.append(f"config/engines/{name}: no engine of the catalogue (drishti-server/src/main/resources/engines/catalogue.yaml) names it")
+        problems.append(f"config/engines/{name}: no engine of the catalogue (kernel/drishti-server/src/main/resources/engines/catalogue.yaml) names it")
     lakes = ROOT / "config" / "lakes"                                               # the shipped lake files and their jar copies (Lakes):
     for lake in sorted([*lakes.glob("*.yaml"), *lakes.glob("*/*.yaml")]):            # a domain folder's in its module's jar
         module = ROOT / ("drishti-lakeconfig" if lake.parent == lakes else f"drishti-{lake.parent.name}")
@@ -402,7 +402,7 @@ def engine_rows() -> tuple[list[Row], list[str]]:
         jar = module / "src/main/resources/drishti/lakes" / lake.name
         if not jar.is_file() or lake.read_bytes() != jar.read_bytes():
             problems.append(f"{lake.relative_to(ROOT)} differs from its jar copy {jar.relative_to(ROOT)}")
-    app_keys = _flat_keys(yaml.safe_load((ROOT / "drishti-server/src/main/resources/application.yaml").read_text(encoding="utf-8")))
+    app_keys = _flat_keys(yaml.safe_load((ROOT / "kernel/drishti-server/src/main/resources/application.yaml").read_text(encoding="utf-8")))
     for e in catalogue:
         f = ENGINES_DIR / e["file"]
         jar = e.get("_jar", ENGINES_JAR) / e["file"]
@@ -410,14 +410,14 @@ def engine_rows() -> tuple[list[Row], list[str]]:
             problems.append(f"the engine {e['id']} has no file config/engines/{e['file']} (and its jar copy)")
             continue
         if f.read_bytes() != jar.read_bytes():
-            problems.append(f"config/engines/{e['file']} differs from its jar copy drishti-server/src/main/resources/engines/{e['file']}")
+            problems.append(f"config/engines/{e['file']} differs from its jar copy kernel/drishti-server/src/main/resources/engines/{e['file']}")
         for k in sorted(_flat_keys(yaml.safe_load(f.read_text(encoding="utf-8"))) & app_keys):
             problems.append(f"{k} is in both application.yaml and config/engines/{e['file']}: an engine's key lives in its file only")
         rows += yaml_rows("engines", [f], "server (each node its own)", "restart", None,   # grouped by key, as the server area (stable anchors)
                           collapse=COLLAPSE["server"])
     for e in catalogue:
         for alias in e.get("aliases") or []:
-            rows.append(Row("engines", "Old names (still accepted)", "drishti-server/src/main/resources/engines/catalogue.yaml", alias, "boolean",
+            rows.append(Row("engines", "Old names (still accepted)", "kernel/drishti-server/src/main/resources/engines/catalogue.yaml", alias, "boolean",
                             None, [], "server", _clean(f"The old name of {e['switch']} ({e['title']}): still accepted, and when set above the "
                                                          f"shipped files it decides, with a warning at start (DRS-1024). Move it to "
                                                          f"config/engines/{e['file']} or use Admin → Engines."), "live", "2.9.11", False))
@@ -428,7 +428,7 @@ def all_rows() -> tuple[list[Row], list[str]]:
     """Every row, and every problem a schema has against the files it describes."""
     problems: list[str] = []
     rows: list[Row] = []
-    rows += yaml_rows("server", [ROOT / "drishti-server/src/main/resources/application.yaml"], "server", "restart",
+    rows += yaml_rows("server", [ROOT / "kernel/drishti-server/src/main/resources/application.yaml"], "server", "restart",
                       collapse=COLLAPSE["server"])
     r, p = engine_rows()
     rows += r
@@ -474,8 +474,8 @@ _PLACEHOLDER = re.compile(r"\$\{([A-Z][A-Z0-9_]*)(?::|\})")
 def code_env() -> dict[str, str]:
     """``DRISHTI_*`` variables the main code reads by name (Java, Python, shell), with the first file that reads each."""
     out: dict[str, str] = {}
-    roots = ["drishti-server", "drishti-engine", "drishti-api", "drishti-common", "drishti-packs", "drishti-console", "drishti-net",
-             "drishti-compute", "drishti-bicompute", "drishti-tables", "drishti-identity", "drishti-ai", "drishti-lakeio", "drishti-deltalake", "drishti-iceberg", "drishti-memlake", "drishti-dataload", "plugins", "tools"]
+    roots = ["kernel/drishti-server", "kernel/drishti-engine", "kernel/drishti-api", "kernel/drishti-common", "kernel/drishti-packs", "drishti-console", "net/drishti-net",
+             "compute/drishti-compute", "compute/drishti-bicompute", "compute/drishti-tables", "kernel/drishti-identity", "kernel/drishti-ai", "lake/drishti-lakeio", "lake/drishti-deltalake", "lake/drishti-iceberg", "drishti-memlake", "drishti-dataload", "plugins", "tools"]
     for r in roots:
         for p in sorted((ROOT / r).rglob("*")):
             if p.suffix not in (".java", ".py") or not p.is_file():
@@ -495,7 +495,7 @@ def placeholder_env(defaults: dict | None = None) -> dict[str, str]:
     """Every ``${NAME...}`` of the packs' manifests and the server's profile files, with the first file that has it; ``defaults``
     collects each one's default (None: the placeholder has none)."""
     out: dict[str, str] = {}
-    files = manifests() + sorted((ROOT / "drishti-server/src/main/resources").glob("application-*.yaml"))
+    files = manifests() + sorted((ROOT / "kernel/drishti-server/src/main/resources").glob("application-*.yaml"))
     for f in files:
         for line in f.read_text(encoding="utf-8").splitlines():
             if line.lstrip().startswith("#"):

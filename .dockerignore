@@ -22,4 +22,4 @@ data
 **/.pytest_cache
 **/node_modules
 **/target
-!drishti-server/target/drishti-server-*-exec.jar
+!kernel/drishti-server/target/drishti-server-*-exec.jar

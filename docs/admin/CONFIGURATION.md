@@ -59,7 +59,7 @@ Drishti has two programs and each has its own configuration:
 
 | Program | Bundled file | Local override (git-ignored) | Env-var form | Argument form |
 |---|---|---|---|---|
-| Server (Java, port 18480) | `drishti-server/src/main/resources/application.yaml` (inside the jar) | `./application.local.yaml` in the server's **working directory** | `DRISHTI_SOURCES_FETCHTIMEOUT=3s` | `--drishti.sources.fetch-timeout=3s` |
+| Server (Java, port 18480) | `kernel/drishti-server/src/main/resources/application.yaml` (inside the jar) | `./application.local.yaml` in the server's **working directory** | `DRISHTI_SOURCES_FETCHTIMEOUT=3s` | `--drishti.sources.fetch-timeout=3s` |
 | Console (Python, port 17480) | `drishti-console/config/application.yaml` | `drishti-console/config/application.local.yaml` | `DRISHTI_CONSOLE__BACKEND__TIMEOUT_SECONDS=30` | `--backend.timeout_seconds=30` |
 
 Secrets never go in a tracked file. Put them in environment variables (or in the git-ignored local file on a
@@ -88,7 +88,7 @@ pack.yaml contributions  <  application.yaml  <  application.local.yaml  <  envi
 The longest a source read may take is `drishti.sources.fetch-timeout`, `10s` in the bundled file: the first read of a date on a large table loads its id index first, and a panel's own source (another pack's data) is read within the same limit.
 
 1. Create `application.local.yaml` in the directory you start the server from (the repository root when
-   you run `java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.g-exec.jar`):
+   you run `java -Djava.io.tmpdir=data/tmp/server -jar kernel/drishti-server/target/drishti-server-2.9.11.g-exec.jar`):
 
    ```yaml
    drishti:
@@ -101,7 +101,7 @@ The longest a source read may take is `drishti.sources.fetch-timeout`, `10s` in 
 2. Start the server with an environment variable as well:
 
    ```bash
-   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.g-exec.jar
+   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar kernel/drishti-server/target/drishti-server-2.9.11.g-exec.jar
    ```
 
    The effective value is `4s`: the environment beats the local file.
@@ -109,7 +109,7 @@ The longest a source read may take is `drishti.sources.fetch-timeout`, `10s` in 
 3. Add an argument:
 
    ```bash
-   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.g-exec.jar \
+   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar kernel/drishti-server/target/drishti-server-2.9.11.g-exec.jar \
        --drishti.sources.fetch-timeout=5s
    ```
 
@@ -265,7 +265,7 @@ Setting `java.io.tmpdir` inside a running JVM does not move `Files.createTempFil
 
 ```bash
 mkdir -p data/tmp/server        # once: the server makes it too, but the JVM warns on a first start when it does not exist yet
-java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.g-exec.jar
+java -Djava.io.tmpdir=data/tmp/server -jar kernel/drishti-server/target/drishti-server-2.9.11.g-exec.jar
 ```
 
 or, where editing the command is awkward (a service manager, a container, a wrapper script), through the environment: `JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=/opt/drishti/data/tmp/server` (Java prints `Picked up JAVA_TOOL_OPTIONS` once). With another data folder or `DRISHTI_TMP_DIR`, use that base: `<data dir>/tmp/server`. Everything Drishti ships passes it already: `bin/start-server` (`<data>/tmp/server[-<node>]`), the IntelliJ run configurations, `deploy/docker/server.Dockerfile` (in `JAVA_TOOL_OPTIONS`), the `run-server.sh`/`.ps1` that `tools/packmake.py` writes, the loaders `tools/load-*.sh`, and every java the tests and tools start (`tools/javacmd.py`; a guard test fails on one that does not). `./mvnw` gives Maven's own JVM `<repository>/data/tmp/maven` (`DRISHTI_MAVEN_TMP` names another), and the test JVMs get `<module>/target/tmp`, which `mvn clean` removes.
@@ -316,7 +316,7 @@ The repository keeps the folder empty (`.gitignore`).
 
 ### Every placeholder
 
-Generated from `drishti-server/src/main/resources/application.yaml` (and checked against it by
+Generated from `kernel/drishti-server/src/main/resources/application.yaml` (and checked against it by
 `drishti-console/tests/test_docs_placeholders.py`, so the table cannot drift). "Sets" is the key the placeholder fills. Profile
 files (`application-files.yaml`, `application-postgres.yaml`, …) and packs have placeholders of their own, listed in
 [Environment variables used by the packs and profiles](#environment-variables-used-by-the-packs-and-profiles).
@@ -528,7 +528,7 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_PACKS` | `packs.enabled` | `default` | Only used when the server cannot be asked which packs are on; `default`: `config/packs/default-packs.yaml`. |
 | `DRISHTI_LENS_DIR` | `lens.dir` | `../config/lenses` | The folder of the edition files, the same the server reads (relative to `drishti-console/`). |
 | `DRISHTI_LAKE_ROOTS` | `lakes.roots` | empty | Admin → Data loads → Lakes ([CLI_REFERENCE.md](../guides/CLI_REFERENCE.md#7-lake-a-large-json-export-into-a-delta-lake)): the lake roots this console may write, comma-separated (relative paths resolve from `drishti-console/`); empty: `<data dir>/delta`, the server's own root. The page offers no other folder. |
-| `DRISHTI_JAR` | `lakes.jar` | empty | The drishti-server exec jar whose Java writer the page's builds use (`lakes.engine: auto`); empty: the newest `drishti-server/target/drishti-server-*-exec.jar`, else the Python `deltalake` package. |
+| `DRISHTI_JAR` | `lakes.jar` | empty | The drishti-server exec jar whose Java writer the page's builds use (`lakes.engine: auto`); empty: the newest `kernel/drishti-server/target/drishti-server-*-exec.jar`, else the Python `deltalake` package. |
 | `DRISHTI_DATA_DIR` | `lakes.data_dir` | `../data` | Admin → Lakes → Maintain ([OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#16-lake-maintenance-and-scheduling)): the data folder whose `lakes/lake-maintenance.yaml` (the file `lake maintain` reads by default) and `lakes/maintenance-history.jsonl` the page uses (relative paths resolve from `drishti-console/`). |
 | `DRISHTI_LAKE_MAINTENANCE_SCHEDULES` | `lakes.maintenance_schedules` | `true` | Run the lake-maintenance schedules in this console; `false` when `lake maintain --daemon` runs them instead (run them in one place). |
 
@@ -726,7 +726,7 @@ and [AI_GUIDE.md](../guides/AI_GUIDE.md#2-the-mcp-client-other-servers-tools-beh
 ### Change the port
 
 ```bash
-DRISHTI_PORT=18490 java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.g-exec.jar
+DRISHTI_PORT=18490 java -Djava.io.tmpdir=data/tmp/server -jar kernel/drishti-server/target/drishti-server-2.9.11.g-exec.jar
 ```
 
 You should see `Tomcat started on port 18490` in the log. Point the console at it with
@@ -735,7 +735,7 @@ You should see `Tomcat started on port 18490` in the log. Point the console at i
 ### Load more packs
 
 ```bash
-DRISHTI_PACKS=market-risk,world-economy java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.g-exec.jar
+DRISHTI_PACKS=market-risk,world-economy java -Djava.io.tmpdir=data/tmp/server -jar kernel/drishti-server/target/drishti-server-2.9.11.g-exec.jar
 ```
 
 Packs a listed pack `extends:` (or the older `requires:`) are loaded too, dependencies first. Then
@@ -748,7 +748,7 @@ set `DRISHTI_PACKS_DIR` to an absolute path so both programs find the same folde
 export DRISHTI_SECURITY_ENABLED=true
 export DRISHTI_TOKEN_SECRET="$(openssl rand -base64 48)"   # at least 32 bytes; give the console the same value
 export DRISHTI_SEED_ADMIN=false
-java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.g-exec.jar
+java -Djava.io.tmpdir=data/tmp/server -jar kernel/drishti-server/target/drishti-server-2.9.11.g-exec.jar
 ```
 
 The console needs `DRISHTI_AUTH_ENABLED=true`, the same `DRISHTI_TOKEN_SECRET`, and its own
@@ -792,7 +792,7 @@ Admin → Connectors. Defining the connector under `drishti.sources.connectors` 
 ### Use a different holiday calendar
 
 ```bash
-DRISHTI_CALENDAR=USNY+GBLO java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.g-exec.jar
+DRISHTI_CALENDAR=USNY+GBLO java -Djava.io.tmpdir=data/tmp/server -jar kernel/drishti-server/target/drishti-server-2.9.11.g-exec.jar
 ```
 
 `curl -s localhost:18480/api/v1/business-date` then shows `"calendar":"USNY+GBLO"`.
@@ -2363,7 +2363,7 @@ read Admin → Caches: [OPERATIONS_GUIDE.md section 12.3](../guides/OPERATIONS_G
 ### Where each plugin's settings are
 
 Each plugin's settings, with type, default and meaning, are listed in one place: the plugin's README, generated from the settings catalogue
-(`drishti-engine/src/main/resources/drishti/plugin-settings.yaml`, the one Admin → Connectors builds its form from). The connector's own
+(`kernel/drishti-engine/src/main/resources/drishti/plugin-settings.yaml`, the one Admin → Connectors builds its form from). The connector's own
 document explains how it reads, its layout, scale and limits.
 
 | Plugin | Reads | Settings | Reference |
@@ -2416,7 +2416,7 @@ Example: the trading pack with its live Kafka stream.
 
 ```bash
 DRISHTI_PACKS=trading DRISHTI_STREAM_TRADING=true DRISHTI_KAFKA_BOOTSTRAP=kafka:9092 \
-  java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.g-exec.jar
+  java -Djava.io.tmpdir=data/tmp/server -jar kernel/drishti-server/target/drishti-server-2.9.11.g-exec.jar
 ```
 
 `curl -s localhost:18480/api/v1/sources` should then list `trading-stream`.
@@ -2442,7 +2442,7 @@ the lake. The packs still decide kinds, routes and modes.
 
 ```bash
 SPRING_PROFILES_ACTIVE=postgres DRISHTI_PG_URL=jdbc:postgresql://db:5432/drishti \
-  DRISHTI_PG_PASSWORD="$PG_PASSWORD" java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.g-exec.jar
+  DRISHTI_PG_PASSWORD="$PG_PASSWORD" java -Djava.io.tmpdir=data/tmp/server -jar kernel/drishti-server/target/drishti-server-2.9.11.g-exec.jar
 ```
 
 ---
@@ -2742,7 +2742,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 ### The server: `application.yaml`
 
-`drishti-server/src/main/resources/application.yaml`, inside the jar. Override a key in `application.local.yaml`, with an environment variable (the one named, or Spring's relaxed name) or a `--key=value` argument ([Precedence](#precedence)).
+`kernel/drishti-server/src/main/resources/application.yaml`, inside the jar. Override a key in `application.local.yaml`, with an environment variable (the one named, or Spring's relaxed name) or a `--key=value` argument ([Precedence](#precedence)).
 
 #### `spring`
 
@@ -4544,7 +4544,7 @@ One file per module (banking, capitalmarkets, economy), `config/modules/<module>
 | `lakes.max_upload_mb` | integer | `4096` |  | console | largest file uploaded (streamed to the console's temporary folder, never held in memory) | restart |  | expert |
 | `lakes.scan_docs` | integer | `20000` |  | console | documents read to suggest the id, date and classifiers (the build reads them all) | restart |  | admin |
 | `lakes.engine` | string | `auto` |  | console | auto (Drishti's Java writer when lakes.jar or the server jar is found, else deltalake), drishti, deltalake | restart |  | admin |
-| `lakes.jar` | string | empty | `DRISHTI_JAR` | console | the drishti-server exec jar that carries the writer (default: drishti-server/target) | restart |  | admin |
+| `lakes.jar` | string | empty | `DRISHTI_JAR` | console | the drishti-server exec jar that carries the writer (default: kernel/drishti-server/target) | restart |  | admin |
 | `lakes.python` | string | `""` |  | console | the Python that runs tools/lake/build.py (default: the console's own) | restart |  | admin |
 | `lakes.keep_min` | integer | `240` |  | console | minutes an upload and a finished build are kept | restart |  | admin |
 | `lakes.jobs` | integer | `2` |  | console | builds running at once on this console | restart |  | admin |
@@ -6348,14 +6348,14 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_IDENTITY_DB_URL` | `drishti.identity.database-url` | `jdbc:sqlite:./data/identity/drishti.db` | server | Users, roles defined in Admin → Roles, saved workspaces/monitors/settings and the audit trail live in one database (JPA). SQLite by default: a single file, nothing to install. For PostgreSQL: DRISHTI\_IDENTITY\_DB\_URL=jdbc:postgresql://db:5432/drishti DRISHTI\_IDENTITY\_DB\_USER=drishti DRISHTI\_IDENTITY\_DB\_PASSWORD=... The schema (drishti-identity: db/schema-sqlite.sql, db/schema-postgres.sql) is applied at start; no migrations. |
 | `DRISHTI_IDENTITY_DB_USER` | `drishti.identity.database-user` | empty | server | the identity database's user (PostgreSQL) |
 | `DRISHTI_INDEX_DIR` | `drishti.index.dir` | empty | server | Where the connectors' multi-day type-ahead index keeps closed days as block-compressed segment files (one subfolder per connector). Blank: &lt;data dir&gt;/index, i.e. ./data/index. Size is capped per connector by its index.max-disk; a day that rolls out of the window, is evicted by the cap or is rebuilt gives its disk back at once. |
-| `DRISHTI_JAR` | `lakes.jar` | empty | console | the drishti-server exec jar that carries the writer (default: drishti-server/target) |
-| `DRISHTI_JAR_DIR` | screenshot tools | `drishti-server/target` | tools | Where the screenshot tools find the server jar |
+| `DRISHTI_JAR` | `lakes.jar` | empty | console | the drishti-server exec jar that carries the writer (default: kernel/drishti-server/target) |
+| `DRISHTI_JAR_DIR` | screenshot tools | `kernel/drishti-server/target` | tools | Where the screenshot tools find the server jar |
 | `DRISHTI_JDBC_ENABLED` | `drishti.sources.plugins.jdbc.enabled` | `false` | server | run the jdbc source as itself (one instance) |
 | `DRISHTI_JDBC_PASSWORD` | `drishti.sources.plugins.jdbc.settings.password` | empty | server | its database password (from the environment) |
 | `DRISHTI_JDBC_URL` | `drishti.sources.plugins.jdbc.settings.url` | empty | server | the JDBC URL of that instance |
 | `DRISHTI_JDBC_USER` | `drishti.sources.plugins.jdbc.settings.user` | empty | server | its database user |
 | `DRISHTI_KAFKA_BOOTSTRAP` | Kafka brokers | `localhost:9092` | packs | The brokers of the trading stream and the VaR PV topic |
-| `DRISHTI_KERNEL_JAR` | the kernel's thin jar, the kernel's thin jar | `drishti-kernel-app/target/drishti-kernel-*-exec.jar` | tools | The jar `drishti.py module run` starts with one module only (CLI\_REFERENCE.md, module run) |
+| `DRISHTI_KERNEL_JAR` | the kernel's thin jar, the kernel's thin jar | `packaging/drishti-kernel-app/target/drishti-kernel-*-exec.jar` | tools | The jar `drishti.py module run` starts with one module only (CLI\_REFERENCE.md, module run) |
 | `DRISHTI_LABS_CALC` | `drishti.calc.enabled`, `labs.calc` | `false` | console, server | Labs: off as shipped; on also needs a role with calc, and a pack that enables it for the view's kind |
 | `DRISHTI_LAKES_DIR` | drishti.lakes.dir | `./config/lakes` | server | The lake folder: one config/lakes/&lt;lake&gt;.yaml per lake, read by the server, the loader, the data inbox and the tools (docs/guides/DATA\_LAKE\_GUIDE.md) |
 | `DRISHTI_LAKES_RELOCATE_ON_START` | drishti.lakes.relocate-on-start | `true` | server | At start, move a demo lake built in the older layout (&lt;data&gt;/delta/&lt;domain&gt;) into &lt;data&gt;/delta/demo once, safely (verified, moved back on any error, never a delete); false: only by drishti.py lake relocate demo (docs/guides/OPERATIONS\_GUIDE.md) |
@@ -6395,7 +6395,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_MODULES_SHIPPED` | `drishti.modules.shipped` | `true` | server | install the distribution's first-party modules (drishti/modules/\*.dmod in the full jar: banking, market-data, capital-markets, economy) at start when not installed or rebuilt; one an administrator removed or switched off stays so |
 | `DRISHTI_MODULE_DEPLOY_DIR` | `drishti.module-deploy.dir` | empty | server | Module deployment (docs/guides/CLUSTER\_GUIDE.md "Deploying a module", KERNEL\_AND\_MODULES.md section 7.6): the module store (each .dmod kept once, by id and version), the installed modules and active.yaml, staging and the registry, all under this folder. empty: modules/ under drishti.data.dir |
 | `DRISHTI_MODULE_MANIFESTS_DIR` | `drishti.module-manifests-dir`, `module_manifests_dir` | `./modules` | console, server | the modules' own manifests (modules/&lt;id&gt;/module.yaml): what a distribution's modules hold, and the one source of what a content module is (the access registry; a folder that is not there: the modules folder beside the packs' config folder) |
-| `DRISHTI_MODULE_TOOL` | the module tool's jar | `drishti-module-runtime/target/drishti-module-tool.jar` | tools | The jar `drishti.py module pack\|check\|inspect` runs (java -jar drishti-module-tool.jar; DEVELOPER\_GUIDE.md section 1.6) |
+| `DRISHTI_MODULE_TOOL` | the module tool's jar | `kernel/drishti-module-runtime/target/drishti-module-tool.jar` | tools | The jar `drishti.py module pack\|check\|inspect` runs (java -jar drishti-module-tool.jar; DEVELOPER\_GUIDE.md section 1.6) |
 | `DRISHTI_MONGODB_DATABASE` | mongodb profile | `drishti` | profile | Its database |
 | `DRISHTI_MONGODB_URI` | mongodb profile | `mongodb://localhost:27017` | profile | The mongodb profile's server |
 | `DRISHTI_MR_CUBE_ENABLED` | `drishti.engines.mr-cube.enabled` (engine) | `true` | engine | run the MR cube on this node: MCUBE, /api/v1/pivot/mr, the VaR source's hierarchy levels and MR measures; needs var and pivot |

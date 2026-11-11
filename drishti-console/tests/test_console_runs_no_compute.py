@@ -59,7 +59,7 @@ def test_the_console_has_no_python_runner_and_the_server_never_calls_it():
     for gone in ("core/pyrunner.py", "core/pyrunner_worker.py", "core/transform_cli.py", "core/pytests.py", "core/python_items.py", "core/quant",
                  "routes/pynode_routes.py"):
         assert not (CONSOLE / gone).exists(), f"{gone} is the deleted console runtime"
-    server = ROOT / "drishti-server/src/main"
+    server = ROOT / "kernel/drishti-server/src/main"
     for p in list(server.rglob("*.java")) + list(server.rglob("*.yaml")):
         text = p.read_text(encoding="utf-8")
         for word in ("transform_cli", "/internal/py", "ConsolePythonRunner", "ProcessTransformRunner", "console-token"):

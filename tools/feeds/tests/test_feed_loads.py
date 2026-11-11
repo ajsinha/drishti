@@ -14,7 +14,7 @@
 
 """The java and python load routes into a temporary lake (its own lake file under DRISHTI_LAKES_DIR, its own root): the recorded test
 feed pulled, loaded, and loaded again for the same date (replace by date: the same rows, never twice). They need the server's exec jar
-(DRISHTI_JAR or drishti-server/target) and Java 21; without them they are skipped."""
+(DRISHTI_JAR or kernel/drishti-server/target) and Java 21; without them they are skipped."""
 from __future__ import annotations
 
 import json

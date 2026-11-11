@@ -113,7 +113,7 @@ def url_problem(url: str | None) -> str | None:
     """What makes a URL no address at all, or None when it is one (QA1-202, QA1-206): http or https, then a host that is a bracketed IPv6
     literal, an IPv4 address in four decimal parts, or a host name (labels of letters, digits and dashes between dots, the last starting
     with a letter, no dot at the end), then an optional port 1 to 65535 and path. Word for word the server's HostAddress.urlProblem; both
-    are tested on drishti-net/src/test/resources/net/advertise-urls.tsv
+    are tested on net/drishti-net/src/test/resources/net/advertise-urls.tsv
     (test_cli_net.py). Whether the host is one other machines can call is loopback_url."""
     u = "" if url is None else str(url)
     m = _URL.fullmatch(u)
