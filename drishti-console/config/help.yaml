@@ -199,8 +199,8 @@ moved:
   docs-guides-flight-java: docs-guides-flight-reference#72-java   # java folded into docs/guides/FLIGHT_REFERENCE.md
   docs-guides-flight-jdbc: docs-guides-flight-reference#73-jdbc-dbeaver-datagrip-any-jdbc-program   # jdbc folded into docs/guides/FLIGHT_REFERENCE.md
   docs-guides-flight-odbc: docs-guides-flight-reference#74-odbc-excel-power-bi-tableau   # odbc folded into docs/guides/FLIGHT_REFERENCE.md
-  docs-connectors-news: data-guide#8-connectors   # news folded into plugins/drishti-plugin-news/README.md
-  docs-connectors-yfinance: data-guide#8-connectors   # yfinance folded into plugins/drishti-plugin-yfinance/README.md
+  docs-connectors-news: data-guide#8-connectors   # news folded into docs/connectors/types/news/README.md
+  docs-connectors-yfinance: data-guide#8-connectors   # yfinance folded into docs/connectors/types/yfinance/README.md
   docs-connectors-reactive-connector: docs-connectors-types-reactive-readme   # reactive connector folded into docs/connectors/types/reactive/README.md
   docs-architecture-parametric-var: docs-guides-var-guide   # parametric var folded into docs/guides/VAR_GUIDE.md
   docs-architecture-var-playground: docs-guides-var-guide   # var playground folded into docs/guides/VAR_GUIDE.md
@@ -219,10 +219,10 @@ moved:
   docs-connectors-aerospike-connector: data-guide#8-connectors   # aerospike connector folded into plugins/drishti-plugin-aerospike/README.md
   docs-connectors-cassandra-connector: data-guide#8-connectors   # cassandra connector folded into plugins/drishti-plugin-cassandra/README.md
   docs-connectors-delta-connector: data-guide#8-connectors   # delta connector folded into plugins/drishti-plugin-delta/README.md
-  docs-connectors-demo-connector: data-guide#8-connectors   # demo connector folded into plugins/drishti-plugin-demo/README.md
+  docs-connectors-demo-connector: data-guide#8-connectors   # demo connector folded into docs/connectors/types/demo/README.md
   docs-connectors-duckdb-connector: data-guide#8-connectors   # duckdb connector folded into plugins/drishti-plugin-duckdb/README.md
-  docs-connectors-feeds-connector: data-guide#8-connectors   # feeds connector folded into plugins/drishti-plugin-feeds/README.md
-  docs-connectors-file-connector: data-guide#8-connectors   # file connector folded into plugins/drishti-plugin-file/README.md
+  docs-connectors-feeds-connector: data-guide#8-connectors   # feeds connector folded into docs/connectors/types/feed/README.md
+  docs-connectors-file-connector: data-guide#8-connectors   # file connector folded into docs/connectors/types/file/README.md
   docs-connectors-redis-connector: data-guide#8-connectors   # redis connector folded into plugins/drishti-plugin-redis/README.md
   docs-connectors-mongodb-connector: data-guide#8-connectors   # mongodb connector folded into plugins/drishti-plugin-mongodb/README.md
   docs-connectors-postgres-connector: data-guide#8-connectors   # postgres connector folded into plugins/drishti-plugin-jdbc/README.md
@@ -232,7 +232,7 @@ moved:
   docs-connectors-s3-connector: data-guide#8-connectors   # s3 connector folded into plugins/drishti-plugin-s3/README.md
   docs-connectors-kafka-connector: data-guide#8-connectors   # kafka connector folded into plugins/drishti-plugin-kafka/README.md
   docs-connectors-rabbitmq-connector: data-guide#8-connectors   # rabbitmq connector folded into plugins/drishti-plugin-rabbitmq/README.md
-  docs-connectors-rest-connector: data-guide#8-connectors   # rest connector folded into plugins/drishti-plugin-rest/README.md
+  docs-connectors-rest-connector: data-guide#8-connectors   # rest connector folded into docs/connectors/types/rest/README.md
   lake-guide: data-lake-guide   # docs/guides/DATA_LAKE_GUIDE.md folded into DATA_LAKE_GUIDE.md (2.9.11.d)
   docs-guides-lake-guide: data-lake-guide
   docs-architecture-data-load-rules: data-lake-guide#5-routing-business-dates-modes-repeats-and-undo   # DATA_LAKE_GUIDE.md folded into DATA_LAKE_GUIDE.md (2.9.11.d)

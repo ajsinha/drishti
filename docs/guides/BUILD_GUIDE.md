@@ -665,7 +665,7 @@ committed: the pack's Delta connector reads the lake its feed loads (`settings.l
 kind of a shipped pack has neither: no Delta connector with committed data, and none reading a lake an enabled feed fills with the kind.
 
 Real tickets live somewhere else; here, the ticketing system exports each business day's tickets as one JSON Lines file, the layout the `file`
-plugin reads ([the file connector](../../plugins/drishti-plugin-file/README.md)):
+plugin reads ([the file connector](../../docs/connectors/types/file/README.md)):
 
 ```text
 data/files/helpdesk/2026-10-16/ticket.jsonl      one ticket a line, the day's export

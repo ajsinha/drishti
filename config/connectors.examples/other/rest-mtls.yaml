@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 # Example: an HTTPS service on a private CA that also asks for a client certificate. Copy to config/connectors/rest-mtls.yaml.
-# See plugins/drishti-plugin-rest/README.md, section Security.
+# See docs/connectors/types/rest/README.md, section Security.
 plugin: rest
 kinds: [price]
 description: Prices from the pricing API over mutual TLS

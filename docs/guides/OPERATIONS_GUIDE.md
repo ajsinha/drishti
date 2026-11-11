@@ -1338,7 +1338,7 @@ Never write into the folder the server reads while it is half-finished: write el
   mv /srv/drishti/files/trading/.2026-10-05.part /srv/drishti/files/trading/2026-10-05      # the rename is atomic
   ```
 
-  A single file: write `<kind>.jsonl.tmp` and `mv` it into place ([the file connector](../../plugins/drishti-plugin-file/README.md)). A whole
+  A single file: write `<kind>.jsonl.tmp` and `mv` it into place ([the file connector](../../docs/connectors/types/file/README.md)). A whole
   root: build `files.new/`, then `mv files files.old && mv files.new files`; keep `files.old` for rollback.
 - **Delta lake**: a new commit is atomic, so `lake build` or `data ingest --lake` into the live lake is the normal daily route. To copy a finished
   lake or partitions, copy **the Parquet files first and `_delta_log/` last** (the log makes files visible):

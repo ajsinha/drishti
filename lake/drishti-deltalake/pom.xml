@@ -58,7 +58,7 @@
   </dependencies>
   <build>
     <plugins>
-      <!-- the test jar: drishti-memlake's tests reuse the Delta table reader (TableReader) -->
+      <!-- the test jar: the in-memory lake's tests (drishti-lakeload) reuse the Delta table reader (TableReader) -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>

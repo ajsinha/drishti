@@ -39,7 +39,7 @@ class LakeFileWritesTest {
     /** The repository root (the module's parent folder, where config/ is). */
     static final Path REPO = Path.of("").toAbsolutePath().getParent();
     static final Path DEMO = REPO.resolve("config/lakes/demo.yaml");
-    static final Path DEMO_JAR = REPO.resolve("drishti-lakeconfig/src/main/resources/drishti/lakes/demo.yaml");
+    static final Path DEMO_JAR = REPO.resolve("lake/drishti-lakeio/src/main/resources/drishti/lakes/demo.yaml");
 
     @TempDir
     Path tmp;

@@ -396,7 +396,7 @@ def engine_rows() -> tuple[list[Row], list[str]]:
         problems.append(f"config/engines/{name}: no engine of the catalogue (kernel/drishti-server/src/main/resources/engines/catalogue.yaml) names it")
     lakes = ROOT / "config" / "lakes"                                               # the shipped lake files and their jar copies (Lakes):
     for lake in sorted([*lakes.glob("*.yaml"), *lakes.glob("*/*.yaml")]):            # a domain folder's in its module's jar
-        module = ROOT / ("drishti-lakeconfig" if lake.parent == lakes else f"drishti-{lake.parent.name}")
+        module = ROOT / ("lake/drishti-lakeio" if lake.parent == lakes else f"drishti-{lake.parent.name}")
         if not (module / "src").is_dir():                                          # a domain module laid out on its own: modules/<domain>/ (a folder left with only an old build's target/ is not a module)
             module = next((m for m in sorted((ROOT / "modules" / lake.parent.name).glob("*")) if (m / "src/main/resources/drishti/lakes" / lake.name).is_file()), module)
         jar = module / "src/main/resources/drishti/lakes" / lake.name

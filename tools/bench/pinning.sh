@@ -48,7 +48,7 @@ cmd_data() {
   uv run -q --with pyyaml python tools/packgen/banking/make_data.py --jsonl "$D/build/banking.tar"
   uv run -q "${WITH[@]}" python tools/samplegen/bulk_trades.py --trades "$TRADES" --days 3 --jsonl "$D/build/bulk-trades.tar"
   local fcp dcp
-  fcp="plugins/drishti-plugin-file/target/classes:$(classpath plugins/drishti-plugin-file)"
+  fcp="plugins/drishti-connectors/target/classes:$(classpath :drishti-connectors)"
   dcp="plugins/drishti-plugin-duckdb/target/classes:$(classpath plugins/drishti-plugin-duckdb)"
   rm -rf "$D/files" "$D/drishti.duckdb"
   mkdir -p "$D/tmp"                                  # the loaders' JVM temp folder: DuckDB unpacks its native library there, not in /tmp

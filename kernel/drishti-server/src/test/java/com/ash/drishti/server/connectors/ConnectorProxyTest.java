@@ -54,7 +54,7 @@ class ConnectorProxyTest {
 
     @BeforeAll
     static void start() throws Exception {
-        byte[] csv = Files.readAllBytes(Path.of("../../plugins/drishti-plugin-feeds/src/test/resources/recorded/ecb-estr.csv"));
+        byte[] csv = Files.readAllBytes(Path.of("../../plugins/drishti-connectors/src/test/resources/recorded/ecb-estr.csv"));
         feed = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         feed.createContext("/", ex -> {
             ex.sendResponseHeaders(200, csv.length);

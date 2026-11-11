@@ -40,8 +40,8 @@ done
 # loader rows by the load rules (docs/guides/DATA_LAKE_GUIDE.md): tars of <kind>/<YYYY-MM-DD>/ folders, each row under its folder's date
 ROWS="$DATA/build/loader-rows"; rm -rf "$ROWS"; mkdir -p "$ROWS"
 uv run -q --with pyyaml python tools/packgen/banking/make_data.py --jsonl "$ROWS/banking.tar"
-./mvnw -q -o install -DskipTests -pl plugins/drishti-plugin-file -am
-CP="plugins/drishti-plugin-file/target/classes:$(./mvnw -q -o dependency:build-classpath -pl plugins/drishti-plugin-file -Dmdep.outputFile=/dev/stdout)"
+./mvnw -q -o install -DskipTests -pl :drishti-connectors -am
+CP="plugins/drishti-connectors/target/classes:$(./mvnw -q -o dependency:build-classpath -pl :drishti-connectors -Dmdep.outputFile=/dev/stdout)"
 "$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -Djdk.nio.maxCachedBufferSize=262144 -cp "$CP" com.ash.drishti.plugin.file.JsonlLoader "$ROWS/banking.tar" "$ROOT" "${OPTS[@]}"
 if [[ -n "$TRADES" ]]; then
   # the bulk book straight from the generator into the loader: no intermediate file

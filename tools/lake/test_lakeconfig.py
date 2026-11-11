@@ -14,7 +14,7 @@
 
 """The Python side of the lake files (tools/lake/lakeconfig.py): the one Java reader's JSON for a table, the refusal of a kind the lake
 file lacks, lake build refusing a --partition-by that contradicts the lake file, and the shipped demo lake read whole. Skipped where
-no Java reader can be found (no exec jar, no compiled drishti-lakeconfig). Every file is written under a temporary folder."""
+no Java reader can be found (no exec jar, no compiled drishti-lakeio). Every file is written under a temporary folder."""
 from __future__ import annotations
 
 import argparse
@@ -36,7 +36,7 @@ def _reader() -> bool:
         return False
 
 
-pytestmark = pytest.mark.skipif(not _reader(), reason="no Java lake reader (build drishti-lakeconfig or the server jar)")
+pytestmark = pytest.mark.skipif(not _reader(), reason="no Java lake reader (build drishti-lakeio or the server jar)")
 
 LAKE = """lake: main
 root: {root}

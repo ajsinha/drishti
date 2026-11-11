@@ -181,16 +181,16 @@ not as a link.
 | Serve millions of entities a day from Aerospike, with recent history there and years in Delta Lake | [AEROSPIKE_CONNECTOR.md](../plugins/drishti-plugin-aerospike/README.md) |
 | Read from Apache Cassandra, ScyllaDB or DataStax Astra: the table layout, the loader, days that appear whole | [CASSANDRA_CONNECTOR.md](../plugins/drishti-plugin-cassandra/README.md) |
 | Serve millions of entities a day from PostgreSQL | [POSTGRES_CONNECTOR.md](../plugins/drishti-plugin-jdbc/README.md) |
-| Serve data from plain JSON-lines files, the simplest store | [FILE_CONNECTOR.md](../plugins/drishti-plugin-file/README.md) |
+| Serve data from plain JSON-lines files, the simplest store | [FILE_CONNECTOR.md](../docs/connectors/types/file/README.md) |
 | Serve documents kept as JSON objects in S3, MinIO or another S3-compatible store | [S3_CONNECTOR.md](../plugins/drishti-plugin-s3/README.md) |
-| Read entities from an in-house HTTP/JSON service, one request per view | [REST_CONNECTOR.md](../plugins/drishti-plugin-rest/README.md) |
+| Read entities from an in-house HTTP/JSON service, one request per view | [REST_CONNECTOR.md](../docs/connectors/types/rest/README.md) |
 | Show live entities from Kafka topics, with history from a lake | [KAFKA_CONNECTOR.md](../plugins/drishti-plugin-kafka/README.md) |
 | Send connectors, AI providers and MCP servers through an outbound HTTP proxy (login, no-proxy list, https via CONNECT) | [DATA_GUIDE.md section 10: proxy](guides/DATA_GUIDE.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers) |
 | Connect a connector over TLS: private CA, PEM or PKCS12/JKS files, mutual TLS, Confluent Cloud, SASL | [DATA_GUIDE.md section 10](guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy), [KAFKA_CONNECTOR.md › Security](../plugins/drishti-plugin-kafka/README.md#security-tls-sasl-and-confluent) |
 | Show live entities from ActiveMQ queues or topics | [ACTIVEMQ_CONNECTOR.md](../plugins/drishti-plugin-activemq/README.md) |
 | Show live entities from RabbitMQ queues | [RABBITMQ_CONNECTOR.md](../plugins/drishti-plugin-rabbitmq/README.md) |
-| Serve public rates and FX (NY Fed SOFR, ECB €STR and FX, US Treasury, FRED) | [FEEDS_CONNECTOR.md](../plugins/drishti-plugin-feeds/README.md) |
-| Write a connector that computes its data on demand, and see two (news headlines for a name, a quote for a ticker) | [NEWS.md](../plugins/drishti-plugin-news/README.md), [YFINANCE.md](../plugins/drishti-plugin-yfinance/README.md), [DEVELOPER_GUIDE.md › Connectors that compute data on demand](guides/DEVELOPER_GUIDE.md#1011-connectors-that-compute-data-on-demand) |
+| Serve public rates and FX (NY Fed SOFR, ECB €STR and FX, US Treasury, FRED) | [FEEDS_CONNECTOR.md](../docs/connectors/types/feed/README.md) |
+| Write a connector that computes its data on demand, and see two (news headlines for a name, a quote for a ticker) | [NEWS.md](../docs/connectors/types/news/README.md), [YFINANCE.md](../docs/connectors/types/yfinance/README.md), [DEVELOPER_GUIDE.md › Connectors that compute data on demand](guides/DEVELOPER_GUIDE.md#1011-connectors-that-compute-data-on-demand) |
 | Compute a kind when a screen asks for it (typed parameters, a Python or Java engine, progress on the panel, recomputed on events) | [REACTIVE_CONNECTOR.md](connectors/types/reactive/README.md), [tutorial 19, Part C](tutorials/19-build-a-pack-and-a-screen.md#part-c--computed-panels-a-reactive-connector) |
 | Measure VaR and ES for any set of trades, drill from the bank to a trade, capture and backtest, size the memory | [VAR_GUIDE.md](guides/VAR_GUIDE.md) (Part II is the data contract), [tutorial 2, Part A](tutorials/02-var-from-the-bank-to-a-trade.md#part-a--historical-var-from-the-bank-to-a-trade) |
 | Compute FRTB-SA market-risk capital for any scope from the positions' sensitivities, critique each method choice and reproduce a run | [FRTB_SA_GUIDE.md](guides/FRTB_SA_GUIDE.md), [tutorial 4](tutorials/04-frtb-sa.md) |
@@ -199,10 +199,10 @@ not as a link.
 | Pivot any table, or VaR, with nested rows opened lazily and every total made from its own members; chart a selection; export to Excel with outline and formulas only where a figure adds up | [PIVOT_GUIDE.md](guides/PIVOT_GUIDE.md), [tutorial 7, Part A](tutorials/07-pivot-cubes-and-explain.md#part-a--the-pivot-engine-trades-by-product-legs-by-desk-then-var-by-desk) |
 | Write your own aggregation function (formula, SQL macro, Python, Java), prove it with the harness, share it after approval; explain why a figure moved in steps that add up; try a what-if | [PIVOT_GUIDE.md sections 19 to 22](guides/PIVOT_GUIDE.md#19-custom-functions), [tutorial 7, Part B](tutorials/07-pivot-cubes-and-explain.md#part-b--custom-functions-why-did-it-move-and-what-if) |
 | Measure counterparty exposure (EE, PFE, EPE, EEPE) for any scope, drill from the bank to a trade, collateral and netting, pre-deal what-if, official results | [EXPOSURE_GUIDE.md](guides/EXPOSURE_GUIDE.md) (Part II is the data contract), [tutorial 3](tutorials/03-exposure-from-the-bank-to-a-trade.md) |
-| Switch on the Yahoo Finance quote connector | [YFINANCE.md](../plugins/drishti-plugin-yfinance/README.md) |
-| See what the sample connector serves and how to switch it off | [DEMO_CONNECTOR.md](../plugins/drishti-plugin-demo/README.md) |
+| Switch on the Yahoo Finance quote connector | [YFINANCE.md](../docs/connectors/types/yfinance/README.md) |
+| See what the sample connector serves and how to switch it off | [DEMO_CONNECTOR.md](../docs/connectors/types/demo/README.md) |
 | Connect your data in the short version (a connector file) | [guides/DATA_GUIDE.md section 8](guides/DATA_GUIDE.md#8-connectors) |
-| Understand the sample data every pack ships, and its live ticks | [DEMO_CONNECTOR.md](../plugins/drishti-plugin-demo/README.md) |
+| Understand the sample data every pack ships, and its live ticks | [DEMO_CONNECTOR.md](../docs/connectors/types/demo/README.md) |
 | Read your own database with your own SQL: several queries per kind | [JDBC_QUERIES.md](../plugins/drishti-plugin-jdbc/README.md#query-mode-the-queries) |
 | Serve millions of entities a day from Apache Iceberg (Snowflake, Glue, Polaris, Trino) | [ICEBERG_CONNECTOR.md](../plugins/drishti-plugin-iceberg/README.md) |
 | Serve Iceberg tables your Spark or Snowflake pipelines already write | [ICEBERG_EXTERNAL_CONNECTOR.md](../plugins/drishti-plugin-iceberg-external/README.md) |
@@ -372,9 +372,9 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 | [guides/DATA_GUIDE.md section 9](guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) | you define connectors: one YAML file each in `config/connectors`, an example per store, how packs and files fit, live reload, Admin → Connectors, the API and CLI, moving off `application.yaml` |
 | [DATA_GUIDE.md section 10](guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy) | a connector must talk TLS: the shared `tls.*` settings, PEM, PKCS12 and JKS, mutual TLS, converting certificates, expiry warnings, rotation, troubleshooting |
 | [DATA_GUIDE.md section 10: proxy](guides/DATA_GUIDE.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers) | a site reaches the internet only through a forward proxy: `proxy:` per connector, AI provider or MCP server, the site default `drishti.http.proxy.*`, no-proxy, https via CONNECT, masking, what each connector does, troubleshooting |
-| [DEMO_CONNECTOR.md](../plugins/drishti-plugin-demo/README.md) | you want to know what the sample connector serves, how it ticks, how packs supply samples, and how to switch it off |
+| [DEMO_CONNECTOR.md](../docs/connectors/types/demo/README.md) | you want to know what the sample connector serves, how it ticks, how packs supply samples, and how to switch it off |
 | [guides/DATA_GUIDE.md section 11](guides/DATA_GUIDE.md#11-the-demo-data) | you need demo data in Delta Lake, PostgreSQL or Aerospike, small for a laptop or a million trades a day |
-| [FILE_CONNECTOR.md](../plugins/drishti-plugin-file/README.md) | you serve data from JSON-lines files: the layout, one file per kind per day, the index of a day, loading, sizes, measurements |
+| [FILE_CONNECTOR.md](../docs/connectors/types/file/README.md) | you serve data from JSON-lines files: the layout, one file per kind per day, the index of a day, loading, sizes, measurements |
 | [DELTA_CONNECTOR.md](../plugins/drishti-plugin-delta/README.md) | you run Drishti over a large Delta Lake (a million trades a day for seven years): layout, writers, reads, memory, maintenance, measurements, and the two engines (native without Hadoop, or Hadoop) |
 | [ICEBERG_CONNECTOR.md](../plugins/drishti-plugin-iceberg/README.md) | you run Drishti over Apache Iceberg: the layout, path-based and REST catalogs, delete files, time travel, the loader and maintenance, sizing, measurements, and the two engines (native without Hadoop, or the Iceberg library) |
 | [ICEBERG_EXTERNAL_CONNECTOR.md](../plugins/drishti-plugin-iceberg-external/README.md) | you serve Iceberg tables other engines write (Spark, Snowflake, Glue, Flink, dbt): rows as documents, ids and dates from columns or the table's metadata, every column searchable, an id index for unsorted tables, read-only |
@@ -386,10 +386,10 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 | [AEROSPIKE_CONNECTOR.md](../plugins/drishti-plugin-aerospike/README.md) | you run Drishti on Aerospike at scale: record layout, loader, partition-parallel scans, TTL retention, sizing, measurements |
 | [CASSANDRA_CONNECTOR.md](../plugins/drishti-plugin-cassandra/README.md) | you run Drishti on Apache Cassandra, ScyllaDB or Astra: table layout, generations, the loader, retention, sizing, measurements |
 | [S3_CONNECTOR.md](../plugins/drishti-plugin-s3/README.md) | you serve documents from S3 or an S3-compatible store: the key layout, listing and caching, credentials, cost of large buckets |
-| [REST_CONNECTOR.md](../plugins/drishti-plugin-rest/README.md) | you read entities from an HTTP/JSON service: paths, headers, generations, timeouts, what it cannot do, load on the service |
-| [FEEDS_CONNECTOR.md](../plugins/drishti-plugin-feeds/README.md) | you switch on the public feeds: each source's URL and parsing, entities and ids, schedules, history, offline mirrors |
-| [NEWS.md](../plugins/drishti-plugin-news/README.md) | you switch on the news connector or write one like it: ids, the filtering steps, settings, privacy, failures, how it is built |
-| [YFINANCE.md](../plugins/drishti-plugin-yfinance/README.md) | you switch on the Yahoo Finance quote connector (samples only): ids, figures, settings, failures |
+| [REST_CONNECTOR.md](../docs/connectors/types/rest/README.md) | you read entities from an HTTP/JSON service: paths, headers, generations, timeouts, what it cannot do, load on the service |
+| [FEEDS_CONNECTOR.md](../docs/connectors/types/feed/README.md) | you switch on the public feeds: each source's URL and parsing, entities and ids, schedules, history, offline mirrors |
+| [NEWS.md](../docs/connectors/types/news/README.md) | you switch on the news connector or write one like it: ids, the filtering steps, settings, privacy, failures, how it is built |
+| [YFINANCE.md](../docs/connectors/types/yfinance/README.md) | you switch on the Yahoo Finance quote connector (samples only): ids, figures, settings, failures |
 | [KAFKA_CONNECTOR.md](../plugins/drishti-plugin-kafka/README.md) | you serve live entities from Kafka: state and ticks modes, the index and disk cache, offsets, ordering, restarts, reconnection, pairing with a lake; TLS, SASL, Confluent and Schema Registry |
 | [ACTIVEMQ_CONNECTOR.md](../plugins/drishti-plugin-activemq/README.md) | you serve live entities from ActiveMQ: queues and durable topics, the state store, its durability and disk budget, acknowledgement, failover, sizing |
 | [RABBITMQ_CONNECTOR.md](../plugins/drishti-plugin-rabbitmq/README.md) | you serve live entities from RabbitMQ: queues and bindings, prefetch and acknowledgement, the state store, its durability and disk budget, recovery, sizing |

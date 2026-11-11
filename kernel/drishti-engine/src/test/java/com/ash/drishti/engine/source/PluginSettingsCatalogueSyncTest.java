@@ -52,6 +52,9 @@ class PluginSettingsCatalogueSyncTest {
     /** The shared base class of the message-queue connectors (in drishti-common), scanned with each of them. */
     private static final String MESSAGING = "kernel/drishti-common/src/main/java/com/ash/drishti/messaging";
 
+    /** The built-in connectors (drishti-connectors), one package each. */
+    private static final String BUILT_IN = "plugins/drishti-connectors/src/main/java/com/ash/drishti/plugin/";
+
     /** The plugin source folders (relative to the repository root); a messaging connector also runs the shared base class. */
     private static final Map<String, List<String>> SOURCES = Map.ofEntries(
             Map.entry("jdbc", List.of("plugins/drishti-plugin-jdbc")), Map.entry("duckdb", List.of("plugins/drishti-plugin-duckdb")),
@@ -59,10 +62,10 @@ class PluginSettingsCatalogueSyncTest {
             Map.entry("iceberg-external", List.of("plugins/drishti-plugin-iceberg-external")),
             Map.entry("aerospike", List.of("plugins/drishti-plugin-aerospike")), Map.entry("cassandra", List.of("plugins/drishti-plugin-cassandra")),
             Map.entry("mongodb", List.of("plugins/drishti-plugin-mongodb")),
-            Map.entry("redis", List.of("plugins/drishti-plugin-redis")), Map.entry("file", List.of("plugins/drishti-plugin-file")),
-            Map.entry("demo", List.of("plugins/drishti-plugin-demo")), Map.entry("feed", List.of("plugins/drishti-plugin-feeds")),
-            Map.entry("news", List.of("plugins/drishti-plugin-news")), Map.entry("yfinance", List.of("plugins/drishti-plugin-yfinance")),
-            Map.entry("rest", List.of("plugins/drishti-plugin-rest")), Map.entry("s3", List.of("plugins/drishti-plugin-s3")),
+            Map.entry("redis", List.of("plugins/drishti-plugin-redis")), Map.entry("file", List.of(BUILT_IN + "file")),
+            Map.entry("demo", List.of(BUILT_IN + "demo")), Map.entry("feed", List.of(BUILT_IN + "feeds")),
+            Map.entry("news", List.of(BUILT_IN + "news")), Map.entry("yfinance", List.of(BUILT_IN + "yfinance")),
+            Map.entry("rest", List.of(BUILT_IN + "rest")), Map.entry("s3", List.of("plugins/drishti-plugin-s3")),
             Map.entry("kafka", List.of("plugins/drishti-plugin-kafka")),
             Map.entry("activemq", List.of("plugins/drishti-plugin-activemq", MESSAGING)),
             Map.entry("rabbitmq", List.of("plugins/drishti-plugin-rabbitmq", MESSAGING)));

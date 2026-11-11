@@ -26,7 +26,7 @@ files:
 - reference-store.yaml
 - risk-store.yaml
 - trading-store.yaml
-doc: plugins/drishti-plugin-file/README.md
+doc: docs/connectors/types/file/README.md
 ---
 # File connector templates
 
@@ -51,7 +51,7 @@ promoted columns: add the pack's `layout.<kind>.columns` to a copied file for fa
 
 The root holds a folder per domain, a folder per business date in it, and one JSON-lines file per kind per date; each line is a
 loaders' row (`domain`, `kind`, `id`, `date`, `doc`, `columns`) or a plain document (see the
-[file connector README](../../../plugins/drishti-plugin-file/README.md)).
+[file connector README](../../../docs/connectors/types/file/README.md)).
 
 | Folder | Files (`<kind>.jsonl`) the connector file serves |
 |---|---|
@@ -92,5 +92,5 @@ Set `DRISHTI_FILES_ROOT` when the folders are elsewhere. `trading-store.yaml` is
 
 ## See also
 
-- The [file connector README](../../../plugins/drishti-plugin-file/README.md).
+- The [file connector README](../../../docs/connectors/types/file/README.md).
 - [Connector files](../../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) (copying examples, the trade union note) and [Demo data](../../../docs/guides/DATA_GUIDE.md#11-the-demo-data).

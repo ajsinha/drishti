@@ -15,10 +15,10 @@
 """The lake files (``config/lakes/<lake>.yaml``, docs/guides/DATA_LAKE_GUIDE.md) for the Python tools: ``lake build``, ``lake demo``,
 ``build_demo_lakes.py``, ``lake check``, ``lake show`` and ``lake migrate-config``.
 
-There is ONE reader of the lake files, in Java (drishti-lakeconfig, ``com.ash.drishti.lakeconfig.LakesCli``): this module runs it and
+There is ONE reader of the lake files, in Java (drishti-lakeio, ``com.ash.drishti.lakeconfig.LakesCli``): this module runs it and
 reads its JSON, so the rules (defaults, ``${ENV}`` references, checks, the pack-entry rule) exist once. The Java is found as the parallel
 loader is: ``DRISHTI_LAKE_CLASSPATH`` (development), else the server's exec jar (``-Dloader.main``), else this checkout's
-``drishti-lakeconfig/target/classes`` with Jackson from the local Maven repository (after ``mvn compile``)."""
+``lake/drishti-lakeio/target/classes`` with Jackson from the local Maven repository (after ``mvn compile``)."""
 from __future__ import annotations
 
 import functools
@@ -71,10 +71,10 @@ def _jars(m2: pathlib.Path, group: str, art: str) -> dict[str, pathlib.Path]:
 
 
 def _maven_classpath() -> str | None:
-    """The compiled drishti-lakeconfig with Jackson from the local Maven repository: databind, core and the YAML format of ONE version
+    """The compiled drishti-lakeio with Jackson from the local Maven repository: databind, core and the YAML format of ONE version
     (the newest present for all three; the annotations of that version or its minor line), never the newest of each (a mixed Jackson
     fails with NoSuchMethodError before a lake file is read)."""
-    classes = ROOT / "drishti-lakeconfig" / "target" / "classes"
+    classes = ROOT / "lake/drishti-lakeio" / "target" / "classes"
     if not (classes / "com" / "ash" / "drishti" / "lakeconfig" / "LakesCli.class").is_file():
         return None
     m2 = pathlib.Path(os.environ.get("MAVEN_REPO") or pathlib.Path.home() / ".m2" / "repository")
@@ -117,7 +117,7 @@ def command(jar: str | None = None, java: str | None = None) -> list[str]:
     if cp:
         return java_cmd(java_bin, ["-cp", cp, MAIN])
     raise LakeConfigError("cannot read the lake files: no server exec jar (DRISHTI_JAR, kernel/drishti-server/target) and no compiled "
-                          "drishti-lakeconfig (mvn -pl drishti-lakeconfig compile); DRISHTI_LAKE_CLASSPATH names one")
+                          "drishti-lakeio (mvn -pl :drishti-lakeio compile); DRISHTI_LAKE_CLASSPATH names one")
 
 
 def run(args: list[str], folder: pathlib.Path | None = None, jar: str | None = None, java: str | None = None) -> dict:

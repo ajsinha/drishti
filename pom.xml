@@ -61,9 +61,7 @@
     <module>compute/drishti-bicompute</module>
     <module>net/drishti-flight</module>
     <module>compute/drishti-tables</module>
-    <module>plugins/drishti-plugin-demo</module>
-    <module>plugins/drishti-plugin-file</module>
-    <module>plugins/drishti-plugin-rest</module>
+    <module>plugins/drishti-connectors</module>
     <module>plugins/drishti-plugin-jdbc</module>
     <module>plugins/drishti-plugin-delta</module>
     <module>plugins/drishti-plugin-aerospike</module>
@@ -73,9 +71,6 @@
     <module>plugins/drishti-plugin-iceberg</module>
     <module>plugins/drishti-plugin-iceberg-external</module>
     <module>plugins/drishti-plugin-duckdb</module>
-    <module>plugins/drishti-plugin-feeds</module>
-    <module>plugins/drishti-plugin-news</module>
-    <module>plugins/drishti-plugin-yfinance</module>
     <module>plugins/drishti-plugin-kafka</module>
     <module>plugins/drishti-plugin-activemq</module>
     <module>plugins/drishti-plugin-rabbitmq</module>
@@ -170,8 +165,7 @@
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-engine</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-identity</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-packs</artifactId><version>${project.version}</version></dependency>
-      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-demo</artifactId><version>${project.version}</version></dependency>
-      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-file</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-connectors</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-delta</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-aerospike</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-cassandra</artifactId><version>${project.version}</version></dependency>
@@ -197,11 +191,7 @@
       <dependency><groupId>org.apache.arrow</groupId><artifactId>flight-core</artifactId><version>${arrow.version}</version></dependency>
       <dependency><groupId>org.apache.arrow</groupId><artifactId>flight-sql</artifactId><version>${arrow.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-flight</artifactId><version>${project.version}</version></dependency>
-      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-feeds</artifactId><version>${project.version}</version></dependency>
-      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-news</artifactId><version>${project.version}</version></dependency>
-      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-yfinance</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-kafka</artifactId><version>${project.version}</version></dependency>
-      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-rest</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-jdbc</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-server</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-server</artifactId><version>${project.version}</version><type>test-jar</type><scope>test</scope></dependency>
