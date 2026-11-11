@@ -17,6 +17,15 @@
 
 ## Unreleased
 
+- **A module's computed kinds start the connectors that name them**: a loaded module's `KindProvider` that a connector file names (banking's
+  `var-system-baskets` and `var-positions`) is installed as that connector's type, as a `SourcePlugin` extension is, so `PORT <id>` opens the
+  system basket's page again and `POS <id>` the position's; before, the provider was routed as a source of its own while the file's
+  connector kept failing with "no plugin named". Module pages (`kernel/page.html`) load drishti-grid's sheet, so the World landing's grids
+  scroll inside themselves on a phone.
+- **The visual snapshots run in a file of their own** (`test_page_snapshots_browser.py`, its own server over the page walk's cached lake), so
+  the walk and the snapshots each fit the drill's re-run time limit; the snapshots mask the checkout's folder (a worktree's or the drill's)
+  and the real day local or UTC (a server's UTC stamp after 19:00 in New York), and the goldens that showed a checkout's folder (White
+  label, Cluster → Modules, Connectors, Curves) are refreshed.
 - **The console's distribution follows the server's module list**: `drishti-console/core/distribution.py` reads the modules from the
   server's one reader (`GET /public/modules/manifests`: shipped and installed `.dmod` packages, then the manifests folder) and reads
   them again when `/public/about`'s `manifests` fingerprint changes, so a package installed after the start joins a running console's
