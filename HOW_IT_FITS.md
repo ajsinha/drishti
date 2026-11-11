@@ -10,6 +10,43 @@ A short tour for someone new to Drishti: an architect at a bank, a developer, an
 idea, one small real example each. The long references are linked at the end; this page only shows how the pieces connect.
 Also as a [PDF](HOW_IT_FITS.pdf).
 
+## The house
+
+![The street: the Drishti Risk, Drishti Finance and Drishti All houses (distributions) stand side by side on one long foundation, the kernel, whose utilities are lakes and connectors (water), compute engines (power), Rachana and BI (common language and tools), security and the cluster. Rooms are modules; market data is the same room in Risk, Finance and All. Each house has one front door, its console, with Health by the door; pipes from the foundation are data bindings. A new room, a .dmod package, slides in like a Linux driver](docs/how-it-fits/house-street.svg)
+
+Think of Drishti as a street of houses built on one foundation:
+
+| In the house | In Drishti |
+|---|---|
+| **the foundation and its utilities** (water, power, a common language, locks, the estate's grid) | **the kernel**: lakes and connectors, compute engines, Rachana and BI, security, the cluster |
+| **a house** | **a distribution** (Drishti Risk, Drishti Finance; Drishti All is the show home with every room) |
+| **a room** | **a module** (banking, economy, capital markets); **market data** is one room shared by every house that needs it |
+| **the front door** | **the console**, one per house |
+| **a shelf** | **a workspace** (a lens): it arranges the books, never locks them; one book can stand on two shelves |
+| **a book** | **a screen** (a page, a dashboard, a Sutra) |
+| **a pipe** | **a data binding**: which connector brings each kind of data into the rooms |
+| **the buildings on the estate** | **placement**: which nodes of the cluster run which part of a module |
+| **a renovation with a permit** | **a deploy**: planned, approved by a second administrator, then done on every placed node together |
+| **the manager's office** | **Admin** |
+| **the dashboard by the door** | **Health** |
+| **the keys** | **access rights** (who may enter which room and read which book) |
+
+**The rule: every function has one room, every room one door, every setting one switch on one wall.** A command word belongs to
+exactly one module; the module is reached through one console; each setting is switched in one place (its file and its Admin page),
+never in two.
+
+**The Linux parallel.** The same idea in software everyone knows:
+
+| Drishti | Linux (and Tomcat) |
+|---|---|
+| the kernel | the Linux kernel |
+| a module (`.dmod`) | a driver (`.ko`), built apart and checked against the kernel it loads into |
+| a first-party module | an in-tree driver, shipped with the kernel's own source |
+| a third-party module | an out-of-tree driver |
+| a distribution | a distro: one kernel, a chosen set of packages, its own name |
+| the `modules/` drop-in folder | Tomcat's `webapps/`: drop a package in and it deploys |
+| the console | the desktop you sign in to |
+
 ## Contents
 
 1. [The three building blocks](#1-the-three-building-blocks)
@@ -102,9 +139,17 @@ loaded.
 
 Every other kernel class is hidden from a module, except a verified first-party module's allowance.
 
-**Two analogies.** A module is to the kernel what a **Linux driver** is to Linux: built apart, version-checked against the kernel
-(`vermagic` here is the kernel range, or the exact build for an allowance), in-tree (first-party) or out-of-tree (third-party). And the
-server's folders work like **Tomcat**'s: `modules/` is `webapps/` (drop a package in, it deploys), `lib/` is Tomcat's `lib/` (shared jars).
+**The Linux parallel, in detail** (the table is in [The house](#the-house)): the driver's `vermagic` here is the module's kernel range,
+or the exact build for an allowance; the server's `lib/` folder is Tomcat's `lib/` (shared jars).
+
+### Inside one house: rooms, shelves and books
+
+![The cutaway: one house, Drishti Finance, in cross-section. Its rooms are modules (economy, capital markets, market data); the capital markets room is opened to show shelves (workspaces) holding books (screens: the fund page, dashboards, forms, Sutras), one book on two shelves; the front door is the console with the keys (access rights) and Health beside it; Admin is the manager's office; pipes (bindings) run from the kernel's module interface up into the rooms; the kernel's layers are Rachana and BI, compute, security, lakes and connectors and the cluster; a deploy is a renovation with a four-eyes permit; and a panel gives the Linux parallel](docs/how-it-fits/house-cutaway.svg)
+
+A module (a room) brings its **screens** (books): pages, dashboards, forms and Sutras, in its packs and its console part. A
+**workspace** (a lens, a shelf) only arranges screens for one kind of person; it never owns or locks them, so the fund page stands on
+the Markets shelf and the World shelf at once. A screen gets its data through the room's **bindings** (pipes) from the kernel, and the
+person sees it only with the **keys**: the access rights checked on every call.
 
 **Example.** `banking-1.0.0.dmod` says `origin: first-party`, `requires: market-data`, function `VAR` at `/api/v1/risk/var`, engines
 `var`, `exposure`, `frtb-sa`, `simm` and the packs `trading`, `market-risk`, `counterparty-risk`. The genomics sample says
