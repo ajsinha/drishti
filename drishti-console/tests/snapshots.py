@@ -172,13 +172,14 @@ def summary(path: str) -> list[str]:
     if not p.is_file():
         return []
     rows = [json.loads(line) for line in p.read_text(encoding="utf-8").splitlines() if line.strip()]
-    return [f"{r['page']} {r['width']} {r['theme']}: {r['share']:.2%} changed, {r['diff']}" for r in rows if r["changed"]]
+    groups = [f"group {r['group']}: {r['signal']} captured on the drawn signal, {r['fallback']} by the fallback" for r in rows if "group" in r]
+    return groups + [f"{r['page']} {r['width']} {r['theme']}: {r['share']:.2%} changed, {r['diff']}" for r in rows if r.get("changed")]
 
 
 if __name__ == "__main__":   # the drill's summary: python3 drishti-console/tests/snapshots.py <data>/drill/snapshots.jsonl
     import sys
 
     lines = summary(sys.argv[1])
-    print(f"drill: visual snapshots: {len(lines)} changed" + (":" if lines else ""))
+    print(f"drill: visual snapshots: {sum(1 for x in lines if not x.startswith('group '))} changed" + (":" if lines else ""))
     for line in lines:
         print("  " + line)

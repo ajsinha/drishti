@@ -201,5 +201,6 @@ def run_group(group: str, stack, browser, request, tmp_path) -> None:
                 pg.context.close()
     print(f"snapshots {group}: {stats.get('signal', 0)} captured on the drawn signal, {stats.get('fallback', 0)} by the fallback; seconds per page:"
           f" {stats.get('secs', {})}")
+    snapshots._report({"group": group, "signal": stats.get("signal", 0), "fallback": stats.get("fallback", 0), "secs": stats.get("secs", {})})
     assert not faults, "pages with faults:\n" + "\n".join(faults)
     assert not changed, "pages that look different from their golden (refresh with --update-snapshots when meant):\n" + "\n".join(changed)
