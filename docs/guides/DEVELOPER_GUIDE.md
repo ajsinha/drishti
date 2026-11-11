@@ -3845,10 +3845,13 @@ the file in the console's static folder, `drishti-console/web/static/img/`, name
 and write `/static/img/drishti_<name>.<ext>`; or give a `data:` URL. The logo is drawn as an image in the top bar and on the public
 pages, so any format a browser draws (SVG best, PNG, WebP); the favicon is the page's icon link, so SVG, PNG or ICO.
 
-**2. Make its modules known.** A distribution reads each module's own manifest from the manifests folder
-(`drishti.module-manifests-dir`, console `module_manifests_dir`, default `./modules`): `modules/<id>/module.yaml`, an SDK project's
-`modules/<id>/src/dmod/module.yaml`, or `modules/<id>/dmod/module.yaml`. That is where its words, menus, packs and Help come from;
-a module with `required: false` and no manifest there adds none.
+**2. Make its modules known.** A distribution reads each module's own manifest, with the same package reader as the module registry:
+the `.dmod` packages the server ships and those installed in the module store (`<data folder>/modules/installed/`, the package's
+manifest winning), then the manifests folder (`drishti.module-manifests-dir`, default `./modules`; the console's own filter,
+`module_manifests_dir`, reads this folder only):
+`modules/<id>/module.yaml`, an SDK project's `modules/<id>/src/dmod/module.yaml`, or `modules/<id>/dmod/module.yaml`. So a third-party
+`.dmod` installed once (dropped in, or deployed) is listed by its id with nothing copied into `modules/`. That is where its words, menus,
+packs and Help come from; a module with `required: false` and no manifest anywhere adds none.
 
 **3. Start it**: `bin/start-all.sh --distribution freight` (`bin\start-all.ps1 -Distribution freight`), or `bin/start-server.sh` and
 `bin/start-console.sh` each with `--distribution freight`, or `DRISHTI_DISTRIBUTION=freight`, or `drishti.distribution: freight`; a path

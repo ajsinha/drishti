@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+- **Distributions see installed and shipped `.dmod` modules**: the distribution reads module manifests with the registry's one package
+  reader (first-party packages in the server's jar, then the module store's active ones), not only the manifests folder. The reader
+  takes `installed/active.yaml` as the module node writes it (`modules: {id: version}`) and looks the store up when it reads, so an
+  installed package is a module of the registry too.
 - **A dropped module loads on a single node without a placement entry**: with no cluster, a module `config/placement.yaml` does not
   name is placed on the node (Health and Admin → Cluster → Modules note *single node: placed here*); a cluster keeps no all-nodes default.
 - **Developer guide: How to create …** ([DEVELOPER_GUIDE.md part 12](docs/guides/DEVELOPER_GUIDE.md#12-how-to-create-)): step-by-step

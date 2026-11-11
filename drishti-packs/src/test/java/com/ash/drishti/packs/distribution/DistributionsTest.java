@@ -120,6 +120,30 @@ class DistributionsTest {
                 Path.of("../config/packs"))).hasMessageContaining("has no manifest");
     }
 
+    /**
+     * A distribution sees a module installed as a .dmod in the module store (no manifest in the modules folder), read by the registry's
+     * one package reader: its function words are the distribution's; a module neither in the folder nor packaged is still refused.
+     */
+    @Test
+    void anInstalledDmodIsSeenByADistribution(@org.junit.jupiter.api.io.TempDir Path tmp) throws Exception {
+        Path store = tmp.resolve("data/modules");
+        Path version = java.nio.file.Files.createDirectories(store.resolve("installed/freight/0.1.0"));
+        java.nio.file.Files.writeString(store.resolve("installed/active.yaml"), "modules:\n  freight: \"0.1.0\"\n");   // as the module node writes it
+        java.nio.file.Files.writeString(version.resolve("module.yaml"), "format: 1\nid: freight\nversion: 0.1.0\ndomain: logistics\n"
+                + "functions: [{word: SHIP}]\nconsole: {menus: [freight]}\n");
+        Path file = tmp.resolve("drishti.freight.yaml");
+        java.nio.file.Files.writeString(file, "format: 1\ndistribution: drishti.freight\nbrand: {product: Drishti Freight}\n"
+                + "modules:\n  - { id: freight }\nkernel-packs: []\nlenses: {offered: [research], default: research}\n");
+        StandardEnvironment env = boot("drishti.distribution", file.toString(), Distributions.MODULES_DIR, tmp.resolve("no-folder").toString(),
+                "drishti.data.dir", tmp.resolve("data").toString());
+        Distribution d = Distributions.of(env);
+        assertThat(d.modules()).containsExactly("freight");
+        assertThat(d.commands()).contains("SHIP");
+        assertThat(d.domains()).containsEntry("freight", "logistics");
+        java.nio.file.Files.delete(store.resolve("installed/active.yaml"));          // not installed any more: refused, with words
+        assertThatThrownBy(() -> Distributions.of(env)).hasMessageContaining("is not a shipped or installed .dmod");
+    }
+
     @Test
     void riskHasNoEconomyCommandsAndMarketDataIsInBoth() {
         Edition risk = Editions.of(boot("drishti.distribution", "risk"));
