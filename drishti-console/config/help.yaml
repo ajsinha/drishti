@@ -174,6 +174,10 @@ sections:
 # slug or slug#anchor. Documents that left the list (architecture, the per-plugin connector pages, the runbooks) are still in
 # the help centre at their path slug, so the old addresses keep working.
 moved:
+  docs-tutorials-02-var-from-the-bank-to-a-trade: docs-guides-var-guide#part-v--tutorial-var-from-the-bank-to-a-trade   # docs/tutorials/02-var-from-the-bank-to-a-trade.md folded into docs/guides/VAR_GUIDE.md
+  docs-tutorials-03-exposure-from-the-bank-to-a-trade: docs-guides-exposure-guide#part-iv--tutorial-exposure-from-the-bank-to-a-trade   # docs/tutorials/03-exposure-from-the-bank-to-a-trade.md folded into docs/guides/EXPOSURE_GUIDE.md
+  docs-tutorials-04-frtb-sa: docs-guides-frtb-sa-guide#17-tutorial-frtb-sa-from-the-hand-built-cases-to-a-desk   # docs/tutorials/04-frtb-sa.md folded into docs/guides/FRTB_SA_GUIDE.md
+  docs-tutorials-05-simm: docs-guides-simm-guide#14-tutorial-simm-from-the-hand-built-examples-to-a-netting-set   # docs/tutorials/05-simm.md folded into docs/guides/SIMM_GUIDE.md
   docs-architecture-docs-plan: docs-architecture-implementation-plan#the-documentation-rules   # docs/architecture/DOCS_PLAN.md folded into docs/architecture/IMPLEMENTATION_PLAN.md
   docs-architecture-financial-crime: docs-architecture-implementation-plan#2921-and-2922-financial-crime-aml-fraud-fcu-proposed   # docs/architecture/FINANCIAL_CRIME.md folded into docs/architecture/IMPLEMENTATION_PLAN.md
   docs-architecture-ifrs9-ecl: docs-architecture-implementation-plan#2920-ifrs-9-expected-credit-loss-proposed   # docs/architecture/IFRS9_ECL.md folded into docs/architecture/IMPLEMENTATION_PLAN.md
@@ -503,21 +507,21 @@ moved:
   docs-tutorials-21-an-entity-over-time: docs-tutorials-01-first-15-minutes#part-e--an-entity-over-time
   docs-tutorials-23-computed-panels: docs-tutorials-19-build-a-pack-and-a-screen#part-c--computed-panels-a-reactive-connector
   docs-tutorials-24-correct-a-trade-and-approve-it: docs-tutorials-11-correct-and-approve
-  docs-tutorials-25-var-from-the-bank-to-a-trade: docs-tutorials-02-var-from-the-bank-to-a-trade
-  docs-tutorials-26-exposure-from-the-bank-to-a-trade: docs-tutorials-03-exposure-from-the-bank-to-a-trade
+  docs-tutorials-25-var-from-the-bank-to-a-trade: docs-guides-var-guide#part-v--tutorial-var-from-the-bank-to-a-trade
+  docs-tutorials-26-exposure-from-the-bank-to-a-trade: docs-guides-exposure-guide#part-iv--tutorial-exposure-from-the-bank-to-a-trade
   docs-tutorials-27-groupings-and-analytics: docs-tutorials-06-groupings-and-analytics
   docs-tutorials-28-funds-and-etfs: docs-tutorials-13-world-data#part-c--funds-and-etfs
   docs-tutorials-29-var-on-iceberg: docs-tutorials-16-load-your-own-data-into-a-new-lake#part-e--the-risk-lake-and-the-official-results-on-iceberg
-  docs-tutorials-30-frtb-sa-from-the-cases-to-a-desk: docs-tutorials-04-frtb-sa
+  docs-tutorials-30-frtb-sa-from-the-cases-to-a-desk: docs-guides-frtb-sa-guide#17-tutorial-frtb-sa-from-the-hand-built-cases-to-a-desk
   docs-tutorials-31-news-in-memory-only: docs-tutorials-16-load-your-own-data-into-a-new-lake#part-d--news-held-in-memory-only
-  docs-tutorials-32-simm-from-the-examples-to-a-netting-set: docs-tutorials-05-simm
+  docs-tutorials-32-simm-from-the-examples-to-a-netting-set: docs-guides-simm-guide#14-tutorial-simm-from-the-hand-built-examples-to-a-netting-set
   docs-tutorials-33-the-pivot-engine: docs-tutorials-07-pivot-cubes-and-explain
   docs-tutorials-34-one-file-per-lake: docs-tutorials-16-load-your-own-data-into-a-new-lake#part-b--one-file-per-lake
   docs-tutorials-35-data-out-with-arrow-flight: docs-tutorials-17-data-out-with-arrow-flight
   docs-tutorials-36-load-files-with-the-data-inbox: docs-tutorials-16-load-your-own-data-into-a-new-lake#part-c--load-files-automatically-with-the-data-inbox
   docs-tutorials-37-custom-functions-and-explain: docs-tutorials-07-pivot-cubes-and-explain#part-b--custom-functions-why-did-it-move-and-what-if
   docs-tutorials-38-the-mr-cube-on-the-pivot-engine: docs-tutorials-07-pivot-cubes-and-explain#part-c--the-mr-cube-desks-by-risk-class-with-the-right-totals
-  docs-tutorials-43-parametric-var-beside-historical: docs-tutorials-02-var-from-the-bank-to-a-trade#part-b--parametric-var-beside-historical-the-fat-tail-gap
+  docs-tutorials-43-parametric-var-beside-historical: docs-guides-var-guide#part-b--parametric-var-beside-historical-the-fat-tail-gap
   docs-tutorials-44-virtual-tables-and-models: docs-tutorials-18-tables-and-models
   docs-tutorials-45-load-your-own-data-into-a-new-lake: docs-tutorials-16-load-your-own-data-into-a-new-lake
   docs-tutorials-46-public-sector-data: docs-tutorials-14-public-sector-data

@@ -43,10 +43,10 @@ VaR, exposure, FRTB-SA and SIMM, each from the bank (or the hand-built cases) do
 
 | # | Tutorial | You will | Time | Status |
 |---|---|---|---|---|
-| 2 | [VaR from the bank to a trade](02-var-from-the-bank-to-a-trade.md) | Part A: build the VaR test data, open the bank's VaR and drill to a trade, the P&L path and contributions, scopes, derived positions, baskets, captures and compare, history and backtest, the hot file, VaR as a kind, the what-if, intraday, limit letters, ten days, the scenario matrix, the regulatory backtest, the VaR Playground; Part B: parametric VaR beside historical and the fat-tail gap; Part C: the same VaR on Iceberg | 1 h 30 min | written |
-| 3 | [Exposure from the bank to a trade](03-exposure-from-the-bank-to-a-trade.md) | the bank's exposure profile, a legal entity's counterparty board, a counterparty and its netting sets, collateral, a trade alone and in its netting set, capture and compare, the pre-deal check by `paths` and by the `addon` proxy, the official end-of-day record | 35 min | written |
-| 4 | [FRTB-SA from the hand-built cases to a desk](04-frtb-sa.md) | the hand-built cases (`FRSA EXAMPLE`), the three correlation scenarios, the playground (`PLAY FRTB`) and its workbook of live formulas, a recipe replayed to the cent, a desk of the demo data | 25 min | written |
-| 5 | [SIMM from the hand-built examples to a netting set](05-simm.md) | install a parameter version, the hand-built examples (`SIMM EXAMPLE`), a netting set both ways, the playground (`PLAY SIMM`) and its workbook, a recipe replayed, the margin against the counterparty's call | 25 min | written |
+| 2 | [VaR from the bank to a trade](../guides/VAR_GUIDE.md#part-v--tutorial-var-from-the-bank-to-a-trade) | Part A: build the VaR test data, open the bank's VaR and drill to a trade, the P&L path and contributions, scopes, derived positions, baskets, captures and compare, history and backtest, the hot file, VaR as a kind, the what-if, intraday, limit letters, ten days, the scenario matrix, the regulatory backtest, the VaR Playground; Part B: parametric VaR beside historical and the fat-tail gap; Part C: the same VaR on Iceberg | 1 h 30 min | written |
+| 3 | [Exposure from the bank to a trade](../guides/EXPOSURE_GUIDE.md#part-iv--tutorial-exposure-from-the-bank-to-a-trade) | the bank's exposure profile, a legal entity's counterparty board, a counterparty and its netting sets, collateral, a trade alone and in its netting set, capture and compare, the pre-deal check by `paths` and by the `addon` proxy, the official end-of-day record | 35 min | written |
+| 4 | [FRTB-SA from the hand-built cases to a desk](../guides/FRTB_SA_GUIDE.md#17-tutorial-frtb-sa-from-the-hand-built-cases-to-a-desk) | the hand-built cases (`FRSA EXAMPLE`), the three correlation scenarios, the playground (`PLAY FRTB`) and its workbook of live formulas, a recipe replayed to the cent, a desk of the demo data | 25 min | written |
+| 5 | [SIMM from the hand-built examples to a netting set](../guides/SIMM_GUIDE.md#14-tutorial-simm-from-the-hand-built-examples-to-a-netting-set) | install a parameter version, the hand-built examples (`SIMM EXAMPLE`), a netting set both ways, the playground (`PLAY SIMM`) and its workbook, a recipe replayed, the margin against the counterparty's call | 25 min | written |
 | 6 | [Groupings and analytics, computed](06-groupings-and-analytics.md) | an ownership group and every group, a country, a SIC sector and the currency rule, a company's margin and growth, a World Bank region, correlations with a window and an estimator, an equity's beta, PXH off and internal, the guard | 25 min | written |
 
 ### BI and analysis
@@ -101,8 +101,8 @@ step 1).
 1. Sign in and find your way around: [tutorial 1, steps 3 and 4](01-first-15-minutes.md#step-3--sign-in).
 2. Open a trade, follow its links, and look at another day: [tutorial 1, steps 12 to 15](01-first-15-minutes.md#step-12--open-one-entity-or-pick-from-many).
 3. See what changed on a trade over the last 30 days: [tutorial 1, steps 27 to 29](01-first-15-minutes.md#step-27--a-range-after-the-id).
-4. Your desk's VaR, down to a trade, and who makes it: [tutorial 2, steps 2 to 4](02-var-from-the-bank-to-a-trade.md#step-2--drill-down-from-the-bank-to-a-trade).
-5. What a hedge would do before you deal: [tutorial 2, step 11](02-var-from-the-bank-to-a-trade.md#step-11--what-would-a-hedge-do-the-what-if).
+4. Your desk's VaR, down to a trade, and who makes it: [the VaR tutorial, steps 2 to 4](../guides/VAR_GUIDE.md#step-2--drill-down-from-the-bank-to-a-trade).
+5. What a hedge would do before you deal: [the VaR tutorial, step 11](../guides/VAR_GUIDE.md#step-11--what-would-a-hedge-do-the-what-if).
 6. Your trades by product, as a pivot: [tutorial 7, steps 1 and 2](07-pivot-cubes-and-explain.md#step-1--a-first-pivot-of-the-trades).
 
 ## What you need once

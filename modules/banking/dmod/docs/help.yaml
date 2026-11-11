@@ -25,11 +25,11 @@ sections:
     file: ../packs/market-risk/guides/market-risk.md
   - title: 'Counterparty risk: counterparty risk'
     file: ../packs/counterparty-risk/guides/counterparty-risk.md
-  - title: 'Tutorial: var from the bank to a trade'
-    file: ../tutorials/02-var-from-the-bank-to-a-trade.md
-  - title: 'Tutorial: exposure from the bank to a trade'
-    file: ../tutorials/03-exposure-from-the-bank-to-a-trade.md
-  - title: 'Tutorial: frtb sa'
-    file: ../tutorials/04-frtb-sa.md
-  - title: 'Tutorial: simm'
-    file: ../tutorials/05-simm.md
+  - title: 'VaR: the guide and the tutorial'
+    file: ../guides/VAR_GUIDE.md
+  - title: 'Exposure: the guide and the tutorial'
+    file: ../guides/EXPOSURE_GUIDE.md
+  - title: 'FRTB-SA: the guide and the tutorial'
+    file: ../guides/FRTB_SA_GUIDE.md
+  - title: 'SIMM: the guide and the tutorial'
+    file: ../guides/SIMM_GUIDE.md

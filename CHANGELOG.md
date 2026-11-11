@@ -5319,7 +5319,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   data contract, version 1.2 AS BUILT part 2 (all of `EXP.md`: every column, formula, DRS code, the official results, retention, the
   reconciliation of the 76 stored sets, decisions and the change table); Part III the engine (where it lives, one date in memory and the
   hot file `DRSHEXP1`, sizes and retention, open items: the benchmark is not built in 2.9.0). [Tutorial
-  26](docs/tutorials/03-exposure-from-the-bank-to-a-trade.md) walks from the bank to a trade on the demo lake in eight steps with screenshots, each step in the UI, on
+  26](docs/guides/EXPOSURE_GUIDE.md#part-iv--tutorial-exposure-from-the-bank-to-a-trade) walks from the bank to a trade on the demo lake in eight steps with screenshots, each step in the UI, on
   the command line and in YAML. `docs/contracts/EXP.md` moved to `docs/archive/` with the archive banner; every reference (contracts and
   their index, the contract policy, pack contracts, guide and README and their generators, the test-data README, CONFIGURATION,
   API_GUIDE, TOOLS, IMPLEMENTATION_PLAN, source and settings comments) points at the guide's sections. The help centre lists the
@@ -5365,7 +5365,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
 - **The landing page's headline** (product owner, 2026-10-26): "See what your data hasn't told you yet.", with the tagline "Any data. Any domain. One grammar." under it as the subtitle; both from configuration (`ui.headline`, `ui.headline_accent`, `ui.tagline`; [CONFIGURATION.md](docs/admin/CONFIGURATION.md)).
 - **Docs: VaR in two documents** (product owner, 2026-10-26). [VAR_GUIDE.md](docs/guides/VAR_GUIDE.md) is now the one VaR reference
   (Part I using VaR, the explorer, scopes, captures, what-if, CLI, API, settings; Part II the data contract, still version 1.4; Part III
-  how the engine stores a date, sizing, the benchmark and open items), and [tutorial 25](docs/tutorials/02-var-from-the-bank-to-a-trade.md#part-a--historical-var-from-the-bank-to-a-trade)
+  how the engine stores a date, sizing, the benchmark and open items), and [tutorial 25](docs/guides/VAR_GUIDE.md#part-a--historical-var-from-the-bank-to-a-trade)
   the one walk-through, each step linking to the guide's sections. `VAR_EXPLORER.md`, `contracts/VAR.md`, `VAR_ENGINE.md` and
   `VAR_DATA_MODEL.md` moved to `docs/archive/` as history; every reference (docs, contracts, pack guides, `tools/contracts.policy.yaml`,
   source comments) points at the guide's sections. The help centre lists the VaR guide and tutorial 25 (cap 47 pages).

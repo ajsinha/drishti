@@ -201,11 +201,16 @@ docs:
   - packs/trading/guides/trading.md
   - packs/market-risk/guides/market-risk.md
   - packs/counterparty-risk/guides/counterparty-risk.md
+  - guides/VAR_GUIDE.md
+  - guides/EXPOSURE_GUIDE.md
+  - guides/FRTB_SA_GUIDE.md
+  - guides/SIMM_GUIDE.md
+  # a risk measure's one document holds its guide and its tutorial
   tutorials:
-  - tutorials/02-var-from-the-bank-to-a-trade.md
-  - tutorials/03-exposure-from-the-bank-to-a-trade.md
-  - tutorials/04-frtb-sa.md
-  - tutorials/05-simm.md
+  - guides/VAR_GUIDE.md
+  - guides/EXPOSURE_GUIDE.md
+  - guides/FRTB_SA_GUIDE.md
+  - guides/SIMM_GUIDE.md
 resources:
   memory-mb: 2048
 # The kernel internals banking still reaches (KERNEL_AND_MODULES.md section 3.3): the packer writes the list here from the file, and

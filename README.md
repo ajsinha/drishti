@@ -188,7 +188,7 @@ The banking module's engines run on the server, in Java, for any scope; the cons
 - **VaR and ES** for the bank, a desk, a book, a counterparty, a portfolio, a basket or an expression (`BANK - DESK:CREDIT`): drill from
   the bank to a trade with contributions that add up, hierarchies from rows or from the trades' own columns, limits with one rule
   (within, near, breach), any reporting currency, the 509- or 250-scenario window, stressed and 10-day VaR, intraday updates, the official
-  end-of-day record and backtests ([VAR_GUIDE.md](docs/guides/VAR_GUIDE.md), [tutorial 2](docs/tutorials/02-var-from-the-bank-to-a-trade.md));
+  end-of-day record and backtests ([VAR_GUIDE.md](docs/guides/VAR_GUIDE.md), [the VaR tutorial](docs/guides/VAR_GUIDE.md#part-v--tutorial-var-from-the-bank-to-a-trade));
   regulatory reporting to the cell in [REGULATORY_VAR_REPORTING.md](docs/guides/REGULATORY_VAR_REPORTING.md).
 - **The VaR page** (the VaR explorer): a scope tree that shows **only the chosen scope** (the whole bank, a node and below with a
   breadcrumb up, or a basket's own positions by the hierarchy you pick) with VaR, ES, contribution and use of limit per node; the switch
@@ -202,10 +202,10 @@ The banking module's engines run on the server, in Java, for any scope; the cons
 - **Counterparty exposure** (EE, PFE, EPE, EEPE) from the simulator's paths with netting and collateral, and **the pre-deal check**
   (`PREDEAL`): a new trade added to its netting set path by path and answered approve, refer or decline against the credit limit and each
   tenor bucket, audited ([EXPOSURE_GUIDE.md](docs/guides/EXPOSURE_GUIDE.md), [section 18.9](docs/guides/EXPOSURE_GUIDE.md#189-the-pre-deal-check),
-  [tutorial 3](docs/tutorials/03-exposure-from-the-bank-to-a-trade.md)).
-- **FRTB-SA** for any VaR scope ([FRTB_SA_GUIDE.md](docs/guides/FRTB_SA_GUIDE.md), [tutorial 4](docs/tutorials/04-frtb-sa.md)) and **SIMM**
+  [the exposure tutorial](docs/guides/EXPOSURE_GUIDE.md#part-iv--tutorial-exposure-from-the-bank-to-a-trade)).
+- **FRTB-SA** for any VaR scope ([FRTB_SA_GUIDE.md](docs/guides/FRTB_SA_GUIDE.md), [the FRTB-SA tutorial](docs/guides/FRTB_SA_GUIDE.md#17-tutorial-frtb-sa-from-the-hand-built-cases-to-a-desk)) and **SIMM**
   per netting set; ISDA's calibration is licensed, so the parameter file ships empty
-  ([SIMM_GUIDE.md section 4](docs/guides/SIMM_GUIDE.md#4-the-licensed-parameter-file), [tutorial 5](docs/tutorials/05-simm.md)).
+  ([SIMM_GUIDE.md section 4](docs/guides/SIMM_GUIDE.md#4-the-licensed-parameter-file), [the SIMM tutorial](docs/guides/SIMM_GUIDE.md#14-tutorial-simm-from-the-hand-built-examples-to-a-netting-set)).
 - **Groupings and analytics** computed on request: ownership groups, sectors, correlations, an equity's beta
   ([GROUPINGS_ANALYTICS_GUIDE.md](docs/guides/GROUPINGS_ANALYTICS_GUIDE.md), [tutorial 6](docs/tutorials/06-groupings-and-analytics.md)).
 
@@ -377,7 +377,7 @@ the modules they may use. The map of every document is [docs/README.md](docs/REA
 | You want to… | Guides | Tutorials |
 |---|---|---|
 | find anything, pivot, report, analyse | [USER_GUIDE](docs/guides/USER_GUIDE.md), [PIVOT_GUIDE](docs/guides/PIVOT_GUIDE.md), [REPORTS_GUIDE](docs/guides/REPORTS_GUIDE.md), [NOTEBOOK_GUIDE](docs/guides/NOTEBOOK_GUIDE.md), [AI_GUIDE](docs/guides/AI_GUIDE.md), [APPROVALS_GUIDE](docs/guides/APPROVALS_GUIDE.md) | [1](docs/tutorials/01-first-15-minutes.md), [7](docs/tutorials/07-pivot-cubes-and-explain.md), [8](docs/tutorials/08-reports-and-dashboards.md), [9](docs/tutorials/09-notebook-and-python.md), [10](docs/tutorials/10-ai-assistant.md), [11](docs/tutorials/11-correct-and-approve.md) |
-| measure risk | [VAR_GUIDE](docs/guides/VAR_GUIDE.md), [REGULATORY_VAR_REPORTING](docs/guides/REGULATORY_VAR_REPORTING.md), [EXPOSURE_GUIDE](docs/guides/EXPOSURE_GUIDE.md), [FRTB_SA_GUIDE](docs/guides/FRTB_SA_GUIDE.md), [SIMM_GUIDE](docs/guides/SIMM_GUIDE.md), [GROUPINGS_ANALYTICS_GUIDE](docs/guides/GROUPINGS_ANALYTICS_GUIDE.md) | [2](docs/tutorials/02-var-from-the-bank-to-a-trade.md), [3](docs/tutorials/03-exposure-from-the-bank-to-a-trade.md), [4](docs/tutorials/04-frtb-sa.md), [5](docs/tutorials/05-simm.md), [6](docs/tutorials/06-groupings-and-analytics.md) |
+| measure risk | [VAR_GUIDE](docs/guides/VAR_GUIDE.md), [REGULATORY_VAR_REPORTING](docs/guides/REGULATORY_VAR_REPORTING.md), [EXPOSURE_GUIDE](docs/guides/EXPOSURE_GUIDE.md), [FRTB_SA_GUIDE](docs/guides/FRTB_SA_GUIDE.md), [SIMM_GUIDE](docs/guides/SIMM_GUIDE.md), [GROUPINGS_ANALYTICS_GUIDE](docs/guides/GROUPINGS_ANALYTICS_GUIDE.md) | [2](docs/guides/VAR_GUIDE.md#part-v--tutorial-var-from-the-bank-to-a-trade), [3](docs/guides/EXPOSURE_GUIDE.md#part-iv--tutorial-exposure-from-the-bank-to-a-trade), [4](docs/guides/FRTB_SA_GUIDE.md#17-tutorial-frtb-sa-from-the-hand-built-cases-to-a-desk), [5](docs/guides/SIMM_GUIDE.md#14-tutorial-simm-from-the-hand-built-examples-to-a-netting-set), [6](docs/tutorials/06-groupings-and-analytics.md) |
 | work with bank, world and public data | [FUNDS_GUIDE](docs/guides/FUNDS_GUIDE.md), [PUBLIC_SECTOR_GUIDE](docs/guides/PUBLIC_SECTOR_GUIDE.md), [EXTERNAL_DATA](docs/guides/EXTERNAL_DATA.md) | [12](docs/tutorials/12-a-day-of-bank-data.md), [13](docs/tutorials/13-world-data.md), [14](docs/tutorials/14-public-sector-data.md) |
 | bring data in and take it out | [DATA_GUIDE](docs/guides/DATA_GUIDE.md), [DATA_LAKE_GUIDE](docs/guides/DATA_LAKE_GUIDE.md), [FLIGHT_GUIDE](docs/guides/FLIGHT_GUIDE.md) | [15](docs/tutorials/15-connect-your-data.md), [16](docs/tutorials/16-load-your-own-data-into-a-new-lake.md), [17](docs/tutorials/17-data-out-with-arrow-flight.md) |
 | understand the kernel, modules and distributions | [HOW_IT_FITS](HOW_IT_FITS.md) ([PDF](HOW_IT_FITS.pdf)), [KERNEL_AND_MODULES](docs/architecture/KERNEL_AND_MODULES.md) ([PDF](docs/architecture/KERNEL_AND_MODULES.pdf)), [DISTRIBUTIONS](docs/architecture/DISTRIBUTIONS.md) ([PDF](docs/architecture/DISTRIBUTIONS.pdf)), [DEVELOPER_GUIDE section 1.6](docs/guides/DEVELOPER_GUIDE.md#16-the-module-sdk) | [the genomics sample, step by step](docs/guides/DEVELOPER_GUIDE.md#19-the-genomics-sample-step-by-step) |

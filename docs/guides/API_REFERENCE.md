@@ -2402,7 +2402,7 @@ are unchanged ([VAR_GUIDE.md section 18.15](VAR_GUIDE.md#1815-parametric-var-and
 For example `GET /api/v1/risk/var/scope?scope=DESK:DESK-RATES&asOf=2026-09-30` answers historical `var` 74,633,680 and `parametric.var`
 58,409,229 (`mu` −732,297, `sigma` 24,792,909, `gap` 16,224,451, `beyond` 12 of an expected 5.09) on the demo data; the computed kind
 `VRES` carries the same as `PARAMETRIC_*` and `FAT_TAIL_GAP*` fields (`"params": {"parametric": false}` leaves them out).
-[Tutorial 2, Part B](../tutorials/02-var-from-the-bank-to-a-trade.md#part-b--parametric-var-beside-historical-the-fat-tail-gap) walks through them.
+[The VaR tutorial, Part B](VAR_GUIDE.md#part-b--parametric-var-beside-historical-the-fat-tail-gap) walks through them.
 
 | Method and path | What it does |
 |---|---|

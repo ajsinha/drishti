@@ -233,7 +233,7 @@ tree, tiles, the profile chart and path fan, the tabs by level, the pre-deal wha
 paths in the Delta reader, `drishti.ccr.exposure.kinds.limit` (the stored credit limits read as stored), and the documentation in two
 documents by the product owner's rule (one guide and one tutorial per measure): [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) (the
 contract EXP.md folded in as its Part II, version 1.2; the old page deleted) and
-[tutorial 3](../tutorials/03-exposure-from-the-bank-to-a-trade.md). **Not built in 2.9.0:** the exposure benchmark at a large bank's
+[the exposure tutorial](../guides/EXPOSURE_GUIDE.md#part-iv--tutorial-exposure-from-the-bank-to-a-trade). **Not built in 2.9.0:** the exposure benchmark at a large bank's
 size, sharding across Drishti\*net, a restricted list (EXPOSURE_GUIDE.md section 28). The other counterparty measures (CVA, SA-CCR, LIM,
 GRP, WWR) stay parked and stored, unchanged; the stored credit limits were sized on the retired profiles, so their use reads very low
 against the computed PFE until LIM is brought back.

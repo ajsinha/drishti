@@ -426,11 +426,13 @@ def test_the_front_door_has_search_most_used_and_a_tile_per_section(client):
 def test_a_section_page_pairs_each_guide_with_its_tutorial_and_searches_only_itself(client):
     page = client.get("/help/section/risk").text
     assert "Value at risk" in page and "Counterparty" in page and "Capital" in page and ">VAR<" in page
-    row = page[page.index('href="/help/docs-guides-var-guide"'):]
+    assert 'href="/help/docs-guides-var-guide"' in page and 'name="section" value="risk"' in page    # a measure's one document: no pair
+    data = client.get("/help/section/data").text
+    row = data[data.index('href="/help/data-guide"'):]
     row = row[:row.index("</li>")]
-    assert 'href="/help/docs-tutorials-02-var-from-the-bank-to-a-trade"' in row and "data-help-pair" in row
-    assert page.count('href="/help/docs-tutorials-02-var-from-the-bank-to-a-trade"') == 1      # the tutorial has no row of its own
-    assert 'name="section" value="risk"' in page and "each guide beside its tutorial" in page
+    assert 'href="/help/docs-tutorials-15-connect-your-data"' in row and "data-help-pair" in row
+    assert data.count('href="/help/docs-tutorials-15-connect-your-data"') == 1      # the tutorial has no row of its own
+    assert "each guide beside its tutorial" in data
     hits = client.get("/help/search", params={"q": "backtesting", "section": "risk"}).text
     found = set(re.findall(r'<li><a href="/help/([\w-]+)"', hits))
     risk = {g["slug"] for g in _pages({"sections": [s for s in _catalogue()["sections"]

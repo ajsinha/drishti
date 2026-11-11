@@ -30,11 +30,11 @@ features:
   - { id: F5, name: AI assistant, domain: core, lenses: all, guide: guides/AI_GUIDE.md, budget: 700, tutorial: tutorials/10-ai-assistant.md, tutorial-budget: 400 }
   - { id: F6, name: Corrections and approvals, domain: core, lenses: all, guide: guides/APPROVALS_GUIDE.md, budget: 600, tutorial: tutorials/11-correct-and-approve.md, tutorial-budget: 300 }
   # Risk (the banking module)
-  - { id: R1, name: Value at risk, domain: banking, lenses: [risk, trading], guide: guides/VAR_GUIDE.md, budget: 2500, tutorial: tutorials/02-var-from-the-bank-to-a-trade.md, tutorial-budget: 900 }
+  - { id: R1, name: Value at risk, domain: banking, lenses: [risk, trading], guide: guides/VAR_GUIDE.md, budget: 7300, tutorial: none }
   - { id: R1R, name: Regulatory VaR reporting, domain: banking, lenses: [risk], guide: guides/REGULATORY_VAR_REPORTING.md, budget: 850, tutorial: none }
-  - { id: R2, name: Counterparty exposure, domain: banking, lenses: [risk], guide: guides/EXPOSURE_GUIDE.md, budget: 1400, tutorial: tutorials/03-exposure-from-the-bank-to-a-trade.md, tutorial-budget: 550 }
-  - { id: R3, name: FRTB-SA, domain: banking, lenses: [risk], guide: guides/FRTB_SA_GUIDE.md, budget: 600, tutorial: tutorials/04-frtb-sa.md, tutorial-budget: 300 }
-  - { id: R4, name: SIMM, domain: banking, lenses: [risk], guide: guides/SIMM_GUIDE.md, budget: 600, tutorial: tutorials/05-simm.md, tutorial-budget: 300 }
+  - { id: R2, name: Counterparty exposure, domain: banking, lenses: [risk], guide: guides/EXPOSURE_GUIDE.md, budget: 2400, tutorial: none }
+  - { id: R3, name: FRTB-SA, domain: banking, lenses: [risk], guide: guides/FRTB_SA_GUIDE.md, budget: 800, tutorial: none }
+  - { id: R4, name: SIMM, domain: banking, lenses: [risk], guide: guides/SIMM_GUIDE.md, budget: 750, tutorial: none }
   - { id: R5, name: Groupings and analytics, domain: core, lenses: all, guide: guides/GROUPINGS_ANALYTICS_GUIDE.md, budget: 800, tutorial: tutorials/06-groupings-and-analytics.md, tutorial-budget: 500 }
   - { id: R6, name: "The bank's data", domain: banking, lenses: [risk, trading, market], guide: after 2.9.11.i, budget: 1200, tutorial: tutorials/12-a-day-of-bank-data.md, tutorial-budget: 400 }
   # World and public data

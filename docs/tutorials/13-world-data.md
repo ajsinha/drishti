@@ -764,7 +764,7 @@ holding the news in memory only is [tutorial 16, Part D](16-load-your-own-data-i
 - [Tutorial 6](06-groupings-and-analytics.md): a SIC sector's totals, a company's margin and growth, an equity's beta.
 - [The funds guide](../guides/FUNDS_GUIDE.md): each kind's contract and example (Part II) and every source (Part III).
 - [External data](../guides/EXTERNAL_DATA.md): every public-data pack and its refresh script.
-- [Tutorial 3](03-exposure-from-the-bank-to-a-trade.md): a counterparty group's exposure, from the bank's side.
+- [The exposure tutorial](../guides/EXPOSURE_GUIDE.md#part-iv--tutorial-exposure-from-the-bank-to-a-trade): a counterparty group's exposure, from the bank's side.
 
 ## If something goes wrong
 

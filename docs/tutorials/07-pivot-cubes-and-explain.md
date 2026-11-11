@@ -43,7 +43,7 @@ About 1 h 25 min in all; each part can be done on its own day.
 
 **Part C · The MR cube: desks by risk class, with the right totals.**
 
-- The server and console running with the demo risk lake ([tutorial 2, Part A](02-var-from-the-bank-to-a-trade.md#part-a--historical-var-from-the-bank-to-a-trade)): `VAR BANK <GO>` answers.
+- The server and console running with the demo risk lake ([the VaR tutorial, Part A](../guides/VAR_GUIDE.md#part-a--historical-var-from-the-bank-to-a-trade)): `VAR BANK <GO>` answers.
 - The engines `var`, `pivot` and `mr-cube` on (Admin → Engines; `mr-cube` is on by default). For step 26, `sensitivities` and `frtb-sa` on too.
 
 ## What you will learn

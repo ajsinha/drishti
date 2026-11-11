@@ -145,8 +145,8 @@ docs:
   glossary: docs/glossary.yaml
   guides: [docs/guides/VAR_GUIDE.md, docs/guides/REGULATORY_VAR_REPORTING.md, docs/guides/EXPOSURE_GUIDE.md, docs/guides/FRTB_SA_GUIDE.md,
            docs/guides/SIMM_GUIDE.md, docs/guides/MR_CUBE_GUIDE.md, docs/guides/FUNDS_GUIDE.md]
-  tutorials: [docs/tutorials/02-var-from-the-bank-to-a-trade.md, docs/tutorials/03-exposure-from-the-bank-to-a-trade.md,
-              docs/tutorials/04-frtb-sa.md, docs/tutorials/05-simm.md, docs/tutorials/24-correct-a-trade.md, "…(nine in all)"]
+  tutorials: [docs/guides/VAR_GUIDE.md, docs/guides/EXPOSURE_GUIDE.md,
+              docs/guides/FRTB_SA_GUIDE.md, docs/guides/SIMM_GUIDE.md, docs/tutorials/24-correct-a-trade.md, "…(nine in all)"]
   features: docs/features.yaml            # its rows of the docs register (one guide + one tutorial per feature)
 
 settings:

@@ -24,7 +24,7 @@ The first module with code: the risk engines (VaR, exposure, sensitivities, FRTB
 | The packs | `packs/trading`, `packs/market-risk`, `packs/counterparty-risk` |
 | Pages | `console/plugin.yaml` (a page per function) |
 | Lenses | `lenses/risk.yaml`, `lenses/trading.yaml` |
-| Help | `docs/help.yaml`: the packs' guides and the VaR, exposure, FRTB-SA and SIMM tutorials |
+| Help | `docs/help.yaml`: the packs' guides and the VaR, exposure, FRTB-SA and SIMM documents (each its guide and tutorial in one) |
 | Data it needs | `data/needs.yaml`: every kind, bound by the site to its own connectors |
 
 **First-party.** The manifest says `origin: first-party`; the kernel believes it only when the module's id and the hash of its

@@ -2007,7 +2007,7 @@ committed test data, `data/testdata`: the seven packs' tables under `data/delta/
 business date (`--as-of data` keeps the files' own dates), the connector files checked, the next steps printed. `--only PREFIX` builds
 some datasets, `--keep-other-dates` keeps a dated table's other business dates (each date written is replaced) instead of
 rebuilding the table (the VaR data's three dates are 2026-09-28 to 2026-09-30; `--as-of 2026-09-25 --keep-other-dates --only market-risk/...`
-adds them again moved back, as 2026-09-23 to 2026-09-25, the scenario window moved with it: [tutorial 2, step 16](../tutorials/02-var-from-the-bank-to-a-trade.md#step-16--the-scenario-matrix-scenarios-across-the-days)), `--lake DIR` another folder (the connector files then point there), `--with-real FILE[,FILE]` adds real extracts to the
+adds them again moved back, as 2026-09-23 to 2026-09-25, the scenario window moved with it: [the VaR tutorial, step 16](VAR_GUIDE.md#step-16--the-scenario-matrix-scenarios-across-the-days)), `--lake DIR` another folder (the connector files then point there), `--with-real FILE[,FILE]` adds real extracts to the
 local lake only. The sample feed the `file` connector serves (`feeds/`) and the staging go to the server's data folder: `--data-dir DIR`, else
 `DRISHTI_DATA_DIR`, else the folder holding the lakes' `delta/` folder (`--lake /srv/data/delta/demo`: `/srv/data`), else `data/`, so a
 server on another data folder finds its feeds (`make_data.py --data-dir DIR` does the same). It then tells the server the lakes changed: the data-load signal for every table and date to `--server` (default
@@ -3510,7 +3510,7 @@ drishti.py var playground DESK:DESK-RATES --measure parametric     the Parametri
 While parametric VaR is on (`drishti.var.parametric.enabled`), `show` prints `parametric VaR 58,409,229 USD = z·σ − μ = 2.3263 ×
 24,792,909 − (-732,297)   ES 58,693,229   fat-tail gap +16,224,451 (+27.8%)   a cross-check, not official` for `DESK:DESK-RATES` on the
 demo data; `parts` adds the *Param. component* and *ρ* columns and, with `--matrix`, the correlation matrix and the engine that computed
-it (`openblas` or `java`); `--json` carries the API's `parametric` block ([tutorial 2, Part B](../tutorials/02-var-from-the-bank-to-a-trade.md#part-b--parametric-var-beside-historical-the-fat-tail-gap)).
+it (`openblas` or `java`); `--json` carries the API's `parametric` block ([the VaR tutorial, Part B](VAR_GUIDE.md#part-b--parametric-var-beside-historical-the-fat-tail-gap)).
 
 `--horizon`, `--method`, `--confidence` and `--es-confidence` read any answer through a lens: the headline then says
 `horizon    10-day (sum)` and `VaR 99%   274,544,283 USD   (the 5th worst of 500 overlapping windows)` on the demo data; limit use is
@@ -3581,7 +3581,7 @@ drishti.py exposure predeal "PREDEAL CP-ALDERSHOT RATES 250M 5Y"           descr
 
 Exit codes: 0; 1 when the server said no (the code and its message on standard error); 2 for usage. Both what-if methods (`--method
 paths`, the default and exact, and `addon`) are the server's exposure engine's.
-[Tutorial 3](../tutorials/03-exposure-from-the-bank-to-a-trade.md) walks through them with the test data.
+[The exposure tutorial](EXPOSURE_GUIDE.md#part-iv--tutorial-exposure-from-the-bank-to-a-trade) walks through them with the test data.
 
 ### `sens`, `frtb` and `play frtb`
 
