@@ -617,7 +617,14 @@ else
     for lane in browser other tools-a tools-b java21 java25 containers; do RUN_LANE[$lane]=1; done
   fi
   stage2=()
-  : > "$LOGS/pageloads.jsonl"                   # each page's load time in the lanes' browser tests (tools/drillkit/pageloads.py)
+  # the test servers' class-data archive, built once from the gate's jar (about 20 s; each server start then about a quarter faster);
+  # without it the servers start from the jar as before (tools/drillkit/server_cds.py)
+  if [[ -n ${RUN_LANE[browser]:-} ]]; then
+    if python3 tools/drillkit/server_cds.py build --out "$DRILL_TMP/server-cds" --java "$JAVA21_HOME/bin/java" >/dev/null; then
+      export DRISHTI_TEST_SERVER_CDS="$DRILL_TMP/server-cds"
+    else echo "drill: warning: no class-data archive for the test servers: they start from the jar" >&2; fi
+  fi
+  : > "$LOGS/pageloads.jsonl"                  # each page's load time in the lanes' browser tests (tools/drillkit/pageloads.py)
   : > "$LOGS/snapshots.jsonl"; rm -rf "$LOGS/snapshot-diffs"   # the visual snapshots of the page walk (drishti-console/tests/snapshots.py)
   # a failed browser test is re-run by file, two files at a time (one at a time took 35 minutes for nine files in the 2026-11-11 drill)
   [[ -n ${RUN_LANE[browser]:-} ]] && { start_job console-browser console_lane browser "$browser_workers" "${DRILL_BROWSER_RERUNS:-2}"; stage2+=(console-browser); }

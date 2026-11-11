@@ -42,7 +42,7 @@ TILE = "document.querySelector('.vx-tile[data-tile=\"%d\"] %s').innerText"
 @pytest.fixture(scope="module")
 def stack(tmp_path_factory):
     # the whole 509-scenario set (the figures below are the full set's); the shipped window is 250 (VarWindowApiTest covers it)
-    yield from var_server(tmp_path_factory, var_lake(tmp_path_factory, var_data(*VAR_TRADES)), DRISHTI_VAR_SCENARIO_WINDOW="all")
+    yield from var_server(tmp_path_factory, var_lake(tmp_path_factory, var_data(*VAR_TRADES)), DRISHTI_VAR_SCENARIO_WINDOW="all", shared=True)   # reads only: the pool guards it
 
 
 def money(text: str) -> float:

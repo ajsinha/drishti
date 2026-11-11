@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The MR cube in a real browser (docs/guides/PIVOT_GUIDE.md section 29; docs/architecture/LENSES.md section 6.4), over the market-risk pack's committed VaR data
-built into a scratch lake and served by its Delta connector, the demo connector off:
+from the cached demo lake (built once per run), served by its Delta connector, the demo connector off:
 
 - ``MCUBE <GO>`` opens the Pivot's preset mr, the pivot screen on source var with the MR lens: the landing view (desks by risk class), the headline strip, the
   slider and the tabs; no second grid, no script error;
@@ -26,37 +26,24 @@ built into a scratch lake and served by its Delta connector, the demo connector 
 
 Skipped when Playwright, Chromium, the built server jar or a JDK is missing."""
 import json
-import subprocess
-import sys
 import urllib.parse
-from pathlib import Path
 
 import pytest
 
-from test_var_explorer_browser import _engine_ready, shot
+from test_var_explorer_browser import shot
 from risk_elements import chart, chart_ready, grid_ready, grid_rows
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
-from wb_live import _stack
+from var_stack import var_data, var_lake, var_server
 
-ROOT = Path(__file__).resolve().parents[2]
-VAR_DATA = ",".join([f"market-risk/{k}" for k in ("scenario-pv", "fx-scenario", "scenario-set",
-                                                 "var-limit")] + ["core/desk", "core/book", "core/legal-entity"] + ["trades/murex"])
+#: the market-risk pack's VaR tables and the Murex trades: the cached lake (tools/drillkit/lake_cache.py), built once per run and source hash
+VAR_DATA = var_data("trades/murex")
 
 
 @pytest.fixture(scope="module")
 def stack(tmp_path_factory):
-    work = tmp_path_factory.mktemp("mr-cube-lake")
-    lake = work / "delta"
-    r = subprocess.run([sys.executable, str(ROOT / "tools" / "drishti.py"), "lake", "demo", "--lake", str(lake), "--data-dir", str(work / "data"),
-                        "--connectors-dir", str(work / "connectors"), "--as-of", "today", "--only", VAR_DATA, "--no-signal", "-q",
-                        "--engine", "auto"], capture_output=True, text=True, cwd=ROOT, timeout=1500)
-    if r.returncode != 0 or not (lake / "risk" / "scenario-pv").is_dir():
-        pytest.skip("could not build the VaR demo lake: " + (r.stderr or r.stdout)[-400:])
-    for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true", "DRISHTI_VAR_SYSTEM_BASKETS_SEED": "true",
-                                        "DRISHTI_COMPUTE_ENABLED": "false", "DRISHTI_MR_CUBE_ENABLED": "true",
-                                        "DRISHTI_VAR_HOT_DIR": str(work / "hot")}):
-        _engine_ready(str(st))
-        yield st
+    """A server of this file's own (the MR cube on, the compute engine off) over the cached lake, which it only reads."""
+    lake = var_lake(tmp_path_factory, VAR_DATA)
+    yield from var_server(tmp_path_factory, lake, DRISHTI_COMPUTE_ENABLED="false", DRISHTI_MR_CUBE_ENABLED="true")
 
 
 def fetch(pg, method, path, body=None):

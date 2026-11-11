@@ -38,7 +38,7 @@ from select_helpers import choose, options, value, values  # <drishti-select>: d
 
 @pytest.fixture(scope="module")
 def stack(tmp_path_factory):
-    yield from var_server(tmp_path_factory, var_lake(tmp_path_factory, var_data(*VAR_TRADES)))
+    yield from var_server(tmp_path_factory, var_lake(tmp_path_factory, var_data(*VAR_TRADES)), shared=True)   # reads only: the pool guards it
 
 
 @pytest.fixture(scope="module")

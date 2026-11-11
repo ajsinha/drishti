@@ -22,8 +22,8 @@
   Help) at 1366 and 1920 px, dark and light: no sideways scroll, no overlapping controls, labels beside their controls, no field group
   taller than its content, the main content using the width; a drishti-inputs Form on the page by tests/form_layout.py's measure.
 
-The visual snapshots run on this file's stack (started again, over the same cached lake) in test_page_snapshots_browser.py, a file of their
-own so each file fits its re-run time limit.
+The visual snapshots run on this file's stack (started again, over the same cached lake) in test_snapshots_<group>_browser.py, four files of
+their own (snapshot_pages.py GROUPS) so the lane's workers capture them side by side.
 
 DRISHTI_PAGEWALK_BASE=<console URL> walks a console that is already running instead of starting one (an owner's stack, a QA machine).
 Skipped when Playwright, Chromium, the built server jar or a JDK is missing."""
@@ -39,7 +39,7 @@ from var_stack import VAR_TRADES, var_data, var_lake, var_server
 KEY_PAGES = ["/", "/var?scope=BANK", go("VAR BANK EXPLAIN"), "/pivot?preset=mr", "/pivot", "/bi/designer", "/forms", "/admin/engines",
              "/admin/connectors", "/admin/loads", "/admin/loads/upload", "/help"]
 THEMES = {"dark": "terminal", "light": "light"}
-#: the business date the page walk's lake ends on: fixed, so the visual snapshots' figures and dates (test_page_snapshots_browser.py) are the same on every run
+#: the business date the page walk's lake ends on: fixed, so the visual snapshots' figures and dates (snapshot_pages.py) are the same on every run
 SNAPSHOT_DATE = "2026-11-06"
 #: the walk's lake: the VaR files' trades and VaR inputs, the exposure engine's committed run (its paths, netting sets, CSAs, collateral,
 #: limits, counterparties), the funds and the US equities, so the Trades, EXP, FUND and USEQ pages and the Markets lens show their data
