@@ -121,6 +121,25 @@ a:hover { text-decoration: underline; }
 .lp-lead { color: var(--d-muted); max-width: 64ch; }
 .lp-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--d-sp-32); align-items: center; }
 
+/* the house (Home; HOW_IT_FITS.md "The house"): the server-drawn SVG of _macros/house.html, coloured by the theme */
+.lp-house .lp-cta { justify-content: flex-start; margin-top: var(--d-sp-16); }
+.house-figure { margin: 0; border: 1px solid var(--d-border); border-radius: var(--d-radius-14); background: var(--d-bg-2); padding: var(--d-sp-12_8); }
+.house-figure figcaption { color: var(--d-muted); font-family: var(--d-font-mono); font-size: var(--d-fs-12_8); padding-top: var(--d-sp-6_4); }
+.house-pic { display: block; width: 100%; height: auto; font-family: var(--d-font-sans); }
+.house-roof { fill: none; stroke: var(--d-accent); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.house-ring { fill: none; stroke: var(--d-border); stroke-width: 1.5; stroke-dasharray: 3 6; }
+.house-wire { stroke: var(--d-accent); stroke-width: 2.5; }
+.house-core { fill: var(--d-surface-2); stroke: var(--d-accent); stroke-width: 2; }
+.house-cap { fill: var(--d-accent); font-weight: 700; letter-spacing: .14em; font-size: var(--d-fs-15); }
+.house-sub { fill: var(--d-muted); font-size: var(--d-fs-12_5); }
+.house-free { fill: none; stroke: var(--d-muted); stroke-width: 1.5; stroke-dasharray: 6 5; }
+.house-socket text { fill: var(--d-muted); font-size: var(--d-fs-12); }
+.house-room .house-back { fill: var(--d-bg-2); }
+.house-room .house-tint { fill: var(--house-hue); fill-opacity: .18; stroke: var(--house-hue); stroke-width: 2; }
+.house-room text { fill: var(--d-ink); font-weight: 700; font-size: var(--d-fs-13_5); }
+.house-h0 { --house-hue: var(--d-link); } .house-h1 { --house-hue: var(--d-accent); } .house-h2 { --house-hue: var(--d-cap-violet); }
+.house-h3 { --house-hue: var(--d-ok); } .house-h4 { --house-hue: var(--d-world-teal); } .house-h5 { --house-hue: var(--d-neg); }
+
 .code-panel { background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius-12); overflow: hidden; }
 .code-panel .bar { display: flex; gap: var(--d-sp-6_4); align-items: center; padding: var(--d-sp-8) var(--d-sp-12_8); border-bottom: 1px solid var(--d-border);
   color: var(--d-muted); font-size: var(--d-fs-12_48); font-family: var(--d-font-mono); }

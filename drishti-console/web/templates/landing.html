@@ -15,6 +15,7 @@
 #}
 {% extends "base.html" %}
 {% from "_macros/ui.html" import card %}
+{% from "_macros/house.html" import kernel_and_rooms %}
 {% block title %}{{ PRODUCT }} — {{ HEADLINE or TAGLINE }}{% endblock %}
 {% block content %}
 <section class="lp-hero">
@@ -53,6 +54,20 @@
 </section>
 
 {% set _ed = edition_of(request) %}{# an edition (or lens) switches the general Drishti story off section by section (home.sections) #}
+{% if house and _ed.home_section('house') %}<section class="lp-section lp-house" id="house" data-house>{# the house: the kernel and this distribution's rooms (HOW_IT_FITS.md) #}
+  <div class="lp-wrap lp-grid2">
+    <div>
+      <div class="lp-kicker">How it fits</div>
+      <h2 class="lp-h2">One kernel. Modules plug in.</h2>
+      {% set n = house.rooms | length %}
+      <p class="lp-lead">{{ PRODUCT }} is one kernel with {{ n }} module{{ '' if n == 1 else 's' }} plugged in{% if n %}: {{ house.rooms | map(attribute='title') | join(', ') }}{% endif %}.
+        Each module is a room with its own screens; an empty socket takes another <code>.dmod</code>. Your product, your way.</p>
+      <div class="lp-cta"><a class="btn-pill btn-ghost" href="/help/how-it-fits" data-house-link><i class="bi bi-diagram-3" aria-hidden="true"></i> How it fits together</a></div>
+    </div>
+    <figure class="house-figure">{{ kernel_and_rooms(house) }}
+      <figcaption>{{ PRODUCT }}{% if TAGLINE %} · {{ TAGLINE }}{% endif %}</figcaption></figure>
+  </div>
+</section>{% endif %}
 {% if _ed.home_section('stats') %}<div class="lp-wrap">
   <div class="lp-stats" role="list">
     <div role="listitem"><b>0</b><span>hand-built screens</span></div>
