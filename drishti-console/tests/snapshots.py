@@ -47,7 +47,7 @@ MASK = ["[data-clock]", "#asofDate", "[data-dyk]", "[data-ready-facts]", "[data-
         "[data-relative-time]"]
 #: timings that change their own width (a mask over them would move with it): the VaR explorer's paint, server and aggregation
 #: times, a live board's last update, a search's or a form's time taken; their words replaced by one dot
-QUIET = ["[data-vx-timing]", "[data-vx-fresh]", "[data-live-time]", "[data-elapsed]"]
+QUIET = ["[data-vx-timing]", "[data-vx-fresh]", "[data-live-time]", "[data-elapsed]", ".dc-ms"]
 
 _STILL = """async ([quiet, today, repo]) => {
   // what the run, not the page, decides: the checkout's folder, the test's scratch folders and the real day's date and time, local or UTC
