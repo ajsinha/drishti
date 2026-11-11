@@ -134,6 +134,12 @@ def test_the_key_pages_look_as_approved(stack, browser, request, tmp_path):
                     faults += [f"{name}: {f}" for f in r["faults"]]
                     pg.evaluate("(t) => document.documentElement.setAttribute('data-theme', t)", THEMES[theme])
                     png = snapshots.capture(pg, opts.get("mask", []), opts.get("scroll"))
+                    for _ in range(8):   # still drawing (a grid filling, a chart easing in): two captures a second apart must agree
+                        pg.wait_for_timeout(1000)
+                        again = snapshots.capture(pg, opts.get("mask", []), opts.get("scroll"))
+                        if again == png:
+                            break
+                        png = again
                     if href.startswith("/lens/"):
                         open_page(pg, base, "/lens/leave")
                         _confirm(pg, base, settle=False)

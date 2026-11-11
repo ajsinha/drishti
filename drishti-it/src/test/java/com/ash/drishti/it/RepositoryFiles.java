@@ -29,7 +29,8 @@ final class RepositoryFiles {
             Set.of("target", ".git", ".claude", ".venv", "vendor", "recorded", "__pycache__", ".mvn", ".idea", ".pytest_cache", "requirements",
                     "connector-upgrade", // byte-exact copies of a past release's generated connector files (ConnectorUpgradeTest)
                     "archetype-resources"); // the Module SDK's templates: a generated module carries its own publisher's header
-    static final Set<String> SKIP_FILES = Set.of("mvnw", "mvnw.cmd", "LICENSE");
+    static final Set<String> SKIP_FILES = Set.of("mvnw", "mvnw.cmd", "LICENSE",
+            "dependency-reduced-pom.xml"); // the shade plugin's build output (git-ignored), not source
 
     private RepositoryFiles() {}
 
