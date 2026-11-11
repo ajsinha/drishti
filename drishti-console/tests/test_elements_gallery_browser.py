@@ -35,6 +35,8 @@ pytestmark = pytest.mark.spread
 STATIC = Path(__file__).resolve().parents[1] / "web" / "static"
 ORIGIN = "http://render.test"
 PAGE = "/static/gallery/drishti_gallery.html"
+#: the console lists the hosted modules' visuals here (routes/elements_routes.py): it always answers, an empty list when there are none
+VISUALS = "/api/elements/visuals"
 HEADERS = {"content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:"}
 TYPES = {".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "application/javascript", ".json": "application/json"}
 FRAME_HEADERS = {"content-security-policy": "default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval'; style-src 'unsafe-inline'; img-src data:; font-src data:; frame-ancestors 'self'"}
@@ -46,6 +48,9 @@ def router(fetched):
     async def route(r):
         path = r.request.url[len(ORIGIN):].split("?")[0].split("#")[0]
         f = STATIC / path[len("/static/"):] if path.startswith("/static/") else None
+        if path == VISUALS:                                   # the console's answer when no hosted module brings a visual
+            fetched.append(path)
+            return await r.fulfill(status=200, body='{"visuals": []}', headers={"content-type": "application/json"})
         if f and f.is_file():
             fetched.append(path)
             headers = {"content-type": TYPES.get(f.suffix, "application/octet-stream")}
