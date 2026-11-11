@@ -57,12 +57,12 @@ LANE_RULES: tuple[tuple[str, frozenset[str]], ...] = (
     (r"^drishti-console/(?!tests/)", ALL),
     (r"^deploy/docker/|(^|/)\.dockerignore$|^bin/drishti-node\.sh$", frozenset({"containers"})),
     (r"^deploy/", frozenset({"tools-b"})),                                                         # deploy/aws's tool tests
-    (r"^drishti-compute/src/test/python/", frozenset({"tools-b"})),
+    (r"^compute/drishti-compute/src/test/python/", frozenset({"tools-b"})),
     (r"^tools/", frozenset({"tools-a", "tools-b", "browser", "other"})),                          # the lake builders the browser files use
-    (r"\.java$|(^|/)pom\.xml$|^\.mvn/|^mvnw|/src/main/resources/|/src/test/resources/", _JAVA_RUNS),
-    (r"^(drishti-(?!console/)[^/]+|modules|plugins|lib|sdk)/", _JAVA_RUNS),
+    (r"\.java$|(^|/)pom\.xml$|^\.mvn/|^mvnw|^\.java-version$|/src/main/resources/|/src/test/resources/", _JAVA_RUNS),
+    (r"^(kernel|compute|lake|net|plugins|modules|packaging|testing|drishti-sdk|external_lib)/", _JAVA_RUNS),   # the Maven modules' subject folders
     (r"^config/|^data/testdata/|^sutras/", ALL),                                                  # what every server and lake reads
-    (r"^(drishti-elements|drishti-compute|drishti-stack|clients|examples)/", ALL),                # shared by the console, the tools and Java
+    (r"^(packaging/drishti-elements|compute/drishti-compute|deploy/stack|clients|examples)/", ALL),   # shared by the console, the tools and Java
     (r"^LICENSE$|^NOTICE|^THIRD-PARTY-NOTICES\.md$|^CHANGELOG\.md$|^RELEASE_NOTES\.md$", frozenset({"other"})),
 )
 

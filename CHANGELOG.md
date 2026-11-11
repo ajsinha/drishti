@@ -65,7 +65,7 @@
     console images, boots them on the host network beside the browser lane (no network change for Chromium), checks health, the VaR golden
     through the server's API (BANK and DESK-RATES, VaR and ES at the walk's fixed date) and four console pages; about a minute with the
     layers cached. Every Testcontainers test still runs, after the browser lane with its copy built at once, when the diff since the last
-    release touches the Dockerfiles, a pom, the Maven wrapper, `drishti-native/` or a module with container tests (`DRILL_CONTAINERS=full`
+    release touches the Dockerfiles, a pom, the Maven wrapper, `.java-version`, the native maths or a module with container tests (`DRILL_CONTAINERS=full`
     forces it). Its first run found both images unable to start: the server's JRE has no `jdk.random` (retry jitter now comes from
     `ThreadLocalRandom`), the console could not write its data folder, and the console image still fetched the removed DuckDB-Wasm.
   - **Fix drills**: `tools/drill.sh --fix` runs the gate, then only the lanes not passed at an ancestor of HEAD or reachable from what changed

@@ -379,7 +379,7 @@ server's JRE has no `jdk.random` (its retry jitter now comes from `ThreadLocalRa
 test: the JDBC, MongoDB, Redis, Cassandra, Aerospike, Kafka, RabbitMQ, ActiveMQ, Iceberg, S3 and identity stores against real brokers)
 still runs, after the browser lane with its copy built while it runs, whenever the diff since the last release (`origin/main`) touches
 what it proves: the Dockerfiles or the build context, a pom (the JDK version, a native library, an image version), the Maven wrapper,
-`drishti-native/`, the image's entry point, or any module with container tests (`container_smoke.py full-needed` prints why;
+the native maths (`compute/drishti-compute`'s `linalg`), `.java-version`, the image's entry point, or any module with container tests (`container_smoke.py full-needed` prints why;
 `DRILL_CONTAINERS=full` forces it, `smoke` skips it). `tools/drillkit/test_drill_lanes.py` checks that choice.
 
 ```bash

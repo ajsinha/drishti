@@ -37,8 +37,8 @@ class Reach(unittest.TestCase):
             self.assertEqual(L.lanes_for(p), L.ALL, p)
 
     def test_java_reaches_everything_that_runs_the_jar(self):
-        for p in ("drishti-server/src/main/java/A.java", "modules/banking/banking-service/src/main/java/B.java", "pom.xml",
-                  "plugins/drishti-plugin-kafka/src/test/java/KTest.java", "drishti-engine/src/main/resources/x.yaml"):
+        for p in ("kernel/drishti-server/src/main/java/A.java", "modules/banking/banking-service/src/main/java/B.java", "pom.xml",
+                  "plugins/drishti-plugin-kafka/src/test/java/KTest.java", "kernel/drishti-engine/src/main/resources/x.yaml", ".java-version"):
             got = L.lanes_for(p)
             self.assertTrue({"java21", "java25", "browser", "tools-a", "tools-b", "containers"} <= got, (p, got))
 
@@ -50,7 +50,7 @@ class Reach(unittest.TestCase):
         self.assertTrue({"browser", "other", "java21", "tools-a"} <= L.lanes_for("docs/guides/VAR_GUIDE.md"))
 
     def test_shared_data_and_config_reach_every_lane(self):
-        for p in ("config/packs/default-packs.yaml", "data/testdata/core/desk/a.jsonl.gz", "drishti-elements/pom.xml"):
+        for p in ("config/packs/default-packs.yaml", "data/testdata/core/desk/a.jsonl.gz", "packaging/drishti-elements/pom.xml"):
             self.assertEqual(L.lanes_for(p), L.ALL, p)
 
     def test_the_dockerfiles_reach_the_containers(self):
@@ -90,7 +90,7 @@ class FixPlan(unittest.TestCase):
         self.assertIsNone(self.plan(["x"], state, reach=None)["browser"][1])   # the fix reaches every console test: the whole lane
 
     def test_a_java_fix_reaches_the_java_lanes(self):
-        self.assertEqual(set(self.plan(["drishti-server/src/main/java/A.java"])), L._JAVA_RUNS)
+        self.assertEqual(set(self.plan(["kernel/drishti-server/src/main/java/A.java"])), L._JAVA_RUNS)
 
     def test_a_pass_on_another_branch_does_not_count(self):
         self.assertEqual(set(self.plan([], ancestor=False)), L.ALL)
@@ -112,7 +112,8 @@ class FixPlan(unittest.TestCase):
 
 class FullContainerSuite(unittest.TestCase):
     def test_the_dockerfiles_the_jdk_and_native_code_need_the_full_suite(self):
-        for p in ("deploy/docker/server.Dockerfile", "pom.xml", "drishti-native/src/main/java/N.java", ".mvn/wrapper/maven-wrapper.properties"):
+        for p in ("deploy/docker/server.Dockerfile", "pom.xml", ".java-version", "compute/drishti-compute/src/main/java/com/ash/drishti/compute/linalg/Blas.java",
+                  ".mvn/wrapper/maven-wrapper.properties"):
             self.assertTrue(C.full_reasons([p]), p)
 
     def test_a_module_with_container_tests_needs_them(self):

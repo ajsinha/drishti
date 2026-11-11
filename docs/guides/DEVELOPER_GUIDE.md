@@ -699,7 +699,7 @@ with `--no-push`), the working tree is clean (`drill: commit your changes first`
   server's API (`tools/drillkit/container_smoke.json`; `container_smoke.py record` after a change that moves the demo figures on
   purpose), four console pages. About a minute with the images' layers cached. Every Testcontainers test runs as well, after the
   browser lane (its copy built at once), when the diff since the last release touches the Dockerfiles, a pom (the JDK, a native
-  library, an image version), the Maven wrapper, `drishti-native/` or a module with container tests (`container_smoke.py full-needed`).
+  library, an image version), the Maven wrapper, `.java-version`, the native maths (`linalg`) or a module with container tests (`container_smoke.py full-needed`).
 
 **After the tests** the drill checks that they left `config/` and the data folder (`DRISHTI_DATA_DIR`, else `data/`) as they found
 them: a file added or changed there fails the drill with its name (a server running from the repository turns the data-folder check

@@ -46,7 +46,7 @@ FLAGS = ["-Xshare:auto", "-Xlog:cds=off", "-Xlog:cds+dynamic=off"]   # an archiv
 
 
 def jar() -> Path | None:
-    found = sorted((ROOT / "drishti-server" / "target").glob("drishti-server-*-exec.jar"))
+    found = sorted((ROOT / "kernel" / "drishti-server" / "target").glob("drishti-server-*-exec.jar"))
     return found[-1] if found else None
 
 

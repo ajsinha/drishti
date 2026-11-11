@@ -60,7 +60,8 @@ FULL_TRIGGERS = {
     r"(^|/)\.dockerignore$": "the images' build context",
     r"(^|/)pom\.xml$": "a pom (the JDK version, a native library or a container image version may have changed)",
     r"^\.mvn/|^mvnw": "the Maven wrapper (the JDK it runs on)",
-    r"^drishti-native/": "the native libraries",
+    r"^compute/drishti-compute/src/main/java/.*/linalg/": "the native maths (OpenBLAS and its Java fallback)",
+    r"(^|/)\.java-version$": "the JDK version",
     r"^bin/drishti-node\.sh$": "the image's entry point",
 }
 
@@ -200,7 +201,7 @@ def pages(console: str) -> list[str]:
 
 def boot_and_check(record: bool, keep: bool) -> int:
     t0 = time.monotonic()
-    jars = sorted((ROOT / "drishti-server" / "target").glob("drishti-server-*-exec.jar"))
+    jars = sorted((ROOT / "kernel" / "drishti-server" / "target").glob("drishti-server-*-exec.jar"))
     if not jars:
         raise SystemExit("smoke: FAILED: no server jar (the gate's build makes it: ./mvnw -o package -DskipTests)")
     for kind in ("server", "console"):
