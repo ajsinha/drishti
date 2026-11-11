@@ -212,3 +212,33 @@ def test_a_path_names_a_sites_own_file(tmp_path: Path):
                    .replace("drishti.finance", "drishti.acme"), encoding="utf-8")
     d = dist.read(dist.file_of(DIR, str(own)), DIR / dist.KERNEL, MODULES, CONSOLE.parent / "config" / "packs")
     assert d.title == "Acme Markets" and d.help_title == "Acme Markets Help"
+
+
+def test_a_dmod_installed_after_the_start_joins_a_custom_distribution_and_its_removal_hides_it(backend, monkeypatch, tmp_path: Path):
+    """The console's distribution reads the server's module list (GET /public/modules/manifests: shipped and installed .dmod packages,
+    then the manifests folder), again whenever /public/about's ``manifests`` changes; before any answer, the manifests folder."""
+    import asyncio
+    own = tmp_path / "drishti.freight.yaml"
+    own.write_text("format: 1\ndistribution: drishti.freight\nbrand: {product: Acme Freight}\nmodules:\n  - { id: freight }\n"
+                   "kernel-packs: []\nlenses: {offered: [research], default: research}\n", encoding="utf-8")
+    app = _app(backend, monkeypatch, f"--distribution={own}")
+    eds = app.state.editions
+    assert "freight" not in eds.distribution.domains and "SHIP" not in eds.instance.commands()   # not in the folder, not installed yet
+    freight = {"id": "freight", "domain": "logistics", "packs": [], "words": ["SHIP"], "features": [], "menus": ["freight"], "docs": [],
+               "requires": []}
+    lists = {"f1": {"modules": [freight]}, "f2": {"modules": []}}
+    asked = []
+
+    async def follow(fp):
+        async def fetch():
+            asked.append(fp)
+            return lists[fp]
+        return await eds.follow_modules({"manifests": fp}, fetch)
+
+    assert asyncio.run(follow("f1"))                                   # installed: the server lists it
+    assert eds.distribution.domains == {"freight": "logistics"} and "SHIP" in eds.instance.commands()
+    assert "Acme Freight" in _client(app).get("/t").text
+    assert not asyncio.run(follow("f1")) and asked == ["f1"]           # the same registry: nothing asked again
+    assert asyncio.run(follow("f2"))                                   # removed: hidden
+    assert "freight" not in eds.distribution.domains and "SHIP" not in eds.instance.commands()
+    assert dist.entries({"modules": [freight]})["freight"].words == ["SHIP"]

@@ -169,7 +169,10 @@ and a module with code's `modules/<id>/dmod/module.yaml` (banking's), both the `
 `compute.engines`, `console.menus`, `docs.domains`, `requires`). The folder is `drishti.module-manifests-dir` (`module_manifests_dir` on the console,
 `DRISHTI_MODULE_MANIFESTS_DIR` for both; default `./modules`). A listed module brings the modules it requires (banking brings
 market-data); a listed module with no manifest stops the start unless the file says `required: false`. A module project made from the
-SDK keeps its manifest in `modules/<id>/src/dmod/module.yaml` (genomics), read the same way. A file may name the kernel's packs it takes
+SDK keeps its manifest in `modules/<id>/src/dmod/module.yaml` (genomics), read the same way. The `.dmod` packages the server ships and
+those installed in its module store are read first, by the module registry's own reader (a package's manifest wins). The console takes
+the server's list (`GET /public/modules/manifests`) and reads it again when the registry changes (`/public/about`'s `manifests`), so a
+package installed or removed while it runs joins or leaves its distribution; its own folder serves only until a server answers. A file may name the kernel's packs it takes
 (`kernel-packs:`; Genomics takes none, and a distribution of no packs loads none, not the default list).
 
 **The content modules.** Three `.dmod`s, each a folder in the `.dmod` layout (`module.yaml`, `console/plugin.yaml` with a Sutra page per

@@ -392,6 +392,9 @@ class Editions:
         self.console_dir = console_dir
         self.own_distribution = _dist.selected(settings)[1]     # --distribution on this console: it decides, whatever the server runs
         self.distribution = _dist.builtin_all()
+        self.server_modules = None                               # the server's module list (/public/modules/manifests); None: not yet
+        self._manifests = None                                   # its fingerprint, from /public/about
+        self._dist_name: str | None = None
         self._use_distribution(None)                             # Drishti All when none is named: nothing changes
 
     def default_packs(self) -> list[str]:
@@ -463,6 +466,31 @@ class Editions:
             self.on_change()
         return True
 
+    async def follow_modules(self, about: dict, fetch) -> bool:
+        """When the server's module registry changed (``about["manifests"]``), reads its module list (``await fetch()``: the answer of
+        ``/public/modules/manifests``) and the distribution again: a ``.dmod`` installed after the start joins it, a removed one leaves.
+        True when the distribution was read again; a list that does not read, or a distribution it refuses, keeps the last one."""
+        fp = about.get("manifests") if isinstance(about, dict) else None
+        if not fp or fp == self._manifests:
+            return False
+        from core import distribution as _dist
+        try:
+            known = _dist.entries(await fetch())
+        except Exception as e:  # noqa: BLE001 - the server's list is asked again at its next change
+            LOG.warning("the server's module list did not read (%s); the distribution stays as it is", e)
+            return False
+        self._manifests, before = fp, self.server_modules
+        self.server_modules = known
+        try:
+            self._use_distribution(self._dist_name)
+        except ValueError as e:
+            LOG.warning("the distribution stays as it was: %s", e)
+            self.server_modules = before
+            return False
+        if self.on_change is not None:
+            self.on_change()
+        return True
+
     def for_request(self, lens: str | None) -> Edition:
         """The instance's edition; on a full instance, the person's lens when the site offers it; else the full Drishti."""
         if self.instance.active and not self.instance.distribution:
@@ -479,7 +507,9 @@ class Editions:
     def _use_distribution(self, name: str | None) -> None:
         """Reads the distribution (``name``, else the console's own choice) and puts its brand layer and visibility filter in place."""
         from core import distribution as _dist
-        d = _dist.load(self.settings, self.console_dir, name)
+        # a listed module neither the server nor the folder knows (not installed yet, or removed) is left out with a warning
+        d = _dist.load(self.settings, self.console_dir, name, self.server_modules, strict=False)
+        self._dist_name = name
         self.distribution = d
         layer = d.settings_layer()
         if os.environ.get("DRISHTI_PRODUCT"):                       # the old variable, read for one release (Health says so)

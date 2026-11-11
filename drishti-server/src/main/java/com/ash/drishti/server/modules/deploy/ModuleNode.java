@@ -743,6 +743,13 @@ public final class ModuleNode implements AutoCloseable {
         return new TreeMap<>(registry).values().stream().toList();
     }
 
+    /** A word that changes whenever a module of the registry comes, goes, changes version or state (the console follows it). */
+    public String fingerprint() {
+        StringBuilder print = new StringBuilder();
+        entries().forEach(e -> print.append(e.id()).append('@').append(e.version()).append(':').append(e.state()).append('|'));
+        return Integer.toHexString(print.toString().hashCode());
+    }
+
     private final Map<String, List<String>> legacy = new ConcurrentHashMap<>();
     private static final ObjectMapper YAML_READER = new ObjectMapper(new com.fasterxml.jackson.dataformat.yaml.YAMLFactory());
 
