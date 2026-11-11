@@ -30,6 +30,9 @@ from test_page_widths_browser import AUDIT  # noqa: E402
 from scratch_ports import worker_port  # noqa: E402
 
 PORT = worker_port(17972)
+#: the Elements grids of the landings (drishti-grid's data rows)
+MOVED_ROWS = "[data-grid=moved] .dg-row"
+FUND_ROWS = "[data-grid=funds] .dg-row"
 THEMES = ["terminal", "light", "wallstreet", "blue", "green", "crimson", "crimson-dark", "terminal-green", "terminal-crimson", "terminal-blue"]
 
 
@@ -143,14 +146,14 @@ def test_each_world_landing_fills_from_the_packs_and_fits(browser, world_console
         page.locator(f"[data-world-landing='{landing}']").wait_for()
         if landing == "desk":
             page.wait_for_function("() => document.querySelector('[data-wl-date]').textContent === '2026-10-28'")
-            page.wait_for_function("() => document.querySelectorAll('[data-wl-moved] tr').length >= 4")
+            page.locator(MOVED_ROWS).nth(3).wait_for()                                           # the Elements grid's rows
             page.wait_for_function("() => document.querySelectorAll('[data-wl-news] li a').length >= 4")
             page.wait_for_function("() => document.querySelector('[data-wl-filings]').textContent === '20'")
             assert page.locator("[data-wl-world]").inner_text() == "2.8%"
             assert page.locator("[data-wl-breadth]").inner_text() == "2 · 1"
             assert page.locator("[data-wl-mover]").inner_text().startswith("SHEL")
             assert page.locator("[data-wl-funds-n]").inner_text() == "200"
-            assert "United States" in page.locator("[data-wl-moved] tr").first.inner_text()     # the largest move (−0.6) first
+            assert "United States" in page.locator(MOVED_ROWS).first.inner_text()     # the largest move (−0.6) first
             assert "interest rates" in page.locator("[data-wl-news] li").first.inner_text()      # the newest story first
             assert "April 2026" in page.locator("[data-wl-vintage]").inner_text()
             assert page.locator("[data-home-card='FUND SPY']").count() == 1
@@ -170,8 +173,9 @@ def test_each_world_landing_fills_from_the_packs_and_fits(browser, world_console
             page.wait_for_function("() => document.querySelector('[data-wl-regions] .wl-reg.hot b').textContent === 'United States'")
             page.wait_for_function("() => document.querySelectorAll('[data-wl-sectors] .wl-bar').length === 3")
             assert "Manufacturing" in page.locator("[data-wl-sectors] .wl-bar").first.inner_text()
-            page.wait_for_function("() => document.querySelectorAll('[data-wl-funds] tr').length === 3")
-            assert "S&P 500" in page.locator("[data-wl-funds] tr").nth(1).inner_text()
+            page.locator(FUND_ROWS).nth(2).wait_for()
+            assert page.locator(FUND_ROWS).count() == 3
+            assert "S&P 500" in page.locator(FUND_ROWS).nth(1).inner_text()
             page.wait_for_function("() => document.querySelectorAll('[data-wl-changes] li').length >= 4")
         assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
         assert not page.evaluate(AUDIT)
@@ -184,7 +188,7 @@ def test_the_world_desk_draws_in_every_theme_with_its_teal_accent(browser, world
     page = ctx.new_page()
     try:
         page.goto(f"{world_console}/?landing=desk", wait_until="load")
-        page.wait_for_function("() => document.querySelectorAll('[data-wl-moved] tr').length >= 4")
+        page.locator(MOVED_ROWS).nth(3).wait_for()                                           # the Elements grid's rows
         seen = set()
         for theme in THEMES:
             page.evaluate(f"document.documentElement.setAttribute('data-theme', '{theme}')")
