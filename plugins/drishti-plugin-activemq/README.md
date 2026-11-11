@@ -49,7 +49,7 @@ doc: plugins/drishti-plugin-activemq/README.md
 ---
 # The activemq connector
 
-Plugin `activemq` (`plugins/drishti-plugin-activemq`, on the shared `MessageStateSource` of `drishti-messaging`, which the
+Plugin `activemq` (`plugins/drishti-plugin-activemq`, on the shared `MessageStateSource` of `drishti-common` (package `messaging`), which the
 [RabbitMQ connector](../drishti-plugin-rabbitmq/README.md) uses too): entity changes published to ActiveMQ Classic, kept on
 local disk, with views that tick on every message.
 

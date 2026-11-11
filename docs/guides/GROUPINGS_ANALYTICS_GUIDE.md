@@ -586,7 +586,7 @@ server even with `DRISHTI_COMPUTE_ENABLED=false`. The code is `modules/banking/b
 ## 21. The price analytics
 
 PXH's prices are read live, never stored; the analytics are worked out in the same step, by the `yfinance` plugin
-(`plugins/drishti-plugin-yfinance/.../PriceAnalytics.java`), from the history it has just parsed, and the benchmark's history read
+(`plugins/drishti-connectors/.../PriceAnalytics.java`), from the history it has just parsed, and the benchmark's history read
 through the same cache. The connector `us-equities-prices` is **off as shipped** and **internal use only**: switching it on sends each
 ticker opened to Yahoo Finance, and the prices and everything computed from them may not be redistributed.
 

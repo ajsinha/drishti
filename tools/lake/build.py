@@ -400,7 +400,7 @@ def plan(a) -> dict:
 def lake_layout(a, p: dict) -> None:
     """``--lake NAME`` naming a lake of config/lakes/ (docs/guides/DATA_LAKE_GUIDE.md): the table's location, partitioning, promoted columns,
     vectors, flattened fields, id, date, latest-by and load mode come from its lake file, read by the one reader (lakeconfig.py runs
-    drishti-lakeconfig). A --partition-by, --promote or --vector that says otherwise is refused, naming both; a kind the lake file has
+    drishti-lakeio). A --partition-by, --promote or --vector that says otherwise is refused, naming both; a kind the lake file has
     no entry for is refused (a writer never creates a table its lake file does not describe). ``--lake-root DIR`` writes the same
     layout under another folder (a scratch or test lake); ``--lake DIR`` alone is the old form: the options and the pack decide."""
     import lakeconfig

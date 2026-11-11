@@ -51,7 +51,7 @@ doc: plugins/drishti-plugin-rabbitmq/README.md
 ---
 # The rabbitmq connector
 
-Plugin `rabbitmq` (`plugins/drishti-plugin-rabbitmq`, on the shared `MessageStateSource` of `drishti-messaging`, as `activemq`):
+Plugin `rabbitmq` (`plugins/drishti-plugin-rabbitmq`, on the shared `MessageStateSource` of `drishti-common` (package `messaging`), as `activemq`):
 entity changes from RabbitMQ queues, kept on local disk, with views that update on every message.
 
 ## What it reads
@@ -66,7 +66,7 @@ Undated, no reverse lookups. Consumers of one queue share its messages: give eac
 A queue delivers a message once and keeps nothing after it is acknowledged, so the connector keeps the latest document of every
 entity itself and acknowledges a message only once the store has kept it (by default synced to disk): neither a crash nor a power loss
 loses an acknowledged message. The plugin (`RabbitMqSourcePlugin`: connection, queues, consumers, health) sits on
-`MessageStateSource` (module `drishti-messaging`: parsing, the state store, the memory cache, type-ahead and live fan-out), shared with
+`MessageStateSource` (package `messaging` of `drishti-common`: parsing, the state store, the memory cache, type-ahead and live fan-out), shared with
 [the activemq connector](../drishti-plugin-activemq/README.md).
 
 | Use it for | Prefer another connector for |

@@ -53,7 +53,7 @@ from core.guides import GithubSlugger  # noqa: E402
 
 # Markdown that is not documentation a reader opens: vendored libraries' notes, test resources, the generator's
 # README fragments (they are pasted into the packs' READMEs, which are checked) and the parallel gleif build.
-NOT_DOCS = ("drishti-console/web/static/vendor/", "plugins/drishti-plugin-feeds/src/test/",
+NOT_DOCS = ("drishti-console/web/static/vendor/", "plugins/drishti-connectors/src/test/",
             "tools/packgen/", "tools/elements-demo/", "data/", "config/packs/core/gleif/")
 # History: names that were true when written. Links in these must still resolve; the names in them need not exist.
 HISTORY = ("CHANGELOG.md", "RELEASE_NOTES.md")
@@ -415,7 +415,7 @@ def server_keys() -> frozenset[str]:
 def properties_prefixes() -> dict[str, str]:
     """prefix -> the text of every class bound to it: a @ConfigurationProperties class, or a plain record the server binds
     with Spring's ``Binder`` (``Binder.get(env).bind("drishti.lake.memory", MemoryLakeSettings.class)``: the in-memory
-    lake's settings live in the Spring-free drishti-memlake)."""
+    lake's settings live in the Spring-free in-memory lake of drishti-lakeload)."""
     out: dict[str, str] = {}
     for p in tracked():
         if p.endswith(".java") and "/src/main/" in p:

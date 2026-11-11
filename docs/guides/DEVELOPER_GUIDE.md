@@ -96,7 +96,7 @@ them, so they are on its class path; each starts only when enabled or used by a 
 
 | Module | Plugin name | Reads | Extra internal dependency |
 |---|---|---|---|
-| `drishti-plugin-demo` | `demo` | The enabled packs' `samples/` (`<kind>.jsonl`); random-walk ticks ([the demo plugin's README](../../plugins/drishti-plugin-demo/README.md)) | — |
+| `drishti-plugin-demo` | `demo` | The enabled packs' `samples/` (`<kind>.jsonl`); random-walk ticks ([the demo plugin's README](../../docs/connectors/types/demo/README.md)) | — |
 | `drishti-plugin-file` | `file` | JSON or JSON Lines documents in a folder, dated by folder | — |
 | `drishti-plugin-rest` | `rest` | An HTTP/JSON service | — |
 | `drishti-plugin-jdbc` | `jdbc` | A database by query, or the PostgreSQL entity-table mode | — |
@@ -108,7 +108,7 @@ them, so they are on its class path; each starts only when enabled or used by a 
 | `drishti-plugin-iceberg` | `iceberg` | Apache Iceberg tables in Drishti's layout (path-based or a REST catalog), with time travel; engine `native` (drishti-iceberg, no Hadoop) or `library` | `drishti-iceberg` |
 | `drishti-plugin-iceberg-external` | `iceberg-external` | Iceberg tables other engines write, rows as documents, read-only, through drishti-iceberg | `drishti-iceberg` |
 | `drishti-plugin-duckdb` | `duckdb` | Every data domain in one embedded DuckDB file | — |
-| `drishti-plugin-feeds` | `feed` | Public feeds: NY Fed SOFR, ECB €STR and FX, US Treasury, FRED ([the feeds plugin's README](../../plugins/drishti-plugin-feeds/README.md)) | — |
+| `drishti-plugin-feeds` | `feed` | Public feeds: NY Fed SOFR, ECB €STR and FX, US Treasury, FRED ([the feeds plugin's README](../../docs/connectors/types/feed/README.md)) | — |
 | `drishti-plugin-news` | `news` | Headlines for a named entity, computed on demand from Google News RSS (code, not a store) | `drishti-common` |
 | `drishti-plugin-yfinance` | `yfinance` | A quote and price history for a ticker, computed on demand from Yahoo Finance | `drishti-common` |
 | `drishti-plugin-kafka` | `kafka` | Compacted topics of entity documents | `drishti-diskcache` |
@@ -1764,7 +1764,7 @@ The console runs Uvicorn with access logs off (`access_log=False` in `run_drisht
 
 1. Does the view say **Live** in the top bar? A picked business date is static: no stream is opened. On the demo lakes with the demo
    source off nothing ticks: start with `DRISHTI_DEMO_ENABLED=true` and open a live sample (a curve, an FX spot, a trade valuation,
-   [the demo plugin's README](../../plugins/drishti-plugin-demo/README.md)).
+   [the demo plugin's README](../../docs/connectors/types/demo/README.md)).
 2. `provenance.live` in the view JSON must be `true`; only live sources (`SourceCapabilities.live`) tick.
 3. Watch the server stream directly; you should see an `event:view` and then `event:frame` lines:
 
@@ -2808,7 +2808,7 @@ uses `RetryPolicy` from `drishti-common` in the same shape (`RetryPolicy.of(look
 
 A connector does not have to sit in front of a store. `fetch(ref)` is Java code, and what it returns can be **worked out when it is asked
 for**: a web search, a calculation, a call to an in-house service, a join of several systems. Two shipped connectors are written this way
-and are the examples to read: [`news`](../../plugins/drishti-plugin-news/README.md) (headlines for the name in the id, from Google News RSS) and [`yfinance`](../../plugins/drishti-plugin-yfinance/README.md) (a quote
+and are the examples to read: [`news`](../../docs/connectors/types/news/README.md) (headlines for the name in the id, from Google News RSS) and [`yfinance`](../../docs/connectors/types/yfinance/README.md) (a quote
 and price history for the ticker in the id, from Yahoo Finance). Neither has a database, a Delta table or a file behind it.
 
 The pattern, in six rules:
