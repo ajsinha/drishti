@@ -52,13 +52,10 @@
     <module>kernel/drishti-ai</module>
     <module>tests/drishti-testkit</module>
     <module>kernel/drishti-registry</module>
-    <module>drishti-lakeconfig</module>
     <module>lake/drishti-lakeio</module>
     <module>lake/drishti-deltalake</module>
     <module>lake/drishti-iceberg</module>
-    <module>drishti-memlake</module>
     <module>lake/drishti-lakeload</module>
-    <module>drishti-dataload</module>
     <module>net/drishti-net</module>
     <module>compute/drishti-compute</module>
     <module>compute/drishti-bicompute</module>
@@ -213,13 +210,10 @@
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-modules</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-deltalake</artifactId><version>${project.version}</version></dependency>
-      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakeconfig</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-registry</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakeio</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-iceberg</artifactId><version>${project.version}</version></dependency>
-      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-memlake</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakeload</artifactId><version>${project.version}</version></dependency>
-      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-dataload</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-net</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-compute</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-bicompute</artifactId><version>${project.version}</version></dependency>

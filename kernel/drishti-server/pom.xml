@@ -37,7 +37,7 @@
     <!-- the table layer (docs/architecture/ARCHITECTURE.md §28): BI depends on it, never the reverse -->
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-tables</artifactId></dependency>
     <!-- the in-memory lake (mem://): the server keeps only its Spring wiring (server.memlake) -->
-    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-memlake</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakeload</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-identity</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-packs</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-registry</artifactId></dependency>
@@ -51,9 +51,7 @@
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-mongodb</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-iceberg</artifactId></dependency>
     <!-- the parallel lake loader: drishti.py lake build with engine java starts it from this jar (loader.main com.ash.drishti.lakeload.LakeLoad) -->
-    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakeload</artifactId></dependency>
     <!-- the data inbox (dataload/inbox): the server keeps only its wiring (server.dataload) -->
-    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-dataload</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-iceberg-external</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-duckdb</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-feeds</artifactId></dependency>

@@ -23,10 +23,11 @@
  *
  * <h2>The dependency direction</h2>
  *
- * <p>This module depends on {@code drishti-lakeio} and {@code drishti-deltalake} (it writes its tables with the lake writer and reads them
- * with Delta Kernel); nothing below it depends on it. The lake readers reach {@code mem://} the other way round: {@code drishti-lakeio}
- * defines {@link com.ash.drishti.lakeio.StorageProvider}, and this module registers its memory stores as the provider of the scheme
- * {@code mem} ({@code META-INF/services/com.ash.drishti.lakeio.StorageProvider}). The native Delta engine, the lake writer, the Iceberg
+ * <p>This package (in drishti-lakeload) depends on {@code drishti-lakeio} and {@code drishti-deltalake} (it writes its tables with the lake
+ * writer and reads them with Delta Kernel); nothing below it depends on it. The lake readers reach {@code mem://} the other way round:
+ * {@code drishti-lakeio} defines {@link com.ash.drishti.lakeio.StorageProvider}, and this package registers its memory stores as the
+ * provider of the scheme {@code mem}
+ * ({@code META-INF/services/com.ash.drishti.lakeio.StorageProvider}). The native Delta engine, the lake writer, the Iceberg
  * engine and the Delta and Iceberg connectors ask {@link com.ash.drishti.lakeio.StorageProviders} for a path's storage, and whether it is
  * memory-only, and never name a class of this module. So:
  *
