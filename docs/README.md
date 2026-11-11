@@ -432,51 +432,15 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 
 ### Examples (`guides/examples/`)
 
-Twelve working Sutras with their data, introduced in [guides/examples/README.md](guides/examples/README.md); each has the Sutra, a JSON document and a note, and opens as a copy in the workbench.
+Twelve working Sutras with their data, on one page, [guides/examples/README.md](guides/examples/README.md): each has the Sutra, a JSON document and its note (a section of that page), and opens as a copy in the workbench.
 
 | Note | Shows |
 |---|---|
-| [all-panels-showcase.md](guides/examples/README.md#all-panels-showcase) | All twenty-two panel kinds on one screen, reading one self-contained bond trade. |
-| [exposure-profile.md](guides/examples/README.md#exposure-profile) | Expected and potential future exposure over tenor, against a limit. |
-| [linked-sources.md](guides/examples/README.md#linked-sources) | Panels that read other entities with `source: "link(id, kind)"`: the counterparty's netting sets, a netting set's exposure and a desk's pivot, all fetched live. |
-| [map.md](guides/examples/README.md#map) | A country on the map: the world with the country highlighted, and the same country's regions beside it. |
-| [market-charts.md](guides/examples/README.md#market-charts) | Market data: daily bars, a line of closes and a volatility surface. |
-| [metric.md](guides/examples/README.md#metric) | A desk's headline numbers as big-number tiles: one large formatted, toned figure each, with a small change, a unit and a caption. |
-| [operations-status.md](guides/examples/README.md#operations-status) | The back office on one screen: where a trade stands and what comes next. |
-| [pivot-row-groups.md](guides/examples/README.md#pivot-row-groups) | A pivot whose `by` is a list: desks hold books, books hold product families, each level with a subtotal. |
-| [pnl-explain.md](guides/examples/README.md#pnl-explain) | Where a trade's P&L came from, and how sensitive it is. |
-| [relationships.md](guides/examples/README.md#relationships) | How entities relate: a group and its agreements as a graph, netting sets as tabs, and the entities a document refers to. |
-| [risk-distribution.md](guides/examples/README.md#risk-distribution) | How risk is spread: scenario P&L as a histogram with VaR lines, books as points, a limit as a dial. |
-| [tree-table.md](guides/examples/README.md#tree-table) | Tables and ladders whose rows hold their own children: an organisation of units, each with sub-units, to any depth. |
 | [pack/helpdesk/guides/helpdesk.md](guides/examples/pack/helpdesk/guides/helpdesk.md) | the help-desk teaching pack's own guide, built step by step in the pack developer guide |
 
-### Decision records (`architecture/adr/`)
+### Decision records
 
-The index is [adr/README.md](../HOW_IT_FITS.md#part-vi--decisions); the 20 records:
-
-| Record |
-|---|
-| [HOW_IT_FITS.md](../HOW_IT_FITS.md#adr-001): ADR-001: Backend is a spring boot application |
-| [HOW_IT_FITS.md](../HOW_IT_FITS.md#adr-002): ADR-002: Layout is sutra plus inference |
-| [HOW_IT_FITS.md](../HOW_IT_FITS.md#adr-003): ADR-003: Sutra is yaml with a closed expression language |
-| [HOW_IT_FITS.md](../HOW_IT_FITS.md#adr-004): ADR-004: Server returns a view model |
-| [HOW_IT_FITS.md](../HOW_IT_FITS.md#adr-005): ADR-005: Server sent events for live updates |
-| [HOW_IT_FITS.md](../HOW_IT_FITS.md#adr-006): ADR-006: Vendored front end without a build pipeline |
-| [HOW_IT_FITS.md](../HOW_IT_FITS.md#adr-007): ADR-007: Build gates in tests |
-| [HOW_IT_FITS.md](../HOW_IT_FITS.md#adr-008): ADR-008: Rachana is the grammar, a Sutra is a layout |
-| [HOW_IT_FITS.md](../HOW_IT_FITS.md#adr-009): ADR-009: Users live in the server |
-| [HOW_IT_FITS.md](../HOW_IT_FITS.md#adr-010): ADR-010: Industries are domain packs |
-| 011-sutras-are-markdown-documents.md: ADR-011: Sutras are Markdown documents |
-| [HOW_IT_FITS.md](../HOW_IT_FITS.md#adr-012): ADR-012: Every read is for a business date; history lives in Delta Lake |
-| [HOW_IT_FITS.md](../HOW_IT_FITS.md#adr-013): ADR-013: Sutras go live through review |
-| [HOW_IT_FITS.md](../HOW_IT_FITS.md#adr-014): ADR-014: Single sign-on, verified by the server |
-| [HOW_IT_FITS.md](../HOW_IT_FITS.md#adr-015): ADR-015: Packs inherit, and the more specific pack wins |
-| [HOW_IT_FITS.md](../HOW_IT_FITS.md#adr-016): ADR-016: One console, many servers; the user picks one and signs in to it |
-| [HOW_IT_FITS.md](../HOW_IT_FITS.md#adr-017): ADR-017: Sutras are YAML, through and through |
-| [HOW_IT_FITS.md](../HOW_IT_FITS.md#adr-018): ADR-018: Packs come from a signed, versioned registry |
-| [HOW_IT_FITS.md](../HOW_IT_FITS.md#adr-019): ADR-019: Pricing is a QuantLib service behind the Drishti server |
-| [HOW_IT_FITS.md](../HOW_IT_FITS.md#adr-020): ADR-020: Collaboration records live in the identity database; the notice is a link, never  |
-| [HOW_IT_FITS.md](../HOW_IT_FITS.md#adr-021): ADR-021: Embedding is HTML over the wire for views, and the viewer's own code for reports |
+The architecture decisions, one paragraph each (what, why, status), are [Part VI of How Drishti fits together](../HOW_IT_FITS.md#part-vi--decisions).
 
 ### Quality assurance runs (`qa/`)
 
