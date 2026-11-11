@@ -68,6 +68,10 @@ public class PlacementConfiguration {
         PlacementService s = new PlacementService(file, Path.of(env.getProperty("drishti.data.dir", "./data"), "placement", "plans.json"),
                 () -> nodes(net.getIfAvailable()), () -> self(net.getIfAvailable()), () -> inProcess(access.getIfAvailable()), audit,
                 Clock.systemUTC());
+        s.singleNode(() -> {
+            NetService n = net.getIfAvailable();
+            return n == null || !n.running();
+        });
         s.refresh();
         return s;
     }

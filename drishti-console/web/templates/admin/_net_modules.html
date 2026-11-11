@@ -21,7 +21,8 @@
 {% set CELL = {'ACTIVE': ('st-ok', 'active'), 'STANDBY': ('', 'standby'), 'DOWN': ('st-bad', 'down'), 'NOT_PLACED': ('', 'not placed'), 'IN_PROCESS': ('st-ok', 'in process')} %}
 <section role="tabpanel" id="netPaneModules" aria-labelledby="netTabModules" data-pane="modules" data-drishti-placement {% if tab != 'modules' %}hidden{% endif %}>
   <p class="text-muted-d">Where each module part runs: by node name or by role (a node label such as <span class="mono">heavy</span> or
-    <span class="mono">web</span>). There is no all-nodes default: a part that is not placed runs nowhere. A heavy part runs only on its placed
+    <span class="mono">web</span>). In a cluster there is no all-nodes default: a part that is not placed runs nowhere; on a single node a module the file
+    does not name is placed here. A heavy part runs only on its placed
     nodes (every other node forwards its requests); a feed or singleton runs on one owner (<span aria-hidden="true">★</span>), the first live
     placed node by name, and fails over only inside its placement. Modules built into the server run on every node. The file is
     <span class="mono">{{ modules.file or 'config/placement.yaml' }}</span>, version {{ modules.version or 0 }}; see the
@@ -32,6 +33,7 @@
 {% else %}
   {% if modules.fileProblem %}<p class="adm-warn" role="alert" data-placement-file-problem>{{ modules.fileProblem }}</p>{% endif %}
   {% for p in modules.problems or [] %}<p class="ib-warn" data-placement-problem>{{ p }}</p>{% endfor %}
+  {% for n in modules.notes or [] %}<p class="text-muted-d" data-placement-note>{{ n }}</p>{% endfor %}
   <div class="tbl-wrap"><table class="tbl adm-tbl" data-placement-matrix>
     <caption class="visually-hidden">Each module part (rows) on each node (columns): active, standby, down, not placed or in process</caption>
     <thead><tr><th scope="col">Module part</th><th scope="col">Class</th>

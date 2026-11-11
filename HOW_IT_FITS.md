@@ -183,7 +183,8 @@ modules:
   the call answers `503 DRS-1032` (*unavailable*, not *absent*: nothing saved is touched).
 - **Changing it**: Admin → Cluster → Modules: one administrator plans, a second applies; every member takes it at once, without a restart.
 
-On a single node every placed part simply runs on that node.
+On a single node (no cluster) every part runs on that node: a module the file does not name is placed there by default, and Health
+notes *single node: placed here*.
 
 ## 6. A module's life
 

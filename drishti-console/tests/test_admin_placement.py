@@ -28,6 +28,7 @@ MODULES = {
         {"module": "banking", "version": "built-in", "part": "compute", "class": "heavy", "memoryMb": 0, "maxNodes": 0, "placed": ["n-a", "n-b", "n-c"],
          "up": ["n-a", "n-b"], "owner": None, "status": "in-process", "cells": {"n-a": "IN_PROCESS", "n-b": "IN_PROCESS", "n-c": "IN_PROCESS"}}],
     "problems": ["genomics is not placed: it runs on no node"],
+    "notes": ["sample: single node: placed here"],
     "placement": "format: 1\nversion: 3\n",
     "plans": [{"id": "pl-1", "reason": "move compute", "proposedBy": "someone-else", "proposedAt": "2026-11-10T10:00:00Z", "warnings": []}]}
 
@@ -48,7 +49,7 @@ def test_the_modules_tab_shows_the_matrix_in_words(client, backend, monkeypatch)
     page = client.get("/admin/net?tab=modules").text
     pane = page.split('id="netPaneModules"')[1].split("</section>")[0]
     for s in ["data-placement-matrix", "sample.compute", "heavy · max 1 · 6,144 MB", "not placed", "active", "down", "in process", "★",
-              "genomics is not placed", "built in: every node", "data-placement-fields", "Plan (a second administrator applies)", "pl-1",
+              "genomics is not placed", "sample: single node: placed here", "built in: every node", "data-placement-fields", "Plan (a second administrator applies)", "pl-1",
               'data-plan-act="apply"', "/help/cluster#19-module-placement"]:
         assert s in pane, s
     assert 'aria-selected="true"' in page.split('id="netTabModules"')[1][:200]

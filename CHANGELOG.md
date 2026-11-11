@@ -17,6 +17,8 @@
 
 ## Unreleased
 
+- **A dropped module loads on a single node without a placement entry**: with no cluster, a module `config/placement.yaml` does not
+  name is placed on the node (Health and Admin → Cluster → Modules note *single node: placed here*); a cluster keeps no all-nodes default.
 - **Developer guide: How to create …** ([DEVELOPER_GUIDE.md part 12](docs/guides/DEVELOPER_GUIDE.md#12-how-to-create-)): step-by-step
   chapters for a module (manifest fields, the contributions, the three builds, the fifteen checks and what a failure means, install,
   remove and reinstall), a connector plugin (plugin or module, `lib/` or inside a module, testkit, Admin → Connectors), a binding (needs,

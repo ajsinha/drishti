@@ -392,7 +392,8 @@ modules:
 
 - **By node name or role.** `nodes:` names members; `roles:` matches a node label (a resource class such as `heavy` or `web`, or
   `role:<name>`), so a new node with the label is placed without changing the file.
-- **No all-nodes default.** A module or part not listed runs nowhere; Health (`placement`) and Admin → Cluster → Modules say *not placed*.
+- **No all-nodes default in a cluster.** A module or part not listed runs nowhere; Health (`placement`) and Admin → Cluster → Modules say
+  *not placed*. A single node (no cluster) places a module the file does not name on itself and notes *single node: placed here*.
 - **Resource classes** come from the module's manifest (`parts:`): `light`, `heavy` (with `memory-mb`), `feed`, `singleton`.
 - **Singletons.** A `feed` or `singleton` part has exactly one owner: the **first live placed node by name**. Every node sees the same
   placement and the same members, so all agree without a vote; when the owner stops, the next placed node takes over, never a node outside

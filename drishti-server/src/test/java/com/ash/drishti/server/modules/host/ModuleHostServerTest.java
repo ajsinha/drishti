@@ -91,10 +91,11 @@ class ModuleHostServerTest {
         }
         r.add("drishti.modules.path", () -> folder.toString());
         r.add("drishti.lib.path", () -> lib.toString());
-        // placement has no all-nodes default: each module's API part is placed on this node ("local" without a cluster)
+        // hello and demo are placed by name on this node ("local" without a cluster); greeter, dropped in later, is not named: on a single
+        // node a module with no placement is placed here by default
         Path placement = work.resolve("placement.yaml");
         if (!Files.exists(placement)) {
-            ModuleFixtures.write(placement, "modules:\n" + String.join("", java.util.stream.Stream.of("hello", "demo", "greeter")
+            ModuleFixtures.write(placement, "modules:\n" + String.join("", java.util.stream.Stream.of("hello", "demo")
                     .map(id -> "  " + id + ":\n    parts:\n      api: { nodes: [local] }\n").toList()));
         }
         r.add("drishti.placement.file", placement::toString);
@@ -168,9 +169,12 @@ class ModuleHostServerTest {
     }
 
     @Test
-    void aDroppedPackageIsDeployedAndRemovedWhenItsFileGoes(@Autowired com.ash.drishti.server.modules.deploy.ModuleAutoDeploy auto) throws Exception {
+    void aDroppedPackageIsDeployedAndRemovedWhenItsFileGoes(@Autowired com.ash.drishti.server.modules.deploy.ModuleAutoDeploy auto,
+            @Autowired com.ash.drishti.server.placement.PlacementService placement) throws Exception {
         Path dmod = Files.copy(archetypeModule(work, "greeter"), folder.resolve("greeter-0.1.0.dmod"));
         assertThat(auto.scan()).containsExactly("deployed greeter 0.1.0");
+        // no placement entry: a single node places it here, and Health says so
+        assertThat(placement.health().get("notes")).isEqualTo(List.of("greeter: single node: placed here"));
         mvc.perform(get("/api/v1/greeter/greeting/Asha")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.greeting").value("Hello, Asha, from the greeter module"));
         assertThat(eval("greeter_greet('Ravi')")).isEqualTo("Hello, Ravi, from the greeter module");
