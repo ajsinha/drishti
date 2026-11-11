@@ -17,6 +17,11 @@
 
 ## Unreleased
 
+- **Competitive landscape: kernel and modules** (`docs/strategy/COMPETITIVE_LANDSCAPE.md`, internal): does any commercial product share Drishti's
+  kernel, `.dmod` module and distribution architecture for data, BI and risk; a summary table (Atoti, Murex, Calypso, FIS, Numerix, MSCI,
+  Bloomberg MARS, Snowflake Native Apps, Salesforce packages, Splunk, Elastic, Grafana, Superset, Kubernetes operators, Power BI, Tableau,
+  Qlik, Looker), per-product notes, where Drishti differs and where it is behind, ideas to borrow; web sources cited with the access date.
+  Linked from the Power BI comparison, the competitive analysis and the docs index; not a Help entry (the count cap stays).
 - **A module's computed kinds start the connectors that name them**: a loaded module's `KindProvider` that a connector file names (banking's
   `var-system-baskets` and `var-positions`) is installed as that connector's type, as a `SourcePlugin` extension is, so `PORT <id>` opens the
   system basket's page again and `POS <id>` the position's; before, the provider was routed as a source of its own while the file's
