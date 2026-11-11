@@ -70,8 +70,8 @@ final class ModuleBridge {
     ModuleBridge(Supplier<SourceRegistry> sources, Supplier<EngineRegistry> engines, BiFunction<String, com.ash.drishti.api.SourcePlugin, Map<String, String>> settings,
             Supplier<com.ash.drishti.server.caches.MemoryBudget> budget) {
         // a computed kind (the kernel API's KindProvider) and a connector extension (the plugin API's SourcePlugin), one way: a type the
-        // site's connector files name (they start with it: banking's var-system-baskets and var-positions), else a source routed under its
-        // own name (a VCF reader), while the module is loaded
+        // site's connector files name (those connectors start with it), else a source routed under its own name (a VCF reader), while the
+        // module is loaded
         port(KindProvider.class, Contributions.Surface.KIND_PROVIDER,
                 (m, k) -> required(sources, "the source registry").attachExtension(new ComputedKindSource(k), Map.of()));
         port(com.ash.drishti.api.SourcePlugin.class, Contributions.Surface.KIND_PROVIDER,
