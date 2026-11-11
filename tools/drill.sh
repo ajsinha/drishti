@@ -489,7 +489,7 @@ data_files() {
   find "$DATA" \( -path "$DATA/drill" -o -path "$DATA/tmp/maven" -o -path "$DATA/tmp/drill" -o -path "$DATA/tmp/lake-cache" -o -path "$DRILL_TMP" -o -path "$DATA/testdata" -o -path "$DATA/stack" \) -prune \
     -o -type f -printf '%P\t%T@\t%s\n' 2>/dev/null | sort
 }
-servers_here() {   # java processes whose working folder is this repository (a server started from the IDE or by drishti-stack)
+servers_here() {   # java processes whose working folder is this repository (a server started from the IDE or by deploy/stack)
   local here p; here=$(pwd -P)
   for p in /proc/[0-9]*; do
     [[ "$(readlink "$p/cwd" 2>/dev/null)" == "$here" && "$(cat "$p/comm" 2>/dev/null)" == java ]] && echo "${p#/proc/}"

@@ -11,8 +11,7 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-# drishti-b of the local cluster (drishti-stack/stack.yaml). The key comes from the environment only.
-enabled: true
-node-id: drishti-b
-advertise-url: http://${DRISHTI_STACK_HOST}:18791     # this machine's real address (bin/start-cluster sets it)
-secret: ${DRISHTI_NET_SECRET}
+# Fast failure detection for one machine (deploy/stack/stack.yaml, gossip).
+interval: 1s
+suspect-after: 3s
+dead-after: 10s

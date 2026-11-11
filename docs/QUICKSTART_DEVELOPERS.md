@@ -112,7 +112,7 @@ To watch a program's output, start each in the foreground in its own terminal in
 Logs are in `data/logs/` (`server.log`, `console.log`), process ids in `data/run/`. Every option of the scripts (ports, heap, an
 env-file for your own secrets, a cluster of several servers with `--node`, the console's `--server`), where the files go, the exit codes
 and what to do when a script stops with an error: [DEPLOYMENT_AND_QA_GUIDE.md › section 6](DEPLOYMENT_AND_QA_GUIDE.md#6-start-the-server-and-the-console).
-A cluster of three servers and a console on this machine, from one file: `bin/start-cluster.sh` (Windows `bin\start-cluster.cmd`), `bin/status.sh --cluster drishti-stack/stack.yaml`, `bin/stop-cluster.sh`
+A cluster of three servers and a console on this machine, from one file: `bin/start-cluster.sh` (Windows `bin\start-cluster.cmd`), `bin/status.sh --cluster deploy/stack/stack.yaml`, `bin/stop-cluster.sh`
 ([bin/README.md](../bin/README.md)). The IntelliJ run configurations **Drishti server (demo lakes)** (module `drishti-app`) and **Drishti console** set the same demo settings for debugging; why each
 setting: [OPERATIONS_GUIDE.md › Start the server](guides/OPERATIONS_GUIDE.md#25-start-the-server) and
 [› Start the console](guides/OPERATIONS_GUIDE.md#26-start-the-console).

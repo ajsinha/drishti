@@ -16,7 +16,7 @@
 """A Drishti*net member's real address (docs/guides/OPERATIONS_GUIDE.md): members advertise themselves, and name their seeds, only by an address another
 machine can call, never localhost, a loopback address (127.x.x.x, ::1) or a wildcard one (0.0.0.0, ::). This machine's primary IPv4 address
 is the address of the interface the default route leaves by, else the first interface that is up and is not a loopback, a container bridge
-or a virtual link, as the server's HostAddress finds it. Used by `drishti.py net`, drishti-stack and the tests that run several nodes on one
+or a virtual link, as the server's HostAddress finds it. Used by `drishti.py net`, deploy/stack and the tests that run several nodes on one
 machine."""
 from __future__ import annotations
 

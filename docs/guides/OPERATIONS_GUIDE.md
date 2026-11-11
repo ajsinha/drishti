@@ -329,7 +329,7 @@ read`); a token with a write scope must expire (at most `writeMaxDays`, 90). Rev
 `Ctrl+C` in each terminal (or the red square in the IDE) stops it; repeat 2.5 and 2.6 with the same `export` lines to start again (no
 rebuild unless the code changed; monitors, alerts, workspaces and settings are kept under `./data`). New demo data: run 2.4 again, with
 the server running or not. The start order does not matter ([5.2](#52-first-start-by-hand-and-check-it-works)). Three servers as one
-cluster with a console, on this machine: `bin/start-cluster.sh` ([drishti-stack/README.md](../../drishti-stack/README.md),
+cluster with a console, on this machine: `bin/start-cluster.sh` ([deploy/stack/README.md](../../deploy/stack/README.md),
 [CLUSTER_GUIDE.md](CLUSTER_GUIDE.md)).
 
 ### 2.10 Where Drishti keeps things
@@ -2218,7 +2218,7 @@ in `/tmp`, whose quota fills. Health lists both folders with their size ([CONFIG
   the exchange (`DRISHTI_ARROW_EXCHANGE_MB`) plus Flight's `memory.total-mb` (`DRISHTI_FLIGHT_MEMORY_MB`, 4,096) when its engine is on. The limit is
   256 MB plus the in-memory lake's stores plus Arrow's budget. An ECS task has no Python: set `DRISHTI_ARROW_MB` (and `DRISHTI_LAKE_MEMORY_MB`) to what
   `memory_caps.py --arrow-only` (`--stores-only`) prints ([FLIGHT_GUIDE.md](FLIGHT_GUIDE.md#10-operations)). A unit file of your own adds both flags.
-- **Diagnostics.** The production launchers (`bin/start-server` and `drishti-stack` through it, the Docker and ECS images, the unit of [5.3](#53-running-as-services-systemd))
+- **Diagnostics.** The production launchers (`bin/start-server` and `deploy/stack` through it, the Docker and ECS images, the unit of [5.3](#53-running-as-services-systemd))
   also start the server with `-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=<folder>/dumps` (a `java_pid<pid>.hprof` about the size of the heap:
   open it in Eclipse MAT or VisualVM; keep room on that disk; at most `drishti.disk.max-dumps`, 2, are kept), a GC log per process rotated at 20 MB with
   five kept (`-Xlog:gc*:file=<logs>/gc-%p.log:…`: whether the heap was filling for hours before a failure), and `-XX:NativeMemoryTracking=summary`

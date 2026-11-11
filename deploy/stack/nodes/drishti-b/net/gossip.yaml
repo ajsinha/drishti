@@ -11,7 +11,7 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-# Fast failure detection for one machine (drishti-stack/stack.yaml, gossip).
+# Fast failure detection for one machine (deploy/stack/stack.yaml, gossip).
 interval: 1s
 suspect-after: 3s
 dead-after: 10s

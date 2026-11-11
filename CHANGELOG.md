@@ -17,6 +17,12 @@
 
 ## Unreleased
 
+- **The local cluster's folder is `deploy/stack/`** (was `drishti-stack/`, 2.9.11.i4), and **the teaching connector plugin is
+  `examples/connector`** (was `docs/guides/examples/connector`; artifact `drishti-example-dayfolder` unchanged), so the root holds no
+  deployment or example folder of its own. `bin/start-cluster`, `stop-cluster` and `status --cluster` default to
+  `deploy/stack/stack.yaml`; for one release they fall back, with a printed notice, to `drishti-stack/secrets.env` (and a
+  `drishti-stack/stack.yaml` left there), so a running stack keeps starting after a pull: move your `secrets.env` to
+  `deploy/stack/`. Both folders' `secrets.env` and `run/` stay git-ignored for that release.
 - **The Maven modules in subject folders, and fewer of them** (2.9.11.i4, item 2a): the root shows `kernel/`, `compute/`, `lake/`,
   `net/`, `plugins/`, `modules/`, `packaging/`, `testing/` and `drishti-sdk/` instead of dozens of modules (a module's folder is its artifact
   id; `modules/dist` is `packaging/dist`), and 59 modules became 48: `drishti-diskcache` and `drishti-messaging` are packages of
@@ -7124,7 +7130,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   Each node's `nodes/<node>/net/` is checked in with `secret: ${DRISHTI_NET_SECRET}` only; the token, session and cluster keys are in
   `drishti-stack/secrets.env`, made with `openssl rand -hex 32` (mode 600) and git-ignored with `run/` and any `net-key`, and
   `tools/test_no_hidden_names.py` fails if one of them or a jar is tracked. Node data and lakes go under `data/stack/`.
-  [drishti-stack/README.md](drishti-stack/README.md), NET.md section 2, tutorial 19, GETTING_STARTED, README.
+  [drishti-stack/README.md](deploy/stack/README.md), NET.md section 2, tutorial 19, GETTING_STARTED, README.
 - **News falls back to the committed snapshot with offline mode off.** A connector of an internet plugin (`drishti.offline.plugins`:
   `news`, `yfinance`, `feed`) that its file switches off (as shipped: `DRISHTI_NEWS_ENABLED` unset) has its kinds read from the other
   connectors that serve them, exactly as in offline mode (`SourceRegistry.standIns`); Admin → Connectors shows it as *off (served from

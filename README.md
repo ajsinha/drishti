@@ -348,7 +348,7 @@ development account, never for a shared machine) and try `TRD MX-20000001`, `VAR
 
 - **The command line** is `tools/drishti.py`, run with the console's Python: lakes and loads, feeds, Elements, approvals, VaR, exposure
   and more ([CLI_REFERENCE.md](docs/guides/CLI_REFERENCE.md), [COMMAND_CATALOG.md](docs/guides/COMMAND_CATALOG.md)).
-- **A local cluster of three** with its consoles, from one file: `bin/start-cluster.sh` with [drishti-stack/stack.yaml](drishti-stack/README.md)
+- **A local cluster of three** with its consoles, from one file: `bin/start-cluster.sh` with [deploy/stack/stack.yaml](deploy/stack/README.md)
   (its `consoles:` list may start a Drishti Risk and a Drishti Finance console over the same cluster).
 - **Other ways**: [Windows](docs/guides/OPERATIONS_GUIDE.md#4-drishti-on-windows) (Java and Python only),
   [Docker Compose](docs/guides/OPERATIONS_GUIDE.md#54-docker-compose) and the

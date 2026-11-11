@@ -449,14 +449,14 @@ comma-separated) and learns the other members from the cluster. The commands for
 every option: [DEPLOYMENT_AND_QA_GUIDE.md › section 10.6](../DEPLOYMENT_AND_QA_GUIDE.md#106-start-order-and-joining) and
 [section 6.1](../DEPLOYMENT_AND_QA_GUIDE.md#61-the-start-and-stop-scripts-bin).
 
-### 2.1 The ready-made local cluster: drishti-stack
+### 2.1 The ready-made local cluster: deploy/stack
 
-For a cluster on one machine without the steps below, the repository's `drishti-stack/` starts three servers and a console from one file,
-`stack.yaml` ([drishti-stack/README.md](../../drishti-stack/README.md)):
+For a cluster on one machine without the steps below, the repository's `deploy/stack/` starts three servers and a console from one file,
+`stack.yaml` ([deploy/stack/README.md](../../deploy/stack/README.md)):
 
 ```bash
 bin/start-cluster.sh       # start what is not running: the three servers, then the console
-bin/status.sh --cluster drishti-stack/stack.yaml      # the processes and ports, the members, the console's servers
+bin/status.sh --cluster deploy/stack/stack.yaml      # the processes and ports, the members, the console's servers
 bin/stop-cluster.sh        # stop everything the cluster file started (by process id, never by name)
 ```
 
@@ -2265,7 +2265,7 @@ JAVA_TOOL_OPTIONS="-Xmx2g -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterva
 
 `-XX:MaxDirectMemorySize` caps direct buffers (the default cap is the heap size); `-XX:TrimNativeHeapInterval` (Java 21.0.1 and later)
 returns freed native memory every minute; `-Djdk.nio.maxCachedBufferSize=262144` stops Java keeping a large temporary direct buffer cached on
-every thread. Every launcher Drishti ships sets them (`drishti-stack`, the Docker and ECS server images and `compose.yaml`, the IntelliJ run
+every thread. Every launcher Drishti ships sets them (`deploy/stack`, the Docker and ECS server images and `compose.yaml`, the IntelliJ run
 configurations, `bin/start-server.sh` and `bin/start-server.ps1`, which on Windows sets the JVM flags only: Windows' allocator has no arenas); the production
 launchers also keep a heap dump on OutOfMemoryError, a rotated GC log and native memory tracking. To look at a running server: start it with
 `-XX:NativeMemoryTracking=summary`, take `jcmd <pid> VM.native_memory baseline`, later `jcmd <pid> VM.native_memory summary.diff scale=MB`,

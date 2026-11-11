@@ -697,7 +697,7 @@ def test_obsolete_designs_are_deleted_not_archived():
 
 def test_the_corpus_is_the_whole_documentation():
     docs = documents()
-    assert "README.md" in docs and "drishti-stack/README.md" in docs
+    assert "README.md" in docs and "deploy/stack/README.md" in docs
     assert any(d.startswith("config/packs/") and d.endswith("/README.md") for d in docs)
     assert any(d.startswith("plugins/") for d in docs) and any(d.startswith("docs/tutorials/") for d in docs)
     assert len(docs) > 200

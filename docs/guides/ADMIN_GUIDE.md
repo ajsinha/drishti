@@ -781,7 +781,7 @@ DRISHTI_EDITION=risk java -Djava.io.tmpdir=data/tmp/server -jar kernel/drishti-s
 Leave `DRISHTI_PACKS` unset: the lens's packs load. If `DRISHTI_PACKS` is set it still wins (site configuration beats the lens file), but
 with `allow-only` the packs outside the lens are not loaded, and the log says which.
 
-**The 3-node stack (`drishti-stack/`).** Each node's settings are in `drishti-stack/stack.yaml`. Add the variable to the `env:` of every
+**The 3-node stack (`deploy/stack/`).** Each node's settings are in `deploy/stack/stack.yaml`. Add the variable to the `env:` of every
 node, then restart the stack:
 
 ```yaml
@@ -842,7 +842,7 @@ Each person then sees **Open Drishti Risk** (and the others listed) in the Views
 Opening one gives them, on every page and every server of the cluster, the lens's menus, commands (command line, `FUNC`, the type-ahead),
 Help, Home landings, Admin pages, BI datasets and branding, with **Leave Drishti Risk** to come back. Inside one lens the menu shows
 **Leave …** first, then **Switch to …** each of the others: switching needs no leaving first. The 3-node stack runs
-`DRISHTI_LENSES: risk,world,market,trading` (`drishti-stack/stack.yaml`, `settings:`); after changing it, restart the stack.
+`DRISHTI_LENSES: risk,world,market,trading` (`deploy/stack/stack.yaml`, `settings:`); after changing it, restart the stack.
 
 - **Kept per person.** The lens is the person's `lens` setting (the server's user store), so a refresh, another browser or another server
   keeps it; the console tells the server on each call (`X-Drishti-Lens: risk`), so the command line, `FUNC`, the type-ahead and BI follow

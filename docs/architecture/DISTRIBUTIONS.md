@@ -126,7 +126,7 @@ The distribution is chosen **at start, by one argument or one setting**; nothing
 |---|---|
 | One node, Linux and macOS | `bin/start-all.sh --distribution risk` (or `finance`, `genomics`, `all`) |
 | One node, Windows | `bin\start-all.ps1 -Distribution risk` (or `bin\start-all.cmd --distribution risk`) |
-| A cluster | `bin/start-cluster.sh --cluster drishti-stack/stack.yaml` with `distribution: risk` in the stack file (per console, so one cluster can serve a Risk console and a Finance console) |
+| A cluster | `bin/start-cluster.sh --cluster deploy/stack/stack.yaml` with `distribution: risk` in the stack file (per console, so one cluster can serve a Risk console and a Finance console) |
 | Any start, by setting | `DRISHTI_DISTRIBUTION=risk` or `drishti.distribution: risk` in `config/drishti.yaml`; a path instead of a name loads a custom distribution file |
 | IntelliJ / PyCharm | the run configurations gain `Drishti server (Risk)`, `(Finance)`, `(All)` and the console's `--distribution` |
 
@@ -141,7 +141,7 @@ consoles:
   - { name: finance, port: 17481, distribution: finance }
 ```
 
-`bin/start-cluster.sh --cluster drishti-stack/stack.yaml` then starts both: Drishti Risk on http://<host>:17480 and Drishti Finance on
+`bin/start-cluster.sh --cluster deploy/stack/stack.yaml` then starts both: Drishti Risk on http://<host>:17480 and Drishti Finance on
 http://<host>:17481. The Deployment and QA guide gets a step-by-step section for each, Linux, macOS and Windows, with what you should see.
 
 ## 8. Build plan inside 2.9.11.i2 + i3

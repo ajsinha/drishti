@@ -246,7 +246,7 @@ end it there): the folders are listed. The server's leftovers are still only lis
 
 | Key | Default | Meaning |
 |---|---|---|
-| `drishti.logging.file` | empty (`DRISHTI_LOG_FILE`) | The server writes its log to this file itself, rotated; empty: standard output only (containers). `bin/start-server` sets `<data>/logs/server[-<node>].log` when started with `--background` (`drishti-stack` too, through it). |
+| `drishti.logging.file` | empty (`DRISHTI_LOG_FILE`) | The server writes its log to this file itself, rotated; empty: standard output only (containers). `bin/start-server` sets `<data>/logs/server[-<node>].log` when started with `--background` (`deploy/stack` too, through it). |
 | `drishti.logging.max-file-mb` | `100` | One log file's size before it rolls (also daily); rolled files are compressed (`.gz`). |
 | `drishti.logging.max-total-mb` | `1024` | Every rolled file together; the oldest go beyond. |
 | `drishti.logging.max-files` | `30` | Rolled days kept at most. |

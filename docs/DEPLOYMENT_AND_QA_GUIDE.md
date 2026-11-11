@@ -231,7 +231,7 @@ This section is the one place for the full list of options; [bin/README.md](../b
 | `status` | every process this machine started with `bin/`: pid, running or a stale pid, port, whether its health URL answers, its LAN address |
 | `start-all` | one server and one console on this machine, in the background (calls `start-server`, then `start-console`) |
 | `stop-all` | the console, then the server (`--all-nodes`: every node too) |
-| `start-cluster`, `stop-cluster` | a cluster on one machine from a cluster file (`--cluster FILE`, default `drishti-stack/stack.yaml`): every node, then the console, or only those named |
+| `start-cluster`, `stop-cluster` | a cluster on one machine from a cluster file (`--cluster FILE`, default `deploy/stack/stack.yaml`): every node, then the console, or only those named |
 | `drishti-node` | one node's drain before a stop and its readiness: the stop hook of the service unit and the images |
 
 **`start-server` options**
@@ -502,9 +502,9 @@ consoles:
   - { name: finance, port: 17481, distribution: finance }
 ```
 
-then `bin/start-cluster.sh --cluster drishti-stack/stack.yaml` (Windows: `bin\start-cluster.cmd --cluster drishti-stack\stack.yaml`).
+then `bin/start-cluster.sh --cluster deploy/stack/stack.yaml` (Windows: `bin\start-cluster.cmd --cluster deploy/stack\stack.yaml`).
 **You should see** each node start, then `console-risk: up on http://<host>:17480` and `console-finance: up on http://<host>:17481`;
-`bin/status.sh --cluster drishti-stack/stack.yaml` lists `console-risk … risk` and `console-finance … finance`. The nodes run Drishti
+`bin/status.sh --cluster deploy/stack/stack.yaml` lists `console-risk … risk` and `console-finance … finance`. The nodes run Drishti
 All; each console shows its own distribution. Without a stack file, start a second console by hand:
 `bin/start-console.sh --server http://<host>:18480 --port 17481 --distribution finance --name finance --background` (Windows the same
 with `bin\start-console.cmd`), and stop it with `bin/stop-console.sh --name finance`.
@@ -915,7 +915,7 @@ depth: [CLUSTER_GUIDE.md](guides/CLUSTER_GUIDE.md) (the one home for the interna
 | the service must survive the loss of a machine, or be upgraded without downtime | a short stop for an upgrade is acceptable |
 | teams or regions want their own servers with their own packs, seen as one | |
 
-The three-node layout used here (and by `drishti-stack/`, the repository's ready-made local cluster):
+The three-node layout used here (and by `deploy/stack/`, the repository's ready-made local cluster):
 
 | Node | Role | Packs and engines | Special settings |
 |---|---|---|---|
@@ -996,7 +996,7 @@ drishti-console/.venv/bin/python tools/drishti.py net check                 # ex
 **In the UI** (once a server runs): **Admin → Cluster → Files** (open `node.yaml`, edit, **Check**, **Save**), **Admin → Cluster → Members →
 Add a seed**.
 
-**The environment per node** (the example layout of `drishti-stack/stack.yaml`, the repository's three-node cluster on one machine):
+**The environment per node** (the example layout of `deploy/stack/stack.yaml`, the repository's three-node cluster on one machine):
 
 | Variable | drishti-a | drishti-b | drishti-c |
 |---|---|---|---|
@@ -1103,9 +1103,9 @@ t-a: stopped (pid 1977639)
 t-b: stopped (pid 1978776)
 ```
 
-**The repository's own three on one machine.** `bin/start-cluster.sh` starts three servers and a console from `drishti-stack/stack.yaml`
+**The repository's own three on one machine.** `bin/start-cluster.sh` starts three servers and a console from `deploy/stack/stack.yaml`
 through these same scripts, with the real address and the secrets made for you; `status.sh` shows them, `stop.sh` stops them
-([drishti-stack/README.md](../drishti-stack/README.md)). The same scripts run on Windows (`bin\start-cluster.cmd`).
+([deploy/stack/README.md](../deploy/stack/README.md)). The same scripts run on Windows (`bin\start-cluster.cmd`).
 
 ### 10.7 Verify the cluster, step by step
 
