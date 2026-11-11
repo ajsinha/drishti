@@ -161,7 +161,7 @@ def test_the_workbench_offers_the_map_and_seeds_it_from_the_field_that_names_a_c
 
 def test_the_bi_map_has_level_and_drill_in_the_format_pane_and_the_scripts_load_geomap_first():
     # 2.4.0: the Format pane is generated from the format schemas; the map's level and drill carry the hooks the schema names
-    schema = yaml.safe_load((CONSOLE.parent / "drishti-server" / "src" / "main" / "resources" / "bi" / "report" / "format" / "other-chart.yaml").read_text(encoding="utf-8"))
+    schema = yaml.safe_load((CONSOLE.parent / "kernel/drishti-server" / "src" / "main" / "resources" / "bi" / "report" / "format" / "other-chart.yaml").read_text(encoding="utf-8"))
     props = schema["properties"]
     assert "map" in schema["x-types"]
     assert props["level"]["x-hook"] == "format-level" and props["level"]["type"] == "string" and props["level"]["x-types"] == ["map"]

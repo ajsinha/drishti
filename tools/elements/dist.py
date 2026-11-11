@@ -451,7 +451,7 @@ def webjar_tree(train: Train, version: str | None = None) -> dict[str, bytes]:
     """The WebJar's files: the tree under META-INF/resources/webjars/drishti-elements/<train version>/ (the product's libraries only:
     a WebJar is not domain-licensed). ``version``: the Maven module's own version, which must be the train's."""
     if version is not None and version != train.version:
-        raise DistError(f"the WebJar module's version {version} is not the Elements train's {train.version}: set drishti-elements/pom.xml's "
+        raise DistError(f"the WebJar module's version {version} is not the Elements train's {train.version}: set packaging/drishti-elements/pom.xml's "
                         "<version> to the train (drishti_elements.json, \"elements\")")
     return {f"{WEBJAR}/{train.version}/{p}": b for p, b in full_tree(train).items()}
 

@@ -179,7 +179,7 @@ class Bench:
             (self.work / d).mkdir(exist_ok=True)
         self.java = JAVAS[a.java]
         self.host = hostaddr.primary_ipv4()
-        jars = sorted(ROOT.glob("drishti-server/target/drishti-server-*-exec.jar"), key=os.path.getmtime, reverse=True)
+        jars = sorted(ROOT.glob("kernel/drishti-server/target/drishti-server-*-exec.jar"), key=os.path.getmtime, reverse=True)
         if not jars:
             raise SystemExit("needs the built server jar")
         self.jar = str(jars[0])

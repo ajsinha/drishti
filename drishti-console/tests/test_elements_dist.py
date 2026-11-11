@@ -160,7 +160,7 @@ def test_the_three_forms_hold_the_same_bytes_and_are_reproducible(built, tmp_pat
 def test_the_webjar_refuses_a_version_that_is_not_the_trains():
     with pytest.raises(dist.DistError, match="not the Elements train"):
         dist.webjar_tree(TRAIN, "9.9.9")
-    pom = (ROOT / "drishti-elements" / "pom.xml").read_text(encoding="utf-8")
+    pom = (ROOT / "packaging/drishti-elements" / "pom.xml").read_text(encoding="utf-8")
     assert re.search(r"<artifactId>drishti-elements</artifactId>\s*<version>([^<]+)</version>", pom).group(1) == TRAIN.version
     assert "<module>drishti-elements</module>" in (ROOT / "pom.xml").read_text(encoding="utf-8")
 

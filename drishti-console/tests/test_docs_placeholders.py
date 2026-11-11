@@ -59,7 +59,7 @@ def _check(path: Path, title: str) -> None:
 
 
 def test_server_placeholders_are_documented():
-    _check(ROOT / "drishti-server/src/main/resources/application.yaml", "### The server: `application.yaml`")
+    _check(ROOT / "kernel/drishti-server/src/main/resources/application.yaml", "### The server: `application.yaml`")
 
 
 def test_console_placeholders_are_documented():

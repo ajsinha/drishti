@@ -95,4 +95,4 @@ def test_the_server_run_configurations_carry_the_domain_modules():
     for f in servers:
         assert '<module name="drishti-app" />' in f.read_text(encoding="utf-8"), f.name
     build = (folder / "Drishti build server jar.run.xml").read_text(encoding="utf-8")
-    assert '<option value="drishti-app" />' in build and '<option value="drishti-server" />' not in build
+    assert '<option value=":drishti-app" />' in build and '<option value=":drishti-server" />' not in build

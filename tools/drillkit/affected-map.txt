@@ -17,7 +17,7 @@
 
 modules/banking/banking-service/*               -> test_var*, test_exposure*, test_stress*, test_mr_cube*, test_frtb*, test_explain*, test_arrow*, test_playground*, test_regulatory*, test_saccr*, test_sa_ccr*
 modules/banking/banking-compute/*       -> test_var*, test_exposure*, test_stress*, test_mr_cube*, test_frtb*, test_explain*, test_arrow*, test_playground*, test_regulatory*, test_saccr*, test_sa_ccr*
-drishti-bicompute/*             -> test_bi*, test_pivot*, test_report*, test_designer*
-drishti-rachana/*               -> test_rachana*, test_sutra*, test_pivot*
+compute/drishti-bicompute/*             -> test_bi*, test_pivot*, test_report*, test_designer*
+compute/drishti-rachana/*               -> test_rachana*, test_sutra*, test_pivot*
 config/packs/banking/market-risk/* -> test_var*, test_mr_cube*, test_stress*, test_explain* | modules/banking/banking-service
 data/testdata/market-risk/*     -> test_var*, test_mr_cube*, test_stress*, test_explain* | modules/banking/banking-service

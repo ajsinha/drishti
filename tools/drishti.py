@@ -104,15 +104,15 @@ def say_json(obj) -> None:
 
 
 def find_jar(explicit: str | None = None) -> str:
-    """The server's exec jar: ``explicit``, else ``DRISHTI_JAR``, else the newest ``drishti-server/target/drishti-server-*-exec.jar``."""
+    """The server's exec jar: ``explicit``, else ``DRISHTI_JAR``, else the newest ``kernel/drishti-server/target/drishti-server-*-exec.jar``."""
     jar = explicit or os.environ.get("DRISHTI_JAR")
     if jar:
         if not os.path.isfile(jar):
             raise CliError(f"jar not found: {jar}")
         return jar
-    jars = sorted(glob.glob(str(ROOT / "drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime)
+    jars = sorted(glob.glob(str(ROOT / "kernel/drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime)
     if not jars:
-        raise CliError("no drishti-server-*-exec.jar under drishti-server/target: build it (./mvnw -q -DskipTests package) or pass --jar / DRISHTI_JAR")
+        raise CliError("no drishti-server-*-exec.jar under kernel/drishti-server/target: build it (./mvnw -q -DskipTests package) or pass --jar / DRISHTI_JAR")
     return jars[-1]
 
 
@@ -138,10 +138,10 @@ def run_java(a: argparse.Namespace, args: list[str], capture: bool = False) -> s
 
 
 def find_module_tool(explicit: str | None = None) -> str:
-    """The module tool's jar: ``explicit``, else ``DRISHTI_MODULE_TOOL``, else ``drishti-module-runtime/target/drishti-module-tool.jar``."""
-    jar = explicit or os.environ.get("DRISHTI_MODULE_TOOL") or str(ROOT / "drishti-module-runtime/target/drishti-module-tool.jar")
+    """The module tool's jar: ``explicit``, else ``DRISHTI_MODULE_TOOL``, else ``kernel/drishti-module-runtime/target/drishti-module-tool.jar``."""
+    jar = explicit or os.environ.get("DRISHTI_MODULE_TOOL") or str(ROOT / "kernel/drishti-module-runtime/target/drishti-module-tool.jar")
     if not os.path.isfile(jar):
-        raise CliError(f"module tool not found: {jar}; build it (./mvnw -q package -DskipTests -pl drishti-module-runtime -am) or pass --tool / DRISHTI_MODULE_TOOL")
+        raise CliError(f"module tool not found: {jar}; build it (./mvnw -q package -DskipTests -pl :drishti-module-runtime -am) or pass --tool / DRISHTI_MODULE_TOOL")
     return jar
 
 

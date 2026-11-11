@@ -116,7 +116,7 @@ def command(jar: str | None = None, java: str | None = None) -> list[str]:
     cp = _maven_classpath()
     if cp:
         return java_cmd(java_bin, ["-cp", cp, MAIN])
-    raise LakeConfigError("cannot read the lake files: no server exec jar (DRISHTI_JAR, drishti-server/target) and no compiled "
+    raise LakeConfigError("cannot read the lake files: no server exec jar (DRISHTI_JAR, kernel/drishti-server/target) and no compiled "
                           "drishti-lakeconfig (mvn -pl drishti-lakeconfig compile); DRISHTI_LAKE_CLASSPATH names one")
 
 

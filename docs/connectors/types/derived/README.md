@@ -54,7 +54,7 @@ doc: docs/guides/BUILD_GUIDE.md
 ---
 # The derived connector
 
-Built-in plugin `derived` (`drishti-engine/src/main/java/com/ash/drishti/engine/source/derived/`, `DerivedSourcePlugin` and
+Built-in plugin `derived` (`kernel/drishti-engine/src/main/java/com/ash/drishti/engine/source/derived/`, `DerivedSourcePlugin` and
 `DerivedKind`): a pack declares a connector of this plugin and routes the derived kinds to it. The trading pack's `trade-pages`
 connector serves `counterparty-trades`, `portfolio-trades`, `legal-entity-trades` and `index-trades` (`CTRD`, `PTRD`, `LTRD`, `ITRD`).
 

@@ -19,7 +19,7 @@ ticks; the console starts on a, so a live view is relayed from b) and small synt
 security is off on the servers and sign-in off on the console, so a test drives the pages without a password. Everything lives in a scratch
 folder; a port in use refuses the start; processes are stopped by PID. Under pytest-xdist each worker adds 100 to every port.
 
-A cross-process lock (the same file the Java in-process cluster tests hold, drishti-server/target/net-it.lock) keeps one cluster at a time on
+A cross-process lock (the same file the Java in-process cluster tests hold, kernel/drishti-server/target/net-it.lock) keeps one cluster at a time on
 these ports.
 """
 from __future__ import annotations
@@ -85,10 +85,10 @@ class NetStack:
         self._lock = None
 
     def _jar(self) -> tuple[str, str]:
-        jars = sorted(glob.glob(str(ROOT / "drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)
+        jars = sorted(glob.glob(str(ROOT / "kernel/drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)
         java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
         if not jars or not Path(java).exists():
-            raise FileNotFoundError("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-app -am")
+            raise FileNotFoundError("needs the built server: ./mvnw -o -q package -DskipTests -pl :drishti-app -am")
         return jars[0], java
 
     def prepare(self, name: str) -> Path:
@@ -132,7 +132,7 @@ class NetStack:
         wait(CONSOLE_URL + "/healthz", proc=self.procs["console"])
 
     def start(self) -> "NetStack":
-        lock_path = ROOT / "drishti-server" / "target" / "net-it.lock"
+        lock_path = ROOT / "kernel/drishti-server" / "target" / "net-it.lock"
         lock_path.parent.mkdir(parents=True, exist_ok=True)
         self._lock = open(lock_path, "a")
         fcntl.lockf(self._lock, fcntl.LOCK_EX)             # one cluster at a time on these ports, Java's or this one

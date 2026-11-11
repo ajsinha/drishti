@@ -218,7 +218,7 @@ enforcer rule `maxJdkVersion 21` still passes and production runs on JDK 21.
 3. **Write the file** (2 minutes): `config/ai/<name>.yaml` (here `acme.yaml`; the shipped providers are `config/ai/*.yaml.example`) with `type: acme`, `base-url`, `api-key: ${ACME_KEY}` and the models.
    Anything extra you need goes in the file under your own keys; read it with `config.setting("key", default)` (nested maps are
    flat: `a.b.c`, lists `a.0.b`).
-4. **Test it** (15 minutes) with the `StubServer` pattern from `drishti-ai/src/test/.../StubServer.java` (a loopback HTTP server, no
+4. **Test it** (15 minutes) with the `StubServer` pattern from `kernel/drishti-ai/src/test/.../StubServer.java` (a loopback HTTP server, no
    network) and the `mock` provider for everything that sits above you. Then Admin -> AI shows your provider and
    `POST /api/v1/admin/ai/test` sends one real call.
 
@@ -353,7 +353,7 @@ canonical request fields beyond those in `ChatCompletionRequest` (images, logpro
 and ignored; the fallback, cache, budget and breaker layers of sajhamcpserver's `Governor` are not built (Drishti's policy is section 4). The registry, factory and settings are the same shape; the layered
 environment overrides (`SAJHA_AI_*`) are Drishti's own `DRISHTI_AI_*` and the provider files.
 
-**Tests.** One shared scenario file, `drishti-ai/src/test/resources/contract/llm_contract.json` (catalogue, chat, tool call, a scripted failure, a stream, embeddings, refusals), is run against the mock
+**Tests.** One shared scenario file, `kernel/drishti-ai/src/test/resources/contract/llm_contract.json` (catalogue, chat, tool call, a scripted failure, a stream, embeddings, refusals), is run against the mock
 by `LLMContractTest` (Java) and `tests/test_llm_contract.py` (Python); `BaseMcpToolTest` and the last test of the Python file cover the tool base.
 
 ### 11. More providers, the way sajhamcpserver has them
@@ -566,7 +566,7 @@ SDKs accept a trust and key manager or a bundle) but not `verify-hostname: false
 
 No test touches a network beyond loopback.
 
-* Per provider, in both languages, against a fake server that speaks that API (`drishti-ai/src/test/java/com/ash/drishti/ai/FakeLlmServer.java`, `drishti-console/tests/llm_fakes.py`; the same rules: the last user text is
+* Per provider, in both languages, against a fake server that speaks that API (`kernel/drishti-ai/src/test/java/com/ash/drishti/ai/FakeLlmServer.java`, `drishti-console/tests/llm_fakes.py`; the same rules: the last user text is
   echoed, `weather` asks for the tool, `boom` is 500, `limit` is 429, `slow` sleeps): the request (path, auth header, body fields), a reply with usage and cost, a tool call, embeddings, the model list, 401, 429,
   500 (the body never appears in the message), a timeout, retries, health, masking, the proxy, Azure's three auth modes and both address styles, Bedrock's SigV4 header and session token. `HttpProvidersTest` and
   `test_llm_providers.py`.
@@ -574,7 +574,7 @@ No test touches a network beyond loopback.
   `HttpProvidersContractTest` and `test_llm_providers.py`; the older `llm_contract.json` still runs against the mock.
 * **TLS** with a test CA (`TestPki` in Java, `cryptography` in Python): the private CA is trusted only when configured, mutual TLS is refused without the client certificate and accepted with it (PEM, encrypted
   key, PKCS12, JKS), the expiry note, the plain-address error, a CONNECT proxy tunnel, every provider type and Bedrock: `ProviderTlsTest`, `test_ai_tls.py`.
-* The catalogue file is the same in `drishti-ai/src/main/resources/ai/` and `drishti-console/core/ai/providers/`; both languages' tests fail if the copies differ.
+* The catalogue file is the same in `kernel/drishti-ai/src/main/resources/ai/` and `drishti-console/core/ai/providers/`; both languages' tests fail if the copies differ.
 
 ## 2. The MCP client: other servers' tools, behind Drishti's policy
 
@@ -663,11 +663,11 @@ by default, so Drishti needs a credential: an `X-API-Key` (Admin -> API keys in 
 `config/mcp/sajha.yaml.example` to `sajha.yaml` in the same folder, export `SAJHA_API_KEY`, set `drishti.mcp.enabled=true`.
 
 Verified live (a scratch copy of SAJHA on a spare port, its own virtualenv; the project itself untouched), with
-`drishti-ai/src/test/java/com/ash/drishti/ai/SajhaMcpLiveTest.java` (skipped unless `DRISHTI_SAJHA_MCP_URL` and `DRISHTI_SAJHA_MCP_KEY`
+`kernel/drishti-ai/src/test/java/com/ash/drishti/ai/SajhaMcpLiveTest.java` (skipped unless `DRISHTI_SAJHA_MCP_URL` and `DRISHTI_SAJHA_MCP_KEY`
 are set) and the console client:
 
 ```
-$ DRISHTI_SAJHA_MCP_URL=http://127.0.0.1:18991/mcp DRISHTI_SAJHA_MCP_KEY=<test key> ./mvnw -o -pl drishti-ai test -Dtest=SajhaMcpLiveTest
+$ DRISHTI_SAJHA_MCP_URL=http://127.0.0.1:18991/mcp DRISHTI_SAJHA_MCP_KEY=<test key> ./mvnw -o -pl :drishti-ai test -Dtest=SajhaMcpLiveTest
 SAJHA tools: 501, e.g. [av_ad_line, av_adx, av_aroon, av_atr, av_balance_sheet]
 calc_percentage_change -> { "old_value": 80, "new_value": 100, "percentage_change": 25.0 }
 [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0

@@ -137,7 +137,7 @@ def refresh(a, log=print) -> int:
 
 def extra_args(r: argparse.ArgumentParser) -> None:
     r.add_argument("--server", help="a running server with the live connectors on (default: a scratch server from the built jar)")
-    r.add_argument("--jar", help="the exec jar for the scratch server (default DRISHTI_JAR, else the newest in drishti-server/target)")
+    r.add_argument("--jar", help="the exec jar for the scratch server (default DRISHTI_JAR, else the newest in kernel/drishti-server/target)")
     r.add_argument("--port", type=int, default=18977, help="the scratch server's port (default 18977)")
     r.add_argument("--delay", type=float, default=2.0, help="seconds between calls, at least 2 (default 2)")
     r.add_argument("--token-file", help="an API token for --server with security on (default DRISHTI_TOKEN)")

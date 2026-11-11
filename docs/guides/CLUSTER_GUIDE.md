@@ -2065,7 +2065,7 @@ benchmark, or estimate); **Explain** says it in plain words with examples; the *
 
 The same planner is **Admin → Capacity** in the console (it evaluates as you type and offers **Download the working (.xlsx)** with every
 formula live; [the operations guide](OPERATIONS_GUIDE.md#146-admin--capacity-today-against-the-plan)) and `drishti.py admin capacity`.
-All three read one file, `drishti-server/src/main/resources/capacity/planner.yaml`; to calibrate to your servers change a coefficient there
+All three read one file, `kernel/drishti-server/src/main/resources/capacity/planner.yaml`; to calibrate to your servers change a coefficient there
 and run `python3 tools/sizing_planner.py` (`--check` exits 1 when the workbook, its template or the test vectors are stale). It plans one
 server: a sharded cluster divides the hot files, page cache and loads among members but copies each date's skeleton to every member.
 

@@ -140,7 +140,7 @@ def cli(*args: str) -> str:
 
 
 def _server():
-    jar = sorted((ROOT / "drishti-server" / "target").glob("drishti-server-*-exec.jar"))[-1]
+    jar = sorted((ROOT / "kernel/drishti-server" / "target").glob("drishti-server-*-exec.jar"))[-1]
     java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
     w = work()
     e = {**os.environ, "DRISHTI_PORT": str(SERVER_PORT), "DRISHTI_PACKS": PACKS, "DRISHTI_SUTRAS": str(w / "sutras"),

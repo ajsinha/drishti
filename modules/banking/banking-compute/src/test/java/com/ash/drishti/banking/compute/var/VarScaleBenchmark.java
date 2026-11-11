@@ -32,7 +32,7 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
  * bytes, twice while the rows are put in hierarchy order).
  *
  * <pre>
- *   ./mvnw -o test -pl drishti-compute -Dtest=VarScaleBenchmark -Ddrishti.var.scale.positions=400000 -DargLine=-Xmx8g
+ *   ./mvnw -o test -pl :drishti-compute -Dtest=VarScaleBenchmark -Ddrishti.var.scale.positions=400000 -DargLine=-Xmx8g
  *   (optional) -Ddrishti.var.scale.trades-per-position=1 -Ddrishti.var.scale.threads=8 -Ddrishti.var.scale.desks=100
  * </pre>
  *

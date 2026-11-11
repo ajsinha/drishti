@@ -78,7 +78,7 @@ def test_the_catalogue_lists_all_twenty_two_kinds_each_with_its_own_anchor():
 
 
 def test_the_kinds_of_the_grammar_are_exactly_these_twenty_two():
-    java = (ROOT / "drishti-rachana" / "src" / "main" / "java" / "com" / "ash" / "drishti" / "rachana" / "model" / "PanelKind.java").read_text()
+    java = (ROOT / "compute/drishti-rachana" / "src" / "main" / "java" / "com" / "ash" / "drishti" / "rachana" / "model" / "PanelKind.java").read_text()
     declared = re.findall(r"^    ([A-Z]+)\(Set\.of", java, re.M)
     assert sorted(k.lower() for k in declared) == sorted(KINDS)
 
@@ -122,14 +122,14 @@ def test_the_catalogue_does_not_copy_option_tables_from_the_reference():
 def test_the_developer_guide_walks_through_metric_with_the_real_code():
     text = DEV_DOC.read_text()
     sources = {
-        "drishti-rachana/src/main/java/com/ash/drishti/rachana/model/PanelKind.java": 'METRIC(Set.of("value"), Set.of("label", "fmt", "tone", "delta", "deltaFmt", "deltaTone", "unit", "caption")),',
-        "drishti-engine/src/main/java/com/ash/drishti/engine/view/PanelData.java": "record Metric(Cell value, Cell delta, String unit, String caption) implements PanelData {}",
-        "drishti-engine/src/main/java/com/ash/drishti/engine/view/Emptiness.java": "case PanelData.Metric m -> m.value() == null || blank(List.of(m.value()));",
-        "drishti-engine/src/main/java/com/ash/drishti/engine/bind/Binder.java": "case METRIC -> metric(p, c);",
+        "compute/drishti-rachana/src/main/java/com/ash/drishti/rachana/model/PanelKind.java": 'METRIC(Set.of("value"), Set.of("label", "fmt", "tone", "delta", "deltaFmt", "deltaTone", "unit", "caption")),',
+        "kernel/drishti-engine/src/main/java/com/ash/drishti/engine/view/PanelData.java": "record Metric(Cell value, Cell delta, String unit, String caption) implements PanelData {}",
+        "kernel/drishti-engine/src/main/java/com/ash/drishti/engine/view/Emptiness.java": "case PanelData.Metric m -> m.value() == null || blank(List.of(m.value()));",
+        "kernel/drishti-engine/src/main/java/com/ash/drishti/engine/bind/Binder.java": "case METRIC -> metric(p, c);",
         "drishti-console/core/export.py": "if isinstance(d.get(\"value\"), dict):",
         "drishti-console/web/static/js/build/drishti_palette.js": "['metric', 'hash',",
         "drishti-console/web/static/css/drishti_terminal.css": ".metric-v { font-size: var(--d-fs-display-5);",
-        "drishti-rachana/src/main/java/com/ash/drishti/rachana/design/ops/Bind.java": '"sum", "delta", "highlight", "region");',
+        "compute/drishti-rachana/src/main/java/com/ash/drishti/rachana/design/ops/Bind.java": '"sum", "delta", "highlight", "region");',
     }
     for path, snippet in sources.items():
         assert snippet in (ROOT / path).read_text(), f"{path} no longer has the snippet the guide quotes"

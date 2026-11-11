@@ -325,7 +325,7 @@ curl -s "$B/history/trade/T-1?from=2026-09-28&to=2026-09-30" | jq -c '{shape, wi
 
 The whole answer, field by field, is the contract in
 [DATA_ARCHITECTURE.md › History queries: an entity over time, section 8](../architecture/DATA_ARCHITECTURE.md#8-the-json-contract); the testkit's
-`drishti-testkit/src/main/resources/history/trade-1000015-30.json` (document shape) and `equity-EQ-CSCA-3M.json` (market shape) are
+`tests/drishti-testkit/src/main/resources/history/trade-1000015-30.json` (document shape) and `equity-EQ-CSCA-3M.json` (market shape) are
 examples of it. In short: `window` (`asked`, `from`, `to`, `days`, `mode` `data-days` \| `calendar` \| `between`, the `baseline` day
 compared with, the business days with no data in `missing`), `columns` (`path`, `label`, `type`, `format`, `masked`, `key`), `parts`
 (top-level lists and objects, shown as counts), `chart`, `rows` (`date`, `values`, `display`, `parts`, `changed`, `changes`,

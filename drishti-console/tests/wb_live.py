@@ -16,7 +16,7 @@
 operations; the real one is what makes "the YAML changes and the comments stay" a true statement).
 
 Not collected as tests (the name does not start with ``test_``); ``test_workbench_browser.py`` imports the fixtures. The server is
-the repackaged jar under ``drishti-server/target`` run on a free port (or DRISHTI_WB_SERVER_PORT / DRISHTI_WB_CONSOLE_PORT) in a scratch directory; when the jar or a JDK is missing the
+the repackaged jar under ``kernel/drishti-server/target`` run on a free port (or DRISHTI_WB_SERVER_PORT / DRISHTI_WB_CONSOLE_PORT) in a scratch directory; when the jar or a JDK is missing the
 tests that need it are skipped, never failed."""
 import atexit
 import json
@@ -93,7 +93,7 @@ def free_port(env: str = "") -> int:
 
 
 def jar() -> Path | None:
-    found = sorted((ROOT / "drishti-server" / "target").glob("drishti-server-*-exec.jar"), key=lambda p: p.stat().st_mtime)
+    found = sorted((ROOT / "kernel/drishti-server" / "target").glob("drishti-server-*-exec.jar"), key=lambda p: p.stat().st_mtime)
     return found[-1] if found else None
 
 
@@ -169,7 +169,7 @@ def _stack(tmp_path_factory, extra_env, work=None, auth=False, heap="768m", shar
 
 def _start_stack(tmp_path_factory, extra_env, work=None, auth=False, heap="768m"):
     if jar() is None or not JAVA.exists():
-        pytest.skip("needs the built server jar (./mvnw -o package -DskipTests -pl drishti-app -am) and JDK 25")
+        pytest.skip("needs the built server jar (./mvnw -o package -DskipTests -pl :drishti-app -am) and JDK 25")
     import uvicorn
 
     from core.app import create_app

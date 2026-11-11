@@ -105,7 +105,7 @@ class QuickChecks(unittest.TestCase):
 
 class Monitor(unittest.TestCase):
     def test_kinds(self):
-        self.assertEqual(M.classify("/usr/lib/jvm/java-21/bin/java -Xmx768m -jar drishti-server/target/drishti-server-2.9.11-exec.jar"), "server_jvm")
+        self.assertEqual(M.classify("/usr/lib/jvm/java-21/bin/java -Xmx768m -jar kernel/drishti-server/target/drishti-server-2.9.11-exec.jar"), "server_jvm")
         self.assertEqual(M.classify("/usr/lib/jvm/java-21/bin/java -cp surefire.jar"), "other_jvm")
         self.assertEqual(M.classify("/x/chrome-headless-shell --type=renderer"), "chromium")
         self.assertEqual(M.classify("python run_drishti_web.py --server.port=1"), "console")

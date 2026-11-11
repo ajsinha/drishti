@@ -38,9 +38,9 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
  * and deletes them at the end.
  *
  * <pre>
- *   a workstation (measured this way):  ./mvnw -o test -pl drishti-compute -Dtest=VarTierBenchmark
+ *   a workstation (measured this way):  ./mvnw -o test -pl :drishti-compute -Dtest=VarTierBenchmark
  *       -Ddrishti.var.tier.trades=100000 -Ddrishti.var.tier.dates=5 -DargLine=-Xmx4g
- *   the full run, on a server with about 110 GB of local disk:  ./mvnw -o test -pl drishti-compute -Dtest=VarTierBenchmark
+ *   the full run, on a server with about 110 GB of local disk:  ./mvnw -o test -pl :drishti-compute -Dtest=VarTierBenchmark
  *       -Ddrishti.var.tier.trades=1000000 -Ddrishti.var.tier.dates=50 -Ddrishti.var.tier.dir=/local/var-bench -DargLine=-Xmx16g
  *   (optional) -Ddrishti.var.tier.trades-per-position=1 -Ddrishti.var.tier.threads=24 -Ddrishti.var.tier.desks=100
  *       -Ddrishti.var.tier.open=2 (dates kept mapped at once, as drishti.var.hot-dates)

@@ -19,7 +19,7 @@ A connector README is written by hand, except two blocks this tool writes:
 
 * a connector TYPE (``plugins/drishti-plugin-<x>/README.md``; the built-ins in ``docs/connectors/types/<type>/README.md``): the
   settings table between ``<!-- settings:begin -->`` and ``<!-- settings:end -->`` and the front matter's ``settings:`` list, from
-  the settings catalogue (``drishti-engine/src/main/resources/drishti/plugin-settings.yaml``), the same one Admin → Connectors
+  the settings catalogue (``kernel/drishti-engine/src/main/resources/drishti/plugin-settings.yaml``), the same one Admin → Connectors
   uses for its form. A built-in type the catalogue does not list keeps a hand-written table (no markers).
 * a folder of connector TEMPLATES (``config/connectors.examples/<x>/README.md``): the table of its files between
   ``<!-- files:begin -->`` and ``<!-- files:end -->`` and the front matter's ``files:`` and ``connectors:`` lists, from the files.
@@ -39,7 +39,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools" / "packgen" / "common"))
 import readme as R  # noqa: E402
 
-CATALOGUE = ROOT / "drishti-engine" / "src" / "main" / "resources" / "drishti" / "plugin-settings.yaml"
+CATALOGUE = ROOT / "kernel/drishti-engine" / "src" / "main" / "resources" / "drishti" / "plugin-settings.yaml"
 EXAMPLES = ROOT / "config" / "connectors.examples"
 BUILT_INS = ROOT / "docs" / "connectors" / "types"
 

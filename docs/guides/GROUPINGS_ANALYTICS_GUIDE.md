@@ -554,7 +554,7 @@ The order on a page: the aggregates, the rows, the tree, the `then` fields, the 
 node's share ([CLUSTER_GUIDE.md](CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)); a median cannot be combined from parts, so a group whose members are split
 over nodes without every member listed shows no median.
 
-The code: `drishti-engine/.../source/derived/DerivedKind.java` (grouping, aggregates), `DerivedPage.java` (`then`, `sort`, `tree`),
+The code: `kernel/drishti-engine/.../source/derived/DerivedKind.java` (grouping, aggregates), `DerivedPage.java` (`then`, `sort`, `tree`),
 `DerivedSourcePlugin.java` (reading, caching, search), `GroupShares.java` (Drishti*net).
 
 ## 20. The correlation engine

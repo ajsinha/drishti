@@ -28,7 +28,7 @@ from core.ai.llm.registry import registered_providers
 from core.ai.providers import catalog
 from llm_fakes import KEY, FakeServer
 
-CONTRACT = json.loads((Path(__file__).resolve().parents[2] / "drishti-ai/src/test/resources/contract/llm_contract_http.json").read_text(encoding="utf-8"))
+CONTRACT = json.loads((Path(__file__).resolve().parents[2] / "kernel/drishti-ai/src/test/resources/contract/llm_contract_http.json").read_text(encoding="utf-8"))
 ENV = {"THE_KEY": KEY, "AKID": "AKIDEXAMPLE", "ASECRET": "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY", "AWS_TOKEN": "tok-session"}
 PRESETS = ["groq", "together", "fireworks", "deepseek", "xai", "openrouter", "perplexity", "huggingface", "vllm", "lmstudio", "mistral", "openai_compatible"]
 
@@ -494,7 +494,7 @@ def test_the_shared_contract_against_each_http_provider(fake, case):
 
 def test_the_two_catalogue_copies_are_identical():
     root = Path(__file__).resolve().parents[2]
-    a = (root / "drishti-ai/src/main/resources/ai/llm_catalog.json").read_text(encoding="utf-8")
+    a = (root / "kernel/drishti-ai/src/main/resources/ai/llm_catalog.json").read_text(encoding="utf-8")
     b = (root / "drishti-console/core/ai/providers/llm_catalog.json").read_text(encoding="utf-8")
     assert a == b
 

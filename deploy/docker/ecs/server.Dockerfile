@@ -22,7 +22,7 @@ FROM ${BASE_IMAGE}
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/* \
  && useradd --system --uid 10001 drishti
 WORKDIR /opt/drishti
-COPY drishti-server/target/drishti-server-*-exec.jar app.jar
+COPY kernel/drishti-server/target/drishti-server-*-exec.jar app.jar
 # shipped packs live outside the EFS paths, so a mount never hides them; installed packs go to data/packs/installed (EFS)
 COPY config/packs/ shipped/packs/
 COPY config/lenses/ /opt/drishti/config/lenses/

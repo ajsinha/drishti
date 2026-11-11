@@ -41,7 +41,7 @@ from core.config import load_settings  # noqa: E402
 from core.prep_snippets import SnippetError, SnippetLibrary  # noqa: E402
 from core.transform_editor import EditorError, compose, parse  # noqa: E402
 
-sys.path.insert(0, str(CONSOLE.parent / "drishti-compute" / "src" / "main" / "python"))
+sys.path.insert(0, str(CONSOLE.parent / "compute/drishti-compute" / "src" / "main" / "python"))
 from drishti_compute import items  # noqa: E402  (the compute pool's engine: its step-by-step run, called here without its sandbox)
 
 LIBRARY = SnippetLibrary([CONSOLE / "config" / "prep-snippets.yaml"])

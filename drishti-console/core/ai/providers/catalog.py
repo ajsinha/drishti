@@ -15,7 +15,7 @@
 """The curated model catalogue and the presets of the providers added after ``openai`` and ``anthropic`` (``sajha/ai/llm/catalog.py``), read from ``llm_catalog.json``.
 
 Data, not code: a vendor's new model id is a line in a provider file's ``models:`` (which adds to or overrides the catalogue), never a code change. The Java layer reads
-an identical copy (``drishti-ai/src/main/resources/ai/llm_catalog.json``). A preset is a base URL, the environment variables a key may be read from and a model list;
+an identical copy (``kernel/drishti-ai/src/main/resources/ai/llm_catalog.json``). A preset is a base URL, the environment variables a key may be read from and a model list;
 ``apply_defaults`` fills a parsed provider block from it. Prices in the file are USD per million tokens; the layer's own unit is per 1,000 tokens."""
 from __future__ import annotations
 

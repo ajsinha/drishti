@@ -378,9 +378,9 @@ def build_groups(kinds: dict[str, list[dict]], opts) -> list[Group]:
 def find_jar(explicit: str | None) -> str:
     if explicit:
         return explicit
-    jars = sorted(glob.glob(str(ROOT / "drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime)
+    jars = sorted(glob.glob(str(ROOT / "kernel/drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime)
     if not jars:
-        raise SystemExit("sutragen: no drishti-server-*-exec.jar under drishti-server/target; build it or pass --jar")
+        raise SystemExit("sutragen: no drishti-server-*-exec.jar under kernel/drishti-server/target; build it or pass --jar")
     return jars[-1]
 
 
@@ -475,7 +475,7 @@ def add_arguments(p: argparse.ArgumentParser) -> None:
     p.add_argument("--priority", type=int, default=10, help="priority of a match-field Sutra (default 10)")
     p.add_argument("--fallback", action="store_true", help="also write <kind>-default (no where, priority 1)")
     p.add_argument("--name-prefix", default="", help="prefix of every Sutra name")
-    p.add_argument("--jar", help="the drishti-server exec jar (default: newest under drishti-server/target)")
+    p.add_argument("--jar", help="the drishti-server exec jar (default: newest under kernel/drishti-server/target)")
     p.add_argument("--java", help="java binary (default: JAVA_HOME, then JDK 21, then java)")
     p.add_argument("-r", "--recursive", action="store_true", help="read *.jsonl in subfolders too")
 

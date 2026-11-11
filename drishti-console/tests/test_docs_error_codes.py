@@ -52,12 +52,12 @@ def _expand(cell: str) -> set[str]:
 
 
 def _server_codes() -> set[str]:
-    return set(CODE.findall(_read("drishti-common/src/main/java/com/ash/drishti/common/ErrorCode.java")))
+    return set(CODE.findall(_read("kernel/drishti-common/src/main/java/com/ash/drishti/common/ErrorCode.java")))
 
 
 def _parser_codes() -> set[str]:
     found: set[str] = set()
-    for path in (ROOT / "drishti-rachana/src/main").rglob("*.java"):
+    for path in (ROOT / "compute/drishti-rachana/src/main").rglob("*.java"):
         found |= set(CODE.findall(path.read_text(encoding="utf-8")))
     return {c for c in found if c.startswith("DRS-20") and c not in ("DRS-2101", "DRS-2102")}
 

@@ -45,7 +45,7 @@ def json_parent() -> argparse.ArgumentParser:
 def jvm_parent() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(add_help=False)
     g = p.add_argument_group("the Java tool")
-    g.add_argument("--jar", help="the drishti-server exec jar (default: DRISHTI_JAR, then the newest drishti-server/target/drishti-server-*-exec.jar)")
+    g.add_argument("--jar", help="the drishti-server exec jar (default: DRISHTI_JAR, then the newest kernel/drishti-server/target/drishti-server-*-exec.jar)")
     g.add_argument("--java", help="the java binary (default: JAVA_HOME, then JDK 21, then java on the PATH)")
     return p
 
@@ -116,7 +116,7 @@ def build_parser(h) -> argparse.ArgumentParser:
                  "exit: 0 done, 1 a check failed or the module was refused, 2 usage")
         mp.set_defaults(module_cmd=name)
         mp.add_argument("path", help="a module folder (module.yaml at its root) or, for check and inspect, a .dmod")
-        mp.add_argument("--tool", help="the module tool's jar (default: DRISHTI_MODULE_TOOL, then drishti-module-runtime/target/drishti-module-tool.jar)")
+        mp.add_argument("--tool", help="the module tool's jar (default: DRISHTI_MODULE_TOOL, then kernel/drishti-module-runtime/target/drishti-module-tool.jar)")
         mp.add_argument("--java", help="the java binary (default: JAVA_HOME, then JDK 21, then java on the PATH)")
         if name in ("pack", "check"):
             mp.add_argument("--jar", dest="module_jar", help="the module's jar, copied to java/ under the name module.yaml gives")

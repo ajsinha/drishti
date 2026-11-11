@@ -67,10 +67,10 @@ def stack(tmp_path_factory):
     for port in (SERVER_PORT, CONSOLE_PORT):
         if NS.listening(port):
             pytest.skip(f"port {port} is in use: stop whatever listens there")
-    jars = sorted(glob.glob(str(ROOT / "drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)
+    jars = sorted(glob.glob(str(ROOT / "kernel/drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)
     java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
     if not jars or not Path(java).exists():
-        pytest.skip("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-app -am")
+        pytest.skip("needs the built server: ./mvnw -o -q package -DskipTests -pl :drishti-app -am")
     tmp = tmp_path_factory.mktemp("publicsector")
     work, data = tmp / "server", tmp / "data"
     work.mkdir()

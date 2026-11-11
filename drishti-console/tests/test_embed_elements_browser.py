@@ -171,10 +171,10 @@ def stack(request, tmp_path_factory):
     tmp = tmp_path_factory.mktemp("elements")
     s = Stack(tmp)
     if not _listening(SERVER_PORT):
-        jars = sorted(glob.glob(str(ROOT / "drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)  # newest build first: target may hold older versions
+        jars = sorted(glob.glob(str(ROOT / "kernel/drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)  # newest build first: target may hold older versions
         java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
         if not jars or not Path(java).exists():
-            pytest.skip("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-app -am")
+            pytest.skip("needs the built server: ./mvnw -o -q package -DskipTests -pl :drishti-app -am")
         work = tmp / "server"
         work.mkdir()
         env = dict(os.environ, DRISHTI_PACKS="trading,counterparty-risk,market-risk", DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_SECURITY_ENABLED="true",

@@ -909,7 +909,7 @@ write-back event that recomputes what a screen shows. Each step shows the UI, th
 ```bash
 DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,compute-demo \
 DRISHTI_COMPUTE_ENABLED=true DRISHTI_PYTHON=$PWD/drishti-console/.venv/bin/python \
-  java -jar drishti-server/target/drishti-server-*-exec.jar
+  java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
 ```
 
 **You should see** in the server's log:

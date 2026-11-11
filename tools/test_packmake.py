@@ -18,7 +18,7 @@
     python3 -m unittest -q tools/test_packmake.py
 
 The folder-layout tests run the whole command (files store, so no deltalake needed) and need the server jar for lint and test:
-they are skipped when there is none (DRISHTI_JAR, or drishti-server/target/*-exec.jar).
+they are skipped when there is none (DRISHTI_JAR, or kernel/drishti-server/target/*-exec.jar).
 """
 import contextlib
 import glob
@@ -35,7 +35,7 @@ import drishti as D  # noqa: E402
 import packmake as PM  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-HAVE_JAR = bool(os.environ.get("DRISHTI_JAR") or glob.glob(str(ROOT / "drishti-server/target/drishti-server-*-exec.jar")))
+HAVE_JAR = bool(os.environ.get("DRISHTI_JAR") or glob.glob(str(ROOT / "kernel/drishti-server/target/drishti-server-*-exec.jar")))
 
 
 def trades(n=12):

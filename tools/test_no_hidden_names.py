@@ -43,7 +43,7 @@ CONCAT = re.compile(r"""(?:resolveSibling\(|resolve\(|Path\.of\(|with_name\(|joi
 
 def sources():
     out = []
-    for pattern in ("drishti-*/src/main/**/*.java", "modules/*/*/src/main/**/*.java", "plugins/*/src/main/**/*.java", "drishti-console/core/**/*.py",
+    for pattern in ("*/drishti-*/src/main/**/*.java", "modules/*/*/src/main/**/*.java", "plugins/*/src/main/**/*.java", "drishti-console/core/**/*.py",
                     "drishti-console/routes/**/*.py", "tools/**/*.py", "tools/*.sh"):
         out += [p for p in ROOT.glob(pattern) if p.is_file() and not p.name.startswith("test_") and "/node_modules/" not in p.as_posix()
                 and "/vendor/" not in p.as_posix() and p.name != "test_no_hidden_names.py"]
@@ -86,7 +86,7 @@ class NoLitterInTheRepoRoot(unittest.TestCase):
         def status():
             return subprocess.run(["git", "status", "--porcelain", "--ignored"], cwd=ROOT, capture_output=True, text=True, check=True).stdout
 
-        if not os.environ.get("DRISHTI_JAR") and not list((ROOT / "drishti-server" / "target").glob("drishti-server-*-exec.jar")):
+        if not os.environ.get("DRISHTI_JAR") and not list((ROOT / "kernel/drishti-server" / "target").glob("drishti-server-*-exec.jar")):
             self.skipTest("pack make needs the server jar (DRISHTI_JAR or ./mvnw -q -DskipTests package)")
         before = status()
         with tempfile.TemporaryDirectory(prefix="drishti-nohidden-") as t:

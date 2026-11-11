@@ -496,7 +496,7 @@ report: {summary: runs/scenario-pv.summary.json}
 ```
 
 ```bash
-java -Xmx2g -Dloader.main=com.ash.drishti.lakeload.LakeLoad -jar drishti-server/target/drishti-server-<version>-exec.jar \
+java -Xmx2g -Dloader.main=com.ash.drishti.lakeload.LakeLoad -jar kernel/drishti-server/target/drishti-server-<version>-exec.jar \
     --config load-scenario-pv.yaml
 ```
 

@@ -114,6 +114,6 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
     p.add_argument("--dry-run", action="store_true", help="say what would be undone, change nothing")
     p.add_argument("--yes", action="store_true", help="undo without asking for the load id again (scripts)")
     p.add_argument("--json", action="store_true")
-    p.add_argument("--jar", help="the drishti-server exec jar (default: DRISHTI_JAR, then drishti-server/target)")
+    p.add_argument("--jar", help="the drishti-server exec jar (default: DRISHTI_JAR, then kernel/drishti-server/target)")
     p.add_argument("--java", help="the java binary")
     return p

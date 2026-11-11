@@ -269,10 +269,10 @@ console_files() {   # name, workers, failed files re-run at a time, then the fil
 # modules side by side; nothing is installed into ~/.m2.
 gate_java() {
   set -e
-  local rules; rules=$(cd drishti-it/src/test/java && find . -name '*Test.java' -printf '%f\n' | sed 's/\.java$//' | sort | paste -sd, -)
+  local rules; rules=$(cd tests/drishti-it/src/test/java && find . -name '*Test.java' -printf '%f\n' | sed 's/\.java$//' | sort | paste -sd, -)
   JAVA_HOME="$JAVA21_HOME" ./mvnw -q -o clean package spotless:check -P api-docs -T "${DRILL_GATE_THREADS:-1C}" \
     -Dtest="$rules,TokenScopeGuardTest,ArrowAnswersTest" -Dsurefire.failIfNoSpecifiedTests=false ${DRILL_MVN_ARGS:-}
-  compgen -G 'drishti-server/target/drishti-server-*-exec.jar' >/dev/null || { echo "drill: the gate's build made no server jar" >&2; return 1; }
+  compgen -G 'kernel/drishti-server/target/drishti-server-*-exec.jar' >/dev/null || { echo "drill: the gate's build made no server jar" >&2; return 1; }
   # a filter that matched nothing would pass in silence: every rule test must have its report
   local c missing=()
   for c in ${rules//,/ } TokenScopeGuardTest ArrowAnswersTest; do
@@ -337,7 +337,7 @@ tools_lane_b() {
   run_tool_tests "${files[@]}" || rc=1
   # outside tools/: the compute worker SDK and its engines (pure Python), and the AWS connectors' tool scripts (botocore's Stubber and
   # an in-memory S3, no AWS account)
-  timeout --kill-after=30 600 uv run -q --with pytest python -m pytest -q -p no:cacheprovider drishti-compute/src/test/python || rc=1
+  timeout --kill-after=30 600 uv run -q --with pytest python -m pytest -q -p no:cacheprovider compute/drishti-compute/src/test/python || rc=1
   timeout --kill-after=30 600 uv run -q --with pytest --with boto3 --with pyarrow --with deltalake python -m pytest -q -p no:cacheprovider deploy/aws/s3-tables deploy/aws/delta-s3 || rc=1
   return $rc
 }

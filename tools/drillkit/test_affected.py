@@ -27,7 +27,7 @@ import shots_affected  # noqa: E402
 
 
 def test_shared_infrastructure_selects_everything():
-    for f in ("pom.xml", "tools/drill.sh", "drishti-console/tests/conftest.py", "drishti-common/src/main/java/X.java"):
+    for f in ("pom.xml", "tools/drill.sh", "drishti-console/tests/conftest.py", "kernel/drishti-common/src/main/java/X.java"):
         assert affected.classify([f]).everything, f
 
 
@@ -37,14 +37,14 @@ def test_a_file_it_cannot_place_selects_everything():
 
 def test_java_reaches_its_users_and_the_mapped_console_tests():
     plan = affected.classify(["modules/banking/banking-compute/src/main/java/com/ash/X.java"])
-    assert {"modules/banking/banking-compute", "modules/banking/banking-service", "drishti-app"} <= plan.modules
-    assert "drishti-rachana" not in plan.modules
+    assert {"modules/banking/banking-compute", "modules/banking/banking-service", "packaging/drishti-app"} <= plan.modules
+    assert "compute/drishti-rachana" not in plan.modules
     assert any("test_var_lens" in c for c in plan.console) and not any("test_funds" in c for c in plan.console)
     assert not plan.all_console and not plan.everything
 
 
 def test_java_the_map_does_not_narrow_selects_every_console_test():
-    assert affected.classify(["drishti-net/src/main/java/X.java"]).all_console
+    assert affected.classify(["net/drishti-net/src/main/java/X.java"]).all_console
 
 
 def test_a_java_test_stays_in_its_module():

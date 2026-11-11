@@ -5,7 +5,7 @@ ARG BASE_IMAGE=eclipse-temurin:21-jre
 FROM ${BASE_IMAGE}
 RUN useradd --system --uid 10001 drishti
 WORKDIR /opt/drishti
-COPY drishti-server/target/drishti-server-*-exec.jar app.jar
+COPY kernel/drishti-server/target/drishti-server-*-exec.jar app.jar
 COPY config/packs/ config/packs/
 COPY config/lenses/ /opt/drishti/config/lenses/
 COPY config/ui-kit/ config/ui-kit/

@@ -831,7 +831,7 @@ connectors:
 2. Start the server with the connector on:
 
    ```bash
-   DRISHTI_STREAM_TRADING=true DRISHTI_KAFKA_BOOTSTRAP=localhost:9092 java -jar drishti-server/target/drishti-server-*-exec.jar
+   DRISHTI_STREAM_TRADING=true DRISHTI_KAFKA_BOOTSTRAP=localhost:9092 java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
    ```
 
    `curl -s http://localhost:18480/api/v1/sources` should now list `trading-stream` with `"live":true` and
@@ -1272,7 +1272,7 @@ history), so the field dialog gets the fast paths and the 260-day constant becom
 ### 8. The JSON contract
 
 This is the contract between the two builders (section 18). Builder B builds the console against a fixture of exactly this shape
-(`drishti-testkit/src/main/resources/history/trade-1000015-30.json`, added in H1) and the server's tests assert it.
+(`tests/drishti-testkit/src/main/resources/history/trade-1000015-30.json`, added in H1) and the server's tests assert it.
 
 ```json
 {
@@ -1723,7 +1723,7 @@ as a fixture file; neither touches the other's files. Each step is one push with
 
 | Step | Builder | What | Done when (its own tests) | Docs in the same push |
 |---|---|---|---|---|
-| **H1** | A | The contract: `HistoryRequest`, `HistoryDay`, `HistoryRead`, `SourcePlugin.history` and `days` defaults, `HistoryReads.perDay`; `ConnectorInstance` delegation; the fixture `drishti-testkit/src/main/resources/history/trade-1000015-30.json` (and an equity one); `DatedSourceContract` history cases | every plugin that extends `DatedSourceContract` passes the new cases with the default | `docs/guides/DEVELOPER_GUIDE.md` (the SPI) |
+| **H1** | A | The contract: `HistoryRequest`, `HistoryDay`, `HistoryRead`, `SourcePlugin.history` and `days` defaults, `HistoryReads.perDay`; `ConnectorInstance` delegation; the fixture `tests/drishti-testkit/src/main/resources/history/trade-1000015-30.json` (and an equity one); `DatedSourceContract` history cases | every plugin that extends `DatedSourceContract` passes the new cases with the default | `docs/guides/DEVELOPER_GUIDE.md` (the SPI) |
 | **H2** | A | `engine/history`: `HistoryProperties`, `HistoryWindow` (ranges, business days, baseline), `HistoryRows` (latest per day, `changed`, parts, summary, diff), `HistoryCache`, `HistorySpec` (+ `DRS-2061`), `HistoryService`; `SourceRouter.history` (read order, coverage, budget, partial) | unit tests (section 19.1) | CONFIGURATION (settings), API_GUIDE and TROUBLESHOOTING (codes) |
 | **H3** | A | `HistoryController.rows` (`/{kind}/{id}` and `/~`), the new `ErrorCode`s, masks, `AccessRecorder.ACTIONS`; `series` re-pointed at the service (260 becomes `max-days`); `HistoryDefinitions` reading `history:`; deploy and `sutra lint` checks | controller tests with a fake router: masks per row, rights, every error, the JSON equals the fixture's shape | API_GUIDE endpoint, PACK_DEVELOPER_GUIDE `history:` |
 | **H4** | A | Drishti\*net: `PeerSource.history`, `NetDataController` `/net/history`, merge by date | in-process cluster test (two nodes, a kind's dates split across them) | OPERATIONS_GUIDE.md routing table |
@@ -2657,7 +2657,7 @@ Windows and never contain `~`, which is reserved for the store's own sidecars. A
 identical bytes keeps the version (harmless: the content is the same). No hidden files, nothing outside the root.
 
 **sqlite and postgres.** One table, `drishti_content (k, v, version, updated_ms, deleted)`, in the two complete Drishti database
-schema files (`drishti-identity/src/main/resources/db/schema-sqlite.sql` and `schema-postgres.sql`; no migrations,
+schema files (`kernel/drishti-identity/src/main/resources/db/schema-sqlite.sql` and `schema-postgres.sql`; no migrations,
 SchemaParityTest keeps them equal). The backend applies the whole schema file at start (idempotent), so it may point at the
 Drishti database itself (the usual choice) or at a database of its own. The version is a counter; compare-and-set is
 `UPDATE … WHERE k = ? AND version = ?` (or an `INSERT` racing on the primary key for a create). A delete keeps a tombstone row
@@ -3729,7 +3729,7 @@ the server table, the spill and heap advice: [BENCHMARK.md section 7](../admin/B
 
 ### 10.11 Tests
 
-`./mvnw -o -q -pl drishti-lakeload test`:
+`./mvnw -o -q -pl :drishti-lakeload test`:
 
 | Test | What |
 |---|---|

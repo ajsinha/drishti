@@ -100,7 +100,7 @@ def admin(method: str, path: str, body=None):
 
 
 def dataset_body() -> str:
-    text = (ROOT / "drishti-server/src/test/resources/bi/samples-2.1/datasets/trades-basic.dataset.yaml").read_text()   # the 2.1 sample, kept by the server's tests
+    text = (ROOT / "kernel/drishti-server/src/test/resources/bi/samples-2.1/datasets/trades-basic.dataset.yaml").read_text()   # the 2.1 sample, kept by the server's tests
     text = text.replace("dataset: trades-basic", "dataset: gov-trades").replace("title: Trades, the basics", "title: Trades model")
     text = re.sub(r"^(sample: true|tags: \[sample.*\]|endorsement: promoted).*\n", "", text, flags=re.M)
     text = re.sub(r"^\s*#.*\n", "", text, flags=re.M)                  # the sample's commentary stays in the sample; a desk's own model is shorter
@@ -161,10 +161,10 @@ class Stack:
     def _start(self) -> "Stack":
         for port in (SERVER_PORT, CONSOLE_PORT):
             assert port not in FORBIDDEN and not listening(port), f"port {port} is in use: stop whatever listens there"
-        jars = sorted(glob.glob(str(ROOT / "drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)  # newest build first: target may hold older versions
+        jars = sorted(glob.glob(str(ROOT / "kernel/drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)  # newest build first: target may hold older versions
         java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
         if not jars or not Path(java).exists():
-            raise FileNotFoundError("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-app -am")
+            raise FileNotFoundError("needs the built server: ./mvnw -o -q package -DskipTests -pl :drishti-app -am")
         work = self.tmp / "server"
         (work / "config" / "bi").mkdir(parents=True)
         lake = self.tmp / "lake"

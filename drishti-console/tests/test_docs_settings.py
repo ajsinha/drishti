@@ -59,7 +59,7 @@ def _yaml_keys(rel: str) -> list[str]:
 
 
 def test_every_key_of_the_server_application_yaml_is_documented():
-    missing = [k for k in _yaml_keys("drishti-server/src/main/resources/application.yaml") if not _documented(k)]
+    missing = [k for k in _yaml_keys("kernel/drishti-server/src/main/resources/application.yaml") if not _documented(k)]
     assert not missing, f"not in CONFIGURATION.md: {missing}"
 
 

@@ -1085,7 +1085,7 @@ Every form holds the same bytes; choose the one your build already uses. The too
 | **Two files** for one page | `drishti.py elements pack --libs core,grid,chart` | `drishti-elements.js` and `drishti-elements.css` with exactly those libraries and what they require | core+grid+chart: 1.8 MB JS (555 KB gzip; 732 KB without ECharts), 50 KB CSS |
 | **Release archive** | `drishti.py elements dist --only zip` | `drishti-elements-<version>.zip`: every library, the themes, a manifest with SRI hashes, the changelog lines, the licence notice | 3.3 MB (11.9 MB unpacked, maps included) |
 | **npm tarballs** | `drishti.py elements dist --only npm` | `@drishti/elements-<name>` as `npm/drishti-elements-<name>-<version>.tgz` | core 90 KB, grid 283 KB, chart 2.5 MB (ECharts and the maps), inputs 217 KB, data 31 KB, renderer 92 KB |
-| **WebJar** | `./mvnw -P elements -pl drishti-elements package` | `drishti-elements-<version>.jar` with the archive's files under `META-INF/resources/webjars/drishti-elements/<version>/` | 3.5 MB |
+| **WebJar** | `./mvnw -P elements -pl :drishti-elements package` | `drishti-elements-<version>.jar` with the archive's files under `META-INF/resources/webjars/drishti-elements/<version>/` | 3.5 MB |
 | **A Drishti server** | nothing to build | `/static/elements/…` on the console's origin, `/embed/v2/elements/<library>/…` for registered host applications ([10.1](#101-where-the-library-is-served)) | |
 
 **The archive.** Unzip it into a folder your web server serves, for example `/vendor/drishti/`. Its layout is the console's: the loader in

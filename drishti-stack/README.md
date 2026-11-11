@@ -59,7 +59,7 @@ Open `/v/trade/10000001` on the console: the trade is held by `drishti-b` only, 
 | `../data/stack/` | **no** (`data/` is git-ignored) | `server.jar` (the copy the servers run), the nodes' data and connector folders, the synthetic lakes |
 
 On the first start `bin/start-cluster` makes what is missing: the secrets, `data/stack/server.jar` (a copy of the newest
-`drishti-server/target/drishti-server-*-exec.jar`; it tells you to build when there is none), a node's net folder, and the two synthetic
+`kernel/drishti-server/target/drishti-server-*-exec.jar`; it tells you to build when there is none), a node's net folder, and the two synthetic
 lakes (`tools/bench/trades.py`: 1,500 trades a day per system for two business days, 300 counterparties). The servers run the copy, so a
 rebuild never replaces the jar under a running server: the next `bin/start-cluster` copies a newer build, and a restarted node runs it.
 

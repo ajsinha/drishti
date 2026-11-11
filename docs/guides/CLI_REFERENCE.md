@@ -273,7 +273,7 @@ http://localhost:18480) and the token from DRISHTI_TOKEN or --token-file; the to
 | PyYAML | `pack`, `data ingest`, `design create --from-sutra` | `python3 -c "import yaml"` |
 | `deltalake` and `pyarrow` | `data ingest --store delta`, `pack new --lake` | only when you write a Delta lake |
 | JDK 21 or newer | `sutra`, `pack new`, `pack check`, `pack about-check` | `java -version` (the tool prefers `JAVA_HOME`, then `/usr/lib/jvm/java-21-openjdk-amd64`, then `java`) |
-| the exec jar `drishti-server/target/drishti-server-<version>-exec.jar` | the same | `./mvnw -q -DskipTests package`, or pass `--jar` / set `DRISHTI_JAR` |
+| the exec jar `kernel/drishti-server/target/drishti-server-<version>-exec.jar` | the same | `./mvnw -q -DskipTests package`, or pass `--jar` / set `DRISHTI_JAR` |
 | `openssl` | `pack keygen` | `openssl version` |
 | Playwright | `docs shots` | see [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) |
 
@@ -303,13 +303,13 @@ does not write a Delta lake; `drishti.py` in the output is the same program. The
 twins under `tools/windows/`.
 
 The Java commands (`sutra`, `pack check`, `tables` and Drishti's own lake writer) run from the server's exec jar, found as `--jar`,
-then `DRISHTI_JAR`, then the newest `drishti-server/target/drishti-server-*-exec.jar` (build it with `./mvnw -q -DskipTests package`).
+then `DRISHTI_JAR`, then the newest `kernel/drishti-server/target/drishti-server-*-exec.jar` (build it with `./mvnw -q -DskipTests package`).
 
 **Environment variables** the program reads:
 
 | Variable | Meaning | Default |
 |---|---|---|
-| `DRISHTI_JAR` | the exec jar the Java commands run | the newest `drishti-server/target/drishti-server-*-exec.jar` |
+| `DRISHTI_JAR` | the exec jar the Java commands run | the newest `kernel/drishti-server/target/drishti-server-*-exec.jar` |
 | `JAVA_HOME` | the JDK that runs it | `/usr/lib/jvm/java-21-openjdk-amd64`, then `java` on the `PATH` |
 | `DRISHTI_SERVER` | the server's base URL | `http://localhost:18480` |
 | `DRISHTI_TOKEN` | the bearer token (never printed) | none |
@@ -591,7 +591,7 @@ extractor, auto-design and the view pipeline) without a browser and without a we
 
 ```
 drishti-console/.venv/bin/python tools/drishti.py sutra <command> <path>... [options]
-java -jar drishti-server/target/drishti-server-<version>-exec.jar sutra <command> <path>... [options]
+java -jar kernel/drishti-server/target/drishti-server-<version>-exec.jar sutra <command> <path>... [options]
 ```
 
 | Command | Takes | Does |
@@ -1246,7 +1246,7 @@ the installed and loaded versions.)
 The module tool ([DEVELOPER_GUIDE.md section 1.6](DEVELOPER_GUIDE.md#16-the-module-sdk)): `pack` turns a module folder (`module.yaml` at
 its root, its jar under `java/` or given with `--jar`) into `<out>/<id>-<version>.dmod`; `check` runs the conformance checks C1–C15 on a
 `.dmod` or a folder; `inspect` says what a package is and whether its files match its hash list. It runs
-`drishti-module-runtime/target/drishti-module-tool.jar` (or `--tool`, `DRISHTI_MODULE_TOOL`) with Java only.
+`kernel/drishti-module-runtime/target/drishti-module-tool.jar` (or `--tool`, `DRISHTI_MODULE_TOOL`) with Java only.
 
 ```bash
 python3 tools/drishti.py module pack build/greet --jar build/libs/greet.jar --out dist
@@ -1277,7 +1277,7 @@ python3 tools/drishti.py module run dist/greeter-1.0.0.dmod     # the kernel's t
 with other bytes is refused) and print the plan per node: the placed nodes stage and activate, the others receive nothing. `apply` exits
 **0** applied, **1** failed (rolled back on every node), **2** a stale plan (`DRS-1031`: plan again), **3** waiting for a second
 administrator (`DRS-2007`). `run` lays out a run folder (the module installed and active, every part placed on this node; `--dir` keeps
-it, otherwise it is removed on exit) and starts `drishti-kernel-app/target/drishti-kernel-*-exec.jar` (or `--jar`); `--dry-run` prints the
+it, otherwise it is removed on exit) and starts `packaging/drishti-kernel-app/target/drishti-kernel-*-exec.jar` (or `--jar`); `--dry-run` prints the
 command. Hot reload while it runs is not built yet.
 
 ## 6. `data`: profile, ingest and load
@@ -2106,7 +2106,7 @@ with the reason, what the simulator does not honour.
 
 ```bash
 # Java: the content store and the Iceberg table on S3Mock (and MinIO when it can run)
-./mvnw -q -pl drishti-identity,plugins/drishti-plugin-iceberg -am test \
+./mvnw -q -pl :drishti-identity,plugins/drishti-plugin-iceberg -am test \
   -Dtest='S3ContentStoreTest,S3MockContentStoreTest,MinioContentStoreTest,NativeOnS3SimulatorTest' -Dsurefire.failIfNoSpecifiedTests=false
 # Python: moto (once: drishti-console/.venv/bin/python -m pip install "moto[server]==5.2.3", or uv pip install --python …)
 drishti-console/.venv/bin/python -m unittest -v tools/lake/test_s3_simulators.py
@@ -2155,14 +2155,14 @@ folder: `-Ddrishti.lakes.dir` or `DRISHTI_LAKES_DIR`); a key of the load file th
 
 ```bash
 java -Xmx40g -Djava.io.tmpdir=/mnt/nvme/tmp -Dloader.main=com.ash.drishti.lakeload.LakeLoad \
-    -jar drishti-server/target/drishti-server-<version>-exec.jar --config /etc/drishti/load-pv.yaml
+    -jar kernel/drishti-server/target/drishti-server-<version>-exec.jar --config /etc/drishti/load-pv.yaml
 # development: java -cp <the module's class path> com.ash.drishti.lakeload.LakeLoad --config load.yaml
 ```
 
 ```powershell
 # Windows (PowerShell; Java only, no .exe)
 java -Xmx8g "-Djava.io.tmpdir=C:\drishti\data\tmp\server" "-Dloader.main=com.ash.drishti.lakeload.LakeLoad" `
-    -jar C:\drishti\drishti-server\target\drishti-server-<version>-exec.jar --config C:\drishti\load-pv.yaml
+    -jar C:\drishti\kernel\drishti-server\target\drishti-server-<version>-exec.jar --config C:\drishti\load-pv.yaml
 ```
 
 Options: `--config FILE`, `--set key.path=value` (repeatable; overrides the file), `--summary FILE`, `--progress FILE`, `--dry-run`
@@ -2325,7 +2325,7 @@ load manifest: /scratch/demo/lake/_drishti-lake/runs/20261028T085451-1591296.man
 
 (The scratch folder's path shortened to `/scratch`.)
 
-The tests: `./mvnw -o -q -pl drishti-lakeload test` (equality with the Python path on both formats, through the connectors; one commit a
+The tests: `./mvnw -o -q -pl :drishti-lakeload test` (equality with the Python path on both formats, through the connectors; one commit a
 date; a stopped load; S3 on S3Mock, a zip and a .tgz on S3 included; gz, multi-member gz, many gz, zstd, byte ranges, 1 vs many threads,
 a tiny budget: identical tables; the 10K throughput; `ArchivesTest`: the shared archive cases, datasets, refusals) and
 `python3 -m pytest tools/lake/test_javaload.py tools/lake/test_archives.py`.
@@ -3751,7 +3751,7 @@ Drishti Elements (the JavaScript and CSS libraries) for other applications (`too
   npm tarballs `@drishti/elements-<name>` (`npm/drishti-elements-<name>-<version>.tgz`); with banking the archive is
   `drishti-elements-<version>+banking.zip` and drishti-risk's tarball is added. Default folder `target/elements`.
 - `elements webjar-tree --out DIR [--version V]`: the WebJar's files; the Maven profile runs it
-  (`./mvnw -P elements -pl drishti-elements package`).
+  (`./mvnw -P elements -pl :drishti-elements package`).
 
 ```bash
 python3 tools/drishti.py elements pack --libs core,grid,chart --theme dark --out build/vendor/drishti
@@ -3867,7 +3867,7 @@ of Parquet.
 | `tools/drillkit/drill_timings.py` | the drill's pytest plugin (`-p drill_timings`): the seconds each test file took, written to the file `DRILL_TIMINGS_OUT` names when the session ends |
 | `tools/bicompute-unit.sh` | a light check of the pivot engine while a drill or a benchmark holds the machine: `javac` and the JUnit launcher at `-Xmx768m`, no Maven, against the jars of the last release installed in `~/.m2` (`DRISHTI_M2_VERSION`) and this checkout's `ErrorCode`; with test class names (`LivePivotTest ScaleSwitchesTest`) it runs them; `--server` also compiles the server's pivot package; its temporary folder is removed on exit. Never instead of the Maven build |
 | `tools/drill-known.txt` | the console tests the drill accepts when they fail: one line each, its pytest id, a `|` and the reason; reported at the end of the lane, never hidden |
-| `tools/sizing_planner.py` | reads the planner's one file, `drishti-server/src/main/resources/capacity/planner.yaml`, and writes the single-node sizing planner workbook `docs/architecture/Drishti-Sizing-Planner.xlsx` (inputs, results with the settings and JVM arguments, coefficients, explanation: [CLUSTER_GUIDE.md section 9.7](CLUSTER_GUIDE.md#155-the-sizing-planner)), the server's workbook template (`drishti-server/src/main/resources/capacity/template/`, for Admin → Capacity's download) and the shared test vectors (`drishti-server/src/test/resources/capacity/test-vectors.json`); `--check` exits 1 when any of them is not a fresh build; PyYAML |
+| `tools/sizing_planner.py` | reads the planner's one file, `kernel/drishti-server/src/main/resources/capacity/planner.yaml`, and writes the single-node sizing planner workbook `docs/architecture/Drishti-Sizing-Planner.xlsx` (inputs, results with the settings and JVM arguments, coefficients, explanation: [CLUSTER_GUIDE.md section 9.7](CLUSTER_GUIDE.md#155-the-sizing-planner)), the server's workbook template (`kernel/drishti-server/src/main/resources/capacity/template/`, for Admin → Capacity's download) and the shared test vectors (`kernel/drishti-server/src/test/resources/capacity/test-vectors.json`); `--check` exits 1 when any of them is not a fresh build; PyYAML |
 | `tools/capacitycli.py` | `drishti.py admin capacity`: Admin → Capacity from a terminal, the server's planner evaluated with `sizing_planner.py`'s evaluator (`--live`, `--set Name=value`, `--all`, `--xlsx FILE --inputs plan\|live\|both`): [section 8](#admin-capacity-admin--capacity-from-a-terminal) |
 | `tools/domain_strings.py` | the domain boundaries' rule 4 ([DOMAIN_MODULES.md](../architecture/DOMAIN_MODULES.md) section 4): counts the banking names (command words, engine ids, connectors, API and console paths, packages) in the core's code against `tools/domain_strings_allowed.yaml`, which only shrinks; `--write` lowers the list after names moved into the module (a quick file check in the drill: `tools/test_domain_strings.py`) |
 | `tools/duplicates.py` | the copy-paste detector (PMD CPD through `tools/cpd/pom.xml`, 100 tokens) over Java, JavaScript and Python, excluding tests, generated files, `static/vendor`, `render/1.2.0` and `web/embed`; fails if a language has more duplicated lines than `tools/cpd/baseline.txt` (the gate runs it); `--report [N]` lists the biggest groups, `--write` lowers the baseline, never raising it |
@@ -3936,7 +3936,7 @@ its packages in its `pom.xml` (`drishti.apidocs.packages`), and the Python surfa
 and its client library, the pack and test-data generator helpers).
 
 ```bash
-./mvnw -o -P api-docs -pl drishti-api,drishti-compute,drishti-server -am process-classes   # Javadoc with doclint, into <module>/target/reports/apidocs
+./mvnw -o -P api-docs -pl :drishti-api,:drishti-compute,:drishti-server -am process-classes   # Javadoc with doclint, into <module>/target/reports/apidocs
 python3 tools/api_docs.py check            # every public Java member and Python function, class and method documented (exit 1 naming them)
 python3 tools/api_docs.py build --maven    # both references into drishti-console/web/apidocs/<version>/ (the Maven step included)
 python3 tools/api_docs.py zip              # drishti-console/web/apidocs/drishti-api-reference-<version>.zip, for the GitHub release
@@ -4002,7 +4002,7 @@ empty PyCharm to a run configuration for each common task.
 | **Environment variables** | `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64;DRISHTI_JAR=<repo>/drishti-server/target/drishti-server-<version>-exec.jar;PYTHONUNBUFFERED=1`, and for server commands `DRISHTI_SERVER=http://localhost:18480;DRISHTI_TOKEN=drk_...` |
 
 Click the folder icon next to **Environment variables** to edit them as a table (one row per variable). `JAVA_HOME` and
-`DRISHTI_JAR` may be left out: the tool then looks for JDK 21 and for the newest `drishti-server/target/*-exec.jar` itself.
+`DRISHTI_JAR` may be left out: the tool then looks for JDK 21 and for the newest `kernel/drishti-server/target/*-exec.jar` itself.
 
 | Name | **Parameters** |
 |---|---|
@@ -4086,7 +4086,7 @@ it without the command-line program, and debug the engine while it lints:
 | **Working directory** | **the repository root** |
 
 (or **JAR Application** with the exec jar as *Path to JAR* and the same program arguments). It prints what the command line
-prints and ends with the exit code; breakpoints in `drishti-rachana` or `drishti-server/.../cli/SutraCli.java` stop as usual.
+prints and ends with the exit code; breakpoints in `drishti-rachana` or `kernel/drishti-server/.../cli/SutraCli.java` stop as usual.
 Paths in the arguments are relative to the working directory here, unlike in `drishti.py` (which makes them absolute for you).
 
 #### Run the tools' own tests
@@ -4184,7 +4184,7 @@ A GitHub Actions job (the jar is built once and reused):
 ```yaml
 - uses: actions/setup-java@v4
   with: { distribution: temurin, java-version: 21 }
-- run: ./mvnw -q -DskipTests -pl drishti-app -am package
+- run: ./mvnw -q -DskipTests -pl :drishti-app -am package
 - uses: astral-sh/setup-uv@v5
 - run: uv run --with pyyaml python tools/drishti.py pack check config/packs/my-bank --strict --junit build/reports
 - uses: actions/upload-artifact@v4
@@ -4326,7 +4326,7 @@ Some commands add codes of their own, each named in its section:
 
 | You see | Why | Do |
 |---|---|---|
-| `drishti: no drishti-server-*-exec.jar under drishti-server/target: build it ... or pass --jar / DRISHTI_JAR` | the Java commands need the exec jar | `./mvnw -q -DskipTests package`, or `export DRISHTI_JAR=/path/to/drishti-server-<version>-exec.jar` |
+| `drishti: no drishti-server-*-exec.jar under kernel/drishti-server/target: build it ... or pass --jar / DRISHTI_JAR` | the Java commands need the exec jar | `./mvnw -q -DskipTests package`, or `export DRISHTI_JAR=/path/to/drishti-server-<version>-exec.jar` |
 | `drishti: jar not found: ...` | `--jar` / `DRISHTI_JAR` names a missing file | fix the path |
 | `drishti: cannot run java: ...; pass --java or set JAVA_HOME` | no JDK found | set `JAVA_HOME` to a JDK 21+ |
 | `drishti: PyYAML is not installed: run with uv run --with pyyaml ...` | the system Python has no PyYAML | use `uv run --with pyyaml`, or a venv |
@@ -4383,7 +4383,7 @@ empty PyCharm to a run configuration for each common task.
 | **Environment variables** | `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64;DRISHTI_JAR=<repo>/drishti-server/target/drishti-server-2.9.11.g-exec.jar;PYTHONUNBUFFERED=1`, and for server commands `DRISHTI_SERVER=http://localhost:18480;DRISHTI_TOKEN=drk_...` |
 
 Click the folder icon next to **Environment variables** to edit them as a table (one row per variable). `JAVA_HOME` and
-`DRISHTI_JAR` may be left out: the tool then looks for JDK 21 and for the newest `drishti-server/target/*-exec.jar` itself.
+`DRISHTI_JAR` may be left out: the tool then looks for JDK 21 and for the newest `kernel/drishti-server/target/*-exec.jar` itself.
 
 | Name | **Parameters** |
 |---|---|
@@ -4467,7 +4467,7 @@ it without the command-line program, and debug the engine while it lints:
 | **Working directory** | **the repository root** |
 
 (or **JAR Application** with the exec jar as *Path to JAR* and the same program arguments). It prints what the command line
-prints and ends with the exit code; breakpoints in `drishti-rachana` or `drishti-server/.../cli/SutraCli.java` stop as usual.
+prints and ends with the exit code; breakpoints in `drishti-rachana` or `kernel/drishti-server/.../cli/SutraCli.java` stop as usual.
 Paths in the arguments are relative to the working directory here, unlike in `drishti.py` (which makes them absolute for you).
 
 ### 14.6 Run the tools' own tests

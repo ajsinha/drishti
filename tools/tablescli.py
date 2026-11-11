@@ -73,7 +73,7 @@ def register(groups, ctx: dict) -> None:
         p.add_argument("--root", help="the catalogue's folder (default config/tables: a folder per domain)")
         p.add_argument("--json", action="store_true", help="JSON instead of words")
         p.add_argument("--java", help="the java to run (default $JAVA_HOME/bin/java)")
-        p.add_argument("--jar", help="the server's exec jar (default the newest drishti-server/target/drishti-server-*-exec.jar, or DRISHTI_JAR)")
+        p.add_argument("--jar", help="the server's exec jar (default the newest kernel/drishti-server/target/drishti-server-*-exec.jar, or DRISHTI_JAR)")
         return p
 
     add("list", "every table and model of the catalogue", "examples:\n  drishti.py tables list\n  drishti.py tables list --json")

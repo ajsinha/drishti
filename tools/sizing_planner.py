@@ -51,13 +51,13 @@ MB = "BytesPerMB"
 
 
 def _version() -> str:
-    pom = (ROOT / "drishti-server" / "pom.xml").read_text()
+    pom = (ROOT / "kernel/drishti-server" / "pom.xml").read_text()
     m = re.search(r"<artifactId>drishti-server</artifactId>\s*<version>([^<]+)</version>", pom) or re.search(r"<parent>.*?<version>([^<]+)</version>", pom, re.S)
     return m.group(1) if m else "VERSION"
 
 
 def _branding() -> dict:
-    text = (ROOT / "drishti-server" / "src" / "main" / "resources" / "application.yaml").read_text(encoding="utf-8")
+    text = (ROOT / "kernel/drishti-server" / "src" / "main" / "resources" / "application.yaml").read_text(encoding="utf-8")
     out = {}
     for key in ("product", "owner", "copyright"):
         m = re.search(r"^\s+" + key + r":\s*(.+?)\s*(#.*)?$", text[text.index("branding:"):], re.M)
@@ -66,12 +66,12 @@ def _branding() -> dict:
 
 
 # ---------------------------------------------------------------------------------------------------------------- the planner's one file
-# drishti-server/src/main/resources/capacity/planner.yaml holds the inputs, coefficients, results, settings, JVM arguments, warnings,
+# kernel/drishti-server/src/main/resources/capacity/planner.yaml holds the inputs, coefficients, results, settings, JVM arguments, warnings,
 # calibration lines and the Explain tab's examples. The server serves it to Admin -> Capacity, whose drishti_capacity.js evaluates the same
 # expressions; this module turns it into the workbook. The tuples below keep the shapes the workbook code and the tests read.
-PLANNER = ROOT / "drishti-server" / "src" / "main" / "resources" / "capacity" / "planner.yaml"
-TEMPLATE_OUT = ROOT / "drishti-server" / "src" / "main" / "resources" / "capacity" / "template"
-VECTORS = ROOT / "drishti-server" / "src" / "test" / "resources" / "capacity" / "test-vectors.json"
+PLANNER = ROOT / "kernel/drishti-server" / "src" / "main" / "resources" / "capacity" / "planner.yaml"
+TEMPLATE_OUT = ROOT / "kernel/drishti-server" / "src" / "main" / "resources" / "capacity" / "template"
+VECTORS = ROOT / "kernel/drishti-server" / "src" / "test" / "resources" / "capacity" / "test-vectors.json"
 
 
 def _load() -> dict:

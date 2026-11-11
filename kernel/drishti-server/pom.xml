@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.ash.drishti</groupId>
+    <artifactId>drishti-parent</artifactId>
+    <version>2.9.11.g</version>
+    <relativePath>../../pom.xml</relativePath>
+  </parent>
+  <artifactId>drishti-server</artifactId>
+  <name>drishti-server</name>
+  <description>The Drishti Spring Boot application</description>
+  <dependencies>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-kernel-api</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-module-runtime</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-engine</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-net</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-compute</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-bicompute</artifactId></dependency>
+    <!-- the table layer (docs/architecture/ARCHITECTURE.md §28): BI depends on it, never the reverse -->
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-tables</artifactId></dependency>
+    <!-- the in-memory lake (mem://): the server keeps only its Spring wiring (server.memlake) -->
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-memlake</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-identity</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-packs</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-registry</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-ai</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-demo</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-file</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-delta</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-aerospike</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-cassandra</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-redis</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-mongodb</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-iceberg</artifactId></dependency>
+    <!-- the parallel lake loader: drishti.py lake build with engine java starts it from this jar (loader.main com.ash.drishti.lakeload.LakeLoad) -->
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakeload</artifactId></dependency>
+    <!-- the data inbox (dataload/inbox): the server keeps only its wiring (server.dataload) -->
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-dataload</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-iceberg-external</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-duckdb</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-feeds</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-news</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-yfinance</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-kafka</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-activemq</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-rabbitmq</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-s3</artifactId></dependency>
+    <dependency><groupId>org.postgresql</groupId><artifactId>postgresql</artifactId><scope>runtime</scope></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-rest</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>org.testcontainers</groupId><artifactId>testcontainers-postgresql</artifactId><version>${testcontainers.version}</version><scope>test</scope></dependency>
+    <dependency><groupId>org.testcontainers</groupId><artifactId>testcontainers-junit-jupiter</artifactId><version>${testcontainers.version}</version><scope>test</scope></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-jdbc</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-flight</artifactId></dependency>
+    <dependency><groupId>org.apache.arrow</groupId><artifactId>arrow-vector</artifactId></dependency>
+    <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-web</artifactId></dependency>
+    <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-actuator</artifactId></dependency>
+    <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-validation</artifactId></dependency>
+    <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-mail</artifactId></dependency>
+    <dependency><groupId>org.springdoc</groupId><artifactId>springdoc-openapi-starter-webmvc-ui</artifactId></dependency>
+    <dependency><groupId>io.micrometer</groupId><artifactId>micrometer-registry-prometheus</artifactId><scope>runtime</scope></dependency>
+    <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-test</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>org.springframework.kafka</groupId><artifactId>spring-kafka-test</artifactId><scope>test</scope></dependency>
+    <dependency>
+      <groupId>com.icegreen</groupId><artifactId>greenmail-junit5</artifactId><scope>test</scope>
+      <exclusions><!-- the mail API and implementation come from spring-boot-starter-mail at the versions Spring Boot manages -->
+        <exclusion><groupId>jakarta.mail</groupId><artifactId>jakarta.mail-api</artifactId></exclusion>
+        <exclusion><groupId>org.eclipse.angus</groupId><artifactId>jakarta.mail</artifactId></exclusion>
+      </exclusions>
+    </dependency>
+  </dependencies>
+  <build>
+    <resources>
+      <resource><directory>src/main/resources</directory></resource>
+      <!-- the README standard: the built-in connector types' READMEs (docs/connectors/types/<type>/README.md), beside the plugins' own -->
+      <resource>
+        <directory>${project.basedir}/../../docs/connectors/types</directory>
+        <includes><include>*/README.md</include></includes>
+        <targetPath>drishti/readme/built-in</targetPath>
+      </resource>
+    </resources>
+    <plugins>
+      <plugin>
+        <!-- each test run starts with no connector files in the forks' folders: a file generated from an older pack template is
+             kept as if edited (a pack's newer template never reaches it), so a test that lands in that fork read the old connector -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-clean-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>fresh-fork-connectors</id>
+            <phase>process-test-classes</phase>
+            <goals><goal>clean</goal></goals>
+            <configuration>
+              <excludeDefaultDirectories>true</excludeDefaultDirectories>
+              <filesets>
+                <fileset><directory>${project.build.directory}</directory><includes><include>fork*/connectors/**</include></includes></fileset>
+              </filesets>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <systemPropertyVariables>
+            <drishti.sdk.archetype>${project.basedir}/../../drishti-sdk/drishti-module-archetype/src/main/resources</drishti.sdk.archetype>
+            <!-- the one folder a test fork writes into (TestRun in the tests): every path below and in the tests' properties is
+                 under it, and the fork removes it when it ends, so a run leaves nothing in target/ but the build's own output -->
+            <drishti.test.dir>${project.build.directory}/test-run/fork${surefire.forkNumber}</drishti.test.dir>
+            <drishti.data.dir>${project.build.directory}/test-run/fork${surefire.forkNumber}/data</drishti.data.dir>
+            <drishti.identity.users-file>${project.build.directory}/test-run/fork${surefire.forkNumber}/identity/users.json</drishti.identity.users-file>
+            <drishti.identity.audit-file>${project.build.directory}/test-run/fork${surefire.forkNumber}/identity/audit.jsonl</drishti.identity.audit-file>
+            <drishti.identity.iterations>1000</drishti.identity.iterations>
+            <!-- the tests' scratch may sit on a RAM disk beside other suites: a free-space guard of 1 GB and 1%, not the site's 20 GB and 10% -->
+            <drishti.disk.min-free-gb>1</drishti.disk.min-free-gb>
+            <drishti.disk.min-free-percent>1</drishti.disk.min-free-percent>
+            <spring.test.context.cache.maxSize>8</spring.test.context.cache.maxSize>
+            <drishti.packs.dir>${project.basedir}/../../config/packs</drishti.packs.dir>
+            <drishti.lens-dir>${project.basedir}/../../config/lenses</drishti.lens-dir>
+            <drishti.ui-kit.dir>${project.basedir}/../../config/ui-kit</drishti.ui-kit.dir>
+            <drishti.ui-kit.site-dir>${project.build.directory}/test-run/fork${surefire.forkNumber}/ui-kit</drishti.ui-kit.site-dir>
+            <!-- the retired example packs stay loadable for the tests that use them as fixtures (finance, logistics…);
+                 tests that name no packs keep finance, the fixture most of them were written against -->
+            <drishti.packs.extra-dirs>${project.basedir}/../../examples/packs</drishti.packs.extra-dirs>
+            <drishti.packs.enabled>finance</drishti.packs.enabled>
+            <drishti.rachana.dirs>${project.build.directory}/test-run/fork${surefire.forkNumber}/no-site-sutras</drishti.rachana.dirs>
+            <drishti.identity.preferences-dir>${project.build.directory}/test-run/fork${surefire.forkNumber}/identity/preferences</drishti.identity.preferences-dir>
+            <drishti.governance.dir>${project.build.directory}/test-run/fork${surefire.forkNumber}/governance</drishti.governance.dir>
+            <DRISHTI_CACHE_ROOT>${project.build.directory}/test-run/fork${surefire.forkNumber}/cache</DRISHTI_CACHE_ROOT>
+            <drishti.sources.connectors-dir>${project.build.directory}/test-run/fork${surefire.forkNumber}/connectors</drishti.sources.connectors-dir>
+            <drishti.bi.governance.imports-dir>${project.build.directory}/test-run/fork${surefire.forkNumber}/bi-imports</drishti.bi.governance.imports-dir>
+          </systemPropertyVariables>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <!-- the tests' helpers and resources (TestRun, the test application.properties) for the domain modules' tests -->
+        <executions><execution><goals><goal>test-jar</goal></goals></execution></executions>
+      </plugin>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <executions>
+          <execution><goals><goal>build-info</goal></goals></execution>
+          <execution><id>repackage</id><phase>none</phase></execution>
+        </executions>
+        <!-- the runnable jar is made by drishti-app (the core with the domain modules this build ships), at the same path as before -->
+      </plugin>
+    </plugins>
+  </build>
+  <properties>
+    <!-- Arrow's memory module (the official IPC writers, Arrow Flight) reads java.nio.Buffer.address -->
+    <argLine>--add-opens=java.base/java.nio=ALL-UNNAMED</argLine>
+    <!-- the API reference (the parent's profile api-docs): ShardedMeasure, what a measure brings to the sharding machinery -->
+    <drishti.apidocs.skip>false</drishti.apidocs.skip>
+    <drishti.apidocs.packages>com.ash.drishti.server.shard</drishti.apidocs.packages>
+  </properties>
+</project>

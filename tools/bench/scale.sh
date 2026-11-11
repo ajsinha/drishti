@@ -179,8 +179,8 @@ note "store size ${SIZE} bytes ($SIZE_KIND)"
 
 # ---- the server -------------------------------------------------------------------------------------------------
 guard
-JAR=$(ls -t drishti-server/target/drishti-server-*-exec.jar 2>/dev/null | head -1 || true)
-if [[ -z "$JAR" ]]; then ./mvnw -q -o install -DskipTests -pl drishti-app -am; JAR=$(ls -t drishti-server/target/drishti-server-*-exec.jar | head -1); fi
+JAR=$(ls -t kernel/drishti-server/target/drishti-server-*-exec.jar 2>/dev/null | head -1 || true)
+if [[ -z "$JAR" ]]; then ./mvnw -q -o install -DskipTests -pl :drishti-app -am; JAR=$(ls -t kernel/drishti-server/target/drishti-server-*-exec.jar | head -1); fi
 mkdir -p "$SRV/identity" "$SRV/tmp"
 note "starting the server on :$PORT (heap $HEAP, $JAR)"
 T0=$(date +%s.%N)

@@ -136,7 +136,7 @@ def table(store: str, system: str, lake: pathlib.Path, ice: pathlib.Path) -> pat
 
 def loader_command(data: pathlib.Path, jar: str | None = None, java: str | None = None, main: str = LOADER) -> list[str]:
     """How to start IcebergLoader (or another class of the plugin, ``main``: IcebergMaintenance): DRISHTI_ICEBERG_CLASSPATH (development:
-    ``-cp CP``), else the server's exec jar (``jar``, DRISHTI_JAR, else the newest drishti-server/target/drishti-server-*-exec.jar), whose
+    ``-cp CP``), else the server's exec jar (``jar``, DRISHTI_JAR, else the newest kernel/drishti-server/target/drishti-server-*-exec.jar), whose
     launcher starts the loader instead of the server (``-Dloader.main``)."""
     for p in (str(HERE), str(ROOT / "tools")):
         if p not in sys.path:

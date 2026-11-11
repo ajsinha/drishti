@@ -126,8 +126,8 @@ the repository has its own (`./mvnw`, Maven 3.9.12).
 ```bash
 git clone https://github.com/ajsinha/drishti.git
 cd drishti
-./mvnw -q package -DskipTests -pl drishti-app -am
-ls drishti-server/target/*-exec.jar
+./mvnw -q package -DskipTests -pl :drishti-app -am
+ls kernel/drishti-server/target/*-exec.jar
 ```
 
 Every command in this guide runs **from this `drishti` folder**: the server finds `./config/packs` and its data folder (`./data`, or
@@ -135,8 +135,8 @@ Every command in this guide runs **from this `drishti` folder**: the server find
 23 MB of `.jsonl.gz`, the one committed folder under `data/`).
 
 The first build downloads its libraries and takes several minutes; later builds about a minute. `-q` keeps it quiet, so success prints
-nothing; `-pl drishti-app -am` builds the server and what it needs (`./mvnw -q package -DskipTests` builds every module, slower, the same
-server; `./mvnw -q verify` also runs every test). You should see `drishti-server/target/drishti-server-<version>-exec.jar`. Before a
+nothing; `-pl :drishti-app -am` builds the server and what it needs (`./mvnw -q package -DskipTests` builds every module, slower, the same
+server; `./mvnw -q verify` also runs every test). You should see `kernel/drishti-server/target/drishti-server-<version>-exec.jar`. Before a
 release build use `./mvnw -q clean package -DskipTests`: without `clean`, `target/` keeps older jars, `java -jar
 drishti-server-*-exec.jar` then runs the first (the oldest) and the server Dockerfile's `COPY` refuses several files. If the build stops
 with `Drishti needs Java 21 or newer … Maven is running on Java …`, `JAVA_HOME` is older than 21: go back to 2.1.
@@ -224,13 +224,13 @@ export DRISHTI_SEED_ADMIN=true DRISHTI_SEED_USERNAME=drishti-dev-admin DRISHTI_S
 export DRISHTI_EXTERNAL_LIB=$PWD/external_lib   # the console's Python libraries; jars go in the lib folder (DRISHTI_LIB_PATH)
 export DRISHTI_DEMO_ENABLED=false
 mkdir -p data/tmp/server
-java -Djava.io.tmpdir=data/tmp/server -Xmx4g -jar drishti-server/target/drishti-server-<version>-exec.jar
+java -Djava.io.tmpdir=data/tmp/server -Xmx4g -jar kernel/drishti-server/target/drishti-server-<version>-exec.jar
 ```
 
 **B. The smallest start** (sign-in off, the packs' samples ticking live):
 
 ```bash
-java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-<version>-exec.jar
+java -Djava.io.tmpdir=data/tmp/server -jar kernel/drishti-server/target/drishti-server-<version>-exec.jar
 ```
 
 | Setting | Meaning |
@@ -367,7 +367,7 @@ The poms enforce only the Java version (`[21,)`); the wrapper pins **Maven 3.9.1
 mvn -v                                  # "Apache Maven 3.9.…" and "Java version: 21.…"
 mvn -q package -DskipTests              # build (add -o to work offline once ~/.m2 is filled)
 mvn -q verify                           # build, every test and every rule
-mvn -q -pl drishti-app -am package -DskipTests    # the server and what it needs
+mvn -q -pl :drishti-app -am package -DskipTests    # the server and what it needs
 ```
 
 ### 3.2 IntelliJ IDEA: open, build, run and debug the server
@@ -394,7 +394,7 @@ soon as the project is open. They use `$PROJECT_DIR$`, the project's JDK and no 
 | **Drishti server (demo lakes)** | the same with `DRISHTI_DEMO_ENABLED=false`, `DRISHTI_VAR_SYSTEM_BASKETS_SEED=true` (the system baskets) and `-Xmx4g` | 18480 |
 | **Drishti server (QA profile)** | its own data folder `data/qa/data`, so QA never touches `./data` | 18580 |
 | **Drishti server (debug-friendly)** | the QA profile with sign-in **off**, DEBUG logging for `com.ash.drishti`, `-Xmx1g` (pair it with a console whose sign-in is off) | 18580 |
-| **Drishti build server jar** | Maven `package -DskipTests -pl drishti-app -am` | |
+| **Drishti build server jar** | Maven `package -DskipTests -pl :drishti-app -am` | |
 | **Build demo lakes** (PyCharm) | `drishti.py lake demo` (2.4) | |
 | **QA pack make**, **QA lake build**, **QA server smoke**, **QA doctor** (PyCharm) | the command-line tools against the QA server; edit *Parameters* | 18580 |
 
@@ -500,18 +500,18 @@ Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 git clone https://github.com/ajsinha/drishti.git
 cd drishti
 $env:JAVA_HOME = $env:DRISHTI_JAVA_HOME
-.\mvnw.cmd -q package -DskipTests -pl drishti-app -am
-dir drishti-server\target\*-exec.jar
+.\mvnw.cmd -q package -DskipTests -pl :drishti-app -am
+dir kernel\drishti-server\target\*-exec.jar
 ```
 
-The Delta engine's and connector's tests: `.\mvnw.cmd -q verify -pl drishti-deltalake,plugins/drishti-plugin-delta -am`; the Iceberg ones:
-`.\mvnw.cmd -q verify -pl drishti-iceberg,plugins/drishti-plugin-iceberg,plugins/drishti-plugin-iceberg-external -am` (Docker tests skip).
+The Delta engine's and connector's tests: `.\mvnw.cmd -q verify -pl :drishti-deltalake,plugins/drishti-plugin-delta -am`; the Iceberg ones:
+`.\mvnw.cmd -q verify -pl :drishti-iceberg,plugins/drishti-plugin-iceberg,plugins/drishti-plugin-iceberg-external -am` (Docker tests skip).
 
 **Or copy** a server built elsewhere (Java bytecode is the same everywhere) into a folder such as `C:\drishti`: the
 `drishti-server-<version>-exec.jar` (every library is inside), `config\packs\` (and `config\connectors\`, `config\bi\` if you use them),
 `drishti-console\` (only to run the console there), `tools\` and `data\testdata\` (to build the demo lakes there), an existing `data\` if any
 (lakes, users, feeds; created when absent) and your `application.local.yaml`. Without a clone copy `bin\` to `C:\drishti\bin\`:
-the scripts work from the folder above themselves and look for the jar in `drishti-server\target\`, then in that folder.
+the scripts work from the folder above themselves and look for the jar in `kernel\drishti-server\target\`, then in that folder.
 
 ### 4.3 The demo lakes, the server and the console
 
@@ -532,7 +532,7 @@ Admin → Health then lists each lake connector as `UP (engine: native)`. By han
 `uv pip install --python drishti-console\.venv\Scripts\python.exe -r drishti-console\requirements.txt`, then
 `drishti-console\.venv\Scripts\python.exe drishti-console\run_drishti_web.py` (the console's own settings: `DRISHTI_CONSOLE_PORT`,
 `DRISHTI_BACKEND_URL`). The jar by hand: `$env:DRISHTI_PACKS = 'market-risk'` then
-`& "$env:DRISHTI_JAVA_HOME\bin\java.exe" -Xmx2g -jar drishti-server\target\drishti-server-<version>-exec.jar`.
+`& "$env:DRISHTI_JAVA_HOME\bin\java.exe" -Xmx2g -jar kernel\drishti-server\target\drishti-server-<version>-exec.jar`.
 
 **Iceberg tables on Windows** run on the native engine too: `.\tools\windows\load-iceberg.ps1` (the samples, ten business days;
 `-Trades 10000 -Days 3` adds a book; the sort spills under `data\tmp\iceberg`, `-SpillDir` to move it), then
@@ -560,10 +560,10 @@ This installs both processes under `/opt/drishti` on a Linux host; adjust the pa
 ### 5.1 Lay out the installation
 
 ```bash
-./mvnw -q clean package -DskipTests                       # from a checkout; exactly one exec jar in drishti-server/target
+./mvnw -q clean package -DskipTests                       # from a checkout; exactly one exec jar in kernel/drishti-server/target
 sudo useradd --system --home /opt/drishti drishti
 sudo mkdir -p /opt/drishti/data /opt/drishti/sutras
-sudo cp drishti-server/target/drishti-server-<version>-exec.jar /opt/drishti/drishti-server.jar
+sudo cp kernel/drishti-server/target/drishti-server-<version>-exec.jar /opt/drishti/drishti-server.jar
 sudo cp -r config drishti-console docs /opt/drishti/
 sudo cp LICENSE CHANGELOG.md RELEASE_NOTES.md THIRD-PARTY-NOTICES.md /opt/drishti/   # the help centre shows them
 sudo chown -R drishti:drishti /opt/drishti
@@ -972,7 +972,7 @@ and secrets and embedded applications declared in configuration; Python and Java
   curl -s -H "Authorization: Bearer $TOKEN" http://localhost:18480/api/v1/admin/modules | jq '.modules[] | {id, on, reason, loaded}'
   curl -s -X POST -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' http://localhost:18480/api/v1/admin/modules \
     -d '{"module": "banking", "enabled": false, "reason": "a site without risk"}'
-  DRISHTI_MODULES_BANKING_ENABLED=false java -jar drishti-server/target/drishti-server-*-exec.jar     # off for one run
+  DRISHTI_MODULES_BANKING_ENABLED=false java -jar kernel/drishti-server/target/drishti-server-*-exec.jar     # off for one run
   ```
 
   The banking API is under `/api/v1/risk/…`; the older paths answer with a `Deprecation: true` header and a `Link` to the new path: move
@@ -1391,7 +1391,7 @@ jobs:
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: 21 }
       - uses: astral-sh/setup-uv@v5
-      - run: ./mvnw -q -DskipTests package -pl drishti-app -am        # the exec jar that lint and test use
+      - run: ./mvnw -q -DskipTests package -pl :drishti-app -am        # the exec jar that lint and test use
       - run: uv run --with pyyaml python tools/drishti.py pack check config/packs/banking/trading --strict --junit build/reports
       - run: uv run --with pyyaml python tools/drishti.py pack bundle config/packs/banking/trading --out dist
       - run: uv run --with pyyaml python tools/drishti.py pack verify dist/trading-*.tar.gz
@@ -2395,7 +2395,7 @@ benchmark's users phase at a small heap with more users than it holds: expect re
   `max-fragments` 8 (fewer for a small database), the breaker at 5 failures for 30 s, standing queries `mq.max-subscriptions` 500 and 20 per user. Readers
   with the same effective security share one standing-query group: 500 viewers with 5 distinct securities are 5 evaluations per visual. Any node
   answers any model query; each model's live tables and standing queries have one owner. The 500-viewer load test, against a real server only:
-  `./mvnw -pl drishti-server test -Dtest=ViewersLoadTest -Ddrishti.load.url=http://server:18480 -Ddrishti.load.queries=/path/visuals.jsonl
+  `./mvnw -pl :drishti-server test -Dtest=ViewersLoadTest -Ddrishti.load.url=http://server:18480 -Ddrishti.load.queries=/path/visuals.jsonl
   -Ddrishti.load.users=rita:…,hana:…` (`-Ddrishti.load.viewers=500 -Ddrishti.load.seconds=120` by default).
 
 ### 14.9 Native libraries (BLAS)
@@ -3250,7 +3250,7 @@ Both programs log to standard output (`docker compose -f deploy/docker/compose.y
 | `pack '…' not found at …/pack.yaml` at start | a typo in `DRISHTI_PACKS`, or started from another folder | use the folder names exactly; start from the installation root or give `DRISHTI_PACKS_DIR` as an absolute path. Other loader messages: `declares pack 'x', expected 'y'` (the folder and `pack:` differ), `packs require each other in a cycle`, `… is defined by both pack 'a' and pack 'b'` |
 | A pack you expected is missing | `DRISHTI_PACKS` lists others, or it is a retired example `DRISHTI_PACKS_EXTRA_DIRS` does not name | restart with the list you want, or **Load** in Admin → Packs |
 | An old version runs | `target/` holds several jars and `*-exec.jar` runs the oldest | name the jar exactly, or build with `clean`; `/api/v1/about` shows the `version` |
-| The server starts but every view is empty, packs missing (IDE) | the run configuration's working directory is `drishti-server/` | the repository root ([3.2](#32-intellij-idea-open-build-run-and-debug-the-server)) |
+| The server starts but every view is empty, packs missing (IDE) | the run configuration's working directory is `kernel/drishti-server/` | the repository root ([3.2](#32-intellij-idea-open-build-run-and-debug-the-server)) |
 | A run configuration is missing or shows `<no module>` | the project is not the root `pom.xml`, or the Python plugin is missing | open the root and let the Maven import finish; Python configurations need PyCharm |
 | Tests pass in a terminal but fail in IntelliJ | `DRISHTI_*` set in the test configuration | clear them in the JUnit template |
 | `ModuleNotFoundError: No module named 'fastapi'` | the console started with another Python | the console's `.venv` ([2.3](#23-the-consoles-python)); in PyCharm choose it as interpreter |

@@ -40,7 +40,7 @@ from typing import Callable
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCES = ("data/testdata", "tools/testdata", "tools/pvgen", "tools/lake", "tools/drishti.py", "tools/build_demo_lakes.py", "tools/demonames.py", "config/demo",
-           "config/packs", "drishti-lakeload/src/main", "drishti-deltalake/src/main")
+           "config/packs", "lake/drishti-lakeload/src/main", "lake/drishti-deltalake/src/main")
 DONE = "BUILT"
 KEEP = 3
 

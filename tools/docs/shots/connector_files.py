@@ -45,9 +45,9 @@ def start_servers(work: Path) -> list:
         if listening(port):
             sys.exit(f":{port} already answers: stop it, or pass --base to use it as it is")
     given = os.environ.get("DRISHTI_SHOTS_SERVER_JAR", "")
-    jar = Path(given) if given else (sorted((ROOT / "drishti-server" / "target").glob("drishti-server-*-exec.jar")) or [None])[-1]
+    jar = Path(given) if given else (sorted((ROOT / "kernel/drishti-server" / "target").glob("drishti-server-*-exec.jar")) or [None])[-1]
     if jar is None or not jar.exists():
-        sys.exit("build the server first: ./mvnw -o package -DskipTests -pl drishti-app -am")
+        sys.exit("build the server first: ./mvnw -o package -DskipTests -pl :drishti-app -am")
     packs = work / "packs"
     packs.mkdir()
     for name in ("core", "market-data", "trading"):
