@@ -426,9 +426,9 @@ the modules they may use. The map of every document is [docs/README.md](docs/REA
 | CSS | 19k | 119 |
 | HTML (templates and pages) | 40k | 367 |
 | YAML: configuration, Sutras, data contracts | 114k | 1,465 |
-| Markdown: guides, tutorials, design | 253k | 330 |
+| Markdown: guides, tutorials, design | 226k | 324 |
 
-About **786k lines of product code** and **287k lines of tests** (37% of the product code), with **253k lines of documentation**.
+About **786k lines of product code** and **287k lines of tests** (37% of the product code), with **226k lines of documentation**.
 
 | What | Count |
 |---|---|
@@ -445,7 +445,7 @@ About **786k lines of product code** and **287k lines of tests** (37% of the pro
 | Feeds | 13 |
 | Lake files | 9 |
 | Test files | 1,579: Java 985, console 259, browser 184, tools 127, JavaScript 24 |
-| Documents under docs/ | 186 (34 guides, 22 tutorials) |
+| Documents under docs/ | 184 (32 guides, 22 tutorials) |
 
 <!-- code-volume:end -->
 
