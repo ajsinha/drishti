@@ -3784,7 +3784,9 @@ The keys are exactly `read`, `union`, `live`, `write`, `demo` and `note`; anythi
 
 **6. What an unbound need does.** A **required** kind that nothing serves switches off exactly the functions that use it, and they say
 why: the needs-data page (*… needs data: shipment is not bound*), the same words on the command line, `409 DRS-1035` from the API. The rest
-of the module keeps working; an optional kind only hides its features. Bind it and the functions come back without a restart.
+of the module keeps working; an optional kind only hides its features. Bind it and the functions come back without a restart. A `.dmod`'s
+needs join the gate when it loads and leave it when it unloads (the genomics sample: binding `variant` where nothing serves it shows
+VARIANT's needs-data page).
 
 ### 12.4 How to create a distribution
 

@@ -89,6 +89,7 @@ class GenomicsDistributionServerTest {
         r.add("drishti.modules.path", () -> work.resolve("modules").toString());
         r.add("drishti.placement.file", () -> work.resolve("placement.yaml").toString());
         r.add("drishti.data.dir", () -> work.resolve("data").toString());
+        r.add("drishti.bindings.file", () -> work.resolve("bindings.yaml").toString());
     }
 
     /** The module as its own build makes it: its sources compiled against the kernel API, src/dmod packed. */
@@ -137,6 +138,42 @@ class GenomicsDistributionServerTest {
         for (String page : List.of("/m/genomics/variants", "/m/genomics/genes/TP53", "/m/genomics/cohorts/COH-A", "/m/genomics/variants/HX-A001")) {
             assertThat(node.runtime().routes().lookup(page).orElseThrow().status()).as(page).isEqualTo(200);
         }
+    }
+
+    /**
+     * The .dmod's declared needs (data/needs.yaml) join the data gate when it loads: variant found by convention serves VARIANT; the site
+     * binding variant where nothing serves it switches VARIANT off with the "needs data" page (409 DRS-1035), and only VARIANT.
+     */
+    @Test
+    void unbindingVariantGatesVariantWithItsNeedsDataPage(@Autowired com.ash.drishti.server.bindings.BindingService bindings,
+            @Autowired com.ash.drishti.registry.AccessRegistry registry) throws Exception {
+        if (registry instanceof com.ash.drishti.registry.EmbeddedAccessRegistry r) {
+            r.refresh();                                          // its watch's next look: the installed package is a module of the server
+        }
+        assertThat(gated()).doesNotContainKey("VARIANT");
+        Path file = work.resolve("bindings.yaml");
+        Files.writeString(file, "format: 1\nbindings:\n  variant: { demo: true }\n");      // the demo lake, which holds no variant
+        try {
+            bindings.refresh();
+            assertThat(bindings.offReason("VARIANT")).as("the data gate").hasValueSatisfying(r -> assertThat(r).startsWith("VARIANT needs data: variant"));
+            assertThat(gated().get("VARIANT")).startsWith("VARIANT needs data: variant");
+            assertThat(gated()).doesNotContainKeys("GENE", "COHORT");
+        } finally {
+            Files.delete(file);
+            bindings.refresh();
+        }
+        assertThat(gated()).doesNotContainKey("VARIANT");
+    }
+
+    /** The functions waiting for data, with their words (what the console's gated page shows). */
+    private java.util.Map<String, String> gated() throws Exception {
+        java.util.Map<String, String> out = new java.util.TreeMap<>();
+        getJson("/api/v1/modules").path("functions").path("off").forEach(f -> {
+            if ("data".equals(f.path("gate").asText())) {
+                out.put(f.path("word").asText(), f.path("text").asText());
+            }
+        });
+        return out;
     }
 
     @Test

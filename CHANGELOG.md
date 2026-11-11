@@ -17,6 +17,9 @@
 
 ## Unreleased
 
+- **A `.dmod`'s data needs reach the data gate**: a loaded module's needs file (`data: {needs: …}` in its manifest) joins the gate on load
+  and leaves it on unload, so an unserved required kind switches its functions off with the needs-data page (genomics: `variant` →
+  VARIANT). Before, only built-in modules' `META-INF/drishti/needs.yaml` on the kernel's class path counted.
 - **Distributions see installed and shipped `.dmod` modules**: the distribution reads module manifests with the registry's one package
   reader (first-party packages in the server's jar, then the module store's active ones), not only the manifests folder. The reader
   takes `installed/active.yaml` as the module node writes it (`modules: {id: version}`) and looks the store up when it reads, so an
