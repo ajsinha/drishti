@@ -25,7 +25,7 @@ The exact form of every request, its schema and its errors are in the [reference
 pandas DataFrame is [tutorial 17](../tutorials/17-data-out-with-arrow-flight.md); the clients have their own sections
 in the reference ([Python](FLIGHT_REFERENCE.md#71-python), [Java](FLIGHT_REFERENCE.md#72-java), [JDBC](FLIGHT_REFERENCE.md#73-jdbc-dbeaver-datagrip-any-jdbc-program), [ODBC](FLIGHT_REFERENCE.md#74-odbc-excel-power-bi-tableau)).
 Working examples to start from, every one read only (Python notebooks from a token to VaR scenario P&L, a live stream, DuckDB and the
-in-memory lake; Java; Excel through Python) are in [examples/clients](../../examples/clients/README.md). Later: C#/.NET, R and Go client sections (the service already answers any Flight client). How the service is built and why: [DATA_ARCHITECTURE.md section 11](../architecture/DATA_ARCHITECTURE.md#11-arrow-flight-drishtis-data-to-any-client).
+in-memory lake; Java; Excel through Python) are in [examples/clients](../../examples/clients/README.md). Later: C#/.NET, R and Go client sections (the service already answers any Flight client). How the service is built and why: [HOW_IT_FITS.md section D11](../../HOW_IT_FITS.md#d11-arrow-flight-drishtis-data-to-any-client).
 
 ## Contents
 

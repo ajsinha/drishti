@@ -32,7 +32,7 @@ import java.util.TreeMap;
 import org.springframework.beans.factory.ObjectProvider;
 
 /**
- * One Explain for every number (docs/architecture/SHARED_SCREENS.md section 3; USER_GUIDE.md, "Explain"): the registered
+ * One Explain for every number (HOW_IT_FITS.md section S3; USER_GUIDE.md, "Explain"): the registered
  * {@link Explainer}s by kind, asked as the person. The core knows no kind: each engine registers its own (banking's VaR, ES, parametric
  * and exposure explainers live with it), and a kind whose engine is off is refused in words ({@code DRS-1020}), never half-answered.
  * A part an explainer has not built yet carries its under-construction registry entry (what, and the release that builds it).

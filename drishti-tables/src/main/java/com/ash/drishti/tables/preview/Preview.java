@@ -37,7 +37,7 @@ import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
 /**
- * A table's first rows over sample documents ({@code drishti.py tables preview}, docs/architecture/ARCHITECTURE.md section 8), and the checks a sample
+ * A table's first rows over sample documents ({@code drishti.py tables preview}, HOW_IT_FITS.md section A8), and the checks a sample
  * allows ({@code tables check --sample}): keys unique, every path present in some document. Documents are JSONL (plain or {@code .gz}),
  * one entity per line, either the document itself or {@code {id, business_date, doc}} as the lake keeps it. The grain is expanded here;
  * paths ({@code $}, {@code @}, {@code ^}, {@code ^^}), filters and calculated columns are evaluated by Rachana through {@link RowEvaluator}. Bounded: at most {@link #MAX_DOCUMENTS} documents and {@link #MAX_ROWS} rows. A preview never reads a lake or a

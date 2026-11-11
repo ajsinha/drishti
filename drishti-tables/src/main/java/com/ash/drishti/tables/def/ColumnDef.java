@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * One column of a virtual table (docs/architecture/ARCHITECTURE.md §28 sections 3.1 and 3.2): a Rachana path ({@code $.MTM}, {@code @.INDEX.NAME},
+ * One column of a virtual table (HOW_IT_FITS.md §A28 sections 3.1 and 3.2): a Rachana path ({@code $.MTM}, {@code @.INDEX.NAME},
  * {@code ^.LEG_ID}), a row-scope expression over the source (never over another column), or a Python column. Exactly one of the three.
  *
  * @param name the column's name

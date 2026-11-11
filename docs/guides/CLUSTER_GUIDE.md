@@ -21,7 +21,7 @@ the operator's side, high availability, load balancing, zero-downtime upgrades a
 recovery, Drishti on AWS (ECS, EFS, S3), the Delta lake in S3 at scale, the scale strategy for one server, sizing memory, CPU and disk,
 and tuning. Installing and running one server is the [operations guide](OPERATIONS_GUIDE.md); every setting named here is in
 [CONFIGURATION.md](../admin/CONFIGURATION.md); every measured figure is in [BENCHMARK.md](../admin/BENCHMARK.md); how the cluster works
-inside is [ARCHITECTURE.md](../architecture/ARCHITECTURE.md). The hands-on walk-through is
+inside is [HOW_IT_FITS.md](../../HOW_IT_FITS.md#part-ii--architecture). The hands-on walk-through is
 [tutorial 22, a cluster of three](../tutorials/22-a-cluster-of-three.md).
 
 ## Contents
@@ -184,7 +184,7 @@ digests there, on threads of its own; on either port those calls are answered fi
 `auto` the port changes at each start: between machines behind a firewall set a number on every node and open it between them. A gossip
 port that refuses while the server's port answers is skipped for 5 minutes (gossip uses the server's port meanwhile, and the log says so).
 A node of an older release advertises no gossip port: its peers gossip on its server port. Seeds are always called on their server port
-first. How it works inside: [ARCHITECTURE.md](../architecture/ARCHITECTURE.md#13a-several-servers-as-one-drishtinet).
+first. How it works inside: [HOW_IT_FITS.md](../../HOW_IT_FITS.md#a13a-several-servers-as-one-drishtinet).
 
 ### 1.5 What each node offers: the capability digest
 
@@ -371,7 +371,7 @@ Without Drishti\*net `backend.urls` still works as a plain list of identical ser
 **Designs and other user content** are kept in the content store, so a console that fails over still finds them. **Every member must use
 the same `config/store/store.yaml`**: the default file-system store needs a shared mount (NFS, EFS, SMB) at the same path on every member;
 PostgreSQL or S3 need none. A member that finds another recorded with a different store root logs `content store roots differ`
-([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)).
+([HOW_IT_FITS.md](../../HOW_IT_FITS.md#d5-the-content-store-user-content-every-node-reaches)).
 
 ### 1.9 Module placement
 
@@ -785,8 +785,8 @@ coordinators about 650 a second at peak, about 330 sustained with half kept free
 VaR sharding spreads each business date's position rows over the members, so adding a server lowers each member's disk and page cache.
 It is built and **off by default**. The full measure-side description (what is sharded, the partial and the combine, horizons, intraday,
 official records) is in the [VaR guide](VAR_GUIDE.md); the operator's facts are also in
-[DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md); how placement works inside is
-[ARCHITECTURE.md](../architecture/ARCHITECTURE.md). Exposure runs on one server.
+[HOW_IT_FITS.md](../../HOW_IT_FITS.md#part-iii--data-architecture); how placement works inside is
+[HOW_IT_FITS.md](../../HOW_IT_FITS.md#part-ii--architecture). Exposure runs on one server.
 
 ### 5.1 What is sharded and what is copied
 
@@ -936,7 +936,7 @@ A rolling upgrade of one node is section 8.2.
 
 The identity database is SQLite by default (`jdbc:sqlite:${drishti.data.dir}/identity/drishti.db`); a cluster needs PostgreSQL
 (`DRISHTI_IDENTITY_DB_URL`) so users, sessions, edit lanes and run leases are shared and failover works
-([APPROVALS_GUIDE.md](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals)). Size its `max_connections` for every member's pool
+([APPROVALS_GUIDE.md](../../HOW_IT_FITS.md#a31-collaboration-write-back-and-approvals)). Size its `max_connections` for every member's pool
 (`drishti.db.pool.size`, 20 a member); run a streaming standby (synchronous in one site, asynchronous to the recovery site); minor upgrades by
 standby switchover. The schema files are complete, with no migrations.
 
@@ -1864,7 +1864,7 @@ one file and is safe to run again. **Limits:** a bucket without conditional writ
 `check-conditional-writes.sh` exit 1) allows one writer per table at a time, which the per-table locks give as long as nothing else writes;
 `lake build` sorts a partition only when it fits a batch; one table holds every year, so watch live files per table; maintenance cannot
 re-sort per-source tables, so `compact` stays off. The design for 500 GB of JSON a day kept seven years (tables by year, range maps, a loader
-fleet, slices owned across servers) is in [ARCHITECTURE.md](../architecture/ARCHITECTURE.md) and not built.
+fleet, slices owned across servers) is in [HOW_IT_FITS.md](../../HOW_IT_FITS.md#part-ii--architecture) and not built.
 
 ---
 

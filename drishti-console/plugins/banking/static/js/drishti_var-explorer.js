@@ -429,7 +429,7 @@
     if (chipText) c.appendChild(h("span", "vx-chip amber", chipText));
   }
 
-  /** The one Explain's request for a figure of this page (SHARED_SCREENS.md section 3): its scope, date, currency and lens. */
+  /** The one Explain's request for a figure of this page (HOW_IT_FITS.md section S3): its scope, date, currency and lens. */
   function explainReq(measure, scope) {
     var r = Object.assign({ kind: "var", measure: measure, scope: scope || S.scope }, lensParams());
     if (S.asOf) r.date = S.asOf;

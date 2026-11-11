@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Share with a note (ARCHITECTURE.md §31): the share dialog, the as-shared banner, the no-access page and the inbox. Colours only from
+/* Share with a note (HOW_IT_FITS.md §A31): the share dialog, the as-shared banner, the no-access page and the inbox. Colours only from
    drishti_tokens.css, so every theme works. On a phone (max-width 640px) the dialog is a full-screen sheet and the inbox one column. */
 .shr-shade { position: fixed; inset: 0; z-index: var(--d-z-float); display: flex; align-items: center; justify-content: center; padding: var(--d-sp-16);
   background: var(--d-scrim-strong); }

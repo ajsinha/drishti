@@ -156,7 +156,7 @@ header) and header `deleted` (`true` deletes). Routing key, exchange, content ty
 
 A delete removes the entity from the state store, the memory cache and type-ahead, and is pushed to open views: the view keeps its
 last document, greyed, under a banner saying when the entity was deleted
-([DATA_ARCHITECTURE.md, Deleted entities](../../docs/architecture/DATA_ARCHITECTURE.md#deleted-entities)); a later message repaints
+([HOW_IT_FITS.md, Deleted entities](../../HOW_IT_FITS.md#deleted-entities)); a later message repaints
 it. Every message, rejected or not, counts in `received` and moves `lastUpdate` (used by `stale-after`). A delete with a header:
 `queue drishti.trades, headers {"id": "Q-9", "deleted": "true"}, body empty`.
 

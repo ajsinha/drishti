@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * A pivot view (ARCHITECTURE.md section 26.2): what a person asked and what a saved view stores. The API takes it as JSON:
+ * A pivot view (HOW_IT_FITS.md section A26.2): what a person asked and what a saved view stores. The API takes it as JSON:
  *
  * <pre>{@code
  * { "source": "trade", "date": "2026-10-30", "rows": ["LEGAL_ENTITY", "DESK"], "columns": ["TRADE_DATE:month"],
@@ -54,7 +54,7 @@ import java.util.Set;
  * @param sort per dimension: by a measure's label or by {@code label}, ascending or descending
  * @param top per dimension: its top N by a measure, the rest in one Others member
  * @param subtotals {@code below} or {@code above} each group
- * @param options the provider's own settings of the view, by name (ARCHITECTURE.md section 26.4: the VaR provider's {@code scope},
+ * @param options the provider's own settings of the view, by name (HOW_IT_FITS.md section A26.4: the VaR provider's {@code scope},
  *     {@code horizon}, {@code confidence}, {@code esConfidence}, {@code method}, {@code set} and {@code ccy}); part of every cache key; the
  *     VaR provider refuses a name it does not know, a provider without options ignores them
  */
@@ -71,7 +71,7 @@ public record PivotView(String source, String date, String asOf, List<Dim> rows,
     }
 
     /**
-     * A conditional format of a measure (ARCHITECTURE.md section 26.11): drawn by the screen from the finished figures (a colour scale or
+     * A conditional format of a measure (HOW_IT_FITS.md section A26.11): drawn by the screen from the finished figures (a colour scale or
      * data bars over a level's cells), never changing a figure; kept with the view.
      *
      * @param style {@code scale} or {@code bars}
@@ -85,7 +85,7 @@ public record PivotView(String source, String date, String asOf, List<Dim> rows,
     }
 
     /**
-     * The explicit conversion of money (ARCHITECTURE.md section 26.3): every amount of a money field is converted from the currency of its
+     * The explicit conversion of money (HOW_IT_FITS.md section A26.3): every amount of a money field is converted from the currency of its
      * row ({@code field}, else the source's currency field) into {@code report} at the {@code rates} given (units of {@code report} per one
      * unit of the currency), named by {@code source} in every cell's provenance. A row in a currency without a rate is left out of the
      * converted figures, and the cell says how. Without a conversion, a money total over several currencies is refused in words.

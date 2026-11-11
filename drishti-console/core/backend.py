@@ -315,7 +315,7 @@ class BackendClient:
         return await self._get(f"/history/{where}/series", ident, path=path, days=days, **q)
 
     async def history(self, kind: str, id_: str, ident=None, **params: str) -> dict:
-        """One entity over business days (DATA_ARCHITECTURE.md › History queries: an entity over time, section 8): ``days=``, ``range=`` or ``from=``/``to=``, plus
+        """One entity over business days (HOW_IT_FITS.md › History queries: an entity over time, section 8): ``days=``, ``range=`` or ``from=``/``to=``, plus
         ``fields=``, ``diff=true``, ``knownAt=``; blank parameters take the server's defaults. Rows oldest first."""
         where, q = entity_path(kind, id_)
         return await self._send("GET", f"/history/{where}", ident, params={**{k: v for k, v in params.items() if v}, **q}, timeout=20.0)
@@ -386,7 +386,7 @@ class BackendClient:
         return await self._send("GET", "/modules", ident, timeout=10.0)
 
     async def explain_number(self, method: str, path: str, ident, body=None, **params) -> Any:
-        """One Explain for every number (/api/v1/explain, docs/architecture/SHARED_SCREENS.md section 3), as the user. ``path`` starts after
+        """One Explain for every number (/api/v1/explain, HOW_IT_FITS.md section S3), as the user. ``path`` starts after
         /api/v1/explain (``""`` or ``/kinds``). Why it moved reads two business dates: this waits up to two minutes."""
         kw: dict[str, Any] = {"params": {k: v for k, v in params.items() if v not in (None, "")}, "timeout": 120.0}
         if body is not None:
@@ -792,7 +792,7 @@ class BackendClient:
                 self._servers.failed(base, f"stream broke ({type(e).__name__})")
             raise BackendError(503, "DRS-5003", f"backend unreachable: {e}") from e
 
-    # -- Rupaka phase 1: the BI shell and catalogue (docs/architecture/ARCHITECTURE.md §28) ---------------------------------------------
+    # -- Rupaka phase 1: the BI shell and catalogue (HOW_IT_FITS.md §A28) ---------------------------------------------
     async def bi(self, method: str, path: str, ident, body: dict | None = None, wait: float | None = None, **params):
         """``/api/v1/bi/...`` as the signed-in user: the server decides what they may see and do, every time. ``wait`` (seconds) replaces
         the console's own wait for a call that may run longer (a query: the server lets one run ``drishti.bi.query.timeout``, 30 s)."""
@@ -806,7 +806,7 @@ class BackendClient:
         return await self._send(method, "/bi" + path, ident, **kw)
 
     async def bi_async(self, method: str, path: str, ident, body: dict | None, prefer: str, wait: float | None = None, **params):
-        """A BI question asked as a run (ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 6): ``Prefer: respond-async, wait=N`` is passed on and the answer comes back as
+        """A BI question asked as a run (HOW_IT_FITS.md §A28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 6): ``Prefer: respond-async, wait=N`` is passed on and the answer comes back as
         ``(status, body)``: 200 the answer (done within the wait), 202 the run that goes on. A refusal (409 DRS-9082, 409 DRS-9089) raises."""
         kw: dict = {"with_status": True, "headers": {"Prefer": prefer}}
         if wait:

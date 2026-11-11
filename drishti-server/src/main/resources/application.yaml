@@ -231,7 +231,7 @@ drishti:
     python: ${DRISHTI_FEEDS_PYTHON:}  # the Python Run now starts (blank: the console's drishti-console/.venv, else python3, python on Windows)
     sample-seconds: 60               # how often the ledger is read for the gauge drishti.datafeed.failed (the alert rule data-feed-failed)
   store:
-    # The content store (docs/architecture/DATA_ARCHITECTURE.md): user content every node of a cluster can reach. Its settings are in their own file.
+    # The content store (HOW_IT_FITS.md): user content every node of a cluster can reach. Its settings are in their own file.
     file: ${DRISHTI_STORE_FILE:./config/store/store.yaml}
     root: ${DRISHTI_STORE_ROOT:}   # the filesystem backend's root, over the file's filesystem.root (empty: the file's, else <data folder>/fstore)
   edit:
@@ -362,7 +362,7 @@ drishti:
     zone: America/New_York  # whose clock decides what today is (any Java zone id: Europe/London)
     history: P5Y                            # how far back users may go
   history:
-    # History queries (TRD 1000015 30): one entity over the business days it has data. docs/architecture/DATA_ARCHITECTURE.md
+    # History queries (TRD 1000015 30): one entity over the business days it has data. HOW_IT_FITS.md
     enabled: true                           # off: no history is read; the endpoint answers DRS-1012
     default-days: 30                        # the range when a link or the CLI names none
     max-days: 366                           # the most business days one request may span (a pack's max-days can only lower it)
@@ -411,7 +411,7 @@ drishti:
       - /api/v1/changes/preview          # write-back's review sheet: what a change would do, written nowhere
       - /api/v1/bi/datasets/*/query     # Rupaka phase 2: a dataset query (fields, measures, filters in the body), masked and row-ruled, changes nothing
       - /api/v1/bi/datasets/validate    # checks a dataset's YAML without storing it
-      - /api/v1/bi/mq                   # the model query language (docs/architecture/ARCHITECTURE.md §28 › The model layer: the specification, section 15): one query of a model as the caller, changes nothing
+      - /api/v1/bi/mq                   # the model query language (HOW_IT_FITS.md §A28 › The model layer: the specification, section 15): one query of a model as the caller, changes nothing
       - /api/v1/bi/models/*/query       # the same with the model in the path
       - /api/v1/bi/mq/validate          # checks a model query without reading data
       - /api/v1/bi/models/validate      # checks a model's or a rachana 2 dataset's YAML without storing it
@@ -439,11 +439,11 @@ drishti:
       - /api/v1/bi/themes/validate      # checks a theme's YAML without storing it
       - /api/v1/bi/python/input         # one input of a Python Transform as the caller (the Transform editor's preview and profile), masked and row-ruled, stores nothing
       - /api/v1/bi/items/*/tests        # runs the expected values (tests:) of a report or dataset as the caller or a role they hold: queries only, stores nothing
-      - /api/v1/bi/runs                 # BI runs (docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built), section 14): one question as the caller, answered inline or as a run of theirs; changes no data
+      - /api/v1/bi/runs                 # BI runs (HOW_IT_FITS.md §A28 › BI runs: every BI query as a bounded, visible job (built), section 14): one question as the caller, answered inline or as a run of theirs; changes no data
       - /api/v1/bi/runs/estimate        # a run's tier and estimate from metadata only, runs nothing
       - /api/v1/export/*                # Rupaka phase 7: a report, visual or view rendered as PDF, PNG, Excel or CSV for the caller (masked), stores nothing
       - /api/v1/subscriptions/preview   # renders what a subscription would send, for the caller, stores nothing
-      - /api/v1/compute/*/*             # a reactive connector's answer for the caller (DATA_ARCHITECTURE.md): computed and cached, changes no data
+      - /api/v1/compute/*/*             # a reactive connector's answer for the caller (HOW_IT_FITS.md): computed and cached, changes no data
     # WRITE SCOPES (TOKEN_SCOPES in docs/guides/API_REFERENCE.md): a token is made with `read` (the default: all of the above) or with
     # scopes from this list (keys in [brackets] keep the colon); each opens the METHOD path patterns under `allow` (* = any method). A scope is only a door: the
     # controller behind it still checks the roles of the token's user at the time of the call, so a token never does more than
@@ -452,7 +452,7 @@ drishti:
     # scopes in its jar (META-INF/drishti/token-scopes.yaml: the banking module's risk:write and its read POSTs), offered only while it is on.
     token-scopes:
       "[compute:write]":
-        description: "Keep your what-if sandboxes and cancel your own computations (DATA_ARCHITECTURE.md). Your own items only."
+        description: "Keep your what-if sandboxes and cancel your own computations (HOW_IT_FITS.md). Your own items only."
         allow:
           - POST /api/v1/compute/sandboxes
           - PUT /api/v1/compute/sandboxes/*
@@ -659,7 +659,7 @@ drishti:
       - "POST /api/v1/approvals/*/*/questions"          # a question on an item: a person asks it
       - "* /api/v1/alerts/**"                           # the alerts raised for a person and their rules: personal state, set in the console
       - "POST /api/v1/risk/var/intraday/streams/*/apply"   # applying a PV topic's waiting window now: an administrator in the console
-      # VaR shards (docs/architecture/DATA_ARCHITECTURE.md section 14). /partial is one member's call to another, signed with the cluster key
+      # VaR shards (HOW_IT_FITS.md section D14). /partial is one member's call to another, signed with the cluster key
       # and made as the caller (their on-behalf-of token; the owner applies their rights again): like /compute/peer/**, never a token's.
       # It reads data but is no read POST for a token, which would only add a door to the members' channel. /shards/drain takes a member's
       # shards away before it stops: an administrator (console, drishti.py var shards --drain, a task's stop hook signed in as one), never
@@ -795,7 +795,7 @@ drishti:
     server-roles: {}                 # "[server]": [roles]   absent = every signed-in user
     tool-roles: {}                   # "[server/tool]": [roles]
     server-features: {}              # "[server]": [features]
-  approvals:                         # the one Approvals queue (docs/architecture/SHARED_SCREENS.md section 2; USER_GUIDE.md, Approvals)
+  approvals:                         # the one Approvals queue (HOW_IT_FITS.md section S2; USER_GUIDE.md, Approvals)
     due-soon-days: 3                 # an item due within this many days (or overdue) is pinned at the top as due soon
     due-days:                        # per kind: an item with a period is due this many days after its period ends
       var-report: 30                 # a regulatory report run (VAR_GUIDE.md section 18.14)
@@ -808,8 +808,8 @@ drishti:
     enabled: ${DRISHTI_ACCESS_LOG:true}  # record who looked at what (Admin -> Access)
     keep-days: 90                    # older events are pruned once a day
     queue: 100000                    # events waiting to be written at most; beyond it they are dropped and counted
-  collab:                            # share with a note, comment threads, the inbox (docs/architecture/ARCHITECTURE.md §31)
-    enabled: ${DRISHTI_COLLAB_ENABLED:true}  # share with a note, the directory and the inbox (docs/architecture/ARCHITECTURE.md §31)
+  collab:                            # share with a note, comment threads, the inbox (HOW_IT_FITS.md §A31)
+    enabled: ${DRISHTI_COLLAB_ENABLED:true}  # share with a note, the directory and the inbox (HOW_IT_FITS.md §A31)
     store: content                   # content: the content store, every cluster node (default) | jpa: the identity database, one node | file: one server only
     dir: ${DRISHTI_COLLAB_DIR:${drishti.data.dir}/collab}   # the file store, and exports
     console-url: ${DRISHTI_CONSOLE_URL:}       # links in emails and shares; empty turns email off
@@ -974,11 +974,11 @@ drishti:
       breaker-failures: 5            # consecutive failures that open a connector's circuit breaker (DRS-9026 at once while open)
       breaker-open: 30s              # how long an open breaker refuses before one fragment may try again
       node: ${DRISHTI_BI_NODE:}      # this Java node's name when several serve the site (blank: one node)
-      background-share: 0.25         # BI runs: the most of the slots background work (runs, dataset refresh) holds at once (docs/architecture/ARCHITECTURE.md §28 10.1)
+      background-share: 0.25         # BI runs: the most of the slots background work (runs, dataset refresh) holds at once (HOW_IT_FITS.md §A28 10.1)
       standing-share: 0.25           # the most of the slots standing-query maintenance holds at once; interactive work keeps the rest
       fragments-share: 0.5           # the most of a connector's max-fragments the layer builds of background runs hold at once
     runs:
-      file: ${DRISHTI_BI_RUNS_FILE:./config/runs/runs.yaml}   # BI runs (docs/architecture/ARCHITECTURE.md §28); ready-made in config/runs.examples/
+      file: ${DRISHTI_BI_RUNS_FILE:./config/runs/runs.yaml}   # BI runs (HOW_IT_FITS.md §A28); ready-made in config/runs.examples/
     plan:                            # the logical plan: result cache and guards (docs/admin/CONFIGURATION.md, drishti.bi.plan)
       cache-entries: 2000            # answers cached by plan hash, security signature and data generation (0: off)
       cache-ttl: 15m                 # an answer for the current state is asked again after this; as-of answers have no ttl
@@ -993,7 +993,7 @@ drishti:
     expr:                            # the Drishti expression language, DEL v2 (docs/guides/RACHANA_REFERENCE.md; docs/admin/CONFIGURATION.md, drishti.bi.expr)
       legacy: refuse                 # the old expression syntax: refuse (DRS-9100 with the DEL v2 text as the fix; the default) or warn (read with DRS-9100)
       parse-cache: 10000             # parsed expressions kept (0: off)
-    migrate:                         # migrations of STORED BI items (docs/architecture/ARCHITECTURE.md §28 8.3; docs/guides/OPERATIONS_GUIDE.md "Migration problems")
+    migrate:                         # migrations of STORED BI items (HOW_IT_FITS.md §A28 8.3; docs/guides/OPERATIONS_GUIDE.md "Migration problems")
       on-start: ${DRISHTI_BI_MIGRATE_ON_START:true}   # at start: stored datasets and models into the table layer, 2.3 boards into reports; audited, the text before kept; idempotent
       actor: system                  # the name the history, the item's events and the audit log give the start-up run
   layouts:                           # layout mode: each user's arrangement of a Sutra's panels (USER_GUIDE.md, Layout mode)
@@ -1133,7 +1133,7 @@ drishti:
     code-names: [year, version, seq, sequence, no, num, number, code, zip, postcode]   # words in a whole-number field's name that make it a code (shown as a label, never summed or formatted as an amount)
     designs:
       # The Build workbench's Designs (/api/v1/builder/designs): samples, a Sutra and notes kept per user. Limits answer DRS-5005.
-      store: content   # content (the content store, config/store/store.yaml: every node of a cluster sees them; docs/architecture/DATA_ARCHITECTURE.md), or, one node only: file (dir below) or jpa (the identity database)
+      store: content   # content (the content store, config/store/store.yaml: every node of a cluster sees them; HOW_IT_FITS.md), or, one node only: file (dir below) or jpa (the identity database)
       dir: ${drishti.data.dir}/designs   # the old file store: with store content, what is here is imported once at start and the folder renamed designs-imported-<time>
       max-per-user: 50              # named designs one user keeps (scratch ones: max-scratch)
       max-samples: 50               # samples in one design

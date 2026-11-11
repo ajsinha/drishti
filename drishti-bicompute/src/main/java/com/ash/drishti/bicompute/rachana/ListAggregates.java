@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The engine's aggregates over a Rachana list (docs/architecture/ARCHITECTURE.md part 2): the list's values made a {@link Batch} and run through the very
+ * The engine's aggregates over a Rachana list (HOW_IT_FITS.md part 2): the list's values made a {@link Batch} and run through the very
  * {@link AggFunction} a pivot cell runs (start, add, finish), so a sum in a Sutra and a sum in a pivot are one implementation with one
  * treatment of nulls and masks. Written {@code f(list)} (the list's values), {@code f(list, 'FIELD', ...)} (a field of each element, a
  * dotted path), or {@code f(xs, ys)} (parallel lists, for the functions of two inputs: {@code wavg(prices, quantities)},

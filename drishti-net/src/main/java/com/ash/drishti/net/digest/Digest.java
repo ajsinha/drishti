@@ -45,7 +45,7 @@ import java.util.Optional;
  * @param reports the BI report ids this node serves (a report on a model held elsewhere is answered there)
  * @param builtAt when it was built (epoch milliseconds)
  * @param services the state of the cluster services the node runs, by name, each as compact text (2.9.6: {@code var-shards}, the VaR
- *     shards it holds and is ready to serve, DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built); empty from a node that runs none or an older node
+ *     shards it holds and is ready to serve, HOW_IT_FITS.md#d13-var-sharding-how-it-is-built); empty from a node that runs none or an older node
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record Digest(String nodeId, String url, String version, int protocol, List<PackEntry> packs, List<KindEntry> kinds, Load load,

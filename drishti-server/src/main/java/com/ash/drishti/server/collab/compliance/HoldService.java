@@ -30,7 +30,7 @@ import java.util.List;
 
 /**
  * Legal holds: placed and released by the {@code compliance} power, audited, never deleted. A hold stops retention and permanent
- * removal for what it covers; it does not change how anything is read or written (ARCHITECTURE.md §31, Retention, legal hold and export).
+ * removal for what it covers; it does not change how anything is read or written (HOW_IT_FITS.md §A31, Retention, legal hold and export).
  */
 public final class HoldService {
 

@@ -150,4 +150,4 @@ def register(groups, add, srv, ctx: dict | None = None) -> None:
             "Only tables lake build built are maintained (--force-foreign overrides, with a warning). Guide: docs/guides/OPERATIONS_GUIDE.md")
     _mod("lakeconfig").register(sub, add)                               # lake show|check|migrate-config (2.9.11.c, DATA_LAKE_GUIDE.md)
     if ctx:
-        _mod("memory_cli").register(sub, add, srv, ctx)                # lake memory status|jobs|refill (2.9.11, docs/architecture/DATA_ARCHITECTURE.md)
+        _mod("memory_cli").register(sub, add, srv, ctx)                # lake memory status|jobs|refill (2.9.11, HOW_IT_FITS.md)

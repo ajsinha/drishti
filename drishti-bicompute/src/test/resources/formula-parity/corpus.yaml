@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The pivot formula parity set (ARCHITECTURE.md section 26.5; PivotFormulaParityTest): every formula the product ships or a test writes, as
+# The pivot formula parity set (HOW_IT_FITS.md section A26.5; PivotFormulaParityTest): every formula the product ships or a test writes, as
 # it was written in DEL's syntax, each field renamed onto the test fixture's columns (REGION, DESK, CCY, TRADE_DATE, NOTIONAL, PNL, CPTY,
 # SALARY, RATE_PCT), and every construct of the old grammar. The answers (answers.json) were recorded on the old parser before the fold;
 # `rachana` is the text the saved-formula migration writes (when it differs), which must give the same answer, cell for cell.

@@ -79,7 +79,7 @@ switch on, and searches the trades of all three booking systems (ENDUR, CALYPSO,
 
 The screens and outputs below come from this version's console and `drishti.py`, reading the history contract's two reference answers:
 trade `1000015` over 30 data days and equity `EQ-CSCA` over 3 months
-(`drishti-testkit/src/main/resources/history/`, [DATA_ARCHITECTURE.md › History queries: an entity over time, section 8](../architecture/DATA_ARCHITECTURE.md#8-the-json-contract)).
+(`drishti-testkit/src/main/resources/history/`, [HOW_IT_FITS.md › History queries: an entity over time, section 8](../../HOW_IT_FITS.md#d8-the-json-contract)).
 Your dates and values are your data's. Trade `1000015` and its *Trader* column are the reference answer's: on the demo lakes the
 trading pack's `history:` block (step 32) lists no trader column. On the sixty-day demo lakes, the
 trades amended most (ten times each) are ENDUR `1000279` and `1001049`, CALYPSO `CLY-4000509` and MUREX `MX-30001745`: try
@@ -1016,7 +1016,7 @@ numbers. This part walks through a trade and an equity, changes only and DIFF, o
 shapes a kind's screen, and the limits. Each step shows the UI, the command line and, where there is one, the YAML. The references are
 [USER_GUIDE › History](../guides/USER_GUIDE.md#history-an-entity-over-time),
 [CLI_GUIDE › history](../guides/CLI_REFERENCE.md#history-an-entity-over-time) and the design,
-[DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time).
+[HOW_IT_FITS.md](../../HOW_IT_FITS.md#d2-history-queries-an-entity-over-time).
 
 ## Step 27 · A range after the id
 
@@ -1203,7 +1203,7 @@ history:
     enabled: false                       # no history for this kind
 ```
 
-The full schema is in [DATA_ARCHITECTURE.md › History queries: an entity over time, section 6](../architecture/DATA_ARCHITECTURE.md#6-the-history-block-in-packyaml). Check it the way
+The full schema is in [HOW_IT_FITS.md › History queries: an entity over time, section 6](../../HOW_IT_FITS.md#d6-the-history-block-in-packyaml). Check it the way
 you check any pack (an unknown key is a warning, a bad value the error `DRS-2061`):
 
 ```

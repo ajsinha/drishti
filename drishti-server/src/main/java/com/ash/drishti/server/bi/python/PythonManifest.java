@@ -27,7 +27,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * The manifest of a Python item (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, sections 13 and 20.8): the body of a BI item of kind {@code python}. It says what the function is
+ * The manifest of a Python item (HOW_IT_FITS.md §A28 › Rūpaka: the original design and every phase as built, sections 13 and 20.8): the body of a BI item of kind {@code python}. It says what the function is
  * ({@code interface}: a measure or a visual), which columns it reads, which packages it needs, where it may run, and its limits, and carries the
  * source. Parsing never runs the code: the compute pool python checks the syntax (PythonRuns), and checks it again before every run.
  *

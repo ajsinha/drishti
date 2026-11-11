@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of the computed attributes on the pages (docs/architecture/DATA_ARCHITECTURE.md section 12, docs/guides/EXPOSURE_GUIDE.md
+"""Pictures of the computed attributes on the pages (HOW_IT_FITS.md section D12, docs/guides/EXPOSURE_GUIDE.md
 section 22), written to docs/guides/img/computed/, over the packs' samples on the shared scratch server and console:
 
     drishti-console/.venv/bin/python tools/docs/screenshots.py --guide computed

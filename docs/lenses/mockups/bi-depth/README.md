@@ -115,4 +115,4 @@ Light: ![](modelling-A-bridge-light.png)
 | Relationship grid and forms; bridge form; path diagram | `drishti-grid`, `drishti-inputs`, `drishti-chart` | the model file | edit, save | to build |
 | Refusal with paths and one-click fixes | server model check; `drishti-core` | a new error code, one per refusal | apply a fix, undo | to build |
 
-The language these screens rest on is designed in [ARCHITECTURE.md section 28.4](../../../architecture/ARCHITECTURE.md#284-the-expression-language-del-and-its-checks).
+The language these screens rest on is designed in [HOW_IT_FITS.md section A28.4](../../../../HOW_IT_FITS.md#a284-the-expression-language-del-and-its-checks).

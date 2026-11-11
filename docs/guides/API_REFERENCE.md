@@ -140,7 +140,7 @@ Entities the caller opened recently (per `X-Drishti-User` or token subject) are 
 | `GET` | `/views/{kind}/{id}` | as-of. The `ViewModel`, with the caller's [field masks](DEVELOPER_GUIDE.md#field-masks) (`"text":"•••"`); `404 DRS-1001` (no such entity), `404 DRS-1002` (no source serves the kind), `502 DRS-1003` (source failed), `504 DRS-1004` (source timed out); `403 DRS-5002` if the caller may not open the kind |
 | `POST` | `/views/{kind}/{id}/ask` | Ask about this page, optional and off by default. Body `{question, locale?}`; answer `{answer, sources[]}` (plain text). `404 DRS-4007` when Ask is off globally or for the page's pack, `502`/`504 DRS-4008` when the model endpoint fails or is slow, `429 DRS-4009` over the per-user rate, `400` for an empty or too long question, `403 DRS-5002` as the view. See [Ask about this page](#ask-about-this-page) |
 | `GET` | `/views/{kind}/{id}/explain` | as-of. About this page, layers 3 and 4 ([design](RACHANA_REFERENCE.md#about-this-page-the-design-of-context-help)): where the data came from and why the page looks as it does, for exactly what the caller sees. Query `panel` (narrows to a panel of the view, else `404 DRS-4006`) and `generation` (the generation your page shows; a newer one on the server adds `"newer":true`). Same rules as the view: `403 DRS-5002`, `404 DRS-1001`, `400 DRS-4003`. See [Explaining a view](#24-explaining-a-view) |
-| `GET` | `/viewmodel/schema` | The JSON Schema (draft 2020-12, `application/schema+json`) of the `ViewModel`, its panels' `data` and the live stream's frames (`$defs.Frame`), generated from the server's own records. Read only. See [VIEWMODEL.md section 9](../architecture/VIEWMODEL.md#9-the-json-schema) |
+| `GET` | `/viewmodel/schema` | The JSON Schema (draft 2020-12, `application/schema+json`) of the `ViewModel`, its panels' `data` and the live stream's frames (`$defs.Frame`), generated from the server's own records. Read only. See [HOW_IT_FITS.md section V9](../../HOW_IT_FITS.md#v9-the-json-schema) |
 
 Opening a view also records it in the caller's recent list. A view is formatted for display: every value
 comes as text with a tone, so all clients show `−1,403,091` the same way.
@@ -178,7 +178,7 @@ curl -s $B/views/trade/MX-20000001 | jq -c '.panels[] | {id, kind, title, key, a
 {"id":"refs","kind":"links","title":"Linked entities","key":null,"area":"right"}
 ```
 
-The full shape is in [The ViewModel in detail](#229-the-viewmodel) and, as a contract, [VIEWMODEL.md](../architecture/VIEWMODEL.md).
+The full shape is in [The ViewModel in detail](#229-the-viewmodel) and, as a contract, [HOW_IT_FITS.md](../../HOW_IT_FITS.md#part-iv--the-viewmodel-contract).
 
 `?sutra=<name>` draws the view with another Sutra of the entity's kind (the newest version; `400 DRS-5001` for one of another kind):
 `GET /api/v1/views/portfolio-trades/BOOK-RATES-2?sutra=book-desk`. `?design=<id>` draws it with one of the caller's own Designs (the
@@ -304,7 +304,7 @@ curl -s "$B/history/trade/MX-20000001/diff?from=2026-09-29&to=2026-09-29&fromKno
 
 ### 2.6 History queries: an entity over time
 
-`TRD 1000015 30 <GO>` reads this endpoint ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)). The range is one of:
+`TRD 1000015 30 <GO>` reads this endpoint ([HOW_IT_FITS.md](../../HOW_IT_FITS.md#d2-history-queries-an-entity-over-time)). The range is one of:
 
 * `days=N`: the last N business days on which the entity has data, ending at the date box (`X-Drishti-As-Of`) or `to`;
 * `range=`: `30D`, `2W`, `3M`, `1Y` (every business day of that span), `YTD`, `MTD`, `QTD`;
@@ -324,7 +324,7 @@ curl -s "$B/history/trade/T-1?from=2026-09-28&to=2026-09-30" | jq -c '{shape, wi
 ```
 
 The whole answer, field by field, is the contract in
-[DATA_ARCHITECTURE.md › History queries: an entity over time, section 8](../architecture/DATA_ARCHITECTURE.md#8-the-json-contract); the testkit's
+[HOW_IT_FITS.md › History queries: an entity over time, section 8](../../HOW_IT_FITS.md#d8-the-json-contract); the testkit's
 `drishti-testkit/src/main/resources/history/trade-1000015-30.json` (document shape) and `equity-EQ-CSCA-3M.json` (market shape) are
 examples of it. In short: `window` (`asked`, `from`, `to`, `days`, `mode` `data-days` \| `calendar` \| `between`, the `baseline` day
 compared with, the business days with no data in `missing`), `columns` (`path`, `label`, `type`, `format`, `masked`, `key`), `parts`
@@ -493,7 +493,7 @@ Reading needs the `bi` power (else `403 DRS-9002`); saving and proposing need `b
 ### 2.11 Live streams
 
 All three are Server-Sent Events (`text/event-stream`). Use `curl -N` (no buffering). Details, event
-shapes and reconnection rules are in [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#1-live-updates).
+shapes and reconnection rules are in [HOW_IT_FITS.md](../../HOW_IT_FITS.md#d1-live-updates).
 
 | Method | Path | Events |
 |---|---|---|
@@ -1131,7 +1131,7 @@ curl -s -X POST "$B/admin/packs/deploy/$ID?acceptBreaking=true" | jq -c '{deploy
 ### 2.21 Packs from a signed registry
 
 Admin → Packs → Registry from a script ([BUILD_GUIDE.md](BUILD_GUIDE.md) publishes to one;
-[ADR 018](../architecture/adr/018-signed-pack-registry.md) explains the signing). Administrators only; a personal token needs `packs:admin` for the `POST`s.
+[ADR 018](../../HOW_IT_FITS.md#adr-018) explains the signing). Administrators only; a personal token needs `packs:admin` for the `POST`s.
 
 | Method | Path | Notes |
 |---|---|---|
@@ -1391,7 +1391,7 @@ ordered and cut as one node would, `scanned` and `matched` summed, and a node th
 | `GET` | `/net/digest` | node | This node's capability digest: `nodeId`, `url`, `version`, `protocol`, `packs` (`name`, `code`, `version`, `hash`, `peerOnly`), `kinds` (`kind`, `mnemonic`, `label`, `pack`, `renders`, `sources`: `connector`, `type`, `table`, `earliestDate`, `latestDate`, `dataVersion`, `columnar`, `dated`, `live`), `load` (`requestsPerSecond`, `latencyMs`), `calendar`, `tags`, `redact`, `access`, `reports`, `builtAt`. Peers pull it when the `digestHash` in gossip changes |
 | `GET` | `/net/capabilities` | node, admin | The capability table as Admin → Cluster's map shows it: `kinds` (each with `renderers`: `nodeId`, `version`, `newest`, `peerOnly`, `routable`; `holders`: `nodeId`, `connector`, `type`, `table`, `shared` (a replica), `latestDate`, `dataVersion`; `scatter`: the peers a search asks), `nodes`, `warnings` (`what`: `pack-content`, `calendar`, `redact`, `protocol`; `text`) |
 | `GET` | `/net/fetch/{kind}/{id}` (`~` and `?id=` for an id with a slash) | node, for a user | One entity document as the on-behalf-of user may see it here (masked by this node's rules), read from this node's own sources only, with the request's `X-Drishti-As-Of` and `X-Drishti-Known-At`: `{"kind", "id", "provenance": {source, generation, fetchedAt, live, businessDate}, "data"}`. `404` when not held here. The asking node renders it and masks it again |
-| `GET` | `/net/history/{kind}/{id}?from=&to=&dates=&fields=&lastDays=` (`~` and `?id=`) | node, for a user | One entity's days for a history query, read from this node's own sources only (one hop), each masked for the on-behalf-of user here: `{"days": [{date, versions, provenance, deleted, data}], "failed": {date: why}}`. The asking node calls it once per peer for all the dates it lacks, and masks again ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time) section 12) |
+| `GET` | `/net/history/{kind}/{id}?from=&to=&dates=&fields=&lastDays=` (`~` and `?id=`) | node, for a user | One entity's days for a history query, read from this node's own sources only (one hop), each masked for the on-behalf-of user here: `{"days": [{date, versions, provenance, deleted, data}], "failed": {date: why}}`. The asking node calls it once per peer for all the dates it lacks, and masks again ([HOW_IT_FITS.md](../../HOW_IT_FITS.md#d2-history-queries-an-entity-over-time) section 12) |
 | `GET` | `/net/subscribe/{kind}/{id}` | node, for a user | The live relay's upstream: server-sent events, one `doc` event per new generation of the entity (`{"provenance", "deleted", "data"}`, masked for the user here), a comment every 10 s; open until the calling node closes it |
 | `POST` | `/net/state` `{"changes": [{user, namespace, key, value, at, origin, catchUp}]}` | node | Users' state from a peer (namespaces `settings`, `layouts`, `pivots`, `workspaces`; `value` null for a delete): applied here, the newest `at` winning; a `catchUp` change only where the key is absent. `{"applied": n}` |
 | `GET` | `/net/placement` | node | This node's module placement `{version, text}`, asked by a member whose digest showed a lower placement version (CLUSTER_GUIDE.md section 1.9) |
@@ -1472,7 +1472,7 @@ drishti_view_seconds_max 0.017122086
 
 ### 2.29 The ViewModel
 
-The full contract is [VIEWMODEL.md](../architecture/VIEWMODEL.md): every field of the top level, the common types (Cell, Link,
+The full contract is [HOW_IT_FITS.md](../../HOW_IT_FITS.md#part-iv--the-viewmodel-contract): every field of the top level, the common types (Cell, Link,
 tones, keys, provenance, `empty`/`error`/`denied`, grid), the `data` shape of all 22 panel kinds with real examples, live
 frames and patches, masks, a minimal render loop, and compatibility. Its JSON Schema is served at
 `GET /api/v1/viewmodel/schema`.
@@ -1481,7 +1481,7 @@ frames and patches, masks, a minimal render loop, and compatibility. Its JSON Sc
 in a `links` panel the item has `status: "denied"` and `badge: "no access"`; a function key's label gets
 ` (no access)` and `action: "denied"`; the title's `with` loses its link. People learn the entity exists
 without seeing it. Masked values read `•••` and `provenance.masked` counts them
-([VIEWMODEL.md section 6](../architecture/VIEWMODEL.md#6-entitlements-and-masks-in-a-view)).
+([HOW_IT_FITS.md section V6](../../HOW_IT_FITS.md#v6-entitlements-and-masks-in-a-view)).
 
 ## 3. Business intelligence: `/api/v1/bi`
 
@@ -1553,7 +1553,7 @@ decided as for any item (`404 DRS-9001` otherwise), what the answer shows is dec
 | `GET` | `/bi/datasets` | `{datasets: [{id, title, description, endorsement, tags, sample, shipped, valid, errors, tables, measures, relationships}]}`: the published datasets the caller may see (samples are left out for those who may not see sample content) |
 | `GET` | `/bi/datasets/{id}` | the model for this caller: `{id, title, name, version, valid, problems[{level, code, path, message}], tables[{name, connector, kind, each, mode, access, columns[{name, path, type, key, calculated, expr, masked}]}], relationships[], measures[{name, expr, rollups}], hierarchies, security{rows[{role, where, appliesToYou}], masked, rowRulesEnforced}, rollups, layers}`; a composed or derived dataset ([BI_GUIDE.md](BI_GUIDE.md#part-3--reports-and-dashboards)) also has `composition: {kind, sources[{alias, dataset, by, fields, measures, filters}], joins[{left, right, on, type}], frame[{name, from, type, measure}] \| transform, params}` |
 | `POST` | `/bi/datasets/validate` | `{yaml}` (needs `bi-author`): `{valid, problems[], tables, measures, model}` without storing anything; `model` (when the structure parsed) is the shape the Model view draws: `{tables[{name, kind, columns[...]}], relationships[{from, to, cardinality, direction, active}], measures[], hierarchies}` |
-| `POST` | `/bi/datasets/{id}/query` | answers **`410`** with `code: DRS-9150` and `mq`, the equivalent model query (the fields, measures, filters, dates, sort and limit of the body, on the model the converter made of a `rachana: 1` dataset, `<name>@1`, or `dataset:<name>` for a `rachana: 2` one); send it to `POST /bi/mq` ([ARCHITECTURE.md section 28](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer)) |
+| `POST` | `/bi/datasets/{id}/query` | answers **`410`** with `code: DRS-9150` and `mq`, the equivalent model query (the fields, measures, filters, dates, sort and limit of the body, on the model the converter made of a `rachana: 1` dataset, `<name>@1`, or `dataset:<name>` for a `rachana: 2` one); send it to `POST /bi/mq` ([HOW_IT_FITS.md section A28](../../HOW_IT_FITS.md#a28-business-intelligence-on-the-table-layer)) |
 | `GET` | `/bi/datasets/{id}/layers` | what the BI store holds per table: dates, rows, how each was read; for a live table `partitions` is empty and `live` holds its counters (below) |
 | `POST` | `/bi/datasets/{id}/transform/run` | refused (`422`): derived datasets are not supported; a Python dataset (`source.python`) runs its Transform when it is asked |
 | `GET` | `/bi/datasets/{id}/refresh` | the refresh state (any reader of the dataset): `{enabled, scheduled, zone, calendar, dataset: {schedule, status, trigger, lastRun, nextRun, lastDurationMs, lastRows, lastDate, tables[], failures, retryAt, error, runs, history: [{at, trigger, status, rows, durationMs, date, error}]}, tables: [{table, ...the same}]}`; `history` is the last `drishti.bi.refresh.history` runs, newest first, kept in the BI store so it survives a restart; `status` is `never`, `waiting`, `running`, `ok`, `retrying`, `failed`, `invalid` or `interrupted` (the server stopped during the run); the dataset's `refresh:` schedule ([BI_GUIDE.md](BI_GUIDE.md#part-3--reports-and-dashboards)) |
@@ -1591,7 +1591,7 @@ Every query is audited (`bi-query`: the counts, the rows, the layer). From the c
 
 ## 5. Models and the model query language: `/api/v1/bi`
 
-The model layer ([ARCHITECTURE.md section 28](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer)): a **dataset** is one governed table (`rachana: 2`, item kind `dataset`), a **data model** puts
+The model layer ([HOW_IT_FITS.md section A28](../../HOW_IT_FITS.md#a28-business-intelligence-on-the-table-layer)): a **dataset** is one governed table (`rachana: 2`, item kind `dataset`), a **data model** puts
 datasets in a star with relationships, measures, model security (only tighter) and a semver contract (item kind `model`, shipped files in `config/tables/<domain>/<name>.model.yaml`),
 and the **model query** (`mq: 1`, YAML or JSON) is the one request for data. Every pack kind gets a read-only dataset `pack.<pack>.<kind>` without anyone writing it.
 A query names its model as `name@major` (`desk-trading@1`), a catalogue id, `dataset:<name>` (the **implicit model** of one dataset: its default measures and, for a
@@ -1655,22 +1655,22 @@ POST /api/v1/bi/mq  {"mq":1,"model":"loop-model@1","select":{"measures":["Total"
 | `GET` | `/bi/mq/stream` | `?ids=sq_a,sq_b` (all of the caller's when absent): server-sent events, `answer` (`{subscription, cursor, rows \| diff{upsert, delete} \| value, totals?, mode}`) when a subscription's answer moved on, at most one per its throttle (pushed by the generation bus when the model's data moves; the latest state wins), and `status` (`{subscription, state: live \| throttled \| tick \| failed, throttle, cursor, mode, group, lagMillis}`) every `drishti.bi.live.status`; `404 DRS-9180` for an id the caller no longer holds (its node restarted, or cannot be reached): subscribe again |
 | `DELETE` | `/bi/mq/subscribe/{id}` | ends a subscription of the caller (`204`; `404 DRS-9180` for one they do not hold) |
 
-**The query** (every key, [ARCHITECTURE.md section 28](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer)): `mq: 1`, `model`, `define` (local measures), `select: {fields, measures}`
+**The query** (every key, [HOW_IT_FITS.md section A28](../../HOW_IT_FITS.md#a28-business-intelligence-on-the-table-layer)): `mq: 1`, `model`, `define` (local measures), `select: {fields, measures}`
 (names or stable ids), `where` (the dataset query's operators plus `relative` with a `window` such as `last-30-days` and `top` with `n`, `by`, `dir`), `having` (a measure
 against one number), `time` (one of `as-of`, `window: {from, to}`, `window: {last: 1h}`, `live: true`), `sort`, `limit` (default `drishti.bi.mq.grouped-limit`), `totals`
 (`grand`, `subtotals` or `{levels}`: only the measures that do not add up are asked per level), `drill: {hierarchy, path}`, `shape: grouped | rows`,
-`options: {layer, explain, format}`. **`mq: 2`** ([ARCHITECTURE.md section 28](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer))
+`options: {layer, explain, format}`. **`mq: 2`** ([HOW_IT_FITS.md section A28](../../HOW_IT_FITS.md#a28-business-intelligence-on-the-table-layer))
 adds `params: {name: value}` (what-if values bound as `param.name` in the model's measures, and field parameters: `param.breakdown` in `select.fields` is the field
 the value names; defaults when left out; `DRS-9164`), `calc: {Group: Item}` (calculation groups applied to every selected measure, the answer keeps the measure's
 name; `DRS-9165`), `perspective: <name>` (names outside it are `DRS-9153`) and `options.budget: {millis, rows}`; `mq: 1` with one of these keys is `DRS-9150`. The
 parameters' values, the items applied and the local measures are part of the plan hash, so of every cache key. Validation runs ten steps in order before any data is read; the first step that fails answers with all its problems
-([section 5.3](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer)). In W1 the currency guard (`DRS-9158`) and the semi-additive rule (`DRS-9159`) are warnings in
+([section 5.3](../../HOW_IT_FITS.md#a28-business-intelligence-on-the-table-layer)). In W1 the currency guard (`DRS-9158`) and the semi-additive rule (`DRS-9159`) are warnings in
 `meta.warnings`, not refusals.
 
 **Explain and Python measures.** With `options: { explain: true }` the answer's `meta` has `explain` (the plan as a tree, each node with its
 `tier`: `source` for a fragment a SQL store runs, `java`, `python` for a `PyAggregate`; each scan with its `layer`: `columns`, `live`, `history`, `direct`,
 `rollup <name>`), `tiers` (nodes per tier), `timings` (`engineMillis`, `pythonMillis`, `layer`, `sourceOrJavaMillis`) and `explainText` (the indented text of
-[ARCHITECTURE.md section 28](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer)). A Python measure (`python: <item>`, `inputs`, `by`) may be asked in any grouped query: the
+[HOW_IT_FITS.md section A28](../../HOW_IT_FITS.md#a28-business-intelligence-on-the-table-layer)). A Python measure (`python: <item>`, `inputs`, `by`) may be asked in any grouped query: the
 SQL measures run first, then the rows of its inputs with the answer's fields are read as the reader and the Python runner gives one value per group (a
 masked input leaves the column `None`, said in `warnings`); it has no total. It runs on the server's compute pool `python` ([BI_GUIDE.md](BI_GUIDE.md#part-4--the-notebook-and-python)).
 
@@ -1709,7 +1709,7 @@ POST /api/v1/bi/mq   {"mq":1, "model":"trading-risk@1", "select":{"fields":["tra
      "fix": {"replace": "select.fields[0]", "with": ["trades.DESK"]}, "problems": [ ...the same, one per problem of the step... ]}
 ```
 
-**The plan, the security signature and the result cache** ([ARCHITECTURE.md section 28](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer)).
+**The plan, the security signature and the result cache** ([HOW_IT_FITS.md section A28](../../HOW_IT_FITS.md#a28-business-intelligence-on-the-table-layer)).
 Every question, whatever asked it (this endpoint, a report visual, an alert, a pivot, Drishti SQL), becomes one **logical plan**: a `SecureScan` per
 dataset read (the reader's row rules ANDed, masks, hidden columns, the query's filters pushed in), a `SemiJoin` where a dimension's security reaches a fact,
 an `Aggregate` per fact grain (met on the shared fields when there are several), then `Window`, `Having`, `Sort`, `Limit`, `Answer`. `meta.plan` is the
@@ -1732,7 +1732,7 @@ hugo: "meta": {"asOf": "2026-10-08", ..., "cached": true,  "plan": "p_2dab3b12b3
 (`drishti.bi.plan.guards: refuse`): a sum adding several currencies in a group (`422 DRS-9158`, fix: add the currency to the fields or filter one) and a
 balance added across dates (`422 DRS-9159`); a balance asked alone over a window is still answered as its last date's value, with the warning.
 
-**Model semantics and access** ([ARCHITECTURE.md section 28](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer)). A model may carry
+**Model semantics and access** ([HOW_IT_FITS.md section A28](../../HOW_IT_FITS.md#a28-business-intelligence-on-the-table-layer)). A model may carry
 **field properties** every consumer inherits, **perspectives** and **object-level security**:
 
 ```yaml
@@ -1811,7 +1811,7 @@ generation (a load, a refresh, a live batch); incremental rules are planned.
 
 ## 6. Expressions: `/api/v1/bi/expr`
 
-See [RACHANA_REFERENCE.md › Rachana-EL expressions](RACHANA_REFERENCE.md#rachana-el-expressions) and [ARCHITECTURE.md section 28](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer). The
+See [RACHANA_REFERENCE.md › Rachana-EL expressions](RACHANA_REFERENCE.md#rachana-el-expressions) and [HOW_IT_FITS.md section A28](../../HOW_IT_FITS.md#a28-business-intelligence-on-the-table-layer). The
 Drishti expression language, DEL v2 (Python-like), has **one parser, on the server**; the console's expression editor completes from the catalogue and
 checks through `validate`, it never parses for meaning. All three need the `bi` power; none reads data or stores anything (the two POSTs are open to a
 read-only token).
@@ -1849,7 +1849,7 @@ site sets `drishti.bi.expr.legacy: warn` it is a warning and the rest of the che
 
 ## 7. BI migrations: `/api/v1/bi/migrate`
 
-Migrations ([ARCHITECTURE.md section 28](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer)): migrations of the server's **stored** BI items. The
+Migrations ([HOW_IT_FITS.md section A28](../../HOW_IT_FITS.md#a28-business-intelligence-on-the-table-layer)): migrations of the server's **stored** BI items. The
 server runs them once at start (`drishti.bi.migrate.on-start`, [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibimigrate--migrations-of-stored-bi-items));
 these endpoints let a **bi-admin** see what would change and run them again. Every run is idempotent and audited; the text before stays in each item's
 history; an item that cannot be converted is never changed and is listed in `problems`.
@@ -1869,7 +1869,7 @@ The problems answer (captured):
 
 ## 8. Drishti SQL: `/api/v1/bi/sql`
 
-See [8. Drishti SQL: `/api/v1/bi/sql`](#8-drishti-sql-apiv1bisql) and [ARCHITECTURE.md section 28](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer): one read-only
+See [8. Drishti SQL: `/api/v1/bi/sql`](#8-drishti-sql-apiv1bisql) and [HOW_IT_FITS.md section A28](../../HOW_IT_FITS.md#a28-business-intelligence-on-the-table-layer): one read-only
 statement over one model, as the caller. An MQ-shaped statement is exactly one model query (same plan hash, same cache entry as the MQ); a composite one
 (`WITH`, `UNION`, a subquery, a window over the answer) runs its model queries as the caller and the rest over their answers. Both need the `bi` power and
 read on the model; neither changes anything (open to a read-only token). Every statement is audited as `bi-sql` with its text.
@@ -1892,7 +1892,7 @@ The answer of an MQ-shaped statement and of a composite one are shown in [RACHAN
 
 ## 9. BI runs: `/api/v1/bi/runs`
 
-Every BI question can be a bounded, visible job ([ARCHITECTURE.md section 28](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer)). The existing query endpoints
+Every BI question can be a bounded, visible job ([HOW_IT_FITS.md section A28](../../HOW_IT_FITS.md#a28-business-intelligence-on-the-table-layer)). The existing query endpoints
 (`POST /api/v1/bi/mq`, `POST /api/v1/bi/models/{id}/query`, `POST /api/v1/bi/sql`, `POST /api/v1/bi/reports/{id}/query`) accept the
 standard header `Prefer: respond-async[, wait=<seconds>]` (RFC 7240). With it the question is submitted as a run computed as the caller and
 the server waits up to `wait` (default `inline.wait`, 2 s; at most `inline.max-wait`, 10 s): done in time, `200` with today's body and the run's id in the
@@ -1939,10 +1939,10 @@ either order). Results are kept under `<data>/bi-runs` (`store.dir`) for `retent
 | `POST` | `/api/v1/bi/admin/runs/suggestions/{id}/accept` | bi-admin: a rollup suggestion (below) accepted: the drafted rollup is added to the model's draft under `rollups:` (comments kept; reviewed and published as any change); `{id, model, grain, …, status: "accepted", item}`. A pack's model is accepted with the YAML to add by hand (`item: null`) |
 | `POST` | `/api/v1/bi/admin/runs/suggestions/{id}/dismiss` | bi-admin: `status: "dismissed"` |
 | `GET` | `/api/v1/bi/runs/settings` | `{enabled, inlineWait: "PT2S", maxWait: "PT10S", confirmAboveSeconds: 60, retentionDays: 30, eventsUrl}` (what the console needs) |
-| `GET` | `/api/v1/bi/admin/runs` | bi-admin: `{now: {slots: {interactive, standing, background: {used, cap}}, admissionWaitP95Ms}, queue: {byClass, byUser, oldestSeconds, oldestUser, queued, workers}, running: [run], storage: {resultsBytes, maxBytes, results, oldest, snapshotsBytes, snapshots, topUsers}, accuracy: {medianRatio, p10, p90, samples, basis, unknownShare}, inline: {inlineShare, jobMedianSeconds}, settings: {file, inlineWait, confirmAboveSeconds, retentionDays}, nodes: [{node, alive}], suggestions}` ([ARCHITECTURE.md section 28](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer)). `admissionWaitP95Ms` is the interactive admission wait over the last 5 minutes (null when none); `accuracy.basis` is `{<basis>: {medianRatio, samples}}`; `suggestions` are repeated heavy questions as rollups ([ARCHITECTURE.md section 28](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer)): `[{id, model, grain, filters, runs, medianSeconds, status (suggested, accepted, dismissed, built), rollup {name, table, by, measures}, yaml, words, decidedBy, item}]`, counted per model, grain and filters' shape (never a value) past `suggest.min-runs` in `suggest.window` with a median of `suggest.min-seconds` |
+| `GET` | `/api/v1/bi/admin/runs` | bi-admin: `{now: {slots: {interactive, standing, background: {used, cap}}, admissionWaitP95Ms}, queue: {byClass, byUser, oldestSeconds, oldestUser, queued, workers}, running: [run], storage: {resultsBytes, maxBytes, results, oldest, snapshotsBytes, snapshots, topUsers}, accuracy: {medianRatio, p10, p90, samples, basis, unknownShare}, inline: {inlineShare, jobMedianSeconds}, settings: {file, inlineWait, confirmAboveSeconds, retentionDays}, nodes: [{node, alive}], suggestions}` ([HOW_IT_FITS.md section A28](../../HOW_IT_FITS.md#a28-business-intelligence-on-the-table-layer)). `admissionWaitP95Ms` is the interactive admission wait over the last 5 minutes (null when none); `accuracy.basis` is `{<basis>: {medianRatio, samples}}`; `suggestions` are repeated heavy questions as rollups ([HOW_IT_FITS.md section A28](../../HOW_IT_FITS.md#a28-business-intelligence-on-the-table-layer)): `[{id, model, grain, filters, runs, medianSeconds, status (suggested, accepted, dismissed, built), rollup {name, table, by, measures}, yaml, words, decidedBy, item}]`, counted per model, grain and filters' shape (never a value) past `suggest.min-runs` in `suggest.window` with a median of `suggest.min-seconds` |
 | `POST` | `/api/v1/bi/admin/runs/{id}/cancel` | bi-admin: `202 run` (reason "cancelled by an administrator (name)") |
 
-The run object (the contract with the console, [ARCHITECTURE.md section 28](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer)):
+The run object (the contract with the console, [HOW_IT_FITS.md section A28](../../HOW_IT_FITS.md#a28-business-intelligence-on-the-table-layer)):
 `id` (`r-<node>-<ulid>`), `title`, `source {type, id, title, model, page, visual, href}`, `runner`, `owner`, `workspace`, `params`, `asOf {from, to, dates}`,
 `data {version, words, tables}`, `tier` (`interactive`, `known-heavy`, `ad-hoc-heavy`), `engine`, `class`, `state` (`planned`, `awaiting-confirm`,
 `queued`, `running`, `storing`, `done`, `reused`, `failed`, `cancelled`, `expired`), `progress`, `phase`, `estimate`, `actual {rowsRead, rowsOut,
@@ -2101,7 +2101,7 @@ POST /api/v1/bi/boards/validate   {"yaml": "board: bad\npages:\n  - id: p\n    t
        {"level": "error", "code": "DRS-9052", "path": "pages[0].tiles[1].report", "message": "no report 'no-such' that you can open (a catalogue id, a file name such as live-trading-desk, or the report's name)"}]}
 ```
 
-Publishing a board (`POST /bi/items/{id}/publish`) checks its structure and refuses `422 DRS-9052`. From the console the calls are under `/bi/api/boards/...` and the stream is the channel subscription `bilive:<report id>` ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#live-bi-a-reports-live-tables)).
+Publishing a board (`POST /bi/items/{id}/publish`) checks its structure and refuses `422 DRS-9052`. From the console the calls are under `/bi/api/boards/...` and the stream is the channel subscription `bilive:<report id>` ([HOW_IT_FITS.md](../../HOW_IT_FITS.md#live-bi-a-reports-live-tables)).
 
 ## 12. Export and subscriptions: `/api/v1`
 
@@ -2322,7 +2322,7 @@ from: a part never names a row or an input the caller may not see, only how many
 The answer: the head (`kind`, `measure`, `subject`, `title`, `value`, `text`, `unit`, `asOf`, `stored`, `origin`, `preview`, `facts`),
 then the parts asked: `formula` (`lines`, the formula with its values; `rachana`, the number's measure in Rachana when it has one),
 `inputs` (`rows` of `{label, value}`; `lineage` of `{source, read, version}`), `why` (`available`; when it is: `from`, `to`, `change`,
-`addsUp`, `views`, `view`, `panels` (ViewModel panels of the standard kinds, [VIEWMODEL.md](../architecture/VIEWMODEL.md)) and `answer`,
+`addsUp`, `views`, `view`, `panels` (ViewModel panels of the standard kinds, [HOW_IT_FITS.md](../../HOW_IT_FITS.md#part-iv--the-viewmodel-contract)) and `answer`,
 the engine's own answer; when not: `note` or `underConstruction`), `workbook` (`available`, `links` of `{label, href, api, note}`), `checks`
 (`{ok, text}`: `true`, `false`, or `null` for not made), `links`, and `underConstruction` for a check not built. The as-of header (or
 `asOf`) is the number's date unless `date` names one. A kind whose engine is off answers `404 DRS-1020`; an unknown kind `404`; a measure
@@ -2415,9 +2415,9 @@ For example `GET /api/v1/risk/var/scope?scope=DESK:DESK-RATES&asOf=2026-09-30` a
 | `GET /api/v1/risk/var/tree?hierarchy=&within=` | every node of the hierarchy (default `MGMT`) with its figures, and the system baskets valid on the date (`portfolios`); `within=<scope>` only that scope: a node and everything below it, or a basket's own positions grouped by the hierarchy, each part's VaR and ES computed by the engine ([VAR_GUIDE.md section 3.2](VAR_GUIDE.md#32-the-screen)); `maturedSwitch` (the grain the switch names, the matured records kept, or why none); `matured=true`: each node holding matured records gets `matured` (`var`, `es`, `add`, `label`), its limit use on the official figure |
 | `GET /api/v1/risk/var/status` | the settings (confidence, rank rule, memory budget, hot dates, kinds, the position rules, the official captures), the tiered memory (`tier`: mode, how this JVM maps and unmaps, the hot files on disk and their bytes, the dates open, builds and reopenings) and the dates loaded (each with its tier, hot file, vector and aggregate bytes, rejected and left-out rows and batch ids, and any date refused) |
 | `POST /api/v1/risk/var/reload` | administrators: drops the loaded dates so the next request maps the date's hot file again (the same inputs) or reads the lake (after a load). `?date=YYYY-MM-DD` drops that business date only (its answers, views, currencies and shard state), the others stay open; `{reloaded, date}`; `400 DRS-5001` for a bad date |
-| `GET /api/v1/risk/var/shards?asOf=` | VaR sharding across Drishti*net ([DATA_ARCHITECTURE.md section 13](../architecture/DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built)): the settings, the members (owner, in the owners' view, draining, zone, the shards each announces ready), the shard books held here, and the date's shard map with each shard's range, rows, owners and the members ready for it; `{"enabled": false}` when off |
+| `GET /api/v1/risk/var/shards?asOf=` | VaR sharding across Drishti*net ([HOW_IT_FITS.md section D13](../../HOW_IT_FITS.md#d13-var-sharding-how-it-is-built)): the settings, the members (owner, in the owners' view, draining, zone, the shards each announces ready), the shard books held here, and the date's shard map with each shard's range, rows, owners and the members ready for it; `{"enabled": false}` when off |
 | `POST /api/v1/risk/var/shards/drain {on}` | administrators: drain this member's shards alone (they go to other owners before it stops; `safeToStop` in `GET /api/v1/risk/var/shards` once it holds none) or take it back. Never open to a personal API token (`token-never`, like `/var/reload`): a session signed in as an administrator (the console, `drishti.py var shards --drain`). before a stop, `POST /api/v1/admin/node/drain` drains the shards and the forwarding together (scope `node:drain`; the stop hooks use it) |
-| `POST /api/v1/risk/var/partial`, `POST /api/v1/risk/var/partials`, `GET /api/v1/risk/var/shards/skeleton` | members only (signed with the cluster key, one hop; else `401 DRS-5051`): a shard's part of a set summed by an owner (as the caller); many sets of one shard summed in one call (`{date, ccy, shard, map, digest, runs}`, 1 to 4,096 row sets, each its runs `[from, to)` as int32 pairs in base64; the answer's `rows` and `sums` in the same order, each sum the one `/partial` gives; a contribution table's positions or trades use it, one call per remote shard of up to 1,024 sets, [DATA_ARCHITECTURE.md section 13](../architecture/DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built)); a shard's skeleton. `/partial` and `/partials` read data but are in `token-never`, not `token-read-posts`: they are the members' own channel, made with the caller's on-behalf-of token (the owner applies their rights again), like `/compute/peer/**` |
+| `POST /api/v1/risk/var/partial`, `POST /api/v1/risk/var/partials`, `GET /api/v1/risk/var/shards/skeleton` | members only (signed with the cluster key, one hop; else `401 DRS-5051`): a shard's part of a set summed by an owner (as the caller); many sets of one shard summed in one call (`{date, ccy, shard, map, digest, runs}`, 1 to 4,096 row sets, each its runs `[from, to)` as int32 pairs in base64; the answer's `rows` and `sums` in the same order, each sum the one `/partial` gives; a contribution table's positions or trades use it, one call per remote shard of up to 1,024 sets, [HOW_IT_FITS.md section D13](../../HOW_IT_FITS.md#d13-var-sharding-how-it-is-built)); a shard's skeleton. `/partial` and `/partials` read data but are in `token-never`, not `token-read-posts`: they are the members' own channel, made with the caller's on-behalf-of token (the owner applies their rights again), like `/compute/peer/**` |
 | `GET /api/v1/risk/var/hints?q=&limit=` | the basket sheet's type-ahead: system baskets, the caller's baskets, desks, books, legal entities, divisions, counterparties, positions and trades matching `q`, each `{type, id, name, scope, trades, var}` as the caller (a typed `WORD:id` as written, with a `notice` when it matches nothing) |
 | `POST /api/v1/risk/var/what-if` | the pre-deal what-if: `{scope, items: [{copyOf, factor, label}], ccy}`, copies of booked trades (or any scope) scaled, or `{pnl: [one per scenario day], factor, label}` priced elsewhere, added to the scope; `{before, after, change, items, engine, note}` by the server's VaR engine, no compute workers needed ([VAR_GUIDE.md section 8.2](VAR_GUIDE.md#82-the-what-if-the-java-engine)) |
 | `GET /api/v1/risk/var/baskets`, `POST /api/v1/risk/var/baskets` | the caller's baskets and those shared with them; save one `{name, title, scope or sheet, sharedWith, version, owner}` (a sheet kept as its lists; `version` the one the editor opened, `409` when changed since; `owner`: an administrator's edit of someone's basket, saved under its owner, audited, the owner told) |
@@ -2595,7 +2595,7 @@ are never a token's. Answers, captures, what-ifs, exports, reloads and official 
 
 ## 23. Pivot engine: `/api/v1/pivot`
 
-The pivot engine ([BI_GUIDE.md](BI_GUIDE.md#part-1--pivot-cubes-and-explain), design [ARCHITECTURE.md section 26](../architecture/ARCHITECTURE.md#26-the-pivot-engine)): any table of Export data,
+The pivot engine ([BI_GUIDE.md](BI_GUIDE.md#part-1--pivot-cubes-and-explain), design [HOW_IT_FITS.md section A26](../../HOW_IT_FITS.md#a26-the-pivot-engine)): any table of Export data,
 or the VaR engine's trades (`source: var`), as a pivot. Every figure is computed by the engine (module `drishti-bicompute`); every total is
 made from its own members; masks apply before aggregation. Every view run and export is audited, never with its values.
 
@@ -2932,7 +2932,7 @@ arrived within `staleAfter`; always false on a picked business date). Admin heal
 
 ## 31. Share with a note, the directory and the inbox
 
-Design: [ARCHITECTURE.md](../architecture/ARCHITECTURE.md). What travels is the sender's words and a pinned link, never data;
+Design: [HOW_IT_FITS.md](../../HOW_IT_FITS.md#part-ii--architecture). What travels is the sender's words and a pinned link, never data;
 what a person receives is computed for that person, when they look, from what they may see now. Everything below needs the
 `collaborate` power (every role has it unless an administrator took it away) and `drishti.collab.enabled` (otherwise
 `403 DRS-7004`). Personal API tokens read only: they cannot send.
@@ -2977,7 +2977,7 @@ header `X-Drishti-Share: sh_…`, which the access log records as `share:sh_…`
 
 ## 32. Comment threads
 
-Design: [ARCHITECTURE.md](../architecture/ARCHITECTURE.md). A thread is a conversation about an entity: on the whole view
+Design: [HOW_IT_FITS.md](../../HOW_IT_FITS.md#part-ii--architecture). A thread is a conversation about an entity: on the whole view
 (`anchor: entity`), on a panel (`panel`, with the `gateKind` of the panel's source) or on a field (`field`, with a `path` such as
 `$.mtm`). **Who sees a thread is who may open the entity**: its kind and its pack, and for a panel the gate kind too (otherwise the
 thread is not listed, not counted and `404 DRS-7005`). Every comment is stored as written, with a **pin** (business date, "known at",
@@ -3224,10 +3224,10 @@ and the fix for the codes that need more than the meaning.
 | DRS-5054 | 403 | net not reachable | the caller's roles may not reach that node (`access.yaml`), or the node is drained and takes no forwarded work (HTTP 403 or 503) |
 | DRS-5055 | 409 | net file refused | a file of `config/net/` was not written (HTTP 409): it changed since you read it (read it again), or it has an error (the problems are listed, with their lines) |
 | DRS-5056 | 400 | net bad request | a Drishti*net management request that cannot be done (HTTP 400): an unknown member, removing a member that is alive or suspect, a seed that is not `host:port` or an address, a file that is not one of `config/net/` |
-| DRS-5057 | 409 | content conflict | content conflict (HTTP 409): the item (a Design) was changed by another node or tab since you read it, or it already exists. Reload and make the change again (docs/architecture/DATA_ARCHITECTURE.md) |
+| DRS-5057 | 409 | content conflict | content conflict (HTTP 409): the item (a Design) was changed by another node or tab since you read it, or it already exists. Reload and make the change again (HOW_IT_FITS.md) |
 | DRS-5058 | 400 | content bad key | a content-store key that is not valid (HTTP 400): empty, too long, a `..` segment or control characters |
 | DRS-5059 | 503 | content unavailable | the content store could not be reached (HTTP 503): its database, bucket or shared folder failed; see the server log and `config/store/store.yaml` |
-| DRS-5215 | 503 | var shard unavailable | VaR sharding: a shard the scope needs has no live owner that holds it (every replica down, draining or refusing); the message names the shard, its range and what each member said. Never a partial VaR. Node figures still answer. Bring an owner back, or wait `drishti.var.sharding.stable-seconds` for other members to own and build it; keep `replicas` at 2 or more ([DATA_ARCHITECTURE.md section 13](../architecture/DATA_ARCHITECTURE.md#14-var-sharding-for-operators)) |
+| DRS-5215 | 503 | var shard unavailable | VaR sharding: a shard the scope needs has no live owner that holds it (every replica down, draining or refusing); the message names the shard, its range and what each member said. Never a partial VaR. Node figures still answer. Bring an owner back, or wait `drishti.var.sharding.stable-seconds` for other members to own and build it; keep `replicas` at 2 or more ([HOW_IT_FITS.md section D13](../../HOW_IT_FITS.md#d14-var-sharding-for-operators)) |
 | DRS-5216 | 409 | var shard stale | VaR sharding: a partial sum or a shard's skeleton was asked for another data version or shard map than the owner holds (a load landed between two members, or the members read different lakes). The asking member tries the next owner, and when all refuse it reads the date again: ask again in a moment. Persistent: check every member reads the same tables (`drishti.py var shards` shows the maps) |
 | DRS-5217 | 422 | var not shardable | VaR sharding: the date cannot be put together from its shards because its data does not cut along the shard key: a book under two legal entities or desks that fall in two shards, or (with a hierarchy built from columns) one position id under two shards. Correct the trades' hierarchy columns upstream, shard by `[LEGAL_ENTITY]` only, or switch sharding off; one server answers the date |
 | DRS-5218 | 503 | disk guard | a hot file, shard book or currency's book was not built because the disk would fall under the free-space guard (`drishti.disk.min-free-percent` 10, `min-free-gb` 20) even after every folder freed down to 90% of its cap; nothing was written, a date already open keeps answering; the message gives what is free, what was needed and the guard ([CLUSTER_GUIDE.md 7.2](CLUSTER_GUIDE.md#158-disk)) |
@@ -3367,7 +3367,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-9075 | 422 | Transform result | A Python Transform returned what a derived dataset cannot use: a column the dataset declares is missing from its frame, or the Transform's inputs do not match the dataset's (a different count, or a different dataset in the same place) |
 | DRS-9076 | 422 | Python tests failed | A Python item that ships `tests:` is published (or approved) through the console while one of them fails or cannot run; a bi-admin may send `force: true` ([BI_GUIDE.md](BI_GUIDE.md#part-3--reports-and-dashboards)). Raised by the console only |
 | DRS-9077 | 422 | Vega-Lite not drawn | Shown in the visual's frame by the page, not an HTTP answer: a Vega-Lite specification that names a `url` or a `loader`, or a feature drishti-chart does not translate, named with what to use instead ([BI_GUIDE.md](BI_GUIDE.md#part-3--reports-and-dashboards)) |
-| DRS-9080 | 404 | Run not found | No such BI run, or not one you may see (a run shared with you needs its share) ([ARCHITECTURE.md section 28](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer)). |
+| DRS-9080 | 404 | Run not found | No such BI run, or not one you may see (a run shared with you needs its share) ([HOW_IT_FITS.md section A28](../../HOW_IT_FITS.md#a28-business-intelligence-on-the-table-layer)). |
 | DRS-9081 | 429 | Run queue full | You already have `queue.per-user` runs queued or running, or the node's queue is at `queue.max`; wait for one to finish or cancel one (`Retry-After`) |
 | DRS-9082 | 409 | Run needs confirming | the question is an ad-hoc heavy run above the confirm threshold (HTTP 409): the answer carries the estimate (a range and its basis) and a `confirmToken`; confirm it, narrow the dates, or add a rollup at the question's grain |
 | DRS-9083 | 409 | Run not done | the run's result is not there yet (HTTP 409): it is queued, running, failed or cancelled; wait for it, or read its reason in the Runs tab |
@@ -3377,7 +3377,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-9087 | 503 | Run node unreachable | The node that owns the run did not answer; try later, or re-run elsewhere |
 | DRS-9088 | 507 | Run store full | The result store is at its budget and nothing can be removed; an administrator frees space or raises `store.max-bytes` |
 | DRS-9089 | 409 | Run needed | A dashboard interaction (slicer, cross-filter, drill) would need a background run; nothing ran; the body carries the estimate: *Run in background*, or add a rollup at this grain |
-| DRS-9100 | 422 | Layer dataset invalid | Publishing a `rachana: 2` dataset whose Check has an error (the problem list uses `DRS-9100` to `DRS-9108`, [ARCHITECTURE.md section 28](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer)) |
+| DRS-9100 | 422 | Layer dataset invalid | Publishing a `rachana: 2` dataset whose Check has an error (the problem list uses `DRS-9100` to `DRS-9108`, [HOW_IT_FITS.md section A28](../../HOW_IT_FITS.md#a28-business-intelligence-on-the-table-layer)) |
 | DRS-9101 | — | — | a dataset column (Check): an unknown type, role, aggregate or additivity, `of:` naming no column, a `sum`/`avg` default on text, a query or Python dataset that declares no columns |
 | DRS-9102 | 422 | Dataset source | A dataset's source cannot run when it is read: its connector is not running or has no SQL target (connector queries run in DuckDB or PostgreSQL connectors), or the query failed |
 | DRS-9103 | — | — | a time mode the source cannot give (Check): `live` over an array (`each`) or for a query or Python dataset, `history` with no `history:` block, a bad `every`, `age`, `storage` or `as-of` |
@@ -3388,7 +3388,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-9108 | 422 | Source query | The query of a dataset whose source is a model does not validate (Check: its own code follows), or its answer lacks a column the dataset declares |
 | DRS-9109 | 422 | Source cycle | A model that reaches itself through a dataset whose source is a model (Check, the bind of a query, or at run time): `model:a -> dataset:x -> model:a` |
 | DRS-9110 | — | — | a dataset whose root cannot be traced (Check): down its `extends` chain there is no source, or the root is a pack kind no enabled pack generates. Enable the pack, or extend a dataset that is published ([BI_GUIDE.md](BI_GUIDE.md#part-3--reports-and-dashboards)) |
-| DRS-9120 | 422 | Model invalid | Publishing a data model whose Check has an error (`DRS-9120` to `DRS-9129` in the problem list, [ARCHITECTURE.md section 28](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer)) |
+| DRS-9120 | 422 | Model invalid | Publishing a data model whose Check has an error (`DRS-9120` to `DRS-9129` in the problem list, [HOW_IT_FITS.md section A28](../../HOW_IT_FITS.md#a28-business-intelligence-on-the-table-layer)) |
 | DRS-9121 | — | — | a dataset of a model with no relationship to the others (a warning): it can be asked alone, never with their fields |
 | DRS-9122 | — | — | a relationship naming no column, columns of two types, an unknown cardinality or direction |
 | DRS-9123 | — | — | a relationship whose one side is not unique (not the grain key, nor a pack kind's `id`): one row would meet several; join to the key |

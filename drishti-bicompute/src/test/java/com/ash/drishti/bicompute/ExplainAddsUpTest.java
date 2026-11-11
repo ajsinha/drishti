@@ -30,7 +30,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /**
- * Explain the difference (ARCHITECTURE.md section 26.7, item 1; test {@code ExplainAddsUpTest} of section 20): for an additive, a ratio, an
+ * Explain the difference (HOW_IT_FITS.md section A26.7, item 1; test {@code ExplainAddsUpTest} of section 20): for an additive, a ratio, an
  * average and a holistic measure, and for the price and quantity effects, the steps and the residual add up to the difference; for a sum
  * each step is the member's own change. And what-if (item 3): the overlay's figures equal the same arithmetic done by hand, the original
  * is unchanged beside it.

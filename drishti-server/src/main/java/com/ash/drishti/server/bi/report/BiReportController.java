@@ -42,7 +42,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 /**
- * Business intelligence, phase 3 (docs/architecture/ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 8): reports. The viewer asks for a report once and then for each visual's
+ * Business intelligence, phase 3 (HOW_IT_FITS.md §A28 › Rūpaka: the original design and every phase as built, section 8): reports. The viewer asks for a report once and then for each visual's
  * data as the person works; every answer is the dataset engine's, as that caller (their row rules, their masks).
  */
 @RestController
@@ -64,7 +64,7 @@ public class BiReportController {
         this(reports, live, executor, null);
     }
 
-    /** With BI runs: {@code Prefer: respond-async} on a visual's query answers as {@code POST /api/v1/bi/runs} does (docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 6). */
+    /** With BI runs: {@code Prefer: respond-async} on a visual's query answers as {@code POST /api/v1/bi/runs} does (HOW_IT_FITS.md §A28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 6). */
     public BiReportController(BiReportService reports, BiLiveProperties live, ExecutorService executor,
             org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.runs.RunSources> runs) {
         this.runs = runs;
@@ -154,7 +154,7 @@ public class BiReportController {
     }
 
     /**
-     * Body {@code {page, visual}}: what the compute pool python runs for one python visual (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 20.8): the Python item, the measure it shows,
+     * Body {@code {page, visual}}: what the compute pool python runs for one python visual (HOW_IT_FITS.md §A28 › Rūpaka: the original design and every phase as built, section 20.8): the Python item, the measure it shows,
      * its parameters and where it may run. The rows come from {@code /query?format=arrow}.
      */
     @PostMapping("/{id}/python")
@@ -171,7 +171,7 @@ public class BiReportController {
     }
 
     /**
-     * The live stream of a report (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 12): {@code hello} (the state of its dataset's live tables), then a {@code tick} whenever the tables changed,
+     * The live stream of a report (HOW_IT_FITS.md §A28 › Rūpaka: the original design and every phase as built, section 12): {@code hello} (the state of its dataset's live tables), then a {@code tick} whenever the tables changed,
      * at most one per {@code drishti.bi.live.frame} (the latest state: a slow client skips frames, never queues them), and a {@code status} every
      * {@code drishti.bi.live.status} when nothing changed (also the heartbeat). A tick carries no data: the client asks its visuals again, as itself, so its row
      * rules and masks apply to every update.

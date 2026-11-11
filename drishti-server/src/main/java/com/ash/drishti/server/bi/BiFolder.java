@@ -59,13 +59,13 @@ public final class BiFolder implements AutoCloseable {
     public static final String SAMPLE_TAG = "sample";
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
     private static final Map<String, String> KINDS = Map.of("reports", "report", "boards", "board", "notebooks", "notebook", "python", "python", "themes", "theme");
-    /** BI's old folders of dataset and model files: a file there is refused with the migration's command (docs/architecture/ARCHITECTURE.md §28 Q18). */
+    /** BI's old folders of dataset and model files: a file there is refused with the migration's command (HOW_IT_FITS.md §A28 Q18). */
     private static final List<String> OLD_FOLDERS = List.of("datasets", "models");
     /** The code of an old dataset or model file the server refuses (BI_GUIDE.md, the migration). */
     public static final String MIGRATE_FIRST = "DRS-9196";
     /** The code of a file refused because another file (another domain folder's) holds the same id: neither is read. */
     public static final String DEFINED_TWICE = "DRS-9610";
-    /** The table layer's files (docs/architecture/ARCHITECTURE.md §28 step 5): items of the kinds {@code table} and {@code model}, as the editors store them. */
+    /** The table layer's files (HOW_IT_FITS.md §A28 step 5): items of the kinds {@code table} and {@code model}, as the editors store them. */
     private static final Map<String, String> LAYER = Map.of("table", "table", "model", "model");
 
     /** One file as last read: its stamp, the last good item (null until one parses) and the problem with the latest content, if any. */

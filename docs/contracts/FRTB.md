@@ -484,7 +484,7 @@ Built at load, indexed like the VaR vectors (position ordinal, then factor ordin
 **A scope's netted sensitivities** are accumulated into a dense float64 array indexed by factor ordinal (2 MB at 250,000 factors; one per
 thread), in position-ordinal order, then compacted to the non-zero factors and grouped by class and bucket. In a cluster, each owner sums
 its shards and the coordinator adds the partial sums in shard order, then applies the formula once
-([DATA_ARCHITECTURE.md section 13](../architecture/DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built)).
+([HOW_IT_FITS.md section D13](../../HOW_IT_FITS.md#d13-var-sharding-how-it-is-built)).
 
 ### 7.3 Load
 

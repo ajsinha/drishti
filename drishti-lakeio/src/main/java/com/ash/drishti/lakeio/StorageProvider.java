@@ -18,7 +18,7 @@ package com.ash.drishti.lakeio;
 /**
  * A storage for one more URI scheme, beyond the local disk and S3 this module serves itself. The engines (the native Delta engine, the
  * Iceberg engine, the lake writer) reach such a scheme only through this interface and {@link StorageProviders}, never through the module
- * that implements it. The in-memory lake ({@code drishti-memlake}, docs/architecture/DATA_ARCHITECTURE.md) provides {@code mem://} this way.
+ * that implements it. The in-memory lake ({@code drishti-memlake}, HOW_IT_FITS.md) provides {@code mem://} this way.
  *
  * <p>An implementation is listed in {@code META-INF/services/com.ash.drishti.lakeio.StorageProvider} of its module and found with
  * {@link java.util.ServiceLoader}: its scheme works wherever its module is on the class path, and nowhere else.

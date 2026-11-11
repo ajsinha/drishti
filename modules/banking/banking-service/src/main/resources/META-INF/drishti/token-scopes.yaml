@@ -30,7 +30,7 @@ read-posts:
 # write scopes a token may be given (risk:write also keeps the core's sandboxes and cancellations, as it always did)
 scopes:
   "risk:write":
-    description: "Save, share and delete your VaR baskets, capture VaR and exposure results, keep your what-if sandboxes and cancel your own computations (VAR_GUIDE.md, EXPOSURE_GUIDE.md, DATA_ARCHITECTURE.md). Your own items only (an administrator's token may also delete anyone's basket, as its user may); the bank's data is never changed."
+    description: "Save, share and delete your VaR baskets, capture VaR and exposure results, keep your what-if sandboxes and cancel your own computations (VAR_GUIDE.md, EXPOSURE_GUIDE.md, HOW_IT_FITS.md). Your own items only (an administrator's token may also delete anyone's basket, as its user may); the bank's data is never changed."
     allow:
       - POST /api/v1/risk/var/baskets
       - POST /api/v1/risk/frtb/playground/recipes   # save a FRTB-SA playground recipe (yours, replayable)

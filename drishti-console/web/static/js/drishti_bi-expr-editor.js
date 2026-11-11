@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* The ExpressionEditor (docs/architecture/ARCHITECTURE.md §28 sections 3.3.8 and 8.1; docs/guides/RACHANA_REFERENCE.md): one editor for every DEL expression a person
+/* The ExpressionEditor (HOW_IT_FITS.md §A28 sections 3.3.8 and 8.1; docs/guides/RACHANA_REFERENCE.md): one editor for every DEL expression a person
    writes (a measure, a derived column, a dataset filter, a row rule, a report's own measure), on drishti-inputs' CodeEditor in Rachana (upgradeCodeArea: one line
    for an input, the whole text for a text area; the element stays the value's holder). Its completion hook offers the fields (with type, meaning and format), the
    measures (writing measure('…')), the functions of the server's catalogue (signature and one line) and the keyword arguments of the call the caret is in, as a

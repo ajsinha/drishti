@@ -98,7 +98,7 @@
       if (!quiet) { entry.frame.busy(); }
       const dates = B.consume.datesOf(o.time());
       const path = '/reports/' + B.id2path(i.report) + '/query', body = { page: i.page, visual: spec.__source, state: dates ? { dates } : {} };
-      // a tile asks with the inline wait (ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 6): a slow one shows the run card and is drawn when its run finishes; a live redraw asks as before
+      // a tile asks with the inline wait (HOW_IT_FITS.md §A28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 6): a slow one shows the run card and is drawn when its run finishes; a live redraw asks as before
       const R = B.runs;
       const asked = !R || !B.ask || quiet ? B.enqueue(() => B.api('POST', path, body))
         : R.settings().then((st) => {

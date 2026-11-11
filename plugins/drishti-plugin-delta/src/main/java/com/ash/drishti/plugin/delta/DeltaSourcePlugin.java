@@ -287,7 +287,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         }
         this.lakeName = ctx.setting("lake-name", "");
         this.domain = ctx.setting("domain", "");
-        // a lake in memory (mem://, docs/architecture/DATA_ARCHITECTURE.md section 8): memory-only by contract, so nothing of it may reach a disk here either:
+        // a lake in memory (mem://, HOW_IT_FITS.md section D8): memory-only by contract, so nothing of it may reach a disk here either:
         // no id-map files, no document cache on disk, no index segments on disk (the memory caches still apply)
         this.memoryOnly = com.ash.drishti.lakeio.StorageProviders.memoryOnly(root);
         this.lake = LakeStore.of(root, ctx.setting("domain", ""), ctx.settings());
@@ -725,7 +725,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     }
 
     /**
-     * History queries' fast path (DATA_ARCHITECTURE.md › History queries: an entity over time, section 10): the dates the table's snapshot already lists in memory
+     * History queries' fast path (HOW_IT_FITS.md › History queries: an entity over time, section 10): the dates the table's snapshot already lists in memory
      * ({@code business_date=} partitions from..to) whose id map holds the entity, so the per-day read
      * ({@link com.ash.drishti.api.HistoryReads#perDay}) reads only those days' row groups and never a date without the entity. Id maps are
      * the ones single reads use (memory-mapped, cached). For an effective table these are the entity's change dates. No document is read.
@@ -981,7 +981,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     private final Map<String, Counted> counted = new java.util.concurrent.ConcurrentHashMap<>();
 
     /**
-     * The date's rows from the add actions of the current snapshot (docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 4.1): the sum of {@code numRecords} in
+     * The date's rows from the add actions of the current snapshot (HOW_IT_FITS.md §A28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 4.1): the sum of {@code numRecords} in
      * their statistics; a file without statistics counts its bytes ÷ the bytes per row of the files that have both. No data file is read. A date
      * without files holds 0 rows. Empty when the log cannot be read now, or no file of the table has a record count to learn from.
      */
@@ -1202,7 +1202,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     }
 
     /**
-     * The date's vectors for the keys of {@code range} (a VaR shard, DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built): a file whose statistics (the first key column's
+     * The date's vectors for the keys of {@code range} (a VaR shard, HOW_IT_FITS.md#d13-var-sharding-how-it-is-built): a file whose statistics (the first key column's
      * {@code minValues} and {@code maxValues}, its {@code nullCount}) show none of them is not read; the reader checks every row.
      */
     @Override

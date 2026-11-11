@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Who a request acts for, carried into work that outlives it (docs/architecture/adr/016-one-console-many-servers.md › As built).
+"""Who a request acts for, carried into work that outlives it (HOW_IT_FITS.md › As built).
 
 A request's scope lives in context variables the middleware sets: the server it runs against (``servers.CURRENT``), the session's
 pin in a pool of servers (``cluster.SESSION``), the lens (``edition._lens``), the share it was opened through (``collab._share``),

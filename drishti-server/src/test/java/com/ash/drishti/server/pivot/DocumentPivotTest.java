@@ -43,7 +43,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 /**
- * Pivots over entity documents (ARCHITECTURE.md section 26.4) on 400 synthetic trades whose documents hold LEGS (one to three, each with
+ * Pivots over entity documents (HOW_IT_FITS.md section A26.4) on 400 synthetic trades whose documents hold LEGS (one to three, each with
  * an INDEX object and CASH_FLOWS) and EVENTS: every figure at the leg grain equals the same view over the legs flattened in Java (the
  * in-memory provider); a trade's quantity in a leg-grain view is counted once per trade, also in a cell holding one trade with three legs;
  * two separate lists are never crossed; a filter on a list keeps the trades with any (or all) of its elements matching; a path read from

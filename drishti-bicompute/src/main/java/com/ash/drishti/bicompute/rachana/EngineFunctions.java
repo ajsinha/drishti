@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * The pivot engine as Rachana's provider of every aggregate (docs/architecture/ARCHITECTURE.md parts 1 to 3), found by {@link java.util.ServiceLoader}
+ * The pivot engine as Rachana's provider of every aggregate (HOW_IT_FITS.md parts 1 to 3), found by {@link java.util.ServiceLoader}
  * ({@code META-INF/services/com.ash.drishti.rachana.el.FunctionProvider}): the aggregates over a list ({@link ListAggregates}, the same
  * {@code AggFunction}s a pivot cell runs), the grouping behind {@code group(...)} ({@link ListGrouping}), and {@code measure(...)} and
  * {@code cell(...)}, answered by the server's {@link FigureSource} (registered with {@link #figures(FigureSource)}; refused with the
@@ -155,7 +155,7 @@ public final class EngineFunctions implements FunctionProvider {
     }
 
     /**
-     * The functions of a model's measures the engine computes over an answer (docs/architecture/ARCHITECTURE.md §28 2.5, runs E): the filter context,
+     * The functions of a model's measures the engine computes over an answer (HOW_IT_FITS.md §A28 2.5, runs E): the filter context,
      * time intelligence, windows, balances, {@code convert} and {@code ratio}. Their signatures are checked mode's; the one compiler
      * ({@code lang.Compiler}) lowers them. Over a list they are refused in words, except {@code ratio}, which is a division (null on 0).
      */

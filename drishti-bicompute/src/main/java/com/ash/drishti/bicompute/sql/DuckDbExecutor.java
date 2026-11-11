@@ -31,7 +31,7 @@ import org.duckdb.DuckDBAppender;
 import org.duckdb.DuckDBConnection;
 
 /**
- * The node's pivot executor (ARCHITECTURE.md section 26.6): one in-process DuckDB database, a bounded number of connections running at once
+ * The node's pivot executor (HOW_IT_FITS.md section A26.6): one in-process DuckDB database, a bounded number of connections running at once
  * (each a duplicate of the base connection, sharing the database), each statement with its memory limit and threads. Tables staged for a
  * pivot (a source read through its connector, masked for the reader) live in it; a memory-only source is never spilled: the temporary
  * directory is off unless the host names one.

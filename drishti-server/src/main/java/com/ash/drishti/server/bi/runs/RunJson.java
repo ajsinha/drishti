@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The run object of the API (docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 14.3), the contract between the server and the console: every field is
+ * The run object of the API (HOW_IT_FITS.md §A28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 14.3), the contract between the server and the console: every field is
  * always present (null when unknown), fields are never removed, and {@code can} is computed here for the caller so the console never decides
  * rights. No data value is ever written: names, counts, states and the values the reader typed into filters.
  */

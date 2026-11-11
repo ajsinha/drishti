@@ -31,7 +31,7 @@ doc: docs/connectors/types/reactive/README.md
 # The reactive connector
 
 Built-in plugin `reactive` (`drishti-compute/src/main/java/com/ash/drishti/compute/reactive/`, `ReactiveSourcePlugin` and
-`ReactiveConnector`): a connector whose answer is a computation (DATA_ARCHITECTURE.md). Its file names the kinds it computes with
+`ReactiveConnector`): a connector whose answer is a computation (HOW_IT_FITS.md). Its file names the kinds it computes with
 their typed parameters, the inputs it reads, the engine, the triggers, coalescing, the cache and the limits. A pack routes the computed
 kinds to it like any kind; a Sutra panel reads them with `source: { kind, id, params }`.
 
@@ -143,7 +143,7 @@ values, chunk-rows: 20, reduce: { sum: [ROWS, SUM], tables: { total: [PNL] }, th
 ## See also
 
 - Below: [when to use one](#when-to-use-one), [writing the computation](#writing-the-computation), [reading a computed kind](#reading-a-computed-kind), [what happens on a read](#what-happens-on-a-read), [engines](#engines), [triggers](#triggers), [private sandboxes](#private-sandboxes), [the HTTP API](#the-http-api), [isolation](#isolation), [performance](#performance).
-- [Reactive connectors, the design](../../../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors) and [compute workers](../../../guides/BI_GUIDE.md#part-4--the-notebook-and-python).
+- [Reactive connectors, the design](../../../../HOW_IT_FITS.md#d4-reactive-connectors) and [compute workers](../../../guides/BI_GUIDE.md#part-4--the-notebook-and-python).
 - [Operating compute](../../../guides/OPERATIONS_GUIDE.md#15-compute-workers) and [tutorial 19, Part C: computed panels](../../../tutorials/19-build-a-pack-and-a-screen.md#part-c--computed-panels-a-reactive-connector).
 
 ## When to use one

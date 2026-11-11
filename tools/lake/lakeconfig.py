@@ -245,7 +245,7 @@ def cmd_show(a) -> int:
 
 
 def cmd_check(a) -> int:
-    """docs/architecture/DATA_ARCHITECTURE.md section 6: every connector names a known lake; every table on a local disk matches its lake file. Exit 1 on an error."""
+    """HOW_IT_FITS.md section D6: every connector names a known lake; every table on a local disk matches its lake file. Exit 1 on an error."""
     args = ["check", "--connectors", str(_connectors_dir(a).resolve())]
     try:
         out = run(args, pathlib.Path(a.dir) if a.dir else None)

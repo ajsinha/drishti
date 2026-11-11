@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Wave C (2.4.0) acceptance in Chromium over the real server and console (tests/bi_report_stack.py on ports 18961 and 17961, security on, a small file lake:
-and prep-store, a file lake of two business days of 60 synthetic trades in the trading pack's names). docs/architecture/ARCHITECTURE.md §28 section 12.2, Wave C, accepted when:
+and prep-store, a file lake of two business days of 60 synthetic trades in the trading pack's names). HOW_IT_FITS.md §A28 section 12.2, Wave C, accepted when:
 
 (a) **a Transform reading a connector is built step by step with a preview at each step and no YAML typing**: in /bi/transform an author adds the pack kind
     trade read straight through trading-store, then steps from the snippets (filter, group and total) by filling forms; after every step the preview shows

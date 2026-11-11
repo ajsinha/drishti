@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""`drishti.py history KIND ID`: one entity over business days, as the console's history page shows it (DATA_ARCHITECTURE.md › History queries: an entity over time,
+"""`drishti.py history KIND ID`: one entity over business days, as the console's history page shows it (HOW_IT_FITS.md › History queries: an entity over time,
 section 15.3). The server's own answer (GET /api/v1/history/{kind}/{id}) for the caller's token, so masks apply as in the browser.
 
 Text is a table, newest first, a changed cell marked `*`; --json prints the answer; --jsonl writes the table as JSON Lines (a day a

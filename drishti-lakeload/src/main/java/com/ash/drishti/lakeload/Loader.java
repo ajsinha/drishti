@@ -45,7 +45,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Stream;
 
 /**
- * One load, every stage parallel and memory bounded (docs/architecture/DATA_ARCHITECTURE.md):
+ * One load, every stage parallel and memory bounded (HOW_IT_FITS.md):
  *
  * <ol>
  *   <li><b>read</b>: {@code readers} threads take the input's splits ({@link Inputs}); each reads and, for a compressed file,

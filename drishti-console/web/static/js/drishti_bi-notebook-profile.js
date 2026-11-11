@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The Notebook's Profile tab (docs/guides/USER_GUIDE.md › The Notebook; docs/architecture/ARCHITECTURE.md §28 section 11.1, item P3): the extract's profile, worked out by the console
+/* The Notebook's Profile tab (docs/guides/USER_GUIDE.md › The Notebook; HOW_IT_FITS.md §A28 section 11.1, item P3): the extract's profile, worked out by the console
    (POST /bi/notebook/profile, no code of the reader's, over the rows the reader may see) and drawn by the Transform editor's panel (drishti_bi-transform-view.js). The page
    adds nothing up. Asked when the tab opens, again after the extract changes. */
 (function () {

@@ -45,7 +45,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Custom aggregation functions (ARCHITECTURE.md section 26.5): defined in one of four languages, proven by the harness, saved as versions,
+ * Custom aggregation functions (HOW_IT_FITS.md section A26.5): defined in one of four languages, proven by the harness, saved as versions,
  * private to their author until someone else approves them, audited at every step, labelled on every figure, never in an official run.
  *
  * <p>A view uses one as {@code fn:owner/name@version(FIELD, FIELD)}: the fields are bound by position to the function's declared inputs.

@@ -15,7 +15,7 @@
   See the LICENSE file in the root of this repository for the full terms.
 
   A screen mock-up (data-out/B.html), self-contained: system fonts, everything inline, nothing from a CDN.
-  Dark theme by default; open it with #light for the light theme. Its requirement is in docs/architecture/DATA_ARCHITECTURE.md (Q3–Q9, Q11: Admin → Data out).
+  Dark theme by default; open it with #light for the light theme. Its requirement is in HOW_IT_FITS.md (Q3–Q9, Q11: Admin → Data out).
 -->
 <html lang="en">
 <head>
@@ -206,7 +206,7 @@ svg.map .lnp{stroke:var(--warn);stroke-width:2;stroke-dasharray:6 3;fill:none}
 <div class="why"><div class="card"><h3>How it feels</h3><ul><li>The cluster at a glance: a node down and its parts moved to a peer are a picture, not a sentence.</li><li>The selected stream answers "what is this client doing?" completely.</li></ul></div>
 <div class="card"><h3>Trade-offs</h3><ul><li>Gets busy with many streams (group by token beyond ten lines).</li><li>Tokens and limits are a click away.</li><li>A map is hard on a phone: it falls back to the Streams list there.</li></ul></div>
 <div class="card"><h3>Build</h3><ul><li>The most work: an SVG layout and selection.</li><li>Same data as A.</li></ul></div></div>
-<footer>Mock-up. Design, not built: Admin → Data out for the Arrow Flight service (planned, docs/architecture/DATA_ARCHITECTURE.md; the questions' recommendations are drawn as if accepted). Every name, address and number is invented for the picture; addresses are the nodes' real LAN addresses, never localhost. Stop ends a stream with a reason the client sees; Revoke ends the token's streams too. The command word DATAOUT is illustrative. Phone width: cards stack, tables scroll in their frame. Open with #light for the light theme.</footer>
+<footer>Mock-up. Design, not built: Admin → Data out for the Arrow Flight service (planned, HOW_IT_FITS.md; the questions' recommendations are drawn as if accepted). Every name, address and number is invented for the picture; addresses are the nodes' real LAN addresses, never localhost. Stop ends a stream with a reason the client sees; Revoke ends the token's streams too. The command word DATAOUT is illustrative. Phone width: cards stack, tables scroll in their frame. Open with #light for the light theme.</footer>
 </div>
 </body>
 </html>

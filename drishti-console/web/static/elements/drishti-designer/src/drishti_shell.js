@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The designer shell (docs/architecture/SHARED_SCREENS.md section 1; mock-up g7, every option of which the product owner took on 2026-11-07): one frame for
+/* The designer shell (HOW_IT_FITS.md section S1; mock-up g7, every option of which the product owner took on 2026-11-07): one frame for
    every editor and designer, in three layouts of the same panes, each person's choice remembered through the host. "studio" (g7 A, the
    default): the left rail's tabs (the objects with a search, the palette, the outline), the canvas or the editor in the middle with the
    live YAML docked under it, the inspector and the live preview with its checks on the right (Preview shows or hides it), a status bar.

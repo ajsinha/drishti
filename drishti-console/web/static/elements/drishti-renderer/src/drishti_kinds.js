@@ -227,7 +227,7 @@ function tabs(R, p, ref) {
 }
 
 /**
- * The kinds this renderer draws (VIEWMODEL.md section 4): all twenty-two.
+ * The kinds this renderer draws (HOW_IT_FITS.md section V4): all twenty-two.
  * @type {ReadonlyArray<string>}
  */
 export const KINDS = Object.freeze(['kv', 'status', 'provenance', 'table', 'ladder', 'tabs', 'line', 'area', 'hbar', 'surface', 'links', 'markdown',
@@ -257,7 +257,7 @@ export function body(R, p, ref) {
     case 'pivot': return docPivot(document, p.data, tableHooks(R));
     case 'metric': return metric(R, p);
     case 'gauge': return gauge(R, p.data);
-    default:                                       // VIEWMODEL.md section 8: a kind this client does not know is said, never a failed view
+    default:                                       // HOW_IT_FITS.md section V8: a kind this client does not know is said, never a failed view
       return h('p', { class: 'pnl-empty', role: 'status', 'data-r-unknown': str(p.kind) }, icon('question-circle'), ' This panel kind is not supported by this client (' + str(p.kind) + ')');
   }
 }

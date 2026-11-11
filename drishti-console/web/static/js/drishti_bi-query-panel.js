@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The Query panel (docs/architecture/ARCHITECTURE.md §28 sections 3.4, 3.6 and 8.1): the selected visual's question as a model query (MQ, YAML) or as Drishti
+/* The Query panel (HOW_IT_FITS.md §A28 sections 3.4, 3.6 and 8.1): the selected visual's question as a model query (MQ, YAML) or as Drishti
    SQL (DSQL), side by side with one switch. Both are one question and compile to one plan on the server: Run as SQL sends the SQL to /bi/api/sql and says
    whether its plan is the one the visual's query ran (the plan hash, when the server gives one). The SQL text is written here from the model query (a
    printer, not a parser: the console never reads SQL for meaning); the server checks and runs it. Also B.mq.sql for Analyse's starter cells. */

@@ -48,7 +48,7 @@ import org.apache.arrow.vector.types.pojo.FieldType;
 import org.apache.arrow.vector.types.pojo.Schema;
 
 /**
- * {@code form: measure} for VaR (docs/architecture/DATA_ARCHITECTURE.md decided 4 and Q6; VAR_GUIDE.md section 2: the vectors are computed when
+ * {@code form: measure} for VaR (HOW_IT_FITS.md decided 4 and Q6; VAR_GUIDE.md section 2: the vectors are computed when
  * asked, never stored): the engine's own figures through {@link VarService#scoped} as the person (their view, the cache), exactly.
  * <ul>
  *   <li>{@code var.scenarios}: the scope's P&amp;L vector, one row per scenario: {@code SCENARIO} (int64, 0-based), {@code SCENARIO_DATE},

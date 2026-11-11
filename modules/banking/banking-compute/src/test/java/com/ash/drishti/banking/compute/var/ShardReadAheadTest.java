@@ -41,7 +41,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * A contribution table's reads fetched ahead (DATA_ARCHITECTURE.md section 13): {@link VarBook#readAhead} asks each remote shard once for all
+ * A contribution table's reads fetched ahead (HOW_IT_FITS.md section D13): {@link VarBook#readAhead} asks each remote shard once for all
  * the positions and trades of a table, and every vector equals, to the bit, the one read position by position and trade by trade (one
  * remote call each). The synthetic bank (2 legal entities, 6 desks, 1,800 trades) cut into six shards, put together as one member holding
  * every shard and as each of three members holding two shards (the other four reached through an owner): whole positions, parts of

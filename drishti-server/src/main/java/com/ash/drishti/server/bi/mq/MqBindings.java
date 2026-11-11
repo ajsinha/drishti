@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The bindings of {@code mq: 2} (docs/architecture/ARCHITECTURE.md §28 sections 3.3.5 and 3.6), applied before and after a query's local measures:
+ * The bindings of {@code mq: 2} (HOW_IT_FITS.md §A28 sections 3.3.5 and 3.6), applied before and after a query's local measures:
  * <ul>
  * <li><b>field parameters</b>: a field written {@code param.breakdown} is the field the query's {@code params} chose (or the parameter's default); a field
  * parameter whose choices are measures ({@code metric: { kind: field, fields: [MTM, Notional] }}) is named the same way among the measures (2.6.0);</li>

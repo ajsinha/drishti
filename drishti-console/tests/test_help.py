@@ -56,7 +56,7 @@ def test_guides_render_examples_boxes_toc_and_internal_links(client):
     assert 'class="help-box tip"' in client.get("/help/build-guide").text   # its deep-documents section (was NESTED_DOCUMENTS.md) has a tip box
     ref = client.get("/help/rachana-reference").text
     assert "DRS-2101" in ref and "panel kinds" in ref.lower()
-    arch = client.get("/help/docs-architecture-architecture").text
+    arch = client.get("/help/how-it-fits#part-ii--architecture").text
     assert 'href="/help/rachana-reference"' in arch
 
 

@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* The gallery's demo of drishti-renderer 2.0.0: a screen drawn from a ViewModel (the strip, a key-value panel, a table and a note),
-   with no server. The ViewModel is written here (the shape of VIEWMODEL.md); the drawing is the renderer's, with drishti-grid's
+   with no server. The ViewModel is written here (the shape of HOW_IT_FITS.md); the drawing is the renderer's, with drishti-grid's
    document table and drishti-core's element maker. It appears with the library (the gallery shows a demo only when its library is in
    the manifest). */
 (function (root) {

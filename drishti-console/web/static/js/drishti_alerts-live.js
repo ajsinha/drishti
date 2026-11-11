@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Wave B (docs/architecture/ARCHITECTURE.md §28 section 4.6, console task 4): the Alerts page shows each alert's number now, pushed by the server. An alert on a model
+/* Wave B (HOW_IT_FITS.md §A28 section 4.6, console task 4): the Alerts page shows each alert's number now, pushed by the server. An alert on a model
    follows its own model query; an alert on a report visual follows the query that visual runs for you (asked once through the report). The value comes as
    a standing query's `value` delivery over the console's one channel (nothing polls); the chip says Live, Throttled, Every few seconds, Stale or Not
    updating. The alert itself is still judged by the server, on its own trigger: this is what you see while you look. */

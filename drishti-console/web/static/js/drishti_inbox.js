@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The inbox page and the no-access page (ARCHITECTURE.md §31, Inbox): marking notices read (one, all, or by opening one), keeping the bell's
+/* The inbox page and the no-access page (HOW_IT_FITS.md §A31, Inbox): marking notices read (one, all, or by opening one), keeping the bell's
    count right, and the "Switch on <pack>" button of the no-access page. The rows are drawn by the console from the server's answer, so
    what a reader may see is decided there; this file never builds a row. */
 (function () {

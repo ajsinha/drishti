@@ -44,7 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The standing queries grouped by <b>(plan hash, security signature)</b> (docs/architecture/ARCHITECTURE.md §28 section 4.6): every subscriber of a group asks the
+ * The standing queries grouped by <b>(plan hash, security signature)</b> (HOW_IT_FITS.md §A28 section 4.6): every subscriber of a group asks the
  * same question with the same effective security, so one evaluation serves them all. A group is evaluated when the generation bus says its model's data moved
  * (no polling), at most once per its throttle (the shortest of its members'; the latest state wins: notices accumulate while it waits), by its
  * {@link Maintainer}; a full recompute otherwise. Per model, the time spent maintaining is counted per second against {@code maintenance-budget}: past it the

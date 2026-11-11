@@ -38,7 +38,7 @@ This is the one home for the three blocks, the module package, loading, data bin
 built and does not repeat it: the access chain (licence → module → lens → function → permission) and the registry are
 [ACCESS_MODEL.md](ACCESS_MODEL.md); the boundary survey, the dependency rules and the split as built are
 [DOMAIN_MODULES.md](DOMAIN_MODULES.md) (section 16 says what moves from it into this document); the JavaScript libraries are
-[ELEMENTS.md](ELEMENTS.md); the lakes and connectors are [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md); the lenses are [LENSES.md](LENSES.md).
+[ELEMENTS.md](ELEMENTS.md); the lakes and connectors are [../../HOW_IT_FITS.md](../../HOW_IT_FITS.md#part-iii--data-architecture); the lenses are [LENSES.md](LENSES.md).
 
 Worked examples (files, not product code) are in `docs/architecture/kernel-and-modules/examples/` (the banking manifest:
 [module.yaml](kernel-and-modules/examples/banking/module.yaml); the genomics sample module as a Maven project with its own pages:
@@ -263,7 +263,7 @@ for Spring beans, through the module's own child application context (section 4.
 |---|---|
 | Connector plugins (`SourcePlugin`), storage providers, the lake formats | the site's data, credentials and network belong to the site's administrators; one place to secure and audit them (G4) |
 | Identity, RBAC, the licence check, the registry's model | one trust point ([ACCESS_MODEL.md section 2](ACCESS_MODEL.md#2-one-registry-asked-by-every-layer)) |
-| The Python runtime, its lock file and sandbox | one runtime ([ARCHITECTURE.md section 29.1](ARCHITECTURE.md#291-one-python-runtime)) |
+| The Python runtime, its lock file and sandbox | one runtime ([../../HOW_IT_FITS.md section A29.1](../../HOW_IT_FITS.md#a291-one-python-runtime)) |
 | In the Drishti Console, never in a module: the shell, menus, Help centre, search, Drishti Elements and every vendored library | one look, one search, one Help, one controlled set of UI statics (section 11) |
 | The database schema files | no migrations, two complete schema files; modules keep state in files under their data folder or in kinds |
 
@@ -535,7 +535,7 @@ prefix. `ApiAlias` keeps working for one release.
   the locked libraries are shared.
 - **No pip at install time.** `python/requirements.txt` must be satisfied by the kernel's lock file; a module needing a library outside it
   is refused with *needs scipy-stats-x 1.2, not in this site's Python lock: an administrator approves it first*
-  ([ARCHITECTURE.md section 29.6](ARCHITECTURE.md#296-requirements-and-approval)).
+  ([../../HOW_IT_FITS.md section A29.6](../../HOW_IT_FITS.md#a296-requirements-and-approval)).
 - Every run goes through the kernel's one door (`PythonRuns`): same strict sandbox, limits, audit line, the person's row rules on every
   frame. The audit line gains `module`.
 - A module's Python items (BI python visuals, Python measures, its compute packs) are registered by the manifest's `python.items`, shown in

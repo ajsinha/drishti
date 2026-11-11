@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The model layer's pages (docs/architecture/ARCHITECTURE.md §28 › The model layer: the specification of wave W1, section 9; docs/guides/BI_GUIDE.md "Models"): *Start from your data* (the pack-generated
+"""The model layer's pages (HOW_IT_FITS.md §A28 › The model layer: the specification of wave W1, section 9; docs/guides/BI_GUIDE.md "Models"): *Start from your data* (the pack-generated
 datasets and the models), one dataset's page (grain, keys, meanings, time mode), the model designer, and the new-dataset wizard for what a pack does not
 give (a connector query, a Python table, a model's answer, a narrowed pack dataset).
 
@@ -69,7 +69,7 @@ async def dataset_page(request: Request, name: str):
     return _page(request, "bi/layer_dataset.html", "models", item=name)
 
 
-# The model designer and the dataset wizards are gone: tables and models are written in Build › Tables & models (docs/architecture/SHARED_SCREENS.md), one way per job.
+# The model designer and the dataset wizards are gone: tables and models are written in Build › Tables & models (HOW_IT_FITS.md), one way per job.
 # Their old addresses lead there.
 
 @router.get("/bi/md/{item:path}")

@@ -49,7 +49,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * The upkeep of a Delta table that is rewritten in place (the in-memory lake's merges and compactions, docs/architecture/DATA_ARCHITECTURE.md
+ * The upkeep of a Delta table that is rewritten in place (the in-memory lake's merges and compactions, HOW_IT_FITS.md
  * sections 5 and 13a): its rows read back as staged lines, its columns and partition columns, its files measured. Freeing what old versions
  * held is the in-memory lake's own ({@code drishti-memlake}), since only a memory store frees files that way.
  */

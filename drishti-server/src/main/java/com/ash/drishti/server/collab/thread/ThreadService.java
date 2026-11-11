@@ -59,7 +59,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 /**
- * Comment threads on an entity, a panel or a field (ARCHITECTURE.md §31). What is stored is the author's words, a pin (business date,
+ * Comment threads on an entity, a panel or a field (HOW_IT_FITS.md §A31). What is stored is the author's words, a pin (business date,
  * generation) and the ranges that copy a masked field's value; what a reader gets is computed for that reader, when they look
  * ({@link CommentRenderer}). A thread is visible to whoever may open its kind (and a panel's gate kind). Comments are edited within the
  * edit window, retracted by their author, hidden by an administrator; every step is an immutable, hash-chained revision. A mention

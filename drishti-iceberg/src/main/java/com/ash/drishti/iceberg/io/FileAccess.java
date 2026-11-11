@@ -134,7 +134,7 @@ public final class FileAccess implements AutoCloseable {
             return s3();
         }
         if (com.ash.drishti.lakeio.StorageProviders.supports(path)) {
-            return com.ash.drishti.lakeio.StorageProviders.storage(path);    // mem://, a warehouse in memory (docs/architecture/DATA_ARCHITECTURE.md section 7)
+            return com.ash.drishti.lakeio.StorageProviders.storage(path);    // mem://, a warehouse in memory (HOW_IT_FITS.md section D7)
         }
         throw new UnsupportedOperationException("drishti-iceberg reads local disk, S3 (s3://, s3a://) and memory (mem://), not " + scheme
                 + "://");

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Share with a note, the console (ARCHITECTURE.md §31, build step 3): the dialog's calls, the link a share opens, the clean no-access page,
+"""Share with a note, the console (HOW_IT_FITS.md §A31, build step 3): the dialog's calls, the link a share opens, the clean no-access page,
 the as-shared banner and the header that tells the server a view came through a share."""
 import sys
 from pathlib import Path

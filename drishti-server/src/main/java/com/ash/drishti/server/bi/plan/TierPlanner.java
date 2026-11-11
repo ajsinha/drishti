@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 /**
- * Stage 7 of the pipeline (docs/architecture/ARCHITECTURE.md §28 sections 4.1 and 4.3): every node of the optimised plan is placed on a tier. A scan of a
+ * Stage 7 of the pipeline (HOW_IT_FITS.md §A28 sections 4.1 and 4.3): every node of the optimised plan is placed on a tier. A scan of a
  * {@code direct} table whose connector is a SQL store runs at the <b>source</b>, and so does an aggregate (with its filters and semi-joins) whose every
  * scan is in that one store and whose connector aggregates (its capability descriptor says so); the {@code Py*} nodes run on the server's <b>python</b> compute pool;
  * everything else (layer and rollup reads, live tables, contexts, meets, windows, totals, masks) on the <b>Java</b> tier. The browser draws. The placement is

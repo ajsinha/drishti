@@ -51,7 +51,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.mail.javamail.JavaMailSender;
 
-/** The collaboration services (ARCHITECTURE.md §31): sharing with a note, the directory, the inbox and its live hub. */
+/** The collaboration services (HOW_IT_FITS.md §A31): sharing with a note, the directory, the inbox and its live hub. */
 @Configuration(proxyBeanMethods = false)
 public class CollabConfiguration {
 

@@ -204,7 +204,7 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
     }
 
     /**
-     * One entity over business dates (DATA_ARCHITECTURE.md › History queries: an entity over time, section 9.3): the kind's dated connectors in read order, each asked for the dates
+     * One entity over business dates (HOW_IT_FITS.md › History queries: an entity over time, section 9.3): the kind's dated connectors in read order, each asked for the dates
      * no earlier one holds or covers, then the Drishti*net peers for the rest. A {@code knownAt} put to a dated store without time travel
      * fails with {@code DRS-1007}.
      */
@@ -1009,7 +1009,7 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
      */
     /**
      * The kind's data files on a date when one source holds the whole kind and can hand them over (the pivot engine's direct lake route,
-     * docs/architecture/ARCHITECTURE.md section 26.4); empty otherwise. Reads no data file.
+     * HOW_IT_FITS.md section A26.4); empty otherwise. Reads no data file.
      */
     public Optional<com.ash.drishti.api.LakeFiles> lakeFiles(String kind, AsOf asOf) {
         List<SourcePlugin> sources = wholeKindSources(kind, asOf);
@@ -1239,7 +1239,7 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
     }
 
     /**
-     * The same, for the rows whose key is in {@code range} (a VaR shard, DATA_ARCHITECTURE.md section 13; null: the whole date): the source may skip the
+     * The same, for the rows whose key is in {@code range} (a VaR shard, HOW_IT_FITS.md section D13; null: the whole date): the source may skip the
      * files its statistics show hold none; the caller checks every row it is given.
      */
     public boolean vectors(String kind, String column, List<String> texts, AsOf asOf, com.ash.drishti.api.KeyRange range,
@@ -1253,7 +1253,7 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
         return false;
     }
 
-    /** Column batches of the kind over a date range from the first source in routing order that answers as columns (ARCHITECTURE.md §28 6.1). */
+    /** Column batches of the kind over a date range from the first source in routing order that answers as columns (HOW_IT_FITS.md §A28 6.1). */
     public Optional<com.ash.drishti.api.ArrowScan> scan(com.ash.drishti.api.ScanRequest request) throws Exception {
         for (SourcePlugin p : candidates(request.kind())) {
             Optional<com.ash.drishti.api.ArrowScan> s = p.scan(request);

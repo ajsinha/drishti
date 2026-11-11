@@ -161,7 +161,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
         registry.onChange(changed -> layouts.invalidateAll());
     }
 
-    /** The table layer's reads for panels whose source is a virtual table (docs/architecture/ARCHITECTURE.md V13); the server sets it once at start. */
+    /** The table layer's reads for panels whose source is a virtual table (HOW_IT_FITS.md V13); the server sets it once at start. */
     public void tables(com.ash.drishti.engine.wire.TableRows rows) {
         wire.tables(rows);
     }

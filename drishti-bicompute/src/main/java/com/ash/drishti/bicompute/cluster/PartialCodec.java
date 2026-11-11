@@ -31,7 +31,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * Plans and partial states as JSON-ready maps (ARCHITECTURE.md section 26.6): what a coordinator sends a node (the plan: source, date, filters,
+ * Plans and partial states as JSON-ready maps (HOW_IT_FITS.md section A26.6): what a coordinator sends a node (the plan: source, date, filters,
  * dimensions, functions by their canonical text, cell sets, the node's shard or parts) and what the node answers (per set, per cell key, the
  * members and each function's state in its own codec, base64). The node parses the functions again on its own provider, so it applies its
  * entitlements and masks for the same person before any aggregation; nothing but states crosses.

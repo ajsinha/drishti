@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Excel-style column filters (ARCHITECTURE.md §28 8.1). Every column heading of a table, matrix (tree rows) or pivot grows a funnel
+/* Excel-style column filters (HOW_IT_FITS.md §A28 8.1). Every column heading of a table, matrix (tree rows) or pivot grows a funnel
    button; its menu sorts, lists the column's distinct values with counts (search, Select all, Blanks) or filters by a
    condition for the column's detected type (numbers, dates, text). Filters combine across columns (AND). "Above / below average"
    compares with the server's average of the column (the pivot engine's avg, POST /api/pivot/inline): this file computes no figure.
@@ -76,7 +76,7 @@
   function opInfo(type, op) { var l = OPS[type] || OPS.text; for (var i = 0; i < l.length; i++) { if (l[i][0] === op) { return l[i]; } } return null; }
   function num(s) { return s == null ? NaN : (function (v) { return v.n == null ? NaN : v.n; })(value(norm(s))); }
 
-  /* "Above / below average": the average is the server's (docs/architecture/ARCHITECTURE.md section 5: the browser computes no figure). The column's
+  /* "Above / below average": the average is the server's (HOW_IT_FITS.md section A5: the browser computes no figure). The column's
      numbers go to the pivot engine (POST /api/pivot/inline, avg(V)); its answer is kept per list of numbers (the last AVG_KEEP lists), so
      a redraw asks nothing. Until it answers no row is hidden; refused, no row matches and the reason is kept (api.averageProblem). */
   var AVG = {}, AVG_ORDER = [], AVG_KEEP = 50;

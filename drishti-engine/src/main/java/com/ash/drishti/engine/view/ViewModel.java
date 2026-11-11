@@ -38,7 +38,7 @@ import java.util.Map;
  * @param phone what the Sutra says about the phone (docs/guides/BUILD_GUIDE.md section 5): {@code panels: {id: {tier, from, rows, columns, sort,
  *     series, figures, tab}}}, {@code order}, {@code default} and the {@code summary} line read against the document; null when it says
  *     nothing (the console then uses each panel kind's default tier)
- * @param contract the ViewModel contract this view speaks, {@code major.minor} ({@link #CONTRACT}; VIEWMODEL.md section 8): a client
+ * @param contract the ViewModel contract this view speaks, {@code major.minor} ({@link #CONTRACT}; HOW_IT_FITS.md section V8): a client
  *     refuses a major it does not know (the renderer's {@code DRS-9105}) and ignores what a newer minor adds
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -57,7 +57,7 @@ public record ViewModel(
         String contract,
         @JsonInclude(JsonInclude.Include.NON_EMPTY) Map<String, Object> phone) {
 
-    /** The contract every ViewModel this server builds speaks (VIEWMODEL.md section 8): the minor moves for additions, the major for a break. */
+    /** The contract every ViewModel this server builds speaks (HOW_IT_FITS.md section V8): the minor moves for additions, the major for a break. */
     public static final String CONTRACT = "1.0";
 
     /** A view with its contract and no phone settings. */
@@ -305,7 +305,7 @@ public record ViewModel(
     public record PanelProvenance(String source, String kind, String fetchedAt, String updatedAt, String staleAfter, boolean stale) {}
 
     /**
-     * The state of a panel whose source is a computed kind (DATA_ARCHITECTURE.md › Reactive connectors, section 12.4): never a blank panel. The console draws
+     * The state of a panel whose source is a computed kind (HOW_IT_FITS.md › Reactive connectors, section 12.4): never a blank panel. The console draws
      * the result when there is one (dimmed while {@code computing}, amber when {@code stale}), the progress, and the message in words
      * ({@code failed}, {@code refused}); it listens to {@code requestId} on the live channel for progress and for the result when it lands.
      *
@@ -339,7 +339,7 @@ public record ViewModel(
             this(id, kind, title, code, key, area, inferred, explanation, data, error, empty, span, height, denied, wire, refresh, form, provenance, null);
         }
 
-        /** The same panel with the state of its computed source (DATA_ARCHITECTURE.md › Reactive connectors, section 12.4), or none (null). */
+        /** The same panel with the state of its computed source (HOW_IT_FITS.md › Reactive connectors, section 12.4), or none (null). */
         public PanelView withCompute(PanelCompute next) {
             return new PanelView(id, kind, title, code, key, area, inferred, explanation, data, error, empty, span, height, denied, wire, refresh, form, provenance, next);
         }

@@ -43,7 +43,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 /**
- * Custom functions (ARCHITECTURE.md section 26.5): saved only when the harness passes, versions, private until someone other than
+ * Custom functions (HOW_IT_FITS.md section A26.5): saved only when the harness passes, versions, private until someone other than
  * the author approves them, withdrawn in the cell, never in an official run, a macro rewritten into states when it is a formula, and a
  * function without an SQL form fed in batches by the tabular provider with the same figures as SQL.
  */

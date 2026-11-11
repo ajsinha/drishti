@@ -32,7 +32,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /**
- * The browser computes nothing (2.9.11.b, docs/architecture/ARCHITECTURE.md section 5): the figures the console used to add up itself are the pivot engine's,
+ * The browser computes nothing (2.9.11.b, HOW_IT_FITS.md section A5): the figures the console used to add up itself are the pivot engine's,
  * asked through {@code POST /api/v1/pivot/inline} (drishti-console/core/engine_figures.py) with the rows the console read. Each case here
  * runs the very path the endpoint runs (a {@link RowsProvider} of the rows, {@link PivotCore} with the default settings) on the console
  * tests' fixtures and proves the engine gives the figures the console showed before: the trading landing's MTM, P&amp;L, DV01, by book and

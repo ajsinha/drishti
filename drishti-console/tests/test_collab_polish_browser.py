@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Console polish in a real browser, against a real server with sign-in on (ARCHITECTURE.md §31, Console polish): the share dialog's "also start a
+"""Console polish in a real browser, against a real server with sign-in on (HOW_IT_FITS.md §A31, Console polish): the share dialog's "also start a
 discussion" tick, the reply box on a shared view, and Admin > Collaboration (moderation by keyboard, holds, export and verify for a compliance
 role, retention dry run, bridges), with times in the top bar's zone.
 

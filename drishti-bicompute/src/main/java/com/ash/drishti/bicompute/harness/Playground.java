@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * The custom-function playground's computation (ARCHITECTURE.md section 26.5): the sample cut into parts in row order, the state after each
+ * The custom-function playground's computation (HOW_IT_FITS.md section A26.5): the sample cut into parts in row order, the state after each
  * part and after each merge (as the engine keeps it, its bytes and size), the final figure beside the one-pass figure, the cost projected on
  * a real table, and the function tried in a little pivot of the sample (by a group column the author picks), with its total made from the
  * groups' states, never from their figures.

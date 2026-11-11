@@ -23,7 +23,7 @@ import java.util.Locale;
 import java.util.function.Function;
 
 /**
- * Writes a Drishti SQL expression as Rachana (docs/architecture/ARCHITECTURE.md §28 section 3.4: "date/text functions mapped to DEL"): an inline aggregate of a
+ * Writes a Drishti SQL expression as Rachana (HOW_IT_FITS.md §A28 section 3.4: "date/text functions mapped to DEL"): an inline aggregate of a
  * {@code SELECT} becomes a local measure of the model query in Rachana, so it is checked, secured and compiled like any measure. {@code SUM(x)} is
  * {@code sum(x)}, {@code COUNT(*)} is {@code count(fact)}, {@code COUNT(DISTINCT x)} is {@code distinct(x)}, {@code PERCENTILE_CONT(p) WITHIN GROUP (ORDER BY
  * x)} is {@code percentile(x, p)}, {@code CASE WHEN c THEN a ELSE b END} is {@code c ? a : b}, {@code MEASURE('m')} is {@code measure('m')}, {@code =} is

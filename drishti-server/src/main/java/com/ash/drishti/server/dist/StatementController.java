@@ -42,7 +42,7 @@ public class StatementController {
     private final AuditLog audit;
     private final org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.runs.RunSources> runs;
 
-    /** With BI runs: {@code Prefer: respond-async} answers as {@code POST /api/v1/bi/runs} does (docs/architecture/ARCHITECTURE.md §28 14.1); without it, as before. */
+    /** With BI runs: {@code Prefer: respond-async} answers as {@code POST /api/v1/bi/runs} does (HOW_IT_FITS.md §A28 14.1); without it, as before. */
     @org.springframework.beans.factory.annotation.Autowired
     public StatementController(StatementService statements, AuditLog audit,
             org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.runs.RunSources> runs) {

@@ -185,8 +185,8 @@ engines:
   us-equities-groupings: "the [Groupings and analytics guide](docs/guides/BI_GUIDE.md)"
   macro-groupings: "the [Groupings and analytics guide](docs/guides/BI_GUIDE.md)"
   trade-pages: "the derived connector's settings in the trading pack's pack.yaml (`trade-pages`)"
-  path-sum-python: "the [reactive connectors](../../../../../docs/architecture/DATA_ARCHITECTURE.md#4-reactive-connectors)"
-  path-sum-java: "the [reactive connectors](../../../../../docs/architecture/DATA_ARCHITECTURE.md#4-reactive-connectors)"
+  path-sum-python: "the [reactive connectors](HOW_IT_FITS.md#d4-reactive-connectors)"
+  path-sum-java: "the [reactive connectors](HOW_IT_FITS.md#d4-reactive-connectors)"
 
 # Each pack: the default origin of its stored kinds and the kinds that differ. An entry is {generator: id} or {external: [ids]};
 # `live` names the external sources a connector reads live when switched on (off as shipped), next to the committed data.

@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Keeps one standing query's answer current from the changes of its model's live tables (docs/architecture/ARCHITECTURE.md §28 section 4.6), by the rule
+ * Keeps one standing query's answer current from the changes of its model's live tables (HOW_IT_FITS.md §A28 section 4.6), by the rule
  * {@link Incremental#classify} gives for the changed table: by difference (no query), the touched groups asked again ({@code field in [values]} added to the
  * question: the engine applies the reader's security), or the whole question asked again (contexts, fields of other tables), or on the tick (windows, time
  * intelligence, Python). It answers the rows as {@link MqService#answer} writes them (the fields, then the measures). Not thread-safe: its standing query

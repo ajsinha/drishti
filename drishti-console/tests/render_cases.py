@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The ViewModels the renderer's parity suite draws two ways (EMBED_GUIDE.md section 14): the captured views under fixtures/,
-and the edge cases of VIEWMODEL.md built on the all-panels showcase (every kind, every empty, denied, error, waits and computed state,
+and the edge cases of HOW_IT_FITS.md built on the all-panels showcase (every kind, every empty, denied, error, waits and computed state,
 masks, banners, links of every sort, both layouts). Not a test module: ``test_render_parity_browser.py`` imports it."""
 from __future__ import annotations
 
@@ -106,7 +106,7 @@ def links_and_tones() -> dict:
 
 
 def masked() -> dict:
-    """A masked view (VIEWMODEL.md section 6): the strip, a gauge and a metric read •••, banners for a partial page and a late source."""
+    """A masked view (HOW_IT_FITS.md section V6): the strip, a gauge and a metric read •••, banners for a partial page and a late source."""
     vm = showcase()
     for c in vm["strip"]:
         if c["label"].startswith(("Notional", "MTM")):

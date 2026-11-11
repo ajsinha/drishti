@@ -25,8 +25,8 @@ Every class, path and command here exists in the repository; the recipes follow 
 Every endpoint, with its parameters and a captured answer, and every error code are in [API_REFERENCE.md](API_REFERENCE.md).
 
 If you only want to run Drishti, read [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine); to run it from IntelliJ IDEA and PyCharm, read
-[OPERATIONS_GUIDE.md (IDE)](OPERATIONS_GUIDE.md#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm). For the design and its reasons, read [ARCHITECTURE.md](../architecture/ARCHITECTURE.md), the BI model
-architecture [ARCHITECTURE.md section 28](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer) and the [decision records](../architecture/adr/README.md).
+[OPERATIONS_GUIDE.md (IDE)](OPERATIONS_GUIDE.md#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm). For the design and its reasons, read [HOW_IT_FITS.md](../../HOW_IT_FITS.md#part-ii--architecture), the BI model
+architecture [HOW_IT_FITS.md section A28](../../HOW_IT_FITS.md#a28-business-intelligence-on-the-table-layer) and the [decision records](../../HOW_IT_FITS.md#part-vi--decisions).
 
 The API references are at **Help → Developer**, generated from the code: the Javadoc of the [plugin and connector SPI](/help/reference/latest/java/drishti-api/index.html) and the [shard machinery](/help/reference/latest/java/drishti-compute/index.html) with [`ShardedMeasure`](/help/reference/latest/java/drishti-server/com/ash/drishti/server/shard/ShardedMeasure.html), and the Python references of the [compute worker SDK](/help/reference/latest/python/drishti_compute/engine.html), [BI Python items](/help/reference/latest/python/core/python_items.html), [`drishti.py`](/help/reference/latest/python/drishti.html) and [`drishti_client`](/help/reference/latest/python/drishti_client.html), the pack generator helpers ([`readme`](/help/reference/latest/python/readme.html), [`packsamples`](/help/reference/latest/python/packsamples.html), [`upper`](/help/reference/latest/python/upper.html), [`walks`](/help/reference/latest/python/walks.html)) and the test-data helpers ([`samplegen`](/help/reference/latest/python/samplegen/dates.html)). What you add to these surfaces is documented as you write it: the drill fails on a public Java member without a comment, a broken `{@link}`, or a public Python function without a docstring and type hints (`python3 tools/api_docs.py check`; [Tools](CLI_REFERENCE.md#api-references)).
 
@@ -51,7 +51,7 @@ Drishti has two programs. The **server** is one Spring Boot 3.5 application on J
 (`drishti-server`), built from a Maven reactor of internal modules; it reads every source, lays out every screen, answers every BI
 question and pushes every live change. The **console** is a FastAPI and Jinja2 web application in `drishti-console/` that renders the
 server's JSON; the browser draws what it is sent and computes no number of its own (the BI rule *the servers compute, the browser
-draws*, [ARCHITECTURE.md section 28](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer)). Industries are **packs** (`config/packs/`),
+draws*, [HOW_IT_FITS.md section A28](../../HOW_IT_FITS.md#a28-business-intelligence-on-the-table-layer)). Industries are **packs** (`config/packs/`),
 which are content and configuration, not code: seven ship (`core`, `market-data`, `trading`, `counterparty-risk`, `market-risk`,
 `world-economy`, `news-and-markets`), every attribute of their documents in UPPER_SNAKE.
 
@@ -76,8 +76,8 @@ All Java code lives under the package `com.ash.drishti`. The parent POM (`pom.xm
 | `drishti-lakeio` | `lakeio` | Lake file access shared by the native Delta and Iceberg engines, no Hadoop: `Storage` (local disk through `java.nio`, Windows drive letters, backslashes and UNC shares included; S3 through the AWS SDK, with conditional PUTs for commits), byte ranges, Parquet page codecs (`NativeCodecs`, reading and writing) and the per-file Parquet footer cache. Other schemes come from a `StorageProvider` another module registers (`mem://`, the in-memory lake): the engines ask `StorageProviders` and never name that module. | `Storage`, `LocalStorage`, `S3Storage`, `LocalPaths`, `NativeCodecs`, `ParquetFooters`, `StorageProvider`, `StorageProviders` |
 | `drishti-iceberg` | `iceberg` | Drishti's own Apache Iceberg engine without Hadoop, on `drishti-lakeio`: metadata JSON kept whole, path-based, metadata-file and REST catalogs (JDK HTTP client, OAuth2, ETag, vended credentials, SigV4), Avro manifests, planning with partition and metric pruning, field-id Parquet reads with schema evolution and deletes, the Parquet writer with Iceberg metrics, safe commits and the table operations. Its tests prove the writer loads no Hadoop `Configuration`. | `Table`, `catalog.Catalogs`, `scan.Planner`, `read.TaskReader`, `write.Operations`, `write.ParquetDataWriter` |
 | `drishti-deltalake` | `deltalake` | A Delta Kernel engine without Hadoop on `drishti-lakeio` (local disk, Windows paths included, and S3; Parquet through parquet-java with the shared input files and codecs); and Drishti's own Delta writer (`lake build --engine drishti`). Its tests prove in an isolated class loader that no Hadoop `FileSystem`, `Shell` or `Configuration` loads. | `NativeEngine`, `write.LakeManifest` |
-| `drishti-memlake` | `memlake` | The in-memory lake, plain Java with no Spring ([IN_MEMORY_LAKE.md](../architecture/DATA_ARCHITECTURE.md#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk)): the `mem://` memory stores (Parquet files in off-heap chunks under a hard cap; registered with `drishti-lakeio` as the `mem` storage provider), the tables and their replenish jobs, the eviction ladder, automated compaction, the owner node's binding, the never-on-disk guard and the host checks. The server keeps only its Spring wiring (`server.memlake`: settings binding, beans, the Admin, Lakes controller). | `MemoryLake`, `MemoryLakeSettings`, `Retention`, `MemoryBinding`, `store.MemoryStores`, `store.MemoryStorage` |
-| `drishti-lakeload` | `lakeload` | The parallel lake loader: JSON Lines from a folder or S3 into Delta or Iceberg, readers, parsers and writers on every core, memory bounded by `memory.budget-mb` (sorted runs spilled to disk), one commit per business date ([PARALLEL_LOADER.md](../architecture/DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-drishti-lakeload)). | `LakeLoad`, `Loader`, `RowParser`, `Runs`, `DeltaTarget`, `IcebergTarget` |
+| `drishti-memlake` | `memlake` | The in-memory lake, plain Java with no Spring ([IN_MEMORY_LAKE.md](../../HOW_IT_FITS.md#d9-the-in-memory-lake-delta-tables-that-never-touch-a-disk)): the `mem://` memory stores (Parquet files in off-heap chunks under a hard cap; registered with `drishti-lakeio` as the `mem` storage provider), the tables and their replenish jobs, the eviction ladder, automated compaction, the owner node's binding, the never-on-disk guard and the host checks. The server keeps only its Spring wiring (`server.memlake`: settings binding, beans, the Admin, Lakes controller). | `MemoryLake`, `MemoryLakeSettings`, `Retention`, `MemoryBinding`, `store.MemoryStores`, `store.MemoryStorage` |
+| `drishti-lakeload` | `lakeload` | The parallel lake loader: JSON Lines from a folder or S3 into Delta or Iceberg, readers, parsers and writers on every core, memory bounded by `memory.budget-mb` (sorted runs spilled to disk), one commit per business date ([PARALLEL_LOADER.md](../../HOW_IT_FITS.md#d10-the-parallel-lake-loader-drishti-lakeload)). | `LakeLoad`, `Loader`, `RowParser`, `Runs`, `DeltaTarget`, `IcebergTarget` |
 | `drishti-testkit` | `testkit` | Contract tests every source plugin of a kind must pass. | `DatedSourceContract`, `MessageSourceContract`, `BrokerOutage` |
 | `drishti-module-runtime` | `module.runtime` | The module runtime ([§1.5](#15-the-module-runtime)): the `.dmod` package and its hash list, the manifest, verification V1–V8, discovery, the dependency resolver, a class loader and a child Spring context per module, the live route table, the registry of contributions and the unload sequence with its leak check; and the module tool ([§1.6](#16-the-module-sdk): `module.tool`, the one packer and the conformance checks, `target/drishti-module-tool.jar`). Spring and Jackson only; one implementation for the kernel and, from i4, the console. | `ModuleRuntime`, `tool.ModuleTool`, `tool.ModuleConformance`, `DmodManifest`, `Dmod`, `ModuleVerifier`, `DependencyResolver`, `ModuleClassLoader`, `RouteTable`, `Contributions`, `LeakCheck` |
 | `drishti-sdk/drishti-module-maven-plugin`, `-archetype`, `-parent` | `sdk` | The Module SDK ([§1.6](#16-the-module-sdk)): the archetype of a module project, the parent it inherits, and the plugin that validates, packs the `.dmod` and runs the conformance checks C1–C15. | `ValidateMojo`, `AssembleMojo`, `ConformanceMojo` (over `module.tool`) |
@@ -466,7 +466,7 @@ kernel with it alone ([DISTRIBUTIONS.md section 4](../architecture/DISTRIBUTIONS
 
 | Tool | Version | Notes |
 |---|---|---|
-| JDK | 21 or newer (any vendor; Java 21 is the production target) | The enforcer rule in `pom.xml` (`requireJavaVersion [21,)`) stops an older Java with `Drishti needs Java 21 or newer (any vendor; production runs Java 21). Maven is running on Java …` The bytecode targets 21 (`maven.compiler.release`), so one jar runs on 21 and 25; `.java-version` says `25`, the version to develop on. On Java 25 run the server with `-XX:+UseCompactObjectHeaders` (about 10% less heap); Java 21 has no such flag and refuses to start with it. Java 21 pins a virtual thread's carrier while it blocks inside `synchronized`, so main code uses a `ReentrantLock` for anything that does I/O (`NoBlockingUnderSynchronizedTest` enforces it; see [CLUSTER_GUIDE.md](../architecture/ARCHITECTURE.md#14-concurrency-and-performance)). |
+| JDK | 21 or newer (any vendor; Java 21 is the production target) | The enforcer rule in `pom.xml` (`requireJavaVersion [21,)`) stops an older Java with `Drishti needs Java 21 or newer (any vendor; production runs Java 21). Maven is running on Java …` The bytecode targets 21 (`maven.compiler.release`), so one jar runs on 21 and 25; `.java-version` says `25`, the version to develop on. On Java 25 run the server with `-XX:+UseCompactObjectHeaders` (about 10% less heap); Java 21 has no such flag and refuses to start with it. Java 21 pins a virtual thread's carrier while it blocks inside `synchronized`, so main code uses a `ReentrantLock` for anything that does I/O (`NoBlockingUnderSynchronizedTest` enforces it; see [CLUSTER_GUIDE.md](../../HOW_IT_FITS.md#a14-concurrency-and-performance)). |
 | Python | 3.13 ([the minimum and why](OPERATIONS_GUIDE.md#21-prerequisites)) | The console and the tools. CI uses 3.13. |
 | uv | any recent | Creates the console's environment (`uv venv --python 3.13`), which works where the system Python has no `ensurepip` (Debian and Ubuntu without `python3.X-venv`); runs some tools with `uv run --with …` so nothing is installed globally. |
 | Docker | optional | Only for the Testcontainers tests (PostgreSQL, Aerospike, Cassandra, ScyllaDB, ActiveMQ, RabbitMQ, MinIO) and `deploy/docker/compose.yaml`. |
@@ -916,12 +916,12 @@ and its live push.
 | 6 | `engine.live.ViewStream`, `PatchDiffer` | On a tick, the view is rebuilt (`ViewPipeline.build`) and `PatchDiffer.diff(before, after)` produces `Patch`es; they travel as a `Frame`. A deletion (`EntityDocument.deleted()`) is sent as one `deleted` patch instead, and nothing is rebuilt until the entity comes back (`restored`). |
 | 7 | `drishti_live.js` | Applies the patches in place: strip cells get new text and tone, panels are swapped for the server-rendered HTML, charts move to new data, and changed values flash. A `deleted` patch greys the view under a "deleted at" banner. |
 
-[DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#1-live-updates) has the details: frames, coalescing, reconnects and the latency metrics.
+[HOW_IT_FITS.md](../../HOW_IT_FITS.md#d1-live-updates) has the details: frames, coalescing, reconnects and the latency metrics.
 
 ### 4.4 A BI question: model query, DEL and SQL
 
 The BI engine lives in `drishti-server` under `server.bi` and follows the model architecture of
-[ARCHITECTURE.md section 28](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer): **datasets** (one governed table each, every pack kind publishing
+[HOW_IT_FITS.md section A28](../../HOW_IT_FITS.md#a28-business-intelligence-on-the-table-layer): **datasets** (one governed table each, every pack kind publishing
 one automatically, `bi.layer.PackDatasets`), **data models** (datasets in a star, relationships, measures written in **DEL**, the
 Drishti Expression Language, [RACHANA_REFERENCE.md › Rachana-EL expressions](RACHANA_REFERENCE.md#rachana-el-expressions)), and **consumers** (reports, boards, notebooks, alerts, subscriptions,
 exports, embeds, AI) each bound to one model. Every consumer asks a model the same way: a **model query** (MQ), a versioned JSON or YAML
@@ -1109,7 +1109,7 @@ in §1.2 and in `README.md`.
 **Goal:** `round(x, digits?)` rounds half up: `round(2.345, 2)` is `2.35`.
 
 Adding a function changes the grammar: record it as an amendment to
-[ADR-003](../architecture/adr/003-sutra-is-yaml-with-a-closed-expression-language.md). Functions must stay pure, total (odd input gives
+[ADR-003](../../HOW_IT_FITS.md#adr-003). Functions must stay pure, total (odd input gives
 `null`, never an exception) and cheap. (Rachana-EL lays out views; BI measures are written in DEL, which has its own catalogue,
 `bi.expr.FunctionCatalog`, and its own guide, [RACHANA_REFERENCE.md › Rachana-EL expressions](RACHANA_REFERENCE.md#rachana-el-expressions).)
 
@@ -1635,7 +1635,7 @@ search, keyboard, URL, phone), `test_controls_browser.py`, `test_embed_controls_
 ### 5.10 Write a view enhancer (the `init(root)` contract)
 
 A script that makes a rendered view interactive (sorting, charts, popovers) must work on the console's page and inside a
-`<drishti-view>` Shadow DOM, from one copy of the code ([ARCHITECTURE.md section 30](../architecture/ARCHITECTURE.md)). The contract:
+`<drishti-view>` Shadow DOM, from one copy of the code ([HOW_IT_FITS.md section A30](../../HOW_IT_FITS.md#part-ii--architecture)). The contract:
 
 - Wrap the code in `function init(root, options)`; `root` is `document` or a `ShadowRoot`. Query with `root.querySelector*` and
   `root.getElementById`, never `document.*` for view content; use `root.activeElement` and `root.elementFromPoint`.
@@ -2465,7 +2465,7 @@ removed by id). It must be cheap.
 
 #### Bulk reads for BI: `scan` and `sqlTarget`
 
-The BI engine ([ARCHITECTURE.md section 28](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer)) reads **whole tables** through the same connectors, by their logical names. Two **optional** methods say how, both default to "no":
+The BI engine ([HOW_IT_FITS.md section A28](../../HOW_IT_FITS.md#a28-business-intelligence-on-the-table-layer)) reads **whole tables** through the same connectors, by their logical names. Two **optional** methods say how, both default to "no":
 
 ```java
 default Optional<ArrowScan> scan(ScanRequest request) throws Exception      // columns of a kind over a date range, as column batches
@@ -2488,7 +2488,7 @@ Test it as the engine does: [`ColumnScansTest`](../../drishti-api/src/test/java/
 
 #### `history(request)` and `days(ref, from, to)`: one entity over business dates
 
-`TRD 1000015 30` (history queries, [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)) reads one entity on many business dates.
+`TRD 1000015 30` (history queries, [HOW_IT_FITS.md](../../HOW_IT_FITS.md#d2-history-queries-an-entity-over-time)) reads one entity on many business dates.
 
 ```java
 default HistoryRead history(HistoryRequest request) throws Exception     // the entity on each date it holds, oldest first
@@ -3029,7 +3029,7 @@ This chapter is for anyone who calls the Drishti server directly: to script a re
 see what the console does behind the scenes. It covers what you need before the first call, tokens and clients, authentication,
 the business date, errors and Arrow answers. Every endpoint, grouped by what it is for, with a `curl` command you can paste and an
 abbreviated copy of a real answer, is in [API_REFERENCE.md](API_REFERENCE.md). Live streaming in depth is in
-[DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#1-live-updates); users, roles and sign-in in
+[HOW_IT_FITS.md](../../HOW_IT_FITS.md#d1-live-updates); users, roles and sign-in in
 [ADMIN_GUIDE.md](ADMIN_GUIDE.md).
 
 ### 11.1 Before you start

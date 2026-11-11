@@ -39,7 +39,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Share with a note (docs/architecture/ARCHITECTURE.md §31): send a note and a pinned link to people and roles, open a share, list the
+ * Share with a note (HOW_IT_FITS.md §A31): send a note and a pinned link to people and roles, open a share, list the
  * caller's shares. Personal API tokens read only (they cannot send). Collaboration off is {@code 403 DRS-7004}.
  */
 @RestController

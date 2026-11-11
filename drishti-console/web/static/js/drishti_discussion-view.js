@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Drawing a discussion (ARCHITECTURE.md §31, Discussion): threads and comments as DOM, from the server's JSON, for the Discussion tab of the
+/* Drawing a discussion (HOW_IT_FITS.md §A31, Discussion): threads and comments as DOM, from the server's JSON, for the Discussion tab of the
    side drawer (drishti_discussion.js). Everything the server sent is put in with textContent: a comment's text arrives already scrubbed for THIS
    reader (masked values as •••, {$.path} quotes filled from their view), and nothing here can turn it into markup. Buttons carry data-act;
    drishti_discussion.js handles them in one delegated listener. Drishti.ThreadView.thread(t, ctx) / .comment(c, t, ctx); ctx = {me, admin, pageGen, pageAsOf}. */

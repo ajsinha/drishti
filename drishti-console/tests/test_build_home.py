@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Build home (2.9.11.e; docs/architecture/SHARED_SCREENS.md section 1): the rail grouped Data · Screens · Analysis · Work with
+"""The Build home (2.9.11.e; HOW_IT_FITS.md section S1): the rail grouped Data · Screens · Analysis · Work with
 counts, the lists with lineage (uses, used by), the first-visit tiles, one search, + New, the registry's domains, a source that fails,
 and two people with different roles and lenses seeing different menus and kinds (session isolation)."""
 from __future__ import annotations

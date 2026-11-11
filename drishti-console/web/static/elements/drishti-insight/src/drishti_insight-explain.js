@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* One Explain for every number (docs/architecture/SHARED_SCREENS.md section 3; USER_GUIDE.md, "Explain"; the approved mock-up
+/* One Explain for every number (HOW_IT_FITS.md section S3; USER_GUIDE.md, "Explain"; the approved mock-up
    docs/architecture/mockups/shared-screens/e3-explain.html, A with B as its preview and C through a link). One component on every page:
 
    - the preview (B): hover a number that carries data-explain (or focus it and press ?): a small card with the answer in one line and

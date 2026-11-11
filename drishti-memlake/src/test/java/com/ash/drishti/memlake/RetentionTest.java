@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
-/** The guard's rules (docs/architecture/DATA_ARCHITECTURE.md section 8): only downloads and peer answers may carry memory-only data; refusals in words. */
+/** The guard's rules (HOW_IT_FITS.md section D8): only downloads and peer answers may carry memory-only data; refusals in words. */
 class RetentionTest {
 
     /** A guard whose memory-only kinds are given (no connectors needed). */

@@ -2445,7 +2445,7 @@ reads the stored value, for the same reader, by an opaque token. `?sutra=<name>`
 A Sutra may declare **controls**: dropdowns, date ranges, a slider, a search box. The reader sets them on the screen; panels read their
 values in expressions as `ctl.<id>`, so the same Sutra shows a swap's events for one leg and one quarter, or a netting set's trades for one
 asset class. Controls only choose: they never write. The model is the one of
-[ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 8.1](../architecture/ARCHITECTURE.md#289-reports-boards-and-controls), built once for the
+[HOW_IT_FITS.md §A28 › Rūpaka: the original design and every phase as built, section 8.1](../../HOW_IT_FITS.md#a289-reports-boards-and-controls), built once for the
 terminal.
 
 Every trade Sutra of the trading pack declares these two, read by the `events` block's events table:
@@ -2889,7 +2889,7 @@ shows the problem and the rest of the view renders.
 | `where` (a panel's row condition), a table's `limit` that reads a control (`ctl.top`) | expression (see [Controls](#controls)) |
 | a control's `options` (when text), `min`, `max`, `step` | expression over the record, which may read `ctl.<parent>` |
 | `keys` entries starting with `link(` | expression |
-| alert rules (`when`, `message`) | expression, template (see [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#monitors-and-alerts)) |
+| alert rules (`when`, `message`) | expression, template (see [HOW_IT_FITS.md](../../HOW_IT_FITS.md#monitors-and-alerts)) |
 
 ### Lexical rules
 
@@ -3104,7 +3104,7 @@ function's Excel and SAS equivalents and what is still to come, is [The function
 the list generated from the registries, every function once with where it runs, is [Every function, generated from the registries](#every-function-generated-from-the-registries) (Help → Functions).
 
 **Aggregates come from the pivot engine.** Rachana's own functions are scalars (one value from values). Every aggregate is the pivot
-engine's (`drishti-bicompute`), registered into Rachana's one table when it starts ([ONE_GRAMMAR.md](../architecture/ARCHITECTURE.md#23-one-grammar-one-engine)
+engine's (`drishti-bicompute`), registered into Rachana's one table when it starts ([ONE_GRAMMAR.md](../../HOW_IT_FITS.md#a23-one-grammar-one-engine)
 parts 1 to 3): the same function a pivot cell runs, with one treatment of empty values and masks. They are `sum`, `count`, `avg`,
 `min` and `max` over one list (with several arguments `min` and `max` are the old spelling of `least` and `greatest`), `median`,
 `percentile`, `distinct`, `wavg`, `variance`, `stddev`, `variance_pop`, `stddev_pop`, the once-per-parent `sum_once`, `count_once`
@@ -4675,7 +4675,7 @@ A **fragment** is `<name>.v<N>.fragment.yaml` with `fragment: <name>`; it is use
 **Drishti UI kit**'s `fragments/` folder (`config/ui-kit/fragments`, [section 3a](#3a-the-drishti-ui-kit)): platform UI vocabulary,
 not domain content, which the server and the CLI `sutra lint|test` ALWAYS load whatever packs are enabled, so every Sutra may use
 it. A pack may add its own fragments in its Sutra folders, namespaced by the pack (`trading/deal-ticket@1`); kit fragments are
-unqualified (`series-line@1`). Later the content store (DATA_ARCHITECTURE.md) holds workspace fragments the same way (phase 7).
+unqualified (`series-line@1`). Later the content store (HOW_IT_FITS.md) holds workspace fragments the same way (phase 7).
 
 ```yaml
 # config/ui-kit/fragments/series-line.v1.fragment.yaml
@@ -4918,7 +4918,7 @@ panels:
     source: { kind: desk-risk, id: "$.DESK", as-of: ctl.asof }            # market-risk pack
 ```
 
-- `source:` takes `kind`, `id` (an expression), optional `as-of` (history queries, DATA_ARCHITECTURE.md) and `pack` (only when two
+- `source:` takes `kind`, `id` (an expression), optional `as-of` (history queries, HOW_IT_FITS.md) and `pack` (only when two
   packs serve the same kind). Inside the panel `$src` is that record; `$` stays the screen's record.
 - Each source is fetched once per screen however many panels read it, concurrently, through the connectors and routes that serve the
   kind; a source the viewer may not open (`kinds` of their role) leaves the panel out with "not available to your role".
@@ -5126,7 +5126,7 @@ panels:
 - **Freshness on every panel.** Each panel's header says "updated 12 s ago" (ticking, from the view's `fetchedAt`, then from each
   refresh); "stale" in amber when a refreshing panel is older than twice its interval or the source is behind (the provenance's `stale`,
   `updatedAt` and `staleAfter`); when a refresh fails, the source is named in words: "trade-endur isn't answering; showing data from
-  10:42". A page the live channel updates (DATA_ARCHITECTURE.md) says "live" on every panel instead of a timer, and runs no timers of its own.
+  10:42". A page the live channel updates (HOW_IT_FITS.md) says "live" on every panel instead of a timer, and runs no timers of its own.
 - **The designer.** Describe's `refresh 30s` writes `refresh: 30` and the page acts on it; Customize has **Refresh** in its side panel
   ("Refresh <part> every <interval>"), which writes `refresh:` on that part (off removes it).
 
@@ -5241,7 +5241,7 @@ actions:
 
 A **dynamic screen** is a Sutra written at runtime (by a person in the editor, or by an AI agent from the docstrings) rather than read
 from a pack: the same YAML, checked by the same parser and lint, rendered as the viewer, and saved to the person's workspace in the
-content store (DATA_ARCHITECTURE.md) when they keep it.
+content store (HOW_IT_FITS.md) when they keep it.
 
 ```yaml
 rachana: 1
@@ -5379,7 +5379,7 @@ panels:
 - **The site and the edition** set and cap tiers over every Sutra (`ui.phone` in the console's configuration, `phone:` in an edition
   file); a cap (`max: glance`) wins. A page always has a must panel: with none, the first panel is.
 - `phone.order` replaces `layout.phone` for the phone page (which is still read when `phone.order` is absent).
-- The ViewModel carries what the Sutra says as `phone` ([VIEWMODEL.md](../architecture/VIEWMODEL.md)); the console resolves each
+- The ViewModel carries what the Sutra says as `phone` ([HOW_IT_FITS.md](../../HOW_IT_FITS.md#part-iv--the-viewmodel-contract)); the console resolves each
   panel's tier and draws the phone page.
 
 ### 14. Lint: what is checked
@@ -7539,7 +7539,7 @@ the bundled hints, so check the path when your change seems to have no effect.
 
 - this document: panel kinds, formats, `infer: true`.
 - [BUILD_GUIDE.md](BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which): where a pack's `config/semantics.yaml` fits.
-- [ARCHITECTURE.md](../architecture/ARCHITECTURE.md): the view pipeline and its caches.
+- [HOW_IT_FITS.md](../../HOW_IT_FITS.md#part-ii--architecture): the view pipeline and its caches.
 
 ## Chart any table: the design
 
@@ -7548,11 +7548,11 @@ Status: **console wiring built and built (2026-10-21):** the engine (C1), the di
 docs; see [section 24](#24-the-console-wiring-c3-c6-c7). **Not built yet (server lane):** `for=chart` on the records
 endpoint (C2), saved charts (C4, C5), the `chart` panel kind and Promote (C8), Open in BI (C9), Chart all N through BI runs; their release is not decided.
 Feature decided by the product owner, beside BI runs
-([ARCHITECTURE.md §28](../architecture/ARCHITECTURE.md#287-bi-runs-every-bi-query-as-a-bounded-visible-job)) and the two Drishti\*net transport items ([CLUSTER_GUIDE.md](CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)). Written
+([HOW_IT_FITS.md §A28](../../HOW_IT_FITS.md#a287-bi-runs-every-bi-query-as-a-bounded-visible-job)) and the two Drishti\*net transport items ([CLUSTER_GUIDE.md](CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)). Written
 2026-10-20 from the agreed feature, checked against the console and server code on `develop`. Builds on the pivot engine
 (drishti-bicompute on the server; `drishti_pivot-engine.js`, its browser client, and `drishti_pivot-grid.js`, its grid; [BI_GUIDE.md](BI_GUIDE.md#part-1--pivot-cubes-and-explain)),
 the chart panels (`drishti_charts.js`, [Panels: the twenty-two kinds, and developing a new one](#panels-the-twenty-two-kinds-and-developing-a-new-one)), the BI visuals ([BI_GUIDE.md](BI_GUIDE.md#r9-the-report-file-pages-visuals-filters-and-slicers) section 3) and
-history queries ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)).
+history queries ([HOW_IT_FITS.md](../../HOW_IT_FITS.md#d2-history-queries-an-entity-over-time)).
 
 ### 1. The ask
 
@@ -7589,7 +7589,7 @@ The product owner, 2026-10-20: **every table can be charted.**
 | Chart panels | `web/static/js/drishti_charts.js` (`window.Drishti.charts`) | `tokens(root)` reads `--d-*` from `<html>` or a shadow host, `palette(t)` (8 tokens), `compact()` numbers, `axis()`, `tooltip()`; a "Data" table under every chart for keyboards, screen readers and print; redraws on a theme change. |
 | Sutra chart kinds | [Panels: the twenty-two kinds, and developing a new one](#panels-the-twenty-two-kinds-and-developing-a-new-one): `line`, `area`, `hbar` (`shape: donut`), `scatter`, `histogram`, `waterfall` | One series per kind (or `area`'s list of bands); **no grouped or stacked bars, no combo, no second axis, no split, no Top N**. |
 | BI visuals | `drishti_bi-report.js`, `drishti_bi-grids.js`, BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 3 | Tables and matrices with raw answers (`columns` with `type` and `masked`, `rows`; BI_MODEL_SPEC 5.2), *first 1,000 of N* footers (`table-rows`), **Show as a table** / **Show as a chart** (`data-act="as-table"`) for chart visuals, **Show the rows behind this visual**. Visual types `bar` (horizontal), `column` (`stacked`, `percent`), `line`, `area`, `combo` (`values` as columns, `secondary` as lines on a second axis), `scatter`, `pie`, `donut`. |
-| BI runs | [ARCHITECTURE.md §28](../architecture/ARCHITECTURE.md#287-bi-runs-every-bi-query-as-a-bounded-visible-job), `POST /api/v1/bi/runs` | Every BI question through one pipeline: inline within about 2 s, otherwise a visible run; `interaction`, `supersedes`; results reused by fingerprint, data version and security signature. |
+| BI runs | [HOW_IT_FITS.md §A28](../../HOW_IT_FITS.md#a287-bi-runs-every-bi-query-as-a-bounded-visible-job), `POST /api/v1/bi/runs` | Every BI question through one pipeline: inline within about 2 s, otherwise a visible run; `interaction`, `supersedes`; results reused by fingerprint, data version and security signature. |
 | History | `drishti_history-page.js`, `terminal/history.html`, `/export/history/{kind}/{id}.{csv,xlsx,json}` | One row per business day (at most `max-days`, 366); a `data-plain` table with its own document-level keys: **`k` is "previous day"** (vim style), `j` next, `C D E R P Y T 1 3 6 ?`. The market shape already draws one line (P cycles the field). |
 | Exports | `POST /export/grid.csv`, `POST /export/grid.xlsx` (`routes/export_routes.py`) | A grid the page computed (`{name, header, rows}`) as CSV (formula-safe) or Excel (bold frozen header, numbers as numbers). |
 | Dialogs | native `<dialog>` with `showModal()` (`drishti_history.js`, `drishti_share.js`, `drishti_colfilter.js`), a phone sheet in `drishti_collab.css`, focus trapped and returned (`drishti_share.js`), `drishti_zoom.js` `OVERLAYS` includes `dialog[open]` | A popup that Escape closes before the zoom, inside a ShadowRoot for an embedded view (the pivot's `layer`). |
@@ -8363,7 +8363,7 @@ text, in five layers, each hidden when it has nothing to say. Layers 3 and 4 nee
 `?` (anywhere on a view where focus is not in a text field) or `F1` on a view opens the drawer on the right. `F1` pressed
 again inside the drawer, or the *Full guide* link, goes to the screen guide exactly as today.
 
-The drawer is shared with Discussion ([ARCHITECTURE.md §31](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals), step 6): it has two tabs, *About* and *Discussion*. `?` and `F1`
+The drawer is shared with Discussion ([HOW_IT_FITS.md §A31](../../HOW_IT_FITS.md#a31-collaboration-write-back-and-approvals), step 6): it has two tabs, *About* and *Discussion*. `?` and `F1`
 always open (or switch to) *About*; `Alt+N` opens *Discussion*. `F1` again is the guide only when *About* is the tab showing.
 
 ```
@@ -9086,7 +9086,7 @@ Not converted, and named when met: `VAR`/`RETURN`, `RANKX`, `SWITCH`, `FILTER` o
 *Product owner, 2026-11-03: "let us implement these functions, wherever possible using native and BLAS if it makes sense, then we
 should have a document with examples". This is the catalogue to review **before** the functions are built: every function Drishti has
 or will have, under its **one** name, with what it means, an example on the demo data's names, its Excel and SAS equivalents, where it
-runs and its status. The design is [ONE_GRAMMAR.md](../architecture/ARCHITECTURE.md#23-one-grammar-one-engine) (section 7); when the functions are built this becomes the user's
+runs and its status. The design is [ONE_GRAMMAR.md](../../HOW_IT_FITS.md#a23-one-grammar-one-engine) (section 7); when the functions are built this becomes the user's
 guide, each example then shown with its real result on the demo lake. Every function registered today, generated from the registries
 and checked against this page's names, is [Every function, generated from the registries](#every-function-generated-from-the-registries) (Help → Functions).*
 
@@ -9098,7 +9098,7 @@ and checked against this page's names, is [Every function, generated from the re
 | **Example** | written on the demo data: trades (`$.LEGS[*].NOTIONAL`, `$.PRODUCT_TYPE`, `$.DESK`), BI model fields (`trades.NOTIONAL`), measures (`measure('MTM')`) |
 | **Excel / SAS** | the nearest equivalent; documentation only, never a second name |
 | **Runs** | **R** Rachana (a scalar, one value from values); **E** the engine (an aggregate or window, many rows to one value, mergeable or *holistic*); **N** the engine on native BLAS/LAPACK through FFM on Java 25, with the plain Java kernel as fallback; **M** a measure's own engine |
-| **Status** | **built** (today, in DEL, Rachana or the engine: where, in brackets), **T1**, **T2**, **T3** (the tiers of ONE_GRAMMAR section 7), **MX** (matrix, with Java 25) |
+| **Status** | **built** (today, in DEL, Rachana or the engine: where, in brackets), **T1**, **T2**, **T3** (the tiers of ONE_GRAMMAR section F7), **MX** (matrix, with Java 25) |
 
 **Rules every function keeps.** A null in gives a null out unless the function says otherwise (`coalesce`, `count`, `nmiss`). Numbers
 are decimals where the data is (money is never turned into binary floating point by a function). An aggregate of amounts in two
@@ -9285,7 +9285,7 @@ grand total and Others without a figure (an open member's total is that member, 
 | `parent_of(agg, hierarchy = 'name')` | `agg` over the same with the deepest level of the hierarchy in the answer ignored; null at the top | `parent_of(measure('MTM'), hierarchy = 'Desk and book')` | none | built (engine: a context sub-plan, FilterContext) |
 | `rank(agg, desc = true, by = [f])`, `dense_rank(agg, desc = true, by = [f])`, `percent_rank(agg, desc = true, by = [f])` | position | `rank(sum(trades.NOTIONAL), by = [trades.DESK])` | `RANK.EQ`, `PERCENTRANK` / PROC RANK | built (engine: a window over the answer, the one compiler) |
 | `ntile(agg, n)` | the bucket 1..n among the siblings, ascending, ties at their mean rank: SAS's ⌊rank·n/(count+1)⌋ plus one | `ntile(sum(trades.NOTIONAL), 10)` | `QUARTILE` buckets / PROC RANK `GROUPS=10` | built (engine) |
-| `kth_largest(x, k)`, `kth_smallest(x, k)` | k-th value | `kth_largest(trades.NOTIONAL, 3)` | `LARGE`, `SMALL` / PROC UNIVARIATE extremes | built (engine, an aggregate: section 4) |
+| `kth_largest(x, k)`, `kth_smallest(x, k)` | k-th value | `kth_largest(trades.NOTIONAL, 3)` | `LARGE`, `SMALL` / PROC UNIVARIATE extremes | built (engine, an aggregate: section F4) |
 | `top_n(n, agg)`, `bottom_n(n, agg)` with Others | the n leading members, the rest as Others | `top_n(10, sum(trades.NOTIONAL))` | PivotTable Top 10 filter | built (the pivot view's `top`: Top N and Others) |
 | `lag(agg, n, order, by = [f])`, `lead(agg, n, order, by = [f])` | n cells before or after | `lag(sum(trades.PNL), 1, trades.TRADE_DATE)` | `OFFSET` / `LAG` | built (engine: a window over the answer, the one compiler) |
 | `diff(agg, [n], order)`, `pct_change(agg, [n], order)` | change from n members before along the order dimension (rows or columns, members in natural order); `pct_change` over the earlier figure, none where it is 0 | `pct_change(sum(trades.NOTIONAL), 1, month)` | `B2-B1` / `DIF` | built (engine) |
@@ -9365,7 +9365,7 @@ reaches from the guess is the answer, as Excel's.
 
 Every function here is in `Distributions` (Rachana) on the numerics of `SpecialFunctions`, each a published algorithm, cited in the code:
 Lanczos's gamma (g = 7, nine coefficients, relative error about 1e-15); the incomplete gamma and beta functions by series and continued
-fractions (modified Lentz, *Numerical Recipes* sections 6.2 and 6.4) to a relative 1e-16; the normal from erfc = Q(½, x²), so a tail keeps
+fractions (modified Lentz, *Numerical Recipes* sections F6.2 and F6.4) to a relative 1e-16; the normal from erfc = Q(½, x²), so a tail keeps
 its relative digits; its inverse by Acklam's approximation refined by one Halley step; other inverses by bisection on the CDF to a relative
 1e-15. No library: commons-math3 is not on Rachana's class path, and none is added. `cumulative` is optional and true by default (Excel
 requires it); degrees of freedom and counts are cut to whole numbers, as Excel's. The VaR engine's backtests keep their own statistics;
@@ -9406,7 +9406,7 @@ to the Java kernel, shown in Admin → Health → Native. Small matrices stay in
 ### F11. Candidates (tier 3)
 
 Frequency tables with chi-square (PROC FREQ, Excel's `FREQUENCY`, `CHISQ.TEST`), two-sample tests over two columns (`T.TEST`, `F.TEST`,
-`Z.TEST`: the distributions they rest on are built, section 9), regression with several variables and its statistics (PROC REG,
+`Z.TEST`: the distributions they rest on are built, section F9), regression with several variables and its statistics (PROC REG,
 `LINEST`, `LOGEST`, on `solve`), `forecast` and `trend` (Excel's linear forms; `slope` and `intercept` give them today), exponential
 smoothing (`FORECAST.ETS`), `winsorize(x, pct)` (PROC UNIVARIATE), histogram bins as a dimension. Each decided one by one.
 
@@ -9415,13 +9415,13 @@ smoothing (`FORECAST.ETS`), `winsorize(x, pct)` (PROC UNIVARIATE), histogram bin
 *Product owner, 2026-11-03: "let us add functions, whatever makes sense": an analyst coming from Excel, SAS or MATLAB should rarely miss a
 function.* Every family of Excel's function list, SAS's DATA-step functions and PROC MEANS/UNIVARIATE/FREQ statistics, and MATLAB's
 (Octave's) everyday data functions, marked: **covered** (by which Drishti function, under its one name: the other names are documentation,
-never aliases), **added** (built in 2.9.11.e, sections 1 to 9), or **not** (why). Counts are of Excel functions, SAS functions and
+never aliases), **added** (built in 2.9.11.e, sections F1 to F9), or **not** (why). Counts are of Excel functions, SAS functions and
 statistics, and MATLAB functions as the families list them.
 
 **The reasons a function is not added.** *Non-deterministic*: a figure must be the same each time it is asked for. *Spreadsheet-cell*:
 it reads a sheet's cells, addresses or workbook (Drishti has fields, paths and saved views instead). *Pricing*: instrument conventions
 and models are QLRisk's (design only until its API is stable). *Risk*: VaR, ES, exposure, FRTB-SA, SIMM come from their engines
-through `measure(...)`, never a `var()` over a vector. *MX*: needs matrices, the Java 25 tier (section 10). *Locale or legacy*: a
+through `measure(...)`, never a `var()` over a vector. *MX*: needs matrices, the Java 25 tier (section F10). *Locale or legacy*: a
 code-page, a national script or a function Excel keeps for compatibility with a newer one beside it. *No use*: nothing on Drishti's data
 calls for it; added on a person's request.
 
@@ -9448,7 +9448,7 @@ calls for it; added on a person's request.
 | PROC UNIVARIATE | moments, quantiles (`percentile`, `percentile_exc` for `PCTLDEF=4`), extremes (`kth_largest`, `maxk`), `TRIMMED=` (`trimmean`), robust scale (`isoutlier`'s MAD) | `MODES` (`mode_multi`), `MAD`-based outliers | `WINSORIZED=` (tier 3), normality tests and plots (tier 3; no plotting) |
 | PROC FREQ | one-way counts (`group`, the pivot's `count`), percentages (`pct_of_total` …) | the distributions a test needs (`chisq_dist` …) | `CHISQ`, `FISHER` exact, `MEASURES`, `AGREE` (tier 3) |
 | PROC RANK, PROC STDIZE, PROC CORR, PROC REG | `GROUPS=` (`ntile`), `TIES=` (`rank`, `dense_rank`), `PERCENT` (`percent_rank`), `CORR` (`corr`, `covar`), simple regression (`slope`, `intercept`, `rsq`) | `TIES=MEAN` of a value (`rank_avg`), `METHOD=STD` (`zscore`), `METHOD=RANGE` (`rescale`), Root MSE (`steyx`), small polynomial fits (`polyfit`) | several regressors, `COV` matrices, PROC PRINCOMP (MX) |
-| DATA-step numeric | `ABS`, `ROUND`, `CEIL`, `FLOOR`, `INT`, `MOD`, `SQRT`, `EXP`, `LOG`, `LOG10`, `LOG2` (`log(x, 2)`), `SIGN`, `MIN`, `MAX` of arguments (`least`, `greatest`), `SUM(OF ...)`, `MEAN(OF ...)` over a list (`sum`, `avg`), `COALESCE`, `IFN`, `IFC` (`if`), `LAG`, `DIF` (`lag`, `diff`), `RETAIN` (`running`, `cumsum`) | `FACT`, `COMB`, `PERM`, `GCD`, `LCM`, trigonometry, `GAMMA`, `LGAMMA`, `ERF`, `ERFC`, `CDF`/`PDF`/`QUANTILE` of the families of section 9, `PROBNORM`, `PROBIT`, `PROBT`, `TINV`, `PROBCHI`, `CINV`, `PROBF`, `FINV`, `PROBBNML`, `POISSON`, `PROBGAM`, `GAMINV`, `PROBBETA`, `BETAINV`, `MORT`, `FINANCE('NPV' …)` | `RAND`, `RANUNI`, `RANNOR`, `STREAMINIT`, `DATETIME()`, `TIME()` (non-deterministic); `BLACKCLPRC`, `BLKSHPTPRC`, `GARKHCLPRC` (pricing: QLRisk) |
+| DATA-step numeric | `ABS`, `ROUND`, `CEIL`, `FLOOR`, `INT`, `MOD`, `SQRT`, `EXP`, `LOG`, `LOG10`, `LOG2` (`log(x, 2)`), `SIGN`, `MIN`, `MAX` of arguments (`least`, `greatest`), `SUM(OF ...)`, `MEAN(OF ...)` over a list (`sum`, `avg`), `COALESCE`, `IFN`, `IFC` (`if`), `LAG`, `DIF` (`lag`, `diff`), `RETAIN` (`running`, `cumsum`) | `FACT`, `COMB`, `PERM`, `GCD`, `LCM`, trigonometry, `GAMMA`, `LGAMMA`, `ERF`, `ERFC`, `CDF`/`PDF`/`QUANTILE` of the families of section F9, `PROBNORM`, `PROBIT`, `PROBT`, `TINV`, `PROBCHI`, `CINV`, `PROBF`, `FINV`, `PROBBNML`, `POISSON`, `PROBGAM`, `GAMINV`, `PROBBETA`, `BETAINV`, `MORT`, `FINANCE('NPV' …)` | `RAND`, `RANUNI`, `RANNOR`, `STREAMINIT`, `DATETIME()`, `TIME()` (non-deterministic); `BLACKCLPRC`, `BLKSHPTPRC`, `GARKHCLPRC` (pricing: QLRisk) |
 | DATA-step character | `UPCASE`, `LOWCASE`, `LENGTH`, `SUBSTR`, `SCAN` (`split`), `CAT`, `CATS`, `CATX` (`concat`, `string_agg`), `STRIP`, `TRIM`, `LEFT`, `TRANWRD` (`replace`), `PRXMATCH` (`matches`), `PRXCHANGE`, `INDEX`, `FIND`, `PUT`, `INPUT` | `PROPCASE` (`proper`), `REPEAT` (`rept`), `REVERSE`, `COMPRESS`, `COMPBL` (`regex_replace`), `INDEX`/`FIND` positions, `INPUT(s, COMMA.)` (`value`), `PUT(x, format)` (`text`) | `SOUNDEX`, `SPEDIS`, `COMPGED` (fuzzy matching: no use yet); `TRANSLATE` per character (`regex_replace` per class); `KSUBSTR` and the `K` functions (DBCS locale) |
 | DATA-step date and time | `TODAY`, `MDY`, `YEAR`, `QTR`, `MONTH`, `DAY`, `INTCK`, `INTNX` (`edate`, `eomonth`, `shift_date`), `YRDIF` (`yearfrac`), `DATDIF` | `HOUR`, `MINUTE`, `SECOND`, `WEEKDAY`, `WEEK(d, 'V')` (`week`), `INTCK('continuous')` (`datedif`) | `DATETIME()`, `TIME()` (non-deterministic); `HOLIDAY` (the bank's calendars instead), `NWKDOM` (no use) |
 

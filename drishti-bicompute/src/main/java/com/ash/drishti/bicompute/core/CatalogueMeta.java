@@ -39,7 +39,7 @@ final class CatalogueMeta {
     /** The built-in functions a value of a field may take, in the pickers' order (the rest stay writable in a view). */
     static final List<String> NUMBER = List.of("sum", "count", "count_distinct", "avg", "wavg", "min", "max", "median", "percentile",
             "var_samp", "stddev_samp");
-    /** A rate or a percentage is never summed (ARCHITECTURE.md section 26.3). */
+    /** A rate or a percentage is never summed (HOW_IT_FITS.md section A26.3). */
     static final List<String> RATE = List.of("avg", "wavg", "min", "max", "median", "percentile", "var_samp", "stddev_samp", "count",
             "count_distinct");
     /** A text, a date or a hierarchy level: its rows or its distinct values. */

@@ -28,7 +28,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 /**
- * One business date's shard map (DATA_ARCHITECTURE.md section 13), for any measure sharded across Drishti*net: the date's rows cut into contiguous
+ * One business date's shard map (HOW_IT_FITS.md section D13), for any measure sharded across Drishti*net: the date's rows cut into contiguous
  * ranges of the shard key (for VaR the legal entity, then the desk), in the order the measure keeps its rows, each near the target size, a
  * key value (a desk) never split. A pure function of the date's row
  * counts per key, so every member that reads the same data version computes the same map; its {@link #digest()} is sent with every

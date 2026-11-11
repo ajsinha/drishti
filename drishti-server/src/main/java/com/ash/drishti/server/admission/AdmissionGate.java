@@ -184,7 +184,7 @@ public final class AdmissionGate {
     private final List<OffHeap> offHeaps = new CopyOnWriteArrayList<>();
 
     /**
-     * A memory store joins the readings (docs/architecture/DATA_ARCHITECTURE.md section 6): its use against its cap is shown on Health's busy card. Its writes
+     * A memory store joins the readings (HOW_IT_FITS.md section D6): its use against its cap is shown on Health's busy card. Its writes
      * are bounded by the store itself (the eviction ladder, then a refusal), so it never makes new work wait here.
      */
     public void memoryStore(String name, LongSupplier used, LongSupplier cap) {

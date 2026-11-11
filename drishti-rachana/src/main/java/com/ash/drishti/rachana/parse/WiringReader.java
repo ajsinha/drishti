@@ -93,7 +93,7 @@ final class WiringReader {
     }
 
     /**
-     * A virtual table as a panel's source (docs/architecture/ARCHITECTURE.md V13): {@code source: { table: trading.trade_legs, where: "...", limit, as-of }};
+     * A virtual table as a panel's source (HOW_IT_FITS.md V13): {@code source: { table: trading.trade_legs, where: "...", limit, as-of }};
      * the rows are {@code $src}, read as the viewer may read the table. A table takes no kind, pack, id, search or parameters.
      */
     private Wiring.Source tableSource(PNode n, Map<String, PNode> m) {
@@ -166,7 +166,7 @@ final class WiringReader {
     }
 
     /**
-     * A computed kind's parameters (DATA_ARCHITECTURE.md › Reactive connectors, section 6.1): a mapping of names to expressions ({@code confidence:
+     * A computed kind's parameters (HOW_IT_FITS.md › Reactive connectors, section 6.1): a mapping of names to expressions ({@code confidence:
      * ctl.confidence}, {@code horizon: 1}); a number or a switch is its own literal. Only with {@code id}: a computation answers one question.
      */
     private Map<String, String> params(String kind, PNode n, boolean single) {

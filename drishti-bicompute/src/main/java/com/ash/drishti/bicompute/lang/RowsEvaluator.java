@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The Java form of a compiled expression over rows held in memory (a live table: docs/architecture/ARCHITECTURE.md §28 2.6, step 3): a row expression
+ * The Java form of a compiled expression over rows held in memory (a live table: HOW_IT_FITS.md §A28 2.6, step 3): a row expression
  * is Rachana's own evaluator; an aggregate feeds the engine's {@link AggFunction} the rows' inputs (masks applied before: a masked input
  * is nothing, as its SQL reads null) after the measure's own condition; a {@link Lowered.Shape} combines its parts with Rachana. What
  * needs an answer (a context sub-plan, a window, time intelligence, a conversion) is computed by the query over the answer and has no

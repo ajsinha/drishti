@@ -28,7 +28,7 @@ are built (phase 2's second half, section 8); the thin jar is designed, not buil
 ([IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md), the 2.9.11.e row and *Domains are modules*): the core knows no industry; each domain
 is a set of modules owning its compute, services and API, console screens and assets, Help, tutorials and packs; what a person sees
 follows role and lens; licences name modules. This document is the boundary list, the target layout, the dependency rules, the cycles
-that exist today and the order of the move. The native libraries' module, which every domain shares, is [DRISHTI_NATIVE.md](ARCHITECTURE.md#25-drishti-native-native-maths-behind-abstractions-with-java-fallbacks).
+that exist today and the order of the move. The native libraries' module, which every domain shares, is [DRISHTI_NATIVE.md](../../HOW_IT_FITS.md#a25-drishti-native-native-maths-behind-abstractions-with-java-fallbacks).
 
 ## 1. The two sides
 
@@ -93,7 +93,7 @@ Everything else (the shell, BI, Pivot, Build, designer, admin, Help, embed, phon
 | Guides | `VAR_GUIDE`, `REGULATORY_VAR_REPORTING`, `EXPOSURE_GUIDE`, `FRTB_SA_GUIDE`, `SIMM_GUIDE`, `MR_CUBE_GUIDE`, `FUNDS_GUIDE` |
 | Tutorials | 24 (correct a trade: a core feature on banking data; moves with banking until it has a neutral twin), 25, 26, 28, 29, 30, 32, 38, 43 |
 | Lenses | `RISK_LENS`, `CRO_LENS`, `TRADING_LENS`, `MARKET_LENS`, `MR_CUBE_LENS`, `CCR_CUBE_LENS` |
-| Architecture | `PARAMETRIC_VAR`, `SENSITIVITIES_AND_FRTB_SA`, `VAR_PLAYGROUND`, `DATA_ARCHITECTURE.md section 13` (its machinery is core: the document is split when it moves) |
+| Architecture | `PARAMETRIC_VAR`, `SENSITIVITIES_AND_FRTB_SA`, `VAR_PLAYGROUND`, `../../HOW_IT_FITS.md section D13` (its machinery is core: the document is split when it moves) |
 | Help pages | the 19 listed under section `risk` and the banking pages of `analytics` (MR cube, funds) and `knowledge` (market risk, counterparty credit risk, trades and products, market data, companies, funds and ETFs) |
 | Contracts | `CVA`, `FRTB`, `FRTB_DATA_STRUCTURES`, `PNL`, `SACCR`, `SIMM`, `TRADING_GROUPINGS`, `COLL`, `GRP`, `LIM`, `MC`, `NSET`, `STR`, `TVAL`, `WWR`, the banking packs' pages and samples |
 

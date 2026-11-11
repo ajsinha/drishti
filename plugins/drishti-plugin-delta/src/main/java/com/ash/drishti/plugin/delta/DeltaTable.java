@@ -274,7 +274,7 @@ final class DeltaTable {
     private static final java.util.regex.Pattern NUM_RECORDS = java.util.regex.Pattern.compile("\"numRecords\"\\s*:\\s*(\\d+)");
 
     /**
-     * Every business date's size at a snapshot version, from the log's add actions and their statistics (docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section
+     * Every business date's size at a snapshot version, from the log's add actions and their statistics (HOW_IT_FITS.md §A28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section
      * 4.1: {@code SourcePlugin.rowEstimate}). Reads the log only, as {@link #layout} does, with the statistics column asked for.
      */
     NavigableMap<LocalDate, DayCount> counts(long version) {

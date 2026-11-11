@@ -317,7 +317,7 @@ with the error instead of Redis silently dropping trades.
 - **Live updates** (`live: true`): the connector subscribes to `<domain>:changes`. `trade TAB MX-20000017 TAB 20260930` re-reads an
   open entity and pushes the changed cells; `trade TAB * TAB 20260930` refreshes the catalogue. Every message sets the connector's
   `lastUpdate` (for `stale-after`). Pub/sub is fire-and-forget: a server that was down catches up on days and ids at the next refresh.
-- **History** (`TRD MX-20000017 30`, [history queries](../../docs/architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)):
+- **History** (`TRD MX-20000017 30`, [history queries](../../HOW_IT_FITS.md#d2-history-queries-an-entity-over-time)):
   `ZRANGEBYSCORE` on the entity's days, then every day's document in one `MGET`. Dates Redis does not hold come from the next
   connector of the kind.
 

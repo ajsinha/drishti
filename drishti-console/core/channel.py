@@ -136,7 +136,7 @@ class ChannelSession:
         if sub.startswith("mq:") and len(sub) > 3:              # wave B: a standing query's pushed answers (answer) and its state (status)
             node = holder(sub[3:])                            # the node that holds it (sq-<node>-<hex>): the stream goes to its server when usable
             return self.backend.sse(f"/bi/mq/stream?ids={quote(sub[3:], safe='')}", self.me, opened=responses, **({"node": node} if node else {})), False
-        if sub == "biruns":                                   # BI runs (ARCHITECTURE.md §28 3.5): the person's runs as they change (hello, run, status); no data
+        if sub == "biruns":                                   # BI runs (HOW_IT_FITS.md §A28 3.5): the person's runs as they change (hello, run, status); no data
             return self.backend.sse("/bi/runs/events", self.me, opened=responses), False
         if sub.startswith("monitor:"):
             return self.backend.sse(f"/me/monitors/{quote(sub[8:])}/stream", self.me, opened=responses), False
@@ -144,7 +144,7 @@ class ChannelSession:
             lid, _, node = sub[10:].partition("@")              # the node that holds it (pivotlive:<id>@<node>)
             stream = self.backend.sse(f"/pivot/live/{quote(lid, safe='')}/events", self.me, opened=responses, **({"node": node} if node else {}))
             return _renamed(stream, {"error": "failed"}), False       # an EventSource's own "error" is its connection's: the stream's is "failed"
-        if sub.startswith("compute:") and len(sub) > 8:        # a computed panel's request (DATA_ARCHITECTURE.md): progress, state, done,
+        if sub.startswith("compute:") and len(sub) > 8:        # a computed panel's request (HOW_IT_FITS.md): progress, state, done,
             return self.backend.sse(f"/compute/requests/{quote(sub[8:], safe='')}/stream", self.me, opened=responses), False   # failed, updated
         return None, False
 

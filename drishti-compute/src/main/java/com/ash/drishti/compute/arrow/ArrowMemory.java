@@ -21,7 +21,7 @@ import org.apache.arrow.memory.RootAllocator;
 /**
  * The process's one Arrow root allocator (Apache Arrow Java). Every Arrow buffer of the process comes from a named child of it: the IPC
  * codec ({@link ArrowIpc}) takes a short-lived child per table, Arrow Flight takes one per stream under its own capped child. Busy protection
- * reads {@link #allocated()} and {@link #peak()} so Arrow's off-heap memory is counted with the rest (docs/architecture/DATA_ARCHITECTURE.md Q8).
+ * reads {@link #allocated()} and {@link #peak()} so Arrow's off-heap memory is counted with the rest (HOW_IT_FITS.md Q8).
  *
  * <p>The cap is {@code drishti.arrow.max-bytes} (a system property, bytes; default: no cap beyond the JVM's direct memory). Arrow's buffers
  * are direct memory: the launchers size both from one place, {@code tools/lake/memory_caps.py} (the exchange's budget,

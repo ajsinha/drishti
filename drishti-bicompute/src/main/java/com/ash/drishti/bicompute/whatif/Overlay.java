@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A what-if overlay on a pivot's rows (ARCHITECTURE.md section 26.7, item 3): members left out, an input column scaled or overridden where a
+ * A what-if overlay on a pivot's rows (HOW_IT_FITS.md section A26.7, item 3): members left out, an input column scaled or overridden where a
  * condition holds, and hypothetical rows added. It is private, saved with the view, and never written to the lake: the tabular provider joins
  * it into the plan as part of the source's relation, so only the cells it touches change.
  *

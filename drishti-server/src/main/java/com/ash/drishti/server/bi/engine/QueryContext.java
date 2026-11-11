@@ -18,7 +18,7 @@ package com.ash.drishti.server.bi.engine;
 import java.util.function.Supplier;
 
 /**
- * What the work on this thread is (wave B, docs/architecture/ARCHITECTURE.md §28 sections 6.3 and 6.7): its work class (who waits for whom), and the budget of the
+ * What the work on this thread is (wave B, HOW_IT_FITS.md §A28 sections 6.3 and 6.7): its work class (who waits for whom), and the budget of the
  * question that asked (rows read, milliseconds: {@code options.budget}). Set around a model query, a standing query's maintenance, a refresh; read by the
  * engine's admission, its cost estimate and its time limit. A thread's own context, never shared between requests.
  */

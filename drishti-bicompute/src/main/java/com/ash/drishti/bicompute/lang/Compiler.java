@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * The one compiler from Rachana's tree to the engine (docs/architecture/ARCHITECTURE.md §28 2.6). The expression is parsed and checked by Rachana
+ * The one compiler from Rachana's tree to the engine (HOW_IT_FITS.md §A28 2.6). The expression is parsed and checked by Rachana
  * ({@code CheckedMode}); this lowers it: a row expression to the engine's row expression (Rachana's tree for Java, {@link SqlLowering}
  * for SQL), an aggregate to the engine's aggregate function ({@link Functions#builtIn}), a filter-context function to a context
  * sub-plan ({@link FilterContext}), a window or time function to a computation over the answer, and what combines them to a

@@ -131,7 +131,7 @@ public final class TableRelations {
 
     /**
      * The table as the compiled query reads it: the source rows, then (a dataset that keeps one row per key) the latest or earliest row of each key within a
-     * business date, then the calculated (derived) columns, then (a grouped dataset) one row per group (docs/architecture/ARCHITECTURE.md §28 section 3.1).
+     * business date, then the calculated (derived) columns, then (a grouped dataset) one row per group (HOW_IT_FITS.md §A28 section 3.1).
      */
     private static SqlCompiler.Source wrap(Dataset ds, Dataset.Table t, String inner, List<Object> params, Dialect d) {
         Dataset.Shape shape = t.shape();

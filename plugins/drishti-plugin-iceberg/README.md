@@ -367,7 +367,7 @@ filter `id = '…'`, so Parquet decodes only the row group whose id range holds 
 
 **Type-ahead** is the newest day's ids (every day's for an `effective` kind), rebuilt when a snapshot changes. With `index.days` above 1
 the past days' ids are kept too, rebuilt from the id column in the background on a new snapshot and re-checked every
-`index.reload-every` ([ARCHITECTURE.md section 9.1](../../docs/architecture/ARCHITECTURE.md#91-several-business-days),
+`index.reload-every` ([HOW_IT_FITS.md section A9.1](../../HOW_IT_FITS.md#a91-several-business-days),
 [OPERATIONS_GUIDE.md section 12.2](../../docs/guides/OPERATIONS_GUIDE.md#144-the-multi-day-type-ahead-index)).
 
 **Searches, pick lists, derived kinds, impact** use `columnar(kind)` and `columns(kind, paths, asOf)` as for Delta Lake; the newest day's
@@ -404,7 +404,7 @@ java -cp <plugin classpath> com.ash.drishti.plugin.iceberg.IcebergMaintenance ./
 | `--columns kind:path,path` | adds promoted columns and fills them from the documents |
 | `--rewrite-manifests` | regroups manifests one per month of business dates |
 | `--expire-hours H` | expires snapshots older than H hours (168), keeping the current one and every branch's and tag's snapshot (as the Apache library does); `-1` skips it |
-| `--remove-orphans --older-than-hours H` | deletes unreferenced files older than H hours (at least 72) ([DATA_ARCHITECTURE.md section 16](../../docs/architecture/DATA_ARCHITECTURE.md#16-vector-columns-and-orphan-files)) |
+| `--remove-orphans --older-than-hours H` | deletes unreferenced files older than H hours (at least 72) ([HOW_IT_FITS.md section D16](../../HOW_IT_FITS.md#d16-vector-columns-and-orphan-files)) |
 | `--floor-days D` | never drops a date, nor expires a snapshot, within D days (`lake maintain` passes 2,557 for `risk` and `risk-results`) |
 | `--dry-run`, `--json`, `--kinds`, `--spill-dir`, `--buffer-mb`, `--catalog …`, `--set` | report only; one JSON line a table; scope; the sort; the catalog |
 
@@ -416,7 +416,7 @@ automatic maintenance, Spark's `rewrite_data_files` with `sort_order => 'id'`, T
 
 ## Engines and caches
 
-Iceberg's protocol comes from `iceberg-core` (metadata, manifests, planning, commits, the REST client) with Drishti's file access and Parquet reader, and there is one engine: `engine`, `DRISHTI_ICEBERG_ENGINE` and `--engine` are accepted and ignored. Roots: local disk, `s3://`, `s3a://`, `mem://`; `abfs://`, `gs://` and `hdfs://` are refused by name ([DATA_ARCHITECTURE.md](../../docs/architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop)). Parquet is read by **field id** (renames, added columns, widened types, `schema.name-mapping.default`), deletes are applied by sequence number, and commits are
+Iceberg's protocol comes from `iceberg-core` (metadata, manifests, planning, commits, the REST client) with Drishti's file access and Parquet reader, and there is one engine: `engine`, `DRISHTI_ICEBERG_ENGINE` and `--engine` are accepted and ignored. Roots: local disk, `s3://`, `s3a://`, `mem://`; `abfs://`, `gs://` and `hdfs://` are refused by name ([HOW_IT_FITS.md](../../HOW_IT_FITS.md#d3-drishti-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop)). Parquet is read by **field id** (renames, added columns, widened types, `schema.name-mapping.default`), deletes are applied by sequence number, and commits are
 safely (a hard link on local disk, a conditional PUT on S3, the catalog's requirements through REST). It refuses by name, never reading
 wrongly: format version 3 deletion vectors and variant columns, encrypted tables, ORC and Avro data files, unknown types, S3 remote signing. File paths are opened as
 written, never percent-decoded (a partition folder `g=a%2Fb` another writer made is that folder). The loader writes only tables

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Rupaka phase 2 (docs/architecture/ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, sections 6 and 7), the console's routes for datasets: the list and one dataset's page are shells
+"""Rupaka phase 2 (HOW_IT_FITS.md §A28 › Rūpaka: the original design and every phase as built, sections 6 and 7), the console's routes for datasets: the list and one dataset's page are shells
 drawn by drishti_bi-dataset.js, the same-origin JSON reaches the server's datasets, model and engine paths under the caller's identity and nothing else
 does, and the server's refusals come back with their DRS codes."""
 from pathlib import Path

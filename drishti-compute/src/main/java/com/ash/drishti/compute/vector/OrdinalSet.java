@@ -473,7 +473,7 @@ public final class OrdinalSet {
 
     /**
      * The members in {@code [from, to)}, renumbered from {@code from} (member {@code from + i} becomes {@code i}): one shard's part of a
-     * set, in the shard's own ordinals (DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built).
+     * set, in the shard's own ordinals (HOW_IT_FITS.md#d13-var-sharding-how-it-is-built).
      */
     public OrdinalSet slice(int from, int to) {
         if (to <= from) {

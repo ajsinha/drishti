@@ -34,7 +34,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 /**
- * The core on the tabular provider (ARCHITECTURE.md section 26.13): every visible cell of a GROUPING SETS answer equals a naive query of its own
+ * The core on the tabular provider (HOW_IT_FITS.md section A26.13): every visible cell of a GROUPING SETS answer equals a naive query of its own
  * rows, for every built-in; the first level, its subtotals and the grand total come from one statement; opening a node computes only its
  * children; Others is its own members (not total minus the top N); a masked field cannot be used and row rules apply before aggregation; the
  * cell budget refuses with the count; a cell reference names coordinates; compare differences add up.

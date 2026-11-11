@@ -31,7 +31,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Python measures in any grouped query (wave B, R8; docs/architecture/ARCHITECTURE.md §28 section 3.5, the {@code PyAggregate} node): after the query's SQL
+ * Python measures in any grouped query (wave B, R8; HOW_IT_FITS.md §A28 section 3.5, the {@code PyAggregate} node): after the query's SQL
  * measures ran, each Python measure gets the rows of its input columns with the answer's fields, read as the reader (row rules and masks applied by the
  * engine), and the compute pool python gives one value per group; the values become the measure's column of the answer, in its place. A masked input makes the
  * column {@code None} for the reader (said in the warnings); more rows than {@code drishti.bi.mq.max-limit} is {@code DRS-9072}.

@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Stage 5 (docs/architecture/ARCHITECTURE.md §28 section 4.1): the correctness guards. Fan-out ({@code DRS-9160}) and reachability ({@code DRS-9156}) are refused
+ * Stage 5 (HOW_IT_FITS.md §A28 section 4.1): the correctness guards. Fan-out ({@code DRS-9160}) and reachability ({@code DRS-9156}) are refused
  * when the question is checked. From wave A the two that W1 only warned about are refused too ({@code drishti.bi.plan.guards: refuse}): a sum that adds
  * amounts in several currencies in one group ({@code DRS-9158}, known once the groups are computed) and a balance added across dates
  * ({@code DRS-9159}); a balance asked alone over a window is answered as its last date's value, which is right, with the warning kept. Pure.

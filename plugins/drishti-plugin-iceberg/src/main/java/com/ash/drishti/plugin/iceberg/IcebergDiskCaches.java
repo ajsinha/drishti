@@ -70,7 +70,7 @@ final class IcebergDiskCaches implements AutoCloseable {
         this(sourceName, ctx, false);
     }
 
-    /** With {@code memoryOnly} (a warehouse at {@code mem://}, docs/architecture/DATA_ARCHITECTURE.md section 8): no id-map files and no document cache on disk. */
+    /** With {@code memoryOnly} (a warehouse at {@code mem://}, HOW_IT_FITS.md section D8): no id-map files and no document cache on disk. */
     IcebergDiskCaches(String sourceName, SourceContext ctx, boolean memoryOnly) {
         this.sourceName = sourceName;
         this.idMapFolder = memoryOnly ? null : com.ash.drishti.api.IdMapFolder.of(sourceName, ctx);

@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis);
-/* The table editor (docs/architecture/SHARED_SCREENS.md section 2, option A, with option C as its Text toggle): tables and virtual tables. The
+/* The table editor (HOW_IT_FITS.md section S2, option A, with option C as its Text toggle): tables and virtual tables. The
    source and its look-ups as rows (a look-up is a join to another table on a key: Rachana's related(), one many-to-one hop, read on the
    server; across connectors it shows its cost and is refused above drishti.tables.scan-warn-rows until the reader filters); the columns
    as a checklist (the name here, where it comes from, its type, the key) with computed columns as Rachana formulas; the filter, the grain

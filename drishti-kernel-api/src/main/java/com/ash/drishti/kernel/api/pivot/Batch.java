@@ -16,7 +16,7 @@
 package com.ash.drishti.kernel.api.pivot;
 
 /**
- * A columnar batch of a cell's rows for {@link AggFunction#add} (ARCHITECTURE.md section 26.5): the function's declared input columns only,
+ * A columnar batch of a cell's rows for {@link AggFunction#add} (HOW_IT_FITS.md section A26.5): the function's declared input columns only,
  * already filtered, ruled and masked for the reader. A number column is a {@code double[]} ({@code NaN} where absent), a text column a
  * {@code String[]} (null where absent).
  *

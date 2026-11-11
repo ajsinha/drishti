@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""One Explain for every number (docs/architecture/SHARED_SCREENS.md section 3) in a real browser, over the market-risk pack's committed
+"""One Explain for every number (HOW_IT_FITS.md section S3) in a real browser, over the market-risk pack's committed
 VaR data built into a scratch lake (its three business dates, moved to end today), the demo connector off:
 
 - old against new on the demo data: every row the VaR page's How calculated box drew (its own code, in Python below), every line the

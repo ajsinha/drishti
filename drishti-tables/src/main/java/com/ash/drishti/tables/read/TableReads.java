@@ -44,7 +44,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Reads virtual tables for one request (docs/architecture/ARCHITECTURE.md section 5 and section 10): a pivot view, a model query, a Flight read, a Sutra
+ * Reads virtual tables for one request (HOW_IT_FITS.md section A5 and section 10): a pivot view, a model query, a Flight read, a Sutra
  * page. Each table is resolved to its root source (a table over a table reads its base's source, with the base's grain and filter and both
  * tables' columns, Catalogue#effective), the source's documents are read for the business date through {@link SourceRows} (as the reader
  * may see the source), and the table's rows are computed by the one computation the preview uses ({@link Preview#rows(TableDef,

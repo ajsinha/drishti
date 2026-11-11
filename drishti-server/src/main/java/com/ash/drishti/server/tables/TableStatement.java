@@ -26,7 +26,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * The table editor's Text toggle (docs/architecture/SHARED_SCREENS.md section 2, option C): one table as one Rachana statement, and the statement read back onto the
+ * The table editor's Text toggle (HOW_IT_FITS.md section S2, option C): one table as one Rachana statement, and the statement read back onto the
  * table's document. Every expression in it is Rachana as the table's own (row scope over the source); the statement adds no meaning of its
  * own, so it can be printed from any table over a kind or another table and read back without loss:
  *

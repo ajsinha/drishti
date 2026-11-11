@@ -226,7 +226,7 @@ later ones read memory. A loader line looks like:
   are never scanned. `reverse-index: false` turns them off.
 - **Derived kinds and impact** (F8) work from the column set as on Delta Lake; desk P&L is computed in the background and kept,
   recomputed every refresh.
-- **History** (`TRD 1000015 30`, [DATA_ARCHITECTURE.md](../../docs/architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)):
+- **History** (`TRD 1000015 30`, [HOW_IT_FITS.md](../../HOW_IT_FITS.md#d2-history-queries-an-entity-over-time)):
   the index record lists the entity's dates (one get), then one batch get reads their documents.
 
 ## Loading

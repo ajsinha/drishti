@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Discussion (ARCHITECTURE.md §31, Discussion): the second tab of the side drawer (the first is About, drishti_about.js). Threads on the whole view, on a
+/* Discussion (HOW_IT_FITS.md §A31, Discussion): the second tab of the side drawer (the first is About, drishti_about.js). Threads on the whole view, on a
    panel (the comment badge in the panel header, beside its ?) or on a field; reply, edit within the window, retract, resolve, follow and
    mute, and for administrators hide and lock. A comment's pin ("gen 1702 · 2 Oct") and *Open as it was* come from the server's thread
    answer (the console adds the link). New comments for people who follow a thread arrive on the bell's live connection (drishti_channel.js) and

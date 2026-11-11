@@ -97,7 +97,7 @@ AREAS = [
          "its switch (`drishti.engines.<engine>.enabled`) and every setting of that engine, under the keys they always had. "
          "`application.local.yaml`, the environment and the command line still win over a file. Admin → Engines and "
          "`drishti.py server engines` write only the switch and `changed`; every other key is edited in the file "
-         "([ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#21-compute-engines-on-or-off), [ARCHITECTURE.md](../architecture/ARCHITECTURE.md#27-compute-engines)). "
+         "([ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#21-compute-engines-on-or-off), [HOW_IT_FITS.md](../architecture/ARCHITECTURE.md#27-compute-engines)). "
          "The old switch names are listed last: they still work, with a warning at start (`DRS-1024`)."),
     Area("modules", "Modules: `config/modules/*.yaml`",
          "One file per module (banking, capitalmarkets, economy), `config/modules/<module>.yaml` (`DRISHTI_MODULES_DIR`): the administrator's switch, and for a module in a jar of "
@@ -127,10 +127,10 @@ AREAS = [
          "wins over any key: `drishti.edition-spec.<key>` on the server, `edition.<key>` in the console "
          "([ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#12-what-a-lens-is))."),
     Area("store", "The content store: `config/store/store.yaml`",
-         "Where user content is kept so every node of a cluster reaches it ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)); "
+         "Where user content is kept so every node of a cluster reaches it ([HOW_IT_FITS.md](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)); "
          "`drishti.store.file` names the file."),
     Area("runs", "BI runs: `config/runs/runs.yaml`",
-         "Every BI question as a bounded, visible job ([ARCHITECTURE.md §28](../architecture/ARCHITECTURE.md#287-bi-runs-every-bi-query-as-a-bounded-visible-job)); `drishti.bi.runs.file` names the file. "
+         "Every BI question as a bounded, visible job ([HOW_IT_FITS.md §A28](../architecture/ARCHITECTURE.md#287-bi-runs-every-bi-query-as-a-bounded-visible-job)); `drishti.bi.runs.file` names the file. "
          "Ready-made variants: `config/runs.examples/`."),
     Area("edit", "Write-back: `config/edit/`",
          "Write-back's four files ([APPROVALS_GUIDE.md](../guides/APPROVALS_GUIDE.md): the administrator's guide and, in its section 16, "

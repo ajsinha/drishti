@@ -35,7 +35,7 @@ import org.springframework.core.env.Environment;
 /**
  * The virtual tables' beans ({@code drishti.tables.*}, BI_GUIDE.md section T7a): the catalogue under {@code drishti.tables.root} and the
  * reads for a viewer (the request's {@link com.ash.drishti.engine.ViewerContext}: who, their attributes, masks and kinds), and the view
- * pipeline's port for panels whose source is a virtual table (docs/architecture/ARCHITECTURE.md V13).
+ * pipeline's port for panels whose source is a virtual table (HOW_IT_FITS.md V13).
  */
 @Configuration
 public class TablesConfiguration {
@@ -52,7 +52,7 @@ public class TablesConfiguration {
         return tables;
     }
 
-    /** The editors of tables, models and Python-driven tables (docs/architecture/SHARED_SCREENS.md sections 1 to 4): their API is {@link EditorController}. */
+    /** The editors of tables, models and Python-driven tables (HOW_IT_FITS.md sections S1 to 4): their API is {@link EditorController}. */
     @Bean
     public EditorService tablesEditorService(TablesService tables, DataViewService data, com.ash.drishti.server.security.Entitlements entitlements,
             com.ash.drishti.server.bi.BiAccess access, com.ash.drishti.server.bi.BiService bi, com.ash.drishti.identity.PreferenceStore preferences,

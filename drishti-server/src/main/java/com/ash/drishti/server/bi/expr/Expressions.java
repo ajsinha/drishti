@@ -27,7 +27,7 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * The one way BI reads an expression (docs/architecture/ARCHITECTURE.md §28 section 2.6): Rachana's one parser ({@link CheckedMode#parse}), lowered to BI's
+ * The one way BI reads an expression (HOW_IT_FITS.md §A28 section 2.6): Rachana's one parser ({@link CheckedMode#parse}), lowered to BI's
  * compiler tree by {@link NodeLowering}. A text in DEL or the old syntax is not read: {@code drishti.py tables migrate} rewrites it. Parses are
  * cached by text (the L0 parse cache, bounded), so the many places that read the same measure pay once. Thread-safe.
  */

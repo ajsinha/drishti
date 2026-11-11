@@ -98,7 +98,7 @@ public final class DigestService implements AutoCloseable {
 
     /**
      * A cluster service's state, published in this node's digest under {@code name} and rebuilt every round (VaR shards: the shards this
-     * node holds, DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built); a change raises the digest's hash, so peers pull it within a round. Null removes it.
+     * node holds, HOW_IT_FITS.md#d13-var-sharding-how-it-is-built); a change raises the digest's hash, so peers pull it within a round. Null removes it.
      */
     public void service(String name, Supplier<String> state) {
         if (state == null) {
@@ -355,7 +355,7 @@ public final class DigestService implements AutoCloseable {
             packEntries.add(new Digest.PackEntry(p.name(), p.code(), p.version(), packHash(p), peerOnly.contains(p.name())));
             for (String kind : p.kinds().stream().sorted().toList()) {
                 if (com.ash.drishti.memlake.MemoryBinding.remoteHere(kind)) {
-                    continue;                                    // held in memory by its owner node: not offered from here (docs/architecture/DATA_ARCHITECTURE.md s9)
+                    continue;                                    // held in memory by its owner node: not offered from here (HOW_IT_FITS.md s9)
                 }
                 String code = mnemonics.codeFor(kind);
                 String label = code == null ? kind : mnemonics.of(code).map(x -> x.label()).orElse(kind);

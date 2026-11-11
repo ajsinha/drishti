@@ -40,7 +40,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The logical plan (docs/architecture/ARCHITECTURE.md §28 sections 3.6, 4 and 5): one plan hash for one question however it is written, the security rewriter's
+ * The logical plan (HOW_IT_FITS.md §A28 sections 3.6, 4 and 5): one plan hash for one question however it is written, the security rewriter's
  * scans and semi-joins, the signature (same security, same id; never the predicates), lowering to the engine's request, the result cache shared by
  * signature and invalidated by generation, the guards that refuse; and two property tests on the engine: ANDing a rule never adds a row, and a rollup answers
  * exactly as the columns layer.

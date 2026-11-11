@@ -14,7 +14,7 @@
 
 """Wave B, console lane, in Chromium over the real server and console (the W1 model stack of tests/test_w1_model_designer_browser.py on this file's own ports
 18926 and 17926 plus the pytest-xdist offset: security on, the trading and core packs, a small file lake of trades and desks). The acceptance of
-docs/architecture/ARCHITECTURE.md §28 section 12.2 for the console lane:
+HOW_IT_FITS.md §A28 section 12.2 for the console lane:
 
 * no BI page computes: no WebAssembly, Pyodide, DuckDB-Wasm or Perspective file is requested, and no page's policy allows 'wasm-unsafe-eval';
 * a %-of-total measure (share_of), equal to an independent computation of the same rows;

@@ -27,7 +27,7 @@ import java.util.Set;
 
 /**
  * The row rule {@code related_rows('alias')}: a table limited to the rows related to the rows of another table of the model that the reader sees
- * (the owner's decision of 2026-11-07, ARCHITECTURE.md §28 8.5: nobody sees more data after the upgrade; a desk head's rule on the trades also limits the
+ * (the owner's decision of 2026-11-07, HOW_IT_FITS.md §A28 8.5: nobody sees more data after the upgrade; a desk head's rule on the trades also limits the
  * related rows of another fact). Related means sharing a key: a dimension both reference many-to-one (the same key column of it), a reference
  * from one table to the other, or, for a live table's history, the history's group columns. The rule is written as {@code EXISTS} over the other
  * table at the query's dates with the other table's own rules for the reader; a rule that cannot be honoured (no such table, no shared key, a

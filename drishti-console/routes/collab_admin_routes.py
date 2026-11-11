@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Administration of collaboration: Admin > Collaboration (ARCHITECTURE.md §31, Administrators and compliance). One page for moderation
+"""Administration of collaboration: Admin > Collaboration (HOW_IT_FITS.md §A31, Administrators and compliance). One page for moderation
 (search threads, hide and unhide comments, lock), legal holds, the compliance export, chain verification, the retention dry run and
 the bridges. The server decides who may do what (``admin`` or ``compliance``, call by call); the page shows only the sections the
 caller's roles open and these routes carry the request, put each time in the console's zone and turn the server's problems into JSON."""

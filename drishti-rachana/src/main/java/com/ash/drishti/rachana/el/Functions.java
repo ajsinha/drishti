@@ -31,7 +31,7 @@ import java.util.function.Function;
  * Rachana's own functions are scalars (one value from values). Every aggregate ({@code sum}, {@code count}, {@code avg},
  * {@code min} and {@code max} over one list, {@code median}, {@code percentile} …), the grouping behind {@code group(...)}, and
  * {@code measure(...)} and {@code cell(...)} come from the pivot engine, registered into this table by a {@link FunctionProvider}
- * ({@link Aggregates}; docs/architecture/ARCHITECTURE.md parts 1 to 3). Functions are pure and cheap; an empty argument gives an empty result unless the
+ * ({@link Aggregates}; HOW_IT_FITS.md parts 1 to 3). Functions are pure and cheap; an empty argument gives an empty result unless the
  * function says otherwise, a masked one a masked result, and a value of the wrong type (text where a number is needed)
  * raises {@code DRS-2102} naming the function and the value, which {@code iferror(...)} turns into a fallback.
  *

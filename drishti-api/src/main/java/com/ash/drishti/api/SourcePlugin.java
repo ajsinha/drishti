@@ -146,7 +146,7 @@ public interface SourcePlugin extends AutoCloseable {
     /**
      * How many rows one business date of the kind holds, from the source's metadata only (a Delta table's add-action statistics, an Iceberg
      * snapshot's manifests), or empty when it cannot say without reading data (the default). Must read no data file: the BI runs planner asks it
-     * for every date of a question before anything runs (docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 4.1).
+     * for every date of a question before anything runs (HOW_IT_FITS.md §A28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 4.1).
      */
     default Optional<RowEstimate> rowEstimate(String kind, java.time.LocalDate date) {
         return Optional.empty();
@@ -205,7 +205,7 @@ public interface SourcePlugin extends AutoCloseable {
 
     /**
      * As {@link #vectors(String, String, java.util.List, AsOf, VectorSink)}, for a reader that needs only the rows whose key is in
-     * {@code range} (a VaR shard, DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built): a source may skip the files whose statistics show none inside; it may still give
+     * {@code range} (a VaR shard, HOW_IT_FITS.md#d13-var-sharding-how-it-is-built): a source may skip the files whose statistics show none inside; it may still give
      * rows outside (the reader checks each row). By default the whole date, as the plain read.
      */
     default boolean vectors(String kind, String column, java.util.List<String> texts, AsOf asOf, KeyRange range, VectorSink sink)
@@ -224,7 +224,7 @@ public interface SourcePlugin extends AutoCloseable {
     }
 
     /**
-     * Bulk read for analytics (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 6.1): the chosen paths of a kind over a business-date range, filters applied, as column
+     * Bulk read for analytics (HOW_IT_FITS.md §A28 › Rūpaka: the original design and every phase as built, section 6.1): the chosen paths of a kind over a business-date range, filters applied, as column
      * batches. Empty when the source cannot answer it as columns (the caller then reads records and warns that a large table will be slow).
      * Sources that promote columns implement it with {@link ColumnScans#over}.
      */
@@ -233,7 +233,7 @@ public interface SourcePlugin extends AutoCloseable {
     }
 
     /**
-     * The entity on each business date of the request that this source holds, oldest first (DATA_ARCHITECTURE.md › History queries: an entity over time, section 9). The default
+     * The entity on each business date of the request that this source holds, oldest first (HOW_IT_FITS.md › History queries: an entity over time, section 9). The default
      * reads date by date through {@link #fetch(EntityRef, AsOf)}, {@link HistoryRequest#parallelDays()} at once ({@link HistoryReads#perDay});
      * a connector whose layout can list or read an entity's dates in one go overrides it. A date answered by an earlier date's document is
      * not a day of the entity. {@link HistoryRequest#fields()}, when set, may cut the documents to those top-level fields.
@@ -371,7 +371,7 @@ public interface SourcePlugin extends AutoCloseable {
     }
 
     /**
-     * Whether this source's data is held in memory only, by contract (a lake at {@code mem://}, docs/architecture/DATA_ARCHITECTURE.md):
+     * Whether this source's data is held in memory only, by contract (a lake at {@code mem://}, HOW_IT_FITS.md):
      * the server then keeps its documents off every disk (no disk caches, no saved rows, no reports or mail carrying them); only a user's
      * download may leave.
      */

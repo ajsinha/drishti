@@ -172,7 +172,7 @@ public final class BiExporter {
     }
 
     /**
-     * A stored answer (a BI run's result, docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 14.1 export) as a one-table document: its columns, its rows up to
+     * A stored answer (a BI run's result, HOW_IT_FITS.md §A28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 14.1 export) as a one-table document: its columns, its rows up to
      * {@code drishti.distribution.export.max-rows} (cut with a note, never silently), its masked columns named. The answer is already the reader's own
      * version (masks applied), so nothing is computed here.
      */

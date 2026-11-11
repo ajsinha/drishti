@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Arrow to the browser (DATA_GUIDE.md › Data formats, section 6; docs/architecture/DATA_ARCHITECTURE.md decided 5), the console's part (core/arrow_answer.py):
+"""Arrow to the browser (DATA_GUIDE.md › Data formats, section 6; HOW_IT_FITS.md decided 5), the console's part (core/arrow_answer.py):
 the server's stream (written here as the server writes it, tests/arrow_server_stream.py) reads back as the very JSON answer (nulls, dates
 as text, decimals, integers past 2^53, unicode, a key left out of some records, repeated text as a dictionary); and the negotiation: Accept
 names the Arrow stream, the server's Arrow is passed through as it came, a JSON answer goes as JSON (the console writes no Arrow), and

@@ -21,7 +21,7 @@ import com.github.benmanes.caffeine.cache.Expiry;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * The L1 result cache (docs/architecture/ARCHITECTURE.md §28 section 6.1): answers keyed by <b>plan hash</b> (the question, the model at its fingerprint, the
+ * The L1 result cache (HOW_IT_FITS.md §A28 section 6.1): answers keyed by <b>plan hash</b> (the question, the model at its fingerprint, the
  * resolved time), <b>security signature</b> (readers with identical effective security share an entry; different security never does) and the <b>generation</b>
  * of the model's data (any load, refresh or live batch moves it, so a stale answer is never served). An as-of answer has no time to live (only idle eviction);
  * an answer for the current state lives {@code cache-ttl} at most. Disposable: dropping it changes no answer, only latency. Thread-safe.

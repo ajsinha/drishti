@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The reply box on a shared view (ARCHITECTURE.md §31, Share with a note): the sender and the people the share reached answer in the banner
+/* The reply box on a shared view (HOW_IT_FITS.md §A31, Share with a note): the sender and the people the share reached answer in the banner
    (POST /api/share/{id}/replies, Ctrl+Enter sends); the other party is told by the server. The reply is drawn with textContent from what
    the server returns (scrubbed for this reader, its time in the top bar's zone). */
 (function () {

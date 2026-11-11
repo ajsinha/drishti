@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * What a connector can do for the query planner (docs/architecture/ARCHITECTURE.md §28 section 6.6, the pushdown capability descriptor; it replaces the fallback to
+ * What a connector can do for the query planner (HOW_IT_FITS.md §A28 section 6.6, the pushdown capability descriptor; it replaces the fallback to
  * a default dialect): whether it is a SQL store and in which dialect, whether it aggregates (an {@code Aggregate} fragment is pushed into it), the column
  * types it filters on, whether it streams (pushes changes: live tables), whether it reads by business date, and how many fragments it runs at once.
  *

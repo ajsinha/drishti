@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Build home's registry of object types (2.9.11.e; docs/architecture/SHARED_SCREENS.md section 1, mock-up e1-build-home A, B and C).
+"""The Build home's registry of object types (2.9.11.e; HOW_IT_FITS.md section S1, mock-up e1-build-home A, B and C).
 
 Every kind of thing a person may build (a connector, a table, a Sutra, a report, ...) is one :class:`ObjectType`, registered by the domain
 that owns it: the core's in ``core/build_types.py``, a module's in the file its plugin.yaml lists under ``registers:`` (banking's:

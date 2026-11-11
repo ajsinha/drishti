@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* BI runs in the browser (docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), sections 6, 7, 11 and 14.3): the words for a run's state, estimate and failure; the one event stream
+/* BI runs in the browser (HOW_IT_FITS.md §A28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), sections 6, 7, 11 and 14.3): the words for a run's state, estimate and failure; the one event stream
    of the person's runs (/bi/api/runs/events); the run card a visual shows while its question runs in the background, with the confirm and "needs a background
    run" cards; and drawing a visual from a stored result (?run=<id>). The Runs tab is drishti_bi-runs-tab.js. Every right comes from the run's `can`, computed by the
    server: this file never decides who may do what. Exposes drishtiBi.runs. */

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Python custom aggregation functions for the pivot engine (docs/architecture/ARCHITECTURE.md section 26.5).
+"""Python custom aggregation functions for the pivot engine (HOW_IT_FITS.md section A26.5).
 
 A function is a class with four steps, ``start(params)``, ``add(state, batch)`` (a columnar batch of the cell's rows: the declared inputs
 only, already ruled and masked), ``merge(a, b)`` and ``finish(state)``, decorated with :func:`function`::

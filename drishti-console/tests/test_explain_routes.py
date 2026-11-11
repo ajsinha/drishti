@@ -11,7 +11,7 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""One Explain for every number (docs/architecture/SHARED_SCREENS.md section 3) in the console: the proxy passes the request to the
+"""One Explain for every number (HOW_IT_FITS.md section S3) in the console: the proxy passes the request to the
 server as the person, the page renders the request it was given, VAR EXPLAIN opens the page at Why it moved, the VaR and exposure pages
 carry Explain and no longer their own panels (How calculated, the ? pop-up, the Why it moved tab, the provenance box), the old addresses
 are gone, F1 has the guide's section."""

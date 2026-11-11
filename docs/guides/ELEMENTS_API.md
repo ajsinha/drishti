@@ -14973,7 +14973,7 @@ Returns `void`.
 
 #### `PANEL_KINDS`
 
-The panel kinds drawn with the engine (VIEWMODEL.md section 4).
+The panel kinds drawn with the engine (HOW_IT_FITS.md section V4).
 
 #### `escapeTip(s)`
 
@@ -15028,7 +15028,7 @@ Returns `{mode: ('flat'\|'up'\|'none'), top: number}`.
 
 #### `panelOption(kind, data, tokens, size, view)`
 
-A panel's chart option: the console's, from the panel's data (VIEWMODEL.md section 4) and the theme's tokens (panelTokens).
+A panel's chart option: the console's, from the panel's data (HOW_IT_FITS.md section V4) and the theme's tokens (panelTokens).
 
 | Parameter | Type | Meaning |
 |---|---|---|
@@ -17072,7 +17072,7 @@ The renderer's version (Elements library drishti-renderer).
 
 #### `CONTRACTS`
 
-The ViewModel contract majors this renderer draws (VIEWMODEL.md section 8: a ViewModel without a contract is 1).
+The ViewModel contract majors this renderer draws (HOW_IT_FITS.md section V8: a ViewModel without a contract is 1).
 
 #### `render(container, source, options)`
 
@@ -17088,7 +17088,7 @@ Returns `Handle`.
 
 #### `patch`
 
-patch(handle, frame): applies a live frame {seq, generation, patches} (VIEWMODEL.md section 5).
+patch(handle, frame): applies a live frame {seq, generation, patches} (HOW_IT_FITS.md section V5).
 
 #### `subscribe`
 
@@ -17118,7 +17118,7 @@ Returns `void`.
 
 #### `KINDS` : `ReadonlyArray&lt;string&gt;`
 
-The kinds this renderer draws (VIEWMODEL.md section 4): all twenty-two.
+The kinds this renderer draws (HOW_IT_FITS.md section V4): all twenty-two.
 
 #### `tableHooks(R)`
 

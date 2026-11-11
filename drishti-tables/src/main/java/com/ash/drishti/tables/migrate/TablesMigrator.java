@@ -37,7 +37,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 /**
- * The one migration tool (docs/architecture/ARCHITECTURE.md §28 section 4), {@code drishti.py tables migrate}: BI's datasets into virtual tables and BI's
+ * The one migration tool (HOW_IT_FITS.md §A28 section 4), {@code drishti.py tables migrate}: BI's datasets into virtual tables and BI's
  * models into models of the layer, every DEL expression into Rachana in the same pass. Plans first (nothing written), then a dry run prints
  * the diff per file, {@code --check} says whether anything would change (exit 1), and a write writes the files, one audit line per item.
  * Idempotent: an item already in the layer's form is left as it is, and a second run over the output changes nothing.
@@ -523,7 +523,7 @@ public final class TablesMigrator {
         if (!out.isEmpty()) {
             out.add("");
         }
-        out.add("# Migrated from config/bi/" + source + " by drishti.py tables migrate (docs/architecture/ARCHITECTURE.md §28 section 4).");
+        out.add("# Migrated from config/bi/" + source + " by drishti.py tables migrate (HOW_IT_FITS.md §A28 section 4).");
         return out;
     }
 }

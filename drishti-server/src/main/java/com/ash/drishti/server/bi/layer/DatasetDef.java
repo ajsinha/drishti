@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * A dataset of the model layer, {@code rachana: 2} (docs/architecture/ARCHITECTURE.md §28 › The model layer: the specification of wave W1, section 1): one governed table with a source, a grain, typed columns
+ * A dataset of the model layer, {@code rachana: 2} (HOW_IT_FITS.md §A28 › The model layer: the specification of wave W1, section 1): one governed table with a source, a grain, typed columns
  * with roles, meanings, units and additivity, a time mode, refresh and its own security. It never joins and declares no measures (a model does both). Produced
  * by {@link DatasetDefParser}, or generated from a pack kind by {@link PackDatasets}. Immutable.
  *
@@ -37,7 +37,7 @@ import java.util.Set;
  * @param ai the {@code ai:} block, kept for wave W5
  * @param tests the {@code tests:} entries as written
  * @param rollups the {@code rollups:} entries as written
- * @param derivation how a narrowing dataset reshapes its base (docs/architecture/ARCHITECTURE.md §28 section 3.1): a column subset, an explicit de-duplication,
+ * @param derivation how a narrowing dataset reshapes its base (HOW_IT_FITS.md §A28 section 3.1): a column subset, an explicit de-duplication,
  *     Python columns, a coarser grain ({@code group}); the {@code derive} expressions are columns with an {@code expr}
  */
 public record DatasetDef(String name, String version, String id, String title, String description, String owner, boolean sample, String endorsement,
@@ -160,7 +160,7 @@ public record DatasetDef(String name, String version, String id, String title, S
         /** A SQL view: a reviewed Drishti SQL statement over a model ({@code source: { sql, model }}); its answer is the table. */
         public static final String SQL = "sql";
         /**
-         * A promoted run's result (docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 9.4): {@code source: { run: <snapshot>, version: N, token: <t> }}, the rows of
+         * A promoted run's result (HOW_IT_FITS.md §A28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 9.4): {@code source: { run: <snapshot>, version: N, token: <t> }}, the rows of
          * {@code <store.dir>/snapshots/<snapshot>/v<N>/answer.json}, read-only. Kept in {@code model} (the snapshot's name), {@code query} (the version, or
          * {@code latest}) and {@code each} (the token that binds the snapshot to the dataset promoted from it).
          */

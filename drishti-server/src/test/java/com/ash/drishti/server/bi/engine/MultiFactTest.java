@@ -180,7 +180,7 @@ class MultiFactTest {
         assertThat(mixed.keySet()).isEqualTo(both.keySet());
         both.forEach((desk, v) -> assertThat(((Number) mixed.get(desk)[0]).doubleValue()).isCloseTo(((Number) v[0]).doubleValue() / ((Number) v[1]).doubleValue(), org.assertj.core.data.Offset.offset(1e-9)));
         // the desk-head's row rule reads trades.desk: never shown unrestricted. The migration gives the limits related_rows('trades') for her role
-        // (ARCHITECTURE.md §28 8.5, the owner's decision of 2026-11-07), so she sees the limits of the desks of the trades she sees, and nothing more
+        // (HOW_IT_FITS.md §A28 8.5, the owner's decision of 2026-11-07), so she sees the limits of the desks of the trades she sees, and nothing more
         Map<String, Object[]> mine = rows(run("{\"fields\":[\"desks.desk\"],\"measures\":[\"Trades\",\"LimitTotal\"]," + DAY + "}", who(true, "DESK-A", "desk-head")));
         assertThat(mine.keySet()).containsExactly("DESK-A");
         assertThat(((Number) mine.get("DESK-A")[0]).doubleValue()).isEqualTo(byDesk().get("DESK-A")[0]);

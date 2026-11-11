@@ -23,7 +23,7 @@ import com.ash.drishti.common.ErrorCode;
 import java.util.List;
 
 /**
- * A Python custom function (ARCHITECTURE.md section 26.5) as the engine sees it: the four steps run by the host's sandboxed worker
+ * A Python custom function (HOW_IT_FITS.md section A26.5) as the engine sees it: the four steps run by the host's sandboxed worker
  * pool through {@link PythonFunctionClient}; the state is the worker's bytes. It has no SQL form: the tabular provider feeds it the cell's
  * rows in columnar batches ({@code functions.python.batch-rows}, 64K by default). A holistic Python function gets all of a cell's rows in one
  * call (its size bound applies); a mergeable or sketch one is merged in the engine's fixed order like any built-in.

@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The one Approvals queue (templates/approvals.html; SHARED_SCREENS.md section 2): reads /approvals/api/list, draws the due-soon items
+/* The one Approvals queue (templates/approvals.html; HOW_IT_FITS.md section S2): reads /approvals/api/list, draws the due-soon items
    pinned on top and the rest newest first, opens an item (/approvals/api/item/<kind>/<id>) with its diff, effect, rules and questions, and
    posts the decision or a question. The server decides who may do what: the buttons drawn are the actions it answers. */
 /**

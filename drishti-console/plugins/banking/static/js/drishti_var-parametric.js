@@ -7,7 +7,7 @@
    fat-tail gap), the tree's Parametric and Gap columns, and the normal curve over the P&L path's histogram with both markers, shaded
    tails and the gap bracket (drishti-risk's P&L distribution with the server's fitted normal). The Euler components and the worked figures are in the VaR Playground's Parametric tab.
 
-   Every parametric figure has a ? that is the one Explain's (drishti-insight; SHARED_SCREENS.md section 3): hover for the preview, click
+   Every parametric figure has a ? that is the one Explain's (drishti-insight; HOW_IT_FITS.md section S3): hover for the preview, click
    for the drawer, its Formula the server's own lines (describe) with the numbers. The browser computes nothing: every number, curve point and line comes from the answer (the server-computes-risk rule). The
    Normal curve toggle (key N) is remembered per person (localStorage) and in the link (nc=0). */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */

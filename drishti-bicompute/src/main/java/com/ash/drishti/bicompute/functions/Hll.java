@@ -20,7 +20,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
 /**
- * A HyperLogLog sketch (Flajolet, Fusy, Gandouet and Meunier, 2007; ARCHITECTURE.md section 26.6): 2^p registers, each the largest rank
+ * A HyperLogLog sketch (Flajolet, Fusy, Gandouet and Meunier, 2007; HOW_IT_FITS.md section A26.6): 2^p registers, each the largest rank
  * (position of the first 1-bit after the first p bits of a 64-bit hash) seen among the values that land on it. Merge is a register-wise
  * maximum: exact for the sketch, associative and commutative, so any split of the rows merged in any order gives the same registers. The
  * estimate's relative standard error is about 1.04 / √m (m = 2^p): 1.6% at p = 12, 0.8% at p = 14.

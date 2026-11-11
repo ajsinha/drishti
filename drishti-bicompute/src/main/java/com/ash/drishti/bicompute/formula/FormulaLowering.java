@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * A pivot formula (ARCHITECTURE.md section 26.5) read by Rachana's one parser and lowered to the engine's formula tree ({@link FormulaAst}):
+ * A pivot formula (HOW_IT_FITS.md section A26.5) read by Rachana's one parser and lowered to the engine's formula tree ({@link FormulaAst}):
  * arithmetic over aggregate calls of the built-ins, each aggregating a row expression with an optional {@code where =} condition.
  *
  * <pre>

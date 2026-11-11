@@ -56,7 +56,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Watermarked snapshots (ARCHITECTURE.md §31, step 10): a PNG of a shared view for the share's email and its page, drawn on the server
+ * Watermarked snapshots (HOW_IT_FITS.md §A31, step 10): a PNG of a shared view for the share's email and its page, drawn on the server
  * with Java2D. Off unless {@code drishti.collab.snapshots.enabled} (a pack may override it per pack).
  *
  * <p>The picture is computed for the <b>most restrictive</b> of the people it is for: the view is built once, with the field masks of

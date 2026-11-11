@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The plan as people read it (docs/architecture/ARCHITECTURE.md §28 section 4.7): a tree of maps for {@code meta.plan} and an indented text for {@code EXPLAIN}.
+ * The plan as people read it (HOW_IT_FITS.md §A28 section 4.7): a tree of maps for {@code meta.plan} and an indented text for {@code EXPLAIN}.
  * A scan says <em>that</em> row rules applied (how many) and which columns are masked for the reader, never the rules' text: another reader's predicates and
  * the values of {@code user.*} stay on the server.
  */

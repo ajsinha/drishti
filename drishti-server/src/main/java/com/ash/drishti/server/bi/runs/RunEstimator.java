@@ -27,7 +27,7 @@ import java.util.Optional;
 import java.util.TreeSet;
 
 /**
- * The planner's estimate maths (docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 4), as pure functions over metadata the caller has already read
+ * The planner's estimate maths (HOW_IT_FITS.md §A28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 4), as pure functions over metadata the caller has already read
  * ({@code Layers.peek}, {@code SourcePlugin.rowEstimate}, {@code RunHistory}, {@code RunRates}). Nothing here reads data or a file.
  *
  * <pre>

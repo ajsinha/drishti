@@ -20,7 +20,7 @@ import com.ash.drishti.rachana.el.Expr;
 import java.util.List;
 
 /**
- * What the one compiler makes of a checked Rachana expression (docs/architecture/ARCHITECTURE.md §28 2.6): a row expression becomes the engine's row
+ * What the one compiler makes of a checked Rachana expression (HOW_IT_FITS.md §A28 2.6): a row expression becomes the engine's row
  * expression ({@link Row}: Rachana's tree, evaluated in Java over a live table's rows, and its SQL for a scan); an aggregate the
  * engine's aggregate function ({@link Aggregate}, the same {@code AggFunction} a pivot cell runs); a measure of measures a
  * {@link Shape} over its parts; a filter-context function the engine's context sub-plan ({@link Context}, decided by

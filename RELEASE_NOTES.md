@@ -837,11 +837,11 @@ days.**
   default), **Command first** and **Risk map**, each person's choice remembered. On a full instance, the **lens** (`drishti.lenses:
   risk`, off by default) gives each person *Open Drishti Risk* and *Leave Drishti Risk*, with no restart; a lens hides, it does not
   secure. Without an edition Drishti is exactly as before. Works across a cluster; Admin → Net warns when members differ.
-- **VaR sharded across Drishti\*net** ([VAR_SHARDING](docs/architecture/DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built)): off by default; with the market-risk pack's
+- **VaR sharded across Drishti\*net** ([VAR_SHARDING](HOW_IT_FITS.md#d13-var-sharding-how-it-is-built)): off by default; with the market-risk pack's
   `sharding:` block each date is cut into legal-entity and desk ranges, owned by two members each (rendezvous hashing, no consensus
   protocol); every member keeps every node's aggregate, so bank and desk totals answer even with a shard's owners down; other scopes sum
   one partial per shard, never a partial VaR (`DRS-5215`); handover and drain for scale-in. Equal to one server to the cent.
-- **The parallel lake loader** ([PARALLEL_LOADER](docs/architecture/DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-drishti-lakeload), [TOOLS 4.13](docs/guides/CLI_REFERENCE.md)): a
+- **The parallel lake loader** ([PARALLEL_LOADER](HOW_IT_FITS.md#d10-the-parallel-lake-loader-drishti-lakeload), [TOOLS 4.13](docs/guides/CLI_REFERENCE.md)): a
   config-driven, multi-threaded Java loader of JSON Lines from a folder or S3 into Delta or Iceberg, memory bounded, one commit per
   date. `lake build` keeps the Python path as the default; `--engine java` asks for the loader. Both follow one duplicate-record rule:
   the latest `COMPUTED_AT` wins (else the last read), the others counted, never a failure.
@@ -852,11 +852,11 @@ days.**
 - **Fixes:** an intraday batch can no longer bring back a date a reload dropped (published only over the date it was built on);
   reporting currencies always carry the current intraday layer; batches listed in a stable order; cluster changes queued for suspected
   members; the browser tests ignore a checkout's own connector and cluster files.
-- **Documents:** the ViewModel contract and its JSON Schema ([VIEWMODEL](docs/architecture/VIEWMODEL.md),
+- **Documents:** the ViewModel contract and its JSON Schema ([VIEWMODEL](HOW_IT_FITS.md#part-iv--the-viewmodel-contract),
   `GET /api/v1/viewmodel/schema`); how a screen is made, generic not bespoke (ARCHITECTURE section 7a); a worked example of every data
   type, field by field ([data samples](docs/contracts/samples/README.md)), with every input contract audited against all its rows and a
   drift test; the computed-attributes analysis of the market-risk and counterparty-risk packs, with its decisions
-  ([COMPUTED_ATTRIBUTES](docs/architecture/DATA_ARCHITECTURE.md#12-computed-and-derived-attributes)); the documentation consolidated (178 to 152 active documents,
+  ([COMPUTED_ATTRIBUTES](HOW_IT_FITS.md#d12-computed-and-derived-attributes)); the documentation consolidated (178 to 152 active documents,
   obsolete designs deleted); the README rewritten as a product page.
 - **Upgrade:** rebuild the server image or jar so the new launch flags apply; nothing else to do. The lens and sharding are off until
   you turn them on.
@@ -1068,7 +1068,7 @@ designs kept ([IMPLEMENTATION_PLAN.md](docs/architecture/IMPLEMENTATION_PLAN.md#
 - **Admin → Commands** ([COMMANDS.md](docs/guides/ADMIN_GUIDE.md#20-functions-func-every-command-and-turning-one-on-or-off)): switch any command off for everyone; it then answers "not active"
   everywhere (page, API, command, CLI, search, exports, BI, AI; `403 DRS-1016`), stored in the Drishti database and gossiped to every
   server; ready for role-based access.
-- **Write-back** ([WRITE_BACK.md](docs/architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals), [EDITS.md](docs/guides/APPROVALS_GUIDE.md#7-for-administrators-switching-write-back-on), tutorial 24, off by default):
+- **Write-back** ([WRITE_BACK.md](HOW_IT_FITS.md#a31-collaboration-write-back-and-approvals), [EDITS.md](docs/guides/APPROVALS_GUIDE.md#7-for-administrators-switching-write-back-on), tutorial 24, off by default):
   forms save through an edit log in the Drishti database, with four-eyes approval, a cluster mode, JDBC writes through an outbox, and
   reactive recomputes and live updates after each change.
 - **Branding from configuration:** the product name, owner, copyright and notices come from configuration only; guard tests.
@@ -1119,7 +1119,7 @@ Everything since 2.6.7, including the patches pushed to main without a tag.
 *2026-10-21.* **BI runs: every heavy question becomes a visible, shareable run; chart any table; Delta and Iceberg side by side.**
 2.6.7 also carries 2.6.6, the QA release that was never tagged on its own (see below).
 
-- **BI runs** ([BI_RUNS.md](docs/architecture/ARCHITECTURE.md#287-bi-runs-every-bi-query-as-a-bounded-visible-job), [BI_RUNS_GUIDE.md](docs/guides/BI_GUIDE.md#r15-background-runs-long-bi-questions)):
+- **BI runs** ([BI_RUNS.md](HOW_IT_FITS.md#a287-bi-runs-every-bi-query-as-a-bounded-visible-job), [BI_RUNS_GUIDE.md](docs/guides/BI_GUIDE.md#r15-background-runs-long-bi-questions)):
   - **Planned before it runs:** a planner sizes every question from metadata only (Delta's row counts, Iceberg's manifests, built
     layers; tested to read no data). A cheap question answers at once; a heavy one becomes a run; a very heavy one asks to confirm; an
     impossible one is refused before anything runs. Report visuals, MQ, SQL and statements all take `Prefer: respond-async`; without it
@@ -1156,7 +1156,7 @@ Everything since 2.6.7, including the patches pushed to main without a tag.
 
 # Drishti 2.6.5 — release notes
 
-*2026-10-20.* **History queries: type a range after an id and see the entity over time.** ([HISTORY_QUERIES.md](docs/architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time),
+*2026-10-20.* **History queries: type a range after an id and see the entity over time.** ([HISTORY_QUERIES.md](HOW_IT_FITS.md#d2-history-queries-an-entity-over-time),
 tutorial 21, [USER_GUIDE](docs/guides/USER_GUIDE.md#history-an-entity-over-time).)
 
 - **The command:** `TRD 1000015 30` (the last 30 business days with data), `30D`, `2W`, `3M`, `1Y`, `YTD`, `MTD`, `QTD`,
@@ -1183,7 +1183,7 @@ tutorial 21, [USER_GUIDE](docs/guides/USER_GUIDE.md#history-an-entity-over-time)
 # Drishti 2.6.0 — release notes
 
 *2026-10-20.* **Paper statements and field parameters in BI, Cassandra and Iceberg without Hadoop, three new themes, and the
-known bugs fixed.** ([BI_DESIGN.md](docs/architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer).)
+known bugs fixed.** ([BI_DESIGN.md](HOW_IT_FITS.md#a28-business-intelligence-on-the-table-layer).)
 
 - **Paginated reports and statements:** a report page with `layout: statement` is paper: page-exact PDF (written by the
   server) and Excel set to print, headers and footers with tokens, page breaks, repeated column titles, groups kept
@@ -1195,16 +1195,16 @@ known bugs fixed.** ([BI_DESIGN.md](docs/architecture/ARCHITECTURE.md#28-busines
 - **drishti-iceberg:** Drishti's own Apache Iceberg engine with no Hadoop, so Iceberg runs on Windows; it is the default
   engine (`engine: library` brings back the old one), and faster: a connector starts in 637 ms (1.8 s before), a trade on a
   past day reads in 94 ms (353 ms). **`iceberg-external`** reads Iceberg tables Drishti did not write (Spark, Flink, Trino,
-  Snowflake, Glue) ([DRISHTI_ICEBERG.md](docs/architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop), [ICEBERG_EXTERNAL_CONNECTOR.md](plugins/drishti-plugin-iceberg-external/README.md)).
+  Snowflake, Glue) ([DRISHTI_ICEBERG.md](HOW_IT_FITS.md#d3-drishti-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop), [ICEBERG_EXTERNAL_CONNECTOR.md](plugins/drishti-plugin-iceberg-external/README.md)).
 - **Three themes:** Green Terminal, Crimson Terminal and Blue Terminal (ten in all); every text colour passes the contrast
   rule on every ground, labels on button fills too.
 - **Known bugs fixed:** a Drishti*net cluster never ends with no enabled administrator; members advertise only a real
   address; a BI query waits for a connector that is restarting; the report designer never saves a draft without its last
   change; Show the rows and Drill through use the selection at the click; embedded reports and Analyse wait as long as the
   server runs a query; flaky browser tests made steady under load.
-- **Designs:** history queries (2.6.5, [HISTORY_QUERIES.md](docs/architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)), Drishti on AWS
+- **Designs:** history queries (2.6.5, [HISTORY_QUERIES.md](HOW_IT_FITS.md#d2-history-queries-an-entity-over-time)), Drishti on AWS
   ([AWS_DEPLOYMENT.md](docs/guides/CLUSTER_GUIDE.md#12-drishti-on-aws-ecs-efs-and-s3)) and super scale, 500 GB a day for seven years
-  ([SUPER_SCALE.md](docs/architecture/ARCHITECTURE.md#3213-super-scale-design-not-built)).
+  ([SUPER_SCALE.md](HOW_IT_FITS.md#a3213-super-scale-design-not-built)).
 - **Roadmap:** 2.6.5 history queries → 2.7.0 write-back → 2.8.0 AI and the Sajha MCP connector; send and push and
   integration (PG-wire, Excel feed, embed tokens) after 3.0.0.
 - **Known:** two browser tests still flaky under heavy load (`test_showcase_clean_browser[map]`, the embedded Pivot click
@@ -1213,7 +1213,7 @@ known bugs fixed.** ([BI_DESIGN.md](docs/architecture/ARCHITECTURE.md#28-busines
 # Drishti 2.5.0 — release notes
 
 *2026-10-19.* **Drishti*net: several servers act as one Drishti, and the console carries on when one stops.** (Wave N of
-[BI_DESIGN.md](docs/architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer); operator's guide [NET.md](docs/guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet), tutorial 19.)
+[BI_DESIGN.md](HOW_IT_FITS.md#a28-business-intelligence-on-the-table-layer); operator's guide [NET.md](docs/guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet), tutorial 19.)
 
 - **One cluster, off by default:** servers find each other by gossip over HTTP from one seed, keep the member list in
   `<data dir>/net/peers.json`, and publish what they serve (packs with versions, kinds, the tables they read). Configured
@@ -1245,7 +1245,7 @@ Upgrading from 2.4.0: nothing to do for a single server (Drishti*net is off with
 # Previous release: Drishti 2.4.0 — release notes
 
 *2026-10-19.* **BI Studio: authoring and analysis as one product, Python data prep step by step, and query by form at
-scale.** (Wave C of [BI_DESIGN.md](docs/architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer).)
+scale.** (Wave C of [BI_DESIGN.md](HOW_IT_FITS.md#a28-business-intelligence-on-the-table-layer).)
 
 - **BI Studio:** the report, model and theme designers share one shell: an Explorer of your items, open items as tabs,
   and a dock with **Problems** (the server's check of the draft, linked to each visual) and **Query** (the visual's model
@@ -1278,7 +1278,7 @@ Upgrading from 2.3.0: stored boards become reports at the first start (`/bi/b/<i
 # Previous release: Drishti 2.3.0 — release notes
 
 *2026-10-17.* **BI that calculates like Power BI and stays live, production-shaped trades from three source systems, and a
-demo you can run from a fresh clone in minutes.** (Wave B of [BI_DESIGN.md](docs/architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer).)
+demo you can run from a fresh clone in minutes.** (Wave B of [BI_DESIGN.md](HOW_IT_FITS.md#a28-business-intelligence-on-the-table-layer).)
 
 - **Calculations with filter context:** `calc`, `share_of`, `parent_of` and `avg_by` change the filter a measure sees;
   calculation groups, field and numeric parameters (slicers), and % of total built in the UI.
@@ -1326,7 +1326,7 @@ the old camelCase names need the new names (the shipped packs and examples are c
 # Previous release: Drishti 2.2.0 — release notes
 
 *2026-10-17.* **The BI foundation rebuilt: datasets and data models rooted in packs, a Python-like expression language,
-read-only SQL, one query plan for everything.** (Wave A of [BI_DESIGN.md](docs/architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer).)
+read-only SQL, one query plan for everything.** (Wave A of [BI_DESIGN.md](HOW_IT_FITS.md#a28-business-intelligence-on-the-table-layer).)
 
 - **Datasets and data models.** Every pack kind is a dataset automatically; a dataset can narrow, filter, de-duplicate
   explicitly, derive columns (expression or Python) and group, and always traces back to its pack. A **data model** is

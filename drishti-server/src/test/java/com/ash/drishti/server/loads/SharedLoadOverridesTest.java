@@ -26,7 +26,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** Per-pack data loads overrides saved through Admin are documents every node reads (DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 11). */
+/** Per-pack data loads overrides saved through Admin are documents every node reads (HOW_IT_FITS.md › The content store: user content every node reaches, section 11). */
 class SharedLoadOverridesTest {
 
     @Test

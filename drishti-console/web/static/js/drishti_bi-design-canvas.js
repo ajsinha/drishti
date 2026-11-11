@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Rupaka phase 3 (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 9): the designer's canvas - the page's visuals on the 12-column grid, drawn with real data (and the time each query took),
+/* Rupaka phase 3 (HOW_IT_FITS.md §A28 › Rūpaka: the original design and every phase as built, section 9): the designer's canvas - the page's visuals on the 12-column grid, drawn with real data (and the time each query took),
    and the rules that put a field into a visual: a field dropped on the canvas makes the best visual for it; dropped on a visual (or its well) it joins that
    visual. The same wells logic serves the Fields pane's Add buttons. The canvas itself is drishti-designer's LayoutCanvas (grid): selecting (Shift or Ctrl for
    more), moving by the heading and resizing by the corner with the pointer, snapped to the grid, and the keys (arrows move, Shift+arrows resize, Delete,

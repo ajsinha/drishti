@@ -87,7 +87,7 @@ async def rupaka(request: Request, rest: str):
         return RedirectResponse("/build", status_code=303)
     if word in ("WORKSPACE", "WORKSPACES"):
         return RedirectResponse("/bi/w/me", status_code=303)
-    if word in ("RUNS", "RUN"):                                       # BI RUNS <GO>: my runs (docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 7.1)
+    if word in ("RUNS", "RUN"):                                       # BI RUNS <GO>: my runs (HOW_IT_FITS.md §A28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 7.1)
         return RedirectResponse("/bi/w/me?tab=runs", status_code=303)
     if word in ("CATALOGUE", "CATALOG"):
         return RedirectResponse("/bi/catalogue", status_code=303)
@@ -129,7 +129,7 @@ async def go(request: Request, q: str = ""):
         return RedirectResponse(f"/t?error={quote(f'DRS-4023 {head} is not in {title}: FUNC lists what you can use')}", status_code=303)
     if head in reserved_words() and head not in mnemonics() and not ed.word_on(head):    # a word the edition (or lens) switches off: said, not run (EXP is also a mnemonic)
         return RedirectResponse(f"/t?error={quote(f'DRS-4023 {head} is not part of {ed.title}: FUNC lists what you can use')}", status_code=303)
-    if typed.split(None, 1)[:1] and typed.split(None, 1)[0].upper() in BI_WORDS:        # reserved (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 4), whatever packs define
+    if typed.split(None, 1)[:1] and typed.split(None, 1)[0].upper() in BI_WORDS:        # reserved (HOW_IT_FITS.md §A28 › Rūpaka: the original design and every phase as built, section 4), whatever packs define
         return await rupaka(request, typed.split(None, 1)[1].strip() if " " in typed else "")
     words = q.replace("<GO>", "").replace("<go>", "").split()
     if words and words[0].upper() == FORM_WORD:                    # reserved too: FORM <pack> [kind] opens the pack's search form
@@ -170,7 +170,7 @@ async def go(request: Request, q: str = ""):
         return RedirectResponse(f"/t?error={quote(e.detail)}", status_code=303)
     if r.get("pack"):                       # a pack's code typed alone (MKT): its overview
         return RedirectResponse(f"/p/{quote(r['pack'])}", status_code=303)
-    hist = (r.get("history") or {}).get("query")   # TRD 1000015 30: the entity over time (DATA_ARCHITECTURE.md › History queries: an entity over time, section 4.3)
+    hist = (r.get("history") or {}).get("query")   # TRD 1000015 30: the entity over time (HOW_IT_FITS.md › History queries: an entity over time, section 4.3)
     if not r.get("ref") and r.get("matched") == 0 and not hist and len(q.replace("<GO>", "").split()) == 2:
         if (alias := await _one_suggestion(request, q.replace("<GO>", "").strip())) is not None:
             return RedirectResponse(f"/v/{alias['kind']}/{quote(alias['id'])}", status_code=303)   # FUND VTSAX: the fund whose share class it is

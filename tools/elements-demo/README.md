@@ -15,7 +15,7 @@
 -->
 # Elements demo: a host application for `<drishti-view>`
 
-The proof of concept of [Drishti Elements](../../docs/architecture/ARCHITECTURE.md#30-the-client-renderer-and-drishti-elements) (build step 0): a tiny "host" web
+The proof of concept of [Drishti Elements](../../HOW_IT_FITS.md#a30-the-client-renderer-and-drishti-elements) (build step 0): a tiny "host" web
 application on **its own origin** that shows live Drishti views in a Shadow DOM, without an iframe.
 
 It has its own sign-in (a demo cookie), its own backend endpoint that asks Drishti for a token **server to server** (the
@@ -85,7 +85,7 @@ drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_embed_e
 ```
 
 Results and what they changed in the plan are in the *Step 0 results* section of
-[EMBED_GUIDE.md](../../docs/architecture/ARCHITECTURE.md#30-the-client-renderer-and-drishti-elements).
+[EMBED_GUIDE.md](../../HOW_IT_FITS.md#a30-the-client-renderer-and-drishti-elements).
 
 ## Files
 

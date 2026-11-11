@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The YAML round trip of the designers (docs/architecture/ARCHITECTURE.md §28 section 8.2): a designer edits a document (the model or the dataset as an
+"""The YAML round trip of the designers (HOW_IT_FITS.md §A28 section 8.2): a designer edits a document (the model or the dataset as an
 object); writing it back must keep what the person wrote around it: comments, the order of keys, blank lines, the licence header. This writes the
 document as a **minimal patch of the original text**, on the concrete layout PyYAML reports (each top-level key's lines, and each entry's lines in a
 one-entry-per-line map such as ``measures:``):

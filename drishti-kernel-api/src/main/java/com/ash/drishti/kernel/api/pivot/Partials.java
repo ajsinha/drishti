@@ -22,7 +22,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 /**
- * A provider's answer to a plan (ARCHITECTURE.md section 26.4): per cell set, per cell key, the members counted and one partial state per
+ * A provider's answer to a plan (HOW_IT_FITS.md section A26.4): per cell set, per cell key, the members counted and one partial state per
  * function of the plan (in the plan's function order). The core merges partials of several shards in a fixed order
  * ({@link com.ash.drishti.bicompute.cluster.OrderedMerge}) and finishes them.
  *

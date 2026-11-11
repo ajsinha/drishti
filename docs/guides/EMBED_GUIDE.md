@@ -30,8 +30,8 @@ There are three ways in:
 | A grid, a chart or a picker in your own application, with or without a Drishti server | **the Elements libraries** (drishti-core, -grid, -chart, ...) | [13](#13-drishti-elements-libraries-in-your-own-app) and [14](#14-moving-an-ag-grid-enterprise-pivot-app) |
 
 What each screen contains is the **ViewModel**, the server's JSON of a screen already laid out and bound: its reference is
-[VIEWMODEL.md](../architecture/VIEWMODEL.md). How the renderer and the elements are built is
-[ARCHITECTURE.md](../architecture/ARCHITECTURE.md) (section 30). The API of every Elements library is [ELEMENTS_API.md](ELEMENTS_API.md).
+[HOW_IT_FITS.md](../../HOW_IT_FITS.md#part-iv--the-viewmodel-contract). How the renderer and the elements are built is
+[HOW_IT_FITS.md](../../HOW_IT_FITS.md#part-ii--architecture) (section 30). The API of every Elements library is [ELEMENTS_API.md](ELEMENTS_API.md).
 
 ## Contents
 
@@ -638,7 +638,7 @@ place** with a back stack, and reads as the person signed in to the console or w
 ```js
 const view = render(container, source, options);   // returns at once; view.ready settles after the first paint
 await view.ready;
-view.patch(frame);              // a live frame {seq, generation, patches} (VIEWMODEL.md section 5)
+view.patch(frame);              // a live frame {seq, generation, patches} (HOW_IT_FITS.md section V5)
 view.apply(message);            // a stream message (6.6)
 const stop = view.subscribe();  // follow the view's stream (default: this console's relay), returns stop()
 view.subscribe((on) => myChannel.subscribe(key, on));     // your own channel (on.frame, on.view, on.gone); returns stop()
@@ -719,7 +719,7 @@ keys starting `drishti`, static files named `drishti_<name>`.
 
 ### 6.6 Live updates and streamed screens
 
-**Live.** `subscribe()` follows the view's stream; `patch(frame)` applies a live frame exactly as [VIEWMODEL.md](../architecture/VIEWMODEL.md)
+**Live.** `subscribe()` follows the view's stream; `patch(frame)` applies a live frame exactly as [HOW_IT_FITS.md](../../HOW_IT_FITS.md#part-iv--the-viewmodel-contract)
 section 5 describes: `strip` (the cell rebuilt), `panel` (the panel rebuilt and re-enhanced, its grid place, phone order, tab state and
 fold kept; charts redrawn), `provenance` (the banners rebuilt), `deleted` (the view greyed under a banner, later patches ignored),
 `restored` (the view fetched again). An op the renderer does not know is ignored; a patch never changes the screen's structure. A
@@ -949,7 +949,7 @@ Three contracts, all semantic versions:
 - **The element and render API** (attributes, properties, methods, events and their `detail`, options, custom properties, parts, slots)
   changes only in a major version of the library.
 - **The ViewModel** carries `"contract": "1.0"`; the renderer refuses a major it does not draw (`DRS-9105`)
-  ([VIEWMODEL.md](../architecture/VIEWMODEL.md)).
+  ([HOW_IT_FITS.md](../../HOW_IT_FITS.md#part-iv--the-viewmodel-contract)).
 - **The embed API** (`/embed/v1`, `/embed/v2`) changes additively within a major. The element sends `Drishti-Embed-Api: <major>.<minor>`
   and the console answers in the newest compatible shape. A major's end is announced with `Deprecation` and `Sunset` headers and a `Link`
   on every answer (the console's `embed.lifecycle`, one entry per major); from the sunset day its calls are `410 DRS-8006`.

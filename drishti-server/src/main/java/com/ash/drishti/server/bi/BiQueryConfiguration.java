@@ -43,7 +43,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Rupaka phase 2: the beans of the dataset query engine (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, sections 6 and 7). The engine is an embedded DuckDB and starts its
+ * Rupaka phase 2: the beans of the dataset query engine (HOW_IT_FITS.md §A28 › Rūpaka: the original design and every phase as built, sections 6 and 7). The engine is an embedded DuckDB and starts its
  * connection on the first query, so a server that never runs a BI query pays nothing.
  */
 @Configuration

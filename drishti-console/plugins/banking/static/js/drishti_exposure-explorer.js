@@ -361,7 +361,7 @@
     }
   }
 
-  /** The one Explain (SHARED_SCREENS.md section 3, drishti-insight): each figure tile and Explain › carry their figure's request. */
+  /** The one Explain (HOW_IT_FITS.md section S3, drishti-insight): each figure tile and Explain › carry their figure's request. */
   function bindExplain(d) {
     var req = function (measure) {
       var r = { kind: "exposure", measure: measure, scope: d.canonical, q: S.q, collateral: S.collateral };

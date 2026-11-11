@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Rupaka phase 3 (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 8): the table, the matrix, the slicers and the static visuals (text, image, button) of a report, plus the generic
+/* Rupaka phase 3 (HOW_IT_FITS.md §A28 › Rūpaka: the original design and every phase as built, section 8): the table, the matrix, the slicers and the static visuals (text, image, button) of a report, plus the generic
    data table every visual can be shown as. A table sorts by a column header and can open a row's entity in the terminal; a matrix groups its rows by the row
    fields, spreads one field across its columns, and adds subtotals (collapsible) and totals. A total of a measure that adds up (sum, count) is the sum of the
    figures shown; a total of one that does not (ratio, average, distinct count, percentile, min, max) is the engine's own, worked out over the rows of the whole
@@ -290,7 +290,7 @@
     return NONE;
   };
 
-  /** A visual of the 2.1 Perspective types (perspective-grid, -pivot, -chart): wave B draws no WebAssembly on BI pages (ARCHITECTURE.md §28 P3), so it is Drishti's own
+  /** A visual of the 2.1 Perspective types (perspective-grid, -pivot, -chart): wave B draws no WebAssembly on BI pages (HOW_IT_FITS.md §A28 P3), so it is Drishti's own
    *  grid of the server's answer, every column the answer has (the server grouped it: nothing is pivoted or added up here). */
   V.perspectiveGrid = function (host, spec, ctx, res) {
     if (!res) { B.clear(host).appendChild(h('p', { class: 'bi-vis-empty', role: 'status', text: 'No rows.' })); return NONE; }
@@ -298,7 +298,7 @@
   };
 
   /**
-   * An entity view (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 20.3): the Drishti view of the entity whose key is selected on the page, inline. The key well names a field (a table's
+   * An entity view (HOW_IT_FITS.md §A28 › Rūpaka: the original design and every phase as built, section 20.3): the Drishti view of the entity whose key is selected on the page, inline. The key well names a field (a table's
    * id column); a click on a mark of another visual that selects one value of it shows that entity's view here. The view is the console's own page in its
    * embedded form, so it is built for the person looking: their masks and rights apply, not the report's author's. Outside the report viewer (the designer's
    * canvas, an embedded element) it shows what it will do instead.

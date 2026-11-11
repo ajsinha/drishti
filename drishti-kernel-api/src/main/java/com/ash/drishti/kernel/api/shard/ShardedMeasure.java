@@ -18,7 +18,7 @@ package com.ash.drishti.kernel.api.shard;
 import java.util.List;
 
 /**
- * What one measure brings to the cluster's sharding machinery (DATA_ARCHITECTURE.md section 13, Decisions: the extension points). The machinery is the
+ * What one measure brings to the cluster's sharding machinery (HOW_IT_FITS.md section D13, Decisions: the extension points). The machinery is the
  * measure's own nowhere: the shard map and its cut by key ranges ({@link com.ash.drishti.compute.shard.ShardMap}), ownership by rendezvous
  * hashing with replicas ({@link ShardMembership}), readiness announced in the capability digest, handover and drain ({@link ShardPeers},
  * {@link com.ash.drishti.compute.shard.ShardHandover}), and the coordinator's scatter-gather with its exactly-once check

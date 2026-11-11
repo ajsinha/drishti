@@ -15,7 +15,7 @@
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Notifications on every signed-in page: one bell in the top bar counts what is new for you, and each new thing shows as a toast (and a
-   system notification when the browser allows). Alerts (rules that fired) and notices (a share sent to you, ARCHITECTURE.md §31, Decision 10)
+   system notification when the browser allows). Alerts (rules that fired) and notices (a share sent to you, HOW_IT_FITS.md §A31, Decision 10)
    arrive on the same live connection; the count starts from the inbox's unread notices (GET /api/inbox/count) and the bell opens the
    inbox (Alt+I does too). The inbox page tells this file when it marks notices read (drishti:unread). Not loaded inside workspace panes. */
 (function () {
@@ -99,7 +99,7 @@
   function onNotice(n) {
     count++; show();
     var alertPath = (n.type === 'alert' || n.type === 'notice') && typeof n.id === 'string' && n.id.charAt(0) === '/' && n.id.charAt(1) !== '/' ? n.id : '';       // an alert on a number: the path it opens
-    var run = n.type === 'bi-run' ? String(n.entityId || n.id || '') : '';                 // a BI run finished (ARCHITECTURE.md §28 3.5): it opens where its result is drawn
+    var run = n.type === 'bi-run' ? String(n.entityId || n.id || '') : '';                 // a BI run finished (HOW_IT_FITS.md §A28 3.5): it opens where its result is drawn
     var href = run ? '/bi/run/' + encodeURIComponent(run) : alertPath ? alertPath : n.shareId ? '/share/' + encodeURIComponent(n.shareId) : (n.access && n.kind && n.id ? '/v/' + encodeURIComponent(n.kind) + '/' + encodeURIComponent(n.id) : '/inbox');
     var label = run ? (/^Run\b/.test(n.title || '') ? '' : 'Run') : n.type || 'notice';       // "Run finished: …" needs no second "Run"
     toast('toast-a sev-info notice', href, (label ? '<b>' + esc(label) + '</b> ' : '') + esc(n.title) + (n.excerpt ? ' <span class="toast-x">\u201c' + esc(n.excerpt) + '\u201d</span>' : ''));

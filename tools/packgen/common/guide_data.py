@@ -349,7 +349,7 @@ def _compute_demo() -> dict[Path, str]:
     lines += ["A book's page asks both engines for the sum of its strips' paths: the Python engine runs in the compute pool `sample` "
               "(`config/compute/compute.yaml`), the Java twin in the server; each panel shows its own progress and state. Parameters ride "
               "on the id (`BOOK-FX~delay-ms=50`). How reactive connectors work: "
-              "[DATA_ARCHITECTURE.md](../../../../../docs/architecture/DATA_ARCHITECTURE.md#4-reactive-connectors).", ""]
+              "[HOW_IT_FITS.md](HOW_IT_FITS.md#d4-reactive-connectors).", ""]
     lines += sections(d)
     help_yaml = yaml.safe_dump({"guides": [{"slug": "compute-demo", "category": "packs", "title": "Compute demo pack", "icon": "cpu",
                                             "file": "guides/compute-demo.md",

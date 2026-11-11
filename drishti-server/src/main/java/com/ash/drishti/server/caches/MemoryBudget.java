@@ -189,7 +189,7 @@ public final class MemoryBudget {
     }
 
     /**
-     * An off-heap pool (docs/architecture/DATA_ARCHITECTURE.md section 6): memory outside the heap with its own hard cap (the in-memory lake's stores). It is not
+     * An off-heap pool (HOW_IT_FITS.md section D6): memory outside the heap with its own hard cap (the in-memory lake's stores). It is not
      * a share of -Xmx and never squeezed; it is shown beside the heap pools so Capacity, the sizing planner and Health see its cap and use.
      */
     public record OffHeap(String name, java.util.function.LongSupplier used, java.util.function.LongSupplier cap) {}

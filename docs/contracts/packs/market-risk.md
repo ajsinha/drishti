@@ -1338,7 +1338,7 @@ The official end-of-day VaR and ES of every node of the MGMT and LEGAL hierarchi
 
 ## SSPNL: Stress P&L of a scenario across desks (derived from the stress results) (`stress-scenario-pnl`)
 
-The bank's stress P&L under one scenario: the desks' stored stress results added (additive), with each desk's limit use and breach, once per business date (docs/architecture/DATA_ARCHITECTURE.md section 12, until the stress engine STR).
+The bank's stress P&L under one scenario: the desks' stored stress results added (additive), with each desk's limit use and breach, once per business date (HOW_IT_FITS.md section D12, until the stress engine STR).
 
 |  |  |
 |---|---|

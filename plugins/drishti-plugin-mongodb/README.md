@@ -246,7 +246,7 @@ language can write them: the shape is under [Data structure](#data-structure).
   operators' own queries. A kind without promoted fields is answered from documents (at most `max-load-rows`), filtered on the
   server first (`doc` contains `"<id>"`) when stored as text. `reverse-index: false` turns reverse lookups off.
 - **Derived kinds and impact** work from the column set as on Delta Lake.
-- **History** (`TRD 1000015 30`, [history queries](../../docs/architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)):
+- **History** (`TRD 1000015 30`, [history queries](../../HOW_IT_FITS.md#d2-history-queries-an-entity-over-time)):
   one indexed range read over the entity's keys, newest first; a snapshot kind keeps only the days its catalogue lists.
 
 ## Retention, sizing and scale-out

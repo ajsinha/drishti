@@ -130,7 +130,7 @@ def _type(arrow_type: str) -> str:
 def model_of(source: str) -> str:
     """The model an extract's source names: ``mq:<model>@<major>`` is that model, ``dataset:<name>`` the dataset's implicit model, and a bare name
     (a notebook saved before 2.2, or a shipped file's id ``file:dataset:<name>``) the model the converter made of that 2.1 dataset, ``<name>@1``
-    (ARCHITECTURE.md §28 › The model layer: the specification of wave W1, section 8); a catalogue id (``bi-...``) is sent as it is (a version 2 dataset's implicit model)."""
+    (HOW_IT_FITS.md §A28 › The model layer: the specification of wave W1, section 8); a catalogue id (``bi-...``) is sent as it is (a version 2 dataset's implicit model)."""
     s = str(source or "").strip()
     if s.startswith("mq:"):
         return s[3:]
@@ -162,7 +162,7 @@ def check_fields(fields, limits: Limits) -> list[str]:
     return fields
 
 
-# ---- Drishti SQL on the server (ARCHITECTURE.md §28 3.4: the default engine of a SQL cell) -----------------------------------------
+# ---- Drishti SQL on the server (HOW_IT_FITS.md §A28 3.4: the default engine of a SQL cell) -----------------------------------------
 def model_ref(dataset: str) -> str | None:
     """The model a notebook's extract reads, for Drishti SQL (``model_of``); None when the source names nothing."""
     d = str(dataset or "").strip()

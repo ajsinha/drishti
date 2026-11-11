@@ -210,8 +210,8 @@ with its environment variable is in [CONFIGURATION.md](../../docs/admin/CONFIGUR
 | Writes | the loader and maintenance | **never** |
 
 Both read through drishti-iceberg, Drishti's own Iceberg engine with no Hadoop
-([DATA_ARCHITECTURE.md](../../docs/architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop)); why
-there are two is in [DATA_ARCHITECTURE.md, Two connectors](../../docs/architecture/DATA_ARCHITECTURE.md#15-two-connectors-drishti-tables-and-external-tables).
+([HOW_IT_FITS.md](../../HOW_IT_FITS.md#d3-drishti-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop)); why
+there are two is in [HOW_IT_FITS.md, Two connectors](../../HOW_IT_FITS.md#d15-two-connectors-drishti-tables-and-external-tables).
 
 ## Ids, dates and modes
 

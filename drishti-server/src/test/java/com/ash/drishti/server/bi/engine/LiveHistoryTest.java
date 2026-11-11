@@ -148,7 +148,7 @@ class LiveHistoryTest {
             clock.advance(Duration.ofSeconds(1));
             return run(ds, byDesk, risk).rows() >= 3;
         });
-        // the desk-head's rule on the live trades reaches its history (ARCHITECTURE.md §28 8.5, the owner's decision of 2026-11-07): her desk's samples only
+        // the desk-head's rule on the live trades reaches its history (HOW_IT_FITS.md §A28 8.5, the owner's decision of 2026-11-07): her desk's samples only
         QueryService.Result mine = run(ds, byDesk, who(true, "DESK-A", "desk-head"));
         assertThat(mine.rows()).isPositive();
         assertThat(mine.columns().get(1).values()).containsOnly("DESK-A");

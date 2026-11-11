@@ -344,7 +344,7 @@ Requests a second (both mixes together), errors, and p50 / p95 / p99 in seconds 
 | 200 users | 231, 0 | 0.57 / 2.44 / 3.70 | 0.93 / 2.93 / 4.14 | 0.58 / 2.49 / 3.75 | 0.62 / 2.57 / 3.89 | 0.79 / 2.70 / 3.87 | 0.81 / **2.53** / 3.52 | 0.58 / 2.29 / 3.16 |
 
 The second cluster table is the same run (Java 21, G1, `-Xmx4g` each, the same lake and mix) with the contribution tables' and the
-standalone sums' remote reads fetched ahead, one `/partials` call per remote shard ([DATA_ARCHITECTURE.md section 13](../architecture/DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built));
+standalone sums' remote reads fetched ahead, one `/partials` call per remote shard ([HOW_IT_FITS.md section D13](../../HOW_IT_FITS.md#d13-var-sharding-how-it-is-built));
 the 50-user window ran its 60 s, the warm-up had no error either, and the run recorded no pinned virtual thread on any member. First
 opens 10.9 / 17.9 s; the bank's VaR the same to the dollar; heap after GC at the end 1,546 / 1,686 / 1,632 MB, RSS 5.2 / 5.8 / 5.5 GB.
 
@@ -814,7 +814,7 @@ set `DRISHTI_LAKE_HEAP` (4g here) for loads of 200,000 positions and more: the w
 `ThroughputTest`, 10,000 positions × 510 scenarios, 53.7 MB of JSON Lines in eight gzip files (22.3 MB), into Delta on local disk. The
 first load in a JVM is cold (1.3 s, 7,700 rows/s); a warm one (what a long load runs at after its first seconds): **0.19 to 0.29 s, 34,000
 to 52,000 rows/s, 180 to 280 MB/s of JSON** end to end. Iceberg warm: 0.25 to 0.27 s (37,000 to 40,000 rows/s). With a 24 MB budget the
-same load spilled 37 MB and wrote the identical table. The design is [PARALLEL_LOADER.md](../architecture/DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-drishti-lakeload).
+same load spilled 37 MB and wrote the identical table. The design is [PARALLEL_LOADER.md](../../HOW_IT_FITS.md#d10-the-parallel-lake-loader-drishti-lakeload).
 
 | Stage | Per thread, warm | Note |
 |---|---|---|
@@ -1322,7 +1322,7 @@ about 10% between two runs of the same configuration are noise. 0 errors in ever
 Java 21 and 25 serve this load within noise of each other: the 200 clients are the bottleneck, not the JVM (p50 around 55 ms; the slow
 requests are the heavy ones, views and F8). What Java 25 adds is memory: compact object headers save about 10% of heap on many small
 objects (5% on the VaR heap of section 4.4, which is mostly arrays), so on Java 21 give the server a little more `-Xmx`. The rules the code
-follows on Java 21 (no blocking inside `synchronized`) are in [CLUSTER_GUIDE.md › Java 21 and virtual-thread pinning](../architecture/ARCHITECTURE.md#14-concurrency-and-performance).
+follows on Java 21 (no blocking inside `synchronized`) are in [CLUSTER_GUIDE.md › Java 21 and virtual-thread pinning](../../HOW_IT_FITS.md#a14-concurrency-and-performance).
 
 ## 11. Memory and heap
 
@@ -1384,7 +1384,7 @@ and about 37 GB and 61 GB at 10M; its P × N term made a bank with many nodes pa
 adds h × P to the heap after GC (0.72 GB at 1,000,000, 1.66 GB at 2.3M), about 1.2 GB and 2.7 GB of `-Xmx` (÷ 0.61); each currency book or
 stress book built ahead adds about one book more ([VAR_GUIDE.md section 27.1](../guides/VAR_GUIDE.md#271-bytes-per-date), whose per-book
 formula the 1,000,000-position run confirms: 0.77 GB predicted, 0.72 GB measured). At 10M the skeleton (ids and columns, most of h) sets
-`-Xmx`; mapping it (D1, [CLUSTER_GUIDE.md section 5.1](../architecture/ARCHITECTURE.md#3212-bounded-resources-inside-one-server)) is the
+`-Xmx`; mapping it (D1, [CLUSTER_GUIDE.md section 5.1](../../HOW_IT_FITS.md#a3212-bounded-resources-inside-one-server)) is the
 designed lever.
 
 ### 12.2 VaR, the reference bank
@@ -1490,7 +1490,7 @@ run's) are counted and skipped. `python3 tools/bench/charts.py <results.jsonl �
 
 **Status: the plan and the harness; to be measured.** Nothing in this section is measured yet; every cell below is filled by the run
 of 16.3, and the larger sizes of 16.4 are EXTRAPOLATED from those measured points, labelled so wherever they appear. The design is
-[ARCHITECTURE.md section 26.13](../architecture/ARCHITECTURE.md#2613-tests-that-prove-it); what it measures is
+[HOW_IT_FITS.md section A26.13](../../HOW_IT_FITS.md#a2613-tests-that-prove-it); what it measures is
 [BI_GUIDE.md section P23](../guides/BI_GUIDE.md#p23-scale-sketches-rollups-progressive-answers-and-the-cluster).
 
 ### 16.1 What is measured
@@ -1575,7 +1575,7 @@ JSON line:
 
 Read the extrapolations as section 14 says: straight lines through three points, orders of magnitude. Past what one node's disk and
 memory hold, other effects (spill, object-store bandwidth, more files than the disk cache) bend the line; the decision on a distributed
-SQL backend (ARCHITECTURE.md section 26) waits for measured common views over 5 minutes on three nodes, not for an extrapolation.
+SQL backend (HOW_IT_FITS.md section A26) waits for measured common views over 5 minutes on three nodes, not for an extrapolation.
 
 ## 17. Many VaR scopes at once (BLAS)
 

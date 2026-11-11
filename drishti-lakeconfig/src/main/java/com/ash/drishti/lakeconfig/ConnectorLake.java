@@ -25,7 +25,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 /**
- * A Delta or Iceberg connector's view of its lake (docs/architecture/DATA_ARCHITECTURE.md section 4): a connector names {@code lake: <name>}
+ * A Delta or Iceberg connector's view of its lake (HOW_IT_FITS.md section D4): a connector names {@code lake: <name>}
  * and its kinds; this turns the lake file's root, storage, catalog, table paths, promoted columns and vectors into the settings the
  * plugin reads ({@code root}, {@code domain}, {@code table.<kind>}, {@code layout.<kind>.columns}, {@code layout.<kind>.vectors},
  * {@code s3.<key>}), so the plugins keep one way of reading and the lake file is the only place those values are written. It runs at

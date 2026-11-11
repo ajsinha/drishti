@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Object-level security (docs/architecture/ARCHITECTURE.md §28 section 5.1, "hidden-for"): for a reader, a column hidden by its dataset or the model, a measure the
+ * Object-level security (HOW_IT_FITS.md §A28 section 5.1, "hidden-for"): for a reader, a column hidden by its dataset or the model, a measure the
  * model hides, and every measure that reads a hidden column <em>do not exist</em>: absent from {@code describe}, unknown to DEL and Drishti SQL, and a model
  * query naming one is refused {@code DRS-9163} "not available to your role" (never with its definition, its columns or who may see it). Hidden measures are
  * kept as {@code measure:<name>}.

@@ -22,7 +22,7 @@ import com.ash.drishti.kernel.api.pivot.Viewer;
 import java.util.List;
 
 /**
- * What a provider offers rollups (ARCHITECTURE.md section 26.6): reads as the system (every row; a rollup is built once for everyone), its data
+ * What a provider offers rollups (HOW_IT_FITS.md section A26.6): reads as the system (every row; a rollup is built once for everyone), its data
  * version, its parts (the files of a Delta or Iceberg version, so a load that appends files adds only theirs), and whether a person reads
  * every row and field: a rollup answers only such a person (row rules and masks apply before aggregation, and a rollup has aggregated
  * already). VaR is never rollup material (its own per-node sums are its rollup).
@@ -52,7 +52,7 @@ public interface RollupSource {
     }
 
     /**
-     * A definition as the provider answers it (ARCHITECTURE.md section 26.4): a document source's paths ({@code $.LEGS[*].CURRENCY}) as its
+     * A definition as the provider answers it (HOW_IT_FITS.md section A26.4): a document source's paths ({@code $.LEGS[*].CURRENCY}) as its
      * field ids, at one grain; refused in words when the grain cannot be answered honestly. The default: as written.
      */
     default RollupDef prepared(RollupDef d) {

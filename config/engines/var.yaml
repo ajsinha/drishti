@@ -110,7 +110,7 @@ drishti:
       empty-label: ${DRISHTI_VAR_HIERARCHY_EMPTY_LABEL:(Blank)}   # the node a row with an empty (or unpromoted) level value sits under; a hierarchy's empty-label wins
     # hierarchies:                   # VAR_GUIDE.md section 15.14: any number, each from promoted columns; wins over a loaded pack's hierarchies: block
     #   REGION: { title: Regions, levels: "REGION > DESK", word: REG, limits: var-limit }   # (the market-risk pack's: MGMT, LEGAL, LL)
-    sharding:                        # VaR sharding (docs/architecture/DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built): on only with the market-risk pack's sharding: block or enabled: true
+    sharding:                        # VaR sharding (HOW_IT_FITS.md#d13-var-sharding-how-it-is-built): on only with the market-risk pack's sharding: block or enabled: true
       release-after-seconds: 900     # a shard book of a date nobody has open (outside the newest hot-dates), unread this long, is released
     tier:                            # the tiered memory (docs/guides/VAR_GUIDE.md section 26): where a loaded date's vectors live
       mode: ${DRISHTI_VAR_TIER:mapped}                 # mapped: each date a float32 hot file, memory-mapped (heap: aggregates, columns, links); heap: float64 rows on the heap

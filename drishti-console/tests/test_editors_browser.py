@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Build › Tables & models in Chromium (docs/architecture/SHARED_SCREENS.md sections 1 to 4), over a real server and console from the worker's pool
+"""Build › Tables & models in Chromium (HOW_IT_FITS.md sections S1 to 4), over a real server and console from the worker's pool
 (security on, the default packs and their demo data, a tables folder of the file's own): a click on every button of the shell, the table editor, the
 model editor, the Python-driven table editor and the + New steps, each checked for what it does; the live YAML and the visual side follow each
 other; the theme and the phone layout; keyboard access; no page error and no policy violation.

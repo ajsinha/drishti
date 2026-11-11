@@ -148,7 +148,7 @@ class DatasetApiTest {
                     rollups:
                       - { name: by_desk, table: trades, by: [desk, currency], measures: [Notional, MTM, Trades] }
                     """);
-            // a dataset is asked through its model: tables migrate writes lake-test's tables and model under tables/ (docs/architecture/ARCHITECTURE.md §28 4.3)
+            // a dataset is asked through its model: tables migrate writes lake-test's tables and model under tables/ (HOW_IT_FITS.md §A28 4.3)
             Files.writeString(datasets.resolve("hidden-sample.dataset.yaml"), "rachana: 2\ndataset: hidden-sample\nversion: 1.0.0\ntitle: A sample\nsample: true\n"
                     + "source: { kind: trade }\ncolumns:\n  desk: { type: string }\n");
             TablesFolder.migrate(datasets.getParent());

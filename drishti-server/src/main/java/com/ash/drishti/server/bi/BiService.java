@@ -50,7 +50,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
- * Business intelligence, Rupaka phase 1 (docs/architecture/ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, sections 3, 10, 11): workspaces (a personal one per user and shared
+ * Business intelligence, Rupaka phase 1 (HOW_IT_FITS.md §A28 › Rūpaka: the original design and every phase as built, sections 3, 10, 11): workspaces (a personal one per user and shared
  * ones with the roles viewer, contributor, member and admin), items (typed placeholders: dataset, report, board or notebook, with a YAML
  * body that is stored and versioned but not run yet), the lifecycle draft, proposed, published (review before publish reuses the
  * Sutra approver power and four-eyes), endorsement, and the catalogue that shows each person only what its audience lets them see.
@@ -705,7 +705,7 @@ public final class BiService {
     public void pythonTestGate(java.util.function.BiFunction<Principal, BiStore.Item, List<String>> gate) { this.pythonTestGate = gate; }
 
     private volatile java.util.function.BiFunction<Principal, BiStore.Item, String> layerCheck;
-    private volatile java.util.function.BiConsumer<Principal, BiStore.Item> tablesCheck; public void tablesCheck(java.util.function.BiConsumer<Principal, BiStore.Item> c) { this.tablesCheck = c; }   // the table layer's editors (docs/architecture/SHARED_SCREENS.md): its checks refuse in words
+    private volatile java.util.function.BiConsumer<Principal, BiStore.Item> tablesCheck; public void tablesCheck(java.util.function.BiConsumer<Principal, BiStore.Item> c) { this.tablesCheck = c; }   // the table layer's editors (HOW_IT_FITS.md): its checks refuse in words
 
     /**
      * Set once by the model catalogue: what publishing a data model or a {@code rachana: 2} dataset runs (Check, the contract's versioning, the security

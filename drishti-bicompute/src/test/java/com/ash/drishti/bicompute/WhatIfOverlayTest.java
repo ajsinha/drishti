@@ -29,7 +29,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /**
- * The what-if overlay's conditions (ARCHITECTURE.md section 26.7, item 3): leaving members out is the negated condition (every other row kept,
+ * The what-if overlay's conditions (HOW_IT_FITS.md section A26.7, item 3): leaving members out is the negated condition (every other row kept,
  * including the members the condition does not name), and a change without a condition applies to every row.
  */
 class WhatIfOverlayTest {

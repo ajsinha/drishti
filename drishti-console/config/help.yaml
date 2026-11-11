@@ -28,7 +28,7 @@
 #   lenses: the lenses that show the page (none said: every lens; the full product, outside any lens, shows every page).
 # A group's words: the command words shown beside its title.
 # Every other document under docs/ (and the top-level *.md) is reachable unlisted at a slug made from its path
-# (docs/architecture/adr/016-one-console-many-servers.md -> /help/docs-architecture-adr-016-one-console-many-servers), in the section
+# (docs/architecture/LENSES.md -> /help/docs-architecture-lenses), in the section
 # documents: names for its top folder, so a link between documents always opens in the help centre (DOC-18; tests/test_help_links.py).
 # Old addresses keep working: /help/<slug> as before, moved: below for retired slugs, and /help#cat-<old id> (aliases:).
 
@@ -127,7 +127,6 @@ sections:
         guides:
           - { slug: api, domain: core, doc: guides/API_REFERENCE.md, title: "API reference", icon: braces-asterisk, summary: "Every REST endpoint by area (views, search, BI, models, SQL, runs, reports, approvals, alerts, administration, {product}*net) and the one error code table." }
           - { slug: developer, domain: core, title: "Developer: API references", icon: code-square, summary: "Every programming surface in one place: the REST API (OpenAPI), the renderer's TypeScript API, the Javadoc of the plugin and connector SPI and the shard machinery, and the Python references of the compute worker SDK, BI Python items, drishti.py and its client library and the pack and test-data generator helpers; generated at build time, versioned, self-contained, and how to document what you add." }
-          - { slug: viewmodel, domain: core, doc: architecture/VIEWMODEL.md, title: "ViewModel contract", icon: braces, summary: "The JSON the server returns for every entity screen: the top level, cells, tones, provenance and masks, the data of all 22 panel kinds with real examples, live frames and patches, how to render it, versioning, and its JSON Schema." }
           - { slug: rachana-reference, domain: core, doc: guides/RACHANA_REFERENCE.md, title: Rachana reference, icon: book, summary: "The grammar and its functions in one reference: the function catalogue (every function once, with its example and its Excel and SAS names) and the list generated from the registries; Every key (fragments and use:, emits and @panel.event, source:, children, refresh:, layout:, form:), panel option, format, tone, Rachana-EL expression and problem code." }
       - title: "Command line"
         guides:
@@ -156,6 +155,32 @@ sections:
 # slug or slug#anchor. Documents that left the list (architecture, the per-plugin connector pages, the runbooks) are still in
 # the help centre at their path slug, so the old addresses keep working.
 moved:
+  docs-architecture-adr-001-backend-is-a-spring-boot-application: how-it-fits#adr-001   # docs/architecture/adr/001-backend-is-a-spring-boot-application.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-002-layout-is-sutra-plus-inference: how-it-fits#adr-002   # docs/architecture/adr/002-layout-is-sutra-plus-inference.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-003-sutra-is-yaml-with-a-closed-expression-language: how-it-fits#adr-003   # docs/architecture/adr/003-sutra-is-yaml-with-a-closed-expression-language.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-004-server-returns-a-view-model: how-it-fits#adr-004   # docs/architecture/adr/004-server-returns-a-view-model.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-005-server-sent-events-for-live-updates: how-it-fits#adr-005   # docs/architecture/adr/005-server-sent-events-for-live-updates.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-006-vendored-front-end-without-a-build-pipeline: how-it-fits#adr-006   # docs/architecture/adr/006-vendored-front-end-without-a-build-pipeline.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-007-build-gates-in-tests: how-it-fits#adr-007   # docs/architecture/adr/007-build-gates-in-tests.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-008-rachana-is-the-grammar-a-sutra-is-a-layout: how-it-fits#adr-008   # docs/architecture/adr/008-rachana-is-the-grammar-a-sutra-is-a-layout.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-009-users-live-in-the-server: how-it-fits#adr-009   # docs/architecture/adr/009-users-live-in-the-server.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-010-industries-are-domain-packs: how-it-fits#adr-010   # docs/architecture/adr/010-industries-are-domain-packs.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-012-business-dates-and-delta-lake: how-it-fits#adr-012   # docs/architecture/adr/012-business-dates-and-delta-lake.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-013-sutras-go-live-through-review: how-it-fits#adr-013   # docs/architecture/adr/013-sutras-go-live-through-review.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-014-single-sign-on-verified-by-the-server: how-it-fits#adr-014   # docs/architecture/adr/014-single-sign-on-verified-by-the-server.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-015-packs-inherit: how-it-fits#adr-015   # docs/architecture/adr/015-packs-inherit.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-016-one-console-many-servers: how-it-fits#adr-016   # docs/architecture/adr/016-one-console-many-servers.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-017-sutras-are-yaml: how-it-fits#adr-017   # docs/architecture/adr/017-sutras-are-yaml.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-018-signed-pack-registry: how-it-fits#adr-018   # docs/architecture/adr/018-signed-pack-registry.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-019-pricing-is-a-quantlib-service-behind-the-server: how-it-fits#adr-019   # docs/architecture/adr/019-pricing-is-a-quantlib-service-behind-the-server.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-020-collaboration-records-live-in-the-identity-database: how-it-fits#adr-020   # docs/architecture/adr/020-collaboration-records-live-in-the-identity-database.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-021-embedding-is-html-over-the-wire: how-it-fits#adr-021   # docs/architecture/adr/021-embedding-is-html-over-the-wire.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-022-one-renderer-in-the-browser: how-it-fits#adr-022   # docs/architecture/adr/022-one-renderer-in-the-browser.md folded into HOW_IT_FITS.md
+  docs-architecture-adr-readme: how-it-fits#part-vi--decisions   # docs/architecture/adr/README.md folded into HOW_IT_FITS.md
+  docs-architecture-architecture: how-it-fits#part-ii--architecture   # docs/architecture/ARCHITECTURE.md folded into HOW_IT_FITS.md
+  docs-architecture-data-architecture: how-it-fits#part-iii--data-architecture   # docs/architecture/DATA_ARCHITECTURE.md folded into HOW_IT_FITS.md
+  docs-architecture-shared-screens: how-it-fits#part-v--shared-screens   # docs/architecture/SHARED_SCREENS.md folded into HOW_IT_FITS.md
+  viewmodel: how-it-fits#part-iv--the-viewmodel-contract   # docs/architecture/VIEWMODEL.md folded into HOW_IT_FITS.md
   docs-architecture-function-catalogue: rachana-reference#the-function-catalogue   # docs/architecture/FUNCTION_CATALOGUE.md folded into docs/guides/RACHANA_REFERENCE.md
   docs-guides-examples-all-panels-showcase: examples#all-panels-showcase   # docs/guides/examples/all-panels-showcase.md folded into docs/guides/examples/README.md
   docs-guides-examples-exposure-profile: examples#exposure-profile   # docs/guides/examples/exposure-profile.md folded into docs/guides/examples/README.md
@@ -191,12 +216,12 @@ moved:
   docs-deployment-and-qa-guide: deployment-qa   # the guide's path slug
   docs-quickstart-developers: developer-quickstart   # the quickstart's path slug
   qa-windows: deployment-qa#11-offline-qa-with-your-own-trade-files   # the Windows QA script folded into the Deployment and QA guide
-  docs-architecture-controls-screens: docs-architecture-shared-screens#6-controls-screens-run-status-and-sign-off-the-breach-queue-number-honesty   # controls screens folded into docs/architecture/SHARED_SCREENS.md
-  docs-architecture-editors: docs-architecture-shared-screens#7-the-editors-one-pattern-for-every-object-people-author   # editors folded into docs/architecture/SHARED_SCREENS.md
-  docs-architecture-bi-foundation-2911e: docs-architecture-architecture#281-the-table-layer-and-models-in-rachana   # bi foundation 2911e folded into docs/architecture/ARCHITECTURE.md §28
-  docs-architecture-virtual-tables: docs-architecture-architecture#24-virtual-tables-the-central-table-layer   # virtual tables folded into docs/architecture/ARCHITECTURE.md
-  docs-architecture-one-grammar: docs-architecture-architecture#23-one-grammar-one-engine   # one grammar folded into docs/architecture/ARCHITECTURE.md
-  docs-architecture-drishti-native: docs-architecture-architecture#25-drishti-native-native-maths-behind-abstractions-with-java-fallbacks   # drishti native folded into docs/architecture/ARCHITECTURE.md
+  docs-architecture-controls-screens: how-it-fits#s6-controls-screens-run-status-and-sign-off-the-breach-queue-number-honesty   # controls screens folded into HOW_IT_FITS.md
+  docs-architecture-editors: how-it-fits#s7-the-editors-one-pattern-for-every-object-people-author   # editors folded into HOW_IT_FITS.md
+  docs-architecture-bi-foundation-2911e: how-it-fits#a281-the-table-layer-and-models-in-rachana   # bi foundation 2911e folded into HOW_IT_FITS.md §A28
+  docs-architecture-virtual-tables: how-it-fits#a24-virtual-tables-the-central-table-layer   # virtual tables folded into HOW_IT_FITS.md
+  docs-architecture-one-grammar: how-it-fits#a23-one-grammar-one-engine   # one grammar folded into HOW_IT_FITS.md
+  docs-architecture-drishti-native: how-it-fits#a25-drishti-native-native-maths-behind-abstractions-with-java-fallbacks   # drishti native folded into HOW_IT_FITS.md
   docs-admin-runbooks-source-down: operations#201-source-down-or-slow   # source-down folded into docs/guides/OPERATIONS_GUIDE.md
   docs-admin-runbooks-sutra-broken: operations#202-a-sutra-is-broken-or-an-edit-does-not-show   # sutra-broken folded into docs/guides/OPERATIONS_GUIDE.md
   docs-admin-runbooks-live-latency-high: operations#203-live-latency-high-or-live-views-stop-ticking   # live-latency-high folded into docs/guides/OPERATIONS_GUIDE.md
@@ -205,10 +230,10 @@ moved:
   docs-architecture-mobile-display: build-guide#32-designing-for-phones   # mobile display folded into docs/guides/BUILD_GUIDE.md
   docs-qa-windows-custom-data: deployment-qa#11-offline-qa-with-your-own-trade-files   # the Windows QA script, now part of docs/DEPLOYMENT_AND_QA_GUIDE.md
   docs-qa-qa-history: changelog   # qa history folded into CHANGELOG.md
-  docs-architecture-arrow-flight: docs-architecture-data-architecture#11-arrow-flight-drishtis-data-to-any-client   # arrow flight folded into docs/architecture/DATA_ARCHITECTURE.md
-  docs-architecture-in-memory-lake: docs-architecture-data-architecture#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk   # in memory lake folded into docs/architecture/DATA_ARCHITECTURE.md
-  docs-architecture-lake-config: docs-architecture-data-architecture#8-the-lake-file-one-description-of-every-lake   # lake config folded into docs/architecture/DATA_ARCHITECTURE.md
-  docs-architecture-parallel-loader: docs-architecture-data-architecture#10-the-parallel-lake-loader-drishti-lakeload   # parallel loader folded into docs/architecture/DATA_ARCHITECTURE.md
+  docs-architecture-arrow-flight: how-it-fits#d11-arrow-flight-drishtis-data-to-any-client   # arrow flight folded into HOW_IT_FITS.md
+  docs-architecture-in-memory-lake: how-it-fits#d9-the-in-memory-lake-delta-tables-that-never-touch-a-disk   # in memory lake folded into HOW_IT_FITS.md
+  docs-architecture-lake-config: how-it-fits#d8-the-lake-file-one-description-of-every-lake   # lake config folded into HOW_IT_FITS.md
+  docs-architecture-parallel-loader: how-it-fits#d10-the-parallel-lake-loader-drishti-lakeload   # parallel loader folded into HOW_IT_FITS.md
   docs-guides-flight-python: docs-guides-flight-reference#71-python   # python folded into docs/guides/FLIGHT_REFERENCE.md
   docs-guides-flight-java: docs-guides-flight-reference#72-java   # java folded into docs/guides/FLIGHT_REFERENCE.md
   docs-guides-flight-jdbc: docs-guides-flight-reference#73-jdbc-dbeaver-datagrip-any-jdbc-program   # jdbc folded into docs/guides/FLIGHT_REFERENCE.md
@@ -329,7 +354,7 @@ moved:
   panel-developer-guide: rachana-reference#developing-a-panel-kind
   nested-data: build-guide#6-sutras-over-deep-documents   # NESTED_DOCUMENTS.md merged into the pack developer guide (2.9.6)
   inference: rachana-reference#inference-the-screens-drishti-draws-with-no-sutra
-  live: docs-architecture-data-architecture#1-live-updates
+  live: how-it-fits#d1-live-updates
   performance: cluster#16-tuning
   scale-benchmark: benchmark#9-the-stores-compared-10000-to-50000-trades-a-day   # SCALE_BENCHMARK.md merged into BENCHMARK.md
   connector-proxy: data-guide#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers
@@ -359,17 +384,17 @@ moved:
   runbook-sutra-broken: operations#202-a-sutra-is-broken-or-an-edit-does-not-show
   runbook-live-latency: operations#203-live-latency-high-or-live-views-stop-ticking
   runbook-sign-in: operations#204-users-cannot-sign-in
-  elements: docs-architecture-architecture#30-the-client-renderer-and-drishti-elements
+  elements: how-it-fits#a30-the-client-renderer-and-drishti-elements
   mcp-client: ai#2-the-mcp-client-other-servers-tools-behind-drishtis-policy
-  rupaka: docs-architecture-architecture#28-business-intelligence-on-the-table-layer
+  rupaka: how-it-fits#a28-business-intelligence-on-the-table-layer
   about-this-page-design: rachana-reference#about-this-page-the-design-of-context-help
-  collaboration: docs-architecture-architecture#31-collaboration-write-back-and-approvals
-  architecture: docs-architecture-architecture
+  collaboration: how-it-fits#a31-collaboration-write-back-and-approvals
+  architecture: how-it-fits#part-ii--architecture
   quant-service: ai#4-server-side-pricing-the-quant-service-proposed
-  decisions: docs-architecture-adr-readme
+  decisions: how-it-fits#part-vi--decisions
   plan: docs-architecture-implementation-plan
-  docs-architecture-rupaka-poc: docs-architecture-architecture#28-business-intelligence-on-the-table-layer            # RUPAKA_POC.md deleted (2.9.6): the design it tested is RUPAKA
-  docs-architecture-bi-parity-plan: docs-architecture-architecture#28-business-intelligence-on-the-table-layer    # BI_PARITY_PLAN.md deleted (2.9.6): its item ids are ARCHITECTURE §28 section 11.1
+  docs-architecture-rupaka-poc: how-it-fits#a28-business-intelligence-on-the-table-layer            # RUPAKA_POC.md deleted (2.9.6): the design it tested is RUPAKA
+  docs-architecture-bi-parity-plan: how-it-fits#a28-business-intelligence-on-the-table-layer    # BI_PARITY_PLAN.md deleted (2.9.6): its item ids are ARCHITECTURE §28 section 11.1
   notices: third-party-notices
   sutra-guide: build-guide#11-what-a-sutra-is-and-when-one-applies
   rachana-guide: build-guide#11-what-a-sutra-is-and-when-one-applies
@@ -379,9 +404,9 @@ moved:
   # The 2.9.6 documentation merge (one home per topic): a merged-away document's path slug opens the section that took it over.
   docs-connectors-connector-recipes: data-guide#84-combining-connectors   # docs/connectors/CONNECTOR_RECIPES.md, merged into docs/guides/DATA_GUIDE.md section 8
   docs-connectors-connector-operations: data-guide#912-health-and-problems   # docs/connectors/CONNECTOR_OPERATIONS.md, merged into docs/guides/DATA_GUIDE.md section 9.12 and TROUBLESHOOTING
-  docs-architecture-how-it-fits: docs-architecture-architecture#5-walk-through-one-request   # HOW_IT_FITS.md deleted (2.9.6)
-  docs-architecture-live-bi: docs-architecture-data-architecture#results-computed-by-a-streaming-producer   # LIVE_BI.md deleted (2.9.6): its live part is DATA_ARCHITECTURE.md
-  docs-architecture-bi-model-architecture: docs-architecture-architecture#281-the-table-layer-and-models-in-rachana   # deleted (2.9.6); D1 to D6 now ARCHITECTURE §28 section 14
+  docs-architecture-how-it-fits: how-it-fits#a5-walk-through-one-request   # HOW_IT_FITS.md deleted (2.9.6)
+  docs-architecture-live-bi: how-it-fits#results-computed-by-a-streaming-producer   # LIVE_BI.md deleted (2.9.6): its live part is HOW_IT_FITS.md
+  docs-architecture-bi-model-architecture: how-it-fits#a281-the-table-layer-and-models-in-rachana   # deleted (2.9.6); D1 to D6 now ARCHITECTURE §28 section 14
   docs-architecture-screen-builder: rachana-reference#32-reference-the-shape-engine-auto-design-and-the-builder-api   # deleted (2.9.6); its reference is RACHANA_REFERENCE › Screen designer, section 32
   docs-architecture-cassandra-connector-design: data-guide#8-connectors   # CASSANDRA_CONNECTOR_DESIGN.md deleted (2.9.6)
   docs-admin-load-and-memory: benchmark#213-many-users-soaks-and-memory   # deleted (2.9.6); its method is PERFORMANCE method 9
@@ -418,7 +443,7 @@ moved:
   editions-guide: admin#12-what-a-lens-is   # admin/EDITIONS_GUIDE.md renamed guides/ADMIN_GUIDE.md (2.9.7), now guides/ADMIN_GUIDE.md
   editions: admin#12-what-a-lens-is   # guides/ADMIN_GUIDE.md renamed guides/ADMIN_GUIDE.md: editions folded into lenses (2.9.11.f)
   docs-admin-editions: admin#12-what-a-lens-is
-  docs-architecture-write-back: docs-architecture-architecture#31-collaboration-write-back-and-approvals   # architecture/WRITE_BACK.md, its design now ARCHITECTURE.md section 31
+  docs-architecture-write-back: how-it-fits#a31-collaboration-write-back-and-approvals   # architecture/WRITE_BACK.md, its design now HOW_IT_FITS.md section A31
   docs-guides-write-back-guide: approvals-guide   # guides/WRITE_BACK_GUIDE.md renamed guides/APPROVALS_GUIDE.md (2.9.7)
   docs-guides-write-back: approvals-guide   # guides/APPROVALS_GUIDE.md is listed as Write-back (2.9.7)
   analyse: bi-guide#n2-the-notebook   # guides/ANALYSE.md, later Analyse: now the Notebook
@@ -435,19 +460,19 @@ moved:
   docs-architecture-aws-deployment: cluster#12-drishti-on-aws-ecs-efs-and-s3   # architecture/AWS_DEPLOYMENT.md merged into guides/CLUSTER_GUIDE.md (2.9.7)
   docs-architecture-drishti-net: cluster#1-several-servers-as-one-drishtinet   # architecture/DRISHTI_NET.md merged into guides/CLUSTER_GUIDE.md (2.9.7)
   docs-architecture-scale-strategy: cluster#14-scale-strategy-for-one-server   # architecture/SCALE_STRATEGY.md merged into guides/CLUSTER_GUIDE.md (2.9.7)
-  docs-architecture-super-scale: docs-architecture-architecture#3213-super-scale-design-not-built   # architecture/SUPER_SCALE.md merged into guides/CLUSTER_GUIDE.md (2.9.7)
+  docs-architecture-super-scale: how-it-fits#a3213-super-scale-design-not-built   # architecture/SUPER_SCALE.md merged into guides/CLUSTER_GUIDE.md (2.9.7)
   packs: build-guide#31-the-packs-that-ship-turning-them-on-who-sees-which   # guides/PACKS.md merged into guides/BUILD_GUIDE.md (2.9.7)
   data-loads: data-guide#1-telling-drishti-new-data-has-landed   # guides/DATA_LOADS.md merged into guides/DATA_GUIDE.md (2.9.7)
   docs-guides-data-formats: data-guide#2-data-formats-json-lines-is-the-standard   # guides/DATA_FORMATS.md merged into guides/DATA_GUIDE.md (2.9.7)
   external-lakes: data-guide#3-using-drishti-with-databricks-delta-lake-or-apache-iceberg   # guides/EXTERNAL_LAKES.md merged into guides/DATA_GUIDE.md (2.9.7)
-  docs-architecture-content-store: docs-architecture-data-architecture#5-the-content-store-user-content-every-node-reaches   # architecture/CONTENT_STORE.md merged into architecture/DATA_ARCHITECTURE.md (2.9.7)
-  docs-architecture-database: docs-architecture-data-architecture#6-the-one-drishti-database-design-not-built   # architecture/DATABASE.md merged into architecture/DATA_ARCHITECTURE.md (2.9.7)
-  docs-architecture-drishti-iceberg: docs-architecture-data-architecture#3-drishti-iceberg-drishtis-own-apache-iceberg-engine   # architecture/DRISHTI_ICEBERG.md merged into architecture/DATA_ARCHITECTURE.md (2.9.7)
-  docs-architecture-history-queries: docs-architecture-data-architecture#2-history-queries-an-entity-over-time   # architecture/HISTORY_QUERIES.md merged into architecture/DATA_ARCHITECTURE.md (2.9.7)
-  docs-architecture-live: docs-architecture-data-architecture#1-live-updates   # architecture/LIVE.md merged into architecture/DATA_ARCHITECTURE.md (2.9.7)
-  docs-architecture-reactive-connectors: docs-architecture-data-architecture#4-reactive-connectors   # architecture/REACTIVE_CONNECTORS.md merged into architecture/DATA_ARCHITECTURE.md (2.9.7)
-  docs-architecture-elements: docs-architecture-architecture#30-the-client-renderer-and-drishti-elements   # architecture/ELEMENTS.md merged into guides/EMBED_GUIDE.md (2.9.7)
-  docs-architecture-genui: docs-architecture-architecture#30-the-client-renderer-and-drishti-elements   # architecture/GENUI.md merged into guides/EMBED_GUIDE.md (2.9.7)
+  docs-architecture-content-store: how-it-fits#d5-the-content-store-user-content-every-node-reaches   # architecture/CONTENT_STORE.md merged into ../HOW_IT_FITS.md (2.9.7)
+  docs-architecture-database: how-it-fits#d6-the-one-drishti-database-design-not-built   # architecture/DATABASE.md merged into ../HOW_IT_FITS.md (2.9.7)
+  docs-architecture-drishti-iceberg: how-it-fits#part-iii--data-architecture   # architecture/DRISHTI_ICEBERG.md merged into ../HOW_IT_FITS.md (2.9.7)
+  docs-architecture-history-queries: how-it-fits#d2-history-queries-an-entity-over-time   # architecture/HISTORY_QUERIES.md merged into ../HOW_IT_FITS.md (2.9.7)
+  docs-architecture-live: how-it-fits#d1-live-updates   # architecture/LIVE.md merged into ../HOW_IT_FITS.md (2.9.7)
+  docs-architecture-reactive-connectors: how-it-fits#d4-reactive-connectors   # architecture/REACTIVE_CONNECTORS.md merged into ../HOW_IT_FITS.md (2.9.7)
+  docs-architecture-elements: how-it-fits#a30-the-client-renderer-and-drishti-elements   # architecture/ELEMENTS.md merged into guides/EMBED_GUIDE.md (2.9.7)
+  docs-architecture-genui: how-it-fits#a30-the-client-renderer-and-drishti-elements   # architecture/GENUI.md merged into guides/EMBED_GUIDE.md (2.9.7)
   elements-guide: embed-guide#5-the-elements-one-by-one   # guides/ELEMENTS.md merged into guides/EMBED_GUIDE.md (2.9.7)
   panels: rachana-reference   # guides/PANELS.md merged into guides/RACHANA_REFERENCE.md (2.9.7): no section, so /help/panels#<kind> keeps its #kind
   docs-architecture-build-workbench: rachana-reference#the-build-workbench-the-design   # architecture/BUILD_WORKBENCH.md merged into guides/RACHANA_REFERENCE.md (2.9.7)
@@ -463,9 +488,9 @@ moved:
   distribution: bi-guide#r18-distribution-the-reports-page-export-and-subscriptions   # guides/DISTRIBUTION.md merged into guides/BI_GUIDE.md (2.9.7)
   python-bi: bi-guide#n3-python-measures-and-visuals   # guides/PYTHON_BI.md merged into guides/BI_GUIDE.md (2.9.7)
   reports: bi-guide#r9-the-report-file-pages-visuals-filters-and-slicers   # guides/REPORTS.md merged into guides/BI_GUIDE.md (2.9.7)
-  docs-architecture-bi-model-spec: docs-architecture-architecture#281-the-table-layer-and-models-in-rachana   # architecture/BI_MODEL_SPEC.md merged into architecture/ARCHITECTURE.md §28 (2.9.7)
-  docs-architecture-bi-runs: docs-architecture-architecture#287-bi-runs-every-bi-query-as-a-bounded-visible-job   # architecture/BI_RUNS.md merged into architecture/ARCHITECTURE.md §28 (2.9.7)
-  docs-architecture-rupaka: docs-architecture-architecture#28-business-intelligence-on-the-table-layer   # architecture/RUPAKA.md merged into architecture/ARCHITECTURE.md §28 (2.9.7)
+  docs-architecture-bi-model-spec: how-it-fits#a281-the-table-layer-and-models-in-rachana   # architecture/BI_MODEL_SPEC.md merged into ../HOW_IT_FITS.md §A28 (2.9.7)
+  docs-architecture-bi-runs: how-it-fits#a287-bi-runs-every-bi-query-as-a-bounded-visible-job   # architecture/BI_RUNS.md merged into ../HOW_IT_FITS.md §A28 (2.9.7)
+  docs-architecture-rupaka: how-it-fits#a28-business-intelligence-on-the-table-layer   # architecture/RUPAKA.md merged into ../HOW_IT_FITS.md §A28 (2.9.7)
   docs-admin-cluster-deployment: cluster   # admin/CLUSTER_DEPLOYMENT.md (the consolidation's clusters, AWS and scale) merged into guides/CLUSTER_GUIDE.md (2.9.7)
   feeds-guide: external-data   # docs/guides/FEEDS_GUIDE.md, folded into EXTERNAL_DATA.md (2.9.11.g)
   docs-guides-feeds-guide: external-data
@@ -473,9 +498,9 @@ moved:
   docs-architecture-regulatory-var-reporting: docs-guides-regulatory-var-reporting   # architecture/REGULATORY_VAR_REPOR
   # 2.9.11.h docs rewrite, build and analyse guides (REPORTS, NOTEBOOK, BUILD, APPROVALS, EMBED, DATA):
   docs-guides-bi-guide: bi-guide                                   # BI_GUIDE.md rewritten as BI_GUIDE.md (listed as bi-guide)
-  docs-architecture-bi-design: docs-architecture-architecture#28-business-intelligence-on-the-table-layer   # BI_DESIGN.md: user parts in BI_GUIDE.md, design in ARCHITECTURE.md section 28
-  docs-architecture-python-compute: bi-guide#n9-for-administrators-turning-python-on   # PYTHON_COMPUTE.md: use in BI_GUIDE.md, design in ARCHITECTURE.md section 29
-  docs-architecture-collaboration: docs-architecture-architecture#31-collaboration-write-back-and-approvals   # COLLABORATION.md: user parts in USER_GUIDE.md, design in ARCHITECTURE.md section 31
+  docs-architecture-bi-design: how-it-fits#a28-business-intelligence-on-the-table-layer   # BI_DESIGN.md: user parts in BI_GUIDE.md, design in HOW_IT_FITS.md section A28
+  docs-architecture-python-compute: bi-guide#n9-for-administrators-turning-python-on   # PYTHON_COMPUTE.md: use in BI_GUIDE.md, design in HOW_IT_FITS.md section A29
+  docs-architecture-collaboration: how-it-fits#a31-collaboration-write-back-and-approvals   # COLLABORATION.md: user parts in USER_GUIDE.md, design in HOW_IT_FITS.md section A31
   write-back: approvals-guide                                      # WRITE_BACK.md: APPROVALS_GUIDE.md (forms: BUILD_GUIDE.md section 28)
   pack-developer-guide: build-guide                                # PACK_DEVELOPER_GUIDE.md: BUILD_GUIDE.md (Part VIII: DEVELOPER_GUIDE.md)
   docs-guides-pack-developer-guide: build-guide
@@ -486,7 +511,7 @@ moved:
   connector-developer-guide: developer-guide#10-connectors-choosing-combining-and-writing-one   # CONNECTOR_DEVELOPER_GUIDE.md folded into DEVELOPER_GUIDE.md
   docs-connectors-connector-developer-guide: developer-guide#10-connectors-choosing-combining-and-writing-one
   docs-guides-api-guide: api                                       # API_GUIDE.md: API_REFERENCE.md (endpoints) and DEVELOPER_GUIDE.md section 11 (how to)
-  client-renderer: embed-guide                                     # CLIENT_RENDERER.md: EMBED_GUIDE.md, design in ARCHITECTURE.md section 30
+  client-renderer: embed-guide                                     # CLIENT_RENDERER.md: EMBED_GUIDE.md, design in HOW_IT_FITS.md section A30
   docs-architecture-client-renderer: embed-guide
   docs-guides-elements-in-your-app: embed-guide#13-drishti-elements-libraries-in-your-own-app   # ELEMENTS_IN_YOUR_APP.md folded into EMBED_GUIDE.mdTING.md moved to guides/ and listed under Use
 
@@ -541,9 +566,9 @@ moved:
   knowledge-companies-funds-and-etfs: knowledge-world#1-companies-funds-and-etfs   # docs/knowledge/companies-funds-and-etfs.md folded into docs/knowledge/world.md
   knowledge-economies: knowledge-world#2-economies   # docs/knowledge/economies.md folded into docs/knowledge/world.md
   docs-guides-mr-cube-guide: bi-guide#p29-the-mr-cube-preset   # docs/guides/MR_CUBE_GUIDE.md folded into docs/guides/BI_GUIDE.md (the MR cube preset)
-  docs-architecture-pivot-engine: docs-architecture-architecture#26-the-pivot-engine   # docs/architecture/PIVOT_ENGINE.md: use folded into BI_GUIDE.md, design into ARCHITECTURE.md section 26
-  docs-architecture-computed-attributes: docs-architecture-data-architecture#12-computed-and-derived-attributes   # docs/architecture/COMPUTED_ATTRIBUTES.md: what is built into DATA_ARCHITECTURE.md section 12, open steps into IMPLEMENTATION_PLAN.md
-  docs-architecture-var-sharding: docs-architecture-data-architecture#13-var-sharding-how-it-is-built   # docs/architecture/VAR_SHARDING.md folded into DATA_ARCHITECTURE.md sections 13 and 14 (operators) and VAR_GUIDE.md section 28
+  docs-architecture-pivot-engine: how-it-fits#a26-the-pivot-engine   # docs/architecture/PIVOT_ENGINE.md: use folded into BI_GUIDE.md, design into HOW_IT_FITS.md section A26
+  docs-architecture-computed-attributes: how-it-fits#d12-computed-and-derived-attributes   # docs/architecture/COMPUTED_ATTRIBUTES.md: what is built into HOW_IT_FITS.md section D12, open steps into IMPLEMENTATION_PLAN.md
+  docs-architecture-var-sharding: how-it-fits#d13-var-sharding-how-it-is-built   # docs/architecture/VAR_SHARDING.md folded into HOW_IT_FITS.md sections D13 and 14 (operators) and VAR_GUIDE.md section 28
   connectors: data-guide#8-connectors   # docs/connectors/CONNECTORS.md folded into docs/guides/DATA_GUIDE.md section 8
   connector-files: data-guide#9-connector-files-and-admin--connectors   # docs/connectors/CONNECTOR_FILES.md folded into DATA_GUIDE.md section 9
   connector-tls: data-guide#10-tls-and-the-outbound-proxy   # docs/connectors/TLS.md folded into DATA_GUIDE.md section 10

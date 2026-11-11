@@ -27,7 +27,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * The host checks of a server that holds memory-only data (docs/architecture/DATA_ARCHITECTURE.md sections 3a and 8), for Admin, Health: the JVM's direct-memory
+ * The host checks of a server that holds memory-only data (HOW_IT_FITS.md sections D3a and 8), for Admin, Health: the JVM's direct-memory
  * limit covers the stores' caps (red when not: the stores would refuse writes long before their caps), no swap, no heap dump on
  * out-of-memory and no JFR recording to a disk, the temporary folder on a RAM disk (amber when not).
  */

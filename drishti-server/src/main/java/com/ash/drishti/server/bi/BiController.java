@@ -32,7 +32,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Business intelligence, phase 1 (docs/architecture/ARCHITECTURE.md §28): the BI shell's API. Every call is answered from the caller's identity by
+ * Business intelligence, phase 1 (HOW_IT_FITS.md §A28): the BI shell's API. Every call is answered from the caller's identity by
  * {@link BiService}; there is no admin path because the powers decide (a role with bi-admin, not only the admin role). Personal API tokens
  * reach the writes through the scopes {@code bi:write}, {@code bi:approve} and {@code bi:admin} (API_REFERENCE).
  */

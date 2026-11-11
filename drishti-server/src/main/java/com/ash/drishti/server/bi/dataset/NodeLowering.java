@@ -28,7 +28,7 @@ import java.util.Set;
 
 /**
  * Rachana's tree as BI's compiler tree ({@link Node}), the one the SQL emitter writes with bound parameters and the live tables evaluate
- * (docs/architecture/ARCHITECTURE.md §28 section 2.6: one parser, Rachana's; BI's compiler keeps its plan). Named arguments become the compiler's
+ * (HOW_IT_FITS.md §A28 section 2.6: one parser, Rachana's; BI's compiler keeps its plan). Named arguments become the compiler's
  * arguments ({@code sum(x, where = c)} is {@code sum(x, c)}; {@code rank(agg, desc = false, by = [f])} is {@code rank(agg, 'asc', f)}); the
  * filter-context, balance and time-travel functions keep theirs as pseudo-calls ({@link Node#keyword}); Rachana's names take the
  * compiler's ({@code len} is {@code length}, {@code starts_with} {@code startsWith}, {@code latest} {@code last}, {@code earliest}
@@ -207,7 +207,7 @@ public final class NodeLowering {
     }
 
     /**
-     * A filter-context, balance or time-travel function keeps its named arguments in the tree (docs/architecture/ARCHITECTURE.md §28 section 3.3.5): the
+     * A filter-context, balance or time-travel function keeps its named arguments in the tree (HOW_IT_FITS.md §A28 section 3.3.5): the
      * required ones in order, then one pseudo-call {@code =name} per named one, whose arguments are the value (a list's items; {@code ALL} the
      * reference {@code ALL}).
      */

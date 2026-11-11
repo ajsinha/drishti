@@ -38,7 +38,7 @@ import java.util.List;
 import java.util.zip.GZIPInputStream;
 
 /**
- * What a replenish job reads (docs/architecture/DATA_ARCHITECTURE.md section 4): a connector's documents of a kind (any connector that can list a kind: the
+ * What a replenish job reads (HOW_IT_FITS.md section D4): a connector's documents of a kind (any connector that can list a kind: the
  * lakes, Kafka's topic state, JDBC, files, the vendor feeds), a JSON Lines file, or a URL answering JSON Lines or a JSON array. Everything
  * is read into memory and nothing is written anywhere: the source's own bytes stay where they were.
  */

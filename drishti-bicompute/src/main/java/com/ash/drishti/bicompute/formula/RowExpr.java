@@ -139,7 +139,7 @@ final class RowExpr {
                     String op = c.ops().get(i);
                     boolean nullTest = (op.equals("==") || op.equals("!=")) && (c.rest().get(i) instanceof FormulaAst.NoneLit
                             || (i == 0 ? c.first() : c.rest().get(i - 1)) instanceof FormulaAst.NoneLit);
-                    // x == null tests for nothing (Rachana's one null rule, docs/architecture/ARCHITECTURE.md §28 Q1); other comparisons with nothing are unknown
+                    // x == null tests for nothing (Rachana's one null rule, HOW_IT_FITS.md §A28 Q1); other comparisons with nothing are unknown
                     Boolean t = nullTest ? Boolean.valueOf((left == null && right == null) == op.equals("==")) : compare(op, left, right);
                     if (t == null) {
                         all = null;

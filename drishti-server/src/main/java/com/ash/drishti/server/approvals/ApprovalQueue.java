@@ -47,7 +47,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The one Approvals queue (docs/architecture/SHARED_SCREENS.md section 2): every four-eyes item waiting for a person, of any kind, in one
+ * The one Approvals queue (HOW_IT_FITS.md section S2): every four-eyes item waiting for a person, of any kind, in one
  * inbox, with the items due soon pinned on top; the item opened shows what changes, its effect if approved and the rules; a person
  * approves, rejects with a reason, withdraws their own, or asks a question (a thread on the item). Each kind is an {@link ApprovalSource}
  * that keeps its own rules; this class gathers, orders, audits and keeps the questions.

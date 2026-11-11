@@ -37,7 +37,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 /**
- * Parity (docs/architecture/ARCHITECTURE.md part 2): every shipped Sutra draws the same figures from the pivot engine's aggregates as from Rachana's own
+ * Parity (HOW_IT_FITS.md part 2): every shipped Sutra draws the same figures from the pivot engine's aggregates as from Rachana's own
  * list aggregates before they were removed. Every call of {@code sum}, {@code min}, {@code max} and {@code group} in every Sutra and
  * fragment of {@code config/packs/<domain>/<pack>/sutras} is evaluated on every test case of the pack ({@code config/packs/<domain>/<pack>/tests/<sutra>/
  * cases.jsonl}), at the document's root and, for a call that reads {@code @}, on every element of every list in the document (the rows

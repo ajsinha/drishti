@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The share dialog's "Include a picture" in a real browser, against a real server with snapshots switched on (ARCHITECTURE.md §31, step 10): the option
+"""The share dialog's "Include a picture" in a real browser, against a real server with snapshots switched on (HOW_IT_FITS.md §A31, step 10): the option
 and its preview appear, the preview is the server's PNG, a share sent with it shows the recipient a picture on the shared view's banner; with
 nothing ticked no picture travels.
 

@@ -98,7 +98,7 @@ WORKER_CSP = "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-
 _HOST = re.compile(r"^[A-Za-z0-9.\-]+(:\d{1,5})?$|^\[[0-9A-Fa-f:.]+\](:\d{1,5})?$")
 WORKER = "/static/js/drishti_calc-worker.js"
 PYODIDE = "/pyodide/"
-# Wave B (ARCHITECTURE.md §28 P3): no BI page loads WebAssembly any more (Perspective and DuckDB-Wasm are gone); only Calc's worker above may compile it.
+# Wave B (HOW_IT_FITS.md §A28 P3): no BI page loads WebAssembly any more (Perspective and DuckDB-Wasm are gone); only Calc's worker above may compile it.
 EMBED = "/embed/"                           # embedded views for other web applications: off unless embed.enabled (routes/embed_routes.py)
 
 
@@ -700,7 +700,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(studio_routes.router)
     app.include_router(build_routes.router)
     app.include_router(pack_routes.router)
-    app.include_router(approval_routes.router)          # the one Approvals queue (SHARED_SCREENS.md section 2) and the old review pages' redirects
+    app.include_router(approval_routes.router)          # the one Approvals queue (HOW_IT_FITS.md section S2) and the old review pages' redirects
     app.include_router(ship_routes.router)
     app.include_router(admin_routes.router)
     app.include_router(help_routes.router)
@@ -736,7 +736,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(net_routes.router)
     from routes import module_admin_routes
     app.include_router(module_admin_routes.router)     # Admin -> Modules and Deploy; a removed module's paths (KERNEL_AND_MODULES.md 7.6, 12.10)
-    app.include_router(explain_routes.router)          # Explain: one for every number, the preview, the drawer and the page (SHARED_SCREENS.md 3)
+    app.include_router(explain_routes.router)          # Explain: one for every number, the preview, the drawer and the page (HOW_IT_FITS.md 3)
     app.include_router(lake_maint_routes.router)
     app.include_router(form_routes.router)
     app.include_router(ai_routes.router)
@@ -747,7 +747,7 @@ def create_app(settings: Settings) -> FastAPI:
         app.state.notebook_limits = Limits.from_settings(settings)     # the Notebook (docs/guides/USER_GUIDE.md): extract, SQL and cell limits
         app.include_router(bi_routes.router)
         app.include_router(model_routes.router)
-        app.include_router(tables_editor_routes.router)     # Build › Tables & models: the editors on the table layer (docs/architecture/SHARED_SCREENS.md)
+        app.include_router(tables_editor_routes.router)     # Build › Tables & models: the editors on the table layer (HOW_IT_FITS.md)
         app.include_router(python_routes.router)
         app.include_router(notebook_routes.router)         # the Notebook (/bi/notebook): SQL on the server, Python on its compute pool
         app.include_router(transform_routes.router)        # wave C: the Transform editor (/bi/transform), step by step

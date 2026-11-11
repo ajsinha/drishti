@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Figures of rows the console holds, computed by the server's pivot engine (docs/architecture/ARCHITECTURE.md section 5: the server
+"""Figures of rows the console holds, computed by the server's pivot engine (HOW_IT_FITS.md section A5: the server
 computes, the console displays). The console has read the rows as the person (a search, raw documents, a field's history); it sends them
 to ``POST /api/v1/pivot/inline`` with the measures it needs (``sum(MTM)``, ``median(S)``, ``stddev_pop(H)``, a formula of aggregates
 such as ``median(TO) - median(FROM)``) and reads the engine's cells back. The engine is the one that aggregates every pivot cell

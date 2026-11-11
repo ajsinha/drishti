@@ -16,7 +16,7 @@
 package com.ash.drishti.compute.shard;
 
 /**
- * The handover rule of one shard a member holds, for any sharded measure (DATA_ARCHITECTURE.md section 13), kept apart to be checked alone. A member
+ * The handover rule of one shard a member holds, for any sharded measure (HOW_IT_FITS.md section D13), kept apart to be checked alone. A member
  * keeps serving a shard it no longer owns until every new owner has announced it ready for the grace period, then releases it; it keeps an
  * older version of a shard it owns while it builds the newer (an older one is released once the newer has been ready here for the grace
  * period), and a shard of a shard map since replaced (the cut moved) once the grace period has passed. So a shard in use always has a ready

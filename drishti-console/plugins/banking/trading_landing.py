@@ -22,7 +22,7 @@ and their choice wins. The scope only chooses what the landing shows: every read
 
 **The figures**, each from an existing answer, never invented (a figure the data cannot give is None, or the panel says why). Every
 total (MtM, P&L, DV01, by book, by trader, the largest counterparty's share) is the server's: the valuations read are sent to its pivot
-engine (``POST /api/v1/pivot/inline``, :func:`engine_figures`) and its cells shown; the console adds up nothing (docs/architecture/ARCHITECTURE.md section 5):
+engine (``POST /api/v1/pivot/inline``, :func:`engine_figures`) and its cells shown; the console adds up nothing (HOW_IT_FITS.md section A5):
 
 * P&L today: the MtM change of every trade valued on both the business date and the business day before (``TVAL``, the trade valuations,
   read on both dates), summed over the scope by the engine; no valuations the day before: None, said;

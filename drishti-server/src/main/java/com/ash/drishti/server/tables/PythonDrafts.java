@@ -31,7 +31,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * The Python-driven table editor's text work (docs/architecture/SHARED_SCREENS.md section 4), none of which runs Python: the build function's item (a BI Python item,
+ * The Python-driven table editor's text work (HOW_IT_FITS.md section S4), none of which runs Python: the build function's item (a BI Python item,
  * {@code interface: transform}, {@code entry: build}, on the server) written from the editor's fields and read back; the templates for common
  * cases; a notebook's cells turned into a build function; and the output contract proposed from the code (the columns it assigns and
  * selects, typed from its inputs' columns where it keeps them). The sample run itself is a run on the server's compute pool

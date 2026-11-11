@@ -357,7 +357,7 @@ final class VarTier implements AutoCloseable {
     }
 
     /**
-     * A shard's folder (DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built): {@code <date>-shard-<i>} (USD) or {@code <date>-<CCY>-shard-<i>}, each its own, so a shard's file
+     * A shard's folder (HOW_IT_FITS.md#d13-var-sharding-how-it-is-built): {@code <date>-shard-<i>} (USD) or {@code <date>-<CCY>-shard-<i>}, each its own, so a shard's file
      * is never taken for another's or the whole date's older build.
      */
     Path folder(LocalDate date, String currency, int shard) {

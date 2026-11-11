@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* One Explain for every number (drishti_explain.js; SHARED_SCREENS.md section 3, mock-up e3-explain.html): the preview card at a number,
+/* One Explain for every number (drishti_explain.js; HOW_IT_FITS.md section S3, mock-up e3-explain.html): the preview card at a number,
    the drawer on the right with four tabs (a bottom sheet on a phone) and the full page. Theme tokens only. */
 .dx-number { cursor: help; text-decoration: underline dotted var(--d-faint); text-underline-offset: 3px; }
 .dx-number:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 2px; }

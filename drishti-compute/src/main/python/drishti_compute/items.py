@@ -389,7 +389,7 @@ def _transform(req: dict, frames: list, ns: dict, out_dir: str) -> dict:
     return {"kind": "transform", "columns": columns, "rows": int(table.num_rows), "head": head}
 
 
-# ---- profiling and the step-by-step run (wave C, 2.4.0: docs/guides/BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17; docs/architecture/ARCHITECTURE.md §28 section 11.1, items P1 and P3) -------------------------
+# ---- profiling and the step-by-step run (wave C, 2.4.0: docs/guides/BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17; HOW_IT_FITS.md §A28 section 11.1, items P1 and P3) -------------------------
 
 HEAD_ROWS = 20
 _STEP = re.compile(r"^\s*#\s*step:\s*(.*?)\s*$")
@@ -652,7 +652,7 @@ def _steps(req: dict, frames: list, names: list[str], ns: dict) -> dict:
 
 
 def _column(req: dict, df, fn, params) -> dict:
-    """The ``column`` interface (ARCHITECTURE.md §28 3.5, plan node ``PyColumn``): ``derive(frame, params)`` gets the declared input columns of the dataset (masked as
+    """The ``column`` interface (HOW_IT_FITS.md §A28 3.5, plan node ``PyColumn``): ``derive(frame, params)`` gets the declared input columns of the dataset (masked as
     the reader sees them) and returns one value per row, vectorised: a pandas Series, a numpy array or a list of the frame's length."""
     inputs = req["inputs"] or [c for c in df.columns if c != "id"]
     missing = [c for c in inputs if c not in df.columns]

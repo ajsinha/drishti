@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Arrow to the browser and to Python (DATA_GUIDE.md › Data formats, section 6; docs/architecture/DATA_ARCHITECTURE.md decided 5).
+"""Arrow to the browser and to Python (DATA_GUIDE.md › Data formats, section 6; HOW_IT_FITS.md decided 5).
 
 A browser that loaded Arrow JS asks with ``Accept: application/vnd.apache.arrow.stream``; the server answers with an Arrow IPC stream
 written by the official Arrow Java library (``ArrowAnswers``): the answer's big table is the record batch, the rest of the answer rides in

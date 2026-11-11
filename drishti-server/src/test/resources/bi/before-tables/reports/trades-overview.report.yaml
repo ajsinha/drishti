@@ -30,7 +30,7 @@ description: >-
 sample: true                     # sample content: hidden from business users when "Hide samples" is on (like sample packs)
 endorsement: promoted
 tags: [sample, trading, tutorial]
-model: trades-basic@1            # the model it reads: its name and major version (ARCHITECTURE.md §28)
+model: trades-basic@1            # the model it reads: its name and major version (HOW_IT_FITS.md §A28)
 theme: { palette: default }      # default (the console's colours), colour-blind or mono
 
 pages:

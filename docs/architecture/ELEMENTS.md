@@ -118,7 +118,7 @@ only shrinks and is capped; section 12.3 lists every authoring screen and its st
   class** with the same options (`new Grid(el, options)`); React, Angular and Vue use them as they use any custom element (the samples of
   [EMBED_GUIDE.md section 19](../guides/EMBED_GUIDE.md#5-the-elements-one-by-one) extend to every library).
 - **Plain ES modules, no build step**, readable as served; one entry per library plus its stylesheet, a `.d.ts` and an integrity record
-  ([the renderer's shape](ARCHITECTURE.md#302-the-renderer-as-an-elements-library) and [versioning](../guides/EMBED_GUIDE.md#10-versions-integrity-and-lifecycle) apply to all eight).
+  ([the renderer's shape](../../HOW_IT_FITS.md#a302-the-renderer-as-an-elements-library) and [versioning](../guides/EMBED_GUIDE.md#10-versions-integrity-and-lifecycle) apply to all eight).
 - **Vendored, never a CDN**; every file of ours carries the `drishti_` prefix inside the console and the library name outside it.
 - **Files under 2,000 lines**; object-oriented, configuration-driven, no globals beyond one namespace (`window.Drishti.<Library>` for
   hosts without modules).
@@ -223,7 +223,7 @@ it the same way. Takes over: `drishti_channel.js`, `drishti_live-hub.js`, `drish
 
 `<drishti-explain>` (the one Explain: a cell, a mark, a figure, a change between two dates), `<drishti-search>` (the one search),
 `<drishti-approvals>` (the queue and a review), `workbook.export()` (the server's workbook with formulas and a Provenance sheet). It
-packages the components the one-Explain, one-search and one-Approvals work finished ([SHARED_SCREENS.md](SHARED_SCREENS.md)); it adds
+packages the components the one-Explain, one-search and one-Approvals work finished ([../../HOW_IT_FITS.md](../../HOW_IT_FITS.md#part-v--shared-screens)); it adds
 no second implementation. Takes over: `drishti_about.js`, `drishti_about-hints.js`, `drishti_about-ask.js`, `drishti_command.js`,
 `drishti_bi-export.js`, the renderer's `m/about.js`; the Why card of `drishti_pivot-functions.js`, the review panel of
 `drishti_bi-govern.js`, the dialog of `drishti_share.js`.
@@ -281,7 +281,7 @@ does not force the terminal density, and any layout takes any density.
 **The model.** A pivot is a view: `rows` (dimensions, in order), `columns` (dimensions, in order), `values` (a measure with its
 aggregation), `filters` (members of a dimension, and value filters such as "VaR 99% > 1m" or "top 5 by VaR"), `totals` (grand total
 and subtotals, before or after), `expanded` (which row and column groups are open). It is the pivot engine's view
-([ARCHITECTURE.md section 26.2](ARCHITECTURE.md#262-the-pivot-model)); the grid adds nothing to its meaning.
+([../../HOW_IT_FITS.md section A26.2](../../HOW_IT_FITS.md#a262-the-pivot-model)); the grid adds nothing to its meaning.
 
 **What the grid draws.** Row groups with + and − (lazy: a group's children are asked when it opens), **pivot result columns** with
 collapsible column groups (a collapsed group shows its own total), totals and subtotals in the server's order, a grand total row and
@@ -308,7 +308,7 @@ column (pinnable), the measure's name in the leaf header, ≈ beside an approxim
   "expandedColumns": ["Americas", "EMEA"] }
 ```
 
-The answer is the pivot engine's answer ([ARCHITECTURE.md section 26 4.4](ARCHITECTURE.md#262-the-pivot-model)): rows in display order, the
+The answer is the pivot engine's answer ([../../HOW_IT_FITS.md section A26 4.4](../../HOW_IT_FITS.md#a262-the-pivot-model)): rows in display order, the
 pivot result column keys, cells with values, texts and tones, totals, approximation marks, the row count. drishti-data's
 `source.drishtiPivot()` speaks it; a host's own server may answer the same JSON, or the AG-style request (section 6).
 
@@ -613,7 +613,7 @@ library with its module: an unlicensed module's library is not served, its kinds
     zoned); rows as views (each holds its row number; `toObject()` copies, the grid's edits copy only the row they change);
     `toGrid()` gives column definitions from the types. **Flight over HTTP** when the server's capabilities name a `do-get` address (the
     ticket POSTed, an Arrow stream back); else **Arrow over HTTP**; else JSON, read into the same frame. The Drishti server answers
-    Arrow over HTTP today; its Flight service is gRPC ([ARROW_FLIGHT.md](DATA_ARCHITECTURE.md#11-arrow-flight-drishtis-data-to-any-client)), which browsers cannot speak, so the
+    Arrow over HTTP today; its Flight service is gRPC ([ARROW_FLIGHT.md](../../HOW_IT_FITS.md#d11-arrow-flight-drishtis-data-to-any-client)), which browsers cannot speak, so the
     Flight path serves servers or gateways that offer it over HTTP.
   - The grid's own SSE and WebSocket feeds (`eventSourceFeed`, `webSocketFeed`) are gone: the connection has one home, `LiveClient`.
 - **Cell editing in drishti-grid 0.3.0** (`drishti_grid-edit.js`, the model; `drishti_grid-editors.js`, the editors): a leaf's cell
@@ -900,9 +900,9 @@ library with its module: an unlicensed module's library is not served, its kinds
 
 ### 8.5 As built: drishti-renderer 2.0.0
 
-The client renderer is library 7 (EMBED_GUIDE.md is its one home: [section 3](ARCHITECTURE.md#302-the-renderer-as-an-elements-library) the modules and
-what each library draws, [section 6](ARCHITECTURE.md#303-the-view-macros-shared-with-the-console) the rounding, [section 13](../guides/EMBED_GUIDE.md#10-versions-integrity-and-lifecycle)
-versions and the migration from 1.x, [section 14.4](ARCHITECTURE.md#308-the-parity-suite) parity). What the
+The client renderer is library 7 (EMBED_GUIDE.md is its one home: [section 3](../../HOW_IT_FITS.md#a302-the-renderer-as-an-elements-library) the modules and
+what each library draws, [section 6](../../HOW_IT_FITS.md#a303-the-view-macros-shared-with-the-console) the rounding, [section 13](../guides/EMBED_GUIDE.md#10-versions-integrity-and-lifecycle)
+versions and the migration from 1.x, [section 14.4](../../HOW_IT_FITS.md#a308-the-parity-suite) parity). What the
 other libraries gained for it:
 
 - **drishti-grid, the document table** (`drishti_doc-table.js`, `drishti_doc-behave.js`): the grid draws the server's table as it speaks
@@ -1693,7 +1693,7 @@ an edit mode where a node is dragged to a new parent and the moves become one pr
 
 **g7, the designer kit** ([g7-designer-kit.html](mockups/elements/g7-designer-kit.html)): one shell on which every designer is built
 (Sutra screens, BI reports, forms, semantic models, tables, Python tables and models, the Build workbench's YAML), with the header
-of [EDITORS.md](SHARED_SCREENS.md#7-the-editors-one-pattern-for-every-object-people-author) section 1. The page shows the same kit as the BI report designer and, by a switch, as the form designer:
+of [EDITORS.md](../../HOW_IT_FITS.md#s7-the-editors-one-pattern-for-every-object-people-author) section 1. The page shows the same kit as the BI report designer and, by a switch, as the form designer:
 only the palette, the schemas and the preview's widgets change. Shared: a layout canvas (drag, drop, resize, snap to the 12-column
 grid, multi-select, align and distribute, undo and redo, keyboard moves); a searchable palette; an inspector generated from the
 component's schema (required fields, validation as typed, fields shown only when they apply); the outline as a tree in g6's style,

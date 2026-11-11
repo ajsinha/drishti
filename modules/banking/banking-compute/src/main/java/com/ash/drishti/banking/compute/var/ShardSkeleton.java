@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A shard's skeleton (DATA_ARCHITECTURE.md section 13): its hot file without the matrices, which an owner sends to the members that put the date
+ * A shard's skeleton (HOW_IT_FITS.md section D13): its hot file without the matrices, which an owner sends to the members that put the date
  * together but do not hold the shard. The same format as the hot file ({@link VarHotFile}: the header, the section table, each section with
  * its CRC32C), flagged {@link VarHotFile#SKELETON}, holding only what the assembly reads: {@code META}, {@code SCEN}, {@code TIDS},
  * {@code TCOL}, {@code BOOK}, {@code AKEY}, {@code AGGS}, and {@code CTOT}, {@code CELL}, {@code RANG} when present. About 0.8 KB a trade
@@ -98,7 +98,7 @@ public final class ShardSkeleton {
     /**
      * The copy buffer. The sections are copied with positional reads and {@link OutputStream#write}, never through
      * {@code Channels.newChannel(out)}: that adapter writes under a {@code synchronized} lock, and on Java 21 a virtual thread blocked in it
-     * by a slow reader (HTTP/2 flow control) pins its carrier thread (DATA_ARCHITECTURE.md section 13).
+     * by a slow reader (HTTP/2 flow control) pins its carrier thread (HOW_IT_FITS.md section D13).
      */
     static final int COPY = 64 * 1024;
 

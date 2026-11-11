@@ -33,7 +33,7 @@ import { aboutBody } from './drishti_about.js';
 
 /** The renderer's version (Elements library drishti-renderer). */
 export const VERSION = '2.0.0';
-/** The ViewModel contract majors this renderer draws (VIEWMODEL.md section 8: a ViewModel without a contract is 1). */
+/** The ViewModel contract majors this renderer draws (HOW_IT_FITS.md section V8: a ViewModel without a contract is 1). */
 export const CONTRACTS = Object.freeze([1]);
 
 const screens = new WeakMap();
@@ -112,7 +112,7 @@ export function render(container, source, options) {
   return handle;
 }
 
-/** patch(handle, frame): applies a live frame {seq, generation, patches} (VIEWMODEL.md section 5). */
+/** patch(handle, frame): applies a live frame {seq, generation, patches} (HOW_IT_FITS.md section V5). */
 export const patch = (handle, frame) => handle.patch(frame);
 /** subscribe(handle, source?): follows the view's stream (default: this console's relay); returns the function that stops it. */
 export const subscribe = (handle, source) => handle.subscribe(source);

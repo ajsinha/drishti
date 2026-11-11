@@ -124,7 +124,7 @@ items:
     release: 2.9.14
     treatment: under-construction
     menus: [ccr-cube]
-    contracts: ["docs/guides/BI_GUIDE.md#p28-presets-the-risk-cubes", "docs/architecture/ARCHITECTURE.md#264-the-providers"]
+    contracts: ["docs/guides/BI_GUIDE.md#p28-presets-the-risk-cubes", "HOW_IT_FITS.md#a264-the-providers"]
 
 
   - id: approvals-access-kinds
@@ -132,7 +132,7 @@ items:
     about: "The Approvals queue's access kinds: users and roles, API keys, captures, pack changes and admin configuration as four-eyes items (today each takes effect at once, by an administrator, audited); the queue and its API take a new kind as one more ApprovalSource"
     release: 2.9.11.j
     treatment: under-construction
-    contracts: ["docs/guides/USER_GUIDE.md#approvals", "docs/architecture/SHARED_SCREENS.md#2-one-approvals-queue"]
+    contracts: ["docs/guides/USER_GUIDE.md#approvals", "HOW_IT_FITS.md#s2-one-approvals-queue"]
 
   - id: approvals-effect-on-risk
     what: decision
@@ -152,42 +152,42 @@ items:
     about: "Explain › Why it moved for ES, parametric VaR, parametric ES and the fat-tail gap: the exact attribution steps are VaR's only (the drawer says so; VaR's own Why it moved is built)"
     release: "2.9.11.k (risk engines II)"
     treatment: under-construction
-    contracts: ["docs/architecture/SHARED_SCREENS.md#3-one-explain-for-every-number"]
+    contracts: ["HOW_IT_FITS.md#s3-one-explain-for-every-number"]
 
   - id: explain-official-check
     what: panel
     about: "Explain's check 'equal to the official capture' (VaR and exposure): the captures are on each page's Captured results tab; the drawer does not compare yet"
     release: "2.9.11.k (risk engines II)"
     treatment: under-construction
-    contracts: ["docs/architecture/SHARED_SCREENS.md#3-one-explain-for-every-number"]
+    contracts: ["HOW_IT_FITS.md#s3-one-explain-for-every-number"]
 
   - id: explain-exposure-why
     what: panel
     about: "Explain › Why it moved for an exposure figure (peak PFE, EPE, EEPE, EE, CE, EAD): the attribution between two dates is not built; the formula, inputs, lineage and checks are"
     release: "2.9.11.k (risk engines II)"
     treatment: under-construction
-    contracts: ["docs/architecture/SHARED_SCREENS.md#3-one-explain-for-every-number"]
+    contracts: ["HOW_IT_FITS.md#s3-one-explain-for-every-number"]
 
   - id: explain-exposure-workbook
     what: panel
     about: "Explain › Workbook for an exposure figure: no exposure playground with a live-formula workbook yet"
     release: "2.9.11.k (risk engines II)"
     treatment: under-construction
-    contracts: ["docs/architecture/SHARED_SCREENS.md#3-one-explain-for-every-number"]
+    contracts: ["HOW_IT_FITS.md#s3-one-explain-for-every-number"]
 
   - id: explain-pivot-workbook
     what: panel
     about: "Explain › Workbook for a pivot cell's move: the steps are on the screen and in the API; no live-formula workbook yet"
     release: "a later release (the pivot playground)"
     treatment: under-construction
-    contracts: ["docs/architecture/SHARED_SCREENS.md#3-one-explain-for-every-number"]
+    contracts: ["HOW_IT_FITS.md#s3-one-explain-for-every-number"]
 
   - id: explain-more-kinds
     what: panel
     about: "Explain for a BI measure, a Sutra metric, an FRTB-SA or a SIMM figure: no explainer of these kinds is registered yet (GET /api/v1/explain/kinds lists the ones that are: var, exposure, pivot); FRTB-SA and SIMM keep their own step-by-step explanation on their pages"
     release: "2.9.11.g (the Build home's rest)"
     treatment: under-construction
-    contracts: ["docs/architecture/SHARED_SCREENS.md#3-one-explain-for-every-number"]
+    contracts: ["HOW_IT_FITS.md#s3-one-explain-for-every-number"]
 
   - id: build-home-model-lineage
     what: field

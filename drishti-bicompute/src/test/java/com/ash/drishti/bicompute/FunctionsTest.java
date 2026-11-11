@@ -32,7 +32,7 @@ import java.util.Random;
 import org.junit.jupiter.api.Test;
 
 /**
- * Split-and-merge equals one pass (ARCHITECTURE.md sections 26.5 and 26.13): every built-in through the harness on 10,000 seeded rows; a
+ * Split-and-merge equals one pass (HOW_IT_FITS.md sections A26.5 and 26.13): every built-in through the harness on 10,000 seeded rows; a
  * deliberately wrong merge fails it; and on the tabular provider, the same view in one pass and split into 3 or 7 shards merged in order gives
  * the same figures (within 1e-12 relative), and the same digits on every run of the same split.
  */

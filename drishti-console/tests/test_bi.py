@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Rupaka phase 1 (docs/architecture/ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, sections 4 and 5), the console's routes: the RUPAKA keyword in any case, the BI top-bar menu
+"""Rupaka phase 1 (HOW_IT_FITS.md §A28 › Rūpaka: the original design and every phase as built, sections 4 and 5), the console's routes: the RUPAKA keyword in any case, the BI top-bar menu
 for people with the bi power only, the pages and their rail, the same-origin JSON passed on to the server (and the server's refusals
 passed back), the admin page, type-ahead, the proof of concept page kept for administrators."""
 import pytest

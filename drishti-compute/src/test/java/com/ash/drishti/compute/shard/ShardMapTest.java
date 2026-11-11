@@ -29,7 +29,7 @@ import java.util.TreeMap;
 import org.junit.jupiter.api.Test;
 
 /**
- * The shard map (DATA_ARCHITECTURE.md section 13): a pure function of the date's row counts per legal entity and desk, the same whatever order
+ * The shard map (HOW_IT_FITS.md section D13): a pure function of the date's row counts per legal entity and desk, the same whatever order
  * the counts were gathered in; contiguous ranges in the hot file's order, a desk never split, each near the target (one desk alone may
  * exceed it); every key, counted or not, in exactly one shard; a shard key that is not the hot file's order refused.
  */

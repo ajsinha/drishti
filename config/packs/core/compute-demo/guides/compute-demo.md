@@ -35,7 +35,7 @@ Sample pack for reactive connectors: three books of synthetic P&L strips (250 sc
 | `PSUM` | `path-sum` | Book path (Python) |
 | `PSUMJ` | `path-sum-java` | Book path (Java) |
 
-A book's page asks both engines for the sum of its strips' paths: the Python engine runs in the compute pool `sample` (`config/compute/compute.yaml`), the Java twin in the server; each panel shows its own progress and state. Parameters ride on the id (`BOOK-FX~delay-ms=50`). How reactive connectors work: [DATA_ARCHITECTURE.md](../../../../../docs/architecture/DATA_ARCHITECTURE.md#4-reactive-connectors).
+A book's page asks both engines for the sum of its strips' paths: the Python engine runs in the compute pool `sample` (`config/compute/compute.yaml`), the Java twin in the server; each panel shows its own progress and state. Parameters ride on the id (`BOOK-FX~delay-ms=50`). How reactive connectors work: [HOW_IT_FITS.md](../../../../../HOW_IT_FITS.md#d4-reactive-connectors).
 
 ## Data contracts
 
@@ -58,8 +58,8 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 |---|---|---|---|
 | `PBOOK` | `path-book` | synthetic: `python3 config/packs/core/compute-demo/tools/make_samples.py` | `config/packs/core/compute-demo/samples/` → `lake demo` → connector `compute-demo-store` |
 | `PSTRIP` | `path-strip` | synthetic: `python3 config/packs/core/compute-demo/tools/make_samples.py` | `config/packs/core/compute-demo/samples/` → `lake demo` → connector `compute-demo-store` |
-| `PSUM` | `path-sum` | computed by Drishti: the reactive connector path-sum-python (python engine); see the [reactive connectors](../../../../../docs/architecture/DATA_ARCHITECTURE.md#4-reactive-connectors) | nothing to load: computed from its inputs when asked |
-| `PSUMJ` | `path-sum-java` | computed by Drishti: the reactive connector path-sum-java (java engine); see the [reactive connectors](../../../../../docs/architecture/DATA_ARCHITECTURE.md#4-reactive-connectors) | nothing to load: computed from its inputs when asked |
+| `PSUM` | `path-sum` | computed by Drishti: the reactive connector path-sum-python (python engine); see the [reactive connectors](../../../../../HOW_IT_FITS.md#d4-reactive-connectors) | nothing to load: computed from its inputs when asked |
+| `PSUMJ` | `path-sum-java` | computed by Drishti: the reactive connector path-sum-java (java engine); see the [reactive connectors](../../../../../HOW_IT_FITS.md#d4-reactive-connectors) | nothing to load: computed from its inputs when asked |
 
 ### Generators
 

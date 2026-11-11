@@ -55,7 +55,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 /**
- * The ViewModel's JSON Schema ({@code GET /api/v1/viewmodel/schema}, VIEWMODEL.md section 9) against real views and frames: the
+ * The ViewModel's JSON Schema ({@code GET /api/v1/viewmodel/schema}, HOW_IT_FITS.md section V9) against real views and frames: the
  * showcase with every panel kind, the reference trades, broken documents, masked values, panels denied, and live frames. Validated
  * as the server writes them (its own ObjectMapper). No JSON Schema library is in the build, so {@link Check} is a small validator of
  * the keywords the schema uses; it fails on any keyword it does not know, so the schema cannot outgrow it unnoticed.
@@ -126,7 +126,7 @@ class ViewModelSchemaTest {
 
     @Test
     void everyViewModelCarriesItsContractAndEveryCandleItsTexts() throws Exception {
-        // VIEWMODEL.md section 8: the server stamps the contract it speaks; a client refuses a major it does not know (DRS-9105)
+        // HOW_IT_FITS.md section V8: the server stamps the contract it speaks; a client refuses a major it does not know (DRS-9105)
         JsonNode trade = mapper.valueToTree(pipeline.view(parser.require("TRD IRS-48213")));
         assertThat(trade.path("contract").asText()).isEqualTo(ViewModel.CONTRACT).isEqualTo("1.0");
         ViewModel shown = pipeline.preview(Optional.of(showcase()), showcaseDoc(1, x -> x));

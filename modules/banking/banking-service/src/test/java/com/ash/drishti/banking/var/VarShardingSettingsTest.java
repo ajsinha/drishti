@@ -23,7 +23,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /**
- * VaR sharding's settings (DATA_ARCHITECTURE.md section 14): off by default (no block, no setting: every date loaded whole, as before 2.9.6); the
+ * VaR sharding's settings (HOW_IT_FITS.md section D14): off by default (no block, no setting: every date loaded whole, as before 2.9.6); the
  * server's keys switch it on with the pack's defaults (legal entity and desk, the trades' two kinds, 2048 MB, two replicas); a server
  * setting that is not valid refuses the start, saying why.
  */

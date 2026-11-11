@@ -30,7 +30,7 @@ import java.util.TreeMap;
  * THE RECORD OF "BEFORE", for {@link SutraAggregateParityTest} only: Rachana's own list aggregates as they were in drishti-rachana
  * until 2.9.11.b ({@code ListFunctions.sum}, {@code ListFunctions.group}, {@code MathFunctions.lenient} over one list), copied unchanged
  * so the parity test can show every shipped Sutra draws the same figures from the engine. Test code: never on a class path that serves
- * anything, and deleted with the parity test once 2.9.11.b is released (docs/architecture/ARCHITECTURE.md part 2).
+ * anything, and deleted with the parity test once 2.9.11.b is released (HOW_IT_FITS.md part 2).
  */
 final class LegacyListAggregates {
 

@@ -201,7 +201,7 @@ within `drishti.sources.fetch-timeout` (10 s), so keep the bucket close to the s
 **Type-ahead** is from memory: every `rescan-seconds` the connector lists the whole prefix and keeps one entry per distinct
 `(kind, id)`, dated or undated; matching is by id prefix, then substring, then the subtitle `<kind> · <source-name>`. It does not
 look at the business date unless `index.days` keeps several days, in which case a past date answers from that date's own ids
-([ARCHITECTURE.md section 9.1](../../docs/architecture/ARCHITECTURE.md#91-several-business-days)); the regular listing fills the kept
+([HOW_IT_FITS.md section A9.1](../../HOW_IT_FITS.md#a91-several-business-days)); the regular listing fills the kept
 days (on the heap), and each past day is re-listed every `index.reload-every` (S3 gives a day no version). **Admin → Connectors →
 this connector → Index** reloads a day by hand ([OPERATIONS_GUIDE.md section 12.2](../../docs/guides/OPERATIONS_GUIDE.md#144-the-multi-day-type-ahead-index)).
 

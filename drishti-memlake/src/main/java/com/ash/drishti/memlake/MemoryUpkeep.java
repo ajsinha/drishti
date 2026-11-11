@@ -33,7 +33,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Old versions of a Delta table in a memory store expired the moment they are past {@code keep-versions} (docs/architecture/DATA_ARCHITECTURE.md
+ * Old versions of a Delta table in a memory store expired the moment they are past {@code keep-versions} (HOW_IT_FITS.md
  * sections 5 and 6): a version still readable holds its files; one past it costs memory for nothing. The caller holds the table's write
  * lock: a file written but not committed yet would otherwise look unreferenced.
  */

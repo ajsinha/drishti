@@ -24,7 +24,7 @@ import java.util.Map;
 /**
  * {@code group(list, key, [aggregate], [by])}: grouping inside one document (RACHANA_REFERENCE.md section F4). Rachana reads the
  * expressions (the key and the aggregate's inputs, with {@code @} each element); the pivot engine groups and aggregates, through
- * its {@link FunctionProvider.Grouping} (docs/architecture/ARCHITECTURE.md part 3); where the engine is not on the class path the call is refused
+ * its {@link FunctionProvider.Grouping} (HOW_IT_FITS.md part 3); where the engine is not on the class path the call is refused
  * with the reason. Two ways to write it, one implementation:
  *
  * <ul>

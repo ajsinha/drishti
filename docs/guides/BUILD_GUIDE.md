@@ -1028,7 +1028,7 @@ until the pack carries it ([The Form tab](RACHANA_REFERENCE.md#the-form-tab)).
 ### 4.7 `history`: a kind over time
 
 `TRD 1000015 30 <GO>` shows the trade over the last 30 business days it has data; `EQ EQ-CSCA 3M` shows the equity's last three months as a chart
-with its high, low and change ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)). **Any kind read
+with its high, low and change ([HOW_IT_FITS.md](../../HOW_IT_FITS.md#d2-history-queries-an-entity-over-time)). **Any kind read
 from a dated store has a history without this key**: a table of its top-level fields, its lists and objects shown as counts, the cells that changed
 from the day before marked. `history:` only shapes it, per kind:
 
@@ -3684,7 +3684,7 @@ date the reader picked.
 
 ### 22.2 Live data
 
-When the source streams, strip figures and table cells update in place; nothing to declare ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#1-live-updates)).
+When the source streams, strip figures and table cells update in place; nothing to declare ([HOW_IT_FITS.md](../../HOW_IT_FITS.md#d1-live-updates)).
 After a Sutra changes on disk every cached layout is dropped, so the next tick uses the new one. A source that does not stream can be fetched again:
 `refresh: 30` (or `{ every: 30, user-can-pause: false }`) on a panel, a use or the Sutra; the reader may pause or slow it, never speed it past `every` or
 the console's `views.refresh_min_seconds`.
@@ -5021,7 +5021,7 @@ within seconds and offers **Refresh**; on a phone each pack is a card. Server si
 
 Every kind of every pack you may open is a BI **dataset** named `pack.<pack>.<kind>` (`pack.trading.trade`), certified by its pack, read-only, versioned
 with the pack, its columns, keys, meanings and masks taken from the pack ([BI_GUIDE.md](BI_GUIDE.md#part-3--reports-and-dashboards)); every BI model is rooted in packs
-([ARCHITECTURE.md](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer)). `config/bi/` holds the BI samples over the seven packs
+([HOW_IT_FITS.md](../../HOW_IT_FITS.md#a28-business-intelligence-on-the-table-layer)). `config/bi/` holds the BI samples over the seven packs
 (models such as `trades-basic`, `trading-risk`, `trading-cashflows`, `counterparty-exposure`, `world-economics`), and a test checks that each reads only
 what the packs serve.
 

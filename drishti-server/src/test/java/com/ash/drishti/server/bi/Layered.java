@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A test's BI fixture moved onto the table layer the way an installation's files are (docs/architecture/ARCHITECTURE.md §28 section 4): {@code tables migrate}
+ * A test's BI fixture moved onto the table layer the way an installation's files are (HOW_IT_FITS.md §A28 section 4): {@code tables migrate}
  * over the fixture's text, in memory, then the layer's tables and model read as the server reads them. A BI dataset of the old forms becomes
  * tables and a model; BI's compiler then plans over the model, flattened ({@link #dataset}). A table or model of the layer is read as it is.
  */

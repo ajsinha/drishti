@@ -59,7 +59,7 @@ TILES_COOKIE = "drishti_build_tiles"
 
 @router.get("")
 async def home(request: Request, type: str = "", q: str = "", tiles: str = ""):  # noqa: A002 (the address's word)
-    """The Build home (docs/architecture/SHARED_SCREENS.md section 1): a rail of every kind this person may build, grouped Data, Screens,
+    """The Build home (HOW_IT_FITS.md section S1): a rail of every kind this person may build, grouped Data, Screens,
     Analysis and Work, each with its count; the middle lists the chosen kind with its lineage (what each uses, what uses it); ``q`` searches
     every kind at once. The four task tiles show on a first visit, until the person hides them (``tiles=0``; ``tiles=1`` shows them again,
     both kept in a cookie of this browser)."""

@@ -22,7 +22,7 @@
   </parent>
   <artifactId>drishti-tables</artifactId>
   <name>drishti-tables</name>
-  <description>The table layer (docs/architecture/ARCHITECTURE.md, docs/architecture/ARCHITECTURE.md §28 sections 3 to 5): plain Java, no Spring. The
+  <description>The table layer (HOW_IT_FITS.md, HOW_IT_FITS.md §A28 sections 3 to 5): plain Java, no Spring. The
     catalogue of virtual tables and models (config/tables/&lt;domain&gt;/&lt;name&gt;.table.yaml and .model.yaml, and stored items of the
     kinds table and model), their definitions and checks, preview over sample documents, lineage (who uses a table), the
     materialisation's API (on-load, live, none) and the migration of BI's datasets and models into tables and layer models.

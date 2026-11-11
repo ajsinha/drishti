@@ -20,7 +20,7 @@ import com.ash.drishti.memlake.store.MemoryStores;
 import java.util.Locale;
 
 /**
- * The owner node binds the pack (docs/architecture/DATA_ARCHITECTURE.md section 9): a memory store is held by one node; on the others the kinds its connectors
+ * The owner node binds the pack (HOW_IT_FITS.md section D9): a memory store is held by one node; on the others the kinds its connectors
  * serve are not answered here but forwarded over Drishti*net to the owner, as any pack a peer holds, and never cached on their disks. The
  * net routing asks {@link #remoteHere(SourceRegistry, String)}.
  */

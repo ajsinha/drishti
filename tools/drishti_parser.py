@@ -371,7 +371,7 @@ def build_parser(h) -> argparse.ArgumentParser:
                 p.add_argument("--body", action="store_true", help="also print the YAML body")
             if noun == "catalogue" and act == "publish":
                 p.add_argument("--note", help="why this version")
-    runs = load_module("biruns", "biruns.py")                                                                         # bi runs (2.6.7, ARCHITECTURE.md §28)
+    runs = load_module("biruns", "biruns.py")                                                                         # bi runs (2.6.7, HOW_IT_FITS.md §A28)
     load_module("bilang", "bilang.py").register(bi, srv_b, {"Api": Api, "CliError": CliError, "say_json": say_json, "runs": runs})   # bi expr, bi migrate, bi sql
     load_module("bimodel", "bimodel.py").register(bi, srv_b, {"Api": Api, "CliError": CliError, "say_json": say_json, "runs": runs})  # bi model, bi mq
     runs.register(bi, srv_b, {"Api": Api, "CliError": CliError, "say_json": say_json})

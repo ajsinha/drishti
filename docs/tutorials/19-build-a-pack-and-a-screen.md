@@ -900,7 +900,7 @@ this part you switch on the compute workers and the **compute-demo** sample pack
 Python engine fanned out over the workers of a pool, and by its Java twin inside the server), watch a panel go from *computing* with its
 progress to the result without a reload, ask the same computation from the command line, see a parameter refused in words, and send a
 write-back event that recomputes what a screen shows. Each step shows the UI, the command line and the YAML. The reference is
-[REACTIVE_CONNECTOR.md](../connectors/types/reactive/README.md); the design is [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors).
+[REACTIVE_CONNECTOR.md](../connectors/types/reactive/README.md); the design is [HOW_IT_FITS.md](../../HOW_IT_FITS.md#d4-reactive-connectors).
 
 ## Step 23 · Switch on the compute workers and the sample pack
 

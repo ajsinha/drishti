@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Comment threads, the console's calls (ARCHITECTURE.md §31, build step 6): what the Discussion tab of the side drawer asks. The server
+"""Comment threads, the console's calls (HOW_IT_FITS.md §A31, build step 6): what the Discussion tab of the side drawer asks. The server
 decides every right (who may read, write, edit, hide); these routes carry the request, add the *Open as it was* link to each comment and
 turn the server's problems into the console's JSON problem form."""
 from __future__ import annotations

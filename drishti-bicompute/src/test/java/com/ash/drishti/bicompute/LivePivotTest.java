@@ -44,7 +44,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 /**
- * Live pivots (ARCHITECTURE.md section 26.7, item 5): after the data of the view's date moves, the patch applied to the last answer equals a
+ * Live pivots (HOW_IT_FITS.md section A26.7, item 5): after the data of the view's date moves, the patch applied to the last answer equals a
  * fresh query of the view, cell by cell; a new member is a reshape with the whole answer; a signal of another date or source computes
  * nothing; a signal with no change reads nothing again (every set from the partial-state cache) and says {@code status}; the limits are
  * refused in words (DRS-5721); a live recompute is exact unless ≈ was asked; a signal reaches a stream through the scheduler.

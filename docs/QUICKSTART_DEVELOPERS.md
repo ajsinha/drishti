@@ -199,7 +199,7 @@ Most rules are tests, so the fast checks above catch them; the rest is review. T
 | **No bespoke UI**: every screen, designer and editor is built from Drishti Elements; a missing piece is added to a library, never written for one page | `test_elements_guards.py`, `test_designer_kit_guard.py`, `test_admin_forms_guard.py`, `test_native_select_guard.py` |
 | **CSS tokens**: colours, spacing and type come from the tokens, never literals | `test_css_tokens.py` |
 | **Domain boundaries**: the core never imports a module; banking code lives in the banking module and its console plugin | `test_module_boundaries.py`, `ArchitectureRulesTest` |
-| **The servers compute, the browser draws**: every risk and BI number is computed in Java on the server | review; [ARCHITECTURE.md](architecture/ARCHITECTURE.md) |
+| **The servers compute, the browser draws**: every risk and BI number is computed in Java on the server | review; [HOW_IT_FITS.md](../HOW_IT_FITS.md#part-ii--architecture) |
 | **Branding from configuration**: no product name or owner in code or templates (`ui.product`, `drishti.branding.*`) | `test_branding_guard.py` |
 | **Our files are named `drishti_<name>`** (JS, CSS, images we write); vendored libraries untouched under `static/vendor` with `VENDOR.md`; nothing from a CDN | `test_assets_policy.py` and the asset-name tests |
 | **The kernel names no domain**: banking's words reach the core through `DomainVocabulary` and the console's plugin hooks ([KERNEL_AND_MODULES.md](architecture/KERNEL_AND_MODULES.md)) | `tools/domain_strings.py` (allow-list `tools/domain_strings_allowed.yaml`, kept empty), `KernelWithoutModulesTest`, `ApiSurfaceTest` |

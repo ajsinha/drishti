@@ -29,7 +29,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * The function catalogue (ARCHITECTURE.md section 26.3) and the parser of a measure's text: {@code sum(NOTIONAL_USD)}, {@code count()},
+ * The function catalogue (HOW_IT_FITS.md section A26.3) and the parser of a measure's text: {@code sum(NOTIONAL_USD)}, {@code count()},
  * {@code wavg(PRICE, QUANTITY)}, {@code percentile(PNL_1D, 0.99)}, {@code var()} (a provider's native measure). A provider's natives are
  * looked up first; the built-ins next, when the provider evaluates them.
  */
@@ -165,7 +165,7 @@ public final class Functions {
     }
 
     /**
-     * Finds the functions a view names beyond the built-ins and the provider's natives (ARCHITECTURE.md section 26.5): custom functions
+     * Finds the functions a view names beyond the built-ins and the provider's natives (HOW_IT_FITS.md section A26.5): custom functions
      * ({@code fn:owner/name@v(FIELD, ...)}), resolved for the reader. The host sets one on the core.
      */
     @FunctionalInterface

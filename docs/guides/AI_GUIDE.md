@@ -698,7 +698,7 @@ layer is in [section 1](#1-model-providers), its section 10.
 ## 3. AI management (design, not built)
 
 Status: **design, not built.** Parked (see
-[ARCHITECTURE.md §28 §12.2](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer)). Asked by the product owner on 2026-10-18: "for AI in general we
+[HOW_IT_FITS.md §A28 §12.2](../../HOW_IT_FITS.md#a28-business-intelligence-on-the-table-layer)). Asked by the product owner on 2026-10-18: "for AI in general we
 will need an elaborate UI to manage". Names marked **(new)** do not exist today.
 
 ### 1. Where we are
@@ -710,7 +710,7 @@ per feature, audit), MCP servers and their tools, and features that use them (`a
 But managing it is files and environment variables: **Admin → AI** is a read-only page (on or off, providers with
 health, MCP servers, a *Test connection* button), and the policy is configuration only ("Admin does not edit these").
 The AI features add more that needs managing: AI grounding and golden questions, AI-drafted measures, reports and Transforms
-under review, the Sajha MCP connector, and GenUI ([EMBED_GUIDE.md](../architecture/ARCHITECTURE.md#30-the-client-renderer-and-drishti-elements)).
+under review, the Sajha MCP connector, and GenUI ([EMBED_GUIDE.md](../../HOW_IT_FITS.md#a30-the-client-renderer-and-drishti-elements)).
 
 ### 2. Principles
 
@@ -786,12 +786,12 @@ budget and alert path.
 ## 4. Server-side pricing: the quant service (proposed)
 
 **Status: proposed; not in a planned release, a later candidate in [IMPLEMENTATION_PLAN.md › Roadmap](../architecture/IMPLEMENTATION_PLAN.md#roadmap); the decision is
-[ADR-019](../architecture/adr/019-pricing-is-a-quantlib-service-behind-the-server.md).** Nothing here is built yet (there is no `drishti-quant-gateway` module, no `drishti.quant.*` server setting and no `quant` power; `drishti.quant` below is the small browser library of Calc).
+[ADR-019](../../HOW_IT_FITS.md#adr-019).** Nothing here is built yet (there is no `drishti-quant-gateway` module, no `drishti.quant.*` server setting and no `quant` power; `drishti.quant` below is the small browser library of Calc).
 
 **Read [BI_GUIDE.md](BI_GUIDE.md#part-4--the-notebook-and-python) first.** The product owner decided that computations,
 pricing included, run in **compute workers supervised by the Drishti server** (out-of-process Python workers with QLRisk as the
 default pricer, and an isolated Java worker for QuantLib's own Java binding), used by **reactive connectors**
-([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors)); the first user is the VaR engine ([VAR_GUIDE.md Part III](VAR_GUIDE.md#24-where-the-engine-lives)). That replaces the
+([HOW_IT_FITS.md](../../HOW_IT_FITS.md#d4-reactive-connectors)); the first user is the VaR engine ([VAR_GUIDE.md Part III](VAR_GUIDE.md#24-where-the-engine-lives)). That replaces the
 *deployment shape* proposed below (a separate `drishti-quant` HTTP service); the rest of this part still stands and is reused:
 pricing stays outside the server's JVM, the `quant` power, the packs' pricer mappings (section 6), market data assembled by the server
 for a business date (section 7), caching by trade version and date (section 11). The QuantLib-SWIG Java option rejected in section 3
@@ -843,7 +843,7 @@ user's credentials; it is given a trade, market data and a model, and it returns
 
 | Option | For | Against | Verdict |
 |---|---|---|---|
-| **A separate Python service with QuantLib-Python** | QuantLib publishes ready-made wheels for Linux, macOS and Windows (QuantLib 1.43 today); a crash in native code cannot take the Drishti server down; it scales on its own; the same interface can front ORE or a bank's pricers later | one more process to run | **chosen** ([ADR-019](../architecture/adr/019-pricing-is-a-quantlib-service-behind-the-server.md)) |
+| **A separate Python service with QuantLib-Python** | QuantLib publishes ready-made wheels for Linux, macOS and Windows (QuantLib 1.43 today); a crash in native code cannot take the Drishti server down; it scales on its own; the same interface can front ORE or a bank's pricers later | one more process to run | **chosen** ([ADR-019](../../HOW_IT_FITS.md#adr-019)) |
 | QuantLib's Java (SWIG) bindings inside the server | one process | native libraries to build for every platform, and a crash or a long calibration inside the server everyone uses | rejected |
 | QuantLib compiled to WebAssembly, in Calc | no server | no build exists; tens of MB more to download; a laptop's CPU for calibrations; rebuilt for every Pyodide version | rejected ([USER_GUIDE.md](USER_GUIDE.md#calc-python-on-any-view)) |
 | ORE (Open Source Risk Engine) as the service | portfolio analytics (XVA, simulation) | larger to adopt, XML-configured | later, behind the same API |
@@ -1014,7 +1014,7 @@ and released on its own.
 
 ### 16. Pricing in Python items (design only)
 
-Python items, Python-driven tables and Notebook cells run on the server's compute pool `python` ([BI_GUIDE.md section N19](../architecture/ARCHITECTURE.md#291-one-python-runtime)), in a strict sandbox with pinned libraries. They price nothing of their own: there is no quant engine in a cell. When QLRisk's API is stable, it joins the way any library does: pinned in `config/compute/locks/python.in` (then `tools/python_lock.py`), allowed in `drishti.bi.report.python-packages`, and imported by the item that lists it; it then runs in the same sandbox (no network: curves and market data come in as inputs the server reads as the person). Server-side pricing as a service is sections 4 to 15 above and the compute workers' pricer SPI ([BI_GUIDE.md section N9](../architecture/ARCHITECTURE.md#298-pricing-engines-planned)).
+Python items, Python-driven tables and Notebook cells run on the server's compute pool `python` ([BI_GUIDE.md section N19](../../HOW_IT_FITS.md#a291-one-python-runtime)), in a strict sandbox with pinned libraries. They price nothing of their own: there is no quant engine in a cell. When QLRisk's API is stable, it joins the way any library does: pinned in `config/compute/locks/python.in` (then `tools/python_lock.py`), allowed in `drishti.bi.report.python-packages`, and imported by the item that lists it; it then runs in the same sandbox (no network: curves and market data come in as inputs the server reads as the person). Server-side pricing as a service is sections 4 to 15 above and the compute workers' pricer SPI ([BI_GUIDE.md section N9](../../HOW_IT_FITS.md#a298-pricing-engines-planned)).
 
 ### 17. Reconciled with the compute workers
 
@@ -1022,13 +1022,13 @@ Decided 2026-10-24 (product owner); the design is [BI_GUIDE.md](BI_GUIDE.md#part
 
 | This document proposed | The compute workers decide |
 |---|---|
-| a separate Python service, `drishti-quant`, reached over HTTP (sections 2, 5, 12) | **compute workers** started and supervised by the server: a pool of out-of-process Python workers, data passed as Arrow, from a locked, administrator-approved environment ([BI_GUIDE.md sections N4 to 7](../architecture/ARCHITECTURE.md#296-requirements-and-approval)); a remote pool on other machines remains a later option and would look much like the service |
-| QuantLib-Python adapters written in the service (section 5) | a **pricer SPI** with **QLRisk as the default provider** (design only until its API is declared stable) and a stand-in for tests ([BI_GUIDE.md section N9](../architecture/ARCHITECTURE.md#298-pricing-engines-planned)) |
+| a separate Python service, `drishti-quant`, reached over HTTP (sections 2, 5, 12) | **compute workers** started and supervised by the server: a pool of out-of-process Python workers, data passed as Arrow, from a locked, administrator-approved environment ([BI_GUIDE.md sections N4 to 7](../../HOW_IT_FITS.md#a296-requirements-and-approval)); a remote pool on other machines remains a later option and would look much like the service |
+| QuantLib-Python adapters written in the service (section 5) | a **pricer SPI** with **QLRisk as the default provider** (design only until its API is declared stable) and a stand-in for tests ([BI_GUIDE.md section N9](../../HOW_IT_FITS.md#a298-pricing-engines-planned)) |
 | QuantLib's Java (SWIG) binding rejected inside the server (section 3) | **accepted in an isolated Java worker**: built per OS (Linux first), packaged in a versioned jar, extracted under the data folder, never loaded in the server; its tests skip on Windows; a parity test against QLRisk |
 | `/api/v1/quant/...` endpoints (section 9) | pricing reaches screens through **reactive connectors** and their kinds (a what-if is a computed kind, [VAR_GUIDE.md section 8.4](VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)); dedicated endpoints for single-trade pricing may still be added on the same workers |
 | packs' `quant: pricers:` mappings (section 6) | **kept**, shared by every pricer provider |
 | market data for a business date assembled by the server (section 7) | **kept** |
-| the `quant` power, limits, caching, audit (sections 4, 10, 11) | **kept**, joined by the `compute` power and the compute audit ([DATA_ARCHITECTURE.md › Reactive connectors, section 15](../architecture/DATA_ARCHITECTURE.md#15-observability-and-audit)) |
+| the `quant` power, limits, caching, audit (sections 4, 10, 11) | **kept**, joined by the `compute` power and the compute audit ([HOW_IT_FITS.md › Reactive connectors, section 15](../../HOW_IT_FITS.md#d15-observability-and-audit)) |
 
 Python items run on the compute pool `python` too (section 16); when QLRisk is stable it is pinned there and shares the packs' pricer mappings with the compute
 pricer SPI share the packs' pricer mappings.

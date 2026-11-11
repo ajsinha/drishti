@@ -25,7 +25,7 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * Records the BI parity fixtures (ARCHITECTURE.md section 26.9) from the code it runs on: every case of {@link BiParityCases}, each level by
+ * Records the BI parity fixtures (HOW_IT_FITS.md section A26.9) from the code it runs on: every case of {@link BiParityCases}, each level by
  * one grouped query, written to {@code src/test/resources/bi/parity/lake-test.json}. Runs only when asked:
  *
  * <pre>

@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The canonical text of a plan and its hash (docs/architecture/ARCHITECTURE.md §28 section 3.6): every node as {@code op{sorted props}[inputs]}, inputs of a
+ * The canonical text of a plan and its hash (HOW_IT_FITS.md §A28 section 3.6): every node as {@code op{sorted props}[inputs]}, inputs of a
  * {@code Meet} and the scans under an aggregate sorted (their order changes no answer), the model at its fingerprint and the resolved time. The same
  * question in any language produces the same text, so caches and standing queries are shared across SQL, MQ and the designer. Security is never part of it.
  */

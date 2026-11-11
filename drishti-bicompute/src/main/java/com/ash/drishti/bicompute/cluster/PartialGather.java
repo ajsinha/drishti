@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
- * The coordinator's gather of the pivot's partial states (ARCHITECTURE.md section 26.6), in the shape of VaR sharding's {@code ShardGather}
+ * The coordinator's gather of the pivot's partial states (HOW_IT_FITS.md section A26.6), in the shape of VaR sharding's {@code ShardGather}
  * ({@code drishti-compute}; this module does not depend on it): every share is asked once, side by side; a share whose node is late past
  * {@code hedgeAfterMs} is asked again of its next node (the first answer wins: both are equal by construction); the answers are combined
  * in <b>share order</b> through a {@link Combine} (zero, add), so the same question gives the same digits whoever answered and in whatever

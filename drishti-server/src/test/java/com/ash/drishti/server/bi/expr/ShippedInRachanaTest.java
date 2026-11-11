@@ -38,7 +38,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Every expression of the shipped tables and models ({@code config/tables}, migrated from BI's datasets and models) read as Rachana
- * (docs/architecture/ARCHITECTURE.md §28 2.4, 2.6 and 7.1): in Rachana's one spelling ({@link Printer}: parsed and printed, the same text), checked in
+ * (HOW_IT_FITS.md §A28 2.4, 2.6 and 7.1): in Rachana's one spelling ({@link Printer}: parsed and printed, the same text), checked in
  * its scope (measures in aggregate scope, rules in rule scope, the rest in row scope) and lowered by the one compiler without a problem;
  * and the worked examples of the design as the migration's DEL step ({@link DelToRachana}) maps them. The values of the same expressions in Java and in SQL are compared by
  * drishti-bicompute's DifferentialTest; the parity of BI's figures is part B's.

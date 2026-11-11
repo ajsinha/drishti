@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A Drishti SQL statement refused (docs/architecture/ARCHITECTURE.md §28 section 3.4; codes {@code DRS-9170} to {@code DRS-9179}): the code, what is wrong, what
+ * A Drishti SQL statement refused (HOW_IT_FITS.md §A28 section 3.4; codes {@code DRS-9170} to {@code DRS-9179}): the code, what is wrong, what
  * to write instead, and where (character offsets into the statement). Over HTTP it is a model-query refusal ({@code 422} with {@code code}, {@code path},
  * {@code fix}, {@code problems}).
  */

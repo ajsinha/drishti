@@ -129,4 +129,4 @@ same way once, from that file.
 
 ## Content store
 
-Every node of this stack uses one content store, `data/fstore` in the repository (`DRISHTI_STORE_ROOT`), so a design or other user content saved through one node opens through any other ([DATA_ARCHITECTURE.md](../docs/architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)).
+Every node of this stack uses one content store, `data/fstore` in the repository (`DRISHTI_STORE_ROOT`), so a design or other user content saved through one node opens through any other ([HOW_IT_FITS.md](../HOW_IT_FITS.md#d5-the-content-store-user-content-every-node-reaches)).

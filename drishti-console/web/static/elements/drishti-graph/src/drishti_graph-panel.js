@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The view's graph panel (a Sutra's kind: graph; VIEWMODEL.md section 4) drawn by drishti-graph: the panel's data (nodes with id, label,
+/* The view's graph panel (a Sutra's kind: graph; HOW_IT_FITS.md section V4) drawn by drishti-graph: the panel's data (nodes with id, label,
    group, link and focus; edges with from, to and label; layout tree or force; more) becomes a Graph in the table mode without its tables
    (the controls float on the canvas, the card at the node), its groups as types, tree as the layered layout top-down, the panel's own
    node (focus) outlined, and a click on a node that names an entity opens it through the host (the console opens it in place, the

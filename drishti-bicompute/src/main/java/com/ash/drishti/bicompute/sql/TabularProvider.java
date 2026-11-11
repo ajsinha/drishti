@@ -33,7 +33,7 @@ import java.util.Optional;
 import java.util.TreeMap;
 
 /**
- * The tabular provider (ARCHITECTURE.md section 26.4): any table of any pack, read by DuckDB. Cell sets that share a restriction compile to
+ * The tabular provider (HOW_IT_FITS.md section A26.4): any table of any pack, read by DuckDB. Cell sets that share a restriction compile to
  * one {@code GROUP BY GROUPING SETS} statement each ({@link GroupingSetsCompiler}); a statement answers states (sums and counts, Welford's
  * parts, a holistic figure of each set's own rows), which the core merges and finishes. Row rules and masks are the source's: a masked field
  * is not in the catalogue, and the row rules are applied inside the base relation before any filter or grouping.
@@ -131,7 +131,7 @@ public final class TabularProvider implements PivotProvider {
     }
 
     /**
-     * How functions without an SQL form (Python, Java plug-ins) are fed (ARCHITECTURE.md section 26.5): rows in each batch, and the
+     * How functions without an SQL form (Python, Java plug-ins) are fed (HOW_IT_FITS.md section A26.5): rows in each batch, and the
      * most rows of one cell a holistic one receives.
      */
     public void feed(int batchRows, long holisticMaxRows) {

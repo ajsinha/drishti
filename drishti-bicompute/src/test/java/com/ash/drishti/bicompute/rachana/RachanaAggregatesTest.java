@@ -34,7 +34,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 /**
- * Rachana's aggregates come from the pivot engine (docs/architecture/ARCHITECTURE.md parts 1 to 3): found by ServiceLoader, the same AggFunctions a pivot
+ * Rachana's aggregates come from the pivot engine (HOW_IT_FITS.md parts 1 to 3): found by ServiceLoader, the same AggFunctions a pivot
  * cell runs, with the results Rachana's own list forms gave (the assertions moved here from drishti-rachana's ElTest, MaskTest,
  * ControlsTest and MathFunctionsTest), the new aggregates, group's two ways of writing, and measure/cell through the server's figures.
  */

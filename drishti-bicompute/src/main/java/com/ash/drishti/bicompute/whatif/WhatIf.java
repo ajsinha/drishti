@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * What-if inside the pivot (ARCHITECTURE.md section 26.7, item 3): the view as it is and the view with an {@link Overlay}, cell by cell, with
+ * What-if inside the pivot (HOW_IT_FITS.md section A26.7, item 3): the view as it is and the view with an {@link Overlay}, cell by cell, with
  * the differences. The what-if runs on a core of its own over the same executor, the same partial-state cache (keys carry the overlay's
  * digest, so the original's states are reused and only the overlay's are new) and the same custom functions; nothing is written anywhere.
  * Sources of the tabular provider only: a compute engine's what-if is its own arithmetic, under its own API.

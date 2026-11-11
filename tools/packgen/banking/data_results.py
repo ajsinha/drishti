@@ -56,7 +56,7 @@ def years(d: str) -> float:
 
 def _bucket_sets() -> dict[str, list[tuple[float | None, str]]]:
     """The named maturity-bucket sets of the counterparty-risk pack's configuration (config/maturity-buckets.yaml; decision 10 of
-    docs/architecture/DATA_ARCHITECTURE.md#12-computed-and-derived-attributes): display (a trade list's MATURITY_BUCKET) and limit (a credit limit's tenor buckets)."""
+    HOW_IT_FITS.md#d12-computed-and-derived-attributes): display (a trade list's MATURITY_BUCKET) and limit (a credit limit's tenor buckets)."""
     import yaml
     f = Path(__file__).resolve().parents[3] / "config" / "packs" / "banking" / "counterparty-risk" / "config" / "maturity-buckets.yaml"
     sets = (yaml.safe_load(f.read_text(encoding="utf-8")) or {})["maturity-buckets"]
@@ -125,7 +125,7 @@ def credit_results(trades: dict, docs: dict) -> None:
         peaks[ns] = pfe_peak
         limit = max(5e6, round(pfe_peak * r.uniform(1.2, 2.2), -6))
         # the collateral balance: three holdings worth the contractual amount before haircut; held and posted are the holdings' values
-        # AFTER haircut (F3 of docs/architecture/DATA_ARCHITECTURE.md section 12, 2.9.7), and so is the set's COLLATERAL (held - posted)
+        # AFTER haircut (F3 of HOW_IT_FITS.md section D12, 2.9.7), and so is the set's COLLATERAL (held - posted)
         pre_held, pre_posted = (abs(coll), 0) if coll > 0 else (0, abs(coll))
         positions = []
         for b in r.sample(list(TR.all_bonds().values()), 3):
@@ -359,7 +359,7 @@ def reference(trades: dict, docs: dict) -> None:
             "elections": {"automaticEarlyTermination": False, "crossDefault": "3% of shareholders' equity", "setOff": True, "terminationCurrency": "USD",
                           "additionalTerminationEvents": "Rating downgrade below BBB-" if rating[0] in "AB" else "None",
                           "protocols": "ISDA 2020 IBOR Fallbacks; 2018 US Resolution Stay"},
-            # one CSA per agreement and bank legal entity (docs/architecture/DATA_ARCHITECTURE.md#12-computed-and-derived-attributes): the agreement's CSAs
+            # one CSA per agreement and bank legal entity (HOW_IT_FITS.md#d12-computed-and-derived-attributes): the agreement's CSAs
             "counterparty": f"CP-{cp}", "csas": sorted(s["csa"] for s in sets), "_meta": {"source": "legal-docs", "generation": 1}}
         th = 0 if typ in ("Bank", "Hedge fund", "Clearing broker") else 10e6
         for s in sorted(sets, key=lambda x: x["nettingSetId"]):

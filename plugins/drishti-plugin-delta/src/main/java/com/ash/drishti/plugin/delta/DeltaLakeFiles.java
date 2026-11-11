@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * A Delta table's files for the pivot engine's direct lake route (docs/architecture/ARCHITECTURE.md section 26.4): the Parquet files of the
+ * A Delta table's files for the pivot engine's direct lake route (HOW_IT_FITS.md section A26.4): the Parquet files of the
  * date's snapshot and the promoted columns, only for a snapshot table (one partition holds the date) on a local disk, without deletion
  * vectors (a reader of the bare files would see deleted rows). No data file is read: the layout is the cached one.
  */

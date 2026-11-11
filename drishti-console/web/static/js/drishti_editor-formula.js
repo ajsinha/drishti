@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis);
-/* The editors' Rachana input (docs/architecture/SHARED_SCREENS.md section 7, "one grammar"): every formula, filter, row rule and computed column is
+/* The editors' Rachana input (HOW_IT_FITS.md section S7, "one grammar"): every formula, filter, row rule and computed column is
    typed in one of these: drishti-inputs' code editor in Rachana (one line for an input, the whole text for a text area), the element kept
    as the value's holder (upgradeCodeArea). As you type, the word before the caret is completed from Rachana's function catalogue (the
    server's, with each function's signature and one line) and the names the editor knows (columns, aliases, measures, tables): the code

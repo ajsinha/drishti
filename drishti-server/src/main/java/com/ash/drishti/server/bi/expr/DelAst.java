@@ -18,7 +18,7 @@ package com.ash.drishti.server.bi.expr;
 import java.util.List;
 
 /**
- * The syntax tree of a DEL v2 expression (docs/architecture/ARCHITECTURE.md §28 section 3.3.2): the accepted subset of Python's expression grammar, as
+ * The syntax tree of a DEL v2 expression (HOW_IT_FITS.md §A28 section 3.3.2): the accepted subset of Python's expression grammar, as
  * {@link DelParser} reads it. Every node knows where it was written ({@code start}, {@code end}: character offsets in the text) so a problem can point at it.
  * Nothing here evaluates: the migration maps the tree to Rachana's ({@link DelToRachana}). Immutable.
  */

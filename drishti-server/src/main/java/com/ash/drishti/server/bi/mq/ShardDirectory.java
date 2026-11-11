@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.function.Predicate;
 
 /**
- * The subscription directory of a site with several Java nodes (docs/architecture/ARCHITECTURE.md §28 section 6.5): each model's shard (its live tables and its
+ * The subscription directory of a site with several Java nodes (HOW_IT_FITS.md §A28 section 6.5): each model's shard (its live tables and its
  * standing queries) is owned by one node, chosen by rendezvous (highest random weight) hashing of the model's key over the nodes that are alive, so a node
  * that leaves moves only its own shards and every node agrees on the owner without talking. Asked queries stay stateless (any node answers any query).
  */

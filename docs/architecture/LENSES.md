@@ -141,7 +141,7 @@ Sutras (a Sutra lays out one entity's view; these span the engines). **A: Risk d
 
 ### 1.3 Gaps and proposals
 
-The rules every proposal follows ([DATA_ARCHITECTURE.md section 12](DATA_ARCHITECTURE.md#121-three-classes-and-the-rule-for-deciding-which)):
+The rules every proposal follows ([../../HOW_IT_FITS.md section D12](../../HOW_IT_FITS.md#d121-three-classes-and-the-rule-for-deciding-which)):
 fundamental inputs under a **data contract** as JSON Lines; measures **computed on demand** from trade or position-grain inputs and
 **never stored**, except as an immutable capture or an official end-of-day record; governance records Drishti-owned and versioned; **BI
 is the report layer**; the engines are unchanged by a lens. Sizes: **S** days, **M** one to three weeks, **L** more than three weeks.
@@ -389,7 +389,7 @@ the VaR explorer: the baskets leave the left-hand column for two drop-downs, and
 | L3 | + New basket | the basket's sheet (`drishti_var-basket.js`) | Alt+B | **Built** |
 | L4 | The hierarchy tree | `/api/var/tree` | ▸ opens, click shows the node's VaR | **Built** |
 | L5 | Keys strip | — | the keys | **Built** |
-| L6 | How calculated › | — | **H** | **Folded** into the one **Explain ›**, key **E** ([SHARED_SCREENS.md](SHARED_SCREENS.md)) |
+| L6 | How calculated › | — | **H** | **Folded** into the one **Explain ›**, key **E** ([../../HOW_IT_FITS.md](../../HOW_IT_FITS.md#part-v--shared-screens)) |
 | L7 | The drawer | the scope's `provenance` | Esc, ✕ | **Folded** into the Explain drawer, tab Inputs & lineage |
 | L8 | Phone (700 px and below) | — | tap | **Built** (full-width drop-downs, the drawer a bottom sheet) |
 
@@ -478,7 +478,7 @@ STR, SSPNL) and collateral operations (COLL, MC), left out by the lens file. **D
 | VaR limit use per book and desk; limit use by book over 5 official dates; breaches and near limit | **Built** (`var-limit`; the server's `limitStatus` with `drishti.risk.limit-near` 0.8) | [VAR_GUIDE section 15.15](../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits) |
 | P&L against VaR: hypothetical P&L against the VaR before it, 60 days, exceptions circled | **Partly built**: Drishti's derived hypothetical P&L only (TL3); left out without official history | [VAR_GUIDE section 7](../guides/VAR_GUIDE.md#7-history-and-backtesting) |
 | DV01 of my books | **Partly built**: Σ live trades' `DV01`; no bucketed sensitivities (TL7) | [IMPLEMENTATION_PLAN.md "Computed and derived attributes: open steps"](IMPLEMENTATION_PLAN.md#computed-and-derived-attributes-open-steps) |
-| Trades today (new, amended, cancelled), today's blotter, trade pages and history | **Built** ("new" reads 0 on the demo: TL1) | [trading pack README](../../config/packs/banking/trading/README.md), [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time) |
+| Trades today (new, amended, cancelled), today's blotter, trade pages and history | **Built** ("new" reads 0 on the demo: TL1) | [trading pack README](../../config/packs/banking/trading/README.md), [../../HOW_IT_FITS.md](../../HOW_IT_FITS.md#d2-history-queries-an-entity-over-time) |
 | Counterparties: `CTRD`, `NSET`, `NSMTM`, `CPMTM`; pre-deal PFE against the credit limit | **Built** | [EXPOSURE_GUIDE section 7](../guides/EXPOSURE_GUIDE.md#7-pre-deal-what-if) |
 | The desk's largest counterparty | **Partly built**: by share of positive MtM, not exposure (TL2) | [EXPOSURE_GUIDE section 4](../guides/EXPOSURE_GUIDE.md#4-scopes) |
 | Alerts on numbers and monitors | **Built**, each person sets their own (one-click watch: TL10) | [USER_GUIDE.md, Alerts on numbers](../guides/USER_GUIDE.md#alerts-on-numbers) |
@@ -801,7 +801,7 @@ licensing shapes what may be shown.
 |---|---|---|
 | Rates (`CRV`, `REPO`, `IRV`, `CPV`, `FIX`, `INF`, `INFC`); FX (`FX`, `FXF`, `FXV`); credit and bonds (`CDS`, `BND`); equities and commodities (`EQ`, `EQX`, `DIV`, `EQV`, `CMD`, `CMDC`, `CMDV`); correlations computed from history (`CORR`, `CORRC`, `EQB`) | **Built** | `market.yaml` `commands.allow`; [market-data README](../../config/packs/banking/market-data/README.md) |
 | Holiday calendars and issuers (`CAL`, `ISS`) | **Loaded, hidden** (the checks use calendars). **Decided:** show them in Market | [ADMIN_GUIDE.md section 16.3](../guides/ADMIN_GUIDE.md#163-drishti-market) |
-| An item's history; query by form | **Built** (the pack's `history:` block) | [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time) |
+| An item's history; query by form | **Built** (the pack's `history:` block) | [../../HOW_IT_FITS.md](../../HOW_IT_FITS.md#d2-history-queries-an-entity-over-time) |
 | Biggest moves in σ of each item's own history; a curve against a week ago | **Built** (desk ranking only; per pillar and decomposed: ML5) | section 3.2.1 |
 | Quality checks: stale, gaps, discount factors and forwards, vol surfaces | **Built** (jumps, two sources, grids, completeness: ML2, ML3, ML4, ML8) | section 3.2.2 |
 | Late loads by expectation | **Built** for loads (per id: ML8) | [DATA_GUIDE.md section 8](../guides/DATA_GUIDE.md#8-expectations-and-late-data) |
@@ -1502,7 +1502,7 @@ Everything below is built in the engines and lenses the Oversight lens would reu
 | Stress: stored definitions and results per desk; the bank's P&L per scenario and each desk's stress limit use (derived) | **Partly** (no stress engine for any scope) | [VAR_GUIDE section 21.4](../guides/VAR_GUIDE.md#214-the-banks-stress-pl-by-scenario-derived), [STR.md](../contracts/STR.md) |
 | Concentration: VaR of any slice | **Partly**: scope words, rules and `WHERE:`; no concentration view | [VAR_GUIDE section 5.5](../guides/VAR_GUIDE.md#55-scope-words-by-a-trades-attribute) |
 | Counterparty exposure and credit limits (read for concentration) | **Built** | [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) |
-| Alerts on numbers; comment threads anchored to the data; write-back approval with four eyes | **Built** (a person sets each alert) | [USER_GUIDE, Alerts](../guides/USER_GUIDE.md#alerts), [ARCHITECTURE.md §31](../guides/USER_GUIDE.md#discussion), [APPROVALS_GUIDE section 10](../guides/APPROVALS_GUIDE.md#6-the-approvals-queue) |
+| Alerts on numbers; comment threads anchored to the data; write-back approval with four eyes | **Built** (a person sets each alert) | [USER_GUIDE, Alerts](../guides/USER_GUIDE.md#alerts), [../../HOW_IT_FITS.md §A31](../guides/USER_GUIDE.md#discussion), [APPROVALS_GUIDE section 10](../guides/APPROVALS_GUIDE.md#6-the-approvals-queue) |
 | Certified BI reports; entitlements and audit per answer | **Built** | [REPORTS_GUIDE, certification](../guides/BI_GUIDE.md#r174-certification-and-endorsement), [VAR_GUIDE section 9](../guides/VAR_GUIDE.md#9-who-sees-what-entitlements-and-audit) |
 | P&L explain by cause; PLA test; FRTB internal models | **Not built** (P&L explain stored per desk as read, `PNL`) | [PNL.md](../contracts/PNL.md), [REGULATORY_VAR_REPORTING section 8.1](../guides/REGULATORY_VAR_REPORTING.md#81-coverage-report-by-report) |
 
@@ -1591,15 +1591,15 @@ the person's settings, filters (coverage, status, period, limit type, business, 
 | **Timeline** | C | every VaR limit by use, the breaches' statuses over 20 business days, the escalation clock |
 
 **How it is built: Sutras over Drishti-owned records, actions through write-back** (the generic screen path,
-[ARCHITECTURE.md section 7a](ARCHITECTURE.md#7a-how-a-screen-is-made-generic-not-bespoke)), so a bank tailors screens,
+[../../HOW_IT_FITS.md section A7a](../../HOW_IT_FITS.md#a7a-how-a-screen-is-made-generic-not-bespoke)), so a bank tailors screens,
 forms and rules in YAML. The screen is a page kind `breach-queue` whose id is the coverage (`MINE`, `ALL` or a node such as
 `MGMT~DESK-RATES`); each view is one Sutra of it (`breach-queue`, `breach-board`, `breach-timeline`), chosen as `?sutra=` does
 ([RACHANA_REFERENCE, Sutra Next](../guides/RACHANA_REFERENCE.md#events-sources-and-children-sutra-next)). An opened breach is a Sutra Next
 child reading `source: { kind: limit-breach, id: "@queue.open.id" }`; `BRCH <id>` opens the same panels on its own page through the pack
 fragment `breach-detail@1`. Each action is a Sutra Next form (`new: drawer`) whose `save:` writes a new record to the `owned` target
 ([APPROVALS_GUIDE section 4a](../guides/APPROVALS_GUIDE.md#4-submitting-a-change)); the breach service hears the record's `edit.applied`
-event ([ARCHITECTURE section 18.3](../architecture/ARCHITECTURE.md#317-the-applied-event-triggers-and-viewers)) and writes the breach's next version, pushed
-live to every viewer. The thread is the record's Discussion ([ARCHITECTURE.md §31](../guides/USER_GUIDE.md#discussion)).
+event ([ARCHITECTURE section 18.3](../../HOW_IT_FITS.md#a317-the-applied-event-triggers-and-viewers)) and writes the breach's next version, pushed
+live to every viewer. The thread is the record's Discussion ([../../HOW_IT_FITS.md §A31](../guides/USER_GUIDE.md#discussion)).
 
 | Action | Who | Form | `save:` | Approval |
 |---|---|---|---|---|
@@ -2197,7 +2197,7 @@ are included in the official run by default, with the list on the run. **Data:**
 | Method | When | How | Status |
 |---|---|---|---|
 | **copy** | the new trade resembles a booked one | a booked trade's vector scaled (1, −1, 0.5) | **Built** ([VAR_GUIDE section 8.5](../guides/VAR_GUIDE.md#85-the-pre-deal-what-if-under-the-baskets-sheet); side by side per row in tab C) |
-| **price** | new terms | QLRisk prices the trade on the base market and under each scenario move; its vector joins the scope; its sensitivities feed the ladder and SBM | proposed (QLRisk design only until its API is stable; [BI_GUIDE.md section N9.2](../architecture/ARCHITECTURE.md#298-pricing-engines-planned)) |
+| **price** | new terms | QLRisk prices the trade on the base market and under each scenario move; its vector joins the scope; its sensitivities feed the ladder and SBM | proposed (QLRisk design only until its API is stable; [BI_GUIDE.md section N9.2](../../HOW_IT_FITS.md#a298-pricing-engines-planned)) |
 | **delta-gamma** | no pricer, or a quick answer | `P&L_s ≈ Σ_f s_f Δx_{f,s} + ½ Σ_f Γ_f Δx_{f,s}²` from the trade's sensitivities and each scenario's factor moves; flagged, its error shown as the gap on the same product's booked trades | proposed |
 
 The QLRisk bridge is **shared with the CCR cube** (scenario P&L here, path MtMs there; CC12 in [7.3](#73-gaps-and-proposals)): one market
@@ -2369,9 +2369,9 @@ columns; every value's function chosen in plain words from those valid for its f
 ### 6.5 The shared cube core (MR and CCR)
 
 The machinery both cubes share; the CCR cube ([section 7](#7-ccr-cube-lens)) refers here and does not repeat it. As built it is the
-**pivot engine** ([BI_GUIDE.md](../guides/BI_GUIDE.md#part-1--pivot-cubes-and-explain); design in [ARCHITECTURE.md section 26](ARCHITECTURE.md#26-the-pivot-engine)) with one
+**pivot engine** ([BI_GUIDE.md](../guides/BI_GUIDE.md#part-1--pivot-cubes-and-explain); design in [../../HOW_IT_FITS.md section A26](../../HOW_IT_FITS.md#a26-the-pivot-engine)) with one
 provider per source: the VaR vector provider (built), the FRTB-SA and SIMM formula providers (built), the CCR provider (to come with the
-CCR cube, [ARCHITECTURE.md section 26.4](ARCHITECTURE.md#264-the-providers)).
+CCR cube, [../../HOW_IT_FITS.md section A26.4](../../HOW_IT_FITS.md#a264-the-providers)).
 
 #### 6.5.1 The pivot model and the three measure classes
 
@@ -2747,7 +2747,7 @@ section holds only what is specific to counterparty risk. Meanwhile every counte
 As the MR cube ([6.2.1](#621-the-lens-a-pivot-preset-not-a-lens-file)), the CCR cube is a **Pivot preset**, not a lens file: the
 proposed `ccrcube` lens file is not built; its doors are the preset's (`CCUBE`, **Counterparties → CCR cube**), its landing
 `limit-board`, its help `ccr-cube`. The grid will be the pivot engine's answer over a **CCR provider** (state per netting set: the path
-matrix netted and collateralised first; finish: EE, EPE, PFE, EEPE; [ARCHITECTURE.md section 26.4](ARCHITECTURE.md#264-the-providers)),
+matrix netted and collateralised first; finish: EE, EPE, PFE, EEPE; [../../HOW_IT_FITS.md section A26.4](../../HOW_IT_FITS.md#a264-the-providers)),
 plus CCR lens endpoints for the board, the allocation, the group tree and the waterfall.
 
 **Decided** (the proof-of-concept decisions, kept as the design): build on the MR cube's core (P1); regenerate the demo's credit limits by
@@ -2938,7 +2938,7 @@ resolves to a curve or a proxy, else its CVA is refused and named, never zero. *
 #### 7.3.14 CC14: exposure sharding
 
 Exposure shards with key `[COUNTERPARTY, NETTING_SET]` ([7.5.2](#752-shards-by-counterparty-and-netting-set)); the cluster design is
-[CLUSTER_GUIDE.md section 6](ARCHITECTURE.md#3211-exposure-sharding-design-not-built). **Size:** L; unscheduled.
+[CLUSTER_GUIDE.md section 6](../../HOW_IT_FITS.md#a3211-exposure-sharding-design-not-built). **Size:** L; unscheduled.
 
 #### 7.3.15 Scale, the FIS comparison, risks and decisions
 
@@ -3296,7 +3296,7 @@ hardest families from trade-grain data (VaR at any scope; PFE by counterparty an
 | VaR change explanation by cause (RO1) | **Built** for VaR; exposure, liquidity and capital reasons not built | [VAR_GUIDE 3.11](../guides/VAR_GUIDE.md#311-why-it-moved-the-var-change-explained) |
 | A breach as a record; one limit catalogue (RO2, RO3) | **Not built**, designed ([section 5.3](#53-gaps-and-proposals)) | — |
 | Temporary limit increases with four eyes | **Not built**; the pattern exists in write-back approval | [APPROVALS_GUIDE 10](../guides/APPROVALS_GUIDE.md#6-the-approvals-queue) |
-| Comments anchored to data; alerts on numbers | **Built**; alerts are set per person, not from a catalogue | [ARCHITECTURE](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals), [USER_GUIDE, alerts](../guides/USER_GUIDE.md#alerts-on-numbers) |
+| Comments anchored to data; alerts on numbers | **Built**; alerts are set per person, not from a catalogue | [ARCHITECTURE](../../HOW_IT_FITS.md#a31-collaboration-write-back-and-approvals), [USER_GUIDE, alerts](../guides/USER_GUIDE.md#alerts-on-numbers) |
 | LCR, NSFR, survival horizon; CET1, RWA | **Not built** (balance-sheet roadmap; stored SA-CCR and FRTB charges are partial RWA inputs only) | [IMPLEMENTATION_PLAN 21.10](../architecture/IMPLEMENTATION_PLAN.md#2110-balance-sheet-and-regulatory) |
 | Financed emissions | **Not built**; climate stays out of scope as a computed measure | — |
 | News, market moves, macro signals | **Built** (World and Market lenses; IMF data internal only) | [ADMIN_GUIDE 16.4](../guides/ADMIN_GUIDE.md#164-drishti-world) |
@@ -3803,7 +3803,7 @@ change and incidents, Ask, and an **evidence pack** for a supervisor or audit.
 | Internal-only rule for public sources | **Built** as a rule and switch; a report of where each is shown not built | [EXTERNAL_DATA 9](../guides/EXTERNAL_DATA.md#9-licences-and-internal-only-data) |
 | Admin → Health; Prometheus, Grafana, suggested alerts; platform metrics and alerts | **Built** | [OPERATIONS 13.2](../guides/OPERATIONS_GUIDE.md#132-admin--health), [13.4](../guides/OPERATIONS_GUIDE.md#134-prometheus-grafana-and-the-suggested-alerts), [13.6](../guides/OPERATIONS_GUIDE.md#135-platform-metrics-and-alert-rules) |
 | Drishti's own history of those metrics | **Not built** (CIO4) | [RESOURCES_AND_SCALE 8.3](../guides/CLUSTER_GUIDE.md#159-seeing-it-admin--caches-health--disk-metrics-and-alerts) |
-| Cluster gossip, VaR sharding with replicas and zones; disk caps and the cache budget | **Built** | [CLUSTER_DEPLOYMENT 4.1](ARCHITECTURE.md#321-membership-by-gossip-swim-over-http), [RESOURCES_AND_SCALE 14](ARCHITECTURE.md#3212-bounded-resources-inside-one-server) |
+| Cluster gossip, VaR sharding with replicas and zones; disk caps and the cache budget | **Built** | [CLUSTER_DEPLOYMENT 4.1](../../HOW_IT_FITS.md#a321-membership-by-gossip-swim-over-http), [RESOURCES_AND_SCALE 14](../../HOW_IT_FITS.md#a3212-bounded-resources-inside-one-server) |
 | Readiness, drain, the rolling upgrade runner; the N and N−1 rule | **Built**; N and N−1 planned (CD4) | [CLUSTER_DEPLOYMENT 18](../guides/CLUSTER_GUIDE.md) |
 | A history of releases and upgrades per node | **Partly**: each server reports its version; no history | [OPERATIONS 15](../guides/OPERATIONS_GUIDE.md#18-upgrades-and-rollback) |
 | Incidents; cloud cost; a BCBS 239 scorecard | **Not built** | — |

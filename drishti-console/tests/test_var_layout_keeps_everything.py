@@ -20,7 +20,7 @@ by How calculated (H). This file is the guard that nothing else went: the invent
 figure and every line of the explanation. The server-rendered page and the scripts are checked here; the drawn page in Chromium
 (a stand-in engine, the console in-process) at the end of the file. Skipped without Playwright or Chromium (the browser part only).
 
-2.9.11.e folded the drawer and the Why it moved tab into the one Explain (SHARED_SCREENS.md section 3, drishti-insight): every line
+2.9.11.e folded the drawer and the Why it moved tab into the one Explain (HOW_IT_FITS.md section S3, drishti-insight): every line
 of How this number was built is now the server's (VarNumberExplainer.java, checked below row for row), the tab is the drawer's Why it
 moved, and Explain › (E) opens it; the drawer's What-if moved to the toolbar."""
 import os

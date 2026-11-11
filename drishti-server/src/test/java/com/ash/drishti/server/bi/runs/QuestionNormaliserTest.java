@@ -26,7 +26,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /**
- * Normalising before hashing (docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 8.3a): pairs that read the same rows hash alike; near pairs that do not, do not.
+ * Normalising before hashing (HOW_IT_FITS.md §A28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 8.3a): pairs that read the same rows hash alike; near pairs that do not, do not.
  */
 class QuestionNormaliserTest {
 

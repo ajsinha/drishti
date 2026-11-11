@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A formula of built-ins as one function (ARCHITECTURE.md section 26.5, the first route offered): {@code sum(PNL) / sum(abs(PNL))}. Its
+ * A formula of built-ins as one function (HOW_IT_FITS.md section A26.5, the first route offered): {@code sum(PNL) / sum(abs(PNL))}. Its
  * state is the tuple of its aggregates' states, merged part by part with each built-in's own exact merge; {@code finish} finishes every part
  * and evaluates the arithmetic. Its kind is its parts' kind (a ratio of sums is mergeable, so its totals are made from states, never from the
  * figures shown; a formula with a median is holistic). In SQL it is its parts' state expressions over the row expressions, so the tabular

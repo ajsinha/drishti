@@ -16,7 +16,7 @@
 package com.ash.drishti.kernel.api.pivot;
 
 /**
- * How a function's total is made (ARCHITECTURE.md section 26.3). The core never mixes them up:
+ * How a function's total is made (HOW_IT_FITS.md section A26.3). The core never mixes them up:
  *
  * <ul>
  *   <li>{@link #MERGEABLE}: a small, fixed state with an exact merge (a sum; a sum and a count; Welford's count, mean and M2): a total is the

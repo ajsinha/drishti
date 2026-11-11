@@ -145,7 +145,7 @@ public final class Histories {
     }
 
     /**
-     * The security with each history table bound like its live table (ARCHITECTURE.md §28 8.5, the owner's decision of 2026-11-07): a role that reads
+     * The security with each history table bound like its live table (HOW_IT_FITS.md §A28 8.5, the owner's decision of 2026-11-07): a role that reads
      * every row of the live table reads every sample; a role limited there reads the samples of the groups related to the live rows it sees
      * ({@code related_rows}, on the history's group columns); a role the live table's rules do not name reads none.
      */

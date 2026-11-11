@@ -49,7 +49,7 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
 /**
- * A Sutra panel whose source is a virtual table (docs/architecture/ARCHITECTURE.md V13, {@code source: { table, where }}), opened by two people with
+ * A Sutra panel whose source is a virtual table (HOW_IT_FITS.md V13, {@code source: { table, where }}), opened by two people with
  * different row rules and masks on the same page, one after the other and at once: each gets their own rows and masks (multi-user
  * isolation through the {@link ViewerContext} passed with the call); a page built for nobody in particular reads no table; {@code where}
  * keeps rows with the page's context.

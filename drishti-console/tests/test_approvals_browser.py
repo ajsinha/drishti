@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The one Approvals queue in a browser, every button of it (SHARED_SCREENS.md section 2): the boxes (Waiting for me, Mine sent, Done,
+"""The one Approvals queue in a browser, every button of it (HOW_IT_FITS.md section S2): the boxes (Waiting for me, Mine sent, Done,
 All), the areas, the kind, Refresh, an item opened with its diff, effect and rules, Approve, Reject (refused without a reason, then with
 one), Withdraw, Ask a question, the parameters a kind needs, Open where it lives, and the top bar's count. A console with a stand-in
 server: the server's rules are tested in ApprovalApiTest and ApprovalQueueTest."""

@@ -18,7 +18,7 @@ package com.ash.drishti.rachana.el;
 import java.util.List;
 
 /**
- * A module that adds functions to Rachana's one function table (docs/architecture/ARCHITECTURE.md parts 1 and 2), found once when the table is first
+ * A module that adds functions to Rachana's one function table (HOW_IT_FITS.md parts 1 and 2), found once when the table is first
  * used, by {@link java.util.ServiceLoader} ({@code META-INF/services/com.ash.drishti.rachana.el.FunctionProvider}), the same pattern as
  * the lake's storage providers. The pivot engine ({@code drishti-bicompute}) is the provider of every aggregate: {@code sum},
  * {@code count}, {@code avg}, {@code min} and {@code max} over a list, {@code median}, {@code percentile}, {@code distinct},

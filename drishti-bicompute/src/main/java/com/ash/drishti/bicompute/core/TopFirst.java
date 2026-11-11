@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * A level's top N chosen before the level is read (ARCHITECTURE.md sections 26.6 and 26.8; phase P3): when the view asks ≈ and a level shows the
+ * A level's top N chosen before the level is read (HOW_IT_FITS.md sections A26.6 and 26.8; phase P3): when the view asks ≈ and a level shows the
  * top N by a count of rows, one Space-Saving summary of the level's dimension (10·n counters, {@code drishti.pivot.sketches.top-capacity-factor})
  * is made for the parent's cell, the members it ranks first are the level, and the rest is one Others; only those members' cells are read.
  * Membership is ≈ with a stated bound (every count over by at most the summary's floor; a member whose share of the rows is over 1/(10·n)

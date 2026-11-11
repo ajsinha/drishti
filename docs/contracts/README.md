@@ -104,7 +104,7 @@ ${DRISHTI_DELTA_ROOT}                         default ${drishti.data.dir}/delta
 - **The masters stay where they are:** trades, counterparties, books, market data and GLEIF entities. Each is read through its own pack's
   connector, by id ([section 4](#4-shared-keys)). The risk lake holds only measure inputs and the hierarchies and portfolios that scope them.
 - **The same layout on every storage:** a local disk, a shared file system, or S3 ([CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#13-the-delta-lake-in-s3-at-scale));
-  Iceberg instead of Delta per table ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop)).
+  Iceberg instead of Delta per table ([HOW_IT_FITS.md](../../HOW_IT_FITS.md#d3-drishti-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop)).
 - **Test data:** follows the repository's pattern: `data/testdata/market-risk/<kind>/*.jsonl.gz` (one file per business date), listed in
   `data/testdata/testdata.yaml`, built into the lake by `drishti.py lake demo`. Each contract's generator is named in its section 13.
 
@@ -114,7 +114,7 @@ ${DRISHTI_DELTA_ROOT}                         default ${drishti.data.dir}/delta
 |---|---|---|---|
 | **Fundamental: masters and terms** | Source systems, through their packs | Their own connectors | trades, counterparties, books, desks, legal entities, CSAs and agreements, market data, GLEIF |
 | **Fundamental: engine inputs** | Upstream engines, once per business date | The common risk lake | P&L vectors, sensitivities, scenario P&L, exposure paths, cash flows |
-| **Drishti-owned** | Drishti, from users' actions | The Drishti database and the content store ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built), [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)) | derived positions, the system baskets (the bank's own, `system-basket`, [VAR_GUIDE.md section 5.7](../guides/VAR_GUIDE.md#57-system-baskets)), people's baskets, captures, official end-of-day captures |
+| **Drishti-owned** | Drishti, from users' actions | The Drishti database and the content store ([HOW_IT_FITS.md](../../HOW_IT_FITS.md#d6-the-one-drishti-database-design-not-built), [HOW_IT_FITS.md](../../HOW_IT_FITS.md#d5-the-content-store-user-content-every-node-reaches)) | derived positions, the system baskets (the bank's own, `system-basket`, [VAR_GUIDE.md section 5.7](../guides/VAR_GUIDE.md#57-system-baskets)), people's baskets, captures, official end-of-day captures |
 | **Computed answers** | Drishti, when asked | Nowhere: computed, cached in memory, and stored only as a capture | VaR, FRTB charge, EAD, EE/PFE, LCR … |
 
 **The rule:** a computed figure is never stored in a fundamental or input table. A guard test fails the build when a table carries a

@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Reads wave B's model keys (docs/architecture/ARCHITECTURE.md §28 sections 3.3.5 and 12.2) into {@link ModelDef.Calculation}:
+ * Reads wave B's model keys (HOW_IT_FITS.md §A28 sections 3.3.5 and 12.2) into {@link ModelDef.Calculation}:
  *
  * <pre>
  * calc-groups:

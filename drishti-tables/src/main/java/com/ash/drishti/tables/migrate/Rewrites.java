@@ -29,7 +29,7 @@ import java.util.function.Predicate;
  * The layer's own rewrites of a Rachana expression during the migration, on Rachana's tree (never on text), after the DEL translator:
  *
  * <ol>
- *   <li><b>Columns to paths</b> (docs/architecture/ARCHITECTURE.md §28 section 3.2): in a table's row and rule scope, a bare column name becomes that
+ *   <li><b>Columns to paths</b> (HOW_IT_FITS.md §A28 section 3.2): in a table's row and rule scope, a bare column name becomes that
  *       column's path ({@code MTM / 1000000} is {@code $.MTM / 1000000}), so a column's meaning never depends on the order columns are read.</li>
  *   <li><b>Date parts</b> (section 2.4): in a model's expression, {@code trades.TRADE_DATE.month} is {@code month(trades.TRADE_DATE)}.</li>
  *   <li><b>The null rule</b> (Q1, decided: Rachana's rule everywhere): DEL, like SQL, makes a comparison with a missing value false; Rachana

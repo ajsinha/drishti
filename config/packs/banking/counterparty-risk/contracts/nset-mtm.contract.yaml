@@ -22,7 +22,7 @@ class: computed
 status: active
 title: Netting-set MtM totals (derived from the trade valuations)
 description: A netting set's MtM totals derived from the trade valuations of its live trades, once per business date, shown beside the netting
-  set's stored figures (docs/architecture/DATA_ARCHITECTURE.md section 12, until the netting-set engine computes them).
+  set's stored figures (HOW_IT_FITS.md section D12, until the netting-set engine computes them).
 source: 'computed by Drishti: the derived connector ccr-derived over the kind trade-valuation'
 grain: One record per NETTING_SET_ID of the trade-valuation records, computed when asked.
 key:
@@ -69,7 +69,7 @@ fields:
 - name: TRADE_COUNT
   type: integer
   presence: derived
-  description: 'Live trades: Live (DATA_ARCHITECTURE.md section 12): TRADE_STATUS NEW, VALIDATED or AMENDED and MATURITY_DATE not before the
+  description: 'Live trades: Live (HOW_IT_FITS.md section D12): TRADE_STATUS NEW, VALIDATED or AMENDED and MATURITY_DATE not before the
     valuation date'
 - name: NET_MTM
   type: amount

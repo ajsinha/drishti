@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* The people picker (ARCHITECTURE.md §31, Console design): drishti-inputs' Combobox over the server's directory (GET /api/directory), the one
+/* The people picker (HOW_IT_FITS.md §A31, Console design): drishti-inputs' Combobox over the server's directory (GET /api/directory), the one
    the share dialog uses, on a field of the page (suggestions only: the field's text stays the page's, so typed names still work). Each
    suggestion shows the name, the user id or "role", and the desk or the role's size; someone who cannot open the view says so. The arrows
    move, Enter or Tab picks, Escape closes the list (and only the list: a dialog stays). The search waits for typing to pause, needs

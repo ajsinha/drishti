@@ -142,7 +142,7 @@ document.addEventListener('click', function (e) {
   });
 })();
 
-/* The Approvals count (SHARED_SCREENS.md section 2): the items waiting for the signed-in person, on the top bar and in the menu entry; asked
+/* The Approvals count (HOW_IT_FITS.md section S2): the items waiting for the signed-in person, on the top bar and in the menu entry; asked
    once a page, after the page has drawn. */
 (function () {
   'use strict';

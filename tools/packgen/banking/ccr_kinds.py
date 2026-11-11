@@ -38,14 +38,14 @@ KINDS = {
     "exposure-result": ("EXP", "Exposure profile of a scope (computed)", None, None),
     # the published official results: one row per netting set, counterparty or group, business date and result version; no pattern
     "exposure-official-cpty": ("XOFC", "Exposure official results by netting set and counterparty (published)", None, None),
-    # the netting-set and counterparty MtM totals derived from the trade valuations (DATA_ARCHITECTURE.md section 12, Q1 and Q2):
+    # the netting-set and counterparty MtM totals derived from the trade valuations (HOW_IT_FITS.md section D12, Q1 and Q2):
     # ids are the netting set's and the counterparty's own ids, so no pattern claims them (NS- and CP- name the stored kinds)
     "nset-mtm": ("NSMTM", "Netting-set MtM totals (derived from the trade valuations)", None, "NETTING_SET_ID"),
     "cpty-mtm": ("CPMTM", "Counterparty MtM totals (derived from the trade valuations)", None, "COUNTERPARTY"),
 }
 # the engine's inputs (2.9.7, E0: the current MtM and the membership come from trade-valuation, not the netting set's stored copies)
 _INPUTS = ["simulation-run", "exposure-path", "netting-set", "csa", "collateral-balance", "trade-valuation", "credit-limit"]
-#: Live (DATA_ARCHITECTURE.md section 12, decided): a live status and not past the maturity date; a live-status trade past its maturity
+#: Live (HOW_IT_FITS.md section D12, decided): a live status and not past the maturity date; a live-status trade past its maturity
 #: date is a row with LIVE false, in no total, counted in PAST_MATURITY_COUNT (a data-quality warning)
 _LIVE_STATUS = "nonblank($.NETTING_SET) && ($.TRADE_STATUS == 'NEW' || $.TRADE_STATUS == 'VALIDATED' || $.TRADE_STATUS == 'AMENDED')"
 _NOT_PAST = "!nonblank($.MATURITY_DATE) || days($.VALUATION_DATE, $.MATURITY_DATE) >= 0"
@@ -73,7 +73,7 @@ DERIVED = {
         "sort": {"TRADES": "MTM desc", "BY_PRODUCT_GROUP": "value desc"},
     },
     "cpty-mtm": {
-        # from the trade valuations too: a derived kind cannot read another derived kind of its connector (DATA_ARCHITECTURE.md section 12
+        # from the trade valuations too: a derived kind cannot read another derived kind of its connector (HOW_IT_FITS.md section D12
         # section 8.1, check (a)); CE_UNCOLLATERALISED takes each netting set's positive net first (exposures never net across sets)
         "from": "trade-valuation", "where": _LIVE_STATUS, "group-by": "$.COUNTERPARTY", "id-field": "COUNTERPARTY", "members": "TRADE_IDS",
         "max-members": 100000, "rows-field": "TRADES",
@@ -98,7 +98,7 @@ OFFICIAL_COLUMNS = ["HIERARCHY", "NODE_ID", "NODE_NAME", "PARENT_ID", "LEVEL", "
                     "PATHS", "CE", "EPE", "EEPE", "PEAK_EE", "PEAK_PFE_95", "PEAK_PFE_99", "EAD_IMM", "PEAK_PFE_DATE", "PFE_95_1Y",
                     "PFE_95_5Y", "EE_1Y", "EE_5Y", "NETTING_SETS", "TRADES", "FAILED_TRADES", "PARTIAL_SETS"]
 CONNECTORS = {
-    # the quick wins Q1 and Q2 (DATA_ARCHITECTURE.md section 12): built once per business date and data version, shared by every
+    # the quick wins Q1 and Q2 (HOW_IT_FITS.md section D12): built once per business date and data version, shared by every
     # reader (decision 6: visible to everyone), shown beside the stored netting-set and counterparty figures until the NSET engine
     "ccr-derived": {
         "plugin": "derived", "enabled": "${DRISHTI_CCR_DERIVED_ENABLED:true}",

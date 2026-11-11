@@ -45,7 +45,7 @@ GUIDE = ROOT / "docs" / "guides" / "img" / "pivot"
 FIGURES: dict = {}
 WORK: list = []                                       # the scratch folder the stack runs in (the figures are written there)
 
-# the guide's worked examples (ARCHITECTURE.md section 26.4), each a saved view
+# the guide's worked examples (HOW_IT_FITS.md section A26.4), each a saved view
 EXAMPLES = {
     "notional-by-desk-and-year": {"source": "trade", "rows": ["$.TT_GROUP"], "columns": ["$.TRADE_DATE:year"],
                                    "values": [{"measure": "sum($.LEGS[*].NOTIONAL)", "as": "Notional"}]},

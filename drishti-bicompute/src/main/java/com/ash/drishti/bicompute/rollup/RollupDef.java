@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A rollup's definition (ARCHITECTURE.md section 26.6): a source, a grain (the dimensions its rows are grouped by, a date at day grain answers
+ * A rollup's definition (HOW_IT_FITS.md section A26.6): a source, a grain (the dimensions its rows are grouped by, a date at day grain answers
  * week, month, quarter and year too) and the functions whose partial states it keeps (mergeable or sketch, never holistic).
  *
  * <pre>{@code

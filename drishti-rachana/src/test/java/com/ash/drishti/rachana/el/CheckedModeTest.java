@@ -34,7 +34,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 /**
- * Checked mode (docs/architecture/ARCHITECTURE.md §28 2.1, 2.2 and 2.8): the four scopes and their refusals, types with no implicit casts, names that
+ * Checked mode (HOW_IT_FITS.md §A28 2.1, 2.2 and 2.8): the four scopes and their refusals, types with no implicit casts, names that
  * exist, masked fields in filters, what is not yet built, chained comparisons, paths in measures, display functions in tables and
  * models, nesting of the filter-context functions, each with DEL's code; and every example of the signature catalogue checks.
  */

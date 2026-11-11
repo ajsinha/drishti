@@ -50,7 +50,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 /**
- * The VaR provider of the pivot engine (ARCHITECTURE.md section 26.4, BI_GUIDE.md#p29-the-mr-cube-preset), source {@code var}: the VaR engine's book of a
+ * The VaR provider of the pivot engine (HOW_IT_FITS.md section A26.4, BI_GUIDE.md#p29-the-mr-cube-preset), source {@code var}: the VaR engine's book of a
  * business date as the person sees it. Members are the date's trades; a cell is the view's scope ({@code options.scope}) under its filters
  * with each coordinate, its members found from per-trade dimension codes ({@link VarPivotCodes}); every cell's and total's vector is summed
  * in <b>one</b> batch for the whole plan ({@code VarBook.vectors}: on a sharded date one call per remote shard for all the sets) and its

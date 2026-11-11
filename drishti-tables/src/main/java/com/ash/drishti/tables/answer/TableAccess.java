@@ -31,7 +31,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * What one reader may see of one table (docs/architecture/ARCHITECTURE.md §28 Q9; docs/architecture/ARCHITECTURE.md section 10, V9): the table's row rules for the
+ * What one reader may see of one table (HOW_IT_FITS.md §A28 Q9; HOW_IT_FITS.md section A10, V9): the table's row rules for the
  * reader's roles (a rule written over the source's paths is read over the table's columns), the table hidden from a role, the columns
  * hidden from a role, and the masked columns for a reader without the raw power. One place for every reader of a table: a model's answer
  * ({@link ModelAnswers}), a direct read ({@code tables.read.TableReads}), and through them the pivot, Sutras and Flight. A table with no

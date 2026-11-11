@@ -18,7 +18,7 @@
 # is its GDP over its population. Report: config/bi/reports/region-economics.report.yaml. Reference: docs/guides/BI_GUIDE.md, docs/guides/EXTERNAL_DATA.md.
 
 # CONVERTED from datasets/region-economics.dataset.yaml (rachana: 1) by the dataset-to-model converter (drishti.py bi migrate --models;
-# docs/architecture/ARCHITECTURE.md §28 › The model layer: the specification of wave W1, section 8). The model keeps the old name and table names as aliases, so fields read as before.
+# HOW_IT_FITS.md §A28 › The model layer: the specification of wave W1, section 8). The model keeps the old name and table names as aliases, so fields read as before.
 
 rachana: 2
 expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/BI_LANGUAGE_REFERENCE.md)

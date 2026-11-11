@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The one Approvals queue (docs/architecture/SHARED_SCREENS.md section 2; USER_GUIDE.md "Approvals"): every four-eyes item waiting for
+"""The one Approvals queue (HOW_IT_FITS.md section S2; USER_GUIDE.md "Approvals"): every four-eyes item waiting for
 the signed-in person in one inbox, due-soon items pinned on top, the chosen item's diff, effect and rules, and approve, reject, withdraw or
 ask a question. A shell: drishti-insight's Approvals queue (static/elements/drishti-insight/) fills it from ``/approvals/api/...``, which passes each call to the server's
 ``/api/v1/approvals`` as the signed-in person. The rules are the server's (who may decide, four eyes); this only draws them.

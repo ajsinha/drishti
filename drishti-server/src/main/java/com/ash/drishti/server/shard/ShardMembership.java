@@ -26,7 +26,7 @@ import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 /**
- * Who owns a sharded measure's shards now, for any measure (DATA_ARCHITECTURE.md section 13): the members that may own shards (alive, the measure's
+ * Who owns a sharded measure's shards now, for any measure (HOW_IT_FITS.md section D13): the members that may own shards (alive, the measure's
  * sharding on there, not coordinator-only), as a view that moves only once the membership has been the same for {@code stable-seconds}
  * (until it first has, the members eligible now); a draining member leaves the view at once. A shard's owners are the top {@code replicas}
  * of the view by rendezvous hashing of the shard's ownership key ({@link ShardOwners}), a pinned member first. Every member that sees the

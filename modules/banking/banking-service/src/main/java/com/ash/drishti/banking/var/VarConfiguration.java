@@ -64,7 +64,7 @@ public class VarConfiguration {
         svc.saved().words(() -> svc.words().keySet());
         com.ash.drishti.engine.time.BusinessDates bd = businessDates.getIfAvailable();
         svc.calendar(bd == null ? null : bd.calendar());                 // the pinned dates' calendars (VAR_GUIDE.md section 26.8)
-        // VaR sharding across Drishti*net (DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built): off unless the pack's sharding block or drishti.var.sharding switches it on
+        // VaR sharding across Drishti*net (HOW_IT_FITS.md#d13-var-sharding-how-it-is-built): off unless the pack's sharding block or drishti.var.sharding switches it on
         java.util.function.Supplier<VarSharding> shardSettings = VarSharding.of(sharding, props, packs::getIfAvailable);
         svc.shards(new VarShards(props, sharding, shardSettings, loader, new com.ash.drishti.server.shard.ShardPeers(VarSharding.MEASURE.service(), net::getIfAvailable, digests::getIfAvailable), access,
                 sums).start());
@@ -217,7 +217,7 @@ public class VarConfiguration {
         return new VarExplain(svc, props);
     }
 
-    /** Explain a VaR figure (kind var, the one Explain of SHARED_SCREENS.md section 3): formula, inputs and lineage, why it moved, workbook. */
+    /** Explain a VaR figure (kind var, the one Explain of HOW_IT_FITS.md section S3): formula, inputs and lineage, why it moved, workbook. */
     @Bean
     com.ash.drishti.kernel.api.explain.Explainer varNumberExplainer(VarService svc, VarViews views, VarExplain explain) {
         return new VarNumberExplainer(svc, views, explain);

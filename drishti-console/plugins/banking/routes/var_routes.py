@@ -166,7 +166,7 @@ DAY = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 def explain_command(words: list[str], user: str) -> str | None:
     """Where ``VAR EXPLAIN <scope> [from] [to]`` (or ``VAR <scope> EXPLAIN [from] [to]``, or ``VAR <scope> EXPLAIN vs <date>``) goes: the one Explain's page of the scope's VaR
-    (``/explain?kind=var``, SHARED_SCREENS.md section 3) at **Why it moved** (VAR_GUIDE.md section 3.11), the dates in the link (``from``,
+    (``/explain?kind=var``, HOW_IT_FITS.md section S3) at **Why it moved** (VAR_GUIDE.md section 3.11), the dates in the link (``from``,
     ``to``); no scope: the bank. None when the command does not ask for the explanation."""
     w = [x for x in words if x.upper() != "<GO>"]
     if len(w) < 2 or w[0].upper() != "VAR":

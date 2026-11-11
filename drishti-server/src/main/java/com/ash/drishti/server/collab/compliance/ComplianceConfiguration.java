@@ -30,7 +30,7 @@ import org.springframework.boot.info.BuildProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/** Retention, legal holds, the compliance export and chain verification (ARCHITECTURE.md §31, Retention, legal hold and export). */
+/** Retention, legal holds, the compliance export and chain verification (HOW_IT_FITS.md §A31, Retention, legal hold and export). */
 @Configuration(proxyBeanMethods = false)
 public class ComplianceConfiguration {
 

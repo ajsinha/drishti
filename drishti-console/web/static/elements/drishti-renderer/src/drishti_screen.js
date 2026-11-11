@@ -261,7 +261,7 @@ export class Screen {
     else { this.emit('key', { key: b.getAttribute('data-fkey'), action }); }
   }
 
-  // ---- live patches (VIEWMODEL.md section 5) --------------------------------------------------------------------------------
+  // ---- live patches (HOW_IT_FITS.md section V5) --------------------------------------------------------------------------------
   /** Applies one frame {seq, generation, patches}: strip, panel, provenance, deleted, restored, in order. Returns what changed. */
   patch(frame) {
     const changed = { strip: [], panels: [] };
@@ -383,7 +383,7 @@ export class Screen {
         else { this.fail(problem(m.code || 'DRS-5003', m.detail || 'the stream failed', m.fix)); }
         break;
       }
-      default: break;                              // a message this client does not know: ignored (VIEWMODEL.md section 8)
+      default: break;                              // a message this client does not know: ignored (HOW_IT_FITS.md section V8)
     }
     return this;
   }

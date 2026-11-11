@@ -8,7 +8,7 @@
 
 How the console's browser tests are run so that their time grows with the machine, not with the number of pages: where the time
 went, the design that replaced it, the numbers it must hold, how it was validated, and the rules every new browser test follows. The
-testing architecture as a whole (the test pyramid, the drill's stages) is in [ARCHITECTURE.md, "Testing architecture"](ARCHITECTURE.md#22-testing-architecture);
+testing architecture as a whole (the test pyramid, the drill's stages) is in [../../HOW_IT_FITS.md, "Testing architecture"](../../HOW_IT_FITS.md#a22-testing-architecture);
 the drill's every option is in [BUILD_GUIDE.md section 2.6](../guides/DEVELOPER_GUIDE.md#26-the-drill-toolsdrillsh).
 
 ## Contents

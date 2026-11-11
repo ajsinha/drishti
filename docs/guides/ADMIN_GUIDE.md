@@ -1372,7 +1372,7 @@ sensitivities, FRTB-SA, SIMM, the MR cube, the pivot engine, the in-memory lake,
 every server runs every engine: a market-risk node has no use for exposure, a small console node needs none. Each engine has **its own
 file**, `config/engines/<engine>.yaml`, with its switch and every one of its settings, and **one switch with one meaning**: off, the engine
 does not exist on that server. Every key of every file is in [CONFIGURATION.md, Compute engines](../admin/CONFIGURATION.md#compute-engines-configenginesyaml).
-How the engines are built is in [ARCHITECTURE.md section 27](../architecture/ARCHITECTURE.md#27-compute-engines).
+How the engines are built is in [HOW_IT_FITS.md section A27](../../HOW_IT_FITS.md#a27-compute-engines).
 
 ### 21.1 The engines
 

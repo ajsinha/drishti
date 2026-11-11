@@ -18,7 +18,7 @@ package com.ash.drishti.kernel.api.pivot;
 import java.util.Map;
 
 /**
- * Where Rachana's {@code measure(...)} and {@code cell(...)} find their figures (docs/architecture/ARCHITECTURE.md part 3): implemented by the server, which
+ * Where Rachana's {@code measure(...)} and {@code cell(...)} find their figures (HOW_IT_FITS.md part 3): implemented by the server, which
  * knows the model measures, the compute engines' pivot providers (VaR, exposure …) and the saved pivot views, and registered once at
  * start ({@code EngineFunctions.figures(...)}). A figure is answered for the person who asks (the server's current request), exactly as
  * its own engine computes it: a computed measure is never summed by anyone, a masked figure stays masked.

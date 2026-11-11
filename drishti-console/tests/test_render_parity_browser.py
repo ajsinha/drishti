@@ -17,7 +17,7 @@
 Each ViewModel is drawn two ways, the console's server HTML and the library in a blank page, and compared: the accessible tree, the
 visible text line by line, every cell, every link and its target, every tone, every chart's series and points (from its ECharts option,
 not pixels), at 390 and 1280 px, with no sideways scroll, no CSP violation and no request off the console's origin. The ViewModels: the
-captured views and the edge cases of VIEWMODEL.md (render_cases.py) in every theme, and every Sutra of every shipped pack bound on its
+captured views and the edge cases of HOW_IT_FITS.md (render_cases.py) in every theme, and every Sutra of every shipped pack bound on its
 own sample by a real server (skipped when the server jar or a JDK is missing). The intentional differences are normalised by name in
 ``INTENTIONAL`` below; anything else fails.
 
@@ -40,7 +40,7 @@ WIDTHS = (390, 1280)
 
 # What differs on purpose, each with its reason (EMBED_GUIDE.md section 14.3). Applied to both sides before comparing.
 INTENTIONAL = {
-    "unknown-kind": "a kind the client does not know says so (VIEWMODEL.md section 8); the macros draw an empty body",
+    "unknown-kind": "a kind the client does not know says so (HOW_IT_FITS.md section V8); the macros draw an empty body",
     "header-role": "a panel header in a tabbed grid area: Chromium exposes it as a banner when the console's script turns the section into a "
                    "tabpanel after parsing; the renderer sets the role before the panel is in the page, and HTML-AAM says generic",
     "resize-handles": "the console's resize handles are its chrome, bound by its own component (drishti-core's resize): a side column's "

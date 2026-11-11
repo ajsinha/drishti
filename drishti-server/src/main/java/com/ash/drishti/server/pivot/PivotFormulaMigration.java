@@ -34,7 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The start-up migration of saved pivot formulas into Rachana (BI_GUIDE.md, formulas; docs/architecture/ARCHITECTURE.md §28 Q20): every measure of every
+ * The start-up migration of saved pivot formulas into Rachana (BI_GUIDE.md, formulas; HOW_IT_FITS.md §A28 Q20): every measure of every
  * saved pivot view and of every kept version of it ({@code pivot/views/}, {@code pivot/view-versions/}), and the code of every custom function
  * written as a formula ({@code pivot/functions/}), in the content store. A text the pivot reads already (Rachana) is left as it is; a text in
  * the old syntax ({@code and}, {@code or}, {@code not}, {@code x if c else y}, {@code True}, {@code False}, {@code None}, {@code **},

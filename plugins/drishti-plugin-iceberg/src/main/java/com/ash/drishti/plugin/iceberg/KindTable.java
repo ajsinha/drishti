@@ -175,7 +175,7 @@ abstract class KindTable {
     /**
      * A text column's bounds in one data file of the day, from its manifest entry: {min, max, nulls} ({@code nulls} "0" when the file
      * has no row without a value), each null when not stated. A VaR shard's read skips the files that hold none of its keys
-     * (DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built); an engine that cannot say gives nothing, and the file is read.
+     * (HOW_IT_FITS.md#d13-var-sharding-how-it-is-built); an engine that cannot say gives nothing, and the file is read.
      */
     String[] textBounds(Layout l, Day day, int file, String column) {
         return new String[3];

@@ -20,7 +20,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * How a request wants scale handled (ARCHITECTURE.md sections 26.3, 26.6), beside the view (a view is what is shown; these are how it
+ * How a request wants scale handled (HOW_IT_FITS.md sections A26.3, 26.6), beside the view (a view is what is shown; these are how it
  * is computed, so a saved view never carries them). The pivot screen shows each as a switch with its state (BI_GUIDE.md, the screen's
  * switches): Exact / Auto / ≈, Progressive, Use rollups.
  *
@@ -68,7 +68,7 @@ public record ScaleOptions(Exactness exactness, double sampleFraction, boolean p
     }
 
     /**
-     * The options of a live pivot's recompute (ARCHITECTURE.md section 26.7, item 5): never a sample, never progressive, and exact unless the
+     * The options of a live pivot's recompute (HOW_IT_FITS.md section A26.7, item 5): never a sample, never progressive, and exact unless the
      * view asked ≈ (a live figure is never an estimate the person did not ask for).
      */
     public ScaleOptions live() {

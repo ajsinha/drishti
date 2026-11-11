@@ -15,7 +15,7 @@
  */
 /* Rupaka phase 6 (docs/guides/BI_GUIDE.md): the python visual of a report. The rows are the ones the person looking may see; the Python item that turns them
    into a number per group or a chart runs on the server's compute pool (POST /bi/python/run: a strict sandbox with no network, its own folder,
-   CPU, memory, time and output limits). Wave B (docs/architecture/ARCHITECTURE.md §28 principle P3): the browser computes nothing, so there is no browser target any
+   CPU, memory, time and output limits). Wave B (HOW_IT_FITS.md §A28 principle P3): the browser computes nothing, so there is no browser target any
    more; a manifest or a visual that still says `browser` or `both` runs on the server. What comes back is data: a measure's rows (drawn here as bars), a
    drishti-chart spec (the preferred form, drawn by drishti-chart), an ECharts option (drawn with the vendored ECharts, formatter strings removed), a Vega-Lite
    specification (translated and drawn by drishti-chart, or refused in words), an SVG or a PNG (shown as an image, which runs no script). Never HTML. */

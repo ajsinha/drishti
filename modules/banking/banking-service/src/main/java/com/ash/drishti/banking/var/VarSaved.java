@@ -30,7 +30,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
- * What people keep of the VaR engine, in the content store (DATA_ARCHITECTURE.md), so it follows its owner across the servers of a
+ * What people keep of the VaR engine, in the content store (HOW_IT_FITS.md), so it follows its owner across the servers of a
  * cluster and every version is kept:
  *
  * <ul>

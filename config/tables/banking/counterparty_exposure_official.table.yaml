@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Migrated from config/bi/datasets/counterparty-exposure-official.dataset.yaml by drishti.py tables migrate (docs/architecture/ARCHITECTURE.md §28 section 4).
+# Migrated from config/bi/datasets/counterparty-exposure-official.dataset.yaml by drishti.py tables migrate (HOW_IT_FITS.md §A28 section 4).
 rachana: 3
 table: banking.counterparty_exposure_official
 was: counterparty-exposure-official

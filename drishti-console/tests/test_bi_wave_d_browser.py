@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Wave D (ARCHITECTURE.md §28 section 12.2, 2.6.0), console lane, in Chromium over the real server and console (tests/bi_report_stack.py, security on, the small
+"""Wave D (HOW_IT_FITS.md §A28 section 12.2, 2.6.0), console lane, in Chromium over the real server and console (tests/bi_report_stack.py, security on, the small
 lake of trade valuations, plus a model with two field parameters written in the stack's BI folder):
 
 * field parameters in the Studio's wells: Build offers the model's field parameters (a parameter of fields in the axis well, one of measures in the values

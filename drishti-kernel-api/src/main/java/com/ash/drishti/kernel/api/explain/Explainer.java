@@ -19,7 +19,7 @@ import com.ash.drishti.kernel.api.security.Principal;
 import java.util.List;
 
 /**
- * One kind of number that can be explained (docs/architecture/SHARED_SCREENS.md section 3, "One Explain for every number"): a VaR or ES
+ * One kind of number that can be explained (HOW_IT_FITS.md section S3, "One Explain for every number"): a VaR or ES
  * figure, an exposure, a pivot cell. Each engine registers its own as a bean; the core's {@link NumberExplainService} finds them by
  * {@link #kind()} and knows nothing of what they explain, so a domain module (banking) carries its explainers with it.
  *

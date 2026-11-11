@@ -31,7 +31,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
 /**
- * Per connector, a fragment pool and a circuit breaker (docs/architecture/ARCHITECTURE.md §28 section 6.6): at most {@code max-fragments} source fragments of one
+ * Per connector, a fragment pool and a circuit breaker (HOW_IT_FITS.md §A28 section 6.6): at most {@code max-fragments} source fragments of one
  * connector run at once (a layer build, a direct query); a connector that fails {@code breaker-failures} times in a row opens its breaker, and for
  * {@code breaker-open} every fragment for it is refused at once ({@code DRS-9026}, the connector named) instead of waiting on a dead source; then one fragment
  * may try (half open): its success closes the breaker, its failure opens it again. Thread-safe.
@@ -85,7 +85,7 @@ public final class FragmentPools {
     }
 
     /**
-     * Runs one source fragment of {@code connector} within its pool and breaker. Background work (BI runs, refresh: docs/architecture/ARCHITECTURE.md §28
+     * Runs one source fragment of {@code connector} within its pool and breaker. Background work (BI runs, refresh: HOW_IT_FITS.md §A28
      * section 10.3) takes at most {@code drishti.bi.exec.fragments-share} of the pool, so an interactive build of one date always finds a place,
      * and it waits for its share as long as background work may run. Every wait is interruptible: a cancelled run leaves at once.
      */

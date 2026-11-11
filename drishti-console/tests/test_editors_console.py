@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Build › Tables & models, console lane (docs/architecture/SHARED_SCREENS.md): the page is a shell with its scripts and needs the bi power; the
+"""Build › Tables & models, console lane (HOW_IT_FITS.md): the page is a shell with its scripts and needs the bi power; the
 editor API is passed on as the person, its paths an allow-list; the Python run's chip follows the under-construction registry; the menu and
 the BI rail link to it; nothing per person is kept in the console. The browser side is tests/test_editors_browser.py."""
 from bi_backend import BiBackend

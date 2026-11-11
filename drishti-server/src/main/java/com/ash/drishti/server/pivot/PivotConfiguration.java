@@ -215,7 +215,7 @@ public class PivotConfiguration {
     }
 
     /**
-     * Rachana's {@code measure(...)} and {@code cell(...)} answered by this server's pivot engine (docs/architecture/ARCHITECTURE.md part 3); while the
+     * Rachana's {@code measure(...)} and {@code cell(...)} answered by this server's pivot engine (HOW_IT_FITS.md part 3); while the
      * pivot engine is switched off they are refused with the reason.
      */
     @Bean

@@ -27,7 +27,7 @@ import com.ash.drishti.server.design.HistoryDefinitions;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/** History queries' service (DATA_ARCHITECTURE.md › History queries: an entity over time, section 7): the packs' {@code history:} entries and the kinds' mnemonics wired in. */
+/** History queries' service (HOW_IT_FITS.md › History queries: an entity over time, section 7): the packs' {@code history:} entries and the kinds' mnemonics wired in. */
 @Configuration(proxyBeanMethods = false)
 public class HistoryConfiguration {
 

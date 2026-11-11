@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis);
-/* + New (docs/architecture/SHARED_SCREENS.md section 1, option B): guided steps in plain language that land in the three-pane editor.
+/* + New (HOW_IT_FITS.md section S1, option B): guided steps in plain language that land in the three-pane editor.
    A table: its name, its source (a kind or another table), the columns suggested from a sample of the source (the server's), check and
    open. A model: the four questions of its Overview (what it is about, what people look at it by, what numbers it gives, who may see what).
    A Python-driven table: its name and where to start (a template, a notebook, or empty). Built with DOM calls only. */

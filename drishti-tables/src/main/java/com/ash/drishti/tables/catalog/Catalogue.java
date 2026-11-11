@@ -45,7 +45,7 @@ import java.util.stream.Stream;
 
 /**
  * The catalogue of the table layer: every table and model from {@code config/tables/<domain>/<name>.table.yaml} and {@code .model.yaml}
- * (planned in docs/architecture/ARCHITECTURE.md section 4, built here) and from the item store (Q16), by name, with {@code was:} names resolved for one
+ * (planned in HOW_IT_FITS.md section A4, built here) and from the item store (Q16), by name, with {@code was:} names resolved for one
  * release (Q18), the checks of every definition and of the catalogue as a whole, and lineage (who uses a table). Immutable: a change is a
  * new catalogue ({@link #load}), swapped in whole by its holder.
  */
@@ -263,7 +263,7 @@ public final class Catalogue {
     }
 
     /**
-     * Names are unique across virtual tables and stored tables (docs/architecture/ARCHITECTURE.md section 10, V12): each table whose name or {@code was:}
+     * Names are unique across virtual tables and stored tables (HOW_IT_FITS.md section A10, V12): each table whose name or {@code was:}
      * name is a stored table's ({@code stored}: the lakes' tables as {@code <domain>.<name>} and the kinds) is refused, compared without
      * case. The server passes what its lakes and packs hold; {@code tables check --stored} a list.
      */
@@ -355,7 +355,7 @@ public final class Catalogue {
     }
 
     /**
-     * Lineage (docs/architecture/ARCHITECTURE.md section 8): who in the catalogue uses {@code table}: models that read it (with their alias), tables over it,
+     * Lineage (HOW_IT_FITS.md section A8): who in the catalogue uses {@code table}: models that read it (with their alias), tables over it,
      * tables whose columns look it up ({@code related}). Consumers outside the layer (BI's reports, alerts, Flight's tokens) add theirs
      * through {@link Lineage}.
      */

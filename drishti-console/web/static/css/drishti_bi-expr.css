@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The ExpressionEditor (drishti_bi-expr-editor.js), the Query panel's MQ / SQL views and the SQL editor (ARCHITECTURE.md §28 sections 3.3.8, 3.4 and 8.1). */
+/* The ExpressionEditor (drishti_bi-expr-editor.js), the Query panel's MQ / SQL views and the SQL editor (HOW_IT_FITS.md §A28 sections 3.3.8, 3.4 and 8.1). */
 .bi-xe { position: relative; display: flex; flex-direction: column; gap: var(--d-sp-4); min-width: 0; flex: 1 1 18rem; }
 .bi-xe-row { display: flex; align-items: flex-start; gap: var(--d-sp-4_8); }
 .bi-xe-row .di-code-host { flex: 1 1 auto; min-width: 0; }

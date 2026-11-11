@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The SQL of the wave B functions (docs/architecture/ARCHITECTURE.md §28 sections 3.3.4 and 3.3.5), written by the {@link SqlEmitter} that meets them:
+ * The SQL of the wave B functions (HOW_IT_FITS.md §A28 sections 3.3.4 and 3.3.5), written by the {@link SqlEmitter} that meets them:
  * <ul>
  * <li>{@code calc(agg, where=)} restricts the aggregates inside to the condition ({@code FILTER (WHERE ...)}); with {@code ignore=}, {@code keep=} or
  * {@code via=} it is a context sub-query ({@link Contexts});</li>

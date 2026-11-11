@@ -144,7 +144,7 @@ priority, expiry) are ignored.
 - **Deletes:** property `deleted=true` on a message whose entity can be named; an envelope with `"doc": null` or no `doc`; an empty
   body with an `id` property on a destination with a kind. A body that is present must still be JSON. A delete removes the entity
   from the store, the memory cache and type-ahead, and is pushed to open views: they keep the last document, greyed, under a banner
-  saying when it was deleted ([deleted entities](../../docs/architecture/DATA_ARCHITECTURE.md#deleted-entities)); a later message
+  saying when it was deleted ([deleted entities](../../HOW_IT_FITS.md#deleted-entities)); a later message
   repaints it.
 - **Rejected** (counted in `rejected`, acknowledged, dropped; no dead-lettering): a body that is not JSON, no kind, no id or a blank
   one, an empty body on a destination without a kind. An unreadable message can never be read, so returning it would bring it back

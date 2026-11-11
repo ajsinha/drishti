@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis);
-/* The Python-driven table editor (docs/architecture/SHARED_SCREENS.md section 4: option A as the editor, B the Notebook, C the templates; all end
+/* The Python-driven table editor (HOW_IT_FITS.md section S4: option A as the editor, B the Notebook, C the templates; all end
    in A). The build function beside its output contract (the columns, types, keys and rules it must return); its inputs (tables read as
    the person may see them); when it runs (on demand and cached per business date, or on each load of an input); its compute pool and
    limits. Sample run reads the inputs as the person may see them and runs the code on the server's compute pool (POST python/run), and the rows

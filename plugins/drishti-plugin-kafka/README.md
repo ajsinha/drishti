@@ -108,7 +108,7 @@ number of changes, and a restart replays one message per entity.
   in two partitions has no defined winner.
 - **Generation and time:** the generation is the message offset, `fetchedAt` the message timestamp. The newest applied timestamp is
   `lastUpdate` in Admin → Health, compared with `stale-after` (the trading pack sets `15m` on `trading-stream`).
-- How a tick reaches the browser: [DATA_ARCHITECTURE.md, Streaming sources](../../docs/architecture/DATA_ARCHITECTURE.md#streaming-sources).
+- How a tick reaches the browser: [HOW_IT_FITS.md, Streaming sources](../../HOW_IT_FITS.md#streaming-sources).
 
 ## Settings
 
@@ -205,7 +205,7 @@ of it answers "not held".
 
 A delete is pushed to open views as a `deleted` patch: the view keeps its last document, greyed, under a banner with the tombstone's
 time, and repaints if a later message brings the entity back
-([DATA_ARCHITECTURE.md, Deleted entities](../../docs/architecture/DATA_ARCHITECTURE.md#deleted-entities)); this works in
+([HOW_IT_FITS.md, Deleted entities](../../HOW_IT_FITS.md#deleted-entities)); this works in
 `mode: ticks` too. The id leaves type-ahead at once, and opening it answers "not held" so the next connector is asked. With
 `kafka-console-producer.sh` send a real null with `--property null.marker=NULL` and the line `MX-20000001|NULL`.
 
@@ -339,7 +339,7 @@ cold read while the broker is away answers "not held" after 5 s and the next sto
 
 **Live push:** each message for a watched entity is parsed once on the consumer thread and handed to every listener; the engine
 merges ticks within a frame (`drishti.live.frame`, 50 ms) and keeps one subscription per entity however many watch it
-([DATA_ARCHITECTURE.md, Guarantees and limits](../../docs/architecture/DATA_ARCHITECTURE.md#guarantees-and-limits)). Type-ahead is
+([HOW_IT_FITS.md, Guarantees and limits](../../HOW_IT_FITS.md#guarantees-and-limits)). Type-ahead is
 built in one go at the first catch-up (empty until then), then grows per new entity.
 
 **Memory.** The index (kind, id, topic, partition, offset per entity) and the type-ahead index grow with the number of entities;

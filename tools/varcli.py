@@ -343,7 +343,7 @@ def matrix_csv(m: dict) -> str:
 
 
 def render_shards(s: dict, say) -> None:
-    """VaR sharding across Drishti*net (docs/architecture/DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built): the settings, the members, the date's shards and their owners."""
+    """VaR sharding across Drishti*net (HOW_IT_FITS.md#d13-var-sharding-how-it-is-built): the settings, the members, the date's shards and their owners."""
     if not s.get("enabled"):
         say(f"VaR sharding is off ({s.get('origin')}): every date is loaded whole on each server"
             + (f"; {s['problem']}" if s.get("problem") else ""))

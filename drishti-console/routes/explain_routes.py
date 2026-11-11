@@ -11,7 +11,7 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""One Explain for every number (docs/architecture/SHARED_SCREENS.md section 3; USER_GUIDE.md, "Explain"). The console only shows: the
+"""One Explain for every number (HOW_IT_FITS.md section S3; USER_GUIDE.md, "Explain"). The console only shows: the
 explanation is the server's (``/api/v1/explain``), asked as the person, so their entitlements, row rules and masks apply.
 
 - ``GET /api/explain?kind=&measure=&part=&...`` and ``POST /api/explain`` (a pivot cell sends its view): the same-origin proxy that the

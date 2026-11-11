@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The model query's side of the logical plan (docs/architecture/ARCHITECTURE.md §28 section 3.6: MQ is the plan's semantic leaf): a checked and compiled query
+ * The model query's side of the logical plan (HOW_IT_FITS.md §A28 section 3.6: MQ is the plan's semantic leaf): a checked and compiled query
  * as the planner's input (the model at its fingerprint, the datasets by alias at their versions, the question with its {@code top} filters as asked and its
  * relative dates resolved, the time, the ids), and the reader's security as the signature sees it. Drishti SQL compiles to the same model query, so it gets
  * the same plan and the same hash.

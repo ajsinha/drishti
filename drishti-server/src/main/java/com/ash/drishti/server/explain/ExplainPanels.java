@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The ViewModel panels an explanation's "Why it moved" is drawn with (docs/architecture/VIEWMODEL.md, the standard kinds metric, waterfall,
+ * The ViewModel panels an explanation's "Why it moved" is drawn with (HOW_IT_FITS.md, the standard kinds metric, waterfall,
  * table, hbar and markdown): built here, on the server, and painted in the browser by the one renderer (Drishti Render), so the console
  * computes nothing and every screen's Explain looks the same. Amounts are formatted here; tones follow risk (a rise is {@code neg}).
  */

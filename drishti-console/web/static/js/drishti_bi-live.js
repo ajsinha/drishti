@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Rupaka phase 5 (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 12): what a report or a board needs to follow live tables. The server's report stream (GET /api/v1/bi/reports/<id>/live)
+/* Rupaka phase 5 (HOW_IT_FITS.md §A28 › Rūpaka: the original design and every phase as built, section 12): what a report or a board needs to follow live tables. The server's report stream (GET /api/v1/bi/reports/<id>/live)
    says only that the tables changed (a "tick") and how they are doing (a "status"); it carries no data. A tick makes the page ask its visuals again, as the
    person looking, so their row rules and masks apply to every update. The stream comes over the console's one channel per browser (drishti_channel.js), so a
    page with live visuals costs the browser no connection of its own.

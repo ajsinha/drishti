@@ -189,7 +189,7 @@ VALUE_STRING); 3 duplicate ids in trading/2026-09-29/trade.jsonl, the last line 
   default).
 - **Type-ahead** answers from memory: the newest day's ids of every kind (all days' ids for effective kinds). With `index.days: 5` (and
   `index.storage: mmap` for a lake searched often by past date) a past date's type-ahead answers from that date's own ids
-  ([ARCHITECTURE.md, Several business days](../../docs/architecture/ARCHITECTURE.md#91-several-business-days)); a folder or file whose
+  ([HOW_IT_FITS.md, Several business days](../../HOW_IT_FITS.md#a91-several-business-days)); a folder or file whose
   modification time changes is a restated day, rebuilt at the next rescan, and a silent restatement is caught every
   `index.reload-every`; **Admin → Connectors → this connector → Index** reloads a day by hand
   ([OPERATIONS_GUIDE.md, sizing the index](../../docs/guides/OPERATIONS_GUIDE.md#144-the-multi-day-type-ahead-index)).
@@ -239,7 +239,7 @@ SPRING_PROFILES_ACTIVE=files DRISHTI_PACKS=market-risk,counterparty-risk java -j
   or kind like `../x`) is refused.
 
 The connector never writes and has no `writes:`; write-back keeps corrections as overlays in the Drishti database and the loader folds
-approved ones into the next build ([APPROVALS_GUIDE.md](../../docs/architecture/ARCHITECTURE.md#316-where-a-write-lands-overlays-owned-rows-and-the-outbox)).
+approved ones into the next build ([APPROVALS_GUIDE.md](../../HOW_IT_FITS.md#a316-where-a-write-lands-overlays-owned-rows-and-the-outbox)).
 
 ## Memory, size and measured results
 

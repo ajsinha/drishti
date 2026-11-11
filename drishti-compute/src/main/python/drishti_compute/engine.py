@@ -144,6 +144,6 @@ class Engine:
         """Computes ``req.kind`` for ``req`` from ``inputs``, reporting through ``progress``; raise :class:`ComputeError` to refuse in words."""
         raise NotImplementedError
 
-    def incremental(self, req: Request, previous: Result, events: list, inputs: Inputs) -> Result | None:  # optional (DATA_ARCHITECTURE.md › Reactive connectors, section 10.2)
+    def incremental(self, req: Request, previous: Result, events: list, inputs: Inputs) -> Result | None:  # optional (HOW_IT_FITS.md › Reactive connectors, section 10.2)
         """The ``previous`` answer updated from ``events``, or None to compute it again in full (the default)."""
         return None

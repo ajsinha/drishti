@@ -24,10 +24,10 @@ Disabling, uninstalling (to an archive that can be restored) and uploading files
 ```
 config/bi/
   datasets/   <id>.dataset.yaml   one table each (rachana: 2, <model>-<table>.dataset.yaml): the table over a connector (by logical name), its columns, row rules and masks
-                                  (ARCHITECTURE.md §28 › The model layer: the specification, section 1); the 2.1 rachana: 1 files were converted by drishti.py bi migrate --models and removed in 2.2,
+                                  (HOW_IT_FITS.md §A28 › The model layer: the specification, section 1); the 2.1 rachana: 1 files were converted by drishti.py bi migrate --models and removed in 2.2,
                                   except the two live ones, live-trading and live-exposure, that their live reports still read. desk-pnl-vs-exposure-py-result is a
                                   Python dataset (source.python) over two model queries: BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 11 says what the 2.1 composed and derived datasets became
-  models/     <id>.model.yaml     2.2 data models: datasets as aliases, relationships, measures, hierarchies, rollups (ARCHITECTURE.md §28 › The model layer: the specification, section 2); samples:
+  models/     <id>.model.yaml     2.2 data models: datasets as aliases, relationships, measures, hierarchies, rollups (HOW_IT_FITS.md §A28 › The model layer: the specification, section 2); samples:
                                   trades-basic, trading-risk, trading-cashflows, counterparty-exposure, desk-pnl-vs-exposure-py, live-trading, live-exposure,
                                   region-economics, world-economics, market-risk-var (the published official VaR; counterparty-exposure and
                                   trading-risk read the published official exposure, counterparty-exposure-official-*); a report reads one with
@@ -62,6 +62,6 @@ Where to read more, in the order a newcomer wants it:
 | boards, report pages of tiles (`layout: board`), and converting a 2.3 board file | [docs/guides/BI_GUIDE.md](../../docs/guides/BI_GUIDE.md#r9-the-report-file-pages-visuals-filters-and-slicers) |
 | the theme format (`themes/`) | [docs/guides/BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 5.2](../../docs/guides/BI_GUIDE.md#r103-themes) |
 | publishing, review, certification and moving content between servers | [docs/guides/BI_GUIDE.md](../../docs/guides/BI_GUIDE.md#r17-publishing-and-governance-versions-review-certification-lineage-impact-environments) |
-| the design and what each phase built | [docs/architecture/ARCHITECTURE.md §28](../../docs/architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer) (sections 6, 8 and 13, "Where BI files live", and section 20) |
+| the design and what each phase built | [HOW_IT_FITS.md §A28](../../HOW_IT_FITS.md#a28-business-intelligence-on-the-table-layer) (sections 6, 8 and 13, "Where BI files live", and section 20) |
 
 Edit a sample and the next open shows it. To keep your own version of a sample, copy it to a workspace item (*Save a copy* in the Model view for a dataset or in the designer for a report, or *New item* in My workspace) rather than editing the shipped file.

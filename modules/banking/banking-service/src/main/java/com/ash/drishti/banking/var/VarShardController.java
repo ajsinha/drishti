@@ -37,7 +37,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * VaR sharding's API (DATA_ARCHITECTURE.md section 14).
+ * VaR sharding's API (HOW_IT_FITS.md section D14).
  *
  * <pre>
  *   GET  /api/v1/risk/var/shards?asOf=                 the settings, the members, the shards held here, a date's shard map and owners
@@ -103,7 +103,7 @@ public class VarShardController {
         return p == null || p.user() == null || p.user().startsWith("node:") ? null : p;
     }
 
-    /** A shard's part of a set, summed here for the member that asked (DATA_ARCHITECTURE.md section 13). */
+    /** A shard's part of a set, summed here for the member that asked (HOW_IT_FITS.md section D13). */
     @PostMapping("/partial")
     public Map<String, Object> partial(@RequestAttribute(value = NetCallFilter.PEER, required = false) String peer,
             @RequestAttribute(value = Principal.ATTRIBUTE, required = false) Principal p, @RequestBody Map<String, Object> body) {
@@ -125,7 +125,7 @@ public class VarShardController {
     static final int MAX_SETS = 4096;
 
     /**
-     * Many row sets of one shard summed here in one call (DATA_ARCHITECTURE.md section 13): {@code runs} each set's runs {@code [from, to)} (int32 pairs, base64),
+     * Many row sets of one shard summed here in one call (HOW_IT_FITS.md section D13): {@code runs} each set's runs {@code [from, to)} (int32 pairs, base64),
      * the answer each set's row count and sum in order, each the sum {@code /partial} gives for that set. The same signature, label, data
      * version and access checks as {@code /partial}, for every set.
      */
@@ -176,7 +176,7 @@ public class VarShardController {
         }
     }
 
-    /** A shard's skeleton for the member that puts the date together without holding the shard (DATA_ARCHITECTURE.md section 13). */
+    /** A shard's skeleton for the member that puts the date together without holding the shard (HOW_IT_FITS.md section D13). */
     @GetMapping("/shards/skeleton")
     public void skeleton(@RequestAttribute(value = NetCallFilter.PEER, required = false) String peer, @RequestParam("date") String date,
             @RequestParam(value = "ccy", required = false) String ccy, @RequestParam("shard") int shard, @RequestParam("map") String map,

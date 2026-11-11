@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Admin > Collaboration (ARCHITECTURE.md §31, Administrators and compliance): search threads, moderate (hide, unhide, lock), legal holds, the
+/* Admin > Collaboration (HOW_IT_FITS.md §A31, Administrators and compliance): search threads, moderate (hide, unhide, lock), legal holds, the
    compliance export, chain verification, the retention dry run and the bridges. The server decides every right call by call; the page
    only draws the sections the caller's roles open and says in words what the server refused. Everything is put in with textContent;
    times arrive as <name>Local, in the top bar's zone. */

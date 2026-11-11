@@ -25,7 +25,7 @@ path; each kind its own line (var-node, var-bank-minus-desk, var-basket, var-con
 (comma separated): user n asks server n mod k (a cluster's members side by side).
 
 With --history-share (0.15 in tools/bench/net_soak.py, 0 by default here) that share of the requests are histories
-(DATA_ARCHITECTURE.md): ``/api/v1/history/{kind}/{id}`` (the console's ``/v/{kind}/{id}/history``) of a trade of any system (four in five),
+(HOW_IT_FITS.md): ``/api/v1/history/{kind}/{id}`` (the console's ``/v/{kind}/{id}/history``) of a trade of any system (four in five),
 a counterparty, or one of --equities, with days=30, days=60, range=3M, diff=true or, now and then, knownAt=now; the rest keep the mix
 above. A history that says DRS-1013 (no data) fails. ``failedBuckets`` counts the failures per kind and per --fail-bucket seconds
 (epoch), so the soak can tell whether they fell inside its kill windows.

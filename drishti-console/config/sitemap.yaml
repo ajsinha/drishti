@@ -255,7 +255,7 @@ menus:
       - title: Administer
         items:
           - { id: bi-settings, tab: bi, href: /admin/bi, icon: sliders, label: BI settings, desc: "Powers per role, who creates workspaces", match: /admin/bi, rail: false, requires: [bi, bi-admin, admin-page:bi] }
-  # The Build menu: the one Build home (2.9.11.e, docs/architecture/SHARED_SCREENS.md section 1) and the guided starts. The home's rail
+  # The Build menu: the one Build home (2.9.11.e, HOW_IT_FITS.md section S1) and the guided starts. The home's rail
   # (Data, Screens, Analysis, Work) is the registry of object types (core/build_registry.py), not a list here.
   - id: build
     label: Build

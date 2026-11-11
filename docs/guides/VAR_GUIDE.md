@@ -1435,7 +1435,7 @@ and hand-picked sets risk management reports on, the same for everyone who may o
 read from a data feed (the `portfolio` kind of earlier releases is gone: a load of a `portfolio` file is refused, saying so): the basket
 store keeps it under the **system scope**, `var/system-baskets/<ID>.json` in the content store, beside people's own baskets
 (`var/baskets/<owner>/`, [section 5.8](#58-baskets)); every version is kept, and an edit on one server is read at the next request on every
-server of a cluster ([DATA_ARCHITECTURE.md section 5](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)).
+server of a cluster ([HOW_IT_FITS.md section D5](../../HOW_IT_FITS.md#d5-the-content-store-user-content-every-node-reaches)).
 Its figures are always the engine's.
 
 | Type | Definition | Becomes the scope | Demo |
@@ -1554,7 +1554,7 @@ A basket of two parts or more is broken down **by part** (`by=part`, the default
 standalone VaR is the part alone inside the basket, its component VaR the part's trades not already in an earlier part, so the components
 add up to the basket's VaR and a trade in two parts counts once. It is a RULE when it is a single rule (the scope starts with `WHERE:` and
 has no ` + `), else a BASKET; private unless you share it read-only with users or roles (*Share read-only with*: each reader sees it
-through their own entitlements). Baskets are stored in the **content store** ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)) at `var/baskets/<owner>/<name>.json`, so
+through their own entitlements). Baskets are stored in the **content store** ([HOW_IT_FITS.md](../../HOW_IT_FITS.md#d5-the-content-store-user-content-every-node-reaches)) at `var/baskets/<owner>/<name>.json`, so
 they follow their owner across the servers of a cluster and every version is kept; they are listed in the explorer's *My baskets* drop-down (yours, then those shared with you)
 and opened as `BASKET:<owner>/<name>` or `VAR SCOPE <name> <GO>`. A basket of nodes and rules is **dynamic** (what matches on the date
 you look at); one of ids is **static** (a later date may not hold them: *unknown*). Every save, edit and delete is audited.
@@ -1826,7 +1826,7 @@ The design ([section 30](#30-the-design-record)). What-if pricing is not built; 
 systems are built** (the subsection *Intraday updates* below).
 
 **What-if changes.** A sandbox is a person's private what-if: a base scope and a list of changes; only its owner sees or changes it
-([DATA_ARCHITECTURE.md › Reactive connectors, section 9](../architecture/DATA_ARCHITECTURE.md#9-isolation-two-users-never-see-each-others-answers)).
+([HOW_IT_FITS.md › Reactive connectors, section 9](../../HOW_IT_FITS.md#d9-isolation-two-users-never-see-each-others-answers)).
 
 | Change | How its vector is obtained | Pricing needed |
 |---|---|---|
@@ -1838,18 +1838,18 @@ systems are built** (the subsection *Intraday updates* below).
 
 **Pricing over the scenario days.** The pricer receives the trade, the base market of the business date (assembled by the server as
 AI_GUIDE.md › Server-side pricing: the quant service (proposed), section 7 describes) and the scenario set's market moves, and returns the 509 P&Ls. QLRisk's
-`MarketRiskEngine.scenario_pnl` is the default path ([BI_GUIDE.md section N9.2](../architecture/ARCHITECTURE.md#298-pricing-engines-planned)),
+`MarketRiskEngine.scenario_pnl` is the default path ([BI_GUIDE.md section N9.2](../../HOW_IT_FITS.md#a298-pricing-engines-planned)),
 QuantLib-Java the Java alternative. The pricer's scenario moves must be the **same moves the batch used**; a **reprice check** proves it:
 for a sample of existing trades in the scope the engine reprices them and compares with their stored vectors, and shows the agreement on
 the what-if panel (*parity with the batch: 0.02%*); a scope whose check fails beyond tolerance shows its what-if numbers in amber with
 the reason. For the sandbox the engine returns before and after VaR, ES and limit use; each change's incremental VaR (in the order
 listed, and standalone); the new trade's component VaR in the scope; overlaid distributions; and a waterfall from before to after.
-*Book via write-back…* turns a sandbox's change into a change request ([APPROVALS_GUIDE.md](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals)); once applied,
+*Book via write-back…* turns a sandbox's change into a change request ([APPROVALS_GUIDE.md](../../HOW_IT_FITS.md#a31-collaboration-write-back-and-approvals)); once applied,
 the event trigger recomputes the real scopes; the sandbox is left as it was. Without QLRisk declared stable, what-if offers only the
 changes that need no pricing.
 
 **Intraday events.** Overnight vectors describe the morning's positions; the design keeps an **intraday layer** on top of them,
-recomputed on the reactive connectors' triggers ([DATA_ARCHITECTURE.md › Reactive connectors, section 7](../architecture/DATA_ARCHITECTURE.md#7-triggers-computing-on-events)):
+recomputed on the reactive connectors' triggers ([HOW_IT_FITS.md › Reactive connectors, section 7](../../HOW_IT_FITS.md#d7-triggers-computing-on-events)):
 
 | Event | Trigger | Effect on the intraday layer |
 |---|---|---|
@@ -1859,11 +1859,11 @@ recomputed on the reactive connectors' triggers ([DATA_ARCHITECTURE.md › React
 | the overnight batch publishes new vectors | `data-version` | the intraday layer of that date is dropped: the batch's vectors include the day's trades |
 
 An event changes the vector of the trade's book and every node above it by (new − old), and every saved basket holding the trade;
-nothing else is recomputed ([DATA_ARCHITECTURE.md › Reactive connectors, section 10.2](../architecture/DATA_ARCHITECTURE.md#102-incremental-recompute)). An
+nothing else is recomputed ([HOW_IT_FITS.md › Reactive connectors, section 10.2](../../HOW_IT_FITS.md#d102-incremental-recompute)). An
 intraday result says which events it includes (`L17:3412`, `trade-kafka p3:182277`) and is labelled *intraday*; the official numbers
 come only from the batch. The submitter of a write-back receives their own change's incremental VaR, computed against the state just
 before their event, under their change id; everyone watching the scope receives the new shared number
-([DATA_ARCHITECTURE.md › Reactive connectors, section 9.2](../architecture/DATA_ARCHITECTURE.md#92-two-traders-two-amendments-the-same-second)). Until a
+([HOW_IT_FITS.md › Reactive connectors, section 9.2](../../HOW_IT_FITS.md#d92-two-traders-two-amendments-the-same-second)). Until a
 pricer is available an amended or booked trade gets no intraday vector (*intraday change not reflected: pricing unavailable*);
 cancellations, which need no pricing, are applied. A trade moved between books moves its vector to another ancestor chain, with no
 repricing.
@@ -1894,7 +1894,7 @@ Iceberg equal Delta to the cent). The rules:
 | a failed scenario, no FX, a wrong length | the row refused as in the morning run (`DRS-5206`, `DRS-5207`, `DRS-5201`) |
 | a full run of the date (overwrite: a new morning `BATCH_ID` or `COMPUTED_AT`, an intraday batch gone, or a signal with no new intraday batch) | the date reloads: restated, its intraday layer dropped |
 
-**Applying (incremental, DATA_ARCHITECTURE.md › Reactive connectors, section 10.2).** The data-load signal of a `scenario-pv` or `pnl-vector` batch on a
+**Applying (incremental, HOW_IT_FITS.md › Reactive connectors, section 10.2).** The data-load signal of a `scenario-pv` or `pnl-vector` batch on a
 loaded date reads the date's rows once, keeps the new intraday batches' latest row per trade, and applies them on the loaded book
 **without a reload** (`VarIntraday`): each updated trade's difference (new − old) is added to its book and every node above it in both
 hierarchies, to the per-trade-currency totals ([section 15.11](#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker)),
@@ -2560,7 +2560,7 @@ also served as the computed kind `var-result` through a reactive connector; the 
 | An optional "risk position" grouping for viewing (book × product × currency × underlying × maturity quarter) | PLANNED | §15.6 |
 | Tiered memory: each loaded date a memory-mapped local hot file (float32 position rows in hierarchy order, the trades of fungible positions, float64 aggregates; Delta stays float64), the heap holding aggregates, columns and links; history dates opened lazily from their file; rebuilt when the inputs change; cleaned on eviction and shutdown | Built | §26 |
 | The benchmark 1 M trades × 50 dates (`VarTierBenchmark`, opt-in): measured at 100,000 trades × 5 dates, extrapolated | Built (measured locally; the full run is for a server) | [BENCHMARK.md section 5.2](../admin/BENCHMARK.md#52-the-tiered-store-vartierbenchmark) |
-| Sharding the hot store across Drishti*net nodes | Built (off by default: the pack's `sharding:` block) | §28, [DATA_ARCHITECTURE.md section 13](../architecture/DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built) |
+| Sharding the hot store across Drishti*net nodes | Built (off by default: the pack's `sharding:` block) | §28, [HOW_IT_FITS.md section D13](../../HOW_IT_FITS.md#d13-var-sharding-how-it-is-built) |
 | The common risk lake (domain `risk`, one connector `risk-store` for every risk pack) | PLANNED (VaR's tables already there) | §15.1 |
 | The computed kind `var-result` (`VRES`, the Java engine through the reactive connector `var-engine`) and the pre-deal what-if (`POST /api/v1/risk/var/what-if`, the same engine: copies of booked trades or scopes, trades priced elsewhere, the stressed window) | Built | §8 |
 | VaR by a trade column (`by=attribute:TRADER_ID`), summed over every trade of the scope, the column's mask honoured | Built | §11.3 |
@@ -3297,7 +3297,7 @@ server; `VarHierarchyApiTest` a fourth tree, the words and the limits.
 **Grain:** one row per node with a limit and business date. **Key:** `LIMIT_ID` = `VL-<NODE_ID>`. **Row count:** 157 in the test data
 (41: the 43 nodes of LL but two letter-desk nodes left without one; the 88 MGMT and LEGAL nodes; the 28 system baskets, hierarchy
 `PORTFOLIO`, `NODE_ID` the system basket's id: every VaR limit lives here, with its currency, decision 8 of
-[DATA_ARCHITECTURE.md section 12](../architecture/DATA_ARCHITECTURE.md#12-computed-and-derived-attributes)). Read for the hierarchies whose `limits` names the kind
+[HOW_IT_FITS.md section D12](../../HOW_IT_FITS.md#d12-computed-and-derived-attributes)). Read for the hierarchies whose `limits` names the kind
 (`drishti.var.kinds.limit`, `var-limit`) and for the system baskets (`HIERARCHY` `PORTFOLIO`); JSON Lines, one row a line.
 
 **Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`var-limit.contract.yaml`](../../config/packs/banking/market-risk/contracts/var-limit.contract.yaml), published as [VLIM: `var-limit`](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit); a real record of the test data with every field explained is its [example](../contracts/samples/market-risk.md#var-limit).
@@ -3488,7 +3488,7 @@ the sources already send (P&L vectors or scenario PVs, [section 15](#15-inputs-f
 position rows (the hot file's float32 rows in float64, or a node's float64 aggregate) in the fixed reduction order
 ([CLUSTER_GUIDE.md section 6.7](CLUSTER_GUIDE.md#15-sizing-memory-cpu-and-disk)). The windowing is a fixed left-to-right sum of ten values, so
 a node's 10-day vector is **equal to the bit** whatever the shards and threads that summed its 1-day vector
-([DATA_ARCHITECTURE.md section 13](../architecture/DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built): the partials stay the 1-day vectors, never windows). **Tested:**
+([HOW_IT_FITS.md section D13](../../HOW_IT_FITS.md#d13-var-sharding-how-it-is-built): the partials stay the 1-day vectors, never windows). **Tested:**
 `VarLensTest` (√10 equals the 1-day VaR and ES × √10 exactly at every confidence; the windows by hand on `1, 2, … 14` give `55, 65, 75,
 85, 95`; 509 → 500, 250 → 241; the ranks; ES; components adding up; the 10-day vector of four scopes the same bits on 1, 2, 3, 8 and 24
 threads), `ShardAssemblyTest` (23 scopes over six shards, three held and three through an owner: the 10-day vectors, VaR and ES
@@ -4380,7 +4380,7 @@ The stress results stay stored (one per desk and scenario, `STR`, with a positiv
 derived, not stored: `stress-scenario-pnl` (`SSPNL`, connector `mr-derived` of the market-risk pack) adds the desks' results of one
 scenario once per business date: the bank's P&L, the number of desks, the worst desk, each desk's limit use and the breaches. The
 stress-scenario page shows it in two panels, **Bank P&L under this scenario** and **Desks under this scenario**
-([DATA_ARCHITECTURE.md section 12](../architecture/DATA_ARCHITECTURE.md#12-computed-and-derived-attributes) section 13). It does not touch VaR: `VAR BANK` on 2026-09-30 stays
+([HOW_IT_FITS.md section D12](../../HOW_IT_FITS.md#d12-computed-and-derived-attributes) section 13). It does not touch VaR: `VAR BANK` on 2026-09-30 stays
 112,041,646.
 
 ![SCN SCN-COVID2020: the bank's P&L under the scenario, the desks' results added, and each desk with its limit use](img/computed/04-stress-scenario.jpg)
@@ -4546,7 +4546,7 @@ table and charts, VaR and ES history, bank to desk to book to position, any ad-h
 first class. Its principles: vectors, not prices; one engine for every scope (a hierarchy node is only a scope that happens to be
 precomputed); additive where it can be, honest where it cannot (P&L vectors and ES contributions add up, VaR does not: the screens show
 diversification); every number reproducible (each result carries its stamp: input versions, scenario set, method, engine,
-[DATA_ARCHITECTURE.md › Reactive connectors, section 8](../architecture/DATA_ARCHITECTURE.md#8-point-in-time-stamping-ordering-and-idempotence)); entitled
+[HOW_IT_FITS.md › Reactive connectors, section 8](../../HOW_IT_FITS.md#d8-point-in-time-stamping-ordering-and-idempotence)); entitled
 as the viewer; packs stay declarative.
 
 | Part | Implementation |
@@ -5139,7 +5139,7 @@ Deploying a sharded cluster (owners and coordinators per role, shard sizes, zone
 
 **Off by default.** With no `sharding:` block in the market-risk pack and no `drishti.var.sharding.enabled`, every server holds whole dates
 as in sections 25 to 27. Switched on, a date's rows are spread over the Drishti\*net members (how it is built:
-[DATA_ARCHITECTURE.md section 13](../architecture/DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built)). In short:
+[HOW_IT_FITS.md section D13](../../HOW_IT_FITS.md#d13-var-sharding-how-it-is-built)). In short:
 
 - **A shard map per date**: the date's rows counted per legal entity and desk (columns only, no vector), cut into contiguous ranges near
   `target-shard-mb` (a desk never split), the same on every member that reads the same data (`ShardMap`).
@@ -5172,7 +5172,7 @@ two shards would break this, so such a date is refused (`422 DRS-5217`) rather t
 
 **Operating it**: switching it on, how many shards and where (`target-shard-mb`, `replicas`, `coordinator-only`, `zone-tag`), the
 hand-over timings, stopping a member safely with a drain, and what each failure looks like and what to do are in
-[DATA_ARCHITECTURE.md, VaR sharding for operators](../architecture/DATA_ARCHITECTURE.md#14-var-sharding-for-operators); every setting
+[HOW_IT_FITS.md, VaR sharding for operators](../../HOW_IT_FITS.md#d14-var-sharding-for-operators); every setting
 with its default is in [CONFIGURATION.md](../admin/CONFIGURATION.md).
 
 The shard books are hot files too: caches, rebuilt from the lake, under the same disk budget ([section 26](#26-the-tiered-memory-and-the-hot-file)).
@@ -5281,7 +5281,7 @@ record.
 
 **The explorer as a Sutra (not built).** The design made the explorer an ordinary Sutra of the market-risk pack built from UI kit
 fragments, reading the reactive kinds through `source:` with `params:`
-([DATA_ARCHITECTURE.md › Reactive connectors, section 12](../architecture/DATA_ARCHITECTURE.md#12-one-screen-many-connectors)), with new fragments (a
+([HOW_IT_FITS.md › Reactive connectors, section 12](../../HOW_IT_FITS.md#d12-one-screen-many-connectors)), with new fragments (a
 distribution histogram with marked lines, a sorted-tail chart, a hierarchy tree with measures). Three static mock-ups were made (the
 explorer, the what-if panel, the write-back review with its recompute status), shared with the product owner and kept outside the
 repository; the explorer was built as a console page from the first. On a phone the design made the hierarchy a drop-down; the
@@ -5317,7 +5317,7 @@ wholly inside, so 8,420 leaves are summed (about 34 MB, about 10 ms); the stamp 
 | V3 | baskets, entitlements by node (`positions`, `aggregate`), audit entries, official numbers; captures (new, product owner 2026-10-24). Accepted: an aggregate-only viewer sees a division's numbers and never a position; every answer is audited | built |
 | *VaR complete* parts 1 and 2 | retired stored kinds, derived positions, official captures and their publication, 7-year retention (part 1); the tiered memory, the benchmark, the computed kind, the what-if, `drishti.py var` (part 2) | built |
 | V4 | what-if: sandboxes, unwind and linear scaling, the reprice check; pricing through QLRisk if its API is stable; the QuantLib-Java parity. Accepted: a sandbox removing three trades matches the scope minus those trades exactly; with QLRisk, a new swap's incremental VaR in under 3 s | partly: copies of booked trades and vectors priced elsewhere ([section 8.2](#82-the-what-if-the-java-engine)); pricing planned ([section 8.4](#84-what-if-pricing-and-intraday-recomputes)) |
-| V5 | intraday: `write-back` and `data-version` triggers, the intraday layer, per-event impacts, pushes ([APPROVALS_GUIDE.md › The design and its reasons, section 18](../architecture/ARCHITECTURE.md#317-the-applied-event-triggers-and-viewers)). Accepted: two traders' amendments to one book: each sees their own impact, both see one shared number stamped with both events | planned |
+| V5 | intraday: `write-back` and `data-version` triggers, the intraday layer, per-event impacts, pushes ([APPROVALS_GUIDE.md › The design and its reasons, section 18](../../HOW_IT_FITS.md#a317-the-applied-event-triggers-and-viewers)). Accepted: two traders' amendments to one book: each sees their own impact, both see one shared number stamped with both events | planned |
 | V6 | scale: sharding across Drishti\*net, the targets measured on a real server. Accepted: the measured numbers published; any target missed has a stated reason and plan | the hot store built (part 2); sharding built ([section 28](#28-sharding-across-drishtinet)) |
 
 **Tests.** The design asked for: additivity (a scope's vector equals the sum of its trades'; node vectors equal their children's sums);

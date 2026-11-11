@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * What a provider is asked (ARCHITECTURE.md section 26.4): the cell sets, the functions (each with its kind and state), the filters, the date,
+ * What a provider is asked (HOW_IT_FITS.md section A26.4): the cell sets, the functions (each with its kind and state), the filters, the date,
  * the as-of version and the shard. A provider answers {@link Partials}: per cell key and function, a partial state.
  *
  * @param source the provider's source ({@code trade}, {@code var})
@@ -44,7 +44,7 @@ public record AggregationPlan(String source, String date, String asOf, Map<Strin
     }
 
     /**
-     * Money in the plan (ARCHITECTURE.md section 26.3).
+     * Money in the plan (HOW_IT_FITS.md section A26.3).
      *
      * @param currencyField the field of a row's currency (null: the source has none)
      * @param fields the money fields
@@ -133,7 +133,7 @@ public record AggregationPlan(String source, String date, String asOf, Map<Strin
     }
 
     /**
-     * One node's part of the rows (scatter and gather, ARCHITECTURE.md section 26.6): part {@code index} of {@code count}; every row is in
+     * One node's part of the rows (scatter and gather, HOW_IT_FITS.md section A26.6): part {@code index} of {@code count}; every row is in
      * exactly one part.
      */
     public record Shard(int index, int count) {

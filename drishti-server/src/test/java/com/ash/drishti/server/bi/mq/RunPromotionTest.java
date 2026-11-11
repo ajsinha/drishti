@@ -51,7 +51,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * Promoting a run (docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), sections 9.4 and 19.3): the snapshot is the promoter's view (a column masked for them is stored as the mask in
+ * Promoting a run (HOW_IT_FITS.md §A28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), sections 9.4 and 19.3): the snapshot is the promoter's view (a column masked for them is stored as the mask in
  * every row, never a value, and the dataset declares it masked); the draft dataset's YAML parses with {@code source: {run}}; the snapshot is read only by
  * the dataset it was promoted to (its name and token); a second promotion is the next version of the same draft, and only versions-keep are kept.
  */

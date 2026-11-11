@@ -327,7 +327,7 @@ the partition is vacuumed after a large load.
   primary-key probe in one partition. An `effective` kind reads the newest row on or before the date.
 - **Type-ahead** answers from memory, never a query per keystroke. With `index.days: 5` (and `index.storage: mmap` for a lake
   searched often by past date) the ids of the last five business days are kept, so a past date answers from its own ids
-  ([several business days](../../docs/architecture/ARCHITECTURE.md#91-several-business-days),
+  ([several business days](../../HOW_IT_FITS.md#a91-several-business-days),
   [sizing](../../docs/guides/OPERATIONS_GUIDE.md#144-the-multi-day-type-ahead-index)); a change of `loaded_at` rebuilds them, a
   restated day is caught every `index.reload-every`, and **Admin → Connectors → this connector → Index** reloads a day by hand.
   Query mode keeps the newest day only.
@@ -339,7 +339,7 @@ the partition is vacuumed after a large load.
 - **Reverse lookups** come from the day's promoted text columns; a kind without promoted link columns is answered with
   `jsonb_path_exists` over at most `max-load-rows` documents. `reverse-index: false` turns them off.
 - **Derived kinds and impact** work from the column set as on Delta Lake.
-- **History** ([history queries](../../docs/architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)) is one query,
+- **History** ([history queries](../../HOW_IT_FITS.md#d2-history-queries-an-entity-over-time)) is one query,
   `SELECT doc, business_date … WHERE kind = ? AND id = ? AND business_date BETWEEN ? AND ? ORDER BY business_date`, pruned to the
   months asked. Query mode reads day by day through `query.<kind>`.
 

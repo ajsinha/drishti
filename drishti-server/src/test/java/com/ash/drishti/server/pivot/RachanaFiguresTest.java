@@ -31,7 +31,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 /**
- * Rachana's {@code measure(...)} and {@code cell(...)} on the server (docs/architecture/ARCHITECTURE.md part 3): answered for the person of the request only,
+ * Rachana's {@code measure(...)} and {@code cell(...)} on the server (HOW_IT_FITS.md part 3): answered for the person of the request only,
  * refused in words with no person, with the pivot engine off, for a measure no compute engine offers (a source's plain fields are not
  * measures), and for a scope not written LEVEL:MEMBER. The figures themselves are the engine's (PivotApiTest, the VaR provider's tests).
  */

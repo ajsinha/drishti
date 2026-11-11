@@ -394,7 +394,7 @@ RESERVED_WORDS = ("ADMIN", "BI", "DATA", "DATAMAP", "EXPORT", "FORM", "FUNC", "R
 
 
 def check_reserved_mnemonics(pack: pathlib.Path) -> list[str]:
-    """A pack may not define a mnemonic that is a reserved command word, in any case (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 4): the server refuses to load it."""
+    """A pack may not define a mnemonic that is a reserved command word, in any case (HOW_IT_FITS.md §A28 › Rūpaka: the original design and every phase as built, section 4): the server refuses to load it."""
     try:
         m = need_yaml().safe_load((pack / "pack.yaml").read_text(encoding="utf-8")) or {}
     except OSError:

@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Rupaka phase 2 (docs/architecture/ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, sections 6 and 7): the datasets list, a model started from the packs, and one dataset's page: a minimal
+/* Rupaka phase 2 (HOW_IT_FITS.md §A28 › Rūpaka: the original design and every phase as built, sections 6 and 7): the datasets list, a model started from the packs, and one dataset's page: a minimal
    read-only Model view and a query preview grid. Same-origin JSON only (/bi/api/datasets/..., /bi/api/model/...), passed on to the server under the
    signed-in user's identity; the server applies the row rules and masks. Everything is built with DOM calls and textContent, never markup strings. */
 (function () {

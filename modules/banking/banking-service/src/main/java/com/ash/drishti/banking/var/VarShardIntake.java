@@ -27,7 +27,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 /**
- * What the intake of a sharded date did (DATA_ARCHITECTURE.md section 13): each shard's own record (its hot file's {@code META}) added up, and the
+ * What the intake of a sharded date did (HOW_IT_FITS.md section D13): each shard's own record (its hot file's {@code META}) added up, and the
  * date's checks made again across the shards, since each shard saw only its rows: one run (one batch id, the date's scenario set) and one
  * form and one grain per source system. A date that fails them is refused as one server refuses it.
  */

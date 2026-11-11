@@ -17,7 +17,7 @@ package com.ash.drishti.kernel.api.pivot;
 
 
 /**
- * Who asks (ARCHITECTURE.md section 26.12): the module knows only the user's name; {@code principal} is the host's own identity (the server's
+ * Who asks (HOW_IT_FITS.md section A26.12): the module knows only the user's name; {@code principal} is the host's own identity (the server's
  * {@code Principal}), passed through to its providers so they apply the person's entitlements and masks before any aggregation.
  *
  * @param user the user's name (audit, per-person limits, saved views)

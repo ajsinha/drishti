@@ -21,7 +21,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * A virtual table's rows for a panel's {@code source: { table }} (docs/architecture/ARCHITECTURE.md V13): read for one viewer on a business date, the source as
+ * A virtual table's rows for a panel's {@code source: { table }} (HOW_IT_FITS.md V13): read for one viewer on a business date, the source as
  * they may see it, then the table's rules, masks and hidden columns. The server provides it (the table layer); the engine knows nothing of
  * tables beyond this port.
  */

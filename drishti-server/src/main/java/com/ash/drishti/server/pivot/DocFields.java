@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * The field list of an entity document beyond its promoted columns (ARCHITECTURE.md section 26.4): from a sample of documents, every
+ * The field list of an entity document beyond its promoted columns (HOW_IT_FITS.md section A26.4): from a sample of documents, every
  * nested object's values as path fields of their parent ({@code $.LEGS[*].INDEX.NAME}, shown as Legs › Index › Name) and every list of
  * objects as a grain of its own ({@code $.LEGS[*]}, {@code $.LEGS[*].CASH_FLOWS[*]}, {@code $.EVENTS[*]}), each typed by its values.
  */

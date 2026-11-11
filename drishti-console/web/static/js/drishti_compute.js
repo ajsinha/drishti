@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Computed panels on a view page (DATA_ARCHITECTURE.md 6.2 and 12.4). A panel whose source a reactive connector computes carries its
+/* Computed panels on a view page (HOW_IT_FITS.md 6.2 and 12.4). A panel whose source a reactive connector computes carries its
    request id (data-compute-req). The page never waits for it: such a panel is drawn at once, computing (with the last good result dimmed,
    if there is one), ready, stale, failed or refused. This listens to each request on the browser's one live channel (compute:<id>, its
    owner's only): progress moves the panel's bar; done, failed or updated (a trigger recomputed what it shows) fetch the panels of that

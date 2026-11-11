@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Tooltip pages (R6, 2.4.0; docs/architecture/ARCHITECTURE.md §28 section 11.1, gap 13): a page with `tooltip: true` is drawn in a popover over a hovered mark of a visual that names it
+/* Tooltip pages (R6, 2.4.0; HOW_IT_FITS.md §A28 section 11.1, gap 13): a page with `tooltip: true` is drawn in a popover over a hovered mark of a visual that names it
    (`tooltip: <page id>`), each of its visuals asked of the server under the page's state with the mark's value carried as a filter (the same `carry` a
    drill-through uses), as the person looking. The popover opens after a short pause on a mark, stays while the pointer is over it, and closes on Escape or
    when the pointer leaves; answers are kept per mark while the page is open. */

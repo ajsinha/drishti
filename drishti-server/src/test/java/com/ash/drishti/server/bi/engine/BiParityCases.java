@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * The BI parity cases (ARCHITECTURE.md section 26.9): the levels, measures, filters, dates and readers BI's totals are asked with, on the
+ * The BI parity cases (HOW_IT_FITS.md section A26.9): the levels, measures, filters, dates and readers BI's totals are asked with, on the
  * test lake, and the fixtures that hold the figures the code BI used before the switch gave for each level (one grouped query per level).
  * The recorder ({@link BiParityRecorder}) writes them from the code it runs on; {@code BiParityTest} compares the pivot engine with them.
  * This class uses only what both codes have ({@link QueryService#query}), so the recorder runs on the tree before the switch too.

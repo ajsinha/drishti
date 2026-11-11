@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Reads and writes {@code config/tables/<domain>/<name>.table.yaml} (planned in docs/architecture/ARCHITECTURE.md §28 section 3.1, built here). Reading
+ * Reads and writes {@code config/tables/<domain>/<name>.table.yaml} (planned in HOW_IT_FITS.md §A28 section 3.1, built here). Reading
  * collects every problem by key; it checks the file's shape only (the meaning is {@code TableChecks}'s). Writing gives the canonical
  * form the migration writes, keys in a fixed order, so a second migration changes nothing.
  */

@@ -121,7 +121,7 @@ documents. The pack declares the layout ([Declaring the layout in a pack](#decla
 connector file instead is the form for tables no lake file describes (a vendor's table on S3); `drishti.py lake migrate-config` moves
 such connectors into a lake file ([DATA_LAKE_GUIDE.md section 12](../../docs/guides/DATA_LAKE_GUIDE.md#12-other-lakes-packs-and-older-installations)).
 A Delta connector never writes per edit: write-back keeps corrections as overlays and the loader folds approved ones into the next build
-([APPROVALS_GUIDE.md](../../docs/architecture/ARCHITECTURE.md#316-where-a-write-lands-overlays-owned-rows-and-the-outbox)).
+([APPROVALS_GUIDE.md](../../HOW_IT_FITS.md#a316-where-a-write-lands-overlays-owned-rows-and-the-outbox)).
 
 ## Settings
 
@@ -448,7 +448,7 @@ a kind's newest day cannot be read at a rebuild, it keeps the ids listed before 
 
 **Several days.** With `index.days: 5` (and `index.storage: mmap` for a lake searched often by past date) the last five business days'
 ids are kept, so a type-ahead on a past date answers from that date's ids
-([ARCHITECTURE.md section 9.1](../../docs/architecture/ARCHITECTURE.md#91-several-business-days)). A new commit rebuilds them in the
+([HOW_IT_FITS.md section A9.1](../../HOW_IT_FITS.md#a91-several-business-days)). A new commit rebuilds them in the
 background; a restated past day is caught every `index.reload-every` (10m), and **Admin → Connectors → Index** reloads a day by hand
 ([OPERATIONS_GUIDE.md section 12.2](../../docs/guides/OPERATIONS_GUIDE.md#144-the-multi-day-type-ahead-index)).
 
@@ -488,7 +488,7 @@ from the last checkpoint, and the caches hold days by memory and drop the least 
 day's id map (about a second) and, for a search, its column set; then the day is as fast as today. What grows is the lake (about 1.6 GB a
 business day) and its log, which maintenance checkpoints.
 
-**History queries** (`TRD 1000015 30`, [DATA_ARCHITECTURE.md](../../docs/architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time))
+**History queries** (`TRD 1000015 30`, [HOW_IT_FITS.md](../../HOW_IT_FITS.md#d2-history-queries-an-entity-over-time))
 list the entity's dates from the partitions in memory whose id map holds it, and read only those, eight at once; for an effective table
 the dates are its change dates; `knownAt` reads each day as the table stood then (time travel). History reads documents even when every
 field asked is promoted.

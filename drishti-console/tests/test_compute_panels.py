@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Computed panels (DATA_ARCHITECTURE.md 12.4) as the console draws them, without a server: a panel never blank (computing with its
+"""Computed panels (HOW_IT_FITS.md 12.4) as the console draws them, without a server: a panel never blank (computing with its
 bar, stale, failed or refused in words, the last result dimmed under it), its request id for drishti_compute.js, and the browser's channel
 mapping compute:<request> to the server's stream of that request."""
 from core.app import create_app

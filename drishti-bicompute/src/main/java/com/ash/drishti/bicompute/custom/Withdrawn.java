@@ -21,7 +21,7 @@ import com.ash.drishti.kernel.api.pivot.Kind;
 import java.util.List;
 
 /**
- * A custom function whose approval was revoked (ARCHITECTURE.md section 26.5), as a view that uses it sees it: every cell of its column says
+ * A custom function whose approval was revoked (HOW_IT_FITS.md section A26.5), as a view that uses it sees it: every cell of its column says
  * "function withdrawn" with who withdrew it and why, and no figure; the rest of the view answers as before. Nothing of the function's code
  * runs.
  */

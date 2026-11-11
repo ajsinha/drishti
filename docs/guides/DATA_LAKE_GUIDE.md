@@ -103,7 +103,7 @@ in-memory store are in `config/lakes.examples/`, each beside its connectors in `
 
 ## 2. The lake file, every key
 
-Why one file per lake, who reads it and how it is built: [DATA_ARCHITECTURE.md section 8](../architecture/DATA_ARCHITECTURE.md#8-the-lake-file-one-description-of-every-lake).
+Why one file per lake, who reads it and how it is built: [HOW_IT_FITS.md section D8](../../HOW_IT_FITS.md#d8-the-lake-file-one-description-of-every-lake).
 
 ### 2.1 A worked example: `config/lakes/risklake.yaml`
 
@@ -514,7 +514,7 @@ documents read: 300, rows written: 300, rejected: 0
 On Windows, the same command in PowerShell with the jar's path; nothing else is needed. Command-line options over the file: `--as-of`,
 `--table`, `--pack`, `--kind`, `--mode append|replace`, `--key`, `--date-from`, `--plan`, `--set key.path=value`. Every key of a load
 file, with S3 and Iceberg examples, is [CLI_REFERENCE.md section 4.13](CLI_REFERENCE.md#713-the-parallel-lake-loader); the design and the memory model
-are [DATA_ARCHITECTURE.md section 10](../architecture/DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-drishti-lakeload).
+are [HOW_IT_FITS.md section D10](../../HOW_IT_FITS.md#d10-the-parallel-lake-loader-drishti-lakeload).
 
 ### 3.4 Pushing data from your own programs
 
@@ -1600,7 +1600,7 @@ Some feeds may not, by contract, be saved on a disk. Drishti holds them in an **
 and Parquet files) whose files live in the server's memory, off the Java heap, under a hard cap. A server job, the **replenish job**,
 fills each table from its feed; every page, search, BI dataset and Export data read it exactly as they read a lake on a disk; a guard
 refuses every way the data could reach a disk. Only a user's download leaves the server. How it is built:
-[DATA_ARCHITECTURE.md section 9](../architecture/DATA_ARCHITECTURE.md#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk); a
+[HOW_IT_FITS.md section D9](../../HOW_IT_FITS.md#d9-the-in-memory-lake-delta-tables-that-never-touch-a-disk); a
 worked example: [tutorial 16, Part D](../tutorials/16-load-your-own-data-into-a-new-lake.md#part-d--news-held-in-memory-only).
 
 ### 13.1 How it works
@@ -1828,7 +1828,7 @@ jobs write Delta.
 Drishti's Delta tables are plain [Delta Lake protocol](https://github.com/delta-io/delta/blob/master/PROTOCOL.md) tables: Spark,
 Databricks, delta-rs and any Delta Kernel reader open them as they are, and Drishti reads the tables those engines write. No Drishti-only
 file, field or naming rule is involved, and it is tested both ways against delta-rs. The internals (the lake file, the in-memory lake,
-the loader) are in [DATA_ARCHITECTURE.md sections 8–10](../architecture/DATA_ARCHITECTURE.md#8-the-lake-file-one-description-of-every-lake).
+the loader) are in [HOW_IT_FITS.md sections D8–10](../../HOW_IT_FITS.md#d8-the-lake-file-one-description-of-every-lake).
 
 ### 14.1 The four readers and writers
 
@@ -1950,7 +1950,7 @@ Section 10 is the other way round: Drishti reading the tables a lakehouse writes
 Drishti's Iceberg tables are standard Apache Iceberg tables, and Drishti reads other engines' Iceberg tables to the
 [Iceberg table spec](https://iceberg.apache.org/spec/) with no workaround: Spark, Trino, Flink, Snowflake, AWS Glue, pyiceberg and the Apache
 Iceberg Java library read what Drishti writes, and Drishti reads what they write, or refuses a table by name. It never reads one wrongly.
-The design is in [DATA_ARCHITECTURE.md › drishti-iceberg](../architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop);
+The design is in [HOW_IT_FITS.md › drishti-iceberg](../../HOW_IT_FITS.md#d3-drishti-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop);
 the connectors are [ICEBERG_CONNECTOR.md](../../plugins/drishti-plugin-iceberg/README.md) and
 [ICEBERG_EXTERNAL_CONNECTOR.md](../../plugins/drishti-plugin-iceberg-external/README.md).
 

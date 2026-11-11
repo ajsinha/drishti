@@ -27,7 +27,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 /**
- * The {@code Context} nodes of a measure (docs/architecture/ARCHITECTURE.md §28 sections 3.6 and 4.2): each filter-context or time-travel function the measure (or a
+ * The {@code Context} nodes of a measure (HOW_IT_FITS.md §A28 sections 3.6 and 4.2): each filter-context or time-travel function the measure (or a
  * measure it names) calls becomes a {@link PlanNode.Context} over its own aggregate, at the grain and with the filters the function leaves, beside the main
  * aggregate in the plan's {@code Meet}. The context's scans are ordinary scans, so the security rewriter secures them like any other (security is never in
  * scope). What the engine runs is the context sub-query of the SQL compiler; these nodes are what the plan hash, explain and the incremental class see.

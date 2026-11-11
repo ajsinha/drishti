@@ -36,7 +36,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
 /**
- * BI runs wiring (docs/architecture/ARCHITECTURE.md §28): reads {@code config/runs/runs.yaml} (the file named by {@code drishti.bi.runs.file}) once at start,
+ * BI runs wiring (HOW_IT_FITS.md §A28): reads {@code config/runs/runs.yaml} (the file named by {@code drishti.bi.runs.file}) once at start,
  * keeps run rows in the identity database, results under the data folder, and recovers this node's unfinished runs before requests are served.
  */
 @Configuration
@@ -56,7 +56,7 @@ public class RunsConfiguration {
     /**
      * Where run rows, shares, schedules and results are kept: the content store ({@code drishti.bi.runs.store: content}, the default; every node of a
      * cluster reads the same runs, and the lease is a compare-and-set there), or {@code local}: the identity database and {@code store.dir} of this
-     * node (docs/architecture/DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9). Null when local.
+     * node (HOW_IT_FITS.md › The content store: user content every node reaches, section 9). Null when local.
      */
     static com.ash.drishti.identity.content.ContentStore content(Environment env, ObjectProvider<com.ash.drishti.identity.content.ContentStore> store) {
         String kind = env.getProperty("drishti.bi.runs.store", "content").trim().toLowerCase(java.util.Locale.ROOT);

@@ -18,7 +18,7 @@ package com.ash.drishti.server.bi.sql;
 import java.util.List;
 
 /**
- * The syntax tree of a Drishti SQL statement (docs/architecture/ARCHITECTURE.md §28 section 3.4), as {@link DsqlParser} reads it. Every node knows where it was
+ * The syntax tree of a Drishti SQL statement (HOW_IT_FITS.md §A28 section 3.4), as {@link DsqlParser} reads it. Every node knows where it was
  * written ({@code at}: a character offset) so a refusal can point at it. Immutable; nothing here runs.
  */
 public final class SqlAst {

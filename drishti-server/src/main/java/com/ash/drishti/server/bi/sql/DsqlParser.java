@@ -22,7 +22,7 @@ import java.util.Locale;
 import java.util.Set;
 
 /**
- * The Drishti SQL parser (docs/architecture/ARCHITECTURE.md §28 section 3.4; decision 1 of section 13): hand-written recursive descent over the documented ANSI
+ * The Drishti SQL parser (HOW_IT_FITS.md §A28 section 3.4; decision 1 of section 13): hand-written recursive descent over the documented ANSI
  * {@code SELECT} subset, because Apache Calcite 1.40's transitive dependencies are not all in the offline Maven cache and the dialect's table clauses
  * ({@code AS OF DATE}, {@code FOR LIVE}, {@code FOR WINDOW}) and joins without {@code ON} are its own. One {@code SELECT} or {@code WITH ... SELECT},
  * {@code UNION [ALL]}, {@code FROM} with joins, {@code WHERE}, {@code GROUP BY}, {@code HAVING}, {@code ORDER BY}, {@code LIMIT/OFFSET}, {@code CASE},

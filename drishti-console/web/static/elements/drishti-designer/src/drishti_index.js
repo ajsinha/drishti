@@ -18,7 +18,7 @@
    multi-select, align, distribute, z-order, groups, copy and paste, a phone's order, the keys, undo and redo on one command stack),
    the palette, the inspector (a drishti-inputs Form from a schema), the outline (drishti-tree's TreeOutline: drag to re-order or re-parent), the YAML pane
    (drishti-inputs' CodeEditor kept in step with the model both ways, the selected item highlighted, completion and lint from a JSON
-   Schema) and the designer shell of docs/architecture/SHARED_SCREENS.md (three panes, Visual / YAML / Both, the header with versions, Validate, Preview,
+   Schema) and the designer shell of HOW_IT_FITS.md (three panes, Visual / YAML / Both, the header with versions, Validate, Preview,
    History, Impact, Propose for review). Depends on drishti-core, drishti-inputs and drishti-tree (the outline). */
 export { CommandStack, SnapshotHistory } from './drishti_commands.js';
 export { Selection } from './drishti_selection.js';

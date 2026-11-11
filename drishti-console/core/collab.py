@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Share with a note, the console's side (ARCHITECTURE.md §31, build step 3): a small client for the server's collaboration
+"""Share with a note, the console's side (HOW_IT_FITS.md §A31, build step 3): a small client for the server's collaboration
 endpoints (``/collab``, ``/directory``, ``/shares``, ``/me/inbox``), and the pieces the pages share: the share id that
 travels with a view call, and the link a share resolves to."""
 from __future__ import annotations

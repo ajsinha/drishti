@@ -40,7 +40,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 /**
- * The 500-viewer load test of wave B (acceptance (5), docs/architecture/ARCHITECTURE.md §28 section 6.8). <b>Run on a real server, never locally</b>: it is skipped
+ * The 500-viewer load test of wave B (acceptance (5), HOW_IT_FITS.md §A28 section 6.8). <b>Run on a real server, never locally</b>: it is skipped
  * unless {@code -Ddrishti.load.url=http://server:18480} is given. A morning of {@code drishti.load.viewers} (500) viewers of one report's visuals with
  * {@code drishti.load.users} (5 distinct securities, {@code user:password,...}): each subscribes to every visual (the standing queries group them by plan and
  * signature: 5 evaluations per visual, not 500), reads its stream for {@code drishti.load.seconds} (120), and asks the visuals again now and then (the

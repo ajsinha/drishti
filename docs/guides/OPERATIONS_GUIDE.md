@@ -409,7 +409,7 @@ lives in the git-ignored `.idea/`). By hand: **Run → Edit Configurations → +
 **Run** (Shift+F10) ends its log with `Started DrishtiApplication`; `curl -s localhost:18480/actuator/info` gives the version, and the
 OpenAPI page is `http://127.0.0.1:18480/api/docs`. **Debug** (Shift+F9): good breakpoints are `com.ash.drishti.engine.ViewPipeline` (a view
 being built), `com.ash.drishti.rachana.SutraRegistry` (which Sutra was chosen), a plugin's `SourcePlugin.fetch(…)` and the controllers
-under `com.ash.drishti.server` ([ARCHITECTURE.md section 5](../architecture/ARCHITECTURE.md#5-walk-through-one-request) follows one
+under `com.ash.drishti.server` ([HOW_IT_FITS.md section A5](../../HOW_IT_FITS.md#a5-walk-through-one-request) follows one
 request). While it runs: Java method bodies reload with **Run → Debugging Actions → Reload Changed Classes** (signatures, fields and new
 classes need a restart); Sutras, packs and connector files reload by themselves; `application.yaml` and the environment need a restart. A
 second server needs `DRISHTI_PORT=18481`, its own working directory if it must not share `./data`, and a console with
@@ -1791,7 +1791,7 @@ Health (its owner sees the error on the Reports page).
 
 ### 12.2 Collaboration email and the outbox
 
-Shares can be emailed ([ARCHITECTURE.md §31](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals)). Off until all three are set (the server refuses to start with email
+Shares can be emailed ([HOW_IT_FITS.md §A31](../../HOW_IT_FITS.md#a31-collaboration-write-back-and-approvals)). Off until all three are set (the server refuses to start with email
 on and sign-in off): `drishti.security.enabled: true`, `drishti.collab.console-url` and an SMTP server:
 
 ```bash
@@ -2021,7 +2021,7 @@ curl -s localhost:18480/api/v1/admin/health | python3 -m json.tool | head -40
 
 `curl -s localhost:18480/api/v1/health/live` gives `{"streams":0,"topics":0,"frames":11660,"p50Ms":0.809,"p99Ms":1.198}`: open live views, distinct
 entities watched, frames sent since start, and the tick-to-frame latency over the last 30 seconds (`drishti.live.window`); the same p99 is in the
-console's top bar ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#1-live-updates)).
+console's top bar ([HOW_IT_FITS.md](../../HOW_IT_FITS.md#d1-live-updates)).
 
 ### 13.4 Prometheus, Grafana and the suggested alerts
 
@@ -2099,7 +2099,7 @@ a missing result only makes its run `expired`); settings `config/runs/runs.yaml`
 SQL per model, the share from the cache, the busiest readers and the Python runner: a model with many questions and few from the cache is the one a
 rollup helps.
 
-The BI engine's metrics ([ARCHITECTURE.md §28](../architecture/ARCHITECTURE.md#285-the-query-engine-and-the-plan)): `drishti_bi_query_seconds` (`model`, `layer`),
+The BI engine's metrics ([HOW_IT_FITS.md §A28](../../HOW_IT_FITS.md#a285-the-query-engine-and-the-plan)): `drishti_bi_query_seconds` (`model`, `layer`),
 `drishti_bi_query_rows`, `drishti_bi_cache_requests_total{result}`, `drishti_bi_admission_wait_seconds`, `drishti_bi_refusals_total{code}`,
 `drishti_bi_fragment_seconds`, `drishti_bi_sq_active`, `drishti_bi_sq_lag_seconds`, `drishti_bi_sq_mode{mode}`, `drishti_bi_python_seconds`,
 `drishti_bi_layer_rebuild_seconds`, and the runs' `drishti.bi.runs.*`. Alert on `drishti_bi_sq_mode{mode="tick"} > 0` for long (a model over its
@@ -2854,7 +2854,7 @@ The server writes state in a few folders; the console writes nothing that needs 
 | Path | Holds | Back up? | How |
 |---|---|---|---|
 | `data/identity/` | users, password hashes, roles, the audit log, each user's settings, workspaces, monitors and pins (`drishti.db`, or the PostgreSQL of `DRISHTI_IDENTITY_DB_URL`); with `drishti.collab.store: jpa` the collaboration tables too | **yes, daily** | SQLite: `sqlite3 data/identity/drishti.db ".backup '/backup/drishti/identity.db'"`, safe while running; PostgreSQL: `pg_dump` |
-| `data/fstore/` (the content store, `config/store/store.yaml`, `DRISHTI_STORE_ROOT`) | designs, collaboration, audit, embed apps, pack switches, proposals, load history, BI items and runs ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)) | **yes** | copy the folder (or back up the `drishti_content` table or the bucket) |
+| `data/fstore/` (the content store, `config/store/store.yaml`, `DRISHTI_STORE_ROOT`) | designs, collaboration, audit, embed apps, pack switches, proposals, load history, BI items and runs ([HOW_IT_FITS.md](../../HOW_IT_FITS.md#d5-the-content-store-user-content-every-node-reaches)) | **yes** | copy the folder (or back up the `drishti_content` table or the bucket) |
 | `data/governance/` | Sutra proposals, approvals, history | **yes, daily** | copy |
 | `sutras/` | your own Sutras and what the workbench saves | **yes**, preferably in version control | git, or copy |
 | `application.local.yaml`, `drishti-console/config/application.local.yaml`, `/etc/drishti/drishti.env` | your configuration and secrets | **yes**, securely | copy |
@@ -3109,7 +3109,7 @@ changed since is stale (`DRS-2006`: reject it and propose again from the live ve
 
 ### 20.3 Live latency high, or live views stop ticking
 
-How live updates work is in [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#1-live-updates); the normal numbers in
+How live updates work is in [HOW_IT_FITS.md](../../HOW_IT_FITS.md#d1-live-updates); the normal numbers in
 [BENCHMARK.md](../admin/BENCHMARK.md).
 
 **Symptoms.** `p99Ms` of `GET /api/v1/health/live` stays above 40 for more than a minute (normal: single digits), or the alert on

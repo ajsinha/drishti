@@ -19,7 +19,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * An honest estimate (docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 4.4): a range with its basis, never a single false-precise number. Unknown rows are
+ * An honest estimate (HOW_IT_FITS.md §A28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 4.4): a range with its basis, never a single false-precise number. Unknown rows are
  * never zero: with {@code basis: unknown} the row and second figures are null.
  *
  * @param readRows     rows the engine reads (rollup rows for covered dates, raw rows for the rest); null when unknown

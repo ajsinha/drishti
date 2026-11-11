@@ -387,9 +387,9 @@ the modules they may use. The map of every document is [docs/README.md](docs/REA
 **References**, one home each: [CONFIGURATION](docs/admin/CONFIGURATION.md), [API_REFERENCE](docs/guides/API_REFERENCE.md),
 [CLI_REFERENCE](docs/guides/CLI_REFERENCE.md), [COMMAND_CATALOG](docs/guides/COMMAND_CATALOG.md), [FUNCTIONS](docs/guides/RACHANA_REFERENCE.md#every-function-generated-from-the-registries),
 [RACHANA_REFERENCE](docs/guides/RACHANA_REFERENCE.md), [ELEMENTS_API](docs/guides/ELEMENTS_API.md), [FLIGHT_REFERENCE](docs/guides/FLIGHT_REFERENCE.md),
-[VIEWMODEL](docs/architecture/VIEWMODEL.md), [BENCHMARK](docs/admin/BENCHMARK.md), [the data contracts](docs/contracts/README.md) and
-[the Knowledge primers](docs/knowledge/README.md). The design is [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) and
-[DATA_ARCHITECTURE.md](docs/architecture/DATA_ARCHITECTURE.md); what changed and when, [RELEASE_NOTES.md](RELEASE_NOTES.md) and
+[VIEWMODEL](HOW_IT_FITS.md#part-iv--the-viewmodel-contract), [BENCHMARK](docs/admin/BENCHMARK.md), [the data contracts](docs/contracts/README.md) and
+[the Knowledge primers](docs/knowledge/README.md). The design is [HOW_IT_FITS.md](HOW_IT_FITS.md#part-ii--architecture) and
+[HOW_IT_FITS.md](HOW_IT_FITS.md#part-iii--data-architecture); what changed and when, [RELEASE_NOTES.md](RELEASE_NOTES.md) and
 [CHANGELOG.md](CHANGELOG.md).
 
 ## Project facts

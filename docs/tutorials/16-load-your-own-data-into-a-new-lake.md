@@ -1342,7 +1342,7 @@ Restart. `NEWS Apple` reads the disk lake; Admin → Lakes no longer shows *Held
 
 You held a whole pack in memory only, filled by server jobs from its feed, read through the same connector, guarded at every place
 Drishti writes, measured and compacted by itself, and went back. The reference is the
-[in-memory lake guide](../guides/DATA_LAKE_GUIDE.md#13-the-in-memory-lake); the design is [IN_MEMORY_LAKE.md](../architecture/DATA_ARCHITECTURE.md#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk).
+[in-memory lake guide](../guides/DATA_LAKE_GUIDE.md#13-the-in-memory-lake); the design is [IN_MEMORY_LAKE.md](../../HOW_IT_FITS.md#d9-the-in-memory-lake-delta-tables-that-never-touch-a-disk).
 
 ### Part E · The risk lake and the official results on Iceberg
 
@@ -1567,7 +1567,7 @@ a table keeps its format). A full build without `--store risk=…` also puts the
 - [Data guide, section 1](../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed): the data-load signal each load sends, expectations and late data.
 - The parallel lake loader the inbox runs: [CLI_REFERENCE.md, section 4.13](../guides/CLI_REFERENCE.md#713-the-parallel-lake-loader).
 - The [in-memory lake guide](../guides/DATA_LAKE_GUIDE.md#13-the-in-memory-lake): every setting, the replenish sources and the guard.
-- The design: [IN_MEMORY_LAKE.md](../architecture/DATA_ARCHITECTURE.md#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk).
+- The design: [IN_MEMORY_LAKE.md](../../HOW_IT_FITS.md#d9-the-in-memory-lake-delta-tables-that-never-touch-a-disk).
 - Your own lake on Iceberg, Databricks or a REST catalog: [Using Drishti with Databricks Delta Lake or Apache Iceberg](../guides/DATA_GUIDE.md#3-using-drishti-with-databricks-delta-lake-or-apache-iceberg).
 - On AWS (S3, Glue, S3 Tables, the scripts in `deploy/aws/iceberg/`): [CLUSTER_GUIDE.md › Drishti on AWS: ECS, EFS and S3, section 22](../guides/CLUSTER_GUIDE.md#1212-iceberg-on-aws-and-official-results-in-s3).
 - Exposure on the same lake: [the exposure tutorial](../guides/EXPOSURE_GUIDE.md#part-iv--tutorial-exposure-from-the-bank-to-a-trade) after a full `--store risk=iceberg` build.

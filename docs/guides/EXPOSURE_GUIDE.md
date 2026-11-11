@@ -684,7 +684,7 @@ ${DRISHTI_DELTA_ROOT}/risk/
 | [`simulation-run`](../contracts/samples/counterparty-risk.md#simulation-run) ([contract](../contracts/packs/counterparty-risk.md#xrun-exposure-simulation-run-simulation-run)) | `RUN_ID` | run × date | EXP, CVA, LIM, GRP, WWR | daily | before the paths (to be agreed) |
 | [`exposure-path`](../contracts/samples/counterparty-risk.md#exposure-path) ([contract](../contracts/packs/counterparty-risk.md#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path)) | `PATH_ROW_ID` | trade × grid date × run | EXP, CVA, LIM, GRP, WWR | daily | **to be agreed** (open question 1); a large bank's run often lands overnight, 04:00–07:00 local |
 
-Beside them the engine reads, for the date (E0 of [DATA_ARCHITECTURE.md section 12](../architecture/DATA_ARCHITECTURE.md#12-computed-and-derived-attributes)):
+Beside them the engine reads, for the date (E0 of [HOW_IT_FITS.md section D12](../../HOW_IT_FITS.md#d12-computed-and-derived-attributes)):
 [`trade-valuation`](../contracts/samples/market-risk.md#trade-valuation) ([contract](../contracts/packs/market-risk.md#tval-trade-valuation-trade-valuation)) (each netting set's members, a live status naming the set, and their MtM today: the market-risk pack's kind, which
 VaR reads too), `netting-set` (the set's terms and links: counterparty, legal entity, CSA, collateral balance; no figure), `csa` (the
 terms), `collateral-balance` (the holdings, after haircut), `credit-limit` (the counterparty's approved limit) and the counterparty and
@@ -837,7 +837,7 @@ Unmargined sets: C = IA held (or 0).
 
 - A primary date whose look-back date would fall on or before the business date (1W and 2W on a 10-day margin period) has no look-back
   point: its collateral is today's collateral held, as nothing called later settles within the margin period. (E0 of
-  [DATA_ARCHITECTURE.md section 12](../architecture/DATA_ARCHITECTURE.md#12-computed-and-derived-attributes)) that is the balance's holdings **after haircut** (`POSITIONS[].VALUE`,
+  [HOW_IT_FITS.md section D12](../../HOW_IT_FITS.md#d12-computed-and-derived-attributes)) that is the balance's holdings **after haircut** (`POSITIONS[].VALUE`,
   held positive, posted negative; a balance without positions gives its `NET`, also after haircut in the test data).
 - Rounding is applied to the change from today's collateral (`CsaTerms.called`); only the held side is shortened by the counterparty's
   MTA, as above (the posted side is not: conservative).
@@ -874,7 +874,7 @@ remaining maturity in the scope, capped at 1 year. Sums and means in float64.
 longest remaining maturity of the scope's trades (their `MATURITY_DATE`, else their last grid date), capped at 1 year; T = 0 gives EPE =
 EEPE = 0. The peaks are over the primary dates only (t₀ is CE), the earliest date on a tie. CE uses each set's value today, the sum of its
 live member trades' MtM, less today's collateral (after haircut) and IM. (E0 of
-[DATA_ARCHITECTURE.md section 12](../architecture/DATA_ARCHITECTURE.md#12-computed-and-derived-attributes)) the members and their MtM are read from `trade-valuation` (a live
+[HOW_IT_FITS.md section D12](../../HOW_IT_FITS.md#d12-computed-and-derived-attributes)) the members and their MtM are read from `trade-valuation` (a live
 status, the set in `NETTING_SET`; a member past its maturity date is in no figure and flags the set `PAST_MATURITY`), not the set's
 stored `TRADES[].MTM`; a date without trade valuations reads the stored members. Implemented in
 `ExposureMath` (Java) and `ccrmath.py` (Python), compared on the test data by `ExposureParityTest`.
@@ -1273,7 +1273,7 @@ input or fundamental kind carries `EPE`, `EEPE`, `PFE_PEAK`, `EE_PEAK`.
   (LIM and CVA are parked); the stored CVA, the SA-CCR figures, a credit limit's stored used amount and utilisation and the
   counterparty's stored net MtM show *Under construction* in their place until their engines are built
   ([UNDER_CONSTRUCTION.md](../admin/UNDER_CONSTRUCTION.md)); the walks of the live demo do not move exposure figures.
-- **Computed attributes** ([DATA_ARCHITECTURE.md section 12](../architecture/DATA_ARCHITECTURE.md#12-computed-and-derived-attributes) section 13): beside the stored figures the netting-set page
+- **Computed attributes** ([HOW_IT_FITS.md section D12](../../HOW_IT_FITS.md#d12-computed-and-derived-attributes) section 13): beside the stored figures the netting-set page
   shows the totals derived from the trade valuations (derived kind `nset-mtm`: net MtM, live trades, gross positive and negative,
   netting benefit, net-to-gross, uncollateralised CE, MtM by product group, the live-status trades past their maturity date) with the
   difference to the stored net MtM; the counterparty page the same from `cpty-mtm` (its CE uncollateralised per set first). The engine's CE
@@ -1627,7 +1627,7 @@ command, every figure and what limits a large bank: [BENCHMARK.md section 6](../
 | **Loading a large bank on one node** | open (§27.4): the load keeps every set's value matrix in float64 on the heap until the date is built (80 GB at P = 2,000, G = 50; 400 GB at P = 5,000, G = 100), so a large bank needs the sharding below or a set-at-a-time load (§26.3's design); the memory budget refuses a date over it (`DRS-5445`) |
 | **Contributions by trade at a large bank's size** | open (§27.4): the trade-path read streams the date's whole `exposure-path` table, minutes at 0.4 to 2 TB; pruning by `NETTING_SET` (planned, §26.2) makes it a set's 0.4 to 2 GB. Its trades' paths are held in float64 (4 GB for 1,000 trades at P = 5,000, G = 100) |
 | **Scopes of many sets at P = 5,000** | open (§27.4): a scope's matrices are summed on one thread; a group of 200 sets is about 0.3 s at P = 5,000, G = 100 (target 150 ms). Summing in parallel, or a `STAT` section of per-set statistics, would meet it |
-| **Sharding across Drishti\*net** | planned: counterparties in contiguous ranges aligned to groups, two replicas, a group across nodes summed by the coordinator (§26.2); today it is one node. The full design (key `COUNTERPARTY`, `NETTING_SET`; partial path matrices; quantiles after the combine; the migration) is [CLUSTER_GUIDE.md section 6](../architecture/ARCHITECTURE.md#3211-exposure-sharding-design-not-built), plan row CD10 |
+| **Sharding across Drishti\*net** | planned: counterparties in contiguous ranges aligned to groups, two replicas, a group across nodes summed by the coordinator (§26.2); today it is one node. The full design (key `COUNTERPARTY`, `NETTING_SET`; partial path matrices; quantiles after the combine; the migration) is [CLUSTER_GUIDE.md section 6](../../HOW_IT_FITS.md#a3211-exposure-sharding-design-not-built), plan row CD10 |
 | **The restricted (wall-crossed) list** | not built (§9): access is by counterparty, group or legal entity at `trades`, `aggregate` or `none` |
 | **Stored credit limits read very low utilisation** | the `credit-limit` records (read as stored, `kinds.limit`) were sized on stored profiles, 3 to 30 times the computed peaks on the large sets (§22.2: median computed / stored 0.08), so the board's *used* reads 0.1% to a few percent. Limits (LIM) are parked; resizing them on the computed PFE comes with the LIM engine |
 | Several runs on one date (`STRESSED`, `EAD_IMM_STRESSED`) | not built (§24.1, question 4) |

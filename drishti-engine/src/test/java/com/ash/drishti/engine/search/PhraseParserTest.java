@@ -91,7 +91,7 @@ class PhraseParserTest {
         }
     }
 
-    /** DATA_ARCHITECTURE.md › History queries: an entity over time, section 15.5: kind word, id, time phrase is the entity over time, read with a fixed today. */
+    /** HOW_IT_FITS.md › History queries: an entity over time, section 15.5: kind word, id, time phrase is the entity over time, read with a fixed today. */
     @Test
     void aKindAnIdAndATimePhraseAreAHistoryCommand() {
         PhraseParser on = new PhraseParser(new PhraseParser.Vocabulary() {

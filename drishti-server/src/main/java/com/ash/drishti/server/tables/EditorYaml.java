@@ -34,7 +34,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The editors' two sides of one definition (docs/architecture/SHARED_SCREENS.md section 1): the YAML text and the document the visual side edits (the same tree as plain
+ * The editors' two sides of one definition (HOW_IT_FITS.md section S1): the YAML text and the document the visual side edits (the same tree as plain
  * maps and lists). A visual edit sends the document and gets the canonical YAML back (the layer's own writer, {@link TableYaml#write} and
  * {@link ModelYaml#write}, its comment header kept); a YAML edit sends the text and gets the document back. Each key's line is known, so the
  * line being edited is highlighted and a problem is shown at its line.

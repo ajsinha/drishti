@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The BI metrics (docs/architecture/ARCHITECTURE.md §28 section 6.8), through Micrometer to Prometheus ({@code /actuator/prometheus}):
+ * The BI metrics (HOW_IT_FITS.md §A28 section 6.8), through Micrometer to Prometheus ({@code /actuator/prometheus}):
  * {@code drishti_bi_query_seconds{model,layer}}, {@code drishti_bi_query_rows}, {@code drishti_bi_cache_requests_total{result}},
  * {@code drishti_bi_admission_wait_seconds}, {@code drishti_bi_refusals_total{code}}, {@code drishti_bi_fragment_seconds{tier,connector}},
  * {@code drishti_bi_sq_active}, {@code drishti_bi_sq_lag_seconds}, {@code drishti_bi_sq_mode{mode}}, {@code drishti_bi_python_seconds{item}},

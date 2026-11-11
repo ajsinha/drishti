@@ -34,7 +34,7 @@ import java.util.function.Consumer;
 import java.util.regex.Matcher;
 
 /**
- * Progressive answers (ARCHITECTURE.md section 26.6): a view estimated over {@code after-ms} (2 s) answers twice, first ≈ from a
+ * Progressive answers (HOW_IT_FITS.md section A26.6): a view estimated over {@code after-ms} (2 s) answers twice, first ≈ from a
  * sample of the rows, then exact. The first answer is honest or silent:
  *
  * <ul>

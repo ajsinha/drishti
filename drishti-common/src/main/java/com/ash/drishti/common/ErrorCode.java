@@ -211,7 +211,7 @@ public enum ErrorCode {
     /** VaR (2.9.5): the tree of a hierarchy the date does not have (the engine's tree endpoint). */
     VAR_HIERARCHY_UNKNOWN("DRS-5214", 404),
     /**
-     * VaR sharding (2.9.6, DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built): a shard of the date has no live owner that holds it (every replica down, draining or refusing),
+     * VaR sharding (2.9.6, HOW_IT_FITS.md#d13-var-sharding-how-it-is-built): a shard of the date has no live owner that holds it (every replica down, draining or refusing),
      * so its part of a scope cannot be summed: the scope's figures are refused, never given from the other shards alone.
      */
     VAR_SHARD_UNAVAILABLE("DRS-5215", 503),
@@ -233,7 +233,7 @@ public enum ErrorCode {
      */
     DISK_GUARD("DRS-5218", 503),
     /**
-     * The in-memory lake's guard (docs/architecture/DATA_ARCHITECTURE.md section 8): the data is held in memory only by contract, and this
+     * The in-memory lake's guard (HOW_IT_FITS.md section D8): the data is held in memory only by contract, and this
      * place would keep it (a scheduled report, a mail attachment, an inbox or share item with rows, a saved result, an outside AI provider).
      * Only a user's download may leave; the answer names the data and its contract.
      */
@@ -277,7 +277,7 @@ public enum ErrorCode {
     PIVOT_FUNCTION_OFF("DRS-5713", 404),
     /** A custom function past a limit: a holistic cell over its rows or megabytes, a state over its bound, a call over its time. */
     PIVOT_FUNCTION_LIMIT("DRS-5714", 422),
-    /** A custom function in an official run, report or sign-off: official measures stay the Java engines (ARCHITECTURE.md section 26). */
+    /** A custom function in an official run, report or sign-off: official measures stay the Java engines (HOW_IT_FITS.md section A26). */
     PIVOT_FUNCTION_OFFICIAL("DRS-5715", 403),
     /** An explanation or a what-if the engine cannot make as asked (two cells of different measures, a holistic measure without its provider's steps). */
     PIVOT_EXPLAIN("DRS-5716", 400),
@@ -478,7 +478,7 @@ public enum ErrorCode {
     PYTHON_TESTS("DRS-9076", 422),
     /** BI: a Vega-Lite specification was not drawn (a url or loader in it, or a feature drishti-chart does not translate, named with what to use instead); raised by the page, in the visual's frame, and listed here so the code has one home. */
     VEGA_FAILED("DRS-9077", 422),
-    /** BI runs (docs/architecture/ARCHITECTURE.md §28): no such run, or not one the caller may see. */
+    /** BI runs (HOW_IT_FITS.md §A28): no such run, or not one the caller may see. */
     RUN_NOT_FOUND("DRS-9080", 404),
     /** BI runs: the caller has {@code queue.per-user} runs queued or running, or the node's queue is at {@code queue.max} (Retry-After). */
     RUN_QUEUE_FULL("DRS-9081", 429),
@@ -602,7 +602,7 @@ public enum ErrorCode {
     NET_FILE_REFUSED("DRS-5055", 409),
     /** Drishti*net: a management request that cannot be done (an unknown member, removing a member that is alive, a malformed seed). */
     NET_BAD_REQUEST("DRS-5056", 400),
-    /** Content store (docs/architecture/DATA_ARCHITECTURE.md): the item changed elsewhere since it was read (or already exists): reload and try again. */
+    /** Content store (HOW_IT_FITS.md): the item changed elsewhere since it was read (or already exists): reload and try again. */
     CONTENT_CONFLICT("DRS-5057", 409),
     /** Content store: a key that is not a valid content key (empty, too long, a {@code ..} segment, control characters). */
     CONTENT_BAD_KEY("DRS-5058", 400),

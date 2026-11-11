@@ -70,7 +70,7 @@ def register(bi, srv, ctx) -> None:
     s.add_argument("--model", required=True, help="the model (name@major) or dataset:<name>")
     s.add_argument("--explain", action="store_true", help="the plan instead of the answer")
     s.add_argument("--format", choices=["table", "json", "csv", "jsonl"], default="table")
-    s.add_argument("--async", dest="as_run", action="store_true", help="ask it as a run (ARCHITECTURE.md §28): the answer if done within --wait, else the run's id")
+    s.add_argument("--async", dest="as_run", action="store_true", help="ask it as a run (HOW_IT_FITS.md §A28): the answer if done within --wait, else the run's id")
     s.add_argument("--wait", default="2s", help="with --async: how long to wait inline (default 2s; 0 returns the run at once)")
     s.add_argument("--yes", action="store_true", help="with --async: accept the confirmation of a large run in advance (DRS-9082)")
     s.set_defaults(func=lambda a, extra: sql(a, ctx))

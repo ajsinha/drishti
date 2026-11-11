@@ -21,7 +21,7 @@
    drawing (the engine, sizes, clicks, the map) is drishti_chart-panel-draw.js. */
 import { formatCompact } from '../../drishti-core/src/drishti_index.js';
 
-/** The panel kinds drawn with the engine (VIEWMODEL.md section 4). */
+/** The panel kinds drawn with the engine (HOW_IT_FITS.md section V4). */
 export const PANEL_KINDS = Object.freeze(['line', 'area', 'waterfall', 'histogram', 'scatter', 'candlestick', 'graph', 'donut', 'surface', 'map']);
 
 const ENT = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' };
@@ -246,7 +246,7 @@ const BUILD = { line: (d, t) => line(d, t, 'line'), area: (d, t) => line(d, t, '
   surface: (d, t, s, view) => surfaceOption(d, t, view || 'heatmap') };
 
 /**
- * A panel's chart option: the console's, from the panel's data (VIEWMODEL.md section 4) and the theme's tokens (panelTokens).
+ * A panel's chart option: the console's, from the panel's data (HOW_IT_FITS.md section V4) and the theme's tokens (panelTokens).
  * @param {string} kind one of PANEL_KINDS but map and graph (line, area, waterfall, histogram, scatter, candlestick, donut, surface; a graph panel
  *   is drishti-graph's: PanelCharts hands it over)
  * @param {Object} data the panel's data

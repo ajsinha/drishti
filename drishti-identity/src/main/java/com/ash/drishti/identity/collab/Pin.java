@@ -19,7 +19,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 
 /**
- * Which data a share or comment is about (ARCHITECTURE.md §31, "The pin"): the business date the page showed, whether it was
+ * Which data a share or comment is about (HOW_IT_FITS.md §A31, "The pin"): the business date the page showed, whether it was
  * live, the instant it was read as known at, the generation it showed and the source that answered. Generation is evidence,
  * never an address: no store can read "generation N".
  *

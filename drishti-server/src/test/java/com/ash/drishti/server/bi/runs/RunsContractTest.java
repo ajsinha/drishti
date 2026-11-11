@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The R1 contract (docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), sections 14.3 and 15): the run object has every documented field, {@code can} is the caller's,
+ * The R1 contract (HOW_IT_FITS.md §A28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), sections 14.3 and 15): the run object has every documented field, {@code can} is the caller's,
  * and {@code config/runs/runs.yaml} reads to the documented defaults (the shipped file and no file agree).
  */
 class RunsContractTest {

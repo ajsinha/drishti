@@ -21,7 +21,7 @@ import java.util.Map;
 
 /**
  * A kind's data files on one business date, for an engine that reads them itself (the pivot engine's direct lake route,
- * docs/architecture/ARCHITECTURE.md section 26.4): the Parquet files of the date's snapshot, and which column of them holds each field. The
+ * HOW_IT_FITS.md section A26.4): the Parquet files of the date's snapshot, and which column of them holds each field. The
  * reader reads only the columns it needs (column pruning) and lets the Parquet footers' statistics skip row groups.
  *
  * @param format {@code delta} or {@code iceberg}

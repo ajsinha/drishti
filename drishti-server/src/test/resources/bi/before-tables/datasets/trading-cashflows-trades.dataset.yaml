@@ -17,7 +17,7 @@
 # Worked examples: docs/guides/BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 17. Reference: docs/guides/BI_GUIDE.md.
 
 # CONVERTED from datasets/trading-cashflows.dataset.yaml (rachana: 1) by the dataset-to-model converter (drishti.py bi migrate --models;
-# docs/architecture/ARCHITECTURE.md §28 › The model layer: the specification of wave W1, section 8). The model keeps the old name and table names as aliases, so fields read as before.
+# HOW_IT_FITS.md §A28 › The model layer: the specification of wave W1, section 8). The model keeps the old name and table names as aliases, so fields read as before.
 # EDITED AFTER CONVERSION (2.3.0, Wave B): trades a dimension, the relationships active (many-to-one), the payments table and the USD
 # equivalent measures; ConvertedSamplesTest leaves a file with this line to its author.
 

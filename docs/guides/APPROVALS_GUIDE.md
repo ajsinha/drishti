@@ -28,7 +28,7 @@ This guide is for the people who **use** forms and approve changes (sections 2 t
 write-back on and runs it (sections 7 to 12). How to **design** a form (the `form:` YAML, editable cells, the drawer's steps, rules,
 hints, the Sutra designer and `sutra lint`) is in [BUILD_GUIDE.md](BUILD_GUIDE.md). The worked example with pictures is
 [tutorial 11](../tutorials/11-correct-and-approve.md). How it is built, and why, is
-[ARCHITECTURE.md, section 31](../architecture/ARCHITECTURE.md).
+[HOW_IT_FITS.md, section A31](../../HOW_IT_FITS.md#part-ii--architecture).
 
 ## Contents
 
@@ -512,5 +512,5 @@ so a changed row is evident. The log is kept `retention.keep` (7 years); finishe
   [BUILD_GUIDE.md](BUILD_GUIDE.md); every key is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#forms-form-on-a-panel).
 - Recomputing on a change: a computed connector with a `write-back` trigger ([tutorial 19, Part C](../tutorials/19-build-a-pack-and-a-screen.md#part-c--computed-panels-a-reactive-connector)).
 - The endpoints: [API_REFERENCE.md](API_REFERENCE.md). The commands: [CLI_REFERENCE.md](CLI_REFERENCE.md).
-- How it is built (lanes, fencing, the outbox, the applied event, the one queue): [ARCHITECTURE.md, section 31](../architecture/ARCHITECTURE.md).
+- How it is built (lanes, fencing, the outbox, the applied event, the one queue): [HOW_IT_FITS.md, section A31](../../HOW_IT_FITS.md#part-ii--architecture).
 - The worked example: [tutorial 11](../tutorials/11-correct-and-approve.md).

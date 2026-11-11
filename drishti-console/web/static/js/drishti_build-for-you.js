@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* The Build home's "For you" strip (BI Studio's own home, folded in; SHARED_SCREENS.md section 1): Recent, Favourites, Certified for you
+/* The Build home's "For you" strip (BI Studio's own home, folded in; HOW_IT_FITS.md section S1): Recent, Favourites, Certified for you
    and Shared with me, as the server's BI home answers them for the person signed in (GET /bi/api/home: the console asks as them).
    Drawn with drishti-core (its API client and element maker: text only, no markup strings); the star sets or clears a favourite
    (PUT /bi/api/items/<id>/favourite) and the strip is asked again. Nothing is kept outside this page's own closure. */

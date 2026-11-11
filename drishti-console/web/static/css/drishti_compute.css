@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Computed panels (DATA_ARCHITECTURE.md 12.4; static/js/drishti_compute.js): the state line over a panel whose source a reactive connector
+/* Computed panels (HOW_IT_FITS.md 12.4; static/js/drishti_compute.js): the state line over a panel whose source a reactive connector
    computes (computing with its progress bar, stale in amber, failed or refused in words) and the last good result dimmed under it while a
    new one is computed. Theme tokens only. */
 .cmp-state { display: flex; align-items: center; gap: var(--d-sp-8); margin: 0 0 var(--d-sp-8); padding: var(--d-sp-5_6) var(--d-sp-8); border-radius: var(--d-radius);

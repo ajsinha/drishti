@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * A node of a dataset expression (Rachana-EL syntax extended with aggregation, ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 6): the tree {@link NodeLowering} lowers Rachana's into and
+ * A node of a dataset expression (Rachana-EL syntax extended with aggregation, HOW_IT_FITS.md §A28 › Rūpaka: the original design and every phase as built, section 6): the tree {@link NodeLowering} lowers Rachana's into and
  * {@link com.ash.drishti.server.bi.engine.SqlCompiler} turns into parameterised SQL. Immutable.
  */
 public sealed interface Node {
@@ -44,7 +44,7 @@ public sealed interface Node {
     /** The analytic functions that run along an order column (the rest rank by the aggregate itself). */
     Set<String> ORDERED = Set.of("lag", "lead", "moving_avg", "moving_sum", "moving_min", "moving_max");
     /**
-     * Wave B (docs/architecture/ARCHITECTURE.md §28 sections 3.3.4 and 3.3.5): functions over an aggregate in an edited filter context or at other dates. Their
+     * Wave B (HOW_IT_FITS.md §A28 sections 3.3.4 and 3.3.5): functions over an aggregate in an edited filter context or at other dates. Their
      * keyword arguments are kept as pseudo-calls {@code Call("=where", [cond])}, {@code Call("=ignore", [refs or ALL])} (see {@link #keyword}).
      */
     Set<String> CONTEXT = Set.of("calc", "share_of", "parent_of", "avg_by", "sum_by", "min_by", "max_by", "as_of", "last", "first", "opening", "closing", "avg_over", "convert");

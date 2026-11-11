@@ -61,4 +61,3 @@ references:
   - guides/ELEMENTS_API.md
   - guides/EXTERNAL_DATA.md          # folds into the world data guide (W1) when it is written
   - guides/API_REFERENCE.md
-  - architecture/VIEWMODEL.md        # the embed developer's contract; listed in Help (the frozen renderers name its path)

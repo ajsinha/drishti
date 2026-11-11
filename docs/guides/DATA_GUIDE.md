@@ -27,7 +27,7 @@ Iceberg lakehouse) have their own guide: [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md
 
 Each plugin's README is the one home for that plugin ([8.2](#82-which-connector)); the
 shape of each command's data is its [contract](../contracts/packs/README.md); how the data layer is built (live updates, history
-queries, the Iceberg engine, reactive connectors, the content store, the database) is [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md).
+queries, the Iceberg engine, reactive connectors, the content store, the database) is [HOW_IT_FITS.md](../../HOW_IT_FITS.md#part-iii--data-architecture).
 Each section keeps its own numbering (section 1's "section 4" is *4. The API reference* inside section 1).
 
 ## Contents
@@ -1420,7 +1420,7 @@ Three connector types need no plugin to install; each has its README beside the 
 | `net` | when Drishti\*net is on, every peer that holds data is a source `net:<node id>`, asked only after the local sources and only for a read made for a person, one signed hop, masked for the caller on both nodes; no connector file | [net](../connectors/types/net/README.md) |
 | `reactive` | a connector whose answer is a computation: the kinds it computes with their typed parameters, the inputs it reads as the person asking, the engine (Java or Python), the triggers, coalescing, cache and limits; a Sutra panel reads it with `source: { kind, id, params }` | [reactive](../connectors/types/reactive/README.md) |
 
-How the reactive connectors are built is [DATA_ARCHITECTURE.md section 4](../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors);
+How the reactive connectors are built is [HOW_IT_FITS.md section D4](../../HOW_IT_FITS.md#d4-reactive-connectors);
 how a pack declares derived kinds is [BUILD_GUIDE.md](BUILD_GUIDE.md#53-derived-kinds-entities-computed-from-other-kinds).
 
 ## 9. Connector files and Admin → Connectors

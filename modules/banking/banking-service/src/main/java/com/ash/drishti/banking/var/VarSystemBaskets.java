@@ -35,7 +35,7 @@ import java.util.regex.Pattern;
 
 /**
  * The system baskets (VAR_GUIDE.md section 5.7): the bank's own baskets, kept in the basket store beside people's baskets
- * (docs/architecture/DATA_ARCHITECTURE.md section 5), under the system scope: {@code var/system-baskets/<ID>.json} in the content store,
+ * (HOW_IT_FITS.md section D5), under the system scope: {@code var/system-baskets/<ID>.json} in the content store,
  * every version compare-and-set, so every server of a cluster reads the same definitions. Each is a node of a hierarchy
  * ({@code hierarchy}), a condition over the positions' columns ({@code rule}) or positions and trades someone picked ({@code basket}),
  * valid from a business date to another (open-ended while {@code validTo} is empty); its VaR limit is a {@code var-limit} row (HIERARCHY

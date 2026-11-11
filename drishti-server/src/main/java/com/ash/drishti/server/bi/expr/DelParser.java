@@ -21,7 +21,7 @@ import java.util.Locale;
 import java.util.Set;
 
 /**
- * The DEL v2 parser (docs/architecture/ARCHITECTURE.md §28 section 3.3.2): hand-written recursive descent over the accepted subset of Python's expression grammar.
+ * The DEL v2 parser (HOW_IT_FITS.md §A28 section 3.3.2): hand-written recursive descent over the accepted subset of Python's expression grammar.
  * Every text it accepts is a valid Python expression ({@code ast.parse(text, mode="eval")}); everything else Python has (assignment, lambda, comprehensions,
  * subscripts, method calls, star arguments, f-strings, dict/set/tuple literals, imports, await) is refused with {@code DRS-9127} naming the construct and the
  * DEL way to write it. Bounded: 2,000 characters (4,000 when written over several lines), nesting depth 64. Pure and thread-safe.

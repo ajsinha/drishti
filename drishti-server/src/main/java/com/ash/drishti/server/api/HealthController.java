@@ -96,7 +96,7 @@ public class HealthController {
         this.busy = g;
     }
 
-    /** The in-memory lake (docs/architecture/DATA_ARCHITECTURE.md section 12): its stores, pinned tables and host checks on Health; absent in such a test. */
+    /** The in-memory lake (HOW_IT_FITS.md section D12): its stores, pinned tables and host checks on Health; absent in such a test. */
     private com.ash.drishti.memlake.MemoryLake memoryLake;
 
     @org.springframework.beans.factory.annotation.Autowired(required = false)

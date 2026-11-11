@@ -34,7 +34,7 @@ import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/** Comment threads (ARCHITECTURE.md §31): rendering, audience, the service, the notes import and the deprecated notes facade. */
+/** Comment threads (HOW_IT_FITS.md §A31): rendering, audience, the service, the notes import and the deprecated notes facade. */
 @Configuration(proxyBeanMethods = false)
 public class ThreadConfiguration {
 

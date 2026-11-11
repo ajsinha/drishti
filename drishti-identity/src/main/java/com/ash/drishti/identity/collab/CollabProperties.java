@@ -21,7 +21,7 @@ import java.util.Map;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * {@code drishti.collab.*}: share with a note, comment threads and the inbox (docs/architecture/ARCHITECTURE.md §31). Every key has
+ * {@code drishti.collab.*}: share with a note, comment threads and the inbox (HOW_IT_FITS.md §A31). Every key has
  * a default here and in {@code application.yaml}; {@code packs} overrides some of them per pack, by pack name in configuration.
  *
  * @param enabled shares, threads and the inbox are on

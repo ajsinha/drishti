@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.bi.layer;
 
-/** Which item bodies are the table layer's: checked by the layer when saved and published, kept as typed (docs/architecture/SHARED_SCREENS.md). */
+/** Which item bodies are the table layer's: checked by the layer when saved and published, kept as typed (HOW_IT_FITS.md). */
 public final class LayerBodies {
 
     private LayerBodies() {}

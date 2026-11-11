@@ -72,7 +72,7 @@ public class ApiExceptionHandler {
     }
 
     /**
-     * A model query refused (docs/architecture/ARCHITECTURE.md §28 › The model layer: the specification of wave W1, section 5.7): the first problem's code, {@code path} and {@code fix}, and every problem of the
+     * A model query refused (HOW_IT_FITS.md §A28 › The model layer: the specification of wave W1, section 5.7): the first problem's code, {@code path} and {@code fix}, and every problem of the
      * step that failed. A masked field ({@code DRS-9161}) also names {@code DRS-9021}, the engine's code for the same refusal.
      */
     @ExceptionHandler(com.ash.drishti.server.bi.mq.MqException.class)
@@ -88,7 +88,7 @@ public class ApiExceptionHandler {
         return p;
     }
 
-    /** A BI run refusal (docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 16): its extra properties (estimate, confirmToken, run hint) and {@code Retry-After}. */
+    /** A BI run refusal (HOW_IT_FITS.md §A28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 16): its extra properties (estimate, confirmToken, run hint) and {@code Retry-After}. */
     @ExceptionHandler(com.ash.drishti.server.bi.runs.RunProblem.class)
     org.springframework.http.ResponseEntity<ProblemDetail> run(com.ash.drishti.server.bi.runs.RunProblem e) {
         ProblemDetail p = drishti(e);

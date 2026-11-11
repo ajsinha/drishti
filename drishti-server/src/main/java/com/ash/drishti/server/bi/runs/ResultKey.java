@@ -23,7 +23,7 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 /**
- * The key of a stored run result (docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 8.2):
+ * The key of a stored run result (HOW_IT_FITS.md §A28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 8.2):
  *
  * <pre>
  * resultKey = sha256( planHash | resolvedTime | dataVersionVector | securitySignature | engineSemantics )

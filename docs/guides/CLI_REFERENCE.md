@@ -123,7 +123,7 @@ The browser column names the console page that runs the same engine; those pages
 | Run VaR's many-scope sums on the bundled OpenBLAS or on the pure-Java path, live | Admin → **Engines** → Linear algebra: OpenBLAS | `drishti.py server blas status`, `server blas java --reason ...`, `server blas native --reason ...` (also as `admin blas`; [OPERATIONS_GUIDE.md section 2.1](OPERATIONS_GUIDE.md#149-native-libraries-blas)) |
 | Make, check or remove the AWS side of the S3 Tables or Delta Lake on S3 connector (bucket, namespace or prefix, IAM policy) | | `deploy/aws/s3-tables/s3-tables.sh`, `deploy/aws/delta-s3/delta-s3.sh` (`.ps1` on Windows; [7.14](#714-the-aws-connectors-tool-scripts-s3-tables-and-delta-lake-on-s3)) |
 | See or check the shape of a command's data (its data contract), or draft the contract of a new kind | | `drishti.py contract list`, `contract show`, `contract check`, `contract docs`, `contract bootstrap` |
-| Pin the Python libraries code people write may use on the server's compute pool `python` (every file's sha256, for `pip --require-hashes`) | | `python tools/python_lock.py config/compute/locks/python.in --out config/compute/locks/python.lock` ([BI_GUIDE.md section N19](../architecture/ARCHITECTURE.md#291-one-python-runtime)) |
+| Pin the Python libraries code people write may use on the server's compute pool `python` (every file's sha256, for `pip --require-hashes`) | | `python tools/python_lock.py config/compute/locks/python.in --out config/compute/locks/python.lock` ([BI_GUIDE.md section N19](../../HOW_IT_FITS.md#a291-one-python-runtime)) |
 
 Use the page for a one-off file, a first look at new data, or when you want to see each choice before it is made. Use the command
 line for anything that repeats, runs at night, or lives in a pipeline: it has exit codes, a lock, a log line and a JSON summary,
@@ -2124,7 +2124,7 @@ For a load too large for the Python path (the bank's scenario PVs: 2.3 million p
 on every core, memory bounded by `memory.budget-mb` whatever the input's size (rows that do not fit are sorted and spilled to disk), Delta
 or Iceberg, from a folder or `s3://`, **one commit per business date**. It writes exactly the tables `lake build` writes (the same
 documents byte for byte, columns and vectors; the connectors and the VaR loader read them unchanged). The design, the memory model and
-the 2.3M sizing: [PARALLEL_LOADER.md](../architecture/DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-drishti-lakeload). `tools/lake/javaload.py` is `lake build`'s side of it.
+the 2.3M sizing: [PARALLEL_LOADER.md](../../HOW_IT_FITS.md#d10-the-parallel-lake-loader-drishti-lakeload). `tools/lake/javaload.py` is `lake build`'s side of it.
 
 `tools/lake/deltaread.py` is how the Python tools read a Delta table's rows: by delta-rs, or by the server's own Delta Kernel reader for
 a table delta-rs would read only in part (column mapping, deletion vectors, v2 checkpoints), never a half-read
@@ -3143,7 +3143,7 @@ drishti-console/.venv/bin/python tools/drishti.py approvals ask change chg-01M5V
 
 ### `change` and `edits`: write-back
 
-Write-back from the terminal (`tools/changecli.py`, [APPROVALS_GUIDE.md](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals),
+Write-back from the terminal (`tools/changecli.py`, [APPROVALS_GUIDE.md](../../HOW_IT_FITS.md#a31-collaboration-write-back-and-approvals),
 [APPROVALS_GUIDE.md section 4a](APPROVALS_GUIDE.md#4-submitting-a-change)), as the caller's token (it needs the `edit` scope):
 
 - `change propose --kind KIND --id ID --set FIELD=VALUE [...] [--from FIELD=VALUE ...] [--reason TEXT] [--sutra S --panel P] [--date YYYY-MM-DD] [--override]`
@@ -3438,7 +3438,7 @@ picks the business date (default the newest with vectors); `--json` prints the s
   currency; the headline says the currency and where its FX came from ([VAR_GUIDE.md section 15.10](VAR_GUIDE.md#1510-reporting-currency)).
 - `var status` prints the engine's settings, its tiered memory (hot files on disk, dates open, how this JVM maps) and the dates loaded.
 - `var shards [--date D] [--json]`: VaR sharding across Drishti*net: the settings, the members, the shards held here, and the
-  date's shard map with each shard's range, owners and the members ready for it ([DATA_ARCHITECTURE.md section 13](../architecture/DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built));
+  date's shard map with each shard's range, owners and the members ready for it ([HOW_IT_FITS.md section D13](../../HOW_IT_FITS.md#d13-var-sharding-how-it-is-built));
   `--drain` / `--undrain` (administrators) hand this member's shards over before it stops, or take shards again.
 - `var capture SCOPE [--note TEXT]`, `var captures [--scope SCOPE]`, `var compare A [B|now]`: captures (writing needs `risk:write`).
 - `var basket NAME SCOPE [--title] [--description] [--share USER|role:NAME ...]`, `var baskets`: saved baskets; `var baskets --all [--owner TEXT]`: every person's (administrators). `var baskets export [--scope system|mine]` writes the system baskets as the YAML import file (or your own baskets); `var baskets import FILE [--apply] [--date D]` shows the difference (add, change field by field, same, invalid with the reason) and writes it only with `--apply` (the permission `var:system-baskets`; exit 1 when an entry is invalid) ([VAR_GUIDE.md section 5.7](VAR_GUIDE.md#57-system-baskets)). `var basket-delete NAME [--owner USER] [--reason TEXT] [--version N]`: deletes your basket, or with `--owner` anyone's (administrators; the reason goes to the audit log and the owner's inbox); captures of it are kept ([VAR_GUIDE.md section 3.5](VAR_GUIDE.md#35-construct-your-basket)).

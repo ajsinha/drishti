@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-{# An alert on a number: new, or an existing one with its history (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 20). #}
+{# An alert on a number: new, or an existing one with its history (HOW_IT_FITS.md §A28 › Rūpaka: the original design and every phase as built, section 20). #}
 {% extends "base.html" %}
 {% block title %}{{ 'Alert ' ~ alert.name if alert else 'New alert' }} · {{ PRODUCT }}{% endblock %}
 {% block head %}<link rel="stylesheet" href="/static/css/drishti_dist.css?v={{ ASSET_V }}">{% endblock %}

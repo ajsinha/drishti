@@ -30,7 +30,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 /**
- * The Java evaluator and the SQL lowering agree value for value (docs/architecture/ARCHITECTURE.md §28 2.6): every operator, every function Rachana
+ * The Java evaluator and the SQL lowering agree value for value (HOW_IT_FITS.md §A28 2.6): every operator, every function Rachana
  * computes in a row (R), every aggregate the engine computes, with and without a measure's own condition, and the shipped models' row
  * expressions and measures written in Rachana, over a table of edges (nulls, empty and mixed-case text, zeros, negatives, dates
  * across a year end, a masked column).
@@ -76,7 +76,7 @@ class DifferentialTest {
             "switch(CCY, 'JPY', 1 / 148.2, 'EUR', 1.174, 'GBP', 1.348, 1)", "switch(STATUS, 'LIVE', 'L', 'MATURED', 'M')",
             "least(MTM, 0)", "least(MTM, NOTIONAL, N)", "greatest(MTM, 0)", "greatest(N, 1, null)");
 
-    /** The shipped models' and datasets' row expressions, as the migration writes them (docs/architecture/ARCHITECTURE.md §28 2.7). */
+    /** The shipped models' and datasets' row expressions, as the migration writes them (HOW_IT_FITS.md §A28 2.7). */
     static final List<String> SHIPPED_ROWS = List.of(
             "$.MTM / 1000000", "'1D'", "STATUS == 'NSET'", "DESK in ['DESK-RATES', 'DESK-FX']",
             "NOTIONAL * (CCY == 'JPY' ? 1 / 148.2 : CCY == 'EUR' ? 1.174 : CCY == 'GBP' ? 1.348 : CCY == 'USD' ? 1 : null)",

@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Rupaka phase 1 (docs/architecture/ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 5): the BI pages. The pages are a shell; this script draws them from the same-origin JSON
+/* Rupaka phase 1 (HOW_IT_FITS.md §A28 › Rūpaka: the original design and every phase as built, section 5): the BI pages. The pages are a shell; this script draws them from the same-origin JSON
    (/bi/api/..., passed on to the server under the signed-in user's identity). Everything is built with DOM calls and textContent, never innerHTML,
    so a title or a description can never become markup. Keys: / search, g h, g c, g w, ?. */
 (function () {
@@ -476,7 +476,7 @@
       var brd = q('[data-open-board]');
       if (brd) { brd.hidden = !it.board; brd.href = '/bi/r/' + enc + '?kiosk=1'; }                 // a report with board pages (2.4.0): its kiosk
       if (des) { const designable = it.kind === 'report'; des.hidden = !(designable && it.can && it.can.edit) && !(designable && it.shipped); des.href = '/bi/design/' + enc; des.lastChild.textContent = it.shipped ? ' Open a copy in the designer' : ' Open in the designer'; }
-      // a table or a model is written in Build › Tables & models (docs/architecture/SHARED_SCREENS.md): one way per job
+      // a table or a model is written in Build › Tables & models (HOW_IT_FITS.md): one way per job
       if (mod) { mod.hidden = !(it.kind === 'table' || it.kind === 'model'); mod.href = '/build/tables?kind=' + it.kind + '&item=' + encodeURIComponent(it.id).replace(/%3A/g, ':'); }
       if (open && (it.kind === 'table' || it.kind === 'dataset' && /^rachana:\s*2\b/m.test(it.body || ''))) { open.href = '/bi/ds/' + enc; }   // a model-layer dataset has its own page
       document.dispatchEvent(new CustomEvent('drishti:bi-item', { detail: x }));          // drishti_bi-govern.js draws history, review, impact and lineage
@@ -714,7 +714,7 @@
   });
 
   // -- start ------------------------------------------------------------------------------------------------------------
-  /** The rail's Runs count: the person's runs queued or running (ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 7.1); drishti_bi-runs-tab.js keeps it live on the Runs tab. Quiet on an older server. */
+  /** The rail's Runs count: the person's runs queued or running (HOW_IT_FITS.md §A28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 7.1); drishti_bi-runs-tab.js keeps it live on the Runs tab. Quiet on an older server. */
   function runsCount() {
     var badge = q('[data-runs-count]');
     if (!badge) { return; }

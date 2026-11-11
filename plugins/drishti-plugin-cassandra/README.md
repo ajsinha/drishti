@@ -241,7 +241,7 @@ scans a table: no `ALLOW FILTERING`, no token range.
 - **Documents of a day, inventory, versions.** Derived pages read a snapshot kind's day in one pass, bucket by bucket. **Test
   connection** shows each day's row count from `kind_days`. The kind's data version (for the BI store) is its days and their
   generations, so a load of another day leaves a stored layer valid.
-- **History** (`TRD 1000015 30`, [DATA_ARCHITECTURE.md](../../docs/architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)):
+- **History** (`TRD 1000015 30`, [HOW_IT_FITS.md](../../HOW_IT_FITS.md#d2-history-queries-an-entity-over-time)):
   one single-partition range read of `entity_days`, keeping only days `kind_days` still names, then one document per day by its
   partition, eight at once. One generation is kept, so `versions` is 1 and *known at* is refused (`DRS-1007`).
 - **Live changes.** The connector refreshes; it does not push. To push, put a Kafka connector in front of it.
