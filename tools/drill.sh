@@ -276,7 +276,7 @@ gate_java() {
   # a filter that matched nothing would pass in silence: every rule test must have its report
   local c missing=()
   for c in ${rules//,/ } TokenScopeGuardTest ArrowAnswersTest; do
-    compgen -G "*/target/surefire-reports/TEST-*.$c.xml" >/dev/null || missing+=("$c")
+    compgen -G "*/*/target/surefire-reports/TEST-*.$c.xml" >/dev/null || missing+=("$c")   # the modules sit in subject folders
   done
   (( ${#missing[@]} == 0 )) || { echo "drill: the gate's build ran no tests of: ${missing[*]}" >&2; return 1; }
 }
