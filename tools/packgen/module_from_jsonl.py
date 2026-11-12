@@ -62,6 +62,7 @@ def build_parser(add_help: bool = True) -> argparse.ArgumentParser:
     p.description = __doc__.split("\n\n")[0]
     p.epilog = __doc__.split("\n\n", 1)[1]
     g = p.add_argument_group("module, binding and deployment")
+    g.add_argument("--allow-shared-kinds", action="store_true", help="keep kinds another product module provides (only for servers without it)")
     g.add_argument("--dry-run", action="store_true", help="read every record and print the plan (kinds, combinations -> Sutras, id check, dates, binding); write nothing")
     g.add_argument("--connector", help="bind the kinds to this existing connector (config/connectors/<name>.yaml) instead of a new file connector")
     g.add_argument("--files-root", help="the file connector's root (default: the input folder's parent when it is laid out <domain>/<date>/<kind>.jsonl, "
@@ -80,6 +81,21 @@ def build_parser(add_help: bool = True) -> argparse.ArgumentParser:
                    help="processes reading the files, a file each (default: a third of the cores, at most 8); every record is read either way")
     p.set_defaults(infer=True)
     return p
+
+
+def claimed_kinds() -> dict[str, str]:
+    """kind -> the product module that provides it (modules/*/{dmod,src/dmod}/module.yaml `provides: kinds:`)."""
+    import yaml
+    out: dict[str, str] = {}
+    for f in sorted(ROOT.glob("modules/*/dmod/module.yaml")) + sorted(ROOT.glob("modules/*/src/dmod/module.yaml")):
+        try:
+            m = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
+        except (OSError, yaml.YAMLError):
+            continue
+        for kinds in ((m.get("provides") or {}).get("kinds") or {}).values():
+            for k in kinds or []:
+                out.setdefault(str(k), str(m.get("id") or f.parts[-3]))
+    return out
 
 
 def laid_out(inputs) -> tuple[pathlib.Path, str] | None:
@@ -234,6 +250,8 @@ def load_files(a, an, b: dict, cli, say=print) -> int:
         args += ["--kind", a.kind]
     if getattr(a, "recursive", False):
         args.append("--recursive")
+    if getattr(a, "kind_prefix", None):
+        args += ["--kind-prefix", a.kind_prefix]
     sys.stdout.flush()
     say("\n== " + " ".join(["drishti.py", *args]))
     return cli.main(args)
@@ -265,12 +283,19 @@ def run(a, cli, say=print) -> int:
         raise cli.CliError(f"{mod} exists; pass --force to replace it", 2)
     an = PFJ.analyse(a, say)
     PFJ.print_plan(an, say)
+    clash = {k: m for k, m in claimed_kinds().items() if k in an.prof.kinds}
+    if clash:
+        say("\nkinds other modules provide (a server with that module refuses this one, \"kind ... is claimed\"): "
+            + ", ".join(f"{k} ({m})" for k, m in sorted(clash.items())) + f"; rename them with --kind-prefix {a.name}-")
     b = binding_plan(a, an)
     say_binding(b, a, say)
     say(f"\nmodule {a.name} {a.version}: {mod} -> {(a.dist or ROOT / 'dist').resolve() / f'{a.name}-{a.version}.dmod'}")
     if a.dry_run:
         say(f"dry run: nothing written ({time.monotonic() - t0:.1f} s)")
         return 0
+    if clash and not a.allow_shared_kinds:
+        raise cli.CliError(f"kinds {', '.join(sorted(clash))} are provided by other modules: give --kind-prefix {a.name}- (or --allow-shared-kinds for "
+                           "a server without those modules)", 2)
     if not an.groups:
         raise cli.CliError("nothing to generate: no combination has --min-docs documents", 1)
     a.jar, a.java = cli.find_jar(a.jar), cli.find_java(a.java)

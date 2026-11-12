@@ -105,6 +105,8 @@ def build_parser(add_help: bool = True) -> argparse.ArgumentParser:
     p.add_argument("--version", default="1.0.0", help="version (default 1.0.0)")
     p.add_argument("--mnemonic", help="kind=MNEMONIC,kind2=M2 (default: initials of the kind, upper case)")
     p.add_argument("--out", type=pathlib.Path, help="where to write (pack new: default modules/<name>)")
+    p.add_argument("--kind-prefix", help="put this before every kind (trade -> otc-trade with --kind-prefix otc-): kinds another module provides "
+                                         "would refuse the module on a server that has that module")
     p.add_argument("--pack-domain", default="core", help="the domain the pack serves (pack.yaml domain:, the module's domain)")
     p.add_argument("--force", action="store_true", help="overwrite an existing --out folder")
     p.add_argument("--catalog-samples", type=int, default=25, help="documents per kind kept in samples/ (default 25; every combination has one)")
@@ -143,7 +145,9 @@ def analyse(opts, say=print) -> Analysis:
     import packprofile as PP
     an = Analysis()
     files = SG.input_files(opts.inputs, getattr(opts, "recursive", False))
-    kind_of = (lambda k: opts.kind) if getattr(opts, "kind", None) else (lambda k: k)
+    prefix = getattr(opts, "kind_prefix", None) or ""
+    kind_of = (lambda k: prefix + opts.kind) if getattr(opts, "kind", None) else (lambda k: prefix + k)
+    bare = (lambda k: k[len(prefix):]) if prefix else (lambda k: k)     # kind=FIELD options may name a kind without the prefix
     key_d, key_k = SG.parse_scalar(_given(opts.key))
     date_d, date_k = SG.parse_scalar(_given(opts.date))
     match_d, match_k = SG.parse_match(_given(opts.match))
@@ -155,16 +159,16 @@ def analyse(opts, say=print) -> Analysis:
     def choose(kind: str):
         why = an.why.setdefault(kind, [])
         c = PP.candidates(kind, heads[kind]) if kind in heads else None
-        key = key_k.get(kind, key_d)
+        key = key_k.get(kind, key_k.get(bare(kind), key_d))
         if key is None and opts.key is None and c and c["keyCandidates"]:
             key = c["keyCandidates"][0]["field"]
             why.append(f"key {key} inferred ({c['keyCandidates'][0]['why']} in the first rows)")
-        date = date_k.get(kind, date_d)
+        date = date_k.get(kind, date_k.get(bare(kind), date_d))
         named = [d for d in (c["dateCandidates"] if c else []) if re.search(r"business|cob|as_?of|report(ing)?_?date", d["field"], re.I)]
         if date is None and opts.date is None and named:     # only a field named as a business date: a trade date is not one
             date = named[0]["field"]
             why.append(f"date {date} inferred (named as a business date, every value an ISO date in the first rows)")
-        fields = SG.for_kind(kind, match_d, match_k)
+        fields = SG.for_kind(kind, SG.for_kind(bare(kind), match_d, match_k), match_k)
         if not fields and opts.match is None and c:
             fields = [m["field"] for m in c["matchCandidates"] if m["score"] >= 0.3 and m["field"] not in (key, date)][:2]
             if fields:
@@ -177,7 +181,7 @@ def analyse(opts, say=print) -> Analysis:
     for kind in sorted({kind_of(SG.file_kind(f)) for f in files} | set(heads)):
         choose(kind)
     conf = PP.Config(getattr(opts, "kind", None), {k: (an.match[k], an.keys[k], an.dates.get(k)) for k in an.keys},
-                     (tuple(match_d), key_d or "id", date_d))
+                     (tuple(match_d), key_d or "id", date_d), prefix)
     workers = getattr(opts, "workers", None) or 1
     say(f"reading every record of {len(files)} file(s)" + (f" with {workers} worker(s)" if workers > 1 else "") + " ...")
     an.prof = PP.scan(files, conf, getattr(opts, "samples", 5), workers, lambda n, t: say(f"  {n:,} rows, {t:.0f} s"))

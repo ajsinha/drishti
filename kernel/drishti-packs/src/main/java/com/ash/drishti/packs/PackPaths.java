@@ -102,18 +102,19 @@ public final class PackPaths {
     }
 
     /**
-     * The packs of the modules installed on this node ({@code <drishti.modules.path>/installed/<id>/<version>/}, the version that
+     * The packs of the modules installed on this node ({@code <module deployment root>/installed/<id>/<version>/}: the root is
+     * {@code drishti.module-deploy.dir}, else {@code <drishti.data.dir>/modules}, as the module deployment keeps it; the version that
      * {@code installed/active.yaml} names) that are not first-party: a site's own content module (`drishti.py pack new`) brings its
      * packs, which load with it and need no {@code DRISHTI_PACKS} entry. The product's own modules keep their packs where the
      * distribution names them.
      */
     public static java.util.List<InstalledPacks> installedModulePacks(Environment env) {
         java.util.List<InstalledPacks> out = new java.util.ArrayList<>();
-        String setting = env.getProperty("drishti.modules.path", Path.of(dataDir(env), "modules").toString());
+        String dir = env.getProperty("drishti.module-deploy.dir", "");
+        Path root = dir.isBlank() ? Path.of(dataDir(env), "modules") : Path.of(dir);
         com.fasterxml.jackson.databind.ObjectMapper yaml = new com.fasterxml.jackson.databind.ObjectMapper(new com.fasterxml.jackson.dataformat.yaml.YAMLFactory());
-        for (String s : setting.split("[," + java.io.File.pathSeparator + "]")) {
-            Path installed = s.isBlank() ? null : Path.of(s.strip()).toAbsolutePath().normalize().resolve("installed");
-            if (installed == null || !Files.isRegularFile(installed.resolve("active.yaml"))) {
+        for (Path installed : java.util.List.of(root.toAbsolutePath().normalize().resolve("installed"))) {
+            if (!Files.isRegularFile(installed.resolve("active.yaml"))) {
                 continue;
             }
             try {

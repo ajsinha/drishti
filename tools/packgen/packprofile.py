@@ -186,6 +186,7 @@ class Config:
     kind: str | None
     per_kind: dict
     default: tuple
+    prefix: str = ""                                    # --kind-prefix: before every kind
 
     def of(self, kind: str) -> tuple:
         return self.per_kind.get(kind, self.default)
@@ -203,7 +204,7 @@ def _scan_file(args) -> Profile:
     if fd is None:
         prof.undated.append(f.name)
     for k, doc, _ in SG.read_records([f], bad):
-        kind = conf.kind or k
+        kind = conf.prefix + (conf.kind or k)
         kp = prof.kinds.get(kind)
         if kp is None:
             match, key, date = conf.of(kind)
