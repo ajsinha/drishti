@@ -140,6 +140,9 @@ rm -f "$LOGS"/*.secs "$LOGS"/timings-*.json "$LOGS"/rerun-*.log "$LOGS"/console-
 # system /tmp: on a machine whose /tmp is a RAM disk, parallel suites would fill it and take memory from the test servers.
 # DRISHTI_DRILL_TMP names another folder; it is emptied when the drill ends.
 DRILL_TMP="${DRISHTI_DRILL_TMP:-$DATA/tmp/drill}"; mkdir -p "$DRILL_TMP"; DRILL_TMP=$(cd "$DRILL_TMP" && pwd -P)
+# The drill deletes only its own temporary folders: a DRISHTI_DRILL_TMP that is not a drill folder (its name holds "drill") is refused,
+# so a mistyped one can never empty a home or a repository
+[[ "$(basename "$DRILL_TMP")" == *drill* ]] || { echo "drill: DRISHTI_DRILL_TMP=$DRILL_TMP is not a drill folder (its name must hold \"drill\")" >&2; exit 2; }
 export TMPDIR="$DRILL_TMP"
 DURATIONS="$LOGS/durations.json"; KNOWN=tools/drill-known.txt; PLAN=tools/drillkit/drill_plan.py
 T0=$SECONDS; STAGES=()
@@ -395,6 +398,9 @@ console_lane() {   # name, workers, re-runs at a time
 # share the machine); one that passes the second time is listed as a flake here and in flakes.log, not hidden.
 REPO=$(pwd -P)
 COPY_BASE="${DRISHTI_DRILL_COPY_DIR:-$(cd .. && pwd -P)/$(basename "$REPO")-drill-copies}"
+# the only folder outside the repository the drill writes; it removes only its own copies there (named <lane>.<its pid>.*) and the
+# folder itself when empty, and refuses a DRISHTI_DRILL_COPY_DIR whose name does not hold "drill-copies"
+[[ "$(basename "$COPY_BASE")" == *drill-copies* ]] || { echo "drill: DRISHTI_DRILL_COPY_DIR=$COPY_BASE is not a copies folder (its name must hold \"drill-copies\")" >&2; exit 2; }
 copy_verify() {   # name, JDK, Drishti*net test ports, whether the copy's data/ and config/ are checked; then Maven arguments
   set -e
   local name=$1 jdk=$2 ports=$3 check=$4; shift 4

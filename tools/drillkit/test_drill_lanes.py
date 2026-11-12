@@ -128,3 +128,26 @@ class FullContainerSuite(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class OwnFoldersOnly(unittest.TestCase):
+    """The drill deletes only what it made: its logs, its temporary folder, its own copies (docs/architecture/TEST_HARNESS.md)."""
+
+    ALLOWED = ('"$LOGS', '"$prev', '"$DRILL_TMP', '"$tmp', '"$COPY_BASE"/*."$$".*', "'$copy'", '"$DRILL_MARK"', '{}')
+
+    def test_every_deletion_targets_a_drill_folder(self):
+        import re
+        text = (ROOT / "tools" / "drill.sh").read_text(encoding="utf-8")
+        for n, line in enumerate(text.splitlines(), 1):
+            code = line.split("#", 1)[0] if not line.lstrip().startswith("trap") else line
+            for m in re.finditer(r"\brm -r?f\s+(\S+)", code):
+                self.assertTrue(m.group(1).startswith(self.ALLOWED), f"drill.sh:{n} deletes {m.group(1)}")
+            for m in re.finditer(r"find (\S+) .*-exec rm", code):
+                self.assertTrue(m.group(1).startswith(self.ALLOWED), f"drill.sh:{n} deletes under {m.group(1)}")
+
+    def test_a_foreign_temporary_folder_is_refused(self):
+        r = subprocess.run(["bash", "-c", 'DRILL_TMP=/home; [[ "$(basename "$DRILL_TMP")" == *drill* ]] || exit 2'], check=False)
+        self.assertEqual(2, r.returncode)
+        text = (ROOT / "tools" / "drill.sh").read_text(encoding="utf-8")
+        self.assertIn('[[ "$(basename "$DRILL_TMP")" == *drill* ]] ||', text)
+        self.assertIn('[[ "$(basename "$COPY_BASE")" == *drill-copies* ]] ||', text)
