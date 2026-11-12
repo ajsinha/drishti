@@ -257,7 +257,6 @@ def run(a, cli, say=print) -> int:
         raise cli.CliError("--name is lower-case letters, digits and '-'", 2)
     if a.deploy and getattr(a, "server", None) and not a.reason:
         raise cli.CliError("--deploy on a cluster (--server) needs --reason", 2)
-    a.jar, a.java = cli.find_jar(a.jar), cli.find_java(a.java)
     mod = (a.out or ROOT / "modules" / a.name).resolve()
     if not a.dry_run and mod.exists() and any(mod.iterdir()) and not a.force:
         raise cli.CliError(f"{mod} exists; pass --force to replace it", 2)
@@ -271,6 +270,7 @@ def run(a, cli, say=print) -> int:
         return 0
     if not an.groups:
         raise cli.CliError("nothing to generate: no combination has --min-docs documents", 1)
+    a.jar, a.java = cli.find_jar(a.jar), cli.find_java(a.java)
     if mod.exists():
         shutil.rmtree(mod)
     pack = mod / "packs" / a.name
