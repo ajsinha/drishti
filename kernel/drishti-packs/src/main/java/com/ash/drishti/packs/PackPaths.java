@@ -81,9 +81,67 @@ public final class PackPaths {
         return dir;
     }
 
-    /** Further pack folders, comma-separated ({@code drishti.packs.extra-dirs}), looked in after the packs folder: retired example packs. */
+    /**
+     * Further pack folders, comma-separated, looked in after the packs folder: {@code drishti.packs.extra-dirs} (retired example packs),
+     * then the {@code packs/} folder of every installed module a site made (below), so its packs come with it.
+     */
     public static String extraDirs(Environment env) {
-        return env.getProperty("drishti.packs.extra-dirs", "");
+        String set = env.getProperty("drishti.packs.extra-dirs", "");
+        java.util.List<String> all = new java.util.ArrayList<>();
+        if (!set.isBlank()) {
+            all.add(set);
+        }
+        for (InstalledPacks m : installedModulePacks(env)) {
+            all.add(m.folder().toString());
+        }
+        return String.join(",", all);
+    }
+
+    /** The pack folder of one installed content module and the packs its manifest lists ({@code packs: {folder, list}}). */
+    public record InstalledPacks(String module, Path folder, java.util.List<String> packs) {
+    }
+
+    /**
+     * The packs of the modules installed on this node ({@code <drishti.modules.path>/installed/<id>/<version>/}, the version that
+     * {@code installed/active.yaml} names) that are not first-party: a site's own content module (`drishti.py pack new`) brings its
+     * packs, which load with it and need no {@code DRISHTI_PACKS} entry. The product's own modules keep their packs where the
+     * distribution names them.
+     */
+    public static java.util.List<InstalledPacks> installedModulePacks(Environment env) {
+        java.util.List<InstalledPacks> out = new java.util.ArrayList<>();
+        String setting = env.getProperty("drishti.modules.path", Path.of(dataDir(env), "modules").toString());
+        com.fasterxml.jackson.databind.ObjectMapper yaml = new com.fasterxml.jackson.databind.ObjectMapper(new com.fasterxml.jackson.dataformat.yaml.YAMLFactory());
+        for (String s : setting.split("[," + java.io.File.pathSeparator + "]")) {
+            Path installed = s.isBlank() ? null : Path.of(s.strip()).toAbsolutePath().normalize().resolve("installed");
+            if (installed == null || !Files.isRegularFile(installed.resolve("active.yaml"))) {
+                continue;
+            }
+            try {
+                Object mods = yaml.readValue(installed.resolve("active.yaml").toFile(), java.util.Map.class).get("modules");
+                if (!(mods instanceof java.util.Map<?, ?> active)) {
+                    continue;
+                }
+                for (java.util.Map.Entry<?, ?> e : active.entrySet()) {
+                    Path dir = installed.resolve(String.valueOf(e.getKey())).resolve(String.valueOf(e.getValue()));
+                    Path manifest = dir.resolve("module.yaml");
+                    if (!Files.isRegularFile(manifest)) {
+                        continue;
+                    }
+                    java.util.Map<?, ?> m = yaml.readValue(manifest.toFile(), java.util.Map.class);
+                    if ("first-party".equals(String.valueOf(m.get("origin"))) || !(m.get("packs") instanceof java.util.Map<?, ?> packs)) {
+                        continue;
+                    }
+                    Path folder = dir.resolve(String.valueOf(packs.get("folder") == null ? "packs" : packs.get("folder"))).normalize();
+                    java.util.List<String> names = packs.get("list") instanceof java.util.List<?> l ? l.stream().map(String::valueOf).toList() : java.util.List.of();
+                    if (folder.startsWith(dir) && Files.isDirectory(folder)) {
+                        out.add(new InstalledPacks(String.valueOf(e.getKey()), folder, names));
+                    }
+                }
+            } catch (java.io.IOException | RuntimeException ex) {
+                System.getLogger(PackPaths.class.getName()).log(System.Logger.Level.WARNING, "installed modules under {0}: {1}", installed, ex.getMessage());
+            }
+        }
+        return out;
     }
 
     public static String installedDir(Environment env) {

@@ -199,7 +199,7 @@ def write_binding(a, b: dict, an, site: pathlib.Path, say=print) -> None:
     if not b["connector"]:
         return
     if b.get("file"):
-        layout = {k: {"columns": PFJ.scalar_columns(an.prof.kinds[k].head, an.keys[k])} for k in b["kinds"]}
+        layout = {k: {"columns": list(dict.fromkeys(an.match[k] + PFJ.scalar_columns(an.prof.kinds[k].head, an.keys[k])))} for k in b["kinds"]}
         settings = {"root": b["root"], "domain": b["domain"], "layout": layout}
         keys = {an.keys[k] for k in b["kinds"]}
         if b["in-place"] and len(keys) == 1:
