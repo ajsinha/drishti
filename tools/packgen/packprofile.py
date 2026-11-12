@@ -37,6 +37,7 @@ from dataclasses import dataclass, field
 
 sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parents[1]))
 import sutragen as SG  # noqa: E402
+sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parents[1] / "lake"))
 import dataprofile as DP  # noqa: E402  (the field walk and the key, date and match candidates of `data profile`)
 
 DUPES_NAMED = 20
@@ -166,15 +167,17 @@ class Profile:
     files: int = 0
     rows: int = 0
     bad: int = 0
+    undated: list = field(default_factory=list)         # files whose name carries no date (the load rules)
     seconds: float = 0.0
     bad_named: list = field(default_factory=list)
 
 
 def file_date(f) -> str | None:
-    """A file's business date by the load rules: the date in its name (trade.2026-11-03.jsonl.gz), else none."""
-    import re
-    m = re.search(r"(\d{4}-\d\d-\d\d)", f.name)
-    return m.group(1) if m else None
+    """A file's business date by the load rules (tools/lake/filedate.py, the loaders' rule): the date in its name
+    (trade.2026-11-03.jsonl.gz), else none (such a file loads under --as-of, its .ready file's date or the business today)."""
+    import filedate
+    d = filedate.of(f.name)
+    return d.isoformat() if d else None
 
 
 @dataclass
@@ -197,6 +200,8 @@ def _scan_file(args) -> Profile:
         if len(prof.bad_named) < 10:
             prof.bad_named.append(text)
     fd = file_date(f)
+    if fd is None:
+        prof.undated.append(f.name)
     for k, doc, _ in SG.read_records([f], bad):
         kind = conf.kind or k
         kp = prof.kinds.get(kind)
@@ -211,6 +216,7 @@ def _scan_file(args) -> Profile:
 def merge(into: Profile, p: Profile) -> None:
     """Folds one file's profile into the whole (counts add; ids already seen in another file are duplicates)."""
     into.rows += p.rows
+    into.undated += p.undated
     into.bad += p.bad
     into.bad_named += p.bad_named[:max(0, 10 - len(into.bad_named))]
     for kind, b in p.kinds.items():
@@ -276,13 +282,33 @@ def scan(files, conf: Config, samples: int = 5, workers: int = 1, progress=None)
 def head(files, limit: int = 2000) -> dict[str, list[dict]]:
     """The first ``limit`` documents per kind (for inference only; the full pass checks what it infers)."""
     out: dict[str, list[dict]] = {}
-    for n, (k, doc, _) in enumerate(SG.read_records(files, lambda t: None)):
-        lst = out.setdefault(k, [])
-        if len(lst) < limit:
-            lst.append(doc)
-        if n >= limit * 10 or all(len(v) >= limit for v in out.values()):
-            break
+    for f in files:                                     # a file whose kind (by its name) is full already is not opened: every kind gets its head
+        if len(out.get(SG.file_kind(f), ())) >= limit:
+            continue
+        for k, doc, _ in SG.read_records([f], lambda t: None):
+            lst = out.setdefault(k, [])
+            if len(lst) < limit:
+                lst.append(doc)
+            elif all(len(v) >= limit for v in out.values()):
+                break
     return out
+
+
+def drop_absent(kp: KindProfile) -> list[str]:
+    """Match fields no row of the kind has (``--match`` given for every kind): dropped, the combinations folded; returns them."""
+    gone = [f for f in kp.match if f not in kp.fields]
+    if not gone:
+        return []
+    keep = [i for i, f in enumerate(kp.match) if f not in gone]
+    combos, shown = Counter(), {}
+    for c, n in kp.combos.items():
+        combos[tuple(c[i] for i in keep)] += n
+    for c, by_date in kp.shown.items():
+        mine = shown.setdefault(tuple(c[i] for i in keep), {})
+        for d, docs in by_date.items():
+            mine[d] = (mine.get(d, []) + docs)[:kp.samples]
+    kp.match, kp.combos, kp.shown = [kp.match[i] for i in keep], combos, shown
+    return gone
 
 
 def candidates(kind: str, docs: list[dict]) -> dict:

@@ -232,6 +232,9 @@ def load_files(a, an, b: dict, cli, say=print) -> int:
         args += ["--date", ",".join(f"{k}={v}" for k, v in an.dates.items())]
     if getattr(a, "kind", None):
         args += ["--kind", a.kind]
+    if getattr(a, "recursive", False):
+        args.append("--recursive")
+    sys.stdout.flush()
     say("\n== " + " ".join(["drishti.py", *args]))
     return cli.main(args)
 

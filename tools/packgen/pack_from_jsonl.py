@@ -187,6 +187,11 @@ def analyse(opts, say=print) -> Analysis:
             an.match[kind], an.keys[kind] = list(m), k
             if d:
                 an.dates[kind] = d
+    for kind, kp in an.prof.kinds.items():      # --match for every kind: a field this kind never has does not split it
+        gone = PP.drop_absent(kp)
+        if gone:
+            an.match[kind] = list(kp.match)
+            an.why.setdefault(kind, []).append(f"match {','.join(gone)} dropped: in no row of {kind}")
     used: set[str] = set()
     min_docs = getattr(opts, "min_docs", 1) or 1
     for kind in sorted(an.prof.kinds):
@@ -222,6 +227,10 @@ def print_plan(an: Analysis, say=print) -> None:
     rate = p.rows / p.seconds if p.seconds else 0
     say(f"\nread {p.rows:,} rows from {p.files} file(s) in {p.seconds:.1f} s ({rate:,.0f} rows/s); {p.bad} unreadable line(s)"
         + (": " + "; ".join(p.bad_named[:3]) if p.bad else ""))
+    if p.undated:
+        say(f"note: {len(p.undated):,} file(s) carry no date in their name ({', '.join(p.undated[:3])}{', ...' if len(p.undated) > 3 else ''}): "
+            "by the load rules they load under --as-of, their .ready file's date or the business today; name them "
+            "<kind>.<YYYY-MM-DD>.jsonl[.gz] (one folder per source when several deliver the same day)")
     for kind in sorted(p.kinds):
         kp = p.kinds[kind]
         say(f"\nkind {kind}: {kp.rows:,} rows, {len(kp.fields)} fields")
@@ -229,7 +238,9 @@ def print_plan(an: Analysis, say=print) -> None:
             say(f"  {w}")
         key = an.keys[kind]
         per = " per business date" if kp.dates else ""
-        if kp.unique():
+        if kp.key and kp.no_key == kp.rows:
+            say(f"  id {key}: in no row; give --key {kind}=FIELD (the duplicate check needs it)")
+        elif kp.unique():
             say(f"  id {key}: unique{per} over all {kp.rows:,} rows")
         else:
             say(f"  id {key}: NOT unique{per}: {kp.dup_rows:,} duplicate row(s)" + (f" (e.g. {', '.join(kp.dup_named[:5])})" if kp.dup_named else "")
