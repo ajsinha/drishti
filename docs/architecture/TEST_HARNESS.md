@@ -453,6 +453,28 @@ time on:
 Across the lane: every VaR server's stop waited 15 s, and every start about 9 s idle and 20 to 40 s under the drill's load; the lane ran on
 3 workers because the sizing reserved the other lane's 8 GB beside the Java verify's 20 GB.
 
+### 3.26 Why each speed-up keeps coverage
+
+Every speed-up of the drill changes how a test runs, never what it proves. For each, why, and the test that holds it to that:
+
+| Speed-up | Why coverage is unchanged | Held by |
+|---|---|---|
+| Distribution by test (3.1), per-worker fixtures (3.2) | every test still runs once; a file that keeps state stays one group on one worker | `test_browser_rules.py` (rules 1 to 4) |
+| The cached demo lake (3.15) | the lake is keyed on the hash of every source that builds it (test data, generators, loaders, packs' config), working-tree edits included: a changed source builds a new lake | `tools/drillkit/test_affected.py` (the cache builds once per hash, again after a change) |
+| Shared read-only servers (3.23) | only files that read share; a file that writes anything into a shared server's folder fails with what it wrote, and that server is stopped, not handed on | `test_shared_stack_guard.py` |
+| The drawn signal (3.20) | a test or capture waits for the frame that draws the change, never less: `Drishti.settled` waits while a grid or chart says it is drawing; a page without the signal falls back to the old network-idle wait, and the snapshot report counts those fallbacks | `test_elements_grid_browser.py` (`test_the_grid_says_it_is_drawing_until_its_frame_has_drawn`) |
+| The visual snapshots split (3.20) | the same key pages, each in exactly one group, the same goldens and tolerances | `test_snapshot_groups.py` |
+| Faster server starts (3.24) | the same classes from the same jars; a missing or stale archive is ignored (`-Xshare:auto`) and the server starts from the jar | the browser lane itself: every server it starts answers or the test fails |
+| The container smoke test (3.21) | the image build, start, health, the VaR golden through the API and four pages run in every drill; the full in-container suite runs whenever the diff since the last release touches what only it proves | `tools/drillkit/test_drill_lanes.py` (`container_smoke.py full-needed`) |
+| Fix drills (3.22) | never skip a lane a commit can reach; an unknown path reaches every lane; a pass on another branch does not count; the release drill is the full one | `tools/drillkit/test_drill_lanes.py` |
+| The Java 25 lane's test list (3.18) | the whole tree is compiled on Java 25; the tests run are those of the code a JDK version can change; every test runs on Java 21 | `tools/drill-java25.txt`, reviewed with each JDK-sensitive change |
+
+**The drill deletes only its own folders.** Every deletion in `tools/drill.sh` targets its logs (`<data>/drill/`), its temporary folder
+(`<data>/tmp/drill/`, which it exports as `TMPDIR`, so the tests' temporary folders land there too), or its own Java copies
+(`<repository>-drill-copies/<lane>.<its pid>.*`, beside the repository, and that folder only when empty). A `DRISHTI_DRILL_TMP` whose name
+does not hold `drill`, or a `DRISHTI_DRILL_COPY_DIR` whose name does not hold `drill-copies`, is refused. `tools/drillkit/test_drill_lanes.py`
+(`OwnFoldersOnly`) checks every `rm` and `find … -exec rm` in the drill against that list.
+
 ## 4. Numbers to hold
 
 | What | Number |

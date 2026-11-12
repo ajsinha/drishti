@@ -60,7 +60,7 @@
   Qlik, Looker), per-product notes, where Drishti differs and where it is behind, ideas to borrow; web sources cited with the access date.
   Linked from the Power BI comparison, the competitive analysis and the docs index; not a Help entry (the count cap stays).
 - **Faster drills** (2.9.11.i4, item 1; [BENCHMARK.md](docs/admin/BENCHMARK.md) section 18.3, [TEST_HARNESS.md](docs/architecture/TEST_HARNESS.md)
-  sections 3.21 to 3.25):
+  sections 3.21 to 3.26):
   - **The containers lane** replaces "Java 21 in Docker" after the browser lane: `tools/drillkit/container_smoke.py` builds the server and
     console images, boots them on the host network beside the browser lane (no network change for Chromium), checks health, the VaR golden
     through the server's API (BANK and DESK-RATES, VaR and ES at the walk's fixed date) and four console pages; about a minute with the
@@ -84,6 +84,8 @@
     start) and are stopped in 3 s, not 15 (their graceful shutdown waited for open requests); the browser workers are sized without the
     other lane's reserve (it ends in five minutes); two failed files re-run at a time; the lane's memory monitor watches the lane (it
     watched itself and recorded nothing); a failed snapshot's difference images are kept in `<data>/drill/runs/<when>/snapshot-diffs/`.
+  - **Why coverage is unchanged**, speed-up by speed-up, with the test that holds each (TEST_HARNESS.md 3.26); **the drill deletes only its
+    own folders**: a `DRISHTI_DRILL_TMP` or `DRISHTI_DRILL_COPY_DIR` that is not a drill folder is refused, and a test checks every deletion.
 
 - **A module's computed kinds start the connectors that name them**: a loaded module's `KindProvider` that a connector file names (banking's
   `var-system-baskets` and `var-positions`) is installed as that connector's type, as a `SourcePlugin` extension is, so `PORT <id>` opens the
