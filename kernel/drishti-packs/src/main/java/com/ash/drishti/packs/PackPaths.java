@@ -110,8 +110,8 @@ public final class PackPaths {
      */
     public static java.util.List<InstalledPacks> installedModulePacks(Environment env) {
         java.util.List<InstalledPacks> out = new java.util.ArrayList<>();
-        String dir = env.getProperty("drishti.module-deploy.dir", "");
-        Path root = dir.isBlank() ? Path.of(dataDir(env), "modules") : Path.of(dir);
+        String deployDir = env.getProperty("drishti.module-deploy.dir", "");
+        Path root = deployDir.isBlank() ? Path.of(dataDir(env), "modules") : Path.of(deployDir);
         com.fasterxml.jackson.databind.ObjectMapper yaml = new com.fasterxml.jackson.databind.ObjectMapper(new com.fasterxml.jackson.dataformat.yaml.YAMLFactory());
         for (Path installed : java.util.List.of(root.toAbsolutePath().normalize().resolve("installed"))) {
             if (!Files.isRegularFile(installed.resolve("active.yaml"))) {
