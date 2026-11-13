@@ -117,6 +117,7 @@ def binding_plan(a, an) -> dict:
         return {"kinds": kinds, "connector": a.connector, "file": None}
     lo = laid_out(a.inputs) if not a.files_root else None
     root, domain = (str(lo[0]), lo[1]) if lo else (a.files_root or FILES_ROOT, a.name)
+    root = str(pathlib.Path(root).resolve())          # the server resolves a relative root against its own working folder
     return {"kinds": kinds, "connector": f"{a.name}-files", "file": f"connectors/{a.name}-files.yaml", "root": root, "domain": domain,
             "in-place": bool(lo)}
 

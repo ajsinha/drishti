@@ -299,7 +299,7 @@ class RegenerateEndToEnd(unittest.TestCase):
             docs = [{"tradeId": f"T{i}", "type": ["IRS", "FRA"][i % 2], "notional": 100 + i} for i in range(6)]
             data.write_text("".join(json.dumps(d) + "\n" for d in docs))
             self.assertEqual(run("pack", "new", data, "--name", "pk", "--key", "tradeId", "--match", "type", "--out", t / "mod", "--dist", t / "dist",
-                                 "--no-binding")[0], 0)
+                                 "--no-binding", "--allow-shared-kinds")[0], 0)
             self.assertTrue((t / "dist" / "pk-1.0.0.dmod").is_file())
             self.assertTrue((pack / "generated" / "pack.yaml.base").is_file())
             irs = pack / "sutras/trade/trade-irs.v1.sutra.yaml"

@@ -910,6 +910,29 @@ ingest:
 It is an optional **tooling key**: `data ingest --pack` and `pack check` read it, the server ignores it (it is listed in the
 key table of [BUILD_GUIDE.md](BUILD_GUIDE.md)). Delete it and the pack loads exactly the same.
 
+**Bulk recipe: a folder of files to a deployed module, unattended.** For a folder of JSON Lines files (any number, any size, `-r` for
+subfolders) `pack new` writes a content module (a `.dmod`), binds its kinds, loads the documents and installs the module in one command:
+
+```bash
+drishti-console/.venv/bin/python tools/drishti.py pack new /data/incoming --name deals --kind-prefix deals- \
+    --key DEAL_ID --match PRODUCT_TYPE,SOURCE_SYSTEM --workers 4 \
+    --files-root /data/files --load --deploy --modules-dir /srv/drishti/data/modules
+```
+
+- **Every record of every file is read** (no sampling), so a combination of the match fields held by one row at the end of the last
+  file still gets its Sutra. `--workers N` reads files in parallel; `--dry-run` prints the plan (kinds, combinations and the Sutra each
+  becomes, the id check, the business dates from the file names, the binding) and writes nothing.
+- **`--kind-prefix`** puts a prefix before every kind (`deal` becomes `deals-deal`). A server that has a product module providing the same kind
+  refuses a module that claims it; `pack new` lists such kinds in the plan and stops unless you prefix them (or pass `--allow-shared-kinds`
+  for a server without that module).
+- **`--load`** writes the documents under `--files-root` as `<name>/<business date>/<kind>.jsonl` (the date comes from the file name,
+  `deal.2026-11-03.jsonl.gz`), and the generated file connector names that root as an absolute path. **`--deploy`** drops the checked
+  `.dmod` into `--modules-dir` (one node; with `--server` and `--reason` it is uploaded and planned on a cluster). The running server's
+  auto-deploy runs the fifteen conformance checks again, installs the module and loads its packs; no restart.
+- Measured on one machine: 60 files, 300,000 rows, 26 Sutras (one of them for a combination of a single row): about 35 s for the
+  generation and the 15 checks of the `.dmod`; 6 files, 20,000 rows, one rare row: 33 s in all (generation, load, checks, deploy), and
+  the server showed the module and opened the rare row's screen (`GET /api/v1/views/<kind>/<id>`, HTTP 200) after its auto-deploy.
+
 ### `pack check`: lint + test + help coverage, for CI
 
 For each pack: `sutra lint` (with `--strict`: help warnings fail), then `sutra test` (renders every sample, checks `expect.yaml`
