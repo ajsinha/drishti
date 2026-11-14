@@ -18,6 +18,12 @@
 
 ## Unreleased
 
+- **Write endpoints tested (BI, pivot, exports, runs).** Each of the BI, pivot, run, export, monitor and alert-rule write endpoints that had no test now
+  has one: a valid request with its effect read back (the saved view gone, the run kept or scheduled or shared, the exported file's cells, the rule
+  deleted) and an invalid one refused with its DRS code. `POST /export/grid.csv`, `/export/grid.xlsx` and `/export/grid.jsonl` refuse a body that is
+  not a JSON object (`400`, `DRS-5001`; `415` for another content type) instead of sending an empty file. `api_sweep.py --writes-only` maps the writes
+  to their tests without a running server.
+
 - **The API sweep.** `tools/sweep/api_sweep.py` lists every endpoint of the server (every controller of the kernel and the modules) and of the
   console (every route) from the source and calls each GET as the administrator, with real ids, kinds and dates of the saved test data and the
   first id of the parent list for any other path variable: a 5xx, an unexpected 4xx, an empty body, a timeout or an answer over 10 s fails.

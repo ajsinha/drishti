@@ -44,7 +44,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
  */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.rachana.hot-reload=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
-        "drishti.security.roles.trades-only.kinds[0]=trade",
+        "drishti.security.roles.trades-only.kinds[0]=trade", "drishti.rachana.studio-save=true",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/identity-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -76,6 +76,10 @@ class PivotWriteEndpointsTest {
         String text = res.getResponse().getContentAsString();
         assertThat(res.getResponse().getStatus()).as(text).isEqualTo(status);
         assertThat(text).as("the refusal names its code").contains(code);
+    }
+
+    static Map<String, Object> dated(String date) {
+        return Map.of("source", "trade", "date", date, "rows", List.of("productType"), "values", List.of(Map.of("measure", "count()", "as", "N")));
     }
 
     static Map<String, Object> view() {
@@ -110,14 +114,13 @@ class PivotWriteEndpointsTest {
 
     @Test @Order(2)
     void compareAnswersTheViewOnTwoDatesAndNeedsTheOtherDate() throws Exception {
-        JsonNode a = ok("u-rita", "trades-only", post("/api/v1/pivot/query"), Map.of("view", view()));
-        String date = a.path("date").asText();
-        assertThat(date).isNotBlank();
-        JsonNode c = ok("u-rita", "trades-only", post("/api/v1/pivot/compare"), Map.of("view", view(), "otherDate", date));
-        assertThat(c.toString()).as("the comparison answers the cells of both dates").contains(date);
-        assertThat(ok("u-rita", "trades-only", post("/api/v1/pivot/compare"), Map.of("view", view(), "otherDate", date))).isEqualTo(c);    // repeated: the same
-        refused("u-rita", "trades-only", post("/api/v1/pivot/compare"), Map.of("view", view()), 422, "DRS-");
-        refused("u-rita", "trades-only", post("/api/v1/pivot/compare"), Map.of("view", Map.of("source", "no-such-kind"), "otherDate", date), 422, "DRS-");
+        String date = "2026-09-30";
+        JsonNode c = ok("u-rita", "trades-only", post("/api/v1/pivot/compare"), Map.of("view", dated(date), "otherDate", date));
+        assertThat(c.has("answer") && c.has("other") && c.has("diff")).as("both answers and the differences per cell: " + c).isTrue();
+        c.path("diff").forEach(d -> assertThat(d.path("status").asText()).as("the same view on the same date: nothing is new or gone").isNotIn("new", "gone"));
+        assertThat(ok("u-rita", "trades-only", post("/api/v1/pivot/compare"), Map.of("view", dated(date), "otherDate", date)).path("diff")).isEqualTo(c.path("diff"));    // repeated: the same differences
+        refused("u-rita", "trades-only", post("/api/v1/pivot/compare"), Map.of("view", dated(date)), 400, "DRS-5701");
+        refused("u-rita", "trades-only", post("/api/v1/pivot/compare"), Map.of("view", Map.of("source", "no-such-kind"), "otherDate", date), 400, "DRS-5701");
     }
 
     @Test @Order(3)
@@ -132,8 +135,8 @@ class PivotWriteEndpointsTest {
         assertThat(refreshed.path("words").asText()).isNotBlank();
         ok("u-ann", "admin", post("/api/v1/pivot/rollups/" + RID + "/refresh"), null);          // again: the same rollup, refreshed again
         refused("u-rita", "trades-only", post("/api/v1/pivot/rollups"), def, 403, "DRS-");
-        refused("u-ann", "admin", post("/api/v1/pivot/rollups"), Map.of("id", "bad id!", "source", "trade", "functions", List.of("count()")), 422, "DRS-");
-        refused("u-ann", "admin", post("/api/v1/pivot/rollups"), Map.of("id", "empty", "source", "trade", "grain", List.of("productType")), 422, "DRS-");
+        refused("u-ann", "admin", post("/api/v1/pivot/rollups"), Map.of("id", "bad id!", "source", "trade", "functions", List.of("count()")), 400, "DRS-5701");
+        refused("u-ann", "admin", post("/api/v1/pivot/rollups"), Map.of("id", "empty", "source", "trade", "grain", List.of("productType")), 400, "DRS-5701");
         refused("u-rita", "trades-only", post("/api/v1/pivot/rollups/" + RID + "/refresh"), null, 403, "DRS-");
         refused("u-ann", "admin", post("/api/v1/pivot/rollups/" + "no-such" + "/refresh"), null, 404, "DRS-5704");
         refused("u-rita", "trades-only", delete("/api/v1/pivot/rollups/" + RID), null, 403, "DRS-");
@@ -147,8 +150,8 @@ class PivotWriteEndpointsTest {
         ok("asha", "analyst", post("/api/v1/pivot/functions"), PivotFunctionsApiTest.definition());
         JsonNode sub = ok("asha", "analyst", post("/api/v1/pivot/functions/asha/wret@1/submit"), Map.of("note", "for the desk"));
         assertThat(sub.toString()).contains("wret");
-        refused("asha", "analyst", post("/api/v1/pivot/functions/asha/wret/submit"), null, 422, "DRS-");
-        refused("raj", "analyst", post("/api/v1/pivot/functions/asha/wret@1/submit"), null, 404, "DRS-");
+        refused("asha", "analyst", post("/api/v1/pivot/functions/asha/wret/submit"), null, 400, "DRS-5701");
+        refused("raj", "analyst", post("/api/v1/pivot/functions/asha/wret@1/submit"), null, 403, "DRS-5712");
         refused("asha", "analyst", post("/api/v1/pivot/functions/asha/nope@1/submit"), null, 404, "DRS-");
     }
 
@@ -156,7 +159,7 @@ class PivotWriteEndpointsTest {
     void promotingAPivotNeedsAnAuthorAPanelSourceAndAnExistingSutra() throws Exception {
         Map<String, Object> panelView = Map.of("view", Map.of("source", "panel/trades/no-panel/x", "rows", List.of("productType")), "sutra", "no-such-sutra");
         refused("u-rita", "trades-only", post("/api/v1/pivot/promote"), panelView, 403, "DRS-5002");
-        refused("u-ann", "admin", post("/api/v1/pivot/promote"), Map.of("view", view(), "sutra", "x"), 422, "DRS-");        // not a panel's pivot
+        refused("u-ann", "admin", post("/api/v1/pivot/promote"), Map.of("view", view(), "sutra", "x"), 400, "DRS-5701");        // not a panel's pivot
         refused("u-ann", "admin", post("/api/v1/pivot/promote"), panelView, 404, "DRS-2003");
     }
 }

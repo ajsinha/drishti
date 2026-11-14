@@ -806,6 +806,9 @@ public final class RunService {
         }
         f.lock.lock();
         try {
+            if (f.run.state().finished()) {                // it finished between the check above and this lock: it stays as it finished
+                return f.run;
+            }
             f.cancelReason = why;
             queue.remove(f);
             Thread t = f.thread;

@@ -272,7 +272,9 @@ class BiGovernanceApiTest {
         String broken = DATASET.replace("  b: { path: \"$.b\", type: string }", "  bee: { path: \"$.bee\", type: string }");     // b gone (another path: not a rename)
         call("PUT", itemPath(ds), ann(), Map.of("body", broken, "message", "rename b")).andExpect(status().isOk());
         assertThat(ok(call("GET", itemPath(ds) + "/impact", ann(), null)).path("refused").asBoolean()).isTrue();
-        call("POST", itemPath(ds) + "/impact", ann(), Map.of("yaml", broken)).andExpect(status().isOk()).andExpect(jsonPath("$.breaksPublished").value(true));
+        call("POST", "/api/v1/bi/items/" + ds + "/impact", ann(), Map.of("yaml", broken)).andExpect(status().isOk()).andExpect(jsonPath("$.breaksPublished").value(true));
+        call("POST", "/api/v1/bi/items/" + ds + "/impact", ann(), Map.of("yaml", DATASET)).andExpect(status().isOk()).andExpect(jsonPath("$.breaksPublished").value(false));     // the unchanged text breaks nothing
+        refused(call("POST", "/api/v1/bi/items/no-such-item/impact", ann(), Map.of("yaml", broken)), 404, "DRS-9001");
         // the publish is refused, and says which report breaks
         call("POST", itemPath(ds) + "/publish", ann(), Map.of("note", "rename")).andExpect(status().is(409)).andExpect(jsonPath("$.code").value("DRS-9040"))
                 .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("Governed report")));
