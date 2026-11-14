@@ -165,10 +165,11 @@ def write_module(a, n: dict, m: dict, mod: pathlib.Path, say=print) -> dict:
                 "kernel": ">=0.2 <1.0", "rachana": ">=1.0", "contracts": ">=1.0", "plugin-api": ">=2.0", "elements": ">=1.4 <2",
                 "requires": {n["pack"]: ">=1.0 <2"}, "data": {"needs": "data/needs.yaml"},
                 "connectors": {"folder": "connectors", "list": sorted(conns)},
-                "dataload": {"rules": [rule]},
+                "mappings": {n["kind"]: n["map"]}, "dataload": "dataload.yaml",
                 "sections": [{"kind": n["kind"], "fragment": n["section"], "when": f"$.SOURCE_SYSTEM == '{n['system']}'"}],
                 "docs": {"readme": "docs/README.md", "help": "docs/help.yaml", "guides": ["docs/guide.md"], "tutorials": ["docs/tutorial.md"]},
                 "resources": {"memory-mb": 16}}
+    write_yaml(mod / "dataload.yaml", {"dataload": {"rules": [rule]}})
     write_yaml(mod / "module.yaml", manifest)
     docs(a, n, m, mod, conns)
     say(f"\nwrote {mod}: module.yaml, {len(conns)} connector(s), {n['map']}, {n['section']}, the inbox rule ({n['match']}), docs/")
@@ -208,7 +209,7 @@ Modules) takes {n['system']}'s rows out everywhere.
 |---|---|---|
 | Read connector | `connectors/{n['name']}.yaml` | {layout}; `set: SOURCE_SYSTEM: {n['system']}`; `map: {n['map']}` |
 {''.join(f"| Listener | `connectors/{c}.yaml` | Kafka, off until the site sets its servers and topic{'; the blotter writes back through it' if 'writes' in conns[c] else ''} |{chr(10)}" for c in conns if c != n['name'])}| Field map | `{n['map']}` | canonical field <- native field or constant, value maps, the native fields kept |
-| Inbox rule | `module.yaml` `dataload:` | files named `{n['match']}` in `data/inbox` (with `.ready`) load into `{n['table']}` |
+| Inbox rule | `dataload.yaml` (module.yaml `dataload:`) | files named `{n['match']}` in `data/inbox` (with `.ready`) load into `{n['table']}` |
 | Page section | `{n['section']}` | the native fields with no canonical one, on the `{n['kind']}` page when `SOURCE_SYSTEM = '{n['system']}'` |
 
 The map ({m['mapped']} of {len(m['fields'])} canonical fields):
