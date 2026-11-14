@@ -30,9 +30,8 @@
 #   engine:<id>          the compute engine runs on a server of the cluster
 #   module:<id>          the domain module is on for the person (ACCESS_MODEL.md)
 # Visibility tags, on an item, a column or a menu (the innermost wins): domain: the domain module it belongs to (core when not said;
-# banking, economy: drawn while the module is on for the person, as the server says: core/modules.py) and lenses: the lenses it
-# shows in (none said: every lens; the full product, outside any lens, shows everything its requirements allow). What a person sees
-# follows their role (requires:) and their lens (lenses: and the lens's own menus: lists), per request: nothing is kept per person.
+# banking, economy: drawn while the module is on for the person, as the server says: core/modules.py). What a person sees follows
+# their role (requires:), per request: nothing is kept per person; a lens arranges the menus and hides nothing.
 # also: [ids] on a menu draws items listed elsewhere in it (the Admin strip's BI settings and Commands, the BI rail's Pivot) without
 # listing them twice. rail: false on a BI item keeps it out of the BI rail (the top bar's BI menu only).
 # An edition (or a lens) lists the items it shows per menu (menus.<menu-id>: [item ids]); a menu it does not name keeps every item its
@@ -230,6 +229,6 @@ in-context:
 # Addresses that are not pages: data for a page's script, redirects of old addresses, sign-in, health and files.
 not-pages: [/about/competitive, /admin, /admin/commands, /asof, /auth/oidc/callback, /auth/oidc/login, /bi, /bi/explore, /bi/model-api/consumers,
             /bi/model-api/dataset, /bi/model-api/datasets, /bi/model-api/fields, /bi/model-api/roles, /bi/notebook/status, /bi/python/status,
-            /bi/transform/snippets, /build/binding, /build/reviews, /build/shape, /build/tables/workspaces, /datamap/data, /designer,
+            /bi/transform/snippets, /build/binding, /build/pack/new, /build/reviews, /build/shape, /build/tables/workspaces, /datamap/data, /designer,
             /dist/status, /favicon.ico, /go, /healthz, /healthz/backend, /lens/leave, /login, /logout, /manifest.webmanifest, /pyconsole,
             /readyz, /render/demo, /render/demo/start, /review/changes, /studio, /studio/schema]

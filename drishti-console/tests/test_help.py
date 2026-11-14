@@ -448,14 +448,13 @@ def test_old_section_names_and_addresses_keep_working(client):
     assert client.get("/help/context/var", follow_redirects=False).headers["location"] == "/help/docs-guides-var-guide"   # F1
 
 
-def test_a_page_with_lenses_shows_only_in_those_lenses_and_in_the_full_product():
-    """help.yaml lenses: a page lists the lenses that show it; outside any lens (the full product) every page shows."""
+def test_a_lens_hides_no_help_page():
+    """A lens is a workspace (ADMIN_GUIDE.md 12): it hides nothing, so Help shows inside a lens what the full product shows."""
     from pathlib import Path as _P
     from core.edition import Edition
     from core.guides import Guide
     from routes.help_routes import shown
-    page = Guide("p", "P", "", "x", "guide", "analytics", _P("x.md"), lenses=("risk",))
+    page = Guide("p", "P", "", "x", "guide", "analytics", _P("x.md"))
     assert shown(Edition(), page)
     assert shown(Edition("risk", {}, lens=True), page)
-    assert not shown(Edition("world", {}, lens=True), page)
-    assert shown(Edition("world", {}, lens=True), Guide("q", "Q", "", "x", "guide", "analytics", _P("x.md")))
+    assert shown(Edition("world", {}, lens=True), page)
