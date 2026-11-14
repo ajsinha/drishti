@@ -129,6 +129,7 @@ def test_the_world_page_comes_from_the_economy_module(browser, console):
         return dict(store.get(ident.user if ident else "", {}))
 
     app.state.backend.settings = settings
+    app.state.user_settings.forget(app.state.auth.default.user)                           # an earlier test's read of this person's settings is cached
     page = browser.new_page()
     try:
         page.goto(url + "/")
