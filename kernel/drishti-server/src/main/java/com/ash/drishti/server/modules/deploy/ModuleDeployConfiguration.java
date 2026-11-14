@@ -174,7 +174,9 @@ public class ModuleDeployConfiguration {
                 env instanceof org.springframework.core.env.ConfigurableEnvironment c ? c : null,
                 () -> ctx.getBeanProvider(com.ash.drishti.server.caches.MemoryBudget.class).getIfAvailable())
                 .bindings(() -> ctx.getBeanProvider(com.ash.drishti.server.bindings.BindingService.class).getIfAvailable())
-                .packs(() -> ctx.getBeanProvider(com.ash.drishti.server.PackReloader.class).getIfAvailable());
+                .packs(() -> ctx.getBeanProvider(com.ash.drishti.server.PackReloader.class).getIfAvailable())
+                .python(() -> ctx.getBeanProvider(com.ash.drishti.compute.ComputeService.class).getIfAvailable(),
+                        m -> placement.computePartHere(m.id()));
         return new ModuleNode(root(env), KernelFacts.ofKernel(), placement, mounts, drain, folders, wiring)
                 .siteSwitch(id -> ctx.getBeanProvider(com.ash.drishti.registry.AccessRegistry.class).getIfAvailable() == null
                         || ctx.getBean(com.ash.drishti.registry.AccessRegistry.class).module(id).map(s -> s.enabled() && s.licensed()).orElse(true));

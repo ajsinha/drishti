@@ -185,7 +185,8 @@ public class ComputeController {
             if (!r.viewer().user().equals(p.user())) {
                 throw new ComputeException(ComputeException.Code.REFUSED, "the chunk's viewer is not the user the call is made for");
             }
-            java.time.Duration budget = r.timeout() != null ? r.timeout() : compute.settings().timeout(compute.settings().pool(r.pool()), r.cls());
+            java.time.Duration budget = r.timeout() != null ? r.timeout() : compute.settings().timeout(compute.poolSettings(r.pool()).orElseThrow(() -> new ComputeException(
+                    ComputeException.Code.REFUSED, "there is no compute pool '" + r.pool() + "'")), r.cls());
             return ComputeWire.result(compute.submit(r, null).await(budget.plusSeconds(10)));
         } catch (ComputeException e) {
             return ComputeWire.error(e);

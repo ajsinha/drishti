@@ -127,6 +127,11 @@ public record DmodManifest(int format, String id, String version, String title, 
     }
 
     /** {@code <id> <version>}, the way refusals name a module. */
+    /** The Python compute the module ships, or empty (a V1 refusal when the section does not read). */
+    public java.util.Optional<PythonPart> python() {
+        return PythonPart.of(this);
+    }
+
     public String label() {
         return id + " " + version;
     }
