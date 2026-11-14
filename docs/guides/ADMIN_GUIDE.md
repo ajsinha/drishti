@@ -35,7 +35,7 @@ almost everything here; it is all under **Admin** in the top bar. Every setting 
 10. [Rules Drishti enforces](#10-rules-drishti-enforces)
 11. [The users and roles API](#11-the-users-and-roles-api)
 12. [What a lens is](#12-what-a-lens-is)
-13. [Run a whole instance as one lens](#13-run-a-whole-instance-as-one-lens)
+13. [Run a whole instance as Drishti Risk or Drishti Finance](#13-run-a-whole-instance-as-drishti-risk-or-drishti-finance)
 14. [Offer lenses to people](#14-offer-lenses-to-people)
 15. [Home: landings, cards and chips](#15-home-landings-cards-and-chips)
 16. [The shipped lenses](#16-the-shipped-lenses)
@@ -680,20 +680,15 @@ curl -s 'localhost:18480/api/v1/admin/audit?subject=priya&limit=20'
 
 ## 12. What a lens is
 
-A **lens** is a focused experience of Drishti: the packs, commands, menus, Home, Help, Admin pages, BI datasets and branding that one kind
-of person needs, and nothing else. Drishti stays one product with one code base; a lens is configuration, and switching lenses is a
-configuration change, never a code change. It is used in two ways:
+A **lens** is a **workspace**: Drishti arranged for one kind of person. It sets the starting Home (landings, cards, chips), which menus
+and menu items come first, the command line's placeholder and the default screens. It **never hides anything**: every command, page,
+menu item, Help page, Admin page and BI dataset the running distribution has stays there, inside a lens or not. A person opens one for
+their own session (*Open Drishti Risk*, [section 14](#14-offer-lenses-to-people)); the distribution may name one as everyone's starting
+workspace (`lenses.default`).
 
-| | The instance's lens (an **edition**) | A person's lens |
-|---|---|---|
-| Set by | `drishti.edition` on the servers, then a restart ([section 13](#13-run-a-whole-instance-as-one-lens)) | a link, per person: *Open Drishti Risk* ([section 14](#14-offer-lenses-to-people)) |
-| Scope | the whole instance: it *is* Drishti Risk | one person's session, kept in their settings |
-| Packs | only the lens's (`allow-only`) | every pack stays loaded |
-| Controlled by | the administrator | the site's `drishti.lenses` and the modules that are on |
-| Secures anything? | refuses packs; hides commands and pages | **no: it hides, it does not secure** |
-
-**A lens hides; it does not secure.** What a person may read is decided by their roles, packs and masks (sections 3 and 4); a lens only
-changes what they are shown. A person who types a hidden command's API call directly gets what their roles allow.
+What exists is not a lens's to say. Three layers of switches, each with one job ([section 12.3](#123-the-three-layers-of-switches)):
+the **distribution** says what exists, the **module switch** whether a module is on at this site, the **engine switch** whether a compute
+engine runs on this server. What a person may read is decided by their roles, packs and masks (sections 3 and 4).
 
 ### 12.1 Modules, functions and lenses
 
@@ -709,16 +704,15 @@ licence  →  modules on  →  lenses offered  →  functions this person may us
 - **The functions** are the command words the lens bundles (`VAR`, `TRD`, `CRV`, `ECON` ...). A card, chip, menu item or command whose
   function is off for the person (its module off, or an administrator's switch on Functions: [section 20](#20-functions-func-every-command-and-turning-one-on-or-off))
   is not shown.
-- **The lens** carries the experience: its packs (by module), the commands people may type and see, the top menus and their items, Home
-  (landings, cards, chips), Help (sections and Knowledge pages), the Admin pages, the BI datasets and models, the feature presets and the
-  branding.
+- **The lens** arranges the experience: the top menus it puts first and their items' order, Home (landings, cards, chips), the
+  placeholder, the phone display. It loads no pack, presets no feature and hides nothing.
 
 ### 12.2 Where a lens is defined
 
 | Where | What it holds |
 |---|---|
 | **The registry** (`META-INF/drishti/lenses.yaml` in each module's jar: [the banking module's](../../modules/banking/banking-service/src/main/resources/META-INF/drishti/lenses.yaml), [the core server's](../../kernel/drishti-server/src/main/resources/META-INF/drishti/lenses.yaml)) | the lens's id and title, the modules it needs, the functions it bundles, its Home template, its Home **cards** (`cards:`) and **chips** (`chips:`), and for a lens with no file its menus and Help pages; a site's `config/access/lenses.yaml` adds a lens or replaces one by its id |
-| **The lens file** (`config/lenses/<module>/<lens>.yaml`) | packs by module, commands and words, features, menus, Home landings, Help, Admin pages, BI, the phone display and branding: everything needed to run an instance as the lens |
+| **The lens file** (`config/lenses/<module>/<lens>.yaml`) | the arrangement: its title and description, the menus it puts first (`menus:`), Home (`home:`), the phone display (`phone:`) and its landings' own settings (`trading:`, `quality:`) |
 
 The shipped lenses:
 
@@ -732,103 +726,38 @@ The shipped lenses:
 
 The registry also lists lenses that have no lens file or Home yet (CRO, MR cube, CCR cube, CIO, Oversight); they are not offered to people.
 
-**One folder.** The lens files and the feature presets every lens uses ([`config/lenses/features.yaml`](../../config/lenses/features.yaml))
-are under `config/lenses` (server `drishti.lens-dir`, `DRISHTI_LENS_DIR`, default `./config/lenses` relative to the server's working
-folder; the console's `lens.dir`). A file sits in its module's folder (`config/lenses/<module>/<lens>.yaml`), or in the folder itself for a
-lens of no module; a module's folder is read only while the module is on. The setting names keep the word *edition*: `drishti.edition`,
-`drishti.edition-spec.*`, the console's `edition:` block, and a lens file's first key `edition:`.
+**One folder.** The lens files are under `config/lenses` (the console's `lens.dir`, `DRISHTI_LENS_DIR`): a file sits in its module's
+folder (`config/lenses/<module>/<lens>.yaml`), or in the folder itself for a lens of no module; only the console reads them. The feature
+presets a distribution may name are in [`config/distributions/kernel.yaml`](../../config/distributions/kernel.yaml) (`features:`). The
+full product's packs are [`config/packs/default-packs.yaml`](../../config/packs/default-packs.yaml), by module; a distribution's are its
+modules'.
 
-**Packs by module.** A lens's `packs.enabled` names its packs under their modules (`{core: [core], banking: [market-data, ...]}`; a plain
-list is read too); a module that is off brings none of them. The full product's packs (no lens) are
-[`config/packs/default-packs.yaml`](../../config/packs/default-packs.yaml), by module too.
+### 12.3 The three layers of switches
 
-### 12.3 A lens, a function switch and an engine switch
+Each switch has one job and one home:
 
-Three switches decide whether a command word is shown, each with its own job:
-
-| Switch | Who sets it | Scope | What it decides |
+| Layer | Its one job | Where | Who changes it |
 |---|---|---|---|
-| **Lens** (the instance's or a person's) | the site, or a person | every node, or one person | which commands and pages people are offered |
-| **Function switch** (Functions, [section 20](#20-functions-func-every-command-and-turning-one-on-or-off)) | an administrator, for everyone | the whole cluster | whether one command may be used at all |
-| **Engine switch** (Admin → Engines, [section 21](#21-compute-engines-on-or-off)) | an administrator, per server | one node | whether a compute engine (VaR, exposure, FRTB-SA, SIMM ...) runs there |
+| **Distribution** | what exists: the modules (their packs, commands, menus, Help, engines), the brand, the feature presets | `config/distributions/drishti.<name>.yaml` (`features:` presets through `kernel.yaml`), chosen at start ([section 24](#24-white-label-distributions)) | the product owner or licensee; a restart |
+| **Module switch** | whether a module the distribution has is on at this site | `config/modules/<module>.yaml`, `DRISHTI_MODULES_<MODULE>_ENABLED`, Admin → Modules ([section 22](#22-modules-on-or-off)) | an administrator |
+| **Engine switch** | whether a compute engine (VaR, exposure, FRTB-SA, SIMM ...) runs on this server | `config/engines/<id>.yaml`, Admin → Engines ([section 21](#21-compute-engines-on-or-off)) | an administrator, per server |
 
-A word is shown when all three allow it: an engine running somewhere in the cluster, the lens offering it, and its function on. A lens's
-`var: off` or `exposure: off` feature preset sets the engine's switch. Underneath them all, a module that is off offers none of its
-lenses, functions or packs.
+A distribution presets an engine **off** when the module that owns it is not in it (it does not exist there), never **on**: where an
+engine runs is its own switch. On top, an administrator's function switch (Functions, [section 20](#20-functions-func-every-command-and-turning-one-on-or-off))
+turns one command off for everyone. A command word is shown when its module exists and is on, its engine runs somewhere in the cluster
+and its function is on. A module's menus (its manifest's `console.menus`) are in the top bar only while the module is in the distribution,
+installed, loaded and on; they go and come back at the next page when that changes. A lens changes none of this.
 
-## 13. Run a whole instance as one lens
+## 13. Run a whole instance as Drishti Risk or Drishti Finance
 
-**Deprecated: name a distribution instead (section 24); `drishti.edition` is read for one release and ignored when a distribution is
-named.** The setting is `drishti.edition` (environment variable `DRISHTI_EDITION`): the name of a lens file in `drishti.lens-dir`
-([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtiedition--editions-and-lenses)). Set it **on the server only**: the console asks the
-server (`/public/about`, the same answer as `/api/v1/about`'s `edition`) and follows. A change needs a restart of the server; the console
-follows within its check interval (`backend.check_seconds`, 5 s) or at its next start. The examples use `risk`; `trading`, `market` and
-`world` work the same way.
-
-**A single server.** Either in the server's `application.local.yaml` (in its working folder, git-ignored):
-
-```yaml
-drishti:
-  edition: risk
-```
-
-or in the environment, from the repository root:
-
-```bash
-DRISHTI_EDITION=risk java -Djava.io.tmpdir=data/tmp/server -jar kernel/drishti-server/target/drishti-server-*-exec.jar
-```
-
-Leave `DRISHTI_PACKS` unset: the lens's packs load. If `DRISHTI_PACKS` is set it still wins (site configuration beats the lens file), but
-with `allow-only` the packs outside the lens are not loaded, and the log says which.
-
-**The 3-node stack (`deploy/stack/`).** Each node's settings are in `deploy/stack/stack.yaml`. Add the variable to the `env:` of every
-node, then restart the stack:
-
-```yaml
-nodes:
-  - name: drishti-main
-    env: { DRISHTI_COMPUTE_ENABLED: "true", DRISHTI_EDITION: risk }
-  - name: drishti-b
-    env: { DRISHTI_EDITION: risk }
-  - name: drishti-c
-    env: { DRISHTI_EDITION: risk }
-```
-
-```bash
-bin/stop-cluster.sh && bin/start-cluster.sh
-```
-
-drishti-main's `packs:` names more packs than Drishti Risk opens: the lens's load and the log names the others it skipped. The console
-section needs nothing: it learns the lens from drishti-main.
-
-**Docker Compose.** `deploy/docker/compose.yaml` passes `DRISHTI_EDITION` to the server; the images carry `config/lenses/` (server and
-console):
-
-```bash
-DRISHTI_EDITION=risk docker compose -f deploy/docker/compose.yaml up -d
-```
-
-**AWS ECS.** Set `DRISHTI_EDITION=risk` in your environment file (the one `deploy/aws/env.example` documents), then register the task
-definitions again and roll the services (`deploy/aws/ecs/register.sh --nodes`, as in
-[CLUSTER_GUIDE.md](CLUSTER_GUIDE.md#12-drishti-on-aws-ecs-efs-and-s3)). Every node's task definition gets
-the same value.
-
-**Check it** from the command line: `curl -s http://localhost:18480/public/about` answers
-`"edition": {"name": "risk", "title": "Drishti Risk", ...}`. Signed in, the browser title, the top bar and About say **Drishti Risk**; what
-else you should see is in the lens's own section ([section 16](#16-the-shipped-lenses)).
-
-**The lens must be offered.** An instance lens whose modules are off (banking for Risk, Trading and Market; capitalmarkets too for Market;
-economy for World) has nothing to show: switch the module on first (`config/modules/<module>.yaml`, `DRISHTI_MODULES_<MODULE>_ENABLED` or `POST /api/v1/admin/modules`, then a restart).
-
-**Back to the full product.** Blank the setting (remove `drishti.edition` from `application.local.yaml`, unset `DRISHTI_EDITION`, or set it
-empty) and restart the server. `/public/about` then answers `"edition": null` and everything is the full product: the default packs
-(`config/packs/default-packs.yaml`), every command, menu, Help page, Admin page and BI dataset of the modules that are on. Packs an
-administrator loaded from Admin → Packs are in `data/packs/added.yaml`; with an allow-only lens the ones outside it are skipped, and they
-load again when you switch back.
+Name a **distribution** ([section 24](#24-white-label-distributions)): `bin/start-all.sh --distribution risk`, `DRISHTI_DISTRIBUTION=risk` or
+`drishti.distribution: risk`; the console follows the server. Drishti Risk has the banking and market-data modules, so economy and
+capital-markets commands, menus and Help do not exist there; its starting workspace is the Risk lens. A lens file is never an instance's
+filter: the old setting `drishti.edition` (`DRISHTI_EDITION`) is no longer read, and Health names it when a site still sets it.
 
 ## 14. Offer lenses to people
 
-On an instance that runs no lens for itself, `drishti.lenses` (`DRISHTI_LENSES`) lists the lenses a person may open. Set it in the server's
+`drishti.lenses` (`DRISHTI_LENSES`) lists the lenses a person may open (a distribution offers its own: `lenses.offered`). Set it in the server's
 configuration and restart the server:
 
 ```yaml
@@ -839,17 +768,16 @@ drishti:
 ```
 
 Each person then sees **Open Drishti Risk** (and the others listed) in the Views menu and on Home, each with its lens's description.
-Opening one gives them, on every page and every server of the cluster, the lens's menus, commands (command line, `FUNC`, the type-ahead),
-Help, Home landings, Admin pages, BI datasets and branding, with **Leave Drishti Risk** to come back. Inside one lens the menu shows
+Opening one arranges, on every page and every server of the cluster, their Home (the lens's landings, cards and chips) and the menus
+(the lens's first, then the rest); every command, page and dataset stays where it was. **Leave Drishti Risk** comes back (to the
+distribution's starting workspace, which has no Leave link of its own). Inside one lens the menu shows
 **Leave …** first, then **Switch to …** each of the others: switching needs no leaving first. The 3-node stack runs
 `DRISHTI_LENSES: risk,world,market,trading` (`deploy/stack/stack.yaml`, `settings:`); after changing it, restart the stack.
 
 - **Kept per person.** The lens is the person's `lens` setting (the server's user store), so a refresh, another browser or another server
-  keeps it; the console tells the server on each call (`X-Drishti-Lens: risk`), so the command line, `FUNC`, the type-ahead and BI follow
-  it too. Other people are unaffected. Every pack stays loaded.
+  keeps it. Other people are unaffected. The server's answers are the same inside a lens or not.
 - **Only lenses the registry offers.** A name in `drishti.lenses` whose registry lens is not offered (a module it needs is off) is dropped:
   no link, and `/lens/<name>` answers `DRS-4023`.
-- **Not with an instance lens.** An instance that runs `drishti.edition` shows no lens link.
 - **Build and Studio are off inside a lens.** A page names the Sutra that drew it ("How this view was built", About this page, a pack's
   page) **without** a link to the designer; in the full product the link opens it.
 - **Who sees the link.** `lens.roles` in the console's configuration (who sees the link, which roles start in the lens) is read and is the
@@ -896,20 +824,12 @@ every theme, one column on a phone. A figure the data cannot give is left out or
 **Drishti Risk** (`risk`, banking module) is a one-stop shop to manage risk: VaR and exposure first; liquidity, climate and more join as
 more lines in the same file.
 
-| Area | Shown | Hidden |
+| Area | Put first | Left to the other menus (still there) |
 |---|---|---|
-| **Packs** | core, market-data, trading, counterparty-risk, market-risk (allow-only) | world-economy, news-and-markets, us-equities, gleif, funds, the public sector's packs, the example packs (refused: `DRS-1017`) |
 | **Commands** | VaR (`VAR` and its page with the basket what-if; `VRES`, `VOFF`, `VLIM`, `PORT`, `POS`, `PNLV`, `SPV`, `FXS`, `SSET`); exposure (`EXP` and its page; `XRUN`, `XPATH`, `XOFC`, `AGR`, `CSA`, `NSET`, `LIM`, `COLL`, `MC`); the derived totals `NSMTM`, `CPMTM`; reference data `CPTY`, `GRP`, `LE`, `BOOK`, `DESK`, `TRDR`, `CCP`; trades `TRD`, `CTRD`, `PTRD`, `LTRD`; `FX`; the words `BI`, `FUNC`, `WHAT`, `DATAMAP`, `DATA` (Export data), `SMAT` (the scenario matrix), `PLAY` (the VaR Playground) | stress (`STR`, `SCN`, `SSPNL`), `PNL`, `TVAL`, `CVA`, `SACCR`, the curves and vol surfaces, `ISS`, `CAL`, `CLR`; the words `FORM`, `RUPAKA` |
 | **Menus** | Views (Terminal, Search, Functions, Data map, Export data, Reports, Workspaces, Monitors, Alerts), Risk (the VaR, exposure and other engines' pages, each while its engine runs), BI, Admin, Help (Help centre, Knowledge, Install and run, About); footer: Help, About, Release notes | Build, Forms |
-| **Features** | BI (the lens's datasets), VaR, exposure, the data map, Export data, layouts, workspaces, monitors, alerts, reports, lakes | Calc and Python visuals, the Sutra designer, Studio, Build, Forms, AI, embedding |
-| **Help** | Get started, Risk measures, Data, Operate, Reference, Knowledge (market risk, counterparty credit risk, core, trading, market data), Internal for administrators | Analytics and BI, Build; other packs' Knowledge pages; documents not in the catalogue |
-| **Admin** | users, roles, packs, commands, tokens, access, connectors, artifacts, loads, lakes, audit, net, engines, health, caches, capacity, BI, scopes (every person's VaR baskets), configuration | AI, collaboration, embedding, edits, compute (404) |
-| **BI** | `banking.market_risk_var_latest`, `banking.market_risk_var_official`, the `banking.counterparty_exposure_*` datasets, `banking.live_exposure_netting`, `banking.trading_risk_*`; models `market-risk-var`, `counterparty-exposure`, `live-exposure`, `trading-risk`, and the reports on them | every other dataset, model, report and board |
-| **Branding** | **Drishti Risk**, "VaR and exposure from your own pricing data", with Drishti's name and eye | nothing, by default |
 
-A hidden command is hidden from people only. The engines still read every kind they need (the VaR engine reads P&L vectors, positions,
-hierarchies, scenario PVs and FX; the exposure engine its paths and agreements), and the API is the same: VaR and exposure of any scope,
-any currency, intraday, official records, the what-if, the API and the CLI work as on the full product. The command line suggests
+The command line suggests
 `VAR BANK`, `VRES DESK:RATES`, `EXP CPTY:CP-ALDERSHOT`; the registry's chips add `VAR DESK RATES`, `EXP BANK`, `VLIM` and `VOFF`, and its
 cards open the bank's and the rates desk's VaR, VaR results by desk and a counterparty's exposure.
 
@@ -930,15 +850,10 @@ my counterparties, and whether a new trade fits. It loads the same five packs as
 risk on my book, counterparties and the market data a trader reads; regulatory, stress, collateral operations and macro economics are left
 out.
 
-| Area | Shown | Hidden |
+| Area | Put first | Left to the other menus (still there) |
 |---|---|---|
-| **Packs** | core, market-data, trading, market-risk, counterparty-risk (allow-only) | the public-data packs, the sample and example packs (`DRS-1017`) |
 | **Commands** | the blotter `TRD`, `CTRD`, `PTRD`, `LTRD`, `ITRD`; books and positions `BOOK`, `DESK`, `TRDR`, `POS`; risk on my book `VLIM`, `VRES`, `TVAL`, `PNLV`, `PORT`, `DPNL`, `PNL`, `SENS`; counterparties `CPTY`, `GRP`, `NSET`, `NSMTM`, `CPMTM`, `LIM`, `EXP`; market data `CRV`, `REPO`, `FIX`, `IRV`, `CPV`, `FX`, `FXF`, `FXV`, `EQ`, `EQX`, `CMD`, `CMDC`, `BND`, `CDS`; the words `VAR`, `EXP`, `BI`, `FUNC`, `WHAT`, `DATA`, `SMAT`, `PLAY` | regulatory (`SACCR`, `CVA`), stress (`SCN`, `STR`, `SSPNL`), collateral operations (`COLL`, `MC`), the exposure engine's runs, paths and official records, VaR's scenario inputs, macro economics; the words `DATAMAP`, `FORM`, `RUPAKA` |
 | **Menus** | Views (Terminal, Search, Functions, Export data, Reports, Workspaces, Monitors, Alerts); Engines; one **Markets** menu (rates, vols, FX, credit, equities and commodities: `menus.markets`); Blotter, Positions, Risk (with the engines' pages), Counterparties; Help. BI and Admin by command only (`BI <GO>`; `ADMIN <GO>` for administrators) | Forms, Data map, Build; BI and Admin in the bar |
-| **Features** | VaR, exposure, BI (the lens's datasets), layouts, workspaces, monitors, alerts, reports, lakes | Calc, Python visuals, the designer, Studio, Build, forms, the data map, AI, embedding |
-| **Help** | Knowledge (Trades and products, Market risk, Counterparty credit risk, Entities and ownership, Market data), with the other sections but Build | Build; the public-data packs' Knowledge pages |
-| **BI** | `banking.trading_risk_*`, `banking.trading_cashflows_*`, `banking.trades_basic_trade`, `banking.live_trading_trade`, the VaR datasets; their models and reports | exposure, stress, world and market-data items |
-| **Branding** | **Drishti Trading**, "Your books, your P&L and your limits, and whether the next trade fits" | |
 
 `SMAT BOOK BOOK-RATES-1 20` opens the scenario matrix: the book's scenarios across its last 20 business dates
 ([VAR_GUIDE.md section 3.9](VAR_GUIDE.md#39-the-scenario-matrix-smat)).
@@ -1027,14 +942,10 @@ limit*. Both halves are the server's engines and need no compute workers.
 forwards and vols, swaption and cap vols, credit curves, bonds, equities, indexes, dividends, inflation, commodities and correlations (the
 market-data pack, with the core pack it extends). No trades and no VaR. The market-data lake must be built (`lake demo` builds it).
 
-| Area | Shown | Hidden |
+| Area | Put first | Left to the other menus (still there) |
 |---|---|---|
-| **Packs** | core, market-data (allow-only) | trading, counterparty-risk, market-risk, the public-data packs, the example packs (`DRS-1017`) |
 | **Commands** | the pack's: `CRV`, `REPO`, `IRV`, `CPV`, `FIX`, `INF`, `INFC`; `FX`, `FXF`, `FXV`; `CDS`, `BND`; `EQ`, `EQX`, `DIV`, `EQV`, `CMD`, `CMDC`, `CMDV`; `CORR`, `CORRC`, `EQB`; the words `BI`, `FORM`, `FUNC`, `WHAT`, `DATAMAP`, `DATA` | `VAR`, `EXP`, `SMAT`, `PLAY` and every risk and trade command; core's own (`CPTY`, `BOOK`, `CAL`, `ISS` …); `RUPAKA` |
 | **Menus** | Views (Terminal, Search, Forms, Functions, Data map, Export data, Reports, Workspaces, Monitors, Alerts), Curves, Volatility, FX, Credit, BI, Admin, Help | Build, the risk engines |
-| **Help** | Knowledge (Market data), with the other sections but Build | Build; the other packs' Knowledge pages |
-| **BI** | `bi.market_data_*` datasets and the `market-data` model (the pack ships none, so BI offers its themes only) | every VaR, exposure, trading and world item |
-| **Branding** | **Drishti Market**, "Curves, surfaces and fixings: the bank's market data that feeds risk and valuations" | |
 
 The landings (violet accent) are worked out in the console from the pack's own answers, read as the person, cached two minutes per person,
 and served by `/api/home/market/desk`, `/moves` and `/quality` (`404 DRS-4023` unless the person's lens shows `CRV`).
@@ -1076,14 +987,10 @@ packs are shown inside the bank only; showing Drishti World outside it needs the
 off, its packs, its functions (`USEQ`, `IDX`, `SIC`, `EDGAR`, `FILING`, `FACT`, `PXH`, `FUND`, `HELD`, `TRACK`), its cards and chips, and
 the landings' company, filing and fund parts are gone; the rest of World stands.
 
-| Area | Shown | Hidden |
+| Area | Put first | Left to the other menus (still there) |
 |---|---|---|
-| **Packs** | world-economy, news-and-markets, official-news, gdelt-events, gleif, us-equities, funds (allow-only) | core, market-data, trading, counterparty-risk, market-risk, the example packs (`DRS-1017`) |
 | **Commands** | the packs' own: `ECON`, `MACRO`, `FCST`, `LABR`, `FISC`, `ECG`, `REGE`, `JUR`, `PARTY`, `OFFC`, `ELEC`, `REGN`, `SOCI`; `TOPIC`, `NEWS`, `CO`, `QUOTE`; `USEQ`, `IDX`, `SIC`, `EDGAR`, `FILING`, `FACT`, `PXH`; `LEI`, `LEIG`, `LEIR`, `LEIC`, `LEIM`; `FUND`, `HELD`, `TRACK`; `PRESS`, `PREL`, `GDELT`; the words `BI`, `FORM`, `FUNC`, `WHAT`, `DATAMAP`, `DATA` | `VAR`, `EXP`, `SMAT`, `PLAY` and every risk command; `RUPAKA` |
 | **Menus** | Views (Terminal, Search, Forms, Functions, Data map, Export data, Reports, Workspaces, Monitors, Alerts), Economies, Markets (news and quotes), Companies, BI, Admin, Help | Build, the risk engines |
-| **Help** | Knowledge (Economies; Companies, funds and ETFs; Entities and ownership; the news packs), with the other sections but Build | Build; the risk packs' Knowledge pages |
-| **BI** | `bi.world_economics_economies`, `bi.region_economics_regions`; models `world-economics`, `region-economics`; their reports | every other dataset, model, report and board |
-| **Branding** | **Drishti World**, "Economies, markets, companies and funds from public data" | |
 
 The landings (teal accent) read one thin read-only route, `/api/home/search`, which runs the server's own search grammar
 (`ECON where GDP_USD_BN > 0 order by GDP_USD_BN desc limit 12`), refused with `404 DRS-4023` for a command the person's lens does not
@@ -1119,7 +1026,6 @@ and world events: the packs world-development, central-banks, national-statistic
 | **Menus** | Views, BI, Admin, Help |
 | **Cards** | a country's development (`WDI WDI-CAN`), one indicator's history, a central bank, a rate series, Statistics Canada, OECD members by inflation, official press releases, the world's news by tone (GDELT) |
 | **Chips** | `WDI WDI-USA`, `CBANK CBANK-FED`, `OECD OECD-USA`, `PRESS PRESS-ECB` |
-| **Help** | the Public sector guide and its tutorial, the six packs' guides, External data |
 
 With the economy module off, all its packs and functions are gone and neither World nor Public sector is offered. It ships no lens file and
 no landing template of its own, so it is not run as a whole instance's lens; to do that, or to give it landings, write a lens file for it
@@ -1127,36 +1033,11 @@ in `config/lenses/economy/` ([section 18](#18-make-your-own-lens)).
 
 ## 17. Customise a lens without forking it, and white-label it
 
-The site's configuration wins over the lens file, key by key. On the server the file's keys are under `drishti.edition-spec`; in the
-console under `edition`. Examples, in the server's `application.local.yaml`:
-
-```yaml
-drishti:
-  edition: risk
-  edition-spec:
-    commands:
-      also-allow: [TVAL]           # one more command, without restating the list
-    packs:
-      allow-only: false            # let Admin -> Packs load other packs too
-    bi:
-      datasets: [banking.market_risk_var_latest, banking.market_risk_var_official, banking.trades_basic_trade]   # a list replaces the lens's
-```
-
-and in the console's `drishti-console/config/application.local.yaml` (menus, Home and Help are drawn by the console):
-
-```yaml
-edition:
-  menus:
-    views: [terminal, search, functions, workspaces]   # show only these in Views
-  home:
-    landing: map
-    chips: [VAR BANK, EXP BANK]                       # replace the registry's chips
-```
-
-`drishti.edition-spec` overrides apply to the instance's lens only; a lens a person opens (`drishti.lenses`) is read from its file alone.
-Any feature preset can be overridden by its own setting too (for example `DRISHTI_LABS_CALC=true` turns Calc, a Labs feature, on). A
-site's `config/access/lenses.yaml` adds a lens to the registry or replaces a shipped one by its id (its modules, functions, cards and
-chips).
+A lens only arranges, so customising one is editing its file (or a copy: [section 18](#18-make-your-own-lens)): the menus it puts
+first, Home's landing, cards and chips, the placeholder. What exists, the brand and the feature presets are the distribution file's
+([section 24](#24-white-label-distributions)); a site changes them in its own distribution file, and any feature preset can be overridden by its own
+setting (for example `DRISHTI_LABS_CALC=true` turns Calc, a Labs feature, on). A site's `config/access/lenses.yaml` adds a lens to the
+registry or replaces a shipped one by its id (its modules, functions, cards and chips).
 
 ### 17.1 On a phone
 
@@ -1181,14 +1062,14 @@ On a phone the lens's subject menus fold into one menu named after it (its title
 
 ### 17.2 White-labelling checklist
 
-**Use a distribution file instead (section 24): its `brand:` and `theme:` are the one way.** The keys below are read for one release
-(Health names each as deprecated). A lens keeps Drishti's name and eye by default. A licensee who wants its own name sets, on both sides:
+**The distribution file's `brand:` is the one home of the product's name, tagline, owner, copyright and notice (section 24), on the server and the
+console alike.** A site that keeps its own `drishti.branding.*`, `DRISHTI_PRODUCT`, `ui.product`, `ui.tagline`, `ui.owner`, `ui.copyright` or `ui.notice` is
+not read: Health names each one as no longer read. A lens keeps Drishti's name and eye by default. A licensee who wants its own name writes its own
+distribution file (`--distribution=<path>`); the rest of the look is set on the console:
 
 | What | Server | Console |
 |---|---|---|
-| Product name | `drishti.branding.product` (`DRISHTI_PRODUCT`) or the lens's `branding.product` | `ui.product` (the console takes the server's when its own is not set) |
-| Tagline | `drishti.branding.tagline` | `ui.tagline` |
-| Owner, copyright, notice | `drishti.branding.owner`, `copyright`, `notice` | `ui.owner`, `ui.copyright`, `ui.notice` |
+| Product name, tagline, owner, copyright, notice | the distribution file's `brand:` | the same file |
 | Logo (instead of the eye) | | `ui.logo`: an image under `/static/` (a site file in `web/static/`) or a `data:` URL |
 | Browser icon, home-screen icon | | `ui.favicon`, `ui.apple_touch_icon`; the web manifest (`/manifest.webmanifest`) follows them and the product name |
 | Colours | | a theme (`ui.default_theme`) or the UI kit's `brand.yaml` (`drishti.ui-kit.site-dir`) |
@@ -1209,42 +1090,22 @@ cp config/lenses/banking/risk.yaml config/lenses/banking/my-desk.yaml
 | Key | What it does |
 |---|---|
 | `edition`, `title`, `description` | the lens's name (the file's), the product title shown in About, the top bar and the lens menu, and its one line |
-| `packs.enabled`, `packs.allow-only` | the packs it loads, by module (`{core: [...], banking: [...]}`; a plain list is read too); whether others are refused |
-| `commands.allow`, `commands.also-allow` | the commands people may type and see (empty: all) |
-| `commands.words` | `BI`, `RUPAKA`, `FORM`, `FUNC`, `WHAT`, `DATAMAP`, `DATA`, `VAR`, `EXP`, `SMAT`, `PLAY`: `on` or `off`. Off, the word answers `DRS-4023` and its pages and APIs answer 404 (`DATA`: `/data`, `/api/data/...`, the server's `/api/v1/data`; `PLAY`: `/play`, `/api/play/...` and the VaR page's **Playground** link; `SMAT`: `/smat`, `/api/smat/...` and every **Scenario matrix** link) |
-| `features` | presets of existing switches (`config/lenses/features.yaml` says which settings each one sets); `off` presets false, anything else true. Every shipped lens sets `internal-only-data` off, so datasets marked internal only are listed but not downloaded |
-| `bi.datasets`, `bi.models` | the BI datasets and models offered (a name may end in `*`); reports and boards follow |
-| `menus.top` | the top menus by id, in order; a menu not named is not drawn (none: Views, Risk, BI, Build, Admin, Help). Risk (`without-lens: true`) is drawn in the full product's bar too: it is the home of the engines' pages, each with `requires: engine:<id>` (drawn while the engine runs in the cluster and the person's role opens it). The subject menus (`subject: true`: `blotter`, `positions`, `risk`, `counterparties`; `curves`, `volatility`, `fx`, `credit`; `economies`, `markets`, `companies`) are drawn only where `menus.top` names them. A menu's `gather: [ids]` puts the columns of those menus first in its own: the one **Markets** menu gathers `curves`, `volatility`, `fx` and `credit`, each item picked by `menus.markets` |
-| `menus.<menu>` | the items shown per menu (`views`, `bi`, `build`, `admin`, `help`, `footer`, `markets`, or a subject menu), by the ids in `drishti-console/config/sitemap.yaml` |
+| `menus.top` | the top menus it puts first, by id, in order; the others follow (a subject menu it names is drawn too where the distribution names no list) |
+| `menus.<menu>` | the items it puts first per menu (`views`, `bi`, `build`, `admin`, `help`, `footer`, or a module's menu), by the ids in `drishti-console/config/sitemap.yaml` and the modules' manifests (`console.menus`); nothing is left out |
 | `menus.placeholder` | the command line's placeholder |
 | `home.landing`, `home.landings`, `home.template`, `home.titles`, `home.landing-by-role`, `home.sections`, `home.hierarchies`, `home.topics` | Home ([section 15](#15-home-landings-cards-and-chips)); `template` is a `home/<name>_landing.html` page (none: Drishti Risk's); `sections` switches off `house`, `stats`, `grammar`, `pipeline`, `capabilities`, `views`, `close` |
-| `help.categories`, `help.knowledge`, `help.unlisted-slugs` | the Help centre's sections by id (`config/help.yaml` `sections:`, or a name its `aliases:` lists), the packs whose Knowledge pages show, `refuse` for documents not in the catalogue |
-| `admin.pages` | the Admin pages shown (the others answer 404) |
 | `phone` | the phone display ([section 17.1](#171-on-a-phone)) |
-| `branding.product`, `branding.tagline` | the product name and tagline |
-| `server:`, `console:` | raw settings of either side, as presets |
 
-Then `drishti.edition: my-desk` (or add `my-desk` to `drishti.lenses`) and restart. A lens a person opens also needs a registry entry (the
-modules it needs and its functions, cards and chips): add it to the site's `config/access/lenses.yaml` with the same id. **Adding a measure
-later** (liquidity, climate) is more lines in the same file: its pack in `packs.enabled`, its commands in `commands.allow`, its datasets in
-`bi.datasets`, its page in `menus.views`, its Knowledge pages in `help.knowledge`. A **funds** lens (us-equities, gleif, funds) or a **data
-platform** lens (BI and Build without the risk packs) is one more file.
+Then add `my-desk` to `drishti.lenses` (or a distribution's `lenses.offered`) and restart. A lens a person opens also needs a registry
+entry (the modules it needs and its functions, cards and chips): add it to the site's `config/access/lenses.yaml` with the same id.
+**Adding a measure later** (liquidity, climate) is a module: its packs, commands and menus come with it, and a lens names its page in
+`menus.views` to put it first.
 
 ## 19. Lenses in a cluster
 
-**Every member runs the same instance lens**: set `DRISHTI_EDITION` on every node (the stack, ECS and Docker examples of
-[section 13](#13-run-a-whole-instance-as-one-lens) do); each reads the same file (it ships in every image under `config/lenses/`). Each
-member publishes its lens in its capability digest (the service `edition`); if they differ, **Admin → Cluster** shows the warning "the nodes
-run different editions" with the nodes of each, and each member shows and refuses what its own lens says until you fix it. Check each node:
-
-```bash
-for p in 18480 18791 18792; do curl -s http://localhost:$p/public/about | python3 -c 'import json,sys; print(json.load(sys.stdin).get("edition"))'; done
-```
-
-A person's lens is kept in their settings (the server's user store), so every member and every console worker sees it, and the server is
-told on each call (`X-Drishti-Lens`). VaR sharding, the exposure engine and every other cluster service work the same under a lens: a lens
-hides commands from people, never a kind an engine reads. Lenses are per cluster; compute engines are per node
-([section 21.7](#217-in-a-cluster)); a lens that hides a word hides it whatever runs.
+A person's lens is kept in their settings (the server's user store), so every member and every console worker sees it. A lens changes
+nothing a server answers, so VaR sharding, the exposure engine and every other cluster service work the same inside one. Every member
+runs the same distribution ([section 24](#24-white-label-distributions)); compute engines are per node ([section 21.7](#217-in-a-cluster)).
 
 ## 20. Functions (FUNC): every command, and turning one on or off
 
@@ -1646,11 +1507,7 @@ connectors whose kinds change are applied again and the read order is swapped. E
 defines, a host or credential in the binding, demo and real together; deciding your own proposal is `403 DRS-2007`. An edit of the file
 by hand is picked up within `drishti.bindings.refresh-seconds` (30), or at once with `POST /api/v1/admin/bindings/reload`.
 
-**The upgrade.** A site that has no `config/bindings.yaml` gets one at the next start, written from its connector files' `kinds:` lists
-(each kind bound to the connectors that list it, `union: true` where they are a union), so it keeps reading what it read. Those `kinds:`
-lists are still read in this release and Health lists each file that carries one (*deprecated: the binding is the one home, remove the
-list*); the next release stops reading them. Health's `bindings` block also gives the counts, the unbound required needs and the functions
-they switched off. The API: `GET /api/v1/admin/bindings`, `POST /api/v1/admin/bindings/proposals` and `…/proposals/{id}/approve|reject|withdraw`.
+**Connector files name no kinds.** `config/bindings.yaml` is the one home of which connectors serve each kind; a connector file keeps its plugin, settings and `lake:`, and serves what its plugin and lake hold (a `kinds:` line left in a file by an earlier release is ignored and dropped at the file's next save). Health's `bindings` line gives the count of bound kinds and of required needs that nothing serves; Admin → Data bindings has the detail. The API: `GET /api/v1/admin/bindings`, `POST /api/v1/admin/bindings/proposals` and `…/proposals/{id}/approve|reject|withdraw`.
 
 ### 23.0 The connector and binding designer (Build → Create → New connector)
 
@@ -1715,13 +1572,20 @@ and it cannot widen the licence.
 
 **Admin → White label** (mock-up A, side by side): every distribution file as a card, the running one first, each with its brand, theme,
 modules (and whether each is loaded on this server), lenses, menus, Home cards, Help title and the command that starts it. Read only:
-change the file and restart. **Admin → Health** shows the console's and the server's distribution and which of its modules loaded.
+change the file and restart. **Admin → Health** summarises: the console's and the server's distribution, how many modules loaded, how many kinds are bound (and how many required needs are unbound) and the placement version, one line each with a link to the page that holds the detail (White label, Modules, Data bindings).
 
-**The old keys** (`drishti.edition`, `drishti.branding.*`, `DRISHTI_PRODUCT`, `ui.product`, `ui.tagline`, `ui.copyright`, `ui.owner`,
-`ui.notice`) are read for one release and named on Health as deprecated; sections 13 and 17 describe them. With a distribution named,
-`drishti.edition` is ignored.
+**The old keys.** `drishti.branding.*`, `DRISHTI_PRODUCT`, `ui.product`, `ui.tagline`, `ui.copyright`, `ui.owner` and `ui.notice` are no longer read (the
+distribution file's `brand:` decides), nor is `drishti.edition` (`DRISHTI_EDITION`: a lens file is never an instance's filter); Health names any a
+site still sets.
 
 ## 25. Modules and Deploy
+
+**A module's settings.** A module describes its own settings in its manifest (`settings:`), and a site sets them as `drishti.module.<id>.<key>`. Banking's
+are the VaR window and confidences, the hierarchies' labels, the system-basket seed and the settings of its risk engines (var, exposure, frtb-sa, simm,
+sensitivities, mr-cube). The server keys they replaced (`drishti.var.confidence`, `drishti.var.scenario-window`, ...) are read for one release, the module's
+key winning; Health lists the old keys a site still sets. `GET /api/v1/admin/modules/banking/settings` gives each setting, its value and where the value
+comes from (the module's key, the old key, or the default). Banking also declares its parts (`api` light, `compute` heavy, `feeds`), so Placement can put
+the compute on its own nodes.
 
 **Admin → Modules** (mock-up A, table and detail) lists every module of the cluster: its version, state (*LOADED*, *OFF*, *REMOVED*, *IN
 THE STORE*), the nodes it is placed on and the versions in the module store; the plans waiting for a second administrator are pinned on top
@@ -1770,19 +1634,12 @@ lists what the console hosts, what is gone and what it refused, with the reasons
 
 | You see | Why | Do |
 |---|---|---|
-| The server does not start: `drishti.edition='x': no edition file …` | the name does not match a file in `drishti.lens-dir` or one of its module folders | check the name, or set `DRISHTI_LENS_DIR` to the folder of the lens files |
 | No "Open …" link for a lens named in `drishti.lenses` | its registry lens is not offered (a module it needs is off), it has no file, or the instance runs a lens itself | switch the module on (`config/modules/<module>.yaml`, `DRISHTI_MODULES_<MODULE>_ENABLED` or `POST /api/v1/admin/modules`; restart); the server's log says "lens … is not offered" with the reason |
-| A command answers `DRS-4023` "is not part of the edition", or the type-ahead does not offer it | the lens hides it (`commands.allow`) | add it with `drishti.edition-spec.commands.also-allow` ([section 17](#17-customise-a-lens-without-forking-it-and-white-label-it)), or use `FUNC` to see what is offered |
 | A command answers `DRS-1026` or "not available to you" | its function is off (its module off, or Functions) | switch the module or the function on |
-| `FORM` (or another word) says "is not part of Drishti Risk" | the lens switches the word off (`commands.words`) | `edition.commands.words.FORM: on` in the console and `drishti.edition-spec.commands.words.form: on` on the server |
-| An Admin page or `/forms` answers 404 | the lens hides it (`admin.pages`, a feature off) | list the page in `admin.pages`, or switch the feature on |
-| Loading a pack in Admin → Packs, Deploy archive or the registry answers `DRS-1017` | the lens's packs are allow-only | add the pack to `packs.enabled`, or set `drishti.edition-spec.packs.allow-only: false` |
-| A pack named in `DRISHTI_PACKS` did not load | allow-only drops it (the log names it), or its module is off | as above, or switch the module on |
 | A Home card or chip is missing | its function is off for the person | switch the function or its module on |
 | World shows no companies, filings or funds | the capitalmarkets module is off | switch it on (`config/modules/<module>.yaml`, `DRISHTI_MODULES_<MODULE>_ENABLED` or `POST /api/v1/admin/modules`; restart) |
 | The console still shows the full product | it has not reached the server yet, or the server runs no lens | check `/public/about`; the console follows within `backend.check_seconds` |
 | A BI report is missing | its dataset or model is not in `bi.datasets` / `bi.models` | add it there |
-| Admin → Cluster warns "the nodes run different editions" | `DRISHTI_EDITION` differs between members | set the same value on every node and restart ([section 19](#19-lenses-in-a-cluster)) |
 
 **Commands and engines**
 

@@ -41,8 +41,9 @@ import org.springframework.core.env.Environment;
  *
  * <p>The modules a file lists are read from their own manifests ({@link ModuleManifests}: {@code modules/<id>/module.yaml}, a module
  * jar's {@code META-INF/drishti/module.yaml}, and the shipped and installed {@code .dmod} packages, read as the registry reads them), the kernel's own packs, words and menus from {@code kernel.yaml} beside the files; a
- * distribution comes to a visibility filter in the edition file's shape: the kernel's and its modules' commands (with the modules they
- * require), the words of the modules it leaves out switched off, those modules' engines off, its menus, Help and Home.
+ * distribution comes to a visibility filter in the edition file's shape: the kernel's packs' commands and its modules' (each module's
+ * manifest {@code functions:}, with the modules they require), the words of the modules it leaves out switched off, those modules'
+ * engines off, its menus, Help and Home.
  */
 public final class Distributions {
 
@@ -179,6 +180,7 @@ public final class Distributions {
         List<String> modules = new ArrayList<>(ModuleManifests.withRequired(listed, known));   // a listed module brings the ones it requires
         // a distribution may name the kernel's packs it takes (kernel-packs:; Drishti Genomics takes none: no counterparty or book anywhere)
         Set<String> packs = new LinkedHashSet<>(texts(spec.has("kernel-packs") ? spec.path("kernel-packs") : kernel.path("packs")));
+        Set<String> commands = commands(packsDir, packs);                 // the kernel's own packs' commands; a module's come from its manifest
         Map<String, String> domains = new LinkedHashMap<>();
         Set<String> menus = new LinkedHashSet<>(texts(kernel.path("menus")));
         Set<String> wordsOff = new LinkedHashSet<>();
@@ -198,8 +200,7 @@ public final class Distributions {
                 featuresOff.addAll(mod.features());
             }
         }
-        Set<String> commands = commands(packsDir, packs);
-        modules.stream().filter(known::containsKey).forEach(m -> commands.addAll(known.get(m).words()));   // a module's own functions (GENE)
+        modules.stream().filter(known::containsKey).forEach(m -> commands.addAll(known.get(m).words()));   // its manifest's functions: the one list
         ObjectNode ed = YAML.createObjectNode();
         ed.put("edition", id);
         ed.put("title", title);
@@ -250,7 +251,10 @@ public final class Distributions {
                 Set.copyOf(wordsOff), Set.copyOf(featuresOff), lenses, brand, spec, ed);
     }
 
-    /** Every command of the packs: each pack's mnemonics and its code ({@code MKT}), from its {@code pack.yaml} under the packs folder. */
+    /**
+     * Every command of the kernel's own packs: each pack's mnemonics and its code, from its {@code pack.yaml} under the packs folder. A
+     * module's commands are its manifest's {@code functions:} (the one list: what its distribution shows, FUNC and the access registry).
+     */
     static Set<String> commands(Path packsDir, Set<String> packs) {
         Set<String> out = new LinkedHashSet<>();
         if (!Files.isDirectory(packsDir)) {

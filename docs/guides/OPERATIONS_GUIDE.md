@@ -977,10 +977,10 @@ and secrets and embedded applications declared in configuration; Python and Java
 
   The banking API is under `/api/v1/risk/…`; the older paths answer with a `Deprecation: true` header and a `Link` to the new path: move
   scripts to the new paths.
-- **Editions and lenses.** `drishti.edition: risk` (`DRISHTI_EDITION=risk`) on every server of a cluster, then a restart, runs Drishti Risk:
-  its packs only (others `DRS-1017`), its commands (others `DRS-4023`), menus, help, Admin pages and branding; check with `curl -s
-  http://<server>/public/about` (`"edition": {"name": "risk", ...}`). A lens lets each person open an edition for their own session:
-  [ADMIN_GUIDE.md](ADMIN_GUIDE.md).
+- **Distributions and lenses.** `drishti.distribution: risk` (`DRISHTI_DISTRIBUTION=risk`, or `--distribution risk`) on every server
+  of a cluster, then a restart, runs Drishti Risk: its packs only (others `DRS-1017`), its commands (others `DRS-4023`), menus, help,
+  Admin pages and brand; check with `curl -s http://<server>/public/about` (`"edition": {"name": "drishti.risk", ...}`). A lens is a
+  workspace each person opens for their own session; it arranges and hides nothing: [ADMIN_GUIDE.md](ADMIN_GUIDE.md).
 
 ### 6.6 Connectors: where a pack reads its data
 

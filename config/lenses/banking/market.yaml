@@ -12,62 +12,16 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Drishti Market: the bank's own market data in one product: curves, fixings, FX, volatility surfaces and cubes, credit curves, equities,
-# inflation, commodities, bonds and correlations, the inputs that feed risk and valuations. No trades and no VaR. Chosen by
-# drishti.edition: market on every server (DRISHTI_EDITION=market), or offered as a lens beside the others (drishti.lenses:
-# risk,world,market). The site's configuration wins over any key (drishti.edition-spec.<key> on the server, edition.<key> in the console).
-# docs/guides/ADMIN_GUIDE.md (how to run it, then the design as built).
+# A lens is a workspace (docs/guides/ADMIN_GUIDE.md, the three layers of switches; LENSES.md): a person opens it for their own
+# session and it arranges what the distribution has for a role: the starting Home (landings, cards), the menus' order (the ones it
+# names first, nothing left out) and default screens. It never hides anything: what exists is the distribution's
+# (config/distributions/drishti.<name>.yaml), what runs where is the module and engine switches'.
 edition: market
 title: Drishti Market
 description: Curves, surfaces, fixings and prices, the market data that feeds risk and valuations, in one place
 
-packs:
-  enabled:                               # by module: a module that is off brings none of its packs (market-data extends core)
-    core: [core]                         # the core's packs this lens opens
-    market-data: [market-data]           # the market-data module: the market data (issuers, curves, vols); no trading, no risk pack
-  allow-only: true                       # Admin -> Packs, Deploy archive and the registry refuse any other pack (DRS-1017)
-
-commands:                                # what people may type and see (command line, FUNC, type-ahead, examples, pages)
-  allow:
-    # rates: curves, repo, swaption and cap vols, fixings, inflation
-    [CRV, REPO, IRV, CPV, FIX, INF, INFC,
-    # FX: spot, forwards, vol surfaces
-     FX, FXF, FXV,
-    # credit and bonds
-     CDS, BND,
-    # equities and commodities: equities, indexes, dividends, vol surfaces, commodities, their curves and vols
-     EQ, EQX, DIV, EQV, CMD, CMDC, CMDV,
-    # correlations: the matrices, and the two kinds computed when asked from price history (correlations, an equity's beta)
-     CORR, CORRC, EQB]
-  words: { BI: on, RUPAKA: off, FORM: on, FUNC: on, WHAT: on, DATAMAP: on, DATA: on, VAR: off, EXP: off, SMAT: off, PLAY: off }
-
-features:                                # presets of existing switches (config/lenses/features.yaml); not named: the product's default
-  bi: edition                            # BI with the datasets below only
-  var: off
-  exposure: off
-  calc: off
-  python: off
-  designer: off
-  build: off
-  forms: on                              # query by form: curves, surfaces and bonds by their fields
-  datamap: on
-  data: on                               # Export data (EXPORT, /data): every dataset, a simple selection, a day as .jsonl.gz
-  internal-only-data: off                # Export data refuses datasets marked internal only (IMF, Yahoo, news headlines)
-  layouts: on
-  workspaces: on
-  monitors: on
-  alerts: on
-  reports: on
-  lakes: on
-  ai: off
-  embed: off
-
-bi:                                      # the market-data pack ships no BI dataset or model yet: these names keep BI to the pack's own
-  datasets: [bi.market_data_*]              # (a table named bi.market_data_... or the model market-data, when one is added), never the
-  models: [market-data]                  # VaR or exposure reports; an empty list would offer every BI item of the product
-
-menus:                                   # by id, per menu; a menu not named shows every item its switches allow
-  top: [views, curves, volatility, fx, credit, bi, admin, help]  # the top menus by id, in order; one not named is not drawn
+menus:                                   # by id, per menu: the order this lens puts first; nothing is left out
+  top: [views, curves, volatility, fx, credit, bi, admin, help]  # the top menus it puts first, in order; the others follow
   views: [terminal, search, forms, functions, datamap, data, reports, workspaces, monitors, alerts]
   help: [help-centre, knowledge, install, about]
   footer: [help, about, release-notes]
@@ -84,14 +38,3 @@ home:
 quality:                                 # the Quality landing's checks (LENSES.md › The design); read-only, from the pack's own answers
   stale-days: 2                          # stale: data older than the business date by more than this many business days
 
-help:
-  categories: [get-started, risk, analytics, data, operate, reference, knowledge, internal]   # the help sections kept (config/help.yaml): Build hidden
-  knowledge: [market-data]               # the Data Knowledge page (the rest hidden)
-  unlisted-slugs: refuse                 # a guide not in the help centre answers 404 (no reaching hidden guides by URL)
-
-admin:                                   # the Admin pages shown; the others answer 404 (and are off the menu and the tab strip)
-  pages: [users, roles, packs, commands, tokens, access, connectors, artifacts, loads, lakes, audit, net, engines, health, caches, capacity, bi, configuration]
-
-branding:                                # Drishti's name and eye mark kept; a licensee may override in site configuration
-  product: Drishti Market
-  tagline: "Curves, surfaces and fixings: the bank's market data that feeds risk and valuations"

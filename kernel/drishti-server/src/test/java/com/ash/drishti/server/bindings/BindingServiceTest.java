@@ -62,11 +62,16 @@ import org.springframework.mock.env.MockEnvironment;
  */
 class BindingServiceTest {
 
-    /** A plugin that could serve any kind; its connector's kinds decide what it serves. */
+    /** A plugin that could serve any kind and holds only trades: a connector serves what its plugin holds (a binding names it for more). */
     public static final class Fake implements SourcePlugin {
         @Override
         public PluginManifest manifest() {
             return new PluginManifest("fake", "t", Set.of(), SourceCapabilities.FETCH_ONLY);
+        }
+
+        @Override
+        public boolean holdsNone(String kind) {
+            return !"trade".equals(kind);
         }
 
         @Override
@@ -95,8 +100,8 @@ class BindingServiceTest {
         Path pack = Files.createDirectories(dir.resolve("packs/risk"));
         Files.writeString(pack.resolve("pack.yaml"), "pack: risk\nkinds: [trade, scenario-set]\n");
         ConnectorFiles files = new ConnectorFiles(dir.resolve("connectors"));
-        files.write("risk-db", "plugin: fake\nkinds: [trade]\n");
-        files.write("risk-two", "plugin: fake\nkinds: [trade]\n");
+        files.write("risk-db", "plugin: fake\n");
+        files.write("risk-two", "plugin: fake\n");
         MockEnvironment env = new MockEnvironment().withProperty("drishti.packs.dir", dir.resolve("packs").toString())
                 .withProperty("drishti.packs.loaded", "risk");
         PackRegistry packs = new PackRegistry(env);
@@ -149,8 +154,7 @@ class BindingServiceTest {
         assertThat(s.offReason("VRES")).as("its function is back on").isEmpty();
         assertThat(Files.readString(dir.resolve("bindings.yaml"))).contains("scenario-set").contains("risk-two");
         assertThat(audited).containsExactly("alice binding-proposed binding/scenario-set", "bob binding-approved binding/scenario-set");
-        assertThat(s.status()).containsKeys("kinds", "counts", "off", "deprecated", "proposals");
-        assertThat(s.deprecated()).anyMatch(d -> d.startsWith("risk-db.yaml lists kinds: [trade]"));
+        assertThat(s.status()).containsKeys("kinds", "counts", "off", "proposals");
     }
 
     @Test

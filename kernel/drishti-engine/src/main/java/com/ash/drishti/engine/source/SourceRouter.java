@@ -58,13 +58,24 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
         return stats;
     }
 
-    /** Packs changed: the kinds they route to connectors are read again. */
+    /** Packs changed: the kinds they route to connectors, and their templates' default connectors of each kind, are read again. */
     @Override
     public Runnable prepare(org.springframework.core.env.Environment candidate) {
-        java.util.Map<String, String> next = java.util.Map.copyOf(org.springframework.boot.context.properties.bind.Binder.get(candidate)
-                .bind("drishti.sources.routes", org.springframework.boot.context.properties.bind.Bindable.mapOf(String.class, String.class)).orElse(java.util.Map.of()));
-        return () -> routes = next;
+        org.springframework.boot.context.properties.bind.Binder b = org.springframework.boot.context.properties.bind.Binder.get(candidate);
+        org.springframework.boot.context.properties.bind.Bindable<Map<String, String>> map =
+                org.springframework.boot.context.properties.bind.Bindable.mapOf(String.class, String.class);
+        java.util.Map<String, String> next = java.util.Map.copyOf(b.bind("drishti.sources.routes", map).orElse(java.util.Map.of()));
+        Map<String, List<String>> nextDefaults = new LinkedHashMap<>();
+        b.bind("drishti.sources.defaults", map).orElse(Map.of()).forEach((k, v) -> nextDefaults.put(k,
+                java.util.Arrays.stream(v.split(",")).map(String::strip).filter(x -> !x.isEmpty()).toList()));
+        return () -> {
+            routes = next;
+            defaults = Map.copyOf(nextDefaults);
+        };
     }
+
+    /** The distribution's default connectors of each kind (the loaded packs' connector templates, in order), read after its route. */
+    private volatile Map<String, List<String>> defaults = Map.of();
 
     public SourceRouter(SourceRegistry registry, SourcesProperties props, ExecutorService virtualExecutor) {
         this.registry = registry;
@@ -108,7 +119,8 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
         List<Serving> out = new ArrayList<>();
         for (SourcePlugin p : candidates(kind)) {
             String n = p.manifest().name();
-            if (!p.manifest().kinds().contains(kind) && !bound.getOrDefault(kind, List.of()).contains(n) && !n.equals(routes.get(kind)) && p.holdsNone(kind)) {
+            if (!p.manifest().kinds().contains(kind) && !bound.getOrDefault(kind, List.of()).contains(n) && !n.equals(routes.get(kind))
+                    && !defaults.getOrDefault(kind, List.of()).contains(n) && p.holdsNone(kind)) {
                 continue;
             }
             String name = p.manifest().name();
@@ -120,8 +132,50 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
         return out;
     }
 
-    /** Plugins to try for {@code kind}, in order. */
+    /**
+     * Plugins to try for {@code kind}, in order: the resolution of docs/architecture/KERNEL_AND_MODULES.md section 5.5, first hit wins. A kind a
+     * module computes is its provider's. A kind the site binds (config/bindings.yaml) is read from its bound connectors and no other. Else
+     * the distribution's default: the kind's route, the connectors whose pack template names it, the default route, and every source that
+     * names the kind itself (its plugin's manifest, a connector's {@code kinds} setting) or serves any kind as a plugin of its own; only
+     * when no source names the kind, a lake connector whose lake holds the kind (the convention); then the packs' samples (demo), which
+     * never answer beside real data. A connector that names no kind is never asked merely because its plugin could read the kind.
+     */
     List<SourcePlugin> candidates(String kind) {
+        List<SourcePlugin> out = picked(kind);
+        if (out.stream().anyMatch(p -> samples(p.manifest().name())) && ownLake(kind, out) != null) {
+            out.removeIf(p -> samples(p.manifest().name()));
+        }
+        return adjacentUnion(out);
+    }
+
+    /** The sources a read of {@code kind} asks, in read order (the resolution, {@link #candidates}). */
+    public List<SourcePlugin> readers(String kind) {
+        return List.copyOf(candidates(kind));
+    }
+
+    /** The kinds the resolution reads from {@code connector} by name: those bound to it, routed to it, or named by its pack template. */
+    java.util.Set<String> kindsFor(String connector) {
+        java.util.Set<String> out = new java.util.TreeSet<>();
+        bound.forEach((k, c) -> {
+            if (c.contains(connector)) {
+                out.add(k);
+            }
+        });
+        routes.forEach((k, c) -> {
+            if (connector.equals(c) && !bound.containsKey(k)) {
+                out.add(k);
+            }
+        });
+        defaults.forEach((k, c) -> {
+            if (c.contains(connector) && !bound.containsKey(k)) {
+                out.add(k);
+            }
+        });
+        return out;
+    }
+
+    /** The sources the resolution picks for {@code kind} ({@link #candidates}), the samples not yet set aside. */
+    List<SourcePlugin> picked(String kind) {
         // a kind a loaded .dmod module computes is always its provider's, never a connector's (KERNEL_AND_MODULES.md section 5.7)
         List<SourcePlugin> computed = registry.plugins().stream()
                 .filter(p -> registry.attached(p.manifest().name()) && p.manifest().kinds().contains(kind))
@@ -130,24 +184,48 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
             return computed;
         }
         Map<String, SourcePlugin> ordered = new LinkedHashMap<>();
-        for (String name : bound.getOrDefault(kind, List.of())) {
-            registry.plugin(name).filter(p -> p.manifest().serves(kind)).ifPresent(p -> ordered.put(name, p));
-        }
-        for (String name : new String[] {routes.get(kind), props.defaultRoute()}) {
-            if (name != null) {
+        List<String> site = bound.getOrDefault(kind, List.of());
+        if (!site.isEmpty()) {
+            for (String name : site) {
                 registry.plugin(name).filter(p -> p.manifest().serves(kind)).ifPresent(p -> ordered.put(name, p));
             }
+            return new ArrayList<>(ordered.values());
         }
-        for (SourcePlugin p : registry.plugins()) {
-            if (p.manifest().serves(kind)) {
-                ordered.putIfAbsent(p.manifest().name(), p);
+        List<String> named = new ArrayList<>();
+        named.add(routes.get(kind));
+        named.addAll(defaults.getOrDefault(kind, List.of()));
+        named.add(props.defaultRoute());
+        for (String name : named) {
+            if (name != null && !name.isBlank()) {
+                registry.plugin(name).filter(p -> p.manifest().serves(kind)).ifPresent(p -> ordered.putIfAbsent(name, p));
             }
         }
-        List<SourcePlugin> out = new ArrayList<>(ordered.values());
-        if (out.stream().anyMatch(p -> samples(p.manifest().name())) && ownLake(kind, out) != null) {
-            out.removeIf(p -> samples(p.manifest().name()));
+        boolean byDefault = !ordered.isEmpty();
+        for (SourcePlugin p : registry.plugins()) {
+            if (p.manifest().serves(kind) && !namesNoKind(p)) {
+                ordered.putIfAbsent(p.manifest().name(), p);
+                byDefault |= p.manifest().kinds().contains(kind);
+            }
         }
-        return adjacentUnion(out);
+        if (!byDefault) {
+            for (SourcePlugin p : registry.plugins()) {                 // the lake convention: a lake connector whose lake holds the kind
+                if (namesNoKind(p) && lakeConnector(p.manifest().name()) && !holdsNone(p, kind)) {
+                    ordered.putIfAbsent(p.manifest().name(), p);
+                }
+            }
+        }
+        return new ArrayList<>(ordered.values());
+    }
+
+    /** A named connector that names no kind (its file names none): it serves a kind only when the resolution picks it. */
+    private boolean namesNoKind(SourcePlugin p) {
+        String n = p.manifest().name();
+        return p.manifest().kinds().isEmpty() && !samples(n) && registry.applied(n).map(c -> c.kinds() == null || c.kinds().isEmpty()).orElse(false);
+    }
+
+    /** A Delta or Iceberg connector: its lake's tables are its kinds by convention. */
+    private boolean lakeConnector(String name) {
+        return registry.applied(name).map(c -> com.ash.drishti.lakeconfig.ConnectorLake.PLUGINS.contains(c.plugin())).orElse(false);
     }
 
     /** The demo lake's name: the lake the packs' demo data is built into (docs/guides/DATA_LAKE_GUIDE.md section 6). */
@@ -182,7 +260,7 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
 
     /** As {@link #ownLake(String, List)} over the connectors that serve {@code kind}. */
     public String ownLake(String kind) {
-        return kind == null ? null : ownLake(kind, registry.plugins().stream().filter(p -> p.manifest().serves(kind)).toList());
+        return kind == null ? null : ownLake(kind, picked(kind));
     }
 
     /** The union connectors of a kind moved up to sit right after the first of them, so the union is read as one store. */

@@ -141,12 +141,18 @@ class ConnectorManagerTest {
 
     private static final String PACK_RENAMED = PACK.replace("kinds: [trade]\nroutes", "kinds: [trade-new]\nroutes").replace("    kinds: [trade]\n", "    kinds: [trade-new]\n");
 
+    /** The same pack redeployed with a new default setting (its connector template changed). */
+    private static final String PACK_CHANGED = PACK.replace("db://pack-default", "db://pack-v2");
+
     @Test
-    void aRedeployedPackWithRenamedKindsRegeneratesAnUneditedFile(@TempDir Path dir) throws Exception {
+    void aRedeployedPackWithAChangedTemplateRegeneratesAnUneditedFileAndARenamedKindChangesNothing(@TempDir Path dir) throws Exception {
         build(dir, PACK, null, null, Map.of());
-        assertThat(files.read("risk-db").kinds()).containsExactly("trade");
-        build(dir, PACK_RENAMED, null, null, Map.of());                                      // the pack is redeployed with a renamed kind
-        assertThat(files.read("risk-db").kinds()).containsExactly("trade-new");
+        assertThat(files.read("risk-db").kinds()).as("a connector file names no kinds (config/bindings.yaml)").isEmpty();
+        String first = files.text("risk-db");
+        build(dir, PACK_RENAMED, null, null, Map.of());                                      // a renamed kind: the file has nothing of it
+        assertThat(files.text("risk-db")).isEqualTo(first);
+        build(dir, PACK_CHANGED, null, null, Map.of());                                      // a changed template: regenerated
+        assertThat(files.read("risk-db").settings()).containsEntry("url", "db://pack-v2");
         assertThat(files.text("risk-db")).contains("Generated at first start");
         assertThat(manager.detail("risk-db").get("templateChanged")).isNull();
     }
@@ -155,17 +161,20 @@ class ConnectorManagerTest {
     void anEditedFileIsKeptAndFlaggedAndResetAppliesTheNewTemplate(@TempDir Path dir) throws Exception {
         build(dir, PACK, null, null, Map.of());
         files.write("risk-db", files.text("risk-db") + "# edited by the site\n");
-        build(dir, PACK_RENAMED, null, null, Map.of());
-        assertThat(files.read("risk-db").kinds()).containsExactly("trade");                  // kept
+        build(dir, PACK_CHANGED, null, null, Map.of());
+        assertThat(files.text("risk-db")).endsWith("# edited by the site\n");                // kept
+        assertThat(files.read("risk-db").settings()).containsEntry("url", "db://pack-default");
         String flag = String.valueOf(manager.detail("risk-db").get("templateChanged"));
-        assertThat(flag).contains("trade \u2192 trade-new").contains("Reset to pack default");
-        assertThat(manager.detail("risk-db").get("problems").toString()).contains("trade-new");
+        assertThat(flag).contains("the pack's template changed").contains("Reset to pack default").doesNotContain("kinds:");
+        assertThat(manager.detail("risk-db").get("problems").toString()).contains("the pack's template changed");
         assertThat(manager.healthSummary().get("templateChanged").toString()).contains("risk-db");
         manager.reset("risk-db", null);
-        assertThat(files.read("risk-db").kinds()).containsExactly("trade-new");
+        assertThat(files.text("risk-db")).doesNotContain("# edited by the site");
+        assertThat(files.read("risk-db").settings()).containsEntry("url", "db://pack-v2");
         assertThat(manager.detail("risk-db").get("templateChanged")).isNull();
-        build(dir, PACK_RENAMED, null, null, Map.of());                                      // and a further restart leaves it alone
-        assertThat(files.read("risk-db").kinds()).containsExactly("trade-new");
+        build(dir, PACK_CHANGED, null, null, Map.of());                                      // and a further restart leaves it alone
+        assertThat(files.read("risk-db").settings()).containsEntry("url", "db://pack-v2");
+        assertThat(manager.detail("risk-db").get("templateChanged")).isNull();
     }
 
     @Test
@@ -308,11 +317,11 @@ class ConnectorManagerTest {
         assertThatThrownBy(() -> manager.save("x", "plugin: fake\nsettings: {url: u, mode: z}\n", null, false)).hasMessageContaining("one of a, b");
         assertThatThrownBy(() -> manager.save("x", "name: y\nplugin: fake\n", null, false)).hasMessageContaining("file name is the connector's name");
         assertThatThrownBy(() -> manager.save("x", "plugin: fake\nsettings: {url: 'db://u:hunter2@h/x'}\n", null, false)).hasMessageContaining("password inside a URL");
-        // an unknown setting and an unknown kind are warnings (typo hints), not errors
+        // an unknown setting is a warning (a typo hint), not an error; a kinds: list is not read (config/bindings.yaml is the one home)
         var w = new java.util.ArrayList<ConnectorManager.Problem>();
         manager.check("x", "plugin: fake\nkinds: [nokind]\nsettings: {url: u, urll: v, layout: {trade: {columns: [a]}}}\n", w);
         assertThat(w).extracting(ConnectorManager.Problem::message).anyMatch(m -> m.contains("'urll' is not a setting the fake plugin reads"))
-                .anyMatch(m -> m.contains("kind 'nokind'"));
+                .noneMatch(m -> m.contains("nokind"));
         assertThat(w).extracting(ConnectorManager.Problem::field).doesNotContain("settings.layout.trade.columns");   // layout.* is declared
     }
 

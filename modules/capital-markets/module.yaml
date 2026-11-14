@@ -57,9 +57,51 @@ data:
   needs: data/needs.yaml
 console:
   plugin: console/plugin.yaml
+  # the module's own top menus, in the console sitemap's form (drishti-console/config/sitemap.yaml); a menu of another module's
+  # id adds its columns to that menu (the one Markets menu). The one home of these menus.
   menus:
-  - companies
-  - markets
+  - id: markets
+    columns:
+    - title: News and quotes
+      items:
+      - id: idx
+        cmd: IDX
+        icon: list-ol
+        label: Indices
+        desc: Index membership
+        requires: ['cmd:IDX']
+  - id: companies
+    domain: banking
+    label: Companies
+    icon: building
+    subject: true
+    columns:
+    - title: Companies
+      items:
+      - id: useq
+        cmd: USEQ
+        icon: building
+        label: US equities
+        desc: US listed companies, their sector and figures
+        requires: ['cmd:USEQ']
+      - id: edgar
+        cmd: EDGAR
+        icon: file-earmark-text
+        label: Filings
+        desc: The filings feed of US companies
+        requires: ['cmd:EDGAR']
+      - id: leic
+        cmd: LEIC
+        icon: globe
+        label: Legal entities
+        desc: Legal entities by country (LEI)
+        requires: ['cmd:LEIC']
+      - id: fund
+        cmd: FUND
+        icon: pie-chart
+        label: Funds and ETFs
+        desc: Funds and ETFs and what they hold
+        requires: ['cmd:FUND']
 functions:
 - USEQS
 - USEQ

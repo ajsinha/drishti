@@ -15,6 +15,7 @@
 -->
 # Changelog
 
+
 ## Unreleased
 
 - **The trading module and the live result sets engine** (modules/trading/docs/guide.md). One engine (`com.ash.drishti.server.liveset`) behind every
@@ -60,6 +61,29 @@
   any such child, each once (`ChildTablesModelTest`); the pack's link graph names the link for models started from the packs. BUILD_GUIDE
   section 8.1.4, DATA_LAKE_GUIDE section 5.7, REPORTS_GUIDE section 5.3, CLI_REFERENCE (`pack new`).
 
+- Connector files name no kinds: `config/bindings.yaml` is the one home of which connectors serve a kind (a `kinds:` line from an earlier release is ignored); the `bindings.yaml` upgrade and its Health deprecation are deleted; generated files (the packs' templates and `build_demo_lakes.py --store`) and the examples carry no `kinds:`. Reads follow the resolution, first hit wins: a kind the site binds is read from its bound connectors (then its `live` one) and no other; else from its route, the connectors whose pack template names it (the distribution's default), and the sources that name it themselves; a lake connector whose lake holds the kind only when nothing else serves it (the convention); the demo samples last, never beside real data. A connector that names no kind is never asked merely because its plugin could read it (a results lake no longer hid the demo samples, a `union: true` trade connector no longer joined every kind's union, an off internet connector's stand-ins are the connectors the resolution reads in its place); BI's and the data views' source of a kind is the router's first. A connector's **Test connection** asks for the kinds its packs route to it and its bindings name; an edited file's "template changed" note names kinds only when they changed.
+- The two clean-ups together: a lens hides no Help page (help.yaml's `lenses:` key is gone); a lens's Home (Drishti Risk's, Trading's, Market's) carries the distribution's tagline in its tab title, as the landing page does; `drishti.edition` and the old brand keys are no longer read, and Health names them.
+- The product's name, tagline, owner, copyright and notice come from the distribution file's `brand:` only: `drishti.branding.*`, `DRISHTI_PRODUCT`, `ui.product`, `ui.tagline`, `ui.copyright`, `ui.owner` and `ui.notice` are no longer read (Health names any a site still sets).
+- Health summarises: one line each for the distribution, modules, bindings and placement, linking to the Admin page that holds the detail.
+- The Pack designer's binding goes through the one bindings path (connector saved, kinds proposed to Admin → Data bindings); the workspace `site/` folder and `builder.pack_designer_site` are gone.
+- Banking: a `settings:` schema (VaR, hierarchies, system-basket seed and its engines' settings) and its real parts (api, compute, feeds) in `modules/banking/dmod/module.yaml`; settings read as `drishti.module.banking.*` (the old keys are read for one release and Health names them); `GET /api/v1/admin/modules/{id}/settings`.
+
+- **One way per job: switches in three layers, lenses as workspaces, module menus and commands from the manifests** (the well-built
+  house, product owner 2026-11-11): the **distribution** says what exists, the **module switch** whether a module is on at this site, the
+  **engine switch** whether a compute runs on this server. A distribution presets an engine off (its module is not in it), never on.
+  The feature switches a distribution's `features:` presets are `config/distributions/kernel.yaml`'s `features:` (server and console
+  read it); `config/lenses/features.yaml` is deleted. A **lens is a workspace**: it arranges the starting Home, the menus' order and the
+  placeholder and never hides anything (no packs, commands, words, features, Help, Admin pages, BI datasets or assets of its own; the
+  server ignores `X-Drishti-Lens`); a distribution's `lenses.default` is everyone's starting workspace; lens links show under a
+  distribution too. **Removed:** `drishti.edition` (`DRISHTI_EDITION`, a lens file as the instance's filter) and `drishti.lens-dir` on the
+  server (Health names a site's old `drishti.edition`); the lens files' `packs`, `commands`, `features`, `bi`, `help`, `admin` and
+  `branding` keys; the tests of those ways (the Market, Risk and World edition servers; the Risk-edition VaR and exposure runs now run
+  Drishti Risk, `drishti.distribution=risk`). A module's **commands** are its manifest's `functions:` (the kernel's packs keep
+  their pack.yaml commands), and its **menus** its manifest's `console.menus` (Blotter, Positions, Risk, Counterparties; Curves, Volatility, FX,
+  Credit, Markets; Economies; Companies; a menu of another module's id adds columns): `drishti-console/config/sitemap.yaml` keeps only
+  the kernel's pages. A module's menu is in the top bar only while the module is active (in the distribution, installed, loaded and on),
+  live at the next page (`test_module_menus.py`). Docs: ADMIN_GUIDE sections 12 to 19, DISTRIBUTIONS section 10, HOW_IT_FITS 8.4
+  (the configuration map), CONFIGURATION.
 - **Pack designer** (Build → New pack, `/build/pack/designer`; the old `/build/pack/new` redirects): a workspace with a rail of six steps and
   their summaries. Data (drop `.jsonl`, `.jsonl.gz`, `.ndjson` files or a folder: uploaded to the server, every record analysed there with
   progress, the code of `drishti.py pack new`), Kind and keys (discriminator columns in any combination with live Sutra counts and a rare mark, the

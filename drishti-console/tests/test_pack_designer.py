@@ -74,3 +74,32 @@ def test_the_old_page_is_gone_and_the_designer_is_built_from_elements_only():
     assert "<select" not in page and "createElementNS" not in js and ".toFixed(" not in js and "echarts" not in js
     for element in ("FileDrop", "MultiSelect", "Select", "Grid", "CodeEditor", "Switch"):
         assert f"I.{element}" in js or f"G.{element}" in js, element
+
+
+def test_the_binding_goes_to_the_one_bindings_path_never_to_a_site_folder_of_the_workspace(tmp_path):
+    """The job writes binding.json (no site/ folder, no setting naming one); installing proposes it: the file connector is saved on the server
+    and each kind binding is proposed to Admin -> Data bindings, where a second administrator approves it."""
+    import asyncio
+    import json
+
+    from routes import pack_routes
+
+    w = ws(tmp_path)
+    wid = w.create("desk\x1fann")
+    d = w.path("desk\x1fann", wid)
+    (d / "binding.json").write_text(json.dumps({"kinds": ["trade", "quote"], "connector": "pdui-files",
+                                                "file": {"name": "pdui-files", "text": "plugin: file\n"}}))
+    calls = []
+
+    class Backend:
+        async def admin(self, method, path, ident, body=None, **kw):
+            calls.append((method, path, body))
+            return {"id": "p" + str(len(calls))}
+
+    out = asyncio.run(pack_routes._propose_binding(Backend(), object(), d, "new module"))
+    assert calls[0][:2] == ("PUT", "/connectors/pdui-files")
+    assert [(m, p) for m, p, _ in calls[1:]] == [("POST", "/bindings/proposals")] * 2
+    assert calls[1][2] == {"kind": "trade", "binding": {"read": ["pdui-files"]}, "reason": "new module"}
+    assert [x["kind"] for x in out["proposed"]] == ["trade", "quote"] and not out["errors"]
+    assert not (d / "site").exists() and not hasattr(w, "site")
+    assert "pack_designer_site" not in (CONSOLE / "config" / "application.yaml").read_text(encoding="utf-8")

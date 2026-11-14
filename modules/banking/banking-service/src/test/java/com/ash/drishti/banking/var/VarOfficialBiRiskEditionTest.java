@@ -18,9 +18,9 @@ package com.ash.drishti.banking.var;
 import org.springframework.test.context.TestPropertySource;
 
 /**
- * Every test of {@link VarOfficialBiTest} again with the server running the {@code risk} edition (docs/guides/ADMIN_GUIDE.md): the official records in BI (the market-risk-var model and report, both in the edition's datasets) work
- * under Drishti Risk exactly as on the full product. Its packs are all in the edition's list, so allow-only stays on.
+ * Every test of {@link VarOfficialBiTest} again with the server running Drishti Risk (drishti.distribution=risk, docs/architecture/DISTRIBUTIONS.md): the official records in BI (the market-risk-var model and report, both in the edition's datasets) work
+ * under Drishti Risk exactly as on the full product.
  */
-@TestPropertySource(properties = {"drishti.edition=risk"})
+@TestPropertySource(properties = {"drishti.distribution=risk", "drishti.distributions-dir=../../../config/distributions", "drishti.module-manifests-dir=../../../modules"})
 class VarOfficialBiRiskEditionTest extends VarOfficialBiTest {
 }

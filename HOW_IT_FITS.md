@@ -379,6 +379,20 @@ Every file the request touches, from start to answer:
 
 The answer goes back through the kernel to the console, which draws it; Explain on any figure shows how it was calculated.
 
+### 8.4 Configuration map: one switch, one home
+
+Every setting has one home, and every switch one job. When two places seem to say the same thing, the one on the left decides what
+exists and the next ones only narrow it.
+
+| Question | The one home | Not here |
+|---|---|---|
+| What exists in this product? (modules, their packs, commands, menus, Help, engines; the brand; the feature presets) | the **distribution**: `config/distributions/drishti.<name>.yaml`; the feature switches each preset sets: `config/distributions/kernel.yaml` `features:` | a lens; the console's settings |
+| Is a module on at this site? | the **module switch**: `config/modules/<id>.yaml` (`drishti.modules.<id>.enabled`), Admin → Modules | the distribution (it only lists the module) |
+| Does a compute engine run on this server? | the **engine switch**: `config/engines/<id>.yaml`, Admin → Engines | the distribution (it can only say off: the engine's module is not in it) |
+| A module's commands and menus | its **manifest**: `module.yaml` `functions:` and `console.menus` (drawn only while the module is active) | the console's sitemap (`drishti-console/config/sitemap.yaml` holds the kernel's pages only) |
+| How a role's screens are arranged (starting Home, menu order, default screens) | a **lens**: `config/lenses/<module>/<lens>.yaml`, a workspace that never hides anything | anything that decides what exists |
+| Who may read what | roles, entitlements and masks (Admin → Roles, Access) | lenses, distributions |
+
 ## 9. Where to read more
 
 | To understand | Read |

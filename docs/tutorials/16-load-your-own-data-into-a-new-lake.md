@@ -373,7 +373,6 @@ A connector reads one lake. Edit the two connector files the packs wrote at the 
 
 ```yaml
 plugin: delta
-kinds: [trade]
 settings:
   lake: risklake                  # was: demo
   lake-tables: trading.trade_endur
@@ -381,12 +380,11 @@ settings:
   source-name: trade-endur
 ```
 
-`config/connectors/risk-store.yaml`, with only the kinds risklake holds (a table the lake file lacks is refused, naming it):
+`config/connectors/risk-store.yaml`, with only the tables risklake holds (a table the lake file lacks is refused, naming it):
 
 ```yaml
 plugin: delta
 enabled: true
-kinds: [scenario-pv, var-limit]
 settings:
   lake: risklake
   lake-tables: risk.scenario-pv,risk.var-limit
@@ -469,7 +467,7 @@ python3 tools/drishti.py dataload undo 20261107T101740.754-2543825.1 --yes      
 **You should see** **Duplicates today 1**: `trade_endur.2026-11-06.jsonl.gz`, *moved to the outbox, not loaded again*, *already loaded
 in run … (the same SHA-256)*, and **Last cycles** *duplicate · 1 file · already loaded*; then the dry run's one line, *26 rows … removed*.
 
-**Go back to the demo.** Set `lake: demo` back in both connector files (for `risk-store`, its full list of kinds and `lake-tables`, or
+**Go back to the demo.** Set `lake: demo` back in both connector files (for `risk-store`, its full `lake-tables` list, or
 delete the file: the pack writes its template again at the next start) and restart. Neither lake changes: risklake stays in
 `data/delta/risklake/` for the next time, the demo in `data/delta/demo/`.
 
@@ -555,7 +553,7 @@ every table partitioned by `business_date` first; the three trade tables also by
 # config/packs/banking/trading/pack.yaml (the template written to config/connectors/trade-endur.yaml)
 trade-endur:
   plugin: delta
-  kinds: [trade]
+  kinds: [trade]                          # the distribution's default binding of trade; the written file names no kinds
   settings:
     lake: demo
     lake-tables: trading.trade_endur      # the kind trade has three tables: the entry is named
@@ -695,7 +693,6 @@ append per business date, each recorded as `drishti-batch:intraday-0915:<date>` 
 ```bash
 mkdir -p $SCRATCH/connectors && cat > $SCRATCH/connectors/old-store.yaml <<EOF
 plugin: delta
-kinds: [pnl-vector]
 settings:
   root: $SCRATCH/lake
   domain: risk
@@ -729,8 +726,6 @@ tables:
 
 --- $SCRATCH/connectors/old-store.yaml (would be written)
 plugin: delta
-kinds:
-- pnl-vector
 settings:
   lake: lake
 
@@ -1163,7 +1158,6 @@ tables:
 ```yaml
 # config/connectors/news-store.yaml
 plugin: delta
-kinds: [news-topic, listed-company, news, quote]
 settings:
   lake: news
   lake-tables: news.news-topic,news.listed-company,news.news,news.quote
@@ -1379,13 +1373,13 @@ one store per domain. Your own `--lake` folder: the Iceberg root is the folder b
 moves it).
 
 **The YAML.** The script writes the connector file `risk-store.yaml` from the market-risk pack's template, switched to Iceberg (the
-text it replaced is kept in `data/connectors/history/`), and does the same for the counterparty-risk pack's `exposure-store.yaml`:
+text it replaced is kept in `data/connectors/history/`), and does the same for the counterparty-risk pack's `exposure-store.yaml`. The
+file names no kinds: the pack's template still binds the risk kinds to `risk-store` by default, and `config/bindings.yaml` (Admin → Data
+bindings) is where a site binds them elsewhere:
 
 ```yaml
 # Written by tools/build_demo_lakes.py --store risk=iceberg: every risk table in Iceberg (data/iceberg/risk), …
 plugin: iceberg
-kinds: [stress-scenario, stress-result, frtb-sensitivity, pnl-explain, trade-valuation, portfolio, pnl-vector, scenario-pv,
-        fx-scenario, scenario-set, var-limit]
 settings:
   root: ${DRISHTI_ICEBERG_ROOT:${drishti.data.dir:./data}/iceberg}
   engine: native
@@ -1526,7 +1520,6 @@ connector var-results   origin file   plugin iceberg   running   …
 
 ```yaml
 plugin: iceberg
-kinds: [var-official]
 settings:
   root: ${drishti.var.official.root:${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}}
   domain: risk-results
@@ -1580,7 +1573,7 @@ a table keeps its format). A full build without `--store risk=…` also puts the
 | `failed/`: *the .ready file's key … is not one of …* | a typo in the `.ready`; correct it and **Retry** (`drishti.py dataload retry <file>`) |
 | `failed/`: *its .ready file says 2000 rows, the file holds …* | the copy was cut short: copy it again, then Retry |
 | `failed/`: the date in the name is refused | a business date is a real date, not in the future: run `make_day.py` with today's date or an earlier one |
-| a connector refused: *lake risklake has no table risk.pnl-vector* | list only risklake's tables in `lake-tables:` and `kinds:` |
+| a connector refused: *lake risklake has no table risk.pnl-vector* | list only risklake's tables in `lake-tables:` |
 | the page still shows demo trades | the connector file still says `lake: demo`, or the server was not restarted |
 | *this Python lacks deltalake* | run the script with the console's Python (Before you start) |
 | *could not find the server jar* or the copy into Iceberg fails | build the server first (`./mvnw clean package -DskipTests`) |

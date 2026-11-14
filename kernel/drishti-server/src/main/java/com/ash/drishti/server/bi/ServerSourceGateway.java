@@ -72,8 +72,9 @@ public final class ServerSourceGateway implements SourceGateway {
             }
             return named;
         }
-        return registry.plugins().stream().filter(p -> p.manifest().serves(kind)).filter(p -> !p.manifest().kinds().isEmpty())
-                .max(Comparator.comparingInt((SourcePlugin p) -> p.columnar(kind).size())).or(() -> registry.plugins().stream().filter(p -> p.manifest().serves(kind)).findFirst());
+        List<SourcePlugin> readers = router.readers(kind);                                // the kind's sources as the resolution orders them
+        return readers.stream().filter(p -> !p.manifest().kinds().isEmpty())
+                .max(Comparator.comparingInt((SourcePlugin p) -> p.columnar(kind).size())).or(() -> readers.stream().findFirst());
     }
 
     @Override

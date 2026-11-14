@@ -142,12 +142,8 @@ drishti:
   distribution: ${DRISHTI_DISTRIBUTION:}
   distributions-dir: ${DRISHTI_DISTRIBUTIONS_DIR:./config/distributions}   # the distribution files and kernel.yaml (the kernel's packs and words)
   module-manifests-dir: ${DRISHTI_MODULE_MANIFESTS_DIR:./modules}   # the modules' own manifests (modules/<id>/module.yaml): what a distribution's modules hold, and the one source of what a content module is (the access registry; a folder that is not there: the modules folder beside the packs' config folder)
-  # DEPRECATED (read for one release; Health names it): the edition, config/lenses/<module>/<lens>.yaml as the instance's filter. Name a
-  # distribution instead; with one named, this is ignored. A change needs a restart.
-  edition: ${DRISHTI_EDITION:}
-  lens-dir: ${DRISHTI_LENS_DIR:./config/lenses}   # the lenses' files: config/lenses/<module>/<lens>.yaml (one of no module in the folder itself), features.yaml
-  # Lenses (LENSES.md › The design): editions a person may open on a full instance ("Open Drishti Risk"), for their own session; no restart,
-  # every pack stays loaded. A lens hides, it does not secure. On by default (product owner, 2026-10-30): the four lenses; DRISHTI_LENSES= (empty) turns them off. Ignored with an edition.
+  # Lenses (LENSES.md): workspaces a person may open ("Open Drishti Risk"), for their own session: each arranges Home and the menus for a
+  # role and never hides anything (what exists is the distribution's). The four lenses by default; DRISHTI_LENSES= (empty) offers none.
   lenses: ${DRISHTI_LENSES:risk,world,market,trading}
   data:
     # The umbrella folder every runtime path below defaults under (identity database, caches, loads, collab, designs, reports, the
@@ -246,7 +242,7 @@ drishti:
   branding:
     # The product's name and legal notices, wherever people see them (pages, the About answer, messages). Change them
     # here, not in code; the console has the same keys under ui: in drishti-console/config/application.yaml.
-    product: ${DRISHTI_PRODUCT:Drishti}
+    product: Drishti
     tagline: Any data. Any domain. One grammar.  # the line under the name
     owner: Ashutosh Sinha  # who holds the rights, named in the About answer
     # the copyright line of the About answer (GET /api/v1/about)
@@ -1199,7 +1195,7 @@ drishti:
       history-file: ${DRISHTI_PACKS_DEPLOY_HISTORY:${drishti.data.dir}/packs/deploy-history.jsonl}  # the history of archive deployments and rollbacks
       probe-dates: 3                       # business dates listed per kind by Test connection
       probe-timeout-seconds: 30  # Test connection: how long to wait for one source to list its business dates
-    enabled: ${DRISHTI_PACKS:default}      # default: the edition's packs (drishti.edition), else config/packs/default-packs.yaml
+    enabled: ${DRISHTI_PACKS:default}      # default: the distribution's packs (drishti.distribution), else config/packs/default-packs.yaml
     # Sample packs (sample: true in pack.yaml) are demonstrations. visible: everyone sees them; developers: only users with the author
     # or admin power; hidden: nobody, they are not loaded and their connectors do not start. Admin -> Packs ("Hide samples from business
     # users") saves a choice that overrides this. Use developers once real packs exist.

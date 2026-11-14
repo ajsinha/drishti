@@ -21,8 +21,6 @@
 # The lake (iceberg, its root or catalog, storage and tables) is config/lakes.examples/s3tables/s3tables.yaml: copy it to
 # config/lakes/s3tables.yaml beside this file (docs/guides/DATA_LAKE_GUIDE.md). This file keeps only what the connector reads.
 plugin: iceberg
-kinds:
-- trade
 description: trades (Endur) read from AWS S3 Tables
 settings:
   lake: s3tables

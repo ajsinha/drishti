@@ -19,7 +19,7 @@
    from the engines' own answers (/api/var/..., /api/exposure/...), drawn by drishti_risk-landing.js; a panel whose answer is refused or empty says
    so and nothing is invented. The choice of landing is the person's, kept in their settings (routes/edition_routes.py). #}
 {% extends "base.html" %}
-{% block title %}{{ PRODUCT }}{% endblock %}
+{% block title %}{{ PRODUCT }}{% if TAGLINE %} — {{ TAGLINE }}{% endif %}{% endblock %}
 {% block screen %}home{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block head %}<link rel="stylesheet" href="/static/css/drishti_risk-landing.css?v={{ ASSET_V }}">{% include "terminal/_risk_elements_css.html" %}<link rel="stylesheet" href="/static/elements/drishti-tree/drishti_tree.css?v={{ ASSET_V }}">{% endblock %}

@@ -75,8 +75,8 @@ def clean_path(p: str) -> str:
 
 
 class Workspaces:
-    def __init__(self, base: Path, tools: Path, limits: DesignerLimits, site: str = ""):
-        self.base, self.tools, self.limits, self.site = base, tools, limits, site       # site: the config folder the bindings are written to ("": each workspace's own site/)
+    def __init__(self, base: Path, tools: Path, limits: DesignerLimits):
+        self.base, self.tools, self.limits = base, tools, limits
 
     # ---- folders ------------------------------------------------------------------------------------------------------
     def scope_dir(self, scope: str) -> Path:
@@ -197,9 +197,6 @@ class Workspaces:
             r["workers"] = self.limits.workers
         if isinstance(body.get("edits"), dict):
             r["edits"] = {str(k): str(v) for k, v in body["edits"].items() if isinstance(v, str) and len(v) < 400_000}
-        site = os.environ.get("DRISHTI_PACK_DESIGNER_SITE") or self.site
-        if site:
-            r["site"] = str(site)
         r["load"] = bool(body.get("load", True))
         r["allowSharedKinds"] = bool(body.get("allowSharedKinds", False))
         return r

@@ -18,8 +18,8 @@
     python3 tools/under_construction.py --check    fail on a stale document, or a location the registry names that does not exist
 
 A location exists when: a Sutra of the kind binds each listed bind (strip or column) and has each listed panel id (the packs' Sutras); a
-menu item id is in drishti-console/config/sitemap.yaml; a help slug is a repository document's slug (docs/<path>.md -> docs-<path>); a
-contract's file (and its #anchor, as GitHub makes it) exists.
+menu item id is in drishti-console/config/sitemap.yaml or a module manifest's console.menus (modules/<id>/); a help slug is a repository
+document's slug (docs/<path>.md -> docs-<path>); a contract's file (and its #anchor, as GitHub makes it) exists.
 """
 from __future__ import annotations
 
@@ -105,8 +105,10 @@ def _sutras_of(kind: str) -> list[str]:
 
 def problems(items: list[dict]) -> list[str]:
     out: list[str] = []
-    menus = (ROOT / "drishti-console" / "config" / "sitemap.yaml").read_text(encoding="utf-8")
-    ids = set(re.findall(r"\bid:\s*([\w.-]+)", menus))
+    # the kernel's pages (the sitemap) and the modules' menus (each manifest's console.menus: core/menus.py draws both)
+    menus = [ROOT / "drishti-console" / "config" / "sitemap.yaml"] + sorted((ROOT / "modules").glob("*/module.yaml")) \
+        + sorted((ROOT / "modules").glob("*/dmod/module.yaml")) + sorted((ROOT / "modules").glob("*/src/dmod/module.yaml"))
+    ids = {m for f in menus for m in re.findall(r"\bid:\s*([\w.-]+)", f.read_text(encoding="utf-8"))}
     seen = set()
     for i in items:
         iid = str(i.get("id") or "")
@@ -130,7 +132,7 @@ def problems(items: list[dict]) -> list[str]:
                     out.append(f"{iid}: no {s.get('kind')} Sutra has a panel {p}")
         for m in i.get("menus") or []:
             if m not in ids:
-                out.append(f"{iid}: no menu item {m} in sitemap.yaml")
+                out.append(f"{iid}: no menu item {m} in sitemap.yaml or a module's menus")
         for h in i.get("help") or []:
             if not h.startswith("docs-") or not any(_doc_slug(p) == h for p in (ROOT / "docs").rglob("*.md")):
                 out.append(f"{iid}: no help page {h}")

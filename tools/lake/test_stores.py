@@ -52,7 +52,7 @@ def test_switching_a_system_writes_its_connector_file_and_keeps_the_old_text(tmp
 
     assert "now reads iceberg, was delta" in stores.switch(folder, "calypso", "iceberg", lake, ice, data, dry=False)
     doc = yaml.safe_load((folder / "trade-calypso.yaml").read_text(encoding="utf-8"))
-    assert doc["plugin"] == "iceberg" and doc["kinds"] == ["trade"]
+    assert doc["plugin"] == "iceberg" and "kinds" not in doc         # config/bindings.yaml (or the template) binds the kind
     s = doc["settings"]
     # the lake form (docs/guides/DATA_LAKE_GUIDE.md): the connector names the lake demo-iceberg; its file, beside the connector folder, holds
     # the table (the pack's entry, the partition field kept as a promoted column) and the root
@@ -89,11 +89,11 @@ def test_the_risk_domain_switches_its_connector_file_and_back(tmp_path, monkeypa
     assert "now reads iceberg, was delta" in stores.switch_domain(folder, "risk", "iceberg", lake, ice, data, dry=False)
     doc = yaml.safe_load((folder / "risk-store.yaml").read_text(encoding="utf-8"))
     assert doc["plugin"] == "iceberg" and doc["settings"]["engine"] == "native" and doc["settings"]["lake"] == stores.ICEBERG_LAKE
-    assert "pnl-vector" in doc["kinds"] and "risk.pnl-vector" in doc["settings"]["lake-tables"]
+    assert "kinds" not in doc and "risk.pnl-vector" in doc["settings"]["lake-tables"]
     lf = yaml.safe_load((tmp_path / "lakes" / "demo-iceberg.yaml").read_text(encoding="utf-8"))
     assert lf["tables"]["risk.pnl-vector"]["vectors"]                  # the vector columns go with the lake entry
     ex = yaml.safe_load((folder / "exposure-store.yaml").read_text(encoding="utf-8"))   # the CCR paths of the domain switch with it
-    assert ex["plugin"] == "iceberg" and "exposure-path" in ex["kinds"] and lf["tables"] is not None
+    assert ex["plugin"] == "iceberg" and "kinds" not in ex and lf["tables"] is not None
     assert yaml.safe_load((tmp_path / "lakes" / "demo-iceberg.yaml").read_text(encoding="utf-8"))["tables"]["risk.exposure-path"]["vectors"]
     assert "reads iceberg already" in stores.switch_domain(folder, "risk", "iceberg", lake, ice, data, dry=False)
     assert "now reads delta, was iceberg" in stores.switch_domain(folder, "risk", "delta", lake, ice, data, dry=False)

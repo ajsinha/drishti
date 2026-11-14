@@ -14,7 +14,6 @@
 # Example: ActiveMQ Classic over an ssl:// transport, trusting a private CA, with a user name and password from the
 # environment. Copy to config/connectors/activemq-ssl.yaml. See plugins/drishti-plugin-activemq/README.md.
 plugin: activemq
-kinds: [order]
 description: Orders from ActiveMQ over SSL
 settings:
   broker-url: failover:(ssl://activemq.example.com:61617)?initialReconnectDelay=1000

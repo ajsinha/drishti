@@ -14,8 +14,8 @@
 
 """The VaR Playground in the console (PLAY VAR, plugins/banking/routes/play_routes.py; VAR_GUIDE.md section 3.10): the command and its forms (a scope in
 the VaR explorer's words with its lens and currency, or ids), the page and its grid read from the server as the person, the export and
-the empty workbook streamed through, the VaR page's link, FUNC and the type-ahead, and the word only where the edition has it (Drishti
-Risk and Trading; not Market or World, DRS-4023). The workbook's own figures against the engine are VarPlaygroundWorkbookTest's and
+the empty workbook streamed through, the VaR page's link, FUNC and the type-ahead, and the word only where the distribution has it (Drishti
+Risk; not Drishti Finance, DRS-4023). The workbook's own figures against the engine are VarPlaygroundWorkbookTest's and
 VarPlaygroundApiTest's (headless LibreOffice, to the cent)."""
 from __future__ import annotations
 
@@ -29,8 +29,9 @@ from core.config import load_settings
 from plugins.banking.routes.play_routes import play_command
 import engine_fakes  # noqa: E402
 
-RISK_ABOUT = {"product": "Drishti Risk", "tagline": "VaR and exposure from your own pricing data", "edition": {"name": "risk", "title": "Drishti Risk"}}
-MARKET_ABOUT = {"product": "Drishti Market", "tagline": "Curves", "edition": {"name": "market", "title": "Drishti Market"}}
+RISK_ABOUT = {"product": "Drishti Risk", "tagline": "VaR and exposure from your own pricing data",
+              "edition": {"name": "drishti.risk", "title": "Drishti Risk"}}
+FINANCE_ABOUT = {"product": "Drishti Finance", "tagline": "Companies", "edition": {"name": "drishti.finance", "title": "Drishti Finance"}}
 
 GRID = {"canonical": "NODE:MGMT~DESK-RATES", "label": "DESK-RATES", "businessDate": "2026-09-30", "currency": "USD", "total": 2, "shown": 2,
         "lens": {"horizon": "1D", "confidence": 0.99, "esConfidence": 0.975}, "positions": [], "figures": {"var": 1.0}, "checks": []}
@@ -141,9 +142,9 @@ def test_the_var_page_link_func_and_the_type_ahead(backend, monkeypatch):
     assert c.get("/play?scope=BANK").status_code == 404
 
 
-def test_market_has_no_playground(backend, monkeypatch):
+def test_drishti_finance_has_no_playground(backend, monkeypatch):
     _server(backend, monkeypatch, [])
-    app, c = _app(backend, monkeypatch, MARKET_ABOUT)
+    app, c = _app(backend, monkeypatch, FINANCE_ABOUT)
     for path in ("/play?scope=BANK", "/api/play/grid?scope=BANK", "/api/play/export.xlsx?scope=BANK", "/api/play/template.xlsx"):
         assert c.get(path).status_code == 404, path
     r = c.get("/go", params={"q": "PLAY VAR BANK <GO>"}, follow_redirects=False)

@@ -179,9 +179,9 @@ def test_the_phone_display_can_be_turned_off(client, monkeypatch):
 # ---- the lens menus' phone form ---------------------------------------------------------------------------------------------------
 
 def test_a_lens_folds_its_subject_menus_into_one_menu_named_after_it(backend, monkeypatch):
-    from test_edition import TRADING_ABOUT, _app, _client
+    from test_edition import _app, _client, _workspace
     app = _app(backend, monkeypatch)
-    app.state.editions.learn(TRADING_ABOUT)
+    _workspace(app, "trading")
     html = _client(app).get("/t").text
     fold = html[html.index("data-lens-fold"):html.index("</template>")]
     assert 'class="tbar-lens-l">Trading<' in fold

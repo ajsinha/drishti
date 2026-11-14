@@ -20,11 +20,6 @@
 # The lake (delta, its root or catalog, storage and tables) is config/lakes.examples/memory/news.yaml: copy it to
 # config/lakes/news.yaml beside this file (docs/guides/DATA_LAKE_GUIDE.md). This file keeps only what the connector reads.
 plugin: delta
-kinds:
-- news-topic
-- listed-company
-- news
-- quote
 description: news-store held in memory only (mem://news), filled by the in-memory lake's replenish jobs
 settings:
   lake: news

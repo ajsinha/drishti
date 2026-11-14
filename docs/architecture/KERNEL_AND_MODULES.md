@@ -823,10 +823,7 @@ bindings:
 | `demo` | `true` binds the demo lake's samples explicitly |
 | `for:` (exception) | a per-module override, `for: {genomics-qc: [qc-store]}`; allowed only for kinds marked `shareable: per-module` in their contract (Q4) |
 
-**Today's equivalent is spread out**: a connector file's `kinds:` list and its `lake:`; the contract's `storage.connector`. P1 folds both
-into `bindings.yaml` (no dual machinery): connector files keep `plugin`, settings and `lake:`, lose `kinds:`; `drishti.py bindings
-migrate` writes `bindings.yaml` from today's files once, and a connector file still carrying `kinds:` is read for one release with a
-deprecation line in Health.
+**Status:** connector files keep `plugin`, settings and `lake:` and name no kinds; `config/bindings.yaml` is the one home (a `kinds:` line from an earlier release is ignored, and the upgrade that wrote `bindings.yaml` from those lists is gone). The Pack designer proposes its binding to Admin → Data bindings (the file connector saved through the connectors API, each kind proposed for a second administrator's approval); there is no `site/` folder side path.
 
 ### 5.5 How a kind finds its data (resolution)
 
@@ -834,11 +831,15 @@ For each kind any loaded module needs, in this order, first hit wins:
 
 1. **The site's binding** in `config/bindings.yaml` (as approved).
 2. **The distribution's default** (`bindings.defaults`, section 6), e.g. `drishti.finance` binds banking's kinds to `risklake` tables by
-   their hints when a lake file holds them.
+   their hints when a lake file holds them. Today: the kind's route in its pack, then the connectors whose pack template names the kind
+   (`kinds:` in the pack's `connectors:` templates, never in the written connector file), then the sources that name the kind themselves.
 3. **The lake convention**: a configured lake (not demo) whose lake file has the contract's `binding-hint.lake-table` table, read by a
    connector of the lake's format → bound, marked `AUTO` (Admin shows *found by convention: confirm*).
 4. **The demo lake**, only while `drishti.demo.enabled` and the need allows demo: marked `DEMO` (amber everywhere: "demo data").
 5. Otherwise **UNBOUND**.
+
+The router reads in the same order: a bound kind from its bound connectors (the `read` list, then `live`) and no other; a connector that
+names no kind is asked for a kind only when one of these steps picks it, never merely because its plugin could read the kind.
 
 Demo and real never mix ([DATA_LAKE_GUIDE.md](../guides/DATA_LAKE_GUIDE.md)): a kind is either demo or real; a pack whose kinds are bound
 to more than one lake is `DEGRADED` (today's warning, moved from packs to bindings).
@@ -936,7 +937,7 @@ differently branded consoles over the same kernels. Brand and theme are always t
 | `lenses` | which lenses are offered, the default lens, per-lens title overrides |
 | `home` | the default landing per lens, cards and chips order, the welcome text |
 | `menus` | top-level menu order; menu entries hidden for the whole product |
-| `features` | presets of switches (today's `config/lenses/features.yaml`) |
+| `features` | presets of switches (today's `config/distributions/kernel.yaml `features:``) |
 | `docs` | which Help sections and tutorials show, their order, the docs title ("Drishti Finance Help"), extra pages from the distribution's folder |
 | `bindings.defaults` | default bindings for this product (section 5.5) |
 | `demo` | whether the demo lake ships and is on |
@@ -2200,7 +2201,7 @@ The owner accepted every recommendation on 2026-11-08; each row below is a decis
 | # | Question | Decision (2026-11-08) |
 |---|---|---|
 | Q1 | The core pack's finance entities (`book`, `desk`, `trader`, `counterparty`, `legal-entity`, …): kernel or banking? (was D1) | move them to a **`banking-reference` pack in the banking module**; the kernel keeps `calendar` and generic entities (organisation, person, location); GLEIF stays kernel |
-| Q2 | Bindings file vs connectors' `kinds:` lists | **`config/bindings.yaml` is the one home**; `kinds:` read for one release, then removed |
+| Q2 | Bindings file vs connectors' `kinds:` lists | **`config/bindings.yaml` is the one home**; `kinds:` no longer read (done) |
 | Q3 | Module static files at `/m/<id>/static/<version>/` (new addresses) or today's `/static/…` | **new addresses** (versioned cache, per-module CSP, clean unload); page addresses unchanged |
 | Q4 | Per-module bindings of one kind (`for:`) | **not in i**: one binding per kind; per-person views are row rules; revisit with a real case |
 | Q5 | Java isolation without a Security Manager: accept review + tests, or run untrusted modules out of process | **in process for Drishti-signed and partner modules**; out-of-process modules (a gRPC/Flight boundary) only if a third-party marketplace is wanted (P5+) |

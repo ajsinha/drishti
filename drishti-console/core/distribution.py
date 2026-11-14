@@ -40,10 +40,14 @@ DEFAULT = "all"
 KERNEL = "kernel.yaml"
 _IN_JAR = "src/main/resources/META-INF/drishti/module.yaml"
 _SHORT = re.compile(r"[a-z0-9][a-z0-9-]{0,63}")
-#: The brand keys and the console settings they fill (the old keys: ui.product, ui.copyright ... read once, with a Health note).
+#: The brand keys and the console settings they fill. The five names and notices (NAMES) come from the distribution file only.
 BRAND_KEYS = {"product": "ui.product", "product_native": "ui.product_native", "tagline": "ui.tagline", "owner": "ui.owner",
               "copyright": "ui.copyright", "notice": "ui.notice", "logo": "ui.logo", "favicon": "ui.favicon", "about": "ui.about",
               "headline": "ui.headline"}
+
+
+#: The product's name and legal notices: the distribution file is their one home (a site's own ``ui.product`` and the like are not read).
+NAMES = ("product", "tagline", "owner", "copyright", "notice")
 
 
 def file_of(directory: Path, name_or_path: str | None) -> Path:
@@ -59,6 +63,35 @@ def file_of(directory: Path, name_or_path: str | None) -> Path:
 
 def _texts(v) -> list[str]:
     return [str(x).strip() for x in v if str(x).strip()] if isinstance(v, list) else []
+
+
+def menu_ids(v) -> list[str]:
+    """A manifest's top menus (``console.menus``): each menu's ``id`` (the menu itself, in the sitemap's form), or a plain id; each once."""
+    out: list[str] = []
+    for x in v if isinstance(v, list) else []:
+        i = str((x.get("id") if isinstance(x, dict) else x) or "").strip()
+        if i and i not in out:
+            out.append(i)
+    return out
+
+
+def module_menus(directory: Path | None) -> list[dict]:
+    """The modules' own top menus, in the sitemap's form (each manifest's ``console.menus``): the one home of a module's menus
+    (core/menus.py draws them beside the kernel's sitemap, each only while its module is active). Each comes tagged with its module
+    (``_module``) and that module's domain (``_domain``). A menu of an id another module already has adds its columns."""
+    out: list[dict] = []
+    if directory is None or not directory.is_dir():
+        return out
+    for m in sorted(p for p in directory.iterdir() if p.is_dir()):
+        for dmod in (m / "module.yaml", m / "src" / "dmod" / "module.yaml", m / "dmod" / "module.yaml"):
+            if dmod.is_file():
+                y = _read(dmod)
+                mid = str(y.get("id") or "").strip()
+                tag = {"_module": mid, "_domain": str(y.get("domain") or mid)}
+                out += [{**x, **tag, "columns": [{**c, **tag} for c in x.get("columns") or [] if isinstance(c, dict)]}
+                        for x in ((y.get("console") or {}).get("menus") or []) if isinstance(x, dict) and x.get("id")]
+                break
+    return out
 
 
 def _read(f: Path) -> dict:
@@ -107,7 +140,7 @@ def module_manifests(directory: Path | None) -> dict[str, ModuleEntry]:
             req = [k for k in (y.get("requires") or {}) if k != "optional"] if isinstance(y.get("requires"), dict) else []
             by_id[mid] = ModuleEntry(mid, str(y.get("domain") or mid), _texts((y.get("packs") or {}).get("list")), _words(y.get("functions")),
                                      [str(e.get("id")) for e in ((y.get("compute") or {}).get("engines") or []) if isinstance(e, dict)],
-                                     _texts((y.get("console") or {}).get("menus")), _texts((y.get("docs") or {}).get("domains")), req)
+                                     menu_ids((y.get("console") or {}).get("menus")), _texts((y.get("docs") or {}).get("domains")), req)
             break
         for part in sorted(p for p in m.iterdir() if p.is_dir()):
             jar = part / _IN_JAR
@@ -248,7 +281,7 @@ class Distribution:
         ui: dict[str, Any] = {}
         for k, key in BRAND_KEYS.items():
             v = self.brand.get(k)
-            if v is not None:
+            if v is not None and k not in NAMES:
                 ui[key.split(".", 1)[1]] = v
         support = (self.spec.get("brand") or {}).get("support") or {}
         if isinstance(support, dict) and (support.get("email") or support.get("url")):
@@ -262,6 +295,10 @@ class Distribution:
         if not self.all:                                         # Drishti All keeps Help as it was
             ui["help_title"] = self.help_title
         return {"ui": ui}
+
+    def brand_layer(self) -> dict:
+        """The product's name and notices as the file says them (pinned above the site's configuration)."""
+        return {"ui": {k: self.brand[k] for k in NAMES if k in self.brand}}
 
     def about(self) -> dict:
         return {"id": self.id, "name": self.name, "title": self.title, "all": self.all, "modules": ["all"] if self.all else self.modules,
@@ -303,6 +340,7 @@ def read(f: Path, kernel_file: Path, modules_dir: Path | None, packs_dir: Path, 
     kernel = (_read(kernel_file).get("kernel") or {}) if kernel_file.is_file() else {}
     # a distribution may name the kernel's packs it takes (``kernel-packs:``; Drishti Genomics takes none: no counterparty or book anywhere)
     packs = list(_texts(spec.get("kernel-packs") if "kernel-packs" in spec else kernel.get("packs")))
+    cmds = pack_commands(packs_dir, packs)                       # the kernel's own packs' commands; a module's are its manifest's functions
     menus = list(_texts(kernel.get("menus")))
     domains: dict[str, str] = {}
     words_on = set(_texts(kernel.get("words")))
@@ -322,7 +360,6 @@ def read(f: Path, kernel_file: Path, modules_dir: Path | None, packs_dir: Path, 
     features = {x: "off" for x in features_off}
     features.update(spec.get("features") or {})
     top = _texts((spec.get("menus") or {}).get("top"))
-    cmds = pack_commands(packs_dir, packs)
     ed: dict[str, Any] = {
         "edition": did, "title": title, "distribution": True,
         "packs": {"enabled": packs} if packs else {"none": True},   # a distribution of no packs (Genomics) loads none
@@ -368,12 +405,11 @@ def load(settings, console_dir: Path, name: str | None = None, known: dict[str, 
 
 
 def deprecated(settings) -> list[str]:
-    """The old product keys the site still sets on this console (read for one release): Health names each one."""
+    """The old keys the site still sets on this console (Health names each one): the product's name and notices are not read from them."""
     out = []
-    for key in ("ui.product", "ui.tagline", "ui.copyright", "ui.owner", "ui.notice", "edition"):
+    for key in ("ui.product", "ui.tagline", "ui.copyright", "ui.owner", "ui.notice"):
         if settings.site(key) not in (None, "", {}):
-            out.append(f"{key} is read for one release: set brand: in the distribution file instead" if key != "edition"
-                       else "edition is read for one release: name a distribution instead (--distribution, DRISHTI_DISTRIBUTION)")
-    if os.environ.get("DRISHTI_PRODUCT"):
-        out.append("DRISHTI_PRODUCT is read for one release: set brand.product in the distribution file instead")
+            out.append(f"{key} is no longer read: set brand: in the distribution file")
+    if settings.site("edition") not in (None, "", {}):
+        out.append("edition is read for one release: name a distribution instead (--distribution, DRISHTI_DISTRIBUTION)")
     return out

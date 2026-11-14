@@ -202,16 +202,11 @@ public class DataViewService {
 
     /** The dataset with the connector that serves it now, its format (the connector's plugin) and whether it is dated. */
     private Dataset withSource(Dataset d) {
-        SourcePlugin first = null;
-        for (SourcePlugin s : sources.plugins()) {
-            if (s.manifest().serves(d.kind())) {
-                first = s;
-                break;
-            }
-        }
-        if (first == null) {
+        List<SourcePlugin> readers = router.readers(d.kind());          // the kind's sources as the resolution orders them
+        if (readers.isEmpty()) {
             return d;
         }
+        SourcePlugin first = readers.get(0);
         String name = first.manifest().name();
         String plugin = sources.applied(name).map(SourcesProperties.ConnectorSettings::plugin).filter(x -> !x.isBlank()).orElse(d.format());
         List<Column> cols = d.columns();
@@ -219,15 +214,7 @@ public class DataViewService {
             cols = router.columnar(d.kind()).stream().sorted().map(n -> new Column(n, "text", "")).toList();
         }
         return new Dataset(d.kind(), d.pack(), d.code(), d.title(), d.description(), d.dataClass(), d.grain(), d.key(), name, format(plugin),
-                d.table(), router.undatedSources(d.kind()).size() < count(d.kind()), d.internalOnly(), cols);
-    }
-
-    private int count(String kind) {
-        int n = 0;
-        for (SourcePlugin s : sources.plugins()) {
-            n += s.manifest().serves(kind) ? 1 : 0;
-        }
-        return n;
+                d.table(), router.undatedSources(d.kind()).size() < readers.size(), d.internalOnly(), cols);
     }
 
     /** The dates the dataset holds, oldest first (empty when its sources cannot say without reading data, or it is not dated). */

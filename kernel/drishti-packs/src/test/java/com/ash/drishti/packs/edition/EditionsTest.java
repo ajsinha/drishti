@@ -16,14 +16,11 @@
 package com.ash.drishti.packs.edition;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.packs.PackPaths;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.SpringApplication;
@@ -33,7 +30,6 @@ import org.springframework.core.env.StandardEnvironment;
 /** The edition layer (docs/guides/ADMIN_GUIDE.md): the shipped risk edition file, the property layer and its place, the one default pack list. */
 class EditionsTest {
 
-    static final Path DIR = Path.of("../../config/lenses");
     static final String PRODUCT_DEFAULTS = "Config resource 'class path resource [application.yaml]' via location 'optional:classpath:/'";
 
     static StandardEnvironment env(Map<String, Object> site, Map<String, Object> product) {
@@ -64,7 +60,7 @@ class EditionsTest {
     void noEditionAddsNothingAndAllowsEverything() {
         StandardEnvironment env = env(map(), map("drishti.packs.enabled", "${DRISHTI_PACKS:default}"));
         new EditionEnvironmentPostProcessor().postProcessEnvironment(env, new SpringApplication());
-        assertThat(env.getProperty("drishti.edition")).isNull();          // Drishti All: only the distribution facts, no filter
+        assertThat(env.getProperty("drishti.edition")).isEmpty();         // Drishti All: only the distribution facts, no filter
         assertThat(env.getProperty(EditionEnvironmentPostProcessor.INFO + ".id")).isEqualTo("drishti.all");
         Edition none = Editions.of(env);
         assertThat(none).isSameAs(Edition.NONE);
@@ -78,64 +74,18 @@ class EditionsTest {
     }
 
     @Test
-    void theRiskEditionIsALayerUnderTheSiteAndAboveTheProductDefaults() {
-        StandardEnvironment env = env(map("drishti.edition", "risk", "drishti.lens-dir", DIR.toString(),
-                "drishti.edition-spec.commands.also-allow[0]", "FRTB"),
-                map("drishti.packs.enabled", "${DRISHTI_PACKS:default}", "drishti.branding.product", "${DRISHTI_PRODUCT:Drishti}"));
+    void aSitesOldEditionKeyNoLongerSelectsALensFile() {
+        StandardEnvironment env = env(map("drishti.edition", "risk", "DRISHTI_EDITION", "risk"), map("drishti.packs.enabled", "${DRISHTI_PACKS:default}"));
         new EditionEnvironmentPostProcessor().postProcessEnvironment(env, new SpringApplication());
-        List<String> order = env.getPropertySources().stream().map(p -> p.getName()).toList();
-        assertThat(order.indexOf(EditionEnvironmentPostProcessor.SOURCE)).isGreaterThan(order.indexOf("site")).isLessThan(order.indexOf(PRODUCT_DEFAULTS));
-        assertThat(env.getProperty("drishti.packs.enabled")).isEqualTo("core,market-data,trading,counterparty-risk,market-risk");
-        assertThat(env.getProperty("drishti.branding.product")).isEqualTo("Drishti Risk");
-        assertThat(env.getProperty("drishti.bi.enabled")).isEqualTo("true");
-        assertThat(env.getProperty("drishti.calc.enabled")).isEqualTo("false");
-        Edition risk = Editions.of(env);
-        assertThat(risk.name()).isEqualTo("risk");
-        assertThat(risk.title()).isEqualTo("Drishti Risk");
-        assertThat(risk.packAllowed("market-risk")).isTrue();
-        assertThat(risk.packAllowed("gleif")).isFalse();
-        assertThatThrownBy(() -> risk.requirePack("gleif")).isInstanceOf(DrishtiException.class).hasMessageContaining("allow-only");
-        assertThat(risk.commandShown("vres")).isTrue();
-        assertThat(risk.commandShown("FRTB")).isTrue();                     // the site's also-allow
-        assertThat(risk.commandShown("CVA")).isFalse();
-        assertThat(risk.wordOn("FORM")).isFalse();
-        assertThat(risk.wordOn("RUPAKA")).isFalse();
-        assertThat(risk.wordOn("VAR")).isTrue();
-        assertThat(risk.wordOn("EXP")).isTrue();
-        assertThat(risk.datasetShown("banking.market_risk_var_latest")).isTrue();
-        assertThat(risk.datasetShown("trades-basic-trade")).isFalse();
-        assertThat(risk.modelShown("market-risk-var@1")).isTrue();
-        assertThat(risk.modelShown("trades-basic")).isFalse();
-        assertThat(risk.adminPageShown("users")).isTrue();
-        assertThat(risk.adminPageShown("ai")).isFalse();
-        assertThat(risk.about()).containsEntry("name", "risk").containsEntry("title", "Drishti Risk");
+        assertThat(Editions.of(env)).isSameAs(Edition.NONE);               // a lens never filters: what exists is the distribution's
+        assertThat(PackPaths.enabled(env)).isEqualTo(PackPaths.DEFAULT_ENABLED);
+        assertThat(env.getProperty(EditionEnvironmentPostProcessor.INFO + ".deprecated")).contains("drishti.edition is no longer read");
     }
 
     @Test
-    void theSitesVariableStillWinsOverTheEditionsPacks() {
-        StandardEnvironment env = env(map("drishti.edition", "risk", "drishti.lens-dir", DIR.toString(), "DRISHTI_PACKS", "core,trading"),
-                map("drishti.packs.enabled", "${DRISHTI_PACKS:default}"));
-        new EditionEnvironmentPostProcessor().postProcessEnvironment(env, new SpringApplication());
-        assertThat(env.getProperty("drishti.packs.enabled")).isEqualTo("core,trading");
-    }
-
-    @Test
-    void aMissingEditionFileStopsTheStartWithWhatToDo() {
-        StandardEnvironment env = env(map("drishti.edition", "nope", "drishti.lens-dir", DIR.toString()), map());
-        assertThatThrownBy(() -> new EditionEnvironmentPostProcessor().postProcessEnvironment(env, new SpringApplication()))
-                .hasMessageContaining("no edition file").hasMessageContaining("DRISHTI_LENS_DIR");
-        StandardEnvironment bad = env(map("drishti.edition", "../etc", "drishti.lens-dir", DIR.toString()), map());
-        assertThatThrownBy(() -> new EditionEnvironmentPostProcessor().postProcessEnvironment(bad, new SpringApplication()))
-                .hasMessageContaining("not an edition name");
-    }
-
-    @Test
-    void lensesAreReadFromTheirFilesOnAFullInstanceOnly() {
-        StandardEnvironment full = env(map("drishti.lenses", "risk,missing", "drishti.lens-dir", DIR.toString()), map());
-        Map<String, Edition> lenses = Editions.lenses(full);
-        assertThat(lenses).containsOnlyKeys("risk");
-        assertThat(lenses.get("risk").commandShown("FRTB")).isFalse();
-        StandardEnvironment edition = env(map("drishti.edition", "risk", "drishti.lenses", "risk", "drishti.lens-dir", DIR.toString()), map());
-        assertThat(Editions.lenses(edition)).isEmpty();
+    void theServerKnowsOnlyTheLensNames() {
+        StandardEnvironment env = env(map("drishti.lenses", "risk, world"), map());
+        assertThat(Editions.lensNames(env)).containsExactly("risk", "world");
+        assertThat(Editions.lensNames(env(map(), map()))).isEmpty();
     }
 }

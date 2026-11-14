@@ -15,7 +15,6 @@
 # tls.* settings (sslmode becomes verify-full, so the server name is checked). Copy to config/connectors/postgres-tls.yaml.
 # See plugins/drishti-plugin-jdbc/README.md, section Security.
 plugin: jdbc
-kinds: [trade]
 description: Trades in PostgreSQL, verified TLS
 settings:
   url: jdbc:postgresql://db.example.com:5432/drishti

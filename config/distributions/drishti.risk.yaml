@@ -49,8 +49,6 @@ menus:
 home:
   cards: [VAR BANK, VAR DESK RATES, "VRES DESK:RATES", "EXP CPTY:CP-ALDERSHOT"]
 
-features: { var: on, exposure: on }
-
 docs: { title: Drishti Risk Help }
 demo: { ships: true, enabled: true }
 locale: { language: en }

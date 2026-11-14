@@ -102,20 +102,14 @@ ui:
     default: Go back to the terminal and try again, or type part of an identifier in the command line.
   studio_example: all-panels-showcase   # the example Studio opens on (a name under studio.examples_dir); blank or missing: the first pack example
   default_theme: terminal        # terminal | light | wallstreet | blue | green | crimson | crimson-dark | terminal-green | terminal-crimson | terminal-blue
-  # The product's name and legal notices on every page; nothing user-visible names them in code. The server has the
-  # same under drishti.branding.
-  product: ${DRISHTI_PRODUCT:Drishti}
-  tagline: Any data. Any domain. One grammar.  # the line under the product name, in the top bar, the sign-in page and the landing page
+  # The product's name, tagline, owner, copyright and notice come from the distribution file (config/distributions/drishti.<name>.yaml,
+  # brand:), on this console and the server alike; they are not set here.
   # The landing page's headline (blank: the tagline is the headline); its accent is the part drawn in the theme's gradient. When a
   # headline is set, the tagline sits under it as the subtitle.
   headline: See what your data hasn't told you yet.
   headline_accent: hasn't told you yet.  # the part of the headline drawn in the theme's gradient
   product_native: दृष्टि             # the name in its own script, beside it on the About page (blank for none)
   product_meaning: Drishti (दृष्टि) means <em>sight</em>.  # one line on the name's meaning, on the About page
-  # the copyright line in the footer and on the About page (the server's drishti.branding.copyright)
-  copyright: Copyright © 2026 Ashutosh Sinha. All rights reserved. Proprietary and confidential.
-  notice: Unauthorised copying, use or distribution is prohibited.  # the legal notice beside it
-  owner: Ashutosh Sinha             # who holds the rights: the About page's Author (the server's drishti.branding.owner)
   owner_email: ajsinha@gmail.com    # beside the owner on the About page (blank for none)
   user: ${DRISHTI_USER:ash}          # acting user until sign-in lands
   # how long a worker reuses what the server says about a user (settings, packs, layouts, pivots); a change on this console reaches
@@ -221,12 +215,10 @@ live:                        # live updates (docs/architecture/DATA_ARCHITECTURE
     window_seconds: 30  # a relay message is accepted this long after it was signed (allow for the hosts' clock difference); each only once
 under_construction:          # the under-construction registry (docs/admin/UNDER_CONSTRUCTION.md): menu items and help pages that depend on unbuilt work
   file: ${DRISHTI_UNDER_CONSTRUCTION_FILE:../config/under-construction.yaml}   # the same file the server reads; absent: nothing registered
-lens:                        # the lens (LENSES.md › The design): "Open Drishti Risk" for one person on a full instance (the server's drishti.lenses)
-  dir: ${DRISHTI_LENS_DIR:../config/lenses}   # the lens files the server reads: config/lenses/<module>/<lens>.yaml, features.yaml
+lens:                        # the lenses (LENSES.md): workspaces a person opens ("Open Drishti Risk"); each arranges, none hides anything
+  dir: ${DRISHTI_LENS_DIR:../config/lenses}   # the lens files: config/lenses/<module>/<lens>.yaml (only the console reads them)
   roles: {}                  # hook for role-based access later ({role: {link: true, start: risk}}): read, not wired
-# A site's overrides of the instance's edition, key by key, as in the edition file (they win over it), e.g.
-# edition: { commands: { also-allow: [FRTB] }, menus: { views: [terminal, search, functions, var, exposure] } }
-features:                    # the console's own switches (LENSES.md › The design); an edition presets them (config/lenses/features.yaml)
+features:                    # the console's own switches; a distribution presets them (config/distributions/kernel.yaml features:)
   build: true                # Build: new screens, new packs, designs, reviews and changes (/build, /review)
   forms: true                # query by form (FORM, /forms)
   datamap: true              # the data map (DATAMAP, /datamap)
@@ -249,7 +241,6 @@ builder:                     # Build workbench, New (/build/new); docs/guides/RA
   pack_designer_ttl_hours: 72     # Build -> New pack: hours a workspace untouched is kept before it is removed
   pack_designer_jobs_per_user: 2  # Build -> New pack: jobs (reading the files, making the module) one person may have running
   pack_designer_workers: 0        # Build -> New pack: processes reading the files in a job (0: the tool's default, a third of the cores, at most 8)
-  pack_designer_site:             # Build -> New pack: the config folder the data bindings are written to (empty: each workspace's own site/ folder)
   pack_designer_modules_dir:       # Build -> New pack: the modules folder 'Install on this node' copies the .dmod to (empty: DRISHTI_MODULES_PATH, else <data folder>/modules)
   pack_load_max_mb: 2048     # Admin -> Packs -> a pack -> Load data: the largest file the console streams on to the server (which has drishti.loads.upload-max-mb)
   tools_dir: ../tools        # the repository's tools/ folder (the Pack designer runs tools/packgen/designer_job.py from it); relative to drishti-console/

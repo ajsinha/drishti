@@ -24,7 +24,6 @@ import time
 from pathlib import Path
 from urllib.parse import quote_plus, urlsplit
 
-import yaml
 
 CONSOLE = Path(__file__).resolve().parents[1]
 SETTLED_JS = CONSOLE / "web" / "static" / "js" / "drishti_settled.js"
@@ -44,7 +43,8 @@ KNOWN_FAULTS: dict[str, str] = {
 
 
 def sitemap() -> dict:
-    return yaml.safe_load((CONSOLE / "config" / "sitemap.yaml").read_text(encoding="utf-8"))
+    from core.menus import spec_of
+    return spec_of(CONSOLE)   # the kernel's pages (config/sitemap.yaml) with the modules' menus from their manifests
 
 
 def go(cmd: str) -> str:

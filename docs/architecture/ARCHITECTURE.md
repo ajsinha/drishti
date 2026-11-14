@@ -1991,7 +1991,7 @@ presets (`EditionEnvironmentPostProcessor`) sit above the engine files.
 `drishti.var.enabled`, `drishti.ccr.exposure.enabled`, `drishti.frtb.enabled`, `drishti.simm.enabled` and `drishti.pivot.enabled`, set above
 the shipped files, decide their engine's switch (`DRS-1024` logged once); the in-memory lake is on when its stores are configured in the
 local file and nothing sets its switch; `drishti.frtb.sensitivity-kind`, `factor-kind` and `cache-minutes` read `drishti.sensitivities.*`
-through a lowest-precedence alias layer (`EngineKeyAliases`). Each lens's `config/lenses/features.yaml` entry names the engine switch
+through a lowest-precedence alias layer (`EngineKeyAliases`). Each lens's `config/distributions/kernel.yaml `features:`` entry names the engine switch
 (`var: { server: [drishti.engines.var.enabled] }`).
 
 ### 27.3 The lifecycle and what off means on the server

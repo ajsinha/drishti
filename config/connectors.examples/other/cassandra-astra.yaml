@@ -14,7 +14,6 @@
 # Example: DataStax Astra through its secure connect bundle (it carries the addresses, the data centre and the TLS material)
 # and an application token. Copy to config/connectors/cassandra-astra.yaml. See plugins/drishti-plugin-cassandra/README.md.
 plugin: cassandra
-kinds: [trade]
 description: Trades in DataStax Astra
 settings:
   domain: trading

@@ -98,10 +98,13 @@ class IcebergMovedConnectorFileTest {
             }
             Files.createDirectories(connectors);
             // as on QA's server: the pack's own credit store is switched off, so reads of the kind reach Iceberg
-            Files.writeString(connectors.resolve("credit-store.yaml"), "plugin: delta\nenabled: false\nkinds: [" + String.join(", ", CREDIT)
-                    + "]\nsettings:\n  root: " + base.resolve("delta") + "\n  domain: credit\n");
-            Files.writeString(connectors.resolve("qa-ice-moved.yaml"), "plugin: iceberg\nkinds: [credit-limit]\nsettings: {root: " + base.resolve("ice2")
+            Files.writeString(connectors.resolve("credit-store.yaml"), "plugin: delta\nenabled: false\nsettings:\n  root: " + base.resolve("delta")
+                    + "\n  domain: credit\n");
+            Files.writeString(connectors.resolve("qa-ice-moved.yaml"), "plugin: iceberg\nsettings: {root: " + base.resolve("ice2")
                     + ", domain: credit, engine: native}\n");
+            // the kind bound to it (config/bindings.yaml, beside the connectors' folder): a connector file names no kinds
+            Files.writeString(connectors.resolveSibling("iceberg-moved-connectors-bindings.yaml"),
+                    "format: 1\nbindings:\n  credit-limit: { read: [qa-ice-moved] }\n");
         } catch (Exception e) {
             throw new ExceptionInInitializerError(e);
         }
@@ -162,7 +165,7 @@ class IcebergMovedConnectorFileTest {
         }
 
         // added while the server runs, with a relocate in the Windows form that matches nothing here (QA3B-04)
-        Files.writeString(com.ash.drishti.server.TestRun.root().resolve("iceberg-moved-connectors").resolve("qa-ice-hot.yaml"), "plugin: iceberg\nkinds: [" + String.join(", ", MARKET) + "]\nsettings:\n  root: "
+        Files.writeString(com.ash.drishti.server.TestRun.root().resolve("iceberg-moved-connectors").resolve("qa-ice-hot.yaml"), "plugin: iceberg\nsettings:\n  root: "
                 + base.resolve("ice2") + "\n  domain: market\n  engine: native\n  relocate: 'C:\\Users\\qa\\ice1 -> D:\\lake\\ice2'\n");
         awaitRunning("qa-ice-hot");
         mvc.perform(get("/api/v1/admin/connectors")).andExpect(status().isOk())
@@ -181,7 +184,7 @@ class IcebergMovedConnectorFileTest {
 
         // QA4-05: a relocate it cannot read fails the start naming the pair, in one line; each retry closes the half-started connector quietly
         before = out.getAll().length();
-        Files.writeString(com.ash.drishti.server.TestRun.root().resolve("iceberg-moved-connectors").resolve("qa-ice-bad.yaml"), "plugin: iceberg\nkinds: [bond]\nsettings:\n  root: " + base.resolve("ice2")
+        Files.writeString(com.ash.drishti.server.TestRun.root().resolve("iceberg-moved-connectors").resolve("qa-ice-bad.yaml"), "plugin: iceberg\nsettings:\n  root: " + base.resolve("ice2")
                 + "\n  domain: market\n  engine: native\n  relocate: '/no/arrow/here'\n");
         long deadline = System.currentTimeMillis() + 30_000;
         while (!out.getAll().substring(before).contains("connector 'qa-ice-bad' failed (attempt 2)") && System.currentTimeMillis() < deadline) {

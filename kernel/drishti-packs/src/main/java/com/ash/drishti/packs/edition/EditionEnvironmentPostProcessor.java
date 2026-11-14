@@ -34,15 +34,17 @@ import com.ash.drishti.packs.distribution.Distribution;
 import com.ash.drishti.packs.distribution.Distributions;
 
 /**
- * Loads the edition {@code drishti.edition} names (docs/guides/ADMIN_GUIDE.md) as a property layer just above the product's own
- * defaults ({@code application.yaml} in the jar) and below the site's configuration (application.local.yaml, the packs overlay, environment
+ * Loads the distribution's filter (docs/architecture/DISTRIBUTIONS.md) as a property layer just above the product's own defaults
+ * ({@code application.yaml} in the jar) and below the site's configuration (application.local.yaml, the packs overlay, environment
  * variables, arguments), before the packs load (it runs right after the configuration files are read; the packs' post-processor runs
- * last). Blank: nothing happens, the full Drishti.
+ * last). Drishti All: only the distribution's facts, no filter.
  *
- * <p>The layer holds the file's keys under {@code drishti.edition-spec.*} (read by {@link Editions#of}) and the server settings the
- * edition presets: {@code drishti.packs.enabled}, {@code drishti.branding.product}/{@code tagline}, each feature of the edition through the
- * mapping in {@code features.yaml} in the lens folder ({@code drishti.lens-dir}), and the file's raw {@code server:} block. A preset of a setting the product
- * writes as {@code ${VARIABLE:default}} keeps the variable: {@code DRISHTI_PACKS} set still wins over the edition's packs.
+ * <p>The layer holds the filter's keys under {@code drishti.edition-spec.*} (read by {@link Editions#of}) and the server settings the
+ * distribution presets: {@code drishti.packs.enabled}, {@code drishti.branding.*}, and each feature it names through the mapping in
+ * {@code kernel.yaml} beside the distribution files ({@code features:}). The three layers of switches (ADMIN_GUIDE.md): the distribution
+ * says what exists, a module's switch whether it is on at this site, an engine's switch whether its compute runs here, so a distribution
+ * presets an engine off (it does not exist there) and never on. A preset of a setting the product writes as {@code ${VARIABLE:default}}
+ * keeps the variable: {@code DRISHTI_PACKS} set still wins over the distribution's packs. A lens presets nothing: it only arranges.
  */
 public final class EditionEnvironmentPostProcessor implements EnvironmentPostProcessor, Ordered {
 
@@ -60,45 +62,49 @@ public final class EditionEnvironmentPostProcessor implements EnvironmentPostPro
     public void postProcessEnvironment(ConfigurableEnvironment env, SpringApplication app) {
         Distribution dist = Distributions.of(env);                         // the distribution file: the one way (DISTRIBUTIONS.md)
         Map<String, Object> props = new LinkedHashMap<>(distributionProps(env, dist, deprecatedKeys(env, dist)));
-        String name;
-        Path file;
-        JsonNode spec;
-        if (!dist.all()) {
-            name = dist.id();
-            file = dist.file();
-            spec = dist.editionSpec();
-        } else {
-            name = env.getProperty(Editions.NAME, "").strip();
-            if (name.isEmpty()) {
-                addLayer(env, new MapPropertySource(SOURCE, props));
-                return;                                                      // Drishti All: the full Drishti, exactly as without editions
+        // the product's name and notices: the distribution file is their one home, above every setting a site made (the old keys are not read)
+        Map<String, Object> brand = new LinkedHashMap<>();
+        for (String k : List.of("product", "tagline", "owner", "copyright", "notice")) {
+            String v = dist.brand().get(k);
+            if (v != null) {
+                brand.put("drishti.branding." + k, v);
             }
-            file = Editions.file(env, name);                                 // the old key, read for one release (Health says so)
-            spec = Editions.read(file);
         }
+        if (!brand.isEmpty()) {
+            env.getPropertySources().addFirst(new MapPropertySource(SOURCE + "-brand", brand));
+        }
+        if (dist.all()) {
+            addLayer(env, new MapPropertySource(SOURCE, props));
+            env.getPropertySources().addFirst(new MapPropertySource(SOURCE + "-name", Map.of(Editions.NAME, "")));   // no filter at all
+            return;                                                          // Drishti All: the full Drishti
+        }
+        String name = dist.id();
+        JsonNode spec = dist.editionSpec();
         props.putAll(Editions.flatten(spec, Editions.SPEC));
         List<String> packs = new ArrayList<>();
-        com.fasterxml.jackson.databind.JsonNode enabled = spec.path("packs").path("enabled");      // by module (in order), or a plain list
-        (enabled.isObject() ? enabled.elements() : java.util.List.of(enabled).iterator())
-                .forEachRemaining(m -> m.forEach(p -> { if (!packs.contains(p.asText().strip())) packs.add(p.asText().strip()); }));
+        spec.path("packs").path("enabled").forEach(p -> {
+            if (!packs.contains(p.asText().strip())) {
+                packs.add(p.asText().strip());
+            }
+        });
         if (!packs.isEmpty() || spec.path("packs").path("none").asBoolean(false)) {   // a distribution of no packs (Genomics) has none
             props.put("drishti.packs.enabled", preset(env, "drishti.packs.enabled", String.join(",", packs)));
         }
         spec.path("branding").fields().forEachRemaining(e -> props.put("drishti.branding." + e.getKey(), preset(env, "drishti.branding." + e.getKey(), e.getValue().asText())));
-        Map<String, List<String>> mapping = featureMapping(Path.of(env.getProperty(Editions.DIR, Editions.DEFAULT_DIR)), "server");   // the lens folder's features.yaml
+        Map<String, List<String>> mapping = featureMapping(Distributions.dir(env), "server");   // kernel.yaml's features: beside the files
         spec.path("features").fields().forEachRemaining(e -> {
             String value = e.getValue().asText().strip();
+            boolean off = value.equalsIgnoreCase("off") || value.equalsIgnoreCase("false");
             for (String key : mapping.getOrDefault(e.getKey(), List.of())) {
-                props.put(key, preset(env, key, value.equalsIgnoreCase("off") || value.equalsIgnoreCase("false") ? "false" : "true"));
+                if (off || !key.startsWith("drishti.engines.")) {            // an engine: off only; where it runs is its engine switch
+                    props.put(key, preset(env, key, off ? "false" : "true"));
+                }
             }
         });
-        spec.path("server").fields().forEachRemaining(e -> props.putAll(Editions.flatten(e.getValue(), e.getKey())));
         addLayer(env, new MapPropertySource(SOURCE, props));
-        if (!dist.all()) {                                                   // the distribution's name wins over a site's old drishti.edition
-            env.getPropertySources().addFirst(new MapPropertySource(SOURCE + "-name", Map.of(Editions.NAME, name)));
-        }
+        env.getPropertySources().addFirst(new MapPropertySource(SOURCE + "-name", Map.of(Editions.NAME, name)));   // the distribution's name
         System.getLogger(EditionEnvironmentPostProcessor.class.getName()).log(System.Logger.Level.INFO,
-                "edition {0} ({1}) from {2}: packs {3}", name, spec.path("title").asText(name), file.toAbsolutePath().normalize(),
+                "distribution {0} ({1}) from {2}: packs {3}", name, dist.title(), dist.file().toAbsolutePath().normalize(),
                 packs.isEmpty() ? "the default list" : packs);
     }
 
@@ -117,12 +123,6 @@ public final class EditionEnvironmentPostProcessor implements EnvironmentPostPro
     /** The settings the old product keys used to hold, as the distribution file says them (under the site's configuration). */
     static Map<String, Object> distributionProps(ConfigurableEnvironment env, Distribution d, List<String> deprecated) {
         Map<String, Object> props = new LinkedHashMap<>();
-        for (String k : List.of("product", "tagline", "owner", "copyright", "notice")) {
-            String v = d.brand().get(k);
-            if (v != null) {
-                props.put("drishti.branding." + k, preset(env, "drishti.branding." + k, v));
-            }
-        }
         if (!d.all()) {
             props.put(Editions.LENSES, String.join(",", d.lenses()));
         }
@@ -137,8 +137,8 @@ public final class EditionEnvironmentPostProcessor implements EnvironmentPostPro
     }
 
     /**
-     * The old product keys a site still sets ({@code drishti.edition}, {@code drishti.branding.*}): read for one release, each named on
-     * Health as deprecated (the distribution file is the one way: KERNEL_AND_MODULES.md section 6).
+     * The old product keys a site still sets ({@code drishti.edition}, {@code drishti.branding.*}, {@code DRISHTI_PRODUCT}), each named on
+     * Health ({@code drishti.branding.*} is no longer read: the distribution file is the one way, KERNEL_AND_MODULES.md section 6).
      */
     static List<String> deprecatedKeys(ConfigurableEnvironment env, Distribution d) {
         List<String> out = new ArrayList<>();
@@ -155,21 +155,20 @@ public final class EditionEnvironmentPostProcessor implements EnvironmentPostPro
                     continue;
                 }
                 out.add(key + (key.equals(Editions.NAME)
-                        ? (d.all() ? " is read for one release: name a distribution instead (--distribution, DRISHTI_DISTRIBUTION)"
-                                : " is ignored: the distribution " + d.id() + " decides")
-                        : " is read for one release: set brand: in the distribution file instead"));
+                        ? " is no longer read: a distribution says what exists (--distribution, DRISHTI_DISTRIBUTION); a lens only arranges"
+                        : " is no longer read: set brand: in the distribution file"));
             }
         }
         return out;
     }
 
     /**
-     * Which settings each feature of an edition presets on one side ({@code server} or {@code console}): {@code features.yaml} in the
-     * lens folder, {@code feature -> {server: [keys], console: [keys]}}. Missing: no feature presets.
+     * Which settings each feature of a distribution presets on one side ({@code server} or {@code console}): {@code features:} of
+     * {@code kernel.yaml} in the folder of the distribution files, {@code feature -> {server: [keys], console: [keys]}}. Missing: no presets.
      */
-    public static Map<String, List<String>> featureMapping(Path dir, String side) {
+    public static Map<String, List<String>> featureMapping(Path distributionsDir, String side) {
         Map<String, List<String>> out = new LinkedHashMap<>();
-        Path f = dir == null ? null : dir.resolve("features.yaml");
+        Path f = distributionsDir == null ? null : distributionsDir.resolve(Distributions.KERNEL);
         if (f == null || !Files.isRegularFile(f)) {
             return out;
         }

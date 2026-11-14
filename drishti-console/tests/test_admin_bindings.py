@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 """Admin → Data bindings in the console (docs/guides/ADMIN_GUIDE.md, "Data bindings"; mock-up A): one row per kind from the server's
-GET /api/v1/admin/bindings, the banner when a required need is unbound, the deprecated kinds: lists, the proposals, and a proposal or a
+GET /api/v1/admin/bindings, the banner when a required need is unbound, the proposals, and a proposal or a
 decision passed to the server with its refusals."""
 from core.backend import BackendError
 
@@ -30,7 +30,6 @@ STATUS = {
         {"kind": "position", "state": "COMPUTED", "origin": "COMPUTED", "read": ["var-positions"], "neededBy": [], "required": False, "usedBy": [],
          "lastLoad": None, "reason": "computed by banking; not bindable", "binding": None}],
     "problems": ["var-limit is bound to 'nowhere', which no connector file defines"],
-    "deprecated": ["trade-endur.yaml lists kinds: [trade]: read this release only; the binding in bindings.yaml is the one home, remove the list"],
     "connectors": ["risk-store", "trade-endur", "trade-murex"],
     "proposals": [{"id": "p1", "kind": "scenario-set", "binding": {"read": ["risk-store"]}, "was": None, "reason": "the bank's sets",
                    "proposedBy": "someone-else", "proposedAt": "2026-11-10T09:00:00Z", "state": "proposed"}],
@@ -58,7 +57,7 @@ def test_the_page_shows_every_kind_its_state_and_what_is_off(client, backend, mo
     with_bindings(backend, monkeypatch, [])
     page = client.get("/admin/bindings").text
     for text in ("Data bindings", "trade-endur, trade-murex", "(union)", "trade-kafka", "site binding", "DEMO", "UNBOUND", "COMPUTED",
-                 "1 required need unbound", "scenario-set", "VRES", "Deprecated: trade-endur.yaml lists kinds", "nowhere",
+                 "1 required need unbound", "scenario-set", "VRES", "nowhere",
                  'data-binding-edit="trade"', 'data-proposal="p1"', 'data-proposal-act="approve"', "drishti_admin-bindings.js",
                  'scope="col"', "<caption", "/srv/drishti/config/bindings.yaml"):
         assert text in page, text

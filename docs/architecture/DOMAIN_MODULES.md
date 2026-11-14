@@ -303,7 +303,7 @@ the VaR and exposure lakes; package `com.ash.drishti.server.connectors` kept, in
   none of its reports, tables or models. The economy samples stay in `config/tables/bi/` and `config/bi/reports/`.
 - **Editions folded into lenses** (step 5 of the list before): `config/editions/` is gone. A lens's file is
   `config/lenses/<module>/<lens>.yaml` (risk, trading, market: banking; world and public sector: economy), the feature presets
-  `config/lenses/features.yaml` (`drishti.lens-dir`, `DRISHTI_LENS_DIR`; the console's `lens.dir`); a lens names its packs by module
+  `config/distributions/kernel.yaml `features:`` (`drishti.lens-dir`, `DRISHTI_LENS_DIR`; the console's `lens.dir`); a lens names its packs by module
   (`packs.enabled: {economy: [...], capitalmarkets: [...]}`), so World is economy with capital markets: while capitalmarkets is off its
   packs, functions, cards and the World landing's company, filing and fund parts are gone (`module_on` in the templates). The registry's lens
   carries its Home cards and chips (`cards:`, `chips:` in its module's `META-INF/drishti/lenses.yaml`, answered per person by

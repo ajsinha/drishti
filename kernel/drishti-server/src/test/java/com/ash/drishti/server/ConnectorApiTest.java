@@ -99,9 +99,18 @@ class ConnectorApiTest {
                 .andExpect(jsonPath("$.directory").value(files.dir().toString()))
                 .andExpect(jsonPath("$.connectors[?(@.name=='api-docs')].state").value(hasItem("RUNNING")));
 
-        // test: a throwaway instance on the saved settings and on a draft
+        // test: a throwaway instance on the saved settings and on a draft, asked for the kinds bound to it (config/bindings.yaml: the file
+        // names none); nothing bound: its health alone
         mvc.perform(post("/api/v1/admin/connectors/api-docs/test")).andExpect(status().isOk()).andExpect(jsonPath("$.ok").value(true))
-                .andExpect(jsonPath("$.kinds[0].kind").value("item"));
+                .andExpect(jsonPath("$.kinds").isEmpty());
+        var before = manager.bindings();
+        manager.adopt(before.with("item", com.ash.drishti.packs.bindings.Bindings.binding("item", java.util.Map.of("read", java.util.List.of("api-docs")))));
+        try {
+            mvc.perform(post("/api/v1/admin/connectors/api-docs/test")).andExpect(status().isOk()).andExpect(jsonPath("$.ok").value(true))
+                    .andExpect(jsonPath("$.kinds[0].kind").value("item"));
+        } finally {
+            manager.adopt(before);
+        }
         mvc.perform(post("/api/v1/admin/connectors/api-docs/test").contentType(MediaType.APPLICATION_JSON).content(body(dir.resolve("nope").toString(), "")))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.ok").isBoolean());
 

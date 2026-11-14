@@ -213,8 +213,8 @@ versions with different contents are flagged on Admin → Cluster.
 
 **Commands and packs switched on or off** (Functions, Admin → Packs) are the same on every node, even when each node has a database of its
 own: the switches travel with gossip and a node that was down catches up when it rejoins
-([ADMIN_GUIDE.md](ADMIN_GUIDE.md#205-several-servers)). **Editions** (`drishti.edition`) are per node and must be equal on all
-(Admin → Cluster warns).
+([ADMIN_GUIDE.md](ADMIN_GUIDE.md#205-several-servers)). **The distribution** (`drishti.distribution`) is per node and must be equal
+on all.
 
 ### 1.6 Security: the key, mutual TLS, nodes per role
 

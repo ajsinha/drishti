@@ -53,8 +53,8 @@ public final class ConnectorBootstrap {
     /** A pack's template has moved on from a file the site edited: the file is kept and flagged. */
     public record TemplateChange(String name, String pack, List<String> oldKinds, List<String> newKinds) {
         public String message() {
-            return "the pack's template changed (kinds: " + String.join(", ", oldKinds) + " \u2192 " + String.join(", ", newKinds)
-                    + "); this file was edited and is kept. Reset to pack default to use the new template";
+            String kinds = oldKinds.equals(newKinds) ? "" : " (kinds: " + String.join(", ", oldKinds) + " \u2192 " + String.join(", ", newKinds) + ")";
+            return "the pack's template changed" + kinds + "; this file was edited and is kept. Reset to pack default to use the new template";
         }
     }
 
@@ -195,7 +195,7 @@ public final class ConnectorBootstrap {
             } else if (behindAndBroken(files, name, text, t, header)) {
                 upgradeStale(files, name, t, fp, pack, newKinds, regenerated, messages);
             } else {
-                TemplateChange c = new TemplateChange(name, pack, mk == null ? files.parse(name, text).kinds() : mk.kinds(), newKinds);
+                TemplateChange c = new TemplateChange(name, pack, mk == null ? List.of() : mk.kinds(), newKinds);
                 changed.add(c);
                 messages.add("connector file " + name + ".yaml was edited and the template of pack '" + pack + "' changed; the file is kept and "
                         + "gets what the template gained, every edit kept");
@@ -214,12 +214,12 @@ public final class ConnectorBootstrap {
             ConnectorFiles.Definition d = files.parse(name, text);
             ConnectorFiles.Definition f = files.parse(name, fresh);
             if (d.plugin().equals(f.plugin()) && d.settings().equals(f.settings()) && d.enabled().equals(f.enabled())) {
-                mk = new ConnectorFiles.Marker(ConnectorFiles.etag(text), "", d.kinds());          // ours, never edited: same as a marked file
+                mk = new ConnectorFiles.Marker(ConnectorFiles.etag(text), "", List.of());          // ours, never edited: same as a marked file
             } else if (behindAndBroken(files, name, text, t, header)) {
                 upgradeStale(files, name, t, fp, pack, newKinds, regenerated, messages);
                 return;
             } else {
-                TemplateChange c = new TemplateChange(name, pack, d.kinds(), newKinds);
+                TemplateChange c = new TemplateChange(name, pack, List.of(), newKinds);
                 changed.add(c);
                 messages.add("connector file " + name + ".yaml was edited and the template of pack '" + pack + "' differs; the file is kept. " + c.message());
                 return;
@@ -261,8 +261,13 @@ public final class ConnectorBootstrap {
                     || !d.plugin().equals(f.plugin()) || !d.enabled().equals(f.enabled())) {
                 return false;
             }
-            java.util.Set<String> gone = new java.util.HashSet<>(d.kinds());
-            f.kinds().forEach(gone::remove);
+            java.util.Set<String> gone = new java.util.HashSet<>();                     // the kinds of the tables it names that the template dropped
+            for (String n : d.settings().getOrDefault(com.ash.drishti.lakeconfig.ConnectorLake.TABLES, "").split(",")) {
+                if (!n.isBlank()) {
+                    gone.add(n.strip().substring(n.strip().indexOf('.') + 1));
+                }
+            }
+            kindsOf(t).forEach(gone::remove);
             com.ash.drishti.lakeconfig.Lake lake = com.ash.drishti.lakeconfig.Lakes.current().get(lakeName.strip());
             List<String> missing = new ArrayList<>();
             for (String n : d.settings().getOrDefault(com.ash.drishti.lakeconfig.ConnectorLake.TABLES, "").split(",")) {

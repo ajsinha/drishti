@@ -130,8 +130,11 @@ public class EngineConfiguration {
     }
 
     @Bean
-    public SourceRouter sourceRouter(SourceRegistry registry, SourcesProperties props, ExecutorService drishtiVirtualExecutor) {
-        return new SourceRouter(registry, props, drishtiVirtualExecutor);
+    public SourceRouter sourceRouter(SourceRegistry registry, SourcesProperties props, ExecutorService drishtiVirtualExecutor,
+            org.springframework.core.env.Environment env) {
+        SourceRouter router = new SourceRouter(registry, props, drishtiVirtualExecutor);
+        router.prepare(env).run();                              // the packs' routes and their templates' default connectors of each kind
+        return router;
     }
 
     @Bean

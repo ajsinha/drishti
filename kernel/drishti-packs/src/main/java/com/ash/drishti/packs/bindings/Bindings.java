@@ -16,7 +16,6 @@
 package com.ash.drishti.packs.bindings;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -150,24 +149,14 @@ public record Bindings(Map<String, Binding> byKind) {
     }
 
     /**
-     * The kinds a connector serves (section 5.4): a connector file that lists {@code kinds:} (read this release, deprecated) serves those
-     * and the kinds bound to it; one that lists none serves what its plugin and lake hold, the bindings setting only the read order.
+     * Each bound kind's sources for the router: its {@code read} list, then its {@code live} connector (the subscriptions' source). The
+     * router reads a bound kind from these and no other connector (section 5.5: first hit wins).
      */
-    public List<String> effectiveKinds(String connector, Collection<String> fileKinds) {
-        if (fileKinds == null || fileKinds.isEmpty()) {
-            return List.of();
-        }
-        Set<String> out = new LinkedHashSet<>(fileKinds);
-        out.addAll(kindsOf(connector));
-        return List.copyOf(out);
-    }
-
-    /** Each bound kind's read order (its {@code read} list), for the router. */
     public Map<String, List<String>> readOrder() {
         Map<String, List<String>> out = new LinkedHashMap<>();
         byKind.values().forEach(b -> {
-            if (!b.read().isEmpty()) {
-                out.put(b.kind(), b.read());
+            if (!b.connectors().isEmpty()) {
+                out.put(b.kind(), b.connectors());
             }
         });
         return out;

@@ -14,19 +14,6 @@
 # Example: copy to config/connectors/reference-store.yaml to read the reference-store data from aerospike. It replaces the
 # connector file of the same name (settings are not merged). Credentials are ${ENV_VAR} references.
 plugin: aerospike
-kinds:
-- counterparty
-- counterparty-group
-- issuer
-- agreement
-- ccp
-- legal-entity
-- book
-- desk
-- trader
-- calendar
-- csa
-- clearing-account
 description: reference-store read from aerospike (the former application-aerospike.yaml profile)
 settings:
   domain: reference

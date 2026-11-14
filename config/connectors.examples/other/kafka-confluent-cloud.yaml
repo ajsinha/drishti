@@ -15,7 +15,6 @@
 # The API key and secret, and the Schema Registry key and secret, are environment references. Copy to
 # config/connectors/kafka-confluent-cloud.yaml. See plugins/drishti-plugin-kafka/README.md.
 plugin: kafka
-kinds: [trade]
 description: Trades from Confluent Cloud, Avro through Schema Registry
 settings:
   flavour: confluent

@@ -65,8 +65,152 @@ data:
   needs: data/needs.yaml
 console:
   plugin: console/plugin.yaml
+  # the module's own top menus, in the console sitemap's form (drishti-console/config/sitemap.yaml); a menu of another module's
+  # id adds its columns to that menu (the one Markets menu). The one home of these menus.
   menus:
-  - markets
+  - id: curves
+    domain: banking
+    label: Curves
+    icon: graph-up-arrow
+    subject: true
+    columns:
+    - title: Rates
+      items:
+      - id: crv
+        cmd: CRV
+        icon: graph-up-arrow
+        label: Curves
+        desc: Yield and discount curves, point by point
+        requires: ['cmd:CRV']
+      - id: repo
+        cmd: REPO
+        icon: arrow-left-right
+        label: Repo
+        desc: Repo rates by collateral and term
+        requires: ['cmd:REPO']
+      - id: fix
+        cmd: FIX
+        icon: pin-angle
+        label: Fixings
+        desc: The published fixings of each index
+        requires: ['cmd:FIX']
+      - id: inf
+        cmd: INF
+        icon: thermometer-half
+        label: Inflation
+        desc: Inflation indexes and their curves
+        requires: ['cmd:INF']
+  - id: volatility
+    domain: banking
+    label: Volatility
+    icon: activity
+    subject: true
+    columns:
+    - title: Volatility surfaces
+      items:
+      - id: irv
+        cmd: IRV
+        icon: activity
+        label: Swaption volatility
+        desc: Swaption volatility cubes
+        requires: ['cmd:IRV']
+      - id: cpv
+        cmd: CPV
+        icon: activity
+        label: Cap volatility
+        desc: Cap and floor volatilities
+        requires: ['cmd:CPV']
+      - id: fxv
+        cmd: FXV
+        icon: activity
+        label: FX volatility
+        desc: FX volatility surfaces by pair
+        requires: ['cmd:FXV']
+      - id: eqv
+        cmd: EQV
+        icon: activity
+        label: Equity volatility
+        desc: Equity volatility surfaces
+        requires: ['cmd:EQV']
+      - id: cmdv
+        cmd: CMDV
+        icon: activity
+        label: Commodity volatility
+        desc: Commodity volatility surfaces
+        requires: ['cmd:CMDV']
+  - id: fx
+    domain: banking
+    label: FX
+    icon: currency-exchange
+    subject: true
+    columns:
+    - title: Foreign exchange
+      items:
+      - id: fx-spot
+        cmd: FX
+        icon: currency-exchange
+        label: Spot
+        desc: FX spot rates by pair
+        requires: ['cmd:FX']
+      - id: fxf
+        cmd: FXF
+        icon: calendar-event
+        label: Forwards
+        desc: FX forward points by pair and tenor
+        requires: ['cmd:FXF']
+  - id: credit
+    domain: banking
+    label: Credit
+    icon: bank
+    subject: true
+    columns:
+    - title: Credit
+      items:
+      - id: cds
+        cmd: CDS
+        icon: graph-down
+        label: CDS curves
+        desc: Credit default swap spreads by issuer and tenor
+        requires: ['cmd:CDS']
+      - id: bnd
+        cmd: BND
+        icon: bank
+        label: Bonds
+        desc: Bonds, their prices and yields
+        requires: ['cmd:BND']
+  - id: markets
+    domain: banking
+    label: Markets
+    icon: graph-up-arrow
+    subject: true
+    gather: [curves, volatility, fx, credit]
+    columns:
+    - title: Equities and commodities
+      items:
+      - id: eq
+        cmd: EQ
+        icon: building
+        label: Equities
+        desc: Listed equities, their prices and dividends
+        requires: ['cmd:EQ']
+      - id: eqx
+        cmd: EQX
+        icon: list-ol
+        label: Equity indices
+        desc: Equity indices and their levels
+        requires: ['cmd:EQX']
+      - id: cmd
+        cmd: CMD
+        icon: droplet
+        label: Commodities
+        desc: Commodities and their spot prices
+        requires: ['cmd:CMD']
+      - id: cmdc
+        cmd: CMDC
+        icon: graph-up
+        label: Commodity curves
+        desc: Commodity forward curves
+        requires: ['cmd:CMDC']
 functions:
 - MKT
 - CRV

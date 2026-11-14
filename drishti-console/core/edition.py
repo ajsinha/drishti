@@ -12,16 +12,15 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Editions and lenses, the console side (docs/guides/ADMIN_GUIDE.md).
+"""The distribution's filter and the lenses, the console side (docs/guides/ADMIN_GUIDE.md, the three layers of switches).
 
-An *edition* is one setting on the servers (``drishti.edition``) naming ``config/lenses/<module>/<lens>.yaml``; the console learns the name from
-the server's about answer (:meth:`Editions.learn`), reads the same file and puts its presets as a layer under the site's own configuration
-(:meth:`core.config.Settings.layer`), so the site still wins key by key. A *lens* is the same file opened by one person on a full instance
-("Open Drishti Risk"): kept in that person's settings (``lens``), it changes only what they see, never what they may read. A lens hides;
-it does not secure: data access stays with roles, entitlements and masks.
+What exists is the *distribution's* (``config/distributions/drishti.<name>.yaml``, core/distribution.py): its filter is the instance's
+:class:`Edition`, and its feature presets are a layer under the site's own configuration (:meth:`core.config.Settings.layer`), so the site
+still wins key by key. A *lens* (``config/lenses/<module>/<lens>.yaml``, "Open Drishti Risk") is a workspace one person works in, kept in
+their settings (``lens``): it arranges (the starting Home, menu emphasis, default screens) and never hides anything; every "is this
+shown?" question inside a lens is the distribution's answer.
 
-:class:`Edition` answers every "is this shown?" question; :data:`Edition.NONE` (the full Drishti) answers yes to all of them, so a console
-without an edition behaves exactly as before editions existed.
+:class:`Edition` answers every "is this shown?" question; :data:`Edition.NONE` (Drishti All) answers yes to all of them.
 """
 from __future__ import annotations
 
@@ -53,9 +52,8 @@ FEATURE_PATHS = {"bi": ("/bi", "/admin/bi"), "forms": ("/forms", "/form/"), "dat
                  "monitors": ("/m",), "alerts": ("/alerts",), "build": ("/build", "/review/", "/studio", "/elements"), "calc": ("/calc",),
                  "reports": ("/reports",), "lakes": ("/admin/lakes", "/admin/api/lakes"),
                  "collaboration": ("/admin/collab",)}
-# (Admin -> AI and Admin -> Embedding stay reachable with their feature off, as before: they are where it is switched on; an edition
-# hides them through admin.pages.)
-# Admin pages by id (the edition's admin.pages); the path prefix each owns
+# (Admin -> AI and Admin -> Embedding stay reachable with their feature off, as before: they are where it is switched on.)
+# Admin pages by id (a filter's admin.pages, a site's edition.admin.pages); the path prefix each owns
 ADMIN_PAGES = ("users", "roles", "packs", "commands", "tokens", "access", "connectors", "artifacts", "ai", "loads", "lakes", "collab",
                "embedding", "bi", "audit", "net", "edits", "compute", "engines", "health", "caches", "capacity", "scopes", "data-out",
                "configuration", "bindings", "white-label")
@@ -115,17 +113,13 @@ def _kinds_word(kind: str) -> str:
 
 
 def hidden_hint(edition, kind: str = "") -> str:
-    """What to do about ``DRS-4023`` (a view refused because the edition or the person's lens hides its kind), naming the lens plainly
-    (EMBED_GUIDE.md 10; plan 2.9.7 row 2a): never "check the kind and id", which sends a person hunting for a typo that is not there."""
+    """What to do about ``DRS-4023`` (a view refused because the distribution leaves its kind out), said plainly (EMBED_GUIDE.md 10): never
+    "check the kind and id", which sends a person hunting for a typo that is not there. A lens never hides, so it is never the reason."""
     what = _kinds_word(kind)
-    if edition is not None and getattr(edition, "active", False) and getattr(edition, "lens", False):
-        return f"You are inside the {edition.title} lens, which does not include {what}: leave the lens (Views → Leave) or choose an entity it shows."
-    if edition is not None and getattr(edition, "active", False) and getattr(edition, "distribution", False):
-        return f"{what[:1].upper() + what[1:]} are not in {edition.title}: choose an entity it shows."
-    if edition is not None and getattr(edition, "active", False):
-        return (f"This server runs the {edition.title} edition, which does not include {what}: choose an entity it shows, or ask an administrator "
-                "to add it (drishti.edition-spec.commands.also-allow).")
-    return f"This server's edition does not include {what}: choose an entity it shows, or ask an administrator."
+    outer = getattr(edition, "outer", None) if getattr(edition, "lens", False) else edition
+    if outer is not None and getattr(outer, "active", False):
+        return f"{what[:1].upper() + what[1:]} are not in {outer.title}: choose an entity it shows."
+    return f"This server does not include {what}: choose an entity it shows, or ask an administrator."
 
 
 def lens_of(edition) -> dict | None:
@@ -161,25 +155,34 @@ def _merge(base: dict, over: dict) -> dict:
 
 
 class Edition:
-    """One edition (or lens) as the console reads it: the file's keys, with the site's ``edition:`` overrides for the instance's own."""
+    """The distribution's filter, or a lens (a workspace: ``lens=True``) as the console reads it. A lens answers only how things are arranged
+    (Home, the menus' order, the placeholder); every visibility question it hands to its distribution (``outer``), or answers "shown"."""
 
     def __init__(self, name: str = "", spec: dict | None = None, lens: bool = False, outer: "Edition | None" = None):
         self.name = (name or "").strip()
         self.spec = spec or {}
         self.lens = lens
-        self.outer = outer                     # a lens inside a distribution (Risk's Trading): it never shows what the distribution does not
+        self.outer = outer                     # the distribution a lens works inside (Risk's Trading): it decides what exists
 
     @property
     def distribution(self) -> bool:
         """True for a distribution's filter (docs/architecture/DISTRIBUTIONS.md): its id is ``drishti.<name>``."""
         return self.name.startswith("drishti.") or bool(self.outer is not None and self.outer.distribution)
 
+    @property
+    def filtering(self) -> "Edition":
+        """Who answers "is this shown?": the distribution itself, or for a lens the distribution it works inside (none: everything)."""
+        if not self.lens:
+            return self
+        return self.outer if self.outer is not None else Edition.NONE
+
     def help_domains(self) -> list[str] | None:
         """The domain modules whose Help a distribution keeps (its modules', today); None: no such filter."""
+        f = self.filtering
+        if f is not self:
+            return f.help_domains()
         d = self._get("help.domains") if self.active else None
-        if isinstance(d, list):
-            return [str(x) for x in d]
-        return self.outer.help_domains() if self.outer is not None else None
+        return [str(x) for x in d] if isinstance(d, list) else None
 
     @property
     def active(self) -> bool:
@@ -199,6 +202,8 @@ class Edition:
 
     # -- commands and words ------------------------------------------------------------------------------------------
     def commands(self) -> set[str]:
+        if self.filtering is not self:
+            return self.filtering.commands()
         allow = self._get("commands.allow") or []
         allow = list(allow) + list(self._get("commands.also-allow") or [])
         return {str(c).strip().upper() for c in allow if str(c).strip()}
@@ -208,8 +213,8 @@ class Edition:
             return False
         if code and _modules.word_refusal(code) is not None:     # its module is off, or the function is off or not the person's (ACCESS_MODEL.md)
             return False
-        if self.outer is not None and not self.outer.command_shown(code):   # a lens never shows what its distribution does not
-            return False
+        if self.filtering is not self:                             # a lens: the distribution's answer
+            return self.filtering.command_shown(code)
         allow = self.commands() if self.active else set()
         return not allow or not code or code.strip().upper() in allow
 
@@ -228,8 +233,8 @@ class Edition:
             return False
         if _modules.word_refusal(word) is not None:              # its module is off, or the function is off for the person: gone too
             return False
-        if self.outer is not None and not self.outer.word_on(word):
-            return False
+        if self.filtering is not self:
+            return self.filtering.word_on(word)
         if not self.active:
             return True
         words = {str(k).upper(): v for k, v in (self._get("commands.words") or {}).items()}
@@ -237,17 +242,32 @@ class Edition:
 
     # -- features ----------------------------------------------------------------------------------------------------
     def feature(self, key: str) -> bool | None:
-        """The edition's preset of a feature (True/False), or None when it does not name it."""
+        """The distribution's preset of a feature (True/False), or None when it does not name it; a lens presets nothing."""
+        if self.filtering is not self:
+            return self.filtering.feature(key)
         return _on((self._get("features") or {}).get(key)) if self.active else None
 
     # -- menus, Home, help, Admin ------------------------------------------------------------------------------------
     def menu(self, group: str) -> list[str] | None:
+        """The items (or, for ``top``, the menus) the file names for a menu, in order; None when it names none. A distribution's list is
+        what that menu holds; a lens's list is only the order it puts first (:meth:`arranged`)."""
         items = (self._get("menus") or {}).get(group) if self.active else None
         return [str(i) for i in items] if isinstance(items, list) else None
 
     def menu_shown(self, group: str, item: str) -> bool:
+        if self.filtering is not self:                             # a lens arranges a menu; it never takes an item out
+            return self.filtering.menu_shown(group, item)
         listed = self.menu(group)
         return listed is None or item in listed
+
+    def arranged(self, group: str, ids: list[str]) -> list[str]:
+        """``ids`` in the order this lens puts first (its ``menus.<group>``: those it names, in its order, then the rest as they were);
+        unchanged outside a lens. Nothing is left out."""
+        named = self.menu(group) if self.lens else None
+        if not named:
+            return list(ids)
+        first = [i for i in named if i in ids]
+        return first + [i for i in ids if i not in first]
 
     @property
     def placeholder(self) -> str | None:
@@ -307,30 +327,41 @@ class Edition:
         return {str(k): str(v) for k, v in m.items()} if isinstance(m, dict) else {}
 
     def help_categories(self) -> list[str] | None:
+        if self.filtering is not self:
+            return self.filtering.help_categories()
         c = self._get("help.categories") if self.active else None
         return [str(x) for x in c] if isinstance(c, list) else None
 
     def knowledge_packs(self) -> list[str] | None:
+        if self.filtering is not self:
+            return self.filtering.knowledge_packs()
         c = self._get("help.knowledge") if self.active else None
         return [str(x) for x in c] if isinstance(c, list) else None
 
     @property
     def refuse_unlisted(self) -> bool:
+        if self.filtering is not self:
+            return self.filtering.refuse_unlisted
         return self.active and str(self._get("help.unlisted-slugs") or "").lower() == "refuse"
 
     def admin_page_shown(self, page: str) -> bool:
+        if self.filtering is not self:
+            return self.filtering.admin_page_shown(page)
         pages = self._get("admin.pages") if self.active else None
         return not isinstance(pages, list) or page in [str(p) for p in pages]
 
     def branding(self, key: str) -> str:
+        if self.filtering is not self:                             # a lens never renames the product
+            return self.filtering.branding(key)
         return str((self._get("branding") or {}).get(key) or "") if self.active else ""
 
     def about(self) -> dict | None:
         return {"name": self.name, "title": self.title, "lens": self.lens} if self.active else None
 
     def presets(self, mapping: dict[str, list[str]]) -> dict:
-        """The console settings the edition presets (a layer under the site's configuration): each named feature's console keys,
-        ``ui.product`` and ``ui.tagline`` from its branding, Home's quick cards, and the file's raw ``console:`` block."""
+        """The console settings the distribution presets (a layer under the site's configuration): each named feature's console keys
+        (``mapping``: kernel.yaml's ``features:``), ``ui.product`` and ``ui.tagline`` from its branding, Home's quick cards, and the raw
+        ``console:`` block. A lens presets nothing."""
         out: dict = {}
 
         def put(dotted: str, value: Any) -> None:
@@ -405,15 +436,18 @@ class Editions:
             return []
 
     def mapping(self) -> dict[str, list[str]]:
-        """Which console settings each feature presets (config/lenses/features.yaml, its ``console`` keys)."""
+        """Which console settings each feature presets: ``features:`` of kernel.yaml beside the distribution files, its ``console`` keys."""
+        from core import distribution as _dist
+        d = Path(str(self.settings.get("distributions_dir", "../config/distributions") or "../config/distributions"))
+        f = (d if d.is_absolute() else (self.console_dir / d).resolve()) / _dist.KERNEL
         try:
-            raw = (yaml.safe_load((self.dir / "features.yaml").read_text(encoding="utf-8")) or {}).get("features") or {}
+            raw = (yaml.safe_load(f.read_text(encoding="utf-8")) or {}).get("features") or {}
         except (OSError, yaml.YAMLError):
             return {}
         return {str(k): [str(x) for x in (v or {}).get("console") or []] for k, v in raw.items()}
 
-    def load(self, name: str, lens: bool = False) -> Edition:
-        """The edition file; the instance's own gets the site's ``edition:`` overrides (application.local.yaml, environment)."""
+    def load(self, name: str) -> Edition:
+        """A lens's file (``config/lenses/<module>/<lens>.yaml``), as a workspace: it arranges and never hides."""
         if not name or not name.replace("-", "").isalnum() or name != name.lower():
             return Edition.NONE
         f = self.dir / f"{name}.yaml"                        # a lens of no module, else in its module's folder (config/lenses/<module>/)
@@ -423,11 +457,9 @@ class Editions:
         try:
             spec = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
         except (OSError, yaml.YAMLError) as e:
-            LOG.warning("edition %s: cannot read %s (%s); the console shows the full Drishti", name, f, e)
+            LOG.warning("lens %s: cannot read %s (%s); it is not offered", name, f, e)
             return Edition.NONE
-        if not lens:
-            _merge(spec, copy.deepcopy(self.settings.site("edition") or {}))
-        return Edition(name, spec, lens)
+        return Edition(name, spec, lens=True)
 
     def learn(self, about: dict) -> bool:
         """What the server's about answer says: its edition, the lenses it offers, its product name and tagline (one branding source).
@@ -441,7 +473,9 @@ class Editions:
                 self.on_change()
             return engines_changed
         name = str((about.get("edition") or {}).get("name") or "")
-        lenses = [str(n) for n in about.get("lenses") or []] if (not name or name.startswith("drishti.")) else []
+        if not name.startswith("drishti."):                         # only a distribution says what exists; a lens never filters
+            name = ""
+        lenses = [str(n) for n in about.get("lenses") or []]
         brand = {k: about.get(k) for k in ("product", "tagline") if about.get(k)}
         changed = name != self.instance.name or sorted(lenses) != sorted(self.lenses) or brand != self._server_brand
         if not changed:
@@ -450,17 +484,17 @@ class Editions:
             return engines_changed
         if name != self.instance.name:
             LOG.warning("the server runs %s: the console follows it", name or "(none: the full Drishti)")
-        if name.startswith("drishti."):                             # the server's distribution: the same file, read here
+        if name:                                                    # the server's distribution: the same file, read here
             self._use_distribution(name)
         else:
-            self.instance = self.load(name) if name else Edition.NONE
+            self.instance = Edition.NONE
         outer = self.instance if self.instance.distribution else None
         self.lenses = {n: e for n, e in ((n, self._lens(n, outer)) for n in lenses) if e.active}
         self._server_brand = brand
         server_layer: dict = {}
-        if brand and not self.settings.site("ui.product"):          # the server's branding, under the console's own site settings
+        if brand:                                                   # the server's branding (from its distribution file)
             server_layer = {"ui": {k: v for k, v in brand.items()}}
-        self.settings.layer("server", server_layer or None)
+        self.settings.pin("server", server_layer or None)
         self.settings.layer("edition", self.instance.presets(self.mapping()) if self.instance.active else None)
         if self.on_change is not None:
             self.on_change()
@@ -491,15 +525,20 @@ class Editions:
             self.on_change()
         return True
 
+    @property
+    def default_lens(self) -> str:
+        """The distribution's starting workspace (``lenses.default``) when it is offered here; blank: none (Drishti All)."""
+        d = self.distribution.default_lens
+        return d if d in self.lenses else ""
+
     def for_request(self, lens: str | None) -> Edition:
-        """The instance's edition; on a full instance, the person's lens when the site offers it; else the full Drishti."""
-        if self.instance.active and not self.instance.distribution:
-            return self.instance
-        return self.lenses.get(lens or "", self.instance)
+        """The person's lens when the site offers it, else the distribution's starting one (a workspace inside the distribution: it
+        arranges, never hides), else the distribution's filter itself."""
+        return self.lenses.get(lens or self.default_lens, self.instance)
 
     # -- distributions (docs/architecture/DISTRIBUTIONS.md) --------------------------------------------------------------
     def _lens(self, name: str, outer: Edition | None) -> Edition:
-        e = self.load(name, lens=True)
+        e = self.load(name)
         if e.active and outer is not None:
             e.outer = outer
         return e
@@ -511,10 +550,8 @@ class Editions:
         d = _dist.load(self.settings, self.console_dir, name, self.server_modules, strict=False)
         self._dist_name = name
         self.distribution = d
-        layer = d.settings_layer()
-        if os.environ.get("DRISHTI_PRODUCT"):                       # the old variable, read for one release (Health says so)
-            layer["ui"].pop("product", None)
-        self.settings.layer("distribution", layer)
+        self.settings.layer("distribution", d.settings_layer())
+        self.settings.pin("distribution", d.brand_layer())            # the names and notices: this file only
         self.instance = Edition(d.id, d.edition_spec) if not d.all else Edition.NONE
         if not d.all:
             outer = self.instance

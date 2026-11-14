@@ -21,7 +21,7 @@
    /api/home/search, and drawn by drishti_market-landing.js; a panel whose answer is refused or empty says so and nothing is invented. The terminal
    look with a violet accent. The choice of landing is the person's, kept in their settings (routes/edition_routes.py). #}
 {% extends "base.html" %}
-{% block title %}{{ PRODUCT }}{% endblock %}
+{% block title %}{{ PRODUCT }}{% if TAGLINE %} — {{ TAGLINE }}{% endif %}{% endblock %}
 {% block screen %}home{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block head %}<link rel="stylesheet" href="/static/css/drishti_market-landing.css?v={{ ASSET_V }}">{% endblock %}

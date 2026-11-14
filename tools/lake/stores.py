@@ -312,7 +312,7 @@ def iceberg_lake(connectors: pathlib.Path, pack: dict, template: dict, ice: path
 def connector_text(system: str, store: str, lake: pathlib.Path, ice: pathlib.Path, data: pathlib.Path,
                    folder: pathlib.Path | None = None) -> str:
     """trade-<system>.yaml for its store: the trading pack's template (one source system of the union, table trade_<system>) with
-    plugin and root set; ``engine: native`` for Iceberg."""
+    plugin and root set; ``engine: native`` for Iceberg. It names no kinds (the pack's template binds trade by default)."""
     import yaml
     pack = yaml.safe_load((ROOT / "config" / "packs" / "banking" / "trading" / "pack.yaml").read_text(encoding="utf-8"))
     tpl = _template(pack, f"trade-{system}", store, lake, data, ice, folder)
@@ -328,7 +328,7 @@ def connector_text(system: str, store: str, lake: pathlib.Path, ice: pathlib.Pat
     else:
         settings["root"] = DELTA_DEFAULT if lake.resolve() == _resolve(DELTA_DEFAULT, data, lakeconfig.DEMO_ROOT_ENV) else str(lake)
         where = f"{system.upper()}'s trades in Delta ({lake / DOMAIN / f'trade_{system}'})"
-    body = {**tpl, "plugin": store, "settings": settings}
+    body = {**{k: v for k, v in tpl.items() if k != "kinds"}, "plugin": store, "settings": settings}
     return (f"{WRITTEN_BY} {system}={store}: {where}, from the connector template of pack 'trading'.\n"
             "# Building the lakes with another --store switches it; the text it replaces is kept in <data>/connectors/history/.\n"
             + yaml.safe_dump(body, sort_keys=False))
@@ -389,8 +389,9 @@ def current_domain(folder: pathlib.Path, domain: str) -> str:
 
 def domain_connector_text(domain: str, store: str, lake: pathlib.Path, ice: pathlib.Path, data: pathlib.Path,
                           pair: tuple[str, str] | None = None, folder: pathlib.Path | None = None) -> str:
-    """One of the domain's connector files for its store: the pack's template (kinds, layouts with their vector columns) with plugin and
-    root set; ``engine: native`` for Iceberg. ``pair`` (pack, connector): by default the domain's first."""
+    """One of the domain's connector files for its store: the pack's template (layouts with their vector columns) with plugin and root
+    set; ``engine: native`` for Iceberg. It names no kinds: config/bindings.yaml, or the pack's template as the distribution's default,
+    says which connectors serve each kind (KERNEL_AND_MODULES.md section 5.5). ``pair`` (pack, connector): by default the domain's first."""
     import yaml
     pack_name, name = pair or DOMAIN_STORES[domain][0]
     pack = yaml.safe_load((pack_dir(pack_name) / "pack.yaml").read_text(encoding="utf-8"))
@@ -407,7 +408,7 @@ def domain_connector_text(domain: str, store: str, lake: pathlib.Path, ice: path
     else:
         settings["root"] = DELTA_DEFAULT if lake.resolve() == _resolve(DELTA_DEFAULT, data, lakeconfig.DEMO_ROOT_ENV) else str(lake)
         where = f"every {domain} table in Delta ({lake / domain})"
-    body = {**tpl, "plugin": store, "settings": settings}
+    body = {**{k: v for k, v in tpl.items() if k != "kinds"}, "plugin": store, "settings": settings}
     return (f"{WRITTEN_BY} {domain}={store}: {where}, from the connector template of pack '{pack_name}'.\n"
             "# Building the lakes with another --store switches it; the text it replaces is kept in <data>/connectors/history/.\n"
             + yaml.safe_dump(body, sort_keys=False))

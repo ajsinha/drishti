@@ -42,11 +42,11 @@ class ConnectorFilesTest {
     @Test
     void nestedSettingsFlattenToTheDottedKeysPluginsRead(@TempDir Path dir) {
         ConnectorFiles files = new ConnectorFiles(dir);
-        String text = "plugin: kafka\nkinds: [trade, order]\nsettings:\n  bootstrap-servers: broker:9093\n  tls:\n    truststore:\n      path: /etc/ssl/ca.p12\n"
+        String text = "plugin: kafka\nsettings:\n  bootstrap-servers: broker:9093\n  tls:\n    truststore:\n      path: /etc/ssl/ca.p12\n"
                 + "      password: ${CA_PASSWORD}\n  topics: [a, b]\n  layout:\n    trade:\n      columns: [x, y]\n";
         ConnectorFiles.Definition d = files.parse("trading-stream", text);
         assertThat(d.plugin()).isEqualTo("kafka");
-        assertThat(d.kinds()).containsExactly("trade", "order");
+        assertThat(files.parse("trading-stream", "plugin: kafka\nkinds: [trade]\n").kinds()).as("a list from an earlier release is not read").isEmpty();
         assertThat(d.settings()).containsEntry("tls.truststore.path", "/etc/ssl/ca.p12").containsEntry("tls.truststore.password", "${CA_PASSWORD}")
                 .containsEntry("topics", "a,b").containsEntry("layout.trade.columns", "x,y").containsEntry("bootstrap-servers", "broker:9093");
         assertThat(d.isEnabled()).isTrue();
@@ -162,7 +162,7 @@ class ConnectorFilesTest {
         assertThat(text).startsWith("# header").contains("enabled: false").contains("tls:").contains("truststore:");
         ConnectorFiles.Definition d = files.parse("db", text);
         assertThat(d.settings()).containsEntry("tls.truststore.path", "/ca.p12").containsEntry("tls.enabled", "true").containsEntry("url", "jdbc:postgresql://db/x");
-        assertThat(d.kinds()).containsExactly("trade");
+        assertThat(text).doesNotContain("kinds").as("which connectors serve a kind is in bindings.yaml");
         assertThat(d.isEnabled()).isFalse();
         assertThat(d.description()).isEqualTo("A db");
     }
@@ -197,7 +197,7 @@ class ConnectorFilesTest {
         assertThat(rendered).doesNotContain(ConnectorFiles.COMPUTE_SETTING).contains("engine:");
         assertThat(files.parse("demo-compute", rendered).compute()).isEqualTo(d.compute());
         assertThatThrownBy(() -> files.parse("x", "plugin: jdbc\nengine: { type: java }\n")).hasMessageContaining("only a connector of plugin reactive");
-        assertThatThrownBy(() -> files.parse("x", "plugin: jdbc\nkinds: { a: {} }\n")).hasMessageContaining("kinds with parameters");
+        assertThatThrownBy(() -> files.parse("x", "plugin: jdbc\nkinds: { a: {} }\n")).hasMessageContaining("config/bindings.yaml");
         assertThatThrownBy(() -> files.parse("x", "plugin: jdbc\nmode: magic\n")).hasMessageContaining("'mode' is static, live, on-demand or reactive");
     }
 }

@@ -78,7 +78,7 @@ python3 tools/drishti.py lake memory refill news
 <!-- files:begin -->
 | File | Plugin | Kinds | What it is |
 |---|---|---|---|
-| `news-store.yaml` | `delta` | `news-topic`, `listed-company`, `news`, `quote` | news-store held in memory only (mem://news), filled by the in-memory lake's replenish jobs |
+| `news-store.yaml` | `delta` | the plugin's own | news-store held in memory only (mem://news), filled by the in-memory lake's replenish jobs |
 <!-- files:end -->
 
 ## Troubleshooting

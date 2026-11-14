@@ -112,6 +112,15 @@ def test_the_health_page_shows_connectors_packs_and_live(client, backend, monkey
     assert "server /var/tmp/drishti/drishti-4242 · 5.0 MB · 7 files" in flat                    # the temp folders of the two processes (path, size)
     assert "data-tmp-folders" in page and "data-tmp-console" in page and "console " in flat
     assert "data-tmpdir-warning" not in page                                            # no warning field: none shown
+    assert 'data-health-modules' in page
+    data.update({"bindings": {"bound": 4, "unboundRequired": ["scenario-set: no source"]}, "placement": {"version": 3, "problems": ["x"]},
+                 "distribution": {"id": "drishti.risk", "title": "Drishti Risk", "modules": {"banking": "loaded", "market-data": "off"}}})
+    page = client.get("/admin/health").text
+    flat = " ".join(__import__("re").sub(r"<[^>]+>", "", page).split())
+    assert "1 of 2 modules loaded" in flat and "bindings: 4 bound, 1 required unbound" in flat and "placement v3, 1 problem" in flat
+    assert 'href="/admin/bindings"' in page and 'href="/admin/modules"' in page and "<table" not in page[page.index("data-distribution"):page.index("data-native-libs") if "data-native-libs" in page else page.index("data-external-lib")]
+    for k in ("bindings", "placement", "distribution"):
+        data.pop(k)
     data["tmp"].update({"jvmTmpdir": "/tmp", "jvmTmpdirPassed": False, "nativeCopiesRemoved": 3,
                         "jvmTmpdirWarning": "java.io.tmpdir was not set when Java started ... Start Java with -Djava.io.tmpdir=/var/tmp/drishti"})
     page = client.get("/admin/health").text

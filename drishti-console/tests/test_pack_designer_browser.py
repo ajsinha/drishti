@@ -37,10 +37,9 @@ LONG = max(BROWSER_WAIT_MS, 240_000)                    # the read, the draft an
 @pytest.fixture(scope="session")
 def designer(tmp_path_factory):
     work = tmp_path_factory.mktemp("pdui-server")
-    keep = {k: os.environ.get(k) for k in ("DRISHTI_DATA_DIR", "DRISHTI_PACK_DESIGNER_SITE", "DRISHTI_FILES_ROOT")}
+    keep = {k: os.environ.get(k) for k in ("DRISHTI_DATA_DIR", "DRISHTI_FILES_ROOT")}
     os.environ["DRISHTI_DATA_DIR"] = str(work / "data")                 # the jobs write the files store where the scratch server reads it
     os.environ["DRISHTI_FILES_ROOT"] = str(work / "data" / "files")
-    os.environ["DRISHTI_PACK_DESIGNER_SITE"] = str(work / "config")     # the bindings the designer writes are the scratch server's
     try:
         yield from _stack(tmp_path_factory, {"DRISHTI_SECURITY_ENABLED": "true", "DRISHTI_TOKEN_SECRET": TOKEN_SECRET}, work=work, auth=True)
     finally:
@@ -102,7 +101,7 @@ def test_files_in_combinations_a_live_screen_that_follows_the_yaml_a_module_depl
         combos = page.locator("[data-combos-grid]").inner_text()
         assert "PRODUCT_TYPE=IRS, SOURCE_SYSTEM=ENDUR" in combos and "60" in combos and "rare" in combos and "CAPFLOOR" in combos
 
-        # 3 Source: the file connector, written as a binding
+        # 3 Source: the file connector, proposed to Admin -> Data bindings when the module is installed
         page.click("[data-go=source]")
         page.fill("[data-f=name]", "pdui-trades")
 

@@ -15,7 +15,6 @@
 # user in the $external database. No user name or password. Copy to config/connectors/mongodb-x509.yaml.
 # See plugins/drishti-plugin-mongodb/README.md, section Security.
 plugin: mongodb
-kinds: [position]
 description: Positions in MongoDB, certificate log-in
 settings:
   uri: mongodb://mongo-1.example.com:27017,mongo-2.example.com:27017/?replicaSet=rs0

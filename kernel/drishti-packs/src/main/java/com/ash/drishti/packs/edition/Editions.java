@@ -21,29 +21,24 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.regex.Pattern;
 import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.core.env.Environment;
 
 /**
- * Reads editions: the edition file ({@code config/lenses/<module>/<lens>.yaml}, folder {@code drishti.lens-dir}), its keys as properties
- * under {@link #SPEC}, and the {@link Edition} the environment describes. Also the one default pack list
+ * Reads the distribution's filter: its keys as properties under {@link #SPEC} (written by {@link EditionEnvironmentPostProcessor} from
+ * the distribution file) and the {@link Edition} the environment describes; the lens names the site offers. Also the one default pack list
  * ({@code config/packs/default-packs.yaml}, copied into this jar at build).
  */
 public final class Editions {
 
-    /** The edition's name: blank for the full Drishti. */
+    /** The filter's name (the distribution's id, set by the post-processor): blank for the full Drishti. */
     public static final String NAME = "drishti.edition";
-    /** The folder of the edition files. */
-    public static final String DIR = "drishti.lens-dir";
-    public static final String DEFAULT_DIR = "./config/lenses";
     /**
      * Where the edition file's keys live as properties, so the site's configuration can override any one of them: for example
      * {@code drishti.edition-spec.packs.allow-only}, {@code drishti.edition-spec.commands.also-allow},
@@ -52,7 +47,6 @@ public final class Editions {
     public static final String SPEC = "drishti.edition-spec";
 
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
-    private static final Pattern NAME_RULE = Pattern.compile("[a-z0-9][a-z0-9-]{0,63}");
     private static final List<String> DEFAULT_PACKS = readDefaultPacks();
 
     private Editions() {
@@ -90,31 +84,11 @@ public final class Editions {
     public static final String LENSES = "drishti.lenses";
 
     /**
-     * The editions a person may open as a <em>lens</em> (LENSES.md › The design): {@code drishti.lenses}, each read from its file alone (the
-     * site's {@code drishti.edition-spec} overrides apply to the instance's edition only). None when the instance runs an edition itself.
-     * A lens hides; it never secures: data access stays with roles, entitlements and masks.
+     * The lenses a person may open (LENSES.md): {@code drishti.lenses}. A lens is a workspace: it arranges (the starting Home, menu
+     * emphasis, default screens) and never hides anything, so the server needs only the names; what exists is the distribution's.
      */
-    public static Map<String, Edition> lenses(Environment env) {
-        Map<String, Edition> out = new LinkedHashMap<>();
-        String instance = env.getProperty(NAME, "").strip();
-        if (!instance.isEmpty() && !instance.startsWith("drishti.")) {   // an edition: no lenses; a distribution (drishti.risk) offers its own
-            return out;
-        }
-        for (String n : list(Binder.get(env), LENSES)) {
-            try {
-                Path f = file(env, n);
-                org.springframework.core.env.StandardEnvironment le = new org.springframework.core.env.StandardEnvironment();
-                le.getPropertySources().remove(org.springframework.core.env.StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME);
-                le.getPropertySources().remove(org.springframework.core.env.StandardEnvironment.SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME);
-                Map<String, Object> props = new LinkedHashMap<>(flatten(read(f), SPEC));
-                props.put(NAME, n);
-                le.getPropertySources().addFirst(new org.springframework.core.env.MapPropertySource("lens " + n, props));
-                out.put(n, of(le));
-            } catch (RuntimeException e) {
-                System.getLogger(Editions.class.getName()).log(System.Logger.Level.WARNING, "lens {0} is not offered: {1}", n, e.getMessage());
-            }
-        }
-        return out;
+    public static List<String> lensNames(Environment env) {
+        return list(Binder.get(env), LENSES);
     }
 
     /** True for {@code on}, {@code true}, {@code yes} (any case). */
@@ -123,37 +97,16 @@ public final class Editions {
         return t.equals("on") || t.equals("true") || t.equals("yes");
     }
 
-    /** The edition file of the name; refuses a name that is not a plain word and a file that does not exist. */
-    public static Path file(Environment env, String name) {
-        if (!NAME_RULE.matcher(name).matches()) {
-            throw new IllegalStateException(NAME + "='" + name + "' is not an edition name (lower-case letters, digits and dashes)");
-        }
-        Path dir = Path.of(env.getProperty(DIR, DEFAULT_DIR));
-        Path f = dir.resolve(name + ".yaml");                       // a lens of no module, else in its module's folder (config/lenses/<module>/)
-        if (!Files.isRegularFile(f) && Files.isDirectory(dir)) {
-            try (java.util.stream.Stream<Path> s = Files.list(dir)) {
-                f = s.filter(Files::isDirectory).sorted().map(d -> d.resolve(name + ".yaml")).filter(Files::isRegularFile).findFirst().orElse(f);
-            } catch (IOException e) {
-                // an unreadable folder holds no lens
-            }
-        }
-        if (!Files.isRegularFile(f)) {
-            throw new IllegalStateException(NAME + "='" + name + "': no edition file " + f.toAbsolutePath().normalize()
-                    + " (set " + DIR + " / DRISHTI_LENS_DIR to the folder of the edition files, or blank " + NAME + " for the full product)");
-        }
-        return f;
-    }
-
-    /** The edition file read as a tree. */
+    /** A YAML file read as a tree. */
     public static JsonNode read(Path file) {
         try {
             JsonNode n = YAML.readTree(file.toFile());
             if (n == null || !n.isObject()) {
-                throw new IllegalStateException("edition file " + file + " is not a YAML mapping");
+                throw new IllegalStateException("file " + file + " is not a YAML mapping");
             }
             return n;
         } catch (IOException e) {
-            throw new IllegalStateException("edition file " + file + " cannot be read: " + e.getMessage(), e);
+            throw new IllegalStateException("file " + file + " cannot be read: " + e.getMessage(), e);
         }
     }
 

@@ -115,7 +115,6 @@ class Guide:
     pair: str = ""                    # help.yaml pair: the tutorial drawn beside this guide on its section's page
     group: str = ""                   # the group of its section it sits in (help.yaml groups[].title)
     domain: str = ""                  # help.yaml domain: the domain module the page belongs to (banking, capitalmarkets, economy); core when not said
-    lenses: tuple = ()                # help.yaml lenses: the lenses that show the page (none said: every lens; the full product shows it)
 
     def permits(self, ident) -> bool:
         """Whether this person may see the guide: an unrestricted guide anyone; a guide with ``roles:`` (an internal page such as the
@@ -158,8 +157,7 @@ class Library:
                     guide = Guide(g["slug"], g["title"], g.get("summary", "").replace("{tutorials}", tutorial_count_word(docs_dir)), g.get("icon", "journal-text"),
                                   g.get("kind", "reference" if src else "guide"), sec["id"], path, packs=tuple(g.get("packs") or ()),
                                   roles=tuple(str(r) for r in (g.get("roles") or ())), engine=str(g.get("engine") or ""),
-                                  pair=str(g.get("pair") or ""), group=str(grp.get("title") or ""), domain=str(g.get("domain") or ""),
-                                  lenses=tuple(str(x) for x in (g.get("lenses") or ())))
+                                  pair=str(g.get("pair") or ""), group=str(grp.get("title") or ""), domain=str(g.get("domain") or ""))
                     if path.exists():
                         self.guides[guide.slug] = guide
                         items.append(guide)

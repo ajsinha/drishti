@@ -15,17 +15,16 @@
 # The help centre's pages (2.9.11.a, mock-up help-hub/A): the main page is a search box, the most used pages and a tile per section;
 # a tile opens the section's own page (/help/section/<id>) with its pages grouped, every guide beside its tutorial and a search of that
 # section only. Every page belongs to exactly one section (tests/test_help.py). The sections themselves (their order, name, icon, line,
-# roles, domain and lenses) are the sitemap's (config/sitemap.yaml help-sections:, the one home of navigation); here each section names
+# roles and domain) are the sitemap's (config/sitemap.yaml help-sections:, the one home of navigation); here each section names
 # its id and its groups of pages.
 # A page is a console guide (web/guides/<slug>.md) or, with `doc:`, a repository document rendered as-is (so the in-app reference is the
-# repository's docs). Its keys: slug, doc, title, icon, kind (guide, tutorial, knowledge), summary, packs, roles, engine, pair, domain and lenses:
+# repository's docs). Its keys: slug, doc, title, icon, kind (guide, tutorial, knowledge), summary, packs, roles, engine, pair and domain:
 #   engine: the compute engine the page is about (config/engines.yaml): left out while the engine runs on no server (an administrator
 #           sees it greyed instead); Help is documentation, open to anyone who can open Help, whatever an engine's opens: (its catalogue entry) says;
 #   pair:   the tutorial drawn beside a guide on its row (the tutorial is a page of the same group);
 #   roles:  only people with one of these roles (or an administrator) see the page: hidden from the sections and search, 404 at its address.
 #   domain: the domain module the page belongs to (core, banking, capitalmarkets, economy; config/docs-features.yaml agrees): while that
 #           module is off for the person the page is not listed, searched or served (a module's own Help file: its pages are its own);
-#   lenses: the lenses that show the page (none said: every lens; the full product, outside any lens, shows every page).
 # A group's words: the command words shown beside its title.
 # Every other document under docs/ (and the top-level *.md) is reachable unlisted at a slug made from its path
 # (docs/architecture/adr/016-one-console-many-servers.md -> /help/docs-architecture-adr-016-one-console-many-servers), in the section

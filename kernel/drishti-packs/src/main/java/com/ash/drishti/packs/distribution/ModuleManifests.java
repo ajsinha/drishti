@@ -132,7 +132,7 @@ public final class ModuleManifests {
         List<String> engines = new ArrayList<>();
         m.path("compute").path("engines").forEach(x -> engines.add(x.path("id").asText()));
         return new Entry(id, m.path("domain").asText(id), texts(m.path("packs").path("list")), words(m.path("functions")), engines,
-                texts(m.path("console").path("menus")), texts(m.path("docs").path("domains")), requires, source);
+                menuIds(m.path("console").path("menus")), texts(m.path("docs").path("domains")), requires, source);
     }
 
     /** A module jar's manifest ({@code module:} or a {@code modules:} list): contributes.packs, functions, engines, menus, help. */
@@ -160,6 +160,20 @@ public final class ModuleManifests {
                 out.add(w);
             }
         });
+        return out;
+    }
+
+    /** A manifest's top menus ({@code console.menus}): each menu's {@code id} (the menu itself, in the sitemap's form), or a plain id. */
+    static List<String> menuIds(JsonNode n) {
+        List<String> out = new ArrayList<>();
+        if (n != null && n.isArray()) {
+            n.forEach(x -> {
+                String id = (x.isObject() ? x.path("id") : x).asText("").strip();
+                if (!id.isEmpty() && !out.contains(id)) {
+                    out.add(id);
+                }
+            });
+        }
         return out;
     }
 
