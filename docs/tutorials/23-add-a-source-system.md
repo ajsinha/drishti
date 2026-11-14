@@ -81,8 +81,6 @@ the confidence and the reason. Choose a row to see its evidence (name, type and 
 required fields no native field fits: you can map one by hand, give a constant (`= value`) or leave it, as the kind allows. Under the grid are
 the native fields no canonical field takes (here the `pay_leg` and `rec_leg` objects' extras): the module shows them on the trade page (step 6).
 
-![The proposed map: each canonical trade field with the SwapOne field, its confidence and the reason](img/swapone/02-map.jpg)
-
 To change a mapping, change the native field in its cell (or choose *(none)*), then **Propose again**: the server reads again with your edits.
 
 **On the command line.**
@@ -101,10 +99,6 @@ constant, `{CANONICAL: {"values": {"Y": "YES"}}}` a value map.
 **In the UI.** **Layout**: choose **A shared table + where**, table `trading.trades_shared` (WSS and ICI share it; SwapOne's rows are told apart by
 `SOURCE_SYSTEM`). The page shows the connector it will write. **Finalize** makes the module `source-swapone` and runs the fifteen checks;
 **Deploy** installs it.
-
-![The layout step: the shared table and the connector that reads it with where](img/swapone/03-layout.jpg)
-
-![The module made: its files and the fifteen checks passed](img/swapone/04-made.jpg)
 
 **On the command line.** One command writes, checks and installs it (on one node, into the server's `modules` folder; on a cluster add `--server`):
 
@@ -149,8 +143,6 @@ dataload:
 
 Auto-deploy loads the module within seconds; **Admin → Modules** lists `source-swapone` as running.
 
-![Admin, Modules: source-swapone running](img/swapone/05-module.jpg)
-
 ## Step 4 · Drop the file in the inbox
 
 **In the UI.** **Admin → Data inbox** shows the folder and its rules (the module's rule is among them). Upload the file and its `.ready`, or copy them.
@@ -169,8 +161,6 @@ trade kind through the connector `source-swapone`, and `date-from: name` makes `
 
 **In the UI.** **Admin → Loads** shows the load: the file, its rows, the table it went to and the date.
 
-![The inbox: the file loaded into trading.trades_shared](img/swapone/06-inbox.jpg)
-
 **On the command line.**
 
 ```bash
@@ -187,13 +177,7 @@ lake file keeps the systems' rows apart on disk; `where:` reads back only SwapOn
 Open one: `TRD S1-700001`. The page is the canonical trade page, with one more section the module brought: **SWAPONE fields**, the native fields the map
 left out, shown only when `SOURCE_SYSTEM` is SWAPONE.
 
-![TRD lists the SwapOne trades](img/swapone/07-trd.jpg)
-
-![A SwapOne trade on the canonical trade page, with the module's own section](img/swapone/08-trade.jpg)
-
 The blotter (the live trading table) lists them with the other systems' trades and can be filtered by source system:
-
-![The blotter with SwapOne's trades](img/swapone/09-blotter.jpg)
 
 **On the command line.**
 
@@ -218,8 +202,6 @@ A role may see only some records of a kind. A desk that books only SwapOne swaps
 
 **In the UI.** **Admin → Roles** lists the roles (the rule is shown with the role); give the role to a person on **Admin → Users**.
 
-![Admin, Roles: the role with its row rule](img/swapone/10-rowrule.jpg)
-
 **On the command line.** `drishti.py security roles` lists them; the rule is configuration.
 
 **The YAML.** In `config/application.yaml`:
@@ -241,8 +223,6 @@ A person with this role (and no other that opens trades) sees only SwapOne's tra
 
 **In the UI.** **Admin → Modules**, `source-swapone`, **Disable**. The trades of SwapOne leave the trade kind, the section leaves the page, and nothing
 else changes. **Enable** brings them back.
-
-![Admin, Modules: source-swapone disabled](img/swapone/11-off.jpg)
 
 **On the command line.**
 

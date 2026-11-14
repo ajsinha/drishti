@@ -4541,3 +4541,7 @@ Drishti*net are off. The site's lakes (`DRISHTI_DELTA_ROOT`, `DRISHTI_ICEBERG_RO
 defaulting under `DRISHTI_DATA_DIR` or `data/`) and its added and installed packs are still read. The `tests/<sutra>/` convention, `expect.yaml`, the exit codes and
 CI wiring are section 15 of the [Sutra developer guide](BUILD_GUIDE.md#24-testing-expectyaml-sutra-lint-sutra-test-and-pack-check); the workbench's own use of the same command is in
 [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#26-the-command-line-and-ci). This section replaces the former `SUTRA_CLI.md`.
+
+## Source modules (pack new --source-for)
+
+`tools/packgen/sourcemap.py` reads every record of a system's file and proposes the map to the canonical kind, `tools/packgen/source_module.py` writes the module `source-<system>` from it, and `tools/packgen/swapone_synth.py` makes the mocked SwapOne file the tests score the proposal against. The path from the file to the blotter is [tutorial 23](../tutorials/23-add-a-source-system.md).
