@@ -741,6 +741,17 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
                 || !offline.reachesInternet(c.plugin()) || c.kinds() == null) {
             return List.of();
         }
+        SourceRouter router = reader.router;
+        if (router != null) {
+            // its kinds (its own list, else those the resolution reads from it: a route, a pack template, a binding), each read from the
+            // named connectors the resolution picks in its place (a plugin running as itself, such as demo, is not counted)
+            java.util.Set<String> kinds = new java.util.LinkedHashSet<>(c.kinds());
+            kinds.addAll(router.kindsFor(name));
+            java.util.Set<String> out = new java.util.TreeSet<>();
+            kinds.forEach(k -> router.picked(k).stream().map(p -> p.manifest().name())
+                    .filter(other -> !other.equals(name) && applied.containsKey(other) && plugins.containsKey(other)).forEach(out::add));
+            return List.copyOf(out);
+        }
         // named connectors that run and list one of its kinds in their files (a plugin running as itself, such as demo, is not counted)
         return plugins.keySet().stream().filter(other -> !other.equals(name) && applied.containsKey(other)).filter(other -> {
             List<String> theirs = applied.get(other).kinds();

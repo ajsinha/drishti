@@ -188,6 +188,9 @@ public final class PackLoader {
     /** One definition of a named thing (a mnemonic, a role, …) by one pack: the properties it contributes. */
     private record Claim(String pack, Map<String, Object> props) {}
 
+    /** Each kind's default connectors, in the packs' template order ({@code drishti.sources.defaults.<kind>}: a comma list). */
+    public static final String DEFAULTS = "drishti.sources.defaults.";
+
     /** Flattened Spring properties for the given packs, lowest precedence. */
     @SuppressWarnings("unchecked")
     public Map<String, Object> properties(List<Pack> packs) {
@@ -205,6 +208,7 @@ public final class PackLoader {
         List<String> formats = new ArrayList<>();
         List<String> semantics = new ArrayList<>();
         List<String> samples = new ArrayList<>();
+        Map<String, java.util.LinkedHashSet<String>> defaults = new java.util.TreeMap<>();
         for (Pack pack : general) {
             Map<String, Object> m = pack.manifest();
             List<Object> owned = (List<Object>) m.getOrDefault("kinds", List.of());
@@ -298,6 +302,9 @@ public final class PackLoader {
             // connectors: the pack names site connectors (config/connectors/<name>.yaml). What it defines inline is a
             // template, in force only while no file of that name exists (the server writes one from it at start).
             for (Map.Entry<String, Map<String, Object>> e : pack.connectorTemplates().entrySet()) {
+                // the kinds a template names are the distribution's default binding of each (KERNEL_AND_MODULES.md section 5.5), whether
+                // its file exists or not: the router reads them after the site's binding and the pack's route, never by the file
+                ConnectorFiles.kindNames(e.getValue().get("kinds")).forEach(k -> defaults.computeIfAbsent(k, x -> new java.util.LinkedHashSet<>()).add(e.getKey()));
                 if (connectorFiles != null && connectorFiles.exists(e.getKey())) {
                     continue;
                 }
@@ -331,6 +338,7 @@ public final class PackLoader {
             addIfExists(semantics, pack, pack.manifest().getOrDefault("semantics", "config/semantics.yaml"));   // specific first: first wins
         }
         claims.values().forEach(c -> p.putAll(c.props()));
+        defaults.forEach((k, c) -> p.put(DEFAULTS + k, String.join(",", c)));
         indexed(p, "drishti.rachana.pack-dirs", sutraDirs);
         indexed(p, "drishti.rachana.pack-formats-files", formats);
         indexed(p, "drishti.inference.pack-semantics-files", semantics);

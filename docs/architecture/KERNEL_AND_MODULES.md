@@ -831,11 +831,15 @@ For each kind any loaded module needs, in this order, first hit wins:
 
 1. **The site's binding** in `config/bindings.yaml` (as approved).
 2. **The distribution's default** (`bindings.defaults`, section 6), e.g. `drishti.finance` binds banking's kinds to `risklake` tables by
-   their hints when a lake file holds them.
+   their hints when a lake file holds them. Today: the kind's route in its pack, then the connectors whose pack template names the kind
+   (`kinds:` in the pack's `connectors:` templates, never in the written connector file), then the sources that name the kind themselves.
 3. **The lake convention**: a configured lake (not demo) whose lake file has the contract's `binding-hint.lake-table` table, read by a
    connector of the lake's format → bound, marked `AUTO` (Admin shows *found by convention: confirm*).
 4. **The demo lake**, only while `drishti.demo.enabled` and the need allows demo: marked `DEMO` (amber everywhere: "demo data").
 5. Otherwise **UNBOUND**.
+
+The router reads in the same order: a bound kind from its bound connectors (the `read` list, then `live`) and no other; a connector that
+names no kind is asked for a kind only when one of these steps picks it, never merely because its plugin could read the kind.
 
 Demo and real never mix ([DATA_LAKE_GUIDE.md](../guides/DATA_LAKE_GUIDE.md)): a kind is either demo or real; a pack whose kinds are bound
 to more than one lake is `DEGRADED` (today's warning, moved from packs to bindings).

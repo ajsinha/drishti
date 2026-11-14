@@ -148,12 +148,15 @@ public record Bindings(Map<String, Binding> byKind) {
         return out;
     }
 
-    /** Each bound kind's read order (its {@code read} list), for the router. */
+    /**
+     * Each bound kind's sources for the router: its {@code read} list, then its {@code live} connector (the subscriptions' source). The
+     * router reads a bound kind from these and no other connector (section 5.5: first hit wins).
+     */
     public Map<String, List<String>> readOrder() {
         Map<String, List<String>> out = new LinkedHashMap<>();
         byKind.values().forEach(b -> {
-            if (!b.read().isEmpty()) {
-                out.put(b.kind(), b.read());
+            if (!b.connectors().isEmpty()) {
+                out.put(b.kind(), b.connectors());
             }
         });
         return out;

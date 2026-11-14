@@ -243,6 +243,7 @@
   pivot.CellSet public java.util.Map<java.lang.String, java.lang.String> com.ash.drishti.kernel.api.pivot.CellSet.marks()
   pivot.CellSet public java.util.Map<java.lang.String, java.util.List<java.lang.String>> com.ash.drishti.kernel.api.pivot.CellSet.exclude()
   pivot.CellSet public static com.ash.drishti.kernel.api.pivot.CellSet com.ash.drishti.kernel.api.pivot.CellSet.of(java.util.List<java.lang.String>,java.util.Map<java.lang.String, java.lang.String>)
+  pivot.Dim public boolean com.ash.drishti.kernel.api.pivot.Dim.joined()
   pivot.Dim public double com.ash.drishti.kernel.api.pivot.Dim.width()
   pivot.Dim public final boolean com.ash.drishti.kernel.api.pivot.Dim.equals(java.lang.Object)
   pivot.Dim public final int com.ash.drishti.kernel.api.pivot.Dim.hashCode()
