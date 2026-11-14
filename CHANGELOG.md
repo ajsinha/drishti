@@ -18,6 +18,13 @@
 
 ## Unreleased
 
+- **The new top bar: Views · Domains · Create · Admin · Help.** The modules' menus (Blotter, Positions, Risk, Counterparties, Markets, Companies,
+  Economies, a hosted module's own) are columns of one **Domains** menu, drawn from the manifests alone (no entry in the console's code); with one
+  domain active the menu is named after it (`console.domain-label` of its manifest: Risk; a hosted module its title), and with none it is not
+  drawn. **Create** holds every designer and the BI tools (the BI and Build menus, which stay the BI rail and the Build home's links). A lens
+  arranges Domains' columns; each entry still follows the person's role. The lens menu's phone fold (subject menus into one) is removed: nothing
+  stands in the bar to fold. Function catalogue: `has`, `any_of` and `all_of` added to FUNCTION_CATALOGUE.md and FUNCTIONS.md.
+
 - **The trading module and the live result sets engine** (modules/trading/docs/guide.md). One engine (`com.ash.drishti.server.liveset`) behind every
   blotter: a declaration (`blotters/<id>.blotter.yaml` in a module, or `config/blotters/`) names the kind, the query (the search grammar), the
   key and version, the columns, grouping, links, the live side's `retention:` (`ttl`, `on`, `max-rows`) and, for edits, a Rachana form with

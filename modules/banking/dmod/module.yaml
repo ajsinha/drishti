@@ -120,6 +120,7 @@ api:
   - /api/v1/pivot/mr
 console:
   plugin: console/plugin.yaml
+  domain-label: Risk                 # the name of the top bar's Domains menu while this is the one active domain
   # the module's own top menus, in the console sitemap's form (drishti-console/config/sitemap.yaml); a menu of another module's
   # id adds its columns to that menu (the one Markets menu). The one home of these menus.
   menus:

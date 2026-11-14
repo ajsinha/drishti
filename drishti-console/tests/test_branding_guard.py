@@ -107,7 +107,7 @@ def test_the_menus_and_the_edition_pages_never_write_the_product_name():
     import yaml
 
     menus = yaml.safe_load((CONSOLE / "config" / "sitemap.yaml").read_text(encoding="utf-8"))
-    shown = [str(i.get(k, "")) for m in menus["menus"] for c in m["columns"] for i in c["items"] for k in ("label", "desc")]
+    shown = [str(i.get(k, "")) for m in menus["menus"] for c in m.get("columns") or [] for i in c["items"] for k in ("label", "desc")]
     shown += [str(i.get("label", "")) for i in menus["footer"]]
     assert not [t for t in shown if NAME.search(t)]
 

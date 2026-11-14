@@ -60,6 +60,18 @@ menus:
           - { id: monitors, href: /m, icon: list-columns, label: Monitors, desc: Live watchlists of entities, match: /m, requires: [feature:monitors] }
           - { id: alerts, href: /alerts, icon: bell, label: Alerts, desc: "Alerts raised for you (acknowledge, snooze, resolve) and your alert rules", match: /alerts, requires: [feature:alerts] }
           - { id: approvals, href: /approvals, icon: patch-check, label: Approvals, desc: "Everything waiting for your four eyes, of every kind, due soon on top", match: /approvals }
+  # Domains: every menu a module brings (Blotter, Positions, Risk, Markets, Economies, Companies ...) as a column of one menu; none is
+  # listed here (core/menus.py draws them from the manifests). With one domain active the menu is named after it (Risk, Genomics).
+  - id: domains
+    label: Domains
+    icon: compass
+    domains: true
+  # Create: every designer and the BI tools in one menu, the gathered columns of the BI and Build menus below (which are also the BI rail
+  # and the Build home's links, so are not top menus of their own: folded: true).
+  - id: create
+    label: Create
+    icon: plus-square
+    gather: [bi, build]
   # The modules' own menus (Blotter, Positions, Risk, Counterparties, Markets, Economies, Companies ...) are not here: each lives in
   # its module's manifest (console.menus: modules/<id>/module.yaml), drawn while the module is in the distribution and on.
   # The BI menu is also the BI rail (bi/shell.html), in this order; rail: false keeps an item to the top bar's menu; also: the rail's
@@ -67,6 +79,7 @@ menus:
   - id: bi
     label: BI
     icon: bar-chart-line
+    folded: true
     also: [build-home, tables-models, pivot]
     columns:
       - title: Business intelligence
@@ -91,6 +104,7 @@ menus:
   - id: build
     label: Build
     icon: braces
+    folded: true
     columns:
       - title: Create
         items:

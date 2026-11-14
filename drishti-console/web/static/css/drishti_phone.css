@@ -13,19 +13,9 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The phone display (docs/guides/BUILD_GUIDE.md section 7, terminal/_phone.html) and the lens menus' phone form (LX1 option C,
+/* The phone display (docs/guides/BUILD_GUIDE.md section 7, terminal/_phone.html) (LX1 option C,
    terminal/_topbar.html). Every colour is a theme token, so dark and light read the same; every control is at least 44 px. */
 
-/* ---- the lens menu: one menu named after the lens on a phone, the subject menus on a wider screen ---------------------------- */
-.tbar-lens { display: none; }
-@media (max-width: 639.98px) {
-  .tbar-menus:has([data-lens-fold]) [data-subject] { display: none; }   /* only once drishti_phone.js has put the lens menu in the bar */
-  .tbar-lens { display: block; }
-  .tbar-lens-btn { min-height: 44px; font-weight: 700; color: var(--d-accent-strong); opacity: 1; padding: var(--d-sp-7_2) var(--d-sp-9_6); }
-  .tbar-lens-btn .bi { font-size: var(--d-fs-12); }
-  .mega-lens .mega-col + .mega-col { border-top: 1px solid var(--d-border); padding-top: var(--d-sp-9_6); }
-  .mega-lens .mega-subject { color: var(--d-accent-strong); }
-  .mega-lens .mega-item { min-height: 44px; align-items: center; }
 }
 
 /* ---- the phone page ------------------------------------------------------------------------------------------------------- */

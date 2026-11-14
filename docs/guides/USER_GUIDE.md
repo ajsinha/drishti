@@ -140,7 +140,7 @@ follows the theme, and on a phone it sits under the text. An edition or lens can
 
 ## The top bar
 
-Every page has the same top bar, on one row: the terminal, the views, the engines, BI, Build, Admin, Help and the landing page when you are signed in, and the public pages (signed out) in the same height, logo and
+Every page has the same top bar, on one row: **Views · Domains · Create · Admin · Help** and the landing page when you are signed in, and the public pages (signed out) in the same height, logo and
 wordmark (set in Cinzel; the slogan is in the footer, which also carries Help, About, the competitive analysis and the release notes).
 
 The **Drishti name and logo** at its left end always lead to the landing page, also when you are signed in. The
@@ -148,7 +148,7 @@ landing page then shows **← Back to …** (the view, Build, Admin or Help page
 takes you back where you were; *Open the terminal* goes to the terminal instead.
 
 ```text
-◉ Drishti  > TRD MX-20000001, CPTY north …  [2026-09-30]   Views ▾  Engines ▾  BI ▾  Build ▾  Admin ▾  Help ▾   [bell] [box 12] [palette] (Live) (A) Ash ▾
+◉ Drishti  > TRD MX-20000001, CPTY north …  [2026-09-30]   Views ▾  Domains ▾  Create ▾  Admin ▾  Help ▾   [bell] [box 12] [palette] (Live) (A) Ash ▾
 ```
 
 **Beside the brand** (click it to go back to `/`) are the [command line](#the-command-line), which takes the
@@ -156,7 +156,7 @@ free space, and the [business date](#business-dates-live-or-a-day-in-the-past) b
 The round **search button** after the command line (or `Alt+K` anywhere) opens [the global search](#search-everything-altk).
 Below 1100 pixels wide they move to a line of their own.
 
-**Then the menus**: **Views**, **Build** and **Help** for everyone, **Risk** where your role opens a risk engine's page (the VaR, exposure, FRTB-SA and SIMM pages, each shown while its engine runs), **BI** where you hold the `bi` power, **Admin** only for administrators: Views, Risk, BI, Build, Admin, Help for a risk administrator, and Views, BI, Build, Help for a role that opens no engine. The engines' on and off switches are in **Admin → Engines**. Below 1280 pixels they show as icons only. Each opens a wide panel
+**Then the menus**: **Views** and **Help** for everyone, **Domains** (the subjects of the modules your site runs, risk included, each a column; with one domain active it is named after it: **Risk** in Drishti Risk, and it is not there when no domain module is active), **Create** (every designer and the BI tools in one menu: BI where you hold the `bi` power) and **Admin** only for administrators. Each menu is drawn from the modules' manifests and the distribution, so a distribution without a domain shows no Domains menu, and each entry follows your role. Each opens a panel
 (a *mega menu*) in which every entry has an icon and one line saying what it does. The menu holding the page
 you are on is highlighted.
 
@@ -164,11 +164,11 @@ you are on is highlighted.
 |---|---|---|
 | **Views** | Look up | *Terminal* (`/t`), *Search & pick lists* (`/s`), *Forms* (`/forms`: the [forms home](#the-forms-home), query by form), *Functions* (`/func`, also `FUNC <GO>`: every command you can use, what it does and an example; administrators switch commands on or off there, [ADMIN_GUIDE.md (Functions)](ADMIN_GUIDE.md#20-functions-func-every-command-and-turning-one-on-or-off)), *Data map* (`/datamap`, also `DATAMAP <GO>`: every kind of data, how it joins and how much there is, [The data map](#the-data-map)), *Data* (`/data`, also `EXPORT <GO>`: every dataset and its dates, a simple selection, a day downloaded as `.jsonl.gz`, [Export data](#export-data)), *Reports* (`/reports`: every scheduled report and subscription, with a box to find one, and links to your alerts and the BI reports) |
 | | Watch | *Workspaces* (`/w`), *Monitors* (`/m`), *Alerts* (`/alerts`), *Approvals* (`/approvals`: [the one queue](#approvals), with the number waiting) |
-| **Engines** (a role that opens an engine) | a column per engine running, its command word in the head | **VaR** `VAR`: *VaR explorer* `VAR BANK`, *Why it moved* `VAR BANK EXPLAIN`, *VaR Playground* `PLAY VAR`, *Scenario matrix* `SMAT`, *Regulatory reports*, *Backtesting* `VAR BANK BACKTEST`, *Stress window* `SWIN BANK`, *VaR results* `VRES`, *Official records* `VOFF`, *Hierarchy limits* `VLIM` · **Exposure** `EXP`: *Exposure explorer* `EXP`, *A counterparty* `EXP CPTY …`, *A netting set* `EXP NSET …` (the pre-deal check `PREDEAL` is under **Counterparties**) · **FRTB-SA** `FRSA`: *FRTB-SA capital* `FRSA BANK`, *FRTB-SA Playground* `PLAY FRTB EXAMPLE` · **SIMM** `SIMM`: *Netting sets* `SIMM`, *SIMM Playground* `PLAY SIMM EXAMPLE`; administrators also see *Admin → Engines* and, at the foot, the engines not running on any server (greyed, never links) |
-| **BI** (people with the `bi` power) | Business intelligence | *Catalogue* (`/bi/catalogue`), *My workspace* (`/bi/w/me`), *My runs*, *Workspaces* |
+| **Domains** (named after its one domain when only one is active: **Risk**) | a column per menu a module brings (Blotter, Positions, Risk, Counterparties, Markets, Companies, Economies ...); Risk's columns are one per engine running, its command word in the head | **VaR** `VAR`: *VaR explorer* `VAR BANK`, *Why it moved* `VAR BANK EXPLAIN`, *VaR Playground* `PLAY VAR`, *Scenario matrix* `SMAT`, *Regulatory reports*, *Backtesting* `VAR BANK BACKTEST`, *Stress window* `SWIN BANK`, *VaR results* `VRES`, *Official records* `VOFF`, *Hierarchy limits* `VLIM` · **Exposure** `EXP`: *Exposure explorer* `EXP`, *A counterparty* `EXP CPTY …`, *A netting set* `EXP NSET …` (the pre-deal check `PREDEAL` is under **Counterparties**) · **FRTB-SA** `FRSA`: *FRTB-SA capital* `FRSA BANK`, *FRTB-SA Playground* `PLAY FRTB EXAMPLE` · **SIMM** `SIMM`: *Netting sets* `SIMM`, *SIMM Playground* `PLAY SIMM EXAMPLE`; administrators also see *Admin → Engines* and, at the foot, the engines not running on any server (greyed, never links) |
+| **Create** (BI: people with the `bi` power) | Business intelligence | *Catalogue* (`/bi/catalogue`), *My workspace* (`/bi/w/me`), *My runs*, *Workspaces* |
 | | Analyse | *Models*, *Datasets*, *Report designer* (`/bi/designer`), *Promotion (test to live)* (`/bi/environments`), *Notebook*, *Data prep* (`/bi/transform`) |
 | | Administer | *BI settings* (administrators with `bi-admin`, [REPORTS_GUIDE.md](REPORTS_GUIDE.md)) |
-| **Build** | Create | *Build home* (`/build`: [the Build home](#the-build-home-everything-you-build-in-one-place)), *New screen* (`/build/new`), *New pack* (`/build/pack/designer`: schema files and/or JSON Lines in, a pack to download or deploy out; [Schema to pack](BUILD_GUIDE.md#8-the-pack-designer-build--new-pack)), *Tables & models* (`/build/tables`), *Examples* |
+| | Create | *Build home* (`/build`: [the Build home](#the-build-home-everything-you-build-in-one-place)), *New screen* (`/build/new`), *New pack* (`/build/pack/designer`: schema files and/or JSON Lines in, a pack to download or deploy out; [Schema to pack](BUILD_GUIDE.md#8-the-pack-designer-build--new-pack)), *Tables & models* (`/build/tables`), *Examples* |
 | | Learn | *Tutorials*, *Schema to pack*, *Screen designer guide*, *Screen developer guide*, *Panel kinds*, *Screen language reference*, *Packs and screens guide* |
 | **Admin** (admins only) | People & access | *Users*, *Roles*, *API tokens*, *Who looked at what*, *Audit log*, *Saved VaR baskets* |
 | | Data | *Packs*, *Connectors*, *Data loads*, *Lakes*, *Record edits*, *Data out*, *Installed items* |

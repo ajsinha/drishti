@@ -20,7 +20,7 @@ format: 1
 kernel:                                    # in every distribution
   packs: [core]
   words: [BI, RUPAKA, FORM, FUNC, WHAT, DATAMAP, DATA, EXPORT, PIVOT]
-  menus: [views, bi, build, admin, help, me]
+  menus: [views, domains, create, bi, build, admin, help, me]
 
 # What each feature a distribution names (features: in config/distributions/drishti.<name>.yaml) presets, on the server and in the console
 # (docs/guides/ADMIN_GUIDE.md, the three layers of switches). A value of off presets false; any other value (on) presets true. A setting the

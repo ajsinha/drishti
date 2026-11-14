@@ -59,20 +59,9 @@
     location.reload();
   }
 
-  /* The lens menus' phone form (LX1 option C): below 640 px the lens menu (waiting in a template in the bar) goes in first, and
-     drishti_phone.css hides the subject menus it folds; above, it is taken out again, so a wide screen draws each item once. */
-  function lensFold() {
-    var tpl = document.querySelector('template[data-lens-fold-tpl]');
-    if (!tpl) { return; }
-    var have = document.querySelector('[data-lens-fold]');
-    var narrow = (window.innerWidth || document.documentElement.clientWidth) < 640;
-    if (narrow && !have) { tpl.after(tpl.content.cloneNode(true)); }
-    else if (!narrow && have) { have.remove(); }
-  }
-
   var t = null;
-  window.addEventListener('resize', function () { clearTimeout(t); t = setTimeout(function () { sync(false); lensFold(); }, 250); });
-  window.addEventListener('orientationchange', function () { setTimeout(function () { lensFold(); sync(true); }, 300); });
+  window.addEventListener('resize', function () { clearTimeout(t); t = setTimeout(function () { sync(false); }, 250); });
+  window.addEventListener('orientationchange', function () { setTimeout(function () { sync(true); }, 300); });
   /* a glance part with rows (a table or a list) gets its Show all under them */
   function glanceButtons() {
     document.querySelectorAll('[data-phone-tier="glance"]').forEach(function (el) {
@@ -94,7 +83,7 @@
     document.querySelectorAll('.ph-parts .ph-more').forEach(function (s) { if (!s.querySelector('li')) { s.remove(); } });
   }
 
-  function ready() { lensFold(); glanceButtons(); pruneRows(); }
+  function ready() { glanceButtons(); pruneRows(); }
   if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', ready); } else { ready(); }
   sync(true);
 
