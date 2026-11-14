@@ -23,7 +23,7 @@ import json
 from fastapi import APIRouter, Request
 from fastapi.responses import Response
 
-from core.csrf import BodyError, json_body
+from core.csrf import json_body
 from core import asof
 from core.backend import BackendError, drs_message
 from core.export import JSONL_MEDIA, filename, grid, panel_rows, plain, to_csv, to_jsonl, to_xlsx
@@ -71,11 +71,8 @@ async def search_csv(request: Request, fmt: str, q: str = ""):
 
 
 async def _grid(request: Request):
-    try:
-        body = await json_body(request)
-    except BodyError:
-        body = {}                                        # a download for the caller only: an empty grid, not an error
-    return grid(body if isinstance(body, dict) else {})
+    body = await json_body(request)                      # not JSON, or not an object: refused (415 / 400, DRS-5001), never an empty file
+    return grid(body)
 
 
 @router.post("/export/grid.csv")

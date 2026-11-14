@@ -161,12 +161,23 @@ class TransformInputsApiTest {
     void setUp() throws Exception {
         role("bi-risk", List.of("*"));
         role("curves-only", List.of("curve"));
+        author();
         for (String u : List.of("rita:bi-risk:", "cora:curves-only:")) {
             String[] n = u.split(":", -1);
             mvc.perform(post("/api/v1/admin/users").header("Authorization", admin()).contentType(MediaType.APPLICATION_JSON)
                     .content(json.writeValueAsString(Map.of("username", n[0], "displayName", n[0], "email", n[0] + "@desk.test", "desk", n[2], "roles", List.of(n[1]),
                             "packs", List.of("finance"), "password", "long-enough-pass-1")))).andExpect(status().isCreated());
         }
+    }
+
+    /** Wes: every kind and the author power (a Notebook cell, a Transform's steps). */
+    void author() throws Exception {
+        var r = mvc.perform(put("/api/v1/admin/role-definitions/risk-author").header("Authorization", admin()).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("kinds", List.of("*"), "approve", false, "raw", true, "bi", List.of("bi", "bi-author"))))).andReturn().getResponse();
+        assertThat(r.getStatus()).as(r.getContentAsString()).isEqualTo(200);
+        mvc.perform(post("/api/v1/admin/users").header("Authorization", admin()).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("username", "wes", "displayName", "wes", "email", "wes@desk.test", "roles", List.of("risk-author"),
+                        "packs", List.of("finance"), "password", "long-enough-pass-1")))).andExpect(status().isCreated());
     }
 
     void role(String name, List<String> kinds) throws Exception {
@@ -270,5 +281,71 @@ class TransformInputsApiTest {
         assertThat(desks).as(rita.toString()).containsEntry("DESK-A", 92_000.0).containsEntry("DESK-B", 100_000.0).containsEntry("DESK-C", 108_000.0);
         JsonNode cora = ok(call("POST", "/api/v1/bi/mq", as("cora", "curves-only"), q));
         assertThat(cora.path("rows").size()).as("the input was asked as cora, who may not read trades: nothing").isZero();
+    }
+
+    // ---- the Notebook and Transform write endpoints: a cell, the steps, a profile, and a derived dataset's run ----
+
+    static final Map<String, Object> TRADES_IN = Map.of("kind", "trade", "connector", "tin-lake", "fields", List.of("desk", "notional"));
+
+    void problem(ResultActions r, int status, String code) throws Exception {
+        var res = r.andReturn().getResponse();
+        assertThat(res.getStatus()).as(res.getContentAsString()).isEqualTo(status);
+        assertThat(json.readTree(res.getContentAsString()).path("code").asText()).as(res.getContentAsString()).isEqualTo(code);
+    }
+
+    @Test @Order(6)
+    void aNotebookCellRunsOverTheReadersRowsAndIsRefusedWithoutTheAuthorPowerOrASource() throws Exception {
+        problem(call("POST", "/api/v1/bi/python/cell", as("rita", "bi-risk"), Map.of("source", "df.shape", "extract", Map.of("input", TRADES_IN))), 403, "DRS-9002");
+        problem(call("POST", "/api/v1/bi/python/cell", as("wes", "risk-author"), Map.of("source", " ", "extract", Map.of("input", TRADES_IN))), 413, "DRS-9072");
+        problem(call("POST", "/api/v1/bi/python/cell", as("wes", "risk-author"), Map.of("source", "df.shape")), 422, "DRS-9070");        // no rows named
+        java.util.Optional<String> why = pythonRuns.unavailable();
+        org.junit.jupiter.api.Assumptions.assumeTrue(why.isEmpty(), () -> "Python does not run here: " + why.orElse(""));
+        JsonNode cell = ok(call("POST", "/api/v1/bi/python/cell", as("wes", "risk-author"), Map.of("source", "print(df.groupby('desk')['notional'].sum().to_dict())",
+                "extract", Map.of("input", TRADES_IN), "params", Map.of())));
+        assertThat(cell.path("stdout").asText()).as(cell.toString()).contains("DESK-A").contains("92000");
+        assertThat(cell.path("inputRows").asInt()).isEqualTo(24);
+        assertThat(ok(call("POST", "/api/v1/bi/python/cell", as("wes", "risk-author"), Map.of("source", "print(df.groupby('desk')['notional'].sum().to_dict())",
+                "extract", Map.of("input", TRADES_IN), "params", Map.of()))).path("stdout").asText()).isEqualTo(cell.path("stdout").asText());                              // the same again
+        var broken = call("POST", "/api/v1/bi/python/cell", as("wes", "risk-author"), Map.of("source", "raise ValueError('nope')", "extract", Map.of("input", TRADES_IN))).andReturn().getResponse();
+        assertThat(broken.getStatus()).isEqualTo(422);                                                                                                // a cell's own error: refused in words, with where
+        assertThat(json.readTree(broken.getContentAsString()).path("code").asText()).isEqualTo("DRS-9071");
+        assertThat(broken.getContentAsString()).contains("ValueError: nope");
+    }
+
+    @Test @Order(7)
+    void aTransformsStepsRunOnTheServerOverTheInputsAsTheReader() throws Exception {
+        Map<String, Object> ask = Map.of("name", "desk-notional-prep", "source", "def run(trades, params):\n    df = trades.groupby('desk', as_index=False)['notional'].sum()\n    return df\n",
+                "inputs", List.of(Map.of("name", "trades", "input", TRADES_IN)), "asOf", DAY);
+        problem(call("POST", "/api/v1/bi/python/steps", as("rita", "bi-risk"), ask), 403, "DRS-9002");
+        java.util.Optional<String> why = pythonRuns.unavailable();
+        org.junit.jupiter.api.Assumptions.assumeTrue(why.isEmpty(), () -> "Python does not run here: " + why.orElse(""));
+        JsonNode steps = ok(call("POST", "/api/v1/bi/python/steps", as("wes", "risk-author"), ask));
+        assertThat(steps.toString()).as(steps.toString()).contains("DESK-A").contains("92000");
+        assertThat(steps.path("previewRows").asInt()).isPositive();
+        JsonNode none = ok(call("POST", "/api/v1/bi/python/steps", as("wes", "risk-author"), Map.of("name", "p", "source", ask.get("source"),
+                "inputs", List.of(Map.of("name", "trades", "input", Map.of("kind", "curve", "fields", List.of("curveId")))), "asOf", DAY)));
+        assertThat(none.toString()).doesNotContain("DESK-A");
+    }
+
+    @Test @Order(8)
+    void aProfileDescribesTheReadersFrameAndRefusesWhatNamesNoRows() throws Exception {
+        problem(call("POST", "/api/v1/bi/python/profile", as("rita", "bi-risk"), Map.of()), 422, "DRS-9070");
+        problem(call("POST", "/api/v1/bi/python/profile", as("rita", "bi-risk"), Map.of("input", Map.of("kind", "no-such-kind"))), 422, "DRS-9102");
+        java.util.Optional<String> why = pythonRuns.unavailable();
+        org.junit.jupiter.api.Assumptions.assumeTrue(why.isEmpty(), () -> "Python does not run here: " + why.orElse(""));
+        JsonNode rita = ok(call("POST", "/api/v1/bi/python/profile", as("rita", "bi-risk"), Map.of("input", TRADES_IN, "asOf", DAY)));
+        assertThat(rita.path("inputRows").asInt()).isEqualTo(24);
+        assertThat(rita.toString()).contains("notional").contains("desk");
+        JsonNode cora = ok(call("POST", "/api/v1/bi/python/profile", as("cora", "curves-only"), Map.of("input", TRADES_IN, "asOf", DAY)));
+        assertThat(cora.path("inputRows").asInt()).as("cora may not read trades: nothing to profile").isZero();
+    }
+
+    @Test @Order(9)
+    void runningADerivedDatasetsTransformNowIsRefusedInWordsBecauseAPythonDatasetRunsWhenItIsAsked() throws Exception {
+        problem(call("POST", "/api/v1/bi/datasets/file:table:bi.desk_notional_prep/transform/run", as("rita", "bi-risk"), null), 403, "DRS-9002");     // authors only
+        problem(call("POST", "/api/v1/bi/datasets/file:table:bi.desk_notional_prep/transform/run", as("wes", "risk-author"), null), 422, "DRS-9020");
+        problem(call("POST", "/api/v1/bi/datasets/no-such-dataset/transform/run", as("wes", "risk-author"), null), 404, "DRS-9001");
+        // the refusal changes nothing: the dataset still checks clean
+        assertThat(ok(call("GET", "/api/v1/bi/layer-datasets/file:table:bi.desk_notional_prep", as("rita", "bi-risk"), null)).toString()).doesNotContain("\"level\":\"error\"");
     }
 }

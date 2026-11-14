@@ -33,6 +33,18 @@
   a connector's DRS-5034 on an Admin page is not that page failing; the Explain page is checked through its API; the drill sweeps as the
   administrator on a sign-in stack of its own (a role user optional and report-only); "The command sweep" is in TEST_HARNESS.md.
 
+- **Write endpoints tested (BI, pivot, exports, runs).** Each of the BI, pivot, run, export, monitor and alert-rule write endpoints that had no test now
+  has one: a valid request with its effect read back (the saved view gone, the run kept or scheduled or shared, the exported file's cells, the rule
+  deleted) and an invalid one refused with its DRS code. `POST /export/grid.csv`, `/export/grid.xlsx` and `/export/grid.jsonl` refuse a body that is
+  not a JSON object (`400`, `DRS-5001`; `415` for another content type) instead of sending an empty file. `api_sweep.py --writes-only` maps the writes
+  to their tests without a running server.
+
+- **The API sweep.** `tools/sweep/api_sweep.py` lists every endpoint of the server (every controller of the kernel and the modules) and of the
+  console (every route) from the source and calls each GET as the administrator, with real ids, kinds and dates of the saved test data and the
+  first id of the parent list for any other path variable: a 5xx, an unexpected 4xx, an empty body, a timeout or an answer over 10 s fails.
+  Writes are never called: each is listed with the test that covers it, and one with none is flagged. Endpoints present in the code and
+  missing from `API_REFERENCE.md`, and the reverse, are reported. A drill step in the browser lane (`test_api_sweep_browser.py`); the report
+  is `data/sweep/api-sweep-<stamp>.md`. `TEST_HARNESS.md` 3.27 and 3.28 describe it with the command sweep.
 - **Documentation consolidated: fewer, larger documents.** Each risk measure's tutorial is the last part of its guide (VaR, exposure, FRTB-SA, SIMM);
   one BI guide holds the pivot, virtual tables and models, reports, the Notebook and the groupings, each with its tutorial; one World and public data guide holds
   the funds, the external feeds and the public sector with their two tutorials; the Arrow Flight reference joins the Flight guide; the source-system tutorial
