@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of the reports tutorial, Part B, Several datasets in one report (docs/guides/BI_GUIDE.md), written to docs/tutorials/img/t18/.
+"""Pictures of the reports tutorial, Part B, Several datasets in one report (docs/guides/bi/README.md), written to docs/tutorials/img/t18/.
 
 One model with two facts: the trade and netting-set pack datasets and their grains, the model built in the model designer (suggested relationships, measures
 from columns, a measure over two facts in the expression editor, a row rule and the safeguard), a report with MTM and exposure in one visual, the refusal

@@ -34,7 +34,7 @@ import org.junit.jupiter.api.Test;
 class RegionEconomicsSampleTest {
 
     private static final ObjectMapper JSON = new ObjectMapper();
-    private static final Path SAMPLES = Path.of("../../config/packs/economy/world-economy/samples");          // region-economy.jsonl
+    private static final Path SAMPLES = Path.of("../../modules/economy/packs/world-economy/samples");          // region-economy.jsonl
     private static final Path SHAPES = Path.of("../../drishti-console/web/static/vendor/echarts/maps/regions");
 
     private static Dataset dataset() throws IOException {

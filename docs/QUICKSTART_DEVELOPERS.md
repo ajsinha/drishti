@@ -164,7 +164,7 @@ capitalmarkets and economy. The modules sit in subject folders (`kernel/`, `comp
 | `plugins/drishti-connectors`, `plugins/drishti-plugin-*` | the connectors: the built-in light ones (file, rest, feed, news, demo, yfinance) in one module, and a plugin each for delta, iceberg, jdbc, kafka, s3 and more ([DATA_GUIDE.md](guides/DATA_GUIDE.md)) |
 | `drishti-elements`, `drishti-console/web/static/elements/` | Drishti Elements, the JavaScript libraries every screen is made of (core, inputs, grid, chart, data, insight, renderer, risk, graph, tree, designer), and their WebJar ([ELEMENTS_API.md](guides/ELEMENTS_API.md)) |
 | `drishti-console/` | `run_drishti_web.py`, `core/` (one module per feature), `routes/`, `web/templates/`, `plugins/<module>/` (a module's console pages, help and static files: `banking`, `economy`), `config/` (`application.yaml`, `help.yaml`), `tests/` |
-| `config/packs/<domain>/<pack>/` | the packs (content, not code): `core/`, `banking/`, `capitalmarkets/`, `economy/` ([BUILD_GUIDE.md](guides/BUILD_GUIDE.md)) |
+| `modules/<module>/packs/<pack>/` | the packs (content, not code): `core/`, `banking/`, `capitalmarkets/`, `economy/` ([BUILD_GUIDE.md](guides/BUILD_GUIDE.md)) |
 | `config/` (the rest) | `modules/`, `lenses/<module>/`, `lakes/`, `engines/`, `tables/`, `bi/`, `feeds/`: the site's switches and files ([CONFIGURATION.md](admin/CONFIGURATION.md)) |
 | `bin/` | the start and stop scripts of the server, its cluster nodes and the console (`.sh` for Linux and macOS, `.ps1` and `.cmd` for Windows; [bin/README.md](../bin/README.md)) |
 | `tools/` | `drishti.py` (the command line), `lake/`, `docs/` (screenshots, the PDFs), `drill.sh` (the release drill), `windows/` (PowerShell loaders and feeds) |

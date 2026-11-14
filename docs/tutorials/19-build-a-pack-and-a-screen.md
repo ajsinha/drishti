@@ -579,7 +579,7 @@ You should see the country change colour and a tip, `Indonesia · click to open`
 
 ![The page of JUR-IDN: Indonesia, Jakarta, population 285.72, and the map with Indonesia highlighted; the breadcrumb at the top reads MX-20000001, JUR-AUS, JUR-IDN](img/t06/13-map-click.jpg)
 
-You should see **Indonesia's own page** (`JUR-IDN`), with the map now highlighting Indonesia, and the trail of pages you came by at the top (`JUR-AUS / JUR-IDN`). The panel that did all of this is three lines of the pack's Sutra, `config/packs/economy/world-economy/sutras/politics-and-society/jurisdiction.v1.sutra.yaml`:
+You should see **Indonesia's own page** (`JUR-IDN`), with the map now highlighting Indonesia, and the trail of pages you came by at the top (`JUR-AUS / JUR-IDN`). The panel that did all of this is three lines of the pack's Sutra, `modules/economy/packs/world-economy/sutras/politics-and-society/jurisdiction.v1.sutra.yaml`:
 
 ```yaml
 - id: geography
@@ -598,7 +598,7 @@ You should see the canvas with **two map panels** (the world with Australia in t
 
 ![The palette: metric, map, kv, status, provenance, markdown, table, ladder, pivot, tabs, line, area, each with an Add button](img/t06/15-map-palette.jpg)
 
-You should see `map` among the kinds with an **Add** button (or drag it onto the canvas); the **YAML** tab shows the lines above, and the **Inspector** takes `highlight`, `region`, `link` and `shade` as boxes. In the example's YAML the two panels are `highlight` and `region` on the same country field: the same field, two views of it. [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) and [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#panels-the-twenty-two-kinds-and-developing-a-new-one) have the rest of the options, and the reports have a map visual of their own ([the reports tutorial, Part A](../guides/BI_GUIDE.md#part-a--your-first-bi-report)).
+You should see `map` among the kinds with an **Add** button (or drag it onto the canvas); the **YAML** tab shows the lines above, and the **Inspector** takes `highlight`, `region`, `link` and `shade` as boxes. In the example's YAML the two panels are `highlight` and `region` on the same country field: the same field, two views of it. [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) and [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#panels-the-twenty-two-kinds-and-developing-a-new-one) have the rest of the options, and the reports have a map visual of their own ([the reports tutorial, Part A](../guides/bi/REPORTS.md#part-a--your-first-bi-report)).
 
 ## Step 15 · Save it, and how it goes live
 
@@ -842,7 +842,7 @@ panels:
 ```
 
 The trading pack ships a screen written this way, by hand: the book desk, `/v/portfolio-trades/BOOK-RATES-2?sutra=book-desk`
-(`config/packs/banking/trading/sutras/pages/book-desk.v1.sutra.yaml`).
+(`modules/banking/dmod/packs/trading/sutras/pages/book-desk.v1.sutra.yaml`).
 
 **Command line.** As in step 20: `design list` shows *My screen · Trades of book BOOK-RATES-2*, and `design get <id> --yaml` prints it.
 

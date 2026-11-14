@@ -322,7 +322,7 @@ def connector_text(system: str, store: str, lake: pathlib.Path, ice: pathlib.Pat
     """trade-<system>.yaml for its store: the trading pack's template (one source system of the union, table trade_<system>) with
     plugin and root set; ``engine: native`` for Iceberg. It names no kinds (the pack's template binds trade by default)."""
     import yaml
-    pack = _pack_manifest(ROOT / "config" / "packs" / "banking" / "trading" / "pack.yaml")
+    pack = _pack_manifest(ROOT / "modules" / "banking" / "dmod" / "packs" / "trading" / "pack.yaml")
     tpl = _template(pack, f"trade-{system}", store, lake, data, ice, folder)
     settings = dict(tpl.get("settings") or {})
     if settings.get("lake") == ICEBERG_LAKE:          # Iceberg: the lake demo-iceberg (its file beside the connector folder)

@@ -104,7 +104,7 @@ def marker(text: str, t: dict, rev: str) -> str:
 
 
 def _manifest_at(rev: str, pack: str) -> str:
-    """A pack's pack.yaml at a revision: in its domain folder (config/packs/<domain>/<pack>), or at config/packs/<domain>/<pack> in a revision
+    """A pack's pack.yaml at a revision: in its domain folder (modules/<module>/packs/<pack>), or at modules/<module>/packs/<pack> in a revision
     from before the packs moved into domain folders (git history, not a second layout)."""
     try:
         return show(rev, f"{pack_dir(pack).relative_to(ROOT).as_posix()}/pack.yaml")

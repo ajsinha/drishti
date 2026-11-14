@@ -69,7 +69,7 @@ drishti-console/.venv/bin/python tools/drishti.py edits status --user ada
 ## Step 2 · Read the form that submits
 
 The book desk's trades form says where a submitted change goes. It is the trading pack's
-`config/packs/banking/trading/sutras/pages/book-desk.v1.sutra.yaml`:
+`modules/banking/dmod/packs/trading/sutras/pages/book-desk.v1.sutra.yaml`:
 
 ```yaml
 form:

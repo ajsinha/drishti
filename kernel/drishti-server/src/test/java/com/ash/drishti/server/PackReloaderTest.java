@@ -121,7 +121,7 @@ class PackReloaderTest {
         Files.createDirectories(pack.resolve("sutras"));
         Files.writeString(pack.resolve("pack.yaml"), "pack: " + name + "\n" + (sample ? "sample: true\n" : "") + "version: 1.0.0\ntitle: " + title
                 + "\nextends: " + extend + "\nkinds: " + kinds + "\nmnemonics:\n  " + mnemonic + ": {kind: " + kinds.get(0) + ", label: " + title + "}\n"
-                + (connector ? "connector-templates:\n  " + name + "-feed:\n    plugin: file\n    kinds: " + kinds + "\n    settings:\n      root: "
+                + (connector ? "connectors:\n  " + name + "-feed:\n    plugin: file\n    kinds: " + kinds + "\n    settings:\n      root: "
                 + root.resolve("data-" + name) + "\n" : ""));
         if (kinds.contains("widget")) {
             Files.writeString(pack.resolve("sutras/widget.v1.sutra.yaml"), SUTRA);

@@ -176,7 +176,7 @@ and a client certificate) and `rest-via-proxy.yaml` (a vendor API through the co
 running server within seconds, edited in any editor, in **Admin → Connectors** (a form, a YAML tab, **Test connection**) or with
 `drishti.py connector apply` ([../../../guides/DATA_GUIDE.md section 9](../../../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors)).
 
-A pack suggests the same as a template in `config/packs/<domain>/<pack>/pack.yaml` (keys with dots written flat); the server writes
+A pack suggests the same as a template in `modules/<module>/packs/<pack>/pack.yaml` (keys with dots written flat); the server writes
 it to `config/connectors/crm-api.yaml` at the first start if the site has none, and the file is then the site's:
 
 ```yaml

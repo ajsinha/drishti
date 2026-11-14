@@ -65,7 +65,7 @@ def render(text: str, source: Path | None = None, library=None) -> str:
 
 
 def source_of(docs_dir: Path, kind: str, name: str, meta: dict | None = None) -> Path:
-    """Where a README sits in the repository: config/packs/<domain>/<pack>/README.md; plugins/<x>/README.md; docs/connectors/types/<t>/README.md."""
+    """Where a README sits in the repository: modules/<module>/packs/<pack>/README.md; plugins/<x>/README.md; docs/connectors/types/<t>/README.md."""
     root = Path(docs_dir).parent
     if kind == "pack":
         return pack_dir(name, root / "config" / "packs") / "README.md"

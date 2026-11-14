@@ -1,0 +1,167 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the sic-sector kind (command SIC): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap sic-sector`; completed by hand.
+kind: sic-sector
+mnemonic: SIC
+pack: us-equities
+version: '1.0'
+class: computed
+status: active
+title: SIC sector
+description: 'A sector by its SIC code, computed from the companies when asked: its companies ranked by revenue; a click opens a company''s summary
+  beside.'
+source: 'computed by Drishti: the derived connector us-equities-groupings over the kind us-company'
+grain: One record per SIC of the us-company records, computed when asked.
+key:
+- SIC
+dated-by: on request
+cadence:
+  frequency: on change
+  due: recomputed from its source kind (connector refresh 60s)
+binding-hint:
+  computed: true
+fields:
+- name: SIC
+  type: id
+  presence: required
+  description: The value the us-company records are grouped by ($.SIC; each also joins 'ALL')
+- name: TICKERS
+  type: id list
+  presence: derived
+  description: The ids of the grouped us-company records (at most 100000)
+- name: COMPANIES
+  type: integer
+  presence: derived
+  description: The companies whose SIC is the key (every currency)
+- name: DESCRIPTIONS
+  type: text list
+  presence: derived
+  description: 'A helper of the page fields: distinct over the group of: $.SIC_DESCRIPTION'
+- name: DIVISIONS
+  type: text list
+  presence: derived
+  description: 'A helper of the page fields: distinct over the group of: $.DIVISION'
+- name: SECTORS
+  type: text list
+  presence: derived
+  description: 'A helper of the page fields: distinct over the group of: $.SECTOR'
+- name: CODE_LIST
+  type: text list
+  presence: derived
+  description: 'A helper of the page fields: distinct over the group of: $.SIC'
+- name: REVENUE
+  type: amount
+  presence: derived
+  description: The latest fiscal year revenue summed over the companies that report in USD
+- name: NET_INCOME
+  type: amount
+  presence: derived
+  description: The latest fiscal year net income summed over the USD reporters
+- name: NON_USD
+  type: integer
+  presence: derived
+  description: 'Companies that report in another currency: counted, not summed'
+- name: PROVENANCE
+  type: record
+  presence: derived
+  description: The first company's source and licence (SEC EDGAR)
+- name: ROWS
+  type: record list
+  presence: derived
+  description: One row per grouped us-company record
+- name: DESCRIPTION
+  type: text
+  presence: derived
+  description: The SIC code's description as the SEC gives it ('Every SIC code of the companies covered' for ALL)
+- name: DIVISION
+  type: text
+  presence: derived
+  description: The SIC division letter
+- name: SECTOR
+  type: text
+  presence: derived
+  description: The SIC division name
+- name: CODES
+  type: integer
+  presence: derived
+  description: The number of SIC codes among the companies (1, or every code on ALL)
+- name: NET_MARGIN
+  type: rate
+  presence: derived
+  description: NET_INCOME / REVENUE x 100 (USD reporters), in per cent
+- name: BY_REVENUE
+  type: record list
+  presence: derived
+  description: The USD reporters with revenue, largest first, the top 15 (rows of ROWS)
+- name: BY_DIVISION
+  type: record list
+  presence: derived
+  description: 'Revenue of the USD reporters by SIC division: label, value, count; largest first'
+nested:
+  ROWS[]:
+  - name: TICKER
+    type: unknown
+    presence: optional
+    description: 'From the us-company record: $.TICKER'
+  - name: NAME
+    type: unknown
+    presence: optional
+    description: 'From the us-company record: $.NAME'
+  - name: EXCHANGE
+    type: unknown
+    presence: optional
+    description: 'From the us-company record: $.EXCHANGE'
+  - name: INDEX_TEXT
+    type: unknown
+    presence: optional
+    description: 'From the us-company record: $.INDEX_TEXT'
+  - name: SECTOR
+    type: unknown
+    presence: optional
+    description: 'From the us-company record: $.SECTOR'
+  - name: REVENUE
+    type: unknown
+    presence: optional
+    description: 'From the us-company record: $.REVENUE'
+  - name: NET_INCOME
+    type: unknown
+    presence: optional
+    description: 'From the us-company record: $.NET_INCOME'
+  - name: NET_MARGIN
+    type: unknown
+    presence: optional
+    description: 'From the us-company record: $.REVENUE ? $.NET_INCOME / $.REVENUE * 100 : null'
+  - name: CURRENCY
+    type: unknown
+    presence: optional
+    description: 'From the us-company record: $.CURRENCY'
+  - name: FISCAL_YEAR
+    type: unknown
+    presence: optional
+    description: 'From the us-company record: $.FISCAL_YEAR'
+links: []
+validation:
+- rule: required
+  fields:
+  - SIC
+- rule: unique
+  key:
+  - SIC
+  per: snapshot
+notes:
+- 'Computed when asked by the derived connector us-equities-groupings from every us-company (which retired the stored page): docs/guides/bi/README.md
+  (its Part II). Totals add the USD reporters only.'
+review: []

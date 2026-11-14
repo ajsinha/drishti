@@ -24,7 +24,7 @@ baskets are no data (VAR_GUIDE.md section 5.7), imported with ``drishti.py var b
 TT_BOOK and LIMIT_LETTER: the market-risk pack's hierarchies (MGMT: bank, --divisions, --desks, --books; LEGAL: bank, --les, desks, books)
 are built from them by the server. The trade ids are the same on every date (the second date's
 vectors move a little), so two open dates hold the same positions. Deterministic for a --seed. Never writes into the repository.
-Load with ``drishti.py lake build --pack config/packs/banking/market-risk --connector risk-store --kind <kind> ...`` (tools/bench/var_bench.py).
+Load with ``drishti.py lake build --pack modules/banking/dmod/packs/market-risk --connector risk-store --kind <kind> ...`` (tools/bench/var_bench.py).
 """
 from __future__ import annotations
 

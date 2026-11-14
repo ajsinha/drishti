@@ -155,7 +155,7 @@ schemas:
     change: live
     maps: [templates]
     keys:
-      - { key: templates, type: map, default: "{}", meaning: "Core starter workspaces by name (packs add their own in config/packs/<domain>/<pack>/config/workspaces.yaml)" }
+      - { key: templates, type: map, default: "{}", meaning: "Core starter workspaces by name (packs add their own in modules/<module>/packs/<pack>/config/workspaces.yaml)" }
       - { key: "templates.*", type: map, meaning: "One starter workspace: its layout and panes, as blank below" }
       - { key: blank, type: map, default: shipped, meaning: "What a new, blank workspace starts as" }
       - { key: blank.layout, type: string, default: 2col, meaning: "Its layout: 2col, 3col, 2x2 or 1+2" }
@@ -321,7 +321,7 @@ schemas:
   pack:
     area: packs
     title: "`pack.yaml`"
-    file: config/packs/<domain>/<pack>/pack.yaml
+    file: modules/<module>/packs/<pack>/pack.yaml
     files: ["config/packs/*/pack.yaml", "examples/packs/*/pack.yaml"]
     applies: the pack
     change: live
@@ -473,7 +473,7 @@ env:
   - { name: DRISHTI_MODULE_TOOL, by: tools, default: "kernel/drishti-module-runtime/target/drishti-module-tool.jar", sets: "the module tool's jar", meaning: "The jar `drishti.py module pack|check|inspect` runs (java -jar drishti-module-tool.jar; DEVELOPER_GUIDE.md section 1.6)" }
   - { name: DRISHTI_KERNEL_JAR, by: tools, default: "packaging/drishti-kernel-app/target/drishti-kernel-*-exec.jar", sets: "the kernel's thin jar", meaning: "The kernel jar `drishti.py module run` starts (tools/modulecli.py)" }
   - { name: DRISHTI_LAKE_CACHE, by: tools, default: "<data>/tmp/lake-cache", sets: "the cached demo lakes' folder", meaning: "Where tools/drillkit/lake_cache.py keeps the demo lakes the test stacks and checks reuse, one per hash of the test data, generators and lake code" }
-  # the packs' connectors (config/packs/<domain>/<pack>/pack.yaml)
+  # the packs' connectors (modules/<module>/packs/<pack>/pack.yaml)
   - { name: DRISHTI_DELTA_ROOT, by: packs, default: "./data/delta/demo", sets: "the demo lake's root (config/lakes/demo.yaml)", meaning: "Root of the demo lake, which every pack's Delta connector reads (lake: demo); every lake's own default is <data>/delta/<lake>" }
   - { name: DRISHTI_LAKES_RELOCATE_ON_START, by: server, default: "true", sets: "drishti.lakes.relocate-on-start", meaning: "At start, move a demo lake built in the older layout (<data>/delta/<domain>) into <data>/delta/demo once, safely (verified, moved back on any error, never a delete); false: only by drishti.py lake relocate demo (docs/guides/OPERATIONS_GUIDE.md)" }
   - { name: DRISHTI_LAKES_DIR, by: server, default: "./config/lakes", sets: "drishti.lakes.dir", meaning: "The lake folder: one config/lakes/<lake>.yaml per lake, read by the server, the loader, the data inbox and the tools (docs/guides/DATA_LAKE_GUIDE.md)" }

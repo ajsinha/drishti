@@ -274,10 +274,10 @@ Fields no record above has, found by reading all 586 rows, with how many rows fi
 
 ### See also
 
-- Data contract: [USEQ in the us-equities pack's contracts](../packs/us-equities.md#useq-us-company-us-company) (`config/packs/capitalmarkets/us-equities/contracts/us-company.contract.yaml`, the source of every meaning on this page).
+- Data contract: [USEQ in the us-equities pack's contracts](../packs/us-equities.md#useq-us-company-us-company) (`modules/capital-markets/packs/us-equities/contracts/us-company.contract.yaml`, the source of every meaning on this page).
 - [World and public data: funds, external feeds, public sector](../../guides/WORLD_DATA_GUIDE.md)
 - [1. Companies, funds and ETFs](../../knowledge/world.md#1-companies-funds-and-etfs)
-- [Business intelligence: pivot, tables and models, reports, the Notebook, groupings (the guide and its tutorials)](../../guides/BI_GUIDE.md)
+- [Business intelligence: pivot, tables and models, reports, the Notebook, groupings (the guide and its tutorials)](../../guides/bi/NOTEBOOK_AND_PYTHON.md)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="index-membership"></a>
@@ -400,10 +400,10 @@ None: all 6 rows were read, and every field any of them has is in the record abo
 
 ### See also
 
-- Data contract: [IDX in the us-equities pack's contracts](../packs/us-equities.md#idx-index-members-index-membership) (`config/packs/capitalmarkets/us-equities/contracts/index-membership.contract.yaml`, the source of every meaning on this page).
+- Data contract: [IDX in the us-equities pack's contracts](../packs/us-equities.md#idx-index-members-index-membership) (`modules/capital-markets/packs/us-equities/contracts/index-membership.contract.yaml`, the source of every meaning on this page).
 - [World and public data: funds, external feeds, public sector](../../guides/WORLD_DATA_GUIDE.md)
 - [1. Companies, funds and ETFs](../../knowledge/world.md#1-companies-funds-and-etfs)
-- [Business intelligence: pivot, tables and models, reports, the Notebook, groupings (the guide and its tutorials)](../../guides/BI_GUIDE.md)
+- [Business intelligence: pivot, tables and models, reports, the Notebook, groupings (the guide and its tutorials)](../../guides/bi/NOTEBOOK_AND_PYTHON.md)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="filing-feed"></a>
@@ -533,10 +533,10 @@ None: all 6 rows were read, and every field any of them has is in the record abo
 
 ### See also
 
-- Data contract: [EDGAR in the us-equities pack's contracts](../packs/us-equities.md#edgar-edgar-filings-browser-filing-feed) (`config/packs/capitalmarkets/us-equities/contracts/filing-feed.contract.yaml`, the source of every meaning on this page).
+- Data contract: [EDGAR in the us-equities pack's contracts](../packs/us-equities.md#edgar-edgar-filings-browser-filing-feed) (`modules/capital-markets/packs/us-equities/contracts/filing-feed.contract.yaml`, the source of every meaning on this page).
 - [World and public data: funds, external feeds, public sector](../../guides/WORLD_DATA_GUIDE.md)
 - [1. Companies, funds and ETFs](../../knowledge/world.md#1-companies-funds-and-etfs)
-- [Business intelligence: pivot, tables and models, reports, the Notebook, groupings (the guide and its tutorials)](../../guides/BI_GUIDE.md)
+- [Business intelligence: pivot, tables and models, reports, the Notebook, groupings (the guide and its tutorials)](../../guides/bi/NOTEBOOK_AND_PYTHON.md)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="filing"></a>
@@ -637,10 +637,10 @@ None: all 11,691 rows were read, and every field any of them has is in the recor
 
 ### See also
 
-- Data contract: [FILING in the us-equities pack's contracts](../packs/us-equities.md#filing-sec-filing-filing) (`config/packs/capitalmarkets/us-equities/contracts/filing.contract.yaml`, the source of every meaning on this page).
+- Data contract: [FILING in the us-equities pack's contracts](../packs/us-equities.md#filing-sec-filing-filing) (`modules/capital-markets/packs/us-equities/contracts/filing.contract.yaml`, the source of every meaning on this page).
 - [World and public data: funds, external feeds, public sector](../../guides/WORLD_DATA_GUIDE.md)
 - [1. Companies, funds and ETFs](../../knowledge/world.md#1-companies-funds-and-etfs)
-- [Business intelligence: pivot, tables and models, reports, the Notebook, groupings (the guide and its tutorials)](../../guides/BI_GUIDE.md)
+- [Business intelligence: pivot, tables and models, reports, the Notebook, groupings (the guide and its tutorials)](../../guides/bi/NOTEBOOK_AND_PYTHON.md)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="financial-fact"></a>
@@ -748,8 +748,8 @@ None: all 4,026 rows were read, and every field any of them has is in the record
 
 ### See also
 
-- Data contract: [FACT in the us-equities pack's contracts](../packs/us-equities.md#fact-financial-fact-financial-fact) (`config/packs/capitalmarkets/us-equities/contracts/financial-fact.contract.yaml`, the source of every meaning on this page).
+- Data contract: [FACT in the us-equities pack's contracts](../packs/us-equities.md#fact-financial-fact-financial-fact) (`modules/capital-markets/packs/us-equities/contracts/financial-fact.contract.yaml`, the source of every meaning on this page).
 - [World and public data: funds, external feeds, public sector](../../guides/WORLD_DATA_GUIDE.md)
 - [1. Companies, funds and ETFs](../../knowledge/world.md#1-companies-funds-and-etfs)
-- [Business intelligence: pivot, tables and models, reports, the Notebook, groupings (the guide and its tutorials)](../../guides/BI_GUIDE.md)
+- [Business intelligence: pivot, tables and models, reports, the Notebook, groupings (the guide and its tutorials)](../../guides/bi/NOTEBOOK_AND_PYTHON.md)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).

@@ -413,7 +413,7 @@ def samples(demo: Demo, docs: dict[str, list[dict]]) -> dict[Path, str]:
     kind, row = b.supply(fungible["POSITION_ID"], b.terms_of[first][4], [b.trade_row(t, "pnl-vector") for t in fungible["TRADE_IDS"]])
     picks["pnl-vector"].append(row)
     out = {SAMPLES / f"{k}.jsonl": "".join(json.dumps(d, ensure_ascii=False, separators=(",", ":")) + "\n" for d in v) for k, v in picks.items()}
-    # the pack's Sutra tests (tests/<kind>/cases.jsonl and expect.yaml: java -jar <server> sutra test config/packs/banking/market-risk). The VaR
+    # the pack's Sutra tests (tests/<kind>/cases.jsonl and expect.yaml: java -jar <server> sutra test modules/banking/dmod/packs/market-risk). The VaR
     # figures of these pages are the engine's, added when the page is opened: a test of the stored document checks the rest.
     head = "".join(f"# {ln}".rstrip() + "\n" for ln in (ROOT / "config" / "license-header.txt").read_text(encoding="utf-8").strip().splitlines())
     expect = {"position": "noErrors: true\nnonEmpty: [trades, where]\n", "system-basket": "noErrors: true\nnonEmpty: [definition]\n"}

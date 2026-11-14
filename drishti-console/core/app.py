@@ -652,7 +652,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.state.business_dates = BusinessDates()
     from core.facts import FactsService
 
-    app.state.facts = FactsService(settings)                  # Home's fact of the day (config/packs/<domain>/<pack>/config/facts.yaml)
+    app.state.facts = FactsService(settings)                  # Home's fact of the day (modules/<module>/packs/<pack>/config/facts.yaml)
     app.state.templates = templates
     from starlette.requests import ClientDisconnect
 
@@ -721,7 +721,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(layout_routes.router)
     app.include_router(designer_routes.router)          # the Sutra designer (ui.designer, off by default)
     app.include_router(designer_grid_routes.router)     # its Grid mode
-    app.include_router(pivot_routes.router)            # the pivot screen: PIVOT [table | @owner/name | panel], /api/pivot/... (BI_GUIDE.md)
+    app.include_router(pivot_routes.router)            # the pivot screen: PIVOT [table | @owner/name | panel], /api/pivot/... (bi/PIVOT.md)
     app.include_router(collab_routes.router)
     app.include_router(thread_routes.router)
     app.include_router(collab_admin_routes.router)

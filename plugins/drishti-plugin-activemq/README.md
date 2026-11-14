@@ -370,7 +370,7 @@ The connector is undated. Serve the same kind from a dated connector as well and
 ([Combining connectors](../../docs/guides/DATA_GUIDE.md#84-combining-connectors)):
 
 ```yaml
-# config/packs/banking/counterparty-risk/pack.yaml (sketch)
+# modules/banking/dmod/packs/counterparty-risk/pack.yaml (sketch)
 connectors:
   credit-store:  { plugin: delta, settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}", domain: credit } }
   limits-mq:     { plugin: activemq, kinds: [credit-limit], settings: { destinations: queue:limits,

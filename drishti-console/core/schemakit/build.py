@@ -281,12 +281,12 @@ def pack_manifest(plan: Plan, kinds_dir_note: str = "") -> dict:
         if k.template in ("file", "delta"):
             by_conn.setdefault(k.connector or f"{p['name']}-store", []).append(k)
     if by_conn:
-        # the pack NAMES its connectors (docs/guides/DATA_GUIDE.md section 9); the connection settings are the pack's template:
+        # the pack NAMES its connectors (docs/guides/DATA_GUIDE.md section 9) in one map, name to template: the connection settings are the template:
         # the server writes the site's connector file from it once, and the file is the site's afterwards
-        m["connectors"], m["routes"], m["connector-templates"], ing = sorted(by_conn), {}, {}, {}
+        m["connectors"], m["routes"], ing = {}, {}, {}
         for name, ks in sorted(by_conn.items()):
             store = ks[0].template
-            m["connector-templates"][name] = connector_block(p["name"], ks, store, {k.kind: list(dict.fromkeys(columns_for(k) + ([k.date] if k.date else []) + page_paths(plan, k))) for k in ks})
+            m["connectors"][name] = connector_block(p["name"], ks, store, {k.kind: list(dict.fromkeys(columns_for(k) + ([k.date] if k.date else []) + page_paths(plan, k))) for k in ks})
             for k in ks:
                 m["routes"][k.kind] = name
                 if k.key and k.date:
@@ -299,17 +299,15 @@ def pack_manifest(plan: Plan, kinds_dir_note: str = "") -> dict:
     if derived:
         # one derived connector builds every page-per-value kind from the documents of the kind it groups (docs/guides/DATA_GUIDE.md section 9)
         name = f"{p['name']}-pages"[:60]
-        m.setdefault("connectors", [])
+        m.setdefault("connectors", {})
         m.setdefault("routes", {})
-        m.setdefault("connector-templates", {})
-        m["connectors"] = sorted(set(m["connectors"]) | {name})
         settings: dict = {"refresh": "60s"}
         for k in derived:
             d = k.derived
             settings[k.kind] = {"from": d["from"], "group-by": d["group-by"], "id-field": d["id-field"], "members": d["members"],
                                 "max-members": d["max-members"], "fields": d["fields"], "rows": d["rows"]}
             m["routes"][k.kind] = name
-        m["connector-templates"][name] = {"plugin": "derived", "enabled": True, "kinds": sorted(k.kind for k in derived),
+        m["connectors"][name] = {"plugin": "derived", "enabled": True, "kinds": sorted(k.kind for k in derived),
                                           "description": "Pages for each value of a field (a counterparty, a portfolio, an index), built from the pack's own documents",
                                           "settings": settings}
     if getattr(plan, "controls_note", None):

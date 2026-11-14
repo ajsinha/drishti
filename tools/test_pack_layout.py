@@ -12,9 +12,10 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The shipped packs' layout, as a quick file check: every pack sits in its domain's folder, config/packs/<domain>/<pack>, where
-<domain> is its pack.yaml ``domain:`` (docs/architecture/DOMAIN_MODULES.md section 8); no pack sits directly in config/packs; and the
-one resolver (drishti-console/core/pack_paths.py, the server's twin PackPaths) finds exactly those folders."""
+"""The product's packs live in the module that owns them (docs/architecture/KERNEL_AND_MODULES.md; the plan's "a pack lives in its
+module"): every pack a module.yaml lists is in that module's packs folder (modules/<id>/packs/<pack>, banking's in modules/banking/dmod/packs),
+no first-party pack remains in config/packs (a site's own packs and overrides, and the kernel's own ``core`` packs), and the one resolver
+(drishti-console/core/pack_paths.py, the server's twin PackFolders) finds exactly those folders."""
 from __future__ import annotations
 
 import sys
@@ -31,30 +32,53 @@ from core.pack_paths import duplicates, manifests, pack_dir, pack_dirs  # noqa: 
 
 pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it (TEST_HARNESS.md, "Quick file checks")
 
-SHIPPED = sorted(PACKS.glob("*/*/pack.yaml"))
+#: the kernel's own reference packs: no module owns them, they stay in config/packs/core
+KERNEL_PACKS = {"core", "gleif", "compute-demo"}
 
 
-def test_there_are_shipped_packs():
-    assert len(SHIPPED) >= 10, SHIPPED
+def _module_homes():
+    """Every first-party module folder with a packs: section: (module id, its folder, the packs folder name, the packs it lists)."""
+    out = []
+    for manifest in sorted(ROOT.glob("modules/*/module.yaml")) + sorted(ROOT.glob("modules/*/dmod/module.yaml")):
+        m = yaml.safe_load(manifest.read_text(encoding="utf-8")) or {}
+        packs = m.get("packs")
+        if isinstance(packs, dict) and packs.get("list"):
+            out.append((m["id"], manifest.parent, packs.get("folder") or "packs", list(packs["list"])))
+    return out
 
 
-@pytest.mark.parametrize("manifest", SHIPPED, ids=lambda p: p.parent.name)
-def test_every_shipped_pack_is_in_the_folder_of_its_domain(manifest):
+HOMES = _module_homes()
+OWNED = [(mid, home / folder / name, name) for mid, home, folder, names in HOMES for name in names]
+
+
+def test_there_are_module_packs():
+    assert len(OWNED) >= 10, OWNED
+
+
+@pytest.mark.parametrize("mid,folder,name", OWNED, ids=[n for _, _, n in OWNED])
+def test_every_pack_a_module_lists_is_in_that_module(mid, folder, name):
+    manifest = folder / "pack.yaml"
+    assert manifest.is_file(), f"module {mid} lists pack {name}, which is not at {folder.relative_to(ROOT)}"
     m = yaml.safe_load(manifest.read_text(encoding="utf-8")) or {}
-    domain, folder = m.get("domain"), manifest.parent.parent.name
-    assert domain, f"{manifest.relative_to(ROOT)}: no domain: (the folder it sits in, {folder})"
-    assert domain == folder, f"{manifest.relative_to(ROOT)}: domain {domain} but in config/packs/{folder}"
-    assert m.get("pack") in (None, manifest.parent.name), f"{manifest.relative_to(ROOT)}: pack {m.get('pack')} in folder {manifest.parent.name}"
+    assert m.get("pack") in (None, name), f"{manifest.relative_to(ROOT)}: pack {m.get('pack')} in folder {name}"
+    assert (folder / "README.md").is_file(), f"{folder.relative_to(ROOT)}: no README.md (the README standard)"
 
 
-def test_no_pack_sits_directly_in_config_packs():
-    assert sorted(PACKS.glob("*/pack.yaml")) == [], "a pack goes in its domain's folder: config/packs/<domain>/<pack>"
+def test_no_first_party_pack_remains_in_the_old_location():
+    """config/packs holds a site's own packs and the kernel's core ones: nothing a module lists, no domain folder of shipped packs."""
+    owned = {name for _, _, name in OWNED}
+    left = sorted(p.parent.relative_to(ROOT).as_posix() for p in list(PACKS.glob("*/pack.yaml")) + list(PACKS.glob("*/*/pack.yaml"))
+                  if p.parent.name in owned)
+    assert left == [], f"a module's pack is still under config/packs: {left}"
+    domains = sorted(d.name for d in PACKS.iterdir() if d.is_dir() and not (d / "pack.yaml").is_file())
+    assert domains == ["core"], f"config/packs holds only the kernel's core folder, not {domains}"
+    assert {p.parent.name for p in PACKS.glob("core/*/pack.yaml")} == KERNEL_PACKS
 
 
-def test_the_resolver_finds_exactly_the_packs_two_levels_down():
+def test_the_resolver_finds_exactly_the_modules_packs_and_the_kernels():
     found = pack_dirs(PACKS)
-    assert sorted(found.values()) == sorted(p.parent for p in SHIPPED)
-    assert set(found) == {p.parent.name for p in SHIPPED}, "two packs of one name in different domain folders"
+    expected = {name: folder for _, folder, name in OWNED} | {p.parent.name: p.parent for p in PACKS.glob("core/*/pack.yaml")}
+    assert found == expected
     assert manifests(PACKS) == [found[n] / "pack.yaml" for n in sorted(found)]
     for name, d in found.items():
         assert pack_dir(name) == d == pack_dir(name, PACKS)

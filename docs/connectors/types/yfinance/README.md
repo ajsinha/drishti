@@ -138,7 +138,7 @@ annotated copy is `config/connectors.examples/other/yfinance.yaml`. There is no 
 ## See also
 
 - Below: [turning it on](#turning-it-on), [how the figures are worked out](#how-the-figures-are-worked-out), [health, errors and retries](#health-errors-and-retries), [using it from a pack](#using-it-from-a-pack), [how it is built](#how-it-is-built), [tests](#tests).
-- [The us-equities pack's guide](../../../../config/packs/capitalmarkets/us-equities/guides/us-equities.md#prices-internal-use-only) (prices: internal use only).
+- [The us-equities pack's guide](../../../../modules/capital-markets/packs/us-equities/guides/us-equities.md#prices-internal-use-only) (prices: internal use only).
 - [The news connector](../news/README.md), [connector files](../../../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors), [TLS (and the outbound proxy)](../../../guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy).
 
 ## Turning it on
@@ -150,7 +150,7 @@ To use a mirror, set `base-url`; HTTPS on a private CA takes the shared [`tls.*`
 
 The `us-equities` pack carries a second connector on the same plugin, `us-equities-prices` (`id-prefix: PX-`, `kind: price-history`, a
 year of daily bars), off unless `DRISHTI_US_EQUITIES_PRICES_ENABLED=true`, for internal use only: the pack commits no prices
-([the pack's guide](../../../../config/packs/capitalmarkets/us-equities/guides/us-equities.md#prices-internal-use-only)).
+([the pack's guide](../../../../modules/capital-markets/packs/us-equities/guides/us-equities.md#prices-internal-use-only)).
 
 ## How the figures are worked out
 

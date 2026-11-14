@@ -247,9 +247,9 @@ Funds tracking the S&P 500, by net assets (a fund opens its page)  (table, track
 
 ## Part II · The data contracts
 
-The contracts are `config/packs/capitalmarkets/funds/contracts/<kind>.contract.yaml` (checked by `python3 tools/contracts.py check`, published as
+The contracts are `modules/capital-markets/packs/funds/contracts/<kind>.contract.yaml` (checked by `python3 tools/contracts.py check`, published as
 [docs/contracts/packs/funds.md](../contracts/packs/funds.md)); each column's meaning is the pack's glossary,
-`config/packs/capitalmarkets/funds/config/about.yaml`, written by `tools/packgen/funds/make.py` from `tools/packgen/funds/fundsglossary.py`. Every column's
+`modules/capital-markets/packs/funds/config/about.yaml`, written by `tools/packgen/funds/make.py` from `tools/packgen/funds/fundsglossary.py`. Every column's
 type, key, meaning (with its unit) and source is the contract; a real record of the snapshot with every field explained is the kind's
 example on [docs/contracts/samples/funds.md](../contracts/samples/funds.md). The sources are the SEC data sets' tables and columns:
 **N-PORT** `FUND_REPORTED_INFO`, `FUND_REPORTED_HOLDING`, `IDENTIFIERS`, `MONTHLY_TOTAL_RETURN`, the derivative tables of part C.11;
@@ -264,7 +264,7 @@ search form and the type-ahead read them; the type-ahead also `NAME` and `TICKER
 (us-company), `FUND` to another `FUND`, `LEI`, `ADVISER_LEI`, `CUSTODIAN_LEI` and a counterparty's `CPTY_LEI` to `LEI` (gleif's
 lei-entity), `INDEX_ID` to `IDX` (index-membership).
 
-**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`fund.contract.yaml`](../../config/packs/capitalmarkets/funds/contracts/fund.contract.yaml), published as [FUND: `fund`](../contracts/packs/funds.md#fund-fund-or-etf-fund); a real record of the test data with every field explained is its [example](../contracts/samples/funds.md#fund).
+**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`fund.contract.yaml`](../../modules/capital-markets/packs/funds/contracts/fund.contract.yaml), published as [FUND: `fund`](../contracts/packs/funds.md#fund-fund-or-etf-fund); a real record of the test data with every field explained is its [example](../contracts/samples/funds.md#fund).
 
 ### 9. fund-holder
 
@@ -273,13 +273,13 @@ from every holding of every fund (not only those a fund page keeps): a holding i
 (an equity) when its CUSIP is one some fund filed with the company's ticker, its issuer LEI is the company's, or its issuer name is the
 company's (legal suffixes and punctuation aside).
 
-**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`fund-holder.contract.yaml`](../../config/packs/capitalmarkets/funds/contracts/fund-holder.contract.yaml), published as [HELD: `fund-holder`](../contracts/packs/funds.md#held-funds-holding-a-company-fund-holder); a real record of the test data with every field explained is its [example](../contracts/samples/funds.md#fund-holder).
+**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`fund-holder.contract.yaml`](../../modules/capital-markets/packs/funds/contracts/fund-holder.contract.yaml), published as [HELD: `fund-holder`](../contracts/packs/funds.md#held-funds-holding-a-company-fund-holder); a real record of the test data with every field explained is its [example](../contracts/samples/funds.md#fund-holder).
 
 ### 10. index-funds
 
 One document per us-equities index that at least one fund tracks, keyed by `INDEX` (command `TRACK`): SP500, NDX, DJIA.
 
-**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`index-funds.contract.yaml`](../../config/packs/capitalmarkets/funds/contracts/index-funds.contract.yaml), published as [TRACK: `index-funds`](../contracts/packs/funds.md#track-funds-tracking-an-index-index-funds); a real record of the test data with every field explained is its [example](../contracts/samples/funds.md#index-funds).
+**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`index-funds.contract.yaml`](../../modules/capital-markets/packs/funds/contracts/index-funds.contract.yaml), published as [TRACK: `index-funds`](../contracts/packs/funds.md#track-funds-tracking-an-index-index-funds); a real record of the test data with every field explained is its [example](../contracts/samples/funds.md#index-funds).
 
 ### 11. Validation and conventions
 
@@ -398,7 +398,7 @@ dry run: funds, sources tickers, nasdaq, nport, ncen, rr, gleif
     https://www.sec.gov/files/dera/data/form-n-port-data-sets/2026q2_nport.zip
     https://www.sec.gov/files/dera/data/form-n-port-data-sets/2026q1_nport.zip
   ...
-  then: tools/packgen/funds/make.py -> config/packs/capitalmarkets/funds and data/testdata; then make.py --check
+  then: tools/packgen/funds/make.py -> modules/capital-markets/packs/funds and data/testdata; then make.py --check
 ```
 
 A quarterly source tries the newest quarters first and takes the published ones (N-PORT one, N-CEN and the summaries four); a quarter
@@ -448,21 +448,21 @@ Every dataset the funds pages reads, what it is for, whether it is required, whe
 
 One document per fund: its identity, share classes, fees, returns and its holdings, the FUND page and the Look-through holdings tab.
 
-- **Data contract:** [`fund`](../contracts/packs/funds.md#fund-fund-or-etf-fund) (FUND), key `TICKER`; 88 fields, 60 required; the file [`fund.contract.yaml`](../../config/packs/capitalmarkets/funds/contracts/fund.contract.yaml).
+- **Data contract:** [`fund`](../contracts/packs/funds.md#fund-fund-or-etf-fund) (FUND), key `TICKER`; 88 fields, 60 required; the file [`fund.contract.yaml`](../../modules/capital-markets/packs/funds/contracts/fund.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../contracts/samples/funds.md#fund) (files `data/testdata/funds/fund/fund.tar`).
 
 ### 18.3 `fund-holder`: who holds a company
 
 One row per held company: the funds that hold it and how much, read by HELD and the company page's Held by funds panel.
 
-- **Data contract:** [`fund-holder`](../contracts/packs/funds.md#held-funds-holding-a-company-fund-holder) (HELD), key `TICKER`; 16 fields, 14 required; the file [`fund-holder.contract.yaml`](../../config/packs/capitalmarkets/funds/contracts/fund-holder.contract.yaml).
+- **Data contract:** [`fund-holder`](../contracts/packs/funds.md#held-funds-holding-a-company-fund-holder) (HELD), key `TICKER`; 16 fields, 14 required; the file [`fund-holder.contract.yaml`](../../modules/capital-markets/packs/funds/contracts/fund-holder.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../contracts/samples/funds.md#fund-holder) (files `data/testdata/funds/fund-holder/fund-holder.*.jsonl.gz`).
 
 ### 18.4 `index-funds`: funds tracking an index
 
 One row per index: the funds that track it, read by TRACK and the index page.
 
-- **Data contract:** [`index-funds`](../contracts/packs/funds.md#track-funds-tracking-an-index-index-funds) (TRACK), key `INDEX`; 8 fields, 8 required; the file [`index-funds.contract.yaml`](../../config/packs/capitalmarkets/funds/contracts/index-funds.contract.yaml).
+- **Data contract:** [`index-funds`](../contracts/packs/funds.md#track-funds-tracking-an-index-index-funds) (TRACK), key `INDEX`; 8 fields, 8 required; the file [`index-funds.contract.yaml`](../../modules/capital-markets/packs/funds/contracts/index-funds.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../contracts/samples/funds.md#index-funds) (files `data/testdata/funds/index-funds/index-funds.*.jsonl.gz`).
 <!-- guide-data:end -->
 
@@ -930,7 +930,7 @@ A source whose terms do not allow redistribution is never written into a committ
 `--internal-ok` (with `--snapshot`); without it the feed refuses (exit 2) and explains why in words:
 
 ```text
-refused: .../config/packs/economy/world-economy is a committed folder of the repository, and these sources may not be redistributed:
+refused: .../modules/economy/packs/world-economy is a committed folder of the repository, and these sources may not be redistributed:
   - IMF World Economic Outlook (DataMapper): the IMF's terms allow reuse with attribution, but commercial reuse needs the IMF's permission; ...
 Write them to the data folder instead (leave out --out, or point it outside the repository), or pass --internal-ok
 if the result stays inside your organisation (internal demos only).
@@ -1098,7 +1098,7 @@ python3 tools/drishti.py feed run world-economy --snapshot --internal-ok --offli
 
 Where it writes:
 
-- With `--internal-ok` (and no widening): the committed `tools/realdata/dataset/`, `config/packs/economy/world-economy/`,
+- With `--internal-ok` (and no widening): the committed `tools/realdata/dataset/`, `modules/economy/packs/world-economy/`,
   `tools/packgen/world/about.yaml` and the generated tables of this page's world-economy section (`tools/realdata/realdata.py docs`). Commit the result.
 - Otherwise: `<data>/datafeeds/sources/world-economy/` with `sources.yaml` (what this build used), `dataset/`, `packs/world-economy/`
   and `about/`. Serve that pack with `DRISHTI_PACKS_DIR` or copy what you need.
@@ -1175,7 +1175,7 @@ credits; the *About this series* panel shows the World Bank code to look it up.
 | economics | `economic-forecast` | `FCST` | 192 | the IMF WEO series 2015 to 2031 (growth, inflation, unemployment, current account, debt, net lending, GDP), outturn and projections |
 | economics | [`labour-market`](../contracts/samples/world-economy.md#labour-market) ([contract](../contracts/packs/world-economy.md#labr-labour-market-labour-market)) | `LABR` | 185 | unemployment, participation, youth and female labour, jobs and output by sector |
 | economics | [`fiscal-position`](../contracts/samples/world-economy.md#fiscal-position) ([contract](../contracts/packs/world-economy.md#fisc-fiscal-position-fiscal-position)) | `FISC` | 192 | IMF debt and net lending, World Bank revenue, expense, military spending |
-| economics | `country-group` | `ECG` | 12 | a World Bank region, income group or the world, computed from its member economies when asked ([BI_GUIDE.md](BI_GUIDE.md)): output, growth, inflation and its largest economies |
+| economics | `country-group` | `ECG` | 12 | a World Bank region, income group or the world, computed from its member economies when asked ([README.md](bi/README.md)): output, growth, inflation and its largest economies |
 | economics | `region-economy` | `REGE` | 59 | a state or territory (ISO 3166-2, `AU-NSW`, `US-CA`) with population and GDP: an **illustrative sample, rounded from public figures, not for reporting** (`tools/realdata/dataset/regions.json`, not fetched), behind the BI sample report *Region economics* |
 | politics | `jurisdiction` | `JUR` | 216 | a country: government type, capital, legislature seats by party, indicators, links to office holders, elections, parties and region |
 | politics | [`office-holder`](../contracts/samples/world-economy.md#office-holder) ([contract](../contracts/packs/world-economy.md#offc-office-holder-office-holder)) | `OFFC` | 430 | the chief of state and head of government as the Factbook publishes them |
@@ -1370,7 +1370,7 @@ python3 tools/realdata/realdata.py all --refresh      # download again, normalis
 python3 tools/realdata/realdata.py check              # clean when everything committed matches
 python3 tools/packgen/world/make.py --check           # clean when the pack matches the dataset
 python3 tools/packgen/politics/make.py --check
-python3 tools/drishti.py pack check config/packs/economy/world-economy config/packs/economy/world-economy
+python3 tools/drishti.py pack check modules/economy/packs/world-economy modules/economy/packs/world-economy
 python3 -m pytest tools/realdata/tests
 ```
 
@@ -1391,7 +1391,7 @@ name; unmatched profiles are listed in `meta.json` (`factbookUnmatched`: depende
 pack tests are one to five real countries per kind (India, the United States, Brazil, Nigeria, Japan) with `expect.yaml` (`noErrors`, `nonEmpty`, help coverage 100%); which ones is in `tools/realdata/pack_tests.yaml`.
 
 ```
-$ python3 tools/drishti.py pack check config/packs/economy/world-economy config/packs/economy/world-economy
+$ python3 tools/drishti.py pack check modules/economy/packs/world-economy modules/economy/packs/world-economy
 == economics: sutra lint: exit 0
 == economics: sutra test: exit 0
      economy: help coverage 8/8 (100%)
@@ -1409,7 +1409,7 @@ The pictures are made by `tools/docs/shots/realdata.py` (`drishti-console/.venv/
 #### news-and-markets
 
 **Sources:** `quote` (Yahoo Finance quotes and daily history, **internal only**) and `news` (Google News RSS headlines, **internal
-only**). The topics and listed companies are hand-written reference data (`config/packs/economy/news-and-markets/tools/make_samples.py`).
+only**). The topics and listed companies are hand-written reference data (`modules/economy/packs/news-and-markets/tools/make_samples.py`).
 
 `drishti.py feed run news-and-markets` wraps `tools/testdata/capture_market.py` (also `drishti.py testdata capture-market`): the
 documents come through Drishti's own live connectors, so they have exactly the shape the Sutras read. It starts a scratch server
@@ -1517,7 +1517,7 @@ python3 tools/drishti.py feed run us-equities --snapshot -- prices --server http
   `<data>/datafeeds/sources/us-equities/testdata/us-equities/<kind>/`, checked with `make.py --check --pack`. Its cache is
   `scoped/<hash>` inside the cache, seeded from the plain cache less what the scope changes (submissions for `FILINGS`, facts for
   `YEARS` and `CONCEPT`, the Wikidata members for `INDEX`). `--into-pack` writes a widened build over the committed pack, on
-  purpose only; without it `--out config/packs/capitalmarkets/us-equities` with a scope is refused.
+  purpose only; without it `--out modules/capital-markets/packs/us-equities` with a scope is refused.
 - **Prices are internal only.** The pack ships no prices; the `prices` source reads `price-history/PX-<ticker>` through the
   pack's `us-equities-prices` connector of a running server where you switched it on (`DRISHTI_US_EQUITIES_PRICES_ENABLED=true`,
   `--server`, `--token-file`, `--delay` at least 2 s, `--limit N`). It is the feed `yahoo-prices` (internal only, off as shipped) and writes
@@ -1601,7 +1601,7 @@ one at a time.
 a quarter) and stay in `<data>/datafeeds/sources/cache/funds`, never in git; a file younger than `--max-age` hours (a week by default) is
 reused. **Where `--snapshot` writes:** the committed snapshot, gzipped JSON Lines under `data/testdata/funds/<kind>/` (the fund kind
 in parts of about 1.2 MB, 5.5 MB in all), listed in `data/testdata/testdata.yaml` and served from the demo lake by the pack's Delta
-connector `funds-store`; `samples/`, the README, the guide and the glossary (`config/about.yaml`) of `config/packs/capitalmarkets/funds`. Rebuild
+connector `funds-store`; `samples/`, the README, the guide and the glossary (`config/about.yaml`) of `modules/capital-markets/packs/funds`. Rebuild
 the demo lake after it: `python3 tools/drishti.py lake demo`. A plain `feed run funds` loads the same kinds into `capitalmarket`.
 
 ```bash
@@ -2006,7 +2006,7 @@ python3 tools/drishti.py view get counterparty/CP-ALDERSHOT
 python3 tools/drishti.py view get economy/ECON-GBR
 ```
 
-**In YAML.** The pack's commands, `config/packs/economy/world-economy/pack.yaml` (the start of the list):
+**In YAML.** The pack's commands, `modules/economy/packs/world-economy/pack.yaml` (the start of the list):
 
 ```yaml
 mnemonics:
@@ -2040,7 +2040,7 @@ A counterparty's `ECONOMY` is a link column of its data contract ([`config/packs
 The economy record takes the IMF series' latest *actual* year for debt, never a projection.
 
 Further: the [Economies primer](../knowledge/world.md#2-economies) and the pack's guide,
-[world-economy.md](../../config/packs/economy/world-economy/guides/world-economy.md).
+[world-economy.md](../../modules/economy/packs/world-economy/guides/world-economy.md).
 
 ### Step 2 · Its outlook, its peers and who governs it
 
@@ -2057,7 +2057,7 @@ python3 tools/drishti.py view get jurisdiction/JUR-GBR
 ```
 
 **In YAML.** A country group is computed from its member economies when opened; the computation, its YAML and a region worked through
-(`ECG ECG-SAS`) are in [the groupings tutorial, step 6](../guides/BI_GUIDE.md#step-6--a-world-bank-region-from-its-economies).
+(`ECG ECG-SAS`) are in [the groupings tutorial, step 6](bi/GROUPINGS_AND_ANALYTICS.md#step-6--a-world-bank-region-from-its-economies).
 
 **You should see**
 
@@ -2068,7 +2068,7 @@ python3 tools/drishti.py view get jurisdiction/JUR-GBR
   grows more slowly and its prices rise faster than the high-income median. `ECG ECG-WLD`: 213 economies, 117,327 bn USD, growth 2.80%.
 - `JUR JUR-GBR`: the government, the office holders, the legislature and the elections, each linked to its own page (`OFFC`, `PARTY`, `ELEC`).
 
-Further: [../guides/BI_GUIDE.md section 5](../guides/BI_GUIDE.md) (ECG with worked numbers).
+Further: [../guides/bi/README.md section 5](bi/README.md) (ECG with worked numbers).
 
 #### Part B · Companies
 
@@ -2080,7 +2080,7 @@ its index memberships, its filings and ten years of annual financials. The commi
 
 **In the UI.** Type `USEQ AAPL` and press Enter. Click its LEI to open the GLEIF record, and its SIC code to open the industry.
 
-![The company page: Apple Inc., with its latest filing opened beside the filings](../../config/packs/capitalmarkets/us-equities/guides/images/us-equities-company.jpg)
+![The company page: Apple Inc., with its latest filing opened beside the filings](../../modules/capital-markets/packs/us-equities/guides/images/us-equities-company.jpg)
 
 **From the command line.**
 
@@ -2089,7 +2089,7 @@ python3 tools/drishti.py view get us-company/AAPL
 python3 tools/drishti.py view get sic-sector/3674
 ```
 
-**In YAML.** The pack's commands, `config/packs/capitalmarkets/us-equities/pack.yaml`:
+**In YAML.** The pack's commands, `modules/capital-markets/packs/us-equities/pack.yaml`:
 
 ```yaml
 mnemonics:
@@ -2109,9 +2109,9 @@ semiconductor companies, NVIDIA first by revenue (215.9bn), then Micron (133.2bn
 classes is keyed by one ticker: `USEQ GOOGL` is *Alphabet Inc.*, CIK `0001652044`, with the other tickers GOOG, GOOGM and GOOGN.
 
 The ratios worked out on the page (net margin, revenue growth) and a sector's totals with the currency rule are
-[the groupings tutorial, steps 4 and 5](../guides/BI_GUIDE.md#step-4--a-sector-and-the-currency-rule).
+[the groupings tutorial, steps 4 and 5](bi/GROUPINGS_AND_ANALYTICS.md#step-4--a-sector-and-the-currency-rule).
 
-Further: the pack's guide, [us-equities.md](../../config/packs/capitalmarkets/us-equities/guides/us-equities.md).
+Further: the pack's guide, [us-equities.md](../../modules/capital-markets/packs/us-equities/guides/us-equities.md).
 
 #### Part C · Funds and ETFs
 
@@ -2146,7 +2146,7 @@ gleif    CC0 1.0                                           committable  2026-10-
 
 (On a fresh clone the LAST REFRESHED and CACHED columns say `never` and `-`: the committed snapshot needs no download.)
 
-**In YAML.** The pack's commands and its Delta connector, `config/packs/capitalmarkets/funds/pack.yaml`:
+**In YAML.** The pack's commands and its Delta connector, `modules/capital-markets/packs/funds/pack.yaml`:
 
 ```yaml
 mnemonics:
@@ -2207,7 +2207,7 @@ Top 10 holdings of 105 (a company opens its page)  (table, top-holdings, F2)
   ...
 ```
 
-**In YAML.** The fact sheet's layout, `config/packs/capitalmarkets/funds/sutras/fund.v1.sutra.yaml` (shortened): tiles on top, the holdings and the
+**In YAML.** The fact sheet's layout, `modules/capital-markets/packs/funds/sutras/fund.v1.sutra.yaml` (shortened): tiles on top, the holdings and the
 fund's facts side by side, the tabs at the bottom:
 
 ```yaml
@@ -2355,7 +2355,7 @@ curl -s "http://localhost:18480/api/v1/search?q=FUND%20INDEX_ID%3DSP500" | pytho
 ['FXAIX', 'IVV', 'SPY', 'SPYM', 'SWPPX', 'VINIX', 'VOO', 'WFSPX']
 ```
 
-**In YAML.** The search form of the kind (`FORM funds`), `config/packs/capitalmarkets/funds/pack.yaml`:
+**In YAML.** The search form of the kind (`FORM funds`), `modules/capital-markets/packs/funds/pack.yaml`:
 
 ```yaml
 form:
@@ -2405,7 +2405,7 @@ Funds holding Apple Inc., by value (a fund opens its page)  (table, holders, F2)
   ...
 ```
 
-**In YAML.** The company page reads the funds pack's record as a source, `config/packs/capitalmarkets/us-equities/sutras/us-company.v1.sutra.yaml`:
+**In YAML.** The company page reads the funds pack's record as a source, `modules/capital-markets/packs/us-equities/sutras/us-company.v1.sutra.yaml`:
 
 ```yaml
 layout:
@@ -2454,7 +2454,7 @@ Funds · Funds tracking an index  SP500  with S&P 500   [TRACK]
   ...
 ```
 
-**In YAML.** On the index page, `config/packs/capitalmarkets/us-equities/sutras/index-membership.v1.sutra.yaml`:
+**In YAML.** On the index page, `modules/capital-markets/packs/us-equities/sutras/index-membership.v1.sutra.yaml`:
 
 ```yaml
   - id: tracked-by
@@ -2519,7 +2519,7 @@ dry run: funds, sources tickers, nasdaq, nport, ncen, rr, gleif
     https://www.sec.gov/files/company_tickers_mf.json
     https://www.sec.gov/files/company_tickers_exchange.json
   ...
-  then: tools/packgen/funds/make.py -> config/packs/capitalmarkets/funds and data/testdata; then make.py --check
+  then: tools/packgen/funds/make.py -> modules/capital-markets/packs/funds and data/testdata; then make.py --check
 ```
 
 **In YAML.** The snapshot the refresh writes, listed in `data/testdata/testdata.yaml` (the fund kind in parts, one tar):
@@ -2537,7 +2537,7 @@ dry run: funds, sources tickers, nasdaq, nport, ncen, rr, gleif
 ```
 
 You should see the dry run name every file it would fetch and write nothing; a refresh prints each download, then *wrote
-config/packs/capitalmarkets/funds ... 7 snapshot files, 5.6 MB* and *funds pack matches its generator*. Without the downloads, `python3
+modules/capital-markets/packs/funds ... 7 snapshot files, 5.6 MB* and *funds pack matches its generator*. Without the downloads, `python3
 tools/packgen/funds/make.py --check` still checks the committed snapshot.
 
 Further in the guide: [sections 15](../guides/WORLD_DATA_GUIDE.md#15-the-refresh-script) and [16](../guides/WORLD_DATA_GUIDE.md#16-the-gzipped-snapshot-and-offline-use).
@@ -2592,7 +2592,7 @@ their LEI lapse**: a credit officer onboarding any of them would want to know. `
 us-equities company `AAPL` (Part B) and to 949 ISINs.
 
 How a group is computed from its entities, every group and the type-ahead, and a country's entities are
-[the groupings tutorial, steps 1 to 3](../guides/BI_GUIDE.md#step-1--an-ownership-group-from-its-entities).
+[the groupings tutorial, steps 1 to 3](bi/GROUPINGS_AND_ANALYTICS.md#step-1--an-ownership-group-from-its-entities).
 
 Further: the pack's guide, [gleif.md](../../config/packs/core/gleif/guides/gleif.md).
 
@@ -2617,7 +2617,7 @@ the publishers and is shown for **internal demonstration only**.
 python3 tools/drishti.py view get listed-company/CO-AAPL
 ```
 
-**In YAML.** The pack's commands and the id rules, `config/packs/economy/news-and-markets/pack.yaml`:
+**In YAML.** The pack's commands and the id rules, `modules/economy/packs/news-and-markets/pack.yaml`:
 
 ```yaml
 mnemonics:
@@ -2638,13 +2638,13 @@ in *(snapshot captured <date>)* and the quote and headline pages show a **Snapsh
 *off (served from the snapshot)*, or *off (offline mode)* on the quick-start server. Turning them on (`DRISHTI_NEWS_ENABLED=true`,
 `DRISHTI_YFINANCE_ENABLED=true`) sends each name and ticker you open to Google and Yahoo.
 
-Further: the pack's guide, [news-and-markets.md](../../config/packs/economy/news-and-markets/guides/news-and-markets.md);
+Further: the pack's guide, [news-and-markets.md](../../modules/economy/packs/news-and-markets/guides/news-and-markets.md);
 holding the news in memory only is [tutorial 16, Part D](../tutorials/16-load-your-own-data-into-a-new-lake.md#part-d--news-held-in-memory-only).
 
 ### Next steps
 
 - [The public sector tutorial](WORLD_DATA_GUIDE.md): the World Bank's development indicators, central banks, national statistics and official news, refreshed daily.
-- [The groupings tutorial](../guides/BI_GUIDE.md): a SIC sector's totals, a company's margin and growth, an equity's beta.
+- [The groupings tutorial](bi/GROUPINGS_AND_ANALYTICS.md): a SIC sector's totals, a company's margin and growth, an equity's beta.
 - [The funds guide](../guides/WORLD_DATA_GUIDE.md): each kind's contract and example (Part II) and every source (Part III).
 - [External data](../guides/WORLD_DATA_GUIDE.md): every public-data pack and its refresh script.
 - [The exposure tutorial](../guides/EXPOSURE_GUIDE.md): a counterparty group's exposure, from the bank's side.
@@ -2771,7 +2771,7 @@ map is shaded by GDP per head; click Brazil to open `WDI-BRA`.
 curl -s "$DRISHTI_SERVER/api/v1/entities/development-profile/WDI-CAN/raw" -H "Authorization: Bearer $DRISHTI_TOKEN" | python3 -m json.tool | head -30
 ```
 
-**YAML.** The screen is the Sutra `config/packs/economy/world-development/sutras/development-profile.v1.sutra.yaml`, built from the UI kit:
+**YAML.** The screen is the Sutra `modules/economy/packs/world-development/sutras/development-profile.v1.sutra.yaml`, built from the UI kit:
 
 ```yaml
 panels:

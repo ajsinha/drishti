@@ -810,7 +810,7 @@ Drafts here; at build they become files of the counterparty-risk pack's configur
 every answer's provenance. One file per regulation; a jurisdiction's variant is its own file. After BCBS the next file is OSFI CAR
 chapter 4 (`saccr-osfi.yaml`, as the FRTB order); the US final rule and EU CRR2 follow when a client asks (decision 4).
 
-### 11.1 SA-CCR (`config/packs/banking/counterparty-risk/capital-parameters/saccr-bcbs.yaml`, draft, not loaded)
+### 11.1 SA-CCR (`modules/banking/dmod/packs/counterparty-risk/capital-parameters/saccr-bcbs.yaml`, draft, not loaded)
 
 ```yaml
 regulation: BCBS

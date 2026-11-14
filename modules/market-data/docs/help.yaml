@@ -22,4 +22,4 @@ sections:
   - title: 'Market data: market data'
     file: ../packs/market-data/guides/market-data.md
   - title: 'Tutorial: groupings and analytics'
-    file: ../guides/BI_GUIDE.md
+    file: ../guides/GROUPINGS_AND_ANALYTICS.md

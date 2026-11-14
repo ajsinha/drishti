@@ -15,7 +15,7 @@
 """What the stand-in pricing system's scripts share (docs/guides/VAR_GUIDE.md section 15.12, "Producing P&L vectors and scenario PVs").
 
 The rows a pricing system sends are the contract: one JSON object per line (JSONL, UTF-8; ``.jsonl``, or ``.jsonl.gz`` with
-``--gzip``), each with exactly the fields of its kind's contract (``config/packs/banking/market-risk/contracts/{scenario-pv,pnl-vector,
+``--gzip``), each with exactly the fields of its kind's contract (``modules/banking/dmod/packs/market-risk/contracts/{scenario-pv,pnl-vector,
 fx-scenario}.contract.yaml``), no other. The morning run comes from the demo's factor model (``tools/packgen/var``: ``make_var_data.Demo``,
 ``scenario_fx``), never a copy of it: P&L vectors for some systems, scenario PVs in each trade's own currency for others
 (``--pv-systems``, ``--pnl-systems``, ``--all-vectors``), today's split by default. ``Updates`` makes the day's intraday updates from it
@@ -38,8 +38,8 @@ import make_var_data as M  # noqa: E402
 import scenario_fx as SFX  # noqa: E402
 import varmath as VM  # noqa: E402
 
-CONTRACTS = ROOT / "config" / "packs" / "banking" / "market-risk" / "contracts"
-PACK = ROOT / "config" / "packs" / "banking" / "market-risk"
+CONTRACTS = ROOT / "modules" / "banking" / "dmod" / "packs" / "market-risk" / "contracts"
+PACK = ROOT / "modules" / "banking" / "dmod" / "packs" / "market-risk"
 #: each kind's lake key
 KEYS = {"scenario-pv": "SCENARIO_PV_ID", "pnl-vector": "VECTOR_ID", "fx-scenario": "FX_SCENARIO_ID"}
 #: the vector of each trades' kind (null on a cancel)

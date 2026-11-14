@@ -70,7 +70,7 @@ may still change before it ships, and the document records each change.
 | [GRP.md](GRP.md) | GRP (`counterparty-group`): members kept, usage computed | PARKED (design kept) |
 | [CVA.md](CVA.md) | CVA (`cva`) | PARKED (design kept) |
 | [WWR.md](WWR.md) | wrong-way risk (new) | PARKED (design kept) |
-| [BUILD_GUIDE.md Part II](../guides/BI_GUIDE.md#10-the-contract-at-a-glance) | LEIG, LEIC, SIC, ECG (`lei-group`, `lei-country`, `sic-sector`, `country-group`: stored pages retired, computed under the same kinds), CORR (`correlation-result`; the sets keep their factors), USEQ ratios, PXH analytics | BUILT (2026-10-26; Track B) |
+| [BUILD_GUIDE.md Part II](../guides/bi/GROUPINGS_AND_ANALYTICS.md#10-the-contract-at-a-glance) | LEIG, LEIC, SIC, ECG (`lei-group`, `lei-country`, `sic-sector`, `country-group`: stored pages retired, computed under the same kinds), CORR (`correlation-result`; the sets keep their factors), USEQ ratios, PXH analytics | BUILT (2026-10-26; Track B) |
 | `CONCENTRATION.md` | large exposures (new); the OSFI report once its template is supplied | PARKED (not written) |
 | `LIQUIDITY.md` | LCR, NSFR, NCCF, cash-flow gaps (new) | PARKED (not written) |
 | `IRRBB.md` | ΔEVE, ΔNII (new) | PARKED (not written) |
@@ -332,7 +332,7 @@ Every command that moves to the compute model retires its stored version **in th
 A grouping whose command, kind and ids stay while its stored table goes (LEIG, LEIC, SIC and ECG, computed by derived
 connectors) is listed under `computed-in-place:` in `tools/contracts.policy.yaml`: the guard then checks that no Delta connector serves
 it, no sample, test data or public-data generator holds it, and its contract is class `computed` over plugin `derived`
-([BI_GUIDE.md, section 23](../guides/BI_GUIDE.md#23-the-retirement-guard)).
+([GROUPINGS_AND_ANALYTICS.md, section 23](../guides/bi/GROUPINGS_AND_ANALYTICS.md#23-the-retirement-guard)).
 
 ## 15. The sections of every contract
 
@@ -362,7 +362,7 @@ Each contract in this folder has the same sections, in this order, so any two ca
 ## 16. Contracts of every command
 
 Every command (mnemonic) of every pack has a **data contract of its own data**, so anyone can see the shape of what a command holds and
-act on it: one YAML file beside its pack, `config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml`, and a section of its pack's page under
+act on it: one YAML file beside its pack, `modules/<module>/packs/<pack>/contracts/<kind>.contract.yaml`, and a section of its pack's page under
 [packs/](packs/README.md) (the index of every command, its class and status). The pages are generated from the YAML files; the YAML files
 are the contracts.
 

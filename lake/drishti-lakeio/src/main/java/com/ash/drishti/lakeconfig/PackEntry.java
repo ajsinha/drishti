@@ -158,7 +158,7 @@ public record PackEntry(String domain, String table, String key, String date, Li
                         t.latestBy() != null ? t.latestBy() : text(ingest, "latest-by"), t);
             }
         }
-        JsonNode defs = m.path("connectors").isObject() ? m.path("connectors") : m.path("connector-templates");
+        JsonNode defs = m.path("connectors");
         JsonNode chosen = null;
         JsonNode first = null;
         String domain = name;
@@ -251,7 +251,7 @@ public record PackEntry(String domain, String table, String key, String date, Li
     public static List<PackTable> tables(Path pack) throws IOException {
         Path file = Files.isDirectory(pack) ? pack.resolve("pack.yaml") : pack;
         JsonNode m = manifest(file);
-        JsonNode defs = m.path("connectors").isObject() ? m.path("connectors") : m.path("connector-templates");
+        JsonNode defs = m.path("connectors");
         List<PackTable> out = new ArrayList<>();
         for (var it = defs.fields(); it.hasNext(); ) {
             var e = it.next();
@@ -270,7 +270,7 @@ public record PackEntry(String domain, String table, String key, String date, Li
 
     /** The {@code table.<kind>} folder a pack's connector template names (null: none, the kind's own name). */
     private static String tableOf(JsonNode pack, String connector, String kind) {
-        JsonNode defs = pack.path("connectors").isObject() ? pack.path("connectors") : pack.path("connector-templates");
+        JsonNode defs = pack.path("connectors");
         JsonNode st = defs.path(connector).path("settings");
         if (st.path(ConnectorLake.TABLES).isTextual()) {               // the lake form: lake-tables names the entries
             for (String n : st.path(ConnectorLake.TABLES).asText().split(",")) {

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Makes the pictures and the captured output of docs/guides/BI_GUIDE.md, BI_GUIDE.md and BI_GUIDE.md from the real stack (not a test: run it by hand).
+"""Makes the pictures and the captured output of docs/guides/bi/README.md, bi/README.md and bi/README.md from the real stack (not a test: run it by hand).
 
     drishti-console/.venv/bin/python drishti-console/tests/bi_report_shots.py <pictures dir> <captures.json>
 

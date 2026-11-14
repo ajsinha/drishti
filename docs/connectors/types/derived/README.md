@@ -106,7 +106,7 @@ Per derived kind (`<kind>.` prefix; a key ending in `.from` declares one):
 | `<kind>.search-fields` | fields | none | Page fields a search matches besides the id; the first labels a hit (`LEIG Ford Motor`) |
 
 These turn the gleif, us-equities and world-economy packs' groupings (LEIG, LEIC, SIC, ECG) into computed pages
-([BI_GUIDE.md](../../../guides/BI_GUIDE.md) Part III); on a page the order is the aggregates, the rows,
+([GROUPINGS_AND_ANALYTICS.md](../../../guides/bi/GROUPINGS_AND_ANALYTICS.md) Part III); on a page the order is the aggregates, the rows,
 the tree, the `then` fields, the sorts, then `unlisted`.
 
 Every connector also takes `kinds`, `enabled` and the common settings (docs/guides/DATA_GUIDE.md section 9).
@@ -130,7 +130,7 @@ A derived page, for the group key `CP-MERIDIAN-RE` of `counterparty-trades` (the
 
 ## Examples
 
-The trading pack's connector (`config/packs/banking/trading/pack.yaml`, shortened):
+The trading pack's connector (`modules/banking/dmod/packs/trading/pack.yaml`, shortened):
 
 ```yaml
 connectors:

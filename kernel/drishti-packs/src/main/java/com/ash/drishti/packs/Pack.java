@@ -64,17 +64,15 @@ public record Pack(String name, String version, String title, String description
     }
 
     /**
-     * The connector definitions the pack suggests, by name: the {@code connector-templates:} mapping, and the older
-     * {@code connectors:} mapping read as templates. A template is never in force by itself once a connector file of the
+     * The connector definitions the pack suggests, by name: the {@code connectors:} mapping (a list of names has no
+     * definitions to read). A template is never in force by itself once a connector file of the
      * same name exists; it is what a file is generated from, and what is used when a file cannot be written.
      */
     @SuppressWarnings("unchecked")
     public Map<String, Map<String, Object>> connectorTemplates() {
         Map<String, Map<String, Object>> out = new java.util.LinkedHashMap<>();
-        for (String key : new String[] {"connectors", "connector-templates"}) {
-            if (manifest.get(key) instanceof Map<?, ?> m) {
-                m.forEach((k, v) -> out.put(String.valueOf(k), v instanceof Map<?, ?> d ? (Map<String, Object>) d : Map.of()));
-            }
+        if (manifest.get("connectors") instanceof Map<?, ?> m) {
+            m.forEach((k, v) -> out.put(String.valueOf(k), v instanceof Map<?, ?> d ? (Map<String, Object>) d : Map.of()));
         }
         return out;
     }

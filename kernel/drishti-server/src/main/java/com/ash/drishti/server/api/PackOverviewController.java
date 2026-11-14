@@ -105,7 +105,7 @@ public class PackOverviewController {
     }
 
     /**
-     * The pack's README ({@code config/packs/<domain>/<pack>/README.md}, the README standard): its front matter as {@code meta} and the markdown
+     * The pack's README ({@code modules/<module>/packs/<pack>/README.md}, the README standard): its front matter as {@code meta} and the markdown
      * after it, for the console and for AI. Like the overview it answers for a pack switched on for the caller, and the Data structures
      * of kinds the caller may not open are left out (and from {@code meta.kinds} and {@code meta.commands}). 404 when the pack has none.
      */

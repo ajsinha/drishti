@@ -133,7 +133,7 @@ A pack suggests the connector as a template in its `pack.yaml`, off until switch
 `config/connectors/risk-docs.yaml` at the first start if the site has none):
 
 ```yaml
-# config/packs/<domain>/<pack>/pack.yaml
+# modules/<module>/packs/<pack>/pack.yaml
 connectors:
   risk-docs:
     plugin: s3

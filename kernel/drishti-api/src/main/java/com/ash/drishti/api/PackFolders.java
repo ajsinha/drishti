@@ -28,7 +28,8 @@ import java.util.stream.Stream;
  * Where a pack's folder is: the one rule every Java reader follows (docs/architecture/DOMAIN_MODULES.md section 8). A packs root
  * ({@code config/packs}, the installed packs, {@code examples/packs}) holds packs directly ({@code <root>/<pack>/pack.yaml}) or one level
  * down in <b>domain folders</b> ({@code <root>/<domain>/<pack>/pack.yaml}): a folder of the root with no {@code pack.yaml} of its own.
- * The shipped packs live in their domain's folder ({@code config/packs/banking/trading}). The console's and the tools' Python twin is
+ * The product's packs live in the module that owns them ({@code modules/banking/dmod/packs/trading}, {@link #moduleRoots}); the packs
+ * folder itself holds a site's own packs (and the kernel's {@code core} ones). The console's and the tools' Python twin is
  * {@code drishti-console/core/pack_paths.py}; tests hold both to the layout.
  */
 public final class PackFolders {
@@ -36,17 +37,51 @@ public final class PackFolders {
     private PackFolders() {
     }
 
-    /** The folders packs are in under a root: the root itself, then each domain folder in name order. */
+    /**
+     * The folders packs are in under a root: the root itself, then each domain folder in name order; for the product's packs folder
+     * ({@code <home>/config/packs}) also the {@code packs/} folder of every module beside it ({@link #moduleRoots}).
+     */
     public static List<Path> roots(Path root) {
         List<Path> out = new ArrayList<>();
         out.add(root);
-        if (!Files.isDirectory(root)) {
+        if (Files.isDirectory(root)) {
+            try (Stream<Path> s = Files.list(root)) {
+                s.filter(Files::isDirectory).filter(d -> !Files.isRegularFile(d.resolve("pack.yaml"))).sorted().forEach(out::add);
+            } catch (IOException e) {
+                // an unreadable folder has no domain folders to offer
+            }
+        }
+        out.addAll(moduleRoots(root));
+        return out;
+    }
+
+    /**
+     * The packs folders of the modules beside a packs folder named {@code config/packs}: {@code <home>/modules/<m>/packs}, or
+     * {@code <home>/modules/<m>/dmod/packs} for a module whose manifest is in its {@code dmod} folder, in module-name order. Empty for any
+     * other root (a test's folder, an installed-packs folder): the modules are the product's, found from the product's home.
+     */
+    public static List<Path> moduleRoots(Path root) {
+        List<Path> out = new ArrayList<>();
+        Path abs = root.toAbsolutePath().normalize();
+        Path config = abs.getParent();
+        if (config == null || !"packs".equals(String.valueOf(abs.getFileName())) || !"config".equals(String.valueOf(config.getFileName()))
+                || config.getParent() == null) {
             return out;
         }
-        try (Stream<Path> s = Files.list(root)) {
-            s.filter(Files::isDirectory).filter(d -> !Files.isRegularFile(d.resolve("pack.yaml"))).sorted().forEach(out::add);
+        Path modules = config.getParent().resolve("modules");
+        if (!Files.isDirectory(modules)) {
+            return out;
+        }
+        try (Stream<Path> s = Files.list(modules)) {
+            s.filter(Files::isDirectory).sorted().forEach(m -> {
+                for (Path home : List.of(m, m.resolve("dmod"))) {
+                    if (Files.isRegularFile(home.resolve("module.yaml")) && Files.isDirectory(home.resolve("packs"))) {
+                        out.add(home.resolve("packs"));
+                    }
+                }
+            });
         } catch (IOException e) {
-            // an unreadable folder has no domain folders to offer
+            // an unreadable folder has no modules to offer
         }
         return out;
     }

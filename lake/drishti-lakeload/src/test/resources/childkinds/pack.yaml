@@ -17,7 +17,7 @@ kinds: [deal, deal-leg]
 ingest:
   deal: { key: TRADE_ID, date: BUSINESS_DATE }
   deal-leg: { key: LEG_KEY, child-of: { kind: deal, field: LEGS, link: TRADE_ID, natural: LEG_ID } }
-connector-templates:
+connectors:
   deals-store:
     plugin: delta
     kinds: [deal, deal-leg]

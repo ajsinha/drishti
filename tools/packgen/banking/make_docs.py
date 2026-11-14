@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Writes the banking packs' documentation (config/packs/<domain>/<pack>/guides/*.md, config/help.yaml and README.md) from the taxonomy, the
+"""Writes the banking packs' documentation (modules/<module>/packs/<pack>/guides/*.md, config/help.yaml and README.md) from the taxonomy, the
 layout and the generated data, so it cannot drift from what the packs contain: an overview per pack, the product
 catalogue, the market-data catalogue and the cross-pack data model. The help centre shows them under Domain packs.
 
@@ -307,7 +307,7 @@ def files() -> dict[Path, str]:
         out[pack_dir(pack) / "config" / "help.yaml"] = "\n".join("#" + (" " + x if x.strip() else "") for x in HEADER.splitlines()[1:14]) + \
             f"\n\n# {GENERATED[5:-4]}\n{help_yaml}"
         out[pack_dir(pack) / "README.md"] = README.render_pack(pack_dir(pack), files=out)
-    return {f: GD.link_kinds(t) if f.parent.name == "guides" else t for f, t in out.items()}   # each input kind linked to its example and contract
+    return {f: (README.deepen(GD.link_kinds(t), f.parent) if f.parent.name == "guides" else t) for f, t in out.items()}   # each input kind linked to its example and contract
 
 
 def main() -> None:

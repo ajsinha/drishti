@@ -137,7 +137,7 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"TICKER": "QQQ", "NAME": "Invesco QQQ Trust, Series 1", "TYPE": "ETF", "FUND_KEY": "S000101292", "SERIES_ID": "S000101292", "CIK": "0001067839", "REGISTRANT": "Invesco QQQ Trust, Series 1", "LEI": "549300VY6FEJBCIMET58", "REGISTRANT_LEI": "549300VY6FEJBCIMET58", "TICKERS": "QQQ", "CLASS_COUNT": 1, "PRIMARY_CLASS": "C000271435", "IS_ETF": true, "IS_INDEX": true, "IS_FUND_OF_FUNDS": false, "IS_TARGET_DATE": false, "IS_MASTER_FEEDER": false, "INDEX_ID": "NDX", "EXCHANGE": "Nasdaq", "CREATION_UNIT": 100000.0, "AP_COUNT": 40, "ADVISER": "The Vanguard Group, Inc.", "ADVISER_LEI": "5493002789CX3L0CJP65", "SUB_ADVISERS": "Geode Capital Management, LLC", "CUSTODIAN": "JPMorgan Chase Bank NA", "CUSTODIAN_LEI": "7H6GLXDRUGQFU57RNE97", "ADMINISTRATOR": "THE VANGUARD GROUP, INC.", "TRANSFER_AGENT": "The Vanguard Group, Inc.", "AUDITOR": "PRICEWATERHOUSECOOPERS LLP", "AUDITOR_LEI": "5493002GVO7EO8RNNS37", "LENDS_SECURITIES": false, "NCEN_PERIOD": "2025-12-31", "NCEN_ACCESSION": "0000036405-26-000103", "RANK": 7, "REPORT_DATE": "2026-06-30", "FILED": "2026-08-28", "ACCESSION": "0001067839-26-000030", "NPORT_URL": "https://www.sec.gov/Archives/edgar/data/1067839/00010678392…", "TOTAL_ASSETS": 492478331787.0, "NET_ASSETS": 490103179942.0, "EXPENSE_RATIO": 0.18, "GROSS_EXPENSE_RATIO": 0.18, "MANAGEMENT_FEE": 0.18, "TURNOVER": 7.98, "PROSPECTUS_FILED": "2025-12-19", "RETURN_LAST_YEAR": 25.58, "RETURN_YEAR": 2024, "RETURN_3M": 27.64, "SALES": 216564959011.07, "REDEMPTIONS": 205720139470.74, "REINVESTMENT": 0, "NET_FLOW": 10844819540.33, "HOLDING_COUNT": 105, "HOLDINGS_SHOWN": 105, "HOLDINGS_REST_COUNT": 0, "HOLDINGS_REST_PCT": 0, "HOLDINGS_REST_VALUE": 0, "TOP10_PCT": 45.0, "TOP50_PCT": 87.448, "HHI": 0.02927, "LARGEST": "NVIDIA Corp.", "LARGEST_PCT": 7.596757, "WITH_LEI": 101, "EQUITY_PCT": 99.927, "US_COMPANY_PCT": 91.196, "US_COMPANIES": 79, "DERIVATIVE_COUNT": 1, "DERIVATIVES_NOTIONAL": 327348711.0, "COUNTERPARTY_COUNT": 1, "MOST_HELD_COMPANY": "NVDA", "MOST_HELD_NAME": "Nvidia", "ACTIVE_SHARE": 11.21}
 ```
 
-The contract: `config/packs/capitalmarkets/funds/contracts/fund.contract.yaml` ([funds](../../docs/contracts/packs/funds.md)).
+The contract: `modules/capital-markets/packs/funds/contracts/fund.contract.yaml` ([funds](../../docs/contracts/packs/funds.md)).
 
 ### fund-holder
 
@@ -170,7 +170,7 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"TICKER": "AAPL", "NAME": "Apple Inc.", "COMPANY": "AAPL", "SECTOR": "Manufacturing", "FUNDS": 85, "ETFS": 26, "TOTAL_VALUE": 831040821744.0, "TOTAL_SHARES": 2809918580.0, "SHARES_OUTSTANDING": 14776353000, "PCT_OF_SHARES": 19.016, "AVG_WEIGHT": 5.425, "MAX_WEIGHT": 14.5683, "TOP_HOLDER": "VTI"}
 ```
 
-The contract: `config/packs/capitalmarkets/funds/contracts/fund-holder.contract.yaml` ([funds](../../docs/contracts/packs/funds.md)).
+The contract: `modules/capital-markets/packs/funds/contracts/fund-holder.contract.yaml` ([funds](../../docs/contracts/packs/funds.md)).
 
 ### index-funds
 
@@ -195,4 +195,4 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"INDEX": "NDX", "NAME": "Nasdaq-100", "FUNDS": 2, "ETFS": 2, "TOTAL_NET_ASSETS": 587254661099.0, "LARGEST": "QQQ"}
 ```
 
-The contract: `config/packs/capitalmarkets/funds/contracts/index-funds.contract.yaml` ([funds](../../docs/contracts/packs/funds.md)).
+The contract: `modules/capital-markets/packs/funds/contracts/index-funds.contract.yaml` ([funds](../../docs/contracts/packs/funds.md)).

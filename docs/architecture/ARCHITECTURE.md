@@ -89,7 +89,7 @@ it is a retired example pack):
 Two things sit beside this picture. With **Drishti\*net** switched on (section 13a), several such servers gossip with each
 other, each with its own sources, and any of them answers any request; the console is given one server and learns the
 others. And every Python run (Transforms, python visuals, Python-driven tables, Notebook cells) is the server's, on its compute pool `python`
-in a strict sandbox ([BI_GUIDE.md section 19](#291-one-python-runtime)); the console runs none.
+in a strict sandbox ([bi/NOTEBOOK_AND_PYTHON.md section 19](#291-one-python-runtime)); the console runs none.
 
 **Deployment model — a departure from Pravaha.** The Drishti backend is always a
 **Spring Boot application**; it is never shipped as an embeddable library. The Maven
@@ -224,7 +224,7 @@ Abbreviated:
 ```
 
 Reading it: the router found the trade in the `demo` plugin (whose sample's `_meta` names the source system
-`murex-rates`); `SutraMatcher` chose `irs-fixfloat v1` from `config/packs/banking/trading/sutras/murex/`; inference added what the
+`murex-rates`); `SutraMatcher` chose `irs-fixfloat v1` from `modules/banking/dmod/packs/trading/sutras/murex/`; inference added what the
 Sutra did not say ("+ inference"); the counterparty, netting set, book and trader were fetched as links and given
 badges from the pack's `badges:` expressions. The console renders the panels with the Jinja macros in
 `web/templates/_macros/panels.html`, main-area panels on the left and `area: right` panels on the right.
@@ -277,7 +277,7 @@ Each row names what to change for a common need and the document that explains i
 | I want to... | Change | Read |
 |---|---|---|
 | Read a new store (a database, a topic, a folder, a service) | A connector: a file `config/connectors/<name>.yaml` with `plugin:` and `settings:` (or Admin → Connectors); the pack names it in `routes:` for the kinds it serves, and may carry a `connectors:` template for it | [../guides/DATA_GUIDE.md section 9](../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors), [DEVELOPER_GUIDE.md](../guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one), [CONFIGURATION.md](../admin/CONFIGURATION.md) |
-| Add a domain (new kinds, commands, links) | A pack folder `config/packs/<domain>/<name>/` with `pack.yaml`, `sutras/`, `samples/`; enable it with `DRISHTI_PACKS` | [BUILD_GUIDE.md](../guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) |
+| Add a domain (new kinds, commands, links) | A pack folder `modules/<module>/packs/<name>/` with `pack.yaml`, `sutras/`, `samples/`; enable it with `DRISHTI_PACKS` | [BUILD_GUIDE.md](../guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) |
 | Change how one screen looks | Its Sutra (`*.sutra.yaml`), or a Design in the Build workbench, proposed and approved | [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md), [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) |
 | Change how a figure is formatted | `fmt:` in the Sutra; named formats in the pack's `config/formats.yaml` | RACHANA_REFERENCE.md |
 | Change how inference reads field names | The pack's `config/semantics.yaml` | [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#inference-the-screens-drishti-draws-with-no-sutra) |
@@ -299,11 +299,11 @@ Each row names what to change for a common need and the document that explains i
 | Let people choose what a panel shows | `controls:` in the Sutra (dropdowns, sliders, date ranges), read by panels as `ctl.<id>` | [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#controls) |
 | Tell Drishti a batch of data landed (refresh, verify, tell people, flag late data) | `POST /api/v1/packs/{pack}/loads` from your ETL; what a pack expects is its `loads:` section | [DATA_GUIDE.md](../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed) |
 | Reach a source over TLS or through a proxy | `tls.*` and `proxy:` in the connector file | [DATA_GUIDE.md section 10](../guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy), [DATA_GUIDE.md section 10 (proxy)](../guides/DATA_GUIDE.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers) |
-| Make a dataset, report or board (business intelligence) | YAML files in `config/bi/` (watched) or the BI pages (workspaces, designer, Model view); the query runs on the server over DuckDB with the reader's masks and row rules | [BI_GUIDE.md](../guides/BI_GUIDE.md), [BI_GUIDE.md](../guides/BI_GUIDE.md#5-models-and-datasets-what-a-report-reads), [BI_GUIDE.md](../guides/BI_GUIDE.md#9-the-report-file-pages-visuals-filters-and-slicers), [ARCHITECTURE.md §28](#28-business-intelligence-on-the-table-layer) |
+| Make a dataset, report or board (business intelligence) | YAML files in `config/bi/` (watched) or the BI pages (workspaces, designer, Model view); the query runs on the server over DuckDB with the reader's masks and row rules | [README.md](../guides/bi/README.md), [MODELS_AND_DATASETS_FOR_REPORTS.md](../guides/bi/MODELS_AND_DATASETS_FOR_REPORTS.md#5-models-and-datasets-what-a-report-reads), [REPORT_FILE_FORMAT_STATEMENTS.md](../guides/bi/REPORT_FILE_FORMAT_STATEMENTS.md#9-the-report-file-pages-visuals-filters-and-slicers), [ARCHITECTURE.md §28](#28-business-intelligence-on-the-table-layer) |
 | Show a view inside another web application | register the application in Admin → Embedding; the page uses `<drishti-view>` | [EMBED_GUIDE.md](#30-the-client-renderer-and-drishti-elements) |
 | Use a language model, or an MCP tool server | a provider file in `config/ai/` or `config/mcp/` and `drishti.ai.enabled` / `drishti.mcp.enabled` (both off by default) | [AI_GUIDE.md](../guides/AI_GUIDE.md#1-model-providers), [AI_GUIDE.md](../guides/AI_GUIDE.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy) |
 | Run several servers as one (Drishti\*net) | the files of `config/net/` (`node.yaml` with `enabled: true` and the cluster key, a seed in `peers/`), or Admin → Cluster → Files; members advertise a real address, never a loopback one | [OPERATIONS_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet), [tutorial 22](../tutorials/22-a-cluster-of-three.md) |
-| Lay a report out on paper (a statement, one per recipient) | `layout: statement` on a report page and the report's `statement:`; BI Studio's Paper tab | [STATEMENTS.md](../guides/BI_GUIDE.md#12-statements-paginated-reports-page-exact-one-per-reader) |
+| Lay a report out on paper (a statement, one per recipient) | `layout: statement` on a report page and the report's `statement:`; BI Studio's Paper tab | [STATEMENTS.md](../guides/bi/REPORT_FILE_FORMAT_STATEMENTS.md#12-statements-paginated-reports-page-exact-one-per-reader) |
 | Make something that failed (a pack, a connector, a provider) try again | nothing: it is retried with backoff; Retry now in Admin | [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#138-retries-what-failed-is-tried-again-by-itself) |
 
 ---
@@ -314,7 +314,7 @@ Rachana is the grammar; each Sutra is one YAML document written in it (ADR-017, 
 Markdown Sutras). The first key, `rachana: 1`, is the language version, so the grammar can evolve without
 misreading old files; `description`, `notes` and a per-panel `description` carry the prose. Files are named
 `<name>.v<N>.sutra.yaml` and are found by scanning, recursively, the site directories (`drishti.rachana.dirs`, default `./sutras`) and every enabled
-pack's `sutras/` folder (`config/packs/<domain>/<pack>/sutras/<area>/…`). `SutraBuilder` validates each one at load against the panel
+pack's `sutras/` folder (`modules/<module>/packs/<pack>/sutras/<area>/…`). `SutraBuilder` validates each one at load against the panel
 kinds' required and allowed options and reports problems with line and column (codes `DRS-2001`, `DRS-2002`; the
 detailed checks are 2009–2012 and 2020–2039; the About files add 2040–2047, search forms 2060). Any other file in a Sutra folder (a `.sutra.md`, a plain `.yaml`)
 is reported as `DRS-2004` with the fix. Because the grammar is plain YAML, `RachanaSchema` generates a JSON Schema of
@@ -412,7 +412,7 @@ Every entity of every mnemonic, in every pack, goes through this one path. There
 or per mnemonic.
 
 ```
- config/packs/<domain>/<pack>/sutras/**/*.sutra.yaml        the entity's document (any connector)
+ modules/<module>/packs/<pack>/sutras/**/*.sutra.yaml        the entity's document (any connector)
           │  SutraBuilder (load, validate)                    │
           ▼                                                   ▼
    Sutra model ── SutraMatcher ─► LayoutMerger ◄── InferenceEngine (shape rules)
@@ -445,7 +445,7 @@ it; the commands use the quick-start port 18480.
 
 ### Example 1: Sutra → ViewModel → HTML
 
-**The Sutra.** `TRD MX-20000001` matches `config/packs/banking/trading/sutras/murex/irs-fixfloat.v1.sutra.yaml` (generated
+**The Sutra.** `TRD MX-20000001` matches `modules/banking/dmod/packs/trading/sutras/murex/irs-fixfloat.v1.sutra.yaml` (generated
 by `tools/packgen/banking/make_sutras.py`). One strip cell, and the first panel, which it takes from a fragment:
 
 ```yaml
@@ -456,7 +456,7 @@ panels:
   - { use: trading/deal-ticket@1, with: { rate-fmt: pct4, product: "Interest rate swap (fixed/float)" } }
 ```
 
-The fragment (`config/packs/banking/trading/sutras/common/deal-ticket.v1.fragment.yaml`) is a `kv` panel, still only YAML:
+The fragment (`modules/banking/dmod/packs/trading/sutras/common/deal-ticket.v1.fragment.yaml`) is a `kv` panel, still only YAML:
 
 ```yaml
 panels:
@@ -548,7 +548,7 @@ and the export read. When a tick changes the panel, the console renders it again
 
 No Sutra in the default packs matches `var-limit` (`VLIM`, a hierarchy node's VaR limit; it is normally read from the `risk-store`
 lake). To show what inference alone makes of it, the first line of the committed sample
-`config/packs/banking/market-risk/samples/var-limit.jsonl` is put in the `file` connector's folder of a scratch server
+`modules/banking/dmod/packs/market-risk/samples/var-limit.jsonl` is put in the `file` connector's folder of a scratch server
 (`<data>/feeds/var-limit/VL-LL~BANK.json`). The document is flat UPPER_SNAKE fields: ids, a number, a currency and dates.
 
 ```bash
@@ -593,7 +593,7 @@ strip:
 
 ### Example 3: query by form
 
-**The YAML.** A pack lists the fields people search a kind by; from `config/packs/banking/trading/pack.yaml`:
+**The YAML.** A pack lists the fields people search a kind by; from `modules/banking/dmod/packs/trading/pack.yaml`:
 
 ```yaml
 form:
@@ -713,7 +713,7 @@ APIs, entitlements and masks as the generic view; none is a screen for one produ
 |---|---|---|---|
 | VaR explorer | `/var` (`VAR <scope> <GO>`) | `terminal/var.html`, `static/js/drishti_var-explorer.js` (drishti-risk's grids and charts) | Any scope (hierarchy node, book, basket, trade) computed on demand by the VaR engine (`/api/v1/risk/var`), with drill-down, captures and compare; the computed kinds stay ordinary kinds on `/v/…` too. [VAR_GUIDE.md](../guides/VAR_GUIDE.md#3-the-explorer-screen-by-screen) |
 | Exposure explorer | `/exposure` (`EXP <scope> <GO>`) | `terminal/exposure.html`, `static/js/drishti_exposure-explorer.js` (drishti-risk's grids and charts) | The same for counterparty exposure (`/api/v1/risk/exposure`); `exposure-result` is still a kind. [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md#3-the-explorer-screen-by-screen) |
-| BI Studio, report viewer and the BI pages | `/bi/…` | `templates/bi/` | Reports and models over datasets (DuckDB on the server), a different job from one entity's view. [BI_GUIDE.md](../guides/BI_GUIDE.md) |
+| BI Studio, report viewer and the BI pages | `/bi/…` | `templates/bi/` | Reports and models over datasets (DuckDB on the server), a different job from one entity's view. [README.md](../guides/bi/README.md) |
 | Admin | `/admin/…` | `templates/admin/` | Running the system: users, packs, connectors, lakes, Drishti\*net |
 | Sutra designer and Build | `/designer`, `/build/…`, `/studio` | `templates/designer/`, `templates/build/`, `templates/studio/` | Tools that write Sutras; their previews are the generic view's macros. [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) |
 | Data map | `/datamap` (`DATAMAP <GO>`) | `terminal/datamap.html`, `static/js/drishti_datamap.js` | The packs' kinds and joins, checked against the data (`/api/v1/datamap`). [USER_GUIDE.md](../guides/USER_GUIDE.md#the-data-map) |
@@ -905,7 +905,7 @@ connector, e.g. `market-store` and `trading-store`. Lake retention, compaction a
 
 ## 12. Domain packs
 
-The core carries no industry. A **domain pack** (`config/packs/<domain>/<name>/pack.yaml`) holds everything specific to one:
+The core carries no industry. A **domain pack** (`modules/<module>/packs/<name>/pack.yaml`) holds everything specific to one:
 kinds, Sutras, mnemonics, identifier patterns, reference fields and link badges, roles, semantic hints and formats,
 connectors, starter workspaces, help guides and sample data.
 
@@ -957,10 +957,10 @@ Maven multi-module reactor on `spring-boot-starter-parent`, `groupId com.ash.dri
 | `drishti-inference` | Shape analysis, semantic hints, rules, scorer, packer, `LayoutMerger` (Sutra ⊕ inference) | `InferenceConfiguration` |
 | `drishti-engine` | `ViewPipeline`, `Binder`, caches, `graph.ReferenceCatalog` (identifier patterns, reference fields) and badges, `SourceRouter`, `SourceRegistry`, `PluginDiscovery`, `TopicHub`, `ViewStream`, `PatchDiffer`, suggestions, structured search, impact, business dates | `EngineConfiguration`, `GraphConfiguration` |
 | `drishti-identity` | Users, roles, passwords, lockout, audit, per-user preferences (workspaces, settings); the collaboration records (`com.ash.drishti.identity.collab`: shares, inbox, outbox, threads, holds, `HashChain`); stored in a JPA database (section 18) | `IdentityConfiguration` |
-| `drishti-packs` | Domain packs: reads `config/packs/<domain>/<name>/pack.yaml`, resolves inheritance, contributes lowest-precedence properties (an `EnvironmentPostProcessor`) | `PackRegistry` |
+| `drishti-packs` | Domain packs: reads `modules/<module>/packs/<name>/pack.yaml`, resolves inheritance, contributes lowest-precedence properties (an `EnvironmentPostProcessor`) | `PackRegistry` |
 | `drishti-ai` | The LLM provider layer and MCP client, no Spring: `LlmGateway`, `LlmRegistry`, providers (`openai`, `anthropic`, `mock`), `LlmPolicy` (masking, limits, audit), `McpGateway`, `McpRegistry`; off by default ([AI_GUIDE.md](../guides/AI_GUIDE.md#1-model-providers), [AI_GUIDE.md](../guides/AI_GUIDE.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy)) | – |
 | `drishti-lakeio` | The lake core: the lake files (`lakeconfig`: `Lakes`, `ConnectorLake`, `LakesCli`) and lake file access without Hadoop, shared by the native Delta and Iceberg engines: local disk (Windows included) and S3, byte ranges, Parquet page codecs, the Parquet footer cache; other schemes through a registered `StorageProvider` (`StorageProviders`) | – |
-| `drishti-tables` | The table layer, plain Java ([BI_GUIDE.md](../guides/BI_GUIDE.md), [section 24](#24-virtual-tables-the-central-table-layer)): the catalogue of virtual tables and models (`config/tables`, stored items), their definitions and checks, preview, lineage, the materialisation's API, `tables migrate`; on Rachana and the pivot engine, never on BI | read by the server (`tables` on the command line); BI reads it with the switch |
+| `drishti-tables` | The table layer, plain Java ([TABLES_AND_MODELS.md](../guides/bi/TABLES_AND_MODELS.md), [section 24](#24-virtual-tables-the-central-table-layer)): the catalogue of virtual tables and models (`config/tables`, stored items), their definitions and checks, preview, lineage, the materialisation's API, `tables migrate`; on Rachana and the pivot engine, never on BI | read by the server (`tables` on the command line); BI reads it with the switch |
 | `drishti-iceberg` | Drishti's own Apache Iceberg engine without Hadoop (reads, writes, path-based and REST catalogs), used by the `iceberg` (engine `native`) and `iceberg-external` connectors ([DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#3-drishti-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop)) | – |
 | `drishti-deltalake` | A Delta Kernel engine without Hadoop (local disk, Windows included, and S3), used by the Delta connector | – |
 | `drishti-lakeload` | The parallel lake loader: JSON Lines (folder or S3) into Delta or Iceberg tables of the connectors' layout, every stage multi-threaded and memory bounded, one commit per business date; `drishti.py lake build --engine java` ([PARALLEL_LOADER.md](DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-drishti-lakeload)); the data inbox (`dataload`); the in-memory lake, plain Java ([IN_MEMORY_LAKE.md](DATA_ARCHITECTURE.md#98-the-package-memlake-in-drishti-lakeload)): the `mem://` stores (the `mem` storage provider of `drishti-lakeio`), tables, replenish jobs, eviction, compaction, the owner binding, the guard (`Retention`), the host checks | `drishti-lakeio`, `drishti-deltalake`, `drishti-iceberg` |
@@ -1031,9 +1031,9 @@ secrets in tracked files. The full key reference is [CONFIGURATION.md](../admin/
 | File | Owns |
 |---|---|
 | `kernel/drishti-server/src/main/resources/application.yaml` | server port, actuator, every `drishti.*` default: `sources`, `business-date`, `security`, `identity`, `rachana`, `governance`, `engine`, `packs`, `commands`, `live`, `graph` |
-| `config/packs/<domain>/<name>/pack.yaml` | a pack's kinds, mnemonics, references, badges, roles, the names of its connectors with their routes (and connector templates), Sutra and sample folders |
+| `modules/<module>/packs/<name>/pack.yaml` | a pack's kinds, mnemonics, references, badges, roles, the names of its connectors with their routes (and connector templates), Sutra and sample folders |
 | `config/connectors/<name>.yaml` | one connector of the site: plugin, switch, kinds and settings; watched and applied without a restart |
-| `config/packs/<domain>/<name>/config/*.yaml` | the pack's formats, semantic hints, help and starter workspaces |
+| `modules/<module>/packs/<name>/config/*.yaml` | the pack's formats, semantic hints, help and starter workspaces |
 | `compute/drishti-rachana/src/main/resources/formats.yaml` (+ `drishti.rachana.formats-file`) | core named number/date formats |
 | `compute/drishti-inference/src/main/resources/inference/semantics.yaml` | core semantic hints and density limits |
 | `./sutras/**` (`drishti.rachana.dirs`) | site Sutras, in addition to the packs' |
@@ -1092,7 +1092,7 @@ Arrow cannot carry falls back to JSON, and nothing changes for a client that doe
 | Lake | Parquet (Delta or Iceberg) | Arrow's partner on disk: compressed columns, statistics to skip files |
 | VaR hot files | Drishti's own float32 rows in hierarchy order, memory-mapped, float64 node totals | summing rows runs near memory bandwidth (about 70 GB/s on 24 threads); Arrow would not be faster |
 | Shard partials between servers | raw vectors of doubles | already minimal; Arrow would add framing |
-| Server ↔ Python compute workers | Arrow IPC files, memory-mapped | no copy, no parse ([BI_GUIDE.md](../guides/BI_GUIDE.md)) |
+| Server ↔ Python compute workers | Arrow IPC files, memory-mapped | no copy, no parse ([NOTEBOOK_AND_PYTHON.md](../guides/bi/NOTEBOOK_AND_PYTHON.md)) |
 | Server → console → browser: **VaR contributions** by trade or position | **Arrow** on request; Arrow JS in the browser (vendored) | 61–65% fewer bytes, faster fetch |
 | BI queries | Arrow on request (API clients); JSON in the console's own pages | mostly text: Arrow 8–14% smaller after gzip, parsed slower, painted no sooner |
 | VaR P&L paths, entity pages, ViewModels | JSON | small answers; Arrow is no smaller |
@@ -1110,7 +1110,7 @@ hot file with sharding, is kept for the few measures that cannot do without it.
 |---|---|---|
 | Entity documents read one at a time or searched | **The lake** (Delta or Iceberg) through connectors, drawn by Sutras | trades, reference data, market data, the public-data packs |
 | A figure per entity derived from its inputs | **Computed (derived) kinds**, computed on demand, never stored ([DATA_ARCHITECTURE.md section 12](DATA_ARCHITECTURE.md#12-computed-and-derived-attributes)) | NSMTM, CPMTM, SSPNL, the Checks panels |
-| Heavy or non-linear models per request | **Python compute workers**, Arrow in and out ([BI_GUIDE.md](../guides/BI_GUIDE.md)) | pricing, Monte Carlo, what-ifs |
+| Heavy or non-linear models per request | **Python compute workers**, Arrow in and out ([NOTEBOOK_AND_PYTHON.md](../guides/bi/NOTEBOOK_AND_PYTHON.md)) | pricing, Monte Carlo, what-ifs |
 | Aggregates for dashboards and reports | **The BI engine**: rollups and caches ([ARCHITECTURE.md §28](#28-business-intelligence-on-the-table-layer)) | desk reports, live exposure reports |
 | Large vectors per position, re-aggregated over any scope, interactively, beyond one server | **The hot file and sharding** ([DATA_ARCHITECTURE.md section 13](DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built)) | VaR |
 
@@ -1440,8 +1440,8 @@ database table, an in-memory table), over a SQL query, a Python transform, a mod
 virtual tables (keys, relationships, cardinality, direction) and defines **measures** over them once. Entity documents (a trade with its
 `LEGS`, `CASH_FLOWS` and `EVENTS` in one JSON `doc`) become rows and typed columns, joined where they relate, and every consumer reads them
 the same way. BI keeps what is BI's (reports, visuals, the designer, boards); its datasets and models are the layer's tables and models.
-Every key, check and command: [BI_GUIDE.md](../guides/BI_GUIDE.md); the walk-through: the
-[virtual tables tutorial](../guides/BI_GUIDE.md).
+Every key, check and command: [TABLES_AND_MODELS.md](../guides/bi/TABLES_AND_MODELS.md); the walk-through: the
+[virtual tables tutorial](../guides/bi/TABLES_AND_MODELS.md).
 
 ```
   reports · visuals · designer · boards · publishing        ← BI (Rūpaka): presentation only
@@ -1494,7 +1494,7 @@ Materialised files are a cache: rebuilt at will, never the truth, never written 
 | V14 | DuckDB is the one SQL engine, required; the layer adds no new place that calls it |
 | V15 | Rachana is the layer's only expression language; whatever moved into it was moved, never copied |
 
-**Screens.** The editors (Build › Tables & models, [BI_GUIDE.md section 11](../guides/BI_GUIDE.md#11-the-editors)) follow the
+**Screens.** The editors (Build › Tables & models, [TABLES_AND_MODELS.md section 11](../guides/bi/TABLES_AND_MODELS.md#11-the-editors)) follow the
 chosen mock-ups: tables as a visual view over a sample document with the columns and the rows a chosen role reads, switched with a YAML
 view ([BC](../lenses/mockups/virtual-tables/BC.html)); models as a diagram with a live answer and a measures-first sheet behind one switch
 ([model-BC](../lenses/mockups/virtual-tables/model-BC.html)). Every view edits one draft; a live YAML panel below every visual view follows
@@ -1566,7 +1566,7 @@ contract: adopted are ONNX Runtime for machine-learning inference (Tribuo as the
 
 One generalised pivot for all of Drishti: "these measures, broken down by these dimensions on rows and columns, under these filters, as
 of this date", for any amount of data and every measure Drishti has (a sum of notional, a distinct count, a 99% VaR, an FRTB charge, a
-function a quant wrote this morning), with every total right. How people use it is the [Pivot guide](../guides/BI_GUIDE.md); this
+function a quant wrote this morning), with every total right. How people use it is the [Pivot guide](../guides/bi/PIVOT.md); this
 section is how it is built. The mock-ups the screen was chosen from are in [mockups/pivot/](mockups/pivot/A.html) (A, the
 Excel-familiar layout, was built; B and C are kept for reference).
 
@@ -2108,7 +2108,7 @@ on an engine and what disappears at the moment of the change; C's matrix is the 
 BI owns **presentation**: reports, visuals, the designers (BI Studio), boards, statements, publishing, subscriptions and the presentation of
 alerts. What it computes or defines underneath belongs to the platform, once: expressions are Rachana ([section 23](#23-one-grammar-one-engine)),
 aggregation and totals are the pivot engine's, and tables and models are the table layer's ([section 24](#24-virtual-tables-the-central-table-layer)).
-The user's view is [BI_GUIDE.md](../guides/BI_GUIDE.md); every key of tables and models is [BI_GUIDE.md](../guides/BI_GUIDE.md).
+The user's view is [TABLES_AND_MODELS.md](../guides/bi/TABLES_AND_MODELS.md); every key of tables and models is [TABLES_AND_MODELS.md](../guides/bi/TABLES_AND_MODELS.md).
 
 Principles that shape every part below:
 
@@ -2272,7 +2272,7 @@ refused with `DRS-9127`, as any stacking of VaR is. An aggregate in a table colu
 with `CALCULATE`, Rachana writes a calculated table and relates it.
 
 **Calculated tables** are not a new thing: a virtual table can already take a model's answer as its source (`from: { model: ..., query }`, see
-[BI_GUIDE.md](../guides/BI_GUIDE.md)), so `SUMMARIZECOLUMNS` and `ADDCOLUMNS` become that query, and `FILTER` its `where`.
+[TABLES_AND_MODELS.md](../guides/bi/TABLES_AND_MODELS.md)), so `SUMMARIZECOLUMNS` and `ADDCOLUMNS` become that query, and `FILTER` its `where`.
 `UNION` and `CROSSJOIN` are a SQL table. Such a table may be related in the same model that produces it, as long as its query does not read itself (that cycle is refused). The table
 is computed per business date, like any answer, never held as a stale copy.
 
@@ -2520,7 +2520,7 @@ pivot's saved formulas are migrated in place at start, idempotent and audited (`
 Drishti runs computation that is not Java, and code people write, **out of the server's process**, in worker processes the server
 supervises: the module `drishti-compute` (supervisor, pools, transport, limits, scheduling, fan-out, environments, approvals) and the
 pure-Python worker SDK `drishti_compute`. Nothing in the module knows about BI or VaR: an engine is a Python class a pool loads. How to use
-Python, and the administrator's part, is [BI_GUIDE.md](../guides/BI_GUIDE.md); the operator's guide to the pools is
+Python, and the administrator's part, is [NOTEBOOK_AND_PYTHON.md](../guides/bi/NOTEBOOK_AND_PYTHON.md); the operator's guide to the pools is
 [OPERATIONS_GUIDE.md › Compute workers](../guides/OPERATIONS_GUIDE.md#15-compute-workers); every setting is in
 [CONFIGURATION.md](../admin/CONFIGURATION.md#compute-workers-configcomputecomputeyaml).
 

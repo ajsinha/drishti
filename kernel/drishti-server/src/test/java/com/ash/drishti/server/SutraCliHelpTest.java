@@ -197,7 +197,7 @@ class SutraCliHelpTest {
 
     @Test
     void theRecordedCoverageFloorOfAShippedPackHolds() throws IOException {
-        Path pack = Path.of("..", "..", "config", "packs", "banking", "market-risk");
+        Path pack = Path.of("..", "..", "modules", "banking", "dmod", "packs", "market-risk");
         assertThat(pack.resolve("tests/help-coverage.txt")).exists();
         Run r = run(shipped, "test", pack.toString());
         assertThat(r.err()).isEmpty();

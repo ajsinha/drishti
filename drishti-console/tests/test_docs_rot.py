@@ -231,7 +231,7 @@ def _pack_roots(rel: str) -> list[str]:
 def pack_roots_all() -> tuple[str, ...]:
     """Every pack folder: a folder holding a pack.yaml under config/packs (in its domain folder, core.pack_paths) or examples/packs."""
     return tuple(sorted({p[: -len("/pack.yaml")] for p in tracked()
-                         if re.match(r"(?:config|examples)/packs/(?:[^/]+/)?[^/]+/pack\.yaml$", p)}))
+                         if re.match(r"(?:(?:config|examples)/packs/(?:[^/]+/)?|modules/[^/]+/(?:dmod/)?packs/)[^/]+/pack\.yaml$", p)}))
 
 
 def ignored(paths: list[str]) -> set[str]:
@@ -365,7 +365,7 @@ CODE_SUFFIXES = (".java", ".py", ".js", ".ts", ".yaml", ".yml", ".sh", ".ps1", "
 ENV_EXAMPLES = {"DRISHTI_PG_PASSWORD", "DRISHTI_CI_TOKEN", "DRISHTI_CONSOLE__SECTION__KEY",
                 "DRISHTI_CONSOLE",   # tutorial 10: a shell variable holding the console's address, beside DRISHTI_SERVER
                 "DRISHTI_FIGURES_OUT", "DRISHTI_FIGURES_BASELINE"}   # read only by tests/test_var_family_figures_browser.py (ELEMENTS.md 12.2)
-# Dotted words that look like console keys and are not: a report's YAML path quoted in an error message (BI_GUIDE.md).
+# Dotted words that look like console keys and are not: a report's YAML path quoted in an error message (bi/REPORTS.md).
 NOT_SETTINGS = {"layouts.phone.desk.order"}
 
 
@@ -573,7 +573,7 @@ RESERVED_WORDS = {"BI", "RUPAKA", "FORM", "FUNC", "VAR", "WHAT", "DATAMAP", "DAT
 def packs() -> list[dict]:
     out = []
     for p in tracked():
-        if re.match(r"(config/|examples/|docs/guides/examples/)packs?/(?:[^/]+/)?[^/]+/pack\.yaml$", p) or re.match(r"(?:[a-z]+/)?drishti-[a-z-]+/src/test/resources/.*packs/[^/]+/pack\.yaml$", p):
+        if re.match(r"((config/|examples/|docs/guides/examples/)packs?/(?:[^/]+/)?|modules/[^/]+/(dmod/)?packs/)[^/]+/pack\.yaml$", p) or re.match(r"(?:[a-z]+/)?drishti-[a-z-]+/src/test/resources/.*packs/[^/]+/pack\.yaml$", p):
             try:
                 out.append(yaml.safe_load(read(p)) or {})
             except yaml.YAMLError:
@@ -698,7 +698,7 @@ def test_obsolete_designs_are_deleted_not_archived():
 def test_the_corpus_is_the_whole_documentation():
     docs = documents()
     assert "README.md" in docs and "deploy/stack/README.md" in docs
-    assert any(d.startswith("config/packs/") and d.endswith("/README.md") for d in docs)
+    assert any("/packs/" in d and d.endswith("/README.md") for d in docs)
     assert any(d.startswith("plugins/") for d in docs) and any(d.startswith("docs/tutorials/") for d in docs)
     assert len(docs) > 200
 

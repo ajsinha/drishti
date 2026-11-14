@@ -123,7 +123,7 @@ The browser column names the console page that runs the same engine; those pages
 | Run VaR's many-scope sums on the bundled OpenBLAS or on the pure-Java path, live | Admin → **Engines** → Linear algebra: OpenBLAS | `drishti.py server blas status`, `server blas java --reason ...`, `server blas native --reason ...` (also as `admin blas`; [OPERATIONS_GUIDE.md section 2.1](OPERATIONS_GUIDE.md#149-native-libraries-blas)) |
 | Make, check or remove the AWS side of the S3 Tables or Delta Lake on S3 connector (bucket, namespace or prefix, IAM policy) | | `deploy/aws/s3-tables/s3-tables.sh`, `deploy/aws/delta-s3/delta-s3.sh` (`.ps1` on Windows; [7.14](#714-the-aws-connectors-tool-scripts-s3-tables-and-delta-lake-on-s3)) |
 | See or check the shape of a command's data (its data contract), or draft the contract of a new kind | | `drishti.py contract list`, `contract show`, `contract check`, `contract docs`, `contract bootstrap` |
-| Pin the Python libraries code people write may use on the server's compute pool `python` (every file's sha256, for `pip --require-hashes`) | | `python tools/python_lock.py config/compute/locks/python.in --out config/compute/locks/python.lock` ([BI_GUIDE.md section 19](../architecture/ARCHITECTURE.md#291-one-python-runtime)) |
+| Pin the Python libraries code people write may use on the server's compute pool `python` (every file's sha256, for `pip --require-hashes`) | | `python tools/python_lock.py config/compute/locks/python.in --out config/compute/locks/python.lock` ([bi/NOTEBOOK_AND_PYTHON.md section 19](../architecture/ARCHITECTURE.md#291-one-python-runtime)) |
 
 Use the page for a one-off file, a first look at new data, or when you want to see each choice before it is made. Use the command
 line for anything that repeats, runs at night, or lives in a pipeline: it has exit codes, a lock, a log line and a JSON summary,
@@ -618,24 +618,24 @@ counterparty-mine/counterparty-mine.v1.sutra.yaml:7 DRS-2021 unknown panel kind 
 $ echo $?
 1
 
-$ drishti-console/.venv/bin/python tools/drishti.py sutra test config/packs/banking/market-risk
+$ drishti-console/.venv/bin/python tools/drishti.py sutra test modules/banking/dmod/packs/market-risk
      frtb-sensitivity: help coverage 9/9 (100%)
-ok   config/packs/banking/market-risk/sutras/market-risk/frtb-sensitivity.v1.sutra.yaml (2 samples)
+ok   modules/banking/dmod/packs/market-risk/sutras/market-risk/frtb-sensitivity.v1.sutra.yaml (2 samples)
      pnl-explain: help coverage 4/4 (100%)
-ok   config/packs/banking/market-risk/sutras/market-risk/pnl-explain.v1.sutra.yaml (2 samples)
+ok   modules/banking/dmod/packs/market-risk/sutras/market-risk/pnl-explain.v1.sutra.yaml (2 samples)
 …    (stress-result and stress-scenario likewise)
-skip config/packs/banking/market-risk/sutras/market-risk/trade-valuation.v1.sutra.yaml (no samples)
+skip modules/banking/dmod/packs/market-risk/sutras/market-risk/trade-valuation.v1.sutra.yaml (no samples)
      var: help coverage 5/5 (100%)
-ok   config/packs/banking/market-risk/sutras/market-risk/var.v1.sutra.yaml (2 samples)
+ok   modules/banking/dmod/packs/market-risk/sutras/market-risk/var.v1.sutra.yaml (2 samples)
 ```
 
-`sutra lint config/packs/banking/trading` prints `ok` for each of the pack's 134 Sutras (blocks expanded) in about seven seconds; `sutra test config/packs/banking/trading` renders each against the samples in its
+`sutra lint modules/banking/dmod/packs/trading` prints `ok` for each of the pack's 134 Sutras (blocks expanded) in about seven seconds; `sutra test modules/banking/dmod/packs/trading` renders each against the samples in its
 `tests/` folder.
 
 #### The tests convention
 
 ```
-config/packs/<domain>/<pack>/
+modules/<module>/packs/<pack>/
   sutras/.../irs-fixfloat.v1.sutra.yaml
   tests/irs-fixfloat/         <- one folder per Sutra, named by the Sutra's name (the `sutra:` line)
     cases.jsonl               <- the cases, one a line: {"case": "MX-20000001", "document": {...}}; the kind comes from the Sutra's `match.kind`
@@ -704,7 +704,7 @@ Publish `sutra-tests.xml` with your CI's JUnit report step. A Sutra whose panels
 when it ends, and no port is opened.
 
 `sutra test docs/guides/examples` passes with the seven packs (the `linked-sources` example reads `CP-SUMMIT`, `NS-SUMMIT-NY` and `DESK-FI` from them); without them its failure line says `NS-SUMMIT-NY
-not found`, which means the pack holding that entity is not enabled. `sutra test config/packs/<domain>/<pack>` reports `skip (no samples)` for a Sutra with no `tests/<sutra>/` folder; that is not a failure.
+not found`, which means the pack holding that entity is not enabled. `sutra test modules/<module>/packs/<pack>` reports `skip (no samples)` for a Sutra with no `tests/<sutra>/` folder; that is not a failure.
 
 **Limits.** The CLI keeps the server's input limits: a file over `drishti.builder.max-file-mb` (5 MB by default) is refused with one line that names it, text that is not UTF-8 says so, an engine that
 cannot start (for example a pack that is not found: set `DRISHTI_PACKS_DIR`) ends with `sutra: ...` and exit `1`, never a stack trace. `--kind` is a name (letters, digits, `.`, `_`, `-`, up to 64),
@@ -800,7 +800,7 @@ Try it without touching anything of yours: `DRISHTI_JAR=... DRISHTI_PORT=18974 d
 
 ### `pack new`: a complete pack from JSON Lines
 
-Writes `config/packs/<domain>/<name>/` (or `--out`): `pack.yaml` (kinds, mnemonics, columns, and with a date a connector, routes and the
+Writes `modules/<module>/packs/<name>/` (or `--out`): `pack.yaml` (kinds, mnemonics, columns, and with a date a connector, routes and the
 optional `ingest:` block), `samples/`, one Sutra per kind or `--match` group, `tests/<sutra>/` with `expect.yaml`,
 `config/about.yaml` (kind titles and glossary entries with `TODO` text for you to fill in) and a `README.md`; then it runs
 `sutra lint` and `sutra test` on it. With a dated store option it also **writes your documents into that store**, so the pack
@@ -1232,7 +1232,7 @@ The offline path: no server API and no token. Full guide with real output, promo
 [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#8-deploy-promote-and-roll-back-by-copying).
 
 ```bash
-drishti.py pack bundle config/packs/banking/trading --out dist                  # trading-1.0.0.tar.gz + .sha256 + .manifest.json (runs pack check first)
+drishti.py pack bundle modules/banking/dmod/packs/trading --out dist                  # trading-1.0.0.tar.gz + .sha256 + .manifest.json (runs pack check first)
 drishti.py pack verify dist/trading-1.0.0.tar.gz                # sha256, manifest checksums, schema, server version, sutra lint + test
 drishti.py pack deploy dist/trading-1.0.0.tar.gz --to /opt/drishti/packs --backup /opt/drishti/backups [--dry-run]
 drishti.py pack rollback trading --to /opt/drishti/packs --backup /opt/drishti/backups [--version 1.0.0]
@@ -1672,7 +1672,7 @@ alone is the older form: the options and the pack decide. A table whose lake fil
 loader only (`--engine java --batch-id ID`: the batch recorded in each date's commit, never appended twice); the Python path refuses it.
 
 ```bash
-python3 tools/drishti.py lake build --from drop/endur-2026-10-28.jsonl.gz --as-of 2026-10-28 --pack config/packs/banking/trading \
+python3 tools/drishti.py lake build --from drop/endur-2026-10-28.jsonl.gz --as-of 2026-10-28 --pack modules/banking/dmod/packs/trading \
     --connector trade-endur --lake demo                  # partitioned by business_date and PRODUCT_TYPE, as config/lakes/demo.yaml says
 python3 tools/drishti.py lake show                       # every lake and table as the server reads them
 python3 tools/drishti.py lake check                      # connectors name known lakes; lake files match the tables on disk
@@ -1832,7 +1832,7 @@ such as AWS Glue: `catalog=rest`, `uri=…`, `warehouse=…`, `catalog.rest.sign
 to maintain ([OPERATIONS_GUIDE.md › Lake maintenance: Admin → Lakes → Maintain and `lake maintain`, section 8](OPERATIONS_GUIDE.md#163-iceberg-lakes)).
 
 ```bash
-python3 tools/drishti.py lake build --from data/testdata/market-risk/pnl-vector/ --pack config/packs/banking/market-risk --connector risk-store \
+python3 tools/drishti.py lake build --from data/testdata/market-risk/pnl-vector/ --pack modules/banking/dmod/packs/market-risk --connector risk-store \
     --kind pnl-vector --lake data/iceberg --format iceberg
 ```
 
@@ -1986,7 +1986,7 @@ connector (`settings.domain`, `settings.layout.<kind>.columns`), and the key, da
 `ingest.trade.flatten` adds `NOTIONAL` and `INDEX_NAME` from the first leg, [7.6](#76-the-two-engines)). Options on the command line win.
 
 ```yaml
-# config/packs/banking/trading/pack.yaml (the parts lake build reads; one Delta connector per source system)
+# modules/banking/dmod/packs/trading/pack.yaml (the parts lake build reads; one Delta connector per source system)
 pack: trading
 connectors:
   trade-endur:
@@ -2006,7 +2006,7 @@ The pack has three Delta connectors for `trade`, so the run names one with `--co
 sixteen promoted columns); captured as a dry run:
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --pack config/packs/banking/trading \
+drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --pack modules/banking/dmod/packs/trading \
     --kind trade --connector trade-endur --key TRADE_ID --as-of 2026-09-22 --partition-by PRODUCT_TYPE --lake lake3 --dry-run --json
 # "pack": "trading", "domain": "trading", "kind": "trade", "table": "lake3/trading/trade_endur", "promote": ["TRADE_ID", "SOURCE_SYSTEM",
 # "PRODUCT_TYPE", ... "TRADER_ID"] (16), "documents": 4407, "status": "dry-run", "exitCode": 0
@@ -2015,7 +2015,7 @@ drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdat
 In production the same run names the real lake and tells the server (the ETL's last step):
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py lake build --from /srv/drop/endur-2026-10-16.json.gz --pack config/packs/banking/trading --kind trade --connector trade-endur \
+drishti-console/.venv/bin/python tools/drishti.py lake build --from /srv/drop/endur-2026-10-16.json.gz --pack modules/banking/dmod/packs/trading --kind trade --connector trade-endur \
     --key TRADE_ID --as-of 2026-10-16 --partition-by PRODUCT_TYPE --lake /srv/drishti/delta \
     --signal http://drishti.internal:18480 --token-file /etc/drishti/loads.token
 ```
@@ -2179,7 +2179,7 @@ a table delta-rs would read only in part (column mapping, deletion vectors, v2 c
 **Through lake build** (the lock, the run log, the summary, the signal as always):
 
 ```bash
-python3 tools/drishti.py lake build --engine java --from /data/pv/2026-10-28/ --as-of 2026-10-28 --pack config/packs/banking/market-risk --kind scenario-pv \
+python3 tools/drishti.py lake build --engine java --from /data/pv/2026-10-28/ --as-of 2026-10-28 --pack modules/banking/dmod/packs/market-risk --kind scenario-pv \
     --key SCENARIO_PV_ID --mode overwrite-dates --lake /var/lib/drishti/delta \
     --loader-set memory.budget-mb=16384 --loader-set memory.spill-dir=/mnt/nvme/spill
 ```
@@ -2275,7 +2275,7 @@ Options: `--config FILE`, `--set key.path=value` (repeatable; overrides the file
 ```yaml
 source:
   files: /data/pv/2026-10-28/*.jsonl.gz
-  pack: config/packs/banking/market-risk
+  pack: modules/banking/dmod/packs/market-risk
   id: SCENARIO_PV_ID
   as-of: 2026-10-28                       # the day's folder: its business date, given (a row's own date is only counted)
 target:
@@ -3217,7 +3217,7 @@ drishti-console/.venv/bin/python tools/drishti.py edits status
 
 ### `bi`: workspaces and the catalogue (Rupaka)
 
-Business intelligence over REST ([BI_GUIDE.md](BI_GUIDE.md), [API_REFERENCE.md](API_REFERENCE.md#3-business-intelligence-apiv1bi)), as the token's user sees it: the
+Business intelligence over REST ([README.md](bi/README.md), [API_REFERENCE.md](API_REFERENCE.md#3-business-intelligence-apiv1bi)), as the token's user sees it: the
 server shows only what that person may open. Reads need no scope; `publish` needs a token with `bi:write` (and the user the `bi-author` power and the member role).
 
 ```
@@ -3273,7 +3273,7 @@ drishti.py bi sql "SELECT ..." --model M [--explain] [--format table|json|csv|js
 ```
 
 BI's own dataset and model files (`rachana: 1` and `2`) and their old expression syntax are migrated into tables and models of the table layer by
-`drishti.py tables migrate` ([BI_GUIDE.md](BI_GUIDE.md), the migration); BI refuses them where it reads (`DRS-9196`).
+`drishti.py tables migrate` ([TABLES_AND_MODELS.md](bi/TABLES_AND_MODELS.md), the migration); BI refuses them where it reads (`DRS-9196`).
 
 ```bash
 drishti-console/.venv/bin/python tools/drishti.py bi expr validate "sum(trades.NOTIONAL) / count(trades)" --model trading-risk
@@ -3294,7 +3294,7 @@ console the migration's state is on Admin → **BI** (items that could not be co
 ### `bi model`, `bi mq`: models and model queries
 
 What the model designer and a report's visuals do, over REST as the token's user (the server checks every model and answers every query with your row
-rules and masks; [BI_GUIDE.md section 23](BI_GUIDE.md#5-models-and-datasets-what-a-report-reads)). Reads need no scope.
+rules and masks; [MODELS_AND_DATASETS_FOR_REPORTS.md section 23](bi/MODELS_AND_DATASETS_FOR_REPORTS.md#5-models-and-datasets-what-a-report-reads)). Reads need no scope.
 
 ```
 drishti.py bi model list [--kind model|implicit|compat]          the models and datasets you may read, with the name@major a query uses
@@ -3312,7 +3312,7 @@ a table with its plan, its as-of date and the columns masked for you; `--json` p
 
 ### `bi transform`: a Transform's inputs as you, and the snippets
 
-What the Transform editor's inputs and snippets picker do (`tools/bitransform.py`, loaded by `drishti.py`; [BI_GUIDE.md › Data prep: the Transform editor](BI_GUIDE.md#5-data-prep-the-transform-editor)). `input`
+What the Transform editor's inputs and snippets picker do (`tools/bitransform.py`, loaded by `drishti.py`; [NOTEBOOK_AND_PYTHON.md › Data prep: the Transform editor](bi/NOTEBOOK_AND_PYTHON.md#5-data-prep-the-transform-editor)). `input`
 asks the server, as the token's user, for each input of a Python dataset (`POST /api/v1/bi/python/input`: a model query, or a pack kind read through a
 connector) and prints its rows, what is masked for you and a short profile of every column; `snippets` and `snippet` read the console's library
 (`drishti-console/config/prep-snippets.yaml`, no server) and print the step a snippet makes, each value written as a literal.
@@ -3323,7 +3323,7 @@ drishti.py bi transform snippets [--json]                                       
 drishti.py bi transform snippet ID [NAME=VALUE ...] [--inputs a,b]                              one step (a list: a,b; a mapping: from:to,from:to)
 ```
 
-Captured, the steps of [the Notebook tutorial, step 12](BI_GUIDE.md#step-12--prepare-raw-trades-step-by-step-the-transform-editor):
+Captured, the steps of [the Notebook tutorial, step 12](bi/NOTEBOOK_AND_PYTHON.md#step-12--prepare-raw-trades-step-by-step-the-transform-editor):
 
 ```text
 $ python3 tools/drishti.py bi transform input docs/tutorials/data/endur-trades-cleaned.dataset.yaml --rows 2
@@ -3351,7 +3351,7 @@ drishti.py bi item tests ID [--role R]                                          
 drishti.py bi dataset refresh ID [--now] [--wait S]                                 the refresh state; --now refreshes and waits until it ends (a rachana 2 dataset: through the models that read it)
 ```
 
-Publishing is `bi catalogue publish ID` (above). Captured, the steps of [the reports tutorial, Part D, Part D](BI_GUIDE.md#part-d--bi-that-runs-itself):
+Publishing is `bi catalogue publish ID` (above). Captured, the steps of [the reports tutorial, Part D, Part D](bi/DISTRIBUTION_AND_ALERTS.md#part-d--bi-that-runs-itself):
 
 ```text
 $ python3 tools/drishti.py bi item new economics-desk docs/tutorials/data/trades-daily.dataset.yaml
@@ -3369,12 +3369,12 @@ fail  Close to 100 trades: expected 100 ± 1%, found 750
 ### `bi runs`, `bi mq --async`, `bi sql --async`: BI runs
 
 `drishti.py bi runs list|get|submit|estimate|wait|result|cancel|rerun|export|share|unshare|promote|keep|schedule|schedules|storage|suggestions` does what the BI
-Runs tab does (sharing, schedules, CSV and Excel export, and for a bi-admin the rollup suggestions), as the token's user (`tools/biruns.py`); `bi mq` and `bi sql` take `--async [--wait 2s] [--yes]`. Examples, exit codes and output: [BI_GUIDE.md section 28](BI_GUIDE.md#1512-on-the-command-line)
+Runs tab does (sharing, schedules, CSV and Excel export, and for a bi-admin the rollup suggestions), as the token's user (`tools/biruns.py`); `bi mq` and `bi sql` take `--async [--wait 2s] [--yes]`. Examples, exit codes and output: [LIVE_REPORTS_AND_BOARDS.md section 28](bi/LIVE_REPORTS_AND_BOARDS.md#1512-on-the-command-line)
 and [CLI_REFERENCE.md section 5.7](#12-bi-and-tables).
 
 ### `bi statement`
 
-A report's statement pages ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](BI_GUIDE.md#12-statements-paginated-reports-page-exact-one-per-reader)) made for the token's user, with their own masks and row rules: what the BI Studio's Paper
+A report's statement pages ([REPORT_FILE_FORMAT_STATEMENTS.md › Reports: the YAML, the visuals and how they behave, section 24](bi/REPORT_FILE_FORMAT_STATEMENTS.md#12-statements-paginated-reports-page-exact-one-per-reader)) made for the token's user, with their own masks and row rules: what the BI Studio's Paper
 tab previews and a subscription mails.
 
 ```
@@ -3420,7 +3420,7 @@ wrote empty.pdf (2,093 bytes)
 
 ### `tables`: virtual tables and models
 
-The table layer's definitions under `config/tables` (`tools/tablescli.py`; [BI_GUIDE.md](BI_GUIDE.md)): listed, checked, previewed over sample documents,
+The table layer's definitions under `config/tables` (`tools/tablescli.py`; [TABLES_AND_MODELS.md](bi/TABLES_AND_MODELS.md)): listed, checked, previewed over sample documents,
 traced, and BI's datasets and models migrated into them. The commands run in Java from the server's exec jar
 (`java -jar drishti-server-*-exec.jar tables ...`) without starting a server and write nothing under the data folder; paths are read from
 the folder you run them in (`--root` for another catalogue folder). Every command takes `--json`.
@@ -3671,7 +3671,7 @@ drishti-console/.venv/bin/python tools/drishti.py play simm NS-ALDERSHOT-LDN --s
 
 ### `pivot`: the pivot engine
 
-The pivot engine as the token's user sees it (`tools/pivotcli.py`; [BI_GUIDE.md](BI_GUIDE.md)); every figure is the server's:
+The pivot engine as the token's user sees it (`tools/pivotcli.py`; [PIVOT.md](bi/PIVOT.md)); every figure is the server's:
 
 - `pivot sources`: the tables (and `var`) you may pivot. `pivot fields SOURCE [--date]`: its fields with their types, its own measures,
   the built-in functions, what is masked for you.
@@ -3682,18 +3682,18 @@ The pivot engine as the token's user sees it (`tools/pivotcli.py`; [BI_GUIDE.md]
   every sketch exactly (exact on request); `--approximate` answers distinct counts and percentiles by their sketches at any size and
   chooses a level's top N by a count with a Space-Saving summary; `--no-rollups` reads the table even when a rollup covers the view; the
   line `computed as:` says how the answer was computed
-  ([BI_GUIDE.md sections 23 and 24](BI_GUIDE.md#24-the-screens-switches-exact-or--progressive-rollups)).
+  ([PIVOT_SCALE_AND_CUBES.md sections 23 and 24](bi/PIVOT_SCALE_AND_CUBES.md#24-the-screens-switches-exact-or--progressive-rollups)).
 - `pivot live start [view flags] [--approximate]`: a live pivot (its id, the node that holds it, how it is kept current);
   `pivot live list` (yours: recomputes, unchanged checks, streaming or not); `pivot live stop ID`
-  ([BI_GUIDE.md section 25](BI_GUIDE.md#25-live-pivots)).
+  ([PIVOT_SCALE_AND_CUBES.md section 25](bi/PIVOT_SCALE_AND_CUBES.md#25-live-pivots)).
 - `pivot comments OWNER/NAME [--cell DIM=V,...] [--open]`: a saved view's cell comments; `--add TEXT --cell DIM=V,... [--measure M]`
   adds one (`--cell '*'`: the grand total); `--resolve ID`, `--reopen ID`, `--delete ID` (its author or the view's owner)
-  ([BI_GUIDE.md section 26](BI_GUIDE.md#26-cell-comments)).
+  ([PIVOT_SCALE_AND_CUBES.md section 26](bi/PIVOT_SCALE_AND_CUBES.md#26-cell-comments)).
 - `pivot estimate`: what the view reads before it runs.
 - `pivot export --format xlsx|csv|arrow [--what pivot|rows|definition] [--cell DIM=V,...] -o FILE`: the Excel workbook with its outline
   and `SUM` formulas only where a figure adds up and a Provenance sheet; CSV; Arrow; a cell's rows; the view as YAML. Audited.
 - `pivot views`; `pivot save NAME [view flags] [--share role:risk]`.
-- `--option KEY=V` (repeatable): a provider's option; the VaR source's (the MR cube, [BI_GUIDE.md section 29](BI_GUIDE.md#29-the-mr-cube-preset)) are `scope`,
+- `--option KEY=V` (repeatable): a provider's option; the VaR source's (the MR cube, [PIVOT_SCALE_AND_CUBES.md section 29](bi/PIVOT_SCALE_AND_CUBES.md#29-the-mr-cube-preset)) are `scope`,
   `horizon`, `method`, `confidence`, `esConfidence`, `set` and `ccy`.
 - `pivot mr headline|cell|versions|explain|ladder|heat|whatif`: the MR cube's lens (`/api/v1/risk/mr`): the view's headline, a cell's
   tail (`--cell DIM=V,...`), the slider's dates, why a scope moved (`--scope`, `--from`, `--to`), the DV01 ladder (`--grid`), the heat
@@ -3759,7 +3759,7 @@ Exit codes: 0 (`ready`, `computing` or `stale`); 1 when the answer is `failed` o
 
 The data contract of every command (`tools/contracts.py`, also run on its own as `python3 tools/contracts.py ...`;
 [docs/contracts/README.md section 16](../contracts/README.md#16-contracts-of-every-command)). Each mnemonic's contract is
-`config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`. No server is needed.
+`modules/<module>/packs/<pack>/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`. No server is needed.
 - `contract list` prints every command with its kind, pack, class, status and the number of points still to review.
 - `contract show NSET` prints one contract (by command or kind; `--json` as JSON).
 - `contract check` fails when a command has no contract, a contract is invalid or no longer matches its pack (identity, id pattern,
@@ -3868,6 +3868,7 @@ guides are listed in [DATA_GUIDE.md section 8](../guides/DATA_GUIDE.md#8-connect
 | `tools/packgen/comswap_synth.py` | **The synthetic Endur-like commodity-swap book**: deals with 1 to 4 legs, monthly cash flows, resets, events, packages and novations; upper-case keys in a fixed order, digit-string codes that must stay text, blanks spelt as `""`, `null`, `0` and a missing key. `--mix` makes a whole book (ComSwap, ComFut, Cash, Commodity and a rare CallNot by `PRODUCT_TYPE`). Deterministic (`--seed`); at most 10,000 deals. Every value is invented. |
 | `tools/packgen/note_synth.py` | a synthetic structured note of another shape (camelCase keys; note, coupon periods, observations, fixings; a call schedule and a basket of underlyings), to show the pack generator is generic. Every value is invented. |
 | `tools/packgen/pack_from_jsonl.py` | the engine of `drishti.py pack new`: a complete pack from a folder of JSON Lines |
+| `tools/packs_to_modules.py` | the one-off that moved the first-party packs into their modules and rewrites every path naming them (idempotent: run again over later-added text) |
 | `tools/packgen/source_module.py` | `drishti.py pack new --source-for <kind> --system <SYSTEM>`: a source-system module (connectors, field map, inbox rule, section, docs) from a sample file |
 | `tools/packgen/sourcemap.py` | proposes the native-to-canonical field map of a source system from a sample file (used by `source_module.py`) |
 | `tools/packgen/swapone_synth.py` | a synthetic SwapOne-style trade file with invented names, to show and test `--source-for` |

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Sutra tests of the world-economy pack (config/packs/<domain>/<pack>/tests/): a few real documents per kind, copied
+"""The Sutra tests of the world-economy pack (modules/<module>/packs/<pack>/tests/): a few real documents per kind, copied
 from the generated samples, an expect.yaml per kind and the help-coverage ratchet. Which documents and what they expect is in
 pack_tests.yaml; the documents come from build_docs, so a data refresh updates the tests with the packs.
 
@@ -45,7 +45,7 @@ def header() -> str:
 
 
 def files(pack: str, docs: dict, base: Path | None = None) -> dict[Path, str]:
-    """Everything under <base>/tests for the pack (base defaults to config/packs/<domain>/<pack>); kinds without documents (--no-imf) are skipped,
+    """Everything under <base>/tests for the pack (base defaults to modules/<module>/packs/<pack>); kinds without documents (--no-imf) are skipped,
     and so are sample ids a narrower build has no document for."""
     tests = (base or pack_dir(pack)) / "tests"
     cfg, out = spec()[pack], {}

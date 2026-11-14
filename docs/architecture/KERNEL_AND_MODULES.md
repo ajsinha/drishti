@@ -174,7 +174,7 @@ Notebook and Admin screens, the Help centre, search, embed and phone pages, and 
 (section 11). The kernel answers their questions over its REST API; it serves no page and no UI static file.
 
 **Not in it, because they are modules:** `drishti-banking`, `drishti-compute-banking`, `drishti-console/plugins/{banking,economy}`, the drishti-risk library, the
-packs of `config/packs/{banking,economy,capitalmarkets}`, their lenses, lakes, BI content, feeds, guides and tutorials. Each of those is a
+packs (now in each module's own `packs/` folder), their lenses, lakes, BI content, feeds, guides and tutorials. Each of those is a
 module (section 14.1 lists today's leaks).
 
 ### 2.2 The kernel API
@@ -1273,7 +1273,7 @@ The files, all in `examples/genomics/` (laid out as inside the `.dmod`; the proj
 ### 8.10 Banking's equivalent
 
 Banking becomes the same shape at `modules/banking/` in this repository (Q9): `banking-compute` ← `drishti-compute-banking`,
-`banking-service` ← `drishti-banking`, `banking-python` ← `drishti_banking` and the packs' Python, `banking-packs` ← `config/packs/banking/`
+`banking-service` ← `drishti-banking`, `banking-python` ← `drishti_banking` and the packs' Python, `banking-packs` ← `modules/banking/dmod/packs/`
 (+ its lenses, BI and lake forms), `banking-console` ← `drishti-console/plugins/banking/` (plugin.yaml format 1 → 2, the nine route files
 reduced to context builders, the ~35 API pass-throughs replaced by the kernel's proxy), `banking-docs` ← the seven banking guides and nine
 tutorials, `banking-test` ← the banking tests, the VaR exact check and `BankingAbsenceTest`. The file-by-file mapping:

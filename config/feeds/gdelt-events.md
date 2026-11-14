@@ -64,4 +64,4 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"EVENT_COUNTRY_ID": "GDELT-AUS", "NAME": "Australia", "ISO3": "AUS", "COUNTRY_NAME": "Australia", "DATE": "2026-11-05", "EVENTS": 92, "MENTIONS": 4410, "AVG_TONE": -2.8054, "AVG_GOLDSTEIN": 1.0946, "CONFLICT_SHARE": 25.0, "COOPERATION_SHARE": 75.0, "EVENTS_WINDOW": 160, "AVG_TONE_WINDOW": -2.2956, "TONE_CHANGE": -0.5098, "WINDOW_DAYS": 2}
 ```
 
-The contract: `config/packs/economy/gdelt-events/contracts/event-country.contract.yaml` ([gdelt-events](../../docs/contracts/packs/gdelt-events.md)).
+The contract: `modules/economy/packs/gdelt-events/contracts/event-country.contract.yaml` ([gdelt-events](../../docs/contracts/packs/gdelt-events.md)).

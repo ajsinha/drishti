@@ -95,8 +95,8 @@ ${DRISHTI_DELTA_ROOT}/risk/
 ```
 
 No separate SIMM sensitivity table: SIMM reads the same records as FRTB-SA (contracts
-[`position-sensitivity.contract.yaml`](../../config/packs/banking/market-risk/contracts/position-sensitivity.contract.yaml) and
-[`risk-factor.contract.yaml`](../../config/packs/banking/market-risk/contracts/risk-factor.contract.yaml)). **What SIMM reads from SENS:** the elements with measures
+[`position-sensitivity.contract.yaml`](../../modules/banking/dmod/packs/market-risk/contracts/position-sensitivity.contract.yaml) and
+[`risk-factor.contract.yaml`](../../modules/banking/dmod/packs/market-risk/contracts/risk-factor.contract.yaml)). **What SIMM reads from SENS:** the elements with measures
 `DV01`, `IE01`, `CS01`, `DELTA`, `VEGA` (with `IMPLIED_VOL`) and `BASE_CORR`; not `CURVATURE_UP`, `CURVATURE_DOWN` or `GAMMA` (SIMM's
 curvature is computed from the vegas). A bank whose systems already produce CRIF loads it into SENS by the mapping of
 [FRTB_DATA_STRUCTURES.md section 11.1](FRTB.md#271-from-isda-crif-rows).

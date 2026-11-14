@@ -406,14 +406,14 @@ line and Export data's `data.flight` on the kind. One part; any member may answe
 {"form": "model", "request": {"model": "trades-basic", "query": {"select": {"fields": ["trade.DESK"], "measures": ["MTM"]}, "sort": [{"by": "MTM", "desc": true}], "limit": 50}}}
 ```
 
-`query` is an MQ query ([BI_GUIDE.md](BI_GUIDE.md)); the request may also be the MQ text or JSON with `model` in it, or
+`query` is an MQ query ([README.md](bi/README.md)); the request may also be the MQ text or JSON with `model` in it, or
 `{"model": …, "sql": "<a DSQL statement>"}` (what Flight SQL sends, section 6). Needs the BI power.
 Schema: the answer's columns (text utf8, integers int64, decimals float64); metadata `drishti.model`, `drishti.masked`. Scope:
 `data:read` or `data:read:bi`. Snapshot only.
 
 #### 3.3 `pivot`
 
-The request is the pivot view, exactly as `POST /api/v1/pivot/query` takes it ([BI_GUIDE.md](BI_GUIDE.md)). Schema: `ROW`, `COLUMN`,
+The request is the pivot view, exactly as `POST /api/v1/pivot/query` takes it ([PIVOT.md](bi/PIVOT.md)). Schema: `ROW`, `COLUMN`,
 one utf8 field per dimension, `MEASURE`, `VALUE` (float64), `MEMBERS` (int64); metadata `drishti.provenance`, `drishti.source`. Scope:
 `data:read` or `data:read:<the view's source>`. Audited as `pivot.query` too. Snapshot only.
 

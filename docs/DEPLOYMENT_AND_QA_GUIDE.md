@@ -760,7 +760,7 @@ market-risk cube, the Pivot screen on the VaR source with VaR and ES by desk (a 
 ![The MR cube: VaR by desk in the Pivot](img/deploy/11-mr-cube.jpg)
 
 **From the command line:** `tools/drishti.py pivot run --source var --rows MGMT.DESK --values "var()"` prints the same cube.
-Details: [guides/BI_GUIDE.md](guides/BI_GUIDE.md), [guides/BI_GUIDE.md](guides/BI_GUIDE.md).
+Details: [guides/bi/README.md](guides/bi/README.md), [guides/bi/README.md](guides/bi/README.md).
 
 ### 8.9 The Elements gallery
 

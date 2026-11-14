@@ -89,7 +89,7 @@ class PackSpec:
     scoped_fields: set[str] = field(default_factory=set)
     # connector -> {"kinds": [...], "settings": {...}}: kinds computed when asked by a derived connector (plugin derived) instead of
     # stored: no Delta table, no samples and no documents; their ids are the group keys the members name (since 2.9.2,
-    # docs/guides/BI_GUIDE.md)
+    # docs/guides/bi/README.md)
     derived: dict[str, dict] = field(default_factory=dict)
 
     @property
@@ -102,10 +102,18 @@ class PackSpec:
 
 
 def pack_dir(spec: PackSpec) -> Path:
-    """Where the pack is written: its domain's folder, config/packs/<domain>/<name> (core when it names none), or
-    examples/packs/<name> for a retired example pack."""
+    """Where the pack is written: where the product keeps it (the packs folder of the module that owns it, found by the one pack
+    resolver), else modules/<module>/packs/<name> (core when it names none), or examples/packs/<name> for a retired example pack. With
+    DRISHTI_PACKS_OUT set, <out>/<domain>/<name>."""
     if spec.retired and not os.environ.get("DRISHTI_PACKS_OUT"):
         return EXAMPLES / spec.name
+    if not os.environ.get("DRISHTI_PACKS_OUT"):
+        if str(ROOT / "drishti-console") not in sys.path:
+            sys.path.insert(0, str(ROOT / "drishti-console"))
+        from core.pack_paths import pack_dirs
+        home = pack_dirs(PACKS).get(spec.name)
+        if home is not None:
+            return home
     return PACKS / (spec.domain or "core") / spec.name
 
 

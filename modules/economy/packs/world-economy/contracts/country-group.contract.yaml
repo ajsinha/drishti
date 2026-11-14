@@ -1,0 +1,199 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the country-group kind (command ECG): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap country-group`; completed by hand.
+kind: country-group
+mnemonic: ECG
+pack: world-economy
+version: '1.0'
+class: computed
+status: active
+title: Country group
+description: 'A World Bank region or income group (or the world), computed from its member economies when asked: output, population, growth, inflation
+  and its largest economies.'
+source: 'computed by Drishti: the derived connector macro-groupings over the kind economy'
+grain: One record per GROUP_ID of the economy records, computed when asked.
+key:
+- GROUP_ID
+id-pattern:
+- ^ECG-
+dated-by: on request
+cadence:
+  frequency: on change
+  due: recomputed from its source kind (connector refresh 60s)
+binding-hint:
+  computed: true
+fields:
+- name: GROUP_ID
+  type: id
+  presence: required
+  description: The value the economy records are grouped by ($.REGION_GROUP; each also joins $.INCOME_GROUP, 'ECG-WLD')
+- name: MEMBER_ECONOMIES
+  type: id list
+  presence: derived
+  description: The ids of the grouped economy records (at most 100000)
+- name: ECONOMIES
+  type: integer
+  presence: derived
+  description: 'The member economies: every economy whose REGION_GROUP or INCOME_GROUP is the key (every economy for ECG-WLD)'
+- name: GDP_USD_BN
+  type: amount
+  presence: derived
+  description: The members' GDP summed, USD bn (each at its latest year)
+- name: POPULATION_M
+  type: amount
+  presence: derived
+  description: The members' population summed, millions
+- name: GDP_PC_GDP
+  type: amount
+  presence: derived
+  description: GDP summed over the members whose population is known (the numerator of GDP_PER_CAPITA)
+- name: GDP_PC_POP
+  type: amount
+  presence: derived
+  description: Population summed over the members whose GDP is known (the denominator)
+- name: GROWTH_WEIGHTED
+  type: amount
+  presence: derived
+  description: GDP x real growth summed over the members with both
+- name: GROWTH_WEIGHT
+  type: amount
+  presence: derived
+  description: GDP summed over the members with a growth figure
+- name: INFLATION
+  type: rate
+  presence: derived
+  description: The median of the members' consumer price inflation, % (the World Bank's aggregate for prices)
+- name: WITH_GROWTH
+  type: integer
+  presence: derived
+  description: Members with a growth figure
+- name: WITH_INFLATION
+  type: integer
+  presence: derived
+  description: Members with an inflation figure
+- name: REGION_KEYS
+  type: text list
+  presence: derived
+  description: 'A helper of the page fields: distinct over the group of: $.REGION_GROUP'
+- name: REGION_NAMES
+  type: text list
+  presence: derived
+  description: 'A helper of the page fields: distinct over the group of: $.REGION_NAME'
+- name: INCOME_NAMES
+  type: text list
+  presence: derived
+  description: 'A helper of the page fields: distinct over the group of: $.INCOME_NAME'
+- name: YEARS
+  type: text list
+  presence: derived
+  description: 'A helper of the page fields: distinct over the group of: $.YEAR'
+- name: PROVENANCE
+  type: record
+  presence: derived
+  description: The first member's source and licence (World Bank WDI, IMF, CIA Factbook)
+- name: ROWS
+  type: record list
+  presence: derived
+  description: One row per grouped economy record
+- name: NAME
+  type: text
+  presence: derived
+  description: 'The group''s name: the World Bank region''s or income group''s name, or World'
+- name: GROUP_TYPE
+  type: text
+  presence: derived
+  description: World Bank region, World Bank income group or World
+- name: GDP_PER_CAPITA
+  type: amount
+  presence: derived
+  description: GDP_PC_GDP x 1000 / GDP_PC_POP, USD a person
+- name: GROWTH
+  type: rate
+  presence: derived
+  description: 'GROWTH_WEIGHTED / GROWTH_WEIGHT: real GDP growth weighted by GDP, % a year'
+- name: YEAR
+  type: text
+  presence: derived
+  description: The latest year among the members' figures
+- name: GDP_PATH
+  type: record list
+  presence: derived
+  description: 'The members'' GDP summed by year: label (year), value (USD bn), count (members with a figure that year)'
+- name: TOP_ECONOMIES
+  type: record list
+  presence: derived
+  description: The ten largest members by GDP (rows of ROWS)
+nested:
+  ROWS[]:
+  - name: ECONOMY_ID
+    type: unknown
+    presence: optional
+    description: 'From the economy record: $.ECONOMY_ID'
+  - name: ECONOMY
+    type: unknown
+    presence: optional
+    description: 'From the economy record: $.NAME'
+    link: economy
+  - name: ISO3
+    type: unknown
+    presence: optional
+    description: 'From the economy record: $.ISO3'
+  - name: GDP_USD_BN
+    type: unknown
+    presence: optional
+    description: 'From the economy record: $.GDP_USD_BN'
+  - name: POPULATION_M
+    type: unknown
+    presence: optional
+    description: 'From the economy record: $.POPULATION_M'
+  - name: GDP_PER_CAPITA
+    type: unknown
+    presence: optional
+    description: 'From the economy record: $.GDP_PER_CAPITA'
+  - name: GROWTH
+    type: unknown
+    presence: optional
+    description: 'From the economy record: $.GROWTH'
+  - name: INFLATION
+    type: unknown
+    presence: optional
+    description: 'From the economy record: $.INFLATION'
+  - name: YEAR
+    type: unknown
+    presence: optional
+    description: 'From the economy record: $.YEAR'
+  - name: GDP_PATH
+    type: unknown
+    presence: optional
+    description: 'From the economy record: $.GDP_PATH'
+links:
+- field: ROWS[].ECONOMY
+  kind: economy
+validation:
+- rule: required
+  fields:
+  - GROUP_ID
+- rule: unique
+  key:
+  - GROUP_ID
+  per: snapshot
+- rule: link
+  field: ROWS[].ECONOMY
+  kind: economy
+notes:
+- 'Computed when asked by the derived connector macro-groupings from every economy (which retired the stored copy of the World Bank''s
+  aggregates): docs/guides/bi/README.md (its Part II).'
+review: []

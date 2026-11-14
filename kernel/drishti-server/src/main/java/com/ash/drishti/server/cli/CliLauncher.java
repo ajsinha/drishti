@@ -165,7 +165,7 @@ public final class CliLauncher {
 
     /**
      * The packs behind the paths of a command line (a pack folder, or a Sutra file inside one: the nearest folder holding a
-     * {@code pack.yaml}), added to the enabled packs, so {@code sutra lint|test config/packs/banking/market-risk} checks market-risk with its
+     * {@code pack.yaml}), added to the enabled packs, so {@code sutra lint|test modules/banking/dmod/packs/market-risk} checks market-risk with its
      * About text and glossary even when DRISHTI_PACKS names other packs. A pack outside the packs folder is read from its
      * parent folder (as an installed pack). Empty when no path is in a pack.
      */

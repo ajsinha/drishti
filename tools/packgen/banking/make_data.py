@@ -14,7 +14,7 @@
 
 """Writes the banking packs' sample data and, as separate steps, the dated rows the loaders put into the lake and the other stores.
 
-    python3 tools/packgen/banking/make_data.py                 write config/packs/<domain>/<pack>/samples (the latest business date): catalog.jsonl
+    python3 tools/packgen/banking/make_data.py                 write modules/<module>/packs/<pack>/samples (the latest business date): catalog.jsonl
                                                                 and samples/<kind>.jsonl, one document a line (--sample-part-mb N splits
                                                                 a kind above N MB into <kind>.part-001.jsonl ..., default 50), the trading
                                                                 pack's Sutra tests and the file connector's sample feed (<data>/feeds/fixing.jsonl)

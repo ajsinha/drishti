@@ -14,7 +14,7 @@
 
 """The console side of domain packs: which packs are enabled (asked of the server, the single source of truth)
 and what each contributes to the console: example commands, workspace starters and help guides, read from
-``config/packs/<domain>/<name>/`` (core/pack_paths.py). Cached per user for ``ui.user_cache_seconds`` (10 s) and read again at once on every worker after a
+``modules/<module>/packs/<name>/`` (core/pack_paths.py). Cached per user for ``ui.user_cache_seconds`` (10 s) and read again at once on every worker after a
 change (core/user_stamps.py); falls back to ``packs.enabled`` when the server is unreachable."""
 from __future__ import annotations
 

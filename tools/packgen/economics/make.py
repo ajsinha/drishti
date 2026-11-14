@@ -18,7 +18,7 @@ positions and the World Bank regions and income groups. The documents come from 
 nothing is invented, and each document carries its source, dataset, retrieval date and licence.
 
     The kinds, documents and pack settings of the economics half of the world-economy pack: tools/packgen/world/make.py joins them
-    with the other half and writes config/packs/economy/world-economy (running this file runs that one).
+    with the other half and writes modules/economy/packs/world-economy (running this file runs that one).
     python3 tools/realdata/realdata.py all             refresh the data, then write both packs
 """
 from __future__ import annotations
@@ -194,7 +194,7 @@ def spec() -> PB.PackSpec:
         derived={"macro-groupings": {"kinds": ["country-group"], "settings": GROUPINGS}})
 
 
-# ECG: the country groups computed from their member economies when asked (since 2.9.2; docs/guides/BI_GUIDE.md), never
+# ECG: the country groups computed from their member economies when asked (since 2.9.2; docs/guides/bi/README.md), never
 # stored. An economy is in its World Bank region (REGION_GROUP), its income group (INCOME_GROUP) and the world (ECG-WLD). Sums: GDP and
 # population; GDP per capita: the members' GDP over their population (both known); real growth: weighted by GDP in USD (the World
 # Bank's weights); inflation: the median of the members (the World Bank's aggregate for consumer prices). Each member's latest year.

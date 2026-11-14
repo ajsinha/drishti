@@ -263,7 +263,7 @@ public final class LakeFiles {
                 continue;
             }
             String packName = m.path("pack").asText(file.toAbsolutePath().getParent().getFileName().toString());
-            JsonNode defs = m.path("connectors").isObject() ? m.path("connectors") : m.path("connector-templates");
+            JsonNode defs = m.path("connectors");
             for (var it = defs.fields(); it.hasNext(); ) {
                 var c = it.next();
                 JsonNode st = c.getValue().path("settings");

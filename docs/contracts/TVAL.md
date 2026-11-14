@@ -16,7 +16,7 @@ The shared rules (the common risk lake, keys, types, dates, signs, delivery, val
 are in [README.md](README.md); the scope grammar, captures, baskets, official end-of-day captures and the entitlement model are VaR's
 ([VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance)) and are referred to, not repeated.
 
-**Sources read for this contract (2026-10-25):** `config/packs/banking/market-risk/contracts/trade-valuation.contract.yaml`, the pack's
+**Sources read for this contract (2026-10-25):** `modules/banking/dmod/packs/market-risk/contracts/trade-valuation.contract.yaml`, the pack's
 `samples/trade-valuation.jsonl` (765 records), `data/testdata/market-risk/trade-valuation/` (a snapshot of 12,076 on 2026-07-08 and
 59 daily files, 15,000 on 2026-09-30), `tools/packgen/banking/make_data.py` (`valuations`), `tools/packgen/banking/data_trades.py`,
 `tools/testdata/universe.py`, the trading pack's `trade` contract.
@@ -484,10 +484,10 @@ MtM day by day (`_meta.walk.MTM`); `PNL_1D` is **not** walked in the daily files
 | Item | Removed |
 |---|---|
 | Kind `trade-valuation` | `pack.yaml` kind, route to `risk-store`, layout, form, id pattern `^TVAL-`, `graph.fields` entries and the pack's `impact.measures` entry for it; mnemonic `TVAL` now opens the computed page |
-| Data | `config/packs/banking/market-risk/samples/trade-valuation.jsonl`, `data/testdata/market-risk/trade-valuation/`, its `testdata.yaml` entries |
-| Sutra | `config/packs/banking/market-risk/sutras/market-risk/trade-valuation.v1.sutra.yaml` (replaced by the TVAL page) |
+| Data | `modules/banking/dmod/packs/market-risk/samples/trade-valuation.jsonl`, `data/testdata/market-risk/trade-valuation/`, its `testdata.yaml` entries |
+| Sutra | `modules/banking/dmod/packs/market-risk/sutras/market-risk/trade-valuation.v1.sutra.yaml` (replaced by the TVAL page) |
 | Generator | `valuations()` in `tools/packgen/banking/make_data.py` (replaced by §13.1) |
-| Contract | `config/packs/banking/market-risk/contracts/trade-valuation.contract.yaml` (a contract for `valuation`, class `input`, replaces it) |
+| Contract | `modules/banking/dmod/packs/market-risk/contracts/trade-valuation.contract.yaml` (a contract for `valuation`, class `input`, replaces it) |
 | About and README | the `trade-valuation` sections of the market-risk `about.yaml` glossary and README |
 | Readers | the Calc snippets that search `TVAL` (`frtb_girr_delta.py`, …) move to the TVAL API |
 | Guard test | fails when `trade-valuation` returns |

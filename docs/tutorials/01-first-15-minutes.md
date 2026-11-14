@@ -374,7 +374,7 @@ You should see one card for each pack that offers a form. Pick **Trading**, kind
 
 You should see a form with a box, a list or a set of tick boxes for each field people search by, grouped as **Identity** (trade id, source system, counterparty), **Product**
 (product type, sub type, status, buy / sell), **Where** (currency, legal entity, portfolio, trader), **Money** (quantity) and **Dates** (trade date, maturity date). Part C
-uses it. The form is written in the pack (`form:` in `config/packs/banking/trading/pack.yaml`):
+uses it. The form is written in the pack (`form:` in `modules/banking/dmod/packs/trading/pack.yaml`):
 
 ```yaml
 form:
@@ -391,8 +391,8 @@ Click the **BI** icon (or type `BI` and press Enter).
 
 ![The BI home: a menu on the left (Home, Catalogue, My workspace and more) and the sections Recent, Favourites, Certified for you and Shared with me](img/t01/09-bi-home.jpg)
 
-You should see the BI home: a menu on the left (Home, Catalogue, My workspace, Datasets, Insights and so on) and, in the middle, the sections *Recent*, *Favourites*, *Certified for you* and *Shared with me*, which fill as you use BI. Business intelligence is Drishti's second front: reports and boards built on models and datasets, with their own guide ([../guides/BI_GUIDE.md](../guides/BI_GUIDE.md)) and tutorial
-([the reports tutorial, Part A](../guides/BI_GUIDE.md#part-a--your-first-bi-report)). The shipped models read the same sixty days of the lakes.
+You should see the BI home: a menu on the left (Home, Catalogue, My workspace, Datasets, Insights and so on) and, in the middle, the sections *Recent*, *Favourites*, *Certified for you* and *Shared with me*, which fill as you use BI. Business intelligence is Drishti's second front: reports and boards built on models and datasets, with their own guide ([../guides/bi/README.md](../guides/bi/TABLES_AND_MODELS.md)) and tutorial
+([the reports tutorial, Part A](../guides/bi/REPORTS.md#part-a--your-first-bi-report)). The shipped models read the same sixty days of the lakes.
 
 **From the command line** (with the token of Step 9), the catalogue as you may see it:
 
@@ -611,7 +611,7 @@ Key figures
 
 The **business date** box in the top bar says which day you are looking at. Empty means **live**: the latest business date (2026-10-16 here). The demo lakes are daily
 snapshots: they change only when a day is loaded, so nothing ticks on these pages. (With `DRISHTI_DEMO_ENABLED=true` the demo source ticks about twice a second and a live view
-moves as a whole: [the reports tutorial, Part F](../guides/BI_GUIDE.md#part-f--live-bi-and-boards).) Open `TRD MX-20000022` (a MUREX cross-currency swap that was amended on the last day), click the date box and type
+moves as a whole: [the reports tutorial, Part F](../guides/bi/LIVE_REPORTS_AND_BOARDS.md#part-f--live-bi-and-boards).) Open `TRD MX-20000022` (a MUREX cross-currency swap that was amended on the last day), click the date box and type
 `2026-10-15`, then press Enter.
 
 ![The trade on 15 October: an amber date box, a red Live button and a Compare link](img/t02/08-past-date.jpg)
@@ -791,7 +791,7 @@ field has its input:
 Leave a field empty and it takes no part in the search. Below the fields choose how to sort and how many to show. The trading pack's form has no free-text field: its
 counterparty is a dropdown of the 24 counterparty ids the data holds. A pack whose kind has text fields (a name, a description) offers the text operators.
 
-**From the command line.** The form is the pack's `form:` (in `config/packs/banking/trading/pack.yaml`), and the server serves it with the values the data holds:
+**From the command line.** The form is the pack's `form:` (in `modules/banking/dmod/packs/trading/pack.yaml`), and the server serves it with the values the data holds:
 
 ```yaml
 form:
@@ -1207,7 +1207,7 @@ The full schema is in [DATA_ARCHITECTURE.md › History queries: an entity over 
 you check any pack (an unknown key is a warning, a bad value the error `DRS-2061`):
 
 ```
-$ drishti.py sutra lint config/packs/banking/trading --strict
+$ drishti.py sutra lint modules/banking/dmod/packs/trading --strict
 ```
 
 In the UI, a pack with a bad block shows its problem on Admin → Packs (and Health marks the pack DEGRADED) as soon as it is loaded: at the

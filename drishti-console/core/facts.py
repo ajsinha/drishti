@@ -14,7 +14,7 @@
 
 """Did you know: the Home page's fact of the day (docs/guides/USER_GUIDE.md, "Home: the fact of the day").
 
-Every fact is declared by the pack it needs, in ``config/packs/<domain>/<pack>/config/facts.yaml``, and computed from the server's answers on the
+Every fact is declared by the pack it needs, in ``modules/<module>/packs/<pack>/config/facts.yaml``, and computed from the server's answers on the
 business date: the steps fetch (``var``, ``exposure``, ``search``, ``raw``), pick a row (``pick`` with ``where`` and ``order``) or compute
 a value (``let``); ``when`` says what makes it surprising; ``text``, ``why`` and the picture are filled from the result. No number is
 written in a fact: a fact whose condition does not hold today is not shown. Results are kept per server, user, business date and set of

@@ -62,7 +62,7 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"SOURCE_ID": "PRESS-BOC", "NAME": "Bank of Canada", "PUBLISHER_TYPE": "central bank", "COUNTRY": "CAN", "WEBSITE": "https://www.bankofcanada.ca/press/press-releases/", "FEED_URL": "https://www.bankofcanada.ca/content_type/press-releases/fee…", "LICENCE": "Bank of Canada terms of use: free to use, copy, distribute …", "TERMS_URL": "https://www.bankofcanada.ca/terms/", "INTERNAL_ONLY": false, "WHY_INTERNAL": "The Bank of England allows personal and internal non-commer…", "RELEASES": 5, "LAST_PUBLISHED": "2026-11-05T16:00:19Z", "LAST_PULL": "ok"}
 ```
 
-The contract: `config/packs/economy/official-news/contracts/release-source.contract.yaml` ([official-news](../../docs/contracts/packs/official-news.md)).
+The contract: `modules/economy/packs/official-news/contracts/release-source.contract.yaml` ([official-news](../../docs/contracts/packs/official-news.md)).
 
 ### press-release
 
@@ -90,4 +90,4 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"RELEASE_ID": "PREL-FED-0224349908", "TITLE": "Federal Reserve Board announces termination of enforcement …", "PUBLISHED": "2026-11-05T16:00:00Z", "DATE": "2026-11-05", "URL": "https://www.federalreserve.gov/newsevents/pressreleases/enf…", "SUMMARY": "Federal Reserve Board announces termination of enforcement …", "CATEGORY": "Enforcement Actions", "RELEASE_SOURCE": "PRESS-FED", "PUBLISHER_NAME": "Federal Reserve Board", "PUBLISHER_TYPE": "central bank", "COUNTRY": "USA", "INTERNAL_ONLY": false}
 ```
 
-The contract: `config/packs/economy/official-news/contracts/press-release.contract.yaml` ([official-news](../../docs/contracts/packs/official-news.md)).
+The contract: `modules/economy/packs/official-news/contracts/press-release.contract.yaml` ([official-news](../../docs/contracts/packs/official-news.md)).

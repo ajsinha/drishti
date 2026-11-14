@@ -117,7 +117,7 @@ AREAS = [
          "file restarts that connector only. Every plugin takes the common settings; a plugin marked TLS or proxy also takes the shared "
          "`tls.*` or `proxy.*` settings."),
     Area("packs", "Packs: `pack.yaml`",
-         "`config/packs/<domain>/<pack>/pack.yaml`, read by the server's pack loader (`PackLoader`) and the console. A changed pack is reloaded "
+         "`modules/<module>/packs/<pack>/pack.yaml`, read by the server's pack loader (`PackLoader`) and the console. A changed pack is reloaded "
          "while the server runs ([Live reload](../guides/BUILD_GUIDE.md#296-live-reload-the-packs-folder-is-watched)). Guide: "
          "[BUILD_GUIDE.md](../guides/BUILD_GUIDE.md#4-packyaml-key-by-key)."),
     Area("editions", "Lenses: `config/lenses/`",

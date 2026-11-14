@@ -550,7 +550,7 @@ every table partitioned by `business_date` first; the three trade tables also by
 **The YAML.** The trading pack's connector `trade-endur` names the lake and its entry; nothing of the table is written here.
 
 ```yaml
-# config/packs/banking/trading/pack.yaml (the template written to config/connectors/trade-endur.yaml)
+# modules/banking/dmod/packs/trading/pack.yaml (the template written to config/connectors/trade-endur.yaml)
 trade-endur:
   plugin: delta
   kinds: [trade]                          # the distribution's default binding of trade; the written file names no kinds
@@ -597,7 +597,7 @@ describes that no writer has made yet; it is not an error.
 
 ```bash
 python3 tools/drishti.py lake build --from data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --as-of 2026-07-08 \
-    --pack config/packs/banking/trading --connector trade-endur --lake demo --lake-root $SCRATCH/lake
+    --pack modules/banking/dmod/packs/trading --connector trade-endur --lake demo --lake-root $SCRATCH/lake
 ```
 
 ```text
@@ -618,7 +618,7 @@ Now ask for another partition:
 
 ```bash
 python3 tools/drishti.py lake build --from data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --as-of 2026-07-08 \
-    --pack config/packs/banking/trading --connector trade-endur --lake demo --lake-root $SCRATCH/lake --partition-by DESK
+    --pack modules/banking/dmod/packs/trading --connector trade-endur --lake demo --lake-root $SCRATCH/lake --partition-by DESK
 ```
 
 ```text
@@ -658,9 +658,9 @@ export DRISHTI_LAKES_DIR=$SCRATCH/lakes
 **The command line.** The parallel loader appends and records the batch; the Python path refuses an append (it does not record batches):
 
 ```bash
-python3 tools/drishti.py lake build --engine java --from data/testdata/market-risk/scenario-pv --pack config/packs/banking/market-risk \
+python3 tools/drishti.py lake build --engine java --from data/testdata/market-risk/scenario-pv --pack modules/banking/dmod/packs/market-risk \
     --kind scenario-pv --lake intraday --batch-id intraday-0915
-python3 tools/drishti.py lake build --engine java --from data/testdata/market-risk/scenario-pv --pack config/packs/banking/market-risk \
+python3 tools/drishti.py lake build --engine java --from data/testdata/market-risk/scenario-pv --pack modules/banking/dmod/packs/market-risk \
     --kind scenario-pv --lake intraday --batch-id intraday-0915      # the same batch again
 ```
 
@@ -1186,8 +1186,8 @@ drishti:
       tables:                     # the store news: config/lakes/news.yaml
         - { name: news,  store: news, source: { file: data/testdata/news-and-markets/news/news.2026-10-18.jsonl.gz },  key: [NEWS_ID],  every: 15m, warm-up: 1, pin: true }
         - { name: quote, store: news, source: { file: data/testdata/news-and-markets/quote/quote.2026-10-18.jsonl.gz }, key: [QUOTE_ID], every: 15m, warm-up: 2 }
-        - { name: news-topic,     store: news, source: { file: config/packs/economy/news-and-markets/samples/news-topic.jsonl },     key: [TOPIC_ID],   warm-up: 3 }
-        - { name: listed-company, store: news, source: { file: config/packs/economy/news-and-markets/samples/listed-company.jsonl }, key: [COMPANY_ID], warm-up: 4 }
+        - { name: news-topic,     store: news, source: { file: modules/economy/packs/news-and-markets/samples/news-topic.jsonl },     key: [TOPIC_ID],   warm-up: 3 }
+        - { name: listed-company, store: news, source: { file: modules/economy/packs/news-and-markets/samples/listed-company.jsonl }, key: [COMPANY_ID], warm-up: 4 }
 ```
 
 A live site points `source` at its feed instead: `url:` (a vendor's REST feed answering JSON Lines, `headers:` with `${ENV}` secrets), or

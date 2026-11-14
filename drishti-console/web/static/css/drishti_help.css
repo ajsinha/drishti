@@ -128,6 +128,7 @@
 .sec-tut { font-weight: 500; }
 .sec-dot { color: var(--d-muted); }
 .sec-sum { margin: var(--d-sp-2_4) 0 0; color: var(--d-muted); font-size: var(--d-fs-13_76); line-height: 1.45; }
+.sec-kids { list-style: none; margin: var(--d-sp-2_4) 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--d-sp-2_4) var(--d-sp-12); font-size: var(--d-fs-13_76); }
 .sec-off { opacity: .6; }
 .sec-off .sec-link { color: var(--d-muted); cursor: not-allowed; }
 .sec-offnote { font-size: var(--d-fs-11_52); border: 1px dashed var(--d-border); border-radius: var(--d-radius-pill); padding: 0 var(--d-sp-8); color: var(--d-muted); }

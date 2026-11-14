@@ -23,7 +23,7 @@
 Each page is generated from two sources only: the committed test data (data/testdata/<domain>/<kind>/: its dated files and tars
 (tools/lake/feedfiles.py), every row of every file,
 read and never written; the pack's samples for the kinds without test data) and the kind's data contract
-(config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml: every field's meaning, unit, presence and values). A meaning missing on a page is
+(modules/<module>/packs/<pack>/contracts/<kind>.contract.yaml: every field's meaning, unit, presence and values). A meaning missing on a page is
 fixed in the contract, never here. The page shows the most complete real record (the one with the most non-empty fields) pretty-printed,
 long arrays folded; a kind whose rows come in sub-types of a different shape or meaning (a trade's product type, a P&L or PV form, a curve
 type) shows the most complete record of each sub-type. Then every field of the samples (nested ones as LEGS[].CASH_FLOWS[].AMOUNT), the
@@ -93,9 +93,9 @@ SUBTYPES = {
 
 #: rows beyond the committed test data that show a form the test data does not hold (the pack's samples), by folder
 EXTRA_SOURCES = {
-    "market-risk/pnl-vector": ["config/packs/banking/market-risk/samples/pnl-vector.jsonl"],
-    "market-risk/scenario-pv": ["config/packs/banking/market-risk/samples/scenario-pv.jsonl",
-                                "config/packs/banking/market-risk/samples/intraday/scenario-pv.2026-09-30.jsonl"],
+    "market-risk/pnl-vector": ["modules/banking/dmod/packs/market-risk/samples/pnl-vector.jsonl"],
+    "market-risk/scenario-pv": ["modules/banking/dmod/packs/market-risk/samples/scenario-pv.jsonl",
+                                "modules/banking/dmod/packs/market-risk/samples/intraday/scenario-pv.2026-09-30.jsonl"],
 }
 
 #: what a folded array holds, by field name
@@ -138,8 +138,8 @@ LINKS = {
 PACK_LINKS = {
     "core": [("knowledge/data.md", "2. Entities"), ("knowledge/risk.md", "2. Counterparty")],
     "market-data": [("knowledge/data.md", "1. Market data")],
-    "gleif": [("guides/WORLD_DATA_GUIDE.md", "# "), ("knowledge/data.md", "2. Entities"), ("guides/BI_GUIDE.md", "# ")],
-    "us-equities": [("guides/WORLD_DATA_GUIDE.md", "# "), ("knowledge/world.md", "1. Companies"), ("guides/BI_GUIDE.md", "# ")],
+    "gleif": [("guides/WORLD_DATA_GUIDE.md", "# "), ("knowledge/data.md", "2. Entities"), ("guides/bi/README.md", "# ")],
+    "us-equities": [("guides/WORLD_DATA_GUIDE.md", "# "), ("knowledge/world.md", "1. Companies"), ("guides/bi/README.md", "# ")],
     "news-and-markets": [("guides/WORLD_DATA_GUIDE.md", "# ")],
     "world-economy": [("guides/WORLD_DATA_GUIDE.md", "# "), ("knowledge/world.md", "2. Economies")],
     "market-risk": [("knowledge/risk.md", "1. Market risk")],

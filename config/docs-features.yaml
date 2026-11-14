@@ -24,7 +24,7 @@
 features:
   # Start and analyse (core)
   - { id: F1, name: Find anything, domain: core, lenses: all, guide: guides/USER_GUIDE.md, budget: 1200, tutorial: tutorials/01-first-15-minutes.md, tutorial-budget: 600 }
-  - { id: F2, name: "Business intelligence: pivot, tables, reports, Notebook, groupings", domain: core, lenses: all, guide: guides/BI_GUIDE.md, budget: 12000, tutorial: none }
+  - { id: F2, name: "Business intelligence: pivot, tables, reports, Notebook, groupings", domain: core, lenses: all, guide: guides/bi/README.md, budget: 13000, tutorial: none }
   - { id: F5, name: AI assistant, domain: core, lenses: all, guide: guides/AI_GUIDE.md, budget: 700, tutorial: tutorials/10-ai-assistant.md, tutorial-budget: 400 }
   - { id: F6, name: Corrections and approvals, domain: core, lenses: all, guide: guides/APPROVALS_GUIDE.md, budget: 600, tutorial: tutorials/11-correct-and-approve.md, tutorial-budget: 300 }
   # Risk (the banking module)

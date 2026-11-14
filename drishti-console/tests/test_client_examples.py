@@ -99,7 +99,7 @@ def test_example_sources_parse():
 
 
 def _contract_fields(kind):
-    """The fields of a kind's data contract (config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml): what a Flight read of the kind may ask for."""
+    """The fields of a kind's data contract (modules/<module>/packs/<pack>/contracts/<kind>.contract.yaml): what a Flight read of the kind may ask for."""
     import yaml
     from core.pack_paths import pack_dirs
     for p in sorted(f for d in pack_dirs(REPO / "config" / "packs").values() for f in d.glob(f"contracts/{kind}.contract.yaml")):
@@ -156,7 +156,7 @@ def _model_queries():
 
 
 def test_every_model_query_uses_the_servers_keys():
-    """A Flight model query is the MQ JSON (BI_GUIDE.md): select {fields, measures}, where, sort, limit ...; the old report-visual body
+    """A Flight model query is the MQ JSON (bi/TABLES_AND_MODELS.md): select {fields, measures}, where, sort, limit ...; the old report-visual body
     ({"fields", "measures", "orderBy"}) is refused with DRS-9150 "unknown key 'fields'"."""
     keys, queries = _mq_keys(), _model_queries()
     assert {"select", "where", "sort", "limit"} <= keys

@@ -68,7 +68,7 @@ class VarGoldenMatrixTest {
     void everyDateWindowCurrencyHierarchyAndBasketAsRecorded() throws IOException {
         Map<String, Object> have = new TreeMap<>();
         Path repo = TestDataBook.root();
-        Object seed = VarSystemBasketEdit.YAML.readValue(repo.resolve("config/packs/banking/market-risk/seeds/system-baskets.yaml").toFile(), Object.class);
+        Object seed = VarSystemBasketEdit.YAML.readValue(repo.resolve("modules/banking/dmod/packs/market-risk/seeds/system-baskets.yaml").toFile(), Object.class);
         VarSystemBaskets baskets = new VarSystemBaskets(new FileContentStore(store.resolve("content")));
         assertThat(baskets.seed(seed, "test", null)).as("seeded").isEqualTo(28);
         try (ParallelSums sums = new ParallelSums(4, 4096)) {

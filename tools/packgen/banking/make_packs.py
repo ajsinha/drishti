@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Writes the banking packs' manifests (config/packs/<domain>/<pack>/pack.yaml) and shared formats from the taxonomy and layout.py:
+"""Writes the banking packs' manifests (modules/<module>/packs/<pack>/pack.yaml) and shared formats from the taxonomy and layout.py:
 kinds, mnemonics, identifier patterns, link fields, badges, F8 impact, roles, requires, and the connectors and
 routes that say which data domain (Delta Lake folder) answers each kind.
 
@@ -386,7 +386,7 @@ def files() -> dict[Path, str]:
 
 
 def orphans(want: dict[Path, str]) -> list[Path]:
-    """Snippet files under config/packs/<domain>/<pack>/python/ that no longer have a source (renamed or removed)."""
+    """Snippet files under modules/<module>/packs/<pack>/python/ that no longer have a source (renamed or removed)."""
     return sorted(f for name in layout.PACKS for f in (pack_dir(name) / "python").glob("*.py") if f not in want)
 
 

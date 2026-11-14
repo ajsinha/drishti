@@ -50,8 +50,8 @@ Each risk measure has one document, its guide and its tutorial together: the tut
 ### BI and analysis
 
 The AI assistant and corrections with four eyes. The pivot engine, tables and models, reports and dashboards, the Notebook and Python and the computed groupings are in the
-[BI guide](../guides/BI_GUIDE.md), each part with its tutorial: [pivot](../guides/BI_GUIDE.md#tutorial-pivot-cubes-and-explain), [tables and models](../guides/BI_GUIDE.md#tutorial-virtual-tables-and-models),
-[reports](../guides/BI_GUIDE.md#tutorial-reports-and-dashboards), [the Notebook](../guides/BI_GUIDE.md#tutorial-the-notebook-and-python) and [groupings](../guides/BI_GUIDE.md#tutorial-groupings-and-analytics-computed).
+[BI guide](../guides/bi/NOTEBOOK_AND_PYTHON.md), each part with its tutorial: [pivot](../guides/bi/PIVOT.md#tutorial-pivot-functions-and-explain), [tables and models](../guides/bi/TABLES_AND_MODELS.md#tutorial-virtual-tables-and-models),
+[reports](../guides/bi/REPORTS.md#tutorial-your-first-bi-report), [the Notebook](../guides/bi/NOTEBOOK_AND_PYTHON.md#tutorial-the-notebook-and-python) and [groupings](../guides/bi/GROUPINGS_AND_ANALYTICS.md#tutorial-groupings-and-analytics-computed).
 
 | # | Tutorial | You will | Time | Status |
 |---|---|---|---|---|
@@ -97,7 +97,7 @@ step 1).
 3. See what changed on a trade over the last 30 days: [tutorial 1, steps 27 to 29](01-first-15-minutes.md#step-27--a-range-after-the-id).
 4. Your desk's VaR, down to a trade, and who makes it: [the VaR tutorial, steps 2 to 4](../guides/VAR_GUIDE.md#step-2--drill-down-from-the-bank-to-a-trade).
 5. What a hedge would do before you deal: [the VaR tutorial, step 11](../guides/VAR_GUIDE.md#step-11--what-would-a-hedge-do-the-what-if).
-6. Your trades by product, as a pivot: [the pivot tutorial, steps 1 and 2](../guides/BI_GUIDE.md#step-1--a-first-pivot-of-the-trades).
+6. Your trades by product, as a pivot: [the pivot tutorial, steps 1 and 2](../guides/bi/PIVOT.md#step-1--a-first-pivot-of-the-trades).
 
 ## What you need once
 

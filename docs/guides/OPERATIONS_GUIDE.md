@@ -1192,7 +1192,7 @@ does the same from the browser, with checks on the server and automatic undo.
 | Artifact | Made by | Goes to | The server notices |
 |---|---|---|---|
 | **Pack bundle** `<name>-<version>.tar.gz` (+ `.sha256`): one pack, versioned, with a manifest of every file's checksum | `pack bundle` | unpacked by `pack deploy` into the packs folder: `drishti.packs.dir` (`DRISHTI_PACKS_DIR`, `./config/packs`) or `drishti.packs.installed-dir` (`./data/packs/installed`, searched first) | the watcher checks and loads the copied folder after it has been quiet for 750 ms, and records it in `data/packs/added.yaml`; one that does not check out is not loaded (Admin → Packs and Health say why) and is retried; a new version is swapped in, a bad one keeps the last good running. With `drishti.packs.watch: off` only Admin → Packs → **Load** acts |
-| **Pack folder** `config/packs/<domain>/<name>/` (what git holds) | you, `pack new` | the same places | the same |
+| **Pack folder** `modules/<module>/packs/<name>/` (what git holds) | you, `pack new` | the same places | the same |
 | **Sutra files** `*.sutra.yaml` | `sutra design`, `sutra gen`, the Screen Designer | `<pack>/sutras/`, or the site Sutra folder | hot reload (250 ms debounce): an invalid file is reported, the last good version stays live |
 | **`config/about.yaml`** (+ `about.<lang>.yaml`, `help.yaml`, `formats.yaml`) | you | `<pack>/config/` | with the pack's reload |
 | **Delta lake** `<root>/<domain>/<kind>/business_date=…/` | your ETL, `lake build`, `data ingest --lake` | `DRISHTI_DELTA_ROOT` or `s3a://…` | the connector re-reads the table version every `refresh-seconds` (10) and on a data-load signal |
@@ -1205,7 +1205,7 @@ touched by `pack deploy`: copy during the day, switch at the moment you choose.
 ### 8.2 Make a bundle
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py pack bundle config/packs/banking/trading --out dist
+drishti-console/.venv/bin/python tools/drishti.py pack bundle modules/banking/dmod/packs/trading --out dist
 ```
 
 ```text
@@ -1297,7 +1297,7 @@ rmdir ../stage
 What you tested is what you ship: build once, on CI, and copy the same file through the stages.
 
 ```text
-git (config/packs/banking/trading, tag v1.0.1)
+git (modules/banking/dmod/packs/trading, tag v1.0.1)
    │  CI: pack check, pack bundle
    ▼
 trading-1.0.1.tar.gz + .sha256        ← built ONCE, stored as a CI artifact
@@ -1318,7 +1318,7 @@ trading-1.0.1.tar.gz + .sha256        ← built ONCE, stored as a CI artifact
 Sutras made by `sutra design`, `sutra gen` or the Screen Designer are ordinary files: copy them into a pack's `sutras/<folder>/`, and a running
 server hot-reloads them ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#hot-reload-the-workbench-and-governance)). `drishti.py design export <id> -o
 design.zip` writes a zip of a design's Sutra and samples: put the `.sutra.yaml` in the pack in git, then the next bundle. `config/about.yaml` goes
-into `<pack>/config/`; check it first with `pack about-check config/packs/<domain>/<name>`. Prefer shipping a Sutra change as a **new bundle** (a
+into `<pack>/config/`; check it first with `pack about-check modules/<module>/packs/<name>`. Prefer shipping a Sutra change as a **new bundle** (a
 version, a checksum, a rollback); hot-copy is for emergencies, and `pack verify <deployed folder>` reports the drift until you redeploy:
 
 ```bash
@@ -1333,7 +1333,7 @@ Never write into the folder the server reads while it is half-finished: write el
 - **Files root** (`<root>/<domain>/<business-date>/<kind>.jsonl`; the connector lists folders every 30 s):
 
   ```bash
-  python3 tools/drishti.py data ingest --from new-day.jsonl --pack config/packs/banking/trading --store files --root /srv/stage/files
+  python3 tools/drishti.py data ingest --from new-day.jsonl --pack modules/banking/dmod/packs/trading --store files --root /srv/stage/files
   cp -r /srv/stage/files/trading/2026-10-05 /srv/drishti/files/trading/.2026-10-05.part     # a dot name the connector skips
   mv /srv/drishti/files/trading/.2026-10-05.part /srv/drishti/files/trading/2026-10-05      # the rename is atomic
   ```
@@ -1377,7 +1377,7 @@ travel on the table.
 
 ### 8.10 Git as the source of truth, and a CI example
 
-Keep `config/packs/<domain>/<name>/` in git with the version bump; a release is a tag, and `git checkout v1.0.1 && pack bundle` gives the same
+Keep `modules/<module>/packs/<name>/` in git with the version bump; a release is a tag, and `git checkout v1.0.1 && pack bundle` gives the same
 bytes. Never edit a deployed folder: change git, build, deploy. A GitHub Actions job (adapt it to any CI):
 
 ```yaml
@@ -1392,8 +1392,8 @@ jobs:
         with: { distribution: temurin, java-version: 21 }
       - uses: astral-sh/setup-uv@v5
       - run: ./mvnw -q -DskipTests package -pl :drishti-app -am        # the exec jar that lint and test use
-      - run: uv run --with pyyaml python tools/drishti.py pack check config/packs/banking/trading --strict --junit build/reports
-      - run: uv run --with pyyaml python tools/drishti.py pack bundle config/packs/banking/trading --out dist
+      - run: uv run --with pyyaml python tools/drishti.py pack check modules/banking/dmod/packs/trading --strict --junit build/reports
+      - run: uv run --with pyyaml python tools/drishti.py pack bundle modules/banking/dmod/packs/trading --out dist
       - run: uv run --with pyyaml python tools/drishti.py pack verify dist/trading-*.tar.gz
       - uses: actions/upload-artifact@v4
         with: { name: trading-bundle, path: "dist/trading-*" }
@@ -1525,7 +1525,7 @@ user the admin role) ([CLI_REFERENCE.md](CLI_REFERENCE.md#server-packs-deploy-hi
 | *the archive needs server >=X* | upgrade the server first, or rebuild with `--requires-server` if you know it is compatible |
 | *extends X, which is neither loaded nor on disk* | deploy or load the parent first |
 | HTTP 413 | over `max-archive-mb` (and the console's `packs.deploy_max_mb`): archives carry no data, so a big one usually has data in it |
-| `the pack fails pack check` | run `pack check config/packs/<domain>/<name>` and fix it |
+| `the pack fails pack check` | run `pack check modules/<module>/packs/<name>` and fix it |
 | `no drishti-server-*-exec.jar` | build it, set `DRISHTI_JAR`, or `--no-sutra` on a target without Java |
 | history says *reverted* | the server could not start with the new files: read the server log at that time; fix and redeploy |
 | deployed, but the old content is served | the watcher waits for the copy to be quiet (`drishti.packs.reload-debounce`, 750 ms), the watch is `off`, or the new version was refused: look at the pack's row; with `watch: off` use Load/Unload or restart |
@@ -2435,7 +2435,7 @@ before every call, a per-call size bound, and any failure or NaN from finite inp
 
 Compute workers run Python computations outside the server's JVM: a pool of worker processes per kind of work, the data handed to them as Arrow files
 already read and masked as the person who asked, in a locked environment of libraries an administrator approved
-([BI_GUIDE.md](BI_GUIDE.md); the module `drishti-compute`). Python people write in BI (python items and visuals,
+([README.md](bi/README.md); the module `drishti-compute`). Python people write in BI (python items and visuals,
 Python-driven tables, Notebook cells) runs here too, on the pool `python`.
 
 ### 15.1 Switch it on
@@ -2766,7 +2766,7 @@ the console as the administrator.
 
 ```cron
 # m  h  dom mon dow  command
-30 21 *   *   1-5  cd /opt/drishti && drishti-console/.venv/bin/python tools/drishti.py lake build --from /srv/drop/endur-$(date +\%F).json.gz --pack config/packs/banking/trading --kind trade --connector trade-endur --key TRADE_ID --lake /srv/drishti/delta --as-of $(date +\%F) --partition-by PRODUCT_TYPE --signal http://localhost:18480 --token-file /etc/drishti/loads.token -q >> /var/log/drishti/lake-build.log 2>&1
+30 21 *   *   1-5  cd /opt/drishti && drishti-console/.venv/bin/python tools/drishti.py lake build --from /srv/drop/endur-$(date +\%F).json.gz --pack modules/banking/dmod/packs/trading --kind trade --connector trade-endur --key TRADE_ID --lake /srv/drishti/delta --as-of $(date +\%F) --partition-by PRODUCT_TYPE --signal http://localhost:18480 --token-file /etc/drishti/loads.token -q >> /var/log/drishti/lake-build.log 2>&1
 ```
 
 Or as a systemd timer (a missed run is caught up after a reboot; `systemctl status` shows the exit code):
@@ -2781,7 +2781,7 @@ After=network-online.target
 Type=oneshot
 User=drishti
 WorkingDirectory=/opt/drishti
-ExecStart=/bin/sh -c 'drishti-console/.venv/bin/python tools/drishti.py lake build --from /srv/drop/endur-$(date +%%F).json.gz --pack config/packs/banking/trading --kind trade --connector trade-endur --key TRADE_ID --lake /srv/drishti/delta --as-of $(date +%%F) --partition-by PRODUCT_TYPE --signal http://localhost:18480 --token-file /etc/drishti/loads.token -q'
+ExecStart=/bin/sh -c 'drishti-console/.venv/bin/python tools/drishti.py lake build --from /srv/drop/endur-$(date +%%F).json.gz --pack modules/banking/dmod/packs/trading --kind trade --connector trade-endur --key TRADE_ID --lake /srv/drishti/delta --as-of $(date +%%F) --partition-by PRODUCT_TYPE --signal http://localhost:18480 --token-file /etc/drishti/loads.token -q'
 # 2 (written with rejects) is not a failure of the unit; alert on it from the summary instead
 SuccessExitStatus=2
 Environment=DRISHTI_LAKE_HEAP=2g
@@ -3427,7 +3427,7 @@ quote values with `{$.path}` so each reader sees their own.
 | A pack is *off* in Admin → Packs, or its users get `DRS-5002` | an administrator switched it off (*Changed* says when and who; audit `pack-disabled`): **Switch on** (live) |
 | A pack says *not loaded* | its folder is there but `DRISHTI_PACKS` did not name it: **Load** (live). *cannot load 'finance': kind trade is defined by both pack 'trading' and pack 'finance'*: it clashes with a loaded pack |
 | "Switch off" is greyed, or `'trading' is needed by [market-risk, counterparty-risk]; switch those off first` | switch off the dependants first |
-| The drill fails with "pack manifests out of date" | a generated file was edited by hand, or the generator changed and was not run: `python3 tools/packgen/banking/make_packs.py --check` lists them; move the change into the generator and run it, or `git checkout -- config/packs/<domain>/<name>/…` |
+| The drill fails with "pack manifests out of date" | a generated file was edited by hand, or the generator changed and was not run: `python3 tools/packgen/banking/make_packs.py --check` lists them; move the change into the generator and run it, or `git checkout -- modules/<module>/packs/<name>/…` |
 
 ### 21.9 Alerts on numbers
 
@@ -3456,7 +3456,7 @@ saved state; an item it cannot convert is never changed.
 
 | Symptom | Check and fix |
 |---|---|
-| A file under `config/bi/datasets` or `config/bi/models` says `DRS-9196`; Admin → Artifacts refuses a `.dataset.yaml` | BI's old form: `drishti.py tables migrate --dry-run`, read the diff, then `drishti.py tables migrate` ([BI_GUIDE.md](BI_GUIDE.md)): it writes tables and models under `config/tables/` and rebinds the reports |
+| A file under `config/bi/datasets` or `config/bi/models` says `DRS-9196`; Admin → Artifacts refuses a `.dataset.yaml` | BI's old form: `drishti.py tables migrate --dry-run`, read the diff, then `drishti.py tables migrate` ([TABLES_AND_MODELS.md](bi/TABLES_AND_MODELS.md)): it writes tables and models under `config/tables/` and rebinds the reports |
 | An expression says `DRS-9100` ("old expression syntax ... refused") | not Rachana (`and`, `or`, `None`, `x if c else y`, `&&`, `[Measure]`): files with `tables migrate` or `drishti.py bi migrate --expressions FILE --write`, stored items at the next start ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#rachana-el-expressions)) |
 | Admin → BI settings lists **migration problems** | fix the item's text by hand and restart, or rebuild it in **Build › Tables & models** |
 | New saved states by `system` with origin `migrate`; a pivot formula reads differently (`&&` for `and`) | nothing to do: the start-up move (audit `pivot-formula-migrate`); its figures do not change |
@@ -3482,10 +3482,10 @@ saved state; an item it cannot convert is never changed.
 | A board tile says "Not available"; never changes colour | the report or visual is gone or not yours (`GET /api/v1/bi/boards/{id}`: `problems` with `DRS-9052`); `on:` names a column the tile lacks, or the value is masked |
 | A python visual, Python dataset or Notebook cell says `DRS-9074` (Run greyed *Off: …*) | Python does not run here, and why: compute off, the pool `python` missing or not strict, no strict sandbox (Windows, no Landlock), the interpreter not carrying the pinned versions, the queue full ([15.1](#151-switch-it-on)); `GET /api/v1/bi/python/runtime` |
 | `DRS-9071`, `DRS-9072`, `DRS-9073`, `DRS-9075`; a python measure refused (`DRS-9013`) | the code raised or returned the wrong thing (traceback for `bi-author`); over `timeout`, `memory` or rows (`python-max-seconds`, `python-max-memory-mb`); an unlisted package, network, files or processes (pin it in `locks/python.in` and add it to `drishti.bi.report.python-packages`); a frame not matching the declared columns; show the measure in a python visual |
-| A Vega-Lite visual says Not drawn, is empty, or "may not load anything from a URL" | the specification uses what drishti-chart does not draw (the message lists each path and what to use, [BI_GUIDE.md](BI_GUIDE.md#96-vega-lite-visuals)); a field not in the rows (`DESK`, not `trade.DESK`); remove `data.url`/`loader` |
+| A Vega-Lite visual says Not drawn, is empty, or "may not load anything from a URL" | the specification uses what drishti-chart does not draw (the message lists each path and what to use, [REPORT_FILE_FORMAT_STATEMENTS.md](bi/REPORT_FILE_FORMAT_STATEMENTS.md#96-vega-lite-visuals)); a field not in the rows (`DESK`, not `trade.DESK`); remove `data.url`/`loader` |
 | The Notebook's extract is short; a SQL cell is refused (`DRS-9170`, `DRS-9072`) | `bi.notebook.max_rows` (10,000) of your rows; SQL is one read-only `SELECT` over the model, at most `sql_max_chars` |
 | Calc: `No module named 'drishti_bi'`, `needs JavaScript Promise Integration`, `DRS-9002` | `import drishti_bi` in the cell; `await drishti_bi.query_async(...)`; you need the `bi` power |
-| A window function reads `null`; a rank differs by reader; `DRS-9020` *no many-to-one path* | no row before or after; row rules apply first; group by a field every fact reaches, or ask the measures apart ([BI_GUIDE.md](BI_GUIDE.md#53-relationships-and-how-a-question-joins)) |
+| A window function reads `null`; a rank differs by reader; `DRS-9020` *no many-to-one path* | no row before or after; row rules apply first; group by a field every fact reaches, or ask the measures apart ([MODELS_AND_DATASETS_FOR_REPORTS.md](bi/MODELS_AND_DATASETS_FOR_REPORTS.md#53-relationships-and-how-a-question-joins)) |
 | A history query is empty or refused; a publish refused (`DRS-9040`) for a rename; *Roll back this import* `DRS-9004` | the live table has not been open long enough (Layers: `samples`); give the column a `path:` so the rename is recognised; an item changed since: export, then a bi-admin rolls back with force |
 | A deployed pack's BI items did not appear | the import was held (deploy answer `bi.loaded: false`, audit `pack-bi-held`) or files not named `<name>.<kind>.yaml` |
 | A theme or format refused (`DRS-9036`, `DRS-9032`); a Transform input refused (`DRS-9102`, `DRS-9108`) | the designer names the path; pick the kind and fields from the editor's lists |
@@ -3531,7 +3531,7 @@ codes whose cause or fix needs more than the meaning.
 | `DRS-4016` | the AI provider or MCP server failed or timed out: Admin → AI shows its health; check its URL, key variable and TLS |
 | `DRS-4017` | over the AI rate or cost limit for your user: wait, or an administrator raises the policy limit |
 | `DRS-4019` | the model, provider, MCP server or tool named is not configured: check `config/ai/` or `config/mcp/` |
-| `DRS-4020` | BI with AI: the model's answer could not be used (a draft that failed the report check after one repair, or not a query): say it more plainly, name the measure, or use a stronger model (`drishti.bi.ai.model`) ([BI_GUIDE.md](BI_GUIDE.md#16-ai-in-bi-report-from-words-ask-the-data-explain-this-number)) |
+| `DRS-4020` | BI with AI: the model's answer could not be used (a draft that failed the report check after one repair, or not a query): say it more plainly, name the measure, or use a stronger model (`drishti.bi.ai.model`) ([GOVERNANCE_AND_AI.md](bi/GOVERNANCE_AND_AI.md#16-ai-in-bi-report-from-words-ask-the-data-explain-this-number)) |
 | `DRS-4021` | history queries: more business days than `max-days`: narrow it with `FROM … TO …` |
 | `DRS-5003` | raised by the console only: it cannot reach the server, a live stream was refused, or a browser is over its live-subscription limit ([21.3](#213-the-console-and-the-server)) |
 | `DRS-5201` | a row of the date's P&L vectors was rejected (wrong length, a null or NaN, not USD): the provenance lists the trade and the reason; fix it upstream and reload the date |
@@ -3568,7 +3568,7 @@ codes whose cause or fix needs more than the meaning.
 | `DRS-9029` | the planner estimated more rows than the query's budget (HTTP 413): a date filter, a rollup's fields, or `options.budget.rows` |
 | `DRS-9030` | a report's YAML is not valid (HTTP 422): the designer's YAML tab or `POST /api/v1/bi/reports/validate` names the path |
 | `DRS-9031` | a report names a field, measure, hierarchy, page, bookmark or slicer its dataset or report lacks (HTTP 422; usually a dataset that changed under it) |
-| `DRS-9040` | publishing would break published reports (HTTP 409; the message lists them): fix the reports, keep the old names beside the new, or a `bi-admin` publishes with `force` ([BI_GUIDE.md](BI_GUIDE.md#176-impact-what-breaks-if-i-change-this)) |
+| `DRS-9040` | publishing would break published reports (HTTP 409; the message lists them): fix the reports, keep the old names beside the new, or a `bi-admin` publishes with `force` ([GOVERNANCE_AND_AI.md](bi/GOVERNANCE_AND_AI.md#176-impact-what-breaks-if-i-change-this)) |
 | `DRS-9043` | publishing is refused because its `tests:` fail or cannot run: run them with **Check** as the role named, fix the item or the expected value; a `bi-admin` may `force` (audited); `drishti.bi.governance.refuse-failing-tests: false` turns the gate off |
 | `DRS-9074` | Python does not run on this server now (HTTP 503), and the message says why: [21.11](#2111-bi-refresh-live-visuals-python-and-ai) |
 | `DRS-9076` | a Python item's own tests failed, so it is not published (HTTP 422, the console): Check shows each test; fix it, or a bi-admin publishes with `force` |
