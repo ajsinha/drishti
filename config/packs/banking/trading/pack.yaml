@@ -594,7 +594,7 @@ lake:
       - id
       file-rows: 250000
       row-group-rows: 1000
-    trading.trades_shared:            # the landing table several source systems share (modules/source-wss, -swapone, -ici), split by SOURCE_SYSTEM
+    trading.trades_shared:
       kind: trade
       partition-by:
       - SOURCE_SYSTEM
@@ -602,6 +602,7 @@ lake:
       - SOURCE_SYSTEM
       sort-by:
       - id
+
 # Read by drishti.py lake build (ignored by the server): each trade's key, and values inside its legs written as plain fields and
 # columns at load, so searches, totals and BI need no document (docs/guides/CLUSTER_GUIDE.md › Appendix D. Scale strategy: millions of trades, fast, in a bounded heap, phase 3)
 ingest:
