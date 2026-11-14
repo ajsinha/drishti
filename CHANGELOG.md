@@ -18,6 +18,12 @@
 
 ## Unreleased
 
+- **i4 follow-ups.** The trade contract gains `UPDATED_BY` (optional; the blotter's `changed-by` names it, so a refused stale edit says who changed
+  the trade again). The grid's column declaration gains `cases` (a derived text from the row's fields), `lookup` (a text by the row's key),
+  `toneField` and `href` / `hrefField` (a cell link to one of the console's own paths): monitors regain their tone colours and cell links, and the
+  trading Home's blotter its Event pill and the valuations' Notional, all through the declaration. A file sent to the inbox is checked against
+  the installed source systems (`SOURCE_SYSTEM` must be one of them).
+
 - **Several source systems on one canonical kind** (docs/guides/DATA_LAKE_GUIDE.md section 6.2; ACCESS_MODEL.md section 10). Trading systems
   are source modules feeding one `trade` kind with `SOURCE_SYSTEM`. Every read connector (Delta, Iceberg, files; Kafka live) takes `where:`
   (a row predicate on the stored row, its top-level comparisons pushed down for pruning), `set:` (constants where the row lacks them) and
