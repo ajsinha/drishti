@@ -95,7 +95,6 @@ public final class PackReloader implements AutoCloseable {
     /** The folders packs are read from, fixed when the server starts (a later change to the environment must not move them). */
     private final String packsDir;
     private final String installedDir;
-    private final String extraDirs;
     private final String watchMode;
     private final long pollMs;
     private final long debounceMs;
@@ -130,7 +129,6 @@ public final class PackReloader implements AutoCloseable {
         this.samples = samples;
         this.packsDir = com.ash.drishti.packs.PackPaths.packsDir(env);
         this.installedDir = com.ash.drishti.packs.PackPaths.installedDir(env);
-        this.extraDirs = com.ash.drishti.packs.PackPaths.extraDirs(env);
         this.watchMode = env.getProperty("drishti.packs.watch", "auto").strip().toLowerCase(java.util.Locale.ROOT);
         if (!Set.of("auto", "poll", "off").contains(watchMode)) {
             throw new IllegalArgumentException("drishti.packs.watch must be auto, poll or off, not " + watchMode);
@@ -197,7 +195,7 @@ public final class PackReloader implements AutoCloseable {
     }
 
     private List<Path> dirs() {
-        return PackLoader.dirs(packsDir, installedDir, extraDirs);
+        return PackLoader.dirs(packsDir, installedDir, com.ash.drishti.packs.PackPaths.extraDirs(env));   // installed modules come and go
     }
 
     /** One look at the folders: acts only when something differs from what was last seen, after the change has settled. */
@@ -753,6 +751,21 @@ public final class PackReloader implements AutoCloseable {
         } finally {
             lock.unlock();
         }
+    }
+
+    /**
+     * A site's content module started (deployed, or switched on): its packs, which {@link com.ash.drishti.packs.PackPaths#extraDirs}
+     * now finds in the module's installed folder, load at once unless loaded already. Returns the ones loaded now.
+     */
+    public List<String> loadModulePacks(String module, List<String> names) {
+        List<String> now = new ArrayList<>();
+        for (String n : names) {
+            if (!loadedNames().contains(n)) {
+                load(n, "module " + module);
+                now.add(n);
+            }
+        }
+        return now;
     }
 
     /** Unloads a pack an administrator loaded; refuses while another loaded pack extends it. */

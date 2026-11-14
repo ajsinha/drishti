@@ -129,16 +129,16 @@ def build_parser(h) -> argparse.ArgumentParser:
 
     # pack -------------------------------------------------------------------------------------------------
     k = group("pack", "Packs: generate from JSON Lines, check in CI, find missing help text, publish and install")
-    pn = add(k, "new", h.cmd_pack_new, "pack new: create a complete pack from JSON Lines (kinds, Sutras, samples, tests, about text, a lake or files store)",
-             [PFJ.build_parser(add_help=False), server_parent(with_json=False)],
-             "examples:\n  drishti.py pack new data/testdata/trades/murex --name murex-book --kind trade --key TRADE_ID --match PRODUCT_TYPE --out data/build/murex-book\n"
-             "  drishti.py pack new your-folder/ --name my-bank --date BUSINESS_DATE --store files --files-root data/files "
-             "--load --server http://localhost:18977")
+    pn = add(k, "new", h.cmd_pack_new, "pack new: JSON Lines (files or folders, .jsonl/.jsonl.gz/.ndjson) -> a content module: every record read, "
+             "one Sutra per --match combination, a binding, a checked .dmod, --deploy",
+             [load_module("module_from_jsonl", "packgen/module_from_jsonl.py").build_parser(add_help=False), server_parent(with_json=False)],
+             "examples:\n  drishti.py pack new data/incoming --name otc-trades --kind trade --key TRADE_ID --match PRODUCT_TYPE,SOURCE_SYSTEM --date BUSINESS_DATE --dry-run\n"
+             "  drishti.py pack new data/incoming --name otc-trades --kind trade --load --deploy\n"
+             "Bulk, unattended: docs/guides/CLI_REFERENCE.md, pack new (a folder of files -> modules).")
     pm = add(k, "make", h.cmd_pack_make, "pack make: ONE folder to deploy from JSON Lines: pack, Delta data, bundle, server config, run scripts and README.txt (tools/packmake.py)", [],
              "example:\n  drishti.py pack make data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --kind trade --match PRODUCT_TYPE --name my-bank --out data/build/my-bank\n"
              "Chooses --key and --date itself when you do not (and says why), then runs pack check and pack verify.")
     load_module("packmake", "packmake.py").add_arguments(pm)
-    pn.add_argument("--load", action="store_true", help="afterwards ask the running server to load the pack (administrator; takes effect at once, no restart)")
     pc = add(k, "check", h.cmd_pack_check, "pack check: sutra lint + sutra test (with help coverage) on packs, for CI", [jvm, js],
              "examples:\n  drishti.py pack check config/packs/my-bank --strict --junit build/reports\n  drishti.py pack check config/packs/a config/packs/b --json\n"
              "exit: 0 all passed, 1 any failure, 2 usage")

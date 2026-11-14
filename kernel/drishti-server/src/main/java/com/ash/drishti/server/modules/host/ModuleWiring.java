@@ -74,6 +74,14 @@ public final class ModuleWiring {
         return this;
     }
 
+    private volatile Supplier<com.ash.drishti.server.PackReloader> packs = () -> null;
+
+    /** The pack loader a site's content module's packs load through when it starts (its manifest's {@code packs: {list}}). */
+    public ModuleWiring packs(Supplier<com.ash.drishti.server.PackReloader> reloader) {
+        this.packs = reloader == null ? () -> null : reloader;
+        return this;
+    }
+
     /** The extension types the bridge connects, by simple name. */
     public List<String> types() {
         return bridge.types();
@@ -138,6 +146,7 @@ public final class ModuleWiring {
         }
         entries.put(module.id(), started);
         needs(module);
+        packs(module);
         LOG.info("module {}: {} contributions connected, {} entr{} started", module.id(), n, started.size(), started.size() == 1 ? "y" : "ies");
     }
 
@@ -155,6 +164,23 @@ public final class ModuleWiring {
         List<String> names = defaults.remove(module.id());
         if (names != null && env != null) {
             names.forEach(env.getPropertySources()::remove);
+        }
+    }
+
+    /** A site's content module brings its packs: loaded now if not yet (at start the pack loader enabled them already). */
+    private void packs(LoadedModule module) {
+        com.ash.drishti.server.PackReloader reloader = packs.get();
+        if (reloader == null || module.manifest() == null || module.manifest().firstPartyClaim()
+                || !(module.manifest().section("packs") instanceof Map<?, ?> p) || !(p.get("list") instanceof List<?> list)) {
+            return;
+        }
+        try {
+            List<String> now = reloader.loadModulePacks(module.id(), list.stream().map(String::valueOf).toList());
+            if (!now.isEmpty()) {
+                LOG.info("module {}: packs {} loaded", module.id(), now);
+            }
+        } catch (RuntimeException e) {
+            LOG.warn("module {}: its packs did not load: {}", module.id(), e.getMessage());
         }
     }
 

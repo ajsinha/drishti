@@ -295,10 +295,12 @@ class RegenerateEndToEnd(unittest.TestCase):
     def test_edit_kept_new_group_added_conflict_listed(self):
         with tempfile.TemporaryDirectory() as t:
             t = pathlib.Path(t)
-            data, pack = t / "trade.jsonl", t / "pk"
+            data, pack = t / "trade.jsonl", t / "mod" / "packs" / "pk"
             docs = [{"tradeId": f"T{i}", "type": ["IRS", "FRA"][i % 2], "notional": 100 + i} for i in range(6)]
             data.write_text("".join(json.dumps(d) + "\n" for d in docs))
-            self.assertEqual(run("pack", "new", data, "--name", "pk", "--key", "tradeId", "--match", "type", "--out", pack)[0], 0)
+            self.assertEqual(run("pack", "new", data, "--name", "pk", "--key", "tradeId", "--match", "type", "--out", t / "mod", "--dist", t / "dist",
+                                 "--no-binding", "--allow-shared-kinds")[0], 0)
+            self.assertTrue((t / "dist" / "pk-1.0.0.dmod").is_file())
             self.assertTrue((pack / "generated" / "pack.yaml.base").is_file())
             irs = pack / "sutras/trade/trade-irs.v1.sutra.yaml"
             irs.write_text(irs.read_text().replace('label: "Notional"', 'label: "Face amount"'))

@@ -17,6 +17,8 @@
 
 ## Unreleased
 
+- **`pack new` finished for bulk sets**: `--load` and `--deploy` work end to end (the server finds a generated module's packs where the module is installed), `--kind-prefix` for kinds other modules provide, the files root written as an absolute path; a bulk recipe in CLI_REFERENCE.
+
 - **The local cluster's folder is `deploy/stack/`** (was `drishti-stack/`, 2.9.11.i4), and **the teaching connector plugin is
   `examples/connector`** (was `docs/guides/examples/connector`; artifact `drishti-example-dayfolder` unchanged), so the root holds no
   deployment or example folder of its own. `bin/start-cluster`, `stop-cluster` and `status --cluster` default to

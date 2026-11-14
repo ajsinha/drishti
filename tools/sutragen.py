@@ -88,7 +88,8 @@ def input_files(inputs, recursive: bool = False) -> list[pathlib.Path]:
         i = pathlib.Path(i)
         if i.is_dir():
             pick = "**/" if recursive else ""
-            files += sorted(list(i.glob(pick + "*.jsonl")) + list(i.glob(pick + "*.jsonl.gz")) + [f for f in i.glob(pick + "*.json") if is_json_array(f)])
+            files += sorted([f for ext in ("*.jsonl", "*.jsonl.gz", "*.ndjson", "*.ndjson.gz") for f in i.glob(pick + ext)]
+                            + [f for f in i.glob(pick + "*.json") if is_json_array(f)])
         elif i.is_file():
             files.append(i)
         else:
@@ -153,7 +154,8 @@ def file_kind(f: pathlib.Path) -> str:
     n = filedate.parse(f.name)
     if n.error is None and not n.tar and n.table:
         return f.name.split(".")[0]
-    return pathlib.Path(f.stem).stem if f.suffix.lower() == ".gz" else f.stem
+    stem = pathlib.Path(f.stem).stem if f.suffix.lower() == ".gz" else f.stem
+    return re.sub(r"\.\d{4}-\d\d-\d\d$", "", stem)                 # trade.2026-11-03.ndjson -> trade
 
 
 def read_records(files, say_bad=None):
@@ -423,8 +425,14 @@ def generate(kinds: dict[str, list[dict]], opts, out: pathlib.Path, tests: pathl
     groups = build_groups(kinds, opts)
     if not groups:
         raise SystemExit("sutragen: nothing to generate (no group has --min-docs documents)")
-    tests = tests or out / "tests"
     say(f"{sum(len(v) for v in kinds.values())} documents, {len(kinds)} kind(s), {len(groups)} group(s)")
+    return draft(groups, opts, out, tests, say)
+
+
+def draft(groups: list[Group], opts, out: pathlib.Path, tests: pathlib.Path | None = None, say=print) -> list[Group]:
+    """Drafts each group's Sutra from its samples (one `sutra design --each` run), writes it under out/<kind>/ and its samples as test
+    cases under tests/<name>/ (the Pack designer's groups come from tools/packgen/profile.py, a full pass, with their samples chosen)."""
+    tests = tests or out / "tests"
     with tempfile.TemporaryDirectory(prefix="sutragen-") as tmp:
         t = pathlib.Path(tmp)
         for i, g in enumerate(groups):
@@ -451,7 +459,7 @@ def generate(kinds: dict[str, list[dict]], opts, out: pathlib.Path, tests: pathl
 def summary(groups: list[Group], say=print) -> None:
     say(f"{'kind':<16}{'group':<44}{'docs':>7}{'samples':>8}  sutra")
     for g in groups:
-        say(f"{g.kind:<16}{g.label[:43]:<44}{len(g.docs):>7}{len(g.samples):>8}  {g.name}")
+        say(f"{g.kind:<16}{g.label[:43]:<44}{getattr(g, 'count', None) or len(g.docs):>7}{len(g.samples):>8}  {g.name}")
 
 
 def lint(opts, path: pathlib.Path, say=print) -> int:
