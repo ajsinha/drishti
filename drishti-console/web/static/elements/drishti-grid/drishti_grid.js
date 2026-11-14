@@ -7004,8 +7004,6 @@
         if (c.type === 'status') { col.cellClass = (v) => 'dg-live-st dg-live-st-' + String(v || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
         if (type === 'number' && sums.has(c.field)) { col.aggFunc = 'sum'; }
         if (type === 'number') { col.enableValue = true; }
-        // derived and decorated cells, all of the declaration (no per-page code): cases (a text from the row's fields; a value ending in * is a prefix), lookup (a text by the row's key),
-        // toneField (a row field naming the cell's tone), href / hrefField (the cell is a link, one of this console's own paths)
         if (Array.isArray(c.cases)) {
           col.valueGetter = (row) => { const hit = c.cases.find((k) => !k.when || Object.keys(k.when).every((f) => { const w = k.when[f]; const v = row && row[f]; if (Array.isArray(w)) { return w.indexOf(v) >= 0; } const t = String(v === undefined || v === null ? '' : v), x = String(w); return x.slice(-1) === '*' ? t.indexOf(x.slice(0, -1)) === 0 : t === x; })); return hit ? hit.text : (c.otherwise === undefined ? null : c.otherwise); };
         }
