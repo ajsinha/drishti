@@ -130,11 +130,12 @@ public class DataLoadConfiguration {
                 return out;
             }
             com.fasterxml.jackson.dataformat.yaml.YAMLMapper yaml = new com.fasterxml.jackson.dataformat.yaml.YAMLMapper();
-            try (java.util.stream.Stream<java.nio.file.Path> s = java.nio.file.Files.list(dir)) {
-                for (java.nio.file.Path m : s.sorted().toList()) {
+            {
+                // the module folders and the modules installed from a .dmod (installed/<id>/<version>/): both give their rules
+                for (java.nio.file.Path m : com.ash.drishti.lakeconfig.ModuleDirs.of(dir)) {
                     java.nio.file.Path manifest = m.resolve("module.yaml");
-                    String id = m.getFileName().toString();
-                    if (!java.nio.file.Files.isRegularFile(manifest) || a != null && !a.moduleOn(id)) {
+                    String id = com.ash.drishti.lakeconfig.ModuleDirs.idOf(m);
+                    if (a != null && !a.moduleOn(id)) {
                         continue;
                     }
                     try {
@@ -154,8 +155,6 @@ public class DataLoadConfiguration {
                         // a module whose rules cannot be read adds none; Admin's module page says why
                     }
                 }
-            } catch (java.io.IOException e) {
-                return out;
             }
             return out;
         };

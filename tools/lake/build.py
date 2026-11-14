@@ -198,7 +198,7 @@ def pack_defaults(pack: pathlib.Path, kind: str | None, connector: str | None = 
     import packlake                                   # a lake-form template read with the pack's lake: entries
     m = packlake.view(yaml.safe_load((pack / "pack.yaml").read_text(encoding="utf-8")) or {})
     out: dict = {"pack": m.get("pack") or pack.name}
-    defs = m.get("connectors") if isinstance(m.get("connectors"), dict) else (m.get("connector-templates") or {})
+    defs = m.get("connectors") if isinstance(m.get("connectors"), dict) else {}
     delta = [(n, c) for n, c in (defs or {}).items() if isinstance(c, dict) and c.get("plugin") == "delta"]
     if connector:
         delta = [(n, c) for n, c in delta if n == connector]

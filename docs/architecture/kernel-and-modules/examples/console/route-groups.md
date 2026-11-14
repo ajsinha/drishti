@@ -14,12 +14,12 @@
   See the LICENSE file in the root of this repository for the full terms.
 
   Status: design, not built. An EXAMPLE: the order in which the console's route groups move from the Python console to the Drishti
-  Console on Spring Boot in release 2.9.11.i4 (docs/architecture/KERNEL_AND_MODULES.md section 10.8). Sizes measured on 970160f9f.
+  Console on Spring Boot in release 2.9.11.i5 (docs/architecture/KERNEL_AND_MODULES.md section 10.8). Sizes measured on 970160f9f.
 -->
 
 # Console route groups: the migration order
 
-The Java console fronts every request from the first day of i4. A group moves when its Playwright browser tests pass against the Java
+The Java console fronts every request from the first day of i5. A group moves when its Playwright browser tests pass against the Java
 console with the rest still proxied to the Python console; its lines in `config/console/legacy-routes.yaml` are deleted in the same merge.
 The pytest unit tests of the group's routes and `core/` helpers are replaced by JUnit and MockMvc tests. After G10 the Python console is
 deleted.

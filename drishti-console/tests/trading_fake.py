@@ -89,6 +89,14 @@ class TradingBackend(FakeBackend):
         roles = tuple(getattr(ident, "roles", ()) or ())
         return "*" in roles or "admin" in roles or "author" in roles
 
+    async def live_query(self, q, ident=None, again=True, limit=1000):
+        """A search as the live engine's result set (the page the real server gives): each row's document holds its values by field name."""
+        found = await self.search(q, ident)
+        rows = [{"id": r["ref"]["id"], "version": 1, "seq": 1, "doc": {k[2:]: v for k, v in r["values"].items()}} for r in found["rows"]]
+        cols = list(found["rows"][0]["values"]) if found["rows"] else []
+        return {"set": {"id": None, "kind": found["kind"]}, "live": False, "total": len(rows), "seq": 1, "offset": 0, "rows": rows,
+                "search": {"kind": found["kind"], "columns": cols, "matched": found["matched"], "partial": found.get("partial", False)}}
+
     async def search(self, q, ident=None):
         self.asked.append((asof.current(), q))
         head = q.split()[0].upper()

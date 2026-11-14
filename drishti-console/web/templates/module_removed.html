@@ -32,6 +32,9 @@
     {% if me and me.is_admin %}<p class="mod-admin" data-module-gone-admin><b>Administrator:</b> removed by {{ route.by or '-' }} on
       {{ (route.at or '')[:16]|replace('T', ' ') }} · deployment <span class="mono">{{ route.deployment or '-' }}</span> ·
       <a href="/admin/modules?module={{ (route.module or '')|urlencode }}">Admin › Modules</a></p>{% endif %}
+    {% elif route.state == 'absent' %}
+    <h1 class="ib-h2">Not part of this distribution</h1>
+    <p>{{ route.what or 'This page' }} belongs to the {{ route.title or route.module }} module, which this distribution does not carry.</p>
     {% elif route.module and route.state == 'off' %}
     <h1 class="ib-h2">Not available</h1>
     <p>The {{ route.title or route.module }} module is switched off: ask your administrator.</p>

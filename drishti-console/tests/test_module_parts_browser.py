@@ -121,8 +121,15 @@ def test_install_remove_and_reinstall_in_the_browser(browser, console):
 
 def test_the_world_page_comes_from_the_economy_module(browser, console):
     url, _, app = console
-    from test_edition import WORLD_ABOUT
-    app.state.editions.learn(WORLD_ABOUT)                                                   # the World edition: its Home is the module's page
+    from test_edition import FULL_ABOUT
+    app.state.editions.learn(FULL_ABOUT)                                                    # the World lens of the full product: its Home is the module's page
+    store = {app.state.auth.default.user: {"lens": "world"}}                                 # the person works in the World lens
+
+    async def settings(ident=None):
+        return dict(store.get(ident.user if ident else "", {}))
+
+    app.state.backend.settings = settings
+    app.state.user_settings.forget(app.state.auth.default.user)                           # an earlier test's read of this person's settings is cached
     page = browser.new_page()
     try:
         page.goto(url + "/")

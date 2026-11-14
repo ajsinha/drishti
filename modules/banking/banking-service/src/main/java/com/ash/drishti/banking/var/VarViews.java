@@ -258,6 +258,15 @@ final class VarViews {
         return headline(p, scope, date, ccy, null);
     }
 
+    /** At trade grain, the trade sources switched off: "trade details from ENDUR unavailable (source switched off)"; VaR's numbers are unchanged. */
+    void tradeSourceBanner(Map<String, Object> out) {
+        java.util.Set<String> off = svc.tradeSourcesOff();
+        if (!off.isEmpty()) {
+            out.put("excludes", off);
+            out.put("banner", "trade details from " + String.join(", ", off) + " unavailable (source switched off)");
+        }
+    }
+
     /** The same through a lens (2.9.7: horizon, 10-day method, confidences; null: the default). */
     Map<String, Object> headline(Principal p, String scope, LocalDate date, String ccy, VarLens lens) {
         VarService.Scoped s = svc.scoped(p, scope, date, ccy, lens);
@@ -276,6 +285,9 @@ final class VarViews {
         out.put("kind", s.kind());
         out.put("label", s.label());
         out.put("node", s.res().node());
+        if (mode.equals("trade") || s.res().trade() >= 0 || mode.startsWith(VarAttributeGroups.PREFIX)) {
+            tradeSourceBanner(out);                                    // trade grain only: position grain never reads trades
+        }
         out.put("businessDate", s.date().date().toString());
         out.put("var", round(s.measures().var()));
         out.put("es", round(s.measures().es()));
@@ -970,6 +982,9 @@ final class VarViews {
         out.put("currency", s.date().currency());
         out.put("intraday", intradayNote(s.date()));
         out.put("by", column != null ? VarAttributeGroups.KIND : parts.isEmpty() ? null : parts.get(0).kind());
+        if (column != null || (!parts.isEmpty() && "trade".equals(parts.get(0).kind()))) {
+            tradeSourceBanner(out);                                    // trade grain only
+        }
         if (column != null) {
             out.put("attribute", column);
             out.put("masked", false);

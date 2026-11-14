@@ -12,10 +12,10 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The module's Help section: the trading guide (guide and tutorial in one).
+# The module's Help section: live results and blotters: the engine guide with its tutorial, and the trading module's part.
 sections:
 - id: trading
   title: Trading
   pages:
-  - title: 'Trading: the live blotter'
+  - title: 'Live results and blotters'
     file: guide.md

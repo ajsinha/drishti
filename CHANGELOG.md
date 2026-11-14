@@ -18,10 +18,27 @@
 
 ## Unreleased
 
+- **A second slogan line on the landing page**: *Your data is a treasury;* **Drishti is its sentinel.** under the headline (italic serif, the closing part in gold, a gentle fade-in, none under reduced motion). Its text is configuration, `ui.headline_second` and `ui.headline_second_accent` (also in a distribution's `brand:`); blank: no line.
+- **One document: Live results and blotters** (modules/trading/docs/guide.md, the module's Help page; the guide caps leave no room for a separate page). The engine, the page, editing and rights, row rules, retention, scale, the declaration format with a complete inventory example and a tutorial from a Kafka feed to an approved, written-back edit; the trading module's guide keeps only the trade-specific parts and links here. The plan is renumbered: i4 holds the trading module, Python compute in modules and the source modules; i5 is the cluster and the console; i6 is banking on the public kernel API.
 - **Source modules integrated**: one manifest key set (`connectors`, `mappings`, `dataload`, `sections`; conformance C9 reads `connectors`);
   the loader, `data ingest` and the inbox stamp a connector's `set:` into the stored rows; a module's `dataload:` rules join the inbox's after
   the site's (Admin shows each rule's origin); the trading pack no longer declares the Endur, Calypso and Murex connectors (their module
   templates are the one home; `lake demo` writes them and the demo bindings by default, `--no-bindings` leaves the bindings out).
+- **VaR with a trading system switched off.** At trade grain the totals stay the PVs' (unchanged), the affected trades are placed by the
+  attributes the PV records carry, else under "Unassigned", the answers and the VaR page carry "trade details from ENDUR unavailable (source
+  switched off)", and a link to a trade of a switched-off system opens a plain "source ENDUR is switched off" page (200). Position grain is
+  identical with every trading system off (tested; the VaR goldens are unchanged). Drishti Risk lists the trading module (the trade blotter)
+  beside its six source modules, with a test.
+- **i4 follow-ups.** The trade contract gains `UPDATED_BY` (optional; the blotter's `changed-by` names it, so a refused stale edit says who changed
+  the trade again). The grid's column declaration gains `cases` (a derived text from the row's fields), `lookup` (a text by the row's key),
+  `toneField` and `href` / `hrefField` (a cell link to one of the console's own paths): monitors regain their tone colours and cell links, and the
+  trading Home's blotter its Event pill and the valuations' Notional, all through the declaration. A file sent to the inbox is checked against
+  the installed source systems (`SOURCE_SYSTEM` must be one of them).
+  A distribution loads only the modules it carries (and requires): Drishti Genomics shows no trading menu, `/live/<id>` of a module the
+  distribution lacks answers a plain "Not part of this distribution" page, and the Elements gallery asks only for libraries of modules that
+  are on. A row rule now also decides who may open a single record's view (404 for a record outside it). Row retention on Delta and files
+  judges one business-date partition at a time (only the ages are kept, and only when `max-rows` needs the table-wide cut). The grid
+  bundle is regenerated from its sources (`tools/elements/build.py`).
 
 - **Several source systems on one canonical kind** (docs/guides/DATA_LAKE_GUIDE.md section 6.2; ACCESS_MODEL.md section 10). Trading systems
   are source modules feeding one `trade` kind with `SOURCE_SYSTEM`. Every read connector (Delta, Iceberg, files; Kafka live) takes `where:`

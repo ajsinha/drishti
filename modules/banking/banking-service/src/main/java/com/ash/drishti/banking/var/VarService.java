@@ -1598,4 +1598,15 @@ public final class VarService implements AutoCloseable {
         loader.tier().close();
         sums.close();
     }
+
+    /**
+     * The trading systems switched off that feed the trade details VaR joins at trade grain (the {@code trade} kind and the valuations). VaR's
+     * numbers come from the scenario PVs and never change with them; only the details (attributes, links) are missing.
+     */
+    java.util.Set<String> tradeSourcesOff() {
+        com.ash.drishti.engine.source.SourceRouter r = loader().router();
+        java.util.Set<String> out = new java.util.TreeSet<>(r.excluded("trade"));
+        out.addAll(r.excluded(props().kinds().valuation()));
+        return out;
+    }
 }

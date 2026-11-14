@@ -197,7 +197,7 @@ server nor Spring, and the lake engines and connectors never see `memlake` (they
 
 `drishti-module-runtime` loads **modules**: separately built packages (`<id>-<version>.dmod`) installed unpacked under a module folder
 as `<folder>/<id>/<version>/` with the package beside them (the design: [KERNEL_AND_MODULES.md sections 3, 4, 9.8 and 12](../architecture/KERNEL_AND_MODULES.md#3-the-module-package-dmod)).
-It is a library; a host (the kernel, from i4 also the console) makes one `ModuleRuntime` and adds only its own kind of contribution through
+It is a library; a host (the kernel, from i5 also the console) makes one `ModuleRuntime` and adds only its own kind of contribution through
 `ModuleHost`. With no module folder, or an empty one, it does nothing.
 
 ```java
@@ -1963,7 +1963,7 @@ kind that some enabled pack gives a mnemonic (or an id pattern) to; through the 
 | **plugin** | a piece of software that knows how to talk to one *type* of store | `jdbc` talks to databases, `kafka` to Kafka |
 | **connector** | one plugin pointed at one *particular* store, with a name and its own settings | `desk-db`: the `jdbc` plugin, pointed at `jdbc:postgresql://db.bank.example/desk` |
 | **connector file** | one YAML file, `config/connectors/<name>.yaml`; the file name is the connector's name. Connectors belong to the site, not to a pack ([DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors)) | `config/connectors/trade-endur.yaml` (Delta Lake) |
-| **pack template** | what a pack suggests for a connector it names (its `pack.yaml` `connectors:` mapping or `connector-templates:`); the server writes it to the file once, at the first start, and never overwrites the file | the trading pack's templates for `trade-endur` (Delta Lake) and `trading-stream` (Kafka) |
+| **pack template** | what a pack suggests for a connector it names (its `pack.yaml` `connectors:` mapping); the server writes it to the file once, at the first start, and never overwrites the file | the trading pack's templates for `trade-endur` (Delta Lake) and `trading-stream` (Kafka) |
 | **site connector** | a connector file no pack suggests | anything you add yourself |
 | **route** | "for this kind, ask this connector first" | `trade: trade-endur` |
 | **default route** | the connector asked second, for every kind | `demo` (the sample data), as shipped |
@@ -2081,7 +2081,7 @@ reads through (`connectors: [trade-endur]` and `routes:` in its `pack.yaml`) and
 |---|---|
 | environment variables, and `drishti.sources.connectors.*` in `application.yaml` / `application.local.yaml` (**deprecated**) | override a file setting by setting until you move them to the file; a warning names the file to write |
 | `config/connectors/<name>.yaml` | the site's definition; it **replaces** the pack's template for that name **wholesale** (settings are not merged) |
-| the pack's template (`connectors:` mapping or `connector-templates:` in `pack.yaml`) | the pack's suggestion; written to the file once at the first start, and used in memory when the file cannot be written |
+| the pack's template (the `connectors:` mapping in `pack.yaml`) | the pack's suggestion; written to the file once at the first start, and used in memory when the file cannot be written |
 
 A file with no template of that name is a new site connector. A connector file holds `plugin`, `enabled`, `kinds`, `description` and `settings`; nesting under
 `settings` is flattened to dotted keys. Values like `${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}` are placeholders: the environment variable if set, else the default
@@ -3840,6 +3840,8 @@ brand:                                 # each value fills the console's ui.<key>
   product_native: ""                   # the name in a second script, beside the product name
   tagline: Lanes, costs and shipments  # under the name on the landing page
   headline: ""                         # the landing page's headline
+  headline_second: ""                  # a second line under the headline, in italic serif ("": none)
+  headline_second_accent: ""           # its closing part, drawn in gold
   owner: Acme Logistics                # the footer's owner
   copyright: Copyright © 2026 Acme Logistics. All rights reserved.
   notice: Internal use only.           # the footer's notice
@@ -4009,7 +4011,7 @@ while the module is on. The rules (no canvas, svg or colour of its own; tones fr
 
 ### 12.6a How to create a blotter (a live result set)
 
-A blotter is a declaration, not code: the kernel's live result sets engine runs it ([the trading module's guide](../../modules/trading/docs/guide.md#6-the-declaration)).
+A blotter is a declaration, not code: the kernel's live result sets engine runs it ([Live results and blotters](../../modules/trading/docs/guide.md#11-make-a-new-blotter), with a complete inventory example and the declaration format in [section 6](../../modules/trading/docs/guide.md#6-the-declaration)).
 
 1. In your module, add `blotters/<id>.blotter.yaml`: the `kind`, an optional `query` (the search grammar), `key`, `version`, `columns`,
    `links`, `retention` and, for edits, `edit:` (a Rachana form with `save:`). The trading module's

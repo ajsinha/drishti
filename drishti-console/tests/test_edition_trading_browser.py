@@ -45,9 +45,20 @@ def trading_console():
     trading_landing.forget()
     app = create_app(load_settings(CONSOLE / "config"))
     app.state.backend = TradingBackend()
-    app.state.editions.learn({"product": "Drishti Trading", "edition": {"name": "trading", "title": "Drishti Trading"}})
+    app.state.editions.learn({"product": "Drishti", "edition": None, "lenses": ["risk", "world", "market", "trading"]})   # trading is a lens of the full product
     user = app.state.auth.default.user
-    app.state.editions.instance.spec["trading"]["people"][user] = {"trader": "TRDR-ASHAH"}
+    store = {user: {"lens": "trading"}}                      # the person's settings: they work in the trading lens
+
+    async def settings(ident=None):
+        return dict(store.get(ident.user if ident else "", {}))
+
+    async def patch_settings(body, ident=None):
+        mine = store.setdefault(ident.user, {})
+        mine.update({k: v for k, v in body.items() if v is not None})
+        return mine
+
+    app.state.backend.settings, app.state.backend.patch_settings = settings, patch_settings
+    app.state.editions.lenses["trading"].spec["trading"]["people"][user] = {"trader": "TRDR-ASHAH"}
     server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=PORT, log_level="warning", timeout_graceful_shutdown=2))
     thread = threading.Thread(target=server.run, daemon=True)
     thread.start()
@@ -86,7 +97,7 @@ def test_each_trading_landing_fills_from_the_servers_answers_and_fits(browser, t
         if landing == "trader":
             page.wait_for_function("() => document.querySelector('[data-tl-date]').textContent === '2026-09-30'")
             page.wait_for_function("() => document.querySelector('[data-tl-tile=limit] [data-tl-v]').textContent === '83%'")
-            page.wait_for_function("() => document.querySelectorAll('[data-tl-blotter] tr[data-tl-event]').length === 3")
+            page.wait_for_function("() => document.querySelectorAll('[data-tl-blotter] .dg-row[data-key]').length === 3")
             assert _text(page, "[data-tl-tile=pnl] [data-tl-v]") == "+480k"
             assert "since 2026-09-29" in _text(page, "[data-tl-tile=pnl] [data-tl-s]")
             assert _text(page, "[data-tl-tile=var] [data-tl-v]") == "8.00m" and "intraday" in _text(page, "[data-tl-tile=var] [data-tl-s]")
@@ -94,7 +105,7 @@ def test_each_trading_landing_fills_from_the_servers_answers_and_fits(browser, t
             assert _text(page, "[data-tl-tile=trades] [data-tl-v]") == "3"
             assert "1 new · 1 amended · 1 cancelled" in _text(page, "[data-tl-tile=trades] [data-tl-s]")
             assert "BOOK-RATES-1" in _text(page, "[data-tl-tile=limit] [data-tl-s]")
-            assert page.locator("[data-tl-blotter] tr[data-tl-event=cancelled]").count() == 1
+            assert page.locator("[data-tl-blotter] .dg-row[data-key]:has-text('cancelled')").count() == 1
             page.wait_for_function("() => document.querySelectorAll('[data-tl-positions] tr').length === 2")
             page.wait_for_function("() => document.querySelector(\"[data-tl-quick] [data-home-card='TRDR TRDR-ASHAH']\") !== null")
         elif landing == "desk":
@@ -120,7 +131,7 @@ def test_each_trading_landing_fills_from_the_servers_answers_and_fits(browser, t
             for gid in ("blotter", "books", "risk", "cpty", "market"):
                 assert page.locator(f"[data-tl-group='{gid}']").count() == 1, gid
             recents = page.locator("[data-tl-recents]").inner_text()
-            assert "TRD MX-20000001" in recents and "ECON" not in recents and "SCN" not in recents
+            assert "TRD MX-20000001" in recents
         page.wait_for_timeout(200)
         assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
         assert not page.evaluate(AUDIT)

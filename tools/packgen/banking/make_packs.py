@@ -354,6 +354,10 @@ def files() -> dict[Path, str]:
     out = {}
     for name in layout.PACKS:
         form = packlake.lake_form(manifest(name), partitions=PARTITIONS)
+        if name == "trading":     # the per-system trade connectors are the source modules' (modules/source-<system>/connectors/); their lake entries stay
+            for cname in TRADE_SYSTEMS:
+                form["connectors"].pop(cname, None)
+            form["routes"].pop("trade", None)
         if name == "trading":     # the table WSS, SwapOne and ICI share (modules/source-wss, -swapone, -ici): not a connector of the pack
             form["lake"]["tables"]["trading.trades_shared"] = {"kind": "trade", "partition-by": ["SOURCE_SYSTEM"], "promote": ["SOURCE_SYSTEM"],
                                                                "sort-by": ["id"]}

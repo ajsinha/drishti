@@ -10,6 +10,8 @@
 
 **Any data. Any domain. One grammar.**
 
+*Your data is a treasury;* **Drishti is its sentinel.**
+
 Drishti looks at data, analyses it and explains it. It is built from **three blocks**: a domain-free **kernel** (connectors and lakes,
 screens written as short YAML **Sutras** in one grammar, **Rachana**, the pivot and BI engines, the cluster), a **console** in front of
 one or many kernels, and **modules**, signed `.dmod` packages that bring an industry: banking brings a bank's risk, capital markets

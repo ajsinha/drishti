@@ -33,7 +33,7 @@ policy) is made, checked and removed by [`deploy/aws/s3-tables/`](../../../deplo
 ## What it reads
 
 `risk-store.yaml` reads the market-risk pack's risk domain (P&L vectors, scenario PVs, VaR limits, desk P&L) and
-The Endur trades are a template of the source module, `modules/source-endur/connector-templates/s3tables.yaml`, not a file of this folder.
+The Endur trades are a template of the source module, `modules/source-endur/connectors/s3tables.yaml`, not a file of this folder.
 A kind is read from the table of its name with hyphens made underscores (`pnl-vector` is the table `pnl_vector`), because S3 Tables
 allows lower-case letters, digits and underscores only. Nothing is written by the server; the loaders write the same tables
 (`drishti.py lake build --format iceberg`, the parallel loader with `target.iceberg`) with the same settings.

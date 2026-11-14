@@ -174,7 +174,7 @@ def contract_key(pack: pathlib.Path, kind: str | None) -> str | None:
 def pack_tables(pack: pathlib.Path) -> list[tuple[str, str, str | None]]:
     """(name, kind, connector) for every kind of the pack and every table a Delta connector names for one (``table.<kind>``)."""
     m = _pack_doc(pack)
-    defs = m.get("connectors") if isinstance(m.get("connectors"), dict) else (m.get("connector-templates") or {})
+    defs = m.get("connectors") if isinstance(m.get("connectors"), dict) else {}
     out: list[tuple[str, str, str | None]] = []
     kinds = list((m.get("ingest") or {}).keys())
     for name, c in (defs or {}).items():

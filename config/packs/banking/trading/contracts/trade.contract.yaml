@@ -74,6 +74,11 @@ fields:
   presence: optional
   description: 'When the booking system last changed the trade, ISO-8601 UTC; moves with every amendment (empty on an ENDUR trade never amended).'
   example: '2026-09-30T18:30:00Z'
+- name: UPDATED_BY
+  type: text
+  presence: optional
+  description: 'Who last changed the trade: a person or a system id. The blotter names it when an edit is refused because the trade changed again.'
+  example: TRADER-014
 - name: TRADE_DATE
   type: date
   presence: required

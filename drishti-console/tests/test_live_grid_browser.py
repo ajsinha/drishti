@@ -97,6 +97,19 @@ def test_a_live_update_arrives_and_ticks(browser, stack):
     assert not pg.errors, pg.errors
 
 
+def test_a_page_says_which_source_systems_it_excludes(browser, stack):
+    url, backend = stack
+    pg = opened(browser, url)
+    assert pg.locator(".dg-live-banner").count() == 0                           # every source on: nothing to say
+    pg.context.close()
+    backend.excludes = ["ENDUR"]                                                 # the spec of the set says so: set.banner
+    pg = opened(browser, url)
+    banner = pg.locator(".dg-live-banner")
+    assert banner.count() == 1 and banner.inner_text() == "excludes ENDUR (switched off)"
+    assert banner.get_attribute("data-excludes") == "ENDUR" and banner.get_attribute("role") == "status"
+    assert not pg.errors, pg.errors
+
+
 def test_the_grid_tells_the_server_the_page_it_shows(browser, stack):
     url, backend = stack
     pg = opened(browser, url)

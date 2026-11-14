@@ -80,6 +80,21 @@ public class ViewController {
         return sb == null ? v : sb.annotate(principal, v);       // Drishti*net: the node that answered, for administrators only
     }
 
+    /** The source router, for a link to a trade of a switched-off source (absent in a test that makes the controller itself). */
+    private com.ash.drishti.engine.source.SourceRouter router;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void router(com.ash.drishti.engine.source.SourceRouter r) {
+        this.router = r;
+    }
+
+    /** The trading systems switched off that feed {@code kind}: a link to one of their records opens a plain "source X is switched off" page. */
+    @GetMapping("/switched-off/{kind}")
+    public java.util.Map<String, Object> switchedOff(@PathVariable String kind) {
+        java.util.Set<String> off = router == null ? java.util.Set.of() : router.excluded(kind);
+        return java.util.Map.of("kind", kind, "excludes", off);
+    }
+
     /** Write-back: "How this view was built" names the overlays laid over the record (absent in a test that makes the controller itself). */
     private org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.edit.EditRuntime> edits;
 

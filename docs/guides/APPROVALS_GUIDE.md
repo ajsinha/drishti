@@ -423,8 +423,7 @@ A lane deeper than `lanes.max-lane-depth` (1,000) refuses new changes with *busy
 ## 10. Writing to a source: `writes:`
 
 A connector says **how** to change a record in its system; the Sutra's form (or a blotter's `edit:`) says **what** may change; the lane
-owner says **when** and in what order. The JDBC and Kafka plugins write (Kafka's `kafka:` commands: [the trading module's guide, section
-8](../../modules/trading/docs/guide.md#8-writing-back-kafka-and-jdbc)); the file, Delta and Iceberg plugins never do (a lake is not written per change), and
+owner says **when** and in what order. The JDBC and Kafka plugins write (Kafka's `kafka:` commands: [Live results and blotters, section 8](../../modules/trading/docs/guide.md#8-writing-back-to-the-records-own-source)); the file, Delta and Iceberg plugins never do (a lake is not written per change), and
 any other plugin is refused with *plugin … cannot write*.
 
 A command needs a **concurrency guard** (it changes the row only if it is still the version the person saw) and an **idempotency clause**

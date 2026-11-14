@@ -42,7 +42,7 @@ class BankingPacksTest {
         mvc.perform(get("/api/v1/packs")).andExpect(status().isOk())
                 .andExpect(jsonPath("$[*].name").value(containsInAnyOrder("core", "market-data", "trading", "market-risk", "counterparty-risk")));
         mvc.perform(get("/api/v1/sources"))
-                .andExpect(jsonPath("$.sources[*].name").value(hasItems("reference-store", "market-store", "trade-endur", "trade-calypso", "trade-murex", "trade-pages", "risk-store",
+                .andExpect(jsonPath("$.sources[*].name").value(hasItems("reference-store", "market-store", "trade-pages", "risk-store",
                         "legal-store", "credit-store", "collateral-store")));
         mvc.perform(get("/api/v1/sutras")).andExpect(jsonPath("$.length()").value(183))      // equity-beta's (2.9.2)
                 .andExpect(jsonPath("$[*].name").value(hasItems("irs-fixfloat", "endur-comswap", "counterparty-trades", "netting-set", "stress-result", "ir-curve", "counterparty")));

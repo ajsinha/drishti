@@ -60,13 +60,11 @@ _COMMENT = re.compile(r"\A(?:\s*<!--.*?-->)*\s*", re.S)
 
 
 def _connectors(m: dict) -> dict:
-    """The connectors a pack brings, name -> details. The pack format is a list of names with the details under
-    ``connector-templates``; the older hand-written packs (examples/, config/packs) give a mapping, still accepted."""
+    """The connectors a pack brings, name -> details: the ``connectors`` mapping (a bare list of names gives empty details)."""
     raw = m.get("connectors") or {}
     if isinstance(raw, dict):
         return raw
-    templates = m.get("connector-templates") or {}
-    return {n: (templates.get(n) or {}) for n in raw if isinstance(n, str)}
+    return {n: {} for n in raw if isinstance(n, str)}
 
 
 def licence_comment() -> str:

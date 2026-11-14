@@ -11,7 +11,7 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-# Example: the demo trade blotter's live side and its write-back (modules/trading/docs/guide.md sections 3 and 8). Copy to
+# Example: the demo trade blotter's live side and its write-back (modules/trading/docs/guide.md section 3; modules/trading/docs/guide.md section 8). Copy to
 # config/connectors/trade-kafka.yaml, start the demo broker and stream (deploy/docker/compose.data.yaml; tools/samplegen/stream.py, whose
 # trades carry a numeric TRADE_VERSION and UPDATED_BY), and bind the kind with live: in config/bindings.yaml:
 #   trade: { read: [trade-endur, trade-murex], union: true, live: trade-kafka }

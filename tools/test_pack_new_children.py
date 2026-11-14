@@ -88,7 +88,7 @@ def pack_yaml(folder: pathlib.Path, an, connector: dict | None = None) -> pathli
     m = {"pack": "deals", "kinds": kinds,
          "ingest": {k: an.parents[k].ingest() if k in an.parents else {"key": an.keys[k], "snapshot": True} for k in kinds}}
     if connector:
-        m["connector-templates"] = {"deals-store": connector}
+        m["connectors"] = {"deals-store": connector}
     folder.mkdir(parents=True, exist_ok=True)
     (folder / "pack.yaml").write_text(yaml.safe_dump(m, sort_keys=False), encoding="utf-8")
     return folder

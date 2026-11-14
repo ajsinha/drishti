@@ -171,7 +171,7 @@ Each item is **built** unless it says otherwise; the design is [KERNEL_AND_MODUL
 
 - **Maturity.** The kernel and module runtime are new; the Ed25519 publisher signature on a `.dmod` is designed and planned (j); until
   then a first-party module is verified by its id and content hash against the kernel's shipped list. The Console as a separate Spring Boot
-  tier is planned (i4).
+  tier is planned (i5).
 - **Ecosystem.** One substantial industry module (banking), no third-party module author, no marketplace or site repository (planned,
   phase P5), no partner network. Snowflake, Salesforce, Splunk and Grafana each run a public catalogue [S1][SP1][G1].
 - **Support.** One author; no support organisation, no SLA, no 24x5 desk of the kind MSCI states [R1].

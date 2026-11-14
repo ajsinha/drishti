@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # The module's pages: one per function, under /m/banking/ (KERNEL_AND_MODULES.md section 9.8). The console's own banking plugin
-# (drishti-console/plugins/banking) draws them until the console part moves into the module (2.9.11.i4).
+# (drishti-console/plugins/banking) draws them until the console part moves into the module (2.9.11.i5).
 format: 2
 module: banking
 title: Banking and risk

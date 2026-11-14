@@ -45,7 +45,7 @@
       if (liveText) { liveText.textContent = 'Live, p99 ' + Math.round(d.p99Ms) + ' ms'; liveBox.setAttribute('data-live-state', 'live'); liveBox.title = (liveBox.getAttribute('data-tip') || '') + ' · ' + liveText.textContent; }
       if (!row || !grid) { return; }
       var fields = {};
-      d.patches.forEach(function (p) { var f = row._cells[String(p.index)]; if (f) { fields[f] = p.cell.text == null || p.cell.text === '' ? '—' : p.cell.text; row[f] = fields[f]; } });
+      d.patches.forEach(function (p) { var f = row._cells[String(p.index)]; if (f) { fields[f] = p.cell.text == null || p.cell.text === '' ? '—' : p.cell.text; row[f] = fields[f]; if (p.cell.tone !== undefined) { fields[f + '_TONE'] = p.cell.tone || ''; row[f + '_TONE'] = fields[f + '_TONE']; } } });
       grid.patch([{ id: row.KEY, fields: fields }]);
     }
   }

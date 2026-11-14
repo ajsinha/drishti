@@ -121,7 +121,7 @@ class TestData(unittest.TestCase):
         packs = {}
         for ds in self.m["datasets"]:
             spec = packs.setdefault(ds["pack"], yaml.safe_load((pack_dir(ds["pack"]) / "pack.yaml").read_text(encoding="utf-8")))
-            import packlake                                  # the connectors of the source modules (modules/source-*/connector-templates/delta.yaml)
+            import packlake                                  # the connectors of the source modules (modules/source-*/connectors/delta.yaml)
             conn = packlake.with_modules(spec)["connectors"][ds["connector"]]
             self.assertEqual(conn["plugin"], "delta", ds)
             self.assertIn(ds["kind"], conn["kinds"], ds)

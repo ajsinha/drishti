@@ -131,7 +131,7 @@ class SourceShapeParityTest {
     @Test
     void whereSetAndMapReadTheSameRowsFromDeltaIcebergAndFiles() throws Exception {
         Map<String, Map<String, Map<String, Object>>> byStore = new LinkedHashMap<>();
-        for (String store : List.of("delta", "iceberg")) {
+        for (String store : List.of("delta", "iceberg", "file")) {
             Path lake = Files.createDirectories(tmp.resolve("lake-" + store));
             write(store, lake, "trades_shared", "TRADE_ID", SHARED);
             write(store, lake, "trade_native", "TRAN_NUM", NATIVE);
@@ -143,5 +143,6 @@ class SourceShapeParityTest {
                 .containsEntry("SOURCE_SYSTEM", "SWAPONE").doesNotContainKeys("TRAN_NUM", "PORTFOLIO", "NOTIONAL_AMT");
         assertThat(delta.get("E1")).containsEntry("SOURCE_SYSTEM", "ENDUR");
         assertThat(byStore.get("iceberg")).as("Iceberg reads the rows Delta does").isEqualTo(delta);
+        assertThat(byStore.get("file")).as("the files store reads the rows Delta does").isEqualTo(delta);
     }
 }

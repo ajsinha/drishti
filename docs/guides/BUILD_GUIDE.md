@@ -825,7 +825,7 @@ resolved from the environment when the server starts (`root: ${HELPDESK_FILES_RO
 | `roles` | server | `support: { kinds: [ticket, agent] }` | Roles this pack adds | [7.5](#75-roles-and-field-masks) |
 | `python` | server | `python: { enabled: true }` | Calc on this pack's kinds, and starter snippets | [7.6](#76-calc-python-snippets) |
 | `connectors` | server | `[helpdesk-store]`, or `helpdesk-store: { plugin: file, … }` | The connectors the pack reads through: a list names site connectors; a mapping names them **and** suggests each one's definition | [4.8](#48-connectors-the-pack-names-them-the-site-owns-them) |
-| `connector-templates` | server | `helpdesk-store: { plugin: file, … }` | Suggested definitions to go with a list of names | [4.8](#48-connectors-the-pack-names-them-the-site-owns-them) |
+| `connectors` (mapping) | server | `helpdesk-store: { plugin: file, … }` | The pack's connector names, each with its suggested definition | [4.8](#48-connectors-the-pack-names-them-the-site-owns-them) |
 | `routes` | server | `ticket: helpdesk-store` | Which connector answers a kind | [4.8](#48-connectors-the-pack-names-them-the-site-owns-them) |
 | `ingest` | tooling | `trade: { key: TRADE_ID, date: BUSINESS_DATE, flatten: { NOTIONAL: LEGS[0].NOTIONAL } }` | The id and business date of each kind for `data ingest --pack`, `lake build --pack` and `pack check`; `flatten`: values inside lists written as plain fields and columns. Ignored by the server | [5.1](#51-large-kinds-the-lake-layout) |
 | `alerts` | server | `- { kind: ticket, name: …, when: "$.AGE_HOURS > 24" }` | Suggested alert rules | step 9 |
@@ -1095,11 +1095,10 @@ roles:
   credit-risk: { kinds: ["*"], raw: true, calc: true }
 ```
 
-A pack that only names connectors writes a list, with optional templates beside it (the form `pack new` writes):
+A pack names its connectors as a mapping, each with the definition it suggests (the form `pack new` writes):
 
 ```yaml
-connectors: [credit-store, collateral-store]
-connector-templates:                                # optional: what to suggest if the site has none yet
+connectors:                                         # what to suggest if the site has none yet
   credit-store: { plugin: delta, kinds: [netting-set], settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}", domain: credit } }
 routes: { netting-set: credit-store, margin-call: collateral-store }
 ```
@@ -1153,7 +1152,7 @@ you read logs or override something:
 | `graph.badges.agent` | `drishti.graph.badges.agent` |
 | `graph.impact.*` | `drishti.graph.impact.follow[i]`, `.measures.<kind>`, `.formats.<kind>` |
 | `roles.support` | `drishti.security.roles.support.kinds[i]`, `.raw`, `.author`, `.admin`, `.approve`, `.calc` |
-| `connectors.x` (mapping) or `connector-templates.x` | a **template** for `config/connectors/x.yaml`, written once if that file does not exist |
+| `connectors.x` (mapping) | a **template** for `config/connectors/x.yaml`, written once if that file does not exist |
 | `connectors: [x]` (list) | the name `x`: the pack reads through the site connector `x` |
 | `routes.kind` | `drishti.sources.routes.<kind>` |
 | `columns.trade` | `drishti.search.columns.trade[i]` |
@@ -2127,9 +2126,8 @@ the packs on the server. A kind with real, dated data gets a `file` or `delta` c
 definition ([section 4.8](#48-connectors-the-pack-names-them-the-site-owns-them)):
 
 ```yaml
-connectors: [desk-pack-store]            # the logical names the pack reads through
 routes: {trade: desk-pack-store}         # which connector answers each kind
-connector-templates:                     # the connection settings, as the pack's suggestion
+connectors:                              # the logical names the pack reads through, with the connection settings as its suggestion
   desk-pack-store:
     plugin: delta
     settings: {root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}", domain: desk-pack, ...}
@@ -2317,7 +2315,7 @@ fields, the number of Sutras and the links; `controls`, `syntheticSutras`, the w
 
 ```text
 pack/desk-pack/
-├── pack.yaml                 kinds, mnemonics, columns, graph.fields (the links); connectors, connector-templates, routes and ingest when real dated data was given
+├── pack.yaml                 kinds, mnemonics, columns, graph.fields (the links); connectors, routes and ingest when real dated data was given
 ├── sutras/<kind>/<sutra>.v1.sutra.yaml
 ├── tests/<sutra>/            sample-N.json / sample-example-N.json / sample-synthetic-N.json and expect.yaml
 ├── samples/                  documents per kind and catalog.jsonl, so the pack opens before any data source
@@ -2478,11 +2476,10 @@ Step 5 downloads the pack or deploys it. What comes out, in `pack.yaml` (shorten
 ```yaml
 pack: book
 kinds: [deals, deals-counterparty, deals-portfolio, deals-index]
-connectors: [book-pages, book-store]
 routes: {deals: book-store, deals-counterparty: book-pages, deals-portfolio: book-pages, deals-index: book-pages}
 ingest:
   deals: {key: TRADE_ID, snapshot: true}       # no business-date field: stored under the day it is loaded
-connector-templates:
+connectors:
   book-store:                                  # the File connector the data goes into
     plugin: file
     kinds: [deals]
@@ -2663,7 +2660,7 @@ It then runs `sutra lint` and `sutra test` on the new pack (both exit `0`, with 
 ```text
 packs/my-bank/
   pack.yaml                 code MB, mnemonics COU and TRA (initials; --mnemonic kind=ABC to choose), columns, form, connectors: [my-bank-store]
-                            with its connector-templates (delta, domain my-bank, layout columns per kind), routes, ingest
+                            with its connectors (delta, domain my-bank, layout columns per kind), routes, ingest
   sutras/trade/             trade-callnot, trade-cash, trade-comfut, trade-commodity, trade-comswap, trade-default (.v1.sutra.yaml)
   sutras/counterparty/      counterparty-default.v1.sutra.yaml
   tests/<sutra>/            three samples each and expect.yaml
