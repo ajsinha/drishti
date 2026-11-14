@@ -475,6 +475,30 @@ Every speed-up of the drill changes how a test runs, never what it proves. For e
 does not hold `drill`, or a `DRISHTI_DRILL_COPY_DIR` whose name does not hold `drill-copies`, is refused. `tools/drillkit/test_drill_lanes.py`
 (`OwnFoldersOnly`) checks every `rm` and `find … -exec rm` in the drill against that list.
 
+### 3.27 The command sweep
+
+`tools/sweep/command_sweep.py` types every function a person can type and checks what comes back. The functions come from the FUNC directory
+itself (every command of every module that is on, with its example), the top bar's module commands, the reserved words (FORM, WHAT, BI, FUNC,
+DATAMAP, DATA, EXPORT, PIVOT, ADMIN `<page>`) and VaR's sub-commands. Each is typed bare (`WORD <GO>`), with its FUNC example and with real
+ids of the saved test data (`data/testdata`, read streamed, never copied: the first id of a kind and a random one), signed in as the
+administrator and, when asked, as a role user. Only HTTP is used; what the browser draws is checked through the API it reads (VaR's headline
+number, the Explain page's `/api/explain`).
+
+```
+python3 tools/sweep/command_sweep.py --base http://host:port --admin USER --admin-password PW [--role USER --role-password PW --report-only USER]
+```
+
+A run fails on: no answer or a 5xx; a 4xx that is not a clean refusal; a DRS error, "not found" or a server error on the page; a list with
+no rows where the demo has data; no VaR headline; an empty main area (a page drawn in the browser is checked through its API instead); more
+than 10 seconds. A refusal told in words (not available to you, not part of the edition, not active, an engine that runs nowhere, no access to a
+pack) is a pass marked "refused" unless it is slow. A connector's DRS-5034 on an Admin page is that connector's state, which the page lists; it
+is not the page failing. The report is `data/sweep/sweep-<stamp>.md` and `.jsonl` (not committed), written as the runs finish.
+
+In the drill the browser lane runs it as `test_command_sweep_browser.py` on a server of its own with sign-in on over the page walk's cached lake,
+as the administrator: any FAIL fails the drill. Setting `DRISHTI_SWEEP_ROLE` also signs in as a role user the test creates; that user's FAILs
+are in the report and never block. `DRISHTI_SWEEP_BASE` (with `_ADMIN`, `_ADMIN_PASSWORD`, `_ROLE`, `_ROLE_PASSWORD`) sweeps a console that
+is already running. The drill keeps its report in its logs folder (`<data>/drill/sweep/`).
+
 ## 4. Numbers to hold
 
 | What | Number |
