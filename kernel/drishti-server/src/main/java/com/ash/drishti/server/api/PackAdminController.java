@@ -195,7 +195,7 @@ public class PackAdminController {
             m.put("extends", pack.parents());
             m.put("requiredBy", access.requiredBy(pack.name()));
             m.put("kinds", pack.kinds());
-            m.put("connectors", pack.connectorRefs());                 // the connectors and connector-templates it names, and those its routes use
+            m.put("connectors", pack.connectorRefs());                 // the connectors it names, and those its routes use
             m.put("sutraProblems", PackSutraProblems.of(sutras, pack.dir()));
             m.put("mnemonics", List.copyOf(map(pack.manifest().get("mnemonics")).keySet()));
             states.find(pack.name()).ifPresent(s -> {

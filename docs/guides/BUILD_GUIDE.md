@@ -1696,7 +1696,7 @@ answer is `?locale=` on the explain request, else the user's *Language of help t
 has its refresh script in `tools/feeds/` ([EXTERNAL_DATA.md](EXTERNAL_DATA.md#8-writing-a-feed)).
 
 **Check it.** Load the pack: a file with a problem lists it (`DRS-2040` to `DRS-2044`). Press `?` on an entity, also as a user whose role is not `raw`.
-`sutra lint config/packs/<domain>/<pack>` warns (`DRS-2046`, `DRS-2047`) about a `panels.<id>` that matches no panel and each field a Sutra shows that
+`sutra lint modules/<module>/packs/<pack>` warns (`DRS-2046`, `DRS-2047`) about a `panels.<id>` that matches no panel and each field a Sutra shows that
 has no glossary entry (`ticket.v1.sutra.yaml:15 warning DRS-2047 field 'ASSIGNEE' is shown but has no glossary entry (kinds.ticket.glossary in
 config/about.yaml, or a vocabulary entry)`); `sutra test` reports *help coverage n/m*; `drishti.py pack about-check` lists the gaps and exits `1`
 while any remain; `pack check --strict` fails on them; `expect.yaml` takes `help: { coverage: 0.9, about: true }`. The Build workbench's **About** tab
@@ -2667,7 +2667,7 @@ trades and scores the generated screens against the hand-built trading Sutras (p
 amounts, key strip, title, keys) with a bar of 90%, `sutra lint` and `sutra test` passing; what a screen cannot match is what its data
 does not carry (a quantity that is always null, resets that are always empty, a single cash flow is no chart).
 
-- **The folder name is the pack name.** `--out` defaults to `config/packs/<domain>/<name>`; a folder with another name makes `sutra lint` refuse the pack
+- **The folder name is the pack name.** `--out` defaults to `modules/<module>/packs/<name>`; a folder with another name makes `sutra lint` refuse the pack
   (`pack.yaml declares pack 'my-bank', expected 'mybank'`).
 - **Kinds must be free.** This example's kinds are `trade` and `counterparty`, which the shipped `trading` and `core` own, so it loads alone
   (`DRISHTI_PACKS=my-bank`). For a pack that joins the seven, name your kinds yourself (`--kind`) or extend the shipped pack and serve its kind from your
@@ -2751,7 +2751,7 @@ keys: { F7: "link($.COUNTERPARTY, 'counterparty-trades')", F8: impact, F9: raw }
 | `panels` | The body. Each has an `id`, a `kind` and the options of that kind; `area: right` puts one in the side column; `{ use: legs@1 }` inserts a shared block |
 | `keys` | Function keys: `F2`-`F12` go to panels (a panel's own `key:`), links (`link(...)`), `impact` (F8) or `raw` (F9) |
 
-A Sutra lives in a Sutra folder of a pack (`config/packs/<domain>/<pack>/sutras/`, any sub-folders) or of the site (`./sutras`, setting
+A Sutra lives in a Sutra folder of a pack (`modules/<module>/packs/<pack>/sutras/`, any sub-folders) or of the site (`./sutras`, setting
 `drishti.rachana.dirs`). Problems report the file's own line and column. Every key and its default: [the reference](RACHANA_REFERENCE.md#top-level).
 
 ## 12. Your first Sutra: a counterparty
@@ -3853,9 +3853,9 @@ Four layers, from the cheapest; the first three need no server.
 
 | Layer | Command | What it proves |
 |---|---|---|
-| Sutra lint | `sutra lint config/packs/<domain>/<pack>` (or the whole `config/packs`) | every Sutra and block parses and its keys, expressions and panel options are valid (`DRS-…` codes with the line); help warnings |
-| Sutra tests | `sutra test config/packs/<domain>/<pack>` | each Sutra renders against the samples in `tests/<sutra>/` with no panel in error, the panels `expect.yaml` names are filled, and the help coverage |
-| Both, for CI | `drishti.py pack check config/packs/<domain>/<pack> [--strict] [--junit DIR]` | lint and test in one command, exit `0` / `1` / `2` |
+| Sutra lint | `sutra lint modules/<module>/packs/<pack>` (or the whole `config/packs`) | every Sutra and block parses and its keys, expressions and panel options are valid (`DRS-…` codes with the line); help warnings |
+| Sutra tests | `sutra test modules/<module>/packs/<pack>` | each Sutra renders against the samples in `tests/<sutra>/` with no panel in error, the panels `expect.yaml` names are filled, and the help coverage |
+| Both, for CI | `drishti.py pack check modules/<module>/packs/<pack> [--strict] [--junit DIR]` | lint and test in one command, exit `0` / `1` / `2` |
 | A scratch server | the [checklist](#295-verifying-a-pack) | links resolve, connectors are up, commands open, the guide renders |
 
 `sutra lint` and `sutra test` are commands of the server's exec jar (`java -jar kernel/drishti-server/target/drishti-server-*-exec.jar sutra …`); `pack check`
@@ -3866,7 +3866,7 @@ commands) is in [CLI_REFERENCE.md, Testing Sutras](CLI_REFERENCE.md#testing-sutr
 **`tests/` and `expect.yaml`:**
 
 ```text
-config/packs/<domain>/<pack>/tests/<sutra>/        one folder per Sutra, named by the Sutra's name (the `sutra:` line)
+modules/<module>/packs/<pack>/tests/<sutra>/        one folder per Sutra, named by the Sutra's name (the `sutra:` line)
     cases.jsonl                    the cases, one a line: {"case": "TKT-1001", "document": {...}} (the kind comes from the Sutra's match.kind)
     expect.yaml                    optional
 ```
@@ -4553,7 +4553,7 @@ The same from the terminal: `drishti.py server packs deploy|history|rollback|dat
 
 1. Read the pack's change notes, and run `drishti.py pack diff OLD NEW` for renamed kinds, mnemonics, attributes or link fields (saved monitors,
    workspaces, alert rules and BI items refer to them).
-2. Replace the folder `config/packs/<domain>/<name>/` with the new version (for a checkout: `git pull`), or deploy its archive from Admin → Packs. Parents
+2. Replace the folder `modules/<module>/packs/<name>/` with the new version (for a checkout: `git pull`), or deploy its archive from Admin → Packs. Parents
    it now extends load with it.
 3. No restart: the server notices the new folder within the poll interval (or press Retry now). A refused pack keeps its last good version.
 4. Check *Admin → Health*: the new version, no Sutra problems, its connectors up and none *not configured* (a new version may name a connector this site

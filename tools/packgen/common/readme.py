@@ -15,7 +15,7 @@
 """The README standard for packs and connectors (docs/guides/BUILD_GUIDE.md and
 docs/guides/DEVELOPER_GUIDE.md, "The README standard").
 
-Every pack (``config/packs/<domain>/<pack>/README.md``), every connector type (``plugins/drishti-plugin-<x>/README.md``, the built-ins in
+Every pack (``modules/<module>/packs/<pack>/README.md``), every connector type (``plugins/drishti-plugin-<x>/README.md``, the built-ins in
 ``docs/connectors/types/<type>/README.md``) and every folder of connector templates (``config/connectors.examples/<x>/README.md``)
 has a README: the licence comment, a YAML front matter (for AI and the console), then fixed ``## `` sections.
 
@@ -417,7 +417,7 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
     intro = intro or find_intro(name)
     imeta, ibody = split(intro.read_text(encoding="utf-8")) if intro and intro.is_file() else ({}, "")
     imeta = imeta or {}
-    # an intro (tools/packgen/<gen>/readme/) is three folders below the repository, a pack's README four (config/packs/<domain>/<pack>)
+    # an intro (tools/packgen/<gen>/readme/) is three folders below the repository, a pack's README four (modules/<module>/packs/<pack>)
     ibody = ibody.replace("](../../../", "](../../../../")
     isec = sections(ibody)
     generator = generator or imeta.get("generator") or f"tools/packgen/readme.py {name}"

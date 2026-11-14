@@ -704,7 +704,7 @@ first path in the expression), in words: `bind: $.COUNTERPARTY_COUNTRY_OF_RISK` 
 wins:
 
 1. `label:` in the Sutra;
-2. the **pack taxonomy**: `labels:` in the semantics file of an enabled pack (`config/packs/<domain>/<pack>/config/semantics.yaml`), e.g.
+2. the **pack taxonomy**: `labels:` in the semantics file of an enabled pack (`modules/<module>/packs/<pack>/config/semantics.yaml`), e.g.
    `labels: { NET_MTM: Net MTM (USD) }`; a more specific pack wins over a general one;
 3. the **global taxonomy**: `labels:` in the core semantics (or the site's replacement, `drishti.inference.semantics-file`);
 4. the field name in words, spelled with the packs' and the core's `acronyms:` (the `core` pack lists MTM, PV, DV01, PFE, EE, CVA, VaR,
@@ -2831,7 +2831,7 @@ A format file has one `formats:` mapping. Keys of a format:
 | `suffix` | none | appended text (`"%"`, `" bp"`) |
 | `pattern` | none | `date` only: a Java date pattern; `yyyy-MM-dd` or none shows the text unchanged |
 
-A pack adds formats in `config/packs/<domain>/<pack>/config/formats.yaml`, as the trading pack does:
+A pack adds formats in `modules/<module>/packs/<pack>/config/formats.yaml`, as the trading pack does:
 
 ```yaml
 formats:
@@ -6077,7 +6077,7 @@ java -jar drishti-server-<version>-exec.jar sutra design samples/*.json --kind d
 java -jar drishti-server-<version>-exec.jar sutra design --each samples-by-kind --out target/drafts   # one draft per subfolder
 ```
 
-`test` uses the **same checker as the Tests tab**, with the `config/packs/<domain>/<pack>/tests/<sutra>/cases.jsonl` + `expect.yaml` convention that the pack fragment export writes. Exit codes: `0` ok, `1` problems, `2` usage. `--junit` writes JUnit XML for your CI's report step; `--out` writes HTML snapshots. The Maven build of this repository runs `sutra test` over every shipped pack that has tests and over the ten documented examples. All the details and a CI example are in [the Sutra command guide](BUILD_GUIDE.md#24-testing-expectyaml-sutra-lint-sutra-test-and-pack-check).
+`test` uses the **same checker as the Tests tab**, with the `modules/<module>/packs/<pack>/tests/<sutra>/cases.jsonl` + `expect.yaml` convention that the pack fragment export writes. Exit codes: `0` ok, `1` problems, `2` usage. `--junit` writes JUnit XML for your CI's report step; `--out` writes HTML snapshots. The Maven build of this repository runs `sutra test` over every shipped pack that has tests and over the ten documented examples. All the details and a CI example are in [the Sutra command guide](BUILD_GUIDE.md#24-testing-expectyaml-sutra-lint-sutra-test-and-pack-check).
 
 ### 27. Binding a design to a file (development servers)
 
@@ -6758,7 +6758,7 @@ Old addresses keep working (302, query kept, covered by tests): `/studio` → a 
 | 4 | Visual canvas with field drops and suggestions, inspector from the Rachana schema, undo/redo | Screens without writing YAML | L |
 | 5 | Command palette (Ctrl+K): add panel, go to panel, next sample, run check, switch tab, propose | Keyboard-first; also the accessible path for every drag | S |
 | 6 | Diff and versions: against the base, the live version or any revision; restore a revision | Reviewers and authors see the change, not the file | S |
-| 7 | Headless CLI for CI: `java -jar drishti-server.jar sutra lint\|test\|shape\|design\|preview <pack-dir>`, exit codes, JUnit XML, preview snapshots; tests in `config/packs/<domain>/<p>/tests/<sutra>/*.json` with `expect.yaml` | Pack authors run in CI exactly what the workbench runs | M |
+| 7 | Headless CLI for CI: `java -jar drishti-server.jar sutra lint\|test\|shape\|design\|preview <pack-dir>`, exit codes, JUnit XML, preview snapshots; tests in `modules/<module>/packs/<p>/tests/<sutra>/*.json` with `expect.yaml` | Pack authors run in CI exactly what the workbench runs | M |
 | 8 | Export a pack fragment (pack.yaml stub, Sutra, tests, three samples); import a pack folder or zip as Designs | From JSON files to a pack in minutes | M |
 | 9 | Snippets per panel kind, generated from the Rachana schema; examples as templates | Fewer trips to the reference | S |
 | 10 | File binding in development: a Design bound to a file under `drishti.rachana.dirs`; save writes it, hot reload brings IDE edits back | Pack authors keep their IDE and git | M |
@@ -6865,7 +6865,7 @@ Studio is folded in, because it is what users are waiting for.
 | **5. Operations and one checker** (done) | the `design.ops` package; stateless `/builder/edit` and `/builder/check`; `SampleChecker` behind Studio's test and auto-design's pruning | every operation on all 20 kinds keeps comments and order; a bad operation is a located problem; a sample set with a missing field shows the right empty and error cells |
 | **6. Workbench with the visual canvas** (done) | `/build/d/{id}`: Data, Design (canvas, palette, field drops with suggestions, inspector, undo/redo, keyboard path, the panel keys (drishti-core) shared with layout mode), YAML, Problems, Tests as you type, sample switcher, *Preview with a file…*, phone and theme toggles; the guide `docs/guides/RACHANA_REFERENCE.md` and its help entry | the all-panels showcase is built from its samples without typing YAML, by mouse and by keyboard only; a folder → auto-design → switch samples → fix → green matrix test; layout mode's tests pass with the shared module |
 | **7. Studio folded in** (done) | all `/studio*` page addresses redirect (302) into the workbench, the review pages are the one Approvals queue (`/approvals`), Studio's page, template and script are gone (its JSON routes under `/studio/` remain for the workbench and for scripts); Studio's keys (Ctrl+S, Ctrl+Enter), File menu, Summary, Save and Submit for review live in the workbench; Studio's test entities become stored-entity samples of a Design made from that Sutra; command palette (Ctrl+K); the Versions tab (`GET /builder/designs/{id}/versions[/n]`, diff against the base or any version with `sutra_diff`, restore as a `text` operation); Build menu: Create, Govern, Learn; Studio's test entities become tests on a Design; the guide grows four chapters | every old Studio address in the console tests lands on an equivalent screen; keyboard-only use across panes |
-| **8. Ship and scale** (done) | propose with evidence, reviewers see the matrix, approval makes it live; pack fragment export and folder/zip import; the headless CLI with the `config/packs/<domain>/<p>/tests/` convention run over every shipped pack in the build; development file binding; read-only share links; the guide's end-to-end walkthrough | folder → design → check → propose → approve → the view serves the new version; an exported fragment loads through Admin → Packs and passes `sutra test` |
+| **8. Ship and scale** (done) | propose with evidence, reviewers see the matrix, approval makes it live; pack fragment export and folder/zip import; the headless CLI with the `modules/<module>/packs/<p>/tests/` convention run over every shipped pack in the build; development file binding; read-only share links; the guide's end-to-end walkthrough | folder → design → check → propose → approve → the view serves the new version; an exported fragment loads through Admin → Packs and passes `sutra test` |
 
 ### Risks
 
@@ -7455,7 +7455,7 @@ by sign) and a weight for the strip. They live in YAML:
 | File | Role |
 |---|---|
 | `compute/drishti-inference/src/main/resources/inference/semantics.yaml` | the core hints, domain-neutral |
-| `config/packs/<domain>/<pack>/config/semantics.yaml` (or the pack's `semantics:` key) | a pack's hints, tried **before** the core's; with several packs, the more specific pack first |
+| `modules/<module>/packs/<pack>/config/semantics.yaml` (or the pack's `semantics:` key) | a pack's hints, tried **before** the core's; with several packs, the more specific pack first |
 | the file named by `drishti.inference.semantics-file` | a site file that **replaces** the core hints |
 
 #### Core roles
@@ -8802,7 +8802,7 @@ restricted ViewModel) plus authored text that does not depend on the caller.
     `explain_*.json`), `test_assets_policy.py` (unchanged rules apply to the new files), `test_contrast.py` (new tokens),
     `test_fkeys.py` (F1 on a view, `?` ignored in inputs), an `about_browser.py` (keyboard open, focus return, phone sheet).
   - A coverage floor for shipped packs: `AboutPacksTest` fails if a QUICKSTART pack's coverage drops below its recorded
-    figure (ratchet file `config/packs/<domain>/<p>/tests/help-coverage.txt`).
+    figure (ratchet file `modules/<module>/packs/<p>/tests/help-coverage.txt`).
 
 ### Optional: Ask about this page (last)
 

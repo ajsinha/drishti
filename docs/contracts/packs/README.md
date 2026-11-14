@@ -17,7 +17,7 @@
 
 # Data contracts of every command
 
-Every command (mnemonic) of every pack has a data contract: a YAML file beside its pack (`config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) and a section of its pack's page here. The shared rules are in [the contracts README](../README.md); the computed measures that replace the retiring kinds have their own contracts there.
+Every command (mnemonic) of every pack has a data contract: a YAML file beside its pack (`modules/<module>/packs/<pack>/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) and a section of its pack's page here. The shared rules are in [the contracts README](../README.md); the computed measures that replace the retiring kinds have their own contracts there.
 
 117 contracts, 399 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
 

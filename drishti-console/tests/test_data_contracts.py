@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Every command has a data contract (docs/contracts/README.md section 16): it fails when a pack's mnemonic has no
-config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml, when a contract breaks tools/contracts.schema.json or no longer names its pack
+modules/<module>/packs/<pack>/contracts/<kind>.contract.yaml, when a contract breaks tools/contracts.schema.json or no longer names its pack
 and command, and when docs/contracts/packs is stale (`drishti.py contract docs --check`). Packs are listed from the disk, so a new
 mnemonic is caught the day it lands. The contracts against the data: tools/test_contracts.py."""
 from __future__ import annotations

@@ -17,8 +17,9 @@ in drishti-api, which the server, the loaders and the CLIs use).
 
 A packs root (``config/packs``, an installed-packs folder, ``examples/packs``) holds packs directly (``<root>/<pack>/pack.yaml``) or one
 level down in **domain folders** (``<root>/<domain>/<pack>/pack.yaml``, docs/architecture/DOMAIN_MODULES.md section 8): a domain folder
-is a folder of the root with no ``pack.yaml`` of its own. The shipped packs live in their domain's folder (``modules/banking/dmod/packs/trading``),
-and a pack's ``domain:`` names that folder (``tools/test_pack_layout.py``). Nothing else joins a pack's name to a packs folder by hand.
+is a folder of the root with no ``pack.yaml`` of its own. The product's packs live in the module that owns them
+(``modules/banking/dmod/packs/trading``; ``module_roots``) and ``config/packs`` holds a site's own packs and the kernel's ``core`` ones
+(``tools/test_pack_layout.py``). Nothing else joins a pack's name to a packs folder by hand.
 
 Tools import it with the console folder on ``sys.path``: ``from core.pack_paths import pack_dir``.
 """
@@ -37,6 +38,23 @@ def roots(root: Path | str | None = None) -> list[Path]:
     out = [r]
     if r.is_dir():
         out += sorted(d for d in r.iterdir() if d.is_dir() and not (d / "pack.yaml").is_file())
+    return out + module_roots(r)
+
+
+def module_roots(root: Path | str) -> list[Path]:
+    """The ``packs/`` folders of the modules beside a packs folder named ``config/packs`` (``<home>/modules/<m>/packs``, or
+    ``<home>/modules/<m>/dmod/packs`` for a module whose manifest is in its ``dmod`` folder), in module-name order. Empty for any
+    other root. The Java twin is ``PackFolders.moduleRoots``."""
+    r = Path(root).resolve()
+    if r.name != "packs" or r.parent.name != "config":
+        return []
+    modules = r.parent.parent / "modules"
+    out: list[Path] = []
+    if modules.is_dir():
+        for m in sorted(d for d in modules.iterdir() if d.is_dir()):
+            for home in (m, m / "dmod"):
+                if (home / "module.yaml").is_file() and (home / "packs").is_dir():
+                    out.append(home / "packs")
     return out
 
 

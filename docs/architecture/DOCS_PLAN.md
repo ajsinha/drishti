@@ -255,7 +255,7 @@ Knowledge primers and the release notes. Help listed entries: 79 → about 60 (e
 ## 4. The contracts plan: 118 → 28 pages
 
 - **11 pack pages** (`contracts/packs/<pack>.md`, one per pack): every kind, derived kinds included, with its fields table (from
-  `config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml`) and **one JSON example** from `data/testdata`, formatted, long arrays shortened
+  `modules/<module>/packs/<pack>/contracts/<kind>.contract.yaml`) and **one JSON example** from `data/testdata`, formatted, long arrays shortened
   `/* … N more … */`. The 90 `contracts/samples/**` pages fold in; `contracts/packs/README` folds into the index.
 - **16 computed pages** (the 16 sections of `contracts/README`): VAR and EXP move here from VAR_GUIDE and EXPOSURE_GUIDE (contracts are the one
   home for data), FRTB_DATA_STRUCTURES folds into FRTB; TVAL, STR, PNL, TRADING_GROUPINGS, SIMM, NSET, SACCR, COLL, MC, LIM, GRP, CVA, WWR stay.

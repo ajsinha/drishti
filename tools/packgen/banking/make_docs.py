@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Writes the banking packs' documentation (config/packs/<domain>/<pack>/guides/*.md, config/help.yaml and README.md) from the taxonomy, the
+"""Writes the banking packs' documentation (modules/<module>/packs/<pack>/guides/*.md, config/help.yaml and README.md) from the taxonomy, the
 layout and the generated data, so it cannot drift from what the packs contain: an overview per pack, the product
 catalogue, the market-data catalogue and the cross-pack data model. The help centre shows them under Domain packs.
 

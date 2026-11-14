@@ -277,7 +277,7 @@ Each row names what to change for a common need and the document that explains i
 | I want to... | Change | Read |
 |---|---|---|
 | Read a new store (a database, a topic, a folder, a service) | A connector: a file `config/connectors/<name>.yaml` with `plugin:` and `settings:` (or Admin → Connectors); the pack names it in `routes:` for the kinds it serves, and may carry a `connectors:` template for it | [../guides/DATA_GUIDE.md section 9](../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors), [DEVELOPER_GUIDE.md](../guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one), [CONFIGURATION.md](../admin/CONFIGURATION.md) |
-| Add a domain (new kinds, commands, links) | A pack folder `config/packs/<domain>/<name>/` with `pack.yaml`, `sutras/`, `samples/`; enable it with `DRISHTI_PACKS` | [BUILD_GUIDE.md](../guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) |
+| Add a domain (new kinds, commands, links) | A pack folder `modules/<module>/packs/<name>/` with `pack.yaml`, `sutras/`, `samples/`; enable it with `DRISHTI_PACKS` | [BUILD_GUIDE.md](../guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) |
 | Change how one screen looks | Its Sutra (`*.sutra.yaml`), or a Design in the Build workbench, proposed and approved | [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md), [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) |
 | Change how a figure is formatted | `fmt:` in the Sutra; named formats in the pack's `config/formats.yaml` | RACHANA_REFERENCE.md |
 | Change how inference reads field names | The pack's `config/semantics.yaml` | [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#inference-the-screens-drishti-draws-with-no-sutra) |
@@ -314,7 +314,7 @@ Rachana is the grammar; each Sutra is one YAML document written in it (ADR-017, 
 Markdown Sutras). The first key, `rachana: 1`, is the language version, so the grammar can evolve without
 misreading old files; `description`, `notes` and a per-panel `description` carry the prose. Files are named
 `<name>.v<N>.sutra.yaml` and are found by scanning, recursively, the site directories (`drishti.rachana.dirs`, default `./sutras`) and every enabled
-pack's `sutras/` folder (`config/packs/<domain>/<pack>/sutras/<area>/…`). `SutraBuilder` validates each one at load against the panel
+pack's `sutras/` folder (`modules/<module>/packs/<pack>/sutras/<area>/…`). `SutraBuilder` validates each one at load against the panel
 kinds' required and allowed options and reports problems with line and column (codes `DRS-2001`, `DRS-2002`; the
 detailed checks are 2009–2012 and 2020–2039; the About files add 2040–2047, search forms 2060). Any other file in a Sutra folder (a `.sutra.md`, a plain `.yaml`)
 is reported as `DRS-2004` with the fix. Because the grammar is plain YAML, `RachanaSchema` generates a JSON Schema of
@@ -412,7 +412,7 @@ Every entity of every mnemonic, in every pack, goes through this one path. There
 or per mnemonic.
 
 ```
- config/packs/<domain>/<pack>/sutras/**/*.sutra.yaml        the entity's document (any connector)
+ modules/<module>/packs/<pack>/sutras/**/*.sutra.yaml        the entity's document (any connector)
           │  SutraBuilder (load, validate)                    │
           ▼                                                   ▼
    Sutra model ── SutraMatcher ─► LayoutMerger ◄── InferenceEngine (shape rules)
@@ -905,7 +905,7 @@ connector, e.g. `market-store` and `trading-store`. Lake retention, compaction a
 
 ## 12. Domain packs
 
-The core carries no industry. A **domain pack** (`config/packs/<domain>/<name>/pack.yaml`) holds everything specific to one:
+The core carries no industry. A **domain pack** (`modules/<module>/packs/<name>/pack.yaml`) holds everything specific to one:
 kinds, Sutras, mnemonics, identifier patterns, reference fields and link badges, roles, semantic hints and formats,
 connectors, starter workspaces, help guides and sample data.
 
@@ -957,7 +957,7 @@ Maven multi-module reactor on `spring-boot-starter-parent`, `groupId com.ash.dri
 | `drishti-inference` | Shape analysis, semantic hints, rules, scorer, packer, `LayoutMerger` (Sutra ⊕ inference) | `InferenceConfiguration` |
 | `drishti-engine` | `ViewPipeline`, `Binder`, caches, `graph.ReferenceCatalog` (identifier patterns, reference fields) and badges, `SourceRouter`, `SourceRegistry`, `PluginDiscovery`, `TopicHub`, `ViewStream`, `PatchDiffer`, suggestions, structured search, impact, business dates | `EngineConfiguration`, `GraphConfiguration` |
 | `drishti-identity` | Users, roles, passwords, lockout, audit, per-user preferences (workspaces, settings); the collaboration records (`com.ash.drishti.identity.collab`: shares, inbox, outbox, threads, holds, `HashChain`); stored in a JPA database (section 18) | `IdentityConfiguration` |
-| `drishti-packs` | Domain packs: reads `config/packs/<domain>/<name>/pack.yaml`, resolves inheritance, contributes lowest-precedence properties (an `EnvironmentPostProcessor`) | `PackRegistry` |
+| `drishti-packs` | Domain packs: reads `modules/<module>/packs/<name>/pack.yaml`, resolves inheritance, contributes lowest-precedence properties (an `EnvironmentPostProcessor`) | `PackRegistry` |
 | `drishti-ai` | The LLM provider layer and MCP client, no Spring: `LlmGateway`, `LlmRegistry`, providers (`openai`, `anthropic`, `mock`), `LlmPolicy` (masking, limits, audit), `McpGateway`, `McpRegistry`; off by default ([AI_GUIDE.md](../guides/AI_GUIDE.md#1-model-providers), [AI_GUIDE.md](../guides/AI_GUIDE.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy)) | – |
 | `drishti-lakeio` | The lake core: the lake files (`lakeconfig`: `Lakes`, `ConnectorLake`, `LakesCli`) and lake file access without Hadoop, shared by the native Delta and Iceberg engines: local disk (Windows included) and S3, byte ranges, Parquet page codecs, the Parquet footer cache; other schemes through a registered `StorageProvider` (`StorageProviders`) | – |
 | `drishti-tables` | The table layer, plain Java ([TABLES_GUIDE.md](../guides/TABLES_GUIDE.md), [section 24](#24-virtual-tables-the-central-table-layer)): the catalogue of virtual tables and models (`config/tables`, stored items), their definitions and checks, preview, lineage, the materialisation's API, `tables migrate`; on Rachana and the pivot engine, never on BI | read by the server (`tables` on the command line); BI reads it with the switch |
@@ -1031,9 +1031,9 @@ secrets in tracked files. The full key reference is [CONFIGURATION.md](../admin/
 | File | Owns |
 |---|---|
 | `kernel/drishti-server/src/main/resources/application.yaml` | server port, actuator, every `drishti.*` default: `sources`, `business-date`, `security`, `identity`, `rachana`, `governance`, `engine`, `packs`, `commands`, `live`, `graph` |
-| `config/packs/<domain>/<name>/pack.yaml` | a pack's kinds, mnemonics, references, badges, roles, the names of its connectors with their routes (and connector templates), Sutra and sample folders |
+| `modules/<module>/packs/<name>/pack.yaml` | a pack's kinds, mnemonics, references, badges, roles, the names of its connectors with their routes (and connector templates), Sutra and sample folders |
 | `config/connectors/<name>.yaml` | one connector of the site: plugin, switch, kinds and settings; watched and applied without a restart |
-| `config/packs/<domain>/<name>/config/*.yaml` | the pack's formats, semantic hints, help and starter workspaces |
+| `modules/<module>/packs/<name>/config/*.yaml` | the pack's formats, semantic hints, help and starter workspaces |
 | `compute/drishti-rachana/src/main/resources/formats.yaml` (+ `drishti.rachana.formats-file`) | core named number/date formats |
 | `compute/drishti-inference/src/main/resources/inference/semantics.yaml` | core semantic hints and density limits |
 | `./sutras/**` (`drishti.rachana.dirs`) | site Sutras, in addition to the packs' |

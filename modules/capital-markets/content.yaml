@@ -12,23 +12,23 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# What the packer brings in from the repository (paths from this folder), so each file keeps one home: the packs without
-# their connector templates (a module carries no connector), the lens and the tutorial. This list itself is not packed.
+# What the packer brings in from the repository (paths from this folder) and what it trims from the module's own folder, so each file keeps
+# one home: `trim` strips a pack of what a module does not carry (its connector templates: a module carries no connector; tests, tools,
+# samples), `copy` brings in the lens and the tutorial. This list itself is not packed.
+trim:
+- path: packs/us-equities
+  leave-out:
+  - tests
+  - tools
+  sections-out:
+  - connectors
+- path: packs/funds
+  leave-out:
+  - tests
+  - tools
+  sections-out:
+  - connectors
 copy:
-- from: ../../modules/capital-markets/packs/us-equities
-  to: packs/us-equities
-  leave-out:
-  - tests
-  - tools
-  sections-out:
-  - connectors
-- from: ../../modules/capital-markets/packs/funds
-  to: packs/funds
-  leave-out:
-  - tests
-  - tools
-  sections-out:
-  - connectors
 - from: ../../config/lenses/capitalmarkets/markets.yaml
   to: lenses/markets.yaml
 - from: ../../docs/tutorials/13-world-data.md

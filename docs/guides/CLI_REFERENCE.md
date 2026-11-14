@@ -635,7 +635,7 @@ ok   modules/banking/dmod/packs/market-risk/sutras/market-risk/var.v1.sutra.yaml
 #### The tests convention
 
 ```
-config/packs/<domain>/<pack>/
+modules/<module>/packs/<pack>/
   sutras/.../irs-fixfloat.v1.sutra.yaml
   tests/irs-fixfloat/         <- one folder per Sutra, named by the Sutra's name (the `sutra:` line)
     cases.jsonl               <- the cases, one a line: {"case": "MX-20000001", "document": {...}}; the kind comes from the Sutra's `match.kind`
@@ -704,7 +704,7 @@ Publish `sutra-tests.xml` with your CI's JUnit report step. A Sutra whose panels
 when it ends, and no port is opened.
 
 `sutra test docs/guides/examples` passes with the seven packs (the `linked-sources` example reads `CP-SUMMIT`, `NS-SUMMIT-NY` and `DESK-FI` from them); without them its failure line says `NS-SUMMIT-NY
-not found`, which means the pack holding that entity is not enabled. `sutra test config/packs/<domain>/<pack>` reports `skip (no samples)` for a Sutra with no `tests/<sutra>/` folder; that is not a failure.
+not found`, which means the pack holding that entity is not enabled. `sutra test modules/<module>/packs/<pack>` reports `skip (no samples)` for a Sutra with no `tests/<sutra>/` folder; that is not a failure.
 
 **Limits.** The CLI keeps the server's input limits: a file over `drishti.builder.max-file-mb` (5 MB by default) is refused with one line that names it, text that is not UTF-8 says so, an engine that
 cannot start (for example a pack that is not found: set `DRISHTI_PACKS_DIR`) ends with `sutra: ...` and exit `1`, never a stack trace. `--kind` is a name (letters, digits, `.`, `_`, `-`, up to 64),
@@ -800,7 +800,7 @@ Try it without touching anything of yours: `DRISHTI_JAR=... DRISHTI_PORT=18974 d
 
 ### `pack new`: a complete pack from JSON Lines
 
-Writes `config/packs/<domain>/<name>/` (or `--out`): `pack.yaml` (kinds, mnemonics, columns, and with a date a connector, routes and the
+Writes `modules/<module>/packs/<name>/` (or `--out`): `pack.yaml` (kinds, mnemonics, columns, and with a date a connector, routes and the
 optional `ingest:` block), `samples/`, one Sutra per kind or `--match` group, `tests/<sutra>/` with `expect.yaml`,
 `config/about.yaml` (kind titles and glossary entries with `TODO` text for you to fill in) and a `README.md`; then it runs
 `sutra lint` and `sutra test` on it. With a dated store option it also **writes your documents into that store**, so the pack
@@ -3759,7 +3759,7 @@ Exit codes: 0 (`ready`, `computing` or `stale`); 1 when the answer is `failed` o
 
 The data contract of every command (`tools/contracts.py`, also run on its own as `python3 tools/contracts.py ...`;
 [docs/contracts/README.md section 16](../contracts/README.md#16-contracts-of-every-command)). Each mnemonic's contract is
-`config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`. No server is needed.
+`modules/<module>/packs/<pack>/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`. No server is needed.
 - `contract list` prints every command with its kind, pack, class, status and the number of points still to review.
 - `contract show NSET` prints one contract (by command or kind; `--json` as JSON).
 - `contract check` fails when a command has no contract, a contract is invalid or no longer matches its pack (identity, id pattern,

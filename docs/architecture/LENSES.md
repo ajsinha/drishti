@@ -2478,7 +2478,7 @@ corrections, streaming, export, embedding, permissions, scatter-gather and cachi
 ### 6.6 Data and contracts
 
 **Conventions** ([docs/contracts/README.md](../contracts/README.md)): one contract YAML per kind in
-`config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml` (kind, mnemonic, class, grain, key, dated-by, cadence, storage, fields);
+`modules/<module>/packs/<pack>/contracts/<kind>.contract.yaml` (kind, mnemonic, class, grain, key, dated-by, cadence, storage, fields);
 data as gzipped JSON Lines in `data/testdata/<domain>/<kind>/` for the demo, loaded into Delta or Iceberg partitioned by `business_date`;
 trade fields in Endur-style UPPER_SNAKE names. The built contracts are documented field by field in
 [docs/contracts/packs/market-risk.md](../contracts/packs/market-risk.md) and in each engine guide's data chapter

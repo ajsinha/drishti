@@ -269,7 +269,7 @@ where the inferred layout had rounded them to whole numbers ("0").
 ## 10. The contract at a glance
 
 Every computed kind is an ordinary kind: it opens by command, link, API, CLI and AI, with the reader's entitlements and masks applied to
-its inputs. The machine-readable contracts are `config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml` (class `computed`; the pages
+its inputs. The machine-readable contracts are `modules/<module>/packs/<pack>/contracts/<kind>.contract.yaml` (class `computed`; the pages
 [docs/contracts/packs/](../contracts/packs/README.md)); this part says what each field means.
 
 | Kind | Command | Connector (plugin) | Key | Inputs | Dated by |

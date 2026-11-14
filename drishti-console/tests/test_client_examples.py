@@ -99,7 +99,7 @@ def test_example_sources_parse():
 
 
 def _contract_fields(kind):
-    """The fields of a kind's data contract (config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml): what a Flight read of the kind may ask for."""
+    """The fields of a kind's data contract (modules/<module>/packs/<pack>/contracts/<kind>.contract.yaml): what a Flight read of the kind may ask for."""
     import yaml
     from core.pack_paths import pack_dirs
     for p in sorted(f for d in pack_dirs(REPO / "config" / "packs").values() for f in d.glob(f"contracts/{kind}.contract.yaml")):

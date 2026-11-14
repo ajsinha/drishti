@@ -144,7 +144,7 @@ Follow these steps when upgrading an installation of 2.9.11.d. The runnable jar 
    `config/lenses/<module>/`. The folder's setting is `drishti.lens-dir` (`DRISHTI_LENS_DIR`, was `DRISHTI_EDITIONS_DIR`).
    `drishti.edition` and `drishti.lenses` are unchanged; Help's old *editions* address opens the lenses guide
    ([LENSES.md section 14](docs/guides/ADMIN_GUIDE.md#122-where-a-lens-is-defined)).
-2. **Packs live in domain folders**: `config/packs/<domain>/<pack>` (`core/`, `banking/`, `capitalmarkets/`, `economy/`). A site's own
+2. **Packs live in domain folders**: `modules/<module>/packs/<pack>` (`core/`, `banking/`, `capitalmarkets/`, `economy/`). A site's own
    pack folder directly under `config/packs` keeps working where it is; `drishti.packs.dir` is unchanged. Links in a site's documents to
    `config/packs/<pack>/...` need the domain folder. A pack's `pack.yaml` names its `domain:`; a pack loads only while a module of its
    domain is on.

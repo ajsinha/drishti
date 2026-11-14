@@ -1192,7 +1192,7 @@ does the same from the browser, with checks on the server and automatic undo.
 | Artifact | Made by | Goes to | The server notices |
 |---|---|---|---|
 | **Pack bundle** `<name>-<version>.tar.gz` (+ `.sha256`): one pack, versioned, with a manifest of every file's checksum | `pack bundle` | unpacked by `pack deploy` into the packs folder: `drishti.packs.dir` (`DRISHTI_PACKS_DIR`, `./config/packs`) or `drishti.packs.installed-dir` (`./data/packs/installed`, searched first) | the watcher checks and loads the copied folder after it has been quiet for 750 ms, and records it in `data/packs/added.yaml`; one that does not check out is not loaded (Admin → Packs and Health say why) and is retried; a new version is swapped in, a bad one keeps the last good running. With `drishti.packs.watch: off` only Admin → Packs → **Load** acts |
-| **Pack folder** `config/packs/<domain>/<name>/` (what git holds) | you, `pack new` | the same places | the same |
+| **Pack folder** `modules/<module>/packs/<name>/` (what git holds) | you, `pack new` | the same places | the same |
 | **Sutra files** `*.sutra.yaml` | `sutra design`, `sutra gen`, the Screen Designer | `<pack>/sutras/`, or the site Sutra folder | hot reload (250 ms debounce): an invalid file is reported, the last good version stays live |
 | **`config/about.yaml`** (+ `about.<lang>.yaml`, `help.yaml`, `formats.yaml`) | you | `<pack>/config/` | with the pack's reload |
 | **Delta lake** `<root>/<domain>/<kind>/business_date=…/` | your ETL, `lake build`, `data ingest --lake` | `DRISHTI_DELTA_ROOT` or `s3a://…` | the connector re-reads the table version every `refresh-seconds` (10) and on a data-load signal |
@@ -1318,7 +1318,7 @@ trading-1.0.1.tar.gz + .sha256        ← built ONCE, stored as a CI artifact
 Sutras made by `sutra design`, `sutra gen` or the Screen Designer are ordinary files: copy them into a pack's `sutras/<folder>/`, and a running
 server hot-reloads them ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#hot-reload-the-workbench-and-governance)). `drishti.py design export <id> -o
 design.zip` writes a zip of a design's Sutra and samples: put the `.sutra.yaml` in the pack in git, then the next bundle. `config/about.yaml` goes
-into `<pack>/config/`; check it first with `pack about-check config/packs/<domain>/<name>`. Prefer shipping a Sutra change as a **new bundle** (a
+into `<pack>/config/`; check it first with `pack about-check modules/<module>/packs/<name>`. Prefer shipping a Sutra change as a **new bundle** (a
 version, a checksum, a rollback); hot-copy is for emergencies, and `pack verify <deployed folder>` reports the drift until you redeploy:
 
 ```bash
@@ -1377,7 +1377,7 @@ travel on the table.
 
 ### 8.10 Git as the source of truth, and a CI example
 
-Keep `config/packs/<domain>/<name>/` in git with the version bump; a release is a tag, and `git checkout v1.0.1 && pack bundle` gives the same
+Keep `modules/<module>/packs/<name>/` in git with the version bump; a release is a tag, and `git checkout v1.0.1 && pack bundle` gives the same
 bytes. Never edit a deployed folder: change git, build, deploy. A GitHub Actions job (adapt it to any CI):
 
 ```yaml
@@ -1525,7 +1525,7 @@ user the admin role) ([CLI_REFERENCE.md](CLI_REFERENCE.md#server-packs-deploy-hi
 | *the archive needs server >=X* | upgrade the server first, or rebuild with `--requires-server` if you know it is compatible |
 | *extends X, which is neither loaded nor on disk* | deploy or load the parent first |
 | HTTP 413 | over `max-archive-mb` (and the console's `packs.deploy_max_mb`): archives carry no data, so a big one usually has data in it |
-| `the pack fails pack check` | run `pack check config/packs/<domain>/<name>` and fix it |
+| `the pack fails pack check` | run `pack check modules/<module>/packs/<name>` and fix it |
 | `no drishti-server-*-exec.jar` | build it, set `DRISHTI_JAR`, or `--no-sutra` on a target without Java |
 | history says *reverted* | the server could not start with the new files: read the server log at that time; fix and redeploy |
 | deployed, but the old content is served | the watcher waits for the copy to be quiet (`drishti.packs.reload-debounce`, 750 ms), the watch is `off`, or the new version was refused: look at the pack's row; with `watch: off` use Load/Unload or restart |
@@ -3427,7 +3427,7 @@ quote values with `{$.path}` so each reader sees their own.
 | A pack is *off* in Admin → Packs, or its users get `DRS-5002` | an administrator switched it off (*Changed* says when and who; audit `pack-disabled`): **Switch on** (live) |
 | A pack says *not loaded* | its folder is there but `DRISHTI_PACKS` did not name it: **Load** (live). *cannot load 'finance': kind trade is defined by both pack 'trading' and pack 'finance'*: it clashes with a loaded pack |
 | "Switch off" is greyed, or `'trading' is needed by [market-risk, counterparty-risk]; switch those off first` | switch off the dependants first |
-| The drill fails with "pack manifests out of date" | a generated file was edited by hand, or the generator changed and was not run: `python3 tools/packgen/banking/make_packs.py --check` lists them; move the change into the generator and run it, or `git checkout -- config/packs/<domain>/<name>/…` |
+| The drill fails with "pack manifests out of date" | a generated file was edited by hand, or the generator changed and was not run: `python3 tools/packgen/banking/make_packs.py --check` lists them; move the change into the generator and run it, or `git checkout -- modules/<module>/packs/<name>/…` |
 
 ### 21.9 Alerts on numbers
 

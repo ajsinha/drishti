@@ -15,7 +15,7 @@
 """The two sections every pack guide ends with (the product owner's request of 2026-10-26: data contract, data retrieval and details
 for all packs), generated so they cannot drift:
 
-  ## Data contracts    every kind of the pack from config/packs/<domain>/<pack>/contracts/*.contract.yaml: class, key, grain and links
+  ## Data contracts    every kind of the pack from modules/<module>/packs/<pack>/contracts/*.contract.yaml: class, key, grain and links
                        to its two homes, never a copy: its contract (docs/contracts/packs/<pack>.md, every field) and its example
                        (docs/contracts/samples/<domain>.md#<table>, a real record of the test data, every field explained)
   ## Data retrieval    per kind, where its data comes from: an external source (licence, internal-only flag, the refresh script with an

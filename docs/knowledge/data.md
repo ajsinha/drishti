@@ -300,7 +300,7 @@ cannot.
 
 A **data contract** writes down what each kind is: its grain (what one row means), its key, every field with its type, unit and
 meaning, the links to other kinds, where it is stored, how often it arrives, and for a computed kind its formulas. Every command has
-one (`config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml`), and the docs are generated from them.
+one (`modules/<module>/packs/<pack>/contracts/<kind>.contract.yaml`), and the docs are generated from them.
 
 ### How the data and contracts data connects
 

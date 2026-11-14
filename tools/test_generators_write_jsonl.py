@@ -46,7 +46,7 @@ PY = sys.executable
 #: the generators whose source is read (data generators; tests and fixtures under them are skipped)
 GENERATORS = ["tools/packgen/**/*.py", "tools/samplegen/*.py", "tools/testdata/*.py", "tools/realdata/*.py", "tools/feeds/*.py", "tools/feeds/sources/*.py",
               "tools/sutragen.py", "tools/schemapack.py", "tools/bench/trades.py", "tools/convertcmd.py", "tools/pvgen/*.py",
-              "config/packs/*/*/tools/*.py",
+              "modules/*/packs/*/tools/*.py", "modules/banking/dmod/packs/*/tools/*.py", "config/packs/*/*/tools/*.py",
               "examples/packs/*/tools/*.py"]
 
 #: files that write a store on purpose: the loaders (generating and loading are separate steps; these are the loading step)

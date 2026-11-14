@@ -1336,7 +1336,7 @@ The rows are in the lake; nothing shows them until a connector names it.
 **Demo and real never mix.** Each lake has its own folder and its own file, and a connector reads one lake. Three rules keep a server
 from showing demo data beside yours:
 
-- **The packs' samples step aside.** Every pack ships sample documents (`config/packs/<domain>/<pack>/samples/`), served by the `demo` connector,
+- **The packs' samples step aside.** Every pack ships sample documents (`modules/<module>/packs/<pack>/samples/`), served by the `demo` connector,
   which answers any kind and, on a live read, before the lakes. Once a kind's routed connector, or any Delta or Iceberg connector serving
   it, names a lake other than `demo`, the samples no longer answer for that kind: not by id (`TRD 1000001`, a demo ComSwap, is not
   found once `trade-endur` reads risklake), not in a search. A kind whose connectors all read `demo` keeps its samples, so a demo server

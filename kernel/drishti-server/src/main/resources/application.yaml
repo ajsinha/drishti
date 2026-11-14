@@ -1175,7 +1175,7 @@ drishti:
   under-construction:                # the under-construction registry (docs/admin/UNDER_CONSTRUCTION.md): what depends on unbuilt work and how it shows
     file: ${DRISHTI_UNDER_CONSTRUCTION_FILE:./config/under-construction.yaml}   # absent: under-construction.yaml beside the packs folder, else nothing registered; none: nothing
   packs:
-    # Domain packs (config/packs/<domain>/<name>/pack.yaml): Sutras, mnemonics, links, badges, roles, vocabulary, samples.
+    # Domain packs (modules/<module>/packs/<name>/pack.yaml): Sutras, mnemonics, links, badges, roles, vocabulary, samples.
     # Site settings below always override what a pack contributes.
     dir: ${DRISHTI_PACKS_DIR:./config/packs}
     # Further pack folders, comma-separated, looked in after dir: examples/packs holds the retired example packs (finance,

@@ -73,7 +73,7 @@ Lowest to highest; a later layer wins:
 pack.yaml contributions  <  application.yaml  <  application.local.yaml  <  environment variables  <  --arguments
 ```
 
-* **Packs** (`config/packs/<domain>/<name>/pack.yaml`) contribute mnemonics, roles, connectors, routes, link fields and so on.
+* **Packs** (`modules/<module>/packs/<name>/pack.yaml`) contribute mnemonics, roles, connectors, routes, link fields and so on.
   They are added as the lowest-precedence source, so anything the site writes in its own configuration
   overrides a pack.
 * **`application.yaml`** is the bundled default.
@@ -5457,7 +5457,7 @@ A connector's settings go under `settings:` in its file, `config/connectors/<nam
 
 ### Packs: `pack.yaml`
 
-`config/packs/<domain>/<pack>/pack.yaml`, read by the server's pack loader (`PackLoader`) and the console. A changed pack is reloaded while the server runs ([Live reload](../guides/BUILD_GUIDE.md#296-live-reload-the-packs-folder-is-watched)). Guide: [BUILD_GUIDE.md](../guides/BUILD_GUIDE.md#4-packyaml-key-by-key).
+`modules/<module>/packs/<pack>/pack.yaml`, read by the server's pack loader (`PackLoader`) and the console. A changed pack is reloaded while the server runs ([Live reload](../guides/BUILD_GUIDE.md#296-live-reload-the-packs-folder-is-watched)). Guide: [BUILD_GUIDE.md](../guides/BUILD_GUIDE.md#4-packyaml-key-by-key).
 
 #### `pack.yaml`
 

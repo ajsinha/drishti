@@ -308,7 +308,7 @@ public final class SutraCli {
             Path expectDir = sampleDir(u, sutra);
             List<Doc> docs = samplesOf(u, sutra, a.samples());
             if (docs.isEmpty()) {
-                cases.add(Case.skip(u.stem(), "samples", "no samples: add config/packs/<domain>/<pack>/tests/" + sutra.name() + "/" + SutraCases.FILE));
+                cases.add(Case.skip(u.stem(), "samples", "no samples: add modules/<module>/packs/<pack>/tests/" + sutra.name() + "/" + SutraCases.FILE));
                 out.println("skip " + u.file() + " (no samples)");
                 continue;
             }

@@ -21,7 +21,7 @@ Per guide the spec names its file, its section number and, per dataset: the kind
 .jsonl.gz, or a tar of <table>/<date>/*.jsonl.gz as DATA_LAKE_GUIDE.md describes), whether the feature needs it, what it is for (written
 by hand) and a link to the guide's own section. The tool writes, between ``<!-- guide-data:begin <id> -->`` and
 ``<!-- guide-data:end -->`` in the guide, an at-a-glance table and one subsection per dataset that LINKS the input's two homes and copies
-neither: its data contract (the pack's contract page and its file, config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml, with the
+neither: its data contract (the pack's contract page and its file, modules/<module>/packs/<pack>/contracts/<kind>.contract.yaml, with the
 key and the field counts) and its example (the data-sample section docs/contracts/samples/<domain>.md#<table>, a real record with every
 field explained, written by tools/testdata/sample_docs.py). Text outside the markers is never touched.
 

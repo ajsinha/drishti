@@ -652,7 +652,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.state.business_dates = BusinessDates()
     from core.facts import FactsService
 
-    app.state.facts = FactsService(settings)                  # Home's fact of the day (config/packs/<domain>/<pack>/config/facts.yaml)
+    app.state.facts = FactsService(settings)                  # Home's fact of the day (modules/<module>/packs/<pack>/config/facts.yaml)
     app.state.templates = templates
     from starlette.requests import ClientDisconnect
 
