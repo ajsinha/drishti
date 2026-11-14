@@ -38,7 +38,6 @@ inventory) is a configuration job, not a project. Drishti is the analytics layer
 14. [Screenshots to add](#14-screenshots-to-add)
 15. [The trading module: switch it on, bind the trades, edit a trade](#15-the-trading-module)
 16. [Source systems: one module per trading system](#16-source-systems)
-16. [Source systems](#16-source-systems)
 
 ## 1. One engine, and what uses it
 
