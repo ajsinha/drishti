@@ -120,7 +120,7 @@ class AutoDesignerTest {
                 }
                 assertThat(d.alternatives().values().stream().flatMap(List::stream).allMatch(a -> !a.reason().isBlank() && !a.options().isEmpty() || "links".equals(a.kind()) || "kv".equals(a.kind())))
                         .as(name).isTrue();
-                assertThat(d.yaml().lines().filter(l -> l.startsWith("  - { label:")).count()).as(name + " strip").isLessThanOrEqualTo(6);
+                assertThat(d.yaml().lines().filter(l -> l.startsWith("  - { label:")).count()).as(name + " strip").isLessThanOrEqualTo(BuilderProperties.defaults().stripMax());
             }
         }
     }
@@ -142,7 +142,8 @@ class AutoDesignerTest {
     @Test
     void linksGetKeysAndTheTitleShowsTheIdAndALink() throws IOException {
         Design d = design(example("all-panels-showcase"), null);
-        assertThat(d.yaml()).contains("id: \"$.TRADE_ID\"").contains("keys: {").contains("F7: \"link($.NETTING_SET, 'netting-set')\"");
+        assertThat(d.yaml()).contains("id: \"$.TRADE_ID\"").contains("keys: {").contains("F8: \"link($.NETTING_SET, 'netting-set')\"")
+                .contains("F7: \"link($.COUNTERPARTY.ID, 'counterparty', $.COUNTERPARTY.NAME)\"");          // the party the trade is with first
         assertThat(d.yaml()).contains("with: \"link($.COUNTERPARTY.ID, 'counterparty', $.COUNTERPARTY.NAME)\"");
     }
 
@@ -231,7 +232,7 @@ class AutoDesignerTest {
     @Test
     void thePruneShareIsConfigurable() {
         BuilderProperties strict = new BuilderProperties(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0.1, null,
-                null, null, null, null, null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
         List<Sample> samples = new ArrayList<>(varied(5, true));
         samples.set(1, new Sample("s1.json", withRare(samples.get(1))));
         samples.set(2, new Sample("s2.json", withRare(samples.get(2))));
@@ -272,7 +273,7 @@ class AutoDesignerTest {
         assertThat(strip.lines().filter(l -> l.contains("emphasis: true")).findFirst().orElse("")).contains("Mtm");
         assertThat(d.reasons().get("strip.Mtm")).contains("emphasised");
         assertThat(d.reasons().get("strip.Fixed")).contains("same in every sample");
-        assertThat(strip.lines().filter(l -> l.startsWith("  - {")).count()).isLessThanOrEqualTo(6);
+        assertThat(strip.lines().filter(l -> l.startsWith("  - {")).count()).isLessThanOrEqualTo(BuilderProperties.defaults().stripMax());
     }
 
     @Test
@@ -298,7 +299,7 @@ class AutoDesignerTest {
         samples.set(0, new Sample("s0.json", o));
         Design d = design(samples, null);
         assertThat(d.reasons().get("strip.Rare amount")).contains("left out").contains("1 of 5");
-        assertThat(d.yaml()).doesNotContain("$.rareAmount\", fmt");
+        assertThat(d.yaml().split("strip:\n")[1].split("panels:")[0]).doesNotContain("$.rareAmount");   // the Details panel lists every field with a value
     }
 
     // ---------------------------------------------------------------------------------------------------- suggest

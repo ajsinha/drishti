@@ -18,7 +18,8 @@
 # A site can replace this file with drishti.inference.semantics-file.
 roles:
   - { role: signed-money, pattern: "(^|_)(pnl|profit|loss|change|delta|variance)$|pnl$|change$", fmt: signed0, tone: sign, weight: 90 }
-  - { role: money,        pattern: "amount|value$|cost|price$|balance|revenue|total$|budget", fmt: amount0, weight: 80 }
+  - { role: price,        pattern: "price$", fmt: price2, weight: 75 }
+  - { role: money,        pattern: "amount|value$|cost|balance|revenue|total$|budget", fmt: amount0, weight: 80 }
   - { role: percent,      pattern: "utili[sz]ation|ratio|share$|pct$|percent", fmt: pct0, weight: 50 }
   - { role: rate,         pattern: "rate$", fmt: pct2, weight: 70, fractionOnly: true }
   - { role: date,         pattern: "date$|^date|at$|time$|expiry|asof|due", fmt: date, weight: 60, dateOnly: true }

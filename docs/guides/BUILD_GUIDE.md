@@ -2592,6 +2592,25 @@ packs/my-bank/
 DRISHTI_PACKS=my-bank DRISHTI_DELTA_ROOT=$PWD/lake java -jar kernel/drishti-server/target/drishti-server-*-exec.jar     # alone: see below
 ```
 
+**What each generated Sutra shows**, from the data's shape (the server's auto-designer; the same rules draft Build's auto-design):
+
+| The data | The screen |
+|---|---|
+| the id, a link to a party | the title: `id: $.TRADE_ID`, `with: link($.COUNTERPARTY, 'counterparty')` (a party first: counterparty, client, issuer); F7/F8 open the links |
+| key figures | the strip, in the order of `drishti.builder.key-figures`: currency, side (`B`/`S` read as Buy/Sell), notional, value (MTM, PV: emphasised), quantity, trade date, maturity, status, book; a figure not at the top comes from the first record of a list (`first($.LEGS).NOTIONAL`); `strip-max` 8 |
+| top-level fields | **Details**: every field with a value in the samples (up to `details-max`), grouped by `detail-groups` (identity, product, parties), then links, dates and amounts; links open their entity, a list of plain values (`["CFTC", "EMIR"]`) reads as one line |
+| a nested object | its own section of labelled values (`SETTLEMENT_INSTRUCTIONS` -> *Settlement instructions*) |
+| a list of records holding lists (at most `tabs-max`) | tabs, side by side for up to three: *Terms* (with the record's nested objects, `INDEX.NAME` -> *Index name*), per inner list a chart (amounts by date as a ladder, a notional or balance as a step line: *Notional profile*) and a table (*Cash flows and resets*, opening to the inner list, first column *Flow / reset*), and a chart of the innermost dated values (*Resets (rate)*, shown only when there are any); plus the inner list across all records (*Cash flows, every leg*) |
+| a list of dated amounts with a label | a table (dates first, amounts signed with a total), a ladder of the amounts by date (by month past 24 dates) on the right, a timeline (`EVENT_TYPE` as the label) |
+
+Labels come from the field names in the house style (`TRADE_DATE` -> *Trade date*, with the packs' acronyms: *SSI ID*, *Our agent BIC*);
+formats from names and values: dates, amounts, signed amounts, rates as percentages (`pct4`), prices and rates above 1 to four places
+(`price4`). A field blank (`""`) in some records and a number or a date in others, or a decimal written as text (`"2332.9131"`), is typed
+by its values; a field blank in every sample is left out. `tools/test_sutragen_quality.py` generates Endur-, Calypso- and Murex-like nested
+trades and scores the generated screens against the hand-built trading Sutras (panel kinds, sub-tables of the arrays, charts of the dated
+amounts, key strip, title, keys) with a bar of 90%, `sutra lint` and `sutra test` passing; what a screen cannot match is what its data
+does not carry (a quantity that is always null, resets that are always empty, a single cash flow is no chart).
+
 - **The folder name is the pack name.** `--out` defaults to `config/packs/<domain>/<name>`; a folder with another name makes `sutra lint` refuse the pack
   (`pack.yaml declares pack 'my-bank', expected 'mybank'`).
 - **Kinds must be free.** This example's kinds are `trade` and `counterparty`, which the shipped `trading` and `core` own, so it loads alone

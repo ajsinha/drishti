@@ -35,15 +35,22 @@ import java.util.Map;
  * @param title a suggested panel title
  * @param options the kind's options, as the Sutra spells them ({@code rows}, {@code x}, {@code by}...)
  * @param columns explicit columns (tables, kv, surface), or for {@code tabs} the columns of the body
+ * @param parts for {@code tabs}: the panels each tab holds ({@code panels:}, read against the tab's record), instead of a body
  */
 public record PanelChoice(String kind, double score, String reason, @com.fasterxml.jackson.annotation.JsonIgnore Area area, String title, Map<String, Object> options,
-        List<Column> columns) {
+        List<Column> columns, @com.fasterxml.jackson.annotation.JsonIgnore List<Panel> parts) {
 
     private static final SourceLocation DRAFT = new SourceLocation("auto-design", 0, 0);
 
     public PanelChoice {
         options = java.util.Collections.unmodifiableMap(new java.util.LinkedHashMap<>(options));
         columns = List.copyOf(columns);
+        parts = parts == null ? List.of() : List.copyOf(parts);
+    }
+
+    /** A choice without panels inside tabs. */
+    public PanelChoice(String kind, double score, String reason, Area area, String title, Map<String, Object> options, List<Column> columns) {
+        this(kind, score, reason, area, title, options, columns, List.of());
     }
 
     /** The column as the API says it: {@code main} or {@code right}. */
@@ -53,20 +60,23 @@ public record PanelChoice(String kind, double score, String reason, @com.fasterx
     }
 
     PanelChoice withScore(double s, String why) {
-        return new PanelChoice(kind, s, why, area, title, options, columns);
+        return new PanelChoice(kind, s, why, area, title, options, columns, parts);
     }
 
     PanelChoice withTitle(String t) {
-        return new PanelChoice(kind, score, reason, area, t, options, columns);
+        return new PanelChoice(kind, score, reason, area, t, options, columns, parts);
     }
 
     PanelChoice inArea(Area a) {
-        return new PanelChoice(kind, score, reason, a, title, options, columns);
+        return new PanelChoice(kind, score, reason, a, title, options, columns, parts);
     }
 
     /** The Rachana panel this choice describes. */
     Panel toPanel(String id) {
         PanelKind k = PanelKind.parse(kind).orElseThrow();
+        if (k == PanelKind.TABS && !parts.isEmpty()) {
+            return new Panel(id, k, title, null, null, area, false, List.of(), null, options, DRAFT, parts);
+        }
         if (k == PanelKind.TABS) {
             Panel body = new Panel("body", PanelKind.KV, null, null, null, Area.MAIN, true, columns, null, Map.of(), DRAFT);
             return new Panel(id, k, title, null, null, area, true, List.of(), body, options, DRAFT);

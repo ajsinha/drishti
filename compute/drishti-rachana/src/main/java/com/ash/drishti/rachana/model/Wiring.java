@@ -156,7 +156,10 @@ public record Wiring(Source source, List<Emit> emits, String waits, List<Childre
     /** One reference to an event in an expression: {@code @panel.event.field} (event and field null when not written). */
     public record Ref(String panel, String event, String field) {}
 
-    /** The event references in an expression or a template ({@code @trades.open.trade}, {@code @parent.select.ID}); strings are skipped. */
+    /**
+     * The event references in an expression or a template ({@code @trades.open.trade}, {@code @parent.select.ID}); strings are
+     * skipped, and so is {@code @acc} inside a {@code reduce(...)}, where it is the value so far, not a panel.
+     */
     public static List<Ref> refs(String text) {
         if (text == null || text.indexOf('@') < 0) {
             return List.of();
@@ -168,9 +171,33 @@ public record Wiring(Source source, List<Emit> emits, String waits, List<Childre
             if (m.start() > 0 && (Character.isLetterOrDigit(bare.charAt(m.start() - 1)) || bare.charAt(m.start() - 1) == '_')) {
                 continue;                                 // an @ inside a word (an e-mail address in a template's text)
             }
+            if ("acc".equals(m.group(1)) && insideReduce(bare, m.start())) {
+                continue;
+            }
             String[] parts = m.group(2).isEmpty() ? new String[0] : m.group(2).substring(1).split("\\.");
             out.add(new Ref(m.group(1), parts.length > 0 ? parts[0] : null, parts.length > 1 ? parts[1] : null));
         }
         return out;
+    }
+
+    private static final Pattern REDUCE = Pattern.compile("\\breduce\\s*\\(");
+
+    /** Whether position {@code at} of {@code text} (strings already blanked) lies between a {@code reduce(} and its closing parenthesis. */
+    private static boolean insideReduce(String text, int at) {
+        Matcher r = REDUCE.matcher(text);
+        while (r.find() && r.start() < at) {
+            int depth = 0;
+            for (int i = r.end() - 1; i < text.length(); i++) {
+                char c = text.charAt(i);
+                depth += c == '(' ? 1 : c == ')' ? -1 : 0;
+                if (depth == 0) {
+                    if (at < i) {
+                        return true;
+                    }
+                    break;
+                }
+            }
+        }
+        return false;
     }
 }
