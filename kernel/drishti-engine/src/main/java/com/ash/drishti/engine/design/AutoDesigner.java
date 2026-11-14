@@ -60,13 +60,22 @@ public final class AutoDesigner {
     private static final int FIRST_LINK_KEY = 7;
     private static final int MAX_LINK_KEYS = 2;
 
+    /** A link to one of these kinds is the party the document is with: the title's 'with' and the first link key. */
+    private static final java.util.regex.Pattern PARTY = java.util.regex.Pattern.compile("(?i)counterparty|customer|client|party|issuer|obligor|borrower");
+    /** A dimension named like this says what the document is: it goes beside the kind in the title. */
+    private static final java.util.regex.Pattern WHAT = java.util.regex.Pattern.compile("(?i)product|instrument|type|class|category|asset");
+
     private final BuilderProperties props;
     private final Semantics semantics;
+    private final java.util.regex.Pattern idNames;
+    private final List<java.util.regex.Pattern> keyFigures;
     private final SutraWriter writer = new SutraWriter();
 
     public AutoDesigner(BuilderProperties props, Semantics semantics) {
         this.props = props;
         this.semantics = semantics;
+        this.idNames = java.util.regex.Pattern.compile(props.idNames(), java.util.regex.Pattern.CASE_INSENSITIVE);
+        this.keyFigures = props.keyFigures().stream().map(p -> java.util.regex.Pattern.compile(p, java.util.regex.Pattern.CASE_INSENSITIVE)).toList();
     }
 
     // ---------------------------------------------------------------------------------------------------- suggest
@@ -78,8 +87,9 @@ public final class AutoDesigner {
      * @throws DrishtiException {@code DRS-5001} when a path is not in the shape
      */
     public List<PanelChoice> suggest(Shape shape, List<Sample> samples, String path, String at) {
-        ShapeModel model = new ShapeModel(shape);
-        PanelChooser chooser = new PanelChooser(semantics, props, new SampleStats(samples), model);
+        SampleStats stats = new SampleStats(samples);
+        ShapeModel model = new ShapeModel(shape, stats, idNames);
+        PanelChooser chooser = new PanelChooser(semantics, props, stats, model);
         FieldNode f = require(model, path);
         if (at != null && !at.isBlank()) {
             return chooser.pair(f, require(model, at));
@@ -111,8 +121,8 @@ public final class AutoDesigner {
         if (!KIND.matcher(k).matches()) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "'kind' is letters, digits, . _ - (up to 64), starting with a letter or digit");
         }
-        ShapeModel model = new ShapeModel(shape);
         SampleStats stats = new SampleStats(samples);
+        ShapeModel model = new ShapeModel(shape, stats, idNames);
         PanelChooser chooser = new PanelChooser(semantics, props, stats, model);
         Plan plan = new Plan(k, model, stats, chooser);
         plan.collect();
@@ -165,11 +175,14 @@ public final class AutoDesigner {
         Title title;
         Map<String, String> keys = new LinkedHashMap<>();
 
+        final StructurePanels structure;
+
         Plan(String kind, ShapeModel model, SampleStats stats, PanelChooser chooser) {
             this.kind = kind;
             this.model = model;
             this.stats = stats;
             this.chooser = chooser;
+            this.structure = new StructurePanels(props, stats, chooser);
         }
 
         String name() {
@@ -182,7 +195,7 @@ public final class AutoDesigner {
         void collect() {
             FieldNode root = model.root();
             List<FieldNode> statuses = new ArrayList<>();
-            PanelChoice details = chooser.details(root);
+            PanelChoice details = structure.details(root, kind);
             if (details != null) {
                 add("$.details", List.of(details), "details");
             }
@@ -201,7 +214,9 @@ public final class AutoDesigner {
                 if (p.array() && p.tree() && p.props().isEmpty() && node.object()) {
                     add(p.path(), chooser.treeUnder(node, p), null);
                 } else if (p.array()) {
-                    if (!p.roleName().isEmpty() && !p.is("link")) {
+                    List<StructurePanels.Planned> planned = structure.forList(p);
+                    planned.forEach(x -> add(x.source(), x.choices(), null));
+                    if (planned.isEmpty() && !p.roleName().isEmpty() && !p.is("link")) {
                         add(p.path(), chooser.choose(p), null);
                     }
                 } else if (p.object()) {
@@ -291,12 +306,27 @@ public final class AutoDesigner {
             return p.props().values().stream().filter(c -> c.name().equalsIgnoreCase(name)).map(FieldNode::path).findFirst().orElse(p.path() + "." + name);
         }
 
+        /** Whether {@code p} links to the document's own kind (its id, read as a link to itself). */
+        private boolean self(FieldNode p) {
+            return p.is("link") && kind.equalsIgnoreCase(p.role().kind());
+        }
+
+        /** The links of the document to other entities, the party it is with first (a counterparty, a client, an issuer). */
+        private List<FieldNode> links() {
+            List<FieldNode> links = new ArrayList<>(model.root().props().values().stream()
+                    .filter(p -> p.is("link") && !p.array() && p.role().kind() != null && !self(p)).toList());
+            links.sort(Comparator.comparingInt(p -> PARTY.matcher(p.role().kind()).find() ? 0 : p.object() ? 1 : 2));
+            return links;
+        }
+
         private void title() {
             FieldNode root = model.root();
-            FieldNode id = root.props().values().stream().filter(p -> p.scalar() && p.is("id")).findFirst().orElse(null);
-            FieldNode dim = root.props().values().stream().filter(p -> p.scalar() && p.is("dimension")).findFirst().orElse(null);
-            List<FieldNode> links = root.props().values().stream().filter(p -> p.is("link") && !p.array() && p.role().kind() != null).toList();
-            FieldNode link = links.stream().filter(FieldNode::object).findFirst().orElse(links.isEmpty() ? null : links.get(0));
+            FieldNode id = root.props().values().stream().filter(p -> p.scalar() && self(p)).findFirst()      // a link to its own kind is its id
+                    .orElseGet(() -> root.props().values().stream().filter(p -> p.scalar() && p.is("id")).findFirst().orElse(null));
+            List<FieldNode> dims = root.props().values().stream().filter(p -> p.scalar() && p.is("dimension")).toList();
+            FieldNode dim = dims.stream().filter(p -> WHAT.matcher(p.name()).find()).findFirst().orElse(dims.isEmpty() ? null : dims.get(0));
+            List<FieldNode> links = links();
+            FieldNode link = links.isEmpty() ? null : links.get(0);
             String pill = Semantics.humanize(kind.replace('-', ' ')) + (dim == null ? "" : " · ${" + dim.path() + "}");
             String with = link == null ? null : linkTo(link);
             title = new Title(pill, id == null ? "'" + kind + "'" : id.path(), with);
@@ -313,13 +343,100 @@ public final class AutoDesigner {
 
         // --------------------------------------------------------------------------------------------- strip
 
+        /**
+         * The key figures first ({@code drishti.builder.key-figures}, in their order: currency, side, notional, value, quantity,
+         * trade date, maturity, status, book), each the first top-level field its pattern names, else that field of the first
+         * record of a top-level list ({@code first($.LEGS).NOTIONAL}); then the strip is filled up to {@code strip-max} with the
+         * figures ranked by role, presence and how much they vary. The value (MTM, PV) is emphasised, else the heaviest amount.
+         */
         private void strip() {
+            List<StripItem> items = new ArrayList<>();
+            List<FieldNode> shown = new ArrayList<>(used);
+            Map<StripItem, FieldNode> of = new LinkedHashMap<>();
+            for (java.util.regex.Pattern kf : keyFigures) {
+                if (items.size() >= props.stripMax()) {
+                    break;
+                }
+                FieldNode f = model.root().props().values().stream().filter(p -> p.scalar() && !shown.contains(p) && !self(p) && kf.matcher(p.name()).find()
+                        && filled(p)).findFirst().orElse(null);
+                String bind = f == null ? null : figure(f, f.path());
+                if (f == null) {
+                    for (FieldNode list : model.root().props().values()) {
+                        FieldNode g = !list.array() || list.props().isEmpty() ? null : list.props().values().stream()
+                                .filter(p -> p.scalar() && kf.matcher(p.name()).find() && filled(p)).findFirst().orElse(null);
+                        if (g != null && shown.stream().noneMatch(s -> s.name().equals(g.name()))) {
+                            f = g;
+                            bind = figure(g, "first(" + list.path() + ")." + g.name());
+                            break;
+                        }
+                    }
+                }
+                if (f == null) {
+                    continue;
+                }
+                shown.add(f);
+                boolean status = f.is("status");
+                String label = Semantics.humanize(f.name());
+                Role r = chooser.roleOf(f);
+                String fmt = status || f.is("link") || !"number".equals(f.type()) && !f.date() ? null : f.date() ? "date" : r.fmt();
+                StripItem item = new StripItem(label, bind, fmt, status ? "status" : "number".equals(f.type()) ? r.tone() : null, false, DRAFT);
+                items.add(item);
+                of.put(item, f);
+                reasons.put("strip." + label, "a key figure (drishti.builder.key-figures: " + kf.pattern() + ")"
+                        + (bind.startsWith("first(") ? ", from the first record of its list" : ""));
+            }
+            List<StripItem> ranked = ranked(shown, props.stripMax() - items.size(), of);
+            items.addAll(ranked);
+            List<FieldNode> amounts = of.values().stream().filter(f -> "number".equals(f.type()) && !f.is("dimension")).toList();
+            FieldNode emph = amounts.stream().filter(f -> "signed-money".equals(chooser.roleOf(f).name())).findFirst()       // the value (MTM, PV)
+                    .orElseGet(() -> stats.count() >= 2 && amounts.stream().anyMatch(f -> stats.variation(f.path()) > 0)
+                            ? amounts.stream().max(Comparator.comparingDouble((FieldNode f) -> stats.variation(f.path()))).orElse(null)
+                            : amounts.stream().max(Comparator.comparingInt((FieldNode f) -> chooser.roleOf(f).weight())).orElse(null));
+            StripItem pick = items.stream().filter(i -> of.get(i) == emph).findFirst().orElse(null);
+            if (pick == null) {
+                pick = items.stream().filter(StripItem::emphasis).findFirst().orElse(null);
+            }
+            List<StripItem> out = new ArrayList<>();
+            for (StripItem i : items) {
+                boolean e = i == pick;
+                out.add(new StripItem(i.label(), i.bind(), i.fmt(), i.tone(), e, DRAFT));
+                if (e) {
+                    reasons.merge("strip." + i.label(), "; emphasised", String::concat);
+                }
+            }
+            strip = out;
+            reasons.put("strip", out.isEmpty() ? "no key figure, top-level measure, date or state to show"
+                    : out.size() + " figure" + (out.size() == 1 ? "" : "s") + " of at most " + props.stripMax()
+                            + ": the key figures, then the rest ranked by role, presence and how much they vary across the samples");
+        }
+
+        /** Whether the samples give the field a value (without samples: its presence in the shape). */
+        private boolean filled(FieldNode p) {
+            return stats.count() > 0 ? stats.present(p.path()) > 0 : p.presence() >= props.rareBelow();
+        }
+
+        /** A key figure's expression: a link opens its entity, a buy/sell code reads as Buy or Sell. */
+        private String figure(FieldNode f, String path) {
+            if (f.is("link") && f.role().kind() != null && !f.array()) {
+                return "link(" + path + ", '" + f.role().kind() + "')";
+            }
+            if ("string".equals(f.type()) && stats.count() > 0) {
+                java.util.Set<String> seen = stats.texts(f.path(), 4);
+                if (!seen.isEmpty() && java.util.Set.of("B", "S").containsAll(seen)) {
+                    return path + " == 'B' ? 'Buy' : (" + path + " == 'S' ? 'Sell' : " + path + ")";
+                }
+            }
+            return path;
+        }
+
+        /** Up to {@code slots} more figures, ranked by role, presence and how much they vary across the samples. */
+        private List<StripItem> ranked(List<FieldNode> shown, int slots, Map<StripItem, FieldNode> of) {
             record Scored(FieldNode f, int order, int weight, double spread, String why) {}
             List<Scored> scored = new ArrayList<>();
             int[] order = {0};
             collectStrip(model.root(), 1, f -> {
                 order[0]++;
-                if (used.contains(f)) {
+                if (shown.contains(f) || self(f)) {
                     return;
                 }
                 int base = switch (f.roleName()) {
@@ -356,7 +473,7 @@ public final class AutoDesigner {
             });
             List<Scored> top = new ArrayList<>(scored);
             top.sort(Comparator.comparingInt((Scored s) -> -s.weight()).thenComparingInt(Scored::order));
-            top = new ArrayList<>(top.subList(0, Math.min(props.stripMax(), top.size())));
+            top = new ArrayList<>(top.subList(0, Math.max(0, Math.min(slots, top.size()))));
             Scored emph = null;
             if (stats.count() >= 2) {
                 emph = top.stream().filter(s -> s.f().is("measure") && s.spread() > 0).max(Comparator.comparingDouble(Scored::spread)).orElse(null);
@@ -380,13 +497,12 @@ public final class AutoDesigner {
                     label = Semantics.humanize(parent.substring(parent.lastIndexOf('.') + 1)) + " " + label.toLowerCase(Locale.ROOT);
                 }
                 boolean e = s == emph;
-                items.add(new StripItem(label, s.f().path(), status ? null : r.fmt(), status ? "status" : r.tone(), e, DRAFT));
-                reasons.put("strip." + label, s.why() + (e ? "; emphasised: it varies most across the samples" : ""));
+                StripItem item = new StripItem(label, s.f().path(), status ? null : r.fmt(), status ? "status" : r.tone(), e, DRAFT);
+                items.add(item);
+                of.put(item, s.f());
+                reasons.put("strip." + label, s.why() + (e ? "; it varies most across the samples" : ""));
             }
-            strip = items;
-            reasons.put("strip", items.isEmpty() ? "no top-level measure, date or state to show"
-                    : items.size() + " figure" + (items.size() == 1 ? "" : "s") + " of at most " + props.stripMax()
-                            + ", ranked by role, presence and how much they vary across the samples");
+            return items;
         }
 
         private void collectStrip(FieldNode node, int depth, java.util.function.Consumer<FieldNode> out) {
@@ -401,15 +517,14 @@ public final class AutoDesigner {
 
         // ---------------------------------------------------------------------------------------------- keys
 
+        /** F7 and F8 open the entities the document links to, the party it is with first; never the document itself. */
         private void keys() {
             int n = FIRST_LINK_KEY;
-            for (FieldNode p : model.root().props().values()) {
+            for (FieldNode p : links()) {
                 if (n >= FIRST_LINK_KEY + MAX_LINK_KEYS) {
                     break;
                 }
-                if (p.is("link") && !p.array() && p.role().kind() != null) {
-                    keys.put("F" + n++, linkTo(p));
-                }
+                keys.put("F" + n++, linkTo(p));
             }
         }
 

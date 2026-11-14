@@ -17,6 +17,18 @@
 
 ## Unreleased
 
+- **Generated Sutras read like the hand-built deal screens** (`pack new`, `pack make`, Build's auto-design: one auto-designer): a list
+  of records holding lists (legs with cash flows and resets) is tabs with terms, a notional profile or amounts-by-date chart, a tree
+  table opening to the inner list and a fixings chart, plus every leg's cash flows in one schedule; a list of dated amounts (events)
+  is a totalled table, a ladder by date and a timeline; Details lists every top-level field with a value, grouped like a ticket, links
+  opening their entity, lists of values on one line; the strip leads with key figures (`drishti.builder.key-figures`: currency, side as
+  Buy/Sell, notional from the first leg, value, quantity, dates, status, book; `strip-max` 8); the title's `with` and F7 are the
+  counterparty, never the document itself. Fields blank in some records (`""`) or decimals written as text are typed by their values;
+  `COUNTERPARTY_ID`-style names link to a kind the catalogue knows; the banking core pack's semantics give notional, MTM, rates
+  (`pct4`) and prices (`price4`) their formats, the core one prices (`price2`). New settings `key-figures`, `detail-groups`,
+  `details-max`, `tabs-max`. `sutra lint` no longer reads `@acc` inside `reduce(...)` as a panel. `tools/test_sutragen_quality.py`
+  scores generated screens of synthetic Endur-, Calypso- and Murex-like trades against the hand-built Sutras: 47.7% before, 91.5% now.
+
 - **`pack new` finished for bulk sets**: `--load` and `--deploy` work end to end (the server finds a generated module's packs where the module is installed), `--kind-prefix` for kinds other modules provide, the files root written as an absolute path; a bulk recipe in CLI_REFERENCE.
 
 - **The local cluster's folder is `deploy/stack/`** (was `drishti-stack/`, 2.9.11.i4), and **the teaching connector plugin is

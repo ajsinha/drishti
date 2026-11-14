@@ -50,6 +50,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param sampleMaxString longest string it generates
  * @param sampleMaxDepth deepest nesting it generates
  * @param sampleMaxKb most kilobytes one synthetic document may take
+ * @param keyFigures the strip's key figures, in order: each a field name pattern (regex, case-insensitive); the first top-level field
+ *     a pattern finds (else the field of the first record of a top-level list, {@code first($.LEGS).NOTIONAL}) is a figure, the rest
+ *     of the strip is ranked by role
+ * @param detailGroups the order of the Details panel after the id: field name patterns (regex, case-insensitive), one group each;
+ *     links, dates and amounts no pattern names follow, then the rest
+ * @param detailsMax most fields in the drafted Details panel (every top-level field with a value in the samples, up to this)
+ * @param tabsMax a list of records holding lists of their own (legs with their cash flows) and at most this many records is drafted
+ *     as tabs, each with its terms and a chart and a table per nested list
  */
 @ConfigurationProperties("drishti.builder")
 public record BuilderProperties(Integer maxSamples, Integer maxFileMb, Integer maxTotalMb, Integer maxDepth, Integer enumMaxDistinct,
@@ -57,7 +65,7 @@ public record BuilderProperties(Integer maxSamples, Integer maxFileMb, Integer m
         List<String> ohlcNames, List<String> graphNodeNames, List<String> graphEdgeNames, Integer longTextChars, Double rareBelow, Double pruneShare, Integer stripMax,
         Integer maxPanels, Integer maxSidePanels, Integer lineMinPoints, Integer maxAlternatives, List<String> limitNames,
         List<String> codeNames, List<String> fractionNames, Integer sampleMaxItems, Integer sampleMaxString, Integer sampleMaxDepth,
-        Integer sampleMaxKb) {
+        Integer sampleMaxKb, List<String> keyFigures, List<String> detailGroups, Integer detailsMax, Integer tabsMax) {
 
     public BuilderProperties {
         maxSamples = positive(maxSamples, 50);
@@ -70,7 +78,7 @@ public record BuilderProperties(Integer maxSamples, Integer maxFileMb, Integer m
         longTextChars = positive(longTextChars, 80);
         rareBelow = rareBelow == null || rareBelow <= 0 || rareBelow > 1 ? 0.5 : rareBelow;
         pruneShare = pruneShare == null || pruneShare < 0 || pruneShare > 1 ? 0.5 : pruneShare;
-        stripMax = positive(stripMax, 6);
+        stripMax = positive(stripMax, 8);
         maxPanels = positive(maxPanels, 16);
         maxSidePanels = positive(maxSidePanels, 4);
         lineMinPoints = positive(lineMinPoints, 5);
@@ -90,11 +98,20 @@ public record BuilderProperties(Integer maxSamples, Integer maxFileMb, Integer m
         ohlcNames = list(ohlcNames, "open", "high", "low", "close");
         graphNodeNames = list(graphNodeNames, "nodes", "vertices");
         graphEdgeNames = list(graphEdgeNames, "edges", "links");
+        keyFigures = list(keyFigures, "(ccy|currency)$", "buy_?sell|(^|_)side$|^side|direction|pay_?rec|long_?short",
+                "notional|principal|nominal|face_?(value|amount)", "(^|_)(mtm|npv|pv)$|^(mtm|npv|pv)|market_?value|fair_?value",
+                "quantity|(^|_)qty$", "trade_?date|deal_?date", "maturity|expiry|expiration|end_?date|termination", "status$",
+                "portfolio|(^|_)book$|^book");
+        detailGroups = list(detailGroups, "version|status|action|source|system|origin",
+                "product|instrument|type|class|group|option|strike|price|quantity|qty|unit",
+                "counterparty|party|entity|trader|portfolio|book|desk|branch|transit|uen|lei|country");
+        detailsMax = positive(detailsMax, 40);
+        tabsMax = positive(tabsMax, 6);
     }
 
     /** The defaults, for code and tests that run without Spring. */
     public static BuilderProperties defaults() {
-        return new BuilderProperties(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+        return new BuilderProperties(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
     }
 
     public long maxFileBytes() {

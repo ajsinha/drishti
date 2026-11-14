@@ -1117,7 +1117,14 @@ drishti:
     rare-below: 0.5                 # fields present in fewer than this share of their records are listed as rare
     # Auto-design and suggest (POST /api/v1/builder/design, /suggest):
     prune-share: 0.5                # a panel or strip figure empty or failing for more than this share of the samples is dropped or demoted
-    strip-max: 6                    # figures in a drafted strip
+    strip-max: 8                    # figures in a drafted strip
+    # the strip's key figures, in order (field name patterns, regex, case-insensitive): the first top-level field each names, else that
+    # field of the first record of a top-level list (first($.LEGS).NOTIONAL); the rest of the strip is ranked by role
+    key-figures: ["(ccy|currency)$", "buy_?sell|(^|_)side$|^side|direction|pay_?rec|long_?short", "notional|principal|nominal|face_?(value|amount)", "(^|_)(mtm|npv|pv)$|^(mtm|npv|pv)|market_?value|fair_?value", "quantity|(^|_)qty$", "trade_?date|deal_?date", "maturity|expiry|expiration|end_?date|termination", "status$", "portfolio|(^|_)book$|^book"]
+    # the drafted Details panel's order after the id, one group per pattern (identity, product, parties); links, dates and amounts follow
+    detail-groups: ["version|status|action|source|system|origin", "product|instrument|type|class|group|option|strike|price|quantity|qty|unit", "counterparty|party|entity|trader|portfolio|book|desk|branch|transit|uen|lei|country"]
+    details-max: 40                 # fields in the drafted Details panel (every top-level field with a value in the samples, up to this)
+    tabs-max: 6                     # a list of records holding lists (legs with cash flows) of at most this many is drafted as tabs, each with its terms, charts and tables
     max-panels: 16                  # panels in the drafted main column
     max-side-panels: 4              # panels in the drafted right column (besides the links panel)
     line-min-points: 5              # dated rows shorter than this are drafted as a ladder, not a line

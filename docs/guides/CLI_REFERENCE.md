@@ -804,6 +804,19 @@ optional `ingest:` block), `samples/`, one Sutra per kind or `--match` group, `t
 `sutra lint` and `sutra test` on it. With a dated store option it also **writes your documents into that store**, so the pack
 has data on the day it is created.
 
+**What a generated Sutra holds** (the server's auto-designer, one rule set for `pack new`, `pack make` and Build's auto-design): a
+title with the id and the party the document is with (`link($.COUNTERPARTY, 'counterparty')`); a strip of key figures in the order
+of `drishti.builder.key-figures` (currency, side as Buy/Sell, notional, value, quantity, trade date, maturity, status, book; a
+figure missing at the top is read from the first record of a list, `first($.LEGS).NOTIONAL`); **Details**, every top-level field
+with a value grouped as a ticket groups it (identity, product, parties, dates, amounts; links open their entity, a list of plain
+values reads as one line); a **nested object** as its own section; a **list of records holding lists** (legs with cash flows and
+resets) as tabs, each with its terms, a chart (a notional profile or amounts by date), a table opening to the inner list and a chart of
+the inner list's dated values (fixings), plus every record's list in one schedule; a **list of dated amounts** (events, payments)
+as a table with totals, a ladder of the amounts by date and a timeline; F7 and F8 open the linked entities. Formats come from the field
+names and values (dates, amounts, rates as percentages, prices to four places); fields blank in the samples are left out, and a field
+blank in some records and a number or a date in others is typed by its values. [BUILD_GUIDE §10](BUILD_GUIDE.md#10-a-pack-from-json-lines-pack-new)
+has the rules; `tools/test_sutragen_quality.py` measures them against the hand-built trading Sutras.
+
 On the MUREX snapshot of the test data (it has no business-date field, so no `--date`: the pack serves its samples and no dated store
 is written), with `--out` outside `config/packs` so nothing of the server's changes:
 

@@ -78,6 +78,25 @@ public final class ReferenceCatalog implements com.ash.drishti.common.LiveSettin
         return ref == null || !ref.appliesTo(sourceKind) ? Optional.empty() : Optional.of(ref.kind());
     }
 
+    /**
+     * The kind a field's name spells, when no field is configured for it: the name without an id ending ({@code COUNTERPARTY_ID},
+     * {@code counterpartyId}, {@code BOOK_REF}) in lower case with {@code -} between words is a kind the catalogue knows (a
+     * configured field or id pattern names it): {@code LEGAL_ENTITY_ID} is a {@code legal-entity}. Empty otherwise.
+     */
+    public Optional<String> kindNamedBy(String field) {
+        if (field == null) {
+            return Optional.empty();
+        }
+        String stem = field.replaceAll("(?i)(_id|_ref|_code)$", "").replaceAll("(?<=[a-z0-9])(Id|Ref)$", "");
+        if (stem.equals(field) || stem.isEmpty()) {
+            return Optional.empty();
+        }
+        String kind = stem.replaceAll("(?<=[a-z0-9])(?=[A-Z])", "-").replace('_', '-').toLowerCase(java.util.Locale.ROOT);
+        State s = state;
+        boolean known = s.fields().values().stream().anyMatch(r -> kind.equals(r.kind())) || s.patterns().stream().anyMatch(c -> kind.equals(c.kind()));
+        return known ? Optional.of(kind) : Optional.empty();
+    }
+
     /** The configured fields that name entities of {@code kind} ({@code counterparty} for counterparties), sorted. */
     public List<String> fieldsNaming(String kind) {
         return state.fields().entrySet().stream().filter(e -> kind.equals(e.getValue().kind())).map(Map.Entry::getKey).sorted().toList();

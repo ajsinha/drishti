@@ -255,7 +255,7 @@ final class RoleDetector {
     // ------------------------------------------------------------------------------------------------------ scalars
 
     private Optional<RoleInfo> string(Facts f, String name) {
-        Optional<String> byField = references.kindOfField(name);
+        Optional<String> byField = references.kindOfField(name).or(() -> references.kindNamedBy(name));
         Optional<String> byValue = kindOfValues(f);
         if (byField.isPresent() || byValue.isPresent()) {
             String kind = byField.orElseGet(byValue::get);

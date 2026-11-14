@@ -30,19 +30,34 @@ import java.util.regex.Pattern;
  * A shape read as a tree of {@link FieldNode}s: schema, roles and presence in one place, with {@code $ref}s resolved and
  * recursive trees cut at the second visit. Names that an expression cannot bind ({@code a-b}, spaces) are left out: a
  * drafted Sutra must be able to say every path it uses. Immutable after construction.
+ *
+ * <p>With samples, what a booking system's export does to a field is read from its values: a field blank ({@code ""}) in some
+ * records and a number or a date in others (the shape calls it mixed), a date that is blank in some records, and a decimal written
+ * as text ({@code "2332.9131"}) are typed by their non-blank values, so they are shown and formatted like the numbers and dates
+ * they are. Whole numbers written as text stay text (ids, versions, codes).
  */
 final class ShapeModel {
 
     private static final Pattern BINDABLE = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*");
+    private static final Set<String> PLAIN = Set.of("string", "number", "integer", "null");
 
     private final JsonNode root;
     private final Map<String, RoleInfo> roles;
+    private final SampleStats stats;
+    private final Pattern idNames;
     private final FieldNode top;
     private final Map<String, FieldNode> byPath = new LinkedHashMap<>();
 
     ShapeModel(Shape shape) {
+        this(shape, null, null);
+    }
+
+    /** With {@code stats}, fields the shape left mixed or untyped are typed from the samples' values; {@code idNames} stay text. */
+    ShapeModel(Shape shape, SampleStats stats, Pattern idNames) {
         this.root = shape.schema();
         this.roles = shape.roles();
+        this.stats = stats == null || stats.count() == 0 ? null : stats;
+        this.idNames = idNames;
         this.top = build(root, "$", "$", 1.0, new HashSet<>());
     }
 
@@ -111,16 +126,50 @@ final class ShapeModel {
         if (ref != null && !chain.contains(ref)) {
             refs.remove(ref);
         }
-        JsonNode x = raw.has("x-drishti") ? raw.get("x-drishti") : node.path("x-drishti");
         RoleInfo role = roles.get(path);
         if (role != null && "tree".equals(role.role())) {
             tree = true;
         }
-        FieldNode f = new FieldNode(path, name, type, role, presence, node.path("format").asText(null), num(node, "minimum"),
-                num(node, "maximum"), node.has("minItems") ? node.get("minItems").asInt() : -1,
-                node.has("maxItems") ? node.get("maxItems").asInt() : -1, tree, props, node);
+        String format = node.path("format").asText(null);
+        double min = num(node, "minimum");
+        double max = num(node, "maximum");
+        String seen = stats == null || !plainValues(node, type, format) ? null : stats.valueKind(path);
+        boolean idLike = idNames != null && idNames.matcher(name).find();
+        if ("number".equals(seen) && !idLike && !"number".equals(type)) {
+            double[] r = stats.range(path);
+            type = "number";
+            min = r[0];
+            max = r[1];
+            role = role != null && !"plain".equals(role.role()) && !"dimension".equals(role.role()) ? role
+                    : new RoleInfo("measure", "numbers (blank or written as text in some records)", null);
+        } else if ("date".equals(seen)) {
+            type = "string";
+            format = "date";
+            role = role != null && ("link".equals(role.role()) || "id".equals(role.role())) ? role
+                    : new RoleInfo("date", "every non-blank value is an ISO date", null);
+        } else if ("string".equals(seen) && "mixed".equals(type)) {
+            type = "string";
+        }
+        FieldNode f = new FieldNode(path, name, type, role, presence, format, min, max,
+                node.has("minItems") ? node.get("minItems").asInt() : -1, node.has("maxItems") ? node.get("maxItems").asInt() : -1, tree, props, node);
         byPath.put(path, f);
         return f;
+    }
+
+    /** A node the samples may type: mixed plain values (text, numbers, null), or text without a format. */
+    private static boolean plainValues(JsonNode node, String type, String format) {
+        if ("string".equals(type)) {
+            return format == null;
+        }
+        if (!"mixed".equals(type) || !node.has("oneOf")) {
+            return false;
+        }
+        for (JsonNode b : node.get("oneOf")) {
+            if (!PLAIN.contains(b.path("type").asText(""))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private void fill(JsonNode properties, String prefix, double presence, Set<String> refs, Map<String, FieldNode> into) {

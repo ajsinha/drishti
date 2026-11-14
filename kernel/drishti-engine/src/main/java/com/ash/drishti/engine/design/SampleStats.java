@@ -124,6 +124,78 @@ final class SampleStats {
         return sd == 0 ? 0 : sd / Math.max(Math.abs(mean), 1e-9);
     }
 
+    /**
+     * What the samples' non-blank values at {@code path} are when the shape could not say (a field blank in some records and a
+     * number or a date in others, or numbers written as text): {@code number} when every one is a number or a decimal written as
+     * text ({@code "2332.9131"}; whole numbers in text stay text: ids, versions, codes), {@code date} when every one is an ISO date,
+     * {@code string} when every one is text; null without values or when they disagree.
+     */
+    String valueKind(String path) {
+        int numbers = 0;
+        int dates = 0;
+        int texts = 0;
+        int all = 0;
+        for (JsonNode d : docs) {
+            for (JsonNode v : values(d, path)) {
+                if (!nonEmpty(v) || v.isContainerNode()) {
+                    continue;
+                }
+                all++;
+                String t = v.asText().trim();
+                if (v.isNumber() || v.isTextual() && DECIMAL.matcher(t).matches()) {
+                    numbers++;
+                } else if (v.isTextual() && ISO_DATE.matcher(t).matches()) {
+                    dates++;
+                } else if (v.isTextual()) {
+                    texts++;
+                }
+            }
+        }
+        if (all == 0) {
+            return null;
+        }
+        if (numbers == all) {
+            return "number";
+        }
+        if (dates == all) {
+            return "date";
+        }
+        return numbers + texts + dates == all ? "string" : null;
+    }
+
+    /** The smallest and largest number at {@code path} over the samples (numbers, and decimals written as text); NaNs without any. */
+    double[] range(String path) {
+        double lo = Double.NaN;
+        double hi = Double.NaN;
+        for (JsonNode d : docs) {
+            for (JsonNode v : values(d, path)) {
+                String t = v.asText().trim();
+                double x = v.isNumber() ? v.asDouble() : v.isTextual() && DECIMAL.matcher(t).matches() ? Double.parseDouble(t) : Double.NaN;
+                if (!Double.isNaN(x)) {
+                    lo = Double.isNaN(lo) ? x : Math.min(lo, x);
+                    hi = Double.isNaN(hi) ? x : Math.max(hi, x);
+                }
+            }
+        }
+        return new double[] {lo, hi};
+    }
+
+    /** The distinct non-blank plain values at {@code path} as text, up to {@code cap}, in the order first seen. */
+    Set<String> texts(String path, int cap) {
+        Set<String> out = new java.util.LinkedHashSet<>();
+        for (JsonNode d : docs) {
+            for (JsonNode v : values(d, path)) {
+                if (nonEmpty(v) && v.isValueNode() && out.size() < cap) {
+                    out.add(v.asText());
+                }
+            }
+        }
+        return out;
+    }
+
+    private static final java.util.regex.Pattern DECIMAL = java.util.regex.Pattern.compile("-?(0|[1-9][0-9]*)\\.[0-9]+([eE][-+]?[0-9]+)?");
+    private static final java.util.regex.Pattern ISO_DATE = java.util.regex.Pattern.compile("\\d{4}-\\d{2}-\\d{2}([T ][0-9:.]+(Z|[+-]\\d{2}:?\\d{2})?)?");
+
     private static boolean nonEmpty(JsonNode v) {
         return !(v.isNull() || v.isMissingNode() || v.isArray() && v.isEmpty() || v.isObject() && v.isEmpty()
                 || v.isTextual() && v.asText().isBlank());
