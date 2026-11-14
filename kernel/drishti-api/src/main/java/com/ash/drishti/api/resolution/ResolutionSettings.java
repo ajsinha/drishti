@@ -23,6 +23,7 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -37,7 +38,16 @@ import java.util.function.Function;
  * @param modulesPath  the store of modules installed from a {@code .dmod} ({@code drishti.modules.path}, else {@code drishti.module-deploy.dir};
  *                     default {@code <data>/modules})
  */
-public record ResolutionSettings(Path siteDir, Path installedDir, Path kernelDir, Path modulesHome, Path modulesPath) {
+public record ResolutionSettings(Path siteDir, Path installedDir, Path kernelDir, Path modulesHome, Path modulesPath, List<Path> extraDirs) {
+
+    public ResolutionSettings {
+        extraDirs = extraDirs == null ? List.of() : List.copyOf(extraDirs);
+    }
+
+    /** As above, with no extra folders of packs. */
+    public ResolutionSettings(Path siteDir, Path installedDir, Path kernelDir, Path modulesHome, Path modulesPath) {
+        this(siteDir, installedDir, kernelDir, modulesHome, modulesPath, List.of());
+    }
 
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
 
@@ -49,12 +59,15 @@ public record ResolutionSettings(Path siteDir, Path installedDir, Path kernelDir
         String home = or(property.apply("drishti.modules.home"), or(property.apply("drishti.module-manifests-dir"), "./modules"));
         String store = or(property.apply("drishti.modules.path"), or(property.apply("drishti.module-deploy.dir"), data + "/modules"));
         return new ResolutionSettings(abs(site), abs(or(property.apply("drishti.packs.installed-dir"), data + "/packs/installed")),
-                abs(or(property.apply("drishti.kernel.packs-dir"), site + "/core")), abs(home), abs(store));
+                abs(or(property.apply("drishti.kernel.packs-dir"), site + "/core")), abs(home), abs(store),
+                // a test's or a tool's own folders of packs (drishti.packs.extra-dirs, the retired example packs): part of the site, after it
+                java.util.Arrays.stream(or(property.apply("drishti.packs.extra-dirs"), "").split(",")).map(String::strip).filter(x -> !x.isEmpty())
+                        .map(ResolutionSettings::abs).toList());
     }
 
     /** The pack resolver's layout of these settings. */
     public PackResolver.Layout layout() {
-        return new PackResolver.Layout(siteDir, kernelDir, modulesHome, modulesPath, installedDir);
+        return new PackResolver.Layout(siteDir, kernelDir, modulesHome, modulesPath, installedDir, extraDirs);
     }
 
     /** Reads a YAML file into a map: empty for an empty file; a broken file throws, naming it. */

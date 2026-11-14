@@ -89,7 +89,16 @@ public final class PackResolver {
      * @param store     the module store ({@code <data>/modules}; null: none)
      * @param installed the packs an administrator deployed, read before the site's folder (null: none)
      */
-    public record Layout(Path site, Path kernel, Path modules, Path store, Path installed) {
+    public record Layout(Path site, Path kernel, Path modules, Path store, Path installed, List<Path> extra) {
+
+        public Layout {
+            extra = extra == null ? List.of() : List.copyOf(extra);
+        }
+
+        /** As above, with no extra folders of packs. */
+        public Layout(Path site, Path kernel, Path modules, Path store, Path installed) {
+            this(site, kernel, modules, store, installed, List.of());
+        }
 
         /** The layout of a site folder, its kernel folder {@code <site>/core}, no deployed packs. */
         public static Layout of(Path site, Path modules, Path store) {
@@ -151,6 +160,11 @@ public final class PackResolver {
                     continue;
                 }
                 siteFound.computeIfAbsent(p.getFileName().toString(), k -> new ArrayList<>()).add(p);
+            }
+        }
+        for (Path root : layout.extra()) {                              // a test's or a tool's own folder: only names the site does not hold
+            for (Path p : children(root)) {
+                siteFound.putIfAbsent(p.getFileName().toString(), new ArrayList<>(List.of(p)));
             }
         }
         layer(siteFound, "the site", n -> null, Layer.SITE, site, problems, yaml);

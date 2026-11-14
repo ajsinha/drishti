@@ -53,7 +53,8 @@ class ShippedExamplesPacksTest {
 
     @Test
     void everyShippedBiItemReadsOnlyWhatTheShippedPacksServe() throws IOException {
-        List<Pack> packs = new PackLoader().load(PACKS.toAbsolutePath().normalize(), List.of(PackPaths.DEFAULT_ENABLED.split(",")));
+        List<Pack> packs = new PackLoader().load(com.ash.drishti.api.resolution.ConfigResolution.repository(PACKS.toAbsolutePath().normalize().getParent().getParent()),
+                List.of(PackPaths.DEFAULT_ENABLED.split(",")));
         Map<String, List<String>> kindsByPack = new java.util.HashMap<>();
         Set<String> kinds = new HashSet<>();
         Set<String> connectors = new HashSet<>();
