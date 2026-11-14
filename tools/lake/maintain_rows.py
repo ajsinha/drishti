@@ -24,7 +24,6 @@ from __future__ import annotations
 
 import json
 import pathlib
-import subprocess
 
 RETENTION = "com.ash.drishti.lakeload.LakeRetention"
 
@@ -53,16 +52,8 @@ def apply(root: str, fmt: str, name: str, rr: dict, dry_run: bool, data: pathlib
     JSON line (tests); by default the command runs. Raises RuntimeError on failure."""
     data = data or pathlib.Path(root) / "_drishti-lake"
     cmd = command(root, fmt, name, rr, dry_run, data)
-    if runner is not None:
-        line = runner(cmd)
-    else:
-        p = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
-        lines = [x for x in p.stdout.splitlines() if x.startswith("{")]
-        if not lines:
-            words = [x for x in (p.stderr + p.stdout).splitlines() if x.strip() and not x.startswith("SLF4J")]
-            raise RuntimeError("row retention failed: " + (words[-1] if words else f"exit {p.returncode}"))
-        line = lines[-1]
-    r = json.loads(line)
+    import maintain_iceberg
+    r = json.loads(runner(cmd) if runner is not None else maintain_iceberg.json_line(cmd, "row retention"))
     return {"ttl": rr.get("ttl"), "on": rr.get("on"), "max-rows": rr.get("max-rows"), "dropped": r.get("dropped", 0), "dates": r.get("dates", []),
             "dry_run": dry_run}
 
