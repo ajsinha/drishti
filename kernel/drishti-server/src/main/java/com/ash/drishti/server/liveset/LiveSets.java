@@ -464,9 +464,10 @@ public final class LiveSets implements AutoCloseable {
     /**
      * The set of a search command (a FORM's result, the search page's): the search's matches, in its order, with the kind's live changes
      * merged in by key while the business date is the live one (static otherwise, and when the kind has no {@code live:} binding). One set
-     * per command, business date and masking, shared by everyone who runs it; {@code again} (a search pressed again) reads a static set
-     * afresh, while a live one is kept current by its live side. Masked people get their own set, filled and kept masked, so a masked
-     * value never decides which rows are in it.
+     * per command, business date and audience ({@link LiveReader}), shared by everyone of that audience and read by no one else; {@code again}
+     * (a search pressed again) reads a static set afresh, while a live one is kept current by its live side. People who see differently
+     * (roles, masks, row scope) get their own set, filled and kept as they see it, so a masked value never decides which rows are in it and
+     * a row outside their scope never reaches them, live changes included.
      */
     public LiveSet query(String command, AsOf asOf, Principal who, LiveReader reader, boolean again) {
         AsOf at = asOf == null ? AsOf.LATEST : asOf;

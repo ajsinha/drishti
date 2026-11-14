@@ -43,8 +43,9 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 /**
  * The live result sets' API (docs/guides/API_REFERENCE.md, {@code /live}): the declarations a person may open, a page of a set's rows,
  * one record whole (the panel's Raw JSON), the stream of changes (server-sent events: {@code hello}, then {@code rows} or {@code resync}),
- * the page a stream shows, and a blotter's edits. Every answer is masked as the caller may see it; nothing is kept per person beyond the
- * caller's own open streams.
+ * the page a stream shows, and a blotter's edits. Every answer is made for a reader of the caller ({@link LiveSets#reader}): kept to their
+ * row scope and masked as they may see it, a search's set read only by the audience it was filled for; nothing is kept per person beyond
+ * the caller's own open streams.
  */
 @RestController
 @RequestMapping("/api/v1/live")
