@@ -58,6 +58,8 @@
 #    - the Java 21 verify (clean verify -P api-docs, every test but the container tests) in a copy of the committed tree, so it
 #      cannot touch the jar the console runs; and the Java 25 lane, in a copy too: the whole tree compiled on Java 25 and the tests of
 #      what the JDK version can change (tools/drill-java25.txt), started once 20 GB are free;
+#    - the command sweep (tests/test_command_sweep_browser.py, tools/sweep/command_sweep.py) in the browser lane: every function of FUNC, bare, with its
+#      example and with real ids of the saved test data, as the walk's one user; any FAIL fails the drill; report: <data>/drill/sweep/sweep-*.md
 #    - the containers lane: both images built and booted on the host network beside the browser lane (tools/drillkit/container_smoke.py:
 #      health, the VaR golden through the API, four console pages), and every Testcontainers test after the browser lane when the diff
 #      since the last release touches the Dockerfiles, the JDK, native code or a module with container tests.
@@ -275,7 +277,7 @@ console_files() {   # name, workers, failed files re-run at a time, then the fil
   local out="$LOGS/console-$name.txt" rc=0 dist=loadfile
   # the browser lane by test: a file's tests stay one group on one worker unless they are marked spread (TEST_HARNESS.md)
   [[ $name == browser ]] && dist=loadgroup
-  DRISHTI_SNAPSHOT_REPORT="$LOGS/snapshots.jsonl" DRISHTI_SNAPSHOT_DIFFS="$LOGS/snapshot-diffs" DRISHTI_PAGELOAD_LOG="$LOGS/pageloads.jsonl" DRILL_MIN_FREE_GB="${DRILL_MIN_FREE_GB:-6}" DRILL_TIMINGS_OUT="$LOGS/timings-$name.json" PYTHONPATH="$PWD/tools/drillkit${PYTHONPATH:+:$PYTHONPATH}" \
+  DRISHTI_SNAPSHOT_REPORT="$LOGS/snapshots.jsonl" DRISHTI_SNAPSHOT_DIFFS="$LOGS/snapshot-diffs" DRISHTI_PAGELOAD_LOG="$LOGS/pageloads.jsonl" DRISHTI_SWEEP_OUT="$LOGS/sweep" DRILL_MIN_FREE_GB="${DRILL_MIN_FREE_GB:-6}" DRILL_TIMINGS_OUT="$LOGS/timings-$name.json" PYTHONPATH="$PWD/tools/drillkit${PYTHONPATH:+:$PYTHONPATH}" \
     timeout --kill-after=60 "$LANE_LIMIT" "$PY" -m pytest -q -rfE -p drill_timings -n "$workers" --dist "$dist" --no-loadscope-reorder "$@" \
     > "$out" 2>&1 || rc=$?
   tail -n 5 "$out"
