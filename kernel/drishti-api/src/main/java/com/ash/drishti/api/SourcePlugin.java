@@ -63,7 +63,7 @@ public interface SourcePlugin extends AutoCloseable {
 
     /**
      * Pushes every new generation (and every deletion) of any entity of {@code kind} to {@code listener} until the subscription is
-     * closed: a live blotter's stream (docs/guides/TRADING_GUIDE.md). Only sources that push (Kafka, RabbitMQ, ActiveMQ) answer it; the
+     * closed: a live blotter's stream (modules/trading/docs/guide.md). Only sources that push (Kafka, RabbitMQ, ActiveMQ) answer it; the
      * others return {@link Subscription#NONE}. The listener runs on the source's own thread and must hand work off quickly.
      */
     default Subscription subscribeKind(String kind, Consumer<EntityDocument> listener) {

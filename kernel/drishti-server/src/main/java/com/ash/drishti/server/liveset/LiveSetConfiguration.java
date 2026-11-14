@@ -36,7 +36,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
 /**
- * Wires the live result sets (docs/guides/TRADING_GUIDE.md section 7): the snapshot from the kind's bound stores in one pass (else the
+ * Wires the live result sets (modules/trading/docs/guide.md section 7): the snapshot from the kind's bound stores in one pass (else the
  * search's matches, read one by one), the live side from the kind's {@code live:} binding, the condition from the search grammar, the
  * declarations from the modules' {@code blotters/} folders and {@code drishti.live-sets.dir} ({@code config/blotters}), and the edits
  * into the write-back when it is on.

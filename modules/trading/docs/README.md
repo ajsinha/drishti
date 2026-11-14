@@ -20,4 +20,4 @@ each change written back through the binding's write path (a version per trade, 
 |---|---|---|
 | `trade` | `read:` the durable store; `live:` a messaging connector (Kafka, RabbitMQ, ActiveMQ) | `TRADE_ID` (key), `TRADE_VERSION` (version), `TRADE_STATUS`, `PORTFOLIO`, `TRADER_ID`, `COUNTERPARTY`, `PRODUCT_TYPE`, `BUY_SELL_CODE`, `QUANTITY`, `PRICE`, `CURRENCY`, `TRADE_DATE`, `MATURITY_DATE`, `TAGS`, `UPDATED_BY`, `SOURCE_UPDATE_TIME` |
 
-The guide and tutorial: [TRADING_GUIDE.md](../../../docs/guides/TRADING_GUIDE.md).
+The guide and tutorial: [guide.md](guide.md).

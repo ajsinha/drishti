@@ -92,8 +92,7 @@ public final class KafkaSourcePlugin implements SourcePlugin {
     private boolean ticksOnly;
     private com.ash.drishti.diskcache.DiskCache disk;
     private boolean searchable;
-    private final Map<EntityRef, List<Consumer<EntityDocument>>> listeners = new ConcurrentHashMap<>();
-    private final Map<String, List<Consumer<EntityDocument>>> kindListeners = new ConcurrentHashMap<>();
+    private final com.ash.drishti.api.KindListeners listeners = new com.ash.drishti.api.KindListeners();
     private volatile KafkaWrites writes;
     private volatile List<String> allTopics = List.of();
     private final Set<String> kinds = ConcurrentHashMap.newKeySet();
@@ -358,7 +357,7 @@ public final class KafkaSourcePlugin implements SourcePlugin {
                 deleted(ref, r);
                 return;
             }
-            boolean wanted = listeners.containsKey(ref) || kindListeners.containsKey(mapped) || cache.getIfPresent(ref) != null;
+            boolean wanted = listeners.wanted(ref) || cache.getIfPresent(ref) != null;
             if (!wanted) {
                 return;
             }
@@ -441,7 +440,7 @@ public final class KafkaSourcePlugin implements SourcePlugin {
             }
             DataNode data = context.parseJson(new ByteArrayInputStream(JSON.writeValueAsBytes(doc)));
             EntityDocument d = new EntityDocument(ref, data, new Provenance(sourceName, r.offset(), Instant.ofEpochMilli(r.timestamp()), true));
-            if (!ticksOnly && (cache.getIfPresent(ref) != null || listeners.containsKey(ref))) {
+            if (!ticksOnly && (cache.getIfPresent(ref) != null || listeners.watched(ref))) {
                 weights.put(ref, r.value() == null ? 64 : r.value().length());
                 cache.put(ref, d);
             }
@@ -465,27 +464,12 @@ public final class KafkaSourcePlugin implements SourcePlugin {
 
     /** Hands a document (or a deletion) to the open views of the entity and to the subscribers of its whole kind (a live blotter). */
     private void tell(EntityRef ref, EntityDocument d) {
-        for (List<Consumer<EntityDocument>> subs : java.util.Arrays.asList(listeners.get(ref), kindListeners.get(ref.kind()))) {
-            if (subs == null) {
-                continue;
-            }
-            subs.forEach(l -> {
-                try {
-                    l.accept(d);
-                } catch (RuntimeException ignored) {
-                    // one broken view must not stop the others
-                }
-            });
-        }
+        listeners.tell(ref, d);
     }
 
     @Override
     public Subscription subscribeKind(String kind, Consumer<EntityDocument> listener) {
-        kindListeners.computeIfAbsent(kind, k -> new CopyOnWriteArrayList<>()).add(listener);
-        return () -> kindListeners.computeIfPresent(kind, (k, subs) -> {
-            subs.remove(listener);
-            return subs.isEmpty() ? null : subs;
-        });
+        return listeners.kind(kind, listener);
     }
 
     /**
@@ -686,16 +670,7 @@ public final class KafkaSourcePlugin implements SourcePlugin {
 
     @Override
     public Subscription subscribe(EntityRef ref, Consumer<EntityDocument> listener) {
-        listeners.compute(ref, (r, subs) -> {
-            List<Consumer<EntityDocument>> l = subs == null ? new CopyOnWriteArrayList<>() : subs;
-            l.add(listener);
-            return l;
-        });
-        // the entry goes when its last listener does, so an entity nobody watches is no longer parsed on every update
-        return () -> listeners.computeIfPresent(ref, (r, subs) -> {
-            subs.remove(listener);
-            return subs.isEmpty() ? null : subs;
-        });
+        return listeners.entity(ref, listener);
     }
 
     @Override

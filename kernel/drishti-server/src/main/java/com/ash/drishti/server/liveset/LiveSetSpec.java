@@ -27,7 +27,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * One live result set's declaration (docs/guides/TRADING_GUIDE.md section 6): a kind, an optional condition in the search grammar, the
+ * One live result set's declaration (modules/trading/docs/guide.md section 6): a kind, an optional condition in the search grammar, the
  * columns, the record's key and version, the grouping, the links, the retention of the live side and, for a blotter, the editable fields
  * as a Rachana form with {@code save:}. A FORM search is the same declaration without {@code edit:}; a blotter is a file
  * {@code blotters/<id>.blotter.yaml} in a module. Immutable.

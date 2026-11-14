@@ -18,4 +18,4 @@ sections:
   title: Trading
   pages:
   - title: 'Trading: the live blotter'
-    file: TRADING_GUIDE.md
+    file: guide.md

@@ -84,8 +84,7 @@ public abstract class MessageStateSource implements SourcePlugin {
     private DiskCache store;
     private Cache<EntityRef, EntityDocument> memory;
     private final Map<EntityRef, Integer> weights = new ConcurrentHashMap<>();
-    private final Map<EntityRef, List<Consumer<EntityDocument>>> listeners = new ConcurrentHashMap<>();
-    private final Map<String, List<Consumer<EntityDocument>>> kindListeners = new ConcurrentHashMap<>();
+    private final com.ash.drishti.api.KindListeners listeners = new com.ash.drishti.api.KindListeners();
     private final Set<EntityRef> known = ConcurrentHashMap.newKeySet();
     private final HitIndex index = new HitIndex();
     private final AtomicLong generation = new AtomicLong();
@@ -236,27 +235,12 @@ public abstract class MessageStateSource implements SourcePlugin {
 
     /** Hands a new document, or a deletion, to the open views of {@code ref}. */
     private void push(EntityRef ref, EntityDocument d) {
-        for (List<Consumer<EntityDocument>> subs : java.util.Arrays.asList(listeners.get(ref), kindListeners.get(ref.kind()))) {
-            if (subs == null) {
-                continue;
-            }
-            subs.forEach(l -> {
-                try {
-                    l.accept(d);
-                } catch (RuntimeException ignored) {
-                    // one broken view must not stop the others
-                }
-            });
-        }
+        listeners.tell(ref, d);
     }
 
     @Override
     public Subscription subscribeKind(String kind, Consumer<EntityDocument> listener) {
-        kindListeners.computeIfAbsent(kind, k -> new java.util.concurrent.CopyOnWriteArrayList<>()).add(listener);
-        return () -> kindListeners.computeIfPresent(kind, (k, subs) -> {
-            subs.remove(listener);
-            return subs.isEmpty() ? null : subs;
-        });
+        return listeners.kind(kind, listener);
     }
 
     private EntityDocument document(EntityRef ref, byte[] bytes) throws java.io.IOException {
@@ -282,15 +266,7 @@ public abstract class MessageStateSource implements SourcePlugin {
 
     @Override
     public Subscription subscribe(EntityRef ref, Consumer<EntityDocument> listener) {
-        listeners.compute(ref, (r, subs) -> {
-            List<Consumer<EntityDocument>> l = subs == null ? new CopyOnWriteArrayList<>() : subs;
-            l.add(listener);
-            return l;
-        });
-        return () -> listeners.computeIfPresent(ref, (r, subs) -> {
-            subs.remove(listener);
-            return subs.isEmpty() ? null : subs;
-        });
+        return listeners.entity(ref, listener);
     }
 
     @Override

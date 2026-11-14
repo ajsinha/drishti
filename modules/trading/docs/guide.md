@@ -41,7 +41,7 @@ engine without edits.
 ## 1. What you see
 
 The screen is the grid with the record's panel beside it: the chosen design, option B of the
-[mock-ups](../lenses/mockups/trading-blotter/README.md), drawn by the Drishti Elements grid in its live mode from the API of section 9:
+[mock-ups](../../../docs/lenses/mockups/trading-blotter/README.md), drawn by the Drishti Elements grid in its live mode from the API of section 9:
 
 | Part | What it does |
 |---|---|
@@ -133,7 +133,7 @@ per field) come with the security release.
 ## 6. The declaration
 
 `blotters/<id>.blotter.yaml` in a module, or `config/blotters/` for a site's own. The trading module's
-[`trade.blotter.yaml`](../../modules/trading/blotters/trade.blotter.yaml) in short:
+[`trade.blotter.yaml`](../blotters/trade.blotter.yaml) in short:
 
 ```yaml
 blotter: trade                     # its id

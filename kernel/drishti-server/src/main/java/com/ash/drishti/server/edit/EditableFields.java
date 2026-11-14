@@ -97,7 +97,7 @@ public final class EditableFields {
     }
 
     /**
-     * Another place forms with {@code save:} are declared besides Sutras (a live result set's {@code edit:}, docs/guides/TRADING_GUIDE.md):
+     * Another place forms with {@code save:} are declared besides Sutras (a live result set's {@code edit:}, modules/trading/docs/guide.md):
      * its rules join the Sutras' at every rebuild; the rules name the declaration as their Sutra ({@code live:trade}). Rebuilds at once.
      */
     public void addSource(java.util.function.Supplier<List<Rule>> rules) {

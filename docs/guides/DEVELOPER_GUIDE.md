@@ -3985,7 +3985,7 @@ while the module is on. The rules (no canvas, svg or colour of its own; tones fr
 
 ### 12.6a How to create a blotter (a live result set)
 
-A blotter is a declaration, not code: the kernel's live result sets engine runs it ([TRADING_GUIDE.md](TRADING_GUIDE.md#6-the-declaration)).
+A blotter is a declaration, not code: the kernel's live result sets engine runs it ([the trading module's guide](../../modules/trading/docs/guide.md#6-the-declaration)).
 
 1. In your module, add `blotters/<id>.blotter.yaml`: the `kind`, an optional `query` (the search grammar), `key`, `version`, `columns`,
    `links`, `retention` and, for edits, `edit:` (a Rachana form with `save:`). The trading module's

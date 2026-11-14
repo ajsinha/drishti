@@ -886,7 +886,7 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
 
     /**
      * Every change of any entity of {@code kind} from the kind's live sources (its {@code live:} binding: Kafka, RabbitMQ, ActiveMQ), each
-     * named after its connector: a live result set's deltas (docs/guides/TRADING_GUIDE.md). {@link Subscription#NONE} when nothing pushes
+     * named after its connector: a live result set's deltas (modules/trading/docs/guide.md). {@link Subscription#NONE} when nothing pushes
      * the kind (the result set then stays a snapshot).
      */
     public Subscription subscribeKind(String kind, java.util.function.Consumer<EntityDocument> listener) {

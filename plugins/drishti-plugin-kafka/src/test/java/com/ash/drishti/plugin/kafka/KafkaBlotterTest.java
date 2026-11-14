@@ -87,11 +87,7 @@ class KafkaBlotterTest {
     }
 
     static void waitFor(BooleanSupplier ok, int seconds) throws InterruptedException {
-        long until = System.nanoTime() + TimeUnit.SECONDS.toNanos(seconds);
-        while (!ok.getAsBoolean() && System.nanoTime() < until) {
-            Thread.sleep(20);
-        }
-        assertThat(ok.getAsBoolean()).as("condition within " + seconds + " s").isTrue();
+        KafkaSourcePluginTest.waitFor(ok, seconds);
     }
 
     static WriteCommand command(String shape, String topic, String entity, Object basedOn, String changeId, String field, Object value) {

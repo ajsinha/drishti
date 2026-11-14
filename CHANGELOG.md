@@ -17,7 +17,7 @@
 
 ## Unreleased
 
-- **The trading module and the live result sets engine** (TRADING_GUIDE.md). One engine (`com.ash.drishti.server.liveset`) behind every
+- **The trading module and the live result sets engine** (modules/trading/docs/guide.md). One engine (`com.ash.drishti.server.liveset`) behind every
   blotter: a declaration (`blotters/<id>.blotter.yaml` in a module, or `config/blotters/`) names the kind, the query (the search grammar), the
   key and version, the columns, grouping, links, the live side's `retention:` (`ttl`, `on`, `max-rows`) and, for edits, a Rachana form with
   `save:`. The snapshot is read from the durable store through the bindings in one pass, the kind's `live:` binding is subscribed to first and
