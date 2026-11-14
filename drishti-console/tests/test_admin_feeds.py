@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Admin → Data loads → Feeds in the console (docs/guides/EXTERNAL_DATA.md section 6): every feed drawn from the server's
+"""Admin → Data loads → Feeds in the console (docs/guides/WORLD_DATA_GUIDE.md section 6): every feed drawn from the server's
 GET /api/v1/admin/feeds (last run, last success, rows, duration, failures, the last error, the licence), the latest runs, the Feeds tab with
 its failing badge, and Run now passed to the server with its answers."""
 from core.backend import BackendError

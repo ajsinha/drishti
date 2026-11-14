@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Tutorial 8, Part G: the model of a desk: one table of trades, three measures, a desk-to-book hierarchy. The tutorial edits it, has it reviewed and published,
+# The reports tutorial, Part G: the model of a desk: one table of trades, three measures, a desk-to-book hierarchy. The tutorial edits it, has it reviewed and published,
 # certifies it, and then finds out what dropping the `book` column would break.
 rachana: 1
 dataset: trades-model

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# config/feeds/gleif.yaml: the GLEIF feed, and the annotated example of a feed file (docs/guides/EXTERNAL_DATA.md section 7; every key is
+# config/feeds/gleif.yaml: the GLEIF feed, and the annotated example of a feed file (docs/guides/WORLD_DATA_GUIDE.md section 7; every key is
 # in docs/admin/CONFIGURATION.md, area feeds).
 #   python3 tools/drishti.py feed run gleif                 pull, write data/datafeeds/gleif/<date>/, load into referencelake
 #   python3 tools/drishti.py feed run gleif --snapshot      refresh the committed pack and data/testdata/gleif instead (no load)

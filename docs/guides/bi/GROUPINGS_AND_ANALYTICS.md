@@ -13,10 +13,16 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Groupings and analytics guide
+# Groupings and analytics
+
+Business intelligence: [Index](README.md) · [Pivot](PIVOT.md) · [Pivot at scale and the risk cubes](PIVOT_SCALE_AND_CUBES.md) · [Tables and models](TABLES_AND_MODELS.md) · [Reports and the designer](REPORTS.md) · [The report file, formatting and statements](REPORT_FILE_FORMAT_STATEMENTS.md) · [Models and datasets for reports](MODELS_AND_DATASETS_FOR_REPORTS.md) · [Live reports, boards and background runs](LIVE_REPORTS_AND_BOARDS.md) · [Distribution, subscriptions and alerts](DISTRIBUTION_AND_ALERTS.md) · [Governing BI and AI in BI](GOVERNANCE_AND_AI.md) · [The Notebook and Python](NOTEBOOK_AND_PYTHON.md) · **Groupings and analytics**
+
+The groupings and analytics computed instead of stored: LEIG, LEIC, SIC, ECG, CORR, EQB, PXH and the USEQ ratios, their data contract and how they are computed; with the tutorial.
+
+## Groupings and analytics
 
 *Revision 1.0 · the one reference for the groupings and analytics computed instead of stored. The
-hands-on companion is [tutorial 6](../tutorials/06-groupings-and-analytics.md).*
+hands-on companion is [the groupings tutorial](GROUPINGS_AND_ANALYTICS.md).*
 
 Seven pages that used to be **stored copies** of figures are **computed from the fundamental data when they are opened**:
 
@@ -31,7 +37,7 @@ Seven pages that used to be **stored copies** of figures are **computed from the
 | `PXH` analytics (`price-history`) | returns, volatility, drawdown, beta | the price history just read | the price connector (`yfinance`) |
 | `EQB` (`equity-beta`; the `EQ` page's beta) | an equity's beta against its index | the equity's and the index's daily closes | the reactive `equity-analytics` (Java) |
 
-The rule is the one the [implementation plan](../architecture/IMPLEMENTATION_PLAN.md#groupings-and-analytics-track-b-shipped-in-290-or-2100-as-each-is-ready)
+The rule is the one the [implementation plan](../../architecture/IMPLEMENTATION_PLAN.md#groupings-and-analytics-track-b-shipped-in-290-or-2100-as-each-is-ready)
 sets for every computed measure: **fundamental data is kept as it is; whatever can be derived from it is computed when asked and never
 stored**, and the stored version is retired in the same release. A stored copy of a computed figure drifts: the stored ownership groups
 were capped at 50 members, the stored countries listed 400 entities, the stored correlations were synthetic and did not match the prices in
@@ -41,7 +47,7 @@ the same lake.
 its inputs and its errors) with the reconciliation against stored pages, and **Part III** says how each is computed and where
 its inputs come from.
 
-## Contents
+### Contents
 
 - **Part I · Using them**
   - [1. What changed for you](#1-what-changed-for-you)
@@ -74,9 +80,9 @@ its inputs come from.
 
 ---
 
-# Part I · Using them
+## Part I · Using them
 
-## 1. What changed for you
+### 1. What changed for you
 
 Very little on the screen, a lot underneath:
 
@@ -94,7 +100,7 @@ Very little on the screen, a lot underneath:
 The pages are computed **once per business date** and shared by every reader (a refresh of 60 seconds, rebuilt when the lake loads), so
 opening one is fast. A date picked in the top bar computes that date's pages from that date's entities.
 
-## 2. LEIG: an ownership group
+### 2. LEIG: an ownership group
 
 ```text
 LEIG 8I5DZWZKVSZI1NUHU748 <GO>
@@ -124,7 +130,7 @@ first, and the search over every entity.
 
 The type-ahead finds a group by its ultimate parent's name: `LEIG Ford Motor` suggests Ford's group.
 
-## 3. LEIC: a country
+### 3. LEIC: a country
 
 ```text
 LEIC GB <GO>
@@ -144,7 +150,7 @@ entities by legal form and by city (`LONDON` 494, `London` 245, `EDINBURGH` 36: 
 `LEIC US`: 2,704 entities, 521 groups present, 451 headquartered, 713 lapsed, 724 late. `LEIC ALL`: 133 countries, 9,937 entities,
 each country with its entities, largest first.
 
-## 4. SIC: a sector
+### 4. SIC: a sector
 
 ```text
 SIC 3674 <GO>
@@ -158,7 +164,7 @@ INTC 52.9bn at −0.5%, AMD 34.6bn); a click opens a company's key facts and ten
 fifteenth, BNS, reports in CAD, so it is counted and listed but **not summed** (the strip says *1 not summed*). `SIC ALL` lists the 194
 codes and totals revenue by SIC division: 586 companies, 18.43 trillion USD of revenue (the 573 USD reporters), 2.34 trillion of net income.
 
-## 5. ECG: a country group
+### 5. ECG: a country group
 
 ```text
 ECG ECG-SAS <GO>
@@ -180,7 +186,7 @@ Below: the largest economies, every member economy (a click opens it), and the G
 income): 84 economies, 75,910bn, 54,209 a head, growth 1.88%: the stored page had **no figures** for the income groups, the computed one
 has them all.
 
-## 6. CORR: correlations from price history
+### 6. CORR: correlations from price history
 
 ```text
 CORR CORR-EU-EQ <GO>
@@ -203,7 +209,7 @@ last close, its return over the window and its annualised volatility (EQ-ORBT 22
 The computed kind opens on its own too: `CORRC CORR-G10FX` (G10 FX, Pearson over 29 returns: average −0.012, EURUSD and GBPUSD 0.222),
 with parameters riding on the id: `CORRC CORR-G10FX~estimator=ledoit-wolf~window=20`.
 
-## 7. USEQ, FACT and IDX: margins, changes and totals
+### 7. USEQ, FACT and IDX: margins, changes and totals
 
 ```text
 USEQ AAPL <GO>
@@ -218,7 +224,7 @@ and the sector pages compute a member's margin the same way.
 last two values (+6.4%). `IDX SP500` adds up its 495 members' rows as it opens: revenue 17.85 trillion and net income 2.28 trillion USD
 (the USD reporters), 9 SIC divisions, members by division on the right.
 
-## 8. PXH: returns, volatility and beta
+### 8. PXH: returns, volatility and beta
 
 ```text
 PXH PX-AAPL <GO>
@@ -230,7 +236,7 @@ the connector has just read: the 1, 3 and 6 month returns and the return over th
 log returns, the largest drawdown, and beta and correlation against the benchmark (`SPY` unless the site sets `DRISHTI_US_EQUITIES_BENCHMARK`).
 Nothing is stored: the analytics are as fresh, and as internal, as the prices. With the connector off the page has no data.
 
-### 8.1 EQB: an equity's beta from price history
+#### 8.1 EQB: an equity's beta from price history
 
 ```text
 EQ EQ-NVTK <GO>          the equity page: its Beta panel
@@ -246,7 +252,7 @@ refusal in words instead of a number. `EQB EQ-NVTK~window=20` takes the last 20 
 the regression to 4 (beta −0.0725, alpha −0.0881% a day, correlation −0.0333, R² 0.0011, volatility 26.72% against the index's 12.27%),
 where the inferred layout had rounded them to whole numbers ("0").
 
-## 9. Old ids, links and commands
+### 9. Old ids, links and commands
 
 | Old | Now |
 |---|---|
@@ -255,29 +261,29 @@ where the inferred layout had rounded them to whole numbers ("0").
 | `SIC <code>`, `/v/sic-sector/<code>`, `SIC ALL` | the same ids, computed from the companies |
 | `ECG ECG-<code>`, `/v/country-group/ECG-<code>` | the same ids, computed from the economies |
 | `CORR CORR-<set>`, `/v/correlation-matrix/CORR-<set>` | the same ids: the set's definition, its correlations computed (`CORRC CORR-<set>`) |
-| [`us-company`](../contracts/samples/us-equities.md#us-company) ([contract](../contracts/packs/us-equities.md#useq-us-company-us-company)) fields `NET_MARGIN`, `REVENUE_GROWTH`, `FINANCIALS[].NET_MARGIN`; `index-membership` `ROWS[].NET_MARGIN` | removed from the records; the pages compute them (a saved search on `NET_MARGIN` finds nothing) |
-| [`correlation-matrix`](../contracts/samples/market-data.md#correlation-matrix) ([contract](../contracts/packs/market-data.md#corr-correlation-matrix-correlation-matrix)) fields `AVERAGE`, `PAIRS`, `WINDOW`, `ESTIMATOR` | removed; `correlation-result` answers them |
-| [`financial-fact`](../contracts/samples/us-equities.md#financial-fact) ([contract](../contracts/packs/us-equities.md#fact-financial-fact-financial-fact)) `CHANGE_PCT`, `HISTORY[].CHANGE_PCT` | removed; the page computes the change |
-| [`index-membership`](../contracts/samples/us-equities.md#index-membership) ([contract](../contracts/packs/us-equities.md#idx-index-members-index-membership)) `SECTORS`, `REVENUE`, `NET_INCOME`, `BY_SECTOR` | removed; the page sums the members' rows (the membership and `MEMBERS` stay) |
+| [`us-company`](../../contracts/samples/us-equities.md#us-company) ([contract](../../contracts/packs/us-equities.md#useq-us-company-us-company)) fields `NET_MARGIN`, `REVENUE_GROWTH`, `FINANCIALS[].NET_MARGIN`; `index-membership` `ROWS[].NET_MARGIN` | removed from the records; the pages compute them (a saved search on `NET_MARGIN` finds nothing) |
+| [`correlation-matrix`](../../contracts/samples/market-data.md#correlation-matrix) ([contract](../../contracts/packs/market-data.md#corr-correlation-matrix-correlation-matrix)) fields `AVERAGE`, `PAIRS`, `WINDOW`, `ESTIMATOR` | removed; `correlation-result` answers them |
+| [`financial-fact`](../../contracts/samples/us-equities.md#financial-fact) ([contract](../../contracts/packs/us-equities.md#fact-financial-fact-financial-fact)) `CHANGE_PCT`, `HISTORY[].CHANGE_PCT` | removed; the page computes the change |
+| [`index-membership`](../../contracts/samples/us-equities.md#index-membership) ([contract](../../contracts/packs/us-equities.md#idx-index-members-index-membership)) `SECTORS`, `REVENUE`, `NET_INCOME`, `BY_SECTOR` | removed; the page sums the members' rows (the membership and `MEMBERS` stay) |
 | `equity` `BETA` | removed; `EQB <ticker>` and the equity page's Beta panel compute it |
 | the search form of `lei-group` (`FORM gleif`) | gone: the type-ahead finds a group by its name, and the `LEIG ALL` search finds entities |
 
 ---
 
-# Part II · The data contract
+## Part II · The data contract
 
-## 10. The contract at a glance
+### 10. The contract at a glance
 
 Every computed kind is an ordinary kind: it opens by command, link, API, CLI and AI, with the reader's entitlements and masks applied to
 its inputs. The machine-readable contracts are `modules/<module>/packs/<pack>/contracts/<kind>.contract.yaml` (class `computed`; the pages
-[docs/contracts/packs/](../contracts/packs/README.md)); this part says what each field means.
+[docs/contracts/packs/](../../contracts/packs/README.md)); this part says what each field means.
 
 | Kind | Command | Connector (plugin) | Key | Inputs | Dated by |
 |---|---|---|---|---|---|
 | `lei-group` | LEIG | `gleif-groupings` (derived) | `GROUP_ID`: an ultimate parent's LEI, or `ALL` | `lei-entity` | the business date asked (the entities' date) |
 | `lei-country` | LEIC | `gleif-groupings` (derived) | `COUNTRY`: an ISO 3166 code, or `ALL` | `lei-entity` | as above |
 | `sic-sector` | SIC | `us-equities-groupings` (derived) | `SIC`: a four-digit code, or `ALL` | `us-company` | as above |
-| `country-group` | ECG | `macro-groupings` (derived) | `GROUP_ID`: `ECG-<World Bank code>` | [`economy`](../contracts/samples/world-economy.md#economy) | as above |
+| `country-group` | ECG | `macro-groupings` (derived) | `GROUP_ID`: `ECG-<World Bank code>` | [`economy`](../../contracts/samples/world-economy.md#economy) | as above |
 | `correlation-result` | CORRC | `correlation-engine` (reactive, Java) | the set's id, `~window=`, `~estimator=` | `correlation-matrix`, `equity`, `fx-spot` | the request |
 | USEQ ratios | USEQ | none: the `us-company` page | `TICKER` | `us-company` | the company record's |
 | PXH analytics | PXH | `us-equities-prices` (yfinance) | `PX-<ticker>` | the price history read live | the request (live only) |
@@ -291,7 +297,7 @@ tree (`unlisted`, [section 19](#19-the-derived-connector)).
 **Number rules:** counts are whole numbers; `sum` skips a member without the figure (a missing number is never a zero); a ratio whose
 denominator is zero or missing is empty; percentages are as published (12.3 means 12.3%) except where a field says *a fraction*.
 
-## 11. lei-group
+### 11. lei-group
 
 One page per ultimate parent: the members are every `lei-entity` whose `LEI_GROUP` is the key. Every entity is also in `ALL`.
 
@@ -320,7 +326,7 @@ One page per ultimate parent: the members are every `lei-entity` whose `LEI_GROU
 group (none in the committed data). A field a member lacks is skipped; an expression that fails on one member leaves that member's value
 empty and never fails the page.
 
-## 12. lei-country
+### 12. lei-country
 
 One page per legal-address country (`LEI_COUNTRY`), and `ALL`.
 
@@ -339,7 +345,7 @@ One page per legal-address country (`LEI_COUNTRY`), and `ALL`.
 | `COUNTRY_ROWS` | record list | on `ALL`: every country code with its entities, largest first |
 | `PROVENANCE` | record | the first member's |
 
-## 13. sic-sector
+### 13. sic-sector
 
 One page per SIC code reported by at least one us-equities company, and `ALL`.
 
@@ -360,7 +366,7 @@ One page per SIC code reported by at least one us-equities company, and `ALL`.
 
 **Why USD only:** a sum of USD, CAD, GBP and EUR figures means nothing; the stored pages did the same, so the totals reconcile exactly.
 
-## 14. country-group
+### 14. country-group
 
 One page per World Bank region and income group, and the world. An economy is in its `REGION_GROUP`, its `INCOME_GROUP` and `ECG-WLD`;
 each counts at its latest year (`YEAR`).
@@ -385,7 +391,7 @@ each counts at its latest year (`YEAR`).
 The stored page's `GROWTH_PATH` (the World Bank's aggregate growth by year) is not computed: a GDP-weighted growth per year needs each
 member's GDP and growth of the same year joined, which the page does not do; each member economy's page has its own growth path.
 
-## 15. correlation-result
+### 15. correlation-result
 
 The answer for one correlation set (`correlation-matrix`, which keeps `MATRIX_ID`, `NAME`, `FACTORS`, `EQUITY_IDS`, `FX_IDS`), one window
 and one estimator.
@@ -424,7 +430,7 @@ that does not exist opened as a page is `DRS-1001`): no such set; fewer than two
 fewer than three common dates; a price of zero or less; a factor that did not move over the window (its correlation is undefined); an
 estimator other than the two.
 
-## 16. The USEQ ratios
+### 16. The USEQ ratios
 
 Computed by the `us-company` page (and by the index, sector and company-card panels) from the record's facts as it is drawn:
 
@@ -444,7 +450,7 @@ ratios are not on the record any more. The same way:
 | `IDX` (index-membership) | members' revenue, net income | `sum(ROWS[CURRENCY = USD], REVENUE)`, the same for `NET_INCOME` |
 | `IDX` | SIC divisions; members by division | `size(group(ROWS, 'SECTOR'))`; `group(ROWS, 'SECTOR')` |
 
-## 17. The PXH analytics
+### 17. The PXH analytics
 
 Computed by the price connector (the `yfinance` plugin, `PriceAnalytics`) from the daily closes it has just read, in the field `ANALYTICS`:
 
@@ -462,7 +468,7 @@ Computed by the price connector (the `yfinance` plugin, `PriceAnalytics`) from t
 All are fractions (0.123 is 12.3%). The benchmark's history is read through the same connector and cache; when it cannot be read, beta
 and correlation are empty and the rest is shown.
 
-### 17.1 equity-beta
+#### 17.1 equity-beta
 
 `EQB` (and the equity page's Beta panel): the regression of the equity's daily log returns on its index's (`EQUITY_INDEX`), on the
 dates both histories have, over the last `window` returns (parameter `window`, default 0: every return). Engine
@@ -482,7 +488,7 @@ dates both histories have, over the last `window` returns (parameter `window`, d
 against`): no such equity; an equity that names no index; an index without price history; fewer than three
 common dates; an index that did not move over the window.
 
-## 18. Reconciliation: stored against computed
+### 18. Reconciliation: stored against computed
 
 On the committed data (gleif 2026-10-25, us-equities 2026-10-24, world-economy's World Bank and IMF data of 2026-10-10, market data on
 2026-09-30), the stored pages against the computed ones:
@@ -493,7 +499,7 @@ On the committed data (gleif 2026-10-25, us-equities 2026-10-24, world-economy's
 | `lei-country` | 133 countries + ALL | every count on every country | the stored page listed the first 400 entities of the six largest countries; the computed one lists all |
 | `sic-sector` | 194 codes + ALL | companies, revenue and net income on every code (USD reporters); ALL 586 companies, 18,430,213,107,000 revenue, 2,340,128,705,000 net income | none |
 | `country-group` | 12 groups | members on every group | the stored figures were the **World Bank's own aggregates** for 2025, which estimate members that have not reported; the computed ones add up the members, each at its latest year. GDP within 3% (ECG-EAS 32,711 against 33,657: three members' latest GDP is from 2022), population within 2.1%, growth within 0.32 points (ECG-MEA 3.06 against 2.75), inflation as the median within 0.5 points (ECG-LCN 2.58 against 2.08). The four income groups had no stored figures; they have computed ones now |
-| [`correlation-matrix`](../contracts/samples/market-data.md#correlation-matrix) ([contract](../contracts/packs/market-data.md#corr-correlation-matrix-correlation-matrix)) | 3 sets | the factors | the stored pairs were **synthetic**: drawn at random between 0.15 and 0.78 and labelled *2 years, Ledoit-Wolf*, with no price history behind them. Computed from the lake's 29 daily returns to 2026-09-30, Pearson: CORR-EU-EQ average 0.096 (stored 0.385), CORR-G10FX −0.012 (0.512), CORR-US-EQ 0.092 (0.406) |
+| [`correlation-matrix`](../../contracts/samples/market-data.md#correlation-matrix) ([contract](../../contracts/packs/market-data.md#corr-correlation-matrix-correlation-matrix)) | 3 sets | the factors | the stored pairs were **synthetic**: drawn at random between 0.15 and 0.78 and labelled *2 years, Ledoit-Wolf*, with no price history behind them. Computed from the lake's 29 daily returns to 2026-09-30, Pearson: CORR-EU-EQ average 0.096 (stored 0.385), CORR-G10FX −0.012 (0.512), CORR-US-EQ 0.092 (0.406) |
 | USEQ ratios | 586 companies | net margin on the 563 that report revenue and net income, and every year of the financials; revenue growth on 560 | **3 companies** whose previous fiscal year is missing from the financials (SNA, SWK and TXT: 2023, 2024, 2026): the stored growth compared with the last year reported (two years earlier); the computed growth is against the previous fiscal year only, and empty when it is missing |
 | PXH analytics | live only | nothing was stored | new |
 | FACT changes | 4,026 facts, 38,632 yearly rows | every change, on every row and every strip | none |
@@ -502,9 +508,9 @@ On the committed data (gleif 2026-10-25, us-equities 2026-10-24, world-economy's
 
 ---
 
-# Part III · How they are computed
+## Part III · How they are computed
 
-## 19. The derived connector
+### 19. The derived connector
 
 `LEIG`, `LEIC`, `SIC` and `ECG` use the lightest mechanism Drishti has for a computed grouping: the **derived connector** (plugin
 `derived`), the one the trading pack's `CTRD`, `PTRD`, `LTRD` and `ITRD` pages use. It reads every document of a kind through the router
@@ -551,16 +557,16 @@ macro-groupings:
 
 The order on a page: the aggregates, the rows, the tree, the `then` fields, the sorts, then `unlisted`. Pages live in the heap by default
 (`store: disk` keeps them on disk for very large kinds, as the trading pages do). Across Drishti*net nodes a group is gathered from every
-node's share ([CLUSTER_GUIDE.md](CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)); a median cannot be combined from parts, so a group whose members are split
+node's share ([CLUSTER_GUIDE.md](../CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)); a median cannot be combined from parts, so a group whose members are split
 over nodes without every member listed shows no median.
 
 The code: `kernel/drishti-engine/.../source/derived/DerivedKind.java` (grouping, aggregates), `DerivedPage.java` (`then`, `sort`, `tree`),
 `DerivedSourcePlugin.java` (reading, caching, search), `GroupShares.java` (Drishti*net).
 
-## 20. The correlation engine
+### 20. The correlation engine
 
 `CORR` is not a grouping: it needs statistics over aligned time series, which a derived page cannot do. It is a **reactive connector**
-with a Java engine in the server's own process (the pattern of VaR's `var-result`, [VAR_GUIDE.md Part III](VAR_GUIDE.md#24-where-the-engine-lives)):
+with a Java engine in the server's own process (the pattern of VaR's `var-result`, [VAR_GUIDE.md Part III](../VAR_GUIDE.md#24-where-the-engine-lives)):
 
 ```yaml
 # modules/market-data/packs/market-data/pack.yaml (written by tools/packgen/banking/make_packs.py from corr_kinds.py)
@@ -583,14 +589,14 @@ per set, parameters, date and view signature, and recomputed when the inputs loa
 server even with `DRISHTI_COMPUTE_ENABLED=false`. The code is `modules/banking/banking-compute/.../analytics/CorrelationEngine.java`; the
 `correlation-matrix` Sutra is hand-written (`tools/packgen/banking/make_sutras.py`, `HAND_WRITTEN`).
 
-## 21. The price analytics
+### 21. The price analytics
 
 PXH's prices are read live, never stored; the analytics are worked out in the same step, by the `yfinance` plugin
 (`plugins/drishti-connectors/.../PriceAnalytics.java`), from the history it has just parsed, and the benchmark's history read
 through the same cache. The connector `us-equities-prices` is **off as shipped** and **internal use only**: switching it on sends each
 ticker opened to Yahoo Finance, and the prices and everything computed from them may not be redistributed.
 
-## 22. Where the inputs come from
+### 22. Where the inputs come from
 
 | Computed | Inputs | External data | Refresh script |
 |---|---|---|---|
@@ -607,7 +613,7 @@ ultimate parent carries `GLEIF_GROUP_SIZE` (its group's size in GLEIF, an input 
 `sic-sector` snapshot and no ratio; `tools/realdata/build_docs.py` builds no country group; the market-data generator writes the
 correlation sets' factors only. `tools/testdata/publicsnap.py` lists the kinds it writes, and `COMPUTED` the ones it never writes again.
 
-## 23. The retirement guard
+### 23. The retirement guard
 
 `tools/contracts.policy.yaml` records the decision, and `tools/test_contracts.py` fails the build if it is undone:
 
@@ -620,7 +626,7 @@ correlation sets' factors only. `tools/testdata/publicsnap.py` lists the kinds i
 - `engine-columns: correlation` (`RHO`, `SHRINKAGE`, `MIN_RHO`, `MAX_RHO`, `FACTOR_STATS`): no fundamental or input kind carries one;
 - `classes: computed` lists the six computed kinds; the CORR and EQB tests check the engine classes exist and every set names its factors.
 
-## 24. Settings and limits
+### 24. Settings and limits
 
 | Setting | Default | Where |
 |---|---|---|
@@ -629,15 +635,15 @@ correlation sets' factors only. `tools/testdata/publicsnap.py` lists the kinds i
 | `max-scan` | `50000` | the most documents a derived connector reads of a kind (9,937 entities, 586 companies, 213 economies) |
 | `DRISHTI_US_EQUITIES_PRICES_ENABLED` | `false` | PXH and its analytics |
 | `DRISHTI_US_EQUITIES_BENCHMARK` | `SPY` | the symbol PXH's beta is measured against |
-| `correlation-engine` `limits` | timeout 30 s, wait 5 s, 4 in flight a user | as every reactive connector ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors)) |
+| `correlation-engine` `limits` | timeout 30 s, wait 5 s, 4 in flight a user | as every reactive connector ([DATA_ARCHITECTURE.md](../../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors)) |
 
 Memory: a derived page set holds each page's aggregates and rows; the gleif pages of the committed data (590 groups, 133 countries) are a
 few megabytes, built in about a second from the 9,937 entities.
 
-## 25. Groupings and analytics data: every input dataset
+### 25. Groupings and analytics data: every input dataset
 
-Every dataset a grouping or an analytic reads, what it is for, whether it is required, where its sample lives, and the links to its two homes: its **data contract** (the fields, the key, the rules: the pack's contract page and its `<kind>.contract.yaml`) and its **example** (a real record of the shipped synthetic test data, every field explained, on [docs/contracts/samples](../contracts/samples/README.md)). This guide copies neither. How files are named, dated and loaded is
-[DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo).
+Every dataset a grouping or an analytic reads, what it is for, whether it is required, where its sample lives, and the links to its two homes: its **data contract** (the fields, the key, the rules: the pack's contract page and its `<kind>.contract.yaml`) and its **example** (a real record of the shipped synthetic test data, every field explained, on [docs/contracts/samples](../../contracts/samples/README.md)). This guide copies neither. How files are named, dated and loaded is
+[DATA_LAKE_GUIDE.md](../DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo).
 
 <!-- The block below is generated by tools/docs/guide_data.py from tools/docs/guide_data.yaml: edit the spec, not the block. -->
 <!-- guide-data:begin groupings -->
@@ -663,21 +669,21 @@ These are the inputs; every grouping and analytic is computed from them when ask
 GLEIF's legal entities: `LEI_GROUP`, `DIRECT_PARENT`, `LEI_COUNTRY`, `RENEWAL_LATE`, `REGISTRATION_STATUS` and `GLEIF_GROUP_SIZE` make
 the ownership groups (LEIG) and the country pages (LEIC).
 
-- **Data contract:** [`lei-entity`](../contracts/packs/gleif.md#lei-lei-legal-entity-lei-entity) (LEI), key `LEI`; 43 fields, 16 required; the file [`lei-entity.contract.yaml`](../../config/packs/core/gleif/contracts/lei-entity.contract.yaml).
-- **Example:** [a real record of the test data, every field explained](../contracts/samples/gleif.md#lei-entity) (files `data/testdata/gleif/lei-entity/lei-entity.*.jsonl.gz`).
+- **Data contract:** [`lei-entity`](../../contracts/packs/gleif.md#lei-lei-legal-entity-lei-entity) (LEI), key `LEI`; 43 fields, 16 required; the file [`lei-entity.contract.yaml`](../../../config/packs/core/gleif/contracts/lei-entity.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../../contracts/samples/gleif.md#lei-entity) (files `data/testdata/gleif/lei-entity/lei-entity.*.jsonl.gz`).
 
 ### 25.3 `us-company`: the US companies
 
 SEC EDGAR's companies: `SIC` makes the sectors (SIC); the financials (`REVENUE`, `NET_INCOME`, `FINANCIALS[]`) make the USEQ ratios.
 
-- **Data contract:** [`us-company`](../contracts/packs/us-equities.md#useq-us-company-us-company) (USEQ), key `TICKER`; 46 fields, 23 required; the file [`us-company.contract.yaml`](../../modules/capital-markets/packs/us-equities/contracts/us-company.contract.yaml).
-- **Example:** [a real record of the test data, every field explained](../contracts/samples/us-equities.md#us-company) (files `data/testdata/us-equities/us-company/us-company.*.jsonl.gz`).
+- **Data contract:** [`us-company`](../../contracts/packs/us-equities.md#useq-us-company-us-company) (USEQ), key `TICKER`; 46 fields, 23 required; the file [`us-company.contract.yaml`](../../../modules/capital-markets/packs/us-equities/contracts/us-company.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../../contracts/samples/us-equities.md#us-company) (files `data/testdata/us-equities/us-company/us-company.*.jsonl.gz`).
 
 ### 25.4 `economy`: the economies
 
 `REGION_GROUP`, `INCOME_GROUP`, `GDP_USD_BN`, `POPULATION_M`, `GROWTH`, `INFLATION`, `YEAR` and `GDP_PATH`: the country groups (ECG).
 
-- **Data contract:** [`economy`](../contracts/packs/world-economy.md#econ-economy-economy) (ECON), key `ECONOMY_ID`; 28 fields, 16 required; the file [`economy.contract.yaml`](../../modules/economy/packs/world-economy/contracts/economy.contract.yaml).
+- **Data contract:** [`economy`](../../contracts/packs/world-economy.md#econ-economy-economy) (ECON), key `ECONOMY_ID`; 28 fields, 16 required; the file [`economy.contract.yaml`](../../../modules/economy/packs/world-economy/contracts/economy.contract.yaml).
 - **Example:** no sample in the demo data (`data/testdata`); the world-economy pack ships its public data with the pack
 (`modules/economy/packs/world-economy/samples/`).
 
@@ -685,48 +691,565 @@ SEC EDGAR's companies: `SIC` makes the sectors (SIC); the financials (`REVENUE`,
 
 A correlation set's factors; the correlations themselves are computed from the factors' price histories.
 
-- **Data contract:** [`correlation-matrix`](../contracts/packs/market-data.md#corr-correlation-matrix-correlation-matrix) (CORR), key `MATRIX_ID`; 5 fields, 5 required; the file [`correlation-matrix.contract.yaml`](../../modules/market-data/packs/market-data/contracts/correlation-matrix.contract.yaml).
-- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-data.md#correlation-matrix) (files `data/testdata/market-data/correlation-matrix/correlation-matrix.*.jsonl.gz`).
+- **Data contract:** [`correlation-matrix`](../../contracts/packs/market-data.md#corr-correlation-matrix-correlation-matrix) (CORR), key `MATRIX_ID`; 5 fields, 5 required; the file [`correlation-matrix.contract.yaml`](../../../modules/market-data/packs/market-data/contracts/correlation-matrix.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../../contracts/samples/market-data.md#correlation-matrix) (files `data/testdata/market-data/correlation-matrix/correlation-matrix.*.jsonl.gz`).
 
 ### 25.6 `equity`: the equities' price history
 
 An equity's quote and its history (`HISTORY[]`): the returns of CORR and the beta of EQB.
 
-- **Data contract:** [`equity`](../contracts/packs/market-data.md#eq-equity-equity) (EQ), key `TICKER`; 15 fields, 14 required; the file [`equity.contract.yaml`](../../modules/market-data/packs/market-data/contracts/equity.contract.yaml).
-- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-data.md#equity) (files `data/testdata/market-data/equity/equity.*.jsonl.gz`).
+- **Data contract:** [`equity`](../../contracts/packs/market-data.md#eq-equity-equity) (EQ), key `TICKER`; 15 fields, 14 required; the file [`equity.contract.yaml`](../../../modules/market-data/packs/market-data/contracts/equity.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../../contracts/samples/market-data.md#equity) (files `data/testdata/market-data/equity/equity.*.jsonl.gz`).
 
 ### 25.7 `equity-index`: the indices' price history
 
 An index's level and history: the market leg of an equity's beta (EQB).
 
-- **Data contract:** [`equity-index`](../contracts/packs/market-data.md#eqx-equity-index-equity-index) (EQX), key `INDEX_ID`; 10 fields, 10 required; the file [`equity-index.contract.yaml`](../../modules/market-data/packs/market-data/contracts/equity-index.contract.yaml).
-- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-data.md#equity-index) (files `data/testdata/market-data/equity-index/equity-index.*.jsonl.gz`).
+- **Data contract:** [`equity-index`](../../contracts/packs/market-data.md#eqx-equity-index-equity-index) (EQX), key `INDEX_ID`; 10 fields, 10 required; the file [`equity-index.contract.yaml`](../../../modules/market-data/packs/market-data/contracts/equity-index.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../../contracts/samples/market-data.md#equity-index) (files `data/testdata/market-data/equity-index/equity-index.*.jsonl.gz`).
 
 ### 25.8 `fx-spot`: FX history
 
 A currency pair's quote and history: FX factors in a correlation set.
 
-- **Data contract:** [`fx-spot`](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot) (FX), key `PAIR`; 11 fields, 11 required; the file [`fx-spot.contract.yaml`](../../modules/market-data/packs/market-data/contracts/fx-spot.contract.yaml).
-- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-data.md#fx-spot) (files `data/testdata/market-data/fx-spot/fx-spot.*.jsonl.gz`).
+- **Data contract:** [`fx-spot`](../../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot) (FX), key `PAIR`; 11 fields, 11 required; the file [`fx-spot.contract.yaml`](../../../modules/market-data/packs/market-data/contracts/fx-spot.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../../contracts/samples/market-data.md#fx-spot) (files `data/testdata/market-data/fx-spot/fx-spot.*.jsonl.gz`).
 
 ### 25.9 `financial-fact`: the reported facts
 
 One reported figure of one company with its `HISTORY[]`: the FACT page's changes.
 
-- **Data contract:** [`financial-fact`](../contracts/packs/us-equities.md#fact-financial-fact-financial-fact) (FACT), key `FACT_ID`; 12 fields, 12 required; the file [`financial-fact.contract.yaml`](../../modules/capital-markets/packs/us-equities/contracts/financial-fact.contract.yaml).
-- **Example:** [a real record of the test data, every field explained](../contracts/samples/us-equities.md#financial-fact) (files `data/testdata/us-equities/financial-fact/financial-fact.*.jsonl.gz`).
+- **Data contract:** [`financial-fact`](../../contracts/packs/us-equities.md#fact-financial-fact-financial-fact) (FACT), key `FACT_ID`; 12 fields, 12 required; the file [`financial-fact.contract.yaml`](../../../modules/capital-markets/packs/us-equities/contracts/financial-fact.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../../contracts/samples/us-equities.md#financial-fact) (files `data/testdata/us-equities/financial-fact/financial-fact.*.jsonl.gz`).
 
 ### 25.10 `index-membership`: the index members
 
 An index's members (`ROWS[]`): the IDX page's totals.
 
-- **Data contract:** [`index-membership`](../contracts/packs/us-equities.md#idx-index-members-index-membership) (IDX), key `INDEX`; 5 fields, 5 required; the file [`index-membership.contract.yaml`](../../modules/capital-markets/packs/us-equities/contracts/index-membership.contract.yaml).
-- **Example:** [a real record of the test data, every field explained](../contracts/samples/us-equities.md#index-membership) (files `data/testdata/us-equities/index-membership/index-membership.*.jsonl.gz`).
+- **Data contract:** [`index-membership`](../../contracts/packs/us-equities.md#idx-index-members-index-membership) (IDX), key `INDEX`; 5 fields, 5 required; the file [`index-membership.contract.yaml`](../../../modules/capital-markets/packs/us-equities/contracts/index-membership.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../../contracts/samples/us-equities.md#index-membership) (files `data/testdata/us-equities/index-membership/index-membership.*.jsonl.gz`).
 
 ### 25.11 `price-history`: live price history
 
 A ticker's daily prices, read live when PXH opens: the returns, volatility and beta of the PXH analytics.
 
-- **Data contract:** [`price-history`](../contracts/packs/us-equities.md#pxh-price-history-live-internal-use-only-price-history) (PXH), key none; 13 fields, 0 required; the file [`price-history.contract.yaml`](../../modules/capital-markets/packs/us-equities/contracts/price-history.contract.yaml).
+- **Data contract:** [`price-history`](../../contracts/packs/us-equities.md#pxh-price-history-live-internal-use-only-price-history) (PXH), key none; 13 fields, 0 required; the file [`price-history.contract.yaml`](../../../modules/capital-markets/packs/us-equities/contracts/price-history.contract.yaml).
 - **Example:** none in the demo data; read live from Yahoo Finance's public chart endpoint (internal use only), off as shipped.
 <!-- guide-data:end -->
+
+## Tutorial: Groupings and analytics, computed
+
+An ownership group, a country's legal entities, a SIC sector, a World Bank region, a set of correlations, a company's margin and a
+stock's volatility are all **derived** from data the packs already hold. Drishti computes them when you open them, from that
+data, instead of keeping stored copies that drift. In this tutorial you open each one on the committed data, see where every number comes
+from, change a correlation's window and estimator, and run the guard that keeps the stored copies from coming back. Each step shows the
+UI, the command line and the YAML behind it; the outputs were captured as the user `rita` with sign-in off, on a lake built on 2026-10-26. Everything else (every column, formula, input, error and the reconciliation with the
+retired pages) is in the one reference, [BI_GUIDE.md](README.md); each step ends with its
+sections.
+
+### Time to complete
+
+About 25 minutes.
+
+### Before you start
+
+- [Tutorial 1, Part A](../../tutorials/01-first-15-minutes.md#part-a--install-start-and-look-around) done: a server and console you can build, start and stop.
+- The demo lake built with the public-data packs: `python3 tools/drishti.py lake demo`, and the packs loaded:
+  `DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif`.
+- For the command-line steps: `DRISHTI_SERVER=http://localhost:18480` and `DRISHTI_TOKEN=...` (My account → API tokens), or `--user`
+  with sign-in off.
+
+The GLEIF, SEC and World Bank figures are published data (CC0, public domain, CC BY 4.0). The market data behind the correlations is the
+demo's synthetic data.
+
+**Where this data comes from.** The inputs are external data: the `us-equities` pack from SEC EDGAR, Wikidata, the Nasdaq Trader directory and GLEIF (`drishti.py feed run us-equities`), the `gleif` pack from GLEIF's golden copy, LEI API and mapping files (`drishti.py feed run gleif`), the `world-economy` pack from the World Bank (`drishti.py feed run world-economy`), all openly licensed; price history (`PXH`, steps 7 to 9) is read live from Yahoo Finance, **internal only** and off as shipped. The groupings and analytics themselves are computed by Drishti. Each source, its licence and how to refresh it: [External data](../WORLD_DATA_GUIDE.md).
+
+### What you will learn
+
+- which pages are computed and from what: LEIG and LEIC from the legal entities, SIC from the companies, ECG from the economies;
+- how a derived connector groups a kind's documents into pages, with no member cap, and what `then`, `tree` and `also-group-by` add;
+- why sector totals add the USD reporters only, and why a region's inflation is a median;
+- how CORR's window and estimator change the answer, and what a Ledoit-Wolf shrinkage of 1 tells you;
+- that the USEQ ratios and PXH analytics are worked out as the page is drawn, and why PXH stays internal and off;
+- how the old ids and links keep working, and the guard that fails the build if a stored copy returns.
+
+### Step 1 · An ownership group, from its entities
+
+**In the UI.** Type `LEIG 8I5DZWZKVSZI1NUHU748` and press Enter: JPMorgan Chase & Co.'s ownership group. The pill reads *GLEIF ·
+Ownership group (computed)*.
+
+**From the command line.**
+
+```bash
+python3 tools/drishti.py view get lei-group/8I5DZWZKVSZI1NUHU748
+```
+
+```text
+$ drishti.py view get lei-group/8I5DZWZKVSZI1NUHU748
+GLEIF · Ownership group (computed)  8I5DZWZKVSZI1NUHU748  with JPMORGAN CHASE & CO.   [LEIG]
+
+Key figures
+  figure           value
+  ---------------  ------------------------------
+  Members          50
+  Members (GLEIF)  173
+  Levels           2
+  Countries        13
+  Late renewals    5 late: renewal failed
+  Home             United States of America (the)
+
+  JPMORGAN CHASE & CO.  US       0      8I5DZWZKVSZI1NUHU748
+
+Members (a click opens one beside)  (table, members, F3)
+  Legal name                                                    Country  Level  LEI
+  ------------------------------------------------------------  -------  -----  --------------------
+  ...
+```
+
+**In YAML.** The page is a derived connector of the gleif pack, `config/packs/core/gleif/pack.yaml`:
+
+```yaml
+gleif-groupings:
+  plugin: derived
+  kinds: [lei-group, lei-country]
+  settings:
+    lei-group:
+      from: lei-entity                 # every legal entity of the lake, as of the date you picked
+      group-by: $.LEI_GROUP            # an entity's ownership group: its ultimate parent
+      max-members: 100000              # no cap
+      fields:
+        MEMBERS: count
+        LATE_RENEWALS: "sum $.RENEWAL_LATE ? 1 : 0"
+      tree: { id: LEI, parent: PARENT } # each member's level, and the tree from the ultimate parent down
+      then:
+        MEMBERS_IN_GLEIF: "$.GLEIF_GROUP_SIZE == null ? $.MEMBERS : max($.GLEIF_GROUP_SIZE, $.MEMBERS)"
+```
+
+You should see the strip **Members 50**, **Members (GLEIF) 173**, **Levels 2**, **Countries 13**, **Late renewals 5 late: renewal failed**;
+the tree with the ultimate parent and two levels open; the members table with all 50 (20 at level 1, 29 at level 2); and on the right
+*Cap: GLEIF has 173 entities in the group; the committed data keeps 50*. The computation has no cap: the 50 is the size of the committed
+snapshot (a wider refresh brings more). Click any member: its key facts open beside the table.
+
+![LEIG: JPMorgan Chase & Co.'s ownership group computed from its entities: the strip, the tree from the ultimate parent and the group's facts with the cap](../../tutorials/img/t27/01-leig-group.jpg)
+
+Further: [guide sections 2](#2-leig-an-ownership-group) and [11](#11-lei-group).
+
+### Step 2 · Every group, and the type-ahead
+
+**In the UI.** Type `LEIG ALL`. Then type `LEIG Ford Motor` without pressing Enter and watch the suggestions.
+
+**From the command line.**
+
+```bash
+python3 tools/drishti.py view get lei-group/ALL
+```
+
+```text
+$ drishti.py view get lei-group/ALL
+GLEIF · Search and browse  ALL  with Every ownership group of the pack   [LEIG]
+
+Key figures
+  figure         value
+  -------------  -------------------------
+  Entities       9,937
+  Groups         590
+  Countries      133
+  Lapsed         2256
+  Late renewals  2288 late: renewal failed
+```
+
+**In YAML.** `ALL` is one more group every entity joins, and its page keeps only its figures:
+
+```yaml
+      also-group-by: { all: "'ALL'" }   # every entity is also in ALL
+      unlisted: ALL                      # ALL keeps no member ids, rows or tree, only what its then fields made
+      search-fields: NAME                # the type-ahead finds a group by its ultimate parent's name
+```
+
+You should see **Entities 9,937**, **Groups 590**, **Countries 133**, **Lapsed 2,256** and **Late renewals 2,288**; the groups table with
+every ultimate parent, largest in GLEIF first (a click opens the group's facts beside it); and the entity search box. The type-ahead
+suggests Ford Motor Company's group by its name.
+
+![LEIG ALL: every ownership group computed, the entity search and the groups by GLEIF size](../../tutorials/img/t27/02-leig-all.jpg)
+
+Further: [guide sections 2 and 19](#19-the-derived-connector).
+
+### Step 3 · A country, every entity of it
+
+**In the UI.** Type `LEIC GB`.
+
+**From the command line.**
+
+```bash
+python3 tools/drishti.py view get lei-country/GB
+```
+
+```text
+$ drishti.py view get lei-country/GB
+GLEIF · Country (computed)  GB  with United Kingdom of Great Britain and Northern Ireland (the)   [LEIC]
+
+Key figures
+  figure                value
+  --------------------  ------------------------
+  Entities              1,274
+  Groups present        263
+  Groups headquartered  27
+  Lapsed                225
+  Late renewals         227 late: renewal failed
+```
+
+**In YAML.** The same connector groups the same entities by another key:
+
+```yaml
+    lei-country:
+      from: lei-entity
+      group-by: $.LEI_COUNTRY
+      fields:
+        ENTITIES: count
+        GROUPS_HEADQUARTERED: "sum $.LEI == $.LEI_GROUP ? 1 : 0"
+      then:
+        GROUP_ROWS: group($.ROWS, 'GROUP')     # each group's entities here
+      sort: { ROWS: NAME asc, GROUP_ROWS: value desc }
+```
+
+You should see **Entities 1,274**, **Groups present 263**, **Groups headquartered 27**, **Lapsed 225** and **227 late**; the entities
+table listing all 1,274 by name (the stored page stopped at 400); the groups present with their entities here, largest first; and cities on
+the right (`LONDON` 494 and `London` 245: GLEIF keeps the city as each entity wrote it). `LEIC ALL` lists the 133 countries.
+
+![LEIC GB: every British entity, the groups present and the entities by legal form and city](../../tutorials/img/t27/03-leic-country.jpg)
+
+Further: [guide sections 3 and 12](#12-lei-country).
+
+### Step 4 · A sector, and the currency rule
+
+**In the UI.** Type `SIC 3674`, then `SIC 6022`.
+
+**From the command line.**
+
+```bash
+python3 tools/drishti.py view get sic-sector/3674
+python3 tools/drishti.py view get sic-sector/6022
+```
+
+```text
+$ drishti.py view get sic-sector/6022
+US equities · SIC sector (computed)  6022  with State Commercial Banks   [SIC]
+
+Key figures
+  figure      value
+  ----------  ----------------------------------
+  SIC         6022
+  Industry    State Commercial Banks
+  Division    Finance, Insurance and Real Estate
+  Companies   15
+  Revenue     70.0bn
+  Net income  25.5bn
+  Net margin  36.4 %
+  Not in USD  1 not summed
+```
+
+**In YAML.** `modules/capital-markets/packs/us-equities/pack.yaml`, the connector `us-equities-groupings`:
+
+```yaml
+    sic-sector:
+      from: us-company
+      group-by: $.SIC
+      fields:
+        REVENUE: "sum $.CURRENCY == 'USD' ? $.REVENUE : null"      # USD reporters only
+        NON_USD: "sum $.CURRENCY != 'USD' ? 1 : 0"
+      then:
+        NET_MARGIN: "$.REVENUE ? $.NET_INCOME / $.REVENUE * 100 : null"
+```
+
+You should see, for 3674 (Semiconductors & Related Devices), **Companies 15**, revenue **588.8bn**, net income **251.0bn**, **Net margin
+42.6%** and **Not in USD: None**, the companies ranked by revenue from NVDA (215.9bn). For 6022 (State Commercial Banks): **Companies 15**,
+revenue **70.0bn** and **Not in USD: 1 not summed**: BNS reports in CAD, so it is listed and counted but not added to a USD total.
+
+![SIC 3674: the semiconductor companies by revenue, with the totals and the net margin of the USD reporters](../../tutorials/img/t27/04-sic-sector.jpg)
+
+![SIC 6022: one company reports in CAD and is listed but not summed](../../tutorials/img/t27/05-sic-currency.jpg)
+
+Further: [guide sections 4 and 13](#13-sic-sector).
+
+### Step 5 · A company's margin and growth, worked out on the page
+
+**In the UI.** Type `USEQ AAPL`.
+
+**From the command line.**
+
+```bash
+python3 tools/drishti.py view get us-company/AAPL
+```
+
+```text
+$ drishti.py view get us-company/AAPL
+US equities · Company  AAPL  with Apple Inc.   [USEQ]
+
+Key figures
+  figure          value
+  --------------  --------------------
+  Ticker          AAPL
+  Industry (SIC)  Electronic Computers
+  Fiscal year     2025
+  Revenue         416.2bn
+  Net income      112.0bn
+  Net margin      26.9 %
+  Revenue growth  +6.4 %
+  Diluted EPS     7.46
+```
+
+**In YAML.** No connector: the company page's strip computes the ratios from the record's facts,
+`modules/capital-markets/packs/us-equities/sutras/us-company.v1.sutra.yaml`:
+
+```yaml
+  - { label: Net margin, bind: "$.REVENUE ? $.NET_INCOME / $.REVENUE * 100 : null", fmt: margin1, tone: sign }
+  - { label: Revenue growth, bind: "first($.FINANCIALS[?@.YEAR == $.FISCAL_YEAR - 1]).REVENUE ? ($.REVENUE - first($.FINANCIALS[?@.YEAR == $.FISCAL_YEAR - 1]).REVENUE) / abs(first($.FINANCIALS[?@.YEAR == $.FISCAL_YEAR - 1]).REVENUE) * 100 : null", fmt: growth1, tone: sign }
+```
+
+You should see **Net margin 26.9 %** (fiscal 2025: 112.01bn of net income on 416.16bn of revenue) and **Revenue growth +6.4 %** against
+fiscal 2024; the financials table's net margin for every year. Press F9 (raw): the record has `REVENUE`, `NET_INCOME` and `FINANCIALS`, and
+no `NET_MARGIN` or `REVENUE_GROWTH` any more. The same holds one level down and one level up: `FACT AAPL-REVENUE` works out each
+year's change from the values (no `CHANGE_PCT` stored), and `IDX SP500` adds up its members' revenue and divisions as it opens.
+
+![USEQ AAPL: the net margin and revenue growth worked out on the page from the financial facts](../../tutorials/img/t27/06-useq-ratios.jpg)
+
+Further: [guide sections 7 and 16](#16-the-useq-ratios).
+
+### Step 6 · A World Bank region from its economies
+
+**In the UI.** Type `ECG ECG-SAS`, then `ECG ECG-HIC`.
+
+**From the command line.**
+
+```bash
+python3 tools/drishti.py view get country-group/ECG-SAS
+```
+
+```text
+$ drishti.py view get country-group/ECG-SAS
+Economics · Country group (computed)  ECG-SAS  with South Asia   [ECG]
+
+Key figures
+  figure                value
+  --------------------  -----------------
+  Group                 South Asia
+  Type                  World Bank region
+  Economies             6
+  GDP (USD bn)          4,578
+  GDP per capita (USD)  2,705
+  Population (m)        1,692.26
+  Real growth           7.07%
+  Inflation (median)    3.10%
+```
+
+**In YAML.** `modules/economy/packs/world-economy/pack.yaml`, the connector `macro-groupings` (written by `tools/packgen/economics/make.py`):
+
+```yaml
+    country-group:
+      from: economy
+      group-by: $.REGION_GROUP
+      also-group-by: { income: $.INCOME_GROUP, world: "'ECG-WLD'" }   # an economy is in its region, its income group and the world
+      fields:
+        GDP_USD_BN: sum $.GDP_USD_BN
+        INFLATION: median $.INFLATION                                  # the World Bank's aggregate for prices
+      then:
+        GROWTH: "$.GROWTH_WEIGHT > 0 ? $.GROWTH_WEIGHTED / $.GROWTH_WEIGHT : null"   # weighted by GDP
+```
+
+You should see for South Asia **Economies 6**, **GDP 4,578** USD bn, **GDP per capita 2,705**, **Population 1,692.26** m, **Real growth
+7.07%**, **Inflation (median) 3.10%**, every member at its latest year (2025 for all six); India first among its members (3,956bn at 7.57%). For the high-income group,
+84 economies, 75,910bn and growth 1.88%: figures the stored page did not have.
+
+![ECG ECG-SAS: South Asia computed from its six economies, the largest economies and every member](../../tutorials/img/t27/07-ecg-region.jpg)
+
+Further: [guide sections 5 and 14](#14-country-group).
+
+### Step 7 · Correlations from price history: window and estimator
+
+**In the UI.** Type `CORR CORR-EU-EQ`. Set *Window* to 20, then back to 0, and *Estimator* to ledoit-wolf. The choice is kept in the
+address (`?ctl.estimator=ledoit-wolf`), so a link opens the same answer.
+
+**From the command line.**
+
+```bash
+python3 tools/drishti.py compute run correlation-engine correlation-result CORR-EU-EQ
+python3 tools/drishti.py compute run correlation-engine correlation-result CORR-EU-EQ --param window=20
+python3 tools/drishti.py compute run correlation-engine correlation-result CORR-EU-EQ --param estimator=ledoit-wolf
+```
+
+```text
+$ drishti.py compute run correlation-engine correlation-result CORR-EU-EQ
+correlation-engine CORR-EU-EQ  READY  (req-mvpm71zs-c7d061e7856f)
+  MATRIX_ID    CORR-EU-EQ
+  NAME         European equities
+  ESTIMATOR    pearson
+  WINDOW       29
+  AVAILABLE    29
+  FROM         2026-09-14
+  TO           2026-10-26
+  AVERAGE      0.0962
+  MIN_RHO      -0.1564
+  MAX_RHO      0.3818
+
+$ drishti.py compute run correlation-engine correlation-result CORR-EU-EQ --param estimator=ledoit-wolf
+correlation-engine CORR-EU-EQ~estimator=ledoit-wolf  READY  (req-mvpm729c-002dd111e08d)
+  MATRIX_ID    CORR-EU-EQ
+  NAME         European equities
+  ESTIMATOR    ledoit-wolf
+  WINDOW       29
+  AVAILABLE    29
+  FROM         2026-09-14
+  TO           2026-10-26
+  AVERAGE      0.0
+  MIN_RHO      0.0
+  MAX_RHO      0.0
+  SHRINKAGE    1.0
+
+$ drishti.py compute run correlation-engine correlation-result CORR-EU-EQ --param estimator=kendall
+correlation-engine CORR-EU-EQ~estimator=kendall  REFUSED  (req-mvpm72cq-292c1a84f66f)
+  estimator kendall is not allowed for correlation-result; allowed: pearson, ledoit-wolf
+```
+
+**In YAML.** The page's panels read the computed kind with the page's controls (`modules/market-data/packs/market-data/sutras/market-data/correlation-matrix.v1.sutra.yaml`):
+
+```yaml
+controls:
+  - { id: window, kind: segmented, label: Window (daily returns), options: ["0", "20", "10"], default: "0" }
+  - { id: estimator, kind: segmented, label: Estimator, options: ["pearson", "ledoit-wolf"], default: "pearson" }
+panels:
+  - id: pairs
+    kind: table
+    source: { kind: correlation-result, id: "$.MATRIX_ID", params: { window: ctl.window, estimator: ctl.estimator } }
+    rows: "$src.PAIRS"
+```
+
+You should see with the defaults (every return, Pearson) **Average ρ 0.10** over 29 daily returns (2026-09-14 to 2026-10-26 on a lake built on 2026-10-26:
+`lake demo` moves the test data's 2026-08-19 to 2026-09-30 to end on the day you build it), the highest pair RHNB and LUMN at 0.38 and the
+lowest RHNB and GRNT at −0.16; with window 20, **0.14**; with Ledoit-Wolf,
+**0.00** with a shrinkage of 1: on 29 days of four factors the sample correlations are within noise, and the estimator shrinks them all
+the way to none. The factors table gives each factor's volatility over the window (EQ-ORBT 22.7%).
+
+![CORR CORR-EU-EQ with the defaults: Pearson over every return, the pairs and how the answer was computed](../../tutorials/img/t27/08-corr-pearson.jpg)
+
+![The same set with Ledoit-Wolf: every pair shrunk to zero (the address carries ?ctl.estimator=ledoit-wolf)](../../tutorials/img/t27/09-corr-ledoit-wolf.jpg)
+
+Further: [guide sections 6, 15 and 20](#15-correlation-result).
+
+### Step 8 · An equity's beta from price history
+
+**In the UI.** Type `EQ EQ-NVTK` and look at the **Beta** panel on the right; then type `EQB EQ-NVTK`.
+
+**From the command line.**
+
+```bash
+python3 tools/drishti.py compute run equity-analytics equity-beta EQ-NVTK
+```
+
+```text
+$ drishti.py compute run equity-analytics equity-beta EQ-NVTK
+equity-analytics EQ-NVTK  READY  (req-mvpm72g6-5abbc916b272)
+  EQUITY       EQ-NVTK
+  INDEX        EQX-NDX
+  WINDOW       29
+  AVAILABLE    29
+  FROM         2026-09-14
+  TO           2026-10-26
+  BETA         -0.0725
+  ALPHA        -0.000881
+  CORRELATION  -0.0333
+  R_SQUARED    0.0011
+  VOLATILITY   0.2672
+  INDEX_VOLATILITY 0.1227
+
+$ drishti.py compute run equity-analytics equity-beta EQ-CSCA
+equity-analytics EQ-CSCA  FAILED  (req-mvpm72j5-a7a17e82f69a)
+  EQ-CSCA names no index (EQUITY_INDEX): its beta has nothing to be measured against
+```
+
+**In YAML.** The market-data pack's `equity-analytics` connector reads the equity and the index it names
+(`modules/market-data/packs/market-data/pack.yaml`, written by `tools/packgen/banking/corr_kinds.py`):
+
+```yaml
+    reads:
+    - { kind: equity, as: equity, id: "{id}" }
+    - { kind: equity-index, as: index, ids: "{inputs.equity.EQUITY_INDEX}", limit: 1 }
+    engine: { type: java, class: com.ash.drishti.banking.compute.analytics.BetaEngine }
+```
+
+You should see a beta of **−0.07** against EQX-NDX over 29 daily returns, with a correlation of −0.03. The
+security master's stored beta (1.28) was set by hand; the demo's price walks are independent, so the measured beta is near zero. `EQ
+EQ-CSCA` names no index: its Beta panel stays empty, and `EQB EQ-CSCA` says why in words.
+
+![EQ EQ-NVTK: the Beta panel computed from the equity's and the Nasdaq-100's price histories](../../tutorials/img/t27/10-equity-beta.jpg)
+
+Further: [guide sections 8.1 and 17.1](#171-equity-beta).
+
+### Step 9 · PXH: off as shipped, internal use only
+
+**In the UI.** Type `PXH PX-AAPL`.
+
+**From the command line.**
+
+```bash
+python3 tools/drishti.py view get price-history/PX-AAPL
+```
+
+```text
+$ drishti.py view get price-history/PX-AAPL
+drishti: the server said 404 DRS-1001: DRS-1001 no source holds price-history/PX-AAPL (asked file; us-equities-prices, which kind 'price-history' is routed to, is disabled)
+```
+
+**In YAML.** The prices and their analytics come from one live connector, off until a site turns it on (`modules/capital-markets/packs/us-equities/pack.yaml`):
+
+```yaml
+  us-equities-prices:
+    plugin: yfinance
+    enabled: ${DRISHTI_US_EQUITIES_PRICES_ENABLED:false}
+    settings:
+      benchmark: ${DRISHTI_US_EQUITIES_BENCHMARK:SPY}     # beta and correlation are measured against it
+```
+
+You should see that the page has no data: the connector is off as shipped. Free price feeds forbid redistribution, so the prices, and the
+returns, volatility, drawdown and beta computed from them as they are read, are for internal demonstrations only. A site that turns it on
+(`DRISHTI_US_EQUITIES_PRICES_ENABLED=true`, and its machine can reach Yahoo) sees the **Analytics** panel beside the quote.
+
+Further: [guide sections 8, 17 and 21](#17-the-pxh-analytics).
+
+### Step 10 · The guard
+
+**In the UI.** Open Admin → Connectors: `gleif-groupings`, `us-equities-groupings` and `macro-groupings` are derived connectors and
+`correlation-engine` a reactive one; no Delta connector lists `lei-group`, `lei-country`, `sic-sector` or `country-group`.
+
+**From the command line.**
+
+```bash
+python3 tools/drishti.py contract show LEIG
+python3 -m unittest -q tools/test_contracts.py
+```
+
+**In YAML.** `tools/contracts.policy.yaml` records the decision:
+
+```yaml
+computed-in-place:
+  lei-group:
+    release: 2.9.2
+    contract: BI_GUIDE.md
+    measure: the derived connector gleif-groupings (from lei-entity)
+removed:
+  us-company:
+    release: 2.9.2
+    figures: [NET_MARGIN, REVENUE_GROWTH, "FINANCIALS[].NET_MARGIN"]
+```
+
+You should see the LEIG contract with **class computed** over the plugin **derived**, and the tests end in **OK**. A stored `lei-group`
+snapshot, a ratio on a company record or a correlation pair on a correlation set would fail them.
+
+Further: [guide section 23](#23-the-retirement-guard).
+
+### Next steps
+
+- The [groupings and analytics guide](GROUPINGS_AND_ANALYTICS.md): every column and formula, and the reconciliation with the
+  retired pages ([section 18](#18-reconciliation-stored-against-computed)).
+- [The VaR tutorial, Part A](../VAR_GUIDE.md#part-a--historical-var-from-the-bank-to-a-trade) and [the exposure tutorial](../EXPOSURE_GUIDE.md): the same rule (computed,
+  never stored) for VaR and exposure.
+- The data contracts of every command: [docs/contracts/packs/](../../contracts/packs/README.md).

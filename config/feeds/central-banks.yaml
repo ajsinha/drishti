@@ -12,16 +12,16 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The central-banks feed (docs/guides/PUBLIC_SECTOR_GUIDE.md section 5): policy rates and market series from FRED (the Federal Reserve
+# The central-banks feed (docs/guides/WORLD_DATA_GUIDE.md section 5): policy rates and market series from FRED (the Federal Reserve
 # Bank of St. Louis) and the Bank of Canada's Valet API into worldlake, for the central-banks pack. Class:
 # tools/feeds/sources/central_banks.py. Daily; incremental (each series asked from a few days before its last observation).
 # FRED needs a free API key (https://fred.stlouisfed.org/docs/api/api_key.html) in DRISHTI_FRED_API_KEY; without it the FRED series are
 # left out, said in the run's log, and the Bank of Canada's (no key) still load.
-# Run: python3 tools/drishti.py feed run central-banks (EXTERNAL_DATA.md); options.sources holds each source's licence and terms; the rest of
+# Run: python3 tools/drishti.py feed run central-banks (WORLD_DATA_GUIDE.md); options.sources holds each source's licence and terms; the rest of
 # options is the default selection.
 feed: central-banks
 title: Central banks (FRED and the Bank of Canada)
-description: 'The economy module''s public-sector central-banks pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): Policy rates and the market series around them: the Federal
+description: 'The economy module''s public-sector central-banks pack (docs/guides/WORLD_DATA_GUIDE.md): Policy rates and the market series around them: the Federal
   Reserve''s target range and effective rate, Treasury yields, the curve''s slope, US inflation, unemployment and the Fed''s balance sheet (FRED, Federal
   Reserve Bank of St. Louis), and the Bank of Canada''s target rate, CORRA, Government of Canada yields and USD/CAD (Bank of Canada Valet). A bank''s page
   shows its policy rate, its last move and its series; each series shows two years of history. Filled daily by the central-banks feed into the worldlake

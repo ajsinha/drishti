@@ -22,4 +22,4 @@ sections:
   - title: 'Funds and ETFs: funds'
     file: ../packs/funds/guides/funds.md
   - title: 'Tutorial: world data'
-    file: ../tutorials/13-world-data.md
+    file: ../guides/WORLD_DATA_GUIDE.md

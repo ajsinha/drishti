@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """``drishti.py feed schedule --cron | --systemd | --windows``: ready-to-use DAILY entries, one per enabled feed at the time its feed
-file's ``schedule`` gives (docs/guides/EXTERNAL_DATA.md section "Run it every day"). Every entry runs the one wrapper of its system,
+file's ``schedule`` gives (docs/guides/WORLD_DATA_GUIDE.md section "Run it every day"). Every entry runs the one wrapper of its system,
 tools/feeds/feed.sh (Linux, macOS) or tools\\windows\\feed.ps1 (Windows), so the Python it uses is the console's."""
 from __future__ import annotations
 

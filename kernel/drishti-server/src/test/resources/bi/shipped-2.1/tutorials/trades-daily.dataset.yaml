@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Tutorial 8, Part D: a small dataset over the trades that rebuilds itself every business morning. The `refresh:` line is the point; the rest is the
+# The reports tutorial, Part D: a small dataset over the trades that rebuilds itself every business morning. The `refresh:` line is the point; the rest is the
 # trades-basic sample cut down to what a desk page needs.
 rachana: 1
 dataset: trades-daily

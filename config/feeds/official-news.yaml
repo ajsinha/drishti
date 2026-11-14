@@ -12,17 +12,17 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The official-news feed (docs/guides/PUBLIC_SECTOR_GUIDE.md section 5): press releases and notices of central banks, regulators and
+# The official-news feed (docs/guides/WORLD_DATA_GUIDE.md section 5): press releases and notices of central banks, regulators and
 # governments from their own feeds into newslake, for the official-news pack. Class: tools/feeds/sources/official_news.py. Daily;
 # incremental (a release already kept is not added again; no new release, nothing written). No key.
 # Each publisher below is a source with its own terms. A publisher whose terms allow no commercial reuse is internal-only: its releases
 # carry INTERNAL_ONLY true, Export data refuses them (internal-only-data off) and they never leave the organisation. The flags are the
 # owner's reading of each site's terms, confirmed on 2026-11-07 (the terms: links).
-# Run: python3 tools/drishti.py feed run official-news (EXTERNAL_DATA.md); options.sources holds each source's licence and terms; the rest of
+# Run: python3 tools/drishti.py feed run official-news (WORLD_DATA_GUIDE.md); options.sources holds each source's licence and terms; the rest of
 # options is the default selection.
 feed: official-news
 title: Official press releases (central banks, regulators, governments)
-description: 'The economy module''s public-sector official-news pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): Press releases and notices from the publishers'' own
+description: 'The economy module''s public-sector official-news pack (docs/guides/WORLD_DATA_GUIDE.md): Press releases and notices from the publishers'' own
   feeds: the Federal Reserve, the European Central Bank, the Bank of Canada, the Bank of England, the SEC, OSFI, the US Federal Register and the Canada
   Gazette. A publisher''s page lists its latest releases newest first, each a link to the original, with its terms; a release''s page gives its title, date,
   summary and link. Each publisher''s terms are recorded: the Bank of England, OSFI and the Canada Gazette allow no commercial reuse, so their releases
