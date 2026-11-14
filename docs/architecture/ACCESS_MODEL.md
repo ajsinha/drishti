@@ -120,3 +120,42 @@ What exists now, on the server and in the console (the console's part since phas
 The domain boundaries and the move: [DOMAIN_MODULES.md](DOMAIN_MODULES.md). The kernel, the module package, its loading and data binding, and distributions: [KERNEL_AND_MODULES.md](KERNEL_AND_MODULES.md). The JavaScript libraries
 modules contribute: `docs/architecture/ELEMENTS.md` (planned until the train merges). The one database: [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md).
 The roadmap: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).
+
+## 10. Row rules
+
+A role may restrict **which records of a kind** its holders see, by the record's fields and the person's attributes. Row rules are declared
+in the configured roles (`drishti.security.roles.<role>` in `config/application.yaml` or a pack's roles), beside `kinds` and `permissions`:
+
+```yaml
+drishti:
+  security:
+    roles:
+      rates-trader:
+        kinds: [trade, position]
+        edit: true
+        rows:
+          trade: "ASSET_CLASS = 'RATES' and DESK in $user.desks"
+      endur-support:
+        kinds: [trade]
+        edit: true
+        rows:
+          trade: "SOURCE_SYSTEM = 'ENDUR'"
+        edit-systems: [ENDUR]           # write-back only to Endur's records
+```
+
+| Key | Meaning |
+|---|---|
+| `rows.<kind>` | A row predicate ([DATA_LAKE_GUIDE.md section 6.2](../guides/DATA_LAKE_GUIDE.md#62-several-source-systems-shared-or-separate-tables): `=`, `<>`, `in (...)`, `and`, `or`, `not`, `is null`; text quoted). `$user.<attribute>` is the person's attribute (`desks`, `desk`, `name`, `roles`, `email`, as the user directory gives them): a list after `in`, its one value otherwise; an attribute the person lacks matches nothing. |
+| `edit-systems` | The trading systems (`SOURCE_SYSTEM`) whose records the role may change through write-back; absent or empty: every system. |
+
+**Combining.** A person sees a record when any of their roles that opens the kind passes it; a role that opens the kind without a rule for
+it opens every record of it; an administrator and a server with sign-in off see every record. A person may change a record of a system when
+none of their roles lists `edit-systems`, or one of them lists that system.
+
+**Where they apply.** Row rules restrict **record views**: the live sets behind lists and blotters (the person's reader, per request,
+tested on every row and every live change; part of the audience, so two people with different rules never share a filled set), search (the
+rule joins the search's condition), FORM and Raw JSON (a record outside the rule is not found). **Aggregates keep their own scope model**:
+VaR, BI totals and other computed measures are not filtered by row rules (BI's dataset rules and VaR's scopes decide them).
+
+**Tests.** `RowRulesTest` (two people on one canonical kind, a role without a rule, edit rights per `SOURCE_SYSTEM`, a rule that is not a
+predicate), `LiveIsolationTest` (a reader's row scope on shared sets), `SourceRoutingTest` (write-back to the record's own system).

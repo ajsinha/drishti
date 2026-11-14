@@ -220,6 +220,7 @@ final class ConnectorInstance implements SourcePlugin {
             }
         });
         out.addAll(shape.set().keySet());
+        out.addAll(shape.fixed().keySet());
         return out;
     }
 

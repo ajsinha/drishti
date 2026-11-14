@@ -312,6 +312,8 @@ public enum ErrorCode {
     /** A connector changed since it was read (ETag mismatch), already exists, or is in use and the change was not confirmed. */
     CONNECTOR_CONFLICT("DRS-5032", 409),
     CONNECTOR_NOT_FOUND("DRS-5033", 404),
+    /** A read connector's where, set or map cannot be used (DATA_LAKE_GUIDE.md section 6.2): the connector is refused at load. */
+    CONNECTOR_SHAPE_INVALID("DRS-5034", 422),
     /** Admin, Artifacts: no installed artifact (pack, connector or BI file) or no archive of that name. */
     ARTIFACT_NOT_FOUND("DRS-5040", 404),
     /** Admin, Artifacts: an uninstall or disable was refused because other things depend on the artifact; the answer lists them. */

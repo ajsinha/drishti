@@ -192,9 +192,15 @@ public final class Entitlements {
         if (p == null || !props.enabled() || isAdmin(p) || props.roles() == null || props.roles().isEmpty()) {
             return java.util.Optional.empty();
         }
+        return rowRule(props.roles(), p.roles(), kind, attributes.apply(p));
+    }
+
+    /** The row rule the roles give on a kind (see {@link #rowRule(Principal, String)}), the person's attributes given. */
+    static java.util.Optional<com.ash.drishti.engine.source.RowPredicate> rowRule(Map<String, SecurityProperties.Role> roles, List<String> held,
+            String kind, Map<String, List<Object>> attributes) {
         List<String> rules = new java.util.ArrayList<>();
-        for (String role : p.roles()) {
-            SecurityProperties.Role r = props.roles().get(role);
+        for (String role : held) {
+            SecurityProperties.Role r = roles.get(role);
             if (r == null || !(r.kinds().contains("*") || r.kinds().contains(kind))) {
                 continue;
             }
@@ -207,7 +213,7 @@ public final class Entitlements {
         if (rules.isEmpty()) {
             return java.util.Optional.empty();
         }
-        return java.util.Optional.of(com.ash.drishti.engine.source.RowPredicate.parse(String.join(" or ", rules), attributes.apply(p)));
+        return java.util.Optional.of(com.ash.drishti.engine.source.RowPredicate.parse(String.join(" or ", rules), attributes));
     }
 
     /** Whether the person may see this record of the kind under their row rule. */
@@ -223,9 +229,14 @@ public final class Entitlements {
         if (p == null || !props.enabled() || isAdmin(p) || system == null || system.isBlank() || props.roles() == null) {
             return true;
         }
+        return mayEditSystem(props.roles(), p.roles(), system);
+    }
+
+    /** Whether the roles may change a record of the system (see {@link #mayEditSystem(Principal, String)}). */
+    static boolean mayEditSystem(Map<String, SecurityProperties.Role> roles, List<String> held, String system) {
         boolean listed = false;
-        for (String role : p.roles()) {
-            SecurityProperties.Role r = props.roles().get(role);
+        for (String role : held) {
+            SecurityProperties.Role r = roles.get(role);
             if (r != null && !r.editSystems().isEmpty()) {
                 listed = true;
                 if (r.editSystems().contains(system)) {

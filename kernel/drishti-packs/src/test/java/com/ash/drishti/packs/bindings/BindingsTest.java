@@ -47,6 +47,20 @@ class BindingsTest {
     }
 
     @Test
+    void severalLiveConnectorsPerKindAndOneStillAccepted() {
+        Bindings.Binding two = Bindings.binding("trade", Map.of("read", List.of("trade-endur", "trade-calypso"), "union", true,
+                "live", List.of("trade-endur-kafka", "trade-calypso-kafka")));
+        assertThat(two.live()).containsExactly("trade-endur-kafka", "trade-calypso-kafka");
+        assertThat(two.connectors()).containsExactly("trade-endur", "trade-calypso", "trade-endur-kafka", "trade-calypso-kafka");
+        assertThat(two.toMap().get("live")).isEqualTo(List.of("trade-endur-kafka", "trade-calypso-kafka"));
+        Bindings.Binding one = Bindings.binding("trade", Map.of("live", "trade-kafka"));
+        assertThat(one.live()).containsExactly("trade-kafka");
+        assertThat(one.toMap().get("live")).as("one connector is written as a name").isEqualTo("trade-kafka");
+        assertThat(new Bindings(Map.of("trade", two)).kindsOf("trade-calypso-kafka")).containsExactly("trade");
+        assertThatThrownBy(() -> Bindings.binding("trade", Map.of("live", List.of("k", "k")))).hasMessageContaining("named twice in 'live'");
+    }
+
+    @Test
     void refusesWithWords() {
         assertThatThrownBy(() -> Bindings.binding("trade", Map.of("read", List.of("a"), "for", Map.of())))
                 .hasMessageContaining("one binding per kind");

@@ -272,6 +272,24 @@ class SourceShapeTest {
     }
 
     @Test
+    void theSourceDesignersMapFormReadsTheSame() throws Exception {
+        // canonical: {from: native, cast, values: {native value: canonical value}} or canonical: {value: constant}; set: and keep: of the file
+        Files.writeString(tmp.resolve("endur-designer.yaml"), "fields:\n  TRADE_ID: { from: TRAN_NUM }\n  DESK: { from: PORTFOLIO, values: { RATES-NY: "
+                + "RATES-NEW-YORK } }\n  NOTIONAL: { from: NOTIONAL_AMT, cast: number }\n  ASSET_CLASS: { value: RATES }\nset:\n  SOURCE_SYSTEM: ENDUR\n"
+                + "keep: false\n");
+        Map<String, Map<String, String>> c = new LinkedHashMap<>();
+        c.put("trade-endur", settings("table", "trade_endur", "map", "endur-designer.yaml"));
+        SourceRouter r = router(c);
+        assertThat(r.registry().failures()).isEmpty();
+        assertThat(all(r).get("E9")).containsExactlyInAnyOrderEntriesOf(Map.of("TRADE_ID", "E9", "DESK", "RATES-NEW-YORK", "NOTIONAL", 1500.0,
+                "ASSET_CLASS", "RATES", "SOURCE_SYSTEM", "ENDUR"));
+        assertThat(r.registry().shape("trade-endur").orElseThrow().system()).contains("ENDUR");
+        ColumnSet cs = r.columns("trade", List.of("TRADE_ID", "DESK", "ASSET_CLASS", "SOURCE_SYSTEM"), AsOf.LATEST, Duration.ofSeconds(2)).orElseThrow();
+        assertThat(List.of(cs.value("TRADE_ID", 0), cs.value("DESK", 0), cs.value("ASSET_CLASS", 0), cs.value("SOURCE_SYSTEM", 0)))
+                .containsExactly("E9", "RATES-NEW-YORK", "RATES", "ENDUR");
+    }
+
+    @Test
     void twoLiveConnectorsMergeIntoOneFeedEachPassingItsOwnSystem() {
         SourceRouter r = sharedSplit();
         List<String> got = new CopyOnWriteArrayList<>();

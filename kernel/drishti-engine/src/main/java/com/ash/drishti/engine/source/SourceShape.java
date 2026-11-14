@@ -58,12 +58,23 @@ public final class SourceShape {
     public static final String CODE = "DRS-5034";
 
     /** A connector that reads its rows as they are. */
-    public static final SourceShape NONE = new SourceShape(RowPredicate.ALL, Map.of(), Map.of(), true, null, "");
+    public static final SourceShape NONE = new SourceShape(RowPredicate.ALL, Map.of(), Map.of(), true, null, "", Map.of());
 
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
 
-    /** A native field's canonical name and cast ({@code null}: as read). */
-    public record Target(String to, String cast) {}
+    /**
+     * A native field's canonical name, cast ({@code null}: as read) and value translation ({@code values}: native value to canonical value;
+     * a value it does not name stays as read).
+     */
+    public record Target(String to, String cast, Map<String, Object> values) {
+        public Target {
+            values = values == null ? Map.of() : Map.copyOf(values);
+        }
+
+        public Target(String to, String cast) {
+            this(to, cast, Map.of());
+        }
+    }
 
     private final RowPredicate where;
     private final Map<String, Object> set;
@@ -72,8 +83,12 @@ public final class SourceShape {
     private final boolean keep;
     private final String system;
     private final String mapFile;
+    /** Canonical fields the map gives one value always ({@code CANON: {value: X}}). */
+    private final Map<String, Object> fixed;
 
-    private SourceShape(RowPredicate where, Map<String, Object> set, Map<String, Target> map, boolean keep, String system, String mapFile) {
+    private SourceShape(RowPredicate where, Map<String, Object> set, Map<String, Target> map, boolean keep, String system, String mapFile,
+            Map<String, Object> fixed) {
+        this.fixed = fixed;
         this.where = where;
         this.set = set;
         this.map = map;
@@ -113,6 +128,7 @@ public final class SourceShape {
             throw refused(connector, "where: " + e.getMessage());
         }
         Map<String, Target> map = Map.of();
+        Map<String, Object> fixed = new LinkedHashMap<>();
         boolean keep = true;
         String file = "";
         if (m != null && !m.isBlank()) {
@@ -134,15 +150,36 @@ public final class SourceShape {
             for (var it = doc.path("fields").fields(); it.hasNext();) {
                 var e = it.next();
                 JsonNode v = e.getValue();
-                String to = v.isTextual() ? v.asText() : v.path("to").asText(e.getKey());
+                // two forms: native: canonical (or native: {to, cast}); and the source designer's canonical: {from: native, cast, values}
+                // or canonical: {value: constant}
+                boolean byCanonical = v.isObject() && (v.has("from") || v.has("value"));
+                if (byCanonical && v.has("value") && !v.has("from")) {
+                    if (!e.getKey().matches("[A-Za-z_][A-Za-z0-9_]{0,127}")) {
+                        throw refused(connector, "map: " + p + ": '" + e.getKey() + "' is not a field name");
+                    }
+                    fixed.put(e.getKey(), plain(v.get("value")));
+                    continue;
+                }
+                String nat = byCanonical ? v.path("from").asText() : e.getKey();
+                String to = byCanonical ? e.getKey() : v.isTextual() ? v.asText() : v.path("to").asText(e.getKey());
                 String cast = v.isObject() && v.hasNonNull("cast") ? v.path("cast").asText().toLowerCase(Locale.ROOT) : null;
                 if (cast != null && !List.of("text", "number", "integer", "boolean", "date").contains(cast)) {
                     throw refused(connector, "map: " + p + ": " + e.getKey() + " casts to '" + cast + "' (text, number, integer, boolean or date)");
                 }
-                if (to.isBlank() || !to.matches("[A-Za-z_][A-Za-z0-9_]{0,127}")) {
-                    throw refused(connector, "map: " + p + ": " + e.getKey() + " maps to '" + to + "', which is not a field name");
+                if (to.isBlank() || !to.matches("[A-Za-z_][A-Za-z0-9_]{0,127}") || nat.isBlank()) {
+                    throw refused(connector, "map: " + p + ": " + e.getKey() + " maps " + nat + " to '" + to + "', which is not a field name");
                 }
-                out.put(e.getKey(), new Target(to, cast));
+                Map<String, Object> values = new LinkedHashMap<>();
+                if (v.path("values").isObject()) {
+                    v.path("values").fields().forEachRemaining(x -> values.put(x.getKey(), plain(x.getValue())));
+                }
+                if (out.containsKey(nat)) {
+                    throw refused(connector, "map: " + p + ": the native field " + nat + " is mapped twice");
+                }
+                out.put(nat, new Target(to, cast, values));
+            }
+            if (doc.path("set").isObject()) {                  // the map file's own constants; the connector's set wins
+                doc.path("set").fields().forEachRemaining(x -> set.putIfAbsent(x.getKey(), plain(x.getValue())));
             }
             if (out.values().stream().map(Target::to).distinct().count() != out.size()) {
                 throw refused(connector, "map: " + p + ": two native fields map to one canonical field");
@@ -150,11 +187,31 @@ public final class SourceShape {
             map = java.util.Collections.unmodifiableMap(out);
             keep = !doc.has("keep") || doc.path("keep").asBoolean(true);
         }
-        Object fixed = set.get(SOURCE_SYSTEM);
-        if (fixed == null) {
-            fixed = where.fixes(SOURCE_SYSTEM).orElse(null);
+        Object system = set.get(SOURCE_SYSTEM);
+        if (system == null) {
+            system = fixed.get(SOURCE_SYSTEM);
         }
-        return new SourceShape(where, java.util.Collections.unmodifiableMap(set), map, keep, fixed == null ? null : String.valueOf(fixed), file);
+        if (system == null) {
+            system = where.fixes(SOURCE_SYSTEM).orElse(null);
+        }
+        return new SourceShape(where, java.util.Collections.unmodifiableMap(set), map, keep, system == null ? null : String.valueOf(system), file,
+                java.util.Collections.unmodifiableMap(fixed));
+    }
+
+    private static Object plain(JsonNode n) {
+        if (n == null || n.isNull()) {
+            return null;
+        }
+        if (n.isBoolean()) {
+            return n.asBoolean();
+        }
+        if (n.isIntegralNumber()) {
+            return n.asLong();
+        }
+        if (n.isNumber()) {
+            return n.asDouble();
+        }
+        return n.asText();
     }
 
     private static IllegalStateException refused(String connector, String why) {
@@ -210,6 +267,11 @@ public final class SourceShape {
         return set;
     }
 
+    /** The canonical fields the map gives one value always ({@code CANON: {value: X}}). */
+    public Map<String, Object> fixed() {
+        return fixed;
+    }
+
     /** The map: native field to canonical field and cast. */
     public Map<String, Target> map() {
         return map;
@@ -254,7 +316,7 @@ public final class SourceShape {
 
     /** The canonical row: renamed and cast by {@code map}, then the constants {@code set} gives where the row lacks them. */
     public DataNode canonical(DataNode stored) {
-        if (map.isEmpty() && set.isEmpty() || !(stored.unwrap() instanceof Map<?, ?> raw)) {
+        if (map.isEmpty() && set.isEmpty() && fixed.isEmpty() || !(stored.unwrap() instanceof Map<?, ?> raw)) {
             return stored;
         }
         Map<String, Object> out = new LinkedHashMap<>();
@@ -262,11 +324,16 @@ public final class SourceShape {
             String k = String.valueOf(e.getKey());
             Target t = map.get(k);
             if (t != null) {
-                out.put(t.to(), cast(e.getValue(), t.cast()));
+                Object v = e.getValue();
+                if (!t.values().isEmpty() && v != null && t.values().containsKey(String.valueOf(v))) {
+                    v = t.values().get(String.valueOf(v));
+                }
+                out.put(t.to(), cast(v, t.cast()));
             } else if (keep && !out.containsKey(k)) {
                 out.put(k, e.getValue());
             }
         }
+        out.putAll(fixed);
         set.forEach((k, v) -> {
             Object had = out.get(k);
             if (had == null || had instanceof String s && s.isBlank()) {

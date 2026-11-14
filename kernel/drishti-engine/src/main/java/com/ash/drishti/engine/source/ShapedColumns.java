@@ -101,8 +101,11 @@ final class ShapedColumns {
         for (Map.Entry<String, String> e : nativeOf.entrySet()) {
             String canonical = e.getKey();
             String n = e.getValue();
-            Object constant = shape.set().get(canonical);
-            if (cs.numbers().containsKey(n) && constant == null) {
+            Object always = shape.fixed().get(canonical);
+            Object constant = always != null ? always : shape.set().get(canonical);
+            SourceShape.Target target = shape.map().get(n);
+            java.util.Map<String, Object> values = target == null ? java.util.Map.of() : target.values();
+            if (cs.numbers().containsKey(n) && constant == null && values.isEmpty()) {
                 double[] src = cs.numbers().get(n);
                 double[] out = new double[ids.length];
                 for (int j = 0; j < out.length; j++) {
@@ -113,7 +116,10 @@ final class ShapedColumns {
                 boolean text = constant == null ? cs.texts().containsKey(n) : constant instanceof String;
                 Object[] vals = new Object[ids.length];
                 for (int j = 0; j < vals.length; j++) {
-                    Object v = cs.has(n) ? cs.value(n, keep.get(j)) : null;
+                    Object v = always != null || !cs.has(n) ? null : cs.value(n, keep.get(j));
+                    if (v != null && values.containsKey(String.valueOf(v))) {
+                        v = values.get(String.valueOf(v));
+                    }
                     vals[j] = v == null || v instanceof String s && s.isBlank() ? constant == null ? v : constant : v;
                 }
                 if (text && java.util.Arrays.stream(vals).allMatch(v -> v == null || v instanceof String)) {
