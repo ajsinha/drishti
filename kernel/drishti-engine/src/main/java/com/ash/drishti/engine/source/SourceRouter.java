@@ -103,6 +103,30 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
         bound = readOrder == null ? Map.of() : Map.copyOf(readOrder);
     }
 
+    /**
+     * The trading systems switched off that feed {@code kind} (their module declares the kind, or a connector of theirs is bound to it or
+     * names it): what a page computed from the kind says it excludes. Empty for a kind no switched-off system feeds (VaR's scenario PVs).
+     */
+    public java.util.Set<String> excluded(String kind) {
+        SourceSystems s = registry.systems();
+        if (s.off().isEmpty()) {
+            return java.util.Set.of();
+        }
+        java.util.Set<String> out = new java.util.TreeSet<>(s.excluded(kind));
+        for (SourcePlugin p : registry.plugins()) {
+            if (p instanceof ConnectorInstance ci && ci.switchedOff() && (ci.manifest().kinds().contains(kind)
+                    || bound.getOrDefault(kind, List.of()).contains(ci.manifest().name()))) {
+                ci.shape().system().ifPresent(out::add);
+            }
+        }
+        return out;
+    }
+
+    /** The connectors' registry this router reads through (the source systems' switches, the connectors' shapes, Raw JSON's native read). */
+    public SourceRegistry registry() {
+        return registry;
+    }
+
     /** Each bound kind's read order as applied. */
     public Map<String, List<String>> bound() {
         return bound;
@@ -142,6 +166,8 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
      */
     List<SourcePlugin> candidates(String kind) {
         List<SourcePlugin> out = picked(kind);
+        // a connector of a trading system switched off leaves every read order without a word (its source module's switch)
+        out.removeIf(p -> p instanceof ConnectorInstance ci && ci.switchedOff());
         if (out.stream().anyMatch(p -> samples(p.manifest().name())) && ownLake(kind, out) != null) {
             out.removeIf(p -> samples(p.manifest().name()));
         }
