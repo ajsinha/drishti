@@ -190,6 +190,41 @@ functions:
 - XOFC
 - NSMTM
 - CPMTM
+settings:                               # read as drishti.module.banking.<key> (ModuleSettings); Admin -> Modules -> banking -> Settings lists them.
+                                        # was: the server key it was before; read for one release (Health names the ones a site still sets).
+  items:
+  - { key: var.window, type: int, was: drishti.var.scenario-window, group: VaR, meaning: "The newest N scenarios of each date's set (250: one year, the Basel minimum)" }
+  - { key: var.confidence, type: number, was: drishti.var.confidence, group: VaR, meaning: "VaR's confidence (0.99 or 0.95)" }
+  - { key: var.es-confidence, type: number, was: drishti.var.es-confidence, group: VaR, meaning: "Expected shortfall's confidence" }
+  - { key: var.ten-day-method, type: string, was: drishti.var.ten-day-method, group: VaR, meaning: "10-day VaR when the method is not named: sqrt10 or sum" }
+  - { key: var.rank-rule, type: string, was: drishti.var.rank-rule, group: VaR, meaning: "kth-worst or interpolated" }
+  - { key: var.threads, type: int, was: drishti.var.threads, group: VaR, meaning: "Cores the vector sums use (0: every core)" }
+  - { key: var.hot-dates, type: int, was: drishti.var.hot-dates, group: VaR, meaning: "Business dates kept open" }
+  - { key: var.root-name, type: string, was: drishti.var.root-name, group: Hierarchies, meaning: "The top of the VaR tree (every hierarchy's root node)" }
+  - { key: var.hierarchy.empty-label, type: string, was: drishti.var.hierarchy.empty-label, group: Hierarchies, meaning: "The node a row with an empty level value sits under" }
+  - { key: var.system-baskets.seed, type: boolean, was: drishti.var.system-baskets.seed, group: Hierarchies, meaning: "Import a loaded pack's system-basket seed once into an empty system scope at start" }
+  - { key: exposure.limit-confidence, type: number, was: drishti.ccr.exposure.limit-confidence, group: Exposure, meaning: "The PFE confidence credit limits are set on" }
+  - { key: exposure.rank-rule, type: string, was: drishti.ccr.exposure.rank-rule, group: Exposure, meaning: "kth or interpolated" }
+  - { key: frtb.parameters-dir, type: string, was: drishti.frtb.parameters-dir, group: FRTB-SA, meaning: "The folder of the FRTB-SA parameter files" }
+  - { key: simm.parameters-dir, type: string, was: drishti.simm.parameters-dir, group: SIMM, meaning: "The bank's licensed SIMM parameter files" }
+  - { key: simm.default-version, type: string, was: drishti.simm.default-version, group: SIMM, meaning: "The SIMM version for a CSA naming none" }
+  - { key: sensitivities.cache-minutes, type: int, was: drishti.sensitivities.cache-minutes, group: Sensitivities, meaning: "How long a date's sensitivities stay in memory" }
+  - { key: mr-cube.sbm-max-cells, type: int, was: drishti.cube.mr.sbm-max-cells, group: MR cube, meaning: "The most cells whose FRTB-SA SBM one view computes" }
+parts:                                  # what the deployer places, part by part (config/placement.yaml)
+  api:
+    class: light
+  compute:
+    class: heavy
+    memory-mb: 6144
+    paths:
+    - /var
+    - /exposure
+    - /frtb
+    - /simm
+    - /sensitivities
+    - /mr
+  feeds:
+    class: feed
 lenses: lenses/risk.yaml
 docs:
   readme: docs/README.md
