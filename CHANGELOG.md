@@ -50,6 +50,12 @@
   repeats the key is not drawn; the header, the pager and the grid's status bar no longer repeat the count. Signed out, `/live/<id>` goes to
   sign-in and back, as `/t` does. New grid options `ribbon`, `pivotToggle`, `toolbarItems`, `quietStatus`; one mount (`records.mount`) serves
   the blotter page too.
+- **The API sweep.** `tools/sweep/api_sweep.py` lists every endpoint of the server (every controller of the kernel and the modules) and of the
+  console (every route) from the source and calls each GET as the administrator, with real ids, kinds and dates of the saved test data and the
+  first id of the parent list for any other path variable: a 5xx, an unexpected 4xx, an empty body, a timeout or an answer over 10 s fails.
+  Writes are never called: each is listed with the test that covers it, and one with none is flagged. Endpoints present in the code and
+  missing from `API_REFERENCE.md`, and the reverse, are reported. A drill step in the browser lane (`test_api_sweep_browser.py`); the report
+  is `data/sweep/api-sweep-<stamp>.md`. `TEST_HARNESS.md` 3.27 and 3.28 describe it with the command sweep.
 
 - **Richer source field maps; the inbox date from the name.** A source module's map (`map:`) reads dotted paths into nested native JSON,
   `from: [a, b]` / `first-of` (the first non-empty), `scale`, `as` (`yyyymmdd`, `yyyymmddhhmmss`, `epoch-millis`, `epoch-seconds`, `iso`),
