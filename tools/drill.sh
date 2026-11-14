@@ -505,12 +505,12 @@ java25_verify() {
 # ---- clean-up and the working tree's checks ----------------------------------------------------------------------------------
 # Every run cleans up after itself, passed or failed: the temporary folders the tests made in its temporary folder during this run
 # (drishti-* and pytest's), never older ones, never the console's static cache; and the console files' durations are kept.
-DRILL_MARK=$(mktemp "${TMPDIR:-/tmp}/drill-mark.XXXXXX")
+DRILL_MARK=$(mktemp "$DRILL_TMP/drill-mark.XXXXXX")
 drill_cleanup() {
   stop_jobs 2>/dev/null || true
   python3 tools/drillkit/lake_cache.py prune >/dev/null 2>&1 || true
   python3 "$PLAN" merge --durations "$DURATIONS" "$LOGS"/timings-*.json 2>/dev/null || true
-  local tmp="${TMPDIR:-/tmp}"
+  local tmp="$DRILL_TMP"   # never the system /tmp: only the drill's own folder
   # || true: a folder already gone (or none made) is not a failure; under set -e it would turn a green drill's exit into 1
   find "$tmp" -maxdepth 1 -name 'drishti-*' ! -name 'drishti-console-static' -newer "$DRILL_MARK" -exec rm -rf {} + 2>/dev/null || true
   chmod -R u+w "$tmp/pytest-of-$(id -un)" 2>/dev/null || true
