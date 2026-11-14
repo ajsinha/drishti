@@ -144,4 +144,44 @@ class FormApiTest {
         mvc.perform(get("/api/v1/forms/trading").header("Authorization", as("masked")))
                 .andExpect(jsonPath("$.form.fields[?(@.path=='TRADER_ID')].values[*]", org.hamcrest.Matchers.not(hasItem(org.hamcrest.Matchers.startsWith("TRDR-")))));
     }
+
+    private static com.fasterxml.jackson.databind.JsonNode json(org.springframework.test.web.servlet.ResultActions r) throws Exception {
+        return new com.fasterxml.jackson.databind.ObjectMapper().readTree(r.andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+    }
+
+    /** A FORM's result is a live result set: the same rows, columns and order as the search it compiled to, with the search's summary. */
+    @Test
+    void aFormsResultIsALiveResultSetWithTheSearchsRowsColumnsAndOrder() throws Exception {
+        String command = json(compile("searcher",
+                "{\"criteria\":[{\"path\":\"CURRENCY\",\"op\":\"in\",\"values\":[\"EUR\",\"USD\"]}],\"orderBy\":\"QUANTITY\",\"descending\":true,\"limit\":25}"))
+                .path("command").asText();
+        var searched = json(mvc.perform(get("/api/v1/search").param("q", command).header("Authorization", as("searcher"))));
+        var live = json(mvc.perform(get("/api/v1/live/query").param("q", command).header("Authorization", as("searcher"))));
+        org.assertj.core.api.Assertions.assertThat(live.path("search").path("columns")).isEqualTo(searched.path("columns"));
+        org.assertj.core.api.Assertions.assertThat(live.path("search").path("labels")).isEqualTo(searched.path("labels"));
+        org.assertj.core.api.Assertions.assertThat(live.path("search").path("matched")).isEqualTo(searched.path("matched"));
+        org.assertj.core.api.Assertions.assertThat(live.path("total").asInt()).isEqualTo(searched.path("rows").size()).isPositive();
+        java.util.List<String> want = new java.util.ArrayList<>();
+        searched.path("rows").forEach(r -> want.add(r.path("ref").path("id").asText()));
+        java.util.List<String> got = new java.util.ArrayList<>();
+        live.path("rows").forEach(r -> got.add(r.path("id").asText()));
+        org.assertj.core.api.Assertions.assertThat(got).containsExactlyElementsOf(want);
+        // each row's document holds the search's values at the columns' fields
+        var first = searched.path("rows").get(0).path("values");
+        first.fieldNames().forEachRemaining(path -> org.assertj.core.api.Assertions
+                .assertThat(live.path("rows").get(0).path("doc").path(path.substring(2))).as(path).isEqualTo(first.path(path)));
+        String id = live.path("set").path("id").asText();
+        org.assertj.core.api.Assertions.assertThat(id).startsWith("qu-");
+        org.assertj.core.api.Assertions.assertThat(live.path("set").path("editable").asBoolean()).isFalse();
+        // a page of it, sorted another way; its declaration is not listed among the blotters
+        mvc.perform(get("/api/v1/live/" + id + "/rows").param("limit", "5").param("sort", "TRADE_ID").header("Authorization", as("searcher")))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.rows.length()").value(5));
+        mvc.perform(get("/api/v1/live").header("Authorization", as("searcher"))).andExpect(status().isOk())
+                .andExpect(jsonPath("$.sets[?(@.id=='" + id + "')]").isEmpty());
+        // a masked person gets the set of the masked, and may not read the other one by its id
+        var masked = json(mvc.perform(get("/api/v1/live/query").param("q", command).header("Authorization", as("masked"))));
+        org.assertj.core.api.Assertions.assertThat(masked.path("set").path("id").asText()).startsWith("qm-");
+        mvc.perform(get("/api/v1/live/" + id + "/rows").header("Authorization", as("masked"))).andExpect(status().isNotFound());
+        mvc.perform(get("/api/v1/live/query").param("q", command).header("Authorization", as("nothing"))).andExpect(status().isForbidden());
+    }
 }

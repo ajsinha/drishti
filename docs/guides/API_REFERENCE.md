@@ -458,6 +458,8 @@ write path are in [the trading module's guide](../../modules/trading/docs/guide.
 | `GET` | `/live` | the declarations the caller may open (`editable`, `readOnly` for them); for administrators those set aside and the open sets |
 | `GET` | `/live/{id}/rows` | a page: `offset`, `limit` (at most 5,000), `sort`, `descending`, `filter`, `query`; `{set, live, total, seq, rows[{id, version, seq, doc}]}` |
 | `GET` | `/live/{id}/rows/{entity}` | one record whole, masked for the caller (the panel's Raw JSON) |
+| `GET` | `/live/query` | a search's matches as a live set (a FORM's result, the search page's): `q` (the search), `offset`, `limit` (1,000), `sort`, `descending`, `filter`, `again` (Search pressed: a static set is read afresh); the page as `/live/{id}/rows` plus `search` (`columns`, `labels`, `matched`, `scanned`, `partial`, `failed`, `noData`, `pivot`); `set.id` streams while `live` is true (the live business date and a kind with a `live:` binding). One set per search, business date and masking, shared |
+| `GET` | `/live/kinds/{word}/rows` | a kind's own set (`POS <GO>`): `word` is its mnemonic or name; its module's declaration, else the default made from its contract (the key fields, else the promoted columns); `capped: true` when the kind holds more than `drishti.live-sets.default-max-rows` (250,000) |
 | `GET` | `/live/{id}/stream` | server-sent events: `hello`, then `rows` `{upserts, removes, total, seq, countOnly}` or `resync` |
 | `POST` | `/live/{id}/stream/{stream}/window` | the page a stream shows: `{ids}` or `{all: true}`; the stream's owner only |
 | `POST` | `/live/{id}/edit` | `{entity, basedOn, reason, items[{field, from, to}]}`; `403 DRS-9302` read-only (with why, audited), `409 DRS-9303` a stale version |

@@ -16,7 +16,6 @@
 package com.ash.drishti.server.api;
 
 import com.ash.drishti.api.AsOf;
-import com.ash.drishti.engine.command.Mnemonics;
 import com.ash.drishti.engine.search.SearchQuery;
 import com.ash.drishti.engine.search.StructuredSearch;
 import com.ash.drishti.server.security.Entitlements;
@@ -40,11 +39,7 @@ public class SearchController {
 
     private final StructuredSearch search;
     private final Entitlements entitlements;
-    private final Mnemonics mnemonics;
-    private final com.ash.drishti.engine.search.SearchProperties searchProps;
-    private final com.ash.drishti.engine.pivot.PivotProperties pivots;
-    private final com.ash.drishti.engine.source.SourceRouter router;
-    private final com.ash.drishti.engine.time.BusinessDates dates;
+    private final SearchAnswers answers;
 
     private com.ash.drishti.server.edition.EditionCommands edition = com.ash.drishti.server.edition.EditionCommands.NONE;
 
@@ -54,17 +49,10 @@ public class SearchController {
         this.edition = edition;
     }
 
-    public SearchController(StructuredSearch search, Entitlements entitlements, Mnemonics mnemonics,
-            com.ash.drishti.engine.search.SearchProperties searchProps, com.ash.drishti.engine.pivot.PivotProperties pivots,
-            com.ash.drishti.engine.source.SourceRouter router,
-            com.ash.drishti.engine.time.BusinessDates dates) {
+    public SearchController(StructuredSearch search, Entitlements entitlements, SearchAnswers answers) {
         this.search = search;
-        this.router = router;
-        this.dates = dates;
+        this.answers = answers;
         this.entitlements = entitlements;
-        this.mnemonics = mnemonics;
-        this.searchProps = searchProps;
-        this.pivots = pivots;
     }
 
     @GetMapping
@@ -91,26 +79,8 @@ public class SearchController {
         entitlements.requireOpen(principal, kind);
         edition.requireKind(kind);
         StructuredSearch.Result r = search.run(query, asOf, data -> entitlements.redact(principal, data));
-        Map<String, Object> out = new java.util.LinkedHashMap<>();
-        out.put("query", q);
-        out.put("kind", r.kind());
-        out.put("mnemonic", mnemonics.codeFor(r.kind()));
-        out.put("condition", r.condition());
-        out.put("orderBy", r.orderBy());
-        out.put("descending", query.descending());
-        out.put("limit", query.limit());
-        out.put("columns", r.columns());
-        out.put("labels", r.columns().stream().collect(java.util.stream.Collectors.toMap(c -> c, c -> HistoryController.label(c.substring(2)),
-                (a, b) -> a, java.util.LinkedHashMap::new)));
+        Map<String, Object> out = answers.summary(q, query, r, asOf);
         out.put("rows", r.rows());
-        out.put("scanned", r.scanned());
-        out.put("matched", r.matched());
-        out.put("partial", r.partial());
-        // the sources that failed or did not answer in time, and why: a partial answer says what it is missing
-        out.put("failed", r.failed().entrySet().stream().map(e -> Map.of("source", e.getKey(), "reason", e.getValue())).toList());
-        out.put("elapsedMs", r.elapsedMs());
-        out.put("pivot", offered(r.kind()));               // Pivot (the pivot engine on the kind), when the kind's pack opts in (null otherwise)
-        noData(r, asOf).ifPresent(n -> out.put("noData", n));
         if (r.listsMatches()) {
             out.put(com.ash.drishti.server.net.SearchScatter.MATCHED_IDS, r.matchedIds());
         }
@@ -123,41 +93,6 @@ public class SearchController {
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     void scatter(org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.net.SearchScatter> s) {
         this.scatter = s;
-    }
-
-    /**
-     * When nothing was read because the sources hold no data of the kind on the date (a date not loaded yet, or before the first):
-     * the date and the newest date that has data, so the console can say so and offer that date instead of an empty result.
-     */
-    private java.util.Optional<Map<String, Object>> noData(StructuredSearch.Result r, AsOf asOf) {
-        if (r.scanned() > 0) {
-            return java.util.Optional.empty();
-        }
-        java.time.LocalDate day = dates.resolve(asOf).businessDate();
-        return router.latestDate(r.kind()).filter(latest -> day != null && !latest.equals(day))
-                .map(latest -> Map.of("businessDate", day.toString(), "latestDate", latest.toString()));
-    }
-
-    /**
-     * What this kind's results offer to pivot (PIVOT_GUIDE.md section 1: Pivot opens the pivot screen on the kind, with its pack's
-     * arrangement as the view): {@code {source, fields, view}}; null when its pack does not opt in (or says what cannot be read).
-     */
-    private Map<String, Object> offered(String kind) {
-        if (!pivots.enabled()) {
-            return null;
-        }
-        try {
-            return searchProps.pivotOf(kind).map(spec -> {
-                Map<String, Object> m = new java.util.LinkedHashMap<>();
-                m.put("source", kind);
-                m.put("fields", spec.fields().stream().map(com.ash.drishti.rachana.model.PivotSpec.Field::name).toList());
-                m.put("view", com.ash.drishti.server.pivot.SpecViews.view(kind, null, spec.arrangementMap()));
-                return m;
-            }).orElse(null);
-        } catch (IllegalArgumentException e) {
-            org.slf4j.LoggerFactory.getLogger(SearchController.class).warn("no Pivot for {}: {}", kind, e.getMessage());
-            return null;
-        }
     }
 
     /**
