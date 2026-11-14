@@ -184,7 +184,8 @@ def analyse(opts, say=print) -> Analysis:
 
     def choose(kind: str):
         why = an.why.setdefault(kind, [])
-        c = PP.candidates(kind, heads[kind]) if kind in heads else None
+        infer = getattr(opts, "infer", False) and (opts.key is None or opts.date is None or opts.match is None)
+        c = PP.candidates(kind, heads[kind]) if infer and kind in heads else None      # the heads are read for child kinds too
         key = key_k.get(kind, key_k.get(bare(kind), key_d))
         if key is None and opts.key is None and c and c["keyCandidates"]:
             key = c["keyCandidates"][0]["field"]
