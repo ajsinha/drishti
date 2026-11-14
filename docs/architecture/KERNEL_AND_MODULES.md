@@ -65,6 +65,7 @@ and what happens when a module is removed section 12.
 15. [Decisions](#15-decisions)
 16. [What moves from DOMAIN_MODULES.md](#16-what-moves-from-domain_modulesmd)
 17. [Mock-ups](#17-mock-ups)
+18. [Configuration resolution: packs, connectors, bindings and inbox rules](#18-configuration-resolution-packs-connectors-bindings-and-inbox-rules)
 
 ## 1. The three building blocks, goals and principles
 
@@ -831,6 +832,8 @@ bindings:
 **Status:** connector files keep `plugin`, settings and `lake:` and name no kinds; `config/bindings.yaml` is the one home (a `kinds:` line from an earlier release is ignored, and the upgrade that wrote `bindings.yaml` from those lists is gone). The Pack designer proposes its binding to Admin → Data bindings (the file connector saved through the connectors API, each kind proposed for a second administrator's approval); there is no `site/` folder side path.
 
 ### 5.5 How a kind finds its data (resolution)
+
+**The order a kind's connectors are decided in is section 18.6** ([Configuration resolution](#18-configuration-resolution-packs-connectors-bindings-and-inbox-rules)); this section and 5.4 and 5.6 follow it when it is built.
 
 For each kind any loaded module needs, in this order, first hit wins:
 
@@ -2341,3 +2344,244 @@ exactly as people will see it, plus one thin developer bar (module id and versio
 *Reload*). The kernel injects the bar from the development key only under `module run`, never from the module, so the page itself stays
 conformant and screenshots taken with `--shots` leave it out. B repeats the terminal in a drawer that covers the page being designed;
 C hides errors in a corner and is kept only for `--shots` runs.
+
+## 18. Configuration resolution: packs, connectors, bindings and inbox rules
+
+**In plain words:**
+
+1. Drishti reads configuration from three places, always in this order: **your site** (`config/`), **the modules that are on**, **the kernel**.
+2. A module that is off contributes nothing, anywhere. A module that is on contributes everything its manifest lists, from wherever it is installed.
+3. Your site adds to what is shipped, and changes it only where it says so: a pack by `replaces:`, a connector by an override file of the same name, a binding by an entry for the kind.
+4. The server only reads. It never writes, moves, upgrades or retires a configuration file; only an administrator's own save does.
+5. One resolver answers every reader (server, loader, console, tools), and Admin shows for each pack, connector, binding and inbox rule where it came from and why.
+
+```
+                     what is on?                          one resolver                          every reader
+  distribution + licence + switches ──► modules ON ─┐
+                                                    ▼
+  1 SITE     config/packs/<pack>   config/connectors/<name>.yaml   config/bindings.yaml   config/dataload.yaml
+  2 MODULES  <module>/packs/<pack> <module>/connectors/<name>.yaml (kinds: in templates)  <module>/dataload.yaml
+  3 KERNEL   the kernel's packs (core, gleif, compute-demo)
+                                                    │
+                                                    ▼
+             ConfigResolution (one immutable snapshot, a version, a digest)
+               packs · connectors · bindings · inbox rules · problems · why
+                                                    │
+        server · lake loader · command line · console (Python twin) · tools · Admin "origin" columns
+```
+
+Packs and inbox rules are **found** top down (the first place that has it). Connectors are **layered** bottom up (the template, then
+the site's changes over it). Bindings are **decided** top down (the site's entry, else what the templates declare). The working
+paper beside this section ([pack-resolution-inventory.md](pack-resolution-inventory.md), internal) lists every reader and the tests.
+
+### 18.1 The one source of "what is on"
+
+The access registry ([ACCESS_MODEL.md](ACCESS_MODEL.md)) decides each module's state from the distribution, the licence, the
+administrator's switch and the modules it requires. The resolver asks it and nothing else: no reader looks at a switch file, the
+distribution or `drishti.packs.enabled` to decide whether a module's content counts. For each module the registry gives its id,
+version, state, the reason when off, and **its folder**: `<drishti.modules.dir>/<id>/` (or `<id>/dmod/`, a module built with code),
+else the active version in the store, `<drishti.modules.path>/installed/<id>/<version>/`. A module found in both with different
+versions is read from the folder and reported (DRS-1044). The command line and the tools, which have no server, compute the same
+from the distribution file and the switch files (licence not evaluated); the console takes the list from the server.
+
+### 18.2 Settings: one per concept
+
+| Setting (variable) | Default | What it is |
+|---|---|---|
+| `drishti.packs.site-dir` (`DRISHTI_PACKS_DIR`) | `./config/packs` | the site's own packs: `<dir>/<pack>/pack.yaml`, or one folder down (`<dir>/<group>/<pack>/`) |
+| `drishti.packs.installed-dir` | `<data>/packs/installed` | packs an administrator deployed (Admin → Packs, a registry); part of the site |
+| `drishti.modules.dir` (`DRISHTI_MODULES_HOME`) | `./modules` | the modules shipped as folders |
+| `drishti.modules.path` (`DRISHTI_MODULES_PATH`) | `<data>/modules` | the store of modules installed from a `.dmod` (section 4.1) |
+| `drishti.modules.switches-dir` | `./config/modules` | the administrator's module switches |
+| `drishti.kernel.packs-dir` | `./config/packs/core` | the kernel's own packs. It is inside the site's packs folder today and is **never read as site packs**; when the folder moves, only this default changes |
+| `drishti.sources.connectors-dir` (`DRISHTI_CONNECTORS_DIR`) | `./config/connectors` | the site's connector files |
+| `drishti.bindings.file` | `./config/bindings.yaml` | the site's bindings |
+| `drishti.dataload.rules-file` | `./config/dataload.yaml` | the site's inbox rules |
+
+No setting is derived from another folder's position, and no folder's name changes what is read. `drishti.packs.dir` is the former
+name of `drishti.packs.site-dir` and is still read; setting both to different folders stops the start (DRS-1047).
+
+### 18.3 The resolver
+
+Plain Java in drishti-api (`com.ash.drishti.api.resolution`: the server, the loader process and the command line share it) and its
+Python twin `drishti-console/core/resolution.py` (the console and the tools). Both are held to one fixture of file trees and expected
+answers. **No other code lists or joins a pack, module, connector, bindings or rules folder**; a guard test enforces it.
+
+```java
+ResolutionSettings s = ResolutionSettings.of(property);                    // section 18.2, nothing else
+ConfigResolution r = ConfigResolution.build(s, modules, enabledPacks);     // immutable; modules = the registry's list (18.1)
+
+r.packs().find("trading")            // Optional<ResolvedPack>: name, version, origin, module, folder, state, replaces, reason
+r.packs().require("trading")         // or DRS-1041 / DRS-1043, in words
+r.packs().loaded()  .all()  .ofOrigin(Origin.KERNEL)  .manifests()
+r.connectors().find("trade-endur")   // Optional<Effective>: plugin, enabled, settings, kinds, writes, layer, templateFrom,
+                                     //   origins (each key's layer), baseDirs (each relative file's folder)
+r.connectors().all()  .unused()      // unused: files that are not read, each with its reason
+r.bindings().read("trade")  .live("trade")  .write("trade", "ENDUR")       // Resolved: connectors, union, state, origin, reason
+r.inboxRules()                       // List<Rule>, in match order, each with its origin
+r.modules().on()  .all()
+r.problems()                         // List<Problem>: code, message, the places it names
+r.why("pack", "trading")             // every place looked in, in order, and what was found there
+r.version()  r.digest()  r.watchRoots()
+```
+
+```python
+from core.resolution import Settings, build, repository
+r = build(Settings.from_env(), modules=server_modules)   # the console; repository() = the checkout with every module on (tools)
+r.packs.find(name); r.packs.loaded(); r.connectors.find(name); r.bindings.read(kind); r.inbox_rules(); r.problems; r.why("pack", name)
+```
+
+`Origin` is `SITE`, `MODULE` or `KERNEL`. A pack's `state` is `LOADED`, `AVAILABLE` (found, not enabled), `MODULE_OFF` or `NOT_READ`.
+
+### 18.4 Packs
+
+**Where a pack is found**, first hit wins:
+
+1. **Site**: `drishti.packs.installed-dir`, then `drishti.packs.site-dir` (the kernel packs folder excluded).
+2. **Modules that are on**: for each, the packs its manifest lists (`packs: {folder, list}`), in `<module folder>/<folder>/<pack>/`.
+   Only listed packs count: a folder the manifest does not list is reported, not read.
+3. **Kernel**: `drishti.kernel.packs-dir`.
+
+**Tie rules:**
+
+| Case | What happens |
+|---|---|
+| A site pack has the name of a module's or the kernel's pack and its `pack.yaml` says `replaces: <that name>` | the site pack is read; the shipped one is shown as *replaced* |
+| The same, without `replaces:` | **the shipped pack is read**; the site folder is `NOT_READ` and listed (DRS-1042), naming both folders |
+| Two site folders hold the same name | neither site folder is read (DRS-1042); a shipped pack of that name still is |
+| Two modules that are on list the same pack name | neither is read (DRS-1042); both modules are named |
+| A deploy of a pack whose name is shipped | refused at the deploy unless the archive says `replaces:` |
+| The kernel's `core` pack is missing | the server does not start (DRS-1040), naming the setting and the folder |
+
+Only the last one stops a start. Every other case leaves the server running with the shipped pack and a red line in Health.
+
+**Which packs load:** every pack of every module that is on, the kernel's `core`, and the kernel's other packs and the site's packs
+when the distribution or the administrator enables them. `drishti.packs.enabled` (`DRISHTI_PACKS`) narrows that set when it names
+packs; a name whose module is off is not loaded and says so (DRS-1043). The manifests' `packs.list` is the one list of what a module
+brings.
+
+**A site upgraded from the layout where shipped packs were under `config/packs/<domain>/`** needs no step: those folders are site
+folders with shipped names and no `replaces:`, so the shipped packs in the modules are read and each old folder is listed once as
+*not read: safe to delete* (never deleted). A site's own pack in such a folder has a name nothing ships and is read as before. A pack
+deployed over a shipped one in an earlier release is treated the same way: the shipped pack is read and the deployed one is listed.
+
+### 18.5 Connectors
+
+**The effective connector** is computed in memory:
+
+1. **Template** (read-only): an entry of a loaded pack's `connectors:`, or a file directly in an on module's connectors folder
+   (`connectors: {folder}` in its manifest). The connector's name is the file's `name:` key, else the file's name. Files under
+   `connectors/examples/` are examples to copy and are not templates. Two templates of one name: neither is used (DRS-1045).
+2. **Site file** `config/connectors/<name>.yaml`, merged over the template key by key (a setting's dotted path is its key:
+   `settings.set.SOURCE_SYSTEM`). **Any key may be changed, the plugin included, and every other key is still inherited**; a key set
+   to `null` removes the inherited one. With no template of that name the file is a complete **site connector** and must name its
+   plugin.
+3. **Secrets**: `${VAR}` and `file:` references, resolved when the connector starts. A template never holds one.
+
+A relative file in a setting (`map: mappings/endur-trade.yaml`) is read from the folder of the layer that set the key.
+
+| A site file… | is… |
+|---|---|
+| has a template of its name | an **override**: its keys win, the rest is the template's |
+| has no template, names a plugin, and has no `template:` key and no generated mark | a **site connector** |
+| says `template: <owner>` (Admin and the tools always write it) and that template is not here (its module is off or removed) | **not used**; listed with the module and why it is off (DRS-1046) |
+| was generated by an earlier release and never edited (its stamp or marker says so) | **superseded**: not read, the template is in force; listed *safe to delete* |
+| was generated by an earlier release and edited | an override, like any other |
+| was generated by an earlier release and its template is not here | **not used**; listed (DRS-1046). It is never run as a site connector |
+
+**The server writes no connector file** at start, on reload or on deploy. Admin → Connectors saves only the keys that differ from the
+template, with `template: <owner>`; *Reset* deletes the override. There is no generation, upgrade, retirement, `.history` or
+`.migrated` step. Folders and markers an earlier release left (`.history`, `.generated`, `<data>/connectors/generated`, per-pack
+connector overrides in `<data>/packs/settings`, connector edits in the content store) are read where they are needed to recognise a
+generated file, listed in Health, and otherwise left alone: the content-store fold at start is removed, because every node that ran
+the earlier release has already folded, and a start that writes files from an inference is the fault this section removes.
+
+### 18.6 Bindings
+
+**How a kind finds its connectors.** One resolution, used by Admin, Health, every read, the inbox and every write; first hit wins:
+
+1. **The site's binding** for the kind in `config/bindings.yaml` (as approved). Names that no effective connector has are set aside
+   and reported; the rest serve. If none is left the next step decides.
+2. **What is shipped and declared**: every effective connector whose template or plugin names the kind (`kinds:` in a template, a
+   pack's `routes:`), in the order: the pack's route first, then by name; `union: true` when the templates say so. This is how a
+   source module enters: `source-endur` on brings `trade-endur` with `kinds: [trade]`, and `trade` reads it; off, it leaves. No site
+   file lists the source systems.
+3. **Demo samples**, only for a kind the site binds with `demo: true`.
+4. Otherwise **UNBOUND** (section 5.6).
+
+A connector is asked for a kind only when one of these steps names it. Two guesses of earlier releases are gone: *any lake connector
+whose lake holds the kind's table*, and *demo samples for whatever nothing else serves*. Every kind of every shipped pack is named by
+a template or a route, so nothing shipped depended on them; a site kind that did is UNBOUND after the upgrade and Health offers the
+exact binding to approve (*trade-history was found by convention on connector risk-store: bind it*).
+
+**Live**: the site binding's `live`, else the effective connectors that name the kind and can push.
+
+**Write** (a correction from a blotter or a form), `write(kind, source system)`:
+
+1. the connector the form names (`save.connector`);
+2. the site's binding: `write: {connector: <name>}` or, by source system, `write: {connectors: {ENDUR: <name>, MUREX: <name>}}`;
+3. what is shipped and declared: the effective connectors with `writes:` that name the kind; with a source system, the one of that
+   system; without, the only one.
+
+None: DRS-9308, naming the kind, the system, and the connectors that could serve if enabled. More than one: DRS-9309, naming them.
+The connector must be running with its `writes:` command switched on (Admin → Edits), as before. `write: {lake, table}`, for a kind
+a module produces, keeps its meaning.
+
+A site's `bindings.yaml` from an earlier release is read as it is. The demo's list of trade connectors is no longer copied into a
+site; a site that holds that copy keeps reading exactly the systems it lists, and Admin shows any on module's connector that names
+the kind and is *not in your binding*.
+
+### 18.7 Inbox rules, and what happens when something changes
+
+**Inbox rules**: the site's rules (`config/dataload.yaml`) first, then each on module's rules (`dataload:` in its manifest) in module
+order; the first rule that matches a file wins. A rule that names no connector takes the kind's first read connector (18.6). A rules
+file that cannot be read is a problem in Health (DRS-1048), never an empty list.
+
+**One snapshot, replaced whole.** The server holds the current `ConfigResolution`. It is rebuilt when: a module is switched,
+installed, upgraded or unloaded (`module.started`, `module.stopped`); a file under `watchRoots()` changes (the site's folders, the
+module folders, the store's `active.yaml`); an administrator saves a connector, a binding or a pack switch; a pack is deployed.
+The rebuild reads everything again, compares with the snapshot before, swaps, and publishes **one** event, `resolution.changed`
+(version, packs added and removed, connectors added, removed and changed, kinds whose binding changed, rules changed):
+
+| Consumer | On `resolution.changed` |
+|---|---|
+| Pack registry | loads the added packs, unloads the removed ones (section 12) |
+| Connector manager | starts added connectors, stops removed ones, restarts changed ones |
+| Binding service | hands the router the new read order per kind; publishes `binding.changed` per kind |
+| Data inbox | uses the new rules from its next cycle; the loader process is given the same snapshot's inputs |
+| Console | sees the new version on its next request and drops what it cached by the old one |
+
+A rebuild that fails (a file half written) keeps the snapshot before and reports the problem. In a cluster every node resolves from
+its own files; the digest is shown per node in Health and a difference is a problem (DRS-1049).
+
+### 18.8 What Admin shows
+
+- **Admin → Packs**: for each pack *Origin* (Site, Module `banking 2.9.11`, Kernel), its folder, *State* (loaded; available; module
+  off, with the reason; not read, with the reason and both folders), *Replaces*. A *Why* link shows the places looked in, in order.
+- **Admin → Connectors**: the layer of the connector (template, override, site) and of each setting, the template's owner, and the
+  list *not used* (superseded, template not here), each *safe to delete* or with the module to switch on.
+- **Admin → Data bindings**: each kind's origin (site, declared by `<module or pack>`, demo), read, live and write, and connectors
+  that offer the kind but are not in the site's binding.
+- **Admin → Data inbox**: each rule's origin, and a rule an earlier one always shadows.
+- **Health**: every problem of the resolution, and the digest per node.
+- `GET /api/v1/admin/resolution` answers all of it; `drishti.py resolution show` and `resolution why <pack|connector|kind> <name>`
+  print it without a server.
+
+### 18.9 Messages
+
+Each names the thing, both places, and what to do.
+
+| Code | When | The message, by example |
+|---|---|---|
+| DRS-1040 | the kernel's packs are missing (start refused) | *The kernel's pack 'core' is not in config/packs/core (drishti.kernel.packs-dir). The server cannot start without it.* |
+| DRS-1041 | a pack is not found | *No pack 'trding'. Looked in the site's packs (config/packs, data/packs/installed), the modules that are on (banking, market-data, economy) and the kernel's packs (config/packs/core). Did you mean 'trading' (module banking)?* |
+| DRS-1042 | one name in two places | *Pack 'trading' is in config/packs/banking/trading and in module banking (modules/banking/dmod/packs/trading). The module's is read. To use yours instead, add `replaces: trading` to its pack.yaml; otherwise the folder is safe to delete.* |
+| DRS-1043 | a pack's module is off | *Pack 'market-risk' belongs to module banking, which is off (switched off in config/modules/banking.yaml). Switch it on in Admin → Modules.* |
+| DRS-1044 | a module in two places | *Module market-data is in modules/market-data (1.0.0) and installed as data/modules/installed/market-data/1.1.0. The folder is read. Remove one.* |
+| DRS-1045 | two templates of one name | *Connector 'trade-endur' is declared by pack trading and by module source-endur. Neither is used. Remove one declaration.* |
+| DRS-1046 | a site connector file is not used | *config/connectors/trade-murex.yaml overrides the template of module source-murex, which is off (not in distribution drishti.risk). It is not used.* |
+| DRS-1047 | a setting names the wrong folder, or two names disagree (start refused) | *drishti.modules.dir is config/modules, which holds module switches and no modules. The switches folder is now drishti.modules.switches-dir; drishti.modules.dir is the modules folder (default ./modules).* |
+| DRS-1048 | rules or bindings cannot be read | *The inbox rules of module source-endur (modules/source-endur/dataload.yaml) cannot be read: line 12, … Its files will not be matched.* |
+| DRS-1049 | two answers differ | *This console resolves pack 'trading' 2.9.10 from /opt/console/modules/…; the server serves 2.9.11 from /opt/drishti/modules/…* |
+| DRS-9308 | no write path | *Kind 'trade' (source ENDUR) has no write path: no connector that serves it offers writes. Module source-endur has an example, connectors/examples/kafka.yaml; or bind one in Admin → Data bindings (write).* |
+| DRS-9309 | more than one write path | *Kind 'trade' has two write paths, trade-endur-kafka and trade-murex-kafka, and the record names no source system. Name one in Admin → Data bindings (write).* |

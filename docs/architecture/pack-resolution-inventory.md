@@ -40,7 +40,7 @@ at `e09846297`; "connres" means the paused branch `wip/i4-connres` (`14b6a9004`,
 | File:line | What it reads | Via | Risk | Change |
 |---|---|---|---|---|
 | `kernel/drishti-api/.../api/PackFolders.java:44-176` | the rule itself: root, domain folders, `moduleRoots` only when the root is named `config/packs` | — | B | deleted; `PackResolver` in the same package replaces it |
-| `kernel/drishti-packs/.../packs/PackPaths.java:71-82` | `drishti.packs.dir`, with the `./packs` fallback | direct | A | deleted with the fallback; `ResolutionSettings.siteDir` |
+| `kernel/drishti-packs/.../packs/PackPaths.java:71-82` | `drishti.packs.dir`, with the `./packs` fallback | direct | A | deleted with the fallback; `ResolutionSettings.siteDir` and `kernelPacksDir` (`config/packs/core` stays where it is) |
 | `kernel/drishti-packs/.../packs/PackPaths.java:88-146` | `extraDirs`, `installedModulePacks` (installed `.dmod` packs, **not** first-party ones) through `drishti.packs.modules-dir` / `drishti.module-deploy.dir` | direct | A | deleted; `.dmod` packs are step 2 of the waterfall for every origin |
 | `kernel/drishti-packs/.../packs/PackLoader.java:65,84-105,111-128,142` | `dirs()` (installed, packs, extra), `readOne`, `folders`, `visit`: first folder holding `<name>/pack.yaml` | PF | B | `load(ResolvedPacks, names)`; no folder lists; `dirs`, `folders` deleted |
 | `kernel/drishti-packs/.../packs/PackEnvironmentPostProcessor.java:39,76-100` | the start: packs dir, enabled names, module-off filter **after** loading, connector suppression | PF + registry | B | builds one `ConfigResolution` first, loads from it; the off filter moves into the resolver |
@@ -106,8 +106,8 @@ resolution (every module on, the *all* distribution), which is what a generator 
 | `tools/command_catalog.py`, `settings_catalogue.py`, `under_construction.py:109` (`modules/*/module.yaml` glob: **A**), `tools/drishti_parser.py` | commands, settings, menus across packs and modules |
 | `tools/realdata/packrun.py`, `pack_tests.py`, `tools/bench/net_soak.py`, `bench/trades.py` | packs for runs and benchmarks |
 | `tools/drishti.py` (14), `packmake.py`, `packbundle.py`, `packdiff.py`, `packform.py`, `packregen.py`, `packreg/packreg.py`, `authoring.py`, `ingest_jsonl.py`, `packgen/pack_from_jsonl.py`, `module_from_jsonl.py` | the pack CLI: mostly a folder the user names (C); the "find the shipped pack" lookups are B |
-| `tools/packs_to_modules.py` | the one-off move | — | deleted (its job is done) |
-| `modules/*/packs/*/tools/make_*.py` | `HERE / "pack.yaml"` (their own folder) | C |
+| `tools/packs_to_modules.py` | the one-off move: deleted, its job is done |
+| `modules/*/packs/*/tools/make_*.py` | `HERE / "pack.yaml"`, their own folder (C: no change) |
 
 ### 2.4 JavaScript
 
@@ -121,13 +121,13 @@ Admin → Connectors show the new `origin` and `layer` fields; `drishti_admin-co
 | File:line | What | Risk | Change |
 |---|---|---|---|
 | `bin/start-server.sh:166` (+ `.ps1`) | warns when `config/packs` is missing | A (a site with no own packs is normal) | warn only when the kernel packs or the modules folder are missing |
-| `kernel/drishti-packs/pom.xml:41-43` | copies `config/packs/default-packs.yaml` into the jar | A | removed with the file |
-| `kernel/drishti-server/pom.xml:130` | tests' `drishti.packs.dir` = the repository's `config/packs` | B | `drishti.home` = the repository root (one setting; design 18.2) |
+| `kernel/drishti-packs/pom.xml:41-43` | copies `config/packs/default-packs.yaml` into the jar | A | removed with the file (step 3 of section 9) |
+| `kernel/drishti-server/pom.xml:130` | tests' `drishti.packs.dir` = the repository's `config/packs` | B | the settings of design 18.2, each to the repository's folder |
 | `kernel/drishti-server/src/main/resources/application.yaml:144,204,1180,1206` | `module-manifests-dir`, `modules.dir` (switches), `packs.dir`, `packs.enabled` | — | section 6 |
 | `drishti-console/config/application.yaml:285,289,292` | the console's twins | — | section 6 |
 | `tools/drill.sh:251` | globs `config/packs/*/*/tools/make_*.py modules/*/packs/... modules/banking/dmod/packs/...` | **A** (a hand-kept list of layouts) | asks `tools/drishti.py pack list --folders` (the resolver) |
-| `tools/bench/pinning.sh:80` | `DRISHTI_PACKS_DIR="$REPO/packs"` (the layout of three releases ago) | **A** (already dead) | `DRISHTI_HOME="$REPO"` |
-| `packaging/dist/pom.xml:84-112` | packs each module folder into a `.dmod` | C | adds the kernel packs to the kernel jar (design 18.4) |
+| `tools/bench/pinning.sh:80` | `DRISHTI_PACKS_DIR="$REPO/packs"` (the layout of three releases ago) | **A** (already dead) | `DRISHTI_PACKS_DIR="$REPO/config/packs"` |
+| `packaging/dist/pom.xml:84-112` | packs each module folder into a `.dmod` | C | none |
 
 ### 2.6 Tests
 
@@ -256,16 +256,237 @@ Tests: `RoutesTest` (20), `NewLakeKeysTest` (20), `InboxStatusTest`, `DataInboxL
 
 ## 6. Settings: today and after
 
-<!-- SETTINGS -->
+Today **eight settings name a modules folder** and four files are found "beside" another folder. After: one setting per concept
+(design 18.2), every one in `ResolutionSettings`, no setting derived from another folder's position.
+
+| Concept | Today | After |
+|---|---|---|
+| The site's packs | `drishti.packs.dir` (`DRISHTI_PACKS_DIR`, `./config/packs`) + the `./packs` fallback; `drishti.packs.extra-dirs`; console `packs.dir` | `drishti.packs.site-dir` (same variable `DRISHTI_PACKS_DIR`, same default; a list is allowed). `drishti.packs.dir` is read as its former name. The `./packs` fallback and `extra-dirs` are deleted |
+| The kernel's packs | inside the site's folder: `config/packs/core/` | `drishti.kernel.packs-dir`, default `./config/packs/core` **in this release** (the folder does not move; only its default changes when it does) |
+| Packs deployed from Admin or a registry | `drishti.packs.installed-dir` (`<data>/packs/installed`) | unchanged; part of the site layer |
+| The modules' folders | `drishti.module-manifests-dir` (`./modules`); system property `drishti.modules.dir` (`PackEntry`); `drishti.live-sets.modules-dir`; console `module_manifests_dir`; "two folders above the packs folder" (`AccessRegistries`, `distribution.py`) | **`drishti.modules.dir`** (`DRISHTI_MODULES_HOME`), default `./modules`. The others are deleted |
+| The module store (`.dmod`) | `drishti.modules.path` (`<data>/modules`); `drishti.packs.modules-dir`; `drishti.module-deploy.dir`; console `builder.pack_designer_modules_dir` | `drishti.modules.path` only |
+| The modules' switches | **`drishti.modules.dir`** (`DRISHTI_MODULES_DIR`, `./config/modules`) | `drishti.modules.switches-dir` (`DRISHTI_MODULES_SWITCHES_DIR`), same default. **The one renamed meaning**: see the note |
+| The site's connector files | `drishti.sources.connectors-dir` (`DRISHTI_CONNECTORS_DIR`, `./config/connectors`) | unchanged |
+| The site's bindings | `drishti.bindings.file`, default "the sibling of the connectors folder" | `drishti.bindings.file`, default `./config/bindings.yaml` |
+| The site's inbox rules | `drishti.dataload.rules-file` (`./config/dataload.yaml`) | unchanged |
+| Placement, UI kit, under-construction | found beside the connectors or packs folder | each its own setting with a plain default under `./config` |
+| Which packs load | `drishti.packs.enabled` (`DRISHTI_PACKS`), `config/packs/default-packs.yaml`, `drishti.packs.added` | `drishti.packs.enabled` narrows what the resolver found (`default` = everything of the modules that are on, the kernel's `core`, the site's enabled packs); `default-packs.yaml` deleted (the manifests' `packs.list` is the list) |
+| Connector generation | `drishti.sources.connectors-generate`, `drishti.connectors.template-updates`, `template-check-ms`, `settings-file` | deleted (connres) |
+
+**Note on `drishti.modules.dir`.** The owner's name for the modules folder is today the name of the switches folder. Nothing in the
+repository sets it (`bin/`, `deploy/`, `packaging/`, the drill and the test forks were searched); the default is unaffected. A site
+that did set it would point the modules folder at its switch files, so the start checks: a `drishti.modules.dir` folder that holds
+`<id>.yaml` files and no `<id>/module.yaml` stops the start with DRS-1047, naming both settings. If the owner prefers no renamed
+meaning at all, the modules folder takes `drishti.modules.home` and `drishti.modules.dir` stays the switches: the design does not
+otherwise change.
 
 ## 7. The failure analysis
 
-<!-- FAILURE -->
+### 7.1 `FORMS` lists only CORE and GLEIF
+
+`drishti-console/core/packs.py:122-130` (`_load`) asks `pack_dir(name, root)` and keeps the answer only when
+`str(pdir).startswith(str(root))`. That containment check was true by construction while every pack lived under `config/packs`.
+`pack_paths.module_roots` now returns `modules/banking/dmod/packs/trading`, which is not under `config/packs`, so the loop falls
+through and the pack is dropped: every module's pack, on every console page that uses `Packs` (FORMS, the switcher, Calc snippets,
+the designer's kinds). The server was right (its loader flattens the roots and has no such check), so the two halves disagreed and
+nothing compared them.
+
+**Causes, in order of weight:** (1) the rule lives twice (Java, Python) with **no shared fixture**; (2) "where a pack is" is path
+arithmetic at each caller instead of an answer from one object; (3) module folders entered through a folder-**name** test
+(`config/packs`), which no caller can see or reason about; (4) **no test asks whether the console shows every pack the server
+serves**.
+
+### 7.2 The trade connectors vanished
+
+The trade connector templates moved from the `trading` pack into the source modules (`modules/source-<sys>/connectors/delta.yaml`).
+The server reads templates only from packs (`Pack.connectorTemplates`); only the lake loader and one tool read a module's folder.
+`ConnectorBootstrap` then saw generated, unedited files (`trade-endur.yaml` …) whose template was no longer in any pack and
+**retired** them (`ConnectorBootstrap.java:145-168`): no connector, no trades.
+
+**Causes:** (1) the server **writes** site configuration from an inference ("the template is gone, so the file is obsolete"); an
+absence caused by a move, a switched-off module or a wrong folder is indistinguishable from a real retirement; (2) two readers of
+module connectors (loader, tool) and a third that ignores them (server); (3) no test counts trades per source system after an upgrade.
+
+### 7.3 DRS-9302 on a blotter edit
+
+`EditConfiguration.connectorOf` (125-139) wants exactly one **site file** with `writes:` whose `kinds` holds the kind. It cannot
+succeed: (1) `ConnectorFiles` ignores a `kinds:` list (332-345), so `kinds()` is empty for every connector that is not reactive;
+(2) the write-capable connectors are module templates (`modules/source-<sys>/connectors/kafka.yaml`), which the server never reads;
+(3) with several source systems the match is ambiguous by design. The refusal then surfaces as the catch-all DRS-9302, the same code
+as a four-eyes refusal and a read-only field: the message cannot say what to do.
+
+### 7.4 The same class of fault, not yet seen
+
+Every row marked **A** in sections 2 to 5. The ones most likely to be the next bug:
+
+| # | Where | How it breaks |
+|---|---|---|
+| 1 | `PackEntry.modulesDir` (`PackEntry.java:85-100`) | the loader finds a pack's source-module templates by walking up to a folder that holds both `modules` and `config`. For a pack inside an installed `.dmod` (`<data>/modules/installed/...`) the walk finds no such folder, or finds the product's `./modules` and not the store: **the loader and the server can read different templates for the same connector** |
+| 2 | `SourceRegistry.shapeBases` (`SourceRegistry.java:165-176`) | a module template's `map: mappings/endur-trade.yaml` is looked for under the site's connectors folder, `config/connectors`, `config`, `.`: never in the module's own folder. With templates read where they are, **a relative file must resolve against the folder of the layer that names it** (to verify first in step 5: which of today's reads of `map:` are the server's and which the loader's) |
+| 3 | `menus.py:82`, `module_parts.py:252`, `distribution.py:131-160`, `house.py:50`, `tools/under_construction.py:109` | five lists of "the modules' folders", three different glob sets, none reading the store: **a module installed only as a `.dmod` has no menu, no console part and no known commands** |
+| 4 | `readmes.py:71` | the literal `root / "config" / "packs"`: Help's pack README works only through the name trick, and never for an installed `.dmod` |
+| 5 | `ArtifactPaths.packFolders` (88-100) | calls the two-argument `PackLoader.dirs`: Admin → Artifacts never lists a site's installed content module's packs, so their **impact analysis is empty** |
+| 6 | `PackReloader.roots` (189-195) | watches the packs folder and the installed-packs folder: an edit inside `modules/installed/<id>/<version>/packs` or a module switch **does not reload** |
+| 7 | `BindingsFile.besideConnectors` (64-67), `PlacementConfiguration:67` | a node whose connectors folder is not named `connectors` reads `<name>-bindings.yaml`; `bin/lib/cluster.py:315` gives each node its own `home/connectors`, so **each node of a local cluster reads its own `home/bindings.yaml`** |
+| 8 | `UiKitDir`, `RachanaConfiguration:69-78`, `AccessRegistries:74-78`, `distribution.py:233` | "beside the packs folder" and "two folders above it": any site that sets `DRISHTI_PACKS_DIR` to a folder of its own loses the UI kit, the under-construction list and the module manifests |
+| 9 | `PackDatasets:85`, banking `Hierarchies:66`, `VarConfiguration:303` | read `pack.manifest().connectors.<name>`: they see neither the site's override (a renamed table) nor a module's template: **VaR hierarchies and BI datasets on the template's table, the data on the site's** |
+| 10 | `SourceRouter.picked` versus `BindingResolver` versus `Routes` versus `connectorOf` | four answers to "which connector serves this kind": Admin can show BOUND to one connector while the read uses another and the inbox loads a third |
+| 11 | `ModuleDirs.of` (no on/off) | the loader takes rules and templates of a module that is **off**; the server skips them: data is loaded that nothing serves |
+| 12 | `config/demo/bindings.yaml` copied into the site (`tools/lake/demo.py:654-659`) | six source systems frozen in a site file: a seventh source module is installed, on, and **silently not read** |
+| 13 | `DataLoadConfiguration.moduleRules` (127-160) | an unreadable module rules file gives no rules and no message: its files sit in the inbox as unmatched |
+| 14 | `tools/drill.sh:251`, `tools/bench/pinning.sh:80` | hand-kept globs of pack layouts; the second already points at a layout three moves old |
+| 15 | `tools/lake/stores.py`, `tools/lake/demo.py`, `bin/start-server --iceberg`, `core/lakes.py bind` | write **whole** connector files: with layers, a whole file freezes today's template into the site and hides every later template change |
+| 16 | `SourceSystemsWiring:109` | a source system's module guessed from the name `source-<system>`: a site's source module of another name is never switched off with its module |
 
 ## 8. The test plan
 
-<!-- TESTS -->
+The aim: a reader that goes its own way, or a release whose layout differs, **cannot merge without a red test that names it**. Tests
+1 to 4 and 9 run in the pre-merge gate of every branch (seconds to a few minutes); 5 to 8 in the drill.
+
+### 8.1 The shared fixture (Java and Python give the same answer)
+
+`testing/resolution-fixture/` (the one home; connres's `connector-layers/cases.yaml` moves into it):
+
+- `cases/<case>/tree/` a small file tree (`config/`, `modules/`, `data/modules/installed/`), `cases/<case>/input.yaml` (the settings,
+  which modules are on and why the others are off, `drishti.packs.enabled`), `cases/<case>/expect.yaml` (every pack with origin, state
+  and folder; every effective connector flattened to dotted keys with each key's layer; every kind's read, live and write; the inbox
+  rules in order with origins; the problems with code **and full message text**).
+- Runners: `ResolutionFixtureTest` (drishti-api) and `tools/test_resolution_fixture.py`. Both assert they ran exactly the cases of
+  `cases/INDEX.txt`, and a third assertion holds `INDEX.txt` equal to the folder listing: a case cannot be skipped by one side.
+- Cases, at least: site pack alone; module pack; kernel pack; site pack with `replaces:`; site pack clashing without it; the same
+  name twice in the site; leftover `config/packs/<domain>/<pack>` of the last release; module off; module only as `.dmod`; module in
+  folder and store; a pack named in `DRISHTI_PACKS` whose module is off; connector: template only, override of one key, override that
+  changes the plugin and inherits, `null` removes a key, unedited generated file (superseded), edited generated file, generated file
+  whose module is off, site-only connector, override with `template:` whose module is off, two templates of one name; binding: site,
+  shipped default from two source modules (union), dangling site binding, write by source system, write ambiguous, write none;
+  inbox: site rule before module rule, off module's rule absent, unreadable rules file.
+
+### 8.2 The guard (no reader goes its own way)
+
+`tools/test_resolution_guard.py`, a source scan over Java main code, the console, `tools/`, `bin/`, `deploy/`:
+
+- **Forbidden outside the resolver** (`com.ash.drishti.api.resolution`, `core/resolution.py`): the names `PackFolders`, `pack_paths`,
+  `ModuleDirs`, `PackPaths.packsDir`; the retired settings of section 6; the literals `config/packs`, `config/connectors`,
+  `bindings.yaml`, `dataload.yaml`, `modules/*`, `"pack.yaml"` or `"module.yaml"` on a line that lists or globs a folder
+  (`Files.list`, `Files.walk`, `iterdir`, `glob`, `rglob`); `getParent()`/`.parent` applied to a packs or connectors folder.
+- **Allow-list** `testing/resolution-fixture/guard-allow.txt`: one line per exception with its reason (a given folder's own
+  `pack.yaml`, authoring tools that write a new pack). The test fails on an entry that matches nothing, and the number of entries is
+  pinned: it can go down in a commit, never up without the number changing in the same commit.
+- **The server writes nothing**: `StartWritesNothingTest` hashes every file under the site's `config/` and `<data>/connectors`, starts
+  the server, reloads packs, switches a module off and on, stops, and compares: identical. The same in the upgrade test.
+
+### 8.3 The upgrade from `v2.9.11.i_2_3`
+
+`tools/connector_upgrade_fixture.py` grows into `tools/upgrade_fixture.py --from v2.9.11.i_2_3`: it builds, from that tag's own files
+(`git archive`), what a site of that release holds: `config/packs/{core,banking,economy,capitalmarkets}/...` (one pack edited, the
+rest untouched), the generated `config/connectors/*.yaml` with their stamps and markers (one edited, one with its marker lost),
+`config/bindings.yaml` (the demo copy), `config/modules/*.yaml`, a pack deployed into `<data>/packs/installed`, the old `.history`
+folder. `UpgradeFromI23Test` starts this release on it and asserts:
+
+1. no file of the site changed (the hash of 8.2);
+2. the loaded packs, FORMS and commands equal a fresh install's, except the listed differences (the edited pack is **not read** and
+   listed; the edited connector is an override);
+3. **trades per source system > 0**, each of the six;
+4. `problems` equals the expected list exactly (every leftover named with both places, nothing else);
+5. the count table below matches.
+
+The 2.9.4 fixture stays. Each release adds its own tag's fixture to the list in the release checklist.
+
+### 8.4 The count table
+
+`testing/resolution-fixture/product-counts.yaml`, per distribution (risk, finance, genomics, all): packs loaded, FORMS, mnemonics,
+connectors running, kinds bound (by origin), kinds with a write path, inbox rules, Help pack pages, designer kinds. One test computes
+them from `GET /api/v1/admin/resolution` and the console and compares. A move that loses a pack changes a number; the number can only
+change by editing this file in the same commit, where a reviewer sees it.
+
+### 8.5 Every pack visible everywhere
+
+`drishti-console/tests/test_every_pack_everywhere.py`, driven by the resolution (a new pack is covered without touching the test), per
+distribution: for every loaded pack: its FORMS are listed and **each FORM opens**; `DATAMAP` shows its kinds; `WHAT <mnemonic>`
+answers for each mnemonic; `EXPORT` offers each kind; Help has its guide and README; the designer lists its kinds and Sutras;
+Admin → Packs shows it with its origin. And the reverse: the console lists **no** pack the resolution does not.
+
+### 8.6 Module off, module on
+
+For every module that can be switched (`ModuleSwitchEverywhereTest`, with `test_engine_off_everywhere.py` as the model): off → the
+difference between the two resolutions is **exactly** that module's packs, templates, default bindings and inbox rules (and those of
+modules that require it); none of them appears in FORMS, DATAMAP, WHAT, EXPORT, Help, the menus, Admin → Connectors, Data bindings or
+the inbox; a `DRISHTI_PACKS` entry of it answers DRS-1043. On again → the digest equals the first one. Run twice: with a restart, and
+live through `POST /api/v1/admin/modules/{id}`.
+
+### 8.7 Data and commands
+
+- **Every demo kind non-empty**: each kind the resolution binds in the demo returns at least one row (`tools/test_empty_lakes.py` and
+  `PacksServedWithoutDemoTest` take their kinds from the resolution, not a list).
+- **Every mnemonic opens** and **the command sweep**: `test_command_catalog.py` and the page walk take the commands from the
+  resolution; each opens without an error panel; the sweep's total is in the count table.
+- **Every editable kind has a write path or says why**: each blotter with editable fields resolves `write(kind, system)` to a
+  connector, or answers DRS-9308 with the candidates.
+- **`.dmod` only**: `SourceModuleInstallTest` asserts the installed module's packs, templates, rules, menus and console parts all
+  appear (rows 1 and 3 of section 7.4), then that they go on uninstall.
+
+### 8.8 One answer on every node
+
+The page walk asserts the console's digest equals the server's (`resolution.digest`); the cluster test asserts every node's digest is
+equal and that Health shows a difference when one node's module folder is changed (DRS-1049).
+
+### 8.9 Messages
+
+Every code of design 18.9 has a fixture case whose `expect.yaml` holds the whole message; a message that stops naming both places
+fails the fixture on both sides.
 
 ## 9. The build order
 
-<!-- ORDER -->
+One implementer, one branch from `wip/i4`, one drill at the end. Each step leaves the tree compiling and the fixture cases written so
+far green.
+
+| # | Step | Done when |
+|---|---|---|
+| 0 | Merge connres (`14b6a9004`, `624b75c24`). **Keep**: `ConnectorLayers`, `ModuleConnectors`, the deletions (bootstrap, stamp writer, template updates, the rewrite at start, the generation calls), Admin's layer display. **Change**: section 3.1 "new" and design 18.5 | compiles |
+| 1 | The fixture's cases and expectations for packs and modules (8.1), red | cases reviewed against design 18.4 |
+| 2 | `com.ash.drishti.api.resolution` (settings, module folders, packs) and `core/resolution.py`; the fixture green on both sides | 8.1 for packs |
+| 3 | Settings (section 6): `ResolutionSettings`, the kernel packs folder as its own setting (**no file moves**), `default-packs.yaml` and the `./packs` fallback deleted | start on the repository as it is |
+| 4 | Every pack reader of section 2 through the resolver; `PackFolders`, `pack_paths`, `PackPaths`' folder half, `ModuleDirs` deleted. **First: `core/packs.py:_load` (bug 1)** | 8.2 on for packs; 8.5 green |
+| 5 | Connectors: the layer rules of design 18.5 (plugin change inherits, `null` removes, `template:`, the orphan rule, the base folder of a relative file); templates by `name:` with `connectors/examples/`; the loader and the tools on the same layers; `ConnectorOverlayFold` and the legacy move deleted; the five red tests repaired | 8.1 for connectors; trades per system > 0 |
+| 6 | Bindings: one resolver, the router served by it, shipped defaults from templates, the write path with DRS-9308/9309, the bindings file's own setting, the demo copy deleted | 8.1 for bindings; 8.7 write path |
+| 7 | Inbox rules from the resolution; the loader process builds the same resolution | 8.1 for the inbox; `RoutesTest` |
+| 8 | `ResolutionService`: refresh, the watch, the `resolution.changed` event, the consumers (design 18.7); `GET /api/v1/admin/resolution`, `drishti.py resolution show|why` | 8.6 live |
+| 9 | Admin: origin on Packs, Connectors, Data bindings, Data inbox; the leftover lists (design 18.8). Columns on existing pages; the "why" panel is shown to the owner as a mock-up first | browser tests |
+| 10 | The upgrade fixture and test (8.3), the count table (8.4), 8.6 to 8.9 | all of section 8 |
+| 11 | Documents in the same push: DATA_GUIDE section 9 (connector layers; generation removed), ADMIN_GUIDE, OPERATIONS and DEVELOPER links, tutorials 02 and 16 (the deleted screenshot 15 still embedded), CONFIGURATION.md regenerated, DOMAIN_MODULES section 8, KERNEL_AND_MODULES sections 5.4 to 5.6 follow 18.6, Help, API_REFERENCE (the new codes), CHANGELOG | docs tests |
+| 12 | The pre-merge gate, then the drill | green |
+
+### 9.1 Four confirmations for the build
+
+**(a) Removing the binding guesses** (*any lake connector whose lake holds the kind*; *demo samples for what nothing serves*):
+confirmed for everything shipped. All 117 kinds of the 17 shipped packs are named by a pack's connector template, a route, or a
+source module's template (`trade`); none needs a guess. What does rely on them, and must change in the same commit:
+
+- `drishti-console/core/lakes.py:395-431` (`bind`, the Lakes page's "bind a table"): it PUTs a connector with a `kinds:` list the
+  server ignores, so the kind is served **only** by the lake guess. It must propose a binding.
+- Tests that start a server with no lakes built and expect rows from the demo sample plugins (`DemoPackWalksTest`,
+  `PacksServedWithoutDemoTest`, and any API test with no lake: **not countable from the source; run the suite**). They get an
+  explicit `demo: true` binding from the testkit, one file.
+- `BindingResolverTest`, `SourceRouterTest`, and sections 5.5 and 5.6 of the design document (the `AUTO` state goes).
+- **An upgraded site whose kinds are `AUTO` today**: they become UNBOUND, with the binding to approve offered in Health. This is the
+  one place where an upgrade needs an administrator's click. Before upgrading the owner's stack: `GET /api/v1/admin/bindings` on the
+  running release and look for `AUTO`. The upgrade fixture (8.3) holds one such kind so the message is pinned.
+
+**(b) `ConnectorOverlayFold`: remove.** It writes connector files at start from an inference, the fault being removed; it exists in
+`v2.9.11.i_2_3`, so every node of an upgrading site has already folded (its marker is in `<data>/connectors`); a node that never
+did keeps its entries in the content store, untouched, and Health lists each (*an edit of an older release in the content store is
+not applied: save it in Admin → Connectors*). The same for the `ConnectorFiles` constructor's move of `.history`/`.generated`.
+
+**(c) A module switched at runtime**: design 18.7. The registry's change raises `module.started` / `module.stopped`; the
+`ResolutionService` rebuilds the whole snapshot (never a partial patch), swaps it, and publishes one `resolution.changed` with the
+difference; the pack registry, the connector manager, the binding service and the inbox each act on their part of the difference; the
+console follows by the version. Order inside one change: connectors of removed packs stop **before** the packs unload; added packs
+load **before** their connectors start; bindings are handed to the router last. A code module that needs a restart (section 4.10)
+changes nothing here: the snapshot is built the same way at start.
+
+**(d) Must not be missed**: the list below.
+
+**Must not be missed** (each is silent if forgotten): rows 1, 2, 7, 9 and 11 of section 7.4; the `drishti.modules.dir` check
+(section 6); `SourceRouter`'s own fallbacks deleted in the same commit as the resolver takes over (never both); the loader process
+(`LoaderProcess`, a separate JVM) builds its resolution from the same settings the server passes it, including which modules are on.
