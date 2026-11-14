@@ -33,7 +33,7 @@ GUIDE = DOCS / "guides" / "RACHANA_REFERENCE.md"
 IMG = DOCS / "guides" / "img" / "designer"
 SHOTS = ROOT / "tools" / "docs" / "screenshots.py"
 LIB = ROOT / "tools" / "docs" / "shotlib.py"
-PICTURE = re.compile(r"!\[[^\]]*\]\(((?:\.\./\w+/)?img/[^)\s]+)\)")      # img/..., or ../guides/img/... from a document in another folder
+PICTURE = re.compile(r"!\[[^\]]*\]\(((?:\.\./)*(?:\w+/)?img/[^)\s]+)\)")      # img/..., or ../guides/img/... from a document in another folder
 SECTIONS = ["Start: bring data", "The workbench at a glance", "The Data pane", "The canvas and the grid", "Add a panel", "Drop a field", "Auto-design",
             "The inspector", "The YAML tab", "Problems", "Tests as you type", "Preview with a file", "Undo, redo", "Phone width", "Keyboard reference",
             "Worked examples", "Troubleshooting", "Limits", "Studio users: where things went", "The command palette", "Diff and versions",
