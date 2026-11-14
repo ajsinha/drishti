@@ -103,9 +103,11 @@ export class LiveSetGrid {
     this.groupSel = selectElement(d, { options: [{ value: '', label: 'No grouping' }].concat(groupable.map((c) => ({ value: c.field, label: c.label || c.field }))), value: (spec.groupBy || [])[0] || '',
       label: 'Group by', search: false }, { class: 'dg-live-group' });
     this.groupSel.component.on('change', (e) => this.group(e.value));
-    this.bar = h(d, 'div', { cls: 'dg-live-bar', attrs: { role: 'toolbar', 'aria-label': (spec.title || spec.id) + ' controls' } }, [
-      h(d, 'strong', { cls: 'dg-live-title', text: spec.title || spec.id }), this.status, h(d, 'span', { cls: 'dg-sp' }),
-      h(d, 'label', { cls: 'dg-live-lbl' }, ['Group by ', this.groupSel]), this.chartBtn, this.pauseBtn, this.pivotBtn, this.trayBtn].filter(Boolean));
+    // the controls of the set (the one count, grouping, Chart, Pause, Pivot ›, the tray) are drawn in the grid's own toolbar once the grid exists (one toolbar);
+    // until the snapshot has arrived they wait in a bar of their own
+    this.items = [this.status, h(d, 'label', { cls: 'dg-live-lbl' }, ['Group by ', this.groupSel]), this.chartBtn, this.pauseBtn, this.pivotBtn, this.trayBtn].filter(Boolean);
+    this.bar = h(d, 'div', { cls: 'dg-live-bar', attrs: { role: 'toolbar', 'aria-label': (spec.title || spec.id) + ' controls' } },
+      [h(d, 'strong', { cls: 'dg-live-title', text: spec.title || spec.id }), h(d, 'span', { cls: 'dg-sp' })].concat(this.items));
     this.gridHost = h(d, 'div', { cls: 'dg-live-grid' });
     this.panelHost = h(d, 'aside', { cls: 'dg-live-panel', attrs: { hidden: true, 'aria-label': 'Record' } });
     this.trayHost = h(d, 'section', { cls: 'dg-live-tray', attrs: { hidden: true, 'aria-label': 'My pending changes' }, data: { tray: 'true' } });
@@ -119,7 +121,7 @@ export class LiveSetGrid {
     this.state = s;
     this.status.setAttribute('data-state', s);
     const n = this.rows.size, total = this.rows.total;
-    const count = (this.paged ? n.toLocaleString('en-US') + ' of ' + total.toLocaleString('en-US') : total.toLocaleString('en-US')) + ' rows';
+    const count = (this.paged ? n.toLocaleString('en-US') + ' of ' + total.toLocaleString('en-US') : total.toLocaleString('en-US')) + ' ' + (this.spec.noun || 'rows');
     this.status.textContent = ({ connecting: 'CONNECTING', live: this.live ? 'LIVE' : 'STATIC', reconnecting: 'RECONNECTING', paused: 'PAUSED', ended: 'ENDED', failed: 'FAILED' })[s] + ' · ' + count
       + (note ? ' · ' + note : '');
     this.status.setAttribute('data-rows', total);
@@ -133,9 +135,10 @@ export class LiveSetGrid {
   start() {
     return this.snapshot().then((rows) => {
       const spec = this.spec;
-      this.grid = new Grid(this.gridHost, { columns: gridColumns(spec), rows: rows, getRowId: (r) => r[ROW_KEY], layout: this.o.layout || 'wells', density: 'compact', title: '',
-        label: spec.title || spec.id, rowSelection: 'single', clientAggregation: true, live: { flashMs: 1200 },
+      this.grid = new Grid(this.gridHost, { columns: gridColumns(spec), rows: rows, getRowId: (r) => r[ROW_KEY], layout: this.o.layout || 'wells', density: 'compact', title: spec.title || spec.id,
+        label: spec.title || spec.id, rowSelection: 'single', clientAggregation: true, live: { flashMs: 1200 }, toolbarItems: this.items, pivotToggle: false, ribbon: false, quietStatus: true,
         getRowData: (r) => ({ key: r[ROW_KEY] }) });
+      if (this.bar) { this.bar.remove(); this.bar = null; }          // its controls are in the grid's toolbar now
       if ((spec.groupBy || []).length) { this.grid.model.setRowGroups(spec.groupBy.slice(0, 1)); }
       this.grid.on('cellClicked', (c) => { if (c && c.kind === 'leaf' && c.data) { this.open(c.data); } });
       this.gridHost.addEventListener('scroll', () => this.windowSoon(), true);

@@ -369,6 +369,7 @@ export function runAction(v, id, at) {
  */
 export function toolbarAction(v, act, btn) {
   const m = v.model;
+  if (act === 'customize') { v.toggleCustomize(); return; }
   if (act === 'menu-format') {
     const items = () => {
       const out = [{ heading: 'Conditional formatting' }];

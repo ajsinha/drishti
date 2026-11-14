@@ -20,11 +20,11 @@
 {% block title %}{{ spec.title or live_id }} · Live · {{ PRODUCT }}{% endblock %}
 {% block screen %}live{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/elements/drishti-grid/drishti_grid.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/elements/drishti-inputs/drishti_inputs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_live-page.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/elements/drishti-grid/drishti_grid.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/elements/drishti-inputs/drishti_inputs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_records.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_live-page.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% with live=true %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
 <div class="lv" data-live-page data-id="{{ live_id }}" data-spec="{{ spec | tojson | forceescape }}">
-  <div class="lv-host" data-live-host></div>
+  <div class="rc-host lv-host" data-live-host data-records-fill></div>
   <p class="lv-error" data-live-error role="alert" hidden></p>
 </div>
 {% endblock %}
