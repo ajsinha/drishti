@@ -181,7 +181,7 @@ def banking_off(c: Ctx):
 
 # ---- three nodes ------------------------------------------------------------------------------------------------------------------------------
 
-@shot("20-net-members.jpg", also=("21-net-drained.jpg", "22-var-while-drained.jpg", "23-health-net.jpg", "24-inbox-owner.jpg"))
+@shot("20-net-members.jpg", also=("21-net-drained.jpg", "22-var-while-drained.jpg", "23-health-net.jpg"))
 def cluster(c: Ctx):
     signin(c)
     page(c, "20-net-members.jpg", "/admin/net", height=1500, settle=4000)
@@ -196,6 +196,13 @@ def cluster(c: Ctx):
         if node:
             drain(node, token, False)
     page(c, "23-health-net.jpg", "/admin/health", height=1300, settle=3000)
+
+
+@shot("24-inbox-owner.jpg")
+def inbox_member(c: Ctx):
+    """The data inbox on a node that does NOT own it (drishti.dataload.owner false): the Owner node fact says the cycles run on the owner.
+    Run it against such a node's console (the owner's own inbox page is 13-inbox.jpg, the same screen)."""
+    signin(c)
     page(c, "24-inbox-owner.jpg", "/admin/loads/inbox", height=1000)
 
 
