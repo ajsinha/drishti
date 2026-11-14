@@ -35,10 +35,9 @@
     const m = new Set(masked || []);
     const types = {};
     (view.columns || []).forEach((c) => { types[c.name] = c.type; });
-    host.appendChild(h('table', { class: 'tbl bi-tbl tx-tbl', 'data-tx-table': '', 'data-plain': '' },
-      h('thead', {}, h('tr', {}, view.head.columns.map((c) => h('th', { scope: 'col', title: (types[c] || '') + (m.has(c) ? ' · masked for you' : '') },
-        h('span', { text: c }), h('small', { class: 'tx-type', text: ' ' + (types[c] || '') }))))),
-      h('tbody', {}, view.head.rows.map((r) => h('tr', {}, r.map((v) => h('td', { class: typeof v === 'number' ? 'num' : v == null ? 'tx-null' : '', text: v == null ? '—' : cell(v) })))))));
+    const grid = window.Drishti.records.table(view.head.columns.map((c) => ({ name: c, label: c + (types[c] ? ' · ' + types[c] : '') + (m.has(c) ? ' · masked' : ''), type: types[c] })), view.head.rows, { title: 'The frame' });
+    grid.setAttribute('data-tx-table', '');
+    host.appendChild(grid);                                         // the records grid, static
     if (view.rows > view.head.rows.length) {
       host.appendChild(h('p', { class: 'text-muted-d', text: 'The first ' + view.head.rows.length + ' of ' + view.rows.toLocaleString('en-US') + ' rows.' }));
     }

@@ -295,7 +295,7 @@ export function inferType(rows, field) {
 /**
  * The declaration of a static set (a result without a record key): its columns as given or from the first rows' fields (a field starting
  * with an underscore is not a column), never editable, no kind (so no Pivot), no history.
- * @param {{rows: Object[], columns?: Array<string|{field: string, label?: string, type?: string}>, title?: string, id?: string}} o
+ * @param {{rows: Object[], columns?: Array<string|{field: string, label?: string, type?: string}>, title?: string, id?: string, links?: Array<{label: string, href: string}>}} o
  * @returns {Object}
  */
 export function staticSpec(o) {
@@ -312,17 +312,18 @@ export function staticSpec(o) {
     col.type = col.type || inferType(rows, col.field);
     return col;
   });
-  return { id: o.id || 'static', title: o.title || '', kind: '', columns: columns, groupBy: [], subtotals: [], links: [], editable: false, readOnly: 'a result, not a set of records',
+  return { id: o.id || 'static', title: o.title || '', kind: '', columns: columns, groupBy: [], subtotals: [], links: o.links || [], editable: false, readOnly: 'a result, not a set of records',
     fields: [], tray: false, static: true };
 }
 
 /**
  * The api of a static set: its rows as given (kept in their order), the row's JSON for the panel, no edits, no history.
  * @param {Object[]} rows
+ * @param {string} [keyField] the field that names a row (else its place, from 1): a page that feeds changes to the grid names the rows it changes by it
  * @returns {{rows: Function, row: Function, edit: Function, window: Function, history: Function, mine: Function}}
  */
-export function staticApi(rows) {
-  const list = (rows || []).map((r, i) => ({ id: String(i + 1), version: 0, seq: 0, doc: r }));
+export function staticApi(rows, keyField) {
+  const list = (rows || []).map((r, i) => ({ id: keyField && r[keyField] !== undefined ? String(r[keyField]) : String(i + 1), version: 0, seq: 0, doc: r }));
   return {
     rows: () => Promise.resolve({ live: false, total: list.length, seq: 0, rows: list }),
     row: (entity) => { const r = list.find((x) => x.id === String(entity)); return r ? Promise.resolve({ id: r.id, version: 0, seq: 0, doc: r.doc }) : Promise.reject(new Error('no such row')); },

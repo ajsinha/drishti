@@ -14,7 +14,6 @@
   See the LICENSE file in the root of this repository for the full terms.
 #}
 {% extends "base.html" %}
-{% from "_macros/panels.html" import cell_text, tone %}
 {% block title %}{{ name }} · Monitor · {{ PRODUCT }}{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% with live=true %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
@@ -25,19 +24,7 @@
       <input id="monAdd" class="studio-in mono" placeholder="Add: command or identifier"></form>
     <button type="button" class="btn-pill btn-ghost" data-delete>Delete monitor</button></div>
   <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
-  <div class="mon-rows">
-  {% for r in rows %}
-    <section class="mon-row pnl" data-row="{{ r.ref.kind }}/{{ r.ref.id }}" data-kind="{{ r.ref.kind }}" data-id="{{ r.ref.id }}">
-      <header class="mon-h"><a class="lnk mono" href="/v/{{ r.ref.kind }}/{{ r.ref.id }}">{{ r.ref.id }}</a>
-        {% if r.title and r.title.pill %}<span class="pill">{{ r.title.pill }}</span>{% endif %}
-        <a class="tbar-link" href="/alerts?kind={{ r.ref.kind }}&id={{ r.ref.id | urlencode }}" title="Set an alert on {{ r.ref.id }}"><i class="bi bi-bell" aria-hidden="true"></i></a>
-        <button type="button" class="tbar-link ws-x" data-remove aria-label="Remove {{ r.ref.id }}">×</button></header>
-      {% if r.error %}<p class="pnl-err">{{ r.error }}</p>
-      {% else %}<dl class="strip mon-strip">{% for c in r.strip %}<div class="strip-i"><dt>{{ c.label }}</dt>
-        <dd class="mono{{ tone(c) }}{% if c.emphasis %} emph{% endif %}" data-i="{{ loop.index0 }}">{{ cell_text(c) }}</dd></div>{% endfor %}</dl>{% endif %}
-    </section>
-  {% endfor %}
-  </div>
+  <div class="rc-host" data-monitor-grid data-rows="{{ grid_rows | tojson | forceescape }}" data-spec="{{ {'title': name, 'columns': grid_columns, 'links': [{'label': 'Open', 'href': '/v/{KIND}/{ID}'}, {'label': 'Set an alert', 'href': '/alerts?kind={KIND}&id={ID}'}]} | tojson | forceescape }}" aria-label="{{ name }}"></div>
 </div>
 {% endblock %}
 {% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_monitor.js?v={{ ASSET_V }}"></script>{% endblock %}

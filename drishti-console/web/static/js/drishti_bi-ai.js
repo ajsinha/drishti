@@ -31,9 +31,11 @@
 
   // ---- the answer: a table, the visual that suits it, the query the model chose ----------------------------------------------------------------------------------
   function table(res) {
-    const head = h('tr', {}, res.columns.map((c) => h('th', { scope: 'col', text: B.label ? B.label(c.name) : c.name })));
-    const rows = res.rows.map((r) => h('tr', {}, r.map((v, i) => h('td', { class: typeof v === 'number' ? 'num' : '', text: B.fmt(v, res.columns[i].name, res.columns[i].masked) }))));
-    return h('div', { class: 'tbl-wrap' }, h('table', { class: 'tbl bi-ai-table', 'data-plain': '' }, h('thead', {}, head), h('tbody', {}, rows)));
+    const cols = res.columns.map((c) => ({ name: c.name, label: B.label ? B.label(c.name) : c.name, type: c.type }));
+    const rows = res.rows.map((r) => r.map((v, i) => B.fmt(v, res.columns[i].name, res.columns[i].masked)));   // as the answer is worded: formats and masks applied
+    const grid = window.Drishti.records.table(cols, rows, { title: 'The answer' });
+    grid.classList.add('bi-ai-table');
+    return grid;                                                     // the records grid, static
   }
 
   function picture(res, kind) {

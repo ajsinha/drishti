@@ -48,7 +48,7 @@ from dataclasses import asdict, dataclass, field, replace
 from datetime import date, timedelta
 from typing import Any
 
-from core import asof
+from core import asof, live_results
 from core.user_cache import LRU, user_key
 from core import engine_figures as engine
 from core.backend import BackendError
@@ -562,7 +562,8 @@ async def blotter(backend, me, scope: Scope, cfg: dict) -> dict:
 
     async def make():
         try:
-            return {**events(await backend.search(q, me), business), "how": "trades"}
+            answer = await live_results.run(backend, q, me)      # the trades are the live engine's result set: the landing's grid follows it
+            return {**events(answer, business), "how": "trades", "live": answer.get("live"), "spec": live_results.grid_spec(answer)}
         except BackendError as e:              # the trades' events read every trade document: too slow on a large lake (kept two minutes)
             changed = tv.get("__changes")
             if changed is None:

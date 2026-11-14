@@ -114,7 +114,8 @@ export class RecordPanel {
     if (this.spec.kind && !this.spec.static && !links.some((l) => l.label === 'Open')) {   // every record of a kind has its page
       links.unshift({ label: 'Open', href: '/v/' + encodeURIComponent(this.spec.kind) + '/' + encodeURIComponent(this.id) });
     }
-    return h(d, 'div', { cls: 'dg-live-links' }, links.map((x) => h(d, 'a', { cls: 'dg-live-link', text: x.label, attrs: { href: x.href }, data: { link: x.label } })));
+    return h(d, 'div', { cls: 'dg-live-links' }, links.map((x) => h(d, 'a', { cls: 'dg-live-link', text: x.label, attrs: { href: x.href }, data: { link: x.label } })).concat(
+      (this.o.actions || []).map((a) => h(d, 'button', { cls: 'dg-live-link', text: a.label, attrs: { type: 'button' }, data: { action: a.label }, on: { click: () => a.run(this.row) } }))));
   }
 
   // ---- Record -----------------------------------------------------------------------------------------------------------------------------

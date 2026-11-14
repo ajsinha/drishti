@@ -41,6 +41,40 @@ async def _starters(request: Request) -> dict:
     return out
 
 
+def grid_rows(rows: list[dict]) -> tuple[list[dict], list[dict]]:
+    """A monitor's entities as the records grid's static rows (one row per entity, keyed ``kind/id``): the entity first, then one column per
+    figure label (the labels the entities share share a column), each cell the server's text. ``_cells`` names the field of each strip index,
+    so the stream's patches (cell index, new text) reach the right cell."""
+    fields: dict[str, str] = {}                       # a figure's label -> its field
+    table = []
+    for r in rows:
+        ref = r.get("ref") or {}
+        row = {"KEY": f"{ref.get('kind')}/{ref.get('id')}", "ID": ref.get("id"), "KIND": ref.get("kind"), "ENTITY": ref.get("id"),
+               "_cells": {}}
+        if (r.get("title") or {}).get("pill"):
+            row["PILL"] = r["title"]["pill"]
+        if r.get("error"):
+            fields.setdefault("Note", "NOTE")
+            row["NOTE"] = r["error"]
+        for i, c in enumerate(r.get("strip") or []):
+            label = str(c.get("label") or f"Figure {i + 1}")
+            field = fields.setdefault(label, f"F{len(fields) + 1}")
+            row[field] = cell_text(c)
+            row["_cells"][str(i)] = field
+        table.append(row)
+    columns = [{"field": "ENTITY", "label": "Entity", "type": "id"}, {"field": "KIND", "label": "Kind", "type": "text"}]
+    if any("PILL" in r for r in table):
+        columns.append({"field": "PILL", "label": "State", "type": "text"})
+    columns += [{"field": f, "label": label, "type": "text"} for label, f in fields.items()]
+    return columns, table
+
+
+def cell_text(c: dict) -> str:
+    """A strip cell's text as the server gave it (a missing one is a dash)."""
+    t = c.get("text")
+    return "—" if t is None or t == "" else str(t)
+
+
 @router.get("/m")
 async def monitors(request: Request):
     try:
@@ -67,7 +101,8 @@ async def monitor(request: Request, name: str, template: str = ""):
         saved = True
     except BackendError as e:
         return render(request, "monitor/index.html", status_code=404, mine=[], starters=await _starters(request), missing=name)
-    return render(request, "monitor/monitor.html", name=name, rows=rows, saved=saved, screen="monitor")
+    columns, table = grid_rows(rows)
+    return render(request, "monitor/monitor.html", name=name, rows=rows, saved=saved, screen="monitor", grid_columns=columns, grid_rows=table)
 
 
 @router.post("/m/api/{name}")

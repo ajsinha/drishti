@@ -24,7 +24,7 @@ one bundled file next to them; a page loads drishti-core and then `Drishti.eleme
 |---|---|---|
 | [drishti-core](#drishti-core) | 1.2.0 | Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts, the filter model every library shares, the element maker and placements, Explain's drawing, chips for list attributes, the CSV writer, reading typed numbers, loading vendored engines |
 | [drishti-inputs](#drishti-inputs) | 0.3.1 | Inputs: business-date and range pickers with holiday calendars, the on/off switch, the tree picker, the multi-select, the combobox with server type-ahead (on its own field or a page's), forms from a schema (live or embedded, steps, named fields, hooks, custom widgets, time, date-and-time and money) with four eyes, the time and date-and-time pickers, the filter bar, the code editor over CodeMirror, and a page's own date fields and checkbox lists upgraded in place |
-| [drishti-grid](#drishti-grid) | 0.4.0 | The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and &lt;drishti-grid&gt; in three layouts and three densities), cell editing with undo, paste, write-back and four eyes, and the AG Grid-style adapter (createGridFromAgOptions) |
+| [drishti-grid](#drishti-grid) | 0.5.0 | The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and &lt;drishti-grid&gt; in three layouts and three densities), cell editing with undo, paste, write-back and four eyes, and the AG Grid-style adapter (createGridFromAgOptions) |
 | [drishti-tree](#drishti-tree) | 0.2.0 | The tree: hierarchies as an org chart, an indented tree with measures (on drishti-grid's tree data), a sunburst and an icicle; expand and collapse, search with breadcrumbs, measures on nodes with non-additive ones (◆) asked of the server and never summed, Explain, re-parenting in an edit mode that proposes the move for four eyes, the outline of an authoring screen (marks, a hiding filter, a designer's selection followed both ways, moves by drag or Alt+arrows), export, keyboard and ARIA |
 | [drishti-designer](#drishti-designer) | 0.2.0 | The designer kit: the layout canvas over a layout model (grid or flow: place, move, resize with snap, multi-select, align, distribute, z-order, groups, copy and paste, a phone's order, the keys, undo and redo on one command stack), the palette, the inspector (a form from a schema), the outline (drishti-tree's, drag to re-order or re-parent), the YAML pane kept in step with the model both ways (completion and lint from a JSON Schema) and the designer shell (three panes, Visual / YAML / Both, versions, Validate, Preview, History, Impact, Propose for review) |
 | [drishti-data](#drishti-data) | 0.1.0 | Data: one data-source contract (in memory, REST pages, server-side rows, Arrow, live), the live client over SSE and WebSocket with reconnect, heartbeat, resume and backpressure, and the Arrow client |
@@ -4715,7 +4715,7 @@ A visible row of the tree.
 
 ## drishti-grid
 
-Version 0.4.0. Bundle `static/elements/drishti-grid/drishti_grid.js`, global `Drishti.elements.grid`; requires drishti-core, drishti-inputs.
+Version 0.5.0. Bundle `static/elements/drishti-grid/drishti_grid.js`, global `Drishti.elements.grid`; requires drishti-core, drishti-inputs.
 
 ### drishti_columns.js
 
@@ -7288,6 +7288,49 @@ The one way a page reaches a live set on the server (the console's /api/live): m
 
 Returns `{rows: Function, row: Function, edit: Function, window: Function, history: Function, mine: Function}`.
 
+#### `inferType(rows, field)`
+
+A column's type from the values it holds: number when every value present is a number, date for ISO dates, else text.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `rows` | `Object[]` |  |
+| `field` | `string` |  |
+
+Returns `string`.
+
+#### `digValue(row, field)`
+
+The value at a dotted field of a row: the row's own property of that name first (a flat record), else the nested one.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `row` | `Object` |  |
+| `field` | `string` |  |
+
+Returns `*`.
+
+#### `staticSpec(o)`
+
+The declaration of a static set (a result without a record key): its columns as given or from the first rows' fields (a field starting with an underscore is not a column), never editable, no kind (so no Pivot), no history.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `o` | `{rows: Object[], columns?: Array&lt;string\|{field: string, label?: string, type?: string}&gt;, title?: string, id?: string, links?: Array&lt;{label: string, href: string}&gt;}` |  |
+
+Returns `Object`.
+
+#### `staticApi(rows, keyField)`
+
+The api of a static set: its rows as given (kept in their order), the row's JSON for the panel, no edits, no history.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `rows` | `Object[]` |  |
+| `[keyField]` | `string` | the field that names a row (else its place, from 1): a page that feeds changes to the grid names the rows it changes by it |
+
+Returns `{rows: Function, row: Function, edit: Function, window: Function, history: Function, mine: Function}`.
+
 ### drishti_live-panel.js
 
 #### `stateWords(state, needed)`
@@ -7410,6 +7453,16 @@ Returns `Promise&lt;LiveSetGrid&gt;`.
 Starts again from a fresh snapshot (the server could not keep up, the connection came back, or a person resumed).
 
 Returns `Promise&lt;void&gt;`.
+
+##### `LiveSetGrid.patch(changes)`
+
+Changes fields of rows the page holds (a static set that a page feeds itself: a monitor's ticks): the grid's rows are updated in place and the open record follows.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `changes` | `Array&lt;{id: string, fields: Object}&gt;` | the row's key and the fields that changed |
+
+Returns `number`: how many rows changed.
 
 ##### `LiveSetGrid.pause(on)`
 
@@ -9879,6 +9932,11 @@ Everything GridModel takes (columns, rows or datasource, serverPivot, explain, c
 | `[navigate]` | `function(string): void` | where Pivot › goes (default: the page's address is set) |
 | `[copy]` | `function(string): Promise&lt;void&gt;` | the clipboard (default: navigator.clipboard) |
 | `[snapshotRows=5000]` | `number` | the most rows held; a larger set is windowed |
+| `[onChart]` | `function({title: string, columns: Object[], rows: Object[]}): void` | when given, a Chart button hands the rows held (as the columns draw them) to it |
+| `[keyField]` | `string` | STATIC MODE: the field that names a row (default: its place) |
+| `[rowActions]` | `Array&lt;{label: string, run: function(Object): void}&gt;` | buttons beside the open record's links (the page decides what they do; given the grid's row) |
+| `[offset=0]` | `number` | the first row read (a page of a larger set: the page's rows tick, the rest of the set is not held) |
+| `[rows]` | `Object[]` | STATIC MODE: plain rows (no api, no channel needed): a result without a record key (an SQL answer, a preview). The rows are not merged and not edited; the panel shows the row's JSON. The spec may be omitted (the columns come from the rows) or given as {title, columns}. |
 
 #### `LiveMessage` : `Object`
 

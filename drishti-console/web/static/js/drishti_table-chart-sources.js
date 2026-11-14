@@ -17,8 +17,6 @@
 /* Chart any table, the source adapters (docs/guides/RACHANA_REFERENCE.md › Chart any table: the design, section 8.4): what each kind of table hands the chart
    dialog (drishti_table-chart.js), which never looks at a table's DOM itself. Every adapter answers the same small interface:
    {identity, title, context, filters, shown, total, approximate, rows() -> Promise<{fields, rows}>, all(settings) -> Promise|null}.
-   - search: a search's results and pick lists, from the raw values search.html writes in data-chart-rows (the shown page); every
-     match aggregated by the pivot engine (/api/pivot/query on the kind) when the kind's pack says pivot: and the chart's fields are its fields.
    - records: a Sutra table whose panel offers Pivot: the shown cells, and every row of the panel aggregated by the pivot engine
      (/api/pivot/query on the panel's source) on Chart all N.
    - history: an entity over time, from the raw values history.html writes in data-hx-chart.
@@ -137,46 +135,6 @@
     return src;
   }
 
-  // ---- search results and pick lists ---------------------------------------------------------------------------------------------
-  function search(t, o, data, fetchJson) {
-    var fields = data.fields || [], rows = data.rows || [];
-    var visible = function () {
-      var idx = [];
-      Array.prototype.forEach.call(t.tBodies[0].rows, function (r) {
-        var i = parseInt(r.getAttribute('data-i'), 10);
-        if (!r.__out && isFinite(i) && rows[i]) { idx.push(i); }
-      });
-      return idx.sort(function (a, b) { return a - b; });
-    };
-    var pivotFields = {};
-    (data.pivot || []).forEach(function (f) { pivotFields[f] = true; });
-    var paths = {};
-    fields.forEach(function (f) { paths[f.name] = f.path || f.name; });
-    function asPivot(name) { var n = String(paths[name] || name || '').replace(/^\$\./, ''); return pivotFields[n] ? n : null; }
-    var src = {
-      kind: 'search', identity: data.kind ? 'search:' + data.kind : null, title: o.title || ('Search: ' + (data.q || '')), context: { kind: data.kind || null },
-      filters: filterWords(o.filtered), shown: visible().length, total: data.matched != null ? data.matched : rows.length, approximate: false,
-      rows: function () { var idx = visible(); return Promise.resolve({ fields: fields, rows: idx.map(function (i) { return rows[i]; }) }); },
-      /** Every match on the business date, aggregated by the pivot engine (the pack's pivot: is its consent); null when it cannot. */
-      allFor: function (settings) {
-        if (!data.pivot || !data.kind || o.filtered) { return 'Charting every match needs the pack’s pivot:'; }
-        if (settings.type === 'scatter' && (settings.series[0] || {}).agg === 'none') { return 'A scatter of points charts the shown rows only'; }
-        var need = [settings.x.field].concat(settings.split ? [settings.split] : []).concat(settings.series.map(function (e) { return e.field; }).filter(Boolean));
-        var miss = need.filter(function (f) { return !asPivot(f); });
-        if (miss.length) { return 'Charting every match works on the pack’s pivot: fields; ' + miss.join(', ') + ' is not one'; }
-        var xv = rows.map(function (r) { return r[fields.map(function (f) { return f.name; }).indexOf(settings.x.field)]; }).filter(function (v) { return v != null; });
-        if (xv.length && xv.every(function (v) { return /^\d{4}-\d{2}-\d{2}/.test(String(v)); }) && settings.x.bucket !== 'day') {
-          return 'Charting every match by a date works by day: choose By day';
-        }
-        return null;
-      },
-      all: !data.pivot || !data.kind ? null : function (settings, arrangement) {
-        return engineCube(data.kind, arrangement, asPivot, fetchJson);
-      }
-    };
-    return src;
-  }
-
   // ---- history: an entity over time ----------------------------------------------------------------------------------------------
   function history(data, o) {
     return { kind: 'history', identity: 'history:' + (data.kind || '') + '/' + (data.shape || 'document'), title: o.title || 'History',
@@ -195,10 +153,8 @@
       rows: function () { return Promise.resolve({ fields: fields, rows: rows }); }, all: null };
   }
 
-  /** The adapter for a table the enhancer (drishti_tables.js) holds: search, records or dom. */
+  /** The adapter for a table the enhancer (drishti_tables.js) holds: records or dom. */
   function forTable(t, o, fetchJson) {
-    var raw = t.getAttribute('data-chart-rows');
-    if (raw) { try { return search(t, o, JSON.parse(raw), fetchJson); } catch (e) { /* the page's own data is broken: chart the cells */ } }
     var panel = t.closest('section.pnl[data-panel]'), view = t.closest('.view[data-view]');
     var link = panel && panel.querySelector('.pv-open a[href*="source=panel"]');
     var source = link ? new URLSearchParams(link.getAttribute('href').split('?')[1] || '').get('source') : null;
@@ -206,7 +162,7 @@
     return dom(t, o);
   }
 
-  var api = { forTable: forTable, dom: dom, records: records, search: search, history: history, bi: bi, cellValue: cellValue, headTexts: headTexts };
+  var api = { forTable: forTable, dom: dom, records: records, history: history, bi: bi, cellValue: cellValue, headTexts: headTexts };
   (window.drishtiModules = window.drishtiModules || {}).tableChartSources = api;
   window.Drishti.tableChartSources = api;
 })();

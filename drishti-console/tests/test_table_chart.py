@@ -22,7 +22,6 @@ from html import unescape
 
 from conftest import CONSOLE
 from core.history_rows import MASK, build_page, chart_data
-from routes.terminal_routes import search_chart_rows
 from table_chart_backend import SEARCH_ROWS, ChartBackend
 from test_contrast import THEMES, _ratio, _theme
 
@@ -34,40 +33,11 @@ SEARCH = {"kind": "trade", "mnemonic": "TRD", "columns": ["desk", "notional", "m
           "pivot": {"fields": [{"name": "desk"}, {"name": "notional"}]}}
 
 
-def test_search_rows_are_the_raw_values_named_as_the_table_heads_them_with_the_masks_kept():
-    out = search_chart_rows(SEARCH, "TRD where notional > 0", titled=True)
-    assert [f["name"] for f in out["fields"]] == ["TRD", "Title", "Desk", "Notional", "MTM", "Legs"]
-    assert out["fields"][0]["id"] is True and out["fields"][2]["path"] == "desk"
-    assert out["rows"][0] == ["T-1", "Swap one", "FX", 2_500_000, MASK, "[1, 2]"]          # a number stays a number, a list its text
-    assert out["rows"][1][3] is None and out["rows"][1][4] == MASK
-    assert out["matched"] == 120 and out["pivot"] == ["desk", "notional"] and out["q"] == "TRD where notional > 0"
-    assert [f["name"] for f in search_chart_rows(SEARCH, "q", titled=False)["fields"]][:2] == ["TRD", "Desk"]
-
-
-def test_two_columns_with_one_label_get_distinct_names():
-    data = dict(SEARCH, columns=["a", "b"], labels={"a": "Amount", "b": "Amount"}, rows=[])
-    names = [f["name"] for f in search_chart_rows(data, "q", titled=False)["fields"]]
-    assert len(set(names)) == len(names) == 3
-
-
-def test_the_search_page_hands_its_rows_to_the_chart_and_numbers_each_row(client, backend, monkeypatch):
+def test_the_search_page_offers_the_chart_through_the_records_grid_not_a_table(client, backend, monkeypatch):
     chart = ChartBackend()
     monkeypatch.setattr(backend, "search", chart.search, raising=False)
     page = client.get("/s", params={"q": "TRD where notional > 0"}).text
-    m = re.search(r'data-chart-rows="([^"]+)"', page)
-    assert m, "no chart rows on the search page"
-    data = json.loads(unescape(m.group(1)))
-    assert len(data["rows"]) == len(SEARCH_ROWS) and data["kind"] == "trade" and data["matched"] == 500
-    mtm = [f["name"] for f in data["fields"]].index("MTM")
-    assert {r[mtm] for r in data["rows"]} == {MASK}                                  # masked on the server, masked here
-    assert [int(i) for i in re.findall(r'<tr data-i="(\d+)"', page)] == list(range(len(SEARCH_ROWS)))
-
-
-def test_a_compared_search_has_no_chart_rows(client, backend, monkeypatch):
-    chart = ChartBackend()
-    monkeypatch.setattr(backend, "search", chart.search, raising=False)
-    page = client.get("/s", params={"q": "TRD where mtm > 0", "vs": "2026-09-29"}).text
-    assert "data-chart-rows" not in page
+    assert "data-records" in page and "data-chart-rows" not in page and "<table" not in page.split('data-panel="results"')[1].split("</section>")[0]
 
 
 def test_history_rows_for_the_chart_keep_numbers_and_mask_the_masked_columns():

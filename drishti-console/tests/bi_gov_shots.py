@@ -99,7 +99,7 @@ def main(out: Path, captures: Path) -> None:
                 ann.wait_for_function("() => document.querySelector('[data-msg]').textContent.includes('Proposed')")
                 sue = sign_in(browser, "sue")
                 open_item(sue, ids["positions"])
-                sue.wait_for_selector("[data-review-body] table.bi-grid")
+                sue.wait_for_selector("[data-review-body] .rc-host .dg-row[data-key]")
                 sue.wait_for_timeout(500)
                 shot(sue, "[data-sec-review]", out / "review.png")
                 got["review"] = call("GET", f"/bi/items/{ids['positions']}/review", "sue", sue_roles)[1]

@@ -46,13 +46,14 @@
   }
   function json(text, fallback) { try { return text ? JSON.parse(text) : fallback; } catch (e) { return fallback; } }
 
-  /** Draws one table of records into host. o: {set, live, spec, rows, columns, title, offset, limit, layout}. Answers the LiveSetGrid (or null). */
+  /** Draws one table of records into host. o: {set, live, spec, rows, columns, title, offset, limit, layout, keyField, rowActions, small}. Answers the LiveSetGrid (or null). */
   function mount(host, o) {
     var grid = window.Drishti.elements && window.Drishti.elements.grid;
     if (!grid || !grid.LiveSetGrid) { host.textContent = 'The grid did not load: reload the page.'; return null; }
     styles();
     host.classList.add('rc-host');
-    var opts = { spec: o.spec || { title: o.title, columns: o.columns }, offset: o.offset || 0, snapshotRows: o.limit || undefined, layout: o.layout || 'panel', onChart: chart };
+    if (o.small) { host.classList.add('rc-small'); }
+    var opts = { spec: o.spec || { title: o.title, columns: o.columns }, offset: o.offset || 0, snapshotRows: o.limit || undefined, layout: o.layout || 'wells', onChart: chart, keyField: o.keyField, rowActions: o.rowActions };
     if (o.set) {
       opts.api = grid.httpLiveApi({ id: o.set });
       opts.channel = o.live && window.Drishti.Channel ? { subscribe: function (h) { return window.Drishti.Channel.subscribe('live:' + o.set, h); } } : NONE;
@@ -67,6 +68,24 @@
     return live;
   }
 
+  /** A result as a host element, drawn on the next tick (when the caller has put it in the page): columns [{name, label?, type?, masked?}], rows as arrays
+      in the columns' order (an answer of an SQL query, a preview, a BI answer). A masked column stays the server's mask. o: {title, small, columns: false}. */
+  function table(columns, rows, o) {
+    o = o || {};
+    var host = document.createElement('div'), seen = {};
+    var cols = (columns || []).map(function (c, i) {
+      var name = typeof c === 'string' ? c : (c.label || c.name || ('Column ' + (i + 1)));
+      var label = name, n = 2;
+      while (seen[label]) { label = name + ' (' + n++ + ')'; }
+      seen[label] = true;
+      var type = typeof c === 'string' ? '' : c.type;
+      return { field: 'c' + i, label: label, type: type === 'string' || type === 'text' ? 'text' : type === 'number' || type === 'decimal' || type === 'integer' || type === 'amount' ? 'number' : undefined };
+    });
+    var objs = (rows || []).map(function (r) { var x = {}; cols.forEach(function (c, i) { x[c.field] = r[i]; }); return x; });
+    setTimeout(function () { mount(host, { rows: objs, spec: { title: o.title || '', columns: cols }, small: o.small !== false }); }, 0);
+    return host;
+  }
+
   function auto(root) {
     (root || document).querySelectorAll('[data-records]:not([data-records-mode])').forEach(function (host) {
       var set = host.getAttribute('data-live-set') || '';
@@ -74,6 +93,6 @@
         offset: +host.getAttribute('data-offset') || 0, limit: +host.getAttribute('data-limit') || 0, title: host.getAttribute('data-title') || '' });
     });
   }
-  window.Drishti.records = { mount: mount, auto: auto };
+  window.Drishti.records = { mount: mount, auto: auto, table: table };
   if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', function () { auto(); }); } else { auto(); }
 })();

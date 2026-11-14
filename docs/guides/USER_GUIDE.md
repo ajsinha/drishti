@@ -729,6 +729,23 @@ A *Title* column appears only when titles say more than the id.
 5. **CSV** downloads the list; **Watch as a monitor** turns its first 50 rows into a live watchlist
    ([Monitors](#monitors)).
 
+## Results everywhere behave the same
+
+Every table of records of the console is one grid, whichever page it is on: the result of **Search with a form** and of a search (`TRD where ...`),
+a kind's own list (`POS <GO>`, `TRD`, `NEWS`), a monitor, the rows behind a Pivot cell, the day's blotter on the trading Home, a dataset's or
+transform's preview in BI and the answer of an AI question. In all of them you can:
+
+- **open a row** to see it in the panel beside the grid: *Record* (its fields, read-only unless your role may edit and the site allows it), *History*
+  (for a set of records) and **Raw JSON** (the whole record, collapsible, with Copy; masked values stay masked);
+- **sort and filter** from the column headings, **group** from *Group by*, and send the same rows, filters and grouping to the Pivot with **Pivot ›**;
+- **Chart** the rows you hold in the one chart dialog;
+- see the rows **tick** when the kind is live (the chip says LIVE), and **Pause** them when you want to read.
+
+Two kinds of result differ only in what they cannot do. A *set of records* (a search, a kind's list, a blotter) can tick and has an **Open** link to each
+record's page. A *result without a record key* (an SQL answer, a preview, the rows behind a cell, a monitor) is **static**: the chip says STATIC, there is
+no Pause and no Pivot ›, and the panel's last tab is **JSON**, the row as it is. A list of many records (`POS <GO>`) shows a page at a time; use the
+pager under the grid, and the grid sorts and filters the page.
+
 ## Tables: sorting, filtering, paging and the keyboard
 
 Every table in the console (pick lists, search results, the tables inside views, admin lists) sorts and filters,
@@ -2144,7 +2161,8 @@ now: a row about a view you can no longer open reads "(no access)" with no excer
 ## Monitors
 
 A monitor is a **live watchlist**: one row per entity, each row showing that entity's key figures (its
-strip) as they tick. Rows can be of different kinds.
+strip) as they tick. Rows can be of different kinds. It is the records grid in its static mode: the cells change in place as the stream
+sends figures; open a row for *Open*, *Set an alert* and *Remove from the monitor*.
 
 *Views → Monitors* in the top bar (`/m`) lists *Yours* and the *Starters* the packs offer. Opening a starter
 saves a copy to your account. (None of the shipped packs offers a starter, so start from a search; the retired example packs

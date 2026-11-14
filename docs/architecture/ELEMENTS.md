@@ -371,6 +371,25 @@ live.start();
 * **The console's side.** One browser channel for every set (`live:<id>` in `/api/channel`), `/api/live/...` passing the server's calls on
   as the person, and the kernel's page `/live/<id>` for any declaration; a module's menu entry links to it (the trading module's *Trade blotter*).
 
+### 5.6 Static mode: one grid for every table of records
+
+A result with **no record key** (an SQL answer, a preview, a BI answer, the rows behind a pivot cell, a monitor) is drawn by the same component, in
+**static mode**: `new LiveSetGrid(host, { rows, spec: { title, columns, links }, keyField, rowActions, onChart })`, with no `api` and no `channel`.
+
+| | live (a set of the engine) | static (rows the page holds) |
+|---|---|---|
+| rows | read from `api.rows`, merged by key and version as the stream sends changes | the rows as given; a row is named by `keyField` (else its place from 1); nothing is merged |
+| bar | status chip, Group by, Chart, Pause, Pivot ›, My changes | status chip (STATIC), Group by, Chart |
+| record panel | Record (editable only when the server allows), History, Raw JSON, links, **Open** the record's page | Record (read-only), **JSON** (the row's JSON, collapsible, Copy), the spec's `links` and the page's `rowActions` |
+| ticks | the engine's stream | none; a page that feeds changes itself calls `patch([{id, fields}])` (a monitor's cells) |
+
+The columns of a static set come from `spec.columns` (strings or `{field, label, type}`) or from the first rows' fields; a column's type is taken from
+its values (number, date, text) when not given. A `field` with a dot (`counterparty.name`) reads the nested value of a record. The model helpers
+`staticSpec`, `staticApi`, `inferType` and `digValue` are exported. The console mounts both modes from one file, `static/js/drishti_records.js`: a host
+with `data-records` and `data-live-set` (live) or `data-rows` (static), or `Drishti.records.mount(host, {...})`, or `Drishti.records.table(columns, rows)` for
+an answer given as columns and row arrays. Nothing of a table of records is drawn by a page of the console; the tables that are not records (a
+Sutra panel's table, drawn by the view and enhanced by the grid's console tables, an admin list of settings) are not part of this.
+
 ## 6. The AG Grid-style adapter
 
 **Purpose.** An application written for AG Grid Enterprise's pivoting moves to drishti-grid by keeping its configuration:

@@ -45,6 +45,8 @@ const WINDOW_DELAY_MS = 200;
  * @property {function(string): Promise<void>} [copy] the clipboard (default: navigator.clipboard)
  * @property {number} [snapshotRows=5000] the most rows held; a larger set is windowed
  * @property {function({title: string, columns: Object[], rows: Object[]}): void} [onChart] when given, a Chart button hands the rows held (as the columns draw them) to it
+ * @property {string} [keyField] STATIC MODE: the field that names a row (default: its place)
+ * @property {Array<{label: string, run: function(Object): void}>} [rowActions] buttons beside the open record's links (the page decides what they do; given the grid's row)
  * @property {number} [offset=0] the first row read (a page of a larger set: the page's rows tick, the rest of the set is not held)
  * @property {Object[]} [rows] STATIC MODE: plain rows (no api, no channel needed): a result without a record key (an SQL answer, a preview).
  *   The rows are not merged and not edited; the panel shows the row's JSON. The spec may be omitted (the columns come from the rows) or
@@ -65,7 +67,7 @@ export class LiveSetGrid {
     this.static = Array.isArray(o.rows) && !o.api;
     if (this.static) {                                    // static mode: the same grid and panel over rows with no key, nothing merged or edited
       const given = o.spec || {};
-      o = Object.assign({}, o, { spec: staticSpec({ rows: o.rows, columns: given.columns, title: given.title, id: given.id }), api: staticApi(o.rows),
+      o = Object.assign({}, o, { spec: staticSpec({ rows: o.rows, columns: given.columns, title: given.title, id: given.id, links: given.links }), api: staticApi(o.rows, o.keyField),
         channel: { subscribe: () => () => undefined } });
     }
     this.o = o;
@@ -94,8 +96,8 @@ export class LiveSetGrid {
     this.status = h(d, 'span', { cls: 'dg-live-chip', attrs: { role: 'status', 'aria-live': 'polite' }, data: { state: this.state } });
     this.pauseBtn = this.static ? null : h(d, 'button', { cls: 'dg-live-btn', text: 'Pause', data: { act: 'pause' }, attrs: { type: 'button' }, on: { click: () => this.pause(!this.paused) } });
     this.pivotBtn = this.static ? null : h(d, 'button', { cls: 'dg-live-btn', text: 'Pivot ›', data: { act: 'pivot' }, attrs: { type: 'button', title: 'The same rows, filters and grouping in the Pivot' }, on: { click: () => this.toPivot() } });
-    this.chartBtn = o.onChart ? h(d, 'button', { cls: 'dg-live-btn', text: 'Chart', data: { act: 'chart' }, attrs: { type: 'button', title: 'Chart these rows' },
-      on: { click: () => o.onChart({ title: spec.title || spec.id, columns: spec.columns || [], rows: Array.from(this.rows.byId.values()) }) } }) : null;
+    this.chartBtn = this.o.onChart ? h(d, 'button', { cls: 'dg-live-btn', text: 'Chart', data: { act: 'chart' }, attrs: { type: 'button', title: 'Chart these rows' },
+      on: { click: () => this.o.onChart({ title: spec.title || spec.id, columns: spec.columns || [], rows: Array.from(this.rows.byId.values()) }) } }) : null;
     this.trayBtn = spec.tray ? h(d, 'button', { cls: 'dg-live-btn', text: 'My changes (0)', data: { act: 'tray' }, attrs: { type: 'button', 'aria-expanded': 'false' }, on: { click: () => this.toggleTray() } }) : null;
     const groupable = (spec.columns || []).filter((c) => c.type !== 'number' && c.type !== 'amount' && c.type !== 'list' && c.type !== 'datetime');
     this.groupSel = selectElement(d, { options: [{ value: '', label: 'No grouping' }].concat(groupable.map((c) => ({ value: c.field, label: c.label || c.field }))), value: (spec.groupBy || [])[0] || '',
@@ -195,6 +197,25 @@ export class LiveSetGrid {
   }
 
   /**
+   * Changes fields of rows the page holds (a static set that a page feeds itself: a monitor's ticks): the grid's rows are updated in place and the open
+   * record follows.
+   * @param {Array<{id: string, fields: Object}>} changes the row's key and the fields that changed
+   * @returns {number} how many rows changed
+   */
+  patch(changes) {
+    const update = [];
+    (changes || []).forEach((c) => {
+      const held = this.rows.byId.get(String(c.id));
+      if (!held) { return; }
+      Object.assign(held, c.fields);
+      update.push(held);
+    });
+    if (update.length) { this.grid.applyTransactionAsync({ add: [], update: update, remove: [] }); }
+    update.forEach((r) => { if (this.panel && this.panel.key === r[ROW_KEY]) { this.panel.update(r); } });
+    return update.length;
+  }
+
+  /**
    * Pauses the grid (rows that arrive are not applied) or resumes it from a fresh snapshot.
    * @param {boolean} on
    * @returns {void}
@@ -251,7 +272,7 @@ export class LiveSetGrid {
     this.panelHost.hidden = false;
     this.host.setAttribute('data-panel', 'open');
     this.panel = new RecordPanel(this.panelHost, { spec: this.spec, api: this.api, row: row, copy: this.o.copy || ((t) => navigator.clipboard.writeText(t)),
-      onSaved: () => this.loadTray(), onClose: () => this.close() });
+      actions: this.o.rowActions, onSaved: () => this.loadTray(), onClose: () => this.close() });
   }
 
   /**
