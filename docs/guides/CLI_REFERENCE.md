@@ -741,6 +741,8 @@ CI wiring are also in section 15 of the [Sutra developer guide](BUILD_GUIDE.md#2
 | `pack bundle` / `pack verify` / `pack deploy` / `pack rollback` | a versioned, checksummed archive; verify offline; copy into a packs folder atomically; put the previous one back | Admin → Packs → Deploy |
 | `pack publish` / `pack keygen` / `pack install` | sign into a registry (`tools/packreg/packreg.py`); make a key; install from the registry on a server | Admin → Packs |
 
+The console's Pack designer (Build → New pack) runs the same code as the job `tools/packgen/designer_job.py` (`analyse` and `finalize` over a workspace folder); you do not start it by hand.
+
 `pack check` belongs in CI (exit `1` fails the build; `--junit DIR` for the report); `pack deploy` is idempotent (the same bundle twice
 changes nothing) and keeps the replaced version for `pack rollback`. Schema files to a pack: [BUILD_GUIDE.md](BUILD_GUIDE.md#8-the-pack-designer-build--new-pack).
 

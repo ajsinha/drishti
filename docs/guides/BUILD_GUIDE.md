@@ -1945,9 +1945,8 @@ Sutra marked *edited*; a YAML the server refuses shows its problems in place of 
 (`module.yaml`, needs, console page routes, docs), `sutra lint` and `sutra test`, then `module pack` and `module check`: the **fifteen conformance
 checks** are listed as they pass. The `.dmod` can be downloaded.
 
-**6. Deploy.** **Plan the install** uploads the `.dmod` to the module store (the server checks it once more) and shows the plan per node; **Apply the
-plan** installs it. A single node installs at once; on a cluster the server may require a second administrator to apply the plan (four eyes, as in
-Admin → Modules → Deploy). **Open the screen** opens a trade of the module, `/m/<module>/<module>/<kind>/<id>`.
+**6. Deploy.** **Install on this node** copies the `.dmod` to the server's modules folder, where auto-deploy checks, installs and loads it. **Plan for the cluster** uploads the `.dmod` to the module store (the server checks it once more) and shows the plan per node; **Apply the
+plan** installs it: the server requires a second administrator to apply a plan (four eyes, as in Admin → Modules → Deploy). **Open the screen** opens a trade of the module, `/m/<module>/<module>/<kind>/<id>`.
 
 ### 8.1.1 The same on the command line
 
@@ -1963,7 +1962,7 @@ sends. Both routes run `tools/packgen/module_from_jsonl.py`; the page runs it as
 
 `builder.pack_designer_max_mb` (uploaded bytes per workspace, 4096), `builder.pack_designer_max_files` (500), `builder.pack_designer_ttl_hours` (72),
 `builder.pack_designer_jobs_per_user` (2 running jobs), `builder.pack_designer_workers` (processes reading the files; 0: the tool's default),
-`builder.pack_designer_site` (where bindings are written) and `builder.tools_dir` (the repository's `tools/` folder the job runs from).
+`builder.pack_designer_site` (where bindings are written), `builder.pack_designer_modules_dir` (where **Install on this node** puts the `.dmod`) and `builder.tools_dir` (the repository's `tools/` folder the job runs from).
 
 ### 8.1.3 From JSON Schema
 
