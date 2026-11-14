@@ -121,7 +121,7 @@ class LiveSetTest {
         AtomicReference<Consumer<EntityDocument>> live = new AtomicReference<>();
         LiveSet s = started(spec(Map.of()), d -> true, List.of(), live, Clock.systemUTC());
         List<Map<String, Object>> got = new CopyOnWriteArrayList<>();
-        LiveSet.Window w = s.window(d -> d, got::add, 5_000);
+        LiveSet.Window w = s.window(null, got::add, 5_000);
         long t0 = System.nanoTime();
         for (int v = 1; v <= 5; v++) {
             for (int i = 0; i < 2_000; i++) {
@@ -151,7 +151,7 @@ class LiveSetTest {
         AtomicReference<Consumer<EntityDocument>> live = new AtomicReference<>();
         LiveSet s = started(spec(Map.of()), d -> true, List.of(trade("T1", 1, "B", null), trade("T2", 1, "B", null)), live, Clock.systemUTC());
         List<Map<String, Object>> got = new ArrayList<>();
-        LiveSet.Window w = s.window(d -> d, got::add, 100);
+        LiveSet.Window w = s.window(null, got::add, 100);
         w.paged(Set.of("T1"));
         live.get().accept(trade("T2", 2, "B", null));
         live.get().accept(trade("T3", 1, "B", null));

@@ -43,8 +43,9 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 /**
  * The live result sets' API (docs/guides/API_REFERENCE.md, {@code /live}): the declarations a person may open, a page of a set's rows,
  * one record whole (the panel's Raw JSON), the stream of changes (server-sent events: {@code hello}, then {@code rows} or {@code resync}),
- * the page a stream shows, and a blotter's edits. Every answer is masked as the caller may see it; nothing is kept per person beyond the
- * caller's own open streams.
+ * the page a stream shows, and a blotter's edits. Every answer is made for a reader of the caller ({@link LiveSets#reader}): kept to their
+ * row scope and masked as they may see it, a search's set read only by the audience it was filled for; nothing is kept per person beyond
+ * the caller's own open streams.
  */
 @RestController
 @RequestMapping("/api/v1/live")
@@ -99,9 +100,21 @@ public class LiveSetController {
         String kind = sets.kindOf(q);
         entitlements.requireOpen(principal, kind);
         edition.requireKind(kind);
-        LiveSet set = sets.query(q, asOf, principal, entitlements.masks(principal), entitlements.redactor(principal), again);
+        LiveReader reader = sets.reader(principal, kind);
+        LiveSet set = sets.query(q, asOf, principal, reader, again);
         Map<String, Object> out = page(set, set.spec(), offset, limit, sort, descending, filter, principal);
-        out.put("search", set.origin());
+        out.put("search", origin(set, reader));
+        return out;
+    }
+
+    /** What the search that filled the set said, as the reader may see it: which node answered what for administrators only. */
+    private static Map<String, Object> origin(LiveSet set, LiveReader reader) {
+        Map<String, Object> o = set.origin();
+        if (reader.admin() || !o.containsKey("nodes")) {
+            return o;
+        }
+        Map<String, Object> out = new LinkedHashMap<>(o);
+        out.remove("nodes");
         return out;
     }
 
@@ -135,14 +148,14 @@ public class LiveSetController {
         LiveSet set = sets.open(spec, query);
         Map<String, Object> out = page(set, spec, offset, limit, sort, descending, filter, principal);
         if (!set.origin().isEmpty()) {
-            out.put("search", set.origin());
+            out.put("search", origin(set, sets.reader(principal, spec.kind())));
         }
         return out;
     }
 
     private Map<String, Object> page(LiveSet set, LiveSetSpec spec, int offset, int limit, String sort, boolean descending, String filter,
             Principal principal) {
-        LiveSet.Page page = set.page(offset, Math.min(MAX_PAGE, Math.max(1, limit)), sort, descending, filter, entitlements.redactor(principal));
+        LiveSet.Page page = set.page(offset, Math.min(MAX_PAGE, Math.max(1, limit)), sort, descending, filter, sets.reader(principal, spec.kind()));
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("set", described(spec, principal));
         out.put("live", set.live());
@@ -158,7 +171,7 @@ public class LiveSetController {
     public Map<String, Object> row(@PathVariable String id, @PathVariable String entity, @RequestParam(required = false) String query,
             @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
         LiveSetSpec spec = spec(id, principal);
-        return sets.open(spec, query).row(entity, entitlements.redactor(principal))
+        return sets.open(spec, query).row(entity, sets.reader(principal, spec.kind()))
                 .orElseThrow(() -> new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, spec.kind() + " " + entity + " is not in " + id));
     }
 
@@ -171,10 +184,11 @@ public class LiveSetController {
             @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
         LiveSetSpec spec = spec(id, principal);
         LiveSet set = sets.open(spec, query);
+        LiveReader reader = sets.reader(principal, spec.kind());
         SseEmitter emitter = new SseEmitter(0L);
         String sid = UUID.randomUUID().toString();
         ReentrantLock sending = new ReentrantLock();
-        LiveSet.Window w = set.window(entitlements.redactor(principal), ev -> {
+        LiveSet.Window w = set.window(reader, ev -> {
             sending.lock();
             try {
                 emitter.send(SseEmitter.event().name(String.valueOf(ev.get("type"))).data(ev, MediaType.APPLICATION_JSON));
@@ -193,7 +207,7 @@ public class LiveSetController {
         emitter.onTimeout(done);
         emitter.onError(e -> done.run());
         try {
-            emitter.send(SseEmitter.event().name("hello").data(Map.of("stream", sid, "total", set.size(), "live", set.live()), MediaType.APPLICATION_JSON));
+            emitter.send(SseEmitter.event().name("hello").data(Map.of("stream", sid, "total", set.total(reader), "live", set.live()), MediaType.APPLICATION_JSON));
         } catch (IOException e) {
             done.run();
         }
@@ -239,12 +253,15 @@ public class LiveSetController {
     }
 
     private LiveSetSpec spec(String id, Principal principal) {
-        LiveSetSpec spec = sets.spec(id).orElseThrow(() -> new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no live set " + id));
-        if (sets.implicit(id) && LiveSets.maskedSet(id) != entitlements.masks(principal)) {
-            // a search's set is filled as its people may see it: one with masks never reads the set of those without, nor the other way
-            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no live set " + id);
+        String aside = sets.aside(id);
+        if (aside != null && sets.spec(id).isEmpty()) {
+            // set aside at load: refused with the reason (Admin lists the same)
+            throw new DrishtiException(ErrorCode.LIVE_SET_INVALID, "the live set " + id + " was set aside at load: " + aside);
         }
+        LiveSetSpec spec = sets.spec(id).orElseThrow(() -> new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no live set " + id));
         entitlements.requireOpen(principal, spec.kind());
+        // a search's set is filled for one audience (roles, masks, row scope, the nodes they reach): no one else reads it
+        sets.requireAudience(id, sets.reader(principal, spec.kind()));
         return spec;
     }
 }

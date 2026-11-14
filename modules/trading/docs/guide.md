@@ -161,9 +161,8 @@ kind: trade
 query: "trade where TRADE_STATUS != 'CANCELLED'"   # the rows (the search grammar); absent: every record of the kind
 key: TRADE_ID                      # the record's key (absent: the entity id)
 version: TRADE_VERSION             # the version: changes merge by it, and an edit on an older one is refused
-changed-by: UPDATED_BY             # said when a stale edit is refused
-changed-at: SOURCE_UPDATE_TIME
-columns: [{field: TRADE_ID, label: Trade, type: id}, {field: TAGS, type: list}, ...]   # type: text, number, amount, date, datetime, list, status, id
+changed-at: SOURCE_UPDATE_TIME     # said when a stale edit is refused (changed-by: names who, when the kind's contract has such a field)
+columns: [{field: TRADE_ID, label: Trade, type: id}, {field: PRICE, type: number, format: price4}, ...]   # type: text, number, amount, date, datetime, list, status, id
 group-by: []                       # the grouping it opens with
 subtotals: [QUANTITY]              # summed per group
 sort: {field: SOURCE_UPDATE_TIME, descending: true}
@@ -177,7 +176,16 @@ edit:                              # a Rachana form with save: (RACHANA_REFERENC
   save: {target: source, command: amend-trade, approval: none, reason: optional}
 ```
 
-A declaration with problems is set aside with every problem in words (`GET /api/v1/live` lists them for administrators); the others load.
+Every declaration is **checked at load**, beyond its own shape:
+
+- each column's `format:` is a named format of `formats.yaml` (the bundled one and the packs': `price4` is the trading pack's);
+- every field it names (columns, key, version, who and when, grouping, subtotals, sort, retention, the edit's binds) is in the kind's
+  data contract (`contracts/<kind>.contract.yaml` of the pack that owns the kind; a kind without a contract is checked for formats only);
+- every editable field has a **write path**: it binds a record field, and not one that names or stamps the record (the key, the version,
+  who and when: mark those `readonly: true`).
+
+A declaration with problems is set aside with every problem in words, under `DRS-9307`: `GET /api/v1/live` lists them for
+administrators (Admin), and asking for the set answers `422 DRS-9307` with the reason; the others load.
 The `edit:` form joins the Sutras' forms in the write-back under the name `live:<id>`, so its checks, roles and approval rules are the
 write-back's own.
 
@@ -185,29 +193,46 @@ write-back's own.
 
 One engine behind every blotter and every FORM result (`com.ash.drishti.server.liveset`):
 
-1. **Snapshot**: the declaration's query over the durable store through the bindings, in one pass where the store can (a lake, Kafka's
-   topic state), else the search's matches.
+1. **Snapshot, paged from the store**: a kind a lake keeps as columns (Delta, Iceberg or files, through the bindings) is never read into
+   memory. For each order (the key, else the chosen sort, ascending or descending), filter and audience the set keeps an *index*: the keys
+   of the records that hold the query, in order, with the sort column's values, read in one pass of those columns (the documents once when
+   a field is not a column). A page fetches only its own rows whole, by id; the total is the index's count. The index is read again when
+   the store's version moves (a load); a few are kept, the latest asked for. Other kinds (no columns) are read whole in one pass, else
+   from the search's matches.
 2. **Live deltas**: the kind's `live:` binding, subscribed to **before** the snapshot is read; what arrives meanwhile is applied after it.
    Every change merges **by key and version**: a newer version replaces the row, an older or equal one is dropped (no duplicates, never back
    in time), a deletion or a row that no longer holds the query leaves. Skipped versions are counted (the record is whole, so the newest is
    still right).
-3. **Viewers**: one set is shared by everyone viewing the same declaration and query, and holds nothing of any person; each viewer's window
-   masks what it sends as that viewer may see it. Changes are coalesced per record and flushed every `flush-ms` (50 ms).
-4. **Scale**: pages of at most 5,000 rows (`offset`, `limit`, `sort`, `filter`); a paged viewer is sent changes of the rows it shows and the
-   new total only; a viewer more than `window-capacity` (5,000) records behind is sent one `resync` instead of a queue (back-pressure: a
-   burst never queues without bound). 10,000 updates apply in well under a second and reach a viewer as one coalesced event.
+   Paged from the store, the set keeps **only the live side** (the records changed since it opened, and the keys deleted or no longer
+   holding the query); each page merges it with the store's order by key: a changed record shadows the store's (and takes its place by the
+   sort), a removed one hides it, a new one joins; the total is the store's count with the same corrections, so it is exact.
+3. **Who sees what** (session isolation: nothing of any person is kept in a shared set): every request makes a *reader* of the person
+   (their **audience**: roles and embedding app, which also decide the Drishti*net nodes a search reaches, their masks, their row scope,
+   whether they see which node answered). A declared set's rows are shared, and **every read is kept to the reader**: pages, totals, each
+   viewer's stream (a record outside their scope is never sent; one that leaves it is a removal to them), the panel's Raw JSON and an edit's
+   record. A **search's set** is filled for one audience and read only by it: another person's request for its id is answered as if it did
+   not exist. Kind access (the role, the kind's pack switched on for them) is checked on every request. Changes are coalesced per record and
+   flushed every `flush-ms` (50 ms).
+4. **Scale**: pages of at most 5,000 rows (`offset`, `limit`, `sort`, `filter`: a text found in the shown columns' values as the reader
+   sees them); a paged viewer is sent changes of the rows it shows and the new total only; a viewer more than `window-capacity` (5,000)
+   records behind is sent one `resync` instead of a queue (back-pressure: a burst never queues without bound). 10,000 updates apply in well
+   under a second and reach a viewer as one coalesced event. At a million records (a narrow kind) the first page takes about half a second
+   (the index read once), a first sorted page under a second, every later page and a page after a live change a millisecond or two
+   (`StorePagesTest`); memory holds the keys and the sort column, never the records.
 5. **Retention**: `retention:` trims the live side every 30 s (older than `ttl` by its field, else by arrival; beyond `max-rows`, oldest
    first); the durable store keeps its own.
 6. A set nobody has viewed for ten minutes is closed.
 7. **A search is a set too**: a FORM's result and the search page's are the search's matches as a set (`GET /api/v1/live/query`): the
    search's rows, columns and order, then the kind's live changes merged in by key while the business date is the live one (static
-   otherwise, and when the kind has no `live:` binding). One set per search, business date and masking: people whose fields are masked get
-   their own set, filled and kept masked, so a masked value never picks, orders or filters rows. Pressing Search again reads a static set
-   afresh; a live one is current already.
+   otherwise, and when the kind has no `live:` binding). One set per search, business date and **audience**: people who see differently
+   (other roles, masks or row scope) get their own set, filled and kept as they see it, so a masked value never picks, orders or filters
+   rows and a row outside a person's scope never reaches them, live changes included. Pressing Search again reads a static set afresh; a
+   live one is current already.
 8. **A bare mnemonic is the kind's set**: `POS <GO>` opens the kind's own set a page at a time (`GET /api/v1/live/kinds/POS/rows`). A
    module's declaration of the kind is used when there is one; otherwise a default is made from the kind's contract (its key fields as
-   columns, else its promoted columns; the entity id as the key; read-only). No YAML per mnemonic is needed. A default set reads at most
-   `drishti.live-sets.default-max-rows` records and says when it stopped there.
+   columns, else its promoted columns; the entity id as the key; read-only). No YAML per mnemonic is needed. A kind a lake keeps as columns
+   is paged from it (every record counted: a bank's 1.3 million positions are all there); a kind that cannot be paged is read into memory
+   up to `drishti.live-sets.default-max-rows` records, and the set says when it stopped there (`capped`).
 
 ## 8. Writing back: Kafka and JDBC
 
@@ -244,7 +269,7 @@ Iceberg and file connectors never write per change.
 
 | Method | Path | What it does |
 |---|---|---|
-| `GET` | `/api/v1/live` | the declarations the caller may open (each with `editable` and `readOnly` for them); for administrators those set aside and the open sets |
+| `GET` | `/api/v1/live` | the declarations the caller may open (each with `editable` and `readOnly` for them, and for an editable one its `fields`: `id`, `label`, `type`, `bind`, `required`, `readonly`, `pattern`, `maxLength`, `min`, `max`, `options`); for administrators those set aside (`problems`, each with `DRS-9307`) and the open sets (`paged`, `storeRows`) |
 | `GET` | `/api/v1/live/{id}/rows` | a page: `offset`, `limit` (≤ 5,000), `sort`, `descending`, `filter`, `query`; `{set, live, total, seq, rows[{id, version, seq, doc}]}` |
 | `GET` | `/api/v1/live/{id}/rows/{entity}` | one record whole (the panel's Raw JSON), masked for the caller |
 | `GET` | `/api/v1/live/query` | a search's matches as a set (FORM, the search page): `q`, `offset`, `limit`, `sort`, `descending`, `filter`, `again`; the page plus `search` (what the search said) |
@@ -267,4 +292,7 @@ mode (ELEMENTS.md section 5.5).
 | `drishti.live-sets.dir` | `config/blotters` | the site's own declarations |
 | `drishti.live-sets.modules-dir` | `modules` | where the modules' `blotters/` folders are found (a module's only while it is on) |
 | `drishti.live-sets.edits-off` | (none) | the blotters whose edits the site switched off, by id (`trade,exposure`) |
-| `drishti.live-sets.default-max-rows` | `250000` | the most records a kind's default set (a bare mnemonic) reads |
+| `drishti.live-sets.default-max-rows` | `250000` | the most records a kind's default set (a bare mnemonic) reads into memory when its store cannot page it |
+| `drishti.live-sets.store-timeout-seconds` | `120` | how long a set paged from the lake may take to read the columns it orders by, and a page's records |
+
+Every one is in [CONFIGURATION.md](../../../docs/admin/CONFIGURATION.md) (`drishti.live-sets`), generated from the server's `application.yaml`.

@@ -24,6 +24,22 @@
   of a files store rewritten), the old files going by the table's vacuum or snapshot expiry. One rule class, `RowRetention` (moved to drishti-common,
   shared with the memory lake), and a parity test: the same rows and block leave the same rows in memory, Delta, Iceberg and files, and delta-rs reads
   the Delta result. Absent: nothing changes. Admin → Lakes' table page shows the rows kept. Domain floors (risk: seven years) apply.
+- **Live result sets: who sees what, paging from the lake, declarations checked at load** (server; modules/trading/docs/guide.md sections
+  6, 7, 9 and 10). *Session isolation*: every request makes a reader of the person (an audience of their roles and embedding app, which also
+  decide the Drishti*net nodes a search reaches, their masks, their row scope, whether they see which node answered). A search's set (FORM
+  results, the search page) is filled for one audience and read only by it, live changes outside the audience's scope never join it, and
+  which node answered is kept from people who are not administrators; a declared set's rows are shared and every read is kept to the reader:
+  pages, totals, each stream's changes, the panel's Raw JSON and an edit's record (`LiveIsolationTest`). *Scale*: a kind a lake keeps as
+  columns (Delta, Iceberg, files) is paged from the store instead of read into memory: an index of the keys in order (the key, else the
+  chosen sort) with the sort column, read once per store version, order, filter and audience; pages fetch only their rows; the live side
+  alone is kept and merged by key and version, totals exact. `POS <GO>` at a bank's 1.3 million positions shows them all; at a million
+  records the first page takes about half a second, later pages a millisecond (`StorePagesTest`). `drishti.live-sets.default-max-rows`
+  caps only kinds that cannot be paged. *Declarations checked at load*: named formats exist in `formats.yaml`, named fields in the kind's
+  data contract, editable fields have a write path; a bad one is set aside with the new `DRS-9307` (listed for administrators, refused with
+  the reason when asked for). The trade blotter's `PRICE` uses the trading pack's `price4` (there was no `number4`) and leaves out `TAGS`
+  and `changed-by: UPDATED_BY`, which are not in the trade contract. The field description now says `readonly`, `pattern` and
+  `maxLength`. The `drishti.live-sets.*` settings are in the server's `application.yaml` and CONFIGURATION.md, with the new
+  `store-timeout-seconds`.
 - **The grid's live mode and the trade blotter page** (drishti-grid; docs/architecture/ELEMENTS.md section 5.5, modules/trading/docs/guide.md).
   One Elements component, `LiveSetGrid`, draws a live result set: a snapshot, then the server's changes merged by key and version and applied
   as one batched transaction so cells tick, the page window sent to the server, `resync` and reconnects reading the set again, grouping with live

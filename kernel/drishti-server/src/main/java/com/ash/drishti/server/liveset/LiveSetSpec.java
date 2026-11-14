@@ -270,6 +270,9 @@ public record LiveSetSpec(String id, String title, String kind, String query, St
                 fm.put("type", f.type());
                 fm.put("bind", f.recordField());
                 fm.put("required", f.required());
+                fm.put("readonly", f.readonly());
+                fm.put("pattern", f.pattern());
+                fm.put("maxLength", f.maxLength());
                 fm.put("min", f.min());
                 fm.put("max", f.max());
                 fm.put("options", f.options() == null ? List.of() : f.options().stream().map(o -> Map.of("value", o.value(), "label", o.label())).toList());
@@ -280,6 +283,34 @@ public record LiveSetSpec(String id, String title, String kind, String query, St
             m.put("reason", form.save().reason() ? "required" : "optional");
         }
         return m;
+    }
+
+    /** Every record field the declaration names (columns, key, version, who and when, grouping, sort, retention, the edit's binds). */
+    public Set<String> namedFields() {
+        Set<String> out = new java.util.LinkedHashSet<>();
+        columns.forEach(c -> out.add(String.valueOf(c.get("field"))));
+        for (String f : new String[] {key, version, changedBy, changedAt, sortField, retention == null ? null : retention.on()}) {
+            if (f != null) {
+                out.add(f);
+            }
+        }
+        out.addAll(groupBy);
+        out.addAll(subtotals);
+        if (form != null) {
+            form.fields().forEach(f -> out.add(f.recordField()));
+        }
+        return out;
+    }
+
+    /** The named formats its columns use ({@code format: amount0}). */
+    public Set<String> formats() {
+        Set<String> out = new java.util.LinkedHashSet<>();
+        columns.forEach(c -> {
+            if (c.get("format") != null) {
+                out.add(String.valueOf(c.get("format")));
+            }
+        });
+        return out;
     }
 
     private static String field(Map<String, Object> m, String k, List<String> problems) {

@@ -234,6 +234,14 @@ drishti:
     # Write-back (docs/guides/APPROVALS_GUIDE.md): its settings are in their own folder (edit.yaml, lanes.yaml, policy.yaml, retention.yaml).
     # Off as shipped (edit.enabled: false there): a fresh install or an upgrade is read-only.
     file: ${DRISHTI_EDIT_FILE:./config/edit/edit.yaml}
+  live-sets:                         # the live result sets behind blotters, FORM results, searches and bare mnemonics (modules/trading/docs/guide.md section 7)
+    flush-ms: 50                     # how often each viewer's waiting changes are sent, coalesced per record (milliseconds, at least 10)
+    window-capacity: 5000            # records waiting for one viewer before it is told to resync instead (back-pressure)
+    default-max-rows: 250000         # the most records a kind's default set reads into memory when its store cannot page it (a kind a lake keeps as columns is paged from the lake, uncapped); beyond it the set says capped
+    store-timeout-seconds: 120       # how long a set paged from the lake may take to read the columns it orders by, and a page's records
+    modules-dir: modules             # where the modules' declarations are read from (modules/<id>/blotters/*.blotter.yaml, the modules that are on)
+    dir: config/blotters             # the site's own declarations (*.blotter.yaml); a declaration with a problem is set aside (DRS-9307) and listed in Admin
+    edits-off: ""                    # declaration ids whose edits the site switches off (comma-separated): their grids are read-only
   index:
     # Where the connectors' multi-day type-ahead index keeps closed days as block-compressed segment files (one subfolder per
     # connector). Blank: <data dir>/index, i.e. ./data/index. Size is capped per connector by its index.max-disk; a day that
