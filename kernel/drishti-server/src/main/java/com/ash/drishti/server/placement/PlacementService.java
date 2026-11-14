@@ -230,6 +230,16 @@ public final class PlacementService {
         return matrix().parts().stream().anyMatch(p -> p.module().equals(module) && p.placed().contains(me));
     }
 
+    /**
+     * True when the module's {@code compute} part is placed on this node, or the module declares none (its Python then goes wherever the
+     * module loads): the module's Python pool is only made where its compute is.
+     */
+    public boolean computePartHere(String module) {
+        String me = self();
+        List<PlacementResolver.PartView> rows = matrix().parts().stream().filter(p -> p.module().equals(module) && p.part().equals("compute")).toList();
+        return rows.isEmpty() || rows.stream().anyMatch(p -> p.placed().contains(me));
+    }
+
     /** The module whose REST namespace is {@code prefix}, if placement knows it. */
     public Optional<ModuleParts> byPrefix(String prefix) {
         return modules().stream().filter(m -> m.prefix().equals(prefix)).findFirst();

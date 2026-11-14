@@ -115,6 +115,20 @@ public record PoolSettings(String name, String type, List<String> engines, Strin
         return locked == null;
     }
 
+    /**
+     * The pool a module's Python compute runs in: the module's own settings ({@code python.pool}, the keys of a pool in compute.yaml) with
+     * its engines and its worker path (its package folders and the folder its vendored wheels were unpacked to). The environment is always
+     * the site's interpreter: a module installs nothing from a network.
+     */
+    public static PoolSettings forModule(String name, java.util.Map<String, Object> settings, List<String> engines, List<String> pythonPath) {
+        java.util.Map<String, Object> m = new java.util.LinkedHashMap<>(settings == null ? java.util.Map.of() : settings);
+        m.remove("environment");
+        m.put("engines", engines);
+        m.put("python-path", pythonPath);
+        ConfigValues c = new ConfigValues(m, "module " + name + " python.pool", java.util.function.UnaryOperator.identity());
+        return parse(name, c, new ConfigValues(java.util.Map.of(), "", null));
+    }
+
     static PoolSettings parse(String name, ConfigValues c, ConfigValues node) {
         ConfigValues w = c.section("workers");
         ConfigValues nw = node.section("workers");

@@ -64,7 +64,9 @@ public final class ComputeService implements AutoCloseable {
     private final Environments environments;
     private final Approvals approvals;
     private final PeerTransport peers;
-    private final Map<String, Pool> pools = new LinkedHashMap<>();
+    private final Map<String, Pool> pools = new ConcurrentHashMap<>();
+    /** The pools modules brought (their Python compute), by name: added when a module loads, withdrawn when it unloads. */
+    private final Map<String, PoolSettings> modulePools = new ConcurrentHashMap<>();
     private final ArrayDeque<Map<String, Object>> recent = new ArrayDeque<>();
     private final Map<String, ComputeHandle> live = new ConcurrentHashMap<>();
     private volatile Path sdk;
@@ -136,7 +138,7 @@ public final class ComputeService implements AutoCloseable {
                 LOG.info("compute: removed {} scratch folder(s) left by an earlier run", swept);
             }
             sdk = Sdk.install(settings.sdk());
-            for (PoolSettings p : settings.pools().values()) {
+            for (PoolSettings p : allPools()) {
                 pools.put(p.name(), new Pool(p, settings, node, n -> spec(p, n), this::finished));
                 if (!p.systemEnvironment() && approvals != null) {
                     try {
@@ -157,7 +159,7 @@ public final class ComputeService implements AutoCloseable {
 
     private String describePools() {
         List<String> out = new ArrayList<>();
-        settings.pools().values().forEach(p -> out.add(p.name() + " " + p.workersMin() + ".." + p.workersMax() + " " + p.mode().resolved().name().toLowerCase(Locale.ROOT)));
+        allPools().forEach(p -> out.add(p.name() + " " + p.workersMin() + ".." + p.workersMax() + " " + p.mode().resolved().name().toLowerCase(Locale.ROOT)));
         return String.join(", ", out);
     }
 
@@ -232,7 +234,7 @@ public final class ComputeService implements AutoCloseable {
             return;
         }
         String pool = r.subject().substring(5);
-        if (settings.pools().containsKey(pool)) {
+        if (poolSettings(pool).isPresent()) {
             Thread.ofVirtual().name("compute-build-" + pool).start(() -> {
                 try {
                     build(pool, "on-approval");
@@ -313,7 +315,7 @@ public final class ComputeService implements AutoCloseable {
 
     /** Submits and waits (the pool's budget plus a margin). */
     public ComputeResult run(ComputeRequest req) {
-        java.time.Duration budget = req.timeout() != null ? req.timeout() : settings.timeout(poolSettings(req.pool()), req.cls());
+        java.time.Duration budget = req.timeout() != null ? req.timeout() : settings.timeout(poolSettings0(req.pool()), req.cls());
         return submit(req, ProgressSink.NONE).await(budget.plusSeconds(10));
     }
 
@@ -367,8 +369,59 @@ public final class ComputeService implements AutoCloseable {
         return p;
     }
 
-    private PoolSettings poolSettings(String name) {
-        return settings.pool(name);
+    private PoolSettings poolSettings0(String name) {
+        return poolSettings(name).orElseThrow(() -> new ComputeException(ComputeException.Code.REFUSED,
+                "there is no compute pool '" + name + "' (pools: " + allPools().stream().map(PoolSettings::name).toList() + ")"));
+    }
+
+    /** A pool's settings, whether the site's ({@code compute.yaml}) or a module's. */
+    public Optional<PoolSettings> poolSettings(String name) {
+        PoolSettings p = settings.pools().get(name);
+        return Optional.ofNullable(p != null ? p : modulePools.get(name));
+    }
+
+    /** Every pool: the site's, then the modules'. */
+    public List<PoolSettings> allPools() {
+        List<PoolSettings> out = new ArrayList<>(settings.pools().values());
+        out.addAll(modulePools.values());
+        return out;
+    }
+
+    /**
+     * Adds the pool of a module's Python compute (one implementation: the same {@link Pool} and workers as a site's). On a started service
+     * it is live at once; before the start, it is made with the others. A name already in use is refused.
+     */
+    public void addModulePool(PoolSettings p) {
+        lifecycle.lock();
+        try {
+            if (settings.pools().containsKey(p.name()) || modulePools.putIfAbsent(p.name(), p) != null) {
+                throw new ComputeException(ComputeException.Code.REFUSED, "there is already a compute pool '" + p.name() + "'");
+            }
+            if (started) {
+                pools.put(p.name(), new Pool(p, settings, node, n -> spec(p, n), this::finished));
+            }
+        } finally {
+            lifecycle.unlock();
+        }
+    }
+
+    /** Withdraws a module's pool: waiting requests fail, running ones are cancelled, its workers stop. Idempotent. */
+    public void removeModulePool(String name) {
+        lifecycle.lock();
+        try {
+            modulePools.remove(name);
+            Pool p = pools.remove(name);
+            if (p != null) {
+                p.close();
+            }
+        } finally {
+            lifecycle.unlock();
+        }
+    }
+
+    /** True when a pool of that name is live here (a started service holds it). */
+    public boolean hasPool(String name) {
+        return pools.containsKey(name);
     }
 
     /** This node's load for a pool, as other nodes see it when they fan out. */
@@ -421,7 +474,7 @@ public final class ComputeService implements AutoCloseable {
                 Map.of("interactive", settings.queueInteractive(), "event", settings.queueEvent(), "batch", settings.queueBatch())));
         m.put("fanOut", Map.of("chunkRows", settings.chunkRows(), "peers", settings.fanOutPeers()));
         List<Map<String, Object>> ps = new ArrayList<>();
-        for (PoolSettings p : settings.pools().values()) {
+        for (PoolSettings p : allPools()) {
             Pool pool = pools.get(p.name());
             Map<String, Object> s = pool == null ? new LinkedHashMap<>(Map.of("name", p.name(), "workersMin", p.workersMin(), "workersMax",
                     p.workersMax(), "environment", p.environment(), "engines", p.engines())) : new LinkedHashMap<>(pool.stats());

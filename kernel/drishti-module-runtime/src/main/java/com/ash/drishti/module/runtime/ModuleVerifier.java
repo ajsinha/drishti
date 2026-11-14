@@ -132,6 +132,12 @@ public final class ModuleVerifier {
                 }
             }
         }
+        m.python().ifPresent(py -> {
+            List<String> bad = py.problems(c.dir());
+            if (!bad.isEmpty()) {
+                throw new ModuleRefusedException("V2", label + ": " + String.join("; ", bad));
+            }
+        });
         List<String> jars = m.java() == null ? List.of() : m.java().classPath();
         for (String f : files) {
             if ((f.startsWith("java/") || f.startsWith("lib/")) && f.toLowerCase(Locale.ROOT).endsWith(".jar") && !jars.contains(f)) {

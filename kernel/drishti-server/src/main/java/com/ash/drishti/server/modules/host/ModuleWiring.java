@@ -74,6 +74,17 @@ public final class ModuleWiring {
         return this;
     }
 
+    private volatile ModulePython python;
+
+    /**
+     * The compute service a module's Python compute joins (its manifest's {@code python:} section), and whether the module's {@code compute}
+     * part is placed on this node (true for a module that declares no such part).
+     */
+    public ModuleWiring python(Supplier<com.ash.drishti.compute.ComputeService> compute, java.util.function.Predicate<LoadedModule> computeHere) {
+        this.python = compute == null ? null : new ModulePython(compute, dataDir, computeHere);
+        return this;
+    }
+
     private volatile Supplier<com.ash.drishti.server.PackReloader> packs = () -> null;
 
     /** The pack loader a site's content module's packs load through when it starts (its manifest's {@code packs: {list}}). */
@@ -147,6 +158,16 @@ public final class ModuleWiring {
         entries.put(module.id(), started);
         needs(module);
         packs(module);
+        ModulePython py = python;
+        if (py != null) {
+            try {
+                py.install(module, contributions);
+            } catch (RuntimeException e) {
+                started.forEach(ModuleWiring::stopQuietly);
+                entries.remove(module.id());
+                throw e;
+            }
+        }
         LOG.info("module {}: {} contributions connected, {} entr{} started", module.id(), n, started.size(), started.size() == 1 ? "y" : "ies");
     }
 

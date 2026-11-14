@@ -130,7 +130,7 @@ public final class ModuleConformance {
         out.add(check("C6", "Routes namespaced", routesNamespaced(dir, m, files)));
         out.add(check("C7", "Help, guide, tutorial present", docsPresent(dir, m, files)));
         out.add(check("C8", "Data contracts present", contractsPresent(dir, m, files)));
-        out.add(check("C9", "No secrets, no connectors", noSecrets(dir, files)));
+        out.add(check("C9", "No secrets, no connectors, pure Python", noSecrets(dir, files, m)));
         out.add(check("C10", "Licence headers", licenceHeaders(dir, files, project)));
         out.addAll(runtimeChecks(dmod, m, work, cycles, facts, with));
         out.add(11, check("C12", "Two people at once", twoPeople(dir, m)));
@@ -406,8 +406,15 @@ public final class ModuleConformance {
         return out;
     }
 
-    private static List<String> noSecrets(Path dir, List<String> files) {
+    private static List<String> noSecrets(Path dir, List<String> files, DmodManifest m) {
         List<String> out = new ArrayList<>();
+        // the module's Python (section 3.3, python:): its entry points exist, its declared requirements are vendored as pure-Python wheels
+        // and nothing in it is compiled or an executable; nothing is installed from a network
+        try {
+            m.python().ifPresent(py -> out.addAll(py.problems(dir)));
+        } catch (ModuleRefusedException e) {
+            out.add(e.getMessage());
+        }
         for (String f : files) {
             if (!isText(f) || f.startsWith("META-INF/")) {
                 continue;

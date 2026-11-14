@@ -367,7 +367,7 @@ failure a sentence naming the file and the fix:
 | C6 Routes namespaced | `plugin.yaml` format 2, unique route ids, paths inside the module (served under `/m/<id>/`), each page present; no code in the console part |
 | C7 Help, guide, tutorial present | README with front matter, the Help file, at least one guide and one tutorial, every relative link and image of `docs/` present |
 | C8 Data contracts present | each provided kind has `packs/<pack>/contracts/<kind>.yaml` with `contract-format: 1`, a `binding-hint:` and no `storage:`; each need names a contract range |
-| C9 No secrets, no connectors | private keys, cloud keys, `jdbc:` anywhere; connector and secret keys (`connector:`, `password:`, `token:` …) in YAML |
+| C9 No secrets, no connectors, pure Python | private keys, cloud keys, `jdbc:` anywhere; connector and secret keys (`connector:`, `password:`, `token:` …) in YAML; the `python:` section's entry points present, every `requires:` vendored as a pure-Python wheel, nothing compiled |
 | C10 Licence headers | the publisher's copyright at the top of every Java source, script and style |
 | C11 Functions answer | loaded into `ModuleRuntime`, every function word has a route that answers 200 |
 | C12 Two people at once | no static field that is not final, and no static collection that is not unmodifiable (the class initialiser's `List.of`, `Map.copyOf`, `Collections.unmodifiable…`, `Stream.toList`), in the module's classes; a field that is one value for the whole engine on purpose carries `@EngineWide("why")` (kernel API) |
@@ -3940,8 +3940,32 @@ the kernel's compute pools. What is supported:
   the kinds it computes, the inputs it reads, triggers): [the reactive connector](../connectors/types/reactive/README.md); a whole worked
   run is [tutorial 19, step 23](../tutorials/19-build-a-pack-and-a-screen.md#step-23--switch-on-the-compute-workers-and-the-sample-pack).
   The kinds it computes are then read like any other, and a module reads them through its needs.
-- **Not supported for modules:** a `.dmod` carries no Python that runs. The manifest's `python:` section is accepted but not acted on;
-  the Python engine is site configuration (the pool and the connector file), and its code is installed on the nodes that serve the pool.
+- **A module carries its Python.** The manifest's `python:` section ships the engine inside the `.dmod`, with everything it needs; the
+  kernel installs it when the module loads and withdraws it when the module unloads, so a site configures no pool for it:
+
+  ```yaml
+  # module.yaml
+  python:
+    version: "3.10"                         # the least Python it runs on
+    path: [python]                          # package folders put on the module's workers' path (default python)
+    wheels: python/wheels                   # the vendored wheels (default python/wheels)
+    requires: ["tinylib==1.0"]              # each must have a wheel in that folder
+    engines: [freight_py.lanes:LaneCost]    # module:Class entry points
+    pool: {workers: {min: 0, max: 2}, mode: auto, timeout: 30s}   # the pool's own settings, as in compute.yaml
+  ```
+
+  On **load** the wheels are unpacked into `<data>/compute/modules/<id>/site` and a pool named `m-<id>` (the module id, lower case) joins
+  the compute service: the same pool and workers as a site's, never a second mechanism. Its workers see the SDK, that folder and the
+  module's package folders and nothing else, so two modules cannot clash. A reactive connector file (shipped in the module's pack) or a
+  compute request names `pool: m-<id>` and the entry point as for any pool. On **unload** the pool is withdrawn (waiting requests fail,
+  running ones are cancelled, workers stop) and the unpacked folder is removed; loading it again installs it again. Compute must be on
+  (`compute.enabled: true`); with it off, the module loads and its Python answers "compute is off".
+
+  The rules, which the load refuses and conformance check C9 reports in words: no network install (every `requires:` entry needs a
+  `py3-none-any` wheel of that name, and of that version when it says `==`, in the wheels folder); no native code (no `.so`, `.pyd`,
+  `.dll`, `.dylib` or executable in the Python folders or inside a wheel); every `engines:` entry point has its module file and class in
+  the package folders. **Placement:** a module that declares a `compute` part gets its pool only on the nodes that part is placed on (part
+  (c) below); one that declares none gets it wherever it loads.
 
 **(c) Placing heavy compute.** A module declares its **parts** and their resource class; the site places them in `config/placement.yaml`
 ([HOW_IT_FITS.md section 5](../../HOW_IT_FITS.md#5-where-things-run-placement), [CLUSTER_GUIDE.md section 1.9](CLUSTER_GUIDE.md#19-module-placement)):

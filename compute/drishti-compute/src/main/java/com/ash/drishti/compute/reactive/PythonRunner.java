@@ -69,10 +69,11 @@ public final class PythonRunner implements EngineRunner {
         if (!c.enabled()) {
             return Optional.of("compute is off on this server (compute.enabled)");
         }
-        if (!c.settings().pools().containsKey(spec.pool())) {
-            return Optional.of("there is no compute pool '" + spec.pool() + "' (config/compute/compute.yaml)");
+        Optional<com.ash.drishti.compute.PoolSettings> pool = c.poolSettings(spec.pool());
+        if (pool.isEmpty()) {
+            return Optional.of("there is no compute pool '" + spec.pool() + "' (config/compute/compute.yaml, or a module's python section)");
         }
-        return c.ready(c.settings().pool(spec.pool())).map(w -> "compute pool " + spec.pool() + ": " + w);
+        return c.ready(pool.get()).map(w -> "compute pool " + spec.pool() + ": " + w);
     }
 
     @Override
