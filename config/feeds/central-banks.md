@@ -9,7 +9,7 @@
 
 Central banks (FRED and the Bank of Canada).
 
-The economy module's public-sector central-banks pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): Policy rates and the market series around them: the Federal Reserve's target range and effective rate, Treasury yields, the curve's slope, US inflation, unemployment and the Fed's balance sheet (FRED, Federal Reserve Bank of St. Louis), and the Bank of Canada's target rate, CORRA, Government of Canada yields and USD/CAD (Bank of Canada Valet). A bank's page shows its policy rate, its last move and its series; each series shows two years of history. Filled daily by the central-banks feed into the worldlake lake; FRED needs a free key in DRISHTI_FRED_API_KEY.
+The economy module's public-sector central-banks pack (docs/guides/WORLD_DATA_GUIDE.md): Policy rates and the market series around them: the Federal Reserve's target range and effective rate, Treasury yields, the curve's slope, US inflation, unemployment and the Fed's balance sheet (FRED, Federal Reserve Bank of St. Louis), and the Bank of Canada's target rate, CORRA, Government of Canada yields and USD/CAD (Bank of Canada Valet). A bank's page shows its policy rate, its last move and its series; each series shows two years of history. Filled daily by the central-banks feed into the worldlake lake; FRED needs a free key in DRISHTI_FRED_API_KEY.
 
 | | |
 |---|---|
@@ -30,7 +30,7 @@ python3 tools/drishti.py feed run central-banks                # pull today, wri
 python3 tools/drishti.py feed status central-banks             # its last runs
 ```
 
-Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windows`). The guide: [EXTERNAL_DATA.md](../../docs/guides/EXTERNAL_DATA.md).
+Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windows`). The guide: [WORLD_DATA_GUIDE.md](../../docs/guides/WORLD_DATA_GUIDE.md).
 
 ## Data contract
 

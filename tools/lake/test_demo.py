@@ -150,7 +150,7 @@ class LakeDemo(unittest.TestCase):
 
 @unittest.skipUnless(HAVE, "needs deltalake and PyYAML")
 class KeepOtherDates(unittest.TestCase):
-    """2.9.7: ``--keep-other-dates`` adds a dated table's dates to the lake (the scenario matrix's extra days, tutorial 2, step 15): the
+    """2.9.7: ``--keep-other-dates`` adds a dated table's dates to the lake (the scenario matrix's extra days, the VaR tutorial, step 15): the
     dates already there stay (the data's three, 2026-09-28 to 2026-09-30), the new ones are the data moved back, its scenario window with
     it (each date written replaced); without it the table is rebuilt."""
 

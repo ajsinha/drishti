@@ -39,6 +39,8 @@ REGISTER = yaml.safe_load((ROOT / "config" / "docs-features.yaml").read_text(enc
 FEATURES = REGISTER["features"]
 REFERENCES = set(REGISTER.get("references") or [])
 
+NOT_GUIDE_FOLDERS = {"examples"}      # docs/guides folders that are galleries, not guide folders
+PAGE_CAP = 2000            # a guide folder's subpage: the lines one page may have (a folder counts as ONE guide for the caps; each page stays readable)
 CAPS = {"guides": 24, "tutorials": 23, "references": 12, "knowledge": 5, "help": 67}
 CONTRACTS_PLANNED = 30
 
@@ -50,8 +52,17 @@ def _written(value) -> bool:
     return isinstance(value, str) and value.endswith(".md")
 
 
+def _pages(rel: str) -> list[Path]:
+    """The files of a guide or tutorial: the file itself, or, for a guide folder (docs/guides/<folder>/README.md, the index of subpages
+    each with its own tutorial part), every page of the folder. A guide folder counts as ONE guide in the register, the caps and Help."""
+    path = DOCS / rel
+    if path.name == "README.md" and path.parent.parent == DOCS / "guides":
+        return [path, *sorted(p for p in path.parent.glob("*.md") if p != path)]
+    return [path]
+
+
 def _customer_docs() -> list[Path]:
-    out = [DOCS / f[k] for f in FEATURES for k in ("guide", "tutorial") if _written(f.get(k))]
+    out = [q for f in FEATURES for k in ("guide", "tutorial") if _written(f.get(k)) for q in _pages(f[k])]
     return out + sorted((DOCS / "knowledge").glob("*.md"))
 
 
@@ -83,6 +94,9 @@ def test_every_guide_and_tutorial_on_disk_is_in_the_register():
     named = {f[k] for f in FEATURES for k in ("guide", "tutorial") if _written(f.get(k))} | REFERENCES
     for p in sorted((DOCS / "guides").glob("*.md")):
         assert f"guides/{p.name}" in named, f"docs/guides/{p.name} is neither a feature's guide nor a reference (config/docs-features.yaml)"
+    for d in sorted(p for p in (DOCS / "guides").iterdir() if p.is_dir() and p.name not in NOT_GUIDE_FOLDERS and any(p.glob("*.md"))):     # a guide folder: its README.md is the register's guide
+        assert (d / "README.md").is_file(), f"docs/guides/{d.name}/ has no README.md (the index of a guide folder)"
+        assert f"guides/{d.name}/README.md" in named, f"docs/guides/{d.name}/README.md is neither a feature's guide nor a reference (config/docs-features.yaml)"
     for p in sorted((DOCS / "tutorials").glob("[0-9][0-9]-*.md")):
         assert f"tutorials/{p.name}" in named, f"docs/tutorials/{p.name} is no feature's tutorial (config/docs-features.yaml)"
     for r in REFERENCES:
@@ -126,12 +140,21 @@ def test_help_lists_user_documents_only_and_their_domains_agree_with_the_registe
             assert r["domain"] == f["domain"], f"{r['slug']}: Help says domain {r['domain']}, the register {f['domain']}"
 
 
+def test_a_guide_folders_pages_stay_readable():
+    """A guide folder is one guide for the caps and the register, but each of its pages is one a reader can hold: under PAGE_CAP lines."""
+    for f in FEATURES:
+        if _written(f.get("guide")) and len(_pages(f["guide"])) > 1:
+            for page in _pages(f["guide"]):
+                n = len(page.read_text(encoding="utf-8").splitlines())
+                assert n <= PAGE_CAP, f"{page.relative_to(ROOT)}: {n} lines, over the {PAGE_CAP}-line page cap of a guide folder: split it"
+
+
 def test_pages_within_their_budgets():
     over = []
     for f in FEATURES:
         for key, budget in (("guide", "budget"), ("tutorial", "tutorial-budget")):
             if _written(f.get(key)) and f.get(budget):
-                n = len((DOCS / f[key]).read_text(encoding="utf-8").splitlines())
+                n = sum(len(q.read_text(encoding="utf-8").splitlines()) for q in _pages(f[key]))
                 if n > 1.1 * int(f[budget]):
                     over.append(f"{f[key]} {n}/{f[budget]}")
     if over:

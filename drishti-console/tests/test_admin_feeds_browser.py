@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Admin → Data loads → Feeds in a real browser (docs/guides/EXTERNAL_DATA.md section 6): the feeds and the latest runs as console tables
+"""Admin → Data loads → Feeds in a real browser (docs/guides/WORLD_DATA_GUIDE.md section 6): the feeds and the latest runs as console tables
 (drishti-grid: sortable headings), the failing badge on the Feeds tab, Run now answered started, then skipped while the feed's lock is
 held, and a 390 px phone without sideways scroll. Chromium through Playwright against a console with a stand-in server; skipped when
 Playwright or its Chromium is missing."""

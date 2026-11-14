@@ -1461,7 +1461,7 @@
       if (!src) { return docTable(doc, panel.data, hooks); }
       const e = mk(doc), title = panel.title || panel.id;
       return [docTable(doc, panel.data, hooks), e('p', { class: 'pv-open' }, e('a', { class: 'btn btn-sm btn-outline-secondary', href: '/pivot?source=' + encodeURIComponent(src).replace(/%2F/g, '/'),
-        title: 'Pivot ' + title + ': rows, columns, values and filters, every total from its own rows (PIVOT_GUIDE.md)' }, 'Pivot'))];
+        title: 'Pivot ' + title + ': rows, columns, values and filters, every total from its own rows (bi/PIVOT.md)' }, 'Pivot'))];
     }
     function drRows(k, pid, rows, numeric, prefix, deeper, noun) {
       return k.e('tbody', null, (rows || []).map((r, ri) => {
@@ -3217,6 +3217,7 @@
     }
     function toolbarAction(v, act, btn) {
       const m = v.model;
+      if (act === 'customize') { v.toggleCustomize(); return; }
       if (act === 'menu-format') {
         const items = () => {
           const out = [{ heading: 'Conditional formatting' }];
@@ -5476,6 +5477,7 @@
       root.addEventListener('click', (e) => {
         const b = e.target.closest('[data-act]');
         if (!b || !(R.toolbar.contains(b) || (R.fkeys && R.fkeys.contains(b)))) { return; }
+        if ((v.o.toolbarItems || []).some((n) => n.contains(b))) { return; }          // the host's own controls run what the host gave them
         e.stopPropagation();
         toolbarAction(v, b.dataset.act, b);
       });
@@ -5508,8 +5510,10 @@
       const quickFocused = quick && doc.activeElement === quick;
       tb.textContent = '';
       tb.append(h(doc, 'span', { cls: 'dg-title', text: v.o.title || '' }));
-      if (v.live) { tb.append(h(doc, 'span', { cls: 'dg-badge dg-live', text: 'live' })); }
+      const lead = v.o.toolbarItems || [];                                  // a host's own controls (LiveSetGrid's count, grouping, Pivot ›), in this one toolbar
+      if (v.live && !lead.length) { tb.append(h(doc, 'span', { cls: 'dg-badge dg-live', text: 'live' })); }
       if (v.o.subtitle) { tb.append(h(doc, 'span', { cls: 'dg-meta', text: v.o.subtitle })); }
+      lead.forEach((n) => tb.append(n));
       tb.append(h(doc, 'span', { cls: 'dg-sp' }));
       if (v.phone && piv) {
         const ms = v.measures(), sel = selectElement(doc, { options: ms, value: v.ui.phoneMeasure && ms.indexOf(v.ui.phoneMeasure) >= 0 ? v.ui.phoneMeasure : undefined,
@@ -5524,15 +5528,17 @@
         tb.append(q);
         if (quickFocused) { q.focus(); }
       }
-      tb.append(button(doc, 'toggle-pivot', 'Pivot', { pressed: piv, title: 'Pivot ⇄ flat (F5)' }));
+      if (v.o.pivotToggle !== false) { tb.append(button(doc, 'toggle-pivot', 'Pivot', { pressed: piv, title: 'Pivot ⇄ flat (F5)' })); }
       if (piv) {
         tb.append(button(doc, 'expand-all', 'Expand all'), button(doc, 'collapse-all', 'Collapse all'), button(doc, 'pin-totals', 'Pin totals', { pressed: v.ui.pinTotals }));
       }
       tb.append(button(doc, 'menu-format', 'Formatting ▾', { menu: true }), button(doc, 'menu-export', 'Export ▾', { menu: true }), button(doc, 'menu-view', 'View ▾', { menu: true }));
+      const ribbonOff = v.o.ribbon === false && L !== 'terminal';             // the wells ribbon is kept behind Customize ›
+      if (ribbonOff && v.o.customize !== false) { tb.append(button(doc, 'customize', L === 'panel' ? 'Close the panes ›' : 'Customize ›', { title: 'The Fields and Build panes (\\)', expanded: L === 'panel' })); }
       const how = L === 'panel' ? 'panel' : L === 'terminal' ? 'lane' : 'ribbon';
       if (v.o.chrome === false) { R.wells.textContent = ''; } else { v.wells.render(R.wells, how); }      // a bare grid draws no wells: none of their fields and wells in the host's page
       const hideWells = v.phone && !v.ui.fieldsOpen;
-      (R.side || R.wells).hidden = hideWells;
+      (R.side || R.wells).hidden = hideWells || (ribbonOff && L === 'wells');
       if (R.cmdInput && doc.activeElement !== R.cmdInput) { R.cmdInput.value = commandText(v.activeWells().getState()); }
       if (R.cmdMeta) { R.cmdMeta.textContent = (m.answer ? (m.answer.computedBy === 'browser' ? 'computed here' : 'server') + ' · ' + (m.answer.notes && m.answer.notes.length ? 'notes' : 'exact') : '') + (v.o.subtitle ? ' · ' + v.o.subtitle : ''); }
       if (R.note) {                                                  // the pivot's header says what the answer says: a list field counts a row once per value
@@ -5555,8 +5561,8 @@
       const item = (text, cls) => st.append(h(doc, 'span', { cls: 'dg-st' + (cls ? ' ' + cls : ''), text: text }));
       const shown = m.shownColumns();
       if (piv) { item(m.answer ? 'Pivot · ' + (m.answer.computedBy === 'browser' ? 'computed in the browser' : 'by the server') : 'Pivot', 'dg-st-mode'); }
-      else { item(m.serverSide ? 'Server-side rows' : 'Rows in the page', 'dg-st-mode'); }
-      item(m.rowCount().toLocaleString('en-US') + ' rows × ' + v.displayColumns().all.length + ' columns', 'dg-st-count');
+      else if (!v.o.quietStatus) { item(m.serverSide ? 'Server-side rows' : 'Rows in the page', 'dg-st-mode'); }
+      if (!v.o.quietStatus) { item(m.rowCount().toLocaleString('en-US') + ' rows × ' + v.displayColumns().all.length + ' columns', 'dg-st-count'); }
       const pending = piv && m.answer && m.answer.pending ? m.answer.pending.length : 0;
       if (pending) { item('… ' + pending + ' figures asked of the server', 'dg-st-pending'); }
       (m.pivotExtra.valueFilters || []).forEach((f) => item('value filter: ' + conditionText(f, (x) => v.fmtMeasure(f.by, x)), 'dg-st-vf'));
@@ -7405,9 +7411,9 @@
         this.groupSel = selectElement(d, { options: [{ value: '', label: 'No grouping' }].concat(groupable.map((c) => ({ value: c.field, label: c.label || c.field }))), value: (spec.groupBy || [])[0] || '',
           label: 'Group by', search: false }, { class: 'dg-live-group' });
         this.groupSel.component.on('change', (e) => this.group(e.value));
-        this.bar = h(d, 'div', { cls: 'dg-live-bar', attrs: { role: 'toolbar', 'aria-label': (spec.title || spec.id) + ' controls' } }, [
-          h(d, 'strong', { cls: 'dg-live-title', text: spec.title || spec.id }), this.status, h(d, 'span', { cls: 'dg-sp' }),
-          h(d, 'label', { cls: 'dg-live-lbl' }, ['Group by ', this.groupSel]), this.chartBtn, this.pauseBtn, this.pivotBtn, this.trayBtn].filter(Boolean));
+        this.items = [this.status, h(d, 'label', { cls: 'dg-live-lbl' }, ['Group by ', this.groupSel]), this.chartBtn, this.pauseBtn, this.pivotBtn, this.trayBtn].filter(Boolean);
+        this.bar = h(d, 'div', { cls: 'dg-live-bar', attrs: { role: 'toolbar', 'aria-label': (spec.title || spec.id) + ' controls' } },
+          [h(d, 'strong', { cls: 'dg-live-title', text: spec.title || spec.id }), h(d, 'span', { cls: 'dg-sp' })].concat(this.items));
         this.gridHost = h(d, 'div', { cls: 'dg-live-grid' });
         this.panelHost = h(d, 'aside', { cls: 'dg-live-panel', attrs: { hidden: true, 'aria-label': 'Record' } });
         this.trayHost = h(d, 'section', { cls: 'dg-live-tray', attrs: { hidden: true, 'aria-label': 'My pending changes' }, data: { tray: 'true' } });
@@ -7418,7 +7424,7 @@
         this.state = s;
         this.status.setAttribute('data-state', s);
         const n = this.rows.size, total = this.rows.total;
-        const count = (this.paged ? n.toLocaleString('en-US') + ' of ' + total.toLocaleString('en-US') : total.toLocaleString('en-US')) + ' rows';
+        const count = (this.paged ? n.toLocaleString('en-US') + ' of ' + total.toLocaleString('en-US') : total.toLocaleString('en-US')) + ' ' + (this.spec.noun || 'rows');
         this.status.textContent = ({ connecting: 'CONNECTING', live: this.live ? 'LIVE' : 'STATIC', reconnecting: 'RECONNECTING', paused: 'PAUSED', ended: 'ENDED', failed: 'FAILED' })[s] + ' · ' + count
           + (note ? ' · ' + note : '');
         this.status.setAttribute('data-rows', total);
@@ -7426,9 +7432,10 @@
       start() {
         return this.snapshot().then((rows) => {
           const spec = this.spec;
-          this.grid = new Grid(this.gridHost, { columns: gridColumns(spec), rows: rows, getRowId: (r) => r[ROW_KEY], layout: this.o.layout || 'wells', density: 'compact', title: '',
-            label: spec.title || spec.id, rowSelection: 'single', clientAggregation: true, live: { flashMs: 1200 },
+          this.grid = new Grid(this.gridHost, { columns: gridColumns(spec), rows: rows, getRowId: (r) => r[ROW_KEY], layout: this.o.layout || 'wells', density: 'compact', title: spec.title || spec.id,
+            label: spec.title || spec.id, rowSelection: 'single', clientAggregation: true, live: { flashMs: 1200 }, toolbarItems: this.items, pivotToggle: false, ribbon: false, quietStatus: true,
             getRowData: (r) => ({ key: r[ROW_KEY] }) });
+          if (this.bar) { this.bar.remove(); this.bar = null; }          // its controls are in the grid's toolbar now
           if ((spec.groupBy || []).length) { this.grid.model.setRowGroups(spec.groupBy.slice(0, 1)); }
           this.grid.on('cellClicked', (c) => { if (c && c.kind === 'leaf' && c.data) { this.open(c.data); } });
           this.gridHost.addEventListener('scroll', () => this.windowSoon(), true);

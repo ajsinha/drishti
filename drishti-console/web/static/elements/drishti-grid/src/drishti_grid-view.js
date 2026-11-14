@@ -66,6 +66,10 @@ let seq = 0;
  * @property {import('./drishti_grid-views.js').ViewsHook} [views] the View picker in front of the compact line (C): ready-made, my and
  *   shared views, Save view as…
  * @property {boolean} [customize=true] Customize › (and \) between the compact line and the panes
+ * @property {boolean} [ribbon=true] false: the wells ribbon (Rows, Columns, Filters, Values) is not shown until Customize › (a list of records)
+ * @property {boolean} [pivotToggle=true] false: no Pivot toggle in the toolbar (the host has its own way to the Pivot)
+ * @property {HTMLElement[]} [toolbarItems] the host's own controls, drawn in the toolbar after the title (one toolbar, not two)
+ * @property {boolean} [quietStatus=false] true: the status bar keeps the selection's figures and drops the row count the host shows itself
  * @property {function(Object, Object): {items: Array<Object>, run: function(string): void}} [valueOptions] a per-cell measure's options in
  *   its value menu (the VaR lens: horizon, confidence, scenario set)
  * @property {Array<{name: string, label: string}>} [customFunctions] the custom functions the server has enabled, offered as ƒ in the value menus

@@ -50,7 +50,7 @@ import org.apache.arrow.vector.ipc.message.MessageSerializer;
 import org.apache.arrow.vector.types.pojo.Schema;
 
 /**
- * Flight SQL on Drishti's Flight port (docs/guides/FLIGHT_GUIDE.md, "Flight SQL"; FLIGHT_REFERENCE.md section 6): read-only SQL over BI
+ * Flight SQL on Drishti's Flight port (docs/guides/FLIGHT_GUIDE.md, "Flight SQL"; FLIGHT_GUIDE.md section 6): read-only SQL over BI
  * models, written in DSQL (API_REFERENCE.md, Drishti SQL) and answered by the server's own DSQL path, never a second SQL engine. A statement is
  * turned into a {@code form: model} request ({@code {"model": …, "sql": …}}) and read through the same producer as every Flight read:
  * the token, the scope, busy protection, the limits, Data out and the audit apply unchanged.

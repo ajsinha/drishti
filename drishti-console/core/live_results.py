@@ -11,7 +11,7 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""Every "rows of records" result is a live result set (modules/trading/docs/guide.md section 7): a FORM's result and the search page's
+"""Every "rows of records" result is a live result set (docs/guides/LIVE_RESULTS_GUIDE.md section 7): a FORM's result and the search page's
 are the server's live set of the search (``GET /api/v1/live/query``), static when the kind has no live binding or the business date is
 not the live one, ticking otherwise. This module is the one place the console turns a set's page into what a result table draws: the
 search's summary (columns, labels, matched, scanned, failed, noData, pivot), the rows with their cells, and ``live`` (the set's id, whether
@@ -113,12 +113,17 @@ def grid_spec(data: dict | None, titled: bool = False) -> dict:
     if titled:
         cols.append({"field": "_title", "label": "Title", "type": "text"})
     labels = d.get("labels") or {}
+    first = d.get("rows", [])[:50]
     for path in d.get("columns") or []:
-        seen = [r["values"].get(path) for r in d.get("rows", [])[:50] if r["values"].get(path) is not None]
+        seen = [r["values"].get(path) for r in first if r["values"].get(path) is not None]
+        if first and len(seen) == len(first) and all(str(r["values"].get(path)) == str(r["ref"]["id"]) for r in first):
+            continue                                    # a column that only repeats the key: the key is shown once
         numeric = bool(seen) and all(number(v) for v in seen)
         cols.append({"field": path[2:] if path.startswith("$.") else path, "label": labels.get(path, path), "type": "number" if numeric else "text"})
     live = d.get("live") or {}
-    return {"id": live.get("set") or "result", "title": d.get("title") or mnemonic, "kind": d.get("kind") or "", "columns": cols, "groupBy": [], "subtotals": [],
+    noun = (d.get("kind") or "").replace("-", " ")
+    noun = (noun[:-1] + "ies" if noun[-1:] == "y" and noun[-2:-1] not in "aeiou" else noun + "s") if noun else "rows"
+    return {"id": live.get("set") or "result", "title": d.get("title") or mnemonic, "kind": d.get("kind") or "", "noun": noun, "columns": cols, "groupBy": [], "subtotals": [],
             "links": [], "editable": False, "readOnly": "a search result: open the record's page to change it", "fields": [], "tray": False}
 
 

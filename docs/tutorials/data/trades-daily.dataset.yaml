@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Tutorial 8, Part D: a dataset of the model layer over the trades that rebuilds itself every business morning. The `refresh:` line is the point; the rest
+# The reports tutorial, Part D: a dataset of the model layer over the trades that rebuilds itself every business morning. The `refresh:` line is the point; the rest
 # says what one row is and which columns a desk page needs. Its measures are in the model trades-daily (trades-daily.model.yaml).
 rachana: 2
 expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/RACHANA_REFERENCE.md)

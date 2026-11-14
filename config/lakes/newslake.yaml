@@ -16,7 +16,7 @@
 # <data>/delta/newslake/<domain>/<table>; the folder is kept in git with only its README.md, and nothing loaded into it is ever committed.
 # Add a table's entry here before its first load to choose its layout (partition-by after business_date, promote, sort-by, file sizes,
 # retention, maintenance); a load into a table with no entry copies its pack's recommended entry here first. Connectors read this lake
-# with lake: newslake. The economy module's public-sector free news packs read it (docs/guides/PUBLIC_SECTOR_GUIDE.md): their feeds fill the tables
+# with lake: newslake. The economy module's public-sector free news packs read it (docs/guides/WORLD_DATA_GUIDE.md): their feeds fill the tables
 # below daily (official-news, gdelt-events); every other shipped connector reads the demo lake.
 lake: newslake
 format: delta

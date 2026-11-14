@@ -25,5 +25,5 @@ trim:
 copy:
 - from: ../../config/lenses/banking/market.yaml
   to: lenses/market.yaml
-- from: ../../docs/tutorials/06-groupings-and-analytics.md
-  to: tutorials/06-groupings-and-analytics.md
+- from: ../../docs/guides/bi/GROUPINGS_AND_ANALYTICS.md
+  to: guides/GROUPINGS_AND_ANALYTICS.md

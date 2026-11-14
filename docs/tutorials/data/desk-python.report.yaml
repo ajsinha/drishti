@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Tutorial 9: a report with a Python visual of your own (notional-by-desk.python.yaml) beside the shipped Python measure. `format.python` names the item;
+# The Notebook tutorial: a report with a Python visual of your own (notional-by-desk.python.yaml) beside the shipped Python measure. `format.python` names the item;
 # the visual is handed the rows of its `columns` well, under the page's slicers and filters.
 rachana: 2
 report: desk-python

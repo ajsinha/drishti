@@ -19,7 +19,7 @@ Expected and potential future exposure over tenor, against a limit.
 
 **Panel kinds:** `area`.
 
-**Open it:** in the workbench, **Build → New → Examples** and pick `exposure-profile`: it opens as a copy (this Sutra, the JSON as samples, this note as notes). Or **File → Open** in the workbench with `exposure-profile.sutra.yaml` and `exposure-profile.json`.
+**Open it:** in the workbench, **Create → New → Examples** and pick `exposure-profile`: it opens as a copy (this Sutra, the JSON as samples, this note as notes). Or **File → Open** in the workbench with `exposure-profile.sutra.yaml` and `exposure-profile.json`.
 
 **What to look for:** two filled series (EE and PFE 95) rising then falling over the tenors, and the limit as a line across them.
 
