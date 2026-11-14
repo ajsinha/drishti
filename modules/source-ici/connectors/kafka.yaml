@@ -26,7 +26,7 @@ settings:
   topics:
   - ${DRISHTI_ICI_TOPIC:drishti.trading.ici.trades}
   kind: trade
-  id-field: TicketNo
+  id-field: TICKET_NO
   stale-after: ${DRISHTI_STREAM_STALE_AFTER:15m}
   source-name: trade-ici-live
   where: SOURCE_SYSTEM = 'ICI'
@@ -39,8 +39,8 @@ writes:
     kafka:
       topic: ${DRISHTI_ICI_TOPIC:drishti.trading.ici.trades}
       shape: document
-      version-field: Header.Rev
+      version-field: HEADER.REV
       changed-by: UPDATED_BY
-      changed-at: Header.LastChange
+      changed-at: HEADER.LAST_CHANGE
       change-id-field: DRISHTI_CHANGE_ID
     confirm: reply

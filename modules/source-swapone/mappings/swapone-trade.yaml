@@ -18,15 +18,15 @@ kind: trade
 about: SwapOne native fields to the canonical trade fields. A path is a dotted path into the native document; first-of takes the first present;
   values translates a code; scale multiplies; as reads a date or time written in another form.
 map:
-  TRADE_ID: swap_id
-  TRADE_VERSION: revision
+  TRADE_ID: SWAP_ID
+  TRADE_VERSION: REVISION
   TRADE_STATUS:
-    from: lifecycle
+    from: LIFECYCLE
     values:
       LIVE: NEW
       VOID: CANCELLED
   PRODUCT_TYPE:
-    from: swap_family
+    from: SWAP_FAMILY
     values:
       IRS: IRS_FIXFLOAT
       OIS: OIS
@@ -35,24 +35,24 @@ map:
       CDS: CDS_SINGLE
       INFL_ZC: ZC_INFL_SWAP
   BUY_SELL_CODE:
-    from: pay_receive
+    from: PAY_RECEIVE
     values:
       PAY: B
       REC: S
-  QUANTITY: pay_leg.notional
+  QUANTITY: PAY_LEG.NOTIONAL
   PRICE:
     first-of:
-    - pay_leg.fixed_rate_pct
-    - rec_leg.fixed_rate_pct
+    - PAY_LEG.FIXED_RATE_PCT
+    - REC_LEG.FIXED_RATE_PCT
     scale: 0.01
-  CURRENCY: pay_leg.ccy
-  COUNTERPARTY: counterparty_id
-  LEGAL_ENTITY: legal_entity
-  PORTFOLIO: book
-  TRADER_ID: usr
-  TRADE_DATE: trade_dt
-  START_DATE: effective_dt
-  MATURITY_DATE: termination_dt
+  CURRENCY: PAY_LEG.CCY
+  COUNTERPARTY: COUNTERPARTY_ID
+  LEGAL_ENTITY: LEGAL_ENTITY
+  PORTFOLIO: BOOK
+  TRADER_ID: USR
+  TRADE_DATE: TRADE_DT
+  START_DATE: EFFECTIVE_DT
+  MATURITY_DATE: TERMINATION_DT
   SOURCE_UPDATE_TIME:
-    from: upd_ts
+    from: UPD_TS
     as: epoch-millis

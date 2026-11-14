@@ -61,7 +61,7 @@ class Fixture(unittest.TestCase):
 class TheProposal(Fixture):
     def test_every_record_is_read(self):
         self.assertEqual(self.prof["rows"], 2500)
-        self.assertEqual(self.prof["fields"]["brokerRef"].rows, sum(1 for d in SS.trades(2500, "2026-11-13") if "brokerRef" in d))
+        self.assertEqual(self.prof["fields"]["BROKER_REF"].rows, sum(1 for d in SS.trades(2500, "2026-11-13") if "BROKER_REF" in d))
 
     def test_most_fields_are_mapped_as_a_person_would(self):
         got = {r["to"]: r["from"] for r in self.map["fields"]}
@@ -81,7 +81,9 @@ class TheProposal(Fixture):
 
     def test_required_missing_and_native_unmapped_are_listed(self):
         self.assertTrue({"INTERNAL_EXTERNAL_CODE", "TRANSIT", "EVENTS"} <= set(self.map["missing"]))
-        self.assertTrue({"clearingHouse", "confirmMethod", "brokerRef"} <= {u["field"] for u in self.map["unmapped"]})
+        self.assertTrue({"CLEARING_HOUSE", "CONFIRM_METHOD"} <= {u["field"] for u in self.map["unmapped"]})
+        guess = [r for r in self.map["fields"] if r["from"] == "BROKER_REF"]        # UPPER_SNAKE names score closer: a weak guess at most, never sure
+        self.assertTrue(all(r["confidence"] < SM.SURE for r in guess))
         source = next(r for r in self.map["fields"] if r["to"] == "SOURCE_SYSTEM")
         self.assertEqual(source["value"], "SWAPONE")
 
@@ -92,12 +94,12 @@ class TheProposal(Fixture):
 class TheEditsAndTheFile(Fixture):
     def test_edits_drop_set_and_choose(self):
         m = SM.edit(json.loads(json.dumps(self.map)), {"TRADER_FIRST_NAME": None, "INTERNAL_EXTERNAL_CODE": {"value": "External"},
-                                                       "TRANSIT": {"value": "00107"}, "TT_GROUP": {"from": "swOneDeskTag"}})
+                                                       "TRANSIT": {"value": "00107"}, "TT_GROUP": {"from": "SW_ONE_DESK_TAG"}})
         by = {r["to"]: r for r in m["fields"]}
         self.assertIsNone(by["TRADER_FIRST_NAME"]["from"])
         self.assertEqual(by["INTERNAL_EXTERNAL_CODE"]["value"], "External")
         self.assertNotIn("INTERNAL_EXTERNAL_CODE", m["missing"])
-        self.assertIn("traderName", {u["field"] for u in m["unmapped"]})
+        self.assertIn("TRADER_NAME", {u["field"] for u in m["unmapped"]})
         with self.assertRaises(SystemExit):
             SM.edit(json.loads(json.dumps(self.map)), {"NOT_A_FIELD": None})
 
@@ -108,11 +110,11 @@ class TheEditsAndTheFile(Fixture):
         self.assertEqual(mapping["set"], {"SOURCE_SYSTEM": "SWAPONE"})
         doc = next(SS.trades(1, "2026-11-13"))
         t = SM.apply(mapping, doc)
-        self.assertEqual(t["TRADE_ID"], doc["dealRef"])
+        self.assertEqual(t["TRADE_ID"], doc["DEAL_REF"])
         self.assertIn(t["BUY_SELL_CODE"], ("B", "S"))
         self.assertEqual(t["SOURCE_SYSTEM"], "SWAPONE")
         self.assertEqual(t["INTERNAL_EXTERNAL_CODE"], "External")
-        self.assertEqual(t["clearingHouse"], doc["clearingHouse"])          # kept as it is, for the module's section of the page
+        self.assertEqual(t["CLEARING_HOUSE"], doc["CLEARING_HOUSE"])          # kept as it is, for the module's section of the page
 
 
 class TheModule(Fixture):
@@ -147,7 +149,7 @@ class TheModule(Fixture):
         self.assertIn("${", live["settings"]["bootstrap-servers"])
         section = yaml.safe_load((mod / m["sections"][0]["fragment"]).read_text())
         self.assertEqual(section["panels"][0]["when"], "$.SOURCE_SYSTEM == 'SWAPONE'")
-        self.assertIn("clearingHouse", [c["label"] for c in section["panels"][0]["columns"]])
+        self.assertIn("CLEARING_HOUSE", [c["label"] for c in section["panels"][0]["columns"]])
         front = (mod / "docs" / "README.md").read_text().split("---")[1]
         self.assertIn("module: source-swapone", front)
         own = SMOD.names(self.opts())
