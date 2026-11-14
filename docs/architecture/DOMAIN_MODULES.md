@@ -287,6 +287,7 @@ the VaR and exposure lakes; package `com.ash.drishti.server.connectors` kept, in
   core's `compute:write` keeps the sandboxes and cancellations. **Help's Risk measures section** is the plugin's
   (`drishti-console/plugins/banking/help.yaml`: `help-sections:` heads with `after:`, and `sections:` pages), merged by `core/modules.py` (`help_heads`,
   `help_pages`) into the sitemap's heads and `help.yaml`'s pages.
+- **Where a pack is found** is specified in one place, [KERNEL_AND_MODULES.md section 18](KERNEL_AND_MODULES.md#18-configuration-resolution-packs-connectors-bindings-and-inbox-rules) (the site, then the modules that are on, then the kernel); the bullet below is the layout as built before it.
 - **Packs in domain folders** (step 7): `modules/<module>/packs/<pack>`: core (core, gleif, compute-demo), banking (trading, market-data,
   market-risk, counterparty-risk), economy (world-economy, news-and-markets), capitalmarkets (us-equities, funds). **One rule** says where a
   pack is: a packs root holds packs directly or one level down in domain folders (a folder with no `pack.yaml` of its own); in Java
