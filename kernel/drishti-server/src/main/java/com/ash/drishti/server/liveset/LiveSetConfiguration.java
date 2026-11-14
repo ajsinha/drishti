@@ -89,6 +89,26 @@ public class LiveSetConfiguration {
             }
 
             @Override
+            public java.util.Optional<EntityDocument> nativeRecord(String kind, String id) {
+                com.ash.drishti.api.EntityRef ref = com.ash.drishti.api.EntityRef.of(kind, id);
+                EntityDocument d = router.fetch(ref).handle((x, e) -> x).join();
+                if (d == null || d.provenance() == null || router.registry().shape(d.provenance().source()).map(s -> s.map().isEmpty()
+                        && s.set().isEmpty()).orElse(true)) {
+                    return java.util.Optional.empty();         // no map or set: the record is as stored already
+                }
+                try {
+                    return router.registry().fetchNative(d.provenance().source(), ref, null);
+                } catch (Exception e) {
+                    return java.util.Optional.empty();
+                }
+            }
+
+            @Override
+            public java.util.Set<String> excluded(String kind) {
+                return router.excluded(kind);
+            }
+
+            @Override
             public Predicate<DataNode> condition(String query) {
                 return search.condition(SearchQuery.parse(query));
             }
@@ -130,7 +150,11 @@ public class LiveSetConfiguration {
         sets.visibility((p, kind) -> {
             boolean admin = entitlements.isAdmin(p);
             boolean masks = entitlements.masks(p);
-            return new LiveReader(p.securitySignature() + "|masks=" + masks + "|admin=" + admin, entitlements.redactor(p), LiveReader.Scope.ALL, admin);
+            // the person's row rule on the kind (their roles' rows:, $user attributes resolved): part of the audience, tested on every row
+            LiveReader.Scope scope = entitlements.rowRule(p, kind)
+                    .map(r -> new LiveReader.Scope("rows=" + r.text() + "|" + p.user(), r.fields(), r::test)).orElse(LiveReader.Scope.ALL);
+            return new LiveReader(p.securitySignature() + "|masks=" + masks + "|admin=" + admin + (scope.all() ? "" : "|" + scope.signature()),
+                    entitlements.redactor(p), scope, admin);
         });
         sets.validator(spec -> problems(spec, formats::has, kind -> contractFields(packs, kind)));
         Predicate<String> on = DomainFolders.on(env);

@@ -34,7 +34,7 @@ Every example below uses invented, Endur-style data (`TRADE_ID`, `PRODUCT_TYPE`,
 3. [Loading, three ways](#3-loading-three-ways)
 4. [The `.ready` file, every key](#4-the-ready-file-every-key)
 5. [Routing, business dates, modes, repeats and undo](#5-routing-business-dates-modes-repeats-and-undo)
-6. [Pointing Drishti at a lake](#6-pointing-drishti-at-a-lake)
+6. [Pointing Drishti at a lake](#6-pointing-drishti-at-a-lake) (6.2: [several source systems](#62-several-source-systems-shared-or-separate-tables))
 7. [The demo lake's one-time move](#7-the-demo-lakes-one-time-move)
 8. [Checking a load, and troubleshooting](#8-checking-a-load-and-troubleshooting)
 9. [Sizing: a day of 1M trades and 50K positions × 509 scenarios](#9-sizing-a-day-of-1m-trades-and-50k-positions--509-scenarios)
@@ -1369,7 +1369,7 @@ bindings:
   trade:
     read: [trade-endur, trade-calypso, trade-murex]   # connectors (config/connectors/<name>.yaml), in read order
     union: true                                        # one trade store across them
-    live: trade-kafka                                  # a connector that pushes changes
+    live: [trade-endur-kafka, trade-calypso-kafka]     # the connectors that push changes (one name, or a list)
   scenario-pv:   { read: [risk-store] }
   var-limit:     { read: [risk-store] }
   var-official:  { write: { lake: risklake, table: banking.var-official } }
@@ -1380,7 +1380,7 @@ bindings:
 |---|---|
 | `read` | the connectors that serve the kind, in read order (the first that holds the date answers; a union is read as one) |
 | `union` | the read connectors are one store together (one source system each, ids unique across them); two or more |
-| `live` | the connector that pushes changes of the kind |
+| `live` | the connectors that push changes of the kind: one name, or a list when several source systems stream it (merged into the live result set by key and version) |
 | `write` | where a produced kind is written: `{lake, table}` |
 | `demo` | `true`: the demo lake's samples serve it (only while demo is on); never with `read` |
 | `note` | the administrator's note |
@@ -1392,6 +1392,68 @@ holds the contract's `binding-hint.lake-table` (`AUTO`, *found by convention: co
 gives the lake table, partitions and promoted columns a site usually binds ([contracts README](../contracts/README.md)).
 
 A connector file names no kinds (a `kinds:` line from an earlier release is ignored): `bindings.yaml` is the one home of which connectors serve a kind.
+
+### 6.2 Several source systems: shared or separate tables
+
+Trading systems (Endur, Calypso, Murex, WSS, SwapOne, ICI) are **source modules**, each feeding the **one canonical `trade` kind**; the field
+`SOURCE_SYSTEM` says which system a record came from. A site keeps their trades in **one shared table** or **one table per system**, and tunes
+the read in the connector file; the same keys work for `delta`, `iceberg` and `files` connectors, and for `kafka` live connectors (each message
+filtered and mapped):
+
+```yaml
+plugin: delta            # also iceberg, files; kafka for live
+settings:
+  lake: main
+  lake-tables: trading.trades          # a shared table, or trading.trade_endur
+  where: SOURCE_SYSTEM = 'ENDUR'       # optional: the rows that are this connector's
+  set: { SOURCE_SYSTEM: ENDUR }        # optional: constants for rows that lack the field
+  map: mappings/endur-trade.yaml       # optional: native field -> canonical field
+```
+
+| Key | Meaning |
+|---|---|
+| `where` | A row predicate on the **stored** row: `=`, `<>`, `<`, `<=`, `>`, `>=`, `in ('A', 'B')`, `is null`, `is not null`, `and`, `or`, `not`, parentheses; text is quoted. The comparisons of a field with constants at the top level are pushed down to the store (partition and file pruning where possible); the whole predicate is tested on every row read. |
+| `set` | Constants for the canonical row where it lacks the field (`SOURCE_SYSTEM` for a system's own table). |
+| `map` | A map file, relative to the connector's module folder, else the connectors' folder (`config/connectors/`). |
+
+The order is: `where` on the stored row, then `map`, then `set`. **Raw JSON** shows the stored record (the source's native fields, before
+`map`); the grid, search, FORM and BI show the canonical fields. The connector's system is its `set.SOURCE_SYSTEM`, else the value its
+`where` fixes (`SOURCE_SYSTEM = 'ENDUR'`).
+
+**The map file** has two forms of entry, which may be mixed:
+
+```yaml
+format: 1
+fields:
+  TRAN_NUM: TRADE_ID                              # native: canonical
+  NOTIONAL_AMT: { to: NOTIONAL, cast: number }    # native: {to, cast}
+  DESK: { from: PORTFOLIO, values: { RNY: RATES-NY } }   # canonical: {from: native, cast, values: native value -> canonical value}
+  ASSET_CLASS: { value: RATES }                   # canonical: {value: constant}, always that value
+set: { SOURCE_SYSTEM: ENDUR }                     # constants where the row lacks them (the connector's set wins)
+keep: true                                        # native fields the map does not name pass as they are (false: dropped)
+```
+
+Casts are `text`, `number`, `integer`, `boolean` and `date` (ISO, `yyyyMMdd` or `13-Nov-2026`); a value a cast cannot read stays as stored.
+
+**Shared or separate.** A shared table split by `where`: one connector per system on the same `lake-tables`, each with its own `where`; the
+binding lists them with `union: true`. Separate tables: one connector per table with `set: { SOURCE_SYSTEM: X }` (and a `map` when the
+system's fields are its own). Several live connectors go in the binding's `live:` list; a message another system's connector would not serve
+is dropped by the `where` of each.
+
+**Refusals.** A `where` that is not a predicate, a map file that is missing, unreadable, maps two fields to one, or names an unknown cast,
+refuses the connector at load with `DRS-5034`, shown on Admin → Connectors with the reason; the rest of the server runs. A connector's `where`
+may not name `$user`: person attributes belong in a role's row rule ([ACCESS_MODEL.md section 10](../architecture/ACCESS_MODEL.md#10-row-rules)).
+
+**A source module switched off** (Admin → Modules, at runtime, no restart): its connectors leave every binding without an error (Admin says
+*source ENDUR off*), its rows leave lists, blotters, search and BI (also from a shared table read by a connector without `where`), its live
+feed stops, and the pages of the kinds it feeds say *excludes ENDUR (switched off)*. Switched on, all comes back. With every source off the
+kind is empty, without errors. A module is a source module when it owns the connector (its manifest's `connectors`) or is named
+`source-<system>`. The allowed values of `SOURCE_SYSTEM` are the systems of the installed source modules, never a fixed list. VaR is driven by
+scenario PVs at position grain and is unchanged by a source switch.
+
+**Write-back.** A blotter edit of a record goes to the write path of the system the record came from (its `SOURCE_SYSTEM`): the form's
+connector when it is that system's, else the first of the system's connectors that carries the command; never another system's. A system
+without a write path for the command refuses the change, with the reason.
 
 ## 7. The demo lake's one-time move
 

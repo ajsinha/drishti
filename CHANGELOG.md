@@ -18,6 +18,19 @@
 
 ## Unreleased
 
+- **Several source systems on one canonical kind** (docs/guides/DATA_LAKE_GUIDE.md section 6.2; ACCESS_MODEL.md section 10). Trading systems
+  are source modules feeding one `trade` kind with `SOURCE_SYSTEM`. Every read connector (Delta, Iceberg, files; Kafka live) takes `where:`
+  (a row predicate on the stored row, its top-level comparisons pushed down for pruning), `set:` (constants where the row lacks them) and
+  `map:` (a map file: `native: canonical`, `native: {to, cast}`, or the source designer's `canonical: {from, cast, values}` and
+  `canonical: {value}`, with `set:` and `keep:`), applied where each connector meets the router, so one shape serves every plugin; Raw JSON
+  shows the stored, native record. A predicate or map that cannot be used refuses the connector with `DRS-5034`. A binding's `live:` is one
+  connector or a list (several live connectors per kind, merged by key and version). A source module switched off in Admin → Modules acts at
+  once: its connectors leave every read order, its rows leave lists, blotters, search and BI (also from a shared table), its live feed stops,
+  pages of the kind say *excludes ENDUR (switched off)*; switched on, all comes back. The allowed values of `SOURCE_SYSTEM` are the installed
+  systems. Row rules by role (`rows.<kind>` with `$user.<attribute>`) restrict lists, blotters, search and Raw JSON; `edit-systems` limits
+  write-back per system; a blotter edit goes to the write path of the system the record came from, never another's. Aggregates (VaR, BI totals)
+  keep their own scope model. Tests: `SourceShapeTest` (shared table split by where, separate tables, set, map in both forms, two live
+  connectors, a system off and on, refusals), `RowRulesTest`, `SourceRoutingTest`.
 - **Row retention for Delta, Iceberg and files, as the in-memory lake has it** (docs/guides/DATA_LAKE_GUIDE.md section 2.7). A table's
   `retention: {ttl, on, max-rows}` now works on durable tables: rows past their age (the field `on`, else `arrived_at`, else the business date) and
   beyond the newest `max-rows` are dropped by `lake maintain`, the one upkeep schedule (a Delta commit per date, an Iceberg commit per day, the day files

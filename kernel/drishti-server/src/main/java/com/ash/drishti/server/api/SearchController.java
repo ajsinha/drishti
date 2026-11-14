@@ -78,6 +78,13 @@ public class SearchController {
         String kind = search.kindOf(query);
         entitlements.requireOpen(principal, kind);
         edition.requireKind(kind);
+        // the person's row rule on the kind joins the condition (ACCESS_MODEL.md section 10): a search finds only the records they may see
+        java.util.Optional<com.ash.drishti.engine.source.RowPredicate> rule = entitlements.rowRule(principal, kind);
+        if (rule.isPresent()) {
+            String c = query.condition();
+            query = new SearchQuery(query.head(), c == null || c.isBlank() ? rule.get().el() : "(" + c + ") && (" + rule.get().el() + ")",
+                    query.orderBy(), query.descending(), query.limit(), query.fields(), query.idPattern());
+        }
         StructuredSearch.Result r = search.run(query, asOf, data -> entitlements.redact(principal, data));
         Map<String, Object> out = answers.summary(q, query, r, asOf);
         out.put("rows", r.rows());

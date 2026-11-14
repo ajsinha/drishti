@@ -31,13 +31,17 @@ import java.util.function.Consumer;
 /**
  * A named connector: one configured instance of a plugin ({@code drishti.sources.connectors.<name>}), so a pack
  * or a site can run the same plugin several times (a Delta Lake per domain, two databases) under distinct names.
- * The manifest carries the connector's name, and {@code kinds}, when set, limits what it serves.
+ * The manifest carries the connector's name, and {@code kinds}, when set, limits what it serves. Its {@link SourceShape} ({@code where},
+ * {@code set}, {@code map}) shapes every record it serves, the same for every plugin; a connector of a trading system that is switched off
+ * ({@link SourceSystems}) serves nothing, and no connector serves a row of a system that is off.
  */
 final class ConnectorInstance implements SourcePlugin {
 
     private final String name;
     private final Set<String> kinds;
     private final SourcePlugin delegate;
+    private final SourceShape shape;
+    private final SourceSystems systems;
 
     /** The plugin instance this connector runs. */
     SourcePlugin delegate() {
@@ -45,9 +49,58 @@ final class ConnectorInstance implements SourcePlugin {
     }
 
     ConnectorInstance(String name, Set<String> kinds, SourcePlugin delegate) {
+        this(name, kinds, delegate, SourceShape.NONE, null);
+    }
+
+    ConnectorInstance(String name, Set<String> kinds, SourcePlugin delegate, SourceShape shape, SourceSystems systems) {
         this.name = name;
         this.kinds = Set.copyOf(kinds);
         this.delegate = delegate;
+        this.shape = shape == null ? SourceShape.NONE : shape;
+        this.systems = systems;
+    }
+
+    /** How this connector shapes what it reads. */
+    SourceShape shape() {
+        return shape;
+    }
+
+    /** True when the trading system this connector feeds is switched off: it serves nothing until it is on again. */
+    boolean switchedOff() {
+        return systems != null && shape.system().map(systems::off).orElse(false);
+    }
+
+    /** Nothing to shape and no system off: every call goes to the plugin as it is. */
+    private boolean plain() {
+        return shape.none() && (systems == null || systems.off().isEmpty());
+    }
+
+    /** The record as this connector serves it; null when its where leaves it out or its system is off. */
+    private EntityDocument shaped(EntityDocument d) {
+        if (d == null || plain()) {
+            return d;
+        }
+        if (switchedOff()) {
+            return null;
+        }
+        EntityDocument out = shape.apply(d);
+        if (out != null && !out.deleted() && systems != null && !systems.off().isEmpty() && out.data() != null
+                && systems.off(out.data().get(SourceShape.SOURCE_SYSTEM).asText())) {
+            return null;
+        }
+        return out;
+    }
+
+    /**
+     * The record as the store holds it, before {@code map} and {@code set} (Raw JSON shows the source's native record); empty when the
+     * connector would not serve it.
+     */
+    Optional<EntityDocument> fetchNative(EntityRef ref, AsOf asOf) throws Exception {
+        if (!serves(ref.kind()) || switchedOff()) {
+            return Optional.empty();
+        }
+        Optional<EntityDocument> d = asOf == null ? delegate.fetch(ref) : delegate.fetch(ref, asOf);
+        return d.filter(x -> shaped(x) != null);
     }
 
     @Override
@@ -73,12 +126,12 @@ final class ConnectorInstance implements SourcePlugin {
 
     @Override
     public Optional<EntityDocument> fetch(EntityRef ref) throws Exception {
-        return serves(ref.kind()) ? delegate.fetch(ref) : Optional.empty();
+        return serves(ref.kind()) ? delegate.fetch(ref).map(this::shaped) : Optional.empty();
     }
 
     @Override
     public Optional<EntityDocument> fetch(EntityRef ref, AsOf asOf) throws Exception {
-        return serves(ref.kind()) ? delegate.fetch(ref, asOf) : Optional.empty();
+        return serves(ref.kind()) ? delegate.fetch(ref, asOf).map(this::shaped) : Optional.empty();
     }
 
     @Override
@@ -118,7 +171,34 @@ final class ConnectorInstance implements SourcePlugin {
 
     @Override
     public Subscription subscribe(EntityRef ref, Consumer<EntityDocument> listener) {
-        return serves(ref.kind()) ? delegate.subscribe(ref, listener) : Subscription.NONE;
+        if (!serves(ref.kind())) {
+            return Subscription.NONE;
+        }
+        if (shape.none() && systems == null) {
+            return delegate.subscribe(ref, listener);
+        }
+        return delegate.subscribe(ref, d -> {                  // each message filtered and mapped; a system switched off passes none
+            EntityDocument s = shaped(d);
+            if (s != null) {
+                listener.accept(s);
+            }
+        });
+    }
+
+    @Override
+    public Subscription subscribeKind(String kind, Consumer<EntityDocument> listener) {
+        if (!serves(kind)) {
+            return Subscription.NONE;
+        }
+        if (shape.none() && systems == null) {
+            return delegate.subscribeKind(kind, listener);
+        }
+        return delegate.subscribeKind(kind, d -> {             // several live connectors of a kind: each passes its own system's records
+            EntityDocument s = shaped(d);
+            if (s != null) {
+                listener.accept(s);
+            }
+        });
     }
 
     @Override
@@ -128,12 +208,31 @@ final class ConnectorInstance implements SourcePlugin {
 
     @Override
     public java.util.Set<String> columnar(String kind) {
-        return delegate.columnar(kind);
+        java.util.Set<String> stored = delegate.columnar(kind);
+        if (shape.none() || stored.isEmpty()) {
+            return stored;
+        }
+        java.util.Set<String> out = new java.util.LinkedHashSet<>();
+        stored.forEach(c -> {
+            String canonical = shape.canonicalName(c);
+            if (canonical != null) {
+                out.add(canonical);
+            }
+        });
+        out.addAll(shape.set().keySet());
+        out.addAll(shape.fixed().keySet());
+        return out;
     }
 
     @Override
     public Optional<com.ash.drishti.api.ColumnSet> columns(String kind, java.util.Collection<String> paths, AsOf asOf) throws Exception {
-        return delegate.columns(kind, paths, asOf);
+        if (plain()) {
+            return delegate.columns(kind, paths, asOf);
+        }
+        if (switchedOff()) {
+            return Optional.empty();
+        }
+        return ShapedColumns.read(delegate, shape, systems, kind, paths, asOf);
     }
 
     @Override
@@ -155,12 +254,27 @@ final class ConnectorInstance implements SourcePlugin {
 
     @Override
     public boolean documents(String kind, AsOf asOf, java.util.function.Consumer<EntityDocument> sink) throws Exception {
-        return serves(kind) ? delegate.documents(kind, asOf, sink) : true;     // a kind it does not serve: it holds none
+        if (!serves(kind)) {
+            return true;                                       // a kind it does not serve: it holds none
+        }
+        if (plain()) {
+            return delegate.documents(kind, asOf, sink);
+        }
+        if (switchedOff()) {
+            return true;
+        }
+        return delegate.documents(kind, asOf, d -> {
+            EntityDocument s = shaped(d);
+            if (s != null) {
+                sink.accept(s);
+            }
+        });
     }
 
     @Override
     public Optional<com.ash.drishti.api.ArrowScan> scan(com.ash.drishti.api.ScanRequest request) throws Exception {
-        return serves(request.kind()) ? delegate.scan(request) : Optional.empty();
+        // a shaped connector's rows are read through columns or documents, where its where, map and set apply
+        return serves(request.kind()) && plain() ? delegate.scan(request) : Optional.empty();
     }
 
     @Override
@@ -185,12 +299,33 @@ final class ConnectorInstance implements SourcePlugin {
 
     @Override
     public List<EntityHit> search(String kind, String text, int limit) {
-        return serves(kind) ? delegate.search(kind, text, limit).stream().filter(h -> serves(h.ref().kind())).toList() : List.of();
+        return serves(kind) ? mine(delegate.search(kind, text, limit).stream().filter(h -> serves(h.ref().kind())).toList(), null) : List.of();
     }
 
     @Override
     public List<EntityHit> search(String kind, String text, int limit, AsOf asOf) {
-        return serves(kind) ? delegate.search(kind, text, limit, asOf).stream().filter(h -> serves(h.ref().kind())).toList() : List.of();
+        return serves(kind) ? mine(delegate.search(kind, text, limit, asOf).stream().filter(h -> serves(h.ref().kind())).toList(), asOf) : List.of();
+    }
+
+    /** The hits that are this connector's records (its where; its system on): each checked by a read, the hits being few. */
+    private List<EntityHit> mine(List<EntityHit> hits, AsOf asOf) {
+        if (plain() || shape.where().all() && (systems == null || systems.off().isEmpty())) {
+            return hits;
+        }
+        if (switchedOff()) {
+            return List.of();
+        }
+        List<EntityHit> out = new java.util.ArrayList<>();
+        for (EntityHit h : hits) {
+            try {
+                if ((asOf == null ? fetch(h.ref()) : fetch(h.ref(), asOf)).isPresent()) {
+                    out.add(h);
+                }
+            } catch (Exception e) {
+                out.add(h);                                    // the read failed: the hit stays (the record's own read says why)
+            }
+        }
+        return out;
     }
 
     @Override
@@ -240,12 +375,14 @@ final class ConnectorInstance implements SourcePlugin {
 
     @Override
     public boolean holdsNone(String kind) {
-        return delegate.holdsNone(kind);
+        return switchedOff() || delegate.holdsNone(kind);
     }
 
     @Override
     public java.util.Optional<String> dataVersion(String kind) {
-        return delegate.dataVersion(kind);
+        // a switch of a trading system moves the version, so a set paged from the store reads it again
+        return systems == null || systems.version() == 0 ? delegate.dataVersion(kind)
+                : delegate.dataVersion(kind).map(v -> v + "~s" + systems.version());
     }
 
     @Override

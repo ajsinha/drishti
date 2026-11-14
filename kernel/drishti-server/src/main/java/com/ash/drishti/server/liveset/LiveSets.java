@@ -77,6 +77,19 @@ public final class LiveSets implements AutoCloseable {
         /** The kind's live changes. */
         Subscription subscribe(String kind, java.util.function.Consumer<EntityDocument> listener);
 
+        /**
+         * The record as its source's store holds it, before the connector's {@code map} and {@code set} (Raw JSON shows the source's native
+         * record: DATA_LAKE_GUIDE.md, "Several source systems"), with the connector it came from; empty when no shaped connector serves it.
+         */
+        default Optional<EntityDocument> nativeRecord(String kind, String id) {
+            return Optional.empty();
+        }
+
+        /** The trading systems switched off that feed the kind: a page of the kind says it excludes them. */
+        default java.util.Set<String> excluded(String kind) {
+            return java.util.Set.of();
+        }
+
         /** The query's condition as a test of one document. */
         Predicate<DataNode> condition(String query);
 
@@ -203,6 +216,20 @@ public final class LiveSets implements AutoCloseable {
     }
 
     /** The reader a person is for a kind's sets, made now (never kept). */
+    /** The record as its source's store holds it, before map and set (Raw JSON), with the connector it came from. */
+    public Optional<EntityDocument> nativeRecord(String kind, String id) {
+        try {
+            return sources.nativeRecord(kind, id);
+        } catch (RuntimeException e) {
+            return Optional.empty();
+        }
+    }
+
+    /** The trading systems switched off that feed the kind (the page's banner: "excludes ENDUR (switched off)"). */
+    public java.util.Set<String> excluded(String kind) {
+        return sources.excluded(kind);
+    }
+
     public LiveReader reader(Principal p, String kind) {
         return visibility.reader(p, kind);
     }

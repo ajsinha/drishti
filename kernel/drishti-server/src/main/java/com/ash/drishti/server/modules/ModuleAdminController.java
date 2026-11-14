@@ -118,6 +118,10 @@ public class ModuleAdminController {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, e.getMessage());
         }
         audit.record(p.user(), "module-switch", "module/" + c.module(), (c.enabled() ? "on" : "off") + " | " + reason);
+        com.ash.drishti.server.sources.SourceSystemsWiring w = sources;
+        if (w != null) {
+            w.refresh();                                       // a source module: its systems switched at once
+        }
         ModuleState s = registry.module(c.module()).orElseThrow();
         return state(s);
     }
@@ -182,6 +186,14 @@ public class ModuleAdminController {
         return off;
     }
 
+    /** The trading source systems (a source module's switch acts at once: DATA_LAKE_GUIDE.md, "Several source systems"). */
+    private volatile com.ash.drishti.server.sources.SourceSystemsWiring sources;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void sources(com.ash.drishti.server.sources.SourceSystemsWiring s) {
+        this.sources = s;
+    }
+
     private Map<String, Object> state(ModuleState s) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("id", s.id());
@@ -195,6 +207,14 @@ public class ModuleAdminController {
         m.put("switchSource", s.switchSource());
         m.put("loaded", started.loaded(s.id()));
         m.put("restartNeeded", started.loaded(s.id()) != s.on());
+        com.ash.drishti.server.sources.SourceSystemsWiring w = sources;
+        List<Map<String, Object>> systems = w == null ? List.of() : w.of(s.id());
+        if (!systems.isEmpty()) {
+            // a source module: its switch acts at once (its connectors leave every read order), so no restart is needed for it
+            m.put("sourceSystems", systems);
+            m.put("restartNeeded", false);
+            m.put("says", String.join(", ", systems.stream().map(x -> String.valueOf(x.get("says"))).toList()));
+        }
         return m;
     }
 
