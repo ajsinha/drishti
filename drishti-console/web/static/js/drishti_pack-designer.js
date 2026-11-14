@@ -25,10 +25,11 @@
   var E = window.Drishti.elements, C = E.core, I = E.inputs, G = E.grid;
   var $ = function (s) { return root.querySelector(s); };
   var BASE = '/build/pack/api/ws';
-  var ORDER = ['data', 'kind', 'source', 'design', 'finalize', 'deploy'];
+  var ORDERS = { kind: ['data', 'kind', 'source', 'design', 'finalize', 'deploy'], source: ['data', 'map', 'layout', 'finalize', 'deploy'] };
+  var ORDER = ORDERS.kind;                                    // the steps of the mode: a new kind (today), or a source for an existing kind
 
   var S = {
-    id: null, step: 'data', files: [], analysis: null, kind: null, busy: false, poll: null,
+    id: null, step: 'data', files: [], analysis: null, kind: null, busy: false, poll: null, mode: 'kind',
     cfg: {},                      // kind -> {match: [fields], key, date}: the choices (inferred first, then yours)
     edits: {},                    // Sutra name -> the YAML as edited
     checks: {},                   // Sutra name -> {ok, total}
@@ -58,15 +59,24 @@
   // ---- the rail ---------------------------------------------------------------------------------------------------------------
   function show(step) {
     S.step = step;
-    ORDER.forEach(function (s) { $('[data-pane="' + s + '"]').hidden = s !== step; });
+    Array.prototype.forEach.call(root.querySelectorAll('[data-pane]'), function (p) { p.hidden = p.dataset.pane !== step; });
     Array.prototype.forEach.call(root.querySelectorAll('[data-go]'), function (b) {
       var i = ORDER.indexOf(b.dataset.go);
+      b.parentNode.hidden = i < 0;
+      b.querySelector('.pd-n').textContent = String(i + 1);
       b.setAttribute('aria-current', b.dataset.go === step ? 'step' : 'false');
       b.classList.toggle('done', i < ORDER.indexOf(step));
     });
     $('[data-back]').hidden = step === 'data';
     $('[data-next]').hidden = step === 'deploy';
     fire('show', step);
+  }
+  /** The mode: 'kind' (a new kind: its pack, Sutras, screens) or 'source' (a source module feeding an existing kind). */
+  function mode(m) {
+    S.mode = m === 'source' ? 'source' : 'kind';
+    ORDER = ORDERS[S.mode];
+    show(ORDER.indexOf(S.step) >= 0 ? S.step : 'data');
+    fire('mode', S.mode);
   }
   Array.prototype.forEach.call(root.querySelectorAll('[data-go]'), function (b) {
     b.addEventListener('click', function () { go(b.dataset.go); });
@@ -160,7 +170,7 @@
       var s = r.body;
       if (op === 'analyse') { $('[data-read-said]').textContent = (s.rows ? num(s.rows) + ' rows read · ' : '') + s.seconds + ' s' + (s.lines && s.lines.length ? ' · ' + s.lines[s.lines.length - 1].trim() : ''); }
       if (s.state === 'running') { S.poll = window.setTimeout(function () { poll(op); }, 700); return; }
-      if (op === 'analyse') { analysed(s); } else { fire('finalised', s); }
+      if (op === 'analyse') { analysed(s); } else if (op === 'map') { fire('mapped', s); } else { fire('finalised', s); }
     });
   }
   function analysed(s) {
@@ -179,7 +189,7 @@
       drawFiles();
       drawKind();
       fire('analysed', S.analysis);
-      if (S.step === 'data') { show('kind'); }
+      if (S.step === 'data' && S.mode === 'kind') { show('kind'); }
     });
   }
   $('[data-analyse]').addEventListener('click', analyse);
@@ -274,7 +284,7 @@
 
   // ---- what part two uses -----------------------------------------------------------------------------------------------------------
   window.Drishti.PackDesigner = { root: root, S: S, api: api, why: why, say: say, num: num, bytes: bytes, ws: ws, show: show, go: go, sumOf: sumOf, poll: poll, choices: choices, on: on, fire: fire,
-    field: field };
+    field: field, mode: mode };
 
   // ---- resume a workspace of this tab ----------------------------------------------------------------------------------------------
   var had = null;

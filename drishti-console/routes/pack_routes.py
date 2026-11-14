@@ -224,10 +224,40 @@ async def finalize(request: Request, wid: str):
         d = ws.path(scoped(ident(request).user), wid)
         if ws.analysis(d) is None:
             return _problem(409, "read the files first (step 1)")
-        ws.start(scoped(ident(request).user), d, "finalize", ws.request_for(body), _job_env(request))
+        req = ws.request_for(body)
+        if req.get("mode") == "source" and ws.mapping(d) is None:
+            return _problem(409, "propose the field map first (step 2)")
+        ws.start(scoped(ident(request).user), d, "source" if req.get("mode") == "source" else "finalize", req, _job_env(request))
     except (PD.DesignerError, BodyError) as e:
         return _problem(e.status, e.detail, getattr(e, "code", None))
     return JSONResponse({"id": wid}, status_code=202)
+
+
+@router.post("/api/ws/{wid}/map")
+async def propose_map(request: Request, wid: str):
+    """A source of an existing kind: every record read again, the field map proposed native -> canonical with a confidence each
+    ({mode: source, sourceFor, system, mapEdits, ...}; `drishti.py pack new --source-for`)."""
+    if not await _may_author(request):
+        return _problem(403, "designing a source needs a role with the author power", "DRS-5002")
+    ws = _ws(request)
+    try:
+        body = await _body(request)
+        d = ws.path(scoped(ident(request).user), wid)
+        req = ws.request_for({**body, "mode": "source", "name": body.get("name") or "source-" + str(body.get("system") or "x").lower().replace("_", "-")})
+        ws.start(scoped(ident(request).user), d, "map", req, _job_env(request))
+    except (PD.DesignerError, BodyError) as e:
+        return _problem(e.status, e.detail, getattr(e, "code", None))
+    return JSONResponse({"id": wid}, status_code=202)
+
+
+@router.get("/api/ws/{wid}/mapping")
+async def mapping(request: Request, wid: str):
+    ws = _ws(request)
+    try:
+        m = ws.mapping(ws.path(scoped(ident(request).user), wid))
+    except PD.DesignerError as e:
+        return _problem(e.status, e.detail, e.code)
+    return m if m is not None else _problem(404, "no field map yet: choose the kind and the system first", "DRS-5006")
 
 
 @router.get("/api/ws/{wid}/dmod")

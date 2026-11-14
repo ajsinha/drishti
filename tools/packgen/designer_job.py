@@ -17,6 +17,8 @@
 
     python3 tools/packgen/designer_job.py analyse <workspace>     # every record read, the Sutras drafted: <workspace>/analysis.json
     python3 tools/packgen/designer_job.py finalize <workspace>    # the module written, bound, packed and checked: <workspace>/dist/<name>-<version>.dmod
+    python3 tools/packgen/designer_job.py map <workspace>         # a source of an existing kind: the field map proposed: <workspace>/mapping.json
+    python3 tools/packgen/designer_job.py source <workspace>      # the source module written, packed and checked (pack new --source-for)
 
 <workspace>/request.json holds the choices ({name, version, title, description, kindPrefix, match, key, date, child, minDocs, connector, filesRoot, edits}),
 <workspace>/in/ the uploaded files. The job writes <workspace>/status.json as it goes ({state, rows, seconds, lines}). The analysis is
@@ -133,6 +135,8 @@ def analyse(wd: pathlib.Path, st: Status) -> None:
     st.say(f"drafting {len(an.groups)} Sutra(s) ...")
     SG.draft(an.groups, a, draft / "sutras", draft / "tests", st.say)
     out = report(an, an.groups)
+    import sourcemap as SM
+    out["sourceFor"] = SM.suggest({"fields": {f["path"]: None for k in out["kinds"].values() for f in k["fields"]}})   # the second mode's kinds
     (wd / "analysis.json").write_text(json.dumps(out, default=str), encoding="utf-8")
     st.say(f"{out['rows']:,} rows in {out['files']} file(s) read; {len(out['sutras'])} Sutra(s)")
 
@@ -154,11 +158,49 @@ def finalize(wd: pathlib.Path, st: Status) -> None:
     (wd / "result.json").write_text(json.dumps(out), encoding="utf-8")
 
 
+def map_(wd: pathlib.Path, st: Status) -> None:
+    """A source of an existing kind: every record read, the field map proposed (`pack new --source-for KIND --dry-run`), the edits applied."""
+    import sourcemap as SM
+    req = json.loads((wd / "request.json").read_text(encoding="utf-8"))
+    st.say(f"reading every record for the map onto {req['sourceFor']} ...")
+    prof = SM.scan([wd / "in"], st.say)
+    m = SM.propose(prof, req["sourceFor"], req["system"])
+    if req.get("mapEdits"):
+        m = SM.edit(m, req["mapEdits"])
+    m["suggest"] = SM.suggest(prof)
+    m["yaml"] = SM.map_yaml(m)
+    (wd / "mapping.json").write_text(json.dumps(m, default=str), encoding="utf-8")
+    st.say(f"{m['rows']:,} rows read; {m['mapped']} of {len(m['fields'])} fields mapped ({m['sure']} sure, {m['check']} to check), "
+           f"{len(m['missing'])} required missing, {len(m['unmapped'])} native unmapped")
+
+
+def source(wd: pathlib.Path, st: Status) -> None:
+    """The source module (`pack new --source-for`): written, packed and checked; no binding (its connector comes with it)."""
+    import drishti as cli
+    import module_from_jsonl as MFJ
+    req = json.loads((wd / "request.json").read_text(encoding="utf-8"))
+    edits = wd / "map-edits.json"
+    edits.write_text(json.dumps(req.get("mapEdits") or {}), encoding="utf-8")
+    argv = [str(wd / "in"), "--source-for", req["sourceFor"], "--system", req["system"], "--name", req["name"], "--version", req.get("version") or "1.0.0",
+            "--out", str(wd / "module"), "--dist", str(wd / "dist"), "--force", "--publisher", req.get("publisher") or "local", "--map-edits", str(edits)]
+    for flag, key in (("--title", "title"), ("--description", "description"), ("--shared-table", "sharedTable"), ("--own-table", "ownTable")):
+        if req.get(key):
+            argv += [flag, str(req[key])]
+    argv += ["--live"] * bool(req.get("live")) + ["--write-back"] * bool(req.get("live") and req.get("writeBack"))
+    a = MFJ.build_parser().parse_args(argv)
+    if MFJ.run(a, cli, st.say):
+        raise RuntimeError("the module was not made: see the log")
+    dmod = wd / "dist" / f"{a.name}-{a.version}.dmod"
+    out = {"dmod": dmod.name, "bytes": dmod.stat().st_size, "name": a.name, "version": a.version, "mode": "source", "kind": req["sourceFor"],
+           "system": req["system"]}
+    (wd / "result.json").write_text(json.dumps(out), encoding="utf-8")
+
+
 def main(argv) -> int:
     op, wd = argv[0], pathlib.Path(argv[1]).resolve()
     st = Status(wd)
     try:
-        {"analyse": analyse, "finalize": finalize}[op](wd, st)
+        {"analyse": analyse, "finalize": finalize, "map": map_, "source": source}[op](wd, st)
     except SystemExit as e:                       # the tools stop with a message
         st.finish("failed", str(e.code) if not isinstance(e.code, int) else "stopped with exit " + str(e.code))
         return 1

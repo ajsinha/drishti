@@ -33,6 +33,8 @@
         <li><button type="button" class="pd-step" data-go="data" aria-current="step"><span class="pd-n">1</span> Data<small data-sum="data">no files yet</small></button></li>
         <li><button type="button" class="pd-step" data-go="kind"><span class="pd-n">2</span> Kind and keys<small data-sum="kind">after the data</small></button></li>
         <li><button type="button" class="pd-step" data-go="source"><span class="pd-n">3</span> Source<small data-sum="source">file connector</small></button></li>
+        <li hidden><button type="button" class="pd-step" data-go="map"><span class="pd-n">2</span> Map<small data-sum="map">a source for an existing kind</small></button></li>
+        <li hidden><button type="button" class="pd-step" data-go="layout"><span class="pd-n">3</span> Layout<small data-sum="layout">its own table</small></button></li>
         <li><button type="button" class="pd-step" data-go="design"><span class="pd-n">4</span> Design<small data-sum="design">after the data</small></button></li>
         <li><button type="button" class="pd-step" data-go="finalize"><span class="pd-n">5</span> Finalize<small data-sum="finalize">not yet</small></button></li>
         <li><button type="button" class="pd-step" data-go="deploy"><span class="pd-n">6</span> Deploy<small data-sum="deploy">not yet</small></button></li>
@@ -51,6 +53,46 @@
         <div class="pd-prog" data-read-prog hidden><progress data-read-bar max="1" value="0" aria-label="Reading the records"></progress> <span data-read-said role="status" aria-live="polite"></span>
           <button type="button" class="btn-pill btn-ghost" data-cancel>Cancel</button></div>
         <p class="bs-actions"><button type="button" class="btn-pill btn-accent" data-analyse disabled>Read every record</button></p>
+        <div class="pd-form pd-mode" data-mode-box hidden>
+          <div class="pd-f"><span id="pdModeL">These files are</span><div data-sel-mode aria-labelledby="pdModeL"></div>
+            <small class="text-muted-d" data-mode-hint>a new kind: its own pack, Sutras and screens; or a new booking system's source of a kind that exists (a source module)</small></div>
+        </div>
+      </section>
+      <section class="pd-pane" data-pane="map" aria-labelledby="pdh-map" hidden>
+        <h2 id="pdh-map" class="bs-h">2. Map</h2>
+        <p class="text-muted-d">Every record is read again: each native field is matched to a field of the kind by its name, its type, its values and the
+          kind's enums, with a confidence. Change a row's native field, set a constant, or drop it; then <b>Propose again</b> applies your edits.</p>
+        <div class="pd-form">
+          <div class="pd-f"><span id="pdSrcKindL">Existing kind</span><div data-sel-srckind aria-labelledby="pdSrcKindL"></div><small class="text-muted-d" data-srckind-hint></small></div>
+          <label class="pd-f"><span>System</span><input class="studio-in mono" type="text" data-s="system" autocomplete="off" placeholder="SWAPONE"><small class="text-muted-d">the booking system, upper case: stamped as SOURCE_SYSTEM at load</small></label>
+        </div>
+        <p class="bs-actions"><button type="button" class="btn-pill btn-accent" data-propose>Propose the map</button>
+          <span class="pd-total" data-map-kpi role="status" aria-live="polite"></span></p>
+        <div class="pd-prog" data-map-prog hidden><progress aria-label="Reading the records for the map"></progress> <span data-map-said role="status" aria-live="polite"></span></div>
+        <div class="pd-map">
+          <div class="pd-grid pd-mapgrid" data-map-grid></div>
+          <div class="pd-mapside">
+            <h3 class="bs-h" data-ev-title>Evidence</h3>
+            <p class="text-muted-d" data-ev-body>Choose a row to see why it was matched.</p>
+            <h3 class="bs-h">Unmapped native fields</h3>
+            <p class="text-muted-d">kept as they are; shown on the kind's page when SOURCE_SYSTEM is this system's</p>
+            <div data-unmapped></div>
+          </div>
+        </div>
+      </section>
+      <section class="pd-pane" data-pane="layout" aria-labelledby="pdh-layout" hidden>
+        <h2 id="pdh-layout" class="bs-h">3. Layout</h2>
+        <p class="text-muted-d">Where the system's rows live: its own lake table, or a table several systems share, read with
+          <code>where: SOURCE_SYSTEM = '&lt;SYS&gt;'</code>. Either way the connector stamps <code>set: { SOURCE_SYSTEM: &lt;SYS&gt; }</code> and reads through the map.</p>
+        <div class="pd-form">
+          <div class="pd-f"><span id="pdLayoutL">Table</span><div data-sel-layout aria-labelledby="pdLayoutL"></div></div>
+          <label class="pd-f"><span>Lake table</span><input class="studio-in mono" type="text" data-s="table" autocomplete="off" placeholder="trading.trades_shared"><small class="text-muted-d" data-table-hint></small></label>
+          <label class="pd-f"><span>Module</span><input class="studio-in mono" type="text" data-s="name" autocomplete="off" placeholder="source-swapone"></label>
+          <label class="pd-f"><span>Version</span><input class="studio-in mono" type="text" data-s="version" value="1.0.0" autocomplete="off"></label>
+          <div class="pd-f"><span id="pdLiveL">Live</span><div data-sw-live aria-labelledby="pdLiveL"></div></div>
+          <div class="pd-f"><span id="pdWbL">Write-back</span><div data-sw-wb aria-labelledby="pdWbL"></div></div>
+        </div>
+        <pre class="bs-yaml pd-log" data-layout-yaml tabindex="0" aria-label="The connector the module ships"></pre>
       </section>
 
       <section class="pd-pane" data-pane="kind" aria-labelledby="pdh-kind" hidden>
@@ -133,4 +175,5 @@
 {% block scripts %}
 <script src="/static/js/drishti_pack-designer.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/drishti_pack-designer-steps.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/drishti_pack-designer-source.js?v={{ ASSET_V }}"></script>
 {% endblock %}
