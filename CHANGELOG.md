@@ -23,6 +23,11 @@
   `toneField` and `href` / `hrefField` (a cell link to one of the console's own paths): monitors regain their tone colours and cell links, and the
   trading Home's blotter its Event pill and the valuations' Notional, all through the declaration. A file sent to the inbox is checked against
   the installed source systems (`SOURCE_SYSTEM` must be one of them).
+  A distribution loads only the modules it carries (and requires): Drishti Genomics shows no trading menu, `/live/<id>` of a module the
+  distribution lacks answers a plain "Not part of this distribution" page, and the Elements gallery asks only for libraries of modules that
+  are on. A row rule now also decides who may open a single record's view (404 for a record outside it). Row retention on Delta and files
+  judges one business-date partition at a time (only the ages are kept, and only when `max-rows` needs the table-wide cut). The grid
+  bundle is regenerated from its sources (`tools/elements/build.py`).
 
 - **Several source systems on one canonical kind** (docs/guides/DATA_LAKE_GUIDE.md section 6.2; ACCESS_MODEL.md section 10). Trading systems
   are source modules feeding one `trade` kind with `SOURCE_SYSTEM`. Every read connector (Delta, Iceberg, files; Kafka live) takes `where:`
