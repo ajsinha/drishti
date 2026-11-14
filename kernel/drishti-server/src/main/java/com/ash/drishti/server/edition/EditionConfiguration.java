@@ -23,9 +23,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
 /**
- * The edition the server runs (docs/guides/ADMIN_GUIDE.md) as beans: the {@link Edition} itself (read once at start, from the edition
- * file's property layer and the site's overrides) and {@link EditionCommands}, the commands it shows people. Without
- * {@code drishti.edition} both answer "allowed" everywhere: the full Drishti.
+ * The distribution's filter (docs/architecture/DISTRIBUTIONS.md) as beans: the {@link Edition} itself (read once at start, from the
+ * distribution's property layer and the site's overrides) and {@link EditionCommands}, the commands it shows people. Drishti All: both
+ * answer "allowed" everywhere.
  */
 @Configuration(proxyBeanMethods = false)
 public class EditionConfiguration {
@@ -37,10 +37,10 @@ public class EditionConfiguration {
 
     @Bean
     public EditionContext editionContext(Edition edition, Environment env, com.ash.drishti.registry.AccessRegistry access) {
-        // a lens whose modules are off does not exist (ACCESS_MODEL.md): an edition opened as a lens is offered only when the registry
-        // offers the lens of that name; a site's own lens the registry does not know stays as it is
-        java.util.Map<String, Edition> lenses = new java.util.LinkedHashMap<>(Editions.lenses(env));
-        lenses.keySet().removeIf(name -> access.lensDeclared(name) && !access.lensOffered(name));
+        // a lens whose modules are off is not offered (ACCESS_MODEL.md): the registry's lens of that name decides; a site's own lens the
+        // registry does not know stays as it is
+        java.util.List<String> lenses = new java.util.ArrayList<>(Editions.lensNames(env));
+        lenses.removeIf(name -> access.lensDeclared(name) && !access.lensOffered(name));
         return new EditionContext(edition, lenses);
     }
 

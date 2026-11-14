@@ -29,10 +29,9 @@ CONSOLE_SWITCHES = frozenset({"build", "forms", "datamap", "data", "workspaces",
 
 
 def feature_on(request_or_app, edition: Edition, name: str) -> bool:
-    """A feature as the person sees it: the lens's preset (a lens presets features for that person only), else the console settings
-    (where the instance's edition is a layer under the site's configuration); a feature no setting names is on."""
-    if edition.lens and edition.feature(name) is not None:
-        return bool(edition.feature(name))
+    """A feature as the console settings say it (the distribution's presets are a layer under the site's configuration); a feature no
+    setting names is on. A lens presets nothing (it only arranges)."""
+    del edition
     app = getattr(request_or_app, "app", request_or_app)
     settings = app.state.settings
     keys = app.state.editions.mapping().get(name) or []

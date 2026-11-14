@@ -17,60 +17,41 @@ package com.ash.drishti.server.edition;
 
 import com.ash.drishti.packs.edition.Edition;
 import java.util.List;
-import java.util.Map;
-import org.springframework.web.context.request.RequestAttributes;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 /**
- * Which edition a request is seen through (docs/guides/ADMIN_GUIDE.md): the instance's own ({@code drishti.edition}), or, on a full
- * instance, the <em>lens</em> the console names in the {@value #HEADER} header for a person who opened one ("Open Drishti Risk").
- * The lens is the person's (kept in their settings, so every node of a cluster sees it); it is accepted only when the site offers it
- * ({@code drishti.lenses}). A lens hides commands and BI items from that person's view; it never secures anything: data access stays
+ * What a request is seen through (docs/guides/ADMIN_GUIDE.md): the distribution's filter ({@link Edition#NONE} for Drishti All), the same
+ * for every request. The lenses the site offers ({@code drishti.lenses}) are workspaces: the console arranges Home and the menus for the
+ * person's lens, and a lens never hides anything, so the {@value #HEADER} header the console sends changes nothing here. Data access stays
  * with roles, entitlements and masks.
  */
 public final class EditionContext {
 
-    /** The header the console sends for a person who opened a lens. */
+    /** The header the console sends for a person working in a lens (read by nothing on the server: a lens only arranges). */
     public static final String HEADER = "X-Drishti-Lens";
 
-    /** No edition and no lens. */
-    public static final EditionContext NONE = new EditionContext(Edition.NONE, Map.of());
+    /** No filter and no lens. */
+    public static final EditionContext NONE = new EditionContext(Edition.NONE, List.of());
 
     private final Edition instance;
-    private final Map<String, Edition> lenses;
+    private final List<String> lenses;
 
-    public EditionContext(Edition instance, Map<String, Edition> lenses) {
+    public EditionContext(Edition instance, List<String> lenses) {
         this.instance = instance;
-        this.lenses = Map.copyOf(lenses);
+        this.lenses = List.copyOf(lenses);
     }
 
-    /** The instance's own edition ({@link Edition#NONE} for the full Drishti). */
+    /** The distribution's filter ({@link Edition#NONE} for Drishti All). */
     public Edition instance() {
         return instance;
     }
 
-    /** The lenses the site offers (none when the instance runs an edition). */
+    /** The lenses the site offers, sorted. */
     public List<String> lensNames() {
-        return lenses.keySet().stream().sorted().toList();
+        return lenses.stream().sorted().toList();
     }
 
-    public Map<String, Edition> lenses() {
-        return lenses;
-    }
-
-    /** The edition the current request is seen through: the instance's, else the request's lens, else none. */
+    /** The filter the current request is seen through: the distribution's, whatever lens the person works in. */
     public Edition current() {
-        if (lenses.isEmpty()) {                                          // an edition (no lenses), or none offered
-            return instance;
-        }
-        RequestAttributes a = RequestContextHolder.getRequestAttributes();
-        if (a instanceof ServletRequestAttributes s) {
-            String lens = s.getRequest().getHeader(HEADER);
-            if (lens != null && !lens.isBlank()) {
-                return lenses.getOrDefault(lens.strip(), instance);     // a distribution's lens (Risk's Trading), else the distribution
-            }
-        }
         return instance;
     }
 }

@@ -51,7 +51,7 @@ import org.springframework.test.web.servlet.MvcResult;
  * routed by the kernel like any connector, its kinds, functions, API and pages answering. The .dmod passes the fifteen checks.
  */
 @SpringBootTest(properties = {"drishti.distribution=genomics", "drishti.distributions-dir=../../config/distributions",
-        "drishti.module-manifests-dir=../../modules", "drishti.packs.dir=../../config/packs", "drishti.lens-dir=../../config/lenses",
+        "drishti.module-manifests-dir=../../modules", "drishti.packs.dir=../../config/packs",
         "drishti.packs.enabled=default", "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.enabled=false",
         "drishti.modules.autodeploy-seconds=3600",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/genomics-${random.uuid}/identity.db"})

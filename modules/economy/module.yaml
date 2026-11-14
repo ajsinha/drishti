@@ -87,9 +87,57 @@ data:
   needs: data/needs.yaml
 console:
   plugin: console/plugin.yaml
+  # the module's own top menus, in the console sitemap's form (drishti-console/config/sitemap.yaml); a menu of another module's
+  # id adds its columns to that menu (the one Markets menu). The one home of these menus.
   menus:
-  - economies
-  - markets
+  - id: markets
+    columns:
+    - title: News and quotes
+      items:
+      - id: news
+        cmd: NEWS
+        icon: newspaper
+        label: News
+        desc: The news by topic
+        requires: ['cmd:NEWS']
+      - id: quote
+        cmd: QUOTE
+        icon: currency-dollar
+        label: Quotes
+        desc: Quotes of listed companies and indices
+        requires: ['cmd:QUOTE']
+  - id: economies
+    domain: economy
+    label: Economies
+    icon: globe2
+    subject: true
+    columns:
+    - title: Economies
+      items:
+      - id: econ
+        fill: ECON
+        icon: flag
+        label: A country
+        desc: Type the country's code after the word (ECON CAN)
+        requires: ['cmd:ECON']
+      - id: macro
+        cmd: MACRO
+        icon: graph-up
+        label: Indicators
+        desc: Every indicator of every economy
+        requires: ['cmd:MACRO']
+      - id: fcst
+        cmd: FCST
+        icon: binoculars
+        label: IMF forecasts
+        desc: The IMF's forecasts by economy
+        requires: ['cmd:FCST']
+      - id: rege
+        cmd: REGE
+        icon: map
+        label: Regions
+        desc: Sub-national regions and their figures
+        requires: ['cmd:REGE']
 functions:
 - WRLD
 - ECON

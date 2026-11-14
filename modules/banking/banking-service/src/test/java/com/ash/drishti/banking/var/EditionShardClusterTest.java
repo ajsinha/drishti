@@ -29,15 +29,15 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Drishti Risk on Drishti*net (docs/guides/ADMIN_GUIDE.md › The design): two real members in one JVM (the {@link NetNodes} pattern and its
- * file lock) and a reference server, all three with {@code drishti.edition=risk}, VaR sharded across the two members. Each member reads the
- * same edition (About and its digest say risk), Admin → Net raises no edition warning, the members agree on the shard owners, and every
+ * file lock) and a reference server, all three running Drishti Risk ({@code drishti.distribution=risk}), VaR sharded across the two members. Each member reads the
+ * same edition (About and its digest say drishti.risk), Admin → Net raises no edition warning, the members agree on the shard owners, and every
  * scope's VaR, ES, contributions, P&amp;L path and tree in USD and EUR equals one server's to the cent: the edition hides commands from
- * people, never anything the sharded engine needs. The fixture is {@link VarShardClusterTest}'s (its retired finance pack's routes, so the
- * site switches allow-only off: drishti.edition-spec.packs.allow-only=false, a site override).
+ * people, never anything the sharded engine needs. The fixture is {@link VarShardClusterTest}'s (its retired finance pack's routes: the
+ * test's own packs win over the distribution's).
  */
 class EditionShardClusterTest {
 
-    static final List<String> EDITION = List.of("--drishti.edition=risk", "--drishti.edition-spec.packs.allow-only=false");
+    static final List<String> EDITION = List.of("--drishti.distribution=risk", "--drishti.distributions-dir=" + java.nio.file.Path.of("../../../config/distributions").toAbsolutePath().normalize(), "--drishti.module-manifests-dir=" + java.nio.file.Path.of("../../../modules").toAbsolutePath().normalize());
     static final List<String> SCOPES = List.of("BANK", "NODE:MGMT~DESK-X", "NODE:LEGAL~LE-A", "NODE:LEGAL~LE-B", "LL:LL-A", "TRD:T1,T3,T5");
 
     static List<String> with(List<String> args) {
@@ -95,11 +95,11 @@ class EditionShardClusterTest {
     void everyMemberRunsTheSameEditionAndNetRaisesNoEditionWarning() throws Exception {
         for (String n : List.of("ref", "a", "b")) {
             assertThat(VarShardClusterTest.get(VarShardClusterTest.url(n) + "/public/about").path("edition").path("name").asText())
-                    .as(n).isEqualTo("risk");
+                    .as(n).isEqualTo("drishti.risk");
         }
         for (String n : List.of("a", "b")) {
             var digest = VarShardClusterTest.cluster.node(n).ctx().getBean(com.ash.drishti.server.net.DigestService.class).self();
-            assertThat(digest.services()).as(n + "'s digest").containsEntry("edition", "risk");
+            assertThat(digest.services()).as(n + "'s digest").containsEntry("edition", "drishti.risk");
         }
         assertThat(NetNodes.await(30_000, () -> {
             try {

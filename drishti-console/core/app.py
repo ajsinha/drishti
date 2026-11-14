@@ -146,9 +146,9 @@ async def _edition_of(request, path: str) -> None:
 
 
 async def _module_asset_refused(request, rel: str) -> str | None:
-    """Why a static file of a domain module is not served to this request (core/modules.py): the module is off, or the person works in a
-    lens that does not use it; None for the core's files (most of them: asked without reading the session). Only a module's file costs
-    the session check, to know the person and their lens."""
+    """Why a static file of a domain module is not served to this request (core/modules.py): the module is off for the person; None for
+    the core's files (most of them: asked without reading the session). Only a module's file costs the session check, to know the person.
+    A lens never hides anything, so it is not asked."""
     from core import modules
 
     if modules.asset_module(rel) is None:
@@ -158,16 +158,6 @@ async def _module_asset_refused(request, rel: str) -> str | None:
     who = await auth.current(request.cookies.get(auth.cookie), request.app.state.backend)
     if who is not None:
         modules.use_person(await request.app.state.modules_me.get(request.app.state.backend, who))
-        editions = request.app.state.editions
-        if editions.instance.active:
-            lens = editions.instance.name
-        elif editions.lenses:
-            from core.settings import changed_at
-            try:
-                mine = await request.app.state.user_settings.get(request.app.state.backend, who, changed_at(request))
-            except Exception:  # noqa: BLE001 - no settings: no lens
-                mine = {}
-            lens = (mine or {}).get("lens") or None
     return modules.asset_refusal(rel, lens)
 
 
@@ -547,9 +537,9 @@ def create_app(settings: Settings) -> FastAPI:
     from core import modules as _modules_state
 
     def _page_modules(request) -> list[str]:
-        """The domain modules this person's page may load Elements libraries of (core/modules.py): on, and used by their lens or edition."""
-        ed = getattr(getattr(request, "state", None), "edition", None)
-        return _modules_state.modules_for_page(ed.name if ed is not None and ed.active else None)
+        """The domain modules this person's page may load Elements libraries of (core/modules.py): those on (a lens never hides one)."""
+        del request
+        return _modules_state.modules_for_page(None)
 
     templates.env.globals["page_modules"] = _page_modules
     templates.env.globals["module_on"] = _modules_state.module_on          # a module's part of a page (the World landing's capital markets)
