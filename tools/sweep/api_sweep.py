@@ -206,17 +206,42 @@ def covered_by(e: dict, index: list[tuple[str, int, str]], text: dict) -> str:
     pieces = [p for p in VARIABLE.sub("\0", route).split("\0") if p.strip("/")]
     if not pieces:
         return ""
-    rx = re.compile(".*?".join(re.escape(p) for p in pieces) + r"(?![\w-])")
+    if route.endswith("}"):                                  # the route ends in a variable: a test names a value there (one segment; a {x:path} may hold slashes)
+        value = r"[^\"'?\s]*" if re.search(r":path\}$|\}/\{[^}]*\}$", route) else r"[^\"'/?\s]*"
+        end = value + r"(?=[\"'?])"
+    else:
+        end = r"(?![\w-])"
+    rx = re.compile(".*?".join(re.escape(p) for p in pieces) + end)
+    # a test that builds the head of the path in a helper (itemPath(id) + "/history/1/restore") names only what follows the first variable
+    tail = [p for p in VARIABLE.sub("\0", route).split("\0")[1:] if p.strip("/")]
+    rxt = re.compile(r"\+\s*[\"']" + ".*?".join(re.escape(p) for p in tail) + r"(?![\w-])") if len(tail) >= 2 and not route.startswith("{") else None
     anchor = max(pieces, key=len)
     verb = e["method"].lower()
     mrx = re.compile(rf"\b{verb}\b|\.{verb}\(|-X\s*{e['method']}|\b{e['method']}\b", re.I)
     for rel, n, ln in index:
-        if anchor in ln and rx.search(ln) and (mrx.search(ln) or mrx.search(text.get((rel, n - 1), "")) or mrx.search(text.get((rel, n + 1), ""))):
+        if ((anchor in ln and rx.search(ln)) or (rxt and rxt.search(ln))) and (mrx.search(ln) or mrx.search(text.get((rel, n - 1), "")) or mrx.search(text.get((rel, n + 1), ""))
+                                               or helper_verb(rel, ln, verb)):
             return f"{enclosing_test(rel, n)} ({rel}:{n})"
     return ""
 
 
 _FILES: dict[str, list[str]] = {}
+_HELPERS: dict[str, dict[str, set[str]]] = {}
+HELPER_DEF = re.compile(r"^\s*(?:@\w+\s+)*(?:(?:private|public|static|protected|final|async)\s+)*(?:[\w<>\[\],.?]+\s+)?(\w+)\s*\([^;]*\)\s*(?:throws [\w., ]+)?\{\s*$|^\s*(?:async\s+)?def\s+(\w+)\s*\(")
+
+
+def helper_verb(rel: str, line: str, verb: str) -> bool:
+    """True when the line calls a helper of its own file (send(path, ...), post_json(path)) whose body issues this verb: the verb is then one call away."""
+    lines = _FILES.setdefault(rel, (ROOT / rel).read_text(encoding="utf-8", errors="replace").splitlines())
+    table = _HELPERS.get(rel)
+    if table is None:
+        table = _HELPERS[rel] = {}
+        for i, ln in enumerate(lines):
+            m = HELPER_DEF.match(ln)
+            if m:
+                body = " ".join(lines[i:i + 14]).lower()
+                table.setdefault(m.group(1) or m.group(2), set()).update(v for v in ("post", "put", "delete", "patch") if re.search(rf"\b{v}\(|\.{v}\(", body))
+    return any(table.get(name, ()) == {verb} for name in re.findall(r"(\w+)\(", line))      # a helper that switches on the method (call("GET", ...)) is no evidence
 
 
 def enclosing_test(rel: str, n: int) -> str:

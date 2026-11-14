@@ -53,6 +53,7 @@ class PivotWriteEndpointsTest {
     @Autowired MockMvc mvc;
     @Autowired TokenVerifier tokens;
     final ObjectMapper json = new ObjectMapper();
+    static final String RID = "wt-by-product";
 
     private MvcResult call(String user, String role, MockHttpServletRequestBuilder r, Object body) throws Exception {
         r = r.header("Authorization", "Bearer " + tokens.mint(user, List.of(role), 300));
@@ -126,19 +127,19 @@ class PivotWriteEndpointsTest {
         assertThat(made.path("id").asText()).isEqualTo("wt-by-product");
         assertThat(made.path("refresh").asText()).startsWith("queued for");
         assertThat(ok("u-ann", "admin", get("/api/v1/pivot/rollups"), null).path("definitions").toString()).contains("wt-by-product");
-        JsonNode refreshed = ok("u-ann", "admin", post("/api/v1/pivot/rollups/wt-by-product/refresh"), null);
+        JsonNode refreshed = ok("u-ann", "admin", post("/api/v1/pivot/rollups/" + RID + "/refresh"), null);
         assertThat(refreshed.path("rollup").asText()).isEqualTo("wt-by-product");
         assertThat(refreshed.path("words").asText()).isNotBlank();
-        ok("u-ann", "admin", post("/api/v1/pivot/rollups/wt-by-product/refresh"), null);          // again: the same rollup, refreshed again
+        ok("u-ann", "admin", post("/api/v1/pivot/rollups/" + RID + "/refresh"), null);          // again: the same rollup, refreshed again
         refused("u-rita", "trades-only", post("/api/v1/pivot/rollups"), def, 403, "DRS-");
         refused("u-ann", "admin", post("/api/v1/pivot/rollups"), Map.of("id", "bad id!", "source", "trade", "functions", List.of("count()")), 422, "DRS-");
         refused("u-ann", "admin", post("/api/v1/pivot/rollups"), Map.of("id", "empty", "source", "trade", "grain", List.of("productType")), 422, "DRS-");
-        refused("u-rita", "trades-only", post("/api/v1/pivot/rollups/wt-by-product/refresh"), null, 403, "DRS-");
-        refused("u-ann", "admin", post("/api/v1/pivot/rollups/no-such/refresh"), null, 404, "DRS-5704");
-        refused("u-rita", "trades-only", delete("/api/v1/pivot/rollups/wt-by-product"), null, 403, "DRS-");
-        assertThat(ok("u-ann", "admin", delete("/api/v1/pivot/rollups/wt-by-product"), null).path("removed").asText()).isEqualTo("wt-by-product");
+        refused("u-rita", "trades-only", post("/api/v1/pivot/rollups/" + RID + "/refresh"), null, 403, "DRS-");
+        refused("u-ann", "admin", post("/api/v1/pivot/rollups/" + "no-such" + "/refresh"), null, 404, "DRS-5704");
+        refused("u-rita", "trades-only", delete("/api/v1/pivot/rollups/" + RID), null, 403, "DRS-");
+        assertThat(ok("u-ann", "admin", delete("/api/v1/pivot/rollups/" + RID), null).path("removed").asText()).isEqualTo("wt-by-product");
         assertThat(ok("u-ann", "admin", get("/api/v1/pivot/rollups"), null).path("definitions").toString()).doesNotContain("wt-by-product");
-        refused("u-ann", "admin", delete("/api/v1/pivot/rollups/wt-by-product"), null, 404, "DRS-5704");
+        refused("u-ann", "admin", delete("/api/v1/pivot/rollups/" + RID), null, 404, "DRS-5704");
     }
 
     @Test @Order(4)

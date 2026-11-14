@@ -415,6 +415,66 @@ class BiApiTest {
         refused(call("GET", "/api/v1/bi/items/" + never + "/published", ann(), null), 404, "DRS-9001");
     }
 
+    // ---- the write endpoints that had no test: members, board conversion and writing, theme checks ----
+
+    @Test @Order(16)
+    void aWorkspaceMemberIsAddedChangedAndRemovedAndTheEffectIsReadBack() throws Exception {
+        String ws = ok(call("POST", "/api/v1/bi/workspaces", ann(), Map.of("name", "Members Desk"))).path("id").asText();
+        String cat = "cat";
+        JsonNode added = ok(call("PUT", "/api/v1/bi/workspaces/" + ws + "/members/" + cat, ann(), Map.of("role", "viewer")));
+        assertThat(added.toString()).contains("cat");
+        assertThat(ok(call("GET", "/api/v1/bi/workspaces/" + ws, cat(), null)).path("role").asText()).isEqualTo("viewer");           // the member now opens it
+        ok(call("PUT", "/api/v1/bi/workspaces/" + ws + "/members/" + cat, ann(), Map.of("role", "member")));                            // changed
+        assertThat(ok(call("GET", "/api/v1/bi/workspaces/" + ws, cat(), null)).path("role").asText()).isEqualTo("member");
+        ok(call("PUT", "/api/v1/bi/workspaces/" + ws + "/members/" + cat, ann(), Map.of("role", "member")));                            // the same again
+        assertThat(ok(call("GET", "/api/v1/bi/workspaces/" + ws, cat(), null)).path("role").asText()).isEqualTo("member");
+        refused(call("PUT", "/api/v1/bi/workspaces/" + ws + "/members/" + cat, ann(), Map.of("role", "emperor")), 422, "DRS-9003");
+        refused(call("DELETE", "/api/v1/bi/workspaces/" + ws + "/members/" + cat, cat(), null), 403, "DRS-9002");                      // a member may not remove people
+        call("DELETE", "/api/v1/bi/workspaces/" + ws + "/members/" + cat, ann(), null).andExpect(status().is2xxSuccessful());
+        refused(call("GET", "/api/v1/bi/workspaces/" + ws, cat(), null), 404, "DRS-9001");                                              // no longer a member
+        assertThat(ok(call("GET", "/api/v1/bi/workspaces", cat(), null)).toString()).doesNotContain("members-desk");
+        refused(call("DELETE", "/api/v1/bi/workspaces/" + ws + "/members/" + "ann", ann(), null), 409, "DRS-9004");                     // the last administrator stays
+        refused(call("DELETE", "/api/v1/bi/workspaces/" + ws + "/members/" + "nobody", ann(), null), 404, "DRS-9001");
+        refused(call("DELETE", "/api/v1/bi/workspaces/no-such-ws/members/" + cat, ann(), null), 404, "DRS-9001");
+    }
+
+    @Test @Order(17)
+    void aBoardIsConvertedToAReportAndWrittenAsYamlAndRefusalsCarryTheirCodes() throws Exception {
+        String board = "rachana: 1\nboard: conv-board\ntitle: Conv\npages:\n  - id: p1\n    tiles:\n      - { id: n, report: \"Desk P&L\", visual: n, at: { x: 0, y: 0, w: 3, h: 2 } }\n";
+        JsonNode converted = ok(call("POST", "/api/v1/bi/boards/convert", ann(), Map.of("yaml", board)));
+        assertThat(converted.has("converted")).isTrue();
+        if (converted.path("converted").asBoolean()) {
+            assertThat(converted.path("yaml").asText()).contains("report:");
+        } else {
+            assertThat(converted.path("problems").size()).as(converted.toString()).isPositive();        // unconvertible: the problems, in words
+        }
+        assertThat(ok(call("POST", "/api/v1/bi/boards/convert", ann(), Map.of("yaml", "board: [broken"))).path("converted").asBoolean()).isFalse();
+        assertThat(ok(call("POST", "/api/v1/bi/boards/convert", ann(), Map.of("yaml", board)))).isEqualTo(converted);                    // repeated: the same answer
+        refused(call("POST", "/api/v1/bi/boards/convert", cat(), Map.of("yaml", board)), 403, "DRS-9002");                              // authors only
+        Map<String, Object> model = Map.of("board", "fmt-board", "pages", List.of(Map.of("id", "p1", "tiles", List.of(Map.of("id", "n", "report", "Desk P&L", "visual", "n",
+                "at", Map.of("x", 0, "y", 0, "w", 3, "h", 2)))));
+        JsonNode written = ok(call("POST", "/api/v1/bi/boards/format", cat(), Map.of("board", model)));
+        assertThat(written.path("yaml").asText()).contains("board: fmt-board").contains("p1").contains("Desk P&L");
+        // what is written is read back as the same board
+        assertThat(ok(call("POST", "/api/v1/bi/boards/validate", ann(), Map.of("yaml", written.path("yaml").asText()))).path("valid").asBoolean()).isTrue();
+        assertThat(ok(call("POST", "/api/v1/bi/boards/format", cat(), Map.of("board", model)))).isEqualTo(written);
+        call("POST", "/api/v1/bi/boards/format", ann(), Map.of("board", "not an object")).andExpect(status().is4xxClientError()).andExpect(jsonPath("$.code").value("DRS-9051"));
+        refused(call("POST", "/api/v1/bi/boards/format", nobi(), Map.of("board", model)), 403, "DRS-9002");
+    }
+
+    @Test @Order(18)
+    void aThemeIsCheckedWithoutBeingStoredAndABadOneIsReportedAtItsPath() throws Exception {
+        String good = "theme: mine\ntitle: Mine\npalette: [\"#112233\", \"#445566\"]\n";
+        JsonNode v = ok(call("POST", "/api/v1/bi/themes/validate", ann(), Map.of("yaml", good)));
+        assertThat(v.has("valid")).isTrue();
+        assertThat(ok(call("POST", "/api/v1/bi/themes/validate", ann(), Map.of("yaml", good)))).isEqualTo(v);                           // repeated: the same
+        JsonNode bad = ok(call("POST", "/api/v1/bi/themes/validate", ann(), Map.of("yaml", "theme: mine\npalette: [\"not-a-colour\"]\n")));
+        assertThat(bad.path("valid").asBoolean()).as(bad.toString()).isFalse();
+        assertThat(bad.toString()).contains("DRS-9036");
+        assertThat(ok(call("GET", "/api/v1/bi/themes", ann(), null)).toString()).doesNotContain("\"mine\"");                            // nothing was stored
+        refused(call("POST", "/api/v1/bi/themes/validate", nobi(), Map.of("yaml", good)), 403, "DRS-9002");
+    }
+
     @Test @Order(99)
     void anInvalidDatasetCannotBePublishedAndSaysWhy() throws Exception {
         JsonNode i = ok(call("POST", "/api/v1/bi/workspaces/" + workspace + "/items", ann(), Map.of("kind", "table", "title", "Broken", "body", "rachana: 3\ntable: desk.x\nversion: 1.0.0\nfrom: { kind: trade }\ncolumns:\n  a: { path: \"$.a\", type: strng }\n")));
