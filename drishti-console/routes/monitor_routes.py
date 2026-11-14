@@ -46,6 +46,8 @@ def grid_rows(rows: list[dict]) -> tuple[list[dict], list[dict]]:
     figure label (the labels the entities share share a column), each cell the server's text. ``_cells`` names the field of each strip index,
     so the stream's patches (cell index, new text) reach the right cell."""
     fields: dict[str, str] = {}                       # a figure's label -> its field
+    tones: set[str] = set()                           # the fields some cell gave a tone (the grid colours them: toneField)
+    links: set[str] = set()                           # the fields some cell links to a record (the grid draws a link: hrefField)
     table = []
     for r in rows:
         ref = r.get("ref") or {}
@@ -61,11 +63,18 @@ def grid_rows(rows: list[dict]) -> tuple[list[dict], list[dict]]:
             field = fields.setdefault(label, f"F{len(fields) + 1}")
             row[field] = cell_text(c)
             row["_cells"][str(i)] = field
+            if c.get("tone"):
+                row[field + "_TONE"] = str(c["tone"])
+                tones.add(field)
+            if c.get("link"):
+                row[field + "_LINK"] = f"/v/{quote(str(c['link'].get('kind')), safe='')}/{quote(str(c['link'].get('id')), safe='')}"
+                links.add(field)
         table.append(row)
     columns = [{"field": "ENTITY", "label": "Entity", "type": "id"}, {"field": "KIND", "label": "Kind", "type": "text"}]
     if any("PILL" in r for r in table):
         columns.append({"field": "PILL", "label": "State", "type": "text"})
-    columns += [{"field": f, "label": label, "type": "text"} for label, f in fields.items()]
+    columns += [{"field": f, "label": label, "type": "text", **({"toneField": f + "_TONE"} if f in tones else {}),
+                 **({"hrefField": f + "_LINK"} if f in links else {})} for label, f in fields.items()]
     return columns, table
 
 

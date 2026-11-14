@@ -563,7 +563,7 @@ async def blotter(backend, me, scope: Scope, cfg: dict) -> dict:
     async def make():
         try:
             answer = await live_results.run(backend, q, me)      # the trades are the live engine's result set: the landing's grid follows it
-            return {**events(answer, business), "how": "trades", "live": answer.get("live"), "spec": live_results.grid_spec(answer)}
+            return {**events(answer, business), "how": "trades", "live": answer.get("live"), "spec": event_spec(live_results.grid_spec(answer), business)}
         except BackendError as e:              # the trades' events read every trade document: too slow on a large lake (kept two minutes)
             changed = tv.get("__changes")
             if changed is None:
@@ -579,7 +579,21 @@ async def blotter(backend, me, scope: Scope, cfg: dict) -> dict:
     for e in out["rows"]:
         r = known.get(e["trade"])
         e["notional"] = _num(r.get("NOTIONAL")) if r else None
+    if out.get("spec"):                                         # the grid's Notional column: the valuations' figure by trade (the valuations are not the trades' set)
+        values = {e["trade"]: e["notional"] for e in out["rows"] if e["notional"] is not None}
+        out["spec"] = {**out["spec"], "columns": [dict(c, lookup={"key": "__id", "values": values}) if c["field"] == "NOTIONAL" else c
+                                                  for c in out["spec"]["columns"]]}
     return out
+
+
+def event_spec(spec: dict, business: date) -> dict:
+    """The blotter's grid declaration with what the old table showed: an Event pill (the rule of :func:`events`, as the grid's ``cases``: cancelled by
+    status, new by action or booked on the day, else amended) after the trade, and the valuations' Notional last (its values are put in by :func:`blotter`)."""
+    cols = list(spec["columns"])
+    event = {"field": "EVENT", "label": "Event", "type": "status", "width": 96, "otherwise": "amended",
+             "cases": [{"when": {"TRADE_STATUS": "CANCELLED"}, "text": "cancelled"}, {"when": {"TRADE_ACTION": "NEW"}, "text": "new"},
+                       {"when": {"TRADE_DATE": business.isoformat() + "*"}, "text": "new"}]}
+    return {**spec, "columns": cols[:1] + [event] + cols[1:] + [{"field": "NOTIONAL", "label": "Notional", "type": "number", "format": "amount0"}]}
 
 
 def changes(rows: dict, old: dict, day: date) -> dict:
