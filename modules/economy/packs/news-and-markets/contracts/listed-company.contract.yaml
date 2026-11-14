@@ -36,7 +36,7 @@ cadence:
 binding-hint:
   lake-table: news.listed-company
   test-data:
-  - config/packs/economy/news-and-markets/samples
+  - modules/economy/packs/news-and-markets/samples
 fields:
 - name: COMPANY_ID
   type: id

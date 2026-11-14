@@ -36,7 +36,7 @@ cadence:
 binding-hint:
   lake-table: civic.social-indicator
   test-data:
-  - config/packs/economy/world-economy/samples
+  - modules/economy/packs/world-economy/samples
 fields:
 - name: INDICATOR_ID
   type: id

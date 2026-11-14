@@ -164,7 +164,7 @@ Fields no record above has, found by reading all 20 rows, with how many rows fil
 
 ### See also
 
-- Data contract: [QUOTE in the news-and-markets pack's contracts](../packs/news-and-markets.md#quote-quote-and-price-history-quote) (`config/packs/economy/news-and-markets/contracts/quote.contract.yaml`, the source of every meaning on this page).
+- Data contract: [QUOTE in the news-and-markets pack's contracts](../packs/news-and-markets.md#quote-quote-and-price-history-quote) (`modules/economy/packs/news-and-markets/contracts/quote.contract.yaml`, the source of every meaning on this page).
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
@@ -317,7 +317,7 @@ Fields no record above has, found by reading all 71 rows, with how many rows fil
 
 ### See also
 
-- Data contract: [NEWS in the news-and-markets pack's contracts](../packs/news-and-markets.md#news-headlines-news) (`config/packs/economy/news-and-markets/contracts/news.contract.yaml`, the source of every meaning on this page).
+- Data contract: [NEWS in the news-and-markets pack's contracts](../packs/news-and-markets.md#news-headlines-news) (`modules/economy/packs/news-and-markets/contracts/news.contract.yaml`, the source of every meaning on this page).
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
@@ -325,13 +325,13 @@ Fields no record above has, found by reading all 71 rows, with how many rows fil
 
 ## News topic: news-topic (TOPIC)
 
-A topic and the news about it: headlines (newest first) with their publishers and links, a count by source, and how the headlines were chosen. One row per news topic, keyed by TOPIC_ID. Read by the **news-and-markets** pack's connector `news-store` (lake table `news.news-topic`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/news-and-markets/samples/news-topic.jsonl`, 15 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+A topic and the news about it: headlines (newest first) with their publishers and links, a count by source, and how the headlines were chosen. One row per news topic, keyed by TOPIC_ID. Read by the **news-and-markets** pack's connector `news-store` (lake table `news.news-topic`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`modules/economy/packs/news-and-markets/samples/news-topic.jsonl`, 15 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 
 |  |  |
 |---|---|
-| Path | `config/packs/economy/news-and-markets/samples/news-topic.jsonl` |
+| Path | `modules/economy/packs/news-and-markets/samples/news-topic.jsonl` |
 | Format | JSON Lines: UTF-8, one JSON object a line |
 | Key field | `TOPIC_ID` |
 | Date field | none in the record: the pack's samples are served on every business date (partition `business_date`) |
@@ -401,7 +401,7 @@ None: all 15 rows were read, and every field any of them has is in the record ab
 
 ### See also
 
-- Data contract: [TOPIC in the news-and-markets pack's contracts](../packs/news-and-markets.md#topic-news-topic-news-topic) (`config/packs/economy/news-and-markets/contracts/news-topic.contract.yaml`, the source of every meaning on this page).
+- Data contract: [TOPIC in the news-and-markets pack's contracts](../packs/news-and-markets.md#topic-news-topic-news-topic) (`modules/economy/packs/news-and-markets/contracts/news-topic.contract.yaml`, the source of every meaning on this page).
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
@@ -409,13 +409,13 @@ None: all 15 rows were read, and every field any of them has is in the record ab
 
 ## Listed company: listed-company (CO)
 
-A listed company: its live quote and price history (yfinance connector) and its news headlines (news connector), both computed on demand. One row per listed company, keyed by COMPANY_ID. Read by the **news-and-markets** pack's connector `news-store` (lake table `news.listed-company`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/news-and-markets/samples/listed-company.jsonl`, 20 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+A listed company: its live quote and price history (yfinance connector) and its news headlines (news connector), both computed on demand. One row per listed company, keyed by COMPANY_ID. Read by the **news-and-markets** pack's connector `news-store` (lake table `news.listed-company`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`modules/economy/packs/news-and-markets/samples/listed-company.jsonl`, 20 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 
 |  |  |
 |---|---|
-| Path | `config/packs/economy/news-and-markets/samples/listed-company.jsonl` |
+| Path | `modules/economy/packs/news-and-markets/samples/listed-company.jsonl` |
 | Format | JSON Lines: UTF-8, one JSON object a line |
 | Key field | `COMPANY_ID` |
 | Date field | none in the record: the pack's samples are served on every business date (partition `business_date`) |
@@ -492,6 +492,6 @@ None: all 20 rows were read, and every field any of them has is in the record ab
 
 ### See also
 
-- Data contract: [CO in the news-and-markets pack's contracts](../packs/news-and-markets.md#co-listed-company-listed-company) (`config/packs/economy/news-and-markets/contracts/listed-company.contract.yaml`, the source of every meaning on this page).
+- Data contract: [CO in the news-and-markets pack's contracts](../packs/news-and-markets.md#co-listed-company-listed-company) (`modules/economy/packs/news-and-markets/contracts/listed-company.contract.yaml`, the source of every meaning on this page).
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).

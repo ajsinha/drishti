@@ -118,7 +118,7 @@ None: all 24 rows were read, and every field any of them has is in the record ab
 
 ### See also
 
-- Data contract: [AGR in the counterparty-risk pack's contracts](../packs/counterparty-risk.md#agr-master-agreement-agreement) (`config/packs/banking/counterparty-risk/contracts/agreement.contract.yaml`, the source of every meaning on this page).
+- Data contract: [AGR in the counterparty-risk pack's contracts](../packs/counterparty-risk.md#agr-master-agreement-agreement) (`modules/banking/dmod/packs/counterparty-risk/contracts/agreement.contract.yaml`, the source of every meaning on this page).
 - [16. Reference and master data read](../../guides/EXPOSURE_GUIDE.md#16-reference-and-master-data-read)
 - [Tutorial 3 · Exposure from the bank to a trade](../../tutorials/03-exposure-from-the-bank-to-a-trade.md)
 - [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
@@ -218,7 +218,7 @@ None: all 4,560 rows were read, and every field any of them has is in the record
 
 ### See also
 
-- Data contract: [COLL in the counterparty-risk pack's contracts](../packs/counterparty-risk.md#coll-collateral-balance-collateral-balance) (`config/packs/banking/counterparty-risk/contracts/collateral-balance.contract.yaml`, the source of every meaning on this page).
+- Data contract: [COLL in the counterparty-risk pack's contracts](../packs/counterparty-risk.md#coll-collateral-balance-collateral-balance) (`modules/banking/dmod/packs/counterparty-risk/contracts/collateral-balance.contract.yaml`, the source of every meaning on this page).
 - [16. Reference and master data read](../../guides/EXPOSURE_GUIDE.md#16-reference-and-master-data-read)
 - [Tutorial 3 · Exposure from the bank to a trade](../../tutorials/03-exposure-from-the-bank-to-a-trade.md)
 - [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
@@ -315,7 +315,7 @@ None: all 1,440 rows were read, and every field any of them has is in the record
 
 ### See also
 
-- Data contract: [LIM in the counterparty-risk pack's contracts](../packs/counterparty-risk.md#lim-credit-limit-credit-limit) (`config/packs/banking/counterparty-risk/contracts/credit-limit.contract.yaml`, the source of every meaning on this page).
+- Data contract: [LIM in the counterparty-risk pack's contracts](../packs/counterparty-risk.md#lim-credit-limit-credit-limit) (`modules/banking/dmod/packs/counterparty-risk/contracts/credit-limit.contract.yaml`, the source of every meaning on this page).
 - [16. Reference and master data read](../../guides/EXPOSURE_GUIDE.md#16-reference-and-master-data-read)
 - [Tutorial 3 · Exposure from the bank to a trade](../../tutorials/03-exposure-from-the-bank-to-a-trade.md)
 - [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
@@ -424,7 +424,7 @@ None: all 76 rows were read, and every field any of them has is in the record ab
 
 ### See also
 
-- Data contract: [CSA in the counterparty-risk pack's contracts](../packs/counterparty-risk.md#csa-credit-support-annex-csa) (`config/packs/banking/counterparty-risk/contracts/csa.contract.yaml`, the source of every meaning on this page).
+- Data contract: [CSA in the counterparty-risk pack's contracts](../packs/counterparty-risk.md#csa-credit-support-annex-csa) (`modules/banking/dmod/packs/counterparty-risk/contracts/csa.contract.yaml`, the source of every meaning on this page).
 - [16. Reference and master data read](../../guides/EXPOSURE_GUIDE.md#16-reference-and-master-data-read)
 - [Tutorial 3 · Exposure from the bank to a trade](../../tutorials/03-exposure-from-the-bank-to-a-trade.md)
 - [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
@@ -528,7 +528,7 @@ None: all 4,373 rows were read, and every field any of them has is in the record
 
 ### See also
 
-- Data contract: [CVA in the counterparty-risk pack's contracts](../packs/counterparty-risk.md#cva-cva--xva-cva) (`config/packs/banking/counterparty-risk/contracts/cva.contract.yaml`, the source of every meaning on this page).
+- Data contract: [CVA in the counterparty-risk pack's contracts](../packs/counterparty-risk.md#cva-cva--xva-cva) (`modules/banking/dmod/packs/counterparty-risk/contracts/cva.contract.yaml`, the source of every meaning on this page).
 - [16. Reference and master data read](../../guides/EXPOSURE_GUIDE.md#16-reference-and-master-data-read)
 - [Tutorial 3 · Exposure from the bank to a trade](../../tutorials/03-exposure-from-the-bank-to-a-trade.md)
 - [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
@@ -621,7 +621,7 @@ None: all 152 rows were read, and every field any of them has is in the record a
 
 ### See also
 
-- Data contract: [MC in the counterparty-risk pack's contracts](../packs/counterparty-risk.md#mc-margin-call-margin-call) (`config/packs/banking/counterparty-risk/contracts/margin-call.contract.yaml`, the source of every meaning on this page).
+- Data contract: [MC in the counterparty-risk pack's contracts](../packs/counterparty-risk.md#mc-margin-call-margin-call) (`modules/banking/dmod/packs/counterparty-risk/contracts/margin-call.contract.yaml`, the source of every meaning on this page).
 - [16. Reference and master data read](../../guides/EXPOSURE_GUIDE.md#16-reference-and-master-data-read)
 - [Tutorial 3 · Exposure from the bank to a trade](../../tutorials/03-exposure-from-the-bank-to-a-trade.md)
 - [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
@@ -773,7 +773,7 @@ None: all 4,560 rows were read, and every field any of them has is in the record
 
 ### See also
 
-- Data contract: [NSET in the counterparty-risk pack's contracts](../packs/counterparty-risk.md#nset-netting-set-netting-set) (`config/packs/banking/counterparty-risk/contracts/netting-set.contract.yaml`, the source of every meaning on this page).
+- Data contract: [NSET in the counterparty-risk pack's contracts](../packs/counterparty-risk.md#nset-netting-set-netting-set) (`modules/banking/dmod/packs/counterparty-risk/contracts/netting-set.contract.yaml`, the source of every meaning on this page).
 - [16. Reference and master data read](../../guides/EXPOSURE_GUIDE.md#16-reference-and-master-data-read)
 - [Tutorial 3 · Exposure from the bank to a trade](../../tutorials/03-exposure-from-the-bank-to-a-trade.md)
 - [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
@@ -875,7 +875,7 @@ None: all 76 rows were read, and every field any of them has is in the record ab
 
 ### See also
 
-- Data contract: [SACCR in the counterparty-risk pack's contracts](../packs/counterparty-risk.md#saccr-sa-ccr-exposure-sa-ccr) (`config/packs/banking/counterparty-risk/contracts/sa-ccr.contract.yaml`, the source of every meaning on this page).
+- Data contract: [SACCR in the counterparty-risk pack's contracts](../packs/counterparty-risk.md#saccr-sa-ccr-exposure-sa-ccr) (`modules/banking/dmod/packs/counterparty-risk/contracts/sa-ccr.contract.yaml`, the source of every meaning on this page).
 - [16. Reference and master data read](../../guides/EXPOSURE_GUIDE.md#16-reference-and-master-data-read)
 - [Tutorial 3 · Exposure from the bank to a trade](../../tutorials/03-exposure-from-the-bank-to-a-trade.md)
 - [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
@@ -960,7 +960,7 @@ None: all 24 rows were read, and every field any of them has is in the record ab
 
 ### See also
 
-- Data contract: [SIMM in the counterparty-risk pack's contracts](../packs/counterparty-risk.md#simm-isda-simm-initial-margin-simm) (`config/packs/banking/counterparty-risk/contracts/simm.contract.yaml`, the source of every meaning on this page).
+- Data contract: [SIMM in the counterparty-risk pack's contracts](../packs/counterparty-risk.md#simm-isda-simm-initial-margin-simm) (`modules/banking/dmod/packs/counterparty-risk/contracts/simm.contract.yaml`, the source of every meaning on this page).
 - [16. Reference and master data read](../../guides/EXPOSURE_GUIDE.md#16-reference-and-master-data-read)
 - [Tutorial 3 · Exposure from the bank to a trade](../../tutorials/03-exposure-from-the-bank-to-a-trade.md)
 - [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
@@ -1087,7 +1087,7 @@ None: all 1 rows were read, and every field any of them has is in the record abo
 
 ### See also
 
-- Data contract: [XRUN in the counterparty-risk pack's contracts](../packs/counterparty-risk.md#xrun-exposure-simulation-run-simulation-run) (`config/packs/banking/counterparty-risk/contracts/simulation-run.contract.yaml`, the source of every meaning on this page).
+- Data contract: [XRUN in the counterparty-risk pack's contracts](../packs/counterparty-risk.md#xrun-exposure-simulation-run-simulation-run) (`modules/banking/dmod/packs/counterparty-risk/contracts/simulation-run.contract.yaml`, the source of every meaning on this page).
 - [15.2 `simulation-run`: the run's identity and grid (reference row)](../../guides/EXPOSURE_GUIDE.md#152-simulation-run-the-runs-identity-and-grid-reference-row)
 - [Tutorial 3 · Exposure from the bank to a trade](../../tutorials/03-exposure-from-the-bank-to-a-trade.md)
 - [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
@@ -1195,7 +1195,7 @@ None: all 7,540 rows were read, and every field any of them has is in the record
 
 ### See also
 
-- Data contract: [XPATH in the counterparty-risk pack's contracts](../packs/counterparty-risk.md#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path) (`config/packs/banking/counterparty-risk/contracts/exposure-path.contract.yaml`, the source of every meaning on this page).
+- Data contract: [XPATH in the counterparty-risk pack's contracts](../packs/counterparty-risk.md#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path) (`modules/banking/dmod/packs/counterparty-risk/contracts/exposure-path.contract.yaml`, the source of every meaning on this page).
 - [15.3 `exposure-path`: every trade's MtM on every path (the large input)](../../guides/EXPOSURE_GUIDE.md#153-exposure-path-every-trades-mtm-on-every-path-the-large-input)
 - [21. Validation, errors and data quality](../../guides/EXPOSURE_GUIDE.md#21-validation-errors-and-data-quality)
 - [Tutorial 3 · Exposure from the bank to a trade](../../tutorials/03-exposure-from-the-bank-to-a-trade.md)

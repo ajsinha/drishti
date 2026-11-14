@@ -82,13 +82,13 @@ final class TestDataBook {
     /** The pack's hierarchies (MGMT, LEGAL, LL) with the server's root name. */
     @SuppressWarnings("unchecked")
     static List<HierarchySpec> hierarchies(Path repo) throws IOException {
-        Map<String, Object> pack = new ObjectMapper(new YAMLFactory()).readValue(repo.resolve("config/packs/banking/market-risk/pack.yaml").toFile(), Map.class);
+        Map<String, Object> pack = new ObjectMapper(new YAMLFactory()).readValue(repo.resolve("modules/banking/dmod/packs/market-risk/pack.yaml").toFile(), Map.class);
         return HierarchySpec.parse((Map<?, ?>) pack.get("hierarchies")).stream().map(s -> s.withRootName("Drishti Bank")).toList();
     }
 
     @SuppressWarnings("unchecked")
     static PositionRules rules(Path repo) throws IOException {
-        Map<String, Object> pack = new ObjectMapper(new YAMLFactory()).readValue(repo.resolve("config/packs/banking/market-risk/pack.yaml").toFile(), Map.class);
+        Map<String, Object> pack = new ObjectMapper(new YAMLFactory()).readValue(repo.resolve("modules/banking/dmod/packs/market-risk/pack.yaml").toFile(), Map.class);
         return PositionRules.of((Map<?, ?>) pack.get("positions"));
     }
 

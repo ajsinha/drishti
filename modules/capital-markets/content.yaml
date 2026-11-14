@@ -15,14 +15,14 @@
 # What the packer brings in from the repository (paths from this folder), so each file keeps one home: the packs without
 # their connector templates (a module carries no connector), the lens and the tutorial. This list itself is not packed.
 copy:
-- from: ../../config/packs/capitalmarkets/us-equities
+- from: ../../modules/capital-markets/packs/us-equities
   to: packs/us-equities
   leave-out:
   - tests
   - tools
   sections-out:
   - connectors
-- from: ../../config/packs/capitalmarkets/funds
+- from: ../../modules/capital-markets/packs/funds
   to: packs/funds
   leave-out:
   - tests

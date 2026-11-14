@@ -88,7 +88,7 @@ helpdesk/
     └── client.jsonl
 ```
 
-The largest shipped pack, `config/packs/banking/trading/`, uses the same parts:
+The largest shipped pack, `modules/banking/dmod/packs/trading/`, uses the same parts:
 
 ```text
 trading/
@@ -1034,13 +1034,13 @@ from the day before marked. `history:` only shapes it, per kind:
 
 ```yaml
 history:
-  trade:                                    # config/packs/banking/trading/pack.yaml
+  trade:                                    # modules/banking/dmod/packs/trading/pack.yaml
     exclude: [_meta]                        # never shown
     ignore-changes: [SOURCE_UPDATE_TIME, INPUT_DATE]   # shown, but a change here is not "a change"
     parts: [LEGS, EVENTS]                   # top-level lists shown as counts (default: every list or object)
     default-days: 30                        # the range when none is named (at most max-days)
   counterparty-trades: {enabled: false}     # a derived kind: no history (DRS-1012)
-  equity:                                   # config/packs/banking/market-data/pack.yaml
+  equity:                                   # modules/market-data/packs/market-data/pack.yaml
     chart: [{path: PRICE, format: price2}]  # the market shape: a chart and the headline numbers (at most 4 fields)
     columns: [PRICE, {path: CHANGE_1D, format: pct2}, {path: MARKET_CAP, format: compact}, BETA, NAME, EXCHANGE, CURRENCY]
     series: {path: HISTORY, date: DATE, value: CLOSE}   # used when no source keeps daily documents
@@ -1629,7 +1629,7 @@ layout is what it is. What only **you** can say is what a kind is and what its f
 
 ![The drawer on an economy, with the world-economy pack's text](img/about/04-economy.jpg)
 
-From `config/packs/banking/market-risk/config/about.yaml` (generated; shortened):
+From `modules/banking/dmod/packs/market-risk/config/about.yaml` (generated; shortened):
 
 ```yaml
 about: 1                           # the file's version, required
@@ -1689,7 +1689,7 @@ entry by its key and cannot delete one; there is no inheritance between kinds. P
 **Translations.** `config/about.<lang>.yaml` beside `about.yaml` (`fr`, `fr-CA`) has the same shape and strict parse and is laid over the English file
 **key by key**: whatever it does not translate stays English. For a regional tag the plain language fills in before English. The language of an
 answer is `?locale=` on the explain request, else the user's *Language of help text*, else the browser's `Accept-Language`. The shipped example is
-`config/packs/banking/market-risk/config/about.fr.yaml`.
+`modules/banking/dmod/packs/market-risk/config/about.fr.yaml`.
 
 **Generated packs.** A generated pack's `config/about.yaml` is copied from a hand-kept source in the generator folder
 (`tools/packgen/banking/about/<pack>.yaml`, `tools/packgen/<generator>/about.yaml`): edit that source and regenerate. A pack built on public data
@@ -1742,7 +1742,7 @@ Links to other help documents with a relative path (`[the build guide](BUILD_GUI
 A pack can give the console's Home page **Did you know** facts ([USER_GUIDE.md](USER_GUIDE.md#home-the-fact-of-the-day)): surprising things its data
 says on the business date. They live in `config/facts.yaml` (no `pack.yaml` key: the console reads the file when it is there) and carry no numbers:
 each fact fetches what it needs from the server's APIs as the user, picks the row that makes the point, and says when the point holds. Shipped
-examples: `config/packs/banking/market-risk/config/facts.yaml`, `counterparty-risk/config/facts.yaml`, `funds/config/facts.yaml`.
+examples: `modules/banking/dmod/packs/market-risk/config/facts.yaml`, `counterparty-risk/config/facts.yaml`, `funds/config/facts.yaml`.
 
 ```yaml
 facts: 1
@@ -1845,7 +1845,7 @@ python:
 ```
 
 Longer snippets read better as files: `python/<name>.py`, in name order after the inline ones, each starting with three comment lines (after the
-copyright header, which is not shown). From `config/packs/banking/market-risk/python/stress_heatmap.py`:
+copyright header, which is not shown). From `modules/banking/dmod/packs/market-risk/python/stress_heatmap.py`:
 
 ```python
 # title: Stress results: scenarios by desk, limits and the worst case
@@ -3285,7 +3285,7 @@ and the screen a `phone: { order, default, summary }` ([section 32](#32-designin
 [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#phone-what-goes-to-a-phone)).
 
 Put the blocks of 14.2 to 14.6 under one `panels:` and you have a complete trade view. The [reference's annotated example](RACHANA_REFERENCE.md#a-complete-example-annotated)
-is the same layout with every line commented, and `config/packs/banking/trading/sutras/murex/irs-fixfloat.v1.sutra.yaml` is the one the server uses,
+is the same layout with every line commented, and `modules/banking/dmod/packs/trading/sutras/murex/irs-fixfloat.v1.sutra.yaml` is the one the server uses,
 built from shared blocks.
 
 ## 15. Matching several Sutras
@@ -3387,7 +3387,7 @@ directory is read recursively and Drishti infers nothing from a folder name ([Fo
 trading pack keeps:
 
 ```text
-config/packs/banking/trading/sutras/
+modules/banking/dmod/packs/trading/sutras/
   common/      deal-ticket, legs, flow-schedule, events, payments, deal-footer  (*.v1.block.yaml, shared panels)
   endur/       one Sutra per Endur product type (5): endur-comswap matches "$.SOURCE_SYSTEM == 'ENDUR' && $.PRODUCT_TYPE == 'ComSwap'"
   calypso/     one Sutra per Calypso product type (51): govt-bond, repo, fx-forward, cds-single …
@@ -3456,7 +3456,7 @@ kit** (`config/ui-kit/fragments`, `drishti.ui-kit.dir`), which the server and `s
 use them like a shared block:
 
 ```yaml
-# config/packs/banking/market-data/sutras/market-data/ir-curve.v1.sutra.yaml
+# modules/market-data/packs/market-data/sutras/market-data/ir-curve.v1.sutra.yaml
 panels:
   - { use: curve-overview@1, with: { curve-code: CRV, curve-key: F2, table-key: F3 } }    # the zero-rate line, then the pillars
   - { use: series-line@1, with: { id: forwards, title: "1Y forward rates (%)", area: right, rows: $.FORWARDS, x: TENOR, y: RATE, fmt: price2 } }
@@ -3560,7 +3560,7 @@ the plain name, even for a pack's own); `since`.
 - **Generated Sutras use fragments.** The pack generators turn a panel into a kit fragment use only when the fragment draws it exactly (a plain line →
   `series-line@1`, plain bars → `ranked-bars@1`, a key/value list over an object → `field-list@1`, a curve's pillars → `curve-table@1`, provenance and
   links → `data-provenance@1` / `linked-entities@1`, the source and licence last → `source-footer@1`); anything else stays written in place. Lint a pack
-  (`sutra lint config/packs/banking/trading`) or the whole root (`sutra lint config/packs`): each pack folder loads its fragments under its own
+  (`sutra lint modules/banking/dmod/packs/trading`) or the whole root (`sutra lint config/packs`): each pack folder loads its fragments under its own
   namespace either way, and a pack may use another pack's fragment by its qualified name when both are linted together.
 - **Changing a fragment.** Never change what a released version draws: write `name.v2.fragment.yaml` and move Sutras one at a time; to prove a move
   changes nothing, compare the view models before and after for a full and a masked reader.
@@ -3660,7 +3660,7 @@ Previewed on `MX-20000001`, you should see four tabs, `NS-MERIDIAN-RE-FRA` to `N
 
 Pack screens are written with fragments that talk to each other through events
 ([Sutra Next](RACHANA_REFERENCE.md#sutra-next-fragments-events-children-sources-layout-and-forms)). The trading pack's book desk
-(`config/packs/banking/trading/sutras/pages/book-desk.v1.sutra.yaml`; open `/v/portfolio-trades/BOOK-RATES-2?sutra=book-desk`) shows all of it, shortened:
+(`modules/banking/dmod/packs/trading/sutras/pages/book-desk.v1.sutra.yaml`; open `/v/portfolio-trades/BOOK-RATES-2?sutra=book-desk`) shows all of it, shortened:
 
 ```yaml
 panels:
@@ -3885,13 +3885,13 @@ missing field. A shipped pack also keeps `tests/help-coverage.txt`, a ratchet th
 (`--tail 2` keeps the last two lines of each step):
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py pack check config/packs/banking/market-risk --tail 2
+$ drishti-console/.venv/bin/python tools/drishti.py pack check modules/banking/dmod/packs/market-risk --tail 2
 == market-risk: sutra lint: exit 0
-ok      config/packs/banking/market-risk/sutras/market-risk/trade-valuation.v1.sutra.yaml
-ok      config/packs/banking/market-risk/sutras/market-risk/var.v1.sutra.yaml
+ok      modules/banking/dmod/packs/market-risk/sutras/market-risk/trade-valuation.v1.sutra.yaml
+ok      modules/banking/dmod/packs/market-risk/sutras/market-risk/var.v1.sutra.yaml
 == market-risk: sutra test: exit 0
      var: help coverage 5/5 (100%)
-ok   config/packs/banking/market-risk/sutras/market-risk/var.v1.sutra.yaml (2 samples)
+ok   modules/banking/dmod/packs/market-risk/sutras/market-risk/var.v1.sutra.yaml (2 samples)
 ```
 
 **In CI:**
@@ -4080,7 +4080,7 @@ Edits and switching write-back on are in [APPROVALS_GUIDE.md](APPROVALS_GUIDE.md
 
 ### 28.1 A form beside the table
 
-The book desk's trades (`config/packs/banking/trading/sutras/pages/book-desk.v1.sutra.yaml`) carry this form. Open
+The book desk's trades (`modules/banking/dmod/packs/trading/sutras/pages/book-desk.v1.sutra.yaml`) carry this form. Open
 `/v/portfolio-trades/BOOK-RATES-2?sutra=book-desk` and click a trade.
 
 ![The form beside the book desk's trades: the counterparty locked, a warning under the notional and the Draft · not saved badge](img/designer/form-beside.jpg)
@@ -4580,7 +4580,7 @@ generated file says so near the top (`# Generated by tools/packgen/banking/make_
 | `world-economy` | `tools/packgen/world/make.py` (economics and politics halves, real public data through `tools/realdata/`), on the common builder `tools/packgen/common/packbuild.py` |
 | the test data (`data/testdata/`) | `tools/testdata/make_testdata.py` (deterministic; `--check` says whether the files are current) |
 | the example packs in `examples/packs/` | `tools/packgen/<area>/make.py`, on the same builder with `retired=True` |
-| `news-and-markets` | hand-written; its samples come from `config/packs/economy/news-and-markets/tools/make_samples.py` |
+| `news-and-markets` | hand-written; its samples come from `modules/economy/packs/news-and-markets/tools/make_samples.py` |
 
 The banking and world-economy generators build documents with short internal names and turn them into UPPER_SNAKE at one boundary,
 `tools/packgen/common/upper.py`; a new field in a generator is written in UPPER_SNAKE without more work. The connectors that build their own documents
@@ -4588,8 +4588,8 @@ The banking and world-economy generators build documents with short internal nam
 
 **Never edit a generated file by hand.** A hand edit is lost the next time the generator runs, and before that it fails the build: every generator runs in
 check mode (`python3 tools/packgen/banking/make_packs.py --check` prints `5 pack manifests up to date (71 Calc snippets)`; `make_sutras.py --check`
-`186 Sutras up to date`). After a hand edit to `config/packs/banking/trading/pack.yaml` the first stops with `pack manifests out of date; run
-make_packs.py: ['config/packs/banking/trading/pack.yaml']`; the packbuild generators also refuse files they did not write
+`186 Sutras up to date`). After a hand edit to `modules/banking/dmod/packs/trading/pack.yaml` the first stops with `pack manifests out of date; run
+make_packs.py: ['modules/banking/dmod/packs/trading/pack.yaml']`; the packbuild generators also refuse files they did not write
 (`<pack> pack out of date; run tools/packgen/<area>/make.py. stale=[] extra=[…]`). A top-level section of a banking pack's manifest the taxonomy does not
 say (the `history:` sections, the trading pack's `ingest:`) is kept in `tools/packgen/banking/kept/<pack>.yaml` and appended as written.
 
@@ -4598,7 +4598,7 @@ say (the `history:` sections, the trading pack's `ingest:`) is kept in `tools/pa
 1. Find the generator named in the file's comment: `tools/packgen/banking/make_packs.py`.
 2. Change its input: add `"TRADER_ID"` after `"COUNTERPARTY"` in the trade columns of the `COLUMNS` table.
 3. Run the generator without `--check`: `python3 tools/packgen/banking/make_packs.py`.
-4. `git diff config/packs/banking/trading/pack.yaml` shows `- TRADER_ID` added under `columns: trade:`.
+4. `git diff modules/banking/dmod/packs/trading/pack.yaml` shows `- TRADER_ID` added under `columns: trade:`.
 5. Wait for the reload, type `TRD MX-200000`: the pick list has a *Trader ID* column (`•••` for a role without `raw`: the shipped setting masks it).
 6. Commit the generator **and** the files it wrote, together.
 
@@ -4883,17 +4883,17 @@ this table is the map. Seven packs are on by default; the others are turned on b
 | Pack | Code | Extends | Mnemonics | Try | README |
 |---|---|---|---|---|---|
 | `core` | `CORE` | — | `CPTY` `GRP` `ISS` `CCP` `LE` `BOOK` `DESK` `TRDR` `CAL` `CLR` | `CPTY CP-NORTHBRIDGE`, `LE LE-NY` | [core](../../config/packs/core/core/README.md) |
-| `market-data` | `MKT` | `core` | `CRV` `REPO` `FX` `FXF` `FXV` `IRV` `CPV` `EQ` `EQX` `DIV` `EQV` `CDS` `INF` `INFC` `CMD` `CMDC` `CMDV` `FIX` `BND` `CORR` | `CRV CRV-USD-OIS`, `FXV FXV-EURUSD` | [market-data](../../config/packs/banking/market-data/README.md) |
-| `trading` | `TRDS` | `core`, `market-data` | `TRD` (three source systems) · `CTRD` `PTRD` `LTRD` `ITRD` (derived) | `TRD MX-20000001`, `TRD 1000001`, `CTRD CP-ALDERSHOT` | [trading](../../config/packs/banking/trading/README.md) |
-| `counterparty-risk` | `CCR` | `trading` | `AGR` `CSA` `NSET` `LIM` `EXP` `CVA` `SACCR` `COLL` `MC` `SIMM` | `AGR AGR-NORTHBRIDGE-ISDA`, `NSET NS-SUMMIT-NY` | [counterparty-risk](../../config/packs/banking/counterparty-risk/README.md) |
-| `market-risk` | `MRSK` | `market-data`, `trading` | `VAR` `SCN` `STR` `FRTB` `PNL` `TVAL` | `VAR VAR-RATES`, `TVAL TVAL-MX-20000001` | [market-risk](../../config/packs/banking/market-risk/README.md) |
-| `world-economy` | `WRLD` | — | `ECON` `MACRO` `FCST` `LABR` `FISC` `ECG` `REGE` `JUR` `PARTY` `OFFC` `ELEC` `REGN` `SOCI` (real public data; the IMF part is for internal demonstrations only) | `ECON ECON-IND` | [world-economy](../../config/packs/economy/world-economy/README.md) |
-| `news-and-markets` | `NWMK` | — | `TOPIC` `NEWS` `CO` `QUOTE` (a sample pack; its news and yfinance connectors are off as shipped) | `TOPIC TOPIC-FED` | [news-and-markets](../../config/packs/economy/news-and-markets/README.md) |
-| `us-equities` | `USEQS` | — | `USEQ` `IDX` `SIC` `EDGAR` `FILING` `FACT` `PXH` (off by default; prices live only and internal) | `USEQ AAPL`, `IDX SP500` | [us-equities](../../config/packs/capitalmarkets/us-equities/README.md) |
+| `market-data` | `MKT` | `core` | `CRV` `REPO` `FX` `FXF` `FXV` `IRV` `CPV` `EQ` `EQX` `DIV` `EQV` `CDS` `INF` `INFC` `CMD` `CMDC` `CMDV` `FIX` `BND` `CORR` | `CRV CRV-USD-OIS`, `FXV FXV-EURUSD` | [market-data](../../modules/market-data/packs/market-data/README.md) |
+| `trading` | `TRDS` | `core`, `market-data` | `TRD` (three source systems) · `CTRD` `PTRD` `LTRD` `ITRD` (derived) | `TRD MX-20000001`, `TRD 1000001`, `CTRD CP-ALDERSHOT` | [trading](../../modules/banking/dmod/packs/trading/README.md) |
+| `counterparty-risk` | `CCR` | `trading` | `AGR` `CSA` `NSET` `LIM` `EXP` `CVA` `SACCR` `COLL` `MC` `SIMM` | `AGR AGR-NORTHBRIDGE-ISDA`, `NSET NS-SUMMIT-NY` | [counterparty-risk](../../modules/banking/dmod/packs/counterparty-risk/README.md) |
+| `market-risk` | `MRSK` | `market-data`, `trading` | `VAR` `SCN` `STR` `FRTB` `PNL` `TVAL` | `VAR VAR-RATES`, `TVAL TVAL-MX-20000001` | [market-risk](../../modules/banking/dmod/packs/market-risk/README.md) |
+| `world-economy` | `WRLD` | — | `ECON` `MACRO` `FCST` `LABR` `FISC` `ECG` `REGE` `JUR` `PARTY` `OFFC` `ELEC` `REGN` `SOCI` (real public data; the IMF part is for internal demonstrations only) | `ECON ECON-IND` | [world-economy](../../modules/economy/packs/world-economy/README.md) |
+| `news-and-markets` | `NWMK` | — | `TOPIC` `NEWS` `CO` `QUOTE` (a sample pack; its news and yfinance connectors are off as shipped) | `TOPIC TOPIC-FED` | [news-and-markets](../../modules/economy/packs/news-and-markets/README.md) |
+| `us-equities` | `USEQS` | — | `USEQ` `IDX` `SIC` `EDGAR` `FILING` `FACT` `PXH` (off by default; prices live only and internal) | `USEQ AAPL`, `IDX SP500` | [us-equities](../../modules/capital-markets/packs/us-equities/README.md) |
 | `gleif` | `GLEIF` | — | `LEI` `LEIG` `LEIR` `LEIC` `LEIM` (off by default; with `us-equities` on, a company and its LEI link both ways) | `LEI 8I5DZWZKVSZI1NUHU748`, `LEIG ALL` | [gleif](../../config/packs/core/gleif/README.md) |
-| `funds` | `FUNDS` | — | `FUND` `HELD` `TRACK` (off by default, after `us-equities`; [FUNDS_GUIDE.md](FUNDS_GUIDE.md)) | `FUND QQQ`, `HELD AAPL` | [funds](../../config/packs/capitalmarkets/funds/README.md) |
+| `funds` | `FUNDS` | — | `FUND` `HELD` `TRACK` (off by default, after `us-equities`; [FUNDS_GUIDE.md](FUNDS_GUIDE.md)) | `FUND QQQ`, `HELD AAPL` | [funds](../../modules/capital-markets/packs/funds/README.md) |
 | `compute-demo` | `CMPD` | — | `PBOOK` `PSTRIP` `PSUM` `PSUMJ` (a sample pack for reactive connectors; [tutorial 19, Part C](../tutorials/19-build-a-pack-and-a-screen.md#part-c--computed-panels-a-reactive-connector)) | `PSUM …` | [compute-demo](../../config/packs/core/compute-demo/README.md) |
-| public sector (economy module) | `WDEV` `CBNK` `STCAN` `OECDP` `ONEWS` `GDLT` | — | world development, central banks, national statistics, OECD, official news, GDELT events ([PUBLIC_SECTOR_GUIDE.md](PUBLIC_SECTOR_GUIDE.md)) | | [world-development](../../config/packs/economy/world-development/README.md), [central-banks](../../config/packs/economy/central-banks/README.md), [national-statistics](../../config/packs/economy/national-statistics/README.md), [oecd](../../config/packs/economy/oecd/README.md), [official-news](../../config/packs/economy/official-news/README.md), [gdelt-events](../../config/packs/economy/gdelt-events/README.md) |
+| public sector (economy module) | `WDEV` `CBNK` `STCAN` `OECDP` `ONEWS` `GDLT` | — | world development, central banks, national statistics, OECD, official news, GDELT events ([PUBLIC_SECTOR_GUIDE.md](PUBLIC_SECTOR_GUIDE.md)) | | [world-development](../../modules/economy/packs/world-development/README.md), [central-banks](../../modules/economy/packs/central-banks/README.md), [national-statistics](../../modules/economy/packs/national-statistics/README.md), [oecd](../../modules/economy/packs/oecd/README.md), [official-news](../../modules/economy/packs/official-news/README.md), [gdelt-events](../../modules/economy/packs/gdelt-events/README.md) |
 
 **Links between packs.** A `core` counterparty carries its country of risk and two link fields that open other packs when they are on: `ECONOMY`
 (`ECON-<alpha-3>`, its economy in `world-economy`) and `NEWS_ID` (its headlines in `news-and-markets`). Agreements and CSAs belong to `counterparty-risk`,

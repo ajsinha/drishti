@@ -637,7 +637,7 @@ def test_a_position_grain_date_drills_to_the_position_and_says_the_rest_in_words
 
 def test_a_trade_of_a_position_sent_whole_is_said_in_words(stack, browser):
     import yaml
-    rows = yaml.safe_load((ROOT / "config/packs/banking/market-risk/seeds/system-baskets.yaml").read_text(encoding="utf-8"))["system-baskets"]
+    rows = yaml.safe_load((ROOT / "modules/banking/dmod/packs/market-risk/seeds/system-baskets.yaml").read_text(encoding="utf-8"))["system-baskets"]
     assert rows                                                       # the seed loads
     doc = json.loads(urllib.request.urlopen(str(stack) + "/api/var/scope/contributions?scope=DESK:DESK-RATES&by=position", timeout=60).read())
     assert doc["by"] == "position"

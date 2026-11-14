@@ -478,7 +478,7 @@ STR, SSPNL) and collateral operations (COLL, MC), left out by the lens file. **D
 | VaR limit use per book and desk; limit use by book over 5 official dates; breaches and near limit | **Built** (`var-limit`; the server's `limitStatus` with `drishti.risk.limit-near` 0.8) | [VAR_GUIDE section 15.15](../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits) |
 | P&L against VaR: hypothetical P&L against the VaR before it, 60 days, exceptions circled | **Partly built**: Drishti's derived hypothetical P&L only (TL3); left out without official history | [VAR_GUIDE section 7](../guides/VAR_GUIDE.md#7-history-and-backtesting) |
 | DV01 of my books | **Partly built**: Σ live trades' `DV01`; no bucketed sensitivities (TL7) | [IMPLEMENTATION_PLAN.md "Computed and derived attributes: open steps"](IMPLEMENTATION_PLAN.md#computed-and-derived-attributes-open-steps) |
-| Trades today (new, amended, cancelled), today's blotter, trade pages and history | **Built** ("new" reads 0 on the demo: TL1) | [trading pack README](../../config/packs/banking/trading/README.md), [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time) |
+| Trades today (new, amended, cancelled), today's blotter, trade pages and history | **Built** ("new" reads 0 on the demo: TL1) | [trading pack README](../../modules/banking/dmod/packs/trading/README.md), [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time) |
 | Counterparties: `CTRD`, `NSET`, `NSMTM`, `CPMTM`; pre-deal PFE against the credit limit | **Built** | [EXPOSURE_GUIDE section 7](../guides/EXPOSURE_GUIDE.md#7-pre-deal-what-if) |
 | The desk's largest counterparty | **Partly built**: by share of positive MtM, not exposure (TL2) | [EXPOSURE_GUIDE section 4](../guides/EXPOSURE_GUIDE.md#4-scopes) |
 | Alerts on numbers and monitors | **Built**, each person sets their own (one-click watch: TL10) | [USER_GUIDE.md, Alerts on numbers](../guides/USER_GUIDE.md#alerts-on-numbers) |
@@ -770,7 +770,7 @@ each item shown only when the lens keeps its command:
 inflation, commodities, bonds and correlations, the inputs that feed risk and valuations. No trades and no VaR"
 ([`config/lenses/banking/market.yaml`](../../config/lenses/banking/market.yaml)). Three landings (Market desk, Explorer, Quality) on a
 violet accent; set-up and running: [ADMIN_GUIDE.md section 16.3](../guides/ADMIN_GUIDE.md#163-drishti-market); every kind and field: the
-[market-data pack README](../../config/packs/banking/market-data/README.md). Proposals ML1 to ML11 are candidates in the plan's
+[market-data pack README](../../modules/market-data/packs/market-data/README.md). Proposals ML1 to ML11 are candidates in the plan's
 [Lens product candidates](IMPLEMENTATION_PLAN.md#lens-product-candidates-not-started).
 
 ### 3.1 Who uses it and their questions
@@ -799,7 +799,7 @@ licensing shapes what may be shown.
 
 | Need | Status | Where |
 |---|---|---|
-| Rates (`CRV`, `REPO`, `IRV`, `CPV`, `FIX`, `INF`, `INFC`); FX (`FX`, `FXF`, `FXV`); credit and bonds (`CDS`, `BND`); equities and commodities (`EQ`, `EQX`, `DIV`, `EQV`, `CMD`, `CMDC`, `CMDV`); correlations computed from history (`CORR`, `CORRC`, `EQB`) | **Built** | `market.yaml` `commands.allow`; [market-data README](../../config/packs/banking/market-data/README.md) |
+| Rates (`CRV`, `REPO`, `IRV`, `CPV`, `FIX`, `INF`, `INFC`); FX (`FX`, `FXF`, `FXV`); credit and bonds (`CDS`, `BND`); equities and commodities (`EQ`, `EQX`, `DIV`, `EQV`, `CMD`, `CMDC`, `CMDV`); correlations computed from history (`CORR`, `CORRC`, `EQB`) | **Built** | `market.yaml` `commands.allow`; [market-data README](../../modules/market-data/packs/market-data/README.md) |
 | Holiday calendars and issuers (`CAL`, `ISS`) | **Loaded, hidden** (the checks use calendars). **Decided:** show them in Market | [ADMIN_GUIDE.md section 16.3](../guides/ADMIN_GUIDE.md#163-drishti-market) |
 | An item's history; query by form | **Built** (the pack's `history:` block) | [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time) |
 | Biggest moves in σ of each item's own history; a curve against a week ago | **Built** (desk ranking only; per pillar and decomposed: ML5) | section 3.2.1 |
@@ -807,7 +807,7 @@ licensing shapes what may be shown.
 | Late loads by expectation | **Built** for loads (per id: ML8) | [DATA_GUIDE.md section 8](../guides/DATA_GUIDE.md#8-expectations-and-late-data) |
 | Monitors and alerts on numbers | **Built** (`market.yaml` `features`) | [USER_GUIDE.md](../guides/USER_GUIDE.md#alerts-on-numbers) |
 | Proxy status of each P&L vector (`ok`, `proxied`, `failed`) | **Partly built**: in the Risk packs, not in Market (ML9) | [VAR_GUIDE section 15.2](../guides/VAR_GUIDE.md#152-pnl-vector-one-pl-vector-per-trade) |
-| Who uses each item; VaR and valuations at stake | **Not built**: trades carry `LEGS[].INDEX` (a benchmark name) and `DISCOUNT_INDEX`, not market-data ids (ML1) | [trading pack README](../../config/packs/banking/trading/README.md) |
+| Who uses each item; VaR and valuations at stake | **Not built**: trades carry `LEGS[].INDEX` (a benchmark name) and `DISCOUNT_INDEX`, not market-data ids (ML1) | [trading pack README](../../modules/banking/dmod/packs/trading/README.md) |
 | Two sources and IPV; kept quality records; market-data BI | **Not built** (ML3, ML7, ML6); the lens keeps BI to `market-data-*` names so it never offers VaR or exposure | — |
 | The market-data line of a data-trust card | **Proposed** as RO13 ([section 5.3](#53-gaps-and-proposals)), reusing the Quality checks | — |
 
@@ -1211,14 +1211,14 @@ the plan's [Lens product candidates](IMPLEMENTATION_PLAN.md#lens-product-candida
 
 | Need | Status | Where |
 |---|---|---|
-| About 200 economies (output, growth, prices, jobs, debt, external balance); governments, parties, office holders, elections; social and governance indicators (`ECON`, `MACRO`, `FCST`, `LABR`, `FISC`, `SOCI`, `JUR`, `PARTY`, `OFFC`, `ELEC`) | **Built** (World Bank, IMF, CIA World Factbook, UNDP, WGI); elections' next date is free text (WL3) | [world-economy README](../../config/packs/economy/world-economy/README.md) |
+| About 200 economies (output, growth, prices, jobs, debt, external balance); governments, parties, office holders, elections; social and governance indicators (`ECON`, `MACRO`, `FCST`, `LABR`, `FISC`, `SOCI`, `JUR`, `PARTY`, `OFFC`, `ELEC`) | **Built** (World Bank, IMF, CIA World Factbook, UNDP, WGI); elections' next date is free text (WL3) | [world-economy README](../../modules/economy/packs/world-economy/README.md) |
 | IMF forecasts with their vintage (`FCST`, `VINTAGE`) | **Built**, internal only; revisions between vintages: WL6 | same |
 | Country groups (World Bank regions, income groups, the World), GDP-weighted (`ECG`, `macro-groupings`) | **Built**; G7 and G20 are member lists in the landing's script (WL2) | same |
 | Regional economies (`REGE`) | **Built**, illustrative ("not for reporting") | same |
-| Fifteen news topics and twenty companies with headlines; live quotes (offline: a captured snapshot) | **Built**, Google News and Yahoo, internal only, quotes off until enabled; index levels and FX not in the snapshot (WL1) | [news-and-markets README](../../config/packs/economy/news-and-markets/README.md) |
-| S&P 500, Nasdaq-100, Dow 30 and the US, Canadian and UK banks filing with the SEC: filings, ten years of XBRL financials, LEI, SIC, index membership (`USEQ`, `FACT`, `FILING`, `EDGAR`) | **Built**; index weights, levels and GICS not shipped; prices live only (`PXH`, off by default, internal only) | [us-equities README](../../config/packs/capitalmarkets/us-equities/README.md) |
+| Fifteen news topics and twenty companies with headlines; live quotes (offline: a captured snapshot) | **Built**, Google News and Yahoo, internal only, quotes off until enabled; index levels and FX not in the snapshot (WL1) | [news-and-markets README](../../modules/economy/packs/news-and-markets/README.md) |
+| S&P 500, Nasdaq-100, Dow 30 and the US, Canadian and UK banks filing with the SEC: filings, ten years of XBRL financials, LEI, SIC, index membership (`USEQ`, `FACT`, `FILING`, `EDGAR`) | **Built**; index weights, levels and GICS not shipped; prices live only (`PXH`, off by default, internal only) | [us-equities README](../../modules/capital-markets/packs/us-equities/README.md) |
 | LEI records, groups (ultimate parent and up to 50 consolidated entities), relationships, mappings, late renewals (`LEI`, `LEIG`, `LEIR`, `LEIC`, `LEIM`); company and LEI linked both ways | **Built**, CC0; changes over time: WL6 | [gleif README](../../config/packs/core/gleif/README.md) |
-| The 200 largest US funds and ETFs: holdings, derivatives and counterparties, flows, returns, N-CEN facts; who holds a company, what tracks an index (`FUND`, `HELD`, `TRACK`) | **Built**, public domain; newest N-PORT only (WL7); no NAV history | [funds README](../../config/packs/capitalmarkets/funds/README.md) |
+| The 200 largest US funds and ETFs: holdings, derivatives and counterparties, flows, returns, N-CEN facts; who holds a company, what tracks an index (`FUND`, `HELD`, `TRACK`) | **Built**, public domain; newest N-PORT only (WL7); no NAV history | [funds README](../../modules/capital-markets/packs/funds/README.md) |
 | BI: `world-economics-economies`, `region-economics-regions` and their reports | **Partly built** (companies, funds, entities: WL8) | `world.yaml` `bi` |
 | One standalone refresh script per pack (`status`, `refresh --dry-run`, `refresh`) | **Built**; a freshness card and schedule: WL11 | [EXTERNAL_DATA.md section 2](../guides/EXTERNAL_DATA.md#2-the-feeds) |
 | A lens beside the others on a full instance (`drishti.lenses: risk,world,market,trading`) | **Built** | [ADMIN_GUIDE.md section 14](../guides/ADMIN_GUIDE.md#14-offer-lenses-to-people) |
@@ -3127,7 +3127,7 @@ risk-neutral run, a stressed run and credit paths.
 
 #### 7.6.3 Contracts the CCR cube adds
 
-Proposed contract YAMLs in `config/packs/banking/counterparty-risk/contracts/` (mnemonics placeholders): `saccr-trade` (SACT),
+Proposed contract YAMLs in `modules/banking/dmod/packs/counterparty-risk/contracts/` (mnemonics placeholders): `saccr-trade` (SACT),
 `collateral-holding` (CHLD), `im-history` (IMH), `credit-path` (XCRP), `wwr-flag` (WWRF), `cva-proxy-map` (CPXY), `cva-sensitivity` (CVAS),
 `exposure-allocation` (XALC, computed), `saccr-result` (SACR, computed, replacing the stored `sa-ccr`), `cva-result` (CVAR, computed,
 replacing the stored `cva`); `simm-result` (SIMR) is the SIMM engine's planned official capture.

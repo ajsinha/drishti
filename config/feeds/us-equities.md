@@ -95,7 +95,7 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"TICKER": "AAPL", "NAME": "Apple Inc.", "SEC_NAME": "Apple Inc.", "CIK": "0000320193", "OTHER_TICKERS": "C-PN, C-PR", "EXCHANGE": "Nasdaq", "LISTING": "Nasdaq Global Select Market", "SIC": "3571", "SIC_DESCRIPTION": "Electronic Computers", "DIVISION": "D", "SECTOR": "Manufacturing", "STATE_OF_INCORPORATION": "CA", "FISCAL_YEAR_END": "09-26", "FILER_CATEGORY": "Large accelerated filer", "HEADQUARTERS": "Cupertino", "BUSINESS_ADDRESS": "CUPERTINO, CA", "FOUNDED": "1976-04-01", "WEBSITE": "https://apple.com/qa/", "PHONE": "(408) 996-1010", "LEI": "HWUPKR0MPOU8FGXBT394", "LEI_LEGAL_NAME": "Apple Inc.", "LEI_STATUS": "ISSUED", "LEI_SOURCE": "GLEIF, LEI from Wikidata", "INDEX_TEXT": "Dow Jones Industrial Average, Nasdaq-100, S&P 500", "CURRENCY": "USD", "FISCAL_YEAR": 2025, "REVENUE": 416161000000, "NET_INCOME": 112010000000, "ASSETS": 359241000000, "LIABILITIES": 285508000000, "EQUITY": 73733000000, "EPS_DILUTED": 7.46, "SHARES_OUTSTANDING": 14776353000, "LATEST_FILING": "2026-10-22", "SIC_SECTOR": "3571", "PRICE_HISTORY": "PX-AAPL", "ECONOMY": "ECON-USA", "MARKET_WATCH": "CO-AAPL"}
 ```
 
-The contract: `config/packs/capitalmarkets/us-equities/contracts/us-company.contract.yaml` ([us-equities](../../docs/contracts/packs/us-equities.md)).
+The contract: `modules/capital-markets/packs/us-equities/contracts/us-company.contract.yaml` ([us-equities](../../docs/contracts/packs/us-equities.md)).
 
 ### index-membership
 
@@ -117,7 +117,7 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"INDEX": "DJIA", "NAME": "Dow Jones Industrial Average", "MEMBERS": 34}
 ```
 
-The contract: `config/packs/capitalmarkets/us-equities/contracts/index-membership.contract.yaml` ([us-equities](../../docs/contracts/packs/us-equities.md)).
+The contract: `modules/capital-markets/packs/us-equities/contracts/index-membership.contract.yaml` ([us-equities](../../docs/contracts/packs/us-equities.md)).
 
 ### filing-feed
 
@@ -145,7 +145,7 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"FEED": "8-K", "NAME": "Current reports", "FORM": "8-K", "FILINGS": 300, "COMPANIES": 222, "LATEST": "2026-10-23", "EARLIEST": "2026-10-02", "BY_TITLE": "Filings by company"}
 ```
 
-The contract: `config/packs/capitalmarkets/us-equities/contracts/filing-feed.contract.yaml` ([us-equities](../../docs/contracts/packs/us-equities.md)).
+The contract: `modules/capital-markets/packs/us-equities/contracts/filing-feed.contract.yaml` ([us-equities](../../docs/contracts/packs/us-equities.md)).
 
 ### filing
 
@@ -175,7 +175,7 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"ACCESSION": "0001104659-26-117587", "COMPANY": "ABT", "COMPANY_NAME": "Abbott Laboratories", "FORM": "8-K", "FORM_NAME": "Current report", "FILED": "2026-10-21", "REPORT_DATE": "2026-10-21", "PRIMARY_DOCUMENT": "tm2627971d1_8k.htm", "DOCUMENT_DESCRIPTION": "FORM 8-K", "SIZE_KB": 278, "ITEMS_TEXT": "8.01, 9.01", "PATH": "1800/000110465926117587"}
 ```
 
-The contract: `config/packs/capitalmarkets/us-equities/contracts/filing.contract.yaml` ([us-equities](../../docs/contracts/packs/us-equities.md)).
+The contract: `modules/capital-markets/packs/us-equities/contracts/filing.contract.yaml` ([us-equities](../../docs/contracts/packs/us-equities.md)).
 
 ### financial-fact
 
@@ -204,4 +204,4 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"FACT_ID": "ABT-REVENUE", "COMPANY": "ABT", "COMPANY_NAME": "Abbott Laboratories", "CIK": "0000001800", "CONCEPT": "REVENUE", "LABEL": "Revenue", "UNIT": "USD", "XBRL_TAG": "RevenueFromContractWithCustomerExcludingAssessedTax", "LATEST": 44328000000, "LATEST_YEAR": 2025, "YEARS": 10}
 ```
 
-The contract: `config/packs/capitalmarkets/us-equities/contracts/financial-fact.contract.yaml` ([us-equities](../../docs/contracts/packs/us-equities.md)).
+The contract: `modules/capital-markets/packs/us-equities/contracts/financial-fact.contract.yaml` ([us-equities](../../docs/contracts/packs/us-equities.md)).

@@ -35,7 +35,7 @@ cadence:
 binding-hint:
   lake-table: development.development-series
   test-data:
-  - config/packs/economy/world-development/samples
+  - modules/economy/packs/world-development/samples
 fields:
 - name: SERIES_ID
   type: id

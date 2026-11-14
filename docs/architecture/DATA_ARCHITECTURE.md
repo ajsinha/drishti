@@ -806,7 +806,7 @@ never streams.
 
 #### Worked example: making trades live from Kafka
 
-The trading pack declares the connector in `config/packs/banking/trading/pack.yaml`:
+The trading pack declares the connector in `modules/banking/dmod/packs/trading/pack.yaml`:
 
 ```yaml
 connectors:
@@ -1192,7 +1192,7 @@ workbench gets a History tab later (open question 3). `docs/guides/BUILD_GUIDE.m
 
 #### 6.2 Embedded series
 
-The market samples (`config/packs/banking/market-data/samples/equity.jsonl`, `fx-spot.jsonl`) carry their own history inside today's document
+The market samples (`modules/market-data/packs/market-data/samples/equity.jsonl`, `fx-spot.jsonl`) carry their own history inside today's document
 (`HISTORY: [{DATE, CLOSE}]`, `[{DATE, MID}]`). When `series:` is declared and the kind's sources hold no daily documents in the range,
 the rows come from that list in the newest document (`"basis": "embedded"` in the answer): a chart and a one-column table, no versions.
 When daily documents exist they win, because they carry every field. *Implementation:* when the stored days start inside the window
@@ -1823,7 +1823,7 @@ than 10,000 trades, deletes its folder at the end and exits 1 on a missed target
 | a row cap and a timeout | also `parallel-days` and `max-concurrent` | the existing series fires every day's read at once with no bound |
 | market kinds from daily documents | also an embedded `series:` | the shipped market samples keep their history inside today's document (`HISTORY: [{DATE, CLOSE}]`) |
 | Cassandra: `entity_days` gives the days | it gives the days; the documents still need one point read per day | `business_date` is part of the data table's partition key |
-| default columns: top-level scalars | key columns first, empty columns hidden | a trade has about 45 top-level scalars (`config/packs/banking/trading/samples/trade.jsonl`) |
+| default columns: top-level scalars | key columns first, empty columns hidden | a trade has about 45 top-level scalars (`modules/banking/dmod/packs/trading/samples/trade.jsonl`) |
 | *Implementation (H1):* `HistoryRequest(ref, from, to, fields, knownAt, lastDays, budget)` | `HistoryRequest(ref, from, to, dates, fields, knownAt, lastDays, budget, parallelDays)` | a plugin has no calendar, so the business dates travel in the request (`dates`, empty means every calendar day); the default loop's parallelism is the server's `parallel-days`, so it travels too |
 | *Implementation (H5):* Delta: `days()`, a promoted-column row read, and `versions` from the log | `days()` only | the demo came first; with `days()` a history reads only the dates that hold the entity. The column-only read (no `doc` decode) and the per-day version count are still to build, so Delta's `versions` is `null` |
 | *Implementation (H3):* effective kinds: every business day a row, carried days marked | the change days only | a source's history leaves out a date answered by an earlier date's document, so the rows of an effective kind are its change dates; `carried` is always false. Filling the days between is a later step |
@@ -2344,7 +2344,7 @@ makes combining **computed** results first-class.
 #### 12.1 An example: the desk VaR screen
 
 ```yaml
-# config/packs/banking/market-risk/sutras/pages/desk-var.v1.sutra.yaml       (planned)
+# modules/banking/dmod/packs/market-risk/sutras/pages/desk-var.v1.sutra.yaml       (planned)
 match: { kind: desk }
 title: "VaR · ${$.DESK_ID}"
 consistency: snapshot                       # one pin for the whole screen (12.2)
@@ -3880,7 +3880,7 @@ counterparty asking for CAD or EUR) is designed in the open steps.
   `NET`) and `netting-set.COLLATERAL` are the positions' values after haircut; one CSA per agreement and legal entity
   (`CSA-<counterparty>-<legal entity>`, named by the netting set, the collateral balance and the margin call; an agreement lists its
   `CSAS`); CSA terms are numeric with a currency (`CSA_CURRENCY`, `MTA_US`, `MTA_THEM`, `MARGIN_FREQUENCY_DAYS`, `MPOR_DAYS`); maturity
-  buckets are named sets per purpose (`display`, `limit`) in `config/packs/banking/counterparty-risk/config/maturity-buckets.yaml`; every
+  buckets are named sets per purpose (`display`, `limit`) in `modules/banking/dmod/packs/counterparty-risk/config/maturity-buckets.yaml`; every
   VaR limit lives in `var-limit` (MGMT, LEGAL and limit-letter nodes, and each system basket as hierarchy `PORTFOLIO`; the system
   baskets themselves are kept in the basket store, section 5, not data), and the hierarchies themselves are built from the trades' promoted columns (no hierarchy feed); a counterparty group's `LIMIT` is its own approved limit; `netting-set.UTILISATION` is not delivered. The
   retirement guard (`tools/contracts.policy.yaml`, `removed:`) fails the build if a retired field returns.
@@ -4031,7 +4031,7 @@ default and environment variable, is in [CONFIGURATION.md](../admin/CONFIGURATIO
 **Switch it on.** In the market-risk pack (no block: off):
 
 ```yaml
-# config/packs/banking/market-risk/pack.yaml (or the pack's settings): off without it
+# modules/banking/dmod/packs/market-risk/pack.yaml (or the pack's settings): off without it
 sharding:
   enabled: true
   key: [LEGAL_ENTITY, DESK]          # ranges cut along this order; a desk is never split ([LEGAL_ENTITY] also allowed)

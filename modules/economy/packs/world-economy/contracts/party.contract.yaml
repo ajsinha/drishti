@@ -35,7 +35,7 @@ cadence:
 binding-hint:
   lake-table: civic.party
   test-data:
-  - config/packs/economy/world-economy/samples
+  - modules/economy/packs/world-economy/samples
 fields:
 - name: PARTY_ID
   type: id

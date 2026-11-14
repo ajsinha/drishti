@@ -167,7 +167,7 @@ generators:
          what: "the VaR engine's inputs into data/testdata/market-risk/<kind>/, as an upstream risk batch would deliver them, from the committed trades (VAR_GUIDE.md)" }
   ccr: { run: "python3 tools/packgen/ccr/make_ccr_data.py", check: "python3 -m pytest -q tools/packgen/ccr/test_ccr_data.py",
          what: "the exposure engine's inputs into data/testdata/counterparty-risk/<kind>/, as an upstream exposure simulator would deliver them, from the committed netting sets (EXPOSURE_GUIDE.md)" }
-  news-reference: { run: "python3 config/packs/economy/news-and-markets/tools/make_samples.py", label: "hand-written reference data",
+  news-reference: { run: "python3 modules/economy/packs/news-and-markets/tools/make_samples.py", label: "hand-written reference data",
                     what: "hand-written reference data (topics and listed companies) into the pack's samples/" }
   compute-demo: { run: "python3 config/packs/core/compute-demo/tools/make_samples.py",
                   what: "synthetic P&L strips (a seeded random walk) into the pack's samples/" }

@@ -26,13 +26,13 @@ Every data type of `central-banks` as a real record of the committed test data, 
 
 ## Central bank: central-bank (CBANK)
 
-One central bank: its policy rate, the last move, the rate's history and the market series around it. One row per central bank, keyed by BANK_ID. Read by the **central-banks** pack's connector `centralbank-store` (lake table `centralbank.central-bank`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/central-banks/samples/central-bank.jsonl`, 2 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+One central bank: its policy rate, the last move, the rate's history and the market series around it. One row per central bank, keyed by BANK_ID. Read by the **central-banks** pack's connector `centralbank-store` (lake table `centralbank.central-bank`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`modules/economy/packs/central-banks/samples/central-bank.jsonl`, 2 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 
 |  |  |
 |---|---|
-| Path | `config/packs/economy/central-banks/samples/central-bank.jsonl` |
+| Path | `modules/economy/packs/central-banks/samples/central-bank.jsonl` |
 | Format | JSON Lines: UTF-8, one JSON object a line |
 | Key field | `BANK_ID` |
 | Date field | none in the record: the pack's samples are served on every business date (partition `business_date`) |
@@ -153,7 +153,7 @@ None: all 2 rows were read, and every field any of them has is in the record abo
 
 ### See also
 
-- Data contract: [CBANK in the central-banks pack's contracts](../packs/central-banks.md#cbank-central-bank-central-bank) (`config/packs/economy/central-banks/contracts/central-bank.contract.yaml`, the source of every meaning on this page).
+- Data contract: [CBANK in the central-banks pack's contracts](../packs/central-banks.md#cbank-central-bank-central-bank) (`modules/economy/packs/central-banks/contracts/central-bank.contract.yaml`, the source of every meaning on this page).
 - [Public sector: government data and free news](../../guides/PUBLIC_SECTOR_GUIDE.md)
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
@@ -162,13 +162,13 @@ None: all 2 rows were read, and every field any of them has is in the record abo
 
 ## Central bank series: rate-series (CBSER)
 
-One central-bank or market series from FRED or the Bank of Canada: the history, the latest value, the change on the day and on the year. One row per central bank series, keyed by SERIES_ID. Read by the **central-banks** pack's connector `centralbank-store` (lake table `centralbank.rate-series`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/central-banks/samples/rate-series.jsonl`, 13 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+One central-bank or market series from FRED or the Bank of Canada: the history, the latest value, the change on the day and on the year. One row per central bank series, keyed by SERIES_ID. Read by the **central-banks** pack's connector `centralbank-store` (lake table `centralbank.rate-series`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`modules/economy/packs/central-banks/samples/rate-series.jsonl`, 13 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 
 |  |  |
 |---|---|
-| Path | `config/packs/economy/central-banks/samples/rate-series.jsonl` |
+| Path | `modules/economy/packs/central-banks/samples/rate-series.jsonl` |
 | Format | JSON Lines: UTF-8, one JSON object a line |
 | Key field | `SERIES_ID` |
 | Date field | none in the record: the pack's samples are served on every business date (partition `business_date`) |
@@ -275,7 +275,7 @@ None: all 13 rows were read, and every field any of them has is in the record ab
 
 ### See also
 
-- Data contract: [CBSER in the central-banks pack's contracts](../packs/central-banks.md#cbser-central-bank-series-rate-series) (`config/packs/economy/central-banks/contracts/rate-series.contract.yaml`, the source of every meaning on this page).
+- Data contract: [CBSER in the central-banks pack's contracts](../packs/central-banks.md#cbser-central-bank-series-rate-series) (`modules/economy/packs/central-banks/contracts/rate-series.contract.yaml`, the source of every meaning on this page).
 - [Public sector: government data and free news](../../guides/PUBLIC_SECTOR_GUIDE.md)
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).

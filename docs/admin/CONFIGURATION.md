@@ -4088,7 +4088,7 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
-| `drishti.frtb.parameters-dir` | string | `./config/packs/banking/market-risk/capital` | `DRISHTI_FRTB_PARAMETERS` | server (each node its own) | frtb-sa-sbm.yaml and frtb-sa-drc-rrao.yaml (else the market-risk pack's capital/) | restart |  | admin |
+| `drishti.frtb.parameters-dir` | string | `./modules/banking/dmod/packs/market-risk/capital` | `DRISHTI_FRTB_PARAMETERS` | server (each node its own) | frtb-sa-sbm.yaml and frtb-sa-drc-rrao.yaml (else the market-risk pack's capital/) | restart |  | admin |
 | `drishti.frtb.default-risk-kind` | string | `default-risk` |  | server (each node its own) | the DRC inputs; none served: "DRC not computed", never 0 | restart |  | admin |
 | `drishti.frtb.residual-risk-kind` | string | `residual-risk` |  | server (each node its own) | the RRAO inputs; none served: derived from the positions' product types and notionals | restart |  | admin |
 | `drishti.frtb.rrao-from-positions` | boolean | `true` |  | server (each node its own) | derive the RRAO from PRODUCT\_TYPE (the parameter file's mapping) and the VaR book's notionals | restart |  | admin |
@@ -6323,7 +6323,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_FORCE_PW_CHANGE_ON_RESET` | `drishti.identity.force-password-change-on-reset` | `false` | server | after an administrator resets a password, the user must change it at the next sign-in |
 | `DRISHTI_FRED_SERIES` | fred-feed series | `DGS10,DFF` | packs | The FRED series read |
 | `DRISHTI_FRTB_ENABLED` | `drishti.engines.frtb-sa.enabled` (engine) | `true` | engine | run FRTB-SA on this node: /api/v1/frtb, FRSA, PLAY FRTB; needs var and sensitivities (live) |
-| `DRISHTI_FRTB_PARAMETERS` | `drishti.frtb.parameters-dir` (engine) | `./config/packs/banking/market-risk/capital` | engine | frtb-sa-sbm.yaml and frtb-sa-drc-rrao.yaml (else the market-risk pack's capital/) |
+| `DRISHTI_FRTB_PARAMETERS` | `drishti.frtb.parameters-dir` (engine) | `./modules/banking/dmod/packs/market-risk/capital` | engine | frtb-sa-sbm.yaml and frtb-sa-drc-rrao.yaml (else the market-risk pack's capital/) |
 | `DRISHTI_GOVERNANCE_DIR` | `drishti.governance.dir` | `./data/governance` | server | where proposals are kept with store: file; with content (the default) the folder is imported once and left in place |
 | `DRISHTI_HEARTBEAT_SECONDS` | build\_demo\_lakes.py | `30` | tools | How often a long lake build prints that it is alive |
 | `DRISHTI_HOME_FACTS` | `ui.facts.enabled` | `true` | console | Home's Did you know tile, the fact of the day for a signed-in user; false: no tile |

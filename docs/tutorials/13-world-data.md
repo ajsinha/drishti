@@ -123,7 +123,7 @@ python3 tools/drishti.py view get counterparty/CP-ALDERSHOT
 python3 tools/drishti.py view get economy/ECON-GBR
 ```
 
-**In YAML.** The pack's commands, `config/packs/economy/world-economy/pack.yaml` (the start of the list):
+**In YAML.** The pack's commands, `modules/economy/packs/world-economy/pack.yaml` (the start of the list):
 
 ```yaml
 mnemonics:
@@ -157,7 +157,7 @@ A counterparty's `ECONOMY` is a link column of its data contract ([`config/packs
 The economy record takes the IMF series' latest *actual* year for debt, never a projection.
 
 Further: the [Economies primer](../knowledge/world.md#2-economies) and the pack's guide,
-[world-economy.md](../../config/packs/economy/world-economy/guides/world-economy.md).
+[world-economy.md](../../modules/economy/packs/world-economy/guides/world-economy.md).
 
 ## Step 2 · Its outlook, its peers and who governs it
 
@@ -197,7 +197,7 @@ its index memberships, its filings and ten years of annual financials. The commi
 
 **In the UI.** Type `USEQ AAPL` and press Enter. Click its LEI to open the GLEIF record, and its SIC code to open the industry.
 
-![The company page: Apple Inc., with its latest filing opened beside the filings](../../config/packs/capitalmarkets/us-equities/guides/images/us-equities-company.jpg)
+![The company page: Apple Inc., with its latest filing opened beside the filings](../../modules/capital-markets/packs/us-equities/guides/images/us-equities-company.jpg)
 
 **From the command line.**
 
@@ -206,7 +206,7 @@ python3 tools/drishti.py view get us-company/AAPL
 python3 tools/drishti.py view get sic-sector/3674
 ```
 
-**In YAML.** The pack's commands, `config/packs/capitalmarkets/us-equities/pack.yaml`:
+**In YAML.** The pack's commands, `modules/capital-markets/packs/us-equities/pack.yaml`:
 
 ```yaml
 mnemonics:
@@ -228,7 +228,7 @@ classes is keyed by one ticker: `USEQ GOOGL` is *Alphabet Inc.*, CIK `0001652044
 The ratios worked out on the page (net margin, revenue growth) and a sector's totals with the currency rule are
 [tutorial 6, steps 4 and 5](06-groupings-and-analytics.md#step-4--a-sector-and-the-currency-rule).
 
-Further: the pack's guide, [us-equities.md](../../config/packs/capitalmarkets/us-equities/guides/us-equities.md).
+Further: the pack's guide, [us-equities.md](../../modules/capital-markets/packs/us-equities/guides/us-equities.md).
 
 ### Part C · Funds and ETFs
 
@@ -263,7 +263,7 @@ gleif    CC0 1.0                                           committable  2026-10-
 
 (On a fresh clone the LAST REFRESHED and CACHED columns say `never` and `-`: the committed snapshot needs no download.)
 
-**In YAML.** The pack's commands and its Delta connector, `config/packs/capitalmarkets/funds/pack.yaml`:
+**In YAML.** The pack's commands and its Delta connector, `modules/capital-markets/packs/funds/pack.yaml`:
 
 ```yaml
 mnemonics:
@@ -324,7 +324,7 @@ Top 10 holdings of 105 (a company opens its page)  (table, top-holdings, F2)
   ...
 ```
 
-**In YAML.** The fact sheet's layout, `config/packs/capitalmarkets/funds/sutras/fund.v1.sutra.yaml` (shortened): tiles on top, the holdings and the
+**In YAML.** The fact sheet's layout, `modules/capital-markets/packs/funds/sutras/fund.v1.sutra.yaml` (shortened): tiles on top, the holdings and the
 fund's facts side by side, the tabs at the bottom:
 
 ```yaml
@@ -472,7 +472,7 @@ curl -s "http://localhost:18480/api/v1/search?q=FUND%20INDEX_ID%3DSP500" | pytho
 ['FXAIX', 'IVV', 'SPY', 'SPYM', 'SWPPX', 'VINIX', 'VOO', 'WFSPX']
 ```
 
-**In YAML.** The search form of the kind (`FORM funds`), `config/packs/capitalmarkets/funds/pack.yaml`:
+**In YAML.** The search form of the kind (`FORM funds`), `modules/capital-markets/packs/funds/pack.yaml`:
 
 ```yaml
 form:
@@ -522,7 +522,7 @@ Funds holding Apple Inc., by value (a fund opens its page)  (table, holders, F2)
   ...
 ```
 
-**In YAML.** The company page reads the funds pack's record as a source, `config/packs/capitalmarkets/us-equities/sutras/us-company.v1.sutra.yaml`:
+**In YAML.** The company page reads the funds pack's record as a source, `modules/capital-markets/packs/us-equities/sutras/us-company.v1.sutra.yaml`:
 
 ```yaml
 layout:
@@ -571,7 +571,7 @@ Funds · Funds tracking an index  SP500  with S&P 500   [TRACK]
   ...
 ```
 
-**In YAML.** On the index page, `config/packs/capitalmarkets/us-equities/sutras/index-membership.v1.sutra.yaml`:
+**In YAML.** On the index page, `modules/capital-markets/packs/us-equities/sutras/index-membership.v1.sutra.yaml`:
 
 ```yaml
   - id: tracked-by
@@ -636,7 +636,7 @@ dry run: funds, sources tickers, nasdaq, nport, ncen, rr, gleif
     https://www.sec.gov/files/company_tickers_mf.json
     https://www.sec.gov/files/company_tickers_exchange.json
   ...
-  then: tools/packgen/funds/make.py -> config/packs/capitalmarkets/funds and data/testdata; then make.py --check
+  then: tools/packgen/funds/make.py -> modules/capital-markets/packs/funds and data/testdata; then make.py --check
 ```
 
 **In YAML.** The snapshot the refresh writes, listed in `data/testdata/testdata.yaml` (the fund kind in parts, one tar):
@@ -654,7 +654,7 @@ dry run: funds, sources tickers, nasdaq, nport, ncen, rr, gleif
 ```
 
 You should see the dry run name every file it would fetch and write nothing; a refresh prints each download, then *wrote
-config/packs/capitalmarkets/funds ... 7 snapshot files, 5.6 MB* and *funds pack matches its generator*. Without the downloads, `python3
+modules/capital-markets/packs/funds ... 7 snapshot files, 5.6 MB* and *funds pack matches its generator*. Without the downloads, `python3
 tools/packgen/funds/make.py --check` still checks the committed snapshot.
 
 Further in the guide: [sections 15](../guides/FUNDS_GUIDE.md#15-the-refresh-script) and [16](../guides/FUNDS_GUIDE.md#16-the-gzipped-snapshot-and-offline-use).
@@ -734,7 +734,7 @@ the publishers and is shown for **internal demonstration only**.
 python3 tools/drishti.py view get listed-company/CO-AAPL
 ```
 
-**In YAML.** The pack's commands and the id rules, `config/packs/economy/news-and-markets/pack.yaml`:
+**In YAML.** The pack's commands and the id rules, `modules/economy/packs/news-and-markets/pack.yaml`:
 
 ```yaml
 mnemonics:
@@ -755,7 +755,7 @@ in *(snapshot captured <date>)* and the quote and headline pages show a **Snapsh
 *off (served from the snapshot)*, or *off (offline mode)* on the quick-start server. Turning them on (`DRISHTI_NEWS_ENABLED=true`,
 `DRISHTI_YFINANCE_ENABLED=true`) sends each name and ticker you open to Google and Yahoo.
 
-Further: the pack's guide, [news-and-markets.md](../../config/packs/economy/news-and-markets/guides/news-and-markets.md);
+Further: the pack's guide, [news-and-markets.md](../../modules/economy/packs/news-and-markets/guides/news-and-markets.md);
 holding the news in memory only is [tutorial 16, Part D](16-load-your-own-data-into-a-new-lake.md#part-d--news-held-in-memory-only).
 
 ## Next steps

@@ -79,7 +79,7 @@ correlation-matrix  CORR CORR-<set>   EQUITY_IDS ─► equity, FX_IDS ─► fx
 correlation-result  CORR CORR-<set>[~window=N~estimator=pearson | ledoit-wolf]   computed from the factors' daily closes
 ```
 
-The links are the market-data pack's contract link columns (`config/packs/banking/market-data/contracts/*.contract.yaml`). Every curve and
+The links are the market-data pack's contract link columns (`modules/market-data/packs/market-data/contracts/*.contract.yaml`). Every curve and
 surface is kept per business date, so `CRV CRV-USD-OIS <GO>` on yesterday's date shows yesterday's curve.
 
 **Id conventions.** A kind's prefix and the instrument: `CRV-USD-OIS`, `FX-EURUSD`, `FXV-EURUSD`, `FIX-SOFR`, `CDS-BUND`, `EQ-CSCA`,
@@ -341,7 +341,7 @@ has an id (an LEI, an ISIN, a ticker, a booking system's trade id). A computed k
 are fundamental, **8** engine inputs (`PNLV`, `SSET`, `VLIM`, `PORT`, `XRUN`, `XPATH` and the compute demo's two), **1** is Drishti's own
 (`POS`, the derived positions) and **18** are computed (among them `VRES`, `EXP`, `LEIG`, `LEIC`, `SIC`, `ECG`, `CORRC`, `EQB`, `CTRD`).
 
-**One contract, read.** `drishti.py contract show NSET` (the netting-set kind, `config/packs/banking/counterparty-risk/contracts/netting-set.contract.yaml`):
+**One contract, read.** `drishti.py contract show NSET` (the netting-set kind, `modules/banking/dmod/packs/counterparty-risk/contracts/netting-set.contract.yaml`):
 
 ```text
 kind: netting-set   mnemonic: NSET   pack: counterparty-risk   class: fundamental   source: xva-engine

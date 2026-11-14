@@ -251,7 +251,7 @@ value's. `{"set": "LEGS.0.CASH_FLOWS.*.PV", "scaleTo": "$.LEGS.0.PV"}` rescales 
 label in `key` is updated, else a row is added and the oldest fall off at `keep`. Each `row` field is an expression, `last.NAME` being
 the previous version of that row.
 
-The cross-currency basis curve `CRV-USD-BASIS` (`config/packs/banking/market-data/samples/ir-curve.jsonl`), whose `TEN_Y` is a decimal
+The cross-currency basis curve `CRV-USD-BASIS` (`modules/market-data/packs/market-data/samples/ir-curve.jsonl`), whose `TEN_Y` is a decimal
 while its zero rates and forwards are in percent:
 
 ```json

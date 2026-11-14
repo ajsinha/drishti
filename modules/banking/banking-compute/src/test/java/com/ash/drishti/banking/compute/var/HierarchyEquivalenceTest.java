@@ -107,7 +107,7 @@ class HierarchyEquivalenceTest {
     static void load() throws IOException {
         Path repo = VarTestDataPrecisionTest.root();
         data = repo.resolve("data/testdata/market-risk");
-        Map<String, Object> pack = new ObjectMapper(new YAMLFactory()).readValue(repo.resolve("config/packs/banking/market-risk/pack.yaml").toFile(), Map.class);
+        Map<String, Object> pack = new ObjectMapper(new YAMLFactory()).readValue(repo.resolve("modules/banking/dmod/packs/market-risk/pack.yaml").toFile(), Map.class);
         rules = PositionRules.of((Map<?, ?>) pack.get("positions"));
         // the pack's own hierarchies are the ones this test builds (the root name is the server's drishti.var.root-name)
         assertThat(HierarchySpec.parse((Map<?, ?>) pack.get("hierarchies")).stream().map(s -> s.withRootName("Drishti Bank")).toList())

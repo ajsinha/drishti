@@ -20,7 +20,7 @@
   samples/catalog.jsonl                 their ids, titles and subtitles, one a line
 
 and the aliases block of the news connector template in pack.yaml (between the BEGIN and END markers), so the connector
-knows every other name of every entity it is asked about. Run: python3 config/packs/economy/news-and-markets/tools/make_samples.py
+knows every other name of every entity it is asked about. Run: python3 modules/economy/packs/news-and-markets/tools/make_samples.py
 The data is static reference data written by hand: no market data, no news. Attribute names are UPPER_SNAKE (TOPIC_ID, NEWS_ID)."""
 import pathlib
 import re

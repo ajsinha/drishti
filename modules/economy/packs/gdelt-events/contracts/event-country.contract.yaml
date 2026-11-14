@@ -35,7 +35,7 @@ cadence:
 binding-hint:
   lake-table: gdelt.event-country
   test-data:
-  - config/packs/economy/gdelt-events/samples
+  - modules/economy/packs/gdelt-events/samples
 fields:
 - name: EVENT_COUNTRY_ID
   type: id

@@ -224,7 +224,7 @@ Abbreviated:
 ```
 
 Reading it: the router found the trade in the `demo` plugin (whose sample's `_meta` names the source system
-`murex-rates`); `SutraMatcher` chose `irs-fixfloat v1` from `config/packs/banking/trading/sutras/murex/`; inference added what the
+`murex-rates`); `SutraMatcher` chose `irs-fixfloat v1` from `modules/banking/dmod/packs/trading/sutras/murex/`; inference added what the
 Sutra did not say ("+ inference"); the counterparty, netting set, book and trader were fetched as links and given
 badges from the pack's `badges:` expressions. The console renders the panels with the Jinja macros in
 `web/templates/_macros/panels.html`, main-area panels on the left and `area: right` panels on the right.
@@ -445,7 +445,7 @@ it; the commands use the quick-start port 18480.
 
 ### Example 1: Sutra → ViewModel → HTML
 
-**The Sutra.** `TRD MX-20000001` matches `config/packs/banking/trading/sutras/murex/irs-fixfloat.v1.sutra.yaml` (generated
+**The Sutra.** `TRD MX-20000001` matches `modules/banking/dmod/packs/trading/sutras/murex/irs-fixfloat.v1.sutra.yaml` (generated
 by `tools/packgen/banking/make_sutras.py`). One strip cell, and the first panel, which it takes from a fragment:
 
 ```yaml
@@ -456,7 +456,7 @@ panels:
   - { use: trading/deal-ticket@1, with: { rate-fmt: pct4, product: "Interest rate swap (fixed/float)" } }
 ```
 
-The fragment (`config/packs/banking/trading/sutras/common/deal-ticket.v1.fragment.yaml`) is a `kv` panel, still only YAML:
+The fragment (`modules/banking/dmod/packs/trading/sutras/common/deal-ticket.v1.fragment.yaml`) is a `kv` panel, still only YAML:
 
 ```yaml
 panels:
@@ -548,7 +548,7 @@ and the export read. When a tick changes the panel, the console renders it again
 
 No Sutra in the default packs matches `var-limit` (`VLIM`, a hierarchy node's VaR limit; it is normally read from the `risk-store`
 lake). To show what inference alone makes of it, the first line of the committed sample
-`config/packs/banking/market-risk/samples/var-limit.jsonl` is put in the `file` connector's folder of a scratch server
+`modules/banking/dmod/packs/market-risk/samples/var-limit.jsonl` is put in the `file` connector's folder of a scratch server
 (`<data>/feeds/var-limit/VL-LL~BANK.json`). The document is flat UPPER_SNAKE fields: ids, a number, a currency and dates.
 
 ```bash
@@ -593,7 +593,7 @@ strip:
 
 ### Example 3: query by form
 
-**The YAML.** A pack lists the fields people search a kind by; from `config/packs/banking/trading/pack.yaml`:
+**The YAML.** A pack lists the fields people search a kind by; from `modules/banking/dmod/packs/trading/pack.yaml`:
 
 ```yaml
 form:

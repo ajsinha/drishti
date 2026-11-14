@@ -35,7 +35,7 @@ cadence:
 binding-hint:
   lake-table: oecd.oecd-series
   test-data:
-  - config/packs/economy/oecd/samples
+  - modules/economy/packs/oecd/samples
 fields:
 - name: SERIES_ID
   type: id

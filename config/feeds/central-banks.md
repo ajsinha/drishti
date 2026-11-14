@@ -62,7 +62,7 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"BANK_ID": "CBANK-BOC", "NAME": "Bank of Canada", "COUNTRY": "CAN", "COUNTRY_NAME": "Canada", "CURRENCY": "CAD", "WEBSITE": "https://www.bankofcanada.ca", "POLICY_RATE": 2.5, "POLICY_RATE_DATE": "2026-11-05", "POLICY_SERIES": "CBSER-BOC-V39079", "LAST_MOVE_DATE": "2026-10-29", "LAST_MOVE_BP": 25.0, "PRESS": "PRESS-BOC"}
 ```
 
-The contract: `config/packs/economy/central-banks/contracts/central-bank.contract.yaml` ([central-banks](../../docs/contracts/packs/central-banks.md)).
+The contract: `modules/economy/packs/central-banks/contracts/central-bank.contract.yaml` ([central-banks](../../docs/contracts/packs/central-banks.md)).
 
 ### rate-series
 
@@ -97,4 +97,4 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"SERIES_ID": "CBSER-BOC-AVG_INTWO", "NAME": "CORRA, Canadian overnight repo rate average", "SOURCE": "Bank of Canada", "CODE": "AVG.INTWO", "CENTRAL_BANK": "CBANK-BOC", "TITLE": "CORRA, Canadian overnight repo rate average", "DESCRIPTION": "A measure of the cost of overnight general collateral fundi…", "UNIT": "%", "FREQUENCY": "Business daily", "LATEST": 2.52, "LATEST_DATE": "2026-11-05", "PREVIOUS": 2.52, "PREVIOUS_DATE": "2026-11-04", "CHANGE": 0.0, "CHANGE_1Y": 0.25, "HIGH": 2.56, "LOW": 2.24, "OBSERVATIONS": 273}
 ```
 
-The contract: `config/packs/economy/central-banks/contracts/rate-series.contract.yaml` ([central-banks](../../docs/contracts/packs/central-banks.md)).
+The contract: `modules/economy/packs/central-banks/contracts/rate-series.contract.yaml` ([central-banks](../../docs/contracts/packs/central-banks.md)).

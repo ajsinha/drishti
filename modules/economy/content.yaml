@@ -15,7 +15,7 @@
 # What the packer brings in from the repository (paths from this folder), so each file keeps one home: the packs without
 # their connector templates (a module carries no connector), the lens and the tutorial. This list itself is not packed.
 copy:
-- from: ../../config/packs/economy/world-economy
+- from: ../../modules/economy/packs/world-economy
   to: packs/world-economy
   leave-out:
   - tests
@@ -23,49 +23,49 @@ copy:
   - samples
   sections-out:
   - connectors
-- from: ../../config/packs/economy/news-and-markets
+- from: ../../modules/economy/packs/news-and-markets
   to: packs/news-and-markets
   leave-out:
   - tests
   - tools
   sections-out:
   - connectors
-- from: ../../config/packs/economy/world-development
+- from: ../../modules/economy/packs/world-development
   to: packs/world-development
   leave-out:
   - tests
   - tools
   sections-out:
   - connectors
-- from: ../../config/packs/economy/central-banks
+- from: ../../modules/economy/packs/central-banks
   to: packs/central-banks
   leave-out:
   - tests
   - tools
   sections-out:
   - connectors
-- from: ../../config/packs/economy/national-statistics
+- from: ../../modules/economy/packs/national-statistics
   to: packs/national-statistics
   leave-out:
   - tests
   - tools
   sections-out:
   - connectors
-- from: ../../config/packs/economy/oecd
+- from: ../../modules/economy/packs/oecd
   to: packs/oecd
   leave-out:
   - tests
   - tools
   sections-out:
   - connectors
-- from: ../../config/packs/economy/official-news
+- from: ../../modules/economy/packs/official-news
   to: packs/official-news
   leave-out:
   - tests
   - tools
   sections-out:
   - connectors
-- from: ../../config/packs/economy/gdelt-events
+- from: ../../modules/economy/packs/gdelt-events
   to: packs/gdelt-events
   leave-out:
   - tests

@@ -15,21 +15,21 @@
 # The repository content the banking package brings in (not packed itself): its packs without their connector
 # templates, its lenses and its tutorials. Every file keeps one home.
 copy:
-- from: ../../../config/packs/banking/trading
+- from: ../../../modules/banking/dmod/packs/trading
   to: packs/trading
   leave-out:
   - tests
   - tools
   sections-out:
   - connectors
-- from: ../../../config/packs/banking/market-risk
+- from: ../../../modules/banking/dmod/packs/market-risk
   to: packs/market-risk
   leave-out:
   - tests
   - tools
   sections-out:
   - connectors
-- from: ../../../config/packs/banking/counterparty-risk
+- from: ../../../modules/banking/dmod/packs/counterparty-risk
   to: packs/counterparty-risk
   leave-out:
   - tests

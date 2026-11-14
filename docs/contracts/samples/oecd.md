@@ -26,13 +26,13 @@ Every data type of `oecd` as a real record of the committed test data, every fie
 
 ## OECD country: oecd-country (OECD)
 
-One OECD member: the latest leading indicator, unemployment, inflation and growth, and the members on a map shaded by inflation. One row per oecd country, keyed by COUNTRY_ID. Read by the **oecd** pack's connector `oecd-store` (lake table `oecd.oecd-country`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/oecd/samples/oecd-country.jsonl`, 10 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+One OECD member: the latest leading indicator, unemployment, inflation and growth, and the members on a map shaded by inflation. One row per oecd country, keyed by COUNTRY_ID. Read by the **oecd** pack's connector `oecd-store` (lake table `oecd.oecd-country`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`modules/economy/packs/oecd/samples/oecd-country.jsonl`, 10 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 
 |  |  |
 |---|---|
-| Path | `config/packs/economy/oecd/samples/oecd-country.jsonl` |
+| Path | `modules/economy/packs/oecd/samples/oecd-country.jsonl` |
 | Format | JSON Lines: UTF-8, one JSON object a line |
 | Key field | `COUNTRY_ID` |
 | Date field | none in the record: the pack's samples are served on every business date (partition `business_date`) |
@@ -145,7 +145,7 @@ None: all 10 rows were read, and every field any of them has is in the record ab
 
 ### See also
 
-- Data contract: [OECD in the oecd pack's contracts](../packs/oecd.md#oecd-oecd-country-oecd-country) (`config/packs/economy/oecd/contracts/oecd-country.contract.yaml`, the source of every meaning on this page).
+- Data contract: [OECD in the oecd pack's contracts](../packs/oecd.md#oecd-oecd-country-oecd-country) (`modules/economy/packs/oecd/contracts/oecd-country.contract.yaml`, the source of every meaning on this page).
 - [Public sector: government data and free news](../../guides/PUBLIC_SECTOR_GUIDE.md)
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
@@ -154,13 +154,13 @@ None: all 10 rows were read, and every field any of them has is in the record ab
 
 ## OECD series: oecd-series (OECDS)
 
-One OECD measure of one member by period: the history, the latest value and the change. One row per oecd series, keyed by SERIES_ID. Read by the **oecd** pack's connector `oecd-store` (lake table `oecd.oecd-series`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/oecd/samples/oecd-series.jsonl`, 10 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+One OECD measure of one member by period: the history, the latest value and the change. One row per oecd series, keyed by SERIES_ID. Read by the **oecd** pack's connector `oecd-store` (lake table `oecd.oecd-series`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`modules/economy/packs/oecd/samples/oecd-series.jsonl`, 10 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 
 |  |  |
 |---|---|
-| Path | `config/packs/economy/oecd/samples/oecd-series.jsonl` |
+| Path | `modules/economy/packs/oecd/samples/oecd-series.jsonl` |
 | Format | JSON Lines: UTF-8, one JSON object a line |
 | Key field | `SERIES_ID` |
 | Date field | none in the record: the pack's samples are served on every business date (partition `business_date`) |
@@ -261,7 +261,7 @@ None: all 10 rows were read, and every field any of them has is in the record ab
 
 ### See also
 
-- Data contract: [OECDS in the oecd pack's contracts](../packs/oecd.md#oecds-oecd-series-oecd-series) (`config/packs/economy/oecd/contracts/oecd-series.contract.yaml`, the source of every meaning on this page).
+- Data contract: [OECDS in the oecd pack's contracts](../packs/oecd.md#oecds-oecd-series-oecd-series) (`modules/economy/packs/oecd/contracts/oecd-series.contract.yaml`, the source of every meaning on this page).
 - [Public sector: government data and free news](../../guides/PUBLIC_SECTOR_GUIDE.md)
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).

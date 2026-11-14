@@ -748,7 +748,7 @@ options win over it):
 
 ```bash
 python3 tools/drishti.py lake build --from trade_endur.2026-11-05.jsonl.gz --lake risklake \
-    --pack config/packs/banking/trading --connector trade-endur --key TRADE_ID --mode overwrite-dates
+    --pack modules/banking/dmod/packs/trading --connector trade-endur --key TRADE_ID --mode overwrite-dates
 ```
 
 ```text
@@ -868,7 +868,7 @@ without `id:` takes it, else the kind's key), or the loader alone from the serve
 
 ```bash
 python3 tools/drishti.py lake build --from trade_endur.2026-11-05.jsonl.gz --lake demo \
-    --pack config/packs/banking/trading --connector trade-endur --mode overwrite-dates --engine java
+    --pack modules/banking/dmod/packs/trading --connector trade-endur --mode overwrite-dates --engine java
 ```
 
 ```text

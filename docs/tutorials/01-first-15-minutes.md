@@ -374,7 +374,7 @@ You should see one card for each pack that offers a form. Pick **Trading**, kind
 
 You should see a form with a box, a list or a set of tick boxes for each field people search by, grouped as **Identity** (trade id, source system, counterparty), **Product**
 (product type, sub type, status, buy / sell), **Where** (currency, legal entity, portfolio, trader), **Money** (quantity) and **Dates** (trade date, maturity date). Part C
-uses it. The form is written in the pack (`form:` in `config/packs/banking/trading/pack.yaml`):
+uses it. The form is written in the pack (`form:` in `modules/banking/dmod/packs/trading/pack.yaml`):
 
 ```yaml
 form:
@@ -791,7 +791,7 @@ field has its input:
 Leave a field empty and it takes no part in the search. Below the fields choose how to sort and how many to show. The trading pack's form has no free-text field: its
 counterparty is a dropdown of the 24 counterparty ids the data holds. A pack whose kind has text fields (a name, a description) offers the text operators.
 
-**From the command line.** The form is the pack's `form:` (in `config/packs/banking/trading/pack.yaml`), and the server serves it with the values the data holds:
+**From the command line.** The form is the pack's `form:` (in `modules/banking/dmod/packs/trading/pack.yaml`), and the server serves it with the values the data holds:
 
 ```yaml
 form:
@@ -1207,7 +1207,7 @@ The full schema is in [DATA_ARCHITECTURE.md › History queries: an entity over 
 you check any pack (an unknown key is a warning, a bad value the error `DRS-2061`):
 
 ```
-$ drishti.py sutra lint config/packs/banking/trading --strict
+$ drishti.py sutra lint modules/banking/dmod/packs/trading --strict
 ```
 
 In the UI, a pack with a bad block shows its problem on Admin → Packs (and Health marks the pack DEGRADED) as soon as it is loaded: at the

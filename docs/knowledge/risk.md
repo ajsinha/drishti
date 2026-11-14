@@ -90,7 +90,7 @@ stored results from upstream engines (fundamental, not computed by Drishti):
    trade-valuation TVAL TVAL-<trade>      (per trade: MTM, 1-day P&L, DV01, its netting set)
 ```
 
-The links are the packs' contract link columns (`config/packs/banking/market-risk/contracts/*.contract.yaml`): `pnl-vector.TRADE_ID → trade`,
+The links are the packs' contract link columns (`modules/banking/dmod/packs/market-risk/contracts/*.contract.yaml`): `pnl-vector.TRADE_ID → trade`,
 `LEGAL_ENTITY → legal-entity`, `DESK → desk`, `TT_BOOK → book`, `COUNTERPARTY → counterparty`; `position.TRADE_IDS → trade`;
 `var-limit.NODE_ID` names a node the server builds from the rows' columns; `stress-result.SCENARIO → stress-scenario`, `DESK → desk`;
 `frtb-sensitivity.BOOK → book`; `trade-valuation.NETTING_SET → netting-set`, which is where market risk meets
@@ -362,7 +362,7 @@ any scope text  (BANK, LE:LE-LDN, GROUP:GRP-ALDERSHOT, CPTY:CP-ALDERSHOT, NSET:N
    └─► exposure-official-cpty  XOFC            the official figures of every netting set and counterparty, published once a day
 ```
 
-The links are the contract link columns of `config/packs/banking/counterparty-risk/contracts/` and `config/packs/core/core/contracts/`:
+The links are the contract link columns of `modules/banking/dmod/packs/counterparty-risk/contracts/` and `config/packs/core/core/contracts/`:
 `netting-set.COUNTERPARTY → counterparty`, `AGREEMENT → agreement`, `CSA → csa`, `CREDIT_LIMIT → credit-limit`,
 `CVA_RESULT → cva`, `SACCR → sa-ccr`, `SIMM → simm`, `COLLATERAL_BALANCE → collateral-balance`, `LEGAL_ENTITY → legal-entity`,
 `TRADE_IDS → trade`; `counterparty.NETTING_SETS → netting-set`, `GROUP → counterparty-group`, `CREDIT_LIMIT → credit-limit`,
@@ -530,7 +530,7 @@ grouped when asked (computed, never stored):
    index-trades         ITRD <index name>     every trade on one floating index
 ```
 
-The links are the trading pack's contract link columns (`config/packs/banking/trading/contracts/trade.contract.yaml`): `COUNTERPARTY` and
+The links are the trading pack's contract link columns (`modules/banking/dmod/packs/trading/contracts/trade.contract.yaml`): `COUNTERPARTY` and
 `ORIGINAL_COUNTERPARTY → counterparty`, `LEGAL_ENTITY → legal-entity`, `PORTFOLIO` and `TT_BOOK → book`, `TRADER_ID → trader`,
 `TT_GROUP → desk`. The arrows marked `◄` are other kinds that point at the trade (`TRADE_ID`, `TRADE_IDS`).
 

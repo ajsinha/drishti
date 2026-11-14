@@ -47,7 +47,7 @@ binding-hint:
   - UNEMPLOYMENT
   - POPULATION_M
   test-data:
-  - config/packs/economy/world-economy/samples
+  - modules/economy/packs/world-economy/samples
 fields:
 - name: ECONOMY_ID
   type: id

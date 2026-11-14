@@ -12,7 +12,7 @@
 #
 #   See the LICENSE file in the root of this repository for the full terms.
 # Hand-kept sections of the trading pack's manifest: tools/packgen/banking/make_packs.py appends them to
-# config/packs/banking/trading/pack.yaml as written. Edit them here, not there.
+# modules/banking/dmod/packs/trading/pack.yaml as written. Edit them here, not there.
 
 # Read by drishti.py lake build (ignored by the server): each trade's key, and values inside its legs written as plain fields and
 # columns at load, so searches, totals and BI need no document (docs/guides/CLUSTER_GUIDE.md › Appendix D. Scale strategy: millions of trades, fast, in a bounded heap, phase 3)

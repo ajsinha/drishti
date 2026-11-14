@@ -17,7 +17,7 @@
 
 # Data contracts of the market-data pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/banking/market-data/guides/market-data.md](../../../config/packs/banking/market-data/guides/market-data.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [modules/market-data/packs/market-data/guides/market-data.md](../../../modules/market-data/packs/market-data/guides/market-data.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -50,7 +50,7 @@ Discounting (OIS), projection (IBOR/term RFR), government or basis curve for a c
 
 |  |  |
 |---|---|
-| Contract | [ir-curve.contract.yaml](../../../config/packs/banking/market-data/contracts/ir-curve.contract.yaml) · version 1.0 |
+| Contract | [ir-curve.contract.yaml](../../../modules/market-data/packs/market-data/contracts/ir-curve.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -135,7 +135,7 @@ General-collateral or specials repo rates by term.
 
 |  |  |
 |---|---|
-| Contract | [repo-curve.contract.yaml](../../../config/packs/banking/market-data/contracts/repo-curve.contract.yaml) · version 1.0 |
+| Contract | [repo-curve.contract.yaml](../../../modules/market-data/packs/market-data/contracts/repo-curve.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -193,7 +193,7 @@ Spot rate for a currency pair with bid/ask.
 
 |  |  |
 |---|---|
-| Contract | [fx-spot.contract.yaml](../../../config/packs/banking/market-data/contracts/fx-spot.contract.yaml) · version 1.0 |
+| Contract | [fx-spot.contract.yaml](../../../modules/market-data/packs/market-data/contracts/fx-spot.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -271,7 +271,7 @@ Forward points by tenor for a pair.
 
 |  |  |
 |---|---|
-| Contract | [fx-forward-curve.contract.yaml](../../../config/packs/banking/market-data/contracts/fx-forward-curve.contract.yaml) · version 1.0 |
+| Contract | [fx-forward-curve.contract.yaml](../../../modules/market-data/packs/market-data/contracts/fx-forward-curve.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -330,7 +330,7 @@ Implied vols by expiry and delta (ATM, 25D RR/BF).
 
 |  |  |
 |---|---|
-| Contract | [fx-vol-surface.contract.yaml](../../../config/packs/banking/market-data/contracts/fx-vol-surface.contract.yaml) · version 1.0 |
+| Contract | [fx-vol-surface.contract.yaml](../../../modules/market-data/packs/market-data/contracts/fx-vol-surface.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -397,7 +397,7 @@ Normal (bp) swaption vols by expiry × tenor.
 
 |  |  |
 |---|---|
-| Contract | [ir-vol-cube.contract.yaml](../../../config/packs/banking/market-data/contracts/ir-vol-cube.contract.yaml) · version 1.0 |
+| Contract | [ir-vol-cube.contract.yaml](../../../modules/market-data/packs/market-data/contracts/ir-vol-cube.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -457,7 +457,7 @@ Cap vols by maturity and strike.
 
 |  |  |
 |---|---|
-| Contract | [cap-vol-surface.contract.yaml](../../../config/packs/banking/market-data/contracts/cap-vol-surface.contract.yaml) · version 1.0 |
+| Contract | [cap-vol-surface.contract.yaml](../../../modules/market-data/packs/market-data/contracts/cap-vol-surface.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -516,7 +516,7 @@ A listed stock: price, dividends, sector and identifiers.
 
 |  |  |
 |---|---|
-| Contract | [equity.contract.yaml](../../../config/packs/banking/market-data/contracts/equity.contract.yaml) · version 1.0 |
+| Contract | [equity.contract.yaml](../../../modules/market-data/packs/market-data/contracts/equity.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -609,7 +609,7 @@ Index level with its largest constituents.
 
 |  |  |
 |---|---|
-| Contract | [equity-index.contract.yaml](../../../config/packs/banking/market-data/contracts/equity-index.contract.yaml) · version 1.0 |
+| Contract | [equity-index.contract.yaml](../../../modules/market-data/packs/market-data/contracts/equity-index.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -684,7 +684,7 @@ Expected dividends by year (implied from dividend futures and forwards).
 
 |  |  |
 |---|---|
-| Contract | [dividend-curve.contract.yaml](../../../config/packs/banking/market-data/contracts/dividend-curve.contract.yaml) · version 1.0 |
+| Contract | [dividend-curve.contract.yaml](../../../modules/market-data/packs/market-data/contracts/dividend-curve.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -745,7 +745,7 @@ Implied vols by expiry and moneyness.
 
 |  |  |
 |---|---|
-| Contract | [equity-vol-surface.contract.yaml](../../../config/packs/banking/market-data/contracts/equity-vol-surface.contract.yaml) · version 1.0 |
+| Contract | [equity-vol-surface.contract.yaml](../../../modules/market-data/packs/market-data/contracts/equity-vol-surface.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -806,7 +806,7 @@ CDS par spreads by tenor, recovery and implied default probabilities.
 
 |  |  |
 |---|---|
-| Contract | [credit-curve.contract.yaml](../../../config/packs/banking/market-data/contracts/credit-curve.contract.yaml) · version 1.0 |
+| Contract | [credit-curve.contract.yaml](../../../modules/market-data/packs/market-data/contracts/credit-curve.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -874,7 +874,7 @@ Published CPI fixings (US CPI-U NSA, HICPxT, UK RPI…).
 
 |  |  |
 |---|---|
-| Contract | [inflation-index.contract.yaml](../../../config/packs/banking/market-data/contracts/inflation-index.contract.yaml) · version 1.0 |
+| Contract | [inflation-index.contract.yaml](../../../modules/market-data/packs/market-data/contracts/inflation-index.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -935,7 +935,7 @@ Zero-coupon breakevens by tenor, with monthly seasonality.
 
 |  |  |
 |---|---|
-| Contract | [inflation-curve.contract.yaml](../../../config/packs/banking/market-data/contracts/inflation-curve.contract.yaml) · version 1.0 |
+| Contract | [inflation-curve.contract.yaml](../../../modules/market-data/packs/market-data/contracts/inflation-curve.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -1002,7 +1002,7 @@ A traded commodity with its benchmark, unit and venue.
 
 |  |  |
 |---|---|
-| Contract | [commodity.contract.yaml](../../../config/packs/banking/market-data/contracts/commodity.contract.yaml) · version 1.0 |
+| Contract | [commodity.contract.yaml](../../../modules/market-data/packs/market-data/contracts/commodity.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -1089,7 +1089,7 @@ Futures settlement prices by delivery month.
 
 |  |  |
 |---|---|
-| Contract | [commodity-curve.contract.yaml](../../../config/packs/banking/market-data/contracts/commodity-curve.contract.yaml) · version 1.0 |
+| Contract | [commodity-curve.contract.yaml](../../../modules/market-data/packs/market-data/contracts/commodity-curve.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -1154,7 +1154,7 @@ Implied vols by delivery month and moneyness.
 
 |  |  |
 |---|---|
-| Contract | [commodity-vol-surface.contract.yaml](../../../config/packs/banking/market-data/contracts/commodity-vol-surface.contract.yaml) · version 1.0 |
+| Contract | [commodity-vol-surface.contract.yaml](../../../modules/market-data/packs/market-data/contracts/commodity-vol-surface.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -1210,7 +1210,7 @@ Published overnight and term rate fixings (SOFR, €STR, SONIA…).
 
 |  |  |
 |---|---|
-| Contract | [rate-fixing.contract.yaml](../../../config/packs/banking/market-data/contracts/rate-fixing.contract.yaml) · version 1.0 |
+| Contract | [rate-fixing.contract.yaml](../../../modules/market-data/packs/market-data/contracts/rate-fixing.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -1273,7 +1273,7 @@ A listed bond: terms, price, yield, spreads and analytics.
 
 |  |  |
 |---|---|
-| Contract | [bond.contract.yaml](../../../config/packs/banking/market-data/contracts/bond.contract.yaml) · version 1.0 |
+| Contract | [bond.contract.yaml](../../../modules/market-data/packs/market-data/contracts/bond.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -1365,7 +1365,7 @@ A correlation set: the factors whose pairwise correlations basket, quanto and sp
 
 |  |  |
 |---|---|
-| Contract | [correlation-matrix.contract.yaml](../../../config/packs/banking/market-data/contracts/correlation-matrix.contract.yaml) · version 1.0 |
+| Contract | [correlation-matrix.contract.yaml](../../../modules/market-data/packs/market-data/contracts/correlation-matrix.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -1414,7 +1414,7 @@ The pairwise correlations of a correlation set's factors, computed when asked fr
 
 |  |  |
 |---|---|
-| Contract | [correlation-result.contract.yaml](../../../config/packs/banking/market-data/contracts/correlation-result.contract.yaml) · version 1.0 |
+| Contract | [correlation-result.contract.yaml](../../../modules/market-data/packs/market-data/contracts/correlation-result.contract.yaml) · version 1.0 |
 | Class | computed |
 | Status | active |
 | Source | computed by Drishti: the reactive connector correlation-engine (java engine com.ash.drishti.banking.compute.analytics.CorrelationEngine) |
@@ -1476,7 +1476,7 @@ An equity's beta, alpha, correlation and R squared against its index (EQUITY_IND
 
 |  |  |
 |---|---|
-| Contract | [equity-beta.contract.yaml](../../../config/packs/banking/market-data/contracts/equity-beta.contract.yaml) · version 1.0 |
+| Contract | [equity-beta.contract.yaml](../../../modules/market-data/packs/market-data/contracts/equity-beta.contract.yaml) · version 1.0 |
 | Class | computed |
 | Status | active |
 | Source | computed by Drishti: the reactive connector equity-analytics (java engine com.ash.drishti.banking.compute.analytics.BetaEngine) |

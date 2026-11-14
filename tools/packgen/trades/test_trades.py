@@ -89,7 +89,7 @@ class CommonSchemaTest(unittest.TestCase):
         self.assertGreater(changed, 20)
 
     def test_the_packs_trade_samples_have_the_common_schema(self):
-        samples = ROOT / "config" / "packs" / "banking" / "trading" / "samples"
+        samples = ROOT / "modules" / "banking" / "dmod" / "packs" / "trading" / "samples"
         systems = set()
         docs = [(f.name, json.loads(f.read_text(encoding="utf-8"))) for f in (samples / "trade").glob("*.json")]        # one file per deal (before 2.3)
         docs += [(f"trade.jsonl:{n}", json.loads(line)) for f in samples.glob("trade*.jsonl")                          # samples/<kind>.jsonl (2.3)
@@ -104,7 +104,7 @@ class CommonSchemaTest(unittest.TestCase):
         """Each (source system, product type) the generators book is matched by one Sutra file of the pack, and each Endur sub type
         shows its own panel (when:) inside its product's one Sutra: no inferred trade, no catch-all, no two Sutras for one."""
         import re
-        sutras = ROOT / "config" / "packs" / "banking" / "trading" / "sutras"
+        sutras = ROOT / "modules" / "banking" / "dmod" / "packs" / "trading" / "sutras"
         matches: dict[tuple[str, str], list[str]] = {}
         whens: dict[str, set[str]] = {}
         for f in sutras.rglob("*.sutra.yaml"):
@@ -130,7 +130,7 @@ class CommonSchemaTest(unittest.TestCase):
         """A layout shared as a YAML anchor reached only the first connector (the others read no columns, so drop-downs and pivots
         saw one system): the manifest spells it out for each."""
         import yaml
-        text = (ROOT / "config" / "packs" / "banking" / "trading" / "pack.yaml").read_text(encoding="utf-8")
+        text = (ROOT / "modules" / "banking" / "dmod" / "packs" / "trading" / "pack.yaml").read_text(encoding="utf-8")
         self.assertNotRegex(text, r"[&*]id\d")
         spec = yaml.safe_load(text)
         conns, tables = spec["connectors"], spec["lake"]["tables"]        # the layout lives in the pack's lake: entries (DATA_LAKE_GUIDE.md)

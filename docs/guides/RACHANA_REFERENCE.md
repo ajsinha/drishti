@@ -512,7 +512,7 @@ the title and strip only.
   and `{'name': 'counterparty', … 'domain': 'counterparty-and-legal', 'kind': 'counterparty', 'where': None, 'priority': 10}`.
 - `GET /api/v1/sutras/{name}/{version}/source` returns the file's YAML (`text/yaml`), comments included, exactly as loaded (a
   product Sutra's `use:` entries as written; `sutra lint` and a preview see them expanded).
-- The **domain** defaults to the name of the folder holding the file (`config/packs/banking/trading/sutras/murex/…` → `murex`). It is a label
+- The **domain** defaults to the name of the folder holding the file (`modules/banking/dmod/packs/trading/sutras/murex/…` → `murex`). It is a label
   only (the catalog groups by it; the workbench saves back there): it never decides what the Sutra matches
   ([Folders mean nothing](#folders-mean-nothing)).
 
@@ -3719,15 +3719,15 @@ wrote, comments included; then it reloads. A `name@version` already defined by a
 
 | File | Open it with | Shows |
 |---|---|---|
-| `config/packs/banking/trading/sutras/murex/irs-fixfloat.v1.sutra.yaml` | `TRD MX-20000001` | a product Sutra made of shared blocks, two controls on its events table |
-| `config/packs/banking/trading/sutras/endur/endur-comswap.v1.sutra.yaml` | `TRD 1000001`, `TRD 1000003` | sub types as `when:` panels (`fixed-float`, `basis`) |
-| `config/packs/banking/trading/sutras/common/*.v1.block.yaml` | (used by every trade Sutra) | blocks with parameters; tabs holding panels; a tree of cash flows and resets; timeline; payment ladder |
-| `config/packs/banking/trading/sutras/pages/counterparty-trades.v1.sutra.yaml` | `/v/counterparty-trades/CP-NORTHPLAINS` | metric tiles, a donut, ladders over many trades |
+| `modules/banking/dmod/packs/trading/sutras/murex/irs-fixfloat.v1.sutra.yaml` | `TRD MX-20000001` | a product Sutra made of shared blocks, two controls on its events table |
+| `modules/banking/dmod/packs/trading/sutras/endur/endur-comswap.v1.sutra.yaml` | `TRD 1000001`, `TRD 1000003` | sub types as `when:` panels (`fixed-float`, `basis`) |
+| `modules/banking/dmod/packs/trading/sutras/common/*.v1.block.yaml` | (used by every trade Sutra) | blocks with parameters; tabs holding panels; a tree of cash flows and resets; timeline; payment ladder |
+| `modules/banking/dmod/packs/trading/sutras/pages/counterparty-trades.v1.sutra.yaml` | `/v/counterparty-trades/CP-NORTHPLAINS` | metric tiles, a donut, ladders over many trades |
 | `config/packs/core/core/sutras/counterparty-and-legal/counterparty.v1.sutra.yaml` | `CPTY CP-MERIDIAN-RE` | table with totals, kv, graph |
-| `config/packs/banking/counterparty-risk/sutras/exposure-and-capital/netting-set.v1.sutra.yaml` | `NSET NS-MERIDIAN-RE-NY` | area with a limit, four controls, `on-select`, Pivot, automatic id links |
-| `config/packs/banking/market-data/sutras/market-data/equity-vol-surface.v1.sutra.yaml` | `EQV EQV-CSCA` | surface, table, line |
-| `config/packs/banking/market-risk/sutras/market-risk/system-basket.v1.sutra.yaml` | `PORT PF-RATES-DESK` | the engine's figures on a page, a P&L distribution, ranked bars, Pivot |
-| `config/packs/economy/world-economy/sutras/economics/economy.v1.sutra.yaml` | `ECON ECON-AUS` | map with a shade and a link |
+| `modules/banking/dmod/packs/counterparty-risk/sutras/exposure-and-capital/netting-set.v1.sutra.yaml` | `NSET NS-MERIDIAN-RE-NY` | area with a limit, four controls, `on-select`, Pivot, automatic id links |
+| `modules/market-data/packs/market-data/sutras/market-data/equity-vol-surface.v1.sutra.yaml` | `EQV EQV-CSCA` | surface, table, line |
+| `modules/banking/dmod/packs/market-risk/sutras/market-risk/system-basket.v1.sutra.yaml` | `PORT PF-RATES-DESK` | the engine's figures on a page, a P&L distribution, ranked bars, Pivot |
+| `modules/economy/packs/world-economy/sutras/economics/economy.v1.sutra.yaml` | `ECON ECON-AUS` | map with a shade and a link |
 | `docs/guides/examples/*.sutra.yaml` | Help → Examples | twelve self-contained examples with their own small documents, every kind |
 
 For a guided, step-by-step introduction, see [BUILD_GUIDE.md](BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies). For how inference fills what a Sutra
@@ -5097,7 +5097,7 @@ panels:
   keys move between them). Below 700 px a pane opens as a full-width sheet with a Back button. Theme tokens only, so every theme
   draws them.
 
-**The worked screen: the book desk** (`config/packs/banking/trading/sutras/pages/book-desk.v1.sutra.yaml`, opened as
+**The worked screen: the book desk** (`modules/banking/dmod/packs/trading/sutras/pages/book-desk.v1.sutra.yaml`, opened as
 `/v/portfolio-trades/BOOK-RATES-2?sutra=book-desk`): the book's trades (`row-picker@1`, `open` with the trade id and the
 counterparty); a click opens the trade's cash flows under the row (`cashflow-ladder@1` over the `trade` kind, trading pack) and fills
 the right column: the counterparty (core pack, by id) and its credit limit with utilisation by tenor (`ranked-bars@1`, counterparty-risk
@@ -8599,7 +8599,7 @@ about: config/about.yaml
 `PackLoader.properties()` adds it to an indexed list `drishti.about.pack-files` in **specific-first** order (as
 `semantics` at `PackLoader.java:249`), so a child pack's entry wins over its parents'.
 
-#### `config/packs/banking/market-risk/config/about.yaml`
+#### `modules/banking/dmod/packs/market-risk/config/about.yaml`
 
 ```yaml
 about: 1                                  # schema version (required)
@@ -8921,7 +8921,7 @@ them is one file in the lowest pack that owns the kind, and it reaches `market-r
 vocabulary has about 190 terms, one per product field, and the `trade` entry the page-specific ones):
 
 ```yaml
-# config/packs/banking/trading/config/about.yaml
+# modules/banking/dmod/packs/trading/config/about.yaml
 about: 1
 vocabulary:                        # a word defined once, reused by every kind and every pack that extends trading
   fixedRate:
@@ -8964,7 +8964,7 @@ broken entry is left out and listed with the Sutra problems (`GET /api/v1/sutras
 never fails the view. **Redaction comes first.** The template is rendered over the document your redactor produced, so
 for a viewer whose role may not see `mtm` (if it were named in `drishti.security.redact`) the sentence above would read
 "…It is marked at ••• USD…", and the glossary never sees a value at all. That is the one rule of the whole feature: *the explanation is derived from your view, never from
-the stored document.* The text that ships today is the VaR page (`config/packs/banking/market-risk/config/about.yaml`, kind `var`):
+the stored document.* The text that ships today is the VaR page (`modules/banking/dmod/packs/market-risk/config/about.yaml`, kind `var`):
 
 ```
 VAR-EQD is a 1-day 99% historical VaR for DESK-EQD: 14.7m USD, 70% of its 20.9m limit, with 0 exception(s) in 250 days.
@@ -8992,7 +8992,7 @@ source.
 
 | | Trade (A) | Variant (B) |
 |---|---|---|
-| About file | `config/packs/banking/trading/config/about.yaml`, `kinds.trade` | `examples/packs/genomics/config/about.yaml`, `kinds.variant` |
+| About file | `modules/banking/dmod/packs/trading/config/about.yaml`, `kinds.trade` | `examples/packs/genomics/config/about.yaml`, `kinds.variant` |
 | Candidates in the `MatchTrace` | 124 other Sutras of kind `trade` | none |
 | Source and health | `murex-rates`, `up` | `reference-genome`, `up` |
 | **Unchanged** | `ExplainController`, `ExplainService`, `PageContext`, the drawer and its keys | the same |
@@ -9028,7 +9028,7 @@ M 2–3 days, L 4–5 days.
 | **3. Pack about files and layer 1** (done) | `AboutParser`, `AboutCatalog`, templates; `PackLoader` property; codes 2040–2044; load problems listed | `compute/drishti-rachana/.../about/*` (new); `kernel/drishti-packs/.../PackLoader.java`; `ExplainService` (about block) | `AboutParserTest`, `AboutCatalogTest` (inheritance), `ExplainMaskTest` (templates) | market-risk `var` and genomics `variant` show parameterised text; a masked field in a template reads `•••` | M |
 | **4. Glossary, layer 2, panel and field help** (done) | `GlossaryResolver`, vocabulary file, derived formulas; panel popover, field hints | `ExplainService`; `compute/drishti-rachana/.../about/GlossaryResolver.java`, `resources/about/vocabulary.yaml`; `DerivedKind.java` (accessor); `drishti_about.js`, `drishti_about.css`, `_macros/about.html` | `GlossaryResolverTest`, derived-formula test; console popover/hint tests | hovering *ES 97.5%* shows its meaning; a derived [`desk-pnl`](../contracts/samples/market-risk.md#desk-pnl) ([contract](../contracts/packs/market-risk.md#dpnl-desk-pl-actual-and-hypothetical-daily-desk-pnl)) field shows "sum of mtm" | M |
 | **5. Content for the QUICKSTART packs + i18n overlay** (done) | about files via generators; `locale` resolution and `about.<lang>.yaml` overlay | `tools/packgen/*/` (about sources, `packbuild.py`), `config/packs/*/config/about.yaml` (generated), `AboutCatalog` (overlay) | `AboutPacksTest` (all load, all render, guide anchors), overlay test | every QUICKSTART kind has `about`; coverage recorded per pack | L |
-| **6. Lint, coverage, pack tests** | `DRS-2045`–`2047`; `sutra lint` warnings, `--strict`; `expect.yaml help:`; ratchet files | `kernel/drishti-server/.../cli/{SutraCli,ExpectFile,CliReports}.java`; `config/packs/*/tests/*/expect.yaml`; `config/packs/*/tests/help-coverage.txt` | `SutraCliTest` extended | `sutra test config/packs/banking/market-risk` prints coverage and fails under the floor | S |
+| **6. Lint, coverage, pack tests** | `DRS-2045`–`2047`; `sutra lint` warnings, `--strict`; `expect.yaml help:`; ratchet files | `kernel/drishti-server/.../cli/{SutraCli,ExpectFile,CliReports}.java`; `config/packs/*/tests/*/expect.yaml`; `config/packs/*/tests/help-coverage.txt` | `SutraCliTest` extended | `sutra test modules/banking/dmod/packs/market-risk` prints coverage and fails under the floor | S |
 | **7. Workbench About tab** (done) | design/studio explain endpoints, about preview endpoint, Design `about` part and fragment export, About tab, Problems coverage | `DesignController.java`, `StudioController.java`, `PackFragment.java`, design store model; `routes/build_routes.py`; `templates/build/design.html`; `static/js/build/drishti_about.js`, `drishti_problems.js` | `DesignControllerTest`, `PackFragmentTest`, `wb_live.py` case | edit about text → the card updates on idle; export contains `config/about.yaml` | M |
 | **8. Docs** | the table above | docs only | `test_help_links.py`, license headers | all links resolve; F1 in the drawer reaches the guide section | S |
 | **9. Ask (optional)** (done) | `AskService`, endpoint, limits, audit, console box | `kernel/drishti-server/.../explain/*` (new), `application.yaml`, `ErrorCode.java` (4007–4009); `_macros/about.html`, `drishti_about.js` | `AskServiceTest` against a stub HTTP server (prompt shape, masks, labels-only, injection text stays in data block, limits, timeout) | off: no box, no network; on with a stub: answer shown, `•••` never in the prompt's values | M |
@@ -9038,7 +9038,7 @@ M 2–3 days, L 4–5 days.
 
 **Step 3, and where it differs from the design above.** `AboutParser` (strict, `DRS-2040` to `DRS-2044`, positions from the YAML nodes), `AboutCatalog` (merge through `extends`, key by key; `use` resolved against the most specific vocabulary visible; `revision()` is in the explain cache key; `reload()`), `AboutText.render` over the caller's redacted document (`Template.renderLenient`: a failing expression reads `—` and counts in `drishti.explain.template-errors`; cap `drishti.about.max-rendered`). The loader hands the catalogue every pack as `drishti.about.packs[i]` (`name`, `title`, `file`, `sutra-dir`, `kinds`, `lineage`), most specific first, instead of the flat `pack-files` list, because the catalogue also needs each pack's kinds and lineage (for `DRS-2041`) and its Sutra directory (for `layout.sutra.pack`). Problems are keyed `<pack>/<file>` in `GET /api/v1/sutras/problems` (never a server path). The shared cross-domain vocabulary file and the glossary in the answer are step 4; `about.panels[]` carries only authored pack text (the Sutra `Panel` description arrives with step 2); a syntax error in the YAML is `DRS-2040`. The about sources for market-risk and genomics live in the generator folders and are copied by `make_packs.py` and `packbuild.py`.
 
-**Step 5.** Content: a hand-written `about.yaml` for every kind of the nine QUICKSTART packs (market-risk 5 kinds, counterparty-risk 8, liquidity-risk 7, climate-risk 6, operational-risk 8, retail-banking 8, genomics 8, world-economy 8, economics 8) and of the `trading` pack (`trade`, with a vocabulary of about 190 product terms, and the derived `desk-pnl`), kept in `tools/packgen/banking/about/<pack>.yaml` and `tools/packgen/<generator>/about.yaml`, copied by `make_packs.py` / `packbuild.py` (which now drop the source's own licence header and write the pack's), so `--check` keeps them. No number is written in any text: the sentences are `${...}` over the document, the glossary is definitions, units and sign conventions. Tests: `AboutPacksTest` (every file loads, every kind has title, sentence, guide and glossary, every sentence and panel note renders over every shipped sample with no failed expression, every guide slug exists); each pack gets `tests/<sutra>/` fixtures (one or two shipped samples, one per product type for the trading Sutras) with `help: { about: true }` and a `tests/help-coverage.txt` ratchet recorded at what `sutra test` reaches: 100% of the shown fields have an entry in every pack (market-risk 5 Sutras, counterparty-risk 8, liquidity-risk 7, climate-risk 6, operational-risk 8, retail-banking 8, genomics 8, world-economy 8, economics 8, trading 125). Two fixes this exposed: pack lint keys a table column like the drawer (`rows.column`, `HelpLint` uses `GlossaryResolver.keyOf`), and its derived-field question goes through the new `SourceRouter.describeField(kind, field)` because lint knows no provenance; `CatalogGlossaryLookup` also counts the core vocabulary. Locale: `AboutCatalog` reads `about.<lang>.yaml` beside each pack's file (BCP 47 tag, any case; the strict parser and the same codes), merged over the English entries key by key (an overlay's own packs first, then the plain language for a regional tag such as `fr-ca`, then English), `localeFor(requested)` picks the first requested tag with an overlay, else its language, else `en`, `forKind(kind, locale)` answers and `GlossaryResolver.forLocale` follows; the explain cache key carries the language used and the answer's `locale` says which. The request: `GET /views/{k}/{id}/explain?locale=fr` (else `Accept-Language`, by quality); the console passes `?locale=`, else the user's `locale` setting (new: `SettingsController`, the account page's *Language of help text*), else the browser's `Accept-Language`. One demo overlay ships: `config/packs/banking/market-risk/config/about.fr.yaml` (kind `var` in French), from `tools/packgen/banking/about/market-risk.fr.yaml`. The drawer's own words are still English (the designed `drishti-console/config/about.yaml` labels were not built).
+**Step 5.** Content: a hand-written `about.yaml` for every kind of the nine QUICKSTART packs (market-risk 5 kinds, counterparty-risk 8, liquidity-risk 7, climate-risk 6, operational-risk 8, retail-banking 8, genomics 8, world-economy 8, economics 8) and of the `trading` pack (`trade`, with a vocabulary of about 190 product terms, and the derived `desk-pnl`), kept in `tools/packgen/banking/about/<pack>.yaml` and `tools/packgen/<generator>/about.yaml`, copied by `make_packs.py` / `packbuild.py` (which now drop the source's own licence header and write the pack's), so `--check` keeps them. No number is written in any text: the sentences are `${...}` over the document, the glossary is definitions, units and sign conventions. Tests: `AboutPacksTest` (every file loads, every kind has title, sentence, guide and glossary, every sentence and panel note renders over every shipped sample with no failed expression, every guide slug exists); each pack gets `tests/<sutra>/` fixtures (one or two shipped samples, one per product type for the trading Sutras) with `help: { about: true }` and a `tests/help-coverage.txt` ratchet recorded at what `sutra test` reaches: 100% of the shown fields have an entry in every pack (market-risk 5 Sutras, counterparty-risk 8, liquidity-risk 7, climate-risk 6, operational-risk 8, retail-banking 8, genomics 8, world-economy 8, economics 8, trading 125). Two fixes this exposed: pack lint keys a table column like the drawer (`rows.column`, `HelpLint` uses `GlossaryResolver.keyOf`), and its derived-field question goes through the new `SourceRouter.describeField(kind, field)` because lint knows no provenance; `CatalogGlossaryLookup` also counts the core vocabulary. Locale: `AboutCatalog` reads `about.<lang>.yaml` beside each pack's file (BCP 47 tag, any case; the strict parser and the same codes), merged over the English entries key by key (an overlay's own packs first, then the plain language for a regional tag such as `fr-ca`, then English), `localeFor(requested)` picks the first requested tag with an overlay, else its language, else `en`, `forKind(kind, locale)` answers and `GlossaryResolver.forLocale` follows; the explain cache key carries the language used and the answer's `locale` says which. The request: `GET /views/{k}/{id}/explain?locale=fr` (else `Accept-Language`, by quality); the console passes `?locale=`, else the user's `locale` setting (new: `SettingsController`, the account page's *Language of help text*), else the browser's `Accept-Language`. One demo overlay ships: `modules/banking/dmod/packs/market-risk/config/about.fr.yaml` (kind `var` in French), from `tools/packgen/banking/about/market-risk.fr.yaml`. The drawer's own words are still English (the designed `drishti-console/config/about.yaml` labels were not built).
 
 **Step 6.** `HelpLint` (`com.ash.drishti.rachana.about`) holds `DRS-2045` to `DRS-2047` and the coverage rule; it asks a one-method `GlossaryLookup` whether a field has an entry (`CatalogGlossaryLookup` applies the catalogue rule: the kind's glossary by path or last name, then the vocabulary by last name; step 4's `GlossaryResolver` can implement the interface and replace it). Shown fields are read from the Sutra's bind expressions (strip, columns, gauge/metric `value`/`delta`) and counted when some sample holds them, not from the rendered cells. `sutra lint` prints the warnings and fails on them only with `--strict`; `expect.yaml` `help: { coverage, about }` and a `tests/help-coverage.txt` ratchet (`<sutra>=<0..1>`) are checked by `sutra test` (`HelpChecks` in `server/cli`); `SutraCliHelpTest` covers each warning and the floor. The workbench Problems pane (step 7) reuses `HelpLint`.
 

@@ -35,7 +35,7 @@ cadence:
 binding-hint:
   lake-table: statistics.statistics-series
   test-data:
-  - config/packs/economy/national-statistics/samples
+  - modules/economy/packs/national-statistics/samples
 fields:
 - name: SERIES_ID
   type: id

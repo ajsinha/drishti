@@ -484,7 +484,7 @@ def load_intraday(path: str, lake: str, day: str | None, signal: str | None, tok
             f = Path(tmp) / f"{kind}.{day}.jsonl"
             f.write_text("".join(json.dumps(r) + "\n" for r in kr), encoding="utf-8")
             cmd = [sys.executable, str(root / "tools" / "drishti.py"), "lake", "build", "--from", str(f), "--pack",
-                   str(root / "config" / "packs" / "banking" / "market-risk"), "--connector", "risk-store", "--kind", kind, "--key", key, "--as-of",
+                   str(root / "modules" / "banking" / "dmod" / "packs" / "market-risk"), "--connector", "risk-store", "--kind", kind, "--key", key, "--as-of",
                    day, "--mode", "append", "--lake", lake, "-q"]
             if signal:
                 cmd += ["--signal", signal]                     # each kind's own signal: the engine reads a batch's two kinds apart

@@ -83,8 +83,8 @@ class SourceModuleEndToEndTest {
     @Test
     void aSwapOneFileInTheInboxIsListedAndTheSwitchTakesItAwayAndBack() throws Exception {
         Path root = repo();
-        Path pack = Files.createDirectories(tmp.resolve("config/packs/banking/trading"));
-        Files.copy(root.resolve("config/packs/banking/trading/pack.yaml"), pack.resolve("pack.yaml"));
+        Path pack = Files.createDirectories(tmp.resolve("modules/banking/dmod/packs/trading"));
+        Files.copy(root.resolve("modules/banking/dmod/packs/trading/pack.yaml"), pack.resolve("pack.yaml"));
         Path module = tmp.resolve("modules/source-swapone");
         copy(root.resolve("modules/source-swapone"), module);
         YAMLMapper yaml = new YAMLMapper();

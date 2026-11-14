@@ -618,18 +618,18 @@ counterparty-mine/counterparty-mine.v1.sutra.yaml:7 DRS-2021 unknown panel kind 
 $ echo $?
 1
 
-$ drishti-console/.venv/bin/python tools/drishti.py sutra test config/packs/banking/market-risk
+$ drishti-console/.venv/bin/python tools/drishti.py sutra test modules/banking/dmod/packs/market-risk
      frtb-sensitivity: help coverage 9/9 (100%)
-ok   config/packs/banking/market-risk/sutras/market-risk/frtb-sensitivity.v1.sutra.yaml (2 samples)
+ok   modules/banking/dmod/packs/market-risk/sutras/market-risk/frtb-sensitivity.v1.sutra.yaml (2 samples)
      pnl-explain: help coverage 4/4 (100%)
-ok   config/packs/banking/market-risk/sutras/market-risk/pnl-explain.v1.sutra.yaml (2 samples)
+ok   modules/banking/dmod/packs/market-risk/sutras/market-risk/pnl-explain.v1.sutra.yaml (2 samples)
 …    (stress-result and stress-scenario likewise)
-skip config/packs/banking/market-risk/sutras/market-risk/trade-valuation.v1.sutra.yaml (no samples)
+skip modules/banking/dmod/packs/market-risk/sutras/market-risk/trade-valuation.v1.sutra.yaml (no samples)
      var: help coverage 5/5 (100%)
-ok   config/packs/banking/market-risk/sutras/market-risk/var.v1.sutra.yaml (2 samples)
+ok   modules/banking/dmod/packs/market-risk/sutras/market-risk/var.v1.sutra.yaml (2 samples)
 ```
 
-`sutra lint config/packs/banking/trading` prints `ok` for each of the pack's 134 Sutras (blocks expanded) in about seven seconds; `sutra test config/packs/banking/trading` renders each against the samples in its
+`sutra lint modules/banking/dmod/packs/trading` prints `ok` for each of the pack's 134 Sutras (blocks expanded) in about seven seconds; `sutra test modules/banking/dmod/packs/trading` renders each against the samples in its
 `tests/` folder.
 
 #### The tests convention
@@ -1232,7 +1232,7 @@ The offline path: no server API and no token. Full guide with real output, promo
 [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#8-deploy-promote-and-roll-back-by-copying).
 
 ```bash
-drishti.py pack bundle config/packs/banking/trading --out dist                  # trading-1.0.0.tar.gz + .sha256 + .manifest.json (runs pack check first)
+drishti.py pack bundle modules/banking/dmod/packs/trading --out dist                  # trading-1.0.0.tar.gz + .sha256 + .manifest.json (runs pack check first)
 drishti.py pack verify dist/trading-1.0.0.tar.gz                # sha256, manifest checksums, schema, server version, sutra lint + test
 drishti.py pack deploy dist/trading-1.0.0.tar.gz --to /opt/drishti/packs --backup /opt/drishti/backups [--dry-run]
 drishti.py pack rollback trading --to /opt/drishti/packs --backup /opt/drishti/backups [--version 1.0.0]
@@ -1672,7 +1672,7 @@ alone is the older form: the options and the pack decide. A table whose lake fil
 loader only (`--engine java --batch-id ID`: the batch recorded in each date's commit, never appended twice); the Python path refuses it.
 
 ```bash
-python3 tools/drishti.py lake build --from drop/endur-2026-10-28.jsonl.gz --as-of 2026-10-28 --pack config/packs/banking/trading \
+python3 tools/drishti.py lake build --from drop/endur-2026-10-28.jsonl.gz --as-of 2026-10-28 --pack modules/banking/dmod/packs/trading \
     --connector trade-endur --lake demo                  # partitioned by business_date and PRODUCT_TYPE, as config/lakes/demo.yaml says
 python3 tools/drishti.py lake show                       # every lake and table as the server reads them
 python3 tools/drishti.py lake check                      # connectors name known lakes; lake files match the tables on disk
@@ -1832,7 +1832,7 @@ such as AWS Glue: `catalog=rest`, `uri=…`, `warehouse=…`, `catalog.rest.sign
 to maintain ([OPERATIONS_GUIDE.md › Lake maintenance: Admin → Lakes → Maintain and `lake maintain`, section 8](OPERATIONS_GUIDE.md#163-iceberg-lakes)).
 
 ```bash
-python3 tools/drishti.py lake build --from data/testdata/market-risk/pnl-vector/ --pack config/packs/banking/market-risk --connector risk-store \
+python3 tools/drishti.py lake build --from data/testdata/market-risk/pnl-vector/ --pack modules/banking/dmod/packs/market-risk --connector risk-store \
     --kind pnl-vector --lake data/iceberg --format iceberg
 ```
 
@@ -1986,7 +1986,7 @@ connector (`settings.domain`, `settings.layout.<kind>.columns`), and the key, da
 `ingest.trade.flatten` adds `NOTIONAL` and `INDEX_NAME` from the first leg, [7.6](#76-the-two-engines)). Options on the command line win.
 
 ```yaml
-# config/packs/banking/trading/pack.yaml (the parts lake build reads; one Delta connector per source system)
+# modules/banking/dmod/packs/trading/pack.yaml (the parts lake build reads; one Delta connector per source system)
 pack: trading
 connectors:
   trade-endur:
@@ -2006,7 +2006,7 @@ The pack has three Delta connectors for `trade`, so the run names one with `--co
 sixteen promoted columns); captured as a dry run:
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --pack config/packs/banking/trading \
+drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --pack modules/banking/dmod/packs/trading \
     --kind trade --connector trade-endur --key TRADE_ID --as-of 2026-09-22 --partition-by PRODUCT_TYPE --lake lake3 --dry-run --json
 # "pack": "trading", "domain": "trading", "kind": "trade", "table": "lake3/trading/trade_endur", "promote": ["TRADE_ID", "SOURCE_SYSTEM",
 # "PRODUCT_TYPE", ... "TRADER_ID"] (16), "documents": 4407, "status": "dry-run", "exitCode": 0
@@ -2015,7 +2015,7 @@ drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdat
 In production the same run names the real lake and tells the server (the ETL's last step):
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py lake build --from /srv/drop/endur-2026-10-16.json.gz --pack config/packs/banking/trading --kind trade --connector trade-endur \
+drishti-console/.venv/bin/python tools/drishti.py lake build --from /srv/drop/endur-2026-10-16.json.gz --pack modules/banking/dmod/packs/trading --kind trade --connector trade-endur \
     --key TRADE_ID --as-of 2026-10-16 --partition-by PRODUCT_TYPE --lake /srv/drishti/delta \
     --signal http://drishti.internal:18480 --token-file /etc/drishti/loads.token
 ```
@@ -2179,7 +2179,7 @@ a table delta-rs would read only in part (column mapping, deletion vectors, v2 c
 **Through lake build** (the lock, the run log, the summary, the signal as always):
 
 ```bash
-python3 tools/drishti.py lake build --engine java --from /data/pv/2026-10-28/ --as-of 2026-10-28 --pack config/packs/banking/market-risk --kind scenario-pv \
+python3 tools/drishti.py lake build --engine java --from /data/pv/2026-10-28/ --as-of 2026-10-28 --pack modules/banking/dmod/packs/market-risk --kind scenario-pv \
     --key SCENARIO_PV_ID --mode overwrite-dates --lake /var/lib/drishti/delta \
     --loader-set memory.budget-mb=16384 --loader-set memory.spill-dir=/mnt/nvme/spill
 ```
@@ -2275,7 +2275,7 @@ Options: `--config FILE`, `--set key.path=value` (repeatable; overrides the file
 ```yaml
 source:
   files: /data/pv/2026-10-28/*.jsonl.gz
-  pack: config/packs/banking/market-risk
+  pack: modules/banking/dmod/packs/market-risk
   id: SCENARIO_PV_ID
   as-of: 2026-10-28                       # the day's folder: its business date, given (a row's own date is only counted)
 target:

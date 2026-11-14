@@ -19,7 +19,7 @@ tools/packgen/us_equities/make.py); this script writes the README of a pack with
 text: pack.yaml, the samples, the Sutras and config/about.yaml, plus the hand-written intro
 (tools/packgen/<generator>/readme/<pack>.intro.md or tools/packgen/intros/<pack>.intro.md).
 
-    python3 tools/packgen/readme.py news-and-markets          write config/packs/economy/news-and-markets/README.md
+    python3 tools/packgen/readme.py news-and-markets          write modules/economy/packs/news-and-markets/README.md
     python3 tools/packgen/readme.py --all --check             fail when a pack's README is missing, stale or breaks the standard
     python3 tools/packgen/readme.py my-pack --packs DIR       a pack in another folder (its intro is looked up the same way)
 """

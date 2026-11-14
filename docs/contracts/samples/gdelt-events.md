@@ -25,13 +25,13 @@ Every data type of `gdelt-events` as a real record of the committed test data, e
 
 ## World events by country: event-country (GDELT)
 
-What the world's news reported about one country yesterday (GDELT): events, tone, conflict, categories, the world map by tone, the top stories. One row per world events by country, keyed by EVENT_COUNTRY_ID. Read by the **gdelt-events** pack's connector `gdelt-store` (lake table `gdelt.event-country`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/gdelt-events/samples/event-country.jsonl`, 13 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+What the world's news reported about one country yesterday (GDELT): events, tone, conflict, categories, the world map by tone, the top stories. One row per world events by country, keyed by EVENT_COUNTRY_ID. Read by the **gdelt-events** pack's connector `gdelt-store` (lake table `gdelt.event-country`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`modules/economy/packs/gdelt-events/samples/event-country.jsonl`, 13 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 
 |  |  |
 |---|---|
-| Path | `config/packs/economy/gdelt-events/samples/event-country.jsonl` |
+| Path | `modules/economy/packs/gdelt-events/samples/event-country.jsonl` |
 | Format | JSON Lines: UTF-8, one JSON object a line |
 | Key field | `EVENT_COUNTRY_ID` |
 | Date field | none in the record: the pack's samples are served on every business date (partition `business_date`) |
@@ -171,7 +171,7 @@ None: all 13 rows were read, and every field any of them has is in the record ab
 
 ### See also
 
-- Data contract: [GDELT in the gdelt-events pack's contracts](../packs/gdelt-events.md#gdelt-world-events-by-country-event-country) (`config/packs/economy/gdelt-events/contracts/event-country.contract.yaml`, the source of every meaning on this page).
+- Data contract: [GDELT in the gdelt-events pack's contracts](../packs/gdelt-events.md#gdelt-world-events-by-country-event-country) (`modules/economy/packs/gdelt-events/contracts/event-country.contract.yaml`, the source of every meaning on this page).
 - [Public sector: government data and free news](../../guides/PUBLIC_SECTOR_GUIDE.md)
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).

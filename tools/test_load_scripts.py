@@ -177,7 +177,7 @@ class LoadScripts(unittest.TestCase):
 
     def test_rows_runs_never_rewrite_the_samples_tests_or_feed(self):
         """make_data.py --jsonl/--lake only write rows: the generator's own outputs come from a plain run (generation and loading split)."""
-        samples = sorted(f for d in pack_dirs().values() for f in d.glob("samples/*.jsonl")) + sorted((ROOT / "config" / "packs" / "banking" / "trading" / "tests").rglob("*.json*"))
+        samples = sorted(f for d in pack_dirs().values() for f in d.glob("samples/*.jsonl")) + sorted((ROOT / "modules" / "banking" / "dmod" / "packs" / "trading" / "tests").rglob("*.json*"))
         before = {f: f.stat().st_mtime_ns for f in samples}
         with tempfile.TemporaryDirectory() as tmp:
             r = subprocess.run([sys.executable, "tools/packgen/banking/make_data.py", "--lake", str(Path(tmp) / "delta"), "--no-load", "--days", "2"],

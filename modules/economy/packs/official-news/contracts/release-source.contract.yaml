@@ -36,7 +36,7 @@ cadence:
 binding-hint:
   lake-table: officialnews.release-source
   test-data:
-  - config/packs/economy/official-news/samples
+  - modules/economy/packs/official-news/samples
 fields:
 - name: SOURCE_ID
   type: id

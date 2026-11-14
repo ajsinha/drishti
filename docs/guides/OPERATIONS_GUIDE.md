@@ -1205,7 +1205,7 @@ touched by `pack deploy`: copy during the day, switch at the moment you choose.
 ### 8.2 Make a bundle
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py pack bundle config/packs/banking/trading --out dist
+drishti-console/.venv/bin/python tools/drishti.py pack bundle modules/banking/dmod/packs/trading --out dist
 ```
 
 ```text
@@ -1297,7 +1297,7 @@ rmdir ../stage
 What you tested is what you ship: build once, on CI, and copy the same file through the stages.
 
 ```text
-git (config/packs/banking/trading, tag v1.0.1)
+git (modules/banking/dmod/packs/trading, tag v1.0.1)
    │  CI: pack check, pack bundle
    ▼
 trading-1.0.1.tar.gz + .sha256        ← built ONCE, stored as a CI artifact
@@ -1333,7 +1333,7 @@ Never write into the folder the server reads while it is half-finished: write el
 - **Files root** (`<root>/<domain>/<business-date>/<kind>.jsonl`; the connector lists folders every 30 s):
 
   ```bash
-  python3 tools/drishti.py data ingest --from new-day.jsonl --pack config/packs/banking/trading --store files --root /srv/stage/files
+  python3 tools/drishti.py data ingest --from new-day.jsonl --pack modules/banking/dmod/packs/trading --store files --root /srv/stage/files
   cp -r /srv/stage/files/trading/2026-10-05 /srv/drishti/files/trading/.2026-10-05.part     # a dot name the connector skips
   mv /srv/drishti/files/trading/.2026-10-05.part /srv/drishti/files/trading/2026-10-05      # the rename is atomic
   ```
@@ -1392,8 +1392,8 @@ jobs:
         with: { distribution: temurin, java-version: 21 }
       - uses: astral-sh/setup-uv@v5
       - run: ./mvnw -q -DskipTests package -pl :drishti-app -am        # the exec jar that lint and test use
-      - run: uv run --with pyyaml python tools/drishti.py pack check config/packs/banking/trading --strict --junit build/reports
-      - run: uv run --with pyyaml python tools/drishti.py pack bundle config/packs/banking/trading --out dist
+      - run: uv run --with pyyaml python tools/drishti.py pack check modules/banking/dmod/packs/trading --strict --junit build/reports
+      - run: uv run --with pyyaml python tools/drishti.py pack bundle modules/banking/dmod/packs/trading --out dist
       - run: uv run --with pyyaml python tools/drishti.py pack verify dist/trading-*.tar.gz
       - uses: actions/upload-artifact@v4
         with: { name: trading-bundle, path: "dist/trading-*" }
@@ -2766,7 +2766,7 @@ the console as the administrator.
 
 ```cron
 # m  h  dom mon dow  command
-30 21 *   *   1-5  cd /opt/drishti && drishti-console/.venv/bin/python tools/drishti.py lake build --from /srv/drop/endur-$(date +\%F).json.gz --pack config/packs/banking/trading --kind trade --connector trade-endur --key TRADE_ID --lake /srv/drishti/delta --as-of $(date +\%F) --partition-by PRODUCT_TYPE --signal http://localhost:18480 --token-file /etc/drishti/loads.token -q >> /var/log/drishti/lake-build.log 2>&1
+30 21 *   *   1-5  cd /opt/drishti && drishti-console/.venv/bin/python tools/drishti.py lake build --from /srv/drop/endur-$(date +\%F).json.gz --pack modules/banking/dmod/packs/trading --kind trade --connector trade-endur --key TRADE_ID --lake /srv/drishti/delta --as-of $(date +\%F) --partition-by PRODUCT_TYPE --signal http://localhost:18480 --token-file /etc/drishti/loads.token -q >> /var/log/drishti/lake-build.log 2>&1
 ```
 
 Or as a systemd timer (a missed run is caught up after a reboot; `systemctl status` shows the exit code):
@@ -2781,7 +2781,7 @@ After=network-online.target
 Type=oneshot
 User=drishti
 WorkingDirectory=/opt/drishti
-ExecStart=/bin/sh -c 'drishti-console/.venv/bin/python tools/drishti.py lake build --from /srv/drop/endur-$(date +%%F).json.gz --pack config/packs/banking/trading --kind trade --connector trade-endur --key TRADE_ID --lake /srv/drishti/delta --as-of $(date +%%F) --partition-by PRODUCT_TYPE --signal http://localhost:18480 --token-file /etc/drishti/loads.token -q'
+ExecStart=/bin/sh -c 'drishti-console/.venv/bin/python tools/drishti.py lake build --from /srv/drop/endur-$(date +%%F).json.gz --pack modules/banking/dmod/packs/trading --kind trade --connector trade-endur --key TRADE_ID --lake /srv/drishti/delta --as-of $(date +%%F) --partition-by PRODUCT_TYPE --signal http://localhost:18480 --token-file /etc/drishti/loads.token -q'
 # 2 (written with rejects) is not a failure of the unit; alert on it from the summary instead
 SuccessExitStatus=2
 Environment=DRISHTI_LAKE_HEAP=2g

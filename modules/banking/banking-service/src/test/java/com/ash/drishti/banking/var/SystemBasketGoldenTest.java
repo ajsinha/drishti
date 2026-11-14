@@ -84,7 +84,7 @@ class SystemBasketGoldenTest {
     /** The definitions as the server keeps them now: the pack's seed imported into an empty system scope, read back on the date. */
     static Map<String, VarDate.Portfolio> definitions() throws IOException {
         VarSystemBaskets sb = new VarSystemBaskets(new FileContentStore(store.resolve("content")));
-        Object seed = VarSystemBasketEdit.YAML.readValue(repo.resolve("config/packs/banking/market-risk/seeds/system-baskets.yaml").toFile(),
+        Object seed = VarSystemBasketEdit.YAML.readValue(repo.resolve("modules/banking/dmod/packs/market-risk/seeds/system-baskets.yaml").toFile(),
                 Object.class);
         assertThat(sb.seed(seed, "test", null)).as("seeded").isEqualTo(28);
         assertThat(sb.seed(seed, "test", null)).as("seeded once").isZero();

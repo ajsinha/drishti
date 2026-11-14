@@ -17,7 +17,7 @@ in drishti-api, which the server, the loaders and the CLIs use).
 
 A packs root (``config/packs``, an installed-packs folder, ``examples/packs``) holds packs directly (``<root>/<pack>/pack.yaml``) or one
 level down in **domain folders** (``<root>/<domain>/<pack>/pack.yaml``, docs/architecture/DOMAIN_MODULES.md section 8): a domain folder
-is a folder of the root with no ``pack.yaml`` of its own. The shipped packs live in their domain's folder (``config/packs/banking/trading``),
+is a folder of the root with no ``pack.yaml`` of its own. The shipped packs live in their domain's folder (``modules/banking/dmod/packs/trading``),
 and a pack's ``domain:`` names that folder (``tools/test_pack_layout.py``). Nothing else joins a pack's name to a packs folder by hand.
 
 Tools import it with the console folder on ``sys.path``: ``from core.pack_paths import pack_dir``.

@@ -1084,7 +1084,7 @@ Fields no record above has, found by reading all 12,477 rows, with how many rows
 
 ### See also
 
-- Data contract: [TRD in the trading pack's contracts](../packs/trading.md#trd-trade-trade) (`config/packs/banking/trading/contracts/trade.contract.yaml`, the source of every meaning on this page).
+- Data contract: [TRD in the trading pack's contracts](../packs/trading.md#trd-trade-trade) (`modules/banking/dmod/packs/trading/contracts/trade.contract.yaml`, the source of every meaning on this page).
 - [Trading: one schema, three source systems](../../guides/BUILD_GUIDE.md#trading-one-schema-three-source-systems)
 - [3. Trades and products](../../knowledge/risk.md#3-trades-and-products)
 - [Tutorial 11 · Correct a trade and approve it: write-back](../../tutorials/11-correct-and-approve.md)
@@ -8137,7 +8137,7 @@ Fields no record above has, found by reading all 18,493 rows, with how many rows
 
 ### See also
 
-- Data contract: [TRD in the trading pack's contracts](../packs/trading.md#trd-trade-trade) (`config/packs/banking/trading/contracts/trade.contract.yaml`, the source of every meaning on this page).
+- Data contract: [TRD in the trading pack's contracts](../packs/trading.md#trd-trade-trade) (`modules/banking/dmod/packs/trading/contracts/trade.contract.yaml`, the source of every meaning on this page).
 - [Trading: one schema, three source systems](../../guides/BUILD_GUIDE.md#trading-one-schema-three-source-systems)
 - [3. Trades and products](../../knowledge/risk.md#3-trades-and-products)
 - [Tutorial 11 · Correct a trade and approve it: write-back](../../tutorials/11-correct-and-approve.md)
@@ -20143,7 +20143,7 @@ Fields no record above has, found by reading all 19,596 rows, with how many rows
 
 ### See also
 
-- Data contract: [TRD in the trading pack's contracts](../packs/trading.md#trd-trade-trade) (`config/packs/banking/trading/contracts/trade.contract.yaml`, the source of every meaning on this page).
+- Data contract: [TRD in the trading pack's contracts](../packs/trading.md#trd-trade-trade) (`modules/banking/dmod/packs/trading/contracts/trade.contract.yaml`, the source of every meaning on this page).
 - [Trading: one schema, three source systems](../../guides/BUILD_GUIDE.md#trading-one-schema-three-source-systems)
 - [3. Trades and products](../../knowledge/risk.md#3-trades-and-products)
 - [Tutorial 11 · Correct a trade and approve it: write-back](../../tutorials/11-correct-and-approve.md)

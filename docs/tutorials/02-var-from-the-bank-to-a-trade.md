@@ -119,7 +119,7 @@ VAR BANK  ·  Drishti Bank  ·  node  ·  2026-09-30
 
 **What it reads.** The market-risk pack's connector `risk-store` keeps the P&L vector as a `list<double>` column of the [`pnl-vector`](../contracts/samples/market-risk.md#pnl-vector) ([contract](../contracts/packs/market-risk.md#pnlv-pl-vector-509-scenarios-pnl-vector))
 table, and the trades a batch sends as **scenario PVs** in their own currency as the `list<double>` column `SCENARIO_PV` of
-the [`scenario-pv`](../contracts/samples/market-risk.md#scenario-pv) ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv)) table, with each currency's scenario FX in [`fx-scenario`](../contracts/samples/market-risk.md#fx-scenario) ([contract](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-509-scenarios-fx-scenario)) (`config/packs/banking/market-risk/pack.yaml`):
+the [`scenario-pv`](../contracts/samples/market-risk.md#scenario-pv) ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv)) table, with each currency's scenario FX in [`fx-scenario`](../contracts/samples/market-risk.md#fx-scenario) ([contract](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-509-scenarios-fx-scenario)) (`modules/banking/dmod/packs/market-risk/pack.yaml`):
 
 ```yaml
 connectors:
@@ -552,7 +552,7 @@ Each basket an import writes appears in **System baskets** at once, on every ser
 
 **In YAML.** The exported file is the import file: `system-baskets:`, one entry a basket with `id`, `name`, `description`, `owner`, `type`,
 its `node`, `rule` or `members`, `rolls-up-to`, `valid-from` and `valid-to`. The demo's own are
-`config/packs/banking/market-risk/seeds/system-baskets.yaml`, imported once into the empty store while `DRISHTI_VAR_SYSTEM_BASKETS_SEED`
+`modules/banking/dmod/packs/market-risk/seeds/system-baskets.yaml`, imported once into the empty store while `DRISHTI_VAR_SYSTEM_BASKETS_SEED`
 is on (it follows `DRISHTI_DEMO_ENABLED`); a bank's installation turns it off and imports its own file.
 
 **You should see** the dry run list one change and write nothing, then `PF-USD-RATES` renamed in **System baskets** after `--apply`, with
@@ -809,7 +809,7 @@ authority a trade's VaR limit is granted under: twelve letters dealt over the bo
 market-risk pack configures three hierarchies over them:
 
 ```yaml
-# config/packs/banking/market-risk/pack.yaml (generated from tools/packgen/banking/kept/market-risk.yaml); drishti.var.hierarchies wins over it
+# modules/banking/dmod/packs/market-risk/pack.yaml (generated from tools/packgen/banking/kept/market-risk.yaml); drishti.var.hierarchies wins over it
 hierarchies:
   MGMT: { title: Management, levels: "DIVISION > DESK > TT_BOOK", level-names: "division > desk > book", ids: leaf,
           root: { id: BANK, name: Drishti Bank }, limits: var-limit }

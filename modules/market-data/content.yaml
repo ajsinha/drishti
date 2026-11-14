@@ -15,7 +15,7 @@
 # What the packer brings in from the repository (paths from this folder), so each file keeps one home: the packs without
 # their connector templates (a module carries no connector), the lens and the tutorial. This list itself is not packed.
 copy:
-- from: ../../config/packs/banking/market-data
+- from: ../../modules/market-data/packs/market-data
   to: packs/market-data
   leave-out:
   - tests
