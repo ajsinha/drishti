@@ -118,7 +118,7 @@ Fields, from 18 sample documents:
 | `SIGNED` | date | `2015-12-10` | The date the agreement was signed. |
 | `CLOSE_OUT_NETTING` | string | `Enforceable` | Whether a legal opinion confirms that on default the trades net to one amount; only then may exposure be netted. |
 | `ELECTIONS` | object |  | The agreement's elections |
-| `COUNTERPARTY` | string | `CP-ALDERSHOT` | The counterparty's id; link to `counterparty` |
+| `COUNTERPARTY` | string | `CP-ALDERSHOT` | The counterparty's id |
 | `CSAS` | list of strings |  | link to `csa` |
 
 Nested structures:
@@ -127,7 +127,7 @@ Nested structures:
 |---|---|
 | `ELECTIONS` | `AUTOMATIC_EARLY_TERMINATION` (boolean): Whether the trades end by themselves on certain defaults, without a notice., `CROSS_DEFAULT` (string): The threshold above which a default on other debt is a default under this agreement., `SET_OFF` (boolean): Whether amounts owed under other contracts may be set off against the close-out amount., `TERMINATION_CURRENCY` (string): The currency the close-out amount is paid in., `ADDITIONAL_TERMINATION_EVENTS` (string): Further events, such as a downgrade, that let a party end the trades., `PROTOCOLS` (string): The ISDA protocols both parties adhered to, which amend the agreement. |
 
-Links: `COUNTERPARTY` → `counterparty`, `CSAS` → `csa`.
+Links: `CSAS` → `csa`.
 
 ### `csa`
 
@@ -153,8 +153,8 @@ Fields, from 66 sample documents:
 | `MPOR_DAYS` | integer | `10` | The time assumed between the last margin received and closing out a defaulted counterparty, in business days. |
 | `ELIGIBLE` | list of objects |  | Eligible collateral with haircuts |
 | `AGREEMENT` | string | `AGR-ALDERSHOT-ISDA` | link to `agreement` |
-| `COUNTERPARTY` | string | `CP-ALDERSHOT` | The counterparty's id; link to `counterparty` |
-| `LEGAL_ENTITY` | string | `LE-FRA` | The bank's entity that signed this CSA: one CSA per agreement and legal entity.; link to `legal-entity` |
+| `COUNTERPARTY` | string | `CP-ALDERSHOT` | The counterparty's id |
+| `LEGAL_ENTITY` | string | `LE-FRA` | The bank's entity that signed this CSA: one CSA per agreement and legal entity. |
 | `NETTING_SETS` | list of strings |  | link to `netting-set` |
 | `COLLATERAL_BALANCES` | list of strings |  | link to `collateral-balance` |
 
@@ -164,7 +164,7 @@ Nested structures:
 |---|---|
 | `ELIGIBLE[]` | `ASSET` (string): An asset the counterparty may deliver as collateral., `HAIRCUT` (number): The share taken off the asset's value when it is counted as collateral. |
 
-Links: `AGREEMENT` → `agreement`, `COLLATERAL_BALANCES` → `collateral-balance`, `COUNTERPARTY` → `counterparty`, `LEGAL_ENTITY` → `legal-entity`, `NETTING_SETS` → `netting-set`.
+Links: `AGREEMENT` → `agreement`, `COLLATERAL_BALANCES` → `collateral-balance`, `NETTING_SETS` → `netting-set`.
 
 ### `netting-set`
 
@@ -184,7 +184,7 @@ Fields, from 66 sample documents:
 | `CVA` | integer | `-7` | The reduction in the value of the trades for the risk that the counterparty defaults before they mature. (USD) |
 | `TRADES` | list of objects |  | Trades in the netting set |
 | `BY_ASSET` | list of objects |  | Exposure by asset class |
-| `COUNTERPARTY` | string | `CP-ALDERSHOT` | The counterparty's id; link to `counterparty` |
+| `COUNTERPARTY` | string | `CP-ALDERSHOT` | The counterparty's id |
 | `AGREEMENT` | string | `AGR-ALDERSHOT-ISDA` | link to `agreement` |
 | `CSA` | string | `CSA-ALDERSHOT-FRA` | link to `csa` |
 | `CREDIT_LIMIT` | string | `LIM-ALDERSHOT` | link to `credit-limit` |
@@ -192,7 +192,7 @@ Fields, from 66 sample documents:
 | `SACCR` | string | `SACCR-ALDERSHOT-FRA` | link to `sa-ccr` |
 | `SIMM` | string | `SIMM-ALDERSHOT` | link to `simm` |
 | `COLLATERAL_BALANCE` | string | `COLL-ALDERSHOT-FRA` | link to `collateral-balance` |
-| `LEGAL_ENTITY` | string | `LE-FRA` | The bank's legal entity; link to `legal-entity` |
+| `LEGAL_ENTITY` | string | `LE-FRA` | The bank's legal entity |
 | `NETTING_ENFORCEABLE` | boolean | `true` | Whether close-out netting is enforceable |
 
 Nested structures:
@@ -202,7 +202,7 @@ Nested structures:
 | `TRADES[]` | `TRADE_ID` (string): The member trade., `STATUS` (string), `PRODUCT` (string): The kind of instrument the trade is., `ASSET_CLASS` (string), `CURRENCY` (string), `BOOK` (string), `NOTIONAL` (number): The reference amount of the trade, in the trade's own currency. (trade currency), `MATURITY` (date): The date the trade ends., `MATURITY_BUCKET` (string), `MTM` (integer): The trade's current value, from the bank's side. (USD) |
 | `BY_ASSET[]` | `ASSET` (string), `MTM` (integer) |
 
-Links: `AGREEMENT` → `agreement`, `COLLATERAL_BALANCE` → `collateral-balance`, `COUNTERPARTY` → `counterparty`, `CREDIT_LIMIT` → `credit-limit`, `CSA` → `csa`, `CVA_RESULT` → `cva`, `LEGAL_ENTITY` → `legal-entity`, `SACCR` → `sa-ccr`, `SIMM` → `simm`, `TRADE_ID` → `trade`.
+Links: `AGREEMENT` → `agreement`, `COLLATERAL_BALANCE` → `collateral-balance`, `CREDIT_LIMIT` → `credit-limit`, `CSA` → `csa`, `CVA_RESULT` → `cva`, `SACCR` → `sa-ccr`, `SIMM` → `simm`, `TRADE_ID` → `trade`.
 
 ### `credit-limit`
 
@@ -224,7 +224,7 @@ Fields, from 18 sample documents:
 | `UTILISATION` | number | `0.6671` | The share of the limit that is used: used divided by limit. Above 100% is a breach. (% of limit) |
 | `STATUS` | string | `Within limit` | Status |
 | `BUCKETS` | list of objects |  | Limit and usage by tenor bucket |
-| `COUNTERPARTY` | string | `CP-ALDERSHOT` | The counterparty's id; link to `counterparty` |
+| `COUNTERPARTY` | string | `CP-ALDERSHOT` | The counterparty's id |
 | `APPROVED_BY` | string | `Credit Risk Committee` | Who approved the limit |
 | `REVIEW_DUE` | date | `2027-03-19` | When the limit is next reviewed |
 
@@ -233,8 +233,6 @@ Nested structures:
 | Path | Fields |
 |---|---|
 | `BUCKETS[]` | `BUCKET` (string): The range of years to maturity the limit is split into; exposure on trades that mature within it is counted against it., `LIMIT` (integer): The limit that applies to this tenor bucket. (USD), `USED` (integer): The exposure in this tenor bucket. (USD), `UTILISATION` (number): The share of the limit that is used: used divided by limit. Above 100% is a breach. (% of limit) |
-
-Links: `COUNTERPARTY` → `counterparty`.
 
 ### `cva`
 
@@ -257,7 +255,7 @@ Fields, from 66 sample documents:
 | `COMPONENTS` | list of objects |  | CVA components |
 | `SENSITIVITIES` | list of objects |  | CVA sensitivities |
 | `NETTING_SET` | string | `NS-ALDERSHOT-FRA` | link to `netting-set` |
-| `CREDIT_CURVE` | string | `CDS-CASCADIA` | The counterparty's credit curve; link to `credit-curve` (in 41%) |
+| `CREDIT_CURVE` | string | `CDS-CASCADIA` | The counterparty's credit curve (in 41%) |
 
 Nested structures:
 
@@ -266,7 +264,7 @@ Nested structures:
 | `COMPONENTS[]` | `NAME` (string), `AMOUNT` (integer) |
 | `SENSITIVITIES[]` | `FACTOR` (string): The market input that is bumped to see how the adjustment changes., `BUMP` (string): The size of the move applied to the factor., `DELTA` (integer): The change in the adjustment for the bump. (USD) |
 
-Links: `CREDIT_CURVE` → `credit-curve`, `NETTING_SET` → `netting-set`.
+Links: `NETTING_SET` → `netting-set`.
 
 ### `sa-ccr`
 
@@ -374,7 +372,7 @@ Fields, from 18 sample documents:
 | `VERSION` | string | `ISDA SIMM 2.7` | The version of the ISDA Standard Initial Margin Model the calculation used; the model is recalibrated each year. |
 | `RISK_CLASSES` | list of objects |  | Initial margin by risk class |
 | `NETTING_SET` | string | `NS-ALDERSHOT-FRA` | link to `netting-set` |
-| `COUNTERPARTY` | string | `CP-ALDERSHOT` | The counterparty's id; link to `counterparty` |
+| `COUNTERPARTY` | string | `CP-ALDERSHOT` | The counterparty's id |
 
 Nested structures:
 
@@ -382,7 +380,7 @@ Nested structures:
 |---|---|
 | `RISK_CLASSES[]` | `RISK_CLASS` (string), `IM` (integer): The initial margin of one SIMM risk class: interest rate, credit qualifying, credit non-qualifying, equity, commodity or FX. (USD) |
 
-Links: `COUNTERPARTY` → `counterparty`, `NETTING_SET` → `netting-set`.
+Links: `NETTING_SET` → `netting-set`.
 
 ### `simulation-run`
 
@@ -441,11 +439,11 @@ Fields, from 1 sample document:
 | `TRADE_ID` | string | `CLY-3000280` | link to `trade` |
 | `SOURCE_SYSTEM` | string | `CALYPSO` | — |
 | `NETTING_SET` | string | `NS-ALDERSHOT-FRA` | The trade's netting set (denormalised; the netting set's membership wins); link to `netting-set` |
-| `COUNTERPARTY` | string | `CP-ALDERSHOT` | link to `counterparty` |
-| `LEGAL_ENTITY` | string | `LE-FRA` | link to `legal-entity` |
+| `COUNTERPARTY` | string | `CP-ALDERSHOT` | — |
+| `LEGAL_ENTITY` | string | `LE-FRA` | — |
 | `DIVISION` | string | `DIV-TREASURY` | — |
-| `DESK` | string | `DESK-SFT` | link to `desk` |
-| `TT_BOOK` | string | `BOOK-SFT-1` | link to `book` |
+| `DESK` | string | `DESK-SFT` | — |
+| `TT_BOOK` | string | `BOOK-SFT-1` | — |
 | `LIMIT_LETTER` | string | `LL-0001` | — |
 | `ASSET_CLASS` | string | `Securities financing` | — |
 | `PRODUCT` | string | `Tri-party repo` | — |
@@ -458,7 +456,7 @@ Fields, from 1 sample document:
 | `PRICER` | string | `testgen-factor-walk` | — |
 | `BATCH_ID` | string | `XB-2026-09-30-01` | — |
 
-Links: `COUNTERPARTY` → `counterparty`, `DESK` → `desk`, `LEGAL_ENTITY` → `legal-entity`, `NETTING_SET` → `netting-set`, `RUN_ID` → `simulation-run`, `TRADE_ID` → `trade`, `TT_BOOK` → `book`.
+Links: `NETTING_SET` → `netting-set`, `RUN_ID` → `simulation-run`, `TRADE_ID` → `trade`.
 
 ### `exposure-result`
 
