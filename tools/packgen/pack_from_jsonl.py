@@ -111,6 +111,8 @@ def build_parser(add_help: bool = True) -> argparse.ArgumentParser:
     p.add_argument("--force", action="store_true", help="overwrite an existing --out folder")
     p.add_argument("--catalog-samples", type=int, default=25, help="documents per kind kept in samples/ (default 25; every combination has one)")
     p.add_argument("--sample-part-mb", type=float, default=50, help="split a kind's samples/<kind>.jsonl into parts above this size (default 50)")
+    p.add_argument("--sutra-edits", type=pathlib.Path, help="a JSON file {sutra name: YAML}: these texts replace the drafted Sutras before lint and test "
+                                                            "(the Pack designer's edits)")
     SG.add_arguments(p)
     return p
 
@@ -321,6 +323,11 @@ def run(opts, say=print, an: Analysis | None = None) -> int:
     sutras, tests = out / "sutras", out / "tests"
     groups = SG.draft(an.groups, opts, sutras, tests, say)
     SG.summary(groups, say)
+    edits = json.loads(opts.sutra_edits.read_text(encoding="utf-8")) if getattr(opts, "sutra_edits", None) else {}
+    for g in groups:
+        if g.name in edits:
+            g.path.write_text(edits[g.name].rstrip("\n") + "\n", encoding="utf-8")
+    say(f"{sum(1 for g in groups if g.name in edits)} Sutra(s) taken from the edits file" if edits else "no edits file")
 
     taken: set[str] = set()
     mnemonics = {}

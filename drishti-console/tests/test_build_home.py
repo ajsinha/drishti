@@ -161,7 +161,7 @@ def test_one_search_across_every_kind(backend, monkeypatch):
 def test_new_lists_where_each_kind_starts(backend, monkeypatch):
     page = _client(_app(backend, monkeypatch)).get("/build").text
     news = dict(re.findall(r'<a href="([^"]+)" data-new-kind="([\w-]+)"', page))
-    assert news.get("/build/new") == "sutras" and news.get("/build/pack/new") == "packs" and news.get("/build/tables?new=python") == "python-tables"
+    assert news.get("/build/new") == "sutras" and news.get("/build/pack/designer") == "packs" and news.get("/build/tables?new=python") == "python-tables"
 
 
 def test_a_source_that_fails_leaves_its_kind_without_a_count(backend, monkeypatch):

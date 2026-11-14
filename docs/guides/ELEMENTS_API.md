@@ -3220,6 +3220,27 @@ Takes a file, as a drop does (a page that was handed one).
 
 Returns `boolean`: false when its type is not accepted.
 
+##### `FileDrop.takeMany(items)`
+
+Takes many files, as a drop or a folder choice does (multiple: true): the accepted ones are kept, the others refused one by one.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `items` | `Array&lt;{file: File, path: string}&gt;` | the files with their paths below the dropped folder |
+
+Returns `number`: how many were accepted.
+
+##### `FileDrop.sendMany(urlOf, headers)`
+
+Sends the picked files one after another, each as the body of a POST to urlOf(item), the bar following the bytes of all of them. Resolves with each answer [{path, status, body}]; stops at the first failure.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `urlOf` | `function({file: File, path: string}): string` |  |
+| `[headers]` | `Object&lt;string, string&gt;` |  |
+
+Returns `Promise&lt;Array&lt;{path: string, status: number, body: *}&gt;&gt;`.
+
 ##### `FileDrop.send(url, headers)`
 
 Sends the file as the body of a POST, streamed by the browser, the bar following.
@@ -4347,6 +4368,7 @@ An entry of the function catalogue (the server's: GET /api/v1/functions, or a pa
 | `[hint]` | `string` | the second line (default: the accepted types) |
 | `[accept]` | `string[]` | name endings taken ('.jsonl', '.tar.gz'); none: any file |
 | `[disabled=false]` | `boolean` |  |
+| `[multiple=false]` | `boolean` | many files (and folders, dropped or chosen) in one go: pick carries {files: [{file, path}]}, sendMany() sends them one after another |
 
 #### `FilterField` : `Object`
 

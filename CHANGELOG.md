@@ -17,6 +17,17 @@
 
 ## Unreleased
 
+- **Pack designer** (Build → New pack, `/build/pack/designer`; the old `/build/pack/new` redirects): a workspace with a rail of six steps and
+  their summaries. Data (drop `.jsonl`, `.jsonl.gz`, `.ndjson` files or a folder: uploaded to the server, every record analysed there with
+  progress, the code of `drishti.py pack new`), Kind and keys (discriminator columns in any combination with live Sutra counts and a rare mark, the
+  ID's whole-file duplicate check, the business date), Source (a file connector written as a binding), Design (the list of Sutras with check
+  badges; one's YAML beside its live screen drawn by the server on real rows and again as the YAML is edited), Finalize (the `.dmod` and the fifteen
+  checks), Deploy (the one module deploy: install on a node, plan then apply on a cluster). Built from Drishti Elements only (FileDrop now takes
+  many files and folders: `multiple`, `takeMany`, `sendMany`). Server side: `tools/packgen/designer_job.py` runs the analysis and the module as a job of
+  its own over `pack new`'s code (`pack new --sutra-edits FILE` takes the edited Sutras); workspaces live on disk under the console's data folder
+  (`core/packdesigner.py`). Settings `builder.pack_designer_*` replace `builder.pack_sample_docs` and the other browser-reading limits. Removed:
+  the old five-step page, its scripts, the console's pack wizard, its bundle build and the hand-off to Admin → Packs (a pack made from JSON Schema
+  is `pack make --schema`). BUILD_GUIDE section 8 describes the designer.
 - **Generated Sutras read like the hand-built deal screens** (`pack new`, `pack make`, Build's auto-design: one auto-designer): a list
   of records holding lists (legs with cash flows and resets) is tabs with terms, a notional profile or amounts-by-date chart, a tree
   table opening to the inner list and a fixings chart, plus every leg's cash flows in one schedule; a list of dated amounts (events)

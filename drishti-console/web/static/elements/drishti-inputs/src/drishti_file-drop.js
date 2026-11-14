@@ -24,6 +24,7 @@ import { InputBase } from './drishti_inputs-dom.js';
  * @property {string} [hint] the second line (default: the accepted types)
  * @property {string[]} [accept] name endings taken ('.jsonl', '.tar.gz'); none: any file
  * @property {boolean} [disabled=false]
+ * @property {boolean} [multiple=false] many files (and folders, dropped or chosen) in one go: pick carries {files: [{file, path}]}, sendMany() sends them one after another
  */
 
 /**
@@ -39,6 +40,23 @@ export function acceptedName(name, accept) {
 }
 
 /**
+ * The files of a drop, folders walked (webkitGetAsEntry), each with its path below what was dropped.
+ * @param {DataTransfer} dt
+ * @returns {Promise<Array<{file: File, path: string}>>}
+ */
+function droppedFiles(dt) {
+  const entries = Array.from(dt.items || []).map((i) => (i.webkitGetAsEntry ? i.webkitGetAsEntry() : null));
+  if (!entries.length || entries.some((e) => !e)) { return Promise.resolve(Array.from(dt.files || []).map((f) => ({ file: f, path: f.name }))); }
+  const out = [];
+  const readAll = (reader) => new Promise((res) => { const all = []; const next = () => reader.readEntries((b) => { if (b.length) { all.push(...b); next(); } else { res(all); } }, () => res(all)); next(); });
+  const walk = async (e, base) => {
+    if (e.isFile) { await new Promise((res) => e.file((f) => { out.push({ file: f, path: base + e.name }); res(); }, res)); }
+    else if (e.isDirectory) { for (const c of await readAll(e.createReader())) { await walk(c, base + e.name + '/'); } }
+  };
+  return Promise.all(entries.map((e) => walk(e, ''))).then(() => out);
+}
+
+/**
  * A file drop zone. Events: pick {file}, refused {name, reason}, progress {loaded, total, percent}, done {status, body}, cancel.
  */
 export class FileDrop extends InputBase {
@@ -51,8 +69,16 @@ export class FileDrop extends InputBase {
     this.file = null;
     this.xhr = null;
     const o = this.o;
-    this.input = this.el('input', { attrs: { type: 'file', tabindex: '-1', 'aria-hidden': 'true', accept: (o.accept || []).join(',') || null } });
+    this.files = [];
+    this.input = this.el('input', { attrs: { type: 'file', tabindex: '-1', 'aria-hidden': 'true', accept: (o.accept || []).join(',') || null, multiple: o.multiple ? '' : null } });
     this.input.hidden = true;
+    if (o.multiple) {                                               // a folder too: its files with their relative paths
+      this.folder = this.el('input', { attrs: { type: 'file', tabindex: '-1', 'aria-hidden': 'true', webkitdirectory: '', multiple: '' } });
+      this.folder.hidden = true;
+      this.folderBtn = this.el('button', { cls: 'di-btn di-drop-folder', text: 'Choose a folder', attrs: { type: 'button' } });
+      this.folderBtn.addEventListener('click', () => { if (!this.o.disabled) { this.folder.click(); } });
+      this.folder.addEventListener('change', () => { this.takeMany(Array.from(this.folder.files || []).map((f) => ({ file: f, path: f.webkitRelativePath || f.name }))); this.folder.value = ''; });
+    }
     this.zone = this.el('div', { cls: 'di-drop-zone', attrs: { role: 'button', tabindex: '0', 'aria-label': o.label || 'Drop a file here' } });
     this.title = this.el('b', { text: o.label || 'Drop a file here' });
     this.note = this.el('div', { cls: 'di-drop-note', text: o.hint || (o.accept && o.accept.length ? 'or click to choose: ' + o.accept.join(' ') : 'or click to choose') });
@@ -68,15 +94,22 @@ export class FileDrop extends InputBase {
     this.bar.appendChild(this.fill);
     [this.name, this.said, this.cancelBtn, this.bar].forEach((e) => this.line.appendChild(e));
     [this.input, this.zone, this.line].forEach((e) => host.appendChild(e));
+    if (this.folder) { host.appendChild(this.folder); host.appendChild(this.folderBtn); }
     this.zone.addEventListener('click', () => { if (!this.o.disabled) { this.input.click(); } });
     this.zone.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && !this.o.disabled) { e.preventDefault(); this.input.click(); } });
-    this.input.addEventListener('change', () => { if (this.input.files && this.input.files[0]) { this.take(this.input.files[0]); } this.input.value = ''; });
+    this.input.addEventListener('change', () => {
+      if (o.multiple) { this.takeMany(Array.from(this.input.files || []).map((f) => ({ file: f, path: f.name }))); }
+      else if (this.input.files && this.input.files[0]) { this.take(this.input.files[0]); }
+      this.input.value = '';
+    });
     this.zone.addEventListener('dragover', (e) => { e.preventDefault(); this.zone.classList.add('di-over'); });
     this.zone.addEventListener('dragleave', () => this.zone.classList.remove('di-over'));
     this.zone.addEventListener('drop', (e) => {
       e.preventDefault();
       this.zone.classList.remove('di-over');
-      if (!this.o.disabled && e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) { this.take(e.dataTransfer.files[0]); }
+      if (this.o.disabled || !e.dataTransfer) { return; }
+      if (o.multiple) { droppedFiles(e.dataTransfer).then((items) => this.takeMany(items)); }
+      else if (e.dataTransfer.files && e.dataTransfer.files[0]) { this.take(e.dataTransfer.files[0]); }
     });
     this.cancelBtn.addEventListener('click', () => this.cancel());
     this.setDisabled(!!o.disabled);
@@ -95,6 +128,53 @@ export class FileDrop extends InputBase {
     this.file = file;
     this.emit('pick', { file: file });
     return true;
+  }
+
+  /**
+   * Takes many files, as a drop or a folder choice does (multiple: true): the accepted ones are kept, the others refused one by one.
+   * @param {Array<{file: File, path: string}>} items the files with their paths below the dropped folder
+   * @returns {number} how many were accepted
+   */
+  takeMany(items) {
+    const ok = [];
+    items.forEach((it) => {
+      if (acceptedName(it.file.name, this.o.accept)) { ok.push({ file: it.file, path: it.path || it.file.name }); }
+      else { this.emit('refused', { name: it.path || it.file.name, reason: it.file.name + ' is not one of ' + (this.o.accept || []).join(', ') }); }
+    });
+    this.files = ok;
+    if (ok.length) { this.emit('pick', { file: ok[0].file, files: ok }); }
+    return ok.length;
+  }
+
+  /**
+   * Sends the picked files one after another, each as the body of a POST to urlOf(item), the bar following the bytes of all of them.
+   * Resolves with each answer [{path, status, body}]; stops at the first failure.
+   * @param {function({file: File, path: string}): string} urlOf
+   * @param {Object<string, string>} [headers]
+   * @returns {Promise<Array<{path: string, status: number, body: *}>>}
+   */
+  async sendMany(urlOf, headers) {
+    const items = this.files.slice(), total = items.reduce((n, it) => n + it.file.size, 0), out = [];
+    let before = 0;
+    this.showing(items.length + ' file' + (items.length === 1 ? '' : 's'));
+    for (const it of items) {
+      const r = await new Promise((resolve, reject) => {
+        const x = this.xhr = new this.win.XMLHttpRequest();
+        x.open('POST', urlOf(it));
+        Object.entries(Object.assign({ 'Content-Type': 'application/octet-stream', Accept: 'application/json' }, headers || {})).forEach(([k, v]) => x.setRequestHeader(k, v));
+        x.upload.onprogress = (e) => { if (e.lengthComputable) { this.setProgress(before + e.loaded, total); } };
+        x.onload = () => { this.xhr = null; let body = null; try { body = JSON.parse(x.responseText); } catch (e) { body = null; } resolve({ path: it.path, status: x.status, body: body }); };
+        x.onerror = () => { this.xhr = null; reject(new Error('the connection was lost')); };
+        x.onabort = () => { this.xhr = null; reject(new Error('cancelled')); };
+        x.send(it.file);
+      });
+      before += it.file.size;
+      out.push(r);
+      this.emit('file', r);
+      if (r.status >= 400) { break; }
+    }
+    this.emit('done', { status: out.length && out[out.length - 1].status, body: out });
+    return out;
   }
 
   /**

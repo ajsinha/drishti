@@ -191,39 +191,6 @@ def test_every_request_scoped_context_variable_is_carried():
     assert listed == set(names.values())
 
 
-def test_a_relayed_pack_job_call_acts_on_the_callers_server_and_checks_the_owner_there(two):  # noqa: F811
-    from core import channel_relay, packwizard as W
-    from routes import pack_routes
-
-    c, app, fakes = two
-    seen = []
-    for name, f in fakes.items():
-        async def preview(yaml_text, kind, id_, ident=None, document=None, _n=name):
-            seen.append(_n)
-            return None
-        f.preview = preview
-    _lim, jobs = pack_routes._wiz(SimpleNamespace(app=app))
-    item = SimpleNamespace(name="trade", samples=[SimpleNamespace(name="s1", doc={}, source="x")], kp=SimpleNamespace(kind="trade"))
-    owner = "desk\x1fann" if hasattr(pack_routes, "scoped") else "ann"
-    jobs.jobs["j1.4000"] = W.Job("j1.4000", owner, None, [item], "p", state="running", results={"trade": {"yaml": "kind: trade\n"}})
-    me = {"user": "ann", "display": "Ann", "desk": "", "roles": ["admin"]}
-
-    async def relayed(server, op, args=None):
-        servers.CURRENT.set("open")                                    # the relay listener's own context: the first server
-        msg = {"op": pack_routes.RELAY_OP, "cid": "j1.4000", "payload": {"op": op, "args": args or {}, "me": me}, "scope": {"server": server}}
-        if hasattr(channel_relay, "_handle"):
-            return await channel_relay._handle(app, channel_relay.HANDLERS[pack_routes.RELAY_OP], msg)
-        return await pack_routes._relayed_job(app, "j1.4000", msg["payload"])
-
-    async def go():
-        return [await asyncio.create_task(relayed(*a), context=contextvars.Context())
-                for a in (("desk", "preview", {"sutra": "trade"}), ("open", "status"), ("desk", "status"))]
-
-    preview, wrong_server, right = asyncio.run(go())
-    assert preview["status"] == 200 and seen == ["desk"]                  # the preview went to the caller's server
-    assert wrong_server["status"] == 404 and right["status"] == 200      # one name on two servers is two people
-
-
 def test_a_console_channel_ends_at_sign_out_and_only_that_session(two):  # noqa: F811
     c, app, fakes = two
     c.get("/connect/desk")

@@ -1093,7 +1093,7 @@ each kind's latency. The pools and workers behind the Python one are under Admin
 
 ## Next steps
 
-- [DATA_GUIDE.md](../guides/BUILD_GUIDE.md#8-a-pack-from-a-json-schema-build--new-pack) lists every rule (keys, links, formats, enums, splitting a kind); [CLI_REFERENCE.md](../guides/CLI_REFERENCE.md) the commands; [BUILD_GUIDE.md](../guides/BUILD_GUIDE.md)
+- [DATA_GUIDE.md](../guides/BUILD_GUIDE.md#8-the-pack-designer-build--new-pack) lists every rule (keys, links, formats, enums, splitting a kind); [CLI_REFERENCE.md](../guides/CLI_REFERENCE.md) the commands; [BUILD_GUIDE.md](../guides/BUILD_GUIDE.md)
   how a pack is laid out; [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#8-deploy-promote-and-roll-back-by-copying) how to promote a pack between servers.
 - [Tutorial 12 · Load data daily](12-a-day-of-bank-data.md) keeps the screens' data fresh.
 - [Tutorial 11 · Correct a trade and approve it](11-correct-and-approve.md): a form like the one of step 19 that writes back, with four eyes.

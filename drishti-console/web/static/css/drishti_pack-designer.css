@@ -1,0 +1,52 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* Build -> New pack, the Pack designer: a workspace with a rail of six steps (their summaries under them) and the step's pane beside it.
+   Tokens only (dark and light follow the theme); under 900px the rail becomes a row above the pane and the Design step stacks. */
+.pd-work { display: grid; grid-template-columns: 15rem minmax(0, 1fr); gap: var(--d-sp-16); align-items: start; }
+.pd-rail ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--d-sp-4); }
+.pd-step { width: 100%; text-align: left; display: grid; grid-template-columns: 1.6rem 1fr; column-gap: var(--d-sp-8); align-items: center; padding: var(--d-sp-8) var(--d-sp-12);
+  border: 1px solid var(--d-border); border-radius: var(--d-radius-8); background: var(--d-surface); color: var(--d-ink); font-size: var(--d-fs-14); font-weight: 600; cursor: pointer; }
+.pd-step small { grid-column: 2; font-weight: 400; font-size: var(--d-fs-12); color: var(--d-muted); overflow-wrap: anywhere; }
+.pd-step:hover, .pd-step:focus-visible { border-color: var(--d-accent); }
+.pd-step[aria-current="step"] { border-color: var(--d-accent); background: var(--d-accent-tint); }
+.pd-step.done .pd-n { background: var(--d-ok); color: var(--d-bg); border-color: var(--d-ok); }
+.pd-n { display: inline-flex; align-items: center; justify-content: center; width: 1.6rem; height: 1.6rem; border-radius: var(--d-radius-pill); border: 1px solid var(--d-border); font-size: var(--d-fs-12); }
+.pd-main { min-width: 0; }
+.pd-warn { border: 1px solid var(--d-warn); border-radius: var(--d-radius-6); padding: var(--d-sp-8) var(--d-sp-12); color: var(--d-ink); }
+.pd-grid { width: 100%; margin: var(--d-sp-8) 0; }
+.pd-prog { display: flex; flex-wrap: wrap; align-items: center; gap: var(--d-sp-8); margin: var(--d-sp-8) 0; }
+.pd-prog progress { flex: 1 1 12rem; max-width: 28rem; accent-color: var(--d-accent); }
+.pd-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: var(--d-sp-12); margin-bottom: var(--d-sp-8); }
+.pd-f { display: flex; flex-direction: column; gap: var(--d-sp-4); min-width: 0; font-size: var(--d-fs-13); }
+.pd-f > span { font-weight: 600; }
+.pd-f small.bad, .bs-status.bad { color: var(--d-neg); }
+.pd-kindsel { margin-bottom: var(--d-sp-6); }
+.pd-design { display: grid; grid-template-columns: minmax(14rem, 0.8fr) minmax(16rem, 1.2fr) minmax(18rem, 1.5fr); gap: var(--d-sp-12); align-items: start; }
+.pd-design > div { min-width: 0; }
+.pd-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--d-sp-8); margin-bottom: var(--d-sp-6); font-size: var(--d-fs-13); }
+.pd-badge { border: 1px solid var(--d-border); border-radius: var(--d-radius-pill); padding: 0 var(--d-sp-8); font-size: var(--d-fs-12); color: var(--d-muted); }
+.pd-rowsel { margin-left: auto; min-width: 7rem; }
+.pd-screen { min-height: 18rem; max-height: 34rem; overflow: auto; }
+.pd-log { max-height: 16rem; margin-top: var(--d-sp-8); white-space: pre-wrap; }
+.pd-nav { margin-top: var(--d-sp-16); }
+@media (max-width: 1100px) { .pd-design { grid-template-columns: 1fr 1fr; } .pd-live { grid-column: 1 / -1; } }
+@media (max-width: 900px) {
+  .pd-work { grid-template-columns: minmax(0, 1fr); }
+  .pd-rail { min-width: 0; }
+  .pd-rail ol { flex-direction: row; overflow-x: auto; padding-bottom: var(--d-sp-4); }
+  .pd-step { min-width: 9rem; }
+  .pd-design { grid-template-columns: 1fr; }
+}

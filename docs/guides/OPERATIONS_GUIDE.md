@@ -1426,9 +1426,9 @@ The folder (`data/build/my-bank-1.0.0/`) holds the pack (`pack/my-bank/`: copy i
 lake root or point `DRISHTI_DELTA_ROOT` at it), the bundle (`bundle/`, already verified), a configuration overlay, `run-server.sh` and `.ps1`, a
 `MANIFEST.json`, and a `README.txt` with the deploy, verify, update and rollback steps filled in with your kind, ids and dates
 ([CLI_REFERENCE.md](CLI_REFERENCE.md#quickest-path-pack-make); `--date` names your business-date field). From **JSON Schema**, `pack make --schema` makes
-the same folder, and **Build → New pack** (`/build/pack/new`) the same bundle in the browser (it profiles every file in the browser, proposes
+the same folder, and **Build → New pack** (`/build/pack/designer`) the same bundle in the browser (it profiles every file in the browser, proposes
 kinds, ids, business dates and one Sutra per type, and previews them), then hands it to Admin → Packs → Deploy an archive
-([BUILD_GUIDE.md](BUILD_GUIDE.md#8-a-pack-from-a-json-schema-build--new-pack)). Schemas alone give a pack that serves its samples.
+([BUILD_GUIDE.md](BUILD_GUIDE.md#8-the-pack-designer-build--new-pack)). Schemas alone give a pack that serves its samples.
 
 ### 8.13 Windows
 

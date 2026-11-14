@@ -231,7 +231,7 @@ for _t in (
                new_label="Python table", source=python_tables, blurb="Tables a Python step makes"),
     ObjectType("sutras", "screens", "Sutras", "window", "show", requires=("feature:build",), new="/build/new", new_label="Screen",
                source=sutras, blurb="Screens: how an entity is drawn"),
-    ObjectType("packs", "screens", "Packs", "box-seam", "package", requires=("feature:build",), new="/build/pack/new", new_label="Pack",
+    ObjectType("packs", "screens", "Packs", "box-seam", "package", requires=("feature:build",), new="/build/pack/designer", new_label="Pack",
                source=packs, blurb="A domain: its kinds, screens and data"),
     ObjectType("ui-kit", "screens", "UI kit", "palette", "package", requires=("feature:build",), source=ui_kit,
                blurb="Fragments every screen may use"),

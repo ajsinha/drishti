@@ -244,20 +244,15 @@ builder:                     # Build workbench, New (/build/new); docs/guides/RA
   max_samples: 50            # files in one upload, and samples (a .jsonl line is one) in all
   max_file_mb: 5             # largest single file
   max_total_mb: 25           # all files together
-  pack_sample_docs: 200      # Build -> New pack: documents the browser keeps per data file and sends (a sample, never the file)
-  pack_read_max_rows: 500000 # the most rows per file the page may be told to read (it streams and samples; nothing is held but the sample)
-  pack_read_max_mb: 1024     # the most MB per file the page may be told to read
-  pack_max_files: 200        # schema and data files in one plan
-  pack_max_docs: 5000        # sampled documents in one plan request
-  pack_profile_rows_per_type: 10000   # Build -> New pack: rows of each type (value of the split column) the page profiles (fields filled, array sizes); every row is counted
+  pack_designer_max_mb: 4096      # Build -> New pack (the Pack designer): the most uploaded MB in one workspace
+  pack_designer_max_files: 500    # Build -> New pack: files in one workspace
+  pack_designer_ttl_hours: 72     # Build -> New pack: hours a workspace untouched is kept before it is removed
+  pack_designer_jobs_per_user: 2  # Build -> New pack: jobs (reading the files, making the module) one person may have running
+  pack_designer_workers: 0        # Build -> New pack: processes reading the files in a job (0: the tool's default, a third of the cores, at most 8)
+  pack_designer_site:             # Build -> New pack: the config folder the data bindings are written to (empty: each workspace's own site/ folder)
+  pack_designer_modules_dir:       # Build -> New pack: the modules folder 'Install on this node' copies the .dmod to (empty: DRISHTI_MODULES_PATH, else <data folder>/modules)
   pack_load_max_mb: 2048     # Admin -> Packs -> a pack -> Load data: the largest file the console streams on to the server (which has drishti.loads.upload-max-mb)
-  pack_design_samples_per_type: 50    # documents of each type the page keeps (spread over the file, varied in shape, anonymised) to design that type's Sutra
-  pack_max_schema_kb: 512    # largest single schema file
-  pack_max_sutras: 200       # Sutras one generated pack may have
-  pack_jobs_per_user: 3      # preview jobs one person may have running (or kept) at a time
-  pack_job_ttl_min: 60       # minutes a finished preview (and its bundle) is kept
-  pack_draft_concurrency: 4  # Sutras drafted at once against the server
-  tools_dir: ../tools        # the repository's tools/ folder (packbundle.py makes the bundle); relative to drishti-console/
+  tools_dir: ../tools        # the repository's tools/ folder (the Pack designer runs tools/packgen/designer_job.py from it); relative to drishti-console/
   studio_kind: sample        # the kind a new Design and "Open in Studio" preview a brought document as (a pasted document has no kind of its own)
 lakes:                       # Admin -> Data loads -> Lakes (/admin/lakes): a large JSON file into a Delta lake (docs/guides/CLI_REFERENCE.md)
   roots: ${DRISHTI_LAKE_ROOTS:}   # the lake roots this console may write, comma-separated (the Delta connectors' root); empty: <data dir>/delta, as the server
