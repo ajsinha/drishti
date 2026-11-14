@@ -352,7 +352,7 @@ def create_app(settings: Settings) -> FastAPI:
     from core.servers import Servers, Switch
 
     catalogue = Servers(settings)
-    from routes import (admin_routes, alert_routes, api_routes, asof_routes, auth_routes, build_routes, pack_routes, calc_routes, export_routes, help_routes, home_routes,
+    from routes import (admin_routes, alert_routes, api_routes, asof_routes, auth_routes, build_routes, pack_routes, connector_designer_routes, calc_routes, export_routes, help_routes, home_routes,
                         designer_routes, designer_grid_routes, dist_routes, layout_routes, monitor_routes, pivot_routes, report_routes, approval_routes, server_routes, ship_routes, studio_routes, terminal_routes,
                         workspace_routes, collab_routes, thread_routes, collab_admin_routes, embed_admin_routes, connector_routes, form_routes,
                         ai_routes)
@@ -711,6 +711,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(studio_routes.router)
     app.include_router(build_routes.router)
     app.include_router(pack_routes.router)
+    app.include_router(connector_designer_routes.router)
     app.include_router(approval_routes.router)          # the one Approvals queue (SHARED_SCREENS.md section 2) and the old review pages' redirects
     app.include_router(ship_routes.router)
     app.include_router(admin_routes.router)

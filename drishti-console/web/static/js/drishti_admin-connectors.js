@@ -18,7 +18,7 @@
    (secrets accept ${ENV_VAR} or file: references only), a YAML tab, a Test tab (a throwaway instance on the draft), and History (diff and restore).
    The form and the YAML tab edit one draft: leaving a tab converts it through the server (render / parse), so what you see is what is saved.
    Every call is same-origin JSON to /admin/connectors/api/...; a connector's version travels as If-Match; text from the server is only ever put
-   in the page as text. Keys: "n" new connector, "/" the filter, arrow keys move between the tabs, Esc closes a dialog. */
+   in the page as text. Keys: "n" the connector designer (new connector), "/" the filter, arrow keys move between the tabs, Esc closes a dialog. */
 (function () {
   'use strict';
   var root = document.querySelector('[data-connectors]');
@@ -50,7 +50,6 @@
   var known = (root.getAttribute('data-kinds') || '').split(',').filter(Boolean);
   var SECRET_OK = /^(\$\{[A-Za-z_][A-Za-z0-9_]*\}|file:.+)$/;
   var SECRET_KEY = /password|passwd|secret|token|api[-_.]?key|access[-_.]?key|private[-_.]?key|credential/i;
-  var GROUPS = [['connection', 'Connection'], ['tls', 'TLS'], ['proxy', 'Proxy'], ['mapping', 'What it reads'], ['tuning', 'Tuning'], ['pool', 'Connection pool'], ['s3', 'S3 storage'], ['security', 'Security'], ['general', 'General']];
 
   // ---- the list: filter ---------------------------------------------------------------------------------------------------
   var filter = $('[data-filter]'), none = $('[data-filter-none]'), stateSel = $('[data-state-filter]'), originSel = $('[data-origin-filter]');
@@ -226,22 +225,6 @@
     draft.settings = settings;
     return draft;
   }
-  /** One setting's field in the settings' Form. */
-  function settingField(spec) {
-    var t = spec.type || 'string', dflt = spec.default != null ? 'default (' + spec.default + ')' : 'default';
-    var fs = { type: 'string', title: spec.name + (spec.required ? ' (required)' : ''), mono: t === 'path' || !!spec.secret,
-      description: spec.description + (spec.secret ? ' A credential is never written into a connector file: use ${ENV_VAR} or file:/path.' : ''),
-      hook: { 'data-setting': spec.name } };
-    if (spec.required) { fs.hook['aria-required'] = 'true'; }
-    if (t === 'boolean' || t.indexOf('enum:') === 0) {
-      fs.widget = 'select'; fs.allowEmpty = true; fs.emptyLabel = dflt;
-      fs['enum'] = t === 'boolean' ? ['true', 'false'] : t.slice(5).split('|');
-    } else {
-      fs.placeholder = spec.secret ? '${ENV_VAR} or file:/run/secrets/name' : (spec.default != null ? String(spec.default) : '');
-      if (spec.secret) { fs.format = 'password'; fs.hook['data-secret'] = ''; }
-    }
-    return fs;
-  }
   // the proxy the connector uses now (masked by the server) and where it came from, for the Proxy section and the test
   function proxyLine(px) {
     if (px === undefined || px === null) { return 'The site default (drishti.http.proxy.*) applies unless you set proxy.url here, or write proxy: none to go direct.'; }
@@ -253,30 +236,9 @@
   }
   function buildForm() {
     if (SF) { SF.destroy && SF.destroy(); }
-    groupsHost.textContent = '';
-    var spec = plugins[draft.plugin], settings = Object.assign({}, draft.settings), by = {}, props = {}, value = {};
-    keys = {};
-    ((spec && spec.settings) || []).forEach(function (s) { if (s.name.slice(-2) !== '.*') { (by[s.group] = by[s.group] || []).push(s); } });
-    GROUPS.concat(Object.keys(by).filter(function (g) { return !GROUPS.some(function (x) { return x[0] === g; }); }).map(function (g) { return [g, g]; })).forEach(function (g, gi) {
-      if (!by[g[0]]) { return; }
-      var gk = 'g' + gi, group = { type: 'object', title: g[1], properties: {}, hook: { 'data-group': g[0], 'class': 'conn-set' } };
-      if (g[0] === 'proxy') { group.description = proxyLine(draft.proxy); }
-      value[gk] = {};
-      by[g[0]].forEach(function (s, si) {
-        var k = 's' + si;
-        keys[s.name] = { path: gk + '.' + k, name: s.name };
-        group.properties[k] = settingField(s);
-        if (settings[s.name] != null) { value[gk][k] = String(settings[s.name]); }
-      });
-      props[gk] = group;
-    });
-    props.extra = { type: 'array', title: 'Other settings', addLabel: 'Add setting', itemHook: 'extra-row', hook: { 'data-group': 'other', 'class': 'conn-set' },
-      description: 'Settings the plugin reads that have no field above, such as layout.trade.columns or mode.trade.',
-      items: { type: 'object', title: 'Setting', properties: {
-        key: { type: 'string', title: 'Setting name', mono: true, placeholder: 'setting.name', hook: { 'data-extra-key': '' } },
-        value: { type: 'string', title: 'Setting value', mono: true, hook: { 'data-extra-val': '' } } } } };
-    value.extra = Object.keys(settings).filter(function (k) { return !keys[k]; }).map(function (k) { return { key: k, value: String(settings[k]) }; });
-    SF = new I.Form(groupsHost, { schema: { type: 'object', properties: props }, value: value, live: true, label: 'The plugin\'s settings', pathAttr: 'data-conn-path' });
+    var built = window.Drishti.connSettings.build(groupsHost, plugins[draft.plugin], draft.settings, proxyLine(draft.proxy));   // the one settings form (drishti_conn-settings.js)
+    SF = built.form;
+    keys = built.keys;
     secretErrors = {};
   }
   function chips() {
@@ -403,21 +365,6 @@
       HF.focusField(draft.isNew ? 'name' : 'description');
     });
   }
-  function newDraft(name) { return { isNew: true, hasFile: false, name: name || '', plugin: 'file', enabled: true, kinds: [], description: '', settings: {} }; }
-
-  function openNew(name, from) {
-    var d = newDraft(name);
-    if (!name) { open({ from: from, draft: d }); return; }
-    call('GET', '/' + q(name) + '/suggestion').then(function (s) {
-      if (!s.ok) { open({ from: from, draft: d, note: 'Nothing defines ' + name + ' yet. Choose a plugin and fill the form.' }); return; }
-      call('POST', '/' + q(name) + '/parse', { text: s.body.text }).then(function (p) {
-        if (p.ok && p.body.plugin) {
-          d.plugin = p.body.plugin; d.enabled = p.body.enabled; d.kinds = p.body.kinds || []; d.description = p.body.description || ''; d.settings = p.body.settings || {};
-        }
-        open({ from: from, draft: d, note: 'Pre-filled from the suggestion of pack ' + s.body.pack + '. Check it, then Save to create ' + name + '.yaml.' });
-      });
-    });
-  }
   function openExisting(name, from) {
     return fetchDetail(name).then(function (r) {
       if (!r.ok) { say(msg, why(r), true); return; }
@@ -436,7 +383,6 @@
     });
   }
   var newBtn = $('[data-new]');
-  if (newBtn) { newBtn.addEventListener('click', function () { openNew('', this); }); }
   dlg.addEventListener('close', function () { if (opener && document.body.contains(opener)) { opener.focus(); } });
   $('[data-close]', dlg).addEventListener('click', function () { hide(dlg); });
 
@@ -583,14 +529,14 @@
   function noDialog() { return !dlg.open && !confirmDlg.open; }
   if (newBtn) {
     window.Drishti.keys.register({ id: 'connectors.new', keys: ['N'], scope: 'screen', area: 'admin-connectors', group: 'Connectors', description: 'A new connector',
-      when: noDialog, run: function () { openNew('', newBtn); } });
+      when: noDialog, run: function () { window.location.assign('/build/connector/designer'); } });
   }
   if (filter) {
     window.Drishti.keys.register({ id: 'connectors.filter', keys: ['/'], scope: 'screen', area: 'admin-connectors', group: 'Connectors', description: 'Focus the filter',
       when: noDialog, run: function () { filter.focus(); } });
   }
 
-  // links from a pack: ?name=x opens it, ?new=x opens New connector pre-filled from the pack's suggestion
+  // links from a pack: ?name=x opens it, ?new=x goes to the connector designer, pre-filled from the pack's suggestion
   var params = new URLSearchParams(location.search);
   if (params.get('name')) {
     openExisting(params.get('name'), null).then(function () {
@@ -598,7 +544,7 @@
       else if (params.get('tab') === 'test') { $('[data-test]').click(); }
     });
   }
-  else if (params.get('new')) { openNew(params.get('new'), null); }
+  else if (params.get('new')) { window.location.replace('/build/connector/designer?new=' + q(params.get('new'))); }      // creating is the designer's job: a pack's old link lands there, pre-filled from its suggestion
 
   // the connector's own page (/admin/connectors/<name>): its buttons reuse the list's actions and the editor
   if (onDetail) {

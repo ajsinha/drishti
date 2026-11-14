@@ -1,0 +1,129 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# Build -> New connector: the connector and binding designer (mock-up option A, docs/lenses/mockups/binding-designer/): the same left-rail workspace as the
+   Pack designer, built from Drishti Elements only (Grid, Select, Form, CodeDiff, Switch). Nothing is saved until step 6. #}
+{% extends "base.html" %}
+{% block title %}New connector · {{ PRODUCT }}{% endblock %}
+{% block screen %}build{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_build.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_pack-designer.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_conn-designer.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/elements/drishti-grid/drishti_grid.css?v={{ ASSET_V }}">{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm bs pd cd" data-conn-designer data-new="{{ name }}">
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/build">My designs</a> · <a href="/admin/connectors">Connectors</a> · <a href="/admin/bindings">Data bindings</a> · <a href="/help/admin#connectors-and-bindings">Connector designer guide <span aria-hidden="true">?</span></a></nav>
+  <h1>New connector</h1>
+  <p class="text-muted-d cd-lead">Secrets come from the site's secret store (an environment variable or a file the server reads): a connector file holds only the reference, never the value. Nothing is saved until step 6.</p>
+  <div class="pd-work">
+    <nav class="pd-rail" aria-label="Steps">
+      <ol>
+        <li><button type="button" class="pd-step" data-go="type" aria-current="step"><span class="pd-n">1</span> Connector type<small data-sum="type">none chosen</small></button></li>
+        <li><button type="button" class="pd-step" data-go="settings"><span class="pd-n">2</span> Settings<small data-sum="settings">after the type</small></button></li>
+        <li><button type="button" class="pd-step" data-go="test"><span class="pd-n">3</span> Test connection<small data-sum="test">not yet</small></button></li>
+        <li><button type="button" class="pd-step" data-go="preview"><span class="pd-n">4</span> Preview data<small data-sum="preview">not yet</small></button></li>
+        <li><button type="button" class="pd-step" data-go="bind"><span class="pd-n">5</span> Bind to kinds<small data-sum="bind">not yet</small></button></li>
+        <li><button type="button" class="pd-step" data-go="review"><span class="pd-n">6</span> Review and apply<small data-sum="review">not yet</small></button></li>
+      </ol>
+    </nav>
+    <div class="pd-main">
+      <div class="bs-status" role="status" aria-live="polite" data-msg></div>
+
+      <section class="pd-pane" data-pane="type" aria-labelledby="cdh-type">
+        <h2 id="cdh-type" class="bs-h">1. Connector type</h2>
+        <p class="text-muted-d" data-type-note>The types installed on this server. Pick one: its settings are generated from its own description.</p>
+        <div class="pd-grid cd-types" data-types-grid></div>
+      </section>
+
+      <section class="pd-pane" data-pane="settings" aria-labelledby="cdh-settings" hidden>
+        <h2 id="cdh-settings" class="bs-h">2. Settings</h2>
+        <div class="pd-form">
+          <label class="pd-f"><span>Name</span><input class="studio-in mono" type="text" data-f="name" autocomplete="off" placeholder="risk-files" aria-describedby="cdNameHint"><small id="cdNameHint" class="text-muted-d">the file's name, config/connectors/&lt;name&gt;.yaml: lower case letters, digits and hyphens</small></label>
+          <label class="pd-f"><span>Description</span><input class="studio-in" type="text" data-f="description" autocomplete="off"></label>
+          <label class="pd-f"><span>Kinds to try</span><input class="studio-in mono" type="text" data-f="kinds" autocomplete="off" list="cdKnownKinds" placeholder="trade, position"><small class="text-muted-d">the kinds this source holds, comma separated: the test counts them, the preview reads them, step 5 binds them</small></label>
+          <datalist id="cdKnownKinds" data-known-kinds></datalist>
+        </div>
+        <div data-settings-form class="cd-settings"></div>
+        <p class="bs-status" data-settings-msg role="status" aria-live="polite"></p>
+      </section>
+
+      <section class="pd-pane" data-pane="test" aria-labelledby="cdh-test" hidden>
+        <h2 id="cdh-test" class="bs-h">3. Test connection</h2>
+        <p class="text-muted-d">A throwaway instance is started on these settings, asked what it holds for each kind, and closed. Nothing that runs changes.</p>
+        <p class="bs-actions"><button type="button" class="btn-pill btn-accent" data-test>Test connection</button></p>
+        <p class="bs-status" data-test-said role="status" aria-live="polite"></p>
+        <div class="pd-grid cd-checks" data-checks-grid hidden></div>
+        <h3 class="bs-h cd-h3" data-sees-h hidden>What it can see</h3>
+        <div class="pd-grid cd-sees" data-sees-grid hidden></div>
+      </section>
+
+      <section class="pd-pane" data-pane="preview" aria-labelledby="cdh-preview" hidden>
+        <h2 id="cdh-preview" class="bs-h">4. Preview data</h2>
+        <p class="text-muted-d">The first real records of a kind, read from the source as it is now, and the type each field is detected to be.</p>
+        <div class="pd-form"><div class="pd-f"><span id="cdPvKindL">Kind</span><div data-sel-kind aria-labelledby="cdPvKindL"></div></div>
+          <div class="pd-f"><span id="cdPvDateL">Business date</span><div data-sel-date aria-labelledby="cdPvDateL"></div></div></div>
+        <p class="bs-actions"><button type="button" class="btn-pill btn-accent" data-preview>Read the first rows</button></p>
+        <p class="bs-status" data-preview-said role="status" aria-live="polite"></p>
+        <h3 class="bs-h cd-h3" data-types-h hidden>Fields and their detected types</h3>
+        <div class="pd-grid cd-fields" data-fields-grid hidden></div>
+        <h3 class="bs-h cd-h3" data-rows-h hidden>Rows</h3>
+        <div class="pd-grid cd-rows" data-rows-grid hidden></div>
+      </section>
+
+      <section class="pd-pane" data-pane="bind" aria-labelledby="cdh-bind" hidden>
+        <h2 id="cdh-bind" class="bs-h">5. Bind to kinds</h2>
+        <p class="text-muted-d">How this connector serves each kind: <b>read</b> (it is the source), <b>union</b> (read together with the sources already bound), <b>live</b> (its live feed),
+          <b>write</b> (it is where written records go). The order a kind is served in: site binding, distribution default, convention, demo, unbound.</p>
+        <div class="pd-grid cd-binds" data-binds-grid></div>
+        <div class="pd-form cd-bind-form" data-bind-form hidden>
+          <div class="pd-f"><span id="cdModeL">Mode for <b data-bind-kind class="mono"></b></span><div data-sel-mode aria-labelledby="cdModeL"></div></div>
+          <label class="pd-f" data-write-only><span>Write: lake</span><input class="studio-in mono" type="text" data-f="writeLake" autocomplete="off"></label>
+          <label class="pd-f" data-write-only><span>Write: table</span><input class="studio-in mono" type="text" data-f="writeTable" autocomplete="off"></label>
+        </div>
+        <h3 class="bs-h cd-h3">Functions that come on</h3>
+        <div class="pd-grid cd-funcs" data-funcs-grid></div>
+        <p class="text-muted-d" data-funcs-none hidden>No function waits for these kinds.</p>
+      </section>
+
+      <section class="pd-pane" data-pane="review" aria-labelledby="cdh-review" hidden>
+        <h2 id="cdh-review" class="bs-h">6. Review and apply</h2>
+        <h3 class="bs-h cd-h3">config/connectors/<span data-file-name class="mono"></span>.yaml <span class="pd-badge">new</span></h3>
+        <div class="cd-diff" data-diff-file></div>
+        <h3 class="bs-h cd-h3">config/bindings.yaml <span class="pd-badge">changed</span></h3>
+        <div class="cd-diff" data-diff-bindings></div>
+        <div class="pd-form"><label class="pd-f"><span>Why (kept in the audit log)</span><input class="studio-in" type="text" data-f="reason" autocomplete="off" placeholder="Bind the risk files for the VaR pack"></label></div>
+        <p class="bs-actions"><button type="button" class="btn-pill btn-accent" data-apply>Save the connector and propose the bindings</button>
+          <button type="button" class="btn-pill btn-ghost" data-refresh hidden>Check for the decision</button>
+          <a class="btn-pill btn-ghost" href="/admin/bindings" data-open-bindings hidden>Open Data bindings</a></p>
+        <ol class="cd-four-eyes" data-four-eyes aria-label="Four eyes">
+          <li data-eye="propose">A proposes the change <b data-eye-a>not yet</b></li>
+          <li data-eye="decide">A second administrator reviews the diff and approves <b data-eye-b>not yet</b></li>
+        </ol>
+        <p class="text-muted-d">Audited with both names. Applied without a restart; the previous <span class="mono">bindings.yaml</span> is kept as <span class="mono">.bak</span>.</p>
+        <div class="pd-grid cd-health" data-health-grid hidden></div>
+      </section>
+
+      <div class="pd-nav bs-actions">
+        <button type="button" class="btn-pill btn-ghost" data-back>Back</button>
+        <button type="button" class="btn-pill btn-accent" data-next>Next</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/drishti_conn-settings.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/drishti_conn-designer.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/drishti_conn-designer-bind.js?v={{ ASSET_V }}"></script>
+{% endblock %}

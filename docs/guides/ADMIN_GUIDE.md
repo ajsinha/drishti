@@ -1652,6 +1652,36 @@ lists are still read in this release and Health lists each file that carries one
 list*); the next release stops reading them. Health's `bindings` block also gives the counts, the unbound required needs and the functions
 they switched off. The API: `GET /api/v1/admin/bindings`, `POST /api/v1/admin/bindings/proposals` and `…/proposals/{id}/approve|reject|withdraw`.
 
+### 23.0 The connector and binding designer (Build → Create → New connector)
+
+**Build → Create → New connector** (`/build/connector/designer`) is the one way to make a connector and bind it. It has the same left-rail workspace as the
+Pack designer, six steps, and **nothing is saved until step 6**. It replaces hand-editing `config/connectors/<name>.yaml` and `config/bindings.yaml`;
+**Admin → Connectors → New connector** (and a pack's *Create* link, `?new=<name>`) opens it, pre-filled from the pack's suggestion. Editing a connector that
+exists stays on Admin → Connectors (its editor, test, history and restore). Administrators only.
+
+1. **Connector type.** One row per type installed on this server (file, jdbc, kafka, delta, iceberg, s3, …) with what it reads; the settings of the one you pick
+   are generated from its own description.
+2. **Settings.** The connector's name (the file's name), what it is, the **kinds to try** (the kinds this source holds) and a form of the type's settings,
+   a group each. **A secret is only a reference** to the site's secret store: `${ENV_VAR}` or `file:/path` (the file's first line is read when the connector
+   starts); a typed value is refused in the page and again by the server, and the connector file holds only the reference.
+3. **Test connection.** A throwaway instance is started on the draft (through a proxy when one is configured), asked what it holds, and closed: connected or
+   not (with the reason and a hint in words), the time it took, notes (for example TLS off) and **what it can see**: each kind's business dates and row counts.
+4. **Preview data.** The first real rows of a kind (and date) read from the source, in a grid, and the **type detected for each field** (integer, decimal, date,
+   timestamp, boolean, text, list, object) with an example and how many are empty. The server reads them (`POST /admin/connectors/api/<name>/preview`, a
+   throwaway instance like the test; at most 200 rows); nothing is kept.
+5. **Bind to kinds.** Per kind, the mode: **read** (this connector is the source), **union** (read together with the sources already bound), **live** (its live
+   feed) or **write** (where written records go: a lake and a table). The grid shows the resolution **now** and **after**; **Functions that come on** lists the
+   functions an unserved need switched off that these kinds bring back.
+6. **Review and apply.** The diff of the new connector file and of `bindings.yaml` (the proposed lines among the current ones), and *why* (kept in the audit
+   log). **Save the connector and propose the bindings** saves the connector file through Admin → Connectors' API and proposes each kind's binding to the
+   bindings service. From there it is the one path of section 23: a second administrator approves it in **Admin → Data bindings** (four eyes: the proposer's own
+   approval is `403 DRS-2007`), it is audited with both names and applies **without a restart**. The page shows the two eyes (*proposed*, then *approved and
+   applied*) and the health of each kind after the apply.
+
+The designer adds no second path: it calls the connector API and the bindings service, so everything those enforce (a literal credential is refused, a connector
+no file defines is refused, a computed kind is not bound) holds here. The connector is saved when you propose and stays until you remove it in Admin → Connectors;
+the bindings change only when the second administrator approves. A connector that already exists cannot be created again (the name is refused).
+
 ### 23.1 Module placement (Admin → Cluster → Modules)
 
 **Admin → Cluster → Modules** shows where every module part runs: one row per part (its resource class, max-nodes, memory), one column per

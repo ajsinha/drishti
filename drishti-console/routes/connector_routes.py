@@ -258,6 +258,17 @@ async def api_test(request: Request, name: str):
         return _problem(e)
 
 
+@router.post("/api/{name}/preview")
+async def api_preview(request: Request, name: str):
+    """The first real records of a kind from a draft's source (the connector designer's Preview): body {plugin, settings, kinds, kind, date?, limit?}; nothing is saved."""
+    body = await json_body(request)
+    pick = {**_draft(body), **{k: body[k] for k in ("kind", "date", "limit") if body.get(k) is not None}}
+    try:
+        return await _server(request, "POST", f"/{quote(name)}/preview", pick, timeout=90.0)
+    except BackendError as e:
+        return _problem(e)
+
+
 @router.post("/api/{name}/validate")
 async def api_validate(request: Request, name: str):
     body = await json_body(request)

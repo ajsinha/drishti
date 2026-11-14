@@ -221,7 +221,7 @@ def recent(have: dict) -> list[Item]:
 
 
 for _t in (
-    ObjectType("connectors", "data", "Connectors", "plug", "bring", requires=("admin", "admin-page:connectors"), new="/admin/connectors#new",
+    ObjectType("connectors", "data", "Connectors", "plug", "bring", requires=("admin", "admin-page:connectors"), new="/build/connector/designer",
                new_label="Connector", source=connectors, blurb="Where each pack reads its data"),
     ObjectType("lakes", "data", "Lakes", "layers", "bring", requires=("admin", "admin-page:lakes", "feature:lakes"), new="/admin/lakes",
                new_label="Load a file into a lake", source=lakes, blurb="Delta and Iceberg tables, loaded and maintained"),

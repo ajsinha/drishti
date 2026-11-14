@@ -32,7 +32,7 @@
   <p class="text-muted-d">Where {{ PRODUCT }} reads its data. Each connector is one file in <span class="mono">{{ listing.directory }}</span>, and the file name is the
     connector's name; packs refer to connectors by that name. A saved change restarts only that connector, in place, and the previous text is kept so you can
     restore it. Watching the folder: <span class="mono">{{ listing.watch }}</span>, so a file you edit by hand is picked up too.
-    <span class="mono">n</span> creates a connector, <span class="mono">/</span> focuses the filter.
+    <span class="mono">n</span> opens the <a href="/build/connector/designer">connector designer</a> (type, settings, test, preview, bind, apply), <span class="mono">/</span> focuses the filter.
     See <a href="/help/connector-files">Connector files</a>.</p>
   </details>
   {% if listing.deprecated %}<p class="adm-warn" role="status"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
@@ -45,7 +45,7 @@
   <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
   <div class="adm-bar">
     {{ admin_form('connector_filters') }}
-    <button type="button" class="btn-pill btn-accent" data-new>New connector</button>
+    <a class="btn-pill btn-accent" href="/build/connector/designer" data-new>New connector</a>
   </div>
   <div class="tbl-wrap"><table class="tbl adm-tbl" data-list>
     <caption class="visually-hidden">Connectors, where each is defined and how it is doing</caption>
@@ -75,4 +75,4 @@
 </div>
 {% endblock %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-cards.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_artifact-uninstall.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-connectors.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-retry.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-watch.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-cards.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_artifact-uninstall.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_conn-settings.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-connectors.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-retry.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-watch.js?v={{ ASSET_V }}"></script>{% endblock %}

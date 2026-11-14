@@ -266,6 +266,7 @@ menus:
           - { id: build-home, href: /build, icon: house-gear, label: Build home, desc: "Everything you can build in one place: data, screens, analysis, your drafts and reviews", match: /build, requires: [feature:build] }
           - { id: new-screen, href: /build/new, icon: plus-square, label: New screen, desc: "Bring JSON files, a schema or stored entities, then design", match: /build/new, requires: [feature:build] }
           - { id: new-pack, href: /build/pack/designer, icon: box-seam, label: New pack, desc: "A folder of JSON Lines files in, a module with its Sutras designed, checked and deployed out", match: /build/pack, requires: [feature:build] }
+          - { id: new-connector, href: /build/connector/designer, icon: plug, label: New connector, desc: "Pick a type, fill its settings, test it, preview real rows, bind it to kinds and apply: four eyes, no restart", match: /build/connector, requires: [admin, admin-page:connectors] }
           - { id: tables-models, href: /build/tables, icon: table, label: "Tables & models", desc: "Virtual tables, semantic models and Python-driven tables: one editor, live YAML, a preview as you may see it, review before live", match: /build/tables, requires: [bi, word:BI] }
           - { id: examples, href: "/build/new#examples", icon: journal-richtext, label: Examples, desc: Every example opens as your own copy, requires: [feature:build] }
       - title: Learn

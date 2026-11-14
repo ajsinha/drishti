@@ -1407,6 +1407,62 @@ public final class ConnectorManager {
         return out;
     }
 
+    /**
+     * Real records of one kind from a draft's source (the preview of the connector designer): a throwaway instance on the text's settings reads the
+     * first {@code limit} records and is closed; nothing running changes. Secrets are resolved here and never returned.
+     */
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> preview(String name, String text, String kind, String date, int limit) {
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("connector", name);
+        out.put("kind", kind);
+        ConnectorFiles.Definition d;
+        try {
+            d = files.parse(name, text);
+        } catch (ConnectorFiles.InvalidFile e) {
+            out.put("ok", false);
+            out.put("error", "the connector is not valid: " + e.getMessage());
+            out.put("rows", List.of());
+            return out;
+        }
+        String errs = errors(validate(d, false));
+        Map<String, String> read = new LinkedHashMap<>();
+        String problem = errs.isEmpty() ? null : "the connector is not valid: " + errs;
+        if (problem == null) {
+            try {
+                Map<String, String> resolved = new LinkedHashMap<>();
+                for (Map.Entry<String, String> e : d.settings().entrySet()) {
+                    resolved.put(e.getKey(), env.resolveRequiredPlaceholders(e.getValue()));
+                }
+                read.putAll(ConnectorSecrets.resolve(resolved));
+            } catch (IllegalArgumentException | IllegalStateException x) {
+                problem = x.getMessage();
+            }
+        }
+        if (problem != null) {
+            out.put("ok", false);
+            out.put("error", problem);
+            out.put("rows", List.of());
+            return out;
+        }
+        java.time.LocalDate day = date == null || date.isBlank() ? null : java.time.LocalDate.parse(date);
+        ConnectionProbe.Sample s = probe.sample(d.plugin(), kind, read, day, Math.max(1, Math.min(limit, 200)), probeTimeoutMs);
+        out.put("ok", s.ok());
+        out.put("ms", s.ms());
+        out.put("error", s.error());
+        com.fasterxml.jackson.databind.ObjectMapper om = new com.fasterxml.jackson.databind.ObjectMapper();
+        List<Object> rows = new ArrayList<>();
+        for (String j : s.documents()) {
+            try {
+                rows.add(om.readValue(j, Object.class));
+            } catch (java.io.IOException e) {
+                rows.add(Map.of("value", j));
+            }
+        }
+        out.put("rows", rows);
+        return out;
+    }
+
     private static Map<String, Object> failure(String name, String message, String plugin) {
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("connector", name);

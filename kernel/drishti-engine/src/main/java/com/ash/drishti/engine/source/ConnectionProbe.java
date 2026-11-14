@@ -96,6 +96,83 @@ public final class ConnectionProbe {
         }
     }
 
+    /** Real records of one kind on a business date (or the latest): {@code ok}, {@code error} and the first {@code limit} documents as JSON text. */
+    public record Sample(boolean ok, String error, long ms, List<String> documents) {}
+
+    /** Starts a throwaway instance, reads up to {@code limit} records of {@code kind} (the whole day in one pass when the source can, else by search and fetch) and closes it. */
+    public Sample sample(String plugin, String kind, Map<String, String> settings, LocalDate date, int limit, long timeoutMs) {
+        long t0 = System.nanoTime();
+        SourcePlugin proto = discovered.stream().filter(p -> p.manifest().name().equals(plugin)).findFirst().orElse(null);
+        if (proto == null) {
+            return new Sample(false, "no plugin named '" + plugin + "' (installed: " + String.join(", ", plugins()) + ")", 0, List.of());
+        }
+        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(Thread.ofVirtual().name("drishti-sample-", 0).factory());
+        try (var exec = Executors.newVirtualThreadPerTaskExecutor()) {
+            Future<List<String>> f = exec.submit(() -> readSample(proto, kind, settings, date, limit, scheduler));
+            try {
+                return new Sample(true, null, ms(t0), f.get(timeoutMs, TimeUnit.MILLISECONDS));
+            } catch (TimeoutException e) {
+                f.cancel(true);
+                return new Sample(false, "no answer within " + timeoutMs / 1000 + " seconds", ms(t0), List.of());
+            } catch (ExecutionException e) {
+                Throwable c = e.getCause() == null ? e : e.getCause();
+                return new Sample(false, String.valueOf(c.getMessage() == null ? c.getClass().getSimpleName() : c.getMessage()), ms(t0), List.of());
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return new Sample(false, "interrupted", ms(t0), List.of());
+            }
+        } finally {
+            scheduler.shutdownNow();
+        }
+    }
+
+    private List<String> readSample(SourcePlugin proto, String kind, Map<String, String> settings, LocalDate date, int limit, ScheduledExecutorService scheduler)
+            throws Exception {
+        SourcePlugin fresh = ComputedKindSource.fresh(proto);
+        SourcePlugin instance = new ConnectorInstance("probe", new java.util.HashSet<>(List.of(kind)), fresh);
+        Map<String, String> own = new LinkedHashMap<>(settings);
+        own.putIfAbsent("source-name", "probe");
+        own.putIfAbsent("refresh-seconds", "3600");
+        own.putIfAbsent("warm-dates", "0");
+        try {
+            instance.start(new EngineSourceContext(own, codec, scheduler, null));
+            AsOf asOf = date == null ? AsOf.LATEST : AsOf.of(date);
+            List<String> out = new ArrayList<>();
+            class Enough extends RuntimeException {
+                Enough() {
+                    super(null, null, false, false);
+                }
+            }
+            try {
+                boolean bulk = instance.documents(kind, asOf, d -> {
+                    if (!d.deleted()) {
+                        out.add(codec.toJson(d.data()));
+                    }
+                    if (out.size() >= limit) {
+                        throw new Enough();
+                    }
+                });
+                if (!bulk) {
+                    for (EntityHit h : instance.search(kind, "", limit, asOf)) {
+                        instance.fetch(h.ref(), asOf).filter(d -> !d.deleted()).ifPresent(d -> out.add(codec.toJson(d.data())));
+                        if (out.size() >= limit) {
+                            break;
+                        }
+                    }
+                }
+            } catch (Enough done) {
+                // the first rows are all a preview wants
+            }
+            return out;
+        } finally {
+            try {
+                instance.close();
+            } catch (Exception ignored) {
+                // nothing more to say
+            }
+        }
+    }
+
     private Result run(SourcePlugin proto, List<String> kinds, Map<String, String> settings, int maxDates, ScheduledExecutorService scheduler, long t0)
             throws Exception {
         SourcePlugin fresh = ComputedKindSource.fresh(proto);

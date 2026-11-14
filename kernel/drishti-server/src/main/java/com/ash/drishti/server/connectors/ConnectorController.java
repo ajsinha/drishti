@@ -185,6 +185,21 @@ public class ConnectorController {
         return out;
     }
 
+    /** The first records of a kind from a draft's source, for the connector designer's Preview: {@code {text|settings.., kind, date?, limit?}}; nothing is saved. */
+    @PostMapping("/{name}/preview")
+    public Map<String, Object> preview(@PathVariable String name, @RequestBody Map<String, Object> body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireAdmin(p);
+        String kind = String.valueOf(body.getOrDefault("kind", "")).trim();
+        if (kind.isEmpty()) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "say which kind to preview");
+        }
+        int limit = body.get("limit") instanceof Number n ? n.intValue() : 20;
+        String date = body.get("date") == null ? null : String.valueOf(body.get("date"));
+        Map<String, Object> out = connectors.preview(name, connectors.textOf(name, body, p.user()), kind, date, limit);
+        audit.record(p.user(), "connector-previewed", name, kind);
+        return out;
+    }
+
     @GetMapping("/{name}/history/{id}")
     public Map<String, Object> revision(@PathVariable String name, @PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);
