@@ -109,7 +109,9 @@ export class LiveSetGrid {
     this.gridHost = h(d, 'div', { cls: 'dg-live-grid' });
     this.panelHost = h(d, 'aside', { cls: 'dg-live-panel', attrs: { hidden: true, 'aria-label': 'Record' } });
     this.trayHost = h(d, 'section', { cls: 'dg-live-tray', attrs: { hidden: true, 'aria-label': 'My pending changes' }, data: { tray: 'true' } });
-    this.host.append(this.bar, h(d, 'div', { cls: 'dg-live-split' }, [this.gridHost, this.panelHost]), this.trayHost);
+    // a source system switched off: the page says what it leaves out ("excludes ENDUR (switched off)")
+    this.banner = spec.banner ? h(d, 'div', { cls: 'dg-live-banner', attrs: { role: 'status' }, data: { excludes: (spec.excludes || []).join(',') }, text: spec.banner }) : null;
+    this.host.append(...[this.bar, this.banner, h(d, 'div', { cls: 'dg-live-split' }, [this.gridHost, this.panelHost]), this.trayHost].filter(Boolean));
   }
 
   /** @private the status chip */
