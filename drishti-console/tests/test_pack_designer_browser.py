@@ -148,6 +148,50 @@ def test_files_in_combinations_a_live_screen_that_follows_the_yaml_a_module_depl
         shutil.rmtree(ROOT / "data" / "pdui-test" / tmp_path.name, ignore_errors=True)
 
 
+def test_an_array_of_records_becomes_a_child_table_by_a_switch(browser, designer, tmp_path):
+    """Kind and keys lists each array of records with a switch: LEGS (2.5 a deal on average) is a child kind at once; switched off and read
+    again, it is gone; CASHFLOWS (1.5) switched on becomes one."""
+    import json
+    base = str(designer)
+    folder = ROOT / "data" / "pdui-test" / ("children-" + tmp_path.name)
+    folder.mkdir(parents=True, exist_ok=True)
+    f = folder / "deal.2026-07-08.jsonl"
+    f.write_text("".join(json.dumps({"TRADE_ID": f"D{i:03d}", "PRODUCT_TYPE": ["IRS", "CCS"][i % 2], "NOTIONAL": 1000 * (i + 1),
+                                     "LEGS": [{"LEG_ID": j + 1, "CURRENCY": ["USD", "EUR"][j % 2], "NOTIONAL": 500 * (j + 1)} for j in range(2 + i % 2)],
+                                     "CASHFLOWS": [{"AMOUNT": 10 * k} for k in range(i % 3)]}) + "\n" for i in range(30)), encoding="utf-8")
+    try:
+        ctx = browser.new_context(viewport={"width": 1500, "height": 950})
+        page = ctx.new_page()
+        page.set_default_timeout(30_000)
+        sign_in(page, base)
+        page.goto(base + "/build/pack/designer")
+        page.evaluate("sessionStorage.clear()")
+        page.goto(base + "/build/pack/designer")
+        page.set_input_files("[data-pane=data] .di-file-drop input[type=file]:not([webkitdirectory])", [str(f)])
+        page.locator("[data-pane=kind]:not([hidden])").wait_for(timeout=LONG)
+
+        def switch(field):
+            return page.locator(f"[data-children] [data-child={field}] [role=switch]")
+        switch("LEGS").wait_for()
+        assert switch("LEGS").get_attribute("aria-checked") == "true"                 # automatic: 2.5 elements on average
+        assert switch("CASHFLOWS").get_attribute("aria-checked") == "false"
+        assert "deal-leg" in page.locator("[data-children]").inner_text()
+        kinds = page.evaluate("() => Object.keys(window.Drishti.PackDesigner.S.analysis.kinds)")
+        assert "deal-leg" in kinds
+
+        switch("LEGS").click()
+        switch("CASHFLOWS").click()
+        page.click("[data-reanalyse]")
+        page.wait_for_function("() => { const a = window.Drishti.PackDesigner.S.analysis; return a && a.kinds['deal-cashflow'] && !a.kinds['deal-leg']; }", timeout=LONG)
+        assert switch("CASHFLOWS").get_attribute("aria-checked") == "true" and switch("LEGS").get_attribute("aria-checked") == "false"
+        sutras = page.evaluate("() => window.Drishti.PackDesigner.S.analysis.sutras.map(s => s.name)")
+        assert "deal-cashflow-default" in sutras and "deal-leg-default" not in sutras   # the child kind's own Sutra
+        ctx.close()
+    finally:
+        import shutil
+        shutil.rmtree(folder, ignore_errors=True)
+
+
 def test_the_layout_at_desktop_and_phone_width(browser, designer):
     ctx = browser.new_context(viewport={"width": 1500, "height": 900})
     page = ctx.new_page()

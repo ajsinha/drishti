@@ -18,7 +18,7 @@
     python3 tools/packgen/designer_job.py analyse <workspace>     # every record read, the Sutras drafted: <workspace>/analysis.json
     python3 tools/packgen/designer_job.py finalize <workspace>    # the module written, bound, packed and checked: <workspace>/dist/<name>-<version>.dmod
 
-<workspace>/request.json holds the choices ({name, version, title, description, kindPrefix, match, key, date, minDocs, connector, filesRoot, edits}),
+<workspace>/request.json holds the choices ({name, version, title, description, kindPrefix, match, key, date, child, minDocs, connector, filesRoot, edits}),
 <workspace>/in/ the uploaded files. The job writes <workspace>/status.json as it goes ({state, rows, seconds, lines}). The analysis is
 packprofile.scan over every record (`pack new --dry-run` is the same pass); the drafts are `sutra design --each` (tools/sutragen.py);
 finalize is module_from_jsonl.run with the edits file (`pack new --sutra-edits`). Nothing is duplicated here: this file only maps the
@@ -75,7 +75,7 @@ def argv_of(req: dict, wd: pathlib.Path) -> list[str]:
          "--publisher", req.get("publisher") or "local"]
     for flag, key in (("--title", "title"), ("--description", "description"), ("--kind-prefix", "kindPrefix"), ("--key", "key"), ("--date", "date"),
                       ("--match", "match"), ("--mnemonic", "mnemonic"), ("--files-root", "filesRoot"), ("--connector", "connector"),
-                      ("--kind", "kind")):
+                      ("--kind", "kind"), ("--child", "child")):
         if req.get(key):
             a += [flag, str(req[key])]
     if req.get("workers"):
@@ -84,7 +84,9 @@ def argv_of(req: dict, wd: pathlib.Path) -> list[str]:
 
 
 def report(an, groups) -> dict:
-    """The analysis as the page shows it: files and rows, per kind its fields, discriminator candidates, key and date checks, and the Sutras."""
+    """The analysis as the page shows it: files and rows, per kind its fields, discriminator candidates, key and date checks, its arrays of
+    records (each a child kind or not), and the Sutras."""
+    import childkinds as CK
     import packprofile as PP
     p = an.prof
     kinds = {}
@@ -98,6 +100,12 @@ def report(an, groups) -> dict:
             "dateCandidates": c.get("dateCandidates", [])[:8],
             "unique": kp.unique(), "dupRows": kp.dup_rows, "dupNamed": kp.dup_named, "noKey": kp.no_key, "noDate": kp.no_date,
             "dates": sorted(kp.dates.items())[:60], "dateCount": len(kp.dates), "combinations": len(kp.combos)}
+        made = {c.field: c for c in an.children.get(kind, [])}
+        kinds[kind]["arrays"] = [{"field": f, "docs": x["docs"], "avg": x["avg"], "natural": x["natural"], "child": f in made,
+                                  "kind": made[f].kind if f in made else CK.kind_of(kind, f)} for f, x in CK.arrays(kp.head).items()]
+        ch = an.parents.get(kind)
+        if ch:
+            kinds[kind]["parent"] = {"kind": ch.parent, "field": ch.field, "link": ch.link}
     sutras = []
     for g in groups:
         sutras.append({"name": g.name, "kind": g.kind, "fields": g.fields, "values": ["" if v is None else v for v in g.values], "label": g.label,

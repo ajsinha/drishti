@@ -1928,7 +1928,8 @@ present becomes one Sutra, listed with its row count and share, a **rare** mark 
 *ID* is the key column; it is checked for duplicates **over the whole of every file** (one entity per ID per business date) and the result is said in
 words. *Business date* is the column holding the date, or none: then each file's name carries it (`trade.2026-07-08.jsonl.gz`). The columns are
 inferred from the data first (the same candidates `drishti.py data profile` shows); change any and press **Apply and read again**, which reads the files
-again with your choice and redraws the combinations.
+again with your choice and redraws the combinations. *Child tables* has a switch for each array of records of the kind (`LEGS`, `CASHFLOWS`): on, the
+array becomes a kind of its own, one row per element (section 8.1.4).
 
 **3. Source.** Pack name (lower-case letters, digits, `-`), title, version, a *kind prefix* (put before every kind, so a kind another module provides
 is not taken: such a clash is refused when the module is made), the files root, and the connector. By default a **file connector** `<name>-files` is
@@ -1979,6 +1980,75 @@ python3 tools/drishti.py pack make --schema docs/guides/examples/schemas docs/gu
 
 > **Real data wins.** A schema says what a document *may* be; real documents say what it *is*. Where both are given the key must be unique in the
 > data, the business date is found in the data, a field the schema does not know is reported, and every Sutra is tested on real documents.
+
+### 8.1.4 Child tables: an array of records as a kind of its own
+
+A document often holds **arrays of records**: a trade's `LEGS`, its `CASHFLOWS`. The parent's screen shows such an array as a sub-table, which is
+enough to read one trade; to add up legs across trades ("notional by leg currency") or to ask for "trades having any leg in EUR", the array is
+made a **child kind**: `LEGS` of `trade` becomes the kind `trade-leg`, one row per element, with
+
+| | What it is | Example |
+|---|---|---|
+| its own **id** | the parent's id, `:`, then the element's natural key when every element has a unique one named like an id (`LEG_ID`), else its index in the array | `LEG_KEY` = `T00012:2` |
+| a **link** to the parent | the parent's id field, carrying the parent's id (a bare `id` key becomes `<KIND>_ID`) | `TRADE_ID` = `T00012` |
+| its **promoted columns** | the link first, then the element's own fields, as for any kind | `TRADE_ID`, `LEG_ID`, `CURRENCY`, `NOTIONAL` |
+| its **own table** | written by the same loader in the same run, beside the parent, under the parent's business date | `<files root>/<pack>/2026-11-03/trade-leg.jsonl`, `<lake>/<pack>/trade-leg/` |
+| its **own Sutra** | one entity screen per leg, its `TRADE_ID` a link back to the trade (beside the title and on F7) | `trade-leg-default` |
+| a **BI relationship** | a model in the site's `tables/<pack>/` relating every leg to its trade, many-to-one and both ways | section 5.3 of the [Reports guide](REPORTS_GUIDE.md#53-relationships-and-how-a-question-joins) |
+
+The parent is unchanged: it keeps the whole array in its document and its screen still shows it as a sub-table.
+
+**Which arrays.** Automatically, every top-level array of records with at least **2 elements on average** in the first rows (`--child-min-avg N`; `0`
+turns it off), or by choice: `--child LEGS,CASHFLOWS` (or per kind `trade=LEGS;quote=TICKS`), `--child none` for none. In the designer, step 2
+(**Kind and keys**) lists each array of the kind under **Child tables** with its average, the child kind it would be and its natural key, and a
+switch: switch it on or off and press **Apply and read again**; every record is read again and the child kind appears in the kind list, with its rows,
+id check and Sutra. A child kind's own step 2 says whose rows it is.
+
+**One profiler, one loader.** The full pass (`tools/packgen/packprofile.py`) explodes each parent's array as it reads the parent, so the child kind's
+rows, fields, dates and id check are the whole files', not a sample; its id is checked within each parent. The loader that writes the parent
+(`tools/ingest_jsonl.py`: `pack new --load`, the designer's *Write the records to the store*, `data ingest --pack`) writes the child rows from the
+same code (`tools/packgen/childkinds.py`). A folder already laid out for the file connector is not read in place when there are child kinds: the
+records go to the files store. The pack says it all in its `ingest:` block, which `drishti.py pack check` checks:
+
+```yaml
+ingest:
+  trade: { key: TRADE_ID, date: BUSINESS_DATE }
+  trade-leg: { key: LEG_KEY, child-of: { kind: trade, field: LEGS, link: TRADE_ID, natural: LEG_ID } }
+graph:
+  fields:
+    TRADE_ID: { kind: trade, label: Trade }       # a leg's TRADE_ID opens its trade; BI reads it as a ready-made relationship
+```
+
+`--dry-run` prints the child kinds planned before anything is written. On the MUREX file of the test data, automatically only `EVENTS` (16 a trade)
+qualifies (`LEGS` averages 1.4), so both are chosen:
+
+```bash
+python3 tools/drishti.py pack new data/testdata/trades/murex/trade_murex.2026-07-08.jsonl.gz --name murex-book --kind trade --key TRADE_ID \
+    --match PRODUCT_TYPE --kind-prefix murex- --child LEGS,EVENTS --dry-run
+```
+
+```text
+kind murex-trade: 4,198 rows, 107 fields
+  child kind from LEGS (--child)
+  child kind from EVENTS (--child)
+  child kind LEGS -> murex-trade-leg: one row per element, id LEG_KEY (TRADE_ID:LEG_ID), link TRADE_ID -> murex-trade: 5,777 rows, 1.38 per murex-trade that has it
+  child kind EVENTS -> murex-trade-event: one row per element, id EVENT_KEY (TRADE_ID:EVENT_ID), link TRADE_ID -> murex-trade: 67,228 rows, 16.01 per murex-trade that has it
+  ...
+kind murex-trade-leg: 5,777 rows, 51 fields (child of murex-trade: one row per element of its LEGS)
+  id LEG_KEY: unique within each parent; link TRADE_ID -> murex-trade
+  date: its parent's: 1 business date(s), 2026-07-08 .. 2026-07-08
+  match: (none: one Sutra for the kind): 1 combination(s)
+         5,777  (all)                                                         -> murex-trade-leg-default
+
+binding (config/bindings.yaml): murex-trade, murex-trade-event, murex-trade-leg -> read: [murex-book-files]
+BI (the site's tables/): murex_book/murex-book.model.yaml, murex_book/murex_trade_events.table.yaml, murex_book/murex_trade_legs.table.yaml, ...
+```
+
+The BI model (`<site>/tables/<pack>/<pack>.model.yaml`, with a table per kind beside it) relates `trade_leg.TRADE_ID` to `trade.TRADE_ID`
+(`cardinality: many-to-one, direction: both`) and has a count per kind and a sum of each numeric column: *Trade leg NOTIONAL* by
+`trade_leg.CURRENCY` sums every leg once, by `trade.PRODUCT_TYPE` joins each leg to its trade, and a filter on `trade_leg.CURRENCY` keeps the
+trades having any such leg, each counted once (`kernel/drishti-server/src/test/java/com/ash/drishti/server/bi/engine/ChildTablesModelTest.java`).
+Only top-level arrays become child kinds; an array inside an element (a leg's resets) stays in the child row and is a sub-table of its screen.
 
 ### 8.2 The rules, one by one
 

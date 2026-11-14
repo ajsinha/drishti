@@ -47,6 +47,8 @@ import sutragen as SG  # noqa: E402
 
 sys.path.insert(0, str(HERE / "common"))
 import packsamples  # noqa: E402  (samples/<kind>.jsonl, one document a line)
+sys.path.insert(0, str(HERE))
+import childkinds as CK  # noqa: E402  (arrays of objects as child kinds)
 
 
 def _lakeconfig():
@@ -88,6 +90,13 @@ def scalar_columns(docs: list[dict], key: str | None, n: int = 7) -> list[str]:
     return [k for k in seen][:n] + [k for k, simple in lists.items() if simple and k not in seen]
 
 
+def promoted(an, kind: str) -> list[str]:
+    """A kind's promoted columns (scalar_columns of its first rows); a child kind's link to its parent first."""
+    cols = scalar_columns(an.prof.kinds[kind].head, an.keys[kind])
+    ch = an.parents.get(kind)
+    return list(dict.fromkeys([ch.link] + cols)) if ch else cols
+
+
 def shown_fields(groups) -> dict[str, list[str]]:
     """kind -> top-level fields bound by its generated Sutras (the ones coverage will ask the glossary about)."""
     out: dict[str, list[str]] = {}
@@ -116,6 +125,10 @@ def build_parser(add_help: bool = True) -> argparse.ArgumentParser:
     p.add_argument("--force", action="store_true", help="overwrite an existing --out folder")
     p.add_argument("--catalog-samples", type=int, default=25, help="documents per kind kept in samples/ (default 25; every combination has one)")
     p.add_argument("--sample-part-mb", type=float, default=50, help="split a kind's samples/<kind>.jsonl into parts above this size (default 50)")
+    p.add_argument("--child", help="arrays of objects made child kinds (one row per element, its own id, a link to the parent): LEGS,CASHFLOWS or "
+                                   "trade=LEGS;quote=TICKS; none for none (default: every array with --child-min-avg elements on average)")
+    p.add_argument("--child-min-avg", type=float, default=CK.MIN_AVG, help=f"without --child: an array of objects with at least this many elements on "
+                                                                          f"average becomes a child kind (default {CK.MIN_AVG:g}; 0 for none)")
     p.add_argument("--sutra-edits", type=pathlib.Path, help="a JSON file {sutra name: YAML}: these texts replace the drafted Sutras before lint and test "
                                                             "(the Pack designer's edits)")
     SG.add_arguments(p)
@@ -141,6 +154,8 @@ class Analysis:
         self.why: dict[str, list[str]] = {}
         self.groups: list = []
         self.skipped: dict[str, list] = {}
+        self.children: dict[str, list] = {}          # parent kind -> [childkinds.Child]
+        self.parents: dict[str, object] = {}         # child kind -> its childkinds.Child
 
 
 def _given(v):
@@ -158,8 +173,12 @@ def analyse(opts, say=print) -> Analysis:
     key_d, key_k = SG.parse_scalar(_given(opts.key))
     date_d, date_k = SG.parse_scalar(_given(opts.date))
     match_d, match_k = SG.parse_match(_given(opts.match))
+    child_d, child_k = CK.parse(getattr(opts, "child", None))
+    min_avg = getattr(opts, "child_min_avg", CK.MIN_AVG)
+    min_avg = CK.MIN_AVG if min_avg is None else min_avg
+    children = bool(child_d) or any(child_k.values()) or (child_d is None and min_avg > 0)
     heads: dict[str, list[dict]] = {}
-    if getattr(opts, "infer", False) and (opts.key is None or opts.date is None or opts.match is None):
+    if (getattr(opts, "infer", False) and (opts.key is None or opts.date is None or opts.match is None)) or children:
         for k, docs in PP.head(files).items():
             heads.setdefault(kind_of(k), []).extend(docs)
 
@@ -187,8 +206,19 @@ def analyse(opts, say=print) -> Analysis:
 
     for kind in sorted({kind_of(SG.file_kind(f)) for f in files} | set(heads)):
         choose(kind)
+    taken = set(an.keys)
+    for kind in sorted(an.keys):                 # child kinds: planned from the first rows, profiled in the one pass
+        if not children or kind not in heads:
+            continue
+        kids, why = CK.plan(kind, heads[kind], an.keys[kind], child_k.get(kind, child_k.get(bare(kind), child_d)), min_avg, taken)
+        an.why.setdefault(kind, []).extend(why)
+        for ch in kids:
+            taken.add(ch.kind)
+            an.children.setdefault(kind, []).append(ch)
+            an.parents[ch.kind] = ch
+            an.keys[ch.kind], an.match[ch.kind] = ch.key, []
     conf = PP.Config(getattr(opts, "kind", None), {k: (an.match[k], an.keys[k], an.dates.get(k)) for k in an.keys},
-                     (tuple(match_d), key_d or "id", date_d), prefix)
+                     (tuple(match_d), key_d or "id", date_d), prefix, an.children)
     workers = getattr(opts, "workers", None) or 1
     say(f"reading every record of {len(files)} file(s)" + (f" with {workers} worker(s)" if workers > 1 else "") + " ...")
     an.prof = PP.scan(files, conf, getattr(opts, "samples", 5), workers, lambda n, t: say(f"  {n:,} rows, {t:.0f} s"))
@@ -222,6 +252,7 @@ def analyse(opts, say=print) -> Analysis:
             used.add(g.name)
             g.priority = opts.priority if fields else 1
             g.count, g.samples, g.key = n, kp.chosen(vals), an.keys[kind]
+            g.parent = an.parents.get(kind)          # a child kind's screen links back to its parent
             made.append(g)
         if getattr(opts, "fallback", False) and fields:
             g = SG.Group(kind, [], (), [])
@@ -244,12 +275,21 @@ def print_plan(an: Analysis, say=print) -> None:
             "<kind>.<YYYY-MM-DD>.jsonl[.gz] (one folder per source when several deliver the same day)")
     for kind in sorted(p.kinds):
         kp = p.kinds[kind]
-        say(f"\nkind {kind}: {kp.rows:,} rows, {len(kp.fields)} fields")
+        ch = an.parents.get(kind)
+        say(f"\nkind {kind}: {kp.rows:,} rows, {len(kp.fields)} fields" + (f" (child of {ch.parent}: one row per element of its {ch.field})" if ch else ""))
         for w in an.why.get(kind, []):
             say(f"  {w}")
+        for c in an.children.get(kind, []):
+            pk = p.kinds.get(c.kind)
+            have = kp.fields.get(c.field)
+            avg = f", {pk.rows / have.docs:.2f} per {kind} that has it" if pk and have and have.docs else ""
+            say(f"  child kind {c.words()}" + (f": {pk.rows:,} rows{avg}" if pk else ": no rows"))
         key = an.keys[kind]
         per = " per business date" if kp.dates else ""
-        if kp.key and kp.no_key == kp.rows:
+        if ch:
+            say(f"  id {key}: " + ("unique within each parent" if kp.unique() else f"NOT unique within a parent: {kp.dup_rows:,} duplicate row(s)"
+                                   + (f" (e.g. {', '.join(kp.dup_named[:5])})" if kp.dup_named else "")) + f"; link {ch.link} -> {ch.parent}")
+        elif kp.key and kp.no_key == kp.rows:
             say(f"  id {key}: in no row; give --key {kind}=FIELD (the duplicate check needs it)")
         elif kp.unique():
             say(f"  id {key}: unique{per} over all {kp.rows:,} rows")
@@ -258,7 +298,9 @@ def print_plan(an: Analysis, say=print) -> None:
                 + (f"; {kp.no_key:,} row(s) without it" if kp.no_key else ""))
         ds = sorted(kp.dates)
         span = f"{len(ds)} business date(s)" + (f", {ds[0]} .. {ds[-1]}" if ds else "") + (f"; {kp.no_date:,} row(s) without one" if kp.no_date else "")
-        if kind in an.dates:
+        if ch:
+            say(f"  date: its parent's: {span}")
+        elif kind in an.dates:
             say(f"  date {an.dates[kind]}: {span}")
         else:
             say(f"  date: each file's by the load rules (its name, else the day of the load): {span}")
@@ -273,8 +315,9 @@ def print_plan(an: Analysis, say=print) -> None:
 CONTRACT_TYPE = {"string": "text", "integer": "integer", "number": "amount", "boolean": "boolean", "object": "record", "array": "list", "null": "unknown"}
 
 
-def contract(kind: str, kp, mnemonic: str, pack: str, key: str, date: str | None) -> dict:
-    """The kind's contract from the full pass: every top-level field, its type and whether every row had it."""
+def contract(kind: str, kp, mnemonic: str, pack: str, key: str, date: str | None, child=None) -> dict:
+    """The kind's contract from the full pass: every top-level field, its type and whether every row had it (a child kind: one row per
+    element of its parent's array, dated as its parent)."""
     fields = []
     nested = " ".join(kp.fields.keys())
     for path, f in kp.fields.items():
@@ -295,8 +338,11 @@ def contract(kind: str, kp, mnemonic: str, pack: str, key: str, date: str | None
         fields.append(row)
     return {"kind": kind, "mnemonic": mnemonic, "pack": pack, "version": "1.0", "class": "input", "status": "active",
             "title": kind.replace("-", " ").replace("_", " ").capitalize(), "description": f"TODO: what a {kind} is.",
-            "source": "TODO: the system that delivers it", "grain": f"One row per {key}" + (" per business date." if date else "."),
-            "key": [key], "dated-by": "business_date" if date else "snapshot",
+            "source": "TODO: the system that delivers it" if not child else f"the {child.field} of each {child.parent} (a child kind: drishti.py pack new)",
+            "grain": (f"One row per {key}" + (" per business date." if date else ".")) if not child else
+                     f"One row per element of a {child.parent}'s {child.field}; {key} is {child.parent_key}{CK.SEP}"
+                     f"{child.natural or 'index'}, {child.link} the {child.parent}'s id.",
+            "key": [key], "dated-by": "business_date" if date or child else "snapshot",
             "cadence": {"frequency": "daily" if date else "on change", "due": "to be confirmed"},
             "binding-hint": {"lake-table": f"{re.sub('[^a-z0-9_-]', '-', pack)}.{re.sub('[^a-z0-9_.-]', '-', kind.lower())}"},
             "fields": fields, "validation": [{"rule": "required", "fields": [x["name"] for x in fields if x["presence"] == "required"]}],
@@ -340,7 +386,7 @@ def run(opts, say=print, an: Analysis | None = None) -> int:
         m = mn_k.get(k) or mnemonic_of(k, taken)
         taken.add(m)
         mnemonics[m] = {"kind": k, "label": k.replace("-", " ").replace("_", " ").capitalize()}
-    columns = {k: scalar_columns(kinds[k].head, keys[k]) for k in kinds}
+    columns = {k: promoted(an, k) for k in kinds}
     lake = getattr(opts, "lake", None)
     store = getattr(opts, "store", "delta")
     target = getattr(opts, "files_root", None) if store == "files" else lake
@@ -366,7 +412,11 @@ def run(opts, say=print, an: Analysis | None = None) -> int:
         manifest["connectors"] = [f"{opts.name}-store"]
         manifest["connector-templates"] = {f"{opts.name}-store": conn}
         manifest["routes"] = {k: f"{opts.name}-store" for k in stored}
-    manifest["ingest"] = {k: {"key": keys[k], **({"date": dates[k]} if k in dates else {"snapshot": True})} for k in sorted(kinds)}
+    manifest["ingest"] = {k: an.parents[k].ingest() if k in an.parents else {"key": keys[k], **({"date": dates[k]} if k in dates else {"snapshot": True})}
+                          for k in sorted(kinds)}
+    if an.parents:                               # a child row's link opens its parent (the link graph: screens, BI's ready-made relationships)
+        manifest["graph"] = {"fields": {ch.link: {"kind": ch.parent, "label": ch.parent.replace("-", " ").replace("_", " ").capitalize()}
+                                        for ch in an.parents.values()}}
     out.mkdir(parents=True, exist_ok=True)
     note = ("# Generated by drishti.py pack new (tools/packgen/pack_from_jsonl.py); now yours to edit.\n"
             + "".join(f"# {k}: its own date in $.{f} (counted only: a file's business date is its name's, the store's business_date)\n"
@@ -376,7 +426,7 @@ def run(opts, say=print, an: Analysis | None = None) -> int:
     (out / "contracts").mkdir(exist_ok=True)
     mn_of = {v["kind"]: m for m, v in mnemonics.items()}
     for k in sorted(kinds):
-        c = contract(k, kinds[k], mn_of[k], opts.name, keys[k], dates.get(k))
+        c = contract(k, kinds[k], mn_of[k], opts.name, keys[k], dates.get(k), an.parents.get(k))
         (out / "contracts" / f"{k}.contract.yaml").write_text(yaml.safe_dump(c, sort_keys=False, width=120, allow_unicode=True), encoding="utf-8")
 
     # samples: one document of every combination first, then the rest up to --catalog-samples per kind

@@ -22,7 +22,9 @@ pack declares), so a running server picks them up within its refresh interval.
 Input: --from is a folder (its *.jsonl; -r for subfolders) or one .jsonl file, repeatable; a line is a plain JSON document or the loader envelope
 {"kind", "id", "doc"} (doc an object or JSON text, unwrapped). The kind is the file stem unless the envelope says one.
 
-What is written where: <lake>/<domain>/<kind>/ with columns id, doc, business_date and the promoted columns of the layout.
+What is written where: <lake>/<domain>/<kind>/ with columns id, doc, business_date and the promoted columns of the layout. A pack's
+child kinds (its `ingest:` block's `child-of` entries, tools/packgen/childkinds.py) are written beside their parent: each parent's array
+(LEGS) as rows of the child kind (trade-leg), one per element, with its own id and the parent's id, under the parent's business date.
 With --pack the domain, the layout (settings.layout.<kind>.columns/sort-by/file-rows/row-group-rows) come from the pack's
 Delta connector, and the id field from its `ingest:` block ({kind: {key: FIELD, date: FIELD}}, written by
 tools/packgen/pack_from_jsonl.py). Without --pack give --domain and per-kind --key (FIELD or kind=FIELD,...; dotted paths); the layout
@@ -56,6 +58,8 @@ sys.path.insert(0, str(HERE / "samplegen"))
 import sutragen as SG  # noqa: E402  (reading, dotted paths, scalar option parsing)
 sys.path.insert(0, str(HERE / "lake"))
 import feedroute  # noqa: E402  (a file's .ready file)
+sys.path.insert(0, str(HERE / "packgen"))
+import childkinds as CK  # noqa: E402  (a parent's array of objects as rows of its child kind: the one explode, shared with pack new)
 import filedate  # noqa: E402  (the table and business date in a file's name, the Java loader's FileDates)
 
 MODES = ("overwrite-dates", "append", "replace")
@@ -120,14 +124,24 @@ def _stem(f: str) -> str:
     return pathlib.Path(p.stem).stem if p.suffix.lower() == ".gz" else p.stem
 
 
-def pack_settings(pack: pathlib.Path) -> tuple[str, dict, dict, dict]:
-    """(domain, {kind: Layout}, {kind: key}, {kind: date}) from a pack folder's pack.yaml."""
+def pack_children(pack: pathlib.Path) -> dict[str, list]:
+    """parent kind -> its child kinds (childkinds.Child), from the pack's ``ingest:`` block."""
+    import yaml
+    m = yaml.safe_load((pack / "pack.yaml").read_text(encoding="utf-8")) or {}
+    return CK.of_ingest(m.get("ingest"))
+
+
+def pack_settings(pack: pathlib.Path, bare: bool = False) -> tuple[str, dict, dict, dict]:
+    """(domain, {kind: Layout}, {kind: key}, {kind: date}) from a pack folder's pack.yaml; ``bare`` (the files store): a pack without a
+    connector (a module's pack: the site binds it) gives its keys and dates, its name as the domain."""
     import yaml
     L = _layout()  # delta only
     import packlake                                   # tools/packlake.py: a lake-form template read with the pack's lake: entries
     m = packlake.view(yaml.safe_load((pack / "pack.yaml").read_text(encoding="utf-8")) or {})
     defs = m.get("connectors") if isinstance(m.get("connectors"), dict) else (m.get("connector-templates") or {})   # a pack names its connectors and suggests them as templates
     conns = [c for c in defs.values() if c.get("plugin") in ("delta", "file")]
+    if not conns and bare:
+        conns = [{"plugin": "file", "settings": {}}]
     if not conns:
         raise SystemExit(f"ingest_jsonl: {pack}/pack.yaml declares no delta or file connector (generate the pack with --lake or --files-root)")
     c = conns[0]
@@ -148,7 +162,7 @@ def business_today() -> date:
     return filedate.business_today()
 
 
-def collect(args, keys, dates, report: Report) -> dict[str, dict[date, list]]:
+def collect(args, keys, dates, report: Report, children: dict | None = None) -> dict[str, dict[date, list]]:
     """kind -> business date -> [(id, doc json, doc)] for the kinds the pack knows. Each file's business date (DATA_LAKE_GUIDE.md): --as-of,
     else its .ready file's business-date, else its name's date, else the business today; a row's own date field never decides (rows
     that say another date are counted)."""
@@ -179,6 +193,9 @@ def collect(args, keys, dates, report: Report) -> dict[str, dict[date, list]]:
             report.no_key[kind] = report.no_key.get(kind, 0) + 1
             continue
         out.setdefault(kind, {}).setdefault(day, []).append((str(kv), json.dumps(doc), doc))
+        for ch in (children or {}).get(kind, ()):          # its child kinds' rows, under the same business date
+            for row in CK.explode(doc, ch):
+                out.setdefault(ch.kind, {}).setdefault(day, []).append((str(row[ch.key]), json.dumps(row), row))
     return out
 
 
@@ -257,8 +274,11 @@ def ingest(args, say=print) -> Report:
         raise SystemExit("ingest_jsonl: give --from (a folder or .jsonl file) or --watch DIR")
     if args.mode is None:
         args.mode = "append"
+    children: dict = {}
     if args.pack:
-        domain, layouts, keys, dates = pack_settings(args.pack)
+        domain, layouts, keys, dates = pack_settings(args.pack, bare=args.store == "files")
+        domain = args.domain or domain
+        children = pack_children(args.pack)
     else:
         L = _layout()
         if not args.domain:
@@ -276,7 +296,7 @@ def ingest(args, say=print) -> Report:
         def get(self, k, d=None):
             return super().get(k, super().get("*", d))
     keys, dates, layouts = _Lookup(keys), _Lookup(dates), _Lookup(layouts)
-    data = collect(args, keys, dates, report)
+    data = collect(args, keys, dates, report, children)
     for kind, days in data.items():
         for day, rows in days.items():
             report.rows[(kind, day.isoformat())] = len(rows)
@@ -301,7 +321,8 @@ def build_parser(add_help: bool = True) -> argparse.ArgumentParser:
                                 epilog=__doc__.split("\n\n", 1)[1], add_help=add_help)
     p.add_argument("--from", dest="src", type=pathlib.Path, action="append", help="a folder of *.jsonl or one .jsonl file; repeatable (or use --watch)")
     p.add_argument("-r", "--recursive", action="store_true")
-    p.add_argument("--pack", type=pathlib.Path, help="pack folder: domain, layouts, key and date fields come from its pack.yaml")
+    p.add_argument("--pack", type=pathlib.Path, help="pack folder: domain, layouts, key and date fields and child kinds come from its pack.yaml "
+                                                     "(--domain names another domain)")
     p.add_argument("--domain", help="lake domain (without --pack)")
     p.add_argument("--kind", help="kind for every document (default: file stem or envelope kind)")
     p.add_argument("--kind-prefix", help="put this before every kind (as `pack new --kind-prefix` named them)")

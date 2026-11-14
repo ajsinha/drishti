@@ -417,6 +417,25 @@ def edit_yaml(text: str, g: Group) -> str:
         elif line.startswith("title:") and g.key:
             line = re.sub(r'id: "[^"]*"', f'id: "$.{g.key}"', line, count=1)
         out.append(line)
+    return link_parent("\n".join(out) + "\n", getattr(g, "parent", None))
+
+
+def link_parent(text: str, ch) -> str:
+    """A child kind's Sutra (tools/packgen/childkinds.py) links back to its parent: its link field opens the parent kind wherever it is shown,
+    beside the title and on F7."""
+    if ch is None:
+        return text
+    to = f"link($.{ch.link}, '{ch.parent}')"
+    text = re.sub(r"link\(\$\." + re.escape(ch.link) + r", '[^']*'\)", to, text)
+    out = []
+    for line in text.splitlines():
+        if line.startswith("title:") and "with:" not in line:
+            line = re.sub(r"\s*}\s*$", f', with: "{to}" }}', line)
+        elif line.startswith("keys:") and "F7:" not in line:
+            line = re.sub(r"^keys:\s*{", f'keys: {{ F7: "{to}",', line)
+        out.append(line)
+    if not any(x.startswith("keys:") for x in out):
+        out.append(f'keys: {{ F7: "{to}" }}')
     return "\n".join(out) + "\n"
 
 

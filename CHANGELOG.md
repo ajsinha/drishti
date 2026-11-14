@@ -17,6 +17,19 @@
 
 ## Unreleased
 
+- **Child tables: arrays of rows become child kinds.** `pack new` and the Pack designer make an array of records (`LEGS`, `CASHFLOWS`) a kind of
+  its own: one row per element (`trade-leg`), its id the parent's id and the element's natural key (`LEG_ID`) or index (`LEG_KEY` = `T1:2`), a
+  link to the parent (`TRADE_ID`), its own promoted columns, contract and Sutra (an entity screen whose `TRADE_ID` opens the trade, beside the title
+  and on F7), loaded into its own table beside the parent under the parent's business date. Automatic for arrays with at least 2 elements on
+  average (`--child-min-avg N`, `0` for none) or by choice (`--child LEGS,CASHFLOWS`, `kind=...;kind2=none`, `none`); in the designer a switch per
+  array under *Kind and keys → Child tables*; `--dry-run` lists the child kinds planned. One implementation (`tools/packgen/childkinds.py`): the
+  full pass profiles the child rows as it reads each parent (every row, ids checked within each parent), and the one loader (`data ingest --pack`,
+  `pack new --load`, the designer) writes them from the pack's `ingest:` block (`child-of: {kind, field, link, natural}`, checked by `pack check`).
+  The parent is unchanged and its screen still shows the array. BI: a table per kind and a model in the site's `tables/<pack>/` relating each child
+  to its parent many-to-one and both ways, so sums by a child's or a parent's field are right and a filter on the child keeps the parents having
+  any such child, each once (`ChildTablesModelTest`); the pack's link graph names the link for models started from the packs. BUILD_GUIDE
+  section 8.1.4, DATA_LAKE_GUIDE section 5.7, REPORTS_GUIDE section 5.3, CLI_REFERENCE (`pack new`).
+
 - **Pack designer** (Build → New pack, `/build/pack/designer`; the old `/build/pack/new` redirects): a workspace with a rail of six steps and
   their summaries. Data (drop `.jsonl`, `.jsonl.gz`, `.ndjson` files or a folder: uploaded to the server, every record analysed there with
   progress, the code of `drishti.py pack new`), Kind and keys (discriminator columns in any combination with live Sutra counts and a rare mark, the

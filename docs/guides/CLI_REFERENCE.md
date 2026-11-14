@@ -940,6 +940,10 @@ drishti-console/.venv/bin/python tools/drishti.py pack new /data/incoming --name
 - **`--kind-prefix`** puts a prefix before every kind (`deal` becomes `deals-deal`). A server that has a product module providing the same kind
   refuses a module that claims it; `pack new` lists such kinds in the plan and stops unless you prefix them (or pass `--allow-shared-kinds`
   for a server without that module).
+- **Child kinds**: an array of records (`LEGS`) becomes a kind of its own (`deal-leg`: one row per element, its own id, a `TRADE_ID` link to its
+  parent, its own Sutra, BI tables and a model in the site's `tables/`) when it has at least `--child-min-avg N` elements on average (2; `0`
+  for none), or as `--child LEGS,CASHFLOWS` (`kind=LEGS;kind2=none`, `none`) says; the plan lists them, `--load` writes their rows beside the
+  parent's ([BUILD_GUIDE section 8.1.4](BUILD_GUIDE.md#814-child-tables-an-array-of-records-as-a-kind-of-its-own)).
 - **`--load`** writes the documents under `--files-root` as `<name>/<business date>/<kind>.jsonl` (the date comes from the file name,
   `deal.2026-11-03.jsonl.gz`), and the generated file connector names that root as an absolute path. **`--deploy`** drops the checked
   `.dmod` into `--modules-dir` (one node; with `--server` and `--reason` it is uploaded and planned on a cluster). The running server's
