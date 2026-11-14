@@ -44,7 +44,7 @@ lenses:
   default: research
 
 menus:
-  top: [genomics, views, bi, admin, help]
+  top: [views, domains, create, admin, help]
   placeholder: "GENE TP53, COHORT COH-A, VARIANT HX-A001 …  then <GO>"
 
 docs: { title: Drishti Genomics Help }

@@ -175,14 +175,26 @@ def _menu_order(edition: Edition, menus: list) -> list:
     by_id = {str(m.get("id") or ""): m for m in menus}
     top = edition.filtering.menu("top")
     if top is None:
-        base = [m for m in menus if (not m.get("subject") or m.get("without-lens")) and not m.get("personal")]
+        base = [m for m in menus if not m.get("personal")]
     else:
         base = [by_id[i] for i in top if i in by_id]
-    named = edition.menu("top") if edition.lens else None
-    if not named:
-        return base
-    first = [by_id[i] for i in named if i in by_id and (by_id[i] in base or (top is None and not by_id[i].get("personal")))]
-    return first + [m for m in base if m not in first]
+    return [m for m in base if not _in_another(m)]
+
+
+def _in_another(menu: dict) -> bool:
+    """Whether a menu is drawn inside another (never as a top menu of its own): a module's menu is a column of Domains, and a menu
+    with ``folded: true`` (BI, Build) is a part of Create."""
+    return bool(menu.get("folded") or menu.get("_module"))
+
+
+def _domain_order(edition: Edition, menus: list) -> list:
+    """The module menus of the sitemap in the order Domains draws them: in a lens, those its ``menus.top`` names first, in its order
+    (a lens only arranges and never takes a menu out), then the rest as the manifests gave them."""
+    gathered = {str(g) for m in menus for g in m.get("gather") or []}          # drawn once, as columns of the menu that gathers them
+    mine = [m for m in menus if m.get("_module") and m.get("label") and m.get("id") not in gathered]
+    named = (edition.menu("top") or []) if edition.lens else []
+    first = [m for i in named for m in mine if m.get("id") == i]
+    return first + [m for m in mine if m not in first]
 
 
 def _columns(menu: dict, menus: list) -> list:
@@ -322,6 +334,11 @@ def top_bar(request, ctx: dict) -> list:
     hosted = _hosted_menus(request)                             # the hosted modules' entries (plugin.yaml menus:), by menu
     for menu in _menu_order(edition, every):
         mid = str(menu.get("id") or "")
+        if menu.get("domains"):                                 # Domains: the module menus, each a column of it
+            drawn = _domains(request, edition, menu, every, hosted, ctx, fill)
+            if drawn is not None:
+                out.append(drawn)
+            continue
         columns = list(hosted.pop(mid, []))
         if _domain_hidden(menu) or not _active(request, menu):  # a module's menu: only while its module is active (absent otherwise)
             continue
@@ -343,6 +360,46 @@ def top_bar(request, ctx: dict) -> list:
     return out
 
 
+def _domains(request, edition: Edition, menu: dict, every: list, hosted: dict, ctx: dict, fill: dict):
+    """The Domains menu, from the manifests alone: a column for each menu a module brought (Blotter, Risk, Markets, Economies ...), drawn
+    while its module is active and the person's role and the sitemap's ``requires:`` allow its items. A menu of several columns keeps
+    each as ``<menu> · <column>``; one with a single column is titled with the menu. With one domain active the menu is named after it
+    (``console.domain-label`` of its manifest, else the domain's name: Risk, Genomics ...), and with none it is not drawn."""
+    columns: list = []
+    by_title: dict[str, int] = {}
+    domains: dict[str, str] = {}
+    for m in _domain_order(edition, every):
+        if _domain_hidden(m) or not _active(request, m):
+            continue
+        mid = str(m.get("id") or "")
+        own = [(str(c.get("title") or ""), c) for c in _columns(m, every) if _active(request, c)]
+        drawn = [(t, _items(request, edition, mid, c, ctx, fill, m)) for t, c in own]
+        drawn = [(t, items) for t, items in drawn if items]
+        extra = hosted.pop(mid, [])
+        label = _text(m.get("label"), fill)
+        several = len({t for t, _ in drawn + list(extra)}) > 1
+        for t, items in drawn + list(extra):
+            title = label if not several or not t or t == label else f"{label} · {t}"
+            if title in by_title:                                # two modules add a column of one title to a menu: one column
+                columns[by_title[title]][1].extend(items)
+            else:
+                by_title[title] = len(columns)
+                columns.append((title, list(items)))
+        if drawn or extra:
+            d = str(m.get("domain") or m.get("_domain") or mid)
+            domains[d] = str(m.get("_domain_label") or domains.get(d) or "")
+    for hid in list(hosted):                                    # a hosted module's own menu (plugin.yaml menus:): a column of Domains too
+        for title, items in hosted.pop(hid):
+            columns.append((title, items))
+            domains[hid] = title
+    if not columns:
+        return None
+    if len(domains) == 1:
+        (domain, name), = domains.items()
+        return (name or domain.replace("-", " ").replace("_", " ").title(), menu.get("icon"), columns)
+    return (_text(menu.get("label"), fill), menu.get("icon"), columns)
+
+
 def _hosted_menus(request) -> dict[str, list]:
     """The hosted modules' menu entries (core/module_parts.py; ``menus:`` of a plugin.yaml format 2), each module a column of the menu its
     entries name (``menu:``; a menu the product lacks is the module's own): ``{menu id: [(title, [item...])]}``. Only modules on are listed,
@@ -352,33 +409,13 @@ def _hosted_menus(request) -> dict[str, list]:
     for p in parts.snapshot.parts.values() if parts is not None else []:
         if not p.menus or not modules.module_on(p.id):
             continue
-        by_menu: dict[str, list] = {}
-        for m in p.menus:
-            by_menu.setdefault(str(m.get("menu") or p.id), []).append(
+        by_menu: dict[tuple[str, str], list] = {}
+        for m in p.menus:                                       # ``column:`` names the column of the menu (else the module's title)
+            by_menu.setdefault((str(m.get("menu") or p.id), str(m.get("column") or p.title)), []).append(
                 (parts.href(m), m.get("icon") or "puzzle", str(m["label"]), str(m.get("desc") or ""), None, str(m.get("cmd") or "")))
-        for mid, items in by_menu.items():
-            out.setdefault(mid, []).append((p.title, items))
+        for (mid, column), items in by_menu.items():
+            out.setdefault(mid, []).append((column, items))
     return out
-
-
-def lens_menu(request, menus: list, product: str = "") -> dict | None:
-    """The lens menus' phone form (LX1 option C, docs/architecture/LENSES.md): on a phone the edition's (or lens's) subject menus fold into one
-    menu named after the lens, a column per subject, so the bar keeps a few finger-sized buttons; on a wider screen the subject menus
-    stand in the bar as before (static/css/drishti_phone.css switches them at 640 px). ``menus`` is :func:`top_bar`'s answer; None without
-    subject menus. ``{"label", "subjects": [labels], "columns": [(title, items)]}``."""
-    edition = _edition(request)
-    if not edition.active or edition.menu("top") is None:
-        return None
-    subject = {str(m.get("label") or "") for m in _spec(_console_dir(request)).get("menus") or [] if m.get("subject")}
-    folded = [(label, [it for _t, items in columns for it in items]) for label, _icon, columns in menus if label in subject]
-    folded = [(label, items) for label, items in folded if items]
-    if not folded:
-        return None
-    label = edition.title                                      # "Drishti Risk" -> "Risk": the product's name is already the brand beside it
-    words, brand = label.split(), (product or "").split()
-    if len(words) > 1 and brand and words[0].lower() == brand[0].lower():
-        label = " ".join(words[1:])
-    return {"label": label, "title": edition.title, "subjects": [s for s, _ in folded], "columns": folded}
 
 
 def footer(request) -> list[dict]:

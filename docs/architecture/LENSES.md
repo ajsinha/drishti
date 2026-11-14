@@ -367,7 +367,7 @@ file with the same switches (an item shows only when the lens keeps its command 
 | X1 | Bar: Views · Risk · Counterparties · BI · Admin · Help | the lens's `menus.top`, [`sitemap.yaml`](../../drishti-console/config/sitemap.yaml), drawn by [`core/menus.py`](../../drishti-console/core/menus.py) | **Built** |
 | X2 | Risk menu's VaR column: VaR explorer, Why it moved, VaR Playground, Scenario matrix, Regulatory reports, Backtesting, Stress window, VaR results, Official records | the `risk` menu's items with `requires: engine:var`, picked by `menus.risk` | **Built** |
 | X3 | Exposure column: Exposure explorer, a counterparty, a netting set | its `exposure` column | **Built** (`EXP CPTY`, `EXP NSET` put in the command line for the id) |
-| X4 | Phone form: Risk and Counterparties fold into the lens menu, 44 px items | the bar's template (the lens menu) | **Built** |
+| X4 | Phone form: Risk and Counterparties fold into the lens menu, 44 px items | the bar's template (the lens menu) | **Replaced by the five-menu bar (Domains)** |
 
 #### 1.4.5 The VaR screen's layout (`var-layout/A.html`)
 

@@ -42,7 +42,7 @@ SHOTS = os.environ.get("DRISHTI_PHONE_SHOTS")
 AUDIT = r"""() => {
   const d = document.documentElement, out = [];
   if (d.scrollWidth > d.clientWidth + 1) out.push('scrolls sideways: ' + d.scrollWidth + ' in ' + d.clientWidth);
-  for (const e of document.querySelectorAll('.ph-row, .ph-all, .ph-btn, .ph-why summary, .tbar-lens-btn, .mega-lens .mega-item')) {
+  for (const e of document.querySelectorAll('.ph-row, .ph-all, .ph-btn, .ph-why summary')) {
     const r = e.getBoundingClientRect();
     if (r.width && r.height && getComputedStyle(e).visibility !== 'hidden' && Math.min(r.width, r.height) < 43.5) out.push('small: ' + e.className + ' ' + Math.round(r.width) + 'x' + Math.round(r.height));
   }
@@ -163,45 +163,6 @@ def test_the_desktop_page_is_unchanged(browser, console_url, theme):
             assert page.locator(f"#p-{pid}").count() == 1, pid
         assert page.locator("[data-phone-compact]").count() == 0
         assert page.evaluate("document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1")
-    finally:
-        ctx.close()
-
-
-@pytest.mark.parametrize("theme", THEMES)
-def test_the_lens_menus_fold_into_one_on_a_phone(browser, trading_console, theme):
-    ctx = _context(browser, 390, theme)
-    page = ctx.new_page()
-    try:
-        _open(page, trading_console + "/t")
-        lens = page.locator(".tbar-lens-btn")
-        assert lens.is_visible() and lens.inner_text().strip().startswith("Trading")
-        assert not page.locator(".tbar-menu[data-subject]").first.is_visible()   # Blotter ... Counterparties are inside it
-        lens.click()
-        panel = page.locator(".mega-lens")
-        panel.wait_for(state="visible")
-        titles = [t.strip() for t in panel.locator(".mega-subject").all_text_contents()]
-        assert titles == ["Markets", "Blotter", "Positions", "Risk", "Counterparties"]
-        assert panel.locator("a.mega-item").first.is_visible()
-        assert not page.evaluate(AUDIT)
-    finally:
-        ctx.close()
-
-
-@pytest.mark.parametrize("theme", THEMES)
-def test_the_subject_menus_stand_in_the_bar_on_a_desktop(browser, trading_console, theme):
-    ctx = _context(browser, 1280, theme)
-    page = ctx.new_page()
-    try:
-        _open(page, trading_console + "/t")
-        assert page.locator(".tbar-lens-btn").count() == 0
-        assert page.locator(".tbar-menu[data-subject]").count() == 5
-        assert page.locator(".tbar-menu[data-subject]").first.is_visible()
-        page.set_viewport_size({"width": 390, "height": 844})                   # narrowed: the lens menu comes in
-        page.wait_for_timeout(500)
-        assert page.locator(".tbar-lens-btn").is_visible()
-        page.set_viewport_size({"width": 1280, "height": 900})                  # widened: it goes out again
-        page.wait_for_timeout(500)
-        assert page.locator(".tbar-lens-btn").count() == 0
     finally:
         ctx.close()
 

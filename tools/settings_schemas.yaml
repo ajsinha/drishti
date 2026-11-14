@@ -74,6 +74,8 @@ schemas:
       - { key: "menus[].subject", type: boolean, default: "false", meaning: "A lens's subject menu (Curves, Economies ...): drawn only where an edition's menus.top names it" }
       - { key: "menus[].without-lens", type: boolean, default: "false", meaning: "A subject menu drawn in the full product's bar too (Risk: the home of the engines' pages, each item with requires engine:<id>)" }
       - { key: "menus[].gather",type: list, default: none, meaning: "A menu that gathers the columns of other menus by id (the Trading lens's one Markets menu gathers Curves, Volatility, FX and Credit), each drawn as its own column" }
+      - { key: "menus[].domains", type: boolean, default: "false", meaning: "The Domains menu: a column for each menu a module brings (named after the one domain when only one is active)" }
+      - { key: "menus[].folded", type: boolean, default: "false", meaning: "A menu drawn inside another (BI, Build inside Create), never as a top menu of its own" }
       - { key: "menus[].columns", type: list, meaning: "The menu's columns, each a title and its items" }
       - { key: "menus[].columns[].title", type: string, meaning: "A column's heading" }
       - { key: "menus[].columns[].domain", type: string, default: "the menu's", meaning: "The domain module of the column's items" }

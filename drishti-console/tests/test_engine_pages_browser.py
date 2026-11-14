@@ -22,7 +22,7 @@ from test_explain_browser import stack  # noqa: F401 - the VaR server and consol
 from test_var_explorer_browser import open_var
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
 
-_LINKS = """() => { const b = [...document.querySelectorAll('.tbar-menu-btn')].find((x) => x.textContent.trim() === 'Risk');
+_LINKS = """() => { const b = [...document.querySelectorAll('.tbar-menu-btn')].find((x) => ['Risk', 'Domains'].includes(x.textContent.trim()));
   const m = b && b.closest('.tbar-menu');
   return m ? [...m.querySelectorAll('a.mega-item')].map((a) => ({ href: a.getAttribute('href'), label: a.textContent.trim().split('\\n')[0] })) : null; }"""
 _ERRORS = """() => [...document.querySelectorAll('.alert-danger, .err, [role=alert]:not([hidden])')].filter((e) => e.offsetParent !== null)

@@ -21,7 +21,7 @@ title: Drishti Market
 description: Curves, surfaces, fixings and prices, the market data that feeds risk and valuations, in one place
 
 menus:                                   # by id, per menu: the order this lens puts first; nothing is left out
-  top: [views, curves, volatility, fx, credit, bi, admin, help]  # the top menus it puts first, in order; the others follow
+  top: [views, markets, bi, admin, help]  # the top menus it puts first, in order; the others follow
   views: [terminal, search, forms, functions, datamap, data, reports, workspaces, monitors, alerts]
   help: [help-centre, knowledge, install, about]
   footer: [help, about, release-notes]

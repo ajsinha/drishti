@@ -105,6 +105,9 @@ types an expression where the types are known (BI_FOUNDATION_2911E.md section 2)
 | `upper(s)`, `lower(s)` | case; null in, null out | `upper($.COUNTERPARTY)` | `UPPER`, `LOWER` / `UPCASE`, `LOWCASE` | R | built (Rachana) |
 | `len(s)` | characters (code points, as the engine's SQL counts them); `len(null)` is null (`size` counts a list) | `len($.TRADE_ID)` | `LEN` / `LENGTH` | R | built (Rachana; DEL until part B) |
 | `contains(s, part)`, `starts_with(s, p)`, `ends_with(s, p)` | ignore case | `starts_with($.PRODUCT_TYPE, 'Com')` | `SEARCH`, `LEFT(...)=` / `FIND`, `INDEX` | R | built (Rachana; old spelling `startsWith`) |
+| `has(list, value)` | a list attribute holds the value; equality as `==` | `has(trades.TAGS, 'fx')` | `COUNTIF` over the list, `ISNUMBER(MATCH(...))` | R | built (Rachana) |
+| `any_of(list, values)` | a list attribute holds at least one of the values; none chosen is false | `any_of(trades.TAGS, ['fx', 'rates'])` | `SUMPRODUCT(--ISNUMBER(MATCH(...)))>0` | R | built (Rachana) |
+| `all_of(list, values)` | a list attribute holds every one of the values | `all_of(trades.TAGS, ['fx', 'hedge'])` | `SUMPRODUCT(--ISNUMBER(MATCH(...)))=n` | R | built (Rachana) |
 | `matches(s, regex)`, `matches_case(s, regex)` | regular expression | `matches($.INSTRUMENT, 'USD 20[0-9]{2}')` | `REGEXTEST` / `PRXMATCH` | R | built (Rachana; old spelling `matchesCase`) |
 | `within(x, range)`, `one_of(x, list)` | in a range, in a list | `one_of($.DESK, ['DESK-COMM', 'DESK-RATES'])` | `OR(x=...)` / `IN` | R | built (Rachana; old spelling `oneOf`) |
 | `concat(a, b, ...)` | joined | `concat($.DESK, ' / ', $.TT_BOOK)` | `CONCAT` / `CATS` | R | built (Rachana) |

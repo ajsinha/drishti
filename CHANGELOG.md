@@ -48,6 +48,12 @@
   the rows behind a Pivot cell, the BI dataset and transform previews and the AI answer. Deleted: those pages' own tables and cell scripts and the
   search adapter of Chart any table (the grid's Chart button replaces it; Pivot › answers "chart all").
 
+- **The new top bar: Views · Domains · Create · Admin · Help.** The modules' menus (Blotter, Positions, Risk, Counterparties, Markets, Companies,
+  Economies, a hosted module's own) are columns of one **Domains** menu, drawn from the manifests alone (no entry in the console's code); with one
+  domain active the menu is named after it (`console.domain-label` of its manifest: Risk; a hosted module its title), and with none it is not
+  drawn. **Create** holds every designer and the BI tools (the BI and Build menus, which stay the BI rail and the Build home's links). A lens
+  arranges Domains' columns; each entry still follows the person's role. The lens menu's phone fold (subject menus into one) is removed: nothing
+  stands in the bar to fold. Function catalogue: `has`, `any_of` and `all_of` added to FUNCTION_CATALOGUE.md and FUNCTIONS.md.
 - **The grid's live mode and the trade blotter page** (drishti-grid; docs/architecture/ELEMENTS.md section 5.5, modules/trading/docs/guide.md).
   One Elements component, `LiveSetGrid`, draws a live result set: a snapshot, then the server's changes merged by key and version and applied
   as one batched transaction so cells tick, the page window sent to the server, `resync` and reconnects reading the set again, grouping with live

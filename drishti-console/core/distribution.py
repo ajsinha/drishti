@@ -88,6 +88,8 @@ def module_menus(directory: Path | None) -> list[dict]:
                 y = _read(dmod)
                 mid = str(y.get("id") or "").strip()
                 tag = {"_module": mid, "_domain": str(y.get("domain") or mid)}
+                if (y.get("console") or {}).get("domain-label"):                  # the name Domains takes when this is the one active domain
+                    tag["_domain_label"] = str(y["console"]["domain-label"])
                 out += [{**x, **tag, "columns": [{**c, **tag} for c in x.get("columns") or [] if isinstance(c, dict)]}
                         for x in ((y.get("console") or {}).get("menus") or []) if isinstance(x, dict) and x.get("id")]
                 break

@@ -25,14 +25,14 @@ from core import menus
 from test_modules_off import ALL_ON, BANKING_OFF, _answer, _console
 from test_edition import _client
 
-RISK = '<span class="tbar-menu-l">Risk</span>'
+RISK = '<div class="mega-title">Counterparties</div>'                          # a Risk-domain column of Domains
 FINANCE = {"product": "Drishti Finance", "edition": {"name": "drishti.finance", "title": "Drishti Finance"}, "lenses": []}
 CONSOLE = Path(__file__).resolve().parent.parent
 
 
 def test_the_sitemap_keeps_the_kernels_pages_and_the_modules_bring_their_menus():
     kernel = {m["id"] for m in yaml.safe_load((CONSOLE / "config" / "sitemap.yaml").read_text(encoding="utf-8"))["menus"]}
-    assert kernel == {"views", "bi", "build", "admin", "help", "me"}
+    assert kernel == {"views", "domains", "create", "bi", "build", "admin", "help", "me"}
     merged = {m["id"]: m for m in menus.spec_of(CONSOLE)["menus"]}
     assert merged["risk"]["_module"] == "banking" and merged["companies"]["_module"] == "capitalmarkets"
     assert merged["markets"]["_module"] == "market-data"                       # the one Markets menu, with the columns others add
