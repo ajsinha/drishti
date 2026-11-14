@@ -46,7 +46,6 @@ import java.util.stream.Stream;
  * <pre>
  * plugin: jdbc                    # required: which source plugin
  * enabled: true                   # optional (default true); may be ${ENV_VAR:true}
- * kinds: [trade]                  # optional: limit the kinds served (default: what the pack's routes send here)
  * description: Trading database   # optional
  * settings:                       # the plugin's settings; nesting is flattened to dotted keys (tls: {truststore: {path: x}} is tls.truststore.path)
  *   url: jdbc:postgresql://db:5432/trading
@@ -336,19 +335,13 @@ public final class ConnectorFiles {
         Map<String, Object> compute = compute(name, m, reactive);
         if (k instanceof Map<?, ?> km) {
             if (!reactive) {
-                throw new InvalidFile(name + ".yaml: 'kinds' is a list of kinds (kinds with parameters are for plugin: reactive)");
+                throw new InvalidFile(name + ".yaml: 'kinds' with parameters are for plugin: reactive; which connectors serve a kind is set in config/bindings.yaml");
             }
             km.keySet().forEach(x -> kinds.add(String.valueOf(x)));
-        } else if (k instanceof List<?> l) {
-            l.forEach(x -> kinds.add(String.valueOf(x)));
-        } else if (k instanceof String s) {
-            for (String x : s.split(",")) {
-                if (!x.isBlank()) {
-                    kinds.add(x.trim());
-                }
-            }
         } else if (k != null) {
-            throw new InvalidFile(name + ".yaml: 'kinds' is a list of kinds");
+            // a list written by an earlier release: not read (config/bindings.yaml is the one home); the next write of the file drops it
+            System.getLogger(ConnectorFiles.class.getName()).log(System.Logger.Level.WARNING,
+                    "connector file {0}.yaml: 'kinds:' is no longer read; which connectors serve a kind is set in config/bindings.yaml (Admin -> Data bindings)", name);
         }
         Object st = m.get("settings");
         if (st != null && !(st instanceof Map<?, ?>)) {
@@ -695,8 +688,6 @@ public final class ConnectorFiles {
         }
         if (compute != null && compute.get("kinds") instanceof Map<?, ?> km) {
             doc.put("kinds", km);
-        } else if (kinds != null && !kinds.isEmpty()) {
-            doc.put("kinds", kinds);
         }
         if (compute != null) {
             COMPUTE_KEYS.forEach(key -> {
@@ -754,14 +745,14 @@ public final class ConnectorFiles {
     }
 
     /** The Spring properties a set of definitions contributes ({@code drishti.sources.connectors.<name>.*}). */
-    /** Each connector's kinds follow the site's data bindings ({@link com.ash.drishti.packs.bindings.Bindings#effectiveKinds}). */
-    public static Map<String, Object> properties(Map<String, Definition> defs, com.ash.drishti.packs.bindings.Bindings bindings) {
+    /** A reactive connector's computed kinds are its own; every other connector serves what its plugin and lake hold (config/bindings.yaml sets the read order). */
+    public static Map<String, Object> properties(Map<String, Definition> defs) {
         Map<String, Object> p = new LinkedHashMap<>();
         defs.forEach((name, d) -> {
             String base = "drishti.sources.connectors." + name;
             p.put(base + ".plugin", d.plugin());
             p.put(base + ".enabled", d.enabled());
-            List<String> kinds = bindings.effectiveKinds(name, d.kinds());
+            List<String> kinds = d.kinds();
             for (int i = 0; i < kinds.size(); i++) {
                 p.put(base + ".kinds[" + i + "]", kinds.get(i));
             }

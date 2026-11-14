@@ -44,7 +44,7 @@ class ConnectorBootstrapTest {
         assertThat(r.generated()).containsExactly("risk-lake");
         ConnectorFiles.Definition d = files.read("risk-lake");
         assertThat(d.plugin()).isEqualTo("delta");
-        assertThat(d.kinds()).containsExactly("var");
+        assertThat(d.text()).as("a generated file names no kinds: bindings.yaml does").doesNotContain("\nkinds:");
         assertThat(d.settings()).containsEntry("root", "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}").containsEntry("domain", "risk");
         assertThat(d.text()).contains("Generated at first start").contains("never overwritten");
 
@@ -70,7 +70,7 @@ class ConnectorBootstrapTest {
             ConnectorBootstrap.Result r = ConnectorBootstrap.run(packs(dir, tpl), files, null, true);
             assertThat(r.regenerated()).containsExactly("m");
             assertThat(files.read("m").settings()).containsEntry("lake-tables", "macro.economy,macro.gdp");
-            assertThat(files.read("m").kinds()).containsExactly("economy", "gdp");
+            assertThat(files.read("m").kinds()).isEmpty();
             try (var s = Files.list(files.dir())) {
                 assertThat(s.map(f -> f.getFileName().toString())).anyMatch(n -> n.contains("before-upgrade"));
             }
@@ -111,30 +111,30 @@ class ConnectorBootstrapTest {
     void aChangedTemplateRegeneratesAnUneditedFileAndFlagsAnEditedOne(@TempDir Path dir) throws Exception {
         ConnectorFiles files = new ConnectorFiles(dir.resolve("config/connectors"));
         ConnectorBootstrap.run(packs(dir, RISK), files, null, true);
-        String renamed = RISK.replace("kinds: [var]\nroutes:\n  var:", "kinds: [var2]\nroutes:\n  var2:").replace("    kinds: [var]", "    kinds: [var2]");
+        String renamed = RISK.replace("kinds: [var]\nroutes:\n  var:", "kinds: [var2]\nroutes:\n  var2:").replace("    kinds: [var]", "    kinds: [var2]").replace("domain: risk", "domain: risk2");
         ConnectorBootstrap.Result r = ConnectorBootstrap.run(packs(dir, renamed), files, null, true);
         assertThat(r.regenerated()).containsExactly("risk-lake");
-        assertThat(files.read("risk-lake").kinds()).containsExactly("var2");
+        assertThat(files.read("risk-lake").kinds()).isEmpty();
         assertThat(ConnectorBootstrap.run(packs(dir, renamed), files, null, true).regenerated()).isEmpty();
 
         files.write("risk-lake", files.text("risk-lake") + "# mine\n");
-        String third = renamed.replace("var2", "var3");
+        String third = renamed.replace("var2", "var3").replace("risk2", "risk3");
         ConnectorBootstrap.Result e = ConnectorBootstrap.run(packs(dir, third), files, null, true);
         assertThat(e.regenerated()).isEmpty();
         assertThat(e.changed()).hasSize(1);
         assertThat(e.changed().get(0).message()).contains("var2 \u2192 var3");
-        assertThat(files.read("risk-lake").kinds()).containsExactly("var2");
+        assertThat(files.read("risk-lake").kinds()).isEmpty();
     }
 
     @Test
-    void aFileGeneratedBeforeMarkersExistedIsRegeneratedWhenOnlyKindsDiffer(@TempDir Path dir) throws Exception {
+    void aFileGeneratedBeforeMarkersExistedIsRegeneratedWhenTheTemplateMoved(@TempDir Path dir) throws Exception {
         ConnectorFiles files = new ConnectorFiles(dir.resolve("config/connectors"));
         List<Pack> old = packs(dir, RISK);
         ConnectorBootstrap.run(old, files, null, true);
         java.nio.file.Files.delete(dir.resolve("config/connectors/generated/risk-lake.properties"));      // as written by an older server
-        String renamed = RISK.replace("kinds: [var]\nroutes:\n  var:", "kinds: [var2]\nroutes:\n  var2:").replace("    kinds: [var]", "    kinds: [var2]");
+        String renamed = RISK.replace("kinds: [var]\nroutes:\n  var:", "kinds: [var2]\nroutes:\n  var2:").replace("    kinds: [var]", "    kinds: [var2]").replace("domain: risk", "domain: risk2");
         assertThat(ConnectorBootstrap.run(packs(dir, renamed), files, null, true).regenerated()).containsExactly("risk-lake");
-        assertThat(files.read("risk-lake").kinds()).containsExactly("var2");
+        assertThat(files.read("risk-lake").kinds()).isEmpty();
     }
 
     @Test

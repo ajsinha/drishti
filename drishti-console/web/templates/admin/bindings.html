@@ -42,7 +42,6 @@
     <b>{{ st.unboundRequired|join(', ') }}</b>{% if st.off %}: {{ st.off.keys()|list|join(', ') }} {{ 'is' if st.off|length == 1 else 'are' }} off for everyone until it is bound{% endif %}.</p>
   {% endif %}
   {% if st.fileProblem %}<p class="adm-warn" role="alert" data-bindings-file-problem>{{ st.fileProblem }}</p>{% endif %}
-  {% for d in st.deprecated or [] %}<p class="ib-warn" data-bindings-deprecated>Deprecated: {{ d }}</p>{% endfor %}
   {% for p in st.problems or [] %}<p class="ib-warn" data-bindings-problem>{{ p }}</p>{% endfor %}
   <p data-bindings-counts>{% for s, n in (st.counts or {}).items() %}{% if n %}<span class="st {{ PILL.get(s, '') }}">{{ s }} {{ n }}</span> {% endif %}{% endfor %}</p>
 

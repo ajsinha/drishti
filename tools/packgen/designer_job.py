@@ -71,7 +71,7 @@ class Status:
 def argv_of(req: dict, wd: pathlib.Path) -> list[str]:
     """The `pack new` command line of the request (the options the page chooses)."""
     a = [str(wd / "in"), "--name", req["name"], "--recursive", "--version", req.get("version") or "1.0.0", "--out", str(wd / "module"),
-         "--dist", str(wd / "dist"), "--force", "--site", str(req.get("site") or wd / "site"), "--min-docs", str(int(req.get("minDocs") or 1)),
+         "--dist", str(wd / "dist"), "--force", "--binding-plan", str(wd / "binding.json"), "--min-docs", str(int(req.get("minDocs") or 1)),
          "--publisher", req.get("publisher") or "local"]
     for flag, key in (("--title", "title"), ("--description", "description"), ("--kind-prefix", "kindPrefix"), ("--key", "key"), ("--date", "date"),
                       ("--match", "match"), ("--mnemonic", "mnemonic"), ("--files-root", "filesRoot"), ("--connector", "connector"),

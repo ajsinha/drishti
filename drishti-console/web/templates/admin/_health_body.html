@@ -31,11 +31,15 @@
 </div>
 
 {% set sd = h.distribution or {} %}{% set cd = console_distribution or {} %}
-<div class="hl-sum" data-distribution aria-label="Distribution">
+{% set bd = h.bindings or {} %}{% set pl = h.placement or {} %}{% set mods = sd.modules or {} %}
+<div class="hl-sum" data-distribution aria-label="Distribution, modules, bindings and placement">
   <span><b>Distribution</b></span>
   <span class="mono" data-distribution-console title="This console's distribution (docs/architecture/DISTRIBUTIONS.md): --distribution, DRISHTI_DISTRIBUTION, else the server's">console {{ cd.title or PRODUCT }} ({{ cd.id or 'drishti.all' }})</span>
-  <span class="mono" data-distribution-server title="The server's distribution and which of its modules loaded">server {{ sd.title or PRODUCT }} ({{ sd.id or 'drishti.all' }}){% for m, s in (sd.modules or {}).items() %} · <span class="{{ 't-warn' if s != 'loaded' }}">{{ m }} {{ s }}</span>{% endfor %}</span>
-  {% for note in (sd.deprecated or []) + (cd.deprecated or []) %}<span class="t-warn" data-distribution-deprecated>Deprecated: {{ note }}</span>{% endfor %}
+  <span class="mono" data-distribution-server title="The server's distribution; the White label page has every distribution and its modules">server {{ sd.title or PRODUCT }} ({{ sd.id or 'drishti.all' }}) · <a href="/admin/white-label">White label</a></span>
+  <span class="mono {{ 't-warn' if mods.values() | reject('equalto', 'loaded') | list }}" data-health-modules title="The modules the distribution lists and whether each loaded; Admin → Modules has the detail">{{ mods.values() | select('equalto', 'loaded') | list | length }} of {{ mods | length }} modules loaded · <a href="/admin/modules">Modules</a></span>
+  <span class="mono {{ 't-warn' if (bd.get('unboundRequired') or []) | length }}" data-health-bindings title="Which connector or lake table serves each kind the modules need; Admin → Data bindings has the detail">bindings: {{ bd.get('bound') or 0 }} bound{% if bd.get('unboundRequired') %}, {{ bd.unboundRequired | length }} required unbound{% endif %} · <a href="/admin/bindings">Data bindings</a></span>
+  <span class="mono {{ 't-warn' if pl.get('problems') }}" data-health-placement title="Where each part of each module runs; Admin → Modules has the plan">placement v{{ pl.get('version') or 0 }}{% if pl.get('problems') %}, {{ pl.problems | length }} problem{{ 's' if pl.problems | length != 1 }}{% endif %} · <a href="/admin/modules">Modules</a></span>
+  {% for note in (sd.deprecated or []) + (cd.deprecated or []) %}<span class="t-warn" data-distribution-deprecated>{{ note }}</span>{% endfor %}
 </div>
 {% with blas = (h.native or {}).get('blas') %}{% include "admin/_native_banner.html" %}{% endwith %}
 {% set nb = (h.native or {}).get('blas') %}

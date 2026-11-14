@@ -188,8 +188,11 @@ def test_a_distribution_offers_its_lenses_and_leaving_one_returns_to_its_default
 
 
 @pytest.mark.parametrize("key", ["ui.logo", "ui.favicon"])
-def test_logo_and_icons_come_from_configuration(backend, monkeypatch, key):
-    app = create_app(load_settings(CONSOLE / "config", [f"--{key}=/static/img/acme.svg", "--ui.product=Acme Risk"]))
+def test_logo_and_icons_come_from_configuration(backend, monkeypatch, tmp_path, key):
+    import yaml
+    f = tmp_path / "drishti.acme.yaml"
+    f.write_text(yaml.safe_dump({"format": 1, "distribution": "drishti.acme", "version": "1.0.0", "modules": "all", "brand": {"product": "Acme Risk"}}))
+    app = create_app(load_settings(CONSOLE / "config", [f"--{key}=/static/img/acme.svg", f"--distribution={f}"]))
     app.state.backend = backend
     c = TestClient(app)
     page = c.get("/").text

@@ -16,27 +16,6 @@
 # The lake (iceberg, its root or catalog, storage and tables) is config/lakes.examples/iceberg/iceberg.yaml: copy it to
 # config/lakes/iceberg.yaml beside this file (docs/guides/DATA_LAKE_GUIDE.md). This file keeps only what the connector reads.
 plugin: iceberg
-kinds:
-- ir-curve
-- repo-curve
-- fx-spot
-- fx-forward-curve
-- fx-vol-surface
-- ir-vol-cube
-- cap-vol-surface
-- equity
-- equity-index
-- dividend-curve
-- equity-vol-surface
-- credit-curve
-- inflation-index
-- inflation-curve
-- commodity
-- commodity-curve
-- commodity-vol-surface
-- rate-fixing
-- bond
-- correlation-matrix
 description: market-store read from iceberg (the former application-iceberg.yaml profile)
 settings:
   lake: iceberg

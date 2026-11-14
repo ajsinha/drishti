@@ -17,7 +17,6 @@
 # Ids are NEWS-<name with underscores>, for example NEWS-Federal_Reserve; NEWS-Toyota@ja-JP picks another edition; ~all turns the relevance filter off.
 plugin: news
 enabled: false
-kinds: [news]
 settings:
   base-url: https://news.google.com/rss/search
   language: en

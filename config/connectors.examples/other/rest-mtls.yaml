@@ -14,7 +14,6 @@
 # Example: an HTTPS service on a private CA that also asks for a client certificate. Copy to config/connectors/rest-mtls.yaml.
 # See docs/connectors/types/rest/README.md, section Security.
 plugin: rest
-kinds: [price]
 description: Prices from the pricing API over mutual TLS
 settings:
   base-url: https://pricing.example.com/api

@@ -20,8 +20,6 @@
 # The lake (delta, its root or catalog, storage and tables) is config/lakes.examples/delta-s3/s3.yaml: copy it to
 # config/lakes/s3.yaml beside this file (docs/guides/DATA_LAKE_GUIDE.md). This file keeps only what the connector reads.
 plugin: delta
-kinds:
-- trade
 description: trades (Endur) read from Delta Lake on AWS S3
 settings:
   lake: s3

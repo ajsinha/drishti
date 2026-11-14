@@ -14,27 +14,6 @@
 # Example: copy to config/connectors/market-store.yaml to read the market-store data from mongodb. It replaces the
 # connector file of the same name (settings are not merged). Credentials are ${ENV_VAR} references.
 plugin: mongodb
-kinds:
-- ir-curve
-- repo-curve
-- fx-spot
-- fx-forward-curve
-- fx-vol-surface
-- ir-vol-cube
-- cap-vol-surface
-- equity
-- equity-index
-- dividend-curve
-- equity-vol-surface
-- credit-curve
-- inflation-index
-- inflation-curve
-- commodity
-- commodity-curve
-- commodity-vol-surface
-- rate-fixing
-- bond
-- correlation-matrix
 description: market-store read from mongodb (the former application-mongodb.yaml profile)
 settings:
   domain: market

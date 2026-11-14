@@ -62,6 +62,17 @@ public final class EditionEnvironmentPostProcessor implements EnvironmentPostPro
     public void postProcessEnvironment(ConfigurableEnvironment env, SpringApplication app) {
         Distribution dist = Distributions.of(env);                         // the distribution file: the one way (DISTRIBUTIONS.md)
         Map<String, Object> props = new LinkedHashMap<>(distributionProps(env, dist, deprecatedKeys(env, dist)));
+        // the product's name and notices: the distribution file is their one home, above every setting a site made (the old keys are not read)
+        Map<String, Object> brand = new LinkedHashMap<>();
+        for (String k : List.of("product", "tagline", "owner", "copyright", "notice")) {
+            String v = dist.brand().get(k);
+            if (v != null) {
+                brand.put("drishti.branding." + k, v);
+            }
+        }
+        if (!brand.isEmpty()) {
+            env.getPropertySources().addFirst(new MapPropertySource(SOURCE + "-brand", brand));
+        }
         if (dist.all()) {
             addLayer(env, new MapPropertySource(SOURCE, props));
             env.getPropertySources().addFirst(new MapPropertySource(SOURCE + "-name", Map.of(Editions.NAME, "")));   // no filter at all
@@ -112,12 +123,6 @@ public final class EditionEnvironmentPostProcessor implements EnvironmentPostPro
     /** The settings the old product keys used to hold, as the distribution file says them (under the site's configuration). */
     static Map<String, Object> distributionProps(ConfigurableEnvironment env, Distribution d, List<String> deprecated) {
         Map<String, Object> props = new LinkedHashMap<>();
-        for (String k : List.of("product", "tagline", "owner", "copyright", "notice")) {
-            String v = d.brand().get(k);
-            if (v != null) {
-                props.put("drishti.branding." + k, preset(env, "drishti.branding." + k, v));
-            }
-        }
         if (!d.all()) {
             props.put(Editions.LENSES, String.join(",", d.lenses()));
         }
@@ -132,8 +137,8 @@ public final class EditionEnvironmentPostProcessor implements EnvironmentPostPro
     }
 
     /**
-     * The old product keys a site still sets ({@code drishti.edition}, {@code drishti.branding.*}): read for one release, each named on
-     * Health as deprecated (the distribution file is the one way: KERNEL_AND_MODULES.md section 6).
+     * The old product keys a site still sets ({@code drishti.edition}, {@code drishti.branding.*}, {@code DRISHTI_PRODUCT}), each named on
+     * Health ({@code drishti.branding.*} is no longer read: the distribution file is the one way, KERNEL_AND_MODULES.md section 6).
      */
     static List<String> deprecatedKeys(ConfigurableEnvironment env, Distribution d) {
         List<String> out = new ArrayList<>();
@@ -151,7 +156,7 @@ public final class EditionEnvironmentPostProcessor implements EnvironmentPostPro
                 }
                 out.add(key + (key.equals(Editions.NAME)
                         ? " is no longer read: a distribution says what exists (--distribution, DRISHTI_DISTRIBUTION); a lens only arranges"
-                        : " is read for one release: set brand: in the distribution file instead"));
+                        : " is no longer read: set brand: in the distribution file"));
             }
         }
         return out;

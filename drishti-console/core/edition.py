@@ -492,9 +492,9 @@ class Editions:
         self.lenses = {n: e for n, e in ((n, self._lens(n, outer)) for n in lenses) if e.active}
         self._server_brand = brand
         server_layer: dict = {}
-        if brand and not self.settings.site("ui.product"):          # the server's branding, under the console's own site settings
+        if brand:                                                   # the server's branding (from its distribution file)
             server_layer = {"ui": {k: v for k, v in brand.items()}}
-        self.settings.layer("server", server_layer or None)
+        self.settings.pin("server", server_layer or None)
         self.settings.layer("edition", self.instance.presets(self.mapping()) if self.instance.active else None)
         if self.on_change is not None:
             self.on_change()
@@ -550,10 +550,8 @@ class Editions:
         d = _dist.load(self.settings, self.console_dir, name, self.server_modules, strict=False)
         self._dist_name = name
         self.distribution = d
-        layer = d.settings_layer()
-        if os.environ.get("DRISHTI_PRODUCT"):                       # the old variable, read for one release (Health says so)
-            layer["ui"].pop("product", None)
-        self.settings.layer("distribution", layer)
+        self.settings.layer("distribution", d.settings_layer())
+        self.settings.pin("distribution", d.brand_layer())            # the names and notices: this file only
         self.instance = Edition(d.id, d.edition_spec) if not d.all else Edition.NONE
         if not d.all:
             outer = self.instance

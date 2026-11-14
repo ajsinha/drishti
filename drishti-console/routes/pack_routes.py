@@ -48,8 +48,7 @@ def _ws(request: Request) -> PD.Workspaces:
         tools = Path(str(st.settings.get("builder.tools_dir", "../tools")))
         console_dir = Path(__file__).resolve().parent.parent
         st.pack_designer = PD.Workspaces(_console_data_dir(st.settings) / "pack-designer", tools if tools.is_absolute() else (console_dir / tools).resolve(),
-                                         PD.DesignerLimits.from_settings(st.settings),
-                                         str(st.settings.get("builder.pack_designer_site", "") or ""))
+                                         PD.DesignerLimits.from_settings(st.settings))
     return st.pack_designer
 
 
@@ -300,6 +299,32 @@ async def check(request: Request, wid: str):
             "problems": res.get("problems") or []}
 
 
+async def _propose_binding(b, me, d: Path, reason: str) -> dict:
+    """The workspace's binding (binding.json, written by the job) goes through the one bindings path: the file connector is saved on the server
+    (Admin -> Connectors) and each kind's binding is proposed to Admin -> Data bindings, where a second administrator approves it (four eyes)."""
+    f = d / "binding.json"
+    if not f.is_file():
+        return {"proposed": [], "note": "the workspace has no binding: bind the kinds in Admin -> Data bindings"}
+    import json
+    plan = json.loads(f.read_text(encoding="utf-8"))
+    out: dict = {"connector": plan.get("connector"), "proposed": [], "errors": []}
+    try:
+        if plan.get("file"):
+            await b.admin("PUT", f"/connectors/{quote(plan['file']['name'], safe='')}", me, {"text": plan["file"]["text"]})
+            out["connectorSaved"] = plan["file"]["name"]
+    except BackendError as e:
+        out["errors"].append(f"connector {plan['file']['name']}: {e.detail}")
+        return out
+    why = (reason or "Pack designer: the data of the new module")[:500]
+    for kind in plan.get("kinds") or []:
+        try:
+            p = await b.admin("POST", "/bindings/proposals", me, {"kind": kind, "binding": {"read": [plan["connector"]]}, "reason": why})
+            out["proposed"].append({"kind": kind, "id": (p or {}).get("id")})
+        except BackendError as e:
+            out["errors"].append(f"{kind}: {e.detail}")
+    return out
+
+
 # ---- deploy: the one module deploy -------------------------------------------------------------------------------------------------
 
 @router.post("/api/ws/{wid}/deploy/{action}")
@@ -324,7 +349,7 @@ async def deploy(request: Request, wid: str, action: str):
                               or Path(os.environ.get("DRISHTI_DATA_DIR") or Path(__file__).resolve().parents[2] / "data") / "modules"))
             target.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(f, target / f.name)
-            return {"installed": str(target / f.name)}
+            return {"installed": str(target / f.name), "binding": await _propose_binding(b, me, d, str(body.get("reason") or ""))}
         if action == "plan":
             f, r = ws.dmod(d), ws.result(d)
             if f is None or r is None:
@@ -332,7 +357,7 @@ async def deploy(request: Request, wid: str, action: str):
             stored = await b.admin_upload("/modules/store", me, f.read_bytes(), {}, timeout=600.0)
             plan = await b.admin("POST", "/modules/deployments/plans", me, {"action": "install", "module": r["name"], "version": r["version"],
                                                                          "reason": str(body.get("reason") or "Pack designer")[:500]})
-            return {"stored": stored, "plan": plan}
+            return {"stored": stored, "plan": plan, "binding": await _propose_binding(b, me, d, str(body.get("reason") or ""))}
         if action == "apply":
             out = await b.admin("POST", f"/modules/deployments/{quote(str(body.get('id') or ''), safe='')}/apply", me,
                                 {"comment": str(body.get("comment") or "")[:500]}, timeout=600.0)

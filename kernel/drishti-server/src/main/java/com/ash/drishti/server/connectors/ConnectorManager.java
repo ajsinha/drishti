@@ -98,35 +98,10 @@ public final class ConnectorManager {
     /** Connectors that must not run: the ones only unloaded packs, or hidden sample packs, used. Their files stay on disk. */
     private volatile Set<String> suppressed;
     private volatile DirectoryWatcher watcher;
-    /** The site's data bindings as applied (config/bindings.yaml): a connector's kinds follow them. */
+    /** The site's data bindings as applied (config/bindings.yaml): read by the router and shown in Admin. */
     private volatile com.ash.drishti.packs.bindings.Bindings bindings = com.ash.drishti.packs.bindings.Bindings.NONE;
 
-    /**
-     * New bindings take effect (docs/architecture/KERNEL_AND_MODULES.md section 5.8): every connector file whose served kinds change is applied
-     * again, as a changed file would be. Returns the connectors applied.
-     */
-    public List<String> bindings(com.ash.drishti.packs.bindings.Bindings next) {
-        com.ash.drishti.packs.bindings.Bindings was = bindings;
-        bindings = next == null ? com.ash.drishti.packs.bindings.Bindings.NONE : next;
-        Set<String> touched = new LinkedHashSet<>(was.connectors());
-        touched.addAll(bindings.connectors());
-        Map<String, ConnectorFiles.Definition> defs = files.readAll(new LinkedHashMap<>());
-        touched.removeIf(n -> defs.get(n) == null
-                || was.effectiveKinds(n, defs.get(n).kinds()).equals(bindings.effectiveKinds(n, defs.get(n).kinds())));
-        if (touched.isEmpty()) {
-            return List.of();
-        }
-        scanLock.lock();
-        try {
-            touched.forEach(seen::remove);                          // seen again as changed: load() re-applies them with the new kinds
-        } finally {
-            scanLock.unlock();
-        }
-        List<String> acted = scan();
-        return acted.stream().filter(touched::contains).toList();
-    }
-
-    /** The bindings the server started with (the environment applied them to the connectors already): adopted without applying again. */
+    /** The bindings as the router applies them (the connectors serve what their plugins and lakes hold; the bindings set the read order). */
     public void adopt(com.ash.drishti.packs.bindings.Bindings started) {
         bindings = started == null ? com.ash.drishti.packs.bindings.Bindings.NONE : started;
     }
@@ -134,17 +109,6 @@ public final class ConnectorManager {
     /** The bindings as applied. */
     public com.ash.drishti.packs.bindings.Bindings bindings() {
         return bindings;
-    }
-
-    /** The connector files that still list {@code kinds:} (read this release; the kind's binding is the one home), each with its kinds. */
-    public Map<String, List<String>> deprecatedKinds() {
-        Map<String, List<String>> out = new java.util.TreeMap<>();
-        files.readAll(new LinkedHashMap<>()).forEach((n, d) -> {
-            if (!d.kinds().isEmpty() && !"reactive".equals(d.plugin())) {
-                out.put(n, d.kinds());
-            }
-        });
-        return out;
     }
 
     public ConnectorManager(ConnectorFiles files, SourceRegistry registry, SourcesProperties props, PackRegistry packs, ConfigurableEnvironment env,
@@ -464,7 +428,7 @@ public final class ConnectorManager {
         boolean enabled = enabled(d);
         List<String> kinds = new ArrayList<>();
         d.kinds().forEach(k -> kinds.add(resolve(d.name(), "kinds", k)));
-        return new SourcesProperties.ConnectorSettings(d.plugin(), enabled, bindings.effectiveKinds(d.name(), kinds), settings);
+        return new SourcesProperties.ConnectorSettings(d.plugin(), enabled, kinds, settings);
     }
 
     /**
@@ -636,7 +600,7 @@ public final class ConnectorManager {
         m.put("name", name);
         m.put("origin", origin(name));
         m.put("plugin", plugin);
-        m.put("kinds", kinds);
+        m.put("kinds", kinds.isEmpty() ? List.copyOf(bindings.kindsOf(name)) : kinds);       // the kinds bound to it (config/bindings.yaml)
         m.put("description", d == null ? "" : d.description());
         var status = registry.connectorStatuses().get(name);
         // the resolved value (QA4-04: "${DRISHTI_LAKE_ENABLED:true}" with the variable false was listed as on while DISABLED)

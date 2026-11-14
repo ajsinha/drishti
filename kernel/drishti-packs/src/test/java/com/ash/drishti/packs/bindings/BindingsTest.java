@@ -65,33 +65,8 @@ class BindingsTest {
     }
 
     @Test
-    void aConnectorsKindsFollowTheBindings() {
-        Bindings b = Bindings.parse(Map.of("bindings", Map.of("scenario-pv", Map.of("read", List.of("risk-store")))));
-        assertThat(b.effectiveKinds("risk-store", List.of("pnl-vector"))).containsExactly("pnl-vector", "scenario-pv");
-        assertThat(b.effectiveKinds("risk-store", List.of())).as("no list: it serves what its lake holds").isEmpty();
-        assertThat(b.effectiveKinds("other", List.of("trade"))).containsExactly("trade");
-    }
-
-    @Test
-    void theUpgradeWritesBindingsFromTheKindsListsOnce(@TempDir Path dir) throws Exception {
-        Path conn = Files.createDirectories(dir.resolve("connectors"));
-        Files.writeString(conn.resolve("trade-endur.yaml"), "plugin: delta\nkinds: [trade]\nsettings:\n  union: true\n", StandardCharsets.UTF_8);
-        Files.writeString(conn.resolve("trade-murex.yaml"), "plugin: delta\nkinds: [trade]\nsettings:\n  union: true\n", StandardCharsets.UTF_8);
-        Files.writeString(conn.resolve("risk-store.yaml"), "plugin: delta\nkinds: [scenario-pv, pnl-vector]\n", StandardCharsets.UTF_8);
-        Files.writeString(conn.resolve("lake.yaml"), "plugin: delta\n", StandardCharsets.UTF_8);
-        Files.writeString(conn.resolve("var-engine.yaml"), "plugin: reactive\nkinds: [var-result]\n", StandardCharsets.UTF_8);
-        ConnectorFiles files = new ConnectorFiles(conn, dir.resolve("data"));
-        Map<String, ConnectorFiles.Definition> defs = files.readAll(new java.util.HashMap<>());
-        BindingsFile f = BindingsFile.besideConnectors(conn);
-        assertThat(f.path()).isEqualTo(dir.resolve("bindings.yaml").toAbsolutePath());
-
-        Bindings written = f.upgradeFrom(defs).orElseThrow();
-        assertThat(written.of("trade").orElseThrow().read()).containsExactly("trade-endur", "trade-murex");
-        assertThat(written.of("trade").orElseThrow().union()).isTrue();
-        assertThat(written.of("scenario-pv").orElseThrow().read()).containsExactly("risk-store");
-        assertThat(written.of("var-result")).as("a reactive connector computes it: not a site binding").isEmpty();
-        assertThat(f.read()).isEqualTo(written);
-        assertThat(f.upgradeFrom(defs)).as("once: a file that exists is the site's").isEmpty();
+    void theFileIsBesideTheConnectorsFolder(@TempDir Path dir) {
+        assertThat(BindingsFile.besideConnectors(dir.resolve("connectors")).path()).isEqualTo(dir.resolve("bindings.yaml").toAbsolutePath());
         assertThat(BindingsFile.besideConnectors(dir.resolve("site-a")).path().getFileName().toString()).isEqualTo("site-a-bindings.yaml");
     }
 }

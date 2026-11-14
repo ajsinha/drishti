@@ -1062,14 +1062,14 @@ On a phone the lens's subject menus fold into one menu named after it (its title
 
 ### 17.2 White-labelling checklist
 
-**Use a distribution file instead (section 24): its `brand:` and `theme:` are the one way.** The keys below are read for one release
-(Health names each as deprecated). A lens keeps Drishti's name and eye by default. A licensee who wants its own name sets, on both sides:
+**The distribution file's `brand:` is the one home of the product's name, tagline, owner, copyright and notice (section 24), on the server and the
+console alike.** A site that keeps its own `drishti.branding.*`, `DRISHTI_PRODUCT`, `ui.product`, `ui.tagline`, `ui.owner`, `ui.copyright` or `ui.notice` is
+not read: Health names each one as no longer read. A lens keeps Drishti's name and eye by default. A licensee who wants its own name writes its own
+distribution file (`--distribution=<path>`); the rest of the look is set on the console:
 
 | What | Server | Console |
 |---|---|---|
-| Product name | `drishti.branding.product` (`DRISHTI_PRODUCT`) or the lens's `branding.product` | `ui.product` (the console takes the server's when its own is not set) |
-| Tagline | `drishti.branding.tagline` | `ui.tagline` |
-| Owner, copyright, notice | `drishti.branding.owner`, `copyright`, `notice` | `ui.owner`, `ui.copyright`, `ui.notice` |
+| Product name, tagline, owner, copyright, notice | the distribution file's `brand:` | the same file |
 | Logo (instead of the eye) | | `ui.logo`: an image under `/static/` (a site file in `web/static/`) or a `data:` URL |
 | Browser icon, home-screen icon | | `ui.favicon`, `ui.apple_touch_icon`; the web manifest (`/manifest.webmanifest`) follows them and the product name |
 | Colours | | a theme (`ui.default_theme`) or the UI kit's `brand.yaml` (`drishti.ui-kit.site-dir`) |
@@ -1507,11 +1507,7 @@ connectors whose kinds change are applied again and the read order is swapped. E
 defines, a host or credential in the binding, demo and real together; deciding your own proposal is `403 DRS-2007`. An edit of the file
 by hand is picked up within `drishti.bindings.refresh-seconds` (30), or at once with `POST /api/v1/admin/bindings/reload`.
 
-**The upgrade.** A site that has no `config/bindings.yaml` gets one at the next start, written from its connector files' `kinds:` lists
-(each kind bound to the connectors that list it, `union: true` where they are a union), so it keeps reading what it read. Those `kinds:`
-lists are still read in this release and Health lists each file that carries one (*deprecated: the binding is the one home, remove the
-list*); the next release stops reading them. Health's `bindings` block also gives the counts, the unbound required needs and the functions
-they switched off. The API: `GET /api/v1/admin/bindings`, `POST /api/v1/admin/bindings/proposals` and `…/proposals/{id}/approve|reject|withdraw`.
+**Connector files name no kinds.** `config/bindings.yaml` is the one home of which connectors serve each kind; a connector file keeps its plugin, settings and `lake:`, and serves what its plugin and lake hold (a `kinds:` line left in a file by an earlier release is ignored and dropped at the file's next save). Health's `bindings` line gives the count of bound kinds and of required needs that nothing serves; Admin → Data bindings has the detail. The API: `GET /api/v1/admin/bindings`, `POST /api/v1/admin/bindings/proposals` and `…/proposals/{id}/approve|reject|withdraw`.
 
 ### 23.1 Module placement (Admin → Cluster → Modules)
 
@@ -1546,13 +1542,20 @@ and it cannot widen the licence.
 
 **Admin → White label** (mock-up A, side by side): every distribution file as a card, the running one first, each with its brand, theme,
 modules (and whether each is loaded on this server), lenses, menus, Home cards, Help title and the command that starts it. Read only:
-change the file and restart. **Admin → Health** shows the console's and the server's distribution and which of its modules loaded.
+change the file and restart. **Admin → Health** summarises: the console's and the server's distribution, how many modules loaded, how many kinds are bound (and how many required needs are unbound) and the placement version, one line each with a link to the page that holds the detail (White label, Modules, Data bindings).
 
-**The old keys** (`drishti.branding.*`, `DRISHTI_PRODUCT`, `ui.product`, `ui.tagline`, `ui.copyright`, `ui.owner`, `ui.notice`) are
-read for one release and named on Health as deprecated. `drishti.edition` (`DRISHTI_EDITION`) is no longer read: a lens file is never an
-instance's filter; Health names it when a site still sets it.
+**The old keys.** `drishti.branding.*`, `DRISHTI_PRODUCT`, `ui.product`, `ui.tagline`, `ui.copyright`, `ui.owner` and `ui.notice` are no longer read (the
+distribution file's `brand:` decides), nor is `drishti.edition` (`DRISHTI_EDITION`: a lens file is never an instance's filter); Health names any a
+site still sets.
 
 ## 25. Modules and Deploy
+
+**A module's settings.** A module describes its own settings in its manifest (`settings:`), and a site sets them as `drishti.module.<id>.<key>`. Banking's
+are the VaR window and confidences, the hierarchies' labels, the system-basket seed and the settings of its risk engines (var, exposure, frtb-sa, simm,
+sensitivities, mr-cube). The server keys they replaced (`drishti.var.confidence`, `drishti.var.scenario-window`, ...) are read for one release, the module's
+key winning; Health lists the old keys a site still sets. `GET /api/v1/admin/modules/banking/settings` gives each setting, its value and where the value
+comes from (the module's key, the old key, or the default). Banking also declares its parts (`api` light, `compute` heavy, `feeds`), so Placement can put
+the compute on its own nodes.
 
 **Admin → Modules** (mock-up A, table and detail) lists every module of the cluster: its version, state (*LOADED*, *OFF*, *REMOVED*, *IN
 THE STORE*), the nodes it is placed on and the versions in the module store; the plans waiting for a second administrator are pinned on top

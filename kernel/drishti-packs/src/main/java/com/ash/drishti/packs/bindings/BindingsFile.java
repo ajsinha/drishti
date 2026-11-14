@@ -135,45 +135,4 @@ public final class BindingsFile {
             lock.unlock();
         }
     }
-
-    /**
-     * The one-time upgrade (section 5.4): when there is no {@code bindings.yaml} yet, writes one from the {@code kinds:} lists of today's
-     * connector files, each kind bound to the connectors that list it, in file order ({@code union: true} when they are a union), so a site
-     * keeps reading what it read. Reactive connectors compute their kinds and are left out. Returns the bindings written, or empty when a
-     * file already exists or no connector file lists kinds.
-     */
-    public java.util.Optional<Bindings> upgradeFrom(Map<String, ConnectorFiles.Definition> connectorFiles) {
-        if (exists()) {
-            return java.util.Optional.empty();
-        }
-        Bindings b = fromConnectorKinds(connectorFiles);
-        if (b.byKind().isEmpty()) {
-            return java.util.Optional.empty();
-        }
-        write(b);
-        return java.util.Optional.of(b);
-    }
-
-    /** The bindings today's connector files imply by their {@code kinds:} lists. */
-    public static Bindings fromConnectorKinds(Map<String, ConnectorFiles.Definition> connectorFiles) {
-        Map<String, List<String>> readers = new LinkedHashMap<>();
-        Map<String, Boolean> unions = new LinkedHashMap<>();
-        new java.util.TreeMap<>(connectorFiles).forEach((name, d) -> {
-            if ("reactive".equals(d.plugin()) || "demo".equals(d.plugin())) {
-                return;                                                 // computed by the connector, or the samples: not a site binding
-            }
-            boolean union = "true".equalsIgnoreCase(String.valueOf(d.settings().get("union")));
-            for (String k : d.kinds()) {
-                if (k.contains("${") || !Bindings.NAME.matcher(k).matches()) {
-                    continue;
-                }
-                readers.computeIfAbsent(k, x -> new java.util.ArrayList<>()).add(name);
-                unions.merge(k, union, Boolean::logicalAnd);
-            }
-        });
-        Map<String, Bindings.Binding> out = new LinkedHashMap<>();
-        readers.forEach((k, r) -> out.put(k, new Bindings.Binding(k, r, r.size() > 1 && unions.get(k), null, null, null, false,
-                "written from the connectors' kinds: lists by the upgrade")));
-        return new Bindings(out);
-    }
 }

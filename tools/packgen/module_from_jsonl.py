@@ -69,6 +69,8 @@ def build_parser(add_help: bool = True) -> argparse.ArgumentParser:
                                         "else the data folder's files store)")
     g.add_argument("--load", action="store_true", help="write the documents into the files store (<files root>/<name>/<date>/<kind>.jsonl) for the file connector")
     g.add_argument("--site", type=pathlib.Path, help="the site's config folder holding bindings.yaml and connectors/ (default: config)")
+    g.add_argument("--binding-plan", type=pathlib.Path, help="write the binding (kinds, connector, the file connector's text) as JSON to this file instead of "
+                                                             "writing bindings.yaml: the Pack designer proposes it to Admin -> Data bindings (four eyes)")
     g.add_argument("--no-binding", action="store_true", help="write no binding and no connector file (the site binds the kinds later, Admin -> Data bindings)")
     g.add_argument("--dist", type=pathlib.Path, help="where the .dmod is written (default dist/)")
     g.add_argument("--publisher", default="local", help="publisher id in module.yaml (default local)")
@@ -211,19 +213,41 @@ the fields, their types and presence are in `packs/{a.name}/contracts/`. Edit a 
     return manifest
 
 
+def connector_doc(a, settings: dict) -> dict:
+    """The file connector's document (which kinds it serves is the binding's, not the file's)."""
+    return {"plugin": "file", "description": f"{a.name}: JSON Lines files (drishti.py pack new)", "settings": settings}
+
+
+def file_settings(a, b: dict, an) -> dict:
+    layout = {k: {"columns": list(dict.fromkeys(an.match[k] + PFJ.scalar_columns(an.prof.kinds[k].head, an.keys[k])))} for k in b["kinds"]}
+    settings = {"root": b["root"], "domain": b["domain"], "layout": layout}
+    keys = {an.keys[k] for k in b["kinds"]}
+    if b["in-place"] and len(keys) == 1:
+        settings["id-field"] = keys.pop()
+    return settings
+
+
+def write_plan(a, b: dict, an, path: pathlib.Path, say=print) -> None:
+    """The binding as data, for the Pack designer: the connector (name and, for a new file connector, its text) and the kinds it should serve.
+    Nothing is written to a site: the designer proposes it to Admin -> Data bindings (the one bindings path)."""
+    import json
+    import yaml
+    plan = {"kinds": b["kinds"], "connector": b["connector"], "file": None}
+    if b.get("file"):
+        text = "# Created by the Pack designer.\n" + yaml.safe_dump(connector_doc(a, file_settings(a, b, an)), sort_keys=False, width=120, allow_unicode=True)
+        plan["file"] = {"name": b["connector"], "text": text}
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(plan, indent=2), encoding="utf-8")
+    say(f"binding plan: {len(b['kinds'])} kind(s) -> {b['connector']} ({path.name}); proposed to Admin -> Data bindings")
+
+
 def write_binding(a, b: dict, an, site: pathlib.Path, say=print) -> None:
     """One read binding per kind in the site's bindings.yaml (kept whole, the previous file as bindings.yaml.bak), and the file connector."""
     import yaml
     if not b["connector"]:
         return
     if b.get("file"):
-        layout = {k: {"columns": list(dict.fromkeys(an.match[k] + PFJ.scalar_columns(an.prof.kinds[k].head, an.keys[k])))} for k in b["kinds"]}
-        settings = {"root": b["root"], "domain": b["domain"], "layout": layout}
-        keys = {an.keys[k] for k in b["kinds"]}
-        if b["in-place"] and len(keys) == 1:
-            settings["id-field"] = keys.pop()
-        write_yaml(site / b["file"], {"plugin": "file", "kinds": b["kinds"], "description": f"{a.name}: JSON Lines files (drishti.py pack new)",
-                                      "settings": settings})
+        write_yaml(site / b["file"], connector_doc(a, file_settings(a, b, an)))
         say(f"wrote {site / b['file']}")
     f = site / "bindings.yaml"
     doc = (yaml.safe_load(f.read_text(encoding="utf-8")) if f.is_file() else None) or {"format": 1}
@@ -308,7 +332,10 @@ def run(a, cli, say=print) -> int:
     rc = PFJ.run(a, say, an)
     write_module(a, an, mod, pack)
     if b["connector"]:
-        write_binding(a, b, an, (a.site or ROOT / "config").resolve(), say)
+        if getattr(a, "binding_plan", None):
+            write_plan(a, b, an, a.binding_plan, say)
+        else:
+            write_binding(a, b, an, (a.site or ROOT / "config").resolve(), say)
         if a.load and b.get("file") and not b["in-place"] and load_files(a, an, b, cli, say):
             return 1
     dist = (a.dist or ROOT / "dist").resolve()

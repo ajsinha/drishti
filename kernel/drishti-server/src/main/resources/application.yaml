@@ -242,7 +242,7 @@ drishti:
   branding:
     # The product's name and legal notices, wherever people see them (pages, the About answer, messages). Change them
     # here, not in code; the console has the same keys under ui: in drishti-console/config/application.yaml.
-    product: ${DRISHTI_PRODUCT:Drishti}
+    product: Drishti
     tagline: Any data. Any domain. One grammar.  # the line under the name
     owner: Ashutosh Sinha  # who holds the rights, named in the About answer
     # the copyright line of the About answer (GET /api/v1/about)

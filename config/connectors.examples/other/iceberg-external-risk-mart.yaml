@@ -16,10 +16,6 @@
 # (Apache Polaris, Snowflake Open Catalog, Glue's Iceberg endpoint) as Drishti kinds, read-only
 # (plugins/drishti-plugin-iceberg-external/README.md). Credentials are ${ENV_VAR} references.
 plugin: iceberg-external
-kinds:
-- trade
-- counterparty
-- market-quote
 description: risk-mart tables written by Spark, read through drishti-iceberg (no Hadoop)
 settings:
   catalog: rest

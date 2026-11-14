@@ -121,21 +121,14 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
                 }
             }
         }
-        // the site's data bindings (config/bindings.yaml, KERNEL_AND_MODULES.md section 5.4): written once from today's kinds: lists when
-        // missing (the upgrade), then the one home of which connectors serve each kind; a connector's kinds follow them
-        com.ash.drishti.packs.bindings.Bindings bound = com.ash.drishti.packs.bindings.Bindings.NONE;
-        com.ash.drishti.packs.bindings.BindingsFile bfile = bindingsFile(env, connDir);
+        // the site's data bindings (config/bindings.yaml, KERNEL_AND_MODULES.md section 5.4) are the one home of which connectors serve each kind
         try {
-            java.util.Optional<com.ash.drishti.packs.bindings.Bindings> up = bfile.upgradeFrom(connectorsToday(env, files, defs));
-            up.ifPresent(b -> System.getLogger(PackEnvironmentPostProcessor.class.getName()).log(System.Logger.Level.INFO,
-                    "data bindings: wrote {0} from the kinds: lists of the connector files ({1} kinds); those lists are read this release only",
-                    bfile.path(), b.byKind().size()));
-            bound = bfile.read();
+            bindingsFile(env, connDir).read();
         } catch (RuntimeException e) {
             System.getLogger(PackEnvironmentPostProcessor.class.getName()).log(System.Logger.Level.WARNING,  // Health says it again
-                    "data bindings: {0} is not usable, every kind resolves without it: {1}", bfile.path(), e.getMessage());
+                    "data bindings: {0} is not usable, every kind resolves without it: {1}", bindingsFile(env, connDir).path(), e.getMessage());
         }
-        java.util.Map<String, Object> fileProps = new java.util.LinkedHashMap<>(ConnectorFiles.properties(defs, bound));
+        java.util.Map<String, Object> fileProps = new java.util.LinkedHashMap<>(ConnectorFiles.properties(defs));
         int si = 0;
         for (String n : suppressed) {
             fileProps.put("drishti.sources.connectors-suppressed[" + si++ + "]", n);
@@ -151,27 +144,6 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
         }
         problems.forEach((n, m) -> fileProps.put("drishti.sources.connector-file-problems." + n, m));
         env.getPropertySources().addBefore(SOURCE, new MapPropertySource(FILES_SOURCE, fileProps));
-    }
-
-    /**
-     * The connector files the bindings upgrade reads: the site's own files (written or edited by the site), but not those switched off, by
-     * the file or by the server's properties ({@code drishti.sources.connectors.<name>.enabled}). A file a pack's template generated and
-     * nobody edited is the distribution's default, not a site's choice: its kinds resolve by the pack's routes and the lake convention
-     * (section 5.5), and binding them would pin them to that file for every later start. A connector defined only in properties (an
-     * environment's or a test's) is never written into the site's file: the next start may define other connectors.
-     */
-    static java.util.Map<String, ConnectorFiles.Definition> connectorsToday(org.springframework.core.env.Environment env, ConnectorFiles files,
-            java.util.Map<String, ConnectorFiles.Definition> defs) {
-        java.util.Map<String, ConnectorFiles.Definition> out = new java.util.LinkedHashMap<>();
-        defs.forEach((n, d) -> {
-            ConnectorFiles.Marker mk = files == null ? null : files.marker(n);
-            boolean generated = mk != null && d.text() != null && mk.fileEtag().equals(ConnectorFiles.etag(d.text()));
-            String on = env.resolvePlaceholders(env.getProperty("drishti.sources.connectors." + n + ".enabled", d.enabled())).trim();
-            if (!generated && !"false".equalsIgnoreCase(on)) {
-                out.put(n, d);
-            }
-        });
-        return out;
     }
 
     /** The site's {@code bindings.yaml}: {@code drishti.bindings.file}, else beside the connectors' folder. */

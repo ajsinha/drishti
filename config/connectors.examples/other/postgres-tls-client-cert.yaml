@@ -14,7 +14,6 @@
 # Example: PostgreSQL with a client certificate as the log-in (pg_hba.conf: "hostssl all drishti all cert"; the certificate's
 # common name is the database user). No password. Copy to config/connectors/postgres-tls-client-cert.yaml.
 plugin: jdbc
-kinds: [trade]
 description: Trades in PostgreSQL, certificate log-in
 settings:
   url: jdbc:postgresql://db.example.com:5432/drishti

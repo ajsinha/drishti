@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Admin → Data bindings (docs/guides/ADMIN_GUIDE.md, "Data bindings"), administrators only: every kind with its state and source, the
- * functions an unserved need switched off, the deprecated {@code kinds:} lists, and the four-eyes proposals (propose, approve, reject,
+ * functions an unserved need switched off, and the four-eyes proposals (propose, approve, reject,
  * withdraw). {@code POST /reload} applies an edited {@code bindings.yaml} at once.
  */
 @RestController

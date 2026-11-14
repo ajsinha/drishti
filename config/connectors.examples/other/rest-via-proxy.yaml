@@ -15,7 +15,6 @@
 # The https target is tunnelled with CONNECT and keeps its own TLS (tls.* below is optional). Leave the proxy: block out to use the site
 # default (drishti.http.proxy.*), or write `proxy: none` to go direct. See docs/guides/DATA_GUIDE.md section 10.
 plugin: rest
-kinds: [price]
 description: Prices from a vendor API through the corporate proxy
 settings:
   base-url: https://api.vendor.example/v1

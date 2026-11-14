@@ -1319,8 +1319,7 @@ holds the contract's `binding-hint.lake-table` (`AUTO`, *found by convention: co
 **required** need switches off exactly the functions that use it, with the reason. A contract names no connector: its `binding-hint`
 gives the lake table, partitions and promoted columns a site usually binds ([contracts README](../contracts/README.md)).
 
-A connector file that still lists `kinds:` is read in this release, the kinds bound to it added; Health lists it as deprecated. A site
-with no `bindings.yaml` gets one at the next start, written from those lists, so it keeps reading what it read.
+A connector file names no kinds (a `kinds:` line from an earlier release is ignored): `bindings.yaml` is the one home of which connectors serve a kind.
 
 ## 7. The demo lake's one-time move
 
