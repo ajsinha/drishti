@@ -19,19 +19,6 @@
 # The lake (delta, its root or catalog, storage and tables) is config/lakes.examples/delta-s3/s3.yaml: copy it to
 # config/lakes/s3.yaml beside this file (docs/guides/DATA_LAKE_GUIDE.md). This file keeps only what the connector reads.
 plugin: delta
-kinds:
-- stress-scenario
-- stress-result
-- frtb-sensitivity
-- pnl-explain
-- trade-valuation
-- pnl-vector
-- scenario-pv
-- fx-scenario
-- scenario-set
-- var-limit
-- desk-pnl
-- pnl-history
 description: risk-store read from Delta Lake on AWS S3 (the market-risk pack's risk domain with its P&L vectors, scenario PVs and limits)
 settings:
   lake: s3

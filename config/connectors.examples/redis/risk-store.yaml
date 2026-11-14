@@ -14,12 +14,6 @@
 # Example: copy to config/connectors/risk-store.yaml to read the risk-store data from redis. It replaces the
 # connector file of the same name (settings are not merged). Credentials are ${ENV_VAR} references.
 plugin: redis
-kinds:
-- var
-- stress-scenario
-- stress-result
-- frtb-sensitivity
-- pnl-explain
 description: risk-store read from redis (the former application-redis.yaml profile)
 settings:
   domain: risk

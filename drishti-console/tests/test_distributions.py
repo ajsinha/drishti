@@ -65,7 +65,7 @@ def _commands(client, q: str) -> list[str]:
 def test_each_distribution_boots_from_its_file_alone(name, product):
     d = dist.read(dist.file_of(DIR, name), DIR / dist.KERNEL, MODULES, CONSOLE.parent / "config" / "packs")
     assert d.id == f"drishti.{name}" and d.title == product
-    assert d.settings_layer()["ui"]["product"] == product
+    assert d.brand_layer()["ui"]["product"] == product
     assert d.all is (name == "all")
     with pytest.raises(ValueError):
         dist.read(dist.file_of(DIR, "nosuch"), DIR / dist.KERNEL, MODULES, CONSOLE.parent / "config" / "packs")
@@ -153,10 +153,10 @@ def test_all_matches_today(backend, monkeypatch):
     assert "<h1>Help</h1>" in c.get("/help").text
 
 
-def test_the_old_keys_still_work_and_health_names_them(backend, monkeypatch):
+def test_the_old_brand_keys_are_not_read_and_health_names_them(backend, monkeypatch):
     app = _app(backend, monkeypatch, "--distribution=risk", "--ui.product=Acme Risk")
-    assert app.state.settings.get("ui.product") == "Acme Risk"           # the site's old key wins, for one release
-    assert any(n.startswith("ui.product") for n in dist.deprecated(app.state.settings))
+    assert app.state.settings.get("ui.product") == "Drishti Risk"        # the distribution file is the one home of the name
+    assert any(n.startswith("ui.product") and "no longer read" in n for n in dist.deprecated(app.state.settings))
     legacy = _app(backend, monkeypatch)                                  # a server still on drishti.edition: risk
     legacy.state.editions.learn({"product": "Drishti Risk", "edition": {"name": "risk", "title": "Drishti Risk"}})
     assert legacy.state.editions.instance.name == "risk" and not legacy.state.editions.instance.distribution

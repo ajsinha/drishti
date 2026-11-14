@@ -13,7 +13,6 @@
 # See the LICENSE file in the root of this repository for the full terms.
 # Example: ActiveMQ destinations with a user and a password taken from the environment.
 plugin: activemq
-kinds: [event]
 settings:
   broker-url: ssl://activemq.example.com:61617
   destinations: [events]

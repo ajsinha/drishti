@@ -16,8 +16,6 @@
 # The lake (delta, its root or catalog, storage and tables) is config/lakes.examples/other/customer-lake-tls.yaml: copy it to
 # config/lakes/customer-lake-tls.yaml beside this file (docs/guides/DATA_LAKE_GUIDE.md). This file keeps only what the connector reads.
 plugin: delta
-kinds:
-- customer
 description: Customer tables in the data lake over TLS
 settings:
   lake: customer-lake-tls

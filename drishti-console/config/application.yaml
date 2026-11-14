@@ -102,20 +102,14 @@ ui:
     default: Go back to the terminal and try again, or type part of an identifier in the command line.
   studio_example: all-panels-showcase   # the example Studio opens on (a name under studio.examples_dir); blank or missing: the first pack example
   default_theme: terminal        # terminal | light | wallstreet | blue | green | crimson | crimson-dark | terminal-green | terminal-crimson | terminal-blue
-  # The product's name and legal notices on every page; nothing user-visible names them in code. The server has the
-  # same under drishti.branding.
-  product: ${DRISHTI_PRODUCT:Drishti}
-  tagline: Any data. Any domain. One grammar.  # the line under the product name, in the top bar, the sign-in page and the landing page
+  # The product's name, tagline, owner, copyright and notice come from the distribution file (config/distributions/drishti.<name>.yaml,
+  # brand:), on this console and the server alike; they are not set here.
   # The landing page's headline (blank: the tagline is the headline); its accent is the part drawn in the theme's gradient. When a
   # headline is set, the tagline sits under it as the subtitle.
   headline: See what your data hasn't told you yet.
   headline_accent: hasn't told you yet.  # the part of the headline drawn in the theme's gradient
   product_native: दृष्टि             # the name in its own script, beside it on the About page (blank for none)
   product_meaning: Drishti (दृष्टि) means <em>sight</em>.  # one line on the name's meaning, on the About page
-  # the copyright line in the footer and on the About page (the server's drishti.branding.copyright)
-  copyright: Copyright © 2026 Ashutosh Sinha. All rights reserved. Proprietary and confidential.
-  notice: Unauthorised copying, use or distribution is prohibited.  # the legal notice beside it
-  owner: Ashutosh Sinha             # who holds the rights: the About page's Author (the server's drishti.branding.owner)
   owner_email: ajsinha@gmail.com    # beside the owner on the About page (blank for none)
   user: ${DRISHTI_USER:ash}          # acting user until sign-in lands
   # how long a worker reuses what the server says about a user (settings, packs, layouts, pivots); a change on this console reaches

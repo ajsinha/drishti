@@ -211,8 +211,11 @@ def test_an_instance_with_an_edition_shows_no_lens_link_and_refuses_one(backend,
 
 
 @pytest.mark.parametrize("key", ["ui.logo", "ui.favicon"])
-def test_logo_and_icons_come_from_configuration(backend, monkeypatch, key):
-    app = create_app(load_settings(CONSOLE / "config", [f"--{key}=/static/img/acme.svg", "--ui.product=Acme Risk"]))
+def test_logo_and_icons_come_from_configuration(backend, monkeypatch, tmp_path, key):
+    import yaml
+    f = tmp_path / "drishti.acme.yaml"
+    f.write_text(yaml.safe_dump({"format": 1, "distribution": "drishti.acme", "version": "1.0.0", "modules": "all", "brand": {"product": "Acme Risk"}}))
+    app = create_app(load_settings(CONSOLE / "config", [f"--{key}=/static/img/acme.svg", f"--distribution={f}"]))
     app.state.backend = backend
     c = TestClient(app)
     page = c.get("/").text

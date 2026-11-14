@@ -138,19 +138,12 @@ public final class BindingService {
 
     private void apply(Bindings next) {
         Bindings was = applied;
-        boolean first = !started;
         started = true;
         applied = next;
-        List<String> redone = List.of();
-        if (first) {
-            connectors.adopt(next);                                 // the environment gave the connectors these kinds at start
-        } else {
-            redone = connectors.bindings(next);
-        }
+        connectors.adopt(next);
         router.bind(next.readOrder());
         if (!was.equals(next)) {
-            LOG.info("data bindings applied from {}: {} kinds bound{}", file.path(), next.byKind().size(),
-                    redone.isEmpty() ? "" : "; connectors applied again: " + redone);
+            LOG.info("data bindings applied from {}: {} kinds bound", file.path(), next.byKind().size());
         }
     }
 
@@ -298,17 +291,8 @@ public final class BindingService {
         out.put("off", r.off());
         out.put("kinds", r.kinds().values().stream().map(BindingResolver.Resolution::toMap).toList());
         out.put("problems", r.problems());
-        out.put("deprecated", deprecated());
         out.put("connectors", connectors.names());
         out.put("proposals", proposals().stream().filter(p -> "proposed".equals(p.state())).toList());
-        return out;
-    }
-
-    /** The deprecation lines (section 5.4): connector files that still list {@code kinds:}, read this release only. */
-    public List<String> deprecated() {
-        List<String> out = new ArrayList<>();
-        connectors.deprecatedKinds().forEach((n, k) -> out.add(n + ".yaml lists kinds: " + k + ": read this release only; "
-                + (file.exists() ? "the binding in " + file.path().getFileName() + " is the one home, remove the list" : "the next start writes " + file.path().getFileName() + " from them")));
         return out;
     }
 
@@ -324,7 +308,6 @@ public final class BindingService {
         m.put("unboundRequired", r.kinds().values().stream().filter(k -> k.required() && !k.state().usable()).map(k -> k.kind() + ": " + k.reason()).toList());
         m.put("functionsOff", r.off());
         m.put("problems", fileProblem == null ? r.problems() : java.util.stream.Stream.concat(java.util.stream.Stream.of(fileProblem), r.problems().stream()).toList());
-        m.put("deprecated", deprecated());
         return m;
     }
 

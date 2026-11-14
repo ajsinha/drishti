@@ -40,10 +40,14 @@ DEFAULT = "all"
 KERNEL = "kernel.yaml"
 _IN_JAR = "src/main/resources/META-INF/drishti/module.yaml"
 _SHORT = re.compile(r"[a-z0-9][a-z0-9-]{0,63}")
-#: The brand keys and the console settings they fill (the old keys: ui.product, ui.copyright ... read once, with a Health note).
+#: The brand keys and the console settings they fill. The five names and notices (NAMES) come from the distribution file only.
 BRAND_KEYS = {"product": "ui.product", "product_native": "ui.product_native", "tagline": "ui.tagline", "owner": "ui.owner",
               "copyright": "ui.copyright", "notice": "ui.notice", "logo": "ui.logo", "favicon": "ui.favicon", "about": "ui.about",
               "headline": "ui.headline"}
+
+
+#: The product's name and legal notices: the distribution file is their one home (a site's own ``ui.product`` and the like are not read).
+NAMES = ("product", "tagline", "owner", "copyright", "notice")
 
 
 def file_of(directory: Path, name_or_path: str | None) -> Path:
@@ -248,7 +252,7 @@ class Distribution:
         ui: dict[str, Any] = {}
         for k, key in BRAND_KEYS.items():
             v = self.brand.get(k)
-            if v is not None:
+            if v is not None and k not in NAMES:
                 ui[key.split(".", 1)[1]] = v
         support = (self.spec.get("brand") or {}).get("support") or {}
         if isinstance(support, dict) and (support.get("email") or support.get("url")):
@@ -262,6 +266,10 @@ class Distribution:
         if not self.all:                                         # Drishti All keeps Help as it was
             ui["help_title"] = self.help_title
         return {"ui": ui}
+
+    def brand_layer(self) -> dict:
+        """The product's name and notices as the file says them (pinned above the site's configuration)."""
+        return {"ui": {k: self.brand[k] for k in NAMES if k in self.brand}}
 
     def about(self) -> dict:
         return {"id": self.id, "name": self.name, "title": self.title, "all": self.all, "modules": ["all"] if self.all else self.modules,
@@ -368,12 +376,13 @@ def load(settings, console_dir: Path, name: str | None = None, known: dict[str, 
 
 
 def deprecated(settings) -> list[str]:
-    """The old product keys the site still sets on this console (read for one release): Health names each one."""
+    """The old keys the site still sets on this console (Health names each one): the product's name and notices are not read from them."""
     out = []
-    for key in ("ui.product", "ui.tagline", "ui.copyright", "ui.owner", "ui.notice", "edition"):
+    for key in ("ui.product", "ui.tagline", "ui.copyright", "ui.owner", "ui.notice"):
         if settings.site(key) not in (None, "", {}):
-            out.append(f"{key} is read for one release: set brand: in the distribution file instead" if key != "edition"
-                       else "edition is read for one release: name a distribution instead (--distribution, DRISHTI_DISTRIBUTION)")
+            out.append(f"{key} is no longer read: set brand: in the distribution file")
+    if settings.site("edition") not in (None, "", {}):
+        out.append("edition is read for one release: name a distribution instead (--distribution, DRISHTI_DISTRIBUTION)")
     if os.environ.get("DRISHTI_PRODUCT"):
-        out.append("DRISHTI_PRODUCT is read for one release: set brand.product in the distribution file instead")
+        out.append("DRISHTI_PRODUCT is no longer read: set brand.product in the distribution file")
     return out

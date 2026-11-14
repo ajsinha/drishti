@@ -178,14 +178,14 @@ class DistributionsTest {
     }
 
     @Test
-    void theOldKeysStillWorkWithADeprecationNote() {
+    void theOldEditionKeyIsReadForOneReleaseAndTheOldBrandKeysAreNot() {
         StandardEnvironment env = boot("drishti.edition", "risk", "drishti.branding.tagline", "Our own line");
         Edition e = Editions.of(env);
         assertThat(e.name()).isEqualTo("risk");                          // the old edition, read for one release
         assertThat(e.commandShown("VRES")).isTrue();
-        assertThat(env.getProperty("drishti.branding.tagline")).isEqualTo("Our own line");
+        assertThat(env.getProperty("drishti.branding.tagline")).as("the distribution file says it").isEqualTo("Any data. Any domain. One grammar.");
         String notes = env.getProperty(EditionEnvironmentPostProcessor.INFO + ".deprecated");
-        assertThat(notes).contains("drishti.edition is read for one release").contains("drishti.branding.tagline");
+        assertThat(notes).contains("drishti.edition is read for one release").contains("drishti.branding.tagline is no longer read");
         StandardEnvironment both = boot("drishti.edition", "risk", "drishti.distribution", "finance");
         assertThat(Editions.of(both).name()).isEqualTo("drishti.finance");
         assertThat(both.getProperty(EditionEnvironmentPostProcessor.INFO + ".deprecated")).contains("is ignored");

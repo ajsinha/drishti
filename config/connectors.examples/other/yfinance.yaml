@@ -17,7 +17,6 @@
 # restrict its use: samples and internal demonstrations only, not production or redistribution. Ids are QUOTE-<TICKER>, for example QUOTE-AAPL.
 plugin: yfinance
 enabled: false
-kinds: [quote]
 settings:
   base-url: https://query1.finance.yahoo.com/v8/finance/chart
   range: 6mo

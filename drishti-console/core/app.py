@@ -509,7 +509,8 @@ def create_app(settings: Settings) -> FastAPI:
     from core.edition import Editions
 
     def _branding_changed() -> None:                    # the instance's edition or the server's branding changed: the pages follow
-        for g, key in (("PRODUCT", "ui.product"), ("TAGLINE", "ui.tagline"), ("LOGO", "ui.logo"), ("FAVICON", "ui.favicon"),
+        for g, key in (("PRODUCT", "ui.product"), ("TAGLINE", "ui.tagline"), ("NOTICE", "ui.notice"), ("COPYRIGHT", "ui.copyright"),
+                       ("OWNER", "ui.owner"), ("LOGO", "ui.logo"), ("FAVICON", "ui.favicon"),
                        ("APPLE_TOUCH_ICON", "ui.apple_touch_icon"), ("HELP_TITLE", "ui.help_title"), ("DEFAULT_DENSITY", "ui.default_density")):
             templates.env.globals[g] = settings.get(key, "") or ""
         templates.env.globals["DEFAULT_THEME"] = settings.get("ui.default_theme", "terminal") or "terminal"   # the distribution's theme
