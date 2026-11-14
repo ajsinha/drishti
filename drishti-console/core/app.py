@@ -452,6 +452,8 @@ def create_app(settings: Settings) -> FastAPI:
         TAGLINE=settings.get("ui.tagline", ""),
         HEADLINE=settings.get("ui.headline", ""),
         HEADLINE_ACCENT=settings.get("ui.headline_accent", ""),
+        HEADLINE_SECOND=settings.get("ui.headline_second", ""),
+        HEADLINE_SECOND_ACCENT=settings.get("ui.headline_second_accent", ""),
         DEFAULT_THEME=settings.get("ui.default_theme", "terminal"),
         DESK=settings.get("ui.desk", "Rates desk"),
         USER=settings.get("ui.user_display", "Ash"),

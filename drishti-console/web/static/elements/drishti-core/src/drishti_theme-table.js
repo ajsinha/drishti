@@ -103,7 +103,9 @@ export const THEME_TABLE = Object.freeze({
       "--d-trading-green": "#1a7f4b",
       "--d-world-teal": "#0b7468",
       "--d-cap-violet": "#7a45a8",
-      "--d-cap-teal": "#11808a"
+      "--d-cap-teal": "#11808a",
+      "--d-gold-from": "#8a6100",
+      "--d-gold-to": "#c08a12"
     }
   },
   "blue": {
@@ -147,7 +149,9 @@ export const THEME_TABLE = Object.freeze({
       "--d-trading-green": "#1a7f4b",
       "--d-world-teal": "#0b7468",
       "--d-cap-violet": "#c792ea",
-      "--d-cap-teal": "#4fc1c9"
+      "--d-cap-teal": "#4fc1c9",
+      "--d-gold-from": "#8a6100",
+      "--d-gold-to": "#c08a12"
     }
   },
   "green": {
@@ -191,7 +195,9 @@ export const THEME_TABLE = Object.freeze({
       "--d-trading-green": "#1a7f4b",
       "--d-world-teal": "#0b7468",
       "--d-cap-violet": "#c792ea",
-      "--d-cap-teal": "#4fc1c9"
+      "--d-cap-teal": "#4fc1c9",
+      "--d-gold-from": "#8a6100",
+      "--d-gold-to": "#c08a12"
     }
   },
   "wallstreet": {
@@ -279,7 +285,9 @@ export const THEME_TABLE = Object.freeze({
       "--d-trading-green": "#1a7f4b",
       "--d-world-teal": "#0b7468",
       "--d-cap-violet": "#c792ea",
-      "--d-cap-teal": "#4fc1c9"
+      "--d-cap-teal": "#4fc1c9",
+      "--d-gold-from": "#8a6100",
+      "--d-gold-to": "#c08a12"
     }
   },
   "crimson-dark": {

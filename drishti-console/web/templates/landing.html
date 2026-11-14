@@ -27,6 +27,7 @@
         {% set hl = HEADLINE or TAGLINE %}{% set accent = HEADLINE_ACCENT if HEADLINE else "One grammar." %}
         {% if accent and accent in hl %}{% set head = hl.rsplit(accent, 1) %}<h1 class="lp-title">{{ head[0] }}<span class="lp-grad">{{ accent }}</span>{{ head[1] }}</h1>
         {% else %}<h1 class="lp-title">{{ hl }}</h1>{% endif %}
+        {% if HEADLINE_SECOND %}<p class="lp-sentinel" data-headline-second>{{ HEADLINE_SECOND }}{% if HEADLINE_SECOND_ACCENT %} <b>{{ HEADLINE_SECOND_ACCENT }}</b>{% endif %}</p>{% endif %}
         {% if HEADLINE and TAGLINE %}<p class="lp-tagline" data-tagline>{{ TAGLINE }}</p>{% endif %}
         <p class="lp-sub">{{ PRODUCT }} turns any record from any system — a swap, an FX trade, a futures position,
           a netting set — into a dense, linked, ticking view. No hand-built screens: a layout grammar
