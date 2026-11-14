@@ -73,7 +73,7 @@ final class ChildLoads {
         }
         Path scratch = null;
         try {
-            scratch = Files.createTempDirectory("drishti-children-");
+            scratch = com.ash.drishti.common.TempFiles.createDir("drishti-children-");
             Map<String, Long> rows = split(cfg, given, kids, scratch);
             int worst = LakeLoad.OK;
             for (ChildKinds c : kids) {
