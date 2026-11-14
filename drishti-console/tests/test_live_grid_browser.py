@@ -138,7 +138,7 @@ def test_a_row_opens_the_record_panel_with_links_and_an_edit_with_a_reason(brows
     panel = pg.locator(".dg-live-panel")
     assert panel.locator(".dg-live-pkey").inner_text() == "T-005" and panel.locator(".dg-live-pver").inner_text() == "v1"
     hrefs = {a.get_attribute("data-link"): a.get_attribute("href") for a in panel.locator(".dg-live-link").all()}
-    assert hrefs == {"Explain": "/explain/trade/T-005", "VaR": "/var?scope=book:BOOK-C", "Limits": "/limits?book=BOOK-C"}
+    assert hrefs == {"Open": "/v/trade/T-005", "Explain": "/explain/trade/T-005", "VaR": "/var?scope=book:BOOK-C", "Limits": "/limits?book=BOOK-C"}  # the record page first
     price = panel.locator("[data-live-field-price]").first
     price.fill("1.5")
     panel.locator("[data-live-reason]").first.fill("Booked at the wrong price: ticket 4411")
@@ -279,7 +279,7 @@ def test_the_layout_holds_on_a_desktop_and_a_phone_light_and_dark(browser, stack
         assert geo["panel"]["left"] >= geo["grid"]["right"] - 2, "on a desktop the panel is beside the grid"
     ink = [int(x) for x in geo["ink"][geo["ink"].index("(") + 1:geo["ink"].index(")")].split(",")[:3]]
     assert (sum(ink) > 380) == (scheme == "dark"), geo                              # the theme's ink: light text on dark, dark on light
-    assert pg.locator(".dg-toolbar .dg-live-btn").first.is_visible()
+    assert pg.locator(".dg-toolbar .dg-live-btn:not([hidden])").first.is_visible()   # "N new" stays hidden until rows wait
     assert not pg.errors, pg.errors
 
 
