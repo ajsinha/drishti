@@ -18,6 +18,15 @@
 ## Unreleased
 
 - **Connector and binding designer** (Build → Create → New connector, `/build/connector/designer`): the Pack designer's left-rail workspace in six steps: the connector type (the installed types), its settings (a form generated from the type; a secret only as a reference to the secret store), a connection test (connected, latency, what it sees per kind and date), a preview of real rows with the type detected per field (new `POST /api/v1/admin/connectors/{name}/preview`, a throwaway instance; `ConnectionProbe.sample`), binding to kinds (read, union, live, write; the resolution now and after; the functions that come on) and a review of the diff of the connector file and `bindings.yaml`, then the one bindings path: the connector is saved through Admin → Connectors' API and the bindings are proposed to the bindings service, a second administrator approves (four eyes, audited, no restart). Admin → Connectors' New connector button, its `n` key and a pack's `?new=<name>` link now open the designer (one way to create); its editor keeps editing existing connectors, and the connector settings form is shared (`drishti_conn-settings.js`). Browser test against a real server with two administrators; ADMIN_GUIDE section 23.0, DEVELOPER_GUIDE section 12.3.
+- **Child tables in every store.** An array of records declared a child kind in the pack's `ingest:` block (`child-of`) is now split off its
+  parent's documents by every loader and written in the parent's store: Delta, **Iceberg** and the file store alike. `data ingest --store iceberg
+  --lake DIR` (new: the Python loader writing Iceberg through the one Iceberg writer, `icebergwrite.write_lines`), `lake build` (the Python
+  path, Delta or `--format iceberg`: the child kinds are built after the parent from scratch rows dated by the parent's file, `tools/lake/childload.py`)
+  and the **parallel loader** (`--engine java`, or `LakeLoad` with `source.pack` and `target.kind`: `ChildLoads`/`ChildKinds` in drishti-lakeload, which reads the same `ingest:` block)
+  all give the same child rows: the same table layout, id (`parent:LEG_ID` or `parent:index`), link field, promoted columns and business date.
+  The rules live in the pack's `ingest:` block alone; the Python and Java readings are checked against one fixture
+  (`lake/drishti-lakeload/src/test/resources/childkinds`) and `tools/test_child_parity.py` loads the same nested JSON Lines as Delta, Iceberg and
+  files and compares the child rows and the BI relationship's answers. Docs: DATA_LAKE_GUIDE 5.7, BUILD_GUIDE 8.1.4.
 - **Child tables: arrays of rows become child kinds.** `pack new` and the Pack designer make an array of records (`LEGS`, `CASHFLOWS`) a kind of
   its own: one row per element (`trade-leg`), its id the parent's id and the element's natural key (`LEG_ID`) or index (`LEG_KEY` = `T1:2`), a
   link to the parent (`TRADE_ID`), its own promoted columns, contract and Sutra (an entity screen whose `TRADE_ID` opens the trade, beside the title

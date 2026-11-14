@@ -1248,11 +1248,25 @@ ingest:
   trade-leg: { key: LEG_KEY, child-of: { kind: trade, field: LEGS, link: TRADE_ID, natural: LEG_ID } }
 ```
 
-`drishti.py data ingest --pack <pack> --from <files>` (Delta with `--lake`, the file connector's layout with `--store files --root`) writes the
-parent's rows and its child kinds' rows; `pack new --load` and the Pack designer load the same way. `pack new` and the Pack designer plan child
-kinds and write this block ([BUILD_GUIDE section 8.1.4](BUILD_GUIDE.md#814-child-tables-an-array-of-records-as-a-kind-of-its-own)). The parallel
-loader (section 3.3) and `lake build` load one table per input and do not split arrays: deliver a child kind to them as files of its own
-(`trade-leg.2026-11-03.jsonl`), or load it with `data ingest --pack`.
+Child tables work in **every store**, by every loader, from the same declaration:
+
+| Loader | Delta | Iceberg | Files |
+|---|---|---|---|
+| `drishti.py data ingest --pack <pack> --from <files>` (also `pack new --load` and the Pack designer) | `--lake DIR` | `--store iceberg --lake DIR` | `--store files --root DIR` |
+| `drishti.py lake build --pack <pack> --kind trade` (`--engine` any) | default | `--format iceberg` | |
+| the parallel loader (section 3.3), with `source.pack` and `target.kind` in its configuration | `target.format: delta` | `target.format: iceberg` | |
+
+The parent's table is loaded as ever; then each child kind of the pack's `ingest:` block is split off the same documents and loaded as a table of
+its own, in the parent's format, with the pack's layout of the child kind (its promoted columns, sort and table name), **under the business
+date the parent's file was loaded under** (`--as-of`, the `.ready` file's, the tar folder's, the file name's, else the business today). The
+rules live in the pack's `ingest:` block alone and every loader reads them: the id is `parent id : LEG_ID` when every element has a unique
+natural key (the `natural:` field), else `parent id : index`; the link field carries the parent's id; an element that is not a record, a
+parent without an id and a parent without the array give no child row. `tools/packgen/childkinds.py` (Python) and
+`com.ash.drishti.lakeload.ChildKinds` (the parallel loader) are checked against one fixture of documents and the rows they must give, so
+they cannot drift; `tools/test_child_parity.py` loads the same nested JSON Lines as Delta, Iceberg and files and checks the child rows (count,
+ids, links, promoted columns, date) and the answers through the BI relationship are the same. A child kind can still be delivered as files of
+its own (`trade-leg.2026-11-03.jsonl`) where the parent has no array to split. `pack new` and the Pack designer plan child kinds and write this
+block ([BUILD_GUIDE section 8.1.4](BUILD_GUIDE.md#814-child-tables-an-array-of-records-as-a-kind-of-its-own)).
 
 ## 6. Pointing Drishti at a lake
 
