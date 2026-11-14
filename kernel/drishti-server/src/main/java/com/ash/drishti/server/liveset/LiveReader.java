@@ -22,7 +22,7 @@ import java.util.function.UnaryOperator;
 
 /**
  * One reader of the live sets, made for each request from the person and never kept beyond it and the reader's own stream
- * (docs/guides/LIVE_RESULTS_GUIDE.md section 7, "Who sees what"): what decides which rows they may see and how.
+ * (modules/trading/docs/guide.md section 7, "Who sees what"): what decides which rows they may see and how.
  *
  * @param audience everything that decides what the reader may see, as text: two readers with equal audiences see the same rows the
  *     same way (their roles, the embedding app, their masks, their row scope, whether they see the cluster's nodes). A search's set is

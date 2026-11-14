@@ -56,7 +56,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The live result sets (docs/guides/LIVE_RESULTS_GUIDE.md section 7): one engine behind every blotter and every FORM search that ticks. It reads
+ * The live result sets (modules/trading/docs/guide.md section 7): one engine behind every blotter and every FORM search that ticks. It reads
  * the declarations ({@code blotters/*.blotter.yaml} of the modules that are on, and the site's {@code config/blotters/}), opens one shared
  * {@link LiveSet} per declaration and condition while anyone views it, flushes the viewers' windows every {@code flush-ms}, trims the live
  * side by each declaration's retention, and sends a blotter's edits down the one write-back path (versions, approvals, outbox, audit):
@@ -120,7 +120,7 @@ public final class LiveSets implements AutoCloseable {
 
     /**
      * Whether a person may edit through a declaration now: null when both the site's configuration and the person's rights allow it,
-     * else the reason in words (docs/guides/LIVE_RESULTS_GUIDE.md section 8).
+     * else the reason in words (modules/trading/docs/guide.md section 8).
      */
     public interface Access {
         String readOnly(Principal p, LiveSetSpec spec);
@@ -128,7 +128,7 @@ public final class LiveSets implements AutoCloseable {
 
     /**
      * What a person may see of a kind's sets, as a {@link LiveReader} made for each request: the audience (everything that decides what
-     * they see), their masks and their row scope (docs/guides/LIVE_RESULTS_GUIDE.md section 7, "Who sees what").
+     * they see), their masks and their row scope (modules/trading/docs/guide.md section 7, "Who sees what").
      */
     public interface Visibility {
         LiveReader reader(Principal p, String kind);

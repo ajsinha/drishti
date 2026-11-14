@@ -37,7 +37,7 @@ import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
 /**
- * A set paged from the durable store (docs/guides/LIVE_RESULTS_GUIDE.md section 7, "Scale"): the snapshot stays in the lake (Delta, Iceberg or
+ * A set paged from the durable store (modules/trading/docs/guide.md section 7, "Scale"): the snapshot stays in the lake (Delta, Iceberg or
  * files, through the kind's bindings). For an order (the key, else the chosen sort), a filter and an audience it keeps an <em>index</em>:
  * the keys of the records that hold the condition and the reader's scope, in order, with the sort column's values, read in one pass of
  * those columns (the store's columns where it keeps them, else its documents once). Never the records: a page fetches its rows whole by

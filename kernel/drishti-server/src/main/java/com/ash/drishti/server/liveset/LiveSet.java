@@ -43,7 +43,7 @@ import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
 /**
- * One live result set (docs/guides/LIVE_RESULTS_GUIDE.md section 7): the snapshot of a kind's records that hold a condition, read from the
+ * One live result set (modules/trading/docs/guide.md section 7): the snapshot of a kind's records that hold a condition, read from the
  * durable store through the bindings, with the changes of the kind's {@code live:} binding merged in by key and version: a newer version
  * replaces the row, an older or equal one is dropped (no duplicates, no going back), a deletion or a row that stops holding the condition
  * leaves. The live side is subscribed to before the snapshot is read, so nothing between the two is lost; what arrived meanwhile is applied

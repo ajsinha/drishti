@@ -451,7 +451,7 @@ a value is cut to 8,192 characters and a match that takes over 50 ms is `DRS-401
 ### 2.8a Live result sets and blotters (`/live`)
 
 One engine behind every blotter and every FORM result that ticks; the declarations, the merge by key and version, the edit gate and the
-write path are in [Live results and blotters](LIVE_RESULTS_GUIDE.md#9-the-api).
+write path are in [Live results and blotters](../../modules/trading/docs/guide.md#9-the-api).
 
 | Method | Path | What it does |
 |---|---|---|

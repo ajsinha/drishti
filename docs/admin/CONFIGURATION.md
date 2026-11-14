@@ -5430,7 +5430,7 @@ A connector's settings go under `settings:` in its file, `config/connectors/<nam
 | `writes` | map | `{}` |  | the connector | Named commands that write an approved change back to the source (APPROVALS\_GUIDE.md section 5.4): JDBC or Kafka; off until an administrator switches the connector's writes on | live (the connector restarts) |  | admin |
 | `writes.*` | map | none |  | the connector | One command: kind, params, confirm (reply, ack-topic, next-load), timeout, and the plugin's block (jdbc or kafka) | live (the connector restarts) |  | admin |
 | `writes.*.confirm` | string | `reply` |  | the connector | How the write is confirmed: reply, ack-topic or next-load | live (the connector restarts) |  | admin |
-| `writes.*.kafka` | map | none |  | the connector | The Kafka block (docs/guides/LIVE_RESULTS_GUIDE.md section 8): topic, shape, version-field, changed-by, changed-at, change-id-field | live (the connector restarts) |  | admin |
+| `writes.*.kafka` | map | none |  | the connector | The Kafka block (modules/trading/docs/guide.md section 8): topic, shape, version-field, changed-by, changed-at, change-id-field | live (the connector restarts) |  | admin |
 | `writes.*.kafka.*` | string | none |  | the connector | One key of the Kafka block | live (the connector restarts) |  | expert |
 
 #### A lake file: `config/lakes/<lake>.yaml` (docs/guides/DATA_LAKE_GUIDE.md)

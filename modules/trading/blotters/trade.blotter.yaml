@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The trade blotter (docs/guides/LIVE_RESULTS_GUIDE.md section 6): one declaration, run by the kernel's live result sets engine.
+# The trade blotter (modules/trading/docs/guide.md section 6): one declaration, run by the kernel's live result sets engine.
 blotter: trade
 title: Trade blotter
 kind: trade

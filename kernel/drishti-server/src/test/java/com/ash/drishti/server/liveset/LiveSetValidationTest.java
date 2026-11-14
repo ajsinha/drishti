@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * Declarations are checked at load (docs/guides/LIVE_RESULTS_GUIDE.md section 6): named formats exist in formats.yaml, fields exist in the
+ * Declarations are checked at load (modules/trading/docs/guide.md section 6): named formats exist in formats.yaml, fields exist in the
  * kind's data contract, editable fields have a write path. A bad one is set aside with DRS-9307, listed for Admin, and refused when asked
  * for; the shipped trade blotter passes against the trading pack's contract and formats, and its field description says readonly and
  * pattern.
