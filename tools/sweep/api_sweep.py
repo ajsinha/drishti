@@ -206,7 +206,10 @@ def covered_by(e: dict, index: list[tuple[str, int, str]], text: dict) -> str:
     pieces = [p for p in VARIABLE.sub("\0", route).split("\0") if p.strip("/")]
     if not pieces:
         return ""
-    rx = re.compile(".*?".join(re.escape(p) for p in pieces) + r"(?![\w-])")
+    tail = r"(?![\w-])"
+    if e["path"].rstrip("/").endswith("}"):      # the path ends in a variable: the test names a value there ("/rules/Deep MTM", "/rules/" + id), not a deeper path
+        tail = r"""[^/"'`]*(?:["'`]|["'`]\s*\+\s*[\w.()\[\]]+\s*[,)]|\$\{)"""
+    rx = re.compile(".*?".join(re.escape(p) for p in pieces) + tail)
     anchor = max(pieces, key=len)
     verb = e["method"].lower()
     mrx = re.compile(rf"\b{verb}\b|\.{verb}\(|-X\s*{e['method']}|\b{e['method']}\b", re.I)
@@ -430,8 +433,8 @@ def check(t: Target, e: dict, res: Resolver) -> dict:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--console", required=True)
-    ap.add_argument("--server", required=True)
+    ap.add_argument("--console", default="")
+    ap.add_argument("--server", default="")
     ap.add_argument("--admin", default="")
     ap.add_argument("--admin-password", default="")
     ap.add_argument("--token", default="", help="a bearer token for the server (otherwise one is made through the console and revoked at the end)")
@@ -440,9 +443,19 @@ def main(argv=None) -> int:
     ap.add_argument("--workers", type=int, default=8)
     ap.add_argument("--only", default="", help="only endpoints whose path contains this text")
     ap.add_argument("--verbose", action="store_true", help="one line a call on stderr")
+    ap.add_argument("--writes-only", action="store_true", help="no server needed: only map the write endpoints to their tests; list the untested (filtered by --only)")
     a = ap.parse_args(argv)
 
     server_eps, console_eps = java_endpoints(), py_endpoints()
+    if a.writes_only:
+        index = test_index()
+        text = {(rel, n): ln for rel, n, ln in index}
+        writes = [{**e, "test": covered_by(e, index, text)} for e in server_eps + console_eps if e["method"] != "GET" and a.only in e["path"]]
+        untested = [w for w in writes if not w["test"]]
+        for w in untested:
+            print(f"NO TEST {w['side']} {w['method']} {w['path']}")
+        print(f"api sweep (writes only): {len(writes)} write endpoints, {len(untested)} with no test")
+        return 1 if untested else 0
     gap = docs_gap(server_eps)
     ids, date = samples(Path(a.testdata))
     con = Target("console", a.console)
