@@ -413,8 +413,7 @@ def run(opts, say=print, an: Analysis | None = None) -> int:
                     "settings": {"root": _lakeconfig().DEMO_ROOT_REF, "domain": opts.name,
                                  "layout": {k: {"columns": lake_cols[k], "sort-by": "id", "file-rows": 250000, "row-group-rows": 1000}
                                             for k in stored}}}
-        manifest["connectors"] = [f"{opts.name}-store"]
-        manifest["connector-templates"] = {f"{opts.name}-store": conn}
+        manifest["connectors"] = {f"{opts.name}-store": conn}
         manifest["routes"] = {k: f"{opts.name}-store" for k in stored}
     manifest["ingest"] = {k: an.parents[k].ingest() if k in an.parents else {"key": keys[k], **({"date": dates[k]} if k in dates else {"snapshot": True})}
                           for k in sorted(kinds)}

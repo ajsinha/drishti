@@ -55,8 +55,8 @@ def start_servers(work: Path) -> list:
     (packs / "desk-demo").mkdir()
     (packs / "desk-demo" / "pack.yaml").write_text(
         "pack: desk-demo\nversion: 1.0.0\ntitle: Desk demo\ndescription: Quotes read from a stream somebody has not set up yet.\n"
-        "kinds: [desk-quote, desk-quote-archive]\nconnectors: [desk-quotes, desk-archive]\nroutes:\n  desk-quote: desk-quotes\n  desk-quote-archive: desk-archive\n"
-        "connector-templates:\n  desk-quotes:\n    plugin: file\n    kinds: [desk-quote]\n    settings:\n      root: ./data/desk-quotes\n", encoding="utf-8")
+        "kinds: [desk-quote, desk-quote-archive]\nroutes:\n  desk-quote: desk-quotes\n  desk-quote-archive: desk-archive\n"
+        "connectors:\n  desk-quotes:\n    plugin: file\n    kinds: [desk-quote]\n    settings:\n      root: ./data/desk-quotes\n", encoding="utf-8")
     lake = work / "lake"
     for day in ("2026-10-02", "2026-10-05"):
         (lake / day).mkdir(parents=True)

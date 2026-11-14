@@ -33,7 +33,7 @@ alarms by [`deploy/aws/delta-lake/`](../../../deploy/aws/delta-lake/).
 ## What it reads
 
 `risk-store.yaml` reads the market-risk pack's risk domain (P&L vectors, scenario PVs, VaR limits, desk P&L) and
-The Endur trades are a template of the source module, `modules/source-endur/connector-templates/delta-s3.yaml`, not a file of this folder.
+The Endur trades are a template of the source module, `modules/source-endur/connectors/delta-s3.yaml`, not a file of this folder.
 layout of the local lake. Nothing is written by the server; the loaders write the same tables (`drishti.py lake build`, the parallel
 loader with an `s3://` target).
 

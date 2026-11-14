@@ -79,7 +79,7 @@ def lake_form(manifest: dict, lake: str = DEMO_LAKE, partitions: dict[str, list[
     then names ``lake`` and ``lake-tables`` (an official results reader names its publisher's lake, :data:`OFFICIAL_LAKES`). A template
     already in that form is left as it is."""
     m = copy.deepcopy(manifest)
-    key = "connectors" if isinstance(m.get("connectors"), dict) else "connector-templates"
+    key = "connectors"
     if not isinstance(m.get("lake"), dict):
         m["lake"] = {}
     tables = m["lake"].setdefault("tables", {})
@@ -171,7 +171,7 @@ def view(manifest: dict | None, modules: bool = True) -> dict:
     """``manifest`` with every template in the lake form shown in the older form (:func:`settings_view`): what a tool that reads a
     template's root, domain, table and layout loads instead of the file as it is. The ``lake:`` block stays."""
     m = with_modules(manifest) if modules else dict(manifest or {})
-    key = "connectors" if isinstance(m.get("connectors"), dict) else "connector-templates"
+    key = "connectors"
     if not isinstance(m.get(key), dict):
         return m
     conns = {}

@@ -1793,8 +1793,7 @@ routes:                             # which connector answers each kind first
 ```
 
 - `connectors:` is either a **list of names** (a pack that only names what it needs) or, as every shipped pack does, a **mapping of
-  definitions**. A mapping is read as the pack's **templates**; both forms work, and `connector-templates:` carries templates beside a
-  list.
+  definitions**. A mapping is read as the pack's **templates**.
 - **Kinds** (this is the one statement of the rule; other documents link here): the pack's `routes:` decide the **primary**
   connector for a kind (the pack author knows where each kind lives). A read of a kind asks the routed connector first, then the
   default route, then every other connector that serves the kind, in configuration order. A connector's own `kinds:` (file, template
@@ -1843,7 +1842,7 @@ Highest first. Each is documented and tested:
 |---|---|
 | Environment variables and `drishti.sources.connectors.*` in the server's own configuration (**deprecated**) | Override a file **setting by setting** until you move them to the file; a warning names the file to write. |
 | `config/connectors/<name>.yaml` | The site's definition. It **replaces** the pack's template for that name **wholesale**: the settings are not merged, so what the file does not say is not inherited. |
-| The pack's template (`connectors:` mapping or `connector-templates:`) | The pack's suggestion. Used to write the file once, and in memory when the file cannot be written. |
+| The pack's template (the `connectors:` mapping) | The pack's suggestion. Used to write the file once, and in memory when the file cannot be written. |
 
 A file with **no** template of that name defines a **new site connector**. When two related packs (one `extends` the other) suggest the
 same name, the more specific pack's template is the one written; two unrelated packs suggesting different definitions of one name is
