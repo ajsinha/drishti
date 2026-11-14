@@ -327,9 +327,9 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_PORT` | `server.port` | `18480` | The server's HTTP port. |
 | `DRISHTI_HTTP2` | `server.http2.enabled` | `true` | HTTP/2 on the server's port as well as HTTP/1.1: Drishti*net peers multiplex their forwarded reads over one connection (`h2c` by the upgrade on plain HTTP, ALPN on TLS; up to 1,000 streams per connection), and browsers over TLS get it too. `false`: HTTP/1.1 only; peers then fall back to it on the same call ([OPERATIONS_GUIDE.md › Drishti*net: running several servers as one, section 7](../guides/CLUSTER_GUIDE.md#17-where-a-request-goes)). |
 | `DRISHTI_PRODUCT` | `drishti.branding.product` | `Drishti` | The product name shown in pages and messages. |
-| `DRISHTI_EDITION` | `drishti.edition` | empty | The edition the server runs ([LENSES.md](../guides/ADMIN_GUIDE.md#12-what-a-lens-is)): empty is the full Drishti; `risk` is Drishti Risk; `world` is Drishti World; `market` is Drishti Market; `trading` is Drishti Trading. Every member of a cluster sets the same; the console learns it from the server. A restart applies it. |
-| `DRISHTI_LENS_DIR` | `drishti.lens-dir` | `./config/lenses` | The folder of the edition files (and `features.yaml`, `default-packs.yaml`). |
-| `DRISHTI_LENSES` | `drishti.lenses` | `risk,world,market,trading` | The editions a person may open as a lens on a full instance (`risk`, `world`, `market`, `trading`, or several: `risk,world,market,trading`, the default); empty: no lens link. Ignored when the server runs an edition. A lens hides, it does not secure. |
+| `DRISHTI_DISTRIBUTION` | `drishti.distribution` | empty | The distribution the server runs ([DISTRIBUTIONS.md](../architecture/DISTRIBUTIONS.md)): `risk`, `finance`, `genomics` or `all`, or the path of a site's own file; empty is Drishti All. Every member of a cluster sets the same; the console learns it from the server. A restart applies it. |
+| `DRISHTI_DISTRIBUTIONS_DIR` | `drishti.distributions-dir` | `./config/distributions` | The folder of the distribution files (`drishti.<name>.yaml`) and `kernel.yaml` (the kernel's packs, words and feature presets). |
+| `DRISHTI_LENSES` | `drishti.lenses` | `risk,world,market,trading` | The lenses a person may open (workspaces: `risk`, `world`, `market`, `trading`, or several, the default); empty: no lens link. A lens arranges Home and the menus and hides nothing. |
 | `DRISHTI_PLUGIN_DIR` | `drishti.sources.plugin-dir` | empty | Deprecated: its jars are moved once into the lib folder (`drishti.lib.path`). |
 | `DRISHTI_HTTP_PROXY_URL` | `drishti.http.proxy.url` | empty | The site's outbound HTTP proxy (`http://host:port`); empty: none. See [`drishti.http.proxy`](#drishtihttpproxy--the-sites-outbound-http-proxy). |
 | `DRISHTI_HTTP_PROXY_USERNAME` | `drishti.http.proxy.username` | empty | The proxy's Basic-authentication user. |
@@ -470,7 +470,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_LOADS_DIR` | `drishti.loads.dir` | `./data/loads` | The data-load history per pack and the administrators' expectation overrides ([DATA_GUIDE.md](../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)). |
 | `DRISHTI_PACKS_DEPLOY_HISTORY` | `drishti.packs.deploy.history-file` | `./data/packs/deploy-history.jsonl` | The history of archive deployments and rollbacks. |
 | `DRISHTI_PACK_REGISTRY` | `drishti.packs.registry.url` | empty | A signed pack registry (a folder, `file:` or `https:` URL with `index.json`); empty: none. |
-| `DRISHTI_PACKS` | `drishti.packs.enabled` | `default` | The packs to load (comma list); a pack's parents load with it. `default`: the edition's packs (`drishti.edition`), else the seven shipped packs of `config/packs/default-packs.yaml` (the one default list). |
+| `DRISHTI_PACKS` | `drishti.packs.enabled` | `default` | The packs to load (comma list); a pack's parents load with it. `default`: the distribution's packs (`drishti.distribution`), else the seven shipped packs of `config/packs/default-packs.yaml` (the one default list). |
 | `DRISHTI_DEFAULT_PACKS` | `drishti.packs.default-for-users` | empty | Packs new users get; empty: every installed pack. |
 | `DRISHTI_SUGGEST_LIMIT` | `drishti.commands.suggest-limit` | `25` | Entries in the command line's dropdown. |
 
@@ -526,7 +526,7 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_PACKS_EXTRA_DIRS` | `packs.extra_dirs` | empty | Further pack folders, comma-separated, as on the server (relative paths resolve from `drishti-console/`, so `../examples/packs`). |
 | `DRISHTI_PACKS_INSTALLED` | `packs.installed_dir` | empty | The server's installed packs (registry and Deploy archive); empty: `<data dir>/packs/installed`. Read first as the server does, so an installed pack's guides, examples and workspaces reach the console. |
 | `DRISHTI_PACKS` | `packs.enabled` | `default` | Only used when the server cannot be asked which packs are on; `default`: `config/packs/default-packs.yaml`. |
-| `DRISHTI_LENS_DIR` | `lens.dir` | `../config/lenses` | The folder of the edition files, the same the server reads (relative to `drishti-console/`). |
+| `DRISHTI_LENS_DIR` | `lens.dir` | `../config/lenses` | The folder of the lens files, `config/lenses/<module>/<lens>.yaml` (relative to `drishti-console/`; only the console reads them). |
 | `DRISHTI_LAKE_ROOTS` | `lakes.roots` | empty | Admin → Data loads → Lakes ([CLI_REFERENCE.md](../guides/CLI_REFERENCE.md#7-lake-a-large-json-export-into-a-delta-lake)): the lake roots this console may write, comma-separated (relative paths resolve from `drishti-console/`); empty: `<data dir>/delta`, the server's own root. The page offers no other folder. |
 | `DRISHTI_JAR` | `lakes.jar` | empty | The drishti-server exec jar whose Java writer the page's builds use (`lakes.engine: auto`); empty: the newest `kernel/drishti-server/target/drishti-server-*-exec.jar`, else the Python `deltalake` package. |
 | `DRISHTI_DATA_DIR` | `lakes.data_dir` | `../data` | Admin → Lakes → Maintain ([OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#16-lake-maintenance-and-scheduling)): the data folder whose `lakes/lake-maintenance.yaml` (the file `lake maintain` reads by default) and `lakes/maintenance-history.jsonl` the page uses (relative paths resolve from `drishti-console/`). |
@@ -777,7 +777,6 @@ Create the file `config/connectors/ops-lake.yaml` (the file name is the connecto
 
 ```yaml
 plugin: delta
-kinds: [counterparty]
 settings:
   root: /data/lake          # or s3a://my-bucket/lake
   domain: reference
@@ -785,8 +784,8 @@ settings:
 ```
 
 No restart: the folder is watched, so within a few seconds `curl -s localhost:18480/api/v1/sources` shows an entry named
-`ops-lake`. Route a kind to it with `drishti.sources.routes.shipment: ops-lake` or from a pack's `routes:`. The same can be done in
-Admin → Connectors. Defining the connector under `drishti.sources.connectors` in `application.yaml` still works but is deprecated
+`ops-lake`; it serves what its plugin and lake hold (the file names no kinds). Which connectors serve a kind is `config/bindings.yaml`
+(Admin → Data bindings). Defining the connector under `drishti.sources.connectors` in `application.yaml` still works but is deprecated
 (see below).
 
 ### Use a different holiday calendar
@@ -1009,25 +1008,34 @@ Messages name the product's features after `product` (`<product> SQL` in a SQL e
 message writes the name in code, and `BrandingLiteralTest` (drishti-it) fails on a literal. Header names (`X-Drishti-…`) and the
 `DRISHTI_` variables are identifiers and keep their names.
 
-### `drishti.edition` — editions and lenses
+### `drishti.distribution` — distributions and lenses
 
-An edition turns Drishti into a focused product with one setting ([LENSES.md](../guides/ADMIN_GUIDE.md#12-what-a-lens-is), the design in
-[its section 15](../architecture/LENSES.md#10-the-lens-mechanism-the-design)). The edition file is a layer under the site's configuration: every key below it can still be set
-by the site.
+Switches come in three layers ([ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#12-what-a-lens-is), [DISTRIBUTIONS.md](../architecture/DISTRIBUTIONS.md)):
+the **distribution** says what exists, a **module switch** whether a module is on at this site, an **engine switch** whether a compute
+runs on this server. A distribution presets an engine off (its module is not in it), never on. The distribution file is a layer under
+the site's configuration: every key below it can still be set by the site. A **lens** is a workspace: it arranges the starting Home, the
+menus' order and the placeholder and never hides anything.
 
 | Key | Default | Meaning |
 |---|---|---|
-| `drishti.edition` | empty (`DRISHTI_EDITION`) | The edition: empty is the full Drishti, exactly as without editions; `risk` is Drishti Risk (`config/lenses/banking/risk.yaml`), `world` Drishti World (`config/lenses/economy/world.yaml`), `market` Drishti Market (`config/lenses/banking/market.yaml`), `trading` Drishti Trading (`config/lenses/banking/trading.yaml`). Names a file in `drishti.lens-dir`; a name with no file stops the start. Set the same on every member of a cluster. |
-| `drishti.lens-dir` | `./config/lenses` (`DRISHTI_LENS_DIR`) | The folder of the edition files, `features.yaml` (which settings each feature presets) and `default-packs.yaml` (the one default pack list). |
-| `drishti.edition-spec.*` | the edition file's keys | The site's overrides of the edition file, key by key: `drishti.edition-spec.commands.also-allow[0]=FRTB` adds a command, `drishti.edition-spec.packs.allow-only=false` lets other packs load, a list (`bi.datasets`) replaces the file's. |
-| `drishti.lenses` | `risk,world,market,trading` (`DRISHTI_LENSES`; empty turns lenses off) | The editions a person may open as a lens on a full instance ("Open Drishti Risk", "Open Drishti World", "Open Drishti Market", "Open Drishti Trading"), comma list: `risk,world,market,trading` offers the four, and a person inside one switches to another. A lens hides, it does not secure. Ignored with an edition. |
+| `drishti.distribution` | empty (`DRISHTI_DISTRIBUTION`) | The distribution: `risk`, `finance`, `genomics` or `all` (`config/distributions/drishti.<name>.yaml`), or the path of a site's own file; empty is Drishti All. Set the same on every member of a cluster. |
+| `drishti.distributions-dir` | `./config/distributions` (`DRISHTI_DISTRIBUTIONS_DIR`) | The folder of the distribution files and `kernel.yaml` (the kernel's packs and words, and `features:`, which settings each feature presets). |
+| `drishti.edition-spec.*` | the distribution's filter keys | The site's overrides of the distribution's filter, key by key: `drishti.edition-spec.commands.also-allow[0]=FRTB` adds a command, `drishti.edition-spec.packs.allow-only=false` lets other packs load, a list (`bi.datasets`) replaces the file's. |
+| `drishti.lenses` | `risk,world,market,trading` (`DRISHTI_LENSES`; empty turns lenses off) | The lenses a person may open ("Open Drishti Risk", "Open Drishti World", "Open Drishti Market", "Open Drishti Trading"), comma list; a person inside one switches to another. A distribution's `lenses.default` is everyone's starting workspace. |
 
-The console's side: `lens.dir` (`DRISHTI_LENS_DIR`, default `../config/lenses`); an `edition:` block in its
-`application.local.yaml` overrides the edition file's keys for the console (menus, Home, help, words; an edition's Home landings are its `home.landings`, drawn by its `home.template` with its `home.titles`: Drishti Risk's `desk`, `command`, `map`, Drishti World's `desk`, `explorer`, `map`, Drishti Market's `desk`, `explorer`, `quality`, Drishti Trading's `trader`, `desk`, `explorer`; Drishti Market's `quality.stale-days`, default 2, is the Quality landing's stale threshold in business days); Drishti Trading's `trading:` block: `trading.people` (who is who: `{user: {trader: TRDR-ASHAH}}` or `{user: {desk: DESK-COMM, role: desk-head}}`; the console's own `trading.people` in its `application.local.yaml` adds to the edition file's and wins for a name in both), `trading.match-records` (true: else a matching trader record), `trading.landing-by-role` (`{desk-head: desk, trader: trader}`, below the person's own choice), `trading.near-limit` (0.8), `trading.limit-days` (5), `trading.pnl-var-days` (60), `trading.max-rows` (20000), `trading.live-statuses`; a person's View as choice is their `tradingView` setting ([LENSES.md section 6](../guides/ADMIN_GUIDE.md#162-drishti-trading)); `lens.roles` is the hook for
-role-based access to the lens link (read, not wired). Its own feature switches, each on by default and preset by an edition through
-`config/lenses/features.yaml`: `features.build` (Build: new screens, packs, designs, reviews, changes), `features.forms` (`FORM`, `/forms`),
-`features.datamap`, `features.data` (Export data, `DATA`), `features.workspaces`, `features.monitors`, `features.alerts`, `features.lakes` (Admin → Lakes), `features.reports`,
-`features.collaboration` (Admin → Collaboration). `/studio` (the Build workbench's entry) follows `features.build`. A page whose switch is off answers 404.
+The console's side: `lens.dir` (`DRISHTI_LENS_DIR`, default `../config/lenses`), the lens files `config/lenses/<module>/<lens>.yaml` (a
+lens's Home landings are its `home.landings`, drawn by its `home.template` with its `home.titles`: Drishti Risk's `desk`, `command`, `map`,
+Drishti World's `desk`, `explorer`, `map`, Drishti Market's `desk`, `explorer`, `quality`, Drishti Trading's `trader`, `desk`, `explorer`;
+Drishti Market's `quality.stale-days`, default 2, is the Quality landing's stale threshold in business days); Drishti Trading's `trading:`
+block: `trading.people` (who is who: `{user: {trader: TRDR-ASHAH}}` or `{user: {desk: DESK-COMM, role: desk-head}}`), `trading.match-records`
+(true: else a matching trader record), `trading.landing-by-role` (`{desk-head: desk, trader: trader}`, below the person's own choice),
+`trading.near-limit` (0.8), `trading.limit-days` (5), `trading.pnl-var-days` (60), `trading.max-rows` (20000), `trading.live-statuses`; a
+person's View as choice is their `tradingView` setting ([ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#162-drishti-trading)). Its own feature
+switches, each on by default and preset by a distribution's `features:` through `config/distributions/kernel.yaml`'s `features:`:
+`features.build` (Build: new screens, packs, designs, reviews, changes), `features.forms` (`FORM`, `/forms`), `features.datamap`,
+`features.data` (Export data, `DATA`), `features.workspaces`, `features.monitors`, `features.alerts`, `features.lakes` (Admin → Lakes),
+`features.reports`, `features.collaboration` (Admin → Collaboration). `/studio` (the Build workbench's entry) follows `features.build`. A page
+whose switch is off answers 404.
 
 Branding keys of the console beside `ui.product`: `ui.placeholder` (the command line's placeholder; blank: `config/sitemap.yaml`'s),
 `ui.logo` (an image under `/static/`, or a `data:` URL, drawn instead of the eye mark), `ui.favicon` and `ui.apple_touch_icon` (the
@@ -2620,7 +2628,6 @@ read by both programs, so one set of variables configures both halves.
 | `builder.pack_designer_ttl_hours` | `72` | The Pack designer: hours a workspace (the uploaded files, the analysis, the module) is kept after its last use, then removed. |
 | `builder.pack_designer_jobs_per_user` | `2` | The Pack designer: jobs (reading every record, making the module) one person may have running at once. Over it: `429`. |
 | `builder.pack_designer_workers` | `0` | The Pack designer: processes reading the files of a job, a file each; 0 is the tool's default (a third of the cores, at most 8). Every record is read either way. |
-| `builder.pack_designer_site` | _(empty)_ | The Pack designer: the config folder the data bindings and the file connector are written to (the server's, on one node); empty, each workspace keeps its own `site/` folder. Environment: `DRISHTI_PACK_DESIGNER_SITE`. |
 | `builder.pack_designer_modules_dir` | _(empty)_ | The Pack designer, Deploy step **Install on this node**: the server's modules folder the `.dmod` is copied to (auto-deploy checks, installs and loads it). Empty: `DRISHTI_MODULES_PATH`, else `<data folder>/modules`. |
 | `builder.pack_load_max_mb` | `2048` | **Admin → Packs → a pack → Load data**: the largest data file the console streams on to the server (never held in memory); the server has its own `drishti.loads.upload-max-mb`. |
 | `builder.tools_dir` | `../tools` | The repository's `tools/` folder, relative to `drishti-console/`: the Pack designer runs its jobs from it (`tools/packgen/designer_job.py`, which uses `pack new`'s code). Without it the designer answers `501`. |

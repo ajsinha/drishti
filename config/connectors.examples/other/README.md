@@ -159,35 +159,9 @@ apply` refuse a credential written in clear. There is no loader for these files:
 | `rest-via-proxy.yaml` | `rest` | the plugin's own | Prices from a vendor API through the corporate proxy |
 | `s3-private-ca.yaml` | `s3` | the plugin's own | Documents in MinIO over TLS |
 | `s3-via-proxy.yaml` | `s3` | the plugin's own | Trade documents in S3, through the corporate proxy |
+| `trade-blotter-kafka.yaml` | `kafka` | `trade` | The demo's live trades, and the trade blotter's amendments written back to them |
 | `trading-stream.yaml` | `kafka` | the plugin's own | Live trades from the trading Kafka cluster |
 | `yfinance.yaml` | `yfinance` | the plugin's own |  |
-| `activemq-ssl.yaml` | `activemq` | `order` | Orders from ActiveMQ over SSL |
-| `aerospike-tls.yaml` | `aerospike` | `trade` | Trades in Aerospike over mutual TLS |
-| `cassandra-astra.yaml` | `cassandra` | `trade` | Trades in DataStax Astra |
-| `cassandra-tls.yaml` | `cassandra` | `trade` | Trades in Cassandra over mutual TLS |
-| `customer-lake.yaml` | `delta` | `customer` | Customer tables in the data lake |
-| `delta-private-ca.yaml` | `delta` | `customer` | Customer tables in the data lake over TLS |
-| `iceberg-external-risk-mart.yaml` | `iceberg-external` | `trade`, `counterparty`, `market-quote` | risk-mart tables written by Spark, read through drishti-iceberg (no Hadoop) |
-| `iceberg-rest-private-ca.yaml` | `iceberg` | `trade` | Iceberg tables behind a REST catalog, object store over TLS |
-| `kafka-confluent-cloud.yaml` | `kafka` | `trade` | Trades from Confluent Cloud, Avro through Schema Registry |
-| `kafka-mtls-pem.yaml` | `kafka` | `trade` | Trades over mutual TLS, PEM certificates |
-| `mongodb-x509.yaml` | `mongodb` | `position` | Positions in MongoDB, certificate log-in |
-| `news.yaml` | `news` | `news` |  |
-| `ops-events.yaml` | `activemq` | `event` |  |
-| `orders-queue.yaml` | `rabbitmq` | `order` | Orders from the order-management broker |
-| `positions-mongo.yaml` | `mongodb` | `position` |  |
-| `postgres-tls-client-cert.yaml` | `jdbc` | `trade` | Trades in PostgreSQL, certificate log-in |
-| `postgres-tls.yaml` | `jdbc` | `trade` | Trades in PostgreSQL, verified TLS |
-| `pricing-api.yaml` | `rest` | `price` |  |
-| `rabbitmq-external.yaml` | `rabbitmq` | `order` | Orders from RabbitMQ, logged in by certificate |
-| `redis-tls.yaml` | `redis` | `trade` | Trades in Redis over mutual TLS |
-| `rest-mtls.yaml` | `rest` | `price` | Prices from the pricing API over mutual TLS |
-| `rest-via-proxy.yaml` | `rest` | `price` | Prices from a vendor API through the corporate proxy |
-| `s3-private-ca.yaml` | `s3` | `trade` | Documents in MinIO over TLS |
-| `s3-via-proxy.yaml` | `s3` | `trade` | Trade documents in S3, through the corporate proxy |
-| `trade-blotter-kafka.yaml` | `kafka` | `trade` | The demo's live trades, and the trade blotter's amendments written back to them |
-| `trading-stream.yaml` | `kafka` | `trade` | Live trades from the trading Kafka cluster |
-| `yfinance.yaml` | `yfinance` | `quote` |  |
 <!-- files:end -->
 
 ## Troubleshooting
