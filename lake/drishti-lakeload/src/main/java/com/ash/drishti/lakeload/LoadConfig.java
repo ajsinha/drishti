@@ -51,7 +51,7 @@ import java.util.regex.Pattern;
  * ({@code ${MINIO_ENDPOINT}}); keys and secrets are never taken from the file: S3 credentials come from the AWS default chain.
  */
 record LoadConfig(Source source, Target target, Parallel parallel, Memory memory, Rejects rejects, Report report, boolean lock, Archive archive,
-        Map<String, LoadConfig> datasets, String datasetsSummary) {
+        Map<String, LoadConfig> datasets, String datasetsSummary, ObjectNode tree) {
 
     /**
      * Archives in the input (DATA_GUIDE.md section 2.7): the name of a folderless archive's dataset ({@code source.dataset}), the caps
@@ -179,7 +179,7 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
             Map<String, LoadConfig> each = datasets(tree, ds, env);
             LoadConfig first = each.values().iterator().next();
             return new LoadConfig(first.source, first.target, first.parallel, first.memory, first.rejects, first.report, first.lock, first.archive,
-                    each, new Reader(env).text(tree.path("report"), "summary", null));
+                    each, new Reader(env).text(tree.path("report"), "summary", null), tree);
         }
         return single(tree, env);
     }
@@ -276,7 +276,7 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
     /** This configuration as a dry run (read and checked, nothing written, no run log). */
     LoadConfig dryRun() {
         Report r = new Report(report.summary(), report.manifest(), report.progress(), false, true);
-        return new LoadConfig(source, target, parallel, memory, rejects, r, lock, archive, datasets, datasetsSummary);
+        return new LoadConfig(source, target, parallel, memory, rejects, r, lock, archive, datasets, datasetsSummary, tree);
     }
 
     private static LoadConfig single(ObjectNode tree, Function<String, String> env) {
@@ -483,7 +483,7 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
         Rejects rej = new Rejects(r.text(rj, "file", null), rj.has("max-pct") ? rj.get("max-pct").asDouble() : 100.0, rj.path("keep").asInt(50));
         Report rep = new Report(r.text(rp, "summary", null), r.text(rp, "manifest", null), r.text(rp, "progress", null), r.bool(rp, "run-log", true),
                 r.bool(rp, "dry-run", false));
-        return new LoadConfig(src, tgt, par, memory, rej, rep, tree.path("lock").asBoolean(true), archive(r, s), Map.of(), null);
+        return new LoadConfig(src, tgt, par, memory, rej, rep, tree.path("lock").asBoolean(true), archive(r, s), Map.of(), null, tree);
     }
 
     /** Whether {@code target.lake} names a lake of config/lakes/ (a plain name) rather than a folder or a URL (the old form). */

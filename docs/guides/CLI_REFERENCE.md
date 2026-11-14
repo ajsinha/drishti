@@ -1393,6 +1393,11 @@ its business date by the load rules ([DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-r
 `--mode overwrite-dates` (the default) replaces only the dates in your input, so re-running a day is safe; `append` adds;
 `replace` rebuilds the kind. Documents without a date or id are counted and left out, never silently dropped.
 
+`--store iceberg --lake DIR` writes Apache Iceberg tables instead of Delta ones (the same rows and promoted columns, by Drishti's Iceberg loader
+in the server's exec jar; `--jar`, `--java`, `--iceberg-set KEY=VALUE`); each business date of the input replaces that date, so `--mode` is
+`overwrite-dates` only. A pack's child kinds (arrays of records, [BUILD_GUIDE section 8.1.4](BUILD_GUIDE.md#814-child-tables-an-array-of-records-as-a-kind-of-its-own))
+are written beside their parent in all three stores.
+
 **The business date from outside.** Each file is one kind and one business date: `--as-of`, else its `.ready` file's `business-date:`,
 else its name's date (`trade.2026-11-03.jsonl`: kind `trade`, 2026-11-03), else the business today. A document's own date field never
 decides; documents whose own date differs are loaded and counted (*1 row of trade.2026-11-03.jsonl carried another date in AS_OF; loaded

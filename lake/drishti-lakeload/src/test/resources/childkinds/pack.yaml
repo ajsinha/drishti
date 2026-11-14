@@ -1,0 +1,14 @@
+pack: deals
+kinds: [deal, deal-leg]
+ingest:
+  deal: { key: TRADE_ID, date: BUSINESS_DATE }
+  deal-leg: { key: LEG_KEY, child-of: { kind: deal, field: LEGS, link: TRADE_ID, natural: LEG_ID } }
+connector-templates:
+  deals-store:
+    plugin: delta
+    kinds: [deal, deal-leg]
+    settings:
+      domain: deals
+      layout:
+        deal: { columns: [TRADE_ID, PRODUCT_TYPE], sort-by: id }
+        deal-leg: { columns: [TRADE_ID, LEG_ID, CURRENCY, NOTIONAL], sort-by: id }

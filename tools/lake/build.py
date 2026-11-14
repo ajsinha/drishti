@@ -470,7 +470,29 @@ class Progress:
 
 
 def run(a, say=print) -> tuple[int, dict]:
-    """The whole build; returns (exit code, summary). Never raises for a data problem: it is in the summary."""
+    """The whole build; returns (exit code, summary). Never raises for a data problem: it is in the summary. A pack's child kinds of the
+    table (``ingest: {child-of}``, DATA_LAKE_GUIDE.md section 5.7) are built after it, each from its parent's array, in the same format;
+    the parallel loader does that itself (the same rules), so only a build by the Python path does it here."""
+    before = (getattr(a, "lake", None), getattr(a, "format", "delta"), getattr(a, "mode", None), getattr(a, "_mode_given", False))
+    code, summary = _run_table(a, say)
+    if code in (EXIT_OK, EXIT_PARTIAL) and not a.dry_run and not getattr(a, "plan", False) and summary.get("status") in ("ok", "partial") \
+            and summary.get("engine") != "java-loader" and summary.get("feed") != "tar":
+        import childload
+        kids = childload.children_of(a.pack, summary.get("kind") or a.kind)
+        if kids:
+            a.lake, a.format, a.mode, a._mode_given = before
+            worst, out = childload.run(a, summary.get("kind") or a.kind, getattr(a, "table", None), kids, run)
+            summary["children"] = out
+            if not a.json and not a.quiet:
+                for k, v in out.items():
+                    say(f"child kind {k}: {v.get('status')}, {v.get('accepted') if v.get('accepted') is not None else v.get('rows')} rows -> {v.get('table')}")
+            if worst > code:
+                code = worst
+                summary["status"] = "partial" if worst == EXIT_PARTIAL else "failed"
+    return code, summary
+
+
+def _run_table(a, say=print) -> tuple[int, dict]:
     started = time.monotonic()
     remote = bool(a.lake) and "://" in str(a.lake) and not str(a.lake).startswith("file:")
     named = _lake_name(a)                                 # --lake NAME: a name, never a folder of the current directory

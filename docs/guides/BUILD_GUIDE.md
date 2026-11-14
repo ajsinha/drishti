@@ -2004,10 +2004,13 @@ turns it off), or by choice: `--child LEGS,CASHFLOWS` (or per kind `trade=LEGS;q
 switch: switch it on or off and press **Apply and read again**; every record is read again and the child kind appears in the kind list, with its rows,
 id check and Sutra. A child kind's own step 2 says whose rows it is.
 
-**One profiler, one loader.** The full pass (`tools/packgen/packprofile.py`) explodes each parent's array as it reads the parent, so the child kind's
-rows, fields, dates and id check are the whole files', not a sample; its id is checked within each parent. The loader that writes the parent
-(`tools/ingest_jsonl.py`: `pack new --load`, the designer's *Write the records to the store*, `data ingest --pack`) writes the child rows from the
-same code (`tools/packgen/childkinds.py`). A folder already laid out for the file connector is not read in place when there are child kinds: the
+**One profiler, every loader, every store.** The full pass (`tools/packgen/packprofile.py`) explodes each parent's array as it reads the parent, so the child kind's
+rows, fields, dates and id check are the whole files', not a sample; its id is checked within each parent. Every loader that writes the parent
+writes the child rows by the rules of the pack's `ingest:` block (below), into the parent's own store: Delta, Iceberg or the files store. The Python
+loaders (`tools/ingest_jsonl.py`: `pack new --load`, the designer's *Write the records to the store*, `data ingest --pack` with `--lake`,
+`--store iceberg --lake` or `--store files --root`; and `lake build --pack`, with `--format iceberg` too) split by one function
+(`tools/packgen/childkinds.py`), the parallel loader (`lake build --engine java`, or `LakeLoad` with `source.pack`) by its Java reading of the same block
+(`ChildKinds`), both checked against one fixture ([DATA_LAKE_GUIDE section 5.7](DATA_LAKE_GUIDE.md#57-child-kinds)). A folder already laid out for the file connector is not read in place when there are child kinds: the
 records go to the files store. The pack says it all in its `ingest:` block, which `drishti.py pack check` checks:
 
 ```yaml

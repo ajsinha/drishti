@@ -67,6 +67,15 @@ def write(lake, domain: str, table: str, by_day: dict, partition_names: list[str
           jar: str | None = None, java: str | None = None, progress=None, settings: list[str] | None = None, types: dict | None = None) -> dict:
     """Streams the staged rows into ``<lake>/<domain>/<table>``; {format, table, rows, dates, engine}. Raises writers.WriteError with the
     loader's own last line when it fails (nothing of a day that did not commit is visible)."""
+    total = sum(len(parts) for parts in by_day.values())
+    return write_lines(lake, domain, table, lines(domain, table, by_day, partition_names, types), sorted(d.isoformat() for d in by_day), workdir,
+                       jar, java, (lambda: progress(total, total)) if progress else None, settings)
+
+
+def write_lines(lake, domain: str, table: str, rows, dates: list[str], workdir: pathlib.Path, jar: str | None = None, java: str | None = None,
+                done=None, settings: list[str] | None = None) -> dict:
+    """The loader's lines (``lines``' form: domain, kind, id, date, doc, columns; a JSON text each) into the table; the same result as ``write``.
+    Also the Python loader's (tools/ingest_jsonl.py ``--store iceberg``): every writer of Iceberg goes through this one."""
     spill = workdir / "spill"
     spill.mkdir(parents=True, exist_ok=True)
     try:
@@ -78,7 +87,6 @@ def write(lake, domain: str, table: str, by_day: dict, partition_names: list[str
     except SystemExit as e:
         raise writers.WriteError(str(e)) from None
     said: list[str] = []
-    total = sum(len(parts) for parts in by_day.values())
     n = 0
     with subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding="utf-8",
                           errors="replace") as proc:
@@ -88,12 +96,12 @@ def write(lake, domain: str, table: str, by_day: dict, partition_names: list[str
             # the load rules (DATA_LAKE_GUIDE.md): rows of several dates go as a tar of <table>/<YYYY-MM-DD>/ folders, each row
             # in its own day's folder (the day lake build decided for it)
             out = feedfiles.RowsTarStream(proc.stdin.buffer)
-            for line in lines(domain, table, by_day, partition_names, types):
+            for line in rows:
                 out.add(table, json.loads(line)["date"], line)
                 n += 1
             out.close()
-            if progress:
-                progress(total, total)
+            if done:
+                done()
             proc.stdin.close()
         except BrokenPipeError:
             pass
@@ -103,4 +111,4 @@ def write(lake, domain: str, table: str, by_day: dict, partition_names: list[str
     if proc.returncode:
         raise writers.WriteError("the Iceberg load did not finish: " + (words[-1] if words else f"exit {proc.returncode}"))
     return {"format": "iceberg", "engine": "native", "table": str(lake).rstrip("/") + "/" + domain + "/" + table, "rows": n,
-            "dates": sorted(d.isoformat() for d in by_day), "loader": [w for w in words if w.startswith("iceberg:")][-3:]}
+            "dates": dates, "loader": [w for w in words if w.startswith("iceberg:")][-3:]}

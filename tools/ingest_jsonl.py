@@ -35,6 +35,10 @@ else the date in its name (trade.2026-11-03.jsonl), else the business today. Eve
 (--date FIELD or kind=FIELD,..., or the pack's ingest date) is optional: it only names the field whose rows that say another date are
 counted, as lake build does; it never chooses the date.
 
+--store iceberg --lake DIR writes Apache Iceberg tables instead of Delta ones, the same rows and columns (the id, doc, business_date and the
+promoted columns of the layout), parent and child kinds alike, by Drishti's Iceberg loader in the server's exec jar (or DRISHTI_ICEBERG_CLASSPATH;
+--iceberg-set KEY=VALUE for its settings): each business date of the input replaces that date (overwrite-dates, the default and only mode).
+
 --store files --root DIR writes the File connector's layout instead (no Delta dependencies): <DIR>/<domain>/<date>/<kind>.jsonl,
 one loader row per line ({"domain","kind","id","date","doc"}); overwrite-dates rewrites only the date files present, replace
 deletes the kind's dated files first, append adds lines. Serve it with DRISHTI_FILES_ROOT=DIR (a pack declares plugin: file).
@@ -248,6 +252,37 @@ def write_files(root: pathlib.Path, domain: str, data: dict, mode: str, report: 
             say(f"  {kind} {day}: {len(rows)} rows -> {target}")
 
 
+def write_iceberg(lake, domain: str, data: dict, layouts: dict, args, report: Report, say=print) -> None:
+    """Iceberg tables: <lake>/<domain>/<kind>, rows as the Delta tables have them, written by the one Iceberg writer (tools/lake/icebergwrite.py)."""
+    sys.path.insert(0, str(HERE / "lake"))
+    import icebergwrite
+    import writers
+    L = _layout()
+    import tempfile
+    for kind in sorted(data):
+        lay = layouts.get(kind) or None
+        by_day = {d: sorted(rows, key=lambda r: r[0]) for d, rows in data[kind].items()}
+
+        def lines(kind=kind, lay=lay, by_day=by_day):
+            for day in sorted(by_day):
+                for id_, body, doc in by_day[day]:
+                    cols = {k: icebergwrite._cell(k, v, set()) for k, v in (L.promote(doc, lay).items() if lay else []) if v is not None}
+                    yield json.dumps({"domain": domain, "kind": kind, "id": id_, "date": day.isoformat(), "doc": body, "columns": cols},
+                                     ensure_ascii=False, separators=(",", ":")) + "\n"
+        work = pathlib.Path(tempfile.mkdtemp(prefix="drishti-iceberg-"))
+        try:
+            icebergwrite.write_lines(lake, domain, kind, lines(), sorted(d.isoformat() for d in by_day), work, getattr(args, "jar", None),
+                                     getattr(args, "java", None), settings=getattr(args, "iceberg_set", None))
+        except writers.WriteError as e:
+            raise SystemExit(f"ingest_jsonl: {e}") from None
+        finally:
+            import shutil
+            shutil.rmtree(work, ignore_errors=True)
+        for day, rows in by_day.items():
+            report.rows[(kind, day.isoformat())] = len(rows)
+            say(f"  {kind} {day}: {len(rows)} rows")
+
+
 def summary(report: Report, dry: bool, say=print) -> None:
     say(f"{'kind':<20}{'business date':<16}{'rows':>9}" + ("   (dry run)" if dry else ""))
     for (k, d), n in sorted(report.rows.items()):
@@ -273,7 +308,9 @@ def ingest(args, say=print) -> Report:
     if not args.src:
         raise SystemExit("ingest_jsonl: give --from (a folder or .jsonl file) or --watch DIR")
     if args.mode is None:
-        args.mode = "append"
+        args.mode = "overwrite-dates" if args.store == "iceberg" else "append"
+    if args.store == "iceberg" and args.mode != "overwrite-dates":
+        raise SystemExit(f"ingest_jsonl: --store iceberg replaces each business date of the input (overwrite-dates); --mode {args.mode} is Delta's only")
     children: dict = {}
     if args.pack:
         domain, layouts, keys, dates = pack_settings(args.pack, bare=args.store == "files")
@@ -308,6 +345,10 @@ def ingest(args, say=print) -> Report:
         if not args.root:
             raise SystemExit("ingest_jsonl: --store files needs --root")
         write_files(args.root, domain, data, args.mode, report, say)
+    elif args.store == "iceberg":
+        if not args.lake:
+            raise SystemExit("ingest_jsonl: --store iceberg needs --lake")
+        write_iceberg(args.lake, domain, data, layouts, args, report, say)
     else:
         if not args.lake:
             raise SystemExit("ingest_jsonl: --store delta needs --lake")
@@ -330,8 +371,12 @@ def build_parser(add_help: bool = True) -> argparse.ArgumentParser:
     p.add_argument("--date", help="optional: the field the documents carry their own date in (FIELD or kind=FIELD,...); only counted when "
                                   "it differs from the file's business date, never the date they are stored under")
     p.add_argument("--columns", help="promoted columns without --pack: a,b,c")
-    p.add_argument("--lake", type=pathlib.Path, help="the Delta root (DRISHTI_DELTA_ROOT) for --store delta")
-    p.add_argument("--store", choices=("delta", "files"), default="delta", help="delta (default) or the File connector's layout")
+    p.add_argument("--lake", type=pathlib.Path, help="the Delta root (DRISHTI_DELTA_ROOT) for --store delta; the Iceberg root for --store iceberg")
+    p.add_argument("--store", choices=("delta", "iceberg", "files"), default="delta",
+                   help="delta (default), iceberg (the same rows in Iceberg tables; needs the server's exec jar) or the File connector's layout")
+    p.add_argument("--iceberg-set", action="append", metavar="KEY=VALUE", help="--store iceberg: a setting of the Iceberg loader (s3.region=..., catalog=rest, uri=...)")
+    p.add_argument("--jar", help="--store iceberg: the drishti-server exec jar (default: DRISHTI_JAR, then kernel/drishti-server/target)")
+    p.add_argument("--java", help="--store iceberg: the java binary")
     p.add_argument("--root", type=pathlib.Path, help="the files root (DRISHTI_FILES_ROOT) for --store files")
     p.add_argument("--mode", choices=MODES, help="append (the default: the documents are added), overwrite-dates (each business date of the "
                                                  "input replaced) or replace (the whole kind rewritten)")
