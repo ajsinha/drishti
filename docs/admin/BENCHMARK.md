@@ -1655,6 +1655,24 @@ The lanes as last measured on the release machine, and what the changes to the d
 
 "Before" is the last full run on record, on a machine shared with other work. Measured for the new pieces: `VarGoldenMatrixTest`, 12 cases with all hierarchies and baskets, about 3 s in the test JVM; a VaR browser file's set-up with the demo lake built, 589 s, and reusing the cached lake, 93 s; `tools/drill.sh --affected` on a two-file diff (one module's tests, one console file), 25 s.
 
+#### Faster drills: the slow lanes measured alone (2026-11-14)
+
+Each lane run by itself with `tools/drill.sh --lanes=<lane>` (the gate first, then that lane; 24 CPUs, 61 GB, the owner's stack and other
+sessions' tests running beside it, no recorded durations in the fresh checkout). Baseline: the recorded drills.
+
+| Lane | Before (recorded drill) | After (measured alone) | What did it |
+|---|---:|---:|---|
+| Browser | about 88 min | 74 min (the main run 53 min, its re-runs 20 min; 127 failures from the machine's memory running out, nearly all passed on re-run) | shared read-only servers with a write guard, the snapshots split, "drawn" signals instead of sleeps |
+| Containers (Docker smoke test) | about 95 min | 10 min | the images built and booted once, health, the VaR golden through the API and four console pages; the Testcontainers tests only when the diff needs them |
+| Java 21 | about 43 min | 29 min | Docker hidden from the copy's tests, the copy built once |
+| Tools b / tools a / Java 25 | about 30 / 20 / 12 min | not re-measured (nothing in this work changes them) | |
+| Gate | 3.3 min | 3.3 min (196 to 221 s) | |
+
+**Projected full drill:** the longest lane plus the gate: 74 + 3.3 = **about 77 minutes** as measured on a loaded machine; the browser
+lane's main run alone (53 min) projects **about 57 minutes** on a quiet one. Before: about 88 + 3.3 = 91 minutes. A few browser files
+failed in the re-runs only because the machine was still loaded (`test_admin_artifacts_browser.py` passes alone: 8 tests in 57 s). The
+numbers are to be confirmed by the release's single full drill.
+
 ### 18.2 Page load in the browser tests
 
 Every page a browser test opens is timed from its main document's request to its load event (`drishti-console/tests/pageload_log.py`,
