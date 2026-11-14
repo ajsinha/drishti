@@ -62,7 +62,7 @@ public final class TableStatement {
 
     private static final Pattern PATH = Pattern.compile("(\\$|@|\\^+)(\\.[A-Za-z_][A-Za-z0-9_]*|\\[\\d+])*");
     private static final Pattern NAME = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*");
-    private static final Set<String> TYPES = Set.of("string", "integer", "decimal", "boolean", "date", "timestamp");
+    private static final Set<String> TYPES = Set.of("string", "integer", "decimal", "boolean", "date", "timestamp", "list");
     private static final List<String> CLAUSES = List.of("table", "from", "grain", "select", "where");
     /** The keys of a column the statement says; every other key of the column is kept as it was. */
     private static final Set<String> SAID = Set.of("path", "expr", "python", "type", "key");

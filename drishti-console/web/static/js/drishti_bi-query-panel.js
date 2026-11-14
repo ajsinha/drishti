@@ -47,6 +47,9 @@
       case 'between': return c + ' BETWEEN ' + lit((w.values || [])[0], t) + ' AND ' + lit((w.values || [])[1], t);
       case 'contains': return c + ' LIKE ' + lit('%' + w.value + '%');
       case 'starts-with': return c + ' LIKE ' + lit(w.value + '%');
+      case 'has': return 'list_contains(' + c + ', ' + vals[0] + ')';
+      case 'any-of': return 'list_has_any(' + c + ', [' + vals.join(', ') + '])';
+      case 'all-of': return 'list_has_all(' + c + ', [' + vals.join(', ') + '])';
       case 'is-null': return c + ' IS NULL';
       case 'not-null': return c + ' IS NOT NULL';
       case 'relative': return '/* ' + c + ' in the window ' + (w.window || w.value) + ' (worked out on the server) */ TRUE';

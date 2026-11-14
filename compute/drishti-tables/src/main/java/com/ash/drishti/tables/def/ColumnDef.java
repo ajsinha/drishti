@@ -46,7 +46,7 @@ public record ColumnDef(String name, String path, String expr, Object python, St
         Map<String, Object> extras) {
 
     /** The types a column may have (DEL's, kept by checked mode). */
-    public static final Set<String> TYPES = Set.of("string", "integer", "decimal", "boolean", "date", "timestamp");
+    public static final Set<String> TYPES = Set.of("string", "integer", "decimal", "boolean", "date", "timestamp", "list");
 
     /** The roles a column may have. */
     public static final Set<String> ROLES = Set.of("key", "dimension", "measure", "attribute", "time");

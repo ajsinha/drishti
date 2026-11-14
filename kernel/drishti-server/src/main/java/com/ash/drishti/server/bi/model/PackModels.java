@@ -199,6 +199,8 @@ public final class PackModels {
             n.fields().forEachRemaining(e -> scalars(path + "." + e.getKey(), e.getValue(), depth + 1, out));
         } else if (n.isNumber()) {
             out.putIfAbsent(path, new ColumnInfo(columnName(path), path, n.isIntegralNumber() ? "integer" : "decimal", false));
+        } else if (n.isArray() && java.util.stream.StreamSupport.stream(n.spliterator(), false).allMatch(x -> x.isValueNode() || x.isNull())) {
+            out.putIfAbsent(path, new ColumnInfo(columnName(path), path, "list", false));        // a list attribute: contains / any of / all of
         } else if (n.isBoolean()) {
             out.putIfAbsent(path, new ColumnInfo(columnName(path), path, "boolean", false));
         } else if (n.isTextual()) {

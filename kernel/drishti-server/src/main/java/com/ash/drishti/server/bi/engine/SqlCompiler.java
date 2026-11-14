@@ -1068,6 +1068,28 @@ public final class SqlCompiler {
                 String lo = bind(e, type, v.get(0), f.field());
                 return "(" + col + " BETWEEN " + lo + " AND " + bind(e, type, v.get(1), f.field()) + ")";
             }
+            case "has", "any-of", "all-of" -> {
+                if (!"list".equals(type) && !"string".equals(type)) {
+                    throw invalid(f.op() + " is for a list column (or text holding a list); '" + f.field() + "' is " + type);
+                }
+                if (dialect != Dialect.DUCKDB) {
+                    throw invalid(f.op() + " runs in the engine's own tables, not pushed down to " + dialect.name().toLowerCase(java.util.Locale.ROOT));
+                }
+                if (v.isEmpty()) {
+                    return "(1 = 1)";                                      // nothing chosen holds everything
+                }
+                if ("has".equals(f.op()) && v.size() != 1) {
+                    throw invalid("has takes one value; any-of and all-of take several");
+                }
+                String items = "coalesce(TRY_CAST(" + col + " AS VARCHAR[]), [CAST(" + col + " AS VARCHAR)])";
+                List<String> marks = new ArrayList<>();
+                for (Object x : v) {
+                    e.params().add(String.valueOf(x));
+                    marks.add("?");
+                }
+                String fn = "has".equals(f.op()) ? "list_contains" : "any-of".equals(f.op()) ? "list_has_any" : "list_has_all";
+                return "coalesce(" + fn + "(" + items + ", " + ("has".equals(f.op()) ? marks.get(0) : "[" + String.join(", ", marks) + "]") + "), FALSE)";
+            }
             case "contains", "starts-with" -> {
                 if (v.size() != 1 || !"string".equals(type)) {
                     throw invalid(f.op() + " takes one text value on a text column");

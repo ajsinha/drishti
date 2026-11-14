@@ -30,6 +30,17 @@
   the old five-step page, its scripts, the console's pack wizard, its bundle build and the hand-off to Admin → Packs (a pack made from JSON Schema
   is `pack make --schema`). BUILD_GUIDE section 8 describes the designer.
 - **i4 carry-overs.** Why it moved: the scenario card is a date card (*Scenario of the VaR*, no unit; *moved from A to B* or *unchanged since A*) and the limit-use card carries no currency unit; the "1 week" compare date (and any picked date) rolls back to the nearest earlier date that has both P&L and a scenario set instead of failing with "no scenario set for <date>"; the Explain drawer's **Open as a page ›** is a button in its header carrying scope, dates, compare date and tab, and **Back to the screen** returns to the screen as it was; the VaR limit page (VLIM) carries Explain ›; the Iceberg refusal messages no longer name the removed `engine: library`; PLAY SIMM with no licensed parameter files answers `422` (`DRS-5333`) that the page explains, not 502; the landing page's tab title is the distribution's own tagline.
+### Lists: the gaps closed
+
+- **drishti-grid**: an expanded list cell makes its **row taller** and the rows below move down (no overlay), shrinking back on collapse;
+  the viewport supports a taller row (`setExtra`) with exact virtual scrolling. A list column's menu has *Contains*, *Any of*, *All of*;
+  the shared filter model and the filter bar take `type: 'list'`.
+- **BI**: filters `has`, `any-of`, `all-of` on a `list` column (a pack's array of simple values; the engine's table holds the list's JSON
+  text), offered in the designer when the dataset has a list column; compiled to DuckDB `list_contains` / `list_has_any` / `list_has_all`.
+- **Rachana SQL form**: `has`, `any_of`, `all_of` lower to the same DuckDB functions, tested value for value against the Rachana path; a
+  list-typed column is accepted by checked mode as the list argument.
+- **Pivot**: the answer's notes (the double-count note of an exploded list field) show in a strip above the grid.
+
 ### Lists: list attributes shown as chips
 
 - **Lake**: `promote` takes a field holding a list of simple values and writes it as a native array column (`array<string>` in Delta,

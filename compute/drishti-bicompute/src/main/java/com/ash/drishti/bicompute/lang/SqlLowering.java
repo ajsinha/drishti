@@ -204,7 +204,8 @@ public final class SqlLowering {
         String fn = Functions.oneName(name);
         List<String> a = new ArrayList<>();
         for (Expr x : args) {
-            a.add(x instanceof Expr.Absent ? null : sql(x));
+            boolean listArg = x instanceof Expr.ListLit && fn.endsWith("_of");           // any_of / all_of take their values written as a list
+            a.add(x instanceof Expr.Absent || listArg ? null : sql(x));
         }
         return switch (fn) {
             case "abs" -> "abs(" + a.get(0) + ")";
@@ -216,6 +217,7 @@ public final class SqlLowering {
             case "contains" -> "coalesce(contains(lower(" + text(a.get(0)) + "), lower(coalesce(" + text(a.get(1)) + ", ''))), FALSE)";
             case "starts_with" -> "starts_with(lower(coalesce(" + text(a.get(0)) + ", '')), lower(coalesce(" + text(a.get(1)) + ", '')))";
             case "ends_with" -> "suffix(lower(coalesce(" + text(a.get(0)) + ", '')), lower(coalesce(" + text(a.get(1)) + ", '')))";
+            case "has", "any_of", "all_of" -> listFilter(fn, args, a);
             case "date" -> date(a.get(0));
             case "timestamp" -> "CAST(" + a.get(0) + " AS TIMESTAMP)";
             case "year", "quarter", "month", "day" -> "CAST(" + fn + "(" + date(a.get(0)) + ") AS BIGINT)";
@@ -242,6 +244,31 @@ public final class SqlLowering {
             default -> throw new IllegalArgumentException(fn + "() has no SQL form in a row expression"
                     + (Functions.arity().containsKey(fn) ? " (an aggregate or a function of a measure belongs in a measure)" : ""));
         };
+    }
+
+    /**
+     * The list filters over a list attribute: a native list column, a promoted column's JSON text, or a single value (a list of one),
+     * compared as text. {@code has(list, v)} is {@code list_contains}; {@code any_of} / {@code all_of} over a written list of values
+     * are {@code list_has_any} / {@code list_has_all}; no value chosen holds everything; a missing list holds nothing.
+     */
+    private String listFilter(String fn, List<Expr> args, List<String> a) {
+        String items = "coalesce(TRY_CAST(" + a.get(0) + " AS VARCHAR[]), [CAST(" + a.get(0) + " AS VARCHAR)])";
+        if ("has".equals(fn)) {
+            return "coalesce(list_contains(" + items + ", CAST(" + a.get(1) + " AS VARCHAR)), FALSE)";
+        }
+        List<String> wanted = new ArrayList<>();
+        if (args.get(1) instanceof Expr.ListLit l) {
+            for (Expr item : l.items()) {
+                wanted.add("CAST(" + sql(item) + " AS VARCHAR)");
+            }
+        } else {
+            wanted.add("CAST(" + a.get(1) + " AS VARCHAR)");
+        }
+        if (wanted.isEmpty()) {
+            return "TRUE";
+        }
+        return "coalesce(" + ("any_of".equals(fn) ? "list_has_any" : "list_has_all") + "(" + items + ", [" + String.join(", ", wanted)
+                + "]), FALSE)";
     }
 
     private static String switchOf(List<String> a) {

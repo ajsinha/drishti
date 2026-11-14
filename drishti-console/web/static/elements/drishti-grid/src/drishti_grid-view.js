@@ -127,7 +127,7 @@ export class Grid extends GridBase {
     const on = (name, fn) => this.listeners.push(m.on(name, fn));
     on('changed', (p) => {
       if (p.what === 'columns' || p.what === 'pivot' || p.what === 'state') { this._disp = null; }
-      if (p.what === 'rows' || p.what === 'pivot' || p.what === 'columns') { this.body.invalidate(); }
+      if (p.what === 'rows' || p.what === 'pivot' || p.what === 'columns') { this.body.collapseLists(); this.body.invalidate(); }
       if (p.what === 'pivot' || p.what === 'state') { this.chromeSoon(); }
       if (p.what === 'state') {
         this.host.setAttribute('data-layout', m.layout);

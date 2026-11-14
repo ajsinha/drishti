@@ -774,7 +774,7 @@ public final class Checker {
                 if (!t.fits(want)) {
                     return err(Problem.LANGUAGE, what + " is a " + want.word() + "; this is a " + t.word() + " (checked mode has no implicit casts)", null, a);
                 }
-                if ("any".equals(p.type()) && t == ElType.LIST) {
+                if ("any".equals(p.type()) && t == ElType.LIST && !("list".equals(p.name()) && List.of("has", "any_of", "all_of").contains(f.name()))) {
                     return err(Problem.LANGUAGE, what + " is one value, not a list", null, a);
                 }
                 return t;

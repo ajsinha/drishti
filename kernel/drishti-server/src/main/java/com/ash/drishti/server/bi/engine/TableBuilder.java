@@ -397,11 +397,25 @@ final class TableBuilder {
                 } else {
                     app.append(d);
                 }
+            } else if ("list".equals(col.type()) && !v.isNull() && !v.isMasked() && v.type() == com.ash.drishti.api.NodeType.ARRAY) {
+                app.append(listText(v));                                  // a list attribute: its JSON text; the list filters read it back
             } else {
                 app.append(v.isNull() || v.isMasked() || v.type() == com.ash.drishti.api.NodeType.OBJECT || v.type() == com.ash.drishti.api.NodeType.ARRAY ? null : v.asText());
             }
         }
         app.endRow();
+    }
+
+    /** A list's JSON text ({@code ["fx","rates"]}), blanks left out. */
+    static String listText(com.ash.drishti.api.DataNode v) {
+        List<Object> items = new ArrayList<>();
+        for (int i = 0; i < v.size(); i++) {
+            com.ash.drishti.api.DataNode x = v.get(i);
+            if (!x.isNull() && !x.isMasked() && x.type() != com.ash.drishti.api.NodeType.OBJECT && x.type() != com.ash.drishti.api.NodeType.ARRAY) {
+                items.add(x.asText());
+            }
+        }
+        return com.ash.drishti.api.ListValues.json(items);
     }
 
     private static boolean numeric(Dataset.Column c) {

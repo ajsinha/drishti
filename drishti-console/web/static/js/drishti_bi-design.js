@@ -402,7 +402,7 @@
     const m = /([A-Za-z0-9_.' -]*)$/.exec(line);
     const word = m ? m[1].replace(/^[ '-]+/, '') : '';
     let pool = [], kind = 'keyword';
-    if (/type:\s*[\w-]*$/.test(line)) { pool = Object.keys(D.catalogue.visuals); } else if (/op:\s*[\w-]*$/.test(line)) { pool = ['in', 'not-in', 'eq', 'ne', 'lt', 'le', 'gt', 'ge', 'between', 'contains', 'starts-with', 'is-null', 'not-null', 'top']; }
+    if (/type:\s*[\w-]*$/.test(line)) { pool = Object.keys(D.catalogue.visuals); } else if (/op:\s*[\w-]*$/.test(line)) { pool = ['in', 'not-in', 'eq', 'ne', 'lt', 'le', 'gt', 'ge', 'between', 'contains', 'starts-with', 'has', 'any-of', 'all-of', 'is-null', 'not-null', 'top']; }
     else if (/mode:\s*[\w-]*$/.test(line)) { pool = D.catalogue.slicerModes; } else if (/hierarchy:\s*[\w ]*$/.test(line)) { pool = Object.keys(D.idx.hierarchies); }
     else if (/(page|navigate):\s*[\w-]*$/.test(line)) { pool = D.model.pages.map((p) => p.id); }
     else if (/(axis|legend|values|columns|rows|secondary|x|y|size|details|target|field|by)\s*:\s*[[{]?[^\]}]*$/.test(line) || /^\s*-\s/.test(line)) { pool = Object.keys(D.idx.columns).concat(Object.keys(D.idx.measures)); kind = 'field'; }

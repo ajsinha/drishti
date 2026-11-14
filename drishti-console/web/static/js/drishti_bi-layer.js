@@ -106,7 +106,7 @@
   });
 
   // ---- one visual as a model query ----------------------------------------------------------------------------------
-  const OPS = { eq: 'eq', ne: 'ne', in: 'in', 'not-in': 'not-in', lt: 'lt', le: 'le', gt: 'gt', ge: 'ge', between: 'between', contains: 'contains', 'starts-with': 'starts-with', 'is-null': 'is-null', 'not-null': 'not-null', relative: 'relative', top: 'top' };
+  const OPS = { eq: 'eq', ne: 'ne', in: 'in', 'not-in': 'not-in', lt: 'lt', le: 'le', gt: 'gt', ge: 'ge', between: 'between', contains: 'contains', 'starts-with': 'starts-with', has: 'has', 'any-of': 'any-of', 'all-of': 'all-of', 'is-null': 'is-null', 'not-null': 'not-null', relative: 'relative', top: 'top' };
 
   function filterOf(f, isMeasure) {
     const op = OPS[f.op || 'eq'] || 'eq';

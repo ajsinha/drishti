@@ -50,7 +50,7 @@ public record QueryRequest(List<String> fields, List<String> measures, List<Filt
     }
 
     /** The comparisons a filter may make. */
-    public static final Set<String> OPS = Set.of("eq", "ne", "in", "not-in", "lt", "le", "gt", "ge", "between", "contains", "starts-with", "is-null", "not-null");
+    public static final Set<String> OPS = Set.of("eq", "ne", "in", "not-in", "lt", "le", "gt", "ge", "between", "contains", "starts-with", "has", "any-of", "all-of", "is-null", "not-null");
 
     public record Filter(String field, String op, List<Object> values) {}
 

@@ -86,6 +86,16 @@ public class TestLake implements SourceGateway {
         }
     }
 
+    /** The tags of trade number {@code i}, as a promoted list column holds them (JSON text): fx+rates, hedge, fx+hedge+emea, none. */
+    public static String tagsOf(int i) {
+        return switch (i % 4) {
+            case 0 -> "[\"fx\",\"rates\"]";
+            case 1 -> "[\"hedge\"]";
+            case 2 -> "[\"fx\",\"hedge\",\"emea\"]";
+            default -> "[]";
+        };
+    }
+
     public static String yaml() {
         return """
                 rachana: 1
@@ -152,7 +162,7 @@ public class TestLake implements SourceGateway {
 
         @Override
         public Set<String> columnar(String kind) {
-            return promoted ? Set.of("desk", "ccy", "counterparty.id", "notional", "mtm", "tradeDate") : Set.of();
+            return promoted ? Set.of("desk", "ccy", "counterparty.id", "notional", "mtm", "tradeDate", "tags") : Set.of();
         }
 
         @Override
@@ -199,6 +209,7 @@ public class TestLake implements SourceGateway {
             texts.put("ccy", list.stream().map(Trade::ccy).toArray(String[]::new));
             texts.put("counterparty.id", list.stream().map(Trade::cpty).toArray(String[]::new));
             texts.put("tradeDate", list.stream().map(Trade::tradeDate).toArray(String[]::new));
+            texts.put("tags", list.stream().map(t -> tagsOf(Integer.parseInt(t.id().substring(t.id().lastIndexOf('-') + 1)))).toArray(String[]::new));   // a promoted list column: its JSON text
             return Optional.of(new ColumnSet(ids, nums, texts, d));
         }
 
