@@ -22,14 +22,14 @@ AI in BI (report from words, ask the data, explain this number) and publishing a
 ## Contents
 
 - [Guide](#guide)
-  - [16. AI in BI: report from words, ask the data, explain this number](#16-ai-in-bi-report-from-words-ask-the-data-explain-this-number)
-  - [17. Publishing and governance: versions, review, certification, lineage, impact, environments](#17-publishing-and-governance-versions-review-certification-lineage-impact-environments)
+  - [1. AI in BI: report from words, ask the data, explain this number](#1-ai-in-bi-report-from-words-ask-the-data-explain-this-number)
+  - [2. Publishing and governance: versions, review, certification, lineage, impact, environments](#2-publishing-and-governance-versions-review-certification-lineage-impact-environments)
 - [Tutorial: Govern BI](#tutorial-govern-bi)
   - [Part G · Govern BI](#part-g--govern-bi)
 
 ## Guide
 
-### 16. AI in BI: report from words, ask the data, explain this number
+### 1. AI in BI: report from words, ask the data, explain this number
 
 A language model sits beside reports in a few places and no more. It is **off by default**, it is the AI layer's
 ([AI_GUIDE.md](../AI_GUIDE.md#1-model-providers)), and the model is never trusted with anything a person could not do by hand: **it writes a draft or a
@@ -47,7 +47,7 @@ query, and Drishti checks it, runs it as the reader, and shows it.** With the AI
 
 ![Ask the data on the Trades overview report](../img/bi-ai/bi-ai-ask.png)
 
-#### 16.1 Turn it on, and who may
+#### 1.1 Turn it on, and who may
 
 ```yaml
 # config/ai/mock.yaml  (a deterministic provider for trying it; use config/ai/openai.yaml.example or anthropic.yaml.example for a real model)
@@ -67,7 +67,7 @@ are named `bi-draft`, `bi-ask`, `bi-explain`, `subscription-narrative`, `bi-sugg
 the cost limit; `403 DRS-4018` otherwise). Every call is audited twice, never with the prompt or the answer: the policy's access-log row and a
 BI audit row (`bi-ai-draft`, `bi-ai-ask`, `bi-ai-explain`).
 
-#### 16.2 What the model is sent
+#### 1.2 What the model is sent
 
 The prompt is the **model** the report reads (its description, as the person reads it) and the person's own words, nothing else. For *Ask the
 data* on **Trades overview** (model `trades-basic@1`), abridged:
@@ -110,7 +110,7 @@ What is **not** in it, in either mode: a row, a value, a measure's definition, a
 `aggregates` sends **the reader's own figures** to the provider: use it only with a provider you may send such figures to. That is why it is an
 administrator's setting (`drishti.bi.ai.values`), not a button.
 
-#### 16.3 Report from words
+#### 1.3 Report from words
 
 In the designer, **Describe a report**: say what you want ("notional by desk as a bar chart and the total as a card") and press **Draft it**. The
 model is told the report grammar and the model as you read it, and answers with YAML. Drishti strips a code fence, pins the draft to the model
@@ -129,7 +129,7 @@ POST /api/v1/bi/ai/draft  {"dataset": "trades-basic@1", "request": "x"}         
 
 ![Describe a report in the designer](../img/bi-ai/bi-ai-describe.png)
 
-#### 16.4 Ask the data
+#### 1.4 Ask the data
 
 The question box maps a question to a **model query** (fields, measures, filters, dates, order, limit). The model chooses only names from the
 model it was shown; the **engine** checks every name, binds every value, and runs it **as you**, so two people asking the same question get the
@@ -147,7 +147,7 @@ POST /api/v1/bi/ai/ask  {"report": "file:report:trades-overview", "question": "n
   "visual": "bar", "values": "labels-only", "summary": null }
 ```
 
-#### 16.5 Explain this number
+#### 1.5 Explain this number
 
 The light bulb in a visual's header explains the visual's **first measure** under the **page's state** (its slicers, selections and date), so the
 number explained is the number on the screen:
@@ -161,7 +161,7 @@ Explain says **what a number is made of**, not why it moved over time.
 
 ![Explain this number](../img/bi-ai/bi-ai-explain.png)
 
-#### 16.6 Designer copilot and the AI helper
+#### 1.6 Designer copilot and the AI helper
 
 **Suggest visuals** (beside *Check*; with the AI layer on and `bi-author`) takes a goal in your words and proposes visuals, their wells and
 filters, each as a card with its type, title, a sentence on why it is useful and **the YAML that would be added**. Each is checked as a
@@ -181,7 +181,7 @@ saved until you save. Feature `bi-helper`.
 
 ![The dataset helper on the Model view](../img/bi-ai/dataset-helper.jpg)
 
-#### 16.7 Errors
+#### 1.7 Errors
 
 | Code | When |
 |---|---|
@@ -196,14 +196,14 @@ saved until you save. Feature `bi-helper`.
 
 Each question stands alone (no follow-up that remembers the last), and Explain does not compare dates.
 
-### 17. Publishing and governance: versions, review, certification, lineage, impact, environments
+### 2. Publishing and governance: versions, review, certification, lineage, impact, environments
 
 A report or a model is not just a file: it is saved, reviewed, certified and moved between servers, and a change to a model can break the
 reports built on it. On an item's page (`/bi/i/<id>`) the sections **History**, **Review**, **Impact on reports** and **Lineage** show it; the
 rail has **Promotion (test to live)**. The walk-through is [the reports tutorial, Part G](#part-g--govern-bi). A phone shows the same sections one column
 wide; tables scroll inside their frame.
 
-#### 17.1 Saved states and published versions
+#### 2.1 Saved states and published versions
 
 | | A **saved state** (History) | A **published version** (Versions) |
 |---|---|---|
@@ -229,14 +229,14 @@ GET /api/v1/bi/items/bi-ba49ebcd44/history        (as ann, after two saves)
 
 ![History, with the saved states and the diff of the first against the draft](../img/bi-governance/history-diff.png)
 
-#### 17.2 The diff
+#### 2.2 The diff
 
 Pick two states (or press *Compare with draft*) and *Show the differences*: a line diff of the YAML side by side, each side one of `draft`,
 `published`, `vN` or `rN`. Lines only on the left are marked `−`, only on the right `+`, a line replaced `≠`, with line numbers and tinted rows
 (the mark, not only the colour, says what changed). Without `from` and `to` it is the published version against the draft
 (`GET /api/v1/bi/items/{id}/diff?from=r1&to=draft`). A shipped file keeps only its current version. A bad side is `DRS-9003`.
 
-#### 17.3 Review
+#### 2.3 Review
 
 A workspace may *require review before publishing*; even where it does not, an author may *Propose for review*.
 
@@ -255,7 +255,7 @@ rejected or withdrawn, so nobody publishes past the review. The proposer may **w
 
 ![The review page: the request, the diff, Check, what it does to reports and a data preview](../img/bi-governance/review.png)
 
-#### 17.4 Certification and endorsement
+#### 2.4 Certification and endorsement
 
 * **Promoted**: the owner or a member of the workspace marks a published item. **Certified**: only a **bi-steward** (or a bi-admin), and only a
   steward removes it. Both are badges in the catalogue, search, Home and the item; **certified items come first** and have *Certified for you*.
@@ -275,7 +275,7 @@ POST /api/v1/bi/items/bi-f99d2f18d5/publish  { "note": "drop book", "force": tru
 
 ![The certified badge in the catalogue, first in the list](../img/bi-governance/catalogue-certified.png)
 
-#### 17.5 Lineage
+#### 2.5 Lineage
 
 *Lineage* on an item's page shows where it comes from and what depends on it. A **model** lists each alias with the table and version it
 resolves now and its chain down to the root (the table, a pack kind and its connector, a SQL source, a Python item, another model), then what
@@ -299,7 +299,7 @@ GET /api/v1/bi/items/file:dataset:trading-risk-trades/lineage          (captured
 `schema`, `topic`, `path`, `bucket`, `prefix`, `database`, `url`, `host`, `bootstrap-servers` and the like), as the file declares them.
 Credentials never appear, and for a reader who is not an administrator the values are masked (`"root": "•••"`).
 
-#### 17.6 Impact: what breaks if I change this
+#### 2.6 Impact: what breaks if I change this
 
 Names are compared: a field is `table.column`, a measure or hierarchy its name. A report names them in its wells, filters, sorts, drill-through
 and bookmarks, and each place is recorded, so the answer says *where* ("trade.book (page overview, visual rows)").
@@ -349,7 +349,7 @@ POST /api/v1/bi/items/bi-501131a408/publish  { "note": "rename", "applyRenames":
 report that uses it. It is **not refused** (the report still draws); it is shown so a reviewer sees that the figures will differ. Relationships and
 row rules are not compared.
 
-#### 17.7 Environments: bundles
+#### 2.7 Environments: bundles
 
 Development, test and production are separate servers; content moves between them as a **bundle**, one JSON file (`*.bi-bundle.json`).
 **Promotion (test to live)** in the rail exports and imports (`GET /api/v1/bi/bundle`, `POST /api/v1/bi/bundle/import`).
@@ -398,7 +398,7 @@ POST /api/v1/bi/imports/mv543kh5-7a48ae/rollback  {}
 200 { "id": "mv543kh5-7a48ae", "restored": 1, "removed": 0, "forced": false }
 ```
 
-#### 17.8 BI content in a pack archive
+#### 2.8 BI content in a pack archive
 
 A pack archive may carry `config/bi/tables/` and `models/` (in the table layer's form), `reports/`, `notebooks/` and `python/`, one file per
 item named `<name>.<kind>.yaml`. Deploying the pack does **not** copy them where readers could use them unchecked: they become a bundle and go
@@ -418,7 +418,7 @@ POST /api/v1/admin/packs/deploy/{uploadId}                                      
       "bi": { "items": 2, "loaded": true, "importId": "mv5494v3-06ad1e", "counts": { "create": 0, "update": 1, "unchanged": 1, "conflict": 0, "invalid": 0 } } }
 ```
 
-#### 17.9 The audit trail
+#### 2.9 The audit trail
 
 Every act is in the audit log (Admin, Audit log), with the actor and the item: `bi-workspace-created`, `-updated`, `-deleted`, `bi-member-set`,
 `bi-member-removed`; `bi-item-created`, `-updated`, `-moved`, `-deleted`, `-proposed`, `-withdrawn`, `-approved`, `-rejected`, `-published` (the
@@ -705,7 +705,7 @@ YAML for lineage: it is worked out from the files, never written down.
 ### Step 60 · What breaks if I remove a field
 
 A model is a **contract**: reports bind to its major version (`trades-model@1`), and a change that takes away something they may use needs a **new major
-version** ([BI_GUIDE.md section 23](MODELS_AND_DATASETS_FOR_REPORTS.md#5-models-and-datasets-what-a-report-reads)). Before changing a published model, ask.
+version** ([BI_GUIDE.md section 23](MODELS_AND_DATASETS_FOR_REPORTS.md#1-models-and-datasets-what-a-report-reads)). Before changing a published model, ask.
 As ann open the model's designer, the **Contract** tab, and set **What consumers may use** to *only what is ticked below*: every field and measure
 consumers use today starts ticked. Untick `trade.PORTFOLIO`.
 

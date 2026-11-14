@@ -39,7 +39,7 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * The pivot engine's beans (bi/PIVOT.md): the node's DuckDB executor, the tabular provider over the Data view's tables, the VaR provider
- * when the VaR engine runs here (the MR cube when engine {@code mr-cube} runs too, bi/PIVOT_SCALE_AND_CUBES.md#29-the-mr-cube-preset), the partial-state cache in the one memory budget ({@code pivot.states}), busy protection, and saved views.
+ * when the VaR engine runs here (the MR cube when engine {@code mr-cube} runs too, bi/PIVOT_SCALE_AND_CUBES.md#7-the-mr-cube-preset), the partial-state cache in the one memory budget ({@code pivot.states}), busy protection, and saved views.
  * The engine itself is the {@code drishti-bicompute} module's {@link PivotCore}; nothing here aggregates.
  */
 @Configuration

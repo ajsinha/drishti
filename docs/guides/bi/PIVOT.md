@@ -54,7 +54,7 @@ The pivot engine turns any table of any pack, or the VaR engine's trades, into a
 rows and columns, under these filters, on this business date. Every figure is computed by the server; every total is made from its own
 members, never from the figures on the screen. The hands-on walk-through is [the pivot tutorial, Part A](#part-a--the-pivot-engine-trades-by-product-legs-by-desk-then-var-by-desk);
 custom functions, explain and what-if are walked through in [the pivot tutorial, Part B](#part-b--custom-functions-why-did-it-move-and-what-if); the MR cube,
-market risk as a pivot, is [section 29](PIVOT_SCALE_AND_CUBES.md#29-the-mr-cube-preset) and [the pivot tutorial, Part C](PIVOT_SCALE_AND_CUBES.md#part-c--the-mr-cube-desks-by-risk-class-with-the-right-totals).
+market risk as a pivot, is [section 29](PIVOT_SCALE_AND_CUBES.md#7-the-mr-cube-preset) and [the pivot tutorial, Part C](PIVOT_SCALE_AND_CUBES.md#part-c--the-mr-cube-desks-by-risk-class-with-the-right-totals).
 
 ### 1. Open it
 
@@ -378,7 +378,7 @@ as two views.*
 So the desks' VaRs add up to more than the bank's: the grand total is the bank's own VaR, and the gap (Σ children − total) is shown beside
 every open node's total as **Σ−total**, the diversification. A function has one name ([FUNCTION_CATALOGUE.md](../../architecture/FUNCTION_CATALOGUE.md));
 its sketch is how it is computed when ≈ is accepted, with a stated error, never a second name, and never for VaR
-([section 23](PIVOT_SCALE_AND_CUBES.md#23-scale-sketches-rollups-progressive-answers-and-the-cluster)); custom functions are in [section 19](#19-custom-functions).
+([section 23](PIVOT_SCALE_AND_CUBES.md#1-scale-sketches-rollups-progressive-answers-and-the-cluster)); custom functions are in [section 19](#19-custom-functions).
 
 Show values as: a value may carry `showAs` (`pct-grand`, `pct-row`, `pct-column`, `pct-parent-row`, `rank`, `ntile:<n>`,
 `diff:<n>:<dimension>`, `pct-change:<n>:<dimension>`); it is computed from the finished figures, so a total is never broken. The same
@@ -480,7 +480,7 @@ own gap of the charted column (each open row's `diversificationByColumn` in the 
 browser adds up nothing. The gap is given only when the row's total and every one of its parts have the figure; when one has none (a
 measure computed for a view's first cells only, such as the MR cube's stressed VaR and SBM, or a hidden cell) it is `null` and no bar is
 drawn: never a sum of some of the parts. Which cells get such a capped measure is fixed by the view: its first N cells in the grid's
-order, row by row as shown, each row's columns left to right ([section 29.2](PIVOT_SCALE_AND_CUBES.md#292-the-measures) section 2). A bar's click opens that member in the
+order, row by row as shown, each row's columns left to right ([section 29.2](PIVOT_SCALE_AND_CUBES.md#72-the-measures) section 2). A bar's click opens that member in the
 grid. ECharts is vendored; nothing comes from a CDN.
 
 ### 10. Export
@@ -542,14 +542,14 @@ differences.
 **Versions.** Every save of a view is kept: `GET /api/v1/pivot/views/{owner}/{name}/versions` lists them, `/diff?from=1&to=2` says what
 changed in the definition (rows, columns, values, filters, open nodes, sorts, top N, date) and `POST /api/v1/pivot/views/{name}/restore`
 with `{"version": 1}` saves an old one again as the next version (the versions between stay). A view keeps its definition, never numbers.
-Comments on its cells are kept beside its versions ([section 26](PIVOT_SCALE_AND_CUBES.md#26-cell-comments)).
+Comments on its cells are kept beside its versions ([section 26](PIVOT_SCALE_AND_CUBES.md#4-cell-comments)).
 
 ### 12. Who sees what
 
 - A table is read through Export data's own read for you: a table you may not open is not offered; a **masked column is not read at
   all**, so it cannot be a dimension, a measure's input or a filter (`403 DRS-5705`).
 - The VaR source applies the VaR engine's own entitlements: trades you may not see are left out of every cell; a role that sees the bank only
-  in aggregate is offered no dimension unless the MR cube runs, which offers it the hierarchy levels ([section 29.4](PIVOT_SCALE_AND_CUBES.md#294-the-view-dimensions-options-cells-and-totals)).
+  in aggregate is offered no dimension unless the MR cube runs, which offers it the hierarchy levels ([section 29.4](PIVOT_SCALE_AND_CUBES.md#74-the-view-dimensions-options-cells-and-totals)).
 - `drishti.pivot.aggregate-only.min-members-per-cell` (1 as shipped) hides the figures of a cell with fewer members.
 - Every view run, rows read and export is audited without values.
 
@@ -594,12 +594,12 @@ The answer has `rows` and `columns` in display order (each with `key`, `kind` no
 | `POST /api/v1/explain` `{kind: pivot, measure: cell, view, from, to, fromDate, toDate, by, order, price, quantity}` | the one Explain of a cell: the difference in steps that add up (section 20); `POST /api/v1/pivot/explain` is its deprecated alias for one release |
 | `POST /api/v1/pivot/whatif` | `{view, whatIf: {exclude, changes, add}}`: the view with the overlay beside the original (section 21) |
 | `GET /api/v1/pivot/views/{owner}/{name}/versions`, `/versions/{n}`, `/diff?from=&to=`; `POST /views/{name}/restore` `{version}` | a saved view's versions (every save kept), one version, what changed between two, an old one restored as the next version |
-| `POST /api/v1/pivot/query` with `"exact": true` or `false` | exact on request, or ≈ by the sketches at any size ([section 23.1](PIVOT_SCALE_AND_CUBES.md#231-sketches-with-a-stated-error-and-exact-on-request)) |
+| `POST /api/v1/pivot/query` with `"exact": true` or `false` | exact on request, or ≈ by the sketches at any size ([section 23.1](PIVOT_SCALE_AND_CUBES.md#11-sketches-with-a-stated-error-and-exact-on-request)) |
 | `POST /api/v1/pivot/query?progressive=true` | server-sent events: `approximate` (from a sample, with intervals) then `exact` |
 | `GET, POST /api/v1/pivot/rollups`, `DELETE /rollups/{id}`, `POST /rollups/{id}/refresh` | rollups: list with advice; define, remove, refresh (administrators) |
-| `POST /api/v1/pivot/query` with `"rollups": false`, `"progressive": false` | the screen's switches as options: no rollup answers, no ≈ first answer; every answer's `computedAs` says what was asked and what answered ([section 24](PIVOT_SCALE_AND_CUBES.md#24-the-screens-switches-exact-or--progressive-rollups)) |
-| `POST /api/v1/pivot/live`, `GET /live`, `GET /live/{id}/events`, `DELETE /live/{id}` | a live pivot: started (its first answer, id and node), listed, streamed (`answer`, `patch`, `reshape`, `status`), ended ([section 25](PIVOT_SCALE_AND_CUBES.md#25-live-pivots)) |
-| `GET, POST /api/v1/pivot/views/{owner}/{name}/comments`, `POST /comments/{id}/resolve`, `/reopen`, `DELETE /comments/{id}` | a saved view's cell comments ([section 26](PIVOT_SCALE_AND_CUBES.md#26-cell-comments)) |
+| `POST /api/v1/pivot/query` with `"rollups": false`, `"progressive": false` | the screen's switches as options: no rollup answers, no ≈ first answer; every answer's `computedAs` says what was asked and what answered ([section 24](PIVOT_SCALE_AND_CUBES.md#2-the-screens-switches-exact-or--progressive-rollups)) |
+| `POST /api/v1/pivot/live`, `GET /live`, `GET /live/{id}/events`, `DELETE /live/{id}` | a live pivot: started (its first answer, id and node), listed, streamed (`answer`, `patch`, `reshape`, `status`), ended ([section 25](PIVOT_SCALE_AND_CUBES.md#3-live-pivots)) |
+| `GET, POST /api/v1/pivot/views/{owner}/{name}/comments`, `POST /comments/{id}/resolve`, `/reopen`, `DELETE /comments/{id}` | a saved view's cell comments ([section 26](PIVOT_SCALE_AND_CUBES.md#4-cell-comments)) |
 
 Details and the error codes: [API_REFERENCE.md, Pivot engine](../API_REFERENCE.md#23-pivot-engine-apiv1pivot).
 
@@ -633,7 +633,7 @@ All under `drishti.pivot` in `config/engines/pivot.yaml` (the switch `drishti.en
 `export.rows-max`; custom functions under `functions` (`formula`, `sql-macros`, `require-approval`, `approver-role`,
 `holistic-max-rows`, `holistic-max-mb`, `harness.tolerance`, `harness.seeds`, `harness.max-ns-per-row`, `python.enabled`,
 `python.interpreter`, `python.workers`, `python.timeout-seconds`, `python.memory-mb`, `python.batch-rows`, `java.enabled`, `java.dir`);
-the scale keys of [section 23.6](PIVOT_SCALE_AND_CUBES.md#236-settings); and `drishti.admission.retry-after.pivot-view`.
+the scale keys of [section 23.6](PIVOT_SCALE_AND_CUBES.md#16-settings); and `drishti.admission.retry-after.pivot-view`.
 
 ### 17. Refusals and their codes
 
@@ -1290,7 +1290,7 @@ harness. Python functions never read memory-only data.
 
 Open a BI report with a matrix (the sample *trades overview*). Every total and subtotal row comes from the pivot engine's
 one statement over the model's rows: the average's total is the average over all the trades, a sum's total is the engine's sum. A
-year-to-date measure shows a dash in the total row; the answer's warnings say why ([BI_GUIDE.md section 3.2](REPORT_FILE_FORMAT_STATEMENTS.md#97-true-totals)).
+year-to-date measure shows a dash in the total row; the answer's warnings say why ([BI_GUIDE.md section 3.2](REPORT_FILE_FORMAT_STATEMENTS.md#17-true-totals)).
 
 **You should see** the matrix's totals and subtotals as before (the figures are the same: `BiParityTest`) and a dash, with its reason,
 where a measure has no total.
@@ -1307,5 +1307,5 @@ where a measure has no total.
   ([../guides/DATA_GUIDE.md section 8](../../guides/DATA_GUIDE.md#8-connectors)) or add it to a BI dataset as a `path:` column ([BI_GUIDE.md](README.md)).
 - [BI_GUIDE.md](README.md) sections 19 to 22: the languages, the harness, approval, explain, what-if, BI's totals.
 - [ARCHITECTURE.md section 26](../../architecture/ARCHITECTURE.md#26-the-pivot-engine) sections 8, 10 and 12: the design.
-- The guide: [BI_GUIDE.md section 29](PIVOT_SCALE_AND_CUBES.md#29-the-mr-cube-preset) (every measure, option, setting and code).
+- The guide: [BI_GUIDE.md section 29](PIVOT_SCALE_AND_CUBES.md#7-the-mr-cube-preset) (every measure, option, setting and code).
 - The pivot screen: [BI_GUIDE.md](PIVOT.md); the VaR engine: [VAR_GUIDE.md](../../guides/VAR_GUIDE.md).

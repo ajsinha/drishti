@@ -48,24 +48,24 @@ the same section wherever it is read; the pivot's sections (1 to 29) run across 
 |---|---|
 | **Learn by doing** | [Reports, Part A](REPORTS.md#part-a--your-first-bi-report) (a first report: map, bar, slicer, publish, filters, several models, relative dates, a tablet); then [BI that runs itself](DISTRIBUTION_AND_ALERTS.md#part-d--bi-that-runs-itself) (refresh, subscriptions, alerts, export, expected values), [live reports and boards](LIVE_REPORTS_AND_BOARDS.md#part-f--live-bi-and-boards), [governance](GOVERNANCE_AND_AI.md#part-g--govern-bi), [several facts in one report](MODELS_AND_DATASETS_FOR_REPORTS.md#part-b--several-datasets-in-one-report), [statements and field parameters](REPORT_FILE_FORMAT_STATEMENTS.md#part-c--statements-and-field-parameters), [the Notebook](NOTEBOOK_AND_PYTHON.md), [tables and models](TABLES_AND_MODELS.md), [AI](../../tutorials/10-ai-assistant.md), [embedding](../../tutorials/20-embed-drishti.md) |
 | Slice a table now | [Pivot](PIVOT.md) |
-| Try each step with real answers, four people and row rules at work | [Models and datasets for reports, worked examples](MODELS_AND_DATASETS_FOR_REPORTS.md#59-worked-examples-the-shipped-models-row-rules-and-masks) |
+| Try each step with real answers, four people and row rules at work | [Models and datasets for reports, worked examples](MODELS_AND_DATASETS_FOR_REPORTS.md#19-worked-examples-the-shipped-models-row-rules-and-masks) |
 | Find your way round the pages, powers and workspaces | [Reports, sections 2 to 4](REPORTS.md#2-getting-in-the-bi-menu-the-rail-and-bi-go) |
-| Write or read a table or a model | [Tables and models](TABLES_AND_MODELS.md); what reports need of them: [section 5](MODELS_AND_DATASETS_FOR_REPORTS.md#5-models-and-datasets-what-a-report-reads) |
-| Design a report | [BI Studio](REPORTS.md#8-bi-studio-and-the-report-designer); the file: [section 9](REPORT_FILE_FORMAT_STATEMENTS.md#9-the-report-file-pages-visuals-filters-and-slicers) |
-| Put a wall of tiles on a screen | [Boards](LIVE_REPORTS_AND_BOARDS.md#14-boards-report-pages-of-live-tiles) |
-| Follow a long question that runs in the background | [Background runs](LIVE_REPORTS_AND_BOARDS.md#15-background-runs-long-bi-questions) |
-| Publish, review, certify, trace lineage, move content between servers | [Publishing and governance](GOVERNANCE_AND_AI.md#17-publishing-and-governance-versions-review-certification-lineage-impact-environments) |
-| Export, subscribe, schedule, alert | [Distribution](DISTRIBUTION_AND_ALERTS.md#18-distribution-the-reports-page-export-and-subscriptions), [alerts](DISTRIBUTION_AND_ALERTS.md#19-alerts-on-numbers) |
-| Show a report in another web application | [Embedding](DISTRIBUTION_AND_ALERTS.md#20-embedding-a-report-in-another-web-application), [EMBED_GUIDE.md](../EMBED_GUIDE.md) |
+| Write or read a table or a model | [Tables and models](TABLES_AND_MODELS.md); what reports need of them: [section 5](MODELS_AND_DATASETS_FOR_REPORTS.md#1-models-and-datasets-what-a-report-reads) |
+| Design a report | [BI Studio](REPORTS.md#7-bi-studio-and-the-report-designer); the file: [section 9](REPORT_FILE_FORMAT_STATEMENTS.md#1-the-report-file-pages-visuals-filters-and-slicers) |
+| Put a wall of tiles on a screen | [Boards](LIVE_REPORTS_AND_BOARDS.md#2-boards-report-pages-of-live-tiles) |
+| Follow a long question that runs in the background | [Background runs](LIVE_REPORTS_AND_BOARDS.md#3-background-runs-long-bi-questions) |
+| Publish, review, certify, trace lineage, move content between servers | [Publishing and governance](GOVERNANCE_AND_AI.md#2-publishing-and-governance-versions-review-certification-lineage-impact-environments) |
+| Export, subscribe, schedule, alert | [Distribution](DISTRIBUTION_AND_ALERTS.md#1-distribution-the-reports-page-export-and-subscriptions), [alerts](DISTRIBUTION_AND_ALERTS.md#2-alerts-on-numbers) |
+| Show a report in another web application | [Embedding](DISTRIBUTION_AND_ALERTS.md#3-embedding-a-report-in-another-web-application), [EMBED_GUIDE.md](../EMBED_GUIDE.md) |
 | Compute a measure or a visual in Python | [The Notebook and Python](NOTEBOOK_AND_PYTHON.md) |
 | Open a group, a sector or a correlation computed from the data | [Groupings and analytics](GROUPINGS_AND_ANALYTICS.md) |
 | Grant the powers, set the limits | [ADMIN_GUIDE.md](../ADMIN_GUIDE.md#34-bi-powers-rupaka), [CONFIGURATION.md](../../admin/CONFIGURATION.md) |
 | Call it from a program or the command line | [API_REFERENCE.md](../API_REFERENCE.md), [CLI_REFERENCE.md](../CLI_REFERENCE.md#bi-workspaces-and-the-catalogue-rupaka) |
 | Compare this with Power BI, honestly: leads, gaps, what is planned | [Drishti BI and Power BI compared](../../strategy/BI_AND_POWER_BI.md) |
-| Fix a problem | [Reports, settings, limits and problem codes](REPORTS.md#22-settings-limits-and-problem-codes), [OPERATIONS_GUIDE.md](../OPERATIONS_GUIDE.md#21-troubleshooting) |
+| Fix a problem | [Reports, settings, limits and problem codes](REPORTS.md#9-settings-limits-and-problem-codes), [OPERATIONS_GUIDE.md](../OPERATIONS_GUIDE.md#21-troubleshooting) |
 
 A good first hour: read [Reports, sections 2 to 4](REPORTS.md#2-getting-in-the-bi-menu-the-rail-and-bi-go), set up the stack of the
-[worked examples](MODELS_AND_DATASETS_FOR_REPORTS.md#59-worked-examples-the-shipped-models-row-rules-and-masks), then do the reports tutorial, Part A.
+[worked examples](MODELS_AND_DATASETS_FOR_REPORTS.md#19-worked-examples-the-shipped-models-row-rules-and-masks), then do the reports tutorial, Part A.
 
 ## A short tour
 

@@ -139,6 +139,12 @@ schemas:
       - { key: "sections[].groups[].guides[].roles", type: list, default: "[]", meaning: "Who may see it: none, everyone; else only an administrator or a person holding one of these roles (others get 404 and do not find it)" }
       - { key: "sections[].groups[].guides[].engine", type: string, default: none, meaning: "The compute engine it is about: left out while it runs on no server (an administrator sees it greyed); open to anyone who can open Help otherwise" }
       - { key: "sections[].groups[].guides[].pair", type: string, default: none, meaning: "The tutorial drawn beside this guide on its row (a page of the same group)" }
+      - { key: "sections[].groups[].guides[].children", type: list, default: "[]", meaning: "Pages that sit under this one in the Help list: each a page of its own with a slug, doc, title, icon and summary (the Business intelligence section)" }
+      - { key: "sections[].groups[].guides[].children[].title", type: string, meaning: "Its title" }
+      - { key: "sections[].groups[].guides[].children[].slug", type: string, meaning: "The child page's address, /help/<slug>" }
+      - { key: "sections[].groups[].guides[].children[].doc", type: string, meaning: "A repository document under docs/ rendered as it is" }
+      - { key: "sections[].groups[].guides[].children[].icon", type: string, meaning: "Its icon" }
+      - { key: "sections[].groups[].guides[].children[].summary", type: string, meaning: "The row's summary, also searched" }
       - { key: "sections[].groups[].guides[].domain", type: string, default: core, meaning: "The domain module the page belongs to (core, banking, capitalmarkets, economy): while it is off for the person the page is not listed, searched or served" }
       - { key: "sections[].groups[].guides[].lenses", type: list, default: none, meaning: "The lenses that show the page (none: every lens; the full product shows every page)" }
       - { key: moved, type: map, default: shipped, meaning: "Retired addresses: old slug -> slug or slug#anchor, answered with a 301" }

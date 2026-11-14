@@ -22,22 +22,22 @@ Sketches, rollups, progressive answers and the cluster; the screen's switches, l
 ## Contents
 
 - [Guide](#guide)
-  - [23. Scale: sketches, rollups, progressive answers and the cluster](#23-scale-sketches-rollups-progressive-answers-and-the-cluster)
-  - [24. The screen's switches: exact or ≈, progressive, rollups](#24-the-screens-switches-exact-or--progressive-rollups)
-  - [25. Live pivots](#25-live-pivots)
-  - [26. Cell comments](#26-cell-comments)
-  - [27. Pivot data: the sources of the examples](#27-pivot-data-the-sources-of-the-examples)
-  - [27.1 At a glance](#271-at-a-glance)
-  - [27.2 The trades: the examples' table](#272-the-trades-the-examples-table)
-  - [27.3 `scenario-pv`: the VaR book's vectors](#273-scenario-pv-the-var-books-vectors)
-  - [27.4 `position`: positions](#274-position-positions)
-  - [27.5 `pnl-vector`: P&L vectors per trade](#275-pnl-vector-pl-vectors-per-trade)
-  - [27.6 `scenario-set`: the scenario days](#276-scenario-set-the-scenario-days)
-  - [27.7 `var-limit`: VaR limits](#277-var-limit-var-limits)
-  - [27.8 `position-sensitivity`: the sensitivities](#278-position-sensitivity-the-sensitivities)
-  - [27.9 `risk-factor`: the factor dictionary](#279-risk-factor-the-factor-dictionary)
-  - [28. Presets: the risk cubes](#28-presets-the-risk-cubes)
-  - [29. The MR cube preset](#29-the-mr-cube-preset)
+  - [1. Scale: sketches, rollups, progressive answers and the cluster](#1-scale-sketches-rollups-progressive-answers-and-the-cluster)
+  - [2. The screen's switches: exact or ≈, progressive, rollups](#2-the-screens-switches-exact-or--progressive-rollups)
+  - [3. Live pivots](#3-live-pivots)
+  - [4. Cell comments](#4-cell-comments)
+  - [5. Pivot data: the sources of the examples](#5-pivot-data-the-sources-of-the-examples)
+  - [5.1 At a glance](#51-at-a-glance)
+  - [5.2 The trades: the examples' table](#52-the-trades-the-examples-table)
+  - [5.3 `scenario-pv`: the VaR book's vectors](#53-scenario-pv-the-var-books-vectors)
+  - [5.4 `position`: positions](#54-position-positions)
+  - [5.5 `pnl-vector`: P&L vectors per trade](#55-pnl-vector-pl-vectors-per-trade)
+  - [5.6 `scenario-set`: the scenario days](#56-scenario-set-the-scenario-days)
+  - [5.7 `var-limit`: VaR limits](#57-var-limit-var-limits)
+  - [5.8 `position-sensitivity`: the sensitivities](#58-position-sensitivity-the-sensitivities)
+  - [5.9 `risk-factor`: the factor dictionary](#59-risk-factor-the-factor-dictionary)
+  - [6. Presets: the risk cubes](#6-presets-the-risk-cubes)
+  - [7. The MR cube preset](#7-the-mr-cube-preset)
 - [Tutorial: The market-risk cube](#tutorial-the-market-risk-cube)
   - [Part C · The MR cube: desks by risk class, with the right totals](#part-c--the-mr-cube-desks-by-risk-class-with-the-right-totals)
 
@@ -45,12 +45,12 @@ Sketches, rollups, progressive answers and the cluster; the screen's switches, l
 
 This page continues [Pivot](PIVOT.md) (sections 1 to 22): the pivot at scale, live and as a preset, and the market-risk cube.
 
-### 23. Scale: sketches, rollups, progressive answers and the cluster
+### 1. Scale: sketches, rollups, progressive answers and the cluster
 
 Large tables (a billion rows and more) are answered by four things that work together, each of them inside the engine and each saying in
 the answer what it did.
 
-#### 23.1 Sketches, with a stated error and exact on request
+#### 1.1 Sketches, with a stated error and exact on request
 
 A sketch is the ≈ form of a function that has one name: the view writes `distinct(x)`, `median(x)` or `percentile(x, q)`, and the engine
 computes it from the values (exact) or by its sketch (≈), as the request and the size decide. The answer's measure says which
@@ -72,7 +72,7 @@ the provenance popover.
 **Exact or ≈ is chosen by size, and you may always ask.** A view that reads more than `sketches.approximate-above-rows` rows (10 million)
 answers `distinct`, `median` and `percentile` by their sketches, with a note saying so; under it they are exact (cheap there). Ask
 for exact with `"exact": true` beside the view, or for ≈ at any size with `"exact": false` (on the screen: the Exact / Auto / ≈ switch,
-[section 24](#24-the-screens-switches-exact-or--progressive-rollups)):
+[section 24](#2-the-screens-switches-exact-or--progressive-rollups)):
 
 ```json
 { "view": { "source": "trade", "rows": ["DESK"], "values": [{"measure": "distinct(COUNTERPARTY)", "as": "Counterparties"}] },
@@ -90,7 +90,7 @@ fractions) and its count; Space-Saving from the cell's value counts, kept to its
 source ([section 3](PIVOT.md#documents-paths-lists-and-grains)) is sketched the same way at
 its view's grain: `distinct($.LEGS[*].CURRENCY)` counts the legs' currencies.
 
-#### 23.2 Rollups of partial states, chosen automatically
+#### 1.2 Rollups of partial states, chosen automatically
 
 A rollup keeps the **partial states** (sums, counts, Welford parts, HyperLogLog registers, KLL summaries, Space-Saving counters) of a source
 at a grain. A view whose dimensions, filters and measures the rollup covers is answered from it, merged in key order, equal to reading the
@@ -126,7 +126,7 @@ that grain, and a view at the same grain is answered from it.
   `GET /api/v1/pivot/rollups` lists the definitions, the rollups built (rows, bytes, version, last refresh) and the advice.
 - Kept on disk under `<data dir>/pivot/rollups/<id>/<date>.rollup`, read back at start.
 
-#### 23.3 Progressive answers: ≈ first, then exact
+#### 1.3 Progressive answers: ≈ first, then exact
 
 A view estimated over `progressive.after-ms` (2 s) answers twice when the caller asks for the pair
 (`POST /api/v1/pivot/query?progressive=true`, server-sent events `approximate` then `exact`): first from a
@@ -143,7 +143,7 @@ Every cell of the first answer is marked `approximate`; it is never cached. **Ne
 has no sketch or that is asked exact: those wait for exact (decision 7). On a document source the sample is of the view's rows at its
 grain (legs of a leg-grain view).
 
-#### 23.4 The cluster: partial states from every node, merged in order
+#### 1.4 The cluster: partial states from every node, merged in order
 
 On a Drishti\*net cluster, a mergeable view estimated over `cluster.min-rows` (5 million) is computed by every live node running the
 engine: on a direct lake route each node reads its share of the files (assigned by rendezvous hashing of the path, so each node's caches
@@ -155,27 +155,27 @@ first answer wins); a share with no answer by `cluster.deadline-seconds` (300) r
 the other nodes alone. VaR keeps its own sharding; a view with a custom function or a holistic measure is computed on the node asked;
 a document view (its lists read from the documents) is shared by row shards, never by files.
 
-#### 23.5 The scan estimate, refined
+#### 1.5 The scan estimate, refined
 
 The estimate (`POST /api/v1/pivot/estimate`) counts rows and bytes from metadata before anything is read; once this node has measured
 scans, its seconds come from the **measured** rate (the median of its last 20 scans over 200 ms), divided by the nodes that will share
 the scan, always as a range (`range`: half to twice) with how it was made. It lists the options: run, narrow, **use the rollup** (when one
 covers the view, and whether it may answer you), run in the background, not now.
 
-#### 23.6 Settings
+#### 1.6 Settings
 
 Under `drishti.pivot` in `config/engines/pivot.yaml`, in [CONFIGURATION.md](../../admin/CONFIGURATION.md): `sketches.hll-precision` (12),
 `sketches.kll-k` (200), `sketches.top-capacity-factor` (10), `sketches.approximate-above-rows` (10,000,000), `progressive.enabled`,
 `progressive.after-ms` (2000), `progressive.sample-fraction` (0.02), `rollups.enabled`, `rollups.refresh-seconds` (60),
 `rollups.advise-after-scans` (10), `rollups.dir`, `rollups.definitions`, `cluster.enabled`, `cluster.hedge-after-seconds` (20),
-`cluster.deadline-seconds` (300), `cluster.min-rows` (5,000,000); live pivots ([section 25](#25-live-pivots)): `drishti.pivot.live.enabled`,
+`cluster.deadline-seconds` (300), `cluster.min-rows` (5,000,000); live pivots ([section 25](#3-live-pivots)): `drishti.pivot.live.enabled`,
 `drishti.pivot.live.max-per-person` (5), `drishti.pivot.live.max-total` (200), `drishti.pivot.live.min-interval-ms` (1000), `drishti.pivot.live.max-cells` (5,000), `drishti.pivot.live.max-rows` (50,000,000),
 `drishti.pivot.live.idle-seconds` (60), `drishti.pivot.live.heartbeat-seconds` (15).
 
 The benchmark of these at 5, 25 and 75 GB, one node and three, cold and warm, with and without a rollup, is
 [BENCHMARK.md section 16](../../admin/BENCHMARK.md#16-the-pivot-engine-at-scale).
 
-### 24. The screen's switches: exact or ≈, progressive, rollups
+### 2. The screen's switches: exact or ≈, progressive, rollups
 
 Under the toolbar, four switches say how the figures are computed. Each is an option of the request (never part of the saved view: a
 view says what is shown, these say how it is computed), and the line beside them says how the answer **was** computed, from the answer's
@@ -190,9 +190,9 @@ view says what is shown, these say how it is computed), and the line beside them
 | **Exact** | `"exact": true` | every figure from its values at any size: distinct counts and percentiles exact, every top N ranked over every member |
 | **Auto** (the default) | `"exact": "auto"` | distinct counts and percentiles exact on small data and ≈ by their sketches above `sketches.approximate-above-rows` (the note says so) |
 | **≈** | `"exact": false` | distinct counts and percentiles by their sketches with their stated error at any size, and a level's top N by a count chosen by a summary ([section 6](PIVOT.md#6-top-n-others-and-sorting)) |
-| **Progressive** | `"progressive": true` | a view estimated over `progressive.after-ms` shows ≈ from a sample first, then the exact answer replaces it ([section 23.3](#233-progressive-answers--first-then-exact)) |
+| **Progressive** | `"progressive": true` | a view estimated over `progressive.after-ms` shows ≈ from a sample first, then the exact answer replaces it ([section 23.3](#13-progressive-answers--first-then-exact)) |
 | **Use rollups** | `"rollups": false` when off | on: a covering rollup may answer (the same figures, faster); off: the table is read, for a check against the rollup |
-| **Live** | `POST /api/v1/pivot/live` | the view kept current ([section 25](#25-live-pivots)) |
+| **Live** | `POST /api/v1/pivot/live` | the view kept current ([section 25](#3-live-pivots)) |
 
 Changing a switch asks again. The line reads, joined by `;`: `exact`; `≈ from a 2% sample` (a progressive first answer);
 `≈ from a sketch (<measures>)`; `top N ≈ by a summary, figures exact`; `from rollup <id>` (or the node route, on a cluster);
@@ -214,7 +214,7 @@ drishti.py pivot run --view asha/desk-risk --approximate          # ≈
 drishti.py pivot run --view asha/desk-risk --exact                # exact on request
 ```
 
-### 25. Live pivots
+### 3. Live pivots
 
 **Live** keeps a view current. When the data under it moves, the engine computes the view again and sends only the cells that changed;
 the screen puts them in place and flashes them. Nothing else is redrawn unless members came or went.
@@ -256,7 +256,7 @@ DELETE /api/v1/pivot/live/lp-3f2a…
 A personal API token may start and stream a live pivot (it reads only); ending one needs the `pivot:write` scope. Starting and ending
 are audited (`pivot.live.start`, `pivot.live.end`).
 
-### 26. Cell comments
+### 4. Cell comments
 
 On a **saved** view, anyone who may open the view may comment on a cell: click the cell, and the provenance popover lists the cell's
 comments and has a box to add one (`M` puts the cursor there), about the whole cell or one measure. A commented cell shows a marker in
@@ -279,30 +279,30 @@ POST   /api/v1/pivot/views/asha/desk-risk/comments/c-91d0…/resolve      (and /
 DELETE /api/v1/pivot/views/asha/desk-risk/comments/c-91d0…
 ```
 
-### 27. Pivot data: the sources of the examples
+### 5. Pivot data: the sources of the examples
 
 Every dataset the pivot guide's examples and the MR cube preset read, what it is for, whether it is required, where its sample lives, and the links to its two homes: its **data contract** (the fields, the key, the rules: the pack's contract page and its `<kind>.contract.yaml`) and its **example** (a real record of the shipped synthetic test data, every field explained, on [docs/contracts/samples](../../contracts/samples/README.md)). This guide copies neither. How files are named, dated and loaded is
 [DATA_LAKE_GUIDE.md](../DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo).
 
 <!-- The block below is generated by tools/docs/guide_data.py from tools/docs/guide_data.yaml: edit the spec, not the block. -->
 <!-- guide-data:begin pivot -->
-### 27.1 At a glance
+### 5.1 At a glance
 
 | Dataset (kind) | What it is for | Required? | Sample files (`data/testdata/…`) | Guide |
 |---|---|---|---|---|
-| [The trades](#272-the-trades-the-examples-table) | the rows of the guide's examples (`"source": "trade"`) | for the table source `trade` | `trades/murex/trade_murex.*.jsonl.gz` | [3](PIVOT.md#3-sources-and-fields) |
-| [`scenario-pv`](#273-scenario-pv-the-var-books-vectors) | the positions' columns and vectors behind `var()`, `es()`, `pv()` | for the source `var` | `market-risk/scenario-pv/scenario-pv-*.tar` | [3](PIVOT.md#3-sources-and-fields) |
-| [`position`](#274-position-positions) | a stored position table, when the bank delivers one | optional (a table source) | no sample in the demo data | [3](PIVOT.md#3-sources-and-fields) |
-| [`pnl-vector`](#275-pnl-vector-pl-vectors-per-trade) | the MR cube preset: every trade's vector; its columns as dimensions | **one of the two**, per trade | no sample in the demo data | [29.3](#293-the-inputs) |
-| [`scenario-set`](#276-scenario-set-the-scenario-days) | the scenario days of the histogram and the explain | for the MR cube | `market-risk/scenario-set/scenario-set.tar` | — |
-| [`var-limit`](#277-var-limit-var-limits) | `limit()` and `limit_use()` | optional | `market-risk/var-limit/var-limit.*.jsonl.gz` | — |
-| [`position-sensitivity`](#278-position-sensitivity-the-sensitivities) | `dv01()`, `cs01()`, the ladder and the heat map | for the sensitivity measures | `market-risk/position-sensitivity/position-sensitivity.*.jsonl.gz` | [FRTB_SA_GUIDE.md 3](../FRTB_SA_GUIDE.md#3-the-inputs-and-their-data-contract) |
-| [`risk-factor`](#279-risk-factor-the-factor-dictionary) | each factor's class, tenor and curve for the ladder | for the sensitivity measures | `market-risk/risk-factor/risk-factor.*.jsonl.gz` | — |
+| [The trades](#52-the-trades-the-examples-table) | the rows of the guide's examples (`"source": "trade"`) | for the table source `trade` | `trades/murex/trade_murex.*.jsonl.gz` | [3](PIVOT.md#3-sources-and-fields) |
+| [`scenario-pv`](#53-scenario-pv-the-var-books-vectors) | the positions' columns and vectors behind `var()`, `es()`, `pv()` | for the source `var` | `market-risk/scenario-pv/scenario-pv-*.tar` | [3](PIVOT.md#3-sources-and-fields) |
+| [`position`](#54-position-positions) | a stored position table, when the bank delivers one | optional (a table source) | no sample in the demo data | [3](PIVOT.md#3-sources-and-fields) |
+| [`pnl-vector`](#55-pnl-vector-pl-vectors-per-trade) | the MR cube preset: every trade's vector; its columns as dimensions | **one of the two**, per trade | no sample in the demo data | [7.3](#73-the-inputs) |
+| [`scenario-set`](#56-scenario-set-the-scenario-days) | the scenario days of the histogram and the explain | for the MR cube | `market-risk/scenario-set/scenario-set.tar` | — |
+| [`var-limit`](#57-var-limit-var-limits) | `limit()` and `limit_use()` | optional | `market-risk/var-limit/var-limit.*.jsonl.gz` | — |
+| [`position-sensitivity`](#58-position-sensitivity-the-sensitivities) | `dv01()`, `cs01()`, the ladder and the heat map | for the sensitivity measures | `market-risk/position-sensitivity/position-sensitivity.*.jsonl.gz` | [FRTB_SA_GUIDE.md 3](FRTB_SA_GUIDE.md#3-the-inputs-and-their-data-contract) |
+| [`risk-factor`](#59-risk-factor-the-factor-dictionary) | each factor's class, tenor and curve for the ladder | for the sensitivity measures | `market-risk/risk-factor/risk-factor.*.jsonl.gz` | — |
 
 The pivot reads any stored kind through its connector ([section 3](PIVOT.md#3-sources-and-fields)); these are the sources the guide's examples
 use. A field's type and unit (money, rate) come from the kind's data contract.
 
-### 27.2 The trades: the examples' table
+### 5.2 The trades: the examples' table
 
 The trades (`trade_murex`, `trade_endur`, `trade_calypso` under `data/testdata/trades/<system>/`): a stored kind read as a table; its
 text fields are the rows and columns, its numbers the measures. The record shows the fields a pivot of trades usually groups by.
@@ -310,51 +310,51 @@ text fields are the rows and columns, its numbers the measures. The record shows
 - **Data contract:** [`trade`](../../contracts/packs/trading.md#trd-trade-trade) (TRD), key `TRADE_ID`; 48 fields, 25 required; the file [`trade.contract.yaml`](../../../modules/banking/dmod/packs/trading/contracts/trade.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../../contracts/samples/trades.md#murex) (files `data/testdata/trades/murex/trade_murex.*.jsonl.gz`).
 
-### 27.3 `scenario-pv`: the VaR book's vectors
+### 5.3 `scenario-pv`: the VaR book's vectors
 
 The source `var` is the VaR engine's book of the date, built from these rows (or `pnl-vector` rows, [VAR_GUIDE.md section
-36](../VAR_GUIDE.md#36-var-data-every-dataset-the-engine-reads)): its text columns (DESK, CURRENCY, PRODUCT_GROUP …) are the fields.
+36](VAR_GUIDE.md#36-var-data-every-dataset-the-engine-reads)): its text columns (DESK, CURRENCY, PRODUCT_GROUP …) are the fields.
 
 - **Data contract:** [`scenario-pv`](../../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv) (SPV), key `SCENARIO_PV_ID`; 40 fields, 28 required; the file [`scenario-pv.contract.yaml`](../../../modules/banking/dmod/packs/market-risk/contracts/scenario-pv.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../../contracts/samples/market-risk.md#scenario-pv) (files `data/testdata/market-risk/scenario-pv/scenario-pv-*.tar`).
 
-### 27.4 `position`: positions
+### 5.4 `position`: positions
 
 A stored position table, pivoted like any other kind. The demo derives its positions in the VaR engine instead.
 
 - **Data contract:** [`position`](../../contracts/packs/market-risk.md#pos-position-position) (POS), key `POSITION_ID`; 32 fields, 30 required; the file [`position.contract.yaml`](../../../modules/banking/dmod/packs/market-risk/contracts/position.contract.yaml).
 - **Example:** no sample in the demo data.
 
-### 27.5 `pnl-vector`: P&L vectors per trade
+### 5.5 `pnl-vector`: P&L vectors per trade
 
 Each trade's scenario P&L; its columns (`LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `CURRENCY`,
 `COUNTERPARTY`, …) are the cube's dimensions.
 
 - **Data contract:** [`pnl-vector`](../../contracts/packs/market-risk.md#pnlv-pl-vector-509-scenarios-pnl-vector) (PNLV), key `VECTOR_ID`; 39 fields, 27 required; the file [`pnl-vector.contract.yaml`](../../../modules/banking/dmod/packs/market-risk/contracts/pnl-vector.contract.yaml).
-- **Example:** none in the demo data (it ships scenario PVs); the record's shape is [its sample](../../contracts/samples/market-risk.md#pnl-vector).
+- **Example:** none in the demo data (it ships scenario PVs); the record's shape is [its sample](../contracts/samples/market-risk.md#pnl-vector).
 
-### 27.6 `scenario-set`: the scenario days
+### 5.6 `scenario-set`: the scenario days
 
 The ordered scenario days: the histogram's and the explain's dates.
 
 - **Data contract:** [`scenario-set`](../../contracts/packs/market-risk.md#sset-scenario-set-scenario-set) (SSET), key `SCENARIO_SET_ID`; 13 fields, 10 required; the file [`scenario-set.contract.yaml`](../../../modules/banking/dmod/packs/market-risk/contracts/scenario-set.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../../contracts/samples/market-risk.md#scenario-set) (files `data/testdata/market-risk/scenario-set/scenario-set.tar`).
 
-### 27.7 `var-limit`: VaR limits
+### 5.7 `var-limit`: VaR limits
 
 A node's VaR limit: the `limit()` and `limit_use()` measures.
 
 - **Data contract:** [`var-limit`](../../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit) (VLIM), key `LIMIT_ID`; 10 fields, 7 required; the file [`var-limit.contract.yaml`](../../../modules/banking/dmod/packs/market-risk/contracts/var-limit.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../../contracts/samples/market-risk.md#var-limit) (files `data/testdata/market-risk/var-limit/var-limit.*.jsonl.gz`).
 
-### 27.8 `position-sensitivity`: the sensitivities
+### 5.8 `position-sensitivity`: the sensitivities
 
 The FRTB-SA engine's position sensitivities: `dv01()`, `cs01()`, the ladder and the heat map of tab C.
 
 - **Data contract:** [`position-sensitivity`](../../contracts/packs/market-risk.md#sens-position-sensitivities-position-sensitivity) (SENS), key `SENSITIVITY_ID`; 28 fields, 19 required; the file [`position-sensitivity.contract.yaml`](../../../modules/banking/dmod/packs/market-risk/contracts/position-sensitivity.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../../contracts/samples/market-risk.md#position-sensitivity) (files `data/testdata/market-risk/position-sensitivity/position-sensitivity.*.jsonl.gz`).
 
-### 27.9 `risk-factor`: the factor dictionary
+### 5.9 `risk-factor`: the factor dictionary
 
 The factor dictionary the sensitivities name their factors by.
 
@@ -362,7 +362,7 @@ The factor dictionary the sensitivities name their factors by.
 - **Example:** [a real record of the test data, every field explained](../../contracts/samples/market-risk.md#risk-factor) (files `data/testdata/market-risk/risk-factor/risk-factor.*.jsonl.gz`).
 <!-- guide-data:end -->
 
-### 28. Presets: the risk cubes
+### 6. Presets: the risk cubes
 
 **One grid, several doors.** A preset is this screen opened with a source, a lens and a landing view, under its own name and command word. It
 draws no grid of its own and computes nothing of its own: every cell, subtotal and total is the pivot engine's answer for the view, as the person
@@ -376,7 +376,7 @@ asking, exactly as on `PIVOT <GO>`. The presets are defined in `drishti-console/
 
 **The MR cube.** `MCUBE <scope> [BY rows[,columns]] [MEASURE m,...] [DATE d] [SORT desc] <GO>` lays what you type over the landing
 (`MCUBE DESK:RATES BY MGMT.BOOK,CURRENCY MEASURE VAR,COMP_VAR`); `MCUBE @owner/name <GO>` opens a saved view; in the VaR explorer, **MR cube ›**
-opens the scope and date you are looking at. Its measures, lens and figures are [section 29](#29-the-mr-cube-preset). A test records the view the
+opens the scope and date you are looking at. Its measures, lens and figures are [section 29](#7-the-mr-cube-preset). A test records the view the
 cube asked the server for, for each form of `MCUBE`, and checks the preset asks for exactly the same (`tests/test_cube_presets.py`).
 
 **The CCR cube** is *Under construction*: the preset, its word and its door exist, and its page says so; its source, the CCR provider, comes with
@@ -385,19 +385,19 @@ the counterparty engines ([UNDER_CONSTRUCTION.md](../../admin/UNDER_CONSTRUCTION
 
 A preset whose engine runs on no server of the cluster (the MR cube needs `mr-cube`) is refused in words (`DRS-1020`), like its word.
 
-### 29. The MR cube preset
+### 7. The MR cube preset
 
 The **MR cube** puts the VaR engine's figures on any rows and columns: desks by risk class, books by currency, legal entities by product,
-a desk's positions by counterparty. It is the Pivot's preset `mr` ([section 28](#28-presets-the-risk-cubes)): the pivot engine on its
+a desk's positions by counterparty. It is the Pivot's preset `mr` ([section 28](#6-presets-the-risk-cubes)): the pivot engine on its
 VaR source (`var`), with the MR lens around it. Every cell, every subtotal and the grand total is the **figure of its own set of trades**,
 computed by the server from those trades' scenario P&L vectors. A total is never the sum of the cells above it: VaR does not add up, and
 the pivot shows the gap as **diversification**. Around the pivot sit the headline of the view's scope, the time-travel slider,
 sparklines, a cell's tail histogram and why it moved, the components and their waterfall, the factor heat map, the DV01 ladder and a
 what-if side by side. The hands-on walk-through is [the pivot tutorial, Part C](#part-c--the-mr-cube-desks-by-risk-class-with-the-right-totals). The preset needs
-the `mr-cube` engine ([29.9](#299-settings-and-switching-the-cube-off)); where it does not run, `MCUBE` and this preset are refused in
+the `mr-cube` engine ([29.9](#79-settings-and-switching-the-cube-off)); where it does not run, `MCUBE` and this preset are refused in
 words and the rest of this guide still applies.
 
-#### 29.1 What the cube answers
+#### 7.1 What the cube answers
 
 | Question | Where |
 |---|---|
@@ -413,7 +413,7 @@ words and the rest of this guide still applies.
 Every figure is computed by the server in Java; the console only draws. The VaR of a cell **equals** the VaR engine's answer for the cell's
 scope (`GET /api/v1/risk/var/scope?scope=<the cell's scope>`) to the cent; every cell carries its scope so you can check it.
 
-#### 29.2 The measures
+#### 7.2 The measures
 
 The VaR source's measures are its own functions (a view writes them `var()`, `comp_var()`): each cell and each total is computed from its
 own trades, never by adding one cell's figure to another's.
@@ -451,11 +451,11 @@ before it or at the same time. A view is not sorted or ranked for a top N by eit
 computed), and a row's diversification of either is shown only when the row's total and every one of its parts have the figure: never a
 sum of some of the parts.
 
-#### 29.3 The inputs
+#### 7.3 The inputs
 
 The cube adds no input of its own: it reads the VaR engine's book of the business date and, for the sensitivity measures, the FRTB-SA
 engine's position sensitivities. Each input's fields are its data contract; the links to each one's contract and example are in
-[section 27](#27-pivot-data-the-sources-of-the-examples).
+[section 27](#5-pivot-data-the-sources-of-the-examples).
 
 | Input | Kind | What the cube reads from it |
 |---|---|---|
@@ -471,7 +471,7 @@ position** in one value, exactly as a `WHERE:` rule selects it, so the cell's sc
 **The risk class** (`RISK_CLASS`) is derived from each position's product group by configuration (`drishti.cube.mr.risk-classes`): a
 position's primary class, the classes in their configured order, then `OTHER`. A desk of one product group has VaR in one class only.
 
-#### 29.4 The view: dimensions, options, cells and totals
+#### 7.4 The view: dimensions, options, cells and totals
 
 A view of the cube is a pivot view of source `var`: rows, columns, values, filters, the date, nodes opened lazily, sort and top N, and the
 source's **options**:
@@ -526,11 +526,11 @@ viewer's rights, the scope and the lens: a re-pivot computes only the cells it h
 **hierarchy levels** only: a column, the risk class, a position or a trade would name what it may not see one by one, and is refused
 in words (`403`). A masked column is not offered and is refused if asked.
 
-#### 29.5 The landing
+#### 7.5 The landing
 
 `MCUBE <GO>` (or **VaR → MR cube**, or **MR cube ›** in the VaR explorer, which opens the scope and date you are looking at) opens the
 pivot screen on the VaR source with the MR lens, the pivot first, with tabs B and C beside it; the command forms are in
-[section 28](#28-presets-the-risk-cubes).
+[section 28](#6-presets-the-risk-cubes).
 
 | Panel | What it shows |
 |---|---|
@@ -543,7 +543,7 @@ pivot screen on the VaR source with the MR lens, the pivot first, with tabs B an
 Click a cell to fill the rail and see its provenance; `→` opens a row (desk → book → position → trade), `E` expands a node by another field,
 `Enter` lists a cell's trades. Keys of the lens: **H** 1D/10D, **[ ]** dates, **W** the what-if tray.
 
-#### 29.6 Tail, attribution, sensitivities and what-if
+#### 7.6 Tail, attribution, sensitivities and what-if
 
 **Tab B** (the first row dimension): **components** (`comp_var()` of each member and its share of the total, a negative component a
 hedge; they add up to the total exactly), the **waterfall** of the components sorted by size with the total as its last bar, the
@@ -560,7 +560,7 @@ outlined. **Explain the move** of the last cell clicked, or of the view's scope.
 A grid is configuration: each bucket `label: from-to` in years, starting where the last ended (a gap or an overlap is refused in words);
 a tenor in no bucket is counted aside (`withoutTenor`).
 
-#### 29.7 Explain the move, time travel and provenance
+#### 7.7 Explain the move, time travel and provenance
 
 **Explain the move** is the one Explain of the cell's VaR (kind `var` on the cell's scope, `GET /api/v1/explain?kind=var&scope=…&from=…&to=…`;
 [USER_GUIDE.md, "Explain: one for every number"](../USER_GUIDE.md#explain-one-for-every-number)): the card names the cell and its dates, a
@@ -575,14 +575,14 @@ is made; the view's shared part (the source's notes: route, scenarios, trades hi
 cache, the batch of vector sums). The headline's provenance (`POST /api/v1/risk/mr/headline`) adds the date's data version and input
 versions, batches and intraday updates, the scenario set and window, the method and lens, and the shards.
 
-#### 29.8 Saved views, sharing and export
+#### 7.8 Saved views, sharing and export
 
 The cube's views are pivot views ([section 11](PIVOT.md#11-saved-and-shared-views-compare)): saved, shared read-only with people or roles and
 opened **with the reader's entitlements**; the options (scope and lens) are kept with the view. Export from the pivot screen's **Export**:
 Excel (outline levels; `SUM` formulas only for `pv()`, `trades()`, `comp_var()`, `comp_es()`, `dv01()` and `cs01()`, the server's values
 for every other measure; a Provenance sheet), CSV, Arrow, the definition as YAML, and a cell's trades.
 
-#### 29.9 Settings and switching the cube off
+#### 7.9 Settings and switching the cube off
 
 The cell budget, busy protection and the cache are the pivot engine's ([section 16](PIVOT.md#16-settings)). The cube's own settings are in
 `config/engines/mr-cube.yaml`; each key, its default and its environment variable are in [CONFIGURATION.md](../../admin/CONFIGURATION.md):
@@ -593,7 +593,7 @@ The cell budget, busy protection and the cache are the pivot engine's ([section 
 | `drishti.cube.mr.risk-classes` | the derived `RISK_CLASS` dimension (IR, CR, FX, EQ, CM by product group as shipped) |
 | `drishti.cube.mr.grids` | the ladders' bucket grids, in years (`BANK-IR-TENOR`, `FRTB-GIRR`) |
 | `drishti.cube.mr.ladder-limits` | two-sided DV01 limits per currency and bucket (`"USD 2-5Y": 1500000`) |
-| `drishti.cube.mr.sbm-max-cells`, `stressed-max-cells` | the cells of a view that get SBM (60), and stressed VaR (100): its first, in the grid's order ([section 29.2](#292-the-measures)) |
+| `drishti.cube.mr.sbm-max-cells`, `stressed-max-cells` | the cells of a view that get SBM (60), and stressed VaR (100): its first, in the grid's order ([section 29.2](#72-the-measures)) |
 | `drishti.cube.mr.sparkline-dates`, `sparkline-max-cells` | the open business dates a sparkline reads, and the most cells of a view that get one |
 | `drishti.cube.mr.what-if-rows` | the most rows the what-if side by side computes (the total always added) |
 
@@ -601,7 +601,7 @@ The cell budget, busy protection and the cache are the pivot engine's ([section 
 gone, the VaR source of the pivot engine offers `var()`, `es()`, `pv()` and `trades()` by the positions' columns only (an MR measure, a
 hierarchy level or an option is refused in words), and the cube's kept dimension codes are released.
 
-#### 29.10 API and command line
+#### 7.10 API and command line
 
 The grid is the pivot engine's API ([section 14](PIVOT.md#14-the-api)) with `"source": "var"`; the MR lens adds:
 
@@ -618,7 +618,7 @@ A `view` is the view itself or a saved view's id (`owner/name`). On the command 
 --cols RISK_CLASS --values "var()" --option horizon=10d`, and `drishti.py pivot mr headline|cell|versions|explain|ladder|heat|whatif`
 ([CLI_REFERENCE.md](../CLI_REFERENCE.md)). In the console: `MCUBE <GO>`.
 
-#### 29.11 Refusals and error codes
+#### 7.11 Refusals and error codes
 
 | Code | When |
 |---|---|
@@ -631,7 +631,7 @@ A `view` is the view itself or a saved view's id (`owner/name`). On the command 
 | `403` | a dimension that would name positions of a scope you see only in aggregate |
 | `DRS-5215` (503) | a shard of the date has no live owner: the view is refused, never answered from the other shards |
 
-#### 29.12 How it is computed
+#### 7.12 How it is computed
 
 The pivot engine owns the view: the levels, the cell sets, the budget, busy protection, the cache, provenance, saved views and exports. The
 VaR provider (`VarPivotProvider`) answers each set of cells: it opens the view's scope through its lens as the person (`VarService`), finds
@@ -641,7 +641,7 @@ partials added in shard order so each vector is the single set's to the bit), an
 (`VarCalc`, `VarMath`, `VarLens`). Components use the view's total vector (the filtered trades of the view). The MR lens's endpoints
 (`MrCubeExtras`, `MrSensitivities`) read the same provider and engines. Nothing in the console computes a figure.
 
-#### 29.13 Not built yet
+#### 7.13 Not built yet
 
 - **Per-class vectors** (the risk-class columns as each position's own split): the class is a position's primary class until the bank
   delivers per-class vectors.
@@ -685,7 +685,7 @@ The MR cube is the pivot engine on the VaR source with the market-risk lens arou
 class), check its totals against `VAR BANK` and see the diversification, read a cell's tail and why it moved, change the lens (10 days,
 97.5%, stressed), re-pivot by currency and open a desk down to its trades, read the components and their waterfall, the DV01 ladder and a
 what-if side by side, and save, share and export a view. Each step shows the UI, the command line and the view's JSON. The guide is
-[BI_GUIDE.md section 29](#29-the-mr-cube-preset); the pivot screen itself is [Part A](PIVOT.md#part-a--the-pivot-engine-trades-by-product-legs-by-desk-then-var-by-desk).
+[BI_GUIDE.md section 29](#7-the-mr-cube-preset); the pivot screen itself is [Part A](PIVOT.md#part-a--the-pivot-engine-trades-by-product-legs-by-desk-then-var-by-desk).
 
 ### Step 20 · The landing: desks by risk class
 

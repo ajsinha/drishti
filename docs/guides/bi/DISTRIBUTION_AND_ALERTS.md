@@ -22,22 +22,22 @@ The Reports page and scheduled searches, export (PDF, PNG, Excel, CSV), subscrip
 ## Contents
 
 - [Guide](#guide)
-  - [18. Distribution: the Reports page, export and subscriptions](#18-distribution-the-reports-page-export-and-subscriptions)
-  - [19. Alerts on numbers](#19-alerts-on-numbers)
-  - [20. Embedding a report in another web application](#20-embedding-a-report-in-another-web-application)
+  - [1. Distribution: the Reports page, export and subscriptions](#1-distribution-the-reports-page-export-and-subscriptions)
+  - [2. Alerts on numbers](#2-alerts-on-numbers)
+  - [3. Embedding a report in another web application](#3-embedding-a-report-in-another-web-application)
 - [Tutorial: BI that runs itself, scheduled searches and subscriptions](#tutorial-bi-that-runs-itself-scheduled-searches-and-subscriptions)
   - [Part D · BI that runs itself](#part-d--bi-that-runs-itself)
   - [Part E · Scheduled searches and subscriptions](#part-e--scheduled-searches-and-subscriptions)
 
 ## Guide
 
-### 18. Distribution: the Reports page, export and subscriptions
+### 1. Distribution: the Reports page, export and subscriptions
 
 **One rule runs through all of it: the file or the mail is made for the person who gets it.** The numbers are asked of the engine *as that
 person*, so their row rules and masks apply; nothing is copied from the sender's screen. **A masked cell reads `•••` in every format** (CSV,
 Excel, PDF, PNG, JSON Lines and the mail's body). The walk-through is [the reports tutorial, Part D](#part-d--bi-that-runs-itself).
 
-#### 18.1 The Reports page and scheduled searches
+#### 1.1 The Reports page and scheduled searches
 
 The **Reports** page (**Views › Reports**, `/reports`) lists every scheduled report and subscription you have in **one list** (by name, with what
 each is, when it runs, who gets it, its next run in UTC and its last run), with a box to find one, and links to your alerts and the BI reports.
@@ -61,7 +61,7 @@ server's reports folder (a `.csv` or `.jsonl` file) or a webhook your administra
 `X-Drishti-Report` and `X-Drishti-Business-Date` headers); email needs the server's SMTP settings. A scheduled report runs **as you**, with your
 masked fields; if your account is disabled it stops. **Run now** runs one at once. The walk-through is [the reports tutorial, Part E](#part-e--scheduled-searches-and-subscriptions).
 
-#### 18.2 Export
+#### 1.2 Export
 
 On a report, the **Export** bar under the page tabs saves **this page** or one visual; on a Sutra view, *Export* in its header saves the view. What
 you save is what **you** may see, with the slicers, selections, drill path, carried values and controls on your screen written in its header with
@@ -113,7 +113,7 @@ table is read whole up to there and says when it was cut), rows drawn per table 
 `{type: "report", id, page?, visual?, state?, date?}` or `{type: "view", id: "kind/id", date?, view?}`; the console serves
 `/dist/bi/<report id>.<format>` and `/dist/view/<kind>/<id>.<format>`. Every export is audited (`export`: who, what, rows, bytes).
 
-#### 18.3 Subscriptions
+#### 1.3 Subscriptions
 
 **Subscribe** (beside Export, on every report and view) sends the content by email on a schedule. A subscription says **what** (a report, page or
 visual with the view state; or a view with its controls), **when**, **in what form**, and **to whom**.
@@ -200,7 +200,7 @@ mail settings (`spring.mail.*`, `drishti.collab.email.from`, `drishti.collab.con
 set spring.mail.host". A subscription is a document in the owner's preferences (`per-user`, 20, a person); run the scheduler on **one** server of a
 group (`drishti.distribution.subscriptions.enabled`).
 
-#### 18.4 Webhooks and text messages
+#### 1.4 Webhooks and text messages
 
 Alerts and subscriptions can also **post to a webhook** and **send a text**. An administrator sets both up (`drishti.notify.*`,
 [CONFIGURATION.md](../../admin/CONFIGURATION.md)); a person only picks from what exists.
@@ -229,7 +229,7 @@ recipient*. A text is cut to `sms.max-chars` (160) and holds the title, severity
 
 ![Subscribe form with the summary and the channels](../img/bi-dist/subscribe-form-channels.png)
 
-### 19. Alerts on numbers
+### 2. Alerts on numbers
 
 An **alert** watches one number and tells you when it crosses a limit, moves too far or does not arrive. **The number is read as you**, with your
 row rules and masks, by the same engine call the screen makes; a number masked for you is never judged or shown. The page is **Alerts**
@@ -243,7 +243,7 @@ row rules and masks, by the same engine call the screen makes; a number masked f
 
 ![The alert form on a phone, 390 px wide](../img/bi-alerts/alert-form-phone-390.png)
 
-#### 19.1 What can be watched
+#### 2.1 What can be watched
 
 | Source | You give | The number is | Live |
 |---|---|---|---|
@@ -264,7 +264,7 @@ PUT /api/v1/alerts/rules/Vol
  "condition": {"type": "threshold", "op": "above", "value": 5000}, "trigger": {"mode": "after-load"}}
 ```
 
-#### 19.2 When it fires, and when it looks
+#### 2.2 When it fires, and when it looks
 
 | Condition | Keys | Fires when |
 |---|---|---|
@@ -281,7 +281,7 @@ PUT /api/v1/alerts/rules/Vol
 A new or edited alert is looked at **once when you save it**; *Look now* looks at once. A change with nothing to compare with does not fire. A
 reading that cannot be judged (masked, no data yet, an error) never fires and never clears an active alert.
 
-#### 19.3 No flapping, and each person on their own number
+#### 2.3 No flapping, and each person on their own number
 
 | State | Meaning |
 |---|---|
@@ -296,7 +296,7 @@ reading that cannot be judged (masked, no data yet, an error) never fires and ne
 * **Each person is judged on their own number.** A number masked for you is a *masked* reading (`skipped: masked for you, so it cannot be judged`,
   once). The message carries **your** number (`MTM floor — now -725,000 (below -300,000)`); a chat bridge post carries none.
 
-#### 19.4 Delivery
+#### 2.4 Delivery
 
 | Channel | What | Rules |
 |---|---|---|
@@ -317,7 +317,7 @@ The audit log has `alert.save`, `alert.delete`, `alert.pause`, `alert.resume` an
 preferences (`per-user`, 20); with several servers, turn `drishti.alerts.enabled` off on all but one. The older rules on one entity
 ([USER_GUIDE.md](../USER_GUIDE.md#alerts)) stay beside these on the Alerts page.
 
-#### 19.5 Real output
+#### 2.5 Real output
 
 Rita makes *the MTM card of Trades overview, below -300,000, after a data load, with hysteresis 25,000, by inbox and email*. *Check now*
 (`POST /api/v1/alerts/rules/preview`, saving nothing) answers:
@@ -361,7 +361,7 @@ Ask for the access, or watch another number.*; after the same load her history h
 
 A bad alert is `422 DRS-9062` and names the key (`DRS-9062 condition.op is above, below, between or outside`).
 
-#### 19.6 Everyone's alerts, and the phone
+#### 2.6 Everyone's alerts, and the phone
 
 Administrators see the tiles that notify, who is alerted now and the history at **Alerts, Everyone's alerts** (`/alerts/all`):
 
@@ -371,7 +371,7 @@ The Alerts page, the form, the history and the inbox keep to the screen at 390 p
 
 ![The Alerts page at 390 px](../img/bi-alerts/alerts-phone-390.png)
 
-### 20. Embedding a report in another web application
+### 3. Embedding a report in another web application
 
 Export and subscriptions send a report **out**; embedding **shows it in place**, in another application's own page, live, for that application's
 user. It is a Drishti Element, `<drishti-report>`, in a Shadow DOM, with **no iframe**. Every attribute, event, the token provider and the
@@ -469,11 +469,11 @@ yet), and **as YAML** (what the UI writes, which you can keep in git).
 
 A dataset keeps its rows in layers it builds from the source. They are rebuilt when a data load arrives ([tutorial 12](../../tutorials/12-a-day-of-bank-data.md)), when someone
 asks, and on a **schedule** set on the dataset. A dataset is one table of the **model layer** (`rachana: 2`): it says where the rows come from and
-what one row is, and its measures live in a **model** over it ([BI_GUIDE.md section 23](MODELS_AND_DATASETS_FOR_REPORTS.md#5-models-and-datasets-what-a-report-reads)).
+what one row is, and its measures live in a **model** over it ([BI_GUIDE.md section 23](MODELS_AND_DATASETS_FOR_REPORTS.md#1-models-and-datasets-what-a-report-reads)).
 
 **In the UI** there are two ways to set the schedule, and neither needs the YAML:
 
-- **In the dataset wizard** (**Models → New dataset**, the wizard of [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 15](MODELS_AND_DATASETS_FOR_REPORTS.md#510-a-table-of-your-own-step-by-step)):
+- **In the dataset wizard** (**Models → New dataset**, the wizard of [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 15](MODELS_AND_DATASETS_FOR_REPORTS.md#110-a-table-of-your-own-step-by-step)):
   on the *Columns* step choose **Refresh** *business days at 06:30* (or *when new data loads*); the YAML of the *Save* step shows the line it writes,
   `refresh: business-days 06:30`.
 - **On the dataset's own page**, when it has no schedule: the **Refresh** section says *No refresh schedule* and, for an author who may edit the draft,
@@ -861,7 +861,7 @@ DESK-INFL,-1.28917764794E9
 and one line per desk, the largest MTM first. Large amounts are written in exponent form (`4.4844818514400015E9` is 4,484,481,851.44): spreadsheets read
 them as numbers. Every export carries your **business date and slicer choices**, is built as you (masked fields stay
 masked), and is audited; limits (rows per sheet, file size, time) are settings of `drishti.distribution.export.*`. There is no YAML: an export is a
-request, and a **subscription** (step 31) is the export written down. [BI_GUIDE.md](#18-distribution-the-reports-page-export-and-subscriptions) has them.
+request, and a **subscription** (step 31) is the export written down. [BI_GUIDE.md](#1-distribution-the-reports-page-export-and-subscriptions) has them.
 
 ### Step 36 · Say what a number should be
 
@@ -953,7 +953,7 @@ fail  Every desk has trades: expected 1 or more, found 0
 
 You should see the same tests fail **as `viewer`**: the model's row rule names `admin`, `risk` and `bi-writer`, and a role no rule names sees no rows
 (the model designer's **Security** tab warns about exactly this, `DRS-9131`). A test run as a role is the quickest way to see what a reader gets. The
-same words work in a report and in a model; [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 17](REPORT_FILE_FORMAT_STATEMENTS.md#912-expected-values-in-a-report) has every form of `expect`.
+same words work in a report and in a model; [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 17](REPORT_FILE_FORMAT_STATEMENTS.md#112-expected-values-in-a-report) has every form of `expect`.
 
 ### Step 37 · Charts in the workbook, a summary in the mail, a webhook and a text
 
@@ -967,7 +967,7 @@ Four small things make what leaves Drishti more useful; none changes how you wor
 
 **A webhook and a text.** An administrator defines webhooks and one text gateway (`drishti.notify.*`, [CONFIGURATION.md](../../admin/CONFIGURATION.md#drishtinotify--webhooks-and-text-messages-for-alerts-and-subscriptions)); the form then offers them by name, plus a field for your own mobile number:
 
-You should see a webhook per defined name and, once a gateway is set up, *Text each recipient who has given a number a link to it* (the picture is in [BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 6](#184-webhooks-and-text-messages)). A webhook post is signed (`X-Drishti-Signature`) and holds the title and a link, never a figure; so does a text. The alert form has the same two boxes. In the subscription's YAML they are `webhooks: [ops]` and `sms: true`. [BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 6](#184-webhooks-and-text-messages).
+You should see a webhook per defined name and, once a gateway is set up, *Text each recipient who has given a number a link to it* (the picture is in [BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 6](#14-webhooks-and-text-messages)). A webhook post is signed (`X-Drishti-Signature`) and holds the title and a link, never a figure; so does a text. The alert form has the same two boxes. In the subscription's YAML they are `webhooks: [ops]` and `sms: true`. [BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 6](#14-webhooks-and-text-messages).
 
 #### Part E · Scheduled searches and subscriptions
 
@@ -1148,4 +1148,4 @@ $ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" http://localhost:18480/api/v
 Swap for Vera | after-load trade | pdf | vera | load
 ```
 
-You should see one line for each, its name, schedule, format or destination, recipients and which day's data. [BI_GUIDE.md](#18-distribution-the-reports-page-export-and-subscriptions) lists the whole API (`PUT /api/v1/me/subscriptions/{name}` and friends, for a session, not a token) and the retry rules.
+You should see one line for each, its name, schedule, format or destination, recipients and which day's data. [BI_GUIDE.md](#1-distribution-the-reports-page-export-and-subscriptions) lists the whole API (`PUT /api/v1/me/subscriptions/{name}` and friends, for a session, not a token) and the retry rules.

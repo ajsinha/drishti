@@ -289,7 +289,7 @@ You should see the search box above the view; type `1000001` (an ENDUR trade) an
 ## Next steps
 
 - [Tutorial 21](21-run-it-in-production.md): the production checklist (security on, users, tokens, backups).
-- [EMBED_GUIDE.md](../guides/EMBED_GUIDE.md#5-the-elements-one-by-one): every attribute, property, method and event of the elements, the npm package, the CSP, the cookbook. [../guides/bi/README.md](../guides/bi/DISTRIBUTION_AND_ALERTS.md#18-distribution-the-reports-page-export-and-subscriptions) section 5 and [../guides/bi/README.md](../guides/bi/REPORT_FILE_FORMAT_STATEMENTS.md#9-the-report-file-pages-visuals-filters-and-slicers) cover embedding a report; [tools/elements-demo](../../tools/elements-demo/README.md) is the host you ran.
+- [EMBED_GUIDE.md](../guides/EMBED_GUIDE.md#5-the-elements-one-by-one): every attribute, property, method and event of the elements, the npm package, the CSP, the cookbook. [../guides/bi/README.md](../guides/bi/DISTRIBUTION_AND_ALERTS.md#1-distribution-the-reports-page-export-and-subscriptions) section 5 and [../guides/bi/README.md](../guides/bi/REPORT_FILE_FORMAT_STATEMENTS.md#1-the-report-file-pages-visuals-filters-and-slicers) cover embedding a report; [tools/elements-demo](../../tools/elements-demo/README.md) is the host you ran.
 
 ## If something goes wrong
 

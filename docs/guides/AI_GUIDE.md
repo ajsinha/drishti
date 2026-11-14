@@ -28,7 +28,7 @@ the design of **server-side pricing**, the quant service (section 4).
 | 4. The quant service | proposed, not built (section 4; pricing in Python items: its section 16) |
 
 Each part keeps its own section numbers (part 1's "section 4" is *4. Policy* inside part 1). The pages that use the layer are
-[*Ask about this page*](USER_GUIDE.md#about-this-page) and BI's AI hooks ([GOVERNANCE_AND_AI.md](bi/GOVERNANCE_AND_AI.md#16-ai-in-bi-report-from-words-ask-the-data-explain-this-number));
+[*Ask about this page*](USER_GUIDE.md#about-this-page) and BI's AI hooks ([GOVERNANCE_AND_AI.md](bi/GOVERNANCE_AND_AI.md#1-ai-in-bi-report-from-words-ask-the-data-explain-this-number));
 the settings are in [CONFIGURATION.md](../admin/CONFIGURATION.md).
 
 ## Contents
@@ -277,7 +277,7 @@ Seven features use the layer through `LLMFactory.model(...)` ([section 10](#10-o
 **`bi-explain-checks`** (the Check panel's problems in plain words), **`bi-helper`** (the dataset helper's relationships, measures and column descriptions) and **`subscription-narrative`** (the written
 summary at the top of a subscription's email, made **as the recipient** from their own unmasked figures, only in `aggregates` mode). Each is a feature name for the policy (section 4), so masks,
 per-feature roles and limits, the cost limit and the audit row apply; each runs under the caller's identity and sends the dataset **model** (names, types, descriptions) and the person's words,
-never a row. Point them at a model with `drishti.bi.ai.model`. Details, settings, errors (`DRS-4020`: an answer that cannot be used) and tests: [GOVERNANCE_AND_AI.md section 29](bi/GOVERNANCE_AND_AI.md#16-ai-in-bi-report-from-words-ask-the-data-explain-this-number).
+never a row. Point them at a model with `drishti.bi.ai.model`. Details, settings, errors (`DRS-4020`: an answer that cannot be used) and tests: [GOVERNANCE_AND_AI.md section 29](bi/GOVERNANCE_AND_AI.md#1-ai-in-bi-report-from-words-ask-the-data-explain-this-number).
 
 ### 8. The console
 

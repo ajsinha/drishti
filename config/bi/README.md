@@ -57,11 +57,11 @@ Where to read more, in the order a newcomer wants it:
 | For | Read |
 |---|---|
 | a tour of the pages and a walk-through with the samples in this folder | [docs/guides/bi/README.md](../../docs/guides/bi/README.md) (start here), [docs/tutorials/10-first-bi-report.md](../../docs/guides/bi/REPORTS.md#part-a--your-first-bi-report) |
-| the dataset and model formats (`datasets/`, `models/`) | [docs/guides/bi/README.md](../../docs/guides/bi/MODELS_AND_DATASETS_FOR_REPORTS.md#5-models-and-datasets-what-a-report-reads) |
-| the report format (`reports/`): a report names its model with `model: <name>@<major>` (a 2.1 live report still names a `dataset:`) | [docs/guides/bi/README.md](../../docs/guides/bi/REPORT_FILE_FORMAT_STATEMENTS.md#9-the-report-file-pages-visuals-filters-and-slicers) |
-| boards, report pages of tiles (`layout: board`), and converting a 2.3 board file | [docs/guides/bi/README.md](../../docs/guides/bi/REPORT_FILE_FORMAT_STATEMENTS.md#9-the-report-file-pages-visuals-filters-and-slicers) |
-| the theme format (`themes/`) | [docs/guides/bi/README.md › Reports: the YAML, the visuals and how they behave, section 5.2](../../docs/guides/bi/REPORT_FILE_FORMAT_STATEMENTS.md#103-themes) |
-| publishing, review, certification and moving content between servers | [docs/guides/bi/README.md](../../docs/guides/bi/GOVERNANCE_AND_AI.md#17-publishing-and-governance-versions-review-certification-lineage-impact-environments) |
+| the dataset and model formats (`datasets/`, `models/`) | [docs/guides/bi/README.md](../../docs/guides/bi/MODELS_AND_DATASETS_FOR_REPORTS.md#1-models-and-datasets-what-a-report-reads) |
+| the report format (`reports/`): a report names its model with `model: <name>@<major>` (a 2.1 live report still names a `dataset:`) | [docs/guides/bi/README.md](../../docs/guides/bi/REPORT_FILE_FORMAT_STATEMENTS.md#1-the-report-file-pages-visuals-filters-and-slicers) |
+| boards, report pages of tiles (`layout: board`), and converting a 2.3 board file | [docs/guides/bi/README.md](../../docs/guides/bi/REPORT_FILE_FORMAT_STATEMENTS.md#1-the-report-file-pages-visuals-filters-and-slicers) |
+| the theme format (`themes/`) | [docs/guides/bi/README.md › Reports: the YAML, the visuals and how they behave, section 5.2](../../docs/guides/bi/REPORT_FILE_FORMAT_STATEMENTS.md#23-themes) |
+| publishing, review, certification and moving content between servers | [docs/guides/bi/README.md](../../docs/guides/bi/GOVERNANCE_AND_AI.md#2-publishing-and-governance-versions-review-certification-lineage-impact-environments) |
 | the design and what each phase built | [docs/architecture/ARCHITECTURE.md §28](../../docs/architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer) (sections 6, 8 and 13, "Where BI files live", and section 20) |
 
 Edit a sample and the next open shows it. To keep your own version of a sample, copy it to a workspace item (*Save a copy* in the Model view for a dataset or in the designer for a report, or *New item* in My workspace) rather than editing the shipped file.

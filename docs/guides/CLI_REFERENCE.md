@@ -3294,7 +3294,7 @@ console the migration's state is on Admin → **BI** (items that could not be co
 ### `bi model`, `bi mq`: models and model queries
 
 What the model designer and a report's visuals do, over REST as the token's user (the server checks every model and answers every query with your row
-rules and masks; [MODELS_AND_DATASETS_FOR_REPORTS.md section 23](bi/MODELS_AND_DATASETS_FOR_REPORTS.md#5-models-and-datasets-what-a-report-reads)). Reads need no scope.
+rules and masks; [MODELS_AND_DATASETS_FOR_REPORTS.md section 23](bi/MODELS_AND_DATASETS_FOR_REPORTS.md#1-models-and-datasets-what-a-report-reads)). Reads need no scope.
 
 ```
 drishti.py bi model list [--kind model|implicit|compat]          the models and datasets you may read, with the name@major a query uses
@@ -3369,12 +3369,12 @@ fail  Close to 100 trades: expected 100 ± 1%, found 750
 ### `bi runs`, `bi mq --async`, `bi sql --async`: BI runs
 
 `drishti.py bi runs list|get|submit|estimate|wait|result|cancel|rerun|export|share|unshare|promote|keep|schedule|schedules|storage|suggestions` does what the BI
-Runs tab does (sharing, schedules, CSV and Excel export, and for a bi-admin the rollup suggestions), as the token's user (`tools/biruns.py`); `bi mq` and `bi sql` take `--async [--wait 2s] [--yes]`. Examples, exit codes and output: [LIVE_REPORTS_AND_BOARDS.md section 28](bi/LIVE_REPORTS_AND_BOARDS.md#1512-on-the-command-line)
+Runs tab does (sharing, schedules, CSV and Excel export, and for a bi-admin the rollup suggestions), as the token's user (`tools/biruns.py`); `bi mq` and `bi sql` take `--async [--wait 2s] [--yes]`. Examples, exit codes and output: [LIVE_REPORTS_AND_BOARDS.md section 28](bi/LIVE_REPORTS_AND_BOARDS.md#312-on-the-command-line)
 and [CLI_REFERENCE.md section 5.7](#12-bi-and-tables).
 
 ### `bi statement`
 
-A report's statement pages ([REPORT_FILE_FORMAT_STATEMENTS.md › Reports: the YAML, the visuals and how they behave, section 24](bi/REPORT_FILE_FORMAT_STATEMENTS.md#12-statements-paginated-reports-page-exact-one-per-reader)) made for the token's user, with their own masks and row rules: what the BI Studio's Paper
+A report's statement pages ([REPORT_FILE_FORMAT_STATEMENTS.md › Reports: the YAML, the visuals and how they behave, section 24](bi/REPORT_FILE_FORMAT_STATEMENTS.md#4-statements-paginated-reports-page-exact-one-per-reader)) made for the token's user, with their own masks and row rules: what the BI Studio's Paper
 tab previews and a subscription mails.
 
 ```
@@ -3682,18 +3682,18 @@ The pivot engine as the token's user sees it (`tools/pivotcli.py`; [PIVOT.md](bi
   every sketch exactly (exact on request); `--approximate` answers distinct counts and percentiles by their sketches at any size and
   chooses a level's top N by a count with a Space-Saving summary; `--no-rollups` reads the table even when a rollup covers the view; the
   line `computed as:` says how the answer was computed
-  ([PIVOT_SCALE_AND_CUBES.md sections 23 and 24](bi/PIVOT_SCALE_AND_CUBES.md#24-the-screens-switches-exact-or--progressive-rollups)).
+  ([PIVOT_SCALE_AND_CUBES.md sections 23 and 24](bi/PIVOT_SCALE_AND_CUBES.md#2-the-screens-switches-exact-or--progressive-rollups)).
 - `pivot live start [view flags] [--approximate]`: a live pivot (its id, the node that holds it, how it is kept current);
   `pivot live list` (yours: recomputes, unchanged checks, streaming or not); `pivot live stop ID`
-  ([PIVOT_SCALE_AND_CUBES.md section 25](bi/PIVOT_SCALE_AND_CUBES.md#25-live-pivots)).
+  ([PIVOT_SCALE_AND_CUBES.md section 25](bi/PIVOT_SCALE_AND_CUBES.md#3-live-pivots)).
 - `pivot comments OWNER/NAME [--cell DIM=V,...] [--open]`: a saved view's cell comments; `--add TEXT --cell DIM=V,... [--measure M]`
   adds one (`--cell '*'`: the grand total); `--resolve ID`, `--reopen ID`, `--delete ID` (its author or the view's owner)
-  ([PIVOT_SCALE_AND_CUBES.md section 26](bi/PIVOT_SCALE_AND_CUBES.md#26-cell-comments)).
+  ([PIVOT_SCALE_AND_CUBES.md section 26](bi/PIVOT_SCALE_AND_CUBES.md#4-cell-comments)).
 - `pivot estimate`: what the view reads before it runs.
 - `pivot export --format xlsx|csv|arrow [--what pivot|rows|definition] [--cell DIM=V,...] -o FILE`: the Excel workbook with its outline
   and `SUM` formulas only where a figure adds up and a Provenance sheet; CSV; Arrow; a cell's rows; the view as YAML. Audited.
 - `pivot views`; `pivot save NAME [view flags] [--share role:risk]`.
-- `--option KEY=V` (repeatable): a provider's option; the VaR source's (the MR cube, [PIVOT_SCALE_AND_CUBES.md section 29](bi/PIVOT_SCALE_AND_CUBES.md#29-the-mr-cube-preset)) are `scope`,
+- `--option KEY=V` (repeatable): a provider's option; the VaR source's (the MR cube, [PIVOT_SCALE_AND_CUBES.md section 29](bi/PIVOT_SCALE_AND_CUBES.md#7-the-mr-cube-preset)) are `scope`,
   `horizon`, `method`, `confidence`, `esConfidence`, `set` and `ccy`.
 - `pivot mr headline|cell|versions|explain|ladder|heat|whatif`: the MR cube's lens (`/api/v1/risk/mr`): the view's headline, a cell's
   tail (`--cell DIM=V,...`), the slider's dates, why a scope moved (`--scope`, `--from`, `--to`), the DV01 ladder (`--grid`), the heat

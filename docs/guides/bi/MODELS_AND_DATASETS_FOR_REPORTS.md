@@ -22,13 +22,13 @@ What a report reads: the Models page, fields, perspectives and the contract, rel
 ## Contents
 
 - [Guide](#guide)
-  - [5. Models and datasets: what a report reads](#5-models-and-datasets-what-a-report-reads)
+  - [1. Models and datasets: what a report reads](#1-models-and-datasets-what-a-report-reads)
 - [Tutorial: Several datasets in one report](#tutorial-several-datasets-in-one-report)
   - [Part B · Several datasets in one report](#part-b--several-datasets-in-one-report)
 
 ## Guide
 
-### 5. Models and datasets: what a report reads
+### 1. Models and datasets: what a report reads
 
 A report reads **one model** (`model: trading-risk@1`). A model relates **tables** (BI's "datasets") and defines measures, hierarchies,
 parameters and tighter security over them; a table is one governed table over a pack kind, a SQL query, a Python transform, a model's
@@ -42,7 +42,7 @@ BI reads only the table layer's form, and only Rachana in it. A file in BI's old
 A pack carries its BI tables and models as `config/bi/tables/*.table.yaml` and `config/bi/models/*.model.yaml` in the layer's form (**Build →
 New pack** writes them).
 
-#### 5.1 The Models page and a table's page
+#### 1.1 The Models page and a table's page
 
 **Models** in the rail (`/bi/models`, *Start from your data*):
 
@@ -67,7 +67,7 @@ same table, the report is bound to that one, and the reports on the same table a
 per-report copy: deleting a report never touches its model, and a model is **not deleted while anything reads it** (`409 DRS-9004` names
 what does; `GET /api/v1/bi/models/{ref}/consumers` lists the reports, boards, notebooks, tables, alerts and live subscriptions that read it).
 
-#### 5.2 Fields, perspectives and the contract
+#### 1.2 Fields, perspectives and the contract
 
 Field properties are written **once, in the model** (`fields:`) and inherited by every report, board and answer on it: each field's
 **display name**, **description**, **format**, **folder**, **hidden**, **sort by**, **data category** and **default summarisation**, and
@@ -101,7 +101,7 @@ audited note). Check also names the readers no row rule matches (`DRS-9131`, a w
 answer is empty and says *you have no access to rows of trades in this model: no row rule names your roles*, so the viewer shows that instead
 of *No rows for this selection*.
 
-#### 5.3 Relationships and how a question joins
+#### 1.3 Relationships and how a question joins
 
 **Many-to-many.** Declare the bridge once; the bridge table's own rows are not repeated into the facts.
 
@@ -176,7 +176,7 @@ leg to its deal's product. Both ways, a filter on the child reaches the parent a
 `deal_leg.CURRENCY = EUR` are the deals **having any** EUR leg, each counted once (a deal with two EUR legs is not counted twice). Two child kinds
 of one parent (legs and cash flows) are siblings: one question reads one of them (the rule above).
 
-#### 5.4 Measures: the expression language
+#### 1.4 Measures: the expression language
 
 Measures are **Rachana** expressions in aggregate scope ([RACHANA_REFERENCE.md › Rachana-EL expressions](../RACHANA_REFERENCE.md#rachana-el-expressions),
 every function in [FUNCTIONS.md](../FUNCTIONS.md); filter context and what is refused: [BI_GUIDE.md section 12](TABLES_AND_MODELS.md#12-measures-in-a-model-filter-context-and-what-is-refused)).
@@ -211,7 +211,7 @@ the families:
 * **Filter context** (`calc`, `share_of`, `parent_of`, `as_of`): security is never in scope, so `share_of(…, over = ALL)` is a share of
   everything **you** may see. The Fields pane badges a measure that uses time intelligence or a window (`ytd`, `running total`, ...).
 
-#### 5.5 Row rules and masks in practice
+#### 1.5 Row rules and masks in practice
 
 Who sees which rows and fields is set on the tables and tightened by the model ([BI_GUIDE.md section 7](TABLES_AND_MODELS.md#7-who-sees-what)).
 For a report it means:
@@ -224,7 +224,7 @@ For a report it means:
 * **Fail closed.** If a visual's measures cannot reach a rule's table many-to-one, that visual answers `DRS-9020`, naming the rule, rather
   than other readers' data.
 
-#### 5.6 Layers, rollups and refresh
+#### 1.6 Layers, rollups and refresh
 
 A table is answered from the smallest layer that covers the question: a model's **rollup** (per-date components of its measures at a coarser
 grain: sums, counts, minimums and maximums; `avg` as a sum and a count), else the **columns layer** (typed Parquet per business date, built on
@@ -248,7 +248,7 @@ the API: `GET` and `POST /api/v1/bi/datasets/{id}/refresh`.
 
 ![The dataset page's Refresh section](../img/bi-visuals/dataset-refresh.png)
 
-#### 5.7 Live tables
+#### 1.7 Live tables
 
 A table with `materialize: { live: { rows, age } }` is the **current state of a kind**, kept in memory and updated by key as the source
 pushes changes ([BI_GUIDE.md section 6](TABLES_AND_MODELS.md#6-materialisation)); reports and boards over it redraw as it changes
@@ -269,7 +269,7 @@ pushes changes ([BI_GUIDE.md section 6](TABLES_AND_MODELS.md#6-materialisation))
 
 ![The dataset page's Layers table for a live table](../img/bi-live/dataset-live-layers.png)
 
-#### 5.8 Expected values: `tests:`
+#### 1.8 Expected values: `tests:`
 
 A table, a model or a report may declare what a number should be. **Check** runs the tests (the table page's *Expected values*, the designer's
 Check, `POST /api/v1/bi/items/{id}/tests`, `drishti.py bi item tests ID`), and **publishing is refused while one fails** (`409 DRS-9043`)
@@ -290,7 +290,7 @@ date; `tolerance` widens a number or a range; `role` runs the test as a role. Ea
 
 ![The Expected values section: two tests pass, one fails with the figure found](../../tutorials/img/t11/16-tests.jpg)
 
-#### 5.9 Worked examples: the shipped models, row rules and masks
+#### 1.9 Worked examples: the shipped models, row rules and masks
 
 The tutorials teach reports in order. This section keeps the recipes they do not repeat: a stack with four people so row rules and masks can
 be seen at work, and the shipped models queried. Every answer was captured over the **demo lakes** (`drishti.py lake demo`: sixty business
@@ -468,7 +468,7 @@ The pages work at 390 px: the rail scrolls sideways, forms stack, tables scroll 
 
 ![phone](../img/bi-datasets/dataset-phone-390.png)
 
-#### 5.10 A table of your own, step by step
+#### 1.10 A table of your own, step by step
 
 For what a pack does not give, a table of your own narrows a pack table (`from:` another table, with a filter, a grain, computed columns and
 masks) or reads another source: a SQL query in a SQL connector, a Python transform, a model's answer, or a **Drishti SQL** statement over a
@@ -500,7 +500,7 @@ drishti.py bi expr validate "TRADE_STATUS != 'MATURED'" --scope row --model data
 drishti.py bi expr validate "NOTIONAL / 1000000" --scope row --model dataset:pack.market-risk.trade-valuation
 ```
 
-#### 5.11 A run's result as a table snapshot
+#### 1.11 A run's result as a table snapshot
 
 A finished background run of a model query or SQL statement can be **promoted** (section 15.10): its result is frozen as a snapshot and
 becomes a draft table (and optionally a draft report on it) you build on.
@@ -603,7 +603,7 @@ Exposure (EE peak)
 (The official results are a Delta table whose columns the pack's connector `exposure-results` promotes, so they are scanned as columns; the
 model `counterparty-exposure` reads the same dataset.)
 
-**The YAML** of a pack dataset is written by Drishti from the pack (read-only; **Narrow it** makes a dataset of your own that `extends` it, [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 14](#510-a-table-of-your-own-step-by-step)). The part that matters here is the grain:
+**The YAML** of a pack dataset is written by Drishti from the pack (read-only; **Narrow it** makes a dataset of your own that `extends` it, [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 14](#110-a-table-of-your-own-step-by-step)). The part that matters here is the grain:
 
 ```yaml
 rachana: 2
@@ -790,7 +790,7 @@ Government           569,515,006.55  310,533,734.00
 warning: 2 fact tables, each aggregated alone at the query's fields and then joined: [trade, counterparty, netting_set]
 ```
 
-`shape mq`: the statement was one model query, compiled into the same plan a visual asks. In the designer, **Query of the selected visual** shows the bar's question as a model query or as this SQL, with **Run as SQL** ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 19](REPORTS.md#83-a-report-on-a-model-fields-own-measures-mq-or-sql)): the visual, the model query and the SQL are one question, so they share one plan and one cached answer per reader.
+`shape mq`: the statement was one model query, compiled into the same plan a visual asks. In the designer, **Query of the selected visual** shows the bar's question as a model query or as this SQL, with **Run as SQL** ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 19](REPORTS.md#73-a-report-on-a-model-fields-own-measures-mq-or-sql)): the visual, the model query and the SQL are one question, so they share one plan and one cached answer per reader.
 
 **What "aggregated alone, then joined" protects you from.** Exposure has no trade in it and P&L has no netting set in it, so a sector's exposure is the sum of that sector's netting sets (76 in all) **once each**, however many trades the sector has; and a sector's MTM is the sum of its trades **once each**, however many netting sets its counterparties have. Add the eleven sector rows of either column and you get step 15's totals, which is the check to run on any model with two facts: the sum of the parts is the whole. A sector whose counterparties have exposure but no trades today keeps its exposure and shows no MTM (empty, not zero), because the join of the two answers keeps both sides.
 
@@ -913,7 +913,7 @@ columns:
   EXPOSURE_RANK: {type: decimal, role: attribute}
 ```
 
-Create it in the workspace (**New item**, kind *dataset*, **Paste YAML**, or the dataset wizard's *Python Transform* source, [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 15](#510-a-table-of-your-own-step-by-step)) and publish it. You should see its page say what one row is and where it comes from:
+Create it in the workspace (**New item**, kind *dataset*, **Paste YAML**, or the dataset wizard's *Python Transform* source, [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 15](#110-a-table-of-your-own-step-by-step)) and publish it. You should see its page say what one row is and where it comes from:
 
 ![The dataset page of Counterparty table (Python): one row per counterparty, the key counterparty, the source the Python Transform Counterparty table, and the columns with their roles and default measures](../../tutorials/img/t18/16-python-dataset.jpg)
 

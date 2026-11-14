@@ -1697,7 +1697,7 @@ shipped, read-only files. The BI powers are granted on roles, see below.
 
 ### `drishti.bi.query` — the dataset query engine (phase 2)
 
-The embedded DuckDB that answers dataset queries ([MODELS_AND_DATASETS_FOR_REPORTS.md](../guides/bi/MODELS_AND_DATASETS_FOR_REPORTS.md#5-models-and-datasets-what-a-report-reads), [TABLES_AND_MODELS.md](../guides/bi/TABLES_AND_MODELS.md) section 13) and the layers it keeps. It starts its connection on the first query. Every limit
+The embedded DuckDB that answers dataset queries ([MODELS_AND_DATASETS_FOR_REPORTS.md](../guides/bi/MODELS_AND_DATASETS_FOR_REPORTS.md#1-models-and-datasets-what-a-report-reads), [TABLES_AND_MODELS.md](../guides/bi/TABLES_AND_MODELS.md) section 13) and the layers it keeps. It starts its connection on the first query. Every limit
 answers with its own code (the codes are in [API_REFERENCE.md](../guides/API_REFERENCE.md#4-datasets-and-the-query-engine-apiv1bi)). Defaults are what a laptop can carry.
 
 | Key | Default | Meaning |
@@ -1728,7 +1728,7 @@ answers with its own code (the codes are in [API_REFERENCE.md](../guides/API_REF
 
 ### `drishti.bi.report` — reports (phase 3)
 
-How many rows each kind of visual asks the engine for ([REPORT_FILE_FORMAT_STATEMENTS.md](../guides/bi/REPORT_FILE_FORMAT_STATEMENTS.md#9-the-report-file-pages-visuals-filters-and-slicers) section 11). The engine's own limits (`drishti.bi.query.*`, above) still apply on top; a visual's own `limit:` replaces the default of its kind.
+How many rows each kind of visual asks the engine for ([REPORT_FILE_FORMAT_STATEMENTS.md](../guides/bi/REPORT_FILE_FORMAT_STATEMENTS.md#1-the-report-file-pages-visuals-filters-and-slicers) section 11). The engine's own limits (`drishti.bi.query.*`, above) still apply on top; a visual's own `limit:` replaces the default of its kind.
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -1764,7 +1764,7 @@ A **Python dataset** (or a Python-driven table) is made by a Python Transform, r
 
 ### `drishti.bi.refresh` — scheduled dataset refresh
 
-A dataset's `refresh:` schedule rebuilds its columns and rollup layers ([MODELS_AND_DATASETS_FOR_REPORTS.md › Datasets: the YAML, the expression language and the security rules, section 7.2](../guides/bi/MODELS_AND_DATASETS_FOR_REPORTS.md#56-layers-rollups-and-refresh)); a failed run is retried with the shared retry policy, area `bi` (`drishti.retry.bi.*`, falling back to `drishti.retry.*`: see Retries above).
+A dataset's `refresh:` schedule rebuilds its columns and rollup layers ([MODELS_AND_DATASETS_FOR_REPORTS.md › Datasets: the YAML, the expression language and the security rules, section 7.2](../guides/bi/MODELS_AND_DATASETS_FOR_REPORTS.md#16-layers-rollups-and-refresh)); a failed run is retried with the shared retry policy, area `bi` (`drishti.retry.bi.*`, falling back to `drishti.retry.*`: see Retries above).
 Times are in `drishti.business-date.zone`, business days by `drishti.business-date.calendar`.
 
 | Key | Default | Meaning |
@@ -1777,7 +1777,7 @@ Times are in `drishti.business-date.zone`, business days by `drishti.business-da
 
 ### `drishti.bi.ai` — BI with AI (stage 2)
 
-The BI hooks on the AI layer ([GOVERNANCE_AND_AI.md section 29](../guides/bi/GOVERNANCE_AND_AI.md#16-ai-in-bi-report-from-words-ask-the-data-explain-this-number)). They also need `drishti.ai.enabled` (off by default) and a provider ([AI_GUIDE.md](../guides/AI_GUIDE.md#1-model-providers));
+The BI hooks on the AI layer ([GOVERNANCE_AND_AI.md section 29](../guides/bi/GOVERNANCE_AND_AI.md#1-ai-in-bi-report-from-words-ask-the-data-explain-this-number)). They also need `drishti.ai.enabled` (off by default) and a provider ([AI_GUIDE.md](../guides/AI_GUIDE.md#1-model-providers));
 the policy's feature names are `bi-draft`, `bi-ask`, `bi-explain`, the authoring helpers `bi-suggest`, `bi-explain-checks` and `bi-helper`, and a subscription's narrative summary `subscription-narrative` (`drishti.ai.policy.features`, above).
 
 | Setting | Default | Meaning |
@@ -1795,7 +1795,7 @@ the policy's feature names are `bi-draft`, `bi-ask`, `bi-explain`, the authoring
 
 ### `drishti.bi.live` — streaming BI (phase 5)
 
-Live tables kept in memory by the engine and the streams that tell browsers they changed ([MODELS_AND_DATASETS_FOR_REPORTS.md](../guides/bi/MODELS_AND_DATASETS_FOR_REPORTS.md#57-live-tables), [LIVE_REPORTS_AND_BOARDS.md](../guides/bi/LIVE_REPORTS_AND_BOARDS.md#131-a-live-report), [LIVE_REPORTS_AND_BOARDS.md › Reports: the YAML, the visuals and how they behave, section 23](../guides/bi/LIVE_REPORTS_AND_BOARDS.md#14-boards-report-pages-of-live-tiles),
+Live tables kept in memory by the engine and the streams that tell browsers they changed ([MODELS_AND_DATASETS_FOR_REPORTS.md](../guides/bi/MODELS_AND_DATASETS_FOR_REPORTS.md#17-live-tables), [LIVE_REPORTS_AND_BOARDS.md](../guides/bi/LIVE_REPORTS_AND_BOARDS.md#11-a-live-report), [LIVE_REPORTS_AND_BOARDS.md › Reports: the YAML, the visuals and how they behave, section 23](../guides/bi/LIVE_REPORTS_AND_BOARDS.md#2-boards-report-pages-of-live-tiles),
 [README.md](../guides/bi/README.md) section 18). A table starts on first use and closes when nobody has used it for `idle-close`. The console's own settings are `bi.live.min_interval_ms`, `bi.live.stale_seconds`, `bi.board.rotate_seconds` (Python runs on the server's compute pool: [NOTEBOOK_AND_PYTHON.md](../guides/bi/NOTEBOOK_AND_PYTHON.md#3-python-measures-and-visuals) section 9).
 
 | Key | Default | Meaning |
@@ -1811,7 +1811,7 @@ Live tables kept in memory by the engine and the streams that tell browsers they
 | `stale-after` | `30s` | A feed that pushes but has delivered nothing for this long is shown as **stale**. |
 | `max-streams` | `100` | Live report streams open at once on the server (`429 DRS-9051`). |
 | `max-streams-per-user` | `10` | Live report streams open at once for one person (`429 DRS-9051`). A browser holds one per distinct report on its open reports and boards. |
-| `incremental-aggregates` | `true` | The rollups a dataset declares over a live table are kept by group as rows change (sums and counts by difference; a lost minimum or maximum is read again for its group alone), and a query a rollup can answer reads them ([MODELS_AND_DATASETS_FOR_REPORTS.md › Datasets: the YAML, the expression language and the security rules, section 7.1](../guides/bi/MODELS_AND_DATASETS_FOR_REPORTS.md#57-live-tables)). `false`: every measure of a live table is computed over its rows on each query. |
+| `incremental-aggregates` | `true` | The rollups a dataset declares over a live table are kept by group as rows change (sums and counts by difference; a lost minimum or maximum is read again for its group alone), and a query a rollup can answer reads them ([MODELS_AND_DATASETS_FOR_REPORTS.md › Datasets: the YAML, the expression language and the security rules, section 7.1](../guides/bi/MODELS_AND_DATASETS_FOR_REPORTS.md#17-live-tables)). `false`: every measure of a live table is computed over its rows on each query. |
 
 <a id="drishtibimq--the-model-layer-and-the-model-query-language-22-wave-w1"></a>
 ### `drishti.bi.mq` — the model layer and the model query language
@@ -1947,7 +1947,7 @@ item silently**: an item it cannot convert keeps its text and is listed in Admin
 
 ### `drishti.distribution`: export and subscriptions
 
-Export of a BI report, page, visual or Sutra view as PDF, PNG, Excel or CSV, and subscriptions (email on a schedule), [DISTRIBUTION_AND_ALERTS.md](../guides/bi/DISTRIBUTION_AND_ALERTS.md#18-distribution-the-reports-page-export-and-subscriptions). Mail goes through the server's
+Export of a BI report, page, visual or Sutra view as PDF, PNG, Excel or CSV, and subscriptions (email on a schedule), [DISTRIBUTION_AND_ALERTS.md](../guides/bi/DISTRIBUTION_AND_ALERTS.md#1-distribution-the-reports-page-export-and-subscriptions). Mail goes through the server's
 mail settings (`spring.mail.host`, `spring.mail.port`, `drishti.collab.email.from`, `drishti.collab.console-url`). Retries use the shared policy with its own area: `drishti.retry.distribution.*` (see Retries above), falling back to
 `drishti.retry.*`.
 
@@ -1980,7 +1980,7 @@ Under `drishti.distribution.subscriptions`:
 | `load-delay` | `5s` | After a data load, wait this long before an `after-load` subscription runs, so the BI layers rebuild |
 | `narrative-rows` | `15` | Most rows per table the model is shown when it writes a subscription's narrative summary (`narrative: true`; only in `drishti.bi.ai.values: aggregates`, and only from the recipient's own unmasked columns) |
 
-Under `drishti.distribution.statements` (statement pages: [REPORT_FILE_FORMAT_STATEMENTS.md › Reports: the YAML, the visuals and how they behave, section 24](../guides/bi/REPORT_FILE_FORMAT_STATEMENTS.md#12-statements-paginated-reports-page-exact-one-per-reader)):
+Under `drishti.distribution.statements` (statement pages: [REPORT_FILE_FORMAT_STATEMENTS.md › Reports: the YAML, the visuals and how they behave, section 24](../guides/bi/REPORT_FILE_FORMAT_STATEMENTS.md#4-statements-paginated-reports-page-exact-one-per-reader)):
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -1993,7 +1993,7 @@ Under `drishti.distribution.statements` (statement pages: [REPORT_FILE_FORMAT_ST
 
 Every alert rule (a visual, a dataset or model measure, a Sutra field, a Rachana-EL rule on one entity), the notifications from board tiles,
 and the lifecycle of every alert raised (raised, acknowledged, resolved; snooze; owners), the platform alerts included
-([USER_GUIDE.md › Alerts](../guides/USER_GUIDE.md#alerts); [DISTRIBUTION_AND_ALERTS.md, section 4](../guides/bi/DISTRIBUTION_AND_ALERTS.md#19-alerts-on-numbers)). Every key has a
+([USER_GUIDE.md › Alerts](../guides/USER_GUIDE.md#alerts); [DISTRIBUTION_AND_ALERTS.md, section 4](../guides/bi/DISTRIBUTION_AND_ALERTS.md#2-alerts-on-numbers)). Every key has a
 default; change one in `application.yaml` or with `DRISHTI_ALERTS_*`.
 
 | Key | Default | Meaning |
@@ -2019,7 +2019,7 @@ default; change one in `application.yaml` or with `DRISHTI_ALERTS_*`.
 
 ### `drishti.notify` — webhooks and text messages for alerts and subscriptions
 
-Where an alert or a subscription may send besides the inbox, mail and the chat bridges ([DISTRIBUTION_AND_ALERTS.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 6](../guides/bi/DISTRIBUTION_AND_ALERTS.md#184-webhooks-and-text-messages)). Nothing here is on until an administrator defines it: a person can pick only the **names** of the webhooks defined here, never type a URL, and a text goes only to a number its owner gave. Neither carries a figure
+Where an alert or a subscription may send besides the inbox, mail and the chat bridges ([DISTRIBUTION_AND_ALERTS.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 6](../guides/bi/DISTRIBUTION_AND_ALERTS.md#14-webhooks-and-text-messages)). Nothing here is on until an administrator defines it: a person can pick only the **names** of the webhooks defined here, never type a URL, and a text goes only to a number its owner gave. Neither carries a figure
 (a webhook post names the alert or subscription and where it opens; a text holds its title and a link, and only with `sms.include-values: true` the alert's one-line message). A `${ENV}` reference in a secret or a header is resolved from the process environment when the message is sent; a variable that is not set is a permanent failure that names the variable, never the value.
 
 | Key | Default | Meaning |
@@ -2061,7 +2061,7 @@ drishti:
 
 ### `drishti.bi.governance` — publishing and governance (phase 4)
 
-Saved states, review, certification, impact analysis and bundles ([GOVERNANCE_AND_AI.md](../guides/bi/GOVERNANCE_AND_AI.md#17-publishing-and-governance-versions-review-certification-lineage-impact-environments)).
+Saved states, review, certification, impact analysis and bundles ([GOVERNANCE_AND_AI.md](../guides/bi/GOVERNANCE_AND_AI.md#2-publishing-and-governance-versions-review-certification-lineage-impact-environments)).
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -2069,11 +2069,11 @@ Saved states, review, certification, impact analysis and bundles ([GOVERNANCE_AN
 | `preview-rows` | `20` | Rows of data a reviewer sees in the preview of a dataset or a report under review (at most 500). The reviewer's own row rules and masks apply. |
 | `refuse-breaking` | `true` | Refuse (`409 DRS-9040`) publishing a dataset change that removes or renames a field, measure or hierarchy a **published** report uses. A `bi-admin` can publish with `force`. Off: the publish goes ahead and answers with warnings. |
 | `revoke-certification` | `true` | Take certification away automatically from a certified dataset that changed incompatibly, and from certified reports broken by such a change; the owner and whoever certified are told. |
-| `refuse-failing-tests` | `true` | Refuse (`409 DRS-9043`) publishing or approving a report or dataset whose expected values (`tests:`) fail or cannot run; a `bi-admin` can publish with `force`. Off: Check still shows the results, a publish goes ahead ([REPORT_FILE_FORMAT_STATEMENTS.md › Reports: the YAML, the visuals and how they behave, section 17](../guides/bi/REPORT_FILE_FORMAT_STATEMENTS.md#912-expected-values-in-a-report)). |
+| `refuse-failing-tests` | `true` | Refuse (`409 DRS-9043`) publishing or approving a report or dataset whose expected values (`tests:`) fail or cannot run; a `bi-admin` can publish with `force`. Off: Check still shows the results, a publish goes ahead ([REPORT_FILE_FORMAT_STATEMENTS.md › Reports: the YAML, the visuals and how they behave, section 17](../guides/bi/REPORT_FILE_FORMAT_STATEMENTS.md#112-expected-values-in-a-report)). |
 | `bundle-max-bytes` | `8388608` | Largest BI bundle an import reads (`422 DRS-9041` above it). |
-| `imports-dir` | blank: `<drishti.data.dir>/bi/imports` | Where each import keeps what it replaced, one JSON file per import, so *Roll back this import* can put it back ([GOVERNANCE_AND_AI.md](../guides/bi/GOVERNANCE_AND_AI.md#177-environments-bundles)). Back it up with the identity database. |
+| `imports-dir` | blank: `<drishti.data.dir>/bi/imports` | Where each import keeps what it replaced, one JSON file per import, so *Roll back this import* can put it back ([GOVERNANCE_AND_AI.md](../guides/bi/GOVERNANCE_AND_AI.md#27-environments-bundles)). Back it up with the identity database. |
 | `imports-keep` | `20` | Imports whose replaced states are kept (the oldest go first). |
-| `pack-workspace` | `packs` | The shared workspace that holds the BI content of deployed packs (`config/bi` inside a pack archive); made at the first deploy that carries some ([GOVERNANCE_AND_AI.md](../guides/bi/GOVERNANCE_AND_AI.md#178-bi-content-in-a-pack-archive)). |
+| `pack-workspace` | `packs` | The shared workspace that holds the BI content of deployed packs (`config/bi` inside a pack archive); made at the first deploy that carries some ([GOVERNANCE_AND_AI.md](../guides/bi/GOVERNANCE_AND_AI.md#28-bi-content-in-a-pack-archive)). |
 | `tell-people` | `true` | Tell people in the inbox (the bell) when a review is asked for (reviewers), decided (the author) or a certification is revoked (the owner and whoever certified). Off: no inbox rows; the audit log and the item's history still record everything. |
 
 ### `drishti.bi.poc` — removed
@@ -2713,9 +2713,9 @@ compose files in `deploy/` show these variables in use; see [OPERATIONS_GUIDE.md
 
 ## Every setting
 
-Every key of every kind: 2,208 settings in 20 areas, and 351 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
+Every key of every kind: 2,214 settings in 20 areas, and 351 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
 
-Every setting has a **tier** (the last column; Admin → Configuration shows them by tier): **everyday** 18, **admin** 1,773, **expert** 417. *Everyday* is what a business lead changes (the lenses, the VaR and exposure confidences, the scenario window, the feature switches); *admin* is what an operator sets; *expert* is performance and internals. The tiers are kept in `tools/settings_schemas.yaml` (`tiers`), one place.
+Every setting has a **tier** (the last column; Admin → Configuration shows them by tier): **everyday** 18, **admin** 1,779, **expert** 417. *Everyday* is what a business lead changes (the lenses, the VaR and exposure confidences, the scenario window, the feature switches); *admin* is what an operator sets; *expert* is performance and internals. The tiers are kept in `tools/settings_schemas.yaml` (`tiers`), one place.
 
 | Area | Settings |
 |---|---|
@@ -2723,7 +2723,7 @@ Every setting has a **tier** (the last column; Admin → Configuration shows the
 | [Compute engines: `config/engines/*.yaml`](#compute-engines-configenginesyaml) | 328 |
 | [Modules: `config/modules/*.yaml`](#modules-configmodulesyaml) | 5 |
 | [The console: `application.yaml`](#the-console-applicationyaml) | 182 |
-| [The console's other files](#the-consoles-other-files) | 102 |
+| [The console's other files](#the-consoles-other-files) | 108 |
 | [Connectors: every plugin's settings](#connectors-every-plugins-settings) | 539 |
 | [Packs: `pack.yaml`](#packs-packyaml) | 137 |
 | [Lenses: `config/lenses/`](#lenses-configlenses) | 59 |
@@ -4741,6 +4741,12 @@ The console's content files under `drishti-console/config/`: menus, the help cen
 | `sections[].groups[].guides[].roles` | list | `[]` |  | console | Who may see it: none, everyone; else only an administrator or a person holding one of these roles (others get 404 and do not find it) | live |  | admin |
 | `sections[].groups[].guides[].engine` | string | `none` |  | console | The compute engine it is about: left out while it runs on no server (an administrator sees it greyed); open to anyone who can open Help otherwise | live |  | admin |
 | `sections[].groups[].guides[].pair` | string | `none` |  | console | The tutorial drawn beside this guide on its row (a page of the same group) | live |  | admin |
+| `sections[].groups[].guides[].children` | list | `[]` |  | console | Pages that sit under this one in the Help list: each a page of its own with a slug, doc, title, icon and summary (the Business intelligence section) | live |  | admin |
+| `sections[].groups[].guides[].children[].title` | string | none |  | console | Its title | live |  | admin |
+| `sections[].groups[].guides[].children[].slug` | string | none |  | console | The child page's address, /help/&lt;slug&gt; | live |  | admin |
+| `sections[].groups[].guides[].children[].doc` | string | none |  | console | A repository document under docs/ rendered as it is | live |  | admin |
+| `sections[].groups[].guides[].children[].icon` | string | none |  | console | Its icon | live |  | admin |
+| `sections[].groups[].guides[].children[].summary` | string | none |  | console | The row's summary, also searched | live |  | admin |
 | `sections[].groups[].guides[].domain` | string | `core` |  | console | The domain module the page belongs to (core, banking, capitalmarkets, economy): while it is off for the person the page is not listed, searched or served | live |  | admin |
 | `sections[].groups[].guides[].lenses` | list | `none` |  | console | The lenses that show the page (none: every lens; the full product shows every page) | live |  | admin |
 | `moved` | map | `shipped` |  | console | Retired addresses: old slug -&gt; slug or slug#anchor, answered with a 301 | live |  | admin |

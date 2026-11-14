@@ -80,7 +80,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | Alerts | `/alerts` | Your alerts on numbers, your alert rules and recent alerts (also **Reports**, *My alerts*) |
 | Workspaces | `/w` | Several live views on one screen |
 | Inbox | `/inbox` | Views and comments sent to you ([Your inbox](#your-inbox)) |
-| Reports | `/reports` | Saved searches delivered as CSV on a schedule, and your subscriptions ([Scheduled reports](#scheduled-reports), [Export, and subscriptions](bi/DISTRIBUTION_AND_ALERTS.md#182-export)) |
+| Reports | `/reports` | Saved searches delivered as CSV on a schedule, and your subscriptions ([Scheduled reports](#scheduled-reports), [Export, and subscriptions](bi/DISTRIBUTION_AND_ALERTS.md#12-export)) |
 | BI | `/bi`, `/bi/catalogue`, `/bi/w/me`, `/bi/r/<id>`, `/bi/models`, `/bi/datasets`, `/bi/designer`, `/bi/notebook`, `/bi/transform` | Rūpaka business intelligence, for people with the `bi` power: reports (a board is a report page; `/bi/b/<id>` opens it), BI Studio's designers, the Notebook and the Transform editor ([NOTEBOOK_AND_PYTHON.md](bi/NOTEBOOK_AND_PYTHON.md)) |
 | Build | `/build`, `/build/new`, `/build/pack/designer` | Design layouts (Sutras) in the workbench, make a pack from schemas (proposed Sutras are approved in [Approvals](#approvals)) |
 | Tables & models | `/build/tables` | The editors of virtual tables, semantic models and Python-driven tables, for people with the `bi` power ([Tables and models: the editors](#tables-and-models-the-editors)) |
@@ -195,20 +195,20 @@ word `BI` goes there from the command line, in any case: `BI <GO>` the Build hom
 catalogue, `BI SETTINGS <GO>` the BI settings (administrators with `bi-admin`), `BI <report-or-board> <GO>` a published item by id or title (a **report opens drawn**, with its slicers, drill-down and drill-through; type-ahead completes after `BI `; `RUPAKA` still works as an alias). Without the power the menu is not there and `BI <GO>`
 says what is missing. No pack can define a mnemonic named `BI`, `RUPAKA`, `FORM`, `FUNC`, `WHAT`, `DATAMAP` or `DATA`. The BI page, its keys (`/`, `g h`, `g c`, `g w`, `?`) and what it can and cannot do yet:
 [README.md](bi/README.md). **Using a report:** click a bar and the page filters to it, the buttons in a visual's header drill down, drill through to another page, show the rows behind it or open a trade in the terminal, and a slicer filters
-what it can reach ([README.md](bi/README.md) section 14); **building one:** *Designer* in the BI rail, drag fields onto the canvas in BI Studio, with its Explorer, tabs and Problems and Query dock ([README.md](bi/README.md) sections 15 and 26, [the reports tutorial, Part A](bi/REPORTS.md#part-a--your-first-bi-report)); the YAML reference is [REPORT_FILE_FORMAT_STATEMENTS.md](bi/REPORT_FILE_FORMAT_STATEMENTS.md#9-the-report-file-pages-visuals-filters-and-slicers). The BI rail also opens *Analyse*, *Transforms* (Python data prep step by step) and the *Python console*.
+what it can reach ([README.md](bi/README.md) section 14); **building one:** *Designer* in the BI rail, drag fields onto the canvas in BI Studio, with its Explorer, tabs and Problems and Query dock ([README.md](bi/README.md) sections 15 and 26, [the reports tutorial, Part A](bi/REPORTS.md#part-a--your-first-bi-report)); the YAML reference is [REPORT_FILE_FORMAT_STATEMENTS.md](bi/REPORT_FILE_FORMAT_STATEMENTS.md#1-the-report-file-pages-visuals-filters-and-slicers). The BI rail also opens *Analyse*, *Transforms* (Python data prep step by step) and the *Python console*.
 
 **In a report:** a **parameter slicer** may switch *which* field or measure a visual draws (a field parameter: the chart breaks down
-by desk, then by portfolio; it shows MTM, then notional), and the choice is yours alone, as any slicer's ([REPORT_FILE_FORMAT_STATEMENTS.md › Reports: the YAML, the visuals and how they behave, section 21](bi/REPORT_FILE_FORMAT_STATEMENTS.md#11-field-parameters)).
+by desk, then by portfolio; it shows MTM, then notional), and the choice is yours alone, as any slicer's ([REPORT_FILE_FORMAT_STATEMENTS.md › Reports: the YAML, the visuals and how they behave, section 21](bi/REPORT_FILE_FORMAT_STATEMENTS.md#3-field-parameters)).
 A report may also have **statement pages**: paper, page by page, with a header and footer, page numbers and a period, downloaded as PDF or
 Excel made as you (your masks and row rules), and sent by a subscription as one statement per recipient; the reference is
-[REPORT_FILE_FORMAT_STATEMENTS.md › Reports: the YAML, the visuals and how they behave, section 24](bi/REPORT_FILE_FORMAT_STATEMENTS.md#12-statements-paginated-reports-page-exact-one-per-reader), the walk-through [the reports tutorial, Part C](bi/REPORT_FILE_FORMAT_STATEMENTS.md#part-c--statements-and-field-parameters).
+[REPORT_FILE_FORMAT_STATEMENTS.md › Reports: the YAML, the visuals and how they behave, section 24](bi/REPORT_FILE_FORMAT_STATEMENTS.md#4-statements-paginated-reports-page-exact-one-per-reader), the walk-through [the reports tutorial, Part C](bi/REPORT_FILE_FORMAT_STATEMENTS.md#part-c--statements-and-field-parameters).
 
 **On the right:** round tools, from left to right.
 
 | Tool | Looks like | What it does |
 |---|---|---|
 | Live | the round button right of the theme switcher | Your choice and this page's stream in one: green while live (glowing while ticks arrive, an amber ring while it reconnects, steady on a page without a stream), red with pause bars while paused or on a picked date. Hover to read both, for example *Live updates on — click to pause · Live, built 1.92 ms*. A click switches ([Business dates](#business-dates-live-or-a-day-in-the-past)) |
-| Alerts | a bell | Opens `/alerts`. A number on the bell counts alerts you have not seen ([Alerts](#alerts)), and BI runs that finished, failed or were started again (`BI RUNS <GO>` lists them: [LIVE_REPORTS_AND_BOARDS.md section 28](bi/LIVE_REPORTS_AND_BOARDS.md#15-background-runs-long-bi-questions)) |
+| Alerts | a bell | Opens `/alerts`. A number on the bell counts alerts you have not seen ([Alerts](#alerts)), and BI runs that finished, failed or were started again (`BI RUNS <GO>` lists them: [LIVE_REPORTS_AND_BOARDS.md section 28](bi/LIVE_REPORTS_AND_BOARDS.md#3-background-runs-long-bi-questions)) |
 | Packs | a box with a number | Appears when you may use more than one pack. The number is how many you have switched on; hover to read their names ([Domain packs](#domain-packs-choosing-what-you-see)) |
 | Theme | a palette | Ten themes ([Themes](#themes)) |
 | You | a round avatar with your initial and name | A menu: your name, desk and roles, a clock in your time zone (`NY` by default), **My account**, **Settings**, and **Sign out** when sign-in is on (when it is off, the menu says *Sign-in is off on this server* and links to how to turn it on) |
@@ -1226,7 +1226,7 @@ are the reference. If it cannot be reached the box says "Ask is unavailable"; ev
 
 ### Ask the data, explain a number, describe a report (BI, when your administrator has turned AI on)
 
-In BI ([GOVERNANCE_AND_AI.md section 29](bi/GOVERNANCE_AND_AI.md#16-ai-in-bi-report-from-words-ask-the-data-explain-this-number)), a report page shows a box **Ask the data**: type "notional by desk" and you get a table, a chart that suits it and the query that was asked, answered from
+In BI ([GOVERNANCE_AND_AI.md section 29](bi/GOVERNANCE_AND_AI.md#1-ai-in-bi-report-from-words-ask-the-data-explain-this-number)), a report page shows a box **Ask the data**: type "notional by desk" and you get a table, a chart that suits it and the query that was asked, answered from
 what *you* may see (the same rows and masks as the report). The light bulb in a visual's header **explains** its number: where it comes from and what it is made of. In the designer,
 **Describe a report** drafts a report from your words; you read it, use it and save it, or not. These are off unless your administrator switched them on; if you do not see the box and the bulb, they are off.
 
@@ -1498,7 +1498,7 @@ the provenance of every cell and its rows, a chart of a selection, Excel with ou
 and Arrow.
 
 **One analysis path: the Pivot, then a report.** The Pivot is the one grid for slicing: the risk cubes are its **presets** (the MR cube,
-`MCUBE`, and the CCR cube, `CCUBE`; [PIVOT_SCALE_AND_CUBES.md section 28](bi/PIVOT_SCALE_AND_CUBES.md#28-presets-the-risk-cubes)), and a figure for other people is a
+`MCUBE`, and the CCR cube, `CCUBE`; [PIVOT_SCALE_AND_CUBES.md section 28](bi/PIVOT_SCALE_AND_CUBES.md#6-presets-the-risk-cubes)), and a figure for other people is a
 BI report. Code over a model is the [Notebook](#the-notebook).
 
 | What | How |
@@ -2163,7 +2163,7 @@ one live connection.
 
 ## Scheduled reports
 
-A report is a search that runs on its own, on a schedule, and delivers its result as a CSV or JSON Lines file (**Format**); **Reports** in the Views menu lists them with your subscriptions. Export and subscriptions are in the same place. The reference is [DISTRIBUTION_AND_ALERTS.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 0](bi/DISTRIBUTION_AND_ALERTS.md#181-the-reports-page-and-scheduled-searches); the walk-through is [the reports tutorial, Part E](bi/DISTRIBUTION_AND_ALERTS.md#part-e--scheduled-searches-and-subscriptions).
+A report is a search that runs on its own, on a schedule, and delivers its result as a CSV or JSON Lines file (**Format**); **Reports** in the Views menu lists them with your subscriptions. Export and subscriptions are in the same place. The reference is [DISTRIBUTION_AND_ALERTS.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 0](bi/DISTRIBUTION_AND_ALERTS.md#11-the-reports-page-and-scheduled-searches); the walk-through is [the reports tutorial, Part E](bi/DISTRIBUTION_AND_ALERTS.md#part-e--scheduled-searches-and-subscriptions).
 
 ## Alerts
 
@@ -2242,7 +2242,7 @@ after a data load, or when it changes), and how to tell you: your **inbox** and 
 inside the limit (by the *hysteresis* you set, if any) and does not fire again within the *cooldown* (30 minutes by default). Your rules are on the **Alerts** page (also **Reports**, *My alerts*): *Look now*, *Pause*, *Resume*,
 *Edit and history* (what every look did, and what was sent where) and *Delete*; what they raised is under *Raised for you* and in the
 **Alerts** tab of your inbox. If a board's author has made a tile notify, you are told when it turns red, on your own number.
-Reference: [DISTRIBUTION_AND_ALERTS.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 4](bi/DISTRIBUTION_AND_ALERTS.md#19-alerts-on-numbers); walk-through: [the reports tutorial, Part D](bi/DISTRIBUTION_AND_ALERTS.md#part-d--bi-that-runs-itself).
+Reference: [DISTRIBUTION_AND_ALERTS.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 4](bi/DISTRIBUTION_AND_ALERTS.md#2-alerts-on-numbers); walk-through: [the reports tutorial, Part D](bi/DISTRIBUTION_AND_ALERTS.md#part-d--bi-that-runs-itself).
 
 ## Workspaces
 
@@ -2451,7 +2451,7 @@ button from the accent instead (the accent buttons' gradient runs from `--d-fill
 `--d-*` values itself ([EMBED_GUIDE.md](EMBED_GUIDE.md#5-the-elements-one-by-one)) should keep the same rule.
 
 These are the console's themes. A BI report has a theme of its own (the shipped *Corporate* and *Print*, or one made in the
-theme designer), chosen by its author in BI Studio: [REPORT_FILE_FORMAT_STATEMENTS.md › Reports: the YAML, the visuals and how they behave, section 5.2](bi/REPORT_FILE_FORMAT_STATEMENTS.md#103-themes).
+theme designer), chosen by its author in BI Studio: [REPORT_FILE_FORMAT_STATEMENTS.md › Reports: the YAML, the visuals and how they behave, section 5.2](bi/REPORT_FILE_FORMAT_STATEMENTS.md#23-themes).
 
 ## Domain packs: choosing what you see
 
@@ -2945,7 +2945,7 @@ strip, the tables, searches and columns alike.
 | A figure everyone sees on a view, every time | a panel in the kind's Sutra ([Sutra developer guide](BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies)): computed on the server, cached, live |
 | Find entities by value (`TRD where mtm > 1m`) | [search](#search-by-value), on the command line |
 | Be told when a figure crosses a line | an [alert](#alerts): the server checks it on every change |
-| The same search as a file every morning | a [scheduled report](bi/DISTRIBUTION_AND_ALERTS.md#181-the-reports-page-and-scheduled-searches) |
+| The same search as a file every morning | a [scheduled report](bi/DISTRIBUTION_AND_ALERTS.md#11-the-reports-page-and-scheduled-searches) |
 | A long notebook, a model you keep in git, millions of rows, your own libraries | Python on your machine with a personal API token ([API_REFERENCE.md (clients)](DEVELOPER_GUIDE.md#113-clients-scripts-notebooks-and-excel)) |
 
 Calc is for questions that are yours, now, about the data in front of you. It is not a batch engine: it runs in one

@@ -1420,7 +1420,7 @@ You should see, beside the button, that a Python Transform draft was saved in yo
 cell's `result` is returned, and the next step is *a dataset of its table: source: { python: <this item>, inputs: { <name>: <a model query> } }, one
 input per parameter of run(), in this order*. Open the draft, **Check the Python**, publish it, and make that dataset. Nothing is published by promoting.
 
-**In the UI** the Python dataset is the dataset wizard's source **A Python Transform** ([BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 15](MODELS_AND_DATASETS_FOR_REPORTS.md#510-a-table-of-your-own-step-by-step)):
+**In the UI** the Python dataset is the dataset wizard's source **A Python Transform** ([BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 15](MODELS_AND_DATASETS_FOR_REPORTS.md#110-a-table-of-your-own-step-by-step)):
 **Models → New dataset**, choose the Transform by its title, give each input of `run()` its model query (a model, the fields and the measures to hand
 over), and list the columns the Transform returns with their types; **Preview** runs it for you before you save. **From the YAML** it is the
 `source: { python: ..., inputs: { ... } }` above; **Make it a model** on its page puts a model over it, where its measures go.

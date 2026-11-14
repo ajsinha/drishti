@@ -26,11 +26,11 @@ What a report is, getting in, the four powers, the catalogue and workspaces, the
   - [2. Getting in: the BI menu, the rail and BI GO](#2-getting-in-the-bi-menu-the-rail-and-bi-go)
   - [3. Who may do what: the four powers](#3-who-may-do-what-the-four-powers)
   - [4. Home, the catalogue, workspaces and items](#4-home-the-catalogue-workspaces-and-items)
-  - [6. The report viewer](#6-the-report-viewer)
-  - [7. Which date a report reads](#7-which-date-a-report-reads)
-  - [8. BI Studio and the report designer](#8-bi-studio-and-the-report-designer)
-  - [21. Python in reports](#21-python-in-reports)
-  - [22. Settings, limits and problem codes](#22-settings-limits-and-problem-codes)
+  - [5. The report viewer](#5-the-report-viewer)
+  - [6. Which date a report reads](#6-which-date-a-report-reads)
+  - [7. BI Studio and the report designer](#7-bi-studio-and-the-report-designer)
+  - [8. Python in reports](#8-python-in-reports)
+  - [9. Settings, limits and problem codes](#9-settings-limits-and-problem-codes)
 - [Tutorial: Your first BI report](#tutorial-your-first-bi-report)
   - [Part A · Your first BI report](#part-a--your-first-bi-report)
 
@@ -330,7 +330,7 @@ bi-cd5f8b2cc5   board    promoted  published v1   Counterparty exposure  (Rates 
 1 item(s)
 ```
 
-### 6. The report viewer
+### 5. The report viewer
 
 Open a report from the catalogue (its page has **Open the report**), with `BI <report> <GO>`, or at `/bi/r/<id>` (and `/bi/r/<id>/<page>`).
 The shipped **Trades overview**, **Counterparty risk** and **Cashflow ladder** read the three stored sample models; **Live trading desk** and
@@ -399,7 +399,7 @@ whole range fits, and says *by week* (section 9.11).
 A visual's answer can also come as Apache Arrow (`POST /api/v1/bi/reports/{id}/query` with `Accept: application/vnd.apache.arrow.stream`)
 for clients that read Arrow; the page itself asks JSON, which measured as fast to draw ([DATA_GUIDE.md](../DATA_GUIDE.md#6-arrow-to-the-browser-where-it-pays)).
 
-### 7. Which date a report reads
+### 6. Which date a report reads
 
 "As of D" (a day in the toolbar's date or the time picker, or **Now**, the current business date) means **each table at its latest business
 date on or before D**: facts and dimensions alike, live or not, on a weekend or a holiday, and before today's load. A report never shows an
@@ -426,7 +426,7 @@ A window the reader picks (two dates) is read as it is; a report's `dates: { fro
 `DRS-9030` at `as-of`. A visual pinned to a past date is asked once, never followed live. Every answer says the date each table was read at
 (`meta.dataAsOf`: `{asked, tables: {trades: "2026-10-16", prices: "2026-10-20"}, aligned: false}`).
 
-### 8. BI Studio and the report designer
+### 7. BI Studio and the report designer
 
 The designers share one shell, **BI Studio**: the report designer (and so the board and statement designers: a board and a statement are
 report pages) and the theme designer. Tables and models are written in **Build › Tables & models**. **Report designer** in the rail
@@ -435,7 +435,7 @@ workspace you choose; **Samples to start from** lists the shipped reports, each 
 `/bi/design/<draft>`; a shipped report opens read-only with **Save a copy**. From a table's page, **Start a report on it** opens the designer
 with it chosen. The designer needs the `bi-author` power; its step-by-step use is [the reports tutorial, Part A](#part-a--your-first-bi-report).
 
-#### 8.1 The Studio shell
+#### 7.1 The Studio shell
 
 * **The header**: where you are (BI › Studio › Reports), the item's name and status (*Saved*, *Unsaved changes*, *Read-only*), the actions
   (Undo, Redo, Preview with data, Check, View, Item page, Publish, Save) and **+ New** (report, board, theme, table, model). The layout picker
@@ -452,7 +452,7 @@ with it chosen. The designer needs the `bi-author` power; its step-by-step use i
 
 ![BI Studio: the Explorer of your items on the left, the open item as a tab, and the report designer with the desk pack (a matrix with a colour scale and icons, small multiples, a card and a slicer); the dock with Problems and Query is under the canvas](../img/bistudio/studio.jpg)
 
-#### 8.2 The report designer
+#### 7.2 The report designer
 
 The panes are where Power BI authors expect them: the canvas on the left, then **Filters**, **Visualizations** (with **Build** and **Format**)
 and **Fields**. The designer is an authoring tool, so it opens with its panes, as the pivot screen does behind **Customize ›**
@@ -504,7 +504,7 @@ out, measures sit in their display folders.
   with its errors listed. Converting a visual's type renames its made-up id (`card-1` becomes `slicer-1`), and everything that named the old id
   follows it (bookmarks, layouts, interactions, tooltips).
 
-#### 8.3 A report on a model: Fields, own measures, MQ or SQL
+#### 7.3 A report on a model: Fields, own measures, MQ or SQL
 
 The **Fields** pane is the model as you see it (`GET /api/v1/bi/models/{ref}/describe`): one group per alias, the model's **display names**
 (every visual's labels use them), **descriptions** (the tooltip), **formats**, **folders**, hidden fields left out, masked fields marked. Its
@@ -552,7 +552,7 @@ LIMIT  500
 (a member of its workspace, or in its audience); otherwise publish is refused with `DRS-9030` (*the model 'wes-draft@1' is not published ...*).
 A report names `model:` or the older `dataset:`, never both (`DRS-9140`).
 
-#### 8.4 Phone and tablet layouts
+#### 7.4 Phone and tablet layouts
 
 A phone shows one column: without anything declared, the grid in **reading order**, each visual at its type's default height. A report may say
 how each page is arranged at **640 px and narrower** (`layouts.phone`) and, for a tablet, at **1024 px and narrower** (`layouts.tablet`, two
@@ -582,7 +582,7 @@ The sample *Live trading desk* ships with a phone layout.
 
 ![The same report on an 820 px screen: the bar across the page, the cards in two columns beneath it](../../tutorials/img/t10/34-tablet-view.jpg)
 
-### 21. Python in reports
+### 8. Python in reports
 
 Python reaches a report in three ways, always run on the server's compute pool in its sandbox, over the rows the reader may see, never in the
 browser: a **Python measure** of a model (`{ python: <item>, inputs, by }`), shown by a `python` visual and watchable by an alert; a **python
@@ -591,7 +591,7 @@ visual** that draws what a Python item returns (bars, a chart or a Vega-Lite spe
 sample report `python-desk-risk` and the board `python-wall` show them. Writing the items, the sandbox, their tests, data prep step by step and the
 Notebook's SQL and Python cells are in [BI_GUIDE.md](NOTEBOOK_AND_PYTHON.md).
 
-### 22. Settings, limits and problem codes
+### 9. Settings, limits and problem codes
 
 **Settings** (all in [CONFIGURATION.md](../../admin/CONFIGURATION.md)): `drishti.bi.*` (`enabled`, `dir`, `watch`, `folder-refresh`,
 `workspace-creation`, `max-body-bytes`, `versions-keep`, `usage-days`, `recent`, `list-limit`) and the console's `bi.enabled`
@@ -731,8 +731,8 @@ You land in the designer: a canvas on a 12-column grid, a **Filters** pane, **Vi
 The designer sits in **BI Studio**, the shell the report, model and theme designers share: the **Explorer** of your items on the left (with
 **New**), the items you opened as **tabs** above the canvas, and under it a **dock** with **Problems** (the server's check of your draft a second after each
 change, each problem linked to its visual) and **Query** (the selected visual's model query and its SQL). The steps below work the same in it;
-[BI_GUIDE.md section 26](#8-bi-studio-and-the-report-designer) is the tour, and
-[BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 5](REPORT_FILE_FORMAT_STATEMENTS.md#101-the-format-pane) the Format pane, conditional formatting and themes.
+[BI_GUIDE.md section 26](#7-bi-studio-and-the-report-designer) is the tour, and
+[BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 5](REPORT_FILE_FORMAT_STATEMENTS.md#21-the-format-pane) the Format pane, conditional formatting and themes.
 
 ![BI Studio: the Explorer of your items on the left, the open item as a tab, the report designer, and the dock with Problems and Query under the canvas](../../guides/img/bistudio/studio.jpg)
 
@@ -1098,7 +1098,7 @@ measures:
 and the report (`config/bi/reports/banking/pnl-vs-exposure.report.yaml`) only says `model: trading-risk@1`. When the two numbers live in **two models**
 (each with its own row rules), a report can still read both side by side and link their fields: that is [Part B](MODELS_AND_DATASETS_FOR_REPORTS.md#part-b--several-datasets-in-one-report).
 The same table made by a Python Transform is in [the Notebook tutorial](NOTEBOOK_AND_PYTHON.md); the reference is
-[ARCHITECTURE.md §28](../../architecture/ARCHITECTURE.md#281-the-table-layer-and-models-in-rachana) and [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 16](REPORT_FILE_FORMAT_STATEMENTS.md#913-reports-over-several-models).
+[ARCHITECTURE.md §28](../../architecture/ARCHITECTURE.md#281-the-table-layer-and-models-in-rachana) and [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 16](REPORT_FILE_FORMAT_STATEMENTS.md#113-reports-over-several-models).
 
 ### Step 12 · Relative dates, a tablet, and a view inside a report
 
@@ -1151,7 +1151,7 @@ where: [{ field: trade.TRADE_DATE, op: between, values: [2026-07-27, 2026-10-26]
 
 ![The relative-date slicer set to Last 3 months: a chip names it, the cards read 2,619 trades and +1,125,679,037](../../tutorials/img/t10/31-relative-date.jpg)
 
-You should see the slicer's dropdown (the report's `default: last-90-days` is chosen until you pick another) and, after choosing **Last 3 months**, a chip `When: Last 3 months` and cards narrowed to the `2,619` trades booked in the three months ending on the report's date (MTM `+1,125,679,037`; the whole book is `15,000` trades). Your count depends on the day you built the lake: the trade dates stay (the newest is 2026-09-25), the business dates move, so a short window such as *Last 4 weeks* can hold no trades at all. The names are `last-N-days`, `last-N-business-days`, `last-N-weeks`, `last-N-months`, `this-week|month|quarter|year` (to date), `previous-...` and `all`: [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 6.1](REPORT_FILE_FORMAT_STATEMENTS.md#99-slicers).
+You should see the slicer's dropdown (the report's `default: last-90-days` is chosen until you pick another) and, after choosing **Last 3 months**, a chip `When: Last 3 months` and cards narrowed to the `2,619` trades booked in the three months ending on the report's date (MTM `+1,125,679,037`; the whole book is `15,000` trades). Your count depends on the day you built the lake: the trade dates stay (the newest is 2026-09-25), the business dates move, so a short window such as *Last 4 weeks* can hold no trades at all. The names are `last-N-days`, `last-N-business-days`, `last-N-weeks`, `last-N-months`, `this-week|month|quarter|year` (to date), `previous-...` and `all`: [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 6.1](REPORT_FILE_FORMAT_STATEMENTS.md#19-slicers).
 
 **A tablet layout.** A phone gets one column ([step 10](#step-10--on-a-phone)); a tablet (up to 1024 px) can get two, with some visuals across:
 
@@ -1178,7 +1178,7 @@ You should see the bar the whole width, then the cards in two columns. A phone, 
 
 ![Counterparty lookup: a bar of ten counterparties with CP-VERDANT selected, and its Drishti view beside it with the netting sets](../../tutorials/img/t10/32-entity-view.jpg)
 
-You should see the counterparty's own **Drishti view** (its name, rating, net MTM and netting sets) in the frame beside the bar, with a chip `counterparties.id: CP-VERDANT` (the first bar: the largest computed expected exposure). It is the view page built **for you**: someone who may not see a field does not see it here either. [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 3.4](REPORT_FILE_FORMAT_STATEMENTS.md#95-the-entity-view).
+You should see the counterparty's own **Drishti view** (its name, rating, net MTM and netting sets) in the frame beside the bar, with a chip `counterparties.id: CP-VERDANT` (the first bar: the largest computed expected exposure). It is the view page built **for you**: someone who may not see a field does not see it here either. [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 3.4](REPORT_FILE_FORMAT_STATEMENTS.md#15-the-entity-view).
 
 ### Step 13 · A dataset and a model of your own, in the wizard
 
@@ -1305,8 +1305,8 @@ Latin America & Caribbean                          12
 ```
 
 A draft model answers its owner (and is listed as `draft` by `bi model list`); a report on it is published once the model is. The reference for the
-wizard's every step is [BI_GUIDE.md section 23](MODELS_AND_DATASETS_FOR_REPORTS.md#5-models-and-datasets-what-a-report-reads) and
-[BI_GUIDE.md](MODELS_AND_DATASETS_FOR_REPORTS.md#5-models-and-datasets-what-a-report-reads); the version 1 guided tables builder (*Use the guided tables builder* under the wizard's first step) still makes
+wizard's every step is [BI_GUIDE.md section 23](MODELS_AND_DATASETS_FOR_REPORTS.md#1-models-and-datasets-what-a-report-reads) and
+[BI_GUIDE.md](MODELS_AND_DATASETS_FOR_REPORTS.md#1-models-and-datasets-what-a-report-reads); the version 1 guided tables builder (*Use the guided tables builder* under the wizard's first step) still makes
 `rachana: 1` datasets, which the upgrade converts to models ([tutorial 21](../../tutorials/21-run-it-in-production.md)).
 
 #### Notes: saving safely, and more than one dataset
@@ -1317,7 +1317,7 @@ wizard's every step is [BI_GUIDE.md section 23](MODELS_AND_DATASETS_FOR_REPORTS.
 
 ### Step 14 · Models: from a pack dataset to a report
 
-The **model layer** ([BI_GUIDE.md section 23](MODELS_AND_DATASETS_FOR_REPORTS.md#5-models-and-datasets-what-a-report-reads)): every
+The **model layer** ([BI_GUIDE.md section 23](MODELS_AND_DATASETS_FOR_REPORTS.md#1-models-and-datasets-what-a-report-reads)): every
 kind of every pack is a dataset already, and a model is a few of them joined. This step goes from the pack's **Trade valuation** (one row per trade
 per business date, with its desk, MTM and P&L, in the `market-risk` pack) to a model of trades and desks with a row rule, published, analysed and
 watched. The numbers are from the demo lake (15,000 trade valuations over ten desks).
@@ -1403,7 +1403,7 @@ security:
 ```
 
 and the report of step 6 says `model: trades-and-desks@1`. It publishes like any report once its model is published and passes its safeguard
-([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 18](#83-a-report-on-a-model-fields-own-measures-mq-or-sql)).
+([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 18](#73-a-report-on-a-model-fields-own-measures-mq-or-sql)).
 
 **Steps 7 to 9 from the command line.** Make the item, publish it and ask it (through the console the same calls are `/bi/api/items/<id>/publish`
 and **`/bi/api/mq`**):
@@ -1439,22 +1439,22 @@ condition: {type: threshold, op: above, value: 1000000}
 
 ### Next steps
 
-- [BI_GUIDE.md](README.md) for every page of the BI area, [BI_GUIDE.md](REPORT_FILE_FORMAT_STATEMENTS.md#9-the-report-file-pages-visuals-filters-and-slicers) for every visual and its wells (sections 3 and 6 are the map and the slicers), [BI_GUIDE.md](MODELS_AND_DATASETS_FOR_REPORTS.md#5-models-and-datasets-what-a-report-reads) for writing a dataset, and [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 17](MODELS_AND_DATASETS_FOR_REPORTS.md#59-worked-examples-the-shipped-models-row-rules-and-masks) for
+- [BI_GUIDE.md](README.md) for every page of the BI area, [BI_GUIDE.md](REPORT_FILE_FORMAT_STATEMENTS.md#1-the-report-file-pages-visuals-filters-and-slicers) for every visual and its wells (sections 3 and 6 are the map and the slicers), [BI_GUIDE.md](MODELS_AND_DATASETS_FOR_REPORTS.md#1-models-and-datasets-what-a-report-reads) for writing a dataset, and [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 17](MODELS_AND_DATASETS_FOR_REPORTS.md#19-worked-examples-the-shipped-models-row-rules-and-masks) for
   a stack with four people, row rules and masks at work, and the Model view.
-- [BI_GUIDE.md sections 23 and 24](MODELS_AND_DATASETS_FOR_REPORTS.md#54-measures-the-expression-language) for models and the model designer, [RACHANA_REFERENCE.md › Rachana-EL expressions](../../guides/RACHANA_REFERENCE.md#rachana-el-expressions) for measures (fifty-odd recipes), [API_REFERENCE.md › Drishti SQL](../../guides/API_REFERENCE.md#8-drishti-sql-apiv1bisql) for Drishti SQL, [BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 13](NOTEBOOK_AND_PYTHON.md#4-transforms-a-table-in-a-table-out) for Transforms, [USER_GUIDE.md](../../guides/USER_GUIDE.md#the-notebook) for extracts and promotion.
-- [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](REPORT_FILE_FORMAT_STATEMENTS.md#12-statements-paginated-reports-page-exact-one-per-reader): every key of a statement and how the layout decides where a page breaks.
-- [BI_GUIDE.md](DISTRIBUTION_AND_ALERTS.md#18-distribution-the-reports-page-export-and-subscriptions): schedules, recipients and retries of a subscription.
-- [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21](REPORT_FILE_FORMAT_STATEMENTS.md#11-field-parameters): field parameters in every kind of well.
-- [BI_GUIDE.md](DISTRIBUTION_AND_ALERTS.md#18-distribution-the-reports-page-export-and-subscriptions): every schedule word, retries, alerts on models and fields, chat bridges, board notifications.
+- [BI_GUIDE.md sections 23 and 24](MODELS_AND_DATASETS_FOR_REPORTS.md#14-measures-the-expression-language) for models and the model designer, [RACHANA_REFERENCE.md › Rachana-EL expressions](../../guides/RACHANA_REFERENCE.md#rachana-el-expressions) for measures (fifty-odd recipes), [API_REFERENCE.md › Drishti SQL](../../guides/API_REFERENCE.md#8-drishti-sql-apiv1bisql) for Drishti SQL, [BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 13](NOTEBOOK_AND_PYTHON.md#4-transforms-a-table-in-a-table-out) for Transforms, [USER_GUIDE.md](../../guides/USER_GUIDE.md#the-notebook) for extracts and promotion.
+- [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](REPORT_FILE_FORMAT_STATEMENTS.md#4-statements-paginated-reports-page-exact-one-per-reader): every key of a statement and how the layout decides where a page breaks.
+- [BI_GUIDE.md](DISTRIBUTION_AND_ALERTS.md#1-distribution-the-reports-page-export-and-subscriptions): schedules, recipients and retries of a subscription.
+- [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21](REPORT_FILE_FORMAT_STATEMENTS.md#3-field-parameters): field parameters in every kind of well.
+- [BI_GUIDE.md](DISTRIBUTION_AND_ALERTS.md#1-distribution-the-reports-page-export-and-subscriptions): every schedule word, retries, alerts on models and fields, chat bridges, board notifications.
 - [CLI_REFERENCE.md](../../guides/CLI_REFERENCE.md): `bi item`, `bi dataset refresh` and `bi mq` with every option.
-- [BI_GUIDE.md](DISTRIBUTION_AND_ALERTS.md#18-distribution-the-reports-page-export-and-subscriptions): export formats (PDF, PNG, Excel, CSV), subscriptions in depth, alerts on numbers, boards, embedding a report in another web application.
-- [USER_GUIDE.md › Scheduled reports](DISTRIBUTION_AND_ALERTS.md#181-the-reports-page-and-scheduled-searches) is the reference for the CSV reports.
+- [BI_GUIDE.md](DISTRIBUTION_AND_ALERTS.md#1-distribution-the-reports-page-export-and-subscriptions): export formats (PDF, PNG, Excel, CSV), subscriptions in depth, alerts on numbers, boards, embedding a report in another web application.
+- [USER_GUIDE.md › Scheduled reports](DISTRIBUTION_AND_ALERTS.md#11-the-reports-page-and-scheduled-searches) is the reference for the CSV reports.
 - Tutorial 1, Part C made the search; tutorial 12 told Drishti when the data lands, which is what `after-load` waits for.
-- [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23](LIVE_REPORTS_AND_BOARDS.md#14-boards-report-pages-of-live-tiles): every tile option, alerts on tiles and notifications, the API. [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 7.1](MODELS_AND_DATASETS_FOR_REPORTS.md#57-live-tables) is the live-table reference.
+- [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23](LIVE_REPORTS_AND_BOARDS.md#2-boards-report-pages-of-live-tiles): every tile option, alerts on tiles and notifications, the API. [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 7.1](MODELS_AND_DATASETS_FOR_REPORTS.md#17-live-tables) is the live-table reference.
 - [DEMO_CONNECTOR.md](../../../docs/connectors/types/demo/README.md) and [../guides/DATA_GUIDE.md section 11](../../guides/DATA_GUIDE.md#11-the-demo-data) say exactly what ticks and how.
 - [The Notebook tutorial](NOTEBOOK_AND_PYTHON.md): Python in a measure, a visual and a notebook.
-- [BI_GUIDE.md](GOVERNANCE_AND_AI.md#17-publishing-and-governance-versions-review-certification-lineage-impact-environments): every rule, setting (`drishti.governance.four-eyes`, `drishti.bi.governance.refuse-breaking`) and error code of this tutorial.
-- [BI_GUIDE.md section 23](MODELS_AND_DATASETS_FOR_REPORTS.md#5-models-and-datasets-what-a-report-reads): models, their contract and their versions.
+- [BI_GUIDE.md](GOVERNANCE_AND_AI.md#2-publishing-and-governance-versions-review-certification-lineage-impact-environments): every rule, setting (`drishti.governance.four-eyes`, `drishti.bi.governance.refuse-breaking`) and error code of this tutorial.
+- [BI_GUIDE.md section 23](MODELS_AND_DATASETS_FOR_REPORTS.md#1-models-and-datasets-what-a-report-reads): models, their contract and their versions.
 - [ADMIN_GUIDE.md](../../guides/ADMIN_GUIDE.md): roles and users in depth; tutorial 21 summarises them.
 
 ### If something goes wrong
@@ -1468,9 +1468,9 @@ condition: {type: threshold, op: above, value: 1000000}
 | Publish is not offered | the report is in **My workspace**: move it to a shared workspace first |
 | a visual says `DRS-9020` | a slicer or a selection cannot reach that visual through the dataset's relationships |
 | a number is `•••` | the dataset masks it for your role; the report is working as it should |
-| `DRS-9190` on a dataset made of others (`from:` or `derived:`) | a composed or derived dataset, which BI does not read: `drishti.py bi migrate --models` converts it to a model ([BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 11](MODELS_AND_DATASETS_FOR_REPORTS.md#53-relationships-and-how-a-question-joins)) |
+| `DRS-9190` on a dataset made of others (`from:` or `derived:`) | a composed or derived dataset, which BI does not read: `drishti.py bi migrate --models` converts it to a model ([BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 11](MODELS_AND_DATASETS_FOR_REPORTS.md#13-relationships-and-how-a-question-joins)) |
 | `DRS-9021` "the join key ... is masked for you" | a source masks the column the join is made on; join on an unmasked key such as an id |
-| a slicer does not filter a visual of another dataset | no `link` in the report says the two fields are the same ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 16](REPORT_FILE_FORMAT_STATEMENTS.md#913-reports-over-several-models)) |
+| a slicer does not filter a visual of another dataset | no `link` in the report says the two fields are the same ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 16](REPORT_FILE_FORMAT_STATEMENTS.md#113-reports-over-several-models)) |
 | a dataset with amounts guessed a *dimension* | another dataset references it: change its role to *fact* with the select on its box (step 16) |
 | *Add as inactive* on a suggestion | it joins two facts directly; relate both to a dimension they share instead, and dismiss it |
 | `DRS-9156` for a field and a measure | the field's dataset is not reached many-to-one from the measure's fact (a netting set has no desk): group by a field both facts reach, or ask the measure alone |

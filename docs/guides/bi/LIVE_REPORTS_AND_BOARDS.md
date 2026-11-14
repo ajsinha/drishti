@@ -22,17 +22,17 @@ Live reports and standing queries, boards of live tiles for a wall, kiosk mode, 
 ## Contents
 
 - [Guide](#guide)
-  - [13. Live reports and standing queries](#13-live-reports-and-standing-queries)
-  - [14. Boards: report pages of live tiles](#14-boards-report-pages-of-live-tiles)
-  - [15. Background runs: long BI questions](#15-background-runs-long-bi-questions)
+  - [1. Live reports and standing queries](#1-live-reports-and-standing-queries)
+  - [2. Boards: report pages of live tiles](#2-boards-report-pages-of-live-tiles)
+  - [3. Background runs: long BI questions](#3-background-runs-long-bi-questions)
 - [Tutorial: Live BI and boards](#tutorial-live-bi-and-boards)
   - [Part F · Live BI and boards](#part-f--live-bi-and-boards)
 
 ## Guide
 
-### 13. Live reports and standing queries
+### 1. Live reports and standing queries
 
-#### 13.1 A live report
+#### 1.1 A live report
 
 Nothing in a report says "live": a report whose model reads a **live table** (section 5.7) is live. Open **Live trading desk** from the
 catalogue. Above the pages is the **live indicator**:
@@ -60,7 +60,7 @@ currency). For a reader without `raw` the `TRADER_ID` column reads `•••`, 
 
 ![The live desk's Chart page: a stacked column per desk, one series per currency, worked out by the server](../../tutorials/img/t12/15-chart-page.jpg)
 
-#### 13.2 Pushed answers and the state chip
+#### 1.2 Pushed answers and the state chip
 
 Every visual of a report and every tile of a board **follows** its model query: the page subscribes it and the server pushes a new answer when
 the model's data moves (a live batch, a data load, a refresh); nothing polls. A page holds at most 12 standing queries (a board 16); the rest
@@ -87,7 +87,7 @@ one plan answers all three. Each table of a model is bound to its own time: a li
 current business date; *as of* a past date, a live table reads its history at the end of that day (refused `DRS-9157` without one). A
 back-dated load moves only that date's answers.
 
-#### 13.3 Parameter slicers and Explain
+#### 1.3 Parameter slicers and Explain
 
 A report on a model with parameters or calculation groups shows them above the page: a what-if number as a slider (its min, max and step), a
 field parameter as a choice of fields (section 11), and each calculation group as *Show as*. A value other than the default is a chip in the
@@ -129,7 +129,7 @@ column shows each alert's number, pushed the same way.
 Drishti's own grid of the rows the server sends; for a pivot change the type to a `matrix`, for a chart to a chart type (the live desk sample's
 *Pivot* and *Chart* pages do).
 
-### 14. Boards: report pages of live tiles
+### 2. Boards: report pages of live tiles
 
 A **board** is a wall of tiles for a screen on the wall of a trading desk, a risk team or an operations room. A board is a **report page** with
 `layout: board`: it holds **tiles** (visuals of other reports, with their alert colours) beside the report's **own visuals**, which take the
@@ -137,7 +137,7 @@ report's filters, slicers, cross-filter and drill as on any page. It keeps them 
 **kiosk** mode, and colours a tile amber or red when its number crosses a threshold. The samples are `config/bi/reports/banking/desk-wall.report.yaml`
 and `python-wall.report.yaml`; the walk-through is [the reports tutorial, Part F](#part-f--live-bi-and-boards).
 
-#### 14.1 What a board is
+#### 2.1 What a board is
 
 * A tile names a report and one of its visuals; the viewer asks **that report** for the tile's data, **as the person looking**, so a tile can
   never show more than the same visual in its own report. Tiles can come from **several reports over several models**.
@@ -147,7 +147,7 @@ and `python-wall.report.yaml`; the walk-through is [the reports tutorial, Part F
   inline wait shows the run card (section 15); live tiles stay streams.
 * A report whose pages are all board pages of tiles needs no `model:`. A board **sends nothing by itself**, unless a tile's alert says `notify:`.
 
-#### 14.2 The file
+#### 2.2 The file
 
 ```yaml
 report: desk-wall
@@ -194,7 +194,7 @@ its own: make an alert on the Python measure instead (section 19.1).
 
 ![The Python wall: a Python measure, a Python histogram and a Python visual that returns Vega-Lite, as tiles](../../tutorials/img/t12/17-python-wall.jpg)
 
-#### 14.3 Alerts: a tile changes colour
+#### 2.3 Alerts: a tile changes colour
 
 | `alert` key | Meaning |
 |---|---|
@@ -240,7 +240,7 @@ nothing. The message is the tile and its colour, never a figure (`Desk wall · M
 more readers than `drishti.alerts.max-audience` (300) tells nobody and says so in the history. Administrators see the tiles that notify at
 **Alerts, Everyone's alerts** (section 19.6).
 
-#### 14.4 The viewer, kiosk and rotation
+#### 2.4 The viewer, kiosk and rotation
 
 A board page is a page of the **report viewer** (`/bi/r/<id>/<page>`; the catalogue lists reports with board pages under *Boards*; the item
 page's **Open the board** opens it in kiosk; `/bi/b/<id>` opens the viewer too). It has the report's tabs, the live indicator with Pause and
@@ -262,7 +262,7 @@ and **turns the board pages** every `board.rotate` (else the console's `bi.board
 
 On a phone the wall is one column in reading order with 44 px buttons.
 
-#### 14.5 Who sees what, and checking a board
+#### 2.5 Who sees what, and checking a board
 
 To open a board a person needs the `bi` power and the right to read the report; each tile's data is its report's answer to them, on every
 update. A tile can name a report that is still a **draft** in the designer; it draws only for people who can open that draft, so a report whose
@@ -279,7 +279,7 @@ tile shows a draft **cannot be published or proposed** until that report is (`DR
 | `DRS-9032` | 422 | a tile on a page that is not a board page, or without `from:` |
 | `DRS-9053` | 501 | a reserved setting this server does not build (`notifications` or `subscriptions` on an alert) |
 
-#### 14.6 Designing a board
+#### 2.6 Designing a board
 
 A board is designed in the report designer:
 
@@ -305,7 +305,7 @@ file becomes. Settings: the console's `bi.board.rotate_seconds`, `bi.live.min_in
 `drishti.bi.live.*` and `drishti.alerts.*`. Endpoints: `GET /api/v1/bi/boards/{id}`, `GET /api/v1/bi/boards/reports` (the reports a tile can
 name) ([API_REFERENCE.md](../API_REFERENCE.md)).
 
-### 15. Background runs: long BI questions
+### 3. Background runs: long BI questions
 
 Every BI question (a report visual, a board tile, a model query, SQL, a statement) goes through one pipeline. The console waits about two
 seconds for the answer. When it comes in time, the visual is drawn as usual and nothing else happens. When it takes longer, the question
@@ -313,7 +313,7 @@ becomes a **run**: it goes on in the background, the visual shows a run card, an
 slicer, a cross-filter or a drill on a dashboard never becomes a run: it is answered at once, or it tells you that it needs one. How it is
 built: [ARCHITECTURE.md section 28](../../architecture/ARCHITECTURE.md).
 
-#### 15.1 The run card
+#### 3.1 The run card
 
 A visual whose question takes longer than the inline wait shows a run card instead of its chart; the rest of the page keeps working.
 
@@ -328,7 +328,7 @@ A visual whose question takes longer than the inline wait shows a run card inste
 
 When the run finishes while the page is open, the card turns into the chart without a reload; if you have left, the bell counts it.
 
-#### 15.2 Confirming a large run
+#### 3.2 Confirming a large run
 
 A question that would read a great deal of data (above a minute, or 500 million rows, by default) asks you first. Nothing has run yet.
 
@@ -345,7 +345,7 @@ time." Such a question always asks first when you ask it yourself (a model query
 it draws as usual and becomes a run card if it outlives the inline wait. When the same question already ran on older data, the confirmation
 offers *Open that result* (with its as-of date and age) beside *Run on the newest data*.
 
-#### 15.3 A selection that needs a run
+#### 3.3 A selection that needs a run
 
 Dashboards stay instant: a slicer, a cross-filter or a drill is answered from the model's rollups and built layers. When a selection would
 need a long scan instead, the visual says so at once, before anything is read:
@@ -358,7 +358,7 @@ need a long scan instead, the visual says so at once, before anything is read:
 **Run in background** starts it as a visible run, with its card. The model's owner can add a rollup at that grain (section 15.14), and then the
 same selection is instant.
 
-#### 15.4 The Runs tab
+#### 3.4 The Runs tab
 
 Open it from the rail (**My runs**, with the number of your runs queued or running), from a workspace's tabs (**Items · Runs · Members**), with
 `BI RUNS <GO>`, or `g` then `r`. The address keeps the tab: `/bi/w/me?tab=runs`.
@@ -374,7 +374,7 @@ Filters: **Status** (all, active, waiting for you, done, failed, cancelled, expi
 statements, schedules), **Who** (mine, shared with me, both), **Since** (1 to 90 days), **Search**. A shared workspace's Runs tab lists the
 runs of its items that you may see. Keys: the arrows move between the tabs; `↑` and `↓` between rows; `Enter` opens a run; `Esc` closes it.
 
-#### 15.5 One run: the drawer
+#### 3.5 One run: the drawer
 
 ![The drawer of a finished run in the light theme: Open, Re-run, Export, Promote; source, who ran it, filters, parameters, as of, data, estimate and actual, tier; kept until, shared with bob (re-masked), schedule](../img/bi-runs/run-drawer-light.png)
 
@@ -396,7 +396,7 @@ versions** lists each table), the estimate beside the actual, the tier and the e
 
 An expired run says when its result was removed, and offers Run again.
 
-#### 15.6 The same answer for the same access profile
+#### 3.6 The same answer for the same access profile
 
 A report visual's answer is shared between everyone with the same **access profile**: the same roles, masks and row rules on the model it
 reads. When a colleague with your profile has drawn the visual on the same data and dates, you get their answer at once (**Reused**), or wait
@@ -404,7 +404,7 @@ for the same run if it is still going; nothing is computed twice. Someone with a
 depends on who is looking (a filter or value naming you, such as `user.name` or `me`, a row rule by your user name, a personal model) stays
 yours alone.
 
-#### 15.7 Sharing a run
+#### 3.7 Sharing a run
 
 ![The drawer of a shared, scheduled run in the Terminal theme: bob re-masked, dave sees the same, carol recomputed as them with her own run; the schedule business-days 07:30 with its next firing, and the schedule form set to weekly on Monday at 08:00](../img/bi-runs/run-share-schedule.png)
 
@@ -423,7 +423,7 @@ rights cost one recomputation. The decision is taken again each time they read i
 **Unshare** stops sharing with that person. A recipient finds the run in their own Runs tab marked **⇄ shared by anna**; they can open and
 export it (their own version); sharing on, scheduling and deleting stay with the owner. The bell tells them.
 
-#### 15.8 Schedules
+#### 3.8 Schedules
 
 **Schedule…** asks the same question again on a schedule, as you, at the time it fires (if you lose access, the firing fails and you are told;
 it never borrows anyone's rights). Choose a preset and the form writes the schedule under it ("Writes `weekly mon 08:00`"):
@@ -443,14 +443,14 @@ out at each firing) or the same dates; times are the server's zone. The drawer's
 ("business-days 07:30 on the newest data · next 2026-10-22 07:30 UTC"); **Edit**, **Pause** / **Resume** and **Remove** (the runs it made stay).
 Each firing is a visible background run and a notice on the bell.
 
-#### 15.9 Export
+#### 3.9 Export
 
 **Export CSV**, **Export Excel** and **Export JSONL** (a row a line, the CSV's column names) download a finished run's result: in the drawer, on
 the run card, and on the line above a report drawn from a run ("Drawn from the run of…"). The server makes the file from the stored result, so
 nothing is computed again, and it is **your** version: a recipient of a share gets theirs, and masked cells stay masked (the file's note names
 the masked columns). A very large result is cut at the export row limit, with a note.
 
-#### 15.10 Promote a run
+#### 3.10 Promote a run
 
 **Promote…** asks for a **Name** (prefilled from the run's title), a **Title**, and **To**: *a dataset snapshot* keeps the result as a read-only
 table and makes a draft table in My workspace (`from: { run: … }`, section 5.11); *a report on it* also makes a draft report with one table of
@@ -460,14 +460,14 @@ with `bi-author`, and only a model query or a SQL run. The same name again is ve
 snapshot name is taken by another person's promotion: choose another name (DRS-9004)*). On the command line:
 `drishti.py bi runs promote RUN --to report --name desk-pnl-2026 --title "Desk P&L 2026"`; over the API, `POST /api/v1/bi/runs/{id}/promote`.
 
-#### 15.11 The bell and the inbox
+#### 3.11 The bell and the inbox
 
 When a visible run finishes, fails, or is started again after a server restart, the bell counts it once: "Run finished: MTM by desk and month,
 2026-01-02 to 2026-09-30 (182 rows, 3 min 40 s)": names and counts only, never a value. Opening it goes to `/bi/run/<id>`, which opens the
 report drawn from the stored result, or the run. The inbox has a **Runs** tab (`/inbox?tab=run`). Nothing is lost without a word: after a
 restart every queued or running run is resumed or marked failed with its reason.
 
-#### 15.12 On the command line
+#### 3.12 On the command line
 
 `drishti.py bi runs` does what the Runs tab does, as the token's user ([CLI_REFERENCE.md](../CLI_REFERENCE.md) section 5.7):
 
@@ -502,7 +502,7 @@ and exit 2. `drishti.py bi mq FILE --async` and `drishti.py bi sql "…" --model
 `--wait` (2 s), else the run's id. Without `--async` they answer in the foreground. Over the API, a client asks for a run with the standard
 `Prefer: respond-async` header; the endpoints are under `/api/v1/bi/runs` ([API_REFERENCE.md](../API_REFERENCE.md)).
 
-#### 15.13 The Admin page for runs
+#### 3.13 The Admin page for runs
 
 `/admin/bi/runs`, for BI administrators (also linked from Admin → BI), shows the engine's gate (slots in use per work class: interactive,
 standing and background, with the background cap), the interactive admission wait (the sign that background work slows nobody), the queue per
@@ -510,7 +510,7 @@ person, what runs now (with **Cancel**: the person is told an administrator canc
 users), how accurate the estimates were, how many questions were answered inline, the settings file (`config/runs/runs.yaml`) and the
 repeated heavy questions. It shows state, sizes and nodes, never a value. `drishti.py bi runs storage` prints the same.
 
-#### 15.14 Rollup suggestions
+#### 3.14 Rollup suggestions
 
 The same heavy question asked again and again is better answered by a rollup in the model. The server counts the finished heavy model queries
 per model, grain and shape of their filters (the field and the operator, never a value); one asked often enough (by default 5 times in 7 days,
@@ -525,7 +525,7 @@ given to add by hand); **Dismiss** stops suggesting it. Once the model has a rol
 are answered at once. While a model has open suggestions, administrators see a notice on it that opens this list for that model
 (`/admin/bi/runs?model=trading#suggestions`).
 
-#### 15.15 The words for each state
+#### 3.15 The words for each state
 
 | State | Shown as | Meaning |
 |---|---|---|
@@ -790,7 +790,7 @@ You should see `layer live (rollup byDeskBook)`, and the FROM reads `live_3_agg0
 `{"rollup": "byDeskBook", "groups": 603, "incremental": 24948, "recomputedGroups": 8580}` after about half a minute of ticks (603 groups; 24,948 rows moved by
 difference; 8,580 groups whose minimum or maximum was read again). The reader's row rules and masks still apply on top. A measure that is not a plain
 sum, count, minimum or maximum of a column (`Losses` has a condition inside) is computed over the rows; `drishti.bi.live.incremental-aggregates:
-false` turns this off. [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 7.1](MODELS_AND_DATASETS_FOR_REPORTS.md#57-live-tables).
+false` turns this off. [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 7.1](MODELS_AND_DATASETS_FOR_REPORTS.md#17-live-tables).
 
 ### Step 47 · A report that follows it
 
@@ -853,7 +853,7 @@ its own type, and nothing says "live" because the dataset does:
 ### Step 48 · A wall for the desk: a board
 
 A **board** puts the visuals of several reports on one screen. A board is a **report whose pages have `layout: board`**: its tiles are visuals of other
-reports, and it may hold its own visuals too ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23](#14-boards-report-pages-of-live-tiles)). Open **Catalogue → Desk wall** (`/bi/r/file:report:desk-wall`; the 2.3 address
+reports, and it may hold its own visuals too ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23](#2-boards-report-pages-of-live-tiles)). Open **Catalogue → Desk wall** (`/bi/r/file:report:desk-wall`; the 2.3 address
 `/bi/b/file:board:desk-wall` opens it too).
 
 ![The Desk wall: tiles from the trading desk report, two of them outlined amber](../../tutorials/img/t12/08-board.jpg)
@@ -875,7 +875,7 @@ pages:
 ```
 
 A tile is a visual of a report (the report supplies the data, **as the person looking**) placed on a 12-column grid, with an optional `alert`: amber when the `warn` condition holds, red when `crit` does, and the footer says the word as well, so colour is never the only signal. Net MTM below 0 is a warning, below -1 billion critical (Losses: below -1.5 billion, below -2.5 billion);
-the live net MTM here (`-310,188,982`) is below 0 but above -1 billion, hence amber, and Losses (`-1,789,927,256`) likewise. A tile that turns red can also **tell people** (`notify:` on its alert; [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23](#14-boards-report-pages-of-live-tiles) section 4). The second page is another report over another live dataset:
+the live net MTM here (`-310,188,982`) is below 0 but above -1 billion, hence amber, and Losses (`-1,789,927,256`) likewise. A tile that turns red can also **tell people** (`notify:` on its alert; [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23](#2-boards-report-pages-of-live-tiles) section 4). The second page is another report over another live dataset:
 
 ![The second page: Counterparty exposure tiles](../../tutorials/img/t12/09-board-exposure.jpg)
 
@@ -890,7 +890,7 @@ file:report:desk-wall report    promoted  published v1   Desk wall  (Shipped con
 ```
 
 (`--body` prints its YAML: [config/bi/reports/banking/desk-wall.report.yaml](../../../config/bi/reports/banking/desk-wall.report.yaml).) A board file of 2.3 (`board:` with `tiles:`) is read as such a report until you convert it:
-`python3 tools/drishti.py bi migrate --boards config/bi/boards --write` writes `config/bi/reports/<name>.report.yaml` ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 12](#146-designing-a-board)).
+`python3 tools/drishti.py bi migrate --boards config/bi/boards --write` writes `config/bi/reports/<name>.report.yaml` ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 12](#26-designing-a-board)).
 
 ### Step 49 · Kiosk mode
 
@@ -937,7 +937,7 @@ Open the **Live trading desk** report again, wait a minute, and scroll to the bo
 
 ![The last-hour line: net MTM and losses, one point every ten seconds, drawn from the server](../../tutorials/img/t12/11-history-line.jpg)
 
-You should see a line titled *Net MTM and losses, last hour* with a point for every ten seconds the dataset has been open (the sample dataset is sampled only while someone has it open, so on a freshly started server the line begins when you opened the page; reload it and the points are still there). The line is an ordinary `line` visual over the dataset table `history`: its axis is `history.ts` and its values are the generated measures `MTM history` and `Losses history`. [BI_GUIDE.md](MODELS_AND_DATASETS_FOR_REPORTS.md#57-live-tables) has the rest (grouping by a column, masks, the limits). **On the command line** the points are one visual's answer (twelve samples, the first two minutes; captured):
+You should see a line titled *Net MTM and losses, last hour* with a point for every ten seconds the dataset has been open (the sample dataset is sampled only while someone has it open, so on a freshly started server the line begins when you opened the page; reload it and the points are still there). The line is an ordinary `line` visual over the dataset table `history`: its axis is `history.ts` and its values are the generated measures `MTM history` and `Losses history`. [BI_GUIDE.md](MODELS_AND_DATASETS_FOR_REPORTS.md#17-live-tables) has the rest (grouping by a column, masks, the limits). **On the command line** the points are one visual's answer (twelve samples, the first two minutes; captured):
 
 ```text
 $ curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' -d '{"page":"desk","visual":"last-hour","state":{}}' \

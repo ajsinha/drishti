@@ -674,7 +674,7 @@ normally create rules from the console's Alerts page; see [USER_GUIDE.md](../gui
 
 ### Live BI: a report's live tables
 
-Business intelligence uses this machinery too (Rūpaka phase 5, [ARCHITECTURE.md §28](ARCHITECTURE.md#28-business-intelligence-on-the-table-layer) section 12; the pages are [TABLES_AND_MODELS.md](../guides/bi/TABLES_AND_MODELS.md) section 18). A dataset table with `mode: live` ([MODELS_AND_DATASETS_FOR_REPORTS.md](../guides/bi/MODELS_AND_DATASETS_FOR_REPORTS.md#57-live-tables)) is **fed by the same
+Business intelligence uses this machinery too (Rūpaka phase 5, [ARCHITECTURE.md §28](ARCHITECTURE.md#28-business-intelligence-on-the-table-layer) section 12; the pages are [TABLES_AND_MODELS.md](../guides/bi/TABLES_AND_MODELS.md) section 18). A dataset table with `mode: live` ([MODELS_AND_DATASETS_FOR_REPORTS.md](../guides/bi/MODELS_AND_DATASETS_FOR_REPORTS.md#17-live-tables)) is **fed by the same
 topics**: for each entity of its kind the engine subscribes through the source layer (the connector's `subscribe`, the same call a live view makes), applies each change to an in-memory table by key (batched every 100 ms, so ticks coalesce as they do for a view), and keeps a counter that grows with
 every change. It is **not** a view stream: it carries no panel patches and costs the entities' topics one more listener (`TopicHub`), not one more source subscription; a dataset that names a connector (`source: { connector: ... }`) subscribes through that connector directly instead, for a stream that keeps no state but ticks what a store serves.
 

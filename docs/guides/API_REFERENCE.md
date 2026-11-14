@@ -2695,7 +2695,7 @@ Refusals: `DRS-5710` to `DRS-5716` ([the error code table](#error-code-table)).
 
 ### 23.2 The MR cube: `/api/v1/risk/mr`
 
-The market-risk cube ([PIVOT_SCALE_AND_CUBES.md section 29](bi/PIVOT_SCALE_AND_CUBES.md#29-the-mr-cube-preset)) is the pivot engine on `source: var` with engine `mr-cube` running: the
+The market-risk cube ([PIVOT_SCALE_AND_CUBES.md section 29](bi/PIVOT_SCALE_AND_CUBES.md#7-the-mr-cube-preset)) is the pivot engine on `source: var` with engine `mr-cube` running: the
 source then offers the hierarchy levels (`MGMT.DESK`), `RISK_CLASS`, `POSITION`, `TRADE`, the measures `comp_var()`, `comp_es()`,
 `incr_var()`, `limit()`, `limit_use()`, `svar()`, `dv01()`, `cs01()`, `sbm()`, and the view's `options` (`scope`, `horizon`, `method`,
 `confidence`, `esConfidence`, `set`, `ccy`). Its lens adds, as the caller (a `view` is the view or a saved view's id):

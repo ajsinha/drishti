@@ -200,7 +200,7 @@ The banking module's engines run on the server, in Java, for any scope; the cons
 - **Parametric VaR** (`PVAR`) beside historical, as a cross-check and never the official figure
   ([VAR_GUIDE.md section 3.12](docs/guides/VAR_GUIDE.md#312-parametric-var-beside-historical-pvar)).
 - **The market-risk cube** (`MCUBE`): VaR by desk and risk class as a Pivot preset, each cell the VaR engine's answer for its scope
-  ([PIVOT_SCALE_AND_CUBES.md section 29](docs/guides/bi/PIVOT_SCALE_AND_CUBES.md#29-the-mr-cube-preset)).
+  ([PIVOT_SCALE_AND_CUBES.md section 29](docs/guides/bi/PIVOT_SCALE_AND_CUBES.md#7-the-mr-cube-preset)).
 - **Counterparty exposure** (EE, PFE, EPE, EEPE) from the simulator's paths with netting and collateral, and **the pre-deal check**
   (`PREDEAL`): a new trade added to its netting set path by path and answered approve, refer or decline against the credit limit and each
   tenor bucket, audited ([EXPOSURE_GUIDE.md](docs/guides/EXPOSURE_GUIDE.md), [section 18.9](docs/guides/EXPOSURE_GUIDE.md#189-the-pre-deal-check),

@@ -368,7 +368,7 @@ guides:
 
   # ------------------------------------------------------------------------------------------------------------- groupings, analytics
   - id: groupings
-    file: docs/guides/bi/README.md
+    file: docs/guides/bi/GROUPINGS_AND_ANALYTICS.md
     number: 25
     note: |
       These are the inputs; every grouping and analytic is computed from them when asked ([section 22](#22-where-the-inputs-come-from)).
@@ -454,10 +454,10 @@ guides:
 
   # --------------------------------------------------------------------------------------------------------------------------- pivot
   - id: pivot
-    file: docs/guides/bi/README.md
-    number: 27
+    file: docs/guides/bi/PIVOT_SCALE_AND_CUBES.md
+    number: 5
     note: |
-      The pivot reads any stored kind through its connector ([section 3](#3-sources-and-fields)); these are the sources the guide's examples
+      The pivot reads any stored kind through its connector ([section 3](PIVOT.md#3-sources-and-fields)); these are the sources the guide's examples
       use. A field's type and unit (money, rate) come from the kind's data contract.
     datasets:
       - kind: trade_murex
@@ -467,7 +467,7 @@ guides:
         sample: trades/murex/trade_murex.*.jsonl.gz
         required: for the table source `trade`
         for: 'the rows of the guide''s examples (`"source": "trade"`)'
-        guide: "[3](#3-sources-and-fields)"
+        guide: "[3](PIVOT.md#3-sources-and-fields)"
         about: |
           The trades (`trade_murex`, `trade_endur`, `trade_calypso` under `data/testdata/trades/<system>/`): a stored kind read as a table; its
           text fields are the rows and columns, its numbers the measures. The record shows the fields a pivot of trades usually groups by.
@@ -476,7 +476,7 @@ guides:
         sample: market-risk/scenario-pv/scenario-pv-*.tar
         required: for the source `var`
         for: the positions' columns and vectors behind `var()`, `es()`, `pv()`
-        guide: "[3](#3-sources-and-fields)"
+        guide: "[3](PIVOT.md#3-sources-and-fields)"
         about: |
           The source `var` is the VaR engine's book of the date, built from these rows (or `pnl-vector` rows, [VAR_GUIDE.md section
           36](VAR_GUIDE.md#36-var-data-every-dataset-the-engine-reads)): its text columns (DESK, CURRENCY, PRODUCT_GROUP …) are the fields.
@@ -484,14 +484,14 @@ guides:
         title: positions
         required: optional (a table source)
         for: a stored position table, when the bank delivers one
-        guide: "[3](#3-sources-and-fields)"
+        guide: "[3](PIVOT.md#3-sources-and-fields)"
         about: |
           A stored position table, pivoted like any other kind. The demo derives its positions in the VaR engine instead.
       - kind: pnl-vector
         title: P&L vectors per trade
         required: "**one of the two**, per trade"
         for: "the MR cube preset: every trade's vector; its columns as dimensions"
-        guide: "[29.3](#293-the-inputs)"
+        guide: "[7.3](#73-the-inputs)"
         sample_note: none in the demo data (it ships scenario PVs); the record's shape is [its sample](../contracts/samples/market-risk.md#pnl-vector).
         about: |
           Each trade's scenario P&L; its columns (`LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `CURRENCY`,

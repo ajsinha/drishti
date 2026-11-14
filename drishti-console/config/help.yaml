@@ -257,7 +257,7 @@ moved:
   blas: operations#149-native-libraries-blas                # BLAS by its name
   net: cluster#1-several-servers-as-one-drishtinet                 # Admin -> Cluster's help link (docs/guides/OPERATIONS_GUIDE.md, the Drishti*net operator's guide, in the reference)
   drishti-net: cluster#1-several-servers-as-one-drishtinet          # Drishti*net by its name
-  bi-studio: bi-reports#8-bi-studio-and-the-report-designer   # BI Studio (2.4.0)
+  bi-studio: bi-reports#7-bi-studio-and-the-report-designer   # BI Studio (2.4.0)
   limit-letters: docs-guides-var-guide#1514-hierarchies-from-the-rows-or-from-the-trades-columns   # VaR hierarchies by columns, LL (2.9.5)
   var-hierarchies: docs-guides-var-guide#1514-hierarchies-from-the-rows-or-from-the-trades-columns
   var-horizon: docs-guides-var-guide#186-horizons-the-two-10-day-methods-and-the-confidence-chosen   # 10-day VaR, √10 and the sum (2.9.7)
@@ -285,13 +285,13 @@ moved:
   databricks: data-guide#3-using-drishti-with-databricks-delta-lake-or-apache-iceberg                                              # Databricks Delta Lake or Apache Iceberg
   transforms: bi-python-notebook#5-data-prep-the-transform-editor             # BI -> Transforms, /bi/transform (2.4.0)
   notebook: bi-python-notebook#2-the-notebook                                        # BI -> Notebook, /bi/notebook: SQL on the server, Python on its compute pool
-  themes: bi-report-file#103-themes                                               # report themes and the theme designer (2.4.0)
+  themes: bi-report-file#23-themes                                               # report themes and the theme designer (2.4.0)
   console-themes: user-guide#themes                                       # the console's ten themes (three Terminal hues in 2.6.0)
-  statements: bi-report-file#12-statements-paginated-reports-page-exact-one-per-reader                                      # statement pages, paginated reports, bursting (2.6.0; docs/guides/bi/README.md)
+  statements: bi-report-file#4-statements-paginated-reports-page-exact-one-per-reader                                      # statement pages, paginated reports, bursting (2.6.0; docs/guides/bi/README.md)
   history: user-guide#history-an-entity-over-time                         # TRD 1000015 30 <GO>: an entity over time (2.6.5)
   history-tutorial: docs-tutorials-01-first-15-minutes#part-e--an-entity-over-time                 # tutorial 1, Part E (2.6.5)
-  paginated-reports: bi-report-file#12-statements-paginated-reports-page-exact-one-per-reader
-  field-parameters: bi-report-file#11-field-parameters             # field parameters in a report's wells (2.6.0)
+  paginated-reports: bi-report-file#4-statements-paginated-reports-page-exact-one-per-reader
+  field-parameters: bi-report-file#3-field-parameters             # field parameters in a report's wells (2.6.0)
   deploy/stack: cluster#2-a-cluster-of-three                     # the ready-made local cluster (deploy/stack/)
   quickstart: operations#2-install-and-run-on-one-machine
   windows: operations#4-drishti-on-windows
@@ -304,16 +304,16 @@ moved:
   on-a-phone: user-guide#on-a-phone
   lens-menu: user-guide#on-a-phone                                      # the lens menus folded into one on a phone (LX1 option C)
   pivot-tab: user-guide#pivot-slice-a-table-your-way
-  bi-runs: bi-live#15-background-runs-long-bi-questions                                       # BI runs, the guide (docs/guides/bi/README.md, 2.6.7)
-  runs-tab: bi-live#154-the-runs-tab                                           # the Runs tab of a BI workspace (2.6.7)
-  run-card: bi-live#151-the-run-card                                           # a visual's run card (2.6.7)
-  run-confirm: bi-live#152-confirming-a-large-run                              # the confirm card of a large run (2.6.7)
-  run-needed: bi-live#153-a-selection-that-needs-a-run                         # a selection that needs a background run, DRS-9089 (2.6.7)
-  snapshot-dataset: bi-live#1510-promote-a-run                                  # a run promoted to a dataset snapshot (2.6.7)
-  run-share: bi-live#157-sharing-a-run                                         # sharing a run: each recipient's mode, unshare (2.6.7)
-  run-schedule: bi-live#158-schedules                                          # a run on a schedule: presets, edit, pause, remove (2.6.7)
-  run-export: bi-live#159-export                                               # a run's result as CSV or Excel (2.6.7)
-  run-suggestions: bi-live#1514-rollup-suggestions                              # Admin → BI → Runs, repeated heavy questions as rollups (2.6.7)
+  bi-runs: bi-live#3-background-runs-long-bi-questions                                       # BI runs, the guide (docs/guides/bi/README.md, 2.6.7)
+  runs-tab: bi-live#34-the-runs-tab                                           # the Runs tab of a BI workspace (2.6.7)
+  run-card: bi-live#31-the-run-card                                           # a visual's run card (2.6.7)
+  run-confirm: bi-live#32-confirming-a-large-run                              # the confirm card of a large run (2.6.7)
+  run-needed: bi-live#33-a-selection-that-needs-a-run                         # a selection that needs a background run, DRS-9089 (2.6.7)
+  snapshot-dataset: bi-live#310-promote-a-run                                  # a run promoted to a dataset snapshot (2.6.7)
+  run-share: bi-live#37-sharing-a-run                                         # sharing a run: each recipient's mode, unshare (2.6.7)
+  run-schedule: bi-live#38-schedules                                          # a run on a schedule: presets, edit, pause, remove (2.6.7)
+  run-export: bi-live#39-export                                               # a run's result as CSV or Excel (2.6.7)
+  run-suggestions: bi-live#314-rollup-suggestions                              # Admin → BI → Runs, repeated heavy questions as rollups (2.6.7)
   table-chart: user-guide#chart-any-table                                 # the chart dialog's ? (Chart any table, 2.6.7)
   using-the-terminal: user-guide
   bi-tutorial: bi-reports#tutorial-your-first-bi-report
@@ -385,16 +385,16 @@ moved:
   docs-guides-pack-modelling-guide: build-guide#5-modelling-data-large-kinds-several-systems-derived-kinds-samples   # merged into BUILD_GUIDE Part II
   docs-guides-pack-lifecycle-guide: build-guide#29-around-the-pack-inheritance-versions-the-registry-live-reload-deploy   # merged into BUILD_GUIDE Part III
   docs-guides-pack-generators-guide: build-guide#30-generated-packs-and-the-readme-standard   # merged into BUILD_GUIDE Part IV
-  reports-page: bi-distribution#181-the-reports-page-and-scheduled-searches   # the Reports page; docs/guides/SCHEDULED_REPORTS.md merged into bi/DISTRIBUTION_AND_ALERTS.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 0
-  docs-guides-scheduled-reports: bi-distribution#181-the-reports-page-and-scheduled-searches   # docs/guides/SCHEDULED_REPORTS.md
-  bi-recipes: bi-report-models#59-worked-examples-the-shipped-models-row-rules-and-masks   # docs/guides/BI_RECIPES.md merged into bi/TABLES_AND_MODELS.md › Datasets: the YAML, the expression language and the security rules, section 17
-  docs-guides-bi-recipes: bi-report-models#59-worked-examples-the-shipped-models-row-rules-and-masks   # docs/guides/BI_RECIPES.md
-  boards: bi-live#14-boards-report-pages-of-live-tiles   # docs/guides/BOARDS.md merged into bi/LIVE_REPORTS_AND_BOARDS.md › Reports: the YAML, the visuals and how they behave, section 23
-  docs-guides-boards: bi-live#14-boards-report-pages-of-live-tiles   # docs/guides/BOARDS.md
-  docs-guides-statements: bi-report-file#12-statements-paginated-reports-page-exact-one-per-reader   # docs/guides/STATEMENTS.md merged into bi/REPORT_FILE_FORMAT_STATEMENTS.md › Reports: the YAML, the visuals and how they behave, section 24
-  bi-ai: bi-govern-ai#16-ai-in-bi-report-from-words-ask-the-data-explain-this-number   # docs/guides/BI_AI.md merged into bi/GOVERNANCE_AND_AI.md section 29
-  docs-guides-bi-ai: bi-govern-ai#16-ai-in-bi-report-from-words-ask-the-data-explain-this-number   # docs/guides/BI_AI.md
-  docs-guides-bi-runs-guide: bi-live#15-background-runs-long-bi-questions   # docs/guides/BI_RUNS_GUIDE.md merged into bi/README.md section 28
+  reports-page: bi-distribution#11-the-reports-page-and-scheduled-searches   # the Reports page; docs/guides/SCHEDULED_REPORTS.md merged into bi/DISTRIBUTION_AND_ALERTS.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 0
+  docs-guides-scheduled-reports: bi-distribution#11-the-reports-page-and-scheduled-searches   # docs/guides/SCHEDULED_REPORTS.md
+  bi-recipes: bi-report-models#19-worked-examples-the-shipped-models-row-rules-and-masks   # docs/guides/BI_RECIPES.md merged into bi/TABLES_AND_MODELS.md › Datasets: the YAML, the expression language and the security rules, section 17
+  docs-guides-bi-recipes: bi-report-models#19-worked-examples-the-shipped-models-row-rules-and-masks   # docs/guides/BI_RECIPES.md
+  boards: bi-live#2-boards-report-pages-of-live-tiles   # docs/guides/BOARDS.md merged into bi/LIVE_REPORTS_AND_BOARDS.md › Reports: the YAML, the visuals and how they behave, section 23
+  docs-guides-boards: bi-live#2-boards-report-pages-of-live-tiles   # docs/guides/BOARDS.md
+  docs-guides-statements: bi-report-file#4-statements-paginated-reports-page-exact-one-per-reader   # docs/guides/STATEMENTS.md merged into bi/REPORT_FILE_FORMAT_STATEMENTS.md › Reports: the YAML, the visuals and how they behave, section 24
+  bi-ai: bi-govern-ai#1-ai-in-bi-report-from-words-ask-the-data-explain-this-number   # docs/guides/BI_AI.md merged into bi/GOVERNANCE_AND_AI.md section 29
+  docs-guides-bi-ai: bi-govern-ai#1-ai-in-bi-report-from-words-ask-the-data-explain-this-number   # docs/guides/BI_AI.md
+  docs-guides-bi-runs-guide: bi-live#3-background-runs-long-bi-questions   # docs/guides/BI_RUNS_GUIDE.md merged into bi/README.md section 28
   docs-guides-nested-documents: build-guide#6-sutras-over-deep-documents   # docs/guides/NESTED_DOCUMENTS.md
   docs-guides-sutra-testing-guide: cli-guide#testing-sutras-expectyaml-the-tests-convention-and-ci   # docs/guides/SUTRA_TESTING_GUIDE.md, beside the sutra command
   docs-guides-sutra-forms-guide: build-guide#28-forms-letting-people-edit-records   # docs/guides/SUTRA_FORMS_GUIDE.md, now BUILD_GUIDE.md section 28
@@ -453,11 +453,11 @@ moved:
   screen-designer: rachana-reference#screen-designer-and-the-build-workbench   # guides/SCREEN_DESIGNER.md merged into guides/RACHANA_REFERENCE.md (2.9.7)
   expressions: rachana-reference#rachana-el-expressions   # guides/EXPRESSIONS.md, then RACHANA_REFERENCE.md: BI's expressions are Rachana (2.9.11.d)
   sql: api#8-drishti-sql-apiv1bisql   # guides/SQL.md, then API_REFERENCE.md, Drishti SQL: Drishti SQL is in the API guide (2.9.11.d)
-  bi-governance: bi-govern-ai#17-publishing-and-governance-versions-review-certification-lineage-impact-environments   # guides/BI_GOVERNANCE.md merged into guides/bi/README.md (2.9.7)
-  datasets: bi-report-models#5-models-and-datasets-what-a-report-reads   # guides/DATASETS.md merged into guides/bi/README.md (2.9.7)
-  distribution: bi-distribution#18-distribution-the-reports-page-export-and-subscriptions   # guides/DISTRIBUTION.md merged into guides/bi/README.md (2.9.7)
+  bi-governance: bi-govern-ai#2-publishing-and-governance-versions-review-certification-lineage-impact-environments   # guides/BI_GOVERNANCE.md merged into guides/bi/README.md (2.9.7)
+  datasets: bi-report-models#1-models-and-datasets-what-a-report-reads   # guides/DATASETS.md merged into guides/bi/README.md (2.9.7)
+  distribution: bi-distribution#1-distribution-the-reports-page-export-and-subscriptions   # guides/DISTRIBUTION.md merged into guides/bi/README.md (2.9.7)
   python-bi: bi-python-notebook#3-python-measures-and-visuals   # guides/PYTHON_BI.md merged into guides/bi/README.md (2.9.7)
-  reports: bi-report-file#9-the-report-file-pages-visuals-filters-and-slicers   # guides/REPORTS.md merged into guides/bi/README.md (2.9.7)
+  reports: bi-report-file#1-the-report-file-pages-visuals-filters-and-slicers   # guides/REPORTS.md merged into guides/bi/README.md (2.9.7)
   docs-architecture-bi-model-spec: docs-architecture-architecture#281-the-table-layer-and-models-in-rachana   # architecture/BI_MODEL_SPEC.md merged into architecture/ARCHITECTURE.md §28 (2.9.7)
   docs-architecture-bi-runs: docs-architecture-architecture#287-bi-runs-every-bi-query-as-a-bounded-visible-job   # architecture/BI_RUNS.md merged into architecture/ARCHITECTURE.md §28 (2.9.7)
   docs-architecture-rupaka: docs-architecture-architecture#28-business-intelligence-on-the-table-layer   # architecture/RUPAKA.md merged into architecture/ARCHITECTURE.md §28 (2.9.7)
@@ -535,7 +535,7 @@ moved:
   knowledge-data-and-contracts: knowledge-data#3-data-and-contracts   # docs/knowledge/data-and-contracts.md folded into docs/knowledge/data.md
   knowledge-companies-funds-and-etfs: knowledge-world#1-companies-funds-and-etfs   # docs/knowledge/companies-funds-and-etfs.md folded into docs/knowledge/world.md
   knowledge-economies: knowledge-world#2-economies   # docs/knowledge/economies.md folded into docs/knowledge/world.md
-  docs-guides-mr-cube-guide: bi-pivot-cubes#29-the-mr-cube-preset   # docs/guides/MR_CUBE_GUIDE.md folded into docs/guides/bi/README.md (the MR cube preset)
+  docs-guides-mr-cube-guide: bi-pivot-cubes#7-the-mr-cube-preset   # docs/guides/MR_CUBE_GUIDE.md folded into docs/guides/bi/README.md (the MR cube preset)
   docs-architecture-pivot-engine: docs-architecture-architecture#26-the-pivot-engine   # docs/architecture/PIVOT_ENGINE.md: use folded into bi/PIVOT.md, design into ARCHITECTURE.md section 26
   docs-architecture-computed-attributes: docs-architecture-data-architecture#12-computed-and-derived-attributes   # docs/architecture/COMPUTED_ATTRIBUTES.md: what is built into DATA_ARCHITECTURE.md section 12, open steps into IMPLEMENTATION_PLAN.md
   docs-architecture-var-sharding: docs-architecture-data-architecture#13-var-sharding-how-it-is-built   # docs/architecture/VAR_SHARDING.md folded into DATA_ARCHITECTURE.md sections 13 and 14 (operators) and VAR_GUIDE.md section 28
@@ -614,7 +614,7 @@ contextual:
   form: user-guide#query-by-form
   pack: build-guide#31-the-packs-that-ship-turning-them-on-who-sees-which
   admin-collab: sharing-and-discussion
-  reports: bi-distribution#181-the-reports-page-and-scheduled-searches
+  reports: bi-distribution#11-the-reports-page-and-scheduled-searches
   search: user-guide
   compare: user-guide
   history: user-guide#history-an-entity-over-time
@@ -636,8 +636,8 @@ contextual:
   func: admin#20-functions-func-every-command-and-turning-one-on-or-off       # Functions, FUNC (F1 and its ?): the command directory and, for administrators, the switches
   datamap: user-guide#the-data-map   # the data map, DATAMAP (F1 and its ?): kinds, counts and joins checked against the data
   data: user-guide#export-data     # Export data, EXPORT (DATA, its older word; F1 and its ?): every dataset, a simple selection, a day as .jsonl.gz
-  bi-designer: bi-reports#8-bi-studio-and-the-report-designer
-  bi-theme-designer: bi-report-file#103-themes
+  bi-designer: bi-reports#7-bi-studio-and-the-report-designer
+  bi-theme-designer: bi-report-file#23-themes
   bi-transform: bi-python-notebook#5-data-prep-the-transform-editor
   bi-notebook: bi-python-notebook#2-the-notebook
 

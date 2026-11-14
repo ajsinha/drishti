@@ -22,10 +22,10 @@ The report YAML (pages, visuals, filters, slicers, interactions), the Format pan
 ## Contents
 
 - [Guide](#guide)
-  - [9. The report file: pages, visuals, filters and slicers](#9-the-report-file-pages-visuals-filters-and-slicers)
-  - [10. Format, conditional formatting and themes](#10-format-conditional-formatting-and-themes)
-  - [11. Field parameters](#11-field-parameters)
-  - [12. Statements: paginated reports, page-exact, one per reader](#12-statements-paginated-reports-page-exact-one-per-reader)
+  - [1. The report file: pages, visuals, filters and slicers](#1-the-report-file-pages-visuals-filters-and-slicers)
+  - [2. Format, conditional formatting and themes](#2-format-conditional-formatting-and-themes)
+  - [3. Field parameters](#3-field-parameters)
+  - [4. Statements: paginated reports, page-exact, one per reader](#4-statements-paginated-reports-page-exact-one-per-reader)
 - [Tutorial: Statements and field parameters](#tutorial-statements-and-field-parameters)
   - [Part C · Statements and field parameters](#part-c--statements-and-field-parameters)
 
@@ -33,16 +33,16 @@ The report YAML (pages, visuals, filters, slicers, interactions), the Format pan
 
 The file and the look of a report, and the paginated statement. The designer that writes the file is on [Reports and the designer](REPORTS.md).
 
-### 9. The report file: pages, visuals, filters and slicers
+### 1. The report file: pages, visuals, filters and slicers
 
-#### 9.1 Where a report lives
+#### 1.1 Where a report lives
 
 * **A file** in the BI folder, `config/bi/reports/<id>.report.yaml`: a published, read-only item of *Shipped content* (id
   `file:report:<id>`), watched live (section 4.6).
 * **An item** of a workspace: a `report` item whose YAML body is a draft you edit in the designer, then publish like any item. Publishing checks
   it and refuses a report with errors (`DRS-9030`).
 
-#### 9.2 The file
+#### 1.2 The file
 
 ```yaml
 report: trades-overview        # the report's name: letters, digits, hyphen, underscore, dot
@@ -95,7 +95,7 @@ visuals' selections do not filter it), the `text` of a text visual or button, an
 URI, never another address) and `alt` (also a text alternative for any visual), a button's `action: { navigate: <page> }` or
 `{ bookmark: <name> }`, and a tile's `from` and `alert` (section 14). The keyboard order is the picture's: top to bottom, then left to right.
 
-#### 9.3 The visuals and their wells
+#### 1.3 The visuals and their wells
 
 A **well** holds fields (`table.column`, or `table.column.year|quarter|month|week|day` for a date), measures or either. Charts draw with the
 vendored chart library; everything else is plain elements. Required wells must be filled.
@@ -136,7 +136,7 @@ vendored chart library; everything else is plain elements. Required wells must b
 Reserved and refused with `DRS-9033`: `shape`. A measure in a field well, a field in a measure well, an unknown well, a required well left
 empty or one over its number of items is `DRS-9032`; a name the model does not have is `DRS-9031`.
 
-#### 9.4 The map, funnel, histogram, box plot and bubble
+#### 1.4 The map, funnel, histogram, box plot and bubble
 
 All five draw from the same question as any chart, are built the same way in the designer (the Charts group, Build, Format), and are exported
 and drawn by `<drishti-report>`. A mask applies as everywhere: a masked measure is a blank visual that says `•••`, a masked field is one bar or
@@ -180,7 +180,7 @@ ISO 3166-2; 251 files, none over 200 KB, loaded when the map first opens that co
 serves them, and for `<drishti-report>` `/embed/v1/world-countries.json`, `/embed/v1/world-points.json` and `/embed/v1/regions/<ISO3>.json`.
 Natural Earth is public domain ([VENDOR.md](../../../drishti-console/web/static/vendor/VENDOR.md)). The same shapes draw the Sutra `map` panel.
 
-#### 9.5 The entity view
+#### 1.5 The entity view
 
 `type: entity-view` shows **a Drishti view inline** for the row the person picks: click a counterparty in a bar and its view opens beside it.
 
@@ -198,7 +198,7 @@ designer's canvas and an embedded report show a note instead. The sample **Count
 
 ![The Counterparty lookup page: a bar of the ten largest counterparties, one selected, and its Drishti view beside it with the netting sets](../../tutorials/img/t10/32-entity-view.jpg)
 
-#### 9.6 Vega-Lite visuals
+#### 1.6 Vega-Lite visuals
 
 A `vega-lite` visual draws a [Vega-Lite](https://vega.github.io/vega-lite/) specification written in the report. Its **data is the rows of
 its wells**, asked as the person looking and put in as `data.values`; put no data in the specification.
@@ -231,7 +231,7 @@ its wells**, asked as the person looking and put in as `data.values`; put no dat
   Anything else (facets, `repeat`, `concat`, `params`, `selection`, `projection`, other transforms, `text` marks, `resolve`) is **not drawn**,
   and the frame says which feature and what to use instead. `width` and `height` are ignored. An embedded `<drishti-report>` does not draw it.
 
-#### 9.7 True totals
+#### 1.7 True totals
 
 A total of a ratio, an average, a distinct count, a percentile, a minimum or a maximum is **not** the sum or the average of the figures shown.
 Every total and subtotal of a matrix, and the total row of a table with `format: { totals: true }`, is computed by the **pivot engine**
@@ -269,7 +269,7 @@ says the parts add to the parent. For a measure that does not (VaR), each split 
 figures; when the source has the Euler component (`comp_var`), each box shows **component VaR** beside its standalone figure, and the
 components add up to the parent. In the designer: *Add a visual → Decomposition*, then Format.
 
-#### 9.8 Filters
+#### 1.8 Filters
 
 A filter is `{ field, op, values }` at **report**, **page** or **visual** level. `field` is a column (or date part) or, for a comparison on a
 total, a **measure** (it becomes `having`).
@@ -291,7 +291,7 @@ filters: [{ field: counterparties.id, op: top, n: 10, by: Exposure (EE peak) }] 
 A `top` filter is resolved first, in the context of the other filters (slicers included), so it follows the person's choices. Rank by a column
 that is not masked (`counterparties.id`, not the masked name): a filter on a masked column is `DRS-9021`.
 
-#### 9.9 Slicers
+#### 1.9 Slicers
 
 A `slicer` lists the values of its field (under the reader's rows and masks) and filters the visuals in its **scope**.
 
@@ -329,7 +329,7 @@ N is 1 to 3,660. `default` applies until the person chooses (and in exports and 
 
 ![A relative-date slicer set to Last 4 weeks: a chip names it and the cards count 74 trades](../../tutorials/img/t10/31-relative-date.jpg)
 
-#### 9.10 Interactions, tooltip pages, drill-through and bookmarks
+#### 1.10 Interactions, tooltip pages, drill-through and bookmarks
 
 * **Edit interactions.** A page's `interactions: { <source visual>: { <target visual>: filter | highlight | none } }` says, pair by pair, how a
   selection (or a slicer's choice) on one visual acts on another; a pair not listed follows the viewer's *Click a mark to* choice. In the
@@ -342,7 +342,7 @@ N is 1 to 3,660. `default` applies until the person chooses (and in exports and 
   relative-date slicer offers its windows and writes `{ relative: name }`), and **Save this page as a bookmark**; a bookmark can be renamed,
   updated from the page's filters or removed.
 
-#### 9.11 How a visual becomes a query
+#### 1.11 How a visual becomes a query
 
 For each visual the server builds one model query from the visual and the state of the page, in this order of authority: the report's
 filters, the page's, the visual's, the slicers in scope, the marks selected on **other** visuals, the values carried by a drill-through, the
@@ -364,7 +364,7 @@ drill-down path. It runs it **as the person looking**. A finished answer is shar
 month, quarter and year, until the whole range fits, and its footer says *by week*; `format: { period: auto | day | week | month | quarter | year }`
 fixes it. A model field may name a period itself: `trade.TRADE_DATE.month_start` (also `week_start`, `quarter_start`, `year_start`).
 
-#### 9.12 Expected values in a report
+#### 1.12 Expected values in a report
 
 A report may declare what its numbers should be (the keys of section 5.8, plus `visual`: what a visual shows, its first measure, one row, asked
 as the viewer asks it; and `column`, the measure column to read). **Check** runs them and shows each as passed, failed or could-not-run;
@@ -392,7 +392,7 @@ POST /api/v1/bi/items/bi-d73f79cdbc/tests     {"role": "writer"}
 
 ![A publish refused while a test fails: DRS-9043 names the test, the figure it expected and the figure it found](../../tutorials/img/t11/17-publish-refused.jpg)
 
-#### 9.13 Reports over several models
+#### 1.13 Reports over several models
 
 A report reads **one model**; put facts that belong together in one model with several fact tables (section 5.3). Only across teams that own
 different models may a visual name its own `model:` (or `dataset:`), with the report's `links:` saying which fields of different models mean
@@ -411,7 +411,7 @@ exposure* (`pnl-vs-exposure`) reads one model, `trading-risk@1`, which holds bot
 
 ![The sample report with Banking chosen on the slicer: the cards and bars of the composed dataset follow it, and so does the donut, which reads the same dataset as the slicer](../../tutorials/img/t10/30-sector-chosen.jpg)
 
-#### 9.14 Checking a report: DRS-9030 to DRS-9038
+#### 1.14 Checking a report: DRS-9030 to DRS-9038
 
 The check never throws: it returns every problem with its code and the path of the key (`POST /api/v1/bi/reports/validate`, the YAML tab, Check,
 the dock's Problems, and the viewer when a report cannot be drawn). **One bad visual is one error card**: it answers `422 DRS-9034` for itself and
@@ -430,7 +430,7 @@ audited).
 | `DRS-9037` | a well's field parameter is not one, or a choice does not fit the well (section 11) | `...wells.values: the values well takes measures, and the field parameter 'breakdown' can be trade.DESK, trade.PORTFOLIO, fields: put it in a field well` |
 | `DRS-9038` | a statement is not valid (section 12.8) | `statement.paper: paper is one of [A3, A4, A5, Legal, Letter], not 'B5'` |
 
-#### 9.15 Security of a report
+#### 1.15 Security of a report
 
 * A reader needs the **report** (audience and workspace roles); they need not open the model's catalogue entry: a published report reads its
   model with the grants of the people who published it, and the engine applies **the reader's own row rules and masks**. A draft (and the
@@ -440,9 +440,9 @@ audited).
 * Nothing in a report is executed: it is parsed, checked, turned into parameterised model queries (every value bound) and drawn. No script,
   style or address from a report reaches the page.
 
-### 10. Format, conditional formatting and themes
+### 2. Format, conditional formatting and themes
 
-#### 10.1 The Format pane
+#### 2.1 The Format pane
 
 `format` is **typed per visual family**: one schema per family (`chart` for bar, column, line, area and combo; `other-chart`; `card` for cards,
 KPIs and gauges; `table`; `matrix`; `slicer`; `static` for text, image, button and tile; `code` for python, vega-lite and the live types;
@@ -486,7 +486,7 @@ range and hint, so whatever the pane offers the server accepts.
 
 A theme's visual defaults are applied under a visual's own format: what the visual says wins.
 
-#### 10.2 Conditional formatting
+#### 2.2 Conditional formatting
 
 `format.rules` is a list; each rule names what it colours (`apply`: a measure the visual shows, or a field for `values`) and its `type`:
 
@@ -511,7 +511,7 @@ reads; an icon is said in words to a screen reader (*low*, *middle*, *high*). Ch
 cards their number. The short form `conditional: [{ measure, op, value, colour }]` is still read. In the designer: Format, *Conditional
 formatting*, choose the kind and **Add a rule**; nothing is typed but the numbers.
 
-#### 10.3 Themes
+#### 2.3 Themes
 
 A **theme** is an item of kind `theme` (shipped in `config/bi/themes`, or stored, versioned, reviewed and published like a report), which a
 report names with `theme: corporate`:
@@ -544,7 +544,7 @@ Save keeps the draft; **Publish** makes it what reports read.
 
 ![The theme designer: series colours, the format defaults of matrices, and the preview](../img/bistudio/theme-designer.jpg)
 
-#### 10.4 Number formats and small multiples
+#### 2.4 Number formats and small multiples
 
 `numberFormat` or the measure's own format; a calculation group item's format wins in a visual that shows it (a share reads as a percent).
 
@@ -559,7 +559,7 @@ one answer the server gave:
 `columns` is the charts per row (default up to 3), `max` the most charts (default 12; the rest are named under the chart), `sharedAxis` one
 value axis for all (the default).
 
-#### 10.5 The matrix
+#### 2.5 The matrix
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -619,7 +619,7 @@ pages:
 The matrix opens at the desks and expands and collapses, coloured and with icons; the small multiples draw a chart per currency; a selection on
 the chart filters the card and not the matrix; the tooltip page opens over a bar, filtered to it; a currency chosen on page 1 holds on page 3.
 
-### 11. Field parameters
+### 3. Field parameters
 
 A **field parameter** of a model lets the **reader** choose what a visual draws: *break down by desk or by portfolio*, *show MTM or Notional*.
 A well of a report on that model may name `param.<name>` instead of a field or a measure, and the parameter slicer above the page
@@ -664,7 +664,7 @@ way (section 13.3).
 
 ![The viewer: Break down by PORTFOLIO and Show NOTIONAL chosen above the page; the chart draws Notional by book](../img/bi-wave-d/field-parameter-slicer.jpg)
 
-### 12. Statements: paginated reports, page-exact, one per reader
+### 4. Statements: paginated reports, page-exact, one per reader
 
 A **statement** is a report page laid out on paper: a monthly client statement, a desk's positions at month end, a regulatory schedule. Where
 a grid page is a screen people slice, a statement page is **page-exact**: a paper size and orientation, margins, a header and a footer with the
@@ -674,7 +674,7 @@ and groups of rows kept together. It is made as a **PDF** (and as an Excel workb
 `statement:` sets its paper. Nothing new is stored: a statement is a report. The walk-through is
 [the reports tutorial, Part C](#part-c--statements-and-field-parameters).
 
-#### 12.1 A statement in YAML
+#### 4.1 A statement in YAML
 
 ```yaml
 report: monthly-statement
@@ -710,7 +710,7 @@ statement pages. Every band is the visual's ordinary question, asked as the read
 
 ![Page 1 of a statement: the header (title, period), a heading, three cards, the Positions table under its column titles, the first desk's group](../img/bi-wave-d/statement-page-1.jpg)
 
-#### 12.2 The paper: `statement:`
+#### 4.2 The paper: `statement:`
 
 | Key | Meaning | Default |
 |---|---|---|
@@ -729,7 +729,7 @@ server's business time zone), `{period}` (*September 2026*, *2026-Q3*, *2026*, o
 `repeatHeader` (a table's column titles on every page, under its title marked *(continued)*; on by default) and `groupBy` (rows grouped under a
 heading *DESK: DESK-FX*; a group that fits on a page is never split).
 
-#### 12.3 How the pages are laid out
+#### 4.3 How the pages are laid out
 
 The server lays the pages out, so the PDF, the preview and the Excel print setup agree: the browser never computes a page.
 
@@ -753,7 +753,7 @@ The server lays the pages out, so the PDF, the preview and the Excel print setup
 
 ![Page 2: the header again, Positions (continued) with its column titles, the next desk's group kept whole](../img/bi-wave-d/statement-page-2.jpg)
 
-#### 12.4 The period, the date and the parameters
+#### 4.4 The period, the date and the parameters
 
 A statement's **date** is the subscription's business date (`today`, `previous` or `load`, section 18.3), the date given to a preview or the
 command line, else the view state's `dates.to`, else the latest business date. Its `period` is worked out from it: dated 2026-10-01 with
@@ -762,7 +762,7 @@ of it (for flows rather than positions). The run's view state carries the model'
 `target.state.params`; `--param name=value`), so a statement whose table names `param.breakdown` is by desk or by portfolio as its
 subscription chooses.
 
-#### 12.5 The statement designer
+#### 4.5 The statement designer
 
 With no visual selected, **Format → Layout → statement** makes the page a statement, and the **Paper** tab appears beside Canvas, Phone, Tablet
 and YAML: **Paper** (size, orientation, margins, text size), **Header** and **Footer** (left, centre and right, with the tokens listed under
@@ -772,7 +772,7 @@ band's **Page break**, **Keep together**, **Repeat the column titles on every pa
 
 ![The Paper tab: Letter landscape, the header and footer with tokens, the period, and page 2 of 3 of the preview](../img/bi-wave-d/statement-designer.jpg)
 
-#### 12.6 PDF, Excel and bursting through subscriptions
+#### 4.6 PDF, Excel and bursting through subscriptions
 
 * **PDF** (Export on the page, `POST /api/v1/export/pdf`, or `POST /api/v1/bi/reports/statement/file`): written by the server itself (the standard
   Helvetica fonts, nothing downloaded), every page exactly the paper's size. The export of a statement page is always the statement.
@@ -784,7 +784,7 @@ band's **Page break**, **Keep together**, **Repeat the column titles on every pa
   subject ends with the page count. A recipient who may not open the report is skipped with the reason in words. The Subscribe form says so when
   it opens on a statement page and offers a PDF first.
 
-#### 12.7 The command line and the API
+#### 4.7 The command line and the API
 
 ```
 $ drishti.py bi statement preview bi-39eb12fe47 --date 2026-10-08
@@ -806,7 +806,7 @@ Monthly statement: 2 pages, A4 portrait, December 9999, 3 rows
 drawing operations, `pageCount`, `rows`, `cut`, `hint`) and `POST /api/v1/bi/reports/statement/file` (`format: pdf`, `xlsx` or `jsonl`, with
 `X-Statement-Pages`, `X-Statement-Cut` and `X-Statement-Hint`) ([API_REFERENCE.md](../API_REFERENCE.md), [CLI_REFERENCE.md](../CLI_REFERENCE.md#bi-statement)).
 
-#### 12.8 Checks: DRS-9038
+#### 4.8 Checks: DRS-9038
 
 | Path | Refused |
 |---|---|
@@ -860,8 +860,8 @@ Two things a Power BI or SSRS author expects are built. **Field parameters in a 
 down by and which measure it shows. **Statements**: a report page laid out on paper, page by page (paper size, margins, a header and footer with page
 numbers, page breaks, column titles on every page, groups kept together), made as a PDF or Excel and sent by a subscription to many people, **each made as
 that person**. This part builds a model with two field parameters, a report whose chart the reader switches, and a monthly statement that bursts to a
-role. Each step shows the UI, the command line and the YAML. The references are [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21](#11-field-parameters)
-and [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](#12-statements-paginated-reports-page-exact-one-per-reader).
+role. Each step shows the UI, the command line and the YAML. The references are [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21](#3-field-parameters)
+and [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](#4-statements-paginated-reports-page-exact-one-per-reader).
 
 ### Step 24 · A model with two field parameters
 
@@ -1032,7 +1032,7 @@ Move the report to a shared workspace and publish it (Part G). Then on the repor
 `role:desk-head` (or the people), *When* `monthly 1 07:30 business`, *Data for* `previous` (the business day before the run: the statement covers that
 month). **Run now** in the subscription's history: one mail per person, each with their own PDF, *Monthly statement October 2026 hana.pdf*; the history
 shows each delivery with `statement: true` and its page count. A desk head's statement holds their desk's trades only; an analyst's has MTM masked;
-two people with the same rights get the same pages but their name ([BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 2](DISTRIBUTION_AND_ALERTS.md#183-subscriptions)).
+two people with the same rights get the same pages but their name ([BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 2](DISTRIBUTION_AND_ALERTS.md#13-subscriptions)).
 
 **From the command line.** A subscription is yours, so it is saved and run from the console while you are signed in: saving one
 (`PUT /api/v1/me/subscriptions/{name}`) or running it (`POST …/{name}/run`) with a personal API token answers `403 DRS-5002 API tokens
@@ -1046,7 +1046,7 @@ $ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" $DRISHTI_SERVER/api/v1/me/su
 ```
 
 and make your own statement as a file, which only reads (step 28's `drishti.py bi statement file`, or
-`POST /api/v1/bi/reports/statement/file`, [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](#12-statements-paginated-reports-page-exact-one-per-reader)).
+`POST /api/v1/bi/reports/statement/file`, [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](#4-statements-paginated-reports-page-exact-one-per-reader)).
 
 **You should see:** after **Run now**, one mail per person in `role:desk-head`, each with their own PDF (*Monthly statement October 2026
 hana.pdf*), and in the subscription's history one delivery per person with `statement: true` and its page count; a desk head's PDF holds
