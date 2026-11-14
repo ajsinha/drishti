@@ -236,7 +236,9 @@ class ChildKinds(unittest.TestCase):
         MJ.write_bi(opts([self.src], version="1.0.0"), PFJ.analyse(opts([self.src], child_min_avg=1.5), quiet), site, quiet)   # two child kinds
         self.assertEqual(4, len(list((site / "tables" / "deals").iterdir())))
         java = PFJ.SG.find_java(None)
-        r = subprocess.run([java, "-jar", JARS[-1], "tables", "check", "--root", str(site / "tables")], cwd=ROOT, text=True, capture_output=True)
+        import javacmd
+        r = subprocess.run(javacmd.java_cmd(java, ["-jar", JARS[-1], "tables", "check", "--root", str(site / "tables")], tmp=self.dir / "jvm", cwd=ROOT),
+                           cwd=ROOT, text=True, capture_output=True)
         self.assertEqual(0, r.returncode, r.stdout[-3000:] + r.stderr[-2000:])
 
 
