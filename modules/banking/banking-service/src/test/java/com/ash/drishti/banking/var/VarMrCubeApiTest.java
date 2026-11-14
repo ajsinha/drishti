@@ -382,6 +382,33 @@ class VarMrCubeApiTest {
     }
 
     @Test
+    void theHistoryOfAViewIsTheSameViewOnEachOpenDateAndALastStopIsTheCellNow() throws Exception {
+        String rita = as("rita", "risk");
+        Map<String, Object> v = view(List.of("MGMT.DESK"), List.of(), Map.of("var()", "VaR"), Map.of());
+        JsonNode now = query(rita, v, 200);
+        JsonNode h = call(rita, post("/api/v1/risk/mr/history"), Map.of("view", v), 200);
+        assertThat(h.get("measure").asText()).isEqualTo("VaR");
+        assertThat(h.get("dates").size()).isGreaterThanOrEqualTo(1);
+        assertThat(h.get("dates").get(h.get("dates").size() - 1).asText()).isEqualTo(VarLakeFixture.DAY.toString());
+        assertThat(h.get("cells").asInt()).isEqualTo(h.get("series").size()).isGreaterThanOrEqualTo(2);
+        int checked = 0;
+        for (var it = h.get("series").fields(); it.hasNext();) {
+            var e = it.next();
+            JsonNode cell = now.get("cells").get(e.getKey());
+            assertThat(e.getValue().size()).as(e.getKey()).isEqualTo(h.get("dates").size());
+            assertThat(e.getValue().get(e.getValue().size() - 1).asDouble()).as("the last stop of " + e.getKey()).isEqualTo(cell.at("/values/VaR").asDouble());
+            checked++;
+        }
+        assertThat(checked).isEqualTo(h.get("cells").asInt());
+        // a request with no view, and one naming a saved view that is not there, are refused in words
+        JsonNode none = call(rita, post("/api/v1/risk/mr/history"), Map.of("colour", "blue"), 400);
+        assertThat(none.get("detail").asText()).contains("needs the view");
+        assertThat(none.get("code").asText()).startsWith("DRS-");
+        JsonNode gone = call(rita, post("/api/v1/risk/mr/history"), Map.of("view", "no-such-view-id"), 404);
+        assertThat(gone.get("code").asText()).startsWith("DRS-");
+    }
+
+    @Test
     void aViewOverTheBudgetIsRefusedWithItsCountAndABadViewInWords() throws Exception {
         String rita = as("rita", "risk");
         JsonNode r = query(rita, view(List.of("TRADE"), List.of("CURRENCY"), Map.of("var()", "VaR"), Map.of()), 422);
