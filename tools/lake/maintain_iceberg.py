@@ -142,6 +142,9 @@ def command(uri: str, conf: dict, today: date, dry_run: bool, force_drop: bool, 
                                                                   "--as-of", today.isoformat(), "--json"]
     if conf.get("keep-business-days"):
         cmd += ["--keep-days", str(int(conf["keep-business-days"])), "--max-drop-share", str(conf.get("max-drop-share", 0.5))]
+    for key in ("ttl", "on", "max-rows"):     # row retention (maintain_rows.py): the same rule as the memory lake's
+        if (conf.get("row-retention") or {}).get(key):
+            cmd += [f"--{key}", str(conf["row-retention"][key])]
     if conf.get("compact"):
         cmd += ["--relayout"]
     cmd += ["--expire-hours", str(int(conf["vacuum-hours"])) if conf.get("vacuum-hours") is not None else "-1"]
@@ -186,6 +189,9 @@ def maintain(uri: str, conf: dict, today: date, dry_run: bool, force_drop: bool 
     keep = r.get("keepDays") or {}
     if keep:
         out["retention"] = {"dates": keep.get("wouldRemove")} if dry_run else {"removed": keep.get("removed")}
+    if "rowRetention" in r:
+        days = r["rowRetention"]
+        out["row-retention"] = {"dropped": sum(int(d.get("dropped", 0)) for d in days), "dates": days, "dry_run": dry_run}
     if "relayout" in r:
         out["compact"] = {"relaid-dates": r["relayout"]}
     if "expireHours" in r:

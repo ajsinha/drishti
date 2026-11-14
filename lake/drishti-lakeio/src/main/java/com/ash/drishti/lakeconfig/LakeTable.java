@@ -42,13 +42,15 @@ import java.util.Map;
  * @param layout      the file layout: {@code file-rows}, {@code row-group-rows}, {@code file-size-mb}, {@code row-group-mb},
  *                    {@code compression}, {@code vector-compression} (only those given)
  * @param retention   business dates or years kept ({@code 520d}, {@code 7y}); null: everything
+ * @param rowRetention the table's row retention ({@code retention: {ttl: 8h, on: UPDATED_AT, max-rows: 100000}}, the keys {@code ttl}, {@code on},
+ *                    {@code max-rows} as written; docs/guides/DATA_LAKE_GUIDE.md, Row retention); empty: no row is dropped for its age
  * @param maintenance compaction, vacuum or expire-snapshots age, checkpoint interval, statistics columns, as written
  * @param timeTravel  how long old versions stay readable; null: the format's default
  * @param properties  Delta or Iceberg table properties passed through as they are
  */
 public record LakeTable(String domain, String table, String kind, String path, String format, List<String> partitionBy, List<String> promote,
         List<String> vectors, Map<String, String> flatten, String id, String date, String latestBy, String loadMode, List<String> sortBy,
-        Map<String, String> layout, String retention, Map<String, String> maintenance, String timeTravel, Map<String, String> properties) {
+        Map<String, String> layout, String retention, Map<String, String> rowRetention, Map<String, String> maintenance, String timeTravel, Map<String, String> properties) {
 
     /** The partition column every table has, first. */
     public static final String BUSINESS_DATE = "business_date";
@@ -64,6 +66,7 @@ public record LakeTable(String domain, String table, String kind, String path, S
         sortBy = List.copyOf(sortBy);
         flatten = java.util.Collections.unmodifiableMap(new LinkedHashMap<>(flatten));
         layout = java.util.Collections.unmodifiableMap(new LinkedHashMap<>(layout));
+        rowRetention = java.util.Collections.unmodifiableMap(new LinkedHashMap<>(rowRetention));
         maintenance = java.util.Collections.unmodifiableMap(new LinkedHashMap<>(maintenance));
         properties = java.util.Collections.unmodifiableMap(new LinkedHashMap<>(properties));
     }
@@ -71,7 +74,7 @@ public record LakeTable(String domain, String table, String kind, String path, S
     /** This table with its id field {@code id} (a table created by its first load takes its kind's key: DATA_LAKE_GUIDE.md section 5.6). */
     public LakeTable withId(String id) {
         return new LakeTable(domain, table, kind, path, format, partitionBy, promote, vectors, flatten, id, date, latestBy, loadMode, sortBy, layout,
-                retention, maintenance, timeTravel, properties);
+                retention, rowRetention, maintenance, timeTravel, properties);
     }
 
     /** {@code <domain>.<table>}, the table's name in its lake file. */
@@ -131,6 +134,7 @@ public record LakeTable(String domain, String table, String kind, String path, S
         m.put("sort-by", sortBy);
         m.put("layout", layout);
         m.put("retention", retention);
+        m.put("row-retention", rowRetention);
         m.put("maintenance", maintenance);
         m.put("time-travel", timeTravel);
         m.put("properties", properties);

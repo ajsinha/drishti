@@ -367,7 +367,7 @@ class LakeMaintenance:
 
 
 def _slim(res: dict) -> dict:
-    keep = ("name", "root", "before", "after", "estimate", "retention", "compact", "checkpoint", "vacuum", "error", "skipped", "forced", "signal", "dryRun")
+    keep = ("name", "root", "before", "after", "estimate", "retention", "row-retention", "compact", "checkpoint", "vacuum", "error", "skipped", "forced", "signal", "dryRun")
     return {k: v for k, v in res.items() if k in keep}
 
 

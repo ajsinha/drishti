@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.memlake;
 
+import com.ash.drishti.common.RowRetention;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 

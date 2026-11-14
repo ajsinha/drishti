@@ -69,6 +69,7 @@ from samplegen.layout import stats_columns as stats_columns_of  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import maintain_iceberg  # noqa: E402
+import maintain_rows  # noqa: E402
 import maintconfig  # noqa: E402
 import maintschedule  # noqa: E402
 import ownership  # noqa: E402
@@ -187,6 +188,12 @@ def maintain(uri: str, conf: dict, today: date, dry_run: bool, force_drop: bool 
         else:
             done["retention"] = {"cutoff": cutoff, "dates": dropped, **{k: v for k, v in dt.delete(f"business_date < '{cutoff.isoformat()}'").items()
                                                                         if k in ("num_deleted_rows", "num_removed_files")}}
+    rows_rr = maintain_rows.clean(conf)
+    if rows_rr:      # rows past their age, by the shared rule (the files compacted and vacuumed below are the ones left)
+        done["row-retention"] = maintain_rows.apply(uri.rsplit("/", 2)[0], "delta", table_name(uri), rows_rr, dry_run)
+        if not dry_run and done["row-retention"]["dropped"]:
+            dt = DeltaTable(uri, storage_options=opts or None)
+            actions = add_actions(dt)
     if dry_run:
         done["estimate"] = estimate(actions, conf, cutoff, lay)
     if conf.get("compact") and lay is not None:
@@ -273,6 +280,11 @@ def run_detailed(config: dict, dry_run: bool, today: date | None = None, force_d
         if want is not None and not want:
             continue
         fmt = str(lake.get("format") or "auto").lower()
+        if fmt == "files":          # a files store (<root>/<domain>/<date>/<kind>.jsonl): only its rows' retention applies (maintain_rows.py)
+            for name in maintain_rows.files_tables(root, list(base["domains"])):
+                if want is None or name in want:
+                    out["tables"].append(_files_one(root, name, lake, base, dry_run, emit, quiet, out))
+            continue
         try:
             opts = base.get("storage-options") or {}
             found = [] if fmt == "iceberg" else tables(root, list(base["domains"]), opts)
@@ -364,13 +376,36 @@ def _one(uri, root, lake, base, owned, want, day, dry_run, force_drop, force_for
     return res
 
 
+def _files_one(root, name, lake, base, dry_run, emit, quiet, out) -> dict:
+    """One table of a files store: its row retention applied (the table's own settings over the lake's); no other upkeep applies to day files."""
+    res: dict = {"root": root, "table": f"{root.rstrip('/')}/{name}", "name": name, "format": "files"}
+    conf = {**base, **((lake.get("tables") or {}).get(name) or {})}
+    emit("start", res)
+    try:
+        rr = maintain_rows.clean(conf)
+        if rr:
+            res["row-retention"] = maintain_rows.apply(root, "files", name, rr, dry_run)
+        else:
+            res["skipped"] = "no row retention set for this table"
+        if not quiet:
+            log(event="maintained", dry_run=dry_run, **{k: v for k, v in res.items() if k not in ("root", "name")})
+    except Exception as e:  # noqa: BLE001 - one table must not stop the others
+        out["failures"] += 1
+        res["error"] = f"{type(e).__name__}: {e}"
+        if not quiet:
+            log(event="failed", table=res["table"], error=res["error"])
+    res["dryRun"] = dry_run
+    emit("done", res)
+    return res
+
+
 def changed(res: dict) -> bool:
     """Whether a maintained table changed in a way readers should hear of (dates dropped, files rewritten)."""
     if res.get("error") or res.get("skipped") or res.get("dryRun"):
         return False
     b, a = res.get("before") or {}, res.get("after") or {}
     ret = res.get("retention") or {}
-    return bool(ret.get("dates") or ret.get("removed")) or b.get("files") != a.get("files") or b.get("mb") != a.get("mb")
+    return bool(ret.get("dates") or ret.get("removed") or (res.get("row-retention") or {}).get("dropped")) or b.get("files") != a.get("files") or b.get("mb") != a.get("mb")
 
 
 def signal_bodies(results: list[dict], run_id: str) -> list[tuple[str, str, dict]]:

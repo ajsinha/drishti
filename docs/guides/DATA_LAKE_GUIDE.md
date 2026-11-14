@@ -199,7 +199,7 @@ A table's entry:
 | `id`, `date`, `latest-by` | the id field, the rows' own date field, which copy of an id wins | 2.4 |
 | `load-mode` | `replace` (the default) or `append` | 5.3 |
 | `sort-by`, `file-rows`, `row-group-rows`, `file-size-mb`, `row-group-mb`, `compression`, `vector-compression` | the file layout | 2.5 |
-| `retention`, `maintenance`, `time-travel` | how long dates and old versions are kept, compaction, vacuum, checkpoints | 2.6 |
+| `retention`, `maintenance`, `time-travel` | how long dates and old versions are kept, rows dropped for their age, compaction, vacuum, checkpoints | 2.6, 2.7 |
 | `properties` | Delta or Iceberg table properties, passed through as they are | 2.6 |
 
 ### 2.3 Partitions: business date first, then as few as possible
@@ -298,6 +298,43 @@ A load file or a command line that gives a layout different from the lake file's
 | `properties` | `{delta.logRetentionDuration: "interval 60 days"}` | table properties, passed through when the table is created |
 
 A maintenance key it does not know is said in the run's log, never guessed.
+
+### 2.7 Row retention: the same option in memory, Delta, Iceberg and files
+
+A table can drop rows for their age, not only whole business dates. The option is one block, `retention:`, and it means the same in all four stores
+(the in-memory lake of section 13, a Delta table, an Iceberg table and a files store); a table's scalar `retention: 7y` (section 2.6) is
+unchanged, and a block may carry both (`dates: 7y`):
+
+```yaml
+tables:
+  trading.trade:
+    retention:
+      ttl: 8h                # rows older than this are dropped (500ms, 30s, 15m, 8h, 1d)
+      on: UPDATED_AT         # the field the age is read from: a promoted column or a document field (a time, a date, epoch seconds or milliseconds)
+      max-rows: 100000       # then at most this many rows are kept, the newest by the same age
+```
+
+| Rule | Detail |
+|---|---|
+| The age | The field `on`. Without `on`: the column `arrived_at` (a memory table aged by arrival writes it), else the row's business date. A row whose age cannot be read is never dropped |
+| `ttl`, `max-rows` | Rows older than `ttl` go; of the rest the newest `max-rows` stay, and rows tied at the cut all stay. Either alone is fine |
+| Absent | No limit; nothing changes |
+| Who applies it | One rule, one class (`RowRetention`), so the four stores leave the same rows. A parity test loads the same rows into all four with the same block and compares what is left, and reads the Delta result with delta-rs |
+| When | On the store's own upkeep, never a second scheduler |
+
+| Store | Where it runs | What it does |
+|---|---|---|
+| Memory | the compaction (section 13.5) | the rewrite leaves out the dropped rows |
+| Delta | `drishti.py lake maintain` (a step before compaction and vacuum; Admin → Lakes → Maintain, its schedules) | each business date holding a dropped row is rewritten without it, one Delta commit per date (a date left empty has its files removed); the files the commit stopped using are removed by the table's vacuum (`maintenance.vacuum`). Any Delta reader sees the result, and delta-rs and Spark read it |
+| Iceberg | the same run (`IcebergMaintenance --ttl --on --max-rows`) | each day holding a dropped row is replaced by one Iceberg commit (a day left empty: its partition is deleted); the old files go when snapshot expiry (`maintenance.expire-snapshots`) says |
+| Files | the same run for a maintenance lake of `format: files` (`<root>/<domain>/<date>/<kind>.jsonl`) | each affected day file is rewritten through a temporary file moved into place, so a running server never reads half a day |
+
+Where the block is written: a lake file's table entry (the table's own), or `row-retention:` in the maintenance file's lake or table settings
+(`lakes[].tables.<domain>/<table>`), the table's own over the lake's. The risk and risk-results domains keep their floor (section 2.6): a ttl under
+the kept years is raised to them and a `max-rows` is not applied. `drishti.py lake maintain --dry-run` counts the rows a run would drop per date.
+A Delta or files run reads the table's rows to judge them, so its memory is about the table's size (an Iceberg run keeps only each row's age in memory and spills the rewrite); a table too large for that is better trimmed by `retention: 520d` (whole dates). Admin → Lakes shows a memory table's retention and the rows it dropped, and a durable table's page the rows it keeps. A memory table that is also
+bound to a durable table keeps its own retention in each place: the memory table's ttl trims the memory only, and the durable table keeps what its
+own block says (none by default).
 
 ## 3. Loading, three ways
 
@@ -1836,7 +1873,7 @@ The store's own keys (`max-mb`, `chunk-kb`, `contract`, `owner`, `idle-trim-minu
 | `tables[].columns` | | fields promoted beside the document |
 | `tables[].every`, `.cron`, `.signal`, `.warm-up` | , , true, | when it runs |
 | `tables[].pin`, `.keep-versions`, `.codec` | false, 2, zstd | never evicted; versions kept; `zstd`, `lz4`, `snappy` |
-| `tables[].retention` | none | the rows' age limit and cap, applied by the compaction (the one upkeep): `{ttl: 8h, on: UPDATED_AT, max-rows: 100000}`; rows older than `ttl` by the document field `on` (a time, a date or epoch seconds; absent: the time the row arrived, kept in the promoted column `arrived_at`) are dropped, then all but the newest `max-rows`. Admin → Lakes shows each table's retention and the rows it dropped. A table that also has a durable copy keeps that copy's own retention (none by default): the TTL trims the memory only |
+| `tables[].retention` | none | the rows' age limit and cap, applied by the compaction (the one upkeep): `{ttl: 8h, on: UPDATED_AT, max-rows: 100000}`; the rule, and the same option for Delta, Iceberg and files, is section 2.7. Admin → Lakes shows each table's retention and the rows it dropped. A table that also has a durable copy keeps that copy's own retention (none by default): the TTL trims the memory only |
 | `history-keep`, `job-threads` | 50, 2 | runs kept per table; jobs at once |
 | `compaction.*` | enabled, 30 s idle, 512 MB headroom, 8 MB small files, 0.2 dead rows, 20 appends, 60 s | 13.5 |
 

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.memlake;
 
+import com.ash.drishti.common.RowRetention;
 import com.ash.drishti.deltalake.write.LakeManifest;
 import com.ash.drishti.deltalake.write.LakeWriter;
 import com.ash.drishti.deltalake.write.TableUpkeep;
@@ -135,7 +136,7 @@ final class MemoryCompactor {
         }
         try {
             List<TableUpkeep.Staged> rows = TableUpkeep.rows(LakeWriter.engineFor(t.spec.path(), Map.of()), t.spec.path(), pv -> true);
-            return rows == null ? 0 : r.expired(rows, Instant.now());
+            return rows == null ? 0 : r.expired(rows, s -> r.ageOfLine(s.line(), null), Instant.now());
         } catch (Exception e) {
             return 0;
         }
@@ -183,7 +184,7 @@ final class MemoryCompactor {
             int dropped = 0;
             if (t.spec.retention() != null) {
                 int before0 = rows.size();
-                rows = t.spec.retention().keep(rows, Instant.now());
+                rows = t.spec.retention().keep(rows, s -> t.spec.retention().ageOfLine(s.line(), null), Instant.now());
                 dropped = before0 - rows.size();
             }
             long before = store.bytesUnder(path);

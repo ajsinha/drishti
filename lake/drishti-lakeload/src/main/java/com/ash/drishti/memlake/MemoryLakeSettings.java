@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.memlake;
 
+import com.ash.drishti.common.RowRetention;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
