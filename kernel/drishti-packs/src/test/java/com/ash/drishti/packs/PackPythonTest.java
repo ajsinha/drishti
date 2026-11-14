@@ -91,7 +91,8 @@ class PackPythonTest {
 
     @Test
     void theShippedBankingPacksOfferTheirStarterSnippets() {
-        List<Pack> packs = new PackLoader().load(PackLoaderTest.PACKS, List.of("market-risk", "counterparty-risk"));
+        List<Pack> packs = new PackLoader().load(com.ash.drishti.api.resolution.ConfigResolution.repository(PackLoaderTest.PACKS.getParent().getParent()),
+                List.of("market-risk", "counterparty-risk"));                                // where the resolution finds them (their module)
         Map<String, List<String>> titles = new java.util.TreeMap<>();
         packs.forEach(p -> titles.put(p.name(), PackPython.of(p).snippets().stream().map(PackPython.Snippet::title).toList()));
         assertThat(packs).allMatch(p -> PackPython.of(p).enabled());

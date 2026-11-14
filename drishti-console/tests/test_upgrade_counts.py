@@ -44,10 +44,11 @@ def _get(base: str, path: str):
 
 
 def _counts(server: str) -> dict[str, object]:
-    """Every kind the bindings serve (BOUND or DEMO) and its record count on the newest date (None: the Data view does not open it)."""
+    """Every kind of the bindings but the computed ones, and its record count on the newest date (None: the Data view does not open it).
+    With the demo off a kind the demo lake holds says UNBOUND in the bindings and is still read: it is counted."""
     out: dict[str, object] = {}
     for row in _get(server, "/api/v1/admin/bindings").get("kinds", []):
-        if row.get("state") not in ("BOUND", "DEMO", "STALE"):
+        if row.get("state") == "COMPUTED":
             continue
         try:
             c = _get(server, f"/api/v1/data/{row['kind']}/count")
@@ -61,6 +62,45 @@ def _counts(server: str) -> dict[str, object]:
             out[f"trade[{system}]"] = c.get("rows", c.get("total"))
         except Exception:                              # noqa: BLE001
             out[f"trade[{system}]"] = None
+    return out
+
+
+def _main(site: Path, lake: Path) -> dict[str, object]:
+    """What the release of the fixture served from this lake: for each kind, the rows of the newest business date in the tables its
+    generated connector files read (lake-tables), summed over the connectors that name the kind (a union); per source system for trades
+    (each of its trade connectors stamps one system). Read with deltalake, as the files say; no server of that release is started."""
+    import yaml
+    try:
+        import pyarrow.compute as pc
+        from deltalake import DeltaTable
+    except ImportError:
+        return {}
+
+    def rows(table: str) -> int | None:
+        folder = lake / table.replace(".", "/", 1)
+        if not folder.is_dir():
+            return 0
+        t = DeltaTable(str(folder)).to_pyarrow_table()
+        if "BUSINESS_DATE" in t.column_names and t.num_rows:
+            newest = pc.max(t["BUSINESS_DATE"])
+            return int(pc.sum(pc.equal(t["BUSINESS_DATE"], newest)).as_py() or 0)
+        return t.num_rows
+
+    out: dict[str, int] = {}
+    for f in sorted((site / "connectors").glob("*.yaml")):
+        d = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
+        st = d.get("settings") or {}
+        tables = [x.strip() for x in str(st.get("lake-tables") or "").split(",") if x.strip()]
+        if d.get("plugin") != "delta" or st.get("lake") != "demo" or not tables:
+            continue
+        for kind in d.get("kinds") or []:
+            mine = [t for t in tables if t.split(".", 1)[1] in (kind, kind.replace("-", "_"))] or (tables if len(tables) == 1 else [])
+            n = sum(rows(t) or 0 for t in mine)
+            out[kind] = out.get(kind, 0) + n
+            # the system: the connector's stamp, else its one table's (trading.trade_endur: ENDUR, as that release named them)
+            system = str(st.get("set.SOURCE_SYSTEM") or (tables[0].rsplit("_", 1)[-1].upper() if len(tables) == 1 and "trade_" in tables[0] else ""))
+            if kind == "trade" and system:
+                out[f"trade[{system}]"] = out.get(f"trade[{system}]", 0) + n
     return out
 
 
@@ -111,10 +151,13 @@ def test_every_demo_kind_keeps_its_record_count_after_the_upgrade(tmp_path_facto
     finally:
         next(gen, None)
 
-    table = [{"kind": k, "fresh": fresh.get(k), "upgraded": upgraded.get(k)} for k in sorted(set(fresh) | set(upgraded))]
+    main = _main(site, lake)
+    table = [{"kind": k, "main": main.get(k), "fresh": fresh.get(k), "upgraded": upgraded.get(k)} for k in sorted(set(fresh) | set(upgraded))]
     if os.environ.get("DRISHTI_COUNT_TABLE"):
         Path(os.environ["DRISHTI_COUNT_TABLE"]).write_text(json.dumps(table, indent=1) + "\n", encoding="utf-8")
     assert _hashes(site / "connectors") == before, "the server changed a site connector file at start"
     assert fresh.get("trade"), f"no trades on a fresh site: {fresh}"
+    no_trades = [s for s in SYSTEMS if (main.get(f"trade[{s}]") or 0) > 0 and not upgraded.get(f"trade[{s}]")]
+    assert not no_trades, f"the upgraded site lost the trades of {no_trades}: {table}"
     lost = [r for r in table if (r["fresh"] or 0) != (r["upgraded"] or 0)]
     assert not lost, "record counts differ after the upgrade:\n" + "\n".join(f"  {r}" for r in lost)
