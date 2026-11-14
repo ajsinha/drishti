@@ -9858,6 +9858,10 @@ Everything GridModel takes (columns, rows or datasource, serverPivot, explain, c
 | `[showAs]` | `Array&lt;{id: string, label: string, needs: ?string}&gt;` | the show-as forms the server computes (none: no Show value as) |
 | `[views]` | `import('./drishti_grid-views.js').ViewsHook` | the View picker in front of the compact line (C): ready-made, my and shared views, Save view as… |
 | `[customize=true]` | `boolean` | Customize › (and \) between the compact line and the panes |
+| `[ribbon=true]` | `boolean` | false: the wells ribbon (Rows, Columns, Filters, Values) is not shown until Customize › (a list of records) |
+| `[pivotToggle=true]` | `boolean` | false: no Pivot toggle in the toolbar (the host has its own way to the Pivot) |
+| `[toolbarItems]` | `HTMLElement[]` | the host's own controls, drawn in the toolbar after the title (one toolbar, not two) |
+| `[quietStatus=false]` | `boolean` | true: the status bar keeps the selection's figures and drops the row count the host shows itself |
 | `[valueOptions]` | `function(Object, Object): {items: Array&lt;Object&gt;, run: function(string): void}` | a per-cell measure's options in its value menu (the VaR lens: horizon, confidence, scenario set) |
 | `[customFunctions]` | `Array&lt;{name: string, label: string}&gt;` | the custom functions the server has enabled, offered as ƒ in the value menus |
 | `[formulaEditor]` | `function({formula: string, field: Object, value: Object, done: function(string, string): void}): void` | the host's formula editor for Custom ƒ… (default: a text field; the server checks the formula when it answers) |

@@ -42,6 +42,18 @@
   is a part of the Build guide. **Live results and blotters** is the platform's own guide (docs/guides/LIVE_RESULTS_GUIDE.md: FORM search, mnemonics and
   blotters work in every distribution); the trading module keeps a short document for the trade blotter and the source systems. The top bar's names
   (Views, Domains, Create, Admin, Help) are used throughout; Help lists far fewer pages; the caps are unchanged.
+- **Fixed: `POS`, `NSET`, `PORT` (and every computed kind) open as a list.** A bare mnemonic whose kind has no search columns and no promoted
+  columns (a position, a system basket, a netting set: computed or kept by Drishti) failed with DRS-1001 "has no columns to show as a set";
+  its default declaration now falls back to the kind's data contract (key fields, the date field, then the other fields). A new test starts a
+  server on the demo with every module and opens every mnemonic of every pack that is on, and one record of each.
+- **Lists of records use the whole window.** Every list of records (a bare mnemonic, the search page, a FORM result, `/live/<id>` blotters, monitors)
+  spans the content width and is as tall as what is left of the window (the heading and toolbar stay; the rows scroll inside the grid; it follows
+  the window; a phone keeps the page's flow). One toolbar (title, the one live count "482 trades", grouping, Chart, Pause, Pivot ›, Formatting,
+  Export, View, Customize ›); the toggle "Pivot" and the ROWS / COLUMNS / FILTERS / VALUES ribbon wait behind Customize ›; a column that only
+  repeats the key is not drawn; the header, the pager and the grid's status bar no longer repeat the count. Signed out, `/live/<id>` goes to
+  sign-in and back, as `/t` does. New grid options `ribbon`, `pivotToggle`, `toolbarItems`, `quietStatus`; one mount (`records.mount`) serves
+  the blotter page too.
+
 - **Richer source field maps; the inbox date from the name.** A source module's map (`map:`) reads dotted paths into nested native JSON,
   `from: [a, b]` / `first-of` (the first non-empty), `scale`, `as` (`yyyymmdd`, `yyyymmddhhmmss`, `epoch-millis`, `epoch-seconds`, `iso`),
   `cast`, `values` and `value`, beside the older `fields:` form; the shipped SwapOne, WSS and ICI maps load as written and the end-to-end

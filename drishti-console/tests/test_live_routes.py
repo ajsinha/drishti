@@ -140,3 +140,10 @@ def test_a_set_of_a_module_this_distribution_lacks_answers_a_plain_page_not_a_40
         assert page.status_code == 200 and "Not part of this distribution" in page.text
     finally:
         state.loaded = before
+
+
+def test_signed_out_a_blotter_is_behind_sign_in_and_returns_to_itself():
+    from core.app import protected
+    from core.nextpath import to_login
+    assert protected("/live/trade") and not protected("/static/x")                  # the gate sends a signed-out person to /login, as /t does
+    assert to_login("/live/trade") == "/login?next=/live/trade"
