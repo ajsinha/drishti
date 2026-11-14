@@ -46,6 +46,7 @@ public class LiveSetConfiguration {
 
     @Bean(destroyMethod = "close")
     public LiveSets liveSets(SourceRouter router, StructuredSearch search, ObjectProvider<com.ash.drishti.server.api.SearchController> searches,
+            com.ash.drishti.engine.search.SearchProperties searchProps, com.ash.drishti.engine.command.Mnemonics mnemonics,
             EditableFields fields, ObjectProvider<EditRuntime> edits,
             com.ash.drishti.server.security.Entitlements entitlements, ObjectProvider<com.ash.drishti.identity.AuditLog> auditLog, Environment env) {
         LiveSets.Sources sources = new LiveSets.Sources() {
@@ -75,6 +76,11 @@ public class LiveSetConfiguration {
             }
 
             @Override
+            public java.util.Optional<LiveSetSpec> defaultFor(String kind) {
+                return defaultSpec(kind, searchProps.columnsOf(kind), router.columnar(kind), mnemonics.codeFor(kind));
+            }
+
+            @Override
             public String kindOf(String command) {
                 return search.kindOf(SearchQuery.pick(command));
             }
@@ -100,6 +106,7 @@ public class LiveSetConfiguration {
         };
         LiveSets sets = new LiveSets(sources, Clock.systemUTC(), env.getProperty("drishti.live-sets.flush-ms", Long.class, 50L),
                 env.getProperty("drishti.live-sets.window-capacity", Integer.class, 5_000));
+        sets.defaultMaxRows(env.getProperty("drishti.live-sets.default-max-rows", Integer.class, 250_000));
         Predicate<String> on = DomainFolders.on(env);
         Path modules = Path.of(env.getProperty("drishti.live-sets.modules-dir", "modules"));
         Path site = Path.of(env.getProperty("drishti.live-sets.dir", "config/blotters"));
@@ -162,6 +169,27 @@ public class LiveSetConfiguration {
             doc.put(TITLE, row.title());
         }
         return DataNode.of(doc);
+    }
+
+    /**
+     * A kind's default declaration (a bare mnemonic): its search columns (the pack's key fields), else its promoted columns, up to twelve;
+     * keyed by the entity id; read-only; titled by its mnemonic. Empty when there is no column to show.
+     */
+    static java.util.Optional<LiveSetSpec> defaultSpec(String kind, java.util.List<String> keyColumns, java.util.Set<String> promoted, String code) {
+        java.util.LinkedHashSet<String> fields = new java.util.LinkedHashSet<>();
+        (keyColumns == null ? java.util.List.<String>of() : keyColumns).forEach(c -> fields.add(c.startsWith("$.") ? c.substring(2) : c));
+        if (fields.isEmpty() && promoted != null) {
+            promoted.stream().filter(c -> !c.equals("id") && !c.equals("doc") && !c.equals("business_date")).sorted().forEach(fields::add);
+        }
+        java.util.List<java.util.Map<String, Object>> columns = fields.stream().limit(12)
+                .map(f -> java.util.Map.<String, Object>of("field", f, "label", com.ash.drishti.server.api.HistoryController.label(f))).toList();
+        if (columns.isEmpty()) {
+            return java.util.Optional.empty();
+        }
+        String id = ("kind-" + kind.toLowerCase(java.util.Locale.ROOT).replaceAll("[^a-z0-9-]", "-"));
+        id = id.length() > 63 ? id.substring(0, 63) : id;
+        return java.util.Optional.of(new LiveSetSpec(id, code == null ? kind : code, kind, null, null, null, null, null, columns, java.util.List.of(),
+                java.util.List.of(), null, false, java.util.List.of(), null, null, false, null));
     }
 
     /** Where a search's row keeps its title in the set's document. */

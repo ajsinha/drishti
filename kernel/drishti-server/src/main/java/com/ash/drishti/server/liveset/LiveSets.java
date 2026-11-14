@@ -89,6 +89,14 @@ public final class LiveSets implements AutoCloseable {
          * {@code mask}, in the search's order, run as {@code who} (across Drishti*net's nodes as the search is); answers what the search said (kind, mnemonic, columns, labels, matched, scanned, partial,
          * failed, elapsedMs, noData, pivot), the shape {@code GET /api/v1/live/query} gives as {@code search}.
          */
+        /**
+         * The default declaration of a kind (a bare mnemonic, {@code POS <GO>}), made from its contract: the entity id as the key, the
+         * kind's search columns (its key fields, else its promoted columns), read-only. Empty when the kind has none to show.
+         */
+        default Optional<LiveSetSpec> defaultFor(String kind) {
+            return Optional.empty();
+        }
+
         default Map<String, Object> search(String command, AsOf asOf, Principal who, UnaryOperator<DataNode> mask,
                 java.util.function.Consumer<EntityDocument> sink) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "this server runs no searches into live sets");
@@ -115,6 +123,9 @@ public final class LiveSets implements AutoCloseable {
     private final Map<String, LiveSetSpec> specs = new ConcurrentHashMap<>();
     /** The declarations a search made (a FORM's result, the search page's), while their set is open: never listed, never editable. */
     private final Map<String, LiveSetSpec> implicit = new ConcurrentHashMap<>();
+    /** The default declarations made for kinds no module declares a set of, by id. */
+    private final Map<String, LiveSetSpec> defaults = new ConcurrentHashMap<>();
+    private volatile int defaultMaxRows = 250_000;
     private final Map<String, String> problems = new ConcurrentHashMap<>();
     private final Map<String, LiveSet> open = new ConcurrentHashMap<>();
     private final Map<String, Instant> idleSince = new ConcurrentHashMap<>();
@@ -221,7 +232,44 @@ public final class LiveSets implements AutoCloseable {
 
     public Optional<LiveSetSpec> spec(String id) {
         LiveSetSpec s = specs.get(id);
-        return Optional.ofNullable(s != null ? s : implicit.get(id));
+        if (s == null) {
+            s = implicit.get(id);
+        }
+        return Optional.ofNullable(s != null ? s : defaults.get(id));
+    }
+
+    /** The most rows a default declaration's snapshot reads ({@code drishti.live-sets.default-max-rows}); beyond it the set says capped. */
+    public LiveSets defaultMaxRows(int n) {
+        this.defaultMaxRows = Math.max(1, n);
+        return this;
+    }
+
+    /**
+     * A kind's own set (a bare mnemonic, {@code POS <GO>}): a module's declaration of the kind (the one named as the kind, else the first by
+     * id) overrides the default made from the kind's contract. No per-mnemonic YAML is needed.
+     */
+    public LiveSetSpec forKind(String kind) {
+        LiveSetSpec own = specs.get(kind);
+        if (own != null && own.kind().equals(kind)) {
+            return own;
+        }
+        Optional<LiveSetSpec> declared = specs.values().stream().filter(x -> x.kind().equals(kind)).min(java.util.Comparator.comparing(LiveSetSpec::id));
+        if (declared.isPresent()) {
+            return declared.get();
+        }
+        LiveSetSpec made = defaults.values().stream().filter(x -> x.kind().equals(kind)).findFirst().orElse(null);
+        if (made != null) {
+            return made;
+        }
+        LiveSetSpec d = sources.defaultFor(kind)
+                .orElseThrow(() -> new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "the kind " + kind + " has no columns to show as a set"));
+        defaults.put(d.id(), d);
+        return d;
+    }
+
+    /** True for a default declaration ({@link #forKind}). */
+    public boolean defaulted(String id) {
+        return defaults.containsKey(id) && !specs.containsKey(id);
     }
 
     /** True for the declaration a search made ({@link #query}). */
@@ -283,9 +331,23 @@ public final class LiveSets implements AutoCloseable {
             Predicate<DataNode> holds = q == null ? d -> true : sources.condition(q);
             LiveSet made = new LiveSet(spec, q, holds, clock);
             String qq = q;
+            boolean capping = defaulted(spec.id());
+            int cap = defaultMaxRows;
             made.start(l -> sources.subscribe(spec.kind(), l), sink -> {
-                if (!sources.snapshot(spec.kind(), qq, sink)) {
-                    LOG.info("live sets: {} has no snapshot reader for {}; it starts empty and fills from the live side", spec.id(), spec.kind());
+                java.util.concurrent.atomic.AtomicInteger read = new java.util.concurrent.atomic.AtomicInteger();
+                java.util.function.Consumer<EntityDocument> counted = !capping ? sink : d -> {
+                    if (read.incrementAndGet() > cap) {
+                        throw new Capped();
+                    }
+                    sink.accept(d);
+                };
+                try {
+                    if (!sources.snapshot(spec.kind(), qq, counted)) {
+                        LOG.info("live sets: {} has no snapshot reader for {}; it starts empty and fills from the live side", spec.id(), spec.kind());
+                    }
+                } catch (Capped c) {
+                    made.capped(true);                    // a kind of a million records: the first rows, said so
+                    LOG.info("live sets: {} read the first {} records of {} (drishti.live-sets.default-max-rows)", spec.id(), cap, spec.kind());
                 }
             });
             open.put(key, made);
@@ -355,6 +417,13 @@ public final class LiveSets implements AutoCloseable {
     /** The kind a search command reads. */
     public String kindOf(String command) {
         return sources.kindOf(command == null ? "" : command.strip());
+    }
+
+    /** Stops a default declaration's snapshot at its cap. */
+    private static final class Capped extends RuntimeException {
+        Capped() {
+            super(null, null, false, false);
+        }
     }
 
     /** A search's set's id: the command, the business date (or live) and the masking, as a short hash. */

@@ -122,6 +122,17 @@ public final class LiveSet implements AutoCloseable {
         origin = m == null ? Map.of() : java.util.Collections.unmodifiableMap(new LinkedHashMap<>(m));
     }
 
+    private volatile boolean capped;
+
+    /** True when its snapshot stopped at the default declarations' row cap ({@code drishti.live-sets.default-max-rows}). */
+    public boolean capped() {
+        return capped;
+    }
+
+    void capped(boolean c) {
+        capped = c;
+    }
+
     /** When its snapshot was read. */
     public Instant openedAt() {
         return openedAt;
@@ -540,6 +551,7 @@ public final class LiveSet implements AutoCloseable {
         m.put("lastChange", lastChange == null ? null : lastChange.toString());
         m.put("retention", spec.retention() == null ? null : spec.retention().describe());
         m.put("search", matched);
+        m.put("capped", capped);
         return m;
     }
 

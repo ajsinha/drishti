@@ -71,6 +71,26 @@ from core.backend import BackendError  # noqa: E402
 from core.config import load_settings  # noqa: E402
 
 
+def live_page(answer: dict, live_kinds=()) -> dict:
+    """A search's answer as the server's live set gives it (LiveSetController /query): rows ``{id, version, seq, doc}`` with the values at
+    the columns' fields (``$.counterparty.name`` is ``{counterparty: {name}}``) and the title as ``_title``; the summary as ``search``."""
+    rows = []
+    for i, r in enumerate(answer.get("rows", [])):
+        doc: dict = {}
+        for path, v in (r.get("values") or {}).items():
+            at, parts = doc, (path[2:] if path.startswith("$.") else path).split(".")
+            for part in parts[:-1]:
+                at = at.setdefault(part, {})
+            at[parts[-1]] = v
+        if r.get("title"):
+            doc["_title"] = r["title"]
+        rows.append({"id": r["ref"]["id"], "version": -1, "seq": i + 1, "doc": doc})
+    search = {k: v for k, v in answer.items() if k != "rows"}
+    live = answer.get("kind") in live_kinds
+    return {"set": {"id": "qu-stand-in", "kind": answer.get("kind")}, "live": live, "total": len(rows), "seq": len(rows), "offset": 0, "rows": rows,
+            "search": search}
+
+
 class FakeBackend:
     """Stands in for the Drishti server."""
 
@@ -82,6 +102,20 @@ class FakeBackend:
         """The collaboration calls (core/collab.py: the bell's unread count every page asks, the inbox, shares): an empty inbox, so a page
         under test never answers 500 to its own bell (each one logged a long traceback)."""
         return {"unread": 0} if path.endswith("/count") else {"items": []}
+
+    async def live_query(self, q, ident=None, again=True, limit=1000):
+        """The server's live set of a search (GET /api/v1/live/query), as the server makes it: the search's answer (this stand-in's own
+        ``search``) as the set's page: its rows as documents at the columns' fields, the summary as ``search``; static (no live binding)
+        unless the stand-in says ``live_kinds`` holds the kind."""
+        return live_page(await self.search(q, ident), getattr(self, "live_kinds", ()))
+
+    async def live_kind(self, word, ident=None, offset=0, limit=100, sort="", descending=False):
+        """A kind's own set (a bare mnemonic): the stand-in's search of the word, paged."""
+        page = live_page(await self.search(f"{word} limit 1000", ident), getattr(self, "live_kinds", ()))
+        spec = {"id": f"kind-{page['search'].get('kind')}", "kind": page["search"].get("kind"), "title": page["search"].get("mnemonic"),
+                "columns": [{"field": c.removeprefix("$."), "label": (page["search"].get("labels") or {}).get(c, c.removeprefix("$."))} for c in page["search"].get("columns", [])]}
+        self.__dict__.setdefault("kind_pages", []).append((word, offset, limit))
+        return {**page, "set": spec, "rows": page["rows"][offset:offset + limit], "offset": offset, "capped": False}
 
     async def pivot(self, method, path, ident, body=None, raw=False, **params):
         """The pivot engine: POST /inline (the figures of rows the console holds, core/engine_figures.py) as engine_standin answers it;

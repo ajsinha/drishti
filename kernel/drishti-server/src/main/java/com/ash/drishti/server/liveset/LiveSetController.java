@@ -105,6 +105,26 @@ public class LiveSetController {
         return out;
     }
 
+    /**
+     * A page of a kind's own set ({@code POS <GO>}): {@code word} is its mnemonic or its name; the set is its module's declaration, else the
+     * default made from its contract. Answers as {@code /{id}/rows}, plus {@code capped} when the kind holds more records than a default
+     * set reads ({@code drishti.live-sets.default-max-rows}).
+     */
+    @GetMapping("/kinds/{word}/rows")
+    public Map<String, Object> kindRows(@PathVariable String word, @RequestParam(defaultValue = "0") int offset,
+            @RequestParam(defaultValue = "100") int limit, @RequestParam(required = false) String sort,
+            @RequestParam(defaultValue = "false") boolean descending, @RequestParam(required = false) String filter,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
+        String kind = sets.kindOf(word);
+        entitlements.requireOpen(principal, kind);
+        edition.requireKind(kind);
+        LiveSetSpec spec = sets.forKind(kind);
+        LiveSet set = sets.open(spec, null);
+        Map<String, Object> out = page(set, spec, offset, limit, sort, descending, filter, principal);
+        out.put("capped", set.capped());
+        return out;
+    }
+
     /** A page of a set's rows: {@code offset}, {@code limit} (at most 5,000), {@code sort}, {@code descending}, {@code filter}, {@code query}. */
     @GetMapping("/{id}/rows")
     public Map<String, Object> rows(@PathVariable String id, @RequestParam(defaultValue = "0") int offset, @RequestParam(defaultValue = "500") int limit,

@@ -47,7 +47,7 @@ import org.junit.jupiter.api.Test;
 class LiveQueryTest {
 
     /** A kind of trades whose search matches CCY = EUR, ordered by NOTIONAL descending, with an optional live side. */
-    static final class Fake implements LiveSets.Sources {
+    static class Fake implements LiveSets.Sources {
         final List<Map<String, Object>> store = new CopyOnWriteArrayList<>();
         final List<Consumer<EntityDocument>> listeners = new CopyOnWriteArrayList<>();
         final AtomicInteger searches = new AtomicInteger();
@@ -204,6 +204,66 @@ class LiveQueryTest {
             assertThat(plain.page(0, 10, null, false, "zeta", MASK).total()).isZero();
             assertThat(plain.page(0, 10, null, false, "zeta", null).total()).isEqualTo(1);
             assertThat(ids(plain.page(0, 10, "CPTY", true, null, MASK))).containsExactly("T1", "T3", "T5");   // all ***: by id
+        }
+    }
+
+    /** A kind of a few hundred positions read in one pass, with a live side. */
+    static final class Positions extends Fake {
+        final int count;
+
+        Positions(int count) {
+            this.count = count;
+        }
+
+        @Override
+        public boolean snapshot(String kind, String query, Consumer<EntityDocument> sink) {
+            for (int i = 0; i < count; i++) {
+                sink.accept(new EntityDocument(EntityRef.of("position", "P" + i), DataNode.of(Map.of("BOOK", "B" + (i % 7), "QTY", (long) i)),
+                        new Provenance("lake", 1, Instant.now(), false)));
+            }
+            return true;
+        }
+
+        @Override
+        public java.util.Optional<LiveSetSpec> defaultFor(String kind) {
+            return LiveSetConfiguration.defaultSpec(kind, List.of("$.BOOK", "$.QTY"), java.util.Set.of(), "POS");
+        }
+    }
+
+    @Test
+    void aBareMnemonicOpensItsKindsDefaultSetPagedTickingAndCapped() throws Exception {
+        Positions f = new Positions(500);
+        try (LiveSets sets = new LiveSets(f, Clock.systemUTC(), 20, 100)) {
+            LiveSetSpec spec = sets.forKind("position");
+            assertThat(spec.id()).isEqualTo("kind-position");
+            assertThat(spec.title()).isEqualTo("POS");
+            assertThat(spec.columns()).extracting(c -> c.get("field")).containsExactly("BOOK", "QTY");
+            assertThat(spec.editable()).isFalse();
+            assertThat(sets.defaulted(spec.id())).isTrue();
+            assertThat(sets.forKind("position")).isSameAs(spec);
+            assertThat(sets.spec("kind-position")).contains(spec);
+            LiveSet s = sets.open(spec, null);
+            assertThat(s.size()).isEqualTo(500);
+            assertThat(s.capped()).isFalse();
+            LiveSet.Page p = s.page(100, 100, "QTY", false, null, null);
+            assertThat(p.total()).isEqualTo(500);
+            assertThat(ids(p)).first().isEqualTo("P100");
+            assertThat(s.live()).isTrue();
+            f.listeners.forEach(l -> l.accept(new EntityDocument(EntityRef.of("position", "P1"), DataNode.of(Map.of("BOOK", "B9", "QTY", 1L)),
+                    new Provenance("feed", 2, Instant.now(), true))));
+            assertThat(String.valueOf(s.current("P1").doc().get("BOOK").unwrap())).isEqualTo("B9");
+        }
+        try (LiveSets sets = new LiveSets(new Positions(500), Clock.systemUTC(), 20, 100).defaultMaxRows(120)) {
+            LiveSet s = sets.open(sets.forKind("position"), null);
+            assertThat(s.size()).isEqualTo(120);
+            assertThat(s.capped()).isTrue();
+        }
+        // a module's declaration of the kind overrides the default
+        try (LiveSets sets = new LiveSets(new Positions(5), Clock.systemUTC(), 20, 100)) {
+            LiveSetSpec own = LiveSetSpec.parse(new LinkedHashMap<>(Map.of("blotter", "positions", "kind", "position", "columns", List.of("BOOK"))),
+                    "positions.blotter.yaml", "risk");
+            sets.add(own);
+            assertThat(sets.forKind("position")).isSameAs(own);
         }
     }
 
