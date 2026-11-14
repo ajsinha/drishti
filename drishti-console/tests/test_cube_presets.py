@@ -87,7 +87,7 @@ def test_the_ccr_preset_is_under_construction_behind_its_counterparties_door(bac
     assert "id: ccr-cube\n        cmd: CCUBE\n        href: /pivot?preset=ccr" in menus
     assert pivot_presets.command("CCUBE <GO>".split()) == "/pivot?preset=ccr"
     r = c.get("/go", params={"q": "CCUBE <GO>"}, follow_redirects=False)
-    assert r.status_code == 303 and r.headers["location"] == "/pivot?preset=ccr" and 'id: mcube, cmd: MCUBE, href: "/pivot?preset=mr"' in menus
+    assert r.status_code == 303 and r.headers["location"] == "/pivot?preset=ccr" and "id: mcube\n        cmd: MCUBE\n        href: /pivot?preset=mr" in menus
 
 
 def test_the_var_explorer_opens_its_scope_in_the_mr_preset(backend, monkeypatch):

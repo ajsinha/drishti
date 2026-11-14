@@ -101,4 +101,4 @@ def test_drishti_genomics_compiles_to_the_research_lens_with_no_finance():
     allow = set(ed["commands"]["allow"])
     assert {"VARIANT", "GENE", "COHORT"} <= allow and not allow & {"CPTY", "BOOK", "DESK", "CRV", "VRES", "TRD"}
     assert ed["commands"]["words"].get("VAR") == "off" and ed["commands"]["words"].get("EXP") == "off"
-    assert "genomics" in ed["menus"]["top"]
+    assert "domains" in ed["menus"]["top"]
