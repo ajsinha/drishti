@@ -41,7 +41,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT / "drishti-console") not in sys.path:
     sys.path.insert(0, str(ROOT / "drishti-console"))
-from core.pack_paths import pack_dir  # noqa: E402  (the one rule for where a pack's folder is)
+from core.resolution import pack_dir  # noqa: E402  (where a pack is: the one resolver, KERNEL_AND_MODULES.md 18)
 SYSTEMS = {"endur": (lambda i: str(10_000_000 + i), "trade-endur", 0), "calypso": (lambda i: f"CLY-{30_000_000 + i}", "trade-calypso", 3),
            "murex": (lambda i: f"MX-{50_000_000 + i}", "trade-murex", 5)}
 LES = ["LE-NY", "LE-LDN", "LE-FRA"]

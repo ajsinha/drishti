@@ -25,7 +25,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from core.pack_paths import manifests
+from core.resolution import manifests
 
 ROOT = Path(__file__).resolve().parents[2]
 MODULE = ROOT / "drishti-console" / "web" / "static" / "calc" / "drishti.py"

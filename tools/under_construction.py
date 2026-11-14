@@ -33,7 +33,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT / "drishti-console") not in sys.path:
     sys.path.insert(0, str(ROOT / "drishti-console"))
-from core.pack_paths import pack_dirs  # noqa: E402  (the one rule for where a pack's folder is)
+from core.resolution import pack_dirs, repository  # noqa: E402  (where a pack is: the one resolver, KERNEL_AND_MODULES.md 18)
 REGISTRY = ROOT / "config" / "under-construction.yaml"
 DOC = ROOT / "docs" / "admin" / "UNDER_CONSTRUCTION.md"
 
@@ -106,8 +106,7 @@ def _sutras_of(kind: str) -> list[str]:
 def problems(items: list[dict]) -> list[str]:
     out: list[str] = []
     # the kernel's pages (the sitemap) and the modules' menus (each manifest's console.menus: core/menus.py draws both)
-    menus = [ROOT / "drishti-console" / "config" / "sitemap.yaml"] + sorted((ROOT / "modules").glob("*/module.yaml")) \
-        + sorted((ROOT / "modules").glob("*/dmod/module.yaml")) + sorted((ROOT / "modules").glob("*/src/dmod/module.yaml"))
+    menus = [ROOT / "drishti-console" / "config" / "sitemap.yaml"] + [m.home / "module.yaml" for m in repository().modules.values()]
     ids = {m for f in menus for m in re.findall(r"\bid:\s*([\w.-]+)", f.read_text(encoding="utf-8"))}
     seen = set()
     for i in items:

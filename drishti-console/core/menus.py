@@ -21,7 +21,6 @@ engine runs in the cluster and the person's role opens it (the catalogue's ``ope
 the engine's command words (type-ahead and command line). Switches and status: Admin -> Engines only."""
 from __future__ import annotations
 
-import os
 from pathlib import Path
 from urllib.parse import quote
 
@@ -35,9 +34,9 @@ _cache: dict[str, tuple[tuple, dict]] = {}
 
 
 def modules_dir(console_dir: Path) -> Path:
-    """The modules' manifests folder (``DRISHTI_MODULE_MANIFESTS_DIR``, else ``../modules`` beside the console, as its settings say)."""
-    d = Path(os.environ.get("DRISHTI_MODULE_MANIFESTS_DIR") or "../modules")
-    return d if d.is_absolute() else (console_dir / d).resolve()
+    """The modules' folder (``drishti.modules.home``, ``DRISHTI_MODULES_HOME``; the one resolver's setting)."""
+    from core import resolution
+    return resolution.Settings.from_env(console_dir=console_dir).modules_home
 
 
 def _merged(kernel: list, extra: list) -> list:
@@ -79,7 +78,8 @@ def _spec(console_dir: Path) -> dict:
     from core import distribution as _dist
     f = console_dir / "config" / "sitemap.yaml"
     mods = modules_dir(console_dir)
-    manifests = sorted(mods.glob("*/module.yaml")) + sorted(mods.glob("*/dmod/module.yaml")) + sorted(mods.glob("*/src/dmod/module.yaml"))
+    from core import resolution
+    manifests = [m.home / "module.yaml" for m in resolution.module_list(mods).values()] if mods and mods.is_dir() else []
     try:
         stamp = (f.stat().st_mtime_ns, tuple((str(p), p.stat().st_mtime_ns) for p in manifests))
     except OSError:

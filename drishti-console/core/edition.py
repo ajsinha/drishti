@@ -407,10 +407,10 @@ class Editions:
     def __init__(self, settings, console_dir: Path, on_change=None):
         d = Path(str(settings.get("lens.dir", "../config/lenses") or "../config/lenses"))   # config/lenses/<module>/<lens>.yaml
         self.dir = d if d.is_absolute() else (console_dir / d).resolve()
-        p = Path(str(settings.get("packs.dir", "../config/packs") or "../config/packs"))
-        self.packs_dir = p if p.is_absolute() else (console_dir / p).resolve()
-        md = Path(str(settings.get("module_manifests_dir", "../modules") or "../modules"))   # the modules' own manifests (DISTRIBUTIONS.md)
-        self.modules_dir = md if md.is_absolute() else (console_dir / md).resolve()
+        from core import resolution
+        where = resolution.Settings.from_env(settings, console_dir)       # the one resolver's settings (KERNEL_AND_MODULES.md 18.2)
+        self.packs_dir = where.site_dir
+        self.modules_dir = where.modules_home
         self.settings = settings
         self.instance: Edition = Edition.NONE
         self.lenses: dict[str, Edition] = {}
@@ -429,11 +429,9 @@ class Editions:
         self._use_distribution(None)                             # Drishti All when none is named: nothing changes
 
     def default_packs(self) -> list[str]:
-        """The one default pack list (config/packs/default-packs.yaml, by module), as the server reads it from its jar."""
-        try:
-            return by_module((yaml.safe_load((self.packs_dir / "default-packs.yaml").read_text(encoding="utf-8")) or {}).get("packs"))
-        except (OSError, yaml.YAMLError):
-            return []
+        """The default packs: every pack the one resolver loads here (the modules' manifests' ``packs.list`` and the kernel's)."""
+        from core import resolution
+        return [p.name for p in resolution.current(self.settings, self.console_dir).packs.loaded()]
 
     def mapping(self) -> dict[str, list[str]]:
         """Which console settings each feature presets: ``features:`` of kernel.yaml beside the distribution files, its ``console`` keys."""

@@ -126,8 +126,8 @@ def _load_json(p: Path):
 def _other_packs() -> tuple[set[str], set[str]]:
     """core legal-entity LEIs (a company links to one whose LEI matches) and the news-and-markets companies (CO-<ticker>)."""
     leis, cos = set(), set()
-    for f, key, into in ((ROOT / "config/packs/core/core/samples/legal-entity.jsonl", "LEI", leis),
-                         (ROOT / "modules/economy/packs/news-and-markets/samples/listed-company.jsonl", "COMPANY_ID", cos)):
+    for f, key, into in ((README.PP.pack_dir("core") / "samples" / "legal-entity.jsonl", "LEI", leis),
+                         (README.PP.pack_dir("news-and-markets") / "samples" / "listed-company.jsonl", "COMPANY_ID", cos)):
         if f.is_file():
             for line in f.read_text(encoding="utf-8").splitlines():
                 if line.strip():

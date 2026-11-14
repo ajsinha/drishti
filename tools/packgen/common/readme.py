@@ -43,7 +43,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[3]
 if str(ROOT / "drishti-console") not in sys.path:
     sys.path.insert(0, str(ROOT / "drishti-console"))
-from core import pack_paths as PP  # noqa: E402  (the one rule for where a pack's folder is)
+from core import resolution as PP  # noqa: E402  (where a pack is: the one resolver, KERNEL_AND_MODULES.md 18)
 
 PACKGEN = ROOT / "tools" / "packgen"
 
@@ -394,18 +394,9 @@ def _ancestors(packs_dir: Path, manifest: dict, seen: set | None = None) -> list
 
 
 def module_of(pack: str) -> str | None:
-    """The module that ships a pack, from the modules' own manifests (DISTRIBUTIONS.md): a content module's modules/<id>/module.yaml
-    (packs.list), a module jar's META-INF/drishti/module.yaml (contributes.packs); None for the kernel's packs."""
-    for f in sorted((ROOT / "modules").glob("*/module.yaml")) + sorted((ROOT / "modules").glob("*/dmod/module.yaml")):
-        y = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
-        if pack in ((y.get("packs") or {}).get("list") or []):
-            return str(y.get("id"))
-    for f in sorted((ROOT / "modules").glob("*/*/src/main/resources/META-INF/drishti/module.yaml")):
-        y = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
-        for m in ([y["module"]] if isinstance(y.get("module"), dict) else []) + list(y.get("modules") or []):
-            if pack in ((m.get("contributes") or {}).get("packs") or []):
-                return str(m.get("id"))
-    return None
+    """The module that ships a pack (its manifest's packs.list, as the one resolver reads it); None for the kernel's packs."""
+    p = PP.repository().packs.get(pack)
+    return p.module if p is not None else None
 
 
 _REPO_LINK = re.compile(r"\]\(((?:\.\./)+)(docs/|HOW_IT_FITS|README|config/|plugins/|drishti-console/|tools/|examples/)")

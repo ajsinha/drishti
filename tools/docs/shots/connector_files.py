@@ -33,7 +33,7 @@ from shotlib import DEMO_ROOT_ENV
 from shotlib import CONSOLE_PORT, ROOT, SERVER_PORT, Ctx, java_cmd, listening, register
 if str(ROOT / "drishti-console") not in sys.path:
     sys.path.insert(0, str(ROOT / "drishti-console"))
-from core.pack_paths import pack_dir  # noqa: E402  (the one rule for where a pack's folder is)
+from core.resolution import pack_dir  # noqa: E402  (where a pack is: the one resolver, KERNEL_AND_MODULES.md 18)
 
 OUT = ROOT / "docs" / "guides" / "img" / "connector_files"
 DEAD_DB = 59997                              # nothing listens here: the connector below is meant to be DOWN

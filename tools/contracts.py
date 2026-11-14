@@ -52,7 +52,7 @@ GENERATOR = "tools/contracts.py docs (drishti.py contract docs)"
 
 if str(ROOT / "drishti-console") not in sys.path:
     sys.path.insert(0, str(ROOT / "drishti-console"))
-from core import pack_paths as PP  # noqa: E402  (the one rule for where a pack's folder is)
+from core import resolution as PP  # noqa: E402  (where a pack is: the one resolver, KERNEL_AND_MODULES.md 18)
 
 _spec = importlib.util.spec_from_file_location("drishti_pack_readme", ROOT / "tools" / "packgen" / "common" / "readme.py")
 R = importlib.util.module_from_spec(_spec)

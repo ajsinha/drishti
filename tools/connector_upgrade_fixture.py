@@ -40,7 +40,7 @@ import yaml
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 if str(ROOT / "drishti-console") not in sys.path:
     sys.path.insert(0, str(ROOT / "drishti-console"))
-from core.pack_paths import pack_dir  # noqa: E402  (the one rule for where a pack's folder is)
+from core.resolution import pack_dir  # noqa: E402  (where a pack is: the one resolver, KERNEL_AND_MODULES.md 18)
 PACKS = ("core", "market-data", "trading", "counterparty-risk", "market-risk")
 COMPUTE_KEYS = ("reads", "engine", "triggers", "coalesce", "cache", "limits", "history", "incremental")
 HEADER = "# Generated at first start from the connector template of pack '{pack}'. Edit it freely: it is never overwritten.\n"

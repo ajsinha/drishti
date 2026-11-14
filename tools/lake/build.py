@@ -74,12 +74,13 @@ import writers  # noqa: E402
 
 if str(HERE.parents[1] / "drishti-console") not in sys.path:
     sys.path.insert(0, str(HERE.parents[1] / "drishti-console"))
-from core.pack_paths import pack_dir  # noqa: E402  (the one rule for where a pack's folder is)
+from core import resolution as R  # noqa: E402  (configuration: the one resolver)
+from core.resolution import pack_dir  # noqa: E402  (where a pack is: the one resolver, KERNEL_AND_MODULES.md 18)
 
 EXIT_OK, EXIT_FAILED, EXIT_PARTIAL, EXIT_LOCKED = 0, 1, 2, 3
 MODES = ("overwrite-dates", "overwrite-partitions", "append")
 STATE = "_drishti-lake"
-PACKS_ROOT = pathlib.Path(os.environ.get("DRISHTI_PACKS_DIR") or HERE.parents[1] / "config" / "packs")
+PACKS_ROOT = R.Settings.from_env().site_dir                       # the site's packs (the modules' and the kernel's: the resolver)
 RESERVED = {"id", "doc", "business_date"}
 
 
@@ -174,19 +175,11 @@ def now_iso() -> str:
 # ------------------------------------------------------------------------------------------------ what to build
 
 def site_set(connector: str, template_settings: dict) -> dict:
-    """The constants the connector's ``set:`` stamps into stored rows: the site's connector file (config/connectors/<name>.yaml, or
-    DRISHTI_CONNECTORS_DIR) when it has settings, else the module template's."""
-    import yaml
-    st = template_settings or {}
-    folder = pathlib.Path(os.environ.get("DRISHTI_CONNECTORS_DIR") or pathlib.Path(__file__).resolve().parents[2] / "config" / "connectors")
-    f = folder / f"{connector}.yaml"
-    if f.is_file():
-        site = (yaml.safe_load(f.read_text(encoding="utf-8")) or {}).get("settings")
-        if isinstance(site, dict):
-            st = site
-    out = {str(k): str(v) for k, v in (st.get("set") or {}).items()} if isinstance(st.get("set"), dict) else {}
-    out.update({k[4:]: str(v) for k, v in st.items() if isinstance(k, str) and k.startswith("set.") and len(k) > 4})
-    return out
+    """The constants the connector's ``set:`` stamps into stored rows: its effective settings (the template, the site's override merged
+    over it: drishti-console/core/resolution.py), else ``template_settings`` when no layer has the connector."""
+    e = R.current().connectors.find(connector)
+    st = e.settings if e is not None else {k: R._text(v) for k, v in R.flatten(template_settings or {}).items()}
+    return {k[4:]: str(v) for k, v in st.items() if isinstance(k, str) and k.startswith("set.") and len(k) > 4}
 
 
 def pack_defaults(pack: pathlib.Path, kind: str | None, connector: str | None = None) -> dict:
@@ -323,7 +316,7 @@ def _plan_only(a, p, summary, started, say) -> tuple[int, dict]:
 
 def _pack_dir(name: str) -> pathlib.Path:
     p = pathlib.Path(name)
-    return p if (p / "pack.yaml").is_file() else pack_dir(name, PACKS_ROOT)
+    return p if (p / "pack.yaml").is_file() else (R.current().packs.dir(name) or pack_dir(name))
 
 
 def _run_tars(a, say, summary, started, lake) -> tuple[int, dict]:

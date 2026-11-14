@@ -22,7 +22,7 @@ file's shape, so commands, menus, Help, AI tools and Home cards of modules outsi
 the server's one reader (``GET /public/modules/manifests``: the shipped and installed ``.dmod`` packages, then the manifests folder), read
 again whenever the server's module registry changes (``/public/about``'s ``manifests``); only while no server has answered, from the
 manifests folder here (``modules/<id>/module.yaml``, a module jar's ``META-INF/drishti/module.yaml`` in its sources). The kernel's own
-packs, words and menus come from ``kernel.yaml`` beside the files.
+packs, words and menus come from ``kernel.yaml`` beside the files. Every module and pack is found by the one resolver (core/resolution.py).
 """
 from __future__ import annotations
 
@@ -35,12 +35,12 @@ from typing import Any
 
 import yaml
 
-from core.pack_paths import pack_dirs
+from core import resolution
+from core.resolution import pack_dirs
 
 LOG = logging.getLogger("drishti.console.distribution")
 DEFAULT = "all"
 KERNEL = "kernel.yaml"
-_IN_JAR = "src/main/resources/META-INF/drishti/module.yaml"
 _SHORT = re.compile(r"[a-z0-9][a-z0-9-]{0,63}")
 #: The brand keys and the console settings they fill. The five names and notices (NAMES) come from the distribution file only.
 BRAND_KEYS = {"product": "ui.product", "product_native": "ui.product_native", "tagline": "ui.tagline", "owner": "ui.owner",
@@ -85,17 +85,13 @@ def module_menus(directory: Path | None) -> list[dict]:
     out: list[dict] = []
     if directory is None or not directory.is_dir():
         return out
-    for m in sorted(p for p in directory.iterdir() if p.is_dir()):
-        for dmod in (m / "module.yaml", m / "src" / "dmod" / "module.yaml", m / "dmod" / "module.yaml"):
-            if dmod.is_file():
-                y = _read(dmod)
-                mid = str(y.get("id") or "").strip()
-                tag = {"_module": mid, "_domain": str(y.get("domain") or mid)}
-                if (y.get("console") or {}).get("domain-label"):                  # the name Domains takes when this is the one active domain
-                    tag["_domain_label"] = str(y["console"]["domain-label"])
-                out += [{**x, **tag, "columns": [{**c, **tag} for c in x.get("columns") or [] if isinstance(c, dict)]}
-                        for x in ((y.get("console") or {}).get("menus") or []) if isinstance(x, dict) and x.get("id")]
-                break
+    for m in sorted(resolution.module_list(directory).values(), key=lambda m: str(m.home)):
+        y = m.manifest
+        tag = {"_module": m.id, "_domain": str(y.get("domain") or m.id)}
+        if (y.get("console") or {}).get("domain-label"):                          # the name Domains takes when this is the one active domain
+            tag["_domain_label"] = str(y["console"]["domain-label"])
+        out += [{**x, **tag, "columns": [{**c, **tag} for c in x.get("columns") or [] if isinstance(c, dict)]}
+                for x in ((y.get("console") or {}).get("menus") or []) if isinstance(x, dict) and x.get("id")]
     return out
 
 
@@ -129,33 +125,20 @@ def _words(functions) -> list[str]:
 
 
 def module_manifests(directory: Path | None) -> dict[str, ModuleEntry]:
-    """Every module manifest under ``directory``, by id, in requirement order (a required module before the ones that need it): a
-    content module's ``<id>/module.yaml`` (the ``.dmod`` manifest; a module project made from the SDK keeps it in ``<id>/src/dmod/``) and a module jar's ``<id>/<part>/src/main/resources/META-INF/drishti/
-    module.yaml``. The kernel reads the same files the same way (drishti-packs ``ModuleManifests``)."""
+    """Every module under ``directory`` (the one resolver's modules: ``<dir>/module.yaml``, ``dmod/module.yaml`` or
+    ``src/dmod/module.yaml``), by id, in requirement order (a required module before the ones that need it). The kernel reads the same
+    files the same way (drishti-packs ``ModuleManifests``)."""
     by_id: dict[str, ModuleEntry] = {}
     if directory is None or not directory.is_dir():
         return by_id
-    for m in sorted(p for p in directory.iterdir() if p.is_dir()):
-        # a content module's folder; a module project from the SDK (src/dmod/); a module with code's dmod/ (banking)
-        for dmod in (m / "module.yaml", m / "src" / "dmod" / "module.yaml", m / "dmod" / "module.yaml"):
-            if not dmod.is_file():
-                continue
-            y = _read(dmod)
-            mid = str(y.get("id") or "").strip()
-            req = [k for k in (y.get("requires") or {}) if k != "optional"] if isinstance(y.get("requires"), dict) else []
-            by_id[mid] = ModuleEntry(mid, str(y.get("domain") or mid), _texts((y.get("packs") or {}).get("list")), _words(y.get("functions")),
-                                     [str(e.get("id")) for e in ((y.get("compute") or {}).get("engines") or []) if isinstance(e, dict)],
-                                     menu_ids((y.get("console") or {}).get("menus")), _texts((y.get("docs") or {}).get("domains")), req)
-            break
-        for part in sorted(p for p in m.iterdir() if p.is_dir()):
-            jar = part / _IN_JAR
-            if jar.is_file():
-                y = _read(jar)
-                mods = ([y["module"]] if isinstance(y.get("module"), dict) else []) + [x for x in y.get("modules") or [] if isinstance(x, dict)]
-                for x in mods:
-                    mid, c = str(x.get("id") or "").strip(), x.get("contributes") or {}
-                    by_id[mid] = ModuleEntry(mid, str(x.get("domain") or mid), _texts(c.get("packs")), _words(c.get("functions")),
-                                             _texts(c.get("engines")), _texts(c.get("menus")), _texts(c.get("help")), _texts(x.get("requires")))
+    for mid, m in resolution.module_list(directory).items():
+        y = m.manifest
+        packs = y.get("packs")
+        by_id[mid] = ModuleEntry(mid, str(y.get("domain") or mid), list(m.packs) if isinstance(packs, (dict, list)) else [],
+                                 _words(y.get("functions")),
+                                 [str(e.get("id")) for e in ((y.get("compute") or {}).get("engines") or []) if isinstance(e, dict)],
+                                 menu_ids((y.get("console") or {}).get("menus")), _texts((y.get("docs") or {}).get("domains")),
+                                 [r for r in m.requires if isinstance(y.get("requires"), dict)])
     ordered: dict[str, ModuleEntry] = {}
 
     def visit(mid: str, path: set) -> None:
@@ -230,7 +213,7 @@ _KNOWN: dict[str, frozenset] = {}
 def known_commands(packs_dir: Path, modules_dir: Path | None = None, known: dict[str, ModuleEntry] | None = None) -> frozenset:
     """Every command and word any module has (all packs' commands, the module manifests' words; ``known``: the server's module list): what
     a distribution may leave out, so a command typed in one that lacks it answers "not in Drishti Finance" instead of becoming a search."""
-    modules_dir = modules_dir or packs_dir.parent.parent / "modules"
+    modules_dir = modules_dir or resolution.Settings.from_env().modules_home
     key = f"{packs_dir}|{modules_dir}|{sorted(known) if known is not None else ''}"
     if key not in _KNOWN:
         names = sorted(pack_dirs(packs_dir)) if packs_dir.is_dir() else []
@@ -393,10 +376,8 @@ def load(settings, console_dir: Path, name: str | None = None, known: dict[str, 
     and ``strict`` as :func:`read`."""
     d = Path(str(settings.get("distributions_dir", "../config/distributions") or "../config/distributions"))
     directory = d if d.is_absolute() else (console_dir / d).resolve()
-    p = Path(str(settings.get("packs.dir", "../config/packs") or "../config/packs"))
-    packs_dir = p if p.is_absolute() else (console_dir / p).resolve()
-    md = Path(str(settings.get("module_manifests_dir", "../modules") or "../modules"))
-    modules_dir = md if md.is_absolute() else (console_dir / md).resolve()
+    where = resolution.Settings.from_env(settings, console_dir)
+    packs_dir, modules_dir = where.site_dir, where.modules_home
     chosen, named = (name, True) if name else selected(settings)
     f = file_of(directory, chosen)
     if not f.is_absolute():

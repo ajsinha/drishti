@@ -375,8 +375,9 @@ async def deploy(request: Request, wid: str, action: str):
             f = ws.dmod(d)
             if f is None:
                 return _problem(409, "make the module first (step 5)")
-            target = Path(str(request.app.state.settings.get("builder.pack_designer_modules_dir", "") or os.environ.get("DRISHTI_MODULES_PATH")
-                              or Path(os.environ.get("DRISHTI_DATA_DIR") or Path(__file__).resolve().parents[2] / "data") / "modules"))
+            from core import resolution
+            target = Path(str(request.app.state.settings.get("builder.pack_designer_modules_dir", "") or "")) \
+                if request.app.state.settings.get("builder.pack_designer_modules_dir", "") else resolution.Settings.from_env().modules_path
             target.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(f, target / f.name)
             return {"installed": str(target / f.name), "binding": await _propose_binding(b, me, d, str(body.get("reason") or ""))}
