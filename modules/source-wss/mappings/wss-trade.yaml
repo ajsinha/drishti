@@ -18,43 +18,43 @@ kind: trade
 about: WSS native fields to the canonical trade fields. A path is a dotted path into the native document; first-of takes the first present; values
   translates a code; scale multiplies; as reads a date or time written in another form.
 map:
-  TRADE_ID: dealRef
-  TRADE_VERSION: dealVer
+  TRADE_ID: DEAL_REF
+  TRADE_VERSION: DEAL_VERSION
   TRADE_STATUS:
-    from: dealState
+    from: DEAL_STATE
     values:
       Verified: NEW
       Amended: AMENDED
       Cancelled: CANCELLED
-  PRODUCT_TYPE: dealType
+  PRODUCT_TYPE: DEAL_TYPE
   PRODUCT_GROUP:
-    from: family
+    from: FAMILY
     values:
       FX: FX
       MONEY: Money markets
       TREASURY: Treasury
   BUY_SELL_CODE:
-    from: dir
+    from: DIR
     values:
       BUY: B
       SELL: S
   QUANTITY:
     first-of:
-    - buyAmt
-    - principal
+    - BUY_AMT
+    - PRINCIPAL
   PRICE:
     first-of:
-    - rate
-    - ratePct
+    - RATE
+    - RATE_PCT
   CURRENCY:
     first-of:
-    - buyCcy
-    - ccy
-  COUNTERPARTY: cpty.code
-  LEGAL_ENTITY: legalEntity
-  PORTFOLIO: bookRef
-  TRADER_ID: dealer
-  TRADE_DATE: tradedOn
-  START_DATE: valueDate
-  MATURITY_DATE: maturityDate
-  SOURCE_UPDATE_TIME: lastUpd
+    - BUY_CCY
+    - CCY
+  COUNTERPARTY: CPTY.CODE
+  LEGAL_ENTITY: LEGAL_ENTITY
+  PORTFOLIO: BOOK_REF
+  TRADER_ID: DEALER
+  TRADE_DATE: TRADED_ON
+  START_DATE: VALUE_DATE
+  MATURITY_DATE: MATURITY_DATE
+  SOURCE_UPDATE_TIME: LAST_UPD

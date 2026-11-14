@@ -158,6 +158,21 @@ def pack_settings(pack: pathlib.Path, bare: bool = False) -> tuple[str, dict, di
     return st.get("domain") or m["pack"], layouts, keys, dates
 
 
+def pack_stamp(pack: pathlib.Path) -> dict:
+    """The constants the pack's first delta or file connector stamps into a row that lacks the field (its set:, site file first): the same
+    as lake build's, so a SOURCE_SYSTEM is stored by every path and every store."""
+    import yaml
+    import packlake
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent / "lake"))
+    import build as lakebuild
+    m = packlake.view(yaml.safe_load((pack / "pack.yaml").read_text(encoding="utf-8")) or {})
+    defs = m.get("connectors") if isinstance(m.get("connectors"), dict) else {}
+    for name, c in defs.items():
+        if c.get("plugin") in ("delta", "file"):
+            return lakebuild.site_set(name, c.get("settings") or {})
+    return {}
+
+
 SNAPSHOT = "@snapshot"     # a kind whose documents carry no date field: nothing to count (the date is the file's, as for every kind)
 
 
@@ -192,6 +207,11 @@ def collect(args, keys, dates, report: Report, children: dict | None = None) -> 
         if own is not None and own != day:
             report.other_dates[f] = report.other_dates.get(f, 0) + 1
             report.date_fields[f] = dfield
+        stamp = getattr(args, "_stamp", None)
+        if stamp and isinstance(doc, dict):               # the connector's set: constants, stored in a row that lacks the field
+            lacking = {n: v for n, v in stamp.items() if n not in doc}
+            if lacking:
+                doc = {**doc, **lacking}
         kv = SG.get(doc, keys.get(kind, "id"))
         if kv is SG.MISSING or kv is None:
             report.no_key[kind] = report.no_key.get(kind, 0) + 1
@@ -316,6 +336,7 @@ def ingest(args, say=print) -> Report:
         domain, layouts, keys, dates = pack_settings(args.pack, bare=args.store == "files")
         domain = args.domain or domain
         children = pack_children(args.pack)
+        args._stamp = pack_stamp(args.pack)
     else:
         L = _layout()
         if not args.domain:

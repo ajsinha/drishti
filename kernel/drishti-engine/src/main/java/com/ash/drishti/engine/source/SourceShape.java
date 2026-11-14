@@ -60,19 +60,32 @@ public final class SourceShape {
     /** A connector that reads its rows as they are. */
     public static final SourceShape NONE = new SourceShape(RowPredicate.ALL, Map.of(), Map.of(), true, null, "", Map.of());
 
+    /** The forms {@code as:} reads a date or time written another way. */
+    private static final List<String> AS_FORMS = List.of("yyyymmdd", "yyyymmddhhmmss", "epoch-millis", "epoch-seconds", "iso");
+
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
 
     /**
      * A native field's canonical name, cast ({@code null}: as read) and value translation ({@code values}: native value to canonical value;
      * a value it does not name stays as read).
      */
-    public record Target(String to, String cast, Map<String, Object> values) {
+    public record Target(String to, String cast, Map<String, Object> values, List<String> from, Double scale, String as) {
         public Target {
             values = values == null ? Map.of() : Map.copyOf(values);
+            from = from == null ? List.of() : List.copyOf(from);
+        }
+
+        public Target(String to, String cast, Map<String, Object> values) {
+            this(to, cast, values, List.of(), null, null);
         }
 
         public Target(String to, String cast) {
             this(to, cast, Map.of());
+        }
+
+        /** True when the value is one whole top-level stored field as it is (so a column store can answer without the documents). */
+        public boolean simple() {
+            return from.size() <= 1 && scale == null && as == null && from.stream().noneMatch(f -> f.indexOf('.') >= 0);
         }
     }
 
@@ -143,40 +156,62 @@ public final class SourceShape {
             } catch (IOException e) {
                 throw refused(connector, "map: " + p + " is not valid YAML: " + e.getMessage().lines().findFirst().orElse(""));
             }
-            if (doc == null || !doc.path("fields").isObject()) {
-                throw refused(connector, "map: " + p + " has no 'fields' (native field: canonical field, or {to, cast})");
+            boolean byCanon = doc != null && doc.path("map").isObject();         // map: canonical <- native path(s); fields: native: canonical
+            JsonNode body = doc == null ? null : byCanon ? doc.path("map") : doc.path("fields");
+            if (body == null || !body.isObject()) {
+                throw refused(connector, "map: " + p + " has no 'map' or 'fields' (canonical field <- native path, or {from, first-of, cast, values, scale, as})");
             }
             Map<String, Target> out = new LinkedHashMap<>();
-            for (var it = doc.path("fields").fields(); it.hasNext();) {
+            for (var it = body.fields(); it.hasNext();) {
                 var e = it.next();
                 JsonNode v = e.getValue();
-                // two forms: native: canonical (or native: {to, cast}); and the source designer's canonical: {from: native, cast, values}
-                // or canonical: {value: constant}
-                boolean byCanonical = v.isObject() && (v.has("from") || v.has("value"));
-                if (byCanonical && v.has("value") && !v.has("from")) {
+                boolean byCanonical = byCanon || v.isObject() && (v.has("from") || v.has("first-of") || v.has("value"));
+                if (byCanonical && v.isObject() && v.has("value") && !v.has("from") && !v.has("first-of")) {
                     if (!e.getKey().matches("[A-Za-z_][A-Za-z0-9_]{0,127}")) {
                         throw refused(connector, "map: " + p + ": '" + e.getKey() + "' is not a field name");
                     }
                     fixed.put(e.getKey(), plain(v.get("value")));
                     continue;
                 }
-                String nat = byCanonical ? v.path("from").asText() : e.getKey();
+                List<String> froms = new java.util.ArrayList<>();
+                if (byCanonical) {
+                    JsonNode f = v.isObject() ? v.has("first-of") ? v.get("first-of") : v.path("from") : v;
+                    if (f.isArray()) {
+                        f.forEach(x -> froms.add(x.asText().strip()));
+                    } else if (!f.asText().isBlank()) {
+                        froms.add(f.asText().strip());
+                    }
+                } else {
+                    froms.add(e.getKey());
+                }
                 String to = byCanonical ? e.getKey() : v.isTextual() ? v.asText() : v.path("to").asText(e.getKey());
+                String nat = froms.isEmpty() ? "" : froms.get(0);
                 String cast = v.isObject() && v.hasNonNull("cast") ? v.path("cast").asText().toLowerCase(Locale.ROOT) : null;
                 if (cast != null && !List.of("text", "number", "integer", "boolean", "date").contains(cast)) {
                     throw refused(connector, "map: " + p + ": " + e.getKey() + " casts to '" + cast + "' (text, number, integer, boolean or date)");
                 }
-                if (to.isBlank() || !to.matches("[A-Za-z_][A-Za-z0-9_]{0,127}") || nat.isBlank()) {
-                    throw refused(connector, "map: " + p + ": " + e.getKey() + " maps " + nat + " to '" + to + "', which is not a field name");
+                if (to.isBlank() || !to.matches("[A-Za-z_][A-Za-z0-9_]{0,127}") || froms.isEmpty() || froms.stream().anyMatch(String::isBlank)) {
+                    throw refused(connector, "map: " + p + ": " + e.getKey() + " maps " + froms + " to '" + to + "', which is not a field name or has no native path");
+                }
+                Double scale = null;
+                if (v.isObject() && v.has("scale")) {
+                    if (!v.get("scale").isNumber()) {
+                        throw refused(connector, "map: " + p + ": " + e.getKey() + " scale '" + v.get("scale").asText() + "' is not a number");
+                    }
+                    scale = v.get("scale").asDouble();
+                }
+                String as = v.isObject() && v.hasNonNull("as") ? v.path("as").asText().strip().toLowerCase(Locale.ROOT) : null;
+                if (as != null && !AS_FORMS.contains(as)) {
+                    throw refused(connector, "map: " + p + ": " + e.getKey() + " reads as '" + as + "' (" + String.join(", ", AS_FORMS) + ")");
                 }
                 Map<String, Object> values = new LinkedHashMap<>();
-                if (v.path("values").isObject()) {
+                if (v.isObject() && v.path("values").isObject()) {
                     v.path("values").fields().forEachRemaining(x -> values.put(x.getKey(), plain(x.getValue())));
                 }
                 if (out.containsKey(nat)) {
                     throw refused(connector, "map: " + p + ": the native field " + nat + " is mapped twice");
                 }
-                out.put(nat, new Target(to, cast, values));
+                out.put(nat, new Target(to, cast, values, froms, scale, as));
             }
             if (doc.path("set").isObject()) {                  // the map file's own constants; the connector's set wins
                 doc.path("set").fields().forEachRemaining(x -> set.putIfAbsent(x.getKey(), plain(x.getValue())));
@@ -303,6 +338,14 @@ public final class SourceShape {
         return canonical;
     }
 
+    /** True when a canonical field is built from nested paths, alternatives, a scale or a reading: only the documents (not columns) can give it. */
+    public boolean needsDocuments(String canonical) {
+        int dot = canonical.indexOf('.');
+        String top = dot < 0 ? canonical : canonical.substring(0, dot);
+        String n = reverse.get(top);
+        return n != null && !map.get(n).simple();
+    }
+
     /** The canonical name of a stored field (the map's; else its own, or null when {@code keep: false} drops it). */
     public String canonicalName(String stored) {
         int dot = stored.indexOf('.');
@@ -320,17 +363,33 @@ public final class SourceShape {
             return stored;
         }
         Map<String, Object> out = new LinkedHashMap<>();
-        for (Map.Entry<?, ?> e : raw.entrySet()) {
-            String k = String.valueOf(e.getKey());
-            Target t = map.get(k);
-            if (t != null) {
-                Object v = e.getValue();
-                if (!t.values().isEmpty() && v != null && t.values().containsKey(String.valueOf(v))) {
-                    v = t.values().get(String.valueOf(v));
+        java.util.Set<String> used = new java.util.HashSet<>();
+        for (Target t : map.values()) {
+            Object v = null;
+            boolean seen = false;
+            for (String f : t.from()) {
+                used.add(top(f));
+                Object x = path(raw, f);
+                seen |= x != null || raw.containsKey(top(f));
+                if (x != null && !(x instanceof String str && str.isBlank())) {
+                    v = x;
+                    break;
                 }
-                out.put(t.to(), cast(v, t.cast()));
-            } else if (keep && !out.containsKey(k)) {
-                out.put(k, e.getValue());
+            }
+            if (v == null && !seen) {
+                continue;
+            }
+            if (!t.values().isEmpty() && v != null && t.values().containsKey(String.valueOf(v))) {
+                v = t.values().get(String.valueOf(v));
+            }
+            out.put(t.to(), v == null ? null : scaled(read(cast(v, t.cast()), t.as()), t.scale()));
+        }
+        if (keep) {
+            for (Map.Entry<?, ?> e : raw.entrySet()) {
+                String k = String.valueOf(e.getKey());
+                if (!used.contains(k) && !out.containsKey(k)) {
+                    out.put(k, e.getValue());
+                }
             }
         }
         out.putAll(fixed);
@@ -356,6 +415,59 @@ public final class SourceShape {
         }
         DataNode c = canonical(d.data());
         return c == d.data() ? d : new EntityDocument(d.ref(), c, d.provenance(), d.deleted());
+    }
+
+    private static String top(String path) {
+        int dot = path.indexOf('.');
+        return dot < 0 ? path : path.substring(0, dot);
+    }
+
+    /** The value at a dotted path into nested native maps (a flat key of that exact name wins), or null. */
+    static Object path(Map<?, ?> raw, String path) {
+        if (raw.containsKey(path)) {
+            return raw.get(path);
+        }
+        Object cur = raw;
+        for (String part : path.split("\\.")) {
+            if (!(cur instanceof Map<?, ?> m) || !m.containsKey(part)) {
+                return null;
+            }
+            cur = m.get(part);
+        }
+        return cur;
+    }
+
+    private static Object scaled(Object v, Double scale) {
+        if (scale == null || v == null) {
+            return v;
+        }
+        try {
+            double d = v instanceof Number n ? n.doubleValue() : Double.parseDouble(String.valueOf(v).strip().replace(",", ""));
+            return d * scale;
+        } catch (NumberFormatException e) {
+            return v;
+        }
+    }
+
+    /** A date or time written another way, as an ISO date ({@code yyyymmdd}) or an ISO UTC instant; a value it cannot read stays as stored. */
+    static Object read(Object v, String as) {
+        if (as == null || v == null) {
+            return v;
+        }
+        String s = String.valueOf(v).strip();
+        try {
+            return switch (as) {
+                case "yyyymmdd" -> LocalDate.parse(s.substring(0, 8), java.time.format.DateTimeFormatter.BASIC_ISO_DATE).toString();
+                case "yyyymmddhhmmss" -> java.time.LocalDateTime.parse(s.substring(0, 14), java.time.format.DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
+                        .toInstant(java.time.ZoneOffset.UTC).toString();
+                case "epoch-millis" -> java.time.Instant.ofEpochMilli(new java.math.BigDecimal(s).longValue()).toString();
+                case "epoch-seconds" -> java.time.Instant.ofEpochSecond(new java.math.BigDecimal(s).longValue()).toString();
+                case "iso" -> java.time.OffsetDateTime.parse(s).toInstant().toString();
+                default -> v;
+            };
+        } catch (RuntimeException e) {
+            return v;
+        }
     }
 
     static Object cast(Object v, String cast) {

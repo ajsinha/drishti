@@ -10,7 +10,7 @@ kinds: [trade]
 ---
 # Source WSS
 
-WSS is a treasury, FX and money-markets dealing system (mocked here: a synthetic look-alike, camelCase, one deal a document, buy and sell legs).
+WSS is a treasury, FX and money-markets dealing system (mocked here: a synthetic look-alike, UPPER_SNAKE names like Endur, one deal a document, buy and sell legs).
 The data is **mocked**: a synthetic look-alike written by `tools/samplegen/src_wss.py` (never real data, banks or counterparties), a few hundred trades over sixty business days in the system's own native style, with no positions and no scenario P&L, so the VaR does not move.
 
 This module is one source of the canonical `trade` kind: its rows carry `SOURCE_SYSTEM = WSS`. It requires the `trading` module and
@@ -20,6 +20,6 @@ can be switched on or off on its own (`config/modules/source-wss.yaml`, `enabled
 
 | Kind | Where | Native key | Canonical fields it fills |
 |---|---|---|---|
-| `trade` | the shared table trading.trades_shared, split by where: | `dealRef` | `TRADE_ID`, `TRADE_VERSION`, `TRADE_STATUS`, `PRODUCT_TYPE`, `BUY_SELL_CODE`, `QUANTITY`, `PRICE`, `CURRENCY`, `COUNTERPARTY`, `LEGAL_ENTITY`, `PORTFOLIO`, `TRADER_ID`, `TRADE_DATE`, `START_DATE`, `MATURITY_DATE`, `SOURCE_UPDATE_TIME` |
+| `trade` | the shared table trading.trades_shared, split by where: | `DEAL_REF` | `TRADE_ID`, `TRADE_VERSION`, `TRADE_STATUS`, `PRODUCT_TYPE`, `BUY_SELL_CODE`, `QUANTITY`, `PRICE`, `CURRENCY`, `COUNTERPARTY`, `LEGAL_ENTITY`, `PORTFOLIO`, `TRADER_ID`, `TRADE_DATE`, `START_DATE`, `MATURITY_DATE`, `SOURCE_UPDATE_TIME` |
 
 The guide: [guide.md](guide.md).

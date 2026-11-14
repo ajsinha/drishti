@@ -16,6 +16,7 @@
 kind and one business date (docs/guides/DATA_LAKE_GUIDE.md): --as-of, else its .ready business-date, else its name's date, else the
 business today; a document's own date field never decides."""
 import json
+import os
 import pathlib
 import sys
 import tempfile
@@ -128,6 +129,42 @@ class IngestTest(unittest.TestCase):
         rows = deltalake.DeltaTable(str(lake / "dom" / "trade")).to_pyarrow_table().to_pylist()
         got = sorted((str(r["business_date"]), r["id"]) for r in rows)
         self.assertEqual(got, [("2026-09-01", "X"), ("2026-09-02", "C")])
+
+
+class StampTest(unittest.TestCase):
+    """The connector's set: constants are stored in a row that lacks the field, by every store (the same as lake build's)."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.t = pathlib.Path(self.tmp.name)
+        self.src = self.t / "drop"
+        self.src.mkdir()
+        (self.src / "trade.2026-09-01.jsonl").write_text(lines({"id": "A"}, {"id": "B", "SOURCE_SYSTEM": "OWN"}))
+        self.pack = self.t / "pack"
+        self.pack.mkdir()
+        (self.pack / "pack.yaml").write_text("pack: stamped\nconnectors:\n  trade-x:\n    plugin: delta\n    kinds: [trade]\n    settings:\n"
+                                              "      domain: dom\n      set:\n        SOURCE_SYSTEM: SWAPONE\ningest:\n  trade: {key: id}\n", encoding="utf-8")
+        os.environ["DRISHTI_CONNECTORS_DIR"] = str(self.t / "no-site-connectors")
+
+    def tearDown(self):
+        os.environ.pop("DRISHTI_CONNECTORS_DIR", None)
+        self.tmp.cleanup()
+
+    def test_the_files_store_stamps_a_row_that_lacks_the_field_and_keeps_one_that_has_it(self):
+        root = self.t / "files"
+        IJ.ingest(args(self.src, store="files", root=root, mode="overwrite-dates", pack=self.pack, domain=None), QUIET)
+        rows = [json.loads(json.loads(x)["doc"]) for x in (root / "dom" / "2026-09-01" / "trade.jsonl").read_text().splitlines()]
+        self.assertEqual({r["id"]: r["SOURCE_SYSTEM"] for r in rows}, {"A": "SWAPONE", "B": "OWN"})
+
+    def test_the_delta_store_stamps_the_same(self):
+        try:
+            import deltalake
+        except ImportError:
+            self.skipTest("deltalake is not installed")
+        lake = self.t / "lake"
+        IJ.ingest(args(self.src, lake=lake, mode="overwrite-dates", pack=self.pack, domain=None), QUIET)
+        rows = deltalake.DeltaTable(str(lake / "dom" / "trade")).to_pyarrow_table().to_pylist()
+        self.assertEqual({r["id"]: json.loads(r["doc"])["SOURCE_SYSTEM"] for r in rows}, {"A": "SWAPONE", "B": "OWN"})
 
 
 if __name__ == "__main__":

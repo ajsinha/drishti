@@ -384,4 +384,31 @@ class SourceShapeTest {
         assertThat(RowPredicate.parse("SOURCE_SYSTEM = 'ENDUR'").test(DataNode.of(new LinkedHashMap<>(Map.of("SOURCE_SYSTEM", "ENDUR"))))).isTrue();
         assertThatThrownBy(() -> RowPredicate.parse("SOURCE_SYSTEM = 'ENDUR")).hasMessageContaining("quote");
     }
+
+    @Test
+    void theRicherMapReadsDottedPathsFirstOfScaleAndAs() throws Exception {
+        Path f = Files.writeString(tmp.resolve("rich.yaml"), String.join("\n", "format: 1", "map:", "  TRADE_ID: SWAP_ID", "  QUANTITY: PAY_LEG.NOTIONAL",
+                "  PRICE:", "    first-of: [PAY_LEG.RATE, REC_LEG.RATE]", "    scale: 0.01", "  CURRENCY:", "    from: [PAY_LEG.CCY, CCY]", "  TRADE_DATE:",
+                "    from: TRADE_DT", "    as: yyyymmdd", "  SOURCE_UPDATE_TIME:", "    from: UPD", "    as: epoch-millis", "  TRADE_STATUS:", "    from: STATE",
+                "    values: {LIVE: NEW}", ""));
+        SourceShape shape = SourceShape.of("c", Map.of("map", f.toString()), List.of());
+        Map<String, Object> raw = new LinkedHashMap<>();
+        raw.put("SWAP_ID", "S1");
+        raw.put("PAY_LEG", new LinkedHashMap<>(Map.of("NOTIONAL", 5000L, "CCY", "")));
+        raw.put("REC_LEG", new LinkedHashMap<>(Map.of("RATE", 4.0)));
+        raw.put("CCY", "CAD");
+        raw.put("TRADE_DT", "20261103");
+        raw.put("UPD", 1793664000000L);
+        raw.put("STATE", "LIVE");
+        raw.put("EXTRA", "kept");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> out = (Map<String, Object>) shape.canonical(DataNode.of(raw)).unwrap();
+        assertThat(out).containsEntry("TRADE_ID", "S1").containsEntry("QUANTITY", 5000L).containsEntry("PRICE", 0.04).containsEntry("CURRENCY", "CAD")
+                .containsEntry("TRADE_DATE", "2026-11-03").containsEntry("SOURCE_UPDATE_TIME", "2026-11-03T00:00:00Z").containsEntry("TRADE_STATUS", "NEW")
+                .containsEntry("EXTRA", "kept").doesNotContainKey("SWAP_ID");
+        assertThat(shape.needsDocuments("QUANTITY")).isTrue();
+        assertThat(shape.needsDocuments("TRADE_ID")).isFalse();
+        assertThatThrownBy(() -> SourceShape.of("c", Map.of("map", Files.writeString(tmp.resolve("bad.yaml"), "map:\n  A:\n    from: a\n    scale: x\n").toString()),
+                List.of())).hasMessageContaining("DRS-5034").hasMessageContaining("scale");
+    }
 }

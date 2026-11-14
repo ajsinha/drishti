@@ -72,6 +72,23 @@ class RoutesTest {
                 .hasMessageContaining("auto (the .ready file's business-date");
     }
 
+    @Test
+    void datePatternTakesTheDateFromADashedNameAndTheReadyFileStillWins() throws Exception {
+        Fixture f = new Fixture(tmp);
+        Path rules = writeRule(f, "date-from: name\n      date-pattern: '-(\\d{4}-\\d{2}-\\d{2})\\.'");
+        Routes.Route r = Routes.read(rules, "lake", f.packs()).route("x-swap-2026-10-30.jsonl.gz", ReadyNote.EMPTY);
+        assertThat(List.of(String.valueOf(r.asOf()), r.dateBy())).containsExactly("2026-10-30", "2026-10-30 from the name (date-pattern)");
+        assertThatThrownBy(() -> Routes.read(rules, "lake", f.packs()).route("x-swap-latest.jsonl.gz", ReadyNote.EMPTY)).isInstanceOf(Routes.Unrouted.class)
+                .hasMessageContaining("carries none");
+        assertThatThrownBy(() -> Routes.read(rules, "lake", f.packs()).route("x-swap-2026-13-45.jsonl.gz", ReadyNote.EMPTY)).isInstanceOf(Routes.Unrouted.class);
+        Routes.Route ready = Routes.read(rules, "lake", f.packs()).route("x-swap-2026-10-30.jsonl.gz", ReadyNote.of(null, null, null, null, LocalDate.parse("2026-10-29")));
+        assertThat(List.of(String.valueOf(ready.asOf()), ready.dateBy())).containsExactly("2026-10-29", "2026-10-29 from the .ready file");
+        Path compact = writeRule(f, "date-from: name\n      date-pattern: '_(\\d{8})\\.'\n      date-format: YYYYMMDD");
+        assertThat(Routes.read(compact, "lake", f.packs()).route("x-swap_20261030.jsonl.gz", ReadyNote.EMPTY).asOf()).isEqualTo(LocalDate.parse("2026-10-30"));
+        assertThatThrownBy(() -> Routes.read(writeRule(f, "date-pattern: '(a)(b)'"), "lake", f.packs())).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("exactly one capture group");
+    }
+
     private static Path writeRule(Fixture f, String extra) throws IOException {
         Files.writeString(f.rules, "dataload:\n  rules:\n    - match: \"x-*\"\n      pack: demo-pack\n      kind: trade\n      " + extra + "\n");
         return f.rules;

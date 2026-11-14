@@ -44,6 +44,7 @@ DISTINCT = 200                          # distinct values kept per field (counts
 SEEN = 20_000_000                       # uniqueness is checked over up to this many rows of a field
 THRESHOLD = 0.35                        # the lowest confidence proposed
 SURE = 0.75                             # at or above: sure; below: to check
+OPTIONAL_FLOOR = 0.45                   # an optional canonical field is mapped only at or above this; below, it stays unmapped (candidates under others)
 ISO_DATE = re.compile(r"^\d{4}-\d\d-\d\d$")
 ISO_TS = re.compile(r"^\d{4}-\d\d-\d\d[T ]\d\d:\d\d")
 NUMERIC = re.compile(r"^-?\d+(\.\d+)?([eE][-+]?\d+)?$")
@@ -395,9 +396,12 @@ def propose(prof: dict, kind: str, system: str) -> dict:
                 pairs.append(p)
     pairs.sort(key=lambda p: (-p["confidence"], p["to"], p["from"]))
     used_to, used_from, chosen = set(), set(), {}
+    required_names = {cf["name"] for cf in canon if cf.get("presence") == "required"}
     for p in pairs:
         if p["to"] in used_to or p["from"] in used_from:
             continue
+        if p["to"] not in required_names and p["confidence"] < OPTIONAL_FLOOR:
+            continue                                          # weak evidence for an optional field: left unmapped, offered under others
         used_to.add(p["to"])
         used_from.add(p["from"])
         chosen[p["to"]] = p
@@ -514,13 +518,18 @@ def get(doc: dict, path: str):
 def apply(mapping: dict, doc: dict) -> dict:
     """One native record read through a map file's content (the reference reading; the connector does the same)."""
     out: dict = {}
-    for to, e in (mapping.get("fields") or {}).items():
+    for to, e in (mapping.get("fields") or mapping.get("map") or {}).items():
+        if not isinstance(e, dict):                                       # map: CANONICAL: native.path
+            e = {"from": e}
         if "value" in e:
             out[to] = e["value"]
             continue
-        v = get(doc, e["from"])
+        src = e.get("first-of") or e["from"]                              # a dotted path, or a list: the first non-empty
+        v = next((x for x in (get(doc, f) for f in (src if isinstance(src, list) else [src])) if x not in (None, "")), None)
         vm = e.get("values") or {}
         out[to] = vm.get(str(v).upper() if isinstance(v, bool) else str(v), v) if vm and v is not None else v
+        if e.get("scale") is not None and isinstance(v, (int, float)) and not isinstance(v, bool):
+            out[to] = out[to] * e["scale"]
     for k in mapping.get("keep") or []:
         out[k] = get(doc, k)
     out.update(mapping.get("set") or {})

@@ -1165,7 +1165,7 @@ dataload:
 ```
 
 Every key of a rule: `match`, `pack`, `kind`, and optionally `connector`, `table`, `date-from` (`auto` or `name`), `date-field`, `key`,
-`lake` (a lake's name; a folder is the older form), `format` (`delta` or `iceberg`).
+`lake` (a lake's name; a folder is the older form), `format` (`delta` or `iceberg`), `date-pattern` and `date-format` (below).
 
 **Which lake**: the `.ready` file's `lake:`, else the rule's `lake:`, else `drishti.dataload.lake` (`demo` as shipped). When the lake
 file has no entry for the table (a kind's, or one of a kind's several tables: `trade_endur`), the pack's recommended entry is copied into it
@@ -1184,6 +1184,11 @@ match wins:
 2. the `.ready` file's `business-date:`;
 3. the name's date: `<table>[.<date>].<extension>`;
 4. the business today: today in the server's zone, and on a Saturday or Sunday the Friday before.
+
+A rule's `date-pattern` reads the date from a name that does not follow `<table>.<YYYY-MM-DD>.<ext>`: a regular expression with exactly one
+capture group around the date, read as `YYYY-MM-DD` (or `YYYYMMDD` with `date-format: YYYYMMDD`). `swapone-2026-11-03.jsonl.gz` with
+`date-pattern: '-(\d{4}-\d{2}-\d{2})\.'` is dated 2026-11-03 with no `.ready` file; a `.ready` file's `business-date:` still wins, and a
+date that is not a calendar date is refused.
 
 A rule's `date-from: name` (or `--date-from name`) refuses a name without a date. Every row of the file goes under the decided date; a
 row whose own date field differs is loaded and counted (*3 rows of trade_endur.2026-11-06.jsonl.gz carried another date in

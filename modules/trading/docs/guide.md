@@ -96,8 +96,8 @@ positions and no scenario P&L, so the VaR does not move).
 
 A module's manifest names its parts with one set of keys: `connectors` (the folder of connector templates), `mappings` (kind to map file),
 `dataload` (the inbox rules file) and `sections` (what it adds to the kind's page). These templates are the one home of the system's
-connectors: the trading pack declares none of them. A file dropped in the inbox (`swapone-<date>.jsonl.gz` and its `.ready`) goes by the
-module's rule to `trading.trades_shared`, its connector's `set:` stamps `SOURCE_SYSTEM = SWAPONE` into each stored row, and `TRD` lists
+connectors: the trading pack declares none of them. A file dropped in the inbox (`swapone-2026-11-03.jsonl.gz`; no `.ready` is needed, the
+rule's `date-pattern` reads the date from the name) goes by the module's rule to `trading.trades_shared`, its connector's `set:` stamps `SOURCE_SYSTEM = SWAPONE` into each stored row, and `TRD` lists
 it; switch `source-swapone` off and it is gone, on and it is back.
 
 A module ships: `connectors/` (read from Delta, Iceberg and files; a Kafka live stream whose `writes:` is the write-back of
@@ -110,6 +110,36 @@ format of `config/dataload.yaml`; the inbox reads the site's rules first) and a 
 | `where` | a predicate that selects this system's rows of a shared table |
 | `set` | constants stamped into the rows this connector reads and into the rows the inbox stores (`SOURCE_SYSTEM`) |
 | `map` | the native-to-canonical field map (the module's `mappings/` file) |
+
+**The map file** (`mappings/<system>-trade.yaml`, `format: 1`): under `map:` each line is a canonical field and where its value comes from.
+Real feeds nest and rename, so one line can be:
+
+| Form | Meaning |
+|---|---|
+| `TRADE_ID: SWAP_ID` | the native field `SWAP_ID` |
+| `QUANTITY: PAY_LEG.NOTIONAL` | a dotted path into a nested native document |
+| `from: [a, b]` or `first-of: [a, b]` | the first of the paths that is present and not blank |
+| `scale: 0.01` | multiply the number (a rate in percent to a fraction) |
+| `cast: text \| number \| integer \| boolean \| date` | the type |
+| `as: yyyymmdd \| yyyymmddhhmmss \| epoch-millis \| epoch-seconds \| iso` | a date or time written another way (a date becomes `YYYY-MM-DD`, a time an ISO UTC instant) |
+| `values: {LIVE: NEW}` | a code translated (a code not listed stays as read) |
+| `value: X` | a constant |
+
+```yaml
+map:
+  TRADE_ID: SWAP_ID
+  QUANTITY: PAY_LEG.NOTIONAL
+  PRICE: { first-of: [PAY_LEG.FIXED_RATE_PCT, REC_LEG.FIXED_RATE_PCT], scale: 0.01 }
+  TRADE_DATE: { from: TRADE_DT, as: yyyymmdd }
+```
+
+The older form (`fields:`, native field to canonical field) still works. A map that cannot be used refuses the connector (`DRS-5034`, shown
+on Admin -> Connectors). A field built from a nested path, alternatives, a scale or a reading is served from the documents, not from
+columns. `drishti.py pack new --source-for KIND` proposes dotted paths for nested native fields.
+
+**The date of a file in the inbox.** The module's rule names it from the file name: `date-from: name` with `date-pattern`, a regular
+expression with one capture group around the date, `-(\d{4}-\d{2}-\d{2})\.` for `swapone-2026-11-03.jsonl.gz`. A date written
+`20261103` takes `date-format: YYYYMMDD`. A `.ready` file's `business-date:` still wins; a name the pattern does not match is refused.
 
 **Layout A: a table each** (Endur, Calypso and Murex in the demo): the connector reads its own table, no `where` is needed.
 

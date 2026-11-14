@@ -26,7 +26,7 @@ settings:
   topics:
   - ${DRISHTI_SWAPONE_TOPIC:drishti.trading.swapone.trades}
   kind: trade
-  id-field: swap_id
+  id-field: SWAP_ID
   stale-after: ${DRISHTI_STREAM_STALE_AFTER:15m}
   source-name: trade-swapone-live
   where: SOURCE_SYSTEM = 'SWAPONE'
@@ -39,8 +39,8 @@ writes:
     kafka:
       topic: ${DRISHTI_SWAPONE_TOPIC:drishti.trading.swapone.trades}
       shape: document
-      version-field: revision
+      version-field: REVISION
       changed-by: UPDATED_BY
-      changed-at: upd_ts
+      changed-at: UPD_TS
       change-id-field: DRISHTI_CHANGE_ID
     confirm: reply

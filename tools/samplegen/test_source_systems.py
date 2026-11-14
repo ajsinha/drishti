@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import gzip
 import json
+import re
 import sys
 import tempfile
 import unittest
@@ -28,6 +29,20 @@ sys.path.insert(0, str(HERE))
 from samplegen import source_systems as SS  # noqa: E402
 
 DATES = ["2026-07-08", "2026-07-09", "2026-07-10", "2026-07-13"]
+
+
+def upper_snake_violations(node, path=""):
+    """The attribute names (at every nesting level, in arrays too) that are not UPPER_SNAKE."""
+    bad = []
+    if isinstance(node, dict):
+        for k, v in node.items():
+            if not re.fullmatch(r"[A-Z][A-Z0-9]*(_[A-Z0-9]+)*", k):
+                bad.append(path + k)
+            bad += upper_snake_violations(v, path + k + ".")
+    elif isinstance(node, list):
+        for v in node:
+            bad += upper_snake_violations(v, path)
+    return bad
 
 
 class SourceSystemsTest(unittest.TestCase):
@@ -47,6 +62,7 @@ class SourceSystemsTest(unittest.TestCase):
                 self.assertIn(e["key"], doc)
                 self.assertEqual(doc["SOURCE_SYSTEM"], folder.split("/")[1].upper())
                 self.assertNotIn("TRADE_ID", doc)                           # native: the mapping has real work to do
+                self.assertEqual(upper_snake_violations(doc), [])           # every real trading system names UPPER_SNAKE, at every level
             self.assertEqual(len({v[0] for v in keys.values()}), 3)
             self.assertEqual(len({tuple(v[1]) for v in keys.values()}), 3)
 
