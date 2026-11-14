@@ -2506,13 +2506,17 @@ the earlier release has already folded, and a start that writes files from an in
    pack's `routes:`), in the order: the pack's route first, then by name; `union: true` when the templates say so. This is how a
    source module enters: `source-endur` on brings `trade-endur` with `kinds: [trade]`, and `trade` reads it; off, it leaves. No site
    file lists the source systems.
-3. **Demo samples**, only for a kind the site binds with `demo: true`.
+3. **Demo samples** (state DEMO): for a kind the site binds with `demo: true`, and, while the demo is on, for a kind nothing above
+   offers and every module that needs it allows demo data. With the demo off (`drishti.demo.enabled: false`) no kind is DEMO: one the
+   samples alone would serve is UNBOUND and its pages say *no source serves kind '…'*, never an error.
 4. Otherwise **UNBOUND** (section 5.6).
 
-A connector is asked for a kind only when one of these steps names it. Two guesses of earlier releases are gone: *any lake connector
-whose lake holds the kind's table*, and *demo samples for whatever nothing else serves*. Every kind of every shipped pack is named by
-a template or a route, so nothing shipped depended on them; a site kind that did is UNBOUND after the upgrade and Health offers the
-exact binding to approve (*trade-history was found by convention on connector risk-store: bind it*).
+A connector is asked for a kind only when one of these steps names it; the router reads the packs' samples only for the kinds this
+resolution puts in DEMO. The guess of earlier releases, *any lake connector whose lake holds the kind's table*, is gone. Every kind of
+every shipped pack is named by a template or a route, so nothing shipped depended on it, and a kind the guess served on an upgraded site
+is read from the connectors that declare it at once: the state `AUTO` (*found by convention: confirm*) is no longer produced, so an
+upgrade needs no administrator's click (owner, 2026-11-14). A binding that names only a write path (`write: {connectors: …}`) leaves the
+read to steps 2 to 4.
 
 **Live**: the site binding's `live`, else the effective connectors that name the kind and can push.
 
@@ -2521,7 +2525,11 @@ exact binding to approve (*trade-history was found by convention on connector ri
 1. the connector the form names (`save.connector`);
 2. the site's binding: `write: {connector: <name>}` or, by source system, `write: {connectors: {ENDUR: <name>, MUREX: <name>}}`;
 3. what is shipped and declared: the effective connectors with `writes:` that name the kind; with a source system, the one of that
-   system; without, the only one.
+   system (its `set: SOURCE_SYSTEM`, else its name `<kind>-<system>…`); without, the only one.
+
+The source system is the record's own: the system of the connector the record was read from, else its `SOURCE_SYSTEM`. A bound or
+defined write connector of that system is a candidate even while it is not running (it must be running when the change is applied). Each
+source module's live template (`trade-<system>-live`, Kafka) writes the blotter's one command, `amend-trade`, to its own system's topic.
 
 None: DRS-9308, naming the kind, the system, and the connectors that could serve if enabled. More than one: DRS-9309, naming them.
 The connector must be running with its `writes:` command switched on (Admin → Edits), as before. `write: {lake, table}`, for a kind

@@ -254,7 +254,16 @@ public final class BindingService {
                 return today;
             }
         };
-        return BindingResolver.resolve(applied, needs, facts);
+        BindingResolver.Result r = BindingResolver.resolve(applied, needs, facts);
+        // the one answer: the packs' samples are read only for the kinds this resolution puts in DEMO (demo off: none, each kind says no source)
+        Set<String> demo = new LinkedHashSet<>();
+        r.kinds().forEach((k, res) -> {
+            if (res.state() == com.ash.drishti.kernel.api.data.BindingState.DEMO) {
+                demo.add(k);
+            }
+        });
+        router.demoKinds(demo);
+        return r;
     }
 
     @SuppressWarnings("unchecked")

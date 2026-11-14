@@ -1359,15 +1359,12 @@ public final class ConnectorManager {
         this.fileDrift = d;
     }
 
-    /** Connectors changed by the upgrade at start: the next scan applies them (the start-up properties came from the earlier files). */
-    public void applyFolded(List<String> names) {
-        scanLock.lock();
-        try {
-            names.forEach(n -> seen.put(n, "folded"));
-            scan();
-        } finally {
-            scanLock.unlock();
-        }
+    /** Connector edits an earlier release kept in the content store, never folded on this node: listed in Health, not applied. */
+    private volatile List<String> storeLeftovers = List.of();
+
+    /** The content store's connector edits of an earlier release (listed in Health; save each in Admin -> Connectors to apply it). */
+    public void storeLeftovers(List<String> names) {
+        storeLeftovers = names == null ? List.of() : List.copyOf(names);
     }
 
     /** Puts the template back in force: the site's override file is removed (its text kept in the history). */
@@ -1648,6 +1645,10 @@ public final class ConnectorManager {
             }
         }
         m.put("supersededFiles", changed);
+        if (!storeLeftovers.isEmpty()) {
+            m.put("contentStoreEdits", storeLeftovers.stream().map(n -> n + ": an edit of an earlier release in the content store is not applied: "
+                    + "save it in Admin -> Connectors").toList());
+        }
         m.put("problems", new LinkedHashMap<>(new java.util.TreeMap<>(fileProblems)));
         m.put("watch", watchState());
         m.put("directory", files.dir().toString());

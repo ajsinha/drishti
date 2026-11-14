@@ -1497,12 +1497,11 @@ tables are maintained here like the ones `drishti.py lake build --format iceberg
 ## Step 34 · BI's reader of the official results follows the format
 
 The market-risk pack's `var-results` connector (BI's `VOFF`) is `plugin: delta` in the pack; with `format: iceberg` the server reads
-that template as `plugin: iceberg` over `${drishti.var.official.root}`. The file the server generated (stamped) and nobody edited
-follows by itself: nothing to do. `lake demo` and `build_demo_lakes.py` leave this file to the server; one an earlier `lake demo` wrote
-(its first line *Written by drishti.py lake demo*) is moved to the history by the build of step 30, so the server writes the stamped one.
-An edited file is kept, and the change of plugin is listed under **Admin → Connectors → Template updates** (**Use the pack's value**).
+that template as `plugin: iceberg` over `${drishti.var.official.root}`. The server reads the template where it is and writes no file:
+nothing to do. A site override of `var-results` (`config/connectors/var-results.yaml`) changes only the keys it names; if it names
+`plugin`, that value wins: **Reset** in Admin → Connectors removes the override and the template is in force again.
 
-**In the UI.** **Admin → Connectors → var-results**:
+**In the UI.** **Admin → Connectors → var-results** shows the layer of each setting (template or override) and `plugin: iceberg`.
 
 ![var-results: plugin iceberg](img/t29/04-var-results.jpg)
 
@@ -1529,8 +1528,8 @@ settings:
 **You should see** `var-results` on `iceberg` and running, and the official records read back: `VOFF HIERARCHY == 'LL'` on
 2026-09-30 finds 43 of the 131 rows.
 
-**Further:** [../guides/DATA_GUIDE.md section 9 "Upgrades"](../guides/DATA_GUIDE.md#upgrades) (stamped files, edited files, Use the
-pack's value).
+**Further:** [../guides/DATA_GUIDE.md section 9, "Connector layers"](../guides/DATA_GUIDE.md#connector-layers) (templates, overrides,
+files an earlier release left).
 
 ## Step 35 · Back to Delta
 
@@ -1579,7 +1578,7 @@ a table keeps its format). A full build without `--store risk=…` also puts the
 | *could not find the server jar* or the copy into Iceberg fails | build the server first (`./mvnw clean package -DskipTests`) |
 | `VAR BANK` answers *no P&L vectors in any connector* | the server reads another Iceberg root: set `DRISHTI_ICEBERG_ROOT` to the folder beside your `--lake` |
 | `publishError` *… is a Delta table and the official format is iceberg* | give the official results another root (step 31) |
-| `var-results` stays `delta` | the file was edited: Admin → Connectors → Template updates → **Use the pack's value** for `plugin` (step 34) |
+| `var-results` stays `delta` | a site override names `plugin`: Admin → Connectors → var-results → **Reset** (step 34) |
 | Admin → Lakes lists no Iceberg table | the console's `DRISHTI_LAKE_ROOTS` lacks `data/iceberg` (step 32) |
 
 **Part A · A new lake of your own.**

@@ -69,19 +69,37 @@ public record Bindings(Map<String, Binding> byKind) {
      * @param writeTable the table in that lake, or null
      * @param demo true when the demo lake's samples serve it explicitly
      * @param note the administrator's note, or empty
+     * @param writeTo where a correction of a record of the kind is written (KERNEL_AND_MODULES.md section 18.6): by source system
+     *                ({@code write: {connectors: {ENDUR: trade-endur-live}}}), or {@value #ANY_SYSTEM} for one connector of every
+     *                system ({@code write: {connector: <name>}}); empty: what is shipped and declared decides
      */
     public record Binding(String kind, List<String> read, boolean union, List<String> live, String writeLake, String writeTable, boolean demo,
-            String note) {
+            String note, Map<String, String> writeTo) {
+
+        /** The {@link #writeTo} key of a connector that takes the corrections of every source system. */
+        public static final String ANY_SYSTEM = "*";
 
         public Binding {
             read = read == null ? List.of() : List.copyOf(read);
             live = live == null ? List.of() : List.copyOf(live);
             note = note == null ? "" : note;
+            writeTo = writeTo == null ? Map.of() : java.util.Collections.unmodifiableMap(new LinkedHashMap<>(writeTo));
+        }
+
+        /** A binding that names no write path. */
+        public Binding(String kind, List<String> read, boolean union, List<String> live, String writeLake, String writeTable, boolean demo, String note) {
+            this(kind, read, union, live, writeLake, writeTable, demo, note, Map.of());
         }
 
         /** A binding with one live connector (or none, for null). */
         public Binding(String kind, List<String> read, boolean union, String live, String writeLake, String writeTable, boolean demo, String note) {
             this(kind, read, union, live == null ? List.of() : List.of(live), writeLake, writeTable, demo, note);
+        }
+
+        /** The connector the site binds a correction of a record of {@code system} to (that system's, else the one for every system). */
+        public java.util.Optional<String> writeConnector(String system) {
+            String own = system == null ? null : writeTo.get(system.toUpperCase(Locale.ROOT));
+            return java.util.Optional.ofNullable(own != null ? own : writeTo.get(ANY_SYSTEM));
         }
 
         /** Every connector the binding names: the read order, then the live ones. */
@@ -116,6 +134,10 @@ public record Bindings(Map<String, Binding> byKind) {
             }
             if (writeLake != null) {
                 m.put("write", Map.of("lake", writeLake, "table", writeTable));
+            } else if (writeTo.size() == 1 && writeTo.containsKey(ANY_SYSTEM)) {
+                m.put("write", Map.of("connector", writeTo.get(ANY_SYSTEM)));
+            } else if (!writeTo.isEmpty()) {
+                m.put("write", Map.of("connectors", writeTo));
             }
             if (demo) {
                 m.put("demo", true);
@@ -284,14 +306,29 @@ public record Bindings(Map<String, Binding> byKind) {
         }
         String lake = null;
         String table = null;
-        if (m.get("write") instanceof Map<?, ?> w) {
+        Map<String, String> writeTo = new LinkedHashMap<>();
+        if (m.get("write") instanceof Map<?, ?> w && (w.containsKey("connector") || w.containsKey("connectors"))) {
+            if (w.get("connector") != null) {
+                writeTo.put(Binding.ANY_SYSTEM, String.valueOf(w.get("connector")).trim());
+            }
+            if (w.get("connectors") instanceof Map<?, ?> bySystem) {
+                bySystem.forEach((sys, c) -> writeTo.put(String.valueOf(sys).trim().toUpperCase(Locale.ROOT), String.valueOf(c).trim()));
+            } else if (w.get("connectors") != null) {
+                throw new Invalid(kind + ": 'write: {connectors}' names a connector per source system ({ENDUR: trade-endur-live})");
+            }
+            for (String c : writeTo.values()) {
+                if (!NAME.matcher(c).matches()) {
+                    throw new Invalid(kind + ": '" + c + "' in 'write' is not a connector name");
+                }
+            }
+        } else if (m.get("write") instanceof Map<?, ?> w) {
             lake = w.get("lake") == null ? null : String.valueOf(w.get("lake")).trim();
             table = w.get("table") == null ? null : String.valueOf(w.get("table")).trim();
             if (lake == null || table == null || !NAME.matcher(lake).matches() || !NAME.matcher(table.toLowerCase(Locale.ROOT)).matches()) {
                 throw new Invalid(kind + ": 'write' names a lake and a table ({lake: risklake, table: banking.var-official})");
             }
         } else if (m.get("write") != null) {
-            throw new Invalid(kind + ": 'write' is {lake, table}");
+            throw new Invalid(kind + ": 'write' is {lake, table}, {connector} or {connectors: {SYSTEM: connector}}");
         }
         boolean union = Boolean.parseBoolean(String.valueOf(m.get("union")));
         boolean demo = Boolean.parseBoolean(String.valueOf(m.get("demo")));
@@ -301,10 +338,10 @@ public record Bindings(Map<String, Binding> byKind) {
         if (demo && !read.isEmpty()) {
             throw new Invalid(kind + ": a kind is either demo or real, never both: drop 'demo' or 'read'");
         }
-        if (read.isEmpty() && live.isEmpty() && lake == null && !demo) {
+        if (read.isEmpty() && live.isEmpty() && lake == null && !demo && writeTo.isEmpty()) {
             throw new Invalid(kind + ": the binding names nothing (read, live, write or demo)");
         }
         String note = m.get("note") == null ? "" : String.valueOf(m.get("note"));
-        return new Binding(kind, read, union, live, lake, table, demo, note);
+        return new Binding(kind, read, union, live, lake, table, demo, note, writeTo);
     }
 }

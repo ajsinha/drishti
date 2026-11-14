@@ -41,6 +41,14 @@ public interface SourceRoute {
     /** The trading system the record came from, if a source system feeds its kind. */
     Optional<String> systemOf(String kind, String entity);
 
-    /** The running connectors of the system, in name order. */
+    /**
+     * The connectors of the system a correction may go to, in name order: the running ones, and the ones the site binds or that are defined
+     * to write it (a bound live connector need not be running to be named; it must be running when the change is applied).
+     */
     List<String> connectorsOf(String system);
+
+    /** The connector the site's binding names for a correction of a record of {@code kind} from {@code system}, if any. */
+    default Optional<String> boundWrite(String kind, String system) {
+        return Optional.empty();
+    }
 }

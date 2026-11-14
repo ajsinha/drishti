@@ -36,6 +36,26 @@
   `drishti.packs.dir` is still read), `drishti.kernel.packs-dir`, `drishti.modules.home`, `drishti.modules.path`;
   `drishti.modules.dir` keeps its meaning (the module switches). Design: docs/architecture/KERNEL_AND_MODULES.md section 18.
 
+- **Configuration resolution, finished: bindings without guesses, the write path by source system, a module switch followed at once.**
+  A kind is read from what the site binds, else from what is shipped and declared (a template's `kinds:`, a pack's route); the router's
+  two guesses are gone: a lake connector is never asked because its lake happens to hold a table of the kind's name, and the packs'
+  samples answer only the kinds the bindings resolve to DEMO (with the demo off: none, and such a kind says *no source*, never an error).
+  An upgraded site's kinds that the guesses served resolve to the declared connectors by themselves: the `AUTO` state ("found by
+  convention: confirm") is no longer produced, so no administrator's click is needed. A binding may name where corrections are written,
+  by source system (`write: {connectors: {ENDUR: trade-endur-live}}`) or for every system (`write: {connector: …}`); a binding that names
+  only that leaves the read to what is declared. A correction goes to the record's own source first (the connector it was read from names
+  its system), to a bound or defined write connector of that system (it need not be running to be named), and every source module's live
+  template carries `SOURCE_SYSTEM` and the blotter's one command name, `amend-trade`. The demo's bindings (`config/demo/bindings.yaml`,
+  with Kafka) bind each system's corrections to its own live connector and no longer list the read connectors. A module switched on or off
+  at run time rebuilds the resolution once and the packs, connectors, bindings and source systems follow (`ResolutionFollower`); the
+  inbox reads the new rules at its next cycle. `ConnectorOverlayFold` (the start-up fold of an older release's content-store edits into
+  files) is removed: such edits are listed in Health and not applied. The access registry and the distributions read
+  `drishti.modules.home` (no folder derived from the packs folder's position), and a module with code whose jar is not on the class path
+  is known by its folder manifest (`dmod/module.yaml`), its content counted. The settings `drishti.sources.connectors-generate`,
+  `drishti.connectors.template-updates` and `template-check-ms` are gone with the generation they steered. Proofs: the upgrade test from
+  `v2.9.11.i_2_3` (`tools/upgrade_fixture.py`, `test_upgrade_counts.py`: every demo kind keeps its record count), `ModuleSwitchFollowsTest`,
+  `KafkaTradeEditTest` (one versioned message, four eyes, a stale correction refused naming who changed the record).
+
 - **Documentation consolidated: fewer, larger documents.** Each risk measure's tutorial is the last part of its guide (VaR, exposure, FRTB-SA, SIMM);
   one BI guide holds the pivot, virtual tables and models, reports, the Notebook and the groupings, each with its tutorial; one World and public data guide holds
   the funds, the external feeds and the public sector with their two tutorials; the Arrow Flight reference joins the Flight guide; the source-system tutorial

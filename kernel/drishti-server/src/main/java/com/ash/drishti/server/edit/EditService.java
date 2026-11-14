@@ -300,7 +300,11 @@ public final class EditService {
             Optional<String> system = "new".equals(origin.get("mode")) ? Optional.empty() : route.systemOf(kind, entity);
             if (system.isPresent()) {
                 origin.put("sourceSystem", system.get());
-                connector = routed(route, commands, kind, system.get(), connector, command);
+                // the form's connector, else the site's binding for that system (write: {connectors: {ENDUR: ...}}), else the system's own
+                String named = save.connector() != null ? save.connector() : route.boundWrite(kind, system.get()).orElse(connector);
+                connector = routed(route, commands, kind, system.get(), named, command);
+            } else if (save.connector() == null) {
+                connector = route.boundWrite(kind, null).orElse(connector);
             }
         }
         LocalDate date = body.hasNonNull("businessDate") ? LocalDate.parse(body.path("businessDate").asText()) : today.get();

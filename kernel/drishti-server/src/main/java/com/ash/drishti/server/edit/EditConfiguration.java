@@ -87,7 +87,7 @@ public class EditConfiguration {
         String node = planned.isBlank() ? "local" : planned;
         EditRuntime r = new EditRuntime(settings, identityDataSource, router, fields, entitlements, user -> principals.user(user).isPresent() ? principals.of(user) : null, drafts, audit, dates::current,
                 cluster.getIfAvailable(), node, clustered, writes, kind -> connectorOf(connectors.getIfAvailable(), kind));
-        r.service().route(sourceRoute(router));
+        r.service().route(sourceRoute(router, connectors::getIfAvailable));
         r.start();
         return r;
     }
@@ -96,7 +96,7 @@ public class EditConfiguration {
      * Where a change goes when several trading systems feed a kind (DATA_LAKE_GUIDE.md, "Several source systems"): the record's
      * {@code SOURCE_SYSTEM} as read (its connector's where or set), and that system's running connectors.
      */
-    static SourceRoute sourceRoute(SourceRouter router) {
+    static SourceRoute sourceRoute(SourceRouter router, java.util.function.Supplier<ConnectorManager> manager) {
         return new SourceRoute() {
             @Override
             public Optional<String> systemOf(String kind, String entity) {
@@ -107,18 +107,49 @@ public class EditConfiguration {
                 if (d == null || d.data() == null) {
                     return Optional.empty();
                 }
-                String s = d.data().get(com.ash.drishti.engine.source.SourceShape.SOURCE_SYSTEM).asText();
-                if (s.isBlank() && d.provenance() != null) {   // the connector the record came from names its system
-                    return router.registry().shape(d.provenance().source()).flatMap(com.ash.drishti.engine.source.SourceShape::system);
+                // the record's own source first: the connector it was read from names its system; else the record's SOURCE_SYSTEM
+                if (d.provenance() != null && d.provenance().source() != null) {
+                    Optional<String> own = router.registry().shape(d.provenance().source()).flatMap(com.ash.drishti.engine.source.SourceShape::system);
+                    if (own.isPresent()) {
+                        return own;
+                    }
                 }
+                var v = d.data().get(com.ash.drishti.engine.source.SourceShape.SOURCE_SYSTEM);
+                String s = v == null ? "" : v.asText();
                 return s.isBlank() ? Optional.empty() : Optional.of(s);
             }
 
             @Override
             public List<String> connectorsOf(String system) {
-                return router.registry().connectorsBySystem().getOrDefault(system, List.of());
+                java.util.Set<String> out = new java.util.TreeSet<>(router.registry().connectorsBySystem().getOrDefault(system, List.of()));
+                ConnectorManager m = manager.get();
+                if (m != null && system != null) {              // a bound or defined write connector of the system, running or not
+                    String tail = "-" + system.toLowerCase(java.util.Locale.ROOT);
+                    for (String n : m.names()) {
+                        boolean writes = m.effective(n).map(d -> !d.writes().isEmpty()).orElse(false);
+                        boolean ofSystem = n.toLowerCase(java.util.Locale.ROOT).contains(tail)
+                                || m.effective(n).map(d -> system.equalsIgnoreCase(String.valueOf(setOf(d).get(com.ash.drishti.engine.source.SourceShape.SOURCE_SYSTEM)))).orElse(false);
+                        if (writes && ofSystem) {
+                            out.add(n);
+                        }
+                    }
+                    m.bindings().byKind().values().forEach(b -> b.writeConnector(system).filter(c -> !c.isBlank()).ifPresent(out::add));
+                }
+                return List.copyOf(out);
+            }
+
+            @Override
+            public Optional<String> boundWrite(String kind, String system) {
+                ConnectorManager m = manager.get();
+                return m == null ? Optional.empty() : m.bindings().of(kind).flatMap(b -> b.writeConnector(system));
             }
         };
+    }
+
+    /** A connector's {@code settings.set} (the fields it stamps on every record, {@code SOURCE_SYSTEM} among them), or empty. */
+    private static java.util.Map<?, ?> setOf(com.ash.drishti.packs.ConnectorFiles.Definition d) {
+        Object flat = d.settings().get("set." + com.ash.drishti.engine.source.SourceShape.SOURCE_SYSTEM);      // settings as flattened keys
+        return flat == null ? java.util.Map.of() : java.util.Map.of(com.ash.drishti.engine.source.SourceShape.SOURCE_SYSTEM, flat);
     }
 
     /**

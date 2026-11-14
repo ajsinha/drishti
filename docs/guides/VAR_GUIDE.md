@@ -1934,12 +1934,10 @@ run, to the cent, on every node, and a restart (the morning run and the 200 batc
 not grow with the batches before it (the first 50 and the last 50 the same, the lake's 1-second refresh dominating).
 
 **A connector file from an older template.** The engine reads a record's `RUN_KIND`, `COMPUTED_AT`, `VALUE_TYPE`, `GRAIN`,
-`SOURCE_SYSTEM` and `POSITION_ID` as promoted columns of the risk lake's connector. A connector file written from the pack's template
-at an earlier first start (`config/connectors/risk-store.yaml`) lacks them: **at start the server adds the template's new columns to
-its `layout.pnl-vector.columns` and `layout.scenario-pv.columns` by itself** (connector template updates, `template-updates:
-additive`, the default; DATA_GUIDE.md section 9, *Template updates*): the connector's own columns are kept, the file as it was is kept beside
-it as `risk-store.yaml.before-<time>.bak`, one line is logged and the change is listed under Admin → Connectors → Template updates.
-With `template-updates: notify` or `off` it is listed only: press **Add missing kinds** there. Until the columns are promoted the server
+`SOURCE_SYSTEM` and `POSITION_ID` as promoted columns of the risk lake's connector. The template (`risk-store`) promotes them; a file an
+earlier release generated from an older template and nobody edited is superseded (the template is in force), and a site override that
+sets its own `layout.pnl-vector.columns` replaces that list (DATA_GUIDE.md section 9, *Connector layers*): add the columns there, or
+**Reset** it in Admin → Connectors. Until the columns are promoted the server
 logs *VaR: the connector does not promote …* once, and the records cannot say what they are (`DRS-5208`, or `DRS-5202` for an
 intraday row read twice), never a mix of runs.
 

@@ -20,7 +20,6 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -31,8 +30,8 @@ import java.util.TreeSet;
 
 /**
  * How each kind finds its data (docs/architecture/KERNEL_AND_MODULES.md sections 5.5 and 5.6), first hit wins: the site's binding
- * ({@code config/bindings.yaml}), the distribution's default (today: a pack's {@code routes:}), a lake that holds the kind by convention
- * ({@code AUTO}), the demo lake ({@code DEMO}, only while demo is on and the need allows it), else {@code UNBOUND}. A bound kind whose last
+ * ({@code config/bindings.yaml}), the distribution's default (a pack's {@code routes:}, the connectors whose template names the kind),
+ * the demo lake ({@code DEMO}, only while demo is on and the need allows it), else {@code UNBOUND}. A bound kind whose last
  * load is older than its cadence is {@code STALE}; one whose source breaks the contract is {@code MISMATCH} (unbound for its needs). A kind a
  * module computes is {@code COMPUTED}, never bound. An unserved required need switches off exactly the functions that use it, with the reason.
  * Pure: every fact comes through {@link Facts}.
@@ -167,7 +166,9 @@ public final class BindingResolver {
         List<String> usedBy = mine.stream().flatMap(n -> n.usedBy().stream()).distinct().toList();
         boolean demoAllowed = mine.isEmpty() || mine.stream().allMatch(DataNeeds.Need::demo);
         List<Source> sources = facts.sources(kind);
-        Bindings.Binding b = site.of(kind).filter(x -> !dangling(x, facts.connectors())).orElse(null);
+        // a binding that names only where corrections are written (write: {connectors}) leaves the read to what is declared
+        Bindings.Binding b = site.of(kind).filter(x -> !dangling(x, facts.connectors()))
+                .filter(x -> !(x.read().isEmpty() && x.live().isEmpty() && !x.writes() && !x.demo())).orElse(null);
         if (needs.computed().containsKey(kind) || sources.stream().anyMatch(Source::computed)) {
             String by = needs.computed().getOrDefault(kind, sources.stream().filter(Source::computed).map(Source::name).findFirst().orElse(""));
             return new Resolution(kind, BindingState.COMPUTED, Origin.COMPUTED, names(sources.stream().filter(Source::computed).toList()), null,
@@ -200,9 +201,10 @@ public final class BindingResolver {
                 r = new Resolution(kind, BindingState.BOUND, Origin.DEFAULT, read, null, neededBy, required, usedBy, null,
                         "the distribution's default (the pack's route to " + route.get() + ")");
             } else if (!real.isEmpty()) {
-                String lakes = String.join(", ", new LinkedHashSet<>(real.stream().map(s -> s.lake() == null ? s.name() : s.lake()).toList()));
-                r = new Resolution(kind, BindingState.AUTO, Origin.CONVENTION, names(real), null, neededBy, required, usedBy, null,
-                        "found by convention in " + lakes + facts.hint(kind).map(h -> " (table " + h + ")").orElse("") + ": confirm");
+                // what is shipped and declared (KERNEL_AND_MODULES.md section 18.6, step 2): the effective connectors whose template or plugin
+                // names the kind. No guess remains, so an upgraded site's kinds resolve here at once: no administrator's click
+                r = new Resolution(kind, BindingState.BOUND, Origin.DEFAULT, names(real), null, neededBy, required, usedBy, null,
+                        "declared by " + String.join(", ", names(real)));
             } else if (!demo.isEmpty() && facts.demoEnabled() && demoAllowed) {
                 r = new Resolution(kind, BindingState.DEMO, Origin.DEMO, names(demo), null, neededBy, required, usedBy, null, "demo data");
             } else {

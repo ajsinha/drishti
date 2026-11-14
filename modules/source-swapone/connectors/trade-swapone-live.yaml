@@ -35,7 +35,7 @@ settings:
     SOURCE_SYSTEM: SWAPONE
   map: mappings/swapone-trade.yaml
 writes:
-  amend-swapone-trade:
+  amend-trade:                          # the trade blotter's command (modules/trading/blotters/trade.blotter.yaml): one name, each system's own connector
     kind: trade
     kafka:
       topic: ${DRISHTI_SWAPONE_TOPIC:drishti.trading.swapone.trades}

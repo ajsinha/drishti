@@ -12,14 +12,21 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The demo's data bindings (docs/architecture/KERNEL_AND_MODULES.md section 5; modules/trading/docs/guide.md, "Source systems"): the one
-# `trade` kind read from the six source systems' modules, as a union. Endur, Calypso and Murex keep a table each; WSS, SwapOne and ICI
-# share trading.trades_shared and each connector selects its own rows with where: SOURCE_SYSTEM = ... (the connectors are written by
-# `drishti.py lake demo` from modules/source-<system>/connectors/delta.yaml). `lake demo` copies this file to config/bindings.yaml
-# when the site has none; a source module switched off (config/modules/source-<system>.yaml) drops out of the union.
+# The demo's data bindings when it runs with Kafka (deploy/docker/compose.data.yaml; the server started with
+# DRISHTI_BINDINGS_FILE=config/demo/bindings.yaml and DRISHTI_STREAM_<SYSTEM>=true): where a correction of a trade is written, by the
+# record's source system: each system's own live connector (modules/source-<system>/connectors/trade-<system>-live.yaml), never another
+# system's (docs/architecture/KERNEL_AND_MODULES.md section 18.6). The read is not bound here: `trade` reads what the source modules that
+# are on declare (kinds: [trade] in their templates, as a union), so a seventh source module switched on is read with no edit of this
+# file, and one switched off drops out. Nothing copies this file into a site.
 format: 1
 
 bindings:
   trade:
-    read: [trade-endur, trade-calypso, trade-murex, trade-wss, trade-swapone, trade-ici]
-    union: true
+    write:
+      connectors:
+        ENDUR: trade-endur-live
+        CALYPSO: trade-calypso-live
+        MUREX: trade-murex-live
+        WSS: trade-wss-live
+        SWAPONE: trade-swapone-live
+        ICI: trade-ici-live

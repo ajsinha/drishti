@@ -1103,12 +1103,10 @@ connectors:                                         # what to suggest if the sit
 routes: { netting-set: credit-store, margin-call: collateral-store }
 ```
 
-- **A template is a suggestion, written once.** When the pack loads, for each connector it names, the server writes `config/connectors/<name>.yaml`
-  from the template if no file of that name exists (logged as `connector file credit-store.yaml generated from the template of pack
-  'counterparty-risk'`, audited as `connector-generated`). A file the site never edited follows your pack: a later version of the template replaces
-  it. Once edited the file is the site's: a later version of your pack never changes a value the site set and only adds the keys it gained
-  ([DATA_GUIDE.md section 9, Upgrades](DATA_GUIDE.md#upgrades)). *Reset to pack default* (Admin → Connectors, or
-  `drishti.py connector reset <name>`) writes the pack's current template over it, keeping the earlier text in `<data>/connectors/history/`.
+- **A template is read where it is.** The server writes no connector file: each connector your pack names runs as its template, with
+  the site's override over it (`config/connectors/<name>.yaml`, only the keys the site changed). A later version of your pack changes every
+  key the site did not override ([DATA_GUIDE.md section 9, Connector layers](DATA_GUIDE.md#connector-layers)). *Reset* (Admin →
+  Connectors, or `drishti.py connector reset <name>`) removes the override.
 - **Kinds go through `routes:`.** How a connector file's `kinds:` adds to and narrows the routes is stated once, in
   [DATA_GUIDE.md section 9, How packs and files fit together](DATA_GUIDE.md#96-how-packs-and-files-fit-together). A connector is
   therefore reusable by other packs.

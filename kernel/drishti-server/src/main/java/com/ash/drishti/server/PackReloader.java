@@ -337,6 +337,7 @@ public final class PackReloader implements AutoCloseable {
         names.addAll(candidates);
         com.ash.drishti.packs.edition.Edition edition = com.ash.drishti.packs.edition.Editions.of(env);
         names.removeIf(n -> !edition.packAllowed(n));              // an allow-only edition: a new folder of another pack is not loaded
+        names.removeIf(n -> dirs.packs().off().containsKey(n));      // a pack of a module that is off: not loaded, and unloaded when it goes off
         return samples.select(dirs, List.copyOf(names), loader);
     }
 
