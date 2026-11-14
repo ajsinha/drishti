@@ -929,6 +929,7 @@
   })();
   /* ---- src/drishti_filters.js ---- */
   __m["src/drishti_filters.js"] = (function () {
+    var listValues = __m["src/drishti_chips.js"].listValues;
     const collator = typeof Intl !== 'undefined' ? new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' }) : null;
     function isBlank(v) { return v === null || v === undefined || v === '' || (typeof v === 'number' && isNaN(v)); }
     function compareValues(a, b) {
@@ -973,6 +974,15 @@
           if (f.values) { return f.values.some((x) => (x === null ? key === null : key !== null && String(x) === String(key))); }
           if (f.excluded) { return !f.excluded.some((x) => (x === null ? key === null : key !== null && String(x) === String(key))); }
           return true;
+        }
+        case 'list': {
+          const want = (f.values || (f.value === undefined || f.value === null || f.value === '' ? [] : [f.value])).map(String);
+          if (!want.length) { return true; }                       // nothing chosen holds everything
+          const have = new Set(listValues(v));
+          if (op === 'allOf') { return want.every((x) => have.has(x)); }
+          if (op === 'anyOf') { return want.some((x) => have.has(x)); }
+          if (op === 'has' || !op) { return have.has(want[0]); }
+          throw new Error('no list filter ' + op);
         }
         case 'number':
         case 'date': {
@@ -1032,6 +1042,7 @@
       return Object.keys(model || {}).filter((k) => model[k]).map((k) => {
         const f = model[k];
         if (f.type === 'set') { return f.values ? h(k) + ' in ' + f.values.map((x) => (x === null ? '(blank)' : x)).join(', ') : h(k) + ' not ' + (f.excluded || []).join(', '); }
+        if (f.type === 'list') { const vs = f.values || (f.value === undefined || f.value === null ? [] : [f.value]); return h(k) + (f.op === 'allOf' ? ' has all of ' : f.op === 'anyOf' ? ' has any of ' : ' contains ') + vs.join(', '); }
         if (f.type === 'blank' || f.op === 'blank' || f.op === 'notBlank') { return h(k) + (f.op === 'notBlank' ? ' is not blank' : ' is blank'); }
         if (f.op === 'between') { return h(k) + ' ' + f.value + ' to ' + f.valueTo; }
         if (sym[f.op]) { return h(k) + ' ' + sym[f.op] + ' ' + f.value; }

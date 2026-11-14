@@ -24,14 +24,15 @@ import { InputBase, Popover, Listbox, normalizeOptions, searchOptions, uid } fro
 import { Select } from './drishti_select.js';
 
 const OPS = { number: [['gt', '>'], ['gte', '≥'], ['lt', '<'], ['lte', '≤'], ['equals', '='], ['notEquals', '≠'], ['between', 'between']],
-  text: [['contains', 'contains'], ['notContains', 'does not contain'], ['equals', 'is'], ['notEquals', 'is not'], ['startsWith', 'starts with'], ['endsWith', 'ends with']] };
+  text: [['contains', 'contains'], ['notContains', 'does not contain'], ['equals', 'is'], ['notEquals', 'is not'], ['startsWith', 'starts with'], ['endsWith', 'ends with']],
+  list: [['has', 'contains'], ['anyOf', 'any of'], ['allOf', 'all of']] };
 
 /**
  * A field the bar may filter.
  * @typedef {Object} FilterField
  * @property {string} id the column id the model uses
  * @property {string} [label]
- * @property {('set'|'number'|'text'|'date')} [type='set']
+ * @property {('set'|'number'|'text'|'date'|'list')} [type='set'] list: a list attribute (contains / any of / all of)
  * @property {Array} [options] a set's members (strings or {value, label})
  * @property {function(string): (Promise<Array>|Array)} [members] a set's members from a server, by search text
  */
@@ -104,6 +105,11 @@ export class FilterModelBar {
       return null;
     }
     if (!String(text || '').trim()) { this.set(id, null); return null; }
+    if (f.type === 'list') {                                     // values separated by commas: one for contains, several for any of / all of
+      const vs = String(text).split(',').map((x) => x.trim()).filter(Boolean);
+      this.set(id, { type: 'list', op: op === 'has' ? 'has' : op, values: op === 'has' ? vs.slice(0, 1) : vs });
+      return null;
+    }
     this.set(id, { type: 'text', op: op, value: String(text).trim() });
     return null;
   }
@@ -260,10 +266,10 @@ export class FilterBar extends InputBase {
         this.changed();
       });
     } else {
-      const ops = OPS[f.type === 'number' ? 'number' : 'text'], op = this.pick('Condition', ops.map(([k, w]) => ({ value: k, label: w })), cur && cur.op ? cur.op : ops[0][0]);
-      const val = this.el('input', { cls: 'di-field', attrs: { type: 'text', 'aria-label': 'Value', placeholder: f.type === 'number' ? '1m, 250k, −5,000' : 'Text' } });
+      const ops = OPS[f.type === 'number' ? 'number' : f.type === 'list' ? 'list' : 'text'], op = this.pick('Condition', ops.map(([k, w]) => ({ value: k, label: w })), cur && cur.op ? cur.op : ops[0][0]);
+      const val = this.el('input', { cls: 'di-field', attrs: { type: 'text', 'aria-label': 'Value', placeholder: f.type === 'number' ? '1m, 250k, −5,000' : f.type === 'list' ? 'fx, rates' : 'Text' } });
       const val2 = this.el('input', { cls: 'di-field', attrs: { type: 'text', 'aria-label': 'Up to', placeholder: 'and' } });
-      if (cur) { val.value = cur.value === undefined ? '' : String(cur.value); val2.value = cur.valueTo === undefined ? '' : String(cur.valueTo); }
+      if (cur) { val.value = cur.values && f.type === 'list' ? cur.values.join(', ') : cur.value === undefined ? '' : String(cur.value); val2.value = cur.valueTo === undefined ? '' : String(cur.valueTo); }
       const showTo = () => { val2.hidden = op.component.getValue() !== 'between'; };
       op.component.on('change', showTo);
       first = val;

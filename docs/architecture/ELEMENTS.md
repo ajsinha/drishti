@@ -182,10 +182,19 @@ the formats and JSON calls of `drishti_bi-lib.js`, and the dialogs of `drishti_b
 `chipList(document, values, {max, compact, label})` (or `new Chips(host, options)`) draws a list attribute: the first `max` chips (3) and
 **"+N more ▾"**; a click, **Enter** or **Space** expands it vertically in place to every value and "▴ less" collapses it; the toggle
 carries `aria-expanded` and keeps focus; `drishti:chips-toggle` says which. Values may be an array or its JSON text (a promoted list
-column). `compact` is a grid cell's form: the first chip and a count badge, expanding downward over the rows below. Theme tokens only
+column). `compact` is a grid cell's form: the first chip and a count badge; expanding it shows every value in the cell and the grid makes **that row taller** (see below), so the rows under it move down and nothing is covered; collapsing gives the row its height back. Theme tokens only
 (`css/drishti_chips.css`), so dark and light work. drishti-grid draws a column of `type: 'list'` (or list values) with it, the renderer
 and the console's panels draw `fmt: list` cells with it (`upgradeChips(root)` upgrades a server page's `[data-drishti-chips]`), and the
 Sutra generator gives lists of plain values `fmt: list`. Tests: `tests/test_elements_chips_browser.py`.
+
+**Variable row height in drishti-grid.** Rows have one height per density, except that a row may be taller: `Viewport.setExtra(row, px)` adds
+height to one row (0 gives it back, `clearExtras()` resets every row), and `rowTop`, `heightOf`, `indexAt`, the scrolled height, the rows in view
+and `scrollToRow` all count it, so virtual scrolling stays exact (a million rows with a few tall ones still draw only the rows in view, and the
+last row is reachable). The grid uses it for a list cell expanded in place: the chips toggle (mouse, Enter or Space) grows the row to the chips'
+height and focus stays on the toggle; a sort, a filter or a new answer collapses every list cell. **List filters:** a column of `type: 'list'`
+has *Contains…*, *Any of…* and *All of…* in its column menu (values separated by commas); the filter model's `{type: 'list', op: has | anyOf |
+allOf, values}` is the one shared by the grid, the filter bar (a field of `type: 'list'`) and `filterRows`. **Pivot notes:** the pivot's header
+shows the answer's notes (the double-count note of an exploded list field) in a strip above the grid.
 
 ### 4.2 drishti-inputs
 

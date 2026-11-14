@@ -42,7 +42,8 @@ export function buildShell(v) {
   R.toolbar = h(doc, 'div', { cls: 'dg-toolbar', attrs: { role: 'toolbar', 'aria-label': (v.o.title || 'Grid') + ' tools' } });
   R.wells = h(doc, 'div', { cls: 'dg-wells' });
   R.status = h(doc, 'div', { cls: 'dg-status', attrs: { 'aria-label': 'Status' } });
-  R.center = h(doc, 'div', { cls: 'dg-gridarea' }, [v.body.scroller, R.status]);
+  R.note = h(doc, 'div', { cls: 'dg-note', attrs: { role: 'note', hidden: true } });       // the answer's notes (a list field exploded: totals count a row once per value)
+  R.center = h(doc, 'div', { cls: 'dg-gridarea' }, [R.note, v.body.scroller, R.status]);
   if (L === 'panel') {
     R.side = h(doc, 'aside', { cls: 'dg-side', attrs: { 'aria-label': 'Pivot panes: Build and Fields' } }, [R.wells]);
     R.card = h(doc, 'div', { cls: 'dg-card', attrs: { role: 'dialog', 'aria-label': 'Explain', hidden: true } });
@@ -136,6 +137,12 @@ export function renderChrome(v) {
   // the terminal's command line and keys
   if (R.cmdInput && doc.activeElement !== R.cmdInput) { R.cmdInput.value = commandText(v.activeWells().getState()); }
   if (R.cmdMeta) { R.cmdMeta.textContent = (m.answer ? (m.answer.computedBy === 'browser' ? 'computed here' : 'server') + ' · ' + (m.answer.notes && m.answer.notes.length ? 'notes' : 'exact') : '') + (v.o.subtitle ? ' · ' + v.o.subtitle : ''); }
+  if (R.note) {                                                  // the pivot's header says what the answer says: a list field counts a row once per value
+    const said = piv && m.answer && Array.isArray(m.answer.notes) ? m.answer.notes.filter((x) => typeof x === 'string' && x.trim()) : [];
+    R.note.textContent = said.join(' ');
+    R.note.title = said.join('\n');
+    R.note.hidden = !said.length;
+  }
   if (R.fkeys) {
     R.fkeys.textContent = '';
     FUNCTION_KEYS.forEach((k) => R.fkeys.append(h(doc, 'button', { cls: 'dg-fkey', attrs: { type: 'button', 'aria-keyshortcuts': k.key }, data: { act: k.action } }, [h(doc, 'b', { text: k.key }), ' ' + k.label])));

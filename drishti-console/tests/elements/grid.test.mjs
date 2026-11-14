@@ -136,6 +136,53 @@ test('the viewport: a million rows, the window drawn, the scroll height capped a
   assert.deepEqual(v.columns(offs), { first: 0, last: 4 });
 });
 
+test('the viewport: a row taller than the rest (a list cell expanded) moves the rows below, keeps the scroll height exact and the window right', () => {
+  const v = new G.Viewport({ rowHeight: 28, height: 280, overscanRows: 0 });
+  v.setRowCount(100);
+  assert.equal(v.contentHeight(), 2800);
+  assert.equal(v.setExtra(3, 56), true);
+  assert.equal(v.setExtra(3, 56), false);                                       // nothing changed
+  assert.equal(v.heightOf(3), 84);
+  assert.equal(v.contentHeight(), 2856);
+  assert.equal(v.rowTop(3), 84);
+  assert.equal(v.rowTop(4), 168);                                               // the row below starts under the taller one: nothing is covered
+  assert.equal(v.indexAt(83), 2);
+  assert.equal(v.indexAt(84), 3);
+  assert.equal(v.indexAt(167), 3);
+  assert.equal(v.indexAt(168), 4);
+  let w = v.rows();
+  assert.deepEqual([w.firstVisible, w.lastVisible], [0, 7]);                    // room for ten rows, one is three rows tall: eight are in view
+  v.scrollTo(v.maxScrollTop());
+  w = v.rows();
+  assert.equal(w.lastVisible, 99);                                              // the last row is still reachable
+  assert.equal(v.rowTop(99) + v.heightOf(99), 2856);
+  v.scrollTo(0);
+  v.scrollToRow(50);
+  w = v.rows();
+  assert.ok(w.firstVisible <= 50 && w.lastVisible >= 50);
+  assert.equal(v.setExtra(3, 0), true);                                         // collapsed: the usual height again
+  assert.equal(v.contentHeight(), 2800);
+  assert.equal(v.rowTop(4), 112);
+  v.setExtra(1, 40); v.setExtra(2, 10);
+  assert.equal(v.clearExtras(), true);
+  assert.equal(v.contentHeight(), 2800);
+});
+
+test('a list filter: contains, any of and all of over a list column, as Rachana has / any_of / all_of', () => {
+  const tags = ['fx', 'rates', 'hedge'];
+  assert.equal(C.passes(tags, { type: 'list', op: 'has', values: ['fx'] }), true);
+  assert.equal(C.passes(tags, { type: 'list', op: 'has', values: ['credit'] }), false);
+  assert.equal(C.passes(tags, { type: 'list', op: 'anyOf', values: ['credit', 'rates'] }), true);
+  assert.equal(C.passes(tags, { type: 'list', op: 'allOf', values: ['fx', 'hedge'] }), true);
+  assert.equal(C.passes(tags, { type: 'list', op: 'allOf', values: ['fx', 'credit'] }), false);
+  assert.equal(C.passes('["fx","rates"]', { type: 'list', op: 'has', values: ['rates'] }), true);   // a promoted column's JSON text
+  assert.equal(C.passes('fx', { type: 'list', op: 'has', values: ['fx'] }), true);                  // one value is a list of one
+  assert.equal(C.passes(null, { type: 'list', op: 'anyOf', values: ['fx'] }), false);               // no list holds nothing
+  assert.equal(C.passes(tags, { type: 'list', op: 'anyOf', values: [] }), true);                    // nothing chosen holds everything
+  assert.equal(C.passes([2025, 2026], { type: 'list', op: 'has', values: ['2026'] }), true);
+  assert.equal(C.filterWords({ TAGS: { type: 'list', op: 'anyOf', values: ['fx', 'rates'] } }, () => 'Tags'), 'Tags has any of fx, rates');
+});
+
 test('the server-side row model: blocks on demand, the request shape, a cache, groups open their own level, stale answers dropped', async () => {
   const data = trades(250);
   const ds = G.memoryDatasource(data);

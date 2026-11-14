@@ -120,7 +120,7 @@ export function openColumnMenu(v, c, anchor) {
   const aggs = piv ? (vi >= 0 ? v.activeWells().funcs() : null) : v.grouped() && col.type === 'number' ? VALUE_FUNCS.map((f) => ({ name: f, label: aggFunc(f).label })) : null;
   const items = columnMenuItems({ header: col.headerPath ? col.headerPath.filter(Boolean).join(' · ') : col.header, pivot: piv, sort: v.sortOf({ col: col }),
     numeric: col.type === 'number', additive: col.additive, aggs: aggs, aggFunc: piv ? (vi >= 0 ? v.activeWells().state.values[vi].aggFunc : null) : col.aggFunc,
-    pinned: col.pinned, pinTotals: v.ui.pinTotals, explain: !!v.o.explain, rowHeader: !!col.rowHeader });
+    pinned: col.pinned, pinTotals: v.ui.pinTotals, explain: !!v.o.explain, rowHeader: !!col.rowHeader, list: col.type === 'list' });
   if (piv && col.additive === false) { items.forEach((it) => { if (it.id === 'agg:server') { it.label = col.measure; } }); }
   v.menu.open(items, { anchor: anchor, label: 'Column menu: ' + col.header, theme: v.host, run: (id, val) => columnAction(v, c, id, val, anchor) });
   v.emitView('menuOpened', { menu: 'column', column: col.id });
@@ -162,6 +162,16 @@ function columnAction(v, c, id, val, anchor) {
     return;
   }
   if (id === 'member-filter') { memberMenu(v, col, anchor); return; }
+  if (id === 'list-has' || id === 'list-any' || id === 'list-all') {              // a list column: contains, any of, all of (values separated by commas)
+    const op = id === 'list-has' ? 'has' : id === 'list-any' ? 'anyOf' : 'allOf';
+    v.menu.open([{ heading: col.header + (op === 'has' ? ' contains' : op === 'anyOf' ? ' has any of' : ' has all of') }, { id: 'cond', label: col.header, input: { placeholder: op === 'has' ? 'fx' : 'fx, rates' } }],
+      { anchor: anchor, label: 'List filter', theme: v.host, run: (x, text) => {
+        const vs = String(text || '').split(',').map((t) => t.trim()).filter(Boolean);
+        if (!vs.length) { v.say('Write a value' + (op === 'has' ? '' : 's, separated by commas')); return; }
+        m.setFilterModel(Object.assign({}, m.filterModel, { [col.id]: { type: 'list', op: op, values: op === 'has' ? vs.slice(0, 1) : vs } }));
+      } });
+    return;
+  }
   if (id === 'clear-filter') { if (piv) { v.setPivotOptions({ valueFilters: [], top: {} }, 'Filters cleared'); } else { m.setFilterModel({}); m.setQuickFilter(''); v.say('Filters cleared'); } return; }
   if (id.indexOf('agg:') === 0) {
     const f = id.slice(4);

@@ -354,6 +354,12 @@ public final class MqValidator {
                     out.add(MqException.Problem.of("DRS-9155", path, "between takes two values: [low, high]"));
                 }
             }
+            case "has", "any-of", "all-of" -> {
+                if (!Set.of("list", "string").contains(type)) {
+                    out.add(MqException.Problem.of("DRS-9155", path, w.op() + " is for a list field; '" + w.field() + "' is " + type));
+                }
+                return;
+            }
             case "contains", "starts-with" -> {
                 if (!"string".equals(type) || n != 1) {
                     out.add(MqException.Problem.of("DRS-9155", path, w.op() + " takes one text value on a text field; '" + w.field() + "' is " + type));

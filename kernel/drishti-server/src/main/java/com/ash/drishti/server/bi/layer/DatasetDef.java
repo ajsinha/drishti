@@ -108,7 +108,7 @@ public record DatasetDef(String name, String version, String id, String title, S
     public static final int RACHANA = 2;
     /** The prefix of a pack-generated dataset's name; no authored dataset may use it. */
     public static final String PACK_PREFIX = "pack.";
-    public static final Set<String> TYPES = Set.of("string", "integer", "decimal", "boolean", "date", "timestamp");
+    public static final Set<String> TYPES = Set.of("string", "integer", "decimal", "boolean", "date", "timestamp", "list");
     public static final Set<String> ROLES = Set.of("key", "dimension", "attribute", "date", "amount", "quantity", "ratio", "text");
     public static final Set<String> AGGREGATES = Set.of("sum", "avg", "min", "max", "count", "distinct");
     public static final Set<String> OVER_TIME = Set.of("last", "first", "avg", "none");

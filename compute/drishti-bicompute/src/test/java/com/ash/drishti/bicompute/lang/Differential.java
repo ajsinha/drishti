@@ -63,6 +63,8 @@ final class Differential implements AutoCloseable {
         TYPES.put("MATURITY", ElType.DATE);
         TYPES.put("LIVE", ElType.BOOLEAN);
         TYPES.put("SECRET", ElType.DECIMAL);
+        TYPES.put("TAGS", ElType.LIST);              // a native list column
+        TYPES.put("TAGS_TEXT", ElType.STRING);       // the same list as a promoted column's JSON text
     }
 
     static final LocalDate AS_OF = LocalDate.of(2026, 10, 16);
@@ -77,7 +79,7 @@ final class Differential implements AutoCloseable {
         db = DriverManager.getConnection("jdbc:duckdb:");
         try (Statement s = db.createStatement()) {
             s.execute("CREATE TABLE t (ID BIGINT, MTM DOUBLE, NOTIONAL DOUBLE, N BIGINT, STATUS VARCHAR, DESK VARCHAR, CCY VARCHAR, "
-                    + "TRADE_DATE DATE, MATURITY DATE, LIVE BOOLEAN, SECRET DOUBLE)");
+                    + "TRADE_DATE DATE, MATURITY DATE, LIVE BOOLEAN, SECRET DOUBLE, TAGS VARCHAR[], TAGS_TEXT VARCHAR)");
             Random r = new Random(2911);
             String[] statuses = {"LIVE", "live", "MATURED", "", null, "Pending"};
             String[] desks = {"DESK-RATES", "DESK-COMM", "DESK-FX", null};
@@ -153,9 +155,13 @@ final class Differential implements AutoCloseable {
 
     private void add(Statement s, int id, Double mtm, Double notional, Long n, String status, String desk, String ccy, LocalDate trade,
             LocalDate maturity, Boolean live, double secret) throws SQLException {
+        String[][] tagSets = {{"fx", "rates"}, {"hedge"}, {"fx", "hedge", "2026"}, {}, null, {"credit", "rates"}};
+        String[] tags = tagSets[id % tagSets.length];
+        String tagsSql = tags == null ? "NULL" : "[" + java.util.Arrays.stream(tags).map(x -> "'" + x + "'").collect(java.util.stream.Collectors.joining(", ")) + "]";
+        String tagsText = tags == null ? null : "[" + java.util.Arrays.stream(tags).map(x -> "\"" + x + "\"").collect(java.util.stream.Collectors.joining(",")) + "]";
         s.execute("INSERT INTO t VALUES (" + id + ", " + sql(mtm) + ", " + sql(notional) + ", " + sql(n) + ", " + sql(status) + ", " + sql(desk)
                 + ", " + sql(ccy) + ", " + (trade == null ? "NULL" : "DATE '" + trade + "'") + ", " + (maturity == null ? "NULL" : "DATE '" + maturity + "'")
-                + ", " + sql(live) + ", " + secret + ")");
+                + ", " + sql(live) + ", " + secret + ", " + tagsSql + ", " + sql(tagsText) + ")");
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("ID", id);
         m.put("MTM", mtm);
@@ -167,6 +173,8 @@ final class Differential implements AutoCloseable {
         m.put("TRADE_DATE", trade == null ? null : trade.toString());
         m.put("MATURITY", maturity == null ? null : maturity.toString());
         m.put("LIVE", live);
+        m.put("TAGS", tags == null ? null : java.util.List.of(tags));
+        m.put("TAGS_TEXT", tagsText);
         String json = new com.fasterxml.jackson.databind.ObjectMapper().valueToTree(m).toString();
         DataNode plain = new JsonCodec().read(json);
         Map<String, DataNode> fields = new LinkedHashMap<>(((DataNode.Obj) plain).fields());

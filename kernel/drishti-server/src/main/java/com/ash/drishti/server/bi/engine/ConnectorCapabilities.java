@@ -30,7 +30,7 @@ import java.util.Set;
  */
 public record ConnectorCapabilities(String connector, String dialect, boolean aggregates, Set<String> filterTypes, boolean streams, boolean dated, int maxFragments) {
 
-    private static final Set<String> SQL_TYPES = Set.of("string", "integer", "decimal", "date", "timestamp", "boolean");
+    private static final Set<String> SQL_TYPES = Set.of("string", "integer", "decimal", "date", "timestamp", "boolean", "list");
 
     public ConnectorCapabilities {
         filterTypes = filterTypes == null ? Set.of() : Set.copyOf(filterTypes);

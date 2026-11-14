@@ -74,7 +74,11 @@ class DifferentialTest {
             "shift_date(TRADE_DATE, -1, unit = 'year')", "asof()", "power(N, 2)", "power(abs(MTM), 0.5)", "power(1.1, 2)", "power(N, -1)", "floor(MTM)",
             "floor(MTM / 1000)", "floor(MTM, 1000)", "floor(N, 0)", "floor(-2.5)", "if(MTM > 0, MTM, 0)", "if(STATUS == 'LIVE', 1)",
             "switch(CCY, 'JPY', 1 / 148.2, 'EUR', 1.174, 'GBP', 1.348, 1)", "switch(STATUS, 'LIVE', 'L', 'MATURED', 'M')",
-            "least(MTM, 0)", "least(MTM, NOTIONAL, N)", "greatest(MTM, 0)", "greatest(N, 1, null)");
+            "least(MTM, 0)", "least(MTM, NOTIONAL, N)", "greatest(MTM, 0)", "greatest(N, 1, null)",
+            "has(TAGS, 'fx')", "has(TAGS, 'nope')", "has(TAGS, '2026')", "!has(TAGS, 'hedge')", "has(TAGS_TEXT, 'rates')", "has(STATUS, 'LIVE')",
+            "any_of(TAGS, ['fx', 'credit'])", "any_of(TAGS, ['nope'])", "any_of(TAGS, [])", "any_of(TAGS_TEXT, ['hedge', 'credit'])",
+            "all_of(TAGS, ['fx', 'hedge'])", "all_of(TAGS, ['fx'])", "all_of(TAGS, [])", "all_of(TAGS_TEXT, ['credit', 'rates'])",
+            "any_of(STATUS, ['LIVE', 'Pending'])", "has(TAGS, 'fx') && MTM > 0");
 
     /** The shipped models' and datasets' row expressions, as the migration writes them (docs/architecture/ARCHITECTURE.md §28 2.7). */
     static final List<String> SHIPPED_ROWS = List.of(

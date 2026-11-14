@@ -28,14 +28,16 @@
 
 /**
  * @typedef {Object} ColumnFilter
- * @property {('text'|'number'|'date'|'set'|'blank')} type
- * @property {string} [op] text: contains, notContains, equals, notEquals, startsWith, endsWith; number and date: equals, notEquals, lt,
+ * @property {('text'|'number'|'date'|'set'|'blank'|'list')} type
+ * @property {string} [op] list: has, anyOf, allOf (a list attribute, as Rachana's has / any_of / all_of); text: contains, notContains, equals, notEquals, startsWith, endsWith; number and date: equals, notEquals, lt,
  *   lte, gt, gte, between; blank: blank, notBlank
  * @property {*} [value]
  * @property {*} [valueTo] the upper end of between (inclusive)
- * @property {Array<*>} [values] set: the members kept
+ * @property {Array<*>} [values] set: the members kept; list: the values asked for (op has: one; anyOf, allOf: several)
  * @property {Array<*>} [excluded] set: the members left out
  */
+
+import { listValues } from './drishti_chips.js';
 
 const collator = typeof Intl !== 'undefined' ? new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' }) : null;
 
@@ -120,6 +122,15 @@ export function passes(v, f) {
       if (f.excluded) { return !f.excluded.some((x) => (x === null ? key === null : key !== null && String(x) === String(key))); }
       return true;
     }
+    case 'list': {
+      const want = (f.values || (f.value === undefined || f.value === null || f.value === '' ? [] : [f.value])).map(String);
+      if (!want.length) { return true; }                       // nothing chosen holds everything
+      const have = new Set(listValues(v));
+      if (op === 'allOf') { return want.every((x) => have.has(x)); }
+      if (op === 'anyOf') { return want.some((x) => have.has(x)); }
+      if (op === 'has' || !op) { return have.has(want[0]); }
+      throw new Error('no list filter ' + op);
+    }
     case 'number':
     case 'date': {
       if (op === 'blank') { return isBlank(v); }
@@ -194,6 +205,7 @@ export function filterWords(model, header) {
   return Object.keys(model || {}).filter((k) => model[k]).map((k) => {
     const f = model[k];
     if (f.type === 'set') { return f.values ? h(k) + ' in ' + f.values.map((x) => (x === null ? '(blank)' : x)).join(', ') : h(k) + ' not ' + (f.excluded || []).join(', '); }
+    if (f.type === 'list') { const vs = f.values || (f.value === undefined || f.value === null ? [] : [f.value]); return h(k) + (f.op === 'allOf' ? ' has all of ' : f.op === 'anyOf' ? ' has any of ' : ' contains ') + vs.join(', '); }
     if (f.type === 'blank' || f.op === 'blank' || f.op === 'notBlank') { return h(k) + (f.op === 'notBlank' ? ' is not blank' : ' is blank'); }
     if (f.op === 'between') { return h(k) + ' ' + f.value + ' to ' + f.valueTo; }
     if (sym[f.op]) { return h(k) + ' ' + sym[f.op] + ' ' + f.value; }

@@ -2038,6 +2038,8 @@
       if (c.numeric && !c.rowHeader) {
         items.push({ id: 'top-5', label: 'Top 5 rows by this column', icon: '⌕' }, { id: 'top-10', label: 'Top 10 rows by this column', icon: '⌕' },
           { id: 'value-filter', label: 'Value filter…', icon: '⌕' });
+      } else if (c.list && !c.pivot) {
+        items.push({ id: 'list-has', label: 'Contains…', icon: '⌕' }, { id: 'list-any', label: 'Any of…', icon: '⌕' }, { id: 'list-all', label: 'All of…', icon: '⌕' });
       } else if (!c.pivot) { items.push({ id: 'member-filter', label: 'Filter members…', icon: '⌕' }); }
       items.push({ id: 'clear-filter', label: 'Clear filters' }, { sep: true });
       if (c.aggs && c.aggs.length && !c.rowHeader) {
@@ -3011,7 +3013,7 @@
       const aggs = piv ? (vi >= 0 ? v.activeWells().funcs() : null) : v.grouped() && col.type === 'number' ? VALUE_FUNCS.map((f) => ({ name: f, label: aggFunc(f).label })) : null;
       const items = columnMenuItems({ header: col.headerPath ? col.headerPath.filter(Boolean).join(' · ') : col.header, pivot: piv, sort: v.sortOf({ col: col }),
         numeric: col.type === 'number', additive: col.additive, aggs: aggs, aggFunc: piv ? (vi >= 0 ? v.activeWells().state.values[vi].aggFunc : null) : col.aggFunc,
-        pinned: col.pinned, pinTotals: v.ui.pinTotals, explain: !!v.o.explain, rowHeader: !!col.rowHeader });
+        pinned: col.pinned, pinTotals: v.ui.pinTotals, explain: !!v.o.explain, rowHeader: !!col.rowHeader, list: col.type === 'list' });
       if (piv && col.additive === false) { items.forEach((it) => { if (it.id === 'agg:server') { it.label = col.measure; } }); }
       v.menu.open(items, { anchor: anchor, label: 'Column menu: ' + col.header, theme: v.host, run: (id, val) => columnAction(v, c, id, val, anchor) });
       v.emitView('menuOpened', { menu: 'column', column: col.id });
@@ -3049,6 +3051,16 @@
         return;
       }
       if (id === 'member-filter') { memberMenu(v, col, anchor); return; }
+      if (id === 'list-has' || id === 'list-any' || id === 'list-all') {              // a list column: contains, any of, all of (values separated by commas)
+        const op = id === 'list-has' ? 'has' : id === 'list-any' ? 'anyOf' : 'allOf';
+        v.menu.open([{ heading: col.header + (op === 'has' ? ' contains' : op === 'anyOf' ? ' has any of' : ' has all of') }, { id: 'cond', label: col.header, input: { placeholder: op === 'has' ? 'fx' : 'fx, rates' } }],
+          { anchor: anchor, label: 'List filter', theme: v.host, run: (x, text) => {
+            const vs = String(text || '').split(',').map((t) => t.trim()).filter(Boolean);
+            if (!vs.length) { v.say('Write a value' + (op === 'has' ? '' : 's, separated by commas')); return; }
+            m.setFilterModel(Object.assign({}, m.filterModel, { [col.id]: { type: 'list', op: op, values: op === 'has' ? vs.slice(0, 1) : vs } }));
+          } });
+        return;
+      }
       if (id === 'clear-filter') { if (piv) { v.setPivotOptions({ valueFilters: [], top: {} }, 'Filters cleared'); } else { m.setFilterModel({}); m.setQuickFilter(''); v.say('Filters cleared'); } return; }
       if (id.indexOf('agg:') === 0) {
         const f = id.slice(4);
@@ -3274,10 +3286,45 @@
         this.rowCount = 0;
         this.scrollTop = 0;
         this.scrollLeft = 0;
+        this.extras = new Map();
+      }
+      setExtra(index, px) {
+        const was = this.extras.get(index) || 0, now = Math.max(0, Math.round(px) || 0);
+        if (was === now) { return false; }
+        if (now) { this.extras.set(index, now); } else { this.extras.delete(index); }
+        return true;
+      }
+      clearExtras() { const had = this.extras.size > 0; this.extras.clear(); return had; }
+      extra(index) { return this.extras.get(index) || 0; }
+      heightOf(index) { return this.rowHeight + this.extra(index); }
+      sortedExtras() {
+        const out = [];
+        this.extras.forEach((px, i) => { if (i < this.rowCount) { out.push([i, px]); } });
+        return out.sort((a, b) => a[0] - b[0]);
+      }
+      rowTop(index) {
+        let top = index * this.rowHeight;
+        this.extras.forEach((px, i) => { if (i < index && i < this.rowCount) { top += px; } });
+        return top;
+      }
+      indexAt(y) {
+        const h = this.rowHeight;
+        let grown = 0;
+        for (const [i, px] of this.sortedExtras()) {
+          const top = i * h + grown;
+          if (y < top) { break; }
+          if (y < top + h + px) { return i; }
+          grown += px;
+        }
+        return Math.max(0, Math.min(this.rowCount - 1, Math.floor((y - grown) / h)));
       }
       resize(width, height) { this.width = width; this.height = height; }
       setRowCount(n) { this.rowCount = Math.max(0, n | 0); this.scrollTop = Math.min(this.scrollTop, this.maxScrollTop()); }
-      contentHeight() { return this.rowCount * this.rowHeight; }
+      contentHeight() {
+        let total = this.rowCount * this.rowHeight;
+        this.extras.forEach((px, i) => { if (i < this.rowCount) { total += px; } });
+        return total;
+      }
       scrollHeight() { return Math.min(this.contentHeight(), this.maxScrollHeight); }
       maxScrollTop() { return Math.max(0, this.scrollHeight() - this.height); }
       realTop(scrollTop) {
@@ -3291,18 +3338,18 @@
       }
       rows() {
         if (!this.rowCount) { return { first: 0, last: -1, offset: 0, firstVisible: 0, lastVisible: -1 }; }
-        const real = this.realTop(this.scrollTop), h = this.rowHeight;
-        const firstVisible = Math.min(this.rowCount - 1, Math.floor(real / h));
-        const lastVisible = Math.min(this.rowCount - 1, Math.ceil((real + this.height) / h) - 1);
+        const real = this.realTop(this.scrollTop);
+        const firstVisible = this.indexAt(real);
+        const lastVisible = Math.max(firstVisible, this.indexAt(real + this.height - 0.001));
         const first = Math.max(0, firstVisible - this.overscanRows), last = Math.min(this.rowCount - 1, lastVisible + this.overscanRows);
-        const offset = this.scrollTop + (first * h - real);       // in the scroller's coordinates: where the first drawn row sits
+        const offset = this.scrollTop + (this.rowTop(first) - real);       // in the scroller's coordinates: where the first drawn row sits
         return { first: first, last: last, offset: offset, firstVisible: firstVisible, lastVisible: lastVisible };
       }
       scrollToRow(index) {
         const r = this.rows();
         if (index >= r.firstVisible && index < r.lastVisible) { return null; }
         const realMax = Math.max(0, this.contentHeight() - this.height);
-        const realTop = index < r.firstVisible ? index * this.rowHeight : (index + 1) * this.rowHeight - this.height;
+        const realTop = index < r.firstVisible ? this.rowTop(index) : this.rowTop(index) + this.heightOf(index) - this.height;
         const clamped = Math.max(0, Math.min(realMax, realTop));
         const max = this.maxScrollTop();
         const top = this.contentHeight() <= this.maxScrollHeight || realMax === 0 ? clamped : clamped / realMax * max;
@@ -3969,6 +4016,7 @@
         this.canvas.append(this.head, this.area);
         this.scroller.append(this.canvas, this.empty);
         this.cfCache = new Map();
+        this.openLists = new Map();      // 'r:c' of each list cell expanded in place, to the px its row needs
         this.version = 0;
         this.drag = null;
         this.frame = 0;
@@ -3983,6 +4031,7 @@
         s.addEventListener('click', (e) => this.click(e));
         s.addEventListener('dblclick', (e) => this.dbl(e));
         s.addEventListener('contextmenu', (e) => this.context(e));
+        s.addEventListener('drishti:chips-toggle', (e) => this.listToggled(e));
         this.onUp = () => { if (this.drag) { this.drag = null; this.view.afterRange(); } };
         win.addEventListener('mouseup', this.onUp);
       }
@@ -3996,6 +4045,28 @@
         });
       }
       invalidate() { this.version++; this.cfCache.clear(); this.spans = null; }
+      listToggled(e) {
+        const cell = e.target.closest ? e.target.closest('.dg-cell') : null;
+        if (!cell || cell.dataset.pinned !== undefined || cell.dataset.r === undefined) { return; }
+        const r = +cell.dataset.r, key = r + ':' + cell.dataset.c, vp = this.model.viewport;
+        if (e.detail && e.detail.expanded) {
+          const chips = cell.querySelector('.drishti-chips');
+          this.openLists.set(key, Math.ceil((chips ? chips.offsetHeight : 0) + 8));       // the chips' own height, a little air above and below
+        } else { this.openLists.delete(key); }
+        this.syncRowHeights(r);
+        this.render();
+        const again = this.rows.querySelector('.dg-cell[data-r="' + r + '"][data-c="' + cell.dataset.c + '"] .drishti-chips-toggle');
+        if (again) { again.focus(); }
+      }
+      syncRowHeights(r) {
+        let need = 0;
+        this.openLists.forEach((px, key) => { if (+key.split(':')[0] === r) { need = Math.max(need, px); } });
+        this.model.viewport.setExtra(r, Math.max(0, need - this.model.viewport.rowHeight));
+      }
+      collapseLists() {
+        if (this.openLists.size) { this.openLists.clear(); }
+        this.model.viewport.clearExtras();
+      }
       cellOf(e) {
         const c = e.target.closest ? e.target.closest('.dg-cell') : null;
         if (!c || c.dataset.pinned !== undefined || !this.scroller.contains(c)) { return null; }
@@ -4183,7 +4254,7 @@
         const cls = 'dg-row dg-k-' + kind + (expandable ? ' dg-parent' : '') + (selected ? ' dg-selected' : '') + (r % 2 ? ' dg-odd' : '');
         const row = h(doc, 'div', { cls: cls, attrs: { role: 'row', 'aria-rowindex': String(r + levels + 1), 'aria-selected': id !== null ? String(selected) : null,
           'aria-level': m.pivotMode || x.kind === 'group' || x.tree || x.depth ? String((x.depth || 0) + 1) : null, 'aria-expanded': expandable ? String(expanded) : null },
-        style: { height: m.viewport.rowHeight + 'px' } });
+        style: { height: m.viewport.heightOf(r) + 'px' } });
         const o = this.view.o;
         if (x.row && (x.kind === 'leaf' || x.tree) && (o.getRowClass || o.getRowData)) {
           const rc = o.getRowClass ? o.getRowClass(x.row) : null, rd = o.getRowData ? o.getRowData(x.row) : null;
@@ -4281,8 +4352,10 @@
         } else if (drawn !== null && drawn !== undefined && drawn !== '') {
           cell.appendChild(typeof drawn === 'string' ? h(doc, 'span', { cls: 'dg-text', text: drawn }) : drawn);
         } else if (leafRow && (col.type === 'list' || isListValue(value))) {
+          const open = this.openLists.has(r + ':' + c);
           cell.classList.add('dg-list');
-          cell.appendChild(chipList(doc, value, { compact: true, label: col.headerName || col.field }));
+          if (open) { cell.classList.add('dg-list-open'); }                     // the row is taller: the chips sit in the cell, nothing is covered
+          cell.appendChild(chipList(doc, value, { compact: true, expanded: open, label: col.headerName || col.field }));
         } else { cell.appendChild(h(doc, 'span', { cls: 'dg-text', text: text })); }
         if (blank) {
           const dim = x.entry.path && x.entry.path.length ? x.entry.path[x.entry.path.length - 1][0] : 'this level';
@@ -4313,9 +4386,9 @@
         if (!f) { return; }
         const vp = m.viewport, rh = vp.rowHeight;
         const top = this.scroller.scrollTop, room = vp.height;
-        const real = f.row * rh;
+        const real = vp.rowTop(f.row), tall = vp.heightOf(f.row);
         if (vp.contentHeight() <= vp.maxScrollHeight) {
-          if (real < top) { this.scroller.scrollTop = real; } else if (real + rh > top + room) { this.scroller.scrollTop = real + rh - room; }
+          if (real < top) { this.scroller.scrollTop = real; } else if (real + tall > top + room) { this.scroller.scrollTop = real + tall - room; }
         } else if (vp.scrollToRow(f.row) !== null) { this.scroller.scrollTop = vp.scrollTop; }
         const disp = this.view.displayColumns(), d = disp.byIndex[f.col];
         if (d && d.pane === 'center') {
@@ -5380,7 +5453,8 @@
       R.toolbar = h(doc, 'div', { cls: 'dg-toolbar', attrs: { role: 'toolbar', 'aria-label': (v.o.title || 'Grid') + ' tools' } });
       R.wells = h(doc, 'div', { cls: 'dg-wells' });
       R.status = h(doc, 'div', { cls: 'dg-status', attrs: { 'aria-label': 'Status' } });
-      R.center = h(doc, 'div', { cls: 'dg-gridarea' }, [v.body.scroller, R.status]);
+      R.note = h(doc, 'div', { cls: 'dg-note', attrs: { role: 'note', hidden: true } });       // the answer's notes (a list field exploded: totals count a row once per value)
+      R.center = h(doc, 'div', { cls: 'dg-gridarea' }, [R.note, v.body.scroller, R.status]);
       if (L === 'panel') {
         R.side = h(doc, 'aside', { cls: 'dg-side', attrs: { 'aria-label': 'Pivot panes: Build and Fields' } }, [R.wells]);
         R.card = h(doc, 'div', { cls: 'dg-card', attrs: { role: 'dialog', 'aria-label': 'Explain', hidden: true } });
@@ -5461,6 +5535,12 @@
       (R.side || R.wells).hidden = hideWells;
       if (R.cmdInput && doc.activeElement !== R.cmdInput) { R.cmdInput.value = commandText(v.activeWells().getState()); }
       if (R.cmdMeta) { R.cmdMeta.textContent = (m.answer ? (m.answer.computedBy === 'browser' ? 'computed here' : 'server') + ' · ' + (m.answer.notes && m.answer.notes.length ? 'notes' : 'exact') : '') + (v.o.subtitle ? ' · ' + v.o.subtitle : ''); }
+      if (R.note) {                                                  // the pivot's header says what the answer says: a list field counts a row once per value
+        const said = piv && m.answer && Array.isArray(m.answer.notes) ? m.answer.notes.filter((x) => typeof x === 'string' && x.trim()) : [];
+        R.note.textContent = said.join(' ');
+        R.note.title = said.join('\n');
+        R.note.hidden = !said.length;
+      }
       if (R.fkeys) {
         R.fkeys.textContent = '';
         FUNCTION_KEYS.forEach((k) => R.fkeys.append(h(doc, 'button', { cls: 'dg-fkey', attrs: { type: 'button', 'aria-keyshortcuts': k.key }, data: { act: k.action } }, [h(doc, 'b', { text: k.key }), ' ' + k.label])));
@@ -5744,7 +5824,7 @@
         const on = (name, fn) => this.listeners.push(m.on(name, fn));
         on('changed', (p) => {
           if (p.what === 'columns' || p.what === 'pivot' || p.what === 'state') { this._disp = null; }
-          if (p.what === 'rows' || p.what === 'pivot' || p.what === 'columns') { this.body.invalidate(); }
+          if (p.what === 'rows' || p.what === 'pivot' || p.what === 'columns') { this.body.collapseLists(); this.body.invalidate(); }
           if (p.what === 'pivot' || p.what === 'state') { this.chromeSoon(); }
           if (p.what === 'state') {
             this.host.setAttribute('data-layout', m.layout);

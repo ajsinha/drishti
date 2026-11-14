@@ -56,6 +56,65 @@ export class Viewport {
     this.rowCount = 0;
     this.scrollTop = 0;
     this.scrollLeft = 0;
+    /** @private row index to the px a row is taller than rowHeight (an expanded list cell); empty for almost every grid */
+    this.extras = new Map();
+  }
+
+  /**
+   * Makes a row taller than the rest by px (a list cell expanded in place); 0 gives it the usual height back. Virtual scrolling stays
+   * exact: the rows' tops, the scrolled height and the rows in view all count the extra.
+   * @param {number} index
+   * @param {number} px
+   * @returns {boolean} whether anything changed
+   */
+  setExtra(index, px) {
+    const was = this.extras.get(index) || 0, now = Math.max(0, Math.round(px) || 0);
+    if (was === now) { return false; }
+    if (now) { this.extras.set(index, now); } else { this.extras.delete(index); }
+    return true;
+  }
+
+  /**
+   * Every row has the usual height again.
+   * @returns {boolean} whether any was taller
+   */
+  clearExtras() { const had = this.extras.size > 0; this.extras.clear(); return had; }
+
+  /** The px a row is taller than the usual height. @param {number} index @returns {number} */
+  extra(index) { return this.extras.get(index) || 0; }
+
+  /** The height of a row (px). @param {number} index @returns {number} */
+  heightOf(index) { return this.rowHeight + this.extra(index); }
+
+  /** @private the extras of the rows that exist, by index */
+  sortedExtras() {
+    const out = [];
+    this.extras.forEach((px, i) => { if (i < this.rowCount) { out.push([i, px]); } });
+    return out.sort((a, b) => a[0] - b[0]);
+  }
+
+  /** The real top of a row (px from the first row's top). @param {number} index @returns {number} */
+  rowTop(index) {
+    let top = index * this.rowHeight;
+    this.extras.forEach((px, i) => { if (i < index && i < this.rowCount) { top += px; } });
+    return top;
+  }
+
+  /**
+   * The row holding a real offset (px from the first row's top), clamped to the rows.
+   * @param {number} y
+   * @returns {number}
+   */
+  indexAt(y) {
+    const h = this.rowHeight;
+    let grown = 0;
+    for (const [i, px] of this.sortedExtras()) {
+      const top = i * h + grown;
+      if (y < top) { break; }
+      if (y < top + h + px) { return i; }
+      grown += px;
+    }
+    return Math.max(0, Math.min(this.rowCount - 1, Math.floor((y - grown) / h)));
   }
 
   /**
@@ -74,7 +133,11 @@ export class Viewport {
   setRowCount(n) { this.rowCount = Math.max(0, n | 0); this.scrollTop = Math.min(this.scrollTop, this.maxScrollTop()); }
 
   /** The real height of every row (px). @returns {number} */
-  contentHeight() { return this.rowCount * this.rowHeight; }
+  contentHeight() {
+    let total = this.rowCount * this.rowHeight;
+    this.extras.forEach((px, i) => { if (i < this.rowCount) { total += px; } });
+    return total;
+  }
 
   /** The height the scroller is given (the real one, capped). @returns {number} */
   scrollHeight() { return Math.min(this.contentHeight(), this.maxScrollHeight); }
@@ -106,11 +169,11 @@ export class Viewport {
    */
   rows() {
     if (!this.rowCount) { return { first: 0, last: -1, offset: 0, firstVisible: 0, lastVisible: -1 }; }
-    const real = this.realTop(this.scrollTop), h = this.rowHeight;
-    const firstVisible = Math.min(this.rowCount - 1, Math.floor(real / h));
-    const lastVisible = Math.min(this.rowCount - 1, Math.ceil((real + this.height) / h) - 1);
+    const real = this.realTop(this.scrollTop);
+    const firstVisible = this.indexAt(real);
+    const lastVisible = Math.max(firstVisible, this.indexAt(real + this.height - 0.001));
     const first = Math.max(0, firstVisible - this.overscanRows), last = Math.min(this.rowCount - 1, lastVisible + this.overscanRows);
-    const offset = this.scrollTop + (first * h - real);       // in the scroller's coordinates: where the first drawn row sits
+    const offset = this.scrollTop + (this.rowTop(first) - real);       // in the scroller's coordinates: where the first drawn row sits
     return { first: first, last: last, offset: offset, firstVisible: firstVisible, lastVisible: lastVisible };
   }
 
@@ -123,7 +186,7 @@ export class Viewport {
     const r = this.rows();
     if (index >= r.firstVisible && index < r.lastVisible) { return null; }
     const realMax = Math.max(0, this.contentHeight() - this.height);
-    const realTop = index < r.firstVisible ? index * this.rowHeight : (index + 1) * this.rowHeight - this.height;
+    const realTop = index < r.firstVisible ? this.rowTop(index) : this.rowTop(index) + this.heightOf(index) - this.height;
     const clamped = Math.max(0, Math.min(realMax, realTop));
     const max = this.maxScrollTop();
     const top = this.contentHeight() <= this.maxScrollHeight || realMax === 0 ? clamped : clamped / realMax * max;

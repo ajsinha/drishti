@@ -974,7 +974,7 @@ out, measures sit in their display folders.
   a drill-through target, whether it is a tooltip page) and the **report** (title, description, theme, palette, business dates, links,
   bookmarks, the kiosk rotation of its board pages).
 * **Filters.** *On all pages*, *On this page*, *On this visual*. **Basic** picks values (type them, or *Pick from the data*), **Advanced** is a
-  condition (is, is not, less than, between, contains, starts with, is empty ...), **Top N** keeps the N values with the highest (or lowest)
+  condition (is, is not, less than, between, contains, starts with, is empty ...; for a list column also *list contains*, *list has any of*, *list has all of*), **Top N** keeps the N values with the highest (or lowest)
   measure.
 
   ![A top-5 filter on the bar](img/bi-reports/design-filter.png)
@@ -1328,6 +1328,7 @@ total, a **measure** (it becomes `having`).
 | `eq`, `ne`, `lt`, `le`, `gt`, `ge` | one value |
 | `between` | two values |
 | `contains`, `starts-with` | text |
+| `has`, `any-of`, `all-of` | a list column (type `list`, or text holding a list): one value, or several; nothing chosen holds every row; the engine's own tables only (not pushed down to PostgreSQL) |
 | `is-null`, `not-null` | none |
 | `top` | `n`, `by` (a measure), `dir` (`desc` for the highest, `asc` for the lowest): keep the `n` values of `field` with the highest measure |
 

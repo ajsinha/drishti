@@ -126,7 +126,7 @@ public record Dataset(String name, int version, String title, String description
         return compose != null ? List.copyOf(compose.from().values()) : derived != null ? List.copyOf(derived.inputs().values()) : List.of();
     }
 
-    public static final Set<String> TYPES = Set.of("string", "integer", "decimal", "boolean", "date", "timestamp");
+    public static final Set<String> TYPES = Set.of("string", "integer", "decimal", "boolean", "date", "timestamp", "list");
     public static final Set<String> MODES = Set.of("live", "cached", "direct");
     /** The mode of the table the engine makes from a live table's history. */
     public static final String HISTORY = "history";

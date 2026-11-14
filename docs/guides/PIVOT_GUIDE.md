@@ -200,7 +200,9 @@ answer names each field by its id (`LEGS.NOTIONAL`).
 **A list field** (a promoted list of simple values, `TAGS: ["fx", "rates"]`) as a row or column field **counts each value**: a row
 tagged fx and rates is in both cells, so totals across the field may count a row more than once, and the answer's note says so (the
 grand total still counts each row once). `TAGS:join` shows the list as one label ("fx, rates") instead. One list field is exploded at a
-time; give another `:join`. A filter on a list field keeps the rows holding any chosen value.
+time; give another `:join`. A filter on a list field keeps the rows holding any chosen value. The note is shown in the strip above the grid whenever a list field is exploded, so a total is never read as a count of rows without it.
+
+A list column in a grid or table is filtered from its column menu by *Contains*, *Any of* or *All of*; an expanded list makes its row taller.
 
 **The rules, so a figure is never counted twice:**
 

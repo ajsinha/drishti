@@ -34,6 +34,9 @@
     ['Tables', ['table', 'matrix']], ['Python', ['python']], ['Filter and other', ['slicer', 'text', 'image', 'button']], ['Board', ['tile']]];
   const PARTS = ['year', 'quarter', 'month', 'week', 'day'];
   const OPS = { eq: 'is', ne: 'is not', lt: 'is less than', le: 'is at most', gt: 'is greater than', ge: 'is at least', between: 'is between', contains: 'contains', 'starts-with': 'starts with', 'is-null': 'is empty', 'not-null': 'is not empty' };
+  /** The conditions of a list column (a field holding several values): contains one, any of several, all of several. Offered when the dataset has a list column. */
+  const LIST_OPS = { has: 'list contains', 'any-of': 'list has any of', 'all-of': 'list has all of' };
+  const OP_WORDS = Object.assign({}, OPS, LIST_OPS);
 
   D.modules.push(function () {
     B.api('GET', '/datasets').then((r) => {                           // the datasets a visual may name for itself
@@ -517,7 +520,7 @@
     function describeFilter(f) {
       if (f.op === 'top') { return B.label(f.field) + ': top ' + f.n + (f.dir === 'asc' ? ' lowest' : '') + ' by ' + f.by; }
       const vals = (f.values || []).join(', ');
-      return B.label(f.field) + ' ' + (f.op === 'in' ? 'is one of' : f.op === 'not-in' ? 'is not one of' : OPS[f.op] || f.op) + (f.op === 'between' ? ' ' + (f.values || []).join(' and ') : vals ? ' ' + vals : '');
+      return B.label(f.field) + ' ' + (f.op === 'in' ? 'is one of' : f.op === 'not-in' ? 'is not one of' : OP_WORDS[f.op] || f.op) + (f.op === 'between' ? ' ' + (f.values || []).join(' and ') : vals ? ' ' + vals : '');
     }
 
     function drawFilters() {
@@ -557,7 +560,9 @@
       const sv = D.sel(), svField = sv && Object.keys(sv.wells || {}).reduce((a, k) => a.concat(sv.wells[k]), []).find((x) => D.kindOf(x) === 'field');           // a new filter starts on the selected visual's own field
       const startField = cur ? cur.field : svField && all.indexOf(svField) >= 0 ? svField : first;
       const mode0 = !cur ? 'basic' : cur.op === 'top' ? 'top' : (cur.op === 'in' || cur.op === 'not-in') ? 'basic' : 'advanced';
-      const ops = ['in', 'not-in'].concat(Object.keys(OPS)), parents = {};
+      const hasList = (D.dataset.tables || []).some((t) => t.columns.some((c) => c.type === 'list'));
+      const opSet = hasList ? Object.assign({}, OPS, LIST_OPS) : OPS;                      // list conditions only where a list column exists
+      const ops = ['in', 'not-in'].concat(Object.keys(opSet)), parents = {};
       ops.forEach((o) => { parents[o] = o === 'in' || o === 'not-in' ? ['basic'] : ['advanced']; });
       const ms = (D.dataset.measures || []).map((m) => m.name);
       const nulls = ['is-null', 'not-null'];
@@ -566,7 +571,7 @@
       const schema = { type: 'object', properties: {
         field: { type: 'string', title: 'Field', enum: all, widget: 'select', allowEmpty: false, name: 'field' },
         mode: { type: 'string', title: 'Filter type', enum: ['basic', 'advanced', 'top'], enumLabels: ['Basic: pick values', 'Advanced: a condition', 'Top N'], widget: 'select', allowEmpty: false, name: 'mode' },
-        op: { type: 'string', title: 'Condition', enum: ops, enumLabels: ['is one of', 'is not one of'].concat(Object.keys(OPS).map((k) => OPS[k])), widget: 'select', allowEmpty: false, name: 'op',
+        op: { type: 'string', title: 'Condition', enum: ops, enumLabels: ['is one of', 'is not one of'].concat(Object.keys(opSet).map((k) => opSet[k])), widget: 'select', allowEmpty: false, name: 'op',
           dependsOn: 'mode', parents, when: { field: 'mode', notEquals: 'top' } },
         values: { type: 'string', title: 'Values', placeholder: 'Values, separated by commas', name: 'values', when: { field: 'mode', equals: 'basic' } },
         pick: { type: 'string', title: 'Pick from the data', widget: 'pick', noLabel: true, when: { field: 'mode', equals: 'basic' } },
@@ -613,10 +618,12 @@
           if (v.mode === 'top') { f.op = 'top'; f.n = v.n || 1; f.by = v.by; f.dir = v.dir; }
           else if (nulls.indexOf(f.op) >= 0) { f.values = []; }
           else {
-            const raw = v.mode === 'basic' ? typed() : [v.v1, v.v2].filter((x) => x !== undefined);
+            if (LIST_OPS[f.op] && ['list', 'string'].indexOf(type) < 0) { D.say(LIST_OPS[f.op] + ' is for a list field; ' + v.field + ' is ' + type + '.', true); return Promise.reject(new Error('Not a list field.')); }
+            const raw = LIST_OPS[f.op] && v.mode === 'advanced' ? String(v.v1 === undefined ? '' : v.v1).split(',').map((x) => x.trim()) : v.mode === 'basic' ? typed() : [v.v1, v.v2].filter((x) => x !== undefined);
             f.values = raw.filter((x) => x !== '' && x != null).map(num);
             if (!f.values.length) { D.say('Give the filter a value.', true); return Promise.reject(new Error('Give the filter a value.')); }
           }
+          if (f.op === 'has' && f.values.length > 1) { f.values = f.values.slice(0, 1); }
           if (f.op === 'between' && f.values.length < 2) { D.say('between needs two values.', true); return Promise.reject(new Error('between needs two values.')); }
           D.change(cur ? 'Change a filter' : 'Add a filter', () => { const l = scopeFilters(scope, true); if (cur) { l[index] = f; } else { l.push(f); } });
           editing = null;

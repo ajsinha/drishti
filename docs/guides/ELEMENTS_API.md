@@ -1692,11 +1692,11 @@ A table to export.
 
 | Name | Type | Meaning |
 |---|---|---|
-| `type` | `('text'\|'number'\|'date'\|'set'\|'blank')` |  |
-| `[op]` | `string` | text: contains, notContains, equals, notEquals, startsWith, endsWith; number and date: equals, notEquals, lt, lte, gt, gte, between; blank: blank, notBlank |
+| `type` | `('text'\|'number'\|'date'\|'set'\|'blank'\|'list')` |  |
+| `[op]` | `string` | list: has, anyOf, allOf (a list attribute, as Rachana's has / any_of / all_of); text: contains, notContains, equals, notEquals, startsWith, endsWith; number and date: equals, notEquals, lt, lte, gt, gte, between; blank: blank, notBlank |
 | `[value]` | `*` |  |
 | `[valueTo]` | `*` | the upper end of between (inclusive) |
-| `[values]` | `Array&lt;*&gt;` | set: the members kept |
+| `[values]` | `Array&lt;*&gt;` | set: the members kept; list: the values asked for (op has: one; anyOf, allOf: several) |
 | `[excluded]` | `Array&lt;*&gt;` | set: the members left out |
 
 #### `NumberOptions` : `Object`
@@ -4469,7 +4469,7 @@ A field the bar may filter.
 |---|---|---|
 | `id` | `string` | the column id the model uses |
 | `[label]` | `string` |  |
-| `[type='set']` | `('set'\|'number'\|'text'\|'date')` |  |
+| `[type='set']` | `('set'\|'number'\|'text'\|'date'\|'list')` | list: a list attribute (contains / any of / all of) |
 | `[options]` | `Array` | a set's members (strings or {value, label}) |
 | `[members]` | `function(string): (Promise&lt;Array&gt;\|Array)` | a set's members from a server, by search text |
 
@@ -5942,6 +5942,63 @@ The scroll arithmetic of a grid's body.
 |---|---|---|
 | `[o]` | `{rowHeight: number, height: number, width: number, overscanRows: number, overscanColumns: number, maxScrollHeight: number}` | rowHeight default 28 (the design's densities pass theirs), overscan: rows and columns drawn beyond the view (default 6 and 2) |
 
+##### `Viewport.setExtra(index, px)`
+
+Makes a row taller than the rest by px (a list cell expanded in place); 0 gives it the usual height back. Virtual scrolling stays exact: the rows' tops, the scrolled height and the rows in view all count the extra.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `index` | `number` |  |
+| `px` | `number` |  |
+
+Returns `boolean`: whether anything changed.
+
+##### `Viewport.clearExtras()`
+
+Every row has the usual height again.
+
+Returns `boolean`: whether any was taller.
+
+##### `Viewport.extra(index)`
+
+The px a row is taller than the usual height.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `index` | `number` |  |
+
+Returns `number`.
+
+##### `Viewport.heightOf(index)`
+
+The height of a row (px).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `index` | `number` |  |
+
+Returns `number`.
+
+##### `Viewport.rowTop(index)`
+
+The real top of a row (px from the first row's top).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `index` | `number` |  |
+
+Returns `number`.
+
+##### `Viewport.indexAt(y)`
+
+The row holding a real offset (px from the first row's top), clamped to the rows.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `y` | `number` |  |
+
+Returns `number`.
+
 ##### `Viewport.resize(width, height)`
 
 Sets the size of the view (px).
@@ -7393,6 +7450,7 @@ The column menu's items: sort, filter (members, top N, a value filter), aggregat
 | `[c.pinTotals]` | `boolean` | the pivot's totals are pinned |
 | `[c.explain]` | `boolean` | the grid has an Explain hook |
 | `[c.rowHeader]` | `boolean` | the pivot's row heading column |
+| `[c.list]` | `boolean` | a list column: it is filtered by contains, any of and all of |
 
 Returns `MenuItem[]`.
 

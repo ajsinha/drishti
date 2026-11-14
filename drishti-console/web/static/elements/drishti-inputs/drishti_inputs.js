@@ -1909,7 +1909,8 @@
     var InputBase = __m["src/drishti_inputs-dom.js"].InputBase, Popover = __m["src/drishti_inputs-dom.js"].Popover, Listbox = __m["src/drishti_inputs-dom.js"].Listbox, normalizeOptions = __m["src/drishti_inputs-dom.js"].normalizeOptions, searchOptions = __m["src/drishti_inputs-dom.js"].searchOptions, uid = __m["src/drishti_inputs-dom.js"].uid;
     var Select = __m["src/drishti_select.js"].Select;
     const OPS = { number: [['gt', '>'], ['gte', '≥'], ['lt', '<'], ['lte', '≤'], ['equals', '='], ['notEquals', '≠'], ['between', 'between']],
-      text: [['contains', 'contains'], ['notContains', 'does not contain'], ['equals', 'is'], ['notEquals', 'is not'], ['startsWith', 'starts with'], ['endsWith', 'ends with']] };
+      text: [['contains', 'contains'], ['notContains', 'does not contain'], ['equals', 'is'], ['notEquals', 'is not'], ['startsWith', 'starts with'], ['endsWith', 'ends with']],
+      list: [['has', 'contains'], ['anyOf', 'any of'], ['allOf', 'all of']] };
     class FilterModelBar {
       constructor(o) {
         this.fields = (o.fields || []).map((f) => Object.assign({ type: 'set', label: f.id }, f));
@@ -1938,6 +1939,11 @@
           return null;
         }
         if (!String(text || '').trim()) { this.set(id, null); return null; }
+        if (f.type === 'list') {                                     // values separated by commas: one for contains, several for any of / all of
+          const vs = String(text).split(',').map((x) => x.trim()).filter(Boolean);
+          this.set(id, { type: 'list', op: op === 'has' ? 'has' : op, values: op === 'has' ? vs.slice(0, 1) : vs });
+          return null;
+        }
         this.set(id, { type: 'text', op: op, value: String(text).trim() });
         return null;
       }
@@ -2041,10 +2047,10 @@
             this.changed();
           });
         } else {
-          const ops = OPS[f.type === 'number' ? 'number' : 'text'], op = this.pick('Condition', ops.map(([k, w]) => ({ value: k, label: w })), cur && cur.op ? cur.op : ops[0][0]);
-          const val = this.el('input', { cls: 'di-field', attrs: { type: 'text', 'aria-label': 'Value', placeholder: f.type === 'number' ? '1m, 250k, −5,000' : 'Text' } });
+          const ops = OPS[f.type === 'number' ? 'number' : f.type === 'list' ? 'list' : 'text'], op = this.pick('Condition', ops.map(([k, w]) => ({ value: k, label: w })), cur && cur.op ? cur.op : ops[0][0]);
+          const val = this.el('input', { cls: 'di-field', attrs: { type: 'text', 'aria-label': 'Value', placeholder: f.type === 'number' ? '1m, 250k, −5,000' : f.type === 'list' ? 'fx, rates' : 'Text' } });
           const val2 = this.el('input', { cls: 'di-field', attrs: { type: 'text', 'aria-label': 'Up to', placeholder: 'and' } });
-          if (cur) { val.value = cur.value === undefined ? '' : String(cur.value); val2.value = cur.valueTo === undefined ? '' : String(cur.valueTo); }
+          if (cur) { val.value = cur.values && f.type === 'list' ? cur.values.join(', ') : cur.value === undefined ? '' : String(cur.value); val2.value = cur.valueTo === undefined ? '' : String(cur.valueTo); }
           const showTo = () => { val2.hidden = op.component.getValue() !== 'between'; };
           op.component.on('change', showTo);
           first = val;
