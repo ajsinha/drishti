@@ -113,7 +113,7 @@ def build_parser(add_help: bool = True) -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description=__doc__.split("\n\n")[0], formatter_class=argparse.RawDescriptionHelpFormatter,
                                 epilog=__doc__.split("\n\n", 1)[1], add_help=add_help)
     p.add_argument("inputs", type=pathlib.Path, nargs="+", help="files (.jsonl, .jsonl.gz, .ndjson, .json arrays) and/or folders of them")
-    p.add_argument("--name", required=True, help="pack (and module) name: lower-case letters, digits and '-'")
+    p.add_argument("--name", help="pack (and module) name: lower-case letters, digits and '-' (required, except with pack new --source-for: source-<system>)")
     p.add_argument("--title", help="title (default: the name)")
     p.add_argument("--description", help="description")
     p.add_argument("--version", default="1.0.0", help="version (default 1.0.0)")
@@ -136,7 +136,10 @@ def build_parser(add_help: bool = True) -> argparse.ArgumentParser:
 
 
 def main(argv=None) -> int:
-    return run(build_parser().parse_args(argv))
+    a = build_parser().parse_args(argv)
+    if not a.name:
+        raise SystemExit("--name is required")
+    return run(a)
 
 
 NONE = ("none", "-")
