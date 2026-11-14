@@ -110,7 +110,9 @@ public final class PackPaths {
      */
     public static java.util.List<InstalledPacks> installedModulePacks(Environment env) {
         java.util.List<InstalledPacks> out = new java.util.ArrayList<>();
-        String deployDir = env.getProperty("drishti.module-deploy.dir", "");
+        // drishti.packs.modules-dir: where to READ the site's modules from when that is not where this process keeps its own (the command
+        // line keeps its data folder in a scratch folder but reads the packs of the site's installed modules where they are)
+        String deployDir = env.getProperty("drishti.packs.modules-dir", env.getProperty("drishti.module-deploy.dir", ""));
         Path root = deployDir.isBlank() ? Path.of(dataDir(env), "modules") : Path.of(deployDir);
         com.fasterxml.jackson.databind.ObjectMapper yaml = new com.fasterxml.jackson.databind.ObjectMapper(new com.fasterxml.jackson.dataformat.yaml.YAMLFactory());
         for (Path installed : java.util.List.of(root.toAbsolutePath().normalize().resolve("installed"))) {

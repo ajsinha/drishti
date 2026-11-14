@@ -128,6 +128,12 @@ public final class CliLauncher {
                 out.put(r[0], site.resolve(r[1]).toString());
             }
         }
+        // the packs of the modules the site installed (a module made by `pack new` brings its packs; the added-packs list names them) are
+        // read where they are, never written: the module deployment itself keeps to the scratch folder
+        if (!given.containsKey("drishti.packs.modules-dir") && System.getProperty("drishti.packs.modules-dir") == null) {
+            String deploy = env.get("DRISHTI_MODULE_DEPLOY_DIR");
+            out.put("drishti.packs.modules-dir", deploy != null && !deploy.isBlank() ? deploy : site.resolve("modules").toString());
+        }
         out.put(com.ash.drishti.api.DataDir.PROPERTY, scratch.resolve("data").toString());
         for (String[] w : WRITTEN_TO_SCRATCH) {
             out.put(w[0], scratch.resolve(w[1]).toString());
