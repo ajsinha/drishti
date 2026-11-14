@@ -18,6 +18,11 @@
 
 ## Unreleased
 
+- **Fixed: `POS`, `NSET`, `PORT` (and every computed kind) open as a list.** A bare mnemonic whose kind has no search columns and no promoted
+  columns (a position, a system basket, a netting set: computed or kept by Drishti) failed with DRS-1001 "has no columns to show as a set";
+  its default declaration now falls back to the kind's data contract (key fields, the date field, then the other fields). A new test starts a
+  server on the demo with every module and opens every mnemonic of every pack that is on, and one record of each.
+
 - **Richer source field maps; the inbox date from the name.** A source module's map (`map:`) reads dotted paths into nested native JSON,
   `from: [a, b]` / `first-of` (the first non-empty), `scale`, `as` (`yyyymmdd`, `yyyymmddhhmmss`, `epoch-millis`, `epoch-seconds`, `iso`),
   `cast`, `values` and `value`, beside the older `fields:` form; the shipped SwapOne, WSS and ICI maps load as written and the end-to-end
