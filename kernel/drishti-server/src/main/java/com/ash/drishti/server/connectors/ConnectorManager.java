@@ -1328,11 +1328,12 @@ public final class ConnectorManager {
                 secrets.add(v);
             }
         });
-        List<String> kinds = d.kinds().isEmpty() ? usedBy(name).stream().flatMap(u -> {
+        // the kinds it serves: a reactive connector's own, else what its packs route to it and what config/bindings.yaml binds to it
+        List<String> kinds = d.kinds().isEmpty() ? java.util.stream.Stream.concat(usedBy(name).stream().flatMap(u -> {
             @SuppressWarnings("unchecked")
             List<String> ks = (List<String>) u.get("kinds");
             return ks.stream();
-        }).distinct().toList() : d.kinds();
+        }), bindings.kindsOf(name).stream()).distinct().toList() : d.kinds();
         ConnectionProbe.Result r = probe.probe(d.plugin(), kinds, read, probeDates, probeTimeoutMs);
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("connector", name);

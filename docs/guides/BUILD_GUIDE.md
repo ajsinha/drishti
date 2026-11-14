@@ -1932,9 +1932,9 @@ again with your choice and redraws the combinations.
 
 **3. Source.** Pack name (lower-case letters, digits, `-`), title, version, a *kind prefix* (put before every kind, so a kind another module provides
 is not taken: such a clash is refused when the module is made), the files root, and the connector. By default a **file connector** `<name>-files` is
-written, one **binding** for each kind in `bindings.yaml` and the connector in `connectors/`; with *Write the records to the files store* on, the
-uploaded records are written to `<files root>/<name>/<date>/<kind>.jsonl` so the connector can read them. An existing connector may be named instead.
-The binding goes to the site's config folder (`builder.pack_designer_site`; by default into the workspace, to copy or bind in Admin → Data bindings).
+made; with *Write the records to the files store* on, the uploaded records are written to `<files root>/<name>/<date>/<kind>.jsonl` so the connector
+can read them. An existing connector may be named instead. At Deploy the binding goes through the one bindings path: the file connector is saved on
+the server (Admin → Connectors) and each kind's binding is proposed to **Admin → Data bindings**, where a second administrator approves it.
 
 **4. Design.** The list on the left holds every Sutra with its rows and a **check badge** (`8/8`: the server's checker, every panel against the real
 rows of the combination); in the middle the Sutra's YAML in the code editor; on the right its **live screen**, drawn by the server from the YAML on one
@@ -1962,7 +1962,7 @@ sends. Both routes run `tools/packgen/module_from_jsonl.py`; the page runs it as
 
 `builder.pack_designer_max_mb` (uploaded bytes per workspace, 4096), `builder.pack_designer_max_files` (500), `builder.pack_designer_ttl_hours` (72),
 `builder.pack_designer_jobs_per_user` (2 running jobs), `builder.pack_designer_workers` (processes reading the files; 0: the tool's default),
-`builder.pack_designer_site` (where bindings are written), `builder.pack_designer_modules_dir` (where **Install on this node** puts the `.dmod`) and `builder.tools_dir` (the repository's `tools/` folder the job runs from).
+`builder.pack_designer_modules_dir` (where **Install on this node** puts the `.dmod`) and `builder.tools_dir` (the repository's `tools/` folder the job runs from).
 
 ### 8.1.3 From JSON Schema
 

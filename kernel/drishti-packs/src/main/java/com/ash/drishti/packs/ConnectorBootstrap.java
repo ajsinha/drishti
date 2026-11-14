@@ -53,8 +53,8 @@ public final class ConnectorBootstrap {
     /** A pack's template has moved on from a file the site edited: the file is kept and flagged. */
     public record TemplateChange(String name, String pack, List<String> oldKinds, List<String> newKinds) {
         public String message() {
-            return "the pack's template changed (kinds: " + String.join(", ", oldKinds) + " \u2192 " + String.join(", ", newKinds)
-                    + "); this file was edited and is kept. Reset to pack default to use the new template";
+            String kinds = oldKinds.equals(newKinds) ? "" : " (kinds: " + String.join(", ", oldKinds) + " \u2192 " + String.join(", ", newKinds) + ")";
+            return "the pack's template changed" + kinds + "; this file was edited and is kept. Reset to pack default to use the new template";
         }
     }
 

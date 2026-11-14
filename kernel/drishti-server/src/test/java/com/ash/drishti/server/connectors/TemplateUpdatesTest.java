@@ -47,7 +47,10 @@ class TemplateUpdatesTest {
             + "  region-economy: risk-store\nconnectors:\n  risk-store:\n    plugin: fake\n    kinds: [trade, valuation, region-economy]\n"
             + "    settings:\n      url: db://pack-default\n      pool: 4\n      layout:\n        trade: t\n        valuation: v\n        region-economy: r\n";
 
-    /** Generated from an older template: lacks valuation and region-economy, has an obsolete kind, and the url was edited. */
+    /**
+     * Generated from an older template: lacks the layouts of valuation and region-economy, has a layout of a kind since gone, and the url was
+     * edited. Its {@code kinds:} line is an earlier release's: not read (a connector serves what its plugin holds; config/bindings.yaml).
+     */
     private static final String STALE = "# Generated at first start from the connector template of pack 'risk'.\nplugin: fake\n"
             + "kinds: [trade, price-basket]\nsettings:\n  url: db://edited-by-admin\n  pool: 4\n  layout:\n    trade: t\n    price-basket: p\n";
 
@@ -101,26 +104,14 @@ class TemplateUpdatesTest {
     }
 
     @Test
-    void theDriftIsSortedIntoAdditiveConflictingAndObsolete(@TempDir Path dir) throws Exception {
+    void theDriftIsSortedIntoAdditiveAndConflicting(@TempDir Path dir) throws Exception {
         Node n = node(dir, null, TemplateUpdates.Mode.NOTIFY);
         TemplateUpdates.Drift d = n.updates().drift("risk-store").orElseThrow();
-        assertThat(d.missingKinds()).containsExactly("valuation", "region-economy");
         assertThat(d.newSettings()).containsOnlyKeys("layout.valuation", "layout.region-economy");
         assertThat(d.conflicting()).containsOnlyKeys("url");
-        assertThat(d.obsoleteKinds()).containsExactly("price-basket");
+        assertThat(d.missingKinds()).as("a connector file names no kinds").isEmpty();
+        assertThat(d.obsoleteKinds()).isEmpty();
         assertThat(n.updates().drifts()).hasSize(1);
-    }
-
-    /** A template naming a kind no pack declares (the market-risk pack's pv-updates: the stream's own pv-update) and its file. */
-    private static final String STREAM = "pack: risk\nkinds: [trade]\nroutes:\n  trade: risk-store\nconnectors:\n  risk-store:\n    plugin: fake\n"
-            + "    kinds: [trade, pv-update]\n    settings:\n      url: db://pack-default\n";
-    private static final String STREAM_FILE = "# Generated at first start from the connector template of pack 'risk'.\nplugin: fake\n"
-            + "kinds: [trade, pv-update]\nsettings:\n  url: db://pack-default\n";
-
-    @Test
-    void aKindTheTemplateItselfNamesIsNeverObsolete(@TempDir Path dir) throws Exception {
-        Node n = node(dir, null, TemplateUpdates.Mode.NOTIFY, STREAM, STREAM_FILE);
-        assertThat(n.updates().drift("risk-store").map(TemplateUpdates.Drift::obsoleteKinds).orElse(List.of())).isEmpty();
     }
 
     /** A pack whose layout gained columns (the VaR inputs in 2.9.4: RUN_KIND, COMPUTED_AT, VALUE_TYPE ...). */
@@ -191,14 +182,13 @@ class TemplateUpdatesTest {
     }
 
     @Test
-    void additiveMergesTheMissingKindsAndKeepsEveryEdit(@TempDir Path dir) throws Exception {
+    void additiveMergesTheMissingSettingsAndKeepsEveryEdit(@TempDir Path dir) throws Exception {
         Node n = node(dir, null, TemplateUpdates.Mode.ADDITIVE);
         assertThat(n.updates().check()).containsExactly("risk-store");
         ConnectorFiles.Definition d = n.files().read("risk-store");
-        assertThat(d.kinds()).containsExactly("trade", "price-basket", "valuation", "region-economy");     // obsolete never removed automatically
+        assertThat(d.kinds()).isEmpty();
         assertThat(d.settings()).containsEntry("url", "db://edited-by-admin")                              // the admin's edit is kept
                 .containsEntry("layout.valuation", "v").containsEntry("layout.region-economy", "r").containsEntry("layout.price-basket", "p");
-        assertThat(n.registry().applied("risk-store").orElseThrow().kinds()).contains("valuation", "region-economy");
         assertThat(n.files().history("risk-store")).isNotEmpty();
         assertThat(n.files().revisionText("risk-store", n.files().history("risk-store").get(0).id())).isEqualTo(STALE);
         assertThat(n.updates().notices()).hasSize(1);
@@ -212,15 +202,15 @@ class TemplateUpdatesTest {
     @Test
     void theButtonsWorkAndKeepTheHistory(@TempDir Path dir) throws Exception {
         Node n = node(dir, null, TemplateUpdates.Mode.OFF);
-        n.updates().removeObsolete("risk-store", null, "admin");
-        assertThat(n.files().read("risk-store").kinds()).containsExactly("trade");
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> n.updates().removeObsolete("risk-store", null, "admin"))
+                .hasMessageContaining("no kind that no pack serves");                          // a file names no kinds: none to remove
         n.updates().addMissing("risk-store", null, "admin");
-        assertThat(n.files().read("risk-store").kinds()).containsExactly("trade", "valuation", "region-economy");
-        assertThat(n.files().read("risk-store").settings()).containsEntry("url", "db://edited-by-admin");
+        assertThat(n.files().read("risk-store").settings()).containsEntry("layout.valuation", "v").containsEntry("layout.region-economy", "r")
+                .containsEntry("url", "db://edited-by-admin");
         n.updates().regenerate("risk-store", null, "admin");
         assertThat(n.files().read("risk-store").settings()).containsEntry("url", "db://pack-default");
         assertThat(n.updates().drift("risk-store").map(TemplateUpdates.Drift::any).orElse(false)).isFalse();
-        assertThat(n.files().history("risk-store")).hasSizeGreaterThanOrEqualTo(3);
+        assertThat(n.files().history("risk-store")).hasSizeGreaterThanOrEqualTo(2);
         assertThat(n.files().history("risk-store").stream().map(r -> n.files().revisionText("risk-store", r.id()))).contains(STALE);
     }
 
@@ -228,7 +218,7 @@ class TemplateUpdatesTest {
     void fixAllAdditiveMergesEveryConnector(@TempDir Path dir) throws Exception {
         Node n = node(dir, null, TemplateUpdates.Mode.OFF);
         assertThat(n.updates().fixAllAdditive("admin")).containsExactly("risk-store");
-        assertThat(n.files().read("risk-store").kinds()).contains("valuation", "region-economy");
+        assertThat(n.files().read("risk-store").settings()).containsKeys("layout.valuation", "layout.region-economy");
     }
 
     @Test
@@ -274,8 +264,7 @@ class TemplateUpdatesTest {
         assertThat(d.toMap().get("conflicting").toString()).contains("where=settings").contains("key=url");
         n.updates().useTemplateValue("risk-store", "settings", "url", d.etag(), "admin");
         ConnectorFiles.Definition after = n.files().read("risk-store");
-        assertThat(after.settings()).containsEntry("url", "db://pack-default").containsEntry("layout.price-basket", "p");
-        assertThat(after.kinds()).contains("price-basket");                                       // the obsolete kind is still the admin's to remove
+        assertThat(after.settings()).containsEntry("url", "db://pack-default").containsEntry("layout.price-basket", "p");   // the rest kept
         assertThat(audited).anyMatch(a -> a.contains("used pack risk's value for url"));
         org.assertj.core.api.Assertions.assertThatThrownBy(() -> n.updates().useTemplateValue("risk-store", "settings", "url", null, "admin"))
                 .hasMessageContaining("no conflicting setting");

@@ -62,11 +62,16 @@ import org.springframework.mock.env.MockEnvironment;
  */
 class BindingServiceTest {
 
-    /** A plugin that could serve any kind; its connector's kinds decide what it serves. */
+    /** A plugin that could serve any kind and holds only trades: a connector serves what its plugin holds (a binding names it for more). */
     public static final class Fake implements SourcePlugin {
         @Override
         public PluginManifest manifest() {
             return new PluginManifest("fake", "t", Set.of(), SourceCapabilities.FETCH_ONLY);
+        }
+
+        @Override
+        public boolean holdsNone(String kind) {
+            return !"trade".equals(kind);
         }
 
         @Override

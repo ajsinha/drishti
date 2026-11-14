@@ -229,9 +229,9 @@ another module's id adds its columns, as economy and capital-markets do to marke
 keeps only the kernel's pages. A module's menu is in the top bar only while the module is active: in the running distribution, installed,
 loaded and on at this site; it goes and comes back at the next page when that changes.
 
-**The old keys, read for one release.** `drishti.edition` (`DRISHTI_EDITION`) is no longer read (a lens file is never an instance's
-filter); a site's `drishti.branding.*`, `DRISHTI_PRODUCT`, `ui.product`, `ui.tagline`,
-`ui.copyright`, `ui.owner`, `ui.notice` still win over the file. Health names each one as deprecated.
+**The old keys, no longer read.** `drishti.edition` (`DRISHTI_EDITION`: a lens file is never an instance's filter), and a site's
+`drishti.branding.*`, `DRISHTI_PRODUCT`, `ui.product`, `ui.tagline`, `ui.copyright`, `ui.owner`, `ui.notice` (the file's `brand:`
+decides). Health names each one a site still sets.
 
 **Health and Admin.** Admin → Health shows the console's and the server's distribution, which of its modules loaded ("loaded", "off",
 "not installed": a listed module whose package is not deployed) and the deprecation notes; `GET /api/v1/health` carries the same under
