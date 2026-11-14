@@ -39,20 +39,15 @@ depends-on:
   - core
   - market-data
   connectors:
-  - trade-calypso
-  - trade-endur
-  - trade-murex
   - trade-pages
   - trading-stream
   plugins:
-  - delta
   - derived
   - kafka
   settings:
   - DRISHTI_CACHE_RESET_AT
   - DRISHTI_CACHE_ROOT
   - DRISHTI_KAFKA_BOOTSTRAP
-  - DRISHTI_LAKE_ENABLED
   - DRISHTI_STREAM_CACHE_GB
   - DRISHTI_STREAM_DISK_CACHE
   - DRISHTI_STREAM_STALE_AFTER
@@ -83,7 +78,7 @@ Every kind the pack owns, read from its manifest, its samples and its Sutras: ho
 
 ### `trade`
 
-**Trade** · mnemonic `TRD` · read through connector `trade-endur`.
+**Trade** · mnemonic `TRD`.
 
 **Id:** field `TRADE_ID`; pattern `^(MX|CLY)-\d+$`; for example `1000001`.
 
@@ -416,13 +411,10 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 
 | Connector | Plugin | Kinds | Enabled |
 |---|---|---|---|
-| `trade-endur` | `delta` | `trade` | `${DRISHTI_LAKE_ENABLED:true}` |
-| `trade-calypso` | `delta` | `trade` | `${DRISHTI_LAKE_ENABLED:true}` |
-| `trade-murex` | `delta` | `trade` | `${DRISHTI_LAKE_ENABLED:true}` |
 | `trading-stream` | `kafka` | `trade` | `${DRISHTI_STREAM_TRADING:false}` |
 | `trade-pages` | `derived` | `counterparty-trades`, `portfolio-trades`, `legal-entity-trades`, `index-trades` | on |
 
-Settings (environment variables) its connectors read: `DRISHTI_CACHE_RESET_AT`, `DRISHTI_CACHE_ROOT`, `DRISHTI_KAFKA_BOOTSTRAP`, `DRISHTI_LAKE_ENABLED`, `DRISHTI_STREAM_CACHE_GB`, `DRISHTI_STREAM_DISK_CACHE`, `DRISHTI_STREAM_STALE_AFTER`, `DRISHTI_STREAM_TRADING`, `DRISHTI_TRADING_TOPIC`.
+Settings (environment variables) its connectors read: `DRISHTI_CACHE_RESET_AT`, `DRISHTI_CACHE_ROOT`, `DRISHTI_KAFKA_BOOTSTRAP`, `DRISHTI_STREAM_CACHE_GB`, `DRISHTI_STREAM_DISK_CACHE`, `DRISHTI_STREAM_STALE_AFTER`, `DRISHTI_STREAM_TRADING`, `DRISHTI_TRADING_TOPIC`.
 
 ## Refreshing the data
 
