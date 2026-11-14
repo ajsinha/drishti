@@ -632,6 +632,11 @@ public enum ErrorCode {
     EDIT_NOT_FOUND("DRS-9305", 404),
     /** Write-back: edits are paused (the edit primary is not reachable, or this cluster has no shared edit log); reading is not affected. */
     EDIT_PAUSED("DRS-9306", 503),
+    /**
+     * Live result sets (modules/trading/docs/guide.md): a declaration ({@code *.blotter.yaml}) was set aside at load: its shape, a format
+     * not in formats.yaml, a field not in the kind's contract, or an editable field without a write path. Admin lists why.
+     */
+    LIVE_SET_INVALID("DRS-9307", 422),
     /** Busy protection (docs/guides/OPERATIONS_GUIDE.md, "Busy protection"): the server is very busy, a new sign-in waits; people signed in keep working. */
     BUSY_SIGN_IN("DRS-9501", 503),
     /** Busy protection: a business date cannot be opened just yet (memory, the loads running, the open dates' memory, disk); open dates keep working. */

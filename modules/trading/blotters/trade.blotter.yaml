@@ -18,8 +18,8 @@ title: Trade blotter
 kind: trade
 query: "trade where TRADE_STATUS != 'CANCELLED'"   # the rows it holds, in the search grammar; a FORM search is the same without edit:
 key: TRADE_ID
-version: TRADE_VERSION                  # the guard: an edit made on an older version is refused, naming who changed it
-changed-by: UPDATED_BY
+version: TRADE_VERSION                  # the guard: an edit made on an older version is refused, naming the version and when it was made
+# who made a version: changed-by names a field of the kind's data contract; the trade contract has none (the demo stream's UPDATED_BY is not part of it)
 changed-at: SOURCE_UPDATE_TIME
 columns:
 - { field: TRADE_ID, label: Trade, type: id, width: 120 }
@@ -31,11 +31,10 @@ columns:
 - { field: PRODUCT_TYPE, label: Product }
 - { field: BUY_SELL_CODE, label: B/S, width: 48 }
 - { field: QUANTITY, label: Quantity, type: amount, format: amount0 }
-- { field: PRICE, label: Price, type: number, format: number4 }
+- { field: PRICE, label: Price, type: number, format: price4 }
 - { field: CURRENCY, label: Ccy, width: 56 }
 - { field: TRADE_DATE, label: Trade date, type: date }
 - { field: MATURITY_DATE, label: Maturity, type: date }
-- { field: TAGS, label: Tags, type: list }
 - { field: SOURCE_UPDATE_TIME, label: Updated, type: datetime }
 group-by: []                            # grouping (desk and book with live subtotals) is a choice on the grid
 subtotals: [QUANTITY]

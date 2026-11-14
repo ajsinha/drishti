@@ -49,10 +49,14 @@ import java.util.function.UnaryOperator;
  * leaves. The live side is subscribed to before the snapshot is read, so nothing between the two is lost; what arrived meanwhile is applied
  * after it, by version.
  *
- * <p>Shared by every viewer of the same declaration and condition, and nothing in it belongs to a person: rows are kept as the source
- * holds them; each viewer's {@link Window} masks what it sends as that viewer may see it. Changes reach a window coalesced (the latest per
- * record) and are flushed every few milliseconds; a window that falls further behind than its capacity is told to resync instead
- * (back-pressure: a burst never queues without bound). A paged window is sent changes of the rows it shows and the new total only.
+ * <p>Shared by every viewer of the same declaration and condition (a search's set: of the same audience, {@link LiveReader}), and nothing
+ * in it belongs to a person: rows are kept as the source holds them; every read and each viewer's {@link Window} keeps to the reader's row
+ * scope and masks what it sends as that reader may see it. Changes reach a window coalesced (the latest per record) and are flushed every
+ * few milliseconds; a window that falls further behind than its capacity is told to resync instead (back-pressure: a burst never queues
+ * without bound). A paged window is sent changes of the rows it shows and the new total only.
+ *
+ * <p>Paged from the store ({@link StorePages}): the snapshot stays in the lake and {@code rows} holds the live side only (the records
+ * changed since the set opened, and {@code removed} the ones deleted or that stopped holding the condition); pages merge the two by key.
  */
 public final class LiveSet implements AutoCloseable {
 
@@ -78,6 +82,12 @@ public final class LiveSet implements AutoCloseable {
     private final Predicate<DataNode> holds;
     private final Clock clock;
     private final Map<String, Row> rows = new ConcurrentHashMap<>();
+    /** Paged from the store: the keys the live side deleted or that stopped holding the condition (they hide the store's record). */
+    private final Set<String> removed = ConcurrentHashMap.newKeySet();
+    /** The store the set pages from, or null: the snapshot is read whole into {@code rows}. */
+    private volatile StorePages pages;
+    /** A search's set: the audience it was filled for (only readers of it read it); null for a declared set. */
+    private volatile String audience;
     private final AtomicLong seq = new AtomicLong();
     private final ReentrantLock lock = new ReentrantLock();
     private final Deque<EntityDocument> early = new ArrayDeque<>();
@@ -133,6 +143,24 @@ public final class LiveSet implements AutoCloseable {
         capped = c;
     }
 
+    /** Pages from the store: the snapshot stays there and only the live side is kept here. */
+    void pages(StorePages p) {
+        pages = p;
+    }
+
+    public boolean paged() {
+        return pages != null;
+    }
+
+    /** The audience a search's set was filled for; null for a declared set. */
+    public String audience() {
+        return audience;
+    }
+
+    void audience(String a) {
+        audience = a;
+    }
+
     /** When its snapshot was read. */
     public Instant openedAt() {
         return openedAt;
@@ -144,7 +172,9 @@ public final class LiveSet implements AutoCloseable {
         subscription = s == null ? Subscription.NONE : s;
         live = subscription != Subscription.NONE;
         openedAt = Instant.now(clock);
-        snapshot.read(d -> apply(d, false, matched));
+        if (snapshot != null) {
+            snapshot.read(d -> apply(d, false, matched));
+        }
         lock.lock();
         try {
             while (!early.isEmpty()) {
@@ -186,9 +216,13 @@ public final class LiveSet implements AutoCloseable {
                 return;
             }
             Row old = rows.get(id);
+            boolean paged = pages != null;
             if (d.deleted()) {
-                if (old != null) {
+                if (old != null || paged) {
                     rows.remove(id);
+                    if (paged) {
+                        removed.add(id);                      // the store's record of it is hidden too
+                    }
                     changed(null, id);
                 }
                 return;
@@ -202,8 +236,11 @@ public final class LiveSet implements AutoCloseable {
                 gaps.incrementAndGet();                       // versions skipped: the record is whole, so the newest is still right
             }
             if (!known && !holds.test(d.data())) {
-                if (old != null) {
+                if (old != null || paged) {
                     rows.remove(id);
+                    if (paged) {
+                        removed.add(id);
+                    }
                     changed(null, id);
                 }
                 return;
@@ -211,6 +248,7 @@ public final class LiveSet implements AutoCloseable {
             long n = seq.incrementAndGet();
             Row r = new Row(id, v, n, d.data(), Instant.now(clock), old == null ? n : old.rank());
             rows.put(id, r);
+            removed.remove(id);
             applied.incrementAndGet();
             if (push) {
                 changed(r, id);
@@ -233,10 +271,18 @@ public final class LiveSet implements AutoCloseable {
             DataNode k = d.data().get(spec.key());
             if (!k.isNull()) {
                 Object v = k.unwrap();
-                return v == null ? null : String.valueOf(v);
+                return v == null ? null : keyText(v);
             }
         }
         return d.ref().id();
+    }
+
+    /** A key's text: a whole number without its decimals (a store's column may read {@code 42} as {@code 42.0}). */
+    static String keyText(Object v) {
+        if (v instanceof Double x && x == Math.rint(x) && !Double.isInfinite(x) && Math.abs(x) < 1e15) {
+            return String.valueOf(x.longValue());
+        }
+        return String.valueOf(v);
     }
 
     /** The record's version, or -1 when the declaration names none (the latest arrival wins). */
@@ -265,12 +311,15 @@ public final class LiveSet implements AutoCloseable {
         try {
             int dropped = 0;
             Instant now = Instant.now(clock);
+            boolean paged = pages != null;                    // paged: a dropped change shows the store's record again
             if (ret.ttl() != null) {
                 Instant cut = now.minus(ret.ttl());
                 for (Row r : List.copyOf(rows.values())) {
                     if (age(r).isBefore(cut)) {
                         rows.remove(r.id());
-                        changed(null, r.id());
+                        if (!paged) {
+                            changed(null, r.id());
+                        }
                         dropped++;
                     }
                 }
@@ -280,9 +329,14 @@ public final class LiveSet implements AutoCloseable {
                 all.sort(Comparator.comparing(this::age));
                 for (int i = 0; i < all.size() - ret.maxRows(); i++) {
                     rows.remove(all.get(i).id());
-                    changed(null, all.get(i).id());
+                    if (!paged) {
+                        changed(null, all.get(i).id());
+                    }
                     dropped++;
                 }
+            }
+            if (paged && dropped > 0) {
+                windows.forEach(Window::resync);
             }
             expired.addAndGet(dropped);
             return dropped;
@@ -334,26 +388,47 @@ public final class LiveSet implements AutoCloseable {
     }
 
     /**
-     * One page of the rows that also hold {@code filter} (a text every shown value is searched for, case ignored), sorted, as maps
-     * masked by {@code redact}. {@code total} is the count before paging.
+     * One page of the rows the reader may see (their row scope) that also hold {@code filter} (a text the shown values are searched for,
+     * case ignored), sorted, as maps masked as the reader sees them. {@code total} is the count before paging. Paged from the store, the
+     * store's records and the live side are merged by key.
      */
-    public Page page(int offset, int limit, String sortField, boolean descending, String filter, UnaryOperator<DataNode> redact) {
+    public Page page(int offset, int limit, String sortField, boolean descending, String filter, LiveReader reader) {
+        LiveReader who = reader == null ? LiveReader.everyone() : reader;
         String f = filter == null || filter.isBlank() ? null : filter.toLowerCase(Locale.ROOT);
+        String by = sortField != null && !sortField.isBlank() ? sortField : spec.sortField();
+        boolean desc = sortField != null && !sortField.isBlank() ? descending : spec.descending();
+        List<String> shown = shownFields();
+        StorePages p = pages;
+        if (p != null) {
+            Map<String, Row> now = new java.util.HashMap<>(rows);       // one view of the live side for the whole page
+            Set<String> gone = Set.copyOf(removed);
+            List<StorePages.Live> live = new ArrayList<>();
+            for (Row r : now.values()) {
+                if (!who.scope().test().test(r.doc())) {
+                    continue;
+                }
+                DataNode seen = who.redact().apply(r.doc());
+                if (f != null && !text(project(seen, shown)).contains(f)) {
+                    continue;
+                }
+                live.add(new StorePages.Live(r.id(), by == null ? null : seen.get(by).unwrap(), r));
+            }
+            return p.page(offset, limit, by, desc, f, who, shown, now, gone, live, seq.get(), this::versionOf);
+        }
         // filtered and sorted on what the viewer may see: a masked value never decides which rows show or their order
         List<Row> all = new ArrayList<>();
         for (Row r : rows.values()) {
-            Row seen = redact == null ? r : new Row(r.id(), r.version(), r.seq(), redact.apply(r.doc()), r.arrived(), r.rank());
-            if (f == null || text(seen.doc()).contains(f)) {
+            if (!who.scope().test().test(r.doc())) {
+                continue;                                     // outside the reader's row scope: never counted, never shown
+            }
+            Row seen = who.unmasked() ? r : new Row(r.id(), r.version(), r.seq(), who.redact().apply(r.doc()), r.arrived(), r.rank());
+            if (f == null || text(project(seen.doc(), shown)).contains(f)) {
                 all.add(seen);
             }
         }
-        String by = sortField != null && !sortField.isBlank() ? sortField : spec.sortField();
-        boolean desc = sortField != null && !sortField.isBlank() ? descending : spec.descending();
         Comparator<Row> cmp = by == null ? (matched ? Comparator.comparingLong(Row::rank) : Comparator.comparingLong(Row::seq).reversed())
-                : Comparator.comparing(r -> sortKey(r, by), LiveSet::compare);
-        if (by != null && desc) {
-            cmp = Comparator.comparing((Row r) -> sortKey(r, by), (a, b) -> compareDescending(a, b));
-        }
+                : (a, b) -> desc ? compareDescending(a.doc().get(by).unwrap(), b.doc().get(by).unwrap())
+                        : compareValues(a.doc().get(by).unwrap(), b.doc().get(by).unwrap());
         all.sort(cmp.thenComparing(Row::id));
         int from = Math.max(0, Math.min(offset, all.size()));
         int to = Math.min(all.size(), from + Math.max(1, limit));
@@ -364,18 +439,76 @@ public final class LiveSet implements AutoCloseable {
         return new Page(out, all.size(), seq.get());
     }
 
+    /** The fields the grid shows (the filter searches their values); empty: the whole record. */
+    List<String> shownFields() {
+        return spec.columns().stream().map(c -> String.valueOf(c.get("field"))).filter(x -> !"null".equals(x)).toList();
+    }
+
+    /** The shown fields of a record; the record itself when none are declared. */
+    static DataNode project(DataNode d, List<String> fields) {
+        if (fields.isEmpty()) {
+            return d;
+        }
+        Object[] v = new Object[fields.size()];
+        Map<String, Integer> at = new java.util.HashMap<>();
+        for (int i = 0; i < fields.size(); i++) {
+            v[i] = d.get(fields.get(i)).unwrap();
+            at.put(fields.get(i), i);
+        }
+        return StorePages.node(fields, v, fields, at);
+    }
+
+    /** How many rows the reader may see (their row scope): the store's and the live side's when paged. */
+    public int total(LiveReader reader) {
+        return total(reader, true);
+    }
+
+    /** {@link #total(LiveReader)}; {@code fresh} false (a stream's flush): the index read last for the reader, never a read of the store. */
+    int total(LiveReader reader, boolean fresh) {
+        LiveReader who = reader == null ? LiveReader.everyone() : reader;
+        StorePages p = pages;
+        if (p != null) {
+            return p.count(who, new java.util.HashMap<>(rows), Set.copyOf(removed), r -> who.scope().test().test(r.doc()), fresh);
+        }
+        if (who.scope().all()) {
+            return rows.size();
+        }
+        int n = 0;
+        for (Row r : rows.values()) {
+            if (who.scope().test().test(r.doc())) {
+                n++;
+            }
+        }
+        return n;
+    }
+
     /** A page: its rows, the total before paging and the sequence it is consistent with. */
     public record Page(List<Map<String, Object>> rows, int total, long seq) {}
 
-    /** One record as a viewer may see it; empty when it is not in the set. */
-    public java.util.Optional<Map<String, Object>> row(String id, UnaryOperator<DataNode> redact) {
-        Row r = rows.get(id);
-        return r == null ? java.util.Optional.empty() : java.util.Optional.of(shown(r, redact));
+    /**
+     * One record as the reader may see it; empty when it is not in the set or outside the reader's row scope. Paged from the store, a
+     * record the live side does not hold is read from the store and must hold the set's condition.
+     */
+    public java.util.Optional<Map<String, Object>> row(String id, LiveReader reader) {
+        LiveReader who = reader == null ? LiveReader.everyone() : reader;
+        Row r = current(id);
+        if (r != null && pages != null && !rows.containsKey(id) && !holds.test(r.doc())) {
+            r = null;
+        }
+        if (r == null || !who.scope().test().test(r.doc())) {
+            return java.util.Optional.empty();
+        }
+        return java.util.Optional.of(shown(r, who.redact()));
     }
 
-    /** The record's current version, or null when the set does not hold it. */
+    /** The record's current version, or null when the set does not hold it (paged: the live side's, else the store's). */
     public Row current(String id) {
-        return rows.get(id);
+        Row r = rows.get(id);
+        StorePages p = pages;
+        if (r == null && p != null && !removed.contains(id)) {
+            r = p.lookup(id, this::versionOf);
+        }
+        return r;
     }
 
     static Map<String, Object> shown(Row r, UnaryOperator<DataNode> redact) {
@@ -388,42 +521,53 @@ public final class LiveSet implements AutoCloseable {
         return m;
     }
 
-    private static Comparable<Object> sortKey(Row r, String field) {
-        Object v = r.doc().get(field).unwrap();
-        @SuppressWarnings("unchecked")
-        Comparable<Object> c = v instanceof Comparable<?> cc ? (Comparable<Object>) cc : null;
-        return c;
-    }
-
     /** Descending, with values that are not there still last. */
-    private static int compareDescending(Comparable<Object> a, Comparable<Object> b) {
+    static int compareDescending(Object a, Object b) {
         if (a == null || b == null) {
             return a == null ? (b == null ? 0 : 1) : -1;
         }
-        return -compare(a, b);
+        return -compareValues(a, b);
     }
 
-    private static int compare(Comparable<Object> a, Comparable<Object> b) {
+    /** Ascending, values that are not there last; numbers as numbers, else the values' own order, else their text. */
+    @SuppressWarnings("unchecked")
+    static int compareValues(Object a, Object b) {
         if (a == null || b == null) {
             return a == null ? (b == null ? 0 : 1) : -1;
         }
         if (a instanceof Number x && b instanceof Number y) {
             return Double.compare(x.doubleValue(), y.doubleValue());
         }
-        try {
-            return a.compareTo(b);
-        } catch (ClassCastException e) {
-            return String.valueOf(a).compareTo(String.valueOf(b));
+        if (a instanceof Comparable<?> ca && a.getClass() == b.getClass()) {
+            try {
+                return ((Comparable<Object>) ca).compareTo(b);
+            } catch (ClassCastException e) {
+                // text below
+            }
+        }
+        return String.valueOf(a).compareTo(String.valueOf(b));
+    }
+
+    /** The values of a record as one lower-case text (no field names: a filter finds values only). */
+    static String text(DataNode d) {
+        StringBuilder b = new StringBuilder();
+        values(d.unwrap(), b);
+        return b.toString().toLowerCase(Locale.ROOT);
+    }
+
+    private static void values(Object o, StringBuilder b) {
+        if (o instanceof Map<?, ?> m) {
+            m.values().forEach(v -> values(v, b));
+        } else if (o instanceof java.util.Collection<?> c) {
+            c.forEach(v -> values(v, b));
+        } else if (o != null) {
+            b.append(o).append('\n');
         }
     }
 
-    private static String text(DataNode d) {
-        return String.valueOf(d.unwrap()).toLowerCase(Locale.ROOT);
-    }
-
-    /** Opens a viewer's window. */
-    Window window(UnaryOperator<DataNode> redact, Consumer<Map<String, Object>> sink, int capacity) {
-        Window w = new Window(redact, sink, capacity);
+    /** Opens a reader's window. */
+    Window window(LiveReader reader, Consumer<Map<String, Object>> sink, int capacity) {
+        Window w = new Window(reader == null ? LiveReader.everyone() : reader, sink, capacity);
         windows.add(w);
         return w;
     }
@@ -441,13 +585,13 @@ public final class LiveSet implements AutoCloseable {
     }
 
     /**
-     * A viewer's window: changes coalesced per record until the next flush, masked as the viewer may see them. Paged ({@link #paged}),
-     * it is sent changes of the rows it shows and the total only. Over {@code capacity} records waiting, it drops them and asks the viewer
-     * to resync.
+     * A reader's window: changes coalesced per record until the next flush, kept to the reader's row scope and masked as they may see
+     * them (a record that leaves their scope is a removal to them, one outside it is never shown). Paged ({@link #paged}), it is sent
+     * changes of the rows it shows and the total only. Over {@code capacity} records waiting, it drops them and asks the viewer to resync.
      */
     public final class Window {
 
-        private final UnaryOperator<DataNode> redact;
+        private final LiveReader reader;
         private final Consumer<Map<String, Object>> sink;
         private final int capacity;
         private final ReentrantLock wl = new ReentrantLock();
@@ -456,8 +600,8 @@ public final class LiveSet implements AutoCloseable {
         private boolean totalChanged;
         private volatile Set<String> visible;             // null: the viewer holds every row
 
-        Window(UnaryOperator<DataNode> redact, Consumer<Map<String, Object>> sink, int capacity) {
-            this.redact = redact;
+        Window(LiveReader reader, Consumer<Map<String, Object>> sink, int capacity) {
+            this.reader = reader;
             this.sink = sink;
             this.capacity = Math.max(16, capacity);
         }
@@ -467,7 +611,19 @@ public final class LiveSet implements AutoCloseable {
             visible = ids == null ? null : Set.copyOf(ids);
         }
 
+        /** Asks the viewer to read its page again (the live side dropped rows the store holds). */
+        void resync() {
+            wl.lock();
+            try {
+                pending = new LinkedHashMap<>();
+                overflow = true;
+            } finally {
+                wl.unlock();
+            }
+        }
+
         void offer(String id, Row r) {
+            Row mine = r != null && !reader.scope().test().test(r.doc()) ? null : r;   // outside the reader's scope: a removal to them
             wl.lock();
             try {
                 Set<String> v = visible;
@@ -478,7 +634,7 @@ public final class LiveSet implements AutoCloseable {
                 if (overflow) {
                     return;
                 }
-                pending.put(id, r);
+                pending.put(id, mine);
                 if (pending.size() > capacity) {
                     pending = new LinkedHashMap<>();
                     overflow = true;
@@ -510,7 +666,7 @@ public final class LiveSet implements AutoCloseable {
             Map<String, Object> ev = new LinkedHashMap<>();
             if (resync) {
                 ev.put("type", "resync");
-                ev.put("reason", "more than " + capacity + " records changed before they could be sent");
+                ev.put("reason", "more than " + capacity + " records changed before they could be sent, or the live side was trimmed");
             } else {
                 List<Map<String, Object>> up = new ArrayList<>();
                 List<String> rm = new ArrayList<>();
@@ -518,7 +674,7 @@ public final class LiveSet implements AutoCloseable {
                     if (r == null) {
                         rm.add(id);
                     } else {
-                        up.add(shown(r, redact));
+                        up.add(shown(r, reader.redact()));
                     }
                 });
                 ev.put("type", "rows");
@@ -526,7 +682,7 @@ public final class LiveSet implements AutoCloseable {
                 ev.put("removes", rm);
                 ev.put("countOnly", up.isEmpty() && rm.isEmpty() && count);
             }
-            ev.put("total", rows.size());
+            ev.put("total", total(reader, false));           // the flush thread never reads the store
             ev.put("seq", seq.get());
             sink.accept(ev);
             return true;
@@ -552,6 +708,13 @@ public final class LiveSet implements AutoCloseable {
         m.put("retention", spec.retention() == null ? null : spec.retention().describe());
         m.put("search", matched);
         m.put("capped", capped);
+        StorePages p = pages;
+        m.put("paged", p != null);
+        if (p != null) {
+            m.put("storeRows", p.lastCount() < 0 ? null : p.lastCount());
+            m.put("indexes", p.indexes());
+            m.put("removed", removed.size());
+        }
         return m;
     }
 

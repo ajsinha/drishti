@@ -455,11 +455,11 @@ write path are in [the trading module's guide](../../modules/trading/docs/guide.
 
 | Method | Path | What it does |
 |---|---|---|
-| `GET` | `/live` | the declarations the caller may open (`editable`, `readOnly` for them); for administrators those set aside and the open sets |
+| `GET` | `/live` | the declarations the caller may open (`editable`, `readOnly` for them; an editable one's `fields` with `readonly`, `pattern`, `maxLength`); for administrators those set aside (`problems`, each `DRS-9307`) and the open sets. Every answer of `/live` is kept to the caller (their masks and row scope); a search's set is read only by the audience it was filled for |
 | `GET` | `/live/{id}/rows` | a page: `offset`, `limit` (at most 5,000), `sort`, `descending`, `filter`, `query`; `{set, live, total, seq, rows[{id, version, seq, doc}]}` |
 | `GET` | `/live/{id}/rows/{entity}` | one record whole, masked for the caller (the panel's Raw JSON) |
 | `GET` | `/live/query` | a search's matches as a live set (a FORM's result, the search page's): `q` (the search), `offset`, `limit` (1,000), `sort`, `descending`, `filter`, `again` (Search pressed: a static set is read afresh); the page as `/live/{id}/rows` plus `search` (`columns`, `labels`, `matched`, `scanned`, `partial`, `failed`, `noData`, `pivot`); `set.id` streams while `live` is true (the live business date and a kind with a `live:` binding). One set per search, business date and masking, shared |
-| `GET` | `/live/kinds/{word}/rows` | a kind's own set (`POS <GO>`): `word` is its mnemonic or name; its module's declaration, else the default made from its contract (the key fields, else the promoted columns); `capped: true` when the kind holds more than `drishti.live-sets.default-max-rows` (250,000) |
+| `GET` | `/live/kinds/{word}/rows` | a kind's own set (`POS <GO>`): `word` is its mnemonic or name; its module's declaration, else the default made from its contract (the key fields, else the promoted columns); a kind a lake keeps as columns is paged from the store (every record, the total exact); `capped: true` only when a kind that cannot be paged holds more than `drishti.live-sets.default-max-rows` (250,000) |
 | `GET` | `/live/{id}/stream` | server-sent events: `hello`, then `rows` `{upserts, removes, total, seq, countOnly}` or `resync` |
 | `POST` | `/live/{id}/stream/{stream}/window` | the page a stream shows: `{ids}` or `{all: true}`; the stream's owner only |
 | `POST` | `/live/{id}/edit` | `{entity, basedOn, reason, items[{field, from, to}]}`; `403 DRS-9302` read-only (with why, audited), `409 DRS-9303` a stale version |
@@ -3292,6 +3292,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-9304 | 503 | Edit lane busy | The record's lane is full (`lanes.max-lane-depth`): try again in a moment; your draft is kept |
 | DRS-9305 | 404 | Change not found | no such change id (HTTP 404) |
 | DRS-9306 | 503 | Edits paused | edits are paused: the edit primary named by `edit.primary` is not reachable, or the cluster has no shared edit log (use PostgreSQL for the server's database, or name an edit primary); reading is not affected (HTTP 503) |
+| DRS-9307 | 422 | Live set declaration invalid | a live result set's declaration (`blotters/*.blotter.yaml`) was set aside at load: its shape, a format not in `formats.yaml`, a field not in the kind's data contract, or an editable field with no write path. `GET /api/v1/live` lists why for administrators; asking for the set answers this code (HTTP 422) |
 | DRS-9501 | 503 | Busy: sign-in waits | busy protection: the server is very short of memory (after clean-up, over `drishti.admission.memory-refuse-sign-in`, 92%), so a new sign-in waits; people signed in keep working. `Retry-After` says when to try again; the body carries `busy`, `title`, `because`, `retryAfterSeconds` ([OPERATIONS_GUIDE.md section 12.5](OPERATIONS_GUIDE.md#147-busy-protection-refuse-politely-never-fall-over)) |
 | DRS-9502 | 503 | Busy: a date waits | busy protection: a VaR or exposure date not yet open cannot be opened just yet (memory, that engine's loads full, the open dates over their safety net, request handlers, disk); dates already open keep answering; `Retry-After` |
 | DRS-9503 | 503 | Busy: a download waits | busy protection: an Export data download did not start (memory, request handlers, disk); nothing was sent; `Retry-After` |

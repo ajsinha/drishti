@@ -39,6 +39,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -85,11 +86,6 @@ public final class LiveSets implements AutoCloseable {
         }
 
         /**
-         * A search's matches as a set's snapshot (a FORM's result, the search page's): each match to the sink as its document masked by
-         * {@code mask}, in the search's order, run as {@code who} (across Drishti*net's nodes as the search is); answers what the search said (kind, mnemonic, columns, labels, matched, scanned, partial,
-         * failed, elapsedMs, noData, pivot), the shape {@code GET /api/v1/live/query} gives as {@code search}.
-         */
-        /**
          * The default declaration of a kind (a bare mnemonic, {@code POS <GO>}), made from its contract: the entity id as the key, the
          * kind's search columns (its key fields, else its promoted columns), read-only. Empty when the kind has none to show.
          */
@@ -97,6 +93,25 @@ public final class LiveSets implements AutoCloseable {
             return Optional.empty();
         }
 
+        /**
+         * The kind's durable store for paging ({@link StorePages}): present when the kind's store reads it whole by columns (Delta,
+         * Iceberg, files through the bindings); empty: the set reads its snapshot whole into memory ({@code default-max-rows} caps a
+         * default set).
+         */
+        default Optional<StorePages.Store> store(String kind) {
+            return Optional.empty();
+        }
+
+        /** The fields a condition reads ({@code TRD where TRADE_STATUS != 'X'}: TRADE_STATUS); empty when they cannot be told. */
+        default Optional<List<String>> fields(String query) {
+            return Optional.empty();
+        }
+
+        /**
+         * A search's matches as a set's snapshot (a FORM's result, the search page's): each match to the sink as its document masked by
+         * {@code mask}, in the search's order, run as {@code who} (across Drishti*net's nodes as the search is); answers what the search said (kind, mnemonic, columns, labels, matched, scanned, partial,
+         * failed, elapsedMs, noData, pivot), the shape {@code GET /api/v1/live/query} gives as {@code search}.
+         */
         default Map<String, Object> search(String command, AsOf asOf, Principal who, UnaryOperator<DataNode> mask,
                 java.util.function.Consumer<EntityDocument> sink) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "this server runs no searches into live sets");
@@ -109,6 +124,19 @@ public final class LiveSets implements AutoCloseable {
      */
     public interface Access {
         String readOnly(Principal p, LiveSetSpec spec);
+    }
+
+    /**
+     * What a person may see of a kind's sets, as a {@link LiveReader} made for each request: the audience (everything that decides what
+     * they see), their masks and their row scope (modules/trading/docs/guide.md section 7, "Who sees what").
+     */
+    public interface Visibility {
+        LiveReader reader(Principal p, String kind);
+    }
+
+    /** A declaration's problems beyond its own shape (formats, the kind's contract, the edit's write path); empty when none. */
+    public interface Validator {
+        List<String> problems(LiveSetSpec spec);
     }
 
     /** The audit log: actor, action, subject, detail. */
@@ -137,6 +165,11 @@ public final class LiveSets implements AutoCloseable {
     private volatile Submit submit;
     private volatile Access access = (p, s) -> s.editable() ? null : "its declaration names no editable fields";
     private volatile Audit audit = (a, b, c, d) -> { };
+    private volatile Visibility visibility = (p, kind) -> new LiveReader(p == null ? "" : p.securitySignature(), null, LiveReader.Scope.ALL,
+            p == null || p.roles().contains("admin") || p.roles().contains("*"));
+    private volatile Validator validator = s -> List.of();
+    /** The declarations set aside, by id, with why (refused with DRS-9307 when asked for). */
+    private final Map<String, String> asideById = new ConcurrentHashMap<>();
 
     /**
      * @param sources the snapshot and live side
@@ -161,6 +194,28 @@ public final class LiveSets implements AutoCloseable {
     public LiveSets access(Access a) {
         this.access = a;
         return this;
+    }
+
+    /** What each person may see of a kind's sets. */
+    public LiveSets visibility(Visibility v) {
+        this.visibility = v;
+        return this;
+    }
+
+    /** The reader a person is for a kind's sets, made now (never kept). */
+    public LiveReader reader(Principal p, String kind) {
+        return visibility.reader(p, kind);
+    }
+
+    /** Checks each declaration at load beyond its shape: formats, contract fields, the edit's write path. */
+    public LiveSets validator(Validator v) {
+        this.validator = v == null ? s -> List.of() : v;
+        return this;
+    }
+
+    /** Why a declaration of this id was set aside at load, or null. */
+    public String aside(String id) {
+        return asideById.get(id);
     }
 
     /** Where refusals are recorded. */
@@ -195,6 +250,7 @@ public final class LiveSets implements AutoCloseable {
     public void load(List<Path> dirs, Function<Path, String> module) {
         Map<String, LiveSetSpec> found = new LinkedHashMap<>();
         Map<String, String> bad = new LinkedHashMap<>();
+        Map<String, String> aside = new LinkedHashMap<>();
         for (Path dir : dirs) {
             if (!Files.isDirectory(dir)) {
                 continue;
@@ -205,13 +261,22 @@ public final class LiveSets implements AutoCloseable {
                         @SuppressWarnings("unchecked")
                         Map<String, Object> m = YAML.readValue(f.toFile(), Map.class);
                         LiveSetSpec s = LiveSetSpec.parse(m, f.getFileName().toString(), module.apply(dir));
-                        if (found.containsKey(s.id())) {
-                            bad.put(f.toString(), "blotter " + s.id() + " is declared twice");
+                        List<String> wrong = validator.problems(s);
+                        if (!wrong.isEmpty()) {
+                            String why = ErrorCode.LIVE_SET_INVALID.code() + " " + f.getFileName() + ": " + String.join("; ", wrong);
+                            bad.put(f.toString(), why);
+                            aside.put(s.id(), why);
+                        } else if (found.containsKey(s.id())) {
+                            bad.put(f.toString(), ErrorCode.LIVE_SET_INVALID.code() + " blotter " + s.id() + " is declared twice");
                         } else {
                             found.put(s.id(), s);
                         }
                     } catch (IOException | IllegalArgumentException e) {
-                        bad.put(f.toString(), e.getMessage());
+                        bad.put(f.toString(), ErrorCode.LIVE_SET_INVALID.code() + " " + e.getMessage());
+                        Object id = m(f).get("blotter");
+                        if (id != null) {
+                            aside.put(String.valueOf(id), ErrorCode.LIVE_SET_INVALID.code() + " " + e.getMessage());
+                        }
                     }
                 }
             } catch (IOException e) {
@@ -222,7 +287,21 @@ public final class LiveSets implements AutoCloseable {
         specs.putAll(found);
         problems.clear();
         problems.putAll(bad);
+        asideById.clear();
+        aside.keySet().removeAll(found.keySet());
+        asideById.putAll(aside);
         bad.forEach((f, why) -> LOG.warn("live sets: {} is set aside: {}", f, why));
+    }
+
+    /** The file's top-level map, or empty when it cannot be read (only to name a declaration set aside). */
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> m(Path f) {
+        try {
+            Object o = YAML.readValue(f.toFile(), Map.class);
+            return o instanceof Map<?, ?> mm ? (Map<String, Object>) mm : Map.of();
+        } catch (IOException | RuntimeException e) {
+            return Map.of();
+        }
     }
 
     /** Adds one declaration (tests, and a FORM search's implicit one). */
@@ -277,13 +356,25 @@ public final class LiveSets implements AutoCloseable {
         return implicit.containsKey(id) && !specs.containsKey(id);
     }
 
-    /** True when a search's set was filled for people whose masked fields are masked (its id says so). */
-    public static boolean maskedSet(String id) {
-        return id != null && id.startsWith(MASKED);
+    /** The audience a search's set was filled for (only its readers may read it); null when the id is not an open search's set. */
+    public String audienceOf(String id) {
+        return audiences.get(id);
     }
 
-    private static final String MASKED = "qm-";
-    private static final String PLAIN = "qu-";
+    /**
+     * Refuses a reader a search's set filled for another audience (as if it did not exist): a search's rows are those its audience may
+     * see, so no one else reads them. A declared set is read by anyone who may open its kind, each read kept to the reader's scope.
+     */
+    public void requireAudience(String id, LiveReader reader) {
+        if (implicit(id) && !Objects.equals(audiences.get(id), reader.audience())) {
+            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no live set " + id);
+        }
+    }
+
+    /** A search's set's id starts so. */
+    private static final String QUERY = "q-";
+    /** The audiences of the open searches' sets, by id. */
+    private final Map<String, String> audiences = new ConcurrentHashMap<>();
 
     public List<LiveSetSpec> specs() {
         return List.copyOf(specs.values());
@@ -319,7 +410,7 @@ public final class LiveSets implements AutoCloseable {
         if (s != null) {
             return s;
         }
-        if (implicit.containsKey(spec.id()) || spec.id().startsWith(MASKED) || spec.id().startsWith(PLAIN)) {
+        if (implicit.containsKey(spec.id()) || spec.id().startsWith(QUERY)) {
             throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "the result " + spec.id() + " has closed: run the search again");
         }
         opening.lock();                                   // one opening at a time: a second viewer waits for the first's snapshot
@@ -331,6 +422,15 @@ public final class LiveSets implements AutoCloseable {
             Predicate<DataNode> holds = q == null ? d -> true : sources.condition(q);
             LiveSet made = new LiveSet(spec, q, holds, clock);
             String qq = q;
+            Optional<StorePages.Store> store = sources.store(spec.kind());
+            Optional<List<String>> condFields = q == null ? Optional.of(List.of()) : sources.fields(q);
+            if (store.isPresent() && condFields.isPresent()) {
+                // the snapshot stays in the store: pages are read from it, merged with the live side by key
+                made.pages(new StorePages(store.get(), spec.key(), condFields.get(), q == null ? null : holds));
+                made.start(l -> sources.subscribe(spec.kind(), l), null);
+                open.put(key, made);
+                return made;
+            }
             boolean capping = defaulted(spec.id());
             int cap = defaultMaxRows;
             made.start(l -> sources.subscribe(spec.kind(), l), sink -> {
@@ -368,14 +468,15 @@ public final class LiveSets implements AutoCloseable {
      * afresh, while a live one is kept current by its live side. Masked people get their own set, filled and kept masked, so a masked
      * value never decides which rows are in it.
      */
-    public LiveSet query(String command, AsOf asOf, Principal who, boolean masks, UnaryOperator<DataNode> mask, boolean again) {
+    public LiveSet query(String command, AsOf asOf, Principal who, LiveReader reader, boolean again) {
         AsOf at = asOf == null ? AsOf.LATEST : asOf;
         String c = command == null ? "" : command.strip();
         if (c.isEmpty()) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "a live query names a search: q=TRD where ...");
         }
         String kind = sources.kindOf(c);
-        String id = queryId(c, at, masks);
+        LiveReader r = reader == null ? LiveReader.everyone() : reader;
+        String id = queryId(c, at, r.audience());
         String key = id + "\u001f" + c;
         LiveSet s = open.get(key);
         if (s != null && !(again && !s.live())) {
@@ -391,17 +492,33 @@ public final class LiveSets implements AutoCloseable {
                 open.remove(key, s);
                 s.close();
             }
-            UnaryOperator<DataNode> m = mask == null ? UnaryOperator.identity() : mask;
+            UnaryOperator<DataNode> m = r.redact();
             LiveSetSpec bare = new LiveSetSpec(id, c, kind, c, null, null, null, null, List.of(), List.of(), List.of(), null, false, List.of(), null,
                     null, false, null);
-            Predicate<DataNode> holds = sources.condition(c);
-            LiveSet made = new LiveSet(bare, c, holds, clock, true);
-            made.start(l -> at.live() ? sources.subscribe(kind, d -> l.accept(masked(d, m))) : null, sink -> {
-                Map<String, Object> said = sources.search(c, at, who, m, sink);
+            // the condition, and the audience's row scope: a live change outside it never joins the set (the scope reads the record as
+            // stored, before masks)
+            Predicate<DataNode> condition = sources.condition(c);
+            LiveSet made = new LiveSet(bare, c, condition, clock, true);
+            made.audience(r.audience());
+            LiveReader.Scope scope = r.scope();
+            made.start(l -> at.live() ? sources.subscribe(kind, d -> {
+                if (d.deleted() || scope.test().test(d.data())) {
+                    l.accept(masked(d, m));
+                } else {
+                    l.accept(new EntityDocument(d.ref(), d.data(), d.provenance(), true));   // left the scope: out of the set
+                }
+            }) : null, sink -> {
+                // the audience's scope on what the search gave (it reads the fields the audience may see)
+                Map<String, Object> said = sources.search(c, at, who, m, d -> {
+                    if (scope.all() || scope.test().test(d.data())) {
+                        sink.accept(d);
+                    }
+                });
                 made.origin(said);
                 made.spec(withColumns(bare, said));
             });
             implicit.put(id, made.spec());
+            audiences.put(id, r.audience());
             open.put(key, made);
             idleSince.remove(key);
             return made;
@@ -426,12 +543,15 @@ public final class LiveSets implements AutoCloseable {
         }
     }
 
-    /** A search's set's id: the command, the business date (or live) and the masking, as a short hash. */
-    static String queryId(String command, AsOf at, boolean masks) {
-        String basis = command + "\u001f" + (at.live() ? "live" : at.businessDate() + "@" + at.knownAt()) + "\u001f" + masks;
+    /**
+     * A search's set's id: the command, the business date (or live) and the audience it is filled for, as a short hash (the audience's
+     * text never shows in it).
+     */
+    static String queryId(String command, AsOf at, String audience) {
+        String basis = command + "\u001f" + (at.live() ? "live" : at.businessDate() + "@" + at.knownAt()) + "\u001f" + audience;
         try {
             byte[] h = java.security.MessageDigest.getInstance("SHA-256").digest(basis.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-            return (masks ? MASKED : PLAIN) + java.util.HexFormat.of().formatHex(h, 0, 10);
+            return QUERY + java.util.HexFormat.of().formatHex(h, 0, 12);
         } catch (java.security.NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
         }
@@ -499,6 +619,7 @@ public final class LiveSets implements AutoCloseable {
                 idleSince.remove(e.getKey());
                 if (implicit.containsKey(s.spec().id()) && !specs.containsKey(s.spec().id())) {
                     implicit.remove(s.spec().id());
+                    audiences.remove(s.spec().id());
                 }
                 s.close();
             }
@@ -529,6 +650,10 @@ public final class LiveSets implements AutoCloseable {
         }
         LiveSet set = open(spec, null);
         LiveSet.Row now = set.current(entity);
+        if (now != null && !reader(p, spec.kind()).scope().test().test(now.doc())) {
+            // outside the person's row scope: as if the set did not hold it
+            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, spec.kind() + " " + entity + " is not in " + id);
+        }
         long basedOn = body.path("basedOn").asLong();
         if (now != null && now.version() >= 0 && now.version() != basedOn) {
             String by = spec.changedBy() == null ? null : String.valueOf(now.doc().get(spec.changedBy()).unwrap());

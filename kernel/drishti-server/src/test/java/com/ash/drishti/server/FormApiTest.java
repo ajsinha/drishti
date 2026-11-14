@@ -33,7 +33,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 /** Query by form: the form of a kind, its criteria compiled, and the compiled command run by the ordinary search (regular expressions included). */
-@SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=trading",
+@SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=trading", "drishti.live-sets.modules-dir=../../modules",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.security.roles.searcher.kinds[0]=trade", "drishti.security.roles.searcher.raw=true",
         "drishti.security.roles.masked.kinds[0]=trade", "drishti.security.roles.masked.raw=false",
@@ -171,16 +171,18 @@ class FormApiTest {
         first.fieldNames().forEachRemaining(path -> org.assertj.core.api.Assertions
                 .assertThat(live.path("rows").get(0).path("doc").path(path.substring(2))).as(path).isEqualTo(first.path(path)));
         String id = live.path("set").path("id").asText();
-        org.assertj.core.api.Assertions.assertThat(id).startsWith("qu-");
+        org.assertj.core.api.Assertions.assertThat(id).startsWith("q-");
         org.assertj.core.api.Assertions.assertThat(live.path("set").path("editable").asBoolean()).isFalse();
         // a page of it, sorted another way; its declaration is not listed among the blotters
         mvc.perform(get("/api/v1/live/" + id + "/rows").param("limit", "5").param("sort", "TRADE_ID").header("Authorization", as("searcher")))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.rows.length()").value(5));
         mvc.perform(get("/api/v1/live").header("Authorization", as("searcher"))).andExpect(status().isOk())
                 .andExpect(jsonPath("$.sets[?(@.id=='" + id + "')]").isEmpty());
-        // a masked person gets the set of the masked, and may not read the other one by its id
+        // the trading module's trade blotter passed the checks at load (formats, the trade contract, the write path): it is listed
+        mvc.perform(get("/api/v1/live").header("Authorization", as("searcher"))).andExpect(jsonPath("$.sets[?(@.id=='trade')]").isNotEmpty());
+        // a masked person (another audience) gets their own set, and may not read the other one by its id
         var masked = json(mvc.perform(get("/api/v1/live/query").param("q", command).header("Authorization", as("masked"))));
-        org.assertj.core.api.Assertions.assertThat(masked.path("set").path("id").asText()).startsWith("qm-");
+        org.assertj.core.api.Assertions.assertThat(masked.path("set").path("id").asText()).startsWith("q-").isNotEqualTo(id);
         mvc.perform(get("/api/v1/live/" + id + "/rows").header("Authorization", as("masked"))).andExpect(status().isNotFound());
         mvc.perform(get("/api/v1/live/query").param("q", command).header("Authorization", as("nothing"))).andExpect(status().isForbidden());
     }
