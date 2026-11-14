@@ -112,6 +112,18 @@ class DistributionsTest {
                 Path.of("../../config/packs"))).hasMessageContaining("has no manifest");
     }
 
+    /** Risk carries the trade blotter (the trading module) and the six source modules, listed in its file; Finance has neither. */
+    @Test
+    void riskCarriesTheTradeBlotterAndTheSixSources() throws Exception {
+        List<String> mods = read("risk").modules();
+        assertThat(mods).contains("trading", "source-endur", "source-calypso", "source-murex", "source-wss", "source-swapone", "source-ici");
+        assertThat(read("risk").spec().path("modules").toString()).contains("\"trading\"");
+        assertThat(java.util.stream.StreamSupport.stream(read("risk").spec().path("modules").spliterator(), false).anyMatch(
+                m -> "trading".equals(m.path("id").asText()) && m.path("required").asBoolean())).isTrue();
+        assertThat(java.nio.file.Files.readString(MODULES.resolve("trading/console/plugin.yaml"))).as("the Risk menu's Trade blotter, from the trading module").contains("Trade blotter", "/live/trade");
+        assertThat(read("finance").modules()).doesNotContain("banking", "trading");
+    }
+
     /**
      * A distribution sees a module installed as a .dmod in the module store (no manifest in the modules folder), read by the registry's
      * one package reader: its function words are the distribution's; a module neither in the folder nor packaged is still refused.

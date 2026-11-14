@@ -1258,6 +1258,15 @@ built in the server:
 The screen options it was chosen from are mock-ups under [docs/lenses/mockups/parametric-var/](../lenses/mockups/parametric-var/A.html)
 (A, the toggle and columns on the explorer, is what the explorer shows; B and C are the options not taken; `phone.html` the phone sheet).
 
+### 3.16 Trade grain and a trading system that is switched off
+
+VaR is driven by the scenario PVs. At position grain it never reads trades, so its results and pages are the same with every trading system
+(Endur, Calypso, Murex, WSS, SwapOne, ICI) switched on or off. At trade grain (a trade scope, `by=trade`, `by=attribute:<COLUMN>`) VaR joins
+the trade details, the trade's attributes and its link. With a trading system switched off those details are unavailable, and nothing else
+changes: the VaR and ES totals are the same, each affected trade is placed by the attributes its PV records carry, else under "Unassigned",
+and the answer and the page say "trade details from ENDUR unavailable (source switched off)" (`banner`, with `excludes`, in the headline and in
+the contributions). A link to a trade of a switched-off system opens a plain "Source ENDUR is switched off" page, not an error.
+
 ## 4. Positions: derived, never delivered
 
 Nobody sends positions: Drishti **derives** them each time it loads a date, from the date's trades and the market-risk pack's

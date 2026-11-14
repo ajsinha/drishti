@@ -212,6 +212,13 @@ async def impact(request: Request, kind: str, id_: str):
     try:
         data = await request.app.state.backend.impact(kind, id_, ident(request))
     except BackendError as e:
+        if e.page_status == 404 and kind == "trade":       # a link to a trade of a trading system switched off: say so, plainly (200)
+            try:
+                off = (await request.app.state.backend._get(f"/views/switched-off/{kind}", ident(request))).get("excludes") or []
+            except BackendError:
+                off = []
+            if off:
+                return render(request, "terminal/source_off.html", kind=kind, id=id_, systems=off, embed=bool(embed))
         return render(request, "terminal/missing.html", status_code=e.page_status, kind=kind, id=id_, error=e)
     return render(request, "terminal/impact.html", kind=kind, id=id_, data=data, screen="impact")
 

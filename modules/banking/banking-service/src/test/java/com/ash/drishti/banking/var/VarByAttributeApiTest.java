@@ -171,4 +171,45 @@ class VarByAttributeApiTest {
                 .header("Authorization", as("rita", "risk"))).andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.detail").value(containsString("NOPE is not a column of the VaR book's trades")));
     }
+
+    @Autowired com.ash.drishti.engine.source.SourceRouter router;
+
+    /**
+     * A trade source switched off: VaR's numbers are the scenario PVs' and do not move; at trade grain the page says the details are
+     * unavailable and the trades are placed under "Unassigned"; at position grain nothing differs at all.
+     */
+    @Test
+    void aSwitchedOffTradeSourceLeavesVarUnchangedAndSaysSoAtTradeGrainOnly() throws Exception {
+        var systems = router.registry().systems();
+        java.util.List<com.ash.drishti.engine.source.SourceSystems.System> before = new ArrayList<>(systems.installed().values());
+        systems.installed(List.of(new com.ash.drishti.engine.source.SourceSystems.System("ENDUR", "source-endur", java.util.Set.of("trade"), true)));
+        String rita = as("rita", "risk");
+        try {
+            JsonNode bankOn = json.readTree(mvc.perform(get("/api/v1/risk/var/scope").param("scope", "BANK").header("Authorization", rita))
+                    .andReturn().getResponse().getContentAsString());
+            JsonNode tradesOn = contributions("BANK", "trade", rita);
+            JsonNode byOn = contributions("BANK", "attribute:TRADER_ID", rita);
+            assertThat(byOn.has("banner")).isFalse();
+            systems.switchTo("ENDUR", false);
+            JsonNode bankOff = json.readTree(mvc.perform(get("/api/v1/risk/var/scope").param("scope", "BANK").header("Authorization", rita))
+                    .andReturn().getResponse().getContentAsString());
+            ((com.fasterxml.jackson.databind.node.ObjectNode) bankOn).remove("provenance");         // its computed-at stamp and cache hit differ
+            ((com.fasterxml.jackson.databind.node.ObjectNode) bankOff).remove("provenance");
+            assertThat(bankOff.toString()).as("position grain: identical with the source off").isEqualTo(bankOn.toString());
+            assertThat(bankOff.has("banner")).isFalse();
+            JsonNode tradesOff = contributions("BANK", "trade", rita);
+            assertThat(tradesOff.get("var").asLong()).isEqualTo(tradesOn.get("var").asLong());
+            assertThat(tradesOff.get("banner").asText()).isEqualTo("trade details from ENDUR unavailable (source switched off)");
+            assertThat(tradesOff.get("rows").toString()).isEqualTo(tradesOn.get("rows").toString());
+            JsonNode byOff = contributions("BANK", "attribute:TRADER_ID", rita);
+            assertThat(byOff.get("banner").asText()).contains("ENDUR unavailable");
+            assertThat(byOff.get("var").asLong()).isEqualTo(byOn.get("var").asLong()).isEqualTo(540);
+            assertThat(byOff.get("rows")).hasSize(1);
+            assertThat(byOff.at("/rows/0/label").asText()).isEqualTo("Unassigned");
+            assertThat(byOff.at("/rows/0/trades").asInt()).isEqualTo(6);
+            assertThat(byOff.at("/rows/0/componentVar").asLong()).isEqualTo(540);
+        } finally {
+            systems.installed(before);
+        }
+    }
 }

@@ -18,6 +18,11 @@
 
 ## Unreleased
 
+- **VaR with a trading system switched off.** At trade grain the totals stay the PVs' (unchanged), the affected trades are placed by the
+  attributes the PV records carry, else under "Unassigned", the answers and the VaR page carry "trade details from ENDUR unavailable (source
+  switched off)", and a link to a trade of a switched-off system opens a plain "source ENDUR is switched off" page (200). Position grain is
+  identical with every trading system off (tested; the VaR goldens are unchanged). Drishti Risk lists the trading module (the trade blotter)
+  beside its six source modules, with a test.
 - **i4 follow-ups.** The trade contract gains `UPDATED_BY` (optional; the blotter's `changed-by` names it, so a refused stale edit says who changed
   the trade again). The grid's column declaration gains `cases` (a derived text from the row's fields), `lookup` (a text by the row's key),
   `toneField` and `href` / `hrefField` (a cell link to one of the console's own paths): monitors regain their tone colours and cell links, and the
