@@ -412,9 +412,6 @@ console:
         desc: 'The Pivot''s counterparty preset: exposure by counterparty and tenor against limits, with the right totals · also CCUBE <GO>'
         requires: ['word:EXP', 'word:PIVOT']
 functions:
-- TRDS                                    # the packs' codes: trading, market risk, counterparty risk
-- MRSK
-- CCR
 - word: VAR
   api:
   - /api/v1/risk/var

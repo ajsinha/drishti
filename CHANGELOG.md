@@ -27,8 +27,8 @@
   distribution too. **Removed:** `drishti.edition` (`DRISHTI_EDITION`, a lens file as the instance's filter) and `drishti.lens-dir` on the
   server (Health names a site's old `drishti.edition`); the lens files' `packs`, `commands`, `features`, `bi`, `help`, `admin` and
   `branding` keys; the tests of those ways (the Market, Risk and World edition servers; the Risk-edition VaR and exposure runs now run
-  Drishti Risk, `drishti.distribution=risk`). A module's **commands** are its manifest's `functions:` (banking lists its packs' codes
-  TRDS, MRSK, CCR), and its **menus** its manifest's `console.menus` (Blotter, Positions, Risk, Counterparties; Curves, Volatility, FX,
+  Drishti Risk, `drishti.distribution=risk`). A module's **commands** are its manifest's `functions:` (the kernel's packs keep
+  their pack.yaml commands), and its **menus** its manifest's `console.menus` (Blotter, Positions, Risk, Counterparties; Curves, Volatility, FX,
   Credit, Markets; Economies; Companies; a menu of another module's id adds columns): `drishti-console/config/sitemap.yaml` keeps only
   the kernel's pages. A module's menu is in the top bar only while the module is active (in the distribution, installed, loaded and on),
   live at the next page (`test_module_menus.py`). Docs: ADMIN_GUIDE sections 12 to 19, DISTRIBUTIONS section 10, HOW_IT_FITS 8.4
