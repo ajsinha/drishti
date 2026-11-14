@@ -60,6 +60,8 @@
 #      what the JDK version can change (tools/drill-java25.txt), started once 20 GB are free;
 #    - the command sweep (tests/test_command_sweep_browser.py, tools/sweep/command_sweep.py) in the browser lane: every function of FUNC, bare, with its
 #      example and with real ids of the saved test data, as the walk's one user; any FAIL fails the drill; report: <data>/drill/sweep/sweep-*.md
+#    - the API sweep (tests/test_api_sweep_browser.py, tools/sweep/api_sweep.py) beside it: every GET endpoint of the server and the console called
+#      with real values of the saved test data, HTTP only; any FAIL fails the drill; report: <data>/drill/sweep/api-sweep-*.md
 #    - the containers lane: both images built and booted on the host network beside the browser lane (tools/drillkit/container_smoke.py:
 #      health, the VaR golden through the API, four console pages), and every Testcontainers test after the browser lane when the diff
 #      since the last release touches the Dockerfiles, the JDK, native code or a module with container tests.
