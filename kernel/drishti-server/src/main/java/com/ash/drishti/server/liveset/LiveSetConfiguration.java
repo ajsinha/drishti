@@ -387,6 +387,13 @@ public class LiveSetConfiguration {
             }
 
             @Override
+            public boolean column(String field) {
+                // a field the lake keeps as a column; a newest-first order by a field only the documents hold (a blotter's update time)
+                // keeps the snapshot a columnar read of the lake through the bindings, never every document of the kind one by one
+                return router.columnar(kind).contains(field);
+            }
+
+            @Override
             public java.util.Map<String, DataNode> fetch(java.util.Collection<String> ids) {
                 java.util.List<com.ash.drishti.api.EntityRef> refs = ids.stream().map(id -> com.ash.drishti.api.EntityRef.of(kind, id)).toList();
                 java.util.Map<String, DataNode> out = new java.util.HashMap<>();

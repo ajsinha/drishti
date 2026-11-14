@@ -61,6 +61,15 @@ public final class StorePages {
 
         /** Records whole, by entity id; one no longer held is left out. */
         Map<String, DataNode> fetch(Collection<String> ids) throws Exception;
+
+        /**
+         * True when the store reads the field as a column in its one pass (a lake's promoted column). An order by a field it does not keep
+         * so (a blotter's update time that a lake leaves in the document) is never read from every document: the store's records keep the
+         * key order, after the live side's rows that carry the field, so new and changed rows come first in a newest-first order.
+         */
+        default boolean column(String field) {
+            return true;
+        }
     }
 
     /** One record of a projection. */
@@ -394,7 +403,8 @@ public final class StorePages {
         }
         fields.addAll(conditionFields);
         fields.addAll(reader.scope().fields());
-        if (sortField != null) {
+        boolean ordered = sortField != null && store.column(sortField);     // else the store's records in key order, values unknown
+        if (ordered) {
             fields.add(sortField);
         }
         if (filter != null) {
@@ -413,7 +423,7 @@ public final class StorePages {
         UnaryOperator<DataNode> redact = reader.redact();
         boolean masked = !reader.unmasked();
         Integer keyAt = keyField == null ? null : at.get(keyField);
-        Integer sortAt = sortField == null ? null : at.get(sortField);
+        Integer sortAt = ordered ? at.get(sortField) : null;
         boolean read;
         try {
             read = store.project(asked, (id, v) -> {
@@ -436,7 +446,9 @@ public final class StorePages {
                 if (!key.equals(id)) {
                     differ[0] = true;
                 }
-                if (values != null) {
+                if (values != null && sortAt == null) {
+                    values.add(null);                         // not a column of the store: after the live rows that carry it
+                } else if (values != null) {
                     Object sv = v[sortAt];
                     if (masked) {
                         sv = redact.apply(node(asked, v, List.of(sortField), at)).get(sortField).unwrap();

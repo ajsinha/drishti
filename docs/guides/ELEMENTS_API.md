@@ -7182,8 +7182,8 @@ Merges one rows event: an upsert replaces a row only when its version is newer (
 
 | Parameter | Type | Meaning |
 |---|---|---|
-| `ev` | `{upserts: Object[], removes: string[], total: number, seq: number}` |  |
-| `[paged]` | `boolean` | the viewer holds only a window of the set: rows it does not hold are not added |
+| `ev` | `{upserts: Object[], removes: string[], top: string[], total: number, seq: number}` |  |
+| `[paged]` | `boolean` | the viewer holds only a window of the set: rows it does not hold are not added, unless the server lists them in {@code top} (new or changed in a newest-first order while the page starts at the first row: they go on top) |
 
 Returns `{add: Object[], update: Object[], remove: string[], stale: number}`: the grid's transaction.
 

@@ -235,7 +235,7 @@ public class LiveSetController {
         } else {
             Set<String> ids = new HashSet<>();
             body.path("ids").forEach(n -> ids.add(n.asText()));
-            o.window().paged(ids);
+            o.window().paged(ids, body.path("top").asBoolean(false));   // its page starts at the first row of the declared order
         }
         return Map.of("stream", stream, "paged", !body.path("all").asBoolean(false));
     }

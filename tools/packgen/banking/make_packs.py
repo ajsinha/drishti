@@ -113,7 +113,8 @@ PIVOTS = {"trading": {"trade": {"fields": ["SOURCE_SYSTEM", "PORTFOLIO", "CURREN
                                 "filters": ["PRODUCT_GROUP", "TRADE_STATUS"]}}}
 
 # calc: may use Calc, Python in the browser on what the role opens (USER_GUIDE.md)
-ROLES = {"trading": {"trader": {"kinds": TRADER_KINDS, "calc": True}}, "market-risk": {"market-risk": {"kinds": ["*"], "raw": True, "calc": True}},
+# trade-editor: the power to amend trades through the trade blotter (docs/guides/LIVE_RESULTS_GUIDE.md section 3); trader alone reads
+ROLES = {"trading": {"trader": {"kinds": TRADER_KINDS, "calc": True}, "trade-editor": {"kinds": ["trade"], "edit": True}}, "market-risk": {"market-risk": {"kinds": ["*"], "raw": True, "calc": True}},
          "counterparty-risk": {"credit-risk": {"kinds": ["*"], "raw": True, "calc": True}}}
 
 

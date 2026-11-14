@@ -281,3 +281,40 @@ def test_the_layout_holds_on_a_desktop_and_a_phone_light_and_dark(browser, stack
     assert (sum(ink) > 380) == (scheme == "dark"), geo                              # the theme's ink: light text on dark, dark on light
     assert pg.locator(".dg-toolbar .dg-live-btn").first.is_visible()
     assert not pg.errors, pg.errors
+
+
+def first_is(key):
+    return f"() => window.Drishti.LivePage.grid.grid.model.idAt(0) === '{key}'"
+
+
+def test_a_new_trade_shows_on_top_of_an_unfiltered_paged_blotter_within_a_second(browser, stack):
+    """The trade blotter's own order is newest first (sort: SOURCE_UPDATE_TIME descending). A viewer holding only a page of the set, at its
+    top, is sent a new trade to insert there (the event's top) and shows it first within a second; rows that land outside the page move
+    the count and the "N new" button, which goes back to the newest."""
+    url, backend = stack
+    backend.order = {"field": "SOURCE_UPDATE_TIME", "descending": True}
+    backend.page = 10                                                           # thirty trades, a snapshot of ten: the viewer is paged
+    ids = sorted(backend.docs)
+    for i, k in enumerate(ids):
+        backend.docs[k]["SOURCE_UPDATE_TIME"] = f"2026-11-14T09:{i:02d}:00Z"
+    pg = opened(browser, url)
+    pg.wait_for_function(first_is(ids[-1]))                                     # the newest first
+    assert "10 of 30 rows" in pg.locator(".dg-live-chip").inner_text()
+    for _ in range(50):
+        if backend.windows and backend.windows[-1].get("ids"):
+            break
+        pg.wait_for_timeout(100)
+    assert backend.windows[-1].get("top") is True, backend.windows[-1]           # the grid tells the server its page starts at the top
+    backend.docs["T-050"] = {**backend.docs[ids[0]], "TRADE_ID": "T-050", "TRADE_VERSION": 1, "SOURCE_UPDATE_TIME": "2026-11-14T10:00:00Z"}
+    backend.push(["T-050"], top=["T-050"])
+    pg.wait_for_function(first_is("T-050"), timeout=1000)                      # on top within a second
+    assert pg.locator(".dg-live-grid .dg-row[data-key='T-050']").count() == 1
+    assert pg.locator(".dg-live-new").is_hidden()
+    backend.docs["T-051"] = {**backend.docs[ids[0]], "TRADE_ID": "T-051", "TRADE_VERSION": 1, "SOURCE_UPDATE_TIME": "2026-11-14T10:01:00Z"}
+    backend.push([], count_only=True)                                           # outside the page (as for a viewer scrolled away)
+    pg.wait_for_selector(".dg-live-new:not([hidden])", timeout=1000)
+    assert pg.locator(".dg-live-new").inner_text() == "1 new"
+    pg.locator(".dg-live-new").click()
+    pg.wait_for_function(first_is("T-051"))
+    assert pg.locator(".dg-live-new").is_hidden()
+    assert not pg.errors, pg.errors

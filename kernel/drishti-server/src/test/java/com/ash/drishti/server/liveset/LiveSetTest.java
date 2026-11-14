@@ -163,6 +163,41 @@ class LiveSetTest {
     }
 
     @Test
+    void inANewestFirstOrderANewOrChangedRowIsInsertedOnTopOfAPageAtTheTopAndOnlyCountedElsewhere() throws Exception {
+        AtomicReference<Consumer<EntityDocument>> live = new AtomicReference<>();
+        LiveSet s = started(spec(Map.of("sort", Map.of("field", "UPDATED_AT", "descending", true))), d -> true,
+                List.of(trade("T1", 1, "B", "2026-11-14T10:00:00Z"), trade("T2", 1, "B", "2026-11-14T10:00:01Z")), live, Clock.systemUTC());
+        assertThat(s.newestFirst()).isTrue();
+        List<Map<String, Object>> top = new ArrayList<>();
+        List<Map<String, Object>> below = new ArrayList<>();
+        LiveSet.Window atTop = s.window(null, top::add, 100);
+        LiveSet.Window scrolled = s.window(null, below::add, 100);
+        atTop.paged(Set.of("T2"), true);                             // the first row of the newest-first order
+        scrolled.paged(Set.of("T1"), false);                         // scrolled down: not at the top
+        live.get().accept(trade("T3", 1, "B", "2026-11-14T10:05:00Z"));   // a new trade
+        live.get().accept(trade("T1", 2, "B", "2026-11-14T10:05:01Z"));   // a changed one the top page does not hold
+        atTop.flush();
+        scrolled.flush();
+        assertThat(top.get(0)).containsEntry("top", List.of("T3", "T1")).containsEntry("total", 3);
+        assertThat((List<?>) top.get(0).get("upserts")).hasSize(2);
+        assertThat((List<?>) below.get(0).get("upserts")).hasSize(1);   // T1 is on its page; T3 only moves its count
+        assertThat(below.get(0)).doesNotContainKey("top").containsEntry("total", 3);
+        live.get().accept(trade("T3", 2, "B", "2026-11-14T10:06:00Z"));   // the page holds T3 now: its change is an update, not an insert
+        atTop.flush();
+        assertThat(top.get(1)).doesNotContainKey("top");
+        assertThat((List<?>) top.get(1).get("upserts")).hasSize(1);
+        // a declaration ordered otherwise (by book) never inserts: a new row's place is not the top
+        LiveSet byBook = started(spec(Map.of("sort", Map.of("field", "BOOK", "descending", true))), d -> true, List.of(trade("T1", 1, "B", null)), live,
+                Clock.systemUTC());
+        List<Map<String, Object>> other = new ArrayList<>();
+        LiveSet.Window w = byBook.window(null, other::add, 100);
+        w.paged(Set.of("T1"), true);
+        live.get().accept(trade("T9", 1, "Z", null));
+        w.flush();
+        assertThat(other.get(0)).containsEntry("countOnly", true).doesNotContainKey("top");
+    }
+
+    @Test
     void retentionDropsRowsPastTheirAgeAndBeyondTheCapOldestFirst() throws Exception {
         Clock clock = Clock.fixed(Instant.parse("2026-11-14T12:00:00Z"), ZoneOffset.UTC);
         AtomicReference<Consumer<EntityDocument>> live = new AtomicReference<>();

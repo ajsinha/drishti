@@ -480,6 +480,10 @@ roles:
     - clearing-account
     - desk-pnl
     calc: true
+  trade-editor:
+    kinds:
+    - trade
+    edit: true
 lake:
   tables:
     trading.trade_endur:

@@ -7044,11 +7044,12 @@
       }
       merge(ev, paged) {
         const add = [], update = [], remove = [];
+        const top = new Set((ev.top || []).map(String));
         let stale = 0;
         (ev.upserts || []).forEach((r) => {
           const g = gridRow(r), held = this.byId.get(g[ROW_KEY]);
           if (held && g[ROW_VERSION] >= 0 && held[ROW_VERSION] >= g[ROW_VERSION]) { stale++; return; }
-          if (!held && paged) { return; }
+          if (!held && paged && !top.has(g[ROW_KEY])) { return; }
           this.byId.set(g[ROW_KEY], g);
           (held ? update : add).push(g);
         });
@@ -7402,6 +7403,9 @@
         this.host.classList.add('dg-liveset');
         this.host.setAttribute('data-live-set', spec.id);
         this.status = h(d, 'span', { cls: 'dg-live-chip', attrs: { role: 'status', 'aria-live': 'polite' }, data: { state: this.state } });
+        this.newRows = 0;
+        this.newBtn = this.static ? null : h(d, 'button', { cls: 'dg-live-btn dg-live-new', text: '0 new', data: { act: 'new' },
+          attrs: { type: 'button', hidden: true, title: 'Rows that arrived outside this page: go to the newest' }, on: { click: () => this.toNew() } });
         this.pauseBtn = this.static ? null : h(d, 'button', { cls: 'dg-live-btn', text: 'Pause', data: { act: 'pause' }, attrs: { type: 'button' }, on: { click: () => this.pause(!this.paused) } });
         this.pivotBtn = this.static ? null : h(d, 'button', { cls: 'dg-live-btn', text: 'Pivot ›', data: { act: 'pivot' }, attrs: { type: 'button', title: 'The same rows, filters and grouping in the Pivot' }, on: { click: () => this.toPivot() } });
         this.chartBtn = this.o.onChart ? h(d, 'button', { cls: 'dg-live-btn', text: 'Chart', data: { act: 'chart' }, attrs: { type: 'button', title: 'Chart these rows' },
@@ -7411,7 +7415,7 @@
         this.groupSel = selectElement(d, { options: [{ value: '', label: 'No grouping' }].concat(groupable.map((c) => ({ value: c.field, label: c.label || c.field }))), value: (spec.groupBy || [])[0] || '',
           label: 'Group by', search: false }, { class: 'dg-live-group' });
         this.groupSel.component.on('change', (e) => this.group(e.value));
-        this.items = [this.status, h(d, 'label', { cls: 'dg-live-lbl' }, ['Group by ', this.groupSel]), this.chartBtn, this.pauseBtn, this.pivotBtn, this.trayBtn].filter(Boolean);
+        this.items = [this.status, this.newBtn, h(d, 'label', { cls: 'dg-live-lbl' }, ['Group by ', this.groupSel]), this.chartBtn, this.pauseBtn, this.pivotBtn, this.trayBtn].filter(Boolean);
         this.bar = h(d, 'div', { cls: 'dg-live-bar', attrs: { role: 'toolbar', 'aria-label': (spec.title || spec.id) + ' controls' } },
           [h(d, 'strong', { cls: 'dg-live-title', text: spec.title || spec.id }), h(d, 'span', { cls: 'dg-sp' })].concat(this.items));
         this.gridHost = h(d, 'div', { cls: 'dg-live-grid' });
@@ -7437,6 +7441,8 @@
             getRowData: (r) => ({ key: r[ROW_KEY] }) });
           if (this.bar) { this.bar.remove(); this.bar = null; }          // its controls are in the grid's toolbar now
           if ((spec.groupBy || []).length) { this.grid.model.setRowGroups(spec.groupBy.slice(0, 1)); }
+          if (spec.sort && spec.sort.field) { this.grid.model.setSortModel([{ colId: spec.sort.field, sort: spec.sort.descending ? 'desc' : 'asc' }]); }
+          this.grid.on('sortChanged', () => this.sendWindow());
           this.grid.on('cellClicked', (c) => { if (c && c.kind === 'leaf' && c.data) { this.open(c.data); } });
           this.gridHost.addEventListener('scroll', () => this.windowSoon(), true);
           this.off = this.o.channel.subscribe({ hello: (m) => this.onHello(m || {}), rows: (m) => this.onRows(m || {}), resync: () => this.resync('the server asked'),
@@ -7476,7 +7482,9 @@
       }
       onRows(ev) {
         if (this.paused) { return; }
+        const before = this.rows.total;
         const tx = this.rows.merge(ev, this.paged);
+        if (this.paged && ev.countOnly && this.rows.total > before) { this.showNew(this.newRows + (this.rows.total - before)); }
         this.stats.batches++;
         this.stats.upserts += tx.add.length + tx.update.length;
         this.stats.stale += tx.stale;
@@ -7518,8 +7526,27 @@
           const v = m.viewport.rows();
           ids = windowIds(shown, v.firstVisible, v.lastVisible, true);
         }
-        this.lastWindow = ids === null ? { all: true } : { ids: ids };
+        this.lastWindow = ids === null ? { all: true } : { ids: ids, top: this.atTop() };
+        if (this.lastWindow.top) { this.showNew(0); }
         return this.api.window(this.stream, this.lastWindow).then(() => undefined, () => undefined);
+      }
+      atTop() {
+        const m = this.grid.model, s = this.spec.sort || {}, sort = m.sortModel || [];
+        const own = !s.field ? sort.length === 0 : sort.length === 1 && sort[0].colId === s.field && sort[0].sort === (s.descending ? 'desc' : 'asc');
+        return own && !(this.o.offset > 0) && m.viewport.rows().firstVisible <= 0;
+      }
+      showNew(n) {
+        this.newRows = n;
+        if (!this.newBtn) { return; }
+        this.newBtn.hidden = n <= 0;
+        this.newBtn.textContent = n.toLocaleString('en-US') + ' new';
+      }
+      toNew() {
+        const s = this.spec.sort || {};
+        if (s.field) { this.grid.model.setSortModel([{ colId: s.field, sort: s.descending ? 'desc' : 'asc' }]); }
+        this.gridHost.querySelectorAll('*').forEach((el) => { if (el.scrollTop) { el.scrollTop = 0; } });
+        this.showNew(0);
+        return this.resync();
       }
       group(field) { this.grid.model.setRowGroups(field ? [field] : []); this.grid.refresh(); }
       open(row) {

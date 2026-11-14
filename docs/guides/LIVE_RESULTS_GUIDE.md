@@ -103,6 +103,12 @@ reflects it):
 | The site's configuration | the declaration names no `edit:`; write-back is off (`edit.enabled`); the site switched this blotter's edits off (its id in `drishti.live-sets.edits-off`); the connector's command is missing, refused or its writes are off (Admin → Edits) |
 | The person's rights | no **edit** power; the kind is not theirs to open; none of the form's fields is editable by their roles (`roles:`, `editable-by:`) |
 
+**The edit power for trades** ships with the trading pack as the role **`trade-editor`** (`kinds: [trade]`, `edit: true`). The plain
+`trader` role reads trades and never writes; give `trade-editor` beside it to the people who amend trades. The trade blotter's form
+names it in `roles:`, so a trade-editor may change the book, price and quantity (the status stays with `middle-office` and `admin` by
+`editable-by:`). A pack's role may carry `edit: true` like `approve:` or `calc:`; a site may still define its own roles in
+`drishti.security.roles`.
+
 A person who may not edit sees no edit controls (`editable: false` and `readOnly: <why>` in the declaration the API gives them). A crafted
 request is refused with `403 DRS-9302` and the reason, and audited (`edit-refused`). Four eyes apply on top. Finer entitlements (per desk,
 per field) come with the security release.
@@ -168,7 +174,7 @@ retention: {ttl: 1d, on: SOURCE_UPDATE_TIME, max-rows: 100000}   # the live side
 tray: true                         # the tray of the person's changes
 edit:                              # a Rachana form with save: (RACHANA_REFERENCE.md, forms): fields, checks, roles, where it goes
   edit: cells
-  roles: [trader, middle-office, admin]
+  roles: [trade-editor, trader, middle-office, admin]
   fields: [{id: book, bind: PORTFOLIO, required: true, pattern: "BOOK-[A-Z0-9-]+"}, ...]
   save: {target: source, command: amend-trade, approval: none, reason: optional}
 ```
@@ -195,7 +201,11 @@ One engine behind every blotter and every FORM result (`com.ash.drishti.server.l
    of the records that hold the query, in order, with the sort column's values, read in one pass of those columns (the documents once when
    a field is not a column). A page fetches only its own rows whole, by id; the total is the index's count. The index is read again when
    the store's version moves (a load); a few are kept, the latest asked for. Other kinds (no columns) are read whole in one pass, else
-   from the search's matches.
+   from the search's matches. The snapshot is the lake's (the kind's `read:` binding, a `union` of source systems included), read by
+   columns: an order by a field the lake does not keep as a column (the trade blotter's `SOURCE_UPDATE_TIME`, which the lake leaves in
+   each document) never turns the read into one of every document. The lake's records then keep the key order **after** the live rows
+   that carry the field: in a newest-first order the new and changed trades come first, then every trade of the lake. Promote the field
+   to a lake column (`promote:` of the pack's `lake:` table) to order the lake's own records by it too.
 2. **Live deltas**: the kind's `live:` binding, subscribed to **before** the snapshot is read; what arrives meanwhile is applied after it.
    Every change merges **by key and version**: a newer version replaces the row, an older or equal one is dropped (no duplicates, never back
    in time), a deletion or a row that no longer holds the query leaves. Skipped versions are counted (the record is whole, so the newest is
@@ -211,7 +221,12 @@ One engine behind every blotter and every FORM result (`com.ash.drishti.server.l
    not exist. Kind access (the role, the kind's pack switched on for them) is checked on every request. Changes are coalesced per record and
    flushed every `flush-ms` (50 ms).
 4. **Scale**: pages of at most 5,000 rows (`offset`, `limit`, `sort`, `filter`: a text found in the shown columns' values as the reader
-   sees them); a paged viewer is sent changes of the rows it shows and the new total only; a viewer more than `window-capacity` (5,000)
+   sees them); a paged viewer is sent changes of the rows it shows and the new total only, with one exception that keeps a blotter
+   readable: **new and changed rows on top**. A declaration whose own order is newest first (`sort:` descending by its `changed-at` or
+   its `version`, as the trade blotter's `sort: {field: SOURCE_UPDATE_TIME, descending: true}`) puts every new or changed row first, so
+   a viewer whose page starts at the first row of that order (the grid says `top: true` with its window) is sent those rows to insert on
+   top (`top: [ids]` in the `rows` event); the grid keeps the declaration's order, so the row lands first within the flush (50 ms). A
+   viewer scrolled down, or sorted otherwise, gets the new total and a **N new** button that goes back to the newest; a viewer more than `window-capacity` (5,000)
    records behind is sent one `resync` instead of a queue (back-pressure: a burst never queues without bound). 10,000 updates apply in well
    under a second and reach a viewer as one coalesced event. At a million records (a narrow kind) the first page takes about half a second
    (the index read once), a first sorted page under a second, every later page and a page after a live change a millisecond or two
@@ -271,8 +286,8 @@ Iceberg and file connectors never write per change.
 | `GET` | `/api/v1/live/{id}/rows/{entity}` | one record whole (the panel's Raw JSON), masked for the caller |
 | `GET` | `/api/v1/live/query` | a search's matches as a set (FORM, the search page): `q`, `offset`, `limit`, `sort`, `descending`, `filter`, `again`; the page plus `search` (what the search said) |
 | `GET` | `/api/v1/live/kinds/{word}/rows` | a kind's own set by its mnemonic or name (`POS <GO>`); `capped` when it stopped at the default cap |
-| `GET` | `/api/v1/live/{id}/stream` | server-sent events: `hello` `{stream, total, live}`, then `rows` `{upserts, removes, total, seq, countOnly}` or `resync` |
-| `POST` | `/api/v1/live/{id}/stream/{stream}/window` | the page the stream shows: `{ids: [...]}`, or `{all: true}` |
+| `GET` | `/api/v1/live/{id}/stream` | server-sent events: `hello` `{stream, total, live}`, then `rows` `{upserts, removes, top, total, seq, countOnly}` or `resync` |
+| `POST` | `/api/v1/live/{id}/stream/{stream}/window` | the page the stream shows: `{ids: [...], top}` (`top`: it starts at the first row of the declared order), or `{all: true}` |
 | `POST` | `/api/v1/live/{id}/edit` | an edit: `{entity, basedOn, reason, items[{field, from, to}]}`; `403 DRS-9302` read-only (why), `409 DRS-9303` stale |
 
 The console passes these on as the person: `GET /api/live`, `GET /api/live/{id}/rows[/{entity}]`, `POST /api/live/{id}/edit` and
