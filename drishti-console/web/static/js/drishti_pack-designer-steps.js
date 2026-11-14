@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Build -> New pack: the Pack designer, part two: Design (the Sutras, one's YAML beside its live screen on real rows, re-rendered as it is
  * edited), Finalize (the module and its fifteen checks) and Deploy (the one module deploy). Drishti Elements only: Grid, CodeEditor, Select. */
 (function () {

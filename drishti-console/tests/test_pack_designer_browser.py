@@ -138,7 +138,7 @@ def test_files_in_combinations_a_live_screen_that_follows_the_yaml_a_module_depl
             r = page.request.get(base + href)
             if r.status == 200:
                 break
-            time.sleep(2)
+            time.sleep(2)  # wait-ok: auto-deploy loads the module within seconds; the route is polled
         assert r.status == 200, (href, r.status, r.text()[:300])
         page.goto(base + "/admin/modules?module=pdui-trades")
         assert "pdui-trades" in page.locator("body").inner_text()
