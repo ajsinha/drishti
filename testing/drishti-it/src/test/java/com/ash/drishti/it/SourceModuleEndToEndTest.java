@@ -88,20 +88,15 @@ class SourceModuleEndToEndTest {
         Path module = tmp.resolve("modules/source-swapone");
         copy(root.resolve("modules/source-swapone"), module);
         YAMLMapper yaml = new YAMLMapper();
-        // KNOWN GAP: the shipped mappings/swapone-trade.yaml is written in a richer form (map:, first-of, scale, as, dotted paths) that
-        // SourceShape does not read (it reads fields:, flat native names; DRS-5034 "has no 'fields'"). This test maps the flat subset.
-        Files.writeString(module.resolve("mappings/swapone-trade.yaml"), "format: 1\nfields:\n  swap_id: TRADE_ID\n  swap_family:\n    to: PRODUCT_TYPE\n"
-                + "    values: {IRS: IRS_FIXFLOAT, OIS: OIS}\n  pay_receive:\n    to: BUY_SELL_CODE\n    values: {PAY: B, REC: S}\n");
-
         // the inbox: the file and its .ready
         Path inbox = Files.createDirectories(tmp.resolve("data/inbox"));
         Path file = inbox.resolve("swapone-" + DAY + ".jsonl.gz");
         try (OutputStream out = new GZIPOutputStream(Files.newOutputStream(file))) {
-            out.write(("{\"swap_id\":\"SW1\",\"revision\":1,\"lifecycle\":\"LIVE\",\"swap_family\":\"IRS\",\"pay_receive\":\"PAY\",\"pay_leg\":{\"notional\":1000000}}\n"
+            out.write(("{\"swap_id\":\"SW1\",\"revision\":1,\"lifecycle\":\"LIVE\",\"swap_family\":\"IRS\",\"pay_receive\":\"PAY\",\"pay_leg\":{\"notional\":1000000,\"fixed_rate_pct\":5.0}}\n"
                     + "{\"swap_id\":\"SW2\",\"revision\":1,\"lifecycle\":\"LIVE\",\"swap_family\":\"OIS\",\"pay_receive\":\"REC\",\"pay_leg\":{\"notional\":2500000}}\n")
                     .getBytes(StandardCharsets.UTF_8));
         }
-        Files.writeString(inbox.resolve(file.getFileName() + ".ready"), "as-of: " + DAY + "\n");     // the .ready names the business date (the loader reads table.date.ext names only)
+        // no .ready: the module's date-pattern reads the business date from the dashed name
 
         // the module's inbox rule matches the name
         JsonNode rule = yaml.readTree(Files.readString(module.resolve("dataload.yaml"))).path("dataload").path("rules").get(0);
@@ -109,6 +104,9 @@ class SourceModuleEndToEndTest {
         assertThat(file.getFileName().toString()).matches(glob.replace(".", "\\.").replace("*", ".*"));
         assertThat(rule.path("pack").asText()).isEqualTo("trading");
         assertThat(rule.path("kind").asText()).isEqualTo("trade");
+        java.util.regex.Matcher dated = java.util.regex.Pattern.compile(rule.path("date-pattern").asText()).matcher(file.getFileName().toString());
+        assertThat(dated.find()).as("the rule's date-pattern finds the date in the name").isTrue();
+        assertThat(LocalDate.parse(dated.group(1))).isEqualTo(DAY);
         String connector = rule.path("connector").asText();
         assertThat(connector).isEqualTo("trade-swapone");
 
@@ -152,7 +150,8 @@ class SourceModuleEndToEndTest {
         Map<String, Map<String, Object>> listed = list(router);
         assertThat(listed.keySet()).as("the trade kind lists the file's trades").containsExactly("SW1", "SW2");
         assertThat(listed.get("SW1")).containsEntry("SOURCE_SYSTEM", "SWAPONE").containsEntry("TRADE_ID", "SW1").containsEntry("PRODUCT_TYPE", "IRS_FIXFLOAT")
-                .containsEntry("BUY_SELL_CODE", "B");
+                .containsEntry("BUY_SELL_CODE", "B").containsEntry("QUANTITY", 1000000L)
+                .containsEntry("TRADE_STATUS", "NEW").containsEntry("PRICE", 0.05);
 
         // the module off: gone, with no restart; on: back
         assertThat(registry.systems().switchTo("SWAPONE", false)).isTrue();

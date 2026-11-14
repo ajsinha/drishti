@@ -312,6 +312,21 @@ class BuildTest(unittest.TestCase):
         self.assertEqual((s["pack"], s["domain"], s["kind"], s["promote"]), ("synth-book", "book", "deal", ["NOTIONAL"]))
         self.assertTrue((self.lake / "book" / "deal" / "_delta_log").is_dir())
 
+    def test_the_connectors_set_is_stamped_into_rows_that_lack_the_field(self):
+        pack = self.root / "pack"
+        pack.mkdir()
+        (pack / "pack.yaml").write_text(
+            "pack: synth-book\nconnectors:\n  book-store:\n    plugin: delta\n    kinds: [deal]\n    settings:\n      root: x\n      domain: book\n"
+            "      set:\n        SOURCE_SYSTEM: SWAPONE\ningest:\n  deal: {key: TRADE_ID, date: TRADE_DATE}\n", encoding="utf-8")
+        os.environ["DRISHTI_CONNECTORS_DIR"] = str(self.root / "no-site-connectors")
+        self.addCleanup(os.environ.pop, "DRISHTI_CONNECTORS_DIR", None)
+        a = args(src=[str(self.src)], lake=str(self.lake), pack=str(pack), engine="deltalake")
+        code, s = build.run(a, quiet)
+        self.assertEqual(code, 0, s.get("error"))
+        rows = self.table().to_pyarrow_table().to_pylist()
+        self.assertTrue(rows)
+        self.assertEqual({json.loads(r["doc"])["SOURCE_SYSTEM"] for r in rows}, {"SWAPONE"})
+
     def test_the_pack_flattens_values_inside_lists_into_fields_and_columns(self):
         pack = self.root / "pack"
         pack.mkdir()

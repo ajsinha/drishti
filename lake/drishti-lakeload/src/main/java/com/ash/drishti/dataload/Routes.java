@@ -113,9 +113,28 @@ public final class Routes {
 
     /** One rule of the file. */
     record Rule(String match, PathMatcher glob, String pack, String kind, String connector, String table, String dateFrom, String dateField, String key,
-            String lake, String format, String origin) {}
+            String lake, String format, String origin,
+            java.util.regex.Pattern datePattern, String dateFormat) {
 
-    private static final Set<String> RULE_KEYS = Set.of("match", "pack", "kind", "connector", "table", "date-from", "date-field", "key", "lake", "format");
+        /** The business date the file name carries by this rule's {@code date-pattern} (one capture group), or null. */
+        LocalDate dateOf(String fileName) throws Unrouted {
+            if (datePattern == null) {
+                return null;
+            }
+            java.util.regex.Matcher m = datePattern.matcher(fileName);
+            if (!m.find()) {
+                return null;
+            }
+            String g = m.group(1);
+            try {
+                return LocalDate.parse(g, java.time.format.DateTimeFormatter.ofPattern(dateFormat.equals("YYYYMMDD") ? "yyyyMMdd" : "yyyy-MM-dd"));
+            } catch (java.time.DateTimeException e) {
+                throw new Unrouted("the rule " + match + ": " + fileName + " carries '" + g + "' by date-pattern, which is not a calendar date (" + dateFormat + ")");
+            }
+        }
+    }
+
+    private static final Set<String> RULE_KEYS = Set.of("match", "pack", "kind", "connector", "table", "date-from", "date-field", "key", "lake", "format", "date-pattern", "date-format");
 
     private final List<Rule> rules;
     /** The inbox's {@code default-mode} (append, else replace) and whether it may create a table ({@code new-tables}). */
@@ -193,6 +212,22 @@ public final class Routes {
             if (!format.equals("delta") && !format.equals("iceberg")) {
                 throw new IllegalArgumentException(at + ".format " + format + ": delta or iceberg");
             }
+            String dateFormat = text(r, "date-format");
+            dateFormat = dateFormat == null ? "YYYY-MM-DD" : dateFormat.toUpperCase(Locale.ROOT);
+            if (!dateFormat.equals("YYYY-MM-DD") && !dateFormat.equals("YYYYMMDD")) {
+                throw new IllegalArgumentException(at + ".date-format " + dateFormat + ": YYYY-MM-DD (the default) or YYYYMMDD");
+            }
+            java.util.regex.Pattern datePattern = null;
+            if (text(r, "date-pattern") != null) {
+                try {
+                    datePattern = java.util.regex.Pattern.compile(text(r, "date-pattern"));
+                } catch (java.util.regex.PatternSyntaxException e) {
+                    throw new IllegalArgumentException(at + ".date-pattern is not a regular expression (" + e.getDescription() + ")");
+                }
+                if (datePattern.matcher("").groupCount() != 1) {
+                    throw new IllegalArgumentException(at + ".date-pattern needs exactly one capture group, around the date");
+                }
+            }
             PathMatcher glob;
             try {
                 glob = FileSystems.getDefault().getPathMatcher("glob:" + match);
@@ -200,7 +235,7 @@ public final class Routes {
                 throw new IllegalArgumentException(at + ".match " + match + ": not a glob (" + e.getMessage() + ")");
             }
             out.add(new Rule(match, glob, pack, kind, text(r, "connector"), text(r, "table"), dateFrom, text(r, "date-field"), text(r, "key"),
-                    text(r, "lake"), format, origin));
+                    text(r, "lake"), format, origin, datePattern, dateFormat));
         }
         return out;
     }
@@ -363,9 +398,18 @@ public final class Routes {
         String dateFrom = rule == null ? "auto" : rule.dateFrom();
         LocalDate asOf = n.businessDate();
         LocalDate nameDate = name.error() == null && !name.tar() ? name.date() : null;
+        LocalDate patternDate = rule == null || name.tar() ? null : rule.dateOf(fileName);     // date-pattern: a date inside a free-form name
+        if (patternDate != null && nameDate == null) {
+            nameDate = patternDate;
+            if (asOf == null) {
+                asOf = patternDate;
+            }
+        }
         String dateBy;
         if (name.tar()) {
             dateBy = "each table and date from the archive's folders";
+        } else if (asOf != null && patternDate != null && n.businessDate() == null) {
+            dateBy = asOf + " from the name (date-pattern)";
         } else if (asOf != null) {
             dateBy = asOf + " from the .ready file";
         } else if (nameDate != null) {

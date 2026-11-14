@@ -18,6 +18,13 @@
 
 ## Unreleased
 
+- **Richer source field maps; the inbox date from the name.** A source module's map (`map:`) reads dotted paths into nested native JSON,
+  `from: [a, b]` / `first-of` (the first non-empty), `scale`, `as` (`yyyymmdd`, `yyyymmddhhmmss`, `epoch-millis`, `epoch-seconds`, `iso`),
+  `cast`, `values` and `value`, beside the older `fields:` form; the shipped SwapOne, WSS and ICI maps load as written and the end-to-end
+  test no longer overwrites its map. An inbox rule's `date-pattern` (one capture group; `date-format: YYYYMMDD`) dates a file such as
+  `swapone-2026-11-03.jsonl.gz` from its name with no `.ready` file (the `.ready` date still wins); the six source modules use it. New
+  tests: `lake build` and `data ingest` (files and Delta) stamp `set:`; a packed `source-swapone` `.dmod` is installed, seen and uninstalled.
+
 - **A second slogan line on the landing page**: *Your data is a treasury;* **Drishti is its sentinel.** under the headline (italic serif, the closing part in gold, a gentle fade-in, none under reduced motion). Its text is configuration, `ui.headline_second` and `ui.headline_second_accent` (also in a distribution's `brand:`); blank: no line.
 - **One document: Live results and blotters** (modules/trading/docs/guide.md, the module's Help page; the guide caps leave no room for a separate page). The engine, the page, editing and rights, row rules, retention, scale, the declaration format with a complete inventory example and a tutorial from a Kafka feed to an approved, written-back edit; the trading module's guide keeps only the trade-specific parts and links here. The plan is renumbered: i4 holds the trading module, Python compute in modules and the source modules; i5 is the cluster and the console; i6 is banking on the public kernel API.
 - **Source modules integrated**: one manifest key set (`connectors`, `mappings`, `dataload`, `sections`; conformance C9 reads `connectors`);
