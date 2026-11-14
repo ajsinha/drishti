@@ -2992,6 +2992,21 @@ A value is one of: empty (missing or `null`; the two behave the same), a boolean
 - **Dependency paths.** Each compiled expression reports the document paths it reads (`$.LEGS[0].CASH_FLOWS[0].RATE`). Cells carry that
   path so live updates can flash exactly what changed.
 
+### List attributes: contains, any of, all of
+
+A field holding a list of simple values (`TAGS: ["fx", "rates"]`, a promoted list column) is filtered with three functions, the one
+implementation the grids, the search form, BI and Sutras share:
+
+| Function | Holds when | Example |
+|---|---|---|
+| `has(list, value)` (contains) | the list holds the value | `has($.TAGS, 'fx')` |
+| `any_of(list, values)` (any of) | the list holds at least one of the values | `any_of($.TAGS, ['fx', 'rates'])` |
+| `all_of(list, values)` (all of) | the list holds every one of the values | `all_of($.TAGS, ['fx', 'hedge'])` |
+
+Equality is `==`'s (numbers numerically, otherwise as text); a promoted column's JSON text reads as its list; a single value is a list of
+one; a missing list holds nothing; no value chosen holds everything. A form's list field offers the same three (`contains`, `any`, `all`).
+A list shows as chips: give a column `fmt: list`.
+
 ### Lists, membership and the parent
 
 A list is written in brackets, `['DESK-COMM', 'DESK-RATES']`; a masked item stays masked in its place. `x in list` is true when the

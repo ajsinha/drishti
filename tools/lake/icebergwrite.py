@@ -39,21 +39,25 @@ import writers
 
 def lines(domain: str, table: str, by_day: dict, partition_names: list[str], types: dict | None = None):
     """The loader's lines for every staged row: its promoted values, and the partition values as columns. A promoted list or object
-    that is not a vector (``types``: Stager.types(), a column's kind; an id list such as TRADE_IDS) goes as its JSON text, as the
-    Delta writers store it (writers._cell): the loader reads every list as a vector."""
+    that is neither a vector nor a list attribute (``types``: Stager.types(), a column's kind) goes as its JSON text, as the Delta
+    writers store it (writers._cell); a list attribute (TRADE_IDS, TAGS) goes as its values' texts, which the loader writes as a
+    list<string> column, and a list of numbers is a vector."""
     vectors = {n for n, k in (types or {}).items() if k == "vector"}
+    lists = {n for n, k in (types or {}).items() if k == "list"}
     for day, parts in by_day.items():
         iso = day.isoformat()
         for part in parts:
             fixed = {n: v for n, v in zip(partition_names, part.values) if v is not None}
             for chunk in stage.read_rows(part.file, 2000):
                 for ident, doc, promoted in chunk:
-                    cols = {**fixed, **{k: _cell(k, v, vectors) for k, v in promoted.items() if v is not None}}
+                    cols = {**fixed, **{k: _cell(k, v, vectors, lists) for k, v in promoted.items() if v is not None}}
                     yield json.dumps({"domain": domain, "kind": table, "id": ident, "date": iso, "doc": doc, "columns": cols},
                                      ensure_ascii=False, separators=(",", ":")) + "\n"
 
 
-def _cell(name: str, v, vectors: set[str]):
+def _cell(name: str, v, vectors: set[str], lists: set[str] = frozenset()):
+    if name in lists:                               # a list attribute: its values as texts, a list<string> column (section 2.4)
+        return stage.list_texts(v)
     if isinstance(v, (list, dict)) and name not in vectors:
         return json.dumps(v, ensure_ascii=False, separators=(",", ":"))
     return v

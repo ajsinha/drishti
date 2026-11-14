@@ -243,6 +243,9 @@ public final class LakeWriter {
     /** A float32 vector column (exposure paths may be stored so, EXPOSURE_GUIDE.md section 15.3): Parquet LIST of FLOAT. */
     static final ArrayType VECTOR32 = new ArrayType(io.delta.kernel.types.FloatType.FLOAT, true);
 
+    /** A list attribute's type (promoted lists of simple values): Parquet LIST of STRING, a number kept as its text. */
+    static final ArrayType LIST = new ArrayType(StringType.STRING, true);
+
     static DataType type(String t) {
         return switch (t) {
             case "double" -> DoubleType.DOUBLE;
@@ -250,6 +253,7 @@ public final class LakeWriter {
             case "date" -> DateType.DATE;
             case "vector" -> VECTOR;            // a P&L vector: list<double> (VAR_GUIDE.md section 29.3)
             case "vector32" -> VECTOR32;        // exposure paths in float32: list<float>
+            case "list" -> LIST;                // a list attribute: array<string> (DATA_LAKE_GUIDE.md section 2.4)
             default -> StringType.STRING;
         };
     }
@@ -440,6 +444,9 @@ public final class LakeWriter {
             if (t instanceof LongType) {
                 return v.isNumber() ? v.asLong() : null;
             }
+            if (t instanceof ArrayType at && at.getElementType() instanceof StringType) {
+                return texts(v);
+            }
             if (t instanceof ArrayType) {
                 if (!v.isArray()) {
                     return null;
@@ -455,6 +462,27 @@ public final class LakeWriter {
                 return (int) LocalDate.parse(v.asText().substring(0, 10)).toEpochDay();
             }
             return v.isTextual() ? v.asText() : v.toString();
+        }
+
+        /** A list attribute's values as texts: a list's simple values (a null left out), a single value as a list of one. */
+        private static String[] texts(JsonNode v) {
+            JsonNode items = v;
+            if (v.isTextual() && v.asText().startsWith("[")) {
+                java.util.List<String> parsed = com.ash.drishti.api.ListValues.of(v.asText());
+                if (parsed != null) {
+                    return parsed.toArray(new String[0]);
+                }
+            }
+            if (!items.isArray()) {
+                return new String[] {v.isTextual() ? v.asText() : v.toString()};
+            }
+            List<String> out = new ArrayList<>(items.size());
+            for (JsonNode x : items) {
+                if (x != null && !x.isNull()) {
+                    out.add(x.isTextual() ? x.asText() : x.isNumber() ? com.ash.drishti.api.ListValues.text(x.numberValue()) : x.toString());
+                }
+            }
+            return out.toArray(new String[0]);
         }
 
         @Override
@@ -508,6 +536,19 @@ public final class LakeWriter {
 
         @Override
         public io.delta.kernel.data.ArrayValue getArray(int rowId) {
+            if (values[rowId] instanceof String[] texts) {
+                return new io.delta.kernel.data.ArrayValue() {
+                    @Override
+                    public int getSize() {
+                        return texts.length;
+                    }
+
+                    @Override
+                    public ColumnVector getElements() {
+                        return new Vector(StringType.STRING, texts);
+                    }
+                };
+            }
             double[] a = (double[]) values[rowId];
             DataType el = type instanceof ArrayType at ? at.getElementType() : DoubleType.DOUBLE;
             return new io.delta.kernel.data.ArrayValue() {

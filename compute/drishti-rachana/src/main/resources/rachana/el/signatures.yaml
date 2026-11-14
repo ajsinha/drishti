@@ -118,6 +118,48 @@ functions:
   - {expr: 'contains(trades.PRODUCT_TYPE, ''SWAP'')', says: every kind of swap}
   - {expr: 'sum(trades.MTM, where = contains(trades.PORTFOLIO, ''COMM''))', says: MTM of the hedge books}
   edge-cases: {nulls: 'contains(null, ''x'') is null, which a filter treats as not matching.', masked: Filtering on a masked column is DRS-9161.}
+- name: has
+  family: scalar
+  runs: R
+  signature: has(list, value)
+  params:
+  - {name: list, type: any}
+  - {name: value, type: any}
+  returns: boolean
+  scopes: [row, rule, aggregate]
+  description: True when a list attribute holds the value (contains, for a list field). A promoted list column's JSON text reads as its list; a single value is a list of one.
+  examples:
+  - {expr: 'has(trades.TAGS, ''fx'')', says: trades tagged fx}
+  - {expr: '!has(trades.TAGS, ''internal'')', says: trades not tagged internal}
+  edge-cases: {nulls: 'has(null, ''x'') is false.', types: Equality as ==; numbers numerically, otherwise as text.}
+- name: any_of
+  family: scalar
+  runs: R
+  signature: any_of(list, values)
+  params:
+  - {name: list, type: any}
+  - {name: values, type: any}
+  returns: boolean
+  scopes: [row, rule, aggregate]
+  description: True when a list attribute holds at least one of the values (any of). No value chosen holds everything.
+  examples:
+  - {expr: 'any_of(trades.TAGS, [''fx'', ''rates''])', says: trades tagged fx or rates}
+  - {expr: 'count(trades, where = any_of(trades.TAGS, [''hedge'']))', says: how many trades are tagged hedge}
+  edge-cases: {nulls: 'any_of(null, [''x'']) is false.', types: Equality as ==.}
+- name: all_of
+  family: scalar
+  runs: R
+  signature: all_of(list, values)
+  params:
+  - {name: list, type: any}
+  - {name: values, type: any}
+  returns: boolean
+  scopes: [row, rule, aggregate]
+  description: True when a list attribute holds every one of the values (all of). No value chosen holds everything.
+  examples:
+  - {expr: 'all_of(trades.TAGS, [''fx'', ''hedge''])', says: trades tagged both fx and hedge}
+  - {expr: 'sum(trades.MTM, where = all_of(trades.TAGS, [''fx'', ''rates'']))', says: MTM of the trades tagged fx and rates}
+  edge-cases: {nulls: 'all_of(null, [''x'']) is false.', types: Equality as ==.}
 - name: starts_with
   family: scalar
   runs: R

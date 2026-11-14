@@ -15,6 +15,7 @@
  */
 /* Cells, fields and entity links: the macros cell_text, tone, fields and entity of _macros/panels.html, as DOM. */
 import { h, str, toneClass } from './drishti_dom.js';
+import { chipList, isListValue } from '../../drishti-core/src/drishti_index.js';
 
 const enc = (s) => encodeURIComponent(String(s == null ? '' : s));
 
@@ -42,6 +43,7 @@ export function cellText(R, c) {
     // a new tab only when the host asks for one (outsideLinks: 'new-window'), as the console's macros do
     return h('a', { class: 'lnk ext', href: t, target: R.outsideLinks === 'new-window' ? '_blank' : null, rel: 'noopener noreferrer nofollow', title: t, 'data-r-link': 'outside' }, t);
   }
+  if (isListValue(t)) { return chipList(document, t, { label: c.label || '' }); }   // a list attribute (fmt: list): chips
   return str(t);
 }
 

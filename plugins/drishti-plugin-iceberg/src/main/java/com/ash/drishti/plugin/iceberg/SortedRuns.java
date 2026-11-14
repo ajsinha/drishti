@@ -348,6 +348,12 @@ final class SortedRuns implements Closeable {
             Object v = e.getValue();
             if (v == null) {
                 out.writeByte(0);
+            } else if (v instanceof IcebergLoader.Texts texts) {
+                out.writeByte(4);                               // a list attribute: its length, then each text
+                out.writeInt(texts.values().size());
+                for (String x : texts.values()) {
+                    writeString(out, x);
+                }
             } else if (v instanceof List<?> list) {
                 out.writeByte(3);                               // a vector: its length, then per element null or the double
                 out.writeInt(list.size());
@@ -369,6 +375,15 @@ final class SortedRuns implements Closeable {
         }
     }
 
+    private static IcebergLoader.Texts readTexts(DataInputStream in) throws IOException {
+        int n = in.readInt();
+        List<String> out = new ArrayList<>(n);
+        for (int i = 0; i < n; i++) {
+            out.add(readString(in));
+        }
+        return new IcebergLoader.Texts(out);
+    }
+
     private static List<Double> readVector(DataInputStream in) throws IOException {
         int n = in.readInt();
         List<Double> out = new ArrayList<>(n);
@@ -386,7 +401,8 @@ final class SortedRuns implements Closeable {
         for (int i = 0; i < n; i++) {
             String path = readString(in);
             byte type = in.readByte();
-            cols.put(path, type == 0 ? null : type == 1 ? (Object) in.readDouble() : type == 3 ? readVector(in) : readString(in));
+            cols.put(path, type == 0 ? null : type == 1 ? (Object) in.readDouble() : type == 3 ? readVector(in) : type == 4 ? readTexts(in)
+                    : readString(in));
         }
         return new Row(id, doc, cols);
     }

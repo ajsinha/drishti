@@ -27,7 +27,9 @@ public enum FieldType {
     DATE("date", List.of("on", "between", "relative", "before", "after")),
     ENUM("enum", List.of("in")),
     ID("id", List.of("in")),
-    BOOL("bool", List.of("is"));
+    BOOL("bool", List.of("is")),
+    /** A list attribute (TAGS: ["fx", "rates"]): contains one value, any of several, all of several (EL has, any_of, all_of). */
+    LIST("list", List.of("contains", "any", "all"));
 
     private final String id;
     private final List<String> operators;

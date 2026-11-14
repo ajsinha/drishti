@@ -3944,7 +3944,7 @@
   })();
   /* ---- src/drishti_grid-body.js ---- */
   __m["src/drishti_grid-body.js"] = (function () {
-    var h = __lib("drishti-core").h;
+    var h = __lib("drishti-core").h, chipList = __lib("drishti-core").chipList, isListValue = __lib("drishti-core").isListValue;
     var GridPointer = __m["src/drishti_grid-pointer.js"].GridPointer;
     var DENSITIES = __m["src/drishti_grid-model-base.js"].DENSITIES;
     var getValue = __m["src/drishti_columns.js"].getValue, formatValue = __m["src/drishti_columns.js"].formatValue;
@@ -4280,6 +4280,9 @@
           cell.appendChild(box);
         } else if (drawn !== null && drawn !== undefined && drawn !== '') {
           cell.appendChild(typeof drawn === 'string' ? h(doc, 'span', { cls: 'dg-text', text: drawn }) : drawn);
+        } else if (leafRow && (col.type === 'list' || isListValue(value))) {
+          cell.classList.add('dg-list');
+          cell.appendChild(chipList(doc, value, { compact: true, label: col.headerName || col.field }));
         } else { cell.appendChild(h(doc, 'span', { cls: 'dg-text', text: text })); }
         if (blank) {
           const dim = x.entry.path && x.entry.path.length ? x.entry.path[x.entry.path.length - 1][0] : 'this level';

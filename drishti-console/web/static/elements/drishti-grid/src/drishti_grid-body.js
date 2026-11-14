@@ -19,7 +19,7 @@
    (total, ◆ non-additive total, pending server figure, loading block), the range, the focus, conditional formats and the flash of a
    live change. Pointer work: click and Shift+click, drag a range, the context menu, header sort, the column menu, a group's toggle,
    resize and autosize by the handle, the row checkboxes. */
-import { h } from '../../drishti-core/src/drishti_index.js';
+import { h, chipList, isListValue } from '../../drishti-core/src/drishti_index.js';
 import { GridPointer } from './drishti_grid-pointer.js';
 import { DENSITIES } from './drishti_grid-model-base.js';
 import { getValue, formatValue } from './drishti_columns.js';
@@ -415,6 +415,10 @@ export class GridBody extends GridPointer {
       cell.appendChild(box);
     } else if (drawn !== null && drawn !== undefined && drawn !== '') {
       cell.appendChild(typeof drawn === 'string' ? h(doc, 'span', { cls: 'dg-text', text: drawn }) : drawn);
+    } else if (leafRow && (col.type === 'list' || isListValue(value))) {
+      // a list attribute: the first chip and a count badge; a click shows every value, growing down over the rows below
+      cell.classList.add('dg-list');
+      cell.appendChild(chipList(doc, value, { compact: true, label: col.headerName || col.field }));
     } else { cell.appendChild(h(doc, 'span', { cls: 'dg-text', text: text })); }
     if (blank) {
       const dim = x.entry.path && x.entry.path.length ? x.entry.path[x.entry.path.length - 1][0] : 'this level';

@@ -285,18 +285,25 @@ final class Loader {
         }
         boolean[] numeric = new boolean[plan.promoted.size()];
         boolean[] seen = new boolean[plan.promoted.size()];
+        boolean[] list = new boolean[plan.promoted.size()];
+        boolean[] notList = new boolean[plan.promoted.size()];
         Arrays.fill(numeric, true);
         for (ParseWorker w : workers) {
             for (int i = 0; i < numeric.length; i++) {
                 numeric[i] &= !w.notNumeric()[i];
                 seen[i] |= w.seen()[i];
+                list[i] |= w.listSeen()[i];
+                notList[i] |= w.notList()[i];
             }
+        }
+        for (int i = 0; i < list.length; i++) {
+            list[i] &= !notList[i];                                     // every value a list of simple values: an array<string> column
         }
         List<String> promoted = plan.promoted.stream().map(RowPlan.Promoted::column).toList();
         Meter write = meter("write", cfg.parallel().writers());
         Meter commit = meter("commit", 1);
         try (TableTarget target = cfg.target().isIceberg() ? new IcebergTarget(cfg, plan) : new DeltaTarget(cfg, plan)) {
-            target.open(new TableTarget.Columns(promoted, numeric, seen));
+            target.open(new TableTarget.Columns(promoted, numeric, seen, list));
             report.columns(target.columnTypes(), target.leftOut());
             DateWriter dw = new DateWriter(target, plan, cfg.target().layout(), cfg.parallel().writers(), write);
             ExecutorService pool = Executors.newFixedThreadPool(cfg.parallel().writers(), named("lakeload-write"));

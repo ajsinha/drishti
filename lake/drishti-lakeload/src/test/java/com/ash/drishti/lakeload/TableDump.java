@@ -119,6 +119,13 @@ final class TableDump {
         if (t instanceof ArrayType) {
             ArrayValue a = v.getArray(r);
             ColumnVector e = a.getElements();
+            if (e.getDataType() instanceof io.delta.kernel.types.StringType) {
+                List<String> texts = new ArrayList<>();                  // a list attribute
+                for (int i = 0; i < a.getSize(); i++) {
+                    texts.add(e.isNullAt(i) ? null : e.getString(i));
+                }
+                return texts;
+            }
             List<Double> out = new ArrayList<>();
             for (int i = 0; i < a.getSize(); i++) {
                 out.add(e.isNullAt(i) ? null : e.getDataType() instanceof FloatType ? (double) e.getFloat(i) : e.getDouble(i));
@@ -163,6 +170,9 @@ final class TableDump {
         }
         if (v instanceof Integer days) {
             return LocalDate.ofEpochDay(days).toString();
+        }
+        if (v instanceof List<?> l && l.stream().anyMatch(x -> x instanceof CharSequence)) {
+            return l.stream().map(x -> x == null ? null : x.toString()).toList();     // a list attribute
         }
         if (v instanceof List<?> l) {
             List<Double> out = new ArrayList<>();

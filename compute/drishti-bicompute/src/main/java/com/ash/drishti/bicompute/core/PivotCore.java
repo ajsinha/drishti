@@ -441,6 +441,14 @@ public final class PivotCore {
             if (d.width() > 0 && !"number".equals(t)) {
                 throw PivotView.bad(d.id() + ": " + d.field() + " is a " + t + ", not a number; only numbers group by width");
             }
+            if ("list".equals(t) && !d.joined() && !dims.containsKey(d.id())) {
+                dims.values().stream().filter(o -> !o.joined() && "list".equals(types.get(o.field()))).findFirst().ifPresent(o -> {
+                    throw PivotView.bad(d.id() + ": " + o.field() + " is exploded already; one list field is exploded at a time, show the "
+                            + "other as one label (" + d.field() + ":" + Dim.JOIN + ")");
+                });
+                work.notes.add(d.field() + " is a list: a row is counted once under each of its values, so totals across " + d.field()
+                        + " may count a row more than once (show it as one label: " + d.field() + ":" + Dim.JOIN + ")");
+            }
             dims.putIfAbsent(d.id(), d);
         }
 

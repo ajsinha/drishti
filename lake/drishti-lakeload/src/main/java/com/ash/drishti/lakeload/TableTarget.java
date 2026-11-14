@@ -36,8 +36,17 @@ import java.util.Map;
  */
 interface TableTarget extends AutoCloseable {
 
-    /** The columns a load has: per promoted column whether every value was a number, and whether any value was seen. */
-    record Columns(List<String> promoted, boolean[] numeric, boolean[] seen) {}
+    /**
+     * The columns a load has: per promoted column whether every value was a number, whether any value was seen, and whether every value
+     * was a list of simple values ({@code list}: an {@code array<string>} column, DATA_LAKE_GUIDE.md section 2.4).
+     */
+    record Columns(List<String> promoted, boolean[] numeric, boolean[] seen, boolean[] list) {
+
+        /** Columns without list columns. */
+        Columns(List<String> promoted, boolean[] numeric, boolean[] seen) {
+            this(promoted, numeric, seen, new boolean[promoted.size()]);
+        }
+    }
 
     /** Creates the table or checks it, and adds the columns it lacks (Iceberg) or reports them left out (Delta). */
     void open(Columns columns) throws IOException;
@@ -134,7 +143,7 @@ interface TableTarget extends AutoCloseable {
             }
         }
         if (type.id() == Type.Id.LIST) {
-            return null;                                                // a vector column the load keeps as a promoted field: none
+            return listValue(r, i, tag, (Type.ListType) type);
         }
         if (tag == RowPlan.NUM) {
             if (icebergRules) {
@@ -145,6 +154,33 @@ interface TableTarget extends AutoCloseable {
             return r.numText(i);
         }
         return r.text(i);
+    }
+
+    /**
+     * A promoted value into an {@code array<string>} column: a list of simple values as its texts ({@link ListValues}: a number in its
+     * plain text), a single value as a list of one. A list of numbers into a vector column ({@code list<double>}) the load keeps as a
+     * promoted field: none, as before.
+     */
+    private static Object listValue(RowView r, int i, byte tag, Type.ListType type) {
+        if (!(type.element() instanceof Type.Primitive p) || p.id() != Type.Id.STRING) {
+            return null;
+        }
+        if (tag == RowPlan.NUM) {
+            return List.of(r.numText(i));
+        }
+        String text = new String(r.text(i), StandardCharsets.UTF_8);
+        if (tag == RowPlan.STR) {
+            return List.of(r.text(i));
+        }
+        List<String> values = com.ash.drishti.api.ListValues.of(text);
+        if (values == null) {
+            return List.of(r.text(i));                                  // an object or a nested list: its JSON text, the one element
+        }
+        List<byte[]> out = new ArrayList<>(values.size());
+        for (String v : values) {
+            out.add(v.getBytes(StandardCharsets.UTF_8));
+        }
+        return out;
     }
 
     /** The Parquet writer's options for a load: the codec, row groups, and the vector columns' encoding. */

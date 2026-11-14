@@ -71,6 +71,14 @@ public final class GroupingSetsCompiler {
             boolean whole = w == Math.rint(w);
             String b = "floor(TRY_CAST(" + col + " AS DOUBLE) / " + num(w) + ") * " + num(w);
             e = whole ? "CAST(CAST(" + b + " AS BIGINT) AS VARCHAR)" : "CAST(" + b + " AS VARCHAR)";
+        } else if ("list".equals(type) || d.joined()) {
+            // a list attribute: a native list<string> column or its JSON text (["fx","rates"]) both cast to a list; a single value is a
+            // list of one. Exploded, each value is its own member (a row in several cells; the answer's note says totals may count a row
+            // twice); joined (TAGS:join), one label "fx, rates"
+            String list = "COALESCE(TRY_CAST(" + col + " AS VARCHAR[]), CASE WHEN " + col + " IS NULL THEN NULL ELSE [CAST(" + col
+                    + " AS VARCHAR)] END)";
+            e = d.joined() ? "NULLIF(array_to_string(" + list + ", ', '), '')"
+                    : "unnest(CASE WHEN len(list_distinct(" + list + ")) > 0 THEN list_distinct(" + list + ") ELSE [NULL] END)";
         } else if (d.group() != null) {
             String dt = "TRY_CAST(" + col + " AS DATE)";
             e = switch (d.group()) {

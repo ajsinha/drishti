@@ -83,6 +83,9 @@ public final class IcebergLoader {
     /** A column's list that is not a list of numbers. */
     private static final Object NOT_NUMBERS = new Object();
 
+    /** A promoted list attribute's values (a list holding text: {@code TRADE_IDS}, {@code TAGS}): a {@code list<string>} column. */
+    record Texts(List<String> values) {}
+
     /**
      * Runs a load; a failure ends it with one line on standard error and exit status 1, never a Java stack trace (QA3B-12: a REST
      * catalog whose bucket is missing ended in {@code Exception in thread "main" java.io.UncheckedIOException …} and eight frames).
@@ -291,7 +294,8 @@ public final class IcebergLoader {
                     Bucket b = new Bucket(line.domain(), line.kind(), line.date());
                     buffered += buckets.computeIfAbsent(b, k -> new SortedRuns(spillDir, k.kind() + "-" + k.date())).add(line.row());
                     Map<String, Integer> types = seen.computeIfAbsent(line.domain() + "/" + line.kind(), k -> new LinkedHashMap<>());
-                    line.row().columns().forEach((path, v) -> types.merge(path, v == null ? 0 : v instanceof List ? 4 : v instanceof Number ? 1 : 2,
+                    line.row().columns().forEach((path, v) -> types.merge(path, v == null ? 0 : v instanceof Texts ? 8 : v instanceof List<?> l ? (l.isEmpty() ? 0 : 4)
+                            : v instanceof Number ? 1 : 2,
                             (x, y) -> x | y));
                     if (++n % 100_000 == 0) {
                         System.err.printf("iceberg: %,d rows read (%,.0f s)%n", n, (System.nanoTime() - t0) / 1e9);
@@ -328,14 +332,19 @@ public final class IcebergLoader {
                 if (!tables.containsKey(key)) {
                     Map<String, Boolean> promoted = new LinkedHashMap<>();
                     java.util.Set<String> vectors = new java.util.LinkedHashSet<>();
+                    java.util.Set<String> lists = new java.util.LinkedHashSet<>();
                     seen.getOrDefault(key, Map.of()).forEach((path, t) -> {
-                        if ((t & 4) != 0) {
+                        if ((t & 8) != 0 && (t & 7) == 0) {
+                            lists.add(path);                     // lists of texts only: a list<string> column (DATA_LAKE_GUIDE.md section 2.4)
+                        } else if ((t & 8) != 0) {
+                            promoted.put(path, false);           // lists and single values mixed: text, each list as its JSON text
+                        } else if ((t & 4) != 0) {
                             vectors.add(path);                   // lists of numbers: a list<double> column
                         } else {
                             promoted.put(path, t == 1);          // numbers only: a number column
                         }
                     });
-                    tables.put(key, lake(b.domain()).open(b.kind(), promoted, vectors, rowGroupBytes, fileRows));
+                    tables.put(key, lake(b.domain()).open(b.kind(), promoted, vectors, lists, rowGroupBytes, fileRows));
                 }
             }
             Semaphore slots = new Semaphore(threads);
@@ -448,19 +457,28 @@ public final class IcebergLoader {
     /** A list of numbers (nulls kept: a missing value is never 0), or {@link #NOT_NUMBERS}; the parser is left after the list. */
     private static Object vector(JsonParser p) throws IOException {
         List<Double> out = new ArrayList<>();
-        boolean numbers = true;
+        List<String> texts = new ArrayList<>();
+        boolean number = false;
+        boolean text = false;
+        boolean container = false;
         JsonToken t;
         while ((t = p.nextToken()) != JsonToken.END_ARRAY) {
             if (t == JsonToken.VALUE_NUMBER_INT || t == JsonToken.VALUE_NUMBER_FLOAT) {
+                number = true;
                 out.add(p.getDoubleValue());
             } else if (t == JsonToken.VALUE_NULL) {
                 out.add(null);
+            } else if (t == JsonToken.VALUE_STRING || t == JsonToken.VALUE_TRUE || t == JsonToken.VALUE_FALSE) {
+                text = true;
+                texts.add(p.getText());
             } else {
-                numbers = false;
+                container = true;
                 p.skipChildren();
             }
         }
-        return numbers ? out : NOT_NUMBERS;
+        // numbers alone are a vector; texts alone a list attribute (lake build sends one as its texts, a list<string> column); numbers and
+        // texts mixed, or a list holding a container, neither: a reject
+        return container || number && text ? NOT_NUMBERS : text ? new Texts(texts) : out;
     }
 
     private static Object skip(JsonParser p) throws IOException {

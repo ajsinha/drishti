@@ -518,6 +518,10 @@ public final class Checker {
                 }
                 try {
                     for (Expr a : bound.get(i)) {
+                        if (a instanceof Expr.ListLit l && i == 1 && ("any_of".equals(f.name()) || "all_of".equals(f.name()))) {
+                            l.items().forEach(this::visit);                     // the values a list attribute is matched against
+                            continue;
+                        }
                         ElType t = argument(f, shown, p, a);
                         if (i == 0) {
                             first = t;

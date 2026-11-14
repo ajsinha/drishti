@@ -29,6 +29,20 @@
   the old five-step page, its scripts, the console's pack wizard, its bundle build and the hand-off to Admin → Packs (a pack made from JSON Schema
   is `pack make --schema`). BUILD_GUIDE section 8 describes the designer.
 - **i4 carry-overs.** Why it moved: the scenario card is a date card (*Scenario of the VaR*, no unit; *moved from A to B* or *unchanged since A*) and the limit-use card carries no currency unit; the "1 week" compare date (and any picked date) rolls back to the nearest earlier date that has both P&L and a scenario set instead of failing with "no scenario set for <date>"; the Explain drawer's **Open as a page ›** is a button in its header carrying scope, dates, compare date and tab, and **Back to the screen** returns to the screen as it was; the VaR limit page (VLIM) carries Explain ›; the Iceberg refusal messages no longer name the removed `engine: library`; PLAY SIMM with no licensed parameter files answers `422` (`DRS-5333`) that the page explains, not 502; the landing page's tab title is the distribution's own tagline.
+### Lists: list attributes shown as chips
+
+- **Lake**: `promote` takes a field holding a list of simple values and writes it as a native array column (`array<string>` in Delta,
+  `list<string>` in Iceberg) in every writer: the parallel loader, `lake build` (Python staging, Drishti's Delta writer, deltalake, the
+  Iceberg loader) and `lake write`; a list of objects stays in the document. The connectors read an array column back as its JSON text,
+  so every reader of a promoted column works unchanged (DATA_LAKE_GUIDE.md section 2.4). The Pack designer and `pack new` promote lists of
+  simple values themselves.
+- **Filters**: *contains / any of / all of* for list fields, once, in Rachana-EL (`has`, `any_of`, `all_of`); the search form's list
+  field type and the search grammar use them (RACHANA_REFERENCE.md, Lists).
+- **Pivot**: a list field as a row or column field counts each value (explode), with a note that totals may count a row more than once;
+  `FIELD:join` shows it as one joined label instead; one list field is exploded at a time (PIVOT_GUIDE.md).
+- **drishti-core 1.2.0: chips** (`Chips`, `chipList`, `upgradeChips`): the first few chips and "+N more ▾", expanding in place
+  (click, Enter, Space; `aria-expanded`), dark and light; in a grid cell the first chip and a count badge, expanding downward. The Sutra
+  generator's lists of plain values, detail panels and grids show lists as chips (`fmt: list`).
 
 - **Generated Sutras read like the hand-built deal screens** (`pack new`, `pack make`, Build's auto-design: one auto-designer): a list
   of records holding lists (legs with cash flows and resets) is tabs with terms, a notional profile or amounts-by-date chart, a tree
