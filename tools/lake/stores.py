@@ -254,6 +254,14 @@ def _resolve(value: str, data: pathlib.Path, env: str) -> pathlib.Path:
 ICEBERG_LAKE = "demo-iceberg"
 
 
+def _pack_manifest(path: pathlib.Path) -> dict:
+    """A pack's manifest with the connectors its source modules bring (modules/source-<system>/connectors/delta.yaml): one home."""
+    import yaml
+    sys.path.insert(0, str(ROOT / "tools"))
+    import packlake
+    return packlake.with_modules(yaml.safe_load(path.read_text(encoding="utf-8")))
+
+
 def _template(pack: dict, name: str, store: str, lake: pathlib.Path, data: pathlib.Path, ice: pathlib.Path | None = None,
               folder: pathlib.Path | None = None) -> dict:
     """A pack's template for the store: as it is (``lake: demo``) for Delta at the demo lake's own root; for Iceberg, the template naming
@@ -314,7 +322,7 @@ def connector_text(system: str, store: str, lake: pathlib.Path, ice: pathlib.Pat
     """trade-<system>.yaml for its store: the trading pack's template (one source system of the union, table trade_<system>) with
     plugin and root set; ``engine: native`` for Iceberg. It names no kinds (the pack's template binds trade by default)."""
     import yaml
-    pack = yaml.safe_load((ROOT / "config" / "packs" / "banking" / "trading" / "pack.yaml").read_text(encoding="utf-8"))
+    pack = _pack_manifest(ROOT / "config" / "packs" / "banking" / "trading" / "pack.yaml")
     tpl = _template(pack, f"trade-{system}", store, lake, data, ice, folder)
     settings = dict(tpl.get("settings") or {})
     if settings.get("lake") == ICEBERG_LAKE:          # Iceberg: the lake demo-iceberg (its file beside the connector folder)
@@ -394,7 +402,7 @@ def domain_connector_text(domain: str, store: str, lake: pathlib.Path, ice: path
     says which connectors serve each kind (KERNEL_AND_MODULES.md section 5.5). ``pair`` (pack, connector): by default the domain's first."""
     import yaml
     pack_name, name = pair or DOMAIN_STORES[domain][0]
-    pack = yaml.safe_load((pack_dir(pack_name) / "pack.yaml").read_text(encoding="utf-8"))
+    pack = _pack_manifest(pack_dir(pack_name) / "pack.yaml")
     tpl = _template(pack, name, store, lake, data, ice, folder)
     settings = dict(tpl.get("settings") or {})
     if settings.get("lake") == ICEBERG_LAKE:          # Iceberg: the lake demo-iceberg (its file beside the connector folder)

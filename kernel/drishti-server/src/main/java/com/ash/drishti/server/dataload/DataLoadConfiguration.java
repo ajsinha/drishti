@@ -68,11 +68,12 @@ public class DataLoadConfiguration {
     @Bean(destroyMethod = "stop")
     public DataInbox dataInbox(DataLoadSettings settings, ObjectProvider<LoadService> loads, ObjectProvider<AdmissionGate> gate,
             ObjectProvider<NetService> net, ObjectProvider<BusinessDates> dates, ObjectProvider<PeerCalls> peers,
-            ObjectProvider<com.ash.drishti.engine.source.SourceRegistry> sources) {
+            ObjectProvider<com.ash.drishti.engine.source.SourceRegistry> sources, Environment env,
+            ObjectProvider<com.ash.drishti.registry.AccessRegistry> access) {
         BusinessDates bd = dates.getIfAvailable();
         ZoneId zone = bd == null ? ZoneId.systemDefault() : bd.zone();
         String node = node(net.getIfAvailable());
-        return new DataInbox(settings, node, Clock.systemUTC(), zone, packs(loads, sources), new LoaderProcess(settings),
+        return new DataInbox(settings, node, Clock.systemUTC(), zone, packs(loads, sources, moduleRules(env, access)), new LoaderProcess(settings),
                 signal(loads, new LoadForwarding(peers.getIfAvailable()), LoadForwarding.node(node)), busy(gate));
     }
 
@@ -90,9 +91,10 @@ public class DataLoadConfiguration {
     /** The Upload page and {@code drishti.py dataload ready}: {@code drishti.dataload.upload.*}, and every module's checks of a file. */
     @Bean
     public ReadyDesk readyDesk(DataLoadSettings settings, DataInbox inbox, Environment env, ObjectProvider<LoadService> loads,
-            ObjectProvider<com.ash.drishti.engine.source.SourceRegistry> sources, ObjectProvider<NetService> net, ObjectProvider<ReadyRule> rules) {
+            ObjectProvider<com.ash.drishti.engine.source.SourceRegistry> sources, ObjectProvider<NetService> net, ObjectProvider<ReadyRule> rules,
+            ObjectProvider<com.ash.drishti.registry.AccessRegistry> access) {
         ReadyDesk.Settings upload = Binder.get(env).bind("drishti.dataload.upload", ReadyDesk.Settings.class).orElseGet(ReadyDesk.Settings::defaults);
-        return new ReadyDesk(settings, upload, inbox, packs(loads, sources), Clock.systemUTC(), node(net.getIfAvailable()), rules.orderedStream().toList());
+        return new ReadyDesk(settings, upload, inbox, packs(loads, sources, moduleRules(env, access)), Clock.systemUTC(), node(net.getIfAvailable()), rules.orderedStream().toList());
     }
 
     @Bean
@@ -114,9 +116,60 @@ public class DataLoadConfiguration {
         }
     }
 
+    /**
+     * The inbox rules of the modules that are on ({@code <modules folder>/<id>/module.yaml}, its {@code dataload:}: a file name, read from the
+     * module's folder, or the rules inline), read at each cycle so that switching a module off or on changes the rules at once. The modules
+     * folder is {@code drishti.live-sets.modules-dir}.
+     */
+    static Supplier<java.util.List<Routes.ModuleRules>> moduleRules(Environment env, ObjectProvider<com.ash.drishti.registry.AccessRegistry> access) {
+        return () -> {
+            java.util.List<Routes.ModuleRules> out = new java.util.ArrayList<>();
+            java.nio.file.Path dir = java.nio.file.Path.of(env.getProperty("drishti.live-sets.modules-dir", "modules"));
+            com.ash.drishti.registry.AccessRegistry a = access.getIfAvailable();
+            if (!java.nio.file.Files.isDirectory(dir)) {
+                return out;
+            }
+            com.fasterxml.jackson.dataformat.yaml.YAMLMapper yaml = new com.fasterxml.jackson.dataformat.yaml.YAMLMapper();
+            try (java.util.stream.Stream<java.nio.file.Path> s = java.nio.file.Files.list(dir)) {
+                for (java.nio.file.Path m : s.sorted().toList()) {
+                    java.nio.file.Path manifest = m.resolve("module.yaml");
+                    String id = m.getFileName().toString();
+                    if (!java.nio.file.Files.isRegularFile(manifest) || a != null && !a.moduleOn(id)) {
+                        continue;
+                    }
+                    try {
+                        com.fasterxml.jackson.databind.JsonNode rules = yaml.readTree(java.nio.file.Files.readString(manifest)).path("dataload");
+                        if (rules.isTextual()) {
+                            java.nio.file.Path f = m.resolve(rules.asText());
+                            rules = java.nio.file.Files.isRegularFile(f) ? yaml.readTree(java.nio.file.Files.readString(f)) : null;
+                        } else if (rules.isObject()) {
+                            rules = yaml.createObjectNode().set("dataload", rules);
+                        } else {
+                            rules = null;
+                        }
+                        if (rules != null) {
+                            out.add(new Routes.ModuleRules(id, rules));
+                        }
+                    } catch (java.io.IOException | RuntimeException e) {
+                        // a module whose rules cannot be read adds none; Admin's module page says why
+                    }
+                }
+            } catch (java.io.IOException e) {
+                return out;
+            }
+            return out;
+        };
+    }
+
     /** The loaded packs by name: the folder whose pack.yaml the loader reads, and the kinds; the lakes the connectors read. */
-    static Routes.Packs packs(ObjectProvider<LoadService> loads, ObjectProvider<com.ash.drishti.engine.source.SourceRegistry> sources) {
+    static Routes.Packs packs(ObjectProvider<LoadService> loads, ObjectProvider<com.ash.drishti.engine.source.SourceRegistry> sources,
+            Supplier<java.util.List<Routes.ModuleRules>> modules) {
         return new Routes.Packs() {
+            @Override
+            public java.util.List<Routes.ModuleRules> moduleRules() {
+                return modules.get();
+            }
+
             @Override
             public Routes.PackInfo find(String name) {
                 LoadService s = loads.getIfAvailable();

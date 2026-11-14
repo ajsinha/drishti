@@ -63,7 +63,13 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
 
     /** The input files and what a row is. */
     record Source(List<String> files, boolean recursive, Map<String, String> storage, String id, String date, LocalDate asOf,
-            List<String> promote, List<String> vectors, Map<String, String> flatten, List<String> partitionBy, String latestBy, String dateFrom) {}
+            List<String> promote, List<String> vectors, Map<String, String> flatten, List<String> partitionBy, String latestBy, String dateFrom,
+            Map<String, String> set) {
+        Source(List<String> files, boolean recursive, Map<String, String> storage, String id, String date, LocalDate asOf, List<String> promote,
+                List<String> vectors, Map<String, String> flatten, List<String> partitionBy, String latestBy, String dateFrom) {
+            this(files, recursive, storage, id, date, asOf, promote, vectors, flatten, partitionBy, latestBy, dateFrom, Map.of());
+        }
+    }
 
     /** The table and its layout. */
     record Target(String format, String path, String lake, String domain, String kind, String table, Map<String, String> storage,
@@ -383,9 +389,19 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
         } else if (s.has("flatten")) {
             agree(entry, "flatten", r.map(s.path("flatten"), "source.flatten"), entry.flatten());
         }
+        // the connector's set: constants, stamped into every stored row that lacks the field (a shared table then splits by where:)
+        Map<String, String> constants = new java.util.LinkedHashMap<>();
+        if (packDir != null) {
+            try {
+                constants.putAll(PackEntry.constants(Path.of(packDir), r.text(s, "connector", null)));
+            } catch (IOException e) {
+                throw new IllegalArgumentException("source.pack " + packDir + ": " + e.getMessage());
+            }
+        }
         Map<String, String> sourceStorage = storage(r, s.path("storage-options"), "source.storage-options");
         Source src = new Source(files, r.bool(s, "recursive", false), sourceStorage, id == null ? "id" : id, date, asOf, promote, vectors, flatten,
-                entry != null ? entry.partitionBy() : r.list(s, "partition-by"), latestBy == null ? DEFAULT_LATEST_BY : latestBy.strip(), dateFrom);
+                entry != null ? entry.partitionBy() : r.list(s, "partition-by"), latestBy == null ? DEFAULT_LATEST_BY : latestBy.strip(), dateFrom,
+                constants);
 
         String tf = r.text(t, "format", entry != null ? entry.format() : "delta").toLowerCase(Locale.ROOT);
         if (entry != null) {

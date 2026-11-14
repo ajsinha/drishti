@@ -40,7 +40,7 @@
   native data for WSS, SwapOne and ICI (`tools/samplegen/src_*.py`, committed under `data/testdata/trades/<system>/`, written by
   `make_testdata.py`, no positions or scenario P&L: the VaR is unchanged) lands in one shared table, `trading.trades_shared`, split by
   `SOURCE_SYSTEM`, while Endur, Calypso and Murex keep a table each; `lake demo` builds both and writes the three new connectors; the demo
-  bindings are `config/demo/bindings.yaml` (`lake demo --bindings`); Drishti Risk lists the source modules.
+  bindings are `config/demo/bindings.yaml` (written by `lake demo`); Drishti Risk lists the source modules.
 - **Row retention for Delta, Iceberg and files, as the in-memory lake has it** (docs/guides/DATA_LAKE_GUIDE.md section 2.7). A table's
   `retention: {ttl, on, max-rows}` now works on durable tables: rows past their age (the field `on`, else `arrived_at`, else the business date) and
   beyond the newest `max-rows` are dropped by `lake maintain`, the one upkeep schedule (a Delta commit per date, an Iceberg commit per day, the day files

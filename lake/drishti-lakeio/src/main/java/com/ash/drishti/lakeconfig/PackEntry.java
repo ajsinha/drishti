@@ -87,6 +87,38 @@ public record PackEntry(String domain, String table, String key, String date, Li
         return null;
     }
 
+    /**
+     * The constants a connector's {@code set:} stamps into the rows it stores (the connector's {@code settings.set}: {@code SOURCE_SYSTEM:
+     * SWAPONE}), as text. The site's own connector file ({@code config/connectors/<name>.yaml}, beside the modules folder) wins over the
+     * module's template, so a site tweak reaches the loader too. Empty without a connector or a {@code set:}.
+     */
+    public static Map<String, String> constants(Path pack, String connector) throws IOException {
+        Map<String, String> out = new LinkedHashMap<>();
+        if (connector == null) {
+            return out;
+        }
+        Path file = Files.isDirectory(pack) ? pack.resolve("pack.yaml") : pack;
+        JsonNode site = null;
+        Path modules = modulesDir(file);
+        String dir = System.getenv("DRISHTI_CONNECTORS_DIR");
+        Path siteFile = dir != null && !dir.isBlank() ? Path.of(dir, connector + ".yaml")
+                : modules == null ? null : modules.getParent().resolve("config").resolve("connectors").resolve(connector + ".yaml");
+        if (siteFile != null && Files.isRegularFile(siteFile)) {
+            site = new YAMLMapper().readTree(Files.readString(siteFile));
+        }
+        JsonNode c = site != null && site.path("settings").size() > 0 ? site : manifest(file).path("connectors").path(connector);
+        JsonNode st = c.path("settings");
+        if (st.path("set").isObject()) {
+            st.path("set").fields().forEachRemaining(e -> out.put(e.getKey(), e.getValue().asText()));
+        }
+        st.fields().forEachRemaining(e -> {
+            if (e.getKey().startsWith("set.") && e.getKey().length() > 4) {
+                out.put(e.getKey().substring(4), e.getValue().asText());
+            }
+        });
+        return out;
+    }
+
     /** The pack's entry for {@code kind}. */
     public static PackEntry read(Path pack, String kind, String connector) throws IOException {
         Path file = Files.isDirectory(pack) ? pack.resolve("pack.yaml") : pack;

@@ -651,7 +651,7 @@ class DemoLake:
                 new = yaml.safe_dump(doc, sort_keys=False)
             f.write_text(new, encoding="utf-8")
             notes.append(f"{name}: now reads {self.lake} (was {root}; the earlier text is in {hist})")
-        if getattr(self.a, "bindings", False) and "trading" in packs:     # the demo's data bindings: the trade kind from the six source modules
+        if getattr(self.a, "bindings", True) and "trading" in packs:     # the demo's data bindings: the trade kind from the six source modules
             target = folder.parent / "bindings.yaml"
             if target.is_file():
                 notes.append(f"bindings: {target} exists, left as it is")
@@ -727,8 +727,9 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
     p.add_argument("--engine", choices=("auto", "drishti", "deltalake"), default="deltalake", help="the lake writer (default deltalake)")
     p.add_argument("--with-real", metavar="FILE[,FILE]", help="LOCAL ONLY: real trade extracts (JSON) whose counterparties, agreements and "
                    "netting sets are added to the local lake, never to data/testdata")
-    p.add_argument("--bindings", action="store_true", help="also write the demo's bindings (config/demo/bindings.yaml: the trade kind read from the six "
-                   "source modules) beside the connectors' folder as bindings.yaml, when there is none there; needs a server that reads where:")
+    p.add_argument("--bindings", action=argparse.BooleanOptionalAction, default=True, help="write the demo's bindings (config/demo/bindings.yaml: the "
+                   "trade kind read from the six source modules) beside the connectors' folder as bindings.yaml, when there is none there (default on; "
+                   "--no-bindings leaves them out)")
     p.add_argument("--only", metavar="PREFIX[,PREFIX]", help="only these datasets: a folder prefix (trades/, core/counterparty) or a pack name")
     p.add_argument("--server", help=f"the server told of the new data (default: DRISHTI_SERVER, then {DEFAULT_SERVER})")
     p.add_argument("--token-file", help="the API token for the data-load signal (default: DRISHTI_TOKEN); never printed")

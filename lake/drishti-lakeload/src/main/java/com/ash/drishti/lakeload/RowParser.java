@@ -83,6 +83,9 @@ final class RowParser {
     private final int[] partitionSlots;
     private final int[] flattenSlots;
     private final String[] flattenNames;
+    private final String[] setNames;
+    private final String[] setValues;
+    private final int[] setSlots;
     private final Set<String> topNames;
     private final DoubleList[] vectors;
     private final boolean[] vectorPresent;
@@ -136,6 +139,12 @@ final class RowParser {
         for (int i = 0; i < flattenNames.length; i++) {
             flattenSlots[i] = slot(slots, plan.flatten.get(flattenNames[i]), true);
         }
+        setNames = plan.set.keySet().toArray(new String[0]);
+        setValues = plan.set.values().toArray(new String[0]);
+        setSlots = new int[setNames.length];
+        for (int i = 0; i < setNames.length; i++) {
+            setSlots[i] = slot(slots, setNames[i], false);
+        }
         vectors = new DoubleList[plan.vectors.size()];
         vectorPresent = new boolean[vectors.length];
         for (int i = 0; i < vectors.length; i++) {
@@ -149,7 +158,7 @@ final class RowParser {
         for (int i = 0; i < caps.length; i++) {
             caps[i] = new Cap();
         }
-        topNames = flattenNames.length > 0 ? new HashSet<>() : null;
+        topNames = flattenNames.length > 0 || setNames.length > 0 ? new HashSet<>() : null;
         notNumeric = new boolean[plan.promoted.size()];
         seen = new boolean[plan.promoted.size()];
         listSeen = new boolean[plan.promoted.size()];
@@ -275,6 +284,22 @@ final class RowParser {
         }
         if (t != JsonToken.END_OBJECT) {
             throw new IOException("an object ends early");
+        }
+        if (depth == 0 && setNames.length > 0) {
+            for (int i = 0; i < setNames.length; i++) {
+                if (!topNames.contains(setNames[i])) {          // a row that lacks the field takes the constant (stored: a shared table splits by it)
+                    if (!first) {
+                        doc.put(',');
+                    }
+                    first = false;
+                    PyJson.string(doc, setNames[i]);
+                    doc.put(':');
+                    PyJson.string(doc, setValues[i]);
+                    Cap c = caps[setSlots[i]];
+                    c.kind = Cap.STRING;
+                    c.text = setValues[i];
+                }
+            }
         }
         if (depth == 0 && flattenNames.length > 0) {
             for (int i = 0; i < flattenNames.length; i++) {

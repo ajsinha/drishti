@@ -344,7 +344,7 @@ settings:
   map: mappings/wss-trade.yaml
 ```
 
-The kind reads them all as a union (`config/demo/bindings.yaml`, written by `drishti.py lake demo --bindings`):
+The kind reads them all as a union (`config/demo/bindings.yaml`, written by `drishti.py lake demo`, on by default; `--no-bindings` leaves it out):
 
 ```yaml
 bindings:

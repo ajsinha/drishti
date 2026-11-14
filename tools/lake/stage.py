@@ -252,6 +252,7 @@ class Stager:
                  partition_by: list[str], promote: list[str], flatten: dict | None = None, vectors: list[str] | None = None,
                  latest_by: str | None = LATEST_BY):
         self.folder, self.key, self.date_field, self.as_of = folder, key, date_field, as_of
+        self.set: dict = {}                                                    # a connector's set: constants (build.plan reads them)
         self.latest_by = (latest_by or "").strip() or None
         self._twice: dict[date, set] = {}                                      # per date: the id hashes seen more than once
         # flattened fields (the pack's layout.<kind>.flatten: NOTIONAL: LEGS[0].NOTIONAL): a plain field of the document and a
@@ -324,6 +325,10 @@ class Stager:
         if isinstance(doc, jsonstream.Bad):
             st.reject(doc.where, doc.reason)
             return
+        if self.set and isinstance(doc, dict):          # the connector's set: constants are stored in a row that lacks the field
+            lacking = {n: v for n, v in self.set.items() if n not in doc}
+            if lacking:
+                doc = {**doc, **lacking}
         kv = get(doc, self.key)
         if kv is MISSING or kv is None or kv == "":
             st.reject(where, f"no id (field '{self.key}' is missing or empty)")

@@ -133,11 +133,11 @@
     {% if st.rulesError %}<p class="ib-warn" role="alert">{{ st.rulesError }}</p>{% endif %}
     <div class="tbl-wrap"><table class="tbl adm-tbl ib-tbl">
       <caption class="visually-hidden">The routing rules: which pack, kind and table a file name goes to</caption>
-      <thead><tr><th scope="col">#</th><th scope="col">Match (file name)</th><th scope="col">Pack / kind</th><th scope="col">Table</th><th scope="col">Business date</th></tr></thead>
+      <thead><tr><th scope="col">#</th><th scope="col">Match (file name)</th><th scope="col">Pack / kind</th><th scope="col">Table</th><th scope="col">Business date</th><th scope="col">Origin</th></tr></thead>
       <tbody>{% for r in rules.rules or [] %}
-        <tr><td>{{ r.n }}</td><td class="mono">{{ r.match }}</td><td>{{ r.pack }} / {{ r.kind }}</td><td class="mono">{{ r.table }}</td><td>{{ r.date }}</td></tr>
+        <tr><td>{{ r.n }}</td><td class="mono">{{ r.match }}</td><td>{{ r.pack }} / {{ r.kind }}</td><td class="mono">{{ r.table }}</td><td>{{ r.date }}</td><td data-origin>{{ r.origin or "site" }}</td></tr>
       {% endfor %}
-        <tr><td>-</td><td colspan="4" class="text-muted-d">{{ rules.unmatchedText or 'anything else: unmatched: fail, to failed/ with the reason, never guessed' }}</td></tr></tbody>
+        <tr><td>-</td><td colspan="5" class="text-muted-d">{{ rules.unmatchedText or 'anything else: unmatched: fail, to failed/ with the reason, never guessed' }}</td></tr></tbody>
     </table></div>
     <p class="text-muted-d">{{ rules.note }}</p>
   </section>
