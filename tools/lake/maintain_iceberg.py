@@ -142,6 +142,9 @@ def command(uri: str, conf: dict, today: date, dry_run: bool, force_drop: bool, 
                                                                   "--as-of", today.isoformat(), "--json"]
     if conf.get("keep-business-days"):
         cmd += ["--keep-days", str(int(conf["keep-business-days"])), "--max-drop-share", str(conf.get("max-drop-share", 0.5))]
+    for key in ("ttl", "on", "max-rows"):     # row retention (maintain_rows.py): the same rule as the memory lake's
+        if (conf.get("row-retention") or {}).get(key):
+            cmd += [f"--{key}", str(conf["row-retention"][key])]
     if conf.get("compact"):
         cmd += ["--relayout"]
     cmd += ["--expire-hours", str(int(conf["vacuum-hours"])) if conf.get("vacuum-hours") is not None else "-1"]
@@ -163,22 +166,24 @@ def command(uri: str, conf: dict, today: date, dry_run: bool, force_drop: bool, 
     return cmd
 
 
+def json_line(cmd: list[str], what: str) -> str:
+    """Runs a Java maintenance command and returns the last line of JSON it printed; RuntimeError (naming ``what`` and the last word of its
+    output) when it printed none."""
+    p = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
+    lines = [x for x in p.stdout.splitlines() if x.startswith("{")]
+    if not lines:
+        words = [x for x in (p.stderr + p.stdout).splitlines() if x.strip() and not x.startswith("SLF4J")]
+        raise RuntimeError(f"{what} failed: " + (words[-1] if words else f"exit {p.returncode}"))
+    return lines[-1]
+
+
 def maintain(uri: str, conf: dict, today: date, dry_run: bool, force_drop: bool = False, floor_days: int = 0,
              data: pathlib.Path | None = None, runner=None) -> dict:
     """One Iceberg table maintained (or a dry run): the result in lake maintain's form (before, after or estimate, retention, compact,
     vacuum, orphans, floor). ``runner(cmd)`` gives the JSON line (tests); by default the command runs. Raises RuntimeError on failure."""
     data = data or pathlib.Path(uri).parent.parent / "_drishti-lake"
     cmd = command(uri, conf, today, dry_run, force_drop, floor_days, data)
-    if runner is not None:
-        line = runner(cmd)
-    else:
-        p = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
-        lines = [x for x in p.stdout.splitlines() if x.startswith("{")]
-        if not lines:
-            words = [x for x in (p.stderr + p.stdout).splitlines() if x.strip() and not x.startswith("SLF4J")]
-            raise RuntimeError("Iceberg maintenance failed: " + (words[-1] if words else f"exit {p.returncode}"))
-        line = lines[-1]
-    r = json.loads(line)
+    r = json.loads(runner(cmd) if runner is not None else json_line(cmd, "Iceberg maintenance"))
     if r.get("error"):
         raise RuntimeError(r["error"])
     out: dict = {"table": uri, "format": "iceberg", "before": r.get("before")}
@@ -186,6 +191,9 @@ def maintain(uri: str, conf: dict, today: date, dry_run: bool, force_drop: bool 
     keep = r.get("keepDays") or {}
     if keep:
         out["retention"] = {"dates": keep.get("wouldRemove")} if dry_run else {"removed": keep.get("removed")}
+    if "rowRetention" in r:
+        days = r["rowRetention"]
+        out["row-retention"] = {"dropped": sum(int(d.get("dropped", 0)) for d in days), "dates": days, "dry_run": dry_run}
     if "relayout" in r:
         out["compact"] = {"relaid-dates": r["relayout"]}
     if "expireHours" in r:

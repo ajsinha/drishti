@@ -84,6 +84,27 @@ class LakesTest {
         assertFalse(l.require(null, "trade", "trade_murex").appends());
     }
 
+    /** {@code retention: 7y} keeps business dates; a block {@code {ttl, on, max-rows}} is the table's row retention (DATA_LAKE_GUIDE.md section 2.7). */
+    @Test
+    void aTablesRetentionIsBusinessDatesOrARowBlock() {
+        Lake l = Lakes.parse("""
+                lake: main
+                format: delta
+                tables:
+                  trading.trade:
+                    retention: 7y
+                  news.item:
+                    retention: {ttl: 8h, on: UPDATED_AT, max-rows: 100000, dates: 2y}
+                """, "main", ENV);
+        assertEquals("7y", l.tables().get("trading.trade").retention());
+        assertTrue(l.tables().get("trading.trade").rowRetention().isEmpty());
+        LakeTable n = l.tables().get("news.item");
+        assertEquals(Map.of("ttl", "8h", "on", "UPDATED_AT", "max-rows", "100000"), n.rowRetention());
+        assertEquals("2y", n.retention());
+        assertEquals(n.rowRetention(), n.describe().get("row-retention"));
+        assertRefused("lake: main\nformat: delta\ntables:\n  news.item:\n    retention: {ttl: 8h, soon: 1}\n", "retention.soon");
+    }
+
     @Test
     void severalTablesOfOneKindAreNamedNeverGuessed() {
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> main().require(null, "trade"));

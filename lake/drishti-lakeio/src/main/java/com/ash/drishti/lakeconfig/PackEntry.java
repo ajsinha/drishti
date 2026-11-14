@@ -125,7 +125,7 @@ public record PackEntry(String domain, String table, String key, String date, Li
         }
         String folder = table == null ? kind : table;
         return new LakeTable(domain, folder, kind, domain + "/" + folder, "delta", List.of(), promote, vectors, flatten, key, date, latestBy,
-                LakeTable.REPLACE, sortBy, Map.of(), null, Map.of(), null, Map.of());
+                LakeTable.REPLACE, sortBy, Map.of(), null, Map.of(), Map.of(), null, Map.of());
     }
 
     /**

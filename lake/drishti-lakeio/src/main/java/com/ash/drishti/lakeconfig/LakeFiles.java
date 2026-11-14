@@ -374,7 +374,19 @@ public final class LakeFiles {
                 e.put(k, v);
             }
         });
-        put(e, "retention", t.retention());
+        if (t.rowRetention().isEmpty()) {
+            put(e, "retention", t.retention());
+        } else {
+            ObjectNode rr = e.putObject("retention");
+            t.rowRetention().forEach((k, x) -> {
+                if (k.equals("max-rows") && x.matches("\\d+")) {
+                    rr.put(k, Integer.parseInt(x));
+                } else {
+                    rr.put(k, x);
+                }
+            });
+            put(rr, "dates", t.retention());
+        }
         put(e, "time-travel", t.timeTravel());
         if (!t.properties().isEmpty()) {
             ObjectNode p = e.putObject("properties");

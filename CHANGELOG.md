@@ -18,6 +18,12 @@
 
 ## Unreleased
 
+- **Row retention for Delta, Iceberg and files, as the in-memory lake has it** (docs/guides/DATA_LAKE_GUIDE.md section 2.7). A table's
+  `retention: {ttl, on, max-rows}` now works on durable tables: rows past their age (the field `on`, else `arrived_at`, else the business date) and
+  beyond the newest `max-rows` are dropped by `lake maintain`, the one upkeep schedule (a Delta commit per date, an Iceberg commit per day, the day files
+  of a files store rewritten), the old files going by the table's vacuum or snapshot expiry. One rule class, `RowRetention` (moved to drishti-common,
+  shared with the memory lake), and a parity test: the same rows and block leave the same rows in memory, Delta, Iceberg and files, and delta-rs reads
+  the Delta result. Absent: nothing changes. Admin → Lakes' table page shows the rows kept. Domain floors (risk: seven years) apply.
 - **The grid's live mode and the trade blotter page** (drishti-grid; docs/architecture/ELEMENTS.md section 5.5, modules/trading/docs/guide.md).
   One Elements component, `LiveSetGrid`, draws a live result set: a snapshot, then the server's changes merged by key and version and applied
   as one batched transaction so cells tick, the page window sent to the server, `resync` and reconnects reading the set again, grouping with live

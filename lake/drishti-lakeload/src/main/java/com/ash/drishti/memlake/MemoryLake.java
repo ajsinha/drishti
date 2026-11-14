@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.memlake;
 
+import com.ash.drishti.common.RowRetention;
 import com.ash.drishti.deltalake.write.LakeManifest;
 import com.ash.drishti.deltalake.write.LakeWriter;
 import com.ash.drishti.deltalake.write.TableUpkeep;

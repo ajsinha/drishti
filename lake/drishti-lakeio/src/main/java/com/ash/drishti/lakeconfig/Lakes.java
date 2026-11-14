@@ -67,6 +67,7 @@ public final class Lakes {
     static final Set<String> TABLE = Set.of("kind", "path", "format", "partition-by", "promote", "vectors", "flatten", "id", "date", "latest-by",
             "load-mode", "sort-by", "file-rows", "row-group-rows", "file-size-mb", "row-group-mb", "compression", "vector-compression",
             "retention", "maintenance", "time-travel", "properties");
+    static final Set<String> ROW_RETENTION = Set.of("ttl", "on", "max-rows", "dates");
     static final Set<String> LAYOUT = Set.of("file-rows", "row-group-rows", "file-size-mb", "row-group-mb", "compression", "vector-compression");
     private static final Set<String> MEMORY = Set.of("max-mb", "chunk-kb", "contract", "owner", "idle-trim-minutes");
 
@@ -435,9 +436,25 @@ public final class Lakes {
             }
         }
         List<String> promote = v.list(pick.apply("promote"));
+        // retention: 7y (business dates kept) or retention: {ttl, on, max-rows[, dates]} (rows dropped for their age, DATA_LAKE_GUIDE.md, Row retention)
+        JsonNode rn = pick.apply("retention");
+        Map<String, String> rowRetention = new LinkedHashMap<>();
+        String retention = null;
+        if (rn.isObject()) {
+            unknown(where, "tables." + key + ".retention.", rn, ROW_RETENTION);
+            for (String k : List.of("ttl", "on", "max-rows")) {
+                String x = v.text(rn.path(k), null);
+                if (x != null) {
+                    rowRetention.put(k, x);
+                }
+            }
+            retention = v.text(rn.path("dates"), null);
+        } else {
+            retention = v.text(rn, null);
+        }
         return new LakeTable(domain, name, kind, path, format, partition, promote, v.list(pick.apply("vectors")),
                 v.map(pick.apply("flatten"), "flatten"), v.text(pick.apply("id"), null), v.text(pick.apply("date"), null),
-                v.text(pick.apply("latest-by"), null), mode, v.list(pick.apply("sort-by")), layout, v.text(pick.apply("retention"), null),
+                v.text(pick.apply("latest-by"), null), mode, v.list(pick.apply("sort-by")), layout, retention, rowRetention,
                 v.map(pick.apply("maintenance"), "maintenance"), v.text(pick.apply("time-travel"), null), v.map(pick.apply("properties"), "properties"));
     }
 

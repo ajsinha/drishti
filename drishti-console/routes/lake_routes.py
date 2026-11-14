@@ -108,6 +108,10 @@ async def table_page(request: Request, root: str = "", table: str = ""):
         from core.lake_maint import maintenance
         over = await asyncio.to_thread(maintenance(request.app).overview, [t])
         maint = next((m for m in over["tables"] if m["table"] == table), None)
+        if maint is not None:      # the rows kept: the lake file's retention (the table's own), else the maintenance file's
+            mc = maintenance(request.app).mod("maintconfig")
+            lake_file = await asyncio.to_thread(mc.lake_file_settings, root)
+            maint["row_retention"] = mc.from_lake_entry(lake_file.get(table) or {})[0].get("row-retention") or maint["settings"].get("row-retention")
     except Exception:                     # noqa: BLE001 - the page opens without maintenance rather than not at all
         pass
     readers = await _readers(request, me, parts[0], parts[1])

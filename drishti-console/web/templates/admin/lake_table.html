@@ -90,6 +90,8 @@
     · files compacted to <b>{{ maint.settings['target-file-mb'] }} MB</b> · checkpoints <b>{{ 'on' if maint.settings.checkpoint else 'off' }}</b>
     · vacuum after <b>{{ maint.settings['vacuum-hours'] }} h</b>{% if maint.settings.own %} <small class="text-muted-d">(this table's own: {{ maint.settings.own | join(', ') }})</small>{% endif %}.
     Change them on <a href="/admin/lakes#maintain">Lakes → Maintain</a>.</p>
+  {% if maint.row_retention %}<p>Rows kept: <b>{% if maint.row_retention.ttl %}{{ maint.row_retention.ttl }}{% if maint.row_retention.on %} by {{ maint.row_retention.on }}{% else %} since the row's business date{% endif %}{% endif %}{% if maint.row_retention['max-rows'] %}{% if maint.row_retention.ttl %} · {% endif %}the newest {{ maint.row_retention['max-rows'] }}{% endif %}</b>
+    <small class="text-muted-d">(the table's <code>retention:</code>; older rows are dropped by the maintenance run, as in a memory table)</small>.</p>{% endif %}
   {% else %}<p class="text-muted-d">{{ (maint.reason if maint else none) or 'Not maintained here' }}: lake build did not build this table under this root, so Lakes → Maintain leaves it alone.</p>{% endif %}
 
   <h2 class="ws-h">Table</h2>

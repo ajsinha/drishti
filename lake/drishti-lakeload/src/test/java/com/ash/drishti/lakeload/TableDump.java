@@ -57,12 +57,12 @@ import java.util.concurrent.Executors;
  * {@code {column: value}} with the date as yyyy-MM-dd and a vector as a list (null elements kept), keyed {@code date|id} (a duplicate
  * id gets {@code #2}, {@code #3}).
  */
-final class TableDump {
+public final class TableDump {
 
     private TableDump() {}
 
     /** The latest version of a Delta table; {@code settings} the S3 ones (empty for local). */
-    static Map<String, Map<String, Object>> delta(String table, Map<String, String> settings) throws Exception {
+    public static Map<String, Map<String, Object>> delta(String table, Map<String, String> settings) throws Exception {
         Engine engine = settings.isEmpty() ? NativeEngine.create() : NativeEngine.create(settings);
         Snapshot s = io.delta.kernel.Table.forPath(engine, table).getLatestSnapshot(engine);
         Scan scan = s.getScanBuilder().build();
@@ -136,7 +136,7 @@ final class TableDump {
     }
 
     /** The current snapshot of an Iceberg table {@code <root>/<domain>/<table>} (or a catalog's: {@code settings}). */
-    static Map<String, Map<String, Object>> iceberg(String root, String domain, String table, Map<String, String> settings) throws Exception {
+    public static Map<String, Map<String, Object>> iceberg(String root, String domain, String table, Map<String, String> settings) throws Exception {
         Map<String, String> s = new java.util.HashMap<>(settings);
         s.put("root", root);
         s.put("domain", domain);

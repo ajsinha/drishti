@@ -2592,7 +2592,7 @@ terminal, cron or a container; both read and write `<data>/lakes/lake-maintenanc
 same way (16.3). The examples use a small lake with two trade tables built by `lake build` and one table another system published (`risk/var_published`).
 Its parts beside `maintain.py`: `tools/lake/maintconfig.py` (the maintenance YAML and the run history), `tools/lake/maintschedule.py`
 (the one scheduler, used by `--daemon` and by the console), `tools/lake/ownership.py` (which tables Drishti's lake tool built: the only ones
-it maintains) and `tools/lake/maintain_iceberg.py` (the Iceberg tables, 16.3).
+it maintains) and `tools/lake/maintain_iceberg.py` (the Iceberg tables, 16.3), and `tools/lake/maintain_rows.py` (a table's row retention, `retention: {ttl, on, max-rows}`, for Delta, Iceberg and files stores: DATA_LAKE_GUIDE.md section 2.7).
 
 ### 16.2 Maintain from the page or the command line
 
