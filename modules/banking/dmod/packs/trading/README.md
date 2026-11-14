@@ -105,16 +105,16 @@ Fields, from 765 sample documents:
 | `PRODUCT_SUB_GROUP` | string | `linear` | Product sub-group, e.g. linear |
 | `OPTION_TYPE` | string | `Call` | Call or Put, for options |
 | `STRIKE_PRICE` | number | `158.79394` | Strike, for options |
-| `COUNTERPARTY` | string | `CP-HARBORPT` | The counterparty's id (core pack); link to `counterparty` |
+| `COUNTERPARTY` | string | `CP-HARBORPT` | The counterparty's id (core pack) |
 | `COUNTERPARTY_UEN` | string | `UEN0100259` | The counterparty's unique entity number |
 | `COUNTERPARTY_COUNTRY_OF_RISK` | string | `US` | The counterparty's country of risk (ISO alpha-2) |
-| `ORIGINAL_COUNTERPARTY` | string | `CP-HALCYON` | The counterparty before a novation or clearing; link to `counterparty` |
+| `ORIGINAL_COUNTERPARTY` | string | `CP-HALCYON` | The counterparty before a novation or clearing |
 | `ORIGINAL_COUNTERPARTY_UEN` | string | `UEN0100222` | Its unique entity number |
 | `INTERNAL_EXTERNAL_CODE` | string | `External` | Internal (between the bank's own books) or External |
 | `TRANSIT` | string | `00107` | The branch transit number |
-| `LEGAL_ENTITY` | string | `LE-NY` | The bank's legal entity that booked it (core pack); link to `legal-entity` |
-| `PORTFOLIO` | string | `BOOK-COMM-2` | The book (portfolio) id (core pack); link to `book` |
-| `TRADER_ID` | string | `TRDR-FROSSI` | The trader's id (core pack); link to `trader` |
+| `LEGAL_ENTITY` | string | `LE-NY` | The bank's legal entity that booked it (core pack) |
+| `PORTFOLIO` | string | `BOOK-COMM-2` | The book (portfolio) id (core pack) |
+| `TRADER_ID` | string | `TRDR-FROSSI` | The trader's id (core pack) |
 | `TRADER_FIRST_NAME` | string | `F.` | The trader's first name or initial |
 | `TRADER_LAST_NAME` | string | `Rossi` | The trader's last name |
 | `START_DATE` | date | `2025-08-01` | Start (effective) date |
@@ -127,8 +127,8 @@ Fields, from 765 sample documents:
 | `NY_CURVE_FLAG` | null |  | The booking system's New York curve flag (null when not set) |
 | `VAULT_LOCATION_ALLOCATION` | string | `Vault Toronto A` | Vault the metal is allocated to, for precious metals |
 | `PRECIOUS_METAL_FLAG` | string | `Y` | Y for a precious-metals trade |
-| `TT_GROUP` | string | `DESK-FX` | The desk the trade is grouped under for transfer pricing; link to `desk` |
-| `TT_BOOK` | string | `BOOK-FX-3` | The book for transfer pricing; link to `book` |
+| `TT_GROUP` | string | `DESK-FX` | The desk the trade is grouped under for transfer pricing |
+| `TT_BOOK` | string | `BOOK-FX-3` | The book for transfer pricing |
 | `LEASE_PERPETUITY_FLAG` | string | `Y` | Y for a perpetual metal lease |
 | `SETTLEMENT_DATE` | date | `2024-04-22` | Settlement date |
 | `LEGS` | list of objects |  | The legs, each with its index and cash flows (and their resets) |
@@ -144,7 +144,7 @@ Nested structures:
 | `LEGS[].CASH_FLOWS[].RESETS[]` | `RESET_ID` (string), `ACCRUAL` (number), `START_DATE` (date), `END_DATE` (date), `RESET_DATE` (date), `ACCRUAL_START_DATE` (date), `ACCRUAL_END_DATE` (date), `RATE` (string or number) |
 | `EVENTS[]` | `LEG_ID` (string), `EVENT_ID` (string), `EVENT_NUMBER` (integer), `EVENT_TYPE` (string), `PAYMENT_TYPE` (string), `EVENT_DATE` (date), `AMOUNT` (number), `CURRENCY` (string), `SEQUENCE_NUMBER` (integer), `VAULT_LOCATION_ALLOCATION` (null), `NY_CURVE_FLAG` (null) |
 
-Links: `COUNTERPARTY` → `counterparty`, `LEGAL_ENTITY` → `legal-entity`, `ORIGINAL_COUNTERPARTY` → `counterparty`, `PORTFOLIO` → `book`, `TRADER_ID` → `trader`, `TRADE_ID` → `trade`, `TT_BOOK` → `book`, `TT_GROUP` → `desk`.
+Links: `TRADE_ID` → `trade`.
 
 ### `counterparty-trades`
 

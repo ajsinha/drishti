@@ -979,7 +979,7 @@ def check(packs_dir: Path = PACKS, testdata: Path = TESTDATA, data: bool = True)
     for f in _contract_files(packs_dir):
         if f.resolve() in known:
             continue
-        rel = f.relative_to(packs_dir)
+        rel = f.relative_to(packs_dir) if f.is_relative_to(packs_dir) else f.relative_to(ROOT)
         c = load(f)
         if c.get("status") != "planned":
             out.append(f"{rel}: no command of its pack has this kind")

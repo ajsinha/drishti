@@ -143,8 +143,6 @@ Nested structures:
 |---|---|
 | `SHOCKS[]` | `FACTOR` (string): The market variable the scenario moves, such as an equity index, a spread or a curve., `SHOCK` (number): How far the factor moves. The unit follows the factor: a proportional change for prices and spreads, percentage points for interest rates, points for volatility. |
 
-Links: `DESK` → `desk`.
-
 ### `stress-result`
 
 **Stress result** · mnemonic `STR` · read through connector `risk-store`.
@@ -161,7 +159,7 @@ Fields, from 80 sample documents:
 | `LIMIT` | number | `75700000.0` | The largest loss the desk accepts under this scenario, a positive amount: a loss larger than the limit is a breach. (USD) |
 | `BY_BOOK` | list of objects |  | Stress P&L by book |
 | `SCENARIO` | string | `SCN-COVID2020` | link to `stress-scenario` |
-| `DESK` | string | `DESK-COMM` | The desk's id; link to `desk` |
+| `DESK` | string | `DESK-COMM` | The desk's id |
 
 Nested structures:
 
@@ -169,7 +167,7 @@ Nested structures:
 |---|---|
 | `BY_BOOK[]` | `BOOK` (string), `PNL` (integer): The book's share of the scenario P&L. (USD) |
 
-Links: `DESK` → `desk`, `SCENARIO` → `stress-scenario`.
+Links: `SCENARIO` → `stress-scenario`.
 
 ### `frtb-sensitivity`
 
@@ -184,7 +182,7 @@ Fields, from 30 sample documents:
 | Field | Type | Example | Description |
 |---|---|---|---|
 | `RESULT_ID` | string | `FRTB-COMM-1` | The document's id |
-| `BOOK` | string | `BOOK-COMM-1` | The trading book the charge is computed for.; link to `book` |
+| `BOOK` | string | `BOOK-COMM-1` | The trading book the charge is computed for. |
 | `DELTA_CHARGE` | integer | `11613331` | Capital for the first-order sensitivity of the book to its risk factors, after the regulatory risk weights and the correlations within and between buckets. (USD) |
 | `VEGA_CHARGE` | integer | `3173321` | Capital for the sensitivity of option values to implied volatility, aggregated like delta. (USD) |
 | `CURVATURE_CHARGE` | integer | `1378886` | Capital for the loss that delta alone does not capture when an option's value is not linear in the underlying move (the gamma risk). (USD) |
@@ -199,8 +197,6 @@ Nested structures:
 |---|---|
 | `SENSITIVITIES[]` | `RISK_CLASS` (string): One of the regulatory risk classes: general interest-rate, credit spread (non-securitisation, securitisation), equity, commodity or FX., `BUCKET` (string): The regulatory grouping of risk factors inside a risk class, such as a sector, rating or tenor group, with its own risk weight and correlation., `MEASURE` (string): Which risk the sensitivity measures: delta (to the price or rate), vega (to volatility) or curvature., `VALUE` (integer): The change in the value of the book's positions for the prescribed unit move in the factor, before the risk weight is applied. (USD) |
 | `BY_CLASS[]` | `RISK_CLASS` (string), `CHARGE` (integer): The class's contribution to the book's sensitivities-based charge. (USD) |
-
-Links: `BOOK` → `book`.
 
 ### `pnl-explain`
 
@@ -219,7 +215,7 @@ Fields, from 30 sample documents:
 | `UNEXPLAINED` | integer | `2399` | Actual minus explained. A large or persistent residual points to a missing risk factor, a stale parameter or a pricing difference between the front office and risk. (USD) |
 | `ATTRIBUTION` | list of objects |  | P&L by risk factor |
 | `EXPLAIN_STEPS` | list of objects |  | The explain steps in order |
-| `BOOK` | string | `BOOK-COMM-1` | The book's id; link to `book` |
+| `BOOK` | string | `BOOK-COMM-1` | The book's id |
 
 Nested structures:
 
@@ -227,8 +223,6 @@ Nested structures:
 |---|---|
 | `ATTRIBUTION[]` | `FACTOR` (string), `PNL` (integer): The explained P&L assigned to this risk factor. (USD) |
 | `EXPLAIN_STEPS[]` | `STEP` (string), `PNL` (integer): Each step moves the running total from zero to the actual P&L; the last step is the unexplained rest. (USD) |
-
-Links: `BOOK` → `book`.
 
 ### `trade-valuation`
 
@@ -245,11 +239,11 @@ Fields, from 765 sample documents:
 | `SOURCE_SYSTEM` | string | `ENDUR` | Source |
 | `PRODUCT_TYPE` | string | `ComSwap` | Product |
 | `PRODUCT_GROUP` | string | `Commodity` | Group |
-| `PORTFOLIO` | string | `BOOK-COMM-2` | The book's id; link to `book` |
-| `DESK` | string | `DESK-COMM` | The desk's id; link to `desk` |
-| `COUNTERPARTY` | string | `CP-HARBORPT` | The counterparty's id; link to `counterparty` |
+| `PORTFOLIO` | string | `BOOK-COMM-2` | The book's id |
+| `DESK` | string | `DESK-COMM` | The desk's id |
+| `COUNTERPARTY` | string | `CP-HARBORPT` | The counterparty's id |
 | `NETTING_SET` | string | `NS-BRAMBLE-LDN` | The netting set's id |
-| `TRADER_ID` | string | `TRDR-FROSSI` | The trader's id; link to `trader` |
+| `TRADER_ID` | string | `TRDR-FROSSI` | The trader's id |
 | `BUY_SELL_CODE` | string | `S` | B or S |
 | `TRADE_STATUS` | string | `VALIDATED` | Status |
 | `CURRENCY` | string | `USD` | Currency |
@@ -262,7 +256,7 @@ Fields, from 765 sample documents:
 | `MATURITY_DATE` | date | `2028-07-31` | Maturity |
 | `VALUATION_DATE` | date | `2026-09-30` | Valued |
 
-Links: `COUNTERPARTY` → `counterparty`, `DESK` → `desk`, `PORTFOLIO` → `book`, `TRADER_ID` → `trader`, `TRADE_ID` → `trade`.
+Links: `TRADE_ID` → `trade`.
 
 ### `position`
 
@@ -291,13 +285,13 @@ Fields, from 2 sample documents:
 | `SHORT_TRADES` | integer | `7` | — |
 | `TRADE_IDS` | list of strings |  | The trades in the position (each links to the trade); link to `trade` |
 | `TRADES` | list of objects |  | Each trade's signed quantity, direction, PV, product and counterparty |
-| `LEGAL_ENTITY` | string | `LE-LDN` | The bank's legal entity that holds the book.; link to `legal-entity` |
+| `LEGAL_ENTITY` | string | `LE-LDN` | The bank's legal entity that holds the book. |
 | `DIVISION` | string | `DIV-MARKETS` | — |
-| `DESK` | string | `DESK-EQD` | The desk the book belongs to.; link to `desk` |
-| `TT_BOOK` | string | `BOOK-EQD-2` | The book the position is held in: its trades are all booked there.; link to `book` |
-| `PORTFOLIO` | string | `BOOK-EQD-2` | link to `book` |
+| `DESK` | string | `DESK-EQD` | The desk the book belongs to. |
+| `TT_BOOK` | string | `BOOK-EQD-2` | The book the position is held in: its trades are all booked there. |
+| `PORTFOLIO` | string | `BOOK-EQD-2` | — |
 | `STRATEGY` | null |  | — |
-| `COUNTERPARTY` | string | `CP-SUMMIT` | The counterparty of the position's trades when they all share one; empty otherwise.; link to `counterparty` |
+| `COUNTERPARTY` | string | `CP-SUMMIT` | The counterparty of the position's trades when they all share one; empty otherwise. |
 | `PRODUCT_GROUP` | string | `Equity` | — |
 | `PRODUCT_TYPE` | string | `WARRANT` | The product of the instrument, as the booking systems name it. |
 | `CURRENCY` | string | `USD` | The instrument's currency. Every P&L and value is in USD, the reporting currency. |
@@ -315,7 +309,7 @@ Nested structures:
 |---|---|
 | `TRADES[]` | `TRADE_ID` (string), `QUANTITY` (number): The trade's signed quantity in the position: a buy positive, a sell negative., `DIRECTION` (string), `PV` (number): The trade's present value on the business date, as the risk batch priced it. (USD), `PRODUCT_TYPE` (string), `COUNTERPARTY` (string), `TRADE_CURRENCY` (string) |
 
-Links: `COUNTERPARTY` → `counterparty`, `DESK` → `desk`, `LEGAL_ENTITY` → `legal-entity`, `PORTFOLIO` → `book`, `POSITION_ID` → `position`, `TRADE_IDS` → `trade`, `TT_BOOK` → `book`.
+Links: `POSITION_ID` → `position`, `TRADE_IDS` → `trade`.
 
 ### `system-basket`
 
@@ -376,16 +370,16 @@ Fields, from 2 sample documents:
 | `TRADE_VERSIONS` | string | `v4` | — (in 50%) |
 | `TRADE_STATUS` | string | `AMENDED` | The trade's status: NEW, VALIDATED and AMENDED count on the date |
 | `MATURITY_DATE` | date | `2027-05-26` | — |
-| `LEGAL_ENTITY` | string | `LE-LDN` | link to `legal-entity` |
+| `LEGAL_ENTITY` | string | `LE-LDN` | — |
 | `DIVISION` | string | `DIV-MARKETS` | — |
-| `DESK` | string | `DESK-EQD` | link to `desk` |
-| `TT_BOOK` | string | `BOOK-EQD-2` | link to `book` |
+| `DESK` | string | `DESK-EQD` | — |
+| `TT_BOOK` | string | `BOOK-EQD-2` | — |
 | `LIMIT_LETTER` | string | `LL-0008` | The limit letter the trade's VaR limit is granted under: the hierarchy LL, LIMIT_LETTER > DESK, is built from it |
-| `PORTFOLIO` | string | `BOOK-EQD-2` | link to `book` |
+| `PORTFOLIO` | string | `BOOK-EQD-2` | — |
 | `STRATEGY` | null |  | — |
 | `PRODUCT_GROUP` | string | `Equity` | — |
 | `PRODUCT_TYPE` | string | `WARRANT` | — |
-| `COUNTERPARTY` | string | `CP-SUMMIT` | link to `counterparty` |
+| `COUNTERPARTY` | string | `CP-SUMMIT` | — |
 | `DIRECTION` | string | `SHORT` | — |
 | `QUANTITY` | number | `-179000000.0` | The trade's quantity: positive for a buy, negative for a sell. |
 | `TAGS` | null |  | — |
@@ -403,7 +397,7 @@ Fields, from 2 sample documents:
 | `POSITION_ID` | string | `POS-BOOK-EQD-2~SEC-WARRANT-USD-01` | link to `position` (in 50%) |
 | `TRADE_IDS` | list of strings |  | link to `trade` (in 50%) |
 
-Links: `COUNTERPARTY` → `counterparty`, `DESK` → `desk`, `LEGAL_ENTITY` → `legal-entity`, `PORTFOLIO` → `book`, `POSITION_ID` → `position`, `TRADE_ID` → `trade`, `TRADE_IDS` → `trade`, `TT_BOOK` → `book`.
+Links: `POSITION_ID` → `position`, `TRADE_ID` → `trade`, `TRADE_IDS` → `trade`.
 
 ### `scenario-pv`
 
@@ -425,12 +419,12 @@ Fields, from 2 sample documents:
 | `SCENARIO_PV_ID` | string | `SPV-POS-BOOK-COMM-1~1000054-HS-509` | link to `scenario-pv` |
 | `BUSINESS_DATE` | date | `2026-09-30` | — |
 | `TRADE_STATUS` | string | `VALIDATED` | — |
-| `LEGAL_ENTITY` | string | `LE-NY` | link to `legal-entity` |
+| `LEGAL_ENTITY` | string | `LE-NY` | — |
 | `DIVISION` | string | `DIV-MARKETS` | — |
-| `DESK` | string | `DESK-COMM` | link to `desk` |
-| `TT_BOOK` | string | `BOOK-COMM-1` | link to `book` |
+| `DESK` | string | `DESK-COMM` | — |
+| `TT_BOOK` | string | `BOOK-COMM-1` | — |
 | `LIMIT_LETTER` | string | `LL-0001` | — |
-| `PORTFOLIO` | string | `BOOK-COMM-1` | link to `book` |
+| `PORTFOLIO` | string | `BOOK-COMM-1` | — |
 | `STRATEGY` | null |  | — |
 | `PRODUCT_GROUP` | string | `Commodity` | — |
 | `PRODUCT_TYPE` | string | `ComSwap` | — |
@@ -438,7 +432,7 @@ Fields, from 2 sample documents:
 | `SECURITY_ID` | string | `SEC-WARRANT-USD-01` | — |
 | `INSTRUMENT` | string | `ENGY-SWAP EUR 2026-09` | — |
 | `MATURITY_DATE` | date | `2026-09-30` | — |
-| `COUNTERPARTY` | string | `CP-NORTHPLAINS` | link to `counterparty` |
+| `COUNTERPARTY` | string | `CP-NORTHPLAINS` | — |
 | `DIRECTION` | string | `SHORT` | — |
 | `QUANTITY` | number | `-18000.0` | — |
 | `TAGS` | null |  | — |
@@ -457,7 +451,7 @@ Fields, from 2 sample documents:
 | `TRADE_ID` | string | `MX-20000274` | link to `trade` (in 50%) |
 | `TRADE_VERSIONS` | string | `v4` | — (in 50%) |
 
-Links: `COUNTERPARTY` → `counterparty`, `DESK` → `desk`, `LEGAL_ENTITY` → `legal-entity`, `PORTFOLIO` → `book`, `POSITION_ID` → `position`, `SCENARIO_PV_ID` → `scenario-pv`, `TRADE_ID` → `trade`, `TRADE_IDS` → `trade`, `TT_BOOK` → `book`.
+Links: `POSITION_ID` → `position`, `SCENARIO_PV_ID` → `scenario-pv`, `TRADE_ID` → `trade`, `TRADE_IDS` → `trade`.
 
 ### `fx-scenario`
 
@@ -543,15 +537,13 @@ Fields, from 3 sample documents:
 | `DESK_PNL_ID` | string | `DPNL-DESK-COMM-2026-09-30` | — |
 | `BUSINESS_DATE` | date | `2026-09-30` | — |
 | `DESK_ID` | string | `DESK-COMM` | — |
-| `LEGAL_ENTITY` | string | `LE-NY` | link to `legal-entity` |
+| `LEGAL_ENTITY` | string | `LE-NY` | — |
 | `ACTUAL_PNL` | integer | `199665` | The desk's P&L of the day from the bank's books, without fees, commissions, reserves and net interest income. (the row's currency) |
 | `HYPOTHETICAL_PNL` | integer | `-479876` | Yesterday's positions revalued at today's market: the P&L had nothing been traded. (the row's currency) |
 | `FEES_AND_COMMISSIONS` | integer | `298323` | Left out of the actual P&L that backtesting uses; shown for reconciliation. (the row's currency) |
 | `CURRENCY` | string | `USD` | — |
 | `SOURCE` | string | `demo-finance` | — |
 | `AS_OF` | timestamp | `2026-09-30T22:00:00Z` | — |
-
-Links: `LEGAL_ENTITY` → `legal-entity`.
 
 ### `pnl-history`
 

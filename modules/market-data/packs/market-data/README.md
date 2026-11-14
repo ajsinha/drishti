@@ -140,7 +140,7 @@ Fields, from 28 sample documents:
 | `FORWARDS` | list of objects |  | Forward rates read off the curve |
 | `INTERPOLATION` | string | `Log-linear on discount factors` | Interpolation method, e.g. log-linear on discount factors |
 | `DAY_COUNT` | string | `ACT/365F` | Day-count convention |
-| `CALENDAR` | string | `CAL-GBLO` | Holiday calendar id; link to `calendar` |
+| `CALENDAR` | string | `CAL-GBLO` | Holiday calendar id |
 | `FIXING_INDEX` | string | `FIX-AONIA` | link to `rate-fixing` |
 | `BUILT_AT` | timestamp | `2026-09-30T18:02:41Z` | When the curve was built |
 | `SOURCES` | list of strings |  | Quote sources the curve was built from |
@@ -152,7 +152,7 @@ Nested structures:
 | `POINTS[]` | `TENOR` (string), `MATURITY` (date), `INSTRUMENT` (string), `QUOTE` (number), `ZERO_RATE` (number), `DF` (number) |
 | `FORWARDS[]` | `TENOR` (string), `RATE` (number) |
 
-Links: `CALENDAR` → `calendar`, `FIXING_INDEX` → `rate-fixing`.
+Links: `FIXING_INDEX` → `rate-fixing`.
 
 ### `repo-curve`
 
@@ -327,7 +327,7 @@ Fields, from 10 sample documents:
 | `HISTORY` | list of objects |  | Daily closes |
 | `OHLC` | list of objects |  | Open, high, low and close bars |
 | `IDENTIFIERS` | object |  | Other identifiers (ISIN, exchange codes) |
-| `ISSUER` | string | `ISS-CASCADIA` | link to `issuer` |
+| `ISSUER` | string | `ISS-CASCADIA` | — |
 | `EQUITY_VOL_SURFACE` | string | `EQV-CSCA` | link to `equity-vol-surface` |
 | `DIVIDEND_CURVE` | string | `DIV-CSCA` | link to `dividend-curve` |
 | `EQUITY_INDEX` | string | `EQX-UKX` | link to `equity-index` (in 80%) |
@@ -340,7 +340,7 @@ Nested structures:
 | `OHLC[]` | `DATE` (date), `OPEN` (number), `HIGH` (number), `LOW` (number), `CLOSE` (number), `VOLUME` (integer) |
 | `IDENTIFIERS` | `ISIN` (string), `BLOOMBERG` (string), `RIC` (string), `FIGI` (string) |
 
-Links: `DIVIDEND_CURVE` → `dividend-curve`, `EQUITY_INDEX` → `equity-index`, `EQUITY_VOL_SURFACE` → `equity-vol-surface`, `ISSUER` → `issuer`.
+Links: `DIVIDEND_CURVE` → `dividend-curve`, `EQUITY_INDEX` → `equity-index`, `EQUITY_VOL_SURFACE` → `equity-vol-surface`.
 
 ### `equity-index`
 
@@ -439,7 +439,7 @@ Fields, from 16 sample documents:
 | `DOC_CLAUSE` | string | `MM14` | Doc clause |
 | `PD_1Y` | number | `0.000666` | 1Y PD |
 | `POINTS` | list of objects |  | Spreads and default probabilities by tenor |
-| `ISSUER` | string | `ISS-BUND` | link to `issuer` |
+| `ISSUER` | string | `ISS-BUND` | — |
 | `CURRENCY` | string | `EUR` | Currency of the curve |
 
 Nested structures:
@@ -447,8 +447,6 @@ Nested structures:
 | Path | Fields |
 |---|---|
 | `POINTS[]` | `TENOR` (string), `SPREAD` (number), `HAZARD` (number), `SURVIVAL` (number) |
-
-Links: `ISSUER` → `issuer`.
 
 ### `inflation-index`
 
@@ -629,7 +627,7 @@ Fields, from 32 sample documents:
 | `TERMS` | object |  | Issue terms |
 | `COUPONS` | list of objects |  | Coupon schedule |
 | `HISTORY` | list of objects |  | Daily price and yield |
-| `ISSUER` | string | `ISS-VERDANT` | link to `issuer` |
+| `ISSUER` | string | `ISS-VERDANT` | — |
 | `BENCHMARK_CURVE` | string | `CRV-USD-GOVT` | link to `ir-curve` |
 
 Nested structures:
@@ -640,7 +638,7 @@ Nested structures:
 | `COUPONS[]` | `DATE` (date), `AMOUNT` (number) |
 | `HISTORY[]` | `DATE` (date), `PRICE` (number) |
 
-Links: `BENCHMARK_CURVE` → `ir-curve`, `ISSUER` → `issuer`.
+Links: `BENCHMARK_CURVE` → `ir-curve`.
 
 ### `correlation-matrix`
 
