@@ -502,8 +502,8 @@ Real feeds nest and rename, so one line can be:
 
 | Form | Meaning |
 |---|---|
-| `TRADE_ID: swap_id` | the native field `swap_id` |
-| `QUANTITY: pay_leg.notional` | a dotted path into a nested native document |
+| `TRADE_ID: SWAP_ID` | the native field `SWAP_ID` |
+| `QUANTITY: PAY_LEG.NOTIONAL` | a dotted path into a nested native document |
 | `from: [a, b]` or `first-of: [a, b]` | the first of the paths that is present and not blank |
 | `scale: 0.01` | multiply the number (a rate in percent to a fraction) |
 | `cast: text \| number \| integer \| boolean \| date` | the type |
@@ -513,10 +513,10 @@ Real feeds nest and rename, so one line can be:
 
 ```yaml
 map:
-  TRADE_ID: swap_id
-  QUANTITY: pay_leg.notional
-  PRICE: { first-of: [pay_leg.fixed_rate_pct, rec_leg.fixed_rate_pct], scale: 0.01 }
-  TRADE_DATE: { from: trade_dt, as: yyyymmdd }
+  TRADE_ID: SWAP_ID
+  QUANTITY: PAY_LEG.NOTIONAL
+  PRICE: { first-of: [PAY_LEG.FIXED_RATE_PCT, REC_LEG.FIXED_RATE_PCT], scale: 0.01 }
+  TRADE_DATE: { from: TRADE_DT, as: yyyymmdd }
 ```
 
 The older form (`fields:`, native field to canonical field) still works. A map that cannot be used refuses the connector (`DRS-5034`, shown

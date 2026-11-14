@@ -26,7 +26,7 @@ settings:
   topics:
   - ${DRISHTI_WSS_TOPIC:drishti.trading.wss.trades}
   kind: trade
-  id-field: dealRef
+  id-field: DEAL_REF
   stale-after: ${DRISHTI_STREAM_STALE_AFTER:15m}
   source-name: trade-wss-live
   where: SOURCE_SYSTEM = 'WSS'
@@ -39,8 +39,8 @@ writes:
     kafka:
       topic: ${DRISHTI_WSS_TOPIC:drishti.trading.wss.trades}
       shape: document
-      version-field: dealVer
+      version-field: DEAL_VERSION
       changed-by: UPDATED_BY
-      changed-at: lastUpd
+      changed-at: LAST_UPD
       change-id-field: DRISHTI_CHANGE_ID
     confirm: reply

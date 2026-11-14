@@ -92,8 +92,8 @@ class SourceModuleEndToEndTest {
         Path inbox = Files.createDirectories(tmp.resolve("data/inbox"));
         Path file = inbox.resolve("swapone-" + DAY + ".jsonl.gz");
         try (OutputStream out = new GZIPOutputStream(Files.newOutputStream(file))) {
-            out.write(("{\"swap_id\":\"SW1\",\"revision\":1,\"lifecycle\":\"LIVE\",\"swap_family\":\"IRS\",\"pay_receive\":\"PAY\",\"pay_leg\":{\"notional\":1000000,\"fixed_rate_pct\":5.0}}\n"
-                    + "{\"swap_id\":\"SW2\",\"revision\":1,\"lifecycle\":\"LIVE\",\"swap_family\":\"OIS\",\"pay_receive\":\"REC\",\"pay_leg\":{\"notional\":2500000}}\n")
+            out.write(("{\"SWAP_ID\":\"SW1\",\"REVISION\":1,\"LIFECYCLE\":\"LIVE\",\"SWAP_FAMILY\":\"IRS\",\"PAY_RECEIVE\":\"PAY\",\"PAY_LEG\":{\"NOTIONAL\":1000000,\"FIXED_RATE_PCT\":5.0}}\n"
+                    + "{\"SWAP_ID\":\"SW2\",\"REVISION\":1,\"LIFECYCLE\":\"LIVE\",\"SWAP_FAMILY\":\"OIS\",\"PAY_RECEIVE\":\"REC\",\"PAY_LEG\":{\"NOTIONAL\":2500000}}\n")
                     .getBytes(StandardCharsets.UTF_8));
         }
         // no .ready: the module's date-pattern reads the business date from the dashed name

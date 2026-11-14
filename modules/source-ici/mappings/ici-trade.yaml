@@ -18,40 +18,40 @@ kind: trade
 about: ICI native fields to the canonical trade fields. A path is a dotted path into the native document; first-of takes the first present; values
   translates a code; scale multiplies; as reads a date or time written in another form.
 map:
-  TRADE_ID: TicketNo
-  TRADE_VERSION: Header.Rev
+  TRADE_ID: TICKET_NO
+  TRADE_VERSION: HEADER.REV
   TRADE_STATUS:
-    from: Header.State
+    from: HEADER.STATE
     values:
       BOOKED: NEW
       AMENDED: AMENDED
       CANCELLED: CANCELLED
   PRODUCT_GROUP:
-    from: Instrument.AssetClass
+    from: INSTRUMENT.ASSET_CLASS
     values:
       RATES: Rates
       FX: FX
       EQUITY: Equity
       CREDIT: Credit
       COMMODITY: Commodity
-  PRODUCT_TYPE: Instrument.Kind
-  BUY_SELL_CODE: Instrument.Side
-  QUANTITY: Instrument.Units
-  PRICE: Instrument.Px
-  CURRENCY: Instrument.Ccy
-  COUNTERPARTY: Parties.Cpty
-  LEGAL_ENTITY: Parties.Entity
-  PORTFOLIO: Parties.Book
-  TRADER_ID: Header.EnteredBy
+  PRODUCT_TYPE: INSTRUMENT.KIND
+  BUY_SELL_CODE: INSTRUMENT.SIDE
+  QUANTITY: INSTRUMENT.UNITS
+  PRICE: INSTRUMENT.PX
+  CURRENCY: INSTRUMENT.CCY
+  COUNTERPARTY: PARTIES.CPTY
+  LEGAL_ENTITY: PARTIES.ENTITY
+  PORTFOLIO: PARTIES.BOOK
+  TRADER_ID: HEADER.ENTERED_BY
   TRADE_DATE:
-    from: Dates.Trade
+    from: DATES.TRADE
     as: yyyymmdd
   START_DATE:
-    from: Dates.Start
+    from: DATES.START
     as: yyyymmdd
   MATURITY_DATE:
-    from: Dates.End
+    from: DATES.END
     as: yyyymmdd
   SOURCE_UPDATE_TIME:
-    from: Header.LastChange
+    from: HEADER.LAST_CHANGE
     as: yyyymmddhhmmss

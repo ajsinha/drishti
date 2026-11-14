@@ -12,8 +12,8 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""SwapOne: a mocked OTC swaps system, in its own native style (snake_case, two legs a swap as pay_leg and rec_leg objects, our side as
-``pay_receive``, dates as ``*_dt``, the update time as epoch milliseconds, a numeric ``revision``). A synthetic look-alike: no real
+"""SwapOne: a mocked OTC swaps system, in its own native style (UPPER_SNAKE names like Endur, two legs a swap as PAY_LEG and REC_LEG objects, our side as
+``PAY_RECEIVE``, dates as ``*_DT``, the update time as epoch milliseconds, a numeric ``REVISION``). A synthetic look-alike: no real
 system's layout, bank or counterparty. See src_common.py."""
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ def millis(day_iso: str) -> int:
 
 class SwapOne(SourceBook):
     SYSTEM = "SWAPONE"
-    KEY = "swap_id"
+    KEY = "SWAP_ID"
     COUNT = 350
 
     def new_trade(self, n: int, booked_on: date) -> dict:
@@ -45,37 +45,37 @@ class SwapOne(SourceBook):
         eff = booked_on + timedelta(days=2)
         end = date(eff.year + years, eff.month, min(eff.day, calendar.monthrange(eff.year + years, eff.month)[1]))
         pay_fixed = r.random() < 0.5
-        fixed_leg = {"ccy": ccy, "notional": notional, "fixed_rate_pct": round(r.uniform(0.5, 5.5), 4), "freq": r.choice(["A", "S"]),
-                     "daycount": "30/360"}
-        float_leg = {"ccy": ccy if fam != "XCCY" else r.choice([c for c in CURRENCIES if c != ccy]), "notional": notional,
-                     "index": INDEXES[ccy], "spread_bp": r.choice([0, 0, 5, 10, 25]) if fam != "OIS" else 0, "freq": "Q", "daycount": "ACT/360"}
+        fixed_leg = {"CCY": ccy, "NOTIONAL": notional, "FIXED_RATE_PCT": round(r.uniform(0.5, 5.5), 4), "FREQ": r.choice(["A", "S"]),
+                     "DAYCOUNT": "30/360"}
+        float_leg = {"CCY": ccy if fam != "XCCY" else r.choice([c for c in CURRENCIES if c != ccy]), "NOTIONAL": notional,
+                     "INDEX": INDEXES[ccy], "SPREAD_BP": r.choice([0, 0, 5, 10, 25]) if fam != "OIS" else 0, "FREQ": "Q", "DAYCOUNT": "ACT/360"}
         if fam == "BASIS":
-            fixed_leg = {"ccy": ccy, "notional": notional, "index": "TERM-" + INDEXES[ccy], "spread_bp": 0, "freq": "Q", "daycount": "ACT/360"}
-        doc = {"swap_id": f"S1-{700000 + n}", "revision": 1, "lifecycle": "LIVE", "swap_family": fam, "book": f"S1-BOOK-{r.randint(1, 6)}",
-               "legal_entity": r.choice(ENTITIES), "counterparty_id": cp[0], "counterparty_name": cp[1], "trade_dt": iso(booked_on),
-               "effective_dt": iso(eff), "termination_dt": iso(end), "pay_receive": "PAY" if pay_fixed else "REC",
-               "pay_leg": fixed_leg if pay_fixed else float_leg, "rec_leg": float_leg if pay_fixed else fixed_leg,
-               "usr": r.choice(TRADERS)[0], "upd_ts": millis(iso(booked_on))}
+            fixed_leg = {"CCY": ccy, "NOTIONAL": notional, "INDEX": "TERM-" + INDEXES[ccy], "SPREAD_BP": 0, "FREQ": "Q", "DAYCOUNT": "ACT/360"}
+        doc = {"SWAP_ID": f"S1-{700000 + n}", "REVISION": 1, "LIFECYCLE": "LIVE", "SWAP_FAMILY": fam, "BOOK": f"S1-BOOK-{r.randint(1, 6)}",
+               "LEGAL_ENTITY": r.choice(ENTITIES), "COUNTERPARTY_ID": cp[0], "COUNTERPARTY_NAME": cp[1], "TRADE_DT": iso(booked_on),
+               "EFFECTIVE_DT": iso(eff), "TERMINATION_DT": iso(end), "PAY_RECEIVE": "PAY" if pay_fixed else "REC",
+               "PAY_LEG": fixed_leg if pay_fixed else float_leg, "REC_LEG": float_leg if pay_fixed else fixed_leg,
+               "USR": r.choice(TRADERS)[0], "UPD_TS": millis(iso(booked_on))}
         if fam == "CDS":
-            doc["reference_entity"] = r.choice(COUNTERPARTIES)[0]
-            doc["upfront_pct"] = round(r.uniform(-2, 4), 3)
+            doc["REFERENCE_ENTITY"] = r.choice(COUNTERPARTIES)[0]
+            doc["UPFRONT_PCT"] = round(r.uniform(-2, 4), 3)
         return doc
 
     def amend(self, doc: dict, day: date, stamp: str) -> dict:
         d = dict(doc)
-        d["revision"] = int(d["revision"]) + 1
-        d["upd_ts"] = millis(iso(day))
-        for leg in ("pay_leg", "rec_leg"):
-            if "fixed_rate_pct" in d[leg]:
-                d[leg] = {**d[leg], "fixed_rate_pct": round(d[leg]["fixed_rate_pct"] + self.rng.choice([-0.01, 0.01, 0.02]), 4)}
+        d["REVISION"] = int(d["REVISION"]) + 1
+        d["UPD_TS"] = millis(iso(day))
+        for leg in ("PAY_LEG", "REC_LEG"):
+            if "FIXED_RATE_PCT" in d[leg]:
+                d[leg] = {**d[leg], "FIXED_RATE_PCT": round(d[leg]["FIXED_RATE_PCT"] + self.rng.choice([-0.01, 0.01, 0.02]), 4)}
         return d
 
     def cancel(self, doc: dict, day: date, stamp: str) -> dict:
         d = dict(doc)
-        d["revision"] = int(d["revision"]) + 1
-        d["lifecycle"] = "VOID"
-        d["upd_ts"] = millis(iso(day))
+        d["REVISION"] = int(d["REVISION"]) + 1
+        d["LIFECYCLE"] = "VOID"
+        d["UPD_TS"] = millis(iso(day))
         return d
 
     def is_cancelled(self, doc: dict) -> bool:
-        return doc["lifecycle"] == "VOID"
+        return doc["LIFECYCLE"] == "VOID"
