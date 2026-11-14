@@ -13,20 +13,26 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Virtual tables and models: the tables guide
+# Tables and models
+
+Business intelligence: [Index](README.md) · [Pivot](PIVOT.md) · [Pivot at scale and the risk cubes](PIVOT_SCALE_AND_CUBES.md) · **Tables and models** · [Reports and the designer](REPORTS.md) · [The report file, formatting and statements](REPORT_FILE_FORMAT_STATEMENTS.md) · [Models and datasets for reports](MODELS_AND_DATASETS_FOR_REPORTS.md) · [Live reports, boards and background runs](LIVE_REPORTS_AND_BOARDS.md) · [Distribution, subscriptions and alerts](DISTRIBUTION_AND_ALERTS.md) · [Governing BI and AI in BI](GOVERNANCE_AND_AI.md) · [The Notebook and Python](NOTEBOOK_AND_PYTHON.md) · [Groupings and analytics](GROUPINGS_AND_ANALYTICS.md)
+
+Virtual tables and semantic models: where definitions live, a table key by key, paths and expressions, a model, materialisation, who sees what, checks, lineage, the editors and measures in a model; with the tutorial.
+
+## Virtual tables and models
 
 A **virtual table** is a named, typed table defined once by configuration over any kind any connector serves (a lake table, a database
 table, an in-memory table), a SQL query, a Python transform, a model's answer or another virtual table. A **model** relates virtual tables
 and defines measures over them. Every consumer reads them the same way: BI, the pivot, Arrow Flight and alerts. This guide is the
 reference: every key, every check, the command line and the migration of BI's datasets and models; the hands-on walk-through is the
-[virtual tables tutorial](../tutorials/18-tables-and-models.md). The design, with its decisions, is
-[ARCHITECTURE.md section 24](../architecture/ARCHITECTURE.md#24-virtual-tables-the-central-table-layer); how BI reads the layer is
-[ARCHITECTURE.md §28 section 18](../architecture/ARCHITECTURE.md#281-the-table-layer-and-models-in-rachana).
+[virtual tables tutorial](TABLES_AND_MODELS.md). The design, with its decisions, is
+[ARCHITECTURE.md section 24](../../architecture/ARCHITECTURE.md#24-virtual-tables-the-central-table-layer); how BI reads the layer is
+[ARCHITECTURE.md §28 section 18](../../architecture/ARCHITECTURE.md#281-the-table-layer-and-models-in-rachana).
 
 The outputs below are real: the shipped BI datasets and models as migrated into `config/tables/bi` (where they ship) beside the tutorial's own two tables and model, and the
 test data's samples of 2026-09-30 (`data/testdata`: Endur trades, counterparties).
 
-## Contents
+### Contents
 
 1. [Where definitions live](#1-where-definitions-live)
 2. [Names](#2-names)
@@ -42,7 +48,7 @@ test data's samples of 2026-09-30 (`data/testdata`: Endur trades, counterparties
 11. [The editors](#11-the-editors)
 12. [Measures in a model: filter context, and what is refused](#12-measures-in-a-model-filter-context-and-what-is-refused)
 
-## 1. Where definitions live
+### 1. Where definitions live
 
 | Where | What |
 |---|---|
@@ -56,7 +62,7 @@ module is `drishti-tables` (plain Java); BI depends on it, never the reverse.
 Every file starts with `rachana: 3`, the language version of the layer's files: expressions are Rachana. A file in BI's old form
 (`rachana: 2`, `dataset:`, `datasets:`) is refused with the command that migrates it (`DRS-9614`).
 
-## 2. Names
+### 2. Names
 
 | Kind | Rule | Example |
 |---|---|---|
@@ -71,7 +77,7 @@ A table's name is unique across virtual tables and stored tables: a virtual tabl
 defined (`DRS-9616`; `tables check --stored NAME,...` checks against a list, the server against its lakes and packs). Many tables may read
 one source, each with its own columns, grain and filter (`trading.trade_summary` and `trading.trade_legs`, both `from: { kind: trade }`).
 
-## 3. A table, key by key
+### 3. A table, key by key
 
 ```yaml
 rachana: 3
@@ -116,7 +122,7 @@ materialize: on-load
 
 **Types.** `string`, `integer`, `decimal`, `boolean`, `date`, `timestamp`.
 
-## 4. Paths and expressions in a table
+### 4. Paths and expressions in a table
 
 | Root | Names | Needs |
 |---|---|---|
@@ -144,7 +150,7 @@ path a column reads has that column's type) or the model's `alias.COLUMN`: the s
 source as it is: masks are its readers'. An aggregate is a measure's, not a column's: `greatest(a, b)` is the larger of two values in a
 row.
 
-## 5. A model, key by key
+### 5. A model, key by key
 
 ```yaml
 rachana: 3
@@ -181,7 +187,7 @@ security:
 
 The model query (MQ, `mq: 1` and `mq: 2`) asks a model as it always has; a table's implicit model is `table:<name>`.
 
-## 6. Materialisation
+### 6. Materialisation
 
 | `materialize` | Means |
 |---|---|
@@ -195,7 +201,7 @@ A live table's rows are worked out from each pushed entity through the table's o
 Materialised files are a cache: rebuilt at will, never the truth, never written into a lake's own tables. A model's `rollups:` keep partial
 states per date. The store's folder is a setting of the layer (planned: `drishti.tables.store-dir`, by default `<data>/tables`).
 
-## 7. Who sees what
+### 7. Who sees what
 
 | Layer | Applies to | Notes |
 |---|---|---|
@@ -218,7 +224,7 @@ document. A table hidden from a role (`hidden-for`) gives that role no rows; a c
 Administrators and BI authors (the power to edit BI datasets) define tables and models; definitions are audited and versioned like BI's
 items.
 
-## 7a. Reading a table: dates and shared reads
+### 7a. Reading a table: dates and shared reads
 
 | Point | Rule |
 |---|---|
@@ -234,7 +240,7 @@ items.
 | models across connectors | a model may relate tables from different connectors; the engine joins them, and the scan estimate warns when a side is larger than the model's `scan-warn-rows`, else `drishti.tables.scan-warn-rows` (1,000,000), and unfiltered |
 | Sutra pages | a panel's `source: { table: trading.trade_legs, where: "@.CURRENCY == $.CCY", limit: 50, as-of }` reads the table for the page's viewer on the page's date (or `as-of`); `where` keeps rows (`@` the row, `$` the page's document, the page's events), at most `limit` (default 20, at most 200); the rows are `$src`. Each viewer gets their own rows and masks; a page built for nobody in particular (an audience's snapshot) shows the panel's reason instead |
 
-## 8. Checks, preview and lineage
+### 8. Checks, preview and lineage
 
 The command line reads definitions and sample files only; it starts no server. Run it from the repository (or installation) folder:
 `config/tables` is read by default (`--root` for another folder).
@@ -281,7 +287,7 @@ A sample is JSON Lines (plain or `.gz`), one entity a line: the document itself,
 The preview expands the grain, walks `$`, `@` and `^`, evaluates filters and calculated columns with Rachana, and shows at most 10,000 rows.
 A sample has no entity id or business date unless it is in the lake's form: the preview numbers its documents (`row-1`). `related(...)`
 reads another table's sample given with `--related TABLE=FILE.jsonl` (repeatable), and `fx(...)` the spot rates of `--fx FILE.jsonl`
-(documents with `PAIR_NAME: "EUR/USD"` and `MID`, the market-data pack's [`fx-spot`](../contracts/samples/market-data.md#fx-spot) ([contract](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot)): a pair as quoted, its inverse, or through USD); without
+(documents with `PAIR_NAME: "EUR/USD"` and `MID`, the market-data pack's [`fx-spot`](../../contracts/samples/market-data.md#fx-spot) ([contract](../../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot)): a pair as quoted, its inverse, or through USD); without
 them `related` finds nothing and only a currency to itself converts.
 
 ```text
@@ -292,7 +298,7 @@ used by  model trading-risk: reads it as trades (fact)
 Lineage lists who uses a table: models that read it (and as which alias), tables over it, columns that look it up; BI's reports, alerts
 and Flight add theirs once BI reads the layer. Every command takes `--json`.
 
-### Offering a table for new data
+#### Offering a table for new data
 
 A table a data load creates (a new lake table, DATA_LAKE_GUIDE.md section 5.6) is offered a flat virtual table; nothing is defined until
 someone accepts it. `tables offer` reads a sample of the new documents and suggests one column per scalar field (a nested object's
@@ -322,7 +328,7 @@ materialize: none
 # offered from 24 document(s); grains you may choose instead: [$.NETTING_SETS[*]]
 ```
 
-## 9. The migration: tables migrate
+### 9. The migration: tables migrate
 
 One command turns BI's datasets and models into tables and models of the layer, and every DEL expression in them into Rachana, in one pass.
 BI reads only the layer's tables and models and only Rachana: an installation with its own datasets or models in `config/bi/datasets` or
@@ -396,7 +402,7 @@ converted  models/trading-risk.model.yaml  ->  bi/trading-risk.model.yaml
 The 32 files are 22 tables and 10 models under `config/tables/bi/`; the two consumers rewritten in place are the live reports, bound to
 their models. Run against a `config/tables` that already holds tables of its own, each is checked in its own domain folder.
 
-## 10. Problem codes
+### 10. Problem codes
 
 | Code | Meaning |
 |---|---|
@@ -419,14 +425,14 @@ their models. Run against a `config/tables` that already holds tables of its own
 | `DRS-9127`, `DRS-9129`, `DRS-9152`, `DRS-9122` | the language's (checked mode): a type or scope, not yet, an unknown name; a relationship's ends |
 | `DRS-9195` | the migration refused an item or an expression |
 
-## 11. The editors
+### 11. The editors
 
 **Build › Tables & models** (`/build/tables`; also from BI's rail) is one screen for every table, virtual table, semantic model and
-Python-driven table. The designs and the mock-ups the product owner chose are in [EDITORS.md](../architecture/SHARED_SCREENS.md#7-the-editors-one-pattern-for-every-object-people-author). Opening it needs
+Python-driven table. The designs and the mock-ups the product owner chose are in [EDITORS.md](../../architecture/SHARED_SCREENS.md#7-the-editors-one-pattern-for-every-object-people-author). Opening it needs
 the `bi` power; saving and proposing need `bi-author` (or an administrator); a person without it reads the YAML and the preview but cannot
 change them.
 
-### 11.1 The shell
+#### 11.1 The shell
 
 | Part | What it does |
 |---|---|
@@ -445,7 +451,7 @@ change them.
 The panes are resized with the shared handles (remembered per person; off on a phone, where the panes stack). Every button is reachable by
 keyboard; the model's tabs move with the arrow keys.
 
-### 11.2 Tables and virtual tables
+#### 11.2 Tables and virtual tables
 
 **The source and its look-ups** are rows: the source (a kind any connector serves, or another table) and each **look-up**: one row of
 another table by a key for each row (`related(trading.desks.NAME, on = $.DESK)`, many to one). A table never multiplies its rows:
@@ -473,7 +479,7 @@ where $.STATUS != 'CANCELLED' && $.STATUS != null
 Every other key of the table (formats, masks, rules, materialisation) is kept as it was. A table whose source is SQL, Python or a model's
 answer is edited in the visual view or the YAML.
 
-### 11.3 Semantic models
+#### 11.3 Semantic models
 
 Tabs with counts: **Overview**, **Tables** (aliases, their tables and roles, and the relationships from the many side, with the join cost
 across connectors), **Fields** (every `alias.COLUMN`), **Measures**, **Hierarchies**, **Row rules**, **Masks** and **Access**.
@@ -489,7 +495,7 @@ across connectors), **Fields** (every `alias.COLUMN`), **Measures**, **Hierarchi
   it (none for a role with the raw power) and whether it may edit.
 - The preview pane is the model's live answer: each measure's grand total, read as you.
 
-### 11.4 Python-driven tables and models
+#### 11.4 Python-driven tables and models
 
 A Python-driven table is a table whose source is a build function: `from: { python: <item>, inputs: { alias: table }, params: { pool, runs } }`.
 Its **output contract** is the table's columns (names, types, keys) and tests (`not-null`, `unique`); its code is kept in the build
@@ -519,10 +525,10 @@ tests:
 | **Runs** | on demand and kept per business date, or on each load of an input; the compute pool and the time and memory limits |
 | **Templates** | join and derive, resample a series, statistics per group, a file or feed from an approved source: each writes the code, the inputs and the contract |
 | **Notebook → Turn into table** | cells become the build function: `drishti.table("domain.name")` becomes an input, the imports move to the top, the last expression is returned, and the contract is proposed |
-| **Sample run** | reads each input as you may see it (a table by name, or a model query), runs the build function on the server's compute pool `python` (the strict sandbox of [REPORTS_GUIDE.md section 34](NOTEBOOK_GUIDE.md#3-python-measures-and-visuals), section 7), and checks the rows against the contract: each contract column there and of its type, the keys unique and the never-empty columns filled, each failure said in words in the checks; the first 20 rows show. Needs `bi-author`; where the server cannot run Python safely (compute off, Windows) the button is off and says why. The Notebook's **Run cells on the server** turns the cells into a build function and runs it the same way |
+| **Sample run** | reads each input as you may see it (a table by name, or a model query), runs the build function on the server's compute pool `python` (the strict sandbox of [BI_GUIDE.md section 34](NOTEBOOK_AND_PYTHON.md#3-python-measures-and-visuals), section 7), and checks the rows against the contract: each contract column there and of its type, the keys unique and the never-empty columns filled, each failure said in words in the checks; the first 20 rows show. Needs `bi-author`; where the server cannot run Python safely (compute off, Windows) the button is off and says why. The Notebook's **Run cells on the server** turns the cells into a build function and runs it the same way |
 
 **Where the code runs.** On the server's compute pool `python`, never in the console or the browser, in the strict sandbox of
-[NOTEBOOK_GUIDE.md section 19](../architecture/ARCHITECTURE.md#291-one-python-runtime): the inputs read as the person the run
+[BI_GUIDE.md section 19](../../architecture/ARCHITECTURE.md#291-one-python-runtime): the inputs read as the person the run
 is for (their row rules and masks), the pinned libraries only (`config/compute/locks/python.lock`), the build function's time and memory limits, no
 network (a file or feed from an approved source is read by the server and handed in as an input), files only in its own folder; every run is audited.
 When BI reads the table, the same function runs for the reader and its rows are checked against the contract: a column missing or of another type is
@@ -530,7 +536,7 @@ refused in words (`DRS-9075`). Where the server cannot run Python safely (comput
 
 A Python **model** is a model whose measures are Python measures (`{ python, inputs, by }`): the Measures tab lists them with the engine's "adds up?" (computed per total), and their keys are edited in the YAML; they run on the same pool.
 
-### 11.5 The editor API
+#### 11.5 The editor API
 
 Everything the screen shows is computed on the server, for the person who asks: `/api/v1/tables/editor`.
 
@@ -553,18 +559,17 @@ Everything the screen shows is computed on the server, for the person who asks: 
 The same definitions are checked on the command line by `drishti.py tables check` (section 8); a saved draft is a BI item of kind `table` or
 `model` in the layer's form (`rachana: 3`).
 
-## 12. Measures in a model: filter context, and what is refused
+### 12. Measures in a model: filter context, and what is refused
 
-**Filter direction, bridges and named paths.** A relationship has a `direction: single` (one way, the default) or `both`. A many-to-many is declared with `bridges:` naming its bridge table; each measure can follow a named or inactive relationship once for all of its expression with `via: name` (`calc(..., via = 'name', filter = 'one_way')` overrides one relationship's direction for one measure). A model where a table reaches another by two paths and one is both-ways or across a bridge is refused at save with both paths and the fix; see [Reports guide section 5.3](REPORTS_GUIDE.md#53-relationships-and-how-a-question-joins).
+**Filter direction, bridges and named paths.** A relationship has a `direction: single` (one way, the default) or `both`. A many-to-many is declared with `bridges:` naming its bridge table; each measure can follow a named or inactive relationship once for all of its expression with `via: name` (`calc(..., via = 'name', filter = 'one_way')` overrides one relationship's direction for one measure). A model where a table reaches another by two paths and one is both-ways or across a bridge is refused at save with both paths and the fix; see [Reports guide section 5.3](MODELS_AND_DATASETS_FOR_REPORTS.md#13-relationships-and-how-a-question-joins).
 
 **Measure functions.** `functions: { share: { params: [a, b], expr: "a / b" } }` lets a measure write `share(sum(x.V), sum(x.W))`; a call is expanded before the checks, so it is exactly the expression it stands for.
-
 
 Every expression is written in one of four scopes, decided by where it stands: **row** (a column's `expr`, a `filter`), **rule** (a
 table's `rules`, a model's `security.rows`), **aggregate** (a model's measures, MQ `define` and `having`) and **context** (the first
 argument of `calc`, `share_of`, `parent_of`, `as_of`). What each scope may name: [ARCHITECTURE.md §28 section
-18.2](../architecture/ARCHITECTURE.md#284-the-expression-language-del-and-its-checks). Every function, with its arguments and where it runs:
-[FUNCTIONS.md](FUNCTIONS.md).
+18.2](../../architecture/ARCHITECTURE.md#284-the-expression-language-del-and-its-checks). Every function, with its arguments and where it runs:
+[FUNCTIONS.md](../FUNCTIONS.md).
 
 A measure is evaluated per group of the answer in four layers: the reader's **security** (fixed: no function touches it), the **query**
 (MQ `where`, report, page and visual filters, slicers, drill, cross-filter), the **group** (the current group's values) and the
@@ -601,3 +606,293 @@ than as a chain of `? :`.
 | context functions nested deeper than three | the plans stay bounded and readable |
 | `ctl.x`, `link`, `fmt` in tables and models | display concerns of a Sutra; a column or a measure has a `format` |
 | VaR, ES, exposure, FRTB-SA or SIMM as an aggregate over a vector or a table | they come only from their engines, through `measure('VAR', scope)` |
+
+## Tutorial: Virtual tables and models
+
+A virtual table turns documents into rows and typed columns, once, for every reader. In this tutorial you define the trades' legs as a
+table, preview it over sample documents, add a column converted to US dollars and the desk's name looked up in a table of books, give a
+trader only their own trades, relate the legs to the books in a model with measures, and migrate BI's shipped datasets and models with a dry
+run first. Each step shows the YAML, the command line and the screen. The guide is [BI_GUIDE.md](README.md).
+
+The outputs below are real: the test data's Endur trades, books and FX spots of 2026-09-30 (`data/testdata`), and the shipped
+`config/bi`. BI reads the table layer from the switch on; until then the screens shown are the ones that read the same data today.
+
+### Time to complete
+
+About 30 minutes.
+
+### Before you start
+
+- A checkout of the repository and the server's exec jar built (`./mvnw -q -DskipTests package`): the `tables` commands run from it
+  without starting a server ([CLI_REFERENCE.md](../../guides/CLI_REFERENCE.md)).
+- Sample documents as JSON Lines, one entity a line, in the folder you work in:
+
+  ```text
+  $ zcat data/testdata/trades/endur/trade_endur.2026-09-30.jsonl.gz > trades.jsonl
+  $ zcat data/testdata/core/book/book.2026-09-30.jsonl.gz > books.jsonl
+  $ zcat data/testdata/market-data/fx-spot/fx-spot.2026-09-30.jsonl.gz > fx-spot.jsonl
+  ```
+
+- Run every command from the folder that holds `config/tables` (the repository's folder, or a copy of it to try things in): the tables live
+  under `config/tables`, one folder per domain, and `tables migrate` reads `config/bi` beside it.
+
+### What you will learn
+
+- how a table's grain, paths and columns turn a trade's legs into rows, and what `$`, `@` and `^` name;
+- why a calculated column reads the source, never another column, and how `fx` and `related` read another source;
+- how a table's rules and masks apply to every reader, and what a reader no rule names sees;
+- how a model relates tables and defines measures in Rachana;
+- how `tables migrate` turns BI's datasets and models into tables and models, keeping every figure (the null rule).
+
+### Step 1 · A table of the trades' legs
+
+An Endur trade holds its legs in `LEGS`, each with `LEG_ID`, `CURRENCY` and `NOTIONAL`; the trade's book is `PORTFOLIO`. Write
+`config/tables/trading/trade_legs.table.yaml`:
+
+```yaml
+rachana: 3
+table: trading.trade_legs
+from: { kind: trade }
+grain: $.LEGS[*]                          # one row per leg
+keys: [TRADE_ID, LEG_ID]
+columns:
+  TRADE_ID: $.TRADE_ID                    # the trade's own field
+  BOOK:     { path: $.PORTFOLIO, type: string }
+  LEG_ID:   { path: "@.LEG_ID", type: string }
+  CURRENCY: { path: "@.CURRENCY", type: string }
+  NOTIONAL: { path: "@.NOTIONAL", type: decimal, format: amount0 }
+materialize: on-load
+```
+
+Check it:
+
+```text
+$ python3 tools/drishti.py tables check
+1 table(s), 0 model(s): 0 error(s), 0 warning(s)
+```
+
+You should see `0 error(s)`. Write `$.LEGS[0]` as the grain and the check names the grain and every path that needed it:
+
+```text
+$ python3 tools/drishti.py tables check
+trading/trade_legs.table.yaml: error DRS-9603 grain: a grain is a path from $ that ends in a list: $.LEGS[*] or $.LEGS[*].CASH_FLOWS[*]
+trading/trade_legs.table.yaml: error DRS-9603 columns.LEG_ID.path: @ names the grain's element: this table's grain is the entity (use $)
+trading/trade_legs.table.yaml: error DRS-9603 columns.CURRENCY.path: @ names the grain's element: this table's grain is the entity (use $)
+trading/trade_legs.table.yaml: error DRS-9603 columns.NOTIONAL.path: @ names the grain's element: this table's grain is the entity (use $)
+1 table(s), 0 model(s): 4 error(s), 0 warning(s)
+```
+
+On the screen: the Pivot reads the same grain from the trades today. Rows `$.LEGS[*].CURRENCY` count one row per leg, as the table will:
+
+![The Pivot: the trades' legs by currency, one row per leg](../../tutorials/img/t44/01-legs-in-the-pivot.jpg)
+
+### Step 2 · Its rows over sample documents
+
+```text
+$ python3 tools/drishti.py tables preview trading.trade_legs --sample trades.jsonl --limit 5
+id	business_date	index	TRADE_ID	BOOK	LEG_ID	CURRENCY	NOTIONAL
+row-1		0	1000016	BOOK-COMM-3	1	USD	1.484794E7
+row-1		1	1000016	BOOK-COMM-3	2	USD	1.1878352E7
+row-2		0	1000138	BOOK-COMM-3	1	USD	3.52635228E7
+row-2		1	1000138	BOOK-COMM-3	2	USD	3.635252842E7
+row-3		0	1000156	BOOK-COMM-3	1	EUR	6437605.63
+5 row(s) from 136 document(s)
+```
+
+Add `--json` for the rows as JSON. Check the keys on the sample:
+
+```text
+$ python3 tools/drishti.py tables check --sample trading.trade_legs=trades.jsonl
+1 table(s), 0 model(s): 0 error(s), 0 warning(s)
+```
+
+You should see one row per leg (trade 1000016 has two), the built-in columns `id`, `business_date` and `index` first (a sample file has
+no entity id or business date: the preview numbers its documents `row-1`, `row-2` ...), and no `DRS-9613` (the keys are unique on each
+business date).
+
+### Step 3 · A column in dollars and the desk's name
+
+Add two calculated columns. A column's expression reads the source (`@.NOTIONAL`), never another column (`NOTIONAL`):
+
+```yaml
+  NOTIONAL_USD: { expr: "@.NOTIONAL * fx(@.CURRENCY, 'USD')", type: decimal }
+  DESK_NAME:    { expr: "related(core.books.DESK_NAME, on = $.PORTFOLIO)", type: string }
+```
+
+`fx` reads the installation's one FX source at the row's business date; `related` reads the `DESK_NAME` of the `core.books` row whose key
+is the trade's book. Write `config/tables/core/books.table.yaml`:
+
+```yaml
+rachana: 3
+table: core.books
+from: { kind: book }
+keys: [BOOK_ID]
+columns:
+  BOOK_ID:   { path: $.BOOK_ID, type: string }
+  NAME:      { path: $.NAME, type: string }
+  DESK_NAME: { path: $.DESK_NAME, type: string }
+```
+
+then preview again, the books' and the FX spots' samples beside the trades' (`--related` gives a table's sample, `--fx` the spot rates;
+without them only a currency to itself converts and `related` finds nothing):
+
+```text
+$ python3 tools/drishti.py tables preview trading.trade_legs --sample trades.jsonl --related core.books=books.jsonl --fx fx-spot.jsonl --limit 6
+id	business_date	index	TRADE_ID	BOOK	LEG_ID	CURRENCY	TRADER	NOTIONAL	NOTIONAL_USD	DESK_NAME
+row-1		0	1000016	BOOK-COMM-3	1	USD	TRDR-FROSSI	1.484794E7	14847940	Commodities
+row-1		1	1000016	BOOK-COMM-3	2	USD	TRDR-FROSSI	1.1878352E7	11878352	Commodities
+row-2		0	1000138	BOOK-COMM-3	1	USD	TRDR-FROSSI	3.52635228E7	3.52635228E7	Commodities
+row-2		1	1000138	BOOK-COMM-3	2	USD	TRDR-FROSSI	3.635252842E7	3.635252842E7	Commodities
+row-3		0	1000156	BOOK-COMM-3	1	EUR	TRDR-TBRENNAN	6437605.63	7557749.00962	Commodities
+row-4		0	1000172	BOOK-COMM-1	1	USD	TRDR-TBRENNAN	659442.31	659442.31	Commodities
+6 row(s) from 136 document(s)
+```
+
+(The `TRADER` column is step 4's.) You should see the EUR leg in dollars at the sample's EUR/USD spot (1.174) and the desk's name. Write
+`NOTIONAL * 2` instead and the check refuses it with the path to write:
+
+```text
+trading/trade_legs.table.yaml: error DRS-9152 columns.DOUBLE.expr: no field 'NOTIONAL'; did you mean @.NOTIONAL?
+trading/trade_legs.table.yaml: error DRS-9127 columns.DOUBLE.expr: 'NOTIONAL' is a column of this table: an expression reads the source, so write the column's path (@.NOTIONAL)
+```
+
+### Step 4 · Who sees which rows
+
+Add rules, and a column masked for readers without the raw power:
+
+```yaml
+  TRADER:   { path: $.TRADER_ID, type: string, masked: true }
+...
+rules:
+  - { role: trader, where: "$.TRADER_ID == user.name" }
+  - { role: [risk, analyst], where: "true" }
+```
+
+The rules apply to every reader of the table: BI, the pivot, Arrow Flight; `tables check` reads each rule in Rachana's checked mode (a
+rule reads the row and `user`). You should see `0 error(s)` from the check and, once BI reads the layer, a trader see the legs of their
+own trades, risk and analysts every leg, and a role no rule names none, told so (`DRS-9131`). A list attribute is strict: a rule
+`$.DESK in user.desks` holds nothing for a reader with no desks. On the screen, BI's model `trading-risk` shows the same today on its Security tab: a row rule
+per role and the masked columns, which `tables migrate` carries into its tables (step 6):
+
+![The model trading-risk, Security: its row rules per role and its masked columns](../../tutorials/img/t44/02-model-security.jpg)
+
+### Step 5 · A model over the legs and the books
+
+Write `config/tables/trading/legs.model.yaml`:
+
+```yaml
+rachana: 3
+model: legs
+tables:
+  legs:  { table: trading.trade_legs, role: fact }
+  books: { table: core.books, role: dimension }
+relationships:
+  - { from: legs.BOOK, to: books.BOOK_ID }
+measures:
+  Notional USD:   { expr: "sum(legs.NOTIONAL_USD)", format: amount0 }
+  Legs:           { expr: "count(legs)" }
+  Average leg:    { expr: "measure('Notional USD') / measure('Legs')", format: amount0 }
+  Non-USD legs:   { expr: "count(legs, where = legs.CURRENCY != 'USD' && legs.CURRENCY != null)" }
+hierarchies:
+  Desk and book: [books.DESK_NAME, books.NAME]
+```
+
+```text
+$ python3 tools/drishti.py tables check
+2 table(s), 1 model(s): 0 error(s), 0 warning(s)
+$ python3 tools/drishti.py tables lineage trading.trade_legs
+used by  model legs: reads it as legs (fact)
+$ python3 tools/drishti.py tables lineage legs
+reads  legs  trading.trade_legs
+reads  books  core.books
+```
+
+You should see `0 error(s)`, and the lineage name the model `legs` and what it reads. Asked by `books.DESK_NAME` or by book, the layer
+compiles each measure with Rachana's one compiler and the pivot engine's aggregates: one row per leg underneath, each book's subtotal and
+the grand total, as the Pivot shows over the same trades today (rows `$.PORTFOLIO` and `$.LEGS[*].CURRENCY`, every book open):
+
+![The Pivot: the legs by book and currency, with each book's subtotal and the grand total](../../tutorials/img/t44/03-legs-by-book.jpg)
+
+### Step 5a · A bridge, both ways, and a measure along another path
+
+**In the Console.** Open the model, **Tables** tab. Under **Many-to-many bridges** add a row: left key `books.BOOK_ID`, right key `limit_groups.GROUP_ID`, bridge table `book_limit_group`. In **Relationships** set a relationship's **Filter** to **Both ways** only if a one-side measure must be filtered by the many side. If the save is refused, the two paths and the fix buttons appear with the paths drawn; **Show the paths** draws them at any time. **Convert DAX to Rachana** at the bottom of the tab turns a pasted DAX measure into Rachana and names what it cannot convert.
+
+**In YAML:**
+
+```yaml
+relationships:
+  - { name: trade_date, from: trades.TRADE_DATE, to: dates.DAY }
+  - { name: settle_date, from: trades.SETTLE_DATE, to: dates.DAY, active: false }
+bridges:
+  - { name: book_limit_group, left: books.BOOK_ID, right: limit_groups.GROUP_ID, through: book_limit_group }
+measures:
+  Notional by settle date: { expr: "sum(trades.NOTIONAL)", via: settle_date }
+```
+
+**At the prompt:** `tools/drishti.py bi dax "CALCULATE(SUM(trades[NOTIONAL]), USERELATIONSHIP(trades[SETTLE_DATE], dates[DAY]))"`
+
+You should see group rows by limit group that do not add to the total when a book sits in two groups: the total counts each trade once.
+
+### Step 6 · BI's samples migrated, with a dry run first
+
+The dry run prints the diff of every file it would write and a report; nothing is written:
+
+```text
+$ python3 tools/drishti.py tables migrate --dry-run --report migration.txt
+--- /dev/null
++++ b/bi/counterparty_exposure_counterparties.table.yaml
+...
+--- a/config/bi/reports/banking/live-trading-desk.report.yaml
++++ b/config/bi/reports/banking/live-trading-desk.report.yaml
+@@ -30,7 +30,7 @@
+ sample: true
+ endorsement: promoted
+ tags: [sample, trading, live, streaming, tutorial]
++model: live-trading@1
+-dataset: live-trading
+ theme: { palette: default }
+items: 34 (converted 34, unchanged 0, refused 0)
+expressions: 103 (rewritten 22, refused 0)
+files to write: 32
+```
+
+You should see 34 items converted, none refused: 22 tables and 10 models under `config/tables/bi/`, and the two live reports bound to their
+models. In the report, `trading-risk`'s *Open MTM*:
+
+```text
+converted  models/trading-risk.model.yaml  ->  bi/trading-risk.model.yaml
+    measures.Open MTM.expr:
+      - sum(trades.MTM, where=trades.TRADE_STATUS != 'MATURED')
+      + sum(trades.MTM, where = trades.TRADE_STATUS != 'MATURED' && trades.TRADE_STATUS != null)
+        (DEL into Rachana (section 2.4))
+        (kept DEL's meaning for a missing value: trades.TRADE_STATUS != 'MATURED' && trades.TRADE_STATUS != null (Q1))
+```
+
+The guard keeps BI's figure: in Rachana a missing status is not `'MATURED'`, so without it a trade with no status would be counted. On the
+screen, the model's measures as BI shows them today, *Open MTM* among them:
+
+![The model trading-risk, Measures: Open MTM among its measures](../../tutorials/img/t44/04-model-measures.jpg)
+
+Then the write, with an audit line per file, and `--check` (exit 1 while something would change):
+
+```text
+$ python3 tools/drishti.py tables migrate --audit data/audit/tables-migrate.jsonl
+...
+34 file(s) written under /path/to/drishti/config/tables
+$ python3 tools/drishti.py tables migrate --check
+nothing to migrate
+$ python3 tools/drishti.py tables check
+24 table(s), 11 model(s): 0 error(s), 0 warning(s)
+```
+
+You should see the files under `config/tables/bi/` beside your own two tables and model, 34 lines in the audit, the second run change
+nothing, and the whole catalogue check clean.
+
+### Next steps
+
+- Every key, check and code: [BI_GUIDE.md](README.md), in Help beside this tutorial:
+
+  ![Help: the virtual tables guide](../../tutorials/img/t44/05-tables-guide-in-help.jpg)
+
+- The language: [RACHANA_REFERENCE.md](../../guides/RACHANA_REFERENCE.md) (paths, `in`, the null rule, checked mode).
+- The design and what is built: [BI_FOUNDATION_2911E.md](../../architecture/ARCHITECTURE.md#281-the-table-layer-and-models-in-rachana).

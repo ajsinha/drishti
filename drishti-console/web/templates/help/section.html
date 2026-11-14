@@ -40,7 +40,7 @@
     <h2 class="sec-gh">{{ grp.title }}{% for w in grp.words %}<code class="sec-word mono">{{ w }}</code>{% endfor %}</h2>
     <ul class="sec-rows">
       {% for r in grp.rows %}{% set g = r.guide %}{% set p = r.pair %}
-      <li class="sec-row{% if r.status == 'off' %} sec-off{% endif %}" data-help-row data-search="{{ ((g.title ~ ' ' ~ g.summary ~ ' ' ~ (p.title if p else '') ~ ' ' ~ grp.title) | product) | lower }}">
+      <li class="sec-row{% if r.status == 'off' %} sec-off{% endif %}" data-help-row data-search="{{ ((g.title ~ ' ' ~ g.summary ~ ' ' ~ (p.title if p else '') ~ ' ' ~ grp.title ~ (' ' ~ g.children | map(attribute='title') | join(' ') if g.children else '')) | product) | lower }}">
         <div class="sec-titles">
           {% if r.status == 'on' %}<a class="sec-link" href="/help/{{ g.slug }}"><i class="bi bi-{{ g.icon }}" aria-hidden="true"></i> {{ g.title | product }}</a>
           {%- else %}<span class="sec-link" aria-disabled="true"><i class="bi bi-{{ g.icon }}" aria-hidden="true"></i> {{ g.title | product }}</span>{% endif %}
@@ -51,6 +51,9 @@
           {% else %}<span class="badge-kind">{{ g.kind }}{% if p %} · {{ p.kind }}{% endif %}</span>{% endif %}
         </div>
         <p class="sec-sum">{{ g.summary | product }}</p>
+        {% if g.children %}<ul class="sec-kids" aria-label="Pages of {{ g.title | product }}">
+          {% for c in g.children %}<li>{% if r.status == 'on' %}<a class="sec-link" href="/help/{{ c.slug }}" data-help-kid><i class="bi bi-{{ c.icon }}" aria-hidden="true"></i> {{ c.title | product }}</a>{% else %}<span class="sec-link" aria-disabled="true">{{ c.title | product }}</span>{% endif %}</li>{% endfor %}
+        </ul>{% endif %}
       </li>
       {% endfor %}
     </ul>

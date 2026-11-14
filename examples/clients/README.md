@@ -20,7 +20,7 @@ Working examples of reading Drishti's data from outside it: Python notebooks fir
 - **only reads.** Nothing here writes to Drishti; the Flight service refuses every call that would (`DoPut`, `DoExchange`).
 - **reads through Arrow Flight** by default, as the person a token belongs to: their entitlements, row rules and masks, busy protection,
   limits and audit, exactly as on the screens. How Flight works, turning it on and making a token: the
-  [Flight guide](../../docs/guides/FLIGHT_GUIDE.md); every request form: the [reference](../../docs/guides/FLIGHT_REFERENCE.md).
+  [Flight guide](../../docs/guides/FLIGHT_GUIDE.md); every request form: the [reference](../../docs/guides/FLIGHT_GUIDE.md).
 - **keeps the token out of the code:** `DRISHTI_TOKEN`, or `DRISHTI_TOKEN_FILE` naming a file that holds it.
 - runs on the **demo lake's synthetic data** (the defaults: the `trade` kind, the `trades-basic` model, the scope `DESK:RATES`), and as a
   test (`drishti-console/tests/test_client_examples.py`).

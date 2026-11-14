@@ -13,17 +13,22 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# The Notebook and Python
 
-# Notebook and Python
+Business intelligence: [Index](README.md) · [Pivot](PIVOT.md) · [Pivot at scale and the risk cubes](PIVOT_SCALE_AND_CUBES.md) · [Tables and models](TABLES_AND_MODELS.md) · [Reports and the designer](REPORTS.md) · [The report file, formatting and statements](REPORT_FILE_FORMAT_STATEMENTS.md) · [Models and datasets for reports](MODELS_AND_DATASETS_FOR_REPORTS.md) · [Live reports, boards and background runs](LIVE_REPORTS_AND_BOARDS.md) · [Distribution, subscriptions and alerts](DISTRIBUTION_AND_ALERTS.md) · [Governing BI and AI in BI](GOVERNANCE_AND_AI.md) · **The Notebook and Python** · [Groupings and analytics](GROUPINGS_AND_ANALYTICS.md)
+
+Where code runs; the Notebook (SQL and Python cells, extract, save, promote, profile); Python measures and visuals; Transforms and the Transform editor; the command line, the sandbox, limits and how an administrator turns Python on; with the tutorial.
+
+## The Notebook and Python
 
 Drishti runs code people write in two places only: **SQL on the server** and **Python on the server's compute pool**. This guide is
 how to use both: the **Notebook** (SQL and Python cells over the rows you may see), **Python measures and visuals** in reports,
 **Transforms** and the **Transform editor** for data prep, the command line, the limits and errors, and what an administrator does to
 turn Python on. How the runtime is built (the pool, its workers, the sandbox, the lock file) is in
-[ARCHITECTURE.md](../architecture/ARCHITECTURE.md) section 29. Reports themselves are in [REPORTS_GUIDE.md](REPORTS_GUIDE.md); a
-walk-through of everything here is [tutorial 9](../tutorials/09-notebook-and-python.md).
+[ARCHITECTURE.md](../../architecture/ARCHITECTURE.md) section 29. Reports themselves are in [BI_GUIDE.md](README.md); a
+walk-through of everything here is [the Notebook tutorial](NOTEBOOK_AND_PYTHON.md).
 
-## Contents
+### Contents
 
 1. [Where code runs](#1-where-code-runs)
 2. [The Notebook](#2-the-notebook)
@@ -35,9 +40,9 @@ walk-through of everything here is [tutorial 9](../tutorials/09-notebook-and-pyt
 8. [Limits and errors](#8-limits-and-errors)
 9. [For administrators: turning Python on](#9-for-administrators-turning-python-on)
 
-## 1. Where code runs
+### 1. Where code runs
 
-### 1.1 One Python runtime, on the server
+#### 1.1 One Python runtime, on the server
 
 Every Python run in Drishti is the server's, on its compute pool **`python`**: a Notebook cell, a python visual, a Python measure of a
 report, board or alert, a Transform behind a Python dataset, a Python-driven table, the Transform editor's step-by-step run, the profile
@@ -63,30 +68,30 @@ pool, which runs it in a strict sandbox (no network, its own folder, time and me
 | a chart the visual catalogue does not have | a **Python visual** ([section 3](#3-python-measures-and-visuals)) |
 | a join or reshaping easier in pandas, published as a dataset | a **Transform** ([section 4](#4-transforms-a-table-in-a-table-out)) |
 | clean raw rows step by step, without typing YAML | the **Transform editor** ([section 5](#5-data-prep-the-transform-editor)) |
-| a table whose rows a build function makes | a **Python-driven table** ([TABLES_GUIDE.md](TABLES_GUIDE.md#114-python-driven-tables-and-models)) |
-| slice and total a table | the **Pivot** ([PIVOT_GUIDE.md](PIVOT_GUIDE.md)), then a report |
+| a table whose rows a build function makes | a **Python-driven table** ([BI_GUIDE.md](TABLES_AND_MODELS.md#114-python-driven-tables-and-models)) |
+| slice and total a table | the **Pivot** ([BI_GUIDE.md](PIVOT.md)), then a report |
 
 Python runs only once an administrator has switched on the compute pool ([section 9](#9-for-administrators-turning-python-on)), and
 only on a Linux server; elsewhere every page says why it cannot run.
 
-### 1.2 The Python console and Calc
+#### 1.2 The Python console and Calc
 
 The **Python console** is the Notebook: its address `/pyconsole` (and `/bi/explore`) opens `/bi/notebook`, where Python over a
 masked extract runs on the server. Python **in your own browser** on a view's rows is a different thing: **Calc**, a scratch pad behind a
-Labs switch that never publishes ([USER_GUIDE.md › Calc](USER_GUIDE.md#calc-python-on-any-view)).
+Labs switch that never publishes ([USER_GUIDE.md › Calc](../USER_GUIDE.md#calc-python-on-any-view)).
 
-## 2. The Notebook
+### 2. The Notebook
 
 The **Notebook** (`/bi/notebook`, the BI rail's *Notebook*) is the one place for code over data. You open a model as an **extract**, the
 rows *you* may see (masked columns stay masked, row rules apply), and work on it in **SQL cells**, run by the server, and **Python cells**,
 run on the server's compute pool. You save the work as a **notebook** (a BI item with versions and review like any other) and **promote**
 what is good: a SQL cell becomes a **visual in a report draft**, a Python cell a Python Measure, Visual or Transform draft.
 
-**One analysis path: Pivot, then Report.** To slice and total a table, use the [Pivot](PIVOT_GUIDE.md) (`PIVOT <GO>`, or *Pivot* in the
+**One analysis path: Pivot, then Report.** To slice and total a table, use the [Pivot](PIVOT.md) (`PIVOT <GO>`, or *Pivot* in the
 BI rail); to publish, share or schedule, make a report. The Notebook is for what a grid cannot say. **Nothing of yours runs in the
 console or in your browser**: SQL is the server's, Python the server's compute pool's.
 
-### 2.1 At a glance
+#### 2.1 At a glance
 
 ```
  model ──(your identity)──▶ server: masks columns, applies your row rules ──▶ extract (at most bi.notebook.max_rows rows)
@@ -100,7 +105,7 @@ console or in your browser**: SQL is the server's, Python the server's compute p
 The extract is **rebuilt for you on every call** and never kept: the console holds nothing between calls, so a mask or a row rule changed
 on the server applies the next time you run a cell.
 
-### 2.2 The extract
+#### 2.2 The extract
 
 1. Choose a **Model or dataset** (a dataset reads as its own small model).
 2. Tick the **Fields**.
@@ -116,15 +121,15 @@ limit)`). Columns are named for the table's column (`DESK`, not `trade.DESK`); t
 fields, built for you by the server exactly as the first is (your row rules, your masks; at most `bi.notebook.max_extracts`, 6, besides
 the first). A Python cell reads one as `extract("name")`.
 
-![The notebook's extracts: the first extract opened, and the second, exposure, under More extracts](../tutorials/img/t14/13-analyse-extracts.jpg)
+![The notebook's extracts: the first extract opened, and the second, exposure, under More extracts](../../tutorials/img/t14/13-analyse-extracts.jpg)
 
 Every extract is the reader's, so a join of two extracts shows **their** rows: a join key that the server masks for them arrives masked
 and the join finds nothing, which is the mask doing its job. Because the extract is cut, a cell over it gives the extract's totals, not
 the model's: for true totals use the Pivot or a report.
 
-### 2.3 SQL cells
+#### 2.3 SQL cells
 
-A SQL cell is **Drishti SQL over the model the extract reads** ([ARCHITECTURE.md](../architecture/ARCHITECTURE.md), section 28), run by
+A SQL cell is **Drishti SQL over the model the extract reads** ([ARCHITECTURE.md](../../architecture/ARCHITECTURE.md), section 28), run by
 the server **as you**, with your row rules and masks, through the same plan as the model query it equals. Its tables are the model's
 aliases, a measure is `MEASURE('name')`, and `JOIN` needs no `ON` (the model's relationships are used). A new cell starts with a
 statement written from the model (the first text field you ticked and the model's first measure):
@@ -140,14 +145,14 @@ LIMIT  20
 The cell's footer says *3 rows in 4 ms · Drishti SQL, run by the server over sql-model@1 as you · plan p_825d3a8857*, with the masked
 columns when there are any:
 
-![A SQL cell: the statement above, Run (Drishti SQL, run by the server over the model), and three currencies with their Sum of MTM: EUR -75000, GBP 425000, USD -575000](img/bi-languages/analyse-dsql-cell.jpg)
+![A SQL cell: the statement above, Run (Drishti SQL, run by the server over the model), and three currencies with their Sum of MTM: EUR -75000, GBP 425000, USD -575000](../img/bi-languages/analyse-dsql-cell.jpg)
 
 The console sends the cell to `POST /bi/notebook/sql` (`{extract, sql}`), which asks the server's `POST /api/v1/bi/sql` with the model and
 the cell's row limit (`bi.notebook.sql_max_rows`, one more to say when it was cut); it never reads the SQL itself. One `SELECT` per cell;
 text over `bi.notebook.sql_max_chars` (20,000) is `DRS-9072`. *Run all* runs the cells in order. The same SQL runs from the terminal with
 `drishti.py bi sql` ([section 6](#6-on-the-command-line)).
 
-### 2.4 Python cells
+#### 2.4 Python cells
 
 A Python cell sees `df` (the extract as a pandas DataFrame), `extract(name)` (any other extract of the notebook, as a DataFrame for the
 same reader) and `params`. What it prints comes back as text; what it puts in **`result`** is drawn: a DataFrame or Series as a table, a
@@ -169,11 +174,11 @@ why; you can still write, save and promote cells. Whoever opens the notebook lat
 Running Python needs the **`bi-author`** power (the page says *Running Python needs the bi-author power.*); SQL needs only `bi`. The
 packages a cell may import are the pinned allow-list ([section 9.3](#93-the-pinned-libraries-installing-and-locking-the-environment)).
 
-### 2.5 Saving a notebook
+#### 2.5 Saving a notebook
 
 **Save as a notebook** stores the extract's definition and every cell as a BI item of kind **`notebook`**: in *My workspace* (or, if you
 opened a notebook you may edit, as a new version of it). It has versions, diffs, review and publishing like any item
-([REPORTS_GUIDE.md](REPORTS_GUIDE.md)); *Open in the Notebook* on the item page (or `/bi/notebook?item=<id>`, or the notebook picker)
+([BI_GUIDE.md](README.md)); *Open in the Notebook* on the item page (or `/bi/notebook?item=<id>`, or the notebook picker)
 reopens it: the extract is rebuilt for whoever opens it, so **a notebook shared with someone else shows *their* rows**. Outputs are not
 stored, only the code.
 
@@ -198,9 +203,9 @@ cells:
 A cell is `sql` or `python`; slicing is the Pivot's, so a notebook saved with a `slice` cell opens with that cell left out and a line
 saying so. A notebook may also carry the catalogue's keys (`sample`, `tags`, `endorsement`, `owner`, `audience`); a shipped one is
 `config/bi/notebooks/banking/pnl-vs-exposure-pandas.notebook.yaml`. A notebook's cells can also become a Python-driven table's build
-function ([TABLES_GUIDE.md](TABLES_GUIDE.md#114-python-driven-tables-and-models)).
+function ([BI_GUIDE.md](TABLES_AND_MODELS.md#114-python-driven-tables-and-models)).
 
-### 2.6 Promote
+#### 2.6 Promote
 
 Every promotion answers **beside the button you pressed** (one message, with an *Open the draft* link). Pressing the same promotion again
 for the same cell does not make a duplicate: it offers **Update that draft** or **Save another**. Promoting writes a **draft** item in your
@@ -215,7 +220,7 @@ workspace; nothing is published.
   existing one the visual is added below what the page holds and the report is written again by the designer's writer (comments in its
   YAML are not kept; the note says so).
 
-  ![A SQL cell promoted into an existing report draft: the note says what was left out and that the report was written again](../tutorials/img/t14/20-promote-existing.jpg)
+  ![A SQL cell promoted into an existing report draft: the note says what was left out and that the report was written again](../../tutorials/img/t14/20-promote-existing.jpg)
 
 * **A Python cell to a Measure or a Visual** (the cell's buttons): the cell's `df` becomes the function's `table`, `result` is returned,
   and the packages the cell imports go into the manifest ([section 3.3](#33-the-manifest)). Check it on the item page, then publish.
@@ -226,24 +231,24 @@ workspace; nothing is published.
 The route is the console's `POST /bi/notebook/promote` with `{to: report, name, dataset, sql, columns, qualified, target?, page?}` or
 `{to: measure | visual | transform, name, source, columns, extracts?}`.
 
-### 2.7 Profile
+#### 2.7 Profile
 
 The **Profile** tab shows every column of the extract: its type, what its text looks like (numbers or dates kept as text), empty values
 (count and %), distinct values, whether it could be a key, min and max (and the mean of a number), the five most common values and a
 histogram of a number. No code of yours runs (`POST /bi/notebook/profile` with `{extract}`), and it is drawn by the same panel as the
 [Transform editor's profile](#55-profiling). A column masked for you says so and profiles as empty.
 
-![The Notebook, Profile tab: the extract of the model prep-model as the analyst ann sees it, PRICE masked for her](img/bi-transform/07-analyse-profile.png)
+![The Notebook, Profile tab: the extract of the model prep-model as the analyst ann sees it, PRICE masked for her](../img/bi-transform/07-analyse-profile.png)
 
-### 2.8 Who sees what in the Notebook
+#### 2.8 Who sees what in the Notebook
 
 The server decides, as everywhere in BI: the extract is a model query (`POST /api/v1/bi/mq`) **as you**, so the same column masks and row
 rules as a report apply, and a masked column arrives empty. A SQL cell is answered by the server as you; a Python cell runs on the pool
 over the extract built for you. A cell cannot widen access, and a saved notebook holds code, not data.
 
-### 2.9 Notebook settings, errors and routes
+#### 2.9 Notebook settings, errors and routes
 
-The console's `bi.notebook.*` settings ([CONFIGURATION.md › `bi.notebook`](../admin/CONFIGURATION.md#binotebook)) set the most rows of an
+The console's `bi.notebook.*` settings ([CONFIGURATION.md › `bi.notebook`](../../admin/CONFIGURATION.md#binotebook)) set the most rows of an
 extract (`max_rows`, 10,000), its most columns (`max_fields`), a SQL cell's limits (`sql_max_rows`, `sql_max_chars`), a Python cell's
 limits (`cell_timeout_seconds`, `cell_memory_mb`, `cell_max_chars`), the most cells (`max_cells`) and the most further extracts
 (`max_extracts`).
@@ -260,7 +265,7 @@ The server's own refusals (`DRS-9001` no such dataset, a denied model) come thro
 session cookie): `GET /bi/notebook`, `GET /bi/notebook/status`, `POST /bi/notebook/extract`, `POST /bi/notebook/sql`,
 `POST /bi/notebook/python`, `POST /bi/notebook/profile`, `POST /bi/notebook/check`, `POST /bi/notebook/promote`.
 
-## 3. Python measures and visuals
+### 3. Python measures and visuals
 
 Where the expression language and the visual catalogue stop, Drishti runs **typed Python**: a **Measure** is a Python function that turns
 the rows of a group into a number (a desk's P&L volatility, a percentile no aggregate gives, a fitted slope), and a **Visual** is a Python
@@ -268,7 +273,7 @@ function that turns rows into a chart (a histogram with your own bins, a regress
 Python function is a **BI item** of its own (kind `python`), with a manifest, versions, review and publishing like a dataset or a report,
 and a report names it.
 
-### 3.1 At a glance
+#### 3.1 At a glance
 
 | | Python measure | Python visual |
 |---|---|---|
@@ -283,9 +288,9 @@ model:
 * `desk-pnl-volatility` (a measure): the standard deviation of one-day P&L, per desk;
 * `pnl-histogram` (a visual): a histogram of one-day P&L drawn with numpy.
 
-![The sample report, run on the server](img/bi-python/report-server.png)
+![The sample report, run on the server](../img/bi-python/report-server.png)
 
-### 3.2 The two interfaces
+#### 3.2 The two interfaces
 
 **Measure.** `config/bi/python/banking/desk-pnl-volatility.python.yaml`:
 
@@ -337,7 +342,7 @@ source: |
 `<foreignObject`, `<iframe`, `<image`, `xlink:href` or an `on...` handler; shown as an image, which never runs script) or PNG bytes.
 Colours you leave out (text, axes, grid lines) take the page's theme, so a chart reads in the dark and the light theme alike.
 
-### 3.3 The manifest
+#### 3.3 The manifest
 
 The body of a `python` item is YAML:
 
@@ -362,16 +367,16 @@ on every publish); **Check the Python**, the button on the item page (the consol
 `POST /api/v1/bi/python/check`), adds the checks that need Python's own parser, made on the compute pool without running anything: the
 source parses, defines its entry, and imports only what it lists or the safe standard library.
 
-![An item page with its Check](img/bi-python/item-check.png)
+![An item page with its Check](../img/bi-python/item-check.png)
 
-### 3.4 Python items are BI items
+#### 3.4 Python items are BI items
 
 A Python item lives where every BI item lives: **shipped** in `config/bi/python/<id>.python.yaml` (a published, read-only item,
 `file:python:<id>`, watched live), or **in a workspace** (create it with kind *python*, or `drishti.py bi item new`). Nothing about
 governance is special:
 
 * every save is a saved state (diff, restore); **publish** checks the manifest and refuses a bad one with `DRS-9070`; a workspace that
-  requires review needs a second person to approve it ([REPORTS_GUIDE.md](REPORTS_GUIDE.md));
+  requires review needs a second person to approve it ([BI_GUIDE.md](README.md));
 * a report that names the item runs **what was published** for every viewer; someone who edits the item (a contributor or better in its
   workspace) runs the **draft**, so a change can be tried before it is published; the run line under the visual shows the version;
 * it has an owner, tags, endorsement and an audience like any item, and appears in the catalogue (`kind=python`) and in bundles.
@@ -379,7 +384,7 @@ governance is special:
 A report **names an item** by catalogue id, shipped file name (`pnl-histogram`) or title. Anyone who can open a published report can have
 its Python items run for them: the report is what names the item, as it is what names the dataset.
 
-### 3.5 A Python measure in a model
+#### 3.5 A Python measure in a model
 
 A measure may be a **Python item** instead of an expression: `python:` names the item (catalogue id, shipped file name or title), `inputs`
 the columns its function reads and `by` the columns that make a group, all `table.column` and all of **one table**:
@@ -398,9 +403,9 @@ checked, so the measure is shown by a **python visual** (below), not mixed into 
 `by` and `inputs` that this person may see, and the pool calls the item once per group. Checks: the item is named, `inputs` is not empty,
 every name is a column, all of one table (`DRS-9012`); `expr` and `python` together are `DRS-9010`. The model is checked **without**
 looking the item up (an item can be published after it), so a wrong item name appears when a report runs it (`DRS-9001`/`9070`). The
-keys of a model's measures are in [TABLES_GUIDE.md](TABLES_GUIDE.md).
+keys of a model's measures are in [BI_GUIDE.md](TABLES_AND_MODELS.md).
 
-### 3.6 The python visual in a report
+#### 3.6 The python visual in a report
 
 The **`python` visual** (designer, catalogue group *Python*; wells `columns` and `values`):
 
@@ -432,9 +437,9 @@ rows* buttons; an export of it is the table of rows handed to Python. In the des
 the canvas shows a placeholder, since Python runs when a report is opened, not while designing. The line under each visual says the server
 ran it: `Python · desk-pnl-volatility v1 · server · 240 ms · 60 rows`.
 
-![The sample report with its Python measure and Python visual](img/bi-python/report-browser.png)
+![The sample report with its Python measure and Python visual](../img/bi-python/report-browser.png)
 
-### 3.7 Grouped measures and the column interface
+#### 3.7 Grouped measures and the column interface
 
 * **`compute_groups(frame, by, params)`.** A measure may define it instead of `compute`: one vectorised call over every group's rows that
   returns a DataFrame of the group columns and one value column (`value`, else the last). Faster for many groups:
@@ -448,7 +453,7 @@ ran it: `Python · desk-pnl-volatility v1 · server · 240 ms · 60 rows`.
 * **The `column` interface.** `derive(frame, params)` returns one value per row (a Series, an array or a list), for a column written
   `derive: { python: … }` (a calculated column computed in Python).
 
-### 3.8 Vega-Lite and drishti-chart output
+#### 3.8 Vega-Lite and drishti-chart output
 
 A visual may return a **Vega-Lite** specification instead of an ECharts option: say `output: vega-lite` in the manifest and return the
 specification as a dict (`mark`, `encoding`, `layer`, `transform` ... as [Vega-Lite](https://vega.github.io/vega-lite/) has them). The sample
@@ -464,11 +469,11 @@ def render(table, params):
         {"data": {"values": medians}, "mark": {"type": "tick", "thickness": 3, "color": "#d9534f"}, "encoding": {"x": {"field": "median", "type": "quantitative"}, "y": {"field": "desk", "type": "nominal"}}}]}
 ```
 
-![The sample Python visual that returns Vega-Lite: a dot for each trade, a tick for each desk's median](../tutorials/img/t14/17-python-vega.jpg)
+![The sample Python visual that returns Vega-Lite: a dot for each trade, a tick for each desk's median](../../tutorials/img/t14/17-python-vega.jpg)
 
 What comes back from the worker is data, as with ECharts: `{"kind": "vega-lite", "spec": {...}, "ms": 258}`. The page has no Vega:
 drishti-chart translates the specification (`fromVegaLite`) and draws it, and a feature it does not translate is refused in words with what
-to use instead (`DRS-9077`; the list is with the report's own Vega-Lite visuals in [REPORTS_GUIDE.md](REPORTS_GUIDE.md)). The rules:
+to use instead (`DRS-9077`; the list is with the report's own Vega-Lite visuals in [BI_GUIDE.md](README.md)). The rules:
 
 * **The data is inside the specification** (`data.values`). A `url` or a `loader` anywhere in it is refused, in the sandbox (`DRS-9073`: "a
   Vega-Lite specification may not load anything from a URL or name a loader") and again in the page. An expression such as
@@ -480,7 +485,7 @@ with its rows inline, and the page draws it as it is: every kind drishti-chart h
 heatmap, pie, donut, waterfall, treemap, sankey, gauge, candlestick, map, layers), its annotations and conditional marks, nothing to
 translate and nothing refused. The answer is `{"kind": "drishti-chart", "spec": {...}}`; a spec without `kind` is a `TypeError`, and
 `data.source` (an address to load) is refused in the sandbox (`DRS-9073`): put the rows in `data.rows`. The spec's language is in
-[ELEMENTS_API.md](ELEMENTS_API.md) (drishti-chart).
+[ELEMENTS_API.md](../ELEMENTS_API.md) (drishti-chart).
 
 ```python
 def render(table, params):
@@ -491,9 +496,9 @@ def render(table, params):
 ```
 
 The answer is at most 4 MB. A report can also hold a Vega-Lite visual with **no Python at all** (`type: vega-lite`,
-[REPORTS_GUIDE.md](REPORTS_GUIDE.md)).
+[BI_GUIDE.md](README.md)).
 
-### 3.9 Tests shipped with an item
+#### 3.9 Tests shipped with an item
 
 A Python item may carry `tests:`: examples of what its function must return. **Check** runs them on the server's compute pool, one request
 each (the same as a report's run), and shows each as passed, failed or could not run; a **publish** is refused while one fails.
@@ -545,14 +550,14 @@ pnl-vega             2 tests: passed 2
   pass  at most max_points dots                             vega-lite
 ```
 
-![Check on the sample measure: manifest and source checks, then each test with its result](../tutorials/img/t14/18-python-tests.jpg)
+![Check on the sample measure: manifest and source checks, then each test with its result](../../tutorials/img/t14/18-python-tests.jpg)
 
-### 3.10 Python on boards and in alerts
+#### 3.10 Python on boards and in alerts
 
 **Boards.** A board tile may show a **python visual** of its report: a Python measure shown as bars, a Python visual that returns a
 chart, or one that returns a Vega-Lite specification. The tile runs the item for the person looking, exactly as the report does, and shows
 the line *Python · item · target · ms · rows* under it. The sample board `python-wall`
-([config/bi/reports/banking/python-wall.report.yaml](../../config/bi/reports/banking/python-wall.report.yaml)) has three:
+([config/bi/reports/banking/python-wall.report.yaml](../../../config/bi/reports/banking/python-wall.report.yaml)) has three:
 
 ```yaml
 - { id: vol,   type: tile, title: Desk P&L volatility, from: { report: python-desk-risk, visual: volatility }, at: { x: 0, y: 0, w: 6, h: 6 } }
@@ -560,7 +565,7 @@ the line *Python · item · target · ms · rows* under it. The sample board `py
 - { id: strip, type: tile, title: P&L by desk,           from: { report: python-desk-risk, visual: strip },      at: { x: 0, y: 6, w: 12, h: 6 } }
 ```
 
-![The Python wall: a Python measure, a Python histogram and a Python visual that returns Vega-Lite, as tiles](../tutorials/img/t12/17-python-wall.jpg)
+![The Python wall: a Python measure, a Python histogram and a Python visual that returns Vega-Lite, as tiles](../../tutorials/img/t12/17-python-wall.jpg)
 
 A Python tile has **no `alert:` of its own**: the colour rule reads the numbers a query returns, and a Python tile's number is made by code
 that runs for the person looking. To be told when a Python measure crosses a limit, make an **alert** on it.
@@ -592,9 +597,9 @@ PUT /api/v1/alerts/rules/Vol
  "condition": {"type": "threshold", "op": "above", "value": 5000}, "trigger": {"mode": "after-load"}}
 ```
 
-The rest of alerts (conditions, triggers, delivery) is in [REPORTS_GUIDE.md](REPORTS_GUIDE.md).
+The rest of alerts (conditions, triggers, delivery) is in [BI_GUIDE.md](README.md).
 
-## 4. Transforms: a table in, a table out
+### 4. Transforms: a table in, a table out
 
 The third interface, after the Measure and the Visual, is the **Transform**: Python that turns the frames of one or more answers into **a
 table**, which a **Python dataset** publishes as its one table (`source: { python: <item>, inputs: { <name>: <a model query> } }`), with
@@ -648,21 +653,21 @@ defines its entry, imports only what it lists; nothing runs).
 each `extract("name")` becomes a parameter of `run`, the cell's `result` is returned; the draft is then checked and published, and a
 Python dataset is written over it (the dataset wizard's source *A Python Transform*), one model query per parameter of `run`.
 
-![The sample's Python dataset: made by the Python Transform pnl-vs-exposure, keyed by counterparty, and the columns its Transform returns](../tutorials/img/t14/12-python-dataset.jpg)
+![The sample's Python dataset: made by the Python Transform pnl-vs-exposure, keyed by counterparty, and the columns its Transform returns](../../tutorials/img/t14/12-python-dataset.jpg)
 
 The sample is `config/bi/python/banking/pnl-vs-exposure.python.yaml` with the Python dataset `desk-pnl-vs-exposure-py-result` and the
-model `desk-pnl-vs-exposure-py` over it ([tutorial 9, step 8](../tutorials/09-notebook-and-python.md#step-8--two-models-a-python-transform-and-a-join-in-the-notebook)).
+model `desk-pnl-vs-exposure-py` over it ([the Notebook tutorial, step 8](#step-8--two-models-a-python-transform-and-a-join-in-the-notebook)).
 Settings: `drishti.bi.transform.*` in
-[CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibitransform--python-transforms-and-composed-datasets).
+[CONFIGURATION.md](../../admin/CONFIGURATION.md#drishtibitransform--python-transforms-and-composed-datasets).
 
-## 5. Data prep: the Transform editor
+### 5. Data prep: the Transform editor
 
 The Transform editor makes the Python path the data-prep tool a Power Query author expects, without a step language: **raw rows straight
 from a connector**, a **step-by-step run with a preview and a profile after every step** and a **tested snippets library** for the common
 reshapes. The steps are lines of pandas, run on the server's compute pool in the same sandbox as every Python item, on the rows the
 person looking may see.
 
-### 5.1 Inputs straight from a connector
+#### 5.1 Inputs straight from a connector
 
 A Python dataset's `source.inputs` ([section 4](#4-transforms-a-table-in-a-table-out)) takes, besides a model query, a **pack kind read
 through a connector**:
@@ -698,7 +703,7 @@ caller: Arrow with `?format=arrow` (headers `X-Bi-Rows`, `X-Bi-Masked`, `X-Bi-Mo
 `drishti.bi.transform.max-input-rows` (50,000). It needs the BI power. This is what the editor previews, and what
 `drishti.py bi transform input` prints.
 
-### 5.2 The editor
+#### 5.2 The editor
 
 **BI → Transforms** (`/bi/transform`, the rail's *Transforms*; also the Notebook's *Transform editor* link) builds a Transform in four
 parts, with **no YAML to type**:
@@ -707,7 +712,7 @@ parts, with **no YAML to type**:
    connector, tick the fields) or *A model or a dataset* (a model query of rows). The line under the input says how many rows came, the day
    they are of and what is masked for you.
 
-   ![The Transform editor: an input, the pack kind trade read through the connector prep-store, 60 rows of 2026-10-08](img/bi-transform/01-input.png)
+   ![The Transform editor: an input, the pack kind trade read through the connector prep-store, 60 rows of 2026-10-08](../img/bi-transform/01-input.png)
 
 2. **Steps.** The first is *Start from trades* (`df = trades.copy()`). *Add a step from the snippets* opens a form for the snippet you
    choose ([section 5.3](#53-the-snippets-library)): the columns are those of the step before, the inputs are yours. *Write a step* takes a
@@ -717,9 +722,9 @@ parts, with **no YAML to type**:
    shows its rows and columns; pick one to see its **first 20 rows** (*Rows*) or its **profile** (*Profile*,
    [section 5.5](#55-profiling)). A step that fails turns red, says its error and line, and the steps before it keep their frames.
 
-   ![Step 2 of the sample, Filter rows by values (PORTFOLIO): 20 rows; its profile, one card per column](img/bi-transform/02-profile.png)
+   ![Step 2 of the sample, Filter rows by values (PORTFOLIO): 20 rows; its profile, one card per column](../img/bi-transform/02-profile.png)
 
-   ![Four steps: start, filter, a calculated column VALUE = QUANTITY * PRICE, total VALUE per CURRENCY; the last step's two rows](img/bi-transform/03-steps.png)
+   ![Four steps: start, filter, a calculated column VALUE = QUANTITY * PRICE, total VALUE per CURRENCY; the last step's two rows](../img/bi-transform/03-steps.png)
 
 4. **Save.** Tick the column(s) that make one row (the grain; a column that was unique in the preview is offered first) and *Save as
    drafts*: a **Python item** (`interface: transform`) and a **Python dataset** that runs it, both drafts in your workspace. Check and
@@ -729,7 +734,7 @@ parts, with **no YAML to type**:
 The YAML is shown under *YAML: what is saved* and stays in step with the page; edit either text and *Read the YAML back* to see it as
 steps again (a Transform written by hand opens too: its `# step:` comments are the steps, or its whole body is one step).
 
-![The YAML the editor wrote: the Python item with the steps after their # step: comments, and the Python dataset with the kind input](img/bi-transform/04-yaml.png)
+![The YAML the editor wrote: the Python item with the steps after their # step: comments, and the Python dataset with the kind input](../img/bi-transform/04-yaml.png)
 
 What is saved, for the sample above:
 
@@ -749,7 +754,6 @@ source: |
   import numpy as np
   import pandas as pd
 
-
   def run(trades, params):
       # step: Start from trades
       df = trades.copy()
@@ -764,7 +768,7 @@ source: |
 
 Running the steps needs the **bi-author** power (it runs Python); without it the page still writes and reads the YAML.
 
-### 5.3 The snippets library
+#### 5.3 The snippets library
 
 `drishti-console/config/prep-snippets.yaml` holds 21 snippets, each one step over `df` with parameters filled in a form. **A value is
 always written as a Python literal** (`repr`): a column called `x"]; import os` is a column of that odd name, never code; an *input*
@@ -782,9 +786,9 @@ step-by-step run, so a snippet is correct out of the box.
 | Dates | align to a business day (following, preceding, modified following; weekends and the holidays you list), tenor bucket (`<1Y`, `1-2Y`, ..., `30Y+`) |
 
 More snippets: a file of the same shape named by `bi.transform.snippets_file`
-([CONFIGURATION.md](../admin/CONFIGURATION.md#prep-snippetsyaml-the-transform-editors-data-prep-snippets)).
+([CONFIGURATION.md](../../admin/CONFIGURATION.md#prep-snippetsyaml-the-transform-editors-data-prep-snippets)).
 
-### 5.4 The step-by-step run
+#### 5.4 The step-by-step run
 
 `POST /bi/transform/steps` (the console) passes the page's inputs and code to the server (`POST /api/v1/bi/python/steps`): each input is
 read **as you** ([section 5.1](#51-inputs-straight-from-a-connector), at most `bi.transform.preview_rows`, 1,000), then `run` runs **once**
@@ -797,7 +801,7 @@ steps): the inputs asked in about 10 ms, the Python run about 45 to 65 ms in all
 
 The run is never kept: an author runs it as they edit. The Python dataset itself runs the same `run` as each reader when it is read.
 
-### 5.5 Profiling
+#### 5.5 Profiling
 
 The **profile** of a frame, worked out on the compute pool over the reader's rows, is one card per column: its type; **what its text looks
 like** (numbers or dates kept as text, with *Fix the type*, which adds the right type-fix step; digits in a column named like an
@@ -809,10 +813,10 @@ unique column, with how many match: the *Join* snippet joins them.
 The same panel is the Notebook's **Profile** tab ([section 2.7](#27-profile)); the server's route is `POST /api/v1/bi/python/profile`. No
 author code runs to profile.
 
-## 6. On the command line
+### 6. On the command line
 
 The commands run over REST as the token's user (`--server`, `--token-file`, `--user` as for every REST command;
-[CLI_REFERENCE.md](CLI_REFERENCE.md)):
+[CLI_REFERENCE.md](../CLI_REFERENCE.md)):
 
 ```
 drishti.py bi sql "SELECT ..." --model M [--explain] [--format table|json|csv|jsonl]   a Notebook SQL cell's statement, from the terminal
@@ -826,7 +830,7 @@ drishti.py bi catalogue publish ID [--note TEXT]                               p
 ```
 
 Real output of `bi transform input` on the demo lakes
-([tutorial 9, step 12](../tutorials/09-notebook-and-python.md#step-12--prepare-raw-trades-step-by-step-the-transform-editor)):
+([the Notebook tutorial, step 12](#step-12--prepare-raw-trades-step-by-step-the-transform-editor)):
 
 ```
 $ python3 tools/drishti.py bi transform input docs/tutorials/data/endur-trades-cleaned.dataset.yaml
@@ -848,9 +852,9 @@ $ python3 tools/drishti.py bi transform snippet asof-fx amount=NOTIONAL currency
 step-by-step run, and the dataset when it is read). The administrator's side (the lock file) is `tools/python_lock.py`
 ([section 9.3](#93-the-pinned-libraries-installing-and-locking-the-environment)).
 
-## 7. The sandbox and who sees what
+### 7. The sandbox and who sees what
 
-### 7.1 What the sandbox enforces
+#### 7.1 What the sandbox enforces
 
 Code people write runs only in the pool's **strict sandbox** (`isolation: strict`), and only where every part of it can be had. The walls
 the kernel holds come first; Python's own guards are the second line.
@@ -874,7 +878,7 @@ the kernel holds come first; Python's own guards are the second line.
 and the table editor's Sample run are off and say why. Nothing falls back to a weaker sandbox. A file or feed the code needs is read by the
 server and handed in as an input; the code itself never reaches a network.
 
-### 7.2 Who sees what
+#### 7.2 Who sees what
 
 * The rows are the server's answer for **this person**: their row rules, their masks, their business date. A masked column arrives masked
   (`X-Bi-Masked` lists it; the visual's line says *masked*); Python never receives the real value, so it cannot reveal it. The result is
@@ -884,11 +888,11 @@ server and handed in as an input; the code itself never reaches a network.
 * Which item runs, and which rows it reads, are decided by the **server**; the console passes on the person's identity and decides nothing
   about access.
 * Every non-GET call takes JSON from the console's own pages only (same-origin check and `application/json`, `DRS-5002` / `DRS-5001`;
-  [API_REFERENCE.md](API_REFERENCE.md)).
+  [API_REFERENCE.md](../API_REFERENCE.md)).
 
-## 8. Limits and errors
+### 8. Limits and errors
 
-### 8.1 The limits
+#### 8.1 The limits
 
 | Limit | Where it is set |
 |---|---|
@@ -899,13 +903,13 @@ server and handed in as an input; the code itself never reaches a network.
 | the editor's preview rows, extra snippets | `bi.transform.*` (`preview_rows`, `snippets_file`) |
 | how many run at once | the pool's workers and queue ([section 9.2](#92-workers-memory-and-time)) |
 
-Every key, its default and its environment variable is in [CONFIGURATION.md](../admin/CONFIGURATION.md):
-[`drishti.bi.report`](../admin/CONFIGURATION.md#drishtibireport--reports-phase-3),
-[`drishti.bi.transform`](../admin/CONFIGURATION.md#drishtibitransform--python-transforms-and-composed-datasets),
-[`bi.notebook`](../admin/CONFIGURATION.md#binotebook), [`bi.transform`](../admin/CONFIGURATION.md#bitransform) and
-[`compute`](../admin/CONFIGURATION.md#compute-workers-configcomputecomputeyaml).
+Every key, its default and its environment variable is in [CONFIGURATION.md](../../admin/CONFIGURATION.md):
+[`drishti.bi.report`](../../admin/CONFIGURATION.md#drishtibireport--reports-phase-3),
+[`drishti.bi.transform`](../../admin/CONFIGURATION.md#drishtibitransform--python-transforms-and-composed-datasets),
+[`bi.notebook`](../../admin/CONFIGURATION.md#binotebook), [`bi.transform`](../../admin/CONFIGURATION.md#bitransform) and
+[`compute`](../../admin/CONFIGURATION.md#compute-workers-configcomputecomputeyaml).
 
-### 8.2 Errors: DRS-9070 to DRS-9077
+#### 8.2 Errors: DRS-9070 to DRS-9077
 
 | Code | HTTP | Meaning | Usual cause |
 |---|---|---|---|
@@ -929,7 +933,7 @@ can):
 
 The server answers them as `DRS-9071` to `9073` (the traceback for authors only).
 
-### 8.3 Does Python run here?
+#### 8.3 Does Python run here?
 
 `GET /api/v1/bi/python/runtime` (the console's `GET /bi/python/status`; the Notebook's `GET /bi/notebook/status`) says whether Python
 runs, and why not:
@@ -941,15 +945,15 @@ runs, and why not:
 
 **How fast.** With pandas loaded, the engine answers a measure, a Transform, a cell or a profile in **11 to 24 ms** inside a warm worker
 (strict sandbox included); the first request of an idle pool also pays for the worker's start, about 0.2 s plus the imports. More in
-[OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#21-troubleshooting).
+[OPERATIONS_GUIDE.md](../OPERATIONS_GUIDE.md#21-troubleshooting).
 
-## 9. For administrators: turning Python on
+### 9. For administrators: turning Python on
 
 Python is **off as shipped**. Turning it on is three things: switch compute on, size the pool `python`, and make sure its interpreter
 carries the pinned libraries. The compute workers in general (other pools, connector requirements and their approval, Admin → Compute) are
-in [OPERATIONS_GUIDE.md › Compute workers](OPERATIONS_GUIDE.md#15-compute-workers).
+in [OPERATIONS_GUIDE.md › Compute workers](../OPERATIONS_GUIDE.md#15-compute-workers).
 
-### 9.1 Switch on compute and the pool `python`
+#### 9.1 Switch on compute and the pool `python`
 
 1. Use a **Linux** server with Landlock (kernel 5.13 or later) and unprivileged user namespaces ([section 7.1](#71-what-the-sandbox-enforces)).
 2. In `config/compute/compute.yaml` set `compute.enabled: true` (or the environment variable `DRISHTI_COMPUTE_ENABLED=true`), and point
@@ -961,7 +965,7 @@ in [OPERATIONS_GUIDE.md › Compute workers](OPERATIONS_GUIDE.md#15-compute-work
 `drishti.bi.transform.enabled` switches every Python run off again without touching compute. The console has no Python setting: it runs
 none.
 
-### 9.2 Workers, memory and time
+#### 9.2 Workers, memory and time
 
 The shipped pool:
 
@@ -991,7 +995,7 @@ The shipped pool:
 * **Per item:** the item's `timeout` and `memory` are capped by `drishti.bi.report.python-max-seconds` and `python-max-memory-mb`; a
   Notebook cell by `bi.notebook.cell_timeout_seconds` and `cell_memory_mb`.
 
-### 9.3 The pinned libraries: installing and locking the environment
+#### 9.3 The pinned libraries: installing and locking the environment
 
 The libraries code people write may import are **one pinned set**: `config/compute/locks/python.in` lists the whole environment, one
 `name==version` per line, transitive packages included (as shipped: numpy, pandas, pyarrow, scipy, python-dateutil, six, tzdata), and
@@ -1022,9 +1026,615 @@ There are two ways to give the pool that environment:
 
 Nothing is resolved at install time: the lock is the whole environment.
 
-### 9.4 Watching it
+#### 9.4 Watching it
 
 * **Admin → Compute** shows the pools, workers busy, queues, latency, environments and recent requests.
 * The **audit log** has one `python-run` line per run (who, what, the pool, the outcome, the time, the bytes).
 * `GET /api/v1/bi/python/runtime` says whether Python runs and why not ([section 8.3](#83-does-python-run-here)).
 * On **Windows** Python runs stay off by design (no network namespace, no Landlock): every run says so with `DRS-9074`.
+
+## Tutorial: The Notebook and Python
+
+SQL measures cover most questions. When a figure needs a real function (a standard deviation of P&L per desk, a histogram, a model) you write it in **Python**, and Drishti runs it **sandboxed, on the rows the person looking may see**. And when you do not yet know the question, the **Notebook** gives you
+an extract of a model to query with **SQL** on the server, work on in **Python** on the server's compute pool, keep as a **notebook**, and **promote** to a measure, a visual or a report draft (slicing is the **Pivot**'s). This tutorial does both on the demo trades, through the
+model `trades-basic@1` (every sample is a model over datasets). Every step shows it **in the UI**, **on the command line** (`python3 tools/drishti.py`, or `curl`) and **as YAML**, or says why one of the three does not apply.
+
+### Time to complete
+
+About 60 minutes (step 12: 15 minutes).
+
+### Before you start
+
+- The quick-start environment of [the reports tutorial](REPORTS.md#before-you-start) (the demo lakes: 15,000 trade valuations over ten desks,
+  business date 2026-10-16) and tutorial 10 done (reports, workspaces, `Economics desk`). You sign in as the development administrator, who holds the `bi-author` power that Python needs (SQL cells need only `bi`).
+- Python on the server: compute switched on, and the server's compute pool `python` pointed at an interpreter that carries the pinned libraries (`DRISHTI_COMPUTE_ENABLED=true`, `DRISHTI_PYTHON=<python with pandas, numpy, pyarrow and scipy at the versions of config/compute/locks/python.lock>`; [OPERATIONS_GUIDE.md](../../guides/OPERATIONS_GUIDE.md)). Every Python item runs on that pool, in a strict sandbox (no network, files held to its own folder), never in the console or your browser; on a Windows server Python is off and says why.
+  the browser. **Calc** (the step that asks a BI model from a view, Alt+C) is the one exception: it is Python on the screen you are on, in your browser, so its
+  runtime must be installed once on the console with `tools/fetch-pyodide.sh` ([OPERATIONS_GUIDE.md](../../guides/OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine)); without it Calc says
+  *Python runtime not installed* and Run stays disabled.
+- Two small files in [data/](../../tutorials/data/): [notional-by-desk.python.yaml](../../tutorials/data/notional-by-desk.python.yaml) (a Python visual) and [desk-python.report.yaml](../../tutorials/data/desk-python.report.yaml) (a report on the model `trades-basic@1` that uses it).
+- The personal API token of [tutorial 1, step 9](../../tutorials/01-first-15-minutes.md#step-9--make-a-token-for-the-command-line) in `DRISHTI_TOKEN` (with `bi:write`),
+  and `DRISHTI_SERVER`. The Notebook and Calc calls quoted below are the console's, made with your session: a personal token does not reach them.
+
+### What you will learn
+
+- the two kinds of Python item: a **measure** (`compute(table, params)`, one number per group) and a **visual** (`render(table, params)`, a chart);
+- how a report uses them, where they run, and what the sandbox forbids;
+- the **Notebook**: the extract of a model, **SQL** (Drishti SQL on the server over the model), a **Python** cell for the server's compute pool, saving a **notebook**, and **promoting** work into BI items; slicing in the **Pivot**.
+- **Python across models**: a **Transform** that turns the answers of two model queries into a table (a **Python dataset**, 2.2), and a notebook that joins two extracts in pandas and promotes the join to a Transform;
+- **Vega-Lite** charts (written in a report, or returned by Python), the **tests** a Python item carries, where a SQL cell runs and promoting into an **existing** report, **Calc's BI client** (a Labs scratch pad; steps 9 to 11).
+- **Data prep**: a Transform built step by step in the **Transform editor** from raw trades read straight through a connector, with a preview
+  and a profile after every step and no YAML to type (step 12).
+
+### Step 1 · Python in a report: the shipped sample
+
+Open **Catalogue → Desk P&L risk (Python)**.
+
+![The sample Python report: P&L volatility per desk as bars, and a histogram of one-day P&L; each frame says Python, the item, v1, server, the time and the rows](../../tutorials/img/t14/01-python-report.jpg)
+
+You should see two charts. Under each is a line such as `Python · desk-pnl-volatility v1 · server · 278 ms · 10000 rows`: the **item** that drew it, its version, **where it ran** (the server's compute pool, `server`) and how many rows it was handed. The left chart is a **Python measure** (the volatility of one-day P&L of each desk); the right one is a **Python visual** (a histogram drawn with numpy).
+Both worked on the trades **as you may see them**: masks and row rules were applied before Python saw a row. A Python visual is handed at most 10,000
+rows, so on the demo lake's 15,000 trade valuations it works on the first 10,000 (the server says so: `DRS-9022` is what a plain JSON answer of more rows
+is told); a Python measure for a figure over every row belongs in a model query, or in a Transform over grouped answers (step 8).
+
+The measure's source is a short YAML item, `config/bi/python/banking/desk-pnl-volatility.python.yaml`:
+
+```yaml
+python: desk-pnl-volatility
+title: Desk P&L volatility
+interface: measure
+inputs: [PNL_1D]                 # the columns the function reads, as the table names them
+packages: [pandas]               # what the source imports (must be on the allow-list)
+target: server                   # the console runs it (there is no browser target)
+timeout: 10                      # seconds
+memory: 256                      # megabytes
+params: { min_trades: 2 }
+source: |
+  def compute(table, params):
+      """One number for the rows of one group."""
+      pnl = table["PNL_1D"].dropna()
+      if len(pnl) < int(params.get("min_trades", 2)):
+          return 0.0
+      return float(pnl.std(ddof=1))
+```
+
+The **model** (`config/tables/banking/trades-basic.model.yaml`) says which groups it is called for (one number per desk) in a measure that is a Python item,
+not an expression:
+
+```yaml
+measures:
+  Desk P&L volatility:
+    python: desk-pnl-volatility      # the item
+    inputs: [trade.PNL_1D]           # columns of ONE dataset of the model
+    by: [trade.DESK]                 # one number per desk
+```
+
+**On the command line** the model lists it with its item, beside the measures that are expressions:
+
+```text
+$ python3 tools/drishti.py bi model describe trades-basic@1
+Trades, the basics  (trades-basic@1)
+
+trade  fact  trades-basic-trade 1.0.0
+  trade.VALUATION_ID                 string    key
+  trade.TRADE_ID                     string    dimension
+  trade.SOURCE_SYSTEM                string    dimension
+  trade.DESK                         string    dimension
+  trade.PORTFOLIO                    string    dimension
+  trade.PRODUCT_TYPE                 string    dimension
+  trade.CURRENCY                     string    dimension
+  trade.TRADE_STATUS                 string    dimension
+  trade.NOTIONAL                     decimal   amount        amount0
+  trade.MTM                          decimal   amount        signed0
+  trade.PNL_1D                       decimal   amount        signed0
+  trade.TRADE_DATE                   date      date
+  trade.MTM_IN_MILLIONS              decimal   amount
+
+measures
+  Notional                          sum(trade.NOTIONAL)
+  MTM                               sum(trade.MTM)
+  Trades                            count(trade)
+  Average MTM per trade             measure('MTM') / measure('Trades')
+  Desk P&L volatility               python: desk-pnl-volatility
+  Count of trade                    count(trade)  (default)
+```
+
+A model query computes it like any measure, on the server's rows (every row, not the visual's 10,000), one call of the item per group:
+
+```text
+$ python3 tools/drishti.py bi mq --model trades-basic@1 --select trade.DESK --measures "Desk P&L volatility" --limit 3
+trade.DESK   Desk P&L volatility
+-----------  -------------------
+DESK-COMM    217,782.36
+DESK-CREDIT  159,732.60
+DESK-EQD     183,546.29
+3 row(s)  as of 2026-10-16  plan p_8978bc854cd42c41
+```
+
+The report's python visual draws it from the rows it is handed.
+
+### Step 2 · A Python visual of your own
+
+A visual is a function `render(table, params)` that gets the rows of the visual's `columns` well and returns a chart **as data** (an ECharts option, SVG text or PNG bytes; never HTML or script). Here is the tutorial's, which draws the largest desks by notional:
+
+```yaml
+rachana: 1
+python: notional-by-desk
+title: Notional by desk chart
+interface: visual
+output: echarts
+inputs: [DESK, NOTIONAL]
+packages: [pandas]
+target: server
+params: { top: 8 }
+source: |
+  def render(table, params):
+      top = int(params.get("top", 8))
+      g = table.groupby("DESK", as_index=False)["NOTIONAL"].sum().sort_values("NOTIONAL", ascending=False).head(top)
+      return {
+          "title": {"text": f"Notional of the {len(g)} largest desks", "left": "center"},
+          "xAxis": {"type": "value", "name": "Notional"},
+          "yAxis": {"type": "category", "data": list(g["DESK"])[::-1]},
+          "series": [{"type": "bar", "data": [float(v) for v in g["NOTIONAL"]][::-1]}],
+      }
+```
+
+A Python item is a BI item like a dataset or a report: stored, versioned, reviewed and published. Create it in your workspace. **In the UI** that is a form, and you do not start from a blank page: **My workspace → New item**, kind *python*, and **What does it make?** asks for *a measure* (one number per group), *a visual* (a chart drawn by Python) or *a table* (a Transform, which joins datasets), and for the columns it reads (or, for a table, the datasets it reads). **Create and open the editor** makes the item with a valid, commented starter body (the manifest the server checks, a function of the right shape, and for a measure a test) and opens it with its editor ready, so you change the code and press **Check the Python**.
+
+![New item, kind python: it makes a measure, reads the column NOTIONAL, titled Mean notional](../../tutorials/img/t14/23-python-starter.jpg)
+
+![The starter body in the item's editor: params, a test of the mean of three values, and def compute(table, params)](../../tutorials/img/t14/24-python-starter-editor.jpg)
+
+For this step choose *a visual* and replace the body with the tutorial's, or, **from the file**, paste the YAML from `data/notional-by-desk.python.yaml` into the same form's item page (**Edit**), the way it was done before the starter existed: kind *python*, title `Notional by desk chart`, **Create item**. (The picture below moved it into `Economics desk`.)
+
+![The Python item's page: draft, with Check the Python, Edit, Propose for review, Publish](../../tutorials/img/t14/02-python-item.jpg)
+
+You should see the item as a draft with its actions. Press **Check the Python**: the console checks what only it can, that the source parses, defines its entry (`render`) and imports only what the manifest lists or the safe standard library.
+
+![The check passes: "The Python item checks out: the manifest is valid and the source parses."](../../tutorials/img/t14/03-check-python.jpg)
+
+You should see `The Python item checks out: the manifest is valid and the source parses.` A mistake is reported with its code. A package that is not allowed, for example `packages: [requests]`, is refused (`DRS-9070`) with the allow-list:
+
+```text
+$ POST /bi/python/check   (packages: [requests])
+{"valid": false, "problems": [
+  {"level": "error", "code": "DRS-9070", "path": "packages", "message": "'requests' is not an allowed package (allowed: pandas, numpy, pyarrow, scipy)"},
+  {"level": "error", "code": "DRS-9070", "path": "packages", "message": "'requests' is not on the pool's pinned allow-list (pandas, numpy, pyarrow, scipy)"}, ...
+```
+
+Press **Publish** (a Python item must be published for a report to use it). **From the command line** the same two moves (`bi item new` reads the
+kind from the file name; the ids differ on your machine):
+
+```text
+$ python3 tools/drishti.py bi item new economics-desk docs/tutorials/data/notional-by-desk.python.yaml
+bi-9f1278b922  python  Notional by desk chart  draft in Economics desk
+$ python3 tools/drishti.py bi catalogue publish bi-9f1278b922 --note "my first Python visual"
+published Notional by desk chart as version 1
+```
+
+Now the report, [data/desk-python.report.yaml](../../tutorials/data/desk-python.report.yaml): it reads the model (`model: trades-basic@1`), a slicer, a `python` visual
+that names your item, and one that uses the shipped measure.
+
+```yaml
+- id: notional-chart
+  type: python
+  title: "Notional by desk (my Python visual)"
+  at: { x: 0, y: 2, w: 6, h: 6 }
+  wells: { columns: [trade.DESK, trade.NOTIONAL] }       # the rows handed to Python
+  format: { python: Notional by desk chart, params: { top: 8 }, run: auto }
+- id: volatility
+  type: python
+  wells: { values: [Desk P&L volatility] }                # a Python measure of the model
+  format: { run: auto }
+```
+
+Create it (New item, kind *report*, or `python3 tools/drishti.py bi item new economics-desk docs/tutorials/data/desk-python.report.yaml`) and press **Open the report**.
+
+![Desks in Python: a currency slicer, my Python bar chart of the eight largest desks, and the shipped volatility measure](../../tutorials/img/t14/04-desks-in-python.jpg)
+
+You should see your chart, `Notional of the 8 largest desks`, drawn by your function, beside the shipped one; the footer of yours reads `Python · bi-... v1 · server · 320 ms · 10000 rows`. Choose a currency in the slicer: the chart is asked again and Python gets only those rows (the rows are the table's own, under the page's slicers, filters and business date, at most 10,000). `format.run` is `auto` (the server first, the browser if the server cannot), `server` or `browser`.
+
+**The sandbox.** The server target runs a short-lived worker process per call: **no network**, a scratch folder only, limits on CPU, memory, time and output, and **nothing kept between calls**, so nothing leaks between people. `import` works for the allow-listed packages. Python never reaches the server's data directly; it receives the Arrow rows the server built for the person.
+
+### Step 3 · The Notebook: an extract to work on
+
+Choose **Notebook** in the BI rail (`/bi/notebook`). In **Model or dataset** choose **Trades, the basics (model 1.0.0, published)** (the list holds the
+models first, then your datasets and the packs' datasets, one group per pack), tick the fields you want and press **Open the extract**.
+
+![The Extract card with the model Trades, the basics and its fields ticked, and the Open the extract button](../../tutorials/img/t14/05-analyse-start.jpg)
+
+You should see the fields grouped by the model's alias (`trade`) and, after **Open the extract**, the line `10000 rows, 10 columns.` with a note that the
+extract was cut (the lake holds 15,000). The extract is **one model query** (its rows, `shape: rows`) asked as **you** (masked columns arrive empty, and
+the line says `Masked for you: ...`), cut to `bi.notebook.max_rows` (10,000; a cut says so). It is rebuilt on every run and never kept, so a mask or row
+rule changed on the server applies the next time. **On the command line** the same rows are a model query, and **the YAML** of it is what the Notebook sends:
+
+```yaml
+mq: 1
+model: trades-basic@1
+select: { fields: [trade.TRADE_ID, trade.DESK, trade.PORTFOLIO, trade.CURRENCY, trade.NOTIONAL, trade.MTM], measures: [] }
+shape: rows                 # the rows themselves, not grouped
+limit: 10000
+```
+
+(`python3 tools/drishti.py bi mq that.yaml` prints them.)
+
+### Step 4 · Slicing is the Pivot's
+
+To put desks down, currencies across and notional in the cells, use the **Pivot**, the one grid for slicing any table: the *Pivot* link in the BI rail,
+or the Notebook's own line *To slice and total a table, use the Pivot*. Its totals are the whole table's, worked out by the server
+([BI_GUIDE.md](README.md)); **on the command line** `PIVOT <table> <GO>` opens it on a table, and a pivot view is saved as YAML there.
+The Notebook is for what a grid cannot say: SQL over the model and Python.
+
+You should see the Pivot open with its source picker: choose the trades' table, then drag `DESK` to Rows, `CURRENCY` to Columns and `NOTIONAL` to Values.
+
+### Step 5 · SQL
+
+Open the **SQL** tab (it opens first). A SQL cell is **one read-only SELECT** in **Drishti SQL over the model**, asked of the **server** as you, so its
+answers are true totals, not the extract's. Its tables are the model's aliases and a measure is `MEASURE('name')`
+([API_REFERENCE.md › Drishti SQL](../../guides/API_REFERENCE.md#8-drishti-sql-apiv1bisql)):
+
+```sql
+SELECT trade.DESK, MEASURE('Trades') AS trades, MEASURE('Notional') AS notional
+FROM trade
+GROUP BY trade.DESK
+ORDER BY notional DESC
+```
+
+Press **Run**.
+
+![The SQL cell in Drishti SQL on the server: desks with trade counts and notional, largest first, and the line naming the model, the plan and as you](../../tutorials/img/t14/07-sql.jpg)
+
+You should see a table, the largest desk first (`DESK-COMM`, `5,990` trades, `888,803,742,774` of notional: true totals over all 15,000 rows, not the
+extract's), and the line *10 rows in 7 ms · Drishti SQL, run by the server over trades-basic@1 as you · plan p_...*: the same plan a visual of the same
+question would run. **From the command line** the same statement (and what a write is told):
+
+```text
+$ python3 tools/drishti.py bi sql "SELECT trade.DESK, MEASURE('Trades') AS trades, MEASURE('Notional') AS notional FROM trade GROUP BY trade.DESK ORDER BY notional DESC LIMIT 3" --model trades-basic@1
+trade.DESK  trades  notional
+----------  ------  ------------------
+DESK-COMM   5990    888,803,742,773.65
+DESK-RATES  1832    596,934,185,000.00
+DESK-EQD    1452    428,542,341,000.00
+3 row(s)  shape mq  plan p_3773eb23294dfb01
+
+$ python3 tools/drishti.py bi sql "DROP TABLE trade" --model trades-basic@1
+drishti: the server said 422 DRS-9170: DRS-9170 Drishti SQL is read-only: DROP is refused; a statement is one SELECT (or WITH ... SELECT)
+```
+
+(Text over 20,000 characters is `DRS-9072`; at most 5,000 rows come back.) There is no YAML for a cell on its own: it is kept in a notebook (step 7).
+
+### Step 6 · A Python cell
+
+Open the **Python** tab. A cell sees `df` (the extract as a pandas table), `extract("name")` (another extract of the notebook) and `params`. What it prints
+comes back as text; what it puts in `result` is **drawn**: a table as a table, a dict as an ECharts option, SVG or PNG as an image.
+
+```python
+g = df.groupby('DESK', as_index=False)['NOTIONAL'].sum()
+result = {'title': {'text': 'Notional by desk'}, 'xAxis': {'type': 'category', 'data': list(g['DESK'])}, 'yAxis': {'type': 'value'},
+          'series': [{'type': 'bar', 'data': [float(v) for v in g['NOTIONAL']]}]}
+```
+
+The line beside **Run** says *Runs on the server's compute pool*: a cell never runs in the console or your browser. Press **Run**: the server reads the
+extract as you and runs the cell in its strict sandbox. You should see the line *Ran on the server's compute pool in ... ms over 10000 rows* and the bar
+chart of notional by desk under it (what the cell printed comes first, when it prints). Keep the cell in the notebook (step 7) and promote it to an item
+(below): whoever opens the notebook later runs it on the pool, over their own rows. Running Python needs `bi-author`; a person with only `bi` writes and runs SQL cells.
+
+### Step 7 · Keep it as a notebook, promote it
+
+Under **Save** give it a title (`Desk notional, first look`) and press **Save as a notebook**. (**My workspace → New item → notebook** only points you here:
+a notebook is made from the work you did, not from a form.)
+
+![The notebook card after saving: Save as a notebook and Open the item](../../tutorials/img/t14/09-saved.jpg)
+
+You should see a link, **Open the item**: the extract's definition and every cell are now a BI item of kind **notebook** in your workspace, with versions,
+diffs, review and publishing like any other. Opening it again (**Open in the Notebook** on the item page) rebuilds the extract **for whoever opens it**: a
+notebook shared with a colleague shows *their* rows. Outputs are not stored, only the code. **The YAML** of the notebook:
+
+```yaml
+rachana: 1
+notebook: desk-notional-first-look
+title: Desk notional, first look
+dataset: mq:trades-basic@1            # the model the extract reads
+fields: [trade.TRADE_ID, trade.DESK, trade.PORTFOLIO, trade.PRODUCT_TYPE, trade.CURRENCY, trade.TRADE_STATUS, trade.NOTIONAL, trade.MTM, trade.PNL_1D, trade.MTM_IN_MILLIONS]
+cells:
+- type: sql
+  source: |
+    SELECT trade.DESK, MEASURE('Trades') AS trades, MEASURE('Notional') AS notional
+    FROM trade
+    GROUP BY trade.DESK
+    ORDER BY notional DESC
+- type: python
+  source: |
+    g = df.groupby('DESK', as_index=False)['NOTIONAL'].sum()
+    result = {'title': {'text': 'Notional by desk'}, ...}
+  target: server
+```
+
+To turn a Python cell into a reusable item press **Promote to a visual** (or **to a measure**) under the cell.
+
+![After promoting: "Python visual draft saved in your workspace: Notebook cell (visual). The cell's df became the function's table..."](../../tutorials/img/t14/10-promote-visual.jpg)
+
+You should see `Python visual draft saved in your workspace: Notebook cell (visual).` and the reminder: the cell's `df` became the function's `table`,
+`result` is returned, a measure must return one number and a visual an ECharts option, SVG or PNG; check it with **Check the Python** on the item page,
+then publish. Nothing is published for you. A SQL cell becomes a **report visual** the same way (step 10).
+
+### Step 8 · Two models: a Python Transform and a join in the Notebook
+
+Steps 1 to 7 used Python on one model. Python can also **join answers**. The sample **Desk P&L vs counterparty exposure (Python)** makes one table, P&L
+next to exposure per counterparty, with a **Python Transform**: a Python item with `interface: transform` whose function `run(pnl, exposure, params)`
+receives two answers as pandas frames, **asked as you**, and returns a table. That table is a **Python dataset** (`source.python`), and each
+input is a **model query**. Open **Models**, find **Desk P&L vs counterparty exposure (Python): the Transform's table** under the datasets.
+
+![The Python dataset's page: made by the Python Transform pnl-vs-exposure, keyed by counterparty, snapshot, and the nine columns its Transform returns](../../tutorials/img/t14/12-python-dataset.jpg)
+
+You should see *Source: the Python Transform pnl-vs-exposure*, the key `counterparty` and the nine columns the Transform returns (a contract: a column it
+does not return is `DRS-9075`). There is nothing to refresh: the Transform runs **when the dataset is asked**, for the person asking, and its frame is kept
+for them until an input changes. **The YAML** says what it reads (`config/tables/bi/desk_pnl_vs_exposure_py_result.table.yaml`):
+
+```yaml
+rachana: 2
+expressions: 2
+dataset: desk-pnl-vs-exposure-py-result
+version: 1.0.0
+source:
+  python: pnl-vs-exposure
+  inputs:                       # each a model query, asked as the reader (their row rules and masks)
+    pnl: { model: trading-risk@1, select: { fields: [counterparties.id, counterparties.NAME], measures: [P&L 1d, Trades] } }
+    exposure: { model: counterparty-exposure@1, select: { fields: [counterparties.id, counterparties.SECTOR], measures: [Exposure (EE peak), Exposure (PFE peak)] } }
+  params: { floor: 1.0 }
+grain: { keys: [counterparty] }
+columns:
+  counterparty: { type: string }
+  ...
+```
+
+and the model `desk-pnl-vs-exposure-py@1` reads it as its one fact, with measures over it. **On the command line** ask it like any model (the
+Transform runs for you on the first question):
+
+```text
+$ python3 tools/drishti.py bi mq --model desk-pnl-vs-exposure-py@1 --select result.counterparty,result.name,result.sector --measures "Desk P&L,Exposure (EE peak),P&L per exposure" --limit 3
+result.counterparty  result.name                   result.sector     Desk P&L       Exposure (EE peak)  P&L per exposure
+-------------------  ----------------------------  ----------------  -------------  ------------------  ----------------
+CP-ALDERSHOT         Aldershot Pension Trust       Pensions          9,940,482.84   276,416,536.00      0.04
+CP-AURORA            Aurora Sovereign Wealth Fund  Government        -5,475,341.95  213,663,642.00      -0.03
+CP-BRAMBLE           Bramble Asset Management      Asset management  6,448,473.64   146,933,503.00      0.04
+3 row(s)  as of 2026-10-26
+```
+
+The item is `config/bi/python/banking/pnl-vs-exposure.python.yaml` (the model queries hand their columns over as the models name them, `NAME` and `SECTOR`;
+the Transform renames them to the table's own `name` and `sector`); the reference is [BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 13](#4-transforms-a-table-in-a-table-out).
+
+How would you write such a Transform? In the **Notebook**, with **two extracts**. Open the notebook **Desk P&L vs counterparty exposure, in pandas** (the Notebook box in the Extract card).
+
+![The Notebook with the sample notebook: the first extract is the trades of the model trading-risk (3 columns); under More extracts, the second is called exposure and reads the same model's computed netting-set exposure](../../tutorials/img/t14/13-analyse-extracts.jpg)
+
+You should see `10000 rows, 3 columns.` for the first extract (cut: the lake holds 15,000 trade valuations) (the trades of the model **Trading and counterparty risk**) and, in **More extracts: join
+several models**, a second one called `exposure` (`mq:trading-risk@1`, 3 fields: the netting sets' computed exposure, `set_exposure`, of the same
+model: the exposure engine's official end-of-day results). Each is built for you by the
+server, with your row rules and masks. Open the **Python** tab: the join cell is there (`df` is the trades; `extract("exposure")` is the
+netting sets' computed exposure, `PEAK_EE`); **Run** runs it on the server's compute pool (step 6). On the server, one model
+already joins its facts through the counterparty (Drishti SQL `FROM trades JOIN counterparties JOIN set_exposure`). When the pandas join is what you want to keep, press **Promote to a Transform**.
+
+![After promoting: "Python transform draft saved in your workspace: Join of P&L and exposure (transform). Each extract("name") became a parameter of run()..."](../../tutorials/img/t14/15-promote-transform.jpg)
+
+You should see, beside the button, that a Python Transform draft was saved in your workspace: each `extract("name")` became a parameter of `run(...)`, the
+cell's `result` is returned, and the next step is *a dataset of its table: source: { python: <this item>, inputs: { <name>: <a model query> } }, one
+input per parameter of run(), in this order*. Open the draft, **Check the Python**, publish it, and make that dataset. Nothing is published by promoting.
+
+**In the UI** the Python dataset is the dataset wizard's source **A Python Transform** ([BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 15](MODELS_AND_DATASETS_FOR_REPORTS.md#110-a-table-of-your-own-step-by-step)):
+**Models → New dataset**, choose the Transform by its title, give each input of `run()` its model query (a model, the fields and the measures to hand
+over), and list the columns the Transform returns with their types; **Preview** runs it for you before you save. **From the YAML** it is the
+`source: { python: ..., inputs: { ... } }` above; **Make it a model** on its page puts a model over it, where its measures go.
+
+### Step 9 · Vega-Lite, and tests that ship with the item
+
+A chart does not have to be an ECharts option. A **Vega-Lite** specification can be written in the report itself (a `vega-lite` visual: its data is the rows of its wells) or returned by a Python visual (`output: vega-lite`). Open the sample report **Desk P&L risk (Python)**, its **Vega-Lite** tab.
+
+![A vega-lite visual: net MTM by desk, red where it is negative. The specification is in the report's YAML; the data is the visual's own rows](../../tutorials/img/t14/16-vega-lite.jpg)
+
+You should see bars for the desks, red for the negative ones: the colour is the specification's `condition: { test: "datum.MTM < 0" }`, evaluated **without `eval`**, so the page keeps its strict content security policy. drishti-chart draws it: the specification is translated into a drishti-chart spec, so the chart has the same card, tooltip, data table (▦) and Explain as every other chart. A feature drishti-chart does not translate (a facet, a `text` mark, a selection) is not drawn: the frame says **Not drawn** and names each feature with what to use instead. In your own Python visuals prefer `output: drishti-chart`: return a drishti-chart spec (`{"kind": "bar", "data": {"rows": [...]}, "x": ..., "y": ...}`), drawn as it is. On the first tab, the bottom visual is a Python visual that returns a specification: a dot for each trade's one-day P&L by desk, a tick for each median.
+
+![A Python visual that returns Vega-Lite: dots of one-day P&L for each desk and each desk's median as a tick](../../tutorials/img/t14/17-python-vega.jpg)
+
+A Python item can also carry **tests**. Open the item **Desk P&L volatility** (the Python measure), and press **Check the Python**.
+
+![Check on the Python measure: the manifest and source checks, then its three tests, each run in the sandbox](../../tutorials/img/t14/18-python-tests.jpg)
+
+You should see `Tests: 3 of 3 passed.` and a line for each (`passed · the standard deviation of one desk · 1.2909944487358056`). The sample is shipped (read-only); in a copy of it in your own workspace, change a number in an `expect:` and check again: that test says `FAILED` with what it expected and got, and **publishing** through the console is refused (`DRS-9076`) until it passes. [BI_GUIDE.md](#3-python-measures-and-visuals) sections 14 and 15 have the rules.
+
+### Step 10 · Where a SQL cell runs, and promote into a report you already have
+
+A SQL cell is **Drishti SQL over the model**, run by the server as you (the answer is the model's, with true totals, and the cell is the same plan a
+report visual runs); the line beside **Run** says so. Nothing runs in the browser or the console. Above the tabs, **Promote a SQL cell to** a *new report
+draft* or to one of your report drafts. Choose one, write a SQL cell and **Run** it:
+
+![A SQL cell on the server engine: MTM by desk for the USD trades, the engine select, and the line naming the model and the plan](../../tutorials/img/t14/19-analyse-engines.jpg)
+
+You should see ten desks (`DESK-RATES` `2,863,034,263` first, for the USD trades) and the line naming
+`trades-basic@1`. **From the command line**:
+
+```text
+$ python3 tools/drishti.py bi sql "SELECT trade.DESK, MEASURE('MTM') AS mtm FROM trade WHERE trade.CURRENCY = 'USD' GROUP BY trade.DESK ORDER BY mtm DESC LIMIT 3" --model trades-basic@1
+trade.DESK   mtm
+-----------  ----------------
+DESK-RATES   2,863,034,262.92
+DESK-STRUCT  409,340,516.24
+DESK-SFT     264,809,126.60
+3 row(s)  shape mq  plan p_3fefc5a51db918b6
+``` Press **Promote to a report visual**:
+
+![A SQL cell promoted into the report draft "Desk views": the note says what a report cannot say (the ORDER BY) and that the report was written again](../../tutorials/img/t14/20-promote-existing.jpg)
+
+You should see, beside the button, `Visual sql added to the report draft: Desk views.` and notes: the `ORDER BY` was left out (a visual sorts in its own
+settings) and the report was written again by the designer's writer. Open the draft in the designer: a new `matrix` (rows `trade.DESK`, values `MTM`, the
+filter `trade.CURRENCY eq USD`) below what was there. The reader understands Drishti SQL (aliases and `MEASURE('...')`) and plain aggregates of columns, matched to the model's measures. **The YAML** of the visual it added:
+
+```yaml
+      - id: sql
+        type: matrix
+        title: Desk views
+        at: { x: 0, y: 8, w: 12, h: 6 }
+        wells: { rows: [trade.DESK], values: [MTM] }
+        filters: [{ field: trade.CURRENCY, op: eq, values: [USD] }]
+```
+
+A SQL cell of **another** model is not added to an existing report (a report reads one model: `DRS-9070` names both); promote it to a new draft.
+[USER_GUIDE.md › The Notebook](../../guides/USER_GUIDE.md#the-notebook) section 6 has the details.
+
+### Step 11 · Calc: the BI engine as a DataFrame; a Python measure in an alert
+
+In **Calc** (`Alt+C` on any view) the module `drishti_bi` asks the BI engine, **as you**: `query` sends one model query (a model's `name@major`; a 2.1
+dataset's name reads the model the converter made of it, `trades-basic` is `trades-basic@1`):
+
+```python
+import drishti_bi
+df = await drishti_bi.query_async('trades-basic@1', measures=['MTM', 'Trades'], by=['trade.DESK'])
+show(df, 'MTM by desk')
+```
+
+![Calc: drishti_bi.query on the model trades-basic@1 in the editor, and the DataFrame it returned, shown as a table](../../tutorials/img/t14/21-calc-bi.jpg)
+
+You should see ten desks with their MTM and trade counts: the same numbers a report shows, with the same masks. The command line prints the same:
+
+```text
+$ python3 tools/drishti.py bi mq --model trades-basic@1 --select trade.DESK --measures MTM,Trades --limit 3
+trade.DESK   MTM              Trades
+-----------  ---------------  ------
+DESK-COMM    -429,967,635.39  5990
+DESK-CREDIT  360,552,941.89   1172
+DESK-EQD     -79,395,510.75   1452
+3 row(s)  as of 2026-10-16  plan p_5d2cad2dda86953b
+```
+
+Calc is a **Labs** feature (off as shipped: an administrator switches `labs.calc` on), a scratch pad in your browser that never publishes.
+
+Last, a **Python measure in an alert**. An alert on a measure of a model asks a model query, and a model query runs Python measures (step 1), so
+**Alerts → New → Watch a measure of a model** on **Desk P&L volatility** works like any other: choose the model `trades-basic@1`, the measure, *crosses a
+limit*, *above* `100000`, **Save**. What the form sends, with your session (a personal API token may not call `/me/...`), and the alert at once firing
+(the largest desk volatility, `1,117,385`, is above the limit), captured:
+
+```text
+PUT /api/v1/alerts/rules/Desk%20volatility%20ceiling
+    {"source":{"type":"model","model":"trades-basic@1","query":{"select":{"fields":["trade.DESK"],"measures":["Desk P&L volatility"]}},"reduce":"max"},
+     "condition":{"type":"threshold","op":"above","value":100000},"trigger":{"mode":"after-load"}}
+200 {"name":"Desk volatility ceiling", ..., "source":{"type":"model","model":"trades-basic@1","measure":"Desk P&L volatility","reduce":"max", ...},
+     "describe":"above 100,000","label":"trades-basic@1 · Desk P&L volatility","link":"/bi/i/trades-basic%401"}
+POST /api/v1/alerts/rules/Desk%20volatility%20ceiling/check
+200 {... "history":[{"action":"fired","trigger":"saved","value":1117385.1394432886,"asOf":"2026-10-16",
+     "message":"Desk volatility ceiling — now 1,117,385.1394 (above 100,000)","delivered":{"inbox":"ok","email":"off","bridge":"off","sms":"off"}}]}
+```
+
+`reduce: max` watches the largest of the desks' figures; `first` or a filter on one desk watches one.
+
+<a id="step-12--prepare-raw-trades-step-by-step-the-transform-editor-240"></a>
+
+### Step 12 · Prepare raw trades step by step: the Transform editor
+
+Step 8 made a Transform from two **models**. Before a model exists you often want to clean the **raw rows** first: drop matured trades, fix a type,
+bucket a tenor, total. The **Transform editor** does that step by step, with the rows and a profile after every step, and you never type YAML.
+
+**In the UI.** Open **BI → Transforms** (the rail). Type the title `ENDUR trades, cleaned`. Under **1. Inputs**, name the input `trades`, keep *A pack
+kind, straight through its connector*, choose the kind **Trade (trading.trade)**, type the connector `trade-endur` (the ENDUR trades of the demo lake),
+tick `TRADE_ID`, `TRADE_STATUS`, `PORTFOLIO`, `CURRENCY`, `NOTIONAL`, `TRADE_DATE` and `MATURITY_DATE`, and press **Add the input**.
+
+![The input: the kind trade read through the connector trade-endur, 1,000 rows of 2026-10-16 (the preview's first thousand)](../../tutorials/img/t14/25-transform-input.jpg)
+
+You should see the line `trades the kind trade (pack trading) through trade-endur · 7 fields 1,000 rows (the first 1,000) · as of 2026-10-16` and a first
+step, **Start from trades**, with `1,000 rows · 7 cols`. The editor previews the first `bi.transform.preview_rows` rows (1,000) **as you**: your row
+rules and masks apply, as when the dataset is read.
+
+Now **Add a step from the snippets**: choose **Filter rows by values**, the column `TRADE_STATUS`, the value `MATURED`, untick *Keep them* (drop them), and
+**Add the step**. Step 2 says `510 rows · 7 cols`. Press **Profile**:
+
+![Step 2's profile: one card per column; TRADE_DATE and MATURITY_DATE are text that looks like dates, with Fix the type; TRADE_ID could be a key](../../tutorials/img/t14/26-transform-profile.jpg)
+
+You should see `TRADE_STATUS` with four values left (`VALIDATED ×336`, `AMENDED ×64`, `NEW ×62`, `CANCELLED ×48`), `TRADE_ID` marked **key?** (every row
+its own value), and *Text that looks like dates* under `TRADE_DATE` and `MATURITY_DATE`. Press **Fix the type** under `TRADE_DATE`: a step
+**Type fix: text to date (TRADE_DATE)** is added. Then two more snippets: **Tenor bucket** (maturity `MATURITY_DATE`, from `TRADE_DATE`) and **Group and
+total** (group by `PORTFOLIO` and `tenor_bucket`, the column `NOTIONAL`, `sum`). Press **Rows**:
+
+![Five steps, each with its rows; the last, Group and total, nine rows: the notional of each book per tenor bucket](../../tutorials/img/t14/27-transform-steps.jpg)
+
+You should see `Ran 5 steps on trades 1,000 rows` and nine rows, `BOOK-COMM-1 1-2Y 90,937,298.74` first. Pick any step to see its own rows again; ✎ edits
+a step, ↑ ↓ move it, × removes it. Under **4. Save**, tick `PORTFOLIO` and `tenor_bucket` (*Each row is one*) and **Save as drafts**: you should see
+*Saved as two drafts in your workspace: the Python item and the dataset*. Check and publish the Python item, then the dataset ([BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python,
+section 13](#4-transforms-a-table-in-a-table-out)).
+
+**The YAML** was written for you; open *YAML: what is saved* to read it (and edit it, then **Read the YAML back**, if you like). The Python item
+([data/endur-trades-cleaned.python.yaml](../../tutorials/data/endur-trades-cleaned.python.yaml)) holds the steps after their `# step:` comments:
+
+```python
+def run(trades, params):
+    # step: Start from trades
+    df = trades.copy()
+    # step: Filter rows by values (TRADE_STATUS)
+    df = df[df['TRADE_STATUS'].isin(['MATURED']) == False].reset_index(drop=True)
+    # step: Type fix: text to date (TRADE_DATE)
+    df['TRADE_DATE'] = pd.to_datetime(df['TRADE_DATE'], format='%Y-%m-%d', errors="coerce").dt.date
+    # step: Tenor bucket (MATURITY_DATE; TRADE_DATE)
+    ...
+    # step: Group and total (PORTFOLIO, tenor_bucket; NOTIONAL)
+    df = df.groupby(['PORTFOLIO', 'tenor_bucket'], as_index=False, dropna=False)[['NOTIONAL']].agg('sum')
+    return df
+```
+
+and the Python dataset ([data/endur-trades-cleaned.dataset.yaml](../../tutorials/data/endur-trades-cleaned.dataset.yaml)) reads the kind straight through the connector:
+
+```yaml
+source:
+  python: endur-trades-cleaned
+  inputs:
+    trades:
+      kind: trade
+      pack: trading
+      fields: [CURRENCY, MATURITY_DATE, NOTIONAL, PORTFOLIO, TRADE_DATE, TRADE_ID, TRADE_STATUS]
+      connector: trade-endur
+grain:
+  keys: [PORTFOLIO, tenor_bucket]
+```
+
+**On the command line** the input is asked as you and profiled, the snippets are listed and written, and the drafts are saved from the files:
+
+```text
+$ python3 tools/drishti.py bi transform input docs/tutorials/data/endur-trades-cleaned.dataset.yaml --rows 2
+trades: 1,000 rows of dataset:pack.trading.trade as of 2026-10-16
+  CURRENCY                     text      empty     0  distinct      3  CAD .. USD
+  MATURITY_DATE                text      empty     0  distinct     81  2024-11-01 .. 2029-10-31
+  NOTIONAL                     float64   empty     0  distinct    971  2,855.8 .. 2.46923e+08
+  PORTFOLIO                    text      empty     0  distinct      3  BOOK-COMM-1 .. BOOK-COMM-3
+  TRADE_DATE                   text      empty     0  distinct    529  2024-10-10 .. 2026-09-25
+  TRADE_ID                     text      empty     0  distinct   1000  1000005 .. 1005000
+  TRADE_STATUS                 text      empty     0  distinct      5  AMENDED .. VALIDATED
+    CAD | 2025-04-30 | 1000000.0 | BOOK-COMM-3 | 2025-03-01 | 1002153 | MATURED
+    CAD | 2026-04-30 | 20000000.0 | BOOK-COMM-1 | 2025-02-06 | 1003026 | MATURED
+$ python3 tools/drishti.py bi transform snippet filter-values column=TRADE_STATUS values=MATURED keep=false
+# step: Filter rows by values (TRADE_STATUS)
+df = df[df['TRADE_STATUS'].isin(['MATURED']) == False].reset_index(drop=True)
+$ python3 tools/drishti.py bi item new me docs/tutorials/data/endur-trades-cleaned.python.yaml
+bi-90b5ada37c  python  ENDUR trades, cleaned  draft in My workspace
+$ python3 tools/drishti.py bi item new me docs/tutorials/data/endur-trades-cleaned.dataset.yaml
+bi-04b126d3c4  dataset  ENDUR trades, cleaned  draft in My workspace
+```
+
+The steps run where every Python item runs, on the server's compute pool; the snippets write each value as a literal, never as code. The reference is
+[BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17](#5-data-prep-the-transform-editor).
+
+### Next steps
+
+- [Tutorial 10](../../tutorials/10-ai-assistant.md): ask the data in words.
+- [BI_GUIDE.md](#3-python-measures-and-visuals): the manifest, where Python runs, the sandbox in full, `DRS-9070` to `9075`, section 13 for the Transform and
+  section 17 for the Transform editor and the snippets. [USER_GUIDE.md](../../guides/USER_GUIDE.md#the-notebook): the page, limits and notebooks. [USER_GUIDE.md](../../guides/USER_GUIDE.md#calc-python-on-any-view) is Calc, the Python panel inside a screen.
+
+### If something goes wrong
+
+| You see | Meaning |
+|---|---|
+| `DRS-9001 no item 'xyz'` in a Python visual | the item is not published, or the name does not match its id, file name or title |
+| `DRS-9070` | the manifest or a cell is wrong; the message names the key (a package not on the allow-list, a second SQL statement, a source that does not parse) |
+| `DRS-9072` | the SQL was too long (`bi.notebook.sql_max_chars`) |
+| `DRS-9170` | Drishti SQL on the server was asked to do more than one SELECT (a write, a second statement) |
+| `DRS-9074` | Python does not run on this server now: the message says why (compute off, the pool's interpreter not carrying the pinned versions, a Windows server) |
+| a Python cell's Run is greyed and says *Off: ...* | the server cannot run Python safely now; the words say why (compute off, a Windows server, a pin that differs) |
+| a column is empty in the extract | it is masked for your role; the line under the form names it |
+| the Transform editor's steps do not run | running them needs `bi-author`; the page still writes the YAML |
+| `DRS-9108 the kind 'trade' has no column [X]` | a field the kind does not have; the message lists the kind's columns |
+| `DRS-9026 connector 'x' is not running` | the input names a connector that is off; leave it empty to read whichever serves the kind |

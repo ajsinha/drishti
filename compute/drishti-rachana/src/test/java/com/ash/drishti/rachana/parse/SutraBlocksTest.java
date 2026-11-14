@@ -88,4 +88,44 @@ class SutraBlocksTest {
         Files.writeString(dir.resolve("wrong.v1.block.yaml"), TICKET);
         assertThat(SutraBlocks.load(List.of(dir))).extracting(SutraProblem::message).anyMatch(m -> m.contains("name it ticket.v1.block.yaml"));
     }
+
+    static final String SECTION = """
+            rachana: 1
+            fragment: trade-swapone
+            version: 1
+            description: SWAPONE's own fields on the trade page
+            doc:
+              summary: SWAPONE's own fields on the trade page
+              description: The native fields of SWAPONE with no canonical trade field.
+              params: {}
+              emits: []
+              expects: []
+              phone: more
+              examples:
+              - use: trade-swapone@1
+              since: 2.9.11
+            panels:
+            - id: swapone-fields
+              kind: kv
+              title: SWAPONE fields
+              when: $.SOURCE_SYSTEM == 'SWAPONE'
+              columns:
+              - label: brokerRef
+                bind: nonblank($.brokerRef, '-')
+            """;
+
+    @Test
+    void aModulesSectionJoinsEverySutraOfItsKindWhileTheModuleRunsAndLeavesWithIt() {
+        SutraBlocks.contribute("source-swapone", "trade", SECTION, "trade-swapone.v1.fragment.yaml");
+        try {
+            Sutra s = new SutraParser().parse(sutra("  - { id: notes, kind: markdown, text: hi }\n"), "deal.v1.sutra.yaml", "endur");
+            assertThat(s.panels()).extracting(Panel::id).containsExactly("notes", "swapone-fields");
+            Sutra other = new SutraParser().parse(sutra("  - { id: notes, kind: markdown, text: hi }\n").replace("kind: trade", "kind: position"), "deal.v1.sutra.yaml", "endur");
+            assertThat(other.panels()).extracting(Panel::id).containsExactly("notes");                  // only the kind it names
+        } finally {
+            SutraBlocks.withdraw("source-swapone");
+        }
+        Sutra gone = new SutraParser().parse(sutra("  - { id: notes, kind: markdown, text: hi }\n"), "deal.v1.sutra.yaml", "endur");
+        assertThat(gone.panels()).extracting(Panel::id).containsExactly("notes");
+    }
 }

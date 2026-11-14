@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The trading module's manifest (modules/trading/docs/guide.md; docs/architecture/KERNEL_AND_MODULES.md section 3.3): content only, no code.
+# The trading module's manifest (docs/guides/LIVE_RESULTS_GUIDE.md; docs/architecture/KERNEL_AND_MODULES.md section 3.3): content only, no code.
 # It ships the trade blotter, a declaration the kernel's live result sets engine runs (blotters/trade.blotter.yaml): the trades from the
 # durable store, ticking from the `trade` kind's live: binding (config/bindings.yaml), editable where the site and the person's rights
 # allow it, written back through the binding's write path. Not an order or execution system: no venue orders, no FIX.

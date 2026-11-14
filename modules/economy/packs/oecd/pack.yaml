@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# OECD · the economy module's public-sector OECD pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): the cycle, jobs, prices and growth of the OECD
+# OECD · the economy module's public-sector OECD pack (docs/guides/WORLD_DATA_GUIDE.md): the cycle, jobs, prices and growth of the OECD
 # members from the OECD Data Explorer (SDMX), filled daily by the oecd feed (config/feeds/oecd.yaml) into worldlake.
 pack: oecd
 domain: economy   # the economy module's (its Public sector lens; docs/architecture/ACCESS_MODEL.md)

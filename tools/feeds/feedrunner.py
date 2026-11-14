@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""One feed run from start to end, and the run ledger (docs/guides/EXTERNAL_DATA.md).
+"""One feed run from start to end, and the run ledger (docs/guides/WORLD_DATA_GUIDE.md).
 
     run_feed(spec, opts)    lock -> pull (Feed.pull) -> write the dated files and manifests -> the feed's check -> load (loaders.py)
                             -> save the state (only after success) -> one ledger line -> one log line; returns (exit code, entry)

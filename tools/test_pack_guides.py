@@ -70,7 +70,7 @@ def test_the_guide_has_both_sections_and_links_every_kind(pack):
     assert "| Column | Type |" not in contracts and "\nNested `" not in contracts, f"{pack.name}: a copied field table"
     for c in GD.contracts(pack):
         assert f"| `{c['mnemonic']}` | `{c['kind']}` |" in retrieval, f"{pack.name}: {c['kind']} has no origin row"
-    assert "EXTERNAL_DATA.md" in retrieval and "lake demo" in retrieval and "Offline" in retrieval
+    assert "WORLD_DATA_GUIDE.md" in retrieval and "lake demo" in retrieval and "Offline" in retrieval
 
 
 @pytest.mark.parametrize("pack", PACKS, ids=lambda d: d.name)
@@ -105,4 +105,4 @@ def test_the_readme_points_to_the_guide_and_the_external_data_page(pack):
     externals = {i for o in [(SPEC["packs"][pack.name].get("default") or {})] + list((SPEC["packs"][pack.name].get("kinds") or {}).values())
                  for i in (o.get("external") or []) + (o.get("official") or [])}
     if externals:
-        assert "docs/guides/EXTERNAL_DATA.md" in text, pack.name
+        assert "docs/guides/WORLD_DATA_GUIDE.md" in text, pack.name
