@@ -108,6 +108,9 @@ ui:
   # headline is set, the tagline sits under it as the subtitle.
   headline: See what your data hasn't told you yet.
   headline_accent: hasn't told you yet.  # the part of the headline drawn in the theme's gradient
+  # A second line under the headline, in italic serif; its accent is drawn in gold. Blank: no line (a distribution may change or hide it).
+  headline_second: Your data is a treasury;   # a second line under the headline, italic serif (blank: no line)
+  headline_second_accent: Drishti is its sentinel.  # its closing part, drawn in gold
   product_native: दृष्टि             # the name in its own script, beside it on the About page (blank for none)
   product_meaning: Drishti (दृष्टि) means <em>sight</em>.  # one line on the name's meaning, on the About page
   owner_email: ajsinha@gmail.com    # beside the owner on the About page (blank for none)

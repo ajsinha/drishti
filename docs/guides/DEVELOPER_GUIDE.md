@@ -3840,6 +3840,8 @@ brand:                                 # each value fills the console's ui.<key>
   product_native: ""                   # the name in a second script, beside the product name
   tagline: Lanes, costs and shipments  # under the name on the landing page
   headline: ""                         # the landing page's headline
+  headline_second: ""                  # a second line under the headline, in italic serif ("": none)
+  headline_second_accent: ""           # its closing part, drawn in gold
   owner: Acme Logistics                # the footer's owner
   copyright: Copyright © 2026 Acme Logistics. All rights reserved.
   notice: Internal use only.           # the footer's notice

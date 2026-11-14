@@ -18,6 +18,7 @@
 
 ## Unreleased
 
+- **A second slogan line on the landing page**: *Your data is a treasury;* **Drishti is its sentinel.** under the headline (italic serif, the closing part in gold, a gentle fade-in, none under reduced motion). Its text is configuration, `ui.headline_second` and `ui.headline_second_accent` (also in a distribution's `brand:`); blank: no line.
 - **One document: Live results and blotters** (modules/trading/docs/guide.md, the module's Help page; the guide caps leave no room for a separate page). The engine, the page, editing and rights, row rules, retention, scale, the declaration format with a complete inventory example and a tutorial from a Kafka feed to an approved, written-back edit; the trading module's guide keeps only the trade-specific parts and links here. The plan is renumbered: i4 holds the trading module, Python compute in modules and the source modules; i5 is the cluster and the console; i6 is banking on the public kernel API.
 - **Row retention for Delta, Iceberg and files, as the in-memory lake has it** (docs/guides/DATA_LAKE_GUIDE.md section 2.7). A table's
   `retention: {ttl, on, max-rows}` now works on durable tables: rows past their age (the field `on`, else `arrived_at`, else the business date) and

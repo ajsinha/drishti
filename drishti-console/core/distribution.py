@@ -43,7 +43,8 @@ _SHORT = re.compile(r"[a-z0-9][a-z0-9-]{0,63}")
 #: The brand keys and the console settings they fill. The five names and notices (NAMES) come from the distribution file only.
 BRAND_KEYS = {"product": "ui.product", "product_native": "ui.product_native", "tagline": "ui.tagline", "owner": "ui.owner",
               "copyright": "ui.copyright", "notice": "ui.notice", "logo": "ui.logo", "favicon": "ui.favicon", "about": "ui.about",
-              "headline": "ui.headline"}
+              "headline": "ui.headline", "headline_second": "ui.headline_second",
+              "headline_second_accent": "ui.headline_second_accent"}
 
 
 #: The product's name and legal notices: the distribution file is their one home (a site's own ``ui.product`` and the like are not read).
