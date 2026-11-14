@@ -140,7 +140,7 @@ class LakeDemo(unittest.TestCase):
             told = {(path.split("/")[4], body["kind"], body["businessDate"]) for path, body in server.got}
             self.assertIn(("trading", "trade", "2026-10-30"), told)
             self.assertIn(("core", "counterparty", "2026-10-22"), told)
-            self.assertEqual(len(server.got), 7 * 7, sorted(told))              # 3 trade tables, counterparty (and group), netting set, agreement
+            self.assertEqual(len(server.got), 8 * 7, sorted(told))              # 4 trade tables (Endur, Calypso, Murex, the shared one of WSS, SwapOne and ICI), counterparty (and group), netting set, agreement
             self.assertIn("data-load signals", out.getvalue())
             stamp = data / "bi-store" / "lake-rebuilt.json"
             self.assertEqual(json.loads(stamp.read_text())["tables"], ["reference/desk"])

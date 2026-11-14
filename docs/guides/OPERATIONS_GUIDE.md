@@ -183,7 +183,7 @@ You should see one line per table, then the summary (the folder is your clone's)
 ```text
   trading/trade_endur: … rows over 60 days
   …
-Demo lake ready: …/drishti/data/delta/demo: 86 tables, 60 business days 2026-07-08 to 2026-09-30, built in 943 s
+Demo lake ready: …/drishti/data/delta/demo: 87 tables, 60 business days 2026-07-08 to 2026-09-30, built in 943 s
 Feeds: …/drishti/data/feeds/fixing.jsonl (the file connector's sample feed)
 Server: no server at http://localhost:18480: left …/drishti/data/bi-store/lake-rebuilt.json, so a server clears its stored BI columns and rollups at its next start
 Connector files:
@@ -523,7 +523,7 @@ bin\status.cmd                                                            # both
 bin\stop-all.cmd
 ```
 
-`lake demo` writes the same 86 tables as on Linux. The scripts of `bin\` are the same on Windows, Linux and macOS (`.cmd` and `.ps1` here,
+`lake demo` writes the same 87 tables as on Linux. The scripts of `bin\` are the same on Windows, Linux and macOS (`.cmd` and `.ps1` here,
 `.sh` there): `start-server` checks that Java is 21 or newer, sets `DRISHTI_DELTA_ENGINE=native` on Windows ([`delta` in CONFIGURATION.md](../admin/CONFIGURATION.md#delta--delta-lake)), adds
 `-XX:+UseCompactObjectHeaders` only on Java 25, and `--demo` sets the demo's settings with its development secrets; `start-console` makes
 the console's environment on its first run (with uv when present, else `python -m venv` and pip). Every option, where the pid, log and

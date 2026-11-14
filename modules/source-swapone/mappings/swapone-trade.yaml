@@ -1,0 +1,58 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+format: 1
+system: SWAPONE
+kind: trade
+about: SwapOne native fields to the canonical trade fields. A path is a dotted path into the native document; first-of takes the first present;
+  values translates a code; scale multiplies; as reads a date or time written in another form.
+map:
+  TRADE_ID: swap_id
+  TRADE_VERSION: revision
+  TRADE_STATUS:
+    from: lifecycle
+    values:
+      LIVE: NEW
+      VOID: CANCELLED
+  PRODUCT_TYPE:
+    from: swap_family
+    values:
+      IRS: IRS_FIXFLOAT
+      OIS: OIS
+      BASIS: BASIS_SWAP
+      XCCY: XCCY_SWAP
+      CDS: CDS_SINGLE
+      INFL_ZC: ZC_INFL_SWAP
+  BUY_SELL_CODE:
+    from: pay_receive
+    values:
+      PAY: B
+      REC: S
+  QUANTITY: pay_leg.notional
+  PRICE:
+    first-of:
+    - pay_leg.fixed_rate_pct
+    - rec_leg.fixed_rate_pct
+    scale: 0.01
+  CURRENCY: pay_leg.ccy
+  COUNTERPARTY: counterparty_id
+  LEGAL_ENTITY: legal_entity
+  PORTFOLIO: book
+  TRADER_ID: usr
+  TRADE_DATE: trade_dt
+  START_DATE: effective_dt
+  MATURITY_DATE: termination_dt
+  SOURCE_UPDATE_TIME:
+    from: upd_ts
+    as: epoch-millis

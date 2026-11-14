@@ -37,6 +37,13 @@ theme: { tokens: terminal-blue, mode: dark, density: compact }   # navy, dark, t
 modules:
   - { id: banking,     required: true }
   - { id: market-data, required: true }
+  # the source systems feeding the trade kind, each switchable on its own (config/modules/source-<system>.yaml)
+  - { id: source-endur,   required: false }
+  - { id: source-calypso, required: false }
+  - { id: source-murex,   required: false }
+  - { id: source-wss,     required: false }
+  - { id: source-swapone, required: false }
+  - { id: source-ici,     required: false }
 
 lenses:
   offered: [risk, trading, market]

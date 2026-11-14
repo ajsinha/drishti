@@ -150,10 +150,27 @@ def settings_view(manifest: dict, connector: dict) -> dict:
     return out
 
 
-def view(manifest: dict | None) -> dict:
+def with_modules(manifest: dict | None) -> dict:
+    """The trading pack's manifest with the Delta read template of every source module (modules/source-<system>/connector-templates/
+    delta.yaml, connector ``trade-<system>``) added where the pack does not declare that connector itself. A source system is a module
+    of its own; the pack declares only the three systems that shipped with it. Any other pack: unchanged."""
+    m = dict(manifest or {})
+    if m.get("pack") != "trading" or not isinstance(m.get("connectors"), dict):
+        return m
+    import yaml
+    conns = dict(m["connectors"])
+    for f in sorted((pathlib.Path(__file__).resolve().parents[1] / "modules").glob("source-*/connector-templates/delta.yaml")):
+        name = "trade-" + f.parents[1].name[len("source-"):]
+        if name not in conns:
+            conns[name] = yaml.safe_load(f.read_text(encoding="utf-8"))
+    m["connectors"] = conns
+    return m
+
+
+def view(manifest: dict | None, modules: bool = True) -> dict:
     """``manifest`` with every template in the lake form shown in the older form (:func:`settings_view`): what a tool that reads a
     template's root, domain, table and layout loads instead of the file as it is. The ``lake:`` block stays."""
-    m = dict(manifest or {})
+    m = with_modules(manifest) if modules else dict(manifest or {})
     key = "connectors" if isinstance(m.get("connectors"), dict) else "connector-templates"
     if not isinstance(m.get(key), dict):
         return m
