@@ -42,14 +42,10 @@ public record PackEntry(String domain, String table, String key, String date, Li
         Map<String, String> flatten, List<String> sortBy, String latestBy, LakeTable entry) {
 
     /**
-     * The pack's {@code pack.yaml} with the Delta read template of each source module that requires the pack
-     * ({@code modules/source-<system>/connectors/delta.yaml}, connector {@code <kind>-<system>}) added to its connectors where the pack does
-     * not declare that name itself: a source system is a module of its own, and its connectors have that one home. The modules folder is
-     * found above the pack, else {@code drishti.modules.dir}.
+     * The pack's {@code pack.yaml} with the templates of each source module that requires the pack ({@link ModuleConnectors}) added to its
+     * connectors where the pack does not declare that name itself: a source system is a module of its own, and its connectors have that one
+     * home.
      */
-    private static final java.util.Set<String> GENERIC_TEMPLATES = java.util.Set.of("iceberg", "files", "file", "kafka", "cassandra", "s3tables",
-            "delta-s3");
-
     static JsonNode manifest(Path file) throws IOException {
         JsonNode m = new YAMLMapper().readTree(Files.readString(file));
         String pack = m.path("pack").asText("");
@@ -59,43 +55,17 @@ public record PackEntry(String domain, String table, String key, String date, Li
         }
         com.fasterxml.jackson.databind.node.ObjectNode defs = root.path("connectors").isObject()
                 ? (com.fasterxml.jackson.databind.node.ObjectNode) root.get("connectors") : root.putObject("connectors");
-        for (Path dir : ModuleDirs.of(modules)) {            // the shipped folders and the modules installed as a .dmod
-            String id = ModuleDirs.idOf(dir);
-            Path folder = dir.resolve("connectors");
-            if (!id.startsWith("source-") || !Files.isDirectory(folder)
-                    || !new YAMLMapper().readTree(Files.readString(dir.resolve("module.yaml"))).path("requires").has(pack)) {
-                continue;
-            }
-            List<Path> files;
-            try (Stream<Path> s = Files.list(folder)) {
-                files = s.filter(f -> f.getFileName().toString().endsWith(".yaml")).sorted().toList();
-            }
-            for (Path tpl : files) {                          // every connector of the folder, whatever its name
-                String stem = tpl.getFileName().toString().replaceFirst("\\.yaml$", "");
-                JsonNode c = new YAMLMapper().readTree(Files.readString(tpl));
-                String kind = c.path("kinds").path(0).asText("");
-                // delta.yaml is the system's read template, connector <kind>-<system>; any other name is the connector's own
-                // (pack new --source-for writes connectors/<module>.yaml); the Iceberg, files and Kafka variants are not read here
-                String name = stem.equals("delta") ? kind + "-" + id.substring("source-".length()) : stem;
-                if (!kind.isEmpty() && !GENERIC_TEMPLATES.contains(stem) && !defs.has(name)) {
-                    defs.set(name, c);
-                }
+        com.fasterxml.jackson.databind.ObjectMapper json = new com.fasterxml.jackson.databind.ObjectMapper();
+        for (Map.Entry<String, Map<String, Object>> e : ModuleConnectors.of(modules, pack).entrySet()) {
+            if (!defs.has(e.getKey())) {
+                defs.set(e.getKey(), json.valueToTree(e.getValue()));
             }
         }
         return root;
     }
 
     private static Path modulesDir(Path file) {
-        String set = System.getProperty("drishti.modules.dir");
-        if (set != null && Files.isDirectory(Path.of(set))) {
-            return Path.of(set);
-        }
-        for (Path p = file.toAbsolutePath().getParent(); p != null; p = p.getParent()) {
-            if (Files.isDirectory(p.resolve("modules")) && Files.isDirectory(p.resolve("config"))) {
-                return p.resolve("modules");
-            }
-        }
-        return null;
+        return ModuleConnectors.modulesDir(file);
     }
 
     /**

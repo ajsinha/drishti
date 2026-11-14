@@ -162,6 +162,7 @@ public final class PackLoader {
             if (!n.equals(m.get("pack"))) {
                 throw new IllegalStateException(manifest + " declares pack '" + m.get("pack") + "', expected '" + n + "'");
             }
+            m = withModuleConnectors(manifest, n, m);
             return new Pack(n, String.valueOf(m.getOrDefault("version", "0")), String.valueOf(m.getOrDefault("title", n)),
                     String.valueOf(m.getOrDefault("description", "")), packDir.toAbsolutePath(), m);
         } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
@@ -173,6 +174,28 @@ public final class PackLoader {
         } catch (IOException e) {
             throw new UncheckedIOException("cannot read " + manifest, e);
         }
+    }
+
+    /**
+     * The manifest with the connector templates of the source modules that require the pack ({@link
+     * com.ash.drishti.lakeconfig.ModuleConnectors}) among its own, where the pack does not declare that name: the template layer of a
+     * source system's connectors (docs/guides/DATA_GUIDE.md, "Connector layers").
+     */
+    @SuppressWarnings("unchecked")
+    static Map<String, Object> withModuleConnectors(Path manifest, String pack, Map<String, Object> m) throws IOException {
+        if (m.get("connectors") != null && !(m.get("connectors") instanceof Map<?, ?>)) {
+            return m;                                                    // a list of names: no templates of its own, none added
+        }
+        Map<String, Map<String, Object>> mods = com.ash.drishti.lakeconfig.ModuleConnectors.of(
+                com.ash.drishti.lakeconfig.ModuleConnectors.modulesDir(manifest), pack);
+        if (mods.isEmpty()) {
+            return m;
+        }
+        Map<String, Object> conns = new LinkedHashMap<>(m.get("connectors") instanceof Map<?, ?> c ? (Map<String, Object>) c : Map.of());
+        mods.forEach(conns::putIfAbsent);
+        Map<String, Object> out = new LinkedHashMap<>(m);
+        out.put("connectors", conns);
+        return out;
     }
 
     /** The inheritance order of the given packs (they must include every pack they inherit from). */
@@ -299,13 +322,14 @@ public final class PackLoader {
                 }
                 offer(claims, overrides, lineage, "role " + e.getKey(), pack.name(), props);
             }
-            // connectors: the pack names site connectors (config/connectors/<name>.yaml). What it defines inline is a
-            // template, in force only while no file of that name exists (the server writes one from it at start).
+            // connectors: the pack names site connectors. What it defines inline (and what its source modules bring) is the template
+            // layer: in force as it is while the site has no file of that name, or only a generated file nobody edited; a site file in
+            // force is merged over it in memory (ConnectorLayers) and its properties come from the connector files' source
             for (Map.Entry<String, Map<String, Object>> e : pack.connectorTemplates().entrySet()) {
                 // the kinds a template names are the distribution's default binding of each (KERNEL_AND_MODULES.md section 5.5), whether
                 // its file exists or not: the router reads them after the site's binding and the pack's route, never by the file
                 ConnectorFiles.kindNames(e.getValue().get("kinds")).forEach(k -> defaults.computeIfAbsent(k, x -> new java.util.LinkedHashSet<>()).add(e.getKey()));
-                if (connectorFiles != null && connectorFiles.exists(e.getKey())) {
+                if (connectorFiles != null && connectorFiles.exists(e.getKey()) && !ConnectorLayers.supersededFile(connectorFiles, e.getKey())) {
                     continue;
                 }
                 Map<String, Object> c = e.getValue();

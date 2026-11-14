@@ -327,7 +327,7 @@ public final class PackDeployService {
         return out;
     }
 
-    /** Writes connector files from the staged pack's templates for the connectors that do not exist yet; returns the names created. */
+    /** The connectors the staged pack's templates define: in force from its templates once it is deployed (no file is written). */
     public List<String> createConnectors(String uploadId) {
         Staged s = staged.get(uploadId);
         if (s == null) {
@@ -336,7 +336,8 @@ public final class PackDeployService {
         try {
             Map<String, Object> meta = PackDiffer.load(s.root()).meta();
             com.ash.drishti.packs.Pack pack = new com.ash.drishti.packs.Pack(s.name(), s.version(), s.name(), "", s.root(), meta);
-            return com.ash.drishti.packs.ConnectorBootstrap.run(List.of(pack), connectorFiles, null, true).generated();
+            // nothing is written: a deployed pack's templates are in force as they are (the template layer, ConnectorLayers)
+            return List.copyOf(pack.connectorTemplates().keySet());
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

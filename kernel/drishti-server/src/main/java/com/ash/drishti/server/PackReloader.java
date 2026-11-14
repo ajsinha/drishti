@@ -20,7 +20,6 @@ import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.engine.command.CommandsProperties;
 import com.ash.drishti.engine.command.Mnemonics;
 import com.ash.drishti.identity.AuditLog;
-import com.ash.drishti.packs.ConnectorBootstrap;
 import com.ash.drishti.packs.ConnectorFiles;
 import com.ash.drishti.packs.Pack;
 import com.ash.drishti.packs.PackEnvironmentPostProcessor;
@@ -59,7 +58,7 @@ import org.springframework.core.env.MapPropertySource;
  * deploy or registry change) come through the same {@link #reconcile} path:
  * <ul>
  *   <li>a <b>new pack folder</b> is checked together with the loaded packs, then loaded: kinds, mnemonics, Sutras and
- *   connector templates (which become connector files by the usual rule) take effect at once;</li>
+ *   connector templates (the template layer, merged in memory with the site files: ConnectorLayers) take effect at once;</li>
  *   <li>a <b>changed</b> {@code pack.yaml}, {@code about.yaml}, Sutra or sample is checked again and swapped in; a bad edit
  *   keeps the last good version and the problem is shown in Admin &rarr; Packs and on the Health page;</li>
  *   <li>a <b>deleted</b> pack is unloaded: connectors only it used stop, and open views of its kinds say the pack was
@@ -604,12 +603,7 @@ public final class PackReloader implements AutoCloseable {
         Map<String, Object> oldProps = env.getPropertySources().get(PackEnvironmentPostProcessor.SOURCE) instanceof MapPropertySource m
                 ? new LinkedHashMap<>(m.getSource()) : Map.of();
         List<Runnable> commits = prepareLive(loader.properties(packs));      // nothing has changed yet: a refusal here leaves everything as it was
-        ConnectorBootstrap.Result boot = ConnectorBootstrap.run(packs, files, null,
-                Boolean.parseBoolean(env.getProperty("drishti.sources.connectors-generate", "true")));
-        boot.generated().forEach(n -> audit.record("system", "connector-generated", n, "written from a pack's connector template"));
-        boot.regenerated().forEach(n -> audit.record("system", "connector-regenerated", n, "rewritten: the pack's connector template changed and the file had not been edited"));
-        boot.changed().forEach(c -> audit.record("system", "connector-template-changed", c.name(), c.message()));
-        boot.messages().forEach(m -> LOG.info("connectors: {}", m));
+        // the connectors' template layer is the packs' (and their source modules') own: nothing is written (ConnectorLayers)
         Map<String, Object> props = loader.properties(packs);
         replaceSource(PackEnvironmentPostProcessor.SOURCE, props);
         // mnemonics: recompute every code a pack ever contributed from the environment, so a site setting keeps winning

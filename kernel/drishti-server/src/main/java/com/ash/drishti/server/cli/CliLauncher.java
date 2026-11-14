@@ -139,7 +139,6 @@ public final class CliLauncher {
             out.put(w[0], scratch.resolve(w[1]).toString());
         }
         out.put("drishti.identity.database-url", "jdbc:sqlite:" + scratch.resolve("data/identity/drishti.db"));
-        out.put("drishti.sources.connectors-generate", "false");   // the packs' connector templates are read in memory, never written to config/connectors
         out.put("drishti.var.official.enabled", "false");
         out.put("drishti.var.official.on-start", "false");
         out.put("drishti.ccr.exposure.official.enabled", "false");

@@ -557,9 +557,8 @@ public final class LakeFiles {
     }
 
     /**
-     * {@link #adoptDemo(Path, Path, boolean)}, each rewritten file's text passed through {@code restamp(before, after)} first: the server
-     * gives the pack templates' stamp ({@code TemplateStamp.keepPristine}), so a stamped file nobody edited is stamped again over its new
-     * text and still counts as unedited (it keeps following its pack's template at upgrades); an edited one stays edited.
+     * {@link #adoptDemo(Path, Path, boolean)}, each rewritten file's text passed through {@code restamp(before, after)} first (a tool's
+     * hook; the server writes no connector file).
      */
     public static Migration adoptDemo(Path connectorsDir, Path lakesDir, boolean write, java.util.function.BinaryOperator<String> restamp) throws IOException {
         Map<Path, String> lakeFiles = new LinkedHashMap<>();
