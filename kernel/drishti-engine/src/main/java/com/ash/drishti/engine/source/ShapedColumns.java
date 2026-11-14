@@ -45,6 +45,9 @@ final class ShapedColumns {
         Map<String, String> nativeOf = new LinkedHashMap<>();
         Set<String> ask = new LinkedHashSet<>();
         for (String p : paths) {
+            if (shape.needsDocuments(p)) {
+                return Optional.empty();                      // a nested, alternative, scaled or re-read field: the documents answer
+            }
             String n = shape.nativeName(p);
             nativeOf.put(p, n);
             if (stored.isEmpty() || stored.contains(n)) {

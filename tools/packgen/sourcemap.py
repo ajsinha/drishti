@@ -514,13 +514,18 @@ def get(doc: dict, path: str):
 def apply(mapping: dict, doc: dict) -> dict:
     """One native record read through a map file's content (the reference reading; the connector does the same)."""
     out: dict = {}
-    for to, e in (mapping.get("fields") or {}).items():
+    for to, e in (mapping.get("fields") or mapping.get("map") or {}).items():
+        if not isinstance(e, dict):                                       # map: CANONICAL: native.path
+            e = {"from": e}
         if "value" in e:
             out[to] = e["value"]
             continue
-        v = get(doc, e["from"])
+        src = e.get("first-of") or e["from"]                              # a dotted path, or a list: the first non-empty
+        v = next((x for x in (get(doc, f) for f in (src if isinstance(src, list) else [src])) if x not in (None, "")), None)
         vm = e.get("values") or {}
         out[to] = vm.get(str(v).upper() if isinstance(v, bool) else str(v), v) if vm and v is not None else v
+        if e.get("scale") is not None and isinstance(v, (int, float)) and not isinstance(v, bool):
+            out[to] = out[to] * e["scale"]
     for k in mapping.get("keep") or []:
         out[k] = get(doc, k)
     out.update(mapping.get("set") or {})
