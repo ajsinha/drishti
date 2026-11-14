@@ -86,7 +86,7 @@ class SimmApiTest {
         assertThat(v.get("default").asText()).isEqualTo("TOY-1");
         ask("/api/v1/risk/simm", 400, "nettingSet", "EXAMPLE", "concentration", "maybe");
         ask("/api/v1/risk/simm", 400, "nettingSet", "EXAMPLE", "override", "InterestRate.no-such=1");
-        ask("/api/v1/risk/simm", 502, "nettingSet", "EXAMPLE", "version", "2.8+2512");
+        ask("/api/v1/risk/simm", 422, "nettingSet", "EXAMPLE", "version", "2.8+2512");
         ask("/api/v1/risk/simm", 400);
     }
 

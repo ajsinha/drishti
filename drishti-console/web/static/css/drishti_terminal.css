@@ -147,6 +147,7 @@ body.terminal { font-size: var(--d-fs-14); }
 .metric-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--d-sp-2_4) var(--d-sp-9_6); }
 /* a figure never breaks inside: it shrinks with the tile (container query) down to a readable minimum */
 .metric-v { font-size: var(--d-fs-display-5); font-weight: 600; line-height: 1.1; color: var(--d-ink); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.metric-v.metric-v-date { font-size: var(--d-fs-display-7); }   /* a date is a label, not a big number */
 .metric-u { color: var(--d-muted); font-size: var(--d-fs-14_4); }
 .metric-d { font-size: var(--d-fs-14_4); color: var(--d-muted); }
 .metric-l, .metric-c { color: var(--d-muted); font-size: var(--d-fs-12_8); }

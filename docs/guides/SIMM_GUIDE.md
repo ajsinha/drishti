@@ -301,7 +301,7 @@ case 11 together are the `EXAMPLE` scope.
 |---|---|---|
 | `DRS-5331` | a factor with no SIMM mapping, a tenor or expiry not on SIMM's vertices, a bucket not in the version, an equity repo (left out: the version's CRIF rule is open), a measure the class does not have | the element is left out of SIMM, counted and named in the provenance |
 | `DRS-5332` | a trade in two netting sets on the date | kept in both, flagged |
-| `DRS-5333` | the CSA's version is not installed, or its file is incomplete (every missing key named) | the netting set is not computed |
+| `DRS-5333` | the CSA's version is not installed, or its file is incomplete (every missing key named); answered `422`, and the SIMM pages say that SIMM needs the licensed ISDA parameter files | the netting set is not computed |
 | `DRS-5334` | a regime code the version does not recognise | ignored and listed |
 | `DRS-5335` | a position record whose trades span netting sets | the record is left out of SIMM, counted |
 | `DRS-5336` | a rates or credit vega without `IMPLIED_VOL` | the element is left out, counted |

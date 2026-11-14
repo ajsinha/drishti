@@ -134,12 +134,24 @@ final class VarWhyPanels {
             double d = (num(lim.get("useTo")) - num(lim.get("useFrom"))) * 100;
             out.add(ExplainPanels.metric("t-limit", "Limit use", Map.of("text", pct(lim.get("useTo"))),
                     Map.of("text", (d >= 0 ? "+" : "−") + String.format(java.util.Locale.ROOT, "%.1f", Math.abs(d)) + " pts", "tone", riseTone(d)),
-                    "USD", "was " + pct(lim.get("useFrom")), 3));
+                    null, "was " + pct(lim.get("useFrom")), 3));          // a percentage and points: no currency unit
         } else {
-            out.add(ExplainPanels.metric("t-scen", "VaR scenario", Map.of("text", last.get("varScenario") == null ? "—" : str(last.get("varScenario"))),
-                    null, "USD", "was " + (first.get("varScenario") == null ? "—" : str(first.get("varScenario"))), 3));
+            out.add(scenarioCard(first.get("varScenario"), last.get("varScenario")));
         }
         return out;
+    }
+
+    /** The card of the scenario that is the VaR: a date (date format, no unit), said as moved from one to the other or as unchanged since the earlier. */
+    static Map<String, Object> scenarioCard(Object was, Object now) {
+        String old = was == null ? null : str(was);
+        String cur = now == null ? null : str(now);
+        String caption = cur == null ? "no scenario is the VaR on this date"
+                : old == null ? "the earlier date has none"
+                : old.equals(cur) ? "unchanged since " + old : "moved from " + old + " to " + cur;
+        Map<String, Object> value = new java.util.LinkedHashMap<>();
+        value.put("text", cur == null ? "—" : cur);
+        value.put("format", "date");
+        return ExplainPanels.metric("t-scen", "Scenario of the VaR", value, null, null, caption, 3);
     }
 
     private Map<String, Object> waterfall() {

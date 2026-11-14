@@ -217,7 +217,7 @@
       const m = (p.data.value && typeof p.data.value === 'object') ? p.data.value : {}, d = (p.data.delta && typeof p.data.delta === 'object') ? p.data.delta : null;
       const label = (p.title || p.id) + ': ' + str(m.text) + (p.data.unit ? ' ' + p.data.unit : '') + (d ? ', change ' + str(d.text) : '');
       return h('div', { class: 'metric', role: 'group', 'aria-label': label }, m.label ? h('span', { class: 'metric-l' }, str(m.label)) : null,
-        h('div', { class: 'metric-row' }, h('span', { class: 'metric-v mono' + toneClass(m), 'data-path': m.path || null }, cellText(R, m)),
+        h('div', { class: 'metric-row' }, h('span', { class: 'metric-v mono' + (m.format === 'date' ? ' metric-v-date' : '') + toneClass(m), 'data-path': m.path || null }, cellText(R, m)),
           p.data.unit ? h('span', { class: 'metric-u' }, str(p.data.unit)) : null,
           d ? h('span', { class: 'metric-d mono' + toneClass(d), 'data-path': d.path || null }, str(d.text)) : null),
         p.data.caption ? h('span', { class: 'metric-c' }, str(p.data.caption)) : null);

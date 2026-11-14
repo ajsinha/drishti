@@ -825,15 +825,15 @@ each one. It is the **Why it moved** tab of the VaR figure's Explain (the drawer
 **Explain › everywhere VaR or ES is shown.** One control, drishti-insight's **Explain ›** (`Drishti.Explain.link`), sits beside every VaR
 and ES: the explorer's tree rows and tiles, the regulatory reports (a cell's lineage, the period-end tile), Home's VaR tile, the Sutra
 pages' engine figures (a system basket, a position, a desk, a book, a legal entity), a BI visual of one VaR or ES, the MR cube and the
-pivots. It opens the drawer at Why it moved; the drawer's **Open as a page** gives the page below. A guard test
+pivots. It opens the drawer at Why it moved; the drawer's **Open as a page ›** button, beside its title (seen without scrolling), gives the page below with the same scope, dates, compare date and tab; **Back to the screen** returns to the screen as it was left. The VLIM limit page's figure carries it too (the node's VaR against its limit). A guard test
 (`drishti-console/tests/test_var_explain_everywhere.py`) keeps every such figure carrying it.
 
 **The page** (the approved mock-up `docs/lenses/mockups/var/why-it-moved.html`, layout A), top down:
 
 1. **The compare line**: *compare 10 Nov 2026 with 09 Nov 2026* and four choices: **Previous day** (the default), **1 week**, **Month
    end** (the last day of the month before) and **Pick a date…**; the choice goes into the link (`from=`) and the engine compares with
-   the newest business date it has on or before it. **Workbook**, **Print** and **Back to the screen** sit at the top right.
-2. **Four figures**: the VaR on each date, the change (and in per cent), the tail scenario (the VaR scenario day now, and what it was).
+   the newest business date it has on or before it that holds both P&L and a scenario set (a week back that has none is answered from the nearest earlier date that has). **Workbook**, **Print** and **Back to the screen** sit at the top right.
+2. **Four figures**: the VaR on each date, the change (and in per cent), and the **Scenario of the VaR**, a date card with no unit (*moved from 2026-06-03 to 2026-06-04*, or *unchanged since 2026-06-03*); with a limit set the fourth card is the limit use (a percentage and the change in points).
 3. **The waterfall, first and wide**: the earlier VaR, each step, the later VaR. **Click a step** and the right column lists its biggest
    contributors (the trades, books, children or scenario days that drove it) with a summary in plain words; the largest step is shown
    when the page opens.

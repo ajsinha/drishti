@@ -40,9 +40,6 @@ IN_CONTEXT = {"/w/new": "/w/new?name=page-walk", "/home/trading/view-as": None}
 SLOW_ALLOWED: dict[str, str] = {}
 #: known faults not yet fixed, each with its reason: reported on every walk, not failed (a page leaves the list when it is fixed)
 KNOWN_FAULTS: dict[str, str] = {
-    "/go?q=PLAY+SIMM+EXAMPLE+%3CGO%3E": "no licensed SIMM parameter files on a test stack: the server answers 5xx (DRS-5333), the console 502; "
-                                        "it should be a 4xx the page explains",
-    "/go?q=PLAY%20SIMM%20EXAMPLE%20%3CGO%3E": "as above, the top bar's link",
 }
 
 

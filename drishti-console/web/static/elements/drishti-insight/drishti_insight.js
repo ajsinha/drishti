@@ -346,6 +346,9 @@
         if (req.body) q.set("body", JSON.stringify(req.body));
         return "/explain?" + q.toString();
       }
+      function withDates(req) {
+        return Object.assign({}, req, S.from ? { from: S.from } : {}, S.to ? { to: S.to } : {});
+      }
       function closePreview() { if (pop) { pop.hidden = true; popFor = null; } }
       function preview(anchor, req) {
         if (!pop) {
@@ -413,9 +416,11 @@
         drawer.hidden = true;
         drawer.dataset.explainDrawer = "";
         drawer.innerHTML = '<div class="dx-head"><div><div class="dx-crumb" data-dx-crumb></div><h2 id="dxTitle" data-dx-title></h2>'
-          + '<p class="dx-origin" data-dx-origin></p></div><button type="button" class="dx-x" data-dx-close aria-label="Close Explain (Esc)" title="Close (Esc)">✕</button></div>'
+          + '<p class="dx-origin" data-dx-origin></p></div>'
+          + '<a class="dx-btn dx-page" data-dx-page href="#" title="Open this explanation as a full page: the same scope, dates, compare date and tab">Open as a page ›</a>'
+          + '<button type="button" class="dx-x" data-dx-close aria-label="Close Explain (Esc)" title="Close (Esc)">✕</button></div>'
           + '<div class="dx-tabs" role="tablist" aria-label="Explain" data-dx-tabs></div><div class="dx-body" data-dx-body role="tabpanel"></div>'
-          + '<div class="dx-foot"><div data-dx-checks></div><a class="dx-page" data-dx-page href="#">Open as a page ›</a></div>';
+          + '<div class="dx-foot"><div data-dx-checks></div></div>';
         var tabs = drawer.querySelector("[data-dx-tabs]");
         TABS.forEach(function (t) {
           var b = h("button", "dx-tab", t[1]);
@@ -449,7 +454,7 @@
         drawer.style.top = window.innerWidth > 640 && bar ? Math.max(0, Math.round(bar.getBoundingClientRect().bottom)) + "px" : "";
         drawer.hidden = false;
         drawer.classList.add("dx-open");
-        drawer.querySelector("[data-dx-page]").href = pageUrl(req, tab || "formula");
+        drawer.querySelector("[data-dx-page]").href = pageUrl(withDates(req), tab || "formula");
         document.body.dataset.explainOpen = "1";
         show(tab || "formula");
         drawer.focus();
@@ -469,7 +474,7 @@
           b.setAttribute("aria-selected", on ? "true" : "false");
           b.tabIndex = on ? 0 : -1;
         });
-        drawer.querySelector("[data-dx-page]").href = pageUrl(S.req, tab);
+        drawer.querySelector("[data-dx-page]").href = pageUrl(withDates(S.req), tab);
         var body = drawer.querySelector("[data-dx-body]");
         body.textContent = "";
         body.appendChild(h("p", "dx-muted", tab === "why" ? "computing why it moved…" : "explaining…"));
@@ -718,6 +723,12 @@
         renderPage(pageRoot);
         var printBtn = pageRoot.querySelector("[data-dx-print]");
         if (printBtn) printBtn.addEventListener("click", function () { window.print(); });
+        var backBtn = pageRoot.querySelector("[data-dx-back]");               // Back: the screen exactly as it was left (its address, its scroll), not a fresh one
+        if (backBtn) backBtn.addEventListener("click", function (ev) {
+          var same = false;
+          try { same = !!document.referrer && new URL(document.referrer).origin === window.location.origin && window.history.length > 1; } catch (e) { same = false; }
+          if (same) { ev.preventDefault(); window.history.back(); }
+        });
       }
       window.Drishti.Explain = {
         open: open, close: close, preview: preview, pageUrl: pageUrl, ask: ask, link: link, upgrade: upgrade,

@@ -2014,18 +2014,18 @@ the form the library uses.
 A table or file outside the feature table stops the read with this message (`[…]` names the table or file where it was met). Rewrite such a table without the feature, with the engine that wrote it, and Drishti reads it:
 
 ```text
-drishti-iceberg does not read format version 3 tables; use the connector's engine: library for this table [<table>]
-drishti-iceberg does not read ORC data files; use the connector's engine: library for this table [<the .orc file>]
-drishti-iceberg does not read the Iceberg type 'variant' (format version 3); use the connector's engine: library for this table
-drishti-iceberg does not read column defaults (format version 3) on NOTIONAL; use the connector's engine: library for this table
-drishti-iceberg does not read encrypted data files; use the connector's engine: library for this table [<the file>]
+drishti-iceberg does not read format version 3 tables; this table cannot be read: write it again as a format-version 2 Iceberg table with Parquet data files [<table>]
+drishti-iceberg does not read ORC data files; this table cannot be read: write it again as a format-version 2 Iceberg table with Parquet data files [<the .orc file>]
+drishti-iceberg does not read the Iceberg type 'variant' (format version 3); this table cannot be read: write it again as a format-version 2 Iceberg table with Parquet data files
+drishti-iceberg does not read column defaults (format version 3) on NOTIONAL; this table cannot be read: write it again as a format-version 2 Iceberg table with Parquet data files
+drishti-iceberg does not read encrypted data files; this table cannot be read: write it again as a format-version 2 Iceberg table with Parquet data files [<the file>]
 ```
 
 A load into a table another engine re-partitioned stops before any file is written (the parallel loader's wording; the Iceberg loader's says the same):
 
 ```text
 <table> is not in the layout: its partition spec 1 has the field 'id_bucket_8' (bucket[8]) beside the identity partition on
-business_date; this writer writes only tables partitioned by business_date alone (write this table with engine: library, or restore its spec)
+business_date; this writer writes only tables partitioned by business_date alone (write this table again partitioned by business_date alone, or restore its spec)
 ```
 
 Write such a table with the engine that re-partitioned it, or restore its spec.

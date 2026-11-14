@@ -181,6 +181,15 @@ def test_two_consoles_over_one_server_show_two_distributions(backend, monkeypatc
     assert risk.state.editions.instance.command_shown("VRES") and not finance.state.editions.instance.command_shown("VRES")
 
 
+def test_the_tab_title_is_the_distributions_tagline(backend, monkeypatch):
+    """The landing page's tab title names the distribution's own tagline, never the generic headline (Drishti Risk: its own line)."""
+    risk = _app(backend, monkeypatch, "--distribution=risk")
+    risk.state.editions.learn(ALL_ABOUT)
+    html = TestClient(risk).get("/").text
+    title = re.search(r"<title>(.*?)</title>", html, re.S).group(1)
+    assert title.strip() == "Drishti Risk — VaR, exposure and limits from your own pricing data", title
+
+
 def test_admin_white_label_shows_the_distributions_side_by_side(backend, monkeypatch):
     app = _app(backend, monkeypatch, "--distribution=finance")
     page = _client(app).get("/admin/white-label")

@@ -2535,7 +2535,7 @@ parameter file (`drishti.simm.parameters-dir`).
 
 Refusals: `400` for a bad switch value, an override naming no parameter, a multiplier below 1, or a schedule-IM CSA; `403` when SIMM is
 switched off (`drishti.simm.enabled`) or the caller sees none of the netting set's trades; `404 DRS-1002` when no connector serves
-`position-sensitivity` or [`netting-set`](../contracts/samples/counterparty-risk.md#netting-set) ([contract](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set)); `502 DRS-5333` when the version is not installed or its file is refused (`DRS-5331`, `DRS-5332`,
+`position-sensitivity` or [`netting-set`](../contracts/samples/counterparty-risk.md#netting-set) ([contract](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set)); `422 DRS-5333` when the version is not installed or its file is refused (`DRS-5331`, `DRS-5332`,
 `DRS-5334`, `DRS-5335`, `DRS-5336` count what each answer left out).
 
 ## 22. Exposure engine: `/api/v1/risk/exposure`
@@ -3258,7 +3258,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-5329 | 502 | FRTB-SA parameters refused | a parameter file (`frtb-sa-sbm.yaml`, `frtb-sa-drc-rrao.yaml`) is missing, incomplete or out of range: every FRTB-SA request answers with the file, the key and the reason; the server itself runs |
 | DRS-5331 | 422 | not a SIMM factor | an element has no SIMM mapping in the dictionary, a tenor or expiry off SIMM's vertices, a bucket the version does not have, an equity repo, or a measure its class does not have: left out of SIMM, counted and named in the answer's provenance ([SIMM_GUIDE.md section 11](SIMM_GUIDE.md#11-refusals-and-error-codes)) |
 | DRS-5332 | 422 | trade in two netting sets | a trade is listed in two netting sets on the date: kept in both, flagged in each answer's provenance |
-| DRS-5333 | 502 | SIMM version not installed | the version the CSA names (or the one asked for, or the default) has no installed parameter file, or its file is refused with every missing key named: the netting set is not computed; `GET /api/v1/risk/simm/versions` lists the files |
+| DRS-5333 | 422 | SIMM version not installed | the version the CSA names (or the one asked for, or the default) has no installed parameter file, or its file is refused with every missing key named: the netting set is not computed; `GET /api/v1/risk/simm/versions` lists the files |
 | DRS-5334 | 422 | regime not recognised | a CSA's regime code the version does not list: ignored and named in the answer |
 | DRS-5335 | 422 | record spans netting sets | a position record whose trades lie in several netting sets: left out of SIMM and counted (send it by trade) |
 | DRS-5336 | 422 | vega without implied volatility | a rates or credit `VEGA` with no `IMPLIED_VOL`: left out of SIMM and counted |
