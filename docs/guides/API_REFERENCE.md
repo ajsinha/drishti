@@ -448,6 +448,20 @@ a value is cut to 8,192 characters and a match that takes over 50 ms is `DRS-401
 `drishti.search.regex.max-pattern`, `.max-program`, `.max-input` and `.timeout-ms`. The form's other limits are
 `drishti.search.form.max-values` (500, an `in` list), `.max-inferred-fields` (14), `.enum-max` (12), `.sample-rows` (200) and `.enum-scan-rows` (1,000: how many rows of a kind are read to find the values of a dropdown, up to the search's own limit; the first 200 of a kind can all be one product group, such as the rates trades, which left the other products out of the list).
 
+### 2.8a Live result sets and blotters (`/live`)
+
+One engine behind every blotter and every FORM result that ticks; the declarations, the merge by key and version, the edit gate and the
+write path are in [the trading module's guide](../../modules/trading/docs/guide.md#9-the-api).
+
+| Method | Path | What it does |
+|---|---|---|
+| `GET` | `/live` | the declarations the caller may open (`editable`, `readOnly` for them); for administrators those set aside and the open sets |
+| `GET` | `/live/{id}/rows` | a page: `offset`, `limit` (at most 5,000), `sort`, `descending`, `filter`, `query`; `{set, live, total, seq, rows[{id, version, seq, doc}]}` |
+| `GET` | `/live/{id}/rows/{entity}` | one record whole, masked for the caller (the panel's Raw JSON) |
+| `GET` | `/live/{id}/stream` | server-sent events: `hello`, then `rows` `{upserts, removes, total, seq, countOnly}` or `resync` |
+| `POST` | `/live/{id}/stream/{stream}/window` | the page a stream shows: `{ids}` or `{all: true}`; the stream's owner only |
+| `POST` | `/live/{id}/edit` | `{entity, basedOn, reason, items[{field, from, to}]}`; `403 DRS-9302` read-only (with why, audited), `409 DRS-9303` a stale version |
+
 ### 2.9 Pivot of a table, a page's table or a search's matches
 
 Pivot is the pivot engine ([Pivot engine](#23-pivot-engine-apiv1pivot), [PIVOT_GUIDE.md](PIVOT_GUIDE.md)): a table or ladder whose Sutra says

@@ -93,8 +93,8 @@ public class LiveSetConfiguration {
             if (rt == null || !rt.settings().enabled()) {
                 return "editing is off on this server (edit.enabled in config/edit/edit.yaml)";
             }
-            if (!env.getProperty("drishti.live-sets." + spec.id() + ".edits", Boolean.class, true)) {
-                return "the site switched this blotter's edits off (drishti.live-sets." + spec.id() + ".edits)";
+            if (java.util.Arrays.stream(env.getProperty("drishti.live-sets.edits-off", "").split(",")).map(String::trim).anyMatch(spec.id()::equals)) {
+                return "the site switched this blotter's edits off (drishti.live-sets.edits-off)";
             }
             com.ash.drishti.rachana.model.Form.Save save = spec.form().save();
             if ("source".equals(save.target()) && save.connector() != null) {

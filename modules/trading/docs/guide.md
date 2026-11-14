@@ -123,7 +123,7 @@ reflects it):
 
 | | Read-only when |
 |---|---|
-| The site's configuration | the declaration names no `edit:`; write-back is off (`edit.enabled`); the site switched this blotter's edits off (`drishti.live-sets.<id>.edits: false`); the connector's command is missing, refused or its writes are off (Admin → Edits) |
+| The site's configuration | the declaration names no `edit:`; write-back is off (`edit.enabled`); the site switched this blotter's edits off (its id in `drishti.live-sets.edits-off`); the connector's command is missing, refused or its writes are off (Admin → Edits) |
 | The person's rights | no **edit** power; the kind is not theirs to open; none of the form's fields is editable by their roles (`roles:`, `editable-by:`) |
 
 A person who may not edit sees no edit controls (`editable: false` and `readOnly: <why>` in the declaration the API gives them). A crafted
@@ -231,4 +231,4 @@ Iceberg and file connectors never write per change.
 | `drishti.live-sets.window-capacity` | `5000` | records waiting per viewer before it is asked to resync |
 | `drishti.live-sets.dir` | `config/blotters` | the site's own declarations |
 | `drishti.live-sets.modules-dir` | `modules` | where the modules' `blotters/` folders are found (a module's only while it is on) |
-| `drishti.live-sets.<id>.edits` | `true` | the site's switch for one blotter's edits |
+| `drishti.live-sets.edits-off` | (none) | the blotters whose edits the site switched off, by id (`trade,exposure`) |
