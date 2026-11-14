@@ -55,6 +55,25 @@ def _merged(kernel: list, extra: list) -> list:
     return out
 
 
+def module_active(request, module_id: str | None, domain: str | None = None) -> bool:
+    """Whether a module's menu is drawn for this request: the module is in the running distribution, installed (the server lists it, once
+    it has answered), loaded and switched on at this site and for the person (core/modules.py ``module_on``, by its domain module). Read per
+    request, so a module that is unloaded, removed or switched off takes its menus with it at once, and one loaded or switched on brings them."""
+    if not module_id:
+        return True
+    eds = request.app.state.editions
+    d = eds.distribution
+    if not d.all and module_id not in d.modules:
+        return False
+    if eds.server_modules is not None and module_id not in eds.server_modules:
+        return False
+    return modules.module_on(domain or module_id)
+
+
+def _active(request, tagged: dict) -> bool:
+    return module_active(request, tagged.get("_module"), tagged.get("_domain"))
+
+
 def _spec(console_dir: Path) -> dict:
     """The sitemap: the kernel's own pages (config/sitemap.yaml) and the modules' menus from their manifests; read again on a change."""
     from core import distribution as _dist
@@ -304,9 +323,11 @@ def top_bar(request, ctx: dict) -> list:
     for menu in _menu_order(edition, every):
         mid = str(menu.get("id") or "")
         columns = list(hosted.pop(mid, []))
-        if _domain_hidden(menu):                                # a menu of a domain module that is off
+        if _domain_hidden(menu) or not _active(request, menu):  # a module's menu: only while its module is active (absent otherwise)
             continue
         for col in _columns(menu, every):                       # an item of a gathered column is filtered as the gathering menu's
+            if not _active(request, col):                       # a column another module adds to this menu: only while it is active
+                continue
             items = _items(request, edition, mid, col, ctx, fill, menu)
             if mid == "views" and col is (menu.get("columns") or [None])[-1]:
                 for link in lens_links(request):                # the lenses: one link each, in Views (and on Home)

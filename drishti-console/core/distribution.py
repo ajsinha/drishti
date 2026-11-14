@@ -72,15 +72,20 @@ def menu_ids(v) -> list[str]:
 
 
 def module_menus(directory: Path | None) -> list[dict]:
-    """The modules' own top menus, in the sitemap's form (each manifest's ``console.menus``), in requirement order: the one home of a
-    module's menus (core/menus.py draws them beside the kernel's sitemap). A menu of an id another module already has adds its columns."""
+    """The modules' own top menus, in the sitemap's form (each manifest's ``console.menus``): the one home of a module's menus
+    (core/menus.py draws them beside the kernel's sitemap, each only while its module is active). Each comes tagged with its module
+    (``_module``) and that module's domain (``_domain``). A menu of an id another module already has adds its columns."""
     out: list[dict] = []
     if directory is None or not directory.is_dir():
         return out
     for m in sorted(p for p in directory.iterdir() if p.is_dir()):
         for dmod in (m / "module.yaml", m / "src" / "dmod" / "module.yaml", m / "dmod" / "module.yaml"):
             if dmod.is_file():
-                out += [x for x in ((_read(dmod).get("console") or {}).get("menus") or []) if isinstance(x, dict) and x.get("id")]
+                y = _read(dmod)
+                mid = str(y.get("id") or "").strip()
+                tag = {"_module": mid, "_domain": str(y.get("domain") or mid)}
+                out += [{**x, **tag, "columns": [{**c, **tag} for c in x.get("columns") or [] if isinstance(c, dict)]}
+                        for x in ((y.get("console") or {}).get("menus") or []) if isinstance(x, dict) and x.get("id")]
                 break
     return out
 
