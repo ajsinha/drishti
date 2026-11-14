@@ -231,6 +231,9 @@ def _start_stack(tmp_path_factory, extra_env, work=None, auth=False, heap="768m"
                 (work / "config" / sub.name).symlink_to(sub)
         (work / "config" / "connectors").mkdir()   # empty: the server writes the packs' connector files there at its first start, as in a
                                                    # clean checkout, and a deployed test pack's file lands in the scratch copy
+    for name in ("modules", "lib"):                # the module folders (the kernel's packs and jars) beside the config, as the server reads them
+        if (ROOT / name).exists() and not (work / name).exists():
+            (work / name).symlink_to(ROOT / name, target_is_directory=True)
     env = {"PATH": os.environ.get("PATH", ""), "HOME": str(work), "DRISHTI_PORT": str(port),
            **{k: os.environ[k] for k in ("DRISHTI_DISK_MINFREEGB", "DRISHTI_DISK_MINFREEPERCENT") if k in os.environ}, **extra_env}  # conftest's guard
     # the server's heap: 768 MB for a page's worth of data; a file whose server holds a year of VaR history says so (heap="1536m")
