@@ -279,7 +279,7 @@ public class HistoryController {
     }
 
     /** The label of the leaf's own field: {@code legs[FIXED].notional} is labelled as {@code notional} would be. */
-    static String label(String path) {
+    public static String label(String path) {
         String last = path.substring(path.lastIndexOf('.') + 1);
         int bracket = last.indexOf('[');
         String field = bracket >= 0 ? last.substring(0, bracket) : last;

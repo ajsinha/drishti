@@ -1,0 +1,20 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# The live result set behind a table of records (modules/trading/docs/guide.md section 7), as attributes of its panel: the set's id
+  (its changes stream from /api/v1/live/<id>/stream), whether it ticks, its total and the sequence the rows are consistent with.
+  The grid's live mode follows them; a static set (no live binding, or a past business date) says data-live="off".
+#}
+{% if data and data.live and data.live.set %} data-live-set="{{ data.live.set }}" data-live="{{ 'on' if data.live.live else 'off' }}" data-live-total="{{ data.live.total }}" data-live-seq="{{ data.live.seq }}"{% endif %}

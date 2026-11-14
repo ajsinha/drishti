@@ -62,8 +62,9 @@
     <p class="asof-banner" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> <span class="mono">{{ drs_message(error.code, error.detail) }}</span></p>
   {% elif data %}
     <div class="cmp-sum">
-      <span><b>{{ data.matched }}</b> of {{ data.scanned }} {% set k = data.kind | replace('-', ' ') %}{% if data.scanned == 1 %}{{ k }}{% elif k[-1:] == 'y' and k[-2:-1] not in 'aeiou' %}{{ k[:-1] }}ies{% else %}{{ k }}s{% endif %} match{% if data.matched > rows | length %}; the first {{ rows | length }} are shown{% endif %}</span>
+      <span><b>{{ data.matched }}</b> of {{ data.scanned }} {% set k = data.kind | replace('-', ' ') %}{% if data.scanned == 1 %}{{ k }}{% elif k[-1:] == 'y' and k[-2:-1] not in 'aeiou' %}{{ k[:-1] }}ies{% else %}{{ k }}s{% endif %} match{% if data.matched > rows | length and not pages %}; the first {{ rows | length }} are shown{% endif %}</span>
       <span class="text-muted-d mono" data-elapsed>{{ data.elapsedMs }} ms</span>
+      {% if data.live and data.live.live %}<span class="live-pill" data-live-badge title="The kind has a live binding: these rows change as its records do"><i class="bi bi-broadcast" aria-hidden="true"></i> Live</span>{% endif %}
       {% if rows %}<a class="lnk" href="/export/search.csv?q={{ q | urlencode }}" title="Download the results as CSV"><i class="bi bi-download" aria-hidden="true"></i> CSV</a>
       <a class="lnk" href="/export/search.jsonl?q={{ q | urlencode }}" title="Download the results as JSON Lines: one entity a line" data-search-jsonl><i class="bi bi-braces" aria-hidden="true"></i> JSONL</a>{% endif %}
       {% if rows %}<form class="srch-watch" method="post" action="/s/watch">
@@ -79,13 +80,17 @@
       <ul class="mono">{% for f in data.failed %}<li><b>{{ f.source }}</b>: {{ f.reason }}</li>{% endfor %}</ul></div>{% endif %}
     {% if rows %}
     {% set pv = data.pivot if (data.pivot and not vs) else none %}
-    <section class="pnl"><div class="pnl-b">{% if pv %}{{ pivot_link(pv.source, 'the ' ~ (data.mnemonic or data.kind) ~ ' rows') }}{% endif %}<div class="tbl-wrap"><table class="tbl"{% if chart_rows %} data-chart-rows="{{ chart_rows | tojson | forceescape }}"{% endif %}>
+    <section class="pnl" data-panel="results"{% include "terminal/_live_attrs.html" %}><div class="pnl-b">{% if pv %}{{ pivot_link(pv.source, 'the ' ~ (data.mnemonic or data.kind) ~ ' rows') }}{% endif %}<div class="tbl-wrap"><table class="tbl"{% if chart_rows %} data-chart-rows="{{ chart_rows | tojson | forceescape }}"{% endif %}>
       <thead><tr><th>{{ data.mnemonic or data.kind }}</th>{% if titled %}<th>Title</th>{% endif %}
         {% for c in data.columns %}<th class="{{ 'num' if rows and rows[0].cells[loop.index0][1] else '' }}" title="{{ c }}">{{ data.labels[c] }}</th>{% endfor %}</tr></thead>
       <tbody>{% for r in rows %}
         <tr data-i="{{ loop.index0 }}"{% if r.status %} class="cmp-{{ r.status }}" title="{{ 'only on the later date' if r.status == 'added' else 'only on ' ~ vs }}"{% endif %}><td><a class="lnk mono" href="/v/{{ r.ref.kind }}/{{ r.ref.id | urlencode }}{% if hq %}/history?{{ hq }}{% endif %}">{{ r.ref.id }}</a>{% if r.status %} <span class="st">{{ r.status }}</span>{% endif %}</td>{% if titled %}<td>{{ r.title }}</td>{% endif %}
           {% for text, number in r.cells %}<td class="{{ 'num ' if number else '' }}mono">{{ text }}</td>{% endfor %}</tr>
-      {% endfor %}</tbody></table></div></div></section>
+      {% endfor %}</tbody></table></div>
+      {% if pages %}<nav class="srch-pager" aria-label="Pages of {{ data.mnemonic or data.kind }}" data-pager><span class="mono">{{ "{:,}".format(pages.from) }}–{{ "{:,}".format(pages.to) }} of {{ "{:,}".format(pages.total) }}</span>
+        {% if pages.prev %}<a class="lnk" href="{{ pages.prev }}" rel="prev"><i class="bi bi-chevron-left" aria-hidden="true"></i> Previous</a>{% endif %}
+        {% if pages.next %}<a class="lnk" href="{{ pages.next }}" rel="next">Next <i class="bi bi-chevron-right" aria-hidden="true"></i></a>{% endif %}</nav>{% endif %}
+    </div></section>
     {% elif not data.noData %}
       <p class="text-muted-d">Nothing matches.</p>
     {% endif %}

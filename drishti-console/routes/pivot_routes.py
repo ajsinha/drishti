@@ -64,15 +64,19 @@ def _problem(e: BackendError) -> JSONResponse:
 
 
 @router.get("/pivot")
-async def page(request: Request, source: str = "", view: str = "", date: str = "", preset: str = "", text: str = "", mode: str = ""):
+async def page(request: Request, source: str = "", view: str = "", date: str = "", preset: str = "", text: str = "", mode: str = "", lay: str = "",
+               live: str = ""):
     """PIVOT: the pivot screen; with ``preset`` (and its word's ``text``), one of its presets: the MR cube, the CCR cube. ``mode`` opens it
     as views (the View picker in front of the compact line, the default), compact or panes (PIVOT_GUIDE.md section 2); a saved view and an
-    address of before open the same, the old field list now behind Customize ›."""
+    address of before open the same, the old field list now behind Customize ›. ``lay`` (JSON: rows, columns, values, filters) lays a view over the
+    source's landing, as a live grid's Pivot › hands it over (the same kind, filters, grouping and numbers); ``live`` starts the live pivot."""
     cube = pivot_presets.get(preset) if preset else None
     if cube is None:
         typed = f"{WORD} @{view}" if view else f"{WORD} {source} {date}".strip()
+        laid = _laid(lay) if not view else {}
         return render(request, "terminal/pivot.html", screen="pivot", source=source.strip(), view_id=view.strip(), date=date.strip(),
-                      command_text=typed, mode=pivot_presets.mode_of(mode) if mode else "", views_json="[]", open_view="")
+                      command_text=typed, mode=pivot_presets.mode_of(mode) if mode else "", views_json="[]", open_view="",
+                      preset=json.dumps(laid) if laid else "", live_on=bool(live and live != "0"))
     from core import engines
     if cube.engine and not engines.engine_available(cube.engine):          # its engine runs on no server of the cluster: said in the server's words
         return RedirectResponse("/t?error=" + quote(engines.refusal(engines.entry(cube.engine) or {"id": cube.engine})), status_code=303)
@@ -86,6 +90,20 @@ async def page(request: Request, source: str = "", view: str = "", date: str = "
     return render(request, "terminal/pivot.html", screen=cube.help, source=cube.source, view_id=view.strip(), date=laid.get("date", ""),
                   command_text=typed, lens=cube.lens, preset=json.dumps(laid) if laid else "", cube=cube, cube_building=building,
                   mode=pivot_presets.mode_of(mode) if mode else cube.mode, views_json=json.dumps(list(cube.views)), open_view=cube.view)
+
+
+_LAY_KEYS = ("rows", "columns", "values", "filters")
+
+
+def _laid(text: str) -> dict:
+    """The layout a hand-over names (``lay``): only the view's wells, only lists and objects of plain text, or nothing."""
+    try:
+        raw = json.loads(text) if text else {}
+    except ValueError:
+        return {}
+    if not isinstance(raw, dict):
+        return {}
+    return {k: raw[k] for k in _LAY_KEYS if isinstance(raw.get(k), (list, dict)) and len(json.dumps(raw[k])) < 8000}
 
 
 async def _call(request: Request, method: str, path: str, body=None, **params):

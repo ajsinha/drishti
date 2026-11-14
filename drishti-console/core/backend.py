@@ -301,6 +301,17 @@ class BackendClient:
         """Structured search: TRD where mtm > 1m order by mtm desc limit 50."""
         return await self._get("/search", ident, q=q)
 
+    async def live_query(self, q: str, ident=None, again: bool = True, limit: int = 1000) -> dict:
+        """A search's matches as a live result set (``GET /api/v1/live/query``): ``{set, live, total, seq, offset, rows: [{id, version, seq,
+        doc}], search}``; ``again``: Search pressed (a static set is read afresh)."""
+        return await self._get("/live/query", ident, q=q, again=str(bool(again)).lower(), limit=limit)
+
+    async def live_kind(self, word: str, ident=None, offset: int = 0, limit: int = 100, sort: str = "", descending: bool = False) -> dict:
+        """A page of a kind's own live result set (a bare mnemonic, ``POS <GO>``): its module's declaration, else the default one made from
+        its contract (``GET /api/v1/live/kinds/{word}/rows``)."""
+        params = {"offset": offset, "limit": limit, **({"sort": sort, "descending": str(bool(descending)).lower()} if sort else {})}
+        return await self._get(f"/live/kinds/{quote(word, safe='')}/rows", ident, **params)
+
     async def form(self, pack: str, kind: str = "", ident=None) -> dict:
         """The search form of a pack's kind (query by form): its fields, declared or inferred, and the kinds you may open."""
         return await self._get(f"/forms/{quote(pack, safe='')}", ident, **({"kind": kind} if kind else {}))

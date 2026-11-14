@@ -258,7 +258,7 @@ def test_the_help_centre_has_eight_sections_and_internal_and_about_sixty_pages()
     from core import menus, modules
     core_catalogue = yaml.safe_load((CONSOLE / "config" / "help.yaml").read_text())
     by_id = {s["id"]: s for s in [*core_catalogue["sections"], *modules.help_pages()]}
-    heads = menus.help_sections(CONSOLE)                       # the sections: the sitemap's and the modules' (2.9.11.f)
+    heads = [h for h in menus.help_sections(CONSOLE) if not h["id"].startswith("module-")]   # the sitemap's sections (a hosted module's own Help section is its own)
     catalogue = {**core_catalogue, "sections": [by_id[h["id"]] for h in heads]}
     assert "risk" not in [c["id"] for c in core_catalogue["sections"]], "the risk section is the banking module's"
     assert next(h for h in heads if h["id"] == "risk")["domain"] == "banking"
@@ -418,7 +418,7 @@ def test_the_front_door_has_search_most_used_and_a_tile_per_section(client):
     most = hub[hub.index("data-help-most"):hub.index("data-help-tiles")]
     assert re.findall(r'href="/help/([\w-]+)"', most) == ["user-guide", "docs-guides-var-guide", "tutorials", "release-notes"]
     assert "What&#39;s new" in most or "What's new" in most
-    tiles = re.findall(r'href="/help/section/([\w-]+)"', hub)
+    tiles = [t for t in re.findall(r'href="/help/section/([\w-]+)"', hub) if not t.startswith("module-")]    # a hosted module adds its own tile
     assert tiles == ["get-started", "risk", "analytics", "data", "build", "operate", "reference", "knowledge", "internal"]
     assert "data-help-sections=" in hub and "get-started" in hub[hub.index("data-help-sections="):hub.index("data-help-sections=") + 400]
 

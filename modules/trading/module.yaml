@@ -36,13 +36,15 @@ plugin-api: '>=2.0'
 elements: '>=1.4 <2'
 data:
   needs: data/needs.yaml
+console:
+  plugin: console/plugin.yaml          # the Trading menu: the trade blotter (/live/trade)
 blotters:
   folder: blotters
   list:
   - trade
 parts:
   feeds: {class: feed, contains: [live-sets]}       # the listener: one runner per placement (KERNEL_AND_MODULES.md section 4.11.2)
-  console: {class: light, contains: [help]}
+  console: {class: light, contains: [console-bundle, help]}
 docs:
   readme: docs/README.md
   help: docs/help.yaml

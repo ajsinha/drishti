@@ -2854,6 +2854,12 @@ On a business date the sources hold no data for (a date not loaded yet, or befor
 matches": it says no trade data is loaded for that date, names the newest date that has data, and **Search on** that date runs the
 same search there (the business date changes for the session, as in the top bar). The same note shows on the search page.
 
+**The results are a live result set.** Where the kind has a live binding (trades from Kafka, news from its feed) and the business date is
+today's, the table ticks: a record that changes is updated in place, a new match comes in, one that no longer matches leaves, and **Live**
+shows beside the time it took. On another business date, or for a kind without a live binding, the results are as they were when you
+pressed **Search**; pressing it again reads them afresh. The search page's results (`TRD where ...`) work the same way, and a mnemonic on its
+own (`POS <GO>`, `TRD <GO>`) opens every record of the kind, a page at a time, with **Previous** and **Next** under the table.
+
 **Copy** puts it on the clipboard (paste it into the command line or the search box); **Edit as text** opens it in the search box. The table is the
 console's table: sort by a heading, filter each column with its funnel ([Filter a table like Excel](#filter-a-table-like-excel)), page and walk it by keyboard. The key
 cell opens the view; **Alt+Left** brings you back to the form with your criteria in place and the results again, because everything you filled in is in the

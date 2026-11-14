@@ -22,7 +22,7 @@ from urllib.parse import parse_qs, quote
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
-from core import about_index, asof, collab as collab_core, compare_side, controls, screen_grid
+from core import about_index, asof, collab as collab_core, compare_side, controls, live_results, screen_grid
 from core.settings import changed_at
 from core.backend import BackendError
 from core.csrf import BodyError, json_body
@@ -216,25 +216,7 @@ async def impact(request: Request, kind: str, id_: str):
     return render(request, "terminal/impact.html", kind=kind, id=id_, data=data, screen="impact")
 
 
-def _shown(v) -> str:
-    """A diff value as text: numbers with separators (up to six decimals), lists and objects compactly."""
-    if v is None:
-        return "—"
-    if isinstance(v, bool):
-        return "true" if v else "false"
-    if isinstance(v, (int, float)):
-        text = f"{v:,.6f}".rstrip("0").rstrip(".") if isinstance(v, float) else f"{v:,}"
-        return text.replace("-", "−")
-    if isinstance(v, (list, dict)):
-        return "[]" if v == [] else str(v)[:80]
-    return str(v)
-
-
-def _delta(d) -> str:
-    if d is None:
-        return ""
-    text = f"{d:+,.6f}".rstrip("0").rstrip(".")
-    return text.replace("-", "−")
+_shown, _delta = live_results.shown, live_results.delta   # values as text (core/live_results.py, one place for every result table)
 
 
 @router.get("/p/{name}")
@@ -282,36 +264,36 @@ async def search(request: Request, q: str = "", vs: str = "", words: str = ""):
         if phrase.get("command") and not phrase.get("ignored") and not q.strip():   # trade 1000015 last month: read fully, so open it
             return RedirectResponse(f"/go?q={quote(phrase['command'])}", status_code=303)
     """Structured search (W17): entities by field values, e.g. TRD where mtm > 1m and currency = 'EUR' order by mtm desc."""
-    data, error = None, None
+    data, error, page = None, None, None
     if q.strip():
         limit = (getattr(request.state, "settings", None) or {}).get("searchLimit") or 100
         asked = q if re.search(r"(?i)\slimit\s+\S+\s*$", q) else f"{q.rstrip()} limit {limit}"   # the user's default size
         try:
-            if vs:     # the same search on another business date, side by side: each number with its change
+            if vs:     # the same search on another business date, side by side: each number with its change (a comparison, not a set)
                 data = await request.app.state.backend.search_compare(asked, vs, "", ident(request))
-            else:
-                data = await request.app.state.backend.search(asked, ident(request))
+            elif _BARE.match(q.strip()):   # a bare mnemonic (POS <GO>): the kind's own live result set, a page at a time
+                page = _page_of(request, limit)
+                data = live_results.kind_page(await request.app.state.backend.live_kind(q.strip(), ident(request), **page))
+            else:      # a search's matches are a live result set (static without a live binding, ticking with one)
+                data = await live_results.run(request.app.state.backend, asked, ident(request))
         except BackendError as e:
             error = e
     hq = history_routes.history_query(request.query_params)   # a pick list of a history command: each row opens its history
-    rows = []
-    if data:
-        for r in data.get("rows", []):
-            cells = []
-            for c in data.get("columns", []):
-                v = r["values"].get(c)
-                if vs and isinstance(v, dict):            # compared: the later value, and its change
-                    to, delta = v.get("to"), v.get("delta")
-                    num = isinstance(to, (int, float)) and not isinstance(to, bool)
-                    text = _shown(to) + (f"  ({_delta(delta)})" if delta not in (None, 0, 0.0) else "")
-                    cells.append((text, num))
-                else:
-                    cells.append((_shown(v), isinstance(v, (int, float)) and not isinstance(v, bool)))
-            rows.append({"ref": r["ref"], "title": r.get("title") or r["ref"]["id"], "cells": cells, "status": r.get("status")})
-    titled = any(r["title"] != r["ref"]["id"] for r in rows)       # a title that only repeats the id is left out
+    rows = live_results.table_rows(data, compared=bool(vs))
+    titled = live_results.titled(rows)
     chart_rows = search_chart_rows(data, q, titled) if data and rows and not vs else None
     return render(request, "terminal/search.html", q=q, vs=vs, words=words, phrase=phrase, data=data, rows=rows, error=error, titled=titled,
-                  screen="search", hq=hq, chart_rows=chart_rows)
+                  screen="search", hq=hq, chart_rows=chart_rows, pages=live_results.pages(data, request.url.path, request.query_params))
+
+
+_BARE = re.compile(r"^[A-Za-z][A-Za-z0-9_-]{0,31}$")      # one word, no condition, ids or limit: the mnemonic alone
+
+
+def _page_of(request: Request, size: int) -> dict:
+    """The page of a kind's set the address asks for: ``offset``, ``sort``, ``desc`` (a bare mnemonic's table pages on the server)."""
+    qp = request.query_params
+    offset = int(qp["offset"]) if qp.get("offset", "").isdigit() else 0
+    return {"offset": offset, "limit": int(size), "sort": qp.get("sort", ""), "descending": qp.get("desc") in ("1", "true", "on")}
 
 
 def _chart_value(v):

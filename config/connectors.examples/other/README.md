@@ -58,6 +58,7 @@ files:
 - rest-via-proxy.yaml
 - s3-private-ca.yaml
 - s3-via-proxy.yaml
+- trade-blotter-kafka.yaml
 - trading-stream.yaml
 - yfinance.yaml
 doc: docs/guides/DATA_GUIDE.md
@@ -158,6 +159,7 @@ apply` refuse a credential written in clear. There is no loader for these files:
 | `rest-via-proxy.yaml` | `rest` | the plugin's own | Prices from a vendor API through the corporate proxy |
 | `s3-private-ca.yaml` | `s3` | the plugin's own | Documents in MinIO over TLS |
 | `s3-via-proxy.yaml` | `s3` | the plugin's own | Trade documents in S3, through the corporate proxy |
+| `trade-blotter-kafka.yaml` | `kafka` | `trade` | The demo's live trades, and the trade blotter's amendments written back to them |
 | `trading-stream.yaml` | `kafka` | the plugin's own | Live trades from the trading Kafka cluster |
 | `yfinance.yaml` | `yfinance` | the plugin's own |  |
 <!-- files:end -->

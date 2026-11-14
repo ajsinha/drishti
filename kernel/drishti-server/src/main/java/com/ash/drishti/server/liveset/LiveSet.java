@@ -56,8 +56,16 @@ import java.util.function.UnaryOperator;
  */
 public final class LiveSet implements AutoCloseable {
 
-    /** One record of the set. */
-    public record Row(String id, long version, long seq, DataNode doc, Instant arrived) {}
+    /**
+     * One record of the set: its key, version, the sequence of its last change, the document, when it arrived, and its rank (the sequence
+     * it first came in with, kept when it changes: a search's set keeps the search's order by it).
+     */
+    public record Row(String id, long version, long seq, DataNode doc, Instant arrived, long rank) {
+
+        public Row(String id, long version, long seq, DataNode doc, Instant arrived) {
+            this(id, version, seq, doc, arrived, seq);
+        }
+    }
 
     /** Reads the snapshot: every record of the kind, to the sink. */
     @FunctionalInterface
@@ -65,7 +73,7 @@ public final class LiveSet implements AutoCloseable {
         void read(Consumer<EntityDocument> sink) throws Exception;
     }
 
-    private final LiveSetSpec spec;
+    private volatile LiveSetSpec spec;
     private final String condition;
     private final Predicate<DataNode> holds;
     private final Clock clock;
@@ -82,12 +90,52 @@ public final class LiveSet implements AutoCloseable {
     private volatile boolean live;
     private volatile Subscription subscription = Subscription.NONE;
     private volatile Instant lastChange;
+    private volatile Instant openedAt;
+    /** A search's set: its snapshot rows are the search's matches (not tested again) and kept in the search's order. */
+    private final boolean matched;
+    /** What the search that filled it said (columns, labels, matched, scanned, failed, ...); empty for a declared set. */
+    private volatile Map<String, Object> origin = Map.of();
 
     LiveSet(LiveSetSpec spec, String condition, Predicate<DataNode> holds, Clock clock) {
+        this(spec, condition, holds, clock, false);
+    }
+
+    LiveSet(LiveSetSpec spec, String condition, Predicate<DataNode> holds, Clock clock, boolean matched) {
         this.spec = spec;
         this.condition = condition;
         this.holds = holds == null ? d -> true : holds;
         this.clock = clock == null ? Clock.systemUTC() : clock;
+        this.matched = matched;
+    }
+
+    /** What the search that filled it said; empty for a declared set. */
+    public Map<String, Object> origin() {
+        return origin;
+    }
+
+    /** A search's set learns its columns from the search that fills it. */
+    void spec(LiveSetSpec s) {
+        spec = s;
+    }
+
+    void origin(Map<String, Object> m) {
+        origin = m == null ? Map.of() : java.util.Collections.unmodifiableMap(new LinkedHashMap<>(m));
+    }
+
+    private volatile boolean capped;
+
+    /** True when its snapshot stopped at the default declarations' row cap ({@code drishti.live-sets.default-max-rows}). */
+    public boolean capped() {
+        return capped;
+    }
+
+    void capped(boolean c) {
+        capped = c;
+    }
+
+    /** When its snapshot was read. */
+    public Instant openedAt() {
+        return openedAt;
     }
 
     /** Subscribes to the live side, reads the snapshot, then applies what arrived meanwhile. */
@@ -95,7 +143,8 @@ public final class LiveSet implements AutoCloseable {
         Subscription s = subscribe.apply(this::offer);
         subscription = s == null ? Subscription.NONE : s;
         live = subscription != Subscription.NONE;
-        snapshot.read(d -> apply(d, false));
+        openedAt = Instant.now(clock);
+        snapshot.read(d -> apply(d, false, matched));
         lock.lock();
         try {
             while (!early.isEmpty()) {
@@ -125,6 +174,11 @@ public final class LiveSet implements AutoCloseable {
 
     /** Merges one document by key and version. */
     void apply(EntityDocument d, boolean push) {
+        apply(d, push, false);
+    }
+
+    /** Merges one document; {@code known} when it is a search's match already (its condition is not tested again). */
+    private void apply(EntityDocument d, boolean push, boolean known) {
         lock.lock();
         try {
             String id = keyOf(d);
@@ -147,14 +201,15 @@ public final class LiveSet implements AutoCloseable {
             if (old != null && v > old.version() + 1 && old.version() >= 0) {
                 gaps.incrementAndGet();                       // versions skipped: the record is whole, so the newest is still right
             }
-            if (!holds.test(d.data())) {
+            if (!known && !holds.test(d.data())) {
                 if (old != null) {
                     rows.remove(id);
                     changed(null, id);
                 }
                 return;
             }
-            Row r = new Row(id, v, seq.incrementAndGet(), d.data(), Instant.now(clock));
+            long n = seq.incrementAndGet();
+            Row r = new Row(id, v, n, d.data(), Instant.now(clock), old == null ? n : old.rank());
             rows.put(id, r);
             applied.incrementAndGet();
             if (push) {
@@ -284,24 +339,27 @@ public final class LiveSet implements AutoCloseable {
      */
     public Page page(int offset, int limit, String sortField, boolean descending, String filter, UnaryOperator<DataNode> redact) {
         String f = filter == null || filter.isBlank() ? null : filter.toLowerCase(Locale.ROOT);
+        // filtered and sorted on what the viewer may see: a masked value never decides which rows show or their order
         List<Row> all = new ArrayList<>();
         for (Row r : rows.values()) {
-            if (f == null || text(r.doc()).contains(f)) {
-                all.add(r);
+            Row seen = redact == null ? r : new Row(r.id(), r.version(), r.seq(), redact.apply(r.doc()), r.arrived(), r.rank());
+            if (f == null || text(seen.doc()).contains(f)) {
+                all.add(seen);
             }
         }
-        String by = sortField != null ? sortField : spec.sortField();
-        boolean desc = sortField != null ? descending : spec.descending();
-        Comparator<Row> cmp = by == null ? Comparator.comparingLong(Row::seq).reversed() : Comparator.comparing(r -> sortKey(r, by), LiveSet::compare);
+        String by = sortField != null && !sortField.isBlank() ? sortField : spec.sortField();
+        boolean desc = sortField != null && !sortField.isBlank() ? descending : spec.descending();
+        Comparator<Row> cmp = by == null ? (matched ? Comparator.comparingLong(Row::rank) : Comparator.comparingLong(Row::seq).reversed())
+                : Comparator.comparing(r -> sortKey(r, by), LiveSet::compare);
         if (by != null && desc) {
-            cmp = cmp.reversed();
+            cmp = Comparator.comparing((Row r) -> sortKey(r, by), (a, b) -> compareDescending(a, b));
         }
         all.sort(cmp.thenComparing(Row::id));
         int from = Math.max(0, Math.min(offset, all.size()));
         int to = Math.min(all.size(), from + Math.max(1, limit));
         List<Map<String, Object>> out = new ArrayList<>();
         for (Row r : all.subList(from, to)) {
-            out.add(shown(r, redact));
+            out.add(shown(r, null));
         }
         return new Page(out, all.size(), seq.get());
     }
@@ -335,6 +393,14 @@ public final class LiveSet implements AutoCloseable {
         @SuppressWarnings("unchecked")
         Comparable<Object> c = v instanceof Comparable<?> cc ? (Comparable<Object>) cc : null;
         return c;
+    }
+
+    /** Descending, with values that are not there still last. */
+    private static int compareDescending(Comparable<Object> a, Comparable<Object> b) {
+        if (a == null || b == null) {
+            return a == null ? (b == null ? 0 : 1) : -1;
+        }
+        return -compare(a, b);
     }
 
     private static int compare(Comparable<Object> a, Comparable<Object> b) {
@@ -484,6 +550,8 @@ public final class LiveSet implements AutoCloseable {
         m.put("viewers", windows.size());
         m.put("lastChange", lastChange == null ? null : lastChange.toString());
         m.put("retention", spec.retention() == null ? null : spec.retention().describe());
+        m.put("search", matched);
+        m.put("capped", capped);
         return m;
     }
 
