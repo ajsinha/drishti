@@ -135,7 +135,7 @@ abstract class PackSutraNextEquivalence {
     /** Each Sutra with an old layout and the record it draws ({@code kind/id}): by default the first committed sample of the kind it is named after. */
     Map<String, String> screens() throws Exception {
         Map<String, String> first = new LinkedHashMap<>();
-        for (JsonNode e : com.ash.drishti.common.PackSamples.catalogEntries(com.ash.drishti.api.PackFolders.of(Path.of("..", "..", "config", "packs"), pack()).resolve("samples"))) {
+        for (JsonNode e : com.ash.drishti.common.PackSamples.catalogEntries(com.ash.drishti.api.resolution.ConfigResolution.repository(Path.of("..", "..", "config", "packs").toAbsolutePath().normalize().getParent().getParent()).packDir(pack()).resolve("samples"))) {
             first.putIfAbsent(e.path("kind").asText(), e.path("id").asText());
         }
         Map<String, String> out = new LinkedHashMap<>();

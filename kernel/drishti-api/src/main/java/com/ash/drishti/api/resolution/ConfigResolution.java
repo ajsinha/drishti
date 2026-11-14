@@ -68,6 +68,25 @@ public record ConfigResolution(ResolutionSettings settings, Predicate<String> ac
         return build(s, ModuleTemplates.offline(modules, sw, property, ResolutionSettings::yaml));
     }
 
+    /**
+     * A checkout's resolution with every module on (the {@code all} distribution): what a test or a tool of the shipped files means. The
+     * Python twin is {@code core.resolution.repository()}. Not installed as the process's current one.
+     *
+     * @param root the repository's root (holds {@code config/packs} and {@code modules})
+     */
+    public static ConfigResolution repository(Path root) {
+        Path r = root.toAbsolutePath().normalize();
+        Map<String, String> p = Map.of("drishti.packs.site-dir", r.resolve("config/packs").toString(), "drishti.modules.home", r.resolve("modules").toString(),
+                "drishti.packs.installed-dir", r.resolve("config/packs/no-installed-packs").toString(),
+                "drishti.modules.path", r.resolve("config/packs/no-module-store").toString());
+        return build(ResolutionSettings.of(p::get), id -> true);
+    }
+
+    /** Every pack folder of this resolution, in pack-name order. */
+    public List<Path> packDirs() {
+        return new java.util.TreeMap<>(packs.packs()).values().stream().map(PackResolver.Located::dir).toList();
+    }
+
     /** The process's current resolution, or null before the first is installed. */
     public static ConfigResolution current() {
         return CURRENT.get();

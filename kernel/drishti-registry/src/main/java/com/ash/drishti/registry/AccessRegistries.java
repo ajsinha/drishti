@@ -33,7 +33,7 @@ public final class AccessRegistries {
     public static final String MODULES_DIR = "./config/modules";
     /** The site's access files. */
     public static final String ACCESS_DIR = "./config/access";
-    /** The content modules' own manifests ({@code <id>/module.yaml}), {@code drishti.module-manifests-dir}. */
+    /** The content modules' own manifests ({@code <id>/module.yaml} or {@code <id>/dmod/module.yaml}), {@code drishti.modules.home}. */
     public static final String MANIFESTS_DIR = "./modules";
 
     private AccessRegistries() {
@@ -62,22 +62,12 @@ public final class AccessRegistries {
     }
 
     /**
-     * The content modules' manifests folder: {@code drishti.module-manifests-dir} (default {@value #MANIFESTS_DIR}, the folder the
-     * distributions read too); when that folder is not there (a server started in a scratch folder), the {@code modules} folder beside the
-     * packs' {@code config} folder ({@code drishti.packs.dir}'s real path, two folders up).
+     * The modules shipped as folders: {@code drishti.modules.home} (its former name {@code drishti.module-manifests-dir}; default
+     * {@value #MANIFESTS_DIR}), the same setting the one resolution reads (KERNEL_AND_MODULES.md section 18.2). No folder is derived from
+     * another folder's position.
      */
     static Path manifests(Function<String, String> property) {
-        Path named = Path.of(orDefault(property.apply("drishti.module-manifests-dir"), MANIFESTS_DIR));
-        if (Files.isDirectory(named)) {
-            return named;
-        }
-        try {
-            Path packs = Path.of(orDefault(property.apply("drishti.packs.dir"), "./config/packs")).toRealPath();
-            Path beside = packs.getParent() == null || packs.getParent().getParent() == null ? null : packs.getParent().getParent().resolve("modules");
-            return beside != null && Files.isDirectory(beside) ? beside : named;
-        } catch (IOException | RuntimeException e) {
-            return named;
-        }
+        return Path.of(orDefault(property.apply("drishti.modules.home"), orDefault(property.apply("drishti.module-manifests-dir"), MANIFESTS_DIR)));
     }
 
     private static final java.util.Map<Object, EmbeddedAccessRegistry> SHARED = new java.util.WeakHashMap<>();

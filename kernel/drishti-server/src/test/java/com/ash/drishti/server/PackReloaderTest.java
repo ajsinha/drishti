@@ -177,7 +177,8 @@ class PackReloaderTest {
         assertThat(mnemonics.of("WGT")).isPresent();
         assertThat(mnemonics.of("ALP")).isPresent();                                             // what was there stays
         until("beta's Sutra", () -> sutras.latest("widget-view").isPresent());
-        assertThat(connectors.files().exists("beta-feed")).as("the template became a connector file").isTrue();
+        until("beta's template to be a connector", () -> connectors.template("beta-feed").isPresent());
+        assertThat(connectors.files().exists("beta-feed")).as("the server writes no connector file").isFalse();
         until("beta to be remembered for the next start", () -> {
             try {
                 return Files.readString(root.resolve("added.yaml")).contains("beta");
@@ -205,7 +206,7 @@ class PackReloaderTest {
         until("beta to be unloaded", () -> pack("beta") == null);
         assertThat(mnemonics.of("WGX")).isEmpty();
         assertThat(registry.removedOwner("widget")).isEqualTo("beta");                           // open views say "pack removed"
-        assertThat(connectors.suppressed()).contains("beta-feed");                               // its connector stops (its file stays)
+        until("its connector to stop with its template", () -> connectors.template("beta-feed").isEmpty() && !connectors.names().contains("beta-feed"));
         until("beta to be forgotten", () -> {
             try {
                 return !Files.readString(root.resolve("added.yaml")).contains("beta");

@@ -126,7 +126,7 @@ public class DataLoadConfiguration {
             // the resolution's modules that are on, wherever each is (its folder under drishti.modules.home, or its installed .dmod);
             // a rules file that cannot be read is a problem of the resolution (Health, DRS-1048), never a silent empty list
             java.util.List<Routes.ModuleRules> out = new java.util.ArrayList<>();
-            com.ash.drishti.api.resolution.ConfigResolution r = com.ash.drishti.packs.PackPaths.resolution(env);
+            com.ash.drishti.api.resolution.ConfigResolution r = com.ash.drishti.packs.PackPaths.resolve(env);
             com.fasterxml.jackson.dataformat.yaml.YAMLMapper yaml = new com.fasterxml.jackson.dataformat.yaml.YAMLMapper();
             java.util.Map<String, java.util.List<java.util.Map<String, Object>>> byModule = new java.util.LinkedHashMap<>();
             for (com.ash.drishti.api.resolution.ModuleTemplates.Rule rule : r.rules()) {

@@ -110,7 +110,7 @@ public final class Distributions {
             return builtInAll();                                       // a server with no config/distributions folder: today's product
         }
         String packsDir = env.getProperty("drishti.packs.dir", "./config/packs");
-        return read(f, dir.resolve(KERNEL), Path.of(env.getProperty(MODULES_DIR, DEFAULT_MODULES_DIR)), Path.of(packsDir), packages(env));
+        return read(f, dir.resolve(KERNEL), modulesHome(env), Path.of(packsDir), packages(env));
     }
 
     /** The packaged modules of the environment's server (shipped first-party, then the module store's active ones), as the registry reads them. */
@@ -124,7 +124,12 @@ public final class Distributions {
      * requirement order. The console's distributions read the same list ({@code GET /public/modules/manifests}).
      */
     public static Map<String, ModuleManifests.Entry> known(Environment env) {
-        return ModuleManifests.read(Path.of(env.getProperty(MODULES_DIR, DEFAULT_MODULES_DIR)), packages(env));
+        return ModuleManifests.read(modulesHome(env), packages(env));
+    }
+
+    /** The modules shipped as folders: {@code drishti.modules.home}, its former name {@code drishti.module-manifests-dir} (section 18.2). */
+    public static Path modulesHome(Environment env) {
+        return Path.of(env.getProperty("drishti.modules.home", env.getProperty(MODULES_DIR, DEFAULT_MODULES_DIR)));
     }
 
     /** Drishti All with no file: every module, no filter, the product's own brand. */

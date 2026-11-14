@@ -332,7 +332,8 @@ class AccessRegistryTest {
         write(manifests.resolve("hello/module.yaml"), "format: 1\nid: hello\nversion: 1.0.0\njava: {jars: [hello.jar]}\n");
         ClassLoader cl = new URLClassLoader(new URL[] {jar.toUri().toURL()}, null);
         EmbeddedAccessRegistry r = new EmbeddedAccessRegistry(new YamlAccessStore(modules, access, cl, manifests), overrides::get, clock);
-        assertThat(r.modules()).extracting(ModuleState::id).contains("capitalmarkets").doesNotContain("hello");   // a code module: its jar
+        // a code module whose jar is not here is known by its folder manifest: its content counts, its code is absent (section 18.1)
+        assertThat(r.modules()).extracting(ModuleState::id).contains("capitalmarkets", "hello");
         assertThat(r.moduleOn("capitalmarkets")).isTrue();                     // the optional requirement does not switch it off
         assertThat(r.words()).contains("USEQ", "FUND");
     }

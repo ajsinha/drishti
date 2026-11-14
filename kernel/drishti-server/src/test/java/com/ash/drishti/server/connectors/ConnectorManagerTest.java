@@ -131,7 +131,7 @@ class ConnectorManagerTest {
         assertThat(files.exists("risk-db")).isFalse();                                      // the server writes no connector file
         assertThat(registry.plugin("risk-db")).isPresent();
         assertThat(Fake.LOG).containsExactly("start:risk-db:db://pack-default");
-        assertThat(manager.origin("risk-db")).isEqualTo("file");
+        assertThat(manager.origin("risk-db")).isEqualTo("pack");                             // the template, read where it is
         Map<String, Object> d = manager.detail("risk-db");
         assertThat(d).containsEntry("plugin", "fake").containsEntry("state", "RUNNING").containsEntry("template", "risk");
         assertThat(d.get("packDefault").toString()).contains("db://pack-default");
@@ -144,43 +144,35 @@ class ConnectorManagerTest {
     private static final String PACK_CHANGED = PACK.replace("db://pack-default", "db://pack-v2");
 
     @Test
-    void aRedeployedPackWithAChangedTemplateRegeneratesAnUneditedFileAndARenamedKindChangesNothing(@TempDir Path dir) throws Exception {
+    void aRedeployedPackWithAChangedTemplateIsInForceAtOnceAndNoFileIsWritten(@TempDir Path dir) throws Exception {
         build(dir, PACK, null, null, Map.of());
-        assertThat(files.read("risk-db").kinds()).as("a connector file names no kinds (config/bindings.yaml)").isEmpty();
-        String first = files.text("risk-db");
-        build(dir, PACK_RENAMED, null, null, Map.of());                                      // a renamed kind: the file has nothing of it
-        assertThat(files.text("risk-db")).isEqualTo(first);
-        build(dir, PACK_CHANGED, null, null, Map.of());                                      // a changed template: regenerated
-        assertThat(files.read("risk-db").settings()).containsEntry("url", "db://pack-v2");
-        assertThat(files.text("risk-db")).contains("Generated at first start");
+        build(dir, PACK_RENAMED, null, null, Map.of());                                      // a renamed kind: still no file
+        assertThat(files.exists("risk-db")).isFalse();
+        build(dir, PACK_CHANGED, null, null, Map.of());                                      // a changed template: in force, nothing generated
+        assertThat(files.exists("risk-db")).isFalse();
+        assertThat(registry.applied("risk-db").get().settings()).containsEntry("url", "db://pack-v2");
         assertThat(manager.detail("risk-db").get("templateChanged")).isNull();
     }
 
     @Test
-    void anEditedFileIsKeptAndFlaggedAndResetAppliesTheNewTemplate(@TempDir Path dir) throws Exception {
-        build(dir, PACK, null, null, Map.of());
-        files.write("risk-db", files.text("risk-db") + "# edited by the site\n");
-        build(dir, PACK_CHANGED, null, null, Map.of());
-        assertThat(files.text("risk-db")).endsWith("# edited by the site\n");                // kept
-        assertThat(files.read("risk-db").settings()).containsEntry("url", "db://pack-default");
-        String flag = String.valueOf(manager.detail("risk-db").get("templateChanged"));
-        assertThat(flag).contains("the pack's template changed").contains("Reset to pack default").doesNotContain("kinds:");
-        assertThat(manager.detail("risk-db").get("problems").toString()).contains("the pack's template changed");
-        assertThat(manager.healthSummary().get("templateChanged").toString()).contains("risk-db");
+    void anOverrideKeepsItsKeysAcrossATemplateChangeInheritsTheRestAndResetPutsTheTemplateBack(@TempDir Path dir) throws Exception {
+        build(dir, PACK + "      pool: '9'\n", "risk-db", "template: risk\nsettings:\n  url: db://mine\n", Map.of());
+        assertThat(Fake.LOG).containsExactly("start:risk-db:db://mine");
+        assertThat(registry.applied("risk-db").get().settings()).containsEntry("url", "db://mine").containsEntry("pool", "9");
+        build(dir, PACK_CHANGED + "      pool: '9'\n", "risk-db", "template: risk\nsettings:\n  url: db://mine\n", Map.of());
+        assertThat(registry.applied("risk-db").get().settings()).containsEntry("url", "db://mine");    // the site's key still wins
         manager.reset("risk-db", null);
-        assertThat(files.text("risk-db")).doesNotContain("# edited by the site");
-        assertThat(files.read("risk-db").settings()).containsEntry("url", "db://pack-v2");
-        assertThat(manager.detail("risk-db").get("templateChanged")).isNull();
-        build(dir, PACK_CHANGED, null, null, Map.of());                                      // and a further restart leaves it alone
-        assertThat(files.read("risk-db").settings()).containsEntry("url", "db://pack-v2");
+        assertThat(files.exists("risk-db")).isFalse();
+        assertThat(registry.applied("risk-db").get().settings()).containsEntry("url", "db://pack-v2").containsEntry("pool", "9");
         assertThat(manager.detail("risk-db").get("templateChanged")).isNull();
     }
 
     @Test
-    void aFileReplacesThePacksTemplateWholesaleAndNothingIsMerged(@TempDir Path dir) throws Exception {
+    void aSiteFileOverridesTheTemplateKeyByKeyAndTheRestIsInherited(@TempDir Path dir) throws Exception {
         build(dir, PACK + "      pool: '9'\n", "risk-db", "plugin: fake\nsettings:\n  url: db://site\n", Map.of());
         assertThat(Fake.LOG).containsExactly("start:risk-db:db://site");
-        assertThat(files.read("risk-db").settings()).containsOnlyKeys("url");                // the pack's pool is not carried over
+        assertThat(files.read("risk-db").settings()).containsOnlyKeys("url");                // the file holds only what the site changed
+        assertThat(registry.applied("risk-db").get().settings()).containsEntry("url", "db://site").containsEntry("pool", "9");
     }
 
     @Test
@@ -418,16 +410,16 @@ class ConnectorManagerTest {
         manager.setEnabled("risk-db", false, null, true);
         assertThat(registry.plugin("risk-db")).isEmpty();
         assertThat(manager.summary("risk-db")).containsEntry("state", "DISABLED").containsEntry("enabled", false);
-        assertThat(files.text("risk-db")).contains("enabled: false").contains("db://pack-default");    // the rest of the file is kept
+        assertThat(files.text("risk-db")).contains("enabled: false").doesNotContain("db://pack-default"); // the override holds only the switch
         manager.setEnabled("risk-db", true, null, false);                                              // switching on never needs confirming
         assertThat(registry.plugin("risk-db")).isPresent();
-        assertThat(files.text("risk-db")).doesNotContain("enabled");
+        assertThat(files.exists("risk-db") ? files.text("risk-db") : "").doesNotContain("enabled: false");
 
         // a connector no pack uses is deleted freely; a pack's connector is reset or disabled, never deleted
         assertThat(manager.delete("solo", null, false).detail()).containsEntry("deleted", true);
         assertThat(registry.plugin("solo")).isEmpty();
         assertThat(files.history("solo")).hasSize(1);
-        assertThatThrownBy(() -> manager.delete("risk-db", null, true)).hasMessageContaining("named by pack risk's template").hasMessageContaining("reset");
+        assertThatThrownBy(() -> manager.delete("risk-db", null, true)).hasMessageContaining("comes from a pack").hasMessageContaining("disable it");
         assertThatThrownBy(() -> manager.delete("nothing", null, true)).satisfies(e -> assertThat(((DrishtiException) e).errorCode()).isEqualTo(ErrorCode.CONNECTOR_NOT_FOUND));
     }
 
@@ -444,10 +436,11 @@ class ConnectorManagerTest {
         build(dir, PACK, null, null, Map.of());
         manager.save("risk-db", "plugin: fake\nsettings:\n  url: db://mine\n", (String) manager.detail("risk-db").get("etag"), false);
         manager.reset("risk-db", null);
-        assertThat(files.read("risk-db").settings()).containsEntry("url", "db://pack-default");
+        assertThat(files.exists("risk-db")).isFalse();                                       // the override is removed: the template is in force
+        assertThat(manager.effective("risk-db").get().settings()).containsEntry("url", "db://pack-default");
         assertThat(registry.applied("risk-db").get().settings()).containsEntry("url", "db://pack-default");
         assertThat(files.history("risk-db").stream().map(r -> files.revisionText("risk-db", r.id())).toList()).anyMatch(t -> t.contains("db://mine"));
-        assertThatThrownBy(() -> manager.reset("solo-none", null)).hasMessageContaining("no pack default");
+        assertThatThrownBy(() -> manager.reset("solo-none", null)).hasMessageContaining("no template to go back to");
     }
 
     @Test

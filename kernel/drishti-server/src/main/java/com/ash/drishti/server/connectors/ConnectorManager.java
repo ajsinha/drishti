@@ -589,12 +589,9 @@ public final class ConnectorManager {
         return out;
     }
 
+    /** The effective connector (its site file over its template, else the template alone), or null. */
     private ConnectorFiles.Definition safeRead(String name) {
-        try {
-            return layered(name).map(ConnectorLayers.Effective::definition).orElse(null);
-        } catch (RuntimeException e) {
-            return null;
-        }
+        return effective(name).orElse(null);
     }
 
     /** The connector its site file and its template make (docs/guides/DATA_GUIDE.md, "Connector layers"); empty without a file. */
@@ -1237,6 +1234,9 @@ public final class ConnectorManager {
         if (!defined(name)) {
             throw new DrishtiException(ErrorCode.CONNECTOR_NOT_FOUND, "no connector named '" + name + "'");
         }
+        if (template(name).isPresent() && files.exists(name) && files.text(name).lines().noneMatch(l -> l.matches("^plugin\\s*:.*"))) {
+            return switchOverride(name, enabled, ifMatch, confirm);
+        }
         String text;
         String tag;
         scanLock.lock();
@@ -1256,6 +1256,38 @@ public final class ConnectorManager {
         }
         String edited = withEnabled(text, enabled);
         return save(name, edited, tag, confirm);
+    }
+
+    /**
+     * Switches a connector whose site file is an override (only the keys the site changes): its {@code enabled} key alone changes; an
+     * override left with nothing of its own is removed, so the template is in force as it is.
+     */
+    private Change switchOverride(String name, boolean enabled, String ifMatch, boolean confirm) {
+        scanLock.lock();
+        try {
+            String text = files.text(name);
+            if (ifMatch != null && !ifMatch.equals(ConnectorFiles.etag(text))) {
+                throw new DrishtiException(ErrorCode.CONNECTOR_CONFLICT, "connector '" + name + "' changed since you read it; reload it");
+            }
+            ConnectorFiles.Definition before = safeRead(name);
+            if (!enabled && before != null && shownEnabled(before)) {
+                requireUnused(name, "disabling", confirm);
+            }
+            List<String> kept = text.lines().filter(l -> !l.matches("^enabled\\s*:.*")).collect(java.util.stream.Collectors.toCollection(ArrayList::new));
+            if (!enabled) {
+                kept.add("enabled: false");
+            }
+            boolean empty = kept.stream().map(String::strip).allMatch(l -> l.isEmpty() || l.startsWith("#") || l.matches("^template\\s*:.*"));
+            if (empty) {
+                files.delete(name);
+            } else {
+                files.write(name, String.join("\n", kept) + "\n");
+            }
+            scan();
+            return new Change(detail(name), List.of("enabled"), List.of());
+        } finally {
+            scanLock.unlock();
+        }
     }
 
     /** Text of a connector that has no file yet: its pack template, or what runs from the server's own configuration. */
