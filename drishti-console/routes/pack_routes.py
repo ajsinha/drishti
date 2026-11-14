@@ -249,17 +249,24 @@ def _sutra_of(a: dict, name: str) -> dict | None:
     return next((s for s in a.get("sutras", []) if s["name"] == name), None)
 
 
-@router.post("/api/ws/{wid}/preview")
-async def preview(request: Request, wid: str):
-    """{sutra, yaml, sample}: the Sutra's YAML (as edited) drawn by the server on one of the combination's real rows (sample is its index)."""
-    ws = _ws(request)
-    me = ident(request)
+async def _sutra_call(request: Request, wid: str):
+    """(person, the analysed Sutra the body names, the body) for the live screen's calls, or the problem to answer with."""
+    ws, me = _ws(request), ident(request)
     try:
         body = await _body(request)
         a = ws.analysis(ws.path(scoped(me.user), wid))
     except (PD.DesignerError, BodyError) as e:
         return _problem(e.status, e.detail, getattr(e, "code", None))
-    s = _sutra_of(a or {}, str(body.get("sutra") or ""))
+    return me, _sutra_of(a or {}, str(body.get("sutra") or "")), body
+
+
+@router.post("/api/ws/{wid}/preview")
+async def preview(request: Request, wid: str):
+    """{sutra, yaml, sample}: the Sutra's YAML (as edited) drawn by the server on one of the combination's real rows (sample is its index)."""
+    got = await _sutra_call(request, wid)
+    if isinstance(got, JSONResponse):
+        return got
+    me, s, body = got
     text = body.get("yaml")
     if s is None or not isinstance(text, str) or not s["samples"]:
         return _problem(404, "no such Sutra in this analysis", "DRS-5006")
@@ -277,14 +284,10 @@ async def preview(request: Request, wid: str):
 @router.post("/api/ws/{wid}/check")
 async def check(request: Request, wid: str):
     """{sutra, yaml}: the server's one checker over the combination's real rows: {ok, empty, error} cells and the problems."""
-    ws = _ws(request)
-    me = ident(request)
-    try:
-        body = await _body(request)
-        a = ws.analysis(ws.path(scoped(me.user), wid))
-    except (PD.DesignerError, BodyError) as e:
-        return _problem(e.status, e.detail, getattr(e, "code", None))
-    s = _sutra_of(a or {}, str(body.get("sutra") or ""))
+    got = await _sutra_call(request, wid)
+    if isinstance(got, JSONResponse):
+        return got
+    me, s, body = got
     text = body.get("yaml")
     if s is None or not isinstance(text, str):
         return _problem(404, "no such Sutra in this analysis", "DRS-5006")
