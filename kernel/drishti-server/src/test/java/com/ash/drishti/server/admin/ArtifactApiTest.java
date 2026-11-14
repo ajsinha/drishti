@@ -295,8 +295,16 @@ class ArtifactApiTest {
         assertThat(root.resolve("installed/artbase/pack.yaml")).exists();                        // kept on disk
         assertThat(find(json("/api/v1/admin/artifacts").path("artifacts"), "pack", "artbase").path("state").asText()).isEqualTo("off");
         assertThat(find(json("/api/v1/admin/artifacts").path("artifacts"), "pack", "artchild").path("state").asText()).isEqualTo("off");
-        act("/enable", "{\"kind\":\"pack\",\"name\":\"artbase\"}");
+        mvc.perform(post("/api/v1/admin/artifacts/enable").contentType(MediaType.APPLICATION_JSON).content("{\"kind\":\"pack\",\"name\":\"artbase\"}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.ok").value(true));
         assertThat(find(json("/api/v1/admin/artifacts").path("artifacts"), "pack", "artbase").path("state").asText()).isEqualTo("on");
+        // enabled again: the same state, no harm; a pack that is not installed and a request with no name are refused with their codes
+        mvc.perform(post("/api/v1/admin/artifacts/enable").contentType(MediaType.APPLICATION_JSON).content("{\"kind\":\"pack\",\"name\":\"artbase\"}")).andExpect(status().isOk());
+        assertThat(find(json("/api/v1/admin/artifacts").path("artifacts"), "pack", "artbase").path("state").asText()).isEqualTo("on");
+        mvc.perform(post("/api/v1/admin/artifacts/enable").contentType(MediaType.APPLICATION_JSON).content("{\"kind\":\"pack\",\"name\":\"no-such-pack\"}"))
+                .andExpect(status().is4xxClientError()).andExpect(jsonPath("$.code").value(org.hamcrest.Matchers.startsWith("DRS-")));
+        mvc.perform(post("/api/v1/admin/artifacts/enable").contentType(MediaType.APPLICATION_JSON).content("{\"kind\":\"pack\"}"))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("DRS-5001"));
     }
 
     @Test

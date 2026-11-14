@@ -46,6 +46,7 @@
   Writes are never called: each is listed with the test that covers it, and one with none is flagged. Endpoints present in the code and
   missing from `API_REFERENCE.md`, and the reverse, are reported. A drill step in the browser lane (`test_api_sweep_browser.py`); the report
   is `data/sweep/api-sweep-<stamp>.md`. `TEST_HARNESS.md` 3.27 and 3.28 describe it with the command sweep.
+
 - **Documentation consolidated: fewer, larger documents.** Each risk measure's tutorial is the last part of its guide (VaR, exposure, FRTB-SA, SIMM);
   one BI guide holds the pivot, virtual tables and models, reports, the Notebook and the groupings, each with its tutorial; one World and public data guide holds
   the funds, the external feeds and the public sector with their two tutorials; the Arrow Flight reference joins the Flight guide; the source-system tutorial

@@ -71,6 +71,7 @@ STREAM = re.compile(r"stream|/events|/channel|subscribe")
 JAVA_MAP = re.compile(r"@(?:[\w.]*\.)?(Get|Post|Put|Delete|Patch)Mapping(?:\(([^)]*)\))?")
 JAVA_BASE = re.compile(r'@RequestMapping\(\s*(?:value\s*=\s*|path\s*=\s*)?(?:\{\s*)?"([^"]*)"')
 ENTITY_PARENTS = ("entities", "views", "view", "raw", "v", "series", "stream", "history", "impact", "explain", "export", "compare", "about", "panels")
+CONST = re.compile(r"""\b([A-Za-z][A-Za-z0-9_]*)\s*=\s*["'](/api/[A-Za-z0-9_/{}.-]*|/[A-Z][A-Za-z0-9_/{}.-]*)["']\s*;?""")
 VARIABLE = re.compile(r"\{([^}:]*)(?::[^}]*)?\}")
 
 
@@ -194,9 +195,15 @@ def test_index() -> list[tuple[str, int, str]]:
              *walk("clients/**/test*.py"), *walk("compute/**/test*.py")]
     for p in files:
         rel = str(p.relative_to(ROOT))
-        for n, ln in enumerate(p.read_text(encoding="utf-8", errors="replace").splitlines(), 1):
+        src = p.read_text(encoding="utf-8", errors="replace").splitlines()
+        consts = dict(CONST.findall("\n".join(src)))     # NAME = "/api/..." : a test that writes API + "/x/retire" names that path
+        for n, ln in enumerate(src, 1):
             if "/" in ln and ('"' in ln or "'" in ln):
-                lines.append((rel, n, ln))
+                for k, v in consts.items():
+                    if k in ln:
+                        ln = re.sub(rf"(?<![\w\"'/.]){re.escape(k)}\s*\+\s*\"", lambda m, v=v: '"' + v, ln)
+                        ln = re.sub(rf"(?<![\w\"'/.]){re.escape(k)}(?![\w\"'(])", lambda m, v=v: '"' + v + '"', ln)
+                lines.append((rel, n, re.sub(r'"\s*\+\s*"', "", ln)))
     return lines
 
 
@@ -207,7 +214,12 @@ def covered_by(e: dict, index: list[tuple[str, int, str]], text: dict) -> str:
     if not pieces:
         return ""
     if route.endswith("}"):                                  # the route ends in a variable: a test names a value there (one segment; a {x:path} may hold slashes)
-        value = r"[^\"'?\s]*" if re.search(r":path\}$|\}/\{[^}]*\}$", route) else r"[^\"'/?\s]*"
+        trailing = 0                                         # several trailing variables ({a}/{b}): the test names a value for each, a {x:path} may hold slashes
+        for seg in reversed(route.rstrip("/").split("/")):
+            if not (seg.startswith("{") and seg.endswith("}")):
+                break
+            trailing += 1
+        value = r"[^\"'?\s]*" if re.search(r":path\}$", route) or trailing > 1 else r"[^\"'/?\s]*"
         end = value + r"(?=[\"'?])"
     else:
         end = r"(?![\w-])"
@@ -457,7 +469,6 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--console", default="")
     ap.add_argument("--server", default="")
-    ap.add_argument("--writes-only", action="store_true", help="only map the write endpoints to their tests (no server or console needed); lists the NO TEST rows")
     ap.add_argument("--admin", default="")
     ap.add_argument("--admin-password", default="")
     ap.add_argument("--token", default="", help="a bearer token for the server (otherwise one is made through the console and revoked at the end)")
@@ -466,6 +477,7 @@ def main(argv=None) -> int:
     ap.add_argument("--workers", type=int, default=8)
     ap.add_argument("--only", default="", help="only endpoints whose path contains this text")
     ap.add_argument("--verbose", action="store_true", help="one line a call on stderr")
+    ap.add_argument("--writes-only", action="store_true", help="no server needed: only map the write endpoints to their tests; list the untested (filtered by --only)")
     a = ap.parse_args(argv)
 
     server_eps, console_eps = java_endpoints(), py_endpoints()

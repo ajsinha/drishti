@@ -122,6 +122,27 @@ class ReactiveApiTest {
     }
 
     @Test
+    void aSandboxIsGivenAsAFrozenCopyAndOnlyItsOwnerGivesIt() throws Exception {
+        String sid = JSON.readTree(mvc.perform(post("/api/v1/compute/sandboxes").header(USER, "asha").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"connector\": \"reactive-echo\", \"title\": \"to give\", \"items\": [{\"TRADE\": \"T-9\"}]}")).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString()).get("id").asText();
+        mvc.perform(post("/api/v1/compute/sandboxes/" + sid + "/copy").header(USER, "ben").contentType(MediaType.APPLICATION_JSON).content("{\"to\": \"cleo\"}"))
+                .andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("DRS-9206"));          // not ben's to give
+        mvc.perform(get("/api/v1/compute/sandboxes").header(USER, "cleo")).andExpect(jsonPath("$.length()").value(0));
+        JsonNode given = JSON.readTree(mvc.perform(post("/api/v1/compute/sandboxes/" + sid + "/copy").header(USER, "asha").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"to\": \"cleo\"}")).andExpect(status().isOk()).andExpect(jsonPath("$.frozen").value(true)).andExpect(jsonPath("$.owner").value("cleo"))
+                .andReturn().getResponse().getContentAsString());
+        assertThat(given.get("id").asText()).isNotEqualTo(sid);
+        JsonNode theirs = JSON.readTree(mvc.perform(get("/api/v1/compute/sandboxes").header(USER, "cleo")).andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        assertThat(theirs).hasSize(1);
+        assertThat(theirs.get(0).get("id").asText()).isEqualTo(given.get("id").asText());
+        mvc.perform(get("/api/v1/compute/sandboxes").header(USER, "asha")).andExpect(jsonPath("$.length()").value(1));   // the original stays with its owner
+        mvc.perform(post("/api/v1/compute/sandboxes/no-such-box/copy").header(USER, "asha").contentType(MediaType.APPLICATION_JSON).content("{\"to\": \"cleo\"}"))
+                .andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("DRS-9206"));
+        mvc.perform(delete("/api/v1/compute/sandboxes/" + sid).header(USER, "asha")).andExpect(status().isOk());
+    }
+
+    @Test
     void anEventReachesTheTriggersOnce() throws Exception {
         String body = "{\"id\": \"chg-1\", \"type\": \"write-back\", \"kind\": \"trade\", \"entity\": \"A\", \"watermark\": {\"L1\": 7}}";
         JsonNode first = JSON.readTree(mvc.perform(post("/api/v1/compute/events").contentType(MediaType.APPLICATION_JSON).content(body))

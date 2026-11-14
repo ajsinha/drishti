@@ -187,6 +187,29 @@ class PlacementClusterTest {
         assertThat(refused.body()).contains("DRS-1031");
         placement("a").forget("other");
 
+        // a plan nobody applies is closed: only its proposer withdraws it, a second administrator rejects it; a closed plan is never applied
+        String pl = "/api/v1/admin/cluster/placement/plans/";
+        String toWithdraw = JSON.readTree(call("a", "POST", "/api/v1/admin/cluster/placement/plans", Map.of("placement", yaml, "reason", "to withdraw"), "admin-one").body()).path("id").asText();
+        String toReject = JSON.readTree(call("a", "POST", "/api/v1/admin/cluster/placement/plans", Map.of("placement", yaml, "reason", "to reject"), "admin-one").body()).path("id").asText();
+        HttpResponse<String> notYours = call("a", "POST", pl + toWithdraw + "/withdraw", null, "admin-two");
+        assertThat(notYours.statusCode()).isEqualTo(403);
+        assertThat(notYours.body()).contains("DRS-2007");
+        assertThat(call("a", "POST", pl + toReject + "/reject", Map.of("comment", "no"), "admin-one").statusCode()).as("its proposer withdraws, never rejects").isEqualTo(403);
+        JsonNode withdrawn = JSON.readTree(call("a", "POST", pl + toWithdraw + "/withdraw", null, "admin-one").body());
+        assertThat(withdrawn.path("state").asText()).isEqualTo("withdrawn");
+        JsonNode rejected = JSON.readTree(call("a", "POST", pl + toReject + "/reject", Map.of("comment", "not this week"), "admin-two").body());
+        assertThat(rejected.path("state").asText()).isEqualTo("rejected");
+        assertThat(rejected.path("comment").asText()).isEqualTo("not this week");
+        HttpResponse<String> again = call("a", "POST", pl + toWithdraw + "/withdraw", null, "admin-one");
+        assertThat(again.statusCode()).isEqualTo(409);
+        assertThat(again.body()).contains("DRS-2006");
+        assertThat(call("a", "POST", pl + toReject + "/apply", Map.of(), "admin-two").statusCode()).as("a rejected plan is not applied").isGreaterThanOrEqualTo(400);
+        assertThat(call("a", "POST", pl + "no-such-plan/reject", null, "admin-two").statusCode()).isEqualTo(404);
+        assertThat(call("a", "GET", "/api/v1/admin/audit", null, "admin-one").body()).contains("placement-withdrawn", "placement-rejected");
+        // reload reads the placement again from its file and answers the matrix
+        JsonNode reloaded = JSON.readTree(call("a", "POST", "/api/v1/admin/cluster/placement/reload", null, "admin-one").body());
+        assertThat(reloaded.path("parts").size()).isPositive().isEqualTo(JSON.readTree(call("a", "GET", "/api/v1/admin/cluster/modules", null, "admin-one").body()).path("parts").size());
+
         // the feeds owner stops: the other placed node takes over on every node, never b (up, but not placed)
         String next = id(second);
         cluster.stop(first);
