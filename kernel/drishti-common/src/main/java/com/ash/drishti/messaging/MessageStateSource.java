@@ -85,6 +85,7 @@ public abstract class MessageStateSource implements SourcePlugin {
     private Cache<EntityRef, EntityDocument> memory;
     private final Map<EntityRef, Integer> weights = new ConcurrentHashMap<>();
     private final Map<EntityRef, List<Consumer<EntityDocument>>> listeners = new ConcurrentHashMap<>();
+    private final Map<String, List<Consumer<EntityDocument>>> kindListeners = new ConcurrentHashMap<>();
     private final Set<EntityRef> known = ConcurrentHashMap.newKeySet();
     private final HitIndex index = new HitIndex();
     private final AtomicLong generation = new AtomicLong();
@@ -235,8 +236,10 @@ public abstract class MessageStateSource implements SourcePlugin {
 
     /** Hands a new document, or a deletion, to the open views of {@code ref}. */
     private void push(EntityRef ref, EntityDocument d) {
-        List<Consumer<EntityDocument>> subs = listeners.get(ref);
-        if (subs != null) {
+        for (List<Consumer<EntityDocument>> subs : java.util.Arrays.asList(listeners.get(ref), kindListeners.get(ref.kind()))) {
+            if (subs == null) {
+                continue;
+            }
             subs.forEach(l -> {
                 try {
                     l.accept(d);
@@ -245,6 +248,15 @@ public abstract class MessageStateSource implements SourcePlugin {
                 }
             });
         }
+    }
+
+    @Override
+    public Subscription subscribeKind(String kind, Consumer<EntityDocument> listener) {
+        kindListeners.computeIfAbsent(kind, k -> new java.util.concurrent.CopyOnWriteArrayList<>()).add(listener);
+        return () -> kindListeners.computeIfPresent(kind, (k, subs) -> {
+            subs.remove(listener);
+            return subs.isEmpty() ? null : subs;
+        });
     }
 
     private EntityDocument document(EntityRef ref, byte[] bytes) throws java.io.IOException {

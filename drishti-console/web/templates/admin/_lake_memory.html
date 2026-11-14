@@ -29,12 +29,12 @@
 <div class="tbl-wrap"><table class="tbl adm-tbl lk-memory-tables">
   <caption class="visually-hidden">Memory tables: their state, memory, rows, version and refills</caption>
   <thead><tr><th scope="col">Table</th><th scope="col">State</th><th scope="col">In memory</th><th scope="col">Smaller than its rows</th><th scope="col">Rows</th>
-    <th scope="col">Version</th><th scope="col">Last refill</th><th scope="col">Next</th><th scope="col">Pinned</th><th scope="col">Evicted</th><th scope="col">Saved by compaction</th></tr></thead>
+    <th scope="col">Version</th><th scope="col">Last refill</th><th scope="col">Next</th><th scope="col">Pinned</th><th scope="col">Evicted</th><th scope="col">Saved by compaction</th><th scope="col">Retention</th><th scope="col">Rows expired</th></tr></thead>
   <tbody>{% for t in memory.tables %}<tr>
     <td class="mono" title="{{ t.path }} ← {{ t.source }} ({{ t.mode }})">{{ t.name }}</td>
     <td title="{{ t.words or '' }}">{{ t.stateWords }}</td><td>{{ mb(t.bytes) }}</td><td>{{ (t.ratio ~ 'x') if t.ratio else '' }}</td>
     <td>{{ '{:,}'.format(t.rows or 0) }}</td><td>{{ t.version if t.version >= 0 else '' }}</td><td class="mono">{{ (t.lastRefill or '')[:19] }}</td>
-    <td class="mono">{{ (t.nextRefill or '')[:19] }}</td><td>{{ 'yes' if t.pinned else '' }}</td><td>{{ t.evictions }}</td><td>{{ mb(t.savedTotalBytes) }}</td></tr>{% endfor %}</tbody>
+    <td class="mono">{{ (t.nextRefill or '')[:19] }}</td><td>{{ 'yes' if t.pinned else '' }}</td><td>{{ t.evictions }}</td><td>{{ mb(t.savedTotalBytes) }}</td><td class="mono">{% if t.retention %}{{ t.retention.ttl if t.retention.ttl != "None" else "" }}{{ (" by " ~ t.retention.on) if t.retention.ttl != "None" else "" }}{{ (" · max " ~ t.retention.maxRows) if t.retention.maxRows != "None" else "" }}{% endif %}</td><td>{{ t.expiredRows or "" }}</td></tr>{% endfor %}</tbody>
 </table></div>
 <p class="text-muted-d">Refill a table: <span class="mono">drishti.py lake memory refill &lt;table&gt;</span> · the runs: <span class="mono">drishti.py lake memory jobs</span>.
   Nothing of these tables is written to a disk; only a download from Export data leaves the server.</p>

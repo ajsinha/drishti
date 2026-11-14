@@ -1825,6 +1825,7 @@ The store's own keys (`max-mb`, `chunk-kb`, `contract`, `owner`, `idle-trim-minu
 | `tables[].columns` | | fields promoted beside the document |
 | `tables[].every`, `.cron`, `.signal`, `.warm-up` | , , true, | when it runs |
 | `tables[].pin`, `.keep-versions`, `.codec` | false, 2, zstd | never evicted; versions kept; `zstd`, `lz4`, `snappy` |
+| `tables[].retention` | none | the rows' age limit and cap, applied by the compaction (the one upkeep): `{ttl: 8h, on: UPDATED_AT, max-rows: 100000}`; rows older than `ttl` by the document field `on` (a time, a date or epoch seconds; absent: the time the row arrived, kept in the promoted column `arrived_at`) are dropped, then all but the newest `max-rows`. Admin → Lakes shows each table's retention and the rows it dropped. A table that also has a durable copy keeps that copy's own retention (none by default): the TTL trims the memory only |
 | `history-keep`, `job-threads` | 50, 2 | runs kept per table; jobs at once |
 | `compaction.*` | enabled, 30 s idle, 512 MB headroom, 8 MB small files, 0.2 dead rows, 20 appends, 60 s | 13.5 |
 

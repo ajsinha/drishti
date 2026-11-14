@@ -63,7 +63,7 @@ public record DmodManifest(int format, String id, String version, String title, 
     /** Every top-level field the design knows. */
     public static final Set<String> FIELDS = Set.of("format", "id", "version", "title", "about", "domain", "publisher", "licence", "kernel",
             "rachana", "contracts", "plugin-api", "elements", "requires", "conflicts", "provides", "java", "compute", "python", "packs", "data",
-            "api", "console", "functions", "lenses", "home", "feeds", "bi", "docs", "settings", "events", "parts", "resources", "health",
+            "api", "console", "functions", "lenses", "home", "feeds", "bi", "docs", "settings", "events", "parts", "resources", "health", "blotters",
             "taint", "origin", "kernel-internals", "kernel-build");
 
     /** The licence part: the feature that unlocks the module and the limits it understands. */
@@ -218,7 +218,7 @@ public record DmodManifest(int format, String id, String version, String title, 
             throw new ModuleRefusedException("V1", label + ": `origin` is first-party or third-party (found " + origin + ")");
         }
         Map<String, Object> rest = new LinkedHashMap<>();
-        for (String k : List.of("compute", "python", "packs", "data", "functions", "lenses", "home", "feeds", "bi", "docs", "settings",
+        for (String k : List.of("compute", "python", "packs", "data", "functions", "lenses", "home", "feeds", "bi", "docs", "settings", "blotters",
                 "events", "parts", "resources", "health", "origin", "kernel-internals", "kernel-build")) {
             if (m.containsKey(k)) {
                 rest.put(k, m.get(k));

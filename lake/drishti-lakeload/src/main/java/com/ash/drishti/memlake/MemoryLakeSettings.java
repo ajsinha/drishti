@@ -158,10 +158,12 @@ public record MemoryLakeSettings(Map<String, Store> stores, List<TableSpec> tabl
      * @param keepVersions versions kept readable (2: the current and the one a reader may still be on)
      * @param codec {@code zstd} (default), {@code lz4}, {@code snappy}
      * @param format {@code delta} (the store's format when blank); {@code iceberg} is written by the Iceberg engine's own jobs
+     * @param retention the rows' age limit and cap ({@link RowRetention}: {@code ttl}, {@code on}, {@code max-rows}), applied by the
+     *     compaction; absent: none
      */
     public record TableSpec(String name, String store, String folder, Source source, String mode, List<String> key, List<String> sortBy,
             String businessDate, List<String> columns, String every, String cron, Boolean signal, Integer warmUp, Boolean pin,
-            Integer keepVersions, String codec, String format) {
+            Integer keepVersions, String codec, String format, RowRetention retention) {
 
         public TableSpec {
             mode = mode == null || mode.isBlank() ? "replace" : mode.trim().toLowerCase(Locale.ROOT);
@@ -174,6 +176,19 @@ public record MemoryLakeSettings(Map<String, Store> stores, List<TableSpec> tabl
             keepVersions = keepVersions == null || keepVersions < 1 ? 2 : keepVersions;
             codec = codec == null || codec.isBlank() ? "zstd" : codec.trim().toLowerCase(Locale.ROOT);
             folder = folder == null || folder.isBlank() ? name : folder.trim().replaceAll("^/+|/+$", "");
+            if (retention != null && retention.ttl() == null && retention.maxRows() == null) {
+                retention = null;                             // an empty block: no limit
+            }
+        }
+
+        /** The promoted columns written: the declared ones, and {@code arrived_at} when the retention ages rows by arrival. */
+        public List<String> written() {
+            if (retention == null || !retention.byArrival() || columns.contains(RowRetention.ARRIVED)) {
+                return columns;
+            }
+            List<String> out = new java.util.ArrayList<>(columns);
+            out.add(RowRetention.ARRIVED);
+            return List.copyOf(out);
         }
 
         /** The table's path: {@code mem://<store>/<folder>}. */

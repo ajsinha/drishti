@@ -885,6 +885,29 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
     }
 
     /**
+     * Every change of any entity of {@code kind} from the kind's live sources (its {@code live:} binding: Kafka, RabbitMQ, ActiveMQ), each
+     * named after its connector: a live result set's deltas (docs/guides/TRADING_GUIDE.md). {@link Subscription#NONE} when nothing pushes
+     * the kind (the result set then stays a snapshot).
+     */
+    public Subscription subscribeKind(String kind, java.util.function.Consumer<EntityDocument> listener) {
+        List<Subscription> subs = new ArrayList<>();
+        for (SourcePlugin p : candidates(kind)) {
+            if (!p.manifest().capabilities().live()) {
+                continue;
+            }
+            String name = p.manifest().name();
+            Subscription s = p.subscribeKind(kind, d -> listener.accept(named(d, name)));
+            if (s != null && s != Subscription.NONE) {
+                subs.add(s);
+            }
+        }
+        if (subs.isEmpty()) {
+            return Subscription.NONE;
+        }
+        return () -> subs.forEach(Subscription::close);
+    }
+
+    /**
      * Subscribes to live updates from the first live plugin that holds {@code ref}. Returns
      * {@link Subscription#NONE} when no source can push it (the view then stays static).
      */

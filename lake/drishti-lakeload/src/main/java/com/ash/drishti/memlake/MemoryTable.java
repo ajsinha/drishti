@@ -87,6 +87,8 @@ final class MemoryTable {
     final AtomicLong appendsSinceSort = new AtomicLong();
     final AtomicLong rowsReplaced = new AtomicLong();
     final AtomicLong compactions = new AtomicLong();
+    /** Rows dropped by the table's retention (its TTL and row cap), since start. */
+    final AtomicLong expiredRows = new AtomicLong();
     final AtomicLong savedTotal = new AtomicLong();
     private volatile LocalDate savedDay = LocalDate.now(ZoneId.systemDefault());
     private final AtomicLong savedToday = new AtomicLong();

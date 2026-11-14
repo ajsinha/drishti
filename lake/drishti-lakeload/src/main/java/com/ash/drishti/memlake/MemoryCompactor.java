@@ -109,7 +109,11 @@ final class MemoryCompactor {
                 continue;
             }
             long dates = Math.max(1, datesOf(t));
-            if (shape.smallFiles() > dates) {
+            int expired = expired(t);
+            if (expired > 0) {
+                // rows past the table's retention: the rewrite drops them (the one upkeep, no second mechanism)
+                out.add(new Candidate(t, expired + " rows past the retention", shape.bytes() * expired / Math.max(1, t.rows) + 1, shape.bytes()));
+            } else if (shape.smallFiles() > dates) {
                 // one footer and one dictionary per column per date instead of one per small file
                 out.add(new Candidate(t, shape.smallFiles() + " small files", shape.bytes() * (shape.smallFiles() - dates) / Math.max(1, shape.files()) / 3,
                         shape.bytes()));
@@ -121,6 +125,20 @@ final class MemoryCompactor {
         }
         out.sort(Comparator.comparingLong(Candidate::saving).reversed());
         return out;
+    }
+
+    /** How many rows of the table its retention would drop now (0 without a retention). */
+    static int expired(MemoryTable t) {
+        RowRetention r = t.spec.retention();
+        if (r == null) {
+            return 0;
+        }
+        try {
+            List<TableUpkeep.Staged> rows = TableUpkeep.rows(LakeWriter.engineFor(t.spec.path(), Map.of()), t.spec.path(), pv -> true);
+            return rows == null ? 0 : r.expired(rows, Instant.now());
+        } catch (Exception e) {
+            return 0;
+        }
     }
 
     private static long datesOf(MemoryTable t) {
@@ -162,6 +180,12 @@ final class MemoryCompactor {
             if (rows == null) {
                 return false;                                 // a column a staged line cannot carry: left as it is
             }
+            int dropped = 0;
+            if (t.spec.retention() != null) {
+                int before0 = rows.size();
+                rows = t.spec.retention().keep(rows, Instant.now());
+                dropped = before0 - rows.size();
+            }
             long before = store.bytesUnder(path);
             List<String> partitionColumns = TableUpkeep.partitionColumns(engine, path);
             Map<Map<String, String>, List<String[]>> groups = new LinkedHashMap<>();
@@ -176,6 +200,10 @@ final class MemoryCompactor {
                 lines.forEach(a -> b.append(a[1]).append('\n'));
                 String text = b.toString();
                 parts.add(LakeManifest.Part.inMemory(() -> new StringReader(text), lines.size(), g.getKey()));
+            }
+            if (parts.isEmpty() && dropped > 0) {
+                // every row expired: an empty table (one commit removing every file)
+                parts.add(LakeManifest.Part.inMemory(() -> new StringReader(""), 0, Map.of("business_date", java.time.LocalDate.now(java.time.ZoneId.systemDefault()).toString())));
             }
             if (parts.isEmpty()) {
                 return false;
@@ -192,6 +220,8 @@ final class MemoryCompactor {
             long after = store.bytesUnder(path);
             long saved = before - after;
             t.version = r.version();
+            t.expiredRows.addAndGet(dropped);
+            t.rows = Math.max(0, t.rows - dropped);
             t.appendsSinceSort.set(0);
             t.rowsReplaced.set(0);
             t.compactions.incrementAndGet();
