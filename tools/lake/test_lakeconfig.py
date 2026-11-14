@@ -87,11 +87,12 @@ def test_the_shipped_demo_lake_reads_whole():
     out = lakeconfig.dump(lakeconfig.ROOT / "config" / "lakes")
     demo = next(x for x in out["lakes"] if x["lake"] == "demo")
     trades = [t for t in demo["tables"] if t["kind"] == "trade"]
-    assert {t["path"] for t in trades} == {"trading/trade_endur", "trading/trade_calypso", "trading/trade_murex"}
+    assert {t["path"] for t in trades} == {"trading/trade_endur", "trading/trade_calypso", "trading/trade_murex", "trading/trades_shared"}
     # Endur by PRODUCT_TYPE, Calypso and Murex by PRODUCT_GROUP (the owner's layout of the demo lake: DATA_LAKE_GUIDE.md)
     assert {t["path"]: t["partition-by"] for t in trades} == {"trading/trade_endur": ["PRODUCT_TYPE"],
                                                            "trading/trade_calypso": ["PRODUCT_GROUP"],
-                                                           "trading/trade_murex": ["PRODUCT_GROUP"]}
+                                                           "trading/trade_murex": ["PRODUCT_GROUP"],
+                                                           "trading/trades_shared": ["SOURCE_SYSTEM"]}      # WSS, SwapOne and ICI, one table
 
 
 def _files(d: pathlib.Path) -> list[str]:

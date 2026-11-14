@@ -65,36 +65,6 @@ graph:
     formats:
       trade: compact
 connectors:
-  trade-endur:
-    plugin: delta
-    enabled: ${DRISHTI_LAKE_ENABLED:true}
-    kinds:
-    - trade
-    settings:
-      lake: demo
-      lake-tables: trading.trade_endur
-      union: true
-      source-name: trade-endur
-  trade-calypso:
-    plugin: delta
-    enabled: ${DRISHTI_LAKE_ENABLED:true}
-    kinds:
-    - trade
-    settings:
-      lake: demo
-      lake-tables: trading.trade_calypso
-      union: true
-      source-name: trade-calypso
-  trade-murex:
-    plugin: delta
-    enabled: ${DRISHTI_LAKE_ENABLED:true}
-    kinds:
-    - trade
-    settings:
-      lake: demo
-      lake-tables: trading.trade_murex
-      union: true
-      source-name: trade-murex
   trading-stream:
     plugin: kafka
     enabled: ${DRISHTI_STREAM_TRADING:false}
@@ -282,7 +252,6 @@ connectors:
           LEGAL_ENTITY: $.LEGAL_ENTITY
           EVENTS: $.EVENTS
 routes:
-  trade: trade-endur
   counterparty-trades: trade-pages
   portfolio-trades: trade-pages
   legal-entity-trades: trade-pages
@@ -594,6 +563,14 @@ lake:
       - id
       file-rows: 250000
       row-group-rows: 1000
+    trading.trades_shared:
+      kind: trade
+      partition-by:
+      - SOURCE_SYSTEM
+      promote:
+      - SOURCE_SYSTEM
+      sort-by:
+      - id
 
 # Read by drishti.py lake build (ignored by the server): each trade's key, and values inside its legs written as plain fields and
 # columns at load, so searches, totals and BI need no document (docs/guides/CLUSTER_GUIDE.md › Appendix D. Scale strategy: millions of trades, fast, in a bounded heap, phase 3)

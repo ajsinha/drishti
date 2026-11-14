@@ -189,6 +189,12 @@ tables:
     row-group-rows: 1000
     id: TRADE_ID
     maintenance: {compaction: true, target-file-mb: 256, vacuum: 7d}
+  trading.trades_shared:
+    kind: trade
+    partition-by: [SOURCE_SYSTEM]
+    promote: [SOURCE_SYSTEM]
+    sort-by: [id]
+    maintenance: {compaction: true, target-file-mb: 256, vacuum: 7d}
   us-equities.us-company:
     promote: [TICKER, NAME, LEI_LEGAL_NAME, CIK, LEI, EXCHANGE, INDEX_TEXT, SECTOR, SIC, SIC_DESCRIPTION, STATE_OF_INCORPORATION, REVENUE]
     id: TICKER

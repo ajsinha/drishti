@@ -64,7 +64,7 @@ public record DmodManifest(int format, String id, String version, String title, 
     public static final Set<String> FIELDS = Set.of("format", "id", "version", "title", "about", "domain", "publisher", "licence", "kernel",
             "rachana", "contracts", "plugin-api", "elements", "requires", "conflicts", "provides", "java", "compute", "python", "packs", "data",
             "api", "console", "functions", "lenses", "home", "feeds", "bi", "docs", "settings", "events", "parts", "resources", "health", "blotters",
-            "taint", "origin", "kernel-internals", "kernel-build");
+            "taint", "origin", "kernel-internals", "kernel-build", "dataload", "connectors", "mappings", "sections");
 
     /** The licence part: the feature that unlocks the module and the limits it understands. */
     public record Licence(String feature, List<String> limits) {
@@ -224,7 +224,7 @@ public record DmodManifest(int format, String id, String version, String title, 
         }
         Map<String, Object> rest = new LinkedHashMap<>();
         for (String k : List.of("compute", "python", "packs", "data", "functions", "lenses", "home", "feeds", "bi", "docs", "settings", "blotters",
-                "events", "parts", "resources", "health", "origin", "kernel-internals", "kernel-build")) {
+                "events", "parts", "resources", "health", "origin", "kernel-internals", "kernel-build", "dataload", "connectors", "mappings", "sections")) {
             if (m.containsKey(k)) {
                 rest.put(k, m.get(k));
             }

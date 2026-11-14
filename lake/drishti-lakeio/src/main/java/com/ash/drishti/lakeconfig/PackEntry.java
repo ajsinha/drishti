@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 /**
  * What a pack recommends for a kind's table (docs/architecture/DATA_ARCHITECTURE.md section 3, decision L2), read from its {@code pack.yaml}:
@@ -40,10 +41,99 @@ import java.util.Map;
 public record PackEntry(String domain, String table, String key, String date, List<String> promote, List<String> vectors,
         Map<String, String> flatten, List<String> sortBy, String latestBy, LakeTable entry) {
 
+    /**
+     * The pack's {@code pack.yaml} with the Delta read template of each source module that requires the pack
+     * ({@code modules/source-<system>/connectors/delta.yaml}, connector {@code <kind>-<system>}) added to its connectors where the pack does
+     * not declare that name itself: a source system is a module of its own, and its connectors have that one home. The modules folder is
+     * found above the pack, else {@code drishti.modules.dir}.
+     */
+    private static final java.util.Set<String> GENERIC_TEMPLATES = java.util.Set.of("iceberg", "files", "file", "kafka", "cassandra", "s3tables",
+            "delta-s3");
+
+    static JsonNode manifest(Path file) throws IOException {
+        JsonNode m = new YAMLMapper().readTree(Files.readString(file));
+        String pack = m.path("pack").asText("");
+        Path modules = modulesDir(file);
+        if (pack.isEmpty() || modules == null || !(m instanceof com.fasterxml.jackson.databind.node.ObjectNode root)) {
+            return m;
+        }
+        com.fasterxml.jackson.databind.node.ObjectNode defs = root.path("connectors").isObject()
+                ? (com.fasterxml.jackson.databind.node.ObjectNode) root.get("connectors") : root.putObject("connectors");
+        for (Path dir : ModuleDirs.of(modules)) {            // the shipped folders and the modules installed as a .dmod
+            String id = ModuleDirs.idOf(dir);
+            Path folder = dir.resolve("connectors");
+            if (!id.startsWith("source-") || !Files.isDirectory(folder)
+                    || !new YAMLMapper().readTree(Files.readString(dir.resolve("module.yaml"))).path("requires").has(pack)) {
+                continue;
+            }
+            List<Path> files;
+            try (Stream<Path> s = Files.list(folder)) {
+                files = s.filter(f -> f.getFileName().toString().endsWith(".yaml")).sorted().toList();
+            }
+            for (Path tpl : files) {                          // every connector of the folder, whatever its name
+                String stem = tpl.getFileName().toString().replaceFirst("\\.yaml$", "");
+                JsonNode c = new YAMLMapper().readTree(Files.readString(tpl));
+                String kind = c.path("kinds").path(0).asText("");
+                // delta.yaml is the system's read template, connector <kind>-<system>; any other name is the connector's own
+                // (pack new --source-for writes connectors/<module>.yaml); the Iceberg, files and Kafka variants are not read here
+                String name = stem.equals("delta") ? kind + "-" + id.substring("source-".length()) : stem;
+                if (!kind.isEmpty() && !GENERIC_TEMPLATES.contains(stem) && !defs.has(name)) {
+                    defs.set(name, c);
+                }
+            }
+        }
+        return root;
+    }
+
+    private static Path modulesDir(Path file) {
+        String set = System.getProperty("drishti.modules.dir");
+        if (set != null && Files.isDirectory(Path.of(set))) {
+            return Path.of(set);
+        }
+        for (Path p = file.toAbsolutePath().getParent(); p != null; p = p.getParent()) {
+            if (Files.isDirectory(p.resolve("modules")) && Files.isDirectory(p.resolve("config"))) {
+                return p.resolve("modules");
+            }
+        }
+        return null;
+    }
+
+    /**
+     * The constants a connector's {@code set:} stamps into the rows it stores (the connector's {@code settings.set}: {@code SOURCE_SYSTEM:
+     * SWAPONE}), as text. The site's own connector file ({@code config/connectors/<name>.yaml}, beside the modules folder) wins over the
+     * module's template, so a site tweak reaches the loader too. Empty without a connector or a {@code set:}.
+     */
+    public static Map<String, String> constants(Path pack, String connector) throws IOException {
+        Map<String, String> out = new LinkedHashMap<>();
+        if (connector == null) {
+            return out;
+        }
+        Path file = Files.isDirectory(pack) ? pack.resolve("pack.yaml") : pack;
+        JsonNode site = null;
+        Path modules = modulesDir(file);
+        String dir = System.getenv("DRISHTI_CONNECTORS_DIR");
+        Path siteFile = dir != null && !dir.isBlank() ? Path.of(dir, connector + ".yaml")
+                : modules == null ? null : modules.getParent().resolve("config").resolve("connectors").resolve(connector + ".yaml");
+        if (siteFile != null && Files.isRegularFile(siteFile)) {
+            site = new YAMLMapper().readTree(Files.readString(siteFile));
+        }
+        JsonNode c = site != null && site.path("settings").size() > 0 ? site : manifest(file).path("connectors").path(connector);
+        JsonNode st = c.path("settings");
+        if (st.path("set").isObject()) {
+            st.path("set").fields().forEachRemaining(e -> out.put(e.getKey(), e.getValue().asText()));
+        }
+        st.fields().forEachRemaining(e -> {
+            if (e.getKey().startsWith("set.") && e.getKey().length() > 4) {
+                out.put(e.getKey().substring(4), e.getValue().asText());
+            }
+        });
+        return out;
+    }
+
     /** The pack's entry for {@code kind}. */
     public static PackEntry read(Path pack, String kind, String connector) throws IOException {
         Path file = Files.isDirectory(pack) ? pack.resolve("pack.yaml") : pack;
-        JsonNode m = new YAMLMapper().readTree(Files.readString(file));
+        JsonNode m = manifest(file);
         String name = m.path("pack").asText(file.getParent().getFileName().toString());
         JsonNode ingest = m.path("ingest").path(kind);
         for (var it = m.path("lake").path("tables").fields(); it.hasNext(); ) {
@@ -160,7 +250,7 @@ public record PackEntry(String domain, String table, String key, String date, Li
      */
     public static List<PackTable> tables(Path pack) throws IOException {
         Path file = Files.isDirectory(pack) ? pack.resolve("pack.yaml") : pack;
-        JsonNode m = new YAMLMapper().readTree(Files.readString(file));
+        JsonNode m = manifest(file);
         JsonNode defs = m.path("connectors").isObject() ? m.path("connectors") : m.path("connector-templates");
         List<PackTable> out = new ArrayList<>();
         for (var it = defs.fields(); it.hasNext(); ) {

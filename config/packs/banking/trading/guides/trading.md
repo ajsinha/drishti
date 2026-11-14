@@ -110,7 +110,7 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 
 | Command | Kind | Origin | How it reaches Drishti |
 |---|---|---|---|
-| `TRD` | `trade` | synthetic: `python3 tools/testdata/make_testdata.py` | `data/testdata/trades/endur/`, `data/testdata/trades/calypso/`, `data/testdata/trades/murex/` → `lake demo` → connector `trade-endur`, `trade-calypso`, `trade-murex` |
+| `TRD` | `trade` | synthetic: `python3 tools/testdata/make_testdata.py` | `data/testdata/trades/endur/`, `data/testdata/trades/calypso/`, `data/testdata/trades/murex/`, `data/testdata/trades/wss/`, `data/testdata/trades/swapone/`, `data/testdata/trades/ici/` → `lake demo` → connector `trade-endur`, `trade-calypso`, `trade-murex`, `trade-wss`, `trade-swapone`, `trade-ici` |
 | `CTRD` | `counterparty-trades` | computed by Drishti: the derived connector trade-pages over the kind trade; see the derived connector's settings in the trading pack's pack.yaml (`trade-pages`) | nothing to load: computed from its inputs when asked |
 | `PTRD` | `portfolio-trades` | computed by Drishti: the derived connector trade-pages over the kind trade; see the derived connector's settings in the trading pack's pack.yaml (`trade-pages`) | nothing to load: computed from its inputs when asked |
 | `LTRD` | `legal-entity-trades` | computed by Drishti: the derived connector trade-pages over the kind trade; see the derived connector's settings in the trading pack's pack.yaml (`trade-pages`) | nothing to load: computed from its inputs when asked |

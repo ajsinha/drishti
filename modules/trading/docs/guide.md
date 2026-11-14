@@ -37,6 +37,7 @@ inventory) is a configuration job, not a project. Drishti is the analytics layer
 13. [Tutorial: feed, blotter, edit, approval, write-back, Pivot](#13-tutorial-a-kafka-feed-a-ticking-blotter-an-edit-with-four-eyes-written-back-pivot)
 14. [Screenshots to add](#14-screenshots-to-add)
 15. [The trading module: switch it on, bind the trades, edit a trade](#15-the-trading-module)
+16. [Source systems](#16-source-systems)
 
 ## 1. One engine, and what uses it
 
@@ -468,3 +469,57 @@ curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: appl
 **A stale edit is refused.** When the trade moved since you saw it, the answer is `409 DRS-9303`:
 *trade MX-20004163 is at version 8, changed by R.DIAZ at 10:02:11; you edited version 7: open it again and edit from what is there*.
 The same guard runs again when the change is applied at the source (section 8), so a change that raced another one is refused there too.
+
+## 16. Source systems
+
+The `trade` kind is one canonical kind (the trading pack's `trade` contract; every row carries `SOURCE_SYSTEM`). Each trading system that
+feeds it is a **source module of its own**, `modules/source-<system>/`, which requires this module and switches on and off alone
+(`config/modules/source-<system>.yaml`, `enabled: false`; off, the system's trades leave the kind and nothing else changes). Six ship:
+`source-endur`, `source-calypso`, `source-murex` (their data is already in the canonical schema) and `source-wss` (treasury, FX and
+money markets), `source-swapone` (OTC swaps) and `source-ici` (a generic cross-asset booking system; its asset class was not stated, so it
+is mocked as one). The data of the last three is **mocked** (`tools/samplegen/src_*.py`; each in its own native field style; no
+positions and no scenario P&L, so the VaR does not move).
+
+A module's manifest names its parts with one set of keys: `connectors` (the folder of connector templates), `mappings` (kind to map file),
+`dataload` (the inbox rules file) and `sections` (what it adds to the kind's page). These templates are the one home of the system's
+connectors: the trading pack declares none of them. A file dropped in the inbox (`swapone-<date>.jsonl.gz` and its `.ready`) goes by the
+module's rule to `trading.trades_shared`, its connector's `set:` stamps `SOURCE_SYSTEM = SWAPONE` into each stored row, and `TRD` lists
+it; switch `source-swapone` off and it is gone, on and it is back.
+
+A module ships: `connectors/` (read from Delta, Iceberg and files; a Kafka live stream whose `writes:` is the write-back of
+section 8), `mappings/<system>-trade.yaml` (the native fields to the canonical ones), `dataload.yaml` (the inbox routing rules, in the
+format of `config/dataload.yaml`; the inbox reads the site's rules first) and a short guide. A connector's source options:
+
+| Option | Meaning |
+|---|---|
+| `lake-tables` | the table read: a table of the system's own, or one several systems share |
+| `where` | a predicate that selects this system's rows of a shared table |
+| `set` | constants stamped into the rows this connector reads and into the rows the inbox stores (`SOURCE_SYSTEM`) |
+| `map` | the native-to-canonical field map (the module's `mappings/` file) |
+
+**Layout A: a table each** (Endur, Calypso and Murex in the demo): the connector reads its own table, no `where` is needed.
+
+```yaml
+# config/connectors/trade-endur.yaml
+plugin: delta
+settings:
+  lake: main
+  lake-tables: trading.trade_endur
+  set: { SOURCE_SYSTEM: ENDUR }
+  map: mappings/endur-trade.yaml
+```
+
+**Layout B: one shared table, split by `where`** (WSS, SwapOne and ICI in the demo, `trading.trades_shared`, partitioned by `SOURCE_SYSTEM`):
+
+```yaml
+# config/connectors/trade-wss.yaml
+plugin: delta
+settings:
+  lake: main
+  lake-tables: trading.trades_shared
+  where: SOURCE_SYSTEM = 'WSS'
+  set: { SOURCE_SYSTEM: WSS }
+  map: mappings/wss-trade.yaml
+```
+
+The kind reads them all as a union (`config/demo/bindings.yaml`, written by `drishti.py lake demo`, on by default; `--no-bindings` leaves it out):

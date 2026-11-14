@@ -173,6 +173,22 @@ def now_iso() -> str:
 
 # ------------------------------------------------------------------------------------------------ what to build
 
+def site_set(connector: str, template_settings: dict) -> dict:
+    """The constants the connector's ``set:`` stamps into stored rows: the site's connector file (config/connectors/<name>.yaml, or
+    DRISHTI_CONNECTORS_DIR) when it has settings, else the module template's."""
+    import yaml
+    st = template_settings or {}
+    folder = pathlib.Path(os.environ.get("DRISHTI_CONNECTORS_DIR") or pathlib.Path(__file__).resolve().parents[2] / "config" / "connectors")
+    f = folder / f"{connector}.yaml"
+    if f.is_file():
+        site = (yaml.safe_load(f.read_text(encoding="utf-8")) or {}).get("settings")
+        if isinstance(site, dict):
+            st = site
+    out = {str(k): str(v) for k, v in (st.get("set") or {}).items()} if isinstance(st.get("set"), dict) else {}
+    out.update({k[4:]: str(v) for k, v in st.items() if isinstance(k, str) and k.startswith("set.") and len(k) > 4})
+    return out
+
+
 def pack_defaults(pack: pathlib.Path, kind: str | None, connector: str | None = None) -> dict:
     """{pack, domain, kind, key, date, promote, connector, table} from a pack folder (its pack.yaml), whatever it declares. With
     ``connector`` that Delta connector of the pack (one of several serving a kind, one per source system: trade-endur ...), else the
@@ -182,7 +198,7 @@ def pack_defaults(pack: pathlib.Path, kind: str | None, connector: str | None = 
     import packlake                                   # a lake-form template read with the pack's lake: entries
     m = packlake.view(yaml.safe_load((pack / "pack.yaml").read_text(encoding="utf-8")) or {})
     out: dict = {"pack": m.get("pack") or pack.name}
-    defs = m.get("connectors") if isinstance(m.get("connectors"), dict) else (m.get("connector-templates") or {})
+    defs = m.get("connectors") if isinstance(m.get("connectors"), dict) else {}
     delta = [(n, c) for n, c in (defs or {}).items() if isinstance(c, dict) and c.get("plugin") == "delta"]
     if connector:
         delta = [(n, c) for n, c in delta if n == connector]
@@ -196,6 +212,7 @@ def pack_defaults(pack: pathlib.Path, kind: str | None, connector: str | None = 
         name, c = delta[0]
         st = c.get("settings") or {}
         out["connector"], out["domain"] = name, st.get("domain") or out["pack"]
+        out["set"] = site_set(name, st)
         if kind:
             lay = (st.get("layout") or {}).get(kind) if isinstance(st.get("layout"), dict) else None
             flat = st.get(f"layout.{kind}.columns")
@@ -369,6 +386,7 @@ def plan(a) -> dict:
         if not p["promote"] and a.promote is None:
             p["promote"] = d.get("promote") or []
         p["flatten"] = d.get("flatten") or {}
+        p["set"] = d.get("set") or {}
         p["vectors"] = p.get("vectors") or d.get("vectors") or []
     lake_layout(a, p)
     p["key"] = p["key"] or "id"
@@ -608,6 +626,7 @@ def _go(a, p, as_of, lake, table, summary, prog, started, say, remote_root: str 
     st = stage.Stager(staging, p["key"], p["date"], as_of, p["partition_by"], p["promote"], p.get("flatten"), p.get("vectors"),
                       p.get("latest_by"))
     st.date_from = p["date_from"]
+    st.set = p.get("set") or {}
     st.run = summary["run"]
     try:
         if table and not iceberg:                                          # a table of another partitioning fails before anything is read

@@ -325,7 +325,7 @@ schemas:
     files: ["config/packs/*/pack.yaml", "examples/packs/*/pack.yaml"]
     applies: the pack
     change: live
-    maps: [columns, connectors, connector-templates, form, graph.fields, graph.badges, graph.impact.measures, graph.impact.formats, history,
+    maps: [columns, connectors, form, graph.fields, graph.badges, graph.impact.measures, graph.impact.formats, history,
            mnemonics, pivot, roles, routes, ingest, hierarchies, console.monitors]
     keys:
       - { key: pack, type: string, meaning: "Required: the pack's name, equal to its folder's name (else the pack is refused)" }
@@ -417,9 +417,6 @@ schemas:
       - { key: connectors, type: "list or map", default: "[]", meaning: "The connectors the pack reads through: a list names site connectors; a mapping names them and is each one's template, written to config/connectors/<name>.yaml at the first start when no such file exists" }
       - { key: "connectors.<name>", type: map, meaning: "One connector's template: plugin, enabled, kinds, settings (the connector file's keys), or a reactive connector's engine, triggers, cache, limits" }
       - { key: "connectors.<name>.*", type: map, meaning: "A template's keys, as a connector file (above) or a reactive connector (docs/connectors/types/reactive/README.md)" }
-      - { key: connector-templates, type: map, default: "{}", meaning: "Templates to go with a list of connector names, as connectors.<name>" }
-      - { key: "connector-templates.<name>", type: map, meaning: "One template" }
-      - { key: "connector-templates.<name>.*", type: map, meaning: "Its keys, as a connector file" }
       - { key: routes, type: map, default: "{}", meaning: "kind -> the connector that answers it (drishti.sources.routes)" }
       - { key: "routes.<name>", type: string, meaning: "One kind's connector" }
       - { key: ingest, type: map, default: "{}", meaning: "For the tools only (drishti.py data ingest --pack, lake build --pack, pack check): each kind's id and business-date fields; ignored by the server" }

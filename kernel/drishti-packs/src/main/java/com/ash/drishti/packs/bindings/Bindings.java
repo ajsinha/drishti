@@ -29,14 +29,15 @@ import java.util.regex.Pattern;
 /**
  * The site's data bindings, {@code config/bindings.yaml} (docs/architecture/KERNEL_AND_MODULES.md section 5.4): one binding per kind, shared
  * by every module that needs the kind. A binding names the site's connectors ({@code config/connectors/<name>.yaml}) in read order, whether
- * they are one store together ({@code union}), the connector that pushes changes ({@code live}), where a produced kind is written
+ * they are one store together ({@code union}), the connectors that push changes ({@code live}: one, or a list when several source systems
+ * stream the kind, merged into the live result set by key and version), where a produced kind is written
  * ({@code write: {lake, table}}) or that the demo lake serves it ({@code demo: true}). It never holds a credential, a host or a location:
  * those stay in the connector files and the secret store. Immutable; {@link #parse} refuses what it does not understand, with words.
  *
  * <pre>
  *   format: 1
  *   bindings:
- *     trade:       { read: [trade-endur, trade-calypso], union: true, live: trade-kafka }
+ *     trade:       { read: [trade-endur, trade-calypso], union: true, live: [trade-endur-kafka, trade-calypso-kafka] }
  *     scenario-pv: { read: [risk-store] }
  *     var-official: { write: { lake: risklake, table: banking.var-official } }
  *     pnl-vector:  { demo: true }
@@ -63,25 +64,34 @@ public record Bindings(Map<String, Binding> byKind) {
      * @param kind the kind
      * @param read the connectors that serve it, in read order
      * @param union true when the read connectors are one store together (one slice each, ids unique across them)
-     * @param live the connector that pushes changes of it, or null
+     * @param live the connectors that push changes of it, in order (empty: none)
      * @param writeLake the lake a produced kind is written to, or null
      * @param writeTable the table in that lake, or null
      * @param demo true when the demo lake's samples serve it explicitly
      * @param note the administrator's note, or empty
      */
-    public record Binding(String kind, List<String> read, boolean union, String live, String writeLake, String writeTable, boolean demo, String note) {
+    public record Binding(String kind, List<String> read, boolean union, List<String> live, String writeLake, String writeTable, boolean demo,
+            String note) {
 
         public Binding {
             read = read == null ? List.of() : List.copyOf(read);
+            live = live == null ? List.of() : List.copyOf(live);
             note = note == null ? "" : note;
         }
 
-        /** Every connector the binding names: the read order, then the live one. */
+        /** A binding with one live connector (or none, for null). */
+        public Binding(String kind, List<String> read, boolean union, String live, String writeLake, String writeTable, boolean demo, String note) {
+            this(kind, read, union, live == null ? List.of() : List.of(live), writeLake, writeTable, demo, note);
+        }
+
+        /** Every connector the binding names: the read order, then the live ones. */
         public List<String> connectors() {
             List<String> out = new ArrayList<>(read);
-            if (live != null && !out.contains(live)) {
-                out.add(live);
-            }
+            live.forEach(l -> {
+                if (!out.contains(l)) {
+                    out.add(l);
+                }
+            });
             return out;
         }
 
@@ -99,7 +109,9 @@ public record Bindings(Map<String, Binding> byKind) {
             if (union) {
                 m.put("union", true);
             }
-            if (live != null) {
+            if (live.size() == 1) {
+                m.put("live", live.get(0));                   // one connector is written as a name, several as a list
+            } else if (!live.isEmpty()) {
                 m.put("live", live);
             }
             if (writeLake != null) {
@@ -251,9 +263,24 @@ public record Bindings(Map<String, Binding> byKind) {
         if (read.size() != new LinkedHashSet<>(read).size()) {
             throw new Invalid(kind + ": a connector is named twice in 'read'");
         }
-        String live = m.get("live") == null ? null : String.valueOf(m.get("live")).trim();
-        if (live != null && !NAME.matcher(live).matches()) {
-            throw new Invalid(kind + ": '" + live + "' is not a connector's name");
+        List<String> live = new ArrayList<>();
+        Object lv = m.get("live");
+        if (lv instanceof List<?> l) {
+            l.forEach(x -> live.add(String.valueOf(x).trim()));
+        } else if (lv != null) {
+            for (String x : String.valueOf(lv).split(",")) {
+                if (!x.isBlank()) {
+                    live.add(x.trim());
+                }
+            }
+        }
+        for (String c : live) {
+            if (!NAME.matcher(c).matches()) {
+                throw new Invalid(kind + ": '" + c + "' is not a connector's name");
+            }
+        }
+        if (live.size() != new LinkedHashSet<>(live).size()) {
+            throw new Invalid(kind + ": a connector is named twice in 'live'");
         }
         String lake = null;
         String table = null;
@@ -274,7 +301,7 @@ public record Bindings(Map<String, Binding> byKind) {
         if (demo && !read.isEmpty()) {
             throw new Invalid(kind + ": a kind is either demo or real, never both: drop 'demo' or 'read'");
         }
-        if (read.isEmpty() && live == null && lake == null && !demo) {
+        if (read.isEmpty() && live.isEmpty() && lake == null && !demo) {
             throw new Invalid(kind + ": the binding names nothing (read, live, write or demo)");
         }
         String note = m.get("note") == null ? "" : String.valueOf(m.get("note"));

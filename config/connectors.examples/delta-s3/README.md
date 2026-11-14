@@ -21,7 +21,6 @@ connectors:
 - delta
 files:
 - risk-store.yaml
-- trade-endur.yaml
 doc: plugins/drishti-plugin-delta/README.md
 ---
 # Delta Lake on S3 connector templates
@@ -34,7 +33,7 @@ alarms by [`deploy/aws/delta-lake/`](../../../deploy/aws/delta-lake/).
 ## What it reads
 
 `risk-store.yaml` reads the market-risk pack's risk domain (P&L vectors, scenario PVs, VaR limits, desk P&L) and
-`trade-endur.yaml` the Endur trades (`table.trade: trade_endur`), each table at `s3://<bucket>/<prefix>/<domain>/<table>`, exactly the
+The Endur trades are a template of the source module, `modules/source-endur/connectors/delta-s3.yaml`, not a file of this folder.
 layout of the local lake. Nothing is written by the server; the loaders write the same tables (`drishti.py lake build`, the parallel
 loader with an `s3://` target).
 
@@ -75,7 +74,6 @@ deploy/aws/delta-s3/delta-s3.sh check --table risk/pnl-vector
 | File | Plugin | Kinds | What it is |
 |---|---|---|---|
 | `risk-store.yaml` | `delta` | the plugin's own | risk-store read from Delta Lake on AWS S3 (the market-risk pack's risk domain with its P&L vectors, scenario PVs and limits) |
-| `trade-endur.yaml` | `delta` | the plugin's own | trades (Endur) read from Delta Lake on AWS S3 |
 <!-- files:end -->
 
 ## Troubleshooting

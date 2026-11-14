@@ -98,6 +98,25 @@ public final class EditService {
         this.appender = a;
     }
 
+    /**
+     * The connector a change to a record of {@code system} goes to: the one the form names when it is that system's, else the first of the
+     * system's connectors that carries the command; null when the system has none (the change is refused: never another system's).
+     */
+    static String routed(SourceRoute route, Commands commands, String kind, String system, String named, String command) {
+        List<String> own = route.connectorsOf(system);
+        if (named != null && own.contains(named)) {
+            return named;
+        }
+        return own.stream().filter(c -> command != null && commands.unusable(c, command, kind).isEmpty()).findFirst().orElse(null);
+    }
+
+    /** Where a change to a source goes when several trading systems feed its kind: the record's own system's write path. */
+    private volatile SourceRoute route = SourceRoute.NONE;
+
+    public void route(SourceRoute r) {
+        this.route = r == null ? SourceRoute.NONE : r;
+    }
+
     public void commands(Commands c, java.util.function.Function<String, Optional<String>> connectorOf) {
         this.commands = c;
         this.connectorOfKind = connectorOf;
@@ -277,6 +296,12 @@ public final class EditService {
         if ("source".equals(target)) {
             connector = save.connector() != null ? save.connector() : connectorOfKind.apply(kind).orElse(null);
             command = "new".equals(origin.get("mode")) ? save.create() : save.command();
+            // several trading systems feed the kind: the change goes to the write path of the system the record came from, never another's
+            Optional<String> system = "new".equals(origin.get("mode")) ? Optional.empty() : route.systemOf(kind, entity);
+            if (system.isPresent()) {
+                origin.put("sourceSystem", system.get());
+                connector = routed(route, commands, kind, system.get(), connector, command);
+            }
         }
         LocalDate date = body.hasNonNull("businessDate") ? LocalDate.parse(body.path("businessDate").asText()) : today.get();
         String id = text(body, "id");
@@ -311,10 +336,19 @@ public final class EditService {
             }
         }
         EditableFields.Rule any = fields.find(c.kind(), EditPaths.field(c.items().get(0).path()), c.origin("sutra"), c.origin("panel")).orElseThrow();
+        String from = c.origin("sourceSystem");
+        if (from != null && !entitlements.mayEditSystem(p, from)) {
+            throw refused(p, c.key(), p.user() + " may not change " + from + " records (edit-systems of their roles)");
+        }
         if (isNew && "overlay".equals(c.target())) {
             throw refused(p, c.key(), "a new record cannot be a correction (overlay): there is no source record to lay it over; use owned or source");
         }
         if ("source".equals(c.target())) {
+            String system = c.origin("sourceSystem");
+            if (system != null && c.connector() == null) {
+                throw refused(p, c.key(), "source " + system + " has no write path for " + c.command() + ": a change goes only to the system the "
+                        + "record came from");
+            }
             if (c.connector() == null || c.command() == null) {
                 throw refused(p, c.key(), "the form sends to a source but names no connector or command");
             }

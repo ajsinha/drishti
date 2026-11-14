@@ -142,7 +142,7 @@ def pack_settings(pack: pathlib.Path, bare: bool = False) -> tuple[str, dict, di
     L = _layout()  # delta only
     import packlake                                   # tools/packlake.py: a lake-form template read with the pack's lake: entries
     m = packlake.view(yaml.safe_load((pack / "pack.yaml").read_text(encoding="utf-8")) or {})
-    defs = m.get("connectors") if isinstance(m.get("connectors"), dict) else (m.get("connector-templates") or {})   # a pack names its connectors and suggests them as templates
+    defs = m.get("connectors") if isinstance(m.get("connectors"), dict) else {}   # a pack names its connectors and suggests them as templates
     conns = [c for c in defs.values() if c.get("plugin") in ("delta", "file")]
     if not conns and bare:
         conns = [{"plugin": "file", "settings": {}}]

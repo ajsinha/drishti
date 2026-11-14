@@ -88,7 +88,7 @@ def _view(manifest: dict) -> dict:
     if tools not in sys.path:
         sys.path.insert(0, tools)
     import packlake
-    return packlake.view(manifest)
+    return packlake.view(manifest, modules=False)       # the pack's own connectors: a source module's template adds none
 
 
 def layouts_for_domain(domain: str, packs: pathlib.Path = PACKS) -> dict[str, Layout]:
@@ -98,7 +98,7 @@ def layouts_for_domain(domain: str, packs: pathlib.Path = PACKS) -> dict[str, La
     out: dict[str, Layout] = {}
     for f in manifests(packs):
         manifest = _view(yaml.safe_load(f.read_text(encoding="utf-8")) or {})
-        for conn in (manifest.get("connectors") if isinstance(manifest.get("connectors"), dict) else manifest.get("connector-templates") or {}).values():
+        for conn in (manifest.get("connectors") if isinstance(manifest.get("connectors"), dict) else {}).values():
             settings = conn.get("settings") or {}
             if conn.get("plugin") != "delta" or settings.get("domain") != domain:
                 continue
@@ -118,7 +118,7 @@ def layouts_by_table(domain: str, packs: pathlib.Path = PACKS) -> dict[str, tupl
     out: dict[str, tuple[str, Layout]] = {}
     for f in manifests(packs):
         manifest = _view(yaml.safe_load(f.read_text(encoding="utf-8")) or {})
-        for conn in (manifest.get("connectors") if isinstance(manifest.get("connectors"), dict) else manifest.get("connector-templates") or {}).values():
+        for conn in (manifest.get("connectors") if isinstance(manifest.get("connectors"), dict) else {}).values():
             settings = conn.get("settings") or {}
             if conn.get("plugin") != "delta" or settings.get("domain") != domain:
                 continue

@@ -258,7 +258,7 @@ public final class LakeFiles {
     public static Map<String, JsonNode> packTables(List<Path> packFiles, String lake) throws IOException {
         Map<String, JsonNode> out = new LinkedHashMap<>();
         for (Path file : packFiles) {
-            JsonNode m = YAML.readTree(Files.readString(file));
+            JsonNode m = PackEntry.manifest(file);
             if (m == null || !m.isObject()) {
                 continue;
             }

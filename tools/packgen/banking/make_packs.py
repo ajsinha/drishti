@@ -353,7 +353,15 @@ def kept(name: str) -> str:
 def files() -> dict[Path, str]:
     out = {}
     for name in layout.PACKS:
-        body = yaml.dump(packlake.lake_form(manifest(name), partitions=PARTITIONS), Dumper=_Plain, sort_keys=False, allow_unicode=True,
+        form = packlake.lake_form(manifest(name), partitions=PARTITIONS)
+        if name == "trading":     # the per-system trade connectors are the source modules' (modules/source-<system>/connectors/); their lake entries stay
+            for cname in TRADE_SYSTEMS:
+                form["connectors"].pop(cname, None)
+            form["routes"].pop("trade", None)
+        if name == "trading":     # the table WSS, SwapOne and ICI share (modules/source-wss, -swapone, -ici): not a connector of the pack
+            form["lake"]["tables"]["trading.trades_shared"] = {"kind": "trade", "partition-by": ["SOURCE_SYSTEM"], "promote": ["SOURCE_SYSTEM"],
+                                                               "sort-by": ["id"]}
+        body = yaml.dump(form, Dumper=_Plain, sort_keys=False, allow_unicode=True,
                          width=140)
         out[pack_dir(name) / "pack.yaml"] = f"{HEADER}\n\n{GENERATED}\n# {layout.PACKS[name]['title']} pack for Drishti.\n{body}{kept(name)}"
         out[pack_dir(name) / "config" / "formats.yaml"] = (f"{HEADER}\n\n{GENERATED}\n# Number formats the banking packs share.\n"

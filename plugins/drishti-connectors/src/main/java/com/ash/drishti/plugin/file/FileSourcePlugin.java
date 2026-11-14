@@ -449,6 +449,29 @@ public final class FileSourcePlugin implements SourcePlugin {
         return com.ash.drishti.api.ColumnScans.over(this, request);
     }
 
+    /**
+     * Every document of a dated JSON-lines kind on the date, in one pass over the day's file (what a whole-kind read, a shaped connector's
+     * {@code where}, {@code set} and {@code map}, and the live blotters use, as the Delta and Iceberg connectors give). False, giving
+     * nothing, for a kind these files do not hold as snapshots (the caller reads entity by entity); true, perhaps with nothing, otherwise.
+     */
+    @Override
+    public boolean documents(String kind, AsOf asOf, java.util.function.Consumer<EntityDocument> sink) throws Exception {
+        if (!jsonl.containsKey(kind) || effective(kind)) {
+            return false;
+        }
+        Optional<LocalDate> d = snapshotDay(kind, asOf.businessDate());
+        if (d.isEmpty()) {
+            return true;                                           // a day these files do not hold
+        }
+        for (String id : day(kind, d.get()).ids()) {
+            Optional<EntityDocument> doc = fromJsonlDay(EntityRef.of(kind, id), d.get());
+            if (doc.isPresent()) {
+                sink.accept(doc.get());
+            }
+        }
+        return true;
+    }
+
     @Override
     public Set<String> columnar(String kind) {
         return effective(kind) || !jsonl.containsKey(kind) ? Set.of() : Set.copyOf(promoted.getOrDefault(kind, List.of()));
