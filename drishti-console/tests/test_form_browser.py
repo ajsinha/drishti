@@ -28,6 +28,19 @@ sync_api = pytest.importorskip("playwright.sync_api", reason="needs Playwright (
 from test_live_tabs_browser import _free_port  # noqa: E402
 
 
+def wait_rows(page, n):
+    """The records grid of a result holds n rows (it reads them from the live set after the page has loaded)."""
+    page.wait_for_selector(".rc-host[data-records-ready] .dg-row[data-key]")
+    page.wait_for_function("(n) => document.querySelectorAll('.rc-host .dg-row[data-key]').length === n", arg=n)
+
+
+def open_record(page, key):
+    """Opens a result's row in the panel and follows Open to the record's page."""
+    wait_rows(page, page.locator(".rc-host .dg-row[data-key]").count() or 1)
+    page.locator(f".rc-host .dg-row[data-key='{key}'] .dg-cell").nth(1).click()
+    page.click(".dg-live-panel a[data-link=Open]")
+
+
 @pytest.fixture(scope="module")
 def be():
     return FormBackend()
@@ -90,15 +103,16 @@ def test_from_the_command_line_to_the_view_and_back_with_the_criteria_kept(page,
     page.wait_for_selector("[data-qf-command]")
     assert "mtm >= 1m and mtm <= 5m" in page.inner_text("[data-qf-command]")
     assert "v.mtm=1m" in page.url and "v2.mtm=5m" in page.url and "run=1" in page.url                # the criteria are in the address
-    assert page.locator("table.tbl tbody tr").count() == 2 and page.locator(".cf-btn").count() >= 1       # the console table with column filters
-    page.click("table.tbl tbody a:has-text('IRS-48213')")
+    wait_rows(page, 2)                                                                                 # the records grid (the live engine's set), not a table of the form's own
+    assert page.locator(".rc-host .dg-live-btn[data-act=chart]").count() == 1 and page.locator("table.tbl").count() == 0
+    open_record(page, "IRS-48213")
     page.wait_for_url("**/v/trade/IRS-48213")
     page.keyboard.press("Alt+ArrowLeft")                                                               # back to the form
     page.wait_for_url("**/form/trading?**")
     assert page.input_value('[name="v.mtm"]') == "1m" and page.input_value('[name="v2.mtm"]') == "5m"
     assert page.is_checked('[name="v.book"][value="BOOK-FI-1"]') and not page.is_checked('[name="v.book"][value="BOOK-FI-2"]')
     assert page.input_value('[name="v.counterparty.name"]') == "Meridian"
-    assert page.locator("table.tbl tbody tr").count() == 2                                               # and the results are there again
+    wait_rows(page, 2)                                                                                   # and the results are there again
 
 
 def test_the_second_box_follows_the_operator_and_a_date_becomes_relative(page, url):
@@ -202,7 +216,7 @@ def test_the_form_folds_to_one_line_of_criteria_and_back(page, url):
     assert not page.locator("#qfBody").is_visible()
     page.goto(url + "/form/trading?kind=trade&op.mtm=%3E&v.mtm=1m&run=1&form=shown", wait_until="load")
     assert page.locator("#qfBody").is_visible()
-    page.click("table.tbl tbody a:has-text('IRS-48213')")
+    open_record(page, "IRS-48213")
     page.wait_for_url("**/v/trade/IRS-48213")
     page.keyboard.press("Alt+ArrowLeft")                                                                 # back from a result: the criteria are kept
     page.wait_for_url("**/form/trading?**")
@@ -334,10 +348,10 @@ def test_endur_and_comswap_offer_only_their_sub_types_and_find_only_endur_swaps(
         page.wait_for_url("**/form/trading?**")
         assert "v.SOURCE_SYSTEM=ENDUR" in page.url and "v.PRODUCT_TYPE=ComSwap" in page.url
         assert "SOURCE_SYSTEM = 'ENDUR'" in be.asked[-1] and "PRODUCT_TYPE = 'ComSwap'" in be.asked[-1]
-        head = page.eval_on_selector_all("table thead th", "els => els.map(e => e.innerText.trim())")
-        rows = page.eval_on_selector_all("table tbody tr", "els => els.map(r => Array.from(r.cells).map(c => c.innerText.trim()))")
-        si, pi = head.index("Source system"), head.index("Product type")
-        assert len(rows) == 2 and all(r[si] == "ENDUR" and r[pi] == "ComSwap" for r in rows)
+        wait_rows(page, 2)
+        page.wait_for_selector(".rc-host .dg-row[data-key] [data-c='2']")
+        rows = page.eval_on_selector_all(".rc-host .dg-row[data-key]", """els => els.map(r => [r.querySelector("[data-c='1']"), r.querySelector("[data-c='2']")].map(c => c ? c.innerText.trim() : null))""")
+        assert len(rows) == 2 and all(r == ["ENDUR", "ComSwap"] for r in rows)
     finally:
         be.systems = False
 

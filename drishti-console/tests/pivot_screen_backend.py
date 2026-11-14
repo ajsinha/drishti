@@ -57,6 +57,9 @@ class PivotBackend(ChartBackend):
                                      "columns": []}],
                     "showAs": [{"id": "pct-grand", "label": "% of grand total", "needs": None}, {"id": "pct-row", "label": "% of row total", "needs": None},
                                {"id": "rank", "label": "Rank among siblings", "needs": None}, {"id": "diff", "label": "Difference from previous", "needs": "dimension"}]}
+        if method == "POST" and path == "/rows":                     # the rows behind a cell (the popover's Rows): the first rows of the trades, as the engine answers
+            cols = [n for n, _ in FIELDS][:5]
+            return {"columns": cols, "rows": [list(t[:5]) for t in TRADES[:6]], "total": len(TRADES), "note": ""}
         if path == "/estimate":
             return {"rows": len(TRADES), "cells": 40, "bytes": 0, "route": "stand-in", "confirm": False}
         if path == "/views" and method == "GET":                     # the saved views: u/desk shared with everyone, and the ones saved here
