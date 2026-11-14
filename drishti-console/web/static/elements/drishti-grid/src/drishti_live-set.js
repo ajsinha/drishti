@@ -25,7 +25,7 @@
 import { h, announce } from '../../drishti-core/src/drishti_index.js';
 import { selectElement } from '../../drishti-inputs/src/drishti_index.js';
 import { Grid } from './drishti_grid-view.js';
-import { ROW_KEY, ROW_VERSION, LiveRows, gridColumns, windowIds, pivotLayout, pivotHref } from './drishti_live-model.js';
+import { ROW_KEY, ROW_VERSION, LiveRows, gridColumns, windowIds, pivotLayout, pivotHref, staticSpec, staticApi } from './drishti_live-model.js';
 import { RecordPanel, isPending, itemsText, stateWords } from './drishti_live-panel.js';
 
 /** The states the status chip shows. */
@@ -44,6 +44,11 @@ const WINDOW_DELAY_MS = 200;
  * @property {function(string): void} [navigate] where Pivot › goes (default: the page's address is set)
  * @property {function(string): Promise<void>} [copy] the clipboard (default: navigator.clipboard)
  * @property {number} [snapshotRows=5000] the most rows held; a larger set is windowed
+ * @property {function({title: string, columns: Object[], rows: Object[]}): void} [onChart] when given, a Chart button hands the rows held (as the columns draw them) to it
+ * @property {number} [offset=0] the first row read (a page of a larger set: the page's rows tick, the rest of the set is not held)
+ * @property {Object[]} [rows] STATIC MODE: plain rows (no api, no channel needed): a result without a record key (an SQL answer, a preview).
+ *   The rows are not merged and not edited; the panel shows the row's JSON. The spec may be omitted (the columns come from the rows) or
+ *   given as {title, columns}.
  */
 
 /**
@@ -57,6 +62,12 @@ export class LiveSetGrid {
   constructor(host, o) {
     this.host = host;
     this.doc = host.ownerDocument;
+    this.static = Array.isArray(o.rows) && !o.api;
+    if (this.static) {                                    // static mode: the same grid and panel over rows with no key, nothing merged or edited
+      const given = o.spec || {};
+      o = Object.assign({}, o, { spec: staticSpec({ rows: o.rows, columns: given.columns, title: given.title, id: given.id }), api: staticApi(o.rows),
+        channel: { subscribe: () => () => undefined } });
+    }
     this.o = o;
     this.spec = o.spec;
     this.api = o.api;
@@ -81,8 +92,10 @@ export class LiveSetGrid {
     this.host.classList.add('dg-liveset');
     this.host.setAttribute('data-live-set', spec.id);
     this.status = h(d, 'span', { cls: 'dg-live-chip', attrs: { role: 'status', 'aria-live': 'polite' }, data: { state: this.state } });
-    this.pauseBtn = h(d, 'button', { cls: 'dg-live-btn', text: 'Pause', data: { act: 'pause' }, attrs: { type: 'button' }, on: { click: () => this.pause(!this.paused) } });
-    this.pivotBtn = h(d, 'button', { cls: 'dg-live-btn', text: 'Pivot ›', data: { act: 'pivot' }, attrs: { type: 'button', title: 'The same rows, filters and grouping in the Pivot' }, on: { click: () => this.toPivot() } });
+    this.pauseBtn = this.static ? null : h(d, 'button', { cls: 'dg-live-btn', text: 'Pause', data: { act: 'pause' }, attrs: { type: 'button' }, on: { click: () => this.pause(!this.paused) } });
+    this.pivotBtn = this.static ? null : h(d, 'button', { cls: 'dg-live-btn', text: 'Pivot ›', data: { act: 'pivot' }, attrs: { type: 'button', title: 'The same rows, filters and grouping in the Pivot' }, on: { click: () => this.toPivot() } });
+    this.chartBtn = o.onChart ? h(d, 'button', { cls: 'dg-live-btn', text: 'Chart', data: { act: 'chart' }, attrs: { type: 'button', title: 'Chart these rows' },
+      on: { click: () => o.onChart({ title: spec.title || spec.id, columns: spec.columns || [], rows: Array.from(this.rows.byId.values()) }) } }) : null;
     this.trayBtn = spec.tray ? h(d, 'button', { cls: 'dg-live-btn', text: 'My changes (0)', data: { act: 'tray' }, attrs: { type: 'button', 'aria-expanded': 'false' }, on: { click: () => this.toggleTray() } }) : null;
     const groupable = (spec.columns || []).filter((c) => c.type !== 'number' && c.type !== 'amount' && c.type !== 'list' && c.type !== 'datetime');
     this.groupSel = selectElement(d, { options: [{ value: '', label: 'No grouping' }].concat(groupable.map((c) => ({ value: c.field, label: c.label || c.field }))), value: (spec.groupBy || [])[0] || '',
@@ -90,7 +103,7 @@ export class LiveSetGrid {
     this.groupSel.component.on('change', (e) => this.group(e.value));
     this.bar = h(d, 'div', { cls: 'dg-live-bar', attrs: { role: 'toolbar', 'aria-label': (spec.title || spec.id) + ' controls' } }, [
       h(d, 'strong', { cls: 'dg-live-title', text: spec.title || spec.id }), this.status, h(d, 'span', { cls: 'dg-sp' }),
-      h(d, 'label', { cls: 'dg-live-lbl' }, ['Group by ', this.groupSel]), this.pauseBtn, this.pivotBtn, this.trayBtn]);
+      h(d, 'label', { cls: 'dg-live-lbl' }, ['Group by ', this.groupSel]), this.chartBtn, this.pauseBtn, this.pivotBtn, this.trayBtn].filter(Boolean));
     this.gridHost = h(d, 'div', { cls: 'dg-live-grid' });
     this.panelHost = h(d, 'aside', { cls: 'dg-live-panel', attrs: { hidden: true, 'aria-label': 'Record' } });
     this.trayHost = h(d, 'section', { cls: 'dg-live-tray', attrs: { hidden: true, 'aria-label': 'My pending changes' }, data: { tray: 'true' } });
@@ -125,6 +138,7 @@ export class LiveSetGrid {
       this.off = this.o.channel.subscribe({ hello: (m) => this.onHello(m || {}), rows: (m) => this.onRows(m || {}), resync: () => this.resync('the server asked'),
         gone: (m) => this.setState('ended', (m && m.detail) || 'the stream ended'), error: () => { if (this.state !== 'paused') { this.setState('reconnecting'); } } });
       this.setState(this.state === 'connecting' ? 'connecting' : this.state);
+      if (this.static) { this.setState('live'); }
       this.loadTray();
       return this;
     });
@@ -133,7 +147,7 @@ export class LiveSetGrid {
   /** @private reads the set's rows */
   snapshot() {
     const s = this.spec.sort || {};
-    return this.api.rows({ limit: this.o.snapshotRows || SNAPSHOT_ROWS, sort: s.field, descending: s.descending ? 'true' : '' }).then((r) => {
+    return this.api.rows({ limit: this.o.snapshotRows || SNAPSHOT_ROWS, offset: this.o.offset || undefined, sort: s.field, descending: s.descending ? 'true' : '' }).then((r) => {
       this.live = !!r.live;
       const rows = this.rows.load(r.rows || [], r.total, r.seq);
       this.paged = this.rows.total > rows.length;

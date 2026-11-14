@@ -103,6 +103,46 @@ def titled(rows: list[dict]) -> bool:
     return any(r["title"] != r["ref"]["id"] for r in rows)
 
 
+def grid_spec(data: dict | None, titled: bool = False) -> dict:
+    """The declaration the records grid (drishti-grid's LiveSetGrid) draws a result with: the id first (the key, pinned), the title when it says
+    more than the id, then each column at its field (a number column by its values), as the search's labels name them. Never editable here: a
+    result is read, the record's page edits."""
+    d = data or {}
+    mnemonic = d.get("mnemonic") or d.get("kind") or "Id"
+    cols = [{"field": "__id", "label": mnemonic, "type": "id"}]
+    if titled:
+        cols.append({"field": "_title", "label": "Title", "type": "text"})
+    labels = d.get("labels") or {}
+    for path in d.get("columns") or []:
+        seen = [r["values"].get(path) for r in d.get("rows", [])[:50] if r["values"].get(path) is not None]
+        numeric = bool(seen) and all(number(v) for v in seen)
+        cols.append({"field": path[2:] if path.startswith("$.") else path, "label": labels.get(path, path), "type": "number" if numeric else "text"})
+    live = d.get("live") or {}
+    return {"id": live.get("set") or "result", "title": d.get("title") or mnemonic, "kind": d.get("kind") or "", "columns": cols, "groupBy": [], "subtotals": [],
+            "links": [], "editable": False, "readOnly": "a search result: open the record's page to change it", "fields": [], "tray": False}
+
+
+def compared_rows(data: dict | None, vs: str = "") -> tuple[list[dict], list[dict]]:
+    """A search on two business dates as the records grid's static rows: the id, the title, the status (only on one date) and each column as
+    the later value with its change; with the columns (the grid's, as :func:`grid_spec` names them)."""
+    d = data or {}
+    labels = d.get("labels") or {}
+    cols = [{"field": "id", "label": d.get("mnemonic") or d.get("kind") or "Id", "type": "id"}, {"field": "status", "label": "Status", "type": "text"}]
+    rows = []
+    for r in d.get("rows", []):
+        row = {"id": r["ref"]["id"], "status": ({"added": "only on the later date", "removed": "only on " + vs}.get(r.get("status") or "", r.get("status")) or "")}
+        for i, c in enumerate(d.get("columns") or []):
+            v = r["values"].get(c)
+            if isinstance(v, dict):
+                to, dl = v.get("to"), v.get("delta")
+                row[f"c{i}"] = shown(to) + (f"  ({delta(dl)})" if dl not in (None, 0, 0.0) else "")
+            else:
+                row[f"c{i}"] = shown(v)
+        rows.append(row)
+    cols += [{"field": f"c{i}", "label": labels.get(c, c), "type": "text"} for i, c in enumerate(d.get("columns") or [])]
+    return cols, rows
+
+
 def kind_page(page: dict) -> dict:
     """A page of a kind's own set (a bare mnemonic) in the same shape: the declaration's columns, the set's total as matched and scanned,
     and ``paged`` (offset, shown, total) for the pager."""

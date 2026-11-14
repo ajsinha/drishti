@@ -58,12 +58,27 @@ export function gridColumns(spec) {
       if (hasFormat(c.format)) { col.format = c.format; } else if (n) { col.format = { decimals: +n[1] }; }
     }
     if (c.type === 'id') { col.pinned = 'left'; }
+    if (String(c.field).indexOf('.') > 0) { col.valueGetter = (row) => digValue(row, c.field); }   // a nested field (counterparty.name) of the record
     if (c.type === 'list') { col.valueGetter = (row) => (Array.isArray(row[c.field]) ? row[c.field].join(', ') : row[c.field]); }
     if (c.type === 'status') { col.cellClass = (v) => 'dg-live-st dg-live-st-' + String(v || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
     if (type === 'number' && sums.has(c.field)) { col.aggFunc = 'sum'; }
     if (type === 'number') { col.enableValue = true; }
     return col;
   });
+}
+
+/**
+ * The value at a dotted field of a row: the row's own property of that name first (a flat record), else the nested one.
+ * @param {Object} row
+ * @param {string} field
+ * @returns {*}
+ */
+export function digValue(row, field) {
+  if (row && Object.prototype.hasOwnProperty.call(row, field)) { return row[field]; }
+  let at = row;
+  const parts = String(field).split('.');
+  for (let i = 0; i < parts.length; i++) { if (at === null || at === undefined || typeof at !== 'object') { return undefined; } at = at[parts[i]]; }
+  return Array.isArray(at) ? at.length : at;
 }
 
 /**
@@ -257,5 +272,63 @@ export function httpLiveApi(o) {
     window: (stream, body) => call('POST', base + '/' + id + '/stream/' + encodeURIComponent(stream) + '/window', body),
     history: (kind, entity) => call('GET', '/api/changes?' + q({ kind: kind, entity: entity, limit: 50 })),
     mine: (kind) => call('GET', '/api/changes?' + q({ mine: 'true', kind: kind, limit: 100 }))
+  };
+}
+
+/**
+ * A column's type from the values it holds: number when every value present is a number, date for ISO dates, else text.
+ * @param {Object[]} rows
+ * @param {string} field
+ * @returns {string}
+ */
+export function inferType(rows, field) {
+  let seen = 0, num = 0, date = 0;
+  for (let i = 0; i < rows.length && seen < 50; i++) {
+    const v = rows[i][field];
+    if (v === null || v === undefined || v === '') { continue; }
+    seen++;
+    if (typeof v === 'number') { num++; } else if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v)) { date++; }
+  }
+  return seen && num === seen ? 'number' : seen && date === seen ? 'date' : 'text';
+}
+
+/**
+ * The declaration of a static set (a result without a record key): its columns as given or from the first rows' fields (a field starting
+ * with an underscore is not a column), never editable, no kind (so no Pivot), no history.
+ * @param {{rows: Object[], columns?: Array<string|{field: string, label?: string, type?: string}>, title?: string, id?: string}} o
+ * @returns {Object}
+ */
+export function staticSpec(o) {
+  const rows = o.rows || [];
+  let fields = o.columns;
+  if (!fields || !fields.length) {
+    const seen = new Set();
+    rows.slice(0, 50).forEach((r) => Object.keys(r || {}).forEach((k) => { if (k.charAt(0) !== '_') { seen.add(k); } }));
+    fields = Array.from(seen);
+  }
+  const columns = fields.map((c) => {
+    const col = typeof c === 'string' ? { field: c } : Object.assign({}, c);
+    col.label = col.label || col.field;
+    col.type = col.type || inferType(rows, col.field);
+    return col;
+  });
+  return { id: o.id || 'static', title: o.title || '', kind: '', columns: columns, groupBy: [], subtotals: [], links: [], editable: false, readOnly: 'a result, not a set of records',
+    fields: [], tray: false, static: true };
+}
+
+/**
+ * The api of a static set: its rows as given (kept in their order), the row's JSON for the panel, no edits, no history.
+ * @param {Object[]} rows
+ * @returns {{rows: Function, row: Function, edit: Function, window: Function, history: Function, mine: Function}}
+ */
+export function staticApi(rows) {
+  const list = (rows || []).map((r, i) => ({ id: String(i + 1), version: 0, seq: 0, doc: r }));
+  return {
+    rows: () => Promise.resolve({ live: false, total: list.length, seq: 0, rows: list }),
+    row: (entity) => { const r = list.find((x) => x.id === String(entity)); return r ? Promise.resolve({ id: r.id, version: 0, seq: 0, doc: r.doc }) : Promise.reject(new Error('no such row')); },
+    edit: () => Promise.reject(new Error('A result is read-only.')),
+    window: () => Promise.resolve({}),
+    history: () => Promise.resolve({ changes: [] }),
+    mine: () => Promise.resolve({ changes: [] })
   };
 }

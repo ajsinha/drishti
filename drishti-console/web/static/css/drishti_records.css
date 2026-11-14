@@ -1,0 +1,19 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* Records everywhere: the host of a table of records (js/drishti_records.js). The grid's look is drishti-grid's; only the frame is sized here. */
+.rc-host { height: min(68vh, 640px); min-height: 280px; border: 1px solid var(--d-border); border-radius: var(--d-radius, 10px); overflow: hidden; background: var(--d-surface); }
+.rc-host.rc-small { height: min(44vh, 360px); min-height: 200px; }
+@media (max-width: 900px) { .rc-host { height: auto; min-height: 0; overflow: visible; } }

@@ -80,13 +80,9 @@
       <ul class="mono">{% for f in data.failed %}<li><b>{{ f.source }}</b>: {{ f.reason }}</li>{% endfor %}</ul></div>{% endif %}
     {% if rows %}
     {% set pv = data.pivot if (data.pivot and not vs) else none %}
-    <section class="pnl" data-panel="results"{% include "terminal/_live_attrs.html" %}><div class="pnl-b">{% if pv %}{{ pivot_link(pv.source, 'the ' ~ (data.mnemonic or data.kind) ~ ' rows') }}{% endif %}<div class="tbl-wrap"><table class="tbl"{% if chart_rows %} data-chart-rows="{{ chart_rows | tojson | forceescape }}"{% endif %}>
-      <thead><tr><th>{{ data.mnemonic or data.kind }}</th>{% if titled %}<th>Title</th>{% endif %}
-        {% for c in data.columns %}<th class="{{ 'num' if rows and rows[0].cells[loop.index0][1] else '' }}" title="{{ c }}">{{ data.labels[c] }}</th>{% endfor %}</tr></thead>
-      <tbody>{% for r in rows %}
-        <tr data-i="{{ loop.index0 }}"{% if r.status %} class="cmp-{{ r.status }}" title="{{ 'only on the later date' if r.status == 'added' else 'only on ' ~ vs }}"{% endif %}><td><a class="lnk mono" href="/v/{{ r.ref.kind }}/{{ r.ref.id | urlencode }}{% if hq %}/history?{{ hq }}{% endif %}">{{ r.ref.id }}</a>{% if r.status %} <span class="st">{{ r.status }}</span>{% endif %}</td>{% if titled %}<td>{{ r.title }}</td>{% endif %}
-          {% for text, number in r.cells %}<td class="{{ 'num ' if number else '' }}mono">{{ text }}</td>{% endfor %}</tr>
-      {% endfor %}</tbody></table></div>
+    <section class="pnl" data-panel="results"><div class="pnl-b">{% if pv %}{{ pivot_link(pv.source, 'the ' ~ (data.mnemonic or data.kind) ~ ' rows') }}{% endif %}
+      {% if vs %}<div class="rc-host" data-records data-rows="{{ compared_rows | tojson | forceescape }}" data-spec="{{ {'title': (data.mnemonic or data.kind) ~ ' on two dates', 'columns': compared_columns} | tojson | forceescape }}" aria-label="Results on two dates"></div>
+      {% else %}{% with spec=grid_spec, offset=(data.paged.offset if data.paged else 0), limit=rows | length %}{% include "terminal/_records.html" %}{% endwith %}{% endif %}
       {% if pages %}<nav class="srch-pager" aria-label="Pages of {{ data.mnemonic or data.kind }}" data-pager><span class="mono">{{ "{:,}".format(pages.from) }}–{{ "{:,}".format(pages.to) }} of {{ "{:,}".format(pages.total) }}</span>
         {% if pages.prev %}<a class="lnk" href="{{ pages.prev }}" rel="prev"><i class="bi bi-chevron-left" aria-hidden="true"></i> Previous</a>{% endif %}
         {% if pages.next %}<a class="lnk" href="{{ pages.next }}" rel="next">Next <i class="bi bi-chevron-right" aria-hidden="true"></i></a>{% endif %}</nav>{% endif %}

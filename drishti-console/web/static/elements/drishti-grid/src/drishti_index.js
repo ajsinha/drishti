@@ -37,7 +37,7 @@ export { EDITORS, editorOf, parseCellText, validateCell, parseTsv, GridEditing }
 export { CellEditor } from './drishti_grid-editors.js';
 export { manualFeed } from './drishti_live.js';
 export { ROW_KEY, ROW_VERSION, WINDOW_ROWS, gridRow, gridColumns, LiveRows, windowIds, editItems, editSchema, pivotLayout, pivotHref, linkFor, maskedPaths,
-  changedFields, httpLiveApi } from './drishti_live-model.js';
+  changedFields, httpLiveApi, inferType, digValue, staticSpec, staticApi } from './drishti_live-model.js';
 export { stateWords, isPending, itemsText, RecordPanel } from './drishti_live-panel.js';
 export { LIVE_STATES, LiveSetGrid } from './drishti_live-set.js';
 export { renderWindow, renderText, renderHtml } from './drishti_plain-render.js';
