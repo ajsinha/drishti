@@ -87,8 +87,38 @@ public class EditConfiguration {
         String node = planned.isBlank() ? "local" : planned;
         EditRuntime r = new EditRuntime(settings, identityDataSource, router, fields, entitlements, user -> principals.user(user).isPresent() ? principals.of(user) : null, drafts, audit, dates::current,
                 cluster.getIfAvailable(), node, clustered, writes, kind -> connectorOf(connectors.getIfAvailable(), kind));
+        r.service().route(sourceRoute(router));
         r.start();
         return r;
+    }
+
+    /**
+     * Where a change goes when several trading systems feed a kind (DATA_LAKE_GUIDE.md, "Several source systems"): the record's
+     * {@code SOURCE_SYSTEM} as read (its connector's where or set), and that system's running connectors.
+     */
+    static SourceRoute sourceRoute(SourceRouter router) {
+        return new SourceRoute() {
+            @Override
+            public Optional<String> systemOf(String kind, String entity) {
+                if (router.registry().connectorsBySystem().isEmpty()) {
+                    return Optional.empty();
+                }
+                com.ash.drishti.api.EntityDocument d = router.fetch(com.ash.drishti.api.EntityRef.of(kind, entity)).handle((x, e) -> x).join();
+                if (d == null || d.data() == null) {
+                    return Optional.empty();
+                }
+                String s = d.data().get(com.ash.drishti.engine.source.SourceShape.SOURCE_SYSTEM).asText();
+                if (s.isBlank() && d.provenance() != null) {   // the connector the record came from names its system
+                    return router.registry().shape(d.provenance().source()).flatMap(com.ash.drishti.engine.source.SourceShape::system);
+                }
+                return s.isBlank() ? Optional.empty() : Optional.of(s);
+            }
+
+            @Override
+            public List<String> connectorsOf(String system) {
+                return router.registry().connectorsBySystem().getOrDefault(system, List.of());
+            }
+        };
     }
 
     /** The connector whose {@code writes:} a source target of a kind uses when the form names none: the one connector of the kind that writes. */

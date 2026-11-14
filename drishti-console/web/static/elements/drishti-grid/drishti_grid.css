@@ -398,3 +398,6 @@
   .dg-live-grid { height: 60vh; min-height: 280px; }
   .dg-live-panel { border-left: 0; border-top: 1px solid var(--d-border); }
 }
+
+/* a source system switched off: the live set's banner */
+.dg-live-banner { padding: 4px 8px; margin: 2px 0; border-left: 3px solid var(--dg-warn, #b7791f); background: var(--dg-warn-bg, rgba(183, 121, 31, .08)); font-size: 12px; }

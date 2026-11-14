@@ -171,8 +171,16 @@ public class LiveSetController {
     public Map<String, Object> row(@PathVariable String id, @PathVariable String entity, @RequestParam(required = false) String query,
             @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
         LiveSetSpec spec = spec(id, principal);
-        return sets.open(spec, query).row(entity, sets.reader(principal, spec.kind()))
-                .orElseThrow(() -> new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, spec.kind() + " " + entity + " is not in " + id));
+        LiveReader reader = sets.reader(principal, spec.kind());
+        Map<String, Object> row = new java.util.LinkedHashMap<>(sets.open(spec, query).row(entity, reader)
+                .orElseThrow(() -> new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, spec.kind() + " " + entity + " is not in " + id)));
+        // Raw JSON is the source's native record, before its connector's map and set (the grid shows the canonical fields)
+        sets.nativeRecord(spec.kind(), entity).ifPresent(n -> {
+            row.put("canonical", row.get("doc"));
+            row.put("doc", reader.redact().apply(n.data()).unwrap());
+            row.put("source", n.provenance() == null ? null : n.provenance().source());
+        });
+        return row;
     }
 
     /**
@@ -243,6 +251,12 @@ public class LiveSetController {
     /** The declaration as this person sees it: editable only when the site and their rights allow it, and why not. */
     private Map<String, Object> described(LiveSetSpec spec, Principal principal) {
         Map<String, Object> m = spec.describe();
+        java.util.Set<String> off = sets.excluded(spec.kind());
+        if (!off.isEmpty()) {
+            // a page of the kind says which source systems it leaves out: "excludes ENDUR (switched off)"
+            m.put("excludes", off);
+            m.put("banner", "excludes " + String.join(", ", off) + " (switched off)");
+        }
         String no = sets.readOnly(principal, spec);
         m.put("editable", no == null);
         m.put("readOnly", no);

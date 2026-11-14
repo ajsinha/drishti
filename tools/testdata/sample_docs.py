@@ -380,7 +380,7 @@ def pages() -> list[dict]:
     test data. {name (domain/kind), pack, kind, dataset (the manifest's entry or None), files, extra}."""
     out, have = [], set()
     for d in manifest().get("datasets") or []:
-        if not d.get("folder"):
+        if not d.get("folder") or d.get("native"):       # a mocked source system's native style (src_*.py) has no sample page
             continue
         folder = TESTDATA / d["folder"]
         got = FF.read_table(folder) if folder.is_dir() else {}

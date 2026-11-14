@@ -180,6 +180,73 @@ public final class Entitlements {
     /** The console's own identity, used only to verify sign-ins. */
     public static final String SERVICE = "service";
 
+    /**
+     * The person's row rule on a kind (ACCESS_MODEL.md section 10): the rules their configured roles declare for it ({@code rows:}), any of
+     * them passing, with {@code $user.<attribute>} read from the person; empty when they see every record they may open (an administrator,
+     * sign-in off, or one of their roles that opens the kind declares no rule for it). Row rules restrict record views (lists, blotters,
+     * search, FORM, Raw JSON); aggregates (VaR, BI totals) keep their own scope model.
+     *
+     * @throws IllegalArgumentException when a rule is not a row predicate (the configuration's error, with words)
+     */
+    public java.util.Optional<com.ash.drishti.engine.source.RowPredicate> rowRule(Principal p, String kind) {
+        if (p == null || !props.enabled() || isAdmin(p) || props.roles() == null || props.roles().isEmpty()) {
+            return java.util.Optional.empty();
+        }
+        return rowRule(props.roles(), p.roles(), kind, attributes.apply(p));
+    }
+
+    /** The row rule the roles give on a kind (see {@link #rowRule(Principal, String)}), the person's attributes given. */
+    static java.util.Optional<com.ash.drishti.engine.source.RowPredicate> rowRule(Map<String, SecurityProperties.Role> roles, List<String> held,
+            String kind, Map<String, List<Object>> attributes) {
+        List<String> rules = new java.util.ArrayList<>();
+        for (String role : held) {
+            SecurityProperties.Role r = roles.get(role);
+            if (r == null || !(r.kinds().contains("*") || r.kinds().contains(kind))) {
+                continue;
+            }
+            String rule = r.rows().get(kind);
+            if (rule == null || rule.isBlank()) {
+                return java.util.Optional.empty();             // this role opens every record of the kind
+            }
+            rules.add("(" + rule.strip() + ")");
+        }
+        if (rules.isEmpty()) {
+            return java.util.Optional.empty();
+        }
+        return java.util.Optional.of(com.ash.drishti.engine.source.RowPredicate.parse(String.join(" or ", rules), attributes));
+    }
+
+    /** Whether the person may see this record of the kind under their row rule. */
+    public boolean mayView(Principal p, String kind, DataNode record) {
+        return rowRule(p, kind).map(r -> r.test(record)).orElse(true);
+    }
+
+    /**
+     * Whether the person may change, through write-back, a record of this trading system ({@code edit-systems:} of their configured roles;
+     * a person none of whose roles lists systems may change any; an administrator may change any).
+     */
+    public boolean mayEditSystem(Principal p, String system) {
+        if (p == null || !props.enabled() || isAdmin(p) || system == null || system.isBlank() || props.roles() == null) {
+            return true;
+        }
+        return mayEditSystem(props.roles(), p.roles(), system);
+    }
+
+    /** Whether the roles may change a record of the system (see {@link #mayEditSystem(Principal, String)}). */
+    static boolean mayEditSystem(Map<String, SecurityProperties.Role> roles, List<String> held, String system) {
+        boolean listed = false;
+        for (String role : held) {
+            SecurityProperties.Role r = roles.get(role);
+            if (r != null && !r.editSystems().isEmpty()) {
+                listed = true;
+                if (r.editSystems().contains(system)) {
+                    return true;
+                }
+            }
+        }
+        return !listed;
+    }
+
     public boolean isAdmin(Principal p) {
         return has(p, com.ash.drishti.identity.RoleDefinition::admin);
     }

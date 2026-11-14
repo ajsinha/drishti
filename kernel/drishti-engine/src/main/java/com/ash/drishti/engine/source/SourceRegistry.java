@@ -157,6 +157,64 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
     /** Connectors whose failure is a lost connection (health says DOWN) rather than a start that failed. */
     private final java.util.Set<String> lost = java.util.concurrent.ConcurrentHashMap.newKeySet();
     private final java.util.concurrent.atomic.AtomicLong sweeps = new java.util.concurrent.atomic.AtomicLong();
+    /** The trading systems the installed source modules feed, and which are switched off (one per server). */
+    private final SourceSystems systems = new SourceSystems();
+    /** Where a connector's relative {@code map:} file is looked for after its module's folder (the connectors' folder first). */
+    private volatile List<java.nio.file.Path> shapeBases;
+
+    /** The connectors' folder (drishti.sources.connectors-dir), then config/connectors, config and the working folder. */
+    private List<java.nio.file.Path> shapeBases() {
+        List<java.nio.file.Path> set = shapeBases;
+        if (set != null) {
+            return set;
+        }
+        List<java.nio.file.Path> out = new ArrayList<>();
+        if (props != null && props.connectorsDir() != null && !props.connectorsDir().isBlank()) {
+            out.add(java.nio.file.Path.of(props.connectorsDir()));
+        }
+        out.add(java.nio.file.Path.of("config", "connectors"));
+        out.add(java.nio.file.Path.of("config"));
+        out.add(java.nio.file.Path.of("."));
+        return out;
+    }
+
+    /** The trading systems of the installed source modules and their switches. */
+    public SourceSystems systems() {
+        return systems;
+    }
+
+    /** Where a relative {@code map:} file is looked for (after the connector's module folder): the site's connectors folder first. */
+    public void shapeBases(List<java.nio.file.Path> bases) {
+        this.shapeBases = List.copyOf(bases);
+    }
+
+    /** How the running connector shapes what it reads ({@code where}, {@code set}, {@code map}); empty for none or an unknown name. */
+    public Optional<SourceShape> shape(String connector) {
+        SourcePlugin p = connector == null ? null : plugins.get(connector);
+        return p instanceof ConnectorInstance ci && !ci.shape().none() ? Optional.of(ci.shape()) : Optional.empty();
+    }
+
+    /** The connectors running now whose shape names a trading system, by system ({@code set.SOURCE_SYSTEM} or the value its where fixes). */
+    public Map<String, List<String>> connectorsBySystem() {
+        Map<String, List<String>> out = new java.util.TreeMap<>();
+        plugins.forEach((n, p) -> {
+            if (p instanceof ConnectorInstance ci) {
+                ci.shape().system().ifPresent(s -> out.computeIfAbsent(s, k -> new ArrayList<>()).add(n));
+            }
+        });
+        out.values().forEach(l -> l.sort(null));
+        return out;
+    }
+
+    /**
+     * The record as the connector's store holds it, before its {@code map} and {@code set} (Raw JSON shows the source's native record); empty
+     * when the connector is not running, would not serve it, or is not a connector.
+     */
+    public Optional<com.ash.drishti.api.EntityDocument> fetchNative(String connector, com.ash.drishti.api.EntityRef ref, com.ash.drishti.api.AsOf asOf)
+            throws Exception {
+        SourcePlugin p = connector == null ? null : plugins.containsKey(connector) ? plugins.get(connector) : bySource.get(connector);
+        return p instanceof ConnectorInstance ci ? ci.fetchNative(ref, asOf) : Optional.empty();
+    }
 
     public SourceRegistry(List<SourcePlugin> discovered, SourcesProperties props, JsonCodec codec) {
         this(discovered, props, codec, com.ash.drishti.common.RetryPolicy.defaults());
@@ -424,7 +482,10 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
             throw new IllegalStateException("no plugin named '" + c.plugin() + "'");
         }
         try {
-            return new ConnectorInstance(name, new java.util.HashSet<>(c.kinds()), ComputedKindSource.fresh(proto));
+            // where, set and map (DATA_LAKE_GUIDE.md, "Several source systems"): one shape for every plugin; a shape that cannot be used
+            // refuses the connector here (DRS-5034), shown on Admin -> Connectors
+            SourceShape shape = SourceShape.of(name, c.settings(), shapeBases());
+            return new ConnectorInstance(name, new java.util.HashSet<>(c.kinds()), ComputedKindSource.fresh(proto), shape, systems);
         } catch (ReflectiveOperationException e) {
             throw new IllegalStateException("cannot create " + c.plugin() + ": " + e.getMessage());
         }
@@ -445,6 +506,9 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
         } catch (IllegalArgumentException | java.io.UncheckedIOException e) {
             throw new IllegalStateException(e.getMessage(), e);
         }
+        own.remove("where");                    // the connector's shape: applied where the connector meets the router, never by the plugin
+        own.remove("map");
+        own.keySet().removeIf(k -> k.startsWith("set."));
         String given = own.get("source-name");
         if (given == null || given.isBlank()) {
             own.put("source-name", name);       // documents say which connector they came from (a blank setting, as a form sends, counts as none)

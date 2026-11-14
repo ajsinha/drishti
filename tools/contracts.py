@@ -189,7 +189,8 @@ def id_patterns(all_m: dict) -> dict[str, list[str]]:
 
 def testdata_sets(pack: str, kind: str, testdata: Path = TESTDATA) -> list[dict]:
     y = _yaml(Path(testdata) / "testdata.yaml") or {}
-    return [d for d in y.get("datasets") or [] if d.get("pack") == pack and d.get("kind") == kind]
+    return [d for d in y.get("datasets") or [] if d.get("pack") == pack and d.get("kind") == kind
+            and not d.get("native")]          # a mocked source system's native style is not the canonical shape the contract describes
 
 
 def _dataset_files(d: dict, testdata: Path) -> list:

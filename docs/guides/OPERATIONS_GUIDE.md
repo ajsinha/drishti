@@ -183,7 +183,7 @@ You should see one line per table, then the summary (the folder is your clone's)
 ```text
   trading/trade_endur: … rows over 60 days
   …
-Demo lake ready: …/drishti/data/delta/demo: 86 tables, 60 business days 2026-07-08 to 2026-09-30, built in 943 s
+Demo lake ready: …/drishti/data/delta/demo: 87 tables, 60 business days 2026-07-08 to 2026-09-30, built in 943 s
 Feeds: …/drishti/data/feeds/fixing.jsonl (the file connector's sample feed)
 Server: no server at http://localhost:18480: left …/drishti/data/bi-store/lake-rebuilt.json, so a server clears its stored BI columns and rollups at its next start
 Connector files:
@@ -523,7 +523,7 @@ bin\status.cmd                                                            # both
 bin\stop-all.cmd
 ```
 
-`lake demo` writes the same 86 tables as on Linux. The scripts of `bin\` are the same on Windows, Linux and macOS (`.cmd` and `.ps1` here,
+`lake demo` writes the same 87 tables as on Linux. The scripts of `bin\` are the same on Windows, Linux and macOS (`.cmd` and `.ps1` here,
 `.sh` there): `start-server` checks that Java is 21 or newer, sets `DRISHTI_DELTA_ENGINE=native` on Windows ([`delta` in CONFIGURATION.md](../admin/CONFIGURATION.md#delta--delta-lake)), adds
 `-XX:+UseCompactObjectHeaders` only on Java 25, and `--demo` sets the demo's settings with its development secrets; `start-console` makes
 the console's environment on its first run (with uv when present, else `python -m venv` and pip). Every option, where the pid, log and
@@ -3551,6 +3551,7 @@ codes whose cause or fix needs more than the meaning.
 | `DRS-5445` | the date's netting-set matrices exceed the exposure engine's budget: raise `drishti.ccr.exposure.memory-budget-gb` or the heap, or lower `drishti.ccr.exposure.hot-dates` |
 | `DRS-5031` | a connector file or body is not valid (HTTP 422): bad name, unknown plugin or top-level key, a missing setting, a wrong type, a `name:` that is not the file name, or a literal credential (use `${ENV_VAR}` or `file:/path`) ([DATA_GUIDE.md section 9](DATA_GUIDE.md#912-health-and-problems)) |
 | `DRS-5033` | no connector of that name (HTTP 404): `drishti.py connector list`; the file name is the name |
+| `DRS-5034` | a connector's `where`, `set` or `map` cannot be used (not a predicate, a map file missing or wrong): the connector is refused at load, the reason on Admin → Connectors ([DATA_LAKE_GUIDE.md section 6.2](DATA_LAKE_GUIDE.md#62-several-source-systems-shared-or-separate-tables)) |
 | `DRS-5040` | Admin → Artifacts: no such pack, connector, BI file or archive (an archive older than `uninstalled-keep` is pruned) |
 | `DRS-9203` | a compute pool is busy (HTTP 429): try again, or raise `workers.max` or the queue |
 | `DRS-9501`–`DRS-9505` | busy protection: a new sign-in, date, download, BI run or bulk load waits (HTTP 503 with `Retry-After`): [14.7](#147-busy-protection-refuse-politely-never-fall-over) |

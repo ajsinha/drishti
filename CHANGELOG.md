@@ -18,6 +18,29 @@
 
 ## Unreleased
 
+- **Several source systems on one canonical kind** (docs/guides/DATA_LAKE_GUIDE.md section 6.2; ACCESS_MODEL.md section 10). Trading systems
+  are source modules feeding one `trade` kind with `SOURCE_SYSTEM`. Every read connector (Delta, Iceberg, files; Kafka live) takes `where:`
+  (a row predicate on the stored row, its top-level comparisons pushed down for pruning), `set:` (constants where the row lacks them) and
+  `map:` (a map file: `native: canonical`, `native: {to, cast}`, or the source designer's `canonical: {from, cast, values}` and
+  `canonical: {value}`, with `set:` and `keep:`), applied where each connector meets the router, so one shape serves every plugin; Raw JSON
+  shows the stored, native record. A predicate or map that cannot be used refuses the connector with `DRS-5034`. A binding's `live:` is one
+  connector or a list (several live connectors per kind, merged by key and version). A source module switched off in Admin → Modules acts at
+  once: its connectors leave every read order, its rows leave lists, blotters, search and BI (also from a shared table), its live feed stops,
+  pages of the kind say *excludes ENDUR (switched off)*; switched on, all comes back. The allowed values of `SOURCE_SYSTEM` are the installed
+  systems. Row rules by role (`rows.<kind>` with `$user.<attribute>`) restrict lists, blotters, search and Raw JSON; `edit-systems` limits
+  write-back per system; a blotter edit goes to the write path of the system the record came from, never another's. Aggregates (VaR, BI totals)
+  keep their own scope model. Tests: `SourceShapeTest` (shared table split by where, separate tables, set, map in both forms, two live
+  connectors, a system off and on, refusals), `RowRulesTest`, `SourceRoutingTest`.
+- **One source module per trading system** (modules/trading/docs/guide.md section 11). `modules/source-endur`, `source-calypso`, `source-murex`,
+  `source-wss`, `source-swapone` and `source-ici`, each requiring `trading`, each switchable on its own (`config/modules/source-<system>.yaml`),
+  each feeding the one canonical `trade` kind (`SOURCE_SYSTEM`): connector templates (Delta, Iceberg, files, a Kafka live stream with its
+  write-back), a native-to-canonical mapping, the inbox routing rules (`dataload.yaml`) and a short guide. The Endur Cassandra, Delta on S3,
+  Iceberg and S3 Tables examples moved from `config/connectors.examples/*/trade-endur.yaml` into `source-endur`. The manifest knows
+  `dataload`, `connector-templates` and `mappings`; conformance C9 lets `connector-templates/` and `dataload.yaml` name connectors. Mocked
+  native data for WSS, SwapOne and ICI (`tools/samplegen/src_*.py`, committed under `data/testdata/trades/<system>/`, written by
+  `make_testdata.py`, no positions or scenario P&L: the VaR is unchanged) lands in one shared table, `trading.trades_shared`, split by
+  `SOURCE_SYSTEM`, while Endur, Calypso and Murex keep a table each; `lake demo` builds both and writes the three new connectors; the demo
+  bindings are `config/demo/bindings.yaml` (`lake demo --bindings`); Drishti Risk lists the source modules.
 - **Row retention for Delta, Iceberg and files, as the in-memory lake has it** (docs/guides/DATA_LAKE_GUIDE.md section 2.7). A table's
   `retention: {ttl, on, max-rows}` now works on durable tables: rows past their age (the field `on`, else `arrived_at`, else the business date) and
   beyond the newest `max-rows` are dropped by `lake maintain`, the one upkeep schedule (a Delta commit per date, an Iceberg commit per day, the day files
@@ -63,6 +86,12 @@
   it), four-eyes state, version history, the declaration's links, and a **Raw JSON** tab of the whole stored record (collapsible, Copy, version,
   "changed since you opened it", masked fields kept masked). Console: `live:<id>` in the one live channel, `/api/live` (rows, one record, the
   stream's window, the edit POST), the page `/live/<id>` for any declaration and the trading module's *Trade blotter* menu entry.
+### Pack designer: a source for an existing kind (source modules)
+
+- `drishti.py pack new FILE --source-for trade --system SWAPONE [--shared-table trading.trades_shared | --own-table ...] [--map-edits F] [--live] [--write-back] [--load --lake DIR] [--deploy]`: a new booking system's JSON Lines as a source of the canonical kind, not a new pack. Every record is read; each native field is matched to a canonical field by name, type, values and enums, with a confidence; required fields left without one and native fields left over are listed (`tools/packgen/sourcemap.py`).
+- The source module `modules/source-<sys>/` (`tools/packgen/source_module.py`): `requires:` the kind's module, `connectors:` (read with `where:`/`set:`/`map:`; an optional Kafka listener with write-back, off until the site turns it on), `mappings/<sys>-<kind>.yaml`, the inbox rule (`dataload:`), the page section of the unmapped native fields (`sections:`, shown when `SOURCE_SYSTEM` is the system's), README with front matter, guide, tutorial. Passes the fifteen checks; C9 now allows a source module's connector templates whose hosts, users and secrets are `${...}` placeholders.
+- The Pack designer's second mode (Build -> New pack): after the analysis, "A source for an existing kind" (the kind suggested from the field overlap), then Map (mock-up A of `docs/lenses/mockups/pack-designer-source/`: the map on a grid, cells editable, evidence and unmapped fields beside it) and Layout; Finalize and Deploy as before.
+
 ### Every record list on the live result sets
 - **FORM results are a live result set** (`GET /api/v1/live/query`): the search's rows, columns and order, ticking where the kind has a live
   binding on today's business date, static otherwise; one set per search, date and masking, shared (a masked value never picks, orders or

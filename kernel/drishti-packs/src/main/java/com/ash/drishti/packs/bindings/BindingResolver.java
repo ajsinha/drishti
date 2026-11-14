@@ -184,7 +184,7 @@ public final class BindingResolver {
                                 : "bound to the demo lake, and demo is off (drishti.demo.enabled)");
             } else if (b.read().isEmpty()) {
                 r = new Resolution(kind, BindingState.BOUND, Origin.SITE, List.of(), b, neededBy, required, usedBy, null,
-                        b.writes() ? "written to " + b.writeLake() + " · " + b.writeTable() : "live from " + b.live());
+                        b.writes() ? "written to " + b.writeLake() + " · " + b.writeTable() : "live from " + String.join(", ", b.live()));
             } else {
                 List<String> running = b.read().stream().filter(c -> sources.stream().anyMatch(s -> s.name().equals(c))).toList();
                 r = running.isEmpty()
