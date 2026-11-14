@@ -143,6 +143,15 @@ final class ParseWorker implements Callable<Void> {
         return parser.seen;
     }
 
+    /** Per promoted column: a list of simple values seen, and a value that is not one seen (RowParser). */
+    boolean[] listSeen() {
+        return parser.listSeen;
+    }
+
+    boolean[] notList() {
+        return parser.notList;
+    }
+
     @Override
     public Void call() throws Exception {
         try {

@@ -86,7 +86,9 @@ final class IcebergTarget implements TableTarget {
         }
         for (int i = 0; i < c.promoted().size(); i++) {
             // a number column when every value seen is a number; a column never seen with a value is text (as the Iceberg loader types it)
-            want.put(c.promoted().get(i), c.numeric()[i] && c.seen()[i] ? Type.Primitive.DOUBLE : Type.Primitive.STRING);
+            // a list attribute (every value a list of simple values) is list<string>, its ids assigned when the table is made or grown
+            want.put(c.promoted().get(i), c.list()[i] ? new Type.ListType(0, false, Type.Primitive.STRING)
+                    : c.numeric()[i] && c.seen()[i] ? Type.Primitive.DOUBLE : Type.Primitive.STRING);
         }
         if (RowPlan.loadColumns) {
             want.put(RowPlan.LOAD_ID, Type.Primitive.STRING);           // every row: the load that wrote it, and its file
@@ -101,7 +103,9 @@ final class IcebergTarget implements TableTarget {
             fields.add(NestedField.required(3, "business_date", Type.Primitive.DATE));
             int next = 4;
             for (Map.Entry<String, Type> e : want.entrySet()) {
-                fields.add(NestedField.optional(next++, e.getKey(), e.getValue()));
+                int id = next++;
+                fields.add(NestedField.optional(id, e.getKey(), e.getValue() instanceof Type.ListType
+                        ? new Type.ListType(next++, false, Type.Primitive.STRING) : e.getValue()));
             }
             for (String v : vectors) {
                 int id = next++;
@@ -264,7 +268,8 @@ final class IcebergTarget implements TableTarget {
     public Map<String, String> columnTypes() {
         Map<String, String> out = new LinkedHashMap<>();
         for (NestedField f : schema.columns()) {
-            out.put(f.name(), f.type() instanceof Type.ListType ? "vector" : f.type().toString().toLowerCase(java.util.Locale.ROOT));
+            out.put(f.name(), f.type() instanceof Type.ListType l ? (Type.Primitive.STRING.equals(l.element()) ? "list" : "vector")
+                    : f.type().toString().toLowerCase(java.util.Locale.ROOT));
         }
         return out;
     }

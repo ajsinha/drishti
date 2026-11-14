@@ -130,7 +130,8 @@ final class DeltaTarget implements TableTarget {
             wanted = wanted.add(RowPlan.column(p), StringType.STRING, true);
         }
         for (int i = 0; i < c.promoted().size(); i++) {
-            wanted = wanted.add(c.promoted().get(i), c.numeric()[i] ? DoubleType.DOUBLE : StringType.STRING, true);
+            wanted = wanted.add(c.promoted().get(i), c.list()[i] ? new ArrayType(StringType.STRING, true)
+                    : c.numeric()[i] ? DoubleType.DOUBLE : StringType.STRING, true);
         }
         for (RowPlan.Vector v : plan.vectors) {
             wanted = wanted.add(v.column(), new ArrayType(DoubleType.DOUBLE, true), true);
@@ -165,8 +166,8 @@ final class DeltaTarget implements TableTarget {
                 continue;                                          // a partition column lives in the folder names, not in the files
             }
             Type t = icebergType(f, id + 1000);
-            if (t instanceof Type.ListType) {
-                vectors.add(f.getName());
+            if (t instanceof Type.ListType l && !(l.element() instanceof Type.Primitive p && p.id() == Type.Id.STRING)) {
+                vectors.add(f.getName());                            // a vector's encoding; a list attribute (array<string>) is plain
             }
             fields.add(NestedField.optional(id++, f.getName(), t));
         }
@@ -239,8 +240,11 @@ final class DeltaTarget implements TableTarget {
         if (t instanceof ArrayType a && (a.getElementType() instanceof DoubleType || a.getElementType() instanceof FloatType)) {
             return new Type.ListType(elementId, false, a.getElementType() instanceof FloatType ? Type.Primitive.FLOAT : Type.Primitive.DOUBLE);
         }
-        throw new IllegalStateException("the table's column " + f.getName() + " is " + t + ": the loader writes string, double, long, date and "
-                + "list<double> columns");
+        if (t instanceof ArrayType a && a.getElementType() instanceof StringType) {
+            return new Type.ListType(elementId, false, Type.Primitive.STRING);           // a list attribute (DATA_LAKE_GUIDE.md section 2.4)
+        }
+        throw new IllegalStateException("the table's column " + f.getName() + " is " + t + ": the loader writes string, double, long, date, "
+                + "list<double> and list<string> columns");
     }
 
     private Snapshot snapshot() {
@@ -404,7 +408,7 @@ final class DeltaTarget implements TableTarget {
         Map<String, String> out = new LinkedHashMap<>();
         for (StructField f : schema.fields()) {
             DataType t = f.getDataType();
-            out.put(f.getName(), t instanceof ArrayType ? "vector" : t instanceof DoubleType ? "double" : t instanceof DateType ? "date"
+            out.put(f.getName(), t instanceof ArrayType a ? (a.getElementType() instanceof StringType ? "list" : "vector") : t instanceof DoubleType ? "double" : t instanceof DateType ? "date"
                     : t instanceof LongType ? "long" : "string");
         }
         return out;

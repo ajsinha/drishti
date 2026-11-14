@@ -55,6 +55,8 @@ final class RowParser {
         double num;
         int start;
         int end;
+        /** A container's shape: 0 an object, 1 a list of simple values, 2 a list holding an object or a list. */
+        byte list;
     }
 
     /** A step of the wanted paths. */
@@ -107,6 +109,13 @@ final class RowParser {
     /** Per promoted column: a value that is not a number was seen (or it is an id field); a value was seen at all. */
     final boolean[] notNumeric;
     final boolean[] seen;
+    /**
+     * Per promoted column: a list of simple values was seen ({@code listSeen}); a value that is not one was seen ({@code notList}: a
+     * scalar, an object, a list holding containers). A column whose every value is a list of simple values is an {@code array<string>}
+     * column (DATA_LAKE_GUIDE.md section 2.4).
+     */
+    final boolean[] listSeen;
+    final boolean[] notList;
 
     RowParser(RowPlan plan) {
         this.plan = plan;
@@ -143,6 +152,8 @@ final class RowParser {
         topNames = flattenNames.length > 0 ? new HashSet<>() : null;
         notNumeric = new boolean[plan.promoted.size()];
         seen = new boolean[plan.promoted.size()];
+        listSeen = new boolean[plan.promoted.size()];
+        notList = new boolean[plan.promoted.size()];
         for (int i = 0; i < notNumeric.length; i++) {
             notNumeric[i] = plan.promoted.get(i).idField();
         }
@@ -285,6 +296,7 @@ final class RowParser {
             c.kind = Cap.CONTAINER;
             c.start = start;
             c.end = doc.n;
+            c.list = 0;
         }
     }
 
@@ -350,12 +362,16 @@ final class RowParser {
         }
         int i = 0;
         JsonToken t;
+        byte shape = 1;
         while ((t = p.nextToken()) != JsonToken.END_ARRAY) {
             if (t == null) {
                 throw new IOException("an array ends early");
             }
             if (i > 0) {
                 doc.put(',');
+            }
+            if (t == JsonToken.START_OBJECT || t == JsonToken.START_ARRAY) {
+                shape = 2;
             }
             Node child = node == null || node.items == null ? null : node.items.get(i);
             if (vec != null) {
@@ -376,6 +392,7 @@ final class RowParser {
             c.kind = Cap.CONTAINER;
             c.start = start;
             c.end = doc.n;
+            c.list = shape;
         }
     }
 
@@ -519,6 +536,11 @@ final class RowParser {
                 continue;
             }
             seen[i] = true;
+            if (c.kind == Cap.CONTAINER && c.list == 1) {
+                listSeen[i] = true;
+            } else {
+                notList[i] = true;
+            }
             if (pr.idField() && (c.kind == Cap.INT || c.kind == Cap.FLOAT)) {
                 putText(rec, RowPlan.STR, c.kind == Cap.INT ? c.text : PyJson.idOfFloat(c.num));     // an id is text: 1000008, never 1000008.0
                 continue;

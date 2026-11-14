@@ -152,6 +152,40 @@ def is_id_field(path: str) -> bool:
     return bool(_ID_FIELD.search(path.replace("__", ".").rsplit(".", 1)[-1]))
 
 
+def is_simple_list(v) -> bool:
+    """A list of simple values (texts, numbers, booleans, nulls): a promoted field whose every value is one is written as an
+    array<string> column (DATA_LAKE_GUIDE.md section 2.4); a list holding an object or a list stays in the document."""
+    return isinstance(v, list) and not any(isinstance(x, (list, dict)) for x in v)
+
+
+def list_texts(v) -> list[str] | None:
+    """A list attribute's values as texts (ListValues.java): a number in its plain text (5, never 5.0), a null left out; a single value
+    is a list of one; JSON text of a list is read as the list."""
+    if v is None:
+        return None
+    if isinstance(v, str) and v.startswith("["):
+        try:
+            parsed = json.loads(v)
+            if is_simple_list(parsed):
+                v = parsed
+        except ValueError:
+            pass
+    items = v if isinstance(v, list) else [v]
+    out = []
+    for x in items:
+        if x is None:
+            continue
+        if isinstance(x, bool):
+            out.append("true" if x else "false")
+        elif isinstance(x, float) and x.is_integer() and abs(x) < 1e18:
+            out.append(str(int(x)))
+        elif isinstance(x, (list, dict)):
+            out.append(json.dumps(x, ensure_ascii=False, separators=(",", ":")))
+        else:
+            out.append(str(x))
+    return out
+
+
 def id_text(v) -> str | None:
     """An id as its exact text: 1000008 (a number in the file) -> "1000008", never "1000008.0"; text unchanged (leading zeros kept)."""
     if isinstance(v, float) and v.is_integer() and abs(v) < 1e18:
@@ -181,6 +215,7 @@ class Stats:
     duplicates: Counter = field(default_factory=Counter)             # business date -> copies dropped (an id seen more than once)
     duplicate_examples: list = field(default_factory=list)            # [{date, kept, dropped}] (file:line), in input order
     numeric: dict = field(default_factory=dict)                       # promoted column -> True while every value is a number
+    lists: dict = field(default_factory=dict)                         # promoted column -> True while every value is a list of simple values
     files: list = field(default_factory=list)                         # [{file, bytes}]
     doc_bytes: int = 0                                                # characters of the accepted documents (compact JSON)
     sample: tuple | None = None                                       # (id, date) of the first accepted document, to open one
@@ -337,6 +372,8 @@ class Stager:
             name = column_name(p)
             if v is not None and not _number(v):
                 st.numeric[name] = False
+            if v is not None:                                           # a list attribute: every value a list of simple values (section 2.4)
+                st.lists[name] = st.lists.get(name, True) and is_simple_list(v)
             if is_id_field(p) or p == self.key:                         # an id column is text even when every id is a number
                 st.numeric[name] = False
                 v = id_text(v) if _number(v) else v
@@ -444,7 +481,7 @@ class Stager:
 
     def types(self) -> dict[str, str]:
         """The promoted columns' types from what was read: double when every value present is a number, else string."""
-        out = {name: ("double" if ok else "string") for name, ok in self.stats.numeric.items()}
+        out = {name: ("double" if ok else "list" if self.stats.lists.get(name) else "string") for name, ok in self.stats.numeric.items()}
         out.update({column_name(v): "vector" for v in self.vectors})
         return out
 

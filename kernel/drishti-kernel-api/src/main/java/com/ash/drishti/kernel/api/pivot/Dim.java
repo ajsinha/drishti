@@ -31,15 +31,21 @@ public record Dim(String field, String group) {
     /** The groupings a date or timestamp offers. */
     public static final Set<String> DATE_GROUPS = Set.of("day", "week", "month", "quarter", "year");
 
+    /**
+     * A list attribute shown as one joined label ({@code TAGS:join}: "fx, rates") instead of exploded (each value its own member, a row
+     * counted under each of its values: PIVOT_GUIDE.md, list fields).
+     */
+    public static final String JOIN = "join";
+
     public Dim {
         if (field == null || field.isBlank()) {
             throw PivotView.bad("a dimension needs a field");
         }
         field = field.strip();
         group = group == null || group.isBlank() ? null : group.strip().toLowerCase(Locale.ROOT);
-        if (group != null && !DATE_GROUPS.contains(group) && !group.matches("width=[0-9]+(\\.[0-9]+)?")) {
-            throw PivotView.bad(field + ":" + group + ": a dimension groups a date by day, week, month, quarter or year, or a number by "
-                    + "width=<n>");
+        if (group != null && !DATE_GROUPS.contains(group) && !JOIN.equals(group) && !group.matches("width=[0-9]+(\\.[0-9]+)?")) {
+            throw PivotView.bad(field + ":" + group + ": a dimension groups a date by day, week, month, quarter or year, a number by "
+                    + "width=<n>, or shows a list as one label by join");
         }
     }
 
@@ -49,6 +55,11 @@ public record Dim(String field, String group) {
     }
 
     /** The width of a number grouping, or 0. */
+    /** Whether a list attribute is shown as one joined label rather than exploded. */
+    public boolean joined() {
+        return JOIN.equals(group);
+    }
+
     public double width() {
         return group != null && group.startsWith("width=") ? Double.parseDouble(group.substring(6)) : 0;
     }

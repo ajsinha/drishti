@@ -56,6 +56,11 @@ final class NativeLayout {
 
     /** The layout's schema with vector columns ({@code list<double>}, optional elements), as {@link IcebergLayout#schema(Map, Set)}. */
     static Schema schema(Map<String, Boolean> promoted, Set<String> vectors) {
+        return schema(promoted, vectors, Set.of());
+    }
+
+    /** With list attributes ({@code list<string>}, optional elements: promoted lists of simple values). */
+    static Schema schema(Map<String, Boolean> promoted, Set<String> vectors, Set<String> lists) {
         List<NestedField> fields = new ArrayList<>();
         fields.add(NestedField.required(1, IcebergLayout.ID, Type.Primitive.STRING));
         fields.add(NestedField.optional(2, IcebergLayout.DOC, Type.Primitive.STRING));
@@ -69,6 +74,10 @@ final class NativeLayout {
         for (String v : vectors) {
             int id = next++;
             fields.add(NestedField.optional(id, IcebergLayout.column(v), new Type.ListType(next++, false, Type.Primitive.DOUBLE)));
+        }
+        for (String l : lists) {
+            int id = next++;
+            fields.add(NestedField.optional(id, IcebergLayout.column(l), new Type.ListType(next++, false, Type.Primitive.STRING)));
         }
         return new Schema(0, fields);
     }
@@ -97,10 +106,16 @@ final class NativeLayout {
 
     /** {@link #open(Catalog, String, Map, long, int)} with vector columns ({@code list<double>}), added when missing too. */
     static Table open(Catalog catalog, String kind, Map<String, Boolean> promoted, Set<String> vectors, long rowGroupBytes, int fileRows) {
+        return open(catalog, kind, promoted, vectors, Set.of(), rowGroupBytes, fileRows);
+    }
+
+    /** With list attributes ({@code list<string>}), added when missing too. */
+    static Table open(Catalog catalog, String kind, Map<String, Boolean> promoted, Set<String> vectors, Set<String> lists, long rowGroupBytes,
+            int fileRows) {
         try {
             Table t = catalog.load(kind).orElse(null);
             if (t == null) {
-                Schema s = schema(promoted, vectors);
+                Schema s = schema(promoted, vectors, lists);
                 PartitionSpec spec = new PartitionSpec(0, List.of(new PartitionSpec.Field(3, 1000, IcebergLayout.DATE, Transform.Identity.INSTANCE)));
                 SortOrder order = new SortOrder(1, List.of(new SortOrder.Field(1, Transform.Identity.INSTANCE, true, true)));
                 try {
@@ -118,6 +133,11 @@ final class NativeLayout {
             for (String v : vectors) {
                 if (t.metadata().schema().field(IcebergLayout.column(v)) == null) {
                     missing.put(IcebergLayout.column(v), new Type.ListType(0, false, Type.Primitive.DOUBLE));   // ids assigned by the commit
+                }
+            }
+            for (String l : lists) {
+                if (t.metadata().schema().field(IcebergLayout.column(l)) == null) {
+                    missing.put(IcebergLayout.column(l), new Type.ListType(0, false, Type.Primitive.STRING));
                 }
             }
             if (!missing.isEmpty()) {
@@ -225,6 +245,10 @@ final class NativeLayout {
     static Object value(Type type, Object v) {
         if (v == null) {
             return null;
+        }
+        if (type instanceof Type.ListType l && Type.Primitive.STRING.equals(l.element())) {
+            List<String> texts = v instanceof IcebergLoader.Texts x ? x.values() : com.ash.drishti.api.ListValues.of(v);
+            return texts != null ? texts : List.of(String.valueOf(v));      // a list attribute; a single value is a list of one
         }
         if (type.id() == Type.Id.LIST) {
             return IcebergLayout.vector(v);

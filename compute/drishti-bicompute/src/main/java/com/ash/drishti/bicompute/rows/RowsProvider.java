@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.bicompute.rows;
 
+import com.ash.drishti.api.ListValues;
 import com.ash.drishti.kernel.api.pivot.AggregationPlan;
 import com.ash.drishti.kernel.api.pivot.AggregationPlan.FunctionCall;
 import com.ash.drishti.kernel.api.pivot.CellKey;
@@ -105,10 +106,30 @@ public final class RowsProvider implements PivotProvider {
         return i == null ? "string" : fields.get(i).type();
     }
 
+    /**
+     * A row's members of a dimension: one, or for a list attribute each distinct value (explode: the row counts under each; an empty
+     * list is the blank member), unless the dimension joins it into one label ({@code TAGS:join}).
+     */
+    List<String> values(Dim d, Object[] row) {
+        Integer i = at.get(d.field());
+        Object raw = i == null || i >= row.length ? null : row[i];
+        if (d.group() == null && (raw instanceof java.util.Collection<?> || "list".equals(type(d.field())))) {
+            List<String> items = ListValues.of(raw);
+            if (items != null) {
+                List<String> out = items.stream().filter(s -> !s.isBlank()).distinct().toList();
+                return out.isEmpty() ? List.of(CellKey.BLANK) : out;
+            }
+        }
+        return List.of(value(d, row));
+    }
+
     /** A row's value of a dimension as the cell keys write it (the tabular provider's formatting, for the same answers). */
     String value(Dim d, Object[] row) {
         Integer i = at.get(d.field());
         Object raw = i == null || i >= row.length ? null : row[i];
+        if (d.joined() || raw instanceof java.util.Collection<?>) {
+            raw = ListValues.joined(raw);                           // a list as one label: "fx, rates"
+        }
         if (raw == null || String.valueOf(raw).isBlank()) {
             return CellKey.BLANK;
         }
@@ -119,6 +140,9 @@ public final class RowsProvider implements PivotProvider {
             }
             double b = Math.floor(x / d.width()) * d.width();
             return d.width() == Math.rint(d.width()) ? Long.toString((long) b) : Double.toString(b);
+        }
+        if (d.joined()) {
+            return String.valueOf(raw);
         }
         if (d.group() != null || "date".equals(type(d.field()))) {
             String s = String.valueOf(raw);
@@ -159,21 +183,23 @@ public final class RowsProvider implements PivotProvider {
         }
     }
 
+    /** Whether a row is in the set: a list attribute's filter keeps a row with any of the chosen values and none of the left-out ones. */
     private boolean keep(AggregationPlan plan, CellSet set, Object[] row) {
         for (Map.Entry<String, AggregationPlan.Filter> f : plan.filters().entrySet()) {
             Dim d = plan.dims().get(f.getKey());
-            String v = d == null ? CellKey.BLANK : value(d, row);
-            if (!f.getValue().in().isEmpty() && !f.getValue().in().contains(v) || f.getValue().notIn().contains(v)) {
+            List<String> v = d == null ? List.of(CellKey.BLANK) : values(d, row);
+            if (!f.getValue().in().isEmpty() && v.stream().noneMatch(f.getValue().in()::contains)
+                    || v.stream().anyMatch(f.getValue().notIn()::contains)) {
                 return false;
             }
         }
         for (Map.Entry<String, String> a : set.at().entrySet()) {
-            if (!a.getValue().equals(value(plan.dims().get(a.getKey()), row))) {
+            if (!values(plan.dims().get(a.getKey()), row).contains(a.getValue())) {
                 return false;
             }
         }
         for (Map.Entry<String, List<String>> ex : set.exclude().entrySet()) {
-            if (ex.getValue().contains(value(plan.dims().get(ex.getKey()), row))) {
+            if (values(plan.dims().get(ex.getKey()), row).stream().anyMatch(ex.getValue()::contains)) {
                 return false;
             }
         }
@@ -190,11 +216,23 @@ public final class RowsProvider implements PivotProvider {
                 if (!keep(plan, set, row)) {
                     continue;
                 }
-                Map<String, String> coords = new TreeMap<>();
+                // the row's cells: one, or one per value of each list attribute grouped by (explode; a row in several cells)
+                List<Map<String, String>> all = new ArrayList<>(List.of(new TreeMap<>()));
                 for (String g : set.grouping()) {
-                    coords.put(g, value(plan.dims().get(g), row));
+                    List<String> vs = values(plan.dims().get(g), row);
+                    List<Map<String, String>> next = new ArrayList<>(all.size() * vs.size());
+                    for (Map<String, String> c : all) {
+                        for (String x : vs) {
+                            Map<String, String> m = new TreeMap<>(c);
+                            m.put(g, x);
+                            next.add(m);
+                        }
+                    }
+                    all = next;
                 }
-                groups.computeIfAbsent(set.key(coords), k -> new ArrayList<>()).add(row);
+                for (Map<String, String> coords : all) {
+                    groups.computeIfAbsent(set.key(coords), k -> new ArrayList<>()).add(row);
+                }
             }
             TreeMap<CellKey, Partials.Entry> cells = new TreeMap<>();
             for (Map.Entry<CellKey, List<Object[]>> g : groups.entrySet()) {

@@ -127,6 +127,17 @@ public final class KindSources implements TabularSource.Resolver {
         return data.datasets().stream().anyMatch(d -> d.kind().equals(source));
     }
 
+    /** A value as staged: a number or text as it is, a list of simple values as its JSON text (a list member reads it back), else text. */
+    static Object staged(Object o) {
+        if (o == null || o instanceof Number || o instanceof String) {
+            return o;
+        }
+        if (o instanceof java.util.Collection<?> c && com.ash.drishti.api.ListValues.isList(c)) {
+            return com.ash.drishti.api.ListValues.json(c);
+        }
+        return String.valueOf(o);
+    }
+
     static String type(DataViewService.Column c) {
         String t = c.type() == null ? "" : c.type().toLowerCase(Locale.ROOT);
         if (NUMBER.contains(t)) {
@@ -134,6 +145,9 @@ public final class KindSources implements TabularSource.Resolver {
         }
         if (DATE.contains(t) || t.isEmpty() && c.name().toUpperCase(Locale.ROOT).endsWith("_DATE")) {
             return "date";
+        }
+        if (t.endsWith("list") && !t.startsWith("record")) {
+            return "list";                       // a list of simple values (text list, id list): each value a member (PIVOT_GUIDE.md)
         }
         return "string";
     }
@@ -452,8 +466,7 @@ public final class KindSources implements TabularSource.Resolver {
                             }
                             Object[] vals = new Object[cols.size() + 2];
                             for (int i = 0; i < cols.size(); i++) {
-                                Object o = row.get(cols.get(i));
-                                vals[i] = o == null || o instanceof Number || o instanceof String ? o : String.valueOf(o);
+                                vals[i] = staged(row.get(cols.get(i)));
                             }
                             Object id = d.key() == null ? null : row.get(d.key());
                             vals[cols.size()] = id == null ? null : String.valueOf(id);
@@ -566,8 +579,7 @@ public final class KindSources implements TabularSource.Resolver {
                             }
                             Object[] vals = new Object[cols.size()];
                             for (int i = 0; i < vals.length; i++) {
-                                Object o = row.get(cols.get(i));
-                                vals[i] = o == null || o instanceof Number || o instanceof String ? o : String.valueOf(o);
+                                vals[i] = staged(row.get(cols.get(i)));
                             }
                             try {
                                 sink.row(vals);

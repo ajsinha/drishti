@@ -391,7 +391,8 @@ abstract class KindTable {
                 ids.add(id == null ? "" : id.toString());
                 for (int c = 0; c < paths.size(); c++) {
                     Object v = r[c + 1];
-                    values.get(c).add(v == null ? null : num[c] ? (Object) ((Number) v).doubleValue() : v.toString());
+                    values.get(c).add(v == null ? null : num[c] ? (Object) ((Number) v).doubleValue()
+                            : v instanceof java.util.Collection<?> items ? com.ash.drishti.api.ListValues.json(items) : v.toString());   // a list: JSON text
                 }
             });
             return new Object[] {ids, values};

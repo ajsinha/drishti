@@ -856,7 +856,11 @@ final class DeltaTable {
         return len;
     }
 
+    /** A column read in its own type and handed over as text: a scalar, or a list attribute ({@code array<string>}, its JSON text). */
     private static boolean isScalar(io.delta.kernel.types.DataType t) {
+        if (t instanceof io.delta.kernel.types.ArrayType a) {
+            return a.getElementType() instanceof StringType || isScalar(a.getElementType()) && !(a.getElementType() instanceof io.delta.kernel.types.ArrayType);
+        }
         return t instanceof io.delta.kernel.types.LongType || t instanceof io.delta.kernel.types.IntegerType
                 || t instanceof io.delta.kernel.types.ShortType || t instanceof io.delta.kernel.types.ByteType
                 || t instanceof io.delta.kernel.types.DoubleType || t instanceof io.delta.kernel.types.FloatType
@@ -866,6 +870,16 @@ final class DeltaTable {
     /** A cell as text: a number keeps its digits (1000008, never 1000008.0), so an id written as a number reads as the id. */
     static String text(io.delta.kernel.data.ColumnVector v, int r) {
         io.delta.kernel.types.DataType t = v.getDataType();
+        if (t instanceof io.delta.kernel.types.ArrayType) {
+            // a list attribute: its JSON text, as a column of text held it before (com.ash.drishti.api.ListValues reads both)
+            io.delta.kernel.data.ArrayValue a = v.getArray(r);
+            io.delta.kernel.data.ColumnVector el = a.getElements();
+            List<Object> items = new ArrayList<>(a.getSize());
+            for (int i = 0; i < a.getSize(); i++) {
+                items.add(el.isNullAt(i) ? null : el.getDataType() instanceof StringType ? el.getString(i) : text(el, i));
+            }
+            return com.ash.drishti.api.ListValues.json(items);
+        }
         if (t instanceof io.delta.kernel.types.LongType) {
             return Long.toString(v.getLong(r));
         }
