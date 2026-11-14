@@ -408,6 +408,17 @@ def module_of(pack: str) -> str | None:
     return None
 
 
+_REPO_LINK = re.compile(r"\]\(((?:\.\./)+)(docs/|HOW_IT_FITS|README|config/|plugins/|drishti-console/|tools/|examples/)")
+
+
+def deepen(text: str, pack_dir: Path) -> str:
+    """The repository links of a pack's page, one folder level deeper for a pack in a module whose manifest is in its ``dmod`` folder
+    (modules/banking/dmod/packs/<pack>): the generators write the depth of every other pack (four levels to the repository root)."""
+    if "/dmod/packs/" not in Path(pack_dir).resolve().as_posix():
+        return text
+    return _REPO_LINK.sub(lambda m: "](../" + m.group(1) + m.group(2), text)
+
+
 def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None = None, intro: Path | None = None) -> str:
     """A pack's README.md. ``files``: {path: text} a generator is about to write (pack.yaml, samples), read before the disk."""
     pack_dir = Path(pack_dir)
@@ -625,4 +636,4 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
         out.append(isec["See also"])
     out += ["- [Packs](../../../../docs/guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/BUILD_GUIDE.md) "
             "(the README standard).", ""]
-    return "\n".join(out).rstrip() + "\n"
+    return deepen("\n".join(out).rstrip() + "\n", pack_dir)

@@ -307,7 +307,7 @@ def files() -> dict[Path, str]:
         out[pack_dir(pack) / "config" / "help.yaml"] = "\n".join("#" + (" " + x if x.strip() else "") for x in HEADER.splitlines()[1:14]) + \
             f"\n\n# {GENERATED[5:-4]}\n{help_yaml}"
         out[pack_dir(pack) / "README.md"] = README.render_pack(pack_dir(pack), files=out)
-    return {f: GD.link_kinds(t) if f.parent.name == "guides" else t for f, t in out.items()}   # each input kind linked to its example and contract
+    return {f: (README.deepen(GD.link_kinds(t), f.parent) if f.parent.name == "guides" else t) for f, t in out.items()}   # each input kind linked to its example and contract
 
 
 def main() -> None:
