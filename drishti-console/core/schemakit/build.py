@@ -223,7 +223,9 @@ def columns_for(kp: KindPlan, n: int = 7) -> list[str]:
     scal = [f.path for f in kp.fields if "." not in f.path and "[" not in f.path and f.path != kp.key and f.role not in ("object", "table", "map", "list")
             and not f.hidden]
     pref = [p for p in kp.strip if p in scal]
-    return list(dict.fromkeys(pref + [p for p in scal if p not in pref]))[:n]
+    # every top-level list of simple values is promoted too (a list attribute: an array<string> column, DATA_LAKE_GUIDE.md section 2.4)
+    lists = [f.path for f in kp.fields if f.role == "list" and "." not in f.path and "[" not in f.path and not f.hidden]
+    return list(dict.fromkeys(pref + [p for p in scal if p not in pref]))[:n] + [p for p in lists if p not in scal]
 
 
 _NUM_FMT = re.compile(r"(?i)(money|amount|ccy|usd|price|signed|mtm|notional)")

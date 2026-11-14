@@ -74,6 +74,7 @@
   /* ---- src/drishti_cells.js ---- */
   __m["src/drishti_cells.js"] = (function () {
     var h = __m["src/drishti_dom.js"].h, str = __m["src/drishti_dom.js"].str, toneClass = __m["src/drishti_dom.js"].toneClass;
+    var chipList = __lib("drishti-core").chipList, isListValue = __lib("drishti-core").isListValue;
     const enc = (s) => encodeURIComponent(String(s == null ? '' : s));
     function entityHref(R, link) {
       return (R.server || '') + '/v/' + enc(link.kind) + '/' + String(link.id == null ? '' : link.id).split('/').map(enc).join('/');
@@ -92,6 +93,7 @@
       if (typeof t === 'string' && (t.startsWith('https://') || t.startsWith('http://')) && !t.includes(' ')) {
         return h('a', { class: 'lnk ext', href: t, target: R.outsideLinks === 'new-window' ? '_blank' : null, rel: 'noopener noreferrer nofollow', title: t, 'data-r-link': 'outside' }, t);
       }
+      if (isListValue(t)) { return chipList(document, t, { label: c.label || '' }); }   // a list attribute (fmt: list): chips
       return str(t);
     }
     function entity(R, label, link) {

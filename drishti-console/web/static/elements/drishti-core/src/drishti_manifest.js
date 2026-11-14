@@ -23,15 +23,16 @@ export const MANIFEST = Object.freeze({
   "elements": "1.0.0",
   "libraries": {
     "drishti-core": {
-      "version": "1.1.0",
-      "title": "Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts, the filter model every library shares, the element maker and placements, Explain's drawing, the CSV writer, reading typed numbers, loading vendored engines",
+      "version": "1.2.0",
+      "title": "Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts, the filter model every library shares, the element maker and placements, Explain's drawing, chips for list attributes, the CSV writer, reading typed numbers, loading vendored engines",
       "bundle": "drishti-core/drishti_core.js",
       "entry": "drishti-core/src/drishti_index.js",
       "global": "core",
       "requires": [],
       "css": [
         "css/drishti_tokens.css",
-        "css/drishti_resize.css"
+        "css/drishti_resize.css",
+        "css/drishti_chips.css"
       ],
       "scripts": [],
       "module": "core"

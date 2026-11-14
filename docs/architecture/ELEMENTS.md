@@ -177,6 +177,16 @@ Takes over: `drishti_app.js`, `drishti_theme-init.js`, `drishti_resize.js`, `dri
 the formats and JSON calls of `drishti_bi-lib.js`, and the dialogs of `drishti_busy.js`, `drishti_scope-delete.js`,
 `drishti_artifact-uninstall.js`, `drishti_server-watch.js`, `build/drishti_grid-keys.js`.
 
+#### Chips: list attributes (drishti-core 1.2.0)
+
+`chipList(document, values, {max, compact, label})` (or `new Chips(host, options)`) draws a list attribute: the first `max` chips (3) and
+**"+N more ▾"**; a click, **Enter** or **Space** expands it vertically in place to every value and "▴ less" collapses it; the toggle
+carries `aria-expanded` and keeps focus; `drishti:chips-toggle` says which. Values may be an array or its JSON text (a promoted list
+column). `compact` is a grid cell's form: the first chip and a count badge, expanding downward over the rows below. Theme tokens only
+(`css/drishti_chips.css`), so dark and light work. drishti-grid draws a column of `type: 'list'` (or list values) with it, the renderer
+and the console's panels draw `fmt: list` cells with it (`upgradeChips(root)` upgrades a server page's `[data-drishti-chips]`), and the
+Sutra generator gives lists of plain values `fmt: list`. Tests: `tests/test_elements_chips_browser.py`.
+
 ### 4.2 drishti-inputs
 
 `<drishti-select>` (one value from a list: keyboard, type-ahead, search on a long list), `<drishti-multiselect>`, `<drishti-date>` (date,

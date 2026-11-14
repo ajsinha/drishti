@@ -197,6 +197,11 @@ The field list shows them grouped by what they count: the trade's own fields fir
 offered as *Your path*, to drag to a zone like any field. The same paths work in a saved view, on the command line and in the API; the
 answer names each field by its id (`LEGS.NOTIONAL`).
 
+**A list field** (a promoted list of simple values, `TAGS: ["fx", "rates"]`) as a row or column field **counts each value**: a row
+tagged fx and rates is in both cells, so totals across the field may count a row more than once, and the answer's note says so (the
+grand total still counts each row once). `TAGS:join` shows the list as one label ("fx, rates") instead. One list field is exploded at a
+time; give another `:join`. A filter on a list field keeps the rows holding any chosen value.
+
 **The rules, so a figure is never counted twice:**
 
 1. **One grain per view: the finest list its rows, columns and values use.** Rows *Desk* and values *Sum of Legs › Notional* aggregate one

@@ -22,7 +22,7 @@ one bundled file next to them; a page loads drishti-core and then `Drishti.eleme
 
 | Library | Version | What it is |
 |---|---|---|
-| [drishti-core](#drishti-core) | 1.1.0 | Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts, the filter model every library shares, the element maker and placements, Explain's drawing, the CSV writer, reading typed numbers, loading vendored engines |
+| [drishti-core](#drishti-core) | 1.2.0 | Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts, the filter model every library shares, the element maker and placements, Explain's drawing, chips for list attributes, the CSV writer, reading typed numbers, loading vendored engines |
 | [drishti-inputs](#drishti-inputs) | 0.3.1 | Inputs: business-date and range pickers with holiday calendars, the on/off switch, the tree picker, the multi-select, the combobox with server type-ahead (on its own field or a page's), forms from a schema (live or embedded, steps, named fields, hooks, custom widgets, time, date-and-time and money) with four eyes, the time and date-and-time pickers, the filter bar, the code editor over CodeMirror, and a page's own date fields and checkbox lists upgraded in place |
 | [drishti-grid](#drishti-grid) | 0.4.0 | The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and &lt;drishti-grid&gt; in three layouts and three densities), cell editing with undo, paste, write-back and four eyes, and the AG Grid-style adapter (createGridFromAgOptions) |
 | [drishti-tree](#drishti-tree) | 0.2.0 | The tree: hierarchies as an org chart, an indented tree with measures (on drishti-grid's tree data), a sunburst and an icicle; expand and collapse, search with breadcrumbs, measures on nodes with non-additive ones (◆) asked of the server and never summed, Explain, re-parenting in an edit mode that proposes the move for four eyes, the outline of an authoring screen (marks, a hiding filter, a designer's selection followed both ways, moves by drag or Alt+arrows), export, keyboard and ARIA |
@@ -36,7 +36,7 @@ one bundled file next to them; a page loads drishti-core and then `Drishti.eleme
 
 ## drishti-core
 
-Version 1.1.0. Bundle `static/elements/drishti-core/drishti_core.js`, global `Drishti.elements.core`.
+Version 1.2.0. Bundle `static/elements/drishti-core/drishti_core.js`, global `Drishti.elements.core`.
 
 ### drishti_format.js
 
@@ -918,6 +918,87 @@ Tracks one pointer from a press until it is let go.
 
 Returns `{cancel: function(): void}`.
 
+### drishti_chips.js
+
+#### class `Chips`
+
+Chips over a host element: new Chips(host, {values}); setValues() redraws, toggle() expands or collapses.
+
+##### `new Chips(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `[options]` | `ChipsOptions` |  |
+
+##### `Chips.setValues(values)`
+
+Replaces the values and redraws (collapsed).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `values` | `*` |  |
+
+Returns `void`.
+
+##### `Chips.toggle(open)`
+
+Expands (true), collapses (false) or flips; emits drishti:chips-toggle with {expanded}.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[open]` | `boolean` |  |
+
+Returns `void`.
+
+##### `Chips.render()`
+
+Draws the chips: collapsed, the first few and "+N more ▾" (compact: the first and a count); expanded, every value and "▴ less".
+
+Returns `void`.
+
+#### `chipList(doc, values, options)`
+
+A list attribute as a chips element (a renderer's or a grid cell's one call).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `doc` | `Document` |  |
+| `values` | `*` | the list or its JSON text |
+| `[options]` | `ChipsOptions` |  |
+
+Returns `HTMLElement`.
+
+#### `listValues(v)`
+
+A list attribute's values as texts: an array's elements, the JSON text of one read as it, a single value a list of one; blanks left out.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+
+Returns `string[]`.
+
+#### `isListValue(v)`
+
+Whether a value is a list attribute (an array of simple values, or the JSON text of one).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+
+Returns `boolean`.
+
+#### `upgradeChips(root)`
+
+Upgrades the list values a server page wrote (span[data-drishti-chips] holding the list's JSON text) into chips, once each.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `root` | `ParentNode` |  |
+
+Returns `number`: how many were upgraded.
+
 ### drishti_keys.js
 
 #### `WORKBENCH`
@@ -1533,6 +1614,16 @@ Returns `void`.
 | `status` | `number` | 0 when the server was not reached |
 | `body` | `*` | the JSON answer ({} when there was none); on a failure {detail} at least |
 | `error` | `?ApiError` |  |
+
+#### `ChipsOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[values]` | `Array&lt;string\|number\|boolean&gt;\|string` | the list, or its JSON text (["fx","rates"]) as a promoted column holds it |
+| `[max]` | `number` | chips shown collapsed (default 3; compact: 1) |
+| `[compact]` | `boolean` | a grid cell's form: the first chip and a count badge |
+| `[expanded]` | `boolean` | start expanded |
+| `[label]` | `string` | what the list is, for screen readers ("Tags") |
 
 #### `BusinessDate` : `Object`
 

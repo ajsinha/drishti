@@ -75,12 +75,17 @@ def pack_code(name: str) -> str:
 
 
 def scalar_columns(docs: list[dict], key: str | None, n: int = 7) -> list[str]:
+    """The top-level fields to promote: the first n scalar fields, then every list of simple values (a list attribute such as TAGS, an
+    array<string> column, DATA_LAKE_GUIDE.md section 2.4); a list of objects stays in the document."""
     seen: dict[str, int] = {}
+    lists: dict[str, bool] = {}
     for d in docs[:50]:
         for k, v in d.items():
-            if not isinstance(v, (dict, list)) and k != key and v is not None:
+            if isinstance(v, list) and k != key:
+                lists[k] = lists.get(k, True) and not any(isinstance(x, (dict, list)) for x in v)
+            elif not isinstance(v, dict) and k != key and v is not None:
                 seen[k] = seen.get(k, 0) + 1
-    return [k for k in seen][:n]
+    return [k for k in seen][:n] + [k for k, simple in lists.items() if simple and k not in seen]
 
 
 def shown_fields(groups) -> dict[str, list[str]]:

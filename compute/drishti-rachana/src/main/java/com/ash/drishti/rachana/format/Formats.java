@@ -104,8 +104,34 @@ public final class Formats implements com.ash.drishti.common.LiveSettings {
         return specs.keySet();
     }
 
+    /** The list format: a list attribute's values as JSON text ({@code ["fx","rates"]}), which every renderer draws as chips. */
+    public static final String LIST = "list";
+
+    private static String list(Object value) {
+        Object v = Values.simplify(value);
+        if (v == null) {
+            return "";
+        }
+        java.util.List<Object> items = new java.util.ArrayList<>();
+        if (v instanceof com.ash.drishti.api.DataNode n && n.type() == com.ash.drishti.api.NodeType.ARRAY) {
+            for (int i = 0; i < n.size(); i++) {
+                Object e = Values.simplify(n.get(i));
+                if (e != null && !Values.text(e).isBlank()) {
+                    items.add(Values.text(e));
+                }
+            }
+        } else {
+            java.util.List<String> parsed = com.ash.drishti.api.ListValues.of(v instanceof CharSequence ? v : Values.text(v));
+            items.addAll(parsed != null ? parsed : java.util.List.of(Values.text(v)));
+        }
+        return items.isEmpty() ? "" : com.ash.drishti.api.ListValues.json(items);
+    }
+
     /** Formats {@code value}; an unknown or null format name falls back to plain text. */
     public String format(String name, Object value) {
+        if (LIST.equals(name)) {
+            return list(value);
+        }
         FormatSpec s = name == null ? null : specs.get(name);
         return s == null ? Values.text(value) : s.format(value);
     }

@@ -377,7 +377,7 @@ final class StructurePanels {
         return "number".equals(f.type()) && !f.is("dimension") ? 3 : 2;
     }
 
-    /** One labelled value: a link opens its entity, a list of plain values reads as one line, amounts and rates keep their format. */
+    /** One labelled value: a link opens its entity, a list of plain values shows as chips, amounts and rates keep their format. */
     private Column column(FieldNode f, String prefix, String selfKind) {
         String bind = prefix + f.name();
         String label = Semantics.humanize(f.name());
@@ -385,7 +385,7 @@ final class StructurePanels {
             return new Column(label, "link(" + bind + ", '" + f.role().kind() + "')", null, null, false, false);
         }
         if (f.array()) {
-            return new Column(label, "reduce(" + bind + ", '', concat(@acc, nonblank(@acc) ? ', ' : '', @))", null, null, false, false);
+            return new Column(label, bind, com.ash.drishti.rachana.format.Formats.LIST, null, false, false);   // chips (drishti-core)
         }
         if (f.is("status")) {
             return new Column(label, bind, null, "status", false, false);

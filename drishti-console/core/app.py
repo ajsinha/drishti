@@ -15,6 +15,7 @@
 """Application factory: one FastAPI app serving pages, static assets and security headers."""
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
@@ -503,6 +504,16 @@ def create_app(settings: Settings) -> FastAPI:
         return str(text or "").replace("{product}", str(ctx.get("PRODUCT") or ""))
 
     templates.env.filters["product"] = product
+
+    def list_words(text):
+        """A list attribute's JSON text (["fx","rates"], the list format) as words, before drishti-core turns it into chips."""
+        try:
+            items = json.loads(text)
+        except (TypeError, ValueError):
+            return text
+        return ", ".join(str(x) for x in items if x is not None) if isinstance(items, list) else text
+
+    templates.env.filters["list_words"] = list_words
     from core import half_up
     half_up.install(templates.env)                      # the panel macros' one rounding rule (half up, as the server and the renderer)
     app.state.settings = settings

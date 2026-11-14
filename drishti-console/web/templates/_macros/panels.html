@@ -20,6 +20,7 @@
 {%- if c.tone == 'inactive' -%}<span class="lnk-off" title="Not active: an administrator turned this command off">{{ c.text }}</span> <span class="lk-badge lk-off">not active</span>
 {%- elif c.link -%}<a class="lnk" href="/v/{{ c.link.kind | urlencode }}/{{ c.link.id | urlencode }}">{{ c.text }}</a>
 {%- elif c.text is string and (c.text.startswith('https://') or c.text.startswith('http://')) and ' ' not in c.text -%}<a class="lnk ext" href="{{ c.text }}" target="_blank" rel="noopener noreferrer nofollow" title="{{ c.text }}">{{ c.text }}</a>
+{%- elif c.text is string and c.text.startswith('["') and c.text.endswith(']') -%}<span class="drishti-chips-host" data-drishti-chips="{{ c.text }}" aria-label="{{ c.label }}">{{ c.text | list_words }}</span>
 {%- else -%}{{ c.text }}{%- endif -%}
 {%- endmacro %}
 
