@@ -151,7 +151,7 @@ def settings_view(manifest: dict, connector: dict) -> dict:
 
 
 def with_modules(manifest: dict | None) -> dict:
-    """The trading pack's manifest with the Delta read template of every source module (modules/source-<system>/connector-templates/
+    """The trading pack's manifest with the Delta read template of every source module (modules/source-<system>/connectors/
     delta.yaml, connector ``trade-<system>``) added where the pack does not declare that connector itself. A source system is a module
     of its own; the pack declares only the three systems that shipped with it. Any other pack: unchanged."""
     m = dict(manifest or {})
@@ -159,7 +159,7 @@ def with_modules(manifest: dict | None) -> dict:
         return m
     import yaml
     conns = dict(m["connectors"])
-    for f in sorted((pathlib.Path(__file__).resolve().parents[1] / "modules").glob("source-*/connector-templates/delta.yaml")):
+    for f in sorted((pathlib.Path(__file__).resolve().parents[1] / "modules").glob("source-*/connectors/delta.yaml")):
         name = "trade-" + f.parents[1].name[len("source-"):]
         if name not in conns:
             conns[name] = yaml.safe_load(f.read_text(encoding="utf-8"))

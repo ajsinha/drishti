@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 /**
  * What a pack recommends for a kind's table (docs/architecture/DATA_ARCHITECTURE.md section 3, decision L2), read from its {@code pack.yaml}:
@@ -40,10 +41,56 @@ import java.util.Map;
 public record PackEntry(String domain, String table, String key, String date, List<String> promote, List<String> vectors,
         Map<String, String> flatten, List<String> sortBy, String latestBy, LakeTable entry) {
 
+    /**
+     * The pack's {@code pack.yaml} with the Delta read template of each source module that requires the pack
+     * ({@code modules/source-<system>/connectors/delta.yaml}, connector {@code <kind>-<system>}) added to its connectors where the pack does
+     * not declare that name itself: a source system is a module of its own, and its connectors have that one home. The modules folder is
+     * found above the pack, else {@code drishti.modules.dir}.
+     */
+    static JsonNode manifest(Path file) throws IOException {
+        JsonNode m = new YAMLMapper().readTree(Files.readString(file));
+        String pack = m.path("pack").asText("");
+        Path modules = modulesDir(file);
+        if (pack.isEmpty() || modules == null || !(m instanceof com.fasterxml.jackson.databind.node.ObjectNode root)) {
+            return m;
+        }
+        com.fasterxml.jackson.databind.node.ObjectNode defs = root.path("connectors").isObject()
+                ? (com.fasterxml.jackson.databind.node.ObjectNode) root.get("connectors") : root.putObject("connectors");
+        try (Stream<Path> s = Files.list(modules)) {
+            for (Path dir : s.filter(d -> d.getFileName().toString().startsWith("source-")).sorted().toList()) {
+                Path mod = dir.resolve("module.yaml");
+                Path tpl = dir.resolve("connectors").resolve("delta.yaml");
+                if (!Files.isRegularFile(mod) || !Files.isRegularFile(tpl) || !new YAMLMapper().readTree(Files.readString(mod)).path("requires").has(pack)) {
+                    continue;
+                }
+                JsonNode c = new YAMLMapper().readTree(Files.readString(tpl));
+                String kind = c.path("kinds").path(0).asText("");
+                String name = kind + "-" + dir.getFileName().toString().substring("source-".length());
+                if (!kind.isEmpty() && !defs.has(name)) {
+                    defs.set(name, c);
+                }
+            }
+        }
+        return root;
+    }
+
+    private static Path modulesDir(Path file) {
+        String set = System.getProperty("drishti.modules.dir");
+        if (set != null && Files.isDirectory(Path.of(set))) {
+            return Path.of(set);
+        }
+        for (Path p = file.toAbsolutePath().getParent(); p != null; p = p.getParent()) {
+            if (Files.isDirectory(p.resolve("modules")) && Files.isDirectory(p.resolve("config"))) {
+                return p.resolve("modules");
+            }
+        }
+        return null;
+    }
+
     /** The pack's entry for {@code kind}. */
     public static PackEntry read(Path pack, String kind, String connector) throws IOException {
         Path file = Files.isDirectory(pack) ? pack.resolve("pack.yaml") : pack;
-        JsonNode m = new YAMLMapper().readTree(Files.readString(file));
+        JsonNode m = manifest(file);
         String name = m.path("pack").asText(file.getParent().getFileName().toString());
         JsonNode ingest = m.path("ingest").path(kind);
         for (var it = m.path("lake").path("tables").fields(); it.hasNext(); ) {
@@ -160,7 +207,7 @@ public record PackEntry(String domain, String table, String key, String date, Li
      */
     public static List<PackTable> tables(Path pack) throws IOException {
         Path file = Files.isDirectory(pack) ? pack.resolve("pack.yaml") : pack;
-        JsonNode m = new YAMLMapper().readTree(Files.readString(file));
+        JsonNode m = manifest(file);
         JsonNode defs = m.path("connectors").isObject() ? m.path("connectors") : m.path("connector-templates");
         List<PackTable> out = new ArrayList<>();
         for (var it = defs.fields(); it.hasNext(); ) {
