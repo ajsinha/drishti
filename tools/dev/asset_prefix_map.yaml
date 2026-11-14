@@ -756,6 +756,9 @@ data_attrs:
     to: drishti-dismiss
     status: manual
     why: 'built at run time where the script cannot follow it: bi-runs-admin.js:2'
+  offset:
+    to: drishti-offset
+    status: rename
   side:
     to: drishti-side
     status: manual
@@ -791,6 +794,7 @@ storage:
   drishti.form: ok
   drishti.forms.recent.: ok
   drishti.packnew.v1: ok
+  drishti.pivot.mode.: ok
   drishti.rememberFilters: ok
   drishti.tableRows: ok
   drishti.theme: ok
@@ -798,6 +802,7 @@ storage:
   drishti.var.ccy: ok
   drishti.varBasket: ok
   drishti.varBasket2: ok
+  drishti_pd_ws: ok
 elements:
   drishti-about: ok
   drishti-panel: ok

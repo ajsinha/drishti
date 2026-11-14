@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Wave C (2.4.0): the drawing half of the Transform editor (docs/guides/REPORTS_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17) and its profiling panel (docs/architecture/ARCHITECTURE.md §28 section 11.1, item P3): a frame's
    first rows as a table, and one card per column with its type, what its text looks like, nulls, distinct values, a key hint, min and max, the most common
    values and a histogram (an SVG, so the strict policy holds: no inline style). Text only, never markup. Exposes drishtiBi.txView. */

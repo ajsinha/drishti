@@ -15,7 +15,7 @@
  */
 /* Records everywhere: every table of records of the console is drishti-grid's LiveSetGrid (live and static mode), mounted by this one file. A page marks
    a host with data-records and one of three things: data-live-set (the id of a result set of the server's live engine: the rows are read from
-   /api/live/<id>/rows and tick when the set is live; data-offset and data-limit name the page of a larger set), data-rows (a result without a record key:
+   /api/live/<id>/rows and tick when the set is live; data-drishti-offset and data-limit name the page of a larger set), data-rows (a result without a record key:
    a JSON array of plain rows, shown in the grid's static mode: no merge, no edit, the panel shows the row's JSON) or nothing (a script calls
    Drishti.records.mount(host, {rows, columns, title}) with rows it has read). data-spec holds the set's declaration (or, static, {title, columns}). The
    grid's own look, its sort, filter, grouping, record panel and Pivot, are the same everywhere; nothing of a table is drawn by a page. */
@@ -90,7 +90,7 @@
     (root || document).querySelectorAll('[data-records]:not([data-records-mode])').forEach(function (host) {
       var set = host.getAttribute('data-live-set') || '';
       mount(host, { set: set, live: host.getAttribute('data-live') === 'on', spec: json(host.getAttribute('data-spec'), null), rows: set ? null : json(host.getAttribute('data-rows'), []),
-        offset: +host.getAttribute('data-offset') || 0, limit: +host.getAttribute('data-limit') || 0, title: host.getAttribute('data-title') || '' });
+        offset: +host.getAttribute('data-drishti-offset') || 0, limit: +host.getAttribute('data-limit') || 0, title: host.getAttribute('data-title') || '' });
     });
   }
   window.Drishti.records = { mount: mount, auto: auto, table: table };

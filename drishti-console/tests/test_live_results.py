@@ -96,7 +96,7 @@ def test_a_bare_mnemonic_opens_the_kinds_own_set_a_page_at_a_time(cl, be):
     page = cl.get("/s", params={"q": "TRD"}).text
     backend = be
     assert backend.kind_pages[-1][:2] == ("TRD", 0)
-    assert 'data-live-set="kind-' in page and "data-pager" in page and 'data-offset' not in page.split("data-records")[1].split(">")[0]
+    assert 'data-live-set="kind-' in page and "data-pager" in page and 'data-drishti-offset' not in page.split("data-records")[1].split(">")[0]
     total = int(re.search(r"of ([\d,]+)</span>", page).group(1).replace(",", ""))
     if total > backend.kind_pages[-1][2]:
         assert 'rel="next"' in page
