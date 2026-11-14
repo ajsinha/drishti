@@ -430,8 +430,9 @@ def check(t: Target, e: dict, res: Resolver) -> dict:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--console", required=True)
-    ap.add_argument("--server", required=True)
+    ap.add_argument("--console", default="")
+    ap.add_argument("--server", default="")
+    ap.add_argument("--writes-only", action="store_true", help="only map the write endpoints to their tests (no server or console needed); lists the NO TEST rows")
     ap.add_argument("--admin", default="")
     ap.add_argument("--admin-password", default="")
     ap.add_argument("--token", default="", help="a bearer token for the server (otherwise one is made through the console and revoked at the end)")
@@ -443,6 +444,17 @@ def main(argv=None) -> int:
     a = ap.parse_args(argv)
 
     server_eps, console_eps = java_endpoints(), py_endpoints()
+    if a.writes_only:
+        index = test_index()
+        text = {(rel, n): ln for rel, n, ln in index}
+        writes = [{**e, "test": covered_by(e, index, text)} for e in server_eps + console_eps if e["method"] != "GET"]
+        untested = [w for w in writes if not w["test"] and a.only in w["path"]]
+        for w in sorted(untested, key=lambda w: (w["side"], w["path"], w["method"])):
+            print(f"NO TEST  {w['side']:7} {w['method']:6} {w['path']}")
+        print(f"api sweep (writes only): {len(writes)} write endpoints, {len(untested)} with no test" + (f" matching '{a.only}'" if a.only else ""))
+        return 1 if untested else 0
+    if not (a.console and a.server):
+        raise SystemExit("api sweep: --console and --server are required (or --writes-only)")
     gap = docs_gap(server_eps)
     ids, date = samples(Path(a.testdata))
     con = Target("console", a.console)
