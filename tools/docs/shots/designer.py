@@ -342,7 +342,7 @@ def save_bar(c: Ctx):
 @shot("25-build-menu.jpg")
 def build_menu(c: Ctx):
     c.example("all-panels-showcase")
-    c.page.locator('.tbar-menu-btn[title="Build"]').click()
+    c.page.locator('.tbar-menu-btn[title="Create"]').click()
     c.page.locator(".mega-panel.show").wait_for()
     c.page.wait_for_timeout(1200)                      # the pending-review count is asked when the menu opens
     c.save("25-build-menu.jpg", clip={"x": 0, "y": 0, "width": 1440, "height": 400})

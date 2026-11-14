@@ -1089,7 +1089,7 @@ cp config/lenses/banking/risk.yaml config/lenses/banking/my-desk.yaml
 
 | Key | What it does |
 |---|---|
-| `edition`, `title`, `description` | the lens's name (the file's), the product title shown in About, the top bar and the lens menu, and its one line |
+| `edition`, `title`, `description` | the lens's name (the file's), the product title shown in About, the top bar and the Domains menu, and its one line |
 | `menus.top` | the top menus it puts first, by id, in order; the others follow (a subject menu it names is drawn too where the distribution names no list) |
 | `menus.<menu>` | the items it puts first per menu (`views`, `bi`, `build`, `admin`, `help`, `footer`, or a module's menu), by the ids in `drishti-console/config/sitemap.yaml` and the modules' manifests (`console.menus`); nothing is left out |
 | `menus.placeholder` | the command line's placeholder |

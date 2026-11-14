@@ -5175,4 +5175,4 @@ The same tiers apply to pages that are not Sutra pages, set and capped by `ui.ph
 | Admin → Capacity | the four states and what breaks first must; the headroom bars at a glance; this server beside the plan and growth under *More*; editing the plan, the JVM arguments, the command line, the sliders and the download on the desktop |
 | Admin pages, designers, the Build workbench | desk, with a short *Open on desktop* page |
 
-Below 640 px the lens menus also fold into one menu named after the lens, a column per subject.
+On a phone the bar keeps its five menus as finger-sized buttons; Domains opens as a list with a heading per column.

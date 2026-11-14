@@ -19,4 +19,4 @@ module: trading
 title: Trading
 routes: []
 menus:
-  - {label: "Trade blotter", href: /live/trade, icon: table, desc: "Trades ticking as they arrive, edited with a reason, written back to the source"}
+  - {menu: blotter, column: Trades, label: "Trade blotter", href: /live/trade, icon: table, desc: "Trades ticking as they arrive, edited with a reason, written back to the source"}

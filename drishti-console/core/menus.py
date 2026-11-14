@@ -377,8 +377,9 @@ def _domains(request, edition: Edition, menu: dict, every: list, hosted: dict, c
         drawn = [(t, items) for t, items in drawn if items]
         extra = hosted.pop(mid, [])
         label = _text(m.get("label"), fill)
+        several = len({t for t, _ in drawn + list(extra)}) > 1
         for t, items in drawn + list(extra):
-            title = label if len(drawn) + len(extra) == 1 or not t or t == label else f"{label} · {t}"
+            title = label if not several or not t or t == label else f"{label} · {t}"
             if title in by_title:                                # two modules add a column of one title to a menu: one column
                 columns[by_title[title]][1].extend(items)
             else:
@@ -408,12 +409,12 @@ def _hosted_menus(request) -> dict[str, list]:
     for p in parts.snapshot.parts.values() if parts is not None else []:
         if not p.menus or not modules.module_on(p.id):
             continue
-        by_menu: dict[str, list] = {}
-        for m in p.menus:
-            by_menu.setdefault(str(m.get("menu") or p.id), []).append(
+        by_menu: dict[tuple[str, str], list] = {}
+        for m in p.menus:                                       # ``column:`` names the column of the menu (else the module's title)
+            by_menu.setdefault((str(m.get("menu") or p.id), str(m.get("column") or p.title)), []).append(
                 (parts.href(m), m.get("icon") or "puzzle", str(m["label"]), str(m.get("desc") or ""), None, str(m.get("cmd") or "")))
-        for mid, items in by_menu.items():
-            out.setdefault(mid, []).append((p.title, items))
+        for (mid, column), items in by_menu.items():
+            out.setdefault(mid, []).append((column, items))
     return out
 
 

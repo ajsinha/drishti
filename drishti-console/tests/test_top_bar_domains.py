@@ -65,9 +65,11 @@ def test_finance_has_no_risk(backend, monkeypatch):
 
 def test_genomics_shows_its_one_domain_by_name(backend, monkeypatch):
     app = _app(backend, monkeypatch, "--distribution=genomics")
-    assert _menus(_client(app).get("/t").text) == ["Views", "Create", "Admin", "Help"]      # no module hosted yet: no Domains
     reg = Registry()
     reg.install(backend, monkeypatch)
+    from core import modules
+    here = modules.module_on                                                    # this distribution runs the genomics module only (and the stand-in)
+    monkeypatch.setattr(modules, "module_on", lambda m: here(m) and str(m or "core") in {"core", "genomics", "greeter"})
     old = app.state.module_parts
     tmp = Path(__file__).resolve().parents[2] / "data" / "tmp"
     tmp.mkdir(parents=True, exist_ok=True)
@@ -75,6 +77,8 @@ def test_genomics_shows_its_one_domain_by_name(backend, monkeypatch):
         parts = ModuleParts(Path(d) / "parts", old.web, old.shipped, 0.0)
         monkeypatch.setattr(app.state, "module_parts", parts)
         monkeypatch.setattr(app.state.editions.modules, "parts", parts)
+        reg.state = "off"
+        assert _menus(_client(app).get("/t").text) == ["Views", "Create", "Admin", "Help"]  # no module hosted: no Domains
         reg.state = "active"
         page = _client(app).get("/t").text
     assert _menus(page) == ["Views", "greeter", "Create", "Admin", "Help"]                   # the one hosted domain, by its own name
