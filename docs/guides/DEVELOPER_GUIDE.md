@@ -3786,7 +3786,7 @@ Each need: `kind`, `contract` (a range of the kind's contract version), `require
 required only for those functions, or only while another kind is bound), `use` (`read`, `live`, `write`), `any-of` (a group one bound
 member satisfies), `demo: false` (the demo lake may not serve it) and `used-by` (the functions that depend on it).
 
-**2. The connector** that serves the kind exists first (section 12.2): a binding names connectors and lakes, never a host, URL or
+**2. The connector** that serves the kind exists first (section 12.2; the designer of step 5 makes it and binds it in one go): a binding names connectors and lakes, never a host, URL or
 credential (the file refuses one).
 
 **3. The binding**, one per kind, shared by every module that needs it, in `config/bindings.yaml`:
@@ -3811,7 +3811,7 @@ The keys are exactly `read`, `union`, `live`, `write`, `demo` and `note`; anythi
 (`BOUND`), a lake that holds the contract's `binding-hint` table (`AUTO`), the demo lake while demo is on (`DEMO`), else `UNBOUND`
 ([HOW_IT_FITS.md section 4](../../HOW_IT_FITS.md#4-data-bindings)).
 
-**5. Change it with four eyes.** **Admin → Data bindings**: *Bind…* on the kind's row (connectors in read order, union, live, demo, why),
+**5. Change it with four eyes.** The easy way is the **connector and binding designer** (**Build → Create → New connector**): pick the connector type, fill its settings (a secret is only a reference), test it, preview real rows, bind the kind (read, union, live or write; it shows the resolution now and after and the functions that come on), review the diff of both files and propose; a second administrator approves ([ADMIN_GUIDE.md section 23.0](ADMIN_GUIDE.md#230-the-connector-and-binding-designer-build--create--new-connector)). For a connector that exists, **Admin → Data bindings**: *Bind…* on the kind's row (connectors in read order, union, live, demo, why),
 *Propose*; a second administrator approves, and it applies without a restart. Over the API: `POST /api/v1/admin/bindings/proposals`
 (`{kind, binding, reason}`), then `…/proposals/{id}/approve`. A hand edit of the file is picked up within
 `drishti.bindings.refresh-seconds` (30) ([ADMIN_GUIDE.md section 23](ADMIN_GUIDE.md#23-data-bindings)).
