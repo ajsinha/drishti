@@ -1092,7 +1092,6 @@ the server writes to the file once, at the first start, and never overwrites.
 # config/connectors/trading-lake.yaml
 plugin: delta                     # required: which source plugin (delta, jdbc, file, kafka, redis, …)
 enabled: true                     # optional, default true
-kinds: [trade]                    # optional: the exact kinds it serves (see the rule below)
 description: Trading lake         # optional
 settings:                         # the plugin's settings; nesting is flattened to dotted keys
   root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}
@@ -1153,7 +1152,6 @@ numbers, `CLY-…`, `MX-…`), and each document says where it came from (the tr
 ```yaml
 # config/connectors/trade-calypso.yaml (trade-endur.yaml and trade-murex.yaml differ only in the table and the name)
 plugin: delta
-kinds: [trade]
 settings:
   root: ${DRISHTI_DELTA_ROOT:./data/delta/demo}
   domain: trading
@@ -1196,7 +1194,6 @@ store already has the day's data and the topic is just the change feed, or the t
 ```yaml
 # config/connectors/trading-stream.yaml
 plugin: kafka
-kinds: [trade]
 settings: { mode: ticks, bootstrap-servers: "${DRISHTI_KAFKA_BOOTSTRAP}", topics: drishti.trading.trades,
             kind: trade, id-field: tradeId }
 ```
@@ -1234,7 +1231,6 @@ pack's template for that name **wholesale**: the settings are not merged, so wha
 ```yaml
 # config/connectors/trade-endur.yaml (generated from the trading pack's template, then edited)
 plugin: delta
-kinds: [trade]
 settings:
   root: /srv/lake                  # the line the site changed
   domain: trading
@@ -1245,7 +1241,6 @@ settings:
 # config/connectors/trading-stream.yaml: the stream on, whatever DRISHTI_STREAM_TRADING says
 plugin: kafka
 enabled: true
-kinds: [trade]
 settings:
   bootstrap-servers: kafka1.bank.example:9092
   topics: trading.trades.v2
@@ -1255,7 +1250,7 @@ settings:
 
 Points to remember:
 
-- **A file is the whole definition.** `kinds:` in the file is the connector's list; kinds you leave out are no longer served by that connector. **Reset to pack default**
+- **A file is the whole definition.** It names no kinds: which connectors serve a kind is `config/bindings.yaml` (Admin → Data bindings), and the connector serves what its plugin and lake hold. **Reset to pack default**
   (Admin → Connectors, or `drishti.py connector reset <name>`) puts the pack's template back and keeps your text in the history.
 - **Switch one off with `enabled: false`** in its file (`drishti.py connector disable fred-feed`).
 - **Keys the plugin does not read are ignored** (with a warning on the form and from the validator). Switching `trade-endur` to `jdbc` and leaving `root` in the file is
@@ -1406,7 +1401,7 @@ settings:
   id-field: orderId
 ```
 
-Remember that a file's `kinds:` list is the connector's whole list, and that keys the new plugin does not read are
+Remember that keys the new plugin does not read are
 simply ignored (`root` and `domain` above would be; but `domain` *is* read by `aerospike`, as the set, and so is `layout`, as the promoted
 bins). Routes stay the pack's (`routes:` in its `pack.yaml`).
 
@@ -1492,7 +1487,6 @@ of the site configuration; `<data dir>/connectors/history/` is a convenience, no
 # config/connectors/trade-endur.yaml
 plugin: delta                     # required: which source plugin (delta, jdbc, file, kafka, redis, derived, …)
 enabled: "${DRISHTI_LAKE_ENABLED:true}"   # optional, default true
-kinds: [trade]                    # optional: the kinds it serves (default: what the plugin and the pack's routes say)
 description: ENDUR trades         # optional, free text
 settings:                         # the plugin's settings; nesting is flattened to the dotted keys the plugin reads
   root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}"

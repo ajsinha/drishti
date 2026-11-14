@@ -383,6 +383,4 @@ def deprecated(settings) -> list[str]:
             out.append(f"{key} is no longer read: set brand: in the distribution file")
     if settings.site("edition") not in (None, "", {}):
         out.append("edition is read for one release: name a distribution instead (--distribution, DRISHTI_DISTRIBUTION)")
-    if os.environ.get("DRISHTI_PRODUCT"):
-        out.append("DRISHTI_PRODUCT is no longer read: set brand.product in the distribution file")
     return out

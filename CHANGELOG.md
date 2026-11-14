@@ -15,6 +15,15 @@
 -->
 # Changelog
 
+
+## Unreleased: overlap clean-up, part 2
+
+- Connector files name no kinds: `config/bindings.yaml` is the one home of which connectors serve a kind (a `kinds:` line from an earlier release is ignored); the `bindings.yaml` upgrade and its Health deprecation are deleted; generated files and the examples carry no `kinds:`.
+- The product's name, tagline, owner, copyright and notice come from the distribution file's `brand:` only: `drishti.branding.*`, `DRISHTI_PRODUCT`, `ui.product`, `ui.tagline`, `ui.copyright`, `ui.owner` and `ui.notice` are no longer read (Health names any a site still sets).
+- Health summarises: one line each for the distribution, modules, bindings and placement, linking to the Admin page that holds the detail.
+- The Pack designer's binding goes through the one bindings path (connector saved, kinds proposed to Admin → Data bindings); the workspace `site/` folder and `builder.pack_designer_site` are gone.
+- Banking: a `settings:` schema (VaR, hierarchies, system-basket seed and its engines' settings) and its real parts (api, compute, feeds) in `modules/banking/dmod/module.yaml`; settings read as `drishti.module.banking.*` (the old keys are read for one release and Health names them); `GET /api/v1/admin/modules/{id}/settings`.
+
 ## Unreleased
 
 - **Pack designer** (Build → New pack, `/build/pack/designer`; the old `/build/pack/new` redirects): a workspace with a rail of six steps and

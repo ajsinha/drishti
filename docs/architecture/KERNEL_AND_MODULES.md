@@ -823,10 +823,7 @@ bindings:
 | `demo` | `true` binds the demo lake's samples explicitly |
 | `for:` (exception) | a per-module override, `for: {genomics-qc: [qc-store]}`; allowed only for kinds marked `shareable: per-module` in their contract (Q4) |
 
-**Today's equivalent is spread out**: a connector file's `kinds:` list and its `lake:`; the contract's `storage.connector`. P1 folds both
-into `bindings.yaml` (no dual machinery): connector files keep `plugin`, settings and `lake:`, lose `kinds:`; `drishti.py bindings
-migrate` writes `bindings.yaml` from today's files once, and a connector file still carrying `kinds:` is read for one release with a
-deprecation line in Health.
+**Status:** connector files keep `plugin`, settings and `lake:` and name no kinds; `config/bindings.yaml` is the one home (a `kinds:` line from an earlier release is ignored, and the upgrade that wrote `bindings.yaml` from those lists is gone). The Pack designer proposes its binding to Admin → Data bindings (the file connector saved through the connectors API, each kind proposed for a second administrator's approval); there is no `site/` folder side path.
 
 ### 5.5 How a kind finds its data (resolution)
 
@@ -2200,7 +2197,7 @@ The owner accepted every recommendation on 2026-11-08; each row below is a decis
 | # | Question | Decision (2026-11-08) |
 |---|---|---|
 | Q1 | The core pack's finance entities (`book`, `desk`, `trader`, `counterparty`, `legal-entity`, …): kernel or banking? (was D1) | move them to a **`banking-reference` pack in the banking module**; the kernel keeps `calendar` and generic entities (organisation, person, location); GLEIF stays kernel |
-| Q2 | Bindings file vs connectors' `kinds:` lists | **`config/bindings.yaml` is the one home**; `kinds:` read for one release, then removed |
+| Q2 | Bindings file vs connectors' `kinds:` lists | **`config/bindings.yaml` is the one home**; `kinds:` no longer read (done) |
 | Q3 | Module static files at `/m/<id>/static/<version>/` (new addresses) or today's `/static/…` | **new addresses** (versioned cache, per-module CSP, clean unload); page addresses unchanged |
 | Q4 | Per-module bindings of one kind (`for:`) | **not in i**: one binding per kind; per-person views are row rules; revisit with a real case |
 | Q5 | Java isolation without a Security Manager: accept review + tests, or run untrusted modules out of process | **in process for Drishti-signed and partner modules**; out-of-process modules (a gRPC/Flight boundary) only if a third-party marketplace is wanted (P5+) |
