@@ -296,7 +296,7 @@ Every dataset the pivot guide's examples and the MR cube preset read, what it is
 | [`pnl-vector`](#55-pnl-vector-pl-vectors-per-trade) | the MR cube preset: every trade's vector; its columns as dimensions | **one of the two**, per trade | no sample in the demo data | [7.3](#73-the-inputs) |
 | [`scenario-set`](#56-scenario-set-the-scenario-days) | the scenario days of the histogram and the explain | for the MR cube | `market-risk/scenario-set/scenario-set.tar` | — |
 | [`var-limit`](#57-var-limit-var-limits) | `limit()` and `limit_use()` | optional | `market-risk/var-limit/var-limit.*.jsonl.gz` | — |
-| [`position-sensitivity`](#58-position-sensitivity-the-sensitivities) | `dv01()`, `cs01()`, the ladder and the heat map | for the sensitivity measures | `market-risk/position-sensitivity/position-sensitivity.*.jsonl.gz` | [FRTB_SA_GUIDE.md 3](FRTB_SA_GUIDE.md#3-the-inputs-and-their-data-contract) |
+| [`position-sensitivity`](#58-position-sensitivity-the-sensitivities) | `dv01()`, `cs01()`, the ladder and the heat map | for the sensitivity measures | `market-risk/position-sensitivity/position-sensitivity.*.jsonl.gz` | [FRTB_SA_GUIDE.md 3](../FRTB_SA_GUIDE.md#3-the-inputs-and-their-data-contract) |
 | [`risk-factor`](#59-risk-factor-the-factor-dictionary) | each factor's class, tenor and curve for the ladder | for the sensitivity measures | `market-risk/risk-factor/risk-factor.*.jsonl.gz` | — |
 
 The pivot reads any stored kind through its connector ([section 3](PIVOT.md#3-sources-and-fields)); these are the sources the guide's examples
@@ -313,7 +313,7 @@ text fields are the rows and columns, its numbers the measures. The record shows
 ### 5.3 `scenario-pv`: the VaR book's vectors
 
 The source `var` is the VaR engine's book of the date, built from these rows (or `pnl-vector` rows, [VAR_GUIDE.md section
-36](VAR_GUIDE.md#36-var-data-every-dataset-the-engine-reads)): its text columns (DESK, CURRENCY, PRODUCT_GROUP …) are the fields.
+36](../VAR_GUIDE.md#36-var-data-every-dataset-the-engine-reads)): its text columns (DESK, CURRENCY, PRODUCT_GROUP …) are the fields.
 
 - **Data contract:** [`scenario-pv`](../../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv) (SPV), key `SCENARIO_PV_ID`; 40 fields, 28 required; the file [`scenario-pv.contract.yaml`](../../../modules/banking/dmod/packs/market-risk/contracts/scenario-pv.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../../contracts/samples/market-risk.md#scenario-pv) (files `data/testdata/market-risk/scenario-pv/scenario-pv-*.tar`).
@@ -331,7 +331,7 @@ Each trade's scenario P&L; its columns (`LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_
 `COUNTERPARTY`, …) are the cube's dimensions.
 
 - **Data contract:** [`pnl-vector`](../../contracts/packs/market-risk.md#pnlv-pl-vector-509-scenarios-pnl-vector) (PNLV), key `VECTOR_ID`; 39 fields, 27 required; the file [`pnl-vector.contract.yaml`](../../../modules/banking/dmod/packs/market-risk/contracts/pnl-vector.contract.yaml).
-- **Example:** none in the demo data (it ships scenario PVs); the record's shape is [its sample](../contracts/samples/market-risk.md#pnl-vector).
+- **Example:** none in the demo data (it ships scenario PVs); the record's shape is [its sample](../../contracts/samples/market-risk.md#pnl-vector).
 
 ### 5.6 `scenario-set`: the scenario days
 

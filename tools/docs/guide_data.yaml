@@ -479,7 +479,7 @@ guides:
         guide: "[3](PIVOT.md#3-sources-and-fields)"
         about: |
           The source `var` is the VaR engine's book of the date, built from these rows (or `pnl-vector` rows, [VAR_GUIDE.md section
-          36](VAR_GUIDE.md#36-var-data-every-dataset-the-engine-reads)): its text columns (DESK, CURRENCY, PRODUCT_GROUP …) are the fields.
+          36](../VAR_GUIDE.md#36-var-data-every-dataset-the-engine-reads)): its text columns (DESK, CURRENCY, PRODUCT_GROUP …) are the fields.
       - kind: position
         title: positions
         required: optional (a table source)
@@ -492,7 +492,7 @@ guides:
         required: "**one of the two**, per trade"
         for: "the MR cube preset: every trade's vector; its columns as dimensions"
         guide: "[7.3](#73-the-inputs)"
-        sample_note: none in the demo data (it ships scenario PVs); the record's shape is [its sample](../contracts/samples/market-risk.md#pnl-vector).
+        sample_note: none in the demo data (it ships scenario PVs); the record's shape is [its sample](../../contracts/samples/market-risk.md#pnl-vector).
         about: |
           Each trade's scenario P&L; its columns (`LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `CURRENCY`,
           `COUNTERPARTY`, …) are the cube's dimensions.
@@ -515,7 +515,7 @@ guides:
         sample: market-risk/position-sensitivity/position-sensitivity.*.jsonl.gz
         required: for the sensitivity measures
         for: "`dv01()`, `cs01()`, the ladder and the heat map"
-        guide: "[FRTB_SA_GUIDE.md 3](FRTB_SA_GUIDE.md#3-the-inputs-and-their-data-contract)"
+        guide: "[FRTB_SA_GUIDE.md 3](../FRTB_SA_GUIDE.md#3-the-inputs-and-their-data-contract)"
         about: |
           The FRTB-SA engine's position sensitivities: `dv01()`, `cs01()`, the ladder and the heat map of tab C.
       - kind: risk-factor
