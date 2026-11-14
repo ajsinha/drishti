@@ -56,6 +56,16 @@ def _java() -> Path:
 
 JAVA = _java()
 
+
+def launch() -> list[str]:
+    """How a test server's JVM finds the server: the class-data archive the drill builds once (DRISHTI_TEST_SERVER_CDS: the extracted jar
+    and its archive, tools/drillkit/server_cds.py; about a quarter of every start), else the built jar as it is."""
+    cds = Path(os.environ.get("DRISHTI_TEST_SERVER_CDS") or "/nonexistent")
+    app = sorted((cds / "app").glob("drishti-server-*-exec.jar")) if (cds / "app").is_dir() else []
+    if app and (cds / "app.jsa").is_file():
+        return [f"-XX:SharedArchiveFile={cds / 'app.jsa'}", "-Xshare:auto", "-Xlog:cds=off", "-Xlog:cds+dynamic=off", "-jar", str(app[-1])]
+    return ["-jar", str(jar())]
+
 # How long a browser test waits for the workbench to draw (milliseconds). Generous on purpose: the drill and the builders run
 # the browser suite beside Maven builds, and a loaded machine once took over 20 s to draw a preview that takes 1 s alone.
 BROWSER_WAIT_MS = int(os.environ.get("DRISHTI_BROWSER_WAIT_MS", "45000"))
@@ -116,11 +126,41 @@ def live_auth_console(tmp_path_factory):
     yield from _stack(tmp_path_factory, {"DRISHTI_SECURITY_ENABLED": "true", "DRISHTI_TOKEN_SECRET": TOKEN_SECRET}, auth=True)
 
 
+#: what a server writes while it only serves reads (its log, its temp and cache folders, the VaR engine's hot files and the official
+#: capture it makes of the newest date at start, from the lake it reads): a shared server's data folder is compared without these (TEST_HARNESS.md, "Shared read-only servers")
+DERIVED = re.compile(r"(^|/)(server\.log|jvm-tmp|tmp|logs|dumps|var-hot|var/hot|var/official|cache|caches|diskcache)(/|$)|\.(lock|log|tmp|pid)$")
+
+
+def fingerprint(work: Path) -> dict[str, tuple[int, int]]:
+    """{path under work: (size, modified ns)} of every file a test could have written there (DERIVED left out)."""
+    out: dict[str, tuple[int, int]] = {}
+    for p in work.rglob("*"):
+        rel = p.relative_to(work).as_posix()
+        if DERIVED.search(rel) or p.is_symlink() or rel.startswith("config/") and not rel.startswith("config/connectors/"):
+            continue
+        try:
+            st = p.stat()
+        except OSError:
+            continue
+        if p.is_file():
+            out[rel] = (st.st_size, st.st_mtime_ns)
+    return out
+
+
+def written(before: dict, after: dict) -> list[str]:
+    """The files added, changed or removed between two fingerprints."""
+    return sorted(k for k in set(before) | set(after) if before.get(k) != after.get(k))
+
+
 class StackPool:
     """This worker's real servers (docs/architecture/TEST_HARNESS.md, "The server pool"). Every server a browser test starts through
     ``_stack`` passes here: the pool counts and times the starts (DRISHTI_BROWSER_PROFILE), and keeps at most one idle server, so servers
     never pile up on a worker. A stack asked for with ``shared=True`` is kept when its file is done and handed to the next file on this
-    worker that asks for the same settings (same environment, sign-in, heap); any other start stops the idle one first."""
+    worker that asks for the same settings (same environment, sign-in, heap); any other start stops the idle one first.
+
+    A shared server is read-only for the files that share it: its data folder is fingerprinted when a file gets it and again when the
+    file is done; a file that wrote anything there (a saved basket, an upload, a setting) fails in its teardown with the files it wrote,
+    and the server is stopped rather than handed on, so no later file ever sees another file's data."""
 
     def __init__(self):
         self.idle: dict[tuple, tuple] = {}
@@ -148,6 +188,7 @@ def _stack(tmp_path_factory, extra_env, work=None, auth=False, heap="768m", shar
     key = (tuple(sorted(extra_env.items())), auth, heap)
     if shared and work is None and key in POOL.idle:
         gen, st = POOL.idle.pop(key)
+        POOL.shared_hits = getattr(POOL, "shared_hits", 0) + 1
     else:
         POOL.stop_idle()
         from browser_harness import Phases
@@ -158,9 +199,15 @@ def _stack(tmp_path_factory, extra_env, work=None, auth=False, heap="768m", shar
         ph.done()
         POOL.starts += 1
     keep = shared and work is None
+    before = fingerprint(Path(st.work)) if keep else None
     try:
         yield st
     finally:
+        wrote = written(before, fingerprint(Path(st.work))) if keep else []
+        if wrote:
+            next(gen, None)          # never handed on: the next file would see this one's data
+            pytest.fail("this file shares its server (shared=True) but wrote to it; a file that changes data starts its own server:\n  "
+                        + "\n  ".join(wrote[:20]), pytrace=False)
         if keep:
             POOL.idle[key] = (gen, st)
         else:
@@ -187,7 +234,7 @@ def _start_stack(tmp_path_factory, extra_env, work=None, auth=False, heap="768m"
     env = {"PATH": os.environ.get("PATH", ""), "HOME": str(work), "DRISHTI_PORT": str(port),
            **{k: os.environ[k] for k in ("DRISHTI_DISK_MINFREEGB", "DRISHTI_DISK_MINFREEPERCENT") if k in os.environ}, **extra_env}  # conftest's guard
     # the server's heap: 768 MB for a page's worth of data; a file whose server holds a year of VaR history says so (heap="1536m")
-    proc = subprocess.Popen(java_cmd(str(JAVA), [f"-Xmx{heap}", "-jar", str(jar())], tmp=work / "jvm-tmp"), cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
+    proc = subprocess.Popen(java_cmd(str(JAVA), [f"-Xmx{heap}", *launch()], tmp=work / "jvm-tmp"), cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
     try:
         # a server that is still starting is waited for (on a loaded machine a cold start takes minutes): only one that exited is skipped, and one
         # that never answers fails rather than skipping every test of the file in silence
@@ -221,11 +268,14 @@ def _start_stack(tmp_path_factory, extra_env, work=None, auth=False, heap="768m"
         server.should_exit = True
         thread.join(10)
     finally:
+        # a scratch server need not drain: its graceful shutdown waits for requests still open (a page's live channel) and took the full
+        # 15 s the tests used to wait on every VaR file; 3 s, then it is killed (its folder is thrown away)
         proc.terminate()
         try:
-            proc.wait(15)
+            proc.wait(3)
         except subprocess.TimeoutExpired:
             proc.kill()
+            proc.wait(10)
 
 
 def post(page, url: str, body: dict) -> dict:

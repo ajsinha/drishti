@@ -22,8 +22,8 @@
   Help) at 1366 and 1920 px, dark and light: no sideways scroll, no overlapping controls, labels beside their controls, no field group
   taller than its content, the main content using the width; a drishti-inputs Form on the page by tests/form_layout.py's measure.
 
-The visual snapshots run on this file's stack (started again, over the same cached lake) in test_page_snapshots_browser.py, a file of their
-own so each file fits its re-run time limit.
+The visual snapshots run on this file's stack (started again, over the same cached lake) in test_snapshots_<group>_browser.py, four files of
+their own (snapshot_pages.py GROUPS) so the lane's workers capture them side by side.
 
 DRISHTI_PAGEWALK_BASE=<console URL> walks a console that is already running instead of starting one (an owner's stack, a QA machine).
 Skipped when Playwright, Chromium, the built server jar or a JDK is missing."""
@@ -39,7 +39,7 @@ from var_stack import VAR_TRADES, var_data, var_lake, var_server
 KEY_PAGES = ["/", "/var?scope=BANK", go("VAR BANK EXPLAIN"), "/pivot?preset=mr", "/pivot", "/bi/designer", "/forms", "/admin/engines",
              "/admin/connectors", "/admin/loads", "/admin/loads/upload", "/help"]
 THEMES = {"dark": "terminal", "light": "light"}
-#: the business date the page walk's lake ends on: fixed, so the visual snapshots' figures and dates (test_page_snapshots_browser.py) are the same on every run
+#: the business date the page walk's lake ends on: fixed, so the visual snapshots' figures and dates (snapshot_pages.py) are the same on every run
 SNAPSHOT_DATE = "2026-11-06"
 #: the walk's lake: the VaR files' trades and VaR inputs, the exposure engine's committed run (its paths, netting sets, CSAs, collateral,
 #: limits, counterparties), the funds and the US equities, so the Trades, EXP, FUND and USEQ pages and the Markets lens show their data
@@ -60,8 +60,29 @@ def stack(tmp_path_factory):
     # the capital-markets module's (off by default: config/packs/default-packs.yaml), and the Markets lens beside the four default ones
     for st in var_server(tmp_path_factory, lake, DRISHTI_DATALOAD_ENABLED="true", DRISHTI_DATALOAD_DIR=str(tmp_path_factory.mktemp("walk-dataload")),
                          DRISHTI_PACKS=WALK_PACKS, DRISHTI_LENSES="risk,world,market,trading,markets"):
+        _packs_ready(st.server, WALK_PACKS.split(","))
         _why_ready(str(st))
         yield st
+
+
+def _packs_ready(server: str, names: list[str], seconds: float = 300) -> None:
+    """Every pack the walk asks for listed by the server: a module's packs come up a moment after the server answers, and a page opened
+    before (Forms, the first snapshots of a group) lists fewer packs than the same page a minute later (seen: Forms without Trading)."""
+    import json
+    import time
+    import urllib.request
+
+    deadline, got = time.monotonic() + seconds, set()
+    while time.monotonic() < deadline:
+        try:
+            with urllib.request.urlopen(server + "/api/v1/packs", timeout=30) as r:
+                got = {p.get("name") for p in json.load(r) if p.get("active", True)}
+            if set(names) <= got:
+                return
+        except OSError:
+            pass
+        time.sleep(1)   # wait-ok: polling a server whose modules are still coming up
+    pytest.fail(f"the server did not list every pack within {seconds:.0f} s: missing {sorted(set(names) - got)}")
 
 
 def _why_ready(base: str, seconds: float = 300) -> None:

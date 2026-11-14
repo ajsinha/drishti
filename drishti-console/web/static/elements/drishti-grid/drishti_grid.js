@@ -3989,7 +3989,11 @@
       schedule() {
         if (this.frame) { return; }
         const win = this.doc.defaultView;
-        this.frame = win.requestAnimationFrame(() => { this.frame = 0; this.render(); });
+        this.scroller.setAttribute('data-dg-drawing', '');
+        this.frame = win.requestAnimationFrame(() => {
+          this.frame = 0;
+          try { this.render(); } finally { if (!this.frame) { this.scroller.removeAttribute('data-dg-drawing'); } }
+        });
       }
       invalidate() { this.version++; this.cfCache.clear(); this.spans = null; }
       cellOf(e) {
@@ -4318,7 +4322,8 @@
       }
       destroy() {
         this.doc.defaultView.removeEventListener('mouseup', this.onUp);
-        if (this.frame) { this.doc.defaultView.cancelAnimationFrame(this.frame); }
+        if (this.frame) { this.doc.defaultView.cancelAnimationFrame(this.frame); this.frame = 0; }
+        this.scroller.removeAttribute('data-dg-drawing');
       }
     }
     return { "GridBody": GridBody };

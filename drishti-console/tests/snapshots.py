@@ -46,8 +46,9 @@ TOLERANCE = 0.002   # a page changed: more than this share of its pixels changed
 MASK = ["[data-clock]", "#asofDate", "[data-dyk]", "[data-ready-facts]", "[data-inbox-next]", "[data-snapshot-mask]", "time.timeago",
         "[data-relative-time]"]
 #: timings that change their own width (a mask over them would move with it): the VaR explorer's paint, server and aggregation
-#: times, a live board's last update, a search's or a form's time taken; their words replaced by one dot
-QUIET = ["[data-vx-timing]", "[data-vx-fresh]", "[data-live-time]", "[data-elapsed]", ".dc-ms"]
+#: times, a live board's last update, a search's or a form's time taken, and the VaR page's data versions (a hash of the lake build,
+#: which differs between the drill's cached lake and the one the goldens were taken over); their words replaced by one dot
+QUIET = ["[data-vx-timing]", "[data-xx-timing]", "[data-vx-fresh]", "[data-live-time]", "[data-elapsed]", ".dc-ms", "[data-vx-version]"]
 
 _STILL = """async ([quiet, today, repo]) => {
   // what the run, not the page, decides: the checkout's folder, the test's scratch folders and the real day's date and time, local or UTC
@@ -68,7 +69,7 @@ _STILL = """async ([quiet, today, repo]) => {
   for (const e of document.querySelectorAll('*')) { if (e.scrollTop > 0) { e.scrollTop = 0; } }   // a page that scrolls a panel to its anchor
   const st = document.createElement('style');
   st.textContent = '*, *::before, *::after { transition: none !important; animation: none !important; caret-color: transparent !important; scroll-behavior: auto !important; }'
-                 + ' ::-webkit-scrollbar { display: none; } .toasts { display: none !important; }';
+                 + ' ::-webkit-scrollbar { display: none; } .toasts, [data-changed] { display: none !important; }';
   document.head.appendChild(st);
   await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
 }"""
@@ -76,7 +77,7 @@ _STILL = """async ([quiet, today, repo]) => {
 
 def capture(pg, masks: list[str] = (), part: str | None = None) -> bytes:
     """The page's viewport at its top as PNG, or only the element ``part`` (a page that scrolls itself to a part when it has drawn),
-    still (toasts hidden) with ``MASK`` and ``masks`` covered."""
+    still (toasts and the admin pages' live "Changed on the server" notice hidden: a connector's state moves on its own clock) with ``MASK`` and ``masks`` covered."""
     days = sorted({datetime.date.today().isoformat(), datetime.datetime.now(datetime.timezone.utc).date().isoformat()})
     pg.evaluate(_STILL, [QUIET, "|".join(days), str(REPO)])
     pg.mouse.move(0, 0)
@@ -171,13 +172,14 @@ def summary(path: str) -> list[str]:
     if not p.is_file():
         return []
     rows = [json.loads(line) for line in p.read_text(encoding="utf-8").splitlines() if line.strip()]
-    return [f"{r['page']} {r['width']} {r['theme']}: {r['share']:.2%} changed, {r['diff']}" for r in rows if r["changed"]]
+    groups = [f"group {r['group']}: {r['signal']} captured on the drawn signal, {r['fallback']} by the fallback" for r in rows if "group" in r]
+    return groups + [f"{r['page']} {r['width']} {r['theme']}: {r['share']:.2%} changed, {r['diff']}" for r in rows if r.get("changed")]
 
 
 if __name__ == "__main__":   # the drill's summary: python3 drishti-console/tests/snapshots.py <data>/drill/snapshots.jsonl
     import sys
 
     lines = summary(sys.argv[1])
-    print(f"drill: visual snapshots: {len(lines)} changed" + (":" if lines else ""))
+    print(f"drill: visual snapshots: {sum(1 for x in lines if not x.startswith('group '))} changed" + (":" if lines else ""))
     for line in lines:
         print("  " + line)

@@ -44,7 +44,7 @@ def stack(tmp_path_factory):
         lake = Path(keep) / "delta"
     else:
         lake = var_lake(tmp_path_factory, var_data(*VAR_TRADES))   # the committed three dates, ending today (the last weekday)
-    yield from var_server(tmp_path_factory, lake)
+    yield from var_server(tmp_path_factory, lake, shared=not keep)   # reads only: the pool guards it
 
 
 def get(url: str):

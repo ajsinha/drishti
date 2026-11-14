@@ -107,15 +107,21 @@ def trade_grain_copy(lake: Path, dest: Path, budget: int = 40) -> Path:
     return out
 
 
-def var_server(tmp_path_factory, lake: Path, **env: str):
+def var_server(tmp_path_factory, lake: Path, shared: bool = False, **env: str):
     """A real server and console over ``lake``, its VaR engine ready; ``env``: more DRISHTI_* settings. Its VaR hot folder and the root
-    it publishes the official results to (``<root>/risk-results``, VAR_GUIDE section 19) are its own: the lake is read, never written."""
+    it publishes the official results to (``<root>/risk-results``, VAR_GUIDE section 19) are its own: the lake is read, never written.
+
+    ``shared``: the file only reads (TEST_HARNESS.md, "Shared read-only servers"): the next file on this worker asking for the same lake
+    and settings gets this server without a start. Its own folders are then inside the server's scratch folder (relative to it), so the
+    settings are the same for every file that asks, and the pool's guard fails a file that writes there."""
     from test_var_explorer_browser import _engine_ready
     from wb_live import _stack
 
-    hot = tmp_path_factory.mktemp("var-hot")
-    official = tmp_path_factory.mktemp("var-official")
+    if shared:
+        own = {"DRISHTI_VAR_HOT_DIR": "data/var/hot", "DRISHTI_VAR_OFFICIAL_ROOT": "data/var/official"}
+    else:
+        own = {"DRISHTI_VAR_HOT_DIR": str(tmp_path_factory.mktemp("var-hot")), "DRISHTI_VAR_OFFICIAL_ROOT": str(tmp_path_factory.mktemp("var-official"))}
     for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true", "DRISHTI_VAR_SYSTEM_BASKETS_SEED": "true",
-                                        "DRISHTI_VAR_HOT_DIR": str(hot), "DRISHTI_VAR_OFFICIAL_ROOT": str(official), **env}, heap=VAR_HEAP):
+                                        **own, **env}, heap=VAR_HEAP, shared=shared):
         _engine_ready(str(st))
         yield st

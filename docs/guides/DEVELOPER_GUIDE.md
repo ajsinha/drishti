@@ -643,10 +643,13 @@ Options: `--docs` (the light drill, below), `--full` (the full drill even when o
 no merge, and it may run on any branch), `--keep-going` (run every job to its end after one has failed, to see every failure at
 once; by default the first failure stops the rest), `--gate` (the gate only, stage 1 below, then stop: no lanes and no push, on any
 branch; a check of a few minutes before a drill), `--affected [--base REF] [--dry-run]` (only the Maven modules and test files the diff can reach, for a builder's
-iterations: [TEST_HARNESS.md](../architecture/TEST_HARNESS.md) section 3.16; `tools/docs/shots_affected.py` does the same for screenshots). The VaR proof of a patch is the
+iterations: [TEST_HARNESS.md](../architecture/TEST_HARNESS.md) section 3.16; `tools/docs/shots_affected.py` does the same for screenshots), `--fix` (a fix drill: the gate,
+then only the lanes that have not passed at an ancestor of HEAD or that the commits since their last pass can reach; below), `--lanes a,b` (the gate and
+these lanes only, to verify: `browser`, `other`, `tools-a`, `tools-b`, `java21`, `java25`, `containers`). The VaR proof of a patch is the
 in-process `VarGoldenMatrixTest`; the server-against-server API comparison runs for releases only. `DRILL_MVN_ARGS="..."` adds Maven arguments to every Maven run (for example
 `-Ddrishti.test.forks=1` to run the test classes serially). `DRILL_BROWSER_WORKERS` and `DRILL_OTHER_WORKERS` set the console
-lanes' workers (the browser lane's default comes from the memory available), `DRILL_BROWSER_RERUNS` the browser-lane files re-run at a time (default 1), `DRILL_LANE_LIMIT` a console lane's
+lanes' workers (the browser lane's default comes from the memory available), `DRILL_BROWSER_RERUNS` the browser-lane files re-run at a time (default 2), `DRILL_CONTAINERS` the containers lane (`full`: every
+Testcontainers test too; `smoke`: never; default: when the diff since `origin/main` needs them), `DRILL_LANE_LIMIT` a console lane's
 time limit in seconds (default three hours), `DRILL_GATE_THREADS` the gate build's Maven threads (default `1C`, one per CPU). The
 script prints
 `drill: mode = full` or `drill: mode = docs`, the machine's CPUs and memory with the workers it chose, each job's time, then a
@@ -685,12 +688,18 @@ with `--no-push`), the working tree is clean (`drill: commit your changes first`
 - **The Python tool tests** in two lanes (`tools-a.log`, `tools-b.log`): every `tools/**/test_*.py` and `tests/` folder, found rather
   than listed, each file in its own pytest process under a 15-minute limit, plus `make_testdata.py --check` and
   `tools/api_docs.py check-java`.
-- **Java 21** (`java21.log`), the production runtime: `./mvnw -q -o clean verify -P api-docs`, every test and rule, containers
-  included, in a copy of the committed tree (`DRISHTI_DRILL_COPY_DIR`), test classes in parallel forks (`drishti.test.forks`, 4).
+- **Java 21** (`java21.log`), the production runtime: `./mvnw -q -o clean verify -P api-docs`, every test and rule but the container
+  tests (Docker hidden), in a copy of the committed tree (`DRISHTI_DRILL_COPY_DIR`), test classes in parallel forks (`drishti.test.forks`, 4).
   Anything a test writes at a fixed path carries `${surefire.forkNumber}`; a test must not change a JVM-wide setting for the classes
   after it in the same fork. A failed test runs once more (`FLAKY` when it then passes).
 - **Java 25** (`java25.log`; `JAVA25_HOME`, skipped when absent): the same tests in a copy of its own, Docker hidden, at the lowest
   priority.
+- **The containers** (`containers.log`): the server and console images built from `deploy/docker/` and booted on the host network
+  (no bridge, so Chromium beside it sees no network change) over the page walk's cached lake: health, the VaR golden through the
+  server's API (`tools/drillkit/container_smoke.json`; `container_smoke.py record` after a change that moves the demo figures on
+  purpose), four console pages. About a minute with the images' layers cached. Every Testcontainers test runs as well, after the
+  browser lane (its copy built at once), when the diff since the last release touches the Dockerfiles, a pom (the JDK, a native
+  library, an image version), the Maven wrapper, `.java-version`, the native maths (`linalg`) or a module with container tests (`container_smoke.py full-needed`).
 
 **After the tests** the drill checks that they left `config/` and the data folder (`DRISHTI_DATA_DIR`, else `data/`) as they found
 them: a file added or changed there fails the drill with its name (a server running from the repository turns the data-folder check
@@ -700,12 +709,21 @@ into a warning). Every test writes to its own scratch folder (`@TempDir`, pytest
 **Then** it pushes `develop`, fast-forwards `main` to `develop`, pushes `main`, returns to `develop`, and prints
 `drilled (full): <the last commit>`.
 
+**Fix drills** (`--fix`). Every lane that passes records the commit it passed at (`<data dir>/drill/lanes-state.json`); a lane that
+failed records the console files that failed. A fix drill runs the gate, then each lane that has not passed at an ancestor of HEAD,
+and each lane that a path changed since its pass can reach (`tools/drillkit/drill_lanes.py`: the drill itself, `config/`, the test
+data and the console's own code reach every lane; Java reaches every lane that starts the jar; documents reach the lanes whose tests
+read them; the console's tests reach the console lanes; a path no rule names reaches every lane). A console lane that failed in some
+files runs those files plus every console test file the fix can reach (`affected.py`; a path it cannot place selects the whole
+lane). It never skips a lane the commits touch, and pushes like a full drill when all it ran passed. The release drill is `--full`.
+
 **Docs mode** runs the gate without its Java build, then the other documentation console tests and the Python tool tests, then the
 same checks, push and merge.
 
-**Where the time goes.** On a 24-CPU, 64 GB machine the gate takes about four minutes; the browser lane is the longest job (its
-slowest file, `test_render_console_browser.py`, about twenty minutes); Java 21 takes about 25 minutes and Java 25 about 28. A full
-drill that passes takes about an hour; one that fails at the gate stops within a few minutes.
+**Where the time goes.** On a 24-CPU, 64 GB machine the gate takes about three minutes; the browser lane and Java 21 (about 43
+minutes) are the longest jobs, the tools' lanes take 20 and 30 minutes, Java 25 about 12, the containers lane about a minute. The
+measured lanes before and after the faster-drills work, and the projected full and fix drills, are in
+[BENCHMARK.md](../admin/BENCHMARK.md) (the drill's lanes); one that fails at the gate stops within a few minutes.
 
 The drill removes its own temporary files on exit. The console suite needs `pytest-xdist` 3.7 or newer (in `requirements-test.txt`).
 The inotify watch limit of a loaded desktop (`fs.inotify.max_user_watches`) can make the Sutra hot-reload tests fail in any mode:

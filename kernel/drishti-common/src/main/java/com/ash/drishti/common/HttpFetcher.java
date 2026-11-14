@@ -23,7 +23,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
-import java.util.random.RandomGenerator;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * One bounded HTTP GET with the shared retry shape: a connection failure, a timeout, a 429 or a 5xx is repeated up to
@@ -87,7 +87,7 @@ public final class HttpFetcher {
         FetchException last = null;
         for (int attempt = 0; attempt <= settings.retries(); attempt++) {
             if (attempt > 0) {
-                Thread.sleep(settings.retryPolicy().delay(attempt, false, RandomGenerator.getDefault().nextDouble()));
+                Thread.sleep(settings.retryPolicy().delay(attempt, false, ThreadLocalRandom.current().nextDouble()));
             }
             try {
                 return once(uri);

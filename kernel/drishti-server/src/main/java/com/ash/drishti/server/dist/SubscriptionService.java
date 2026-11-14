@@ -48,7 +48,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.random.RandomGenerator;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -614,7 +614,7 @@ public final class SubscriptionService implements AutoCloseable {
             return d.put("status", "failed");
         }
         boolean hint = RetryPolicy.looksPermanent(why);
-        d.put("status", "retry").put("nextAttempt", clock.instant().plus(retry.delay(attempt, hint, RandomGenerator.getDefault().nextDouble())).toString());
+        d.put("status", "retry").put("nextAttempt", clock.instant().plus(retry.delay(attempt, hint, ThreadLocalRandom.current().nextDouble())).toString());
         return d;
     }
 

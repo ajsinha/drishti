@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.random.RandomGenerator;
+import java.util.concurrent.ThreadLocalRandom;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,7 +77,7 @@ public final class RetryBoard {
 
     /** Records that {@code key} failed and plans its next retry. */
     public RetryTracker.Status failed(String key, String error, boolean permanentHint) {
-        RetryTracker t = trackers.computeIfAbsent(key, k -> new RetryTracker(policy, clock, () -> RandomGenerator.getDefault().nextDouble()));
+        RetryTracker t = trackers.computeIfAbsent(key, k -> new RetryTracker(policy, clock, () -> ThreadLocalRandom.current().nextDouble()));
         RetryTracker.Status s = t.failed(error, permanentHint);
         boolean log = Integer.bitCount(s.attempt()) == 1;
         if (log) {

@@ -1655,6 +1655,24 @@ The lanes as last measured on the release machine, and what the changes to the d
 
 "Before" is the last full run on record, on a machine shared with other work. Measured for the new pieces: `VarGoldenMatrixTest`, 12 cases with all hierarchies and baskets, about 3 s in the test JVM; a VaR browser file's set-up with the demo lake built, 589 s, and reusing the cached lake, 93 s; `tools/drill.sh --affected` on a two-file diff (one module's tests, one console file), 25 s.
 
+#### Faster drills: the slow lanes measured alone (2026-11-14)
+
+Each lane run by itself with `tools/drill.sh --lanes=<lane>` (the gate first, then that lane; 24 CPUs, 61 GB, the owner's stack and other
+sessions' tests running beside it, no recorded durations in the fresh checkout). Baseline: the recorded drills.
+
+| Lane | Before (recorded drill) | After (measured alone) | What did it |
+|---|---:|---:|---|
+| Browser | about 88 min | 74 min (the main run 53 min, its re-runs 20 min; 127 failures from the machine's memory running out, nearly all passed on re-run) | shared read-only servers with a write guard, the snapshots split, "drawn" signals instead of sleeps |
+| Containers (Docker smoke test) | about 95 min | 10 min | the images built and booted once, health, the VaR golden through the API and four console pages; the Testcontainers tests only when the diff needs them |
+| Java 21 | about 43 min | 29 min | Docker hidden from the copy's tests, the copy built once |
+| Tools b / tools a / Java 25 | about 30 / 20 / 12 min | not re-measured (nothing in this work changes them) | |
+| Gate | 3.3 min | 3.3 min (196 to 221 s) | |
+
+**Projected full drill:** the longest lane plus the gate: 74 + 3.3 = **about 77 minutes** as measured on a loaded machine; the browser
+lane's main run alone (53 min) projects **about 57 minutes** on a quiet one. Before: about 88 + 3.3 = 91 minutes. A few browser files
+failed in the re-runs only because the machine was still loaded (`test_admin_artifacts_browser.py` passes alone: 8 tests in 57 s). The
+numbers are to be confirmed by the release's single full drill.
+
 ### 18.2 Page load in the browser tests
 
 Every page a browser test opens is timed from its main document's request to its load event (`drishti-console/tests/pageload_log.py`,
@@ -1665,7 +1683,35 @@ load (many workers and the Java builds beside them), so they are an upper bound 
 `DRISHTI_PAGEWALK_BUDGET`).
 
 <!-- pageloads:begin (tools/drillkit/pageloads.py --write; the last drill's browser lane) -->
-Not measured yet: the next drill writes it.
+Measured 2026-11-11: 3,063 page loads of 397 pages; the 25 slowest by p95 (slow from 2 s).
+
+| Page | Loads | p95 | Median |
+|---|---:|---:|---:|
+| `/v/trade/1000101` (slow) | 2 | 10.60 s | 6.08 s |
+| `/admin/white-label` (slow) | 14 | 9.09 s | 0.44 s |
+| `/v/system-basket/PF-RATES-DESK` (slow) | 1 | 8.90 s | 8.90 s |
+| `/func` (slow) | 9 | 8.12 s | 0.32 s |
+| `/admin/bindings` (slow) | 12 | 7.89 s | 0.42 s |
+| `/admin/loads` (slow) | 16 | 6.91 s | 0.47 s |
+| `/admin/connectors` (slow) | 32 | 6.63 s | 0.51 s |
+| `/page.html` (slow) | 5 | 6.24 s | 3.99 s |
+| `/v/listed-company/CO-AAPL` (slow) | 4 | 6.16 s | 4.50 s |
+| `/lens/risk` (slow) | 6 | 5.84 s | 0.22 s |
+| `/forms` (slow) | 24 | 5.71 s | 0.32 s |
+| `/var` (slow) | 106 | 5.67 s | 0.73 s |
+| `/admin/net` (slow) | 31 | 5.25 s | 0.60 s |
+| `/bi/r/file:report:python-desk-risk/vega` (slow) | 1 | 5.19 s | 5.19 s |
+| `/lens/leave` (slow) | 22 | 5.12 s | 0.07 s |
+| `/v/development-profile/WDI-CAN` (slow) | 1 | 4.99 s | 4.99 s |
+| `/v/trade/MX-20000001` (slow) | 17 | 4.62 s | 1.29 s |
+| `/v/jurisdiction/JUR-AUS` (slow) | 2 | 4.59 s | 3.69 s |
+| `/admin/modules/deploy` (slow) | 9 | 4.55 s | 0.29 s |
+| `/v/fund/QQQ` (slow) | 1 | 4.50 s | 4.50 s |
+| `/v/central-bank/CBANK-BOC` (slow) | 1 | 4.34 s | 4.34 s |
+| `/var/reports` (slow) | 3 | 4.34 s | 0.42 s |
+| `/bi/r/file:report:counterparty-risk` (slow) | 10 | 4.22 s | 0.45 s |
+| `/datamap` (slow) | 10 | 3.94 s | 0.48 s |
+| `/admin/engines` (slow) | 16 | 3.90 s | 0.36 s |
 <!-- pageloads:end -->
 
 ## 19. The BI scale gate

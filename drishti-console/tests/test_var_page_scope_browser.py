@@ -42,7 +42,7 @@ BASKET = "PORT:PF-USD-RATES"
 
 @pytest.fixture(scope="module")
 def stack(tmp_path_factory):
-    yield from var_server(tmp_path_factory, var_lake(tmp_path_factory, var_data(*VAR_TRADES)), DRISHTI_VAR_SCENARIO_WINDOW="all")
+    yield from var_server(tmp_path_factory, var_lake(tmp_path_factory, var_data(*VAR_TRADES)), DRISHTI_VAR_SCENARIO_WINDOW="all", shared=True)   # reads only: the pool guards it
 
 
 def _get(base, path):

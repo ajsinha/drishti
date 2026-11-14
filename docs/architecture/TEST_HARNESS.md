@@ -179,7 +179,8 @@ file, and written with the offset.
 ### 3.9 Worker sizing
 
 `tools/drillkit/drill_plan.py workers`: the memory available (`MemAvailable`) less what runs beside the lane (in the drill: the Java
-verify's 20 GB, 1 GB per worker of the other lane and 4 GB to spare), divided by one browser worker's budget (3 GB: its Chromium,
+verify's 20 GB and 4 GB to spare; the other lane is not reserved, it ends in about five minutes, before the browser workers peak, and
+the memory floor `DRILL_MIN_FREE_GB` holds a test back while memory is short), divided by one browser worker's budget (3 GB: its Chromium,
 its stand-in console, its session server's JVM and the JVM of the file it runs; section 3.18), at most the CPU threads less two and at most 12 (the
 ports), at least 1. `DRILL_BROWSER_WORKERS` overrides it.
 
@@ -189,7 +190,9 @@ ports), at least 1. `DRILL_BROWSER_WORKERS` overrides it.
 processes and memory every 5 s into `<data>/drill/monitor-browser.csv` and prints the peaks (`tools/drillkit/drill_monitor.py`); and
 after the lane flags every file over the per-file budget (section 4) in `<data>/drill/budget-browser.txt` and in the drill's
 summary (`drill_plan.py budget`). A file listed in `tools/drill-budgets.txt` is reported with its reason; a spread file has no file
-budget. The re-run of failed tests is unchanged (once, file by file).
+budget. Failed tests run once more, file by file, two files at a time (`DRILL_BROWSER_RERUNS`). The monitor watches the lane's shell
+and everything under it (`--under`, read before the monitor is started: inside it `$BASHPID` was the monitor itself, which then
+recorded only its own process).
 
 ### 3.11 Quick file checks
 
@@ -313,15 +316,24 @@ DRISHTI_PAGEWALK_BASE=http://<host>:<console port> drishti-console/.venv/bin/pyt
 
 ### 3.20 The visual snapshots
 
-`drishti-console/tests/test_page_snapshots_browser.py` (`test_the_key_pages_look_as_approved`, helpers in `snapshots.py`) captures the key pages (`KEY_SNAPSHOTS`: Home
-and each lens's Home, the World page, the VaR explorer for the bank, a desk and a basket, Why it moved, the market-risk cube, the Pivot, a BI
-report, FRTB-SA, SIMM, exposure, Forms, Trades, Curves, FUND, USEQ, Admin → Engines, Connectors, Data loads, Upload, Data bindings, Cluster →
-Modules, Modules, Deploy, White label, Help, the Elements gallery and its Playground) at 1366 and 1920 px, dark and light, on a server of its own
-over the walk's cached lake (a file apart from the walk, so each fits its re-run time limit), and compares each with its golden image in `drishti-console/tests/snapshots/<page>/<width>-<theme>.png`.
+`drishti-console/tests/snapshot_pages.py` lists the key pages (`KEY_SNAPSHOTS`: Home and each lens's Home, the World page, the VaR explorer
+for the bank, a desk and a basket, Why it moved, the market-risk cube, the Pivot, a BI report, FRTB-SA, SIMM, exposure, Forms, Trades,
+Curves, FUND, USEQ, Connectors, Data loads, Upload, Data bindings, Cluster → Modules, Modules, Deploy, White label, Help, the Elements
+gallery and its Playground) in four groups (`GROUPS`: home, var, pages, admin), each captured by a file of its own
+(`test_snapshots_<group>_browser.py`) at 1366 and 1920 px, dark and light, on a server of that file's own over the walk's cached lake, and
+compared with its golden image in `drishti-console/tests/snapshots/<page>/<width>-<theme>.png` (helpers in `snapshots.py`). The four files
+run side by side on the lane's workers; the one file they replace took 19 minutes on one worker. `test_snapshot_groups.py` (a quick
+file check) holds the split honest: every key page in exactly one group, every group its own file, every golden a key page's.
 
+- **Captured when drawn.** A page is captured once it says it has drawn: its settled signal (`Drishti.settled`: every chart drawn and its
+  animation done, every grid drawn, no request of the page's own unanswered, the page quiet for 300 ms; section 3.4) and the page's own
+  ready mark where it has one (the VaR page's `data-painted`, Why it moved's `data-state`); a second capture right after must agree. Only
+  a page that never settles, or whose two captures differ, falls back to captures a second apart until two agree; each file prints how
+  many pages went each way. drishti-grid marks its scroller `data-dg-drawing` from a change until the frame that draws it, so a grid
+  half filled is never read.
 - **Deterministic.** The walk's lake ends on a fixed business date (`SNAPSHOT_DATE`), so figures and dates never move; its server has opened
   nothing before (no recent pages, no workspaces); animations and transitions are off, the caret hidden, fonts (vendored) loaded, the scroll at
-  the top; the business date is picked (`/asof`), pages that draw late are waited on (`idle`, `wait`); the live clock, the date box, Home's fact of the day, the VaR timings, a search's time taken, the inbox's facts and anything marked `data-snapshot-mask` are covered, timings replaced by a dot, the checkout's folder, the test's scratch folders and the real day's date and time (local or UTC) by fixed words (`snapshots.MASK`, and per page `mask` in `KEY_SNAPSHOTS`).
+  the top; the business date is picked (`/asof`), pages that draw late are waited on (`idle`, `wait`); the live clock, the date box, Home's fact of the day, the VaR timings and data versions (a hash of the lake build), a search's time taken, the inbox's facts and anything marked `data-snapshot-mask` are covered, timings replaced by a dot, the checkout's folder, the test's scratch folders and the real day's date and time (local or UTC) by fixed words (`snapshots.MASK`, `snapshots.QUIET`, and per page `mask` in `KEY_SNAPSHOTS`).
 - **Small goldens.** Each golden is the viewport at half size in at most 128 colours (PNG): a quarter of the pixels and a palette keep the
   whole set (128 images: 32 pages; Admin → Engines is left out because its native-maths notice depends on a timed probe) at about 4 MB, while a moved panel, a lost border, a wrong theme colour or a missing chart still shows. A full-size capture
   would be about ten times that; a perceptual hash alone would not draw what changed. The capture is mapped onto the golden's own palette,
@@ -330,17 +342,138 @@ over the walk's cached lake (a file apart from the walk, so each fits its re-run
   the test skips there.
 - **Per-page tolerance.** A pixel changed when a channel is off by more than 40 of 255; a page changed when more than 0.2% of its pixels did
   (`tolerance` per page in `KEY_SNAPSHOTS`). On a change the capture and a diff image (golden | capture | changed pixels in red) are
-  written to `DRISHTI_SNAPSHOT_DIFFS` (default the test's temporary folder; the drill: `<data>/drill/snapshot-diffs/`).
+  written to `DRISHTI_SNAPSHOT_DIFFS` (default the test's temporary folder; the drill: `<data>/drill/snapshot-diffs/`, the re-run's in
+  `snapshot-diffs/rerun/`, and the next drill keeps both in `<data>/drill/runs/<when>/`, so a difference is never lost to the clean-up).
+- **The VaR desk page** once differed by 0.21-0.23% in the drill only. The kept difference image showed the cause: the histogram's legend
+  was written by two answers racing (the headline's words, "VaR 99% (3rd worst)", and the P&L path's figures, "VaR 74.63m"), so a busy
+  machine changed which came last; the path's figures now always win (`drishti_var-explorer.js`), and the data versions are quieted.
+  The page is back to the default tolerance.
 - **The drill** lists every changed page from `<data>/drill/snapshots.jsonl` and the goldens refreshed in the commit under test. A changed
   page fails the drill unless its golden was refreshed in the same commit; the drill never refreshes them (`--update-snapshots` fails under it).
 
 Refresh the goldens deliberately, look at them, and commit them with the change that meant them:
 
 ```bash
-drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_page_snapshots_browser.py --update-snapshots
-drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_page_snapshots_browser.py     # compare
-DRISHTI_SNAPSHOT_ONLY=why-it-moved,home drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_page_snapshots_browser.py --update-snapshots   # some pages
+drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_snapshots_var_browser.py --update-snapshots   # one group
+drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_snapshots_*_browser.py     # compare, every group
+DRISHTI_SNAPSHOT_ONLY=why-it-moved,var-desk drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_snapshots_var_browser.py --update-snapshots   # some pages
 ```
+
+### 3.21 The container smoke test
+
+The drill's containers lane (`tools/drill.sh containers`, `tools/drillkit/container_smoke.py run`) proves the images as shipped: it builds the
+server and console images from `deploy/docker/` (the gate's jar inside), boots the server over the page walk's cached lake (read-only
+mount, capped at 3 GB so the image's `MaxRAMPercentage` applies) and the console in front of it, and checks the server's health (liveness
+and readiness UP), **the VaR golden through the server's API** (`/api/v1/risk/var/scope`, BANK and DESK:DESK-RATES, VaR and ES to the cent
+at the walk's fixed business date, against `tools/drillkit/container_smoke.json`), and four console pages through Chromium (Home, the VaR
+page until it marks itself painted, Help, Admin → Engines: each answers 200, settles and raises no page error). Both build and run use the
+host's network: no bridge and no virtual interface comes or goes, so the browser lane beside it never sees the network change (rule 8),
+and the lane no longer waits for the browser lane. About a minute with the images' layers cached (the console's Pyodide layer is fetched
+again only when its fetch script or the vendored libraries change).
+
+**How it keeps coverage.** What only containers can show (an image that does not build, a server or console that cannot start in its
+image, a wrong entry point, a missing file in the build context, a JRE module the code needs) fails the smoke test, which runs in every full
+drill and in every fix drill that touches the console, Java, `deploy/docker/` or the shared folders. Its first run found three such faults the
+old lane could not see: the console image still fetched the removed DuckDB-Wasm, the console could not write its data folder, and the
+server's JRE has no `jdk.random` (its retry jitter now comes from `ThreadLocalRandom`). The full in-container suite (every Testcontainers
+test: the JDBC, MongoDB, Redis, Cassandra, Aerospike, Kafka, RabbitMQ, ActiveMQ, Iceberg, S3 and identity stores against real brokers)
+still runs, after the browser lane with its copy built while it runs, whenever the diff since the last release (`origin/main`) touches
+what it proves: the Dockerfiles or the build context, a pom (the JDK version, a native library, an image version), the Maven wrapper,
+the native maths (`compute/drishti-compute`'s `linalg`), `.java-version`, the image's entry point, or any module with container tests (`container_smoke.py full-needed` prints why;
+`DRILL_CONTAINERS=full` forces it, `smoke` skips it). `tools/drillkit/test_drill_lanes.py` checks that choice.
+
+```bash
+drishti-console/.venv/bin/python tools/drillkit/container_smoke.py run          # build, boot, check (about a minute when cached)
+drishti-console/.venv/bin/python tools/drillkit/container_smoke.py record       # the VaR golden again, after a change that moves the demo figures on purpose
+python3 tools/drillkit/container_smoke.py full-needed --base origin/main          # would the full in-container suite run, and why
+```
+
+### 3.22 Fix drills
+
+`tools/drill.sh --fix` is the drill after a failed one. Every lane that passes records the commit it passed at in
+`<data>/drill/lanes-state.json`; a console lane that fails records the files that failed (a lane stopped by another's failure records
+nothing). A fix drill runs the gate, then (`tools/drillkit/drill_lanes.py fix`):
+
+- every lane that has not passed at an ancestor of HEAD (a pass on another branch does not count);
+- every lane that a path changed since its last pass can reach (`LANE_RULES`): the drill itself, `config/`, the test data, the shared
+  libraries and the console's own code reach every lane (Java and tools tests read the console's files); Java, poms and resources reach
+  every lane that starts the jar; documents reach the lanes whose tests read them; the console's tests reach the console lanes;
+  `deploy/docker/` reaches the containers; **a path no rule names reaches every lane**;
+- for a console lane that failed in some files: those files, plus every console test file the changes since can reach
+  (`affected.py`, which selects the whole lane for any path it cannot place).
+
+It never skips a lane the commits touch; it pushes like a full drill when everything it ran passed. The release drill is the full one.
+`--lanes browser,java21` runs the gate and chosen lanes to verify (no push). `tools/drillkit/test_drill_lanes.py` holds the rules to
+this: an unknown path reaches every lane, a pass on another branch does not count, an unknown diff reruns the lane, every lane name is
+the drill's.
+
+### 3.23 Shared read-only servers
+
+A VaR file that only reads asks `var_server(..., shared=True)`: its hot folder and official results are then inside the server's own
+scratch folder (relative paths), so the settings are the same for every such file, and the worker's pool (section 3.7) hands the server to
+the next file on that worker asking for the same lake and settings, without a start or the engine's warm-up. The files that share today:
+`test_var_family_figures_browser.py`, `test_var_currency_browser.py` (its first server), `test_explain_browser.py`, and, with every
+scenario window, `test_var_lens_browser.py` and `test_var_page_scope_browser.py`. Files that change data (save a basket, upload, change a
+setting, enter a lens on the server) keep a server of their own.
+
+**The guard.** The pool fingerprints a shared server's scratch folder (every file's size and time, the server's log, temporary, cache and
+VaR hot folders left out: `wb_live.DERIVED`) when a file gets the server and again when the file is done; a file that wrote anything there
+fails in its teardown with the files it wrote, and the server is stopped instead of handed on, so no file ever sees another file's data.
+The browser-rules test (`test_browser_rules.py`, rule 4) is unchanged: every server still comes from the pool.
+
+### 3.24 Faster server starts
+
+The drill builds a class-data archive once, after the gate (`tools/drillkit/server_cds.py build`: the jar extracted by Spring Boot's tools
+jar mode, one start until the server answers, its loaded classes written at exit; about 20 s), and every server a browser test starts
+through the pool maps it (`DRISHTI_TEST_SERVER_CDS`; `wb_live.launch`): the same classes from the same jars, read from the archive.
+Measured on an idle machine: 9.4 s from start to the first answer from the jar, 6.6 to 7.2 s from the archive (the nested jar with a
+dynamic archive only reached 8.8 s). A mismatched or missing archive is ignored (`-Xshare:auto`), so a server always starts. Spring AOT was
+not adopted: the module host registers beans at run time from each module's package, which an ahead-of-time bean graph cannot know.
+A scratch server is stopped with 3 s to exit, then killed: its graceful shutdown waited for requests still open (a page's live channel)
+and took the full 15 s the tests allowed on every VaR file.
+
+### 3.25 The ten slowest browser files
+
+From the last drills' recorded timings (`<data>/drill/timings-browser.json`, 3 workers beside the Java verify), and what each spent its
+time on:
+
+| File | Seconds | Why |
+|---|---:|---|
+| `test_mr_cube_browser.py` | 1,277 | built its own VaR demo lake (`lake demo`, about 3 minutes) instead of the cached one; six tests computing the cube per desk and risk class; its re-run built the lake again (566 s). Now on the cached lake. |
+| `test_page_snapshots_browser.py` | 1,129 | 132 captures in turn on one worker, each after a 1 s recapture and up to 10 s of network idle. Now four files on the drawn signal. |
+| `test_var_explorer_browser.py` | 1,043 | 15 tests on one VaR server over the trades' lake; the engine's first answers under a busy lane. |
+| `test_embed_elements_browser.py` | 628 | 35 tests run once per browser engine on one host (listed in `tools/drill-budgets.txt`). |
+| `test_stress_window_browser.py` | 509 | one test; its server and the stressed window over every scenario date. |
+| `test_page_walk_browser.py` | 465 | every sitemap page and link, each lens and distribution, in turn (cannot be spread). |
+| `test_var_regulatory_browser.py` | 397 | four tests over a year of official records the server captures at start. |
+| `test_news_browser.py` | 342 | four server starts, one per test (the news stack's baseline in `test_browser_rules.py`). |
+| `test_render_parity_browser.py` | 289 | the render suites' parity pages. |
+| `test_funds_browser.py` | 262 | its own server and console over the funds pack's lake. |
+
+Across the lane: every VaR server's stop waited 15 s, and every start about 9 s idle and 20 to 40 s under the drill's load; the lane ran on
+3 workers because the sizing reserved the other lane's 8 GB beside the Java verify's 20 GB.
+
+### 3.26 Why each speed-up keeps coverage
+
+Every speed-up of the drill changes how a test runs, never what it proves. For each, why, and the test that holds it to that:
+
+| Speed-up | Why coverage is unchanged | Held by |
+|---|---|---|
+| Distribution by test (3.1), per-worker fixtures (3.2) | every test still runs once; a file that keeps state stays one group on one worker | `test_browser_rules.py` (rules 1 to 4) |
+| The cached demo lake (3.15) | the lake is keyed on the hash of every source that builds it (test data, generators, loaders, packs' config), working-tree edits included: a changed source builds a new lake | `tools/drillkit/test_affected.py` (the cache builds once per hash, again after a change) |
+| Shared read-only servers (3.23) | only files that read share; a file that writes anything into a shared server's folder fails with what it wrote, and that server is stopped, not handed on | `test_shared_stack_guard.py` |
+| The drawn signal (3.20) | a test or capture waits for the frame that draws the change, never less: `Drishti.settled` waits while a grid or chart says it is drawing; a page without the signal falls back to the old network-idle wait, and the snapshot report counts those fallbacks | `test_elements_grid_browser.py` (`test_the_grid_says_it_is_drawing_until_its_frame_has_drawn`) |
+| The visual snapshots split (3.20) | the same key pages, each in exactly one group, the same goldens and tolerances | `test_snapshot_groups.py` |
+| Faster server starts (3.24) | the same classes from the same jars; a missing or stale archive is ignored (`-Xshare:auto`) and the server starts from the jar | the browser lane itself: every server it starts answers or the test fails |
+| The container smoke test (3.21) | the image build, start, health, the VaR golden through the API and four pages run in every drill; the full in-container suite runs whenever the diff since the last release touches what only it proves | `tools/drillkit/test_drill_lanes.py` (`container_smoke.py full-needed`) |
+| Fix drills (3.22) | never skip a lane a commit can reach; an unknown path reaches every lane; a pass on another branch does not count; the release drill is the full one | `tools/drillkit/test_drill_lanes.py` |
+| The Java 25 lane's test list (3.18) | the whole tree is compiled on Java 25; the tests run are those of the code a JDK version can change; every test runs on Java 21 | `tools/drill-java25.txt`, reviewed with each JDK-sensitive change |
+
+**The drill deletes only its own folders.** Every deletion in `tools/drill.sh` targets its logs (`<data>/drill/`), its temporary folder
+(`<data>/tmp/drill/`, which it exports as `TMPDIR`, so the tests' temporary folders land there too), or its own Java copies
+(`<repository>-drill-copies/<lane>.<its pid>.*`, beside the repository, and that folder only when empty). A `DRISHTI_DRILL_TMP` whose name
+does not hold `drill`, or a `DRISHTI_DRILL_COPY_DIR` whose name does not hold `drill-copies`, is refused. `tools/drillkit/test_drill_lanes.py`
+(`OwnFoldersOnly`) checks every `rm` and `find … -exec rm` in the drill against that list.
 
 ## 4. Numbers to hold
 
@@ -383,8 +516,8 @@ machine) and the refresh test (fixed: it read the freshness label after a fixed 
 workers was about 4 GB a worker (18 to 19 server JVMs, 81 Chromium processes, 18 pytest processes), so the sizing
 budgets 4 GB a worker (`PER_WORKER_GB`). Each drill keeps the previous runs' logs and failure lists in `<data>/drill/runs/<when>/`
 (the last 20), so a flake's traceback is still there after the next run. The drill's Java 21 run hides Docker while the browser lane
-runs; the container tests (every test class using Testcontainers) run on their own, as `java21-docker`, once the browser lane has
-finished (rule 8).
+runs; the containers lane boots the images on the host network beside it (section 3.21), and the container tests (every test class
+using Testcontainers), when the diff needs them, run once the browser lane has finished (rule 8).
 
 ## 6. Rules for browser tests
 
@@ -408,7 +541,8 @@ old pauses and starts in the test's `BASELINE`, which may only go down.
    (`wb_live.should_reload`, once per page); any other timeout is a failure, never retried.
 8. **Docker and Chrome do not share the machine.** A Docker container starting or stopping changes the network interfaces and
    Chromium cancels the requests in flight: never run browser tests while the Docker-based Maven suites (the JDBC, MongoDB, Redis,
-   Cassandra and Aerospike plugins) or a drill run.
+   Cassandra and Aerospike plugins) or a drill run. Containers on the host's network (`--network host`, as the container smoke test
+   builds and runs them) add no interface and may run beside the lane.
 9. **Read what the user reads.** Charts are compared by their ECharts option, never pixels; such a test passes
    `animations=False` to the settled wait. A screenshot test waits for the animations (the default).
 10. **Start clean.** A test never relies on cookies or storage an earlier test left: the per-worker contexts are reset between tests.
@@ -428,7 +562,7 @@ old pauses and starts in the test's `BASELINE`, which may only go down.
 ## 8. Next candidates
 
 - `test_embed_elements_browser.py` and `test_mr_cube_browser.py`: their stack is built once per file; a session stack per worker
-  through the pool would let their tests spread.
+  through the pool would let their tests spread (the MR cube now reads the cached lake, section 3.25).
 - The other files that build a VaR demo lake (`test_var_explorer_browser.py`, `test_var_regulatory_browser.py`,
   `test_stress_window_browser.py`, `test_mr_cube_browser.py`) could ask it through `var_stack.py` (section 3.12) once each is shown to
   leave the lake as it found it.

@@ -38,7 +38,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
-import java.util.random.RandomGenerator;
+import java.util.concurrent.ThreadLocalRandom;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -329,7 +329,7 @@ public final class DatasetRefresher implements AutoCloseable {
             st.date = date.toString();
             boolean permanent = RetryPolicy.looksPermanent(e);
             if (retry.enabled() && failed < props.maxAttempts()) {
-                st.retryAt = clock.instant().plus(retry.delay(failed, permanent, RandomGenerator.getDefault().nextDouble()));
+                st.retryAt = clock.instant().plus(retry.delay(failed, permanent, ThreadLocalRandom.current().nextDouble()));
                 ended = "retrying";
             } else {
                 st.retryAt = null;

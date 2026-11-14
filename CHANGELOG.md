@@ -73,6 +73,34 @@
   Bloomberg MARS, Snowflake Native Apps, Salesforce packages, Splunk, Elastic, Grafana, Superset, Kubernetes operators, Power BI, Tableau,
   Qlik, Looker), per-product notes, where Drishti differs and where it is behind, ideas to borrow; web sources cited with the access date.
   Linked from the Power BI comparison, the competitive analysis and the docs index; not a Help entry (the count cap stays).
+- **Faster drills** (2.9.11.i4, item 1; [BENCHMARK.md](docs/admin/BENCHMARK.md) section 18.3, [TEST_HARNESS.md](docs/architecture/TEST_HARNESS.md)
+  sections 3.21 to 3.26):
+  - **The containers lane** replaces "Java 21 in Docker" after the browser lane: `tools/drillkit/container_smoke.py` builds the server and
+    console images, boots them on the host network beside the browser lane (no network change for Chromium), checks health, the VaR golden
+    through the server's API (BANK and DESK-RATES, VaR and ES at the walk's fixed date) and four console pages; about a minute with the
+    layers cached. Every Testcontainers test still runs, after the browser lane with its copy built at once, when the diff since the last
+    release touches the Dockerfiles, a pom, the Maven wrapper, `.java-version`, the native maths or a module with container tests (`DRILL_CONTAINERS=full`
+    forces it). Its first run found both images unable to start: the server's JRE has no `jdk.random` (retry jitter now comes from
+    `ThreadLocalRandom`), the console could not write its data folder, and the console image still fetched the removed DuckDB-Wasm.
+  - **Fix drills**: `tools/drill.sh --fix` runs the gate, then only the lanes not passed at an ancestor of HEAD or reachable from what changed
+    since their pass (`tools/drillkit/drill_lanes.py`, every lane's last pass in `<data>/drill/lanes-state.json`); a console lane that failed
+    in some files runs those and the files the fix reaches. `--lanes a,b` verifies chosen lanes. The release drill stays `--full`.
+  - **The visual snapshots in four files** by page group (`test_snapshots_{home,var,pages,admin}_browser.py`, the pages in
+    `snapshot_pages.py`), captured on the page's drawn signal: `Drishti.settled` now also waits for every grid's draw (drishti-grid marks
+    its scroller `data-dg-drawing` until the frame that draws it) and the VaR page waits for its `data-painted` mark; the one-second
+    recapture is only the fallback, counted in the run's output.
+  - **The VaR desk snapshot's 0.21-0.23 %**: the histogram legend was written by two answers racing (the headline's words, the path's
+    figures); the path's figures now always win, and the page's data versions (a hash of the lake build) are quieted. Its tolerance is the
+    default again; the VaR, exposure and SIMM goldens are refreshed for the VaR page and Why it moved (layout A).
+  - **Browser lane**: the MR cube reads the cached VaR lake (its own `lake demo` build took about three minutes); the read-only VaR files
+    share one server per worker (`var_server(shared=True)`), guarded: a file that writes to a shared server fails and the server is never
+    handed on; test servers start from a class-data archive built once per drill (`tools/drillkit/server_cds.py`, about a quarter of each
+    start) and are stopped in 3 s, not 15 (their graceful shutdown waited for open requests); the browser workers are sized without the
+    other lane's reserve (it ends in five minutes); two failed files re-run at a time; the lane's memory monitor watches the lane (it
+    watched itself and recorded nothing); a failed snapshot's difference images are kept in `<data>/drill/runs/<when>/snapshot-diffs/`.
+  - **Why coverage is unchanged**, speed-up by speed-up, with the test that holds each (TEST_HARNESS.md 3.26); **the drill deletes only its
+    own folders**: a `DRISHTI_DRILL_TMP` or `DRISHTI_DRILL_COPY_DIR` that is not a drill folder is refused, and a test checks every deletion.
+
 - **A module's computed kinds start the connectors that name them**: a loaded module's `KindProvider` that a connector file names (banking's
   `var-system-baskets` and `var-positions`) is installed as that connector's type, as a `SourcePlugin` extension is, so `PORT <id>` opens the
   system basket's page again and `POS <id>` the position's; before, the provider was routed as a source of its own while the file's

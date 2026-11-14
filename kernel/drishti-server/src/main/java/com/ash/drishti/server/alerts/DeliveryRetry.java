@@ -20,7 +20,7 @@ import java.time.Duration;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Supplier;
-import java.util.random.RandomGenerator;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Tries a failed alert delivery (email, webhook, text) again with the shared retry policy ({@code drishti.retry.alerts.*}), up to {@code max-attempts} in all. The first
@@ -103,7 +103,7 @@ final class DeliveryRetry implements AutoCloseable {
     }
 
     private Duration delay(int attempt, String r) {
-        return policy.delay(attempt, RetryPolicy.looksPermanent(reason(r)), RandomGenerator.getDefault().nextDouble());
+        return policy.delay(attempt, RetryPolicy.looksPermanent(reason(r)), ThreadLocalRandom.current().nextDouble());
     }
 
     private static String seconds(Duration d) {

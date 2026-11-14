@@ -23,6 +23,12 @@
 #   tools/drill.sh --no-push    verify only: no push, no merge (the timing of each stage is printed either way)
 #   tools/drill.sh --keep-going run every job to its end even after one has failed (the default stops the rest at the first failure)
 #   tools/drill.sh --gate       the gate only (stage 1), then stop: no lanes, no push; on any branch (a quick check before a drill)
+#   tools/drill.sh --fix        a fix drill: the gate, then only the lanes that have not passed at an ancestor of HEAD or that the commits
+#                               since their last pass can reach (tools/drillkit/drill_lanes.py); a console lane that failed in some files
+#                               runs those and the files the fix reaches. Never skips a lane the commits touch. The release drill is --full.
+#   tools/drill.sh --lanes a,b  the gate, then these lanes only (browser, other, tools-a, tools-b, java21, java25, containers); verify only
+#   DRILL_CONTAINERS=full|smoke the containers lane: full runs every Testcontainers test after the browser lane as well as the smoke test;
+#                               smoke never; default: full only when the diff since origin/main needs it (container_smoke.py full-needed)
 #   tools/drill.sh --affected [--base REF] [--dry-run]   only the Maven modules and test files the diff against REF (default origin/develop) can reach
 #                               (tools/drillkit/affected.py; for builders, never a release proof; working-tree edits included; no push)
 #   DRILL_MVN_ARGS="..."        extra Maven arguments for every Maven run (e.g. -Ddrishti.test.forks=1 to run the test classes serially)
@@ -49,9 +55,13 @@
 #      files allowed over it, each with its reason); every page a browser test opens is timed (<data>/drill/pageloads.jsonl), and
 #      after the lanes p95 and median per page are printed, slowest first, and written to docs/admin/BENCHMARK.md 18.2;
 #    - the Python tool tests;
-#    - the Java 21 verify (clean verify -P api-docs, every test, containers included) in a copy of the committed tree, so it
+#    - the Java 21 verify (clean verify -P api-docs, every test but the container tests) in a copy of the committed tree, so it
 #      cannot touch the jar the console runs; and the Java 25 lane, in a copy too: the whole tree compiled on Java 25 and the tests of
-#      what the JDK version can change (tools/drill-java25.txt), started once 20 GB are free.
+#      what the JDK version can change (tools/drill-java25.txt), started once 20 GB are free;
+#    - the containers lane: both images built and booted on the host network beside the browser lane (tools/drillkit/container_smoke.py:
+#      health, the VaR golden through the API, four console pages), and every Testcontainers test after the browser lane when the diff
+#      since the last release touches the Dockerfiles, the JDK, native code or a module with container tests.
+#    Each lane that passes is recorded (<data>/drill/lanes-state.json) for the fix drill (--fix).
 #    A console test that fails is run once more on its own (file by file, every file, under a time limit of twice the file's
 #    recorded time); one that passes then is a flake, kept in <data>/drill/flakes.log; one listed in tools/drill-known.txt is
 #    reported as accepted and does not fail the drill. Every test that ran before still runs.
@@ -63,7 +73,7 @@ export JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-21-openjdk-amd64}"   # producti
 # would fill: ./mvnw starts Maven with -Djava.io.tmpdir=<repo>/data/tmp/maven (in a copy, the copy's own), the test forks get
 # <module>/target/tmp (the parent pom's argLine), and the console and tool tests start java through tools/javacmd.py.
 
-MODE=auto; PUSH=1; KEEP_GOING=0; GATE_ONLY=0
+MODE=auto; PUSH=1; KEEP_GOING=0; GATE_ONLY=0; FIX=0; ONLY_LANES=""
 if [[ "${1:-}" == --affected ]]; then
   shift; base=(); dry=()
   while (( $# )); do
@@ -76,14 +86,20 @@ if [[ "${1:-}" == --affected ]]; then
   done
   exec python3 tools/drillkit/affected.py run "${base[@]}" "${dry[@]}"
 fi
-for a in "$@"; do
+args=()
+while (( $# )); do
+  if [[ "$1" == --lanes && $# -ge 2 ]]; then args+=("--lanes=$2"); shift 2; else args+=("$1"); shift; fi
+done
+for a in "${args[@]}"; do
   case "$a" in
     --gate) GATE_ONLY=1; PUSH=0 ;;
     --docs) MODE=docs ;;
     --full) MODE=full ;;
     --no-push) PUSH=0 ;;
     --keep-going) KEEP_GOING=1 ;;
-    *) echo "drill: unknown option $a (use --docs, --full, --no-push, --keep-going, --gate, --affected)" >&2; exit 2 ;;
+    --fix) FIX=1; MODE=full ;;
+    --lanes=*) ONLY_LANES=${a#--lanes=}; MODE=full; PUSH=0 ;;
+    *) echo "drill: unknown option $a (use --docs, --full, --fix, --lanes=a,b, --no-push, --keep-going, --gate, --affected)" >&2; exit 2 ;;
   esac
 done
 
@@ -114,7 +130,8 @@ DATA="${DRISHTI_DATA_DIR:-data}"; mkdir -p "$DATA/drill"; LOGS=$(cd "$DATA/drill
 # the previous run's failure logs are kept in runs/<when>/ (the last 20 runs), so a flake's traceback is not lost to the next run
 if compgen -G "$LOGS/console-*.txt" >/dev/null || compgen -G "$LOGS/rerun-*.log" >/dev/null || compgen -G "$LOGS/*.log" >/dev/null; then
   prev="$LOGS/runs/$(date -r "$LOGS/durations.json" +%Y%m%d-%H%M%S 2>/dev/null || date +%Y%m%d-%H%M%S)"; mkdir -p "$prev"
-  cp -p "$LOGS"/*.log "$LOGS"/console-*.txt "$LOGS"/*.secs "$LOGS"/budget-*.txt "$prev"/ 2>/dev/null || true
+  cp -p "$LOGS"/*.log "$LOGS"/console-*.txt "$LOGS"/*.secs "$LOGS"/budget-*.txt "$LOGS"/snapshots.jsonl "$prev"/ 2>/dev/null || true
+  [[ -d "$LOGS/snapshot-diffs" ]] && cp -rp "$LOGS/snapshot-diffs" "$prev"/ 2>/dev/null || true   # a failed snapshot's images outlive the next run
   rm -f "$prev/flakes.log"
   ls -1d "$LOGS"/runs/*/ 2>/dev/null | sort | head -n -20 | xargs -r rm -rf
 fi
@@ -123,6 +140,9 @@ rm -f "$LOGS"/*.secs "$LOGS"/timings-*.json "$LOGS"/rerun-*.log "$LOGS"/console-
 # system /tmp: on a machine whose /tmp is a RAM disk, parallel suites would fill it and take memory from the test servers.
 # DRISHTI_DRILL_TMP names another folder; it is emptied when the drill ends.
 DRILL_TMP="${DRISHTI_DRILL_TMP:-$DATA/tmp/drill}"; mkdir -p "$DRILL_TMP"; DRILL_TMP=$(cd "$DRILL_TMP" && pwd -P)
+# The drill deletes only its own temporary folders: a DRISHTI_DRILL_TMP that is not a drill folder (its name holds "drill") is refused,
+# so a mistyped one can never empty a home or a repository
+[[ "$(basename "$DRILL_TMP")" == *drill* ]] || { echo "drill: DRISHTI_DRILL_TMP=$DRILL_TMP is not a drill folder (its name must hold \"drill\")" >&2; exit 2; }
 export TMPDIR="$DRILL_TMP"
 DURATIONS="$LOGS/durations.json"; KNOWN=tools/drill-known.txt; PLAN=tools/drillkit/drill_plan.py
 T0=$SECONDS; STAGES=()
@@ -136,9 +156,10 @@ mem_gb=$(awk '/^MemTotal:/ { print int($2 / 1048576) }' /proc/meminfo 2>/dev/nul
 clamp() { local v=$1; (( v < $2 )) && v=$2; (( v > $3 )) && v=$3; echo "$v"; }
 other_workers=${DRILL_OTHER_WORKERS:-$(clamp $(( cpus / 3 )) 1 8)}
 while (( other_workers + 20 > mem_gb && other_workers > 2 )); do other_workers=$(( other_workers - 1 )); done
-# the browser lane: (memory available now less the Java verify's 20 GB, the other lane's GB per worker and 4 GB to spare) divided by one
-# browser worker's budget, at most the CPU threads less two and the scratch ports' 12 (TEST_HARNESS.md, "Worker sizing")
-browser_workers=${DRILL_BROWSER_WORKERS:-$(python3 tools/drillkit/drill_plan.py workers --reserve-gb $(( 20 + other_workers + 4 )) --threads "$cpus")}
+# the browser lane: (memory available now less the Java verify's 20 GB and 4 GB to spare) divided by one browser worker's budget, at most
+# the CPU threads less two and the scratch ports' 12 (TEST_HARNESS.md, "Worker sizing"). The other lane is not reserved: it ends in about
+# five minutes, before the browser workers reach their peak; the memory floor (DRILL_MIN_FREE_GB) holds a test back while memory is short.
+browser_workers=${DRILL_BROWSER_WORKERS:-$(python3 tools/drillkit/drill_plan.py workers --reserve-gb 24 --threads "$cpus")}
 export DRISHTI_LAKE_CACHE="${DRISHTI_LAKE_CACHE:-$(pwd -P)/$DATA/tmp/lake-cache}"   # the demo lakes, built once per hash (tools/drillkit/lake_cache.py)
 LANE_LIMIT=${DRILL_LANE_LIMIT:-10800}   # a console lane that runs three hours has hung: it fails the drill instead of blocking it
 echo "drill: $cpus CPUs, ${mem_gb} GB: console lanes browser $browser_workers workers, other $other_workers workers"
@@ -260,6 +281,8 @@ console_files() {   # name, workers, failed files re-run at a time, then the fil
   tail -n 5 "$out"
   (( rc == 0 )) && return 0
   if (( rc != 1 )); then echo "drill: console $name stopped with exit $rc (124: the time limit; 2: interrupted; 3: internal error; 4: usage)" >&2; return 1; fi
+  # the re-run's snapshot differences are kept beside the first run's (rerun/), never in a temporary folder the clean-up empties
+  DRISHTI_SNAPSHOT_REPORT="$LOGS/snapshots.jsonl" DRISHTI_SNAPSHOT_DIFFS="$LOGS/snapshot-diffs/rerun" DRISHTI_PAGELOAD_LOG="$LOGS/pageloads.jsonl" \
   python3 "$PLAN" rerun --label "console $name" --report "$out" --durations "$DURATIONS" --known "$KNOWN" --logs "$LOGS" \
     --python "$PY" --parallel "$reruns"
 }
@@ -344,13 +367,22 @@ tools_lane_b() {
 
 # A console lane: its files longest first (the planner's list), then the failed tests once more.
 console_lane() {   # name, workers, re-runs at a time
-  local name=$1 mon="" rc=0; mapfile -t files < "$LOGS/lane-$1.txt"
+  local name=$1 mon="" rc=0 me=$BASHPID; mapfile -t files < "$LOGS/lane-$1.txt"
+  if [[ -s "$LOGS/fix-$name.txt" ]]; then   # a fix drill: the files that failed and those the fix reaches, in the lane's order
+    local keep=" $(tr '\n' ' ' < "$LOGS/fix-$name.txt") " f sub=()
+    for f in "${files[@]}"; do [[ $keep == *" $f "* ]] && sub+=("$f"); done
+    echo "drill: console $name: ${#sub[@]} of ${#files[@]} files (a fix drill)"; files=("${sub[@]}")
+  fi
   (( ${#files[@]} )) || { echo "drill: console $name: no files"; return 0; }
   files=(-m "not static" "${files[@]}")        # the quick file checks ran in the gate
   if [[ $name == browser ]]; then   # the lane's processes and memory, sampled every 5 s (tools/drillkit/drill_monitor.py)
-    python3 tools/drillkit/drill_monitor.py watch --out "$LOGS/monitor-browser.csv" --under $BASHPID & mon=$!
+    # --under this lane's shell ($me, read before the &: inside it $BASHPID is the monitor's own process, which then counted only itself)
+    python3 tools/drillkit/drill_monitor.py watch --out "$LOGS/monitor-browser.csv" --under "$me" & mon=$!
   fi
   console_files "$name" "$2" "$3" "${files[@]}" || rc=$?
+  if (( rc != 0 )); then   # the files that failed, for a fix drill (tools/drillkit/drill_lanes.py); none named: the whole lane again
+    grep -oE '^(FAILED|ERROR) [^ :]+\.py' "$LOGS/console-$name.txt" 2>/dev/null | awk '{print $2}' | sort -u > "$LOGS/failed-$name.txt" || true
+  fi
   if [[ -n $mon ]]; then
     kill "$mon" 2>/dev/null || true; wait "$mon" 2>/dev/null || true
     echo "drill: browser lane memory: $(python3 tools/drillkit/drill_monitor.py summary "$LOGS/monitor-browser.csv")"
@@ -366,6 +398,9 @@ console_lane() {   # name, workers, re-runs at a time
 # share the machine); one that passes the second time is listed as a flake here and in flakes.log, not hidden.
 REPO=$(pwd -P)
 COPY_BASE="${DRISHTI_DRILL_COPY_DIR:-$(cd .. && pwd -P)/$(basename "$REPO")-drill-copies}"
+# the only folder outside the repository the drill writes; it removes only its own copies there (named <lane>.<its pid>.*) and the
+# folder itself when empty, and refuses a DRISHTI_DRILL_COPY_DIR whose name does not hold "drill-copies"
+[[ "$(basename "$COPY_BASE")" == *drill-copies* ]] || { echo "drill: DRISHTI_DRILL_COPY_DIR=$COPY_BASE is not a copies folder (its name must hold \"drill-copies\")" >&2; exit 2; }
 copy_verify() {   # name, JDK, Drishti*net test ports, whether the copy's data/ and config/ are checked; then Maven arguments
   set -e
   local name=$1 jdk=$2 ports=$3 check=$4; shift 4
@@ -383,7 +418,12 @@ copy_verify() {   # name, JDK, Drishti*net test ports, whether the copy's data/ 
                      -o -type f -exec md5sum {} + 2>/dev/null || true; } | awk '{ h = $1; sub(/^[^ ]+  /, ""); print $0 "\t" h }' | sort; }
   local before; before=$(tree_files)
   local rc=0
-  DRISHTI_NET_IT_PORTS="$ports" JAVA_HOME="$jdk" ./mvnw -q -o clean verify -Dsurefire.rerunFailingTestsCount=1 "$@" ${DRILL_MVN_ARGS:-} || rc=$?
+  local goals=(clean verify)
+  if [[ -n "${COPY_THEN_WAIT:-}" ]]; then   # built now, tested once that file exists (the lane it must not run beside has finished)
+    JAVA_HOME="$jdk" ./mvnw -q -o clean package -DskipTests ${DRILL_MVN_ARGS:-} || return $?
+    after 7200 "$COPY_THEN_WAIT"; echo "drill: $name tests start at $(date +%T)"; goals=(verify)
+  fi
+  DRISHTI_NET_IT_PORTS="$ports" JAVA_HOME="$jdk" ./mvnw -q -o "${goals[@]}" -Dsurefire.rerunFailingTestsCount=1 "$@" ${DRILL_MVN_ARGS:-} || rc=$?
   local flaky
   flaky=$(grep -l -E '<flaky(Failure|Error)' $(find . -path '*/target/surefire-reports/TEST-*.xml' 2>/dev/null) /dev/null 2>/dev/null \
           | sed -E 's|.*/TEST-(.*)\.xml|\1|' | sort -u || true)
@@ -404,7 +444,8 @@ copy_verify() {   # name, JDK, Drishti*net test ports, whether the copy's data/ 
 # Java 21 in a copy, every test and the containers (Testcontainers), as production runs; its cluster tests on their own ports.
 # Java 21 runs beside the browser lane with Docker hidden: containers starting and stopping change the machine's network, and Chromium
 # then cancels its requests (ERR_NETWORK_CHANGED). The container tests (@Testcontainers, disabledWithoutDocker) skip here and run
-# on their own in java21-docker once the browser lane has finished (TEST_HARNESS.md rule 8).
+# in the containers lane: its smoke test on the host network beside the browser lane, the Testcontainers tests (java21-docker) only when
+# the diff needs them and only once the browser lane has finished (TEST_HARNESS.md rule 8).
 java21_verify() {
   export DOCKER_HOST=unix:///nonexistent/drill-java21 TESTCONTAINERS_RYUK_DISABLED=true
   copy_verify java21 "$JAVA21_HOME" 20783,20784,20785 check -P api-docs
@@ -413,12 +454,29 @@ docker_test_classes() {   # every test class that uses Testcontainers, as Maven'
   grep -rl --include='*Test.java' -e 'org.testcontainers' "$REPO" --exclude-dir=.claude --exclude-dir=target 2>/dev/null \
     | sed -E 's#.*/##; s#\.java$##' | sort -u | paste -sd, -
 }
-java21_docker() {
-  after 7200 "$LOGS/console-browser.secs"
-  echo "drill: java21-docker starts at $(date +%T)"
+java21_docker() {   # every Testcontainers test: the copy is built at once, its tests start once the browser lane has finished
   local classes; classes=$(docker_test_classes)
   [[ -n "$classes" ]] || { echo "drill: java21-docker: no container tests found" >&2; return 1; }
-  copy_verify java21-docker "$JAVA21_HOME" 21783,21784,21785 none -Dtest="$classes" -Dsurefire.failIfNoSpecifiedTests=false
+  local wait=/dev/null; [[ -n ${RUN_LANE[browser]:-} ]] && wait="$LOGS/console-browser.secs"   # no browser lane in this drill: no wait
+  COPY_THEN_WAIT="$wait" copy_verify java21-docker "$JAVA21_HOME" 21783,21784,21785 none -Dtest="$classes" -Dsurefire.failIfNoSpecifiedTests=false
+}
+# The containers lane (TEST_HARNESS.md, "The container smoke test"): the images as shipped, built and booted on the host's network beside
+# the browser lane (no network change for Chromium): health, the VaR golden through the API, four console pages. Every Testcontainers test
+# too (java21_docker) only when the diff since the last release needs it (the Dockerfiles, the JDK, native code, a module with container
+# tests: tools/drillkit/container_smoke.py full-needed) or DRILL_CONTAINERS=full.
+containers() {
+  set -e
+  command -v docker >/dev/null && docker info >/dev/null 2>&1 || { echo "drill: containers: Docker is not running" >&2; return 1; }
+  local full=0 rc=0
+  case "${DRILL_CONTAINERS:-auto}" in
+    full) full=1 ;;
+    smoke) ;;
+    *) python3 tools/drillkit/container_smoke.py full-needed --base "${DRILL_CONTAINERS_BASE:-origin/main}" && full=1 || true ;;
+  esac
+  if (( full )); then java21_docker & local jd=$!; fi
+  "$PY" tools/drillkit/container_smoke.py run || rc=1
+  if (( full )); then wait "$jd" || rc=1; else echo "drill: containers: the smoke test only (no Dockerfile, JDK, native or container-test module change since ${DRILL_CONTAINERS_BASE:-origin/main})"; fi
+  return $rc
 }
 # Java 21 is what production runs; Java 25 checks forward compatibility: the whole tree compiles on it (a removed API fails here) and the tests of
 # the code the JDK version can change run on it (native maths and memory access, codecs, the store that relies on Unsafe or the Foreign API: the
@@ -447,12 +505,12 @@ java25_verify() {
 # ---- clean-up and the working tree's checks ----------------------------------------------------------------------------------
 # Every run cleans up after itself, passed or failed: the temporary folders the tests made in its temporary folder during this run
 # (drishti-* and pytest's), never older ones, never the console's static cache; and the console files' durations are kept.
-DRILL_MARK=$(mktemp "${TMPDIR:-/tmp}/drill-mark.XXXXXX")
+DRILL_MARK=$(mktemp "$DRILL_TMP/drill-mark.XXXXXX")
 drill_cleanup() {
   stop_jobs 2>/dev/null || true
   python3 tools/drillkit/lake_cache.py prune >/dev/null 2>&1 || true
   python3 "$PLAN" merge --durations "$DURATIONS" "$LOGS"/timings-*.json 2>/dev/null || true
-  local tmp="${TMPDIR:-/tmp}"
+  local tmp="$DRILL_TMP"   # never the system /tmp: only the drill's own folder
   # || true: a folder already gone (or none made) is not a failure; under set -e it would turn a green drill's exit into 1
   find "$tmp" -maxdepth 1 -name 'drishti-*' ! -name 'drishti-console-static' -newer "$DRILL_MARK" -exec rm -rf {} + 2>/dev/null || true
   chmod -R u+w "$tmp/pytest-of-$(id -un)" 2>/dev/null || true
@@ -550,18 +608,51 @@ else
   python3 "$PLAN" lanes --durations "$DURATIONS" --out "$LOGS/lanes" --browser-workers "$browser_workers" --other-workers "$other_workers" \
     --exclude "${GATE_CONSOLE[@]}"
   mv "$LOGS/lanes/browser.txt" "$LOGS/lane-browser.txt"; mv "$LOGS/lanes/other.txt" "$LOGS/lane-other.txt"; rmdir "$LOGS/lanes"
-  stage2=(console-browser console-other tools-a tools-b java21 java21-docker)
-  : > "$LOGS/pageloads.jsonl"                   # each page's load time in the lanes' browser tests (tools/drillkit/pageloads.py)
+  # the lanes: every one (a full drill), those named (--lanes), or those a fix drill needs (--fix: tools/drillkit/drill_lanes.py)
+  STATE="$LOGS/lanes-state.json"; HEAD_SHA=$(git rev-parse HEAD); rm -f "$LOGS"/fix-*.txt "$LOGS"/failed-*.txt
+  declare -A RUN_LANE
+  if (( FIX )); then
+    while IFS=$'\t' read -r lane why files; do
+      RUN_LANE[$lane]=1; echo "drill: fix drill: lane $lane: $why"
+      [[ $files != all ]] && tr ',' '\n' <<< "$files" > "$LOGS/fix-$lane.txt"
+    done < <(python3 tools/drillkit/drill_lanes.py fix --state "$STATE")
+    (( ${#RUN_LANE[@]} )) || echo "drill: fix drill: every lane passed at an ancestor and nothing since reaches it: the gate alone"
+  elif [[ -n $ONLY_LANES ]]; then
+    for lane in ${ONLY_LANES//,/ }; do RUN_LANE[$lane]=1; done
+  else
+    for lane in browser other tools-a tools-b java21 java25 containers; do RUN_LANE[$lane]=1; done
+  fi
+  stage2=()
+  # the test servers' class-data archive, built once from the gate's jar (about 20 s; each server start then about a quarter faster);
+  # without it the servers start from the jar as before (tools/drillkit/server_cds.py)
+  if [[ -n ${RUN_LANE[browser]:-} ]]; then
+    if python3 tools/drillkit/server_cds.py build --out "$DRILL_TMP/server-cds" --java "$JAVA21_HOME/bin/java" >/dev/null; then
+      export DRISHTI_TEST_SERVER_CDS="$DRILL_TMP/server-cds"
+    else echo "drill: warning: no class-data archive for the test servers: they start from the jar" >&2; fi
+  fi
+  : > "$LOGS/pageloads.jsonl"                  # each page's load time in the lanes' browser tests (tools/drillkit/pageloads.py)
   : > "$LOGS/snapshots.jsonl"; rm -rf "$LOGS/snapshot-diffs"   # the visual snapshots of the page walk (drishti-console/tests/snapshots.py)
-  start_job console-browser console_lane browser "$browser_workers" "${DRILL_BROWSER_RERUNS:-1}"
-  start_job console-other niced 5 console_lane other "$other_workers" 2
-  start_job tools-a niced 5 tools_lane_a
-  start_job tools-b niced 5 tools_lane_b
-  start_job java21 niced 5 java21_verify
-  start_job java21-docker niced 5 java21_docker
-  if [[ -x "$JAVA25_HOME/bin/java" ]]; then start_job java25 niced 10 java25_verify; stage2+=(java25)
-  else echo "drill: no JDK 25 at $JAVA25_HOME (set JAVA25_HOME): the forward-compatibility run is skipped" >&2; fi
-  rc=0; watch_jobs "${stage2[@]}" || rc=1
+  # a failed browser test is re-run by file, two files at a time (one at a time took 35 minutes for nine files in the 2026-11-11 drill)
+  [[ -n ${RUN_LANE[browser]:-} ]] && { start_job console-browser console_lane browser "$browser_workers" "${DRILL_BROWSER_RERUNS:-2}"; stage2+=(console-browser); }
+  [[ -n ${RUN_LANE[other]:-} ]] && { start_job console-other niced 5 console_lane other "$other_workers" 2; stage2+=(console-other); }
+  [[ -n ${RUN_LANE[tools-a]:-} ]] && { start_job tools-a niced 5 tools_lane_a; stage2+=(tools-a); }
+  [[ -n ${RUN_LANE[tools-b]:-} ]] && { start_job tools-b niced 5 tools_lane_b; stage2+=(tools-b); }
+  [[ -n ${RUN_LANE[java21]:-} ]] && { start_job java21 niced 5 java21_verify; stage2+=(java21); }
+  [[ -n ${RUN_LANE[containers]:-} ]] && { start_job containers niced 5 containers; stage2+=(containers); }
+  if [[ -n ${RUN_LANE[java25]:-} ]]; then
+    if [[ -x "$JAVA25_HOME/bin/java" ]]; then start_job java25 niced 10 java25_verify; stage2+=(java25)
+    else echo "drill: no JDK 25 at $JAVA25_HOME (set JAVA25_HOME): the forward-compatibility run is skipped" >&2; fi
+  fi
+  rc=0; (( ${#stage2[@]} == 0 )) || watch_jobs "${stage2[@]}" || rc=1
+  # what passed, for the next fix drill: a lane that ran whole and passed, or a console lane that ran whole and failed in some files
+  for n in "${stage2[@]}"; do
+    lane=${n#console-}
+    if [[ ${RC[$n]:-x} == 0 && ! -s "$LOGS/fix-$lane.txt" ]]; then python3 tools/drillkit/drill_lanes.py passed --state "$STATE" --commit "$HEAD_SHA" "$lane"
+    elif [[ ${RC[$n]:-x} == 0 ]]; then :   # a fix drill's part of a lane passed: its files are proven, the lane's record stays as it was
+    elif [[ ! -s "$LOGS/fix-$lane.txt" ]]; then python3 tools/drillkit/drill_lanes.py failed --state "$STATE" --commit "$HEAD_SHA" --lane "$lane" \
+      $( [[ ${RC[$n]} != stopped ]] && cat "$LOGS/failed-$lane.txt" 2>/dev/null )
+    fi
+  done
   # p95 and median per page, slowest first; the latest into BENCHMARK.md 18.2 (reported, never failed: the tests' budget is 10 s)
   python3 tools/drillkit/pageloads.py "$LOGS/pageloads.jsonl" --top 25 --write docs/admin/BENCHMARK.md || true
   # the visual snapshots: each changed page (its test failed the lane) and the goldens this commit refreshed (TEST_HARNESS.md)
@@ -570,7 +661,7 @@ else
   [[ -n $refreshed ]] && echo "drill: visual snapshots refreshed in this commit: $refreshed"
   config_unchanged || rc=1; data_unchanged || rc=1
   (( rc == 0 )) || { echo "drill: FAILED (logs in $LOGS/)" >&2; exit 1; }
-  stage_done "console lanes | tools (two lanes) | Java 21 | Java 25" $t
+  stage_done "lanes: ${stage2[*]:-none}" $t
   for n in "${stage2[@]}"; do printf '  %-16s %5ss\n' "$n" "$(cat "$LOGS/$n.secs" 2>/dev/null || echo '?')"; done
   if [[ -s "$LOGS/budget-browser.txt" ]]; then echo "drill: browser files over the per-file budget:"; sed 's/^/  /' "$LOGS/budget-browser.txt"; fi
 fi

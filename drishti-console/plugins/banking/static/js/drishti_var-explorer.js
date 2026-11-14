@@ -314,8 +314,12 @@
     var ln = d.lens || {}, sum = ln.method === "SUM", sq = ln.method === "SQRT10", unit = sum ? "windows" : "scenarios";
     $("[data-vx-n]").textContent = "(" + d.scenarios + " " + unit + ")";
     var conf = Math.round(d.confidence * 1000) / 10, esc = Math.round(d.esConfidence * 1000) / 10;
-    $("[data-vx-var-legend]").textContent = "VaR " + conf + "% (" + ordinal(d.k) + " worst)";
-    $("[data-vx-es-legend]").textContent = "ES " + esc + "% (mean of worst " + d.esCount + ")";
+    // the histogram's legend: the path's figures once its chart is drawn (drawPath), else these words; whichever answer comes last, the
+    // legend reads the same (the snapshots once caught the two answers racing)
+    if ($("[data-vx-var-legend]").dataset.seq !== String(S.seq)) {
+      $("[data-vx-var-legend]").textContent = "VaR " + conf + "% (" + ordinal(d.k) + " worst)";
+      $("[data-vx-es-legend]").textContent = "ES " + esc + "% (mean of worst " + d.esCount + ")";
+    }
     var bt = d.backtest || {}, u = d.limitUse, cur = d.currency || "USD";
     var days = ln.horizon === "10D" ? "10 days" : "1 day", stressed = ln.set === "STRESSED", avg = d.stressAverage || {};
     var tiles = [
@@ -479,6 +483,7 @@
       parametric: p && p.curve ? { "var": p["var"], curve: p.curve, gap: p.gap, gapPct: p.gapPct, describe: p.curveDescribe } : null }, { height: 210 });
     $("[data-vx-var-legend]").textContent = "VaR " + money(d["var"]);
     $("[data-vx-es-legend]").textContent = "ES " + money(d.es);
+    $("[data-vx-var-legend]").dataset.seq = String(S.seq);
     R.riskChart($("[data-vx-tail]"), { kind: "bar", id: "key", x: { field: "key", title: "" }, y: { field: "pnl", format: "compact" }, legend: "none",
       data: { rows: d.worst.map(function (w, r) { return { key: "#" + w.rank, pnl: w.pnl, date: w.date, atVar: r === d.k - 1 ? 1 : 0, inTail: r < d.esCount ? 1 : 0 }; }) },
       colourWhen: [{ when: "atVar > 0", tone: "bad" }, { when: "inTail > 0", tone: "warn" }] },
