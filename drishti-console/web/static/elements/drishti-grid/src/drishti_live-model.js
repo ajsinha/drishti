@@ -66,7 +66,7 @@ export function gridColumns(spec) {
     // derived and decorated cells, all of the declaration (no per-page code): cases (a text from the row's fields; a value ending in * is a prefix), lookup (a text by the row's key),
     // toneField (a row field naming the cell's tone), href / hrefField (the cell is a link, one of this console's own paths)
     if (Array.isArray(c.cases)) {
-      col.valueGetter = (row) => { const hit = c.cases.find((k) => !k.when || Object.keys(k.when).every((f) => { const w = k.when[f]; const v = row && row[f]; return Array.isArray(w) ? w.indexOf(v) >= 0 : const t = String(v === undefined || v === null ? '' : v), x = String(w); return x.slice(-1) === '*' ? t.indexOf(x.slice(0, -1)) === 0 : t === x; })); return hit ? hit.text : (c.otherwise === undefined ? null : c.otherwise); };
+      col.valueGetter = (row) => { const hit = c.cases.find((k) => !k.when || Object.keys(k.when).every((f) => { const w = k.when[f]; const v = row && row[f]; if (Array.isArray(w)) { return w.indexOf(v) >= 0; } const t = String(v === undefined || v === null ? '' : v), x = String(w); return x.slice(-1) === '*' ? t.indexOf(x.slice(0, -1)) === 0 : t === x; })); return hit ? hit.text : (c.otherwise === undefined ? null : c.otherwise); };
     }
     if (c.lookup && c.lookup.key) { col.valueGetter = (row) => { const v = (c.lookup.values || {})[row && row[c.lookup.key]]; return v === undefined ? null : v; }; }
     if (c.toneField) { const was = col.cellClass; col.cellClass = (v, row) => (was ? was(v, row) + ' ' : '') + (row && row[c.toneField] ? 't-' + String(row[c.toneField]).replace(/[^A-Za-z0-9_-]/g, '') : ''); }
