@@ -358,6 +358,8 @@
     syncLensPicker(d.lens);
     renderCrumb(d);
     renderIntraday(d.intraday);
+    var sb = $("[data-vx-sources]");       // trade grain with a trade source switched off: the details are missing, the numbers are not
+    sb.hidden = !d.banner; sb.textContent = d.banner || ""; sb.dataset.excludes = (d.excludes || []).join(",");
     bindExplain(d);
     if (PM && window.Drishti.VarParametric) window.Drishti.VarParametric.headline(d);   // the parametric tiles, each with its ? (drishti_var-parametric.js)
     renderMatured(d);
