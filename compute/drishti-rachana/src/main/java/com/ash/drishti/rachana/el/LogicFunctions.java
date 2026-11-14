@@ -41,6 +41,56 @@ final class LogicFunctions {
         t.fn("one_of", 2, 2, (a, c) -> oneOf(a.get(0), a.get(1)));
         t.old("oneOf", "one_of", 2, 2);                                  // read for compatibility: existing Sutras write oneOf
         t.fn("link", 1, 3, LogicFunctions::link);
+        // list attributes (TAGS: ["fx", "rates"], or a promoted column's JSON text): the one implementation of the list filters that
+        // grids, forms, BI and Rachana offer as contains / any of / all of (RACHANA_REFERENCE.md, Lists)
+        t.fn("has", 2, 2, (a, c) -> listMatch(a.get(0), List.of(a.get(1)), true));
+        t.fn("any_of", 2, 2, (a, c) -> listMatch(a.get(0), choices(a.get(1)), false));
+        t.fn("all_of", 2, 2, (a, c) -> listMatch(a.get(0), choices(a.get(1)), true));
+    }
+
+    /** A list attribute's values: an array's elements, a list's JSON text read as the list, a single value a list of one; null none. */
+    static List<Object> listItems(Object v) {
+        Object s = Values.simplify(v);
+        if (s == null) {
+            return List.of();
+        }
+        if (s instanceof DataNode n && n.type() == NodeType.ARRAY) {
+            List<Object> out = new java.util.ArrayList<>();
+            for (int i = 0; i < n.size(); i++) {
+                if (!Values.isNull(n.get(i))) {
+                    out.add(n.get(i));
+                }
+            }
+            return out;
+        }
+        List<String> parsed = com.ash.drishti.api.ListValues.of(s instanceof DataNode ? Values.text(s) : s);
+        return parsed != null ? new java.util.ArrayList<>(parsed) : List.of(s);
+    }
+
+    private static List<Object> choices(Object v) {
+        Object s = Values.simplify(v);
+        return s instanceof DataNode n && n.type() == NodeType.ARRAY ? listItems(s) : s == null ? List.of() : List.of(s);
+    }
+
+    /**
+     * {@code has(list, value)}: the list holds the value; {@code any_of(list, values)}: it holds at least one of them; {@code all_of(list,
+     * values)}: it holds every one. Equality as {@code ==} (numbers numerically, otherwise as text); no value chosen holds everything.
+     */
+    private static boolean listMatch(Object list, List<Object> wanted, boolean all) {
+        if (wanted.isEmpty()) {
+            return true;
+        }
+        List<Object> items = listItems(list);
+        for (Object w : wanted) {
+            boolean in = items.stream().anyMatch(i -> Values.equal(i, w));
+            if (all && !in) {
+                return false;
+            }
+            if (!all && in) {
+                return true;
+            }
+        }
+        return all;
     }
 
     /**

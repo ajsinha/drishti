@@ -106,6 +106,9 @@ public final class FormInference {
         List<Object> seen = sample.stream().filter(v -> v != null && !String.valueOf(v).isBlank()).toList();
         String last = path.substring(path.lastIndexOf('.') + 1);
         if (!seen.isEmpty()) {
+            if (seen.stream().allMatch(v -> v instanceof java.util.Collection<?> l && com.ash.drishti.api.ListValues.isList(l))) {
+                return FieldType.LIST;                                     // a list attribute: contains, any of, all of
+            }
             if (seen.stream().allMatch(v -> v instanceof Boolean)) {
                 return FieldType.BOOL;
             }

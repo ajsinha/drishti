@@ -59,7 +59,7 @@ public record SearchQuery(String head, String condition, String orderBy, boolean
     private static final Pattern WHERE = Pattern.compile("(?i)^\\s*(\\S+)(?:\\s+where\\s+(.+))?$", Pattern.DOTALL);
     private static final Set<String> KEYWORDS = Set.of("true", "false", "null");
     private static final Set<String> FUNCTIONS = Set.of("link", "size", "sum", "fmt", "coalesce", "first", "last", "abs", "min", "max",
-            "upper", "lower", "contains", "startsWith", "matches", "matchesCase");
+            "upper", "lower", "contains", "startsWith", "matches", "matchesCase", "has", "any_of", "all_of");
 
     /** The document paths ({@code $.a.b}) the condition, the order and the columns read, as written. */
     public Set<String> documentPaths() {

@@ -116,7 +116,17 @@ public final class FormCompiler {
             case DATE -> date(f, p, op, v, today, cal);
             case ENUM, ID -> any(f, p, v);
             case BOOL -> bool(f, p, v);
+            case LIST -> list(p, op, v);
         };
+    }
+
+    /** A list attribute: contains one value, any of several, all of several (Rachana-EL has: one implementation of the list filters). */
+    private String list(String p, String op, List<String> values) {
+        List<String> parts = new ArrayList<>();
+        for (String w : "contains".equals(op) ? values.subList(0, 1) : values) {
+            parts.add("has(" + p + ", " + quote(w) + ")");
+        }
+        return parts.size() == 1 ? parts.get(0) : "(" + String.join("all".equals(op) ? " and " : " or ", parts) + ")";
     }
 
     private String text(FormField f, String p, String op, String value, boolean exact) {
