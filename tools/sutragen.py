@@ -463,7 +463,8 @@ def draft(groups: list[Group], opts, out: pathlib.Path, tests: pathlib.Path | No
         r = sutra_cli(opts, "design", "--each", str(t / "in"), "--out", str(t / "out"))
         if r.returncode != 0:
             sys.stderr.write(r.stdout + r.stderr)
-            raise SystemExit(f"sutragen: sutra design failed (exit {r.returncode})")
+            why = [x for x in (r.stdout + r.stderr).splitlines() if x.strip()][-4:]
+            raise SystemExit(f"sutragen: sutra design failed (exit {r.returncode})" + (": " + " | ".join(why) if why else ""))
         for i, g in enumerate(groups):
             text = (t / "out" / f"g{i:04d}.sutra.yaml").read_text(encoding="utf-8")
             g.path = out / g.kind / f"{g.name}.v1.sutra.yaml"

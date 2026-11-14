@@ -59,6 +59,16 @@ CATEGORIES = {"plugin", "built-in", "template"}
 _COMMENT = re.compile(r"\A(?:\s*<!--.*?-->)*\s*", re.S)
 
 
+def _connectors(m: dict) -> dict:
+    """The connectors a pack brings, name -> details. The pack format is a list of names with the details under
+    ``connector-templates``; the older hand-written packs (examples/, config/packs) give a mapping, still accepted."""
+    raw = m.get("connectors") or {}
+    if isinstance(raw, dict):
+        return raw
+    templates = m.get("connector-templates") or {}
+    return {n: (templates.get(n) or {}) for n in raw if isinstance(n, str)}
+
+
 def licence_comment() -> str:
     """The HTML-comment licence header every markdown file of the repository starts with."""
     lines = (ROOT / "docs" / "guides" / "RACHANA_REFERENCE.md").read_text(encoding="utf-8").splitlines()
@@ -431,7 +441,7 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
         example_id.setdefault(e.get("kind"), str(e.get("id")))
     sutras = _sutras(F)
     about = yaml.safe_load(F.text(m.get("about") or "config/about.yaml") or "{}") or {}
-    connectors = m.get("connectors") or {}
+    connectors = _connectors(m)
     routes = m.get("routes") or {}
     notes = imeta.get("fields") or {}
     feeds = pack_feeds(name)
