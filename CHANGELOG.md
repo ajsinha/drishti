@@ -6083,7 +6083,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
 - The UI Board work is kept on branch ui-board-preview; not in this release.
 - **Grid: `@` suggests the opened cells**: the formula bar's suggestions list the cells a click opens (`@A2a.`, `@A2a1.`) with
   their events and fields, and inside an opened cell offer `@parent.` with what its parent emits (`@parent.open.ref`).
-- **The us-equities pack** ([its guide](config/packs/capitalmarkets/us-equities/guides/us-equities.md), [PACKS.md](docs/guides/BUILD_GUIDE.md#311-the-packs-that-ship)):
+- **The us-equities pack** ([its guide](modules/capital-markets/packs/us-equities/guides/us-equities.md), [PACKS.md](docs/guides/BUILD_GUIDE.md#311-the-packs-that-ship)):
   real public data on the companies of the Dow 30, the Nasdaq-100 and the S&P 500 as Wikidata records their membership (479 companies
   with SEC filings): `us-company` (CIK, ticker, exchange and listing market, SIC with its description and division, LEI from GLEIF,
   headquarters, founded, website, index memberships, ten years of annual 10-K XBRL financials, the latest 20 filings), `filing` (9,561,

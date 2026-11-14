@@ -107,13 +107,13 @@ trade valuations (mark-to-market, P&L and sensitivities per trade), and the **Va
 per live trade over 509 historical scenario days, the scenario set and the VaR limits of the hierarchies' nodes and of the system
 baskets (`var-limit`). The system baskets themselves (`PORT <id>`: a hierarchy node, a rule or a basket) are kept in Drishti's basket
 store, not data: the demo's are this pack's seed, `seeds/system-baskets.yaml`, imported once at a demo's first start
-([VAR_GUIDE.md section 5.7](../../../../docs/guides/VAR_GUIDE.md#57-system-baskets)). The hierarchies themselves are configured in this pack's `hierarchies:` block (any
+([VAR_GUIDE.md section 5.7](../../../../../docs/guides/VAR_GUIDE.md#57-system-baskets)). The hierarchies themselves are configured in this pack's `hierarchies:` block (any
 number): MGMT (`DIVISION > DESK > TT_BOOK`), LEGAL (`LEGAL_ENTITY > DESK > TT_BOOK`) and the limit letters LL (`LIMIT_LETTER > DESK`),
-each built by the server from the trades' promoted columns ([VAR_GUIDE.md section 15.14](../../../../docs/guides/VAR_GUIDE.md#1514-hierarchies-from-promoted-columns)). Value at risk is never stored: the VaR explorer (`VAR DESK DESK-RATES <GO>`,
-[VAR_GUIDE.md section 3](../../../../docs/guides/VAR_GUIDE.md#3-the-explorer-screen-by-screen)) computes VaR, ES and contributions for any set of these trades, the system basket
+each built by the server from the trades' promoted columns ([VAR_GUIDE.md section 15.14](../../../../../docs/guides/VAR_GUIDE.md#1514-hierarchies-from-promoted-columns)). Value at risk is never stored: the VaR explorer (`VAR DESK DESK-RATES <GO>`,
+[VAR_GUIDE.md section 3](../../../../../docs/guides/VAR_GUIDE.md#3-the-explorer-screen-by-screen)) computes VaR, ES and contributions for any set of these trades, the system basket
 and position pages (`PORT <id>`, `POS <id>`) show the engine's figures computed as they open, and each business date's official figures
 are the engine's end-of-day captures. Positions are Drishti's: derived from the trades by this pack's `positions:` rules (securities by
-book and security, listed by book and contract, OTC one per trade) when a date loads ([VAR_GUIDE.md Part II](../../../../docs/guides/VAR_GUIDE.md#14-the-contract-at-a-glance)).
+book and security, listed by book and contract, OTC one per trade) when a date loads ([VAR_GUIDE.md Part II](../../../../../docs/guides/VAR_GUIDE.md#14-the-contract-at-a-glance)).
 There is no stored `var` (VAR-<desk>) or `var-node` kind: `VAR VAR-COMM` opens the explorer at `DESK:COMM`.
 
 ## Data structures
@@ -706,4 +706,4 @@ The pack's files are written by `tools/packgen/banking/make_docs.py`; its `--che
 ## See also
 
 - [Market risk pack](guides/market-risk.md): VaR, stress testing, FRTB and P&L explain: kinds, connectors and examples.
-- [Packs](../../../../docs/guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/BUILD_GUIDE.md) (the README standard).
+- [Packs](../../../../../docs/guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../../docs/guides/BUILD_GUIDE.md) (the README standard).

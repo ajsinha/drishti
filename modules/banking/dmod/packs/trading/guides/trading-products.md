@@ -35,27 +35,27 @@ The trading pack covers **125 products** in ten asset classes. Each has its own 
 
 | Product | PRODUCT_TYPE | Family | Schedule | Market data | Risk |
 |---|---|---|---|---|---|
-| Interest rate swap (fixed/float) | `IRS_FIXFLOAT` | swap | cashflows | [`ir-curve`](../../../../../docs/contracts/samples/market-data.md#ir-curve) ([contract](../../../../../docs/contracts/packs/market-data.md#crv-interest-rate-curve-ir-curve)), `ir-curve`, [`rate-fixing`](../../../../../docs/contracts/samples/market-data.md#rate-fixing) ([contract](../../../../../docs/contracts/packs/market-data.md#fix-rate-index-fixings-rate-fixing)) | DV01 |
+| Interest rate swap (fixed/float) | `IRS_FIXFLOAT` | swap | cashflows | [`ir-curve`](../../../../../../docs/contracts/samples/market-data.md#ir-curve) ([contract](../../../../../../docs/contracts/packs/market-data.md#crv-interest-rate-curve-ir-curve)), `ir-curve`, [`rate-fixing`](../../../../../../docs/contracts/samples/market-data.md#rate-fixing) ([contract](../../../../../../docs/contracts/packs/market-data.md#fix-rate-index-fixings-rate-fixing)) | DV01 |
 | Overnight index swap | `OIS` | swap | cashflows | `ir-curve`, `rate-fixing` | DV01 |
 | Basis swap (float/float) | `BASIS_SWAP` | swap | cashflows | `ir-curve`, `ir-curve`, `ir-curve` | DV01 |
-| Cross-currency swap (non-MtM) | `XCCY_SWAP` | swap | cashflows | `ir-curve`, `ir-curve`, `ir-curve`, [`fx-spot`](../../../../../docs/contracts/samples/market-data.md#fx-spot) ([contract](../../../../../docs/contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot)) | DV01, FX delta |
+| Cross-currency swap (non-MtM) | `XCCY_SWAP` | swap | cashflows | `ir-curve`, `ir-curve`, `ir-curve`, [`fx-spot`](../../../../../../docs/contracts/samples/market-data.md#fx-spot) ([contract](../../../../../../docs/contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot)) | DV01, FX delta |
 | Cross-currency swap (MtM resetting) | `XCCY_SWAP_MTM` | swap | cashflows | `ir-curve`, `ir-curve`, `ir-curve`, `fx-spot` | DV01, FX delta |
 | Zero-coupon swap | `ZC_SWAP` | swap | cashflows | `ir-curve`, `ir-curve` | DV01 |
 | Amortising swap | `AMORT_SWAP` | swap | amortization | `ir-curve`, `ir-curve` | DV01 |
 | Accreting swap | `ACCRETING_SWAP` | swap | amortization | `ir-curve`, `ir-curve` | DV01 |
 | Forward-starting swap | `FWD_START_SWAP` | swap | cashflows | `ir-curve`, `ir-curve` | DV01 |
-| Constant maturity swap | `CMS_SWAP` | swap | cashflows | `ir-curve`, `ir-curve`, [`ir-vol-cube`](../../../../../docs/contracts/samples/market-data.md#ir-vol-cube) ([contract](../../../../../docs/contracts/packs/market-data.md#irv-swaption-volatility-cube-ir-vol-cube)) | DV01, Vega |
+| Constant maturity swap | `CMS_SWAP` | swap | cashflows | `ir-curve`, `ir-curve`, [`ir-vol-cube`](../../../../../../docs/contracts/samples/market-data.md#ir-vol-cube) ([contract](../../../../../../docs/contracts/packs/market-data.md#irv-swaption-volatility-cube-ir-vol-cube)) | DV01, Vega |
 | Forward rate agreement | `FRA` | linear | fixings | `ir-curve`, `ir-curve` | DV01 |
 | Short-term interest rate future | `STIR_FUTURE` | future | — | `ir-curve` | DV01 |
-| Government bond future | `BOND_FUTURE` | future | — | `ir-curve`, `bond`, [`repo-curve`](../../../../../docs/contracts/samples/market-data.md#repo-curve) ([contract](../../../../../docs/contracts/packs/market-data.md#repo-repo-curve-repo-curve)) | DV01 |
-| Interest rate cap | `CAP` | option | fixings | `ir-curve`, `ir-curve`, [`cap-vol-surface`](../../../../../docs/contracts/samples/market-data.md#cap-vol-surface) ([contract](../../../../../docs/contracts/packs/market-data.md#cpv-capfloor-volatility-surface-cap-vol-surface)) | DV01, Vega |
+| Government bond future | `BOND_FUTURE` | future | — | `ir-curve`, `bond`, [`repo-curve`](../../../../../../docs/contracts/samples/market-data.md#repo-curve) ([contract](../../../../../../docs/contracts/packs/market-data.md#repo-repo-curve-repo-curve)) | DV01 |
+| Interest rate cap | `CAP` | option | fixings | `ir-curve`, `ir-curve`, [`cap-vol-surface`](../../../../../../docs/contracts/samples/market-data.md#cap-vol-surface) ([contract](../../../../../../docs/contracts/packs/market-data.md#cpv-capfloor-volatility-surface-cap-vol-surface)) | DV01, Vega |
 | Interest rate floor | `FLOOR` | option | fixings | `ir-curve`, `ir-curve`, `cap-vol-surface` | DV01, Vega |
 | Interest rate collar | `COLLAR` | option | fixings | `ir-curve`, `ir-curve`, `cap-vol-surface` | DV01, Vega |
 | European swaption | `SWAPTION_EUR` | option | — | `ir-curve`, `ir-curve`, `ir-vol-cube` | DV01, Vega |
 | Bermudan swaption | `SWAPTION_BERM` | option | exercise | `ir-curve`, `ir-curve`, `ir-vol-cube` | DV01, Vega |
 | American swaption | `SWAPTION_AMER` | option | — | `ir-curve`, `ir-curve`, `ir-vol-cube` | DV01, Vega |
 | CMS cap / floor | `CMS_CAP` | option | fixings | `ir-curve`, `ir-curve`, `ir-vol-cube` | DV01, Vega |
-| CMS spread option | `CMS_SPREAD_OPT` | option | fixings | `ir-curve`, `ir-curve`, `ir-vol-cube`, [`correlation-matrix`](../../../../../docs/contracts/samples/market-data.md#correlation-matrix) ([contract](../../../../../docs/contracts/packs/market-data.md#corr-correlation-matrix-correlation-matrix)) | DV01, Vega |
+| CMS spread option | `CMS_SPREAD_OPT` | option | fixings | `ir-curve`, `ir-curve`, `ir-vol-cube`, [`correlation-matrix`](../../../../../../docs/contracts/samples/market-data.md#correlation-matrix) ([contract](../../../../../../docs/contracts/packs/market-data.md#corr-correlation-matrix-correlation-matrix)) | DV01, Vega |
 | STIR future option | `STIR_FUT_OPT` | option | — | `ir-curve`, `cap-vol-surface` | DV01, Vega |
 | Callable swap | `CALLABLE_SWAP` | exotic | exercise | `ir-curve`, `ir-curve`, `ir-vol-cube` | DV01, Vega |
 | Range accrual swap | `RANGE_ACCRUAL_SWAP` | exotic | observations | `ir-curve`, `ir-curve`, `ir-vol-cube` | DV01, Vega |
@@ -119,10 +119,10 @@ The trading pack covers **125 products** in ten asset classes. Each has its own 
 | Product | PRODUCT_TYPE | Family | Schedule | Market data | Risk |
 |---|---|---|---|---|---|
 | FX spot | `FX_SPOT` | linear | — | `fx-spot` | FX delta |
-| FX forward | `FX_FORWARD` | linear | — | `fx-spot`, [`fx-forward-curve`](../../../../../docs/contracts/samples/market-data.md#fx-forward-curve) ([contract](../../../../../docs/contracts/packs/market-data.md#fxf-fx-forward-curve-fx-forward-curve)), `ir-curve` | FX delta, DV01 |
+| FX forward | `FX_FORWARD` | linear | — | `fx-spot`, [`fx-forward-curve`](../../../../../../docs/contracts/samples/market-data.md#fx-forward-curve) ([contract](../../../../../../docs/contracts/packs/market-data.md#fxf-fx-forward-curve-fx-forward-curve)), `ir-curve` | FX delta, DV01 |
 | Non-deliverable forward | `FX_NDF` | linear | — | `fx-spot`, `fx-forward-curve`, `ir-curve` | FX delta |
 | FX swap | `FX_SWAP` | swap | cashflows | `fx-spot`, `fx-forward-curve`, `ir-curve` | FX delta, DV01 |
-| FX vanilla option | `FX_OPTION` | option | — | `fx-spot`, `fx-forward-curve`, [`fx-vol-surface`](../../../../../docs/contracts/samples/market-data.md#fx-vol-surface) ([contract](../../../../../docs/contracts/packs/market-data.md#fxv-fx-volatility-surface-fx-vol-surface)) | FX delta, Vega, Gamma |
+| FX vanilla option | `FX_OPTION` | option | — | `fx-spot`, `fx-forward-curve`, [`fx-vol-surface`](../../../../../../docs/contracts/samples/market-data.md#fx-vol-surface) ([contract](../../../../../../docs/contracts/packs/market-data.md#fxv-fx-volatility-surface-fx-vol-surface)) | FX delta, Vega, Gamma |
 | FX digital option | `FX_DIGITAL` | option | — | `fx-spot`, `fx-vol-surface` | FX delta, Vega |
 | FX barrier option | `FX_BARRIER` | exotic | observations | `fx-spot`, `fx-vol-surface` | FX delta, Vega, Gamma |
 | FX double-barrier option | `FX_DOUBLE_BARRIER` | exotic | observations | `fx-spot`, `fx-vol-surface` | FX delta, Vega |
@@ -165,7 +165,7 @@ The trading pack covers **125 products** in ten asset classes. Each has its own 
 
 | Product | PRODUCT_TYPE | Family | Schedule | Market data | Risk |
 |---|---|---|---|---|---|
-| Single-name CDS | `CDS_SINGLE` | cds | cashflows | [`credit-curve`](../../../../../docs/contracts/samples/market-data.md#credit-curve) ([contract](../../../../../docs/contracts/packs/market-data.md#cds-credit-curve-credit-curve)), `ir-curve` | CS01, Jump to default |
+| Single-name CDS | `CDS_SINGLE` | cds | cashflows | [`credit-curve`](../../../../../../docs/contracts/samples/market-data.md#credit-curve) ([contract](../../../../../../docs/contracts/packs/market-data.md#cds-credit-curve-credit-curve)), `ir-curve` | CS01, Jump to default |
 | CDS index (CDX / iTraxx) | `CDS_INDEX` | cds | cashflows | `credit-curve`, `ir-curve` | CS01, Jump to default |
 | Index tranche | `CDS_TRANCHE` | cds | cashflows | `credit-curve`, `ir-curve`, `correlation-matrix` | CS01, Jump to default |
 | CDS index option | `CDS_SWAPTION` | option | — | `credit-curve`, `ir-curve` | CS01, Vega |
@@ -206,11 +206,11 @@ The trading pack covers **125 products** in ten asset classes. Each has its own 
 
 | Product | PRODUCT_TYPE | Family | Schedule | Market data | Risk |
 |---|---|---|---|---|---|
-| Equity position | `EQ_CASH` | position | — | `equity`, [`dividend-curve`](../../../../../docs/contracts/samples/market-data.md#dividend-curve) ([contract](../../../../../docs/contracts/packs/market-data.md#div-dividend-curve-dividend-curve)) | Delta |
+| Equity position | `EQ_CASH` | position | — | `equity`, [`dividend-curve`](../../../../../../docs/contracts/samples/market-data.md#dividend-curve) ([contract](../../../../../../docs/contracts/packs/market-data.md#div-dividend-curve-dividend-curve)) | Delta |
 | Equity forward | `EQ_FORWARD` | linear | — | `equity`, `dividend-curve`, `ir-curve` | Delta |
 | Single-stock future | `EQ_FUTURE_SINGLE` | future | — | `equity`, `dividend-curve` | Delta |
-| Equity index future | `EQ_INDEX_FUTURE` | future | — | [`equity-index`](../../../../../docs/contracts/samples/market-data.md#equity-index) ([contract](../../../../../docs/contracts/packs/market-data.md#eqx-equity-index-equity-index)), `dividend-curve` | Delta |
-| Listed equity option | `EQ_OPTION_LISTED` | option | — | `equity`, [`equity-vol-surface`](../../../../../docs/contracts/samples/market-data.md#equity-vol-surface) ([contract](../../../../../docs/contracts/packs/market-data.md#eqv-equity-volatility-surface-equity-vol-surface)), `dividend-curve` | Delta, Gamma, Vega, Theta |
+| Equity index future | `EQ_INDEX_FUTURE` | future | — | [`equity-index`](../../../../../../docs/contracts/samples/market-data.md#equity-index) ([contract](../../../../../../docs/contracts/packs/market-data.md#eqx-equity-index-equity-index)), `dividend-curve` | Delta |
+| Listed equity option | `EQ_OPTION_LISTED` | option | — | `equity`, [`equity-vol-surface`](../../../../../../docs/contracts/samples/market-data.md#equity-vol-surface) ([contract](../../../../../../docs/contracts/packs/market-data.md#eqv-equity-volatility-surface-equity-vol-surface)), `dividend-curve` | Delta, Gamma, Vega, Theta |
 | OTC equity option | `EQ_OPTION_OTC` | option | — | `equity`, `equity-vol-surface`, `dividend-curve`, `ir-curve` | Delta, Gamma, Vega, Theta |
 | Index option | `EQ_INDEX_OPTION` | option | — | `equity-index`, `equity-vol-surface` | Delta, Gamma, Vega, Theta |
 | Equity barrier option | `EQ_BARRIER` | exotic | observations | `equity`, `equity-vol-surface`, `dividend-curve` | Delta, Gamma, Vega |
@@ -277,11 +277,11 @@ The trading pack covers **125 products** in ten asset classes. Each has its own 
 
 | Product | PRODUCT_TYPE | Family | Schedule | Market data | Risk |
 |---|---|---|---|---|---|
-| Commodity future | `CMD_FUTURE` | future | — | [`commodity-curve`](../../../../../docs/contracts/samples/market-data.md#commodity-curve) ([contract](../../../../../docs/contracts/packs/market-data.md#cmdc-commodity-forward-curve-commodity-curve)) | Delta |
+| Commodity future | `CMD_FUTURE` | future | — | [`commodity-curve`](../../../../../../docs/contracts/samples/market-data.md#commodity-curve) ([contract](../../../../../../docs/contracts/packs/market-data.md#cmdc-commodity-forward-curve-commodity-curve)) | Delta |
 | Commodity forward | `CMD_FORWARD` | linear | — | `commodity-curve`, `ir-curve` | Delta |
 | Commodity swap | `CMD_SWAP` | swap | cashflows | `commodity-curve`, `ir-curve` | Delta |
 | Commodity basis swap | `CMD_BASIS_SWAP` | swap | fixings | `commodity-curve`, `ir-curve` | Delta |
-| Option on commodity future | `CMD_FUT_OPTION` | option | — | `commodity-curve`, [`commodity-vol-surface`](../../../../../docs/contracts/samples/market-data.md#commodity-vol-surface) ([contract](../../../../../docs/contracts/packs/market-data.md#cmdv-commodity-volatility-surface-commodity-vol-surface)) | Delta, Gamma, Vega |
+| Option on commodity future | `CMD_FUT_OPTION` | option | — | `commodity-curve`, [`commodity-vol-surface`](../../../../../../docs/contracts/samples/market-data.md#commodity-vol-surface) ([contract](../../../../../../docs/contracts/packs/market-data.md#cmdv-commodity-volatility-surface-commodity-vol-surface)) | Delta, Gamma, Vega |
 | Average price option (APO) | `CMD_APO` | exotic | fixings | `commodity-curve`, `commodity-vol-surface` | Delta, Vega |
 | Commodity swaption | `CMD_SWAPTION` | option | — | `commodity-curve`, `commodity-vol-surface` | Delta, Vega |
 | Commodity spread option | `CMD_SPREAD_OPT` | exotic | — | `commodity-curve`, `commodity-vol-surface`, `correlation-matrix` | Delta, Vega |
@@ -327,7 +327,7 @@ The trading pack covers **125 products** in ten asset classes. Each has its own 
 
 | Product | PRODUCT_TYPE | Family | Schedule | Market data | Risk |
 |---|---|---|---|---|---|
-| Zero-coupon inflation swap | `ZC_INFL_SWAP` | swap | cashflows | `ir-curve`, [`inflation-curve`](../../../../../docs/contracts/samples/market-data.md#inflation-curve) ([contract](../../../../../docs/contracts/packs/market-data.md#infc-inflation-curve-inflation-curve)), [`inflation-index`](../../../../../docs/contracts/samples/market-data.md#inflation-index) ([contract](../../../../../docs/contracts/packs/market-data.md#inf-inflation-index-inflation-index)) | IE01, DV01 |
+| Zero-coupon inflation swap | `ZC_INFL_SWAP` | swap | cashflows | `ir-curve`, [`inflation-curve`](../../../../../../docs/contracts/samples/market-data.md#inflation-curve) ([contract](../../../../../../docs/contracts/packs/market-data.md#infc-inflation-curve-inflation-curve)), [`inflation-index`](../../../../../../docs/contracts/samples/market-data.md#inflation-index) ([contract](../../../../../../docs/contracts/packs/market-data.md#inf-inflation-index-inflation-index)) | IE01, DV01 |
 | Year-on-year inflation swap | `YOY_INFL_SWAP` | swap | cashflows | `ir-curve`, `inflation-curve`, `inflation-index` | IE01, DV01 |
 | Inflation cap / floor | `INFL_CAP_FLOOR` | option | fixings | `ir-curve`, `inflation-curve`, `inflation-index` | IE01, Vega |
 | Inflation-linked bond | `INFL_LINKED_BOND` | bond | coupons | `ir-curve`, `inflation-curve`, `inflation-index` | IE01, DV01 |

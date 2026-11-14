@@ -90,12 +90,12 @@ generated-by: tools/packgen/banking/make_docs.py
 Counterparty credit risk over the trading pack's trades: master agreements and CSAs, netting sets, credit limits, CVA, SA-CCR,
 collateral balances, margin calls and SIMM initial margin, and the **exposure engine's inputs**: an upstream simulation run
 (`simulation-run`) and every trade's mark to market on every path of its grid (`exposure-path`). Exposure is never stored: `EXP
-NSET:NS-ALDERSHOT-FRA <GO>` (the computed kind `exposure-result`, [EXPOSURE_GUIDE.md Part II](../../../../docs/guides/EXPOSURE_GUIDE.md#14-the-contract-at-a-glance)) nets the paths per
+NSET:NS-ALDERSHOT-FRA <GO>` (the computed kind `exposure-result`, [EXPOSURE_GUIDE.md Part II](../../../../../docs/guides/EXPOSURE_GUIDE.md#14-the-contract-at-a-glance)) nets the paths per
 netting set, applies each CSA's collateral path by path with the margin period of risk, and reads EE, ENE, EEE, PFE 95% and 99%, EPE
 and EEPE for any scope (`NSET:`, `CPTY:`, `GROUP:`, `LE:`, `DESK:`, `TRD:`); the netting-set and counterparty pages show the engine's
 figures computed as they open. There is no stored `exposure-profile` kind (`EXP-<cp>-<le>`): `EXP EXP-ALDERSHOT-FRA`
-opens `EXP NSET:NS-ALDERSHOT-FRA`. The exposure explorer ([EXPOSURE_GUIDE.md section 3](../../../../docs/guides/EXPOSURE_GUIDE.md#3-the-explorer-screen-by-screen))
-walks from the bank to a trade; [tutorial 3](../../../../docs/tutorials/03-exposure-from-the-bank-to-a-trade.md) does it on the test data.
+opens `EXP NSET:NS-ALDERSHOT-FRA`. The exposure explorer ([EXPOSURE_GUIDE.md section 3](../../../../../docs/guides/EXPOSURE_GUIDE.md#3-the-explorer-screen-by-screen))
+walks from the bank to a trade; [tutorial 3](../../../../../docs/tutorials/03-exposure-from-the-bank-to-a-trade.md) does it on the test data.
 
 ## Data structures
 
@@ -614,4 +614,4 @@ The pack's files are written by `tools/packgen/banking/make_docs.py`; its `--che
 ## See also
 
 - [Counterparty credit risk pack](guides/counterparty-risk.md): Netting sets, exposure, CVA, SA-CCR, collateral and margin.
-- [Packs](../../../../docs/guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/BUILD_GUIDE.md) (the README standard).
+- [Packs](../../../../../docs/guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../../docs/guides/BUILD_GUIDE.md) (the README standard).
