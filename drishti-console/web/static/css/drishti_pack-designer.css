@@ -34,6 +34,7 @@
 .pd-f > span { font-weight: 600; }
 .pd-f small.bad, .bs-status.bad { color: var(--d-neg); }
 .pd-kindsel { margin-bottom: var(--d-sp-6); }
+.pd-child { margin-bottom: var(--d-sp-2); }
 .pd-design { display: grid; grid-template-columns: minmax(14rem, 0.8fr) minmax(16rem, 1.2fr) minmax(18rem, 1.5fr); gap: var(--d-sp-12); align-items: start; }
 .pd-design > div { min-width: 0; }
 .pd-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--d-sp-8); margin-bottom: var(--d-sp-6); font-size: var(--d-fs-13); }

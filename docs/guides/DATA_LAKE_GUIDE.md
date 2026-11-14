@@ -1233,6 +1233,27 @@ allows it (`new-tables: true`, off as shipped). The table is then written in the
 `doc`, `business_date`, `_load_id`, `_source_file`), its id field `key:` else `id`. The report says *new table X created; no pack serves it
 yet*: a pack declares it as a kind when it should appear on screen.
 
+### 5.7 Child kinds
+
+A **child kind** is an array of records in a parent's documents (`LEGS` of `trade`) loaded as a kind of its own (`trade-leg`): one row per
+element, in a table of its own beside the parent's (`<lake>/<domain>/trade-leg/`, or `<files root>/<domain>/<date>/trade-leg.jsonl`), under
+the **parent's business date**, written in the same run as the parent. Its row is the element's fields with two in front: its id (`LEG_KEY`,
+the parent's id `:` the element's natural key such as `LEG_ID`, else its index) and the link to the parent (`TRADE_ID`); its promoted columns
+are the link and the element's fields. The parent's row is unchanged (it keeps the array). The pack declares the child kind in its `ingest:`
+block, which the loader reads:
+
+```yaml
+ingest:
+  trade: { key: TRADE_ID, date: BUSINESS_DATE }
+  trade-leg: { key: LEG_KEY, child-of: { kind: trade, field: LEGS, link: TRADE_ID, natural: LEG_ID } }
+```
+
+`drishti.py data ingest --pack <pack> --from <files>` (Delta with `--lake`, the file connector's layout with `--store files --root`) writes the
+parent's rows and its child kinds' rows; `pack new --load` and the Pack designer load the same way. `pack new` and the Pack designer plan child
+kinds and write this block ([BUILD_GUIDE section 8.1.4](BUILD_GUIDE.md#814-child-tables-an-array-of-records-as-a-kind-of-its-own)). The parallel
+loader (section 3.3) and `lake build` load one table per input and do not split arrays: deliver a child kind to them as files of its own
+(`trade-leg.2026-11-03.jsonl`), or load it with `data ingest --pack`.
+
 ## 6. Pointing Drishti at a lake
 
 A lake is read by the Delta and Iceberg connectors that name it. A connector file (`config/connectors/<name>.yaml`, written from the

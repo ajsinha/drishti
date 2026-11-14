@@ -21,7 +21,9 @@ the memory of its counts. Per kind it gathers:
 - every field seen anywhere (dotted paths, ``[]`` for the elements of an array of objects) with the JSON types it held and how often;
 - the id's uniqueness over the whole input: a 64-bit hash of every id in a set (about 70 bytes an id), duplicates counted and the
   first ones named;
-- the business dates present (``--date``) and the rows without one.
+- the business dates present (``--date``) and the rows without one;
+- the rows of its child kinds (an array of objects made a kind, tools/packgen/childkinds.py): each parent's elements, exploded as the
+  loader writes them, profiled as a kind of their own (their id is unique when it is unique within each parent: no id set is kept).
 
 Only what Sutras and previews *show* is a chosen few: up to ``samples`` documents per combination, spread over the dates seen.
 ``head()`` reads the first rows of the first files to infer what the command line did not give (key, date, match); the full pass then
@@ -37,6 +39,8 @@ from dataclasses import dataclass, field
 
 sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parents[1]))
 import sutragen as SG  # noqa: E402
+sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent))
+import childkinds as CK  # noqa: E402  (child kinds: the one explode, shared with the loader)
 sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parents[1] / "lake"))
 import dataprofile as DP  # noqa: E402  (the field walk and the key, date and match candidates of `data profile`)
 
@@ -108,9 +112,11 @@ class KindProfile:
     dates: Counter = field(default_factory=Counter)
     no_date: int = 0
     head: list = field(default_factory=list)             # the first documents: pick-list columns and the search form
+    local: bool = False                                  # a child kind: its ids are checked within each parent (by the caller), no id set
 
-    def add(self, doc: dict, file_date: str | None = None) -> None:
-        """One row; ``file_date`` is its file's business date by the load rules (its name), the row's date when there is no --date."""
+    def add(self, doc: dict, file_date: str | None = None) -> str | None:
+        """One row; ``file_date`` is its file's business date by the load rules (its name), the row's date when there is no --date.
+        Returns the row's business date (a child row's is its parent's)."""
         fold(doc, self.fields, self.rows)
         self.rows += 1
         combo = tuple(SG.group_value(doc, f) for f in self.match)
@@ -124,7 +130,7 @@ class KindProfile:
             v = SG.get(doc, self.key)
             if v is SG.MISSING or v is None:
                 self.no_key += 1
-            else:
+            elif not self.local:
                 h = int.from_bytes(hashlib.blake2b(f"{d or ''}\x00{v}".encode("utf-8"), digest_size=8).digest(), "little")
                 if h in self.ids:                           # one entity per id per business date (the stores' rule)
                     self.dup_rows += 1
@@ -141,6 +147,19 @@ class KindProfile:
             bucket.append(doc)
         if len(self.head) < 200:
             self.head.append(doc)
+        return d
+
+    def add_children(self, rows: list[dict], key: str, d: str | None) -> None:
+        """One parent's child rows (childkinds.explode): profiled, their ids checked within the parent."""
+        for r in rows:
+            self.add(r, d)
+        ids = [str(r.get(key)) for r in rows]
+        dup = len(ids) - len(set(ids))
+        if dup:
+            self.dup_rows += dup
+            for i in sorted({i for i in ids if ids.count(i) > 1}):
+                if len(self.dup_named) < DUPES_NAMED:
+                    self.dup_named.append(i + (f" on {d}" if d else ""))
 
     def chosen(self, combo: tuple) -> list[dict]:
         """The documents shown for one combination: round-robin over its dates, the most recent first."""
@@ -187,6 +206,7 @@ class Config:
     per_kind: dict
     default: tuple
     prefix: str = ""                                    # --kind-prefix: before every kind
+    children: dict = field(default_factory=dict)        # parent kind -> [childkinds.Child]: profiled as they are read
 
     def of(self, kind: str) -> tuple:
         return self.per_kind.get(kind, self.default)
@@ -209,8 +229,15 @@ def _scan_file(args) -> Profile:
         if kp is None:
             match, key, date = conf.of(kind)
             kp = prof.kinds[kind] = KindProfile(kind, list(match), key, date, samples)
-        kp.add(doc, fd)
+        d = kp.add(doc, fd)
         prof.rows += 1
+        for ch in conf.children.get(kind, ()):
+            rows = CK.explode(doc, ch)
+            if rows:
+                ckp = prof.kinds.get(ch.kind)
+                if ckp is None:
+                    ckp = prof.kinds[ch.kind] = KindProfile(ch.kind, [], ch.key, None, samples, local=True)
+                ckp.add_children(rows, ch.key, d)
     return prof
 
 

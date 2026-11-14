@@ -18,6 +18,19 @@
 ## Unreleased
 
 - **Connector and binding designer** (Build → Create → New connector, `/build/connector/designer`): the Pack designer's left-rail workspace in six steps: the connector type (the installed types), its settings (a form generated from the type; a secret only as a reference to the secret store), a connection test (connected, latency, what it sees per kind and date), a preview of real rows with the type detected per field (new `POST /api/v1/admin/connectors/{name}/preview`, a throwaway instance; `ConnectionProbe.sample`), binding to kinds (read, union, live, write; the resolution now and after; the functions that come on) and a review of the diff of the connector file and `bindings.yaml`, then the one bindings path: the connector is saved through Admin → Connectors' API and the bindings are proposed to the bindings service, a second administrator approves (four eyes, audited, no restart). Admin → Connectors' New connector button, its `n` key and a pack's `?new=<name>` link now open the designer (one way to create); its editor keeps editing existing connectors, and the connector settings form is shared (`drishti_conn-settings.js`). Browser test against a real server with two administrators; ADMIN_GUIDE section 23.0, DEVELOPER_GUIDE section 12.3.
+- **Child tables: arrays of rows become child kinds.** `pack new` and the Pack designer make an array of records (`LEGS`, `CASHFLOWS`) a kind of
+  its own: one row per element (`trade-leg`), its id the parent's id and the element's natural key (`LEG_ID`) or index (`LEG_KEY` = `T1:2`), a
+  link to the parent (`TRADE_ID`), its own promoted columns, contract and Sutra (an entity screen whose `TRADE_ID` opens the trade, beside the title
+  and on F7), loaded into its own table beside the parent under the parent's business date. Automatic for arrays with at least 2 elements on
+  average (`--child-min-avg N`, `0` for none) or by choice (`--child LEGS,CASHFLOWS`, `kind=...;kind2=none`, `none`); in the designer a switch per
+  array under *Kind and keys → Child tables*; `--dry-run` lists the child kinds planned. One implementation (`tools/packgen/childkinds.py`): the
+  full pass profiles the child rows as it reads each parent (every row, ids checked within each parent), and the one loader (`data ingest --pack`,
+  `pack new --load`, the designer) writes them from the pack's `ingest:` block (`child-of: {kind, field, link, natural}`, checked by `pack check`).
+  The parent is unchanged and its screen still shows the array. BI: a table per kind and a model in the site's `tables/<pack>/` relating each child
+  to its parent many-to-one and both ways, so sums by a child's or a parent's field are right and a filter on the child keeps the parents having
+  any such child, each once (`ChildTablesModelTest`); the pack's link graph names the link for models started from the packs. BUILD_GUIDE
+  section 8.1.4, DATA_LAKE_GUIDE section 5.7, REPORTS_GUIDE section 5.3, CLI_REFERENCE (`pack new`).
+
 - **Pack designer** (Build → New pack, `/build/pack/designer`; the old `/build/pack/new` redirects): a workspace with a rail of six steps and
   their summaries. Data (drop `.jsonl`, `.jsonl.gz`, `.ndjson` files or a folder: uploaded to the server, every record analysed there with
   progress, the code of `drishti.py pack new`), Kind and keys (discriminator columns in any combination with live Sutra counts and a rare mark, the

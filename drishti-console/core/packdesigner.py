@@ -179,7 +179,7 @@ class Workspaces:
         if not VERSION_RE.fullmatch(version):
             raise DesignerError(400, "the version must be X.Y.Z, such as 1.0.0 or 2.0.0-rc.1")
         r["version"] = version
-        for k in ("title", "description", "kind", "kindPrefix", "key", "date", "match", "mnemonic", "connector", "filesRoot", "publisher"):
+        for k in ("title", "description", "kind", "kindPrefix", "key", "date", "match", "child", "mnemonic", "connector", "filesRoot", "publisher"):
             v = body.get(k)
             if v is None or v == "":
                 continue
@@ -188,6 +188,8 @@ class Workspaces:
             r[k] = v.strip()
         if "kind" in r and not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", r["kind"]):
             raise DesignerError(400, "the kind is letters, digits, '_', '-' and '.'")
+        if "child" in r and not re.fullmatch(r"[A-Za-z0-9_.,;=-]+", r["child"]):
+            raise DesignerError(400, "child tables are fields: LEGS,CASHFLOWS or kind=LEGS;kind2=none")
         if "kindPrefix" in r and not re.fullmatch(r"[a-z0-9][a-z0-9-]*", r["kindPrefix"]):
             raise DesignerError(400, "the kind prefix is lower-case letters, digits and '-'")
         r["minDocs"] = max(1, min(int(body.get("minDocs") or 1), 1_000_000))

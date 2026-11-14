@@ -24,8 +24,10 @@
    samples, tests, about text, README), data/needs.yaml, console/plugin.yaml (one route per kind's word), docs/ (README with front
    matter, help.yaml, guide, tutorial).
 3. Binds the data: one entry per kind in the site's config/bindings.yaml (--site), read by a file connector on the data's location
-   (config/connectors/<name>-files.yaml; the input folder itself when it is laid out <domain>/<yyyy-MM-dd>/<kind>.jsonl, else the
-   files store, filled with --load), or by the connector --connector names. The module itself carries no connector.
+   (config/connectors/<name>-files.yaml; the input folder itself when it is laid out <domain>/<yyyy-MM-dd>/<kind>.jsonl and has no
+   child kinds, else the files store, filled with --load), or by the connector --connector names. The module itself carries no connector.
+   Child kinds (an array of objects as a kind of its own, --child, tools/packgen/childkinds.py) also get BI tables and a model relating
+   them to their parent, in the site's tables/<domain>/.
 4. Packs modules/<name>/ into dist/<name>-<version>.dmod with the module tool and runs its fifteen checks.
 5. --deploy: one node, the package is dropped into the modules folder (--modules-dir, auto-deploy loads it); a cluster (--server),
    it is uploaded and planned (`module deploy`), and a second administrator applies the plan (`module apply`).
@@ -46,6 +48,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(HERE))
 import pack_from_jsonl as PFJ  # noqa: E402
+import childkinds as CK  # noqa: E402
 
 SG = PFJ.SG
 DATE_DIR = re.compile(r"^\d{4}-\d\d-\d\d$")
@@ -115,7 +118,7 @@ def binding_plan(a, an) -> dict:
         return {"kinds": kinds, "connector": None}
     if a.connector:
         return {"kinds": kinds, "connector": a.connector, "file": None}
-    lo = laid_out(a.inputs) if not a.files_root else None
+    lo = laid_out(a.inputs) if not a.files_root and not an.children else None    # child kinds are written by the loader, never read in place
     root, domain = (str(lo[0]), lo[1]) if lo else (a.files_root or FILES_ROOT, a.name)
     if "${" not in root:                                # a ${...} placeholder is the server's to resolve (it is not a path)
         root = str(pathlib.Path(root).resolve())      # the server resolves a relative root against its own working folder
@@ -217,7 +220,7 @@ def write_binding(a, b: dict, an, site: pathlib.Path, say=print) -> None:
     if not b["connector"]:
         return
     if b.get("file"):
-        layout = {k: {"columns": list(dict.fromkeys(an.match[k] + PFJ.scalar_columns(an.prof.kinds[k].head, an.keys[k])))} for k in b["kinds"]}
+        layout = {k: {"columns": list(dict.fromkeys(an.match[k] + PFJ.promoted(an, k)))} for k in b["kinds"]}
         settings = {"root": b["root"], "domain": b["domain"], "layout": layout}
         keys = {an.keys[k] for k in b["kinds"]}
         if b["in-place"] and len(keys) == 1:
@@ -244,10 +247,8 @@ def load_files(a, an, b: dict, cli, say=print) -> int:
     root = b["root"]
     if "${" in root:
         root = str(pathlib.Path(os.environ.get("DRISHTI_FILES_ROOT") or pathlib.Path(os.environ.get("DRISHTI_DATA_DIR") or ROOT / "data") / "files"))
-    args = ["data", "ingest", "--from", *map(str, a.inputs), "--domain", b["domain"], "--store", "files", "--root", root,
-            "--key", ",".join(f"{k}={v}" for k, v in an.keys.items())]
-    if an.dates:
-        args += ["--date", ",".join(f"{k}={v}" for k, v in an.dates.items())]
+    args = ["data", "ingest", "--from", *map(str, a.inputs), "--domain", b["domain"], "--store", "files", "--root", root, "--pack", str(a.out)]
+    # the pack's ingest block gives the keys, dates and child kinds (the one loader writes the child rows beside their parents)
     if getattr(a, "kind", None):
         args += ["--kind", a.kind]
     if getattr(a, "recursive", False):
@@ -257,6 +258,20 @@ def load_files(a, an, b: dict, cli, say=print) -> int:
     sys.stdout.flush()
     say("\n== " + " ".join(["drishti.py", *args]))
     return cli.main(args)
+
+
+def bi_plan(a, an) -> dict[str, str]:
+    """The BI tables and model relating each parent kind to its child kinds (tools/packgen/childkinds.py): relative path -> text."""
+    kinds = an.prof.kinds
+    return CK.bi_files(a.name, a.version, kinds, an.keys, {k: PFJ.promoted(an, k) for k in kinds}, an.children, HEADER)
+
+
+def write_bi(a, an, site: pathlib.Path, say=print) -> None:
+    for rel, text in bi_plan(a, an).items():
+        f = site / "tables" / rel
+        f.parent.mkdir(parents=True, exist_ok=True)
+        f.write_text(text, encoding="utf-8")
+        say(f"wrote {f}")
 
 
 def module_tool(cli, a, *args: str) -> int:
@@ -291,6 +306,9 @@ def run(a, cli, say=print) -> int:
             + ", ".join(f"{k} ({m})" for k, m in sorted(clash.items())) + f"; rename them with --kind-prefix {a.name}-")
     b = binding_plan(a, an)
     say_binding(b, a, say)
+    bi = bi_plan(a, an)
+    if bi:
+        say(f"\nBI (the site's tables/): {', '.join(sorted(bi))}: each child kind related many-to-one to its parent, both ways")
     say(f"\nmodule {a.name} {a.version}: {mod} -> {(a.dist or ROOT / 'dist').resolve() / f'{a.name}-{a.version}.dmod'}")
     if a.dry_run:
         say(f"dry run: nothing written ({time.monotonic() - t0:.1f} s)")
@@ -309,6 +327,7 @@ def run(a, cli, say=print) -> int:
     write_module(a, an, mod, pack)
     if b["connector"]:
         write_binding(a, b, an, (a.site or ROOT / "config").resolve(), say)
+        write_bi(a, an, (a.site or ROOT / "config").resolve(), say)
         if a.load and b.get("file") and not b["in-place"] and load_files(a, an, b, cli, say):
             return 1
     dist = (a.dist or ROOT / "dist").resolve()

@@ -480,6 +480,31 @@ trades.DESK → desk_pnl.id  100% of 10 values match (many-to-one)
 accepted: { from: trades.DESK, to: desk_pnl.id, cardinality: many-to-one }
 ```
 
+**A parent and its child kinds.** When `pack new` or the Pack designer makes an array of records a child kind (a trade's `LEGS` as `trade-leg`,
+[BUILD_GUIDE section 8.1.4](BUILD_GUIDE.md#814-child-tables-an-array-of-records-as-a-kind-of-its-own)), it writes a table per kind and a model
+relating them into the site's `tables/<pack>/`, and the pack's link graph names the link (`TRADE_ID` is a trade), so a model started from the
+packs finds the same relationship ready-made:
+
+```yaml
+rachana: 3
+model: deals
+tables:
+  deal:     { table: deals.deals, role: dimension }
+  deal_leg: { table: deals.deal_legs, role: fact }
+relationships:
+  - { from: deal_leg.TRADE_ID, to: deal.TRADE_ID, cardinality: many-to-one, direction: both, name: deal_leg_deal }
+measures:
+  "Deals": { expr: count(deal) }
+  "Deal NOTIONAL": { expr: sum(deal.NOTIONAL), format: amount0 }
+  "Deal legs": { expr: count(deal_leg) }
+  "Deal leg NOTIONAL": { expr: sum(deal_leg.NOTIONAL), format: amount0 }
+```
+
+Each leg joins its deal many-to-one, so *Deal leg NOTIONAL* by `deal_leg.CURRENCY` sums every leg once and by `deal.PRODUCT_TYPE` adds each
+leg to its deal's product. Both ways, a filter on the child reaches the parent as a semi-join: *Deals* and *Deal NOTIONAL* with
+`deal_leg.CURRENCY = EUR` are the deals **having any** EUR leg, each counted once (a deal with two EUR legs is not counted twice). Two child kinds
+of one parent (legs and cash flows) are siblings: one question reads one of them (the rule above).
+
 ### 5.4 Measures: the expression language
 
 Measures are **Rachana** expressions in aggregate scope ([RACHANA_REFERENCE.md › Rachana-EL expressions](RACHANA_REFERENCE.md#rachana-el-expressions),

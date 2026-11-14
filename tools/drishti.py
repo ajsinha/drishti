@@ -366,6 +366,10 @@ def check_ingest_block(pack: pathlib.Path) -> list[str]:
     for k, v in ing.items():
         if k not in kinds:
             problems.append(f"pack.yaml ingest: '{k}' is not one of the pack's kinds")
+        if isinstance(v, dict) and "child-of" in v:            # a child kind: dated as its parent (tools/packgen/childkinds.py)
+            problems += ([] if isinstance(v.get("key"), str) else [f"pack.yaml ingest.{k}: needs key: <field>"])
+            problems += load_module("childkinds", "packgen/childkinds.py").check_ingest(k, v, kinds)
+            continue
         if not isinstance(v, dict) or not isinstance(v.get("key"), str) or not (isinstance(v.get("date"), str) or v.get("snapshot") is True):
             problems.append(f"pack.yaml ingest.{k}: needs key: <field> and date: <field> (or snapshot: true, stored under the day of the load)")
     return problems

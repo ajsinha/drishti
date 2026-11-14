@@ -940,6 +940,10 @@ drishti-console/.venv/bin/python tools/drishti.py pack new /data/incoming --name
 - **`--kind-prefix`** puts a prefix before every kind (`deal` becomes `deals-deal`). A server that has a product module providing the same kind
   refuses a module that claims it; `pack new` lists such kinds in the plan and stops unless you prefix them (or pass `--allow-shared-kinds`
   for a server without that module).
+- **Child kinds**: an array of records (`LEGS`) becomes a kind of its own (`deal-leg`: one row per element, its own id, a `TRADE_ID` link to its
+  parent, its own Sutra, BI tables and a model in the site's `tables/`) when it has at least `--child-min-avg N` elements on average (2; `0`
+  for none), or as `--child LEGS,CASHFLOWS` (`kind=LEGS;kind2=none`, `none`) says; the plan lists them, `--load` writes their rows beside the
+  parent's ([BUILD_GUIDE section 8.1.4](BUILD_GUIDE.md#814-child-tables-an-array-of-records-as-a-kind-of-its-own)).
 - **`--load`** writes the documents under `--files-root` as `<name>/<business date>/<kind>.jsonl` (the date comes from the file name,
   `deal.2026-11-03.jsonl.gz`), and the generated file connector names that root as an absolute path. **`--deploy`** drops the checked
   `.dmod` into `--modules-dir` (one node; with `--server` and `--reason` it is uploaded and planned on a cluster). The running server's
@@ -3862,6 +3866,7 @@ guides are listed in [DATA_GUIDE.md section 8](../guides/DATA_GUIDE.md#8-connect
 | `tools/packgen/pack_from_jsonl.py` | the engine of `drishti.py pack new`: a complete pack from a folder of JSON Lines |
 | `tools/packgen/module_from_jsonl.py` | `drishti.py pack new` as a content module: the plan, the binding, the load, the checked `.dmod`, `--deploy` |
 | `tools/packgen/packprofile.py` | reads every record of the files (parallel with `--workers`): kinds, fields, combinations, dates, id check |
+| `tools/packgen/childkinds.py` | child kinds: an array of records as a kind of its own (the plan, the one explode the full pass and the loader share, the BI tables and model relating it to its parent) |
 | `tools/contracts.py` | the data contract of every command (`drishti.py contract`, [section 14](#contract-data-contracts-and-the-command-catalog)): drafts one from a pack and its data, checks them all, writes `docs/contracts/packs`; the schema `tools/contracts.schema.json` and the product owner's decisions `tools/contracts.policy.yaml` beside it |
 | `tools/knowledge.py` | the Knowledge pages' glossaries (`docs/knowledge/`): writes each page's terms and the home's A to Z from `docs/knowledge/glossary.yaml`; `--check` fails when a page differs or the glossary is invalid (`tools/test_knowledge_pages.py`) |
 | `tools/packgen/readme.py` | a pack's `README.md` (the README standard, [BUILD_GUIDE.md Part IV](BUILD_GUIDE.md#303-the-readme-standard)) for a pack without a generator of its own; `--all --check` fails on any pack whose README is missing, stale or breaks the standard |

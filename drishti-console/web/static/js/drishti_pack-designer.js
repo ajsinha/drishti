@@ -130,7 +130,7 @@
 
   // ---- reading every record ----------------------------------------------------------------------------------------------------
   function choices() {
-    var cur = S.kind && S.cfg[S.kind] ? S.cfg[S.kind] : null, ks = Object.keys(S.cfg), one = ks.length <= 1;
+    var cur = S.kind && S.cfg[S.kind] ? S.cfg[S.kind] : null, ks = Object.keys(S.cfg).filter(function (k) { return !(S.analysis && S.analysis.kinds[k] && S.analysis.kinds[k].parent); }), one = ks.length <= 1;
     var pairs = function (pick) { return ks.map(function (k) { return S.cfg[k][pick] ? (one ? '' : k + '=') + (Array.isArray(S.cfg[k][pick]) ? S.cfg[k][pick].join(',') : S.cfg[k][pick]) : null; }).filter(Boolean); };
     var r = { name: (field('name').value || 'my-pack').trim(), version: field('version').value.trim() || '1.0.0', title: field('title').value.trim(), kind: field('kind').value.trim(),
       kindPrefix: field('kindPrefix').value.trim(), filesRoot: field('filesRoot').value.trim(), connector: field('connector').value.trim(), load: S.load !== false };
@@ -139,6 +139,7 @@
       r.key = pairs('key').join(',');
       r.date = pairs('date').join(',');
       if (!r.match && S.touched) { r.match = 'none'; }
+      if (S.childTouched) { r.child = ks.map(function (k) { return k + '=' + (S.cfg[k].children.length ? S.cfg[k].children.join(',') : 'none'); }).join(';'); }   // child tables: as switched
     }
     return r;
   }
@@ -171,7 +172,7 @@
       S.analysis = r.body;
       Object.keys(S.analysis.kinds).forEach(function (k) {
         var a = S.analysis.kinds[k];
-        S.cfg[k] = { match: a.match.slice(), key: a.key, date: a.date || '' };
+        S.cfg[k] = { match: a.match.slice(), key: a.key, date: a.date || '', children: (a.arrays || []).filter(function (x) { return x.child; }).map(function (x) { return x.field; }) };
       });
       if (!S.kind || !S.analysis.kinds[S.kind]) { S.kind = kinds()[0]; }
       say(num(S.analysis.rows) + ' records read in ' + S.analysis.seconds + ' s; ' + S.analysis.sutras.length + ' Sutras drafted.');
@@ -205,6 +206,7 @@
     $('[data-sel-date]').textContent = '';
     selDate = new I.Select($('[data-sel-date]'), { options: [{ value: '', label: '(none: the file name\'s date)' }].concat(keyOpts), value: cfg.date || '', label: 'Business date column', search: true });
     selDate.on('change', function (e) { cfg.date = e.value; S.touched = true; });
+    drawChildren(a, cfg);
     var ks = kinds();
     if (ks.length > 1) {                                                // several kinds: choose the one to set up
       var host = $('[data-ms-match]').parentNode;
@@ -234,6 +236,29 @@
     host2.style.height = (Math.min(Math.max(rows.length, 1), 14) * 34 + 56) + 'px';
     sumOf('kind', S.kind + ' · ' + cfg.match.length + ' discriminator' + (cfg.match.length === 1 ? '' : 's') + ' · ' + a.combinations + ' Sutra' + (a.combinations === 1 ? '' : 's'));
     if (!field('kind').value && ks.length === 1 && !/[_]/.test(S.kind)) { field('kind').placeholder = S.kind; }
+  }
+  /** Child tables: one switch per array of records of the kind (on: a child kind of its own); a child kind says whose rows it is. */
+  function drawChildren(a, cfg) {
+    var box = $('[data-children-box]'), host = $('[data-children]');
+    host.textContent = '';
+    var arrays = a.arrays || [];
+    box.hidden = !arrays.length && !a.parent;
+    if (a.parent) {
+      host.textContent = 'This kind is the rows of ' + a.parent.kind + '\'s ' + a.parent.field + ': ID ' + a.key + ', link ' + a.parent.link + ' to the ' + a.parent.kind + '.';
+      return;
+    }
+    arrays.forEach(function (x) {
+      var row = document.createElement('div');
+      row.className = 'pd-child';
+      row.setAttribute('data-child', x.field);
+      host.appendChild(row);
+      var sw = new I.Switch(row, { label: x.field + ' → ' + (x.kind || '') + ' (' + x.avg + ' per row on average' + (x.natural ? ', ID ' + x.natural : '') + ')',
+        value: cfg.children.indexOf(x.field) >= 0, help: 'one row per element of ' + x.field + '; Apply and read again to profile it' });
+      sw.on('change', function (e) {
+        cfg.children = cfg.children.filter(function (f) { return f !== x.field; }).concat(e.value ? [x.field] : []);
+        S.childTouched = true;
+      });
+    });
   }
   $('[data-reanalyse]').addEventListener('click', function () { S.edits = {}; S.checks = {}; analyse(); });
   var sw = new I.Switch($('[data-sw-load]'), { label: 'Write the records to the files store', value: true, help: 'the file connector reads the records from the files store; switch off to bind to a store you fill yourself' });
