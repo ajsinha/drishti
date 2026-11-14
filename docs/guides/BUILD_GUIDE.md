@@ -5204,7 +5204,7 @@ On a phone the bar keeps its five menus as finger-sized buttons; Domains opens a
 
 A bank has one canonical `trade`. Every booking system, Endur, Murex, Calypso and the rest, is another **source** of it: its own file layout, its
 own field names, one module that maps them to the canonical trade and says where they land. This tutorial adds a new one. A mocked system called
-**SwapOne** (OTC swaps; its fields are `swap_id`, `pay_leg`, `rec_leg`, `upd_ts`, nothing like ours) sends one file. You read the whole file,
+**SwapOne** (OTC swaps; its fields are `DEAL_REF`, `DEAL_VERSION`, `TRADE_DT`, `NOTIONAL_AMT`, `CCY`, `CPTY_CODE`, `BOOK` and `LEGS[LEG_NO, PAY_REC, RATE_TYPE]`, nothing like ours) sends one file. You read the whole file,
 check the proposed map, let the Pack designer write the module `source-swapone`, drop the file in the data inbox, and find the trades in
 `trading.trades_shared` stamped `SWAPONE`, in `TRD`, on the blotter, behind a row rule, and gone when you switch the module off.
 
@@ -5266,14 +5266,14 @@ It prints each canonical field of the kind and the native field it was matched t
 **In the UI.** The **Map** step shows the kind's fields in a grid: the canonical field, whether it is required, the SwapOne field proposed for it,
 the confidence and the reason. Choose a row to see its evidence (name, type and values) and the other candidates. Fields marked *missing* are
 required fields no native field fits: you can map one by hand, give a constant (`= value`) or leave it, as the kind allows. Under the grid are
-the native fields no canonical field takes (here the `pay_leg` and `rec_leg` objects' extras): the module shows them on the trade page (step 6).
+the native fields no canonical field takes (here `CLEARING_HOUSE`, `CONFIRM_METHOD`, `BROKER_REF`, `SW_ONE_DESK_TAG` and `TRADER_NAME`): the module shows them on the trade page (step 6).
 
 To change a mapping, change the native field in its cell (or choose *(none)*), then **Propose again**: the server reads again with your edits.
 
 **On the command line.**
 
 ```bash
-python3 tools/drishti.py pack new --source-for trade --system SWAPONE --map-edits '{"TT_GROUP": null}' --map-out swapone-map.json drop/swapone-2026-07-08.jsonl.gz
+python3 tools/drishti.py pack new --source-for trade --system SWAPONE --map-edits '{"PACKAGE_ID": null}' --map-out swapone-map.json drop/swapone-2026-07-08.jsonl.gz
 ```
 
 `--map-edits` is a JSON object: `{CANONICAL: null}` drops a guess, `{CANONICAL: {"from": "native"}}` maps one, `{CANONICAL: {"value": "x"}}` gives a
@@ -5360,8 +5360,8 @@ lake file keeps the systems' rows apart on disk; `where:` reads back only SwapOn
 
 ### Step 6 · `TRD` and the blotter
 
-**In the UI.** Type `TRD` in the command line: the list of trades now includes SwapOne's (the `S1-…` ids), each with the canonical fields the map filled.
-Open one: `TRD S1-700001`. The page is the canonical trade page, with one more section the module brought: **SWAPONE fields**, the native fields the map
+**In the UI.** Type `TRD` in the command line: the list of trades now includes SwapOne's (the `SW1-…` ids), each with the canonical fields the map filled.
+Open one: `TRD SW1-4000000`. The page is the canonical trade page, with one more section the module brought: **SWAPONE fields**, the native fields the map
 left out, shown only when `SOURCE_SYSTEM` is SWAPONE.
 
 The blotter (the live trading table) lists them with the other systems' trades and can be filtered by source system:
@@ -5369,7 +5369,7 @@ The blotter (the live trading table) lists them with the other systems' trades a
 **On the command line.**
 
 ```bash
-python3 tools/drishti.py view get trade/S1-700001
+python3 tools/drishti.py view get trade/SW1-4000000
 ```
 
 **The YAML.** The section is the module's `sections:` entry; no pack file was edited:
