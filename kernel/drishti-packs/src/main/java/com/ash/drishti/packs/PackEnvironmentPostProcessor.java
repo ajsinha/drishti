@@ -61,6 +61,7 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
         names.addAll(org.springframework.boot.context.properties.bind.Binder.get(env)
                 .bind("drishti.packs.added", org.springframework.boot.context.properties.bind.Bindable.listOf(String.class))
                 .orElse(List.of()));
+        PackPaths.installedModulePacks(env).forEach(m -> names.addAll(m.packs()));     // a site's installed content module brings its packs
         com.ash.drishti.packs.edition.Edition edition = com.ash.drishti.packs.edition.Editions.of(env);
         List<String> notInEdition = names.stream().filter(n -> !edition.packAllowed(n)).toList();
         if (!notInEdition.isEmpty()) {                                                   // allow-only: the edition's packs, nothing else

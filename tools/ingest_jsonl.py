@@ -86,7 +86,7 @@ class Report:
         self.date_fields: dict[str, str] = {}           # file -> the date field those rows carried
 
 
-def read_lines(inputs, recursive: bool, kind: str | None, report: Report):
+def read_lines(inputs, recursive: bool, kind: str | None, report: Report, prefix: str = ""):
     """Yields (kind, doc, file) from the JSONL files; bad lines go to the report with file:line. A kind taken from a file's name is its
     table, the name's first segment (``trade.2026-11-03.jsonl`` is kind ``trade``)."""
     for k, doc, where in SG.read_records(SG.input_files(inputs, recursive), report.bad.append):
@@ -94,7 +94,7 @@ def read_lines(inputs, recursive: bool, kind: str | None, report: Report):
         if not kind and k == _stem(f):
             n = filedate.parse(f)
             k = n.table if n.error is None and not n.tar else k
-        yield kind or k, doc, f
+        yield prefix + (kind or k), doc, f
 
 
 def _day(text) -> date | None:
@@ -156,7 +156,7 @@ def collect(args, keys, dates, report: Report) -> dict[str, dict[date, list]]:
     as_of = date.fromisoformat(args.as_of) if getattr(args, "as_of", None) else None
     date_from = getattr(args, "date_from", None) or "auto"
     decided: dict[str, filedate.Decided] = {}
-    for kind, doc, f in read_lines(args.src, args.recursive, args.kind, report):
+    for kind, doc, f in read_lines(args.src, args.recursive, args.kind, report, getattr(args, "kind_prefix", None) or ""):
         dfield = dates.get(kind)                         # optional: only the field whose differing rows are counted
         d = decided.get(f)
         if d is None:
@@ -304,6 +304,7 @@ def build_parser(add_help: bool = True) -> argparse.ArgumentParser:
     p.add_argument("--pack", type=pathlib.Path, help="pack folder: domain, layouts, key and date fields come from its pack.yaml")
     p.add_argument("--domain", help="lake domain (without --pack)")
     p.add_argument("--kind", help="kind for every document (default: file stem or envelope kind)")
+    p.add_argument("--kind-prefix", help="put this before every kind (as `pack new --kind-prefix` named them)")
     p.add_argument("--key", help="id field: FIELD or kind=FIELD,... (default id)")
     p.add_argument("--date", help="optional: the field the documents carry their own date in (FIELD or kind=FIELD,...); only counted when "
                                   "it differs from the file's business date, never the date they are stored under")

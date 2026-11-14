@@ -31,7 +31,8 @@ def _modules() -> list[str]:
 
 
 def test_the_root_pom_lists_every_plugin_directory():
-    on_disk = sorted(p.name.removeprefix("drishti-plugin-") for p in (ROOT / "plugins").glob("drishti-plugin-*"))
+    # a folder is a plugin when it has its pom.xml (a folder left with only an old build's target/ after a module was folded is not)
+    on_disk = sorted(p.name.removeprefix("drishti-plugin-") for p in (ROOT / "plugins").glob("drishti-plugin-*") if (p / "pom.xml").is_file())
     assert sorted(_modules()) == on_disk
 
 
